@@ -38,7 +38,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "fs-extra": "^11.3.0",
+    "fs-extra": "^11.3.2",
     "nodemon": "^3.1.10",
     "tailwindcss": "^4.1.8",
     "ts-node": "^10.9.2",
