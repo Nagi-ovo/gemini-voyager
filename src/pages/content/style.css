@@ -1,5 +1,2 @@
-@import "tailwindcss";
-
-.your-class {
-    color: aliceblue;
-}
+/* This file is currently unused by the content script UI.
+   We keep it minimal to avoid shipping unnecessary CSS. */
