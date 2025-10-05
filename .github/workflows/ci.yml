@@ -1,33 +1,27 @@
-name: Build and Zip Chrome Extension
+name: CI
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  build:
-    name: Build
-    timeout-minutes: 15
+  build-and-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
+      - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 2
- 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'yarn'
- 
-      - name: Install dependencies
-        run: yarn
- 
-      - name: Build Chrome
-        run: yarn build:chrome
-
-      - name: Upload Chrome extension artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: vite-web-extension-chrome
-          path: dist_chrome
+          node-version: '20'
+          cache: 'bun'
+      - name: Install
+        run: bun i
+      - name: Lint
+        run: bun run lint
+      - name: Typecheck
+        run: bun run typecheck
+      - name: Build (Chrome)
+        run: bun run build:chrome
