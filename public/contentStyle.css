@@ -1,0 +1,297 @@
+/* ChatGPT-like timeline styling with CSS variables and theme awareness */
+:root {
+  --timeline-dot-color: #cbd5e1;
+  --timeline-dot-active-color: #3b82f6;
+  --timeline-star-color: #f59e0b;
+  --timeline-tooltip-bg: #ffffff;
+  --timeline-tooltip-text: #0f172a;
+  --timeline-tooltip-border: #e2e8f0;
+  --timeline-tooltip-radius: 12px;
+  --timeline-tooltip-shadow: 0 8px 28px rgba(2, 8, 23, 0.16), 0 2px 6px rgba(2, 8, 23, 0.08);
+  --timeline-tooltip-lh: 18px;
+  --timeline-tooltip-pad-y: 10px;
+  --timeline-tooltip-pad-x: 12px;
+  --timeline-tooltip-border-w: 1px;
+  --timeline-tooltip-arrow-size: 8px;
+  --timeline-tooltip-arrow-outside: 4px;
+  --timeline-tooltip-anim-in: 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --timeline-tooltip-anim-out: 100ms linear;
+  --timeline-bar-bg: rgba(248, 250, 252, 0.85);
+  --timeline-dot-size: 12px;
+  --timeline-active-ring: 3px;
+  --timeline-track-padding: 16px;
+  --timeline-tooltip-max: 288px;
+  --timeline-min-gap: 24px;
+  --timeline-hit-size: 30px;
+  --timeline-tooltip-gap-visual: 8px;
+  --timeline-tooltip-gap-box: 4px;
+  --timeline-hold-ms: 550ms;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --timeline-dot-color: #475569;
+    --timeline-dot-active-color: #60a5fa;
+    --timeline-star-color: #f59e0b;
+    --timeline-tooltip-bg: #0b1220;
+    --timeline-tooltip-text: #e2e8f0;
+    --timeline-tooltip-border: #1f2937;
+    --timeline-bar-bg: rgba(2, 6, 23, 0.72);
+  }
+}
+/* Gemini theme hosts */
+.theme-host.dark-theme .chatgpt-timeline-bar:not(.timeline-no-container) {
+  background-color: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.theme-host.light-theme .chatgpt-timeline-bar:not(.timeline-no-container) {
+  background-color: rgba(248, 250, 252, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.chatgpt-timeline-bar {
+  position: fixed;
+  top: 60px;
+  right: 15px;
+  width: 24px;
+  height: calc(100vh - 100px);
+  z-index: 2147483646;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 10px;
+  background-color: var(--timeline-bar-bg);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: background-color 0.3s ease;
+  overflow: visible;
+  contain: layout;
+}
+.timeline-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: visible;
+  background: transparent;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.timeline-track-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.timeline-dot {
+  position: absolute;
+  left: 50%;
+  top: calc(
+    var(--timeline-track-padding) + (100% - 2 * var(--timeline-track-padding)) * var(--n, 0)
+  );
+  transform: translate(-50%, -50%);
+  width: var(--timeline-hit-size);
+  height: var(--timeline-hit-size);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.timeline-dot::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--timeline-dot-size);
+  height: var(--timeline-dot-size);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background-color: var(--timeline-dot-color);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+/* true punch-through: remove filled dot and draw only inner stroke to make host page visible */
+html.dark .timeline-track,
+[data-theme='dark'] .timeline-track,
+[data-color-scheme='dark'] .timeline-track {
+  background: transparent;
+}
+html.dark .timeline-dot:not(.active):not(.starred)::after,
+[data-theme='dark'] .timeline-dot:not(.active):not(.starred)::after,
+[data-color-scheme='dark'] .timeline-dot:not(.active):not(.starred)::after {
+  background: #000;
+  box-shadow: none;
+}
+.timeline-dot:hover::after {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+.timeline-dot:focus-visible::after {
+  box-shadow: 0 0 6px var(--timeline-dot-active-color);
+}
+.timeline-dot.active::after {
+  box-shadow:
+    0 0 0 var(--timeline-active-ring) var(--timeline-dot-active-color),
+    0 0 10px rgba(59, 130, 246, 0.45);
+}
+.timeline-dot.starred::after {
+  background-color: var(--timeline-star-color);
+}
+.timeline-dot.holding::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--timeline-dot-size) + 8px);
+  height: calc(var(--timeline-dot-size) + 8px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--timeline-dot-active-color) inset;
+  opacity: 0.15;
+  animation: timeline-hold-fade var(--timeline-hold-ms) linear forwards;
+  pointer-events: none;
+}
+@keyframes timeline-hold-fade {
+  from {
+    opacity: 0.15;
+  }
+  to {
+    opacity: 0.85;
+  }
+}
+.timeline-tooltip {
+  position: fixed;
+  max-width: var(--timeline-tooltip-max);
+  background-color: var(--timeline-tooltip-bg);
+  color: var(--timeline-tooltip-text);
+  padding: var(--timeline-tooltip-pad-y) var(--timeline-tooltip-pad-x);
+  border-radius: var(--timeline-tooltip-radius);
+  border: var(--timeline-tooltip-border-w) solid var(--timeline-tooltip-border);
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: var(--timeline-tooltip-lh);
+  max-height: calc(
+    3 * var(--timeline-tooltip-lh) + 2 * var(--timeline-tooltip-pad-y) + 2 *
+      var(--timeline-tooltip-border-w)
+  );
+  box-shadow: var(--timeline-tooltip-shadow);
+  pointer-events: none;
+  z-index: 2147483647;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  opacity: 0;
+  will-change: opacity, transform;
+  transition: opacity var(--timeline-tooltip-anim-in);
+}
+.timeline-tooltip.visible {
+  opacity: 1;
+  animation: timeline-tooltip-in var(--timeline-tooltip-anim-in);
+}
+@media (prefers-reduced-motion: reduce) {
+  .timeline-tooltip,
+  .timeline-tooltip.visible {
+    transition: opacity 120ms linear;
+    transform: none !important;
+  }
+}
+.timeline-tooltip[data-placement='left'] {
+  transform-origin: right center;
+}
+.timeline-tooltip[data-placement='right'] {
+  transform-origin: left center;
+}
+@keyframes timeline-tooltip-in {
+  from {
+    transform: scale(0.96);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.timeline-tooltip::after {
+  content: '';
+  position: absolute;
+  width: var(--timeline-tooltip-arrow-size);
+  height: var(--timeline-tooltip-arrow-size);
+  background: var(--timeline-tooltip-bg);
+  border: var(--timeline-tooltip-border-w) solid var(--timeline-tooltip-border);
+  transform: rotate(45deg);
+}
+.timeline-tooltip[data-placement='left']::after {
+  right: calc(-1 * var(--timeline-tooltip-arrow-outside));
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-left: none;
+  border-bottom: none;
+}
+.timeline-tooltip[data-placement='right']::after {
+  left: calc(-1 * var(--timeline-tooltip-arrow-outside));
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-right: none;
+  border-top: none;
+}
+.timeline-track::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.timeline-track {
+  scrollbar-width: none;
+}
+.timeline-left-slider {
+  position: fixed;
+  top: 0;
+  width: 12px;
+  height: 160px;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  z-index: 2147483646;
+  pointer-events: none;
+}
+.timeline-left-slider.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.timeline-left-slider::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+}
+html.dark .timeline-left-slider::before {
+  background: rgba(255, 255, 255, 0.1);
+}
+.timeline-left-handle {
+  position: absolute;
+  left: 2px;
+  width: 8px;
+  height: 22px;
+  background: rgba(16, 163, 127, 0.28);
+  border-radius: 9999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+  cursor: grab;
+  transition: background-color 120ms ease;
+}
+.timeline-left-handle:hover {
+  background: rgba(16, 163, 127, 0.45);
+}
+.timeline-left-handle:active {
+  cursor: grabbing;
+}
+.timeline-runner-ring {
+  will-change: top, opacity;
+}
+.chatgpt-timeline-bar.timeline-no-container {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none;
+  contain: none;
+}
