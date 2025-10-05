@@ -6,11 +6,15 @@
 
 ## Intro <a name="intro"></a>
 
-**Gemini Voyager** enhances `https://gemini.google.com/app` with a compact, elegant timeline:
+**Gemini Voyager** transforms your experience on `https://gemini.google.com/app` by adding a refined, interactive timeline—mirroring the intuitive flow found in [AI Studio](https://aistudio.google.com/):
 
-- Your messages are mapped to dots; click to jump or flow to the message.
+<div align="center">
+  <img src="public/teaser.png" alt="teaser"/>
+</div>
+
+- Your messages are mapped to nodes; click to jump or flow to the message.
 - Hover to preview the prompt (3‑line clamp with gradient fade).
-- Long‑press to star a dot; stars sync across tabs.
+- Long‑press to **star** a node; stars sync across tabs. 
 - Robust SPA observers keep the active state in sync while you scroll.
 
 

@@ -6,11 +6,15 @@
 
 ## 简介 <a name="intro"></a>
 
-**Gemini Voyager** 为 `https://gemini.google.com/app` 增强了一个紧凑优雅的时间线：
+**Gemini Voyager** 让你在 `https://gemini.google.com/app` 上的聊天体验焕然一新，新增了一个精致、交互式的时间线，灵感源自 [AI Studio](https://aistudio.google.com/) 的直观流程：
 
-- 你的消息会映射为时间线上的圆点，点击可跳转或平滑滚动到对应消息。
-- 悬停可预览消息内容（3 行截断并渐变淡出）。
-- 长按可为圆点加星标，星标会在所有标签页间同步。
+<div align="center">
+  <img src="public/teaser.png" alt="teaser"/>
+</div>
+
+- 你的消息会映射为时间线节点，点击可跳转或平滑滚动到对应消息。
+- 悬停节点可预览消息内容（3 行截断并渐变淡出）。
+- 长按节点可加**星标**，星标会在所有标签页间同步。
 - 强大的 SPA 观察器确保你滚动时活跃状态始终同步。
 
 ## 快速开始 <a name="gettingStarted"></a>
