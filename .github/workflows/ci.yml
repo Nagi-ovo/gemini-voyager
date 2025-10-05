@@ -16,12 +16,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'bun'
+          cache: 'pnpm'
       - name: Install
-        run: bun i
+        run: pnpm i
       - name: Lint
-        run: bun run lint
+        run: pnpm run lint
       - name: Typecheck
-        run: bun run typecheck
+        run: pnpm run typecheck
       - name: Build (Chrome)
-        run: bun run build:chrome
+        run: pnpm run build:chrome
