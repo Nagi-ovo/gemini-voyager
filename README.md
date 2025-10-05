@@ -18,13 +18,31 @@
 
 ### Load your extension (Chrome)
 
-1. Open - Chrome browser
-2. Access - [chrome://extensions](chrome://extensions)
-3. Tick - Developer mode
-4. Find - Load unpacked extension
-5. Select - `dist_chrome` folder in this project (after dev or build)
+1. Go to the repository Releases page and download the latest archive named like `gemini-voyager-chrome-vX.Y.Z.zip`.
+2. Unzip it to a folder (you will see `manifest.json` at the root).
+3. Open [chrome://extensions](chrome://extensions) and enable Developer mode.
+4. Click “Load unpacked”.
+5. Select the unzipped folder (e.g. `Gemini Voyager vX.Y.Z`).
 
-Note: Edge (Chromium) can also load `dist_chrome` as an unpacked extension, but this project primarily targets Chrome.
+Note: Edge (Chromium) can also load the unzipped folder as an unpacked extension, but this project primarily targets Chrome.
+
+### Load your extension (Firefox)
+
+1. Go to the repository Releases page and download `gemini-voyager-firefox-vX.Y.Z.zip`.
+2. Unzip it.
+3. Open `about:debugging#/runtime/this-firefox` in Firefox.
+4. Click “Load Temporary Add-on…”.
+5. Select the `manifest.json` inside the unzipped folder.
+
+### Develop (recommended with Bun)
+
+```bash
+bun i
+# Chrome dev
+bun run dev:chrome
+# Firefox dev
+bun run dev:firefox
+```
 
 ## References
 Inspired by “[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)”. We adapted timeline mapping and observer patterns for Gemini and extended the UI/UX.

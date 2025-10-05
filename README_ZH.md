@@ -17,13 +17,31 @@
 
 ### 加载扩展（Chrome）
 
-1. 打开 Chrome 浏览器
-2. 访问 [chrome://extensions](chrome://extensions)
-3. 勾选“开发者模式”
-4. 点击“加载已解压的扩展程序”
-5. 选择本项目中的 `dist_chrome` 文件夹（需先执行 dev 或 build）
+1. 前往项目的 Releases 页面，下载最新的 `gemini-voyager-chrome-vX.Y.Z.zip` 压缩包。
+2. 解压到任意文件夹（根目录应能看到 `manifest.json`）。
+3. 打开 [chrome://extensions](chrome://extensions) 并开启“开发者模式”。
+4. 点击“加载已解压的扩展程序”。
+5. 选择刚解压的文件夹（例如 `Gemini Voyager vX.Y.Z`）。
 
-注意：Edge（Chromium）同样可以加载 `dist_chrome` 作为未打包扩展，但本项目主要面向 Chrome。
+注意：Edge（Chromium）同样可以加载该解压文件夹为未打包扩展，但本项目主要面向 Chrome。
+
+### 加载扩展（Firefox）
+
+1. 前往 Releases 页面，下载 `gemini-voyager-firefox-vX.Y.Z.zip`。
+2. 解压。
+3. 在 Firefox 打开 `about:debugging#/runtime/this-firefox`。
+4. 点击“Load Temporary Add-on…”（加载临时附加组件）。
+5. 选择解压目录中的 `manifest.json`。
+
+### 本地开发（推荐 Bun）
+
+```bash
+bun i
+# Chrome 开发
+bun run dev:chrome
+# Firefox 开发
+bun run dev:firefox
+```
 
 ## 参考
 
