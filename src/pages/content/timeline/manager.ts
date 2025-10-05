@@ -1324,8 +1324,10 @@ export class TimelineManager {
     this.saveStars();
     const m = this.markerMap.get(id);
     if (m && m.dotElement) {
-      m.dotElement.classList.toggle('starred', this.starred.has(id));
-      m.dotElement.setAttribute('aria-pressed', this.starred.has(id) ? 'true' : 'false');
+      const isStarredNow = this.starred.has(id);
+      m.starred = isStarredNow;
+      m.dotElement.classList.toggle('starred', isStarredNow);
+      m.dotElement.setAttribute('aria-pressed', isStarredNow ? 'true' : 'false');
       this.refreshTooltipForDot(m.dotElement);
     }
   }
