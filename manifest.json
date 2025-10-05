@@ -1,48 +1,29 @@
 {
   "manifest_version": 3,
-  "name": "name in manifest.json",
-  "description": "description in manifest.json",
-  "options_ui": {
-    "page": "src/pages/options/index.html"
-  },
+  "name": "Gemini Voyager",
+  "description": "Maps your Gemini chats on a timeline.",
   "action": {
     "default_popup": "src/pages/popup/index.html",
     "default_icon": {
       "32": "icon-32.png"
     }
   },
-  "chrome_url_overrides": {
-    "newtab": "src/pages/newtab/index.html"
-  },
+
   "icons": {
     "128": "icon-128.png"
   },
-  "permissions": [
-    "activeTab"
-  ],
+  "permissions": ["activeTab", "storage"],
   "content_scripts": [
     {
-      "matches": [
-        "http://*/*",
-        "https://*/*",
-        "<all_urls>"
-      ],
-      "js": [
-        "src/pages/content/index.tsx"
-      ],
-      "css": [
-        "contentStyle.css"
-      ]
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["src/pages/content/index.tsx"],
+      "css": ["contentStyle.css"]
     }
   ],
-  "devtools_page": "src/pages/devtools/index.html",
+
   "web_accessible_resources": [
     {
-      "resources": [
-        "contentStyle.css",
-        "icon-128.png",
-        "icon-32.png"
-      ],
+      "resources": ["contentStyle.css", "icon-128.png", "icon-32.png"],
       "matches": []
     }
   ]
