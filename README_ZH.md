@@ -31,7 +31,7 @@
 
 ### 加载扩展（Firefox）
 
-1. 前往 Releases 页面，下载 `gemini-voyager-firefox-vX.Y.Z.zip`。
+1. 前往 [Releases 页面](https://github.com/Nagi-ovo/gemini-voyager/releases)，下载 `gemini-voyager-firefox-vX.Y.Z.zip`。
 2. 解压。
 3. 在 Firefox 打开 `about:debugging#/runtime/this-firefox`。
 4. 点击“Load Temporary Add-on…”（加载临时附加组件）。

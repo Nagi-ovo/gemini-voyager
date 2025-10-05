@@ -26,7 +26,7 @@
 
 ### Load your extension (Chrome)
 
-1. Go to the repository Releases page and download the latest archive named like `gemini-voyager-chrome-vX.Y.Z.zip`.
+1. Go to the [repository Releases page](https://github.com/Nagi-ovo/gemini-voyager/releases) and download the latest archive named like `gemini-voyager-chrome-vX.Y.Z.zip`.
 2. Unzip it to a folder (you will see `manifest.json` at the root).
 3. Open [chrome://extensions](chrome://extensions) and enable Developer mode.
 4. Click “Load unpacked”.
