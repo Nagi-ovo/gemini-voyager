@@ -13,22 +13,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
+          cache: 'bun'
 
       - name: Install
-        run: pnpm i
+        run: bun i
       - name: Lint
-        run: pnpm run lint
+        run: bun run lint
       - name: Typecheck
-        run: pnpm run typecheck
+        run: bun run typecheck
       - name: Build (Chrome)
-        run: pnpm run build:chrome
+        run: bun run build:chrome
