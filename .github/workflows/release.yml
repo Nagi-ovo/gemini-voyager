@@ -1,4 +1,10 @@
 name: Release
+run-name: >
+  ${{
+    (github.event_name == 'workflow_dispatch' && inputs.version && format('chore(release): v{0}', inputs.version)) ||
+    (startsWith(github.ref, 'refs/tags/') && format('chore(release): {0}', github.ref_name)) ||
+    format('Release #{0}', github.run_number)
+  }}
 
 on:
   push:
@@ -36,7 +42,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Bumping to version ${VERSION}"
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version='${process.env.VERSION}';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));m.version='${process.env.VERSION}';fs.writeFileSync('manifest.json',JSON.stringify(m,null,2)+'\n');"
+          node -e "const fs=require('fs');const v=process.env.VERSION;const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=v;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));m.version=v;fs.writeFileSync('manifest.json',JSON.stringify(m,null,2)+'\n');"
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add package.json manifest.json
