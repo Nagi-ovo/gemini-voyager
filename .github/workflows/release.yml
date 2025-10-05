@@ -5,6 +5,14 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 0.2.0)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
   build-and-release:
@@ -12,11 +20,38 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 'latest'
+
+      # If a version is provided via manual dispatch, bump files, commit and create tag
+      - name: Bump version, commit and tag (manual)
+        if: ${{ inputs.version != '' }}
+        env:
+          VERSION: ${{ inputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Bumping to version ${VERSION}"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version='${process.env.VERSION}';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));m.version='${process.env.VERSION}';fs.writeFileSync('manifest.json',JSON.stringify(m,null,2)+'\n');"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add package.json manifest.json
+          git commit -m "chore(release): v${VERSION}" || echo "No changes to commit"
+          git tag v${VERSION} || echo "Tag exists"
+          git push origin HEAD:main --tags
+
+      - name: Compute tag name
+        id: tag
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "name=v${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Install deps
         run: bun i
@@ -25,18 +60,22 @@ jobs:
         run: bun run build:chrome
 
       - name: Archive dist_chrome
-        run: zip -r gemini-voyager-chrome-${{ github.ref_name }}.zip dist_chrome
+        run: |
+          cd dist_chrome
+          zip -r ../gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip .
 
+      # Optional: upload to Actions artifacts (can be removed if not needed)
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gemini-voyager-chrome-${{ github.ref_name }}
-          path: gemini-voyager-chrome-${{ github.ref_name }}.zip
+          name: gemini-voyager-chrome-${{ steps.tag.outputs.name }}
+          path: gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: gemini-voyager-chrome-${{ github.ref_name }}.zip
+          files: gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip
+          name: Gemini Voyager ${{ steps.tag.outputs.name }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
