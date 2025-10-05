@@ -20,6 +20,8 @@ export function stripDevIcons(isDev: boolean) {
       fs.rm(resolve(outDir, 'dev-icon-128.png'), () =>
         console.log(`Deleted dev-icon-128.png from prod build`)
       );
+      // Do not ship documentation teaser image
+      fs.rm(resolve(outDir, 'teaser.png'), () => console.log(`Deleted teaser.png from prod build`));
     },
   };
 }
