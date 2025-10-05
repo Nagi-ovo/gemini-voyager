@@ -2,29 +2,40 @@
   "manifest_version": 3,
   "name": "Gemini Voyager",
   "description": "Maps your Gemini chats on a timeline.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "action": {
     "default_popup": "src/pages/popup/index.html",
     "default_icon": {
       "32": "icon-32.png"
     }
   },
-
   "icons": {
     "128": "icon-128.png"
   },
-  "permissions": ["activeTab", "storage"],
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://gemini.google.com/*"],
-      "js": ["src/pages/content/index.tsx"],
-      "css": ["contentStyle.css"]
+      "matches": [
+        "https://gemini.google.com/*"
+      ],
+      "js": [
+        "src/pages/content/index.tsx"
+      ],
+      "css": [
+        "contentStyle.css"
+      ]
     }
   ],
-
   "web_accessible_resources": [
     {
-      "resources": ["contentStyle.css", "icon-128.png", "icon-32.png"],
+      "resources": [
+        "contentStyle.css",
+        "icon-128.png",
+        "icon-32.png"
+      ],
       "matches": []
     }
   ]
