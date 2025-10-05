@@ -43,3 +43,24 @@ Note: Edge (Chromium) can also load the unzipped folder as an unpacked extension
 5. Select the `manifest.json` inside the unzipped folder.
 
 ### Develop (recommended with Bun)
+
+```bash
+bun i
+# Chrome dev
+bun run dev:chrome
+# Firefox dev
+bun run dev:firefox
+```
+
+## References
+Inspired by “[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)”. We adapted timeline mapping and observer patterns for Gemini and extended the UI/UX.
+
+
+## Contributing <a name="contributing"></a>
+We welcome all pull requests and issue reports!  
+
+For development guidelines and best practices, please refer to [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+Before submitting an issue, please review our [bug report template](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) and [feature request template](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feat_request.md) to help us address your feedback efficiently.
+
+Thank you for helping improve **Gemini Voyager**!
