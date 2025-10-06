@@ -193,39 +193,58 @@ export class TimelineManager {
 
   private async findCriticalElements(): Promise<boolean> {
     const configured = this.getConfiguredUserTurnSelector();
-    const usingConfigured = !!configured;
+    let userOverride = '';
+    try {
+      userOverride = localStorage.getItem('geminiTimelineUserTurnSelector') || '';
+    } catch {}
+    const defaultCandidates = [
+      // Angular-based Gemini UI user bubble
+      '.user-query-bubble-with-background',
+      // Attribute-based fallbacks for other Gemini variants
+      'div[aria-label="User message"]',
+      'article[data-author="user"]',
+      'article[data-turn="user"]',
+      '[data-message-author-role="user"]',
+      'div[role="listitem"][data-user="true"]',
+    ];
     const candidates = configured.length
-      ? [configured]
-      : [
-          // Angular-based Gemini UI user bubble
-          '.user-query-bubble-with-background',
-          // Attribute-based fallbacks for other Gemini variants
-          'div[aria-label="User message"]',
-          'article[data-author="user"]',
-          'article[data-turn="user"]',
-          '[data-message-author-role="user"]',
-          'div[role="listitem"][data-user="true"]',
-        ];
+      ? [configured, ...defaultCandidates.filter((s) => s !== configured)]
+      : defaultCandidates;
     let firstTurn: Element | null = null;
+    let matchedSelector = '';
     for (const sel of candidates) {
       firstTurn = await this.waitForElement(sel, 4000);
       if (firstTurn) {
         this.userTurnSelector = sel;
+        matchedSelector = sel;
         break;
       }
     }
     if (!firstTurn) {
       this.conversationContainer =
         (document.querySelector('main') as HTMLElement) || (document.body as HTMLElement);
-      this.userTurnSelector = configured || candidates.join(',');
+      this.userTurnSelector = defaultCandidates.join(',');
     } else {
-      if (usingConfigured) {
+      // If the match came from a user override, scope broadly; otherwise, scope to the parent for performance
+      if (userOverride && matchedSelector === userOverride) {
         this.conversationContainer =
           (document.querySelector('main') as HTMLElement) || (document.body as HTMLElement);
       } else {
         const parent = firstTurn.parentElement as HTMLElement | null;
         if (!parent) return false;
         this.conversationContainer = parent;
+      }
+      // Persist auto-detected selector for future sessions when no explicit user override exists
+      if (!userOverride && matchedSelector) {
+        try {
+          localStorage.setItem('geminiTimelineUserTurnSelectorAuto', matchedSelector);
+        } catch {}
+      }
+      // If a stale user override failed (matchedSelector differs), clear it so we don't keep retrying it
+      if (userOverride && matchedSelector && matchedSelector !== userOverride) {
+        try {
+          localStorage.removeItem('geminiTimelineUserTurnSelector');
+        } catch {}
       }
     }
     let p: HTMLElement | null = (firstTurn as HTMLElement) || this.conversationContainer;
@@ -247,8 +266,10 @@ export class TimelineManager {
 
   private getConfiguredUserTurnSelector(): string {
     try {
-      const k = localStorage.getItem('geminiTimelineUserTurnSelector');
-      return k && typeof k === 'string' ? k : '';
+      const user = localStorage.getItem('geminiTimelineUserTurnSelector');
+      if (user && typeof user === 'string') return user;
+      const auto = localStorage.getItem('geminiTimelineUserTurnSelectorAuto');
+      return auto && typeof auto === 'string' ? auto : '';
     } catch {
       return '';
     }
