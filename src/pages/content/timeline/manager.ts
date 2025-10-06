@@ -197,6 +197,9 @@ export class TimelineManager {
     const candidates = configured.length
       ? [configured]
       : [
+          // Angular-based Gemini UI user bubble
+          '.user-query-bubble-with-background',
+          // Attribute-based fallbacks for other Gemini variants
           'div[aria-label="User message"]',
           'article[data-author="user"]',
           'article[data-turn="user"]',
