@@ -24,15 +24,18 @@
 
 ## Getting Started <a name="gettingStarted"></a>
 
-### Load your extension (Chrome)
+Supported browsers: Chrome, Edge (Chromium), Opera (Chromium), Firefox.
+
+### Load your extension (Chromium: Chrome / Edge / Opera)
 
 1. Go to the [repository Releases page](https://github.com/Nagi-ovo/gemini-voyager/releases) and download the latest archive named like `gemini-voyager-chrome-vX.Y.Z.zip`.
 2. Unzip it to a folder (you will see `manifest.json` at the root).
-3. Open [chrome://extensions](chrome://extensions) and enable Developer mode.
+3. Open your extensions page and enable Developer mode:
+   - Chrome: `chrome://extensions`
+   - Edge: `edge://extensions`
+   - Opera: `opera://extensions`
 4. Click “Load unpacked”.
 5. Select the unzipped folder (e.g. `Gemini Voyager vX.Y.Z`).
-
-Note: Edge (Chromium) can also load the unzipped folder as an unpacked extension, but this project primarily targets Chrome.
 
 ### Load your extension (Firefox)
 

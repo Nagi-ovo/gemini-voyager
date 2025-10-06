@@ -19,22 +19,25 @@
 
 ## 快速开始 <a name="gettingStarted"></a>
 
-### 加载扩展（Chrome）
+已支持浏览器：Chrome、Edge（Chromium）、Opera（Chromium）、Firefox。
 
-1. 前往项目的 Releases 页面，下载最新的 `gemini-voyager-chrome-vX.Y.Z.zip` 压缩包。
-2. 解压到任意文件夹（根目录应能看到 `manifest.json`）。
-3. 打开 [chrome://extensions](chrome://extensions) 并开启“开发者模式”。
-4. 点击“加载已解压的扩展程序”。
-5. 选择刚解压的文件夹（例如 `Gemini Voyager vX.Y.Z`）。
+### 加载扩展（Chromium：Chrome / Edge / Opera）
 
-注意：Edge（Chromium）同样可以加载该解压文件夹为未打包扩展，但本项目主要面向 Chrome。
+1. 前往项目的 Releases 页面，下载最新版 `gemini-voyager-chrome-vX.Y.Z.zip`。
+2. 解压到任意文件夹（根目录可见 `manifest.json`）。
+3. 打开浏览器扩展页面并开启“开发者模式”：
+   - Chrome：`chrome://extensions`
+   - Edge：`edge://extensions`
+   - Opera：`opera://extensions`
+4. 点击“加载已解压”/“Load unpacked”。
+5. 选择解压的文件夹（例如 `Gemini Voyager vX.Y.Z`）。
 
 ### 加载扩展（Firefox）
 
-1. 前往 [Releases 页面](https://github.com/Nagi-ovo/gemini-voyager/releases)，下载 `gemini-voyager-firefox-vX.Y.Z.zip`。
+1. 前往 Releases 页面下载 `gemini-voyager-firefox-vX.Y.Z.zip`。
 2. 解压。
 3. 在 Firefox 打开 `about:debugging#/runtime/this-firefox`。
-4. 点击“Load Temporary Add-on…”（加载临时附加组件）。
+4. 点击“Load Temporary Add-on…”。
 5. 选择解压目录中的 `manifest.json`。
 
 ### 本地开发（推荐 Bun）
