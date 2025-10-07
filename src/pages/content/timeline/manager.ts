@@ -198,8 +198,12 @@ export class TimelineManager {
       userOverride = localStorage.getItem('geminiTimelineUserTurnSelector') || '';
     } catch {}
     const defaultCandidates = [
-      // Angular-based Gemini UI user bubble
+      // Angular-based Gemini UI user bubble (primary)
       '.user-query-bubble-with-background',
+      // Angular containers (fallbacks if bubble selector changes)
+      '.user-query-bubble-container',
+      '.user-query-container',
+      'user-query-content .user-query-bubble-with-background',
       // Attribute-based fallbacks for other Gemini variants
       'div[aria-label="User message"]',
       'article[data-author="user"]',
@@ -225,8 +229,13 @@ export class TimelineManager {
         (document.querySelector('main') as HTMLElement) || (document.body as HTMLElement);
       this.userTurnSelector = defaultCandidates.join(',');
     } else {
-      // If the match came from a user override, scope broadly; otherwise, scope to the parent for performance
-      if (userOverride && matchedSelector === userOverride) {
+      // Scope selection/observers:
+      // - Broad scope (main/body) if:
+      //   a) user provided an explicit override, or
+      //   b) auto-detected selector suggests Angular-based user query DOM (contains 'user-query')
+      // - Otherwise, scope to the immediate parent for performance
+      const looksAngularUserQuery = /user-query/i.test(matchedSelector || '');
+      if ((userOverride && matchedSelector === userOverride) || looksAngularUserQuery) {
         this.conversationContainer =
           (document.querySelector('main') as HTMLElement) || (document.body as HTMLElement);
       } else {
