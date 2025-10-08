@@ -364,8 +364,9 @@ export class TimelineManager {
     if (!this.intersectionObserver || !this.conversationContainer || !this.userTurnSelector) return;
     this.intersectionObserver.disconnect();
     this.visibleUserTurns.clear();
-    const els = this.conversationContainer.querySelectorAll(this.userTurnSelector);
-    els.forEach((el) => this.intersectionObserver!.observe(el));
+    const nodeList = this.conversationContainer.querySelectorAll(this.userTurnSelector);
+    const topLevel = this.filterTopLevel(Array.from(nodeList));
+    topLevel.forEach((el) => this.intersectionObserver!.observe(el));
   }
 
   private normalizeText(text: string | null): string {
@@ -376,6 +377,38 @@ export class TimelineManager {
     } catch {
       return '';
     }
+  }
+
+  private filterTopLevel(elements: Element[]): HTMLElement[] {
+    const arr = elements.map((e) => e as HTMLElement);
+    const out: HTMLElement[] = [];
+    for (let i = 0; i < arr.length; i++) {
+      const el = arr[i];
+      let isDescendant = false;
+      for (let j = 0; j < arr.length; j++) {
+        if (i === j) continue;
+        const other = arr[j];
+        if (other.contains(el)) {
+          isDescendant = true;
+          break;
+        }
+      }
+      if (!isDescendant) out.push(el);
+    }
+    return out;
+  }
+
+  private dedupeByTextAndOffset(elements: HTMLElement[], firstTurnOffset: number): HTMLElement[] {
+    const seen = new Set<string>();
+    const out: HTMLElement[] = [];
+    for (const el of elements) {
+      const offsetFromStart = (el.offsetTop || 0) - firstTurnOffset;
+      const key = `${this.normalizeText(el.textContent || '')}|${Math.round(offsetFromStart)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(el);
+    }
+    return out;
   }
 
   private getCSSVarNumber(el: Element, name: string, fallback: number): number {
@@ -500,9 +533,9 @@ export class TimelineManager {
       !this.userTurnSelector
     )
       return;
-    const userTurnElements = this.conversationContainer.querySelectorAll(this.userTurnSelector);
+    const userTurnNodeList = this.conversationContainer.querySelectorAll(this.userTurnSelector);
     this.visibleRange = { start: 0, end: -1 };
-    if (userTurnElements.length === 0) {
+    if (userTurnNodeList.length === 0) {
       if (!this.zeroTurnsTimer) {
         this.zeroTurnsTimer = window.setTimeout(() => {
           this.zeroTurnsTimer = null;
@@ -519,13 +552,19 @@ export class TimelineManager {
       .querySelectorAll('.timeline-dot')
       .forEach((n) => n.remove());
 
+    // Filter to top-level matches first to avoid nested duplicates, then dedupe by text+offset
+    let allEls = Array.from(userTurnNodeList) as HTMLElement[];
+    allEls = this.filterTopLevel(allEls);
+    if (allEls.length === 0) return;
+
+    const firstTurnOffset = (allEls[0] as HTMLElement).offsetTop;
+    allEls = this.dedupeByTextAndOffset(allEls, firstTurnOffset);
+
     let contentSpan: number;
-    const firstTurnOffset = (userTurnElements[0] as HTMLElement).offsetTop;
-    if (userTurnElements.length < 2) {
+    if (allEls.length < 2) {
       contentSpan = 1;
     } else {
-      const lastTurnOffset = (userTurnElements[userTurnElements.length - 1] as HTMLElement)
-        .offsetTop;
+      const lastTurnOffset = (allEls[allEls.length - 1] as HTMLElement).offsetTop;
       contentSpan = lastTurnOffset - firstTurnOffset;
     }
     if (contentSpan <= 0) contentSpan = 1;
@@ -533,7 +572,7 @@ export class TimelineManager {
     this.contentSpanPx = contentSpan;
 
     this.markerMap.clear();
-    this.markers = Array.from(userTurnElements).map((el, idx) => {
+    this.markers = Array.from(allEls).map((el, idx) => {
       const element = el as HTMLElement;
       const offsetFromStart = element.offsetTop - firstTurnOffset;
       let n = offsetFromStart / contentSpan;
