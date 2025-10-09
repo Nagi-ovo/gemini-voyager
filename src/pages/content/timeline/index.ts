@@ -1,7 +1,7 @@
 import { TimelineManager } from './manager';
 
 function isGeminiConversationRoute(pathname = location.pathname): boolean {
-  return pathname.startsWith('/app') || pathname.startsWith('/gem/') || pathname.includes('/chat/');
+  return pathname.startsWith('/app') || pathname.startsWith('/gem/');
 }
 
 let timelineManagerInstance: TimelineManager | null = null;
