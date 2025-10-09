@@ -1,7 +1,7 @@
 import { TimelineManager } from './manager';
 
 function isGeminiConversationRoute(pathname = location.pathname): boolean {
-  return pathname.startsWith('/app');
+  return pathname.startsWith('/app') || pathname.startsWith('/gem/');
 }
 
 let timelineManagerInstance: TimelineManager | null = null;
@@ -65,7 +65,11 @@ function attachRouteListenersOnce(): void {
 }
 
 export function startTimeline(): void {
-  if (isGeminiConversationRoute()) initializeTimeline();
+  // Immediately initialize if we're already on a conversation page
+  if (document.body && isGeminiConversationRoute()) {
+    initializeTimeline();
+  }
+  
   const initialObserver = new MutationObserver(() => {
     if (document.body) {
       if (isGeminiConversationRoute()) initializeTimeline();
