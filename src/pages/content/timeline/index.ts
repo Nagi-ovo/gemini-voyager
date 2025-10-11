@@ -1,7 +1,9 @@
 import { TimelineManager } from './manager';
 
 function isGeminiConversationRoute(pathname = location.pathname): boolean {
-  return pathname.startsWith('/app') || pathname.startsWith('/gem/');
+  // Support account-scoped routes like /u/1/app or /u/0/gem/
+  // Matches: "/app", "/gem/", "/u/<num>/app", "/u/<num>/gem/"
+  return /^\/(?:u\/\d+\/)?(app|gem)(\/|$)/.test(pathname);
 }
 
 let timelineManagerInstance: TimelineManager | null = null;
