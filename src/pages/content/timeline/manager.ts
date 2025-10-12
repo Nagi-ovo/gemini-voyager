@@ -285,10 +285,10 @@ export class TimelineManager {
   }
 
   private injectTimelineUI(): void {
-    let bar = document.querySelector('.chatgpt-timeline-bar') as HTMLElement | null;
+    let bar = document.querySelector('.gemini-timeline-bar') as HTMLElement | null;
     if (!bar) {
       bar = document.createElement('div');
-      bar.className = 'chatgpt-timeline-bar';
+      bar.className = 'gemini-timeline-bar';
       document.body.appendChild(bar);
     }
     this.ui.timelineBar = bar;
@@ -322,7 +322,7 @@ export class TimelineManager {
     if (!this.ui.tooltip) {
       const tip = document.createElement('div');
       tip.className = 'timeline-tooltip';
-      tip.id = 'chatgpt-timeline-tooltip';
+      tip.id = 'gemini-timeline-tooltip';
       document.body.appendChild(tip);
       this.ui.tooltip = tip;
       if (!this.measureEl) {
@@ -765,7 +765,7 @@ export class TimelineManager {
 
     this.onStorage = (e: StorageEvent) => {
       if (!e || e.storageArea !== localStorage) return;
-      const expectedKey = `chatgptTimelineStars:${this.conversationId}`;
+      const expectedKey = `geminiTimelineStars:${this.conversationId}`;
       if (e.key !== expectedKey) return;
       let nextArr: string[] = [];
       try {
@@ -1270,7 +1270,7 @@ export class TimelineManager {
         dot.dataset.targetTurnId = marker.id;
         dot.setAttribute('aria-label', marker.summary);
         dot.setAttribute('tabindex', '0');
-        dot.setAttribute('aria-describedby', 'chatgpt-timeline-tooltip');
+        dot.setAttribute('aria-describedby', 'gemini-timeline-tooltip');
         dot.style.setProperty('--n', String(marker.n || 0));
         if (this.usePixelTop) dot.style.top = `${Math.round(this.yPositions[i])}px`;
         dot.classList.toggle('active', marker.id === this.activeTurnId);
@@ -1408,7 +1408,7 @@ export class TimelineManager {
     const cid = this.conversationId;
     if (!cid) return;
     try {
-      localStorage.setItem(`chatgptTimelineStars:${cid}`, JSON.stringify(Array.from(this.starred)));
+      localStorage.setItem(`geminiTimelineStars:${cid}`, JSON.stringify(Array.from(this.starred)));
     } catch {}
   }
 
@@ -1417,7 +1417,7 @@ export class TimelineManager {
     const cid = this.conversationId;
     if (!cid) return;
     try {
-      const raw = localStorage.getItem(`chatgptTimelineStars:${cid}`);
+      const raw = localStorage.getItem(`geminiTimelineStars:${cid}`);
       if (!raw) return;
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) arr.forEach((id: any) => this.starred.add(String(id)));

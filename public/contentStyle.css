@@ -1,4 +1,4 @@
-/* ChatGPT-like timeline styling with CSS variables and theme awareness */
+/* Gemini-like timeline styling with CSS variables and theme awareness */
 :root {
   --timeline-dot-color: #cbd5e1;
   --timeline-dot-active-color: #3b82f6;
@@ -39,17 +39,17 @@
   }
 }
 /* Gemini theme hosts */
-.theme-host.dark-theme .chatgpt-timeline-bar:not(.timeline-no-container) {
+.theme-host.dark-theme .gemini-timeline-bar:not(.timeline-no-container) {
   background-color: rgba(2, 6, 23, 0.72);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
-.theme-host.light-theme .chatgpt-timeline-bar:not(.timeline-no-container) {
+.theme-host.light-theme .gemini-timeline-bar:not(.timeline-no-container) {
   background-color: rgba(248, 250, 252, 0.85);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
-.chatgpt-timeline-bar {
+.gemini-timeline-bar {
   position: fixed;
   top: 60px;
   right: 15px;
@@ -288,7 +288,7 @@ html.dark .timeline-left-slider::before {
 .timeline-runner-ring {
   will-change: top, opacity;
 }
-.chatgpt-timeline-bar.timeline-no-container {
+.gemini-timeline-bar.timeline-no-container {
   background-color: transparent !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;

@@ -19,13 +19,13 @@ function initializeTimeline(): void {
     timelineManagerInstance = null;
   }
   try {
-    document.querySelector('.chatgpt-timeline-bar')?.remove();
+    document.querySelector('.gemini-timeline-bar')?.remove();
   } catch {}
   try {
     document.querySelector('.timeline-left-slider')?.remove();
   } catch {}
   try {
-    document.getElementById('chatgpt-timeline-tooltip')?.remove();
+    document.getElementById('gemini-timeline-tooltip')?.remove();
   } catch {}
   timelineManagerInstance = new TimelineManager();
   timelineManagerInstance
@@ -45,13 +45,13 @@ function handleUrlChange(): void {
       timelineManagerInstance = null;
     }
     try {
-      document.querySelector('.chatgpt-timeline-bar')?.remove();
+      document.querySelector('.gemini-timeline-bar')?.remove();
     } catch {}
     try {
       document.querySelector('.timeline-left-slider')?.remove();
     } catch {}
     try {
-      document.getElementById('chatgpt-timeline-tooltip')?.remove();
+      document.getElementById('gemini-timeline-tooltip')?.remove();
     } catch {}
   }
 }
