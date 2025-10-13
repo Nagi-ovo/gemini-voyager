@@ -12,15 +12,16 @@
   "icons": {
     "128": "icon-128.png"
   },
-  "background": {
-    "service_worker": "src/pages/background/index.ts"
-  },
   "permissions": [
     "activeTab",
     "storage",
     "notifications",
     "alarms"
   ],
+  "background": {
+    "service_worker": "src/pages/background/index.ts",
+    "type": "module"
+  },
   "content_scripts": [
     {
       "matches": [
