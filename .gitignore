@@ -12,3 +12,7 @@ yarn-error.log*
 
 *.local
 .env*
+package-lock.json
+bun.lockb
+package-lock.json
+bun.lockb

@@ -12,9 +12,13 @@
   "icons": {
     "128": "icon-128.png"
   },
+  "background": {
+    "service_worker": "src/pages/background/index.ts"
+  },
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "notifications"
   ],
   "content_scripts": [
     {
