@@ -1,0 +1,38 @@
+{
+  "extName": {
+    "message": "Gemini Voyager",
+    "description": "扩展程序名称"
+  },
+  "extDescription": {
+    "message": "在时间线上映射您的 Gemini 聊天记录。",
+    "description": "扩展程序描述"
+  },
+  "scrollMode": {
+    "message": "滚动模式",
+    "description": "滚动模式标签"
+  },
+  "flow": {
+    "message": "流动",
+    "description": "流动模式"
+  },
+  "jump": {
+    "message": "跳跃",
+    "description": "跳跃模式"
+  },
+  "hideOuterContainer": {
+    "message": "隐藏外部容器",
+    "description": "隐藏外部容器标签"
+  },
+  "draggableTimeline": {
+    "message": "可拖拽时间线",
+    "description": "可拖拽时间线标签"
+  },
+  "resetPosition": {
+    "message": "重置位置",
+    "description": "重置位置按钮"
+  },
+  "language": {
+    "message": "语言",
+    "description": "语言标签"
+  }
+}

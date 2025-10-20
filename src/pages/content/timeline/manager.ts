@@ -112,6 +112,13 @@ export class TimelineManager {
   private onBarLeave: (() => void) | null = null;
   private onSliderEnter: (() => void) | null = null;
   private onSliderLeave: (() => void) | null = null;
+  private draggable = false;
+  private barDragging = false;
+  private barStartPos = { x: 0, y: 0 };
+  private barStartOffset = { x: 0, y: 0 };
+  private onBarPointerDown: ((ev: PointerEvent) => void) | null = null;
+  private onBarPointerMove: ((ev: PointerEvent) => void) | null = null;
+  private onBarPointerUp: ((ev: PointerEvent) => void) | null = null;
 
   async init(): Promise<void> {
     const ok = await this.findCriticalElements();
@@ -125,12 +132,22 @@ export class TimelineManager {
       // prefer chrome.storage if available to sync with popup
       if ((window as any).chrome?.storage?.sync) {
         (window as any).chrome.storage.sync.get(
-          { geminiTimelineScrollMode: 'flow', geminiTimelineHideContainer: false },
+          {
+            geminiTimelineScrollMode: 'flow',
+            geminiTimelineHideContainer: false,
+            geminiTimelineDraggable: false,
+            geminiTimelinePosition: null,
+          },
           (res: any) => {
             const m = res?.geminiTimelineScrollMode;
             if (m === 'flow' || m === 'jump') this.scrollMode = m;
             this.hideContainer = !!res?.geminiTimelineHideContainer;
             this.applyContainerVisibility();
+            this.toggleDraggable(!!res?.geminiTimelineDraggable);
+            if (res?.geminiTimelinePosition) {
+              this.ui.timelineBar!.style.top = `${res.geminiTimelinePosition.top}px`;
+              this.ui.timelineBar!.style.left = `${res.geminiTimelinePosition.left}px`;
+            }
           }
         );
         // listen for changes from popup and update mode live
@@ -144,6 +161,13 @@ export class TimelineManager {
             if (changes?.geminiTimelineHideContainer) {
               this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
               this.applyContainerVisibility();
+            }
+            if (changes?.geminiTimelineDraggable) {
+              this.toggleDraggable(!!changes.geminiTimelineDraggable.newValue);
+            }
+            if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
+              this.ui.timelineBar!.style.top = '';
+              this.ui.timelineBar!.style.left = '';
             }
           });
         } catch {}
@@ -763,6 +787,21 @@ export class TimelineManager {
     this.ui.slider?.addEventListener('pointerenter', this.onSliderEnter);
     this.ui.slider?.addEventListener('pointerleave', this.onSliderLeave);
 
+    this.onBarPointerDown = (ev: PointerEvent) => {
+      if ((ev.target as HTMLElement).closest('.timeline-dot, .timeline-thumb')) {
+        return;
+      }
+      this.barDragging = true;
+      this.barStartPos = { x: ev.clientX, y: ev.clientY };
+      const rect = this.ui.timelineBar!.getBoundingClientRect();
+      this.barStartOffset = { x: rect.left, y: rect.top };
+      this.ui.timelineBar!.setPointerCapture(ev.pointerId);
+      this.onBarPointerMove = (e: PointerEvent) => this.handleBarDrag(e);
+      this.onBarPointerUp = (e: PointerEvent) => this.endBarDrag(e);
+      window.addEventListener('pointermove', this.onBarPointerMove);
+      window.addEventListener('pointerup', this.onBarPointerUp, { once: true });
+    };
+
     this.onStorage = (e: StorageEvent) => {
       if (!e || e.storageArea !== localStorage) return;
       const expectedKey = `geminiTimelineStars:${this.conversationId}`;
@@ -1376,6 +1415,38 @@ export class TimelineManager {
     this.hideSliderDeferred();
   }
 
+  private toggleDraggable(enabled: boolean): void {
+    this.draggable = enabled;
+    if (this.draggable) {
+      this.ui.timelineBar!.addEventListener('pointerdown', this.onBarPointerDown!);
+      this.ui.timelineBar!.style.cursor = 'move';
+    } else {
+      this.ui.timelineBar!.removeEventListener('pointerdown', this.onBarPointerDown!);
+      this.ui.timelineBar!.style.cursor = 'default';
+    }
+  }
+
+  private handleBarDrag(e: PointerEvent): void {
+    if (!this.barDragging) return;
+    const dx = e.clientX - this.barStartPos.x;
+    const dy = e.clientY - this.barStartPos.y;
+    this.ui.timelineBar!.style.left = `${this.barStartOffset.x + dx}px`;
+    this.ui.timelineBar!.style.top = `${this.barStartOffset.y + dy}px`;
+  }
+
+  private endBarDrag(_e: PointerEvent): void {
+    this.barDragging = false;
+    this.savePosition();
+    window.removeEventListener('pointermove', this.onBarPointerMove!);
+  }
+
+  private savePosition(): void {
+    if (!this.ui.timelineBar) return;
+    const rect = this.ui.timelineBar.getBoundingClientRect();
+    const { top, left } = rect;
+    chrome.storage.sync.set({ geminiTimelinePosition: { top, left } });
+  }
+
   private hideTooltip(immediate = false): void {
     if (!this.ui.tooltip) return;
     const doHide = () => {
@@ -1438,6 +1509,17 @@ export class TimelineManager {
   }
 
   destroy(): void {
+    // Ensure draggable listeners are removed
+    try {
+      this.toggleDraggable(false);
+    } catch {}
+    // Also remove any in-flight drag listeners
+    try {
+      if (this.onBarPointerMove) window.removeEventListener('pointermove', this.onBarPointerMove);
+    } catch {}
+    try {
+      if (this.onBarPointerUp) window.removeEventListener('pointerup', this.onBarPointerUp);
+    } catch {}
     try {
       this.mutationObserver?.disconnect();
     } catch {}
