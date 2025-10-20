@@ -6,5 +6,33 @@
   "extDescription": {
     "message": "Maps your Gemini chats on a timeline.",
     "description": "Extension description"
+  },
+  "scrollMode": {
+    "message": "Scroll mode",
+    "description": "Scroll mode label"
+  },
+  "flow": {
+    "message": "Flow",
+    "description": "Flow mode"
+  },
+  "jump": {
+    "message": "Jump",
+    "description": "Jump mode"
+  },
+  "hideOuterContainer": {
+    "message": "Hide outer container",
+    "description": "Hide outer container label"
+  },
+  "draggableTimeline": {
+    "message": "Draggable Timeline",
+    "description": "Draggable Timeline label"
+  },
+  "resetPosition": {
+    "message": "Reset Position",
+    "description": "Reset Position button"
+  },
+  "language": {
+    "message": "Language",
+    "description": "Language label"
   }
 }
