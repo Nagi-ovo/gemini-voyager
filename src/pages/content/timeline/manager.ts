@@ -327,6 +327,7 @@ export class TimelineManager {
     if (!thumb) {
       thumb = document.createElement('div');
       thumb.className = 'timeline-thumb';
+      thumb.style.zIndex = '5';
       track.appendChild(thumb);
     }
     this.ui.thumb = thumb;
