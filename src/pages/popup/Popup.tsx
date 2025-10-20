@@ -5,26 +5,38 @@ type ScrollMode = 'jump' | 'flow';
 export default function Popup() {
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
+  const [draggableScrollbar, setDraggableScrollbar] = useState<boolean>(false);
   // simplified popup: just mode toggle
 
   useEffect(() => {
     // read from chrome.storage.sync with fallback to flow
     try {
       chrome.storage?.sync?.get(
-        { geminiTimelineScrollMode: 'flow', geminiTimelineHideContainer: false },
+        {
+          geminiTimelineScrollMode: 'flow',
+          geminiTimelineHideContainer: false,
+          geminiTimelineDraggableScrollbar: false,
+        },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
           if (m === 'jump' || m === 'flow') setMode(m);
           setHideContainer(!!res?.geminiTimelineHideContainer);
+          setDraggableScrollbar(!!res?.geminiTimelineDraggableScrollbar);
         }
       );
     } catch {}
   }, []);
 
-  const apply = (nextMode: ScrollMode | null, nextHide?: boolean) => {
+  const apply = (
+    nextMode: ScrollMode | null,
+    nextHide?: boolean,
+    nextDraggable?: boolean
+  ) => {
     const payload: any = {};
     if (nextMode) payload.geminiTimelineScrollMode = nextMode;
     if (typeof nextHide === 'boolean') payload.geminiTimelineHideContainer = nextHide;
+    if (typeof nextDraggable === 'boolean')
+      payload.geminiTimelineDraggableScrollbar = nextDraggable;
     try {
       chrome.storage?.sync?.set(payload);
     } catch {}
@@ -46,7 +58,7 @@ export default function Popup() {
                 className={`relative z-10 px-3 py-1 text-sm ${mode === 'flow' ? 'text-blue-600' : 'text-slate-600'}`}
                 onClick={() => {
                   setMode('flow');
-                  apply('flow');
+                  apply('flow', null);
                 }}
               >
                 Flow
@@ -55,7 +67,7 @@ export default function Popup() {
                 className={`relative z-10 px-3 py-1 text-sm ${mode === 'jump' ? 'text-blue-600' : 'text-slate-600'}`}
                 onClick={() => {
                   setMode('jump');
-                  apply('jump');
+                  apply('jump', null);
                 }}
               >
                 Jump
@@ -75,6 +87,20 @@ export default function Popup() {
           />
           <label htmlFor="hide-container" className="text-sm">
             Hide outer container
+          </label>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            id="draggable-scrollbar"
+            type="checkbox"
+            checked={draggableScrollbar}
+            onChange={(e) => {
+              setDraggableScrollbar(e.target.checked);
+              apply(null, null, e.target.checked);
+            }}
+          />
+          <label htmlFor="draggable-scrollbar" className="text-sm">
+            Draggable scrollbar
           </label>
         </div>
       </div>

@@ -29,6 +29,7 @@ export class TimelineManager {
     trackContent?: HTMLElement | null;
     slider?: HTMLElement | null;
     sliderHandle?: HTMLElement | null;
+    thumb?: HTMLElement | null;
   } = { timelineBar: null, tooltip: null };
   private isScrolling = false;
 
@@ -74,6 +75,13 @@ export class TimelineManager {
   private onSliderUp: ((ev: PointerEvent) => void) | null = null;
   private sliderStartClientY = 0;
   private sliderStartTop = 0;
+  private draggableScrollbar = false;
+  private thumbDragging = false;
+  private thumbStartDragY = 0;
+  private thumbStartScrollTop = 0;
+  private onThumbDown: ((ev: PointerEvent) => void) | null = null;
+  private onThumbMove: ((ev: PointerEvent) => void) | null = null;
+  private onThumbUp: ((ev: PointerEvent) => void) | null = null;
   private markersVersion = 0;
   private resizeIdleTimer: number | null = null;
   private resizeIdleDelay = 140;
@@ -125,12 +133,18 @@ export class TimelineManager {
       // prefer chrome.storage if available to sync with popup
       if ((window as any).chrome?.storage?.sync) {
         (window as any).chrome.storage.sync.get(
-          { geminiTimelineScrollMode: 'flow', geminiTimelineHideContainer: false },
+          {
+            geminiTimelineScrollMode: 'flow',
+            geminiTimelineHideContainer: false,
+            geminiTimelineDraggableScrollbar: false,
+          },
           (res: any) => {
             const m = res?.geminiTimelineScrollMode;
             if (m === 'flow' || m === 'jump') this.scrollMode = m;
             this.hideContainer = !!res?.geminiTimelineHideContainer;
+            this.draggableScrollbar = !!res?.geminiTimelineDraggableScrollbar;
             this.applyContainerVisibility();
+            this.updateControls();
           }
         );
         // listen for changes from popup and update mode live
@@ -144,6 +158,10 @@ export class TimelineManager {
             if (changes?.geminiTimelineHideContainer) {
               this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
               this.applyContainerVisibility();
+            }
+            if (changes?.geminiTimelineDraggableScrollbar) {
+              this.draggableScrollbar = !!changes.geminiTimelineDraggableScrollbar.newValue;
+              this.updateControls();
             }
           });
         } catch {}
@@ -306,18 +324,13 @@ export class TimelineManager {
     }
     this.ui.track = track;
     this.ui.trackContent = content;
-
-    let slider = document.querySelector('.timeline-left-slider') as HTMLElement | null;
-    if (!slider) {
-      slider = document.createElement('div');
-      slider.className = 'timeline-left-slider';
-      const handle = document.createElement('div');
-      handle.className = 'timeline-left-handle';
-      slider.appendChild(handle);
-      document.body.appendChild(slider);
+    let thumb = track.querySelector('.timeline-thumb') as HTMLElement | null;
+    if (!thumb) {
+      thumb = document.createElement('div');
+      thumb.className = 'timeline-thumb';
+      track.appendChild(thumb);
     }
-    this.ui.slider = slider;
-    this.ui.sliderHandle = slider.querySelector('.timeline-left-handle') as HTMLElement | null;
+    this.ui.thumb = thumb;
 
     if (!this.ui.tooltip) {
       const tip = document.createElement('div');
@@ -489,7 +502,7 @@ export class TimelineManager {
       this._cssVarTopSupported = this.detectCssVarTopSupport(pad, usableC);
       this.usePixelTop = !this._cssVarTopSupported;
     }
-    this.updateSlider();
+    this.updateControls();
     const barH = this.ui.timelineBar.clientHeight || 0;
     this.sliderAlwaysVisible = this.contentHeight > barH + 1;
     if (this.sliderAlwaysVisible) this.showSlider();
@@ -661,7 +674,6 @@ export class TimelineManager {
       const delta = e.deltaY || 0;
       this.scrollContainer!.scrollTop += delta;
       this.scheduleScrollSync();
-      this.showSlider();
     };
     this.ui.timelineBar!.addEventListener('wheel', this.onTimelineWheel, { passive: false });
 
@@ -737,31 +749,26 @@ export class TimelineManager {
       window.visualViewport.addEventListener('resize', this.onVisualViewportResize);
     }
 
-    this.onSliderDown = (ev: PointerEvent) => {
-      if (!this.ui.sliderHandle) return;
-      try {
-        (this.ui.sliderHandle as any).setPointerCapture(ev.pointerId);
-      } catch {}
-      this.sliderDragging = true;
-      this.showSlider();
-      this.sliderStartClientY = ev.clientY;
-      const rect = this.ui.sliderHandle.getBoundingClientRect();
-      this.sliderStartTop = rect.top;
-      this.onSliderMove = (e: PointerEvent) => this.handleSliderDrag(e);
-      this.onSliderUp = (e: PointerEvent) => this.endSliderDrag(e);
-      window.addEventListener('pointermove', this.onSliderMove);
-      window.addEventListener('pointerup', this.onSliderUp, { once: true });
-    };
-    this.ui.sliderHandle?.addEventListener('pointerdown', this.onSliderDown);
-
-    this.onBarEnter = () => this.showSlider();
-    this.onBarLeave = () => this.hideSliderDeferred();
-    this.onSliderEnter = () => this.showSlider();
-    this.onSliderLeave = () => this.hideSliderDeferred();
+    this.onBarEnter = () => {};
+    this.onBarLeave = () => {};
     this.ui.timelineBar!.addEventListener('pointerenter', this.onBarEnter);
     this.ui.timelineBar!.addEventListener('pointerleave', this.onBarLeave);
-    this.ui.slider?.addEventListener('pointerenter', this.onSliderEnter);
-    this.ui.slider?.addEventListener('pointerleave', this.onSliderLeave);
+
+    this.onThumbDown = (ev: PointerEvent) => {
+      if (!this.ui.thumb || !this.ui.track) return;
+      try {
+        this.ui.thumb.setPointerCapture(ev.pointerId);
+      } catch {}
+      this.thumbDragging = true;
+      this.thumbStartDragY = ev.clientY;
+      this.thumbStartScrollTop = this.ui.track.scrollTop;
+      this.ui.thumb.classList.add('dragging');
+      this.onThumbMove = (e: PointerEvent) => this.handleThumbDrag(e);
+      this.onThumbUp = (e: PointerEvent) => this.endThumbDrag(e);
+      window.addEventListener('pointermove', this.onThumbMove);
+      window.addEventListener('pointerup', this.onThumbUp, { once: true });
+    };
+    this.ui.thumb?.addEventListener('pointerdown', this.onThumbDown);
 
     this.onStorage = (e: StorageEvent) => {
       if (!e || e.storageArea !== localStorage) return;
@@ -1140,7 +1147,7 @@ export class TimelineManager {
       this.syncTimelineTrackToMain();
       this.updateVirtualRangeAndRender();
       this.computeActiveByScroll();
-      this.updateSlider();
+      this.updateControls();
     });
   }
 
@@ -1288,92 +1295,60 @@ export class TimelineManager {
     if (localVersion !== this.markersVersion) return;
     if (frag.childNodes.length) this.ui.trackContent.appendChild(frag);
     this.visibleRange = { start, end };
-    this.updateSlider();
+    this.updateControls();
   }
 
-  private updateSlider(): void {
-    if (!this.ui.slider || !this.ui.sliderHandle) return;
-    if (!this.contentHeight || !this.ui.timelineBar || !this.ui.track) return;
-    const barRect = this.ui.timelineBar.getBoundingClientRect();
-    const barH = barRect.height || 0;
-    const pad = this.getTrackPadding();
-    const innerH = Math.max(0, barH - 2 * pad);
-    if (this.contentHeight <= barH + 1 || innerH <= 0) {
-      this.sliderAlwaysVisible = false;
-      this.ui.slider.classList.remove('visible');
-      this.ui.slider.style.opacity = '';
+  private updateControls(): void {
+    if (!this.ui.thumb || !this.contentHeight || !this.ui.timelineBar || !this.ui.track) return;
+    const barH = this.ui.timelineBar.clientHeight || 0;
+    if (this.contentHeight <= barH + 1 || !this.draggableScrollbar) {
+      this.ui.thumb.style.display = 'none';
       return;
     }
-    this.sliderAlwaysVisible = true;
-    const railLen = Math.max(120, Math.min(240, Math.floor(barH * 0.45)));
-    const railTop = Math.round(barRect.top + pad + (innerH - railLen) / 2);
-    const railLeftGap = 8;
-    const sliderWidth = 12;
-    const left = Math.round(barRect.left - railLeftGap - sliderWidth);
-    this.ui.slider.style.left = `${left}px`;
-    this.ui.slider.style.top = `${railTop}px`;
-    this.ui.slider.style.height = `${railLen}px`;
-    const handleH = 22;
-    const maxTop = Math.max(0, railLen - handleH);
-    const range = Math.max(1, this.contentHeight - barH);
+    this.ui.thumb.style.display = '';
+    const trackH = this.ui.track.clientHeight || 0;
+    const thumbH = Math.max(20, (trackH / this.contentHeight) * trackH);
+    this.ui.thumb.style.height = `${thumbH}px`;
     const st = this.ui.track.scrollTop || 0;
-    const r = Math.max(0, Math.min(1, st / range));
-    const top = Math.round(r * maxTop);
-    this.ui.sliderHandle.style.height = `${handleH}px`;
-    this.ui.sliderHandle.style.top = `${top}px`;
-    this.ui.slider.classList.add('visible');
-    this.ui.slider.style.opacity = '';
+    const maxSt = Math.max(0, this.contentHeight - trackH);
+    const r = maxSt > 0 ? st / maxSt : 0;
+    const maxThumbTop = Math.max(0, trackH - thumbH);
+    const top = r * maxThumbTop;
+    this.ui.thumb.style.top = `${top}px`;
   }
 
-  private showSlider(): void {
-    if (!this.ui.slider) return;
-    this.ui.slider.classList.add('visible');
-    if (this.sliderFadeTimer) {
-      clearTimeout(this.sliderFadeTimer);
-      this.sliderFadeTimer = null;
-    }
-    this.updateSlider();
+  private handleThumbDrag(e: PointerEvent): void {
+    if (!this.thumbDragging || !this.ui.track) return;
+    const deltaY = e.clientY - this.thumbStartDragY;
+    const trackH = this.ui.track.clientHeight || 0;
+    const thumbH = this.ui.thumb?.clientHeight || 20;
+    const maxThumbTop = Math.max(0, trackH - thumbH);
+    const scrollRange = Math.max(0, this.contentHeight - trackH);
+    if (maxThumbTop <= 0 || scrollRange <= 0) return;
+    const scrollDelta = (deltaY / maxThumbTop) * scrollRange;
+    this.ui.track.scrollTop = this.thumbStartScrollTop + scrollDelta;
+    this.syncMainToTimelineTrack();
   }
 
-  private hideSliderDeferred(): void {
-    if (this.sliderDragging || this.sliderAlwaysVisible) return;
-    if (this.sliderFadeTimer) clearTimeout(this.sliderFadeTimer);
-    this.sliderFadeTimer = window.setTimeout(() => {
-      this.sliderFadeTimer = null;
-      this.ui.slider?.classList.remove('visible');
-    }, this.sliderFadeDelay);
-  }
-
-  private handleSliderDrag(e: PointerEvent): void {
-    if (!this.sliderDragging || !this.ui.timelineBar || !this.ui.track) return;
-    const barRect = this.ui.timelineBar.getBoundingClientRect();
-    const barH = barRect.height || 0;
-    const railLen =
-      parseFloat(this.ui.slider!.style.height || '0') ||
-      Math.max(120, Math.min(240, Math.floor(barH * 0.45)));
-    const handleH = this.ui.sliderHandle!.getBoundingClientRect().height || 22;
-    const maxTop = Math.max(0, railLen - handleH);
-    const delta = e.clientY - this.sliderStartClientY;
-    let top = Math.max(
-      0,
-      Math.min(maxTop, this.sliderStartTop + delta - (parseFloat(this.ui.slider!.style.top) || 0))
-    );
-    const r = maxTop > 0 ? top / maxTop : 0;
-    const range = Math.max(1, this.contentHeight - barH);
-    this.ui.track.scrollTop = Math.round(r * range);
-    this.updateVirtualRangeAndRender();
-    this.showSlider();
-    this.updateSlider();
-  }
-
-  private endSliderDrag(_e: PointerEvent): void {
-    this.sliderDragging = false;
+  private endThumbDrag(_e: PointerEvent): void {
+    this.thumbDragging = false;
+    this.ui.thumb?.classList.remove('dragging');
     try {
-      window.removeEventListener('pointermove', this.onSliderMove!);
+      window.removeEventListener('pointermove', this.onThumbMove!);
     } catch {}
-    this.onSliderMove = null;
-    this.onSliderUp = null;
-    this.hideSliderDeferred();
+    this.onThumbMove = null;
+    this.onThumbUp = null;
+  }
+
+  private syncMainToTimelineTrack(): void {
+    if (!this.ui.track || !this.scrollContainer) return;
+    const trackSt = this.ui.track.scrollTop;
+    const trackH = this.ui.track.clientHeight;
+    const contentH = this.contentHeight;
+    const maxTrackSt = Math.max(0, contentH - trackH);
+    const r = maxTrackSt > 0 ? trackSt / maxTrackSt : 0;
+    const mainScrollRange = this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight;
+    this.scrollContainer.scrollTop = r * mainScrollRange;
   }
 
   private hideTooltip(immediate = false): void {
@@ -1486,15 +1461,9 @@ export class TimelineManager {
       try {
         this.ui.timelineBar.removeEventListener('pointerleave', this.onBarLeave!);
       } catch {}
-      try {
-        this.ui.slider?.removeEventListener('pointerenter', this.onSliderEnter!);
-      } catch {}
-      try {
-        this.ui.slider?.removeEventListener('pointerleave', this.onSliderLeave!);
-      } catch {}
     }
     try {
-      this.ui.sliderHandle?.removeEventListener('pointerdown', this.onSliderDown!);
+      this.ui.thumb?.removeEventListener('pointerdown', this.onThumbDown!);
     } catch {}
     try {
       window.removeEventListener('resize', this.onWindowResize!);
@@ -1520,19 +1489,6 @@ export class TimelineManager {
     try {
       this.measureEl?.remove();
     } catch {}
-    try {
-      if (this.ui.slider) {
-        this.ui.slider.style.pointerEvents = 'none';
-        this.ui.slider.remove();
-      }
-      const stray = document.querySelector('.timeline-left-slider');
-      if (stray) {
-        (stray as HTMLElement).style.pointerEvents = 'none';
-        stray.remove();
-      }
-    } catch {}
-    this.ui.slider = null;
-    this.ui.sliderHandle = null;
     this.ui = { timelineBar: null, tooltip: null } as any;
     this.markers = [];
     this.activeTurnId = null;
