@@ -69,7 +69,6 @@ export class TimelineManager {
   private sliderDragging = false;
   private sliderFadeTimer: number | null = null;
   private sliderFadeDelay = 1000;
-  private sliderAlwaysVisible = false;
   private onSliderDown: ((ev: PointerEvent) => void) | null = null;
   private onSliderMove: ((ev: PointerEvent) => void) | null = null;
   private onSliderUp: ((ev: PointerEvent) => void) | null = null;
@@ -503,9 +502,6 @@ export class TimelineManager {
       this.usePixelTop = !this._cssVarTopSupported;
     }
     this.updateControls();
-    const barH = this.ui.timelineBar.clientHeight || 0;
-    this.sliderAlwaysVisible = this.contentHeight > barH + 1;
-    if (this.sliderAlwaysVisible) this.showSlider();
   }
 
   private applyMinGap(positions: number[], minTop: number, maxTop: number, gap: number): number[] {
@@ -1193,7 +1189,7 @@ export class TimelineManager {
   }
 
   private syncTimelineTrackToMain(): void {
-    if (this.sliderDragging) return;
+    if (this.thumbDragging) return;
     if (!this.ui.track || !this.scrollContainer || !this.contentHeight) return;
     const scrollTop = this.scrollContainer.scrollTop;
     const ref = scrollTop + this.scrollContainer.clientHeight * 0.45;
