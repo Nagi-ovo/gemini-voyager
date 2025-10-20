@@ -112,6 +112,7 @@ export class TimelineManager {
   private onBarLeave: (() => void) | null = null;
   private onSliderEnter: (() => void) | null = null;
   private onSliderLeave: (() => void) | null = null;
+  private draggable = false;
   private barDragging = false;
   private barStartPos = { x: 0, y: 0 };
   private barStartOffset = { x: 0, y: 0 };
@@ -134,6 +135,7 @@ export class TimelineManager {
           {
             geminiTimelineScrollMode: 'flow',
             geminiTimelineHideContainer: false,
+            geminiTimelineDraggable: false,
             geminiTimelinePosition: null,
           },
           (res: any) => {
@@ -141,6 +143,7 @@ export class TimelineManager {
             if (m === 'flow' || m === 'jump') this.scrollMode = m;
             this.hideContainer = !!res?.geminiTimelineHideContainer;
             this.applyContainerVisibility();
+            this.toggleDraggable(!!res?.geminiTimelineDraggable);
             if (res?.geminiTimelinePosition) {
               this.ui.timelineBar!.style.top = `${res.geminiTimelinePosition.top}px`;
               this.ui.timelineBar!.style.left = `${res.geminiTimelinePosition.left}px`;
@@ -158,6 +161,13 @@ export class TimelineManager {
             if (changes?.geminiTimelineHideContainer) {
               this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
               this.applyContainerVisibility();
+            }
+            if (changes?.geminiTimelineDraggable) {
+              this.toggleDraggable(!!changes.geminiTimelineDraggable.newValue);
+            }
+            if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
+              this.ui.timelineBar!.style.top = '';
+              this.ui.timelineBar!.style.left = '';
             }
           });
         } catch {}
@@ -792,8 +802,6 @@ export class TimelineManager {
       window.addEventListener('pointerup', this.onBarPointerUp, { once: true });
     };
 
-    this.ui.timelineBar!.addEventListener('pointerdown', this.onBarPointerDown);
-
     this.onStorage = (e: StorageEvent) => {
       if (!e || e.storageArea !== localStorage) return;
       const expectedKey = `geminiTimelineStars:${this.conversationId}`;
@@ -1405,6 +1413,17 @@ export class TimelineManager {
     this.onSliderMove = null;
     this.onSliderUp = null;
     this.hideSliderDeferred();
+  }
+
+  private toggleDraggable(enabled: boolean): void {
+    this.draggable = enabled;
+    if (this.draggable) {
+      this.ui.timelineBar!.addEventListener('pointerdown', this.onBarPointerDown!);
+      this.ui.timelineBar!.style.cursor = 'move';
+    } else {
+      this.ui.timelineBar!.removeEventListener('pointerdown', this.onBarPointerDown!);
+      this.ui.timelineBar!.style.cursor = 'default';
+    }
   }
 
   private handleBarDrag(e: PointerEvent): void {

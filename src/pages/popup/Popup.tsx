@@ -5,26 +5,39 @@ type ScrollMode = 'jump' | 'flow';
 export default function Popup() {
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
+  const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
   // simplified popup: just mode toggle
 
   useEffect(() => {
     // read from chrome.storage.sync with fallback to flow
     try {
       chrome.storage?.sync?.get(
-        { geminiTimelineScrollMode: 'flow', geminiTimelineHideContainer: false },
+        {
+          geminiTimelineScrollMode: 'flow',
+          geminiTimelineHideContainer: false,
+          geminiTimelineDraggable: false,
+        },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
           if (m === 'jump' || m === 'flow') setMode(m);
           setHideContainer(!!res?.geminiTimelineHideContainer);
+          setDraggableTimeline(!!res?.geminiTimelineDraggable);
         }
       );
     } catch {}
   }, []);
 
-  const apply = (nextMode: ScrollMode | null, nextHide?: boolean) => {
+  const apply = (
+    nextMode: ScrollMode | null,
+    nextHide?: boolean,
+    nextDraggable?: boolean,
+    resetPosition?: boolean
+  ) => {
     const payload: any = {};
     if (nextMode) payload.geminiTimelineScrollMode = nextMode;
     if (typeof nextHide === 'boolean') payload.geminiTimelineHideContainer = nextHide;
+    if (typeof nextDraggable === 'boolean') payload.geminiTimelineDraggable = nextDraggable;
+    if (resetPosition) payload.geminiTimelinePosition = null;
     try {
       chrome.storage?.sync?.set(payload);
     } catch {}
@@ -77,6 +90,28 @@ export default function Popup() {
             Hide outer container
           </label>
         </div>
+        <div className="flex items-center gap-2">
+          <input
+            id="draggable-timeline"
+            type="checkbox"
+            checked={draggableTimeline}
+            onChange={(e) => {
+              setDraggableTimeline(e.target.checked);
+              apply(null, null, e.target.checked);
+            }}
+          />
+          <label htmlFor="draggable-timeline" className="text-sm">
+            Draggable Timeline
+          </label>
+        </div>
+        <button
+          className="px-3 py-1 text-sm border border-slate-300 rounded-full"
+          onClick={() => {
+            apply(null, null, null, true);
+          }}
+        >
+          Reset Position
+        </button>
       </div>
     </div>
   );
