@@ -1509,6 +1509,17 @@ export class TimelineManager {
   }
 
   destroy(): void {
+    // Ensure draggable listeners are removed
+    try {
+      this.toggleDraggable(false);
+    } catch {}
+    // Also remove any in-flight drag listeners
+    try {
+      if (this.onBarPointerMove) window.removeEventListener('pointermove', this.onBarPointerMove);
+    } catch {}
+    try {
+      if (this.onBarPointerUp) window.removeEventListener('pointerup', this.onBarPointerUp);
+    } catch {}
     try {
       this.mutationObserver?.disconnect();
     } catch {}
