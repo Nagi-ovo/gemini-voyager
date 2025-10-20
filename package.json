@@ -50,5 +50,8 @@
     "typescript": "^5.8.3",
     "vite": "^7.1.10",
     "vite-tsconfig-paths": "^5.1.4"
+  },
+  "overrides": {
+    "rollup": "^4.24.0"
   }
 }
