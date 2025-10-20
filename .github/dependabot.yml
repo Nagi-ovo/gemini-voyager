@@ -9,3 +9,18 @@ updates:
     directory: '/' # Location of package manifests
     schedule:
       interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 5
+    rebase-strategy: 'auto'
+    automerged-updates:
+      - match:
+          update-type: 'version-update:semver-patch'
+      - match:
+          update-type: 'version-update:semver-minor'
+    groups:
+      all-bun-updates:
+        patterns:
+          - '*'
+        update-types:
+          - 'version-update:semver-minor'
+          - 'version-update:semver-patch'
