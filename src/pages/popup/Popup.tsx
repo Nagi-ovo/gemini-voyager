@@ -75,7 +75,7 @@ export default function Popup() {
                 }`}
                 onClick={() => {
                   setMode('flow');
-                  apply('flow', null, null, null);
+                  apply('flow');
                 }}
               >
                 {t('flow')}
@@ -86,7 +86,7 @@ export default function Popup() {
                 }`}
                 onClick={() => {
                   setMode('jump');
-                  apply('jump', null, null, null);
+                  apply('jump');
                 }}
               >
                 {t('jump')}
@@ -101,7 +101,7 @@ export default function Popup() {
             checked={hideContainer}
             onChange={(e) => {
               setHideContainer(e.target.checked);
-              apply(null, e.target.checked, null, null);
+              apply(null, e.target.checked);
             }}
           />
           <label htmlFor="hide-container" className="text-sm">
@@ -115,7 +115,7 @@ export default function Popup() {
             checked={draggableTimeline}
             onChange={(e) => {
               setDraggableTimeline(e.target.checked);
-              apply(null, null, e.target.checked, null);
+              apply(null, undefined, e.target.checked);
             }}
           />
           <label htmlFor="draggable-timeline" className="text-sm">
@@ -125,7 +125,7 @@ export default function Popup() {
         <button
           className="px-3 py-1 text-sm border border-slate-300 rounded-full"
           onClick={() => {
-            apply(null, null, null, true);
+            apply(null, undefined, undefined, true);
           }}
         >
           {t('resetPosition')}
