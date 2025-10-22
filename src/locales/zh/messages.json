@@ -34,5 +34,28 @@
   "language": {
     "message": "语言",
     "description": "语言标签"
-  }
+  },
+  "pm_title": { "message": "Prompt 管理器", "description": "面板标题" },
+  "pm_add": { "message": "新增", "description": "新增 prompt 按钮" },
+  "pm_search_placeholder": { "message": "搜索 prompt 或标签", "description": "搜索占位符" },
+  "pm_import": { "message": "导入", "description": "导入按钮" },
+  "pm_export": { "message": "导出", "description": "导出按钮" },
+  "pm_prompt_placeholder": { "message": "Prompt 文本", "description": "Prompt 输入占位符" },
+  "pm_tags_placeholder": { "message": "标签（逗号分隔）", "description": "标签输入占位符" },
+  "pm_save": { "message": "保存", "description": "保存" },
+  "pm_cancel": { "message": "取消", "description": "取消" },
+  "pm_all_tags": { "message": "全部", "description": "全部标签" },
+  "pm_empty": { "message": "暂无 prompt", "description": "空状态" },
+  "pm_copy": { "message": "复制", "description": "复制 prompt" },
+  "pm_copied": { "message": "已复制", "description": "复制成功" },
+  "pm_delete": { "message": "删除", "description": "删除 prompt" },
+  "pm_delete_confirm": { "message": "确定删除该 prompt 吗？", "description": "删除确认" },
+  "pm_lock": { "message": "锁定位置", "description": "锁定面板位置" },
+  "pm_unlock": { "message": "取消锁定", "description": "取消锁定面板位置" },
+  "pm_import_invalid": { "message": "文件格式不正确", "description": "导入失败" },
+  "pm_import_success": { "message": "已导入 {count} 条", "description": "导入成功" },
+  "pm_duplicate": { "message": "重复的 prompt", "description": "新增重复" },
+  "pm_deleted": { "message": "已删除", "description": "删除提示" },
+  "pm_edit": { "message": "编辑", "description": "编辑 prompt" },
+  "pm_saved": { "message": "已保存", "description": "保存提示" }
 }

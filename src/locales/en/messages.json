@@ -34,5 +34,28 @@
   "language": {
     "message": "Language",
     "description": "Language label"
-  }
+  },
+  "pm_title": { "message": "Prompt Manager", "description": "Prompt Manager title" },
+  "pm_add": { "message": "Add", "description": "Add prompt button" },
+  "pm_search_placeholder": { "message": "Search prompts or tags", "description": "Search placeholder" },
+  "pm_import": { "message": "Import", "description": "Import button" },
+  "pm_export": { "message": "Export", "description": "Export button" },
+  "pm_prompt_placeholder": { "message": "Prompt text", "description": "Prompt textarea placeholder" },
+  "pm_tags_placeholder": { "message": "Tags (comma separated)", "description": "Tags input placeholder" },
+  "pm_save": { "message": "Save", "description": "Save prompt" },
+  "pm_cancel": { "message": "Cancel", "description": "Cancel" },
+  "pm_all_tags": { "message": "All", "description": "All tags chip" },
+  "pm_empty": { "message": "No prompts yet", "description": "Empty state" },
+  "pm_copy": { "message": "Copy", "description": "Copy prompt" },
+  "pm_copied": { "message": "Copied", "description": "Copied notice" },
+  "pm_delete": { "message": "Delete", "description": "Delete prompt" },
+  "pm_delete_confirm": { "message": "Delete this prompt?", "description": "Delete confirm" },
+  "pm_lock": { "message": "Lock position", "description": "Lock panel position" },
+  "pm_unlock": { "message": "Unlock position", "description": "Unlock panel position" },
+  "pm_import_invalid": { "message": "Invalid file format", "description": "Import invalid" },
+  "pm_import_success": { "message": "Imported {count} prompts", "description": "Import success" },
+  "pm_duplicate": { "message": "Duplicate prompt", "description": "Duplicate on add" },
+  "pm_deleted": { "message": "Deleted", "description": "Deleted notice" },
+  "pm_edit": { "message": "Edit", "description": "Edit prompt" },
+  "pm_saved": { "message": "Saved", "description": "Saved notice" }
 }
