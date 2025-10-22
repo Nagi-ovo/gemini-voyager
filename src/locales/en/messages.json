@@ -58,4 +58,5 @@
   "pm_deleted": { "message": "Deleted", "description": "Deleted notice" },
   "pm_edit": { "message": "Edit", "description": "Edit prompt" },
   "pm_saved": { "message": "Saved", "description": "Saved notice" }
+  ,"starProject": { "message": "Support the project", "description": "Github callout" }
 }

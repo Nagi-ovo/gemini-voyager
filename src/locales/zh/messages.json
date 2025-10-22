@@ -58,4 +58,5 @@
   "pm_deleted": { "message": "已删除", "description": "删除提示" },
   "pm_edit": { "message": "编辑", "description": "编辑 prompt" },
   "pm_saved": { "message": "已保存", "description": "保存提示" }
+  ,"starProject": { "message": "为项目点亮⭐️", "description": "Github 引导" }
 }

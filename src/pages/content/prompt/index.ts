@@ -310,6 +310,13 @@ export async function startPromptManager(): Promise<void> {
     const notice = createEl('div', 'gv-pm-notice');
     footer.appendChild(importBtn);
     footer.appendChild(exportBtn);
+    const gh = document.createElement('a');
+    gh.className = 'gv-pm-gh';
+    gh.href = 'https://github.com/Nagi-ovo/gemini-voyager';
+    gh.target = '_blank';
+    gh.rel = 'noreferrer';
+    gh.title = i18n.t('starProject') || 'Support the project';
+    footer.appendChild(gh);
     footer.appendChild(importInput);
     footer.appendChild(notice);
 
@@ -497,9 +504,32 @@ export async function startPromptManager(): Promise<void> {
       lockBtn.classList.toggle('active', locked);
       lockBtn.setAttribute('aria-pressed', locked ? 'true' : 'false');
       // When locked, show 🔒; when unlocked, show 🔓.
-      lockBtn.setAttribute('data-icon', locked ? '🔓' : '🔒');
+      lockBtn.setAttribute('data-icon', locked ? '🔒' : '🔓');
       lockBtn.title = locked ? (i18n.t('pm_unlock') || 'Unlock') : (i18n.t('pm_lock') || 'Lock');
       panel.classList.toggle('gv-locked', locked);
+    }
+
+    function refreshUITexts(): void {
+      title.textContent = i18n.t('pm_title') || 'Prompt Manager';
+      addBtn.textContent = i18n.t('pm_add') || 'Add';
+      searchInput.placeholder = i18n.t('pm_search_placeholder') || 'Search prompts';
+      importBtn.textContent = i18n.t('pm_import') || 'Import';
+      exportBtn.textContent = i18n.t('pm_export') || 'Export';
+      try {
+        const ghEl = footer.querySelector('.gv-pm-gh') as HTMLAnchorElement | null;
+        if (ghEl) ghEl.title = i18n.t('starProject') || 'Support the project';
+      } catch {}
+      (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).placeholder =
+        i18n.t('pm_prompt_placeholder') || 'Prompt text';
+      (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).placeholder =
+        i18n.t('pm_tags_placeholder') || 'Tags (comma separated)';
+      (addForm.querySelector('.gv-pm-save') as HTMLButtonElement).textContent =
+        i18n.t('pm_save') || 'Save';
+      (addForm.querySelector('.gv-pm-cancel') as HTMLButtonElement).textContent =
+        i18n.t('pm_cancel') || 'Cancel';
+      applyLockUI();
+      renderTags();
+      renderList();
     }
 
     function onReposition(): void {
@@ -600,25 +630,21 @@ export async function startPromptManager(): Promise<void> {
       const next = normalizeLang(langSel.value) as 'en' | 'zh';
       i18n.set(next);
       await setLanguage(next);
-      // update visible labels
-      title.textContent = i18n.t('pm_title') || 'Prompt Manager';
-      addBtn.textContent = i18n.t('pm_add') || 'Add';
-      searchInput.placeholder = i18n.t('pm_search_placeholder') || 'Search prompts';
-      importBtn.textContent = i18n.t('pm_import') || 'Import';
-      exportBtn.textContent = i18n.t('pm_export') || 'Export';
-      // update add form texts
-      (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).placeholder =
-        i18n.t('pm_prompt_placeholder') || 'Prompt text';
-      (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).placeholder =
-        i18n.t('pm_tags_placeholder') || 'Tags (comma separated)';
-      (addForm.querySelector('.gv-pm-save') as HTMLButtonElement).textContent =
-        i18n.t('pm_save') || 'Save';
-      (addForm.querySelector('.gv-pm-cancel') as HTMLButtonElement).textContent =
-        i18n.t('pm_cancel') || 'Cancel';
-      applyLockUI();
-      renderTags();
-      renderList();
+      refreshUITexts();
     });
+
+    // Listen to external language changes (popup/options)
+    try {
+      chrome.storage?.onChanged?.addListener((changes: any, area: string) => {
+        if (area !== 'sync') return;
+        if (changes?.language) {
+          const next = normalizeLang(changes.language.newValue);
+          i18n.set(next);
+          try { langSel.value = next; } catch {}
+          refreshUITexts();
+        }
+      });
+    } catch {}
 
     addBtn.addEventListener('click', (ev) => {
       ev.preventDefault();
@@ -751,7 +777,7 @@ export async function startPromptManager(): Promise<void> {
     });
 
     // Initialize
-    applyLockUI();
+    refreshUITexts();
   } catch (err) {
     try { (window as any).console?.error?.('Prompt Manager init failed', err); } catch {}
   }
