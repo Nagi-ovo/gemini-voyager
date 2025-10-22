@@ -17,6 +17,12 @@
 - 长按节点可加**星标**，星标会在所有标签页间同步。
 - 强大的 SPA 观察器确保你滚动时活跃状态始终同步。
 
+## TODOs <a name="todos"></a>
+
+- [x] 支持提示词管理（Prompt Management）
+- [ ] 支持导出当前聊天记录
+- [ ] 更多功能敬请期待...
+
 ## 快速开始 <a name="gettingStarted"></a>
 
 已支持浏览器：Chrome、Edge（Chromium）、Opera（Chromium）、Firefox。
@@ -49,6 +55,17 @@ bun run dev:chrome
 # Firefox 开发
 bun run dev:firefox
 ```
+
+或 `pnpm`:
+
+```bash
+pnpm install
+# Chrome 开发
+pnpm run dev:chrome
+# Firefox 开发
+pnpm run dev:firefox
+```
+
 
 ## 参考
 

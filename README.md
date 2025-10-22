@@ -21,6 +21,11 @@
 - Long‑press to **star** a node; stars sync across tabs. 
 - Robust SPA observers keep the active state in sync while you scroll.
 
+## TODOs <a name="todos"></a>
+
+- [x] Support prompt management
+- [ ] Support exporting current chat history
+- [ ] TBD...
 
 ## Getting Started <a name="gettingStarted"></a>
 
@@ -53,6 +58,16 @@ bun i
 bun run dev:chrome
 # Firefox dev
 bun run dev:firefox
+```
+
+or `pnpm`:
+
+```bash
+pnpm install
+# Chrome dev
+pnpm run dev:chrome
+# Firefox dev
+pnpm run dev:firefox
 ```
 
 ## References
