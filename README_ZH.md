@@ -25,10 +25,33 @@
 - 支持 JSON 导入/导出你的 prompt 集合
 - 浮动小面板锚定在触发图标，支持锁定位置；适配 Gemini 与 AI Studio
 
+### 导出聊天记录
+
+- 在 Gemini 页面左上角 Logo 旁会出现一个导出图标，点击即可下载当前页面的聊天记录 JSON。
+- 导出文件采用 `gemini-voyager.chat.v1` 格式，包含：
+  - `url`、`exportedAt`、`count`
+  - `items`：按顺序的 `{ user, assistant, starred }`
+    - `starred` 与时间线中的星标保持一致（基于用户回合）
+    - 助手文本会排除页面上的思维开关标签（如“显示思路/Show thinking”）
+
+示例结构：
+
+```json
+{
+  "format": "gemini-voyager.chat.v1",
+  "url": "https://gemini.google.com/app/...",
+  "exportedAt": "2025-01-01T12:34:56.000Z",
+  "count": 3,
+  "items": [
+    { "user": "...", "assistant": "...", "starred": true }
+  ]
+}
+```
+
 ## TODOs <a name="todos"></a>
 
 - [x] 支持提示词管理（Prompt Management）
-- [ ] 支持导出当前聊天记录
+- [x] 支持导出当前聊天记录
 - [ ] 更多功能敬请期待...
 
 ## 快速开始 <a name="gettingStarted"></a>

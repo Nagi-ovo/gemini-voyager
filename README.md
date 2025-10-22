@@ -29,10 +29,33 @@
 - Import/export your prompts as JSON
 - Compact floating panel anchored to the trigger with optional lock; works on Gemini and AI Studio
 
+### Export Chat History
+
+- Click the small export icon next to the Gemini logo to download the current page's chat as JSON.
+- The exported file uses the format `gemini-voyager.chat.v1` and includes:
+  - `url`, `exportedAt`, `count`
+  - `items`: ordered pairs of `{ user, assistant, starred }`
+    - `starred` mirrors your timeline stars for each user turn
+    - The assistant text excludes the on-page reasoning toggle labels (e.g., "Show thinking", "显示思路")
+
+Example payload shape:
+
+```json
+{
+  "format": "gemini-voyager.chat.v1",
+  "url": "https://gemini.google.com/app/...",
+  "exportedAt": "2025-01-01T12:34:56.000Z",
+  "count": 3,
+  "items": [
+    { "user": "...", "assistant": "...", "starred": true }
+  ]
+}
+```
+
 ## TODOs <a name="todos"></a>
 
 - [x] Support prompt management
-- [ ] Support exporting current chat history
+- [x] Support exporting current chat history
 - [ ] TBD...
 
 ## Getting Started <a name="gettingStarted"></a>

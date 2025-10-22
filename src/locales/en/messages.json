@@ -59,4 +59,5 @@
   "pm_edit": { "message": "Edit", "description": "Edit prompt" },
   "pm_saved": { "message": "Saved", "description": "Saved notice" }
   ,"starProject": { "message": "Support the project", "description": "Github callout" }
+  ,"exportChatJson": { "message": "Export chat history (JSON)", "description": "Tooltip for export button" }
 }
