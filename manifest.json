@@ -19,7 +19,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://gemini.google.com/*"
+        "https://gemini.google.com/*",
+        "https://aistudio.google.com/*"
       ],
       "js": [
         "src/pages/content/index.tsx"
@@ -36,7 +37,10 @@
         "icon-128.png",
         "icon-32.png"
       ],
-      "matches": []
+      "matches": [
+        "https://gemini.google.com/*",
+        "https://aistudio.google.com/*"
+      ]
     }
   ]
 }

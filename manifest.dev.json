@@ -8,8 +8,18 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["contentStyle.css", "dev-icon-128.png", "dev-icon-32.png"],
-      "matches": []
+      "resources": ["contentStyle.css", "dev-icon-128.png", "dev-icon-32.png", "icon-32.png", "icon-128.png"],
+      "matches": [
+        "https://gemini.google.com/*",
+        "https://aistudio.google.com/*"
+      ]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://gemini.google.com/*", "https://aistudio.google.com/*"],
+      "js": ["src/pages/content/index.tsx"],
+      "css": ["contentStyle.css"]
     }
   ]
 }
