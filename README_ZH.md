@@ -12,10 +12,24 @@
   <img src="public/teaser.png" alt="teaser"/>
 </div>
 
+### 时间线
+
 - 你的消息会映射为时间线节点，点击可跳转或平滑滚动到对应消息。
 - 悬停节点可预览消息内容（3 行截断并渐变淡出）。
 - 长按节点可加**星标**，星标会在所有标签页间同步。
 - 强大的 SPA 观察器确保你滚动时活跃状态始终同步。
+
+### Prompt 管理器
+
+- 保存常用 prompt，支持标签、关键词搜索与一键复制
+- 支持 JSON 导入/导出你的 prompt 集合
+- 浮动小面板锚定在触发图标，支持锁定位置；适配 Gemini 与 AI Studio
+
+## TODOs <a name="todos"></a>
+
+- [x] 支持提示词管理（Prompt Management）
+- [ ] 支持导出当前聊天记录
+- [ ] 更多功能敬请期待...
 
 ## 快速开始 <a name="gettingStarted"></a>
 
@@ -49,6 +63,17 @@ bun run dev:chrome
 # Firefox 开发
 bun run dev:firefox
 ```
+
+或 `pnpm`:
+
+```bash
+pnpm install
+# Chrome 开发
+pnpm run dev:chrome
+# Firefox 开发
+pnpm run dev:firefox
+```
+
 
 ## 参考
 

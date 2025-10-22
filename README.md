@@ -16,11 +16,24 @@
   <img src="public/teaser.png" alt="teaser"/>
 </div>
 
+### Timeline
+
 - Your messages are mapped to nodes; click to jump or flow to the message.
 - Hover to preview the prompt (3‑line clamp with gradient fade).
 - Long‑press to **star** a node; stars sync across tabs. 
 - Robust SPA observers keep the active state in sync while you scroll.
 
+### Prompt Manager
+
+- Save and reuse prompts with tags; instant search and one‑click copy
+- Import/export your prompts as JSON
+- Compact floating panel anchored to the trigger with optional lock; works on Gemini and AI Studio
+
+## TODOs <a name="todos"></a>
+
+- [x] Support prompt management
+- [ ] Support exporting current chat history
+- [ ] TBD...
 
 ## Getting Started <a name="gettingStarted"></a>
 
@@ -53,6 +66,16 @@ bun i
 bun run dev:chrome
 # Firefox dev
 bun run dev:firefox
+```
+
+or `pnpm`:
+
+```bash
+pnpm install
+# Chrome dev
+pnpm run dev:chrome
+# Firefox dev
+pnpm run dev:firefox
 ```
 
 ## References
