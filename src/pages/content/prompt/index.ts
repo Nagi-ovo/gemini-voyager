@@ -678,6 +678,26 @@ export async function startPromptManager(): Promise<void> {
     window.addEventListener('resize', onReposition, { passive: true });
     window.addEventListener('scroll', onReposition, { passive: true });
 
+    // Close when clicking outside of the manager (panel/trigger/confirm are exceptions)
+    window.addEventListener(
+      'pointerdown',
+      (ev: PointerEvent) => {
+        if (!open) return;
+        const target = ev.target as HTMLElement | null;
+        if (!target) return;
+        if (target.closest(`#${ID.panel}`)) return;
+        if (target.closest(`#${ID.trigger}`)) return;
+        if (target.closest('.gv-pm-confirm')) return;
+        closePanel();
+      },
+      { capture: true }
+    );
+    // Close on Escape
+    window.addEventListener('keydown', (ev: KeyboardEvent) => {
+      if (!open) return;
+      if (ev.key === 'Escape') closePanel();
+    }, { passive: true } as any);
+
     lockBtn.addEventListener('click', async (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
