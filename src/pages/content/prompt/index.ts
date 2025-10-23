@@ -5,6 +5,11 @@
  * - Optional lock to pin panel position; when locked, panel is draggable and persisted
  */
 
+import DOMPurify from 'dompurify';
+import { marked } from 'marked';
+import markedKatex from 'marked-katex-extension';
+import 'katex/dist/katex.min.css';
+
 type PromptItem = {
   id: string;
   text: string;
@@ -216,6 +221,14 @@ function computeAnchoredPosition(trigger: HTMLElement, panel: HTMLElement): { to
 
 export async function startPromptManager(): Promise<void> {
   try {
+    // markdown config: respect single newlines as <br> and KaTeX inline/display math
+    try {
+      marked.use(markedKatex({
+        throwOnError: false,
+        output: 'html',
+      } as any));
+      marked.setOptions({ breaks: true });
+    } catch {}
     await loadDictionaries();
     const lang = await getLanguage();
     const i18n = createI18n(dictionaries as any, lang);
@@ -411,7 +424,20 @@ export async function startPromptManager(): Promise<void> {
       for (const it of filtered) {
         const row = createEl('div', 'gv-pm-item');
         const textBtn = createEl('button', 'gv-pm-item-text');
-        textBtn.textContent = it.text;
+        // Render Markdown + KaTeX preview (sanitized)
+        const md = document.createElement('div');
+        md.className = 'gv-md';
+        try {
+          const out = marked.parse(it.text as string);
+          if (typeof out === 'string') {
+            md.innerHTML = DOMPurify.sanitize(out);
+          } else {
+            out.then((html) => { md.innerHTML = DOMPurify.sanitize(html); }).catch(() => { md.textContent = it.text; });
+          }
+        } catch {
+          md.textContent = it.text;
+        }
+        textBtn.appendChild(md);
         textBtn.title = i18n.t('pm_copy') || 'Copy';
         textBtn.addEventListener('click', async () => {
           await copyText(it.text);
@@ -420,7 +446,7 @@ export async function startPromptManager(): Promise<void> {
         // Edit button
         const editBtn = createEl('button', 'gv-pm-edit');
         editBtn.setAttribute('aria-label', i18n.t('pm_edit') || 'Edit');
-        editBtn.textContent = '✏️';
+        //editBtn.textContent = '✏️';
         editBtn.addEventListener('click', async (e) => {
           e.stopPropagation();
           // Start inline edit using the add form fields
@@ -430,6 +456,7 @@ export async function startPromptManager(): Promise<void> {
           (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).focus();
           editingId = it.id;
         });
+        const bottom = createEl('div', 'gv-pm-bottom');
         const meta = createEl('div', 'gv-pm-item-meta');
         for (const t of it.tags) {
           const chip = createEl('span', 'gv-pm-chip');
@@ -441,12 +468,14 @@ export async function startPromptManager(): Promise<void> {
           });
           meta.appendChild(chip);
         }
+        // Actions container at row bottom-right
+        const actions = createEl('div', 'gv-pm-actions');
         const del = createEl('button', 'gv-pm-del');
         del.title = i18n.t('pm_delete') || 'Delete';
         del.addEventListener('click', async (e) => {
           e.stopPropagation();
-          // inline confirm popover
-          if (row.querySelector('.gv-pm-confirm')) return; // one popover per row
+          // inline confirm popover (floating)
+          if (document.body.querySelector('.gv-pm-confirm')) return; // one at a time
           const pop = document.createElement('div');
           pop.className = 'gv-pm-confirm';
           const msg = document.createElement('span');
@@ -459,8 +488,21 @@ export async function startPromptManager(): Promise<void> {
           pop.appendChild(msg);
           pop.appendChild(yes);
           pop.appendChild(no);
-          row.appendChild(pop);
-          const cleanup = () => pop.remove();
+          document.body.appendChild(pop);
+          // position near button
+          const r = del.getBoundingClientRect();
+          const vw = window.innerWidth;
+          const side: 'left' | 'right' = r.right + 220 > vw ? 'left' : 'right';
+          const top = Math.max(8, r.top + window.scrollY - 6);
+          const left = side === 'right' ? r.right + window.scrollX + 10 : r.left + window.scrollX - pop.offsetWidth - 10;
+          pop.style.top = `${Math.round(top)}px`;
+          pop.style.left = `${Math.round(Math.max(8, left))}px`;
+          pop.setAttribute('data-side', side);
+          const cleanup = () => { try { pop.remove(); } catch {} window.removeEventListener('keydown', onKey); window.removeEventListener('click', onOutside, true); };
+          const onOutside = (ev: MouseEvent) => { const t = ev.target as HTMLElement; if (!t.closest('.gv-pm-confirm')) cleanup(); };
+          const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape') cleanup(); };
+          window.addEventListener('click', onOutside, true);
+          window.addEventListener('keydown', onKey, { passive: true } as any);
           no.addEventListener('click', (ev) => { ev.stopPropagation(); cleanup(); });
           yes.addEventListener('click', async (ev) => {
             ev.stopPropagation();
@@ -473,12 +515,15 @@ export async function startPromptManager(): Promise<void> {
           });
         });
         row.appendChild(textBtn);
-        row.appendChild(meta);
-        row.appendChild(editBtn);
-        row.appendChild(del);
+        actions.appendChild(editBtn);
+        actions.appendChild(del);
+        bottom.appendChild(meta);
+        bottom.appendChild(actions);
+        row.appendChild(bottom);
         frag.appendChild(row);
       }
       list.appendChild(frag);
+      // KaTeX rendered during Markdown step, no post-typeset needed
     }
 
     function openPanel(): void {
