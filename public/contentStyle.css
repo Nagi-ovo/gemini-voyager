@@ -455,6 +455,8 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   border: 1px solid rgba(255,255,255,0.12); padding: 8px 10px; font-size: 12px; color: #e5e7eb;
 }
 .gv-pm-add-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.gv-pm-inline-hint { margin-right: auto; font-size: 12px; color: #fca5a5; opacity: .95; }
+.gv-pm-inline-hint.ok { color: #86efac; }
 .gv-pm-save { background: #10b981; color: #032014; border-radius: 8px; padding: 6px 10px; }
 .gv-pm-save:hover { filter: brightness(1.05); }
 .gv-pm-cancel { background: transparent; color: #e5e7eb; border-radius: 8px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.12); }

@@ -359,9 +359,10 @@ export async function startPromptManager(): Promise<void> {
     gh.target = '_blank';
     gh.rel = 'noreferrer';
     gh.title = i18n.t('starProject') || 'Support the project';
+    // Put notice before GitHub button so GH stays at the far right
+    footer.appendChild(notice);
     footer.appendChild(gh);
     footer.appendChild(importInput);
-    footer.appendChild(notice);
 
     const addForm = elFromHTML(
       `<form class="gv-pm-add-form gv-hidden">
@@ -372,6 +373,7 @@ export async function startPromptManager(): Promise<void> {
           i18n.t('pm_tags_placeholder') || 'Tags (comma separated)'
         )}" />
         <div class="gv-pm-add-actions">
+          <span class="gv-pm-inline-hint" aria-live="polite"></span>
           <button type="submit" class="gv-pm-save">${escapeHtml(i18n.t('pm_save') || 'Save')}</button>
           <button type="button" class="gv-pm-cancel">${escapeHtml(
             i18n.t('pm_cancel') || 'Cancel'
@@ -390,7 +392,7 @@ export async function startPromptManager(): Promise<void> {
     // State
     let items: PromptItem[] = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
     let open = false;
-    let selectedTag: string = '';
+    let selectedTags: Set<string> = new Set<string>();
     let locked = !!(await readStorage<boolean>(STORAGE_KEYS.locked, false));
     let savedPos = await readStorage<PanelPosition | null>(STORAGE_KEYS.position, null);
     let dragging = false;
@@ -410,14 +412,22 @@ export async function startPromptManager(): Promise<void> {
       }
     }
 
+    function setInlineHint(text: string, kind: 'ok' | 'err' = 'err'): void {
+      const hint = addForm.querySelector('.gv-pm-inline-hint') as HTMLSpanElement | null;
+      if (!hint) return;
+      hint.textContent = text || '';
+      hint.classList.toggle('ok', kind === 'ok');
+      hint.classList.toggle('err', kind === 'err');
+    }
+
     function renderTags(): void {
       const all = collectAllTags(items);
       tagsWrap.innerHTML = '';
       const allBtn = createEl('button', 'gv-pm-tag');
       allBtn.textContent = i18n.t('pm_all_tags') || 'All';
-      allBtn.classList.toggle('active', !selectedTag);
+      allBtn.classList.toggle('active', selectedTags.size === 0);
       allBtn.addEventListener('click', () => {
-        selectedTag = '';
+        selectedTags = new Set();
         renderTags();
         renderList();
       });
@@ -425,9 +435,10 @@ export async function startPromptManager(): Promise<void> {
       for (const tag of all) {
         const btn = createEl('button', 'gv-pm-tag');
         btn.textContent = tag;
-        btn.classList.toggle('active', selectedTag === tag);
+        btn.classList.toggle('active', selectedTags.has(tag));
         btn.addEventListener('click', () => {
-          selectedTag = selectedTag === tag ? '' : tag;
+          if (selectedTags.has(tag)) selectedTags.delete(tag);
+          else selectedTags.add(tag);
           renderTags();
           renderList();
         });
@@ -437,8 +448,9 @@ export async function startPromptManager(): Promise<void> {
 
     function renderList(): void {
       const q = (searchInput.value || '').trim().toLowerCase();
+      const selectedTagList = Array.from(selectedTags);
       const filtered = items.filter((it) => {
-        const okTag = !selectedTag || it.tags.includes(selectedTag);
+        const okTag = selectedTagList.length === 0 || selectedTagList.every((t) => it.tags.includes(t));
         if (!okTag) return false;
         if (!q) return true;
         return it.text.toLowerCase().includes(q) || it.tags.some((t) => t.includes(q));
@@ -492,7 +504,8 @@ export async function startPromptManager(): Promise<void> {
           const chip = createEl('span', 'gv-pm-chip');
           chip.textContent = t;
           chip.addEventListener('click', () => {
-            selectedTag = t;
+            if (selectedTags.has(t)) selectedTags.delete(t);
+            else selectedTags.add(t);
             renderTags();
             renderList();
           });
@@ -744,7 +757,7 @@ export async function startPromptManager(): Promise<void> {
       if (editingId) {
         const dup = items.some((x) => x.id !== editingId && x.text.trim().toLowerCase() === text.toLowerCase());
         if (dup) {
-          setNotice(i18n.t('pm_duplicate') || 'Duplicate prompt', 'err');
+          setInlineHint(i18n.t('pm_duplicate') || 'Duplicate prompt', 'err');
           return;
         }
         const target = items.find((x) => x.id === editingId);
@@ -760,7 +773,7 @@ export async function startPromptManager(): Promise<void> {
         // prevent duplicates (case-insensitive, same text)
         const exists = items.some((x) => x.text.trim().toLowerCase() === text.toLowerCase());
         if (exists) {
-          setNotice(i18n.t('pm_duplicate') || 'Duplicate prompt', 'err');
+          setInlineHint(i18n.t('pm_duplicate') || 'Duplicate prompt', 'err');
           return;
         }
         const it: PromptItem = { id: uid(), text, tags, createdAt: Date.now() };
@@ -769,6 +782,7 @@ export async function startPromptManager(): Promise<void> {
       }
       (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value = '';
       (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).value = '';
+      setInlineHint('');
       addForm.classList.add('gv-hidden');
       renderTags();
       renderList();
