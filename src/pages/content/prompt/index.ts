@@ -252,14 +252,44 @@ export async function startPromptManager(): Promise<void> {
     }, { once: true });
     trigger.appendChild(img);
     document.body.appendChild(trigger);
-    // Restore trigger position if saved
+    // Helper: place trigger near a target element (e.g. Gemini FAB touch target)
+    function placeTriggerNextToHost(): void {
+      try {
+        const candidates = Array.from(document.querySelectorAll('span.mat-mdc-button-touch-target')) as HTMLElement[];
+        if (!candidates.length) return;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const pick = candidates
+          .map((el) => ({ el, r: el.getBoundingClientRect() }))
+          .filter((x) => x.r.width > 0 && x.r.height > 0)
+          // choose the element closest to bottom-right corner
+          .sort((a, b) => (a.r.bottom + a.r.right) - (b.r.bottom + b.r.right))
+          .reduce((_, x) => x, undefined as any) as { el: HTMLElement; r: DOMRect } | undefined;
+        if (!pick) return;
+        const r = pick.r;
+        const tw = (trigger.getBoundingClientRect().width || 36);
+        const th = (trigger.getBoundingClientRect().height || 36);
+        const gap = 10;
+        const right = Math.max(6, Math.round(vw - r.left + gap));
+        const bottom = Math.max(6, Math.round(vh - (r.top + r.height / 2 + th / 2)));
+        trigger.style.right = `${right}px`;
+        trigger.style.bottom = `${bottom}px`;
+      } catch {}
+    }
+
+    // Restore trigger position if saved; otherwise place next to host button
     try {
       const pos = await readStorage<TriggerPosition | null>(STORAGE_KEYS.triggerPos, null);
       if (pos && Number.isFinite(pos.bottom) && Number.isFinite(pos.right)) {
         trigger.style.bottom = `${Math.max(6, Math.round(pos.bottom))}px`;
         trigger.style.right = `${Math.max(6, Math.round(pos.right))}px`;
+      } else {
+        // defer a bit to wait for host DOM
+        placeTriggerNextToHost();
+        requestAnimationFrame(placeTriggerNextToHost);
+        window.setTimeout(placeTriggerNextToHost, 350);
       }
-    } catch {}
+    } catch { placeTriggerNextToHost(); }
 
     // Panel root
     const panel = createEl('div', 'gv-pm-panel gv-hidden');
@@ -586,7 +616,7 @@ export async function startPromptManager(): Promise<void> {
     }
 
     function beginDrag(ev: PointerEvent): void {
-      if (!locked) return;
+      if (locked) return;
       dragging = true;
       const rect = panel.getBoundingClientRect();
       dragOffset = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
@@ -641,6 +671,7 @@ export async function startPromptManager(): Promise<void> {
       locked = !locked;
       await writeStorage(STORAGE_KEYS.locked, locked);
       applyLockUI();
+      try { (ev.currentTarget as HTMLButtonElement)?.blur?.(); } catch {}
       if (locked) {
         const rect = panel.getBoundingClientRect();
         savedPos = { left: rect.left, top: rect.top };
