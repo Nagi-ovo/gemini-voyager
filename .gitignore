@@ -12,3 +12,5 @@ yarn-error.log*
 
 *.local
 .env*
+
+*.mov
