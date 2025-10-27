@@ -6,7 +6,7 @@
       "dependencies": {
         "dompurify": "^3",
         "katex": "^0.16",
-        "marked": "^12",
+        "marked": "^16",
         "marked-katex-extension": "^4",
         "prettier": "^3.6.2",
         "react": "^19.1.0",
@@ -738,7 +738,7 @@
 
     "make-error": ["make-error@1.3.6", "", {}, "sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw=="],
 
-    "marked": ["marked@12.0.2", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-qXUm7e/YKFoqFPYPa3Ukg9xlI5cyAtGmyEIzMfW//m6kXwCy2Ps9DYf5ioijFKQ8qyuscrHoY04iJGctu2Kg0Q=="],
+    "marked": ["marked@16.4.1", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-ntROs7RaN3EvWfy3EZi14H4YxmT6A5YvywfhO+0pm+cH/dnSQRmdAmoFIc3B9aiwTehyk7pESH4ofyBY+V5hZg=="],
 
     "marked-katex-extension": ["marked-katex-extension@4.0.5", "", { "dependencies": { "@types/katex": "^0.16.7", "katex": "^0.16.9" }, "peerDependencies": { "marked": ">=4 <12" } }, "sha512-+CVYWfTXDIZUth4blTDnr07TrqU0QDYrnIqEup75wt9eAHvuSmluttmtwscNF7KXz95D9fK6o0e2dfCGXdp4wg=="],
 

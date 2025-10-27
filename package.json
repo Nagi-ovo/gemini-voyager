@@ -23,7 +23,7 @@
   "dependencies": {
     "dompurify": "^3",
     "katex": "^0.16",
-    "marked": "^12",
+    "marked": "^16",
     "marked-katex-extension": "^4",
     "prettier": "^3.6.2",
     "react": "^19.1.0",
