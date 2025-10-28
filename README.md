@@ -8,6 +8,12 @@
   <a href="./README_ZH.md">中文说明</a>
 </p>
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
+    <img alt="Chrome Web Store" src="https://img.shields.io/badge/Install-Chrome%20Web%20Store-4285F4?logo=google-chrome&logoColor=white">
+  </a>
+</p>
+
 ## Intro <a name="intro"></a>
 
 **Gemini Voyager** transforms your experience on `https://gemini.google.com/app` by adding a refined, interactive timeline—mirroring the intuitive flow found in [AI Studio](https://aistudio.google.com/):
@@ -62,7 +68,16 @@ Example payload shape:
 
 Supported browsers: Chrome, Edge (Chromium), Opera (Chromium), Firefox.
 
-### Load your extension (Chromium: Chrome / Edge / Opera)
+### Install from Browser Stores (Recommended)
+
+- Chrome / Edge / Opera: Install from the Chrome Web Store: [Open listing](<!-- REPLACE_WITH_CHROME_WEB_STORE_URL -->)
+- Firefox: Install from Firefox Add-ons: [Open listing](<!-- REPLACE_WITH_FIREFOX_ADDONS_URL -->)
+
+### Manual install (ZIP)
+
+If you prefer manual installation:
+
+#### Load your extension (Chromium: Chrome / Edge / Opera)
 
 1. Go to the [repository Releases page](https://github.com/Nagi-ovo/gemini-voyager/releases) and download the latest archive named like `gemini-voyager-chrome-vX.Y.Z.zip`.
 2. Unzip it to a folder (you will see `manifest.json` at the root).
@@ -73,7 +88,7 @@ Supported browsers: Chrome, Edge (Chromium), Opera (Chromium), Firefox.
 4. Click “Load unpacked”.
 5. Select the unzipped folder (e.g. `Gemini Voyager vX.Y.Z`).
 
-### Load your extension (Firefox)
+#### Load your extension (Firefox)
 
 1. Go to the repository Releases page and download `gemini-voyager-firefox-vX.Y.Z.zip`.
 2. Unzip it.

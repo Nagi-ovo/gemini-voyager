@@ -4,6 +4,12 @@
   <h5>一个为 Gemini 聊天添加丝滑交互时间线的 Chrome 扩展。</h5>
 </div>
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
+    <img alt="Chrome Web Store" src="https://img.shields.io/badge/安装-Chrome%20Web%20Store-4285F4?logo=google-chrome&logoColor=white">
+  </a>
+</p>
+
 ## 简介 <a name="intro"></a>
 
 **Gemini Voyager** 让你在 `https://gemini.google.com/app` 上的聊天体验焕然一新，新增了一个精致、交互式的时间线，灵感源自 [AI Studio](https://aistudio.google.com/) 的直观流程：
@@ -58,7 +64,16 @@
 
 已支持浏览器：Chrome、Edge（Chromium）、Opera（Chromium）、Firefox。
 
-### 加载扩展（Chromium：Chrome / Edge / Opera）
+### 从商店安装（推荐）
+
+- Chrome / Edge / Opera：从 Chrome 网上应用店安装：[打开商店](<!-- REPLACE_WITH_CHROME_WEB_STORE_URL -->)
+- Firefox：从 Firefox 附加组件安装：[打开商店](<!-- REPLACE_WITH_FIREFOX_ADDONS_URL -->)
+
+### 手动安装（ZIP）
+
+如需手动安装：
+
+#### 加载扩展（Chromium：Chrome / Edge / Opera）
 
 1. 前往项目的 Releases 页面，下载最新版 `gemini-voyager-chrome-vX.Y.Z.zip`。
 2. 解压到任意文件夹（根目录可见 `manifest.json`）。
@@ -69,7 +84,7 @@
 4. 点击“加载已解压”/“Load unpacked”。
 5. 选择解压的文件夹（例如 `Gemini Voyager vX.Y.Z`）。
 
-### 加载扩展（Firefox）
+#### 加载扩展（Firefox）
 
 1. 前往 Releases 页面下载 `gemini-voyager-firefox-vX.Y.Z.zip`。
 2. 解压。
