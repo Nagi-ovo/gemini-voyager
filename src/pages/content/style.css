@@ -120,10 +120,10 @@
 .gv-pm-chip { font-size: 11px; border-radius: 999px; padding: 2px 8px; background: rgba(59,130,246,0.15); color: #c7d2fe; border: 1px solid rgba(59,130,246,0.35); cursor: pointer; }
 .gv-pm-del { grid-column: 2 / span 1; width: 26px; height: 26px; border-radius: 8px; background: rgba(239,68,68,0.15); color: #fecaca; border: 1px solid rgba(239,68,68,0.45); }
 
-.gv-pm-footer { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+.gv-pm-footer { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; }
 .gv-pm-import-input { display: none; }
-.gv-pm-import-btn, .gv-pm-export-btn { border-radius: 8px; padding: 6px 10px; background: rgba(31,41,55,0.7); border: 1px solid rgba(255,255,255,0.12); color: #e5e7eb; }
-.gv-pm-notice { margin-left: auto; font-size: 12px; opacity: 0.9; }
+.gv-pm-import-btn, .gv-pm-export-btn { border-radius: 8px; padding: 6px 10px; background: rgba(31,41,55,0.7); border: 1px solid rgba(255,255,255,0.12); color: #e5e7eb; flex-shrink: 0; }
+.gv-pm-notice { margin-left: 0; margin-right: auto; font-size: 12px; opacity: 0.9; flex-shrink: 1; min-width: 0; }
 .gv-pm-notice.ok { color: #86efac; }
 .gv-pm-notice.err { color: #fca5a5; }
 
