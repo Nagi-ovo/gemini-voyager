@@ -486,7 +486,7 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
 
 .gv-pm-footer { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
 .gv-pm-import-input { display: none; }
-.gv-pm-import-btn, .gv-pm-export-btn { border-radius: 6px; padding: 3px 8px 7px 8px; background: rgba(31,41,55,0.7); border: 1px solid rgba(255,255,255,0.12); color: #e5e7eb; flex-shrink: 0; font-size: 11px; line-height: 1.2; white-space: nowrap; }
+.gv-pm-import-btn, .gv-pm-export-btn { height: 24px; border-radius: 6px; padding: 0 8px; background: rgba(31,41,55,0.7); border: 1px solid rgba(255,255,255,0.12); color: #e5e7eb; flex-shrink: 0; font-size: 11px; line-height: 24px; white-space: nowrap; display: inline-flex; align-items: center; box-sizing: border-box; }
 .gv-pm-import-btn:hover, .gv-pm-export-btn:hover { background: rgba(31,41,55,0.85); }
 .gv-pm-gh { width: 24px; height: 24px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(31,41,55,0.7); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .gv-pm-gh::before {
