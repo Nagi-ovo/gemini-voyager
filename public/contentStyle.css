@@ -976,3 +976,31 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   background-color: rgba(239, 68, 68, 0.2);
   border-color: rgba(239, 68, 68, 0.5);
 }
+
+/* Custom Tooltip Styles */
+.gv-tooltip {
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  max-width: 300px;
+  word-wrap: break-word;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.gv-tooltip.show {
+  opacity: 1;
+}
+
+/* Light theme tooltip */
+html[data-color-scheme='light'] .gv-tooltip {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #fff;
+}

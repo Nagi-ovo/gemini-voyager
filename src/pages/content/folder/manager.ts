@@ -26,9 +26,12 @@ export class FolderManager {
   private containerElement: HTMLElement | null = null;
   private sidebarContainer: HTMLElement | null = null;
   private recentSection: HTMLElement | null = null;
+  private tooltipElement: HTMLElement | null = null;
+  private tooltipTimeout: number | null = null;
 
   constructor() {
     this.loadData();
+    this.createTooltip();
   }
 
   async init(): Promise<void> {
@@ -202,6 +205,12 @@ export class FolderManager {
     folderName.textContent = folder.name;
     folderName.addEventListener('dblclick', () => this.renameFolder(folder.id));
 
+    // Add tooltip event listeners
+    folderName.addEventListener('mouseenter', () =>
+      this.showTooltip(folderName, folder.name),
+    );
+    folderName.addEventListener('mouseleave', () => this.hideTooltip());
+
     // Actions menu
     const actionsBtn = document.createElement('button');
     actionsBtn.className = 'gv-folder-actions-btn';
@@ -293,6 +302,10 @@ export class FolderManager {
     const title = document.createElement('span');
     title.className = 'gv-conversation-title gds-label-l';
     title.textContent = conv.title;
+
+    // Add tooltip event listeners
+    title.addEventListener('mouseenter', () => this.showTooltip(title, conv.title));
+    title.addEventListener('mouseleave', () => this.hideTooltip());
 
     // Remove button
     const removeBtn = document.createElement('button');
@@ -1115,5 +1128,64 @@ export class FolderManager {
       folder_remove_conversation_confirm: 'Remove "{title}" from this folder?',
     };
     return fallback[key] || key;
+  }
+
+  // Tooltip methods
+  private createTooltip(): void {
+    this.tooltipElement = document.createElement('div');
+    this.tooltipElement.className = 'gv-tooltip';
+    document.body.appendChild(this.tooltipElement);
+  }
+
+  private showTooltip(element: HTMLElement, text: string): void {
+    if (!this.tooltipElement) return;
+
+    // Clear any existing timeout
+    if (this.tooltipTimeout) {
+      clearTimeout(this.tooltipTimeout);
+    }
+
+    // Check if text is truncated
+    const isTruncated = element.scrollWidth > element.clientWidth;
+    if (!isTruncated) return;
+
+    // Show tooltip after a short delay (200ms)
+    this.tooltipTimeout = window.setTimeout(() => {
+      if (!this.tooltipElement) return;
+
+      this.tooltipElement.textContent = text;
+
+      // Position tooltip
+      const rect = element.getBoundingClientRect();
+      const tooltipRect = this.tooltipElement.getBoundingClientRect();
+
+      let left = rect.left;
+      let top = rect.bottom + 8;
+
+      // Adjust if tooltip goes off screen
+      if (left + tooltipRect.width > window.innerWidth) {
+        left = window.innerWidth - tooltipRect.width - 10;
+      }
+      if (top + tooltipRect.height > window.innerHeight) {
+        top = rect.top - tooltipRect.height - 8;
+      }
+
+      this.tooltipElement.style.left = `${left}px`;
+      this.tooltipElement.style.top = `${top}px`;
+
+      // Trigger reflow for animation
+      this.tooltipElement.offsetHeight;
+      this.tooltipElement.classList.add('show');
+    }, 200);
+  }
+
+  private hideTooltip(): void {
+    if (this.tooltipTimeout) {
+      clearTimeout(this.tooltipTimeout);
+      this.tooltipTimeout = null;
+    }
+    if (this.tooltipElement) {
+      this.tooltipElement.classList.remove('show');
+    }
   }
 }
