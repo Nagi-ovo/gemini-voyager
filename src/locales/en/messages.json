@@ -60,4 +60,14 @@
   "pm_saved": { "message": "Saved", "description": "Saved notice" }
   ,"starProject": { "message": "Support the project", "description": "Github callout" }
   ,"exportChatJson": { "message": "Export chat history (JSON)", "description": "Tooltip for export button" }
+  ,"folder_title": { "message": "Folders", "description": "Folder section title" }
+  ,"folder_create": { "message": "Create folder", "description": "Create folder button tooltip" }
+  ,"folder_name_prompt": { "message": "Enter folder name:", "description": "Create folder name prompt" }
+  ,"folder_rename_prompt": { "message": "Enter new name:", "description": "Rename folder prompt" }
+  ,"folder_delete_confirm": { "message": "Delete this folder and all its contents?", "description": "Delete folder confirmation" }
+  ,"folder_create_subfolder": { "message": "Create subfolder", "description": "Create subfolder menu item" }
+  ,"folder_rename": { "message": "Rename", "description": "Rename folder menu item" }
+  ,"folder_delete": { "message": "Delete", "description": "Delete folder menu item" }
+  ,"folder_remove_conversation": { "message": "Remove from folder", "description": "Remove conversation button tooltip" }
+  ,"folder_remove_conversation_confirm": { "message": "Remove \"{title}\" from this folder?", "description": "Remove conversation confirmation" }
 }

@@ -515,3 +515,464 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
 .gv-pm-drag { width: 16px; height: 20px; margin-right: 4px; position: relative; opacity: 0.7; cursor: move; }
 .gv-pm-drag::before { content: '⠿'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .gv-locked .gv-pm-drag { cursor: default; opacity: 0.9; }
+
+/* ========================================
+   Folder Manager Styles
+   ======================================== */
+
+/* CSS Variables for folder theming */
+:root {
+  --folder-bg: #ffffff;
+  --folder-text: #1f2937;
+  --folder-border: #e5e7eb;
+  --folder-hover-bg: #f3f4f6;
+  --folder-active-bg: #e0e7ff;
+  --folder-icon-color: #6b7280;
+  --folder-menu-bg: #ffffff;
+  --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --folder-dragover-bg: #dbeafe;
+  --folder-dragover-border: #3b82f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --folder-bg: #1f2937;
+    --folder-text: #e5e7eb;
+    --folder-border: #374151;
+    --folder-hover-bg: #374151;
+    --folder-active-bg: #1e40af;
+    --folder-icon-color: #9ca3af;
+    --folder-menu-bg: #1f2937;
+    --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --folder-dragover-bg: #1e3a8a;
+    --folder-dragover-border: #60a5fa;
+  }
+}
+
+/* Gemini theme support */
+.theme-host.dark-theme {
+  --folder-bg: #1f2937;
+  --folder-text: #e5e7eb;
+  --folder-border: #374151;
+  --folder-hover-bg: #374151;
+  --folder-active-bg: #1e40af;
+  --folder-icon-color: #9ca3af;
+  --folder-menu-bg: #1f2937;
+  --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --folder-dragover-bg: #1e3a8a;
+  --folder-dragover-border: #60a5fa;
+}
+
+.theme-host.light-theme {
+  --folder-bg: #ffffff;
+  --folder-text: #1f2937;
+  --folder-border: #e5e7eb;
+  --folder-hover-bg: #f3f4f6;
+  --folder-active-bg: #e0e7ff;
+  --folder-icon-color: #6b7280;
+  --folder-menu-bg: #ffffff;
+  --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --folder-dragover-bg: #dbeafe;
+  --folder-dragover-border: #3b82f6;
+}
+
+/* Folder Container */
+.gv-folder-container {
+  margin-bottom: 16px;
+  padding: 8px 8px 8px 12px;
+  /* Ensure alignment with Recent section */
+  margin-left: 0;
+}
+
+/* Folder Header */
+.gv-folder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 8px 0;
+  margin-bottom: 8px;
+}
+
+.gv-folder-header .title-container {
+  flex: 1;
+}
+
+/* Let native Gemini title styles take precedence - don't override */
+.gv-folder-header .title {
+  margin: 0;
+  padding-left: 16px;
+  /* Make the title darker/more subtle */
+  opacity: 0.7;
+  color: var(--bard-color-on-surface-variant);
+}
+
+.gv-folder-add-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.gv-folder-add-btn:hover {
+  background-color: var(--folder-hover-bg);
+  color: var(--folder-text);
+}
+
+/* Folder List */
+.gv-folder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Folder Item */
+.gv-folder-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.gv-folder-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.gv-folder-item-header:hover {
+  background-color: var(--folder-hover-bg);
+}
+
+.gv-folder-item-header.gv-folder-dragover {
+  background-color: var(--folder-dragover-bg);
+  border: 2px dashed var(--folder-dragover-border);
+}
+
+.gv-folder-expand-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.gv-folder-expand-btn .google-symbols {
+  font-size: 20px;
+}
+
+.gv-folder-icon {
+  font-size: 20px;
+  color: var(--folder-icon-color);
+  flex-shrink: 0;
+}
+
+.gv-folder-name {
+  flex: 1;
+  font-size: 14px;
+  color: var(--folder-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.gv-folder-actions-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.gv-folder-item-header:hover .gv-folder-actions-btn {
+  opacity: 1;
+}
+
+.gv-folder-actions-btn:hover {
+  background-color: var(--folder-hover-bg);
+}
+
+.gv-folder-actions-btn .google-symbols {
+  font-size: 18px;
+}
+
+/* Folder Content (conversations and subfolders) */
+.gv-folder-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+/* Conversation Item in Folder */
+.gv-folder-conversation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+  position: relative;
+}
+
+.gv-folder-conversation:hover {
+  background-color: var(--folder-hover-bg);
+}
+
+/* Draggable conversations in folders */
+.gv-folder-conversation[draggable="true"] {
+  cursor: grab;
+}
+
+.gv-folder-conversation[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.gv-conversation-icon {
+  font-size: 13px !important;
+  width: 13px !important;
+  height: 13px !important;
+  color: var(--folder-icon-color);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+.gv-conversation-title {
+  flex: 1;
+  font-size: 14px;
+  color: var(--folder-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gv-conversation-remove-btn {
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.2s;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.gv-folder-conversation:hover .gv-conversation-remove-btn {
+  opacity: 1;
+}
+
+.gv-conversation-remove-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.gv-conversation-remove-btn mat-icon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+
+/* Folder Context Menu */
+.gv-folder-menu {
+  background-color: var(--folder-menu-bg);
+  border: 1px solid var(--folder-border);
+  border-radius: 8px;
+  box-shadow: var(--folder-menu-shadow);
+  padding: 4px;
+  z-index: 2147483647;
+  min-width: 160px;
+}
+
+.gv-folder-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--folder-text);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.gv-folder-menu-item:hover {
+  background-color: var(--folder-hover-bg);
+}
+
+/* Drag cursor for original conversation elements */
+[data-test-id="conversation"][draggable="true"] {
+  cursor: grab;
+}
+
+[data-test-id="conversation"][draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Inline Input/Rename Styles */
+.gv-folder-inline-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--folder-hover-bg);
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+.gv-folder-name-input,
+.gv-folder-rename-input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--folder-border);
+  border-radius: 4px;
+  background-color: var(--folder-bg);
+  color: var(--folder-text);
+  font-size: 14px;
+  outline: none;
+}
+
+.gv-folder-name-input:focus,
+.gv-folder-rename-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.gv-folder-rename-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.gv-folder-inline-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0;
+  transition: background-color 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.gv-folder-inline-btn:hover {
+  background-color: var(--folder-hover-bg);
+}
+
+.gv-folder-inline-save:hover {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.gv-folder-inline-cancel:hover {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.gv-folder-inline-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.gv-hidden {
+  display: none !important;
+}
+
+/* Confirm Dialog */
+.gv-folder-confirm-dialog {
+  background-color: var(--folder-menu-bg);
+  border: 1px solid var(--folder-border);
+  border-radius: 8px;
+  box-shadow: var(--folder-menu-shadow);
+  padding: 12px;
+  z-index: 2147483647;
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.gv-folder-confirm-message {
+  color: var(--folder-text);
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.gv-folder-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.gv-folder-confirm-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--folder-border);
+  background-color: var(--folder-bg);
+  color: var(--folder-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.gv-folder-confirm-btn:hover {
+  background-color: var(--folder-hover-bg);
+}
+
+.gv-folder-confirm-yes {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.gv-folder-confirm-yes:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+}

@@ -5,7 +5,7 @@
 </div>
 
 <p align="center">
-  <a href="./README_ZH.md">中文说明</a>
+  <a href="./.github/README_ZH.md">中文说明</a>
 </p>
 
 <p align="center">
@@ -34,6 +34,13 @@
 - Save and reuse prompts with tags; instant search and one‑click copy
 - Import/export your prompts as JSON
 - Compact floating panel anchored to the trigger with optional lock; works on Gemini and AI Studio
+
+### Folder Manager
+
+- Organize conversations with folders and subfolders (2-level hierarchy)
+- Drag and drop conversations from the sidebar directly into folders
+- Auto-detect Gem types with distinctive icons (Learning Coach, Brainstorm Buddy, Career Guide, etc.)
+- Navigate seamlessly between conversations without page reload
 
 ### Export Chat History
 
@@ -123,7 +130,7 @@ Inspired by “[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatg
 ## Contributing <a name="contributing"></a>
 We welcome all pull requests and issue reports!  
 
-For development guidelines and best practices, please refer to [CONTRIBUTING.md](./CONTRIBUTING.md).
+For development guidelines, best practices, and instructions on adding new Gems, please refer to [CONTRIBUTING.md](./.github/CONTRIBUTING.md).
 
 Before submitting an issue, please review our [bug report template](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) and [feature request template](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feat_request.md) to help us address your feedback efficiently.
 

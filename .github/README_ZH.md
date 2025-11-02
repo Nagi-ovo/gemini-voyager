@@ -31,6 +31,13 @@
 - 支持 JSON 导入/导出你的 prompt 集合
 - 浮动小面板锚定在触发图标，支持锁定位置；适配 Gemini 与 AI Studio
 
+### 文件夹管理器
+
+- 使用文件夹和子文件夹整理对话（支持两级结构）
+- 从侧边栏直接拖放对话到文件夹
+- 自动识别 Gem 类型并显示专属图标（学习教练、头脑风暴伙伴、职业指导等）
+- 在对话间无缝切换，无需刷新页面
+
 ### 导出聊天记录
 
 - 在 Gemini 页面左上角 Logo 旁会出现一个导出图标，点击即可下载当前页面的聊天记录 JSON。
@@ -121,7 +128,7 @@ pnpm run dev:firefox
 ## 贡献指南 <a name="contributing"></a>
 欢迎所有的 Pull Request 和 Issue！
 
-开发规范和最佳实践请参阅 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+开发规范、最佳实践以及添加新 Gem 的说明，请参阅 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 
 提交 Issue 前，请先查阅我们的 [Bug 报告模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) 和 [功能请求模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feat_request.md)，以便我们高效处理你的反馈。
 
