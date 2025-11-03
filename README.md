@@ -22,7 +22,7 @@
 
 ## ✨ What Can It Do?
 
-**Gemini Voyager** enhances your Gemini chat experience with four powerful features:
+**Gemini Voyager** enhances your Gemini chat experience with five powerful features:
 
 <div align="center">
   <img src="public/teaser.png" alt="teaser"/>
@@ -81,6 +81,13 @@ Download your conversations for safekeeping:
 }
 ```
 </details>
+
+### 📏 Adjustable Chat Width
+
+Customize your reading experience:
+- **Wide Range**: Adjust chat width from 400px to 1400px via an interactive slider
+- **Instant Preview**: See changes in real-time as you drag the slider
+- **Persistent Settings**: Your preference is saved and synced across all tabs
 
 ---
 

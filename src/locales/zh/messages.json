@@ -70,4 +70,7 @@
   ,"folder_delete": { "message": "删除", "description": "删除文件夹菜单项" }
   ,"folder_remove_conversation": { "message": "从文件夹中移除", "description": "移除对话按钮提示" }
   ,"folder_remove_conversation_confirm": { "message": "从此文件夹中移除「{title}」？", "description": "移除对话确认" }
+  ,"chatWidth": { "message": "对话区域宽度", "description": "对话区域宽度调整标签" }
+  ,"chatWidthNarrow": { "message": "窄", "description": "窄对话区域宽度标签" }
+  ,"chatWidthWide": { "message": "宽", "description": "宽对话区域宽度标签" }
 }

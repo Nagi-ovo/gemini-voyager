@@ -70,4 +70,7 @@
   ,"folder_delete": { "message": "Delete", "description": "Delete folder menu item" }
   ,"folder_remove_conversation": { "message": "Remove from folder", "description": "Remove conversation button tooltip" }
   ,"folder_remove_conversation_confirm": { "message": "Remove \"{title}\" from this folder?", "description": "Remove conversation confirmation" }
+  ,"chatWidth": { "message": "Chat width", "description": "Chat width adjustment label" }
+  ,"chatWidthNarrow": { "message": "Narrow", "description": "Narrow chat width label" }
+  ,"chatWidthWide": { "message": "Wide", "description": "Wide chat width label" }
 }

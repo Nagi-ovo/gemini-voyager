@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import useI18n from '../../hooks/useI18n';
 
@@ -9,6 +9,9 @@ export default function Popup() {
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
+  const [chatWidth, setChatWidth] = useState<number>(800);
+  const chatWidthDebounceTimer = useRef<number | null>(null);
+  const pendingChatWidth = useRef<number | null>(null);
 
   useEffect(() => {
     try {
@@ -17,28 +20,45 @@ export default function Popup() {
           geminiTimelineScrollMode: 'flow',
           geminiTimelineHideContainer: false,
           geminiTimelineDraggable: false,
+          geminiChatWidth: 800,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
           if (m === 'jump' || m === 'flow') setMode(m);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
+          setChatWidth(res?.geminiChatWidth || 800);
         }
       );
     } catch {}
+  }, []);
+
+  // Cleanup and save pending changes on unmount
+  useEffect(() => {
+    return () => {
+      if (chatWidthDebounceTimer.current !== null) {
+        clearTimeout(chatWidthDebounceTimer.current);
+      }
+      // Save any pending width changes before unmount
+      if (pendingChatWidth.current !== null) {
+        apply(null, undefined, undefined, undefined, pendingChatWidth.current);
+      }
+    };
   }, []);
 
   const apply = (
     nextMode: ScrollMode | null,
     nextHide?: boolean,
     nextDraggable?: boolean,
-    resetPosition?: boolean
+    resetPosition?: boolean,
+    nextChatWidth?: number
   ) => {
     const payload: any = {};
     if (nextMode) payload.geminiTimelineScrollMode = nextMode;
     if (typeof nextHide === 'boolean') payload.geminiTimelineHideContainer = nextHide;
     if (typeof nextDraggable === 'boolean') payload.geminiTimelineDraggable = nextDraggable;
     if (resetPosition) payload.geminiTimelinePosition = null;
+    if (typeof nextChatWidth === 'number') payload.geminiChatWidth = nextChatWidth;
     try {
       chrome.storage?.sync?.set(payload);
     } catch {}
@@ -121,6 +141,50 @@ export default function Popup() {
           <label htmlFor="draggable-timeline" className="text-sm">
             {t('draggableTimeline')}
           </label>
+        </div>
+        <div>
+          <label className="text-sm font-medium">{t('chatWidth')}</label>
+          <div className="mt-2 px-1">
+            <input
+              type="range"
+              min="400"
+              max="1400"
+              step="50"
+              value={chatWidth}
+              onChange={(e) => {
+                const newWidth = Number(e.target.value);
+                setChatWidth(newWidth);
+                pendingChatWidth.current = newWidth;
+
+                // Debounce the storage write to avoid quota limits
+                if (chatWidthDebounceTimer.current !== null) {
+                  clearTimeout(chatWidthDebounceTimer.current);
+                }
+                chatWidthDebounceTimer.current = window.setTimeout(() => {
+                  apply(null, undefined, undefined, undefined, newWidth);
+                  pendingChatWidth.current = null;
+                  chatWidthDebounceTimer.current = null;
+                }, 300);
+              }}
+              onMouseUp={() => {
+                // Also save immediately when user releases the slider
+                if (pendingChatWidth.current !== null) {
+                  if (chatWidthDebounceTimer.current !== null) {
+                    clearTimeout(chatWidthDebounceTimer.current);
+                    chatWidthDebounceTimer.current = null;
+                  }
+                  apply(null, undefined, undefined, undefined, pendingChatWidth.current);
+                  pendingChatWidth.current = null;
+                }
+              }}
+              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            />
+            <div className="flex justify-between items-center mt-1 text-xs text-slate-500">
+              <span>{t('chatWidthNarrow')}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">{chatWidth}px</span>
+              <span>{t('chatWidthWide')}</span>
+            </div>
+          </div>
         </div>
         <button
           className="px-3 py-1 text-sm border border-slate-300 rounded-full"
