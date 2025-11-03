@@ -48,16 +48,6 @@ function applyWidth(width: number) {
   const assistantRules = assistantSelectors.map(sel => `${sel}`).join(',\n    ');
 
   style.textContent = `
-    /* Remove width constraints from parent containers */
-    main,
-    main > *,
-    main > * > *,
-    [role="main"],
-    .conversation-container {
-      max-width: none !important;
-      width: 100% !important;
-    }
-
     /* User query containers */
     ${userRules} {
       max-width: ${width}px !important;
@@ -88,6 +78,11 @@ function applyWidth(width: number) {
     .presented-response-container,
     [data-message-author-role] {
       max-width: ${width}px !important;
+    }
+
+    /* Only remove width constraints from conversation-specific containers */
+    [role="main"] {
+      max-width: none !important;
     }
   `;
 }
