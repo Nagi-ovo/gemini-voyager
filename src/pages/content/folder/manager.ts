@@ -9,6 +9,7 @@ import type { Folder, FolderData, ConversationReference, DragData } from './type
 
 const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
+const ROOT_CONVERSATIONS_ID = '__root_conversations__'; // Special ID for root-level conversations
 
 export class FolderManager {
   private debug(...args: any[]): void {
@@ -158,12 +159,27 @@ export class FolderManager {
     header.appendChild(titleContainer);
     header.appendChild(addButton);
 
+    // Setup root drop zone on header
+    this.setupRootDropZone(header);
+
     return header;
   }
 
   private createFoldersList(): HTMLElement {
     const list = document.createElement('div');
     list.className = 'gv-folder-list';
+
+    // Setup root-level drop zone for dragging folders and conversations to root
+    this.setupRootDropZone(list);
+
+    // Render root-level conversations (favorites/pinned conversations)
+    const rootConversations = this.data.folderContents[ROOT_CONVERSATIONS_ID] || [];
+    if (rootConversations.length > 0) {
+      rootConversations.forEach((conv) => {
+        const convEl = this.createConversationElement(conv, ROOT_CONVERSATIONS_ID, 0);
+        list.appendChild(convEl);
+      });
+    }
 
     // Render root level folders
     const rootFolders = this.data.folders.filter((f) => f.parentId === null);
@@ -222,10 +238,14 @@ export class FolderManager {
     folderHeader.appendChild(folderName);
     folderHeader.appendChild(actionsBtn);
 
-    // Setup drop zone for conversations
+    // Setup drop zone for conversations and folders
     this.setupDropZone(folderHeader, folder.id);
 
     folderEl.appendChild(folderHeader);
+
+    // Apply draggable behavior dynamically based on current state
+    // This ensures draggability is always in sync with folder structure
+    this.applyFolderDraggableBehavior(folderHeader, folder);
 
     // Folder content (conversations and subfolders)
     if (folder.isExpanded) {
@@ -269,6 +289,7 @@ export class FolderManager {
     convEl.addEventListener('dragstart', (e) => {
       e.stopPropagation();
       const dragData = {
+        type: 'conversation',
         conversationId: conv.conversationId,
         title: conv.title,
         url: conv.url,
@@ -339,6 +360,7 @@ export class FolderManager {
   private setupDropZone(element: HTMLElement, folderId: string): void {
     element.addEventListener('dragover', (e) => {
       e.preventDefault();
+      e.stopPropagation(); // Prevent root drop zone from also highlighting
       element.classList.add('gv-folder-dragover');
     });
 
@@ -348,6 +370,7 @@ export class FolderManager {
 
     element.addEventListener('drop', (e) => {
       e.preventDefault();
+      e.stopPropagation(); // CRITICAL: Prevent event bubbling to root drop zone
       element.classList.remove('gv-folder-dragover');
 
       const data = e.dataTransfer?.getData('application/json');
@@ -355,9 +378,70 @@ export class FolderManager {
 
       try {
         const dragData: DragData = JSON.parse(data);
-        this.addConversationToFolder(folderId, dragData);
+
+        // Handle different drag types
+        if (dragData.type === 'folder') {
+          // Handle folder drop
+          this.debug('Dropping folder into folder:', dragData.title, '→', folderId);
+          this.addFolderToFolder(folderId, dragData);
+        } else {
+          // Handle conversation drop (default behavior for backward compatibility)
+          this.addConversationToFolder(folderId, dragData);
+        }
       } catch (error) {
         console.error('[FolderManager] Drop error:', error);
+      }
+    });
+  }
+
+  private setupRootDropZone(element: HTMLElement): void {
+    element.addEventListener('dragover', (e) => {
+      // Allow both folder and conversation drops on the root zone
+      const data = e.dataTransfer?.types.includes('application/json');
+      if (!data) return;
+
+      e.preventDefault();
+      e.stopPropagation(); // Prevent parent handlers from firing
+      element.classList.add('gv-folder-list-dragover');
+    });
+
+    element.addEventListener('dragleave', (e) => {
+      // Check if we're leaving this element (not just entering a child)
+      const rect = element.getBoundingClientRect();
+      const x = (e as DragEvent).clientX;
+      const y = (e as DragEvent).clientY;
+
+      if (
+        x <= rect.left ||
+        x >= rect.right ||
+        y <= rect.top ||
+        y >= rect.bottom
+      ) {
+        element.classList.remove('gv-folder-list-dragover');
+      }
+    });
+
+    element.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // Prevent parent handlers from firing
+      element.classList.remove('gv-folder-list-dragover');
+
+      const data = e.dataTransfer?.getData('application/json');
+      if (!data) return;
+
+      try {
+        const dragData: DragData = JSON.parse(data);
+
+        // Handle different drag types at root level
+        if (dragData.type === 'folder') {
+          this.moveFolderToRoot(dragData);
+        } else {
+          // Handle conversation drop - add to root-level favorites
+          this.debug('Adding conversation to root level:', dragData.title);
+          this.addConversationToFolder(ROOT_CONVERSATIONS_ID, dragData);
+        }
+      } catch (error) {
+        console.error('[FolderManager] Root drop error:', error);
       }
     });
   }
@@ -367,6 +451,122 @@ export class FolderManager {
 
     const conversations = this.sidebarContainer.querySelectorAll('[data-test-id="conversation"]');
     conversations.forEach((conv) => this.makeConversationDraggable(conv as HTMLElement));
+  }
+
+  /**
+   * Strategy Pattern: Determine if a folder can be dragged
+   * Single Responsibility Principle: Separate logic for draggability check
+   *
+   * A folder can be dragged if and only if:
+   * - It has no subfolders (to prevent deep nesting complexity)
+   *
+   * @param folderId - The ID of the folder to check
+   * @returns true if the folder can be dragged, false otherwise
+   */
+  private canFolderBeDragged(folderId: string): boolean {
+    return !this.data.folders.some((f) => f.parentId === folderId);
+  }
+
+  /**
+   * Strategy Pattern: Apply or remove draggable behavior based on folder state
+   * Open/Closed Principle: Easy to extend with new draggable conditions
+   *
+   * This method ensures that folder draggability is always in sync with the current state.
+   * It will enable dragging if conditions are met, or disable it if not.
+   *
+   * @param element - The folder header element
+   * @param folder - The folder data object
+   */
+  private applyFolderDraggableBehavior(element: HTMLElement, folder: Folder): void {
+    if (this.canFolderBeDragged(folder.id)) {
+      this.enableFolderDragging(element, folder);
+    } else {
+      this.disableFolderDragging(element);
+    }
+  }
+
+  /**
+   * Enable dragging for a folder element
+   * Encapsulates all logic needed to make a folder draggable
+   *
+   * Uses a data attribute to track drag listeners and prevent duplicates.
+   * This ensures event listeners are only added once per element lifecycle.
+   *
+   * @param element - The folder header element
+   * @param folder - The folder data object
+   */
+  private enableFolderDragging(element: HTMLElement, folder: Folder): void {
+    // Mark element as draggable
+    element.draggable = true;
+    element.style.cursor = 'grab';
+
+    // Check if drag listeners are already attached
+    if (element.dataset.dragListenersAttached === 'true') {
+      this.debug('Drag listeners already attached for folder:', folder.name);
+      return;
+    }
+
+    // Create named event handler functions for proper cleanup
+    const handleDragStart = (e: Event) => {
+      e.stopPropagation(); // Prevent parent folder from being dragged
+
+      const dragData: DragData = {
+        type: 'folder',
+        folderId: folder.id,
+        title: folder.name,
+      };
+
+      (e as DragEvent).dataTransfer?.setData('application/json', JSON.stringify(dragData));
+      element.style.opacity = '0.5';
+
+      this.debug('Folder drag start:', folder.name, 'canBeDragged:', this.canFolderBeDragged(folder.id));
+    };
+
+    const handleDragEnd = () => {
+      element.style.opacity = '1';
+    };
+
+    // Store references for potential cleanup
+    (element as any)._dragStartHandler = handleDragStart;
+    (element as any)._dragEndHandler = handleDragEnd;
+
+    // Add drag event listeners
+    element.addEventListener('dragstart', handleDragStart);
+    element.addEventListener('dragend', handleDragEnd);
+
+    // Mark that listeners are attached
+    element.dataset.dragListenersAttached = 'true';
+  }
+
+  /**
+   * Disable dragging for a folder element
+   * Ensures folder cannot be dragged when it has subfolders
+   *
+   * Properly removes event listeners to prevent memory leaks.
+   *
+   * @param element - The folder header element
+   */
+  private disableFolderDragging(element: HTMLElement): void {
+    element.draggable = false;
+    element.style.cursor = '';
+
+    // Remove drag event listeners if they exist
+    if (element.dataset.dragListenersAttached === 'true') {
+      const dragStartHandler = (element as any)._dragStartHandler;
+      const dragEndHandler = (element as any)._dragEndHandler;
+
+      if (dragStartHandler) {
+        element.removeEventListener('dragstart', dragStartHandler);
+        delete (element as any)._dragStartHandler;
+      }
+
+      if (dragEndHandler) {
+        element.removeEventListener('dragend', dragEndHandler);
+        delete (element as any)._dragEndHandler;
+      }
+
+      delete element.dataset.dragListenersAttached;
+    }
   }
 
   private makeConversationDraggable(element: HTMLElement): void {
@@ -388,6 +588,7 @@ export class FolderManager {
       });
 
       const dragData: DragData = {
+        type: 'conversation',
         conversationId,
         title,
         url: conversationData.url,
@@ -753,9 +954,9 @@ export class FolderManager {
     }
 
     const conv: ConversationReference = {
-      conversationId: dragData.conversationId,
+      conversationId: dragData.conversationId!,
       title: dragData.title,
-      url: dragData.url,
+      url: dragData.url!,
       addedAt: Date.now(),
       isGem: dragData.isGem,
       gemId: dragData.gemId,
@@ -767,13 +968,83 @@ export class FolderManager {
     // If this was dragged from another folder, remove it from the source
     if (dragData.sourceFolderId && dragData.sourceFolderId !== folderId) {
       this.debug('Moving from folder:', dragData.sourceFolderId);
-      this.removeConversationFromFolder(dragData.sourceFolderId, dragData.conversationId);
+      this.removeConversationFromFolder(dragData.sourceFolderId, dragData.conversationId!);
       // Note: removeConversationFromFolder calls saveData() and refresh(), so we don't need to call them again
       return;
     }
 
     this.saveData();
     this.refresh();
+  }
+
+  private addFolderToFolder(targetFolderId: string, dragData: DragData): void {
+    const draggedFolderId = dragData.folderId;
+    if (!draggedFolderId) return;
+
+    this.debug('Moving folder to folder:', {
+      draggedFolderId,
+      targetFolderId,
+    });
+
+    // Prevent dropping a folder onto itself
+    if (draggedFolderId === targetFolderId) {
+      this.debug('Cannot drop folder onto itself');
+      return;
+    }
+
+    // Prevent dropping a folder onto its descendant (would create a cycle)
+    if (this.isFolderDescendant(targetFolderId, draggedFolderId)) {
+      this.debug('Cannot drop folder onto its descendant');
+      return;
+    }
+
+    // Find the dragged folder
+    const draggedFolder = this.data.folders.find((f) => f.id === draggedFolderId);
+    if (!draggedFolder) return;
+
+    // Update the parent
+    draggedFolder.parentId = targetFolderId;
+    draggedFolder.updatedAt = Date.now();
+
+    this.saveData();
+    this.refresh();
+  }
+
+  private moveFolderToRoot(dragData: DragData): void {
+    const draggedFolderId = dragData.folderId;
+    if (!draggedFolderId) return;
+
+    this.debug('Moving folder to root level:', draggedFolderId);
+
+    // Find the dragged folder
+    const draggedFolder = this.data.folders.find((f) => f.id === draggedFolderId);
+    if (!draggedFolder) return;
+
+    // If already at root level, no need to do anything
+    if (draggedFolder.parentId === null) {
+      this.debug('Folder is already at root level');
+      return;
+    }
+
+    // Update the parent to null (root level)
+    draggedFolder.parentId = null;
+    draggedFolder.updatedAt = Date.now();
+
+    this.saveData();
+    this.refresh();
+  }
+
+  private isFolderDescendant(folderId: string, potentialAncestorId: string): boolean {
+    // Check if potentialAncestorId is an ancestor of folderId
+    let currentId: string | null = folderId;
+    while (currentId) {
+      if (currentId === potentialAncestorId) {
+        return true;
+      }
+      const folder = this.data.folders.find((f) => f.id === currentId);
+      currentId = folder?.parentId || null;
+    }
+    return false;
   }
 
   private confirmRemoveConversation(

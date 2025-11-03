@@ -591,6 +591,13 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   justify-content: space-between;
   padding: 8px 16px 8px 0;
   margin-bottom: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s, border 0.2s;
+}
+
+.gv-folder-header.gv-folder-list-dragover {
+  background-color: var(--folder-dragover-bg);
+  border: 2px dashed var(--folder-dragover-border);
 }
 
 .gv-folder-header .title-container {
@@ -630,6 +637,15 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-height: 40px; /* Ensure there's always a drop zone even when empty */
+  padding: 4px;
+  border-radius: 8px;
+  transition: background-color 0.2s, border 0.2s;
+}
+
+.gv-folder-list-dragover {
+  background-color: var(--folder-dragover-bg);
+  border: 2px dashed var(--folder-dragover-border);
 }
 
 /* Folder Item */
@@ -656,6 +672,14 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
 .gv-folder-item-header.gv-folder-dragover {
   background-color: var(--folder-dragover-bg);
   border: 2px dashed var(--folder-dragover-border);
+}
+
+.gv-folder-item-header[draggable="true"] {
+  cursor: grab;
+}
+
+.gv-folder-item-header[draggable="true"]:active {
+  cursor: grabbing;
 }
 
 .gv-folder-expand-btn {

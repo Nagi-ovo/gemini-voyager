@@ -23,9 +23,11 @@ export interface FolderData {
 }
 
 export interface DragData {
-  conversationId: string;
+  type?: 'conversation' | 'folder'; // Type of dragged item
+  conversationId?: string;
+  folderId?: string; // For folder dragging
   title: string;
-  url: string;
+  url?: string;
   isGem?: boolean;
   gemId?: string;
 }
