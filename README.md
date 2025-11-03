@@ -19,7 +19,7 @@
   </a>
 
   <p><b>Works on all Chromium browsers: Chrome, Edge, Opera, Brave, Vivaldi, Arc, and more</b></p>
-  <p><b>Safari support: Full compatibility via conditional compilation</b> - See <a href="SAFARI_BUILD.md">SAFARI_BUILD.md</a></p>
+  <p><b>Safari support: Available via manual installation</b> - Download from <a href="https://github.com/Nagi-ovo/gemini-voyager/releases">Releases</a> and see <a href=".github/docs/safari/INSTALLATION.md">installation guide</a></p>
 
   <details>
   <summary><i>Using Edge or Opera? Click here for installation tips</i></summary>
@@ -40,7 +40,7 @@
   </p>
   </details>
 
-  <p><i>Firefox and Safari versions: See manual installation below</i></p>
+  <p><i>Firefox and Safari: Download from <a href="https://github.com/Nagi-ovo/gemini-voyager/releases">GitHub Releases</a> (manual installation required)</i></p>
 </div>
 
 ---
@@ -144,14 +144,18 @@ For developers or users who prefer manual installation:
 
 #### Load your extension (Safari)
 
-Safari extensions require conversion to an Xcode project. See [SAFARI_BUILD.md](SAFARI_BUILD.md) for detailed instructions:
+Safari extensions require conversion to an Xcode project. **See [installation guide](.github/docs/safari/INSTALLATION.md) ([中文](.github/docs/safari/INSTALLATION_ZH.md)) for detailed instructions.**
 
-1. Build the extension: `npm run build:safari`
-2. Convert to Safari format: `xcrun safari-web-extension-converter dist_safari`
-3. Open in Xcode and run
-4. Enable in Safari preferences
+**Quick Start:**
+1. Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
+2. Unzip it to get the `dist_safari` folder
+3. Convert to Safari format: `xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"`
+4. Open the generated Xcode project and run (⌘R)
+5. Enable in Safari → Settings → Extensions
 
-**Requirements:** macOS 11+, Xcode 12+, Safari 14+
+**Requirements:** macOS 11+, Xcode Command Line Tools, Safari 14+
+
+**Note:** Safari extensions cannot be installed like Chrome/Firefox. You need to convert and run through Xcode. No Apple Developer account required for local testing!
 
 ---
 
@@ -175,12 +179,12 @@ bun run build:safari   # Safari
 bun run build:all      # All browsers
 ```
 
-Or with pnpm/npm:
+Or with npm/pnpm:
 ```bash
-pnpm install
-pnpm run dev:chrome    # Chrome
-pnpm run dev:firefox   # Firefox
-pnpm run dev:safari    # Safari (macOS only)
+npm install
+npm run dev:chrome    # Chrome
+npm run dev:firefox   # Firefox
+npm run dev:safari    # Safari (macOS only)
 ```
 
 ### Safari Development
