@@ -83,8 +83,10 @@ async function loadDictionaries(): Promise<void> {
 async function getLanguage(): Promise<'en' | 'zh'> {
   try {
     const stored = await browser.storage.sync.get(STORAGE_KEYS.language);
-    const v = typeof stored?.[STORAGE_KEYS.language] === 'string' ? stored[STORAGE_KEYS.language] : undefined;
-    return normalizeLang(v || (navigator.language || 'en'));
+    const value = stored?.[STORAGE_KEYS.language];
+    const v = typeof value === 'string' ? value : undefined;
+    const fallback = navigator.language || 'en';
+    return normalizeLang(v || fallback);
   } catch {
     return 'en';
   }
