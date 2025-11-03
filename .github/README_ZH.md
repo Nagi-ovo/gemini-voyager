@@ -19,6 +19,7 @@
   </a>
 
   <p><b>适用于所有 Chromium 浏览器：Chrome、Edge、Opera、Brave、Vivaldi、Arc 等</b></p>
+  <p><b>Safari 支持：可通过手动安装</b> - 从 <a href="https://github.com/Nagi-ovo/gemini-voyager/releases">Releases</a> 下载，查看<a href="../.github/docs/safari/INSTALLATION_ZH.md">安装指南</a></p>
 
   <details>
   <summary><i>使用 Edge 或 Opera？点击查看安装说明</i></summary>
@@ -39,7 +40,7 @@
   </p>
   </details>
 
-  <p><i>Firefox 版本即将推出！</i></p>
+  <p><i>Firefox 和 Safari：从 <a href="https://github.com/Nagi-ovo/gemini-voyager/releases">GitHub Releases</a> 下载（需要手动安装）</i></p>
 </div>
 
 ---
@@ -139,6 +140,17 @@
 4. 点击"临时载入附加组件..."
 5. 选择解压文件夹中的 `manifest.json` 文件
 
+#### 在 Safari 上安装
+
+1. 下载 `gemini-voyager-safari-vX.Y.Z.zip` 从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
+2. 解压并转换：`xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"`
+3. 在 Xcode 中打开并运行（⌘R）
+4. 在 Safari → 设置 → 扩展中启用
+
+**系统要求：** macOS 11+、Xcode Command Line Tools（`xcode-select --install`）、Safari 14+
+
+**注意：** 本地使用无需 Apple Developer 账号！详细说明请查看[安装指南](../.github/docs/safari/INSTALLATION_ZH.md)。
+
 ---
 
 ## 🛠️ 开发者指南
@@ -149,19 +161,33 @@
 # 安装依赖（推荐使用 Bun）
 bun i
 
-# Chrome 开发模式
-bun run dev:chrome
+# 开发模式（支持热重载）
+bun run dev:chrome   # Chrome 和 Chromium 浏览器
+bun run dev:firefox  # Firefox
+bun run dev:safari   # Safari（需要 macOS）
 
-# Firefox 开发模式
-bun run dev:firefox
+# 生产构建
+bun run build:chrome   # Chrome
+bun run build:firefox  # Firefox
+bun run build:safari   # Safari
+bun run build:all      # 所有浏览器
 ```
 
-或使用 pnpm：
+或使用 npm/pnpm：
 ```bash
 pnpm install
-pnpm run dev:chrome  # Chrome
-pnpm run dev:firefox # Firefox
+pnpm run dev:chrome    # Chrome
+pnpm run dev:firefox   # Firefox
+pnpm run dev:safari    # Safari（仅限 macOS）
 ```
+
+### Safari 开发
+
+Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/README_ZH.md) 了解：
+- 从源代码构建
+- 开发工作流与自动重载
+- 添加 Swift 原生代码
+- 调试与发布
 
 开发规范和最佳实践请参考 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 

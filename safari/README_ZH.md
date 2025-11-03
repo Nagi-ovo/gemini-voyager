@@ -1,136 +1,184 @@
-# Safari 原生扩展代码
+# Safari 开发指南
 
 [English](README.md) | 简体中文
 
-本目录包含 Safari 扩展的原生 Swift 代码，用于实现更深层次的 macOS 集成和原生功能。
+为 Safari 构建和扩展 Gemini Voyager 的开发者指南。
 
-## 📁 目录结构
+## 快速开始
+
+### 从源代码构建
+
+```bash
+# 安装依赖
+bun install
+
+# 为 Safari 构建
+bun run build:safari
+```
+
+这会创建一个包含扩展文件的 `dist_safari/` 文件夹。
+
+### 转换并运行
+
+```bash
+# 转换为 Safari 格式
+xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
+
+# 在 Xcode 中打开
+open "Gemini Voyager/Gemini Voyager.xcodeproj"
+```
+
+在 Xcode 中：
+1. 选择 **Signing & Capabilities** → 选择你的 Team
+2. 设置目标为 **My Mac**
+3. 按 **⌘R** 构建并运行
+
+## 开发工作流
+
+### 文件变更自动重载
+
+```bash
+bun run dev:safari
+```
+
+这会监听文件变更并自动重新构建。每次重新构建后：
+1. 在 Xcode 中按 **⌘R** 重新加载
+2. Safari 会刷新扩展
+
+### 手动构建
+
+```bash
+# 修改代码后
+bun run build:safari
+
+# 然后在 Xcode 中重新构建（⌘R）
+```
+
+## 添加 Swift 原生代码（可选）
+
+本项目包含用于原生 macOS 功能的 Swift 代码。添加它是**可选的**，但推荐使用。
+
+### 包含的文件
 
 ```
 safari/
 ├── App/
-│   └── SafariWebExtensionHandler.swift  # 主消息处理器
-├── Models/
-│   └── SafariMessage.swift              # 消息类型定义
-└── Resources/
-    └── example-native-messaging.js      # JavaScript 使用示例
+│   └── SafariWebExtensionHandler.swift  # 原生消息处理器
+└── Models/
+    └── SafariMessage.swift              # 消息定义
 ```
 
-## 🔧 工作原理
+### 如何添加
 
-当你使用 `xcrun safari-web-extension-converter` 转换扩展时，Xcode 会：
-1. 创建一个新的 macOS 应用程序项目
-2. 可以手动将这些 Swift 文件链接到项目中
-3. 处理 JavaScript 和 Swift 之间的原生消息传递
+1. 打开 Xcode 项目
+2. 右键点击 **"Gemini Voyager Extension"** 目标
+3. 选择 **Add Files to "Gemini Voyager Extension"...**
+4. 导航到 `safari/App/` 和 `safari/Models/`
+5. 勾选 **"Copy items if needed"**
+6. 确保目标是 **"Gemini Voyager Extension"**
 
-## 📬 原生消息 API
+### 原生功能
 
-### 从 JavaScript 发送到 Swift
+添加后，你可以：
+- 访问 macOS 钥匙串（未来）
+- 使用原生通知
+- 通过原生选择器访问文件系统
+- 通过 iCloud 同步（未来）
+- 增强的调试日志
 
+### 原生消息 API
+
+**从 JavaScript 调用：**
 ```javascript
-// 发送消息到原生 Swift 代码
+// 健康检查
 browser.runtime.sendNativeMessage('ping', {}, (response) => {
-  if (response.success) {
-    console.log('原生响应：', response.data);
-  }
+  console.log(response); // { success: true, data: { status: "ok", message: "pong" } }
 });
 
-// 获取版本信息
+// 获取版本
 browser.runtime.sendNativeMessage('getVersion', {}, (response) => {
-  console.log('版本：', response.data.version);
-  console.log('平台：', response.data.platform);
+  console.log(response.data); // { version: "1.0.0", platform: "macOS" }
 });
 ```
 
-### 可用操作
+**可用操作：**
+- `ping` - 健康检查
+- `getVersion` - 获取扩展版本信息
+- `syncStorage` - 同步存储（未来功能的占位符）
 
-| 操作 | 说明 | 返回值 |
-|------|------|--------|
-| `ping` | 健康检查 | `{ status: "ok", message: "pong" }` |
-| `getVersion` | 获取扩展信息 | `{ version, build, platform }` |
-| `syncStorage` | 同步存储（未来） | `{ synced: false }` |
+## 调试
 
-## 🚀 当前功能
+### 查看扩展日志
 
-### ✅ 已实现
+**Web 控制台：**
+- Safari → 开发 → Web Extension Background Pages → Gemini Voyager
 
-- **健康检查**：`ping` 操作用于验证原生消息是否工作
-- **版本信息**：获取扩展版本和平台信息
-- **统一日志**：使用 `os.log` 进行调试
-
-### 🔮 未来可能性
-
-Swift 代码为以下功能提供了基础：
-
-- **钥匙串集成**：安全存储敏感数据
-- **原生通知**：macOS 通知中心集成
-- **文件系统访问**：使用原生文件选择器导出/导入
-- **共享容器**：在多设备的 Safari 之间同步
-- **后台任务**：在 Swift 中运行长时间操作
-
-## 🛠️ 使用方法
-
-### 步骤 1：构建 Web 扩展
-
+**原生日志：**
 ```bash
-bun run build:safari
-```
-
-### 步骤 2：转换为 Safari 扩展
-
-```bash
-xcrun safari-web-extension-converter dist_safari \
-  --macos-only \
-  --app-name "Gemini Voyager"
-```
-
-### 步骤 3：添加 Swift 文件到 Xcode
-
-1. 打开 `Gemini Voyager/Gemini Voyager.xcodeproj`
-2. 右键点击 "Gemini Voyager Extension" 目标
-3. 添加文件 → 选择 `safari/` 目录中的文件
-4. 确保勾选 "Copy items if needed"
-5. 选择 "Gemini Voyager Extension" 目标
-
-### 步骤 4：构建并运行
-
-在 Xcode 中按 ⌘R 构建并运行扩展。
-
-## 🔍 调试原生代码
-
-### 查看日志
-
-```bash
-# 从 Safari 扩展实时查看日志
 log stream --predicate 'subsystem == "com.gemini-voyager.safari"' --level debug
 ```
 
 ### 常见问题
 
-**Q: "Module 'SafariServices' not found"**
-- A: 确保文件添加到 "Gemini Voyager Extension" 目标，而不是主应用目标
+**"Module 'SafariServices' not found"**
+- 确保 Swift 文件添加到 "Gemini Voyager Extension" 目标，而不是主应用
 
-**Q: 原生消息不工作**
-- A: 验证 `Info.plist` 中 `SafariWebExtensionHandler` 设置为主类
+**原生消息不工作**
+- 检查 `Info.plist` 是否将 `SafariWebExtensionHandler` 设置为主类
 
-**Q: Swift 文件未包含在构建中**
-- A: 检查 Xcode 检查器中的目标成员资格
+**Swift 文件未编译**
+- 在 Xcode 文件检查器中验证目标成员资格
 
-## 📚 资源
+## 构建分发版本
+
+### 创建存档
+
+1. 在 Xcode 中选择 Product → Archive
+2. Window → Organizer
+3. 选择存档 → Distribute App
+4. 按提示导出
+
+### 发布到 App Store
+
+需要：
+- Apple Developer 账号（$99/年）
+- App Store Connect 设置
+- 应用审核提交
+
+详见 [Apple 官方指南](https://developer.apple.com/documentation/safariservices/safari_web_extensions/distributing_your_safari_web_extension)。
+
+## 项目结构
+
+```
+├── dist_safari/              # 构建的扩展（已忽略）
+├── safari/                   # 原生 Swift 代码
+│   ├── App/                 # 扩展处理器
+│   ├── Models/              # 数据模型
+│   └── Resources/           # 示例代码
+├── src/                     # 主扩展源代码
+└── vite.config.safari.ts    # Safari 构建配置
+```
+
+## 构建命令
+
+```bash
+bun run build:safari   # 生产构建
+bun run dev:safari     # 开发模式（自动重载）
+bun run build:all      # 为所有浏览器构建
+```
+
+## 资源
 
 - [Safari Web Extensions 文档](https://developer.apple.com/documentation/safariservices/safari_web_extensions)
-- [Safari 中的原生消息](https://developer.apple.com/documentation/safariservices/safari_web_extensions/messaging_between_the_app_and_javascript_in_a_safari_web_extension)
-- [os.log 文档](https://developer.apple.com/documentation/os/logging)
+- [原生消息指南](https://developer.apple.com/documentation/safariservices/safari_web_extensions/messaging_between_the_app_and_javascript_in_a_safari_web_extension)
+- [为 Safari 转换扩展](https://developer.apple.com/documentation/safariservices/safari_web_extensions/converting_a_web_extension_for_safari)
 
-## 🤝 贡献
+## 贡献
 
-添加新的原生功能时：
+查看 [CONTRIBUTING.md](../.github/CONTRIBUTING.md) 了解贡献指南。
 
+添加原生功能时：
 1. 在 `SafariMessage.swift` 中定义操作
 2. 在 `SafariWebExtensionHandler.swift` 中实现处理器
-3. 在 web 扩展中添加相应的 JavaScript 代码
-4. 用使用示例更新本 README
-
-## 📝 许可证
-
-与主项目相同（MIT）。
+3. 在 web 扩展中添加 JavaScript API
+4. 在本 README 中记录

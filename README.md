@@ -144,18 +144,14 @@ For developers or users who prefer manual installation:
 
 #### Load your extension (Safari)
 
-Safari extensions require conversion to an Xcode project. **See [installation guide](.github/docs/safari/INSTALLATION.md) ([中文](.github/docs/safari/INSTALLATION_ZH.md)) for detailed instructions.**
-
-**Quick Start:**
 1. Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
-2. Unzip it to get the `dist_safari` folder
-3. Convert to Safari format: `xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"`
-4. Open the generated Xcode project and run (⌘R)
-5. Enable in Safari → Settings → Extensions
+2. Unzip and convert: `xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"`
+3. Open in Xcode and run (⌘R)
+4. Enable in Safari → Settings → Extensions
 
-**Requirements:** macOS 11+, Xcode Command Line Tools, Safari 14+
+**Requirements:** macOS 11+, Xcode Command Line Tools (`xcode-select --install`), Safari 14+
 
-**Note:** Safari extensions cannot be installed like Chrome/Firefox. You need to convert and run through Xcode. No Apple Developer account required for local testing!
+**Note:** No Apple Developer account needed for local use! For detailed instructions, see the [installation guide](.github/docs/safari/INSTALLATION.md) ([中文](.github/docs/safari/INSTALLATION_ZH.md)).
 
 ---
 
@@ -181,21 +177,19 @@ bun run build:all      # All browsers
 
 Or with npm/pnpm:
 ```bash
-npm install
-npm run dev:chrome    # Chrome
-npm run dev:firefox   # Firefox
-npm run dev:safari    # Safari (macOS only)
+pnpm install
+pnpm run dev:chrome    # Chrome
+pnpm run dev:firefox   # Firefox
+pnpm run dev:safari    # Safari (macOS only)
 ```
 
 ### Safari Development
 
-Safari development requires additional steps. See [SAFARI_BUILD.md](SAFARI_BUILD.md) for:
-- Converting the extension to Safari format
-- Running in Xcode
-- Debugging tips
-- Publishing to App Store
-
-**Technical Note**: Safari support uses conditional compilation to ensure zero performance impact on Chrome/Firefox builds. Chrome and Firefox use native `chrome.*` API (0.67kb wrapper), while Safari uses the same API wrapper approach for compatibility.
+Safari requires additional build steps. See [safari/README.md](safari/README.md) for:
+- Building from source
+- Development workflow with auto-reload
+- Adding Swift native code
+- Debugging and distribution
 
 For contribution guidelines and best practices, see [CONTRIBUTING.md](./.github/CONTRIBUTING.md).
 

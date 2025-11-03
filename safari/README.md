@@ -1,136 +1,184 @@
-# Safari Native Extension Code
+# Safari Development Guide
 
 English | [简体中文](README_ZH.md)
 
-This directory contains native Swift code for the Safari extension, enabling deeper macOS integration and native functionality.
+Developer guide for building and extending Gemini Voyager for Safari.
 
-## 📁 Structure
+## Quick Start
+
+### Build from Source
+
+```bash
+# Install dependencies
+bun install
+
+# Build for Safari
+bun run build:safari
+```
+
+This creates a `dist_safari/` folder with the extension files.
+
+### Convert and Run
+
+```bash
+# Convert to Safari format
+xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
+
+# Open in Xcode
+open "Gemini Voyager/Gemini Voyager.xcodeproj"
+```
+
+In Xcode:
+1. Select **Signing & Capabilities** → Choose your Team
+2. Set target to **My Mac**
+3. Press **⌘R** to build and run
+
+## Development Workflow
+
+### Auto-reload on Changes
+
+```bash
+bun run dev:safari
+```
+
+This watches for file changes and rebuilds automatically. After each rebuild:
+1. Press **⌘R** in Xcode to reload
+2. Safari will refresh the extension
+
+### Manual Build
+
+```bash
+# After code changes
+bun run build:safari
+
+# Then rebuild in Xcode (⌘R)
+```
+
+## Adding Swift Native Code (Optional)
+
+This project includes Swift code for native macOS features. Adding it is **optional** but recommended.
+
+### Files Included
 
 ```
 safari/
 ├── App/
-│   └── SafariWebExtensionHandler.swift  # Main message handler
-├── Models/
-│   └── SafariMessage.swift              # Message type definitions
-└── Resources/
-    └── (Xcode will link dist_safari here)
+│   └── SafariWebExtensionHandler.swift  # Native message handler
+└── Models/
+    └── SafariMessage.swift              # Message definitions
 ```
 
-## 🔧 How It Works
+### How to Add
 
-When you convert the extension using `xcrun safari-web-extension-converter`, Xcode automatically:
-1. Creates a new macOS app project
-2. Links these Swift files into the project
-3. Handles native messaging between JavaScript and Swift
+1. Open the Xcode project
+2. Right-click **"Gemini Voyager Extension"** target
+3. Select **Add Files to "Gemini Voyager Extension"...**
+4. Navigate to `safari/App/` and `safari/Models/`
+5. Check **"Copy items if needed"**
+6. Ensure target is **"Gemini Voyager Extension"**
 
-## 📬 Native Messaging API
+### Native Features
 
-### From JavaScript to Swift
+Once added, you can:
+- Access macOS Keychain (future)
+- Use native notifications
+- Access file system with native pickers
+- Sync via iCloud (future)
+- Enhanced debugging logs
 
+### Native Messaging API
+
+**From JavaScript:**
 ```javascript
-// Send a message to native Swift code
+// Health check
 browser.runtime.sendNativeMessage('ping', {}, (response) => {
-  if (response.success) {
-    console.log('Native response:', response.data);
-  }
+  console.log(response); // { success: true, data: { status: "ok", message: "pong" } }
 });
 
-// Get version info
+// Get version
 browser.runtime.sendNativeMessage('getVersion', {}, (response) => {
-  console.log('Version:', response.data.version);
-  console.log('Platform:', response.data.platform);
+  console.log(response.data); // { version: "1.0.0", platform: "macOS" }
 });
 ```
 
-### Available Actions
+**Available Actions:**
+- `ping` - Health check
+- `getVersion` - Get extension version info
+- `syncStorage` - Sync storage (placeholder for future)
 
-| Action | Description | Return Value |
-|--------|-------------|--------------|
-| `ping` | Health check | `{ status: "ok", message: "pong" }` |
-| `getVersion` | Get extension info | `{ version, build, platform }` |
-| `syncStorage` | Sync storage (future) | `{ synced: false }` |
+## Debugging
 
-## 🚀 Current Features
+### View Extension Logs
 
-### ✅ Implemented
+**Web Console:**
+- Safari → Develop → Web Extension Background Pages → Gemini Voyager
 
-- **Health Check**: `ping` action for verifying native messaging works
-- **Version Info**: Get extension version and platform info
-- **Logging**: Unified logging using `os.log` for debugging
-
-### 🔮 Future Possibilities
-
-The Swift code provides a foundation for:
-
-- **Keychain Integration**: Secure storage for sensitive data
-- **Native Notifications**: macOS notification center integration
-- **File System Access**: Export/import with native file picker
-- **Shared Containers**: Sync between Safari on multiple devices
-- **Background Tasks**: Long-running operations in Swift
-
-## 🛠️ How to Use
-
-### Step 1: Build the Web Extension
-
+**Native Logs:**
 ```bash
-bun run build:safari
-```
-
-### Step 2: Convert to Safari Extension
-
-```bash
-xcrun safari-web-extension-converter dist_safari \
-  --macos-only \
-  --app-name "Gemini Voyager"
-```
-
-### Step 3: Add Swift Files to Xcode
-
-1. Open `Gemini Voyager/Gemini Voyager.xcodeproj`
-2. Right-click "Gemini Voyager Extension" target
-3. Add Files → Select files from `safari/` directory
-4. Make sure "Copy items if needed" is checked
-5. Select "Gemini Voyager Extension" target
-
-### Step 4: Build and Run
-
-Press ⌘R in Xcode to build and run the extension.
-
-## 🔍 Debugging Native Code
-
-### View Logs
-
-```bash
-# Real-time logs from Safari extension
 log stream --predicate 'subsystem == "com.gemini-voyager.safari"' --level debug
 ```
 
 ### Common Issues
 
-**Q: "Module 'SafariServices' not found"**
-- A: Make sure files are added to the "Gemini Voyager Extension" target, not the main app target
+**"Module 'SafariServices' not found"**
+- Ensure Swift files are added to "Gemini Voyager Extension" target, not the main app
 
-**Q: Native messaging doesn't work**
-- A: Verify `SafariWebExtensionHandler` is set as the principal class in `Info.plist`
+**Native messaging not working**
+- Check `Info.plist` has `SafariWebExtensionHandler` as principal class
 
-**Q: Swift files not included in build**
-- A: Check Target Membership in Xcode inspector
+**Swift files not compiling**
+- Verify Target Membership in Xcode file inspector
 
-## 📚 Resources
+## Building for Distribution
 
-- [Safari Web Extensions Documentation](https://developer.apple.com/documentation/safariservices/safari_web_extensions)
-- [Native Messaging in Safari](https://developer.apple.com/documentation/safariservices/safari_web_extensions/messaging_between_the_app_and_javascript_in_a_safari_web_extension)
-- [os.log Documentation](https://developer.apple.com/documentation/os/logging)
+### Create Archive
 
-## 🤝 Contributing
+1. Product → Archive in Xcode
+2. Window → Organizer
+3. Select archive → Distribute App
+4. Follow prompts to export
 
-When adding new native features:
+### For App Store
 
-1. Define the action in `SafariMessage.swift`
-2. Implement the handler in `SafariWebExtensionHandler.swift`
-3. Add corresponding JavaScript code in the web extension
-4. Update this README with usage examples
+Requires:
+- Apple Developer account ($99/year)
+- App Store Connect setup
+- App review submission
 
-## 📝 License
+See [Apple's official guide](https://developer.apple.com/documentation/safariservices/safari_web_extensions/distributing_your_safari_web_extension) for details.
 
-Same as the main project (MIT).
+## Project Structure
+
+```
+├── dist_safari/              # Built extension (gitignored)
+├── safari/                   # Native Swift code
+│   ├── App/                 # Extension handlers
+│   ├── Models/              # Data models
+│   └── Resources/           # Example code
+├── src/                     # Main extension source
+└── vite.config.safari.ts    # Safari build config
+```
+
+## Build Commands
+
+```bash
+bun run build:safari   # Production build
+bun run dev:safari     # Development with auto-reload
+bun run build:all      # Build for all browsers
+```
+
+## Resources
+
+- [Safari Web Extensions Docs](https://developer.apple.com/documentation/safariservices/safari_web_extensions)
+- [Native Messaging Guide](https://developer.apple.com/documentation/safariservices/safari_web_extensions/messaging_between_the_app_and_javascript_in_a_safari_web_extension)
+- [Converting Extensions for Safari](https://developer.apple.com/documentation/safariservices/safari_web_extensions/converting_a_web_extension_for_safari)
+
+## Contributing
+
+See [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for contribution guidelines.
+
+When adding native features:
+1. Define action in `SafariMessage.swift`
+2. Implement handler in `SafariWebExtensionHandler.swift`
+3. Add JavaScript API in web extension
+4. Document in this README
