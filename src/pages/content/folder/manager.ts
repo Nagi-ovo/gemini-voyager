@@ -29,6 +29,7 @@ export class FolderManager {
   private recentSection: HTMLElement | null = null;
   private tooltipElement: HTMLElement | null = null;
   private tooltipTimeout: number | null = null;
+  private sideNavObserver: MutationObserver | null = null;
 
   constructor() {
     this.loadData();
@@ -56,6 +57,12 @@ export class FolderManager {
 
       // Set up mutation observer to handle dynamically added conversations
       this.setupMutationObserver();
+
+      // Set up sidebar visibility observer
+      this.setupSideNavObserver();
+
+      // Initial visibility check
+      this.updateVisibilityBasedOnSideNav();
 
       this.debug('Initialized successfully');
     } catch (error) {
@@ -700,6 +707,52 @@ export class FolderManager {
       childList: true,
       subtree: true,
     });
+  }
+
+  /**
+   * Setup observer to monitor sidebar open/close state
+   * Hides folder container when sidebar is collapsed for better UX
+   */
+  private setupSideNavObserver(): void {
+    const appRoot = document.querySelector('#app-root');
+    if (!appRoot) {
+      this.debugWarn('Could not find #app-root element for sidebar monitoring');
+      return;
+    }
+
+    this.sideNavObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          this.updateVisibilityBasedOnSideNav();
+        }
+      });
+    });
+
+    this.sideNavObserver.observe(appRoot, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    this.debug('Side nav observer setup complete');
+  }
+
+  /**
+   * Check if sidebar is open and update folder container visibility
+   * Sidebar is considered open when #app-root has 'side-nav-open' class
+   */
+  private updateVisibilityBasedOnSideNav(): void {
+    const appRoot = document.querySelector('#app-root');
+    if (!appRoot || !this.containerElement) return;
+
+    const isSideNavOpen = appRoot.classList.contains('side-nav-open');
+
+    if (isSideNavOpen) {
+      this.containerElement.style.display = '';
+      this.debug('Sidebar open - showing folder container');
+    } else {
+      this.containerElement.style.display = 'none';
+      this.debug('Sidebar closed - hiding folder container');
+    }
   }
 
   private createFolder(parentId: string | null = null): void {
