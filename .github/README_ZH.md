@@ -3,45 +3,20 @@
   <h1>Gemini Voyager</h1>
   <h3>让 Gemini 体验更上一层楼 ✨</h3>
   <p>优雅的时间线导航、文件夹管理对话、保存常用提示词——这一个强大的扩展就够了</p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Chrome-✓-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome">
+    <img src="https://img.shields.io/badge/Edge-✓-0078D7?style=flat-square&logo=microsoftedge&logoColor=white" alt="Edge">
+    <img src="https://img.shields.io/badge/Firefox-✓-FF7139?style=flat-square&logo=firefox&logoColor=white" alt="Firefox">
+    <img src="https://img.shields.io/badge/Safari-✓-000000?style=flat-square&logo=safari&logoColor=white" alt="Safari">
+    <img src="https://img.shields.io/badge/Opera-✓-FF1B2D?style=flat-square&logo=opera&logoColor=white" alt="Opera">
+    <img src="https://img.shields.io/badge/Brave-✓-FB542B?style=flat-square&logo=brave&logoColor=white" alt="Brave">
+  </p>
 </div>
 
 <p align="center">
   <a href="../README.md">English</a>
 </p>
-
----
-
-## 🚀 快速安装
-
-<div align="center">
-  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
-    <img src="https://img.shields.io/badge/立即安装-Chrome%20应用商店-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 应用商店安装" height="60">
-  </a>
-
-  <p><b>适用于所有 Chromium 浏览器：Chrome、Edge、Opera、Brave、Vivaldi、Arc 等</b></p>
-  <p><b>Safari 支持：可通过手动安装</b> - 从 <a href="https://github.com/Nagi-ovo/gemini-voyager/releases">Releases</a> 下载，查看<a href="../.github/docs/safari/INSTALLATION_ZH.md">安装指南</a></p>
-
-  <details>
-  <summary><i>使用 Edge 或 Opera？点击查看安装说明</i></summary>
-  <br>
-  <p align="left">
-    <b>Microsoft Edge 用户：</b><br>
-    1. 点击上方按钮访问 Chrome 应用商店<br>
-    2. 浏览器会提示"允许来自其他商店的扩展"<br>
-    3. 点击"允许"后即可正常安装<br>
-    <br>
-    <b>Opera 用户：</b><br>
-    1. 先安装 <a href="https://addons.opera.com/extensions/details/install-chrome-extensions/">Install Chrome Extensions</a>（Opera 官方扩展）<br>
-    2. 然后点击上方安装按钮<br>
-    3. 像在 Chrome 上一样安装即可<br>
-    <br>
-    <b>Brave、Vivaldi、Arc 等其他 Chromium 浏览器：</b><br>
-    直接点击上方安装按钮即可使用，无需任何额外步骤！
-  </p>
-  </details>
-
-  <p><i>Firefox 和 Safari：从 <a href="https://github.com/Nagi-ovo/gemini-voyager/releases">GitHub Releases</a> 下载（需要手动安装）</i></p>
-</div>
 
 ---
 
@@ -107,21 +82,12 @@
 
 ## 📥 安装方式
 
-### 方式一：Chrome 应用商店（推荐）
+> **⚠️ 推荐：** 从 [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载最新版本  
+> Chrome 应用商店的版本可能因审核延迟而不是最新的
 
-最简单的安装方法：
+### 方式一：手动安装（推荐）
 
-1. **访问 Chrome 应用商店**：[安装 Gemini Voyager](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb)
-2. **点击"添加至 Chrome"**
-3. **大功告成！** 扩展会自动在 Gemini 上激活
-
-**适用于：** Chrome、Edge、Opera 及其他 Chromium 内核浏览器
-
-### 方式二：手动安装（进阶）
-
-适合开发者或偏好手动安装的用户：
-
-#### 在 Chromium 浏览器上安装（Chrome / Edge / Opera）
+**Chromium 浏览器（Chrome、Edge、Opera、Brave、Vivaldi、Arc）：**
 
 1. 前往[项目 Releases 页面](https://github.com/Nagi-ovo/gemini-voyager/releases)，下载最新的 `gemini-voyager-chrome-vX.Y.Z.zip`
 2. 解压到任意文件夹（可看到根目录下的 `manifest.json` 文件）
@@ -130,30 +96,70 @@
    - Edge：访问 `edge://extensions`
    - Opera：访问 `opera://extensions`
 4. 点击"加载已解压的扩展程序"
-5. 选择刚才解压的文件夹（如 `Gemini Voyager vX.Y.Z`）
+5. 选择刚才解压的文件夹
 
-#### 在 Firefox 上安装
+<details>
+<summary>Firefox 安装方法</summary>
 
-1. 前往[项目 Releases 页面](https://github.com/Nagi-ovo/gemini-voyager/releases)，下载 `gemini-voyager-firefox-vX.Y.Z.zip`
+1. 前往 [项目 Releases 页面](https://github.com/Nagi-ovo/gemini-voyager/releases)，下载 `gemini-voyager-firefox-vX.Y.Z.zip`
 2. 解压文件
 3. 在 Firefox 中打开 `about:debugging#/runtime/this-firefox`
 4. 点击"临时载入附加组件..."
 5. 选择解压文件夹中的 `manifest.json` 文件
+</details>
 
-#### 在 Safari 上安装
+<details>
+<summary>Safari 安装方法</summary>
 
-1. 下载 `gemini-voyager-safari-vX.Y.Z.zip` 从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
+1. 从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载 `gemini-voyager-safari-vX.Y.Z.zip`
 2. 解压并转换：`xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"`
 3. 在 Xcode 中打开并运行（⌘R）
 4. 在 Safari → 设置 → 扩展中启用
 
 **系统要求：** macOS 11+、Xcode Command Line Tools（`xcode-select --install`）、Safari 14+
 
-**注意：** 本地使用无需 Apple Developer 账号！详细说明请查看[安装指南](../.github/docs/safari/INSTALLATION_ZH.md)。
+**注意：** 本地使用无需 Apple Developer 账号！详细说明请查看 [安装指南](../.github/docs/safari/INSTALLATION_ZH.md)。
+</details>
+
+### 方式二：Chrome 应用商店（更方便但可能不是最新版）
+
+<div align="center">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
+    <img src="https://img.shields.io/badge/从这里安装-Chrome%20应用商店-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 应用商店安装" height="50">
+  </a>
+</div>
+
+最简单的安装方法，但可能没有最新功能：
+
+1. 点击上方按钮访问 Chrome 应用商店
+2. 点击"添加至 Chrome"
+3. 扩展会自动在 Gemini 上激活
+
+**适用于：** Chrome、Edge、Opera、Brave、Vivaldi、Arc 等所有 Chromium 浏览器
+
+<details>
+<summary>Edge 和 Opera 用户的安装说明</summary>
+
+**Microsoft Edge 用户：**
+1. 通过上方按钮访问 Chrome 应用商店
+2. 浏览器会提示"允许来自其他商店的扩展"
+3. 点击"允许"后即可正常安装
+
+**Opera 用户：**
+1. 先安装 [Install Chrome Extensions](https://addons.opera.com/extensions/details/install-chrome-extensions/)（Opera 官方扩展）
+2. 然后访问 Chrome 应用商店
+3. 像在 Chrome 上一样安装即可
+
+**Brave、Vivaldi、Arc 等其他 Chromium 浏览器：**  
+无需任何额外步骤，直接从 Chrome 应用商店安装即可！
+</details>
 
 ---
 
 ## 🛠️ 开发者指南
+
+<details>
+<summary>点击查看开发环境配置方法</summary>
 
 想要参与贡献或自定义扩展？以下是开发环境配置方法：
 
@@ -190,6 +196,7 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
 - 调试与发布
 
 开发规范和最佳实践请参考 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+</details>
 
 ---
 
@@ -200,18 +207,12 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
 
 ## 🤝 参与贡献
 
-欢迎所有人参与贡献！无论你想要：
-- 🐛 报告 Bug
-- 💡 提出新功能建议
-- 📝 改进文档
-- 🔧 提交代码改进
+欢迎参与贡献！无论是报告问题、提出功能建议、改进文档还是提交代码：
 
-**开始参与：**
-- **Bug 报告**：使用我们的 [Bug 报告模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md)
-- **功能建议**：使用我们的[功能请求模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feat_request.md)
+- **Issue**：使用我们的 [Bug 报告模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md)或[功能请求模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feat_request.md)
 - **Pull Request**：查看[贡献指南](./CONTRIBUTING.md)了解详细说明
 
-感谢你帮助 **Gemini Voyager** 变得更好！❤️
+感谢你帮助 Gemini Voyager 变得更好！❤️
 
 ---
 

@@ -3,45 +3,20 @@
   <h1>Gemini Voyager</h1>
   <h3>Supercharge Your Gemini Experience ✨</h3>
   <p>Navigate conversations with an elegant timeline, organize chats with folders, and save your favorite prompts—all in one powerful extension.</p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Chrome-✓-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome">
+    <img src="https://img.shields.io/badge/Edge-✓-0078D7?style=flat-square&logo=microsoftedge&logoColor=white" alt="Edge">
+    <img src="https://img.shields.io/badge/Firefox-✓-FF7139?style=flat-square&logo=firefox&logoColor=white" alt="Firefox">
+    <img src="https://img.shields.io/badge/Safari-✓-000000?style=flat-square&logo=safari&logoColor=white" alt="Safari">
+    <img src="https://img.shields.io/badge/Opera-✓-FF1B2D?style=flat-square&logo=opera&logoColor=white" alt="Opera">
+    <img src="https://img.shields.io/badge/Brave-✓-FB542B?style=flat-square&logo=brave&logoColor=white" alt="Brave">
+  </p>
 </div>
 
 <p align="center">
   <a href="./.github/README_ZH.md">中文说明</a>
 </p>
-
----
-
-## 🚀 Quick Install
-
-<div align="center">
-  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
-    <img src="https://img.shields.io/badge/Install%20Now-Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store" height="60">
-  </a>
-
-  <p><b>Works on all Chromium browsers: Chrome, Edge, Opera, Brave, Vivaldi, Arc, and more</b></p>
-  <p><b>Safari support: Available via manual installation</b> - Download from <a href="https://github.com/Nagi-ovo/gemini-voyager/releases">Releases</a> and see <a href=".github/docs/safari/INSTALLATION.md">installation guide</a></p>
-
-  <details>
-  <summary><i>Using Edge or Opera? Click here for installation tips</i></summary>
-  <br>
-  <p align="left">
-    <b>For Microsoft Edge users:</b><br>
-    1. Click the install button above to visit Chrome Web Store<br>
-    2. You'll see a prompt "Allow extensions from other stores"<br>
-    3. Click "Allow" and then install normally<br>
-    <br>
-    <b>For Opera users:</b><br>
-    1. First install <a href="https://addons.opera.com/extensions/details/install-chrome-extensions/">Install Chrome Extensions</a> (official Opera extension)<br>
-    2. Then click the install button above<br>
-    3. Install like you would on Chrome<br>
-    <br>
-    <b>For Brave, Vivaldi, Arc, and other Chromium browsers:</b><br>
-    Just click the install button above—it works right out of the box! No extra steps needed.
-  </p>
-  </details>
-
-  <p><i>Firefox and Safari: Download from <a href="https://github.com/Nagi-ovo/gemini-voyager/releases">GitHub Releases</a> (manual installation required)</i></p>
-</div>
 
 ---
 
@@ -91,7 +66,8 @@ Download your conversations for safekeeping:
 - **Includes Stars**: Your starred messages are preserved in the export
 - **No Clutter**: Automatically removes UI labels like "Show thinking" for cleaner data
 
-Example payload shape:
+<details>
+<summary>Example payload shape</summary>
 
 ```json
 {
@@ -104,45 +80,40 @@ Example payload shape:
   ]
 }
 ```
+</details>
 
 ---
 
-## 📥 Installation Options
+## 📥 Installation
 
-### Option 1: Chrome Web Store (Recommended)
+> **⚠️ Recommended:** Download the latest version from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)  
+> The Chrome Web Store version may lag behind due to review delays.
 
-The easiest way to get started:
+### Option 1: Manual Installation (Recommended)
 
-1. **Visit the Chrome Web Store**: [Install Gemini Voyager](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb)
-2. **Click "Add to Chrome"**
-3. **You're all set!** The extension will activate automatically on Gemini
+**For Chromium browsers (Chrome, Edge, Opera, Brave, Vivaldi, Arc):**
 
-**Works on:** Chrome, Edge, Opera, and other Chromium-based browsers
-
-### Option 2: Manual Installation (Advanced)
-
-For developers or users who prefer manual installation:
-
-#### Load your extension (Chromium: Chrome / Edge / Opera)
-
-1. Go to the [repository Releases page](https://github.com/Nagi-ovo/gemini-voyager/releases) and download the latest archive named like `gemini-voyager-chrome-vX.Y.Z.zip`.
-2. Unzip it to a folder (you will see `manifest.json` at the root).
+1. Go to the [repository Releases page](https://github.com/Nagi-ovo/gemini-voyager/releases) and download the latest `gemini-voyager-chrome-vX.Y.Z.zip`
+2. Unzip it to a folder (you will see `manifest.json` at the root)
 3. Open your extensions page and enable Developer mode:
    - Chrome: `chrome://extensions`
    - Edge: `edge://extensions`
    - Opera: `opera://extensions`
-4. Click "Load unpacked".
-5. Select the unzipped folder (e.g. `Gemini Voyager vX.Y.Z`).
+4. Click "Load unpacked"
+5. Select the unzipped folder
 
-#### Load your extension (Firefox)
+<details>
+<summary>Firefox Installation</summary>
 
 1. Go to the [repository Releases page](https://github.com/Nagi-ovo/gemini-voyager/releases) and download `gemini-voyager-firefox-vX.Y.Z.zip`
 2. Unzip it
 3. Open `about:debugging#/runtime/this-firefox` in Firefox
 4. Click "Load Temporary Add-on…"
 5. Select the `manifest.json` inside the unzipped folder
+</details>
 
-#### Load your extension (Safari)
+<details>
+<summary>Safari Installation</summary>
 
 1. Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
 2. Unzip and convert: `xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"`
@@ -152,10 +123,47 @@ For developers or users who prefer manual installation:
 **Requirements:** macOS 11+, Xcode Command Line Tools (`xcode-select --install`), Safari 14+
 
 **Note:** No Apple Developer account needed for local use! For detailed instructions, see the [installation guide](.github/docs/safari/INSTALLATION.md) ([中文](.github/docs/safari/INSTALLATION_ZH.md)).
+</details>
+
+### Option 2: Chrome Web Store (Easier but may be outdated)
+
+<div align="center">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
+    <img src="https://img.shields.io/badge/Install%20from-Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store" height="50">
+  </a>
+</div>
+
+The easiest installation method, but may not have the latest features:
+
+1. Click the button above to visit the Chrome Web Store
+2. Click "Add to Chrome"
+3. The extension will activate automatically on Gemini
+
+**Works on:** Chrome, Edge, Opera, Brave, Vivaldi, Arc, and other Chromium browsers
+
+<details>
+<summary>Installation tips for Edge and Opera users</summary>
+
+**For Microsoft Edge users:**
+1. Visit Chrome Web Store via the button above
+2. You'll see a prompt "Allow extensions from other stores"
+3. Click "Allow" and install normally
+
+**For Opera users:**
+1. First install [Install Chrome Extensions](https://addons.opera.com/extensions/details/install-chrome-extensions/) (official Opera extension)
+2. Then visit Chrome Web Store
+3. Install like you would on Chrome
+
+**For Brave, Vivaldi, Arc, and other Chromium browsers:**  
+No extra steps needed—just install directly from Chrome Web Store!
+</details>
 
 ---
 
 ## 🛠️ For Developers
+
+<details>
+<summary>Click to see development setup instructions</summary>
 
 Want to contribute or customize the extension? Here's how to set up the development environment:
 
@@ -192,6 +200,7 @@ Safari requires additional build steps. See [safari/README.md](safari/README.md)
 - Debugging and distribution
 
 For contribution guidelines and best practices, see [CONTRIBUTING.md](./.github/CONTRIBUTING.md).
+</details>
 
 ---
 
@@ -202,18 +211,12 @@ Inspired by [ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-
 
 ## 🤝 Contributing
 
-We welcome contributions from everyone! Whether you want to:
-- 🐛 Report a bug
-- 💡 Suggest a new feature
-- 📝 Improve documentation
-- 🔧 Submit code improvements
+We welcome contributions! Whether you want to report bugs, suggest features, improve documentation, or submit code:
 
-**Getting Started:**
-- **Bug Reports**: Use our [bug report template](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md)
-- **Feature Requests**: Use our [feature request template](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feat_request.md)
+- **Issues**: Use our [bug report](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) or [feature request](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feat_request.md) templates
 - **Pull Requests**: Check out [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for guidelines
 
-Thank you for helping make **Gemini Voyager** better! ❤️
+Thank you for helping make Gemini Voyager better! ❤️
 
 ---
 
