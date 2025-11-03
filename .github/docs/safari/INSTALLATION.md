@@ -1,6 +1,8 @@
-# Safari Extension 构建指南
+# Safari Extension Installation Guide
 
-本指南说明如何为 Safari 浏览器构建和测试 Gemini Voyager 扩展。
+English | [简体中文](INSTALLATION_ZH.md)
+
+This guide explains how to install and test the Gemini Voyager extension for Safari.
 
 ## 前置要求
 
@@ -19,8 +21,8 @@
 ### 1. 构建扩展
 
 ```bash
-# 方法 A: 使用 npm 脚本
-npm run build:safari
+# 方法 A: 使用 bun 脚本
+bun run build:safari
 
 # 方法 B: 使用构建脚本（推荐）
 ./scripts/build-safari.sh
@@ -36,7 +38,7 @@ Safari 扩展需要转换为 Xcode 项目格式：
 # 基本转换（创建 Xcode 项目）
 xcrun safari-web-extension-converter dist_safari --app-name "Gemini Voyager"
 
-# 仅用于 macOS（不包含 iOS）
+# 仅用于 macOS（不包含 iOS）- 推荐
 xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
 
 # 指定输出目录
@@ -46,19 +48,46 @@ xcrun safari-web-extension-converter dist_safari \
   --project-location ./safari-build
 ```
 
-### 3. 在 Xcode 中打开项目
+**💡 提示**：转换后会在当前目录生成 `Gemini Voyager/` 文件夹，包含完整的 Xcode 项目。
+
+### 3. 添加 Swift 原生代码（可选但推荐）
+
+项目包含 Swift 原生代码用于增强 Safari 集成：
 
 ```bash
-# 转换后会创建一个 .xcodeproj 文件
+# 打开 Xcode 项目
 open "Gemini Voyager/Gemini Voyager.xcodeproj"
 ```
 
-### 4. 签名和运行
+在 Xcode 中：
+1. 右键点击 **"Gemini Voyager Extension"** 目标
+2. 选择 **Add Files to "Gemini Voyager Extension"...**
+3. 导航到项目根目录的 `safari/` 文件夹
+4. 选择 `App/` 和 `Models/` 文件夹
+5. 勾选 **"Copy items if needed"**
+6. 确保目标选择为 **"Gemini Voyager Extension"**
 
-1. 在 Xcode 中选择你的开发团队（Team）
-2. 选择目标设备：**My Mac**
-3. 点击 **Run** (⌘R) 按钮
-4. Safari 会自动打开并加载扩展
+**包含的 Swift 文件**：
+- `SafariWebExtensionHandler.swift` - 原生消息处理
+- `SafariMessage.swift` - 消息类型定义
+
+**为什么添加 Swift 代码？**
+- 🔐 访问 macOS 钥匙串（未来功能）
+- 📢 原生通知支持
+- 📁 文件系统访问
+- 🔄 设备间数据同步
+- 🐛 更好的调试日志
+
+详见 [`safari/README.md`](safari/README.md) 了解更多。
+
+### 4. 配置和构建
+
+1. 在 Xcode 中选择 **Signing & Capabilities**
+2. 选择你的开发团队（Team）- 可以使用免费的个人团队
+3. 确保 Bundle Identifier 唯一（如需要可修改）
+4. 选择目标设备：**My Mac**
+5. 点击 **Run** (⌘R) 按钮构建并运行
+6. Safari 会自动打开并加载扩展
 
 ### 5. 在 Safari 中启用扩展
 
@@ -74,7 +103,7 @@ open "Gemini Voyager/Gemini Voyager.xcodeproj"
 实时监听文件变化并自动重新构建：
 
 ```bash
-npm run dev:safari
+bun run dev:safari
 ```
 
 每次文件修改后：
@@ -86,7 +115,7 @@ npm run dev:safari
 
 ```bash
 # 修改代码后
-npm run build:safari
+bun run build:safari
 
 # 在 Xcode 中重新运行
 ```
@@ -182,7 +211,7 @@ xcode-select --install
 rm -rf dist_safari/
 
 # 2. 构建新版本
-npm run build:safari
+bun run build:safari
 
 # 3. 转换为 Safari 扩展
 xcrun safari-web-extension-converter dist_safari \

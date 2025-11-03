@@ -12,11 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `vite.config.safari.ts` for Safari-specific build configuration
   - Added `nodemon.safari.json` for Safari development mode with auto-reload
   - Added `scripts/build-safari.sh` automated build script for Safari
-  - Added comprehensive Safari build guide (`SAFARI_BUILD.md`)
+  - Added comprehensive Safari build guide ([EN](safari/INSTALLATION.md) | [中文](safari/INSTALLATION_ZH.md))
   - Added Safari build commands to `package.json`:
-    - `npm run build:safari` - Build for Safari
-    - `npm run dev:safari` - Development mode for Safari
-    - `npm run build:all` - Build for all browsers (Chrome, Firefox, Safari)
+    - `bun run build:safari` - Build for Safari
+    - `bun run dev:safari` - Development mode for Safari
+    - `bun run build:all` - Build for all browsers (Chrome, Firefox, Safari)
 
 ### Changed
 - **Cross-browser compatibility improvements**
@@ -31,11 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dependency version conflicts**
   - Downgraded `marked` from v12 to v11 for compatibility with `marked-katex-extension`
   - Upgraded `@typescript-eslint/eslint-plugin` from v7 to v8 to match parser version
-  - Resolved all peer dependency conflicts for clean `npm install`
+  - Resolved all peer dependency conflicts for clean `bun install`
 
 ### Documentation
 - Updated `README.md` with Safari installation and development instructions
-- Added detailed Safari build guide (`SAFARI_BUILD.md`) including:
+- Added detailed Safari build guide including:
   - Prerequisites and system requirements
   - Quick start guide
   - Development workflow
@@ -71,12 +71,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### For Users
 - No changes required for existing Chrome/Firefox users
-- Safari users: Follow the new installation guide in `SAFARI_BUILD.md`
+- Safari users: Follow the new [installation guide](safari/INSTALLATION.md) ([中文](safari/INSTALLATION_ZH.md))
 
 ### For Developers
 - All `chrome.*` API usage has been replaced with `browser.*`
 - Storage API calls now return Promises (use `.then()` or `await`)
-- `npm install` now works without `--legacy-peer-deps` flag
+- `bun install` now works without any additional flags
 - New build commands available for Safari development
 
 ### Breaking Changes
