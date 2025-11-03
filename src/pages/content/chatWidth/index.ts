@@ -48,20 +48,46 @@ function applyWidth(width: number) {
   const assistantRules = assistantSelectors.map(sel => `${sel}`).join(',\n    ');
 
   style.textContent = `
+    /* Remove width constraints from outer containers that contain conversations */
+    .content-wrapper:has(chat-window),
+    .main-content:has(chat-window),
+    .content-container:has(chat-window),
+    .content-container:has(.conversation-container) {
+      max-width: none !important;
+    }
+
     /* Remove width constraints from main and conversation containers, but not buttons */
-    [role="main"] {
+    [role="main"]:has(chat-window),
+    [role="main"]:has(.conversation-container) {
+      max-width: none !important;
+    }
+
+    /* Target chat window and related containers */
+    chat-window,
+    .chat-container,
+    chat-window-content,
+    .chat-history-scroll-container,
+    .chat-history,
+    .conversation-container {
       max-width: none !important;
     }
 
     main > div:has(user-query),
-    main > div:has(model-response) {
+    main > div:has(model-response),
+    main > div:has(.conversation-container) {
       max-width: none !important;
       width: 100% !important;
     }
 
     /* Fallback for browsers without :has() support */
     @supports not selector(:has(*)) {
-      main > div:not(:has(button)) {
+      .content-wrapper,
+      .main-content,
+      .content-container {
+        max-width: none !important;
+      }
+
+      main > div:not(:has(button)):not(.main-menu-button) {
         max-width: none !important;
         width: 100% !important;
       }
