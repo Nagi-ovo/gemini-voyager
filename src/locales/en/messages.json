@@ -67,6 +67,7 @@
   ,"folder_delete_confirm": { "message": "Delete this folder and all its contents?", "description": "Delete folder confirmation" }
   ,"folder_create_subfolder": { "message": "Create subfolder", "description": "Create subfolder menu item" }
   ,"folder_rename": { "message": "Rename", "description": "Rename folder menu item" }
+  ,"folder_duplicate": { "message": "Duplicate", "description": "Duplicate folder menu item" }
   ,"folder_delete": { "message": "Delete", "description": "Delete folder menu item" }
   ,"folder_remove_conversation": { "message": "Remove from folder", "description": "Remove conversation button tooltip" }
   ,"folder_remove_conversation_confirm": { "message": "Remove \"{title}\" from this folder?", "description": "Remove conversation confirmation" }
