@@ -780,7 +780,10 @@ export class FolderManager {
     inputContainer.appendChild(saveBtn);
     inputContainer.appendChild(cancelBtn);
 
-    const save = () => {
+    const save = (e?: Event) => {
+      e?.stopPropagation();
+      e?.preventDefault();
+      
       const name = input.value.trim();
       if (!name) {
         inputContainer.remove();
@@ -802,15 +805,21 @@ export class FolderManager {
       this.refresh();
     };
 
-    const cancel = () => {
+    const cancel = (e?: Event) => {
+      e?.stopPropagation();
+      e?.preventDefault();
       inputContainer.remove();
     };
 
-    saveBtn.addEventListener('click', save);
-    cancelBtn.addEventListener('click', cancel);
+    saveBtn.addEventListener('click', (e) => save(e));
+    cancelBtn.addEventListener('click', (e) => cancel(e));
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') save();
-      if (e.key === 'Escape') cancel();
+      if (e.key === 'Enter') {
+        save(e);
+      }
+      if (e.key === 'Escape') {
+        cancel(e);
+      }
     });
 
     // Insert input into the folder list
@@ -870,7 +879,10 @@ export class FolderManager {
     inputContainer.appendChild(saveBtn);
     inputContainer.appendChild(cancelBtn);
 
-    const save = () => {
+    const save = (e?: Event) => {
+      e?.stopPropagation();
+      e?.preventDefault();
+      
       const newName = input.value.trim();
       if (!newName) {
         restore();
@@ -889,15 +901,21 @@ export class FolderManager {
       folderNameEl.classList.remove('gv-hidden');
     };
 
-    const cancel = () => {
+    const cancel = (e?: Event) => {
+      e?.stopPropagation();
+      e?.preventDefault();
       restore();
     };
 
-    saveBtn.addEventListener('click', save);
-    cancelBtn.addEventListener('click', cancel);
+    saveBtn.addEventListener('click', (e) => save(e));
+    cancelBtn.addEventListener('click', (e) => cancel(e));
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') save();
-      if (e.key === 'Escape') cancel();
+      if (e.key === 'Enter') {
+        save(e);
+      }
+      if (e.key === 'Escape') {
+        cancel(e);
+      }
     });
 
     // Hide original name and show input

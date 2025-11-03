@@ -73,9 +73,13 @@
   background-color: var(--timeline-bar-bg);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  transition: background-color 0.3s ease;
+  opacity: 0.3;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
   overflow: visible;
   contain: layout;
+}
+.gemini-timeline-bar:hover {
+  opacity: 1;
 }
 .timeline-track {
   position: relative;
