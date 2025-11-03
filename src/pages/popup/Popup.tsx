@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import browser from 'webextension-polyfill';
 
 import useI18n from '../../hooks/useI18n';
 
@@ -12,19 +13,18 @@ export default function Popup() {
 
   useEffect(() => {
     try {
-      chrome.storage?.sync?.get(
+      browser.storage.sync.get(
         {
           geminiTimelineScrollMode: 'flow',
           geminiTimelineHideContainer: false,
           geminiTimelineDraggable: false,
         },
-        (res) => {
-          const m = res?.geminiTimelineScrollMode as ScrollMode;
-          if (m === 'jump' || m === 'flow') setMode(m);
-          setHideContainer(!!res?.geminiTimelineHideContainer);
-          setDraggableTimeline(!!res?.geminiTimelineDraggable);
-        }
-      );
+      ).then((res) => {
+        const m = res?.geminiTimelineScrollMode as ScrollMode;
+        if (m === 'jump' || m === 'flow') setMode(m);
+        setHideContainer(!!res?.geminiTimelineHideContainer);
+        setDraggableTimeline(!!res?.geminiTimelineDraggable);
+      });
     } catch {}
   }, []);
 
@@ -40,7 +40,7 @@ export default function Popup() {
     if (typeof nextDraggable === 'boolean') payload.geminiTimelineDraggable = nextDraggable;
     if (resetPosition) payload.geminiTimelinePosition = null;
     try {
-      chrome.storage?.sync?.set(payload);
+      browser.storage.sync.set(payload);
     } catch {}
   };
 
