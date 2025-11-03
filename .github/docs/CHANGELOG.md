@@ -9,88 +9,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Safari browser support** 🎉
-  - Added `vite.config.safari.ts` for Safari-specific build configuration
-  - Added `nodemon.safari.json` for Safari development mode with auto-reload
-  - Added `scripts/build-safari.sh` automated build script for Safari
-  - Added comprehensive Safari build guide ([EN](safari/INSTALLATION.md) | [中文](safari/INSTALLATION_ZH.md))
-  - Added Safari build commands to `package.json`:
-    - `bun run build:safari` - Build for Safari
-    - `bun run dev:safari` - Development mode for Safari
-    - `bun run build:all` - Build for all browsers (Chrome, Firefox, Safari)
+  - Safari build configuration and development mode
+  - Installation guide ([EN](.github/docs/safari/INSTALLATION.md) | [中文](.github/docs/safari/INSTALLATION_ZH.md))
+  - Development guide ([EN](safari/README.md) | [中文](safari/README_ZH.md))
+  - New commands: `build:safari`, `dev:safari`, `build:all`
 
 ### Changed
-- **Cross-browser compatibility improvements**
-  - Migrated from `chrome.*` API to `browser.*` API (via webextension-polyfill) for better cross-browser support
-  - Updated `src/pages/popup/Popup.tsx` to use Promise-based storage API
-  - Updated `src/pages/content/timeline/manager.ts` to use browser.storage with proper error handling
-  - Updated `src/pages/content/prompt/index.ts` to use unified browser API
-  - Updated `src/pages/content/export/index.ts` to use cross-browser compatible storage
-  - All storage API calls now use async/await pattern instead of callbacks
+- **Cross-browser compatibility**
+  - Migrated to `browser.*` API via `webextension-polyfill` for better compatibility
+  - All storage APIs now use async/await pattern
 
 ### Fixed
-- **Dependency version conflicts**
-  - Downgraded `marked` from v12 to v11 for compatibility with `marked-katex-extension`
-  - Upgraded `@typescript-eslint/eslint-plugin` from v7 to v8 to match parser version
-  - Resolved all peer dependency conflicts for clean `bun install`
+- **Dependencies**
+  - Downgraded `marked` to v11 for compatibility
+  - Upgraded `@typescript-eslint/eslint-plugin` to v8
+  - Resolved peer dependency conflicts
 
-### Documentation
-- Updated `README.md` with Safari installation and development instructions
-- Added detailed Safari build guide including:
-  - Prerequisites and system requirements
-  - Quick start guide
-  - Development workflow
-  - Common troubleshooting tips
-  - App Store publishing guide
-- Updated developer setup instructions with all three browser platforms
-
-### Technical Details
-- Extension now supports three major browser engines:
-  - **Chromium** (Chrome, Edge, Opera, Brave, Vivaldi, Arc)
-  - **Gecko** (Firefox)
-  - **WebKit** (Safari) ⭐ NEW
-- All features work consistently across all supported browsers:
-  - ✅ Interactive Timeline
-  - ✅ Folder Manager
-  - ✅ Prompt Manager
-  - ✅ Chat Export
+### Supported Browsers
+- **Chromium** (Chrome, Edge, Opera, Brave, Vivaldi, Arc)
+- **Gecko** (Firefox)
+- **WebKit** (Safari) ⭐ NEW
 
 ## [0.6.1] - Previous Release
 
 ### Features
-- Interactive conversation timeline with visual navigation
-- Folder management for organizing chats
-- Prompt library with tags and search
-- Chat history export to JSON
-- Cross-tab star synchronization
-- Markdown and KaTeX rendering support
-- Multi-language support (English, 中文)
+- Interactive conversation timeline
+- Folder management
+- Prompt library with search
+- Chat export to JSON
+- Cross-tab star sync
+- Markdown/KaTeX rendering
+- Multi-language (EN, 中文)
 
 ---
 
 ## Migration Notes
 
-### For Users
-- No changes required for existing Chrome/Firefox users
-- Safari users: Follow the new [installation guide](safari/INSTALLATION.md) ([中文](safari/INSTALLATION_ZH.md))
+### Users
+- Chrome/Firefox: No changes needed
+- Safari: See [installation guide](.github/docs/safari/INSTALLATION.md)
 
-### For Developers
-- All `chrome.*` API usage has been replaced with `browser.*`
-- Storage API calls now return Promises (use `.then()` or `await`)
-- `bun install` now works without any additional flags
-- New build commands available for Safari development
-
-### Breaking Changes
-- None for end users
-- For developers: If you have custom code using `chrome.*` API, update to `browser.*`
-
----
-
-## Credits
-
-Safari support implementation includes:
-- Cross-browser API compatibility layer using `webextension-polyfill`
-- Safari Web Extension Converter integration
-- Comprehensive documentation and build automation
-
-Special thanks to the WebExtensions community for cross-browser standards.
+### Developers
+- API changed from `chrome.*` to `browser.*`
+- Storage now uses Promises (async/await)
+- New Safari build commands available
 
