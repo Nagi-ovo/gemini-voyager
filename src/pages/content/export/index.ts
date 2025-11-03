@@ -1,4 +1,4 @@
-import browser from 'webextension-polyfill';
+import { browserAPI } from '@/utils/browser-api';
 
 function hashString(input: string): string {
   let h = 2166136261 >>> 0;
@@ -287,7 +287,7 @@ function normalizeLang(lang: string | undefined): 'en' | 'zh' {
 
 async function getLanguage(): Promise<'en' | 'zh'> {
   try {
-    const stored = await browser.storage.sync.get('language');
+    const stored = await browserAPI.storage.sync.get('language');
     const v = typeof stored?.language === 'string' ? stored.language : undefined;
     return normalizeLang(v || (navigator.language || 'en'));
   } catch {
@@ -316,7 +316,7 @@ export async function startExportButton(): Promise<void> {
 
   // listen for runtime language changes
   try {
-    browser.storage.onChanged.addListener((changes: any, areaName: string) => {
+    browserAPI.storage.onChanged.addListener((changes: any, areaName: string) => {
       if (areaName !== 'sync') return;
       if (changes?.language) {
         const next = normalizeLang(changes.language.newValue);

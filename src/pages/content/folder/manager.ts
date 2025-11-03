@@ -1,4 +1,4 @@
-import browser from 'webextension-polyfill';
+import { browserAPI } from '@/utils/browser-api';
 
 import {
   getGemIcon,
@@ -1121,9 +1121,9 @@ export class FolderManager {
 
   private t(key: string): string {
     try {
-      // Use webextension-polyfill for cross-browser compatibility
-      // This works for Chrome, Edge, Opera, Firefox, etc.
-      const message = browser.i18n.getMessage(key);
+      // Use browserAPI for cross-browser compatibility
+      // This works for Chrome, Edge, Opera, Firefox, Safari, etc.
+      const message = browserAPI.i18n.getMessage(key);
       if (message && message.trim()) {
         return message;
       }
@@ -1132,7 +1132,7 @@ export class FolderManager {
       this.debugWarn('i18n error for key:', key, e);
     }
 
-    // Fallback translations if browser.i18n is not available or returns empty
+    // Fallback translations if browserAPI.i18n is not available or returns empty
     const fallback: Record<string, string> = {
       folder_title: 'Folders',
       folder_create: 'Create folder',
