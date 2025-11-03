@@ -10,9 +10,6 @@ const outDir = resolve(__dirname, 'dist_chrome');
 export default mergeConfig(
   baseConfig,
   defineConfig({
-    define: {
-      __BROWSER_TARGET__: JSON.stringify('chrome'),
-    },
     plugins: [
       crx({
         manifest: {

@@ -1,5 +1,3 @@
-import { browserAPI } from '@/utils/browser-api';
-
 import { DotElement } from './types';
 
 function hashString(input: string): string {
@@ -131,47 +129,52 @@ export class TimelineManager {
     this.conversationId = this.computeConversationId();
     this.loadStars();
     try {
-      // Use browserAPI.storage for cross-browser compatibility (Chrome, Firefox, Safari)
-      browserAPI.storage.sync.get({
-        geminiTimelineScrollMode: 'flow',
-        geminiTimelineHideContainer: false,
-        geminiTimelineDraggable: false,
-        geminiTimelinePosition: null,
-      }).then((res: any) => {
-        const m = res?.geminiTimelineScrollMode;
-        if (m === 'flow' || m === 'jump') this.scrollMode = m;
-        this.hideContainer = !!res?.geminiTimelineHideContainer;
-        this.applyContainerVisibility();
-        this.toggleDraggable(!!res?.geminiTimelineDraggable);
-        if (res?.geminiTimelinePosition) {
-          this.ui.timelineBar!.style.top = `${res.geminiTimelinePosition.top}px`;
-          this.ui.timelineBar!.style.left = `${res.geminiTimelinePosition.left}px`;
-        }
-      }).catch(() => {
-        // Fallback to localStorage if browserAPI.storage is not available
+      // prefer chrome.storage if available to sync with popup
+      if ((window as any).chrome?.storage?.sync) {
+        (window as any).chrome.storage.sync.get(
+          {
+            geminiTimelineScrollMode: 'flow',
+            geminiTimelineHideContainer: false,
+            geminiTimelineDraggable: false,
+            geminiTimelinePosition: null,
+          },
+          (res: any) => {
+            const m = res?.geminiTimelineScrollMode;
+            if (m === 'flow' || m === 'jump') this.scrollMode = m;
+            this.hideContainer = !!res?.geminiTimelineHideContainer;
+            this.applyContainerVisibility();
+            this.toggleDraggable(!!res?.geminiTimelineDraggable);
+            if (res?.geminiTimelinePosition) {
+              this.ui.timelineBar!.style.top = `${res.geminiTimelinePosition.top}px`;
+              this.ui.timelineBar!.style.left = `${res.geminiTimelinePosition.left}px`;
+            }
+          }
+        );
+        // listen for changes from popup and update mode live
+        try {
+          (window as any).chrome.storage.onChanged.addListener((changes: any, area: string) => {
+            if (area !== 'sync') return;
+            if (changes?.geminiTimelineScrollMode) {
+              const n = changes.geminiTimelineScrollMode.newValue;
+              if (n === 'flow' || n === 'jump') this.scrollMode = n;
+            }
+            if (changes?.geminiTimelineHideContainer) {
+              this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
+              this.applyContainerVisibility();
+            }
+            if (changes?.geminiTimelineDraggable) {
+              this.toggleDraggable(!!changes.geminiTimelineDraggable.newValue);
+            }
+            if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
+              this.ui.timelineBar!.style.top = '';
+              this.ui.timelineBar!.style.left = '';
+            }
+          });
+        } catch {}
+      } else {
         const saved = localStorage.getItem('geminiTimelineScrollMode');
         if (saved === 'flow' || saved === 'jump') this.scrollMode = saved;
-      });
-      
-      // Listen for changes from popup and update mode live
-      browserAPI.storage.onChanged.addListener((changes: any, areaName: string) => {
-        if (areaName !== 'sync') return;
-        if (changes?.geminiTimelineScrollMode) {
-          const n = changes.geminiTimelineScrollMode.newValue;
-          if (n === 'flow' || n === 'jump') this.scrollMode = n;
-        }
-        if (changes?.geminiTimelineHideContainer) {
-          this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
-          this.applyContainerVisibility();
-        }
-        if (changes?.geminiTimelineDraggable) {
-          this.toggleDraggable(!!changes.geminiTimelineDraggable.newValue);
-        }
-        if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
-          this.ui.timelineBar!.style.top = '';
-          this.ui.timelineBar!.style.left = '';
-        }
-      });
+      }
     } catch {}
   }
 
@@ -1441,9 +1444,7 @@ export class TimelineManager {
     if (!this.ui.timelineBar) return;
     const rect = this.ui.timelineBar.getBoundingClientRect();
     const { top, left } = rect;
-    browserAPI.storage.sync.set({ geminiTimelinePosition: { top, left } }).catch(() => {
-      // Silently fail if storage is not available
-    });
+    chrome.storage.sync.set({ geminiTimelinePosition: { top, left } });
   }
 
   private hideTooltip(immediate = false): void {

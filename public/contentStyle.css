@@ -73,13 +73,9 @@
   background-color: var(--timeline-bar-bg);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  opacity: 0.3;
-  transition: background-color 0.3s ease, opacity 0.3s ease;
+  transition: background-color 0.3s ease;
   overflow: visible;
   contain: layout;
-}
-.gemini-timeline-bar:hover {
-  opacity: 1;
 }
 .timeline-track {
   position: relative;
@@ -606,8 +602,6 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
 
 .gv-folder-header .title-container {
   flex: 1;
-  min-width: 0; /* Allow text ellipsis to work */
-  overflow: hidden;
 }
 
 /* Let native Gemini title styles take precedence - don't override */
@@ -617,12 +611,6 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   /* Make the title darker/more subtle */
   opacity: 0.7;
   color: var(--bard-color-on-surface-variant);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-  flex-shrink: 1;
-  transition: opacity 0.2s ease;
 }
 
 .gv-folder-add-btn {
@@ -637,7 +625,6 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s, color 0.2s;
-  flex-shrink: 0; /* Prevent button from shrinking when sidebar is narrow */
 }
 
 .gv-folder-add-btn:hover {

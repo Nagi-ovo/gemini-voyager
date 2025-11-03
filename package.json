@@ -26,7 +26,7 @@
   "dependencies": {
     "dompurify": "^3",
     "katex": "^0.16",
-    "marked": "^11",
+    "marked": "^12",
     "marked-katex-extension": "^4",
     "prettier": "^3.6.2",
     "react": "^19.1.0",
@@ -41,7 +41,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@types/webextension-polyfill": "^0.12.3",
-    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
     "@typescript-eslint/parser": "^8.46.2",
     "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9.38.0",

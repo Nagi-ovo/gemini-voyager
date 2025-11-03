@@ -1,4 +1,4 @@
-import { browserAPI } from '@/utils/browser-api';
+import browser from 'webextension-polyfill';
 
 import {
   getGemIcon,
@@ -780,10 +780,7 @@ export class FolderManager {
     inputContainer.appendChild(saveBtn);
     inputContainer.appendChild(cancelBtn);
 
-    const save = (e?: Event) => {
-      e?.stopPropagation();
-      e?.preventDefault();
-      
+    const save = () => {
       const name = input.value.trim();
       if (!name) {
         inputContainer.remove();
@@ -805,21 +802,15 @@ export class FolderManager {
       this.refresh();
     };
 
-    const cancel = (e?: Event) => {
-      e?.stopPropagation();
-      e?.preventDefault();
+    const cancel = () => {
       inputContainer.remove();
     };
 
-    saveBtn.addEventListener('click', (e) => save(e));
-    cancelBtn.addEventListener('click', (e) => cancel(e));
+    saveBtn.addEventListener('click', save);
+    cancelBtn.addEventListener('click', cancel);
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        save(e);
-      }
-      if (e.key === 'Escape') {
-        cancel(e);
-      }
+      if (e.key === 'Enter') save();
+      if (e.key === 'Escape') cancel();
     });
 
     // Insert input into the folder list
@@ -879,10 +870,7 @@ export class FolderManager {
     inputContainer.appendChild(saveBtn);
     inputContainer.appendChild(cancelBtn);
 
-    const save = (e?: Event) => {
-      e?.stopPropagation();
-      e?.preventDefault();
-      
+    const save = () => {
       const newName = input.value.trim();
       if (!newName) {
         restore();
@@ -901,21 +889,15 @@ export class FolderManager {
       folderNameEl.classList.remove('gv-hidden');
     };
 
-    const cancel = (e?: Event) => {
-      e?.stopPropagation();
-      e?.preventDefault();
+    const cancel = () => {
       restore();
     };
 
-    saveBtn.addEventListener('click', (e) => save(e));
-    cancelBtn.addEventListener('click', (e) => cancel(e));
+    saveBtn.addEventListener('click', save);
+    cancelBtn.addEventListener('click', cancel);
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        save(e);
-      }
-      if (e.key === 'Escape') {
-        cancel(e);
-      }
+      if (e.key === 'Enter') save();
+      if (e.key === 'Escape') cancel();
     });
 
     // Hide original name and show input
@@ -991,55 +973,6 @@ export class FolderManager {
       result.push(...this.getFolderAndDescendants(child.id));
     });
     return result;
-  }
-
-  private duplicateFolder(folderId: string): void {
-    const folder = this.data.folders.find((f) => f.id === folderId);
-    if (!folder) return;
-
-    // Create a copy of the folder with a new ID and "(Copy)" suffix
-    const newFolder: Folder = {
-      id: this.generateId(),
-      name: `${folder.name} (Copy)`,
-      parentId: folder.parentId,
-      isExpanded: folder.isExpanded,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-
-    this.data.folders.push(newFolder);
-
-    // Copy all conversations from the original folder
-    const originalContents = this.data.folderContents[folderId] || [];
-    this.data.folderContents[newFolder.id] = originalContents.map((conv) => ({
-      ...conv,
-      // Keep the same conversation references (they point to same chats)
-    }));
-
-    // Recursively duplicate all subfolders
-    const subfolders = this.data.folders.filter((f) => f.parentId === folderId);
-    const idMapping: Record<string, string> = { [folderId]: newFolder.id };
-
-    subfolders.forEach((subfolder) => {
-      const newSubfolder: Folder = {
-        id: this.generateId(),
-        name: subfolder.name,
-        parentId: newFolder.id, // Point to the new parent
-        isExpanded: subfolder.isExpanded,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-
-      this.data.folders.push(newSubfolder);
-      idMapping[subfolder.id] = newSubfolder.id;
-
-      // Copy subfolder contents
-      const subContents = this.data.folderContents[subfolder.id] || [];
-      this.data.folderContents[newSubfolder.id] = subContents.map((conv) => ({ ...conv }));
-    });
-
-    this.saveData();
-    this.refresh();
   }
 
   private toggleFolder(folderId: string): void {
@@ -1293,7 +1226,6 @@ export class FolderManager {
     const menuItems = [
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
-      { label: this.t('folder_duplicate'), action: () => this.duplicateFolder(folderId) },
       { label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) },
     ];
 
@@ -1495,9 +1427,9 @@ export class FolderManager {
 
   private t(key: string): string {
     try {
-      // Use browserAPI for cross-browser compatibility
-      // This works for Chrome, Edge, Opera, Firefox, Safari, etc.
-      const message = browserAPI.i18n.getMessage(key);
+      // Use webextension-polyfill for cross-browser compatibility
+      // This works for Chrome, Edge, Opera, Firefox, etc.
+      const message = browser.i18n.getMessage(key);
       if (message && message.trim()) {
         return message;
       }
@@ -1506,7 +1438,7 @@ export class FolderManager {
       this.debugWarn('i18n error for key:', key, e);
     }
 
-    // Fallback translations if browserAPI.i18n is not available or returns empty
+    // Fallback translations if browser.i18n is not available or returns empty
     const fallback: Record<string, string> = {
       folder_title: 'Folders',
       folder_create: 'Create folder',
@@ -1515,12 +1447,9 @@ export class FolderManager {
       folder_delete_confirm: 'Delete this folder and all its contents?',
       folder_create_subfolder: 'Create subfolder',
       folder_rename: 'Rename',
-      folder_duplicate: 'Duplicate',
       folder_delete: 'Delete',
       folder_remove_conversation: 'Remove from folder',
       folder_remove_conversation_confirm: 'Remove "{title}" from this folder?',
-      pm_save: 'Save',
-      pm_cancel: 'Cancel',
     };
     return fallback[key] || key;
   }

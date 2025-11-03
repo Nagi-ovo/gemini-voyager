@@ -5,7 +5,6 @@
  * - Optional lock to pin panel position; when locked, panel is draggable and persisted
  */
 
-import { browserAPI } from '@/utils/browser-api';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
@@ -37,7 +36,7 @@ const ID = {
 
 function getRuntimeUrl(path: string): string {
   try {
-    return browserAPI.runtime.getURL(path);
+    return (window as any).chrome?.runtime?.getURL?.(path) || path;
   } catch {
     return path;
   }
@@ -82,11 +81,15 @@ async function loadDictionaries(): Promise<void> {
 
 async function getLanguage(): Promise<'en' | 'zh'> {
   try {
-    const stored = await browserAPI.storage.sync.get(STORAGE_KEYS.language);
-    const value = stored?.[STORAGE_KEYS.language];
-    const v = typeof value === 'string' ? value : undefined;
-    const fallback = navigator.language || 'en';
-    return normalizeLang(v || fallback);
+    const stored = await new Promise<any>((resolve) => {
+      try {
+        (window as any).chrome?.storage?.sync?.get?.(STORAGE_KEYS.language, resolve);
+      } catch {
+        resolve({});
+      }
+    });
+    const v = typeof stored?.[STORAGE_KEYS.language] === 'string' ? stored[STORAGE_KEYS.language] : undefined;
+    return normalizeLang(v || (navigator.language || 'en'));
   } catch {
     return 'en';
   }
@@ -94,7 +97,9 @@ async function getLanguage(): Promise<'en' | 'zh'> {
 
 async function setLanguage(lang: 'en' | 'zh'): Promise<void> {
   try {
-    await browserAPI.storage.sync.set({ [STORAGE_KEYS.language]: lang });
+    await new Promise<void>((resolve) => {
+      (window as any).chrome?.storage?.sync?.set?.({ [STORAGE_KEYS.language]: lang }, () => resolve());
+    });
   } catch {}
 }
 
@@ -121,19 +126,26 @@ function uid(): string {
 }
 
 async function readStorage<T>(key: string, fallback: T): Promise<T> {
-  try {
-    const res = await browserAPI.storage.sync.get(key);
-    if (res && key in res) return res[key] as T;
-    return fallback;
-  } catch {
-    return fallback;
-  }
+  return await new Promise<T>((resolve) => {
+    try {
+      (window as any).chrome?.storage?.sync?.get?.(key, (res: any) => {
+        if (res && key in res) return resolve(res[key] as T);
+        resolve(fallback);
+      });
+    } catch {
+      resolve(fallback);
+    }
+  });
 }
 
 async function writeStorage<T>(key: string, value: T): Promise<void> {
-  try {
-    await browserAPI.storage.sync.set({ [key]: value });
-  } catch {}
+  return await new Promise<void>((resolve) => {
+    try {
+      (window as any).chrome?.storage?.sync?.set?.({ [key]: value }, () => resolve());
+    } catch {
+      resolve();
+    }
+  });
 }
 
 function createEl<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string): HTMLElementTagNameMap[K] {
@@ -732,8 +744,8 @@ export async function startPromptManager(): Promise<void> {
 
     // Listen to external language changes (popup/options)
     try {
-      browserAPI.storage.onChanged.addListener((changes: any, areaName: string) => {
-        if (areaName !== 'sync') return;
+      chrome.storage?.onChanged?.addListener((changes: any, area: string) => {
+        if (area !== 'sync') return;
         if (changes?.language) {
           const next = normalizeLang(changes.language.newValue);
           i18n.set(next);
