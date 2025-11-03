@@ -16,11 +16,13 @@
  */
 async function sendNativeMessage(action, payload = {}) {
   return new Promise((resolve, reject) => {
-    // Safari's native messaging API
+    // Safari's native messaging API expects a single message object.
     browser.runtime.sendNativeMessage(
-      action,
-      payload,
+      { action, payload },
       (response) => {
+        if (browser.runtime.lastError) {
+          return reject(browser.runtime.lastError);
+        }
         if (response && response.success) {
           resolve(response.data);
         } else {
