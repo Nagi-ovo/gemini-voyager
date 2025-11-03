@@ -48,6 +48,25 @@ function applyWidth(width: number) {
   const assistantRules = assistantSelectors.map(sel => `${sel}`).join(',\n    ');
 
   style.textContent = `
+    /* Remove width constraints from main and conversation containers, but not buttons */
+    [role="main"] {
+      max-width: none !important;
+    }
+
+    main > div:has(user-query),
+    main > div:has(model-response) {
+      max-width: none !important;
+      width: 100% !important;
+    }
+
+    /* Fallback for browsers without :has() support */
+    @supports not selector(:has(*)) {
+      main > div:not(:has(button)) {
+        max-width: none !important;
+        width: 100% !important;
+      }
+    }
+
     /* User query containers */
     ${userRules} {
       max-width: ${width}px !important;
@@ -78,11 +97,6 @@ function applyWidth(width: number) {
     .presented-response-container,
     [data-message-author-role] {
       max-width: ${width}px !important;
-    }
-
-    /* Only remove width constraints from conversation-specific containers */
-    [role="main"] {
-      max-width: none !important;
     }
   `;
 }
