@@ -104,6 +104,9 @@ jobs:
       - name: Build (Firefox)
         run: bun run build:firefox
 
+      - name: Build (Safari)
+        run: bun run build:safari
+
       - name: Archive dist_chrome
         run: |
           cd dist_chrome
@@ -114,6 +117,11 @@ jobs:
           cd dist_firefox
           zip -r ../gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip .
 
+      - name: Archive dist_safari
+        run: |
+          cd dist_safari
+          zip -r ../gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip .
+
       # Optional: upload to Actions artifacts (can be removed if not needed)
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -122,6 +130,7 @@ jobs:
           path: |
             gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip
             gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip
+            gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -129,6 +138,7 @@ jobs:
           files: |
             gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip
             gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip
+            gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip
           name: Gemini Voyager ${{ steps.tag.outputs.name }}
           tag_name: ${{ steps.tag.outputs.name }}
           body: ${{ inputs.notes }}
