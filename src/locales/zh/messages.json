@@ -67,7 +67,6 @@
   ,"folder_delete_confirm": { "message": "确定删除此文件夹及其所有内容吗？", "description": "删除文件夹确认" }
   ,"folder_create_subfolder": { "message": "创建子文件夹", "description": "创建子文件夹菜单项" }
   ,"folder_rename": { "message": "重命名", "description": "重命名文件夹菜单项" }
-  ,"folder_duplicate": { "message": "复制", "description": "复制文件夹菜单项" }
   ,"folder_delete": { "message": "删除", "description": "删除文件夹菜单项" }
   ,"folder_remove_conversation": { "message": "从文件夹中移除", "description": "移除对话按钮提示" }
   ,"folder_remove_conversation_confirm": { "message": "从此文件夹中移除「{title}」？", "description": "移除对话确认" }
