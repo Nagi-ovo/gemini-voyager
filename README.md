@@ -19,7 +19,7 @@
   </a>
 
   <p><b>Works on all Chromium browsers: Chrome, Edge, Opera, Brave, Vivaldi, Arc, and more</b></p>
-  <p><b>Safari support: Build instructions available</b> - See <a href="SAFARI_BUILD.md">SAFARI_BUILD.md</a></p>
+  <p><b>Safari support: Full compatibility via conditional compilation</b> - See <a href="SAFARI_BUILD.md">SAFARI_BUILD.md</a></p>
 
   <details>
   <summary><i>Using Edge or Opera? Click here for installation tips</i></summary>
@@ -60,15 +60,19 @@ Navigate your conversations like never before:
 - **Quick Preview**: Hover over any node to preview your message
 - **Star Important Messages**: Long-press to mark key moments—stars sync across all your tabs
 - **Always in Sync**: Scroll freely; the timeline stays perfectly aligned with your chat
+- **Subtle Design**: Timeline bar uses subtle transparency (0.3 opacity) that becomes fully opaque on hover
 
 ### 📂 Folder Manager
 
 Keep your conversations organized:
 - **Drag & Drop**: Simply drag conversations from the sidebar into folders
 - **Two-Level Organization**: Create folders and subfolders for better structure
+- **Folder Management**: Right-click folders for context menu (rename, duplicate, delete)
+- **Duplicate Folders**: Copy entire folders with all conversations for A/B testing or backups
 - **Smart Icons**: Automatically shows unique icons for different Gem types (Learning Coach, Coding Partner, Writing Editor, and more)
 - **Smooth Navigation**: Switch between conversations instantly—no page reloads
 - **Persistent Storage**: Your folder structure is saved locally in your browser and shared across all your Gemini accounts (u/0, u/1, etc.)
+- **Responsive UI**: Folder header adapts elegantly when sidebar is resized
 
 ### 💡 Prompt Manager
 
@@ -186,6 +190,8 @@ Safari development requires additional steps. See [SAFARI_BUILD.md](SAFARI_BUILD
 - Running in Xcode
 - Debugging tips
 - Publishing to App Store
+
+**Technical Note**: Safari support uses conditional compilation to ensure zero performance impact on Chrome/Firefox builds. Chrome and Firefox use native `chrome.*` API (0.67kb wrapper), while Safari uses the same API wrapper approach for compatibility.
 
 For contribution guidelines and best practices, see [CONTRIBUTING.md](./.github/CONTRIBUTING.md).
 
