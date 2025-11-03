@@ -1,4 +1,4 @@
-import browser from 'webextension-polyfill';
+import { browserAPI } from '@/utils/browser-api';
 
 import { DotElement } from './types';
 
@@ -131,8 +131,8 @@ export class TimelineManager {
     this.conversationId = this.computeConversationId();
     this.loadStars();
     try {
-      // Use browser.storage for cross-browser compatibility (Chrome, Firefox, Safari)
-      browser.storage.sync.get({
+      // Use browserAPI.storage for cross-browser compatibility (Chrome, Firefox, Safari)
+      browserAPI.storage.sync.get({
         geminiTimelineScrollMode: 'flow',
         geminiTimelineHideContainer: false,
         geminiTimelineDraggable: false,
@@ -148,13 +148,13 @@ export class TimelineManager {
           this.ui.timelineBar!.style.left = `${res.geminiTimelinePosition.left}px`;
         }
       }).catch(() => {
-        // Fallback to localStorage if browser.storage is not available
+        // Fallback to localStorage if browserAPI.storage is not available
         const saved = localStorage.getItem('geminiTimelineScrollMode');
         if (saved === 'flow' || saved === 'jump') this.scrollMode = saved;
       });
       
       // Listen for changes from popup and update mode live
-      browser.storage.onChanged.addListener((changes: any, areaName: string) => {
+      browserAPI.storage.onChanged.addListener((changes: any, areaName: string) => {
         if (areaName !== 'sync') return;
         if (changes?.geminiTimelineScrollMode) {
           const n = changes.geminiTimelineScrollMode.newValue;
@@ -1441,7 +1441,7 @@ export class TimelineManager {
     if (!this.ui.timelineBar) return;
     const rect = this.ui.timelineBar.getBoundingClientRect();
     const { top, left } = rect;
-    browser.storage.sync.set({ geminiTimelinePosition: { top, left } }).catch(() => {
+    browserAPI.storage.sync.set({ geminiTimelinePosition: { top, left } }).catch(() => {
       // Silently fail if storage is not available
     });
   }

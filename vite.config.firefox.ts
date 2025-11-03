@@ -10,6 +10,9 @@ const outDir = resolve(__dirname, 'dist_firefox');
 export default mergeConfig(
   baseConfig,
   defineConfig({
+    define: {
+      __BROWSER_TARGET__: JSON.stringify('firefox'),
+    },
     plugins: [
       crx({
         manifest: {

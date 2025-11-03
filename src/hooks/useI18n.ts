@@ -1,7 +1,7 @@
 import enMessages from '@locales/en/messages.json';
 import zhMessages from '@locales/zh/messages.json';
 import { useState, useEffect } from 'react';
-import browser from 'webextension-polyfill';
+import { browserAPI } from '@/utils/browser-api';
 
 const useI18n = () => {
   const normalizeLang = (lang: string | undefined) =>
@@ -9,7 +9,7 @@ const useI18n = () => {
 
   const initialUiLang = (() => {
     try {
-      return browser.i18n.getUILanguage();
+      return browserAPI.i18n.getMessage('@@ui_locale') || 'en';
     } catch {
       return 'en';
     }
@@ -36,7 +36,7 @@ const useI18n = () => {
 
   useEffect(() => {
     const getLanguage = async () => {
-      const stored = await browser.storage.sync.get('language');
+      const stored = await browserAPI.storage.sync.get('language');
       const lang = typeof stored?.language === 'string' ? stored.language : undefined;
       if (lang) {
         setLanguage(normalizeLang(lang));
@@ -51,7 +51,7 @@ const useI18n = () => {
 
   const setLanguageWrapper = async (lang: string) => {
     const norm = normalizeLang(lang);
-    await browser.storage.sync.set({ language: norm });
+    await browserAPI.storage.sync.set({ language: norm });
     setLanguage(norm);
   };
 
