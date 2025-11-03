@@ -91,12 +91,12 @@ Once added, you can:
 **From JavaScript:**
 ```javascript
 // Health check
-browser.runtime.sendNativeMessage('ping', {}, (response) => {
+browser.runtime.sendNativeMessage({ action: 'ping' }, (response) => {
   console.log(response); // { success: true, data: { status: "ok", message: "pong" } }
 });
 
 // Get version
-browser.runtime.sendNativeMessage('getVersion', {}, (response) => {
+browser.runtime.sendNativeMessage({ action: 'getVersion' }, (response) => {
   console.log(response.data); // { version: "1.0.0", platform: "macOS" }
 });
 ```
