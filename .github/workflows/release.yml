@@ -2,6 +2,7 @@ name: Release
 run-name: >
   ${{
     (github.event_name == 'workflow_dispatch' && inputs.version && format('chore(release): v{0}', inputs.version)) ||
+    (github.event_name == 'workflow_dispatch' && !inputs.version && 'chore(release): auto-increment') ||
     (startsWith(github.ref, 'refs/tags/') && format('chore(release): {0}', github.ref_name)) ||
     format('Release #{0}', github.run_number)
   }}
@@ -13,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g. 0.2.0)'
+        description: 'Version to release (e.g. 0.2.0) - leave empty to auto-increment patch version'
         required: false
         type: string
       notes:
@@ -38,11 +39,46 @@ jobs:
         with:
           bun-version: 'latest'
 
-      # If a version is provided via manual dispatch, bump files, commit and create tag
-      - name: Bump version, commit and tag (manual)
-        if: ${{ inputs.version != '' }}
+      # Calculate next version automatically if not provided
+      - name: Calculate next version
+        id: next_version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            # Use manually provided version
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            echo "Using manual version: ${{ inputs.version }}"
+          else
+            # Auto-calculate next patch version with proper carry logic
+            CURRENT=$(node -e "console.log(require('./package.json').version)")
+            echo "Current version: ${CURRENT}"
+
+            # Split version into major.minor.patch
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+            # Increment patch
+            PATCH=$((PATCH + 1))
+
+            # Handle carry: if patch >= 10, increment minor and reset patch
+            if [ $PATCH -ge 10 ]; then
+              MINOR=$((MINOR + 1))
+              PATCH=0
+            fi
+
+            # Handle carry: if minor >= 10, increment major and reset minor
+            if [ $MINOR -ge 10 ]; then
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+            fi
+
+            NEXT="${MAJOR}.${MINOR}.${PATCH}"
+            echo "version=${NEXT}" >> $GITHUB_OUTPUT
+            echo "Auto-calculated next version: ${NEXT}"
+          fi
+
+      # Bump files, commit and create tag (works for both manual and auto versions)
+      - name: Bump version, commit and tag
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ steps.next_version.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Bumping to version ${VERSION}"
@@ -57,11 +93,7 @@ jobs:
       - name: Compute tag name
         id: tag
         run: |
-          if [ -n "${{ inputs.version }}" ]; then
-            echo "name=v${{ inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-          fi
+          echo "name=v${{ steps.next_version.outputs.version }}" >> $GITHUB_OUTPUT
 
       - name: Install deps
         run: bun i
