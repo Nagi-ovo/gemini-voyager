@@ -257,6 +257,18 @@ If you find **Gemini Voyager** helpful and want to support its development, cons
 
 ---
 
+## Star History
+
+<a href="https://www.star-history.com/#Nagi-ovo/gemini-voyager&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
+ </picture>
+</a>
+
+---
+
 <div align="center">
   <p>Made with ❤️ for the Gemini community</p>
   <p>If you find this useful, consider giving us a ⭐ on GitHub!</p>

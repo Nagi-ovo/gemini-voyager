@@ -253,6 +253,18 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
 
 ---
 
+## Star History
+
+<a href="https://www.star-history.com/#Nagi-ovo/gemini-voyager&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
+ </picture>
+</a>
+
+---
+
 <div align="center">
   <p>用 ❤️ 为 Gemini 社区打造</p>
   <p>觉得有用的话，请给我们点个 ⭐ 吧！</p>
