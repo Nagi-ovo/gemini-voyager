@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Safari browser support** 🎉
   - Safari build configuration and development mode
-  - Installation guide ([EN](.github/docs/safari/INSTALLATION.md) | [中文](.github/docs/safari/INSTALLATION_ZH.md))
-  - Development guide ([EN](safari/README.md) | [中文](safari/README_ZH.md))
+  - Installation guide ([EN](safari/INSTALLATION.md) | [中文](safari/INSTALLATION_ZH.md))
+  - Development guide ([EN](.../../../safari/README.md) | [中文](.../../../safari/README_ZH.md))
   - New commands: `build:safari`, `dev:safari`, `build:all`
 
 ### Changed
