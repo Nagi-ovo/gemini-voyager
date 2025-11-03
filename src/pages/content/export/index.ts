@@ -1,3 +1,5 @@
+import browser from 'webextension-polyfill';
+
 function hashString(input: string): string {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < input.length; i++) {
@@ -285,9 +287,7 @@ function normalizeLang(lang: string | undefined): 'en' | 'zh' {
 
 async function getLanguage(): Promise<'en' | 'zh'> {
   try {
-    const stored = await new Promise<any>((resolve) => {
-      try { (window as any).chrome?.storage?.sync?.get?.('language', resolve); } catch { resolve({}); }
-    });
+    const stored = await browser.storage.sync.get('language');
     const v = typeof stored?.language === 'string' ? stored.language : undefined;
     return normalizeLang(v || (navigator.language || 'en'));
   } catch {
@@ -316,8 +316,8 @@ export async function startExportButton(): Promise<void> {
 
   // listen for runtime language changes
   try {
-    chrome.storage?.onChanged?.addListener((changes: any, area: string) => {
-      if (area !== 'sync') return;
+    browser.storage.onChanged.addListener((changes: any, areaName: string) => {
+      if (areaName !== 'sync') return;
       if (changes?.language) {
         const next = normalizeLang(changes.language.newValue);
         const ttl = (dict[next]?.['exportChatJson'] ?? dict.en?.['exportChatJson'] ?? 'Export chat history (JSON)');
