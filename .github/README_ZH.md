@@ -189,6 +189,34 @@ pnpm run dev:firefox # Firefox
 
 ---
 
+## ☕ 支持本项目
+
+如果你觉得 **Gemini Voyager** 对你有帮助，欢迎请我喝杯咖啡！你的支持能让这个项目持续发展。
+
+<div align="center">
+  <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
+    <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" >
+  </a>
+</div>
+
+<div align="center">
+  <p><b>或通过微信/支付宝赞助：</b></p>
+  <table>
+    <tr>
+      <td align="center">
+        <img src="../public/wechat-sponsor.png" alt="微信支付" width="200"><br>
+        <sub><b>微信支付</b></sub>
+      </td>
+      <td align="center">
+        <img src="../public/alipay-sponsor.jpg" alt="支付宝" width="200"><br>
+        <sub><b>支付宝</b></sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
 <div align="center">
   <p>用 ❤️ 为 Gemini 社区打造</p>
   <p>觉得有用的话，请给我们点个 ⭐ 吧！</p>

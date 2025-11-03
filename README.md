@@ -187,6 +187,34 @@ Thank you for helping make **Gemini Voyager** better! ❤️
 
 ---
 
+## ☕ Support This Project
+
+If you find **Gemini Voyager** helpful and want to support its development, consider buying me a coffee! Your support helps keep this project alive and growing.
+
+<div align="center">
+  <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
+    <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" >
+  </a>
+</div>
+
+<div align="center">
+  <p><b>Or support via WeChat / Alipay:</b></p>
+  <table>
+    <tr>
+      <td align="center">
+        <img src="public/wechat-sponsor.png" alt="WeChat Pay" width="200"><br>
+        <sub><b>WeChat Pay</b></sub>
+      </td>
+      <td align="center">
+        <img src="public/alipay-sponsor.jpg" alt="Alipay" width="200"><br>
+        <sub><b>Alipay</b></sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
 <div align="center">
   <p>Made with ❤️ for the Gemini community</p>
   <p>If you find this useful, consider giving us a ⭐ on GitHub!</p>
