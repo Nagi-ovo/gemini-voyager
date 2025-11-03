@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import browser from 'webextension-polyfill';
 
+import { browserAPI } from '@/utils/browser-api';
 import useI18n from '../../hooks/useI18n';
 
 type ScrollMode = 'jump' | 'flow';
@@ -13,7 +13,7 @@ export default function Popup() {
 
   useEffect(() => {
     try {
-      browser.storage.sync.get(
+      browserAPI.storage.sync.get(
         {
           geminiTimelineScrollMode: 'flow',
           geminiTimelineHideContainer: false,
@@ -40,7 +40,7 @@ export default function Popup() {
     if (typeof nextDraggable === 'boolean') payload.geminiTimelineDraggable = nextDraggable;
     if (resetPosition) payload.geminiTimelinePosition = null;
     try {
-      browser.storage.sync.set(payload);
+      browserAPI.storage.sync.set(payload);
     } catch {}
   };
 

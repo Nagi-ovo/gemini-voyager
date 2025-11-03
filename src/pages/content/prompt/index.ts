@@ -5,7 +5,7 @@
  * - Optional lock to pin panel position; when locked, panel is draggable and persisted
  */
 
-import browser from 'webextension-polyfill';
+import { browserAPI } from '@/utils/browser-api';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
@@ -37,7 +37,7 @@ const ID = {
 
 function getRuntimeUrl(path: string): string {
   try {
-    return browser.runtime.getURL(path);
+    return browserAPI.runtime.getURL(path);
   } catch {
     return path;
   }
@@ -82,7 +82,7 @@ async function loadDictionaries(): Promise<void> {
 
 async function getLanguage(): Promise<'en' | 'zh'> {
   try {
-    const stored = await browser.storage.sync.get(STORAGE_KEYS.language);
+    const stored = await browserAPI.storage.sync.get(STORAGE_KEYS.language);
     const value = stored?.[STORAGE_KEYS.language];
     const v = typeof value === 'string' ? value : undefined;
     const fallback = navigator.language || 'en';
@@ -94,7 +94,7 @@ async function getLanguage(): Promise<'en' | 'zh'> {
 
 async function setLanguage(lang: 'en' | 'zh'): Promise<void> {
   try {
-    await browser.storage.sync.set({ [STORAGE_KEYS.language]: lang });
+    await browserAPI.storage.sync.set({ [STORAGE_KEYS.language]: lang });
   } catch {}
 }
 
@@ -122,7 +122,7 @@ function uid(): string {
 
 async function readStorage<T>(key: string, fallback: T): Promise<T> {
   try {
-    const res = await browser.storage.sync.get(key);
+    const res = await browserAPI.storage.sync.get(key);
     if (res && key in res) return res[key] as T;
     return fallback;
   } catch {
@@ -132,7 +132,7 @@ async function readStorage<T>(key: string, fallback: T): Promise<T> {
 
 async function writeStorage<T>(key: string, value: T): Promise<void> {
   try {
-    await browser.storage.sync.set({ [key]: value });
+    await browserAPI.storage.sync.set({ [key]: value });
   } catch {}
 }
 
@@ -732,7 +732,7 @@ export async function startPromptManager(): Promise<void> {
 
     // Listen to external language changes (popup/options)
     try {
-      browser.storage.onChanged.addListener((changes: any, areaName: string) => {
+      browserAPI.storage.onChanged.addListener((changes: any, areaName: string) => {
         if (areaName !== 'sync') return;
         if (changes?.language) {
           const next = normalizeLang(changes.language.newValue);
