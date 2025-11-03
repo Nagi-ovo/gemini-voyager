@@ -1,0 +1,16 @@
+{
+  "watch": [
+    "src",
+    "public",
+    "vite.config.safari.ts",
+    "vite.config.base.ts",
+    "manifest.json",
+    "manifest.dev.json"
+  ],
+  "ext": "ts,tsx,js,jsx,json,css,html",
+  "exec": "vite build --config vite.config.safari.ts --mode development --watch",
+  "env": {
+    "__DEV__": "true"
+  }
+}
+

@@ -19,6 +19,7 @@
   </a>
 
   <p><b>Works on all Chromium browsers: Chrome, Edge, Opera, Brave, Vivaldi, Arc, and more</b></p>
+  <p><b>Safari support: Build instructions available</b> - See <a href="SAFARI_BUILD.md">SAFARI_BUILD.md</a></p>
 
   <details>
   <summary><i>Using Edge or Opera? Click here for installation tips</i></summary>
@@ -39,7 +40,7 @@
   </p>
   </details>
 
-  <p><i>Firefox version coming soon!</i></p>
+  <p><i>Firefox and Safari versions: See manual installation below</i></p>
 </div>
 
 ---
@@ -126,7 +127,7 @@ For developers or users who prefer manual installation:
    - Chrome: `chrome://extensions`
    - Edge: `edge://extensions`
    - Opera: `opera://extensions`
-4. Click “Load unpacked”.
+4. Click "Load unpacked".
 5. Select the unzipped folder (e.g. `Gemini Voyager vX.Y.Z`).
 
 #### Load your extension (Firefox)
@@ -136,6 +137,17 @@ For developers or users who prefer manual installation:
 3. Open `about:debugging#/runtime/this-firefox` in Firefox
 4. Click "Load Temporary Add-on…"
 5. Select the `manifest.json` inside the unzipped folder
+
+#### Load your extension (Safari)
+
+Safari extensions require conversion to an Xcode project. See [SAFARI_BUILD.md](SAFARI_BUILD.md) for detailed instructions:
+
+1. Build the extension: `npm run build:safari`
+2. Convert to Safari format: `xcrun safari-web-extension-converter dist_safari`
+3. Open in Xcode and run
+4. Enable in Safari preferences
+
+**Requirements:** macOS 11+, Xcode 12+, Safari 14+
 
 ---
 
@@ -147,19 +159,33 @@ Want to contribute or customize the extension? Here's how to set up the developm
 # Install dependencies (Bun recommended)
 bun i
 
-# Chrome development mode
-bun run dev:chrome
+# Development mode (with auto-reload)
+bun run dev:chrome   # Chrome & Chromium browsers
+bun run dev:firefox  # Firefox
+bun run dev:safari   # Safari (requires macOS)
 
-# Firefox development mode
-bun run dev:firefox
+# Production builds
+bun run build:chrome   # Chrome
+bun run build:firefox  # Firefox
+bun run build:safari   # Safari
+bun run build:all      # All browsers
 ```
 
-Or with pnpm:
+Or with pnpm/npm:
 ```bash
 pnpm install
-pnpm run dev:chrome  # Chrome
-pnpm run dev:firefox # Firefox
+pnpm run dev:chrome    # Chrome
+pnpm run dev:firefox   # Firefox
+pnpm run dev:safari    # Safari (macOS only)
 ```
+
+### Safari Development
+
+Safari development requires additional steps. See [SAFARI_BUILD.md](SAFARI_BUILD.md) for:
+- Converting the extension to Safari format
+- Running in Xcode
+- Debugging tips
+- Publishing to App Store
 
 For contribution guidelines and best practices, see [CONTRIBUTING.md](./.github/CONTRIBUTING.md).
 
