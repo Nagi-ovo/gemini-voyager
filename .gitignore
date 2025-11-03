@@ -2,7 +2,13 @@ node_modules/
 /dist_chrome/
 /dist_firefox/
 /dist_safari/
+
+# Generated Xcode projects (users generate these locally)
 /Gemini Voyager/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+
 .git-commit-message.txt
 
 npm-debug.log*
