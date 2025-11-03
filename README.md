@@ -24,6 +24,8 @@
 
 **Gemini Voyager** enhances your Gemini chat experience with five powerful features:
 
+> 💡 **Quick Tip:** Click the extension icon to access settings for scroll mode, chat width, and timeline options.
+
 <div align="center">
   <img src="public/teaser.png" alt="teaser"/>
 </div>

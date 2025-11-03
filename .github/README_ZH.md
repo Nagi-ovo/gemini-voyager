@@ -24,6 +24,8 @@
 
 **Gemini Voyager** 通过五大强大功能提升你的 Gemini 聊天体验：
 
+> 💡 **小提示**：点击扩展图标可打开设置面板，调整滚动模式、对话宽度和时间线选项。
+
 <div align="center">
   <img src="../public/teaser.png" alt="teaser"/>
 </div>
