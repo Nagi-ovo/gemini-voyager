@@ -3,6 +3,10 @@ node_modules/
 /dist_firefox/
 /dist_safari/
 
+# Vitest
+coverage/
+.vitest/
+
 # Generated Xcode projects (users generate these locally)
 /Gemini Voyager/
 *.xcodeproj/xcuserdata/

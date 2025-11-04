@@ -126,26 +126,22 @@ function uid(): string {
 }
 
 async function readStorage<T>(key: string, fallback: T): Promise<T> {
-  return await new Promise<T>((resolve) => {
-    try {
-      (window as any).chrome?.storage?.sync?.get?.(key, (res: any) => {
-        if (res && key in res) return resolve(res[key] as T);
-        resolve(fallback);
-      });
-    } catch {
-      resolve(fallback);
-    }
-  });
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
 }
 
 async function writeStorage<T>(key: string, value: T): Promise<void> {
-  return await new Promise<void>((resolve) => {
-    try {
-      (window as any).chrome?.storage?.sync?.set?.({ [key]: value }, () => resolve());
-    } catch {
-      resolve();
-    }
-  });
+  try {
+    const raw = JSON.stringify(value);
+    localStorage.setItem(key, raw);
+  } catch {
+    // Silent fail
+  }
 }
 
 function createEl<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string): HTMLElementTagNameMap[K] {

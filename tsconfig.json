@@ -20,7 +20,11 @@
       "@src/*": ["src/*"],
       "@assets/*": ["src/assets/*"],
       "@locales/*": ["src/locales/*"],
-      "@pages/*": ["src/pages/*"]
+      "@pages/*": ["src/pages/*"],
+      "@/*": ["src/*"],
+      "@/core": ["src/core"],
+      "@/core/*": ["src/core/*"],
+      "@/features/*": ["src/features/*"]
     }
   },
   "include": [
