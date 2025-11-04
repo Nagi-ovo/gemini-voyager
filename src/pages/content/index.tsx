@@ -4,11 +4,14 @@ import { startFolderManager } from './folder/index';
 import { startPromptManager } from './prompt/index';
 import { startTimeline } from './timeline/index';
 
+import { startFormulaCopy } from '@/features/formulaCopy';
+
 try {
   if (location.hostname === 'gemini.google.com') {
     startTimeline();
     startFolderManager();
     startChatWidthAdjuster();
+    startFormulaCopy();
   }
   if (location.hostname === 'gemini.google.com' || location.hostname === 'aistudio.google.com') {
     startPromptManager();

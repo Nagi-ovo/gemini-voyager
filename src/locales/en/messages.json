@@ -76,4 +76,6 @@
   ,"chatWidth": { "message": "Chat width", "description": "Chat width adjustment label" }
   ,"chatWidthNarrow": { "message": "Narrow", "description": "Narrow chat width label" }
   ,"chatWidthWide": { "message": "Wide", "description": "Wide chat width label" }
+  ,"formula_copied": { "message": "✓ Formula copied", "description": "Formula copied success message" }
+  ,"formula_copy_failed": { "message": "✗ Failed to copy", "description": "Formula copy failed message" }
 }

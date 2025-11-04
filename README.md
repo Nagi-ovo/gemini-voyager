@@ -20,56 +20,54 @@
 
 ---
 
-## ✨ What Can It Do?
-
-**Gemini Voyager** enhances your Gemini chat experience with five powerful features:
-
-> 💡 **Quick Tip:** Click the extension icon to access settings for scroll mode, chat width, and timeline options.
+## Features
 
 <div align="center">
   <img src="public/teaser.png" alt="teaser"/>
 </div>
 
-### 📍 Interactive Timeline
+### 📍 Timeline Navigation
 
-Navigate your conversations like never before:
-- **Visual Navigation**: See all your messages as clickable nodes on a timeline
-- **Quick Preview**: Hover over any node to preview your message
-- **Star Important Messages**: Long-press to mark key moments—stars sync across all your tabs
-- **Always in Sync**: Scroll freely; the timeline stays perfectly aligned with your chat
-- **Subtle Design**: Timeline bar uses subtle transparency (0.3 opacity) that becomes fully opaque on hover
+Visual conversation navigation with clickable message nodes:
+- Click nodes to jump to messages
+- Hover for message preview
+- Long-press to star important messages (synced across tabs)
+- Draggable timeline position
+- Auto-syncs with scroll position
 
-### 📂 Folder Manager
+### 📂 Folder Organization
 
-Keep your conversations organized:
-- **Drag & Drop**: Simply drag conversations from the sidebar into folders
-- **Two-Level Organization**: Create folders and subfolders for better structure
-- **Folder Management**: Right-click folders for context menu (rename, duplicate, delete)
-- **Duplicate Folders**: Copy entire folders with all conversations for A/B testing or backups
-- **Smart Icons**: Automatically shows unique icons for different Gem types (Learning Coach, Coding Partner, Writing Editor, and more)
-- **Smooth Navigation**: Switch between conversations instantly—no page reloads
-- **Persistent Storage**: Your folder structure is saved locally in your browser and shared across all your Gemini accounts (u/0, u/1, etc.)
-- **Responsive UI**: Folder header adapts elegantly when sidebar is resized
+Manage conversations with drag-and-drop folders:
+- Two-level hierarchy (folders and subfolders)
+- Right-click menu for rename/duplicate/delete
+- Auto-detects Gem types and displays corresponding icons
+- Local storage, shared across Gemini accounts (u/0, u/1, etc.)
+- Instant navigation without page reloads
 
-### 💡 Prompt Manager
+### 💡 Prompt Library
 
-Build your personal prompt library:
-- **Save & Reuse**: Store your favorite prompts with custom tags
-- **Instant Search**: Find prompts quickly with keyword search
-- **One-Click Copy**: Reuse prompts with a single click
-- **Import/Export**: Share your prompt library as JSON files
-- **Works Everywhere**: Available on both Gemini and AI Studio
+Save and reuse prompts:
+- Tag-based organization
+- Keyword search
+- Import/export as JSON
+- Available on Gemini and AI Studio
 
-### 💾 Export Chat History
+### 📐 Formula Copy
 
-Download your conversations for safekeeping:
-- **One-Click Export**: Click the export icon next to the Gemini logo
-- **Clean JSON Format**: Get your chats in a structured, readable format
-- **Includes Stars**: Your starred messages are preserved in the export
-- **No Clutter**: Automatically removes UI labels like "Show thinking" for cleaner data
+Click LaTeX/MathJax formulas to copy source code:
+- One-click copy of formula source
+- Works with inline and display math
+- Visual feedback on copy success
+
+### 💾 Chat Export
+
+Export conversations as structured JSON:
+- Click export icon next to Gemini logo
+- Preserves starred messages
+- Removes UI noise (labels like "Show thinking")
 
 <details>
-<summary>Example payload shape</summary>
+<summary>Export format example</summary>
 
 ```json
 {
@@ -86,10 +84,9 @@ Download your conversations for safekeeping:
 
 ### 📏 Adjustable Chat Width
 
-Customize your reading experience:
-- **Wide Range**: Adjust chat width from 400px to 1400px via an interactive slider
-- **Instant Preview**: See changes in real-time as you drag the slider
-- **Persistent Settings**: Your preference is saved and synced across all tabs
+Customize chat container width (400px - 1400px) with real-time preview.
+
+> **Settings**: Click the extension icon for scroll mode, chat width, and timeline options.
 
 ---
 

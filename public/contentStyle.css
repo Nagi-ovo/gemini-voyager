@@ -1127,3 +1127,90 @@ html[data-color-scheme='light'] .gv-tooltip {
   background-color: rgba(0, 0, 0, 0.85);
   color: #fff;
 }
+
+/* ==================== Formula Copy Feature ==================== */
+
+/* Math element hover effect - make formulas clickable */
+.math-inline,
+.math-display,
+[data-math] {
+  cursor: pointer !important;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: 0 2px;
+}
+
+.math-inline:hover,
+.math-display:hover,
+[data-math]:hover {
+  background-color: rgba(66, 133, 244, 0.1) !important;
+  box-shadow: 0 0 0 1px rgba(66, 133, 244, 0.3);
+}
+
+/* Light theme hover */
+html[data-color-scheme='light'] .math-inline:hover,
+html[data-color-scheme='light'] .math-display:hover,
+html[data-color-scheme='light'] [data-math]:hover {
+  background-color: rgba(66, 133, 244, 0.08) !important;
+}
+
+/* Copy toast notification */
+.gv-copy-toast {
+  position: fixed;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 100000;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.9);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+/* Success state */
+.gv-copy-toast-success {
+  background: linear-gradient(135deg, #34a853 0%, #1e8e3e 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2),
+              0 2px 8px rgba(52, 168, 83, 0.3);
+}
+
+/* Error state */
+.gv-copy-toast-error {
+  background: linear-gradient(135deg, #ea4335 0%, #c5221f 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2),
+              0 2px 8px rgba(234, 67, 53, 0.3);
+}
+
+.gv-copy-toast-show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Add slight pulse animation */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.gv-copy-toast-show {
+  animation: pulse 0.3s ease-out;
+}
+
+/* Light theme toast */
+html[data-color-scheme='light'] .gv-copy-toast-success {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15),
+              0 2px 8px rgba(52, 168, 83, 0.2);
+}
+
+html[data-color-scheme='light'] .gv-copy-toast-error {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15),
+              0 2px 8px rgba(234, 67, 53, 0.2);
+}
