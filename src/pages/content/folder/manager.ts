@@ -1461,9 +1461,10 @@ export class FolderManager {
   }
 
   private setupNativeConversationMenuObserver(): void {
-    // Observe the document for menu appearance
+    // Observe the document for menu appearance and disappearance
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
+        // Handle added nodes (menu opening)
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
             // Check if this is the native conversation menu
@@ -1478,6 +1479,20 @@ export class FolderManager {
               }
             } else if (menuContent) {
               this.debug('Observer: menu content detected but button already present');
+            }
+          }
+        });
+
+        // Handle removed nodes (menu closing)
+        mutation.removedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            // Check if a menu panel was removed
+            const isMenuPanel = node.classList?.contains('mat-mdc-menu-panel') ||
+                               node.querySelector('.mat-mdc-menu-panel');
+            if (isMenuPanel) {
+              this.debug('Observer: menu closed, clearing conversation state');
+              this.lastClickedConversation = null;
+              this.lastClickedConversationInfo = null;
             }
           }
         });
@@ -1538,28 +1553,41 @@ export class FolderManager {
 
   private injectMoveToFolderButton(menuContent: HTMLElement): void {
     this.debug('injectMoveToFolderButton: begin');
-    // Get conversation info from the menu context
-    // We need to find the conversation element that triggered this menu
-    const conversationEl = this.findConversationElementFromMenu();
-    if (!conversationEl) {
-      this.debug('No conversation element found from menu');
-      return;
+
+    // First, try to use pre-extracted conversation info (most reliable)
+    let conversationId: string | null = null;
+    let title: string | null = null;
+    let url: string | null = null;
+
+    if (this.lastClickedConversationInfo) {
+      this.debug('Using pre-extracted conversation info');
+      conversationId = this.lastClickedConversationInfo.id;
+      title = this.lastClickedConversationInfo.title;
+      url = this.lastClickedConversationInfo.url;
+    } else {
+      // Fallback: try to extract from conversation element
+      this.debug('No pre-extracted info, falling back to extraction from element');
+      const conversationEl = this.findConversationElementFromMenu();
+      if (!conversationEl) {
+        this.debug('No conversation element found from menu');
+        return;
+      }
+
+      conversationId = this.extractNativeConversationId(conversationEl);
+      title = this.extractNativeConversationTitle(conversationEl);
+      url = this.extractNativeConversationUrl(conversationEl);
     }
 
-    let conversationId = this.extractNativeConversationId(conversationEl);
-    let title = this.extractNativeConversationTitle(conversationEl);
-    let url = this.extractNativeConversationUrl(conversationEl);
-
-    // Fallbacks when link is not present in the conversation DOM
+    // Additional fallbacks when info is still missing
     if (!conversationId) {
       // Try to parse hex id from the overlay menu itself
       const hexFromMenu = this.extractHexIdFromMenu(menuContent);
       if (hexFromMenu) {
         conversationId = hexFromMenu;
         this.debug('injectMoveToFolderButton: using id from menu jslog', conversationId);
-      } else {
+      } else if (this.lastClickedConversation) {
         // Try from jslog on the conversation element tree
-        const hexFromJslog = this.extractHexIdFromJslog(conversationEl as HTMLElement);
+        const hexFromJslog = this.extractHexIdFromJslog(this.lastClickedConversation);
         if (hexFromJslog) {
           conversationId = hexFromJslog;
           this.debug('injectMoveToFolderButton: using id from conversation jslog', conversationId);
@@ -1574,8 +1602,8 @@ export class FolderManager {
     }
 
     // Title fallback
-    if (!title || title.trim() === '') {
-      title = this.extractFallbackTitle(conversationEl) || 'Untitled';
+    if ((!title || title.trim() === '') && this.lastClickedConversation) {
+      title = this.extractFallbackTitle(this.lastClickedConversation) || 'Untitled';
       this.debug('injectMoveToFolderButton: using fallback title', title);
     }
 
@@ -1641,29 +1669,21 @@ export class FolderManager {
   }
 
   private findConversationElementFromMenu(): HTMLElement | null {
-    // Prefer the element captured on click
+    // Use the element captured on click
     if (this.lastClickedConversation) {
       this.debug('findConversationElementFromMenu: using lastClickedConversation');
       return this.lastClickedConversation;
     }
 
-    // Fallback: try to use the selected actions container in the sidebar
-    const selectedActions = document.querySelector('.conversation-actions-container.selected') as HTMLElement | null;
-    if (selectedActions) {
-      const conv = selectedActions.closest('[data-test-id="conversation"]') as HTMLElement | null;
-      if (conv) {
-        this.debug('findConversationElementFromMenu: resolved via selected actions container');
-        return conv;
-      }
-      this.debug('findConversationElementFromMenu: returning selectedActions as fallback');
-      return selectedActions;
-    }
-
-    this.debugWarn('findConversationElementFromMenu: no conversation element found');
+    // No fallback - if we don't have the clicked conversation element, we should not guess
+    // The previous fallback logic using '.conversation-actions-container.selected' was incorrect
+    // as it would select the currently focused conversation instead of the one user clicked
+    this.debugWarn('findConversationElementFromMenu: no conversation element found (lastClickedConversation is null)');
     return null;
   }
 
   private lastClickedConversation: HTMLElement | null = null;
+  private lastClickedConversationInfo: { id: string; title: string; url: string } | null = null;
 
   private setupConversationClickTracking(): void {
     // Track clicks on conversation more buttons
@@ -1671,14 +1691,91 @@ export class FolderManager {
       const target = e.target as HTMLElement;
       const moreButton = target.closest('[data-test-id="actions-menu-button"]');
       if (moreButton) {
-        // Find the parent conversation item (prefer the canonical selector)
-        const conversationEl = moreButton.closest('[data-test-id="conversation"]') ||
-                               moreButton.closest('[data-test-id^="history-item"]') ||
-                               moreButton.closest('.conversation-card') ||
-                               moreButton.closest('[jslog]');
+        this.debug('More button clicked:', moreButton);
+
+        let conversationEl: HTMLElement | null = null;
+
+        // Strategy 1: In Gemini's new UI, the conversation div and actions-menu-button are siblings!
+        // Find the actions container first, then look for sibling conversation div
+        const actionsContainer = moreButton.closest('.conversation-actions-container');
+        if (actionsContainer) {
+          this.debug('Found actions container, looking for sibling conversation...');
+          // Look for previous sibling with data-test-id="conversation"
+          let sibling = actionsContainer.previousElementSibling;
+          while (sibling) {
+            if (sibling.getAttribute('data-test-id') === 'conversation') {
+              conversationEl = sibling as HTMLElement;
+              this.debug('Found conversation as sibling:', conversationEl);
+              break;
+            }
+            sibling = sibling.previousElementSibling;
+          }
+        }
+
+        // Strategy 2: Try traditional closest approach (for older UI patterns)
+        if (!conversationEl) {
+          this.debug('Trying closest with conversation selector...');
+          conversationEl = moreButton.closest('[data-test-id="conversation"]') as HTMLElement | null;
+        }
+
+        if (!conversationEl) {
+          this.debug('Trying history-item selector...');
+          conversationEl = moreButton.closest('[data-test-id^="history-item"]') as HTMLElement | null;
+        }
+
+        if (!conversationEl) {
+          this.debug('Trying conversation-card selector...');
+          conversationEl = moreButton.closest('.conversation-card') as HTMLElement | null;
+        }
+
+        // Strategy 3: Check parent container for conversation children
+        if (!conversationEl && actionsContainer && actionsContainer.parentElement) {
+          this.debug('Trying to find conversation in parent container...');
+          const parentContainer = actionsContainer.parentElement;
+          const conversationInParent = parentContainer.querySelector('[data-test-id="conversation"]') as HTMLElement | null;
+          if (conversationInParent) {
+            // Verify this is the right conversation by checking it's close to the actions container
+            const actionsIndex = Array.from(parentContainer.children).indexOf(actionsContainer);
+            const convIndex = Array.from(parentContainer.children).indexOf(conversationInParent);
+            if (Math.abs(actionsIndex - convIndex) <= 1) {
+              conversationEl = conversationInParent;
+              this.debug('Found conversation in parent container');
+            }
+          }
+        }
+
+        // Last resort fallback
+        if (!conversationEl) {
+          this.debugWarn('Could not find precise conversation element, using broader fallback');
+          conversationEl = moreButton.closest('[jslog]') as HTMLElement | null;
+        }
+
         if (conversationEl) {
           this.lastClickedConversation = conversationEl as HTMLElement;
-          this.debug('Tracked conversation click:', conversationEl);
+
+          // Debug: verify this element and show its attributes
+          const linkCount = conversationEl.querySelectorAll('a[href*="/app/"], a[href*="/gem/"]').length;
+          const jslogAttr = conversationEl.getAttribute('jslog');
+          const dataTestId = conversationEl.getAttribute('data-test-id');
+          this.debug('Tracked conversation element:', {
+            element: conversationEl,
+            linkCount,
+            jslog: jslogAttr,
+            dataTestId
+          });
+
+          // Extract conversation info immediately to avoid issues with multiple links later
+          const conversationId = this.extractNativeConversationId(conversationEl);
+          const title = this.extractNativeConversationTitle(conversationEl);
+          const url = this.extractNativeConversationUrl(conversationEl);
+
+          if (conversationId && title && url) {
+            this.lastClickedConversationInfo = { id: conversationId, title, url };
+            this.debug('✅ Extracted conversation info on click:', this.lastClickedConversationInfo);
+          } else {
+            this.debugWarn('⚠️ Failed to extract complete conversation info on click', { conversationId, title, url });
+            this.lastClickedConversationInfo = null;
+          }
 
           // Fallback: after the click, the Angular Material menu is rendered
           // into a global overlay container. Poll briefly to inject our item
@@ -1708,16 +1805,46 @@ export class FolderManager {
   private extractNativeConversationId(conversationEl: HTMLElement): string | null {
     // Support both /app/<hexId> and /gem/<gemId>/<hexId>
     const scope = (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
-    const link = scope.querySelector('a[href*="/app/"], a[href*="/gem/"]');
-    if (!link) {
+
+    // Get all conversation links
+    const links = scope.querySelectorAll('a[href*="/app/"], a[href*="/gem/"]');
+
+    if (links.length === 0) {
       this.debugWarn('extractId: no conversation link found under scope');
       // Fallback to jslog parsing on the conversation element tree
       const hex = this.extractHexIdFromJslog(scope);
       if (hex) return hex;
       return null;
     }
+
+    // If there are multiple links, try to find the most specific one
+    let link: Element;
+    if (links.length > 1) {
+      this.debugWarn(`extractId: found ${links.length} links, attempting to select the most appropriate one`);
+
+      // Strategy 1: Find the link with the smallest bounding box (most likely the actual conversation item)
+      let minArea = Infinity;
+      let bestLink = links[0];
+
+      for (const l of Array.from(links)) {
+        const rect = l.getBoundingClientRect();
+        const area = rect.width * rect.height;
+        if (area > 0 && area < minArea) {
+          minArea = area;
+          bestLink = l;
+        }
+      }
+
+      // If all links have the same size, fall back to the first one
+      link = minArea < Infinity ? bestLink : links[0];
+      this.debug('extractId: selected link with area', minArea);
+    } else {
+      link = links[0];
+    }
+
     const href = link.getAttribute('href') || '';
     this.debug('extractId: found link href', href);
+
     // Try /app/<hexId>
     let match = href.match(/\/app\/([^\/?#]+)/);
     if (match && match[1]) {
