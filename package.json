@@ -3,6 +3,7 @@
   "version": "0.7.1",
   "description": "Maps your Gemini chats on a timeline.",
   "license": "MIT",
+  "author": "Jesse Zhang",
   "repository": {
     "type": "git",
     "url": "https://github.com/Nagi-ovo/gemini-voyager.git"
