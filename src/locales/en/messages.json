@@ -70,6 +70,9 @@
   ,"folder_delete": { "message": "Delete", "description": "Delete folder menu item" }
   ,"folder_remove_conversation": { "message": "Remove from folder", "description": "Remove conversation button tooltip" }
   ,"folder_remove_conversation_confirm": { "message": "Remove \"{title}\" from this folder?", "description": "Remove conversation confirmation" }
+  ,"conversation_more": { "message": "More options", "description": "Conversation more options button tooltip" }
+  ,"conversation_move_to_folder": { "message": "Move to folder", "description": "Move conversation to folder menu item" }
+  ,"conversation_move_to_folder_title": { "message": "Move to folder", "description": "Move conversation to folder dialog title" }
   ,"chatWidth": { "message": "Chat width", "description": "Chat width adjustment label" }
   ,"chatWidthNarrow": { "message": "Narrow", "description": "Narrow chat width label" }
   ,"chatWidthWide": { "message": "Wide", "description": "Wide chat width label" }
