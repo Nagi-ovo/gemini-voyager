@@ -1214,3 +1214,270 @@ html[data-color-scheme='light'] .gv-copy-toast-error {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15),
               0 2px 8px rgba(234, 67, 53, 0.2);
 }
+
+/* ==========================================================================
+   Folder Import/Export Styles
+   ========================================================================== */
+
+/* Header actions container */
+.gv-folder-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Action buttons (import/export) */
+.gv-folder-action-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  opacity: 0.7;
+}
+
+.gv-folder-action-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  opacity: 1;
+}
+
+html.dark .gv-folder-action-btn:hover,
+[data-theme='dark'] .gv-folder-action-btn:hover,
+[data-color-scheme='dark'] .gv-folder-action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.gv-folder-action-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* Import dialog */
+.gv-folder-import-dialog {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  min-width: 400px;
+  max-width: 500px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+html.dark .gv-folder-import-dialog,
+[data-theme='dark'] .gv-folder-import-dialog,
+[data-color-scheme='dark'] .gv-folder-import-dialog {
+  background: #1e1e1e;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.gv-folder-import-dialog .gv-folder-dialog-title {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: #202124;
+}
+
+html.dark .gv-folder-import-dialog .gv-folder-dialog-title,
+[data-theme='dark'] .gv-folder-import-dialog .gv-folder-dialog-title,
+[data-color-scheme='dark'] .gv-folder-import-dialog .gv-folder-dialog-title {
+  color: #e8eaed;
+}
+
+/* Strategy selection */
+.gv-folder-import-strategy {
+  margin-bottom: 20px;
+}
+
+.gv-folder-import-strategy-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: #5f6368;
+}
+
+html.dark .gv-folder-import-strategy-label,
+[data-theme='dark'] .gv-folder-import-strategy-label,
+[data-color-scheme='dark'] .gv-folder-import-strategy-label {
+  color: #9aa0a6;
+}
+
+.gv-folder-import-strategy-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gv-folder-import-radio-option {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gv-folder-import-radio-option:hover {
+  background-color: #f8f9fa;
+  border-color: #1a73e8;
+}
+
+html.dark .gv-folder-import-radio-option,
+[data-theme='dark'] .gv-folder-import-radio-option,
+[data-color-scheme='dark'] .gv-folder-import-radio-option {
+  border-color: #3c4043;
+}
+
+html.dark .gv-folder-import-radio-option:hover,
+[data-theme='dark'] .gv-folder-import-radio-option:hover,
+[data-color-scheme='dark'] .gv-folder-import-radio-option:hover {
+  background-color: #2d2e30;
+  border-color: #8ab4f8;
+}
+
+.gv-folder-import-radio-option input[type='radio'] {
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.gv-folder-import-radio-option span {
+  font-size: 14px;
+  color: #202124;
+}
+
+html.dark .gv-folder-import-radio-option span,
+[data-theme='dark'] .gv-folder-import-radio-option span,
+[data-color-scheme='dark'] .gv-folder-import-radio-option span {
+  color: #e8eaed;
+}
+
+/* File input */
+.gv-folder-import-file-input {
+  margin-bottom: 20px;
+}
+
+.gv-folder-import-file-button {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  width: 100%;
+}
+
+.gv-folder-import-file-button:hover {
+  background: #1765cc;
+}
+
+.gv-folder-import-file-name {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #5f6368;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  text-align: center;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html.dark .gv-folder-import-file-name,
+[data-theme='dark'] .gv-folder-import-file-name,
+[data-color-scheme='dark'] .gv-folder-import-file-name {
+  background: #2d2e30;
+  color: #9aa0a6;
+}
+
+/* Dialog buttons */
+.gv-folder-dialog-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.gv-folder-dialog-btn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gv-folder-dialog-btn-primary {
+  background: #1a73e8;
+  color: white;
+}
+
+.gv-folder-dialog-btn-primary:hover {
+  background: #1765cc;
+}
+
+.gv-folder-dialog-btn-secondary {
+  background: transparent;
+  color: #1a73e8;
+  border: 1px solid #dadce0;
+}
+
+.gv-folder-dialog-btn-secondary:hover {
+  background: #f8f9fa;
+}
+
+html.dark .gv-folder-dialog-btn-secondary,
+[data-theme='dark'] .gv-folder-dialog-btn-secondary,
+[data-color-scheme='dark'] .gv-folder-dialog-btn-secondary {
+  color: #8ab4f8;
+  border-color: #3c4043;
+}
+
+html.dark .gv-folder-dialog-btn-secondary:hover,
+[data-theme='dark'] .gv-folder-dialog-btn-secondary:hover,
+[data-color-scheme='dark'] .gv-folder-dialog-btn-secondary:hover {
+  background: #2d2e30;
+}
+
+/* Notification toast */
+.gv-notification {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  z-index: 2147483647;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  max-width: 400px;
+}
+
+.gv-notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gv-notification-success {
+  background: linear-gradient(135deg, #34a853 0%, #0d652d 100%);
+}
+
+.gv-notification-error {
+  background: linear-gradient(135deg, #ea4335 0%, #c5221f 100%);
+}
+
+.gv-notification-info {
+  background: linear-gradient(135deg, #1a73e8 0%, #1765cc 100%);
+}

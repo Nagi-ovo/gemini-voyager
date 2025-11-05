@@ -78,4 +78,17 @@
   ,"chatWidthWide": { "message": "宽", "description": "宽对话区域宽度标签" }
   ,"formula_copied": { "message": "✓ 公式已复制", "description": "公式复制成功消息" }
   ,"formula_copy_failed": { "message": "✗ 复制失败", "description": "公式复制失败消息" }
+  ,"folder_export": { "message": "导出文件夹", "description": "导出文件夹按钮提示" }
+  ,"folder_import": { "message": "导入文件夹", "description": "导入文件夹按钮提示" }
+  ,"folder_import_title": { "message": "导入文件夹配置", "description": "导入对话框标题" }
+  ,"folder_import_strategy": { "message": "导入策略：", "description": "导入策略标签" }
+  ,"folder_import_merge": { "message": "与现有文件夹合并", "description": "合并导入策略" }
+  ,"folder_import_overwrite": { "message": "覆盖现有文件夹", "description": "覆盖导入策略" }
+  ,"folder_import_select_file": { "message": "选择要导入的 JSON 文件", "description": "导入文件选择提示" }
+  ,"folder_import_success": { "message": "✓ 已导入 {folders} 个文件夹，{conversations} 个对话", "description": "导入成功消息" }
+  ,"folder_import_success_skipped": { "message": "✓ 已导入 {folders} 个文件夹，{conversations} 个对话（跳过 {skipped} 个重复项）", "description": "导入成功并跳过重复项消息" }
+  ,"folder_import_error": { "message": "✗ 导入失败：{error}", "description": "导入错误消息" }
+  ,"folder_export_success": { "message": "✓ 文件夹导出成功", "description": "导出成功消息" }
+  ,"folder_import_invalid_format": { "message": "文件格式无效。请选择有效的文件夹配置文件。", "description": "无效格式错误" }
+  ,"folder_import_confirm_overwrite": { "message": "这将替换所有现有文件夹。系统将创建备份。是否继续？", "description": "覆盖确认" }
 }

@@ -78,4 +78,17 @@
   ,"chatWidthWide": { "message": "Wide", "description": "Wide chat width label" }
   ,"formula_copied": { "message": "✓ Formula copied", "description": "Formula copied success message" }
   ,"formula_copy_failed": { "message": "✗ Failed to copy", "description": "Formula copy failed message" }
+  ,"folder_export": { "message": "Export folders", "description": "Export folders button tooltip" }
+  ,"folder_import": { "message": "Import folders", "description": "Import folders button tooltip" }
+  ,"folder_import_title": { "message": "Import Folder Configuration", "description": "Import dialog title" }
+  ,"folder_import_strategy": { "message": "Import strategy:", "description": "Import strategy label" }
+  ,"folder_import_merge": { "message": "Merge with existing folders", "description": "Merge import strategy" }
+  ,"folder_import_overwrite": { "message": "Overwrite existing folders", "description": "Overwrite import strategy" }
+  ,"folder_import_select_file": { "message": "Select a JSON file to import", "description": "Import file selection prompt" }
+  ,"folder_import_success": { "message": "✓ Imported {folders} folders, {conversations} conversations", "description": "Import success message" }
+  ,"folder_import_success_skipped": { "message": "✓ Imported {folders} folders, {conversations} conversations ({skipped} duplicates skipped)", "description": "Import success with skipped message" }
+  ,"folder_import_error": { "message": "✗ Import failed: {error}", "description": "Import error message" }
+  ,"folder_export_success": { "message": "✓ Folders exported successfully", "description": "Export success message" }
+  ,"folder_import_invalid_format": { "message": "Invalid file format. Please select a valid folder configuration file.", "description": "Invalid format error" }
+  ,"folder_import_confirm_overwrite": { "message": "This will replace all existing folders. A backup will be created. Continue?", "description": "Overwrite confirmation" }
 }

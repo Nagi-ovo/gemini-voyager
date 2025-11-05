@@ -8,6 +8,9 @@ import {
 } from './gemConfig';
 import type { Folder, FolderData, ConversationReference, DragData } from './types';
 
+import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
+import type { ImportStrategy } from '@/features/folder/types/import-export';
+
 const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
 const ROOT_CONVERSATIONS_ID = '__root_conversations__'; // Special ID for root-level conversations
@@ -170,14 +173,37 @@ export class FolderManager {
 
     titleContainer.appendChild(title);
 
+    // Actions container for buttons
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'gv-folder-header-actions';
+
+    // Import button
+    const importButton = document.createElement('button');
+    importButton.className = 'gv-folder-action-btn';
+    importButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">upload</mat-icon>`;
+    importButton.title = this.t('folder_import');
+    importButton.addEventListener('click', () => this.showImportDialog());
+
+    // Export button
+    const exportButton = document.createElement('button');
+    exportButton.className = 'gv-folder-action-btn';
+    exportButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">download</mat-icon>`;
+    exportButton.title = this.t('folder_export');
+    exportButton.addEventListener('click', () => this.exportFolders());
+
+    // Add folder button
     const addButton = document.createElement('button');
     addButton.className = 'gv-folder-add-btn';
     addButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">add</mat-icon>`;
     addButton.title = this.t('folder_create');
     addButton.addEventListener('click', () => this.createFolder());
 
+    actionsContainer.appendChild(importButton);
+    actionsContainer.appendChild(exportButton);
+    actionsContainer.appendChild(addButton);
+
     header.appendChild(titleContainer);
-    header.appendChild(addButton);
+    header.appendChild(actionsContainer);
 
     // Setup root drop zone on header
     this.setupRootDropZone(header);
@@ -2417,5 +2443,242 @@ export class FolderManager {
     if (this.tooltipElement) {
       this.tooltipElement.classList.remove('show');
     }
+  }
+
+  // Export/Import methods
+  private exportFolders(): void {
+    try {
+      // Type assertion to match the service's expected type
+      const payload = FolderImportExportService.exportToPayload(this.data as any);
+      FolderImportExportService.downloadJSON(payload);
+      this.showNotification(this.t('folder_export_success'), 'success');
+      this.debug('Folders exported successfully');
+    } catch (error) {
+      console.error('[FolderManager] Export error:', error);
+      this.showNotification(
+        this.t('folder_import_error').replace('{error}', String(error)),
+        'error'
+      );
+    }
+  }
+
+  private showImportDialog(): void {
+    // Create dialog overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'gv-folder-dialog-overlay';
+
+    // Create dialog
+    const dialog = document.createElement('div');
+    dialog.className = 'gv-folder-import-dialog';
+
+    // Dialog title
+    const dialogTitle = document.createElement('div');
+    dialogTitle.className = 'gv-folder-dialog-title';
+    dialogTitle.textContent = this.t('folder_import_title');
+
+    // Strategy selection
+    const strategyContainer = document.createElement('div');
+    strategyContainer.className = 'gv-folder-import-strategy';
+
+    const strategyLabel = document.createElement('div');
+    strategyLabel.className = 'gv-folder-import-strategy-label';
+    strategyLabel.textContent = this.t('folder_import_strategy');
+
+    const strategyOptions = document.createElement('div');
+    strategyOptions.className = 'gv-folder-import-strategy-options';
+
+    const mergeOption = this.createRadioOption('merge', this.t('folder_import_merge'), true);
+    const overwriteOption = this.createRadioOption('overwrite', this.t('folder_import_overwrite'), false);
+
+    strategyOptions.appendChild(mergeOption);
+    strategyOptions.appendChild(overwriteOption);
+
+    strategyContainer.appendChild(strategyLabel);
+    strategyContainer.appendChild(strategyOptions);
+
+    // File input
+    const fileInputContainer = document.createElement('div');
+    fileInputContainer.className = 'gv-folder-import-file-input';
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json,application/json';
+    fileInput.style.display = 'none';
+
+    const fileButton = document.createElement('button');
+    fileButton.className = 'gv-folder-import-file-button';
+    fileButton.textContent = this.t('folder_import_select_file');
+    fileButton.addEventListener('click', () => fileInput.click());
+
+    const fileName = document.createElement('div');
+    fileName.className = 'gv-folder-import-file-name';
+    fileName.textContent = '';
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]) {
+        fileName.textContent = fileInput.files[0].name;
+      }
+    });
+
+    fileInputContainer.appendChild(fileInput);
+    fileInputContainer.appendChild(fileButton);
+    fileInputContainer.appendChild(fileName);
+
+    // Buttons
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'gv-folder-dialog-buttons';
+
+    const importBtn = document.createElement('button');
+    importBtn.className = 'gv-folder-dialog-btn gv-folder-dialog-btn-primary';
+    importBtn.textContent = this.t('pm_import');
+    importBtn.addEventListener('click', async () => {
+      const strategy = (mergeOption.querySelector('input') as HTMLInputElement).checked
+        ? 'merge'
+        : 'overwrite';
+      await this.handleImport(fileInput, strategy);
+      overlay.remove();
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'gv-folder-dialog-btn gv-folder-dialog-btn-secondary';
+    cancelBtn.textContent = this.t('pm_cancel');
+    cancelBtn.addEventListener('click', () => overlay.remove());
+
+    buttonsContainer.appendChild(cancelBtn);
+    buttonsContainer.appendChild(importBtn);
+
+    // Assemble dialog
+    dialog.appendChild(dialogTitle);
+    dialog.appendChild(strategyContainer);
+    dialog.appendChild(fileInputContainer);
+    dialog.appendChild(buttonsContainer);
+    overlay.appendChild(dialog);
+
+    // Add to body
+    document.body.appendChild(overlay);
+
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.remove();
+      }
+    });
+  }
+
+  private createRadioOption(value: string, label: string, checked: boolean): HTMLElement {
+    const container = document.createElement('label');
+    container.className = 'gv-folder-import-radio-option';
+
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'import-strategy';
+    radio.value = value;
+    radio.checked = checked;
+
+    const labelText = document.createElement('span');
+    labelText.textContent = label;
+
+    container.appendChild(radio);
+    container.appendChild(labelText);
+
+    return container;
+  }
+
+  private async handleImport(fileInput: HTMLInputElement, strategy: ImportStrategy): Promise<void> {
+    try {
+      if (!fileInput.files || fileInput.files.length === 0) {
+        this.showNotification(this.t('folder_import_select_file'), 'error');
+        return;
+      }
+
+      const file = fileInput.files[0];
+
+      // Confirm overwrite if strategy is overwrite
+      if (strategy === 'overwrite') {
+        const confirmed = confirm(this.t('folder_import_confirm_overwrite'));
+        if (!confirmed) {
+          return;
+        }
+      }
+
+      // Read and parse file
+      const readResult = await FolderImportExportService.readJSONFile(file);
+      if (!readResult.success) {
+        this.showNotification(this.t('folder_import_invalid_format'), 'error');
+        return;
+      }
+
+      // Validate payload
+      const validationResult = FolderImportExportService.validatePayload(readResult.data);
+      if (!validationResult.success) {
+        this.showNotification(
+          this.t('folder_import_invalid_format') + ': ' + validationResult.error.message,
+          'error'
+        );
+        return;
+      }
+
+      // Import data
+      const importResult = FolderImportExportService.importFromPayload(
+        validationResult.data,
+        this.data as any,
+        { strategy, createBackup: true }
+      );
+
+      if (!importResult.success) {
+        this.showNotification(
+          this.t('folder_import_error').replace('{error}', String(importResult.error)),
+          'error'
+        );
+        return;
+      }
+
+      // Update data and save
+      this.data = importResult.data.data as any;
+      this.saveData();
+      this.refresh();
+
+      // Show success message
+      const stats = importResult.data.stats;
+      let message = this.t('folder_import_success')
+        .replace('{folders}', String(stats.foldersImported))
+        .replace('{conversations}', String(stats.conversationsImported));
+
+      if (strategy === 'merge' && (stats.duplicatesFoldersSkipped || stats.duplicatesConversationsSkipped)) {
+        const totalSkipped = (stats.duplicatesFoldersSkipped || 0) + (stats.duplicatesConversationsSkipped || 0);
+        message = this.t('folder_import_success_skipped')
+          .replace('{folders}', String(stats.foldersImported))
+          .replace('{conversations}', String(stats.conversationsImported))
+          .replace('{skipped}', String(totalSkipped));
+      }
+
+      this.showNotification(message, 'success');
+      this.debug('Import successful:', stats);
+    } catch (error) {
+      console.error('[FolderManager] Import error:', error);
+      this.showNotification(
+        this.t('folder_import_error').replace('{error}', String(error)),
+        'error'
+      );
+    }
+  }
+
+  private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `gv-notification gv-notification-${type}`;
+    notification.textContent = message;
+
+    // Add to body
+    document.body.appendChild(notification);
+
+    // Trigger animation
+    setTimeout(() => notification.classList.add('show'), 10);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
   }
 }
