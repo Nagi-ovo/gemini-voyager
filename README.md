@@ -43,6 +43,7 @@ Manage conversations with drag-and-drop folders:
 - Auto-detects Gem types and displays corresponding icons
 - Local storage, shared across Gemini accounts (u/0, u/1, etc.)
 - Instant navigation without page reloads
+- Import/export for cross-device sync ([guide](.github/docs/IMPORT_EXPORT_GUIDE.md))
 
 ### 💡 Prompt Library
 

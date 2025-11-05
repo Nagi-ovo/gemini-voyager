@@ -6,15 +6,15 @@
 
 ## 使用方法
 
-### 📤 导出文件夹配置
+### 📥 导出文件夹配置（下载 ⬇️）
 
 1. 打开 Gemini 聊天页面
-2. 在文件夹区域找到下载图标按钮（📥）
+2. 在文件夹区域找到**下载图标按钮**（向下箭头 ⬇️）
 3. 点击即可下载配置文件（格式：`gemini-voyager-folders-YYYYMMDD-HHMMSS.json`）
 
-### 📥 导入文件夹配置
+### 📤 导入文件夹配置（上传 ⬆️）
 
-1. 点击文件夹区域的上传图标按钮（📤）
+1. 点击文件夹区域的**上传图标按钮**（向上箭头 ⬆️）
 2. 选择导入策略：
    - **合并模式**：保留现有文件夹，只添加新的（推荐）
    - **覆盖模式**：完全替换现有配置（会创建备份）
@@ -52,11 +52,11 @@
 
 // 2. 检查是否有备份
 const hasBackup = sessionStorage.getItem('gvFolderBackup');
-console.log('备份存在:', hasBackup !== null);
+console.log('备份存在：', hasBackup !== null);
 
 // 3. 查看备份时间
 const backupTime = sessionStorage.getItem('gvFolderBackupTimestamp');
-console.log('备份时间:', backupTime);
+console.log('备份时间：', backupTime);
 
 // 4. 恢复备份
 const backup = JSON.parse(sessionStorage.getItem('gvFolderBackup'));
@@ -149,3 +149,4 @@ A: 支持！只需在一个浏览器导出，在另一个浏览器导入即可�
 
 如有问题或建议，请访问：
 https://github.com/Nagi-ovo/gemini-voyager/issues/36
+
