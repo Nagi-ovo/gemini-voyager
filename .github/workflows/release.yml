@@ -132,6 +132,34 @@ jobs:
             gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip
             gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip
 
+      - name: Generate release body
+        id: release_body
+        run: |
+          if [ -n "${{ inputs.notes }}" ]; then
+            # Use provided notes
+            echo "body<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ inputs.notes }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            # Use template with installation instructions
+            cat > release_body.md << 'EOF'
+          ## 📥 Installation
+
+          Download the latest version for your browser:
+          - **Chrome/Edge/Opera/Brave**: `gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip`
+          - **Firefox**: `gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip`
+          - **Safari**: `gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip`
+
+          See [README](https://github.com/Nagi-ovo/gemini-voyager#-installation) for detailed installation instructions.
+
+          ---
+
+          EOF
+            echo "body<<EOF" >> $GITHUB_OUTPUT
+            cat release_body.md >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -141,7 +169,8 @@ jobs:
             gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip
           name: Gemini Voyager ${{ steps.tag.outputs.name }}
           tag_name: ${{ steps.tag.outputs.name }}
-          body: ${{ inputs.notes }}
-          generate_release_notes: ${{ inputs.notes == '' }}
+          body: ${{ steps.release_body.outputs.body }}
+          generate_release_notes: true
+          append_body: ${{ inputs.notes == '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
