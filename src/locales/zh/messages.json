@@ -91,4 +91,6 @@
   ,"folder_export_success": { "message": "✓ 文件夹导出成功", "description": "导出成功消息" }
   ,"folder_import_invalid_format": { "message": "文件格式无效。请选择有效的文件夹配置文件。", "description": "无效格式错误" }
   ,"folder_import_confirm_overwrite": { "message": "这将替换所有现有文件夹。系统将创建备份。是否继续？", "description": "覆盖确认" }
+  ,"export_dialog_title": { "message": "导出对话", "description": "导出对话框标题" }
+  ,"export_dialog_select": { "message": "选择导出格式：", "description": "导出格式选择标签" }
 }

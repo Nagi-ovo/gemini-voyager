@@ -329,12 +329,57 @@ export async function startExportButton(): Promise<void> {
 
   btn.addEventListener('click', () => {
     try {
-      const pairs = collectChatPairs();
-      const payload = buildExportPayload(pairs);
-      downloadJSON(payload, formatFilename());
+      // Show export dialog instead of directly exporting
+      showExportDialog(dict, lang);
     } catch (err) {
       try { console.error('Gemini Voyager export failed', err); } catch {}
     }
+  });
+}
+
+async function showExportDialog(dict: Record<'en' | 'zh', Record<string, string>>, lang: 'en' | 'zh'): Promise<void> {
+  const t = (key: string) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+
+  // Dynamically import export modules
+  const { ExportDialog } = await import('../../../features/export/ui/ExportDialog');
+  const { ConversationExportService } = await import('../../../features/export/services/ConversationExportService');
+
+  const dialog = new ExportDialog();
+
+  dialog.show({
+    onExport: async (format) => {
+      try {
+        // Collect conversation data
+        const pairs = collectChatPairs();
+        const metadata = {
+          url: location.href,
+          exportedAt: new Date().toISOString(),
+          count: pairs.length,
+        };
+
+        // Export in selected format
+        const result = await ConversationExportService.export(pairs, metadata, {
+          format: format as any,
+        });
+
+        if (result.success) {
+          console.log(`[Gemini Voyager] Exported ${result.format} successfully`);
+        } else {
+          console.error(`[Gemini Voyager] Export failed: ${result.error}`);
+        }
+      } catch (err) {
+        console.error('[Gemini Voyager] Export error:', err);
+      }
+    },
+    onCancel: () => {
+      // Dialog closed
+    },
+    translations: {
+      title: t('export_dialog_title'),
+      selectFormat: t('export_dialog_select'),
+      cancel: t('pm_cancel'),
+      export: t('pm_export'),
+    },
   });
 }
 

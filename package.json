@@ -42,6 +42,7 @@
     "@crxjs/vite-plugin": "2.2.1",
     "@tailwindcss/vite": "^4.1.15",
     "@types/chrome": "^0.1.24",
+    "@types/jsdom": "^27.0.0",
     "@types/node": "^24.9.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",

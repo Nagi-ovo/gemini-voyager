@@ -91,4 +91,6 @@
   ,"folder_export_success": { "message": "✓ Folders exported successfully", "description": "Export success message" }
   ,"folder_import_invalid_format": { "message": "Invalid file format. Please select a valid folder configuration file.", "description": "Invalid format error" }
   ,"folder_import_confirm_overwrite": { "message": "This will replace all existing folders. A backup will be created. Continue?", "description": "Overwrite confirmation" }
+  ,"export_dialog_title": { "message": "Export Conversation", "description": "Export dialog title" }
+  ,"export_dialog_select": { "message": "Choose export format:", "description": "Export format selection label" }
 }
