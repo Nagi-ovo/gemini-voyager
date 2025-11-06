@@ -5,6 +5,7 @@
  */
 
 import type { ChatTurn, ConversationMetadata } from '../types/export';
+import { DOMContentExtractor } from './DOMContentExtractor';
 
 /**
  * PDF print service using browser's native print dialog
@@ -95,6 +96,24 @@ export class PDFPrintService {
   private static renderTurn(turn: ChatTurn, index: number): string {
     const starredClass = turn.starred ? 'gv-print-turn-starred' : '';
 
+    // Extract rich content if DOM elements available
+    let userContent: string;
+    let assistantContent: string;
+
+    if (turn.userElement) {
+      const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
+      userContent = extracted.html || '<em>No content</em>';
+    } else {
+      userContent = this.formatContent(turn.user);
+    }
+
+    if (turn.assistantElement) {
+      const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
+      assistantContent = extracted.html || '<em>No content</em>';
+    } else {
+      assistantContent = this.formatContent(turn.assistant);
+    }
+
     return `
       <article class="gv-print-turn ${starredClass}">
         <div class="gv-print-turn-header">
@@ -104,15 +123,15 @@ export class PDFPrintService {
 
         <div class="gv-print-turn-user">
           <div class="gv-print-turn-label">👤 User</div>
-          <div class="gv-print-turn-text">${this.formatContent(turn.user)}</div>
+          <div class="gv-print-turn-text">${userContent}</div>
         </div>
 
         ${
-          turn.assistant
+          assistantContent
             ? `
           <div class="gv-print-turn-assistant">
             <div class="gv-print-turn-label">🤖 Assistant</div>
-            <div class="gv-print-turn-text">${this.formatContent(turn.assistant)}</div>
+            <div class="gv-print-turn-text">${assistantContent}</div>
           </div>
         `
             : ''

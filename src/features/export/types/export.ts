@@ -10,6 +10,9 @@ export interface ChatTurn {
   user: string;
   assistant: string;
   starred: boolean;
+  // Optional DOM elements for rich content extraction
+  userElement?: HTMLElement;
+  assistantElement?: HTMLElement;
 }
 
 /**

@@ -5,6 +5,7 @@
  */
 
 import type { ChatTurn, ConversationMetadata } from '../types/export';
+import { DOMContentExtractor } from './DOMContentExtractor';
 
 /**
  * Markdown formatting service
@@ -69,13 +70,33 @@ export class MarkdownFormatter {
     lines.push('');
     lines.push('### 👤 User');
     lines.push('');
-    lines.push(this.formatContent(turn.user));
+
+    // Extract rich content if DOM element available
+    if (turn.userElement) {
+      const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
+
+      // Handle images
+      if (extracted.hasImages) {
+        lines.push('*[This turn includes uploaded images]*');
+        lines.push('');
+      }
+
+      lines.push(extracted.text || '_No content_');
+    } else {
+      lines.push(this.formatContent(turn.user));
+    }
 
     // Assistant response (always show section, even if empty)
     lines.push('');
     lines.push('### 🤖 Assistant');
     lines.push('');
-    lines.push(this.formatContent(turn.assistant));
+
+    if (turn.assistantElement) {
+      const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
+      lines.push(extracted.text || '_No content_');
+    } else {
+      lines.push(this.formatContent(turn.assistant));
+    }
 
     return lines.join('\n');
   }

@@ -1,3 +1,7 @@
+// Static imports to avoid CSP issues with dynamic imports in content scripts
+import { ExportDialog } from '../../../features/export/ui/ExportDialog';
+import { ConversationExportService } from '../../../features/export/services/ConversationExportService';
+
 function hashString(input: string): string {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < input.length; i++) {
@@ -156,7 +160,13 @@ function extractAssistantText(el: HTMLElement): string {
   return text;
 }
 
-type ChatTurn = { user: string; assistant: string; starred: boolean };
+type ChatTurn = {
+  user: string;
+  assistant: string;
+  starred: boolean;
+  userElement?: HTMLElement;
+  assistantElement?: HTMLElement;
+};
 
 function collectChatPairs(): ChatTurn[] {
   const root = getConversationRoot();
@@ -183,6 +193,7 @@ function collectChatPairs(): ChatTurn[] {
     const start = userOffsets[i];
     const end = i + 1 < userOffsets.length ? userOffsets[i + 1] : Number.POSITIVE_INFINITY;
     let aText = '';
+    let aEl: HTMLElement | null = null;
     let bestIdx = -1;
     let bestOff = Number.POSITIVE_INFINITY;
     for (let k = 0; k < assistants.length; k++) {
@@ -192,7 +203,7 @@ function collectChatPairs(): ChatTurn[] {
       }
     }
     if (bestIdx >= 0) {
-      const aEl = assistants[bestIdx] as HTMLElement;
+      aEl = assistants[bestIdx] as HTMLElement;
       aText = extractAssistantText(aEl);
     } else {
       // Fallback: search next siblings up to a small window
@@ -202,6 +213,7 @@ function collectChatPairs(): ChatTurn[] {
         if (!sib) break;
         if (sib.matches(userSelectors.join(','))) break;
         if (sib.matches(assistantSelectors.join(','))) {
+          aEl = sib;
           aText = extractAssistantText(sib);
           break;
         }
@@ -209,7 +221,15 @@ function collectChatPairs(): ChatTurn[] {
     }
     const turnId = ensureTurnId(uEl, i);
     const starred = !!turnId && starredSet.has(turnId);
-    if (uText || aText) pairs.push({ user: uText, assistant: aText, starred });
+    if (uText || aText) {
+      pairs.push({
+        user: uText,
+        assistant: aText,
+        starred,
+        userElement: uEl,
+        assistantElement: aEl || undefined,
+      });
+    }
   }
   return pairs;
 }
@@ -340,24 +360,20 @@ export async function startExportButton(): Promise<void> {
 async function showExportDialog(dict: Record<'en' | 'zh', Record<string, string>>, lang: 'en' | 'zh'): Promise<void> {
   const t = (key: string) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
-  // Dynamically import export modules
-  const { ExportDialog } = await import('../../../features/export/ui/ExportDialog');
-  const { ConversationExportService } = await import('../../../features/export/services/ConversationExportService');
+  // Collect conversation data BEFORE showing dialog to avoid page state changes
+  const pairs = collectChatPairs();
+  const metadata = {
+    url: location.href,
+    exportedAt: new Date().toISOString(),
+    count: pairs.length,
+  };
 
   const dialog = new ExportDialog();
 
   dialog.show({
     onExport: async (format) => {
       try {
-        // Collect conversation data
-        const pairs = collectChatPairs();
-        const metadata = {
-          url: location.href,
-          exportedAt: new Date().toISOString(),
-          count: pairs.length,
-        };
-
-        // Export in selected format
+        // Use pre-collected conversation data
         const result = await ConversationExportService.export(pairs, metadata, {
           format: format as any,
         });
