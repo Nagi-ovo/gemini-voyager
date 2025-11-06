@@ -23,6 +23,7 @@ export interface ExtractedTurn {
  * Preserves formatting including LaTeX formulas, code blocks, tables, etc.
  */
 export class DOMContentExtractor {
+  private static DEBUG = false;
   /**
    * Extract user query content
    */
@@ -85,7 +86,7 @@ export class DOMContentExtractor {
    * Extract assistant response content with rich formatting
    */
   static extractAssistantContent(element: HTMLElement): ExtractedContent {
-    console.log('[DOMContentExtractor] extractAssistantContent called, element:', element);
+    if (this.DEBUG) console.log('[DOMContentExtractor] extractAssistantContent called, element:', element);
 
     const result: ExtractedContent = {
       text: '',
@@ -124,49 +125,110 @@ export class DOMContentExtractor {
       messageContent = element;
     }
 
-    console.log('[DOMContentExtractor] Using container:', messageContent.tagName, messageContent.className);
+    if (this.DEBUG) console.log('[DOMContentExtractor] Using container:', messageContent.tagName, messageContent.className);
 
-    // Clone and remove model-thoughts before processing
-    const cloned = messageContent.cloneNode(true) as Element;
-    cloned.querySelectorAll('model-thoughts, .model-thoughts').forEach((el) => el.remove());
-    messageContent = cloned;
-
+    // Don't clone! Angular custom elements may lose content when cloned
+    // Instead, skip model-thoughts during processNodes
     const htmlParts: string[] = [];
     const textParts: string[] = [];
 
-    // Process main content (text, formulas, etc.)
-    this.processNodes(messageContent, htmlParts, textParts, result);
+    // STRATEGY CHANGE: Instead of recursing through DOM (which misses Angular-rendered elements),
+    // process the .markdown div directly and then search for response-elements
+    const markdownDiv = messageContent.querySelector('.markdown, .markdown-main-panel');
+
+    if (this.DEBUG) {
+      console.log('[DOMContentExtractor] messageContent tagName:', messageContent.tagName);
+      console.log('[DOMContentExtractor] messageContent className:', messageContent.className);
+      console.log('[DOMContentExtractor] markdownDiv found?', !!markdownDiv);
+    }
+
+    if (markdownDiv) {
+      if (this.DEBUG) {
+        console.log('[DOMContentExtractor] markdownDiv tagName:', markdownDiv.tagName);
+        console.log('[DOMContentExtractor] markdownDiv className:', markdownDiv.className);
+        console.log('[DOMContentExtractor] markdownDiv innerHTML preview:', (markdownDiv as HTMLElement).innerHTML.substring(0, 300));
+      }
+
+      // First, process all direct children of markdown that are NOT response-element
+      this.processNodes(markdownDiv, htmlParts, textParts, result);
+
+      // Note: response-element contents are processed by processNodes recursion above
+    } else {
+      // Fallback to old method
+      if (this.DEBUG) console.log('[DOMContentExtractor] No markdown div found, using fallback');
+      this.processNodes(messageContent, htmlParts, textParts, result);
+    }
 
     // Additionally, look for code blocks and tables at the element level
     // These might be siblings to message-content in response-element containers
-    const codeBlocks = element.querySelectorAll('code-block, .code-block');
-    codeBlocks.forEach((codeBlock) => {
-      console.log('[DOMContentExtractor] Found code block outside message-content!');
-      const codeContent = this.extractCodeBlock(codeBlock as HTMLElement);
-      if (codeContent.text) {
-        result.hasCode = true;
-        htmlParts.push(codeContent.html);
-        textParts.push(`\n${codeContent.text}\n`);
-      }
-    });
+    // IMPORTANT: Angular may use Shadow DOM, so we need to search both light DOM and shadow DOM
+    if (this.DEBUG) {
+      console.log('[DOMContentExtractor] Searching for code blocks in:', element.tagName, element.className);
+      console.log('[DOMContentExtractor] Element HTML preview:', element.outerHTML.substring(0, 200));
+    }
 
-    const tableBlocks = element.querySelectorAll('table-block, .table-block');
-    tableBlocks.forEach((tableBlock) => {
-      console.log('[DOMContentExtractor] Found table block outside message-content!');
-      const tableContent = this.extractTable(tableBlock as HTMLElement);
-      if (tableContent.text) {
-        result.hasTables = true;
-        htmlParts.push(tableContent.html);
-        textParts.push(`\n${tableContent.text}\n`);
+    // Helper function to search in both light DOM and shadow DOM
+    const searchAll = (root: Element, selector: string): Element[] => {
+      const results: Element[] = [];
+
+      // Search in light DOM
+      results.push(...Array.from(root.querySelectorAll(selector)));
+
+      // Search in shadow DOM recursively
+      const searchShadow = (el: Element) => {
+        const shadowRoot = (el as any).shadowRoot as ShadowRoot | null;
+        if (shadowRoot) {
+          console.log(`[DOMContentExtractor] Searching in Shadow DOM of`, el.tagName);
+          results.push(...Array.from(shadowRoot.querySelectorAll(selector)));
+        }
+
+        // Recursively check children for shadow roots
+        Array.from(el.children).forEach(searchShadow);
+      };
+
+      searchShadow(root);
+      return results;
+    };
+
+    // Also search for raw code elements regardless of presence of code-block
+    const altCodeBlocks = searchAll(messageContent, 'pre > code, [data-test-id="code-content"]');
+    if (this.DEBUG) console.log('[DOMContentExtractor] Found', altCodeBlocks.length, 'raw code elements with alternative selector');
+    altCodeBlocks.forEach((codeEl, idx) => {
+      // Avoid duplicates if already processed
+      if ((codeEl as any).processedByGV) return;
+      // Skip if inside a code-block (already handled by processNodes)
+      if (codeEl.closest && codeEl.closest('code-block')) return;
+      if (this.DEBUG) console.log(`[DOMContentExtractor] Processing raw code element ${idx + 1}/${altCodeBlocks.length}`);
+      const extracted = this.extractCodeFromCodeElement(codeEl as HTMLElement);
+      if (extracted.text) {
+        (codeEl as any).processedByGV = true;
+        result.hasCode = true;
+        htmlParts.push(extracted.html);
+        textParts.push(`\n${extracted.text}\n`);
       }
     });
+    // Note: tables and code-blocks were already processed via processNodes()
 
     result.html = htmlParts.join('\n');
     // Clean up multiple newlines but preserve intentional spacing
-    result.text = textParts
+    let combinedText = textParts
       .join('')
       .replace(/\n{3,}/g, '\n\n') // Max 2 consecutive newlines
       .trim();
+    // Last-chance fallback: if no structured text captured, use plain innerText
+    if (!combinedText) {
+      const fallbackContainer =
+        (messageContent as HTMLElement) ||
+        (element.querySelector('message-content') as HTMLElement | null) ||
+        (element as HTMLElement);
+      try {
+        const plain = (fallbackContainer as HTMLElement).innerText || fallbackContainer.textContent || '';
+        combinedText = this.normalizeText(plain);
+      } catch {
+        /* ignore */
+      }
+    }
+    result.text = combinedText;
 
     return result;
   }
@@ -181,21 +243,29 @@ export class DOMContentExtractor {
     flags: Pick<ExtractedContent, 'hasImages' | 'hasFormulas' | 'hasTables' | 'hasCode'>,
   ): void {
     const children = Array.from(container.children);
+    if (this.DEBUG) console.log(`[DOMContentExtractor] processNodes: ${children.length} children in`, container.tagName, container.className);
+
+    // Check for Shadow DOM
+    const shadowRoot = (container as any).shadowRoot;
+    if (shadowRoot) {
+      if (this.DEBUG) console.log('[DOMContentExtractor] Found Shadow DOM! Processing shadow children');
+      this.processNodes(shadowRoot, htmlParts, textParts, flags);
+    }
 
     for (const child of children) {
       const tagName = child.tagName.toLowerCase();
-      console.log('[DOMContentExtractor] Processing child:', tagName, child.className);
+      if (this.DEBUG) console.log('[DOMContentExtractor] Processing child:', tagName, child.className);
 
       // Skip certain elements
       if (this.shouldSkipElement(child)) {
-        console.log('[DOMContentExtractor] Skipping element:', tagName);
+        if (this.DEBUG) console.log('[DOMContentExtractor] Skipping element:', tagName);
         continue;
       }
 
       // Math block (display formula)
       if (child.classList.contains('math-block')) {
         const latex = child.getAttribute('data-math') || '';
-        console.log('[DOMContentExtractor] Found math-block, latex:', latex);
+        if (this.DEBUG) console.log('[DOMContentExtractor] Found math-block, latex:', latex);
         flags.hasFormulas = true;
         htmlParts.push(`<div class="math-block">$$${latex}$$</div>`);
         textParts.push(`\n$$\n${latex}\n$$\n`);
@@ -205,10 +275,10 @@ export class DOMContentExtractor {
       // Code block (check for nested code-block first)
       const codeBlock = child.querySelector('code-block');
       if (tagName === 'code-block' || child.classList.contains('code-block') || codeBlock) {
-        console.log('[DOMContentExtractor] Found code block!');
+        if (this.DEBUG) console.log('[DOMContentExtractor] Found code block!');
         const elementToExtract = (codeBlock || child) as HTMLElement;
         const codeContent = this.extractCodeBlock(elementToExtract);
-        console.log('[DOMContentExtractor] Code content:', codeContent.text);
+        if (this.DEBUG) console.log('[DOMContentExtractor] Code content:', codeContent.text);
         if (codeContent.text) {
           flags.hasCode = true;
           htmlParts.push(codeContent.html);
@@ -220,10 +290,10 @@ export class DOMContentExtractor {
       // Table block (check for nested table-block first)
       const tableBlock = child.querySelector('table-block');
       if (tagName === 'table-block' || tableBlock || child.querySelector('table')) {
-        console.log('[DOMContentExtractor] Found table block!');
+        if (this.DEBUG) console.log('[DOMContentExtractor] Found table block!');
         const elementToExtract = (tableBlock || child) as HTMLElement;
         const tableContent = this.extractTable(elementToExtract);
-        console.log('[DOMContentExtractor] Table content:', tableContent.text);
+        if (this.DEBUG) console.log('[DOMContentExtractor] Table content:', tableContent.text);
         if (tableContent.text) {
           // Only add if table was successfully extracted
           flags.hasTables = true;
@@ -275,7 +345,7 @@ export class DOMContentExtractor {
         child.classList.contains('horizontal-scroll-wrapper') ||
         child.classList.contains('table-block-component')
       ) {
-        console.log('[DOMContentExtractor] Recursing into container:', tagName, child.className);
+        if (this.DEBUG) console.log('[DOMContentExtractor] Recursing into container:', tagName, child.className);
         // Recursively process children instead of extracting text directly
         this.processNodes(child, htmlParts, textParts, flags);
         continue;
@@ -414,10 +484,43 @@ export class DOMContentExtractor {
   }
 
   /**
+   * Extract code directly from a <code> element (fallback path)
+   */
+  private static extractCodeFromCodeElement(codeEl: HTMLElement): { html: string; text: string } {
+    const code = codeEl.textContent || '';
+    // Try to infer language from class names like "language-python"
+    let language = '';
+    const className = (codeEl.getAttribute('class') || '').toLowerCase();
+    const langMatch = className.match(/language-([a-z0-9]+)/i);
+    if (langMatch) {
+      language = langMatch[1];
+    } else {
+      // Try to find a nearby header label inside a surrounding code-block component
+      const parentBlock = codeEl.closest('code-block') as HTMLElement | null;
+      if (parentBlock) {
+        const label = parentBlock.querySelector('.code-block-decoration');
+        if (label) {
+          language = this.normalizeText(label.textContent || '').toLowerCase();
+        }
+      }
+    }
+    return {
+      html: `<pre><code class="language-${language}">${this.escapeHtml(code)}</code></pre>`,
+      text: `\`\`\`${language}\n${code}\n\`\`\``,
+    };
+  }
+
+  /**
    * Extract table content
    */
   private static extractTable(element: HTMLElement): { html: string; text: string } {
-    const table = element.querySelector('table');
+    // Accept either a container that holds a <table>, or a <table> element itself
+    let table: HTMLTableElement | null = null;
+    if (element.tagName && element.tagName.toLowerCase() === 'table') {
+      table = element as HTMLTableElement;
+    } else {
+      table = element.querySelector('table') as HTMLTableElement | null;
+    }
     if (!table) {
       return { html: '', text: '' };
     }
@@ -449,6 +552,25 @@ export class DOMContentExtractor {
       // Body
       for (let i = 1; i < rows.length; i++) {
         markdownLines.push('| ' + rows[i].join(' | ') + ' |');
+      }
+    } else {
+      // Fallback: treat first tbody row as header if no thead present
+      const firstBodyRow = table.querySelector('tbody tr');
+      if (firstBodyRow) {
+        const header = Array.from(firstBodyRow.querySelectorAll('td, th')).map((cell) =>
+          this.normalizeText(cell.textContent || ''),
+        );
+        if (header.length > 0) {
+          markdownLines.push('| ' + header.join(' | ') + ' |');
+          markdownLines.push('| ' + header.map(() => '---').join(' | ') + ' |');
+          const rest = Array.from(table.querySelectorAll('tbody tr')).slice(1);
+          rest.forEach((row) => {
+            const cells = Array.from(row.querySelectorAll('td, th')).map((cell) =>
+              this.normalizeText(cell.textContent || ''),
+            );
+            markdownLines.push('| ' + cells.join(' | ') + ' |');
+          });
+        }
       }
     }
 

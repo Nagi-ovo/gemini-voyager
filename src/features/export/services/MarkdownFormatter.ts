@@ -5,6 +5,7 @@
  */
 
 import type { ChatTurn, ConversationMetadata } from '../types/export';
+
 import { DOMContentExtractor } from './DOMContentExtractor';
 
 /**
@@ -93,7 +94,9 @@ export class MarkdownFormatter {
 
     if (turn.assistantElement) {
       const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
-      lines.push(extracted.text || '_No content_');
+      // Fallback to plain assistant text if rich extraction produced nothing
+      const fallback = this.formatContent(turn.assistant);
+      lines.push(extracted.text || fallback || '_No content_');
     } else {
       lines.push(this.formatContent(turn.assistant));
     }

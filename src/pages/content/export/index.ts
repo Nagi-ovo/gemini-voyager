@@ -1,6 +1,6 @@
 // Static imports to avoid CSP issues with dynamic imports in content scripts
-import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 import { ConversationExportService } from '../../../features/export/services/ConversationExportService';
+import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 
 function hashString(input: string): string {
   let h = 2166136261 >>> 0;
@@ -130,7 +130,17 @@ function readStarredSet(): Set<string> {
 }
 
 function extractAssistantText(el: HTMLElement): string {
-  // Clone and remove reasoning toggles/labels before reading text
+  // Prefer direct text from message container if available (connected to DOM)
+  try {
+    const mc = (el.querySelector('message-content, .markdown, .markdown-main-panel') as HTMLElement | null);
+    if (mc) {
+      const raw = mc.textContent || mc.innerText || '';
+      const txt = normalizeText(raw);
+      if (txt) return txt;
+    }
+  } catch {}
+
+  // Clone and remove reasoning toggles/labels before reading text (detached fallback)
   const clone = el.cloneNode(true) as HTMLElement;
   const matchesReasonToggle = (txt: string): boolean => {
     const s = normalizeText(txt).toLowerCase();
@@ -222,12 +232,24 @@ function collectChatPairs(): ChatTurn[] {
     const turnId = ensureTurnId(uEl, i);
     const starred = !!turnId && starredSet.has(turnId);
     if (uText || aText) {
+      // Prefer a richer assistant container for downstream rich extraction
+      let finalAssistantEl: HTMLElement | undefined = undefined;
+      if (aEl) {
+        const pick =
+          (aEl.querySelector('message-content') as HTMLElement | null) ||
+          (aEl.querySelector('.markdown, .markdown-main-panel') as HTMLElement | null) ||
+          (aEl.closest('.presented-response-container') as HTMLElement | null) ||
+          (aEl.querySelector('.presented-response-container, .response-content') as HTMLElement | null) ||
+          (aEl.querySelector('response-element') as HTMLElement | null) ||
+          aEl;
+        finalAssistantEl = pick || undefined;
+      }
       pairs.push({
         user: uText,
         assistant: aText,
         starred,
         userElement: uEl,
-        assistantElement: aEl || undefined,
+        assistantElement: finalAssistantEl,
       });
     }
   }
@@ -326,6 +348,16 @@ export async function startExportButton(): Promise<void> {
   if ((btn as any)._gvBound) return;
   (btn as any)._gvBound = true;
 
+  // Swallow events on the button to avoid parent navigation (logo click -> /app)
+  const swallow = (e: Event) => {
+    try { e.preventDefault(); } catch {}
+    try { e.stopPropagation(); } catch {}
+  };
+  // Capture low-level press events to avoid parent logo navigation, but do NOT capture 'click'
+  ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((type) => {
+    try { btn.addEventListener(type, swallow, true); } catch {}
+  });
+
   // i18n setup for tooltip
   const dict = await loadDictionaries();
   const lang = await getLanguage();
@@ -347,7 +379,9 @@ export async function startExportButton(): Promise<void> {
     });
   } catch {}
 
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', (ev) => {
+    // Stop parent navigation, but allow this handler to run
+    swallow(ev);
     try {
       // Show export dialog instead of directly exporting
       showExportDialog(dict, lang);
