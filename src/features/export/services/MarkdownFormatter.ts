@@ -14,6 +14,72 @@ import { DOMContentExtractor } from './DOMContentExtractor';
  */
 export class MarkdownFormatter {
   /**
+   * Fetch URL as data URL (best-effort). Returns null on failure.
+   */
+  private static async fetchAsDataURL(url: string): Promise<string | null> {
+    try {
+      const resp = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
+      if (!resp.ok || !resp.body) return null;
+      const blob = await resp.blob();
+      return await new Promise<string>((resolve, reject) => {
+        try {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error('readAsDataURL failed'));
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.readAsDataURL(blob);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Extract image URLs from Markdown (http/https only)
+   */
+  static extractImageUrls(markdown: string): string[] {
+    const imgRegex = /!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/g;
+    const out = new Set<string>();
+    let m: RegExpExecArray | null;
+    while ((m = imgRegex.exec(markdown)) !== null) {
+      out.add(m[1]);
+    }
+    return Array.from(out);
+  }
+
+  /**
+   * Rewrite Markdown image URLs using provided mapping (original -> newUrl)
+   */
+  static rewriteImageUrls(markdown: string, mapping: Map<string, string>): string {
+    const imgRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+    return markdown.replace(imgRegex, (_all, alt, url) => {
+      const next = mapping.get(url);
+      return next ? `![${alt}](${next})` : _all;
+    });
+  }
+
+  /**
+   * Async formatter that tries to inline images as data URLs
+   */
+  static async formatWithAssets(turns: ChatTurn[], metadata: ConversationMetadata): Promise<string> {
+    const md = this.format(turns, metadata);
+    const urls = this.extractImageUrls(md);
+    if (urls.length === 0) return md;
+
+    const urlToData = new Map<string, string>();
+    await Promise.all(
+      urls.map(async (u) => {
+        const data = await this.fetchAsDataURL(u);
+        if (data) urlToData.set(u, data);
+      }),
+    );
+    if (urlToData.size === 0) return md;
+
+    return this.rewriteImageUrls(md, urlToData);
+  }
+  /**
    * Format conversation as Markdown
    */
   static format(turns: ChatTurn[], metadata: ConversationMetadata): string {

@@ -27,6 +27,9 @@ export class PDFPrintService {
     // Inject print styles
     this.injectPrintStyles();
 
+    // Inline images as data URLs (best-effort) to avoid auth-bound links failing in print
+    await this.inlineImages(container);
+
     // Small delay to ensure styles are applied
     await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -59,6 +62,56 @@ export class PDFPrintService {
     `;
 
     return container;
+  }
+
+  /**
+   * Convert <img src> links in container to data URLs (best-effort)
+   */
+  private static async inlineImages(container: HTMLElement): Promise<void> {
+    const imgs = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
+    if (imgs.length === 0) return;
+    const toDataUrl = async (url: string): Promise<string | null> => {
+      try {
+        const resp = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
+        if (!resp.ok) return null;
+        const blob = await resp.blob();
+        const data = await new Promise<string>((resolve, reject) => {
+          try {
+            const reader = new FileReader();
+            reader.onerror = () => reject(new Error('readAsDataURL failed'));
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.readAsDataURL(blob);
+          } catch (e) {
+            reject(e);
+          }
+        });
+        return data;
+      } catch {
+        return null;
+      }
+    };
+
+    await Promise.all(
+      imgs.map(async (img) => {
+        const src = img.getAttribute('src') || '';
+        if (!/^https?:\/\//i.test(src)) return;
+        const data = await toDataUrl(src);
+        if (data) {
+          try {
+            img.src = data;
+          } catch {}
+        }
+      }),
+    );
+
+    // Attempt to wait for image decoding
+    await Promise.all(
+      imgs.map((img) =>
+        (img as any).decode?.().catch(() => {
+          /* ignore */
+        }),
+      ),
+    );
   }
 
   /**
@@ -282,6 +335,15 @@ export class PDFPrintService {
           padding-left: 1em;
           border-left: 3px solid #e5e7eb;
           color: #1a1a1a;
+        }
+
+        /* Constrain images to avoid oversized visuals */
+        .gv-print-turn-text img {
+          max-width: 60%;
+          height: auto;
+          display: block;
+          margin: 0.5em 0;
+          page-break-inside: avoid;
         }
 
         .gv-print-turn-assistant .gv-print-turn-text {

@@ -53,6 +53,10 @@ export interface ExportOptions {
   includeMetadata?: boolean;
   includeStarred?: boolean;
   filename?: string;
+  // Image handling for markdown/pdf
+  // - 'inline': try to inline images as data URLs when possible
+  // - 'none': keep remote URLs as-is
+  embedImages?: 'inline' | 'none';
 }
 
 /**

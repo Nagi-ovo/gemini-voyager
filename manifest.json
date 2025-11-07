@@ -15,6 +15,15 @@
   "permissions": [
     "storage"
   ],
+  "host_permissions": [
+    "https://*.googleusercontent.com/*",
+    "https://lh3.google.com/*",
+    "https://*.ggpht.com/*"
+  ],
+  "background": {
+    "service_worker": "src/pages/background/index.ts",
+    "type": "module"
+  },
   "content_scripts": [
     {
       "matches": [

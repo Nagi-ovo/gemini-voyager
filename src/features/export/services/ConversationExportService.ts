@@ -4,6 +4,8 @@
  * Uses Strategy pattern for format-specific implementations
  */
 
+import JSZip from 'jszip';
+
 import type { ChatTurn, ConversationMetadata, ExportFormat, ExportOptions, ExportResult } from '../types/export';
 
 import { MarkdownFormatter } from './MarkdownFormatter';
@@ -28,7 +30,7 @@ export class ConversationExportService {
           return this.exportJSON(turns, metadata, options);
 
         case 'markdown':
-          return this.exportMarkdown(turns, metadata, options);
+          return await this.exportMarkdown(turns, metadata, options);
 
         case 'pdf':
           return await this.exportPDF(turns, metadata, options);
@@ -74,21 +76,106 @@ export class ConversationExportService {
   /**
    * Export as Markdown
    */
-  private static exportMarkdown(
+  private static async exportMarkdown(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
     options: ExportOptions,
-  ): ExportResult {
+  ): Promise<ExportResult> {
+    // First create a clean markdown (no inlining)
     const markdown = MarkdownFormatter.format(turns, metadata);
-    const filename = options.filename || MarkdownFormatter.generateFilename();
+    const imageUrls = MarkdownFormatter.extractImageUrls(markdown);
 
-    MarkdownFormatter.download(markdown, filename);
+    // If no images → plain .md
+    if (imageUrls.length === 0) {
+      const filename = options.filename || MarkdownFormatter.generateFilename();
+      MarkdownFormatter.download(markdown, filename);
+      return { success: true, format: 'markdown' as ExportFormat, filename };
+    }
 
-    return {
-      success: true,
-      format: 'markdown' as ExportFormat,
-      filename,
+    // If has images → build a zip with chat.md + assets
+    const zip = new JSZip();
+    const assetsFolder = zip.folder('assets');
+    const mapping = new Map<string, string>();
+
+    // Helper: choose extension by Content-Type or URL
+    const pickExt = (contentType: string | null, url: string): string => {
+      const byType: Record<string, string> = {
+        'image/png': 'png',
+        'image/jpeg': 'jpg',
+        'image/jpg': 'jpg',
+        'image/webp': 'webp',
+        'image/gif': 'gif',
+        'image/svg+xml': 'svg',
+      };
+      if (contentType && byType[contentType]) return byType[contentType];
+      const m = url.split('?')[0].match(/\.(png|jpg|jpeg|gif|webp|svg)$/i);
+      if (m) return m[1].toLowerCase() === 'jpeg' ? 'jpg' : m[1].toLowerCase();
+      return 'bin';
     };
+
+    let idx = 1;
+    const bgFetch = async (u: string): Promise<{ blob: Blob; contentType: string } | null> => {
+      try {
+        const resp = await new Promise<any>((resolve) => {
+          try { chrome.runtime?.sendMessage?.({ type: 'gv.fetchImage', url: u }, resolve); } catch { resolve(null); }
+        });
+        if (resp && resp.ok && resp.base64) {
+          const contentType = String(resp.contentType || 'application/octet-stream');
+          const bin = atob(resp.base64);
+          const len = bin.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+          return { blob: new Blob([bytes], { type: contentType }), contentType };
+        }
+      } catch {}
+      return null;
+    };
+
+    await Promise.all(imageUrls.map(async (url) => {
+      // Attempt content-script fetch first
+      let blob: Blob | null = null;
+      let contentType: string | null = null;
+      try {
+        const resp = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
+        if (resp.ok) {
+          contentType = resp.headers.get('Content-Type');
+          blob = await resp.blob();
+        }
+      } catch {}
+      // If failed, try background fetch (bypasses page CORS)
+      if (!blob) {
+        const bg = await bgFetch(url);
+        if (bg) {
+          blob = bg.blob;
+          contentType = bg.contentType;
+        }
+      }
+      if (!blob) return; // leave original URL
+      const ext = pickExt(contentType, url);
+      const fileName = `img-${String(idx++).padStart(3, '0')}.${ext}`;
+      // Store inside the 'assets' folder WITHOUT duplicating the folder name
+      await assetsFolder?.file(fileName, blob);
+      // Reference in markdown should include the 'assets/' prefix
+      mapping.set(url, `assets/${fileName}`);
+    }));
+
+    const packagedMd = MarkdownFormatter.rewriteImageUrls(markdown, mapping);
+    zip.file('chat.md', packagedMd);
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const filename = (options.filename || MarkdownFormatter.generateFilename()).replace(/\.md$/i, '.zip');
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try { document.body.removeChild(a); } catch {}
+      URL.revokeObjectURL(url);
+    }, 0);
+
+    return { success: true, format: 'markdown' as ExportFormat, filename };
   }
 
   /**

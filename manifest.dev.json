@@ -21,5 +21,14 @@
       "js": ["src/pages/content/index.tsx"],
       "css": ["contentStyle.css"]
     }
-  ]
+  ],
+  "host_permissions": [
+    "https://*.googleusercontent.com/*",
+    "https://lh3.google.com/*",
+    "https://*.ggpht.com/*"
+  ],
+  "background": {
+    "service_worker": "src/pages/background/index.ts",
+    "type": "module"
+  }
 }
