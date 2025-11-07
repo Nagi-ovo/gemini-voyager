@@ -4,7 +4,7 @@
  */
 
 import type { Folder, FolderData, ConversationReference, FolderId, ConversationId } from '@/core';
-import { logger } from '@/core';
+import { logger, sortFolders } from '@/core';
 
 export class FolderStateManager {
   private readonly logger = logger.createChild('FolderState');
@@ -71,11 +71,13 @@ export class FolderStateManager {
 
   // Folder hierarchy operations
   getRootFolders(): Folder[] {
-    return this.data.folders.filter((f) => f.parentId === null);
+    const rootFolders = this.data.folders.filter((f) => f.parentId === null);
+    return sortFolders(rootFolders);
   }
 
   getSubfolders(parentId: FolderId): Folder[] {
-    return this.data.folders.filter((f) => f.parentId === parentId);
+    const subfolders = this.data.folders.filter((f) => f.parentId === parentId);
+    return sortFolders(subfolders);
   }
 
   hasSubfolders(folderId: FolderId): boolean {

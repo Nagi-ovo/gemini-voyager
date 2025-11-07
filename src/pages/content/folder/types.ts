@@ -3,6 +3,7 @@ export interface Folder {
   name: string;
   parentId: string | null; // null for root-level folders
   isExpanded: boolean;
+  pinned?: boolean; // Whether folder is pinned to the top
   createdAt: number;
   updatedAt: number;
 }

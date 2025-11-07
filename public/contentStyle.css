@@ -716,6 +716,36 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   user-select: none;
 }
 
+.gv-folder-pin-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.2s;
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: 4px;
+}
+
+.gv-folder-item-header:hover .gv-folder-pin-btn {
+  opacity: 1;
+}
+
+.gv-folder-pin-btn:hover {
+  background-color: var(--folder-hover-bg);
+}
+
+.gv-folder-pin-btn .google-symbols {
+  font-size: 18px;
+}
+
 .gv-folder-actions-btn {
   width: 24px;
   height: 24px;

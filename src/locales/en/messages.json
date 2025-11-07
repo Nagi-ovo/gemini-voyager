@@ -68,6 +68,8 @@
   ,"folder_create_subfolder": { "message": "Create subfolder", "description": "Create subfolder menu item" }
   ,"folder_rename": { "message": "Rename", "description": "Rename folder menu item" }
   ,"folder_delete": { "message": "Delete", "description": "Delete folder menu item" }
+  ,"folder_pin": { "message": "Pin folder", "description": "Pin folder menu item" }
+  ,"folder_unpin": { "message": "Unpin folder", "description": "Unpin folder menu item" }
   ,"folder_remove_conversation": { "message": "Remove from folder", "description": "Remove conversation button tooltip" }
   ,"folder_remove_conversation_confirm": { "message": "Remove \"{title}\" from this folder?", "description": "Remove conversation confirmation" }
   ,"conversation_more": { "message": "More options", "description": "Conversation more options button tooltip" }

@@ -10,6 +10,7 @@ export interface Folder {
   name: string;
   parentId: FolderId | null;
   isExpanded: boolean;
+  pinned?: boolean;
   createdAt: number;
   updatedAt: number;
 }

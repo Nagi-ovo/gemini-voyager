@@ -278,6 +278,25 @@ export class FolderManager implements IDisposable {
   }
 
   /**
+   * Toggle folder pin state
+   */
+  togglePin(folderId: FolderId): void {
+    const folder = this.state.getFolder(folderId);
+
+    if (!folder) {
+      this.logger.warn('Folder not found for pin toggle', { folderId });
+      return;
+    }
+
+    const newPinnedState = !folder.pinned;
+    this.state.updateFolder(folderId, { pinned: newPinnedState });
+    this.saveData();
+    this.refresh();
+
+    this.logger.info('Folder pin toggled', { folderId, pinned: newPinnedState });
+  }
+
+  /**
    * Refresh UI
    */
   private refresh(): void {

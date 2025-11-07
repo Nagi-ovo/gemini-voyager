@@ -227,9 +227,10 @@ export class FolderManager {
       });
     }
 
-    // Render root level folders
+    // Render root level folders (sorted)
     const rootFolders = this.data.folders.filter((f) => f.parentId === null);
-    rootFolders.forEach((folder) => {
+    const sortedRootFolders = this.sortFolders(rootFolders);
+    sortedRootFolders.forEach((folder) => {
       const folderElement = this.createFolderElement(folder);
       list.appendChild(folderElement);
     });
@@ -273,6 +274,23 @@ export class FolderManager {
     );
     folderName.addEventListener('mouseleave', () => this.hideTooltip());
 
+    // Pin button
+    const pinBtn = document.createElement('button');
+    pinBtn.className = 'gv-folder-pin-btn';
+    const pinIcon = document.createElement('span');
+    pinIcon.className = 'google-symbols';
+    pinIcon.textContent = 'push_pin';
+    // Add filled style for pinned folders
+    if (folder.pinned) {
+      pinIcon.style.fontVariationSettings = "'FILL' 1";
+    }
+    pinBtn.appendChild(pinIcon);
+    pinBtn.title = folder.pinned ? this.t('folder_unpin') : this.t('folder_pin');
+    pinBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.togglePinFolder(folder.id);
+    });
+
     // Actions menu
     const actionsBtn = document.createElement('button');
     actionsBtn.className = 'gv-folder-actions-btn';
@@ -282,6 +300,7 @@ export class FolderManager {
     folderHeader.appendChild(expandBtn);
     folderHeader.appendChild(folderIcon);
     folderHeader.appendChild(folderName);
+    folderHeader.appendChild(pinBtn);
     folderHeader.appendChild(actionsBtn);
 
     // Setup drop zone for conversations and folders
@@ -305,9 +324,10 @@ export class FolderManager {
         content.appendChild(convEl);
       });
 
-      // Render subfolders
+      // Render subfolders (sorted)
       const subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
-      subfolders.forEach((subfolder) => {
+      const sortedSubfolders = this.sortFolders(subfolders);
+      sortedSubfolders.forEach((subfolder) => {
         const subfolderEl = this.createFolderElement(subfolder, level + 1);
         content.appendChild(subfolderEl);
       });
@@ -1073,6 +1093,33 @@ export class FolderManager {
     this.refresh();
   }
 
+  private togglePinFolder(folderId: string): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    folder.pinned = !folder.pinned;
+    folder.updatedAt = Date.now();
+    this.saveData();
+    this.refresh();
+  }
+
+  /**
+   * Sort folders with pinned folders first, then by name using localized collation
+   */
+  private sortFolders(folders: Folder[]): Folder[] {
+    return [...folders].sort((a, b) => {
+      // Pinned folders always come first
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+
+      // Within the same pinned state, sort by name using localized comparison
+      return a.name.localeCompare(b.name, undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      });
+    });
+  }
+
   private addConversationToFolder(folderId: string, dragData: DragData & { sourceFolderId?: string }): void {
     this.debug('Adding conversation to folder:', {
       folderId,
@@ -1304,6 +1351,9 @@ export class FolderManager {
   private showFolderMenu(event: MouseEvent, folderId: string): void {
     event.stopPropagation();
 
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
     // Create context menu
     const menu = document.createElement('div');
     menu.className = 'gv-folder-menu';
@@ -1312,6 +1362,10 @@ export class FolderManager {
     menu.style.top = `${event.clientY}px`;
 
     const menuItems = [
+      {
+        label: folder.pinned ? this.t('folder_unpin') : this.t('folder_pin'),
+        action: () => this.togglePinFolder(folderId)
+      },
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
       { label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) },

@@ -104,3 +104,22 @@ export function chunk<T>(array: T[], size: number): T[][] {
 
   return chunks;
 }
+
+/**
+ * Sort folders with pinned folders first, then by name using localized collation
+ */
+export function sortFolders<T extends { name: string; pinned?: boolean }>(
+  folders: T[]
+): T[] {
+  return [...folders].sort((a, b) => {
+    // Pinned folders always come first
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+
+    // Within the same pinned state, sort by name using localized comparison
+    return a.name.localeCompare(b.name, undefined, {
+      numeric: true,
+      sensitivity: 'base',
+    });
+  });
+}

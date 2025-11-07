@@ -68,6 +68,8 @@
   ,"folder_create_subfolder": { "message": "创建子文件夹", "description": "创建子文件夹菜单项" }
   ,"folder_rename": { "message": "重命名", "description": "重命名文件夹菜单项" }
   ,"folder_delete": { "message": "删除", "description": "删除文件夹菜单项" }
+  ,"folder_pin": { "message": "置顶文件夹", "description": "置顶文件夹菜单项" }
+  ,"folder_unpin": { "message": "取消置顶", "description": "取消置顶文件夹菜单项" }
   ,"folder_remove_conversation": { "message": "从文件夹中移除", "description": "移除对话按钮提示" }
   ,"folder_remove_conversation_confirm": { "message": "从此文件夹中移除「{title}」？", "description": "移除对话确认" }
   ,"conversation_more": { "message": "更多选项", "description": "对话更多选项按钮提示" }
