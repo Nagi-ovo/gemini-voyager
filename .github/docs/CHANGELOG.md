@@ -13,17 +13,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Installation guide ([EN](safari/INSTALLATION.md) | [中文](safari/INSTALLATION_ZH.md))
   - Development guide ([EN](.../../../safari/README.md) | [中文](.../../../safari/README_ZH.md))
   - New commands: `build:safari`, `dev:safari`, `build:all`
+  
+- **Conversation export (Markdown/PDF)**
+  - Rich Markdown export with formulas, code blocks, tables, lists, headings
+  - Auto-package images: if a chat contains user-uploaded images, export a ZIP with `chat.md` and `assets/` (images rewritten to relative paths)
+  - PDF export: inline images (best-effort) and print-optimized styles
+  - Background service worker for cross-origin image fetch; added host permissions for Google image domains
 
 ### Changed
 - **Cross-browser compatibility**
   - Migrated to `browser.*` API via `webextension-polyfill` for better compatibility
   - All storage APIs now use async/await pattern
+  
+- **Export robustness**
+  - More resilient DOM extraction (supports Angular/custom elements; better selectors)
+  - Reduced noisy logs; cleaner fallback paths
+  - PDF images constrained (max-width ~60%) to avoid oversized visuals
 
 ### Fixed
 - **Dependencies**
   - Downgraded `marked` to v11 for compatibility
   - Upgraded `@typescript-eslint/eslint-plugin` to v8
   - Resolved peer dependency conflicts
+  
+- **Export correctness**
+  - Fixed duplicate inclusion of code blocks/tables in Markdown
+  - Fixed export button causing navigation back to `/app` on Gemini
+  - Addressed missing assistant content by adding last-chance plaintext fallback
+  - Avoid CORS failures for images in Markdown by packaging images into ZIP (with relative paths)
 
 ### Supported Browsers
 - **Chromium** (Chrome, Edge, Opera, Brave, Vivaldi, Arc)

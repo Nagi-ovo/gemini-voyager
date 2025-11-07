@@ -60,9 +60,11 @@ Click LaTeX/MathJax formulas to copy source code:
 - Works with inline and display math
 - Visual feedback on copy success
 
-### 💾 Chat Export
+### 💾 Chat Export (JSON + Markdown/PDF)
 
-Export conversations as structured JSON:
+Export conversations as:
+- Structured JSON
+- Markdown/PDF (images auto-packaged into `assets/`, print-friendly)
 - Click export icon next to Gemini logo
 - Preserves starred messages
 - Removes UI noise (labels like "Show thinking")
