@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Gemini Voyager",
   "description": "Maps your Gemini chats on a timeline.",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "action": {
     "default_popup": "src/pages/popup/index.html",
     "default_icon": {
