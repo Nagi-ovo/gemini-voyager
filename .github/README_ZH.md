@@ -126,7 +126,7 @@
 #### 2）永久安装（适用于 Firefox ESR，可安装未签名插件）
 如果你希望永久安装并使用发行版构建，可在 Firefox ESR（Extended Support Release）中允许安装未签名扩展：
 
-1. 安装 `firefox-esr`（ESR 版本通常提供以下配置选项）。
+1. 安装 [`firefox-esr`](https://www.mozilla.org/zh-CN/firefox/enterprise/)（ESR 版本通常提供以下配置选项）。
 2. 地址栏输入 `about:config`，接受风险提示后继续。
 3. 搜索 `xpinstall.signatures.required`，将其值设为 `false`。
 4. 从 Releases 下载 `gemini-voyager-firefox-vX.Y.Z.xpi`。
