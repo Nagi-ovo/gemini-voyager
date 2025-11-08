@@ -79,8 +79,8 @@ export default function Popup() {
   return (
     <div className="w-[360px] bg-background text-foreground">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary/10 via-accent/5 to-transparent border-b border-border/50 px-5 py-4 flex items-center justify-between backdrop-blur-sm">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+      <div className="bg-linear-to-br from-primary/10 via-accent/5 to-transparent border-b border-border/50 px-5 py-4 flex items-center justify-between backdrop-blur-sm">
+        <h1 className="text-xl font-bold bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
           {t('extName')}
         </h1>
         <div className="flex items-center gap-1">
@@ -193,7 +193,7 @@ export default function Popup() {
       </div>
 
       {/* Footer */}
-      <div className="bg-gradient-to-br from-secondary/30 via-accent/10 to-transparent border-t border-border/50 px-5 py-4 flex items-center justify-between backdrop-blur-sm">
+      <div className="bg-linear-to-br from-secondary/30 via-accent/10 to-transparent border-t border-border/50 px-5 py-4 flex items-center justify-between backdrop-blur-sm">
         <span className="text-xs text-muted-foreground font-medium">{t('starProject')}</span>
         <a
           href="https://github.com/Nagi-ovo/gemini-voyager"
