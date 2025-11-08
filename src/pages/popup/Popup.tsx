@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 import useI18n from '../../hooks/useI18n';
+import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
+import WidthSlider from './components/WidthSlider';
 
 type ScrollMode = 'jump' | 'flow';
 
@@ -9,12 +11,45 @@ export default function Popup() {
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
-  const [chatWidth, setChatWidth] = useState<number>(800);
-  const [editInputWidth, setEditInputWidth] = useState<number>(600);
-  const chatWidthDebounceTimer = useRef<number | null>(null);
-  const pendingChatWidth = useRef<number | null>(null);
-  const editInputWidthDebounceTimer = useRef<number | null>(null);
-  const pendingEditInputWidth = useRef<number | null>(null);
+
+  // Helper function to apply settings to storage
+  const apply = useCallback((
+    nextMode: ScrollMode | null,
+    nextHide?: boolean,
+    nextDraggable?: boolean,
+    resetPosition?: boolean
+  ) => {
+    const payload: any = {};
+    if (nextMode) payload.geminiTimelineScrollMode = nextMode;
+    if (typeof nextHide === 'boolean') payload.geminiTimelineHideContainer = nextHide;
+    if (typeof nextDraggable === 'boolean') payload.geminiTimelineDraggable = nextDraggable;
+    if (resetPosition) payload.geminiTimelinePosition = null;
+    try {
+      chrome.storage?.sync?.set(payload);
+    } catch {}
+  }, []);
+
+  // Width adjuster for chat width
+  const chatWidthAdjuster = useWidthAdjuster({
+    storageKey: 'geminiChatWidth',
+    defaultValue: 800,
+    onApply: useCallback((width: number) => {
+      try {
+        chrome.storage?.sync?.set({ geminiChatWidth: width });
+      } catch {}
+    }, []),
+  });
+
+  // Width adjuster for edit input width
+  const editInputWidthAdjuster = useWidthAdjuster({
+    storageKey: 'geminiEditInputWidth',
+    defaultValue: 600,
+    onApply: useCallback((width: number) => {
+      try {
+        chrome.storage?.sync?.set({ geminiEditInputWidth: width });
+      } catch {}
+    }, []),
+  });
 
   useEffect(() => {
     try {
@@ -23,59 +58,16 @@ export default function Popup() {
           geminiTimelineScrollMode: 'flow',
           geminiTimelineHideContainer: false,
           geminiTimelineDraggable: false,
-          geminiChatWidth: 800,
-          geminiEditInputWidth: 600,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
           if (m === 'jump' || m === 'flow') setMode(m);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
-          setChatWidth(res?.geminiChatWidth || 800);
-          setEditInputWidth(res?.geminiEditInputWidth || 600);
         }
       );
     } catch {}
   }, []);
-
-  // Cleanup and save pending changes on unmount
-  useEffect(() => {
-    return () => {
-      if (chatWidthDebounceTimer.current !== null) {
-        clearTimeout(chatWidthDebounceTimer.current);
-      }
-      if (editInputWidthDebounceTimer.current !== null) {
-        clearTimeout(editInputWidthDebounceTimer.current);
-      }
-      // Save any pending width changes before unmount
-      if (pendingChatWidth.current !== null) {
-        apply(null, undefined, undefined, undefined, pendingChatWidth.current);
-      }
-      if (pendingEditInputWidth.current !== null) {
-        apply(null, undefined, undefined, undefined, undefined, pendingEditInputWidth.current);
-      }
-    };
-  }, []);
-
-  const apply = (
-    nextMode: ScrollMode | null,
-    nextHide?: boolean,
-    nextDraggable?: boolean,
-    resetPosition?: boolean,
-    nextChatWidth?: number,
-    nextEditInputWidth?: number
-  ) => {
-    const payload: any = {};
-    if (nextMode) payload.geminiTimelineScrollMode = nextMode;
-    if (typeof nextHide === 'boolean') payload.geminiTimelineHideContainer = nextHide;
-    if (typeof nextDraggable === 'boolean') payload.geminiTimelineDraggable = nextDraggable;
-    if (resetPosition) payload.geminiTimelinePosition = null;
-    if (typeof nextChatWidth === 'number') payload.geminiChatWidth = nextChatWidth;
-    if (typeof nextEditInputWidth === 'number') payload.geminiEditInputWidth = nextEditInputWidth;
-    try {
-      chrome.storage?.sync?.set(payload);
-    } catch {}
-  };
 
   return (
     <div className="w-[320px] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 text-slate-900 dark:text-slate-100">
@@ -176,107 +168,29 @@ export default function Popup() {
           </label>
         </div>
         {/* Chat Width */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-              {t('chatWidth')}
-            </label>
-            <span className="text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">
-              {chatWidth}px
-            </span>
-          </div>
-          <div className="px-1">
-            <input
-              type="range"
-              min="400"
-              max="1400"
-              step="50"
-              value={chatWidth}
-              onChange={(e) => {
-                const newWidth = Number(e.target.value);
-                setChatWidth(newWidth);
-                pendingChatWidth.current = newWidth;
-
-                // Debounce the storage write to avoid quota limits
-                if (chatWidthDebounceTimer.current !== null) {
-                  clearTimeout(chatWidthDebounceTimer.current);
-                }
-                chatWidthDebounceTimer.current = window.setTimeout(() => {
-                  apply(null, undefined, undefined, undefined, newWidth);
-                  pendingChatWidth.current = null;
-                  chatWidthDebounceTimer.current = null;
-                }, 300);
-              }}
-              onMouseUp={() => {
-                // Also save immediately when user releases the slider
-                if (pendingChatWidth.current !== null) {
-                  if (chatWidthDebounceTimer.current !== null) {
-                    clearTimeout(chatWidthDebounceTimer.current);
-                    chatWidthDebounceTimer.current = null;
-                  }
-                  apply(null, undefined, undefined, undefined, pendingChatWidth.current);
-                  pendingChatWidth.current = null;
-                }
-              }}
-              className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md hover:[&::-webkit-slider-thumb]:bg-blue-700 [&::-webkit-slider-thumb]:transition-colors"
-            />
-            <div className="flex justify-between items-center mt-2 text-xs text-slate-500 dark:text-slate-400">
-              <span>{t('chatWidthNarrow')}</span>
-              <span>{t('chatWidthWide')}</span>
-            </div>
-          </div>
-        </div>
+        <WidthSlider
+          label={t('chatWidth')}
+          value={chatWidthAdjuster.width}
+          min={400}
+          max={1400}
+          step={50}
+          narrowLabel={t('chatWidthNarrow')}
+          wideLabel={t('chatWidthWide')}
+          onChange={chatWidthAdjuster.handleChange}
+          onChangeComplete={chatWidthAdjuster.handleChangeComplete}
+        />
         {/* Edit Input Width */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-              {t('editInputWidth')}
-            </label>
-            <span className="text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">
-              {editInputWidth}px
-            </span>
-          </div>
-          <div className="px-1">
-            <input
-              type="range"
-              min="400"
-              max="1200"
-              step="50"
-              value={editInputWidth}
-              onChange={(e) => {
-                const newWidth = Number(e.target.value);
-                setEditInputWidth(newWidth);
-                pendingEditInputWidth.current = newWidth;
-
-                // Debounce the storage write to avoid quota limits
-                if (editInputWidthDebounceTimer.current !== null) {
-                  clearTimeout(editInputWidthDebounceTimer.current);
-                }
-                editInputWidthDebounceTimer.current = window.setTimeout(() => {
-                  apply(null, undefined, undefined, undefined, undefined, newWidth);
-                  pendingEditInputWidth.current = null;
-                  editInputWidthDebounceTimer.current = null;
-                }, 300);
-              }}
-              onMouseUp={() => {
-                // Also save immediately when user releases the slider
-                if (pendingEditInputWidth.current !== null) {
-                  if (editInputWidthDebounceTimer.current !== null) {
-                    clearTimeout(editInputWidthDebounceTimer.current);
-                    editInputWidthDebounceTimer.current = null;
-                  }
-                  apply(null, undefined, undefined, undefined, undefined, pendingEditInputWidth.current);
-                  pendingEditInputWidth.current = null;
-                }
-              }}
-              className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md hover:[&::-webkit-slider-thumb]:bg-blue-700 [&::-webkit-slider-thumb]:transition-colors"
-            />
-            <div className="flex justify-between items-center mt-2 text-xs text-slate-500 dark:text-slate-400">
-              <span>{t('editInputWidthNarrow')}</span>
-              <span>{t('editInputWidthWide')}</span>
-            </div>
-          </div>
-        </div>
+        <WidthSlider
+          label={t('editInputWidth')}
+          value={editInputWidthAdjuster.width}
+          min={400}
+          max={1200}
+          step={50}
+          narrowLabel={t('editInputWidthNarrow')}
+          wideLabel={t('editInputWidthWide')}
+          onChange={editInputWidthAdjuster.handleChange}
+          onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
+        />
         {/* Reset Button */}
         <button
           className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm transition-all hover:shadow active:scale-[0.98]"
