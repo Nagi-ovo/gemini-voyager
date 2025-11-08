@@ -367,16 +367,27 @@ export async function startExportButton(): Promise<void> {
   btn.setAttribute('aria-label', title);
 
   // listen for runtime language changes
+  const storageChangeHandler = (changes: any, area: string) => {
+    if (area !== 'sync') return;
+    if (changes?.language) {
+      const next = normalizeLang(changes.language.newValue);
+      const ttl = (dict[next]?.['exportChatJson'] ?? dict.en?.['exportChatJson'] ?? 'Export chat history (JSON)');
+      btn.title = ttl;
+      btn.setAttribute('aria-label', ttl);
+    }
+  };
+
   try {
-    chrome.storage?.onChanged?.addListener((changes: any, area: string) => {
-      if (area !== 'sync') return;
-      if (changes?.language) {
-        const next = normalizeLang(changes.language.newValue);
-        const ttl = (dict[next]?.['exportChatJson'] ?? dict.en?.['exportChatJson'] ?? 'Export chat history (JSON)');
-        btn.title = ttl;
-        btn.setAttribute('aria-label', ttl);
+    chrome.storage?.onChanged?.addListener(storageChangeHandler);
+
+    // Cleanup listener on page unload to prevent memory leaks
+    window.addEventListener('beforeunload', () => {
+      try {
+        chrome.storage?.onChanged?.removeListener(storageChangeHandler);
+      } catch (e) {
+        console.error('[Gemini Voyager] Failed to remove storage listener on unload:', e);
       }
-    });
+    }, { once: true });
   } catch {}
 
   btn.addEventListener('click', (ev) => {

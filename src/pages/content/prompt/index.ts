@@ -739,16 +739,18 @@ export async function startPromptManager(): Promise<void> {
     });
 
     // Listen to external language changes (popup/options)
+    const storageChangeHandler = (changes: any, area: string) => {
+      if (area !== 'sync') return;
+      if (changes?.language) {
+        const next = normalizeLang(changes.language.newValue);
+        i18n.set(next);
+        try { langSel.value = next; } catch {}
+        refreshUITexts();
+      }
+    };
+
     try {
-      chrome.storage?.onChanged?.addListener((changes: any, area: string) => {
-        if (area !== 'sync') return;
-        if (changes?.language) {
-          const next = normalizeLang(changes.language.newValue);
-          i18n.set(next);
-          try { langSel.value = next; } catch {}
-          refreshUITexts();
-        }
-      });
+      chrome.storage?.onChanged?.addListener(storageChangeHandler);
     } catch {}
 
     addBtn.addEventListener('click', (ev) => {
@@ -884,6 +886,15 @@ export async function startPromptManager(): Promise<void> {
 
     // Initialize
     refreshUITexts();
+
+    // Cleanup on page unload to prevent memory leaks
+    window.addEventListener('beforeunload', () => {
+      try {
+        chrome.storage?.onChanged?.removeListener(storageChangeHandler);
+      } catch (e) {
+        console.error('[Gemini Voyager] Failed to remove storage listener on unload:', e);
+      }
+    }, { once: true });
   } catch (err) {
     try { (window as any).console?.error?.('Prompt Manager init failed', err); } catch {}
   }
