@@ -27,6 +27,8 @@ jobs:
         run: bun run lint
       - name: Typecheck
         run: bun run typecheck
+      - name: Test
+        run: bun run test
       - name: Build (Chrome)
         run: bun run build:chrome
       - name: Build (Firefox)
