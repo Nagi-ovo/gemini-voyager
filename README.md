@@ -114,11 +114,28 @@ Customize chat container width (400px - 1400px) with real-time preview.
 <details>
 <summary>Firefox Installation</summary>
 
+#### 1) Temporary (developer) install — quick & safe
 1. Go to the [repository Releases page](https://github.com/Nagi-ovo/gemini-voyager/releases) and download `gemini-voyager-firefox-vX.Y.Z.zip`
 2. Unzip it
 3. Open `about:debugging#/runtime/this-firefox` in Firefox
 4. Click "Load Temporary Add-on…"
 5. Select the `manifest.json` inside the unzipped folder
+
+> Note: This method is temporary — the add-on will be removed when Firefox restarts.
+
+#### 2) Permanent install (Firefox ESR — install unsigned add-ons)
+If you prefer a persistent installation and are using Firefox ESR (Extended Support Release), you can enable installation of unsigned add-ons. This allows you to install the release build directly:
+
+1. Install `firefox-esr` (ESR builds provide the configuration option described below).
+2. In the address bar enter `about:config` and accept the risk prompt.
+3. Search for `xpinstall.signatures.required` and set its value to `false`.
+4. Download `gemini-voyager-firefox-vX.Y.Z.xpi` from Releases.
+5. Drag the `.xpi` file into an open Firefox ESR window, or open the Add-ons Manager and install the file.
+
+Cautions:
+- Disabling signature enforcement allows installation of unsigned extensions and reduces security. Only install trusted builds.
+- This preference is typically available in Firefox ESR; recent standard Firefox releases no longer allow unsigned extensions. If the preference is unavailable, use the temporary developer install or official signed releases.
+- After installing, you may wish to keep `xpinstall.signatures.required` set to `false` for continued use, or revert it to `true` if you later install only signed extensions.
 </details>
 
 <details>
