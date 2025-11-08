@@ -186,6 +186,8 @@ export function startChatWidthAdjuster() {
     // Remove storage listener
     try {
       chrome.storage?.onChanged?.removeListener(storageChangeHandler);
-    } catch {}
+    } catch (e) {
+      console.error('[Gemini Voyager] Failed to remove storage listener on unload:', e);
+    }
   }, { once: true });
 }

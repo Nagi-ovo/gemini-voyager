@@ -83,7 +83,9 @@ function cleanup(): void {
   activeObservers.forEach((observer) => {
     try {
       observer.disconnect();
-    } catch {}
+    } catch (e) {
+      console.error('[Gemini Voyager] Failed to disconnect observer during cleanup:', e);
+    }
   });
   activeObservers = [];
 
@@ -97,7 +99,9 @@ function cleanup(): void {
   cleanupHandlers.forEach((handler) => {
     try {
       handler();
-    } catch {}
+    } catch (e) {
+      console.error('[Gemini Voyager] Failed to run cleanup handler:', e);
+    }
   });
   cleanupHandlers = [];
 
