@@ -114,12 +114,28 @@
 <details>
 <summary>Firefox 安装方法</summary>
 
+#### 1）临时安装（开发者模式）—— 简单且安全
 1. 前往 [项目 Releases 页面](https://github.com/Nagi-ovo/gemini-voyager/releases)，下载 `gemini-voyager-firefox-vX.Y.Z.zip`
 2. 解压文件
 3. 在 Firefox 中打开 `about:debugging#/runtime/this-firefox`
 4. 点击"临时载入附加组件..."
 5. 选择解压文件夹中的 `manifest.json` 文件
-</details>
+
+> 提示：此方法为临时安装，重启 Firefox 后需重新载入。
+
+#### 2）永久安装（适用于 Firefox ESR，可安装未签名插件）
+如果你希望永久安装并使用发行版构建，可在 Firefox ESR（Extended Support Release）中允许安装未签名扩展：
+
+1. 安装 `firefox-esr`（ESR 版本通常提供以下配置选项）。
+2. 地址栏输入 `about:config`，接受风险提示后继续。
+3. 搜索 `xpinstall.signatures.required`，将其值设为 `false`。
+4. 从 Releases 下载 `gemini-voyager-firefox-vX.Y.Z.xpi`。
+5. 将 `.xpi` 文件拖入已打开的 Firefox ESR 窗口，或通过附加组件管理器安装该文件。
+
+注意事项：
+- 关闭签名校验会降低浏览器安全性，请仅在信任的构建下使用此方法。
+- 该偏好项通常只在 Firefox ESR 可用；在新版标准 Firefox 中可能不可用。如果找不到该选项，请使用临时安装或等待官方签名发布。
+- 安装完成后，根据需要决定是否保留 `xpinstall.signatures.required` 为 `false`，或在不再需要未签名扩展时切回 `true`。
 
 <details>
 <summary>Safari 安装方法</summary>
