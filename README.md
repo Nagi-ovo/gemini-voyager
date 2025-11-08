@@ -126,7 +126,7 @@ Customize chat container width (400px - 1400px) with real-time preview.
 #### 2) Permanent install (Firefox ESR — install unsigned add-ons)
 If you prefer a persistent installation and are using Firefox ESR (Extended Support Release), you can enable installation of unsigned add-ons. This allows you to install the release build directly:
 
-1. Install `firefox-esr` (ESR builds provide the configuration option described below).
+1. Install [`firefox-esr`](https://www.mozilla.org/firefox/enterprise/) (ESR builds provide the configuration option described below).
 2. In the address bar enter `about:config` and accept the risk prompt.
 3. Search for `xpinstall.signatures.required` and set its value to `false`.
 4. Download `gemini-voyager-firefox-vX.Y.Z.xpi` from Releases.
