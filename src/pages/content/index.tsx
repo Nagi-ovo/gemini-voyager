@@ -1,4 +1,5 @@
 import { startChatWidthAdjuster } from './chatWidth/index';
+import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startFolderManager } from './folder/index';
 import { startPromptManager } from './prompt/index';
@@ -11,6 +12,7 @@ try {
     startTimeline();
     startFolderManager();
     startChatWidthAdjuster();
+    startEditInputWidthAdjuster();
     startFormulaCopy();
   }
   if (location.hostname === 'gemini.google.com' || location.hostname === 'aistudio.google.com') {

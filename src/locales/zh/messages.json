@@ -95,4 +95,7 @@
   ,"folder_import_confirm_overwrite": { "message": "这将替换所有现有文件夹。系统将创建备份。是否继续？", "description": "覆盖确认" }
   ,"export_dialog_title": { "message": "导出对话", "description": "导出对话框标题" }
   ,"export_dialog_select": { "message": "选择导出格式：", "description": "导出格式选择标签" }
+  ,"editInputWidth": { "message": "编辑输入框宽度", "description": "编辑输入框宽度调整标签" }
+  ,"editInputWidthNarrow": { "message": "窄", "description": "窄编辑输入框宽度标签" }
+  ,"editInputWidthWide": { "message": "宽", "description": "宽编辑输入框宽度标签" }
 }

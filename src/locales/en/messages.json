@@ -95,4 +95,7 @@
   ,"folder_import_confirm_overwrite": { "message": "This will replace all existing folders. A backup will be created. Continue?", "description": "Overwrite confirmation" }
   ,"export_dialog_title": { "message": "Export Conversation", "description": "Export dialog title" }
   ,"export_dialog_select": { "message": "Choose export format:", "description": "Export format selection label" }
+  ,"editInputWidth": { "message": "Edit input width", "description": "Edit input width adjustment label" }
+  ,"editInputWidthNarrow": { "message": "Narrow", "description": "Narrow edit input width label" }
+  ,"editInputWidthWide": { "message": "Wide", "description": "Wide edit input width label" }
 }
