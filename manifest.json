@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Gemini Voyager",
-  "description": "Maps your Gemini chats on a timeline.",
+  "description": "Supercharge your Gemini experience with timeline navigation, folder organization, prompt library, and chat export.",
   "version": "0.7.6",
   "action": {
     "default_popup": "src/pages/popup/index.html",
