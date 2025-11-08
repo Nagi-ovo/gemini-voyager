@@ -136,6 +136,7 @@
 - 关闭签名校验会降低浏览器安全性，请仅在信任的构建下使用此方法。
 - 该偏好项通常只在 Firefox ESR 可用；在新版标准 Firefox 中可能不可用。如果找不到该选项，请使用临时安装或等待官方签名发布。
 - 安装完成后，根据需要决定是否保留 `xpinstall.signatures.required` 为 `false`，或在不再需要未签名扩展时切回 `true`。
+</details>
 
 <details>
 <summary>Safari 安装方法</summary>
