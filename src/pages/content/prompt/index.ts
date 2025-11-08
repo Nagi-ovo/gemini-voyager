@@ -8,7 +8,11 @@
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
+
 import 'katex/dist/katex.min.css';
+import browser from 'webextension-polyfill';
+
+import { initI18n, getTranslationSync, getCurrentLanguage } from '@/utils/i18n';
 
 type PromptItem = {
   id: string;
@@ -51,66 +55,18 @@ function safeParseJSON<T>(raw: string, fallback: T): T {
   }
 }
 
-function normalizeLang(lang: string | undefined): 'en' | 'zh' {
-  return lang && lang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
-}
-
-// Minimal i18n util (reads same JSON dictionaries used by popup/options)
-let dictionaries: Record<'en' | 'zh', Record<string, string>> | null = null;
-async function loadDictionaries(): Promise<void> {
-  if (dictionaries) return;
-  try {
-    // Dynamic import to avoid bundling issues if JSON module typing varies
-    const enRaw: any = await import(/* @vite-ignore */ '../../../locales/en/messages.json');
-    const zhRaw: any = await import(/* @vite-ignore */ '../../../locales/zh/messages.json');
-    const extract = (raw: any): Record<string, string> => {
-      const out: Record<string, string> = {};
-      if (raw && typeof raw === 'object') {
-        Object.keys(raw).forEach((k) => {
-          const v = (raw as any)[k];
-          if (v && typeof v.message === 'string') out[k] = v.message;
-        });
-      }
-      return out;
-    };
-    dictionaries = { en: extract(enRaw), zh: extract(zhRaw) } as any;
-  } catch {
-    dictionaries = { en: {}, zh: {} } as any;
-  }
-}
-
-async function getLanguage(): Promise<'en' | 'zh'> {
-  try {
-    const stored = await new Promise<any>((resolve) => {
-      try {
-        (window as any).chrome?.storage?.sync?.get?.(STORAGE_KEYS.language, resolve);
-      } catch {
-        resolve({});
-      }
-    });
-    const v = typeof stored?.[STORAGE_KEYS.language] === 'string' ? stored[STORAGE_KEYS.language] : undefined;
-    return normalizeLang(v || (navigator.language || 'en'));
-  } catch {
-    return 'en';
-  }
-}
-
-async function setLanguage(lang: 'en' | 'zh'): Promise<void> {
-  try {
-    await new Promise<void>((resolve) => {
-      (window as any).chrome?.storage?.sync?.set?.({ [STORAGE_KEYS.language]: lang }, () => resolve());
-    });
-  } catch {}
-}
-
-function createI18n(tables: Record<'en' | 'zh', Record<string, string>>, lang: 'en' | 'zh') {
-  let current = lang;
+// Use centralized i18n system
+function createI18n() {
   return {
-    t: (key: string): string => tables[current]?.[key] ?? tables.en?.[key] ?? key,
-    set: (l: 'en' | 'zh') => {
-      current = l;
+    t: (key: string): string => getTranslationSync(key),
+    set: async (lang: 'en' | 'zh') => {
+      try {
+        await browser.storage.sync.set({ language: lang });
+      } catch (e) {
+        console.warn('[PromptManager] Failed to set language:', e);
+      }
     },
-    get: (): 'en' | 'zh' => current,
+    get: async (): Promise<'en' | 'zh'> => await getCurrentLanguage(),
   };
 }
 
@@ -225,9 +181,9 @@ export async function startPromptManager(): Promise<void> {
       } as any));
       marked.setOptions({ breaks: true });
     } catch {}
-    await loadDictionaries();
-    const lang = await getLanguage();
-    const i18n = createI18n(dictionaries as any, lang);
+    // Initialize centralized i18n system
+    await initI18n();
+    const i18n = createI18n();
 
     // Prevent duplicate injection
     if (document.getElementById(ID.trigger)) return;
@@ -310,7 +266,12 @@ export async function startPromptManager(): Promise<void> {
     optZh.textContent = '中文';
     langSel.appendChild(optEn);
     langSel.appendChild(optZh);
-    langSel.value = i18n.get();
+    // Set initial language value asynchronously
+    i18n.get().then((lang) => {
+      langSel.value = lang;
+    }).catch(() => {
+      langSel.value = 'en';
+    });
 
     const lockBtn = createEl('button', 'gv-pm-lock');
     lockBtn.setAttribute('aria-pressed', 'false');
@@ -732,25 +693,27 @@ export async function startPromptManager(): Promise<void> {
     }, { passive: true });
 
     langSel.addEventListener('change', async () => {
-      const next = normalizeLang(langSel.value) as 'en' | 'zh';
-      i18n.set(next);
-      await setLanguage(next);
+      const next = langSel.value as 'en' | 'zh';
+      await i18n.set(next);
       refreshUITexts();
     });
 
     // Listen to external language changes (popup/options)
+    // Note: The centralized i18n system already handles storage changes,
+    // we just need to update the UI when language changes
     const storageChangeHandler = (changes: any, area: string) => {
       if (area !== 'sync') return;
-      if (changes?.language) {
-        const next = normalizeLang(changes.language.newValue);
-        i18n.set(next);
-        try { langSel.value = next; } catch {}
+      if (changes?.language?.newValue) {
+        const next = changes.language.newValue;
+        try {
+          langSel.value = next.startsWith('zh') ? 'zh' : 'en';
+        } catch {}
         refreshUITexts();
       }
     };
 
     try {
-      chrome.storage?.onChanged?.addListener(storageChangeHandler);
+      browser.storage.onChanged.addListener(storageChangeHandler);
     } catch {}
 
     addBtn.addEventListener('click', (ev) => {

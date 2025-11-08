@@ -10,6 +10,7 @@ import type { Folder, FolderData, ConversationReference, DragData } from './type
 
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
+import { initI18n, getTranslationSync } from '@/utils/i18n';
 
 const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
@@ -48,6 +49,10 @@ export class FolderManager {
   constructor() {
     this.loadData();
     this.createTooltip();
+    // Initialize i18n system
+    initI18n().catch((e) => {
+      this.debugWarn('Failed to initialize i18n:', e);
+    });
   }
 
   async init(): Promise<void> {
@@ -2434,43 +2439,8 @@ export class FolderManager {
   }
 
   private t(key: string): string {
-    try {
-      // Use webextension-polyfill for cross-browser compatibility
-      // This works for Chrome, Edge, Opera, Firefox, etc.
-      const message = browser.i18n.getMessage(key);
-      if (message && message.trim()) {
-        return message;
-      }
-      // If message is empty or whitespace, fall through to fallback
-    } catch (e) {
-      // Check if this is an extension context invalidation error
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      if (errorMessage.includes('Extension context invalidated')) {
-        // Extension was reloaded/updated - silently use fallback
-        // This is expected behavior and not an actual error
-      } else {
-        // Log other i18n errors for debugging
-        this.debugWarn('i18n error for key:', key, e);
-      }
-    }
-
-    // Fallback translations if browser.i18n is not available or returns empty
-    const fallback: Record<string, string> = {
-      folder_title: 'Folders',
-      folder_create: 'Create folder',
-      folder_name_prompt: 'Enter folder name:',
-      folder_rename_prompt: 'Enter new name:',
-      folder_delete_confirm: 'Delete this folder and all its contents?',
-      folder_create_subfolder: 'Create subfolder',
-      folder_rename: 'Rename',
-      folder_delete: 'Delete',
-      folder_remove_conversation: 'Remove from folder',
-      folder_remove_conversation_confirm: 'Remove "{title}" from this folder?',
-      conversation_move_to_folder: 'Move to folder',
-      conversation_move_to_folder_title: 'Move to folder',
-      pm_cancel: 'Cancel',
-    };
-    return fallback[key] || key;
+    // Use the centralized i18n system that respects user's language preference
+    return getTranslationSync(key);
   }
 
   // Tooltip methods
