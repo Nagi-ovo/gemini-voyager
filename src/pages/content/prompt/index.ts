@@ -308,8 +308,15 @@ export async function startPromptManager(): Promise<void> {
     const exportBtn = createEl('button', 'gv-pm-export-btn');
     exportBtn.textContent = i18n.t('pm_export');
     const notice = createEl('div', 'gv-pm-notice');
+
+    // Settings button to open popup - placed before GitHub link
+    const settingsBtn = createEl('button', 'gv-pm-settings');
+    settingsBtn.textContent = i18n.t('pm_settings') || '设置';
+    settingsBtn.title = i18n.t('pm_settings_tooltip') || '调整扩展设置';
+
     footer.appendChild(importBtn);
     footer.appendChild(exportBtn);
+    footer.appendChild(settingsBtn);
     const gh = document.createElement('a');
     gh.className = 'gv-pm-gh';
     gh.href = 'https://github.com/Nagi-ovo/gemini-voyager';
@@ -560,6 +567,8 @@ export async function startPromptManager(): Promise<void> {
       searchInput.placeholder = i18n.t('pm_search_placeholder') || 'Search prompts';
       importBtn.textContent = i18n.t('pm_import') || 'Import';
       exportBtn.textContent = i18n.t('pm_export') || 'Export';
+      settingsBtn.textContent = i18n.t('pm_settings') || 'Settings';
+      settingsBtn.title = i18n.t('pm_settings_tooltip') || 'Open extension settings';
       try {
         const ghEl = footer.querySelector('.gv-pm-gh') as HTMLAnchorElement | null;
         if (ghEl) ghEl.title = i18n.t('starProject') || 'Support the project';
@@ -723,6 +732,23 @@ export async function startPromptManager(): Promise<void> {
       addForm.classList.remove('gv-hidden');
       (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement)?.focus();
     });
+
+    settingsBtn.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      try {
+        // Send message to background to open popup
+        const response = await browser.runtime.sendMessage({ type: 'gv.openPopup' }) as { ok?: boolean };
+        if (!response?.ok) {
+          // If programmatic opening failed, show a helpful message
+          setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
+        }
+      } catch (err) {
+        console.warn('[PromptManager] Failed to open settings:', err);
+        setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
+      }
+    });
+
     (addForm.querySelector('.gv-pm-cancel') as HTMLButtonElement).addEventListener('click', (ev) => {
       ev.preventDefault();
       ev.stopPropagation();

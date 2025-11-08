@@ -31,10 +31,10 @@ export default function WidthSlider({
   onChangeComplete,
 }: WidthSliderProps) {
   return (
-    <Card className="p-3">
+    <Card className="p-4 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between mb-3">
-        <CardTitle>{label}</CardTitle>
-        <span className="text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">
+        <CardTitle className="text-xs uppercase">{label}</CardTitle>
+        <span className="text-sm font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md shadow-sm">
           {value}px
         </span>
       </div>
@@ -48,7 +48,7 @@ export default function WidthSlider({
             onValueChange={onChange}
             onValueCommit={onChangeComplete}
           />
-          <div className="flex justify-between items-center mt-2 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex justify-between items-center mt-3 text-xs text-muted-foreground font-medium">
             <span>{narrowLabel}</span>
             <span>{wideLabel}</span>
           </div>

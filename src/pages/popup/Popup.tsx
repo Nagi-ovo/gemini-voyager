@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 
+import { DarkModeToggle } from '../../components/DarkModeToggle';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../components/ui/card';
@@ -76,28 +77,31 @@ export default function Popup() {
   }, []);
 
   return (
-    <div className="w-[320px] bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 text-slate-900 dark:text-slate-100">
+    <div className="w-[360px] bg-background text-foreground">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+      <div className="bg-gradient-to-br from-primary/10 via-accent/5 to-transparent border-b border-border/50 px-5 py-4 flex items-center justify-between backdrop-blur-sm">
+        <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
           {t('extName')}
         </h1>
-        <LanguageSwitcher />
+        <div className="flex items-center gap-1">
+          <DarkModeToggle />
+          <LanguageSwitcher />
+        </div>
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-5 space-y-4">
         {/* Scroll Mode */}
-        <Card className="p-3">
-          <CardTitle className="mb-3">{t('scrollMode')}</CardTitle>
+        <Card className="p-4 hover:shadow-lg transition-shadow">
+          <CardTitle className="mb-3 text-xs uppercase">{t('scrollMode')}</CardTitle>
           <CardContent className="p-0">
-            <div className="relative grid grid-cols-2 rounded-lg bg-slate-100 dark:bg-slate-700 p-1">
+            <div className="relative grid grid-cols-2 rounded-lg bg-secondary/50 p-1 gap-1">
               <div
-                className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md bg-white dark:bg-slate-600 shadow-sm pointer-events-none transition-all duration-200"
-                style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 4px)' }}
+                className="absolute top-1 bottom-1 w-[calc(50%-6px)] rounded-md bg-primary shadow-md pointer-events-none transition-all duration-300 ease-out"
+                style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
               />
               <button
-                className={`relative z-10 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  mode === 'flow' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'
+                className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                  mode === 'flow' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
                 onClick={() => {
                   setMode('flow');
@@ -107,8 +111,8 @@ export default function Popup() {
                 {t('flow')}
               </button>
               <button
-                className={`relative z-10 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  mode === 'jump' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'
+                className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                  mode === 'jump' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
                 onClick={() => {
                   setMode('jump');
@@ -121,11 +125,11 @@ export default function Popup() {
           </CardContent>
         </Card>
         {/* Timeline Options */}
-        <Card className="p-3">
-          <CardTitle className="mb-3">{t('timelineOptions')}</CardTitle>
-          <CardContent className="p-0 space-y-3">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="hide-container" className="cursor-pointer normal-case text-sm font-normal text-slate-700 dark:text-slate-300">
+        <Card className="p-4 hover:shadow-lg transition-shadow">
+          <CardTitle className="mb-4 text-xs uppercase">{t('timelineOptions')}</CardTitle>
+          <CardContent className="p-0 space-y-4">
+            <div className="flex items-center justify-between group">
+              <Label htmlFor="hide-container" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
                 {t('hideOuterContainer')}
               </Label>
               <Switch
@@ -137,8 +141,8 @@ export default function Popup() {
                 }}
               />
             </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="draggable-timeline" className="cursor-pointer normal-case text-sm font-normal text-slate-700 dark:text-slate-300">
+            <div className="flex items-center justify-between group">
+              <Label htmlFor="draggable-timeline" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
                 {t('draggableTimeline')}
               </Label>
               <Switch
@@ -179,23 +183,23 @@ export default function Popup() {
         {/* Reset Button */}
         <Button
           variant="outline"
-          className="w-full"
+          className="w-full group hover:border-primary/50"
           onClick={() => {
             apply(null, undefined, undefined, true);
           }}
         >
-          {t('resetPosition')}
+          <span className="group-hover:scale-105 transition-transform">{t('resetPosition')}</span>
         </Button>
       </div>
 
       {/* Footer */}
-      <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between">
-        <span className="text-xs text-slate-600 dark:text-slate-400">{t('starProject')}</span>
+      <div className="bg-gradient-to-br from-secondary/30 via-accent/10 to-transparent border-t border-border/50 px-5 py-4 flex items-center justify-between backdrop-blur-sm">
+        <span className="text-xs text-muted-foreground font-medium">{t('starProject')}</span>
         <a
           href="https://github.com/Nagi-ovo/gemini-voyager"
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white rounded-lg text-xs font-medium transition-all hover:shadow-md"
+          className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-semibold transition-all hover:shadow-lg hover:scale-105 active:scale-95"
           title={t('starProject')}
         >
           <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">

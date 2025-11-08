@@ -57,7 +57,10 @@
   "pm_duplicate": { "message": "Duplicate prompt", "description": "Duplicate on add" },
   "pm_deleted": { "message": "Deleted", "description": "Deleted notice" },
   "pm_edit": { "message": "Edit", "description": "Edit prompt" },
-  "pm_saved": { "message": "Saved", "description": "Saved notice" }
+  "pm_saved": { "message": "Saved", "description": "Saved notice" },
+  "pm_settings": { "message": "Settings", "description": "Settings button" },
+  "pm_settings_tooltip": { "message": "Open extension settings", "description": "Settings button tooltip" },
+  "pm_settings_fallback": { "message": "Please click the extension icon in the browser toolbar to open settings", "description": "Settings open failed message" }
   ,"starProject": { "message": "Support the project", "description": "Github callout" }
   ,"exportChatJson": { "message": "Export chat history (JSON)", "description": "Tooltip for export button" }
   ,"folder_title": { "message": "Folders", "description": "Folder section title" }
