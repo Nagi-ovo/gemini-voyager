@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 
 import useI18n from '../../hooks/useI18n';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
+
 import WidthSlider from './components/WidthSlider';
 
 type ScrollMode = 'jump' | 'flow';
@@ -70,10 +71,10 @@ export default function Popup() {
   }, []);
 
   return (
-    <div className="w-[320px] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 text-slate-900 dark:text-slate-100">
+    <div className="w-[320px] bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 text-slate-900 dark:text-slate-100">
       {/* Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3">
-        <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <h1 className="text-lg font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           {t('extName')}
         </h1>
       </div>
