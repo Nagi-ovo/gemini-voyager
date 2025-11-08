@@ -8,7 +8,6 @@
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
-
 import 'katex/dist/katex.min.css';
 import browser from 'webextension-polyfill';
 

@@ -2694,8 +2694,8 @@ export class FolderManager {
         return;
       }
 
-      // Import data
-      const importResult = FolderImportExportService.importFromPayload(
+      // Import data (now async with concurrency protection)
+      const importResult = await FolderImportExportService.importFromPayload(
         validationResult.data,
         this.data as any,
         { strategy, createBackup: true }
