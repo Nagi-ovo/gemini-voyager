@@ -42,6 +42,8 @@ export class FolderManager {
   private tooltipElement: HTMLElement | null = null;
   private tooltipTimeout: number | null = null;
   private sideNavObserver: MutationObserver | null = null;
+  private importInProgress: boolean = false; // Lock to prevent concurrent imports
+  private exportInProgress: boolean = false; // Lock to prevent concurrent exports
 
   constructor() {
     this.loadData();
@@ -1016,16 +1018,33 @@ export class FolderManager {
   }
 
   private deleteFolder(folderId: string, event?: MouseEvent): void {
-    // Create inline confirmation
+    // Create inline confirmation using safe DOM API
     const confirmDialog = document.createElement('div');
     confirmDialog.className = 'gv-folder-confirm-dialog';
-    confirmDialog.innerHTML = `
-      <div class="gv-folder-confirm-message">${this.t('folder_delete_confirm')}</div>
-      <div class="gv-folder-confirm-actions">
-        <button class="gv-folder-confirm-btn gv-folder-confirm-yes">${this.t('pm_delete')}</button>
-        <button class="gv-folder-confirm-btn gv-folder-confirm-no">${this.t('pm_cancel')}</button>
-      </div>
-    `;
+
+    // Create message element safely
+    const message = document.createElement('div');
+    message.className = 'gv-folder-confirm-message';
+    message.textContent = this.t('folder_delete_confirm'); // Safe: uses textContent
+
+    // Create actions container
+    const actions = document.createElement('div');
+    actions.className = 'gv-folder-confirm-actions';
+
+    // Create buttons safely
+    const yesBtn = document.createElement('button');
+    yesBtn.className = 'gv-folder-confirm-btn gv-folder-confirm-yes';
+    yesBtn.textContent = this.t('pm_delete'); // Safe: uses textContent
+
+    const noBtn = document.createElement('button');
+    noBtn.className = 'gv-folder-confirm-btn gv-folder-confirm-no';
+    noBtn.textContent = this.t('pm_cancel'); // Safe: uses textContent
+
+    // Assemble the dialog
+    actions.appendChild(yesBtn);
+    actions.appendChild(noBtn);
+    confirmDialog.appendChild(message);
+    confirmDialog.appendChild(actions);
 
     // Position near the folder
     const folderEl = this.containerElement?.querySelector(`[data-folder-id="${folderId}"]`);
@@ -1038,9 +1057,7 @@ export class FolderManager {
 
     document.body.appendChild(confirmDialog);
 
-    const yesBtn = confirmDialog.querySelector('.gv-folder-confirm-yes') as HTMLButtonElement;
-    const noBtn = confirmDialog.querySelector('.gv-folder-confirm-no') as HTMLButtonElement;
-
+    // Cleanup function
     const cleanup = () => {
       confirmDialog.remove();
     };
@@ -1241,16 +1258,34 @@ export class FolderManager {
     title: string,
     event: MouseEvent
   ): void {
-    // Create inline confirmation dialog
+    // Create inline confirmation dialog using safe DOM API
     const confirmDialog = document.createElement('div');
     confirmDialog.className = 'gv-folder-confirm-dialog';
-    confirmDialog.innerHTML = `
-      <div class="gv-folder-confirm-message">${this.t('folder_remove_conversation_confirm').replace('{title}', title)}</div>
-      <div class="gv-folder-confirm-actions">
-        <button class="gv-folder-confirm-btn gv-folder-confirm-yes">${this.t('pm_delete')}</button>
-        <button class="gv-folder-confirm-btn gv-folder-confirm-no">${this.t('pm_cancel')}</button>
-      </div>
-    `;
+
+    // Create message element safely with user-provided title
+    const message = document.createElement('div');
+    message.className = 'gv-folder-confirm-message';
+    // Safe: textContent prevents XSS even with user-controlled title
+    message.textContent = this.t('folder_remove_conversation_confirm').replace('{title}', title);
+
+    // Create actions container
+    const actions = document.createElement('div');
+    actions.className = 'gv-folder-confirm-actions';
+
+    // Create buttons safely
+    const yesBtn = document.createElement('button');
+    yesBtn.className = 'gv-folder-confirm-btn gv-folder-confirm-yes';
+    yesBtn.textContent = this.t('pm_delete'); // Safe: uses textContent
+
+    const noBtn = document.createElement('button');
+    noBtn.className = 'gv-folder-confirm-btn gv-folder-confirm-no';
+    noBtn.textContent = this.t('pm_cancel'); // Safe: uses textContent
+
+    // Assemble the dialog
+    actions.appendChild(yesBtn);
+    actions.appendChild(noBtn);
+    confirmDialog.appendChild(message);
+    confirmDialog.appendChild(actions);
 
     // Position near the clicked element
     const rect = (event.target as HTMLElement).getBoundingClientRect();
@@ -1260,9 +1295,7 @@ export class FolderManager {
 
     document.body.appendChild(confirmDialog);
 
-    const yesBtn = confirmDialog.querySelector('.gv-folder-confirm-yes') as HTMLButtonElement;
-    const noBtn = confirmDialog.querySelector('.gv-folder-confirm-no') as HTMLButtonElement;
-
+    // Cleanup function
     const cleanup = () => {
       confirmDialog.remove();
     };
@@ -2501,6 +2534,14 @@ export class FolderManager {
 
   // Export/Import methods
   private exportFolders(): void {
+    // Prevent concurrent exports
+    if (this.exportInProgress) {
+      this.showNotification(this.t('folder_export_in_progress') || 'Export already in progress', 'info');
+      return;
+    }
+
+    this.exportInProgress = true;
+
     try {
       // Type assertion to match the service's expected type
       const payload = FolderImportExportService.exportToPayload(this.data as any);
@@ -2513,6 +2554,9 @@ export class FolderManager {
         this.t('folder_import_error').replace('{error}', String(error)),
         'error'
       );
+    } finally {
+      // Always release the lock
+      this.exportInProgress = false;
     }
   }
 
@@ -2639,6 +2683,14 @@ export class FolderManager {
   }
 
   private async handleImport(fileInput: HTMLInputElement, strategy: ImportStrategy): Promise<void> {
+    // Prevent concurrent imports to avoid data corruption
+    if (this.importInProgress) {
+      this.showNotification(this.t('folder_import_in_progress') || 'Import already in progress', 'info');
+      return;
+    }
+
+    this.importInProgress = true;
+
     try {
       if (!fileInput.files || fileInput.files.length === 0) {
         this.showNotification(this.t('folder_import_select_file'), 'error');
@@ -2714,6 +2766,9 @@ export class FolderManager {
         this.t('folder_import_error').replace('{error}', String(error)),
         'error'
       );
+    } finally {
+      // Always release the lock, even if an error occurred
+      this.importInProgress = false;
     }
   }
 

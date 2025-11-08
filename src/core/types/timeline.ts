@@ -17,6 +17,7 @@ export interface TimelineMarker {
   baseN: number; // Original normalized position
   dotElement: DotElement | null;
   starred: boolean;
+  cachedOffsetTop?: number; // Cached position to avoid layout thrashing
 }
 
 export interface DotElement extends HTMLButtonElement {

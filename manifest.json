@@ -20,6 +20,9 @@
     "https://lh3.google.com/*",
     "https://*.ggpht.com/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; worker-src 'self'"
+  },
   "background": {
     "service_worker": "src/pages/background/index.ts",
     "type": "module"

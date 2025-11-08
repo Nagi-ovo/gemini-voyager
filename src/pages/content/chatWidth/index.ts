@@ -144,7 +144,7 @@ export function startChatWidthAdjuster() {
   });
 
   // Listen for changes from storage
-  chrome.storage?.onChanged?.addListener((changes, area) => {
+  const storageChangeHandler = (changes: any, area: string) => {
     if (area === 'sync' && changes.geminiChatWidth) {
       const newWidth = changes.geminiChatWidth.newValue;
       if (typeof newWidth === 'number') {
@@ -152,7 +152,9 @@ export function startChatWidthAdjuster() {
         applyWidth(currentWidth);
       }
     }
-  });
+  };
+
+  chrome.storage?.onChanged?.addListener(storageChangeHandler);
 
   // Re-apply styles when DOM changes (for dynamic content)
   // Use debouncing and cache the width to avoid storage reads
@@ -177,9 +179,13 @@ export function startChatWidthAdjuster() {
     });
   }
 
-  // Clean up on unload
+  // Clean up on unload to prevent memory leaks
   window.addEventListener('beforeunload', () => {
     observer.disconnect();
     removeStyles();
-  });
+    // Remove storage listener
+    try {
+      chrome.storage?.onChanged?.removeListener(storageChangeHandler);
+    } catch {}
+  }, { once: true });
 }

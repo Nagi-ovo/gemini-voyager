@@ -57,7 +57,8 @@ export class TimelineMarkerManager {
     const contentSpan = Math.max(1, lastOffset - firstOffset);
 
     return elements.map((element, index) => {
-      const offsetFromStart = element.offsetTop - firstOffset;
+      const offsetTop = element.offsetTop;
+      const offsetFromStart = offsetTop - firstOffset;
       const normalized = Math.max(0, Math.min(1, offsetFromStart / contentSpan));
       const id = this.ensureTurnId(element, index);
 
@@ -69,6 +70,7 @@ export class TimelineMarkerManager {
         baseN: normalized,
         dotElement: null,
         starred: starredSet.has(id),
+        cachedOffsetTop: offsetTop, // Cache to avoid layout thrashing
       };
     });
   }
@@ -110,17 +112,15 @@ export class TimelineMarkerManager {
       return null;
     }
 
-    const containerRect = scrollContainer.getBoundingClientRect();
     const scrollTop = scrollContainer.scrollTop;
     const referencePoint = scrollTop + scrollContainer.clientHeight * 0.45;
 
     let activeId = markers[0].id;
 
     for (const marker of markers) {
-      const elementTop =
-        marker.element.getBoundingClientRect().top -
-        containerRect.top +
-        scrollTop;
+      // Use cached offsetTop to avoid expensive getBoundingClientRect() calls
+      // If cache is not available, fall back to live DOM read (only on first run)
+      const elementTop = marker.cachedOffsetTop ?? marker.element.offsetTop;
 
       if (elementTop <= referencePoint) {
         activeId = marker.id;
