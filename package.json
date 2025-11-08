@@ -1,7 +1,7 @@
 {
   "name": "gemini-voyager",
-  "version": "0.7.8",
-  "description": "Maps your Gemini chats on a timeline.",
+  "version": "0.7.7",
+  "description": "Supercharge your Gemini experience with timeline navigation, folder organization, prompt library, and chat export.",
   "license": "MIT",
   "author": "Jesse Zhang",
   "repository": {
@@ -29,13 +29,17 @@
   },
   "type": "module",
   "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "dompurify": "^3",
     "katex": "^0.16",
+    "lucide-react": "^0.553.0",
     "marked": "16.4.1",
     "marked-katex-extension": "^4",
     "prettier": "^3.6.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.3.1",
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {

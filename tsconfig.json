@@ -24,7 +24,9 @@
       "@/*": ["src/*"],
       "@/core": ["src/core"],
       "@/core/*": ["src/core/*"],
-      "@/features/*": ["src/features/*"]
+      "@/features/*": ["src/features/*"],
+      "@/components/*": ["src/components/*"],
+      "@/lib/*": ["src/lib/*"]
     }
   },
   "include": [

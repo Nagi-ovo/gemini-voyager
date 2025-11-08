@@ -1,7 +1,21 @@
-/* Background service worker - handles cross-origin image fetch for packaging */
+/* Background service worker - handles cross-origin image fetch for packaging and popup opening */
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   (async () => {
     try {
+      // Handle popup opening request
+      if (message && message.type === 'gv.openPopup') {
+        try {
+          await chrome.action.openPopup();
+          sendResponse({ ok: true });
+        } catch (e: any) {
+          // Fallback: If openPopup fails, user can click the extension icon
+          console.warn('[GV] Failed to open popup programmatically:', e);
+          sendResponse({ ok: false, error: String(e?.message || e) });
+        }
+        return;
+      }
+
+      // Handle image fetch
       if (!message || message.type !== 'gv.fetchImage') return;
       const url = String(message.url || '');
       if (!/^https?:\/\//i.test(url)) {
