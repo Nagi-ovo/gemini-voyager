@@ -98,4 +98,5 @@
   ,"editInputWidth": { "message": "编辑输入框宽度", "description": "编辑输入框宽度调整标签" }
   ,"editInputWidthNarrow": { "message": "窄", "description": "窄编辑输入框宽度标签" }
   ,"editInputWidthWide": { "message": "宽", "description": "宽编辑输入框宽度标签" }
+  ,"timelineOptions": { "message": "时间线选项", "description": "时间线选项区域标签" }
 }

@@ -135,7 +135,7 @@ export default function Popup() {
         {/* Timeline Options */}
         <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm space-y-2">
           <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-2">
-            Timeline Options
+            {t('timelineOptions')}
           </label>
           <label htmlFor="hide-container" className="flex items-center gap-3 cursor-pointer group">
             <input

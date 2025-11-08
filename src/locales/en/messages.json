@@ -98,4 +98,5 @@
   ,"editInputWidth": { "message": "Edit input width", "description": "Edit input width adjustment label" }
   ,"editInputWidthNarrow": { "message": "Narrow", "description": "Narrow edit input width label" }
   ,"editInputWidthWide": { "message": "Wide", "description": "Wide edit input width label" }
+  ,"timelineOptions": { "message": "Timeline Options", "description": "Timeline options section label" }
 }
