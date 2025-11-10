@@ -31,4 +31,6 @@ export interface DragData {
   url?: string;
   isGem?: boolean;
   gemId?: string;
+  conversations?: ConversationReference[]; // For multi-select dragging
+  sourceFolderId?: string; // Track where conversations are being dragged from
 }

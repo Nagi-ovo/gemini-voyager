@@ -45,6 +45,10 @@ export class FolderManager {
   private sideNavObserver: MutationObserver | null = null;
   private importInProgress: boolean = false; // Lock to prevent concurrent imports
   private exportInProgress: boolean = false; // Lock to prevent concurrent exports
+  private selectedConversations: Set<string> = new Set(); // For multi-select support
+  private isMultiSelectMode: boolean = false; // Multi-select mode state
+  private longPressTimeout: number | null = null; // For long-press detection
+  private longPressThreshold: number = 500; // Long-press duration in ms
 
   constructor() {
     this.loadData();
@@ -153,6 +157,10 @@ export class FolderManager {
     this.containerElement = document.createElement('div');
     this.containerElement.className = 'gv-folder-container';
 
+    // Create multi-select mode indicator
+    const indicator = this.createMultiSelectIndicator();
+    this.containerElement.appendChild(indicator);
+
     // Create header
     const header = this.createHeader();
     this.containerElement.appendChild(header);
@@ -163,6 +171,39 @@ export class FolderManager {
 
     // Insert before Recent section
     this.recentSection.parentElement?.insertBefore(this.containerElement, this.recentSection);
+  }
+
+  private createMultiSelectIndicator(): HTMLElement {
+    const indicator = document.createElement('div');
+    indicator.className = 'gv-multi-select-indicator';
+    indicator.dataset.multiSelectIndicator = 'true';
+
+    const content = document.createElement('div');
+    content.className = 'gv-multi-select-indicator-content';
+
+    const icon = document.createElement('mat-icon');
+    icon.className = 'mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color';
+    icon.setAttribute('role', 'img');
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = 'check_circle';
+
+    const text = document.createElement('span');
+    text.className = 'gv-multi-select-indicator-text';
+    text.textContent = '0 selected';
+    text.dataset.selectionCount = 'true';
+
+    const exitBtn = document.createElement('button');
+    exitBtn.className = 'gv-multi-select-exit-btn';
+    exitBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
+    exitBtn.title = 'Exit multi-select mode';
+    exitBtn.addEventListener('click', () => this.exitMultiSelectMode());
+
+    content.appendChild(icon);
+    content.appendChild(text);
+    indicator.appendChild(content);
+    indicator.appendChild(exitBtn);
+
+    return indicator;
   }
 
   private createHeader(): HTMLElement {
@@ -372,21 +413,36 @@ export class FolderManager {
     convEl.draggable = true;
     convEl.addEventListener('dragstart', (e) => {
       e.stopPropagation();
+
+      // If this conversation is not selected, select it exclusively
+      if (!this.selectedConversations.has(conv.conversationId)) {
+        this.clearSelection();
+        this.selectConversation(conv.conversationId);
+        this.updateConversationSelectionUI();
+      }
+
+      // Include all selected conversations in the drag data
+      const selectedConvs = this.getSelectedConversationsData(folderId);
       const dragData = {
         type: 'conversation',
-        conversationId: conv.conversationId,
-        title: displayTitle,
-        url: conv.url,
-        isGem: conv.isGem,
-        gemId: conv.gemId,
-        sourceFolderId: folderId, // Track where it's being dragged from
+        conversations: selectedConvs,
+        sourceFolderId: folderId, // Track where they're being dragged from
       };
       e.dataTransfer!.setData('application/json', JSON.stringify(dragData));
-      convEl.style.opacity = '0.5';
+
+      // Apply opacity to all selected conversations
+      this.selectedConversations.forEach(id => {
+        const el = this.containerElement?.querySelector(`[data-conversation-id="${id}"]`) as HTMLElement;
+        if (el) el.style.opacity = '0.5';
+      });
     });
 
     convEl.addEventListener('dragend', () => {
-      convEl.style.opacity = '1';
+      // Restore opacity for all selected conversations
+      this.selectedConversations.forEach(id => {
+        const el = this.containerElement?.querySelector(`[data-conversation-id="${id}"]`) as HTMLElement;
+        if (el) el.style.opacity = '1';
+      });
     });
 
     // Conversation icon - use Gem-specific icons
@@ -422,10 +478,51 @@ export class FolderManager {
       this.confirmRemoveConversation(folderId, conv.conversationId, displayTitle, e);
     });
 
-    // Click to navigate - use SPA-style navigation like original conversations
-    convEl.addEventListener('click', () => {
-      // Don't capture conv object in closure - look up latest data
-      this.navigateToConversationById(folderId, conv.conversationId);
+    // Long-press detection for entering multi-select mode
+    let longPressTriggered = false;
+
+    convEl.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return; // Only left mouse button
+      longPressTriggered = false;
+
+      this.longPressTimeout = window.setTimeout(() => {
+        longPressTriggered = true;
+        this.enterMultiSelectMode(conv.conversationId);
+      }, this.longPressThreshold);
+    });
+
+    convEl.addEventListener('mouseup', () => {
+      if (this.longPressTimeout) {
+        clearTimeout(this.longPressTimeout);
+        this.longPressTimeout = null;
+      }
+    });
+
+    convEl.addEventListener('mouseleave', () => {
+      if (this.longPressTimeout) {
+        clearTimeout(this.longPressTimeout);
+        this.longPressTimeout = null;
+      }
+    });
+
+    // Click to navigate or toggle selection based on mode
+    convEl.addEventListener('click', (e) => {
+      // Prevent navigation if long-press was triggered
+      if (longPressTriggered) {
+        longPressTriggered = false;
+        return;
+      }
+
+      if (this.isMultiSelectMode) {
+        // Multi-select mode: toggle selection
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleConversationSelection(conv.conversationId);
+        this.updateConversationSelectionUI();
+      } else {
+        // Normal mode: navigate to conversation
+        this.navigateToConversationById(folderId, conv.conversationId);
+      }
     });
 
     // Double-click to rename
@@ -469,9 +566,19 @@ export class FolderManager {
           this.debug('Dropping folder into folder:', dragData.title, '→', folderId);
           this.addFolderToFolder(folderId, dragData);
         } else {
-          // Handle conversation drop (default behavior for backward compatibility)
-          this.addConversationToFolder(folderId, dragData);
+          // Handle conversation drop - supports both single and multiple conversations
+          if (dragData.conversations && dragData.conversations.length > 0) {
+            // Multi-select drag
+            this.debug('Dropping multiple conversations:', dragData.conversations.length);
+            this.addConversationsToFolder(folderId, dragData.conversations, dragData.sourceFolderId);
+          } else {
+            // Legacy single conversation drag (backward compatibility)
+            this.addConversationToFolder(folderId, dragData);
+          }
         }
+
+        // Clear selection and exit multi-select mode after successful drop
+        this.exitMultiSelectMode();
       } catch (error) {
         console.error('[FolderManager] Drop error:', error);
       }
@@ -520,10 +627,20 @@ export class FolderManager {
         if (dragData.type === 'folder') {
           this.moveFolderToRoot(dragData);
         } else {
-          // Handle conversation drop - add to root-level favorites
-          this.debug('Adding conversation to root level:', dragData.title);
-          this.addConversationToFolder(ROOT_CONVERSATIONS_ID, dragData);
+          // Handle conversation drop - supports both single and multiple conversations
+          if (dragData.conversations && dragData.conversations.length > 0) {
+            // Multi-select drag
+            this.debug('Adding multiple conversations to root level:', dragData.conversations.length);
+            this.addConversationsToFolder(ROOT_CONVERSATIONS_ID, dragData.conversations, dragData.sourceFolderId);
+          } else {
+            // Legacy single conversation drag (backward compatibility)
+            this.debug('Adding conversation to root level:', dragData.title);
+            this.addConversationToFolder(ROOT_CONVERSATIONS_ID, dragData);
+          }
         }
+
+        // Clear selection and exit multi-select mode after successful drop
+        this.exitMultiSelectMode();
       } catch (error) {
         console.error('[FolderManager] Root drop error:', error);
       }
@@ -657,6 +774,73 @@ export class FolderManager {
     element.draggable = true;
     element.style.cursor = 'grab';
 
+    // Long-press detection for entering multi-select mode
+    let longPressTriggered = false;
+    let longPressTimeoutId: number | null = null;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return; // Only left mouse button
+      longPressTriggered = false;
+
+      const conversationId = this.extractConversationId(element);
+
+      longPressTimeoutId = window.setTimeout(() => {
+        longPressTriggered = true;
+        this.enterMultiSelectMode(conversationId);
+        // Add visual feedback to this element
+        element.classList.add('gv-conversation-selected');
+      }, this.longPressThreshold);
+    };
+
+    const handleMouseUp = () => {
+      if (longPressTimeoutId) {
+        clearTimeout(longPressTimeoutId);
+        longPressTimeoutId = null;
+      }
+    };
+
+    const handleMouseLeave = () => {
+      if (longPressTimeoutId) {
+        clearTimeout(longPressTimeoutId);
+        longPressTimeoutId = null;
+      }
+    };
+
+    // Add event listeners
+    element.addEventListener('mousedown', handleMouseDown);
+    element.addEventListener('mouseup', handleMouseUp);
+    element.addEventListener('mouseleave', handleMouseLeave);
+
+    // Click handler for multi-select mode
+    const originalClickHandler = element.onclick;
+    element.addEventListener('click', (e) => {
+      // Prevent navigation if long-press was triggered
+      if (longPressTriggered) {
+        e.preventDefault();
+        e.stopPropagation();
+        longPressTriggered = false;
+        return;
+      }
+
+      if (this.isMultiSelectMode) {
+        // Multi-select mode: toggle selection
+        e.preventDefault();
+        e.stopPropagation();
+        const conversationId = this.extractConversationId(element);
+        this.toggleConversationSelection(conversationId);
+
+        // Update visual state
+        if (this.selectedConversations.has(conversationId)) {
+          element.classList.add('gv-conversation-selected');
+        } else {
+          element.classList.remove('gv-conversation-selected');
+        }
+
+        this.updateConversationSelectionUI();
+        return;
+      }
+    }, true); // Use capture phase to intercept before navigation
+
     element.addEventListener('dragstart', (e) => {
       const title = element.querySelector('.conversation-title')?.textContent?.trim() || 'Untitled';
       const conversationId = this.extractConversationId(element);
@@ -664,29 +848,102 @@ export class FolderManager {
       // Extract URL and conversation metadata together
       const conversationData = this.extractConversationData(element);
 
-      this.debug('Drag start:', {
-        title,
-        isGem: conversationData.isGem,
-        gemId: conversationData.gemId,
-        url: conversationData.url
-      });
+      // If this conversation is not selected, select it exclusively
+      if (!this.selectedConversations.has(conversationId)) {
+        this.clearSelection();
+        this.selectConversation(conversationId);
+        element.classList.add('gv-conversation-selected');
+        this.updateConversationSelectionUI();
+      }
 
-      const dragData: DragData = {
-        type: 'conversation',
-        conversationId,
-        title,
-        url: conversationData.url,
-        isGem: conversationData.isGem,
-        gemId: conversationData.gemId,
-      };
+      // Check if we have multiple selections
+      if (this.selectedConversations.size > 1) {
+        // Multi-select drag - collect all selected conversations
+        const selectedConvs: ConversationReference[] = [];
 
-      e.dataTransfer?.setData('application/json', JSON.stringify(dragData));
-      element.style.opacity = '0.5';
+        this.selectedConversations.forEach(id => {
+          const convEl = this.findConversationElement(id);
+          if (convEl) {
+            const convTitle = convEl.querySelector('.conversation-title')?.textContent?.trim() || 'Untitled';
+            const convData = this.extractConversationData(convEl);
+
+            selectedConvs.push({
+              conversationId: id,
+              title: convTitle,
+              url: convData.url,
+              addedAt: Date.now(),
+              isGem: convData.isGem,
+              gemId: convData.gemId,
+            });
+          }
+        });
+
+        const dragData: DragData = {
+          type: 'conversation',
+          conversations: selectedConvs,
+        };
+
+        e.dataTransfer?.setData('application/json', JSON.stringify(dragData));
+
+        // Apply opacity to all selected conversations
+        this.selectedConversations.forEach(id => {
+          const el = this.findConversationElement(id);
+          if (el) el.style.opacity = '0.5';
+        });
+      } else {
+        // Single conversation drag (legacy behavior)
+        this.debug('Drag start:', {
+          title,
+          isGem: conversationData.isGem,
+          gemId: conversationData.gemId,
+          url: conversationData.url
+        });
+
+        const dragData: DragData = {
+          type: 'conversation',
+          conversationId,
+          title,
+          url: conversationData.url,
+          isGem: conversationData.isGem,
+          gemId: conversationData.gemId,
+        };
+
+        e.dataTransfer?.setData('application/json', JSON.stringify(dragData));
+        element.style.opacity = '0.5';
+      }
     });
 
     element.addEventListener('dragend', () => {
-      element.style.opacity = '1';
+      // Restore opacity for all selected conversations
+      if (this.selectedConversations.size > 1) {
+        this.selectedConversations.forEach(id => {
+          const el = this.findConversationElement(id);
+          if (el) el.style.opacity = '1';
+        });
+      } else {
+        element.style.opacity = '1';
+      }
     });
+  }
+
+  // Helper method to find conversation element by ID
+  private findConversationElement(conversationId: string): HTMLElement | null {
+    // Check in folder conversations
+    const folderConv = this.containerElement?.querySelector(`[data-conversation-id="${conversationId}"]`) as HTMLElement;
+    if (folderConv) return folderConv;
+
+    // Check in native conversations (Recent section)
+    const nativeConvs = this.sidebarContainer?.querySelectorAll('[data-test-id="conversation"]');
+    if (nativeConvs) {
+      for (const conv of Array.from(nativeConvs)) {
+        const id = this.extractConversationId(conv as HTMLElement);
+        if (id === conversationId) {
+          return conv as HTMLElement;
+        }
+      }
+    }
+
+    return null;
   }
 
   private extractConversationId(element: HTMLElement): string {
@@ -1187,6 +1444,64 @@ export class FolderManager {
     this.refresh();
   }
 
+  // Batch add conversations to folder (for multi-select support)
+  private addConversationsToFolder(
+    folderId: string,
+    conversations: ConversationReference[],
+    sourceFolderId?: string
+  ): void {
+    this.debug('Adding multiple conversations to folder:', {
+      folderId,
+      count: conversations.length,
+      sourceFolderId,
+    });
+
+    if (!this.data.folderContents[folderId]) {
+      this.data.folderContents[folderId] = [];
+    }
+
+    let addedCount = 0;
+    const conversationsToRemove: string[] = [];
+
+    conversations.forEach(conv => {
+      // Check if conversation is already in this folder
+      const exists = this.data.folderContents[folderId].some(
+        (c) => c.conversationId === conv.conversationId
+      );
+
+      if (!exists) {
+        // Create a copy with updated timestamp
+        const newConv: ConversationReference = {
+          ...conv,
+          addedAt: Date.now(),
+        };
+
+        this.data.folderContents[folderId].push(newConv);
+        addedCount++;
+
+        // Track conversations to remove from source folder
+        if (sourceFolderId && sourceFolderId !== folderId) {
+          conversationsToRemove.push(conv.conversationId);
+        }
+      }
+    });
+
+    this.debug(`Added ${addedCount} conversations. Total in folder:`, this.data.folderContents[folderId].length);
+
+    // Remove from source folder if moving
+    if (sourceFolderId && sourceFolderId !== folderId && conversationsToRemove.length > 0) {
+      this.debug('Removing conversations from source folder:', sourceFolderId);
+      conversationsToRemove.forEach(convId => {
+        this.data.folderContents[sourceFolderId] = this.data.folderContents[sourceFolderId].filter(
+          (c) => c.conversationId !== convId
+        );
+      });
+    }
+
+    this.saveData();
+    this.refresh();
+  }
+
   private addFolderToFolder(targetFolderId: string, dragData: DragData): void {
     const draggedFolderId = dragData.folderId;
     if (!draggedFolderId) return;
@@ -1333,6 +1648,113 @@ export class FolderManager {
 
     this.saveData();
     this.refresh();
+  }
+
+  // Multi-select helper methods
+  private clearSelection(): void {
+    this.selectedConversations.clear();
+  }
+
+  private selectConversation(conversationId: string): void {
+    this.selectedConversations.add(conversationId);
+  }
+
+  private toggleConversationSelection(conversationId: string): void {
+    if (this.selectedConversations.has(conversationId)) {
+      this.selectedConversations.delete(conversationId);
+    } else {
+      this.selectedConversations.add(conversationId);
+    }
+  }
+
+  private updateConversationSelectionUI(): void {
+    // Update folder conversation elements
+    const allConvEls = this.containerElement?.querySelectorAll('.gv-folder-conversation');
+    allConvEls?.forEach((el) => {
+      const convId = (el as HTMLElement).dataset.conversationId;
+      if (convId) {
+        if (this.selectedConversations.has(convId)) {
+          el.classList.add('gv-folder-conversation-selected');
+        } else {
+          el.classList.remove('gv-folder-conversation-selected');
+        }
+      }
+    });
+
+    // Update native conversation elements (Recent section)
+    const nativeConvs = this.sidebarContainer?.querySelectorAll('[data-test-id="conversation"]');
+    nativeConvs?.forEach((el) => {
+      const convId = this.extractConversationId(el as HTMLElement);
+      if (convId) {
+        if (this.selectedConversations.has(convId)) {
+          el.classList.add('gv-conversation-selected');
+        } else {
+          el.classList.remove('gv-conversation-selected');
+        }
+      }
+    });
+
+    // Update the selection count
+    this.updateMultiSelectModeUI();
+  }
+
+  // Multi-select mode methods
+  private enterMultiSelectMode(initialConversationId?: string): void {
+    this.debug('Entering multi-select mode');
+    this.isMultiSelectMode = true;
+
+    // Select the conversation that triggered the long-press
+    if (initialConversationId) {
+      this.selectConversation(initialConversationId);
+    }
+
+    this.updateMultiSelectModeUI();
+    this.updateConversationSelectionUI();
+
+    // Add visual feedback (vibration on mobile)
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+  }
+
+  private exitMultiSelectMode(): void {
+    this.debug('Exiting multi-select mode');
+    this.isMultiSelectMode = false;
+    this.clearSelection();
+    this.updateMultiSelectModeUI();
+    this.updateConversationSelectionUI();
+  }
+
+  private updateMultiSelectModeUI(): void {
+    // Add or remove multi-select mode class from container
+    if (this.isMultiSelectMode) {
+      this.containerElement?.classList.add('gv-multi-select-mode');
+    } else {
+      this.containerElement?.classList.remove('gv-multi-select-mode');
+    }
+
+    // Update selection count in indicator
+    const indicator = this.containerElement?.querySelector('[data-selection-count="true"]');
+    if (indicator) {
+      const count = this.selectedConversations.size;
+      indicator.textContent = `${count} selected`;
+    }
+  }
+
+  private getSelectedConversationsData(folderId: string): ConversationReference[] {
+    const result: ConversationReference[] = [];
+
+    // Collect from all folders since selection can span folders
+    for (const fId in this.data.folderContents) {
+      const conversations = this.data.folderContents[fId];
+      conversations.forEach(conv => {
+        if (this.selectedConversations.has(conv.conversationId)) {
+          result.push(conv);
+        }
+      });
+    }
+
+    return result;
   }
 
   private renameConversation(folderId: string, conversationId: string, titleElement: HTMLElement): void {

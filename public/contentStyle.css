@@ -706,6 +706,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   --folder-dragover-bg: #dbeafe;
   --folder-dragover-border: #3b82f6;
+  --folder-selected-bg: #f0f9ff;
+  --folder-selected-border: #0ea5e9;
+  --folder-selected-accent: #38bdf8;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -720,6 +723,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
     --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     --folder-dragover-bg: #1e3a8a;
     --folder-dragover-border: #60a5fa;
+    --folder-selected-bg: #164e63;
+    --folder-selected-border: #06b6d4;
+    --folder-selected-accent: #22d3ee;
   }
 }
 
@@ -735,6 +741,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   --folder-dragover-bg: #1e3a8a;
   --folder-dragover-border: #60a5fa;
+  --folder-selected-bg: #164e63;
+  --folder-selected-border: #06b6d4;
+  --folder-selected-accent: #22d3ee;
 }
 
 .theme-host.light-theme {
@@ -748,6 +757,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   --folder-dragover-bg: #dbeafe;
   --folder-dragover-border: #3b82f6;
+  --folder-selected-bg: #f0f9ff;
+  --folder-selected-border: #0ea5e9;
+  --folder-selected-accent: #38bdf8;
 }
 
 /* Folder Container */
@@ -970,6 +982,131 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
 
 .gv-folder-conversation:hover {
   background-color: var(--folder-hover-bg);
+}
+
+/* Selected state for multi-select - shadcn/ui inspired */
+.gv-folder-conversation-selected {
+  background-color: var(--folder-selected-bg) !important;
+  border: 1px solid var(--folder-selected-border);
+  box-shadow: 0 0 0 1px var(--folder-selected-border);
+  padding: 7px 11px; /* Adjust padding to account for border */
+  position: relative;
+}
+
+.gv-folder-conversation-selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right, var(--folder-selected-accent), transparent);
+  opacity: 0.1;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* Selected state for native conversations (Recent section) */
+[data-test-id="conversation"].gv-conversation-selected {
+  background-color: var(--folder-selected-bg) !important;
+  border: 1px solid var(--folder-selected-border) !important;
+  box-shadow: 0 0 0 1px var(--folder-selected-border) !important;
+  position: relative;
+  border-radius: 12px !important;
+}
+
+[data-test-id="conversation"].gv-conversation-selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right, var(--folder-selected-accent), transparent);
+  opacity: 0.1;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure content is above the gradient overlay */
+[data-test-id="conversation"].gv-conversation-selected > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Multi-select mode indicator */
+.gv-multi-select-indicator {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 8px 8px 0 12px;
+  background: var(--folder-selected-bg);
+  border: 1px solid var(--folder-selected-border);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gv-multi-select-mode .gv-multi-select-indicator {
+  display: flex;
+}
+
+.gv-multi-select-indicator-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gv-multi-select-indicator-content mat-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: var(--folder-selected-border);
+}
+
+.gv-multi-select-indicator-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--folder-text);
+}
+
+.gv-multi-select-exit-btn {
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.gv-multi-select-exit-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--folder-text);
+}
+
+.gv-multi-select-exit-btn mat-icon {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
 }
 
 /* Draggable conversations in folders */
