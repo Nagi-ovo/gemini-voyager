@@ -913,6 +913,7 @@ export class FolderManager {
 
         const dragData: DragData = {
           type: 'conversation',
+          title: `${selectedConvs.length} conversations`,
           conversations: selectedConvs,
         };
 
