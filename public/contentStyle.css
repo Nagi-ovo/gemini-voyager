@@ -1035,6 +1035,11 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   z-index: 1;
 }
 
+/* Hide archived conversations (conversations that are in folders) */
+[data-test-id="conversation"].gv-conversation-archived {
+  display: none !important;
+}
+
 /* Multi-select mode indicator */
 .gv-multi-select-indicator {
   display: none;

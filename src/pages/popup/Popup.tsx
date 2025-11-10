@@ -18,18 +18,21 @@ export default function Popup() {
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
+  const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
 
   // Helper function to apply settings to storage
   const apply = useCallback((
     nextMode: ScrollMode | null,
     nextHide?: boolean,
     nextDraggable?: boolean,
-    resetPosition?: boolean
+    resetPosition?: boolean,
+    nextHideArchived?: boolean
   ) => {
     const payload: any = {};
     if (nextMode) payload.geminiTimelineScrollMode = nextMode;
     if (typeof nextHide === 'boolean') payload.geminiTimelineHideContainer = nextHide;
     if (typeof nextDraggable === 'boolean') payload.geminiTimelineDraggable = nextDraggable;
+    if (typeof nextHideArchived === 'boolean') payload.geminiFolderHideArchivedConversations = nextHideArchived;
     if (resetPosition) payload.geminiTimelinePosition = null;
     try {
       chrome.storage?.sync?.set(payload);
@@ -65,12 +68,14 @@ export default function Popup() {
           geminiTimelineScrollMode: 'flow',
           geminiTimelineHideContainer: false,
           geminiTimelineDraggable: false,
+          geminiFolderHideArchivedConversations: false,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
           if (m === 'jump' || m === 'flow') setMode(m);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
+          setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
         }
       );
     } catch {}
@@ -151,6 +156,25 @@ export default function Popup() {
                 onChange={(e) => {
                   setDraggableTimeline(e.target.checked);
                   apply(null, undefined, e.target.checked);
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+        {/* Folder Options */}
+        <Card className="p-4 hover:shadow-lg transition-shadow">
+          <CardTitle className="mb-4 text-xs uppercase">{t('folderOptions')}</CardTitle>
+          <CardContent className="p-0 space-y-4">
+            <div className="flex items-center justify-between group">
+              <Label htmlFor="hide-archived" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                {t('hideArchivedConversations')}
+              </Label>
+              <Switch
+                id="hide-archived"
+                checked={hideArchivedConversations}
+                onChange={(e) => {
+                  setHideArchivedConversations(e.target.checked);
+                  apply(null, undefined, undefined, undefined, e.target.checked);
                 }}
               />
             </div>

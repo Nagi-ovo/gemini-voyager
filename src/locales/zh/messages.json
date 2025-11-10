@@ -102,4 +102,6 @@
   ,"editInputWidthNarrow": { "message": "窄", "description": "窄编辑输入框宽度标签" }
   ,"editInputWidthWide": { "message": "宽", "description": "宽编辑输入框宽度标签" }
   ,"timelineOptions": { "message": "时间线选项", "description": "时间线选项区域标签" }
+  ,"folderOptions": { "message": "文件夹选项", "description": "文件夹选项区域标签" }
+  ,"hideArchivedConversations": { "message": "隐藏已归档对话", "description": "从主列表隐藏已添加到文件夹的对话" }
 }

@@ -49,6 +49,7 @@ export class FolderManager {
   private isMultiSelectMode: boolean = false; // Multi-select mode state
   private longPressTimeout: number | null = null; // For long-press detection
   private longPressThreshold: number = 500; // Long-press duration in ms
+  private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
 
   constructor() {
     this.loadData();
@@ -61,6 +62,12 @@ export class FolderManager {
 
   async init(): Promise<void> {
     try {
+      // Load hide archived setting
+      await this.loadHideArchivedSetting();
+
+      // Set up storage change listener
+      this.setupStorageListener();
+
       // Wait for sidebar to be available
       await this.waitForSidebar();
 
@@ -560,6 +567,13 @@ export class FolderManager {
       try {
         const dragData: DragData = JSON.parse(data);
 
+        // Pre-cleanup: Restore opacity immediately before processing drop
+        // This prevents visual artifacts if dragend doesn't fire properly
+        this.selectedConversations.forEach(id => {
+          const el = this.findConversationElement(id);
+          if (el) el.style.opacity = '1';
+        });
+
         // Handle different drag types
         if (dragData.type === 'folder') {
           // Handle folder drop
@@ -623,6 +637,13 @@ export class FolderManager {
       try {
         const dragData: DragData = JSON.parse(data);
 
+        // Pre-cleanup: Restore opacity immediately before processing drop
+        // This prevents visual artifacts if dragend doesn't fire properly
+        this.selectedConversations.forEach(id => {
+          const el = this.findConversationElement(id);
+          if (el) el.style.opacity = '1';
+        });
+
         // Handle different drag types at root level
         if (dragData.type === 'folder') {
           this.moveFolderToRoot(dragData);
@@ -651,7 +672,19 @@ export class FolderManager {
     if (!this.sidebarContainer) return;
 
     const conversations = this.sidebarContainer.querySelectorAll('[data-test-id="conversation"]');
-    conversations.forEach((conv) => this.makeConversationDraggable(conv as HTMLElement));
+    conversations.forEach((conv) => {
+      this.makeConversationDraggable(conv as HTMLElement);
+
+      // Apply hide archived setting
+      const convId = this.extractConversationId(conv as HTMLElement);
+      const isArchived = this.isConversationInFolders(convId);
+
+      if (this.hideArchivedConversations && isArchived) {
+        (conv as HTMLElement).classList.add('gv-conversation-archived');
+      } else {
+        (conv as HTMLElement).classList.remove('gv-conversation-archived');
+      }
+    });
   }
 
   /**
@@ -1720,9 +1753,34 @@ export class FolderManager {
   private exitMultiSelectMode(): void {
     this.debug('Exiting multi-select mode');
     this.isMultiSelectMode = false;
-    this.clearSelection();
-    this.updateMultiSelectModeUI();
+
+    // First update UI to remove selection styles
     this.updateConversationSelectionUI();
+
+    // Then clear the selection set
+    this.clearSelection();
+
+    // Update mode UI
+    this.updateMultiSelectModeUI();
+
+    // Force cleanup of any remaining visual artifacts
+    this.cleanupSelectionArtifacts();
+  }
+
+  private cleanupSelectionArtifacts(): void {
+    // Remove selection classes from all native conversations
+    const nativeConvs = this.sidebarContainer?.querySelectorAll('[data-test-id="conversation"]');
+    nativeConvs?.forEach((el) => {
+      (el as HTMLElement).classList.remove('gv-conversation-selected');
+      (el as HTMLElement).style.opacity = '1';
+    });
+
+    // Remove selection classes from all folder conversations
+    const folderConvs = this.containerElement?.querySelectorAll('.gv-folder-conversation');
+    folderConvs?.forEach((el) => {
+      (el as HTMLElement).classList.remove('gv-folder-conversation-selected');
+      (el as HTMLElement).style.opacity = '1';
+    });
   }
 
   private updateMultiSelectModeUI(): void {
@@ -2684,6 +2742,9 @@ export class FolderManager {
       const newList = this.createFoldersList();
       oldList.replaceWith(newList);
     }
+
+    // Re-apply hide archived setting after refresh
+    this.applyHideArchivedSetting();
   }
 
   private loadData(): void {
@@ -2703,6 +2764,55 @@ export class FolderManager {
     } catch (error) {
       console.error('[FolderManager] Save data error:', error);
     }
+  }
+
+  private async loadHideArchivedSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({ geminiFolderHideArchivedConversations: false });
+      this.hideArchivedConversations = !!result.geminiFolderHideArchivedConversations;
+      this.debug('Loaded hide archived setting:', this.hideArchivedConversations);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load hide archived setting:', error);
+      this.hideArchivedConversations = false;
+    }
+  }
+
+  private setupStorageListener(): void {
+    browser.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'sync' && changes.geminiFolderHideArchivedConversations) {
+        this.hideArchivedConversations = !!changes.geminiFolderHideArchivedConversations.newValue;
+        this.debug('Hide archived setting changed:', this.hideArchivedConversations);
+        // Apply the change to all conversations
+        this.applyHideArchivedSetting();
+      }
+    });
+  }
+
+  private applyHideArchivedSetting(): void {
+    if (!this.sidebarContainer) return;
+
+    const conversations = this.sidebarContainer.querySelectorAll('[data-test-id="conversation"]');
+    conversations.forEach((conv) => {
+      const convId = this.extractConversationId(conv as HTMLElement);
+      const isArchived = this.isConversationInFolders(convId);
+
+      if (this.hideArchivedConversations && isArchived) {
+        (conv as HTMLElement).classList.add('gv-conversation-archived');
+      } else {
+        (conv as HTMLElement).classList.remove('gv-conversation-archived');
+      }
+    });
+  }
+
+  private isConversationInFolders(conversationId: string): boolean {
+    // Check if conversation exists in any folder
+    for (const folderId in this.data.folderContents) {
+      const conversations = this.data.folderContents[folderId];
+      if (conversations.some(c => c.conversationId === conversationId)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private generateId(): string {

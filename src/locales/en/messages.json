@@ -102,4 +102,6 @@
   ,"editInputWidthNarrow": { "message": "Narrow", "description": "Narrow edit input width label" }
   ,"editInputWidthWide": { "message": "Wide", "description": "Wide edit input width label" }
   ,"timelineOptions": { "message": "Timeline Options", "description": "Timeline options section label" }
+  ,"folderOptions": { "message": "Folder Options", "description": "Folder options section label" }
+  ,"hideArchivedConversations": { "message": "Hide archived conversations", "description": "Hide conversations that are in folders from the main list" }
 }
