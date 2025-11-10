@@ -415,14 +415,16 @@ export class FolderManager {
     convEl.style.paddingLeft = `${level * 16 + 24}px`; // More indentation for tree structure
 
     // Try to sync title from native conversation
-    const syncedTitle = this.syncConversationTitleFromNative(conv.conversationId);
-    const displayTitle = syncedTitle || conv.title;
-
-    // Update stored title if we found a different one
-    if (syncedTitle && syncedTitle !== conv.title) {
-      conv.title = syncedTitle;
-      this.saveData();
-      this.debug('Updated conversation title from native:', syncedTitle);
+    // Decide what title to display, respecting manual renames and hidden native list
+    let displayTitle = conv.title;
+    if (!conv.customTitle && !this.hideArchivedConversations) {
+      const syncedTitle = this.syncConversationTitleFromNative(conv.conversationId);
+      if (syncedTitle && syncedTitle !== conv.title) {
+        conv.title = syncedTitle;
+        displayTitle = syncedTitle;
+        this.saveData();
+        this.debug('Updated conversation title from native:', syncedTitle);
+      }
     }
 
     // Make conversation draggable within folders
@@ -1961,32 +1963,46 @@ export class FolderManager {
     input.focus();
     input.select();
 
-    const save = () => {
-      const newTitle = input.value.trim();
-      if (newTitle && newTitle !== currentTitle) {
-        conv.title = newTitle;
-        this.saveData();
-      }
-      input.remove();
-      titleElement.style.display = '';
-      titleElement.textContent = conv.title;
+    let finished = false;
+    const cleanup = () => {
+      try { input.removeEventListener('blur', onBlur); } catch {}
+      try { input.removeEventListener('keydown', onKeyDown); } catch {}
     };
-
-    const cancel = () => {
-      input.remove();
-      titleElement.style.display = '';
+    const finalize = (commit: boolean) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      try {
+        if (commit) {
+          const newTitle = input.value.trim();
+          if (newTitle && newTitle !== currentTitle) {
+            conv.title = newTitle;
+            conv.customTitle = true; // mark as manually renamed, don't auto-sync from native
+            this.saveData();
+          }
+        }
+      } catch {}
+      // Restore title element gracefully even if DOM re-rendered
+      try { if (input.isConnected) input.remove(); } catch {}
+      try { titleElement.style.display = ''; } catch {}
+      try { titleElement.textContent = conv.title; } catch {}
     };
-
-    input.addEventListener('blur', save);
-    input.addEventListener('keydown', (e) => {
+    const onBlur = () => {
+      // Defer finalize to let Angular/SPA navigation settle
+      requestAnimationFrame(() => finalize(true));
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        save();
+        finalize(true);
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        cancel();
+        finalize(false);
       }
-    });
+    };
+
+    input.addEventListener('blur', onBlur);
+    input.addEventListener('keydown', onKeyDown);
   }
 
   private showFolderMenu(event: MouseEvent, folderId: string): void {
@@ -2663,7 +2679,7 @@ export class FolderManager {
       const conversations = this.data.folderContents[folderId];
       for (const conv of conversations) {
         // Match by conversation ID (check both direct match and URL match)
-        if (conv.conversationId === conversationId || conv.url.includes(conversationId)) {
+        if ((conv.conversationId === conversationId || conv.url.includes(conversationId)) && !conv.customTitle) {
           conv.title = newTitle;
           updated = true;
           this.debug(`Updated title for conversation ${conversationId} in folder ${folderId}`);

@@ -16,6 +16,7 @@ export interface ConversationReference {
   isGem?: boolean; // Whether this is a Gem conversation
   gemId?: string; // Gem identifier if applicable
   starred?: boolean; // Whether this conversation is starred in the folder
+  customTitle?: boolean; // Whether title was manually renamed in folder (don't auto-sync from native)
 }
 
 export interface FolderData {
