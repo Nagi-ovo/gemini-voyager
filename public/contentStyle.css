@@ -1252,47 +1252,65 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
 
 /* Selected state for multi-select - shadcn/ui inspired */
 .gv-folder-conversation-selected {
-  background-color: var(--folder-selected-bg) !important;
-  border: 1px solid var(--folder-selected-border);
-  box-shadow: 0 0 0 1px var(--folder-selected-border);
-  padding: 7px 11px; /* Adjust padding to account for border */
   position: relative;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--folder-selected-bg) 92%, transparent) 0%,
+    color-mix(in srgb, var(--folder-selected-bg) 98%, transparent) 100%
+  ) !important;
+  border: 1px solid var(--folder-selected-border);
+  box-shadow:
+    0 6px 12px rgba(0,0,0,0.06),
+    0 0 0 1px var(--folder-selected-border);
+  padding: 7px 11px; /* account for border */
+  border-radius: 10px;
+  transition: background 160ms ease, box-shadow 180ms ease, border-color 160ms ease;
 }
 
-.gv-folder-conversation-selected::before {
+/* Elegant accent bar with soft glow */
+.gv-folder-conversation-selected::after {
   content: '';
   position: absolute;
-  top: 0;
+  top: 6px;
+  bottom: 6px;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to right, var(--folder-selected-accent), transparent);
-  opacity: 0.1;
-  border-radius: 8px;
+  width: 3px;
+  border-radius: 2px 2px 2px 2px;
+  background: linear-gradient(180deg, var(--folder-selected-accent), color-mix(in srgb, var(--folder-selected-accent) 80%, transparent));
+  opacity: 0.95;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--folder-selected-accent) 20%, transparent);
   pointer-events: none;
+  transform: translateZ(0);
 }
 
 /* Selected state for native conversations (Recent section) */
 [data-test-id="conversation"].gv-conversation-selected {
-  background-color: var(--folder-selected-bg) !important;
-  border: 1px solid var(--folder-selected-border) !important;
-  box-shadow: 0 0 0 1px var(--folder-selected-border) !important;
   position: relative;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--folder-selected-bg) 92%, transparent) 0%,
+    color-mix(in srgb, var(--folder-selected-bg) 98%, transparent) 100%
+  ) !important;
+  border: 1px solid var(--folder-selected-border) !important;
+  box-shadow:
+    0 6px 12px rgba(0,0,0,0.06),
+    0 0 0 1px var(--folder-selected-border) !important;
   border-radius: 12px !important;
+  transition: background 160ms ease, box-shadow 180ms ease, border-color 160ms ease;
 }
 
-[data-test-id="conversation"].gv-conversation-selected::before {
+[data-test-id="conversation"].gv-conversation-selected::after {
   content: '';
   position: absolute;
-  top: 0;
+  top: 8px;
+  bottom: 8px;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to right, var(--folder-selected-accent), transparent);
-  opacity: 0.1;
-  border-radius: 12px;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--folder-selected-accent), color-mix(in srgb, var(--folder-selected-accent) 80%, transparent));
+  opacity: 0.95;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--folder-selected-accent) 20%, transparent);
   pointer-events: none;
-  z-index: 0;
 }
 
 /* Ensure content is above the gradient overlay */

@@ -52,6 +52,8 @@ export class FolderManager {
   private longPressTimeout: number | null = null; // For long-press detection
   private longPressThreshold: number = 500; // Long-press duration in ms
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
+  private navPoller: number | null = null;
+  private lastPathname: string | null = null;
 
   constructor() {
     this.loadData();
@@ -180,6 +182,11 @@ export class FolderManager {
 
     // Insert before Recent section
     this.recentSection.parentElement?.insertBefore(this.containerElement, this.recentSection);
+
+    // Initial active conversation highlight and route listeners
+    this.highlightActiveConversationInFolders();
+    this.installRouteChangeListener();
+    this.installSidebarClickListener();
   }
 
   private createMultiSelectIndicator(): HTMLElement {
@@ -2861,6 +2868,30 @@ export class FolderManager {
 
     // Re-apply hide archived setting after refresh
     this.applyHideArchivedSetting();
+
+    // Update active highlight after re-render
+    this.highlightActiveConversationInFolders();
+  }
+
+  private getCurrentHexIdFromLocation(): string | null {
+    try {
+      const path = window.location.pathname || '';
+      // Match /app/<hex> or /gem/<gemId>/<hex>
+      const m = path.match(/\/(?:app|gem\/[^/]+)\/([a-f0-9]+)/i);
+      return m ? m[1] : null;
+    } catch { return null; }
+  }
+
+  private highlightActiveConversationInFolders(): void {
+    if (!this.containerElement) return;
+    const hex = this.getCurrentHexIdFromLocation();
+    const currentId = hex ? `c_${hex}` : null;
+    const rows = this.containerElement.querySelectorAll('.gv-folder-conversation');
+    rows.forEach((el) => {
+      const row = el as HTMLElement;
+      const isActive = currentId && row.dataset.conversationId === currentId;
+      row.classList.toggle('gv-folder-conversation-selected', !!isActive);
+    });
   }
 
   private loadData(): void {
@@ -2981,6 +3012,7 @@ export class FolderManager {
           // This will trigger SPA navigation, even if there's a brief redirect for gems
           (conv as HTMLElement).click();
           this.debug('Navigated by clicking sidebar element');
+          setTimeout(() => this.highlightActiveConversationInFolders(), 0);
 
           // After navigation, sync title and check for gem updates
           setTimeout(() => {
@@ -3010,6 +3042,7 @@ export class FolderManager {
       window.history.pushState({}, '', url);
       const popStateEvent = new PopStateEvent('popstate', { state: {} });
       window.dispatchEvent(popStateEvent);
+      setTimeout(() => this.highlightActiveConversationInFolders(), 0);
 
       // If that doesn't work, fall back to page reload
       setTimeout(() => {
@@ -3084,6 +3117,53 @@ export class FolderManager {
     existingList.replaceWith(newList);
 
     this.debug('Re-rendered all folders');
+
+    // Ensure active conversation remains highlighted after full re-render
+    this.highlightActiveConversationInFolders();
+  }
+
+  private installRouteChangeListener(): void {
+    const update = () => setTimeout(() => this.highlightActiveConversationInFolders(), 0);
+    try { window.addEventListener('popstate', update); } catch {}
+    try {
+      const hist = history as any;
+      const wrap = (method: 'pushState' | 'replaceState') => {
+        const orig = hist[method];
+        hist[method] = function (...args: any[]) {
+          const ret = orig.apply(this, args);
+          try { update(); } catch {}
+          return ret;
+        };
+      };
+      wrap('pushState');
+      wrap('replaceState');
+    } catch {}
+    // Fallback poller for routers/flows that don't emit events
+    try {
+      this.lastPathname = window.location.pathname;
+      this.navPoller = window.setInterval(() => {
+        const now = window.location.pathname;
+        if (now !== this.lastPathname) {
+          this.lastPathname = now;
+          update();
+        }
+      }, 400);
+    } catch {}
+  }
+
+  private installSidebarClickListener(): void {
+    // Capture clicks in Gemini's native sidebar and update highlight after navigation happens
+    const root = this.sidebarContainer;
+    if (!root) return;
+    const handler = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const a = target.closest('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+      if (a) {
+        setTimeout(() => this.highlightActiveConversationInFolders(), 0);
+      }
+    };
+    try { root.addEventListener('click', handler, true); } catch {}
   }
 
   private t(key: string): string {

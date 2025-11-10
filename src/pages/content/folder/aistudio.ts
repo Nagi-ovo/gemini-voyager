@@ -88,6 +88,10 @@ export class AIStudioFolderManager {
     this.injectUI();
     this.observePromptList();
     this.bindDraggablesInPromptList();
+
+    // Highlight current conversation initially and on navigation
+    this.highlightActiveConversation();
+    this.installRouteChangeListener();
   }
 
   private async load(): Promise<void> {
@@ -178,6 +182,56 @@ export class AIStudioFolderManager {
     rootDrop.textContent = '';
     this.bindDropZone(rootDrop, null);
     list.appendChild(rootDrop);
+
+    // After rendering, update active highlight
+    this.highlightActiveConversation();
+  }
+
+  private getCurrentPromptIdFromLocation(): string | null {
+    try {
+      const m = (location.pathname || '').match(/\/prompts\/([^/?#]+)/);
+      return m ? m[1] : null;
+    } catch { return null; }
+  }
+
+  private highlightActiveConversation(): void {
+    if (!this.container) return;
+    const currentId = this.getCurrentPromptIdFromLocation();
+    const rows = this.container.querySelectorAll('.gv-folder-conversation') as NodeListOf<HTMLElement>;
+    rows.forEach((row) => {
+      const isActive = currentId && row.dataset.conversationId === currentId;
+      row.classList.toggle('gv-folder-conversation-selected', !!isActive);
+    });
+  }
+
+  private installRouteChangeListener(): void {
+    const update = () => setTimeout(() => this.highlightActiveConversation(), 0);
+    try { window.addEventListener('popstate', update); } catch {}
+    try {
+      const hist = history as any;
+      const wrap = (method: 'pushState' | 'replaceState') => {
+        const orig = hist[method];
+        hist[method] = function (...args: any[]) {
+          const ret = orig.apply(this, args);
+          try { update(); } catch {}
+          return ret;
+        };
+      };
+      wrap('pushState');
+      wrap('replaceState');
+    } catch {}
+    // Fallback poller for routers that bypass events
+    try {
+      let last = location.pathname;
+      const id = window.setInterval(() => {
+        const now = location.pathname;
+        if (now !== last) {
+          last = now;
+          update();
+        }
+      }, 400);
+      this.cleanupFns.push(() => { try { clearInterval(id); } catch {} });
+    } catch {}
   }
 
   private renderFolder(folder: Folder): HTMLElement {
@@ -439,10 +493,26 @@ export class AIStudioFolderManager {
     if (!root) return;
     const observer = new MutationObserver(() => {
       this.bindDraggablesInPromptList();
+      // Update highlight when the list updates
+      this.highlightActiveConversation();
     });
     try { observer.observe(root, { childList: true, subtree: true }); } catch {}
     this.cleanupFns.push(() => {
       try { observer.disconnect(); } catch {}
+    });
+
+    // Also update on clicks within the prompt list (SPA navigation)
+    const onClick = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const a = target.closest('a.prompt-link') as HTMLAnchorElement | null;
+      if (a && /\/prompts\//.test(a.getAttribute('href') || '')) {
+        setTimeout(() => this.highlightActiveConversation(), 0);
+      }
+    };
+    try { root.addEventListener('click', onClick, true); } catch {}
+    this.cleanupFns.push(() => {
+      try { root.removeEventListener('click', onClick, true); } catch {}
     });
   }
 
@@ -491,11 +561,13 @@ export class AIStudioFolderManager {
     const a = document.querySelector(selector) as HTMLAnchorElement | null;
     if (a) {
       a.click();
+      setTimeout(() => this.highlightActiveConversation(), 0);
       return;
     }
     try {
       window.history.pushState({}, '', url);
       window.dispatchEvent(new PopStateEvent('popstate'));
+      setTimeout(() => this.highlightActiveConversation(), 0);
     } catch {
       location.href = url;
     }
