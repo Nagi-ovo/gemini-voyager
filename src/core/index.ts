@@ -22,3 +22,5 @@ export * from './utils/text';
 export * from './utils/selectors';
 export * from './utils/array';
 export * from './utils/async';
+export * from './utils/version';
+export * from './utils/concurrency';

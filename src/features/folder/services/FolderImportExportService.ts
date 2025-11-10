@@ -14,9 +14,16 @@ import {
 import { AppError, ErrorCode } from '@/core/errors/AppError';
 import type { Result } from '@/core/types/common';
 import type { FolderData, Folder, ConversationReference } from '@/core/types/folder';
+import { importExportLock, LOCK_KEYS } from '@/core/utils/concurrency';
+import {
+  EXTENSION_VERSION,
+  type FormatVersion,
+  getCompatibilityInfo,
+  isSupportedFormat,
+  applyMigrations,
+} from '@/core/utils/version';
 
-const EXPORT_FORMAT = 'gemini-voyager.folders.v1' as const;
-const CURRENT_VERSION = '0.7.2'; // Should match package.json version
+const EXPORT_FORMAT: FormatVersion = 'gemini-voyager.folders.v1' as const;
 
 /**
  * Service for handling folder import/export operations
@@ -24,12 +31,13 @@ const CURRENT_VERSION = '0.7.2'; // Should match package.json version
 export class FolderImportExportService {
   /**
    * Export folder data to a downloadable JSON payload
+   * Uses centralized version management to ensure consistency
    */
   static exportToPayload(data: FolderData): FolderExportPayload {
     return {
       format: EXPORT_FORMAT,
       exportedAt: new Date().toISOString(),
-      version: CURRENT_VERSION,
+      version: EXTENSION_VERSION, // Automatically synced from manifest.json
       data: {
         folders: data.folders,
         folderContents: data.folderContents,
@@ -39,6 +47,7 @@ export class FolderImportExportService {
 
   /**
    * Validate import payload format and structure
+   * Includes version compatibility checking
    */
   static validatePayload(payload: unknown): Result<FolderExportPayload, ValidationError> {
     // Check if payload is an object
@@ -56,7 +65,7 @@ export class FolderImportExportService {
     const p = payload as Record<string, unknown>;
 
     // Check format version
-    if (p.format !== EXPORT_FORMAT) {
+    if (typeof p.format !== 'string' || !isSupportedFormat(p.format)) {
       return {
         success: false,
         error: {
@@ -65,6 +74,21 @@ export class FolderImportExportService {
           details: { format: p.format },
         },
       };
+    }
+
+    // Check version compatibility
+    if (typeof p.version === 'string') {
+      const compatInfo = getCompatibilityInfo(p.version, p.format);
+      if (!compatInfo.compatible) {
+        return {
+          success: false,
+          error: {
+            type: ValidationErrorType.INVALID_VERSION,
+            message: compatInfo.reason || 'Version incompatible',
+            details: compatInfo,
+          },
+        };
+      }
     }
 
     // Check required fields
@@ -209,14 +233,34 @@ export class FolderImportExportService {
    * @param currentData - Current folder data
    * @param options - Import options (strategy, backup)
    * @returns Result with import statistics
+   * 
+   * Note: This method should be called through importFromPayloadWithLock for concurrency protection
    */
-  static importFromPayload(
+  private static importFromPayloadInternal(
     payload: FolderExportPayload,
     currentData: FolderData,
     options: ImportOptions,
   ): Result<{ data: FolderData; stats: ImportResult }> {
     try {
       const { strategy, createBackup = true } = options;
+
+      // Apply any necessary data migrations
+      let importData = payload.data;
+      const migrationsApplied: string[] = [];
+      
+      if (payload.version) {
+        try {
+          const migrationResult = applyMigrations(payload.data, payload.version);
+          importData = migrationResult.data;
+          migrationsApplied.push(...migrationResult.migrationsApplied);
+          
+          if (migrationsApplied.length > 0) {
+            console.log('Applied migrations:', migrationsApplied);
+          }
+        } catch (error) {
+          console.warn('Migration failed, using original data:', error);
+        }
+      }
 
       // Create backup if requested
       let backupData: FolderData | null = null;
@@ -233,23 +277,23 @@ export class FolderImportExportService {
       if (strategy === 'overwrite') {
         // Overwrite: completely replace with imported data
         resultData = {
-          folders: [...payload.data.folders],
-          folderContents: { ...payload.data.folderContents },
+          folders: [...importData.folders],
+          folderContents: { ...importData.folderContents },
         };
 
-        const totalConversations = Object.values(payload.data.folderContents).reduce(
+        const totalConversations = Object.values(importData.folderContents).reduce(
           (sum, convs) => sum + convs.length,
           0,
         );
 
         stats = {
-          foldersImported: payload.data.folders.length,
+          foldersImported: importData.folders.length,
           conversationsImported: totalConversations,
           backupCreated: createBackup,
         };
       } else {
         // Merge: combine with existing data
-        const mergeResult = this.mergeData(currentData, payload.data);
+        const mergeResult = this.mergeData(currentData, importData);
         resultData = mergeResult.merged;
         stats = {
           ...mergeResult.stats,
@@ -278,6 +322,27 @@ export class FolderImportExportService {
         error: new AppError(ErrorCode.UNKNOWN_ERROR, 'Import failed', { originalError: error }),
       };
     }
+  }
+
+  /**
+   * Import folder data from payload with concurrency protection
+   * This is the public method that should be used for imports
+   * @param payload - The import payload
+   * @param currentData - Current folder data
+   * @param options - Import options (strategy, backup)
+   * @returns Result with import statistics
+   */
+  static async importFromPayload(
+    payload: FolderExportPayload,
+    currentData: FolderData,
+    options: ImportOptions,
+  ): Promise<Result<{ data: FolderData; stats: ImportResult }>> {
+    // Use lock to prevent concurrent imports
+    return await importExportLock.withLock(
+      LOCK_KEYS.FOLDER_IMPORT,
+      () => Promise.resolve(this.importFromPayloadInternal(payload, currentData, options)),
+      30000 // 30 second timeout
+    );
   }
 
   /**

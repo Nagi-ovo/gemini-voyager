@@ -8,7 +8,6 @@
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
-
 import 'katex/dist/katex.min.css';
 import browser from 'webextension-polyfill';
 
@@ -61,8 +60,17 @@ function createI18n() {
     t: (key: string): string => getTranslationSync(key),
     set: async (lang: 'en' | 'zh') => {
       try {
+        // Check if extension context is still valid
+        if (!browser.runtime?.id) {
+          // Extension context invalidated, skip
+          return;
+        }
         await browser.storage.sync.set({ language: lang });
       } catch (e) {
+        // Silently ignore extension context errors
+        if (e instanceof Error && e.message.includes('Extension context invalidated')) {
+          return;
+        }
         console.warn('[PromptManager] Failed to set language:', e);
       }
     },

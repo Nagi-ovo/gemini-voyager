@@ -230,9 +230,11 @@ For contribution guidelines and best practices, see [CONTRIBUTING.md](./.github/
 
 ---
 
-## 🙏 Credits
+## 🌟 Related Projects & Credits
 
-Inspired by [ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline). We adapted the timeline concept for Gemini and added extensive new features including folder management, prompt library, and chat export.
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Gemini Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Gemini Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt library, and chat export.
 
 
 ## 🤝 Contributing
@@ -290,3 +292,5 @@ If you find **Gemini Voyager** helpful and want to support its development, cons
   <p>Made with ❤️ for the Gemini community</p>
   <p>If you find this useful, consider giving us a ⭐ on GitHub!</p>
 </div>
+
+This project is licensed under the MIT License. Copyright © 2025 Jesse Zhang.

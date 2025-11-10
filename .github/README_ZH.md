@@ -230,9 +230,11 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
 
 ---
 
-## 🙏 致谢
+## 🌟 相关项目与致谢
 
-灵感来源于 [ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)。我们为 Gemini 适配了时间线概念，并添加了文件夹管理、提示词库、聊天导出等大量新功能。
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Gemini Voyager 的 Fork 版本，为 DeepSeek 适配，为 DeepSeek 用户带来时间线导航和对话管理功能！
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 为 ChatGPT 设计的时间线导航扩展，本项目的灵感来源：Gemini Voyager 为 Gemini 适配了时间线概念，并添加了文件夹管理、提示词库、聊天导出等大量新功能。
 
 
 ## 🤝 参与贡献
@@ -290,3 +292,5 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
   <p>用 ❤️ 为 Gemini 社区打造</p>
   <p>觉得有用的话，请给我们点个 ⭐ 吧！</p>
 </div>
+
+This project is licensed under the MIT License. Copyright © 2025 Jesse Zhang.

@@ -706,6 +706,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   --folder-dragover-bg: #dbeafe;
   --folder-dragover-border: #3b82f6;
+  --folder-selected-bg: #f0f9ff;
+  --folder-selected-border: #0ea5e9;
+  --folder-selected-accent: #38bdf8;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -720,6 +723,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
     --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     --folder-dragover-bg: #1e3a8a;
     --folder-dragover-border: #60a5fa;
+    --folder-selected-bg: #164e63;
+    --folder-selected-border: #06b6d4;
+    --folder-selected-accent: #22d3ee;
   }
 }
 
@@ -735,6 +741,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   --folder-dragover-bg: #1e3a8a;
   --folder-dragover-border: #60a5fa;
+  --folder-selected-bg: #164e63;
+  --folder-selected-border: #06b6d4;
+  --folder-selected-accent: #22d3ee;
 }
 
 .theme-host.light-theme {
@@ -748,6 +757,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   --folder-dragover-bg: #dbeafe;
   --folder-dragover-border: #3b82f6;
+  --folder-selected-bg: #f0f9ff;
+  --folder-selected-border: #0ea5e9;
+  --folder-selected-accent: #38bdf8;
 }
 
 /* Folder Container */
@@ -964,12 +976,194 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   padding: 8px 12px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition: background-color 0.15s ease, opacity 0.2s;
   position: relative;
+  min-height: 40px;
 }
 
 .gv-folder-conversation:hover {
   background-color: var(--folder-hover-bg);
+}
+
+/* Starred conversation - subtle gold accent on the left */
+.gv-folder-conversation.gv-starred {
+  background: linear-gradient(
+    to right,
+    rgba(251, 191, 36, 0.08) 0%,
+    transparent 100%
+  );
+}
+
+.gv-folder-conversation.gv-starred::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+  border-radius: 0 2px 2px 0;
+  opacity: 0.9;
+}
+
+/* Selected state for multi-select - shadcn/ui inspired */
+.gv-folder-conversation-selected {
+  background-color: var(--folder-selected-bg) !important;
+  border: 1px solid var(--folder-selected-border);
+  box-shadow: 0 0 0 1px var(--folder-selected-border);
+  padding: 7px 11px; /* Adjust padding to account for border */
+  position: relative;
+}
+
+.gv-folder-conversation-selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right, var(--folder-selected-accent), transparent);
+  opacity: 0.1;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* Selected state for native conversations (Recent section) */
+[data-test-id="conversation"].gv-conversation-selected {
+  background-color: var(--folder-selected-bg) !important;
+  border: 1px solid var(--folder-selected-border) !important;
+  box-shadow: 0 0 0 1px var(--folder-selected-border) !important;
+  position: relative;
+  border-radius: 12px !important;
+}
+
+[data-test-id="conversation"].gv-conversation-selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right, var(--folder-selected-accent), transparent);
+  opacity: 0.1;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure content is above the gradient overlay */
+[data-test-id="conversation"].gv-conversation-selected > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hide archived conversations (conversations that are in folders) */
+[data-test-id="conversation"].gv-conversation-archived {
+  display: none !important;
+}
+
+/* Multi-select mode indicator */
+.gv-multi-select-indicator {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 8px 8px 0 12px;
+  background: var(--folder-selected-bg);
+  border: 1px solid var(--folder-selected-border);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gv-multi-select-mode .gv-multi-select-indicator {
+  display: flex;
+}
+
+.gv-multi-select-indicator-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gv-multi-select-indicator-content mat-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: var(--folder-selected-border);
+}
+
+.gv-multi-select-indicator-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--folder-text);
+}
+
+/* Multi-select actions container */
+.gv-multi-select-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Common styling for action buttons */
+.gv-multi-select-action-btn {
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-multi-select-action-btn mat-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Delete button specific styling */
+.gv-multi-select-delete-btn {
+  color: #ef4444;
+}
+
+.gv-multi-select-delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  transform: scale(1.05);
+}
+
+.gv-multi-select-delete-btn:active {
+  transform: scale(0.95);
+}
+
+/* Exit button specific styling */
+.gv-multi-select-exit-btn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--folder-text);
+  transform: scale(1.05);
+}
+
+.gv-multi-select-exit-btn:active {
+  transform: scale(0.95);
 }
 
 /* Draggable conversations in folders */
@@ -1003,22 +1197,82 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   white-space: nowrap;
 }
 
-.gv-conversation-remove-btn {
-  min-width: 24px;
-  width: 24px;
-  height: 24px;
+/* Action buttons container for proper layout */
+.gv-conversation-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Star button - always visible but subtle */
+.gv-conversation-star-btn {
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
   border: none;
   background: transparent;
-  color: var(--folder-icon-color);
+  color: #9ca3af;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  opacity: 0;
-  transition: opacity 0.2s, background-color 0.2s;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
-  margin-left: 4px;
+  padding: 0;
+  opacity: 0.4;
+}
+
+.gv-folder-conversation:hover .gv-conversation-star-btn {
+  opacity: 1;
+}
+
+/* Starred state */
+.gv-conversation-star-btn.starred {
+  opacity: 1 !important;
+  color: #fbbf24;
+}
+
+.gv-conversation-star-btn:hover {
+  background-color: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  transform: scale(1.05);
+}
+
+.gv-conversation-star-btn.starred:hover {
+  background-color: rgba(251, 191, 36, 0.15);
+}
+
+.gv-conversation-star-btn mat-icon {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  transition: transform 0.2s;
+}
+
+.gv-conversation-star-btn:active mat-icon {
+  transform: scale(0.9);
+}
+
+/* Remove button - only visible on hover */
+.gv-conversation-remove-btn {
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  opacity: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
 }
 
 .gv-folder-conversation:hover .gv-conversation-remove-btn {
@@ -1026,18 +1280,24 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
 }
 
 .gv-conversation-remove-btn:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: rgba(239, 68, 68, 0.12);
   color: #ef4444;
+  transform: scale(1.05);
 }
 
 .gv-conversation-remove-btn mat-icon {
-  font-size: 16px !important;
-  width: 16px !important;
-  height: 16px !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   line-height: 1 !important;
+  transition: transform 0.2s;
+}
+
+.gv-conversation-remove-btn:active mat-icon {
+  transform: scale(0.9);
 }
 
 /* Folder Context Menu */
