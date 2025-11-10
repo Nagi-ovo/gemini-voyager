@@ -144,7 +144,9 @@ export class AIStudioFolderManager {
     container.appendChild(list);
 
     // Insert before prompt history
-    const host = this.historyRoot.parentElement || this.historyRoot;
+    const root = this.historyRoot;
+    if (!root) return;
+    const host: Element = root.parentElement ?? root;
     host.insertAdjacentElement('beforebegin', container);
 
     this.container = container;
@@ -320,14 +322,14 @@ export class AIStudioFolderManager {
     menu.appendChild(rename);
     menu.appendChild(del);
 
-    Object.assign(menu.style, {
-      position: 'fixed',
-      top: `${ev.clientY}px`,
-      left: `${ev.clientX}px`,
-      zIndex: 2147483647,
-      display: 'flex',
-      flexDirection: 'column',
-    } as CSSStyleDeclaration);
+    // Apply styles with proper typing
+    const st = menu.style;
+    st.position = 'fixed';
+    st.top = `${ev.clientY}px`;
+    st.left = `${ev.clientX}px`;
+    st.zIndex = String(2147483647);
+    st.display = 'flex';
+    (st as any).flexDirection = 'column';
     document.body.appendChild(menu);
     const onClickAway = (e: MouseEvent) => {
       if (e.target instanceof Node && !menu.contains(e.target)) {
