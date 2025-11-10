@@ -159,6 +159,17 @@ export default function Popup() {
                 }}
               />
             </div>
+            {/* Reset Timeline Position Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full group hover:border-primary/50 mt-2"
+              onClick={() => {
+                apply(null, undefined, undefined, true);
+              }}
+            >
+              <span className="group-hover:scale-105 transition-transform text-xs">{t('resetTimelinePosition')}</span>
+            </Button>
           </CardContent>
         </Card>
         {/* Folder Options */}
@@ -204,16 +215,6 @@ export default function Popup() {
           onChange={editInputWidthAdjuster.handleChange}
           onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
         />
-        {/* Reset Button */}
-        <Button
-          variant="outline"
-          className="w-full group hover:border-primary/50"
-          onClick={() => {
-            apply(null, undefined, undefined, true);
-          }}
-        >
-          <span className="group-hover:scale-105 transition-transform">{t('resetPosition')}</span>
-        </Button>
       </div>
 
       {/* Footer */}
