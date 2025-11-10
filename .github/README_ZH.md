@@ -23,7 +23,7 @@
 ## 功能特性
 
 <div align="center">
-  <img src="../public/teaser.png" alt="teaser"/>
+  <img src="../public/assets/teaser.png" alt="teaser"/>
 </div>
 
 ### 📍 时间线导航
@@ -44,6 +44,7 @@
 - 本地存储，跨 Gemini 账号共享（u/0、u/1 等）
 - 无需刷新页面即可切换对话
 - 支持导入/导出，跨设备同步（[使用指南](./docs/IMPORT_EXPORT_GUIDE_ZH.md)）
+- 在 Gemini 和 AI Studio 均可使用
 
 ### 💡 提示词库
 
@@ -263,11 +264,11 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
   <table>
     <tr>
       <td align="center">
-        <img src="../public/wechat-sponsor.png" alt="微信支付" width="200"><br>
+        <img src="../public/assets/wechat-sponsor.png" alt="微信支付" width="200"><br>
         <sub><b>微信支付</b></sub>
       </td>
       <td align="center">
-        <img src="../public/alipay-sponsor.jpg" alt="支付宝" width="200"><br>
+        <img src="../public/assets/alipay-sponsor.jpg" alt="支付宝" width="200"><br>
         <sub><b>支付宝</b></sub>
       </td>
     </tr>

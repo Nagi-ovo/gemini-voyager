@@ -23,7 +23,7 @@
 ## Features
 
 <div align="center">
-  <img src="public/teaser.png" alt="teaser"/>
+  <img src="public/assets/teaser.png" alt="teaser"/>
 </div>
 
 ### 📍 Timeline Navigation
@@ -44,6 +44,7 @@ Manage conversations with drag-and-drop folders:
 - Local storage, shared across Gemini accounts (u/0, u/1, etc.)
 - Instant navigation without page reloads
 - Import/export for cross-device sync ([guide](.github/docs/IMPORT_EXPORT_GUIDE.md))
+- Available on both Gemini and AI Studio
 
 ### 💡 Prompt Library
 
@@ -263,11 +264,11 @@ If you find **Gemini Voyager** helpful and want to support its development, cons
   <table>
     <tr>
       <td align="center">
-        <img src="public/wechat-sponsor.png" alt="WeChat Pay" width="200"><br>
+        <img src="public/assets/wechat-sponsor.png" alt="WeChat Pay" width="200"><br>
         <sub><b>WeChat Pay</b></sub>
       </td>
       <td align="center">
-        <img src="public/alipay-sponsor.jpg" alt="Alipay" width="200"><br>
+        <img src="public/assets/alipay-sponsor.jpg" alt="Alipay" width="200"><br>
         <sub><b>Alipay</b></sub>
       </td>
     </tr>
