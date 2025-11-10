@@ -39,7 +39,7 @@
     "message": "Language",
     "description": "Language label"
   },
-  "pm_title": { "message": "Prompt Manager", "description": "Prompt Manager title" },
+  "pm_title": { "message": "Gemini Voyager", "description": "Prompt Manager title" },
   "pm_add": { "message": "Add", "description": "Add prompt button" },
   "pm_search_placeholder": { "message": "Search prompts or tags", "description": "Search placeholder" },
   "pm_import": { "message": "Import", "description": "Import button" },

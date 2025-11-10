@@ -39,7 +39,7 @@
     "message": "语言",
     "description": "语言标签"
   },
-  "pm_title": { "message": "Prompt 管理器", "description": "面板标题" },
+  "pm_title": { "message": "Gemini Voyager", "description": "面板标题" },
   "pm_add": { "message": "新增", "description": "新增 prompt 按钮" },
   "pm_search_placeholder": { "message": "搜索 prompt 或标签", "description": "搜索占位符" },
   "pm_import": { "message": "导入", "description": "导入按钮" },
