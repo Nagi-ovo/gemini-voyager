@@ -260,7 +260,7 @@ export class AIStudioFolderManager {
 
     const title = document.createElement('span');
     title.className = 'gv-conversation-title gds-label-l';
-    title.textContent = conv.title || 'Untitled';
+    title.textContent = conv.title || this.t('conversation_untitled');
     row.appendChild(title);
 
 
@@ -407,7 +407,7 @@ export class AIStudioFolderManager {
       if (!data || data.type !== 'conversation' || !data.conversationId) return;
       const conv: ConversationReference = {
         conversationId: data.conversationId,
-        title: normalizeText(data.title) || 'Untitled',
+        title: normalizeText(data.title) || this.t('conversation_untitled'),
         url: data.url || '',
         addedAt: now(),
       };
