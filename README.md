@@ -275,3 +275,5 @@ If you find **Gemini Voyager** helpful and want to support its development, cons
   <p>Made with ❤️ for the Gemini community</p>
   <p>If you find this useful, consider giving us a ⭐ on GitHub!</p>
 </div>
+
+This project is licensed under the MIT License. Copyright © 2025 Jesse Zhang.
