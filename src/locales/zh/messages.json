@@ -31,6 +31,10 @@
     "message": "重置位置",
     "description": "重置位置按钮"
   },
+  "resetTimelinePosition": {
+    "message": "重置时间线位置",
+    "description": "重置时间线位置按钮（在时间线选项中）"
+  },
   "language": {
     "message": "语言",
     "description": "语言标签"

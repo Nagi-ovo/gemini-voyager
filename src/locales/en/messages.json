@@ -31,6 +31,10 @@
     "message": "Reset Position",
     "description": "Reset Position button"
   },
+  "resetTimelinePosition": {
+    "message": "Reset Timeline Position",
+    "description": "Reset timeline position button in timeline options"
+  },
   "language": {
     "message": "Language",
     "description": "Language label"

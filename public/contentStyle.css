@@ -1111,10 +1111,18 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   color: var(--folder-text);
 }
 
-.gv-multi-select-exit-btn {
-  min-width: 28px;
-  width: 28px;
-  height: 28px;
+/* Multi-select actions container */
+.gv-multi-select-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Common styling for action buttons */
+.gv-multi-select-action-btn {
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
   border: none;
   background: transparent;
   color: var(--folder-icon-color);
@@ -1123,18 +1131,39 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  transition: background-color 0.2s, color 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.gv-multi-select-action-btn mat-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Delete button specific styling */
+.gv-multi-select-delete-btn {
+  color: #ef4444;
+}
+
+.gv-multi-select-delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  transform: scale(1.05);
+}
+
+.gv-multi-select-delete-btn:active {
+  transform: scale(0.95);
+}
+
+/* Exit button specific styling */
 .gv-multi-select-exit-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.08);
   color: var(--folder-text);
+  transform: scale(1.05);
 }
 
-.gv-multi-select-exit-btn mat-icon {
-  font-size: 18px !important;
-  width: 18px !important;
-  height: 18px !important;
+.gv-multi-select-exit-btn:active {
+  transform: scale(0.95);
 }
 
 /* Draggable conversations in folders */

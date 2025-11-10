@@ -47,6 +47,8 @@ export class FolderManager {
   private exportInProgress: boolean = false; // Lock to prevent concurrent exports
   private selectedConversations: Set<string> = new Set(); // For multi-select support
   private isMultiSelectMode: boolean = false; // Multi-select mode state
+  private multiSelectSource: 'folder' | 'native' | null = null; // Track where multi-select was initiated
+  private multiSelectFolderId: string | null = null; // Track which folder multi-select was initiated from
   private longPressTimeout: number | null = null; // For long-press detection
   private longPressThreshold: number = 500; // Long-press duration in ms
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
@@ -199,16 +201,15 @@ export class FolderManager {
     text.textContent = '0 selected';
     text.dataset.selectionCount = 'true';
 
-    const exitBtn = document.createElement('button');
-    exitBtn.className = 'gv-multi-select-exit-btn';
-    exitBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
-    exitBtn.title = 'Exit multi-select mode';
-    exitBtn.addEventListener('click', () => this.exitMultiSelectMode());
-
     content.appendChild(icon);
     content.appendChild(text);
     indicator.appendChild(content);
-    indicator.appendChild(exitBtn);
+
+    // Actions container (will be populated dynamically)
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'gv-multi-select-actions';
+    actionsContainer.dataset.multiSelectActions = 'true';
+    indicator.appendChild(actionsContainer);
 
     return indicator;
   }
@@ -513,7 +514,7 @@ export class FolderManager {
 
       this.longPressTimeout = window.setTimeout(() => {
         longPressTriggered = true;
-        this.enterMultiSelectMode(conv.conversationId);
+        this.enterMultiSelectMode(conv.conversationId, 'folder', folderId);
       }, this.longPressThreshold);
     });
 
@@ -838,7 +839,7 @@ export class FolderManager {
 
       longPressTimeoutId = window.setTimeout(() => {
         longPressTriggered = true;
-        this.enterMultiSelectMode(conversationId);
+        this.enterMultiSelectMode(conversationId, 'native');
         // Add visual feedback to this element
         element.classList.add('gv-conversation-selected');
       }, this.longPressThreshold);
@@ -1733,6 +1734,31 @@ export class FolderManager {
     this.refresh();
   }
 
+  private batchDeleteConversations(): void {
+    if (!this.multiSelectFolderId || this.selectedConversations.size === 0) return;
+
+    const count = this.selectedConversations.size;
+    const confirmed = confirm(`Delete ${count} selected conversation${count > 1 ? 's' : ''} from this folder?`);
+
+    if (!confirmed) return;
+
+    // Remove all selected conversations from the folder
+    const folderId = this.multiSelectFolderId;
+    if (!this.data.folderContents[folderId]) return;
+
+    this.data.folderContents[folderId] = this.data.folderContents[folderId].filter(
+      (c) => !this.selectedConversations.has(c.conversationId)
+    );
+
+    this.saveData();
+
+    // Exit multi-select mode and refresh
+    this.exitMultiSelectMode();
+    this.refresh();
+
+    this.debug(`Batch deleted ${count} conversations from folder ${folderId}`);
+  }
+
   // Multi-select helper methods
   private clearSelection(): void {
     this.selectedConversations.clear();
@@ -1751,40 +1777,52 @@ export class FolderManager {
   }
 
   private updateConversationSelectionUI(): void {
-    // Update folder conversation elements
-    const allConvEls = this.containerElement?.querySelectorAll('.gv-folder-conversation');
-    allConvEls?.forEach((el) => {
-      const convId = (el as HTMLElement).dataset.conversationId;
-      if (convId) {
-        if (this.selectedConversations.has(convId)) {
-          el.classList.add('gv-folder-conversation-selected');
-        } else {
-          el.classList.remove('gv-folder-conversation-selected');
-        }
-      }
-    });
+    // Only update UI for the source where multi-select was initiated
+    if (this.multiSelectSource === 'folder') {
+      // Only update folder conversation elements
+      const allConvEls = this.containerElement?.querySelectorAll('.gv-folder-conversation');
+      allConvEls?.forEach((el) => {
+        const convId = (el as HTMLElement).dataset.conversationId;
+        const elFolderId = (el as HTMLElement).dataset.folderId;
 
-    // Update native conversation elements (Recent section)
-    const nativeConvs = this.sidebarContainer?.querySelectorAll('[data-test-id="conversation"]');
-    nativeConvs?.forEach((el) => {
-      const convId = this.extractConversationId(el as HTMLElement);
-      if (convId) {
-        if (this.selectedConversations.has(convId)) {
-          el.classList.add('gv-conversation-selected');
-        } else {
-          el.classList.remove('gv-conversation-selected');
+        // Only update conversations in the same folder where multi-select started
+        if (convId && (!this.multiSelectFolderId || elFolderId === this.multiSelectFolderId)) {
+          if (this.selectedConversations.has(convId)) {
+            el.classList.add('gv-folder-conversation-selected');
+          } else {
+            el.classList.remove('gv-folder-conversation-selected');
+          }
         }
-      }
-    });
+      });
+    } else if (this.multiSelectSource === 'native') {
+      // Only update native conversation elements (Recent section)
+      const nativeConvs = this.sidebarContainer?.querySelectorAll('[data-test-id="conversation"]');
+      nativeConvs?.forEach((el) => {
+        const convId = this.extractConversationId(el as HTMLElement);
+        if (convId) {
+          if (this.selectedConversations.has(convId)) {
+            el.classList.add('gv-conversation-selected');
+          } else {
+            el.classList.remove('gv-conversation-selected');
+          }
+        }
+      });
+    }
 
     // Update the selection count
     this.updateMultiSelectModeUI();
   }
 
   // Multi-select mode methods
-  private enterMultiSelectMode(initialConversationId?: string): void {
-    this.debug('Entering multi-select mode');
+  private enterMultiSelectMode(
+    initialConversationId?: string,
+    source: 'folder' | 'native' = 'native',
+    folderId?: string
+  ): void {
+    this.debug('Entering multi-select mode', { source, folderId });
     this.isMultiSelectMode = true;
+    this.multiSelectSource = source;
+    this.multiSelectFolderId = folderId || null;
 
     // Select the conversation that triggered the long-press
     if (initialConversationId) {
@@ -1803,6 +1841,8 @@ export class FolderManager {
   private exitMultiSelectMode(): void {
     this.debug('Exiting multi-select mode');
     this.isMultiSelectMode = false;
+    this.multiSelectSource = null;
+    this.multiSelectFolderId = null;
 
     // First update UI to remove selection styles
     this.updateConversationSelectionUI();
@@ -1842,10 +1882,36 @@ export class FolderManager {
     }
 
     // Update selection count in indicator
-    const indicator = this.containerElement?.querySelector('[data-selection-count="true"]');
-    if (indicator) {
+    const countElement = this.containerElement?.querySelector('[data-selection-count="true"]');
+    if (countElement) {
       const count = this.selectedConversations.size;
-      indicator.textContent = `${count} selected`;
+      countElement.textContent = `${count} selected`;
+    }
+
+    // Update action buttons based on source
+    const actionsContainer = this.containerElement?.querySelector('[data-multi-select-actions="true"]');
+    if (actionsContainer && this.isMultiSelectMode) {
+      actionsContainer.innerHTML = ''; // Clear existing buttons
+
+      if (this.multiSelectSource === 'folder') {
+        // Delete button for folder multi-select
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'gv-multi-select-action-btn gv-multi-select-delete-btn';
+        deleteBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">delete</mat-icon>';
+        deleteBtn.title = 'Delete selected conversations';
+        deleteBtn.addEventListener('click', () => this.batchDeleteConversations());
+        actionsContainer.appendChild(deleteBtn);
+      }
+
+      // Exit button (always present)
+      const exitBtn = document.createElement('button');
+      exitBtn.className = 'gv-multi-select-action-btn gv-multi-select-exit-btn';
+      exitBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
+      exitBtn.title = 'Exit multi-select mode';
+      exitBtn.addEventListener('click', () => this.exitMultiSelectMode());
+      actionsContainer.appendChild(exitBtn);
+    } else if (actionsContainer) {
+      actionsContainer.innerHTML = ''; // Clear buttons when exiting
     }
   }
 
