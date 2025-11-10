@@ -1,8 +1,8 @@
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
-import { startFolderManager } from './folder/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
+import { startFolderManager } from './folder/index';
 import { startPromptManager } from './prompt/index';
 import { startTimeline } from './timeline/index';
 

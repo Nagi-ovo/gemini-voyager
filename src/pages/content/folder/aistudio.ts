@@ -1,6 +1,7 @@
+import type { Folder, FolderData, ConversationReference, DragData } from './types';
+
 import { storageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
-import type { Folder, FolderData, ConversationReference, DragData } from './types';
 import { initI18n, createTranslator } from '@/utils/i18n';
 
 function waitForElement<T extends Element = Element>(selector: string, timeoutMs = 10000): Promise<T | null> {
@@ -60,6 +61,16 @@ export class AIStudioFolderManager {
   private container: HTMLElement | null = null;
   private historyRoot: HTMLElement | null = null;
   private cleanupFns: Array<() => void> = [];
+  private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
+
+  // Helper to create a ligature icon span with a data-icon attribute
+  private createIcon(name: string): HTMLSpanElement {
+    const span = document.createElement('span');
+    span.className = 'google-symbols';
+    try { span.dataset.icon = name; } catch {}
+    span.textContent = name;
+    return span;
+  }
 
   async init(): Promise<void> {
     await initI18n();
@@ -71,6 +82,7 @@ export class AIStudioFolderManager {
     // Find the prompt history component and sidebar region
     this.historyRoot = (await waitForElement<HTMLElement>('ms-prompt-history-v3')) || null;
     if (!this.historyRoot) return;
+    try { document.documentElement.classList.add('gv-aistudio-root'); } catch {}
 
     await this.load();
     this.injectUI();
@@ -80,7 +92,7 @@ export class AIStudioFolderManager {
 
   private async load(): Promise<void> {
     try {
-      const res = await storageService.get<FolderData>(StorageKeys.FOLDER_DATA);
+      const res = await storageService.get<FolderData>(this.STORAGE_KEY);
       if (res.success && res.data) {
         this.data = res.data;
       } else {
@@ -93,7 +105,7 @@ export class AIStudioFolderManager {
 
   private async save(): Promise<void> {
     try {
-      await storageService.set<FolderData>(StorageKeys.FOLDER_DATA, this.data);
+      await storageService.set<FolderData>(this.STORAGE_KEY, this.data);
     } catch {}
   }
 
@@ -101,7 +113,8 @@ export class AIStudioFolderManager {
     if (this.container && document.body.contains(this.container)) return;
 
     const container = document.createElement('div');
-    container.className = 'gv-folder-container';
+    // Scope aistudio-specific styles under .gv-aistudio to avoid impacting Gemini
+    container.className = 'gv-folder-container gv-aistudio';
 
     const header = document.createElement('div');
     header.className = 'gv-folder-header';
@@ -115,27 +128,13 @@ export class AIStudioFolderManager {
     actions.className = 'gv-folder-header-actions';
     header.appendChild(actions);
 
-    // Import
-    const importBtn = document.createElement('button');
-    importBtn.className = 'gv-folder-action-btn';
-    importBtn.title = this.t('folder_import');
-    importBtn.innerHTML = '<span class="google-symbols">upload</span>';
-    importBtn.addEventListener('click', () => this.handleImport());
-    actions.appendChild(importBtn);
-
-    // Export
-    const exportBtn = document.createElement('button');
-    exportBtn.className = 'gv-folder-action-btn';
-    exportBtn.title = this.t('folder_export');
-    exportBtn.innerHTML = '<span class="google-symbols">download</span>';
-    exportBtn.addEventListener('click', () => this.handleExport());
-    actions.appendChild(exportBtn);
+    // For AI Studio, hide import/export for now to simplify UI
 
     // Add folder
     const addBtn = document.createElement('button');
     addBtn.className = 'gv-folder-add-btn';
     addBtn.title = this.t('folder_create');
-    addBtn.innerHTML = '<span class="google-symbols">add</span>';
+    addBtn.appendChild(this.createIcon('add'));
     addBtn.addEventListener('click', () => this.createFolder());
     actions.appendChild(addBtn);
 
@@ -158,8 +157,8 @@ export class AIStudioFolderManager {
     if (!list) return;
     list.innerHTML = '';
 
-    // Pinned first, then others
-    const folders = [...this.data.folders];
+    // Render only root-level folders here; children are rendered recursively
+    const folders = this.data.folders.filter((f) => !f.parentId);
     folders.sort((a, b) => {
       const ap = a.pinned ? 1 : 0;
       const bp = b.pinned ? 1 : 0;
@@ -183,14 +182,17 @@ export class AIStudioFolderManager {
     const item = document.createElement('div');
     item.className = 'gv-folder-item';
     item.dataset.folderId = folder.id;
+    item.dataset.pinned = folder.pinned ? 'true' : 'false';
 
     const header = document.createElement('div');
     header.className = 'gv-folder-item-header';
     item.appendChild(header);
+    // Allow dropping directly on folder header
+    this.bindDropZone(header, folder.id);
 
     const expandBtn = document.createElement('button');
     expandBtn.className = 'gv-folder-expand-btn';
-    expandBtn.innerHTML = `<span class="google-symbols">${folder.isExpanded ? 'expand_more' : 'chevron_right'}</span>`;
+    expandBtn.appendChild(this.createIcon(folder.isExpanded ? 'expand_more' : 'chevron_right'));
     expandBtn.addEventListener('click', () => {
       folder.isExpanded = !folder.isExpanded;
       this.save().then(() => this.render());
@@ -199,6 +201,7 @@ export class AIStudioFolderManager {
 
     const icon = document.createElement('span');
     icon.className = 'gv-folder-icon google-symbols';
+    (icon as any).dataset.icon = 'folder';
     icon.textContent = 'folder';
     header.appendChild(icon);
 
@@ -208,14 +211,11 @@ export class AIStudioFolderManager {
     name.addEventListener('dblclick', () => this.renameFolder(folder.id));
     header.appendChild(name);
 
-    const spacer = document.createElement('div');
-    spacer.style.flex = '1 1 auto';
-    header.appendChild(spacer);
-
     const pinBtn = document.createElement('button');
     pinBtn.className = 'gv-folder-pin-btn';
     pinBtn.title = folder.pinned ? this.t('folder_unpin') : this.t('folder_pin');
-    pinBtn.innerHTML = `<span class="google-symbols">${folder.pinned ? 'push_pin' : 'push_pin'}</span>`;
+    try { (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned'; } catch {}
+    pinBtn.appendChild(this.createIcon('push_pin'));
     pinBtn.addEventListener('click', () => {
       folder.pinned = !folder.pinned;
       this.save().then(() => this.render());
@@ -224,11 +224,11 @@ export class AIStudioFolderManager {
 
     const moreBtn = document.createElement('button');
     moreBtn.className = 'gv-folder-actions-btn';
-    moreBtn.innerHTML = '<span class="google-symbols">more_vert</span>';
+    moreBtn.appendChild(this.createIcon('more_vert'));
     moreBtn.addEventListener('click', (e) => this.openFolderMenu(e, folder.id));
     header.appendChild(moreBtn);
 
-    // Content
+    // Content (conversations only; subfolders are not supported in AI Studio)
     if (folder.isExpanded) {
       const content = document.createElement('div');
       content.className = 'gv-folder-content';
@@ -252,6 +252,7 @@ export class AIStudioFolderManager {
 
     const icon = document.createElement('span');
     icon.className = 'gv-conversation-icon google-symbols';
+    (icon as any).dataset.icon = 'chat';
     icon.textContent = 'chat';
     row.appendChild(icon);
 
@@ -260,13 +261,10 @@ export class AIStudioFolderManager {
     title.textContent = conv.title || 'Untitled';
     row.appendChild(title);
 
-    const spacer = document.createElement('div');
-    spacer.style.flex = '1 1 auto';
-    row.appendChild(spacer);
 
     const starBtn = document.createElement('button');
     starBtn.className = conv.starred ? 'gv-conversation-star-btn starred' : 'gv-conversation-star-btn';
-    starBtn.innerHTML = `<span class="google-symbols">${conv.starred ? 'star' : 'star_outline'}</span>`;
+    starBtn.appendChild(this.createIcon(conv.starred ? 'star' : 'star_outline'));
     starBtn.title = conv.starred ? this.t('conversation_unstar') : this.t('conversation_star');
     starBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -277,7 +275,7 @@ export class AIStudioFolderManager {
 
     const removeBtn = document.createElement('button');
     removeBtn.className = 'gv-conversation-remove-btn';
-    removeBtn.innerHTML = '<span class="google-symbols">close</span>';
+    removeBtn.appendChild(this.createIcon('close'));
     removeBtn.title = this.t('folder_remove_conversation');
     removeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -307,12 +305,6 @@ export class AIStudioFolderManager {
     ev.stopPropagation();
     const menu = document.createElement('div');
     menu.className = 'gv-context-menu';
-    const addSub = document.createElement('button');
-    addSub.textContent = this.t('folder_create_subfolder');
-    addSub.addEventListener('click', () => {
-      this.createFolder(folderId);
-      try { document.body.removeChild(menu); } catch {}
-    });
     const rename = document.createElement('button');
     rename.textContent = this.t('folder_rename');
     rename.addEventListener('click', () => {
@@ -325,7 +317,6 @@ export class AIStudioFolderManager {
       this.deleteFolder(folderId);
       try { document.body.removeChild(menu); } catch {}
     });
-    menu.appendChild(addSub);
     menu.appendChild(rename);
     menu.appendChild(del);
 
@@ -396,6 +387,7 @@ export class AIStudioFolderManager {
     });
     el.addEventListener('dragover', (e) => {
       e.preventDefault();
+      try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; } catch {}
     });
     el.addEventListener('dragleave', () => {
       el.classList.remove('gv-folder-dragover');
@@ -403,7 +395,10 @@ export class AIStudioFolderManager {
     el.addEventListener('drop', (e) => {
       e.preventDefault();
       el.classList.remove('gv-folder-dragover');
-      const raw = e.dataTransfer?.getData('application/json');
+      let raw = e.dataTransfer?.getData('application/json');
+      if (!raw) {
+        try { raw = e.dataTransfer?.getData('text/plain') || ''; } catch {}
+      }
       if (!raw) return;
       let data: DragData | null = null;
       try { data = JSON.parse(raw) as DragData; } catch { data = null; }
@@ -463,7 +458,14 @@ export class AIStudioFolderManager {
         const title = normalizeText(anchor.textContent || '');
         const url = anchor.href || `${location.origin}${anchor.getAttribute('href') || ''}`;
         const data: DragData = { type: 'conversation', conversationId: id, title, url };
-        try { e.dataTransfer?.setData('application/json', JSON.stringify(data)); } catch {}
+        try {
+          if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('application/json', JSON.stringify(data));
+            // Fallback to text/plain to interop with stricter DnD
+            e.dataTransfer.setData('text/plain', JSON.stringify(data));
+          }
+        } catch {}
         try { e.dataTransfer?.setDragImage(hostEl, 10, 10); } catch {}
       });
     });
@@ -563,5 +565,3 @@ export async function startAIStudioFolderManager(): Promise<void> {
     console.error('[AIStudioFolderManager] Start error:', e);
   }
 }
-
-

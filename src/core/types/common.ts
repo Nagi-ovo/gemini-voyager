@@ -36,6 +36,7 @@ export type TurnId = Brand<string, 'TurnId'>;
  */
 export const StorageKeys = {
   FOLDER_DATA: 'gvFolderData',
+  FOLDER_DATA_AISTUDIO: 'gvFolderDataAIStudio',
   TIMELINE_SCROLL_MODE: 'geminiTimelineScrollMode',
   TIMELINE_HIDE_CONTAINER: 'geminiTimelineHideContainer',
   TIMELINE_DRAGGABLE: 'geminiTimelineDraggable',
