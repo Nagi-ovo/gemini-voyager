@@ -117,16 +117,6 @@ jobs:
           cd dist_firefox
           zip -r ../gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip .
 
-      - name: Create firefox .xpi (same content as zip)
-        run: |
-          # copy the zip to .xpi so contents are identical, only the extension differs
-          cp gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip gemini-voyager-firefox-${{ steps.tag.outputs.name }}.xpi
-          # verify sizes (optional) - exit non-zero if mismatch
-          # Uncomment the following lines to enforce identical size check:
-          # if [ "$(stat -c%s gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip)" != "$(stat -c%s gemini-voyager-firefox-${{ steps.tag.outputs.name }}.xpi)" ]; then
-          #   echo "Mismatch between zip and xpi sizes"; exit 1
-          # fi
-
       - name: Archive dist_safari
         run: |
           cd dist_safari
@@ -140,7 +130,6 @@ jobs:
           path: |
             gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip
             gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip
-            gemini-voyager-firefox-${{ steps.tag.outputs.name }}.xpi
             gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip
 
       - name: Generate release body
@@ -158,7 +147,7 @@ jobs:
 
           Download the latest version for your browser:
           - **Chrome/Edge/Opera/Brave**: `gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip`
-          - **Firefox**: `gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip` or `gemini-voyager-firefox-${{ steps.tag.outputs.name }}.xpi` (same contents, .xpi is provided for convenience)
+          - **Firefox**: `gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip`
           - **Safari**: `gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip`
 
           See [README](https://github.com/Nagi-ovo/gemini-voyager#-installation) for detailed installation instructions.
@@ -177,7 +166,6 @@ jobs:
           files: |
             gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip
             gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip
-            gemini-voyager-firefox-${{ steps.tag.outputs.name }}.xpi
             gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip
           name: Gemini Voyager ${{ steps.tag.outputs.name }}
           tag_name: ${{ steps.tag.outputs.name }}

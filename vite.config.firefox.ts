@@ -14,16 +14,10 @@ export default mergeConfig(
       crx({
         manifest: {
           ...baseManifest,
-          browser_specific_settings: {
-            gecko: {
-              id: 'gemini-voyager@github.com',
-              strict_min_version: '115.0',
-            },
-          },
           background: {
             scripts: ['src/pages/background/index.ts'],
           },
-        } as unknown as ManifestV3Export,
+        } as ManifestV3Export,
         browser: 'firefox',
         contentScripts: {
           injectCss: true,
