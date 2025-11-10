@@ -372,9 +372,10 @@ export class FolderManager {
       const content = document.createElement('div');
       content.className = 'gv-folder-content';
 
-      // Render conversations in this folder
+      // Render conversations in this folder (sorted: starred first)
       const conversations = this.data.folderContents[folder.id] || [];
-      conversations.forEach((conv) => {
+      const sortedConversations = this.sortConversations(conversations);
+      sortedConversations.forEach((conv) => {
         const convEl = this.createConversationElement(conv, folder.id, level + 1);
         content.appendChild(convEl);
       });
@@ -399,7 +400,7 @@ export class FolderManager {
     level: number
   ): HTMLElement {
     const convEl = document.createElement('div');
-    convEl.className = 'gv-folder-conversation';
+    convEl.className = conv.starred ? 'gv-folder-conversation gv-starred' : 'gv-folder-conversation';
     convEl.dataset.conversationId = conv.conversationId;
     convEl.dataset.folderId = folderId;
     // Increase indentation for conversations under folders
@@ -475,6 +476,21 @@ export class FolderManager {
     title.addEventListener('mouseenter', () => this.showTooltip(title, displayTitle));
     title.addEventListener('mouseleave', () => this.hideTooltip());
 
+    // Actions container for buttons
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'gv-conversation-actions';
+
+    // Star button
+    const starBtn = document.createElement('button');
+    starBtn.className = conv.starred ? 'gv-conversation-star-btn starred' : 'gv-conversation-star-btn';
+    const starIcon = conv.starred ? 'star' : 'star_outline';
+    starBtn.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">${starIcon}</mat-icon>`;
+    starBtn.title = conv.starred ? this.t('conversation_unstar') : this.t('conversation_star');
+    starBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggleConversationStar(folderId, conv.conversationId);
+    });
+
     // Remove button
     const removeBtn = document.createElement('button');
     removeBtn.className = 'gv-conversation-remove-btn';
@@ -484,6 +500,9 @@ export class FolderManager {
       e.stopPropagation();
       this.confirmRemoveConversation(folderId, conv.conversationId, displayTitle, e);
     });
+
+    actionsContainer.appendChild(starBtn);
+    actionsContainer.appendChild(removeBtn);
 
     // Long-press detection for entering multi-select mode
     let longPressTriggered = false;
@@ -540,7 +559,7 @@ export class FolderManager {
 
     convEl.appendChild(icon);
     convEl.appendChild(title);
-    convEl.appendChild(removeBtn);
+    convEl.appendChild(actionsContainer);
 
     return convEl;
   }
@@ -1433,6 +1452,17 @@ export class FolderManager {
     });
   }
 
+  private sortConversations(conversations: ConversationReference[]): ConversationReference[] {
+    return [...conversations].sort((a, b) => {
+      // Starred conversations always come first
+      if (a.starred && !b.starred) return -1;
+      if (!a.starred && b.starred) return 1;
+
+      // Within the same starred state, sort by addedAt (newest first)
+      return b.addedAt - a.addedAt;
+    });
+  }
+
   private addConversationToFolder(folderId: string, dragData: DragData & { sourceFolderId?: string }): void {
     this.debug('Adding conversation to folder:', {
       folderId,
@@ -1604,6 +1634,25 @@ export class FolderManager {
       currentId = folder?.parentId || null;
     }
     return false;
+  }
+
+  private toggleConversationStar(folderId: string, conversationId: string): void {
+    const conversations = this.data.folderContents[folderId];
+    if (!conversations) return;
+
+    const conv = conversations.find(c => c.conversationId === conversationId);
+    if (!conv) return;
+
+    // Toggle starred state
+    conv.starred = !conv.starred;
+
+    // Save data
+    this.saveData();
+
+    // Refresh the folder UI to update the star icon and re-sort
+    this.refresh();
+
+    this.debug('Toggled star for conversation:', conversationId, 'starred:', conv.starred);
   }
 
   private confirmRemoveConversation(

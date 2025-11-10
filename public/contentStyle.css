@@ -976,12 +976,35 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   padding: 8px 12px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition: background-color 0.15s ease, opacity 0.2s;
   position: relative;
+  min-height: 40px;
 }
 
 .gv-folder-conversation:hover {
   background-color: var(--folder-hover-bg);
+}
+
+/* Starred conversation - subtle gold accent on the left */
+.gv-folder-conversation.gv-starred {
+  background: linear-gradient(
+    to right,
+    rgba(251, 191, 36, 0.08) 0%,
+    transparent 100%
+  );
+}
+
+.gv-folder-conversation.gv-starred::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+  border-radius: 0 2px 2px 0;
+  opacity: 0.9;
 }
 
 /* Selected state for multi-select - shadcn/ui inspired */
@@ -1145,22 +1168,82 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   white-space: nowrap;
 }
 
-.gv-conversation-remove-btn {
-  min-width: 24px;
-  width: 24px;
-  height: 24px;
+/* Action buttons container for proper layout */
+.gv-conversation-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Star button - always visible but subtle */
+.gv-conversation-star-btn {
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
   border: none;
   background: transparent;
-  color: var(--folder-icon-color);
+  color: #9ca3af;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  opacity: 0;
-  transition: opacity 0.2s, background-color 0.2s;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
-  margin-left: 4px;
+  padding: 0;
+  opacity: 0.4;
+}
+
+.gv-folder-conversation:hover .gv-conversation-star-btn {
+  opacity: 1;
+}
+
+/* Starred state */
+.gv-conversation-star-btn.starred {
+  opacity: 1 !important;
+  color: #fbbf24;
+}
+
+.gv-conversation-star-btn:hover {
+  background-color: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  transform: scale(1.05);
+}
+
+.gv-conversation-star-btn.starred:hover {
+  background-color: rgba(251, 191, 36, 0.15);
+}
+
+.gv-conversation-star-btn mat-icon {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  transition: transform 0.2s;
+}
+
+.gv-conversation-star-btn:active mat-icon {
+  transform: scale(0.9);
+}
+
+/* Remove button - only visible on hover */
+.gv-conversation-remove-btn {
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  opacity: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
 }
 
 .gv-folder-conversation:hover .gv-conversation-remove-btn {
@@ -1168,18 +1251,24 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
 }
 
 .gv-conversation-remove-btn:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: rgba(239, 68, 68, 0.12);
   color: #ef4444;
+  transform: scale(1.05);
 }
 
 .gv-conversation-remove-btn mat-icon {
-  font-size: 16px !important;
-  width: 16px !important;
-  height: 16px !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   line-height: 1 !important;
+  transition: transform 0.2s;
+}
+
+.gv-conversation-remove-btn:active mat-icon {
+  transform: scale(0.9);
 }
 
 /* Folder Context Menu */

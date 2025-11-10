@@ -15,6 +15,7 @@ export interface ConversationReference {
   addedAt: number; // When it was added to the folder
   isGem?: boolean; // Whether this is a Gem conversation
   gemId?: string; // Gem identifier if applicable
+  starred?: boolean; // Whether this conversation is starred in the folder
 }
 
 export interface FolderData {
