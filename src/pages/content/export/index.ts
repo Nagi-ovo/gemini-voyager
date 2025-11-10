@@ -338,7 +338,11 @@ async function getLanguage(): Promise<'en' | 'zh'> {
 }
 
 export async function startExportButton(): Promise<void> {
-  if (location.hostname !== 'gemini.google.com' && location.hostname !== 'aistudio.google.com') return;
+  if (
+    location.hostname !== 'gemini.google.com' &&
+    location.hostname !== 'aistudio.google.com' &&
+    location.hostname !== 'aistudio.google.cn'
+  ) return;
   const logo =
     (await waitForElement('[data-test-id="logo"]', 6000)) ||
     (await waitForElement('.logo', 2000));

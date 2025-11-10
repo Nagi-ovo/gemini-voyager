@@ -2,6 +2,7 @@ import { startChatWidthAdjuster } from './chatWidth/index';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startFolderManager } from './folder/index';
+import { startAIStudioFolderManager } from './folder/aistudio';
 import { startPromptManager } from './prompt/index';
 import { startTimeline } from './timeline/index';
 
@@ -15,8 +16,15 @@ try {
     startEditInputWidthAdjuster();
     startFormulaCopy();
   }
-  if (location.hostname === 'gemini.google.com' || location.hostname === 'aistudio.google.com') {
+  if (
+    location.hostname === 'gemini.google.com' ||
+    location.hostname === 'aistudio.google.com' ||
+    location.hostname === 'aistudio.google.cn'
+  ) {
     startPromptManager();
+  }
+  if (location.hostname === 'aistudio.google.com' || location.hostname === 'aistudio.google.cn') {
+    startAIStudioFolderManager();
   }
   startExportButton();
 } catch (e) {

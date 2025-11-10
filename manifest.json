@@ -31,7 +31,8 @@
     {
       "matches": [
         "https://gemini.google.com/*",
-        "https://aistudio.google.com/*"
+        "https://aistudio.google.com/*",
+        "https://aistudio.google.cn/*"
       ],
       "js": [
         "src/pages/content/index.tsx"
@@ -50,7 +51,8 @@
       ],
       "matches": [
         "https://gemini.google.com/*",
-        "https://aistudio.google.com/*"
+        "https://aistudio.google.com/*",
+        "https://aistudio.google.cn/*"
       ]
     }
   ]
