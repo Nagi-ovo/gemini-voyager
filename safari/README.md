@@ -56,6 +56,8 @@ bun run build:safari
 
 ## Adding Swift Native Code (Optional)
 
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+
 This project includes Swift code for native macOS features. Adding it is **optional** but recommended.
 
 ### Files Included
@@ -87,6 +89,8 @@ Once added, you can:
 - Enhanced debugging logs
 
 ### Native Messaging API
+
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
 
 **From JavaScript:**
 ```javascript
@@ -148,6 +152,8 @@ Requires:
 See [Apple's official guide](https://developer.apple.com/documentation/safariservices/safari_web_extensions/distributing_your_safari_web_extension) for details.
 
 ## Project Structure
+
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
 
 ```
 ├── dist_safari/              # Built extension (gitignored)

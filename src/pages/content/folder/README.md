@@ -19,7 +19,11 @@ The folder manager allows users to:
 - **`index.ts`** - Entry point that initializes the folder manager
 - **`README.md`** - This file
 
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+
 ## Adding Support for New Gems
+
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
 
 To add support for a new Gem (either official Google Gems or custom Gems):
 
@@ -74,6 +78,8 @@ If you're adding support for a new official Google Gem, please submit a pull req
 2. A brief description of the Gem in your PR
 
 ## Technical Details
+
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
 
 ### Gem Detection
 

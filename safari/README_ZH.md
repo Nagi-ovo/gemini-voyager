@@ -56,6 +56,8 @@ bun run build:safari
 
 ## 添加 Swift 原生代码（可选）
 
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+
 本项目包含用于原生 macOS 功能的 Swift 代码。添加它是**可选的**，但推荐使用。
 
 ### 包含的文件
@@ -87,6 +89,8 @@ safari/
 - 增强的调试日志
 
 ### 原生消息 API
+
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
 
 **从 JavaScript 调用：**
 ```javascript
@@ -148,6 +152,8 @@ log stream --predicate 'subsystem == "com.gemini-voyager.safari"' --level debug
 详见 [Apple 官方指南](https://developer.apple.com/documentation/safariservices/safari_web_extensions/distributing_your_safari_web_extension)。
 
 ## 项目结构
+
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
 
 ```
 ├── dist_safari/              # 构建的扩展（已忽略）
