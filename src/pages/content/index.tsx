@@ -4,6 +4,7 @@ import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderManager } from './folder/index';
 import { startPromptManager } from './prompt/index';
+import { startSidebarWidthAdjuster } from './sidebarWidth/index'; // 新增导入
 import { startTimeline } from './timeline/index';
 
 import { startFormulaCopy } from '@/features/formulaCopy';
@@ -15,6 +16,9 @@ try {
     startChatWidthAdjuster();
     startEditInputWidthAdjuster();
     startFormulaCopy();
+
+    // 在 gemini 页面上也启动 sidebar 宽度调整器（会向页面注入样式）
+    startSidebarWidthAdjuster();
   }
   if (
     location.hostname === 'gemini.google.com' ||

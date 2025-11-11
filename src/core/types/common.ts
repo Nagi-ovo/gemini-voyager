@@ -43,6 +43,8 @@ export const StorageKeys = {
   TIMELINE_POSITION: 'geminiTimelinePosition',
   CHAT_WIDTH: 'geminiChatWidth',
   LANGUAGE: 'language',
+  // 新增 Sidebar Width 的 storage key
+  SIDEBAR_WIDTH: 'geminiSidebarWidth',
 } as const;
 
 export type StorageKey = typeof StorageKeys[keyof typeof StorageKeys];
