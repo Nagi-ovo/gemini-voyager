@@ -309,6 +309,7 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
 
 
 ## 🤝 参与贡献
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
 
 欢迎参与贡献！无论是报告问题、提出功能建议、改进文档还是提交代码：
 
