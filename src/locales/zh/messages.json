@@ -111,4 +111,5 @@
   ,"conversation_star": { "message": "星标对话", "description": "星标对话按钮提示" }
   ,"conversation_unstar": { "message": "取消星标", "description": "取消星标对话按钮提示" }
   ,"conversation_untitled": { "message": "未命名", "description": "无标题对话的回退标题" }
+  ,"geminiOnlyNotice": { "message": "所有设置仅支持 Gemini", "description": "提示所有设置仅适用于 Gemini" }
 }

@@ -111,4 +111,5 @@
   ,"conversation_star": { "message": "Star conversation", "description": "Star conversation button tooltip" }
   ,"conversation_unstar": { "message": "Unstar conversation", "description": "Unstar conversation button tooltip" }
   ,"conversation_untitled": { "message": "Untitled", "description": "Fallback title for conversations without a name" }
+  ,"geminiOnlyNotice": { "message": "All settings only support Gemini", "description": "Notice that all settings only work with Gemini" }
 }
