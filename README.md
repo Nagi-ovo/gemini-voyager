@@ -37,14 +37,30 @@ Visual conversation navigation with clickable message nodes:
 
 ### 📂 Folder Organization
 
-Manage conversations with drag-and-drop folders:
+Organize conversations with drag-and-drop folders:
 - Two-level hierarchy (folders and subfolders)
-- Right-click menu for rename/duplicate/delete
-- Auto-detects Gem types and displays corresponding icons
-- Local storage, shared across Gemini accounts (u/0, u/1, etc.)
-- Instant navigation without page reloads
+- Double-click to rename, long-press to multi-select
+- Auto-detects Gem types and displays icons
 - Import/export for cross-device sync ([guide](.github/docs/IMPORT_EXPORT_GUIDE.md))
 - Available on both Gemini and AI Studio
+
+<details>
+<summary>View screenshots</summary>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <p><b>Gemini</b></p>
+      <img src="public/assets/gemini-folders.png" alt="Gemini folders" style="max-width: 100%;"/>
+    </td>
+    <td align="center" width="50%">
+      <p><b>AI Studio</b></p>
+      <img src="public/assets/aistudio-folders.png" alt="AI Studio folders" style="max-width: 100%;"/>
+    </td>
+  </tr>
+</table>
+
+</details>
 
 ### 💡 Prompt Library
 
@@ -54,12 +70,30 @@ Save and reuse prompts:
 - Import/export as JSON
 - Available on Gemini and AI Studio
 
+<details>
+<summary>View screenshot</summary>
+
+<div align="center">
+  <img src="public/assets/gemini-prompt-manager.png" alt="Prompt manager" style="max-width: 100%;"/>
+</div>
+
+</details>
+
 ### 📐 Formula Copy
 
 Click LaTeX/MathJax formulas to copy source code:
 - One-click copy of formula source
 - Works with inline and display math
 - Visual feedback on copy success
+
+<details>
+<summary>View screenshot</summary>
+
+<div align="center">
+  <img src="public/assets/gemini-math-copy.png" alt="Formula copy" style="max-width: 100%;"/>
+</div>
+
+</details>
 
 ### 💾 Chat Export (JSON + Markdown/PDF)
 
@@ -69,6 +103,24 @@ Export conversations as:
 - Click export icon next to Gemini logo
 - Preserves starred messages
 - Removes UI noise (labels like "Show thinking")
+
+<details>
+<summary>View export guide</summary>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <p><b>Step 1: Click the export icon</b></p>
+      <img src="public/assets/gemini-export-guide-1.png" alt="Export guide step 1" style="max-width: 100%;"/>
+    </td>
+    <td align="center" width="50%">
+      <p><b>Step 2: Choose export format</b></p>
+      <img src="public/assets/gemini-export-guide-2.png" alt="Export guide step 2" style="max-width: 100%;"/>
+    </td>
+  </tr>
+</table>
+
+</details>
 
 <details>
 <summary>Export format example</summary>
@@ -91,6 +143,24 @@ Export conversations as:
 Customize chat container width (400px - 1400px) with real-time preview.
 
 > **Settings**: Click the extension icon for scroll mode, chat width, and timeline options.
+
+<details>
+<summary>View tutorial</summary>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <p><b>How to open settings</b></p>
+      <img src="public/assets/gemini-open-settings-guide.png" alt="Open settings guide" style="max-width: 100%;"/>
+    </td>
+    <td align="center" width="50%">
+      <p><b>Chat width adjustment</b></p>
+      <img src="public/assets/gemini-chatwidth.png" alt="Chat width adjustment" style="max-width: 100%;"/>
+    </td>
+  </tr>
+</table>
+
+</details>
 
 ---
 

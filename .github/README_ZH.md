@@ -39,12 +39,28 @@
 
 通过拖放操作管理对话：
 - 两级层级结构（文件夹和子文件夹）
-- 右键菜单实现重命名/复制/删除
-- 自动识别 Gem 类型并显示对应图标
-- 本地存储，跨 Gemini 账号共享（u/0、u/1 等）
-- 无需刷新页面即可切换对话
+- 双击重命名，长按多选
+- 自动识别 Gem 类型并显示图标
 - 支持导入/导出，跨设备同步（[使用指南](./docs/IMPORT_EXPORT_GUIDE_ZH.md)）
 - 在 Gemini 和 AI Studio 均可使用
+
+<details>
+<summary>查看截图</summary>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <p><b>Gemini</b></p>
+      <img src="../public/assets/gemini-folders.png" alt="Gemini 文件夹" style="max-width: 100%;"/>
+    </td>
+    <td align="center" width="50%">
+      <p><b>AI Studio</b></p>
+      <img src="../public/assets/aistudio-folders.png" alt="AI Studio 文件夹" style="max-width: 100%;"/>
+    </td>
+  </tr>
+</table>
+
+</details>
 
 ### 💡 提示词库
 
@@ -54,12 +70,30 @@
 - 支持 JSON 导入/导出
 - 在 Gemini 和 AI Studio 均可使用
 
+<details>
+<summary>查看截图</summary>
+
+<div align="center">
+  <img src="../public/assets/gemini-prompt-manager.png" alt="提示词管理器" style="max-width: 100%;"/>
+</div>
+
+</details>
+
 ### 📐 公式复制
 
 点击 LaTeX/MathJax 公式复制源代码：
 - 一键复制公式源码
 - 支持行内和独立显示公式
 - 复制成功视觉反馈
+
+<details>
+<summary>查看截图</summary>
+
+<div align="center">
+  <img src="../public/assets/gemini-math-copy.png" alt="公式复制" style="max-width: 100%;"/>
+</div>
+
+</details>
 
 ### 💾 对话导出（JSON + Markdown/PDF）
 
@@ -69,6 +103,24 @@
 - 点击 Gemini 徽标旁的导出图标
 - 保留星标消息
 - 自动移除界面标签（如"显示思路"）
+
+<details>
+<summary>查看导出指南</summary>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <p><b>步骤 1：点击导出图标</b></p>
+      <img src="../public/assets/gemini-export-guide-1.png" alt="导出指南步骤 1" style="max-width: 100%;"/>
+    </td>
+    <td align="center" width="50%">
+      <p><b>步骤 2：选择导出格式</b></p>
+      <img src="../public/assets/gemini-export-guide-2.png" alt="导出指南步骤 2" style="max-width: 100%;"/>
+    </td>
+  </tr>
+</table>
+
+</details>
 
 <details>
 <summary>导出格式示例</summary>
@@ -91,6 +143,24 @@
 自定义对话区域宽度（400px - 1400px），支持实时预览。
 
 > **设置面板**：点击扩展图标调整滚动模式、对话宽度和时间线选项。
+
+<details>
+<summary>查看教程</summary>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <p><b>如何打开设置</b></p>
+      <img src="../public/assets/gemini-open-settings-guide.png" alt="打开设置指南" style="max-width: 100%;"/>
+    </td>
+    <td align="center" width="50%">
+      <p><b>对话宽度调整</b></p>
+      <img src="../public/assets/gemini-chatwidth.png" alt="对话宽度调整" style="max-width: 100%;"/>
+    </td>
+  </tr>
+</table>
+
+</details>
 
 ---
 
