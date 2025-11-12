@@ -54,6 +54,8 @@ export class FolderManager {
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
+  private saveInProgress: boolean = false; // Lock to prevent concurrent saves
+  private pendingTitleUpdates: Map<string, string> = new Map(); // Buffer title updates during render
 
   constructor() {
     this.loadData();
@@ -422,8 +424,9 @@ export class FolderManager {
       if (syncedTitle && syncedTitle !== conv.title) {
         conv.title = syncedTitle;
         displayTitle = syncedTitle;
-        this.saveData();
-        this.debug('Updated conversation title from native:', syncedTitle);
+        // Buffer title updates during render to avoid multiple rapid saves
+        this.pendingTitleUpdates.set(conv.conversationId, syncedTitle);
+        this.debug('Buffered title update for:', conv.conversationId);
       }
     }
 
@@ -1514,7 +1517,16 @@ export class FolderManager {
       return;
     }
 
+    // Save immediately and verify before refresh to prevent data loss
     this.saveData();
+
+    // Ensure folderContents entry exists after save (defensive check)
+    if (!this.data.folderContents[folderId]) {
+      this.debugWarn('folderContents entry missing after save, reinitializing');
+      this.data.folderContents[folderId] = [conv];
+      this.saveData();
+    }
+
     this.refresh();
   }
 
@@ -1572,7 +1584,18 @@ export class FolderManager {
       });
     }
 
+    // Save immediately and verify before refresh to prevent data loss
     this.saveData();
+
+    // Ensure folderContents entry exists after save (defensive check)
+    if (!this.data.folderContents[folderId]) {
+      this.debugWarn('folderContents entry missing after batch add, reinitializing');
+      this.data.folderContents[folderId] = conversations.filter(c =>
+        !this.data.folderContents[folderId]?.some(existing => existing.conversationId === c.conversationId)
+      );
+      this.saveData();
+    }
+
     this.refresh();
   }
 
@@ -2875,6 +2898,9 @@ export class FolderManager {
   private refresh(): void {
     if (!this.containerElement) return;
 
+    // Clear pending title updates before refresh
+    this.pendingTitleUpdates.clear();
+
     // Find and update the folders list
     const oldList = this.containerElement.querySelector('.gv-folder-list');
     if (oldList) {
@@ -2887,6 +2913,14 @@ export class FolderManager {
 
     // Update active highlight after re-render
     this.highlightActiveConversationInFolders();
+
+    // Flush any pending title updates collected during rendering
+    if (this.pendingTitleUpdates.size > 0) {
+      this.debug(`Flushing ${this.pendingTitleUpdates.size} pending title updates`);
+      this.pendingTitleUpdates.clear();
+      // Save once after all title updates are applied
+      this.saveData();
+    }
   }
 
   private getCurrentHexIdFromLocation(): string | null {
@@ -2915,17 +2949,89 @@ export class FolderManager {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         this.data = JSON.parse(stored);
+
+        // Validate and repair data integrity
+        if (!this.data.folderContents) {
+          this.data.folderContents = {};
+          this.debugWarn('folderContents missing in loaded data, initialized');
+        }
+
+        if (!this.data.folders) {
+          this.data.folders = [];
+          this.debugWarn('folders missing in loaded data, initialized');
+        }
+
+        // Ensure all folders have a folderContents entry (even if empty)
+        // This is critical for empty folders to persist correctly
+        this.data.folders.forEach((folder) => {
+          if (!this.data.folderContents[folder.id]) {
+            this.data.folderContents[folder.id] = [];
+            this.debugWarn(`Repaired missing folderContents for folder: ${folder.name}`);
+          }
+        });
+
+        // Clean up orphaned folderContents (folders that no longer exist)
+        const validFolderIds = new Set(this.data.folders.map(f => f.id));
+        validFolderIds.add(ROOT_CONVERSATIONS_ID); // Keep root conversations
+        Object.keys(this.data.folderContents).forEach((folderId) => {
+          if (!validFolderIds.has(folderId)) {
+            this.debugWarn(`Removing orphaned folderContents for: ${folderId}`);
+            delete this.data.folderContents[folderId];
+          }
+        });
+
+        this.debug('Data loaded and validated successfully');
       }
     } catch (error) {
       console.error('[FolderManager] Load data error:', error);
+      // Reset to default on error
+      this.data = { folders: [], folderContents: {} };
     }
   }
 
   private saveData(): void {
+    // Prevent concurrent saves to avoid race conditions
+    if (this.saveInProgress) {
+      this.debug('Save already in progress, skipping duplicate call');
+      return;
+    }
+
+    this.saveInProgress = true;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      // Validate data integrity before saving
+      if (!this.data.folderContents) {
+        this.data.folderContents = {};
+      }
+
+      // Ensure all folders have a folderContents entry (even if empty)
+      this.data.folders.forEach((folder) => {
+        if (!this.data.folderContents[folder.id]) {
+          this.data.folderContents[folder.id] = [];
+          this.debug(`Initialized empty folderContents for folder: ${folder.name}`);
+        }
+      });
+
+      const dataString = JSON.stringify(this.data);
+      localStorage.setItem(STORAGE_KEY, dataString);
+
+      // Verify the save was successful by reading back
+      const verification = localStorage.getItem(STORAGE_KEY);
+      if (verification !== dataString) {
+        console.error('[FolderManager] Save verification failed - data mismatch');
+      } else {
+        this.debug('Data saved and verified successfully');
+      }
     } catch (error) {
       console.error('[FolderManager] Save data error:', error);
+      // Attempt retry once on error
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+        this.debug('Retry save successful');
+      } catch (retryError) {
+        console.error('[FolderManager] Retry save failed:', retryError);
+      }
+    } finally {
+      this.saveInProgress = false;
     }
   }
 
