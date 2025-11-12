@@ -2,21 +2,23 @@ import React, { useEffect, useState } from 'react';
 
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Slider } from '../../../components/ui/slider';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 import { StorageKeys } from '@/core/types/common';
 
 /**
  * SidebarWidth popup 组件
- * - 默认值 400px，范围 200 - 800（可按需调整）
+ * - 默认值 308px，范围 200 - 800（可按需调整）
  * - 保存到 chrome.storage.sync（并发送 runtime message: {type: 'gv_sidebar_width_changed', width: number}）
  */
 
-const DEFAULT = 308; // Gemini 默认侧边栏宽度
+const DEFAULT = 308;
 const MIN = 200;
 const MAX = 800;
 const STEP = 10;
 
 export default function SidebarWidth() {
+  const { t } = useLanguage();
   const [value, setValue] = useState<number>(DEFAULT);
 
   useEffect(() => {
@@ -79,7 +81,7 @@ export default function SidebarWidth() {
   return (
     <Card className="p-4 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between mb-3">
-        <CardTitle className="text-xs uppercase">SIDEBAR WIDTH</CardTitle>
+        <CardTitle className="text-xs uppercase">{t('sidebarWidth')}</CardTitle>
         <span className="text-sm font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md shadow-sm">
           {value}px
         </span>
@@ -95,8 +97,8 @@ export default function SidebarWidth() {
             onValueCommit={(v: number) => commit(v)}
           />
           <div className="flex justify-between items-center mt-3 text-xs text-muted-foreground font-medium">
-            <span>Narrow</span>
-            <span>Wide</span>
+            <span>{t('sidebarWidthNarrow')}</span>
+            <span>{t('sidebarWidthWide')}</span>
           </div>
         </div>
       </CardContent>
