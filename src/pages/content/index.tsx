@@ -4,8 +4,8 @@ import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderManager } from './folder/index';
 import { startPromptManager } from './prompt/index';
-import { startTimeline } from './timeline/index';
 import { startSidebarWidthAdjuster } from './sidebarWidth/index'; // 新增导入
+import { startTimeline } from './timeline/index';
 
 import { startFormulaCopy } from '@/features/formulaCopy';
 

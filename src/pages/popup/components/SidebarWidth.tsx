@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Slider } from '../../../components/ui/slider';
+
 import { StorageKeys } from '@/core/types/common';
 
 /**
