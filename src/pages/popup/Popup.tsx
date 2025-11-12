@@ -234,6 +234,10 @@ export default function Popup() {
           onChange={editInputWidthAdjuster.handleChange}
           onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
         />
+
+        {/* 新增：渲染侧边栏宽度控制组件 */}
+        <SidebarWidth />
+        
       </div>
 
       {/* Footer */}
