@@ -1517,16 +1517,8 @@ export class FolderManager {
       return;
     }
 
-    // Save immediately and verify before refresh to prevent data loss
+    // Save immediately before refresh to persist data
     this.saveData();
-
-    // Ensure folderContents entry exists after save (defensive check)
-    if (!this.data.folderContents[folderId]) {
-      this.debugWarn('folderContents entry missing after save, reinitializing');
-      this.data.folderContents[folderId] = [conv];
-      this.saveData();
-    }
-
     this.refresh();
   }
 
@@ -1584,18 +1576,8 @@ export class FolderManager {
       });
     }
 
-    // Save immediately and verify before refresh to prevent data loss
+    // Save immediately before refresh to persist data
     this.saveData();
-
-    // Ensure folderContents entry exists after save (defensive check)
-    if (!this.data.folderContents[folderId]) {
-      this.debugWarn('folderContents entry missing after batch add, reinitializing');
-      this.data.folderContents[folderId] = conversations.filter(c =>
-        !this.data.folderContents[folderId]?.some(existing => existing.conversationId === c.conversationId)
-      );
-      this.saveData();
-    }
-
     this.refresh();
   }
 
@@ -2917,9 +2899,10 @@ export class FolderManager {
     // Flush any pending title updates collected during rendering
     if (this.pendingTitleUpdates.size > 0) {
       this.debug(`Flushing ${this.pendingTitleUpdates.size} pending title updates`);
-      this.pendingTitleUpdates.clear();
       // Save once after all title updates are applied
       this.saveData();
+      // Only clear after successful save to avoid losing updates
+      this.pendingTitleUpdates.clear();
     }
   }
 
@@ -3023,10 +3006,18 @@ export class FolderManager {
       }
     } catch (error) {
       console.error('[FolderManager] Save data error:', error);
-      // Attempt retry once on error
+      // Attempt retry once on error with verification
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-        this.debug('Retry save successful');
+        const dataString = JSON.stringify(this.data);
+        localStorage.setItem(STORAGE_KEY, dataString);
+
+        // Verify retry save was successful
+        const verification = localStorage.getItem(STORAGE_KEY);
+        if (verification !== dataString) {
+          console.error('[FolderManager] Retry save verification failed - data mismatch');
+        } else {
+          this.debug('Retry save successful and verified');
+        }
       } catch (retryError) {
         console.error('[FolderManager] Retry save failed:', retryError);
       }
