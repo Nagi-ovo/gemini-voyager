@@ -1212,7 +1212,7 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
 }
 
 /* Conversation Item in Folder */
-.gv-folder-conversation {
+/* .gv-folder-conversation {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1222,7 +1222,23 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   transition: background-color 0.15s ease, opacity 0.2s;
   position: relative;
   min-height: 40px;
+} */
+
+/* 修改 */
+.gv-folder-conversation {
+  display: flex;
+  align-items: center;
+  gap: 6px;                /* 图标与文本间距，适度缩小 */
+  padding: 6px 8px;        /* 上下 / 左右内边距：从 8px 12px 缩小到 6px 8px */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, opacity 0.12s ease;
+  position: relative;
+  min-height: 28px;        /* 从 40px 缩小到 28px，与 folder root drop 匹配 */
+  box-sizing: border-box;
 }
+
+
 
 .gv-folder-conversation:hover {
   background-color: var(--folder-hover-bg);
