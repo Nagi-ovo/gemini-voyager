@@ -1,7 +1,7 @@
 /**
  * startSidebarWidthAdjuster
  * - 注入样式： bard-sidenav { --bard-sidenav-open-width: ${width}px !important; }
- * - 监听 chrome.storage（或 browser.storage）变化以实时更新
+ * - 监听 storage 变更以实时更新
  */
 
 import { StorageKeys } from '@/core/types/common';
@@ -21,14 +21,17 @@ function applyWidth(width: number) {
 
 function readAndApplyFromStorage() {
   try {
+    // 使用 globalThis 访问 browser 避免 tsc 报错
+    const g: any = globalThis as any;
+
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
       chrome.storage.sync.get([StorageKeys.SIDEBAR_WIDTH], (res: any) => {
         const v = res && res[StorageKeys.SIDEBAR_WIDTH];
         const w = typeof v === 'number' && !isNaN(v) ? v : DEFAULT_WIDTH;
         applyWidth(w);
       });
-    } else if (typeof browser !== 'undefined' && browser.storage && browser.storage.local) {
-      browser.storage.local.get([StorageKeys.SIDEBAR_WIDTH]).then((res: any) => {
+    } else if (typeof g.browser !== 'undefined' && g.browser.storage && g.browser.storage.local) {
+      g.browser.storage.local.get([StorageKeys.SIDEBAR_WIDTH]).then((res: any) => {
         const v = res && res[StorageKeys.SIDEBAR_WIDTH];
         const w = typeof v === 'number' && !isNaN(v) ? v : DEFAULT_WIDTH;
         applyWidth(w);
@@ -52,6 +55,8 @@ export function startSidebarWidthAdjuster() {
   readAndApplyFromStorage();
 
   try {
+    const g: any = globalThis as any;
+
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
       chrome.storage.onChanged.addListener((changes: any) => {
         if (changes && changes[StorageKeys.SIDEBAR_WIDTH]) {
@@ -65,8 +70,8 @@ export function startSidebarWidthAdjuster() {
           applyWidth(msg.width);
         }
       });
-    } else if (typeof browser !== 'undefined' && browser.storage && browser.storage.onChanged) {
-      browser.storage.onChanged.addListener((changes: any) => {
+    } else if (typeof g.browser !== 'undefined' && g.browser.storage && g.browser.storage.onChanged) {
+      g.browser.storage.onChanged.addListener((changes: any) => {
         if (changes && changes[StorageKeys.SIDEBAR_WIDTH]) {
           const newValue = changes[StorageKeys.SIDEBAR_WIDTH].newValue;
           if (typeof newValue === 'number') applyWidth(newValue);

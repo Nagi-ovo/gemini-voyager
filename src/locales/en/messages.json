@@ -113,9 +113,6 @@
   ,"conversation_untitled": { "message": "Untitled", "description": "Fallback title for conversations without a name" }
   ,"geminiOnlyNotice": { "message": "All settings only support Gemini", "description": "Notice that all settings only work with Gemini" }
 
-
-
-  // 新增
   ,"sidebarWidth": { "message": "Sidebar width", "description": "Sidebar width adjustment label" }
   ,"sidebarWidthNarrow": { "message": "Narrow", "description": "Narrow sidebar width label" }
   ,"sidebarWidthWide": { "message": "Wide", "description": "Wide sidebar width label" }

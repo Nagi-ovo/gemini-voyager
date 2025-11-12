@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Slider } from '../../../components/ui/slider';
-
 import { StorageKeys } from '@/core/types/common';
 
 /**
@@ -21,6 +19,8 @@ export default function SidebarWidth() {
 
   useEffect(() => {
     let mounted = true;
+    const g: any = globalThis as any;
+
     // 读取 storage
     try {
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
@@ -29,8 +29,8 @@ export default function SidebarWidth() {
           const v = res && res[StorageKeys.SIDEBAR_WIDTH];
           setValue(typeof v === 'number' && !isNaN(v) ? v : DEFAULT);
         });
-      } else if (typeof browser !== 'undefined' && browser.storage && browser.storage.local) {
-        browser.storage.local.get([StorageKeys.SIDEBAR_WIDTH]).then((res: any) => {
+      } else if (typeof g.browser !== 'undefined' && g.browser.storage && g.browser.storage.local) {
+        g.browser.storage.local.get([StorageKeys.SIDEBAR_WIDTH]).then((res: any) => {
           if (!mounted) return;
           const v = res && res[StorageKeys.SIDEBAR_WIDTH];
           setValue(typeof v === 'number' && !isNaN(v) ? v : DEFAULT);
@@ -50,6 +50,7 @@ export default function SidebarWidth() {
   }, []);
 
   function commit(val: number) {
+    const g: any = globalThis as any;
     try {
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
         chrome.storage.sync.set({ [StorageKeys.SIDEBAR_WIDTH]: val });
@@ -58,11 +59,13 @@ export default function SidebarWidth() {
         } catch (e) {
           // ignore
         }
-      } else if (typeof browser !== 'undefined' && browser.storage && browser.storage.local) {
-        browser.storage.local.set({ [StorageKeys.SIDEBAR_WIDTH]: val });
+      } else if (typeof g.browser !== 'undefined' && g.browser.storage && g.browser.storage.local) {
+        g.browser.storage.local.set({ [StorageKeys.SIDEBAR_WIDTH]: val });
         try {
-          browser.runtime.sendMessage({ type: 'gv_sidebar_width_changed', width: val });
-        } catch (e) {}
+          g.browser.runtime.sendMessage({ type: 'gv_sidebar_width_changed', width: val });
+        } catch (e) {
+          // ignore
+        }
       } else {
         localStorage.setItem(StorageKeys.SIDEBAR_WIDTH, String(val));
       }
