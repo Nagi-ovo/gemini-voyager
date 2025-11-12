@@ -9,6 +9,7 @@ import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 
+import SidebarWidth from './components/SidebarWidth'; // 新增：导入侧边栏宽度组件
 import WidthSlider from './components/WidthSlider';
 
 type ScrollMode = 'jump' | 'flow';
@@ -237,8 +238,8 @@ export default function Popup() {
 
         {/* 新增：渲染侧边栏宽度控制组件 */}
         <SidebarWidth />
-        
       </div>
+
 
       {/* Footer */}
       <div className="bg-linear-to-br from-secondary/30 via-accent/10 to-transparent border-t border-border/50 px-5 py-4 flex items-center justify-between backdrop-blur-sm">
