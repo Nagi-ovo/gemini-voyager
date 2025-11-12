@@ -727,7 +727,11 @@ export class FolderManager {
    * @returns true if the folder can be dragged, false otherwise
    */
   private canFolderBeDragged(folderId: string): boolean {
-    return !this.data.folders.some((f) => f.parentId === folderId);
+    // return !this.data.folders.some((f) => f.parentId === folderId);
+    
+    // 允许拖拽所有文件夹（包含有子文件夹的情况）。
+    // 负责防止产生循环/把文件夹拖到其后代的检查由 addFolderToFolder 里的 isFolderDescendant 完成。
+    return true;
   }
 
   /**
