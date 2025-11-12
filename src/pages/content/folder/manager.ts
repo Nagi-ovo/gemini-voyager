@@ -2880,9 +2880,6 @@ export class FolderManager {
   private refresh(): void {
     if (!this.containerElement) return;
 
-    // Clear pending title updates before refresh
-    this.pendingTitleUpdates.clear();
-
     // Find and update the folders list
     const oldList = this.containerElement.querySelector('.gv-folder-list');
     if (oldList) {
@@ -2900,9 +2897,13 @@ export class FolderManager {
     if (this.pendingTitleUpdates.size > 0) {
       this.debug(`Flushing ${this.pendingTitleUpdates.size} pending title updates`);
       // Save once after all title updates are applied
-      this.saveData();
-      // Only clear after successful save to avoid losing updates
-      this.pendingTitleUpdates.clear();
+      const saved = this.saveData();
+      // Only clear after confirmed successful save to avoid losing updates
+      if (saved) {
+        this.pendingTitleUpdates.clear();
+      } else {
+        this.debugWarn('Save failed, retaining pending title updates for next attempt');
+      }
     }
   }
 
@@ -2972,15 +2973,18 @@ export class FolderManager {
     }
   }
 
-  private saveData(): void {
+  private saveData(): boolean {
     // Prevent concurrent saves to avoid race conditions
     if (this.saveInProgress) {
       this.debug('Save already in progress, skipping duplicate call');
-      return;
+      return false;
     }
 
     this.saveInProgress = true;
-    try {
+    let success = false;
+
+    // Centralized save logic to avoid duplication
+    const attemptSave = (): void => {
       // Validate data integrity before saving
       if (!this.data.folderContents) {
         this.data.folderContents = {};
@@ -3000,30 +3004,29 @@ export class FolderManager {
       // Verify the save was successful by reading back
       const verification = localStorage.getItem(STORAGE_KEY);
       if (verification !== dataString) {
-        console.error('[FolderManager] Save verification failed - data mismatch');
-      } else {
-        this.debug('Data saved and verified successfully');
+        throw new Error('Save verification failed - data mismatch');
       }
-    } catch (error) {
-      console.error('[FolderManager] Save data error:', error);
-      // Attempt retry once on error with verification
-      try {
-        const dataString = JSON.stringify(this.data);
-        localStorage.setItem(STORAGE_KEY, dataString);
+    };
 
-        // Verify retry save was successful
-        const verification = localStorage.getItem(STORAGE_KEY);
-        if (verification !== dataString) {
-          console.error('[FolderManager] Retry save verification failed - data mismatch');
-        } else {
-          this.debug('Retry save successful and verified');
-        }
+    try {
+      attemptSave();
+      this.debug('Data saved and verified successfully');
+      success = true;
+    } catch (error) {
+      console.error('[FolderManager] Save data error, retrying once:', error);
+      // Attempt retry once on error
+      try {
+        attemptSave();
+        this.debug('Retry save successful and verified');
+        success = true;
       } catch (retryError) {
         console.error('[FolderManager] Retry save failed:', retryError);
       }
     } finally {
       this.saveInProgress = false;
     }
+
+    return success;
   }
 
   private async loadHideArchivedSetting(): Promise<void> {
