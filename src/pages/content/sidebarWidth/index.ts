@@ -7,7 +7,7 @@
 import { StorageKeys } from '@/core/types/common';
 
 const STYLE_ID = 'gemini-voyager-sidebar-width';
-const DEFAULT_WIDTH = 400;
+const DEFAULT_WIDTH = 308;  // Gemini 默认侧边栏宽度
 
 function applyWidth(width: number) {
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement | null;

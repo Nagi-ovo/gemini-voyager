@@ -11,7 +11,7 @@ import { StorageKeys } from '@/core/types/common';
  * - 保存到 chrome.storage.sync（并发送 runtime message: {type: 'gv_sidebar_width_changed', width: number}）
  */
 
-const DEFAULT = 400;
+const DEFAULT = 308; // Gemini 默认侧边栏宽度
 const MIN = 200;
 const MAX = 800;
 const STEP = 10;
