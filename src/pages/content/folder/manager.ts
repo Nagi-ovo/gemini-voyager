@@ -15,6 +15,11 @@ import { initI18n, getTranslationSync } from '@/utils/i18n';
 const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
 const ROOT_CONVERSATIONS_ID = '__root_conversations__'; // Special ID for root-level conversations
+const NOTIFICATION_TIMEOUT_MS = 10000; // Duration to show data loss notification
+
+// Export session backup keys for use by FolderImportExportService
+export const SESSION_BACKUP_KEY = 'gvFolderBackup';
+export const SESSION_BACKUP_TIMESTAMP_KEY = 'gvFolderBackupTimestamp';
 
 export class FolderManager {
   private debug(...args: any[]): void {
@@ -3011,7 +3016,7 @@ export class FolderManager {
   private attemptDataRecovery(error: unknown): void {
     // Try to restore from sessionStorage backup first
     try {
-      const backupStr = sessionStorage.getItem('gvFolderBackup');
+      const backupStr = sessionStorage.getItem(SESSION_BACKUP_KEY);
       if (backupStr) {
         const backup = JSON.parse(backupStr);
         if (backup && typeof backup === 'object' && Array.isArray(backup.folders)) {
@@ -3074,14 +3079,14 @@ export class FolderManager {
       notification.textContent = message;
       document.body.appendChild(notification);
 
-      // Auto-remove after 10 seconds
+      // Auto-remove after timeout
       setTimeout(() => {
         try {
           document.body.removeChild(notification);
         } catch {
           /* ignore */
         }
-      }, 10000);
+      }, NOTIFICATION_TIMEOUT_MS);
     } catch (notificationError) {
       console.error('[FolderManager] Failed to show notification:', notificationError);
     }
@@ -3155,8 +3160,8 @@ export class FolderManager {
     try {
       // Only create backup if we have data worth backing up
       if (this.data.folders.length > 0 || Object.keys(this.data.folderContents).length > 0) {
-        sessionStorage.setItem('gvFolderBackup', JSON.stringify(this.data));
-        sessionStorage.setItem('gvFolderBackupTimestamp', new Date().toISOString());
+        sessionStorage.setItem(SESSION_BACKUP_KEY, JSON.stringify(this.data));
+        sessionStorage.setItem(SESSION_BACKUP_TIMESTAMP_KEY, new Date().toISOString());
         this.debug('Session backup created');
       }
     } catch (error) {
