@@ -365,4 +365,6 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
   <p>觉得有用的话，请给我们点个 ⭐ 吧！</p>
 </div>
 
-This project is licensed under the MIT License. Copyright © 2025 Jesse Zhang.
+<div align="center">
+  <sub>MIT License © 2025 Jesse Zhang</sub>
+</div>
