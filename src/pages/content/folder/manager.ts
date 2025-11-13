@@ -2997,8 +2997,93 @@ export class FolderManager {
       }
     } catch (error) {
       console.error('[FolderManager] Load data error:', error);
-      // Reset to default on error
-      this.data = { folders: [], folderContents: {} };
+
+      // CRITICAL: Do NOT clear data on error - this causes data loss!
+      // Instead, try to recover from backup or keep existing data
+      this.attemptDataRecovery(error);
+    }
+  }
+
+  /**
+   * Attempt to recover data when loadData() fails
+   * Priority: sessionStorage backup > keep existing data > initialize empty
+   */
+  private attemptDataRecovery(error: unknown): void {
+    // Try to restore from sessionStorage backup first
+    try {
+      const backupStr = sessionStorage.getItem('gvFolderBackup');
+      if (backupStr) {
+        const backup = JSON.parse(backupStr);
+        if (backup && typeof backup === 'object' && Array.isArray(backup.folders)) {
+          this.data = backup;
+          this.ensureDataIntegrity();
+          console.warn('[FolderManager] Data recovered from session backup');
+          // Save recovered data to localStorage
+          this.saveData();
+          return;
+        }
+      }
+    } catch (backupError) {
+      console.error('[FolderManager] Failed to restore from backup:', backupError);
+    }
+
+    // If current this.data already has valid structure, keep it
+    if (this.data &&
+        typeof this.data === 'object' &&
+        Array.isArray(this.data.folders) &&
+        this.data.folderContents &&
+        typeof this.data.folderContents === 'object') {
+      console.warn('[FolderManager] Keeping existing in-memory data after load error');
+      this.ensureDataIntegrity();
+      return;
+    }
+
+    // Last resort: initialize empty data and log critical error
+    console.error('[FolderManager] CRITICAL: Unable to recover data, initializing empty state');
+    console.error('[FolderManager] Original error:', error);
+    this.data = { folders: [], folderContents: {} };
+
+    // Show user notification about data loss
+    this.showDataLossNotification();
+  }
+
+  /**
+   * Show notification to user about potential data loss
+   */
+  private showDataLossNotification(): void {
+    try {
+      const message = getTranslationSync('folderManager_dataLossWarning') ||
+        'Warning: Failed to load folder data. Please check your browser console for details.';
+
+      // Create a visible notification
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #f44336;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 14px;
+        max-width: 400px;
+      `;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      // Auto-remove after 10 seconds
+      setTimeout(() => {
+        try {
+          document.body.removeChild(notification);
+        } catch {
+          /* ignore */
+        }
+      }, 10000);
+    } catch (notificationError) {
+      console.error('[FolderManager] Failed to show notification:', notificationError);
     }
   }
 
@@ -3016,6 +3101,20 @@ export class FolderManager {
     const attemptSave = (): void => {
       // Validate data integrity before saving
       this.ensureDataIntegrity();
+
+      // CRITICAL: Create backup before saving to protect against data loss
+      this.createSessionBackup();
+
+      // Additional safety check: warn if saving empty data
+      if (this.data.folders.length === 0 && Object.keys(this.data.folderContents).length === 0) {
+        const existingData = localStorage.getItem(STORAGE_KEY);
+        if (existingData && existingData !== '{"folders":[],"folderContents":{}}') {
+          // We're about to overwrite non-empty data with empty data - this is suspicious
+          console.warn('[FolderManager] WARNING: Attempting to save empty data over existing non-empty data');
+          console.warn('[FolderManager] This may indicate a bug. Current localStorage data:', existingData.substring(0, 200));
+          // Still proceed, but log it prominently
+        }
+      }
 
       const dataString = JSON.stringify(this.data);
       localStorage.setItem(STORAGE_KEY, dataString);
@@ -3046,6 +3145,24 @@ export class FolderManager {
     }
 
     return success;
+  }
+
+  /**
+   * Create a backup of current data in sessionStorage
+   * This helps recover data if a save operation corrupts localStorage
+   */
+  private createSessionBackup(): void {
+    try {
+      // Only create backup if we have data worth backing up
+      if (this.data.folders.length > 0 || Object.keys(this.data.folderContents).length > 0) {
+        sessionStorage.setItem('gvFolderBackup', JSON.stringify(this.data));
+        sessionStorage.setItem('gvFolderBackupTimestamp', new Date().toISOString());
+        this.debug('Session backup created');
+      }
+    } catch (error) {
+      // Session storage might be full or unavailable, but don't fail the save
+      console.warn('[FolderManager] Failed to create session backup:', error);
+    }
   }
 
   private async loadFolderEnabledSetting(): Promise<void> {
