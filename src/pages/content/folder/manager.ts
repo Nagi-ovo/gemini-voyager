@@ -54,6 +54,8 @@ export class FolderManager {
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
+  private saveInProgress: boolean = false; // Lock to prevent concurrent saves
+  private pendingTitleUpdates: Map<string, string> = new Map(); // Buffer title updates during render
 
   constructor() {
     this.loadData();
@@ -422,8 +424,9 @@ export class FolderManager {
       if (syncedTitle && syncedTitle !== conv.title) {
         conv.title = syncedTitle;
         displayTitle = syncedTitle;
-        this.saveData();
-        this.debug('Updated conversation title from native:', syncedTitle);
+        // Buffer title updates during render to avoid multiple rapid saves
+        this.pendingTitleUpdates.set(conv.conversationId, syncedTitle);
+        this.debug('Buffered title update for:', conv.conversationId);
       }
     }
 
@@ -1514,6 +1517,7 @@ export class FolderManager {
       return;
     }
 
+    // Save immediately before refresh to persist data
     this.saveData();
     this.refresh();
   }
@@ -1572,6 +1576,7 @@ export class FolderManager {
       });
     }
 
+    // Save immediately before refresh to persist data
     this.saveData();
     this.refresh();
   }
@@ -2887,6 +2892,19 @@ export class FolderManager {
 
     // Update active highlight after re-render
     this.highlightActiveConversationInFolders();
+
+    // Flush any pending title updates collected during rendering
+    if (this.pendingTitleUpdates.size > 0) {
+      this.debug(`Flushing ${this.pendingTitleUpdates.size} pending title updates`);
+      // Save once after all title updates are applied
+      const saved = this.saveData();
+      // Only clear after confirmed successful save to avoid losing updates
+      if (saved) {
+        this.pendingTitleUpdates.clear();
+      } else {
+        this.debugWarn('Save failed, retaining pending title updates for next attempt');
+      }
+    }
   }
 
   private getCurrentHexIdFromLocation(): string | null {
@@ -2910,23 +2928,105 @@ export class FolderManager {
     });
   }
 
+  /**
+   * Ensures data integrity by validating and repairing the folder data structure.
+   * This method is called by both loadData() and saveData() to maintain consistency.
+   */
+  private ensureDataIntegrity(): void {
+    // Ensure folderContents object exists
+    if (!this.data.folderContents) {
+      this.data.folderContents = {};
+      this.debugWarn('folderContents was missing, initialized');
+    }
+
+    // Ensure folders array exists
+    if (!this.data.folders) {
+      this.data.folders = [];
+      this.debugWarn('folders was missing, initialized');
+    }
+
+    // Ensure all folders have a folderContents entry (even if empty)
+    // This is critical for empty folders to persist correctly
+    this.data.folders.forEach((folder) => {
+      if (!this.data.folderContents[folder.id]) {
+        this.data.folderContents[folder.id] = [];
+        this.debugWarn(`Initialized missing folderContents for folder: ${folder.name}`);
+      }
+    });
+  }
+
   private loadData(): void {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         this.data = JSON.parse(stored);
+
+        // Validate and repair data integrity
+        this.ensureDataIntegrity();
+
+        // Clean up orphaned folderContents (folders that no longer exist)
+        const validFolderIds = new Set(this.data.folders.map(f => f.id));
+        validFolderIds.add(ROOT_CONVERSATIONS_ID); // Keep root conversations
+        Object.keys(this.data.folderContents).forEach((folderId) => {
+          if (!validFolderIds.has(folderId)) {
+            this.debugWarn(`Removing orphaned folderContents for: ${folderId}`);
+            delete this.data.folderContents[folderId];
+          }
+        });
+
+        this.debug('Data loaded and validated successfully');
       }
     } catch (error) {
       console.error('[FolderManager] Load data error:', error);
+      // Reset to default on error
+      this.data = { folders: [], folderContents: {} };
     }
   }
 
-  private saveData(): void {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-    } catch (error) {
-      console.error('[FolderManager] Save data error:', error);
+  private saveData(): boolean {
+    // Prevent concurrent saves to avoid race conditions
+    if (this.saveInProgress) {
+      this.debug('Save already in progress, skipping duplicate call');
+      return false;
     }
+
+    this.saveInProgress = true;
+    let success = false;
+
+    // Centralized save logic to avoid duplication
+    const attemptSave = (): void => {
+      // Validate data integrity before saving
+      this.ensureDataIntegrity();
+
+      const dataString = JSON.stringify(this.data);
+      localStorage.setItem(STORAGE_KEY, dataString);
+
+      // Verify the save was successful by reading back
+      const verification = localStorage.getItem(STORAGE_KEY);
+      if (verification !== dataString) {
+        throw new Error('Save verification failed - data mismatch');
+      }
+    };
+
+    try {
+      attemptSave();
+      this.debug('Data saved and verified successfully');
+      success = true;
+    } catch (error) {
+      console.error('[FolderManager] Save data error, retrying once:', error);
+      // Attempt retry once on error
+      try {
+        attemptSave();
+        this.debug('Retry save successful and verified');
+        success = true;
+      } catch (retryError) {
+        console.error('[FolderManager] Retry save failed:', retryError);
+      }
+    } finally {
+      this.saveInProgress = false;
+    }
+
+    return success;
   }
 
   private async loadHideArchivedSetting(): Promise<void> {
