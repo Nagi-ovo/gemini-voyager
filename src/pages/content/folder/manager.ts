@@ -51,6 +51,7 @@ export class FolderManager {
   private multiSelectFolderId: string | null = null; // Track which folder multi-select was initiated from
   private longPressTimeout: number | null = null; // For long-press detection
   private longPressThreshold: number = 500; // Long-press duration in ms
+  private folderEnabled: boolean = true; // Whether folder feature is enabled
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
@@ -68,6 +69,9 @@ export class FolderManager {
 
   async init(): Promise<void> {
     try {
+      // Load folder enabled setting
+      await this.loadFolderEnabledSetting();
+
       // Load hide archived setting
       await this.loadHideArchivedSetting();
 
@@ -189,6 +193,9 @@ export class FolderManager {
     this.highlightActiveConversationInFolders();
     this.installRouteChangeListener();
     this.installSidebarClickListener();
+
+    // Apply initial folder enabled setting
+    this.applyFolderEnabledSetting();
   }
 
   private createMultiSelectIndicator(): HTMLElement {
@@ -3030,6 +3037,17 @@ export class FolderManager {
     return success;
   }
 
+  private async loadFolderEnabledSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({ geminiFolderEnabled: true });
+      this.folderEnabled = result.geminiFolderEnabled !== false;
+      this.debug('Loaded folder enabled setting:', this.folderEnabled);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load folder enabled setting:', error);
+      this.folderEnabled = true;
+    }
+  }
+
   private async loadHideArchivedSetting(): Promise<void> {
     try {
       const result = await browser.storage.sync.get({ geminiFolderHideArchivedConversations: false });
@@ -3043,13 +3061,33 @@ export class FolderManager {
 
   private setupStorageListener(): void {
     browser.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName === 'sync' && changes.geminiFolderHideArchivedConversations) {
-        this.hideArchivedConversations = !!changes.geminiFolderHideArchivedConversations.newValue;
-        this.debug('Hide archived setting changed:', this.hideArchivedConversations);
-        // Apply the change to all conversations
-        this.applyHideArchivedSetting();
+      if (areaName === 'sync') {
+        if (changes.geminiFolderEnabled) {
+          this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
+          this.debug('Folder enabled setting changed:', this.folderEnabled);
+          // Apply the change to folder visibility
+          this.applyFolderEnabledSetting();
+        }
+        if (changes.geminiFolderHideArchivedConversations) {
+          this.hideArchivedConversations = !!changes.geminiFolderHideArchivedConversations.newValue;
+          this.debug('Hide archived setting changed:', this.hideArchivedConversations);
+          // Apply the change to all conversations
+          this.applyHideArchivedSetting();
+        }
       }
     });
+  }
+
+  private applyFolderEnabledSetting(): void {
+    if (!this.containerElement) return;
+
+    if (this.folderEnabled) {
+      this.containerElement.style.display = '';
+      this.debug('Folder feature enabled');
+    } else {
+      this.containerElement.style.display = 'none';
+      this.debug('Folder feature disabled');
+    }
   }
 
   private applyHideArchivedSetting(): void {

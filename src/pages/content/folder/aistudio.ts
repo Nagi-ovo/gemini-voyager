@@ -62,6 +62,7 @@ export class AIStudioFolderManager {
   private historyRoot: HTMLElement | null = null;
   private cleanupFns: Array<() => void> = [];
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
+  private folderEnabled: boolean = true; // Whether folder feature is enabled
 
   // Helper to create a ligature icon span with a data-icon attribute
   private createIcon(name: string): HTMLSpanElement {
@@ -78,6 +79,12 @@ export class AIStudioFolderManager {
 
     // Only enable on prompts routes
     if (!/\/prompts(\/|$)/.test(location.pathname)) return;
+
+    // Load folder enabled setting
+    await this.loadFolderEnabledSetting();
+
+    // Set up storage change listener
+    this.setupStorageListener();
 
     // Find the prompt history component and sidebar region
     this.historyRoot = (await waitForElement<HTMLElement>('ms-prompt-history-v3')) || null;
@@ -155,6 +162,9 @@ export class AIStudioFolderManager {
 
     this.container = container;
     this.render();
+
+    // Apply initial folder enabled setting
+    this.applyFolderEnabledSetting();
   }
 
   private render(): void {
@@ -628,6 +638,43 @@ export class AIStudioFolderManager {
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  }
+
+  private async loadFolderEnabledSetting(): Promise<void> {
+    try {
+      const result = await storageService.get<boolean>('geminiFolderEnabled');
+      if (result.success && result.data !== undefined) {
+        this.folderEnabled = result.data !== false;
+      } else {
+        this.folderEnabled = true;
+      }
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to load folder enabled setting:', error);
+      this.folderEnabled = true;
+    }
+  }
+
+  private setupStorageListener(): void {
+    try {
+      chrome.storage?.onChanged?.addListener((changes, areaName) => {
+        if (areaName === 'sync' && changes.geminiFolderEnabled) {
+          this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
+          this.applyFolderEnabledSetting();
+        }
+      });
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to set up storage listener:', error);
+    }
+  }
+
+  private applyFolderEnabledSetting(): void {
+    if (!this.container) return;
+
+    if (this.folderEnabled) {
+      this.container.style.display = '';
+    } else {
+      this.container.style.display = 'none';
+    }
   }
 }
 

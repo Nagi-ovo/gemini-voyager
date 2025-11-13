@@ -18,6 +18,7 @@ export default function Popup() {
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
+  const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
 
   // Helper function to apply settings to storage
@@ -26,12 +27,14 @@ export default function Popup() {
     nextHide?: boolean,
     nextDraggable?: boolean,
     resetPosition?: boolean,
+    nextFolderEnabled?: boolean,
     nextHideArchived?: boolean
   ) => {
     const payload: any = {};
     if (nextMode) payload.geminiTimelineScrollMode = nextMode;
     if (typeof nextHide === 'boolean') payload.geminiTimelineHideContainer = nextHide;
     if (typeof nextDraggable === 'boolean') payload.geminiTimelineDraggable = nextDraggable;
+    if (typeof nextFolderEnabled === 'boolean') payload.geminiFolderEnabled = nextFolderEnabled;
     if (typeof nextHideArchived === 'boolean') payload.geminiFolderHideArchivedConversations = nextHideArchived;
     if (resetPosition) payload.geminiTimelinePosition = null;
     try {
@@ -68,6 +71,7 @@ export default function Popup() {
           geminiTimelineScrollMode: 'flow',
           geminiTimelineHideContainer: false,
           geminiTimelineDraggable: false,
+          geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
         },
         (res) => {
@@ -75,6 +79,7 @@ export default function Popup() {
           if (m === 'jump' || m === 'flow') setMode(m);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
+          setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
         }
       );
@@ -196,6 +201,19 @@ export default function Popup() {
           <CardTitle className="mb-4 text-xs uppercase">{t('folderOptions')}</CardTitle>
           <CardContent className="p-0 space-y-4">
             <div className="flex items-center justify-between group">
+              <Label htmlFor="folder-enabled" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                {t('enableFolderFeature')}
+              </Label>
+              <Switch
+                id="folder-enabled"
+                checked={folderEnabled}
+                onChange={(e) => {
+                  setFolderEnabled(e.target.checked);
+                  apply(null, undefined, undefined, undefined, e.target.checked);
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between group">
               <Label htmlFor="hide-archived" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
                 {t('hideArchivedConversations')}
               </Label>
@@ -204,7 +222,7 @@ export default function Popup() {
                 checked={hideArchivedConversations}
                 onChange={(e) => {
                   setHideArchivedConversations(e.target.checked);
-                  apply(null, undefined, undefined, undefined, e.target.checked);
+                  apply(null, undefined, undefined, undefined, undefined, e.target.checked);
                 }}
               />
             </div>

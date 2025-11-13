@@ -107,6 +107,7 @@
   ,"editInputWidthWide": { "message": "Wide", "description": "Wide edit input width label" }
   ,"timelineOptions": { "message": "Timeline Options", "description": "Timeline options section label" }
   ,"folderOptions": { "message": "Folder Options", "description": "Folder options section label" }
+  ,"enableFolderFeature": { "message": "Enable folder feature", "description": "Enable or disable the folder feature" }
   ,"hideArchivedConversations": { "message": "Hide archived conversations", "description": "Hide conversations that are in folders from the main list" }
   ,"conversation_star": { "message": "Star conversation", "description": "Star conversation button tooltip" }
   ,"conversation_unstar": { "message": "Unstar conversation", "description": "Unstar conversation button tooltip" }
