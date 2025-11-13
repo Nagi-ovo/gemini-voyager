@@ -113,4 +113,5 @@
   ,"conversation_unstar": { "message": "Unstar conversation", "description": "Unstar conversation button tooltip" }
   ,"conversation_untitled": { "message": "Untitled", "description": "Fallback title for conversations without a name" }
   ,"geminiOnlyNotice": { "message": "All settings only support Gemini", "description": "Notice that all settings only work with Gemini" }
+  ,"folderManager_dataLossWarning": { "message": "⚠️ Warning: Failed to load folder data. Your folders may have been corrupted. Please check the browser console for details and try restoring from backup if available.", "description": "Warning shown when folder data fails to load" }
 }

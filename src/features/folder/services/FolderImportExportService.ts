@@ -22,6 +22,10 @@ import {
   isSupportedFormat,
   applyMigrations,
 } from '@/core/utils/version';
+import {
+  SESSION_BACKUP_KEY,
+  SESSION_BACKUP_TIMESTAMP_KEY,
+} from '@/pages/content/folder/manager';
 
 const EXPORT_FORMAT: FormatVersion = 'gemini-voyager.folders.v1' as const;
 
@@ -304,8 +308,8 @@ export class FolderImportExportService {
       // Store backup in sessionStorage if created
       if (backupData) {
         try {
-          sessionStorage.setItem('gvFolderBackup', JSON.stringify(backupData));
-          sessionStorage.setItem('gvFolderBackupTimestamp', new Date().toISOString());
+          sessionStorage.setItem(SESSION_BACKUP_KEY, JSON.stringify(backupData));
+          sessionStorage.setItem(SESSION_BACKUP_TIMESTAMP_KEY, new Date().toISOString());
         } catch (error) {
           // Backup storage failed, but continue with import
           console.warn('Failed to store backup in sessionStorage', error);
@@ -406,7 +410,7 @@ export class FolderImportExportService {
    */
   static restoreFromBackup(): Result<FolderData> {
     try {
-      const backupStr = sessionStorage.getItem('gvFolderBackup');
+      const backupStr = sessionStorage.getItem(SESSION_BACKUP_KEY);
       if (!backupStr) {
         return {
           success: false,
@@ -432,8 +436,8 @@ export class FolderImportExportService {
    */
   static clearBackup(): void {
     try {
-      sessionStorage.removeItem('gvFolderBackup');
-      sessionStorage.removeItem('gvFolderBackupTimestamp');
+      sessionStorage.removeItem(SESSION_BACKUP_KEY);
+      sessionStorage.removeItem(SESSION_BACKUP_TIMESTAMP_KEY);
     } catch {
       /* ignore */
     }
@@ -444,7 +448,7 @@ export class FolderImportExportService {
    */
   static hasBackup(): boolean {
     try {
-      return sessionStorage.getItem('gvFolderBackup') !== null;
+      return sessionStorage.getItem(SESSION_BACKUP_KEY) !== null;
     } catch {
       return false;
     }
@@ -455,7 +459,7 @@ export class FolderImportExportService {
    */
   static getBackupTimestamp(): string | null {
     try {
-      return sessionStorage.getItem('gvFolderBackupTimestamp');
+      return sessionStorage.getItem(SESSION_BACKUP_TIMESTAMP_KEY);
     } catch {
       return null;
     }

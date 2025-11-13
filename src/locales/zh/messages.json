@@ -113,4 +113,5 @@
   ,"conversation_unstar": { "message": "取消星标", "description": "取消星标对话按钮提示" }
   ,"conversation_untitled": { "message": "未命名", "description": "无标题对话的回退标题" }
   ,"geminiOnlyNotice": { "message": "所有设置仅支持 Gemini", "description": "提示所有设置仅适用于 Gemini" }
+  ,"folderManager_dataLossWarning": { "message": "⚠️ 警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。", "description": "文件夹数据加载失败时显示的警告" }
 }
