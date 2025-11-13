@@ -1,5 +1,6 @@
 import type { Folder, FolderData, ConversationReference, DragData } from './types';
 
+import browser from 'webextension-polyfill';
 import { storageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
 import { initI18n, createTranslator } from '@/utils/i18n';
@@ -642,12 +643,8 @@ export class AIStudioFolderManager {
 
   private async loadFolderEnabledSetting(): Promise<void> {
     try {
-      const result = await storageService.get<boolean>('geminiFolderEnabled');
-      if (result.success && result.data !== undefined) {
-        this.folderEnabled = result.data !== false;
-      } else {
-        this.folderEnabled = true;
-      }
+      const result = await browser.storage.sync.get({ geminiFolderEnabled: true });
+      this.folderEnabled = result.geminiFolderEnabled !== false;
     } catch (error) {
       console.error('[AIStudioFolderManager] Failed to load folder enabled setting:', error);
       this.folderEnabled = true;
@@ -655,16 +652,12 @@ export class AIStudioFolderManager {
   }
 
   private setupStorageListener(): void {
-    try {
-      chrome.storage?.onChanged?.addListener((changes, areaName) => {
-        if (areaName === 'sync' && changes.geminiFolderEnabled) {
-          this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
-          this.applyFolderEnabledSetting();
-        }
-      });
-    } catch (error) {
-      console.error('[AIStudioFolderManager] Failed to set up storage listener:', error);
-    }
+    browser.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'sync' && changes.geminiFolderEnabled) {
+        this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
+        this.applyFolderEnabledSetting();
+      }
+    });
   }
 
   private applyFolderEnabledSetting(): void {
