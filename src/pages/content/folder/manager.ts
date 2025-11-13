@@ -75,43 +75,54 @@ export class FolderManager {
       // Load hide archived setting
       await this.loadHideArchivedSetting();
 
-      // Set up storage change listener
+      // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
 
-      // Wait for sidebar to be available
-      await this.waitForSidebar();
-
-      // Find the Recent section
-      this.findRecentSection();
-
-      if (!this.recentSection) {
-        this.debugWarn('Could not find Recent section');
+      // If folder feature is disabled, skip initialization
+      if (!this.folderEnabled) {
+        this.debug('Folder feature is disabled, skipping initialization');
         return;
       }
 
-      // Create and inject folder UI
-      this.createFolderUI();
-
-      // Make conversations draggable
-      this.makeConversationsDraggable();
-
-      // Set up mutation observer to handle dynamically added conversations
-      this.setupMutationObserver();
-
-      // Set up sidebar visibility observer
-      this.setupSideNavObserver();
-
-      // Initial visibility check
-      this.updateVisibilityBasedOnSideNav();
-
-      // Set up native conversation menu injection
-      this.setupConversationClickTracking();
-      this.setupNativeConversationMenuObserver();
+      // Initialize folder UI
+      await this.initializeFolderUI();
 
       this.debug('Initialized successfully');
     } catch (error) {
       console.error('[FolderManager] Initialization error:', error);
     }
+  }
+
+  private async initializeFolderUI(): Promise<void> {
+    // Wait for sidebar to be available
+    await this.waitForSidebar();
+
+    // Find the Recent section
+    this.findRecentSection();
+
+    if (!this.recentSection) {
+      this.debugWarn('Could not find Recent section');
+      return;
+    }
+
+    // Create and inject folder UI
+    this.createFolderUI();
+
+    // Make conversations draggable
+    this.makeConversationsDraggable();
+
+    // Set up mutation observer to handle dynamically added conversations
+    this.setupMutationObserver();
+
+    // Set up sidebar visibility observer
+    this.setupSideNavObserver();
+
+    // Initial visibility check
+    this.updateVisibilityBasedOnSideNav();
+
+    // Set up native conversation menu injection
+    this.setupConversationClickTracking();
+    this.setupNativeConversationMenuObserver();
   }
 
   private async waitForSidebar(): Promise<void> {
@@ -3079,14 +3090,24 @@ export class FolderManager {
   }
 
   private applyFolderEnabledSetting(): void {
-    if (!this.containerElement) return;
-
     if (this.folderEnabled) {
-      this.containerElement.style.display = '';
-      this.debug('Folder feature enabled');
+      // If folder UI doesn't exist yet, initialize it
+      if (!this.containerElement) {
+        this.debug('Folder feature enabled, initializing UI');
+        this.initializeFolderUI().catch((error) => {
+          console.error('[FolderManager] Failed to initialize folder UI:', error);
+        });
+      } else {
+        // UI already exists, just show it
+        this.containerElement.style.display = '';
+        this.debug('Folder feature enabled');
+      }
     } else {
-      this.containerElement.style.display = 'none';
-      this.debug('Folder feature disabled');
+      // Hide the folder UI if it exists
+      if (this.containerElement) {
+        this.containerElement.style.display = 'none';
+        this.debug('Folder feature disabled');
+      }
     }
   }
 

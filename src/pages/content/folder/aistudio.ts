@@ -85,9 +85,19 @@ export class AIStudioFolderManager {
     // Load folder enabled setting
     await this.loadFolderEnabledSetting();
 
-    // Set up storage change listener
+    // Set up storage change listener (always needed to respond to setting changes)
     this.setupStorageListener();
 
+    // If folder feature is disabled, skip initialization
+    if (!this.folderEnabled) {
+      return;
+    }
+
+    // Initialize folder UI
+    await this.initializeFolderUI();
+  }
+
+  private async initializeFolderUI(): Promise<void> {
     // Find the prompt history component and sidebar region
     this.historyRoot = (await waitForElement<HTMLElement>('ms-prompt-history-v3')) || null;
     if (!this.historyRoot) return;
@@ -662,12 +672,21 @@ export class AIStudioFolderManager {
   }
 
   private applyFolderEnabledSetting(): void {
-    if (!this.container) return;
-
     if (this.folderEnabled) {
-      this.container.style.display = '';
+      // If folder UI doesn't exist yet, initialize it
+      if (!this.container) {
+        this.initializeFolderUI().catch((error) => {
+          console.error('[AIStudioFolderManager] Failed to initialize folder UI:', error);
+        });
+      } else {
+        // UI already exists, just show it
+        this.container.style.display = '';
+      }
     } else {
-      this.container.style.display = 'none';
+      // Hide the folder UI if it exists
+      if (this.container) {
+        this.container.style.display = 'none';
+      }
     }
   }
 }

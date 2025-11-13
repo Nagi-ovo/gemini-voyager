@@ -13,6 +13,15 @@ import WidthSlider from './components/WidthSlider';
 
 type ScrollMode = 'jump' | 'flow';
 
+interface SettingsUpdate {
+  mode?: ScrollMode | null;
+  hideContainer?: boolean;
+  draggableTimeline?: boolean;
+  resetPosition?: boolean;
+  folderEnabled?: boolean;
+  hideArchivedConversations?: boolean;
+}
+
 export default function Popup() {
   const { t } = useLanguage();
   const [mode, setMode] = useState<ScrollMode>('flow');
@@ -22,21 +31,14 @@ export default function Popup() {
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
 
   // Helper function to apply settings to storage
-  const apply = useCallback((
-    nextMode: ScrollMode | null,
-    nextHide?: boolean,
-    nextDraggable?: boolean,
-    resetPosition?: boolean,
-    nextFolderEnabled?: boolean,
-    nextHideArchived?: boolean
-  ) => {
+  const apply = useCallback((settings: SettingsUpdate) => {
     const payload: any = {};
-    if (nextMode) payload.geminiTimelineScrollMode = nextMode;
-    if (typeof nextHide === 'boolean') payload.geminiTimelineHideContainer = nextHide;
-    if (typeof nextDraggable === 'boolean') payload.geminiTimelineDraggable = nextDraggable;
-    if (typeof nextFolderEnabled === 'boolean') payload.geminiFolderEnabled = nextFolderEnabled;
-    if (typeof nextHideArchived === 'boolean') payload.geminiFolderHideArchivedConversations = nextHideArchived;
-    if (resetPosition) payload.geminiTimelinePosition = null;
+    if (settings.mode) payload.geminiTimelineScrollMode = settings.mode;
+    if (typeof settings.hideContainer === 'boolean') payload.geminiTimelineHideContainer = settings.hideContainer;
+    if (typeof settings.draggableTimeline === 'boolean') payload.geminiTimelineDraggable = settings.draggableTimeline;
+    if (typeof settings.folderEnabled === 'boolean') payload.geminiFolderEnabled = settings.folderEnabled;
+    if (typeof settings.hideArchivedConversations === 'boolean') payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
+    if (settings.resetPosition) payload.geminiTimelinePosition = null;
     try {
       chrome.storage?.sync?.set(payload);
     } catch {}
@@ -134,7 +136,7 @@ export default function Popup() {
                 }`}
                 onClick={() => {
                   setMode('flow');
-                  apply('flow');
+                  apply({ mode: 'flow' });
                 }}
               >
                 {t('flow')}
@@ -145,7 +147,7 @@ export default function Popup() {
                 }`}
                 onClick={() => {
                   setMode('jump');
-                  apply('jump');
+                  apply({ mode: 'jump' });
                 }}
               >
                 {t('jump')}
@@ -166,7 +168,7 @@ export default function Popup() {
                 checked={hideContainer}
                 onChange={(e) => {
                   setHideContainer(e.target.checked);
-                  apply(null, e.target.checked);
+                  apply({ hideContainer: e.target.checked });
                 }}
               />
             </div>
@@ -179,7 +181,7 @@ export default function Popup() {
                 checked={draggableTimeline}
                 onChange={(e) => {
                   setDraggableTimeline(e.target.checked);
-                  apply(null, undefined, e.target.checked);
+                  apply({ draggableTimeline: e.target.checked });
                 }}
               />
             </div>
@@ -189,7 +191,7 @@ export default function Popup() {
               size="sm"
               className="w-full group hover:border-primary/50 mt-2"
               onClick={() => {
-                apply(null, undefined, undefined, true);
+                apply({ resetPosition: true });
               }}
             >
               <span className="group-hover:scale-105 transition-transform text-xs">{t('resetTimelinePosition')}</span>
@@ -209,7 +211,7 @@ export default function Popup() {
                 checked={folderEnabled}
                 onChange={(e) => {
                   setFolderEnabled(e.target.checked);
-                  apply(null, undefined, undefined, undefined, e.target.checked);
+                  apply({ folderEnabled: e.target.checked });
                 }}
               />
             </div>
@@ -222,7 +224,7 @@ export default function Popup() {
                 checked={hideArchivedConversations}
                 onChange={(e) => {
                   setHideArchivedConversations(e.target.checked);
-                  apply(null, undefined, undefined, undefined, undefined, e.target.checked);
+                  apply({ hideArchivedConversations: e.target.checked });
                 }}
               />
             </div>
