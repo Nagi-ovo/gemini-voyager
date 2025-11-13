@@ -2928,6 +2928,33 @@ export class FolderManager {
     });
   }
 
+  /**
+   * Ensures data integrity by validating and repairing the folder data structure.
+   * This method is called by both loadData() and saveData() to maintain consistency.
+   */
+  private ensureDataIntegrity(): void {
+    // Ensure folderContents object exists
+    if (!this.data.folderContents) {
+      this.data.folderContents = {};
+      this.debugWarn('folderContents was missing, initialized');
+    }
+
+    // Ensure folders array exists
+    if (!this.data.folders) {
+      this.data.folders = [];
+      this.debugWarn('folders was missing, initialized');
+    }
+
+    // Ensure all folders have a folderContents entry (even if empty)
+    // This is critical for empty folders to persist correctly
+    this.data.folders.forEach((folder) => {
+      if (!this.data.folderContents[folder.id]) {
+        this.data.folderContents[folder.id] = [];
+        this.debugWarn(`Initialized missing folderContents for folder: ${folder.name}`);
+      }
+    });
+  }
+
   private loadData(): void {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -2935,24 +2962,7 @@ export class FolderManager {
         this.data = JSON.parse(stored);
 
         // Validate and repair data integrity
-        if (!this.data.folderContents) {
-          this.data.folderContents = {};
-          this.debugWarn('folderContents missing in loaded data, initialized');
-        }
-
-        if (!this.data.folders) {
-          this.data.folders = [];
-          this.debugWarn('folders missing in loaded data, initialized');
-        }
-
-        // Ensure all folders have a folderContents entry (even if empty)
-        // This is critical for empty folders to persist correctly
-        this.data.folders.forEach((folder) => {
-          if (!this.data.folderContents[folder.id]) {
-            this.data.folderContents[folder.id] = [];
-            this.debugWarn(`Repaired missing folderContents for folder: ${folder.name}`);
-          }
-        });
+        this.ensureDataIntegrity();
 
         // Clean up orphaned folderContents (folders that no longer exist)
         const validFolderIds = new Set(this.data.folders.map(f => f.id));
@@ -2986,17 +2996,7 @@ export class FolderManager {
     // Centralized save logic to avoid duplication
     const attemptSave = (): void => {
       // Validate data integrity before saving
-      if (!this.data.folderContents) {
-        this.data.folderContents = {};
-      }
-
-      // Ensure all folders have a folderContents entry (even if empty)
-      this.data.folders.forEach((folder) => {
-        if (!this.data.folderContents[folder.id]) {
-          this.data.folderContents[folder.id] = [];
-          this.debug(`Initialized empty folderContents for folder: ${folder.name}`);
-        }
-      });
+      this.ensureDataIntegrity();
 
       const dataString = JSON.stringify(this.data);
       localStorage.setItem(STORAGE_KEY, dataString);
