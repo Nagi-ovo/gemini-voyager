@@ -2129,7 +2129,7 @@ export class FolderManager {
     document.body.appendChild(overlay);
 
     // Auto-focus the folder list for immediate scrolling
-    folderList.focus();
+    requestAnimationFrame(() => folderList.focus());
 
     // Close on overlay click
     overlay.addEventListener('click', (e) => {
