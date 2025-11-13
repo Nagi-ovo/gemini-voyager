@@ -66,14 +66,23 @@ describe('Concurrency Control', () => {
     });
 
     it('should track lock duration', async () => {
-      const release = await lock.acquire('test');
-      
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
-      const duration = lock.getLockDuration('test');
-      expect(duration).toBeGreaterThanOrEqual(50);
-      
-      release();
+      try {
+        // Use fake timers for deterministic timing
+        vi.useFakeTimers();
+
+        const release = await lock.acquire('test');
+
+        // Advance time by exactly 50ms
+        vi.advanceTimersByTime(50);
+
+        const duration = lock.getLockDuration('test');
+        expect(duration).toBeGreaterThanOrEqual(50);
+
+        release();
+      } finally {
+        // Always restore real timers
+        vi.useRealTimers();
+      }
     });
 
     it('should return null duration for non-existent lock', () => {

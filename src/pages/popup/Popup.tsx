@@ -13,27 +13,32 @@ import WidthSlider from './components/WidthSlider';
 
 type ScrollMode = 'jump' | 'flow';
 
+interface SettingsUpdate {
+  mode?: ScrollMode | null;
+  hideContainer?: boolean;
+  draggableTimeline?: boolean;
+  resetPosition?: boolean;
+  folderEnabled?: boolean;
+  hideArchivedConversations?: boolean;
+}
+
 export default function Popup() {
   const { t } = useLanguage();
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
+  const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
 
   // Helper function to apply settings to storage
-  const apply = useCallback((
-    nextMode: ScrollMode | null,
-    nextHide?: boolean,
-    nextDraggable?: boolean,
-    resetPosition?: boolean,
-    nextHideArchived?: boolean
-  ) => {
+  const apply = useCallback((settings: SettingsUpdate) => {
     const payload: any = {};
-    if (nextMode) payload.geminiTimelineScrollMode = nextMode;
-    if (typeof nextHide === 'boolean') payload.geminiTimelineHideContainer = nextHide;
-    if (typeof nextDraggable === 'boolean') payload.geminiTimelineDraggable = nextDraggable;
-    if (typeof nextHideArchived === 'boolean') payload.geminiFolderHideArchivedConversations = nextHideArchived;
-    if (resetPosition) payload.geminiTimelinePosition = null;
+    if (settings.mode) payload.geminiTimelineScrollMode = settings.mode;
+    if (typeof settings.hideContainer === 'boolean') payload.geminiTimelineHideContainer = settings.hideContainer;
+    if (typeof settings.draggableTimeline === 'boolean') payload.geminiTimelineDraggable = settings.draggableTimeline;
+    if (typeof settings.folderEnabled === 'boolean') payload.geminiFolderEnabled = settings.folderEnabled;
+    if (typeof settings.hideArchivedConversations === 'boolean') payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
+    if (settings.resetPosition) payload.geminiTimelinePosition = null;
     try {
       chrome.storage?.sync?.set(payload);
     } catch {}
@@ -68,6 +73,7 @@ export default function Popup() {
           geminiTimelineScrollMode: 'flow',
           geminiTimelineHideContainer: false,
           geminiTimelineDraggable: false,
+          geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
         },
         (res) => {
@@ -75,6 +81,7 @@ export default function Popup() {
           if (m === 'jump' || m === 'flow') setMode(m);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
+          setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
         }
       );
@@ -129,7 +136,7 @@ export default function Popup() {
                 }`}
                 onClick={() => {
                   setMode('flow');
-                  apply('flow');
+                  apply({ mode: 'flow' });
                 }}
               >
                 {t('flow')}
@@ -140,7 +147,7 @@ export default function Popup() {
                 }`}
                 onClick={() => {
                   setMode('jump');
-                  apply('jump');
+                  apply({ mode: 'jump' });
                 }}
               >
                 {t('jump')}
@@ -161,7 +168,7 @@ export default function Popup() {
                 checked={hideContainer}
                 onChange={(e) => {
                   setHideContainer(e.target.checked);
-                  apply(null, e.target.checked);
+                  apply({ hideContainer: e.target.checked });
                 }}
               />
             </div>
@@ -174,7 +181,7 @@ export default function Popup() {
                 checked={draggableTimeline}
                 onChange={(e) => {
                   setDraggableTimeline(e.target.checked);
-                  apply(null, undefined, e.target.checked);
+                  apply({ draggableTimeline: e.target.checked });
                 }}
               />
             </div>
@@ -184,7 +191,7 @@ export default function Popup() {
               size="sm"
               className="w-full group hover:border-primary/50 mt-2"
               onClick={() => {
-                apply(null, undefined, undefined, true);
+                apply({ resetPosition: true });
               }}
             >
               <span className="group-hover:scale-105 transition-transform text-xs">{t('resetTimelinePosition')}</span>
@@ -196,6 +203,19 @@ export default function Popup() {
           <CardTitle className="mb-4 text-xs uppercase">{t('folderOptions')}</CardTitle>
           <CardContent className="p-0 space-y-4">
             <div className="flex items-center justify-between group">
+              <Label htmlFor="folder-enabled" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                {t('enableFolderFeature')}
+              </Label>
+              <Switch
+                id="folder-enabled"
+                checked={folderEnabled}
+                onChange={(e) => {
+                  setFolderEnabled(e.target.checked);
+                  apply({ folderEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between group">
               <Label htmlFor="hide-archived" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
                 {t('hideArchivedConversations')}
               </Label>
@@ -204,7 +224,7 @@ export default function Popup() {
                 checked={hideArchivedConversations}
                 onChange={(e) => {
                   setHideArchivedConversations(e.target.checked);
-                  apply(null, undefined, undefined, undefined, e.target.checked);
+                  apply({ hideArchivedConversations: e.target.checked });
                 }}
               />
             </div>

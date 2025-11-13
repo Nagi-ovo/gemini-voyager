@@ -4,7 +4,7 @@
     "description": "扩展程序名称"
   },
   "extDescription": {
-    "message": "在时间线上映射您的 Gemini 聊天记录。",
+    "message": "让你的 Gemini 体验更上一层楼：支持时间线导航、文件夹整理、提示库和聊天记录导出。",
     "description": "扩展程序描述"
   },
   "scrollMode": {
@@ -107,6 +107,7 @@
   ,"editInputWidthWide": { "message": "宽", "description": "宽编辑输入框宽度标签" }
   ,"timelineOptions": { "message": "时间线选项", "description": "时间线选项区域标签" }
   ,"folderOptions": { "message": "文件夹选项", "description": "文件夹选项区域标签" }
+  ,"enableFolderFeature": { "message": "启用文件夹功能", "description": "启用或禁用文件夹功能" }
   ,"hideArchivedConversations": { "message": "隐藏已归档对话", "description": "从主列表隐藏已添加到文件夹的对话" }
   ,"conversation_star": { "message": "星标对话", "description": "星标对话按钮提示" }
   ,"conversation_unstar": { "message": "取消星标", "description": "取消星标对话按钮提示" }

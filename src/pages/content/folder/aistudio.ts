@@ -1,3 +1,5 @@
+import browser from 'webextension-polyfill';
+
 import type { Folder, FolderData, ConversationReference, DragData } from './types';
 
 import { storageService } from '@/core/services/StorageService';
@@ -62,6 +64,7 @@ export class AIStudioFolderManager {
   private historyRoot: HTMLElement | null = null;
   private cleanupFns: Array<() => void> = [];
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
+  private folderEnabled: boolean = true; // Whether folder feature is enabled
 
   // Helper to create a ligature icon span with a data-icon attribute
   private createIcon(name: string): HTMLSpanElement {
@@ -79,6 +82,22 @@ export class AIStudioFolderManager {
     // Only enable on prompts routes
     if (!/\/prompts(\/|$)/.test(location.pathname)) return;
 
+    // Load folder enabled setting
+    await this.loadFolderEnabledSetting();
+
+    // Set up storage change listener (always needed to respond to setting changes)
+    this.setupStorageListener();
+
+    // If folder feature is disabled, skip initialization
+    if (!this.folderEnabled) {
+      return;
+    }
+
+    // Initialize folder UI
+    await this.initializeFolderUI();
+  }
+
+  private async initializeFolderUI(): Promise<void> {
     // Find the prompt history component and sidebar region
     this.historyRoot = (await waitForElement<HTMLElement>('ms-prompt-history-v3')) || null;
     if (!this.historyRoot) return;
@@ -155,6 +174,9 @@ export class AIStudioFolderManager {
 
     this.container = container;
     this.render();
+
+    // Apply initial folder enabled setting
+    this.applyFolderEnabledSetting();
   }
 
   private render(): void {
@@ -628,6 +650,44 @@ export class AIStudioFolderManager {
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  }
+
+  private async loadFolderEnabledSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({ geminiFolderEnabled: true });
+      this.folderEnabled = result.geminiFolderEnabled !== false;
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to load folder enabled setting:', error);
+      this.folderEnabled = true;
+    }
+  }
+
+  private setupStorageListener(): void {
+    browser.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'sync' && changes.geminiFolderEnabled) {
+        this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
+        this.applyFolderEnabledSetting();
+      }
+    });
+  }
+
+  private applyFolderEnabledSetting(): void {
+    if (this.folderEnabled) {
+      // If folder UI doesn't exist yet, initialize it
+      if (!this.container) {
+        this.initializeFolderUI().catch((error) => {
+          console.error('[AIStudioFolderManager] Failed to initialize folder UI:', error);
+        });
+      } else {
+        // UI already exists, just show it
+        this.container.style.display = '';
+      }
+    } else {
+      // Hide the folder UI if it exists
+      if (this.container) {
+        this.container.style.display = 'none';
+      }
+    }
   }
 }
 

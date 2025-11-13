@@ -51,6 +51,7 @@ export class FolderManager {
   private multiSelectFolderId: string | null = null; // Track which folder multi-select was initiated from
   private longPressTimeout: number | null = null; // For long-press detection
   private longPressThreshold: number = 500; // Long-press duration in ms
+  private folderEnabled: boolean = true; // Whether folder feature is enabled
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
@@ -68,46 +69,60 @@ export class FolderManager {
 
   async init(): Promise<void> {
     try {
+      // Load folder enabled setting
+      await this.loadFolderEnabledSetting();
+
       // Load hide archived setting
       await this.loadHideArchivedSetting();
 
-      // Set up storage change listener
+      // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
 
-      // Wait for sidebar to be available
-      await this.waitForSidebar();
-
-      // Find the Recent section
-      this.findRecentSection();
-
-      if (!this.recentSection) {
-        this.debugWarn('Could not find Recent section');
+      // If folder feature is disabled, skip initialization
+      if (!this.folderEnabled) {
+        this.debug('Folder feature is disabled, skipping initialization');
         return;
       }
 
-      // Create and inject folder UI
-      this.createFolderUI();
-
-      // Make conversations draggable
-      this.makeConversationsDraggable();
-
-      // Set up mutation observer to handle dynamically added conversations
-      this.setupMutationObserver();
-
-      // Set up sidebar visibility observer
-      this.setupSideNavObserver();
-
-      // Initial visibility check
-      this.updateVisibilityBasedOnSideNav();
-
-      // Set up native conversation menu injection
-      this.setupConversationClickTracking();
-      this.setupNativeConversationMenuObserver();
+      // Initialize folder UI
+      await this.initializeFolderUI();
 
       this.debug('Initialized successfully');
     } catch (error) {
       console.error('[FolderManager] Initialization error:', error);
     }
+  }
+
+  private async initializeFolderUI(): Promise<void> {
+    // Wait for sidebar to be available
+    await this.waitForSidebar();
+
+    // Find the Recent section
+    this.findRecentSection();
+
+    if (!this.recentSection) {
+      this.debugWarn('Could not find Recent section');
+      return;
+    }
+
+    // Create and inject folder UI
+    this.createFolderUI();
+
+    // Make conversations draggable
+    this.makeConversationsDraggable();
+
+    // Set up mutation observer to handle dynamically added conversations
+    this.setupMutationObserver();
+
+    // Set up sidebar visibility observer
+    this.setupSideNavObserver();
+
+    // Initial visibility check
+    this.updateVisibilityBasedOnSideNav();
+
+    // Set up native conversation menu injection
+    this.setupConversationClickTracking();
+    this.setupNativeConversationMenuObserver();
   }
 
   private async waitForSidebar(): Promise<void> {
@@ -189,6 +204,9 @@ export class FolderManager {
     this.highlightActiveConversationInFolders();
     this.installRouteChangeListener();
     this.installSidebarClickListener();
+
+    // Apply initial folder enabled setting
+    this.applyFolderEnabledSetting();
   }
 
   private createMultiSelectIndicator(): HTMLElement {
@@ -3030,6 +3048,17 @@ export class FolderManager {
     return success;
   }
 
+  private async loadFolderEnabledSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({ geminiFolderEnabled: true });
+      this.folderEnabled = result.geminiFolderEnabled !== false;
+      this.debug('Loaded folder enabled setting:', this.folderEnabled);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load folder enabled setting:', error);
+      this.folderEnabled = true;
+    }
+  }
+
   private async loadHideArchivedSetting(): Promise<void> {
     try {
       const result = await browser.storage.sync.get({ geminiFolderHideArchivedConversations: false });
@@ -3043,13 +3072,43 @@ export class FolderManager {
 
   private setupStorageListener(): void {
     browser.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName === 'sync' && changes.geminiFolderHideArchivedConversations) {
-        this.hideArchivedConversations = !!changes.geminiFolderHideArchivedConversations.newValue;
-        this.debug('Hide archived setting changed:', this.hideArchivedConversations);
-        // Apply the change to all conversations
-        this.applyHideArchivedSetting();
+      if (areaName === 'sync') {
+        if (changes.geminiFolderEnabled) {
+          this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
+          this.debug('Folder enabled setting changed:', this.folderEnabled);
+          // Apply the change to folder visibility
+          this.applyFolderEnabledSetting();
+        }
+        if (changes.geminiFolderHideArchivedConversations) {
+          this.hideArchivedConversations = !!changes.geminiFolderHideArchivedConversations.newValue;
+          this.debug('Hide archived setting changed:', this.hideArchivedConversations);
+          // Apply the change to all conversations
+          this.applyHideArchivedSetting();
+        }
       }
     });
+  }
+
+  private applyFolderEnabledSetting(): void {
+    if (this.folderEnabled) {
+      // If folder UI doesn't exist yet, initialize it
+      if (!this.containerElement) {
+        this.debug('Folder feature enabled, initializing UI');
+        this.initializeFolderUI().catch((error) => {
+          console.error('[FolderManager] Failed to initialize folder UI:', error);
+        });
+      } else {
+        // UI already exists, just show it
+        this.containerElement.style.display = '';
+        this.debug('Folder feature enabled');
+      }
+    } else {
+      // Hide the folder UI if it exists
+      if (this.containerElement) {
+        this.containerElement.style.display = 'none';
+        this.debug('Folder feature disabled');
+      }
+    }
   }
 
   private applyHideArchivedSetting(): void {
