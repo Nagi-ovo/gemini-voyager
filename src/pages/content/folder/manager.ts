@@ -2077,7 +2077,8 @@ export class FolderManager {
     // Helper function to add folder options recursively
     const addFolderOptions = (parentId: string | null, level: number = 0) => {
       const folders = this.data.folders.filter((f) => f.parentId === parentId);
-      folders.forEach((folder) => {
+      const sortedFolders = this.sortFolders(folders); // Apply same sorting as sidebar
+      sortedFolders.forEach((folder) => {
         const folderItem = document.createElement('button');
         folderItem.className = 'gv-folder-dialog-item';
         folderItem.style.paddingLeft = `${level * 16 + 12}px`;
