@@ -92,7 +92,7 @@ gemini-voyager/
 │   ├── assets/                   # Images and styles
 │   ├── lib/                      # Third-party utilities
 │   ├── utils/                    # Shared utilities
-│   └── tests/                    # Test setup and mocks
+│   └── tests/                    # Global test setup (setup.ts)
 ├── public/                       # Static assets (icons, CSS)
 ├── scripts/                      # Build scripts (Safari)
 ├── safari/                       # Safari-specific code
@@ -199,11 +199,17 @@ throw new StorageError('Failed to save folder data', {
 const storage = await createStorageService(); // Auto-selects implementation
 ```
 
-**Storage Keys**: Prefixed by feature
-- `gvFolderData` - Folder structure
-- `gvPromptItems` - Saved prompts
-- `geminiTimelineScrollMode` - Timeline settings
-- `geminiTimelineDraggable` - Timeline drag state
+**Storage Keys**: Centralized in `src/core/types/common.ts` (`StorageKeys` object)
+- `gvFolderData` - Folder structure (Gemini)
+- `gvFolderDataAIStudio` - Folder structure (AI Studio)
+- `geminiTimelineScrollMode` - Timeline scroll mode setting
+- `geminiTimelineHideContainer` - Timeline visibility setting
+- `geminiTimelineDraggable` - Timeline draggable state
+- `geminiTimelinePosition` - Timeline position coordinates
+- `geminiChatWidth` - Chat container width
+- `language` - UI language preference
+
+**Note**: Some features (e.g., Prompt Manager) use local storage keys (`gvPromptItems`, `gvPromptPanelLocked`) not in the central `StorageKeys` object
 
 **Concurrency**: Uses `AsyncLock` to prevent race conditions during import/export operations
 
@@ -418,14 +424,17 @@ import { cn } from '@/lib/utils';                                 // ✓
 ```
 
 **Available aliases**:
-- `@src/*` → `src/*`
+- `@/*` → `src/*` (most commonly used)
 - `@/core` → `src/core`
+- `@/core/*` → `src/core/*`
 - `@/features/*` → `src/features/*`
 - `@/components/*` → `src/components/*`
 - `@/lib/*` → `src/lib/*`
 - `@assets/*` → `src/assets/*`
 - `@pages/*` → `src/pages/*`
 - `@locales/*` → `src/locales/*`
+
+**Note**: `@src/*` is defined in tsconfig.json but not used in practice. Use `@/*` instead.
 
 ---
 
@@ -449,14 +458,21 @@ bun run test:coverage     # Generate coverage report
 
 ### Test File Location
 
-Tests are colocated with source code in `__tests__/` directories:
+**Primary Pattern**: Tests are colocated with source code in `__tests__/` directories within each module:
 
 ```
 src/core/services/
 ├── StorageService.ts
 └── __tests__/
     └── StorageService.test.ts
+
+src/features/export/services/
+├── MarkdownFormatter.ts
+└── __tests__/
+    └── MarkdownFormatter.test.ts
 ```
+
+**Test Configuration**: Global test setup and mocks are in `src/tests/setup.ts`
 
 ### Writing Tests
 
@@ -491,21 +507,22 @@ describe('FeatureName', () => {
 Chrome APIs are mocked in `src/tests/setup.ts`:
 
 ```typescript
-vi.stubGlobal('chrome', {
+globalThis.chrome = {
   storage: {
     sync: {
       get: vi.fn(),
       set: vi.fn(),
       remove: vi.fn(),
+      clear: vi.fn(),
     },
-  },
-  runtime: {
-    sendMessage: vi.fn(),
-    onMessage: {
+    onChanged: {
       addListener: vi.fn(),
     },
   },
-});
+  runtime: {
+    lastError: null,
+  },
+} as any;
 ```
 
 ### Coverage Goals

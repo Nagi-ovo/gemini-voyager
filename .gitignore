@@ -23,6 +23,7 @@ yarn-error.log*
 
 .vscode/
 .idea/
+.claude/
 .DS_Store
 
 *.local
