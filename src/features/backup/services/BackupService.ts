@@ -74,11 +74,26 @@ export class BackupService {
    */
   async restoreFromBackup(file: File): Promise<RestoreResult> {
     try {
+      const text = await file.text();
+      return await this.restoreFromJSON(text);
+    } catch (error) {
+      this.logger.error('Backup restoration failed', { error });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Restore data from a JSON string
+   */
+  async restoreFromJSON(jsonString: string): Promise<RestoreResult> {
+    try {
       this.logger.info('Restoring from backup...');
 
-      // Parse backup file
-      const text = await file.text();
-      const backup = JSON.parse(text) as BackupData;
+      // Parse backup JSON
+      const backup = JSON.parse(jsonString) as BackupData;
 
       // Validate backup format
       if (backup.format !== 'gemini-voyager.backup.v1') {

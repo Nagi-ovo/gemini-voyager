@@ -40,6 +40,23 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return;
       }
 
+      // Handle restore backup request
+      if (message && message.type === 'gv.restoreBackup') {
+        try {
+          const jsonString = message.payload;
+          if (typeof jsonString !== 'string') {
+            sendResponse({ success: false, error: 'Invalid payload' });
+            return;
+          }
+          const result = await backupService.restoreFromJSON(jsonString);
+          sendResponse(result);
+        } catch (e: any) {
+          console.error('[GV] Restore failed:', e);
+          sendResponse({ success: false, error: String(e?.message || e) });
+        }
+        return;
+      }
+
       // Handle image fetch
       if (!message || message.type !== 'gv.fetchImage') return;
       const url = String(message.url || '');

@@ -9,7 +9,7 @@ import { Label } from '../../components/ui/label';
 import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
-import type { BackupConfig, BackupResult } from '../../features/backup/types/backup';
+import type { BackupConfig, BackupResult, RestoreResult } from '../../features/backup/types/backup';
 import { BackupInterval } from '../../features/backup/types/backup';
 
 import WidthSlider from './components/WidthSlider';
@@ -152,34 +152,19 @@ export default function Popup() {
       if (!file) return;
 
       try {
-        const text = await file.text();
-        const backup = JSON.parse(text);
+        const fileContent = await file.text();
 
-        if (backup.format !== 'gemini-voyager.backup.v1') {
-          alert(t('invalidBackupFormat'));
-          return;
+        // Send to background script to handle restoration via BackupService
+        const response = await browser.runtime.sendMessage({
+          type: 'gv.restoreBackup',
+          payload: fileContent,
+        }) as RestoreResult;
+
+        if (response?.success) {
+          alert(t('restoreSuccess'));
+        } else {
+          alert(t('restoreFailed') + ': ' + (response?.error || 'Unknown error'));
         }
-
-        // Restore prompts
-        if (backup.data?.prompts) {
-          localStorage.setItem('gvPromptItems', JSON.stringify(backup.data.prompts));
-        }
-
-        // Restore folders
-        if (backup.data?.folders) {
-          const updates: Record<string, any> = {};
-          if (backup.data.folders.gemini) {
-            updates.gvFolderData = backup.data.folders.gemini;
-          }
-          if (backup.data.folders.aiStudio) {
-            updates.gvFolderDataAIStudio = backup.data.folders.aiStudio;
-          }
-          if (Object.keys(updates).length > 0) {
-            await browser.storage.sync.set(updates);
-          }
-        }
-
-        alert(t('restoreSuccess'));
       } catch (error) {
         console.error('Restore failed:', error);
         alert(t('restoreFailed'));
