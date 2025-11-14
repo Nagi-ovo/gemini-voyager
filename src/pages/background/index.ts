@@ -1,4 +1,17 @@
-/* Background service worker - handles cross-origin image fetch for packaging and popup opening */
+/* Background service worker - handles cross-origin image fetch for packaging, popup opening, and backups */
+import { backupScheduler } from '@/features/backup/services/BackupScheduler';
+import { backupService } from '@/features/backup/services/BackupService';
+
+// Initialize backup scheduler on startup
+backupScheduler.initialize().catch(console.error);
+
+// Listen for config changes to update schedule
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'sync' && changes.gvBackupConfig) {
+    backupScheduler.updateSchedule().catch(console.error);
+  }
+});
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   (async () => {
     try {
@@ -11,6 +24,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           // Fallback: If openPopup fails, user can click the extension icon
           console.warn('[GV] Failed to open popup programmatically:', e);
           sendResponse({ ok: false, error: String(e?.message || e) });
+        }
+        return;
+      }
+
+      // Handle manual backup request
+      if (message && message.type === 'gv.createBackup') {
+        try {
+          const result = await backupService.createBackup();
+          sendResponse(result);
+        } catch (e: any) {
+          console.error('[GV] Backup failed:', e);
+          sendResponse({ success: false, error: String(e?.message || e) });
         }
         return;
       }

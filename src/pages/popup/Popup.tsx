@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import browser from 'webextension-polyfill';
 
 import { DarkModeToggle } from '../../components/DarkModeToggle';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
@@ -8,6 +9,7 @@ import { Label } from '../../components/ui/label';
 import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
+import type { BackupConfig, BackupInterval } from '../../features/backup/types/backup';
 
 import WidthSlider from './components/WidthSlider';
 
@@ -29,6 +31,12 @@ export default function Popup() {
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
+
+  // Backup state
+  const [backupEnabled, setBackupEnabled] = useState<boolean>(false);
+  const [backupInterval, setBackupInterval] = useState<BackupInterval>('disabled' as BackupInterval);
+  const [lastBackupTime, setLastBackupTime] = useState<number | undefined>();
+  const [backupInProgress, setBackupInProgress] = useState<boolean>(false);
 
   // Helper function to apply settings to storage
   const apply = useCallback((settings: SettingsUpdate) => {
@@ -66,6 +74,97 @@ export default function Popup() {
     }, []),
   });
 
+  // Backup handlers
+  const handleBackupEnabledChange = useCallback(async (enabled: boolean) => {
+    try {
+      const config: BackupConfig = {
+        enabled,
+        interval: enabled ? backupInterval : ('disabled' as BackupInterval),
+      };
+      await browser.storage.sync.set({ gvBackupConfig: config });
+      setBackupEnabled(enabled);
+    } catch (error) {
+      console.error('Failed to update backup enabled:', error);
+    }
+  }, [backupInterval]);
+
+  const handleBackupIntervalChange = useCallback(async (interval: BackupInterval) => {
+    try {
+      const config: BackupConfig = {
+        enabled: interval !== 'disabled',
+        interval,
+      };
+      await browser.storage.sync.set({ gvBackupConfig: config });
+      setBackupInterval(interval);
+      setBackupEnabled(interval !== 'disabled');
+    } catch (error) {
+      console.error('Failed to update backup interval:', error);
+    }
+  }, []);
+
+  const handleManualBackup = useCallback(async () => {
+    setBackupInProgress(true);
+    try {
+      const response = await browser.runtime.sendMessage({ type: 'gv.createBackup' });
+      if (response?.success) {
+        setLastBackupTime(response.timestamp);
+        alert(t('backupSuccess'));
+      } else {
+        alert(t('backupFailed') + ': ' + (response?.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Backup failed:', error);
+      alert(t('backupFailed'));
+    } finally {
+      setBackupInProgress(false);
+    }
+  }, [t]);
+
+  const handleRestoreBackup = useCallback(async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const backup = JSON.parse(text);
+
+        if (backup.format !== 'gemini-voyager.backup.v1') {
+          alert(t('invalidBackupFormat'));
+          return;
+        }
+
+        // Restore prompts
+        if (backup.data?.prompts) {
+          localStorage.setItem('gvPromptItems', JSON.stringify(backup.data.prompts));
+        }
+
+        // Restore folders
+        if (backup.data?.folders) {
+          const updates: Record<string, any> = {};
+          if (backup.data.folders.gemini) {
+            updates.gvFolderData = backup.data.folders.gemini;
+          }
+          if (backup.data.folders.aiStudio) {
+            updates.gvFolderDataAIStudio = backup.data.folders.aiStudio;
+          }
+          if (Object.keys(updates).length > 0) {
+            await browser.storage.sync.set(updates);
+          }
+        }
+
+        alert(t('restoreSuccess'));
+      } catch (error) {
+        console.error('Restore failed:', error);
+        alert(t('restoreFailed'));
+      }
+    };
+    input.click();
+  }, [t]);
+
   useEffect(() => {
     try {
       chrome.storage?.sync?.get(
@@ -75,6 +174,7 @@ export default function Popup() {
           geminiTimelineDraggable: false,
           geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
+          gvBackupConfig: { enabled: false, interval: 'disabled' },
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -83,6 +183,14 @@ export default function Popup() {
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
+
+          // Load backup config
+          const backupConfig = res?.gvBackupConfig as BackupConfig | undefined;
+          if (backupConfig) {
+            setBackupEnabled(!!backupConfig.enabled);
+            setBackupInterval(backupConfig.interval || ('disabled' as BackupInterval));
+            setLastBackupTime(backupConfig.lastBackupTime);
+          }
         }
       );
     } catch {}
@@ -254,6 +362,59 @@ export default function Popup() {
           onChange={editInputWidthAdjuster.handleChange}
           onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
         />
+        {/* Backup Options */}
+        <Card className="p-4 hover:shadow-lg transition-shadow">
+          <CardTitle className="mb-4 text-xs uppercase">{t('backupOptions')}</CardTitle>
+          <CardContent className="p-0 space-y-4">
+            {/* Backup Interval Selector */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('backupInterval')}</Label>
+              <select
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                value={backupInterval}
+                onChange={(e) => handleBackupIntervalChange(e.target.value as BackupInterval)}
+              >
+                <option value="disabled">{t('backupDisabled')}</option>
+                <option value="hourly">{t('backupHourly')}</option>
+                <option value="daily">{t('backupDaily')}</option>
+                <option value="weekly">{t('backupWeekly')}</option>
+              </select>
+            </div>
+
+            {/* Last Backup Time */}
+            {lastBackupTime && (
+              <div className="text-xs text-muted-foreground">
+                {t('lastBackup')}: {new Date(lastBackupTime).toLocaleString()}
+              </div>
+            )}
+
+            {/* Manual Backup Button */}
+            <Button
+              variant="default"
+              size="sm"
+              className="w-full"
+              onClick={handleManualBackup}
+              disabled={backupInProgress}
+            >
+              {backupInProgress ? t('backupInProgress') : t('createBackupNow')}
+            </Button>
+
+            {/* Restore Backup Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={handleRestoreBackup}
+            >
+              {t('restoreBackup')}
+            </Button>
+
+            {/* Info Text */}
+            <div className="text-xs text-muted-foreground p-2 bg-secondary/30 rounded-md">
+              {t('backupInfo')}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Footer */}

@@ -13,7 +13,10 @@
     "128": "icon-128.png"
   },
   "permissions": [
-    "storage"
+    "storage",
+    "alarms",
+    "downloads",
+    "notifications"
   ],
   "host_permissions": [
     "https://*.googleusercontent.com/*",

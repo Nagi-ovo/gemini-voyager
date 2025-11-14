@@ -114,4 +114,20 @@
   ,"conversation_untitled": { "message": "未命名", "description": "无标题对话的回退标题" }
   ,"geminiOnlyNotice": { "message": "所有设置仅支持 Gemini", "description": "提示所有设置仅适用于 Gemini" }
   ,"folderManager_dataLossWarning": { "message": "⚠️ 警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。", "description": "文件夹数据加载失败时显示的警告" }
+  ,"backupOptions": { "message": "备份选项", "description": "备份选项区域标签" }
+  ,"backupInterval": { "message": "自动备份间隔", "description": "备份间隔选择器标签" }
+  ,"backupDisabled": { "message": "禁用", "description": "禁用备份选项" }
+  ,"backupHourly": { "message": "每小时", "description": "每小时备份选项" }
+  ,"backupDaily": { "message": "每天", "description": "每天备份选项" }
+  ,"backupWeekly": { "message": "每周", "description": "每周备份选项" }
+  ,"createBackupNow": { "message": "立即创建备份", "description": "手动备份按钮" }
+  ,"backupInProgress": { "message": "正在创建备份...", "description": "备份进行中消息" }
+  ,"restoreBackup": { "message": "从备份恢复", "description": "恢复备份按钮" }
+  ,"backupSuccess": { "message": "备份创建成功", "description": "备份成功消息" }
+  ,"backupFailed": { "message": "备份失败", "description": "备份失败消息" }
+  ,"restoreSuccess": { "message": "备份恢复成功。请刷新页面。", "description": "恢复成功消息" }
+  ,"restoreFailed": { "message": "恢复失败。请检查备份文件。", "description": "恢复失败消息" }
+  ,"invalidBackupFormat": { "message": "无效的备份文件格式", "description": "无效备份格式错误" }
+  ,"lastBackup": { "message": "上次备份", "description": "上次备份时间标签" }
+  ,"backupInfo": { "message": "备份包含您的提示库和文件夹组织结构。文件将保存到您的下载文件夹。", "description": "备份功能信息文本" }
 }

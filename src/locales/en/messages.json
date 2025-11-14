@@ -114,4 +114,20 @@
   ,"conversation_untitled": { "message": "Untitled", "description": "Fallback title for conversations without a name" }
   ,"geminiOnlyNotice": { "message": "All settings only support Gemini", "description": "Notice that all settings only work with Gemini" }
   ,"folderManager_dataLossWarning": { "message": "⚠️ Warning: Failed to load folder data. Your folders may have been corrupted. Please check the browser console for details and try restoring from backup if available.", "description": "Warning shown when folder data fails to load" }
+  ,"backupOptions": { "message": "Backup Options", "description": "Backup options section label" }
+  ,"backupInterval": { "message": "Automatic backup interval", "description": "Backup interval selector label" }
+  ,"backupDisabled": { "message": "Disabled", "description": "Backup disabled option" }
+  ,"backupHourly": { "message": "Every hour", "description": "Backup hourly option" }
+  ,"backupDaily": { "message": "Daily", "description": "Backup daily option" }
+  ,"backupWeekly": { "message": "Weekly", "description": "Backup weekly option" }
+  ,"createBackupNow": { "message": "Create backup now", "description": "Manual backup button" }
+  ,"backupInProgress": { "message": "Creating backup...", "description": "Backup in progress message" }
+  ,"restoreBackup": { "message": "Restore from backup", "description": "Restore backup button" }
+  ,"backupSuccess": { "message": "Backup created successfully", "description": "Backup success message" }
+  ,"backupFailed": { "message": "Backup failed", "description": "Backup failed message" }
+  ,"restoreSuccess": { "message": "Backup restored successfully. Please reload the page.", "description": "Restore success message" }
+  ,"restoreFailed": { "message": "Restore failed. Please check the backup file.", "description": "Restore failed message" }
+  ,"invalidBackupFormat": { "message": "Invalid backup file format", "description": "Invalid backup format error" }
+  ,"lastBackup": { "message": "Last backup", "description": "Last backup time label" }
+  ,"backupInfo": { "message": "Backups include your prompt library and folder organization. Files are saved to your Downloads folder.", "description": "Backup feature info text" }
 }
