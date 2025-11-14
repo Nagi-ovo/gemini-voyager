@@ -1120,8 +1120,19 @@ export class FolderManager {
         // Handle added conversations
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
+            // Check if the node itself is a conversation
+            if (node.matches('[data-test-id="conversation"]')) {
+              this.makeConversationDraggable(node);
+              this.applyHideArchivedToConversation(node);
+            }
+            // Also check for conversations within the node
             const conversations = node.querySelectorAll('[data-test-id="conversation"]');
-            conversations.forEach((conv) => this.makeConversationDraggable(conv as HTMLElement));
+            conversations.forEach((conv) => {
+              const convElement = conv as HTMLElement;
+              this.makeConversationDraggable(convElement);
+              // Apply hide archived setting to newly added conversations
+              this.applyHideArchivedToConversation(convElement);
+            });
           }
         });
 
@@ -3238,15 +3249,22 @@ export class FolderManager {
 
     const conversations = this.sidebarContainer.querySelectorAll('[data-test-id="conversation"]');
     conversations.forEach((conv) => {
-      const convId = this.extractConversationId(conv as HTMLElement);
-      const isArchived = this.isConversationInFolders(convId);
-
-      if (this.hideArchivedConversations && isArchived) {
-        (conv as HTMLElement).classList.add('gv-conversation-archived');
-      } else {
-        (conv as HTMLElement).classList.remove('gv-conversation-archived');
-      }
+      this.applyHideArchivedToConversation(conv as HTMLElement);
     });
+  }
+
+  /**
+   * Apply hide archived setting to a single conversation element
+   */
+  private applyHideArchivedToConversation(conv: HTMLElement): void {
+    const convId = this.extractConversationId(conv);
+    const isArchived = this.isConversationInFolders(convId);
+
+    if (this.hideArchivedConversations && isArchived) {
+      conv.classList.add('gv-conversation-archived');
+    } else {
+      conv.classList.remove('gv-conversation-archived');
+    }
   }
 
   private isConversationInFolders(conversationId: string): boolean {
