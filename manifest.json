@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Gemini Voyager",
   "description": "Supercharge your Gemini experience with timeline navigation, folder organization, prompt library, and chat export.",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "action": {
     "default_popup": "src/pages/popup/index.html",
     "default_icon": {
