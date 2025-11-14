@@ -22,6 +22,7 @@ vi.mock('webextension-polyfill', () => ({
 
 import { BackupService } from '../BackupService';
 import type { BackupConfig } from '../../types/backup';
+import { BackupInterval } from '../../types/backup';
 
 describe('BackupService', () => {
   let service: BackupService;
@@ -37,25 +38,28 @@ describe('BackupService', () => {
     it('should return default config when none exists', async () => {
       const config = await service.getConfig();
       expect(config.enabled).toBe(false);
-      expect(config.interval).toBe('disabled');
+      expect(config.interval).toBe(BackupInterval.DISABLED);
     });
 
     it('should return saved config', async () => {
       const testConfig: BackupConfig = {
         enabled: true,
-        interval: 'daily',
+        interval: BackupInterval.DAILY,
         lastBackupTime: Date.now(),
       };
 
       // Mock chrome.storage.sync.get
-      const mockGet = vi.fn((keys, callback) => {
-        callback({ gvBackupConfig: testConfig });
+      const mockGet = vi.fn().mockImplementation((keys: any, callback?: any) => {
+        if (callback) {
+          callback({ gvBackupConfig: testConfig });
+        }
+        return Promise.resolve({ gvBackupConfig: testConfig });
       });
-      globalThis.chrome.storage.sync.get = mockGet;
+      globalThis.chrome.storage.sync.get = mockGet as any;
 
       const config = await service.getConfig();
       expect(config.enabled).toBe(true);
-      expect(config.interval).toBe('daily');
+      expect(config.interval).toBe(BackupInterval.DAILY);
     });
   });
 
@@ -69,7 +73,7 @@ describe('BackupService', () => {
 
       await service.updateConfig({
         enabled: true,
-        interval: 'daily',
+        interval: BackupInterval.DAILY,
       });
 
       expect(mockSet).toHaveBeenCalled();

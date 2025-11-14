@@ -11,6 +11,7 @@ import type {
   PromptItem,
   BackupConfig,
 } from '../types/backup';
+import { BackupInterval } from '../types/backup';
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 
@@ -123,17 +124,21 @@ export class BackupService {
   async getConfig(): Promise<BackupConfig> {
     try {
       const result = await browser.storage.sync.get(BACKUP_STORAGE_KEYS.CONFIG);
-      return (
-        result[BACKUP_STORAGE_KEYS.CONFIG] || {
-          enabled: false,
-          interval: 'disabled',
-        }
-      );
+      const config = result[BACKUP_STORAGE_KEYS.CONFIG];
+
+      if (config && typeof config === 'object' && 'enabled' in config && 'interval' in config) {
+        return config as BackupConfig;
+      }
+
+      return {
+        enabled: false,
+        interval: BackupInterval.DISABLED,
+      };
     } catch (error) {
       this.logger.error('Failed to get backup config', { error });
       return {
         enabled: false,
-        interval: 'disabled',
+        interval: BackupInterval.DISABLED,
       };
     }
   }

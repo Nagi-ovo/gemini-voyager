@@ -9,7 +9,8 @@ import { Label } from '../../components/ui/label';
 import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
-import type { BackupConfig, BackupInterval } from '../../features/backup/types/backup';
+import type { BackupConfig, BackupResult } from '../../features/backup/types/backup';
+import { BackupInterval } from '../../features/backup/types/backup';
 
 import WidthSlider from './components/WidthSlider';
 
@@ -34,7 +35,7 @@ export default function Popup() {
 
   // Backup state
   const [backupEnabled, setBackupEnabled] = useState<boolean>(false);
-  const [backupInterval, setBackupInterval] = useState<BackupInterval>('disabled' as BackupInterval);
+  const [backupInterval, setBackupInterval] = useState<BackupInterval>(BackupInterval.DISABLED);
   const [lastBackupTime, setLastBackupTime] = useState<number | undefined>();
   const [backupInProgress, setBackupInProgress] = useState<boolean>(false);
 
@@ -79,7 +80,7 @@ export default function Popup() {
     try {
       const config: BackupConfig = {
         enabled,
-        interval: enabled ? backupInterval : ('disabled' as BackupInterval),
+        interval: enabled ? backupInterval : BackupInterval.DISABLED,
       };
       await browser.storage.sync.set({ gvBackupConfig: config });
       setBackupEnabled(enabled);
@@ -91,12 +92,12 @@ export default function Popup() {
   const handleBackupIntervalChange = useCallback(async (interval: BackupInterval) => {
     try {
       const config: BackupConfig = {
-        enabled: interval !== 'disabled',
+        enabled: interval !== BackupInterval.DISABLED,
         interval,
       };
       await browser.storage.sync.set({ gvBackupConfig: config });
       setBackupInterval(interval);
-      setBackupEnabled(interval !== 'disabled');
+      setBackupEnabled(interval !== BackupInterval.DISABLED);
     } catch (error) {
       console.error('Failed to update backup interval:', error);
     }
@@ -105,7 +106,7 @@ export default function Popup() {
   const handleManualBackup = useCallback(async () => {
     setBackupInProgress(true);
     try {
-      const response = await browser.runtime.sendMessage({ type: 'gv.createBackup' });
+      const response = await browser.runtime.sendMessage({ type: 'gv.createBackup' }) as BackupResult;
       if (response?.success) {
         setLastBackupTime(response.timestamp);
         alert(t('backupSuccess'));
@@ -174,7 +175,7 @@ export default function Popup() {
           geminiTimelineDraggable: false,
           geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
-          gvBackupConfig: { enabled: false, interval: 'disabled' },
+          gvBackupConfig: { enabled: false, interval: BackupInterval.DISABLED },
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -188,7 +189,7 @@ export default function Popup() {
           const backupConfig = res?.gvBackupConfig as BackupConfig | undefined;
           if (backupConfig) {
             setBackupEnabled(!!backupConfig.enabled);
-            setBackupInterval(backupConfig.interval || ('disabled' as BackupInterval));
+            setBackupInterval(backupConfig.interval || BackupInterval.DISABLED);
             setLastBackupTime(backupConfig.lastBackupTime);
           }
         }
