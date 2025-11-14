@@ -20,8 +20,29 @@ globalThis.chrome = {
   },
   runtime: {
     lastError: null,
+    getManifest: vi.fn().mockReturnValue({ version: '1.0.0' }),
+    getURL: vi.fn((path: string) => `chrome-extension://test/${path}`),
+  },
+  downloads: {
+    download: vi.fn(),
   },
 } as any;
+
+// Mock webextension-polyfill
+vi.mock('webextension-polyfill', () => ({
+  default: {
+    runtime: {
+      getManifest: () => ({ version: '1.0.0' }),
+      getURL: (path: string) => `chrome-extension://test/${path}`,
+    },
+    storage: {
+      sync: {
+        get: vi.fn().mockResolvedValue({}),
+        set: vi.fn().mockResolvedValue(undefined),
+      },
+    },
+  },
+}));
 
 // Mock localStorage
 const localStorageMock = (() => {

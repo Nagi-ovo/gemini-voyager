@@ -3,22 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-// Mock webextension-polyfill before importing BackupService
-vi.mock('webextension-polyfill', () => ({
-  default: {
-    runtime: {
-      getManifest: () => ({ version: '1.0.0' }),
-      getURL: (path: string) => `chrome-extension://test/${path}`,
-    },
-    storage: {
-      sync: {
-        get: vi.fn(),
-        set: vi.fn(),
-      },
-    },
-  },
-}));
+import browser from 'webextension-polyfill';
 
 import { BackupService } from '../BackupService';
 import type { BackupConfig } from '../../types/backup';
@@ -32,10 +17,25 @@ describe('BackupService', () => {
     // Clear storage
     localStorage.clear();
     vi.clearAllMocks();
+
+    // Setup default browser mock
+    vi.mocked(browser.storage.sync.get).mockResolvedValue({});
+    vi.mocked(browser.storage.sync.set).mockResolvedValue(undefined);
+
+    // Setup chrome.downloads mock
+    if (!globalThis.chrome) {
+      globalThis.chrome = {} as any;
+    }
+    if (!globalThis.chrome.downloads) {
+      globalThis.chrome.downloads = {} as any;
+    }
+    globalThis.chrome.downloads.download = vi.fn().mockResolvedValue(1);
   });
 
   describe('getConfig', () => {
     it('should return default config when none exists', async () => {
+      vi.mocked(browser.storage.sync.get).mockResolvedValue({});
+
       const config = await service.getConfig();
       expect(config.enabled).toBe(false);
       expect(config.interval).toBe(BackupInterval.DISABLED);
@@ -48,14 +48,9 @@ describe('BackupService', () => {
         lastBackupTime: Date.now(),
       };
 
-      // Mock chrome.storage.sync.get
-      const mockGet = vi.fn().mockImplementation((keys: any, callback?: any) => {
-        if (callback) {
-          callback({ gvBackupConfig: testConfig });
-        }
-        return Promise.resolve({ gvBackupConfig: testConfig });
+      vi.mocked(browser.storage.sync.get).mockResolvedValue({
+        gvBackupConfig: testConfig,
       });
-      globalThis.chrome.storage.sync.get = mockGet as any;
 
       const config = await service.getConfig();
       expect(config.enabled).toBe(true);
@@ -65,18 +60,16 @@ describe('BackupService', () => {
 
   describe('updateConfig', () => {
     it('should update backup configuration', async () => {
-      const mockSet = vi.fn((data, callback?) => {
-        if (callback) callback();
-        return Promise.resolve();
+      vi.mocked(browser.storage.sync.get).mockResolvedValue({
+        gvBackupConfig: { enabled: false, interval: BackupInterval.DISABLED },
       });
-      globalThis.chrome.storage.sync.set = mockSet;
 
       await service.updateConfig({
         enabled: true,
         interval: BackupInterval.DAILY,
       });
 
-      expect(mockSet).toHaveBeenCalled();
+      expect(browser.storage.sync.set).toHaveBeenCalled();
     });
   });
 
@@ -93,10 +86,16 @@ describe('BackupService', () => {
       ];
       localStorage.setItem('gvPromptItems', JSON.stringify(testPrompts));
 
-      const mockDownload = vi.fn();
-      globalThis.chrome.downloads = {
-        download: mockDownload,
-      } as any;
+      // Mock storage.sync.get for folder data
+      vi.mocked(browser.storage.sync.get).mockResolvedValue({
+        gvFolderData: { test: 'data' },
+        gvFolderDataAIStudio: null,
+      });
+
+      // Mock URL.createObjectURL and URL.revokeObjectURL for Node.js environment
+      const mockUrl = 'blob:mock-url';
+      global.URL.createObjectURL = vi.fn().mockReturnValue(mockUrl);
+      global.URL.revokeObjectURL = vi.fn();
 
       const result = await service.createBackup();
 
@@ -127,17 +126,14 @@ describe('BackupService', () => {
         },
       };
 
-      const blob = new Blob([JSON.stringify(backupData)], {
+      // Create a mock File with text() method
+      const mockFile = {
+        text: vi.fn().mockResolvedValue(JSON.stringify(backupData)),
+        name: 'backup.json',
         type: 'application/json',
-      });
-      const file = new File([blob], 'backup.json', {
-        type: 'application/json',
-      });
+      } as unknown as File;
 
-      const mockSet = vi.fn();
-      globalThis.chrome.storage.sync.set = mockSet;
-
-      const result = await service.restoreFromBackup(file);
+      const result = await service.restoreFromBackup(mockFile);
 
       expect(result.success).toBe(true);
       expect(result.promptsRestored).toBe(1);
@@ -150,14 +146,14 @@ describe('BackupService', () => {
         data: {},
       };
 
-      const blob = new Blob([JSON.stringify(invalidData)], {
+      // Create a mock File with text() method
+      const mockFile = {
+        text: vi.fn().mockResolvedValue(JSON.stringify(invalidData)),
+        name: 'invalid.json',
         type: 'application/json',
-      });
-      const file = new File([blob], 'invalid.json', {
-        type: 'application/json',
-      });
+      } as unknown as File;
 
-      const result = await service.restoreFromBackup(file);
+      const result = await service.restoreFromBackup(mockFile);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid backup format');
