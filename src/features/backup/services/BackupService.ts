@@ -204,34 +204,39 @@ export class BackupService {
     filename: string
   ): Promise<void> {
     const json = JSON.stringify(backup, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
 
-    try {
-      // Get config to check for custom folder
-      const config = await this.getConfig();
-      const downloadFilename = config.folderName
-        ? `${config.folderName}/${filename}`
-        : filename;
+    // Get config to check for custom folder
+    const config = await this.getConfig();
+    const downloadFilename = config.folderName
+      ? `${config.folderName}/${filename}`
+      : filename;
 
-      // Use downloads API
-      if (typeof chrome !== 'undefined' && chrome.downloads) {
-        await chrome.downloads.download({
-          url,
-          filename: downloadFilename,
-          saveAs: false, // Don't prompt user
-        });
-      } else {
-        // Fallback for browsers without downloads API (e.g., during development)
+    // Use downloads API with data URL to avoid URL.createObjectURL in service worker
+    if (typeof chrome !== 'undefined' && chrome.downloads) {
+      // Convert JSON to base64 data URL
+      const base64 = btoa(unescape(encodeURIComponent(json)));
+      const dataUrl = `data:application/json;base64,${base64}`;
+
+      await chrome.downloads.download({
+        url: dataUrl,
+        filename: downloadFilename,
+        saveAs: false, // Don't prompt user
+      });
+    } else {
+      // Fallback for browsers without downloads API (e.g., during development)
+      // This requires DOM environment
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      try {
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+      } finally {
+        URL.revokeObjectURL(url);
       }
-    } finally {
-      URL.revokeObjectURL(url);
     }
   }
 

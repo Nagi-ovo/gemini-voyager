@@ -130,4 +130,6 @@
   ,"invalidBackupFormat": { "message": "Invalid backup file format", "description": "Invalid backup format error" }
   ,"lastBackup": { "message": "Last backup", "description": "Last backup time label" }
   ,"backupInfo": { "message": "Backups include your prompt library and folder organization. Files are saved to your Downloads folder.", "description": "Backup feature info text" }
+  ,"backupFolderName": { "message": "Backup folder name", "description": "Backup folder name label" }
+  ,"backupFolderHint": { "message": "Subfolder in Downloads where backups will be saved (leave empty for Downloads root)", "description": "Backup folder name hint" }
 }

@@ -130,4 +130,6 @@
   ,"invalidBackupFormat": { "message": "无效的备份文件格式", "description": "无效备份格式错误" }
   ,"lastBackup": { "message": "上次备份", "description": "上次备份时间标签" }
   ,"backupInfo": { "message": "备份包含您的提示库和文件夹组织结构。文件将保存到您的下载文件夹。", "description": "备份功能信息文本" }
+  ,"backupFolderName": { "message": "备份文件夹名称", "description": "备份文件夹名称标签" }
+  ,"backupFolderHint": { "message": "在下载文件夹中保存备份的子文件夹（留空则保存到下载根目录）", "description": "备份文件夹名称提示" }
 }

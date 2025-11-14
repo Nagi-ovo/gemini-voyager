@@ -38,6 +38,7 @@ export default function Popup() {
   const [backupInterval, setBackupInterval] = useState<BackupInterval>(BackupInterval.DISABLED);
   const [lastBackupTime, setLastBackupTime] = useState<number | undefined>();
   const [backupInProgress, setBackupInProgress] = useState<boolean>(false);
+  const [backupFolderName, setBackupFolderName] = useState<string>('Gemini Voyager Backups');
 
   // Helper function to apply settings to storage
   const apply = useCallback((settings: SettingsUpdate) => {
@@ -94,12 +95,33 @@ export default function Popup() {
       const config: BackupConfig = {
         enabled: interval !== BackupInterval.DISABLED,
         interval,
+        folderName: backupFolderName,
       };
       await browser.storage.sync.set({ gvBackupConfig: config });
       setBackupInterval(interval);
       setBackupEnabled(interval !== BackupInterval.DISABLED);
     } catch (error) {
       console.error('Failed to update backup interval:', error);
+    }
+  }, [backupFolderName]);
+
+  const handleBackupFolderNameChange = useCallback(async (folderName: string) => {
+    try {
+      const config = await browser.storage.sync.get('gvBackupConfig') as { gvBackupConfig?: BackupConfig };
+      const currentConfig = config.gvBackupConfig || {
+        enabled: false,
+        interval: BackupInterval.DISABLED,
+      };
+
+      const updatedConfig: BackupConfig = {
+        ...currentConfig,
+        folderName: folderName || undefined,
+      };
+
+      await browser.storage.sync.set({ gvBackupConfig: updatedConfig });
+      setBackupFolderName(folderName);
+    } catch (error) {
+      console.error('Failed to update backup folder name:', error);
     }
   }, []);
 
@@ -191,6 +213,7 @@ export default function Popup() {
             setBackupEnabled(!!backupConfig.enabled);
             setBackupInterval(backupConfig.interval || BackupInterval.DISABLED);
             setLastBackupTime(backupConfig.lastBackupTime);
+            setBackupFolderName(backupConfig.folderName || 'Gemini Voyager Backups');
           }
         }
       );
@@ -380,6 +403,22 @@ export default function Popup() {
                 <option value="daily">{t('backupDaily')}</option>
                 <option value="weekly">{t('backupWeekly')}</option>
               </select>
+            </div>
+
+            {/* Backup Folder Name */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('backupFolderName')}</Label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                value={backupFolderName}
+                onChange={(e) => setBackupFolderName(e.target.value)}
+                onBlur={(e) => handleBackupFolderNameChange(e.target.value)}
+                placeholder="Gemini Voyager Backups"
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('backupFolderHint')}
+              </p>
             </div>
 
             {/* Last Backup Time */}
