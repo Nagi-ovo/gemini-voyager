@@ -64,7 +64,17 @@
   "pm_saved": { "message": "已保存", "description": "保存提示" },
   "pm_settings": { "message": "设置", "description": "设置按钮" },
   "pm_settings_tooltip": { "message": "调整扩展设置", "description": "设置按钮提示" },
-  "pm_settings_fallback": { "message": "请点击浏览器工具栏中的扩展图标打开设置", "description": "设置打开失败提示" }
+  "pm_settings_fallback": { "message": "请点击浏览器工具栏中的扩展图标打开设置", "description": "设置打开失败提示" },
+  "pm_backup": { "message": "一键备份", "description": "一键备份按钮" },
+  "pm_backup_tooltip": { "message": "将提示词和文件夹备份到带时间戳的文件夹", "description": "备份按钮提示" },
+  "pm_backup_not_supported": { "message": "⚠️ 浏览器不支持文件系统访问", "description": "浏览器不支持备份" },
+  "pm_backup_cancelled": { "message": "备份已取消", "description": "备份取消提示" },
+  "pm_backup_error": { "message": "✗ 备份失败", "description": "备份失败提示" },
+  "pm_backup_hint_options": { "message": "功能已集成在 Gemini 页面的提示词管理器中。", "description": "选项页面的备份说明" },
+  "pm_backup_step1": { "message": "打开 Gemini 页面（gemini.google.com）", "description": "备份步骤 1" },
+  "pm_backup_step2": { "message": "点击右下角的扩展图标打开提示词管理器", "description": "备份步骤 2" },
+  "pm_backup_step3": { "message": "点击 \"💾 一键备份\" 按钮，选择备份文件夹", "description": "备份步骤 3" },
+  "pm_backup_note": { "message": "备份将包含所有提示词和文件夹，并保存在带时间戳的文件夹中（格式：backup-YYYYMMDD-HHMMSS）", "description": "备份功能说明" }
   ,"starProject": { "message": "为项目点亮⭐️", "description": "Github 引导" }
   ,"exportChatJson": { "message": "导出聊天记录（JSON）", "description": "导出按钮提示" }
   ,"folder_title": { "message": "文件夹", "description": "文件夹区域标题" }

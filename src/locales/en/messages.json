@@ -64,7 +64,17 @@
   "pm_saved": { "message": "Saved", "description": "Saved notice" },
   "pm_settings": { "message": "Settings", "description": "Settings button" },
   "pm_settings_tooltip": { "message": "Open extension settings", "description": "Settings button tooltip" },
-  "pm_settings_fallback": { "message": "Please click the extension icon in the browser toolbar to open settings", "description": "Settings open failed message" }
+  "pm_settings_fallback": { "message": "Please click the extension icon in the browser toolbar to open settings", "description": "Settings open failed message" },
+  "pm_backup": { "message": "Backup All", "description": "One-click backup button" },
+  "pm_backup_tooltip": { "message": "Backup prompts and folders to a timestamped folder", "description": "Backup button tooltip" },
+  "pm_backup_not_supported": { "message": "⚠️ Browser doesn't support file system access", "description": "Browser not supported for backup" },
+  "pm_backup_cancelled": { "message": "Backup cancelled", "description": "Backup cancelled hint" },
+  "pm_backup_error": { "message": "✗ Backup failed", "description": "Backup failed hint" },
+  "pm_backup_hint_options": { "message": "The feature is integrated into the Prompt Manager on the Gemini page.", "description": "Backup hint in options page" },
+  "pm_backup_step1": { "message": "Open the Gemini page (gemini.google.com)", "description": "Backup step 1" },
+  "pm_backup_step2": { "message": "Click the extension icon in the bottom-right to open Prompt Manager", "description": "Backup step 2" },
+  "pm_backup_step3": { "message": "Click the \"💾 Backup All\" button and select a backup folder", "description": "Backup step 3" },
+  "pm_backup_note": { "message": "Backups include all prompts and folders, saved in a timestamped folder (format: backup-YYYYMMDD-HHMMSS)", "description": "Backup feature note" }
   ,"starProject": { "message": "Support the project", "description": "Github callout" }
   ,"exportChatJson": { "message": "Export chat history (JSON)", "description": "Tooltip for export button" }
   ,"folder_title": { "message": "Folders", "description": "Folder section title" }

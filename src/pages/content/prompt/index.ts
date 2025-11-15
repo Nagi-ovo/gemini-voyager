@@ -322,8 +322,14 @@ export async function startPromptManager(): Promise<void> {
     settingsBtn.textContent = i18n.t('pm_settings') || '设置';
     settingsBtn.title = i18n.t('pm_settings_tooltip') || '调整扩展设置';
 
+    // Backup button - one-click backup
+    const backupBtn = createEl('button', 'gv-pm-backup-btn');
+    backupBtn.textContent = '💾 ' + (i18n.t('pm_backup') || 'Backup All');
+    backupBtn.title = i18n.t('pm_backup_tooltip') || 'Backup prompts and folders to a timestamp folder';
+
     footer.appendChild(importBtn);
     footer.appendChild(exportBtn);
+    footer.appendChild(backupBtn);
     footer.appendChild(settingsBtn);
     const gh = document.createElement('a');
     gh.className = 'gv-pm-gh';
@@ -824,6 +830,83 @@ export async function startPromptManager(): Promise<void> {
         URL.revokeObjectURL(url);
       } catch {
         setNotice('Export failed', 'err');
+      }
+    });
+
+    // Backup button handler - creates timestamp folder with all data
+    backupBtn.addEventListener('click', async () => {
+      try {
+        // Check File System Access API support
+        if (!('showDirectoryPicker' in window)) {
+          setNotice(i18n.t('pm_backup_not_supported') || '⚠️ Browser not supported', 'err');
+          return;
+        }
+
+        // Select backup directory
+        const dirHandle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+        if (!dirHandle) {
+          setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');
+          return;
+        }
+
+        // Create timestamp folder
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const d = new Date();
+        const timestamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+        const folderName = `backup-${timestamp}`;
+        const backupDir = await dirHandle.getDirectoryHandle(folderName, { create: true });
+
+        // Read prompts
+        const prompts = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
+        const promptPayload = {
+          format: 'gemini-voyager.prompts.v1',
+          exportedAt: new Date().toISOString(),
+          items: prompts,
+        };
+
+        // Read folders
+        const folderRaw = localStorage.getItem('gvFolderData');
+        const folderData = folderRaw ? JSON.parse(folderRaw) : { folders: [], folderContents: {} };
+
+        // Count conversations
+        const conversationCount = Object.values(folderData.folderContents || {})
+          .reduce((sum: number, convs: any) => sum + (Array.isArray(convs) ? convs.length : 0), 0);
+
+        // Create metadata
+        const metadata = {
+          version: '0.9.3',
+          timestamp: new Date().toISOString(),
+          includesPrompts: true,
+          includesFolders: true,
+          promptCount: prompts.length,
+          folderCount: folderData.folders?.length || 0,
+          conversationCount,
+        };
+
+        // Write files
+        const promptsFile = await backupDir.getFileHandle('prompts.json', { create: true });
+        const promptsWritable = await promptsFile.createWritable();
+        await promptsWritable.write(JSON.stringify(promptPayload, null, 2));
+        await promptsWritable.close();
+
+        const foldersFile = await backupDir.getFileHandle('folders.json', { create: true });
+        const foldersWritable = await foldersFile.createWritable();
+        await foldersWritable.write(JSON.stringify(folderData, null, 2));
+        await foldersWritable.close();
+
+        const metaFile = await backupDir.getFileHandle('metadata.json', { create: true });
+        const metaWritable = await metaFile.createWritable();
+        await metaWritable.write(JSON.stringify(metadata, null, 2));
+        await metaWritable.close();
+
+        setNotice(`✓ Backed up ${prompts.length} prompts, ${folderData.folders?.length || 0} folders`, 'ok');
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');
+        } else {
+          console.error('[PromptManager] Backup failed:', err);
+          setNotice(i18n.t('pm_backup_error') || '✗ Backup failed', 'err');
+        }
       }
     });
 
