@@ -4,12 +4,6 @@
  * Follows enterprise best practices with comprehensive error handling
  */
 
-import { AppError, ErrorCode } from '@/core/errors/AppError';
-import type { Result } from '@/core/types/common';
-import type { FolderData } from '@/core/types/folder';
-import { EXTENSION_VERSION } from '@/core/utils/version';
-import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
-
 import type {
   BackupConfig,
   BackupFile,
@@ -19,6 +13,14 @@ import type {
 } from '../types/backup';
 
 import { PromptImportExportService } from './PromptImportExportService';
+
+import { AppError, ErrorCode } from '@/core/errors/AppError';
+import type { Result } from '@/core/types/common';
+import type { FolderData } from '@/core/types/folder';
+import { EXTENSION_VERSION } from '@/core/utils/version';
+import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
+
+
 
 /**
  * Core backup service implementation

@@ -4,11 +4,12 @@
  * Extracted from prompt manager to follow DRY principle
  */
 
+import type { PromptItem, PromptExportPayload } from '../types/backup';
+
 import { AppError, ErrorCode } from '@/core/errors/AppError';
 import type { Result } from '@/core/types/common';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 
-import type { PromptItem, PromptExportPayload } from '../types/backup';
 
 const EXPORT_FORMAT = 'gemini-voyager.prompts.v1' as const;
 const STORAGE_KEY = 'gvPromptItems';

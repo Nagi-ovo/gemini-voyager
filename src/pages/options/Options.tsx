@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { LanguageProvider, useLanguage } from '../../contexts/LanguageContext';
 import '@pages/options/Options.css';
 
