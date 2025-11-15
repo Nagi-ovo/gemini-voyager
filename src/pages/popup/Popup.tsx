@@ -26,6 +26,10 @@ interface SettingsUpdate {
 }
 
 export default function Popup() {
+  // Debug: Confirm popup is loaded
+  console.log('=== Gemini Voyager Popup Loaded ===');
+  console.log('To see backup logs: Right-click this popup → Inspect');
+
   const { t } = useLanguage();
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
@@ -103,13 +107,15 @@ export default function Popup() {
   }, []);
 
   // Save backup configuration
-  const saveBackupConfig = useCallback((config: BackupConfig) => {
+  const saveBackupConfig = useCallback((config: BackupConfig, showMessage = false) => {
     try {
       chrome.storage?.sync?.set({
         [BACKUP_STORAGE_KEYS.CONFIG]: config,
       });
       setBackupConfig(config);
-      showBackupMessage(t('backupConfigSaved'), 'success');
+      if (showMessage) {
+        showBackupMessage(t('backupConfigSaved'), 'success');
+      }
     } catch (e) {
       console.warn('Failed to save backup config:', e);
     }
@@ -194,12 +200,12 @@ export default function Popup() {
           'success'
         );
 
-        // Update last backup timestamp
+        // Update last backup timestamp (don't show "config saved" message, backup success already shown)
         const updatedConfig = {
           ...backupConfig,
           lastBackupAt: data.timestamp,
         };
-        saveBackupConfig(updatedConfig);
+        saveBackupConfig(updatedConfig, false);
       } else {
         showBackupMessage(
           t('backupError').replace('{error}', result.error?.message || 'Unknown error'),
@@ -428,6 +434,13 @@ export default function Popup() {
             {!BackupService.isSupported() && (
               <div className="text-xs p-2 rounded bg-yellow-500/10 text-yellow-600 dark:text-yellow-400">
                 {t('backupNotSupported')}
+              </div>
+            )}
+
+            {/* Debug hint */}
+            {BackupService.isSupported() && (
+              <div className="text-xs p-2 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                💡 调试提示：如遇到问题，请右键此弹窗 → 检查 → 查看 Console 标签页
               </div>
             )}
 
