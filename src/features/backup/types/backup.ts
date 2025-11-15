@@ -57,10 +57,9 @@ export interface BackupMetadata {
 
 /**
  * Result of backup operation
+ * Note: Wrapped in Result<T> type, so no need for success/error fields here
  */
 export interface BackupResult {
-  /** Whether backup was successful */
-  success: boolean;
   /** Timestamp of backup (ISO 8601) */
   timestamp: string;
   /** Number of prompts backed up */
@@ -69,8 +68,6 @@ export interface BackupResult {
   folderCount: number;
   /** Number of conversations backed up */
   conversationCount: number;
-  /** Error message if failed */
-  error?: string;
 }
 
 /**

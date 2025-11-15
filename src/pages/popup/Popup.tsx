@@ -8,7 +8,7 @@ import { Label } from '../../components/ui/label';
 import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
-import { BackupService } from '../../features/backup';
+import { backupService, BackupService } from '../../features/backup';
 import type { BackupConfig } from '../../features/backup';
 import { BACKUP_STORAGE_KEYS, DEFAULT_BACKUP_CONFIG } from '../../features/backup';
 
@@ -38,7 +38,6 @@ export default function Popup() {
   const [backupDirectoryHandle, setBackupDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
   const [backupMessage, setBackupMessage] = useState<string>('');
   const [backupMessageType, setBackupMessageType] = useState<'success' | 'error' | ''>('');
-  const backupService = new BackupService();
 
   // Helper function to apply settings to storage
   const apply = useCallback((settings: SettingsUpdate) => {
@@ -143,6 +142,22 @@ export default function Popup() {
     }
   }, [t, showBackupMessage]);
 
+  // Handle backup config changes
+  const handleBackupConfigChange = useCallback(
+    (key: keyof BackupConfig, value: boolean) => {
+      saveBackupConfig({ ...backupConfig, [key]: value });
+    },
+    [backupConfig, saveBackupConfig]
+  );
+
+  // Handle backup interval change
+  const handleIntervalChange = useCallback(
+    (intervalHours: number) => {
+      saveBackupConfig({ ...backupConfig, intervalHours });
+    },
+    [backupConfig, saveBackupConfig]
+  );
+
   // Handle backup now
   const handleBackupNow = useCallback(async () => {
     try {
@@ -182,7 +197,7 @@ export default function Popup() {
         'error'
       );
     }
-  }, [backupDirectoryHandle, backupConfig, backupService, t, showBackupMessage, saveBackupConfig]);
+  }, [backupDirectoryHandle, backupConfig, t, showBackupMessage, saveBackupConfig]);
 
   useEffect(() => {
     try {
@@ -428,10 +443,7 @@ export default function Popup() {
               <Switch
                 id="backup-include-prompts"
                 checked={backupConfig.includePrompts}
-                onChange={(e) => {
-                  const newConfig = { ...backupConfig, includePrompts: e.target.checked };
-                  saveBackupConfig(newConfig);
-                }}
+                onChange={(e) => handleBackupConfigChange('includePrompts', e.target.checked)}
               />
             </div>
 
@@ -442,10 +454,7 @@ export default function Popup() {
               <Switch
                 id="backup-include-folders"
                 checked={backupConfig.includeFolders}
-                onChange={(e) => {
-                  const newConfig = { ...backupConfig, includeFolders: e.target.checked };
-                  saveBackupConfig(newConfig);
-                }}
+                onChange={(e) => handleBackupConfigChange('includeFolders', e.target.checked)}
               />
             </div>
 
@@ -470,10 +479,7 @@ export default function Popup() {
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
-                  onClick={() => {
-                    const newConfig = { ...backupConfig, intervalHours: 0 };
-                    saveBackupConfig(newConfig);
-                  }}
+                  onClick={() => handleIntervalChange(0)}
                 >
                   {t('backupIntervalManual')}
                 </button>
@@ -483,10 +489,7 @@ export default function Popup() {
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
-                  onClick={() => {
-                    const newConfig = { ...backupConfig, intervalHours: 24 };
-                    saveBackupConfig(newConfig);
-                  }}
+                  onClick={() => handleIntervalChange(24)}
                 >
                   {t('backupIntervalDaily')}
                 </button>
@@ -496,10 +499,7 @@ export default function Popup() {
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
-                  onClick={() => {
-                    const newConfig = { ...backupConfig, intervalHours: 168 };
-                    saveBackupConfig(newConfig);
-                  }}
+                  onClick={() => handleIntervalChange(168)}
                 >
                   {t('backupIntervalWeekly')}
                 </button>

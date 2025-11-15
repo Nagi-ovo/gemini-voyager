@@ -209,7 +209,6 @@ export class BackupService implements IBackupService {
       ) as BackupMetadata;
 
       const result: BackupResult = {
-        success: true,
         timestamp: new Date().toISOString(),
         promptCount: metadata.promptCount || 0,
         folderCount: metadata.folderCount || 0,
