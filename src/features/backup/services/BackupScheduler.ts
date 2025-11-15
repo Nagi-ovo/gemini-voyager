@@ -127,17 +127,20 @@ export class BackupScheduler {
       }
 
       // Execute backup
+      // Note: Automatic backups only include folders, not prompts
+      // (Service worker cannot access localStorage where prompts are stored)
+      // Users should manually trigger backups from popup to include prompts
       const result = await backupService.createBackup();
 
       if (result.success) {
-        this.logger.info('Scheduled backup completed successfully', {
+        this.logger.info('Scheduled backup completed successfully (folders only)', {
           filename: result.filename,
         });
 
         // Send notification (optional)
         await this.showNotification(
           'Backup Created',
-          `Backup saved: ${result.filename}`
+          `Folders backup saved: ${result.filename}`
         );
       } else {
         this.logger.error('Scheduled backup failed', { error: result.error });

@@ -26,13 +26,14 @@ export class BackupService {
 
   /**
    * Create a backup of current data
+   * @param prompts - Optional prompts array (must be provided from popup/content script since service worker can't access localStorage)
    */
-  async createBackup(): Promise<BackupResult> {
+  async createBackup(prompts?: PromptItem[]): Promise<BackupResult> {
     try {
       this.logger.info('Creating backup...');
 
       // Collect data from various sources
-      const data = await this.collectBackupData();
+      const data = await this.collectBackupData(prompts);
 
       // Create backup payload
       const backup: BackupData = {
@@ -70,68 +71,10 @@ export class BackupService {
   }
 
   /**
-   * Restore data from a backup file
+   * Note: Restore functionality has been moved to popup (Popup.tsx)
+   * because it requires access to localStorage which is not available in service workers.
+   * The popup can directly access both localStorage (for prompts) and chrome.storage.sync (for folders).
    */
-  async restoreFromBackup(file: File): Promise<RestoreResult> {
-    try {
-      const text = await file.text();
-      return await this.restoreFromJSON(text);
-    } catch (error) {
-      this.logger.error('Backup restoration failed', { error });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  }
-
-  /**
-   * Restore data from a JSON string
-   */
-  async restoreFromJSON(jsonString: string): Promise<RestoreResult> {
-    try {
-      this.logger.info('Restoring from backup...');
-
-      // Parse backup JSON
-      const backup = JSON.parse(jsonString) as BackupData;
-
-      // Validate backup format
-      if (backup.format !== 'gemini-voyager.backup.v1') {
-        throw new Error('Invalid backup format');
-      }
-
-      // Restore prompts
-      let promptsRestored = 0;
-      if (backup.data.prompts && Array.isArray(backup.data.prompts)) {
-        await this.restorePrompts(backup.data.prompts);
-        promptsRestored = backup.data.prompts.length;
-      }
-
-      // Restore folders
-      let foldersRestored = false;
-      if (backup.data.folders) {
-        await this.restoreFolders(backup.data.folders);
-        foldersRestored = true;
-      }
-
-      this.logger.info('Backup restored successfully', {
-        promptsRestored,
-        foldersRestored,
-      });
-
-      return {
-        success: true,
-        promptsRestored,
-        foldersRestored,
-      };
-    } catch (error) {
-      this.logger.error('Backup restoration failed', { error });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  }
 
   /**
    * Get backup configuration
@@ -177,10 +120,16 @@ export class BackupService {
 
   /**
    * Collect all data to be backed up
+   * @param prompts - Prompts from localStorage (must be provided from context with DOM access)
    */
-  private async collectBackupData(): Promise<BackupData['data']> {
-    // Collect prompts from localStorage
-    const prompts = await this.getPromptsFromLocalStorage();
+  private async collectBackupData(prompts?: PromptItem[]): Promise<BackupData['data']> {
+    // Use provided prompts or empty array
+    // Note: Service worker cannot access localStorage, so prompts must be provided from popup/content script
+    const promptsData = prompts || [];
+
+    if (!prompts || prompts.length === 0) {
+      this.logger.warn('No prompts provided for backup. If this is a service worker context, prompts must be passed from popup/content script.');
+    }
 
     // Collect folder data from chrome.storage.sync
     const folderData = await browser.storage.sync.get([
@@ -189,26 +138,12 @@ export class BackupService {
     ]);
 
     return {
-      prompts: prompts || [],
+      prompts: promptsData,
       folders: {
         gemini: (folderData[StorageKeys.FOLDER_DATA] as FolderData | undefined) || null,
         aiStudio: (folderData[StorageKeys.FOLDER_DATA_AISTUDIO] as FolderData | undefined) || null,
       },
     };
-  }
-
-  /**
-   * Get prompts from localStorage
-   */
-  private async getPromptsFromLocalStorage(): Promise<PromptItem[]> {
-    try {
-      const raw = localStorage.getItem(BACKUP_STORAGE_KEYS.PROMPTS);
-      if (!raw) return [];
-      return JSON.parse(raw) as PromptItem[];
-    } catch (error) {
-      this.logger.warn('Failed to read prompts from localStorage', { error });
-      return [];
-    }
   }
 
   /**
@@ -240,97 +175,6 @@ export class BackupService {
     } else {
       throw new Error('Downloads API not available');
     }
-  }
-
-  /**
-   * Restore prompts
-   */
-  private async restorePrompts(prompts: PromptItem[]): Promise<void> {
-    try {
-      // Get existing prompts
-      const existing = await this.getPromptsFromLocalStorage();
-
-      // Merge: keep existing, add new ones
-      const merged = this.mergePrompts(existing, prompts);
-
-      // Save back to localStorage
-      localStorage.setItem(
-        BACKUP_STORAGE_KEYS.PROMPTS,
-        JSON.stringify(merged)
-      );
-
-      this.logger.info('Prompts restored', {
-        existing: existing.length,
-        imported: prompts.length,
-        merged: merged.length,
-      });
-    } catch (error) {
-      this.logger.error('Failed to restore prompts', { error });
-      throw error;
-    }
-  }
-
-  /**
-   * Restore folder data
-   */
-  private async restoreFolders(folders: {
-    gemini: FolderData | null;
-    aiStudio: FolderData | null;
-  }): Promise<void> {
-    try {
-      const updates: Record<string, FolderData> = {};
-
-      if (folders.gemini) {
-        updates[StorageKeys.FOLDER_DATA] = folders.gemini;
-      }
-
-      if (folders.aiStudio) {
-        updates[StorageKeys.FOLDER_DATA_AISTUDIO] = folders.aiStudio;
-      }
-
-      if (Object.keys(updates).length > 0) {
-        await browser.storage.sync.set(updates);
-        this.logger.info('Folders restored', { updates });
-      }
-    } catch (error) {
-      this.logger.error('Failed to restore folders', { error });
-      throw error;
-    }
-  }
-
-  /**
-   * Merge prompts (avoid duplicates)
-   */
-  private mergePrompts(
-    existing: PromptItem[],
-    imported: PromptItem[]
-  ): PromptItem[] {
-    const map = new Map<string, PromptItem>();
-
-    // Add existing prompts
-    for (const item of existing) {
-      map.set(item.text.toLowerCase(), item);
-    }
-
-    // Add imported prompts (skip duplicates based on text)
-    for (const item of imported) {
-      const key = item.text.toLowerCase();
-      if (!map.has(key)) {
-        map.set(key, item);
-      } else {
-        // Merge tags if prompt already exists
-        const existingItem = map.get(key)!;
-        const mergedTags = Array.from(
-          new Set([...existingItem.tags, ...item.tags])
-        );
-        existingItem.tags = mergedTags;
-        existingItem.updatedAt = Date.now();
-      }
-    }
-
-    return Array.from(map.values()).sort(
-      (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
-    );
   }
 
   /**

@@ -102,59 +102,7 @@ describe('BackupService', () => {
     });
   });
 
-  describe('restoreFromBackup', () => {
-    it('should restore valid backup data', async () => {
-      const backupData = {
-        format: 'gemini-voyager.backup.v1',
-        createdAt: new Date().toISOString(),
-        version: '1.0.0',
-        data: {
-          prompts: [
-            {
-              id: '1',
-              text: 'Test prompt',
-              tags: ['test'],
-              createdAt: Date.now(),
-            },
-          ],
-          folders: {
-            gemini: { test: 'data' },
-            aiStudio: null,
-          },
-        },
-      };
-
-      // Create a mock File with text() method
-      const mockFile = {
-        text: vi.fn().mockResolvedValue(JSON.stringify(backupData)),
-        name: 'backup.json',
-        type: 'application/json',
-      } as unknown as File;
-
-      const result = await service.restoreFromBackup(mockFile);
-
-      expect(result.success).toBe(true);
-      expect(result.promptsRestored).toBe(1);
-      expect(result.foldersRestored).toBe(true);
-    });
-
-    it('should reject invalid backup format', async () => {
-      const invalidData = {
-        format: 'invalid-format',
-        data: {},
-      };
-
-      // Create a mock File with text() method
-      const mockFile = {
-        text: vi.fn().mockResolvedValue(JSON.stringify(invalidData)),
-        name: 'invalid.json',
-        type: 'application/json',
-      } as unknown as File;
-
-      const result = await service.restoreFromBackup(mockFile);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid backup format');
-    });
-  });
+  // Note: Restore functionality has been moved to Popup.tsx
+  // because it requires access to localStorage which is not available in service workers.
+  // The popup can directly access both localStorage (for prompts) and chrome.storage.sync (for folders).
 });

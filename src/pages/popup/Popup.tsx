@@ -9,7 +9,7 @@ import { Label } from '../../components/ui/label';
 import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
-import type { BackupConfig, BackupResult, RestoreResult } from '../../features/backup/types/backup';
+import type { BackupConfig, BackupResult } from '../../features/backup/types/backup';
 import { BackupInterval } from '../../features/backup/types/backup';
 
 import WidthSlider from './components/WidthSlider';
@@ -128,7 +128,23 @@ export default function Popup() {
   const handleManualBackup = useCallback(async () => {
     setBackupInProgress(true);
     try {
-      const response = await browser.runtime.sendMessage({ type: 'gv.createBackup' }) as BackupResult;
+      // Read prompts from localStorage (only accessible in popup, not in service worker)
+      let prompts = [];
+      try {
+        const promptsRaw = localStorage.getItem('gvPromptItems');
+        if (promptsRaw) {
+          prompts = JSON.parse(promptsRaw);
+        }
+      } catch (error) {
+        console.warn('Failed to read prompts from localStorage:', error);
+      }
+
+      // Send backup request with prompts data
+      const response = await browser.runtime.sendMessage({
+        type: 'gv.createBackup',
+        payload: { prompts },
+      }) as BackupResult;
+
       if (response?.success) {
         setLastBackupTime(response.timestamp);
         alert(t('backupSuccess'));
@@ -153,18 +169,52 @@ export default function Popup() {
 
       try {
         const fileContent = await file.text();
+        const backup = JSON.parse(fileContent);
 
-        // Send to background script to handle restoration via BackupService
-        const response = await browser.runtime.sendMessage({
-          type: 'gv.restoreBackup',
-          payload: fileContent,
-        }) as RestoreResult;
-
-        if (response?.success) {
-          alert(t('restoreSuccess'));
-        } else {
-          alert(t('restoreFailed') + ': ' + (response?.error || 'Unknown error'));
+        // Validate backup format
+        if (backup.format !== 'gemini-voyager.backup.v1') {
+          alert(t('invalidBackupFormat'));
+          return;
         }
+
+        // Restore prompts to localStorage (only accessible in popup)
+        if (backup.data?.prompts && Array.isArray(backup.data.prompts)) {
+          try {
+            // Get existing prompts
+            const existingRaw = localStorage.getItem('gvPromptItems');
+            const existing = existingRaw ? JSON.parse(existingRaw) : [];
+
+            // Merge prompts (avoid duplicates based on text)
+            const merged = [...existing];
+            const existingTexts = new Set(existing.map((p: any) => p.text.toLowerCase()));
+
+            for (const item of backup.data.prompts) {
+              if (!existingTexts.has(item.text.toLowerCase())) {
+                merged.push(item);
+              }
+            }
+
+            localStorage.setItem('gvPromptItems', JSON.stringify(merged));
+          } catch (error) {
+            console.error('Failed to restore prompts:', error);
+          }
+        }
+
+        // Restore folders to chrome.storage.sync
+        if (backup.data?.folders) {
+          const updates: Record<string, any> = {};
+          if (backup.data.folders.gemini) {
+            updates.gvFolderData = backup.data.folders.gemini;
+          }
+          if (backup.data.folders.aiStudio) {
+            updates.gvFolderDataAIStudio = backup.data.folders.aiStudio;
+          }
+          if (Object.keys(updates).length > 0) {
+            await browser.storage.sync.set(updates);
+          }
+        }
+
+        alert(t('restoreSuccess'));
       } catch (error) {
         console.error('Restore failed:', error);
         alert(t('restoreFailed'));

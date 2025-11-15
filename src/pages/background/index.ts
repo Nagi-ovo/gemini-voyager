@@ -31,7 +31,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       // Handle manual backup request
       if (message && message.type === 'gv.createBackup') {
         try {
-          const result = await backupService.createBackup();
+          // Prompts must be provided from popup since service worker cannot access localStorage
+          const prompts = message.payload?.prompts || [];
+          const result = await backupService.createBackup(prompts);
           sendResponse(result);
         } catch (e: any) {
           console.error('[GV] Backup failed:', e);
@@ -40,22 +42,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return;
       }
 
-      // Handle restore backup request
-      if (message && message.type === 'gv.restoreBackup') {
-        try {
-          const jsonString = message.payload;
-          if (typeof jsonString !== 'string') {
-            sendResponse({ success: false, error: 'Invalid payload' });
-            return;
-          }
-          const result = await backupService.restoreFromJSON(jsonString);
-          sendResponse(result);
-        } catch (e: any) {
-          console.error('[GV] Restore failed:', e);
-          sendResponse({ success: false, error: String(e?.message || e) });
-        }
-        return;
-      }
+      // Note: Backup restoration is handled directly in popup (Popup.tsx)
+      // because it requires access to localStorage which is not available in service workers
 
       // Handle image fetch
       if (!message || message.type !== 'gv.fetchImage') return;
