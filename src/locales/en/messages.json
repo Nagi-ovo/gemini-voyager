@@ -134,4 +134,5 @@
   ,"backupUserCancelled": { "message": "Backup cancelled", "description": "User cancelled folder selection" }
   ,"backupConfigSaved": { "message": "✓ Backup settings saved", "description": "Config saved message" }
   ,"backupPermissionDenied": { "message": "⚠️ Cannot access this directory. Please choose a different location (e.g., Documents, Downloads, or a folder in Desktop)", "description": "Permission denied for restricted directory" }
+  ,"backupPinPopupHint": { "message": "📌 Tip: Before selecting folder, click the pin icon in the top right to keep this popup open", "description": "Hint to pin the popup" }
 }

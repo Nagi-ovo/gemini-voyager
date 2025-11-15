@@ -444,6 +444,13 @@ export default function Popup() {
               </div>
             )}
 
+            {/* Pin popup warning */}
+            {BackupService.isSupported() && !backupDirectoryHandle && (
+              <div className="text-xs p-2 rounded bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+                {t('backupPinPopupHint')}
+              </div>
+            )}
+
             {/* Select backup folder */}
             <div className="space-y-2">
               <Button
