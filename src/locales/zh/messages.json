@@ -133,4 +133,5 @@
   ,"backupSelectFolderFirst": { "message": "请先选择备份文件夹", "description": "未选择文件夹警告" }
   ,"backupUserCancelled": { "message": "备份已取消", "description": "用户取消文件夹选择" }
   ,"backupConfigSaved": { "message": "✓ 备份设置已保存", "description": "配置保存消息" }
+  ,"backupPermissionDenied": { "message": "⚠️ 无法访问此目录。请选择其他位置（例如：文档、下载，或桌面中的自定义文件夹）", "description": "受限目录权限被拒绝" }
 }

@@ -131,14 +131,23 @@ export default function Popup() {
           'success'
         );
       } else {
+        // User cancelled the folder picker
         showBackupMessage(t('backupUserCancelled'), 'error');
       }
     } catch (error) {
       console.error('Failed to select backup folder:', error);
-      showBackupMessage(
-        t('backupError').replace('{error}', error instanceof Error ? error.message : 'Unknown error'),
-        'error'
-      );
+
+      // Check if it's a permission/restricted directory error
+      if (error instanceof Error &&
+          (error.message.includes('not allowed') ||
+           error.message.includes('Cannot access this directory'))) {
+        showBackupMessage(t('backupPermissionDenied'), 'error');
+      } else {
+        showBackupMessage(
+          t('backupError').replace('{error}', error instanceof Error ? error.message : 'Unknown error'),
+          'error'
+        );
+      }
     }
   }, [t, showBackupMessage]);
 

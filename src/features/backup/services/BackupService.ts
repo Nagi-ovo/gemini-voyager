@@ -53,7 +53,7 @@ export class BackupService implements IBackupService {
 
   /**
    * Request directory access from user
-   * @returns FileSystemDirectoryHandle if granted, null if denied
+   * @returns FileSystemDirectoryHandle if granted, null if denied/cancelled
    */
   static async requestDirectoryAccess(): Promise<FileSystemDirectoryHandle | null> {
     try {
@@ -72,9 +72,24 @@ export class BackupService implements IBackupService {
 
       return directoryHandle;
     } catch (error) {
-      // User cancelled or denied permission
+      // User cancelled the picker
       if (error instanceof Error && error.name === 'AbortError') {
         return null;
+      }
+
+      // Permission denied or restricted directory
+      if (
+        error instanceof Error &&
+        (error.name === 'NotAllowedError' ||
+          error.name === 'SecurityError' ||
+          error.message.includes('not allowed') ||
+          error.message.includes('permission'))
+      ) {
+        throw new AppError(
+          ErrorCode.UNKNOWN_ERROR,
+          'Cannot access this directory. Please choose a different location (e.g., Documents, Downloads, or a custom folder on Desktop)',
+          { originalError: error }
+        );
       }
 
       console.error('Failed to request directory access:', error);

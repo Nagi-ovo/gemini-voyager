@@ -133,4 +133,5 @@
   ,"backupSelectFolderFirst": { "message": "Please select a backup folder first", "description": "No folder selected warning" }
   ,"backupUserCancelled": { "message": "Backup cancelled", "description": "User cancelled folder selection" }
   ,"backupConfigSaved": { "message": "✓ Backup settings saved", "description": "Config saved message" }
+  ,"backupPermissionDenied": { "message": "⚠️ Cannot access this directory. Please choose a different location (e.g., Documents, Downloads, or a folder in Desktop)", "description": "Permission denied for restricted directory" }
 }
