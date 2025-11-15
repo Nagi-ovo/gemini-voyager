@@ -159,70 +159,6 @@ export default function Popup() {
     }
   }, [t]);
 
-  const handleRestoreBackup = useCallback(async () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e: Event) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      try {
-        const fileContent = await file.text();
-        const backup = JSON.parse(fileContent);
-
-        // Validate backup format
-        if (backup.format !== 'gemini-voyager.backup.v1') {
-          alert(t('invalidBackupFormat'));
-          return;
-        }
-
-        // Restore prompts to localStorage (only accessible in popup)
-        if (backup.data?.prompts && Array.isArray(backup.data.prompts)) {
-          try {
-            // Get existing prompts
-            const existingRaw = localStorage.getItem('gvPromptItems');
-            const existing = existingRaw ? JSON.parse(existingRaw) : [];
-
-            // Merge prompts (avoid duplicates based on text)
-            const merged = [...existing];
-            const existingTexts = new Set(existing.map((p: any) => p.text.toLowerCase()));
-
-            for (const item of backup.data.prompts) {
-              if (!existingTexts.has(item.text.toLowerCase())) {
-                merged.push(item);
-              }
-            }
-
-            localStorage.setItem('gvPromptItems', JSON.stringify(merged));
-          } catch (error) {
-            console.error('Failed to restore prompts:', error);
-          }
-        }
-
-        // Restore folders to chrome.storage.sync
-        if (backup.data?.folders) {
-          const updates: Record<string, any> = {};
-          if (backup.data.folders.gemini) {
-            updates.gvFolderData = backup.data.folders.gemini;
-          }
-          if (backup.data.folders.aiStudio) {
-            updates.gvFolderDataAIStudio = backup.data.folders.aiStudio;
-          }
-          if (Object.keys(updates).length > 0) {
-            await browser.storage.sync.set(updates);
-          }
-        }
-
-        alert(t('restoreSuccess'));
-      } catch (error) {
-        console.error('Restore failed:', error);
-        alert(t('restoreFailed'));
-      }
-    };
-    input.click();
-  }, [t]);
-
   useEffect(() => {
     try {
       chrome.storage?.sync?.get(
@@ -472,16 +408,6 @@ export default function Popup() {
               disabled={backupInProgress}
             >
               {backupInProgress ? t('backupInProgress') : t('createBackupNow')}
-            </Button>
-
-            {/* Restore Backup Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={handleRestoreBackup}
-            >
-              {t('restoreBackup')}
             </Button>
 
             {/* Info Text */}

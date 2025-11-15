@@ -94,11 +94,12 @@ describe('BackupService', () => {
       global.URL.createObjectURL = vi.fn().mockReturnValue(mockUrl);
       global.URL.revokeObjectURL = vi.fn();
 
-      const result = await service.createBackup();
+      const result = await service.createBackup(testPrompts);
 
       expect(result.success).toBe(true);
-      // New format includes full timestamp: YYYY-MM-DDTHH-MM-SS-mmmZ
-      expect(result.filename).toMatch(/gemini-voyager-backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z\.json/);
+      // New format creates two files: prompts and folders
+      expect(result.filename).toContain('gemini-voyager-prompts-');
+      expect(result.filename).toContain('gemini-voyager-folders-');
     });
   });
 

@@ -26,40 +26,45 @@ export class BackupService {
 
   /**
    * Create a backup of current data
+   * Creates two separate files: one for prompts, one for folders
    * @param prompts - Optional prompts array (must be provided from popup/content script since service worker can't access localStorage)
    */
   async createBackup(prompts?: PromptItem[]): Promise<BackupResult> {
     try {
       this.logger.info('Creating backup...');
 
-      // Collect data from various sources
-      const data = await this.collectBackupData(prompts);
-
-      // Create backup payload
-      const backup: BackupData = {
-        format: 'gemini-voyager.backup.v1',
-        createdAt: new Date().toISOString(),
-        version: this.getExtensionVersion(),
-        data,
-      };
-
-      // Generate filename with full timestamp to ensure uniqueness
+      // Generate timestamp for consistent filenames
       const timestamp = new Date()
         .toISOString()
         .replace(/[:.]/g, '-');
-      const filename = `gemini-voyager-backup-${timestamp}.json`;
 
-      // Save to downloads
-      const result = await this.saveToDownloads(backup, filename);
+      const folderName = (await this.getConfig()).folderName;
+      const results: string[] = [];
+
+      // 1. Backup prompts if provided
+      if (prompts && prompts.length > 0) {
+        const promptsFilename = `gemini-voyager-prompts-${timestamp}.json`;
+        await this.savePromptsBackup(prompts, promptsFilename, folderName);
+        results.push(promptsFilename);
+        this.logger.info('Prompts backup created', { filename: promptsFilename, count: prompts.length });
+      } else {
+        this.logger.warn('No prompts provided for backup');
+      }
+
+      // 2. Backup folders
+      const foldersFilename = `gemini-voyager-folders-${timestamp}.json`;
+      await this.saveFoldersBackup(foldersFilename, folderName);
+      results.push(foldersFilename);
+      this.logger.info('Folders backup created', { filename: foldersFilename });
 
       // Update last backup time
       await this.updateLastBackupTime();
 
-      this.logger.info('Backup created successfully', { filename });
+      this.logger.info('Backup completed successfully', { files: results });
       return {
         success: true,
         timestamp: Date.now(),
-        filename,
+        filename: results.join(', '), // Return comma-separated list of files
       };
     } catch (error) {
       this.logger.error('Backup creation failed', { error });
@@ -119,46 +124,58 @@ export class BackupService {
   }
 
   /**
-   * Collect all data to be backed up
-   * @param prompts - Prompts from localStorage (must be provided from context with DOM access)
+   * Save prompts backup
+   * Format: Direct JSON array compatible with prompt manager import
    */
-  private async collectBackupData(prompts?: PromptItem[]): Promise<BackupData['data']> {
-    // Use provided prompts or empty array
-    // Note: Service worker cannot access localStorage, so prompts must be provided from popup/content script
-    const promptsData = prompts || [];
+  private async savePromptsBackup(
+    prompts: PromptItem[],
+    filename: string,
+    folderName?: string
+  ): Promise<void> {
+    const json = JSON.stringify(prompts, null, 2);
+    await this.downloadJSON(json, filename, folderName);
+  }
 
-    if (!prompts || prompts.length === 0) {
-      this.logger.warn('No prompts provided for backup. If this is a service worker context, prompts must be passed from popup/content script.');
-    }
-
+  /**
+   * Save folders backup
+   * Format: FolderExportPayload compatible with folder manager import
+   */
+  private async saveFoldersBackup(
+    filename: string,
+    folderName?: string
+  ): Promise<void> {
     // Collect folder data from chrome.storage.sync
     const folderData = await browser.storage.sync.get([
       StorageKeys.FOLDER_DATA,
       StorageKeys.FOLDER_DATA_AISTUDIO,
     ]);
 
-    return {
-      prompts: promptsData,
-      folders: {
-        gemini: (folderData[StorageKeys.FOLDER_DATA] as FolderData | undefined) || null,
-        aiStudio: (folderData[StorageKeys.FOLDER_DATA_AISTUDIO] as FolderData | undefined) || null,
-      },
+    const geminiData = folderData[StorageKeys.FOLDER_DATA] as FolderData | undefined;
+    const aiStudioData = folderData[StorageKeys.FOLDER_DATA_AISTUDIO] as FolderData | undefined;
+
+    // Create export payload using folder manager's format
+    const exportPayload = {
+      format: 'gemini-voyager.folders.v1' as const,
+      exportedAt: new Date().toISOString(),
+      version: this.getExtensionVersion(),
+      gemini: geminiData || { folders: [], folderContents: {} },
+      aiStudio: aiStudioData || { folders: [], folderContents: {} },
     };
+
+    const json = JSON.stringify(exportPayload, null, 2);
+    await this.downloadJSON(json, filename, folderName);
   }
 
   /**
-   * Save backup to downloads folder
+   * Download JSON file using downloads API
    */
-  private async saveToDownloads(
-    backup: BackupData,
-    filename: string
+  private async downloadJSON(
+    json: string,
+    filename: string,
+    folderName?: string
   ): Promise<void> {
-    const json = JSON.stringify(backup, null, 2);
-
-    // Get config to check for custom folder
-    const config = await this.getConfig();
-    const downloadFilename = config.folderName
-      ? `${config.folderName}/${filename}`
+    const downloadFilename = folderName
+      ? `${folderName}/${filename}`
       : filename;
 
     // Use downloads API with data URL (works in service worker context)
