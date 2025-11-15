@@ -19,6 +19,12 @@ import { startFormulaCopy } from '@/features/formulaCopy';
  * many Gemini tabs containing long conversations.
  */
 
+// Initialization delay constants (in milliseconds)
+const HEAVY_FEATURE_INIT_DELAY = 100;  // For resource-intensive features (Timeline, Folder)
+const LIGHT_FEATURE_INIT_DELAY = 50;   // For lightweight features
+const BACKGROUND_TAB_MIN_DELAY = 3000; // Minimum delay for background tabs
+const BACKGROUND_TAB_MAX_DELAY = 8000; // Maximum delay for background tabs (3000 + 5000)
+
 let initialized = false;
 let initializationTimer: number | null = null;
 
@@ -37,19 +43,19 @@ async function initializeFeatures(): Promise<void> {
     if (location.hostname === 'gemini.google.com') {
       // Timeline is most resource-intensive, start it first
       startTimeline();
-      await delay(100);
+      await delay(HEAVY_FEATURE_INIT_DELAY);
 
       startFolderManager();
-      await delay(100);
+      await delay(HEAVY_FEATURE_INIT_DELAY);
 
       startChatWidthAdjuster();
-      await delay(50);
+      await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startEditInputWidthAdjuster();
-      await delay(50);
+      await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startFormulaCopy();
-      await delay(50);
+      await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
     if (
@@ -58,12 +64,12 @@ async function initializeFeatures(): Promise<void> {
       location.hostname === 'aistudio.google.cn'
     ) {
       startPromptManager();
-      await delay(100);
+      await delay(HEAVY_FEATURE_INIT_DELAY);
     }
 
     if (location.hostname === 'aistudio.google.com' || location.hostname === 'aistudio.google.cn') {
       startAIStudioFolderManager();
-      await delay(100);
+      await delay(HEAVY_FEATURE_INIT_DELAY);
     }
 
     startExportButton();
@@ -84,8 +90,9 @@ function getInitializationDelay(): number {
     console.log('[Gemini Voyager] Foreground tab detected, initializing immediately');
     return 0;
   } else {
-    // Background tab: add random delay (3-8 seconds) to distribute load
-    const randomDelay = 3000 + Math.random() * 5000;
+    // Background tab: add random delay to distribute load across multiple tabs
+    const randomRange = BACKGROUND_TAB_MAX_DELAY - BACKGROUND_TAB_MIN_DELAY;
+    const randomDelay = BACKGROUND_TAB_MIN_DELAY + Math.random() * randomRange;
     console.log(`[Gemini Voyager] Background tab detected, delaying initialization by ${Math.round(randomDelay)}ms`);
     return randomDelay;
   }
