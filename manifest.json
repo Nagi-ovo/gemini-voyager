@@ -9,6 +9,10 @@
       "32": "icon-32.png"
     }
   },
+  "options_ui": {
+    "page": "src/pages/options/index.html",
+    "open_in_tab": true
+  },
   "icons": {
     "128": "icon-128.png"
   },

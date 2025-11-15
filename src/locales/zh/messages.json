@@ -134,5 +134,5 @@
   ,"backupUserCancelled": { "message": "备份已取消", "description": "用户取消文件夹选择" }
   ,"backupConfigSaved": { "message": "✓ 备份设置已保存", "description": "配置保存消息" }
   ,"backupPermissionDenied": { "message": "⚠️ 无法访问此目录。请选择其他位置（例如：文档、下载，或桌面中的自定义文件夹）", "description": "受限目录权限被拒绝" }
-  ,"backupPinPopupHint": { "message": "📌 提示：选择文件夹前，请先点击右上角的图钉图标钉住此弹窗，防止自动关闭", "description": "提示用户钉住弹窗" }
+  ,"backupPopupLimitation": { "message": "⚠️ 注意：弹窗在选择文件夹时可能会自动关闭。如遇问题，请右键扩展图标 → 选项，在选项页面中配置备份", "description": "浏览器弹窗限制提示" }
 }

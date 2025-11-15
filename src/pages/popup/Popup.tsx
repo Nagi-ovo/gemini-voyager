@@ -437,17 +437,10 @@ export default function Popup() {
               </div>
             )}
 
-            {/* Debug hint */}
-            {BackupService.isSupported() && (
-              <div className="text-xs p-2 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                💡 调试提示：如遇到问题，请右键此弹窗 → 检查 → 查看 Console 标签页
-              </div>
-            )}
-
-            {/* Pin popup warning */}
+            {/* Browser limitation hint */}
             {BackupService.isSupported() && !backupDirectoryHandle && (
               <div className="text-xs p-2 rounded bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
-                {t('backupPinPopupHint')}
+                {t('backupPopupLimitation')}
               </div>
             )}
 
