@@ -26,12 +26,14 @@ export class BackupService {
 
   /**
    * Create a backup of current data
-   * Creates two separate files: one for prompts, one for folders
+   * Creates separate files: one for prompts, one for Gemini folders (AI Studio folders not backed up as import is not supported)
    * @param prompts - Optional prompts array (must be provided from popup/content script since service worker can't access localStorage)
    */
   async createBackup(prompts?: PromptItem[]): Promise<BackupResult> {
     try {
       this.logger.info('Creating backup...');
+      console.log('[GV BackupService] createBackup called with prompts:', prompts?.length || 0, 'items');
+      console.log('[GV BackupService] Prompts value:', prompts);
 
       // Generate timestamp for consistent filenames
       const timestamp = new Date()
@@ -39,23 +41,26 @@ export class BackupService {
         .replace(/[:.]/g, '-');
 
       const folderName = (await this.getConfig()).folderName;
+      console.log('[GV BackupService] Backup folder name:', folderName);
       const results: string[] = [];
 
       // 1. Backup prompts if provided
       if (prompts && prompts.length > 0) {
+        console.log('[GV BackupService] Creating prompts backup...');
         const promptsFilename = `gemini-voyager-prompts-${timestamp}.json`;
         await this.savePromptsBackup(prompts, promptsFilename, folderName);
         results.push(promptsFilename);
         this.logger.info('Prompts backup created', { filename: promptsFilename, count: prompts.length });
       } else {
+        console.log('[GV BackupService] Skipping prompts backup - prompts is:', prompts);
         this.logger.warn('No prompts provided for backup');
       }
 
-      // 2. Backup folders
+      // 2. Backup Gemini folders only (AI Studio doesn't support folder import)
       const foldersFilename = `gemini-voyager-folders-${timestamp}.json`;
-      await this.saveFoldersBackup(foldersFilename, folderName);
+      await this.saveFoldersBackup(StorageKeys.FOLDER_DATA, foldersFilename, folderName);
       results.push(foldersFilename);
-      this.logger.info('Folders backup created', { filename: foldersFilename });
+      this.logger.info('Gemini folders backup created', { filename: foldersFilename });
 
       // Update last backup time
       await this.updateLastBackupTime();
@@ -137,29 +142,24 @@ export class BackupService {
   }
 
   /**
-   * Save folders backup
+   * Save folders backup for a specific storage key
    * Format: FolderExportPayload compatible with folder manager import
    */
   private async saveFoldersBackup(
+    storageKey: string,
     filename: string,
     folderName?: string
   ): Promise<void> {
-    // Collect folder data from chrome.storage.sync
-    const folderData = await browser.storage.sync.get([
-      StorageKeys.FOLDER_DATA,
-      StorageKeys.FOLDER_DATA_AISTUDIO,
-    ]);
+    // Get folder data from chrome.storage.sync
+    const result = await browser.storage.sync.get(storageKey);
+    const data = result[storageKey] as FolderData | undefined;
 
-    const geminiData = folderData[StorageKeys.FOLDER_DATA] as FolderData | undefined;
-    const aiStudioData = folderData[StorageKeys.FOLDER_DATA_AISTUDIO] as FolderData | undefined;
-
-    // Create export payload using folder manager's format
+    // Create export payload using folder manager's standard format
     const exportPayload = {
       format: 'gemini-voyager.folders.v1' as const,
       exportedAt: new Date().toISOString(),
       version: this.getExtensionVersion(),
-      gemini: geminiData || { folders: [], folderContents: {} },
-      aiStudio: aiStudioData || { folders: [], folderContents: {} },
+      data: data || { folders: [], folderContents: {} },
     };
 
     const json = JSON.stringify(exportPayload, null, 2);

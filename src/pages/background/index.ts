@@ -33,7 +33,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         try {
           // Prompts must be provided from popup since service worker cannot access localStorage
           const prompts = message.payload?.prompts || [];
+          console.log('[GV Backup] Background received prompts:', prompts.length, 'items');
+          console.log('[GV Backup] Prompts data:', prompts);
           const result = await backupService.createBackup(prompts);
+          console.log('[GV Backup] Backup result:', result);
           sendResponse(result);
         } catch (e: any) {
           console.error('[GV] Backup failed:', e);

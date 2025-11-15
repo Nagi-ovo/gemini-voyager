@@ -97,7 +97,7 @@ describe('BackupService', () => {
       const result = await service.createBackup(testPrompts);
 
       expect(result.success).toBe(true);
-      // New format creates two files: prompts and folders
+      // New format creates two files: one for prompts, one for Gemini folders
       expect(result.filename).toContain('gemini-voyager-prompts-');
       expect(result.filename).toContain('gemini-voyager-folders-');
     });

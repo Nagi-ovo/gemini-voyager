@@ -132,13 +132,18 @@ export default function Popup() {
       let prompts = [];
       try {
         const promptsRaw = localStorage.getItem('gvPromptItems');
+        console.log('[GV Backup] localStorage raw value:', promptsRaw);
         if (promptsRaw) {
           prompts = JSON.parse(promptsRaw);
+          console.log('[GV Backup] Parsed prompts:', prompts.length, 'items');
+        } else {
+          console.log('[GV Backup] No prompts found in localStorage');
         }
       } catch (error) {
-        console.warn('Failed to read prompts from localStorage:', error);
+        console.warn('[GV Backup] Failed to read prompts from localStorage:', error);
       }
 
+      console.log('[GV Backup] Sending backup request with', prompts.length, 'prompts');
       // Send backup request with prompts data
       const response = await browser.runtime.sendMessage({
         type: 'gv.createBackup',
