@@ -264,20 +264,18 @@ export class BackupService implements IBackupService {
 
   /**
    * Load folder data from storage
-   * Supports both Gemini and AI Studio
+   * Only loads Gemini data (AI Studio doesn't support import)
    */
   private async loadFolderData(): Promise<Result<FolderData>> {
     try {
-      // Try to load Gemini folder data first
       const geminiKey = 'gvFolderData';
-      const aiStudioKey = 'gvFolderDataAIStudio';
 
       let folderData: FolderData = {
         folders: [],
         folderContents: {},
       };
 
-      // Load Gemini data
+      // Load Gemini data only
       const geminiRaw = localStorage.getItem(geminiKey);
       if (geminiRaw) {
         try {
@@ -285,43 +283,6 @@ export class BackupService implements IBackupService {
           folderData = geminiData;
         } catch (e) {
           console.warn('Failed to parse Gemini folder data:', e);
-        }
-      }
-
-      // Merge AI Studio data if exists
-      const aiStudioRaw = localStorage.getItem(aiStudioKey);
-      if (aiStudioRaw) {
-        try {
-          const aiStudioData = JSON.parse(aiStudioRaw) as FolderData;
-
-          // Merge folders (deduplicate by ID)
-          const folderMap = new Map(folderData.folders.map((f) => [f.id, f]));
-          for (const folder of aiStudioData.folders) {
-            if (!folderMap.has(folder.id)) {
-              folderMap.set(folder.id, folder);
-            }
-          }
-          folderData.folders = Array.from(folderMap.values());
-
-          // Merge folder contents
-          for (const [folderId, conversations] of Object.entries(aiStudioData.folderContents)) {
-            if (!folderData.folderContents[folderId]) {
-              folderData.folderContents[folderId] = [];
-            }
-
-            // Deduplicate conversations by conversationId
-            const convMap = new Map(
-              folderData.folderContents[folderId].map((c) => [c.conversationId, c])
-            );
-            for (const conv of conversations) {
-              if (!convMap.has(conv.conversationId)) {
-                convMap.set(conv.conversationId, conv);
-              }
-            }
-            folderData.folderContents[folderId] = Array.from(convMap.values());
-          }
-        } catch (e) {
-          console.warn('Failed to parse AI Studio folder data:', e);
         }
       }
 
