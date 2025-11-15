@@ -114,4 +114,23 @@
   ,"conversation_untitled": { "message": "Untitled", "description": "Fallback title for conversations without a name" }
   ,"geminiOnlyNotice": { "message": "All settings only support Gemini", "description": "Notice that all settings only work with Gemini" }
   ,"folderManager_dataLossWarning": { "message": "⚠️ Warning: Failed to load folder data. Your folders may have been corrupted. Please check the browser console for details and try restoring from backup if available.", "description": "Warning shown when folder data fails to load" }
+  ,"backupOptions": { "message": "Auto Backup", "description": "Backup options section label" }
+  ,"backupEnabled": { "message": "Enable auto backup", "description": "Enable auto backup toggle" }
+  ,"backupNow": { "message": "Backup Now", "description": "Backup now button" }
+  ,"backupSelectFolder": { "message": "Select Backup Folder", "description": "Select backup folder button" }
+  ,"backupFolderSelected": { "message": "Backup folder: {folder}", "description": "Shows selected backup folder" }
+  ,"backupIncludePrompts": { "message": "Include prompts", "description": "Include prompts in backup toggle" }
+  ,"backupIncludeFolders": { "message": "Include folders", "description": "Include folders in backup toggle" }
+  ,"backupIntervalLabel": { "message": "Backup interval", "description": "Backup interval label" }
+  ,"backupIntervalManual": { "message": "Manual only", "description": "Manual backup mode" }
+  ,"backupIntervalDaily": { "message": "Daily", "description": "Daily backup interval" }
+  ,"backupIntervalWeekly": { "message": "Weekly (7 days)", "description": "Weekly backup interval" }
+  ,"backupLastBackup": { "message": "Last backup: {time}", "description": "Last backup timestamp" }
+  ,"backupNever": { "message": "Never", "description": "Never backed up" }
+  ,"backupSuccess": { "message": "✓ Backup created: {prompts} prompts, {folders} folders, {conversations} conversations", "description": "Backup success message" }
+  ,"backupError": { "message": "✗ Backup failed: {error}", "description": "Backup error message" }
+  ,"backupNotSupported": { "message": "⚠️ Auto backup requires a modern browser with File System Access API support", "description": "Browser not supported message" }
+  ,"backupSelectFolderFirst": { "message": "Please select a backup folder first", "description": "No folder selected warning" }
+  ,"backupUserCancelled": { "message": "Backup cancelled", "description": "User cancelled folder selection" }
+  ,"backupConfigSaved": { "message": "✓ Backup settings saved", "description": "Config saved message" }
 }

@@ -114,4 +114,23 @@
   ,"conversation_untitled": { "message": "未命名", "description": "无标题对话的回退标题" }
   ,"geminiOnlyNotice": { "message": "所有设置仅支持 Gemini", "description": "提示所有设置仅适用于 Gemini" }
   ,"folderManager_dataLossWarning": { "message": "⚠️ 警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。", "description": "文件夹数据加载失败时显示的警告" }
+  ,"backupOptions": { "message": "自动备份", "description": "备份选项区域标签" }
+  ,"backupEnabled": { "message": "启用自动备份", "description": "启用自动备份开关" }
+  ,"backupNow": { "message": "立即备份", "description": "立即备份按钮" }
+  ,"backupSelectFolder": { "message": "选择备份文件夹", "description": "选择备份文件夹按钮" }
+  ,"backupFolderSelected": { "message": "备份文件夹：{folder}", "description": "显示已选择的备份文件夹" }
+  ,"backupIncludePrompts": { "message": "包含提示词", "description": "备份中包含提示词开关" }
+  ,"backupIncludeFolders": { "message": "包含文件夹", "description": "备份中包含文件夹开关" }
+  ,"backupIntervalLabel": { "message": "备份间隔", "description": "备份间隔标签" }
+  ,"backupIntervalManual": { "message": "仅手动", "description": "手动备份模式" }
+  ,"backupIntervalDaily": { "message": "每天", "description": "每天备份间隔" }
+  ,"backupIntervalWeekly": { "message": "每周（7 天）", "description": "每周备份间隔" }
+  ,"backupLastBackup": { "message": "上次备份：{time}", "description": "上次备份时间戳" }
+  ,"backupNever": { "message": "从未", "description": "从未备份过" }
+  ,"backupSuccess": { "message": "✓ 备份创建成功：{prompts} 个提示词、{folders} 个文件夹、{conversations} 个对话", "description": "备份成功消息" }
+  ,"backupError": { "message": "✗ 备份失败：{error}", "description": "备份错误消息" }
+  ,"backupNotSupported": { "message": "⚠️ 自动备份需要支持文件系统访问 API 的现代浏览器", "description": "浏览器不支持消息" }
+  ,"backupSelectFolderFirst": { "message": "请先选择备份文件夹", "description": "未选择文件夹警告" }
+  ,"backupUserCancelled": { "message": "备份已取消", "description": "用户取消文件夹选择" }
+  ,"backupConfigSaved": { "message": "✓ 备份设置已保存", "description": "配置保存消息" }
 }
