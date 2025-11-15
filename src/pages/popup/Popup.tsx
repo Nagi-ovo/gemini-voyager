@@ -118,12 +118,18 @@ export default function Popup() {
   // Handle backup folder selection
   const handleSelectBackupFolder = useCallback(async () => {
     try {
+      console.log('[Popup] Requesting directory access...');
+
       if (!BackupService.isSupported()) {
+        console.error('[Popup] File System Access API not supported');
         showBackupMessage(t('backupNotSupported'), 'error');
         return;
       }
 
       const handle = await BackupService.requestDirectoryAccess();
+
+      console.log('[Popup] Directory access result:', handle ? `Selected: ${handle.name}` : 'null');
+
       if (handle) {
         setBackupDirectoryHandle(handle);
         showBackupMessage(
@@ -131,11 +137,12 @@ export default function Popup() {
           'success'
         );
       } else {
-        // User cancelled the folder picker
+        // User cancelled the folder picker, or picker returned null
+        console.log('[Popup] No directory handle returned (user cancelled or error)');
         showBackupMessage(t('backupUserCancelled'), 'error');
       }
     } catch (error) {
-      console.error('Failed to select backup folder:', error);
+      console.error('[Popup] Error selecting backup folder:', error);
 
       // Check if it's a permission/restricted directory error
       if (error instanceof Error &&

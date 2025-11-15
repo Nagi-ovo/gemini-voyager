@@ -65,15 +65,27 @@ export class BackupService implements IBackupService {
         );
       }
 
+      console.log('[BackupService] Showing directory picker...');
+
       const directoryHandle = await (window as any).showDirectoryPicker({
         mode: 'readwrite',
-        startIn: 'documents',
+        // Remove startIn to avoid potential issues on some systems
       });
+
+      console.log('[BackupService] Directory selected:', directoryHandle?.name || 'null');
+
+      if (!directoryHandle) {
+        console.warn('[BackupService] showDirectoryPicker returned null/undefined');
+        return null;
+      }
 
       return directoryHandle;
     } catch (error) {
+      console.log('[BackupService] Directory picker error:', error);
+
       // User cancelled the picker
       if (error instanceof Error && error.name === 'AbortError') {
+        console.log('[BackupService] User cancelled directory selection');
         return null;
       }
 
@@ -85,6 +97,7 @@ export class BackupService implements IBackupService {
           error.message.includes('not allowed') ||
           error.message.includes('permission'))
       ) {
+        console.error('[BackupService] Permission denied:', error.message);
         throw new AppError(
           ErrorCode.UNKNOWN_ERROR,
           'Cannot access this directory. Please choose a different location (e.g., Documents, Downloads, or a custom folder on Desktop)',
@@ -92,7 +105,7 @@ export class BackupService implements IBackupService {
         );
       }
 
-      console.error('Failed to request directory access:', error);
+      console.error('[BackupService] Unexpected error:', error);
       throw error;
     }
   }
