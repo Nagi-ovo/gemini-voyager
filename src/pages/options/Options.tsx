@@ -14,20 +14,9 @@ function OptionsContent() {
       </div>
 
       <div className="p-6 rounded-lg border border-border bg-card">
-        <h2 className="text-xl font-semibold mb-4">💾 {t('backupOptions')}</h2>
-        <div className="space-y-4 text-sm">
-          <p>
-            <strong className="text-primary">✓ {t('pm_backup')}</strong> {t('pm_backup_hint_options')}
-          </p>
-          <ol className="list-decimal list-inside space-y-2 ml-4">
-            <li>{t('pm_backup_step1')}</li>
-            <li>{t('pm_backup_step2')}</li>
-            <li>{t('pm_backup_step3')}</li>
-          </ol>
-          <p className="mt-4 p-3 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-            💡 {t('pm_backup_note')}
-          </p>
-        </div>
+        <p className="text-muted-foreground">
+          {t('optionsComingSoon') || 'More options coming soon...'}
+        </p>
       </div>
     </div>
   );

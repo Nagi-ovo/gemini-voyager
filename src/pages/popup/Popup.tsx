@@ -254,30 +254,6 @@ export default function Popup() {
           onChange={editInputWidthAdjuster.handleChange}
           onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
         />
-
-        {/* Auto Backup - Open Options */}
-        <Card className="p-4 hover:shadow-lg transition-shadow">
-          <CardTitle className="mb-4 text-xs uppercase">{t('backupOptions')}</CardTitle>
-          <CardContent className="p-0 space-y-3">
-            <p className="text-xs text-muted-foreground">
-              {t('backupConfigureInOptions')}
-            </p>
-            <Button
-              variant="default"
-              size="sm"
-              className="w-full group"
-              onClick={() => {
-                if (chrome.runtime?.openOptionsPage) {
-                  chrome.runtime.openOptionsPage();
-                }
-              }}
-            >
-              <span className="group-hover:scale-105 transition-transform text-xs">
-                {t('openOptionsPage')}
-              </span>
-            </Button>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Footer */}
