@@ -134,5 +134,8 @@
   ,"backupUserCancelled": { "message": "备份已取消", "description": "用户取消文件夹选择" }
   ,"backupConfigSaved": { "message": "✓ 备份设置已保存", "description": "配置保存消息" }
   ,"backupPermissionDenied": { "message": "⚠️ 无法访问此目录。请选择其他位置（例如：文档、下载，或桌面中的自定义文件夹）", "description": "受限目录权限被拒绝" }
-  ,"backupPopupLimitation": { "message": "⚠️ 注意：弹窗在选择文件夹时可能会自动关闭。如遇问题，请右键扩展图标 → 选项，在选项页面中配置备份", "description": "浏览器弹窗限制提示" }
+  ,"backupConfigureInOptions": { "message": "备份功能需要在选项页面中配置。点击下方按钮打开选项页面（点击扩展图标旁的三个点 → 选项）。", "description": "备份配置在选项页面的说明" }
+  ,"openOptionsPage": { "message": "打开选项页面", "description": "打开选项页面按钮" }
+  ,"backupDataAccessNotice": { "message": "数据访问限制", "description": "备份数据访问限制标题" }
+  ,"backupDataAccessHint": { "message": "由于浏览器安全限制，选项页面无法直接读取 Gemini 页面的提示词和文件夹数据。建议使用 Gemini 页面上的提示词管理器和文件夹导出功能进行手动备份。", "description": "备份数据访问限制说明" }
 }

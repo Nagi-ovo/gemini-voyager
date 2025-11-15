@@ -134,5 +134,8 @@
   ,"backupUserCancelled": { "message": "Backup cancelled", "description": "User cancelled folder selection" }
   ,"backupConfigSaved": { "message": "✓ Backup settings saved", "description": "Config saved message" }
   ,"backupPermissionDenied": { "message": "⚠️ Cannot access this directory. Please choose a different location (e.g., Documents, Downloads, or a folder in Desktop)", "description": "Permission denied for restricted directory" }
-  ,"backupPopupLimitation": { "message": "⚠️ Note: This popup may close when selecting a folder. If you encounter issues, right-click the extension icon → Options to configure backup in the options page", "description": "Browser popup limitation hint" }
+  ,"backupConfigureInOptions": { "message": "Backup configuration requires the Options page. Click the button below to open it (click the three dots next to the extension icon → Options).", "description": "Backup configure in options page explanation" }
+  ,"openOptionsPage": { "message": "Open Options Page", "description": "Open options page button" }
+  ,"backupDataAccessNotice": { "message": "Data Access Limitation", "description": "Backup data access limitation title" }
+  ,"backupDataAccessHint": { "message": "Due to browser security restrictions, this Options page cannot directly access prompts and folder data from Gemini pages. Please use the Prompt Manager and Folder Export features on the Gemini page for manual backups.", "description": "Backup data access limitation explanation" }
 }

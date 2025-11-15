@@ -174,6 +174,12 @@ function OptionsContent() {
       <Card className="p-6">
         <CardTitle className="mb-6 text-lg">{t('backupOptions')}</CardTitle>
         <CardContent className="p-0 space-y-4">
+          {/* Important notice about data access */}
+          <div className="text-sm p-3 rounded bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+            <p className="font-medium mb-1">⚠️ {t('backupDataAccessNotice')}</p>
+            <p className="text-xs opacity-90">{t('backupDataAccessHint')}</p>
+          </div>
+
           {/* Backup message */}
           {backupMessage && (
             <div
