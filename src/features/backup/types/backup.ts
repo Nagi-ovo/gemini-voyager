@@ -3,6 +3,8 @@
  * Supports periodic backup of prompt library and folder data
  */
 
+import type { FolderData } from '@/core/types/folder';
+
 /**
  * Backup interval options
  */
@@ -43,8 +45,8 @@ export interface BackupData {
   data: {
     prompts: PromptItem[];
     folders: {
-      gemini: any; // FolderData from gvFolderData
-      aiStudio: any; // FolderData from gvFolderDataAIStudio
+      gemini: FolderData | null;
+      aiStudio: FolderData | null;
     };
   };
 }

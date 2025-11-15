@@ -31,8 +31,8 @@ export class BackupScheduler {
       this.logger.info('Initializing backup scheduler...');
 
       // Set up alarm listener
-      if (typeof chrome !== 'undefined' && chrome.alarms) {
-        chrome.alarms.onAlarm.addListener(this.handleAlarm.bind(this));
+      if (browser.alarms) {
+        browser.alarms.onAlarm.addListener(this.handleAlarm.bind(this));
       }
 
       // Schedule based on current config
@@ -78,8 +78,8 @@ export class BackupScheduler {
     }
 
     try {
-      if (typeof chrome !== 'undefined' && chrome.alarms) {
-        await chrome.alarms.create(ALARM_NAME, {
+      if (browser.alarms) {
+        await browser.alarms.create(ALARM_NAME, {
           periodInMinutes: minutes,
           delayInMinutes: minutes, // First backup after one interval
         });
@@ -97,8 +97,8 @@ export class BackupScheduler {
    */
   private async clearSchedule(): Promise<void> {
     try {
-      if (typeof chrome !== 'undefined' && chrome.alarms) {
-        await chrome.alarms.clear(ALARM_NAME);
+      if (browser.alarms) {
+        await browser.alarms.clear(ALARM_NAME);
         this.logger.info('Alarm cleared', { alarm: ALARM_NAME });
       }
     } catch (error) {
@@ -163,8 +163,8 @@ export class BackupScheduler {
     type: 'basic' | 'error' = 'basic'
   ): Promise<void> {
     try {
-      if (typeof chrome !== 'undefined' && chrome.notifications) {
-        await chrome.notifications.create({
+      if (browser.notifications) {
+        await browser.notifications.create({
           type: 'basic',
           iconUrl: browser.runtime.getURL('icon-128.png'),
           title: `Gemini Voyager - ${title}`,

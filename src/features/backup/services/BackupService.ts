@@ -12,6 +12,7 @@ import type {
   BackupConfig,
 } from '../types/backup';
 import { BackupInterval } from '../types/backup';
+import type { FolderData } from '@/core/types/folder';
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 
@@ -41,11 +42,10 @@ export class BackupService {
         data,
       };
 
-      // Generate filename
+      // Generate filename with full timestamp to ensure uniqueness
       const timestamp = new Date()
         .toISOString()
-        .replace(/[:.]/g, '-')
-        .split('T')[0];
+        .replace(/[:.]/g, '-');
       const filename = `gemini-voyager-backup-${timestamp}.json`;
 
       // Save to downloads
@@ -191,8 +191,8 @@ export class BackupService {
     return {
       prompts: prompts || [],
       folders: {
-        gemini: folderData[StorageKeys.FOLDER_DATA] || null,
-        aiStudio: folderData[StorageKeys.FOLDER_DATA_AISTUDIO] || null,
+        gemini: (folderData[StorageKeys.FOLDER_DATA] as FolderData | undefined) || null,
+        aiStudio: (folderData[StorageKeys.FOLDER_DATA_AISTUDIO] as FolderData | undefined) || null,
       },
     };
   }
@@ -226,32 +226,19 @@ export class BackupService {
       ? `${config.folderName}/${filename}`
       : filename;
 
-    // Use downloads API with data URL to avoid URL.createObjectURL in service worker
-    if (typeof chrome !== 'undefined' && chrome.downloads) {
+    // Use downloads API with data URL (works in service worker context)
+    if (browser.downloads) {
       // Convert JSON to base64 data URL
       const base64 = btoa(unescape(encodeURIComponent(json)));
       const dataUrl = `data:application/json;base64,${base64}`;
 
-      await chrome.downloads.download({
+      await browser.downloads.download({
         url: dataUrl,
         filename: downloadFilename,
         saveAs: false, // Don't prompt user
       });
     } else {
-      // Fallback for browsers without downloads API (e.g., during development)
-      // This requires DOM environment
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      try {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      } finally {
-        URL.revokeObjectURL(url);
-      }
+      throw new Error('Downloads API not available');
     }
   }
 
@@ -287,11 +274,11 @@ export class BackupService {
    * Restore folder data
    */
   private async restoreFolders(folders: {
-    gemini: any;
-    aiStudio: any;
+    gemini: FolderData | null;
+    aiStudio: FolderData | null;
   }): Promise<void> {
     try {
-      const updates: Record<string, any> = {};
+      const updates: Record<string, FolderData> = {};
 
       if (folders.gemini) {
         updates[StorageKeys.FOLDER_DATA] = folders.gemini;

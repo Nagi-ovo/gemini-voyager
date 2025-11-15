@@ -22,14 +22,11 @@ describe('BackupService', () => {
     vi.mocked(browser.storage.sync.get).mockResolvedValue({});
     vi.mocked(browser.storage.sync.set).mockResolvedValue(undefined);
 
-    // Setup chrome.downloads mock
-    if (!globalThis.chrome) {
-      globalThis.chrome = {} as any;
+    // Setup browser.downloads mock
+    if (!browser.downloads) {
+      (browser as any).downloads = {};
     }
-    if (!globalThis.chrome.downloads) {
-      globalThis.chrome.downloads = {} as any;
-    }
-    globalThis.chrome.downloads.download = vi.fn().mockResolvedValue(1);
+    (browser.downloads as any).download = vi.fn().mockResolvedValue(1);
   });
 
   describe('getConfig', () => {
@@ -100,7 +97,8 @@ describe('BackupService', () => {
       const result = await service.createBackup();
 
       expect(result.success).toBe(true);
-      expect(result.filename).toMatch(/gemini-voyager-backup-\d{4}-\d{2}-\d{2}\.json/);
+      // New format includes full timestamp: YYYY-MM-DDTHH-MM-SS-mmmZ
+      expect(result.filename).toMatch(/gemini-voyager-backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z\.json/);
     });
   });
 
