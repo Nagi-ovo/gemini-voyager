@@ -75,7 +75,7 @@
   "pm_backup_step2": { "message": "Click the extension icon in the bottom-right to open Prompt Manager", "description": "Backup step 2" },
   "pm_backup_step3": { "message": "Click the \"💾 Backup All\" button and select a backup folder", "description": "Backup step 3" },
   "pm_backup_note": { "message": "Backups include all prompts and folders, saved in a timestamped folder (format: backup-YYYYMMDD-HHMMSS)", "description": "Backup feature note" }
-  ,"starProject": { "message": "Support the project", "description": "Github callout" }
+  ,"starProject": { "message": "Support me ⭐", "description": "Github callout" }
   ,"exportChatJson": { "message": "Export chat history (JSON)", "description": "Tooltip for export button" }
   ,"folder_title": { "message": "Folders", "description": "Folder section title" }
   ,"folder_create": { "message": "Create folder", "description": "Create folder button tooltip" }
