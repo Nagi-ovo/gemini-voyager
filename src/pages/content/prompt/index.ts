@@ -857,26 +857,6 @@ export async function startPromptManager(): Promise<void> {
     // Backup button handler - creates timestamp folder with all data
     backupBtn.addEventListener('click', async () => {
       try {
-        // Check File System Access API support
-        if (!('showDirectoryPicker' in window)) {
-          setNotice(i18n.t('pm_backup_not_supported') || '⚠️ Browser not supported', 'err');
-          return;
-        }
-
-        // Select backup directory
-        const dirHandle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-        if (!dirHandle) {
-          setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');
-          return;
-        }
-
-        // Create timestamp folder
-        const pad = (n: number) => String(n).padStart(2, '0');
-        const d = new Date();
-        const timestamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-        const folderName = `backup-${timestamp}`;
-        const backupDir = await dirHandle.getDirectoryHandle(folderName, { create: true });
-
         // Read prompts
         const prompts = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
         const promptPayload = {
@@ -915,23 +895,65 @@ export async function startPromptManager(): Promise<void> {
           conversationCount,
         };
 
-        // Write files
-        const promptsFile = await backupDir.getFileHandle('prompts.json', { create: true });
-        const promptsWritable = await promptsFile.createWritable();
-        await promptsWritable.write(JSON.stringify(promptPayload, null, 2));
-        await promptsWritable.close();
+        // Generate timestamp for folder/file name
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const d = new Date();
+        const timestamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+        const folderName = `backup-${timestamp}`;
 
-        const foldersFile = await backupDir.getFileHandle('folders.json', { create: true });
-        const foldersWritable = await foldersFile.createWritable();
-        await foldersWritable.write(JSON.stringify(folderPayload, null, 2));
-        await foldersWritable.close();
+        // Check File System Access API support
+        if ('showDirectoryPicker' in window) {
+          // Modern browsers (Chrome, Edge) - use File System Access API
+          const dirHandle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+          if (!dirHandle) {
+            setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');
+            return;
+          }
 
-        const metaFile = await backupDir.getFileHandle('metadata.json', { create: true });
-        const metaWritable = await metaFile.createWritable();
-        await metaWritable.write(JSON.stringify(metadata, null, 2));
-        await metaWritable.close();
+          const backupDir = await dirHandle.getDirectoryHandle(folderName, { create: true });
 
-        setNotice(`✓ Backed up ${prompts.length} prompts, ${folderData.folders?.length || 0} folders`, 'ok');
+          // Write files
+          const promptsFile = await backupDir.getFileHandle('prompts.json', { create: true });
+          const promptsWritable = await promptsFile.createWritable();
+          await promptsWritable.write(JSON.stringify(promptPayload, null, 2));
+          await promptsWritable.close();
+
+          const foldersFile = await backupDir.getFileHandle('folders.json', { create: true });
+          const foldersWritable = await foldersFile.createWritable();
+          await foldersWritable.write(JSON.stringify(folderPayload, null, 2));
+          await foldersWritable.close();
+
+          const metaFile = await backupDir.getFileHandle('metadata.json', { create: true });
+          const metaWritable = await metaFile.createWritable();
+          await metaWritable.write(JSON.stringify(metadata, null, 2));
+          await metaWritable.close();
+
+          setNotice(`✓ Backed up ${prompts.length} prompts, ${folderData.folders?.length || 0} folders`, 'ok');
+        } else {
+          // Fallback for Firefox, Safari - download as ZIP file
+          const JSZip = (await import('jszip')).default;
+          const zip = new JSZip();
+          
+          // Add files to ZIP
+          zip.file('prompts.json', JSON.stringify(promptPayload, null, 2));
+          zip.file('folders.json', JSON.stringify(folderPayload, null, 2));
+          zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+
+          // Generate ZIP file
+          const zipBlob = await zip.generateAsync({ type: 'blob' });
+          
+          // Download ZIP file
+          const url = URL.createObjectURL(zipBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${folderName}.zip`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+
+          setNotice(`✓ Downloaded ${folderName}.zip (${prompts.length} prompts, ${folderData.folders?.length || 0} folders)`, 'ok');
+        }
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
           setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');

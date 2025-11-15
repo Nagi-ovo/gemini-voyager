@@ -67,7 +67,7 @@
   "pm_settings_fallback": { "message": "请点击浏览器工具栏中的扩展图标打开设置", "description": "设置打开失败提示" },
   "pm_backup": { "message": "一键备份", "description": "一键备份按钮" },
   "pm_backup_tooltip": { "message": "将提示词和文件夹备份到带时间戳的文件夹", "description": "备份按钮提示" },
-  "pm_backup_not_supported": { "message": "⚠️ 浏览器不支持文件系统访问", "description": "浏览器不支持备份" },
+
   "pm_backup_cancelled": { "message": "备份已取消", "description": "备份取消提示" },
   "pm_backup_error": { "message": "✗ 备份失败", "description": "备份失败提示" },
   "pm_backup_hint_options": { "message": "功能已集成在 Gemini 页面的提示词管理器中。", "description": "选项页面的备份说明" },

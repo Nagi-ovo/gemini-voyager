@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "gemini-voyager",
@@ -8,6 +7,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "dompurify": "^3",
+        "jszip": "^3.10.1",
         "katex": "^0.16",
         "lucide-react": "^0.553.0",
         "marked": "16.4.1",

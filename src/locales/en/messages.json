@@ -67,7 +67,7 @@
   "pm_settings_fallback": { "message": "Please click the extension icon in the browser toolbar to open settings", "description": "Settings open failed message" },
   "pm_backup": { "message": "Backup All", "description": "One-click backup button" },
   "pm_backup_tooltip": { "message": "Backup prompts and folders to a timestamped folder", "description": "Backup button tooltip" },
-  "pm_backup_not_supported": { "message": "⚠️ Browser doesn't support file system access", "description": "Browser not supported for backup" },
+
   "pm_backup_cancelled": { "message": "Backup cancelled", "description": "Backup cancelled hint" },
   "pm_backup_error": { "message": "✗ Backup failed", "description": "Backup failed hint" },
   "pm_backup_hint_options": { "message": "The feature is integrated into the Prompt Manager on the Gemini page.", "description": "Backup hint in options page" },
