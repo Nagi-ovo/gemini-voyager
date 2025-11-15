@@ -64,8 +64,18 @@
   "pm_saved": { "message": "Saved", "description": "Saved notice" },
   "pm_settings": { "message": "Settings", "description": "Settings button" },
   "pm_settings_tooltip": { "message": "Open extension settings", "description": "Settings button tooltip" },
-  "pm_settings_fallback": { "message": "Please click the extension icon in the browser toolbar to open settings", "description": "Settings open failed message" }
-  ,"starProject": { "message": "Support the project", "description": "Github callout" }
+  "pm_settings_fallback": { "message": "Please click the extension icon in the browser toolbar to open settings", "description": "Settings open failed message" },
+  "pm_backup": { "message": "Backup All", "description": "One-click backup button" },
+  "pm_backup_tooltip": { "message": "Backup prompts and folders to a timestamped folder", "description": "Backup button tooltip" },
+  "pm_backup_not_supported": { "message": "⚠️ Browser doesn't support file system access", "description": "Browser not supported for backup" },
+  "pm_backup_cancelled": { "message": "Backup cancelled", "description": "Backup cancelled hint" },
+  "pm_backup_error": { "message": "✗ Backup failed", "description": "Backup failed hint" },
+  "pm_backup_hint_options": { "message": "The feature is integrated into the Prompt Manager on the Gemini page.", "description": "Backup hint in options page" },
+  "pm_backup_step1": { "message": "Open the Gemini page (gemini.google.com)", "description": "Backup step 1" },
+  "pm_backup_step2": { "message": "Click the extension icon in the bottom-right to open Prompt Manager", "description": "Backup step 2" },
+  "pm_backup_step3": { "message": "Click the \"💾 Backup All\" button and select a backup folder", "description": "Backup step 3" },
+  "pm_backup_note": { "message": "Backups include all prompts and folders, saved in a timestamped folder (format: backup-YYYYMMDD-HHMMSS)", "description": "Backup feature note" }
+  ,"starProject": { "message": "Support me ⭐", "description": "Github callout" }
   ,"exportChatJson": { "message": "Export chat history (JSON)", "description": "Tooltip for export button" }
   ,"folder_title": { "message": "Folders", "description": "Folder section title" }
   ,"folder_create": { "message": "Create folder", "description": "Create folder button tooltip" }
@@ -114,4 +124,28 @@
   ,"conversation_untitled": { "message": "Untitled", "description": "Fallback title for conversations without a name" }
   ,"geminiOnlyNotice": { "message": "All settings only support Gemini", "description": "Notice that all settings only work with Gemini" }
   ,"folderManager_dataLossWarning": { "message": "⚠️ Warning: Failed to load folder data. Your folders may have been corrupted. Please check the browser console for details and try restoring from backup if available.", "description": "Warning shown when folder data fails to load" }
+  ,"backupOptions": { "message": "Auto Backup", "description": "Backup options section label" }
+  ,"backupEnabled": { "message": "Enable auto backup", "description": "Enable auto backup toggle" }
+  ,"backupNow": { "message": "Backup Now", "description": "Backup now button" }
+  ,"backupSelectFolder": { "message": "Select Backup Folder", "description": "Select backup folder button" }
+  ,"backupFolderSelected": { "message": "Backup folder: {folder}", "description": "Shows selected backup folder" }
+  ,"backupIncludePrompts": { "message": "Include prompts", "description": "Include prompts in backup toggle" }
+  ,"backupIncludeFolders": { "message": "Include folders", "description": "Include folders in backup toggle" }
+  ,"backupIntervalLabel": { "message": "Backup interval", "description": "Backup interval label" }
+  ,"backupIntervalManual": { "message": "Manual only", "description": "Manual backup mode" }
+  ,"backupIntervalDaily": { "message": "Daily", "description": "Daily backup interval" }
+  ,"backupIntervalWeekly": { "message": "Weekly (7 days)", "description": "Weekly backup interval" }
+  ,"backupLastBackup": { "message": "Last backup: {time}", "description": "Last backup timestamp" }
+  ,"backupNever": { "message": "Never", "description": "Never backed up" }
+  ,"backupSuccess": { "message": "✓ Backup created: {prompts} prompts, {folders} folders, {conversations} conversations", "description": "Backup success message" }
+  ,"backupError": { "message": "✗ Backup failed: {error}", "description": "Backup error message" }
+  ,"backupNotSupported": { "message": "⚠️ Auto backup requires a modern browser with File System Access API support", "description": "Browser not supported message" }
+  ,"backupSelectFolderFirst": { "message": "Please select a backup folder first", "description": "No folder selected warning" }
+  ,"backupUserCancelled": { "message": "Backup cancelled", "description": "User cancelled folder selection" }
+  ,"backupConfigSaved": { "message": "✓ Backup settings saved", "description": "Config saved message" }
+  ,"backupPermissionDenied": { "message": "⚠️ Cannot access this directory. Please choose a different location (e.g., Documents, Downloads, or a folder in Desktop)", "description": "Permission denied for restricted directory" }
+  ,"backupConfigureInOptions": { "message": "Backup configuration requires the Options page. Click the button below to open it (click the three dots next to the extension icon → Options).", "description": "Backup configure in options page explanation" }
+  ,"openOptionsPage": { "message": "Open Options Page", "description": "Open options page button" }
+  ,"backupDataAccessNotice": { "message": "Data Access Limitation", "description": "Backup data access limitation title" }
+  ,"backupDataAccessHint": { "message": "Due to browser security restrictions, this Options page cannot directly access prompts and folder data from Gemini pages. Please use the Prompt Manager and Folder Export features on the Gemini page for manual backups.", "description": "Backup data access limitation explanation" }
 }

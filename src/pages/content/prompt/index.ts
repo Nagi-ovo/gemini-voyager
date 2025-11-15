@@ -311,29 +311,55 @@ export async function startPromptManager(): Promise<void> {
     importInput.type = 'file';
     importInput.accept = '.json,application/json';
     importInput.className = 'gv-pm-import-input';
+    
+    // Backup button - primary action
+    const backupBtn = createEl('button', 'gv-pm-backup-btn');
+    backupBtn.textContent = '💾 ' + i18n.t('pm_backup');
+    backupBtn.title = i18n.t('pm_backup_tooltip');
+
+    // Primary actions container
+    const primaryActions = createEl('div', 'gv-pm-footer-actions');
+    primaryActions.appendChild(backupBtn);
+
+    // Secondary actions container
+    const secondaryActions = createEl('div', 'gv-pm-footer-secondary');
+    
     const importBtn = createEl('button', 'gv-pm-import-btn');
     importBtn.textContent = i18n.t('pm_import');
+    
     const exportBtn = createEl('button', 'gv-pm-export-btn');
     exportBtn.textContent = i18n.t('pm_export');
-    const notice = createEl('div', 'gv-pm-notice');
-
-    // Settings button to open popup - placed before GitHub link
+    
     const settingsBtn = createEl('button', 'gv-pm-settings');
-    settingsBtn.textContent = i18n.t('pm_settings') || '设置';
-    settingsBtn.title = i18n.t('pm_settings_tooltip') || '调整扩展设置';
-
-    footer.appendChild(importBtn);
-    footer.appendChild(exportBtn);
-    footer.appendChild(settingsBtn);
+    settingsBtn.textContent = i18n.t('pm_settings');
+    settingsBtn.title = i18n.t('pm_settings_tooltip');
+    
+    const notice = createEl('div', 'gv-pm-notice');
+    
     const gh = document.createElement('a');
     gh.className = 'gv-pm-gh';
     gh.href = 'https://github.com/Nagi-ovo/gemini-voyager';
     gh.target = '_blank';
     gh.rel = 'noreferrer';
-    gh.title = i18n.t('starProject') || 'Support the project';
-    // Put notice before GitHub button so GH stays at the far right
-    footer.appendChild(notice);
-    footer.appendChild(gh);
+    gh.title = i18n.t('starProject');
+    
+    // Add icon and text
+    const ghIcon = document.createElement('span');
+    ghIcon.className = 'gv-pm-gh-icon';
+    const ghText = document.createElement('span');
+    ghText.className = 'gv-pm-gh-text';
+    ghText.textContent = i18n.t('starProject');
+    gh.appendChild(ghIcon);
+    gh.appendChild(ghText);
+
+    secondaryActions.appendChild(importBtn);
+    secondaryActions.appendChild(exportBtn);
+    secondaryActions.appendChild(settingsBtn);
+    secondaryActions.appendChild(gh);
+    secondaryActions.appendChild(notice);
+
+    footer.appendChild(primaryActions);
+    footer.appendChild(secondaryActions);
     footer.appendChild(importInput);
 
     const addForm = elFromHTML(
@@ -570,25 +596,26 @@ export async function startPromptManager(): Promise<void> {
     }
 
     function refreshUITexts(): void {
-      title.textContent = i18n.t('pm_title') || 'Prompt Manager';
-      addBtn.textContent = i18n.t('pm_add') || 'Add';
-      searchInput.placeholder = i18n.t('pm_search_placeholder') || 'Search prompts';
-      importBtn.textContent = i18n.t('pm_import') || 'Import';
-      exportBtn.textContent = i18n.t('pm_export') || 'Export';
-      settingsBtn.textContent = i18n.t('pm_settings') || 'Settings';
-      settingsBtn.title = i18n.t('pm_settings_tooltip') || 'Open extension settings';
-      try {
-        const ghEl = footer.querySelector('.gv-pm-gh') as HTMLAnchorElement | null;
-        if (ghEl) ghEl.title = i18n.t('starProject') || 'Support the project';
-      } catch {}
+      title.textContent = i18n.t('pm_title');
+      addBtn.textContent = i18n.t('pm_add');
+      searchInput.placeholder = i18n.t('pm_search_placeholder');
+      importBtn.textContent = i18n.t('pm_import');
+      exportBtn.textContent = i18n.t('pm_export');
+      backupBtn.textContent = '💾 ' + i18n.t('pm_backup');
+      backupBtn.title = i18n.t('pm_backup_tooltip');
+      settingsBtn.textContent = i18n.t('pm_settings');
+      settingsBtn.title = i18n.t('pm_settings_tooltip');
+      gh.title = i18n.t('starProject');
+      const ghTextEl = gh.querySelector('.gv-pm-gh-text');
+      if (ghTextEl) ghTextEl.textContent = i18n.t('starProject');
       (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).placeholder =
-        i18n.t('pm_prompt_placeholder') || 'Prompt text';
+        i18n.t('pm_prompt_placeholder');
       (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).placeholder =
-        i18n.t('pm_tags_placeholder') || 'Tags (comma separated)';
+        i18n.t('pm_tags_placeholder');
       (addForm.querySelector('.gv-pm-save') as HTMLButtonElement).textContent =
-        i18n.t('pm_save') || 'Save';
+        i18n.t('pm_save');
       (addForm.querySelector('.gv-pm-cancel') as HTMLButtonElement).textContent =
-        i18n.t('pm_cancel') || 'Cancel';
+        i18n.t('pm_cancel');
       applyLockUI();
       renderTags();
       renderList();
@@ -824,6 +851,94 @@ export async function startPromptManager(): Promise<void> {
         URL.revokeObjectURL(url);
       } catch {
         setNotice('Export failed', 'err');
+      }
+    });
+
+    // Backup button handler - creates timestamp folder with all data
+    backupBtn.addEventListener('click', async () => {
+      try {
+        // Check File System Access API support
+        if (!('showDirectoryPicker' in window)) {
+          setNotice(i18n.t('pm_backup_not_supported') || '⚠️ Browser not supported', 'err');
+          return;
+        }
+
+        // Select backup directory
+        const dirHandle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+        if (!dirHandle) {
+          setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');
+          return;
+        }
+
+        // Create timestamp folder
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const d = new Date();
+        const timestamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+        const folderName = `backup-${timestamp}`;
+        const backupDir = await dirHandle.getDirectoryHandle(folderName, { create: true });
+
+        // Read prompts
+        const prompts = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
+        const promptPayload = {
+          format: 'gemini-voyager.prompts.v1',
+          exportedAt: new Date().toISOString(),
+          items: prompts,
+        };
+
+        // Read folders
+        const folderRaw = localStorage.getItem('gvFolderData');
+        const folderData = folderRaw ? JSON.parse(folderRaw) : { folders: [], folderContents: {} };
+
+        // Create folder export payload with correct format
+        const folderPayload = {
+          format: 'gemini-voyager.folders.v1',
+          exportedAt: new Date().toISOString(),
+          version: '0.9.3',
+          data: {
+            folders: folderData.folders || [],
+            folderContents: folderData.folderContents || {},
+          },
+        };
+
+        // Count conversations
+        const conversationCount = Object.values(folderData.folderContents || {})
+          .reduce((sum: number, convs: any) => sum + (Array.isArray(convs) ? convs.length : 0), 0);
+
+        // Create metadata
+        const metadata = {
+          version: '0.9.3',
+          timestamp: new Date().toISOString(),
+          includesPrompts: true,
+          includesFolders: true,
+          promptCount: prompts.length,
+          folderCount: folderData.folders?.length || 0,
+          conversationCount,
+        };
+
+        // Write files
+        const promptsFile = await backupDir.getFileHandle('prompts.json', { create: true });
+        const promptsWritable = await promptsFile.createWritable();
+        await promptsWritable.write(JSON.stringify(promptPayload, null, 2));
+        await promptsWritable.close();
+
+        const foldersFile = await backupDir.getFileHandle('folders.json', { create: true });
+        const foldersWritable = await foldersFile.createWritable();
+        await foldersWritable.write(JSON.stringify(folderPayload, null, 2));
+        await foldersWritable.close();
+
+        const metaFile = await backupDir.getFileHandle('metadata.json', { create: true });
+        const metaWritable = await metaFile.createWritable();
+        await metaWritable.write(JSON.stringify(metadata, null, 2));
+        await metaWritable.close();
+
+        setNotice(`✓ Backed up ${prompts.length} prompts, ${folderData.folders?.length || 0} folders`, 'ok');
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');
+        } else {
+          console.error('[PromptManager] Backup failed:', err);
+          setNotice(i18n.t('pm_backup_error') || '✗ Backup failed', 'err');
+        }
       }
     });
 

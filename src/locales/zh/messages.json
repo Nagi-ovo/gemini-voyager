@@ -64,7 +64,17 @@
   "pm_saved": { "message": "已保存", "description": "保存提示" },
   "pm_settings": { "message": "设置", "description": "设置按钮" },
   "pm_settings_tooltip": { "message": "调整扩展设置", "description": "设置按钮提示" },
-  "pm_settings_fallback": { "message": "请点击浏览器工具栏中的扩展图标打开设置", "description": "设置打开失败提示" }
+  "pm_settings_fallback": { "message": "请点击浏览器工具栏中的扩展图标打开设置", "description": "设置打开失败提示" },
+  "pm_backup": { "message": "一键备份", "description": "一键备份按钮" },
+  "pm_backup_tooltip": { "message": "将提示词和文件夹备份到带时间戳的文件夹", "description": "备份按钮提示" },
+  "pm_backup_not_supported": { "message": "⚠️ 浏览器不支持文件系统访问", "description": "浏览器不支持备份" },
+  "pm_backup_cancelled": { "message": "备份已取消", "description": "备份取消提示" },
+  "pm_backup_error": { "message": "✗ 备份失败", "description": "备份失败提示" },
+  "pm_backup_hint_options": { "message": "功能已集成在 Gemini 页面的提示词管理器中。", "description": "选项页面的备份说明" },
+  "pm_backup_step1": { "message": "打开 Gemini 页面（gemini.google.com）", "description": "备份步骤 1" },
+  "pm_backup_step2": { "message": "点击右下角的扩展图标打开提示词管理器", "description": "备份步骤 2" },
+  "pm_backup_step3": { "message": "点击 \"💾 一键备份\" 按钮，选择备份文件夹", "description": "备份步骤 3" },
+  "pm_backup_note": { "message": "备份将包含所有提示词和文件夹，并保存在带时间戳的文件夹中（格式：backup-YYYYMMDD-HHMMSS）", "description": "备份功能说明" }
   ,"starProject": { "message": "为项目点亮⭐️", "description": "Github 引导" }
   ,"exportChatJson": { "message": "导出聊天记录（JSON）", "description": "导出按钮提示" }
   ,"folder_title": { "message": "文件夹", "description": "文件夹区域标题" }
@@ -114,4 +124,28 @@
   ,"conversation_untitled": { "message": "未命名", "description": "无标题对话的回退标题" }
   ,"geminiOnlyNotice": { "message": "所有设置仅支持 Gemini", "description": "提示所有设置仅适用于 Gemini" }
   ,"folderManager_dataLossWarning": { "message": "⚠️ 警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。", "description": "文件夹数据加载失败时显示的警告" }
+  ,"backupOptions": { "message": "自动备份", "description": "备份选项区域标签" }
+  ,"backupEnabled": { "message": "启用自动备份", "description": "启用自动备份开关" }
+  ,"backupNow": { "message": "立即备份", "description": "立即备份按钮" }
+  ,"backupSelectFolder": { "message": "选择备份文件夹", "description": "选择备份文件夹按钮" }
+  ,"backupFolderSelected": { "message": "备份文件夹：{folder}", "description": "显示已选择的备份文件夹" }
+  ,"backupIncludePrompts": { "message": "包含提示词", "description": "备份中包含提示词开关" }
+  ,"backupIncludeFolders": { "message": "包含文件夹", "description": "备份中包含文件夹开关" }
+  ,"backupIntervalLabel": { "message": "备份间隔", "description": "备份间隔标签" }
+  ,"backupIntervalManual": { "message": "仅手动", "description": "手动备份模式" }
+  ,"backupIntervalDaily": { "message": "每天", "description": "每天备份间隔" }
+  ,"backupIntervalWeekly": { "message": "每周（7 天）", "description": "每周备份间隔" }
+  ,"backupLastBackup": { "message": "上次备份：{time}", "description": "上次备份时间戳" }
+  ,"backupNever": { "message": "从未", "description": "从未备份过" }
+  ,"backupSuccess": { "message": "✓ 备份创建成功：{prompts} 个提示词、{folders} 个文件夹、{conversations} 个对话", "description": "备份成功消息" }
+  ,"backupError": { "message": "✗ 备份失败：{error}", "description": "备份错误消息" }
+  ,"backupNotSupported": { "message": "⚠️ 自动备份需要支持文件系统访问 API 的现代浏览器", "description": "浏览器不支持消息" }
+  ,"backupSelectFolderFirst": { "message": "请先选择备份文件夹", "description": "未选择文件夹警告" }
+  ,"backupUserCancelled": { "message": "备份已取消", "description": "用户取消文件夹选择" }
+  ,"backupConfigSaved": { "message": "✓ 备份设置已保存", "description": "配置保存消息" }
+  ,"backupPermissionDenied": { "message": "⚠️ 无法访问此目录。请选择其他位置（例如：文档、下载，或桌面中的自定义文件夹）", "description": "受限目录权限被拒绝" }
+  ,"backupConfigureInOptions": { "message": "备份功能需要在选项页面中配置。点击下方按钮打开选项页面（点击扩展图标旁的三个点 → 选项）。", "description": "备份配置在选项页面的说明" }
+  ,"openOptionsPage": { "message": "打开选项页面", "description": "打开选项页面按钮" }
+  ,"backupDataAccessNotice": { "message": "数据访问限制", "description": "备份数据访问限制标题" }
+  ,"backupDataAccessHint": { "message": "由于浏览器安全限制，选项页面无法直接读取 Gemini 页面的提示词和文件夹数据。建议使用 Gemini 页面上的提示词管理器和文件夹导出功能进行手动备份。", "description": "备份数据访问限制说明" }
 }
