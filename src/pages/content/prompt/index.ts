@@ -868,6 +868,17 @@ export async function startPromptManager(): Promise<void> {
         const folderRaw = localStorage.getItem('gvFolderData');
         const folderData = folderRaw ? JSON.parse(folderRaw) : { folders: [], folderContents: {} };
 
+        // Create folder export payload with correct format
+        const folderPayload = {
+          format: 'gemini-voyager.folders.v1',
+          exportedAt: new Date().toISOString(),
+          version: '0.9.3',
+          data: {
+            folders: folderData.folders || [],
+            folderContents: folderData.folderContents || {},
+          },
+        };
+
         // Count conversations
         const conversationCount = Object.values(folderData.folderContents || {})
           .reduce((sum: number, convs: any) => sum + (Array.isArray(convs) ? convs.length : 0), 0);
@@ -891,7 +902,7 @@ export async function startPromptManager(): Promise<void> {
 
         const foldersFile = await backupDir.getFileHandle('folders.json', { create: true });
         const foldersWritable = await foldersFile.createWritable();
-        await foldersWritable.write(JSON.stringify(folderData, null, 2));
+        await foldersWritable.write(JSON.stringify(folderPayload, null, 2));
         await foldersWritable.close();
 
         const metaFile = await backupDir.getFileHandle('metadata.json', { create: true });
