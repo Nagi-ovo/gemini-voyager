@@ -47,6 +47,9 @@ function applyWidth(width: number) {
   const userRules = userSelectors.map(sel => `${sel}`).join(',\n    ');
   const assistantRules = assistantSelectors.map(sel => `${sel}`).join(',\n    ');
 
+  // A small gap to account for scrollbars
+  const GAP_PX = 10;
+
   style.textContent = `
     /* Remove width constraints from outer containers that contain conversations */
     .content-wrapper:has(chat-window),
@@ -62,7 +65,7 @@ function applyWidth(width: number) {
       max-width: none !important;
     }
 
-    /* Target chat window and related containers */
+    /* Target chat window and related containers; A small gap to account for scrollbars */
     chat-window,
     .chat-container,
     chat-window-content,
@@ -70,6 +73,8 @@ function applyWidth(width: number) {
     .chat-history,
     .conversation-container {
       max-width: none !important;
+      padding-right: ${GAP_PX}px !important;
+      box-sizing: border-box !important;
     }
 
     main > div:has(user-query),
