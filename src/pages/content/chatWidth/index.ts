@@ -47,7 +47,7 @@ function applyWidth(width: number) {
   const userRules = userSelectors.map(sel => `${sel}`).join(',\n    ');
   const assistantRules = assistantSelectors.map(sel => `${sel}`).join(',\n    ');
 
-  // 固定的右侧空隙（仅使用 padding-right 的方案）
+  // A small gap to account for scrollbars
   const GAP_PX = 10;
 
   style.textContent = `
@@ -65,7 +65,7 @@ function applyWidth(width: number) {
       max-width: none !important;
     }
 
-    /* Target chat window and related containers; 添加右侧内边距以确保与竖向滚动条保持 GAP_PX 的间距 */
+    /* Target chat window and related containers; A small gap to account for scrollbars */
     chat-window,
     .chat-container,
     chat-window-content,
