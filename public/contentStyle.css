@@ -1348,7 +1348,8 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   cursor: pointer;
   transition: background-color 0.15s ease, opacity 0.2s;
   position: relative;
-  min-height: 40px;
+  /* min-height: 40px; */
+  /* line-height: 20px;  */
 }
 
 .gv-folder-conversation:hover {
