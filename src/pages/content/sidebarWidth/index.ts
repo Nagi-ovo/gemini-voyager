@@ -31,13 +31,13 @@ function removeStyles(): void {
 
 /** 初始化与启动侧边栏宽度调节器 */
 export function startSidebarWidthAdjuster(): void {
-  let currentWidth = 400;
+  let currentWidth = 310;
 
   // 1) 读取初始宽度
   try {
-    chrome.storage?.sync?.get({ geminiSidebarWidth: 400 }, (res) => {
+    chrome.storage?.sync?.get({ geminiSidebarWidth: 310 }, (res) => {
       const w = Number(res?.geminiSidebarWidth);
-      currentWidth = Number.isFinite(w) ? w : 400;
+      currentWidth = Number.isFinite(w) ? w : 310;
       applyWidth(currentWidth);
     });
   } catch {
