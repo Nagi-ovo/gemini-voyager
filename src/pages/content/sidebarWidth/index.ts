@@ -1,4 +1,4 @@
-/* 调整 Gemini 侧边栏（<bard-sidenav>）宽度：通过 CSS 变量 --bard-sidenav-open-width 实现 */
+/* Adjust Gemini sidebar (<bard-sidenav>) width: through CSS variable --bard-sidenav-open-width */
 const STYLE_ID = 'gv-sidebar-width-style';
 
 function buildStyle(width: number): string {
@@ -29,23 +29,24 @@ function removeStyles(): void {
   if (style) style.remove();
 }
 
-/** 初始化与启动侧边栏宽度调节器 */
+/** Initialize and start the sidebar width adjuster */
 export function startSidebarWidthAdjuster(): void {
   let currentWidth = 310;
 
-  // 1) 读取初始宽度
+  // 1) Read initial width
   try {
     chrome.storage?.sync?.get({ geminiSidebarWidth: 310 }, (res) => {
       const w = Number(res?.geminiSidebarWidth);
       currentWidth = Number.isFinite(w) ? w : 310;
       applyWidth(currentWidth);
     });
-  } catch {
-    // 兜底：无存储权限时也按默认值注入
-    applyWidth(currentWidth);
-  }
+  } catch (e){
+    // Fallback: inject default value if no storage permission
+      console.error('[Gemini Voyager] Failed to get sidebar width from storage:', e);
+	    applyWidth(currentWidth);
+	  }
 
-  // 2) 响应存储变化（来自 Popup 滑块调整）
+  // 2) Respond to storage changes (from Popup slider adjustment)
   try {
     chrome.storage?.onChanged?.addListener((changes, area) => {
       if (area === 'sync' && changes.geminiSidebarWidth) {
@@ -56,26 +57,28 @@ export function startSidebarWidthAdjuster(): void {
         }
       }
     });
-  } catch {}
+   } catch (e) {
+	    console.error('[Gemini Voyager] Failed to add storage listener for sidebar width:', e);
+	  }
 
-  // 3) 监听 DOM 变化（<bard-sidenav> 可能是延迟挂载的）
-  let debounceTimer: number | null = null;
-  const observer = new MutationObserver(() => {
-    if (debounceTimer !== null) window.clearTimeout(debounceTimer);
-    debounceTimer = window.setTimeout(() => {
-      applyWidth(currentWidth);
-      debounceTimer = null;
-    }, 150);
-  });
+  // // 3) Listen for DOM changes (<bard-sidenav> may be lazily mounted)
+  // let debounceTimer: number | null = null;
+  // const observer = new MutationObserver(() => {
+  //   if (debounceTimer !== null) window.clearTimeout(debounceTimer);
+  //   debounceTimer = window.setTimeout(() => {
+  //     applyWidth(currentWidth);
+  //     debounceTimer = null;
+  //   }, 150);
+  // });
 
-  const root = document.documentElement || document.body;
-  if (root) {
-    observer.observe(root, { childList: true, subtree: true });
-  }
+  // const root = document.documentElement || document.body;
+  // if (root) {
+  //   observer.observe(root, { childList: true, subtree: true });
+  // }
 
-  // 4) 清理
+  // 4) Cleanup
   window.addEventListener('beforeunload', () => {
-    observer.disconnect();
+    // observer.disconnect();
     removeStyles();
   });
 }

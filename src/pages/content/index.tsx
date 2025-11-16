@@ -9,7 +9,6 @@ import { startTimeline } from './timeline/index';
 
 import { startFormulaCopy } from '@/features/formulaCopy';
 
-startSidebarWidthAdjuster();
 
 /**
  * Staggered initialization to prevent "thundering herd" problem when multiple tabs
@@ -55,6 +54,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startEditInputWidthAdjuster();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startSidebarWidthAdjuster();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startFormulaCopy();

@@ -29,7 +29,6 @@ export default function Popup() {
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
-  const [sidebarWidth, setSidebarWidth] = useState<number>(310);
 
   // Helper function to apply settings to storage
   const apply = useCallback((settings: SettingsUpdate) => {
@@ -67,6 +66,17 @@ export default function Popup() {
     }, []),
   });
 
+  // Width adjuster for sidebar width
+  const sidebarWidthAdjuster = useWidthAdjuster({
+    storageKey: 'geminiSidebarWidth',
+    defaultValue: 310,
+    onApply: useCallback((width: number) => {
+      try {
+        chrome.storage?.sync?.set({ geminiSidebarWidth: width });
+      } catch {}
+    }, []),
+  });
+
   useEffect(() => {
     try {
       chrome.storage?.sync?.get(
@@ -76,7 +86,6 @@ export default function Popup() {
           geminiTimelineDraggable: false,
           geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
-          geminiSidebarWidth: 310, // ← 新增默认值
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -85,9 +94,7 @@ export default function Popup() {
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
-          // ← 新增：读取侧边栏宽度
-          const w = Number(res?.geminiSidebarWidth);
-          setSidebarWidth(Number.isFinite(w) ? w : 310);
+
         }
       );
     } catch {}
@@ -259,26 +266,19 @@ export default function Popup() {
           onChange={editInputWidthAdjuster.handleChange}
           onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
         />
-        {/* Sidebar Width ← 新增 */}
+        
+        {/* Sidebar Width */}
         <WidthSlider
           label={t('sidebarWidth')}
-          value={sidebarWidth}
+          value={sidebarWidthAdjuster.width}
           min={240}
           max={520}
           step={5}
           narrowLabel={t('sidebarWidthNarrow')}
           wideLabel={t('sidebarWidthWide')}
-          onChange={(value) => {
-            setSidebarWidth(value);
-          }}
-          onChangeComplete={(value) => {
-            try {
-              chrome.storage?.sync?.set({ geminiSidebarWidth: value });
-            } catch {}
-          }}
+          onChange={sidebarWidthAdjuster.handleChange}
+          onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
         />
-
-
       </div>
 
       {/* Footer */}
