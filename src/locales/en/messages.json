@@ -95,6 +95,9 @@
   ,"chatWidth": { "message": "Chat width", "description": "Chat width adjustment label" }
   ,"chatWidthNarrow": { "message": "Narrow", "description": "Narrow chat width label" }
   ,"chatWidthWide": { "message": "Wide", "description": "Wide chat width label" }
+  ,"sidebarWidth": { "message": "Sidebar width", "description": "Sidebar width adjustment label" }
+  ,"sidebarWidthNarrow": { "message": "Narrow", "description": "Narrow sidebar width label" }
+  ,"sidebarWidthWide": { "message": "Wide", "description": "Wide sidebar width label" }
   ,"formula_copied": { "message": "✓ Formula copied", "description": "Formula copied success message" }
   ,"formula_copy_failed": { "message": "✗ Failed to copy", "description": "Formula copy failed message" }
   ,"folder_export": { "message": "Export folders", "description": "Export folders button tooltip" }
@@ -148,4 +151,5 @@
   ,"openOptionsPage": { "message": "Open Options Page", "description": "Open options page button" }
   ,"backupDataAccessNotice": { "message": "Data Access Limitation", "description": "Backup data access limitation title" }
   ,"backupDataAccessHint": { "message": "Due to browser security restrictions, this Options page cannot directly access prompts and folder data from Gemini pages. Please use the Prompt Manager and Folder Export features on the Gemini page for manual backups.", "description": "Backup data access limitation explanation" }
+
 }

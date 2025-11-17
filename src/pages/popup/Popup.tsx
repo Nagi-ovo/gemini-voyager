@@ -66,6 +66,17 @@ export default function Popup() {
     }, []),
   });
 
+  // Width adjuster for sidebar width
+  const sidebarWidthAdjuster = useWidthAdjuster({
+    storageKey: 'geminiSidebarWidth',
+    defaultValue: 310,
+    onApply: useCallback((width: number) => {
+      try {
+        chrome.storage?.sync?.set({ geminiSidebarWidth: width });
+      } catch {}
+    }, []),
+  });
+
   useEffect(() => {
     try {
       chrome.storage?.sync?.get(
@@ -83,6 +94,7 @@ export default function Popup() {
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
+
         }
       );
     } catch {}
@@ -253,6 +265,19 @@ export default function Popup() {
           wideLabel={t('editInputWidthWide')}
           onChange={editInputWidthAdjuster.handleChange}
           onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
+        />
+        
+        {/* Sidebar Width */}
+        <WidthSlider
+          label={t('sidebarWidth')}
+          value={sidebarWidthAdjuster.width}
+          min={240}
+          max={520}
+          step={5}
+          narrowLabel={t('sidebarWidthNarrow')}
+          wideLabel={t('sidebarWidthWide')}
+          onChange={sidebarWidthAdjuster.handleChange}
+          onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
         />
       </div>
 
