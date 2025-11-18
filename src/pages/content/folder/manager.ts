@@ -14,7 +14,6 @@ import { initI18n, getTranslationSync } from '@/utils/i18n';
 import {
   createFolderStorageAdapter,
   type IFolderStorageAdapter,
-  SafariFolderAdapter,
 } from './storage/FolderStorageAdapter';
 
 const STORAGE_KEY = 'gvFolderData';
@@ -86,10 +85,8 @@ export class FolderManager {
 
   async init(): Promise<void> {
     try {
-      // Safari: Migrate data from localStorage to browser.storage.local (one-time)
-      if (this.storage instanceof SafariFolderAdapter) {
-        await this.storage.migrateFromLocalStorage(STORAGE_KEY);
-      }
+      // Initialize storage adapter (handles migration for Safari automatically)
+      await this.storage.init(STORAGE_KEY);
 
       // Load folder data (async, works for both Safari and non-Safari)
       await this.loadData();
@@ -3166,10 +3163,16 @@ export class FolderManager {
       // Save via storage adapter (handles both Safari and non-Safari)
       success = await this.storage.saveData(STORAGE_KEY, this.data);
 
+      // Retry once if the first attempt fails (for transient errors)
+      if (!success) {
+        console.warn('[FolderManager] Save failed, retrying once...');
+        success = await this.storage.saveData(STORAGE_KEY, this.data);
+      }
+
       if (success) {
         this.debug('Data saved successfully');
       } else {
-        console.error('[FolderManager] Save failed via storage adapter');
+        console.error('[FolderManager] Save failed after retry');
       }
     } catch (error) {
       console.error('[FolderManager] Save data error:', error);

@@ -26,6 +26,13 @@ import { isSafari } from '@/core/utils/browser';
  */
 export interface IFolderStorageAdapter {
   /**
+   * Initialize the storage adapter
+   * Used for adapter-specific setup like data migration
+   * @param key Storage key
+   */
+  init(key: string): Promise<void>;
+
+  /**
    * Load folder data from storage
    * @returns FolderData or null if no data exists
    */
@@ -56,6 +63,14 @@ export interface IFolderStorageAdapter {
  * Synchronous localStorage API wrapped in async interface for consistency
  */
 export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
+  /**
+   * No-op initialization for localStorage adapter
+   * No migration needed as this is the default storage
+   */
+  async init(_key: string): Promise<void> {
+    // No initialization needed for localStorage
+  }
+
   async loadData(key: string): Promise<FolderData | null> {
     try {
       const stored = localStorage.getItem(key);
@@ -111,6 +126,14 @@ export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
  * - browser.storage.local is more reliable (10MB quota, persistent)
  */
 export class SafariFolderAdapter implements IFolderStorageAdapter {
+  /**
+   * Initialize Safari adapter with data migration
+   * Migrates data from localStorage to browser.storage.local (one-time)
+   */
+  async init(key: string): Promise<void> {
+    await this.migrateFromLocalStorage(key);
+  }
+
   async loadData(key: string): Promise<FolderData | null> {
     try {
       const stored = await safariStorage.getItem(key);
@@ -128,6 +151,13 @@ export class SafariFolderAdapter implements IFolderStorageAdapter {
     try {
       const dataString = JSON.stringify(data);
       await safariStorage.setItem(key, dataString);
+
+      // Verify the save was successful for robustness
+      const verification = await safariStorage.getItem(key);
+      if (verification !== dataString) {
+        throw new Error('Save verification failed - data mismatch');
+      }
+
       return true;
     } catch (error) {
       console.error('[SafariFolderAdapter] Failed to save data:', error);
