@@ -709,7 +709,7 @@ The backup service (`src/features/backup/`) provides automatic timestamped backu
 
 **Example Usage**:
 ```typescript
-import { backupService } from '@/features/backup/services/BackupService';
+import { BackupService, backupService } from '@/features/backup/services/BackupService';
 
 // Request directory access
 const dirHandle = await BackupService.requestDirectoryAccess();
