@@ -6,15 +6,15 @@ import {
   DEFAULT_CONVERSATION_ICON,
   GEM_CONFIG,
 } from './gemConfig';
+import {
+  createFolderStorageAdapter,
+  type IFolderStorageAdapter,
+} from './storage/FolderStorageAdapter';
 import type { Folder, FolderData, ConversationReference, DragData } from './types';
 
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { initI18n, getTranslationSync } from '@/utils/i18n';
-import {
-  createFolderStorageAdapter,
-  type IFolderStorageAdapter,
-} from './storage/FolderStorageAdapter';
 
 const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging

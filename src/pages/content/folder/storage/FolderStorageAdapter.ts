@@ -17,8 +17,9 @@
  */
 
 import type { FolderData } from '../types';
-import { safariStorage } from '@/core/utils/safariStorage';
+
 import { isSafari } from '@/core/utils/browser';
+import { safariStorage } from '@/core/utils/safariStorage';
 
 /**
  * Unified storage interface for folder data
