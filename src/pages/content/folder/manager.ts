@@ -11,6 +11,11 @@ import type { Folder, FolderData, ConversationReference, DragData } from './type
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { initI18n, getTranslationSync } from '@/utils/i18n';
+import {
+  createFolderStorageAdapter,
+  type IFolderStorageAdapter,
+  SafariFolderAdapter,
+} from './storage/FolderStorageAdapter';
 
 const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
@@ -41,6 +46,7 @@ export class FolderManager {
       return IS_DEBUG;
     }
   }
+  private storage: IFolderStorageAdapter; // Storage adapter (Strategy Pattern)
   private data: FolderData = { folders: [], folderContents: {} };
   private containerElement: HTMLElement | null = null;
   private sidebarContainer: HTMLElement | null = null;
@@ -64,8 +70,14 @@ export class FolderManager {
   private pendingTitleUpdates: Map<string, string> = new Map(); // Buffer title updates during render
 
   constructor() {
-    this.loadData();
+    // Create storage adapter based on browser (Factory Pattern)
+    this.storage = createFolderStorageAdapter();
+    this.debug(`Using storage backend: ${this.storage.getBackendName()}`);
+
+    // Note: Data loading moved to init() for async support
+    // This allows Safari to use async browser.storage API
     this.createTooltip();
+
     // Initialize i18n system
     initI18n().catch((e) => {
       this.debugWarn('Failed to initialize i18n:', e);
@@ -74,6 +86,14 @@ export class FolderManager {
 
   async init(): Promise<void> {
     try {
+      // Safari: Migrate data from localStorage to browser.storage.local (one-time)
+      if (this.storage instanceof SafariFolderAdapter) {
+        await this.storage.migrateFromLocalStorage(STORAGE_KEY);
+      }
+
+      // Load folder data (async, works for both Safari and non-Safari)
+      await this.loadData();
+
       // Load folder enabled setting
       await this.loadFolderEnabledSetting();
 
@@ -2931,14 +2951,17 @@ export class FolderManager {
     // Flush any pending title updates collected during rendering
     if (this.pendingTitleUpdates.size > 0) {
       this.debug(`Flushing ${this.pendingTitleUpdates.size} pending title updates`);
-      // Save once after all title updates are applied
-      const saved = this.saveData();
-      // Only clear after confirmed successful save to avoid losing updates
-      if (saved) {
-        this.pendingTitleUpdates.clear();
-      } else {
-        this.debugWarn('Save failed, retaining pending title updates for next attempt');
-      }
+      // Save once after all title updates are applied (async, fire-and-forget)
+      this.saveData().then((saved) => {
+        // Only clear after confirmed successful save to avoid losing updates
+        if (saved) {
+          this.pendingTitleUpdates.clear();
+        } else {
+          this.debugWarn('Save failed, retaining pending title updates for next attempt');
+        }
+      }).catch((error) => {
+        console.error('[FolderManager] Failed to save pending title updates:', error);
+      });
     }
   }
 
@@ -2990,11 +3013,16 @@ export class FolderManager {
     });
   }
 
-  private loadData(): void {
+  /**
+   * Load folder data from storage (async, browser-agnostic)
+   * Uses storage adapter for automatic Safari/non-Safari handling
+   */
+  private async loadData(): Promise<void> {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        this.data = JSON.parse(stored);
+      const loadedData = await this.storage.loadData(STORAGE_KEY);
+
+      if (loadedData) {
+        this.data = loadedData;
 
         // Validate and repair data integrity
         this.ensureDataIntegrity();
@@ -3103,7 +3131,11 @@ export class FolderManager {
     }
   }
 
-  private saveData(): boolean {
+  /**
+   * Save folder data to storage (async, browser-agnostic)
+   * Uses storage adapter for automatic Safari/non-Safari handling
+   */
+  private async saveData(): Promise<boolean> {
     // Prevent concurrent saves to avoid race conditions
     if (this.saveInProgress) {
       this.debug('Save already in progress, skipping duplicate call');
@@ -3113,8 +3145,7 @@ export class FolderManager {
     this.saveInProgress = true;
     let success = false;
 
-    // Centralized save logic to avoid duplication
-    const attemptSave = (): void => {
+    try {
       // Validate data integrity before saving
       this.ensureDataIntegrity();
 
@@ -3123,39 +3154,26 @@ export class FolderManager {
 
       // Additional safety check: warn if saving empty data
       if (this.data.folders.length === 0 && Object.keys(this.data.folderContents).length === 0) {
-        const existingData = localStorage.getItem(STORAGE_KEY);
-        if (existingData && existingData !== '{"folders":[],"folderContents":{}}') {
-          // We're about to overwrite non-empty data with empty data - this is suspicious
+        // Check if we're about to overwrite non-empty data
+        const existingData = await this.storage.loadData(STORAGE_KEY);
+        if (existingData && (existingData.folders.length > 0 || Object.keys(existingData.folderContents).length > 0)) {
           console.warn('[FolderManager] WARNING: Attempting to save empty data over existing non-empty data');
-          console.warn('[FolderManager] This may indicate a bug. Current localStorage data:', existingData.substring(0, 200));
+          console.warn('[FolderManager] This may indicate a bug.');
           // Still proceed, but log it prominently
         }
       }
 
-      const dataString = JSON.stringify(this.data);
-      localStorage.setItem(STORAGE_KEY, dataString);
+      // Save via storage adapter (handles both Safari and non-Safari)
+      success = await this.storage.saveData(STORAGE_KEY, this.data);
 
-      // Verify the save was successful by reading back
-      const verification = localStorage.getItem(STORAGE_KEY);
-      if (verification !== dataString) {
-        throw new Error('Save verification failed - data mismatch');
+      if (success) {
+        this.debug('Data saved successfully');
+      } else {
+        console.error('[FolderManager] Save failed via storage adapter');
       }
-    };
-
-    try {
-      attemptSave();
-      this.debug('Data saved and verified successfully');
-      success = true;
     } catch (error) {
-      console.error('[FolderManager] Save data error, retrying once:', error);
-      // Attempt retry once on error
-      try {
-        attemptSave();
-        this.debug('Retry save successful and verified');
-        success = true;
-      } catch (retryError) {
-        console.error('[FolderManager] Retry save failed:', retryError);
-      }
+      console.error('[FolderManager] Save data error:', error);
+      success = false;
     } finally {
       this.saveInProgress = false;
     }

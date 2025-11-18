@@ -865,9 +865,10 @@ export async function startPromptManager(): Promise<void> {
           items: prompts,
         };
 
-        // Read folders
-        const folderRaw = localStorage.getItem('gvFolderData');
-        const folderData = folderRaw ? JSON.parse(folderRaw) : { folders: [], folderContents: {} };
+        // Read folders (Safari-compatible: uses storage adapter)
+        const { createFolderStorageAdapter } = await import('../folder/storage/FolderStorageAdapter');
+        const folderStorage = createFolderStorageAdapter();
+        const folderData = await folderStorage.loadData('gvFolderData') || { folders: [], folderContents: {} };
 
         // Create folder export payload with correct format
         const folderPayload = {
