@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+    base: '/gemini-voyager/',
     title: "Gemini Voyager",
     description: "直观的导航。强大的组织。简洁优雅。",
     lang: 'zh-CN',
