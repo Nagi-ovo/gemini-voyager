@@ -57,6 +57,10 @@ function uid(): string {
   return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }
 
+// Session backup key for data recovery
+const SESSION_BACKUP_KEY = 'gvFolderDataAIStudioBackup';
+const NOTIFICATION_TIMEOUT_MS = 5000;
+
 export class AIStudioFolderManager {
   private t: (key: string) => string = (k) => k;
   private data: FolderData = { folders: [], folderContents: {} };
@@ -118,18 +122,30 @@ export class AIStudioFolderManager {
       const res = await storageService.get<FolderData>(this.STORAGE_KEY);
       if (res.success && res.data) {
         this.data = res.data;
+        // Create sessionStorage backup on successful load
+        this.createSessionBackup();
       } else {
-        this.data = { folders: [], folderContents: {} };
+        // Don't immediately clear data - try to recover
+        console.warn('[AIStudioFolderManager] Storage returned no data, attempting recovery');
+        this.attemptDataRecovery(null);
       }
-    } catch {
-      this.data = { folders: [], folderContents: {} };
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Load error:', error);
+      // CRITICAL: Don't clear data on error - attempt recovery
+      this.attemptDataRecovery(error);
     }
   }
 
   private async save(): Promise<void> {
     try {
       await storageService.set<FolderData>(this.STORAGE_KEY, this.data);
-    } catch {}
+      // Create sessionStorage backup after successful save
+      this.createSessionBackup();
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Save error:', error);
+      // Show error notification to user
+      this.showErrorNotification('Failed to save folder data. Changes may not be persisted.');
+    }
   }
 
   private injectUI(): void {
@@ -687,6 +703,96 @@ export class AIStudioFolderManager {
       if (this.container) {
         this.container.style.display = 'none';
       }
+    }
+  }
+
+  /**
+   * Create a backup of current data in sessionStorage
+   * This provides a recovery point if storage fails
+   */
+  private createSessionBackup(): void {
+    try {
+      sessionStorage.setItem(SESSION_BACKUP_KEY, JSON.stringify(this.data));
+    } catch (error) {
+      console.warn('[AIStudioFolderManager] Failed to create session backup:', error);
+      // Session backup is non-critical, don't throw
+    }
+  }
+
+  /**
+   * Attempt to recover data when load() fails
+   * Priority: sessionStorage backup > keep existing data > initialize empty
+   */
+  private attemptDataRecovery(error: unknown): void {
+    console.warn('[AIStudioFolderManager] Attempting data recovery after load failure');
+
+    // Step 1: Try to restore from sessionStorage backup
+    try {
+      const backupStr = sessionStorage.getItem(SESSION_BACKUP_KEY);
+      if (backupStr) {
+        const backup = JSON.parse(backupStr);
+        if (backup && typeof backup === 'object' && Array.isArray(backup.folders)) {
+          this.data = backup;
+          console.warn('[AIStudioFolderManager] Data recovered from session backup');
+          this.showErrorNotification('Folder data recovered from session backup');
+          // Try to save recovered data to persistent storage
+          this.save();
+          return;
+        }
+      }
+    } catch (backupError) {
+      console.warn('[AIStudioFolderManager] Session backup recovery failed:', backupError);
+    }
+
+    // Step 2: Keep existing in-memory data if it exists
+    if (this.data.folders && this.data.folders.length > 0) {
+      console.warn('[AIStudioFolderManager] Keeping existing in-memory data after load error');
+      this.showErrorNotification('Failed to load folder data, using cached version');
+      return;
+    }
+
+    // Step 3: Last resort - initialize empty data and notify user
+    console.error('[AIStudioFolderManager] All recovery attempts failed, initializing empty data');
+    this.data = { folders: [], folderContents: {} };
+    this.showErrorNotification('Failed to load folder data. All folders have been reset.');
+  }
+
+  /**
+   * Show an error notification to the user
+   */
+  private showErrorNotification(message: string): void {
+    try {
+      const notification = document.createElement('div');
+      notification.className = 'gv-notification gv-notification-error';
+      notification.textContent = `[Gemini Voyager] ${message}`;
+
+      // Apply inline styles for visibility
+      const style = notification.style;
+      style.position = 'fixed';
+      style.top = '20px';
+      style.right = '20px';
+      style.padding = '12px 20px';
+      style.background = '#f44336';
+      style.color = 'white';
+      style.borderRadius = '4px';
+      style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+      style.zIndex = String(2147483647);
+      style.maxWidth = '400px';
+      style.fontSize = '14px';
+      style.fontFamily = 'system-ui, -apple-system, sans-serif';
+
+      document.body.appendChild(notification);
+
+      // Auto-remove after timeout
+      setTimeout(() => {
+        try {
+          document.body.removeChild(notification);
+        } catch {
+          // Element might already be removed
+        }
+      }, NOTIFICATION_TIMEOUT_MS);
+    } catch (notificationError) {
+      console.error('[AIStudioFolderManager] Failed to show notification:', notificationError);
     }
   }
 }
