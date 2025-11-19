@@ -593,9 +593,17 @@ export class FolderManager {
       }
 
       if (this.isMultiSelectMode) {
-        // Multi-select mode: toggle selection
+        // Multi-select mode: validate folder before toggling selection
         e.preventDefault();
         e.stopPropagation();
+
+        // Prevent cross-folder selection
+        if (this.multiSelectSource === 'folder' && this.multiSelectFolderId && this.multiSelectFolderId !== folderId) {
+          // Provide visual feedback for invalid selection attempt
+          this.showInvalidSelectionFeedback(convEl);
+          return;
+        }
+
         this.toggleConversationSelection(conv.conversationId);
         this.updateConversationSelectionUI();
       } else {
@@ -1936,6 +1944,41 @@ export class FolderManager {
       (el as HTMLElement).classList.remove('gv-folder-conversation-selected');
       (el as HTMLElement).style.opacity = '1';
     });
+  }
+
+  /**
+   * Provides visual feedback when user attempts to select conversations from different folders.
+   * Uses a subtle shake animation to indicate invalid selection.
+   *
+   * @param element - The conversation element to apply feedback to
+   *
+   * Note: Uses animationend event instead of setTimeout to ensure cleanup happens
+   * exactly when the CSS animation finishes, making it resilient to animation timing changes.
+   */
+  private showInvalidSelectionFeedback(element: HTMLElement): void {
+    // Remove existing class (if any) to allow animation restart on rapid clicks
+    element.classList.remove('gv-invalid-selection');
+
+    // Force reflow to ensure animation restarts (see: CSS Triggers)
+    void element.offsetWidth;
+
+    // Add invalid selection class to trigger animation
+    element.classList.add('gv-invalid-selection');
+
+    // Listen for animation end to clean up the class automatically
+    // Using { once: true } ensures the listener is removed after first invocation
+    element.addEventListener(
+      'animationend',
+      () => {
+        element.classList.remove('gv-invalid-selection');
+      },
+      { once: true }
+    );
+
+    // Optional: Haptic feedback on mobile devices
+    if ('vibrate' in navigator) {
+      navigator.vibrate([30, 20, 30]); // Two short vibrations
+    }
   }
 
   private updateMultiSelectModeUI(): void {
