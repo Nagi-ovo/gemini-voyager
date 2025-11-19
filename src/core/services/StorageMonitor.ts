@@ -140,7 +140,7 @@ export class StorageMonitor {
     if (highestThreshold > this.lastWarningLevel) {
       this.lastWarningLevel = highestThreshold;
 
-      const message = this.formatWarningMessage(info, thresholdPercent);
+      const message = this.formatWarningMessage(info);
       const level = this.getWarningLevel(info.usagePercent);
 
       console.warn(`[StorageMonitor] ${message}`);
