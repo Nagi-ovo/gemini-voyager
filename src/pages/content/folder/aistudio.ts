@@ -3,6 +3,7 @@ import browser from 'webextension-polyfill';
 import type { Folder, FolderData, ConversationReference, DragData } from './types';
 
 import { storageService } from '@/core/services/StorageService';
+import { DataBackupService } from '@/core/services/DataBackupService';
 import { StorageKeys } from '@/core/types/common';
 import { initI18n, createTranslator } from '@/utils/i18n';
 
@@ -57,9 +58,19 @@ function uid(): string {
   return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }
 
-// Session backup key for data recovery
-const SESSION_BACKUP_KEY = 'gvFolderDataAIStudioBackup';
 const NOTIFICATION_TIMEOUT_MS = 5000;
+
+/**
+ * Validate folder data structure
+ */
+function validateFolderData(data: any): boolean {
+  return (
+    data &&
+    typeof data === 'object' &&
+    Array.isArray(data.folders) &&
+    typeof data.folderContents === 'object'
+  );
+}
 
 export class AIStudioFolderManager {
   private t: (key: string) => string = (k) => k;
@@ -69,6 +80,7 @@ export class AIStudioFolderManager {
   private cleanupFns: Array<() => void> = [];
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
+  private backupService: DataBackupService<FolderData>;
 
   // Helper to create a ligature icon span with a data-icon attribute
   private createIcon(name: string): HTMLSpanElement {
@@ -82,6 +94,15 @@ export class AIStudioFolderManager {
   async init(): Promise<void> {
     await initI18n();
     this.t = createTranslator();
+
+    // Initialize backup service
+    this.backupService = new DataBackupService<FolderData>(
+      'aistudio-folders',
+      validateFolderData
+    );
+
+    // Setup automatic backup before page unload
+    this.backupService.setupBeforeUnloadBackup(() => this.data);
 
     // Only enable on prompts routes
     if (!/\/prompts(\/|$)/.test(location.pathname)) return;
@@ -120,27 +141,35 @@ export class AIStudioFolderManager {
   private async load(): Promise<void> {
     try {
       const res = await storageService.get<FolderData>(this.STORAGE_KEY);
-      if (res.success && res.data) {
+      if (res.success && res.data && validateFolderData(res.data)) {
         this.data = res.data;
-        // Create sessionStorage backup on successful load
-        this.createSessionBackup();
+        // Create primary backup on successful load
+        this.backupService.createPrimaryBackup(this.data);
+        console.log('[AIStudioFolderManager] Data loaded successfully');
       } else {
-        // Don't immediately clear data - try to recover
-        console.warn('[AIStudioFolderManager] Storage returned no data, attempting recovery');
+        // Don't immediately clear data - try to recover from backup
+        console.warn('[AIStudioFolderManager] Storage returned no data, attempting recovery from backup');
         this.attemptDataRecovery(null);
       }
     } catch (error) {
       console.error('[AIStudioFolderManager] Load error:', error);
-      // CRITICAL: Don't clear data on error - attempt recovery
+      // CRITICAL: Don't clear data on error - attempt recovery from backup
       this.attemptDataRecovery(error);
     }
   }
 
   private async save(): Promise<void> {
     try {
+      // Create emergency backup BEFORE saving (snapshot of previous state)
+      this.backupService.createEmergencyBackup(this.data);
+
+      // Attempt to save to main storage
       await storageService.set<FolderData>(this.STORAGE_KEY, this.data);
-      // Create sessionStorage backup after successful save
-      this.createSessionBackup();
+
+      // Create primary backup AFTER successful save
+      this.backupService.createPrimaryBackup(this.data);
+
+      console.log('[AIStudioFolderManager] Data saved successfully');
     } catch (error) {
       console.error('[AIStudioFolderManager] Save error:', error);
       // Show error notification to user
@@ -707,45 +736,25 @@ export class AIStudioFolderManager {
   }
 
   /**
-   * Create a backup of current data in sessionStorage
-   * This provides a recovery point if storage fails
-   */
-  private createSessionBackup(): void {
-    try {
-      sessionStorage.setItem(SESSION_BACKUP_KEY, JSON.stringify(this.data));
-    } catch (error) {
-      console.warn('[AIStudioFolderManager] Failed to create session backup:', error);
-      // Session backup is non-critical, don't throw
-    }
-  }
-
-  /**
    * Attempt to recover data when load() fails
-   * Priority: sessionStorage backup > keep existing data > initialize empty
+   * Uses multi-layer backup system: primary > emergency > beforeUnload > in-memory
    */
   private attemptDataRecovery(error: unknown): void {
     console.warn('[AIStudioFolderManager] Attempting data recovery after load failure');
 
-    // Step 1: Try to restore from sessionStorage backup
-    try {
-      const backupStr = sessionStorage.getItem(SESSION_BACKUP_KEY);
-      if (backupStr) {
-        const backup = JSON.parse(backupStr);
-        if (backup && typeof backup === 'object' && Array.isArray(backup.folders)) {
-          this.data = backup;
-          console.warn('[AIStudioFolderManager] Data recovered from session backup');
-          this.showErrorNotification('Folder data recovered from session backup');
-          // Try to save recovered data to persistent storage
-          this.save();
-          return;
-        }
-      }
-    } catch (backupError) {
-      console.warn('[AIStudioFolderManager] Session backup recovery failed:', backupError);
+    // Step 1: Try to restore from localStorage backups (primary, emergency, beforeUnload)
+    const recovered = this.backupService.recoverFromBackup();
+    if (recovered && validateFolderData(recovered)) {
+      this.data = recovered;
+      console.warn('[AIStudioFolderManager] Data recovered from localStorage backup');
+      this.showErrorNotification('Folder data recovered from backup');
+      // Try to save recovered data to persistent storage
+      this.save();
+      return;
     }
 
-    // Step 2: Keep existing in-memory data if it exists
-    if (this.data.folders && this.data.folders.length > 0) {
+    // Step 2: Keep existing in-memory data if it exists and is valid
+    if (validateFolderData(this.data) && this.data.folders.length > 0) {
       console.warn('[AIStudioFolderManager] Keeping existing in-memory data after load error');
       this.showErrorNotification('Failed to load folder data, using cached version');
       return;

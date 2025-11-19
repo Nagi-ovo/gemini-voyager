@@ -12,6 +12,7 @@ import {
 } from './storage/FolderStorageAdapter';
 import type { Folder, FolderData, ConversationReference, DragData } from './types';
 
+import { DataBackupService } from '@/core/services/DataBackupService';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { initI18n, getTranslationSync } from '@/utils/i18n';
@@ -21,9 +22,21 @@ const IS_DEBUG = false; // Set to true to enable debug logging
 const ROOT_CONVERSATIONS_ID = '__root_conversations__'; // Special ID for root-level conversations
 const NOTIFICATION_TIMEOUT_MS = 10000; // Duration to show data loss notification
 
-// Export session backup keys for use by FolderImportExportService
+// Export session backup keys for use by FolderImportExportService (deprecated, kept for compatibility)
 export const SESSION_BACKUP_KEY = 'gvFolderBackup';
 export const SESSION_BACKUP_TIMESTAMP_KEY = 'gvFolderBackupTimestamp';
+
+/**
+ * Validate folder data structure
+ */
+function validateFolderData(data: any): boolean {
+  return (
+    data &&
+    typeof data === 'object' &&
+    Array.isArray(data.folders) &&
+    typeof data.folderContents === 'object'
+  );
+}
 
 export class FolderManager {
   private debug(...args: any[]): void {
@@ -46,6 +59,7 @@ export class FolderManager {
     }
   }
   private storage: IFolderStorageAdapter; // Storage adapter (Strategy Pattern)
+  private backupService: DataBackupService<FolderData>; // Multi-layer backup system
   private data: FolderData = { folders: [], folderContents: {} };
   private containerElement: HTMLElement | null = null;
   private sidebarContainer: HTMLElement | null = null;
@@ -73,6 +87,12 @@ export class FolderManager {
     this.storage = createFolderStorageAdapter();
     this.debug(`Using storage backend: ${this.storage.getBackendName()}`);
 
+    // Initialize backup service with localStorage
+    this.backupService = new DataBackupService<FolderData>(
+      'gemini-folders',
+      validateFolderData
+    );
+
     // Note: Data loading moved to init() for async support
     // This allows Safari to use async browser.storage API
     this.createTooltip();
@@ -87,6 +107,9 @@ export class FolderManager {
     try {
       // Initialize storage adapter (handles migration for Safari automatically)
       await this.storage.init(STORAGE_KEY);
+
+      // Setup automatic backup before page unload
+      this.backupService.setupBeforeUnloadBackup(() => this.data);
 
       // Load folder data (async, works for both Safari and non-Safari)
       await this.loadData();
@@ -3018,7 +3041,7 @@ export class FolderManager {
     try {
       const loadedData = await this.storage.loadData(STORAGE_KEY);
 
-      if (loadedData) {
+      if (loadedData && validateFolderData(loadedData)) {
         this.data = loadedData;
 
         // Validate and repair data integrity
@@ -3034,7 +3057,14 @@ export class FolderManager {
           }
         });
 
+        // Create primary backup on successful load
+        this.backupService.createPrimaryBackup(this.data);
+
         this.debug('Data loaded and validated successfully');
+      } else {
+        // Don't immediately clear data - try to recover from backup
+        console.warn('[FolderManager] Storage returned no valid data, attempting recovery from backup');
+        this.attemptDataRecovery(null);
       }
     } catch (error) {
       console.error('[FolderManager] Load data error:', error);
@@ -3047,39 +3077,30 @@ export class FolderManager {
 
   /**
    * Attempt to recover data when loadData() fails
-   * Priority: sessionStorage backup > keep existing data > initialize empty
+   * Priority: localStorage backup (primary/emergency/beforeUnload) > keep existing data > initialize empty
    */
   private attemptDataRecovery(error: unknown): void {
-    // Try to restore from sessionStorage backup first
-    try {
-      const backupStr = sessionStorage.getItem(SESSION_BACKUP_KEY);
-      if (backupStr) {
-        const backup = JSON.parse(backupStr);
-        if (backup && typeof backup === 'object' && Array.isArray(backup.folders)) {
-          this.data = backup;
-          this.ensureDataIntegrity();
-          console.warn('[FolderManager] Data recovered from session backup');
-          // Save recovered data to localStorage
-          this.saveData();
-          return;
-        }
-      }
-    } catch (backupError) {
-      console.error('[FolderManager] Failed to restore from backup:', backupError);
+    console.warn('[FolderManager] Attempting data recovery after load failure');
+
+    // Step 1: Try to restore from localStorage backups (primary, emergency, beforeUnload)
+    const recovered = this.backupService.recoverFromBackup();
+    if (recovered && validateFolderData(recovered)) {
+      this.data = recovered;
+      this.ensureDataIntegrity();
+      console.warn('[FolderManager] Data recovered from localStorage backup');
+      // Save recovered data to persistent storage
+      this.saveData();
+      return;
     }
 
-    // If current this.data already has valid structure, keep it
-    if (this.data &&
-        typeof this.data === 'object' &&
-        Array.isArray(this.data.folders) &&
-        this.data.folderContents &&
-        typeof this.data.folderContents === 'object') {
+    // Step 2: If current this.data already has valid structure, keep it
+    if (validateFolderData(this.data) && this.data.folders.length > 0) {
       console.warn('[FolderManager] Keeping existing in-memory data after load error');
       this.ensureDataIntegrity();
       return;
     }
 
-    // Last resort: initialize empty data and log critical error
+    // Step 3: Last resort - initialize empty data and log critical error
     console.error('[FolderManager] CRITICAL: Unable to recover data, initializing empty state');
     console.error('[FolderManager] Original error:', error);
     this.data = { folders: [], folderContents: {} };
@@ -3146,8 +3167,8 @@ export class FolderManager {
       // Validate data integrity before saving
       this.ensureDataIntegrity();
 
-      // CRITICAL: Create backup before saving to protect against data loss
-      this.createSessionBackup();
+      // CRITICAL: Create emergency backup BEFORE saving (snapshot of previous state)
+      this.backupService.createEmergencyBackup(this.data);
 
       // Additional safety check: warn if saving empty data
       if (this.data.folders.length === 0 && Object.keys(this.data.folderContents).length === 0) {
@@ -3170,6 +3191,8 @@ export class FolderManager {
       }
 
       if (success) {
+        // Create primary backup AFTER successful save
+        this.backupService.createPrimaryBackup(this.data);
         this.debug('Data saved successfully');
       } else {
         console.error('[FolderManager] Save failed after retry');
@@ -3185,21 +3208,16 @@ export class FolderManager {
   }
 
   /**
-   * Create a backup of current data in sessionStorage
-   * This helps recover data if a save operation corrupts localStorage
+   * @deprecated This method is deprecated and replaced by DataBackupService
+   * Kept for compatibility with existing code that may reference it
+   *
+   * OLD: Create a backup of current data in sessionStorage
+   * NEW: Use backupService.createPrimaryBackup() / createEmergencyBackup() instead
    */
   private createSessionBackup(): void {
-    try {
-      // Only create backup if we have data worth backing up
-      if (this.data.folders.length > 0 || Object.keys(this.data.folderContents).length > 0) {
-        sessionStorage.setItem(SESSION_BACKUP_KEY, JSON.stringify(this.data));
-        sessionStorage.setItem(SESSION_BACKUP_TIMESTAMP_KEY, new Date().toISOString());
-        this.debug('Session backup created');
-      }
-    } catch (error) {
-      // Session storage might be full or unavailable, but don't fail the save
-      console.warn('[FolderManager] Failed to create session backup:', error);
-    }
+    // Deprecated: sessionStorage is not reliable across page refreshes in error scenarios
+    // Now using DataBackupService with localStorage for better persistence
+    this.debug('createSessionBackup() called - this method is deprecated, using DataBackupService instead');
   }
 
   private async loadFolderEnabledSetting(): Promise<void> {
