@@ -761,7 +761,7 @@ export class AIStudioFolderManager {
     if (recovered && validateFolderData(recovered)) {
       this.data = recovered;
       console.warn('[AIStudioFolderManager] Data recovered from localStorage backup');
-      this.showErrorNotification('Folder data recovered from backup');
+      this.showNotification('Folder data recovered from backup', 'warning');
       // Try to save recovered data to persistent storage
       this.save();
       return;
