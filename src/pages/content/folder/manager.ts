@@ -13,6 +13,7 @@ import {
 import type { Folder, FolderData, ConversationReference, DragData } from './types';
 
 import { DataBackupService } from '@/core/services/DataBackupService';
+import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { initI18n, getTranslationSync } from '@/utils/i18n';
@@ -110,6 +111,19 @@ export class FolderManager {
 
       // Setup automatic backup before page unload
       this.backupService.setupBeforeUnloadBackup(() => this.data);
+
+      // Initialize storage quota monitor
+      const storageMonitor = getStorageMonitor({
+        checkIntervalMs: 60000, // Check every minute for Gemini (more active)
+      });
+
+      // Use custom notification callback to match our style
+      storageMonitor.setNotificationCallback((message, level) => {
+        this.showNotificationByLevel(message, level);
+      });
+
+      // Start monitoring
+      storageMonitor.startMonitoring();
 
       // Load folder data (async, works for both Safari and non-Safari)
       await this.loadData();
@@ -3113,9 +3127,24 @@ export class FolderManager {
    * Show notification to user about potential data loss
    */
   private showDataLossNotification(): void {
+    this.showNotificationByLevel(
+      getTranslationSync('folderManager_dataLossWarning') ||
+        'Warning: Failed to load folder data. Please check your browser console for details.',
+      'error'
+    );
+  }
+
+  /**
+   * Show a notification to the user with customizable level
+   */
+  private showNotificationByLevel(message: string, level: 'info' | 'warning' | 'error' = 'error'): void {
     try {
-      const message = getTranslationSync('folderManager_dataLossWarning') ||
-        'Warning: Failed to load folder data. Please check your browser console for details.';
+      // Color based on level
+      const colors = {
+        info: '#2196F3',
+        warning: '#FF9800',
+        error: '#f44336',
+      };
 
       // Create a visible notification
       const notification = document.createElement('div');
@@ -3123,7 +3152,7 @@ export class FolderManager {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: #f44336;
+        background: ${colors[level]};
         color: white;
         padding: 16px 24px;
         border-radius: 8px;
@@ -3132,18 +3161,20 @@ export class FolderManager {
         font-family: system-ui, -apple-system, sans-serif;
         font-size: 14px;
         max-width: 400px;
+        line-height: 1.4;
       `;
       notification.textContent = message;
       document.body.appendChild(notification);
 
-      // Auto-remove after timeout
+      // Auto-remove after timeout (longer for errors/warnings)
+      const timeout = level === 'info' ? 3000 : level === 'warning' ? 7000 : NOTIFICATION_TIMEOUT_MS;
       setTimeout(() => {
         try {
           document.body.removeChild(notification);
         } catch {
           /* ignore */
         }
-      }, NOTIFICATION_TIMEOUT_MS);
+      }, timeout);
     } catch (notificationError) {
       console.error('[FolderManager] Failed to show notification:', notificationError);
     }

@@ -4,6 +4,7 @@ import type { Folder, FolderData, ConversationReference, DragData } from './type
 
 import { storageService } from '@/core/services/StorageService';
 import { DataBackupService } from '@/core/services/DataBackupService';
+import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
 import { initI18n, createTranslator } from '@/utils/i18n';
 
@@ -103,6 +104,19 @@ export class AIStudioFolderManager {
 
     // Setup automatic backup before page unload
     this.backupService.setupBeforeUnloadBackup(() => this.data);
+
+    // Initialize storage quota monitor
+    const storageMonitor = getStorageMonitor({
+      checkIntervalMs: 120000, // Check every 2 minutes (less frequent for AI Studio)
+    });
+
+    // Use custom notification callback to match our style
+    storageMonitor.setNotificationCallback((message, level) => {
+      this.showNotification(message, level);
+    });
+
+    // Start monitoring
+    storageMonitor.startMonitoring();
 
     // Only enable on prompts routes
     if (!/\/prompts(\/|$)/.test(location.pathname)) return;
@@ -768,12 +782,27 @@ export class AIStudioFolderManager {
 
   /**
    * Show an error notification to the user
+   * @deprecated Use showNotification() instead for better level support
    */
   private showErrorNotification(message: string): void {
+    this.showNotification(message, 'error');
+  }
+
+  /**
+   * Show a notification to the user with customizable level
+   */
+  private showNotification(message: string, level: 'info' | 'warning' | 'error' = 'error'): void {
     try {
       const notification = document.createElement('div');
-      notification.className = 'gv-notification gv-notification-error';
+      notification.className = `gv-notification gv-notification-${level}`;
       notification.textContent = `[Gemini Voyager] ${message}`;
+
+      // Color based on level
+      const colors = {
+        info: '#2196F3',
+        warning: '#FF9800',
+        error: '#f44336',
+      };
 
       // Apply inline styles for visibility
       const style = notification.style;
@@ -781,7 +810,7 @@ export class AIStudioFolderManager {
       style.top = '20px';
       style.right = '20px';
       style.padding = '12px 20px';
-      style.background = '#f44336';
+      style.background = colors[level];
       style.color = 'white';
       style.borderRadius = '4px';
       style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
@@ -789,17 +818,19 @@ export class AIStudioFolderManager {
       style.maxWidth = '400px';
       style.fontSize = '14px';
       style.fontFamily = 'system-ui, -apple-system, sans-serif';
+      style.lineHeight = '1.4';
 
       document.body.appendChild(notification);
 
-      // Auto-remove after timeout
+      // Auto-remove after timeout (longer for errors/warnings)
+      const timeout = level === 'info' ? 3000 : level === 'warning' ? 7000 : NOTIFICATION_TIMEOUT_MS;
       setTimeout(() => {
         try {
           document.body.removeChild(notification);
         } catch {
           // Element might already be removed
         }
-      }, NOTIFICATION_TIMEOUT_MS);
+      }, timeout);
     } catch (notificationError) {
       console.error('[AIStudioFolderManager] Failed to show notification:', notificationError);
     }
