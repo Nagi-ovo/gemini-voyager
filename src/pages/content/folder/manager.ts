@@ -593,9 +593,17 @@ export class FolderManager {
       }
 
       if (this.isMultiSelectMode) {
-        // Multi-select mode: toggle selection
+        // Multi-select mode: validate folder before toggling selection
         e.preventDefault();
         e.stopPropagation();
+
+        // Prevent cross-folder selection
+        if (this.multiSelectSource === 'folder' && this.multiSelectFolderId && this.multiSelectFolderId !== folderId) {
+          // Provide visual feedback for invalid selection attempt
+          this.showInvalidSelectionFeedback(convEl);
+          return;
+        }
+
         this.toggleConversationSelection(conv.conversationId);
         this.updateConversationSelectionUI();
       } else {
@@ -1936,6 +1944,25 @@ export class FolderManager {
       (el as HTMLElement).classList.remove('gv-folder-conversation-selected');
       (el as HTMLElement).style.opacity = '1';
     });
+  }
+
+  /**
+   * Provides visual feedback when user attempts to select conversations from different folders.
+   * Uses a subtle shake animation to indicate invalid selection.
+   */
+  private showInvalidSelectionFeedback(element: HTMLElement): void {
+    // Add invalid selection class to trigger animation
+    element.classList.add('gv-invalid-selection');
+
+    // Remove class after animation completes
+    setTimeout(() => {
+      element.classList.remove('gv-invalid-selection');
+    }, 400);
+
+    // Optional: Haptic feedback on mobile devices
+    if ('vibrate' in navigator) {
+      navigator.vibrate([30, 20, 30]); // Two short vibrations
+    }
   }
 
   private updateMultiSelectModeUI(): void {
