@@ -81,7 +81,7 @@ export class AIStudioFolderManager {
   private cleanupFns: Array<() => void> = [];
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
-  private backupService: DataBackupService<FolderData>;
+  private backupService!: DataBackupService<FolderData>; // Initialized in init()
 
   // Helper to create a ligature icon span with a data-icon attribute
   private createIcon(name: string): HTMLSpanElement {
