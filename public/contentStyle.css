@@ -1084,6 +1084,24 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   --folder-selected-glow: rgba(99, 102, 241, 0.15);
 }
 
+/* ========================================
+   Dark Theme Variable Definitions
+
+   NOTE: Dark theme variables are defined in TWO places for different scenarios:
+   1. @media (prefers-color-scheme: dark) - For system-level dark mode preference
+   2. .theme-host.dark-theme - For Gemini's theme system (higher specificity)
+
+   ⚠️ IMPORTANT: Keep these values synchronized when updating dark theme colors.
+   Changes to one should be reflected in the other to ensure consistent appearance.
+
+   SSOT (Single Source of Truth) for Dark Theme Colors:
+   - Selection BG Start: #1e1b4b (deep indigo)
+   - Selection BG End: #312e81 (violet)
+   - Selection Border: #8b5cf6 (purple)
+   - Selection Accent: #a78bfa (light purple)
+   - Selection Glow: rgba(139, 92, 246, 0.2)
+   ======================================== */
+
 @media (prefers-color-scheme: dark) {
   :root {
     --folder-bg: #1f2937;
@@ -1105,7 +1123,7 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   }
 }
 
-/* Gemini theme support */
+/* Gemini theme support - Overrides system preferences on Gemini site */
 .theme-host.dark-theme {
   --folder-bg: #1f2937;
   --folder-text: #e5e7eb;

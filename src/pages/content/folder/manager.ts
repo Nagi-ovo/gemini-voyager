@@ -1949,15 +1949,31 @@ export class FolderManager {
   /**
    * Provides visual feedback when user attempts to select conversations from different folders.
    * Uses a subtle shake animation to indicate invalid selection.
+   *
+   * @param element - The conversation element to apply feedback to
+   *
+   * Note: Uses animationend event instead of setTimeout to ensure cleanup happens
+   * exactly when the CSS animation finishes, making it resilient to animation timing changes.
    */
   private showInvalidSelectionFeedback(element: HTMLElement): void {
+    // Remove existing class (if any) to allow animation restart on rapid clicks
+    element.classList.remove('gv-invalid-selection');
+
+    // Force reflow to ensure animation restarts (see: CSS Triggers)
+    void element.offsetWidth;
+
     // Add invalid selection class to trigger animation
     element.classList.add('gv-invalid-selection');
 
-    // Remove class after animation completes
-    setTimeout(() => {
-      element.classList.remove('gv-invalid-selection');
-    }, 400);
+    // Listen for animation end to clean up the class automatically
+    // Using { once: true } ensures the listener is removed after first invocation
+    element.addEventListener(
+      'animationend',
+      () => {
+        element.classList.remove('gv-invalid-selection');
+      },
+      { once: true }
+    );
 
     // Optional: Haptic feedback on mobile devices
     if ('vibrate' in navigator) {
