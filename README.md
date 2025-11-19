@@ -15,7 +15,7 @@
 </div>
 
 <p align="center">
-  <a href="https://www.nagi.fun/gemini-voyager/">📖 Documentation</a> • 
+  <a href="https://www.nagi.fun/gemini-voyager/en">📖 Documentation</a> • 
   <a href="./.github/README_ZH.md">中文说明</a>
 </p>
 
