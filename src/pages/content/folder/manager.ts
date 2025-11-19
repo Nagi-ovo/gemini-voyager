@@ -3102,9 +3102,9 @@ export class FolderManager {
       this.data = recovered;
       this.ensureDataIntegrity();
       console.warn('[FolderManager] Data recovered from localStorage backup');
+      this.showNotificationByLevel('Folder data has been recovered from a backup.', 'warning');
       // Save recovered data to persistent storage
       this.saveData();
-      return;
     }
 
     // Step 2: If current this.data already has valid structure, keep it
