@@ -1076,12 +1076,12 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   --folder-dragover-bg: #dbeafe;
   --folder-dragover-border: #3b82f6;
-  /* Elegant blue twilight selection colors */
-  --folder-selected-bg-start: #eff6ff;
-  --folder-selected-bg-end: #e0e7ff;
-  --folder-selected-border: #6366f1;
-  --folder-selected-accent: #818cf8;
-  --folder-selected-glow: rgba(99, 102, 241, 0.15);
+  /* Selection colors adapted to shadcn/ui primary (emerald/green) theme */
+  --folder-selected-bg-start: #f0fdf4; /* green-50 - subtle background */
+  --folder-selected-bg-end: #dcfce7; /* green-100 - slightly deeper */
+  --folder-selected-border: #10b981; /* emerald-500 - matches primary tone */
+  --folder-selected-accent: #34d399; /* emerald-400 - vibrant accent */
+  --folder-selected-glow: rgba(16, 185, 129, 0.12); /* emerald-500 with low opacity */
 }
 
 /* ========================================
@@ -1094,12 +1094,14 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
    ⚠️ IMPORTANT: Keep these values synchronized when updating dark theme colors.
    Changes to one should be reflected in the other to ensure consistent appearance.
 
-   SSOT (Single Source of Truth) for Dark Theme Colors:
-   - Selection BG Start: #1e1b4b (deep indigo)
-   - Selection BG End: #312e81 (violet)
-   - Selection Border: #8b5cf6 (purple)
-   - Selection Accent: #a78bfa (light purple)
-   - Selection Glow: rgba(139, 92, 246, 0.2)
+   SSOT (Single Source of Truth) - Subtle Selection Colors (shadcn/ui emerald):
+   Light Mode:
+   - Accent Bar: #34d399 (emerald-400)
+   - Background Glow: rgba(16, 185, 129, 0.12) - emerald-500 at 12% opacity
+
+   Dark Mode:
+   - Accent Bar: #6ee7b7 (emerald-300)
+   - Background Glow: rgba(16, 185, 129, 0.10) - emerald-500 at 10% opacity
    ======================================== */
 
 @media (prefers-color-scheme: dark) {
@@ -1114,12 +1116,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
     --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     --folder-dragover-bg: #1e3a8a;
     --folder-dragover-border: #60a5fa;
-    /* Elegant deep twilight selection colors for dark mode */
-    --folder-selected-bg-start: #1e1b4b;
-    --folder-selected-bg-end: #312e81;
-    --folder-selected-border: #8b5cf6;
-    --folder-selected-accent: #a78bfa;
-    --folder-selected-glow: rgba(139, 92, 246, 0.2);
+    /* Subtle selection colors for dark mode (shadcn/ui emerald theme) */
+    --folder-selected-accent: #6ee7b7; /* emerald-300 - bright for dark bg */
+    --folder-selected-glow: rgba(16, 185, 129, 0.10); /* emerald-500 at 10% opacity */
   }
 }
 
@@ -1135,12 +1134,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   --folder-dragover-bg: #1e3a8a;
   --folder-dragover-border: #60a5fa;
-  /* Elegant deep twilight selection colors for dark theme */
-  --folder-selected-bg-start: #1e1b4b;
-  --folder-selected-bg-end: #312e81;
-  --folder-selected-border: #8b5cf6;
-  --folder-selected-accent: #a78bfa;
-  --folder-selected-glow: rgba(139, 92, 246, 0.2);
+  /* Subtle selection colors for dark theme (shadcn/ui emerald theme) */
+  --folder-selected-accent: #6ee7b7; /* emerald-300 - bright for dark bg */
+  --folder-selected-glow: rgba(16, 185, 129, 0.10); /* emerald-500 at 10% opacity */
 }
 
 .theme-host.light-theme {
@@ -1154,12 +1150,9 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   --folder-dragover-bg: #dbeafe;
   --folder-dragover-border: #3b82f6;
-  /* Elegant blue twilight selection colors for light theme */
-  --folder-selected-bg-start: #eff6ff;
-  --folder-selected-bg-end: #e0e7ff;
-  --folder-selected-border: #6366f1;
-  --folder-selected-accent: #818cf8;
-  --folder-selected-glow: rgba(99, 102, 241, 0.15);
+  /* Subtle selection colors for light theme (shadcn/ui emerald theme) */
+  --folder-selected-accent: #34d399; /* emerald-400 - vibrant accent */
+  --folder-selected-glow: rgba(16, 185, 129, 0.12); /* emerald-500 at 12% opacity */
 }
 
 /* Folder Container */
@@ -1408,31 +1401,24 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
 
 /* ========================================
    Multi-select Selection Styles
-   Elegant blue twilight theme with DRY principles
+   Subtle design inspired by starred conversations
    ======================================== */
 
-/* Shared selection base styles */
+/* Shared selection base styles - subtle like starred items */
 .gv-folder-conversation-selected,
 [data-test-id="conversation"].gv-conversation-selected {
   position: relative;
-  /* Elegant twilight gradient background */
+  /* Very subtle gradient background (similar opacity to starred: ~10%) */
   background: linear-gradient(
-    135deg,
-    var(--folder-selected-bg-start) 0%,
-    var(--folder-selected-bg-end) 100%
+    to right,
+    var(--folder-selected-glow) 0%,
+    transparent 100%
   ) !important;
-  border: 1px solid var(--folder-selected-border);
-  box-shadow:
-    0 8px 16px var(--folder-selected-glow),
-    0 2px 6px rgba(0, 0, 0, 0.08),
-    0 0 0 1px var(--folder-selected-border),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: all 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 200ms ease;
 }
 
 /* Folder conversation specific adjustments */
 .gv-folder-conversation-selected {
-  padding: 7px 11px;
   border-radius: 10px;
 }
 
@@ -1441,49 +1427,20 @@ html.dark-theme .gv-pm-trigger { background: rgba(17,24,39,0.75); color: #fff; b
   border-radius: 12px !important;
 }
 
-/* Elegant accent bar with soft twilight glow */
-.gv-folder-conversation-selected::after,
-[data-test-id="conversation"].gv-conversation-selected::after {
+/* Subtle left accent indicator (similar to starred dot) */
+.gv-folder-conversation-selected::before,
+[data-test-id="conversation"].gv-conversation-selected::before {
   content: '';
   position: absolute;
   left: 0;
-  width: 4px;
-  border-radius: 0 3px 3px 0;
-  /* Twilight gradient accent */
-  background: linear-gradient(
-    180deg,
-    var(--folder-selected-accent) 0%,
-    color-mix(in srgb, var(--folder-selected-accent) 85%, transparent) 50%,
-    color-mix(in srgb, var(--folder-selected-accent) 70%, transparent) 100%
-  );
-  box-shadow:
-    0 0 12px var(--folder-selected-glow),
-    0 0 6px color-mix(in srgb, var(--folder-selected-accent) 40%, transparent);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 2px 2px 0;
+  background-color: var(--folder-selected-accent);
+  opacity: 0.9;
   pointer-events: none;
-  transform: translateZ(0);
-  animation: accentPulse 2s ease-in-out infinite;
-}
-
-/* Folder conversation accent bar positioning */
-.gv-folder-conversation-selected::after {
-  top: 6px;
-  bottom: 6px;
-}
-
-/* Native conversation accent bar positioning */
-[data-test-id="conversation"].gv-conversation-selected::after {
-  top: 8px;
-  bottom: 8px;
-}
-
-/* Subtle pulse animation for accent bar */
-@keyframes accentPulse {
-  0%, 100% {
-    opacity: 0.9;
-  }
-  50% {
-    opacity: 1;
-  }
 }
 
 /* Ensure content is above the gradient overlay */
