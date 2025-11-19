@@ -1,0 +1,86 @@
+import { defineConfig } from 'vitepress'
+
+// https://vitepress.dev/reference/site-config
+export default defineConfig({
+    title: "Gemini Voyager",
+    description: "直观的导航。强大的组织。简洁优雅。",
+    lang: 'zh-CN',
+    head: [['link', { rel: 'icon', href: '/logo.png' }]],
+    
+    locales: {
+        root: {
+            label: '简体中文',
+            lang: 'zh-CN',
+            themeConfig: {
+                nav: [
+                    { text: '首页', link: '/' },
+                    { text: '指南', link: '/guide/installation' },
+                ],
+                sidebar: [
+                    {
+                        text: '启程',
+                        items: [
+                            { text: '安装', link: '/guide/installation' },
+                            { text: '快速上手', link: '/guide/getting-started' }
+                        ]
+                    },
+                    {
+                        text: '核心',
+                        items: [
+                            { text: '时间轴', link: '/guide/timeline' },
+                            { text: '文件夹', link: '/guide/folders' },
+                            { text: '灵感库', link: '/guide/prompts' },
+                            { text: '导出', link: '/guide/export' },
+                            { text: '设置', link: '/guide/settings' }
+                        ]
+                    }
+                ],
+                footer: {
+                    message: '本项目开源。欢迎在 <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> 上给一颗 ⭐ 支持。',
+                    copyright: '基于 MIT 协议发布 | Copyright © 2025 Jesse Zhang'
+                }
+            }
+        },
+        en: {
+            label: 'English',
+            lang: 'en-US',
+            link: '/en/',
+            themeConfig: {
+                nav: [
+                    { text: 'Home', link: '/en/' },
+                    { text: 'Guide', link: '/en/guide/installation' },
+                ],
+                sidebar: [
+                    {
+                        text: 'Introduction',
+                        items: [
+                            { text: 'Installation', link: '/en/guide/installation' },
+                            { text: 'Getting Started', link: '/en/guide/getting-started' }
+                        ]
+                    },
+                    {
+                        text: 'Features',
+                        items: [
+                            { text: 'Timeline Navigation', link: '/en/guide/timeline' },
+                            { text: 'Folder Organization', link: '/en/guide/folders' },
+                            { text: 'Prompt Library', link: '/en/guide/prompts' },
+                            { text: 'Chat Export', link: '/en/guide/export' },
+                            { text: 'Settings & Customization', link: '/en/guide/settings' }
+                        ]
+                    }
+                ],
+                footer: {
+                    message: 'Open source project. Star us on <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> if you like it ⭐.',
+                    copyright: 'Released under the MIT License | Copyright © 2025 Jesse Zhang'
+                }
+            }
+        }
+    },
+    
+    themeConfig: {
+        logo: '/logo.png',
+        socialLinks: [
+            { icon: 'github', link: 'https://github.com/Nagi-ovo/gemini-voyager' }
+        ]
+    }
+})

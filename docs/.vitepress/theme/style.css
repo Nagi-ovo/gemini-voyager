@@ -1,0 +1,19 @@
+/**
+ * Customize default theme styling by overriding CSS variables:
+ * https://github.com/vuejs/vitepress/blob/main/src/client/theme-default/styles/vars.css
+ */
+
+:root {
+  /* Shadcn Primary Color (Light Mode): oklch(0.7227 0.1920 149.5793) */
+  /* Converted to approx Hex for compatibility if needed, but trying OKLCH first */
+  --vp-c-brand-1: oklch(0.7227 0.1920 149.5793);
+  --vp-c-brand-2: oklch(0.65 0.1920 149.5793); /* Slightly darker */
+  --vp-c-brand-3: oklch(0.60 0.1920 149.5793); /* Even darker */
+}
+
+.dark {
+  /* Shadcn Primary Color (Dark Mode): oklch(0.7729 0.1535 163.2231) */
+  --vp-c-brand-1: oklch(0.7729 0.1535 163.2231);
+  --vp-c-brand-2: oklch(0.82 0.1535 163.2231); /* Slightly lighter */
+  --vp-c-brand-3: oklch(0.87 0.1535 163.2231); /* Even lighter */
+}

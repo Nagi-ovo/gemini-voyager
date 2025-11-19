@@ -15,6 +15,7 @@
 </div>
 
 <p align="center">
+  <a href="https://nagi.fun/gemini-voyager/">📖 文档</a> • 
   <a href="../README.md">English</a>
 </p>
 
@@ -23,7 +24,7 @@
 ## 功能特性
 
 <div align="center">
-  <img src="../public/assets/teaser.png" alt="teaser"/>
+  <img src="../docs/public/assets/teaser.png" alt="teaser"/>
 </div>
 
 ### 📍 时间线导航
@@ -51,11 +52,11 @@
   <tr>
     <td align="center" width="50%">
       <p><b>Gemini</b></p>
-      <img src="../public/assets/gemini-folders.png" alt="Gemini 文件夹" style="max-width: 100%;"/>
+      <img src="../docs/public/assets/gemini-folders.png" alt="Gemini 文件夹" style="max-width: 100%;"/>
     </td>
     <td align="center" width="50%">
       <p><b>AI Studio</b></p>
-      <img src="../public/assets/aistudio-folders.png" alt="AI Studio 文件夹" style="max-width: 100%;"/>
+      <img src="../docs/public/assets/aistudio-folders.png" alt="AI Studio 文件夹" style="max-width: 100%;"/>
     </td>
   </tr>
 </table>
@@ -74,7 +75,7 @@
 <summary>查看截图</summary>
 
 <div align="center">
-  <img src="../public/assets/gemini-prompt-manager.png" alt="提示词管理器" style="max-width: 100%;"/>
+  <img src="../docs/public/assets/gemini-prompt-manager.png" alt="提示词管理器" style="max-width: 100%;"/>
 </div>
 
 </details>
@@ -90,7 +91,7 @@
 <summary>查看截图</summary>
 
 <div align="center">
-  <img src="../public/assets/gemini-math-copy.png" alt="公式复制" style="max-width: 100%;"/>
+  <img src="../docs/public/assets/gemini-math-copy.png" alt="公式复制" style="max-width: 100%;"/>
 </div>
 
 </details>
@@ -111,11 +112,11 @@
   <tr>
     <td align="center" width="50%">
       <p><b>步骤 1：点击导出图标</b></p>
-      <img src="../public/assets/gemini-export-guide-1.png" alt="导出指南步骤 1" style="max-width: 100%;"/>
+      <img src="../docs/public/assets/gemini-export-guide-1.png" alt="导出指南步骤 1" style="max-width: 100%;"/>
     </td>
     <td align="center" width="50%">
       <p><b>步骤 2：选择导出格式</b></p>
-      <img src="../public/assets/gemini-export-guide-2.png" alt="导出指南步骤 2" style="max-width: 100%;"/>
+      <img src="../docs/public/assets/gemini-export-guide-2.png" alt="导出指南步骤 2" style="max-width: 100%;"/>
     </td>
   </tr>
 </table>
@@ -151,11 +152,11 @@
   <tr>
     <td align="center" width="50%">
       <p><b>如何打开设置</b></p>
-      <img src="../public/assets/gemini-open-settings-guide.png" alt="打开设置指南" style="max-width: 100%;"/>
+      <img src="../docs/public/assets/gemini-open-settings-guide.png" alt="打开设置指南" style="max-width: 100%;"/>
     </td>
     <td align="center" width="50%">
       <p><b>对话宽度调整</b></p>
-      <img src="../public/assets/gemini-chatwidth.png" alt="对话宽度调整" style="max-width: 100%;"/>
+      <img src="../docs/public/assets/gemini-chatwidth.png" alt="对话宽度调整" style="max-width: 100%;"/>
     </td>
   </tr>
 </table>
@@ -335,11 +336,11 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
   <table>
     <tr>
       <td align="center">
-        <img src="../public/assets/wechat-sponsor.png" alt="微信支付" width="200"><br>
+        <img src="../docs/public/assets/wechat-sponsor.png" alt="微信支付" width="200"><br>
         <sub><b>微信支付</b></sub>
       </td>
       <td align="center">
-        <img src="../public/assets/alipay-sponsor.jpg" alt="支付宝" width="200"><br>
+        <img src="../docs/public/assets/alipay-sponsor.jpg" alt="支付宝" width="200"><br>
         <sub><b>支付宝</b></sub>
       </td>
     </tr>

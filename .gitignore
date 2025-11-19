@@ -32,3 +32,7 @@ yarn-error.log*
 *.mov
 *.mp4
 
+
+# VitePress
+docs/.vitepress/dist
+docs/.vitepress/cache

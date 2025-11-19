@@ -15,6 +15,7 @@
 </div>
 
 <p align="center">
+  <a href="https://www.nagi.fun/gemini-voyager/">📖 Documentation</a> • 
   <a href="./.github/README_ZH.md">中文说明</a>
 </p>
 
@@ -23,7 +24,7 @@
 ## Features
 
 <div align="center">
-  <img src="public/assets/teaser.png" alt="teaser"/>
+  <img src="docs/public/assets/teaser.png" alt="teaser"/>
 </div>
 
 ### 📍 Timeline Navigation
@@ -51,11 +52,11 @@ Organize conversations with drag-and-drop folders:
   <tr>
     <td align="center" width="50%">
       <p><b>Gemini</b></p>
-      <img src="public/assets/gemini-folders.png" alt="Gemini folders" style="max-width: 100%;"/>
+      <img src="docs/public/assets/gemini-folders.png" alt="Gemini folders" style="max-width: 100%;"/>
     </td>
     <td align="center" width="50%">
       <p><b>AI Studio</b></p>
-      <img src="public/assets/aistudio-folders.png" alt="AI Studio folders" style="max-width: 100%;"/>
+      <img src="docs/public/assets/aistudio-folders.png" alt="AI Studio folders" style="max-width: 100%;"/>
     </td>
   </tr>
 </table>
@@ -74,7 +75,7 @@ Save and reuse prompts:
 <summary>View screenshot</summary>
 
 <div align="center">
-  <img src="public/assets/gemini-prompt-manager.png" alt="Prompt manager" style="max-width: 100%;"/>
+  <img src="docs/public/assets/gemini-prompt-manager.png" alt="Prompt manager" style="max-width: 100%;"/>
 </div>
 
 </details>
@@ -90,7 +91,7 @@ Click LaTeX/MathJax formulas to copy source code:
 <summary>View screenshot</summary>
 
 <div align="center">
-  <img src="public/assets/gemini-math-copy.png" alt="Formula copy" style="max-width: 100%;"/>
+  <img src="docs/public/assets/gemini-math-copy.png" alt="Formula copy" style="max-width: 100%;"/>
 </div>
 
 </details>
@@ -111,11 +112,11 @@ Export conversations as:
   <tr>
     <td align="center" width="50%">
       <p><b>Step 1: Click the export icon</b></p>
-      <img src="public/assets/gemini-export-guide-1.png" alt="Export guide step 1" style="max-width: 100%;"/>
+      <img src="docs/public/assets/gemini-export-guide-1.png" alt="Export guide step 1" style="max-width: 100%;"/>
     </td>
     <td align="center" width="50%">
       <p><b>Step 2: Choose export format</b></p>
-      <img src="public/assets/gemini-export-guide-2.png" alt="Export guide step 2" style="max-width: 100%;"/>
+      <img src="docs/public/assets/gemini-export-guide-2.png" alt="Export guide step 2" style="max-width: 100%;"/>
     </td>
   </tr>
 </table>
@@ -151,11 +152,11 @@ Customize chat container width (400px - 1400px) with real-time preview.
   <tr>
     <td align="center" width="50%">
       <p><b>How to open settings</b></p>
-      <img src="public/assets/gemini-open-settings-guide.png" alt="Open settings guide" style="max-width: 100%;"/>
+      <img src="docs/public/assets/gemini-open-settings-guide.png" alt="Open settings guide" style="max-width: 100%;"/>
     </td>
     <td align="center" width="50%">
       <p><b>Chat width adjustment</b></p>
-      <img src="public/assets/gemini-chatwidth.png" alt="Chat width adjustment" style="max-width: 100%;"/>
+      <img src="docs/public/assets/gemini-chatwidth.png" alt="Chat width adjustment" style="max-width: 100%;"/>
     </td>
   </tr>
 </table>
@@ -337,11 +338,11 @@ If you find **Gemini Voyager** helpful and want to support its development, cons
   <table>
     <tr>
       <td align="center">
-        <img src="public/assets/wechat-sponsor.png" alt="WeChat Pay" width="200"><br>
+        <img src="docs/public/assets/wechat-sponsor.png" alt="WeChat Pay" width="200"><br>
         <sub><b>WeChat Pay</b></sub>
       </td>
       <td align="center">
-        <img src="public/assets/alipay-sponsor.jpg" alt="Alipay" width="200"><br>
+        <img src="docs/public/assets/alipay-sponsor.jpg" alt="Alipay" width="200"><br>
         <sub><b>Alipay</b></sub>
       </td>
     </tr>

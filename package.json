@@ -25,7 +25,10 @@
     "lint": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "commitlint": "commitlint --edit $GIT_PARAMS"
+    "commitlint": "commitlint --edit $GIT_PARAMS",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "type": "module",
   "dependencies": {
@@ -72,7 +75,9 @@
     "typescript": "^5.8.3",
     "vite": "^7.1.11",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.0.6"
+    "vitepress": "^1.6.4",
+    "vitest": "^4.0.6",
+    "vue": "^3.5.24"
   },
   "overrides": {
     "rollup": "^4.24.0"
