@@ -3238,19 +3238,6 @@ export class FolderManager {
     return success;
   }
 
-  /**
-   * @deprecated This method is deprecated and replaced by DataBackupService
-   * Kept for compatibility with existing code that may reference it
-   *
-   * OLD: Create a backup of current data in sessionStorage
-   * NEW: Use backupService.createPrimaryBackup() / createEmergencyBackup() instead
-   */
-  private createSessionBackup(): void {
-    // Deprecated: sessionStorage is not reliable across page refreshes in error scenarios
-    // Now using DataBackupService with localStorage for better persistence
-    this.debug('createSessionBackup() called - this method is deprecated, using DataBackupService instead');
-  }
-
   private async loadFolderEnabledSetting(): Promise<void> {
     try {
       const result = await browser.storage.sync.get({ geminiFolderEnabled: true });

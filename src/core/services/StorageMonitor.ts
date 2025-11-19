@@ -156,7 +156,7 @@ export class StorageMonitor {
   /**
    * Format warning message
    */
-  private formatWarningMessage(info: StorageQuotaInfo, thresholdPercent: number): string {
+  private formatWarningMessage(info: StorageQuotaInfo): string {
     const usagePercent = Math.round(info.usagePercent * 100);
     const usageMB = info.usageMB.toFixed(2);
     const quotaMB = info.quotaMB.toFixed(2);
