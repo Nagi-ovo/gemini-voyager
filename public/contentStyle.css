@@ -1201,8 +1201,7 @@ html.dark-theme .gv-pm-trigger {
 }
 
 .gv-pm-footer-secondary {
-  display: grid;
-  grid-template-columns: auto auto auto 1fr auto;
+  display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
@@ -1250,11 +1249,12 @@ html.dark-theme .gv-pm-trigger {
 .gv-pm-export-btn {
   height: 32px;
   border-radius: 8px;
-  padding: 0 16px;
+  padding: 0 12px;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #e5e7eb;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
@@ -1264,6 +1264,8 @@ html.dark-theme .gv-pm-trigger {
   box-sizing: border-box;
   cursor: pointer;
   transition: all 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gv-pm-import-btn:hover,
@@ -1302,11 +1304,12 @@ html.dark-theme .gv-pm-trigger {
 .gv-pm-settings {
   height: 32px;
   border-radius: 8px;
-  padding: 0 16px;
+  padding: 0 12px;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #e5e7eb;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
@@ -1317,6 +1320,8 @@ html.dark-theme .gv-pm-trigger {
   box-sizing: border-box;
   cursor: pointer;
   transition: all 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gv-pm-settings::before {
@@ -1355,13 +1360,13 @@ html.dark-theme .gv-pm-trigger {
 .gv-pm-gh {
   height: 32px;
   border-radius: 8px;
-  padding: 0 16px;
+  padding: 0 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
@@ -1369,6 +1374,10 @@ html.dark-theme .gv-pm-trigger {
   font-weight: 500;
   color: #e5e7eb;
   white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .gv-pm-gh:hover {
@@ -1388,6 +1397,10 @@ html.dark-theme .gv-pm-trigger {
 
 .gv-pm-gh-text {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .theme-host.light-theme .gv-pm-gh {
@@ -1420,24 +1433,62 @@ html.dark-theme .gv-pm-trigger {
   background: #e5e7eb;
 }
 
-/* Notice message */
+/* Notice message - floating toast style */
 .gv-pm-notice {
-  flex: 1;
-  font-size: 12px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
   line-height: 1.4;
-  opacity: 0.9;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.gv-pm-notice:not(:empty) {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.gv-pm-notice:empty {
+  transform: translate(-50%, -50%) scale(0.9);
 }
 
 .gv-pm-notice.ok {
-  color: #86efac;
+  background: rgba(34, 197, 94, 0.95);
+  color: #ffffff;
 }
 
 .gv-pm-notice.err {
-  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.95);
+  color: #ffffff;
+}
+
+.theme-host.light-theme .gv-pm-notice.ok {
+  background: rgba(34, 197, 94, 0.95);
+  color: #ffffff;
+}
+
+.theme-host.light-theme .gv-pm-notice.err {
+  background: rgba(239, 68, 68, 0.95);
+  color: #ffffff;
+}
+
+.theme-host.dark-theme .gv-pm-notice.ok {
+  background: rgba(34, 197, 94, 0.95);
+  color: #ffffff;
+}
+
+.theme-host.dark-theme .gv-pm-notice.err {
+  background: rgba(239, 68, 68, 0.95);
+  color: #ffffff;
 }
 
 /* Inline confirm popover for delete (floating and responsive) */
@@ -2847,6 +2898,35 @@ html.dark .gv-folder-action-btn:hover,
 /* Aistudio conversation layout tweaks */
 .gv-aistudio .gv-folder-conversation {
   overflow: visible;
+}
+
+/* AI Studio selected conversation style */
+.gv-aistudio .gv-folder-conversation-selected {
+  position: relative;
+  background: linear-gradient(to right,
+      var(--folder-selected-glow) 0%,
+      transparent 100%) !important;
+  border-radius: 10px;
+  transition: background 200ms ease;
+}
+
+.gv-aistudio .gv-folder-conversation-selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 2px 2px 0;
+  background-color: var(--folder-selected-accent);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.gv-aistudio .gv-folder-conversation-selected>* {
+  position: relative;
+  z-index: 1;
 }
 
 .gv-aistudio .gv-conversation-title {

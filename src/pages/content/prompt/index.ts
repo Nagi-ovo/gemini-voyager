@@ -111,7 +111,10 @@ async function readStorage<T>(key: StorageKey, fallback: T): Promise<T> {
 async function writeStorage<T>(key: StorageKey, value: T): Promise<void> {
   const result = await promptStorageService.set(key, value);
   if (!result.success) {
-    pmLogger.error(`Failed to write key: ${key}`, { error: result.error });
+    pmLogger.error(`Failed to write key: ${key}`, { 
+      error: result.error?.message || 'Unknown error',
+      errorDetails: result.error 
+    });
   }
 }
 
@@ -369,8 +372,6 @@ export async function startPromptManager(): Promise<void> {
     settingsBtn.textContent = i18n.t('pm_settings');
     settingsBtn.title = i18n.t('pm_settings_tooltip');
     
-    const notice = createEl('div', 'gv-pm-notice');
-    
     const gh = document.createElement('a');
     gh.className = 'gv-pm-gh';
     gh.href = 'https://github.com/Nagi-ovo/gemini-voyager';
@@ -391,7 +392,6 @@ export async function startPromptManager(): Promise<void> {
     secondaryActions.appendChild(exportBtn);
     secondaryActions.appendChild(settingsBtn);
     secondaryActions.appendChild(gh);
-    secondaryActions.appendChild(notice);
 
     footer.appendChild(primaryActions);
     footer.appendChild(secondaryActions);
@@ -415,12 +415,16 @@ export async function startPromptManager(): Promise<void> {
       </form>`
     );
 
+    // Notice as floating toast (not in footer layout)
+    const notice = createEl('div', 'gv-pm-notice');
+    
     panel.appendChild(header);
     panel.appendChild(searchWrap);
     panel.appendChild(tagsWrap);
     panel.appendChild(addForm);
     panel.appendChild(list);
     panel.appendChild(footer);
+    panel.appendChild(notice);
 
     // State
     let items: PromptItem[] = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
@@ -757,17 +761,27 @@ export async function startPromptManager(): Promise<void> {
     window.addEventListener('pointerup', endDrag, { passive: true });
 
     // Trigger drag (always draggable)
+    let triggerDragStartPos: { x: number; y: number } | null = null;
     trigger.addEventListener('pointerdown', (ev: PointerEvent) => {
       if (typeof ev.button === 'number' && ev.button !== 0) return;
       draggingTrigger = true;
+      triggerDragStartPos = { x: ev.clientX, y: ev.clientY };
       try { trigger.setPointerCapture?.(ev.pointerId); } catch {}
     });
-    window.addEventListener('pointerup', async () => {
+    window.addEventListener('pointerup', async (ev: PointerEvent) => {
       if (draggingTrigger) {
         draggingTrigger = false;
-        const r = parseFloat((trigger.style.right || '').replace('px', '')) || 18;
-        const b = parseFloat((trigger.style.bottom || '').replace('px', '')) || 18;
-        await writeStorage(STORAGE_KEYS.triggerPos, { right: r, bottom: b });
+        // Only save if the trigger actually moved (threshold: 5px)
+        if (triggerDragStartPos) {
+          const dx = Math.abs(ev.clientX - triggerDragStartPos.x);
+          const dy = Math.abs(ev.clientY - triggerDragStartPos.y);
+          if (dx > 5 || dy > 5) {
+            const r = parseFloat((trigger.style.right || '').replace('px', '')) || 18;
+            const b = parseFloat((trigger.style.bottom || '').replace('px', '')) || 18;
+            await writeStorage(STORAGE_KEYS.triggerPos, { right: r, bottom: b });
+          }
+        }
+        triggerDragStartPos = null;
       }
     }, { passive: true });
 
