@@ -12,6 +12,10 @@ import 'katex/dist/katex.min.css';
 import browser from 'webextension-polyfill';
 
 import { initI18n, getTranslationSync, getCurrentLanguage } from '@/utils/i18n';
+import { promptStorageService } from '@/core/services/StorageService';
+import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
+import { logger } from '@/core/services/LoggerService';
+import { StorageKeys, type StorageKey } from '@/core/types/common';
 
 type PromptItem = {
   id: string;
@@ -25,11 +29,11 @@ type PanelPosition = { top: number; left: number };
 type TriggerPosition = { bottom: number; right: number };
 
 const STORAGE_KEYS = {
-  items: 'gvPromptItems',
-  locked: 'gvPromptPanelLocked',
-  position: 'gvPromptPanelPosition',
-  triggerPos: 'gvPromptTriggerPosition',
-  language: 'language', // reuse global language key
+  items: StorageKeys.PROMPT_ITEMS,
+  locked: StorageKeys.PROMPT_PANEL_LOCKED,
+  position: StorageKeys.PROMPT_PANEL_POSITION,
+  triggerPos: StorageKeys.PROMPT_TRIGGER_POSITION,
+  language: StorageKeys.LANGUAGE, // reuse global language key
 } as const;
 
 const ID = {
@@ -89,22 +93,25 @@ function uid(): string {
   return (h >>> 0).toString(36);
 }
 
-async function readStorage<T>(key: string, fallback: T): Promise<T> {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw === null) return fallback;
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
+/**
+ * Storage adapter - uses chrome.storage.local for cross-domain data sharing
+ * Falls back to localStorage if chrome.storage is unavailable
+ */
+const pmLogger = logger.createChild('PromptManager');
+
+async function readStorage<T>(key: StorageKey, fallback: T): Promise<T> {
+  const result = await promptStorageService.get<T>(key);
+  if (result.success) {
+    return result.data;
   }
+  pmLogger.debug(`Key not found: ${key}, using fallback`);
+  return fallback;
 }
 
-async function writeStorage<T>(key: string, value: T): Promise<void> {
-  try {
-    const raw = JSON.stringify(value);
-    localStorage.setItem(key, raw);
-  } catch {
-    // Silent fail
+async function writeStorage<T>(key: StorageKey, value: T): Promise<void> {
+  const result = await promptStorageService.set(key, value);
+  if (!result.success) {
+    pmLogger.error(`Failed to write key: ${key}`, { error: result.error });
   }
 }
 
@@ -181,6 +188,34 @@ function computeAnchoredPosition(trigger: HTMLElement, panel: HTMLElement): { to
 
 export async function startPromptManager(): Promise<void> {
   try {
+    // Migrate data from localStorage to chrome.storage.local (one-time migration)
+    try {
+      const keysToMigrate = [
+        STORAGE_KEYS.items,
+        STORAGE_KEYS.locked,
+        STORAGE_KEYS.position,
+        STORAGE_KEYS.triggerPos,
+      ];
+
+      const migrationResult = await migrateFromLocalStorage(keysToMigrate, promptStorageService, {
+        deleteAfterMigration: false, // Keep localStorage as backup
+        skipExisting: true, // Skip if already migrated
+      });
+
+      if (migrationResult.migratedKeys.length > 0) {
+        pmLogger.info('Migrated prompt data from localStorage to chrome.storage.local', {
+          migratedKeys: migrationResult.migratedKeys,
+        });
+      }
+
+      if (migrationResult.errors.length > 0) {
+        pmLogger.warn('Some keys failed to migrate', { errors: migrationResult.errors });
+      }
+    } catch (migrationError) {
+      pmLogger.error('Migration failed, continuing with current storage', { migrationError });
+      // Continue even if migration fails - data will still work from current storage
+    }
+
     // markdown config: respect single newlines as <br> and KaTeX inline/display math
     try {
       marked.use(markedKatex({

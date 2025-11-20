@@ -17,17 +17,23 @@ export interface IStorageService {
 }
 
 /**
- * Chrome Storage implementation
+ * Base Chrome Storage implementation (DRY: shared logic)
  */
-export class ChromeStorageService implements IStorageService {
-  private readonly logger = logger.createChild('ChromeStorage');
+abstract class BaseChromeStorageService implements IStorageService {
+  protected abstract readonly storageArea: chrome.storage.StorageArea;
+  protected abstract readonly loggerName: string;
+
+  protected get logger(): ReturnType<typeof logger.createChild> {
+    // Lazy getter to avoid abstract property access in constructor
+    return logger.createChild(this.loggerName);
+  }
 
   async get<T>(key: StorageKey): Promise<Result<T>> {
     try {
       this.logger.debug(`Reading key: ${key}`);
 
       const result = await new Promise<Record<string, T>>((resolve) => {
-        chrome.storage?.sync?.get([key], (items) => {
+        this.storageArea.get([key], (items) => {
           resolve(items as Record<string, T>);
         });
       });
@@ -67,7 +73,7 @@ export class ChromeStorageService implements IStorageService {
       this.logger.debug(`Writing key: ${key}`);
 
       await new Promise<void>((resolve, reject) => {
-        chrome.storage?.sync?.set({ [key]: value }, () => {
+        this.storageArea.set({ [key]: value }, () => {
           if (chrome.runtime.lastError) {
             reject(new Error(chrome.runtime.lastError.message));
           } else {
@@ -97,7 +103,7 @@ export class ChromeStorageService implements IStorageService {
       this.logger.debug(`Removing key: ${key}`);
 
       await new Promise<void>((resolve, reject) => {
-        chrome.storage?.sync?.remove(key, () => {
+        this.storageArea.remove(key, () => {
           if (chrome.runtime.lastError) {
             reject(new Error(chrome.runtime.lastError.message));
           } else {
@@ -127,7 +133,7 @@ export class ChromeStorageService implements IStorageService {
       this.logger.debug('Clearing all storage');
 
       await new Promise<void>((resolve, reject) => {
-        chrome.storage?.sync?.clear(() => {
+        this.storageArea.clear(() => {
           if (chrome.runtime.lastError) {
             reject(new Error(chrome.runtime.lastError.message));
           } else {
@@ -151,6 +157,24 @@ export class ChromeStorageService implements IStorageService {
       };
     }
   }
+}
+
+/**
+ * Chrome Storage Sync implementation (100KB quota, cross-device sync)
+ * Use for small settings and preferences
+ */
+export class ChromeStorageService extends BaseChromeStorageService {
+  protected readonly storageArea = chrome.storage.sync;
+  protected readonly loggerName = 'ChromeStorage';
+}
+
+/**
+ * Chrome Storage Local implementation (5-10MB quota, local only)
+ * Use for large data like prompts
+ */
+export class ChromeLocalStorageService extends BaseChromeStorageService {
+  protected readonly storageArea = chrome.storage.local;
+  protected readonly loggerName = 'ChromeLocalStorage';
 }
 
 /**
@@ -264,13 +288,29 @@ export class LocalStorageService implements IStorageService {
 }
 
 /**
+ * Storage type selection
+ */
+export type StorageType = 'sync' | 'local';
+
+/**
  * Storage factory - automatically selects the best available storage
  */
 export class StorageFactory {
-  static create(): IStorageService {
-    if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
-      logger.info('Using ChromeStorageService');
-      return new ChromeStorageService();
+  /**
+   * Create a storage service instance
+   * @param type - 'sync' for chrome.storage.sync (100KB, cross-device), 'local' for chrome.storage.local (5-10MB, local only)
+   */
+  static create(type: StorageType = 'sync'): IStorageService {
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      if (type === 'local' && chrome.storage.local) {
+        logger.info('Using ChromeLocalStorageService');
+        return new ChromeLocalStorageService();
+      }
+
+      if (chrome.storage.sync) {
+        logger.info('Using ChromeStorageService');
+        return new ChromeStorageService();
+      }
     }
 
     logger.info('Using LocalStorageService (fallback)');
@@ -278,5 +318,6 @@ export class StorageFactory {
   }
 }
 
-// Export singleton instance
-export const storageService = StorageFactory.create();
+// Export singleton instances
+export const storageService = StorageFactory.create('sync'); // For folders (small data, cross-device sync)
+export const promptStorageService = StorageFactory.create('local'); // For prompts (large data, local only)
