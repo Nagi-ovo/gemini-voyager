@@ -111,9 +111,9 @@ async function readStorage<T>(key: StorageKey, fallback: T): Promise<T> {
 async function writeStorage<T>(key: StorageKey, value: T): Promise<void> {
   const result = await promptStorageService.set(key, value);
   if (!result.success) {
-    pmLogger.error(`Failed to write key: ${key}`, { 
+    pmLogger.error(`Failed to write key: ${key}`, {
       error: result.error?.message || 'Unknown error',
-      errorDetails: result.error 
+      errorDetails: result.error
     });
   }
 }
@@ -172,7 +172,7 @@ function copyText(text: string): Promise<void> {
       ta.select();
       try {
         document.execCommand('copy');
-      } catch {}
+      } catch { }
       ta.remove();
       resolve();
     });
@@ -224,9 +224,11 @@ export async function startPromptManager(): Promise<void> {
       marked.use(markedKatex({
         throwOnError: false,
         output: 'html',
+        trust: true,        // Trust the rendering environment (content script context)
+        strict: false,      // Disable strict mode checks including quirks mode detection
       } as any));
       marked.setOptions({ breaks: true });
-    } catch {}
+    } catch { }
     // Initialize centralized i18n system
     await initI18n();
     const i18n = createI18n();
@@ -272,7 +274,7 @@ export async function startPromptManager(): Promise<void> {
         const bottom = Math.max(6, Math.round(vh - (r.top + r.height / 2 + th / 2)));
         trigger.style.right = `${right}px`;
         trigger.style.bottom = `${bottom}px`;
-      } catch {}
+      } catch { }
     }
 
     // Restore trigger position if saved; otherwise place next to host button
@@ -349,7 +351,7 @@ export async function startPromptManager(): Promise<void> {
     importInput.type = 'file';
     importInput.accept = '.json,application/json';
     importInput.className = 'gv-pm-import-input';
-    
+
     // Backup button - primary action
     const backupBtn = createEl('button', 'gv-pm-backup-btn');
     backupBtn.textContent = '💾 ' + i18n.t('pm_backup');
@@ -361,24 +363,24 @@ export async function startPromptManager(): Promise<void> {
 
     // Secondary actions container
     const secondaryActions = createEl('div', 'gv-pm-footer-secondary');
-    
+
     const importBtn = createEl('button', 'gv-pm-import-btn');
     importBtn.textContent = i18n.t('pm_import');
-    
+
     const exportBtn = createEl('button', 'gv-pm-export-btn');
     exportBtn.textContent = i18n.t('pm_export');
-    
+
     const settingsBtn = createEl('button', 'gv-pm-settings');
     settingsBtn.textContent = i18n.t('pm_settings');
     settingsBtn.title = i18n.t('pm_settings_tooltip');
-    
+
     const gh = document.createElement('a');
     gh.className = 'gv-pm-gh';
     gh.href = 'https://github.com/Nagi-ovo/gemini-voyager';
     gh.target = '_blank';
     gh.rel = 'noreferrer';
     gh.title = i18n.t('starProject');
-    
+
     // Add icon and text
     const ghIcon = document.createElement('span');
     ghIcon.className = 'gv-pm-gh-icon';
@@ -400,24 +402,24 @@ export async function startPromptManager(): Promise<void> {
     const addForm = elFromHTML(
       `<form class="gv-pm-add-form gv-hidden">
         <textarea class="gv-pm-input-text" placeholder="${escapeHtml(
-          i18n.t('pm_prompt_placeholder') || 'Prompt text'
-        )}" rows="3"></textarea>
+        i18n.t('pm_prompt_placeholder') || 'Prompt text'
+      )}" rows="3"></textarea>
         <input class="gv-pm-input-tags" type="text" placeholder="${escapeHtml(
-          i18n.t('pm_tags_placeholder') || 'Tags (comma separated)'
-        )}" />
+        i18n.t('pm_tags_placeholder') || 'Tags (comma separated)'
+      )}" />
         <div class="gv-pm-add-actions">
           <span class="gv-pm-inline-hint" aria-live="polite"></span>
           <button type="submit" class="gv-pm-save">${escapeHtml(i18n.t('pm_save') || 'Save')}</button>
           <button type="button" class="gv-pm-cancel">${escapeHtml(
-            i18n.t('pm_cancel') || 'Cancel'
-          )}</button>
+        i18n.t('pm_cancel') || 'Cancel'
+      )}</button>
         </div>
       </form>`
     );
 
     // Notice as floating toast (not in footer layout)
     const notice = createEl('div', 'gv-pm-notice');
-    
+
     panel.appendChild(header);
     panel.appendChild(searchWrap);
     panel.appendChild(tagsWrap);
@@ -506,17 +508,21 @@ export async function startPromptManager(): Promise<void> {
         // Render Markdown + KaTeX preview (sanitized)
         const md = document.createElement('div');
         md.className = 'gv-md';
-        try {
-          const out = marked.parse(it.text as string);
-          if (typeof out === 'string') {
-            md.innerHTML = DOMPurify.sanitize(out);
-          } else {
-            out.then((html) => { md.innerHTML = DOMPurify.sanitize(html); }).catch(() => { md.textContent = it.text; });
-          }
-        } catch {
-          md.textContent = it.text;
-        }
+        // Insert element into DOM first, then render to ensure KaTeX can detect document mode correctly
         textBtn.appendChild(md);
+        // Defer rendering to next frame to ensure element is fully attached
+        requestAnimationFrame(() => {
+          try {
+            const out = marked.parse(it.text as string);
+            if (typeof out === 'string') {
+              md.innerHTML = DOMPurify.sanitize(out);
+            } else {
+              out.then((html) => { md.innerHTML = DOMPurify.sanitize(html); }).catch(() => { md.textContent = it.text; });
+            }
+          } catch {
+            md.textContent = it.text;
+          }
+        });
         textBtn.title = i18n.t('pm_copy') || 'Copy';
         textBtn.addEventListener('click', async () => {
           await copyText(it.text);
@@ -578,7 +584,7 @@ export async function startPromptManager(): Promise<void> {
           pop.style.top = `${Math.round(top)}px`;
           pop.style.left = `${Math.round(Math.max(8, left))}px`;
           pop.setAttribute('data-side', side);
-          const cleanup = () => { try { pop.remove(); } catch {} window.removeEventListener('keydown', onKey); window.removeEventListener('click', onOutside, true); };
+          const cleanup = () => { try { pop.remove(); } catch { } window.removeEventListener('keydown', onKey); window.removeEventListener('click', onOutside, true); };
           const onOutside = (ev: MouseEvent) => { const t = ev.target as HTMLElement; if (!t.closest('.gv-pm-confirm')) cleanup(); };
           const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape') cleanup(); };
           window.addEventListener('click', onOutside, true);
@@ -676,7 +682,7 @@ export async function startPromptManager(): Promise<void> {
       dragStart = { x: ev.clientX, y: ev.clientY };
       try {
         panel.setPointerCapture?.(ev.pointerId);
-      } catch {}
+      } catch { }
     }
 
     async function endDrag(_ev: PointerEvent): Promise<void> {
@@ -744,7 +750,7 @@ export async function startPromptManager(): Promise<void> {
       locked = !locked;
       await writeStorage(STORAGE_KEYS.locked, locked);
       applyLockUI();
-      try { (ev.currentTarget as HTMLButtonElement)?.blur?.(); } catch {}
+      try { (ev.currentTarget as HTMLButtonElement)?.blur?.(); } catch { }
       if (locked) {
         const rect = panel.getBoundingClientRect();
         savedPos = { left: rect.left, top: rect.top };
@@ -766,7 +772,7 @@ export async function startPromptManager(): Promise<void> {
       if (typeof ev.button === 'number' && ev.button !== 0) return;
       draggingTrigger = true;
       triggerDragStartPos = { x: ev.clientX, y: ev.clientY };
-      try { trigger.setPointerCapture?.(ev.pointerId); } catch {}
+      try { trigger.setPointerCapture?.(ev.pointerId); } catch { }
     });
     window.addEventListener('pointerup', async (ev: PointerEvent) => {
       if (draggingTrigger) {
@@ -800,14 +806,14 @@ export async function startPromptManager(): Promise<void> {
         const next = changes.language.newValue;
         try {
           langSel.value = next.startsWith('zh') ? 'zh' : 'en';
-        } catch {}
+        } catch { }
         refreshUITexts();
       }
     };
 
     try {
       browser.storage.onChanged.addListener(storageChangeHandler);
-    } catch {}
+    } catch { }
 
     addBtn.addEventListener('click', (ev) => {
       ev.preventDefault();
@@ -827,7 +833,7 @@ export async function startPromptManager(): Promise<void> {
           setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
           return;
         }
-        
+
         // Send message to background to open popup
         const response = await browser.runtime.sendMessage({ type: 'gv.openPopup' }) as { ok?: boolean };
         if (!response?.ok) {
@@ -995,7 +1001,7 @@ export async function startPromptManager(): Promise<void> {
           // Fallback for Firefox, Safari - download as ZIP file
           const JSZip = (await import('jszip')).default;
           const zip = new JSZip();
-          
+
           // Add files to ZIP
           zip.file('prompts.json', JSON.stringify(promptPayload, null, 2));
           zip.file('folders.json', JSON.stringify(folderPayload, null, 2));
@@ -1003,7 +1009,7 @@ export async function startPromptManager(): Promise<void> {
 
           // Generate ZIP file
           const zipBlob = await zip.generateAsync({ type: 'blob' });
-          
+
           // Download ZIP file
           const url = URL.createObjectURL(zipBlob);
           const a = document.createElement('a');
@@ -1092,7 +1098,7 @@ export async function startPromptManager(): Promise<void> {
       }
     }, { once: true });
   } catch (err) {
-    try { (window as any).console?.error?.('Prompt Manager init failed', err); } catch {}
+    try { (window as any).console?.error?.('Prompt Manager init failed', err); } catch { }
   }
 }
 
