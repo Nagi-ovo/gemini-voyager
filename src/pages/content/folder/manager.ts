@@ -56,6 +56,7 @@ export class FolderManager {
       // Enable by setting localStorage.gvFolderDebug = '1'
       return IS_DEBUG || localStorage.getItem('gvFolderDebug') === '1';
     } catch {
+      // Ignore - localStorage may not be available in some contexts (e.g. incognito mode)
       return IS_DEBUG;
     }
   }
@@ -1178,8 +1179,8 @@ export class FolderManager {
     if (!this.sidebarContainer) return;
 
     const observer = new MutationObserver((mutations) => {
+      // 1. Handle added conversations (always safe)
       mutations.forEach((mutation) => {
-        // Handle added conversations
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
             // Check if the node itself is a conversation
@@ -1197,41 +1198,80 @@ export class FolderManager {
             });
           }
         });
+      });
 
-        // Handle removed conversations
+      // 2. Handle removed conversations with safeguards
+      // CRITICAL FIX: Prevent data loss when network disconnects or UI refreshes
+
+      // Check 1: If offline, assume removals are due to network error
+      if (!navigator.onLine) {
+        this.debug('Network offline, ignoring conversation removals to prevent data loss');
+        return;
+      }
+
+      // Check 2: Calculate total conversations being removed in this batch
+      let totalRemovedCount = 0;
+      const nodesWithRemovals: HTMLElement[] = [];
+
+      mutations.forEach((mutation) => {
         mutation.removedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
-            // Check if this is a conversation element or contains conversations
-            const conversations = node.matches('[data-test-id="conversation"]')
-              ? [node]
-              : Array.from(node.querySelectorAll('[data-test-id="conversation"]'));
+            const isConv = node.matches('[data-test-id="conversation"]');
+            // Check if it contains conversations (e.g. a container was removed)
+            const containedConvsCount = node.querySelectorAll('[data-test-id="conversation"]').length;
 
-            conversations.forEach((conv) => {
-              // Extract conversation ID from the removed element
-              const jslog = conv.getAttribute('jslog');
-              if (jslog) {
-                const match = jslog.match(/c_([a-f0-9]{8,})/i);
-                if (match && match[1]) {
-                  const conversationId = match[1];
-                  this.debug('Detected conversation deletion:', conversationId);
-                  // Remove this conversation from all folders
-                  this.removeConversationFromAllFolders(conversationId);
-                }
-              }
+            if (isConv) {
+              totalRemovedCount++;
+              nodesWithRemovals.push(node);
+            } else if (containedConvsCount > 0) {
+              totalRemovedCount += containedConvsCount;
+              nodesWithRemovals.push(node);
+            }
+          }
+        });
+      });
 
-              // Also try to extract from href
-              const link = conv.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
-              if (link) {
-                const href = link.href;
-                const appMatch = href.match(/\/app\/([^\/?#]+)/);
-                const gemMatch = href.match(/\/gem\/[^/]+\/([^\/?#]+)/);
-                const conversationId = appMatch?.[1] || gemMatch?.[1];
-                if (conversationId) {
-                  this.debug('Detected conversation deletion (from href):', conversationId);
-                  this.removeConversationFromAllFolders(conversationId);
-                }
-              }
-            });
+      // If no conversations were removed, we're done
+      if (totalRemovedCount === 0) return;
+
+      // Check 3: If multiple conversations are removed at once, it's likely a UI refresh/clear
+      // Users typically delete conversations one by one.
+      // EXCEPTION: If we are in multi-select mode, the user might be performing a bulk delete.
+      if (totalRemovedCount > 1 && !this.isMultiSelectMode) {
+        this.debugWarn(`Ignored bulk removal of ${totalRemovedCount} conversations - likely UI refresh`);
+        return;
+      }
+
+      // Process the single removal
+      nodesWithRemovals.forEach((node) => {
+        const conversations = node.matches('[data-test-id="conversation"]')
+          ? [node]
+          : Array.from(node.querySelectorAll('[data-test-id="conversation"]'));
+
+        conversations.forEach((conv) => {
+          // Extract conversation ID from the removed element
+          const jslog = conv.getAttribute('jslog');
+          if (jslog) {
+            const match = jslog.match(/c_([a-f0-9]{8,})/i);
+            if (match && match[1]) {
+              const conversationId = match[1];
+              this.debug('Detected conversation deletion:', conversationId);
+              // Remove this conversation from all folders
+              this.removeConversationFromAllFolders(conversationId);
+            }
+          }
+
+          // Also try to extract from href
+          const link = conv.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+          if (link) {
+            const href = link.href;
+            const appMatch = href.match(/\/app\/([^\/?#]+)/);
+            const gemMatch = href.match(/\/gem\/[^/]+\/([^\/?#]+)/);
+            const conversationId = appMatch?.[1] || gemMatch?.[1];
+            if (conversationId) {
+              this.debug('Detected conversation deletion (from href):', conversationId);
+              this.removeConversationFromAllFolders(conversationId);
+            }
           }
         });
       });
@@ -2101,8 +2141,8 @@ export class FolderManager {
 
     let finished = false;
     const cleanup = () => {
-      try { input.removeEventListener('blur', onBlur); } catch {}
-      try { input.removeEventListener('keydown', onKeyDown); } catch {}
+      try { input.removeEventListener('blur', onBlur); } catch (e) { this.debug('Failed to remove blur listener:', e); }
+      try { input.removeEventListener('keydown', onKeyDown); } catch (e) { this.debug('Failed to remove keydown listener:', e); }
     };
     const finalize = (commit: boolean) => {
       if (finished) return;
@@ -2117,11 +2157,11 @@ export class FolderManager {
             this.saveData();
           }
         }
-      } catch {}
+      } catch (e) { this.debug('Failed to save renamed conversation:', e); }
       // Restore title element gracefully even if DOM re-rendered
-      try { if (input.isConnected) input.remove(); } catch {}
-      try { titleElement.style.display = ''; } catch {}
-      try { titleElement.textContent = conv.title; } catch {}
+      try { if (input.isConnected) input.remove(); } catch (e) { this.debug('Failed to remove input:', e); }
+      try { titleElement.style.display = ''; } catch (e) { this.debug('Failed to restore title display:', e); }
+      try { titleElement.textContent = conv.title; } catch (e) { this.debug('Failed to restore title text:', e); }
     };
     const onBlur = () => {
       // Defer finalize to let Angular/SPA navigation settle
@@ -2362,7 +2402,7 @@ export class FolderManager {
           if (node instanceof HTMLElement) {
             // Check if a menu panel was removed
             const isMenuPanel = node.classList?.contains('mat-mdc-menu-panel') ||
-                               node.querySelector('.mat-mdc-menu-panel');
+              node.querySelector('.mat-mdc-menu-panel');
             if (isMenuPanel) {
               this.debug('Observer: menu closed, clearing conversation state');
               this.lastClickedConversation = null;
@@ -2916,7 +2956,7 @@ export class FolderManager {
         const gemId = gemMatch[1];
         return `https://gemini.google.com/gem/${gemId}/${hexId}`;
       }
-    } catch {}
+    } catch (e) { this.debug('Failed to extract gem URL:', e); }
     return `https://gemini.google.com/app/${hexId}`;
   }
 
@@ -3048,7 +3088,10 @@ export class FolderManager {
       // Match /app/<hex> or /gem/<gemId>/<hex>
       const m = path.match(/\/(?:app|gem\/[^/]+)\/([a-f0-9]+)/i);
       return m ? m[1] : null;
-    } catch { return null; }
+    } catch (e) {
+      this.debug('Failed to get current hex ID from location:', e);
+      return null;
+    }
   }
 
   private highlightActiveConversationInFolders(): void {
@@ -3172,7 +3215,7 @@ export class FolderManager {
   private showDataLossNotification(): void {
     this.showNotificationByLevel(
       getTranslationSync('folderManager_dataLossWarning') ||
-        'Warning: Failed to load folder data. Please check your browser console for details.',
+      'Warning: Failed to load folder data. Please check your browser console for details.',
       'error'
     );
   }
@@ -3215,7 +3258,7 @@ export class FolderManager {
         try {
           document.body.removeChild(notification);
         } catch {
-          /* ignore */
+          // Ignore - notification may have already been removed
         }
       }, timeout);
     } catch (notificationError) {
@@ -3540,20 +3583,20 @@ export class FolderManager {
 
   private installRouteChangeListener(): void {
     const update = () => setTimeout(() => this.highlightActiveConversationInFolders(), 0);
-    try { window.addEventListener('popstate', update); } catch {}
+    try { window.addEventListener('popstate', update); } catch (e) { this.debug('Failed to add popstate listener:', e); }
     try {
       const hist = history as any;
       const wrap = (method: 'pushState' | 'replaceState') => {
         const orig = hist[method];
         hist[method] = function (...args: any[]) {
           const ret = orig.apply(this, args);
-          try { update(); } catch {}
+          try { update(); } catch { /* Ignore - update is non-critical */ }
           return ret;
         };
       };
       wrap('pushState');
       wrap('replaceState');
-    } catch {}
+    } catch (e) { this.debug('Failed to wrap history methods:', e); }
     // Fallback poller for routers/flows that don't emit events
     try {
       this.lastPathname = window.location.pathname;
@@ -3564,7 +3607,7 @@ export class FolderManager {
           update();
         }
       }, 400);
-    } catch {}
+    } catch (e) { this.debug('Failed to setup navigation poller:', e); }
   }
 
   private installSidebarClickListener(): void {
@@ -3579,7 +3622,7 @@ export class FolderManager {
         setTimeout(() => this.highlightActiveConversationInFolders(), 0);
       }
     };
-    try { root.addEventListener('click', handler, true); } catch {}
+    try { root.addEventListener('click', handler, true); } catch (e) { this.debug('Failed to add sidebar click listener:', e); }
   }
 
   private t(key: string): string {
