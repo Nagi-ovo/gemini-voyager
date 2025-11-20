@@ -1,7 +1,9 @@
 /* Background service worker - handles cross-origin image fetch for packaging and popup opening */
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   (async () => {
     try {
+
       // Handle popup opening request
       if (message && message.type === 'gv.openPopup') {
         try {

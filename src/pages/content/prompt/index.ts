@@ -11,11 +11,11 @@ import markedKatex from 'marked-katex-extension';
 import 'katex/dist/katex.min.css';
 import browser from 'webextension-polyfill';
 
-import { initI18n, getTranslationSync, getCurrentLanguage } from '@/utils/i18n';
-import { promptStorageService } from '@/core/services/StorageService';
-import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import { logger } from '@/core/services/LoggerService';
+import { promptStorageService } from '@/core/services/StorageService';
 import { StorageKeys, type StorageKey } from '@/core/types/common';
+import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
+import { initI18n, getTranslationSync, getCurrentLanguage } from '@/utils/i18n';
 
 type PromptItem = {
   id: string;
@@ -821,6 +821,13 @@ export async function startPromptManager(): Promise<void> {
       ev.preventDefault();
       ev.stopPropagation();
       try {
+        // Check if extension context is still valid
+        if (!browser.runtime?.id) {
+          // Extension context invalidated, show fallback message
+          setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
+          return;
+        }
+        
         // Send message to background to open popup
         const response = await browser.runtime.sendMessage({ type: 'gv.openPopup' }) as { ok?: boolean };
         if (!response?.ok) {
@@ -828,6 +835,11 @@ export async function startPromptManager(): Promise<void> {
           setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
         }
       } catch (err) {
+        // Silently handle extension context errors
+        if (err instanceof Error && err.message.includes('Extension context invalidated')) {
+          setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
+          return;
+        }
         console.warn('[PromptManager] Failed to open settings:', err);
         setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
       }

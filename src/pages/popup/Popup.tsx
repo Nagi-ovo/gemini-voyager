@@ -20,6 +20,7 @@ interface SettingsUpdate {
   resetPosition?: boolean;
   folderEnabled?: boolean;
   hideArchivedConversations?: boolean;
+  customWebsites?: string[];
 }
 
 export default function Popup() {
@@ -29,6 +30,9 @@ export default function Popup() {
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
+  const [customWebsites, setCustomWebsites] = useState<string[]>([]);
+  const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
+  const [websiteError, setWebsiteError] = useState<string>('');
 
   // Helper function to apply settings to storage
   const apply = useCallback((settings: SettingsUpdate) => {
@@ -39,6 +43,7 @@ export default function Popup() {
     if (typeof settings.folderEnabled === 'boolean') payload.geminiFolderEnabled = settings.folderEnabled;
     if (typeof settings.hideArchivedConversations === 'boolean') payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
     if (settings.resetPosition) payload.geminiTimelinePosition = null;
+    if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
     try {
       chrome.storage?.sync?.set(payload);
     } catch {}
@@ -86,6 +91,7 @@ export default function Popup() {
           geminiTimelineDraggable: false,
           geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
+          gvPromptCustomWebsites: [],
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -94,11 +100,70 @@ export default function Popup() {
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
-
+          setCustomWebsites(Array.isArray(res?.gvPromptCustomWebsites) ? res.gvPromptCustomWebsites : []);
         }
       );
     } catch {}
   }, []);
+
+  // Validate and normalize URL
+  const normalizeUrl = useCallback((url: string): string | null => {
+    try {
+      let normalized = url.trim().toLowerCase();
+      
+      // Remove protocol if present
+      normalized = normalized.replace(/^https?:\/\//, '');
+      
+      // Remove trailing slash
+      normalized = normalized.replace(/\/$/, '');
+      
+      // Remove www. prefix
+      normalized = normalized.replace(/^www\./, '');
+      
+      // Basic validation: must contain at least one dot and valid characters
+      if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(normalized)) {
+        return null;
+      }
+      
+      return normalized;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // Add website handler
+  const handleAddWebsite = useCallback(() => {
+    setWebsiteError('');
+    
+    if (!newWebsiteInput.trim()) {
+      return;
+    }
+    
+    const normalized = normalizeUrl(newWebsiteInput);
+    
+    if (!normalized) {
+      setWebsiteError(t('invalidUrl'));
+      return;
+    }
+    
+    // Check if already exists
+    if (customWebsites.includes(normalized)) {
+      setWebsiteError(t('invalidUrl'));
+      return;
+    }
+
+    const updatedWebsites = [...customWebsites, normalized];
+    setCustomWebsites(updatedWebsites);
+    apply({ customWebsites: updatedWebsites });
+    setNewWebsiteInput('');
+  }, [newWebsiteInput, customWebsites, normalizeUrl, apply, t]);
+
+  // Remove website handler
+  const handleRemoveWebsite = useCallback((website: string) => {
+    const updatedWebsites = customWebsites.filter(w => w !== website);
+    setCustomWebsites(updatedWebsites);
+    apply({ customWebsites: updatedWebsites });
+  }, [customWebsites, apply]);
 
   return (
     <div className="w-[360px] bg-background text-foreground">
@@ -133,44 +198,42 @@ export default function Popup() {
             <p className="text-xs text-primary font-medium">{t('geminiOnlyNotice')}</p>
           </div>
         </Card>
-        {/* Scroll Mode */}
-        <Card className="p-4 hover:shadow-lg transition-shadow">
-          <CardTitle className="mb-3 text-xs uppercase">{t('scrollMode')}</CardTitle>
-          <CardContent className="p-0">
-            <div className="relative grid grid-cols-2 rounded-lg bg-secondary/50 p-1 gap-1">
-              <div
-                className="absolute top-1 bottom-1 w-[calc(50%-6px)] rounded-md bg-primary shadow-md pointer-events-none transition-all duration-300 ease-out"
-                style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
-              />
-              <button
-                className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
-                  mode === 'flow' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-                onClick={() => {
-                  setMode('flow');
-                  apply({ mode: 'flow' });
-                }}
-              >
-                {t('flow')}
-              </button>
-              <button
-                className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
-                  mode === 'jump' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-                onClick={() => {
-                  setMode('jump');
-                  apply({ mode: 'jump' });
-                }}
-              >
-                {t('jump')}
-              </button>
-            </div>
-          </CardContent>
-        </Card>
         {/* Timeline Options */}
         <Card className="p-4 hover:shadow-lg transition-shadow">
           <CardTitle className="mb-4 text-xs uppercase">{t('timelineOptions')}</CardTitle>
           <CardContent className="p-0 space-y-4">
+            {/* Scroll Mode */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">{t('scrollMode')}</Label>
+              <div className="relative grid grid-cols-2 rounded-lg bg-secondary/50 p-1 gap-1">
+                <div
+                  className="absolute top-1 bottom-1 w-[calc(50%-6px)] rounded-md bg-primary shadow-md pointer-events-none transition-all duration-300 ease-out"
+                  style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
+                />
+                <button
+                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                    mode === 'flow' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => {
+                    setMode('flow');
+                    apply({ mode: 'flow' });
+                  }}
+                >
+                  {t('flow')}
+                </button>
+                <button
+                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                    mode === 'jump' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => {
+                    setMode('jump');
+                    apply({ mode: 'jump' });
+                  }}
+                >
+                  {t('jump')}
+                </button>
+              </div>
+            </div>
             <div className="flex items-center justify-between group">
               <Label htmlFor="hide-container" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
                 {t('hideOuterContainer')}
@@ -279,6 +342,73 @@ export default function Popup() {
           onChange={sidebarWidthAdjuster.handleChange}
           onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
         />
+
+        {/* Prompt Manager Options */}
+        <Card className="p-4 hover:shadow-lg transition-shadow">
+          <CardTitle className="mb-4 text-xs uppercase">{t('promptManagerOptions')}</CardTitle>
+          <CardContent className="p-0 space-y-3">
+            <div>
+              <Label className="text-sm font-medium mb-2 block">{t('customWebsites')}</Label>
+              <p className="text-xs text-muted-foreground mb-3">{t('customWebsitesHint')}</p>
+              
+              {/* Website List */}
+              {customWebsites.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {customWebsites.map((website) => (
+                    <div
+                      key={website}
+                      className="flex items-center justify-between bg-secondary/30 rounded-md px-3 py-2 group hover:bg-secondary/50 transition-colors"
+                    >
+                      <span className="text-sm font-mono text-foreground/90">{website}</span>
+                      <button
+                        onClick={() => handleRemoveWebsite(website)}
+                        className="text-xs text-destructive hover:text-destructive/80 font-medium opacity-70 group-hover:opacity-100 transition-opacity"
+                      >
+                        {t('removeWebsite')}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Add Website Input */}
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newWebsiteInput}
+                    onChange={(e) => {
+                      setNewWebsiteInput(e.target.value);
+                      setWebsiteError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddWebsite();
+                      }
+                    }}
+                    placeholder={t('customWebsitesPlaceholder')}
+                    className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  />
+                  <Button
+                    onClick={handleAddWebsite}
+                    size="sm"
+                    className="shrink-0"
+                  >
+                    {t('addWebsite')}
+                  </Button>
+                </div>
+                {websiteError && (
+                  <p className="text-xs text-destructive">{websiteError}</p>
+                )}
+              </div>
+              
+              {/* Note about reloading */}
+              <div className="mt-3 p-2 bg-primary/5 border border-primary/20 rounded-md">
+                <p className="text-xs text-muted-foreground">{t('customWebsitesNote')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Footer */}

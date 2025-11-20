@@ -31,6 +31,7 @@ export default defineConfig({
                             { text: '时间轴', link: '/guide/timeline' },
                             { text: '文件夹', link: '/guide/folders' },
                             { text: '灵感库', link: '/guide/prompts' },
+                            { text: '自定义网站', link: '/guide/custom-websites' },
                             { text: '导出', link: '/guide/export' },
                             { text: '设置', link: '/guide/settings' }
                         ]
@@ -65,6 +66,7 @@ export default defineConfig({
                             { text: 'Timeline Navigation', link: '/en/guide/timeline' },
                             { text: 'Folder Organization', link: '/en/guide/folders' },
                             { text: 'Prompt Library', link: '/en/guide/prompts' },
+                            { text: 'Custom Websites', link: '/en/guide/custom-websites' },
                             { text: 'Chat Export', link: '/en/guide/export' },
                             { text: 'Settings & Customization', link: '/en/guide/settings' }
                         ]

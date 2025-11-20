@@ -151,4 +151,15 @@
   ,"openOptionsPage": { "message": "打开选项页面", "description": "打开选项页面按钮" }
   ,"backupDataAccessNotice": { "message": "数据访问限制", "description": "备份数据访问限制标题" }
   ,"backupDataAccessHint": { "message": "由于浏览器安全限制，选项页面无法直接读取 Gemini 页面的提示词和文件夹数据。建议使用 Gemini 页面上的提示词管理器和文件夹导出功能进行手动备份。", "description": "备份数据访问限制说明" }
+  ,"promptManagerOptions": { "message": "提示词管理器", "description": "提示词管理器选项区域标签" }
+  ,"customWebsites": { "message": "自定义网站", "description": "提示词管理器的自定义网站" }
+  ,"customWebsitesPlaceholder": { "message": "输入网站 URL（例如：chatgpt.com）", "description": "自定义网站输入占位符" }
+  ,"customWebsitesHint": { "message": "添加您想要使用提示词管理器的网站。这些网站上只会激活提示词管理器功能。", "description": "自定义网站提示" }
+  ,"addWebsite": { "message": "添加网站", "description": "添加网站按钮" }
+  ,"removeWebsite": { "message": "移除", "description": "移除网站按钮" }
+  ,"invalidUrl": { "message": "URL 格式无效", "description": "无效 URL 错误消息" }
+  ,"websiteAdded": { "message": "网站已添加", "description": "网站添加成功消息" }
+  ,"websiteRemoved": { "message": "网站已移除", "description": "网站移除成功消息" }
+  ,"permissionDenied": { "message": "权限被拒绝。请允许访问此网站。", "description": "权限被拒绝错误消息" }
+  ,"customWebsitesNote": { "message": "注意：添加网站后，请刷新页面以使更改生效。自定义网站上只会激活提示词管理器。", "description": "自定义网站重新加载提示" }
 }

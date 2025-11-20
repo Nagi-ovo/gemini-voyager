@@ -151,5 +151,15 @@
   ,"openOptionsPage": { "message": "Open Options Page", "description": "Open options page button" }
   ,"backupDataAccessNotice": { "message": "Data Access Limitation", "description": "Backup data access limitation title" }
   ,"backupDataAccessHint": { "message": "Due to browser security restrictions, this Options page cannot directly access prompts and folder data from Gemini pages. Please use the Prompt Manager and Folder Export features on the Gemini page for manual backups.", "description": "Backup data access limitation explanation" }
-
+  ,"promptManagerOptions": { "message": "Prompt Manager", "description": "Prompt Manager options section label" }
+  ,"customWebsites": { "message": "Custom websites", "description": "Custom websites for prompt manager" }
+  ,"customWebsitesPlaceholder": { "message": "Enter website URL (e.g., chatgpt.com)", "description": "Custom websites input placeholder" }
+  ,"customWebsitesHint": { "message": "Add websites where you want to use the Prompt Manager. Only the Prompt Manager will be activated on these sites.", "description": "Custom websites hint" }
+  ,"addWebsite": { "message": "Add website", "description": "Add website button" }
+  ,"removeWebsite": { "message": "Remove", "description": "Remove website button" }
+  ,"invalidUrl": { "message": "Invalid URL format", "description": "Invalid URL error message" }
+  ,"websiteAdded": { "message": "Website added", "description": "Website added success message" }
+  ,"websiteRemoved": { "message": "Website removed", "description": "Website removed success message" }
+  ,"permissionDenied": { "message": "Permission denied. Please allow access to this website.", "description": "Permission denied error message" }
+  ,"customWebsitesNote": { "message": "Note: After adding websites, please reload the page for changes to take effect. Only the Prompt Manager will be activated on custom sites.", "description": "Custom websites reload note" }
 }

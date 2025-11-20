@@ -70,6 +70,7 @@ Save and reuse prompts:
 - Keyword search
 - Import/export as JSON
 - Available on Gemini and AI Studio
+- **NEW**: Add custom websites to use Prompt Manager anywhere
 
 <details>
 <summary>View screenshot</summary>

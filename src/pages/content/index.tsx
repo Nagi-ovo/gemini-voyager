@@ -31,6 +31,38 @@ let initialized = false;
 let initializationTimer: number | null = null;
 
 /**
+ * Check if current hostname matches any custom websites
+ */
+async function isCustomWebsite(): Promise<boolean> {
+  try {
+    const result = await chrome.storage?.sync?.get({ gvPromptCustomWebsites: [] });
+    const customWebsites = Array.isArray(result?.gvPromptCustomWebsites) ? result.gvPromptCustomWebsites : [];
+    
+    // Normalize current hostname
+    const currentHost = location.hostname.toLowerCase().replace(/^www\./, '');
+    
+    console.log('[Gemini Voyager] Checking custom websites:', {
+      currentHost,
+      customWebsites,
+      hostname: location.hostname
+    });
+    
+    const isCustom = customWebsites.some((website: string) => {
+      const normalizedWebsite = website.toLowerCase().replace(/^www\./, '');
+      const matches = currentHost === normalizedWebsite || currentHost.endsWith('.' + normalizedWebsite);
+      console.log('[Gemini Voyager] Comparing:', { currentHost, normalizedWebsite, matches });
+      return matches;
+    });
+    
+    console.log('[Gemini Voyager] Is custom website:', isCustom);
+    return isCustom;
+  } catch (e) {
+    console.error('[Gemini Voyager] Error checking custom websites:', e);
+    return false;
+  }
+}
+
+/**
  * Initialize all features sequentially to reduce simultaneous load
  */
 async function initializeFeatures(): Promise<void> {
@@ -41,6 +73,18 @@ async function initializeFeatures(): Promise<void> {
     // Sequential initialization with small delays between features
     // to further reduce simultaneous resource usage
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // Check if this is a custom website (only prompt manager should be enabled)
+    const isCustomSite = await isCustomWebsite();
+
+    if (isCustomSite) {
+      // Only start prompt manager for custom websites
+      console.log('[Gemini Voyager] Custom website detected, starting Prompt Manager only');
+      startPromptManager();
+      return;
+    }
+    
+    console.log('[Gemini Voyager] Not a custom website, checking for Gemini/AI Studio');
 
     if (location.hostname === 'gemini.google.com') {
       // Timeline is most resource-intensive, start it first
@@ -120,23 +164,55 @@ function handleVisibilityChange(): void {
 }
 
 // Main initialization logic
-try {
-  const delay = getInitializationDelay();
+(function() {
+  try {
+    // Quick check: only run on supported websites
+    const hostname = location.hostname.toLowerCase();
+    const isSupportedSite = 
+      hostname.includes('gemini.google.com') ||
+      hostname.includes('aistudio.google.com') ||
+      hostname.includes('aistudio.google.cn');
+    
+    // If not a known site, check if it's a custom website (async)
+    if (!isSupportedSite) {
+      // For unknown sites, check storage asynchronously
+      chrome.storage?.sync?.get({ gvPromptCustomWebsites: [] }, (result) => {
+        const customWebsites = Array.isArray(result?.gvPromptCustomWebsites) ? result.gvPromptCustomWebsites : [];
+        const currentHost = hostname.replace(/^www\./, '');
+        
+        const isCustomSite = customWebsites.some((website: string) => {
+          const normalizedWebsite = website.toLowerCase().replace(/^www\./, '');
+          return currentHost === normalizedWebsite || currentHost.endsWith('.' + normalizedWebsite);
+        });
+        
+        if (isCustomSite) {
+          console.log('[Gemini Voyager] Custom website detected:', hostname);
+          initializeFeatures();
+        } else {
+          // Not a supported site, exit early
+          console.log('[Gemini Voyager] Not a supported website, skipping initialization');
+        }
+      });
+      return;
+    }
 
-  if (delay === 0) {
-    // Immediate initialization for foreground tabs
-    initializeFeatures();
-  } else {
-    // Delayed initialization for background tabs
-    initializationTimer = window.setTimeout(() => {
-      initializationTimer = null;
+    const delay = getInitializationDelay();
+
+    if (delay === 0) {
+      // Immediate initialization for foreground tabs
       initializeFeatures();
-    }, delay);
+    } else {
+      // Delayed initialization for background tabs
+      initializationTimer = window.setTimeout(() => {
+        initializationTimer = null;
+        initializeFeatures();
+      }, delay);
+    }
+
+    // Listen for visibility changes to handle tab switching
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  } catch (e) {
+    console.error('[Gemini Voyager] Fatal initialization error:', e);
   }
-
-  // Listen for visibility changes to handle tab switching
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-
-} catch (e) {
-  console.error('[Gemini Voyager] Fatal initialization error:', e);
-}
+})();

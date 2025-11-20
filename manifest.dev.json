@@ -10,15 +10,13 @@
     {
       "resources": ["contentStyle.css", "dev-icon-128.png", "dev-icon-32.png", "icon-32.png", "icon-128.png"],
       "matches": [
-        "https://gemini.google.com/*",
-        "https://aistudio.google.com/*",
-        "https://aistudio.google.cn/*"
+        "<all_urls>"
       ]
     }
   ],
   "content_scripts": [
     {
-      "matches": ["https://gemini.google.com/*", "https://aistudio.google.com/*", "https://aistudio.google.cn/*"],
+      "matches": ["<all_urls>"],
       "js": ["src/pages/content/index.tsx"],
       "css": ["contentStyle.css"]
     }
@@ -26,7 +24,8 @@
   "host_permissions": [
     "https://*.googleusercontent.com/*",
     "https://lh3.google.com/*",
-    "https://*.ggpht.com/*"
+    "https://*.ggpht.com/*",
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "src/pages/background/index.ts",

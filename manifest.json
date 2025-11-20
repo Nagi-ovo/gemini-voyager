@@ -22,7 +22,8 @@
   "host_permissions": [
     "https://*.googleusercontent.com/*",
     "https://lh3.google.com/*",
-    "https://*.ggpht.com/*"
+    "https://*.ggpht.com/*",
+    "<all_urls>"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; worker-src 'self'"
@@ -34,9 +35,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://gemini.google.com/*",
-        "https://aistudio.google.com/*",
-        "https://aistudio.google.cn/*"
+        "<all_urls>"
       ],
       "js": [
         "src/pages/content/index.tsx"
@@ -54,9 +53,7 @@
         "icon-32.png"
       ],
       "matches": [
-        "https://gemini.google.com/*",
-        "https://aistudio.google.com/*",
-        "https://aistudio.google.cn/*"
+        "<all_urls>"
       ]
     }
   ]

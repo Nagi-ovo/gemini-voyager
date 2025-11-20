@@ -10,7 +10,7 @@ It just feels right.
 - **Instant Sync**: Organize on your desktop. See it on your laptop.
 
 ## Pro Tips
-- **Multi-Select**: Hold `Shift` to select multiple chats and move them all at once.
+- **Multi-Select**: Long-press a conversation to enter multi-select mode, then select multiple chats and move them all at once.
 - **Renaming**: Double-click any folder to rename it.
 - **Icons**: We automatically detect the Gem type (Coding, Creative, etc.) and assign the right icon. You don't have to do a thing.
 

@@ -70,6 +70,7 @@
 - 关键词搜索
 - 支持 JSON 导入/导出
 - 在 Gemini 和 AI Studio 均可使用
+- **新功能**：添加自定义网站，在任何地方使用提示词管理器
 
 <details>
 <summary>查看截图</summary>

@@ -2,9 +2,9 @@ import browser from 'webextension-polyfill';
 
 import type { Folder, FolderData, ConversationReference, DragData } from './types';
 
-import { storageService } from '@/core/services/StorageService';
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
+import { storageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
 import { initI18n, createTranslator } from '@/utils/i18n';
 
