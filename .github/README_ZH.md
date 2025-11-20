@@ -1,8 +1,11 @@
 <div align="center">
   <img src="../public/icon-128.png" alt="logo"/>
   <h1>Gemini Voyager</h1>
-  <h3>让 Gemini 体验更上一层楼 ✨</h3>
-  <p>优雅的时间线导航、文件夹管理对话、保存常用提示词——这一个强大的扩展就够了</p>
+  <h3>打造属于你的 Gemini 体验 ✨</h3>
+  <p>
+    优雅的时间线导航、文件夹管理对话、构建专属提示词库。<br>
+    <b>这是 Google Gemini 缺失的那块拼图。</b>
+  </p>
   
   <p>
     <img src="https://img.shields.io/badge/Chrome-✓-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome">
@@ -21,32 +24,52 @@
 
 ---
 
-## 功能特性
+## 👋 为什么开发 Gemini Voyager？
+
+我们都很喜欢 Gemini，但有时候总觉得它少了一点"秩序感"。
+
+这就是我们开发 **Gemini Voyager** 的初衷。它不仅仅是一个工具，更是一个能帮你把 AI 对话变得井井有条、触手可及的得力助手。无论你是需要处理大量对话的研究人员，还是喜欢收藏代码片段的开发者，亦或是单纯的整理控，Voyager 都是为你准备的。
+
+---
+
+## 📚 目录
+
+- [功能特性](#-功能特性)
+  - [时间线导航](#-时间线导航)
+  - [文件夹管理](#-文件夹管理)
+  - [提示词库](#-提示词库)
+  - [公式复制](#-公式复制)
+  - [对话导出](#-对话导出)
+  - [对话宽度调整](#-对话宽度调整)
+- [安装方式](#-安装方式)
+- [开发者指南](#-开发者指南)
+- [参与贡献](#-参与贡献)
+- [支持本项目](#-支持本项目)
+
+---
+
+## ✨ 功能特性
 
 <div align="center">
   <img src="../docs/public/assets/teaser.png" alt="teaser"/>
 </div>
 
 ### 📍 时间线导航
-
-通过可视化节点导航对话：
-- 点击节点跳转到对应消息
-- 悬停预览消息内容
-- 长按标记重要消息（跨标签页同步）
-- 可拖拽时间线位置
-- 自动跟随滚动位置
+**再也不在长对话中迷路。**
+通过可视化的节点，一眼看清对话结构。
+- **瞬间跳转**：点击节点即可直接滚动到对应消息。
+- **快速预览**：鼠标悬停即可查看内容，无需来回滚动。
+- **标记重点**：长按节点即可星标重要消息（跨标签页同步！）。
 
 ### 📂 文件夹管理
-
-通过拖放操作管理对话：
-- 两级层级结构（文件夹和子文件夹）
-- 双击重命名，长按多选
-- 自动识别 Gem 类型并显示图标
-- 支持导入/导出，跨设备同步（[使用指南](./docs/IMPORT_EXPORT_GUIDE_ZH.md)）
-- 在 Gemini 和 AI Studio 均可使用
+**让灵感井井有条。**
+告别杂乱无章的历史记录列表。将你的对话拖拽到文件夹中，按照你的逻辑进行分类。
+- **两级层级**：支持文件夹和子文件夹，满足深度整理需求。
+- **轻松管理**：双击重命名，长按多选。
+- **多端同步**：支持导入/导出，让你的整理成果在不同设备间无缝衔接。
 
 <details>
-<summary>查看截图</summary>
+<summary>👀 查看演示</summary>
 
 <table>
   <tr>
@@ -64,16 +87,13 @@
 </details>
 
 ### 💡 提示词库
-
-保存和复用提示词：
-- 基于标签的组织方式
-- 关键词搜索
-- 支持 JSON 导入/导出
-- 在 Gemini 和 AI Studio 均可使用
-- **新功能**：添加自定义网站，在任何地方使用提示词管理器
+**你的私人提示词宝库。**
+不要重复编写相同的指令。保存你最常用的提示词，随时随地调用。
+- **标签与搜索**：通过标签分类，秒级找到你需要的提示词。
+- **全网通用**：不仅支持 Gemini 和 AI Studio，现在更支持添加**自定义网站**，在任何网页使用提示词管理器。
 
 <details>
-<summary>查看截图</summary>
+<summary>👀 查看截图</summary>
 
 <div align="center">
   <img src="../docs/public/assets/gemini-prompt-manager.png" alt="提示词管理器" style="max-width: 100%;"/>
@@ -82,14 +102,11 @@
 </details>
 
 ### 📐 公式复制
-
-点击 LaTeX/MathJax 公式复制源代码：
-- 一键复制公式源码
-- 支持行内和独立显示公式
-- 复制成功视觉反馈
+**理科生的福音。**
+看到漂亮的 LaTeX 公式想复用？点击一下即可复制源代码，告别手动敲击。
 
 <details>
-<summary>查看截图</summary>
+<summary>👀 查看截图</summary>
 
 <div align="center">
   <img src="../docs/public/assets/gemini-math-copy.png" alt="公式复制" style="max-width: 100%;"/>
@@ -97,17 +114,15 @@
 
 </details>
 
-### 💾 对话导出（JSON + Markdown/PDF）
-
-将对话导出为：
-- 结构化 JSON
-- Markdown/PDF（图片自动打包至 `assets/`，打印样式优化）
-- 点击 Gemini 徽标旁的导出图标
-- 保留星标消息
-- 自动移除界面标签（如"显示思路"）
+### 💾 对话导出
+**你的数据，你做主。**
+将对话以你需要的格式保存下来。
+- **多种格式**：结构化的 JSON 或适合打印阅读的 Markdown/PDF。
+- **干净纯粹**：自动移除界面上的无关元素，只保留核心内容。
+- **完整无缺**：图片会自动打包到 `assets/` 文件夹中。
 
 <details>
-<summary>查看导出指南</summary>
+<summary>👀 查看导出指南</summary>
 
 <table>
   <tr>
@@ -124,25 +139,10 @@
 
 </details>
 
-<details>
-<summary>导出格式示例</summary>
-
-```json
-{
-  "format": "gemini-voyager.chat.v1",
-  "url": "https://gemini.google.com/app/...",
-  "exportedAt": "2025-01-01T12:34:56.000Z",
-  "count": 3,
-  "items": [
-    { "user": "...", "assistant": "...", "starred": true }
-  ]
-}
-```
-</details>
-
 ### 📏 对话宽度调整
 
-自定义对话区域宽度（400px - 1400px），支持实时预览。
+**怎么舒服怎么来。**
+屏幕够大？那就利用起来。自定义对话框宽度（400px - 1400px），找到最适合你的阅读体验。
 
 > **设置面板**：点击扩展图标调整滚动模式、对话宽度和时间线选项。
 
@@ -282,14 +282,6 @@ bun run build:safari   # Safari
 bun run build:all      # 所有浏览器
 ```
 
-或使用 npm/pnpm：
-```bash
-pnpm install
-pnpm run dev:chrome    # Chrome
-pnpm run dev:firefox   # Firefox
-pnpm run dev:safari    # Safari（仅限 macOS）
-```
-
 ### Safari 开发
 
 Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/README_ZH.md) 了解：
@@ -324,7 +316,7 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
 
 ## ☕ 支持本项目
 
-如果你觉得 **Gemini Voyager** 对你有帮助，欢迎请我喝杯咖啡！你的支持能让这个项目持续发展。
+如果 Gemini Voyager 让你的工作效率提升了，不妨请我喝杯咖啡，这将支持我持续维护和更新！
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -350,23 +342,15 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
 
 ---
 
-## Star History
-
-<a href="https://www.star-history.com/#Nagi-ovo/gemini-voyager&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
- </picture>
-</a>
-
----
-
 <div align="center">
-  <p>用 ❤️ 为 Gemini 社区打造</p>
-  <p>觉得有用的话，请给我们点个 ⭐ 吧！</p>
-</div>
-
-<div align="center">
-  <sub>MIT License © 2025 Jesse Zhang</sub>
+  <a href="https://www.star-history.com/#Nagi-ovo/gemini-voyager&type=date&legend=top-left">
+   <picture>
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
+   </picture>
+  </a>
+  
+  <p>Made with ❤️ by Jesse Zhang</p>
+  <sub>MIT License © 2025</sub>
 </div>

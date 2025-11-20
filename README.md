@@ -1,8 +1,11 @@
 <div align="center">
   <img src="public/icon-128.png" alt="logo"/>
   <h1>Gemini Voyager</h1>
-  <h3>Supercharge Your Gemini Experience ✨</h3>
-  <p>Navigate conversations with an elegant timeline, organize chats with folders, and save your favorite prompts—all in one powerful extension.</p>
+  <h3>Make Your Gemini Experience Truly Yours ✨</h3>
+  <p>
+    Navigate conversations with an elegant timeline, organize chats with folders, and build your own prompt library.<br>
+    <b>It's the missing power-up for Google Gemini.</b>
+  </p>
   
   <p>
     <img src="https://img.shields.io/badge/Chrome-✓-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome">
@@ -21,32 +24,52 @@
 
 ---
 
-## Features
+## 👋 Why Gemini Voyager?
+
+We love Gemini, but sometimes we wish it had just a *bit* more structure. 
+
+That's why we built **Gemini Voyager**. It's not just a tool; it's a companion that helps you keep your AI conversations organized, accessible, and productive. Whether you're a researcher juggling dozens of threads, a developer saving code snippets, or just someone who loves order, Voyager is designed for you.
+
+---
+
+## 📚 Table of Contents
+
+- [Features](#-features)
+  - [Timeline Navigation](#-timeline-navigation)
+  - [Folder Organization](#-folder-organization)
+  - [Prompt Library](#-prompt-library)
+  - [Formula Copy](#-formula-copy)
+  - [Chat Export](#-chat-export)
+  - [Adjustable Width](#-adjustable-chat-width)
+- [Installation](#-installation)
+- [For Developers](#-for-developers)
+- [Contributing](#-contributing)
+- [Support](#-support-this-project)
+
+---
+
+## ✨ Features
 
 <div align="center">
   <img src="docs/public/assets/teaser.png" alt="teaser"/>
 </div>
 
 ### 📍 Timeline Navigation
-
-Visual conversation navigation with clickable message nodes:
-- Click nodes to jump to messages
-- Hover for message preview
-- Long-press to star important messages (synced across tabs)
-- Draggable timeline position
-- Auto-syncs with scroll position
+**Never get lost in a long conversation again.**
+Visual nodes let you see the structure of your chat at a glance.
+- **Jump instantly**: Click a node to scroll right to that message.
+- **Peek content**: Hover to see what was said without scrolling.
+- **Mark what matters**: Long-press to star important messages (synced across tabs!).
 
 ### 📂 Folder Organization
-
-Organize conversations with drag-and-drop folders:
-- Two-level hierarchy (folders and subfolders)
-- Double-click to rename, long-press to multi-select
-- Auto-detects Gem types and displays icons
-- Import/export for cross-device sync ([guide](.github/docs/IMPORT_EXPORT_GUIDE.md))
-- Available on both Gemini and AI Studio
+**Keep your ideas sorted.**
+Stop digging through a messy history list. Drag and drop your chats into folders that make sense to you.
+- **Two-level hierarchy**: Folders and subfolders for deep organization.
+- **Easy management**: Double-click to rename, long-press to multi-select.
+- **Syncs everywhere**: Import/export your structure to keep your devices in sync.
 
 <details>
-<summary>View screenshots</summary>
+<summary>👀 See it in action</summary>
 
 <table>
   <tr>
@@ -64,16 +87,13 @@ Organize conversations with drag-and-drop folders:
 </details>
 
 ### 💡 Prompt Library
-
-Save and reuse prompts:
-- Tag-based organization
-- Keyword search
-- Import/export as JSON
-- Available on Gemini and AI Studio
-- **NEW**: Add custom websites to use Prompt Manager anywhere
+**Your personal prompt arsenal.**
+Don't rewrite the same instructions. Save your best prompts and use them anywhere.
+- **Tag & Search**: Find the right prompt in seconds.
+- **Universal Access**: Works on Gemini, AI Studio, and now **any website** you choose.
 
 <details>
-<summary>View screenshot</summary>
+<summary>👀 View screenshot</summary>
 
 <div align="center">
   <img src="docs/public/assets/gemini-prompt-manager.png" alt="Prompt manager" style="max-width: 100%;"/>
@@ -82,14 +102,11 @@ Save and reuse prompts:
 </details>
 
 ### 📐 Formula Copy
-
-Click LaTeX/MathJax formulas to copy source code:
-- One-click copy of formula source
-- Works with inline and display math
-- Visual feedback on copy success
+**For the math wizards.**
+See a beautiful LaTeX formula? One click copies the source code. No more manual re-typing.
 
 <details>
-<summary>View screenshot</summary>
+<summary>👀 View screenshot</summary>
 
 <div align="center">
   <img src="docs/public/assets/gemini-math-copy.png" alt="Formula copy" style="max-width: 100%;"/>
@@ -97,17 +114,15 @@ Click LaTeX/MathJax formulas to copy source code:
 
 </details>
 
-### 💾 Chat Export (JSON + Markdown/PDF)
-
-Export conversations as:
-- Structured JSON
-- Markdown/PDF (images auto-packaged into `assets/`, print-friendly)
-- Click export icon next to Gemini logo
-- Preserves starred messages
-- Removes UI noise (labels like "Show thinking")
+### 💾 Chat Export
+**Your data, your format.**
+Take your conversations with you.
+- **Formats**: Structured JSON or print-friendly Markdown/PDF.
+- **Clean**: We strip out the UI noise so you get just the content.
+- **Complete**: Images are automatically packaged into an `assets/` folder.
 
 <details>
-<summary>View export guide</summary>
+<summary>👀 View export guide</summary>
 
 <table>
   <tr>
@@ -124,25 +139,10 @@ Export conversations as:
 
 </details>
 
-<details>
-<summary>Export format example</summary>
-
-```json
-{
-  "format": "gemini-voyager.chat.v1",
-  "url": "https://gemini.google.com/app/...",
-  "exportedAt": "2025-01-01T12:34:56.000Z",
-  "count": 3,
-  "items": [
-    { "user": "...", "assistant": "...", "starred": true }
-  ]
-}
-```
-</details>
-
 ### 📏 Adjustable Chat Width
 
-Customize chat container width (400px - 1400px) with real-time preview.
+**Read comfortably.**
+Wide screen? Make use of it. Customize the chat container width (400px - 1400px) to suit your reading preference.
 
 > **Settings**: Click the extension icon for scroll mode, chat width, and timeline options.
 
@@ -282,14 +282,6 @@ bun run build:safari   # Safari
 bun run build:all      # All browsers
 ```
 
-Or with npm/pnpm:
-```bash
-pnpm install
-pnpm run dev:chrome    # Chrome
-pnpm run dev:firefox   # Firefox
-pnpm run dev:safari    # Safari (macOS only)
-```
-
 ### Safari Development
 
 Safari requires additional build steps. See [safari/README.md](safari/README.md) for:
@@ -326,14 +318,13 @@ Thank you for helping make Gemini Voyager better! ❤️
 
 ## ☕ Support This Project
 
-If you find **Gemini Voyager** helpful and want to support its development, consider buying me a coffee! Your support helps keep this project alive and growing.
+If Gemini Voyager makes your life easier, consider buying me a coffee. It helps keep the updates coming!
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
     <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" >
   </a>
-</div>
-
+  
 <div align="center">
   <p><b>Or support via WeChat / Alipay:</b></p>
   <table>
@@ -352,23 +343,15 @@ If you find **Gemini Voyager** helpful and want to support its development, cons
 
 ---
 
-## Star History
-
-<a href="https://www.star-history.com/#Nagi-ovo/gemini-voyager&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
- </picture>
-</a>
-
----
-
 <div align="center">
-  <p>Made with ❤️ for the Gemini community</p>
-  <p>If you find this useful, consider giving us a ⭐ on GitHub!</p>
-</div>
-
-<div align="center">
-  <sub>MIT License © 2025 Jesse Zhang</sub>
+  <a href="https://www.star-history.com/#Nagi-ovo/gemini-voyager&type=date&legend=top-left">
+   <picture>
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
+   </picture>
+  </a>
+  
+  <p>Made with ❤️ by Jesse Zhang</p>
+  <sub>MIT License © 2025</sub>
 </div>
