@@ -3,6 +3,8 @@ import browser from 'webextension-polyfill';
 import type { Folder, FolderData, ConversationReference, DragData } from './types';
 
 import { storageService } from '@/core/services/StorageService';
+import { DataBackupService } from '@/core/services/DataBackupService';
+import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
 import { initI18n, createTranslator } from '@/utils/i18n';
 
@@ -57,6 +59,20 @@ function uid(): string {
   return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }
 
+const NOTIFICATION_TIMEOUT_MS = 5000;
+
+/**
+ * Validate folder data structure
+ */
+function validateFolderData(data: any): boolean {
+  return (
+    data &&
+    typeof data === 'object' &&
+    Array.isArray(data.folders) &&
+    typeof data.folderContents === 'object'
+  );
+}
+
 export class AIStudioFolderManager {
   private t: (key: string) => string = (k) => k;
   private data: FolderData = { folders: [], folderContents: {} };
@@ -65,6 +81,7 @@ export class AIStudioFolderManager {
   private cleanupFns: Array<() => void> = [];
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
+  private backupService!: DataBackupService<FolderData>; // Initialized in init()
 
   // Helper to create a ligature icon span with a data-icon attribute
   private createIcon(name: string): HTMLSpanElement {
@@ -78,6 +95,28 @@ export class AIStudioFolderManager {
   async init(): Promise<void> {
     await initI18n();
     this.t = createTranslator();
+
+    // Initialize backup service
+    this.backupService = new DataBackupService<FolderData>(
+      'aistudio-folders',
+      validateFolderData
+    );
+
+    // Setup automatic backup before page unload
+    this.backupService.setupBeforeUnloadBackup(() => this.data);
+
+    // Initialize storage quota monitor
+    const storageMonitor = getStorageMonitor({
+      checkIntervalMs: 120000, // Check every 2 minutes (less frequent for AI Studio)
+    });
+
+    // Use custom notification callback to match our style
+    storageMonitor.setNotificationCallback((message, level) => {
+      this.showNotification(message, level);
+    });
+
+    // Start monitoring
+    storageMonitor.startMonitoring();
 
     // Only enable on prompts routes
     if (!/\/prompts(\/|$)/.test(location.pathname)) return;
@@ -116,20 +155,40 @@ export class AIStudioFolderManager {
   private async load(): Promise<void> {
     try {
       const res = await storageService.get<FolderData>(this.STORAGE_KEY);
-      if (res.success && res.data) {
+      if (res.success && res.data && validateFolderData(res.data)) {
         this.data = res.data;
+        // Create primary backup on successful load
+        this.backupService.createPrimaryBackup(this.data);
+        console.log('[AIStudioFolderManager] Data loaded successfully');
       } else {
-        this.data = { folders: [], folderContents: {} };
+        // Don't immediately clear data - try to recover from backup
+        console.warn('[AIStudioFolderManager] Storage returned no data, attempting recovery from backup');
+        this.attemptDataRecovery(null);
       }
-    } catch {
-      this.data = { folders: [], folderContents: {} };
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Load error:', error);
+      // CRITICAL: Don't clear data on error - attempt recovery from backup
+      this.attemptDataRecovery(error);
     }
   }
 
   private async save(): Promise<void> {
     try {
+      // Create emergency backup BEFORE saving (snapshot of previous state)
+      this.backupService.createEmergencyBackup(this.data);
+
+      // Attempt to save to main storage
       await storageService.set<FolderData>(this.STORAGE_KEY, this.data);
-    } catch {}
+
+      // Create primary backup AFTER successful save
+      this.backupService.createPrimaryBackup(this.data);
+
+      console.log('[AIStudioFolderManager] Data saved successfully');
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Save error:', error);
+      // Show error notification to user
+      this.showErrorNotification('Failed to save folder data. Changes may not be persisted.');
+    }
   }
 
   private injectUI(): void {
@@ -687,6 +746,93 @@ export class AIStudioFolderManager {
       if (this.container) {
         this.container.style.display = 'none';
       }
+    }
+  }
+
+  /**
+   * Attempt to recover data when load() fails
+   * Uses multi-layer backup system: primary > emergency > beforeUnload > in-memory
+   */
+  private attemptDataRecovery(error: unknown): void {
+    console.warn('[AIStudioFolderManager] Attempting data recovery after load failure');
+
+    // Step 1: Try to restore from localStorage backups (primary, emergency, beforeUnload)
+    const recovered = this.backupService.recoverFromBackup();
+    if (recovered && validateFolderData(recovered)) {
+      this.data = recovered;
+      console.warn('[AIStudioFolderManager] Data recovered from localStorage backup');
+      this.showNotification('Folder data recovered from backup', 'warning');
+      // Try to save recovered data to persistent storage
+      this.save();
+      return;
+    }
+
+    // Step 2: Keep existing in-memory data if it exists and is valid
+    if (validateFolderData(this.data) && this.data.folders.length > 0) {
+      console.warn('[AIStudioFolderManager] Keeping existing in-memory data after load error');
+      this.showErrorNotification('Failed to load folder data, using cached version');
+      return;
+    }
+
+    // Step 3: Last resort - initialize empty data and notify user
+    console.error('[AIStudioFolderManager] All recovery attempts failed, initializing empty data');
+    this.data = { folders: [], folderContents: {} };
+    this.showErrorNotification('Failed to load folder data. All folders have been reset.');
+  }
+
+  /**
+   * Show an error notification to the user
+   * @deprecated Use showNotification() instead for better level support
+   */
+  private showErrorNotification(message: string): void {
+    this.showNotification(message, 'error');
+  }
+
+  /**
+   * Show a notification to the user with customizable level
+   */
+  private showNotification(message: string, level: 'info' | 'warning' | 'error' = 'error'): void {
+    try {
+      const notification = document.createElement('div');
+      notification.className = `gv-notification gv-notification-${level}`;
+      notification.textContent = `[Gemini Voyager] ${message}`;
+
+      // Color based on level
+      const colors = {
+        info: '#2196F3',
+        warning: '#FF9800',
+        error: '#f44336',
+      };
+
+      // Apply inline styles for visibility
+      const style = notification.style;
+      style.position = 'fixed';
+      style.top = '20px';
+      style.right = '20px';
+      style.padding = '12px 20px';
+      style.background = colors[level];
+      style.color = 'white';
+      style.borderRadius = '4px';
+      style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+      style.zIndex = String(2147483647);
+      style.maxWidth = '400px';
+      style.fontSize = '14px';
+      style.fontFamily = 'system-ui, -apple-system, sans-serif';
+      style.lineHeight = '1.4';
+
+      document.body.appendChild(notification);
+
+      // Auto-remove after timeout (longer for errors/warnings)
+      const timeout = level === 'info' ? 3000 : level === 'warning' ? 7000 : NOTIFICATION_TIMEOUT_MS;
+      setTimeout(() => {
+        try {
+          document.body.removeChild(notification);
+        } catch {
+          // Element might already be removed
+        }
+      }, timeout);
+    } catch (notificationError) {
+      console.error('[AIStudioFolderManager] Failed to show notification:', notificationError);
     }
   }
 }
