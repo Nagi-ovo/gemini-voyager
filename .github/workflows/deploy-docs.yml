@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'docs/**'
+      - '.vitepress/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'bun.lock'
   workflow_dispatch:
 
 permissions:
