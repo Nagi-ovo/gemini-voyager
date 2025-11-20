@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for Gemini Voyager
 
-> **Last Updated**: 2025-11-18
-> **Version**: 0.9.5
+> **Last Updated**: 2025-11-20
+> **Version**: 0.9.6
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
 
 ---
@@ -78,10 +78,10 @@ gemini-voyager/
 │   │   ├── panel/                # Side panel (placeholder)
 │   │   └── devtools/             # DevTools page (placeholder)
 │   ├── core/                     # Core business logic
-│   │   ├── services/             # StorageService, LoggerService, DOMService
+│   │   ├── services/             # StorageService, LoggerService, DOMService, DataBackupService, StorageMonitor
 │   │   ├── types/                # TypeScript type definitions
 │   │   ├── errors/               # Custom error classes
-│   │   └── utils/                # Utility functions
+│   │   └── utils/                # Utility functions (concurrency, storageMigration, etc.)
 │   ├── features/                 # Shared feature modules
 │   │   ├── export/               # Chat export (JSON, MD, PDF)
 │   │   ├── folder/               # Folder system logic
@@ -99,6 +99,7 @@ gemini-voyager/
 ├── public/                       # Static assets (icons, CSS)
 ├── scripts/                      # Build scripts (Safari)
 ├── safari/                       # Safari-specific code
+├── docs/                         # VitePress documentation
 ├── .github/                      # GitHub workflows, docs, templates
 ├── vite.config.*.ts             # Build configs (base, chrome, firefox, safari)
 ├── manifest.json                # Production manifest (MV3)
@@ -106,7 +107,9 @@ gemini-voyager/
 ├── package.json                 # Dependencies and scripts
 ├── tsconfig.json                # TypeScript configuration
 ├── vitest.config.ts             # Testing configuration
-└── custom-vite-plugins.ts       # Custom Vite plugins
+├── custom-vite-plugins.ts       # Custom Vite plugins
+├── CLAUDE.md                    # AI assistant guide (this file)
+└── TESTING_GUIDE.md             # Data loss prevention testing guide
 ```
 
 ### Key Directories Explained
@@ -114,7 +117,7 @@ gemini-voyager/
 | Directory | Purpose | When to Modify |
 |-----------|---------|----------------|
 | `src/pages/content/` | Content scripts injected into Gemini/AI Studio | Adding/modifying features visible on the Gemini site |
-| `src/core/services/` | Business logic services (storage, logging, DOM) | Changing storage strategy, logging behavior |
+| `src/core/services/` | Business logic services (storage, logging, DOM, backup, monitoring) | Changing storage strategy, logging behavior, backup mechanism, quota monitoring |
 | `src/core/types/` | TypeScript type definitions | Adding new data structures |
 | `src/features/export/` | Multi-format export functionality | Changing export formats or behavior |
 | `src/features/backup/` | Auto-backup with File System API/JSZip fallback | Changing backup strategy, adding backup targets |
@@ -130,7 +133,7 @@ gemini-voyager/
 ### Design Patterns Used
 
 1. **Service Pattern**
-   - `StorageService`, `LoggerService`, `DOMService` - Centralized business logic
+   - `StorageService`, `LoggerService`, `DOMService`, `DataBackupService`, `StorageMonitor` - Centralized business logic
    - Singleton instances with factory methods
    - Example: `src/core/services/StorageService.ts`
 
@@ -140,7 +143,7 @@ gemini-voyager/
 
 3. **Repository Pattern**
    - Abstracted storage access via `StorageService`
-   - Multiple implementations: `ChromeStorageService`, `LocalStorageService`
+   - Multiple implementations: `ChromeStorageService`, `ChromeLocalStorageService`, `LocalStorageService`
 
 4. **Observer Pattern**
    - `MutationObserver` for DOM change detection
@@ -197,26 +200,57 @@ throw new StorageError('Failed to save folder data', {
 
 ### Storage Architecture
 
-**Factory Pattern**: Automatically falls back to LocalStorage if Chrome Storage fails
+**Factory Pattern**: Automatically selects appropriate storage implementation
 
 ```typescript
 const storage = await createStorageService(); // Auto-selects implementation
 ```
 
-**Storage Keys**: Centralized in `src/core/types/common.ts` (`StorageKeys` object)
-- `gvFolderData` - Folder structure (Gemini)
-- `gvFolderDataAIStudio` - Folder structure (AI Studio)
-- `geminiTimelineScrollMode` - Timeline scroll mode setting
-- `geminiTimelineHideContainer` - Timeline visibility setting
-- `geminiTimelineDraggable` - Timeline draggable state
-- `geminiTimelinePosition` - Timeline position coordinates
-- `geminiChatWidth` - Chat container width
-- `geminiSidebarWidth` - Sidebar width setting
-- `language` - UI language preference
+**Storage Implementations**:
+- **ChromeStorageService**: `chrome.storage.sync` for settings (100KB quota, cross-device sync)
+- **ChromeLocalStorageService**: `chrome.storage.local` for large data (5-10MB quota, per-device)
+- **LocalStorageService**: Fallback using browser `localStorage`
 
-**Note**: Some features use storage keys not in the central `StorageKeys` object:
-- Prompt Manager: `gvPromptItems`, `gvPromptPanelLocked`
+**Storage Strategy**:
+- **Sync Storage** (`chrome.storage.sync`): UI preferences, settings (language, width, positions)
+- **Local Storage** (`chrome.storage.local`): Large data like prompts (shared across gemini.google.com and aistudio.google.com)
+- **localStorage** (browser): Multi-layer backup system via `DataBackupService`
+
+**Storage Keys**: Centralized in `src/core/types/common.ts` (`StorageKeys` object)
+- `FOLDER_DATA` (`gvFolderData`) - Folder structure (Gemini)
+- `FOLDER_DATA_AISTUDIO` (`gvFolderDataAIStudio`) - Folder structure (AI Studio)
+- `TIMELINE_SCROLL_MODE` (`geminiTimelineScrollMode`) - Timeline scroll mode setting
+- `TIMELINE_HIDE_CONTAINER` (`geminiTimelineHideContainer`) - Timeline visibility setting
+- `TIMELINE_DRAGGABLE` (`geminiTimelineDraggable`) - Timeline draggable state
+- `TIMELINE_POSITION` (`geminiTimelinePosition`) - Timeline position coordinates
+- `CHAT_WIDTH` (`geminiChatWidth`) - Chat container width
+- `PROMPT_ITEMS` (`gvPromptItems`) - Prompt library data
+- `PROMPT_PANEL_LOCKED` (`gvPromptPanelLocked`) - Prompt panel lock state
+- `PROMPT_PANEL_POSITION` (`gvPromptPanelPosition`) - Prompt panel position
+- `PROMPT_TRIGGER_POSITION` (`gvPromptTriggerPosition`) - Prompt trigger position
+- `LANGUAGE` (`language`) - UI language preference
+
+**Note**: Some features still use storage keys not in the central `StorageKeys` object:
+- Sidebar Width: `geminiSidebarWidth` (not centralized yet)
 - Backup Service: `gvBackupConfig` (defined in `src/features/backup/types/backup.ts`)
+
+**Data Protection Features**:
+1. **DataBackupService** (`src/core/services/DataBackupService.ts`)
+   - Multi-layer localStorage backup (primary, emergency, beforeUnload)
+   - Timestamp validation (7-day expiry)
+   - Automatic page unload backup
+   - Recovery priority: primary → emergency → beforeUnload → in-memory
+
+2. **StorageMonitor** (`src/core/services/StorageMonitor.ts`)
+   - Proactive storage quota monitoring
+   - Multi-level warnings (80%, 90%, 95%)
+   - User notifications with usage details
+   - Configurable check intervals
+
+3. **Storage Migration** (`src/core/utils/storageMigration.ts`)
+   - Automatic migration from localStorage to chrome.storage.local
+   - Non-destructive (preserves localStorage as backup)
+   - Idempotent migration (skips already-migrated keys)
 
 **Concurrency**: Uses `AsyncLock` to prevent race conditions during import/export operations
 
@@ -781,9 +815,12 @@ For manifest differences, use separate configs:
 | File | Purpose | Key Exports |
 |------|---------|-------------|
 | `src/pages/content/index.tsx` | Content script orchestrator | Feature initialization |
-| `src/core/services/StorageService.ts` | Storage abstraction | `createStorageService()`, storage methods |
+| `src/core/services/StorageService.ts` | Storage abstraction with sync/local support | `createStorageService()`, `ChromeLocalStorageService` |
+| `src/core/services/DataBackupService.ts` | Multi-layer localStorage backup system | `DataBackupService`, backup/recovery methods |
+| `src/core/services/StorageMonitor.ts` | Storage quota monitoring with warnings | `StorageMonitor`, `startMonitoring()` |
 | `src/core/services/LoggerService.ts` | Centralized logging | `logger.info()`, `logger.error()` |
-| `src/core/types/common.ts` | Shared type definitions | Brand types, utility types |
+| `src/core/types/common.ts` | Shared type definitions and storage keys | Brand types, `StorageKeys` object |
+| `src/core/utils/storageMigration.ts` | Auto-migration from localStorage | `migrateToExtensionStorage()` |
 | `src/core/errors/index.ts` | Error classes | `AppError`, `StorageError`, etc. |
 | `src/features/export/ConversationExportService.ts` | Chat export logic | `exportConversation()` |
 | `src/features/backup/services/BackupService.ts` | Auto-backup with File System API | `backupService`, `createBackup()` |
@@ -799,7 +836,21 @@ For manifest differences, use separate configs:
 | `custom-vite-plugins.ts` | Custom Vite plugins (i18n, icon stripping) |
 | `nodemon.*.json` | Hot reload configuration for dev mode |
 | `scripts/build-safari.ts` | Safari-specific build script |
-| `.github/workflows/` | CI/CD workflows (not present, recommend adding) |
+| `TESTING_GUIDE.md` | Comprehensive testing guide for data loss prevention features |
+| `.github/workflows/` | CI/CD workflows for documentation deployment |
+
+### Documentation Files
+
+| File | Purpose |
+|------|---------|
+| `CLAUDE.md` | AI assistant guide (this file) |
+| `README.md` | Main user-facing documentation |
+| `TESTING_GUIDE.md` | Testing guide for data protection features |
+| `docs/` | VitePress documentation site |
+| `.github/CONTRIBUTING.md` | Contribution guidelines |
+| `.github/docs/safari/INSTALLATION.md` | Safari installation guide |
+| `.github/docs/IMPORT_EXPORT_GUIDE.md` | Data portability guide |
+| `.github/README_ZH.md` | Chinese documentation |
 
 ---
 
@@ -1006,6 +1057,8 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for detailed guidelines.
 ### Documentation
 
 - [Main README](README.md) - User-facing documentation
+- [VitePress Documentation](docs/) - Interactive documentation site (deployed via GitHub workflows)
+- [Testing Guide](TESTING_GUIDE.md) - Comprehensive testing guide for data loss prevention
 - [Contributing Guide](.github/CONTRIBUTING.md) - Contribution guidelines
 - [Safari Installation](.github/docs/safari/INSTALLATION.md) - Safari setup
 - [Import/Export Guide](.github/docs/IMPORT_EXPORT_GUIDE.md) - Data portability
@@ -1030,7 +1083,20 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for detailed guidelines.
 
 ## Changelog
 
-### v0.9.5 (Latest)
+### v0.9.6 (Latest)
+- **Data Loss Prevention**: Implemented robust localStorage-based backup system to prevent data loss during network errors and page refreshes
+- **Storage Monitoring**: Added proactive storage quota monitoring with multi-level warnings (80%, 90%, 95%)
+- **Cross-Domain Prompts**: Migrated Prompt Manager to chrome.storage.local for sharing between gemini.google.com and aistudio.google.com
+- **Data Recovery**: Enhanced AIStudio folder manager with three-tier data recovery mechanism (sessionStorage → in-memory → empty state)
+- **New Services**:
+  - `DataBackupService`: Multi-layer backup with automatic page unload protection
+  - `StorageMonitor`: Real-time storage quota monitoring with user notifications
+  - `ChromeLocalStorageService`: Large data storage support (5-10MB quota)
+- **Migration Utilities**: Automatic one-time migration from localStorage to chrome.storage.local
+- **Documentation**: Added comprehensive TESTING_GUIDE.md for data loss prevention features
+- **Bug Fixes**: Fixed sessionStorage recovery issues and improved data reliability
+
+### v0.9.5
 - Added configurable sidebar width setting
 - Fixed abnormal line spacing of dialog items within folder
 - Fixed 10px right padding overlap issue between chat scroll and timeline
@@ -1063,6 +1129,6 @@ By contributing to this project, you agree that your contributions will be licen
 
 ---
 
-**Last Updated**: 2025-11-18
+**Last Updated**: 2025-11-20
 **Maintainer**: Jesse Zhang (@Nagi-ovo)
 **For Questions**: Open an issue on [GitHub](https://github.com/Nagi-ovo/gemini-voyager/issues)
