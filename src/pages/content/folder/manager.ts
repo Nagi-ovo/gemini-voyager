@@ -83,6 +83,8 @@ export class FolderManager {
   private lastPathname: string | null = null;
   private saveInProgress: boolean = false; // Lock to prevent concurrent saves
   private pendingTitleUpdates: Map<string, string> = new Map(); // Buffer title updates during render
+  private pendingRemovals: Map<string, number> = new Map(); // Pending conversation removals with timer IDs
+  private removalCheckDelay: number = 300; // Delay (ms) before confirming conversation deletion
 
   constructor() {
     // Create storage adapter based on browser (Factory Pattern)
@@ -1187,6 +1189,8 @@ export class FolderManager {
             if (node.matches('[data-test-id="conversation"]')) {
               this.makeConversationDraggable(node);
               this.applyHideArchivedToConversation(node);
+              // Cancel pending removal for this conversation (it's back!)
+              this.cancelPendingRemovalForElement(node);
             }
             // Also check for conversations within the node
             const conversations = node.querySelectorAll('[data-test-id="conversation"]');
@@ -1195,6 +1199,8 @@ export class FolderManager {
               this.makeConversationDraggable(convElement);
               // Apply hide archived setting to newly added conversations
               this.applyHideArchivedToConversation(convElement);
+              // Cancel pending removal for this conversation (it's back!)
+              this.cancelPendingRemovalForElement(convElement);
             });
           }
         });
@@ -1242,7 +1248,8 @@ export class FolderManager {
         return;
       }
 
-      // Process the single removal
+      // NEW: Instead of immediately removing, schedule a delayed check
+      // This prevents false positives when Gemini temporarily removes/re-adds DOM elements during UI updates
       nodesWithRemovals.forEach((node) => {
         const conversations = node.matches('[data-test-id="conversation"]')
           ? [node]
@@ -1251,27 +1258,30 @@ export class FolderManager {
         conversations.forEach((conv) => {
           // Extract conversation ID from the removed element
           const jslog = conv.getAttribute('jslog');
+          let conversationId: string | undefined;
+
           if (jslog) {
             const match = jslog.match(/c_([a-f0-9]{8,})/i);
             if (match && match[1]) {
-              const conversationId = match[1];
-              this.debug('Detected conversation deletion:', conversationId);
-              // Remove this conversation from all folders
-              this.removeConversationFromAllFolders(conversationId);
+              conversationId = match[1];
             }
           }
 
           // Also try to extract from href
-          const link = conv.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
-          if (link) {
-            const href = link.href;
-            const appMatch = href.match(/\/app\/([^\/?#]+)/);
-            const gemMatch = href.match(/\/gem\/[^/]+\/([^\/?#]+)/);
-            const conversationId = appMatch?.[1] || gemMatch?.[1];
-            if (conversationId) {
-              this.debug('Detected conversation deletion (from href):', conversationId);
-              this.removeConversationFromAllFolders(conversationId);
+          if (!conversationId) {
+            const link = conv.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+            if (link) {
+              const href = link.href;
+              const appMatch = href.match(/\/app\/([^\/?#]+)/);
+              const gemMatch = href.match(/\/gem\/[^/]+\/([^\/?#]+)/);
+              conversationId = appMatch?.[1] || gemMatch?.[1];
             }
+          }
+
+          if (conversationId) {
+            this.debug('Detected potential conversation removal:', conversationId);
+            // Schedule delayed removal check
+            this.scheduleConversationRemovalCheck(conversationId);
           }
         });
       });
@@ -2869,6 +2879,118 @@ export class FolderManager {
       // Re-render folders to show updated title
       this.renderAllFolders();
     }
+  }
+
+  /**
+   * Schedule a delayed check to confirm conversation deletion
+   * This prevents false positives when Gemini UI temporarily removes/re-adds elements
+   */
+  private scheduleConversationRemovalCheck(conversationId: string): void {
+    // Cancel any existing timer for this conversation
+    const existingTimer = this.pendingRemovals.get(conversationId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      this.debug(`Cancelled previous removal timer for ${conversationId}`);
+    }
+
+    // Schedule a new check after delay
+    const timerId = window.setTimeout(() => {
+      this.confirmConversationRemoval(conversationId);
+    }, this.removalCheckDelay);
+
+    this.pendingRemovals.set(conversationId, timerId);
+    this.debug(`Scheduled removal check for ${conversationId} (delay: ${this.removalCheckDelay}ms)`);
+  }
+
+  /**
+   * Cancel pending removal for a conversation element that was re-added
+   */
+  private cancelPendingRemovalForElement(element: HTMLElement): void {
+    // Extract conversation ID from the element
+    const jslog = element.getAttribute('jslog');
+    let conversationId: string | undefined;
+
+    if (jslog) {
+      const match = jslog.match(/c_([a-f0-9]{8,})/i);
+      if (match && match[1]) {
+        conversationId = match[1];
+      }
+    }
+
+    // Also try to extract from href
+    if (!conversationId) {
+      const link = element.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+      if (link) {
+        const href = link.href;
+        const appMatch = href.match(/\/app\/([^\/?#]+)/);
+        const gemMatch = href.match(/\/gem\/[^/]+\/([^\/?#]+)/);
+        conversationId = appMatch?.[1] || gemMatch?.[1];
+      }
+    }
+
+    if (conversationId) {
+      const timerId = this.pendingRemovals.get(conversationId);
+      if (timerId) {
+        clearTimeout(timerId);
+        this.pendingRemovals.delete(conversationId);
+        this.debug(`Cancelled removal for ${conversationId} (conversation re-added to DOM)`);
+      }
+    }
+  }
+
+  /**
+   * Check if conversation still exists in DOM
+   */
+  private isConversationInDOM(conversationId: string): boolean {
+    if (!this.sidebarContainer) return false;
+
+    // Check by jslog attribute
+    const byJslog = this.sidebarContainer.querySelector(
+      `[data-test-id="conversation"][jslog*="c_${conversationId}"]`
+    );
+    if (byJslog) return true;
+
+    // Check by href
+    const byHref = this.sidebarContainer.querySelector(
+      `[data-test-id="conversation"] a[href*="${conversationId}"]`
+    );
+    return !!byHref;
+  }
+
+  /**
+   * Get the conversation ID from current URL
+   */
+  private getCurrentConversationId(): string | null {
+    const url = window.location.href;
+    const appMatch = url.match(/\/app\/([^\/?#]+)/);
+    const gemMatch = url.match(/\/gem\/[^/]+\/([^\/?#]+)/);
+    return appMatch?.[1] || gemMatch?.[1] || null;
+  }
+
+  /**
+   * Confirm conversation removal after delay
+   * Only removes if conversation is truly deleted (not in DOM and not current conversation)
+   */
+  private confirmConversationRemoval(conversationId: string): void {
+    // Remove from pending list
+    this.pendingRemovals.delete(conversationId);
+
+    // Check 1: Is this the currently active conversation?
+    const currentConvId = this.getCurrentConversationId();
+    if (currentConvId === conversationId) {
+      this.debug(`Skipping removal for ${conversationId} - it's the current active conversation`);
+      return;
+    }
+
+    // Check 2: Is conversation still in DOM?
+    if (this.isConversationInDOM(conversationId)) {
+      this.debug(`Skipping removal for ${conversationId} - conversation is still in DOM`);
+      return;
+    }
+
+    // Conversation is truly deleted - remove from folders
+    this.debug(`Confirmed deletion of conversation ${conversationId}`);
+    this.removeConversationFromAllFolders(conversationId);
   }
 
   private removeConversationFromAllFolders(conversationId: string): void {
