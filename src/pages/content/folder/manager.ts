@@ -1222,6 +1222,40 @@ export class FolderManager {
     return { url, isGem: false, gemId: undefined };
   }
 
+  /**
+   * Extract conversation ID from a DOM element
+   * Used for handling removed/added conversations in MutationObserver
+   *
+   * @param element - The conversation element to extract ID from
+   * @returns The conversation ID (hex only, without 'c_' prefix) or undefined if not found
+   *
+   * @remarks
+   * This method attempts two extraction strategies:
+   * 1. From jslog attribute (e.g., jslog="c_abc123def456")
+   * 2. From href in anchor tags (e.g., /app/abc123def456 or /gem/xxx/abc123def456)
+   */
+  private extractConversationIdFromElement(element: Element): string | undefined {
+    // Strategy 1: Extract from jslog attribute
+    const jslog = element.getAttribute('jslog');
+    if (jslog) {
+      const match = jslog.match(/c_([a-f0-9]{8,})/i);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+    // Strategy 2: Extract from href
+    const link = element.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+    if (link) {
+      const href = link.href;
+      const appMatch = href.match(/\/app\/([^\/?#]+)/);
+      const gemMatch = href.match(/\/gem\/[^/]+\/([^\/?#]+)/);
+      return appMatch?.[1] || gemMatch?.[1];
+    }
+
+    return undefined;
+  }
+
   private setupMutationObserver(): void {
     if (!this.sidebarContainer) return;
 
@@ -1302,26 +1336,7 @@ export class FolderManager {
 
         conversations.forEach((conv) => {
           // Extract conversation ID from the removed element
-          const jslog = conv.getAttribute('jslog');
-          let conversationId: string | undefined;
-
-          if (jslog) {
-            const match = jslog.match(/c_([a-f0-9]{8,})/i);
-            if (match && match[1]) {
-              conversationId = match[1];
-            }
-          }
-
-          // Also try to extract from href
-          if (!conversationId) {
-            const link = conv.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
-            if (link) {
-              const href = link.href;
-              const appMatch = href.match(/\/app\/([^\/?#]+)/);
-              const gemMatch = href.match(/\/gem\/[^/]+\/([^\/?#]+)/);
-              conversationId = appMatch?.[1] || gemMatch?.[1];
-            }
-          }
+          const conversationId = this.extractConversationIdFromElement(conv);
 
           if (conversationId) {
             this.debug('Detected potential conversation removal:', conversationId);
@@ -2952,26 +2967,7 @@ export class FolderManager {
    */
   private cancelPendingRemovalForElement(element: HTMLElement): void {
     // Extract conversation ID from the element
-    const jslog = element.getAttribute('jslog');
-    let conversationId: string | undefined;
-
-    if (jslog) {
-      const match = jslog.match(/c_([a-f0-9]{8,})/i);
-      if (match && match[1]) {
-        conversationId = match[1];
-      }
-    }
-
-    // Also try to extract from href
-    if (!conversationId) {
-      const link = element.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
-      if (link) {
-        const href = link.href;
-        const appMatch = href.match(/\/app\/([^\/?#]+)/);
-        const gemMatch = href.match(/\/gem\/[^/]+\/([^\/?#]+)/);
-        conversationId = appMatch?.[1] || gemMatch?.[1];
-      }
-    }
+    const conversationId = this.extractConversationIdFromElement(element);
 
     if (conversationId) {
       const timerId = this.pendingRemovals.get(conversationId);
