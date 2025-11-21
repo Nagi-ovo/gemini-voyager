@@ -155,6 +155,51 @@ export class FolderManager {
     }
   }
 
+  /**
+   * Cleanup method to prevent memory leaks
+   * Clears all pending deletion timers and observers
+   */
+  destroy(): void {
+    this.debug('Destroying FolderManager - cleaning up resources');
+
+    // Clear all pending removal timers
+    let clearedCount = 0;
+    this.pendingRemovals.forEach((timerId, conversationId) => {
+      clearTimeout(timerId);
+      clearedCount++;
+      this.debug(`Cleared pending removal timer for ${conversationId}`);
+    });
+    this.pendingRemovals.clear();
+
+    if (clearedCount > 0) {
+      this.debug(`Cleared ${clearedCount} pending removal timer(s)`);
+    }
+
+    // Clear other timers
+    if (this.longPressTimeout) {
+      clearTimeout(this.longPressTimeout);
+      this.longPressTimeout = null;
+    }
+
+    if (this.tooltipTimeout) {
+      clearTimeout(this.tooltipTimeout);
+      this.tooltipTimeout = null;
+    }
+
+    if (this.navPoller) {
+      clearInterval(this.navPoller);
+      this.navPoller = null;
+    }
+
+    // Disconnect mutation observer
+    if (this.sideNavObserver) {
+      this.sideNavObserver.disconnect();
+      this.sideNavObserver = null;
+    }
+
+    this.debug('Cleanup complete');
+  }
+
   private async initializeFolderUI(): Promise<void> {
     // Wait for sidebar to be available
     await this.waitForSidebar();
@@ -2940,21 +2985,43 @@ export class FolderManager {
 
   /**
    * Check if conversation still exists in DOM
+   * Returns true if conversation found, false if definitely deleted
+   * In case of errors, conservatively returns true to avoid false deletions
    */
   private isConversationInDOM(conversationId: string): boolean {
-    if (!this.sidebarContainer) return false;
+    if (!this.sidebarContainer) {
+      this.debugWarn('Sidebar container not available for DOM check');
+      return true; // Conservative: assume conversation exists if we can't check
+    }
 
-    // Check by jslog attribute
-    const byJslog = this.sidebarContainer.querySelector(
-      `[data-test-id="conversation"][jslog*="c_${conversationId}"]`
-    );
-    if (byJslog) return true;
+    try {
+      // Check by jslog attribute
+      const byJslog = this.sidebarContainer.querySelector(
+        `[data-test-id="conversation"][jslog*="c_${conversationId}"]`
+      );
+      if (byJslog) {
+        this.debug(`Found conversation ${conversationId} in DOM by jslog`);
+        return true;
+      }
 
-    // Check by href
-    const byHref = this.sidebarContainer.querySelector(
-      `[data-test-id="conversation"] a[href*="${conversationId}"]`
-    );
-    return !!byHref;
+      // Check by href
+      const byHref = this.sidebarContainer.querySelector(
+        `[data-test-id="conversation"] a[href*="${conversationId}"]`
+      );
+      if (byHref) {
+        this.debug(`Found conversation ${conversationId} in DOM by href`);
+        return true;
+      }
+
+      // Not found in DOM
+      this.debug(`Conversation ${conversationId} not found in DOM`);
+      return false;
+    } catch (error) {
+      this.debugWarn(`DOM check failed for ${conversationId}:`, error);
+      // Conservative approach: if we can't check, assume it still exists
+      // This prevents accidental deletion during DOM reconstruction
+      return true;
+    }
   }
 
   /**
@@ -2975,21 +3042,35 @@ export class FolderManager {
     // Remove from pending list
     this.pendingRemovals.delete(conversationId);
 
+    this.debug(`\n═══ Confirming removal for conversation ${conversationId} ═══`);
+    this.debug(`  Delay elapsed: ${this.removalCheckDelay}ms`);
+
     // Check 1: Is this the currently active conversation?
     const currentConvId = this.getCurrentConversationId();
+    const currentUrl = window.location.href;
+
     if (currentConvId === conversationId) {
-      this.debug(`Skipping removal for ${conversationId} - it's the current active conversation`);
+      this.debug(`  ✓ SKIPPED: Currently active conversation`);
+      this.debug(`    Current URL: ${currentUrl}`);
+      this.debug(`    Matched ID: ${currentConvId}`);
+      this.debug(`════════════════════════════════════════════════\n`);
       return;
     }
 
     // Check 2: Is conversation still in DOM?
     if (this.isConversationInDOM(conversationId)) {
-      this.debug(`Skipping removal for ${conversationId} - conversation is still in DOM`);
+      this.debug(`  ✓ SKIPPED: Conversation still exists in DOM`);
+      this.debug(`    Likely a UI refresh, not a deletion`);
+      this.debug(`════════════════════════════════════════════════\n`);
       return;
     }
 
     // Conversation is truly deleted - remove from folders
-    this.debug(`Confirmed deletion of conversation ${conversationId}`);
+    this.debug(`  ✗ CONFIRMED DELETION: Removing from all folders`);
+    this.debug(`    Reason: Not in current URL and not found in DOM`);
+    this.debug(`    Current URL: ${currentUrl}`);
+    this.debug(`════════════════════════════════════════════════\n`);
+
     this.removeConversationFromAllFolders(conversationId);
   }
 

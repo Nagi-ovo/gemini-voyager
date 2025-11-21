@@ -29,6 +29,7 @@ const BACKGROUND_TAB_MAX_DELAY = 8000; // Maximum delay for background tabs (300
 
 let initialized = false;
 let initializationTimer: number | null = null;
+let folderManagerInstance: Awaited<ReturnType<typeof startFolderManager>> | null = null;
 
 /**
  * Check if current hostname matches any custom websites
@@ -91,7 +92,7 @@ async function initializeFeatures(): Promise<void> {
       startTimeline();
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
-      startFolderManager();
+      folderManagerInstance = await startFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
       startChatWidthAdjuster();
@@ -211,6 +212,18 @@ function handleVisibilityChange(): void {
 
     // Listen for visibility changes to handle tab switching
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Setup cleanup on page unload to prevent memory leaks
+    window.addEventListener('beforeunload', () => {
+      try {
+        if (folderManagerInstance) {
+          folderManagerInstance.destroy();
+          folderManagerInstance = null;
+        }
+      } catch (e) {
+        console.error('[Gemini Voyager] Cleanup error:', e);
+      }
+    });
 
   } catch (e) {
     console.error('[Gemini Voyager] Fatal initialization error:', e);
