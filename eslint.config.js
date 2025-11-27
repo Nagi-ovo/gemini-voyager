@@ -14,6 +14,7 @@ export default [
       'docs/.vitepress/cache/**',
       'docs/.vitepress/dist/**',
       'coverage/**',
+      'gemini-voyager-sync/**',
     ],
   },
   {
