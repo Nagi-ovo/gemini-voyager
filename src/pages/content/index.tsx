@@ -3,6 +3,7 @@ import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderManager } from './folder/index';
+import { initKaTeXConfig } from './katexConfig';
 import { startPromptManager } from './prompt/index';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
@@ -169,11 +170,17 @@ function handleVisibilityChange(): void {
   try {
     // Quick check: only run on supported websites
     const hostname = location.hostname.toLowerCase();
-    const isSupportedSite = 
+    const isSupportedSite =
       hostname.includes('gemini.google.com') ||
       hostname.includes('aistudio.google.com') ||
       hostname.includes('aistudio.google.cn');
-    
+
+    // Initialize KaTeX configuration early to suppress Unicode warnings
+    // This must run before any formulas are rendered on the page
+    if (isSupportedSite) {
+      initKaTeXConfig();
+    }
+
     // If not a known site, check if it's a custom website (async)
     if (!isSupportedSite) {
       // For unknown sites, check storage asynchronously
