@@ -115,7 +115,11 @@ export class FormulaCopyService {
       return;
     }
 
-    this.copyFormula(latexSource, event.clientX, event.clientY);
+    // Wrap formula with delimiters based on display type
+    const isDisplayMode = this.isDisplayMode(mathElement);
+    const wrappedFormula = this.wrapFormula(latexSource, isDisplayMode);
+
+    this.copyFormula(wrappedFormula, event.clientX, event.clientY);
     event.stopPropagation();
   };
 
@@ -220,10 +224,40 @@ export class FormulaCopyService {
   private isMathContainer(element: HTMLElement): boolean {
     return (
       element.classList.contains('math-inline') ||
-      element.classList.contains('math-display') ||
-      element.classList.contains('katex') ||
-      element.classList.contains('katex-display')
+      element.classList.contains('math-block')
     );
+  }
+
+  /**
+   * Check if formula is in display mode (block formula)
+   */
+  private isDisplayMode(element: HTMLElement): boolean {
+    let current: HTMLElement | null = element;
+    let depth = 0;
+
+    // Traverse up to find display mode indicator
+    while (current && depth < this.config.maxTraversalDepth) {
+      if (current.classList.contains('math-block')) {
+        return true;
+      }
+      current = current.parentElement;
+      depth++;
+    }
+
+    return false;
+  }
+
+  /**
+   * Wrap formula with appropriate delimiters
+   * @param formula - Raw LaTeX formula
+   * @param isDisplayMode - Whether formula is in display mode
+   * @returns Wrapped formula with $$ for display mode or $ for inline mode
+   */
+  private wrapFormula(formula: string, isDisplayMode: boolean): string {
+    if (isDisplayMode) {
+      return `$$${formula}$$`;
+    }
+    return `$${formula}$`;
   }
 
   /**
