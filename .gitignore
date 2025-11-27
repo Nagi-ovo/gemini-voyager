@@ -36,3 +36,8 @@ yarn-error.log*
 # VitePress
 docs/.vitepress/dist
 docs/.vitepress/cache
+
+# Sync Service (Commercial - Private)
+SYNC_SERVICE_ARCHITECTURE.md
+/gemini-voyager-sync/
+.env.sync
