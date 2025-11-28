@@ -262,14 +262,24 @@ export class DOMContentExtractor {
         continue;
       }
 
-      // Math block (display formula)
-      if (child.classList.contains('math-block')) {
+      // Math block (display formula) - check both class and data-math attribute
+      if (child.classList.contains('math-block') || child.hasAttribute('data-math')) {
         const latex = child.getAttribute('data-math') || '';
-        if (this.DEBUG) console.log('[DOMContentExtractor] Found math-block, latex:', latex);
-        flags.hasFormulas = true;
-        htmlParts.push(`<div class="math-block">$$${latex}$$</div>`);
-        textParts.push(`\n$$\n${latex}\n$$\n`);
-        continue;
+        if (latex) {
+          if (this.DEBUG) console.log('[DOMContentExtractor] Found math-block, latex:', latex);
+          flags.hasFormulas = true;
+          // For HTML output: preserve the rendered formula HTML for PDF export
+          // Clone the element to preserve its rendered content
+          const clonedFormula = (child as HTMLElement).cloneNode(true) as HTMLElement;
+          // Ensure data-math attribute is preserved for potential re-rendering
+          if (!clonedFormula.hasAttribute('data-math')) {
+            clonedFormula.setAttribute('data-math', latex);
+          }
+          htmlParts.push(clonedFormula.outerHTML);
+          // For text output: use Markdown format
+          textParts.push(`\n$$\n${latex}\n$$\n`);
+          continue;
+        }
       }
 
       // Code block (check for nested code-block first)
@@ -408,13 +418,22 @@ export class DOMContentExtractor {
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         const el = node as Element;
 
-        // Inline formula
-        if (el.classList.contains('math-inline')) {
+        // Inline formula - check both class and data-math attribute
+        if (el.classList.contains('math-inline') || el.hasAttribute('data-math')) {
           const latex = el.getAttribute('data-math') || '';
-          hasFormulas = true;
-          htmlParts.push(`<span class="math-inline">$${latex}$</span>`);
-          textParts.push(`$${latex}$`);
-          return;
+          if (latex) {
+            hasFormulas = true;
+            // For HTML output: preserve the rendered formula HTML for PDF export
+            const clonedFormula = (el as HTMLElement).cloneNode(true) as HTMLElement;
+            // Ensure data-math attribute is preserved
+            if (!clonedFormula.hasAttribute('data-math')) {
+              clonedFormula.setAttribute('data-math', latex);
+            }
+            htmlParts.push(clonedFormula.outerHTML);
+            // For text output: use Markdown format
+            textParts.push(`$${latex}$`);
+            return;
+          }
         }
 
         // Emphasis
@@ -581,17 +600,46 @@ export class DOMContentExtractor {
   }
 
   /**
-   * Extract list content
+   * Extract list content with support for nested lists
    */
-  private static extractList(element: HTMLElement): { html: string; text: string } {
+  private static extractList(element: HTMLElement, depth: number = 0): { html: string; text: string } {
     const isOrdered = element.tagName === 'OL';
     const items = Array.from(element.querySelectorAll(':scope > li'));
+    const indent = '  '.repeat(depth); // 2 spaces per level
 
     const textLines: string[] = [];
     items.forEach((item, index) => {
-      const text = this.normalizeText(item.textContent || '');
+      // Create a temporary container with only direct children (excluding nested lists)
+      const tempContainer = document.createElement('div');
+      const childNodes = Array.from(item.childNodes);
+
+      childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          tempContainer.appendChild(node.cloneNode(true));
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as Element;
+          // Skip nested lists, we'll process them separately
+          if (el.tagName !== 'UL' && el.tagName !== 'OL') {
+            tempContainer.appendChild(el.cloneNode(true));
+          }
+        }
+      });
+
+      // Process inline content (handles formulas, emphasis, etc.)
+      const processed = this.processInlineContent(tempContainer);
+      const itemText = processed.text || this.normalizeText(tempContainer.textContent || '');
+
       const prefix = isOrdered ? `${index + 1}. ` : '- ';
-      textLines.push(prefix + text);
+      textLines.push(indent + prefix + itemText);
+
+      // Process nested lists
+      const nestedLists = item.querySelectorAll(':scope > ul, :scope > ol');
+      nestedLists.forEach((nestedList) => {
+        const nestedResult = this.extractList(nestedList as HTMLElement, depth + 1);
+        if (nestedResult.text) {
+          textLines.push(nestedResult.text);
+        }
+      });
     });
 
     return {

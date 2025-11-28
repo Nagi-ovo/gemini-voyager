@@ -115,19 +115,75 @@ export class PDFPrintService {
   }
 
   /**
-   * Render document header
+   * Get conversation title from page
+   */
+  private static getConversationTitle(): string {
+    // Strategy 1: Get from gv-conversation-title (most accurate, created by Folder Manager)
+    try {
+      const gvTitle = document.querySelector('.gv-conversation-title');
+      if (gvTitle?.textContent?.trim()) {
+        return gvTitle.textContent.trim();
+      }
+    } catch (error) {
+      console.debug('[PDF Export] Failed to get title from gv-conversation-title:', error);
+    }
+
+    // Strategy 2: Try to get from page title
+    const titleElement = document.querySelector('title');
+    if (titleElement) {
+      const title = titleElement.textContent?.trim();
+      // Filter out generic titles
+      if (
+        title &&
+        title !== 'Gemini' &&
+        title !== 'Google Gemini' &&
+        title !== 'Google AI Studio' &&
+        !title.startsWith('Gemini -') &&
+        !title.startsWith('Google AI Studio -') &&
+        title.length > 0
+      ) {
+        return title;
+      }
+    }
+
+    // Strategy 3: Try to get from sidebar conversation list
+    try {
+      const selectors = [
+        'mat-list-item.mdc-list-item--activated [mat-line]',
+        'mat-list-item[aria-current="page"] [mat-line]',
+        '.conversation-list-item.active .conversation-title',
+        '.active-conversation .title',
+      ];
+
+      for (const selector of selectors) {
+        const element = document.querySelector(selector);
+        if (element?.textContent?.trim() && element.textContent.trim() !== 'New chat') {
+          return element.textContent.trim();
+        }
+      }
+    } catch (error) {
+      console.debug('[PDF Export] Failed to get title from sidebar:', error);
+    }
+
+    return 'Untitled Conversation';
+  }
+
+  /**
+   * Render document header with cover page
    */
   private static renderHeader(metadata: ConversationMetadata): string {
-    const title = metadata.title || this.extractTitleFromURL(metadata.url);
+    const conversationTitle = this.getConversationTitle();
+    const urlTitle = metadata.title || this.extractTitleFromURL(metadata.url);
     const date = this.formatDate(metadata.exportedAt);
 
     return `
-      <header class="gv-print-header">
-        <h1 class="gv-print-title">${this.escapeHTML(title)}</h1>
-        <div class="gv-print-meta">
-          <p><strong>Date:</strong> ${date}</p>
-          <p><strong>Turns:</strong> ${metadata.count}</p>
-          <p><strong>Source:</strong> <a href="${this.escapeHTML(metadata.url)}">Gemini Chat</a></p>
+      <header class="gv-print-header gv-print-cover-page">
+        <div class="gv-print-cover-content">
+          <h1 class="gv-print-cover-title">${this.escapeHTML(conversationTitle)}</h1>
+          <div class="gv-print-meta">
+            <p>${date}</p>
+            <p><a href="${this.escapeHTML(metadata.url)}">${this.escapeHTML(urlTitle)}</a></p>
+          </div>
         </div>
       </header>
     `;
@@ -218,7 +274,7 @@ export class PDFPrintService {
   private static renderFooter(metadata: ConversationMetadata): string {
     return `
       <footer class="gv-print-footer">
-        <p>Exported from <a href="https://github.com/Nagi-ovo/gemini-voyager">Gemini Voyager</a></p>
+        <p>Exported from <a href="https://github.com/Nagi-ovo/gemini-voyager">Gemini Voyager</a> • ${metadata.count} conversation turns</p>
         <p>Generated on ${this.formatDate(metadata.exportedAt)}</p>
       </footer>
     `;
@@ -266,27 +322,51 @@ export class PDFPrintService {
           max-width: 100%;
         }
 
-        /* Header */
-        .gv-print-header {
-          margin-bottom: 2em;
-          padding-bottom: 1em;
-          border-bottom: 2px solid #333;
+        /* Cover Page Header */
+        .gv-print-cover-page {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          page-break-after: always;
+          margin: 0;
+          padding: 0;
+          border: none;
         }
 
-        .gv-print-title {
-          font-size: 20pt;
-          font-weight: bold;
-          margin: 0 0 0.5em 0;
-          color: #000;
+        .gv-print-cover-content {
+          text-align: center;
+          max-width: 80%;
+        }
+
+        .gv-print-cover-title {
+          font-size: 36pt;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          margin: 0 0 1.5em 0;
+          color: oklch(0.7227 0.1920 149.5793);
+          line-height: 1.2;
+          word-wrap: break-word;
         }
 
         .gv-print-meta {
-          font-size: 10pt;
-          color: #333;
+          font-size: 12pt;
+          color: #666;
+          line-height: 2;
+          margin-top: 0.5em;
         }
 
         .gv-print-meta p {
-          margin: 0.25em 0;
+          margin: 0.3em 0;
+        }
+
+        .gv-print-meta a {
+          color: #666;
+          text-decoration: none;
+        }
+
+        .gv-print-meta a:after {
+          content: none !important;
         }
 
         /* Content */
@@ -374,6 +454,24 @@ export class PDFPrintService {
           overflow-x: auto;
           white-space: pre-wrap;
           word-wrap: break-word;
+        }
+
+        /* Math formulas */
+        .gv-print-turn-text .math-inline,
+        .gv-print-turn-text .math-block,
+        .gv-print-turn-text [data-math] {
+          page-break-inside: avoid;
+        }
+
+        .gv-print-turn-text .math-block {
+          display: block;
+          margin: 1em 0;
+          text-align: center;
+          overflow-x: auto;
+        }
+
+        .gv-print-turn-text .math-inline {
+          display: inline;
         }
 
         /* Footer */
