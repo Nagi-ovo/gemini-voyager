@@ -61,6 +61,8 @@
   "pm_duplicate": { "message": "重复的 prompt", "description": "新增重复" },
   "pm_deleted": { "message": "已删除", "description": "删除提示" },
   "pm_edit": { "message": "编辑", "description": "编辑 prompt" },
+  "pm_expand": { "message": "展开", "description": "展开提示词文本" },
+  "pm_collapse": { "message": "收起", "description": "收起提示词文本" },
   "pm_saved": { "message": "已保存", "description": "保存提示" },
   "pm_settings": { "message": "设置", "description": "设置按钮" },
   "pm_settings_tooltip": { "message": "调整扩展设置", "description": "设置按钮提示" },

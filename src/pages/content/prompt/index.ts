@@ -277,12 +277,41 @@ export async function startPromptManager(): Promise<void> {
       } catch { }
     }
 
+    // Helper: constrain trigger position to viewport bounds
+    function constrainTriggerPosition(): void {
+      try {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const rect = trigger.getBoundingClientRect();
+        const tw = rect.width || 44;
+        const th = rect.height || 44;
+        const minPad = 6;
+
+        // Parse current position
+        const currentRight = parseFloat(trigger.style.right || '18') || 18;
+        const currentBottom = parseFloat(trigger.style.bottom || '18') || 18;
+
+        // Calculate constraints (ensure at least minPad from edges)
+        const maxRight = vw - tw - minPad;
+        const maxBottom = vh - th - minPad;
+
+        // Constrain position
+        const right = Math.max(minPad, Math.min(currentRight, maxRight));
+        const bottom = Math.max(minPad, Math.min(currentBottom, maxBottom));
+
+        trigger.style.right = `${Math.round(right)}px`;
+        trigger.style.bottom = `${Math.round(bottom)}px`;
+      } catch { }
+    }
+
     // Restore trigger position if saved; otherwise place next to host button
     try {
       const pos = await readStorage<TriggerPosition | null>(STORAGE_KEYS.triggerPos, null);
       if (pos && Number.isFinite(pos.bottom) && Number.isFinite(pos.right)) {
         trigger.style.bottom = `${Math.max(6, Math.round(pos.bottom))}px`;
         trigger.style.right = `${Math.max(6, Math.round(pos.right))}px`;
+        // Constrain position after restore to handle window resize/split screen
+        requestAnimationFrame(constrainTriggerPosition);
       } else {
         // defer a bit to wait for host DOM
         placeTriggerNextToHost();
@@ -439,6 +468,7 @@ export async function startPromptManager(): Promise<void> {
     let dragOffset = { x: 0, y: 0 };
     let draggingTrigger = false;
     let editingId: string | null = null;
+    let expandedItems: Set<string> = new Set<string>(); // Track expanded prompt items
 
     function setNotice(text: string, kind: 'ok' | 'err' = 'ok') {
       notice.textContent = text || '';
@@ -504,12 +534,24 @@ export async function startPromptManager(): Promise<void> {
       const frag = document.createDocumentFragment();
       for (const it of filtered) {
         const row = createEl('div', 'gv-pm-item');
+
+        // Create text container with expand/collapse functionality
+        const textContainer = createEl('div', 'gv-pm-item-text-container');
         const textBtn = createEl('button', 'gv-pm-item-text');
+
         // Render Markdown + KaTeX preview (sanitized)
         const md = document.createElement('div');
         md.className = 'gv-md';
+
+        // Apply collapsed class if not expanded
+        const isExpanded = expandedItems.has(it.id);
+        if (!isExpanded) {
+          md.classList.add('gv-md-collapsed');
+        }
+
         // Insert element into DOM first, then render to ensure KaTeX can detect document mode correctly
         textBtn.appendChild(md);
+
         // Defer rendering to next frame to ensure element is fully attached
         requestAnimationFrame(() => {
           try {
@@ -523,11 +565,32 @@ export async function startPromptManager(): Promise<void> {
             md.textContent = it.text;
           }
         });
+
         textBtn.title = i18n.t('pm_copy') || 'Copy';
-        textBtn.addEventListener('click', async () => {
+        textBtn.addEventListener('click', async (e) => {
+          // Don't copy when clicking expand button
+          if ((e.target as HTMLElement).closest('.gv-pm-expand-btn')) return;
           await copyText(it.text);
           setNotice(i18n.t('pm_copied') || 'Copied', 'ok');
         });
+
+        // Add expand/collapse button
+        const expandBtn = createEl('button', 'gv-pm-expand-btn');
+        expandBtn.innerHTML = isExpanded ? '▲' : '▼';
+        expandBtn.title = isExpanded ? (i18n.t('pm_collapse') || 'Collapse') : (i18n.t('pm_expand') || 'Expand');
+        expandBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (expandedItems.has(it.id)) {
+            expandedItems.delete(it.id);
+          } else {
+            expandedItems.add(it.id);
+          }
+          renderList();
+        });
+
+        textContainer.appendChild(textBtn);
+        textContainer.appendChild(expandBtn);
+
         // Edit button
         const editBtn = createEl('button', 'gv-pm-edit');
         editBtn.setAttribute('aria-label', i18n.t('pm_edit') || 'Edit');
@@ -600,7 +663,10 @@ export async function startPromptManager(): Promise<void> {
             setNotice(i18n.t('pm_deleted') || 'Deleted', 'ok');
           });
         });
-        row.appendChild(textBtn);
+
+        // Append text container instead of textBtn
+        row.appendChild(textContainer);
+
         actions.appendChild(editBtn);
         actions.appendChild(del);
         bottom.appendChild(meta);
@@ -721,7 +787,13 @@ export async function startPromptManager(): Promise<void> {
         renderList();
       }
     });
-    window.addEventListener('resize', onReposition, { passive: true });
+
+    // Handle window resize - constrain trigger and reposition panel
+    window.addEventListener('resize', () => {
+      constrainTriggerPosition();
+      onReposition();
+    }, { passive: true });
+
     window.addEventListener('scroll', onReposition, { passive: true });
 
     // Close when clicking outside of the manager (panel/trigger/confirm are exceptions)

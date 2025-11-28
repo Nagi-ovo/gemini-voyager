@@ -981,17 +981,150 @@ html.dark-theme .gv-pm-trigger {
   background: rgba(17, 24, 39, 0.55);
 }
 
+.gv-pm-item-text-container {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
 .gv-pm-item-text {
   background: transparent;
   border: none;
   padding: 0;
   color: #e5e7eb;
   text-align: left;
-  grid-column: 1;
-  grid-row: 1;
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.gv-pm-item-text:hover {
+  opacity: 0.85;
+}
+
+.gv-md-collapsed {
+  max-height: 7.5em;
+  overflow: hidden;
+  position: relative;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  line-clamp: 5;
+}
+
+.gv-md-collapsed::after {
+  content: '...';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding-left: 1em;
+  background: linear-gradient(to right, transparent, rgba(17, 24, 39, 0.4) 50%);
+}
+
+.theme-host.light-theme .gv-md-collapsed::after {
+  background: linear-gradient(to right, transparent, rgba(243, 244, 246, 0.5) 50%);
+}
+
+.theme-host.dark-theme .gv-md-collapsed::after {
+  background: linear-gradient(to right, transparent, rgba(17, 24, 39, 0.4) 50%);
+}
+
+.gv-pm-expand-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #9ca3af;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  line-height: 1;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gv-pm-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #d1d5db;
+}
+
+.theme-host.light-theme .gv-pm-expand-btn {
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #6b7280;
+}
+
+.theme-host.light-theme .gv-pm-expand-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.25);
+  color: #374151;
+}
+
+.theme-host.dark-theme .gv-pm-expand-btn {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #9ca3af;
+}
+
+.theme-host.dark-theme .gv-pm-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #d1d5db;
+}
+
+/* AI Studio body theme styles */
+body.light-theme .gv-pm-item-text,
+html.light-theme .gv-pm-item-text {
+  color: #1f2937;
+}
+
+body.dark-theme .gv-pm-item-text,
+html.dark-theme .gv-pm-item-text {
+  color: #e5e7eb;
+}
+
+body.light-theme .gv-md-collapsed::after,
+html.light-theme .gv-md-collapsed::after {
+  background: linear-gradient(to right, transparent, rgba(248, 250, 252, 0.9) 50%);
+}
+
+body.dark-theme .gv-md-collapsed::after,
+html.dark-theme .gv-md-collapsed::after {
+  background: linear-gradient(to right, transparent, rgba(17, 24, 39, 0.75) 50%);
+}
+
+body.light-theme .gv-pm-expand-btn,
+html.light-theme .gv-pm-expand-btn {
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #6b7280;
+}
+
+body.light-theme .gv-pm-expand-btn:hover,
+html.light-theme .gv-pm-expand-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.25);
+  color: #374151;
+}
+
+body.dark-theme .gv-pm-expand-btn,
+html.dark-theme .gv-pm-expand-btn {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #9ca3af;
+}
+
+body.dark-theme .gv-pm-expand-btn:hover,
+html.dark-theme .gv-pm-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #d1d5db;
 }
 
 .theme-host.light-theme .gv-pm-item {

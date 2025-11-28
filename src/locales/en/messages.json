@@ -61,6 +61,8 @@
   "pm_duplicate": { "message": "Duplicate prompt", "description": "Duplicate on add" },
   "pm_deleted": { "message": "Deleted", "description": "Deleted notice" },
   "pm_edit": { "message": "Edit", "description": "Edit prompt" },
+  "pm_expand": { "message": "Expand", "description": "Expand prompt text" },
+  "pm_collapse": { "message": "Collapse", "description": "Collapse prompt text" },
   "pm_saved": { "message": "Saved", "description": "Saved notice" },
   "pm_settings": { "message": "Settings", "description": "Settings button" },
   "pm_settings_tooltip": { "message": "Open extension settings", "description": "Settings button tooltip" },
