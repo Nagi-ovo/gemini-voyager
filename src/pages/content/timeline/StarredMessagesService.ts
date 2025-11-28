@@ -1,23 +1,40 @@
 /**
  * Service for managing starred messages across all conversations
- * Implements Singleton pattern for centralized state management
+ * Uses message passing to background script to prevent race conditions
  */
 
 import { eventBus } from './EventBus';
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
 
-import { StorageKeys } from '@/core/types/common';
-
 export class StarredMessagesService {
-  private static readonly STORAGE_KEY = StorageKeys.TIMELINE_STARRED_MESSAGES;
+  /**
+   * Send message to background script and wait for response
+   */
+  private static async sendMessage<T>(type: string, payload?: any): Promise<T> {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type, payload }, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        if (!response || !response.ok) {
+          reject(new Error(response?.error || 'Operation failed'));
+          return;
+        }
+        resolve(response as T);
+      });
+    });
+  }
 
   /**
    * Get all starred messages from storage
    */
   static async getAllStarredMessages(): Promise<StarredMessagesData> {
     try {
-      const result = await this.getFromStorage();
-      return result || { messages: {} };
+      const response = await this.sendMessage<{ ok: boolean; data: StarredMessagesData }>(
+        'gv.starred.getAll'
+      );
+      return response.data || { messages: {} };
     } catch (error) {
       console.error('[StarredMessagesService] Failed to get starred messages:', error);
       return { messages: {} };
@@ -30,30 +47,29 @@ export class StarredMessagesService {
   static async getStarredMessagesForConversation(
     conversationId: string
   ): Promise<StarredMessage[]> {
-    const data = await this.getAllStarredMessages();
-    return data.messages[conversationId] || [];
+    try {
+      const response = await this.sendMessage<{ ok: boolean; messages: StarredMessage[] }>(
+        'gv.starred.getForConversation',
+        { conversationId }
+      );
+      return response.messages || [];
+    } catch (error) {
+      console.error('[StarredMessagesService] Failed to get starred messages:', error);
+      return [];
+    }
   }
 
   /**
-   * Add a starred message
+   * Add a starred message - delegated to background script
    */
   static async addStarredMessage(message: StarredMessage): Promise<void> {
     try {
-      const data = await this.getAllStarredMessages();
-
-      if (!data.messages[message.conversationId]) {
-        data.messages[message.conversationId] = [];
-      }
-
-      // Check if message already exists
-      const exists = data.messages[message.conversationId].some(
-        (m) => m.turnId === message.turnId
+      const response = await this.sendMessage<{ ok: boolean; added: boolean }>(
+        'gv.starred.add',
+        message
       );
 
-      if (!exists) {
-        data.messages[message.conversationId].push(message);
-        await this.saveToStorage(data);
-
+      if (response.added) {
         // Emit event for cross-component synchronization
         eventBus.emit('starred:added', {
           conversationId: message.conversationId,
@@ -69,39 +85,27 @@ export class StarredMessagesService {
   }
 
   /**
-   * Remove a starred message
+   * Remove a starred message - delegated to background script
    */
   static async removeStarredMessage(
     conversationId: string,
     turnId: string
   ): Promise<void> {
     try {
-      const data = await this.getAllStarredMessages();
+      const response = await this.sendMessage<{ ok: boolean; removed: boolean }>(
+        'gv.starred.remove',
+        { conversationId, turnId }
+      );
 
-      if (data.messages[conversationId]) {
-        const initialLength = data.messages[conversationId].length;
-        data.messages[conversationId] = data.messages[conversationId].filter(
-          (m) => m.turnId !== turnId
-        );
+      if (response.removed) {
+        // Emit event for cross-component synchronization
+        eventBus.emit('starred:removed', {
+          conversationId,
+          turnId,
+        });
 
-        // Only save and emit if actually removed
-        if (data.messages[conversationId].length < initialLength) {
-          // Remove conversation key if no messages left
-          if (data.messages[conversationId].length === 0) {
-            delete data.messages[conversationId];
-          }
-
-          await this.saveToStorage(data);
-
-          // Emit event for cross-component synchronization
-          eventBus.emit('starred:removed', {
-            conversationId,
-            turnId,
-          });
-
-          // Also update localStorage for backward compatibility
-          this.updateLegacyStorage(conversationId, turnId, 'remove');
-        }
+        // Also update localStorage for backward compatibility
+        this.updateLegacyStorage(conversationId, turnId, 'remove');
       }
     } catch (error) {
       console.error('[StarredMessagesService] Failed to remove starred message:', error);
@@ -165,55 +169,5 @@ export class StarredMessagesService {
     });
 
     return allMessages.sort((a, b) => b.starredAt - a.starredAt);
-  }
-
-  /**
-   * Get from chrome.storage.local or localStorage fallback
-   */
-  private static async getFromStorage(): Promise<StarredMessagesData | null> {
-    try {
-      // Try chrome.storage.local first
-      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-        return new Promise((resolve) => {
-          chrome.storage.local.get([this.STORAGE_KEY], (result) => {
-            resolve(result[this.STORAGE_KEY] || null);
-          });
-        });
-      }
-
-      // Fallback to localStorage
-      const data = localStorage.getItem(this.STORAGE_KEY);
-      return data ? JSON.parse(data) : null;
-    } catch (error) {
-      console.error('[StarredMessagesService] Failed to get from storage:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Save to chrome.storage.local or localStorage fallback
-   */
-  private static async saveToStorage(data: StarredMessagesData): Promise<void> {
-    try {
-      // Try chrome.storage.local first
-      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-        await new Promise<void>((resolve, reject) => {
-          chrome.storage.local.set({ [this.STORAGE_KEY]: data }, () => {
-            if (chrome.runtime.lastError) {
-              reject(chrome.runtime.lastError);
-            } else {
-              resolve();
-            }
-          });
-        });
-        return;
-      }
-
-      // Fallback to localStorage
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
-    } catch (error) {
-      console.error('[StarredMessagesService] Failed to save to storage:', error);
-      throw error;
-    }
   }
 }

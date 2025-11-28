@@ -69,10 +69,15 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) {
-      return t('today');
+    // Within 24 hours: show hours
+    if (diffHours < 24) {
+      if (diffHours === 0) {
+        return t('justNow');
+      }
+      return `${diffHours} ${t('hoursAgo')}`;
     } else if (diffDays === 1) {
       return t('yesterday');
     } else if (diffDays < 7) {

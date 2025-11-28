@@ -291,13 +291,27 @@ export class TimelineManager {
   }
 
   private getConversationTitle(): string {
-    // Strategy 1: Try to get from page title
+    // Strategy 1: Get from gv-conversation-title (most accurate, created by Folder Manager)
+    try {
+      const gvTitle = document.querySelector('.gv-conversation-title');
+      if (gvTitle && gvTitle.textContent) {
+        const title = gvTitle.textContent.trim();
+        if (title && title.length > 0) {
+          return title;
+        }
+      }
+    } catch (error) {
+      console.debug('[Timeline] Failed to get title from gv-conversation-title:', error);
+    }
+
+    // Strategy 2: Try to get from page title
     const titleElement = document.querySelector('title');
     if (titleElement) {
       const title = titleElement.textContent?.trim();
       // Filter out generic titles
       if (title &&
           title !== 'Gemini' &&
+          title !== 'Google Gemini' &&
           title !== 'Google AI Studio' &&
           !title.startsWith('Gemini -') &&
           !title.startsWith('Google AI Studio -') &&
@@ -306,7 +320,7 @@ export class TimelineManager {
       }
     }
 
-    // Strategy 2: Try to get from sidebar conversation list
+    // Strategy 3: Try to get from sidebar conversation list
     // Look for the active conversation in the sidebar
     try {
       // Gemini uses various selectors for conversation titles
@@ -332,14 +346,14 @@ export class TimelineManager {
       console.debug('[Timeline] Failed to get title from sidebar:', error);
     }
 
-    // Strategy 3: Use first user message as title
+    // Strategy 4: Use first user message as title (fallback)
     const firstMarker = this.markers[0];
     if (firstMarker && firstMarker.summary) {
       const preview = firstMarker.summary.slice(0, 50);
       return preview.length < firstMarker.summary.length ? `${preview}...` : preview;
     }
 
-    // Strategy 4: Extract from URL if it contains conversation ID
+    // Strategy 5: Extract from URL if it contains conversation ID
     try {
       const urlPath = window.location.pathname;
       const match = urlPath.match(/\/app\/([a-zA-Z0-9_-]+)/);
@@ -570,8 +584,9 @@ export class TimelineManager {
   }
 
   /**
-   * Performance-optimized filter to remove nested elements
-   * Complexity reduced from O(n²) to O(n log n) using Set tracking
+   * Performance-optimized filter to remove nested elements.
+   * Sorts elements by depth first, which can prune the search space in the average case.
+   * Worst-case complexity: O(n²), but average case is improved over naive implementation.
    */
   private filterTopLevel(elements: Element[]): HTMLElement[] {
     const arr = elements.map((e) => e as HTMLElement);

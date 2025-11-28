@@ -166,7 +166,8 @@
   ,"viewStarredHistory": { "message": "View Starred History", "description": "View starred history button" }
   ,"noStarredMessages": { "message": "No starred messages yet", "description": "No starred messages placeholder" }
   ,"removeFromStarred": { "message": "Remove from starred", "description": "Remove from starred tooltip" }
-  ,"today": { "message": "Today", "description": "Today date label" }
+  ,"justNow": { "message": "Just now", "description": "Just now time label" }
+  ,"hoursAgo": { "message": "hours ago", "description": "Hours ago label" }
   ,"yesterday": { "message": "Yesterday", "description": "Yesterday date label" }
   ,"daysAgo": { "message": "days ago", "description": "Days ago label" }
   ,"loading": { "message": "Loading...", "description": "Loading message" }

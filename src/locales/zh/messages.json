@@ -166,7 +166,8 @@
   ,"viewStarredHistory": { "message": "查看星标历史", "description": "查看星标历史按钮" }
   ,"noStarredMessages": { "message": "暂无星标消息", "description": "无星标消息占位符" }
   ,"removeFromStarred": { "message": "取消星标", "description": "取消星标提示" }
-  ,"today": { "message": "今天", "description": "今天日期标签" }
+  ,"justNow": { "message": "刚刚", "description": "刚刚时间标签" }
+  ,"hoursAgo": { "message": "小时前", "description": "小时前标签" }
   ,"yesterday": { "message": "昨天", "description": "昨天日期标签" }
   ,"daysAgo": { "message": "天前", "description": "天前标签" }
   ,"loading": { "message": "加载中...", "description": "加载消息" }
