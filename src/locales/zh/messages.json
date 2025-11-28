@@ -161,5 +161,14 @@
   ,"websiteAdded": { "message": "网站已添加", "description": "网站添加成功消息" }
   ,"websiteRemoved": { "message": "网站已移除", "description": "网站移除成功消息" }
   ,"permissionDenied": { "message": "权限被拒绝。请允许访问此网站。", "description": "权限被拒绝错误消息" }
-  ,"customWebsitesNote": { "message": "注意：添加网站后，请刷新页面以使更改生效。自定义网站上只会激活提示词管理器。", "description": "自定义网站重新加载提示" }
+  ,"customWebsitesNote": { "message": "注意:添加网站后，请刷新页面以使更改生效。自定义网站上只会激活提示词管理器。", "description": "自定义网站重新加载提示" }
+  ,"starredHistory": { "message": "星标历史", "description": "星标历史标题" }
+  ,"viewStarredHistory": { "message": "查看星标历史", "description": "查看星标历史按钮" }
+  ,"noStarredMessages": { "message": "暂无星标消息", "description": "无星标消息占位符" }
+  ,"removeFromStarred": { "message": "取消星标", "description": "取消星标提示" }
+  ,"justNow": { "message": "刚刚", "description": "刚刚时间标签" }
+  ,"hoursAgo": { "message": "小时前", "description": "小时前标签" }
+  ,"yesterday": { "message": "昨天", "description": "昨天日期标签" }
+  ,"daysAgo": { "message": "天前", "description": "天前标签" }
+  ,"loading": { "message": "加载中...", "description": "加载消息" }
 }

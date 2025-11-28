@@ -9,6 +9,7 @@ import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 
+import { StarredHistory } from './components/StarredHistory';
 import WidthSlider from './components/WidthSlider';
 
 type ScrollMode = 'jump' | 'flow';
@@ -33,6 +34,7 @@ export default function Popup() {
   const [customWebsites, setCustomWebsites] = useState<string[]>([]);
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
   const [websiteError, setWebsiteError] = useState<string>('');
+  const [showStarredHistory, setShowStarredHistory] = useState<boolean>(false);
 
   // Helper function to apply settings to storage
   const apply = useCallback((settings: SettingsUpdate) => {
@@ -165,6 +167,11 @@ export default function Popup() {
     apply({ customWebsites: updatedWebsites });
   }, [customWebsites, apply]);
 
+  // Show starred history if requested
+  if (showStarredHistory) {
+    return <StarredHistory onClose={() => setShowStarredHistory(false)} />;
+  }
+
   return (
     <div className="w-[360px] bg-background text-foreground">
       {/* Header */}
@@ -270,6 +277,30 @@ export default function Popup() {
               }}
             >
               <span className="group-hover:scale-105 transition-transform text-xs">{t('resetTimelinePosition')}</span>
+            </Button>
+            {/* View Starred History Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full group hover:border-primary/50 mt-2"
+              onClick={() => setShowStarredHistory(true)}
+            >
+              <span className="group-hover:scale-105 transition-transform text-xs flex items-center gap-1.5">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-primary"
+                >
+                  <path
+                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                    fill="currentColor"
+                  />
+                </svg>
+                {t('viewStarredHistory')}
+              </span>
             </Button>
           </CardContent>
         </Card>
