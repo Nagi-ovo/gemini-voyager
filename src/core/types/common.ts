@@ -58,6 +58,7 @@ export const StorageKeys = {
 
   // Global settings
   LANGUAGE: 'language',
+  FORMULA_COPY_FORMAT: 'gvFormulaCopyFormat',
 } as const;
 
 export type StorageKey = typeof StorageKeys[keyof typeof StorageKeys];

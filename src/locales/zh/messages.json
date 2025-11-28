@@ -102,6 +102,10 @@
   ,"sidebarWidthWide": { "message": "宽", "description": "侧边栏变宽标签" }
   ,"formula_copied": { "message": "✓ 公式已复制", "description": "公式复制成功消息" }
   ,"formula_copy_failed": { "message": "✗ 复制失败", "description": "公式复制失败消息" }
+  ,"formulaCopyFormat": { "message": "公式复制格式", "description": "公式复制格式设置标签" }
+  ,"formulaCopyFormatLatex": { "message": "LaTeX", "description": "LaTeX 格式选项" }
+  ,"formulaCopyFormatUnicodeMath": { "message": "UnicodeMath (Word)", "description": "UnicodeMath 格式选项，用于 Word" }
+  ,"formulaCopyFormatHint": { "message": "选择点击公式时复制的格式", "description": "公式复制格式提示" }
   ,"folder_export": { "message": "导出文件夹", "description": "导出文件夹按钮提示" }
   ,"folder_import": { "message": "导入文件夹", "description": "导入文件夹按钮提示" }
   ,"folder_import_title": { "message": "导入文件夹配置", "description": "导入对话框标题" }
