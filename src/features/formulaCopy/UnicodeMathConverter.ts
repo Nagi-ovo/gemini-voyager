@@ -42,10 +42,9 @@ function toBoldText(text: string): string {
 /**
  * Convert LaTeX formula to UnicodeMath format
  * @param latex - LaTeX formula string
- * @param isDisplayMode - Whether the formula is in display mode
  * @returns UnicodeMath formatted string
  */
-export function latexToUnicodeMath(latex: string, isDisplayMode: boolean): string {
+export function latexToUnicodeMath(latex: string): string {
   if (!latex) return '';
 
   let result = latex;
@@ -65,9 +64,11 @@ export function latexToUnicodeMath(latex: string, isDisplayMode: boolean): strin
   };
 
   // Process accents: \hat{x} -> x̂
-  for (const [latex, combining] of Object.entries(accentMarks)) {
+  for (const [accentLatex, combining] of Object.entries(accentMarks)) {
+    const escaped = accentLatex.replace(/\\/g, '\\\\');
+
     // Handle braced form: \hat{x} -> x̂
-    const bracedPattern = new RegExp(latex.replace(/\\/g, '\\\\') + '\\{([^}]+)\\}', 'g');
+    const bracedPattern = new RegExp(escaped + '\\{([^}]+)\\}', 'g');
     result = result.replace(bracedPattern, (match, content) => {
       // For single character, place combining mark after
       if (content.length === 1) {
@@ -77,9 +78,14 @@ export function latexToUnicodeMath(latex: string, isDisplayMode: boolean): strin
       return '(' + content + ')' + combining;
     });
 
-    // Handle non-braced form: \hat x -> x̂
-    const unbracedPattern = new RegExp(latex.replace(/\\/g, '\\\\') + '\\s+([a-zA-Z])', 'g');
-    result = result.replace(unbracedPattern, (match, char) => char + combining);
+    // Handle non-braced form:
+    // - \hat x       -> x̂
+    // - \hat\alpha   -> α̂
+    const unbracedPattern = new RegExp(
+      `${escaped}\\s*(\\\\[a-zA-Z]+|[a-zA-Z])`,
+      'g'
+    );
+    result = result.replace(unbracedPattern, (match, token) => token + combining);
   }
 
   // Greek letters (lowercase)
@@ -214,9 +220,20 @@ export function latexToUnicodeMath(latex: string, isDisplayMode: boolean): strin
     '\\wp': '℘',
   };
 
-  // Replace Greek letters and symbols
-  for (const [latex, unicode] of Object.entries({ ...greekLowercase, ...greekUppercase, ...symbols })) {
-    result = result.replace(new RegExp(latex.replace(/\\/g, '\\\\'), 'g'), unicode);
+  // Replace Greek letters and symbols.
+  // Process from longest to shortest key to avoid prefix conflicts
+  // (e.g., \notin vs \in).
+  const allSymbols: Record<string, string> = {
+    ...greekLowercase,
+    ...greekUppercase,
+    ...symbols,
+  };
+  const sortedKeys = Object.keys(allSymbols).sort((a, b) => b.length - a.length);
+
+  for (const latexKey of sortedKeys) {
+    const unicode = allSymbols[latexKey];
+    const pattern = new RegExp(latexKey.replace(/\\/g, '\\\\'), 'g');
+    result = result.replace(pattern, unicode);
   }
 
   // Handle fractions: \frac{a}{b} -> a/b (UnicodeMath uses linear format)
@@ -271,9 +288,11 @@ export function latexToUnicodeMath(latex: string, isDisplayMode: boolean): strin
   // \begin{matrix}...\end{matrix} -> [■(...)]
   result = result.replace(/\\begin\{(?:matrix|pmatrix|bmatrix|vmatrix|Vmatrix)\}([\s\S]*?)\\end\{(?:matrix|pmatrix|bmatrix|vmatrix|Vmatrix)\}/g, (match, content) => {
     // Replace \\ with @ (row separator in UnicodeMath)
-    const rows = content.trim().split('\\\\').map((row: string) =>
-      row.trim().replace(/&/g, '&')  // & is column separator
-    ).join('@');
+    const rows = content
+      .trim()
+      .split('\\\\')
+      .map((row: string) => row.trim()) // & is column separator in both LaTeX and UnicodeMath
+      .join('@');
     return `[■(${rows})]`;
   });
 

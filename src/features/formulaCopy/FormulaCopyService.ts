@@ -37,6 +37,20 @@ export class FormulaCopyService {
   private readonly config: Required<Omit<FormulaCopyConfig, 'format'>>;
   private currentFormat: FormulaCopyFormat = 'latex';
 
+  // Storage change listener, extracted so it can be removed on destroy
+  private readonly handleStorageChange: Parameters<
+    typeof browser.storage.onChanged.addListener
+  >[0] = (changes, areaName) => {
+    if (areaName === 'sync' && changes[StorageKeys.FORMULA_COPY_FORMAT]) {
+      const newFormat = changes[StorageKeys.FORMULA_COPY_FORMAT]
+        .newValue as FormulaCopyFormat;
+      if (newFormat === 'latex' || newFormat === 'unicodemath') {
+        this.currentFormat = newFormat;
+        this.logger.debug('Formula format changed', { format: newFormat });
+      }
+    }
+  };
+
   private isInitialized = false;
   private copyToast: HTMLDivElement | null = null;
   private i18nMessages: Record<string, string> = {};
@@ -97,15 +111,7 @@ export class FormulaCopyService {
     }
 
     // Listen for format changes
-    browser.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName === 'sync' && changes[StorageKeys.FORMULA_COPY_FORMAT]) {
-        const newFormat = changes[StorageKeys.FORMULA_COPY_FORMAT].newValue as FormulaCopyFormat;
-        if (newFormat === 'latex' || newFormat === 'unicodemath') {
-          this.currentFormat = newFormat;
-          this.logger.debug('Formula format changed', { format: newFormat });
-        }
-      }
-    });
+    browser.storage.onChanged.addListener(this.handleStorageChange);
   }
 
   /**
@@ -126,6 +132,13 @@ export class FormulaCopyService {
    * Clean up the service (for extension unloading)
    */
   public destroy(): void {
+    // Always detach storage change listener
+    try {
+      browser.storage.onChanged.removeListener(this.handleStorageChange);
+    } catch (error) {
+      this.logger.warn('Failed to remove storage change listener', { error });
+    }
+
     if (!this.isInitialized) {
       this.logger.warn('Service not initialized, cannot destroy');
       return;
@@ -295,7 +308,7 @@ export class FormulaCopyService {
   private wrapFormula(formula: string, isDisplayMode: boolean): string {
     if (this.currentFormat === 'unicodemath') {
       // Convert to UnicodeMath format for Word
-      return latexToUnicodeMath(formula, isDisplayMode);
+      return latexToUnicodeMath(formula);
     }
 
     // Default: LaTeX format with delimiters

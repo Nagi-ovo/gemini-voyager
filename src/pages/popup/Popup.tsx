@@ -37,6 +37,19 @@ export default function Popup() {
   const [showStarredHistory, setShowStarredHistory] = useState<boolean>(false);
   const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath'>('latex');
 
+  const handleFormulaCopyFormatChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const format = e.target.value as 'latex' | 'unicodemath';
+      setFormulaCopyFormat(format);
+      try {
+        chrome.storage?.sync?.set({ gvFormulaCopyFormat: format });
+      } catch (err) {
+        console.error('[Gemini Voyager] Failed to save formula copy format:', err);
+      }
+    },
+    []
+  );
+
   // Helper function to apply settings to storage
   const apply = useCallback((settings: SettingsUpdate) => {
     const payload: any = {};
@@ -390,13 +403,7 @@ export default function Popup() {
                   name="formulaCopyFormat"
                   value="latex"
                   checked={formulaCopyFormat === 'latex'}
-                  onChange={(e) => {
-                    const format = e.target.value as 'latex' | 'unicodemath';
-                    setFormulaCopyFormat(format);
-                    try {
-                      chrome.storage?.sync?.set({ gvFormulaCopyFormat: format });
-                    } catch {}
-                  }}
+                  onChange={handleFormulaCopyFormatChange}
                   className="w-4 h-4"
                 />
                 <span className="text-sm">{t('formulaCopyFormatLatex')}</span>
@@ -407,13 +414,7 @@ export default function Popup() {
                   name="formulaCopyFormat"
                   value="unicodemath"
                   checked={formulaCopyFormat === 'unicodemath'}
-                  onChange={(e) => {
-                    const format = e.target.value as 'latex' | 'unicodemath';
-                    setFormulaCopyFormat(format);
-                    try {
-                      chrome.storage?.sync?.set({ gvFormulaCopyFormat: format });
-                    } catch {}
-                  }}
+                  onChange={handleFormulaCopyFormatChange}
                   className="w-4 h-4"
                 />
                 <span className="text-sm">{t('formulaCopyFormatUnicodeMath')}</span>
