@@ -69,6 +69,7 @@ export class FolderManager {
   private tooltipElement: HTMLElement | null = null;
   private tooltipTimeout: number | null = null;
   private sideNavObserver: MutationObserver | null = null;
+  private conversationObserver: MutationObserver | null = null; // Observer for conversation additions/removals
   private importInProgress: boolean = false; // Lock to prevent concurrent imports
   private exportInProgress: boolean = false; // Lock to prevent concurrent exports
   private selectedConversations: Set<string> = new Set(); // For multi-select support
@@ -191,10 +192,15 @@ export class FolderManager {
       this.navPoller = null;
     }
 
-    // Disconnect mutation observer
+    // Disconnect mutation observers
     if (this.sideNavObserver) {
       this.sideNavObserver.disconnect();
       this.sideNavObserver = null;
+    }
+
+    if (this.conversationObserver) {
+      this.conversationObserver.disconnect();
+      this.conversationObserver = null;
     }
 
     this.debug('Cleanup complete');
@@ -1259,7 +1265,13 @@ export class FolderManager {
   private setupMutationObserver(): void {
     if (!this.sidebarContainer) return;
 
-    const observer = new MutationObserver((mutations) => {
+    // Disconnect existing observer to prevent duplicates
+    if (this.conversationObserver) {
+      this.conversationObserver.disconnect();
+      this.conversationObserver = null;
+    }
+
+    this.conversationObserver = new MutationObserver((mutations) => {
       // 1. Handle added conversations (always safe)
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
@@ -1347,7 +1359,7 @@ export class FolderManager {
       });
     });
 
-    observer.observe(this.sidebarContainer, {
+    this.conversationObserver.observe(this.sidebarContainer, {
       childList: true,
       subtree: true,
     });
@@ -1386,9 +1398,31 @@ export class FolderManager {
    */
   private updateVisibilityBasedOnSideNav(): void {
     const appRoot = document.querySelector('#app-root');
-    if (!appRoot || !this.containerElement) return;
+    if (!appRoot) return;
 
     const isSideNavOpen = appRoot.classList.contains('side-nav-open');
+
+    // Check if containerElement exists AND is still in the DOM
+    // During screen resize (e.g., split-screen to fullscreen), Gemini may re-render the sidebar DOM,
+    // causing containerElement to become detached from the DOM tree
+    if (!this.containerElement || !document.body.contains(this.containerElement)) {
+      if (isSideNavOpen) {
+        this.debug('Container element not in DOM, reinitializing folder UI');
+        // Reinitialize the entire folder UI asynchronously
+        // This ensures sidebarContainer and recentSection are also re-found
+        this.reinitializeFolderUI();
+      }
+      return;
+    }
+
+    // Also check if sidebarContainer is still valid
+    if (!this.sidebarContainer || !document.body.contains(this.sidebarContainer)) {
+      if (isSideNavOpen) {
+        this.debug('Sidebar container not in DOM, reinitializing folder UI');
+        this.reinitializeFolderUI();
+      }
+      return;
+    }
 
     if (isSideNavOpen) {
       this.containerElement.style.display = '';
@@ -1397,6 +1431,24 @@ export class FolderManager {
       this.containerElement.style.display = 'none';
       this.debug('Sidebar closed - hiding folder container');
     }
+  }
+
+  /**
+   * Reinitialize folder UI when DOM elements become detached
+   * This can happen during window resize or split-screen operations
+   */
+  private reinitializeFolderUI(): void {
+    this.debug('Reinitializing folder UI...');
+
+    // Clear existing references
+    this.containerElement = null;
+    this.sidebarContainer = null;
+    this.recentSection = null;
+
+    // Reinitialize asynchronously
+    this.initializeFolderUI().catch((error) => {
+      this.debugWarn('Failed to reinitialize folder UI:', error);
+    });
   }
 
   private createFolder(parentId: string | null = null): void {
