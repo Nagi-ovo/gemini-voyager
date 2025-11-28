@@ -3443,6 +3443,26 @@ html.dark .gv-export-dialog-subtitle,
   color: #9aa0a6;
 }
 
+/* Warning message */
+.gv-export-dialog-warning {
+  font-size: 13px;
+  color: #d93025;
+  background-color: #fef7e0;
+  border: 1px solid #f9ab00;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+html.dark .gv-export-dialog-warning,
+[data-theme='dark'] .gv-export-dialog-warning,
+[data-color-scheme='dark'] .gv-export-dialog-warning {
+  color: #fdd663;
+  background-color: rgba(249, 171, 0, 0.1);
+  border-color: #f9ab00;
+}
+
 /* Format list */
 .gv-export-format-list {
   display: flex;

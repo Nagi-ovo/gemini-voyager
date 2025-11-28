@@ -442,6 +442,7 @@ async function showExportDialog(dict: Record<'en' | 'zh', Record<string, string>
     translations: {
       title: t('export_dialog_title'),
       selectFormat: t('export_dialog_select'),
+      warning: t('export_dialog_warning'),
       cancel: t('pm_cancel'),
       export: t('pm_export'),
     },
