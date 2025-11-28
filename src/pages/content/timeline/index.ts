@@ -8,6 +8,7 @@ function isGeminiConversationRoute(pathname = location.pathname): boolean {
 
 let timelineManagerInstance: TimelineManager | null = null;
 let currentUrl = location.href;
+let currentPathAndSearch = location.pathname + location.search;
 let routeCheckIntervalId: number | null = null;
 let routeListenersAttached = false;
 let activeObservers: MutationObserver[] = [];
@@ -35,11 +36,41 @@ function initializeTimeline(): void {
     .catch((err) => console.error('Timeline initialization failed:', err));
 }
 
+let urlChangeTimer: number | null = null;
+
 function handleUrlChange(): void {
   if (location.href === currentUrl) return;
+
+  const newPathAndSearch = location.pathname + location.search;
+  const pathChanged = newPathAndSearch !== currentPathAndSearch;
+
+  // Update current URL
   currentUrl = location.href;
-  if (isGeminiConversationRoute()) initializeTimeline();
-  else {
+
+  // Only reinitialize if pathname or search changed, not just hash
+  if (!pathChanged) {
+    console.log('[Timeline] Only hash changed, keeping existing timeline');
+    return;
+  }
+
+  currentPathAndSearch = newPathAndSearch;
+
+  // Clear any pending initialization
+  if (urlChangeTimer) {
+    clearTimeout(urlChangeTimer);
+    urlChangeTimer = null;
+  }
+
+  if (isGeminiConversationRoute()) {
+    // Add delay to allow DOM to update after SPA navigation
+    console.log('[Timeline] URL changed to conversation route, scheduling initialization');
+    urlChangeTimer = window.setTimeout(() => {
+      console.log('[Timeline] Initializing timeline after URL change');
+      initializeTimeline();
+      urlChangeTimer = null;
+    }, 500); // Wait for DOM to settle
+  } else {
+    console.log('[Timeline] URL changed to non-conversation route, cleaning up');
     if (timelineManagerInstance) {
       try {
         timelineManagerInstance.destroy();

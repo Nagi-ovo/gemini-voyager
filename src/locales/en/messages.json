@@ -162,4 +162,12 @@
   ,"websiteRemoved": { "message": "Website removed", "description": "Website removed success message" }
   ,"permissionDenied": { "message": "Permission denied. Please allow access to this website.", "description": "Permission denied error message" }
   ,"customWebsitesNote": { "message": "Note: After adding websites, please reload the page for changes to take effect. Only the Prompt Manager will be activated on custom sites.", "description": "Custom websites reload note" }
+  ,"starredHistory": { "message": "Starred History", "description": "Starred history title" }
+  ,"viewStarredHistory": { "message": "View Starred History", "description": "View starred history button" }
+  ,"noStarredMessages": { "message": "No starred messages yet", "description": "No starred messages placeholder" }
+  ,"removeFromStarred": { "message": "Remove from starred", "description": "Remove from starred tooltip" }
+  ,"today": { "message": "Today", "description": "Today date label" }
+  ,"yesterday": { "message": "Yesterday", "description": "Yesterday date label" }
+  ,"daysAgo": { "message": "days ago", "description": "Days ago label" }
+  ,"loading": { "message": "Loading...", "description": "Loading message" }
 }
