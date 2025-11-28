@@ -78,7 +78,7 @@
   "pm_backup_step3": { "message": "点击 \"💾 一键备份\" 按钮，选择备份文件夹", "description": "备份步骤 3" },
   "pm_backup_note": { "message": "备份将包含所有提示词和文件夹，并保存在带时间戳的文件夹中（格式：backup-YYYYMMDD-HHMMSS）", "description": "备份功能说明" }
   ,"starProject": { "message": "为项目点亮⭐️", "description": "Github 引导" }
-  ,"exportChatJson": { "message": "导出聊天记录（JSON）", "description": "导出按钮提示" }
+  ,"exportChatJson": { "message": "导出聊天记录", "description": "导出按钮提示" }
   ,"folder_title": { "message": "文件夹", "description": "文件夹区域标题" }
   ,"folder_create": { "message": "创建文件夹", "description": "创建文件夹按钮提示" }
   ,"folder_name_prompt": { "message": "输入文件夹名称：", "description": "创建文件夹名称提示" }
