@@ -102,6 +102,10 @@
   ,"sidebarWidthWide": { "message": "Wide", "description": "Wide sidebar width label" }
   ,"formula_copied": { "message": "✓ Formula copied", "description": "Formula copied success message" }
   ,"formula_copy_failed": { "message": "✗ Failed to copy", "description": "Formula copy failed message" }
+  ,"formulaCopyFormat": { "message": "Formula copy format", "description": "Formula copy format setting label" }
+  ,"formulaCopyFormatLatex": { "message": "LaTeX", "description": "LaTeX format option" }
+  ,"formulaCopyFormatUnicodeMath": { "message": "UnicodeMath (Word)", "description": "UnicodeMath format option for Word" }
+  ,"formulaCopyFormatHint": { "message": "Choose the format when copying formulas by clicking", "description": "Formula copy format hint" }
   ,"folder_export": { "message": "Export folders", "description": "Export folders button tooltip" }
   ,"folder_import": { "message": "Import folders", "description": "Import folders button tooltip" }
   ,"folder_import_title": { "message": "Import Folder Configuration", "description": "Import dialog title" }

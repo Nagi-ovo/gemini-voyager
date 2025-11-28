@@ -35,6 +35,20 @@ export default function Popup() {
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
   const [websiteError, setWebsiteError] = useState<string>('');
   const [showStarredHistory, setShowStarredHistory] = useState<boolean>(false);
+  const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath'>('latex');
+
+  const handleFormulaCopyFormatChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const format = e.target.value as 'latex' | 'unicodemath';
+      setFormulaCopyFormat(format);
+      try {
+        chrome.storage?.sync?.set({ gvFormulaCopyFormat: format });
+      } catch (err) {
+        console.error('[Gemini Voyager] Failed to save formula copy format:', err);
+      }
+    },
+    []
+  );
 
   // Helper function to apply settings to storage
   const apply = useCallback((settings: SettingsUpdate) => {
@@ -94,10 +108,13 @@ export default function Popup() {
           geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
           gvPromptCustomWebsites: [],
+          gvFormulaCopyFormat: 'latex',
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
           if (m === 'jump' || m === 'flow') setMode(m);
+          const format = res?.gvFormulaCopyFormat as 'latex' | 'unicodemath';
+          if (format === 'latex' || format === 'unicodemath') setFormulaCopyFormat(format);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
@@ -373,6 +390,38 @@ export default function Popup() {
           onChange={sidebarWidthAdjuster.handleChange}
           onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
         />
+
+        {/* Formula Copy Options */}
+        <Card className="p-4 hover:shadow-lg transition-shadow">
+          <CardTitle className="mb-4 text-xs uppercase">{t('formulaCopyFormat')}</CardTitle>
+          <CardContent className="p-0 space-y-3">
+            <p className="text-xs text-muted-foreground mb-3">{t('formulaCopyFormatHint')}</p>
+            <div className="space-y-2">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="formulaCopyFormat"
+                  value="latex"
+                  checked={formulaCopyFormat === 'latex'}
+                  onChange={handleFormulaCopyFormatChange}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm">{t('formulaCopyFormatLatex')}</span>
+              </label>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="formulaCopyFormat"
+                  value="unicodemath"
+                  checked={formulaCopyFormat === 'unicodemath'}
+                  onChange={handleFormulaCopyFormatChange}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm">{t('formulaCopyFormatUnicodeMath')}</span>
+              </label>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Prompt Manager Options */}
         <Card className="p-4 hover:shadow-lg transition-shadow">

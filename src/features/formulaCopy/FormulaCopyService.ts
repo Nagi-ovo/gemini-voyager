@@ -6,8 +6,16 @@
 
 import browser from 'webextension-polyfill';
 
+import { latexToUnicodeMath } from './UnicodeMathConverter';
+
 import { logger } from '@/core';
+import { StorageKeys } from '@/core/types/common';
 import type { ILogger } from '@/core/types/common';
+
+/**
+ * Formula copy format options
+ */
+export type FormulaCopyFormat = 'latex' | 'unicodemath';
 
 /**
  * Configuration for the formula copy service
@@ -16,6 +24,7 @@ export interface FormulaCopyConfig {
   toastDuration?: number;
   toastOffsetY?: number;
   maxTraversalDepth?: number;
+  format?: FormulaCopyFormat;
 }
 
 /**
@@ -25,7 +34,22 @@ export interface FormulaCopyConfig {
 export class FormulaCopyService {
   private static instance: FormulaCopyService | null = null;
   private readonly logger: ILogger;
-  private readonly config: Required<FormulaCopyConfig>;
+  private readonly config: Required<Omit<FormulaCopyConfig, 'format'>>;
+  private currentFormat: FormulaCopyFormat = 'latex';
+
+  // Storage change listener, extracted so it can be removed on destroy
+  private readonly handleStorageChange: Parameters<
+    typeof browser.storage.onChanged.addListener
+  >[0] = (changes, areaName) => {
+    if (areaName === 'sync' && changes[StorageKeys.FORMULA_COPY_FORMAT]) {
+      const newFormat = changes[StorageKeys.FORMULA_COPY_FORMAT]
+        .newValue as FormulaCopyFormat;
+      if (newFormat === 'latex' || newFormat === 'unicodemath') {
+        this.currentFormat = newFormat;
+        this.logger.debug('Formula format changed', { format: newFormat });
+      }
+    }
+  };
 
   private isInitialized = false;
   private copyToast: HTMLDivElement | null = null;
@@ -38,7 +62,9 @@ export class FormulaCopyService {
       toastOffsetY: config.toastOffsetY ?? 40,
       maxTraversalDepth: config.maxTraversalDepth ?? 10,
     };
+    this.currentFormat = config.format ?? 'latex';
     this.loadI18nMessages();
+    this.loadFormatPreference();
   }
 
   /**
@@ -70,6 +96,25 @@ export class FormulaCopyService {
   }
 
   /**
+   * Load format preference from storage
+   */
+  private async loadFormatPreference(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get(StorageKeys.FORMULA_COPY_FORMAT);
+      const format = result[StorageKeys.FORMULA_COPY_FORMAT] as FormulaCopyFormat | undefined;
+      if (format === 'latex' || format === 'unicodemath') {
+        this.currentFormat = format;
+        this.logger.debug('Loaded formula format preference', { format });
+      }
+    } catch (error) {
+      this.logger.warn('Failed to load format preference, using default', { error });
+    }
+
+    // Listen for format changes
+    browser.storage.onChanged.addListener(this.handleStorageChange);
+  }
+
+  /**
    * Initialize the formula copy feature
    */
   public initialize(): void {
@@ -87,6 +132,13 @@ export class FormulaCopyService {
    * Clean up the service (for extension unloading)
    */
   public destroy(): void {
+    // Always detach storage change listener
+    try {
+      browser.storage.onChanged.removeListener(this.handleStorageChange);
+    } catch (error) {
+      this.logger.warn('Failed to remove storage change listener', { error });
+    }
+
     if (!this.isInitialized) {
       this.logger.warn('Service not initialized, cannot destroy');
       return;
@@ -248,12 +300,18 @@ export class FormulaCopyService {
   }
 
   /**
-   * Wrap formula with appropriate delimiters
+   * Wrap formula with appropriate delimiters based on format
    * @param formula - Raw LaTeX formula
    * @param isDisplayMode - Whether formula is in display mode
-   * @returns Wrapped formula with $$ for display mode or $ for inline mode
+   * @returns Formatted formula (LaTeX with delimiters or UnicodeMath)
    */
   private wrapFormula(formula: string, isDisplayMode: boolean): string {
+    if (this.currentFormat === 'unicodemath') {
+      // Convert to UnicodeMath format for Word
+      return latexToUnicodeMath(formula);
+    }
+
+    // Default: LaTeX format with delimiters
     if (isDisplayMode) {
       return `$$${formula}$$`;
     }
