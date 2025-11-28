@@ -457,7 +457,9 @@ export class TimelineManager {
     let id = (asEl.dataset && (asEl.dataset as any).turnId) || '';
     if (!id) {
       const basis = this.normalizeText(asEl.textContent || '') || `user-${index}`;
-      id = `u-${index}-${hashString(basis)}`;
+      // Use only content hash (without index) to ensure stable IDs across page refreshes
+      // This prevents starred messages from losing their stars when the conversation continues
+      id = `u-${hashString(basis)}`;
       try {
         (asEl.dataset as any).turnId = id;
       } catch {}
