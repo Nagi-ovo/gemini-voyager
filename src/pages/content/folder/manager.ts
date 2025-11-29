@@ -612,6 +612,12 @@ export class FolderManager {
         this.updateConversationSelectionUI();
       }
 
+      // Cancel long press if drag starts
+      if (this.longPressTimeout) {
+        clearTimeout(this.longPressTimeout);
+        this.longPressTimeout = null;
+      }
+
       // Include all selected conversations in the drag data
       const selectedConvs = this.getSelectedConversationsData(folderId);
       const dragData = {
@@ -634,6 +640,12 @@ export class FolderManager {
         const el = this.containerElement?.querySelector(`[data-conversation-id="${id}"]`) as HTMLElement;
         if (el) el.style.opacity = '1';
       });
+
+      // If we are not in multi-select mode, clear the temporary selection
+      if (!this.isMultiSelectMode) {
+        this.clearSelection();
+        this.cleanupSelectionArtifacts();
+      }
     });
 
     // Conversation icon - use Gem-specific icons
@@ -1099,6 +1111,12 @@ export class FolderManager {
         this.updateConversationSelectionUI();
       }
 
+      // Cancel long press if drag starts
+      if (longPressTimeoutId) {
+        clearTimeout(longPressTimeoutId);
+        longPressTimeoutId = null;
+      }
+
       // Check if we have multiple selections
       if (this.selectedConversations.size > 1) {
         // Multi-select drag - collect all selected conversations
@@ -1166,6 +1184,12 @@ export class FolderManager {
         });
       } else {
         element.style.opacity = '1';
+      }
+
+      // If we are not in multi-select mode, clear the temporary selection
+      if (!this.isMultiSelectMode) {
+        this.clearSelection();
+        this.cleanupSelectionArtifacts();
       }
     });
   }
