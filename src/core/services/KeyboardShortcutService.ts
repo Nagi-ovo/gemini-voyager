@@ -22,6 +22,7 @@ import type {
   ShortcutAction,
   ShortcutMatch,
 } from '@/core/types/keyboardShortcut';
+import { StorageKeys } from '@/core/types/common';
 
 /**
  * Default keyboard shortcuts configuration
@@ -39,11 +40,6 @@ const DEFAULT_SHORTCUTS: KeyboardShortcutConfig = {
     key: 'j',
   },
 };
-
-/**
- * Storage key for shortcuts configuration
- */
-const STORAGE_KEY = 'geminiTimelineShortcuts';
 
 /**
  * Callback type for shortcut actions
@@ -92,8 +88,8 @@ export class KeyboardShortcutService {
   private async loadConfig(): Promise<void> {
     try {
       if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
-        const result = await chrome.storage.sync.get(STORAGE_KEY);
-        const stored = result[STORAGE_KEY] as KeyboardShortcutStorage | undefined;
+        const result = await chrome.storage.sync.get(StorageKeys.TIMELINE_SHORTCUTS);
+        const stored = result[StorageKeys.TIMELINE_SHORTCUTS] as KeyboardShortcutStorage | undefined;
 
         if (stored?.shortcuts) {
           this.config = this.validateConfig(stored.shortcuts) ? stored.shortcuts : DEFAULT_SHORTCUTS;
@@ -101,7 +97,7 @@ export class KeyboardShortcutService {
         }
       } else {
         // Fallback to localStorage
-        const stored = localStorage.getItem(STORAGE_KEY);
+        const stored = localStorage.getItem(StorageKeys.TIMELINE_SHORTCUTS);
         if (stored) {
           const parsed = JSON.parse(stored) as KeyboardShortcutStorage;
           this.config = this.validateConfig(parsed.shortcuts) ? parsed.shortcuts : DEFAULT_SHORTCUTS;
@@ -133,9 +129,9 @@ export class KeyboardShortcutService {
 
     try {
       if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
-        await chrome.storage.sync.set({ [STORAGE_KEY]: storage });
+        await chrome.storage.sync.set({ [StorageKeys.TIMELINE_SHORTCUTS]: storage });
       } else {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+        localStorage.setItem(StorageKeys.TIMELINE_SHORTCUTS, JSON.stringify(storage));
       }
     } catch (error) {
       console.error('[KeyboardShortcut] Failed to save config:', error);
@@ -218,8 +214,8 @@ export class KeyboardShortcutService {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       this.storageChangeHandler = (changes, areaName) => {
         if (areaName !== 'sync') return;
-        if (changes[STORAGE_KEY]) {
-          const newValue = changes[STORAGE_KEY].newValue as KeyboardShortcutStorage | undefined;
+        if (changes[StorageKeys.TIMELINE_SHORTCUTS]) {
+          const newValue = changes[StorageKeys.TIMELINE_SHORTCUTS].newValue as KeyboardShortcutStorage | undefined;
           if (newValue?.shortcuts) {
             this.config = this.validateConfig(newValue.shortcuts)
               ? newValue.shortcuts

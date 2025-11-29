@@ -1942,6 +1942,31 @@ export class TimelineManager {
   }
 
   /**
+   * Perform navigation to a target node
+   * Shared logic for previous/next navigation
+   */
+  private async performNodeNavigation(targetIndex: number, currentIndex: number): Promise<void> {
+    if (targetIndex < 0 || targetIndex >= this.markers.length) return;
+
+    const targetMarker = this.markers[targetIndex];
+    if (!targetMarker?.element) return;
+
+    if (this.scrollMode === 'flow' && currentIndex >= 0) {
+      // Flow mode: animate with queue support
+      const duration = this.computeFlowDuration(currentIndex, targetIndex);
+      this.startRunner(currentIndex, targetIndex, duration);
+      this.smoothScrollTo(targetMarker.element, duration);
+      await new Promise<void>((resolve) => setTimeout(resolve, duration));
+    } else {
+      // Jump mode: instant, no wait
+      this.smoothScrollTo(targetMarker.element, 0);
+    }
+
+    this.activeTurnId = targetMarker.id;
+    this.updateActiveDotUI();
+  }
+
+  /**
    * Navigate to previous timeline node (k or custom shortcut)
    */
   private async navigateToPreviousNode(): Promise<void> {
@@ -1950,24 +1975,7 @@ export class TimelineManager {
     const currentIndex = this.getActiveIndex();
     const targetIndex = currentIndex <= 0 ? 0 : currentIndex - 1;
 
-    if (targetIndex < 0 || targetIndex >= this.markers.length) return;
-
-    const targetMarker = this.markers[targetIndex];
-    if (targetMarker && targetMarker.element) {
-      if (this.scrollMode === 'flow' && currentIndex >= 0) {
-        // Flow mode: animate with queue support
-        const duration = this.computeFlowDuration(currentIndex, targetIndex);
-        this.startRunner(currentIndex, targetIndex, duration);
-        this.smoothScrollTo(targetMarker.element, duration);
-        await new Promise<void>((resolve) => setTimeout(resolve, duration));
-      } else {
-        // Jump mode: instant, no wait
-        this.smoothScrollTo(targetMarker.element, 0);
-      }
-
-      this.activeTurnId = targetMarker.id;
-      this.updateActiveDotUI();
-    }
+    await this.performNodeNavigation(targetIndex, currentIndex);
   }
 
   /**
@@ -1979,24 +1987,7 @@ export class TimelineManager {
     const currentIndex = this.getActiveIndex();
     const targetIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, this.markers.length - 1);
 
-    if (targetIndex < 0 || targetIndex >= this.markers.length) return;
-
-    const targetMarker = this.markers[targetIndex];
-    if (targetMarker && targetMarker.element) {
-      if (this.scrollMode === 'flow' && currentIndex >= 0) {
-        // Flow mode: animate with queue support
-        const duration = this.computeFlowDuration(currentIndex, targetIndex);
-        this.startRunner(currentIndex, targetIndex, duration);
-        this.smoothScrollTo(targetMarker.element, duration);
-        await new Promise<void>((resolve) => setTimeout(resolve, duration));
-      } else {
-        // Jump mode: instant, no wait
-        this.smoothScrollTo(targetMarker.element, 0);
-      }
-
-      this.activeTurnId = targetMarker.id;
-      this.updateActiveDotUI();
-    }
+    await this.performNodeNavigation(targetIndex, currentIndex);
   }
 
   /**

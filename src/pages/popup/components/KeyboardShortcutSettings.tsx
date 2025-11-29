@@ -89,8 +89,6 @@ export function KeyboardShortcutSettings() {
     const currentConfig = configRef.current;
     const currentEnabled = enabledRef.current;
 
-    console.log('[KeyboardShortcut] Key pressed:', e.key, 'Recording:', currentRecording.action);
-
     if (!currentRecording.action) return;
 
     e.preventDefault();
@@ -98,14 +96,12 @@ export function KeyboardShortcutSettings() {
 
     // Escape cancels recording
     if (e.key === 'Escape') {
-      console.log('[KeyboardShortcut] Cancelled');
       setRecording({ action: null, modifiers: [], key: null });
       return;
     }
 
     // Ignore modifier keys alone (they can't be shortcuts by themselves)
     if (['Alt', 'Control', 'Shift', 'Meta', 'AltGraph'].includes(e.key)) {
-      console.log('[KeyboardShortcut] Ignoring modifier key alone');
       return;
     }
 
@@ -123,8 +119,6 @@ export function KeyboardShortcutSettings() {
       key = e.key;
     }
 
-    console.log('[KeyboardShortcut] Recording key:', key);
-
     // Extract modifiers
     const modifiers: ModifierKey[] = [];
     if (e.altKey) modifiers.push('Alt');
@@ -132,13 +126,8 @@ export function KeyboardShortcutSettings() {
     if (e.shiftKey) modifiers.push('Shift');
     if (e.metaKey) modifiers.push('Meta');
 
-    console.log('[KeyboardShortcut] Modifiers:', modifiers);
-
     // Update config
-    if (!currentConfig) {
-      console.log('[KeyboardShortcut] No config');
-      return;
-    }
+    if (!currentConfig) return;
 
     const updatedConfig: KeyboardShortcutConfig = {
       ...currentConfig,
@@ -149,13 +138,10 @@ export function KeyboardShortcutSettings() {
       },
     };
 
-    console.log('[KeyboardShortcut] Saving config:', updatedConfig);
-
     try {
       await keyboardShortcutService.saveConfig(updatedConfig, currentEnabled);
       setConfig(updatedConfig);
       setRecording({ action: null, modifiers: [], key: null });
-      console.log('[KeyboardShortcut] Saved successfully');
     } catch (error) {
       console.error('[KeyboardShortcut] Failed to save shortcut:', error);
     }
