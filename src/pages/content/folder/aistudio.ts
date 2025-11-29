@@ -82,6 +82,10 @@ export class AIStudioFolderManager {
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private backupService!: DataBackupService<FolderData>; // Initialized in init()
+  private sidebarWidth: number = 280; // Default sidebar width
+  private readonly SIDEBAR_WIDTH_KEY = 'gvAIStudioSidebarWidth';
+  private readonly MIN_SIDEBAR_WIDTH = 240;
+  private readonly MAX_SIDEBAR_WIDTH = 600;
 
   // Helper to create a ligature icon span with a data-icon attribute
   private createIcon(name: string): HTMLSpanElement {
@@ -124,6 +128,9 @@ export class AIStudioFolderManager {
     // Load folder enabled setting
     await this.loadFolderEnabledSetting();
 
+    // Load sidebar width setting
+    await this.loadSidebarWidth();
+
     // Set up storage change listener (always needed to respond to setting changes)
     this.setupStorageListener();
 
@@ -150,6 +157,12 @@ export class AIStudioFolderManager {
     // Highlight current conversation initially and on navigation
     this.highlightActiveConversation();
     this.installRouteChangeListener();
+
+    // Apply initial sidebar width (force on first load)
+    this.applySidebarWidth(true);
+
+    // Add resize handle for sidebar width adjustment
+    this.addResizeHandle();
   }
 
   private async load(): Promise<void> {
@@ -159,7 +172,6 @@ export class AIStudioFolderManager {
         this.data = res.data;
         // Create primary backup on successful load
         this.backupService.createPrimaryBackup(this.data);
-        console.log('[AIStudioFolderManager] Data loaded successfully');
       } else {
         // Don't immediately clear data - try to recover from backup
         console.warn('[AIStudioFolderManager] Storage returned no data, attempting recovery from backup');
@@ -182,8 +194,6 @@ export class AIStudioFolderManager {
 
       // Create primary backup AFTER successful save
       this.backupService.createPrimaryBackup(this.data);
-
-      console.log('[AIStudioFolderManager] Data saved successfully');
     } catch (error) {
       console.error('[AIStudioFolderManager] Save error:', error);
       // Show error notification to user
@@ -834,6 +844,236 @@ export class AIStudioFolderManager {
     } catch (notificationError) {
       console.error('[AIStudioFolderManager] Failed to show notification:', notificationError);
     }
+  }
+
+  /**
+   * Check if extension context is valid
+   */
+  private isExtensionContextValid(): boolean {
+    try {
+      // Try to access chrome.runtime.id to check if context is valid
+      return !!(browser?.runtime?.id || chrome?.runtime?.id);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Load sidebar width from storage (with localStorage fallback)
+   */
+  private async loadSidebarWidth(): Promise<void> {
+    try {
+      // Try chrome.storage.sync first
+      if (this.isExtensionContextValid()) {
+        const result = await browser.storage.sync.get({ [this.SIDEBAR_WIDTH_KEY]: 280 });
+        const width = result[this.SIDEBAR_WIDTH_KEY];
+        if (typeof width === 'number' && width >= this.MIN_SIDEBAR_WIDTH && width <= this.MAX_SIDEBAR_WIDTH) {
+          this.sidebarWidth = width;
+          return;
+        }
+      }
+    } catch (error) {
+      console.warn('[AIStudioFolderManager] Failed to load from sync storage, trying localStorage:', error);
+    }
+
+    // Fallback to localStorage
+    try {
+      const stored = localStorage.getItem(this.SIDEBAR_WIDTH_KEY);
+      if (stored) {
+        const width = parseInt(stored, 10);
+        if (typeof width === 'number' && width >= this.MIN_SIDEBAR_WIDTH && width <= this.MAX_SIDEBAR_WIDTH) {
+          this.sidebarWidth = width;
+        }
+      }
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to load sidebar width from localStorage:', error);
+    }
+  }
+
+  /**
+   * Save sidebar width to storage (with localStorage fallback)
+   */
+  private async saveSidebarWidth(): Promise<void> {
+    // Always save to localStorage as immediate backup
+    try {
+      localStorage.setItem(this.SIDEBAR_WIDTH_KEY, String(this.sidebarWidth));
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to save to localStorage:', error);
+    }
+
+    // Try to save to chrome.storage.sync if context is valid
+    if (this.isExtensionContextValid()) {
+      try {
+        await browser.storage.sync.set({ [this.SIDEBAR_WIDTH_KEY]: this.sidebarWidth });
+      } catch (error) {
+        // Silent fail if extension context is invalidated (happens during dev reload)
+        if (error instanceof Error && !error.message.includes('Extension context invalidated')) {
+          console.error('[AIStudioFolderManager] Failed to save sidebar width:', error);
+        }
+      }
+    }
+  }
+
+  /**
+   * Apply sidebar width to the navbar element (only when expanded)
+   */
+  private applySidebarWidth(force: boolean = false): void {
+    // Target the actual nav-content div, not the outer ms-navbar
+    const navContent = document.querySelector('.nav-content.v3-left-nav') as HTMLElement | null;
+    if (!navContent) return;
+
+    // Check if sidebar is expanded by looking at the 'expanded' class
+    const isExpanded = navContent.classList.contains('expanded');
+
+    if (isExpanded || force) {
+      navContent.style.width = `${this.sidebarWidth}px`;
+      navContent.style.minWidth = `${this.sidebarWidth}px`;
+      navContent.style.maxWidth = `${this.sidebarWidth}px`;
+      navContent.style.flex = `0 0 ${this.sidebarWidth}px`;
+    } else {
+      // Remove our width overrides when collapsed to allow native behavior
+      navContent.style.width = '';
+      navContent.style.minWidth = '';
+      navContent.style.maxWidth = '';
+      navContent.style.flex = '';
+    }
+  }
+
+  /**
+   * Add a draggable resize handle to adjust sidebar width
+   */
+  private addResizeHandle(): void {
+    // Target the actual nav-content div
+    const navContent = document.querySelector('.nav-content.v3-left-nav') as HTMLElement | null;
+    if (!navContent) {
+      console.warn('[AIStudioFolderManager] nav-content not found, resize handle not added');
+      return;
+    }
+
+    // Create resize handle
+    const handle = document.createElement('div');
+    handle.className = 'gv-sidebar-resize-handle';
+    handle.title = 'Drag to resize sidebar';
+
+    // Position it at the right edge of the nav-content with inline styles
+    const handleStyle = handle.style;
+    handleStyle.position = 'absolute';
+    handleStyle.top = '0';
+    handleStyle.right = '-4px'; // Position at right edge, overlapping slightly outside
+    handleStyle.width = '8px';
+    handleStyle.height = '100%';
+    handleStyle.cursor = 'ew-resize';
+    handleStyle.zIndex = '10000';
+    handleStyle.backgroundColor = 'transparent';
+    handleStyle.transition = 'background-color 0.2s';
+    handleStyle.pointerEvents = 'auto';
+
+    // Hover effect
+    handle.addEventListener('mouseenter', () => {
+      handleStyle.backgroundColor = 'rgba(66, 133, 244, 0.5)';
+    });
+    handle.addEventListener('mouseleave', () => {
+      handleStyle.backgroundColor = 'transparent';
+    });
+
+    // Dragging logic
+    let isDragging = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      isDragging = true;
+      startX = e.clientX;
+      startWidth = this.sidebarWidth;
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Add dragging class for visual feedback
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+
+      const delta = e.clientX - startX;
+      const newWidth = Math.max(
+        this.MIN_SIDEBAR_WIDTH,
+        Math.min(this.MAX_SIDEBAR_WIDTH, startWidth + delta)
+      );
+
+      this.sidebarWidth = newWidth;
+      this.applySidebarWidth(true); // Force apply during drag
+
+      // Handle position is relative, no need to update during drag
+    };
+
+    const handleMouseUp = () => {
+      if (!isDragging) return;
+
+      isDragging = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+
+      // Save the new width
+      this.saveSidebarWidth();
+    };
+
+    handle.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    // Ensure nav-content has position relative for absolute handle positioning
+    navContent.style.position = 'relative';
+
+    // Add to nav-content for correct positioning
+    navContent.appendChild(handle);
+
+    // Update handle visibility when sidebar state changes
+    const updateHandleVisibility = () => {
+      const isExpanded = navContent.classList.contains('expanded');
+
+      if (isExpanded) {
+        handleStyle.display = 'block';
+      } else {
+        handleStyle.display = 'none'; // Hide when collapsed
+      }
+    };
+
+    // Monitor sidebar state changes by watching the 'expanded' class
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          updateHandleVisibility();
+          this.applySidebarWidth(); // Reapply width based on current state
+          break;
+        }
+      }
+    });
+
+    try {
+      observer.observe(navContent, {
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to observe nav-content:', error);
+    }
+
+    // Initial visibility update
+    updateHandleVisibility();
+
+    this.cleanupFns.push(() => {
+      try {
+        observer.disconnect();
+        handle.removeEventListener('mousedown', handleMouseDown);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        if (handle.parentElement) {
+          handle.parentElement.removeChild(handle);
+        }
+      } catch {}
+    });
   }
 }
 

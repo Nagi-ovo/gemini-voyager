@@ -2829,28 +2829,18 @@ html.dark .gv-folder-action-btn:hover,
    AI Studio specific tweaks
    - Compact spacing + icon fallbacks
    - Do NOT affect gemini.google UI
+   - Let AI Studio manage sidebar width natively
    ========================== */
-.gv-aistudio-root ms-navbar {
-  width: 320px !important;
-  min-width: 320px !important;
-  max-width: 360px !important;
-  flex: 0 0 320px !important;
-  overflow: visible !important;
-}
 
+/* Allow folder container to adapt to native sidebar width */
 .gv-aistudio-root ms-prompt-history-v3 {
-  max-width: 320px !important;
+  /* Ensure folder content doesn't overflow */
+  overflow-x: hidden;
 }
 
-/* Widen the actual nav-content container the app uses */
 .gv-aistudio-root .nav-content.v3-left-nav {
-  width: 320px !important;
-  min-width: 320px !important;
-  max-width: 360px !important;
-  flex: 0 0 320px !important;
-  overflow: visible !important;
-  padding-right: 8px;
-  /* give absolute icons some breathing room */
+  /* Just add padding for folder icons, don't force width */
+  padding-right: 4px;
 }
 
 .gv-aistudio .gv-folder-header {
