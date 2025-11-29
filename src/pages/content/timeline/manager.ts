@@ -157,9 +157,32 @@ export class TimelineManager {
             this.hideContainer = !!res?.geminiTimelineHideContainer;
             this.applyContainerVisibility();
             this.toggleDraggable(!!res?.geminiTimelineDraggable);
-            if (res?.geminiTimelinePosition) {
-              this.ui.timelineBar!.style.top = `${res.geminiTimelinePosition.top}px`;
-              this.ui.timelineBar!.style.left = `${res.geminiTimelinePosition.left}px`;
+
+            // Load position with auto-migration from v1 to v2
+            const position = res?.geminiTimelinePosition;
+            if (position) {
+              const viewportWidth = window.innerWidth;
+              const viewportHeight = window.innerHeight;
+
+              // v2 format: use percentage (responsive)
+              if (position.version === 2 && position.topPercent !== undefined && position.leftPercent !== undefined) {
+                const top = (position.topPercent / 100) * viewportHeight;
+                const left = (position.leftPercent / 100) * viewportWidth;
+                this.applyPosition(top, left);
+              }
+              // v1 format: migrate to v2 (auto-upgrade)
+              else if (position.top !== undefined && position.left !== undefined) {
+                // Apply old position first
+                this.applyPosition(position.top, position.left);
+
+                // Migrate to v2 format (percentage-based)
+                const migratedPosition = {
+                  version: 2,
+                  topPercent: (position.top / viewportHeight) * 100,
+                  leftPercent: (position.left / viewportWidth) * 100,
+                };
+                chrome.storage.sync.set({ geminiTimelinePosition: migratedPosition });
+              }
             }
           }
         );
@@ -967,6 +990,8 @@ export class TimelineManager {
       this.updateTimelineGeometry();
       this.syncTimelineTrackToMain();
       this.updateVirtualRangeAndRender();
+      // Reapply position for responsive design (v2 format only)
+      this.reapplyPosition();
     };
     window.addEventListener('resize', this.onWindowResize);
     if (window.visualViewport) {
@@ -974,6 +999,8 @@ export class TimelineManager {
         this.updateTimelineGeometry();
         this.syncTimelineTrackToMain();
         this.updateVirtualRangeAndRender();
+        // Reapply position for responsive design (v2 format only)
+        this.reapplyPosition();
       };
       window.visualViewport.addEventListener('resize', this.onVisualViewportResize);
     }
@@ -1696,8 +1723,63 @@ export class TimelineManager {
   private savePosition(): void {
     if (!this.ui.timelineBar) return;
     const rect = this.ui.timelineBar.getBoundingClientRect();
-    const { top, left } = rect;
-    chrome.storage.sync.set({ geminiTimelinePosition: { top, left } });
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Save position as percentage of viewport for responsive design
+    const position = {
+      version: 2,
+      topPercent: (rect.top / viewportHeight) * 100,
+      leftPercent: (rect.left / viewportWidth) * 100,
+    };
+
+    chrome.storage.sync.set({ geminiTimelinePosition: position });
+  }
+
+  /**
+   * Apply position with boundary checks to keep timeline visible
+   */
+  private applyPosition(top: number, left: number): void {
+    if (!this.ui.timelineBar) return;
+
+    const barWidth = this.ui.timelineBar.offsetWidth || 24; // fallback to default width
+    const barHeight = this.ui.timelineBar.offsetHeight || 100;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Clamp to viewport bounds (with small padding)
+    const padding = 10;
+    const clampedTop = Math.max(padding, Math.min(top, viewportHeight - barHeight - padding));
+    const clampedLeft = Math.max(padding, Math.min(left, viewportWidth - barWidth - padding));
+
+    this.ui.timelineBar.style.top = `${clampedTop}px`;
+    this.ui.timelineBar.style.left = `${clampedLeft}px`;
+  }
+
+  /**
+   * Reapply position from storage (for window resize)
+   */
+  private reapplyPosition(): void {
+    if (!this.ui.timelineBar) return;
+
+    chrome.storage.sync.get(['geminiTimelinePosition'], (res: any) => {
+      const position = res?.geminiTimelinePosition;
+      if (!position) return;
+
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // v2 format: use percentage (responsive)
+      if (position.version === 2 && position.topPercent !== undefined && position.leftPercent !== undefined) {
+        const top = (position.topPercent / 100) * viewportHeight;
+        const left = (position.leftPercent / 100) * viewportWidth;
+        this.applyPosition(top, left);
+      }
+      // v1 format: keep absolute position (no resize adjustment for legacy)
+      else if (position.top !== undefined && position.left !== undefined) {
+        this.applyPosition(position.top, position.left);
+      }
+    });
   }
 
   private hideTooltip(immediate = false): void {
