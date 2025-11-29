@@ -86,6 +86,12 @@ export class FolderManager {
   private pendingTitleUpdates: Map<string, string> = new Map(); // Buffer title updates during render
   private pendingRemovals: Map<string, number> = new Map(); // Pending conversation removals with timer IDs
   private removalCheckDelay: number = 300; // Delay (ms) before confirming conversation deletion
+  private isDestroyed: boolean = false; // Flag to prevent callbacks after destruction
+
+  // Cleanup references
+  private routeChangeCleanup: (() => void) | null = null;
+  private sidebarClickListener: ((e: Event) => void) | null = null;
+  private nativeMenuObserver: MutationObserver | null = null;
 
   constructor() {
     // Create storage adapter based on browser (Factory Pattern)
@@ -162,6 +168,7 @@ export class FolderManager {
    */
   destroy(): void {
     this.debug('Destroying FolderManager - cleaning up resources');
+    this.isDestroyed = true;
 
     // Clear all pending removal timers
     let clearedCount = 0;
@@ -201,6 +208,38 @@ export class FolderManager {
     if (this.conversationObserver) {
       this.conversationObserver.disconnect();
       this.conversationObserver = null;
+    }
+
+    if (this.nativeMenuObserver) {
+      this.nativeMenuObserver.disconnect();
+      this.nativeMenuObserver = null;
+    }
+
+    // Remove event listeners
+    if (this.routeChangeCleanup) {
+      this.routeChangeCleanup();
+      this.routeChangeCleanup = null;
+    }
+
+    if (this.sidebarClickListener && this.sidebarContainer) {
+      try {
+        this.sidebarContainer.removeEventListener('click', this.sidebarClickListener, true);
+      } catch (e) {
+        // Ignore
+      }
+      this.sidebarClickListener = null;
+    }
+
+    // Remove tooltip
+    if (this.tooltipElement) {
+      this.tooltipElement.remove();
+      this.tooltipElement = null;
+    }
+
+    // Remove container
+    if (this.containerElement) {
+      this.containerElement.remove();
+      this.containerElement = null;
     }
 
     this.debug('Cleanup complete');
@@ -2497,8 +2536,14 @@ export class FolderManager {
   }
 
   private setupNativeConversationMenuObserver(): void {
+    // Disconnect existing observer if any
+    if (this.nativeMenuObserver) {
+      this.nativeMenuObserver.disconnect();
+    }
+
     // Observe the document for menu appearance and disappearance
-    const observer = new MutationObserver((mutations) => {
+    this.nativeMenuObserver = new MutationObserver((mutations) => {
+      if (this.isDestroyed) return;
       mutations.forEach((mutation) => {
         // Handle added nodes (menu opening)
         mutation.addedNodes.forEach((node) => {
@@ -2535,7 +2580,7 @@ export class FolderManager {
       });
     });
 
-    observer.observe(document.body, {
+    this.nativeMenuObserver.observe(document.body, {
       childList: true,
       subtree: true,
     });
@@ -3833,25 +3878,47 @@ export class FolderManager {
   }
 
   private installRouteChangeListener(): void {
-    const update = () => setTimeout(() => this.highlightActiveConversationInFolders(), 0);
-    try { window.addEventListener('popstate', update); } catch (e) { this.debug('Failed to add popstate listener:', e); }
+    const update = () => {
+      if (this.isDestroyed) return;
+      setTimeout(() => this.highlightActiveConversationInFolders(), 0);
+    };
+
+    const cleanupFns: (() => void)[] = [];
+
+    try {
+      window.addEventListener('popstate', update);
+      cleanupFns.push(() => window.removeEventListener('popstate', update));
+    } catch (e) { this.debug('Failed to add popstate listener:', e); }
+
     try {
       const hist = history as any;
-      const wrap = (method: 'pushState' | 'replaceState') => {
-        const orig = hist[method];
+      const originalPushState = hist.pushState;
+      const originalReplaceState = hist.replaceState;
+
+      const wrap = (method: 'pushState' | 'replaceState', original: any) => {
         hist[method] = function (...args: any[]) {
-          const ret = orig.apply(this, args);
+          const ret = original.apply(this, args);
           try { update(); } catch { /* Ignore - update is non-critical */ }
           return ret;
         };
       };
-      wrap('pushState');
-      wrap('replaceState');
+      wrap('pushState', originalPushState);
+      wrap('replaceState', originalReplaceState);
+
+      cleanupFns.push(() => {
+        hist.pushState = originalPushState;
+        hist.replaceState = originalReplaceState;
+      });
     } catch (e) { this.debug('Failed to wrap history methods:', e); }
+
     // Fallback poller for routers/flows that don't emit events
     try {
       this.lastPathname = window.location.pathname;
       this.navPoller = window.setInterval(() => {
+        if (this.isDestroyed) {
+          if (this.navPoller) clearInterval(this.navPoller);
+          return;
+        }
         const now = window.location.pathname;
         if (now !== this.lastPathname) {
           this.lastPathname = now;
@@ -3859,13 +3926,23 @@ export class FolderManager {
         }
       }, 400);
     } catch (e) { this.debug('Failed to setup navigation poller:', e); }
+
+    this.routeChangeCleanup = () => {
+      cleanupFns.forEach(fn => fn());
+      if (this.navPoller) {
+        clearInterval(this.navPoller);
+        this.navPoller = null;
+      }
+    };
   }
 
   private installSidebarClickListener(): void {
     // Capture clicks in Gemini's native sidebar and update highlight after navigation happens
     const root = this.sidebarContainer;
     if (!root) return;
-    const handler = (e: Event) => {
+
+    this.sidebarClickListener = (e: Event) => {
+      if (this.isDestroyed) return;
       const target = e.target as HTMLElement | null;
       if (!target) return;
       const a = target.closest('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
@@ -3873,7 +3950,8 @@ export class FolderManager {
         setTimeout(() => this.highlightActiveConversationInFolders(), 0);
       }
     };
-    try { root.addEventListener('click', handler, true); } catch (e) { this.debug('Failed to add sidebar click listener:', e); }
+
+    try { root.addEventListener('click', this.sidebarClickListener, true); } catch (e) { this.debug('Failed to add sidebar click listener:', e); }
   }
 
   private t(key: string): string {

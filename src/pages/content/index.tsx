@@ -31,6 +31,7 @@ const BACKGROUND_TAB_MAX_DELAY = 8000; // Maximum delay for background tabs (300
 let initialized = false;
 let initializationTimer: number | null = null;
 let folderManagerInstance: Awaited<ReturnType<typeof startFolderManager>> | null = null;
+let promptManagerInstance: Awaited<ReturnType<typeof startPromptManager>> | null = null;
 
 /**
  * Check if current hostname matches any custom websites
@@ -39,23 +40,23 @@ async function isCustomWebsite(): Promise<boolean> {
   try {
     const result = await chrome.storage?.sync?.get({ gvPromptCustomWebsites: [] });
     const customWebsites = Array.isArray(result?.gvPromptCustomWebsites) ? result.gvPromptCustomWebsites : [];
-    
+
     // Normalize current hostname
     const currentHost = location.hostname.toLowerCase().replace(/^www\./, '');
-    
+
     console.log('[Gemini Voyager] Checking custom websites:', {
       currentHost,
       customWebsites,
       hostname: location.hostname
     });
-    
+
     const isCustom = customWebsites.some((website: string) => {
       const normalizedWebsite = website.toLowerCase().replace(/^www\./, '');
       const matches = currentHost === normalizedWebsite || currentHost.endsWith('.' + normalizedWebsite);
       console.log('[Gemini Voyager] Comparing:', { currentHost, normalizedWebsite, matches });
       return matches;
     });
-    
+
     console.log('[Gemini Voyager] Is custom website:', isCustom);
     return isCustom;
   } catch (e) {
@@ -82,10 +83,11 @@ async function initializeFeatures(): Promise<void> {
     if (isCustomSite) {
       // Only start prompt manager for custom websites
       console.log('[Gemini Voyager] Custom website detected, starting Prompt Manager only');
-      startPromptManager();
+
+      promptManagerInstance = await startPromptManager();
       return;
     }
-    
+
     console.log('[Gemini Voyager] Not a custom website, checking for Gemini/AI Studio');
 
     if (location.hostname === 'gemini.google.com') {
@@ -114,7 +116,7 @@ async function initializeFeatures(): Promise<void> {
       location.hostname === 'aistudio.google.com' ||
       location.hostname === 'aistudio.google.cn'
     ) {
-      startPromptManager();
+      promptManagerInstance = await startPromptManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
     }
 
@@ -166,7 +168,7 @@ function handleVisibilityChange(): void {
 }
 
 // Main initialization logic
-(function() {
+(function () {
   try {
     // Quick check: only run on supported websites
     const hostname = location.hostname.toLowerCase();
@@ -187,12 +189,12 @@ function handleVisibilityChange(): void {
       chrome.storage?.sync?.get({ gvPromptCustomWebsites: [] }, (result) => {
         const customWebsites = Array.isArray(result?.gvPromptCustomWebsites) ? result.gvPromptCustomWebsites : [];
         const currentHost = hostname.replace(/^www\./, '');
-        
+
         const isCustomSite = customWebsites.some((website: string) => {
           const normalizedWebsite = website.toLowerCase().replace(/^www\./, '');
           return currentHost === normalizedWebsite || currentHost.endsWith('.' + normalizedWebsite);
         });
-        
+
         if (isCustomSite) {
           console.log('[Gemini Voyager] Custom website detected:', hostname);
           initializeFeatures();
@@ -226,6 +228,10 @@ function handleVisibilityChange(): void {
         if (folderManagerInstance) {
           folderManagerInstance.destroy();
           folderManagerInstance = null;
+        }
+        if (promptManagerInstance) {
+          promptManagerInstance.destroy();
+          promptManagerInstance = null;
         }
       } catch (e) {
         console.error('[Gemini Voyager] Cleanup error:', e);

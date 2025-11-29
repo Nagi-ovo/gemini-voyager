@@ -189,7 +189,7 @@ function computeAnchoredPosition(trigger: HTMLElement, panel: HTMLElement): { to
   return { top, left: Math.round(tentativeLeft) };
 }
 
-export async function startPromptManager(): Promise<void> {
+export async function startPromptManager(): Promise<{ destroy: () => void }> {
   try {
     // Migrate data from localStorage to chrome.storage.local (one-time migration)
     try {
@@ -234,7 +234,7 @@ export async function startPromptManager(): Promise<void> {
     const i18n = createI18n();
 
     // Prevent duplicate injection
-    if (document.getElementById(ID.trigger)) return;
+    if (document.getElementById(ID.trigger)) return { destroy: () => { } };
 
     // Trigger button
     const trigger = createEl('button', 'gv-pm-trigger');
@@ -789,32 +789,33 @@ export async function startPromptManager(): Promise<void> {
     });
 
     // Handle window resize - constrain trigger and reposition panel
-    window.addEventListener('resize', () => {
+    // Handle window resize - constrain trigger and reposition panel
+    const onWindowResize = () => {
       constrainTriggerPosition();
       onReposition();
-    }, { passive: true });
+    };
+    window.addEventListener('resize', onWindowResize, { passive: true });
 
     window.addEventListener('scroll', onReposition, { passive: true });
 
     // Close when clicking outside of the manager (panel/trigger/confirm are exceptions)
-    window.addEventListener(
-      'pointerdown',
-      (ev: PointerEvent) => {
-        if (!open) return;
-        const target = ev.target as HTMLElement | null;
-        if (!target) return;
-        if (target.closest(`#${ID.panel}`)) return;
-        if (target.closest(`#${ID.trigger}`)) return;
-        if (target.closest('.gv-pm-confirm')) return;
-        closePanel();
-      },
-      { capture: true }
-    );
+    const onWindowPointerDown = (ev: PointerEvent) => {
+      if (!open) return;
+      const target = ev.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest(`#${ID.panel}`)) return;
+      if (target.closest(`#${ID.trigger}`)) return;
+      if (target.closest('.gv-pm-confirm')) return;
+      closePanel();
+    };
+    window.addEventListener('pointerdown', onWindowPointerDown, { capture: true });
+
     // Close on Escape
-    window.addEventListener('keydown', (ev: KeyboardEvent) => {
+    const onWindowKeyDown = (ev: KeyboardEvent) => {
       if (!open) return;
       if (ev.key === 'Escape') closePanel();
-    }, { passive: true } as any);
+    };
+    window.addEventListener('keydown', onWindowKeyDown, { passive: true } as any);
 
     lockBtn.addEventListener('click', async (ev) => {
       ev.preventDefault();
@@ -846,7 +847,8 @@ export async function startPromptManager(): Promise<void> {
       triggerDragStartPos = { x: ev.clientX, y: ev.clientY };
       try { trigger.setPointerCapture?.(ev.pointerId); } catch { }
     });
-    window.addEventListener('pointerup', async (ev: PointerEvent) => {
+
+    const onTriggerDragEnd = async (ev: PointerEvent) => {
       if (draggingTrigger) {
         draggingTrigger = false;
         // Only save if the trigger actually moved (threshold: 5px)
@@ -861,7 +863,8 @@ export async function startPromptManager(): Promise<void> {
         }
         triggerDragStartPos = null;
       }
-    }, { passive: true });
+    };
+    window.addEventListener('pointerup', onTriggerDragEnd, { passive: true });
 
     langSel.addEventListener('change', async () => {
       const next = langSel.value as 'en' | 'zh';
@@ -1161,16 +1164,31 @@ export async function startPromptManager(): Promise<void> {
     // Initialize
     refreshUITexts();
 
-    // Cleanup on page unload to prevent memory leaks
-    window.addEventListener('beforeunload', () => {
-      try {
-        chrome.storage?.onChanged?.removeListener(storageChangeHandler);
-      } catch (e) {
-        console.error('[Gemini Voyager] Failed to remove storage listener on unload:', e);
+    // Return destroy function
+    return {
+      destroy: () => {
+        try {
+          window.removeEventListener('resize', onWindowResize);
+          window.removeEventListener('scroll', onReposition);
+          window.removeEventListener('pointerdown', onWindowPointerDown, { capture: true });
+          window.removeEventListener('keydown', onWindowKeyDown);
+          window.removeEventListener('pointermove', onDragMove);
+          window.removeEventListener('pointerup', endDrag);
+          window.removeEventListener('pointerup', onTriggerDragEnd);
+
+          chrome.storage?.onChanged?.removeListener(storageChangeHandler);
+
+          trigger.remove();
+          panel.remove();
+          document.querySelectorAll('.gv-pm-confirm').forEach(el => el.remove());
+        } catch (e) {
+          console.error('[PromptManager] Destroy error:', e);
+        }
       }
-    }, { once: true });
+    };
   } catch (err) {
     try { (window as any).console?.error?.('Prompt Manager init failed', err); } catch { }
+    return { destroy: () => { } };
   }
 }
 
