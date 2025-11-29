@@ -13,6 +13,7 @@
  * - Collision detection with browser shortcuts
  */
 
+import { StorageKeys } from '@/core/types/common';
 import type {
   KeyboardShortcut,
   KeyboardShortcutConfig,
@@ -22,7 +23,6 @@ import type {
   ShortcutAction,
   ShortcutMatch,
 } from '@/core/types/keyboardShortcut';
-import { StorageKeys } from '@/core/types/common';
 
 /**
  * Default keyboard shortcuts configuration
