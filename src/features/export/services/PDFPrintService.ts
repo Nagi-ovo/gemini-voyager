@@ -118,14 +118,37 @@ export class PDFPrintService {
    * Get conversation title from page
    */
   private static getConversationTitle(): string {
-    // Strategy 1: Get from gv-conversation-title (most accurate, created by Folder Manager)
+    // Strategy 1: Get from active conversation in Gemini Voyager Folder UI (most accurate)
     try {
-      const gvTitle = document.querySelector('.gv-conversation-title');
-      if (gvTitle?.textContent?.trim()) {
-        return gvTitle.textContent.trim();
+      // Prefer the folder row that is marked as selected for the current conversation
+      const activeFolderTitle =
+        document.querySelector('.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title') ||
+        document.querySelector('.gv-folder-conversation-selected .gv-conversation-title');
+
+      if (activeFolderTitle?.textContent?.trim()) {
+        return activeFolderTitle.textContent.trim();
       }
     } catch (error) {
-      console.debug('[PDF Export] Failed to get title from gv-conversation-title:', error);
+      console.debug('[PDF Export] Failed to get title from Folder Manager:', error);
+    }
+
+    // Strategy 1b: Get from Gemini's native sidebar using the selected actions container
+    try {
+      // In new Gemini UI, the selected conversation row has a sibling
+      // actions container like: .conversation-actions-container.selected
+      const actionsContainer = document.querySelector('.conversation-actions-container.selected');
+      if (actionsContainer && actionsContainer.previousElementSibling) {
+        const convEl = actionsContainer.previousElementSibling as HTMLElement;
+        // Typical pattern: the conversation element itself carries the text title
+        // (or contains a child with it). Use textContent as a robust fallback.
+        const rawTitle = convEl.textContent || '';
+        const title = rawTitle.trim();
+        if (title) {
+          return title;
+        }
+      }
+    } catch (error) {
+      console.debug('[PDF Export] Failed to get title from native sidebar selected conversation:', error);
     }
 
     // Strategy 2: Try to get from page title
@@ -173,8 +196,11 @@ export class PDFPrintService {
    */
   private static renderHeader(metadata: ConversationMetadata): string {
     const conversationTitle = this.getConversationTitle();
-    const urlTitle = metadata.title || this.extractTitleFromURL(metadata.url);
+    // For PDF, avoid repeating the same title in smaller text under the H1.
+    // Always derive a neutral "source" label from the URL instead of using metadata.title.
+    const urlTitle = this.extractTitleFromURL(metadata.url);
     const date = this.formatDate(metadata.exportedAt);
+    const turnsCount = metadata.count;
 
     return `
       <header class="gv-print-header gv-print-cover-page">
@@ -183,6 +209,7 @@ export class PDFPrintService {
           <div class="gv-print-meta">
             <p>${date}</p>
             <p><a href="${this.escapeHTML(metadata.url)}">${this.escapeHTML(urlTitle)}</a></p>
+            <p>${turnsCount} conversation turns</p>
           </div>
         </div>
       </header>
