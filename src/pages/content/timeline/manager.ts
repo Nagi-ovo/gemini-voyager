@@ -4,7 +4,9 @@ import { StarredMessagesService } from './StarredMessagesService';
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
 import { DotElement } from './types';
 
+import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { StorageKeys } from '@/core/types/common';
+import type { ShortcutAction } from '@/core/types/keyboardShortcut';
 
 function hashString(input: string): string {
   let h = 2166136261 >>> 0;
@@ -129,6 +131,9 @@ export class TimelineManager {
   private onBarPointerMove: ((ev: PointerEvent) => void) | null = null;
   private onBarPointerUp: ((ev: PointerEvent) => void) | null = null;
   private eventBusUnsubscribers: Array<() => void> = [];
+  private shortcutUnsubscribe: (() => void) | null = null;
+  private navigationQueue: Array<'previous' | 'next'> = [];
+  private isNavigating: boolean = false;
 
   async init(): Promise<void> {
     const ok = await this.findCriticalElements();
@@ -141,6 +146,8 @@ export class TimelineManager {
     await this.syncStarredFromService();
     // Handle URL hash for starred message navigation
     this.handleStarredMessageNavigation();
+    // Initialize keyboard shortcuts
+    await this.initKeyboardShortcuts();
     try {
       // prefer chrome.storage if available to sync with popup
       if ((window as any).chrome?.storage?.sync) {
@@ -1884,6 +1891,115 @@ export class TimelineManager {
   }
 
   /**
+   * Initialize keyboard shortcuts for timeline navigation
+   */
+  private async initKeyboardShortcuts(): Promise<void> {
+    try {
+      await keyboardShortcutService.init();
+
+      // Register shortcut handler with queue support
+      this.shortcutUnsubscribe = keyboardShortcutService.on((action) => {
+        if (action === 'timeline:previous') {
+          this.enqueueNavigation('previous');
+        } else if (action === 'timeline:next') {
+          this.enqueueNavigation('next');
+        }
+      });
+    } catch (error) {
+      console.warn('[Timeline] Failed to initialize keyboard shortcuts:', error);
+    }
+  }
+
+  /**
+   * Enqueue navigation action (supports rapid key presses)
+   */
+  private enqueueNavigation(direction: 'previous' | 'next'): void {
+    this.navigationQueue.push(direction);
+    this.processNavigationQueue();
+  }
+
+  /**
+   * Process navigation queue (one at a time)
+   */
+  private async processNavigationQueue(): Promise<void> {
+    if (this.isNavigating || this.navigationQueue.length === 0) return;
+
+    this.isNavigating = true;
+    const direction = this.navigationQueue.shift()!;
+
+    if (direction === 'previous') {
+      await this.navigateToPreviousNode();
+    } else {
+      await this.navigateToNextNode();
+    }
+
+    this.isNavigating = false;
+
+    // Process next item in queue
+    if (this.navigationQueue.length > 0) {
+      this.processNavigationQueue();
+    }
+  }
+
+  /**
+   * Navigate to previous timeline node (k or custom shortcut)
+   */
+  private async navigateToPreviousNode(): Promise<void> {
+    if (this.markers.length === 0) return;
+
+    const currentIndex = this.getActiveIndex();
+    const targetIndex = currentIndex <= 0 ? 0 : currentIndex - 1;
+
+    if (targetIndex < 0 || targetIndex >= this.markers.length) return;
+
+    const targetMarker = this.markers[targetIndex];
+    if (targetMarker && targetMarker.element) {
+      if (this.scrollMode === 'flow' && currentIndex >= 0) {
+        // Flow mode: animate with queue support
+        const duration = this.computeFlowDuration(currentIndex, targetIndex);
+        this.startRunner(currentIndex, targetIndex, duration);
+        this.smoothScrollTo(targetMarker.element, duration);
+        await new Promise<void>((resolve) => setTimeout(resolve, duration));
+      } else {
+        // Jump mode: instant, no wait
+        this.smoothScrollTo(targetMarker.element, 0);
+      }
+
+      this.activeTurnId = targetMarker.id;
+      this.updateActiveDotUI();
+    }
+  }
+
+  /**
+   * Navigate to next timeline node (j or custom shortcut)
+   */
+  private async navigateToNextNode(): Promise<void> {
+    if (this.markers.length === 0) return;
+
+    const currentIndex = this.getActiveIndex();
+    const targetIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, this.markers.length - 1);
+
+    if (targetIndex < 0 || targetIndex >= this.markers.length) return;
+
+    const targetMarker = this.markers[targetIndex];
+    if (targetMarker && targetMarker.element) {
+      if (this.scrollMode === 'flow' && currentIndex >= 0) {
+        // Flow mode: animate with queue support
+        const duration = this.computeFlowDuration(currentIndex, targetIndex);
+        this.startRunner(currentIndex, targetIndex, duration);
+        this.smoothScrollTo(targetMarker.element, duration);
+        await new Promise<void>((resolve) => setTimeout(resolve, duration));
+      } else {
+        // Jump mode: instant, no wait
+        this.smoothScrollTo(targetMarker.element, 0);
+      }
+
+      this.activeTurnId = targetMarker.id;
+      this.updateActiveDotUI();
+    }
+  }
+
+  /**
    * Handle starred message navigation with optimized performance
    * Strategy: Quick check if markers ready, otherwise retry with exponential backoff
    */
@@ -1958,6 +2074,20 @@ export class TimelineManager {
   }
 
   destroy(): void {
+    // Cleanup keyboard shortcuts
+    if (this.shortcutUnsubscribe) {
+      try {
+        this.shortcutUnsubscribe();
+        this.shortcutUnsubscribe = null;
+      } catch (error) {
+        console.error('[Timeline] Failed to unsubscribe from keyboard shortcuts:', error);
+      }
+    }
+
+    // Clear navigation queue
+    this.navigationQueue = [];
+    this.isNavigating = false;
+
     // Cleanup EventBus subscriptions (Observer pattern cleanup)
     this.eventBusUnsubscribers.forEach((unsubscribe) => {
       try {

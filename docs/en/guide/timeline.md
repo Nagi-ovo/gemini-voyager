@@ -9,7 +9,24 @@ Each node represents a message. The timeline visualizes the rhythm of your dialo
 
 ## Navigation, Solved.
 - **Teleport**: Click a node to jump instantly to that message.
-- **Peek**: Hover to see what’s inside without moving.
-- **Bookmark**: Long-press a node to **Star** it. It’s like a bookmark for your brain.
+- **Peek**: Hover to see what's inside without moving.
+- **Bookmark**: Long-press a node to **Star** it. It's like a bookmark for your brain.
+- **Keyboard**: Navigate at the speed of thought. Default `j`/`k`, customize to anything.
 
 ![Timeline Navigation](/assets/teaser.png)
+
+## Even Faster with Keys
+Don't want to use the mouse? Use your keyboard.
+
+**It's like turning on Vim mode in Gemini.**
+
+### Default Shortcuts
+- `k` - Jump to previous node
+- `j` - Jump to next node
+
+### Customize It
+Open extension settings, click a shortcut box, press any key you want.
+Any key, any combo. `n`/`p`? `,`/`.`? Your call.
+
+**Flow mode**: Rapid presses queue up smoothly.
+**Jump mode**: Instant response, max speed.

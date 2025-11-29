@@ -9,6 +9,7 @@ import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 
+import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { StarredHistory } from './components/StarredHistory';
 import WidthSlider from './components/WidthSlider';
 
@@ -422,6 +423,9 @@ export default function Popup() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Keyboard Shortcuts */}
+        <KeyboardShortcutSettings />
 
         {/* Prompt Manager Options */}
         <Card className="p-4 hover:shadow-lg transition-shadow">
