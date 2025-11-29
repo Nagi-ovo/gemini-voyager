@@ -178,4 +178,18 @@
   ,"yesterday": { "message": "昨天", "description": "昨天日期标签" }
   ,"daysAgo": { "message": "天前", "description": "天前标签" }
   ,"loading": { "message": "加载中...", "description": "加载消息" }
+  ,"keyboardShortcuts": { "message": "键盘快捷键", "description": "键盘快捷键部分标题" }
+  ,"enableShortcuts": { "message": "启用键盘快捷键", "description": "启用快捷键开关标签" }
+  ,"previousNode": { "message": "上一个节点", "description": "上一个时间线节点快捷键标签" }
+  ,"nextNode": { "message": "下一个节点", "description": "下一个时间线节点快捷键标签" }
+  ,"shortcutKey": { "message": "按键", "description": "快捷键按键标签" }
+  ,"shortcutModifiers": { "message": "修饰键", "description": "快捷键修饰键标签" }
+  ,"resetShortcuts": { "message": "恢复默认", "description": "重置快捷键按钮" }
+  ,"shortcutsResetSuccess": { "message": "快捷键已恢复默认设置", "description": "快捷键重置成功消息" }
+  ,"shortcutsDescription": { "message": "使用键盘快捷键导航时间线节点", "description": "快捷键描述" }
+  ,"modifierNone": { "message": "无", "description": "无修饰键" }
+  ,"modifierAlt": { "message": "Alt", "description": "Alt 修饰键" }
+  ,"modifierCtrl": { "message": "Ctrl", "description": "Ctrl 修饰键" }
+  ,"modifierShift": { "message": "Shift", "description": "Shift 修饰键" }
+  ,"modifierMeta": { "message": "Cmd/Win", "description": "Meta/Command/Windows 修饰键" }
 }

@@ -45,6 +45,7 @@ export const StorageKeys = {
   TIMELINE_DRAGGABLE: 'geminiTimelineDraggable',
   TIMELINE_POSITION: 'geminiTimelinePosition',
   TIMELINE_STARRED_MESSAGES: 'geminiTimelineStarredMessages',
+  TIMELINE_SHORTCUTS: 'geminiTimelineShortcuts',
 
   // UI customization
   CHAT_WIDTH: 'geminiChatWidth',

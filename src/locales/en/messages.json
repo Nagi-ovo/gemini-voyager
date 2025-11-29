@@ -178,4 +178,18 @@
   ,"yesterday": { "message": "Yesterday", "description": "Yesterday date label" }
   ,"daysAgo": { "message": "days ago", "description": "Days ago label" }
   ,"loading": { "message": "Loading...", "description": "Loading message" }
+  ,"keyboardShortcuts": { "message": "Keyboard Shortcuts", "description": "Keyboard shortcuts section title" }
+  ,"enableShortcuts": { "message": "Enable keyboard shortcuts", "description": "Enable shortcuts toggle label" }
+  ,"previousNode": { "message": "Previous node", "description": "Previous timeline node shortcut label" }
+  ,"nextNode": { "message": "Next node", "description": "Next timeline node shortcut label" }
+  ,"shortcutKey": { "message": "Key", "description": "Shortcut key label" }
+  ,"shortcutModifiers": { "message": "Modifiers", "description": "Shortcut modifiers label" }
+  ,"resetShortcuts": { "message": "Reset to defaults", "description": "Reset shortcuts button" }
+  ,"shortcutsResetSuccess": { "message": "Shortcuts reset to defaults", "description": "Shortcuts reset success message" }
+  ,"shortcutsDescription": { "message": "Navigate timeline nodes using keyboard shortcuts", "description": "Shortcuts description" }
+  ,"modifierNone": { "message": "None", "description": "No modifier key" }
+  ,"modifierAlt": { "message": "Alt", "description": "Alt modifier key" }
+  ,"modifierCtrl": { "message": "Ctrl", "description": "Ctrl modifier key" }
+  ,"modifierShift": { "message": "Shift", "description": "Shift modifier key" }
+  ,"modifierMeta": { "message": "Cmd/Win", "description": "Meta/Command/Windows modifier key" }
 }
