@@ -1,5 +1,6 @@
 // Static imports to avoid CSP issues with dynamic imports in content scripts
 import { ConversationExportService } from '../../../features/export/services/ConversationExportService';
+import type { ConversationMetadata } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 
 function hashString(input: string): string {
@@ -321,6 +322,84 @@ async function loadDictionaries(): Promise<Record<'en' | 'zh', Record<string, st
   }
 }
 
+/**
+ * Extract human-readable conversation title from the current page
+ * Used for JSON/Markdown metadata so all formats share the same title.
+ * Mirrors the logic used by PDFPrintService.getConversationTitle.
+ */
+function getConversationTitleForExport(): string {
+  // Strategy 1: Get from active conversation in Gemini Voyager Folder UI (most accurate)
+  try {
+    const activeFolderTitle =
+      document.querySelector('.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title') ||
+      document.querySelector('.gv-folder-conversation-selected .gv-conversation-title');
+
+    if (activeFolderTitle?.textContent?.trim()) {
+      return activeFolderTitle.textContent.trim();
+    }
+  } catch (error) {
+    try { console.debug('[Export] Failed to get title from Folder Manager:', error); } catch {}
+  }
+
+  // Strategy 1b: Get from Gemini's native sidebar using the selected actions container
+  try {
+    const actionsContainer = document.querySelector('.conversation-actions-container.selected');
+    if (actionsContainer && actionsContainer.previousElementSibling) {
+      const convEl = actionsContainer.previousElementSibling as HTMLElement;
+      const rawTitle = convEl.textContent || '';
+      const title = rawTitle.trim();
+      if (title) {
+        return title;
+      }
+    }
+  } catch (error) {
+    try {
+      console.debug(
+        '[Export] Failed to get title from native sidebar selected conversation:',
+        error,
+      );
+    } catch {}
+  }
+
+  // Strategy 2: Try to get from page title
+  const titleElement = document.querySelector('title');
+  if (titleElement) {
+    const title = titleElement.textContent?.trim();
+    if (
+      title &&
+      title !== 'Gemini' &&
+      title !== 'Google Gemini' &&
+      title !== 'Google AI Studio' &&
+      !title.startsWith('Gemini -') &&
+      !title.startsWith('Google AI Studio -') &&
+      title.length > 0
+    ) {
+      return title;
+    }
+  }
+
+  // Strategy 3: Try to get from sidebar conversation list (Gemini / AI Studio)
+  try {
+    const selectors = [
+      'mat-list-item.mdc-list-item--activated [mat-line]',
+      'mat-list-item[aria-current="page"] [mat-line]',
+      '.conversation-list-item.active .conversation-title',
+      '.active-conversation .title',
+    ];
+
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      if (element?.textContent?.trim() && element.textContent.trim() !== 'New chat') {
+        return element.textContent.trim();
+      }
+    }
+  } catch (error) {
+    try { console.debug('[Export] Failed to get title from sidebar:', error); } catch {}
+  }
+
+  return 'Untitled Conversation';
+}
+
 function normalizeLang(lang: string | undefined): 'en' | 'zh' {
   return lang && lang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
 }
@@ -411,10 +490,11 @@ async function showExportDialog(dict: Record<'en' | 'zh', Record<string, string>
 
   // Collect conversation data BEFORE showing dialog to avoid page state changes
   const pairs = collectChatPairs();
-  const metadata = {
+  const metadata: ConversationMetadata = {
     url: location.href,
     exportedAt: new Date().toISOString(),
     count: pairs.length,
+    title: getConversationTitleForExport(),
   };
 
   const dialog = new ExportDialog();

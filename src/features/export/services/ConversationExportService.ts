@@ -60,6 +60,7 @@ export class ConversationExportService {
       url: metadata.url,
       exportedAt: metadata.exportedAt,
       count: metadata.count,
+      title: metadata.title,
       items: turns,
     };
 

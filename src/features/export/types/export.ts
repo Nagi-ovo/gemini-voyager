@@ -67,6 +67,11 @@ export interface BaseExportPayload {
   url: string;
   exportedAt: string;
   count: number;
+  /**
+   * Optional human-readable conversation title
+   * Added in a backward-compatible way for JSON/Markdown exports
+   */
+  title?: string;
 }
 
 /**
