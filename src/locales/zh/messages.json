@@ -39,157 +39,616 @@
     "message": "语言",
     "description": "语言标签"
   },
-  "pm_title": { "message": "Gemini Voyager", "description": "面板标题" },
-  "pm_add": { "message": "新增", "description": "新增 prompt 按钮" },
-  "pm_search_placeholder": { "message": "搜索 prompt 或标签", "description": "搜索占位符" },
-  "pm_import": { "message": "导入", "description": "导入按钮" },
-  "pm_export": { "message": "导出", "description": "导出按钮" },
-  "pm_prompt_placeholder": { "message": "Prompt 文本", "description": "Prompt 输入占位符" },
-  "pm_tags_placeholder": { "message": "标签（逗号分隔）", "description": "标签输入占位符" },
-  "pm_save": { "message": "保存", "description": "保存" },
-  "pm_cancel": { "message": "取消", "description": "取消" },
-  "pm_all_tags": { "message": "全部", "description": "全部标签" },
-  "pm_empty": { "message": "暂无 prompt", "description": "空状态" },
-  "pm_copy": { "message": "复制", "description": "复制 prompt" },
-  "pm_copied": { "message": "已复制", "description": "复制成功" },
-  "pm_delete": { "message": "删除", "description": "删除 prompt" },
-  "pm_delete_confirm": { "message": "确定删除该 prompt 吗？", "description": "删除确认" },
-  "pm_lock": { "message": "锁定位置", "description": "锁定面板位置" },
-  "pm_unlock": { "message": "取消锁定", "description": "取消锁定面板位置" },
-  "pm_import_invalid": { "message": "文件格式不正确", "description": "导入失败" },
-  "pm_import_success": { "message": "已导入 {count} 条", "description": "导入成功" },
-  "pm_duplicate": { "message": "重复的 prompt", "description": "新增重复" },
-  "pm_deleted": { "message": "已删除", "description": "删除提示" },
-  "pm_edit": { "message": "编辑", "description": "编辑 prompt" },
-  "pm_expand": { "message": "展开", "description": "展开提示词文本" },
-  "pm_collapse": { "message": "收起", "description": "收起提示词文本" },
-  "pm_saved": { "message": "已保存", "description": "保存提示" },
-  "pm_settings": { "message": "设置", "description": "设置按钮" },
-  "pm_settings_tooltip": { "message": "调整扩展设置", "description": "设置按钮提示" },
-  "pm_settings_fallback": { "message": "请点击浏览器工具栏中的扩展图标打开设置", "description": "设置打开失败提示" },
-  "pm_backup": { "message": "一键备份", "description": "一键备份按钮" },
-  "pm_backup_tooltip": { "message": "将提示词和文件夹备份到带时间戳的文件夹", "description": "备份按钮提示" },
-
-  "pm_backup_cancelled": { "message": "备份已取消", "description": "备份取消提示" },
-  "pm_backup_error": { "message": "✗ 备份失败", "description": "备份失败提示" },
-  "pm_backup_hint_options": { "message": "功能已集成在 Gemini 页面的提示词管理器中。", "description": "选项页面的备份说明" },
-  "pm_backup_step1": { "message": "打开 Gemini 页面（gemini.google.com）", "description": "备份步骤 1" },
-  "pm_backup_step2": { "message": "点击右下角的扩展图标打开提示词管理器", "description": "备份步骤 2" },
-  "pm_backup_step3": { "message": "点击 \"💾 一键备份\" 按钮，选择备份文件夹", "description": "备份步骤 3" },
-  "pm_backup_note": { "message": "备份将包含所有提示词和文件夹，并保存在带时间戳的文件夹中（格式：backup-YYYYMMDD-HHMMSS）", "description": "备份功能说明" }
-  ,"starProject": { "message": "为项目点亮⭐️", "description": "Github 引导" }
-  ,"exportChatJson": { "message": "导出聊天记录", "description": "导出按钮提示" }
-  ,"folder_title": { "message": "文件夹", "description": "文件夹区域标题" }
-  ,"folder_create": { "message": "创建文件夹", "description": "创建文件夹按钮提示" }
-  ,"folder_name_prompt": { "message": "输入文件夹名称：", "description": "创建文件夹名称提示" }
-  ,"folder_rename_prompt": { "message": "输入新名称：", "description": "重命名文件夹提示" }
-  ,"folder_delete_confirm": { "message": "确定删除此文件夹及其所有内容吗？", "description": "删除文件夹确认" }
-  ,"folder_create_subfolder": { "message": "创建子文件夹", "description": "创建子文件夹菜单项" }
-  ,"folder_rename": { "message": "重命名", "description": "重命名文件夹菜单项" }
-  ,"folder_delete": { "message": "删除", "description": "删除文件夹菜单项" }
-  ,"folder_pin": { "message": "置顶文件夹", "description": "置顶文件夹菜单项" }
-  ,"folder_unpin": { "message": "取消置顶", "description": "取消置顶文件夹菜单项" }
-  ,"folder_remove_conversation": { "message": "从文件夹中移除", "description": "移除对话按钮提示" }
-  ,"folder_remove_conversation_confirm": { "message": "从此文件夹中移除「{title}」？", "description": "移除对话确认" }
-  ,"conversation_more": { "message": "更多选项", "description": "对话更多选项按钮提示" }
-  ,"conversation_move_to_folder": { "message": "移动到文件夹", "description": "移动对话到文件夹菜单项" }
-  ,"conversation_move_to_folder_title": { "message": "移动到文件夹", "description": "移动对话到文件夹对话框标题" }
-  ,"chatWidth": { "message": "对话区域宽度", "description": "对话区域宽度调整标签" }
-  ,"chatWidthNarrow": { "message": "窄", "description": "窄对话区域宽度标签" }
-  ,"chatWidthWide": { "message": "宽", "description": "宽对话区域宽度标签" }
-  ,"sidebarWidth": { "message": "侧边栏宽度", "description": "侧边栏宽度调节标签" }
-  ,"sidebarWidthNarrow": { "message": "窄", "description": "侧边栏变窄标签" }
-  ,"sidebarWidthWide": { "message": "宽", "description": "侧边栏变宽标签" }
-  ,"formula_copied": { "message": "✓ 公式已复制", "description": "公式复制成功消息" }
-  ,"formula_copy_failed": { "message": "✗ 复制失败", "description": "公式复制失败消息" }
-  ,"formulaCopyFormat": { "message": "公式复制格式", "description": "公式复制格式设置标签" }
-  ,"formulaCopyFormatLatex": { "message": "LaTeX", "description": "LaTeX 格式选项" }
-  ,"formulaCopyFormatUnicodeMath": { "message": "UnicodeMath (Word)", "description": "UnicodeMath 格式选项，用于 Word" }
-  ,"formulaCopyFormatHint": { "message": "选择点击公式时复制的格式", "description": "公式复制格式提示" }
-  ,"folder_export": { "message": "导出文件夹", "description": "导出文件夹按钮提示" }
-  ,"folder_import": { "message": "导入文件夹", "description": "导入文件夹按钮提示" }
-  ,"folder_import_title": { "message": "导入文件夹配置", "description": "导入对话框标题" }
-  ,"folder_import_strategy": { "message": "导入策略：", "description": "导入策略标签" }
-  ,"folder_import_merge": { "message": "与现有文件夹合并", "description": "合并导入策略" }
-  ,"folder_import_overwrite": { "message": "覆盖现有文件夹", "description": "覆盖导入策略" }
-  ,"folder_import_select_file": { "message": "选择要导入的 JSON 文件", "description": "导入文件选择提示" }
-  ,"folder_import_success": { "message": "✓ 已导入 {folders} 个文件夹，{conversations} 个对话", "description": "导入成功消息" }
-  ,"folder_import_success_skipped": { "message": "✓ 已导入 {folders} 个文件夹，{conversations} 个对话（跳过 {skipped} 个重复项）", "description": "导入成功并跳过重复项消息" }
-  ,"folder_import_error": { "message": "✗ 导入失败：{error}", "description": "导入错误消息" }
-  ,"folder_export_success": { "message": "✓ 文件夹导出成功", "description": "导出成功消息" }
-  ,"folder_import_invalid_format": { "message": "文件格式无效。请选择有效的文件夹配置文件。", "description": "无效格式错误" }
-  ,"folder_import_confirm_overwrite": { "message": "这将替换所有现有文件夹。系统将创建备份。是否继续？", "description": "覆盖确认" }
-  ,"export_dialog_title": { "message": "导出对话", "description": "导出对话框标题" }
-  ,"export_dialog_select": { "message": "选择导出格式：", "description": "导出格式选择标签" }
-  ,"export_dialog_warning": { "message": "⚠️ 由于 Gemini 的久远消息会惰性加载，请在导出前通过时间线跳转到该对话的第一条消息，否则导出内容可能不完整。", "description": "关于惰性加载影响导出完整性的警告" }
-  ,"editInputWidth": { "message": "编辑输入框宽度", "description": "编辑输入框宽度调整标签" }
-  ,"editInputWidthNarrow": { "message": "窄", "description": "窄编辑输入框宽度标签" }
-  ,"editInputWidthWide": { "message": "宽", "description": "宽编辑输入框宽度标签" }
-  ,"timelineOptions": { "message": "时间线选项", "description": "时间线选项区域标签" }
-  ,"folderOptions": { "message": "文件夹选项", "description": "文件夹选项区域标签" }
-  ,"enableFolderFeature": { "message": "启用文件夹功能", "description": "启用或禁用文件夹功能" }
-  ,"hideArchivedConversations": { "message": "隐藏已归档对话", "description": "从主列表隐藏已添加到文件夹的对话" }
-  ,"conversation_star": { "message": "星标对话", "description": "星标对话按钮提示" }
-  ,"conversation_unstar": { "message": "取消星标", "description": "取消星标对话按钮提示" }
-  ,"conversation_untitled": { "message": "未命名", "description": "无标题对话的回退标题" }
-  ,"geminiOnlyNotice": { "message": "所有设置仅支持 Gemini", "description": "提示所有设置仅适用于 Gemini" }
-  ,"folderManager_dataLossWarning": { "message": "⚠️ 警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。", "description": "文件夹数据加载失败时显示的警告" }
-  ,"backupOptions": { "message": "自动备份", "description": "备份选项区域标签" }
-  ,"backupEnabled": { "message": "启用自动备份", "description": "启用自动备份开关" }
-  ,"backupNow": { "message": "立即备份", "description": "立即备份按钮" }
-  ,"backupSelectFolder": { "message": "选择备份文件夹", "description": "选择备份文件夹按钮" }
-  ,"backupFolderSelected": { "message": "备份文件夹：{folder}", "description": "显示已选择的备份文件夹" }
-  ,"backupIncludePrompts": { "message": "包含提示词", "description": "备份中包含提示词开关" }
-  ,"backupIncludeFolders": { "message": "包含文件夹", "description": "备份中包含文件夹开关" }
-  ,"backupIntervalLabel": { "message": "备份间隔", "description": "备份间隔标签" }
-  ,"backupIntervalManual": { "message": "仅手动", "description": "手动备份模式" }
-  ,"backupIntervalDaily": { "message": "每天", "description": "每天备份间隔" }
-  ,"backupIntervalWeekly": { "message": "每周（7 天）", "description": "每周备份间隔" }
-  ,"backupLastBackup": { "message": "上次备份：{time}", "description": "上次备份时间戳" }
-  ,"backupNever": { "message": "从未", "description": "从未备份过" }
-  ,"backupSuccess": { "message": "✓ 备份创建成功：{prompts} 个提示词、{folders} 个文件夹、{conversations} 个对话", "description": "备份成功消息" }
-  ,"backupError": { "message": "✗ 备份失败：{error}", "description": "备份错误消息" }
-  ,"backupNotSupported": { "message": "⚠️ 自动备份需要支持文件系统访问 API 的现代浏览器", "description": "浏览器不支持消息" }
-  ,"backupSelectFolderFirst": { "message": "请先选择备份文件夹", "description": "未选择文件夹警告" }
-  ,"backupUserCancelled": { "message": "备份已取消", "description": "用户取消文件夹选择" }
-  ,"backupConfigSaved": { "message": "✓ 备份设置已保存", "description": "配置保存消息" }
-  ,"backupPermissionDenied": { "message": "⚠️ 无法访问此目录。请选择其他位置（例如：文档、下载，或桌面中的自定义文件夹）", "description": "受限目录权限被拒绝" }
-  ,"backupConfigureInOptions": { "message": "备份功能需要在选项页面中配置。点击下方按钮打开选项页面（点击扩展图标旁的三个点 → 选项）。", "description": "备份配置在选项页面的说明" }
-  ,"openOptionsPage": { "message": "打开选项页面", "description": "打开选项页面按钮" }
-  ,"backupDataAccessNotice": { "message": "数据访问限制", "description": "备份数据访问限制标题" }
-  ,"backupDataAccessHint": { "message": "由于浏览器安全限制，选项页面无法直接读取 Gemini 页面的提示词和文件夹数据。建议使用 Gemini 页面上的提示词管理器和文件夹导出功能进行手动备份。", "description": "备份数据访问限制说明" }
-  ,"promptManagerOptions": { "message": "提示词管理器", "description": "提示词管理器选项区域标签" }
-  ,"customWebsites": { "message": "自定义网站", "description": "提示词管理器的自定义网站" }
-  ,"customWebsitesPlaceholder": { "message": "输入网站 URL（例如：chatgpt.com）", "description": "自定义网站输入占位符" }
-  ,"customWebsitesHint": { "message": "添加您想要使用提示词管理器的网站。这些网站上只会激活提示词管理器功能。", "description": "自定义网站提示" }
-  ,"addWebsite": { "message": "添加网站", "description": "添加网站按钮" }
-  ,"removeWebsite": { "message": "移除", "description": "移除网站按钮" }
-  ,"invalidUrl": { "message": "URL 格式无效", "description": "无效 URL 错误消息" }
-  ,"websiteAdded": { "message": "网站已添加", "description": "网站添加成功消息" }
-  ,"websiteRemoved": { "message": "网站已移除", "description": "网站移除成功消息" }
-  ,"permissionDenied": { "message": "权限被拒绝。请允许访问此网站。", "description": "权限被拒绝错误消息" }
-  ,"customWebsitesNote": { "message": "注意：添加网站后，请刷新页面以使更改生效。自定义网站上只会激活提示词管理器。", "description": "自定义网站重新加载提示" }
-  ,"starredHistory": { "message": "星标历史", "description": "星标历史标题" }
-  ,"viewStarredHistory": { "message": "查看星标历史", "description": "查看星标历史按钮" }
-  ,"noStarredMessages": { "message": "暂无星标消息", "description": "无星标消息占位符" }
-  ,"removeFromStarred": { "message": "取消星标", "description": "取消星标提示" }
-  ,"justNow": { "message": "刚刚", "description": "刚刚时间标签" }
-  ,"hoursAgo": { "message": "小时前", "description": "小时前标签" }
-  ,"yesterday": { "message": "昨天", "description": "昨天日期标签" }
-  ,"daysAgo": { "message": "天前", "description": "天前标签" }
-  ,"loading": { "message": "加载中...", "description": "加载消息" }
-  ,"keyboardShortcuts": { "message": "键盘快捷键", "description": "键盘快捷键部分标题" }
-  ,"enableShortcuts": { "message": "启用键盘快捷键", "description": "启用快捷键开关标签" }
-  ,"previousNode": { "message": "上一个节点", "description": "上一个时间线节点快捷键标签" }
-  ,"nextNode": { "message": "下一个节点", "description": "下一个时间线节点快捷键标签" }
-  ,"shortcutKey": { "message": "按键", "description": "快捷键按键标签" }
-  ,"shortcutModifiers": { "message": "修饰键", "description": "快捷键修饰键标签" }
-  ,"resetShortcuts": { "message": "恢复默认", "description": "重置快捷键按钮" }
-  ,"shortcutsResetSuccess": { "message": "快捷键已恢复默认设置", "description": "快捷键重置成功消息" }
-  ,"shortcutsDescription": { "message": "使用键盘快捷键导航时间线节点", "description": "快捷键描述" }
-  ,"modifierNone": { "message": "无", "description": "无修饰键" }
-  ,"modifierAlt": { "message": "Alt", "description": "Alt 修饰键" }
-  ,"modifierCtrl": { "message": "Ctrl", "description": "Ctrl 修饰键" }
-  ,"modifierShift": { "message": "Shift", "description": "Shift 修饰键" }
-  ,"modifierMeta": { "message": "Cmd/Win", "description": "Meta/Command/Windows 修饰键" }
+  "pm_title": {
+    "message": "Gemini Voyager",
+    "description": "面板标题"
+  },
+  "pm_add": {
+    "message": "新增",
+    "description": "新增 prompt 按钮"
+  },
+  "pm_search_placeholder": {
+    "message": "搜索 prompt 或标签",
+    "description": "搜索占位符"
+  },
+  "pm_import": {
+    "message": "导入",
+    "description": "导入按钮"
+  },
+  "pm_export": {
+    "message": "导出",
+    "description": "导出按钮"
+  },
+  "pm_prompt_placeholder": {
+    "message": "Prompt 文本",
+    "description": "Prompt 输入占位符"
+  },
+  "pm_tags_placeholder": {
+    "message": "标签（逗号分隔）",
+    "description": "标签输入占位符"
+  },
+  "pm_save": {
+    "message": "保存",
+    "description": "保存"
+  },
+  "pm_cancel": {
+    "message": "取消",
+    "description": "取消"
+  },
+  "pm_all_tags": {
+    "message": "全部",
+    "description": "全部标签"
+  },
+  "pm_empty": {
+    "message": "暂无 prompt",
+    "description": "空状态"
+  },
+  "pm_copy": {
+    "message": "复制",
+    "description": "复制 prompt"
+  },
+  "pm_copied": {
+    "message": "已复制",
+    "description": "复制成功"
+  },
+  "pm_delete": {
+    "message": "删除",
+    "description": "删除 prompt"
+  },
+  "pm_delete_confirm": {
+    "message": "确定删除该 prompt 吗？",
+    "description": "删除确认"
+  },
+  "pm_lock": {
+    "message": "锁定位置",
+    "description": "锁定面板位置"
+  },
+  "pm_unlock": {
+    "message": "取消锁定",
+    "description": "取消锁定面板位置"
+  },
+  "pm_import_invalid": {
+    "message": "文件格式不正确",
+    "description": "导入失败"
+  },
+  "pm_import_success": {
+    "message": "已导入 {count} 条",
+    "description": "导入成功"
+  },
+  "pm_duplicate": {
+    "message": "重复的 prompt",
+    "description": "新增重复"
+  },
+  "pm_deleted": {
+    "message": "已删除",
+    "description": "删除提示"
+  },
+  "pm_edit": {
+    "message": "编辑",
+    "description": "编辑 prompt"
+  },
+  "pm_expand": {
+    "message": "展开",
+    "description": "展开提示词文本"
+  },
+  "pm_collapse": {
+    "message": "收起",
+    "description": "收起提示词文本"
+  },
+  "pm_saved": {
+    "message": "已保存",
+    "description": "保存提示"
+  },
+  "pm_settings": {
+    "message": "设置",
+    "description": "设置按钮"
+  },
+  "pm_settings_tooltip": {
+    "message": "调整扩展设置",
+    "description": "设置按钮提示"
+  },
+  "pm_settings_fallback": {
+    "message": "请点击浏览器工具栏中的扩展图标打开设置",
+    "description": "设置打开失败提示"
+  },
+  "pm_backup": {
+    "message": "一键备份",
+    "description": "一键备份按钮"
+  },
+  "pm_backup_tooltip": {
+    "message": "将提示词和文件夹备份到带时间戳的文件夹",
+    "description": "备份按钮提示"
+  },
+  "pm_backup_cancelled": {
+    "message": "备份已取消",
+    "description": "备份取消提示"
+  },
+  "pm_backup_error": {
+    "message": "✗ 备份失败",
+    "description": "备份失败提示"
+  },
+  "pm_backup_hint_options": {
+    "message": "功能已集成在 Gemini 页面的提示词管理器中。",
+    "description": "选项页面的备份说明"
+  },
+  "pm_backup_step1": {
+    "message": "打开 Gemini 页面（gemini.google.com）",
+    "description": "备份步骤 1"
+  },
+  "pm_backup_step2": {
+    "message": "点击右下角的扩展图标打开提示词管理器",
+    "description": "备份步骤 2"
+  },
+  "pm_backup_step3": {
+    "message": "点击 \"💾 一键备份\" 按钮，选择备份文件夹",
+    "description": "备份步骤 3"
+  },
+  "pm_backup_note": {
+    "message": "备份将包含所有提示词和文件夹，并保存在带时间戳的文件夹中（格式：backup-YYYYMMDD-HHMMSS）",
+    "description": "备份功能说明"
+  },
+  "starProject": {
+    "message": "为项目点亮⭐️",
+    "description": "Github 引导"
+  },
+  "exportChatJson": {
+    "message": "导出聊天记录",
+    "description": "导出按钮提示"
+  },
+  "folder_title": {
+    "message": "文件夹",
+    "description": "文件夹区域标题"
+  },
+  "folder_create": {
+    "message": "创建文件夹",
+    "description": "创建文件夹按钮提示"
+  },
+  "folder_name_prompt": {
+    "message": "输入文件夹名称：",
+    "description": "创建文件夹名称提示"
+  },
+  "folder_rename_prompt": {
+    "message": "输入新名称：",
+    "description": "重命名文件夹提示"
+  },
+  "folder_delete_confirm": {
+    "message": "确定删除此文件夹及其所有内容吗？",
+    "description": "删除文件夹确认"
+  },
+  "folder_create_subfolder": {
+    "message": "创建子文件夹",
+    "description": "创建子文件夹菜单项"
+  },
+  "folder_rename": {
+    "message": "重命名",
+    "description": "重命名文件夹菜单项"
+  },
+  "folder_delete": {
+    "message": "删除",
+    "description": "删除文件夹菜单项"
+  },
+  "folder_pin": {
+    "message": "置顶文件夹",
+    "description": "置顶文件夹菜单项"
+  },
+  "folder_unpin": {
+    "message": "取消置顶",
+    "description": "取消置顶文件夹菜单项"
+  },
+  "folder_remove_conversation": {
+    "message": "从文件夹中移除",
+    "description": "移除对话按钮提示"
+  },
+  "folder_remove_conversation_confirm": {
+    "message": "从此文件夹中移除「{title}」？",
+    "description": "移除对话确认"
+  },
+  "conversation_more": {
+    "message": "更多选项",
+    "description": "对话更多选项按钮提示"
+  },
+  "conversation_move_to_folder": {
+    "message": "移动到文件夹",
+    "description": "移动对话到文件夹菜单项"
+  },
+  "conversation_move_to_folder_title": {
+    "message": "移动到文件夹",
+    "description": "移动对话到文件夹对话框标题"
+  },
+  "chatWidth": {
+    "message": "对话区域宽度",
+    "description": "对话区域宽度调整标签"
+  },
+  "chatWidthNarrow": {
+    "message": "窄",
+    "description": "窄对话区域宽度标签"
+  },
+  "chatWidthWide": {
+    "message": "宽",
+    "description": "宽对话区域宽度标签"
+  },
+  "sidebarWidth": {
+    "message": "侧边栏宽度",
+    "description": "侧边栏宽度调节标签"
+  },
+  "sidebarWidthNarrow": {
+    "message": "窄",
+    "description": "侧边栏变窄标签"
+  },
+  "sidebarWidthWide": {
+    "message": "宽",
+    "description": "侧边栏变宽标签"
+  },
+  "formula_copied": {
+    "message": "✓ 公式已复制",
+    "description": "公式复制成功消息"
+  },
+  "formula_copy_failed": {
+    "message": "✗ 复制失败",
+    "description": "公式复制失败消息"
+  },
+  "formulaCopyFormat": {
+    "message": "公式复制格式",
+    "description": "公式复制格式设置标签"
+  },
+  "formulaCopyFormatLatex": {
+    "message": "LaTeX",
+    "description": "LaTeX 格式选项"
+  },
+  "formulaCopyFormatUnicodeMath": {
+    "message": "UnicodeMath (Word)",
+    "description": "UnicodeMath 格式选项，用于 Word"
+  },
+  "formulaCopyFormatHint": {
+    "message": "选择点击公式时复制的格式",
+    "description": "公式复制格式提示"
+  },
+  "formulaCopyFormatNoDollar": {
+    "message": "LaTeX (纯文本，无 $ 符号)",
+    "description": "LaTeX 格式选项，无美元符号"
+  },
+  "folder_export": {
+    "message": "导出文件夹",
+    "description": "导出文件夹按钮提示"
+  },
+  "folder_import": {
+    "message": "导入文件夹",
+    "description": "导入文件夹按钮提示"
+  },
+  "folder_import_title": {
+    "message": "导入文件夹配置",
+    "description": "导入对话框标题"
+  },
+  "folder_import_strategy": {
+    "message": "导入策略：",
+    "description": "导入策略标签"
+  },
+  "folder_import_merge": {
+    "message": "与现有文件夹合并",
+    "description": "合并导入策略"
+  },
+  "folder_import_overwrite": {
+    "message": "覆盖现有文件夹",
+    "description": "覆盖导入策略"
+  },
+  "folder_import_select_file": {
+    "message": "选择要导入的 JSON 文件",
+    "description": "导入文件选择提示"
+  },
+  "folder_import_success": {
+    "message": "✓ 已导入 {folders} 个文件夹，{conversations} 个对话",
+    "description": "导入成功消息"
+  },
+  "folder_import_success_skipped": {
+    "message": "✓ 已导入 {folders} 个文件夹，{conversations} 个对话（跳过 {skipped} 个重复项）",
+    "description": "导入成功并跳过重复项消息"
+  },
+  "folder_import_error": {
+    "message": "✗ 导入失败：{error}",
+    "description": "导入错误消息"
+  },
+  "folder_export_success": {
+    "message": "✓ 文件夹导出成功",
+    "description": "导出成功消息"
+  },
+  "folder_import_invalid_format": {
+    "message": "文件格式无效。请选择有效的文件夹配置文件。",
+    "description": "无效格式错误"
+  },
+  "folder_import_confirm_overwrite": {
+    "message": "这将替换所有现有文件夹。系统将创建备份。是否继续？",
+    "description": "覆盖确认"
+  },
+  "export_dialog_title": {
+    "message": "导出对话",
+    "description": "导出对话框标题"
+  },
+  "export_dialog_select": {
+    "message": "选择导出格式：",
+    "description": "导出格式选择标签"
+  },
+  "export_dialog_warning": {
+    "message": "⚠️ 由于 Gemini 的久远消息会惰性加载，请在导出前通过时间线跳转到该对话的第一条消息，否则导出内容可能不完整。",
+    "description": "关于惰性加载影响导出完整性的警告"
+  },
+  "editInputWidth": {
+    "message": "编辑输入框宽度",
+    "description": "编辑输入框宽度调整标签"
+  },
+  "editInputWidthNarrow": {
+    "message": "窄",
+    "description": "窄编辑输入框宽度标签"
+  },
+  "editInputWidthWide": {
+    "message": "宽",
+    "description": "宽编辑输入框宽度标签"
+  },
+  "timelineOptions": {
+    "message": "时间线选项",
+    "description": "时间线选项区域标签"
+  },
+  "folderOptions": {
+    "message": "文件夹选项",
+    "description": "文件夹选项区域标签"
+  },
+  "enableFolderFeature": {
+    "message": "启用文件夹功能",
+    "description": "启用或禁用文件夹功能"
+  },
+  "hideArchivedConversations": {
+    "message": "隐藏已归档对话",
+    "description": "从主列表隐藏已添加到文件夹的对话"
+  },
+  "conversation_star": {
+    "message": "星标对话",
+    "description": "星标对话按钮提示"
+  },
+  "conversation_unstar": {
+    "message": "取消星标",
+    "description": "取消星标对话按钮提示"
+  },
+  "conversation_untitled": {
+    "message": "未命名",
+    "description": "无标题对话的回退标题"
+  },
+  "geminiOnlyNotice": {
+    "message": "所有设置仅支持 Gemini",
+    "description": "提示所有设置仅适用于 Gemini"
+  },
+  "folderManager_dataLossWarning": {
+    "message": "⚠️ 警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。",
+    "description": "文件夹数据加载失败时显示的警告"
+  },
+  "backupOptions": {
+    "message": "自动备份",
+    "description": "备份选项区域标签"
+  },
+  "backupEnabled": {
+    "message": "启用自动备份",
+    "description": "启用自动备份开关"
+  },
+  "backupNow": {
+    "message": "立即备份",
+    "description": "立即备份按钮"
+  },
+  "backupSelectFolder": {
+    "message": "选择备份文件夹",
+    "description": "选择备份文件夹按钮"
+  },
+  "backupFolderSelected": {
+    "message": "备份文件夹：{folder}",
+    "description": "显示已选择的备份文件夹"
+  },
+  "backupIncludePrompts": {
+    "message": "包含提示词",
+    "description": "备份中包含提示词开关"
+  },
+  "backupIncludeFolders": {
+    "message": "包含文件夹",
+    "description": "备份中包含文件夹开关"
+  },
+  "backupIntervalLabel": {
+    "message": "备份间隔",
+    "description": "备份间隔标签"
+  },
+  "backupIntervalManual": {
+    "message": "仅手动",
+    "description": "手动备份模式"
+  },
+  "backupIntervalDaily": {
+    "message": "每天",
+    "description": "每天备份间隔"
+  },
+  "backupIntervalWeekly": {
+    "message": "每周（7 天）",
+    "description": "每周备份间隔"
+  },
+  "backupLastBackup": {
+    "message": "上次备份：{time}",
+    "description": "上次备份时间戳"
+  },
+  "backupNever": {
+    "message": "从未",
+    "description": "从未备份过"
+  },
+  "backupSuccess": {
+    "message": "✓ 备份创建成功：{prompts} 个提示词、{folders} 个文件夹、{conversations} 个对话",
+    "description": "备份成功消息"
+  },
+  "backupError": {
+    "message": "✗ 备份失败：{error}",
+    "description": "备份错误消息"
+  },
+  "backupNotSupported": {
+    "message": "⚠️ 自动备份需要支持文件系统访问 API 的现代浏览器",
+    "description": "浏览器不支持消息"
+  },
+  "backupSelectFolderFirst": {
+    "message": "请先选择备份文件夹",
+    "description": "未选择文件夹警告"
+  },
+  "backupUserCancelled": {
+    "message": "备份已取消",
+    "description": "用户取消文件夹选择"
+  },
+  "backupConfigSaved": {
+    "message": "✓ 备份设置已保存",
+    "description": "配置保存消息"
+  },
+  "backupPermissionDenied": {
+    "message": "⚠️ 无法访问此目录。请选择其他位置（例如：文档、下载，或桌面中的自定义文件夹）",
+    "description": "受限目录权限被拒绝"
+  },
+  "backupConfigureInOptions": {
+    "message": "备份功能需要在选项页面中配置。点击下方按钮打开选项页面（点击扩展图标旁的三个点 → 选项）。",
+    "description": "备份配置在选项页面的说明"
+  },
+  "openOptionsPage": {
+    "message": "打开选项页面",
+    "description": "打开选项页面按钮"
+  },
+  "backupDataAccessNotice": {
+    "message": "数据访问限制",
+    "description": "备份数据访问限制标题"
+  },
+  "backupDataAccessHint": {
+    "message": "由于浏览器安全限制，选项页面无法直接读取 Gemini 页面的提示词和文件夹数据。建议使用 Gemini 页面上的提示词管理器和文件夹导出功能进行手动备份。",
+    "description": "备份数据访问限制说明"
+  },
+  "promptManagerOptions": {
+    "message": "提示词管理器",
+    "description": "提示词管理器选项区域标签"
+  },
+  "customWebsites": {
+    "message": "自定义网站",
+    "description": "提示词管理器的自定义网站"
+  },
+  "customWebsitesPlaceholder": {
+    "message": "输入网站 URL（例如：chatgpt.com）",
+    "description": "自定义网站输入占位符"
+  },
+  "customWebsitesHint": {
+    "message": "添加您想要使用提示词管理器的网站。这些网站上只会激活提示词管理器功能。",
+    "description": "自定义网站提示"
+  },
+  "addWebsite": {
+    "message": "添加网站",
+    "description": "添加网站按钮"
+  },
+  "removeWebsite": {
+    "message": "移除",
+    "description": "移除网站按钮"
+  },
+  "invalidUrl": {
+    "message": "URL 格式无效",
+    "description": "无效 URL 错误消息"
+  },
+  "websiteAdded": {
+    "message": "网站已添加",
+    "description": "网站添加成功消息"
+  },
+  "websiteRemoved": {
+    "message": "网站已移除",
+    "description": "网站移除成功消息"
+  },
+  "permissionDenied": {
+    "message": "权限被拒绝。请允许访问此网站。",
+    "description": "权限被拒绝错误消息"
+  },
+  "customWebsitesNote": {
+    "message": "注意：添加网站后，请刷新页面以使更改生效。自定义网站上只会激活提示词管理器。",
+    "description": "自定义网站重新加载提示"
+  },
+  "starredHistory": {
+    "message": "星标历史",
+    "description": "星标历史标题"
+  },
+  "viewStarredHistory": {
+    "message": "查看星标历史",
+    "description": "查看星标历史按钮"
+  },
+  "noStarredMessages": {
+    "message": "暂无星标消息",
+    "description": "无星标消息占位符"
+  },
+  "removeFromStarred": {
+    "message": "取消星标",
+    "description": "取消星标提示"
+  },
+  "justNow": {
+    "message": "刚刚",
+    "description": "刚刚时间标签"
+  },
+  "hoursAgo": {
+    "message": "小时前",
+    "description": "小时前标签"
+  },
+  "yesterday": {
+    "message": "昨天",
+    "description": "昨天日期标签"
+  },
+  "daysAgo": {
+    "message": "天前",
+    "description": "天前标签"
+  },
+  "loading": {
+    "message": "加载中...",
+    "description": "加载消息"
+  },
+  "keyboardShortcuts": {
+    "message": "键盘快捷键",
+    "description": "键盘快捷键部分标题"
+  },
+  "enableShortcuts": {
+    "message": "启用键盘快捷键",
+    "description": "启用快捷键开关标签"
+  },
+  "previousNode": {
+    "message": "上一个节点",
+    "description": "上一个时间线节点快捷键标签"
+  },
+  "nextNode": {
+    "message": "下一个节点",
+    "description": "下一个时间线节点快捷键标签"
+  },
+  "shortcutKey": {
+    "message": "按键",
+    "description": "快捷键按键标签"
+  },
+  "shortcutModifiers": {
+    "message": "修饰键",
+    "description": "快捷键修饰键标签"
+  },
+  "resetShortcuts": {
+    "message": "恢复默认",
+    "description": "重置快捷键按钮"
+  },
+  "shortcutsResetSuccess": {
+    "message": "快捷键已恢复默认设置",
+    "description": "快捷键重置成功消息"
+  },
+  "shortcutsDescription": {
+    "message": "使用键盘快捷键导航时间线节点",
+    "description": "快捷键描述"
+  },
+  "modifierNone": {
+    "message": "无",
+    "description": "无修饰键"
+  },
+  "modifierAlt": {
+    "message": "Alt",
+    "description": "Alt 修饰键"
+  },
+  "modifierCtrl": {
+    "message": "Ctrl",
+    "description": "Ctrl 修饰键"
+  },
+  "modifierShift": {
+    "message": "Shift",
+    "description": "Shift 修饰键"
+  },
+  "modifierMeta": {
+    "message": "Cmd/Win",
+    "description": "Meta/Command/Windows 修饰键"
+  }
 }

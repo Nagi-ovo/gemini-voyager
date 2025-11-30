@@ -36,11 +36,11 @@ export default function Popup() {
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
   const [websiteError, setWebsiteError] = useState<string>('');
   const [showStarredHistory, setShowStarredHistory] = useState<boolean>(false);
-  const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath'>('latex');
+  const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath' | 'no-dollar'>('latex');
 
   const handleFormulaCopyFormatChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const format = e.target.value as 'latex' | 'unicodemath';
+      const format = e.target.value as 'latex' | 'unicodemath' | 'no-dollar';
       setFormulaCopyFormat(format);
       try {
         chrome.storage?.sync?.set({ gvFormulaCopyFormat: format });
@@ -63,7 +63,7 @@ export default function Popup() {
     if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
     try {
       chrome.storage?.sync?.set(payload);
-    } catch {}
+    } catch { }
   }, []);
 
   // Width adjuster for chat width
@@ -73,7 +73,7 @@ export default function Popup() {
     onApply: useCallback((width: number) => {
       try {
         chrome.storage?.sync?.set({ geminiChatWidth: width });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -84,7 +84,7 @@ export default function Popup() {
     onApply: useCallback((width: number) => {
       try {
         chrome.storage?.sync?.set({ geminiEditInputWidth: width });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -95,7 +95,7 @@ export default function Popup() {
     onApply: useCallback((width: number) => {
       try {
         chrome.storage?.sync?.set({ geminiSidebarWidth: width });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -114,8 +114,8 @@ export default function Popup() {
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
           if (m === 'jump' || m === 'flow') setMode(m);
-          const format = res?.gvFormulaCopyFormat as 'latex' | 'unicodemath';
-          if (format === 'latex' || format === 'unicodemath') setFormulaCopyFormat(format);
+          const format = res?.gvFormulaCopyFormat as 'latex' | 'unicodemath' | 'no-dollar';
+          if (format === 'latex' || format === 'unicodemath' || format === 'no-dollar') setFormulaCopyFormat(format);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
@@ -123,28 +123,28 @@ export default function Popup() {
           setCustomWebsites(Array.isArray(res?.gvPromptCustomWebsites) ? res.gvPromptCustomWebsites : []);
         }
       );
-    } catch {}
+    } catch { }
   }, []);
 
   // Validate and normalize URL
   const normalizeUrl = useCallback((url: string): string | null => {
     try {
       let normalized = url.trim().toLowerCase();
-      
+
       // Remove protocol if present
       normalized = normalized.replace(/^https?:\/\//, '');
-      
+
       // Remove trailing slash
       normalized = normalized.replace(/\/$/, '');
-      
+
       // Remove www. prefix
       normalized = normalized.replace(/^www\./, '');
-      
+
       // Basic validation: must contain at least one dot and valid characters
       if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(normalized)) {
         return null;
       }
-      
+
       return normalized;
     } catch {
       return null;
@@ -154,18 +154,18 @@ export default function Popup() {
   // Add website handler
   const handleAddWebsite = useCallback(() => {
     setWebsiteError('');
-    
+
     if (!newWebsiteInput.trim()) {
       return;
     }
-    
+
     const normalized = normalizeUrl(newWebsiteInput);
-    
+
     if (!normalized) {
       setWebsiteError(t('invalidUrl'));
       return;
     }
-    
+
     // Check if already exists
     if (customWebsites.includes(normalized)) {
       setWebsiteError(t('invalidUrl'));
@@ -236,9 +236,8 @@ export default function Popup() {
                   style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
                 />
                 <button
-                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
-                    mode === 'flow' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${mode === 'flow' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
                   onClick={() => {
                     setMode('flow');
                     apply({ mode: 'flow' });
@@ -247,9 +246,8 @@ export default function Popup() {
                   {t('flow')}
                 </button>
                 <button
-                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
-                    mode === 'jump' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${mode === 'jump' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
                   onClick={() => {
                     setMode('jump');
                     apply({ mode: 'jump' });
@@ -378,7 +376,7 @@ export default function Popup() {
           onChange={editInputWidthAdjuster.handleChange}
           onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
         />
-        
+
         {/* Sidebar Width */}
         <WidthSlider
           label={t('sidebarWidth')}
@@ -420,6 +418,17 @@ export default function Popup() {
                 />
                 <span className="text-sm">{t('formulaCopyFormatUnicodeMath')}</span>
               </label>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="formulaCopyFormat"
+                  value="no-dollar"
+                  checked={formulaCopyFormat === 'no-dollar'}
+                  onChange={handleFormulaCopyFormatChange}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm">{t('formulaCopyFormatNoDollar')}</span>
+              </label>
             </div>
           </CardContent>
         </Card>
@@ -434,7 +443,7 @@ export default function Popup() {
             <div>
               <Label className="text-sm font-medium mb-2 block">{t('customWebsites')}</Label>
               <p className="text-xs text-muted-foreground mb-3">{t('customWebsitesHint')}</p>
-              
+
               {/* Website List */}
               {customWebsites.length > 0 && (
                 <div className="space-y-2 mb-3">
@@ -454,7 +463,7 @@ export default function Popup() {
                   ))}
                 </div>
               )}
-              
+
               {/* Add Website Input */}
               <div className="space-y-2">
                 <div className="flex gap-2">
@@ -485,7 +494,7 @@ export default function Popup() {
                   <p className="text-xs text-destructive">{websiteError}</p>
                 )}
               </div>
-              
+
               {/* Note about reloading */}
               <div className="mt-3 p-2 bg-primary/5 border border-primary/20 rounded-md">
                 <p className="text-xs text-muted-foreground">{t('customWebsitesNote')}</p>
