@@ -4,18 +4,19 @@
  * to suppress KaTeX strict mode warnings for Unicode text in math mode
  */
 
-(function() {
+(function () {
   'use strict';
 
   // Monkey patch console.warn to suppress specific KaTeX warnings
   const originalWarn = console.warn;
-  console.warn = function(...args) {
+  console.warn = function (...args) {
     const message = args[0];
 
     // Suppress KaTeX Unicode warnings
     if (typeof message === 'string' &&
-        (message.includes('unicodeTextInMathMode') ||
-         message.includes('LaTeX-incompatible input and strict mode'))) {
+      (message.includes('unicodeTextInMathMode') ||
+        message.includes('LaTeX-incompatible input and strict mode') ||
+        message.includes("KaTeX doesn't work in quirks mode"))) {
       // Silently ignore these warnings
       return;
     }

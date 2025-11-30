@@ -191,6 +191,19 @@ function computeAnchoredPosition(trigger: HTMLElement, panel: HTMLElement): { to
 
 export async function startPromptManager(): Promise<{ destroy: () => void }> {
   try {
+    // Monkey patch console.warn to suppress KaTeX quirks mode warning in content script
+    const originalWarn = console.warn;
+    console.warn = function (...args) {
+      const message = args[0];
+      if (typeof message === 'string' &&
+        (message.includes("KaTeX doesn't work in quirks mode") ||
+          message.includes('unicodeTextInMathMode') ||
+          message.includes('LaTeX-incompatible input and strict mode'))) {
+        return;
+      }
+      return originalWarn.apply(console, args);
+    };
+
     // Migrate data from localStorage to chrome.storage.local (one-time migration)
     try {
       const keysToMigrate = [
