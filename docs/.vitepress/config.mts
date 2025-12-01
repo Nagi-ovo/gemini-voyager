@@ -6,7 +6,9 @@ export default defineConfig({
     title: "Gemini Voyager",
     description: "直观的导航。强大的组织。简洁优雅。",
     lang: 'zh-CN',
-    head: [['link', { rel: 'icon', href: '/logo.png' }]],
+    head: [
+        ['link', { rel: 'icon', href: '/gemini-voyager/favicon.ico' }]
+    ],
     
     locales: {
         root: {
