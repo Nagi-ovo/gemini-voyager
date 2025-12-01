@@ -6,10 +6,9 @@
  */
 
 import DOMPurify from 'dompurify';
-import { marked } from 'marked';
-import markedKatex from 'marked-katex-extension';
-import 'katex/dist/katex.min.css';
+
 import browser from 'webextension-polyfill';
+import 'katex/dist/katex.min.css';
 
 import { logger } from '@/core/services/LoggerService';
 import { promptStorageService } from '@/core/services/StorageService';
@@ -190,6 +189,7 @@ function computeAnchoredPosition(trigger: HTMLElement, panel: HTMLElement): { to
 }
 
 export async function startPromptManager(): Promise<{ destroy: () => void }> {
+  let marked: any;
   try {
     // Monkey patch console.warn to suppress KaTeX quirks mode warning in content script
     const originalWarn = console.warn;
@@ -231,6 +231,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       pmLogger.error('Migration failed, continuing with current storage', { migrationError });
       // Continue even if migration fails - data will still work from current storage
     }
+
+    // Dynamic imports to prevent side effects on unsupported pages
+    // Dynamic imports to prevent side effects on unsupported pages
+    marked = (await import('marked')).marked;
+    const { default: markedKatex } = await import('marked-katex-extension');
 
     // markdown config: respect single newlines as <br> and KaTeX inline/display math
     try {
@@ -572,7 +577,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
             if (typeof out === 'string') {
               md.innerHTML = DOMPurify.sanitize(out);
             } else {
-              out.then((html) => { md.innerHTML = DOMPurify.sanitize(html); }).catch(() => { md.textContent = it.text; });
+              out.then((html: string) => { md.innerHTML = DOMPurify.sanitize(html); }).catch(() => { md.textContent = it.text; });
             }
           } catch {
             md.textContent = it.text;
