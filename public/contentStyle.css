@@ -567,6 +567,7 @@ html.dark-theme .gv-pm-trigger {
   gap: 4px;
   padding: 3px 8px;
   flex-shrink: 0;
+  position: relative;
   border-radius: 999px;
   background: linear-gradient(
     120deg,
@@ -595,6 +596,35 @@ html.dark-theme .gv-pm-trigger {
   );
 }
 
+.gv-pm-version-outdated {
+  border-color: oklch(0.7227 0.1920 149.5793 / 0.8);
+  box-shadow: 0 10px 20px oklch(0 0 0 / 0.12);
+}
+
+.gv-pm-version-outdated::after {
+  content: 'NEW';
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: oklch(0.95 0.02 95);
+  background: linear-gradient(120deg, oklch(0.76 0.18 50), oklch(0.68 0.2 30));
+  box-shadow: 0 8px 18px oklch(0 0 0 / 0.16);
+  transform: translateY(0);
+  animation: gv-pm-float 1.8s ease-in-out infinite;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@keyframes gv-pm-float {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(-2px); opacity: 0.92; }
+}
+
 @media (prefers-color-scheme: dark) {
   .gv-pm-title-row {
     color: oklch(0.8717 0.0093 258.3382);
@@ -618,6 +648,12 @@ html.dark-theme .gv-pm-trigger {
       oklch(0.3729 0.0306 259.7328 / 0.38),
       oklch(0.7729 0.1535 163.2231 / 0.3)
     );
+  }
+
+  .gv-pm-version-outdated::after {
+    background: linear-gradient(120deg, oklch(0.72 0.18 45), oklch(0.62 0.2 28));
+    color: oklch(0.98 0.01 96);
+    box-shadow: 0 10px 22px oklch(0 0 0 / 0.24);
   }
 }
 

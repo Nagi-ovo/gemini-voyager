@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import browser from 'webextension-polyfill';
 
 import { DarkModeToggle } from '../../components/DarkModeToggle';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
@@ -12,6 +13,8 @@ import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { StarredHistory } from './components/StarredHistory';
 import WidthSlider from './components/WidthSlider';
+
+import { compareVersions } from '@/core/utils/version';
 
 type ScrollMode = 'jump' | 'flow';
 
@@ -39,6 +42,22 @@ const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LE
 const EDIT_PERCENT = { min: 30, max: 100, defaultValue: 60, legacyBaselinePx: LEGACY_BASELINE_PX };
 const SIDEBAR_PERCENT = { min: 15, max: 45, defaultValue: 26, legacyBaselinePx: LEGACY_BASELINE_PX };
 
+const LATEST_VERSION_CACHE_KEY = 'gvLatestVersionCache';
+const LATEST_VERSION_MAX_AGE = 1000 * 60 * 60 * 6; // 6 hours
+
+const normalizeVersionString = (version?: string | null): string | null => {
+  if (!version) return null;
+  const trimmed = version.trim();
+  return trimmed ? trimmed.replace(/^v/i, '') : null;
+};
+
+const toReleaseTag = (version?: string | null): string | null => {
+  if (!version) return null;
+  const trimmed = version.trim();
+  if (!trimmed) return null;
+  return trimmed.startsWith('v') ? trimmed : `v${trimmed}`;
+};
+
 interface SettingsUpdate {
   mode?: ScrollMode | null;
   hideContainer?: boolean;
@@ -62,6 +81,7 @@ export default function Popup() {
   const [showStarredHistory, setShowStarredHistory] = useState<boolean>(false);
   const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath' | 'no-dollar'>('latex');
   const [extVersion, setExtVersion] = useState<string | null>(null);
+  const [latestVersion, setLatestVersion] = useState<string | null>(null);
 
   const handleFormulaCopyFormatChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,6 +189,62 @@ export default function Popup() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchLatestVersion = async () => {
+      if (!extVersion) return;
+
+      try {
+        const cache = await browser.storage.local.get(LATEST_VERSION_CACHE_KEY);
+        const cached = cache?.[LATEST_VERSION_CACHE_KEY] as { version?: string; fetchedAt?: number } | undefined;
+        const now = Date.now();
+
+        let latest =
+          cached && cached.version && cached.fetchedAt && now - cached.fetchedAt < LATEST_VERSION_MAX_AGE
+            ? cached.version
+            : null;
+
+        if (!latest) {
+          const resp = await fetch('https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest', {
+            headers: { Accept: 'application/vnd.github+json' },
+          });
+
+          if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}`);
+          }
+
+          const data = await resp.json();
+          const candidate =
+            typeof data.tag_name === 'string'
+              ? data.tag_name
+              : (typeof data.name === 'string' ? data.name : null);
+
+          if (candidate) {
+            latest = candidate;
+            await browser.storage.local.set({
+              [LATEST_VERSION_CACHE_KEY]: { version: candidate, fetchedAt: now },
+            });
+          }
+        }
+
+        if (cancelled || !latest) return;
+
+        setLatestVersion(latest);
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('[Gemini Voyager] Failed to check latest version:', error);
+        }
+      }
+    };
+
+    fetchLatestVersion();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [extVersion]);
+
+  useEffect(() => {
     try {
       chrome.storage?.sync?.get(
         {
@@ -254,8 +330,19 @@ export default function Popup() {
     apply({ customWebsites: updatedWebsites });
   }, [customWebsites, apply]);
 
+  const normalizedCurrentVersion = normalizeVersionString(extVersion);
+  const normalizedLatestVersion = normalizeVersionString(latestVersion);
+  const hasUpdate =
+    normalizedCurrentVersion && normalizedLatestVersion
+      ? compareVersions(normalizedLatestVersion, normalizedCurrentVersion) > 0
+      : false;
+  const latestReleaseTag = toReleaseTag(latestVersion ?? normalizedLatestVersion ?? undefined);
+  const latestReleaseUrl = latestReleaseTag
+    ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/${latestReleaseTag}`
+    : 'https://github.com/Nagi-ovo/gemini-voyager/releases/latest';
+  const currentReleaseTag = toReleaseTag(extVersion);
   const releaseUrl = extVersion
-    ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/v${extVersion}`
+    ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/${currentReleaseTag ?? `v${extVersion}`}`
     : 'https://github.com/Nagi-ovo/gemini-voyager/releases';
 
   // Show starred history if requested
@@ -277,6 +364,31 @@ export default function Popup() {
       </div>
 
       <div className="p-5 space-y-4">
+        {hasUpdate && normalizedLatestVersion && normalizedCurrentVersion && (
+          <Card className="p-3 bg-amber-50 border-amber-200 text-amber-900 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="mt-1 text-amber-600">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2l4 4h-3v7h-2V6H8l4-4zm6 11v6H6v-6H4v8h16v-8h-2z" />
+                </svg>
+              </div>
+              <div className="flex-1 space-y-1">
+                <p className="text-sm font-semibold leading-tight">{t('newVersionAvailable')}</p>
+                <p className="text-xs leading-tight">
+                  {t('currentVersionLabel')}: v{normalizedCurrentVersion} · {t('latestVersionLabel')}: v{normalizedLatestVersion}
+                </p>
+              </div>
+              <a
+                href={latestReleaseUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-md transition-colors"
+              >
+                {t('updateNow')}
+              </a>
+            </div>
+          </Card>
+        )}
         {/* Gemini Only Notice */}
         <Card className="p-3 bg-primary/10 border-primary/20 hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-2">

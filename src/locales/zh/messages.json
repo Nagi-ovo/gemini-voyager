@@ -191,6 +191,22 @@
     "message": "版本",
     "description": "扩展版本标签"
   },
+  "newVersionAvailable": {
+    "message": "发现新版本",
+    "description": "更新提醒标题"
+  },
+  "currentVersionLabel": {
+    "message": "当前",
+    "description": "当前版本号标签"
+  },
+  "latestVersionLabel": {
+    "message": "最新",
+    "description": "最新版本号标签"
+  },
+  "updateNow": {
+    "message": "立即更新",
+    "description": "跳转更新 CTA"
+  },
   "starProject": {
     "message": "为项目点亮 ⭐️",
     "description": "Github 引导"

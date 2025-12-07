@@ -16,6 +16,7 @@ import { logger } from '@/core/services/LoggerService';
 import { promptStorageService } from '@/core/services/StorageService';
 import { StorageKeys, type StorageKey } from '@/core/types/common';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
+import { compareVersions } from '@/core/utils/version';
 import { initI18n, getTranslationSync, getCurrentLanguage } from '@/utils/i18n';
 
 type PromptItem = {
@@ -41,6 +42,9 @@ const ID = {
   trigger: 'gv-pm-trigger',
   panel: 'gv-pm-panel',
 } as const;
+
+const LATEST_VERSION_CACHE_KEY = 'gvLatestVersionCache';
+const LATEST_VERSION_MAX_AGE = 1000 * 60 * 60 * 6; // 6 hours
 
 function getRuntimeUrl(path: string): string {
   try {
@@ -100,6 +104,19 @@ function uid(): string {
  */
 const pmLogger = logger.createChild('PromptManager');
 
+const normalizeVersionString = (version?: string | null): string | null => {
+  if (!version) return null;
+  const trimmed = version.trim();
+  return trimmed ? trimmed.replace(/^v/i, '') : null;
+};
+
+const toReleaseTag = (version?: string | null): string | null => {
+  if (!version) return null;
+  const trimmed = version.trim();
+  if (!trimmed) return null;
+  return trimmed.startsWith('v') ? trimmed : `v${trimmed}`;
+};
+
 async function readStorage<T>(key: StorageKey, fallback: T): Promise<T> {
   const result = await promptStorageService.get<T>(key);
   if (result.success) {
@@ -117,6 +134,40 @@ async function writeStorage<T>(key: StorageKey, value: T): Promise<void> {
       errorDetails: result.error
     });
   }
+}
+
+async function getLatestVersionCached(): Promise<string | null> {
+  try {
+    if (!browser.runtime?.id) return null;
+
+    const now = Date.now();
+    const cache = await browser.storage.local.get(LATEST_VERSION_CACHE_KEY);
+    const cached = cache?.[LATEST_VERSION_CACHE_KEY] as { version?: string; fetchedAt?: number } | undefined;
+    if (cached && cached.version && cached.fetchedAt && now - cached.fetchedAt < LATEST_VERSION_MAX_AGE) {
+      return cached.version;
+    }
+
+    const resp = await fetch('https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest', {
+      headers: { Accept: 'application/vnd.github+json' },
+    });
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const candidate =
+      typeof data.tag_name === 'string'
+        ? data.tag_name
+        : (typeof data.name === 'string' ? data.name : null);
+
+    if (candidate) {
+      await browser.storage.local.set({ [LATEST_VERSION_CACHE_KEY]: { version: candidate, fetchedAt: now } });
+      return candidate;
+    }
+  } catch (error) {
+    pmLogger.debug('Latest version check failed', { error });
+  }
+  return null;
 }
 
 function createEl<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string): HTMLElementTagNameMap[K] {
@@ -358,8 +409,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     title.appendChild(titleText);
 
     const manifestVersion = chrome?.runtime?.getManifest?.()?.version;
+    const currentVersionNormalized = normalizeVersionString(manifestVersion);
+    const currentReleaseTag = toReleaseTag(manifestVersion);
     const releaseUrl = manifestVersion
-      ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/v${manifestVersion}`
+      ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/${currentReleaseTag ?? `v${manifestVersion}`}`
       : 'https://github.com/Nagi-ovo/gemini-voyager/releases';
     const versionBadge = document.createElement('a');
     versionBadge.className = 'gv-pm-version';
@@ -371,6 +424,26 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     titleRow.appendChild(title);
     titleRow.appendChild(versionBadge);
+
+    (async () => {
+      const latest = await getLatestVersionCached();
+      const latestNormalized = normalizeVersionString(latest);
+      const hasUpdate =
+        currentVersionNormalized && latestNormalized
+          ? compareVersions(latestNormalized, currentVersionNormalized) > 0
+          : false;
+
+      if (!hasUpdate || !latestNormalized) return;
+
+      const latestTag = toReleaseTag(latest);
+      const latestUrl = latestTag
+        ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/${latestTag}`
+        : 'https://github.com/Nagi-ovo/gemini-voyager/releases/latest';
+
+      versionBadge.classList.add('gv-pm-version-outdated');
+      versionBadge.href = latestUrl;
+      versionBadge.title = `${i18n.t('latestVersionLabel')}: v${latestNormalized}`;
+    })();
 
     const controls = createEl('div', 'gv-pm-controls');
 
