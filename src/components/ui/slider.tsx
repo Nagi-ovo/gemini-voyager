@@ -10,6 +10,16 @@ export interface SliderProps
 
 const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
   ({ className, onValueChange, onValueCommit, ...props }, ref) => {
+    const handleInput = (e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) => {
+      const value = Number((e.target as HTMLInputElement).value);
+      onValueChange?.(value);
+    };
+
+    const handleCommit = (e: React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>) => {
+      const value = Number((e.target as HTMLInputElement).value);
+      onValueCommit?.(value);
+    };
+
     return (
       <input
         ref={ref}
@@ -20,9 +30,10 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
           "[&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md",
           className
         )}
-        onChange={(e) => onValueChange?.(Number(e.target.value))}
-        onMouseUp={(e) => onValueCommit?.(Number((e.target as HTMLInputElement).value))}
-        onTouchEnd={(e) => onValueCommit?.(Number((e.target as HTMLInputElement).value))}
+        onInput={handleInput}
+        onChange={handleInput}
+        onMouseUp={handleCommit}
+        onTouchEnd={handleCommit}
         {...props}
       />
     );

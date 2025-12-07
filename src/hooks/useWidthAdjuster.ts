@@ -3,8 +3,11 @@ import { useRef, useEffect, useState } from 'react';
 interface UseWidthAdjusterOptions {
   storageKey: string;
   defaultValue: number;
-  debounceMs?: number;
   onApply: (value: number) => void;
+  /**
+   * Optional normalization hook (e.g., migrate legacy px to %)
+   */
+  normalize?: (value: number) => number;
 }
 
 /**
@@ -14,12 +17,14 @@ interface UseWidthAdjusterOptions {
 export function useWidthAdjuster({
   storageKey,
   defaultValue,
-  debounceMs = 300,
   onApply,
+  normalize,
 }: UseWidthAdjusterOptions) {
-  const [width, setWidth] = useState<number>(defaultValue);
-  const debounceTimer = useRef<number | null>(null);
+  const initial = normalize ? normalize(defaultValue) : defaultValue;
+  const [width, setWidth] = useState<number>(initial);
   const pendingWidth = useRef<number | null>(null);
+  const hydrated = useRef(false);
+  const isInteracting = useRef(false);
 
   // Load initial width from storage
   useEffect(() => {
@@ -27,18 +32,22 @@ export function useWidthAdjuster({
       chrome.storage?.sync?.get({ [storageKey]: defaultValue }, (res) => {
         const storedWidth = res?.[storageKey];
         if (typeof storedWidth === 'number') {
-          setWidth(storedWidth);
+          const normalized = normalize ? normalize(storedWidth) : storedWidth;
+          if (Number.isFinite(normalized)) {
+            // Avoid overriding user drag in progress
+            if (!isInteracting.current) {
+              setWidth(normalized);
+            }
+          }
         }
+        hydrated.current = true;
       });
     } catch {}
-  }, [storageKey, defaultValue]);
+  }, [storageKey, defaultValue, normalize]);
 
   // Cleanup and save pending changes on unmount
   useEffect(() => {
     return () => {
-      if (debounceTimer.current !== null) {
-        clearTimeout(debounceTimer.current);
-      }
       if (pendingWidth.current !== null) {
         onApply(pendingWidth.current);
       }
@@ -46,30 +55,19 @@ export function useWidthAdjuster({
   }, [onApply]);
 
   const handleChange = (newWidth: number) => {
+    isInteracting.current = true;
     setWidth(newWidth);
     pendingWidth.current = newWidth;
-
-    // Debounce the storage write to avoid quota limits
-    if (debounceTimer.current !== null) {
-      clearTimeout(debounceTimer.current);
-    }
-    debounceTimer.current = window.setTimeout(() => {
-      onApply(newWidth);
-      pendingWidth.current = null;
-      debounceTimer.current = null;
-    }, debounceMs);
   };
 
   const handleChangeComplete = () => {
-    // Save immediately when user releases the slider
+    // Save once when user releases the slider
     if (pendingWidth.current !== null) {
-      if (debounceTimer.current !== null) {
-        clearTimeout(debounceTimer.current);
-        debounceTimer.current = null;
-      }
       onApply(pendingWidth.current);
       pendingWidth.current = null;
     }
+    // Allow future external sync after interaction ends
+    isInteracting.current = false;
   };
 
   return {

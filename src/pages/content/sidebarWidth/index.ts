@@ -1,10 +1,30 @@
 /* Adjust Gemini sidebar (<bard-sidenav>) width: through CSS variable --bard-sidenav-open-width */
 const STYLE_ID = 'gv-sidebar-width-style';
+const DEFAULT_PERCENT = 26;
+const MIN_PERCENT = 15;
+const MAX_PERCENT = 45;
+const LEGACY_BASELINE_PX = 1200;
 
-function buildStyle(width: number): string {
+const clampPercent = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, Math.round(value)));
+
+const normalizePercent = (value: number, fallback: number) => {
+  if (!Number.isFinite(value)) return fallback;
+  if (value > MAX_PERCENT) {
+    const approx = (value / LEGACY_BASELINE_PX) * 100;
+    return clampPercent(approx, MIN_PERCENT, MAX_PERCENT);
+  }
+  return clampPercent(value, MIN_PERCENT, MAX_PERCENT);
+};
+
+function buildStyle(widthPercent: number): string {
+  const normalizedPercent = normalizePercent(widthPercent, DEFAULT_PERCENT);
+  // Keep a hard clamp to avoid overly wide sidebars on very large screens
+  const clampedWidth = `clamp(200px, ${normalizedPercent}vw, 520px)`;
+
   return `
     bard-sidenav {
-      --bard-sidenav-open-width: ${width}px !important;
+      --bard-sidenav-open-width: ${clampedWidth} !important;
     }
   `;
 }
@@ -19,9 +39,9 @@ function ensureStyleEl(): HTMLStyleElement {
   return style;
 }
 
-function applyWidth(width: number): void {
+function applyWidth(widthPercent: number): void {
   const style = ensureStyleEl();
-  style.textContent = buildStyle(width);
+  style.textContent = buildStyle(widthPercent);
 }
 
 function removeStyles(): void {
@@ -31,19 +51,28 @@ function removeStyles(): void {
 
 /** Initialize and start the sidebar width adjuster */
 export function startSidebarWidthAdjuster(): void {
-  let currentWidth = 310;
+  let currentWidthPercent = DEFAULT_PERCENT;
 
   // 1) Read initial width
   try {
-    chrome.storage?.sync?.get({ geminiSidebarWidth: 310 }, (res) => {
+    chrome.storage?.sync?.get({ geminiSidebarWidth: DEFAULT_PERCENT }, (res) => {
       const w = Number(res?.geminiSidebarWidth);
-      currentWidth = Number.isFinite(w) ? w : 310;
-      applyWidth(currentWidth);
+      const normalized = normalizePercent(w, DEFAULT_PERCENT);
+      currentWidthPercent = normalized;
+      applyWidth(currentWidthPercent);
+
+      if (Number.isFinite(w) && w !== normalized) {
+        try {
+          chrome.storage?.sync?.set({ geminiSidebarWidth: normalized });
+        } catch (err) {
+          console.warn('[Gemini Voyager] Failed to migrate sidebar width to %:', err);
+        }
+      }
     });
   } catch (e){
     // Fallback: inject default value if no storage permission
       console.error('[Gemini Voyager] Failed to get sidebar width from storage:', e);
-	    applyWidth(currentWidth);
+	    applyWidth(currentWidthPercent);
 	  }
 
   // 2) Respond to storage changes (from Popup slider adjustment)
@@ -52,8 +81,17 @@ export function startSidebarWidthAdjuster(): void {
       if (area === 'sync' && changes.geminiSidebarWidth) {
         const w = Number(changes.geminiSidebarWidth.newValue);
         if (Number.isFinite(w)) {
-          currentWidth = w;
-          applyWidth(currentWidth);
+          const normalized = normalizePercent(w, DEFAULT_PERCENT);
+          currentWidthPercent = normalized;
+          applyWidth(currentWidthPercent);
+
+          if (normalized !== w) {
+            try {
+              chrome.storage?.sync?.set({ geminiSidebarWidth: normalized });
+            } catch (err) {
+              console.warn('[Gemini Voyager] Failed to migrate sidebar width to % on change:', err);
+            }
+          }
         }
       }
     });
@@ -66,7 +104,7 @@ export function startSidebarWidthAdjuster(): void {
   // const observer = new MutationObserver(() => {
   //   if (debounceTimer !== null) window.clearTimeout(debounceTimer);
   //   debounceTimer = window.setTimeout(() => {
-  //     applyWidth(currentWidth);
+  //     applyWidth(currentWidthPercent);
   //     debounceTimer = null;
   //   }, 150);
   // });

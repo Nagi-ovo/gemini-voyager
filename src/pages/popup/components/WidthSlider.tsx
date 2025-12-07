@@ -35,7 +35,7 @@ export default function WidthSlider({
       <div className="flex items-center justify-between mb-3">
         <CardTitle className="text-xs uppercase">{label}</CardTitle>
         <span className="text-sm font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md shadow-sm">
-          {value}px
+          {value}%
         </span>
       </div>
       <CardContent className="p-0">

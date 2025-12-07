@@ -1,8 +1,12 @@
 /**
- * Adjusts the chat area width based on user settings
+ * Adjusts the chat area width based on user settings (stored as viewport %)
  */
 
 const STYLE_ID = 'gemini-voyager-chat-width';
+const DEFAULT_PERCENT = 70;
+const MIN_PERCENT = 30;
+const MAX_PERCENT = 100;
+const LEGACY_BASELINE_PX = 1200;
 
 // Selectors based on the export functionality that already works
 function getUserSelectors(): string[] {
@@ -32,7 +36,22 @@ function getAssistantSelectors(): string[] {
   ];
 }
 
-function applyWidth(width: number) {
+const clampPercent = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, Math.round(value)));
+
+const normalizePercent = (value: number, fallback: number) => {
+  if (!Number.isFinite(value)) return fallback;
+  if (value > MAX_PERCENT) {
+    const approx = (value / LEGACY_BASELINE_PX) * 100;
+    return clampPercent(approx, MIN_PERCENT, MAX_PERCENT);
+  }
+  return clampPercent(value, MIN_PERCENT, MAX_PERCENT);
+};
+
+function applyWidth(widthPercent: number) {
+  const normalizedPercent = normalizePercent(widthPercent, DEFAULT_PERCENT);
+  const widthValue = `${normalizedPercent}vw`;
+
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement;
   if (!style) {
     style = document.createElement('style');
@@ -100,14 +119,14 @@ function applyWidth(width: number) {
 
     /* User query containers */
     ${userRules} {
-      max-width: ${width}px !important;
-      width: auto !important;
+      max-width: ${widthValue} !important;
+      width: min(100%, ${widthValue}) !important;
     }
 
     /* Model response containers */
     ${assistantRules} {
-      max-width: ${width}px !important;
-      width: auto !important;
+      max-width: ${widthValue} !important;
+      width: min(100%, ${widthValue}) !important;
     }
 
     /* Additional deep targeting for nested elements */
@@ -120,14 +139,14 @@ function applyWidth(width: number) {
     response-container,
     response-container > *,
     response-container > * > * {
-      max-width: ${width}px !important;
+      max-width: ${widthValue} !important;
     }
 
     /* Target specific internal containers that might have fixed widths */
     .user-query-bubble-with-background,
     .presented-response-container,
     [data-message-author-role] {
-      max-width: ${width}px !important;
+      max-width: ${widthValue} !important;
     }
   `;
 }
@@ -140,12 +159,22 @@ function removeStyles() {
 }
 
 export function startChatWidthAdjuster() {
-  let currentWidth = 800;
+  let currentWidthPercent = DEFAULT_PERCENT;
 
-  // Load initial width
-  chrome.storage?.sync?.get({ geminiChatWidth: 800 }, (res) => {
-    currentWidth = res?.geminiChatWidth || 800;
-    applyWidth(currentWidth);
+  // Load initial width (%), migrating legacy px values when seen
+  chrome.storage?.sync?.get({ geminiChatWidth: DEFAULT_PERCENT }, (res) => {
+    const storedWidth = res?.geminiChatWidth;
+    const normalized = normalizePercent(storedWidth, DEFAULT_PERCENT);
+    currentWidthPercent = normalized;
+    applyWidth(currentWidthPercent);
+
+    if (typeof storedWidth === 'number' && storedWidth !== normalized) {
+      try {
+        chrome.storage?.sync?.set({ geminiChatWidth: normalized });
+      } catch (e) {
+        console.warn('[Gemini Voyager] Failed to migrate chat width to %:', e);
+      }
+    }
   });
 
   // Listen for changes from storage
@@ -153,8 +182,17 @@ export function startChatWidthAdjuster() {
     if (area === 'sync' && changes.geminiChatWidth) {
       const newWidth = changes.geminiChatWidth.newValue;
       if (typeof newWidth === 'number') {
-        currentWidth = newWidth;
-        applyWidth(currentWidth);
+        const normalized = normalizePercent(newWidth, DEFAULT_PERCENT);
+        currentWidthPercent = normalized;
+        applyWidth(currentWidthPercent);
+
+        if (normalized !== newWidth) {
+          try {
+            chrome.storage?.sync?.set({ geminiChatWidth: normalized });
+          } catch (e) {
+            console.warn('[Gemini Voyager] Failed to migrate chat width to % on change:', e);
+          }
+        }
       }
     }
   };
@@ -170,7 +208,7 @@ export function startChatWidthAdjuster() {
     }
     debounceTimer = window.setTimeout(() => {
       // Use cached width instead of reading from storage
-      applyWidth(currentWidth);
+      applyWidth(currentWidthPercent);
       debounceTimer = null;
     }, 200);
   });

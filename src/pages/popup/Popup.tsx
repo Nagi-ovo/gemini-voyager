@@ -15,6 +15,30 @@ import WidthSlider from './components/WidthSlider';
 
 type ScrollMode = 'jump' | 'flow';
 
+const LEGACY_BASELINE_PX = 1200; // used to migrate old px widths to %
+
+const clampPercent = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, Math.round(value)));
+
+const normalizePercent = (
+  value: number,
+  fallback: number,
+  min: number,
+  max: number,
+  legacyBaselinePx: number
+) => {
+  if (!Number.isFinite(value)) return fallback;
+  if (value > max) {
+    const approx = (value / legacyBaselinePx) * 100;
+    return clampPercent(approx, min, max);
+  }
+  return clampPercent(value, min, max);
+};
+
+const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LEGACY_BASELINE_PX };
+const EDIT_PERCENT = { min: 30, max: 100, defaultValue: 60, legacyBaselinePx: LEGACY_BASELINE_PX };
+const SIDEBAR_PERCENT = { min: 15, max: 45, defaultValue: 26, legacyBaselinePx: LEGACY_BASELINE_PX };
+
 interface SettingsUpdate {
   mode?: ScrollMode | null;
   hideContainer?: boolean;
@@ -69,33 +93,66 @@ export default function Popup() {
   // Width adjuster for chat width
   const chatWidthAdjuster = useWidthAdjuster({
     storageKey: 'geminiChatWidth',
-    defaultValue: 800,
-    onApply: useCallback((width: number) => {
+    defaultValue: CHAT_PERCENT.defaultValue,
+    normalize: (v) =>
+      normalizePercent(v, CHAT_PERCENT.defaultValue, CHAT_PERCENT.min, CHAT_PERCENT.max, CHAT_PERCENT.legacyBaselinePx),
+    onApply: useCallback((widthPercent: number) => {
+      const normalized = normalizePercent(
+        widthPercent,
+        CHAT_PERCENT.defaultValue,
+        CHAT_PERCENT.min,
+        CHAT_PERCENT.max,
+        CHAT_PERCENT.legacyBaselinePx
+      );
       try {
-        chrome.storage?.sync?.set({ geminiChatWidth: width });
-      } catch { }
+        chrome.storage?.sync?.set({ geminiChatWidth: normalized });
+      } catch {}
     }, []),
   });
 
   // Width adjuster for edit input width
   const editInputWidthAdjuster = useWidthAdjuster({
     storageKey: 'geminiEditInputWidth',
-    defaultValue: 600,
-    onApply: useCallback((width: number) => {
+    defaultValue: EDIT_PERCENT.defaultValue,
+    normalize: (v) =>
+      normalizePercent(v, EDIT_PERCENT.defaultValue, EDIT_PERCENT.min, EDIT_PERCENT.max, EDIT_PERCENT.legacyBaselinePx),
+    onApply: useCallback((widthPercent: number) => {
+      const normalized = normalizePercent(
+        widthPercent,
+        EDIT_PERCENT.defaultValue,
+        EDIT_PERCENT.min,
+        EDIT_PERCENT.max,
+        EDIT_PERCENT.legacyBaselinePx
+      );
       try {
-        chrome.storage?.sync?.set({ geminiEditInputWidth: width });
-      } catch { }
+        chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
+      } catch {}
     }, []),
   });
 
   // Width adjuster for sidebar width
   const sidebarWidthAdjuster = useWidthAdjuster({
     storageKey: 'geminiSidebarWidth',
-    defaultValue: 310,
-    onApply: useCallback((width: number) => {
+    defaultValue: SIDEBAR_PERCENT.defaultValue,
+    normalize: (v) =>
+      normalizePercent(
+        v,
+        SIDEBAR_PERCENT.defaultValue,
+        SIDEBAR_PERCENT.min,
+        SIDEBAR_PERCENT.max,
+        SIDEBAR_PERCENT.legacyBaselinePx
+      ),
+    onApply: useCallback((widthPercent: number) => {
+      const normalized = normalizePercent(
+        widthPercent,
+        SIDEBAR_PERCENT.defaultValue,
+        SIDEBAR_PERCENT.min,
+        SIDEBAR_PERCENT.max,
+        SIDEBAR_PERCENT.legacyBaselinePx
+      );
       try {
-        chrome.storage?.sync?.set({ geminiSidebarWidth: width });
-      } catch { }
+        chrome.storage?.sync?.set({ geminiSidebarWidth: normalized });
+      } catch {}
     }, []),
   });
 
@@ -356,9 +413,9 @@ export default function Popup() {
         <WidthSlider
           label={t('chatWidth')}
           value={chatWidthAdjuster.width}
-          min={400}
-          max={1400}
-          step={50}
+          min={CHAT_PERCENT.min}
+          max={CHAT_PERCENT.max}
+          step={1}
           narrowLabel={t('chatWidthNarrow')}
           wideLabel={t('chatWidthWide')}
           onChange={chatWidthAdjuster.handleChange}
@@ -368,9 +425,9 @@ export default function Popup() {
         <WidthSlider
           label={t('editInputWidth')}
           value={editInputWidthAdjuster.width}
-          min={400}
-          max={1200}
-          step={50}
+          min={EDIT_PERCENT.min}
+          max={EDIT_PERCENT.max}
+          step={1}
           narrowLabel={t('editInputWidthNarrow')}
           wideLabel={t('editInputWidthWide')}
           onChange={editInputWidthAdjuster.handleChange}
@@ -381,9 +438,9 @@ export default function Popup() {
         <WidthSlider
           label={t('sidebarWidth')}
           value={sidebarWidthAdjuster.width}
-          min={240}
-          max={520}
-          step={5}
+          min={SIDEBAR_PERCENT.min}
+          max={SIDEBAR_PERCENT.max}
+          step={1}
           narrowLabel={t('sidebarWidthNarrow')}
           wideLabel={t('sidebarWidthWide')}
           onChange={sidebarWidthAdjuster.handleChange}

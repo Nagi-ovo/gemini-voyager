@@ -6,6 +6,22 @@
  */
 
 const STYLE_ID = 'gemini-voyager-edit-input-width';
+const DEFAULT_PERCENT = 60;
+const MIN_PERCENT = 30;
+const MAX_PERCENT = 100;
+const LEGACY_BASELINE_PX = 1200;
+
+const clampPercent = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, Math.round(value)));
+
+const normalizePercent = (value: number, fallback: number) => {
+  if (!Number.isFinite(value)) return fallback;
+  if (value > MAX_PERCENT) {
+    const approx = (value / LEGACY_BASELINE_PX) * 100;
+    return clampPercent(approx, MIN_PERCENT, MAX_PERCENT);
+  }
+  return clampPercent(value, MIN_PERCENT, MAX_PERCENT);
+};
 
 /**
  * Selectors for edit mode containers
@@ -20,10 +36,13 @@ function getEditModeSelectors(): string[] {
 }
 
 /**
- * Applies the specified width to edit input elements
+ * Applies the specified width (%) to edit input elements
  * Following the chatWidth pattern with container width removal and precise targeting
  */
-function applyWidth(width: number): void {
+function applyWidth(widthPercent: number): void {
+  const normalizedPercent = normalizePercent(widthPercent, DEFAULT_PERCENT);
+  const widthValue = `${normalizedPercent}vw`;
+
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement;
   if (!style) {
     style = document.createElement('style');
@@ -54,22 +73,22 @@ function applyWidth(width: number): void {
 
     /* Target edit mode containers directly */
     ${editModeRules} {
-      max-width: ${width}px !important;
-      width: auto !important;
+      max-width: ${widthValue} !important;
+      width: min(100%, ${widthValue}) !important;
     }
 
     /* Target the edit-container within edit-mode */
     .edit-mode .edit-container,
     .query-content.edit-mode .edit-container {
-      max-width: ${width}px !important;
-      width: ${width}px !important;
+      max-width: ${widthValue} !important;
+      width: min(100%, ${widthValue}) !important;
     }
 
     /* Target Material Design form field */
     .edit-mode .mat-mdc-form-field,
     .edit-container .mat-mdc-form-field,
     .edit-mode .edit-form {
-      max-width: ${width}px !important;
+      max-width: ${widthValue} !important;
       width: 100% !important;
     }
 
@@ -77,13 +96,13 @@ function applyWidth(width: number): void {
     .edit-mode .mat-mdc-text-field-wrapper,
     .edit-mode .mat-mdc-form-field-flex,
     .edit-mode .mdc-text-field {
-      max-width: ${width}px !important;
+      max-width: ${widthValue} !important;
       width: 100% !important;
     }
 
     /* Target form field infix (contains the textarea) */
     .edit-mode .mat-mdc-form-field-infix {
-      max-width: ${width}px !important;
+      max-width: ${widthValue} !important;
       width: 100% !important;
     }
 
@@ -92,7 +111,7 @@ function applyWidth(width: number): void {
     .edit-container textarea,
     .edit-mode .mat-mdc-input-element,
     .edit-mode .cdk-textarea-autosize {
-      max-width: ${width}px !important;
+      max-width: ${widthValue} !important;
       width: 100% !important;
       box-sizing: border-box !important;
     }
@@ -122,12 +141,22 @@ function removeStyles(): void {
  * Initializes and starts the edit input width adjuster
  */
 export function startEditInputWidthAdjuster(): void {
-  let currentWidth = 600;
+  let currentWidthPercent = DEFAULT_PERCENT;
 
   // Load initial width from storage
-  chrome.storage?.sync?.get({ geminiEditInputWidth: 600 }, (res) => {
-    currentWidth = res?.geminiEditInputWidth || 600;
-    applyWidth(currentWidth);
+  chrome.storage?.sync?.get({ geminiEditInputWidth: DEFAULT_PERCENT }, (res) => {
+    const storedWidth = res?.geminiEditInputWidth;
+    const normalized = normalizePercent(storedWidth, DEFAULT_PERCENT);
+    currentWidthPercent = normalized;
+    applyWidth(currentWidthPercent);
+
+    if (typeof storedWidth === 'number' && storedWidth !== normalized) {
+      try {
+        chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
+      } catch (e) {
+        console.warn('[Gemini Voyager] Failed to migrate edit input width to %:', e);
+      }
+    }
   });
 
   // Listen for changes from storage (when user adjusts in popup)
@@ -135,8 +164,17 @@ export function startEditInputWidthAdjuster(): void {
     if (area === 'sync' && changes.geminiEditInputWidth) {
       const newWidth = changes.geminiEditInputWidth.newValue;
       if (typeof newWidth === 'number') {
-        currentWidth = newWidth;
-        applyWidth(currentWidth);
+        const normalized = normalizePercent(newWidth, DEFAULT_PERCENT);
+        currentWidthPercent = normalized;
+        applyWidth(currentWidthPercent);
+
+        if (normalized !== newWidth) {
+          try {
+            chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
+          } catch (e) {
+            console.warn('[Gemini Voyager] Failed to migrate edit input width to % on change:', e);
+          }
+        }
       }
     }
   });
@@ -150,7 +188,7 @@ export function startEditInputWidthAdjuster(): void {
     }
     debounceTimer = window.setTimeout(() => {
       // Use cached width instead of reading from storage
-      applyWidth(currentWidth);
+      applyWidth(currentWidthPercent);
       debounceTimer = null;
     }, 200);
   });
