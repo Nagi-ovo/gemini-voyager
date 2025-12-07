@@ -6,8 +6,11 @@
  */
 
 import DOMPurify from 'dompurify';
+import JSZip from 'jszip';
 import browser from 'webextension-polyfill';
 import 'katex/dist/katex.min.css';
+
+import { createFolderStorageAdapter } from '../folder/storage/FolderStorageAdapter';
 
 import { logger } from '@/core/services/LoggerService';
 import { promptStorageService } from '@/core/services/StorageService';
@@ -1025,7 +1028,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         };
 
         // Read folders (Safari-compatible: uses storage adapter)
-        const { createFolderStorageAdapter } = await import('../folder/storage/FolderStorageAdapter');
         const folderStorage = createFolderStorageAdapter();
         const folderData = await folderStorage.loadData('gvFolderData') || { folders: [], folderContents: {} };
 
@@ -1091,7 +1093,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           setNotice(`✓ Backed up ${prompts.length} prompts, ${folderData.folders?.length || 0} folders`, 'ok');
         } else {
           // Fallback for Firefox, Safari - download as ZIP file
-          const JSZip = (await import('jszip')).default;
           const zip = new JSZip();
 
           // Add files to ZIP
