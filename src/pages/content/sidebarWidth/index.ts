@@ -20,7 +20,7 @@ const normalizePercent = (value: number, fallback: number) => {
 function buildStyle(widthPercent: number): string {
   const normalizedPercent = normalizePercent(widthPercent, DEFAULT_PERCENT);
   // Keep a hard clamp to avoid overly wide sidebars on very large screens
-  const clampedWidth = `clamp(200px, ${normalizedPercent}vw, 1200px)`;
+  const clampedWidth = `clamp(200px, ${normalizedPercent}vw, 800px)`;
   const closedWidth = 'var(--bard-sidenav-closed-width, 72px)'; // fallback matches collapsed rail width
   const openClosedDiff = `max(0px, calc(${clampedWidth} - ${closedWidth}))`;
 
