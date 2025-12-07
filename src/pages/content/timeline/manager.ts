@@ -905,16 +905,35 @@ export class TimelineManager {
         e.stopPropagation();
         return;
       }
-      const targetId = dot.dataset.targetTurnId!;
-      const targetElement =
-        (this.conversationContainer!.querySelector(
-          `[data-turn-id="${targetId}"]`
-        ) as HTMLElement | null) ||
-        this.markers.find((m) => m.id === targetId)?.element ||
-        null;
+
+      // Use index lookup if available for robust handling of duplicate content
+      const indexStr = dot.dataset.markerIndex;
+      let targetElement: HTMLElement | null = null;
+      let toIdx = -1;
+
+      if (indexStr) {
+        toIdx = parseInt(indexStr, 10);
+        const marker = this.markers[toIdx];
+        if (marker) {
+          targetElement = marker.element;
+        }
+      }
+
+      // Fallback to ID-based lookup if index fails (shouldn't happen)
+      if (!targetElement) {
+        const targetId = dot.dataset.targetTurnId!;
+        targetElement =
+          (this.conversationContainer!.querySelector(
+            `[data-turn-id="${targetId}"]`
+          ) as HTMLElement | null) ||
+          this.markers.find((m) => m.id === targetId)?.element ||
+          null;
+        toIdx = this.markers.findIndex((m) => m.id === targetId);
+      }
+
       if (targetElement) {
         const fromIdx = this.getActiveIndex();
-        const toIdx = this.markers.findIndex((m) => m.id === targetId);
+        // toIdx is already determined above
         const dur = this.computeFlowDuration(fromIdx, toIdx);
         if (this.scrollMode === 'flow' && fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx) {
           this.startRunner(fromIdx, toIdx, dur);
@@ -1594,6 +1613,7 @@ export class TimelineManager {
         const dot = document.createElement('button') as DotElement;
         dot.className = 'timeline-dot';
         dot.dataset.targetTurnId = marker.id;
+        dot.dataset.markerIndex = String(i);
         dot.setAttribute('aria-label', marker.summary);
         dot.setAttribute('tabindex', '0');
         dot.setAttribute('aria-describedby', 'gemini-timeline-tooltip');
@@ -1605,6 +1625,7 @@ export class TimelineManager {
         marker.dotElement = dot;
         frag.appendChild(dot);
       } else {
+        marker.dotElement.dataset.markerIndex = String(i);
         marker.dotElement.style.setProperty('--n', String(marker.n || 0));
         if (this.usePixelTop) marker.dotElement.style.top = `${Math.round(this.yPositions[i])}px`;
         marker.dotElement.classList.toggle('starred', !!marker.starred);
@@ -1836,15 +1857,20 @@ export class TimelineManager {
       }
     }
 
-    // Update UI
-    const m = this.markerMap.get(id);
-    if (m && m.dotElement) {
-      const isStarredNow = this.starred.has(id);
-      m.starred = isStarredNow;
-      m.dotElement.classList.toggle('starred', isStarredNow);
-      m.dotElement.setAttribute('aria-pressed', isStarredNow ? 'true' : 'false');
-      this.refreshTooltipForDot(m.dotElement);
-    }
+    // Update UI for ALL markers with this ID (handle duplicates)
+    const isStarredNow = this.starred.has(id);
+    this.markers.forEach((m) => {
+      if (m.id === id) {
+        m.starred = isStarredNow;
+        if (m.dotElement) {
+          m.dotElement.classList.toggle('starred', isStarredNow);
+          m.dotElement.setAttribute('aria-pressed', isStarredNow ? 'true' : 'false');
+          // Only refresh tooltip if this specific dot is actively hovered/focused
+          // (checked internally by refreshTooltipForDot)
+          this.refreshTooltipForDot(m.dotElement);
+        }
+      }
+    });
   }
 
   /**
