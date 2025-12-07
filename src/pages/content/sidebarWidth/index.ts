@@ -21,10 +21,19 @@ function buildStyle(widthPercent: number): string {
   const normalizedPercent = normalizePercent(widthPercent, DEFAULT_PERCENT);
   // Keep a hard clamp to avoid overly wide sidebars on very large screens
   const clampedWidth = `clamp(200px, ${normalizedPercent}vw, 520px)`;
+  const baselineOpenPx = 310; // estimated default open width
+  const extraShift = `clamp(0px, calc(${clampedWidth} - ${baselineOpenPx}px), 320px)`;
 
   return `
     bard-sidenav {
       --bard-sidenav-open-width: ${clampedWidth} !important;
+    }
+
+    /* Keep mode switcher aligned when sidebar grows */
+    bard-mode-switcher {
+      transform: translateX(
+        calc(var(--bard-sidenav-open-closed-width-diff, 0px) + ${extraShift})
+      ) !important;
     }
   `;
 }
