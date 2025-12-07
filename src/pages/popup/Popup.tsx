@@ -61,6 +61,7 @@ export default function Popup() {
   const [websiteError, setWebsiteError] = useState<string>('');
   const [showStarredHistory, setShowStarredHistory] = useState<boolean>(false);
   const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath' | 'no-dollar'>('latex');
+  const [extVersion, setExtVersion] = useState<string | null>(null);
 
   const handleFormulaCopyFormatChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,6 +159,17 @@ export default function Popup() {
 
   useEffect(() => {
     try {
+      const version = chrome?.runtime?.getManifest?.()?.version;
+      if (version) {
+        setExtVersion(version);
+      }
+    } catch (err) {
+      console.error('[Gemini Voyager] Failed to get extension version:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
       chrome.storage?.sync?.get(
         {
           geminiTimelineScrollMode: 'flow',
@@ -241,6 +253,10 @@ export default function Popup() {
     setCustomWebsites(updatedWebsites);
     apply({ customWebsites: updatedWebsites });
   }, [customWebsites, apply]);
+
+  const releaseUrl = extVersion
+    ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/v${extVersion}`
+    : 'https://github.com/Nagi-ovo/gemini-voyager/releases';
 
   // Show starred history if requested
   if (showStarredHistory) {
@@ -562,7 +578,19 @@ export default function Popup() {
       </div>
 
       {/* Footer */}
-      <div className="bg-linear-to-br from-secondary/30 via-accent/10 to-transparent border-t border-border/50 px-5 py-4 flex items-center justify-center backdrop-blur-sm">
+      <div className="bg-linear-to-br from-secondary/30 via-accent/10 to-transparent border-t border-border/50 px-5 py-4 flex items-center justify-between gap-3 backdrop-blur-sm">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground/80">{t('extensionVersion')}</span>
+          <a
+            href={releaseUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-primary hover:text-primary/80 transition-colors"
+            title={extVersion ? extVersion : undefined}
+          >
+            {extVersion ?? '...'}
+          </a>
+        </div>
         <a
           href="https://github.com/Nagi-ovo/gemini-voyager"
           target="_blank"

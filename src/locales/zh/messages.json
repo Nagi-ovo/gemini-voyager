@@ -187,8 +187,12 @@
     "message": "备份将包含所有提示词和文件夹，并保存在带时间戳的文件夹中（格式：backup-YYYYMMDD-HHMMSS）",
     "description": "备份功能说明"
   },
+  "extensionVersion": {
+    "message": "版本",
+    "description": "扩展版本标签"
+  },
   "starProject": {
-    "message": "为项目点亮⭐️",
+    "message": "为项目点亮 ⭐️",
     "description": "Github 引导"
   },
   "exportChatJson": {

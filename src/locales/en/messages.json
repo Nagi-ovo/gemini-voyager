@@ -187,6 +187,10 @@
     "message": "Backups include all prompts and folders, saved in a timestamped folder (format: backup-YYYYMMDD-HHMMSS)",
     "description": "Backup feature note"
   },
+  "extensionVersion": {
+    "message": "Version",
+    "description": "Extension version label"
+  },
   "starProject": {
     "message": "Support me ⭐",
     "description": "Github callout"

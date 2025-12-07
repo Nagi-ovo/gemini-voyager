@@ -350,8 +350,28 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // Build panel DOM
     const header = createEl('div', 'gv-pm-header');
     const dragHandle = createEl('div', 'gv-pm-drag');
+
+    const titleRow = createEl('div', 'gv-pm-title-row');
     const title = createEl('div', 'gv-pm-title');
-    title.textContent = i18n.t('pm_title') || 'Prompt Manager';
+    const titleText = document.createElement('span');
+    titleText.textContent = 'Gemini Voyager';
+    title.appendChild(titleText);
+
+    const manifestVersion = chrome?.runtime?.getManifest?.()?.version;
+    const releaseUrl = manifestVersion
+      ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/v${manifestVersion}`
+      : 'https://github.com/Nagi-ovo/gemini-voyager/releases';
+    const versionBadge = document.createElement('a');
+    versionBadge.className = 'gv-pm-version';
+    versionBadge.href = releaseUrl;
+    versionBadge.target = '_blank';
+    versionBadge.rel = 'noreferrer';
+    versionBadge.title = manifestVersion ? `${i18n.t('extensionVersion')} ${manifestVersion}` : i18n.t('extensionVersion');
+    versionBadge.textContent = manifestVersion ?? '...';
+
+    titleRow.appendChild(title);
+    titleRow.appendChild(versionBadge);
+
     const controls = createEl('div', 'gv-pm-controls');
 
     const langSel = createEl('select', 'gv-pm-lang');
@@ -382,7 +402,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     controls.appendChild(addBtn);
     controls.appendChild(lockBtn);
     header.appendChild(dragHandle);
-    header.appendChild(title);
+    header.appendChild(titleRow);
     header.appendChild(controls);
 
     const searchWrap = createEl('div', 'gv-pm-search');
@@ -727,7 +747,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     }
 
     function refreshUITexts(): void {
-      title.textContent = i18n.t('pm_title');
+      // Keep custom icon + label
+      titleText.textContent = 'Gemini Voyager';
       addBtn.textContent = i18n.t('pm_add');
       searchInput.placeholder = i18n.t('pm_search_placeholder');
       importBtn.textContent = i18n.t('pm_import');
