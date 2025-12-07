@@ -1027,6 +1027,31 @@ html.dark-theme .gv-pm-trigger {
   background: linear-gradient(to right, transparent, rgba(17, 24, 39, 0.4) 50%);
 }
 
+/* Ensure markdown content overflow handling */
+.gv-md {
+  width: 100%;
+  min-width: 0;
+}
+
+.gv-md pre,
+.gv-md code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.gv-md pre {
+  margin: 0;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.theme-host.light-theme .gv-md pre {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 .theme-host.light-theme .gv-md-collapsed::after {
   background: linear-gradient(to right, transparent, rgba(243, 244, 246, 0.5) 50%);
 }
