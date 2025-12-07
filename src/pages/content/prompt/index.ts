@@ -6,7 +6,6 @@
  */
 
 import DOMPurify from 'dompurify';
-
 import browser from 'webextension-polyfill';
 import 'katex/dist/katex.min.css';
 
