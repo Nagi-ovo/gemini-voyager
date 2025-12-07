@@ -321,17 +321,20 @@ export class TimelineManager {
   }
 
   private getConversationTitle(): string {
-    // Strategy 1: Get from gv-conversation-title (most accurate, created by Folder Manager)
+    const getText = (el: Element | null | undefined): string | null => {
+      const text = el?.textContent?.trim();
+      return text && text.length > 0 ? text : null;
+    };
+
+    // Strategy 1: Prefer the currently selected conversation in folder view
     try {
-      const gvTitle = document.querySelector('.gv-conversation-title');
-      if (gvTitle && gvTitle.textContent) {
-        const title = gvTitle.textContent.trim();
-        if (title && title.length > 0) {
-          return title;
-        }
-      }
+      const selected = document.querySelector(
+        '.gv-folder-conversation-selected .gv-conversation-title'
+      );
+      const title = getText(selected);
+      if (title) return title;
     } catch (error) {
-      console.debug('[Timeline] Failed to get title from gv-conversation-title:', error);
+      console.debug('[Timeline] Failed to get title from selected folder conversation:', error);
     }
 
     // Strategy 2: Try to get from page title
