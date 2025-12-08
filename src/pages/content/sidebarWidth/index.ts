@@ -35,6 +35,11 @@ function buildStyle(widthPercent: number): string {
       --bard-sidenav-open-closed-width-diff: ${openClosedDiff} !important;
     }
 
+    /* Keep top-level mode switcher (header) aligned when sidebar grows/shrinks */
+    #app-root > main > div > bard-mode-switcher {
+      transform: translateX(${openClosedDiff}) !important;
+    }
+
   `;
 }
 
