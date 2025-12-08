@@ -11,10 +11,10 @@ hero:
   actions:
     - theme: brand
       text: Download
-      link: /en/guide/installation
+      link: ./guide/installation
     - theme: alt
       text: Start the Journey
-      link: /en/guide/getting-started
+      link: ./guide/getting-started
 
 features:
   - icon: 🧭
@@ -67,5 +67,5 @@ When you use Gemini Voyager, you stop fighting the interface and start flowing w
 
 <div class="vp-doc" style="text-align: center; margin: 3.5rem auto 2rem; max-width: 720px; padding: 0 16px;">
   <p style="font-size: 1.05em; font-weight: 600; opacity: 0.86; margin: 0 0 12px;">“It's not just a tool. It's a bicycle for the mind.”</p>
-  <a href="/en/guide/getting-started" style="font-weight: 600; text-decoration: none;">See what's possible →</a>
+  <a href="./guide/getting-started" style="font-weight: 600; text-decoration: none;">See what's possible →</a>
 </div>

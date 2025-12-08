@@ -11,10 +11,10 @@ hero:
   actions:
     - theme: brand
       text: 下载安装
-      link: /guide/installation
+      link: ./guide/installation
     - theme: alt
       text: 开始旅程
-      link: /guide/getting-started
+      link: ./guide/getting-started
 
 features:
   - icon: 🧭
@@ -67,5 +67,5 @@ features:
 
 <div class="vp-doc" style="text-align: center; margin: 3.5rem auto 2rem; max-width: 720px; padding: 0 16px;">
   <p style="font-size: 1.05em; font-weight: 600; opacity: 0.86; margin: 0 0 12px;">“它不只是工具，更是伴你思维远航的伙伴。”</p>
-  <a href="/guide/getting-started" style="font-weight: 600; text-decoration: none;">探索更多 →</a>
+  <a href="./guide/getting-started" style="font-weight: 600; text-decoration: none;">探索更多 →</a>
 </div>
