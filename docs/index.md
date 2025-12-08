@@ -52,8 +52,20 @@ features:
   </div>
 </div>
 
-> "不仅仅是工具。它是思维的单车。"
+</div>
 
-[探索更多 →](/guide/getting-started)
+<div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
+  <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">每一次下载，都是信任的刻度</h3>
+  <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">来自 GitHub 与 Chrome Web Store 的实时数据。致敬每一位与我们同行的 Voyager。</p>
+  <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+    <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Star">
+    <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Fork">
+    <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="最新版本">
+    <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店用户数">
+  </div>
+</div>
 
+<div class="vp-doc" style="text-align: center; margin: 3.5rem auto 2rem; max-width: 720px; padding: 0 16px;">
+  <p style="font-size: 1.05em; font-weight: 600; opacity: 0.86; margin: 0 0 12px;">“它不只是工具，更是伴你思维远航的伙伴。”</p>
+  <a href="/guide/getting-started" style="font-weight: 600; text-decoration: none;">探索更多 →</a>
 </div>

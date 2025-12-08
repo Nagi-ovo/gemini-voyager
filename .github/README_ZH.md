@@ -15,6 +15,12 @@
     <img src="https://img.shields.io/badge/Opera-✓-FF1B2D?style=flat-square&logo=opera&logoColor=white" alt="Opera">
     <img src="https://img.shields.io/badge/Brave-✓-FB542B?style=flat-square&logo=brave&logoColor=white" alt="Brave">
   </p>
+  <p>
+    <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Star">
+    <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Fork">
+    <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="最新版本">
+    <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店用户数">
+  </p>
 </div>
 
 <p align="center">
@@ -34,17 +40,25 @@
 
 ## 📚 目录
 
-- [功能特性](#-功能特性)
-  - [时间线导航](#-时间线导航)
-  - [文件夹管理](#-文件夹管理)
-  - [提示词库](#-提示词库)
-  - [公式复制](#-公式复制)
-  - [对话导出](#-对话导出)
-  - [对话宽度调整](#-对话宽度调整)
-- [安装方式](#-安装方式)
-- [开发者指南](#-开发者指南)
-- [参与贡献](#-参与贡献)
-- [支持本项目](#-支持本项目)
+- [👋 为什么开发 Gemini Voyager？](#-为什么开发-gemini-voyager)
+- [📚 目录](#-目录)
+- [✨ 功能特性](#-功能特性)
+  - [📍 时间线导航](#-时间线导航)
+  - [📂 文件夹管理](#-文件夹管理)
+  - [💡 提示词库](#-提示词库)
+  - [📐 公式复制](#-公式复制)
+  - [💾 对话导出](#-对话导出)
+  - [📏 对话宽度调整](#-对话宽度调整)
+- [📥 安装方式](#-安装方式)
+  - [方式一：手动安装（推荐）](#方式一手动安装推荐)
+    - [1）临时安装（开发者模式）—— 简单且安全](#1临时安装开发者模式-简单且安全)
+    - [2）永久安装（适用于 Firefox ESR，可安装未签名插件）](#2永久安装适用于-firefox-esr可安装未签名插件)
+  - [方式二：Chrome 应用商店（更方便但可能不是最新版）](#方式二chrome-应用商店更方便但可能不是最新版)
+- [🛠️ 开发者指南](#️-开发者指南)
+  - [Safari 开发](#safari-开发)
+- [🌟 相关项目与致谢](#-相关项目与致谢)
+- [🤝 参与贡献](#-参与贡献)
+- [☕ 支持本项目](#-支持本项目)
 
 ---
 

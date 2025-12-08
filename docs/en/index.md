@@ -52,8 +52,20 @@ When you use Gemini Voyager, you stop fighting the interface and start flowing w
   </div>
 </div>
 
-> "It's not just a tool. It's a bicycle for the mind."
+</div>
 
-[See what's possible →](/en/guide/getting-started)
+<div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
+  <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Every install is a vote of trust</h3>
+  <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Live numbers from GitHub and Chrome Web Store. Thanks for riding with us, fellow Voyagers.</p>
+  <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+    <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Stars">
+    <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Forks">
+    <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="Latest Release">
+    <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome Web Store Users">
+  </div>
+</div>
 
+<div class="vp-doc" style="text-align: center; margin: 3.5rem auto 2rem; max-width: 720px; padding: 0 16px;">
+  <p style="font-size: 1.05em; font-weight: 600; opacity: 0.86; margin: 0 0 12px;">“It's not just a tool. It's a bicycle for the mind.”</p>
+  <a href="/en/guide/getting-started" style="font-weight: 600; text-decoration: none;">See what's possible →</a>
 </div>
