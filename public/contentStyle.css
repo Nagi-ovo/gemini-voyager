@@ -604,9 +604,10 @@ html.dark-theme .gv-pm-trigger {
 .gv-pm-version-outdated::after {
   content: 'NEW';
   position: absolute;
-  top: -6px;
-  right: -10px;
-  padding: 4px 8px;
+  top: -14px;
+  right: -2px;
+  transform: translateX(35%);
+  padding: 3px 7px;
   border-radius: 10px;
   font-size: 10px;
   font-weight: 800;
@@ -614,7 +615,6 @@ html.dark-theme .gv-pm-trigger {
   color: oklch(0.95 0.02 95);
   background: linear-gradient(120deg, oklch(0.76 0.18 50), oklch(0.68 0.2 30));
   box-shadow: 0 8px 18px oklch(0 0 0 / 0.16);
-  transform: translateY(0);
   animation: gv-pm-float 1.8s ease-in-out infinite;
   pointer-events: none;
   white-space: nowrap;
