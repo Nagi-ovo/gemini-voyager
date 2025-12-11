@@ -28,6 +28,12 @@ function buildStyle(widthPercent: number): string {
     :root {
       --bard-sidenav-open-width: ${clampedWidth} !important;
       --bard-sidenav-open-closed-width-diff: ${openClosedDiff} !important;
+      --gv-sidenav-shift: ${openClosedDiff} !important;
+    }
+
+    /* When sidenav is collapsed, zero out the shift */
+    #app-root:has(side-navigation-content > div.collapsed) {
+      --gv-sidenav-shift: 0px !important;
     }
 
     bard-sidenav {
@@ -37,7 +43,21 @@ function buildStyle(widthPercent: number): string {
 
     /* Keep top-level mode switcher (header) aligned when sidebar grows/shrinks */
     #app-root > main > div > bard-mode-switcher {
-      transform: translateX(${openClosedDiff}) !important;
+      transform: translateX(var(--gv-sidenav-shift)) !important;
+      pointer-events: none !important;
+    }
+
+    /* Re-enable clicks for the actual switcher contents */
+    #app-root > main > div > bard-mode-switcher * {
+      pointer-events: auto;
+    }
+
+    /* Keep top bar aligned with sidebar width so it doesn't cover the nav */
+    #app-root > main > top-bar-actions,
+    #app-root > main > .top-bar-actions {
+      transform: translateX(var(--gv-sidenav-shift)) !important;
+      width: calc(100% - var(--gv-sidenav-shift)) !important;
+      max-width: calc(100% - var(--gv-sidenav-shift)) !important;
     }
 
   `;
