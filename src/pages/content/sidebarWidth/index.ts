@@ -81,6 +81,18 @@ function buildStyle(widthValue: number): string {
       max-width: calc(100% - var(--gv-sidenav-shift)) !important;
     }
 
+    /* Pin center-section near 35% of viewport; clamp to avoid overlapping mode switcher on small screens */
+    #app-root > main > top-bar-actions > div > div.center-section,
+    #app-root > main > .top-bar-actions > div > div.center-section {
+      position: absolute !important;
+      left: clamp(
+        calc(var(--gv-sidenav-shift) + 120px),
+        calc(0.5 * var(--gv-top-bar-width, 100vw) - var(--gv-sidenav-shift)),
+        calc(0.6 * var(--gv-top-bar-width, 100vw))
+      ) !important;
+      transform: translateX(-50%) !important;
+    }
+
   `;
 }
 
@@ -107,6 +119,22 @@ function removeStyles(): void {
 /** Initialize and start the sidebar width adjuster */
 export function startSidebarWidthAdjuster(): void {
   let currentWidthValue = DEFAULT_PX;
+  let topBarObserver: ResizeObserver | null = null;
+
+  const measureTopBarWidth = () => {
+    try {
+      const el =
+        document.querySelector<HTMLElement>('#app-root > main > top-bar-actions') ||
+        document.querySelector<HTMLElement>('#app-root > main > .top-bar-actions');
+      if (!el) return;
+      const width = el.getBoundingClientRect().width;
+      if (Number.isFinite(width) && width > 0) {
+        document.documentElement.style.setProperty('--gv-top-bar-width', `${Math.round(width)}px`);
+      }
+    } catch (err) {
+      console.warn('[Gemini Voyager] Failed to measure top bar width:', err);
+    }
+  };
 
   // 1) Read initial width
   try {
@@ -154,6 +182,23 @@ export function startSidebarWidthAdjuster(): void {
 	    console.error('[Gemini Voyager] Failed to add storage listener for sidebar width:', e);
 	  }
 
+  // 3) Track top bar width to keep center-section stable across screens
+  try {
+    const el =
+      document.querySelector<HTMLElement>('#app-root > main > top-bar-actions') ||
+      document.querySelector<HTMLElement>('#app-root > main > .top-bar-actions');
+    if (el && 'ResizeObserver' in window) {
+      topBarObserver = new ResizeObserver(() => measureTopBarWidth());
+      topBarObserver.observe(el);
+      measureTopBarWidth();
+    } else {
+      // Fallback: one-time measure
+      measureTopBarWidth();
+    }
+  } catch (err) {
+    console.warn('[Gemini Voyager] Failed to observe top bar width:', err);
+  }
+
   // // 3) Listen for DOM changes (<bard-sidenav> may be lazily mounted)
   // let debounceTimer: number | null = null;
   // const observer = new MutationObserver(() => {
@@ -173,5 +218,11 @@ export function startSidebarWidthAdjuster(): void {
   window.addEventListener('beforeunload', () => {
     // observer.disconnect();
     removeStyles();
+    if (topBarObserver) {
+      try {
+        topBarObserver.disconnect();
+      } catch {}
+      topBarObserver = null;
+    }
   });
 }
