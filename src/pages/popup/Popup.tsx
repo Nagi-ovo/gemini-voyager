@@ -19,6 +19,10 @@ import { compareVersions } from '@/core/utils/version';
 type ScrollMode = 'jump' | 'flow';
 
 const LEGACY_BASELINE_PX = 1200; // used to migrate old px widths to %
+const pxFromPercent = (percent: number) => (percent / 100) * LEGACY_BASELINE_PX;
+
+const clampNumber = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, Math.round(value)));
 
 const clampPercent = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, Math.round(value)));
@@ -41,6 +45,22 @@ const normalizePercent = (
 const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LEGACY_BASELINE_PX };
 const EDIT_PERCENT = { min: 30, max: 100, defaultValue: 60, legacyBaselinePx: LEGACY_BASELINE_PX };
 const SIDEBAR_PERCENT = { min: 15, max: 45, defaultValue: 26, legacyBaselinePx: LEGACY_BASELINE_PX };
+const SIDEBAR_PX = {
+  min: Math.round(pxFromPercent(SIDEBAR_PERCENT.min)),
+  max: Math.round(pxFromPercent(SIDEBAR_PERCENT.max)),
+  defaultValue: Math.round(pxFromPercent(SIDEBAR_PERCENT.defaultValue)),
+};
+
+const clampSidebarPx = (value: number) => clampNumber(value, SIDEBAR_PX.min, SIDEBAR_PX.max);
+const normalizeSidebarPx = (value: number) => {
+  if (!Number.isFinite(value)) return SIDEBAR_PX.defaultValue;
+  // If the stored value looks like a legacy percent, convert to px first.
+  if (value <= SIDEBAR_PERCENT.max) {
+    const px = pxFromPercent(value);
+    return clampSidebarPx(px);
+  }
+  return clampSidebarPx(value);
+};
 
 const LATEST_VERSION_CACHE_KEY = 'gvLatestVersionCache';
 const LATEST_VERSION_MAX_AGE = 1000 * 60 * 60 * 6; // 6 hours
@@ -151,28 +171,15 @@ export default function Popup() {
     }, []),
   });
 
-  // Width adjuster for sidebar width
+  // Width adjuster for sidebar width (px-based UI, stored as px; content will migrate >max to %)
   const sidebarWidthAdjuster = useWidthAdjuster({
     storageKey: 'geminiSidebarWidth',
-    defaultValue: SIDEBAR_PERCENT.defaultValue,
-    normalize: (v) =>
-      normalizePercent(
-        v,
-        SIDEBAR_PERCENT.defaultValue,
-        SIDEBAR_PERCENT.min,
-        SIDEBAR_PERCENT.max,
-        SIDEBAR_PERCENT.legacyBaselinePx
-      ),
-    onApply: useCallback((widthPercent: number) => {
-      const normalized = normalizePercent(
-        widthPercent,
-        SIDEBAR_PERCENT.defaultValue,
-        SIDEBAR_PERCENT.min,
-        SIDEBAR_PERCENT.max,
-        SIDEBAR_PERCENT.legacyBaselinePx
-      );
+    defaultValue: SIDEBAR_PX.defaultValue,
+    normalize: normalizeSidebarPx,
+    onApply: useCallback((widthPx: number) => {
+      const clamped = normalizeSidebarPx(widthPx);
       try {
-        chrome.storage?.sync?.set({ geminiSidebarWidth: normalized });
+        chrome.storage?.sync?.set({ geminiSidebarWidth: clamped });
       } catch {}
     }, []),
   });
@@ -566,11 +573,12 @@ export default function Popup() {
         <WidthSlider
           label={t('sidebarWidth')}
           value={sidebarWidthAdjuster.width}
-          min={SIDEBAR_PERCENT.min}
-          max={SIDEBAR_PERCENT.max}
-          step={1}
+          min={SIDEBAR_PX.min}
+          max={SIDEBAR_PX.max}
+          step={8}
           narrowLabel={t('sidebarWidthNarrow')}
           wideLabel={t('sidebarWidthWide')}
+          valueFormatter={(v) => `${v}px`}
           onChange={sidebarWidthAdjuster.handleChange}
           onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
         />

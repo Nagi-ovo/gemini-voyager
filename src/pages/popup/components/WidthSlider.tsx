@@ -11,6 +11,7 @@ interface WidthSliderProps {
   step: number;
   narrowLabel: string;
   wideLabel: string;
+  valueFormatter?: (value: number) => string;
   onChange: (value: number) => void;
   onChangeComplete?: (value: number) => void;
 }
@@ -27,15 +28,18 @@ export default function WidthSlider({
   step,
   narrowLabel,
   wideLabel,
+  valueFormatter,
   onChange,
   onChangeComplete,
 }: WidthSliderProps) {
+  const formatValue = valueFormatter ?? ((v: number) => `${v}%`);
+
   return (
     <Card className="p-4 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between mb-3">
         <CardTitle className="text-xs uppercase">{label}</CardTitle>
         <span className="text-sm font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md shadow-sm">
-          {value}%
+          {formatValue(value)}
         </span>
       </div>
       <CardContent className="p-0">

@@ -5,22 +5,43 @@ const MIN_PERCENT = 15;
 const MAX_PERCENT = 45;
 const LEGACY_BASELINE_PX = 1200;
 
-const clampPercent = (value: number, min: number, max: number) =>
+const DEFAULT_PX = Math.round((DEFAULT_PERCENT / 100) * LEGACY_BASELINE_PX); // 312px
+const MIN_PX = Math.round((MIN_PERCENT / 100) * LEGACY_BASELINE_PX); // 180px
+const MAX_PX = Math.round((MAX_PERCENT / 100) * LEGACY_BASELINE_PX); // 540px
+
+const clampNumber = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, Math.round(value)));
 
 const normalizePercent = (value: number, fallback: number) => {
   if (!Number.isFinite(value)) return fallback;
   if (value > MAX_PERCENT) {
     const approx = (value / LEGACY_BASELINE_PX) * 100;
-    return clampPercent(approx, MIN_PERCENT, MAX_PERCENT);
+    return clampNumber(approx, MIN_PERCENT, MAX_PERCENT);
   }
-  return clampPercent(value, MIN_PERCENT, MAX_PERCENT);
+  return clampNumber(value, MIN_PERCENT, MAX_PERCENT);
 };
 
-function buildStyle(widthPercent: number): string {
-  const normalizedPercent = normalizePercent(widthPercent, DEFAULT_PERCENT);
-  // Keep a hard clamp to avoid overly wide sidebars on very large screens
-  const clampedWidth = `clamp(200px, ${normalizedPercent}vw, 800px)`;
+const normalizePx = (value: number, fallback: number) => {
+  if (!Number.isFinite(value)) return fallback;
+  return clampNumber(value, MIN_PX, MAX_PX);
+};
+
+function normalizeWidth(value: number): { normalized: number; unit: 'px' | 'percent' } {
+  if (!Number.isFinite(value)) return { normalized: DEFAULT_PX, unit: 'px' };
+  if (value > MAX_PERCENT) {
+    return { normalized: normalizePx(value, DEFAULT_PX), unit: 'px' };
+  }
+  return { normalized: normalizePercent(value, DEFAULT_PERCENT), unit: 'percent' };
+}
+
+function buildStyle(widthValue: number): string {
+  const { normalized, unit } = normalizeWidth(widthValue);
+
+  const clampedWidth =
+    unit === 'px'
+      ? `${normalized}px`
+      : `clamp(200px, ${normalized}vw, 800px)`; // preserve vw behavior for legacy %
+
   const closedWidth = 'var(--bard-sidenav-closed-width, 72px)'; // fallback matches collapsed rail width
   const openClosedDiff = `max(0px, calc(${clampedWidth} - ${closedWidth}))`;
 
@@ -73,9 +94,9 @@ function ensureStyleEl(): HTMLStyleElement {
   return style;
 }
 
-function applyWidth(widthPercent: number): void {
+function applyWidth(widthValue: number): void {
   const style = ensureStyleEl();
-  style.textContent = buildStyle(widthPercent);
+  style.textContent = buildStyle(widthValue);
 }
 
 function removeStyles(): void {
@@ -85,15 +106,15 @@ function removeStyles(): void {
 
 /** Initialize and start the sidebar width adjuster */
 export function startSidebarWidthAdjuster(): void {
-  let currentWidthPercent = DEFAULT_PERCENT;
+  let currentWidthValue = DEFAULT_PX;
 
   // 1) Read initial width
   try {
-    chrome.storage?.sync?.get({ geminiSidebarWidth: DEFAULT_PERCENT }, (res) => {
+    chrome.storage?.sync?.get({ geminiSidebarWidth: DEFAULT_PX }, (res) => {
       const w = Number(res?.geminiSidebarWidth);
-      const normalized = normalizePercent(w, DEFAULT_PERCENT);
-      currentWidthPercent = normalized;
-      applyWidth(currentWidthPercent);
+      const { normalized } = normalizeWidth(w);
+      currentWidthValue = normalized;
+      applyWidth(currentWidthValue);
 
       if (Number.isFinite(w) && w !== normalized) {
         try {
@@ -106,8 +127,8 @@ export function startSidebarWidthAdjuster(): void {
   } catch (e){
     // Fallback: inject default value if no storage permission
       console.error('[Gemini Voyager] Failed to get sidebar width from storage:', e);
-	    applyWidth(currentWidthPercent);
-	  }
+      applyWidth(currentWidthValue);
+    }
 
   // 2) Respond to storage changes (from Popup slider adjustment)
   try {
@@ -115,9 +136,9 @@ export function startSidebarWidthAdjuster(): void {
       if (area === 'sync' && changes.geminiSidebarWidth) {
         const w = Number(changes.geminiSidebarWidth.newValue);
         if (Number.isFinite(w)) {
-          const normalized = normalizePercent(w, DEFAULT_PERCENT);
-          currentWidthPercent = normalized;
-          applyWidth(currentWidthPercent);
+          const { normalized } = normalizeWidth(w);
+          currentWidthValue = normalized;
+          applyWidth(currentWidthValue);
 
           if (normalized !== w) {
             try {
@@ -138,7 +159,7 @@ export function startSidebarWidthAdjuster(): void {
   // const observer = new MutationObserver(() => {
   //   if (debounceTimer !== null) window.clearTimeout(debounceTimer);
   //   debounceTimer = window.setTimeout(() => {
-  //     applyWidth(currentWidthPercent);
+  //     applyWidth(currentWidthValue);
   //     debounceTimer = null;
   //   }, 150);
   // });
