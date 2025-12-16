@@ -41,7 +41,7 @@ export default defineConfig({
                 ],
                 footer: {
                     message: '本项目开源。欢迎在 <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> 上给一颗 ⭐ 支持。',
-                    copyright: '基于 MIT 协议发布 | Copyright © 2025 Jesse Zhang | <a href="/privacy">隐私政策</a>'
+                    copyright: '基于 MIT 协议发布 | Copyright © 2025 Jesse Zhang | <a href="/gemini-voyager/privacy">隐私政策</a>'
                 }
             }
         },
@@ -76,7 +76,7 @@ export default defineConfig({
                 ],
                 footer: {
                     message: 'Open source project. Star us on <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> if you like it ⭐.',
-                    copyright: 'Released under the MIT License | Copyright © 2025 Jesse Zhang | <a href="/en/privacy">Privacy Policy</a>'
+                    copyright: 'Released under the MIT License | Copyright © 2025 Jesse Zhang | <a href="/gemini-voyager/en/privacy">Privacy Policy</a>'
                 }
             }
         }
