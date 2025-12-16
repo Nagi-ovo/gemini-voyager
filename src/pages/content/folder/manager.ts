@@ -3667,6 +3667,7 @@ export class FolderManager {
   }
 
   private setupStorageListener(): void {
+    // Listen for sync settings changes
     browser.storage.onChanged.addListener((changes, areaName) => {
       if (areaName === 'sync') {
         if (changes.geminiFolderEnabled) {
@@ -3682,7 +3683,63 @@ export class FolderManager {
           this.applyHideArchivedSetting();
         }
       }
+      // Listen for folder data changes from cloud sync
+      if (areaName === 'local' && changes.gvFolderData) {
+        this.debug('Folder data changed in chrome.storage.local, reloading...');
+        this.reloadFoldersFromStorage();
+      }
     });
+
+    // Listen for reload message from popup after sync
+    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if (message?.type === 'gv.folders.reload') {
+        this.debug('Received folder reload message');
+        this.reloadFoldersFromStorage();
+        sendResponse({ ok: true });
+      }
+      return true;
+    });
+
+    // Check for auto-sync on page load
+    this.checkAutoSync();
+  }
+
+  /**
+   * Reload folder data from chrome.storage.local and refresh UI
+   */
+  private async reloadFoldersFromStorage(): Promise<void> {
+    try {
+      await this.loadData();
+      this.renderAllFolders();
+      this.debug('Folders reloaded from storage');
+    } catch (error) {
+      console.error('[FolderManager] Failed to reload folders:', error);
+    }
+  }
+
+  /**
+   * Check if auto-sync is enabled and trigger sync on page load
+   */
+  private async checkAutoSync(): Promise<void> {
+    try {
+      const result = await chrome.storage.local.get('gvSyncMode');
+      console.log('[FolderManager] Auto-sync check, mode:', result.gvSyncMode);
+      if (result.gvSyncMode === 'auto') {
+        console.log('[FolderManager] Auto-sync is enabled, triggering sync in 1s...');
+        // Delay to ensure service worker is ready
+        setTimeout(() => {
+          chrome.runtime.sendMessage({ type: 'gv.sync.download' })
+            .then((response) => {
+              console.log('[FolderManager] Auto-sync response:', response);
+            })
+            .catch((err) => {
+              console.warn('[FolderManager] Auto-sync message failed:', err);
+            });
+        }, 1000);
+      }
+    } catch (error) {
+      console.warn('[FolderManager] Failed to check auto-sync setting:', error);
+    }
   }
 
   private applyFolderEnabledSetting(): void {

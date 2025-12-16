@@ -65,15 +65,39 @@ export interface IFolderStorageAdapter {
  */
 export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
   /**
-   * No-op initialization for localStorage adapter
-   * No migration needed as this is the default storage
+   * Initialize and migrate existing data to chrome.storage.local
+   * This enables popup/sync to access folder data
    */
-  async init(_key: string): Promise<void> {
-    // No initialization needed for localStorage
+  async init(key: string): Promise<void> {
+    try {
+      // Check if we need to migrate localStorage data to chrome.storage.local
+      const localData = localStorage.getItem(key);
+      if (localData) {
+        const result = await chrome.storage.local.get(key);
+        if (!result[key]) {
+          // Migrate localStorage data to chrome.storage.local
+          const data = JSON.parse(localData) as FolderData;
+          await chrome.storage.local.set({ [key]: data });
+          console.log('[LocalStorageFolderAdapter] Migrated folder data to chrome.storage.local');
+        }
+      }
+    } catch (error) {
+      console.warn('[LocalStorageFolderAdapter] Migration check failed:', error);
+    }
   }
 
   async loadData(key: string): Promise<FolderData | null> {
     try {
+      // First check chrome.storage.local (for synced data from popup/download)
+      const chromeResult = await chrome.storage.local.get(key);
+      if (chromeResult[key]) {
+        console.log('[LocalStorageFolderAdapter] Loaded data from chrome.storage.local');
+        // Also sync to localStorage for consistency
+        localStorage.setItem(key, JSON.stringify(chromeResult[key]));
+        return chromeResult[key] as FolderData;
+      }
+
+      // Fallback to localStorage
       const stored = localStorage.getItem(key);
       if (!stored) {
         return null;
@@ -94,6 +118,13 @@ export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
       const verification = localStorage.getItem(key);
       if (verification !== dataString) {
         throw new Error('Save verification failed - data mismatch');
+      }
+
+      // Also mirror to chrome.storage.local for popup/sync access
+      try {
+        await chrome.storage.local.set({ [key]: data });
+      } catch (storageError) {
+        console.warn('[LocalStorageFolderAdapter] Failed to mirror to chrome.storage.local:', storageError);
       }
 
       return true;

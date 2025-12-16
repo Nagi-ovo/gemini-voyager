@@ -670,5 +670,57 @@
   "modifierMeta": {
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows modifier key"
+  },
+  "cloudSync": {
+    "message": "Cloud Sync",
+    "description": "Cloud sync section title"
+  },
+  "cloudSyncDescription": {
+    "message": "Sync folders and prompts to Google Drive",
+    "description": "Cloud sync description"
+  },
+  "syncModeDisabled": {
+    "message": "Disabled",
+    "description": "Sync mode disabled option"
+  },
+  "syncModeManual": {
+    "message": "Manual",
+    "description": "Sync mode manual option"
+  },
+  "syncModeAuto": {
+    "message": "Auto",
+    "description": "Sync mode auto option"
+  },
+  "syncNow": {
+    "message": "Sync Now",
+    "description": "Sync now button"
+  },
+  "lastSynced": {
+    "message": "Last synced: {time}",
+    "description": "Last sync timestamp"
+  },
+  "neverSynced": {
+    "message": "Never synced",
+    "description": "Never synced message"
+  },
+  "syncSuccess": {
+    "message": "✓ Synced successfully",
+    "description": "Sync success message"
+  },
+  "syncError": {
+    "message": "✗ Sync failed: {error}",
+    "description": "Sync error message"
+  },
+  "syncInProgress": {
+    "message": "Syncing...",
+    "description": "Sync in progress message"
+  },
+  "signOut": {
+    "message": "Sign out",
+    "description": "Sign out button"
+  },
+  "signInWithGoogle": {
+    "message": "Sign in with Google",
+    "description": "Sign in with Google button"
   }
 }

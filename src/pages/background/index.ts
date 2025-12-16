@@ -1,6 +1,9 @@
-/* Background service worker - handles cross-origin image fetch for packaging and popup opening */
+/* Background service worker - handles cross-origin image fetch, popup opening, and sync */
 
+import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
 import { StorageKeys } from '@/core/types/common';
+import type { FolderData } from '@/core/types/folder';
+import type { SyncMode, SyncData, PromptItem } from '@/core/types/sync';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 /**
@@ -15,7 +18,7 @@ class StarredMessagesManager {
    */
   private serialize<T>(operation: () => Promise<T>): Promise<T> {
     const promise = this.operationQueue.then(operation, operation);
-    this.operationQueue = promise.catch(() => {}); // Prevent error propagation
+    this.operationQueue = promise.catch(() => { }); // Prevent error propagation
     return promise;
   }
 
@@ -138,6 +141,63 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         }
       }
 
+      // Handle sync operations
+      if (message && message.type && message.type.startsWith('gv.sync.')) {
+        switch (message.type) {
+          case 'gv.sync.authenticate': {
+            const success = await googleDriveSyncService.authenticate();
+            sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
+            return;
+          }
+          case 'gv.sync.signOut': {
+            await googleDriveSyncService.signOut();
+            sendResponse({ ok: true, state: await googleDriveSyncService.getState() });
+            return;
+          }
+          case 'gv.sync.upload': {
+            const { folders, prompts } = message.payload as {
+              folders: FolderData;
+              prompts: PromptItem[];
+            };
+            const success = await googleDriveSyncService.upload(folders, prompts);
+            sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
+            return;
+          }
+          case 'gv.sync.download': {
+            const data = await googleDriveSyncService.download();
+            // Automatically save downloaded data to chrome.storage.local
+            // This triggers storage change listeners to refresh UI
+            if (data) {
+              const folderData = data.folders?.data || { folders: [], folderContents: {} };
+              const promptItems = data.prompts?.items || [];
+              await chrome.storage.local.set({
+                gvFolderData: folderData,
+                gvPromptItems: promptItems,
+              });
+              console.log('[Background] Downloaded data saved to storage, folders:', folderData.folders?.length || 0, 'prompts:', promptItems.length);
+            }
+            sendResponse({
+              ok: true,
+              data,
+              state: await googleDriveSyncService.getState(),
+            });
+            return;
+          }
+          case 'gv.sync.getState': {
+            sendResponse({ ok: true, state: await googleDriveSyncService.getState() });
+            return;
+          }
+          case 'gv.sync.setMode': {
+            const mode = message.payload?.mode as SyncMode;
+            if (mode) {
+              await googleDriveSyncService.setMode(mode);
+            }
+            sendResponse({ ok: true, state: await googleDriveSyncService.getState() });
+            return;
+          }
+        }
+      }
+
       // Handle popup opening request
       if (message && message.type === 'gv.openPopup') {
         try {
@@ -169,7 +229,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       const b64 = arrayBufferToBase64(ab);
       sendResponse({ ok: true, contentType, base64: b64 });
     } catch (e: any) {
-      try { sendResponse({ ok: false, error: String(e?.message || e) }); } catch {}
+      try { sendResponse({ ok: false, error: String(e?.message || e) }); } catch { }
     }
   })();
   return true; // keep channel open for async sendResponse

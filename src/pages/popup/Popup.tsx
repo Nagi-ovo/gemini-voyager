@@ -10,6 +10,7 @@ import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 
+import { CloudSyncSettings } from './components/CloudSyncSettings';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { StarredHistory } from './components/StarredHistory';
 import WidthSlider from './components/WidthSlider';
@@ -147,7 +148,7 @@ export default function Popup() {
       );
       try {
         chrome.storage?.sync?.set({ geminiChatWidth: normalized });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -167,7 +168,7 @@ export default function Popup() {
       );
       try {
         chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -180,7 +181,7 @@ export default function Popup() {
       const clamped = normalizeSidebarPx(widthPx);
       try {
         chrome.storage?.sync?.set({ geminiSidebarWidth: clamped });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -544,6 +545,8 @@ export default function Popup() {
             </div>
           </CardContent>
         </Card>
+        {/* Cloud Sync */}
+        <CloudSyncSettings />
         {/* Chat Width */}
         <WidthSlider
           label={t('chatWidth')}

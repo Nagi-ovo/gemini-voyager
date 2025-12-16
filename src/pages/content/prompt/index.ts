@@ -990,13 +990,24 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // Note: The centralized i18n system already handles storage changes,
     // we just need to update the UI when language changes
     const storageChangeHandler = (changes: any, area: string) => {
-      if (area !== 'sync') return;
-      if (changes?.language?.newValue) {
+      // Handle language changes from sync storage
+      if (area === 'sync' && changes?.language?.newValue) {
         const next = changes.language.newValue;
         try {
           langSel.value = next.startsWith('zh') ? 'zh' : 'en';
         } catch { }
         refreshUITexts();
+      }
+      // Handle prompt data changes from cloud sync (local storage)
+      if (area === 'local' && changes?.gvPromptItems) {
+        pmLogger.info('Prompt data changed in chrome.storage.local, reloading...');
+        const newItems = changes.gvPromptItems.newValue;
+        if (Array.isArray(newItems)) {
+          items = newItems;
+          renderTags();
+          renderList();
+          setNotice(i18n.t('syncSuccess') || 'Synced', 'ok');
+        }
       }
     };
 

@@ -670,5 +670,57 @@
   "modifierMeta": {
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows 修饰键"
+  },
+  "cloudSync": {
+    "message": "云同步",
+    "description": "云同步区域标题"
+  },
+  "cloudSyncDescription": {
+    "message": "将文件夹和提示词同步到 Google Drive",
+    "description": "云同步描述"
+  },
+  "syncModeDisabled": {
+    "message": "已禁用",
+    "description": "同步模式禁用选项"
+  },
+  "syncModeManual": {
+    "message": "手动",
+    "description": "同步模式手动选项"
+  },
+  "syncModeAuto": {
+    "message": "自动",
+    "description": "同步模式自动选项"
+  },
+  "syncNow": {
+    "message": "立即同步",
+    "description": "立即同步按钮"
+  },
+  "lastSynced": {
+    "message": "上次同步：{time}",
+    "description": "上次同步时间戳"
+  },
+  "neverSynced": {
+    "message": "从未同步",
+    "description": "从未同步消息"
+  },
+  "syncSuccess": {
+    "message": "✓ 同步成功",
+    "description": "同步成功消息"
+  },
+  "syncError": {
+    "message": "✗ 同步失败：{error}",
+    "description": "同步错误消息"
+  },
+  "syncInProgress": {
+    "message": "同步中...",
+    "description": "同步进行中消息"
+  },
+  "signOut": {
+    "message": "退出登录",
+    "description": "退出登录按钮"
+  },
+  "signInWithGoogle": {
+    "message": "使用 Google 登录",
+    "description": "使用 Google 登录按钮"
   }
 }
