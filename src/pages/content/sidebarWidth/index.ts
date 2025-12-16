@@ -93,6 +93,18 @@ function buildStyle(widthValue: number): string {
       transform: translateX(-50%) !important;
     }
 
+    /* Keep right-section's second child (e.g., profile/settings) fixed in original position */
+    /* Parent has transform which offsets this element, so we compensate with margin-right */
+    #app-root > main > top-bar-actions > div > div.right-section > div:nth-child(2),
+    #app-root > main > .top-bar-actions > div > div.right-section > div:nth-child(2) {
+      position: fixed !important;
+      top: 4px !important;
+      right: 150px !important;
+      z-index: 1000 !important;
+      /* When sidebar expands, parent moves right, so we add positive margin to pull element left */
+      margin-right: var(--gv-sidenav-shift, 0px) !important;
+    }
+
   `;
 }
 
@@ -152,11 +164,11 @@ export function startSidebarWidthAdjuster(): void {
         }
       }
     });
-  } catch (e){
+  } catch (e) {
     // Fallback: inject default value if no storage permission
-      console.error('[Gemini Voyager] Failed to get sidebar width from storage:', e);
-      applyWidth(currentWidthValue);
-    }
+    console.error('[Gemini Voyager] Failed to get sidebar width from storage:', e);
+    applyWidth(currentWidthValue);
+  }
 
   // 2) Respond to storage changes (from Popup slider adjustment)
   try {
@@ -178,9 +190,9 @@ export function startSidebarWidthAdjuster(): void {
         }
       }
     });
-   } catch (e) {
-	    console.error('[Gemini Voyager] Failed to add storage listener for sidebar width:', e);
-	  }
+  } catch (e) {
+    console.error('[Gemini Voyager] Failed to add storage listener for sidebar width:', e);
+  }
 
   // 3) Track top bar width to keep center-section stable across screens
   try {
@@ -221,7 +233,7 @@ export function startSidebarWidthAdjuster(): void {
     if (topBarObserver) {
       try {
         topBarObserver.disconnect();
-      } catch {}
+      } catch { }
       topBarObserver = null;
     }
   });
