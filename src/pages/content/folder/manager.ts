@@ -3728,13 +3728,15 @@ export class FolderManager {
         console.log('[FolderManager] Auto-sync is enabled, triggering sync in 1s...');
         // Delay to ensure service worker is ready
         setTimeout(() => {
+          // Fire and forget - don't wait for response
+          // The background script will save data to storage, which triggers
+          // the storage change listener to refresh the UI
           chrome.runtime.sendMessage({ type: 'gv.sync.download' })
-            .then((response) => {
-              console.log('[FolderManager] Auto-sync response:', response);
-            })
-            .catch((err) => {
-              console.warn('[FolderManager] Auto-sync message failed:', err);
+            .catch(() => {
+              // Ignore message channel errors - the sync may still succeed
+              // and trigger storage change listeners
             });
+          console.log('[FolderManager] Auto-sync message sent');
         }, 1000);
       }
     } catch (error) {

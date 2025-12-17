@@ -16,6 +16,8 @@ export function CloudSyncSettings() {
     const { t } = useLanguage();
     const [syncState, setSyncState] = useState<SyncState>(DEFAULT_SYNC_STATE);
     const [statusMessage, setStatusMessage] = useState<{ text: string; kind: 'ok' | 'err' } | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Fetch sync state on mount
     useEffect(() => {
@@ -104,7 +106,7 @@ export function CloudSyncSettings() {
     // Handle sync now (upload current data)
     const handleSyncNow = useCallback(async () => {
         setStatusMessage(null);
-        setSyncState((prev) => ({ ...prev, isSyncing: true }));
+        setIsUploading(true);
 
         try {
             // First authenticate if needed
@@ -169,14 +171,15 @@ export function CloudSyncSettings() {
             const errorMessage = error instanceof Error ? error.message : 'Sync failed';
             console.error('[CloudSyncSettings] Sync failed:', error);
             setStatusMessage({ text: t('syncError').replace('{error}', errorMessage), kind: 'err' });
-            setSyncState((prev) => ({ ...prev, isSyncing: false }));
+        } finally {
+            setIsUploading(false);
         }
     }, [syncState.isAuthenticated, t]);
 
     // Handle download from Drive (restore data)
     const handleDownloadFromDrive = useCallback(async () => {
         setStatusMessage(null);
-        setSyncState((prev) => ({ ...prev, isSyncing: true }));
+        setIsDownloading(true);
 
         try {
             // First authenticate if needed
@@ -197,7 +200,7 @@ export function CloudSyncSettings() {
 
             if (!response.data) {
                 setStatusMessage({ text: 'No sync data found in Drive', kind: 'err' });
-                setSyncState((prev) => ({ ...prev, isSyncing: false }));
+                setIsDownloading(false);
                 return;
             }
 
@@ -230,7 +233,8 @@ export function CloudSyncSettings() {
             const errorMessage = error instanceof Error ? error.message : 'Download failed';
             console.error('[CloudSyncSettings] Download failed:', error);
             setStatusMessage({ text: t('syncError').replace('{error}', errorMessage), kind: 'err' });
-            setSyncState((prev) => ({ ...prev, isSyncing: false }));
+        } finally {
+            setIsDownloading(false);
         }
     }, [syncState.isAuthenticated, t]);
 
@@ -299,10 +303,10 @@ export function CloudSyncSettings() {
                                 size="sm"
                                 className="flex-1 group hover:border-primary/50"
                                 onClick={handleSyncNow}
-                                disabled={syncState.isSyncing}
+                                disabled={isUploading || isDownloading}
                             >
                                 <span className="group-hover:scale-105 transition-transform text-xs flex items-center gap-1">
-                                    {syncState.isSyncing ? (
+                                    {isUploading ? (
                                         <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -322,10 +326,10 @@ export function CloudSyncSettings() {
                                 size="sm"
                                 className="flex-1 group hover:border-primary/50"
                                 onClick={handleDownloadFromDrive}
-                                disabled={syncState.isSyncing}
+                                disabled={isUploading || isDownloading}
                             >
                                 <span className="group-hover:scale-105 transition-transform text-xs flex items-center gap-1">
-                                    {syncState.isSyncing ? (
+                                    {isDownloading ? (
                                         <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
