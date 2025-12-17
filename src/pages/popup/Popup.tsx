@@ -640,6 +640,46 @@ export default function Popup() {
               <Label className="text-sm font-medium mb-2 block">{t('customWebsites')}</Label>
               <p className="text-xs text-muted-foreground mb-3">{t('customWebsitesHint')}</p>
 
+              {/* Quick-select buttons for popular websites */}
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {[
+                  { domain: 'chatgpt.com', label: 'ChatGPT', icon: '🤖' },
+                  { domain: 'claude.ai', label: 'Claude', icon: '🧠' },
+                  { domain: 'grok.com', label: 'Grok', icon: '⚡' },
+                  { domain: 'deepseek.com', label: 'DeepSeek', icon: '🔍' },
+                  { domain: 'qwen.ai', label: 'Qwen', icon: '🌐' },
+                  { domain: 'kimi.com', label: 'Kimi', icon: '🌙' },
+                ].map(({ domain, label, icon }) => {
+                  const isEnabled = customWebsites.includes(domain);
+                  return (
+                    <button
+                      key={domain}
+                      onClick={() => {
+                        if (isEnabled) {
+                          const updated = customWebsites.filter(w => w !== domain);
+                          setCustomWebsites(updated);
+                          apply({ customWebsites: updated });
+                        } else {
+                          const updated = [...customWebsites, domain];
+                          setCustomWebsites(updated);
+                          apply({ customWebsites: updated });
+                        }
+                      }}
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all ${isEnabled
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
+                        }`}
+                    >
+                      <span className="text-[10px]">{icon}</span>
+                      <span>{label}</span>
+                      {isEnabled && (
+                        <span className="text-[10px]">✓</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
               {/* Website List */}
               {customWebsites.length > 0 && (
                 <div className="space-y-2 mb-3">
