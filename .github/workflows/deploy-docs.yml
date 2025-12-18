@@ -10,6 +10,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'bun.lock'
+      - 'CNAME'
   workflow_dispatch:
 
 permissions:
@@ -40,6 +41,9 @@ jobs:
 
       - name: Build docs
         run: bun run docs:build
+
+      - name: Copy CNAME to dist
+        run: cp CNAME docs/.vitepress/dist/CNAME
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
