@@ -5,7 +5,7 @@ export default {
     login: 'Nagi-ovo',
   },
 
-  outputDir: '../docs/public/assets',
+  outputDir: '../../docs/public/assets',
 
   onSponsorsAllFetched: async (sponsors) => {
     try {
@@ -15,7 +15,7 @@ export default {
           type: 'User',
           login: name,
           name: name,
-          avatarUrl: '', 
+          avatarUrl: '',
         },
         monthlyDollars: 0,
         provider: 'manual',
@@ -55,7 +55,7 @@ export default {
         const perLine = 6
         const boxWidth = width / perLine
         const fontSize = 14
-        
+
         for (let i = 0; i < Math.ceil(sponsors.length / perLine); i++) {
           const row = sponsors.slice(i * perLine, (i + 1) * perLine)
           row.forEach((s, j) => {
