@@ -330,6 +330,8 @@ If Gemini Voyager makes your life easier, consider buying me a coffee. It helps 
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
     <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" >
   </a>
+
+  <!--<iframe id="afdian_leaflet_{nagi-ovo}" src="https://afdian.com/leaflet?slug={nagi-ovo}" width="100%" scrolling="no" height="200" frameborder="0"></iframe><script>document.body.clientWidth< 700 ? document.getElementById("afdian_leaflet_{nagi-ovo}").width = "100%" : document.getElementById("afdian_leaflet_{nagi-ovo}").width = "640"</script>-->
   
 <div align="center">
   <p><b>Or support via WeChat / Alipay:</b></p>
