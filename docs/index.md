@@ -65,6 +65,13 @@ features:
   </div>
 </div>
 
+<div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 1000px; padding: 0 16px;">
+  <h3 style="margin: 0 0 24px; font-weight: 600; font-size: 1.2em;">特别鸣谢</h3>
+  <a href="https://github.com/Nagi-ovo/gemini-voyager">
+    <img src="https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/docs/public/assets/sponsors.svg" width="1000px" style="margin: 0 auto;" />
+  </a>
+</div>
+
 <div class="vp-doc" style="text-align: center; margin: 3.5rem auto 2rem; max-width: 720px; padding: 0 16px;">
   <p style="font-size: 1.05em; font-weight: 600; opacity: 0.86; margin: 0 0 12px;">“它不只是工具，更是伴你思维远航的伙伴。”</p>
   <a href="./guide/getting-started" style="font-weight: 600; text-decoration: none;">探索更多 →</a>

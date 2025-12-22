@@ -324,6 +324,12 @@ Thank you for helping make Gemini Voyager better! ❤️
 
 ## ☕ Support This Project
 
+<div align="center">
+  <a href="https://github.com/Nagi-ovo/gemini-voyager">
+    <img src="https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
+  </a>
+</div>
+
 If Gemini Voyager makes your life easier, consider buying me a coffee. It helps keep the updates coming!
 
 <div align="center">

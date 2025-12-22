@@ -330,6 +330,12 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
 
 ## ☕ 支持本项目
 
+<div align="center">
+  <a href="https://github.com/Nagi-ovo/gemini-voyager">
+    <img src="https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
+  </a>
+</div>
+
 如果 Gemini Voyager 让你的工作效率提升了，不妨请我喝杯咖啡，这将支持我持续维护和更新！
 
 <div align="center">
@@ -368,3 +374,4 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
   <p>Made with ❤️ by Jesse Zhang</p>
   <sub>MIT License © 2025</sub>
 </div>
+</content>
