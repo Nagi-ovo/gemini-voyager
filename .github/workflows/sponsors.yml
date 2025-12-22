@@ -1,12 +1,12 @@
 name: Update Sponsors
 
 on:
-  schedule:
-    - cron: '0 0 * * 0' # Every Sunday at 00:00
   workflow_dispatch:
   push:
     branches:
       - main
+    paths:
+      - '.github/sponsors/sponsors.json'
 
 jobs:
   update-sponsors:
