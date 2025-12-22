@@ -5,7 +5,7 @@ export default {
     login: 'Nagi-ovo',
   },
 
-  outputDir: '../../sponsorkit',
+  outputDir: '../docs/public/assets',
 
   onSponsorsAllFetched: async (sponsors) => {
     try {
