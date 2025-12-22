@@ -15,6 +15,7 @@ export default [
       'docs/.vitepress/dist/**',
       'coverage/**',
       'gemini-voyager-sync/**',
+      '.github/sponsors/**',
     ],
   },
   {

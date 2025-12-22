@@ -1,0 +1,39 @@
+name: Update Sponsors
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Every Sunday at 00:00
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-sponsors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      
+      - name: Enable Corepack and Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Update sponsors
+        run: npx sponsorkit
+        working-directory: .github/sponsors
+        env:
+          SPONSORKIT_GITHUB_TOKEN: ${{ secrets.SPONSORKIT_GITHUB_TOKEN }}
+          SPONSORKIT_GITHUB_LOGIN: Nagi-ovo
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update sponsors.svg"
+          file_pattern: 'sponsorkit/*'
