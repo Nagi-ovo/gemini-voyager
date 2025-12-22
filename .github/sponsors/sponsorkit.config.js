@@ -6,6 +6,8 @@ export default {
   },
 
   outputDir: '../../docs/public/assets',
+  
+  formats: ['svg'],
 
   onSponsorsAllFetched: async (sponsors) => {
     try {
