@@ -337,20 +337,28 @@ If Gemini Voyager makes your life easier, consider buying me a coffee. It helps 
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
     <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" >
   </a>
-
-  [![Nagi-ovo's Profile](https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo)](https://afdian.com/a/nagi-ovo)
   
 <div align="center">
-  <p><b>Or support via WeChat / Alipay:</b></p>
+  <p><b>Or support via WeChat / Alipay / Afdian:</b></p>
   <table>
     <tr>
       <td align="center">
-        <img src="docs/public/assets/wechat-sponsor.png" alt="WeChat Pay" width="200"><br>
+        <img src="docs/public/assets/wechat-sponsor.png" alt="WeChat Pay" height="200"><br>
         <sub><b>WeChat Pay</b></sub>
       </td>
       <td align="center">
-        <img src="docs/public/assets/alipay-sponsor.jpg" alt="Alipay" width="200"><br>
+        <img src="docs/public/assets/alipay-sponsor.jpg" alt="Alipay" height="200"><br>
         <sub><b>Alipay</b></sub>
+      </td>
+      <td align="center">
+        <a href="https://afdian.com/a/nagi-ovo">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
+            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
+            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="200" />
+          </picture>
+          <sub><b>Afdian</b></sub>
+        </a>
       </td>
     </tr>
   </table>
