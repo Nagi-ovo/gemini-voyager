@@ -343,19 +343,27 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
     <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" >
   </a>
-</div>
-
-<div align="center">
-  <p><b>或通过微信/支付宝赞助：</b></p>
-  <table>
+  
+  <p><b>或通过微信 / 支付宝 / 爱发电支持：</b></p>
+  <table align="center" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
-        <img src="../docs/public/assets/wechat-sponsor.png" alt="微信支付" width="200"><br>
+        <img src="../docs/public/assets/wechat-sponsor.png" alt="微信支付" height="160"><br>
         <sub><b>微信支付</b></sub>
       </td>
       <td align="center">
-        <img src="../docs/public/assets/alipay-sponsor.jpg" alt="支付宝" width="200"><br>
+        <img src="../docs/public/assets/alipay-sponsor.jpg" alt="支付宝" height="160"><br>
         <sub><b>支付宝</b></sub>
+      </td>
+      <td align="center">
+        <a href="https://afdian.com/a/nagi-ovo" target="_blank">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
+            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
+            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
+          </picture>
+        </a><br>
+        <sub><b>爱发电</b></sub>
       </td>
     </tr>
   </table>
