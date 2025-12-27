@@ -11,7 +11,6 @@ const LEGACY_BASELINE_PX = 1200;
 // Selectors based on the export functionality that already works
 function getUserSelectors(): string[] {
   return [
-    '.user-query-bubble-with-background',
     '.user-query-bubble-container',
     '.user-query-container',
     'user-query-content',
@@ -143,10 +142,15 @@ function applyWidth(widthPercent: number) {
     }
 
     /* Target specific internal containers that might have fixed widths */
-    .user-query-bubble-with-background,
     .presented-response-container,
     [data-message-author-role] {
       max-width: ${widthValue} !important;
+    }
+
+    /* Specific fix for user bubble background to fit content but respect max-width */
+    .user-query-bubble-with-background {
+      max-width: ${widthValue} !important;
+      width: fit-content !important;
     }
   `;
 }
