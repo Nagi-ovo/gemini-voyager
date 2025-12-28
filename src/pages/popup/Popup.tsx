@@ -13,6 +13,16 @@ import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 import { CloudSyncSettings } from './components/CloudSyncSettings';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { StarredHistory } from './components/StarredHistory';
+import {
+  IconChatGPT,
+  IconClaude,
+  IconGrok,
+  IconDeepSeek,
+  IconQwen,
+  IconKimi,
+  IconNotebookLM,
+  IconMidjourney,
+} from './components/WebsiteLogos';
 import WidthSlider from './components/WidthSlider';
 
 import { compareVersions } from '@/core/utils/version';
@@ -643,13 +653,15 @@ export default function Popup() {
               {/* Quick-select buttons for popular websites */}
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {[
-                  { domain: 'chatgpt.com', label: 'ChatGPT', icon: '🤖' },
-                  { domain: 'claude.ai', label: 'Claude', icon: '🧠' },
-                  { domain: 'grok.com', label: 'Grok', icon: '⚡' },
-                  { domain: 'deepseek.com', label: 'DeepSeek', icon: '🔍' },
-                  { domain: 'qwen.ai', label: 'Qwen', icon: '🌐' },
-                  { domain: 'kimi.com', label: 'Kimi', icon: '🌙' },
-                ].map(({ domain, label, icon }) => {
+                  { domain: 'chatgpt.com', label: 'ChatGPT', Icon: IconChatGPT },
+                  { domain: 'claude.ai', label: 'Claude', Icon: IconClaude },
+                  { domain: 'grok.com', label: 'Grok', Icon: IconGrok },
+                  { domain: 'deepseek.com', label: 'DeepSeek', Icon: IconDeepSeek },
+                  { domain: 'qwen.ai', label: 'Qwen', Icon: IconQwen },
+                  { domain: 'kimi.com', label: 'Kimi', Icon: IconKimi },
+                  { domain: 'notebooklm.google.com', label: 'NotebookLM', Icon: IconNotebookLM },
+                  { domain: 'midjourney.com', label: 'Midjourney', Icon: IconMidjourney },
+                ].map(({ domain, label, Icon }) => {
                   const isEnabled = customWebsites.includes(domain);
                   return (
                     <button
@@ -665,16 +677,19 @@ export default function Popup() {
                           apply({ customWebsites: updated });
                         }
                       }}
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all ${isEnabled
+                      className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-full text-[11px] font-medium transition-all flex-grow justify-center min-w-[30%] ${isEnabled
                         ? 'bg-primary text-primary-foreground shadow-sm'
                         : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
                         }`}
+                      title={label}
                     >
-                      <span className="text-[10px]">{icon}</span>
-                      <span>{label}</span>
-                      {isEnabled && (
-                        <span className="text-[10px]">✓</span>
-                      )}
+                      <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
+                        <Icon />
+                      </span>
+                      <span className="truncate">{label}</span>
+                      <span className={`shrink-0 w-2.5 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}>
+                        ✓
+                      </span>
                     </button>
                   );
                 })}
