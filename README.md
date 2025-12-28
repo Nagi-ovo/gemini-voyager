@@ -47,6 +47,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - [Prompt Library](#-prompt-library)
   - [Formula Copy](#-formula-copy)
   - [NanoBanana Option](#-nanobanana-option)
+  - [Deep Research Export](#-deep-research-export)
   - [Chat Export](#-chat-export)
   - [Adjustable Width](#-adjustable-chat-width)
 - [Installation](#-installation)
@@ -141,6 +142,10 @@ Automatically removes the visible "Gemini" watermark from AI-generated images (N
 </div>
 
 </details>
+
+### 🔬 Deep Research Export
+**Extract thinking content from Deep Research conversations.**
+One-click export to Markdown format preserving all thinking phases and research links. Click the share & export button in Deep Research conversations to download.
 
 ### 💾 Chat Export
 **Your data, your format.**

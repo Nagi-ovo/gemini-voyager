@@ -8,6 +8,8 @@ import { startPromptManager } from './prompt/index';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startWatermarkRemover } from './watermarkRemover/index';
+import { startDeepResearchExport } from './deepResearch/index';
+
 
 import { startFormulaCopy } from '@/features/formulaCopy';
 
@@ -114,6 +116,9 @@ async function initializeFeatures(): Promise<void> {
       // Watermark remover - based on gemini-watermark-remover by journey-ad
       // https://github.com/journey-ad/gemini-watermark-remover
       startWatermarkRemover();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startDeepResearchExport();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 

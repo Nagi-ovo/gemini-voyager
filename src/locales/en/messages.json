@@ -738,5 +738,13 @@
   "nanobananaDownloadTooltip": {
     "message": "Download unwatermarked image (NanoBanana)",
     "description": "Download button tooltip"
+  },
+  "deepResearchDownload": {
+    "message": "Download thinking content",
+    "description": "Deep Research download button text"
+  },
+  "deepResearchDownloadTooltip": {
+    "message": "Download thinking content as Markdown",
+    "description": "Deep Research download button tooltip"
   }
 }

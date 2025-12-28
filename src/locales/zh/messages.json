@@ -738,5 +738,13 @@
   "nanobananaDownloadTooltip": {
     "message": "下载无水印图片 (NanoBanana)",
     "description": "Download button tooltip"
+  },
+  "deepResearchDownload": {
+    "message": "下载 Thinking 内容",
+    "description": "Deep Research download button text"
+  },
+  "deepResearchDownloadTooltip": {
+    "message": "将 Thinking 内容导出为 Markdown 文件",
+    "description": "Deep Research download button tooltip"
   }
 }
