@@ -25,6 +25,10 @@
 </div>
 
 <p align="center">
+    <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
+  </p>
+
+<p align="center">
   <a href="https://www.nagi.fun/gemini-voyager/en">📖 Documentation</a> • 
   <a href="./.github/README_ZH.md">中文说明</a>
 </p>
@@ -399,9 +403,6 @@ If Gemini Voyager makes your life easier, consider buying me a coffee. It helps 
      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
    </picture>
   </a>
-  <p align="center">
-    <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
-  </p>
   <p>Made with ❤️ by Jesse Zhang</p>
   <sub>MIT License © 2025</sub>
 </div>
