@@ -9,7 +9,6 @@
  */
 
 import { calculateAlphaMap } from './alphaMap';
-
 // Import watermark background capture images - Vite will bundle these
 import BG_48_IMPORT from './assets/bg_48.png';
 import BG_96_IMPORT from './assets/bg_96.png';
