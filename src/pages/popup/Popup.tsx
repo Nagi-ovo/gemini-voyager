@@ -25,6 +25,7 @@ import {
 } from './components/WebsiteLogos';
 import WidthSlider from './components/WidthSlider';
 
+import { isSafari } from '@/core/utils/browser';
 import { compareVersions } from '@/core/utils/version';
 
 type ScrollMode = 'jump' | 'flow';
@@ -555,8 +556,8 @@ export default function Popup() {
             </div>
           </CardContent>
         </Card>
-        {/* Cloud Sync */}
-        <CloudSyncSettings />
+        {/* Cloud Sync - Hidden on Safari due to API limitations */}
+        {!isSafari() && <CloudSyncSettings />}
         {/* Chat Width */}
         <WidthSlider
           label={t('chatWidth')}
@@ -717,7 +718,7 @@ export default function Popup() {
 
               {/* Add Website Input */}
               <div className="space-y-2">
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <input
                     type="text"
                     value={newWebsiteInput}
@@ -731,12 +732,12 @@ export default function Popup() {
                       }
                     }}
                     placeholder={t('customWebsitesPlaceholder')}
-                    className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    className="flex-1 min-w-0 px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                   />
                   <Button
                     onClick={handleAddWebsite}
                     size="sm"
-                    className="shrink-0"
+                    className="shrink-0 whitespace-nowrap"
                   >
                     {t('addWebsite')}
                   </Button>
