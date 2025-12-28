@@ -48,6 +48,7 @@
   - [📂 文件夹管理](#-文件夹管理)
   - [💡 提示词库](#-提示词库)
   - [📐 公式复制](#-公式复制)
+  - [🍌 NanoBanana 水印去除](#-nanobanana-选项)
   - [💾 对话导出](#-对话导出)
   - [📏 对话宽度调整](#-对话宽度调整)
 - [📥 安装方式](#-安装方式)
@@ -125,6 +126,26 @@
 
 <div align="center">
   <img src="../docs/public/assets/gemini-math-copy.png" alt="公式复制" style="max-width: 100%;"/>
+</div>
+
+</details>
+
+### 🍌 NanoBanana 选项
+**Gemini 图片无损去水印。**
+使用反向 Alpha 混合算法，自动去除 AI 生成图片 (NanoBanana) 上的可见 "Gemini" 水印。
+- **零质量损失**：完美还原原始像素，得到纯净图片。
+- **一键启用**：在设置面板开启后即可全程自动运行。
+- **直接下载**：使用 🍌 图标完全替代原生的下载按钮。点击即可直接下载 100% 无水印的已处理版本。
+- **隐私保护**：所有处理 100% 在浏览器本地完成。
+
+> [!NOTE]
+> 本功能基于 [journey-ad](https://github.com/journey-ad) 开发的 [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) 算法实现，其核心逻辑源自 [allenk](https://github.com/allenk) 的 [C++ 原始版本](https://github.com/allenk/GeminiWatermarkTool)。🧡
+
+<details>
+<summary>👀 查看截图</summary>
+
+<div align="center">
+  <img src="../docs/public/assets/nanobanana.png" alt="NanoBanana" style="max-width: 100%;"/>
 </div>
 
 </details>

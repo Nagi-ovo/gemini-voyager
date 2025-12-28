@@ -98,6 +98,7 @@ interface SettingsUpdate {
   folderEnabled?: boolean;
   hideArchivedConversations?: boolean;
   customWebsites?: string[];
+  watermarkRemoverEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -114,6 +115,7 @@ export default function Popup() {
   const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath' | 'no-dollar'>('latex');
   const [extVersion, setExtVersion] = useState<string | null>(null);
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
+  const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
 
   const handleFormulaCopyFormatChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,6 +140,7 @@ export default function Popup() {
     if (typeof settings.hideArchivedConversations === 'boolean') payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
     if (settings.resetPosition) payload.geminiTimelinePosition = null;
     if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
+    if (typeof settings.watermarkRemoverEnabled === 'boolean') payload.geminiWatermarkRemoverEnabled = settings.watermarkRemoverEnabled;
     try {
       chrome.storage?.sync?.set(payload);
     } catch { }
@@ -274,6 +277,7 @@ export default function Popup() {
           geminiFolderHideArchivedConversations: false,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
+          geminiWatermarkRemoverEnabled: true,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -285,6 +289,7 @@ export default function Popup() {
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
           setCustomWebsites(Array.isArray(res?.gvPromptCustomWebsites) ? res.gvPromptCustomWebsites : []);
+          setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
         }
       );
     } catch { }
@@ -751,6 +756,29 @@ export default function Popup() {
               <div className="mt-3 p-2 bg-primary/5 border border-primary/20 rounded-md">
                 <p className="text-xs text-muted-foreground">{t('customWebsitesNote')}</p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* NanoBanana Options */}
+        <Card className="p-4 hover:shadow-lg transition-shadow">
+          <CardTitle className="mb-4 text-xs uppercase">{t('nanobananaOptions')}</CardTitle>
+          <CardContent className="p-0 space-y-4">
+            <div className="flex items-center justify-between group">
+              <div className="flex-1">
+                <Label htmlFor="watermark-remover" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                  {t('enableNanobananaWatermarkRemover')}
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">{t('nanobananaWatermarkRemoverHint')}</p>
+              </div>
+              <Switch
+                id="watermark-remover"
+                checked={watermarkRemoverEnabled}
+                onChange={(e) => {
+                  setWatermarkRemoverEnabled(e.target.checked);
+                  apply({ watermarkRemoverEnabled: e.target.checked });
+                }}
+              />
             </div>
           </CardContent>
         </Card>

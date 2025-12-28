@@ -26,6 +26,9 @@ features:
   - icon: ✨
     title: Library
     details: Your genius, captured. Save and reuse your best prompts.
+  - icon: 🍌
+    title: NanoBanana Watermark Removal
+    details: Lossless watermark removal. Keeping AI moments pure.
 ---
 
 <div class="vp-doc" style="margin-top: 4rem; text-align: center;">

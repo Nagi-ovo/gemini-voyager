@@ -59,7 +59,8 @@
         "contentStyle.css",
         "icon-128.png",
         "icon-32.png",
-        "katex-config.js"
+        "katex-config.js",
+        "assets/*.png"
       ],
       "matches": [
         "<all_urls>"

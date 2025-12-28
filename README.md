@@ -46,6 +46,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - [Folder Organization](#-folder-organization)
   - [Prompt Library](#-prompt-library)
   - [Formula Copy](#-formula-copy)
+  - [NanoBanana Option](#-nanobanana-option)
   - [Chat Export](#-chat-export)
   - [Adjustable Width](#-adjustable-chat-width)
 - [Installation](#-installation)
@@ -117,6 +118,26 @@ See a beautiful LaTeX formula? One click copies the source code. No more manual 
 
 <div align="center">
   <img src="docs/public/assets/gemini-math-copy.png" alt="Formula copy" style="max-width: 100%;"/>
+</div>
+
+</details>
+
+### 🍌 NanoBanana Option
+**Lossless watermark removal for Gemini images.**
+Automatically removes the visible "Gemini" watermark from AI-generated images (NanoBanana) using a reverse alpha blending algorithm.
+- **Zero quality loss**: Reconstructs original pixels for a perfectly clean image.
+- **Set and forget**: Just enable it once in settings and it works automatically.
+- **Direct Download**: Replaces the native download button with a 🍌 button that saves the clean, processed image directly.
+- **Privacy focus**: All processing happens 100% locally in your browser.
+
+> [!NOTE]
+> This feature is powered by the [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) algorithm by [journey-ad](https://github.com/journey-ad), which is based on the [original C++ implementation](https://github.com/allenk/GeminiWatermarkTool) by [allenk](https://github.com/allenk). 🧡
+
+<details>
+<summary>👀 View screenshot</summary>
+
+<div align="center">
+  <img src="docs/public/assets/nanobanana.png" alt="NanoBanana" style="max-width: 100%;"/>
 </div>
 
 </details>

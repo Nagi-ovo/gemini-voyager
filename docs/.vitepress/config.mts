@@ -35,7 +35,8 @@ export default defineConfig({
                             { text: '灵感库', link: '/guide/prompts' },
                             { text: '自定义网站', link: '/guide/custom-websites' },
                             { text: '导出', link: '/guide/export' },
-                            { text: '设置', link: '/guide/settings' }
+                            { text: '设置', link: '/guide/settings' },
+                            { text: 'NanoBanana 水印去除', link: '/guide/nanobanana' }
                         ]
                     }
                 ],
@@ -70,7 +71,8 @@ export default defineConfig({
                             { text: 'Prompt Library', link: '/en/guide/prompts' },
                             { text: 'Custom Websites', link: '/en/guide/custom-websites' },
                             { text: 'Chat Export', link: '/en/guide/export' },
-                            { text: 'Settings & Customization', link: '/en/guide/settings' }
+                            { text: 'Settings & Customization', link: '/en/guide/settings' },
+                            { text: 'NanoBanana (Watermark Remover)', link: '/en/guide/nanobanana' }
                         ]
                     }
                 ],

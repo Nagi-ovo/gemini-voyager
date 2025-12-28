@@ -7,6 +7,7 @@ import { initKaTeXConfig } from './katexConfig';
 import { startPromptManager } from './prompt/index';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
+import { startWatermarkRemover } from './watermarkRemover/index';
 
 import { startFormulaCopy } from '@/features/formulaCopy';
 
@@ -108,6 +109,11 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startFormulaCopy();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Watermark remover - based on gemini-watermark-remover by journey-ad
+      // https://github.com/journey-ad/gemini-watermark-remover
+      startWatermarkRemover();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 

@@ -722,5 +722,21 @@
   "signInWithGoogle": {
     "message": "使用 Google 登录",
     "description": "使用 Google 登录按钮"
+  },
+  "nanobananaOptions": {
+    "message": "NanoBanana 选项",
+    "description": "NanoBanana options section label"
+  },
+  "enableNanobananaWatermarkRemover": {
+    "message": "去除 NanoBanana 水印",
+    "description": "启用自动去除生成图片水印功能"
+  },
+  "nanobananaWatermarkRemoverHint": {
+    "message": "自动移除 Gemini 生成图片上的可见水印",
+    "description": "水印去除功能提示"
+  },
+  "nanobananaDownloadTooltip": {
+    "message": "下载无水印图片 (NanoBanana)",
+    "description": "Download button tooltip"
   }
 }

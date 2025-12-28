@@ -722,5 +722,21 @@
   "signInWithGoogle": {
     "message": "Sign in with Google",
     "description": "Sign in with Google button"
+  },
+  "nanobananaOptions": {
+    "message": "NanoBanana Options",
+    "description": "NanoBanana options section label"
+  },
+  "enableNanobananaWatermarkRemover": {
+    "message": "Remove NanoBanana watermark",
+    "description": "Enable automatic watermark removal for NanoBanana images"
+  },
+  "nanobananaWatermarkRemoverHint": {
+    "message": "Automatically removes visible Gemini watermarks from generated images",
+    "description": "Watermark remover feature hint"
+  },
+  "nanobananaDownloadTooltip": {
+    "message": "Download unwatermarked image (NanoBanana)",
+    "description": "Download button tooltip"
   }
 }

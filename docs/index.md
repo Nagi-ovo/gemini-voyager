@@ -26,6 +26,9 @@ features:
   - icon: ✨
     title: 灵感库
     details: 捕捉灵光。珍藏你的每一次神来之笔。
+  - icon: 🍌
+    title: NanoBanana 水印去除
+    details: 无损去水印。让 AI 生成的瞬间回归纯净。
 ---
 
 <div class="vp-doc" style="margin-top: 4rem; text-align: center;">
