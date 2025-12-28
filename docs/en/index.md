@@ -80,3 +80,7 @@ When you use Gemini Voyager, you stop fighting the interface and start flowing w
   <p style="font-size: 1.05em; font-weight: 600; opacity: 0.86; margin: 0 0 12px;">“It's not just a tool. It's a bicycle for the mind.”</p>
   <a href="./guide/getting-started" style="font-weight: 600; text-decoration: none;">See what's possible →</a>
 </div>
+
+<p align="center">
+  <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
+</p>

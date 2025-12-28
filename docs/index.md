@@ -80,3 +80,7 @@ features:
   <p style="font-size: 1.05em; font-weight: 600; opacity: 0.86; margin: 0 0 12px;">“它不只是工具，更是伴你思维远航的伙伴。”</p>
   <a href="./guide/getting-started" style="font-weight: 600; text-decoration: none;">探索更多 →</a>
 </div>
+
+<p align="center">
+  <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
+</p>

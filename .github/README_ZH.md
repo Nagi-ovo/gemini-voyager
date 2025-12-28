@@ -401,6 +401,9 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
    </picture>
   </a>
   
+  <p align="center">
+    <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
+  </p>
   <p>Made with ❤️ by Jesse Zhang</p>
   <sub>MIT License © 2025</sub>
 </div>
