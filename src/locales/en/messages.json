@@ -746,5 +746,9 @@
   "deepResearchDownloadTooltip": {
     "message": "Download thinking content as Markdown",
     "description": "Deep Research download button tooltip"
+  },
+  "folder_uncategorized": {
+    "message": "Uncategorized",
+    "description": "Label for root-level conversations not in any folder"
   }
 }

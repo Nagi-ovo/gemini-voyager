@@ -1,4 +1,5 @@
 import { startChatWidthAdjuster } from './chatWidth/index';
+import { startDeepResearchExport } from './deepResearch/index';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
@@ -8,7 +9,6 @@ import { startPromptManager } from './prompt/index';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startWatermarkRemover } from './watermarkRemover/index';
-import { startDeepResearchExport } from './deepResearch/index';
 
 
 import { startFormulaCopy } from '@/features/formulaCopy';

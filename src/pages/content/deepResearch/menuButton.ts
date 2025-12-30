@@ -2,9 +2,9 @@
  * Menu button injection module for Deep Research export
  */
 
+import { downloadMarkdown } from './download';
 import { extractThinkingPanels } from './extractor';
 import { formatToMarkdown } from './formatter';
-import { downloadMarkdown } from './download';
 
 /**
  * Wait for an element to appear in the DOM

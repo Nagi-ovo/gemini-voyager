@@ -746,5 +746,9 @@
   "deepResearchDownloadTooltip": {
     "message": "将 Thinking 内容导出为 Markdown 文件",
     "description": "Deep Research download button tooltip"
+  },
+  "folder_uncategorized": {
+    "message": "未分类",
+    "description": "根目录下未分类对话的标签"
   }
 }

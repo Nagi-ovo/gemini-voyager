@@ -15,14 +15,14 @@ function waitForElement<T extends Element = Element>(selector: string, timeoutMs
     const obs = new MutationObserver(() => {
       const el = document.querySelector(selector) as T | null;
       if (el) {
-        try { obs.disconnect(); } catch {}
+        try { obs.disconnect(); } catch { }
         resolve(el);
       }
     });
-    try { obs.observe(document.body, { childList: true, subtree: true }); } catch {}
+    try { obs.observe(document.body, { childList: true, subtree: true }); } catch { }
     if (timeoutMs > 0) {
       setTimeout(() => {
-        try { obs.disconnect(); } catch {}
+        try { obs.disconnect(); } catch { }
         resolve(null);
       }, timeoutMs);
     }
@@ -46,7 +46,7 @@ function downloadJSON(data: any, filename: string): void {
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {
-    try { document.body.removeChild(a); } catch {}
+    try { document.body.removeChild(a); } catch { }
     URL.revokeObjectURL(url);
   }, 0);
 }
@@ -86,12 +86,13 @@ export class AIStudioFolderManager {
   private readonly SIDEBAR_WIDTH_KEY = 'gvAIStudioSidebarWidth';
   private readonly MIN_SIDEBAR_WIDTH = 240;
   private readonly MAX_SIDEBAR_WIDTH = 600;
+  private readonly UNCATEGORIZED_KEY = '__uncategorized__'; // Special key for root-level conversations
 
   // Helper to create a ligature icon span with a data-icon attribute
   private createIcon(name: string): HTMLSpanElement {
     const span = document.createElement('span');
     span.className = 'google-symbols';
-    try { span.dataset.icon = name; } catch {}
+    try { span.dataset.icon = name; } catch { }
     span.textContent = name;
     return span;
   }
@@ -122,8 +123,10 @@ export class AIStudioFolderManager {
     // Start monitoring
     storageMonitor.startMonitoring();
 
-    // Only enable on prompts routes
-    if (!/\/prompts(\/|$)/.test(location.pathname)) return;
+    // Only enable on prompts, library, or root pages
+    // Root path (/) is where the main playground is, prompts are saved chats, library is history
+    const isValidPath = /^\/(prompts|library)(\/|$)/.test(location.pathname) || location.pathname === '/';
+    if (!isValidPath) return;
 
     // Load folder enabled setting
     await this.loadFolderEnabledSetting();
@@ -146,23 +149,40 @@ export class AIStudioFolderManager {
   private async initializeFolderUI(): Promise<void> {
     // Find the prompt history component and sidebar region
     this.historyRoot = (await waitForElement<HTMLElement>('ms-prompt-history-v3')) || null;
-    if (!this.historyRoot) return;
-    try { document.documentElement.classList.add('gv-aistudio-root'); } catch {}
+
+    // On /library page, historyRoot may not exist, but we still need to load data
+    // and observe the library table for draggable elements
+    const isLibraryPage = /\/library(\/|$)/.test(location.pathname);
+
+    if (!this.historyRoot && !isLibraryPage) return;
+
+    try { document.documentElement.classList.add('gv-aistudio-root'); } catch { }
 
     await this.load();
-    this.injectUI();
-    this.observePromptList();
-    this.bindDraggablesInPromptList();
 
-    // Highlight current conversation initially and on navigation
-    this.highlightActiveConversation();
-    this.installRouteChangeListener();
+    // Only inject folder UI on prompts pages where historyRoot exists
+    if (this.historyRoot) {
+      this.injectUI();
+      this.observePromptList();
+      this.bindDraggablesInPromptList();
 
-    // Apply initial sidebar width (force on first load)
-    this.applySidebarWidth(true);
+      // Highlight current conversation initially and on navigation
+      this.highlightActiveConversation();
+      this.installRouteChangeListener();
 
-    // Add resize handle for sidebar width adjustment
-    this.addResizeHandle();
+      // Apply initial sidebar width (force on first load)
+      this.applySidebarWidth(true);
+
+      // Add resize handle for sidebar width adjustment
+      this.addResizeHandle();
+    }
+
+    // On library page, observe and bind draggables to table rows
+    if (isLibraryPage) {
+      this.observeLibraryTable();
+      this.bindDraggablesInLibraryTable();
+      this.injectLibraryDropZone();
+    }
   }
 
   private async load(): Promise<void> {
@@ -274,6 +294,26 @@ export class AIStudioFolderManager {
     this.bindDropZone(rootDrop, null);
     list.appendChild(rootDrop);
 
+    // Render uncategorized conversations (dropped to root)
+    const uncategorized = this.data.folderContents[this.UNCATEGORIZED_KEY] || [];
+    if (uncategorized.length > 0) {
+      const uncatSection = document.createElement('div');
+      uncatSection.className = 'gv-folder-uncategorized';
+
+      const uncatHeader = document.createElement('div');
+      uncatHeader.className = 'gv-folder-uncategorized-header';
+      uncatHeader.innerHTML = `<span class="google-symbols" data-icon="inbox" style="margin-right: 6px;">inbox</span>${this.t('folder_uncategorized') || 'Uncategorized'}`;
+      uncatSection.appendChild(uncatHeader);
+
+      const uncatContent = document.createElement('div');
+      uncatContent.className = 'gv-folder-uncategorized-content';
+      for (const conv of uncategorized) {
+        uncatContent.appendChild(this.renderConversation(this.UNCATEGORIZED_KEY, conv));
+      }
+      uncatSection.appendChild(uncatContent);
+      list.appendChild(uncatSection);
+    }
+
     // After rendering, update active highlight
     this.highlightActiveConversation();
   }
@@ -297,20 +337,20 @@ export class AIStudioFolderManager {
 
   private installRouteChangeListener(): void {
     const update = () => setTimeout(() => this.highlightActiveConversation(), 0);
-    try { window.addEventListener('popstate', update); } catch {}
+    try { window.addEventListener('popstate', update); } catch { }
     try {
       const hist = history as any;
       const wrap = (method: 'pushState' | 'replaceState') => {
         const orig = hist[method];
         hist[method] = function (...args: any[]) {
           const ret = orig.apply(this, args);
-          try { update(); } catch {}
+          try { update(); } catch { }
           return ret;
         };
       };
       wrap('pushState');
       wrap('replaceState');
-    } catch {}
+    } catch { }
     // Fallback poller for routers that bypass events
     try {
       let last = location.pathname;
@@ -321,8 +361,8 @@ export class AIStudioFolderManager {
           update();
         }
       }, 400);
-      this.cleanupFns.push(() => { try { clearInterval(id); } catch {} });
-    } catch {}
+      this.cleanupFns.push(() => { try { clearInterval(id); } catch { } });
+    } catch { }
   }
 
   private renderFolder(folder: Folder): HTMLElement {
@@ -361,7 +401,7 @@ export class AIStudioFolderManager {
     const pinBtn = document.createElement('button');
     pinBtn.className = 'gv-folder-pin-btn';
     pinBtn.title = folder.pinned ? this.t('folder_unpin') : this.t('folder_pin');
-    try { (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned'; } catch {}
+    try { (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned'; } catch { }
     pinBtn.appendChild(this.createIcon('push_pin'));
     pinBtn.addEventListener('click', () => {
       folder.pinned = !folder.pinned;
@@ -441,8 +481,8 @@ export class AIStudioFolderManager {
         url: conv.url,
         sourceFolderId: folderId,
       };
-      try { e.dataTransfer?.setData('application/json', JSON.stringify(data)); } catch {}
-      try { e.dataTransfer?.setDragImage(row, 10, 10); } catch {}
+      try { e.dataTransfer?.setData('application/json', JSON.stringify(data)); } catch { }
+      try { e.dataTransfer?.setDragImage(row, 10, 10); } catch { }
     });
 
     return row;
@@ -456,13 +496,13 @@ export class AIStudioFolderManager {
     rename.textContent = this.t('folder_rename');
     rename.addEventListener('click', () => {
       this.renameFolder(folderId);
-      try { document.body.removeChild(menu); } catch {}
+      try { document.body.removeChild(menu); } catch { }
     });
     const del = document.createElement('button');
     del.textContent = this.t('folder_delete');
     del.addEventListener('click', () => {
       this.deleteFolder(folderId);
-      try { document.body.removeChild(menu); } catch {}
+      try { document.body.removeChild(menu); } catch { }
     });
     menu.appendChild(rename);
     menu.appendChild(del);
@@ -478,7 +518,7 @@ export class AIStudioFolderManager {
     document.body.appendChild(menu);
     const onClickAway = (e: MouseEvent) => {
       if (e.target instanceof Node && !menu.contains(e.target)) {
-        try { document.body.removeChild(menu); } catch {}
+        try { document.body.removeChild(menu); } catch { }
         window.removeEventListener('click', onClickAway, true);
       }
     };
@@ -534,7 +574,7 @@ export class AIStudioFolderManager {
     });
     el.addEventListener('dragover', (e) => {
       e.preventDefault();
-      try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; } catch {}
+      try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; } catch { }
     });
     el.addEventListener('dragleave', () => {
       el.classList.remove('gv-folder-dragover');
@@ -544,7 +584,7 @@ export class AIStudioFolderManager {
       el.classList.remove('gv-folder-dragover');
       let raw = e.dataTransfer?.getData('application/json');
       if (!raw) {
-        try { raw = e.dataTransfer?.getData('text/plain') || ''; } catch {}
+        try { raw = e.dataTransfer?.getData('text/plain') || ''; } catch { }
       }
       if (!raw) return;
       let data: DragData | null = null;
@@ -557,11 +597,20 @@ export class AIStudioFolderManager {
         addedAt: now(),
       };
       const folderId = targetFolderId;
-      if (!folderId) {
-        // Drop to root: remove from any folder
+      if (!folderId || folderId === this.UNCATEGORIZED_KEY) {
+        // Drop to root or uncategorized section: move to uncategorized section
+        // First remove from any existing folder
         Object.keys(this.data.folderContents).forEach((fid) => {
+          if (fid === this.UNCATEGORIZED_KEY) return; // Don't remove from uncategorized yet
           this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter((c) => c.conversationId !== conv.conversationId);
         });
+        // Add to uncategorized if not already there
+        const uncatArr = this.data.folderContents[this.UNCATEGORIZED_KEY] || [];
+        const existsInUncat = uncatArr.some((c) => c.conversationId === conv.conversationId);
+        if (!existsInUncat) {
+          uncatArr.push(conv);
+          this.data.folderContents[this.UNCATEGORIZED_KEY] = uncatArr;
+        }
       } else {
         const arr = this.data.folderContents[folderId] || [];
         const exists = arr.some((c) => c.conversationId === conv.conversationId);
@@ -569,7 +618,7 @@ export class AIStudioFolderManager {
           arr.push(conv);
           this.data.folderContents[folderId] = arr;
         }
-        // If moving from another folder, remove there
+        // If moving from another folder (including uncategorized), remove there
         Object.keys(this.data.folderContents).forEach((fid) => {
           if (fid === folderId) return;
           this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter((c) => c.conversationId !== conv.conversationId);
@@ -587,9 +636,9 @@ export class AIStudioFolderManager {
       // Update highlight when the list updates
       this.highlightActiveConversation();
     });
-    try { observer.observe(root, { childList: true, subtree: true }); } catch {}
+    try { observer.observe(root, { childList: true, subtree: true }); } catch { }
     this.cleanupFns.push(() => {
-      try { observer.disconnect(); } catch {}
+      try { observer.disconnect(); } catch { }
     });
 
     // Also update on clicks within the prompt list (SPA navigation)
@@ -601,9 +650,9 @@ export class AIStudioFolderManager {
         setTimeout(() => this.highlightActiveConversation(), 0);
       }
     };
-    try { root.addEventListener('click', onClick, true); } catch {}
+    try { root.addEventListener('click', onClick, true); } catch { }
     this.cleanupFns.push(() => {
-      try { root.removeEventListener('click', onClick, true); } catch {}
+      try { root.removeEventListener('click', onClick, true); } catch { }
     });
   }
 
@@ -628,9 +677,362 @@ export class AIStudioFolderManager {
             // Fallback to text/plain to interop with stricter DnD
             e.dataTransfer.setData('text/plain', JSON.stringify(data));
           }
-        } catch {}
-        try { e.dataTransfer?.setDragImage(hostEl, 10, 10); } catch {}
+        } catch { }
+        try { e.dataTransfer?.setDragImage(hostEl, 10, 10); } catch { }
       });
+    });
+  }
+
+  /**
+   * Observe the library table for dynamic row additions
+   * This is needed because the library page loads rows dynamically
+   */
+  private observeLibraryTable(): void {
+    // The library table is within a mat-table element
+    const tableRoot = document.querySelector('table.mat-mdc-table, mat-table') as HTMLElement | null;
+    if (!tableRoot) {
+      // Fallback: observe entire body for table appearance
+      const bodyObserver = new MutationObserver(() => {
+        const table = document.querySelector('table.mat-mdc-table, mat-table');
+        if (table) {
+          this.bindDraggablesInLibraryTable();
+        }
+      });
+      try { bodyObserver.observe(document.body, { childList: true, subtree: true }); } catch { }
+      this.cleanupFns.push(() => {
+        try { bodyObserver.disconnect(); } catch { }
+      });
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      this.bindDraggablesInLibraryTable();
+    });
+    try { observer.observe(tableRoot, { childList: true, subtree: true }); } catch { }
+    this.cleanupFns.push(() => {
+      try { observer.disconnect(); } catch { }
+    });
+  }
+
+  /**
+   * Bind drag handlers to library table rows
+   * Each row contains an anchor with href like /prompts/{id}
+   */
+  private bindDraggablesInLibraryTable(): void {
+    // Find all table rows that contain chat prompt links
+    // The structure from user's example: <tr> > <td> > <a href="/prompts/..."> title </a>
+    const rows = document.querySelectorAll('tr.mat-mdc-row, tr[mat-row]');
+    rows.forEach((row) => {
+      const tr = row as HTMLElement;
+      // Find the anchor with prompt link in this row
+      // Matches: a[href^="/prompts/"] or a.name-btn with /prompts/ in href
+      const anchor = tr.querySelector('a[href^="/prompts/"], a.name-btn[href*="/prompts/"]') as HTMLAnchorElement | null;
+      if (!anchor) return;
+
+      // Skip if already bound
+      if ((tr as any)._gvLibraryDragBound) return;
+      (tr as any)._gvLibraryDragBound = true;
+
+      tr.draggable = true;
+      tr.style.cursor = 'grab';
+
+      tr.addEventListener('dragstart', (e) => {
+        const id = this.extractPromptId(anchor);
+        const title = normalizeText(anchor.textContent || '');
+        const url = anchor.href || `${location.origin}${anchor.getAttribute('href') || ''}`;
+        const data: DragData = { type: 'conversation', conversationId: id, title, url };
+        try {
+          if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('application/json', JSON.stringify(data));
+            // Fallback to text/plain to interop with stricter DnD
+            e.dataTransfer.setData('text/plain', JSON.stringify(data));
+          }
+        } catch { }
+        try { e.dataTransfer?.setDragImage(tr, 10, 10); } catch { }
+
+        // Visual feedback
+        tr.style.opacity = '0.5';
+      });
+
+      tr.addEventListener('dragend', () => {
+        tr.style.opacity = '';
+      });
+    });
+  }
+
+  /**
+   * Inject a floating drop zone for the library page
+   * Shows available folders when user starts dragging
+   */
+  private injectLibraryDropZone(): void {
+    // Create a floating container that appears during drag
+    const floatingZone = document.createElement('div');
+    floatingZone.className = 'gv-library-drop-zone';
+    floatingZone.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(32, 33, 36, 0.95);
+      border: 2px dashed rgba(138, 180, 248, 0.5);
+      border-radius: 12px;
+      padding: 16px;
+      min-width: 200px;
+      max-width: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 2147483646;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      transform: translateY(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    `;
+
+    const title = document.createElement('div');
+    title.style.cssText = `
+      color: #e8eaed;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    `;
+    title.innerHTML = `<span class="google-symbols" style="font-size: 18px;">folder</span>${this.t('folder_title')}`;
+    floatingZone.appendChild(title);
+
+    const folderList = document.createElement('div');
+    folderList.className = 'gv-library-folder-list';
+    floatingZone.appendChild(folderList);
+
+    document.body.appendChild(floatingZone);
+
+    // Update folder list content
+    const updateFolderList = () => {
+      folderList.innerHTML = '';
+
+      // Add a "Root / Uncategorized" option at the top
+      const rootItem = document.createElement('div');
+      rootItem.className = 'gv-library-folder-item gv-library-root-item';
+      rootItem.style.cssText = `
+        padding: 10px 12px;
+        margin: 4px 0 12px 0;
+        background: rgba(138, 180, 248, 0.1);
+        border-radius: 8px;
+        color: #8ab4f8;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.15s, border-color 0.15s;
+        border: 2px dashed rgba(138, 180, 248, 0.4);
+      `;
+      rootItem.innerHTML = `<span class="google-symbols" data-icon="inbox">inbox</span>${this.t('folder_uncategorized') || 'Uncategorized'}`;
+
+      const onDropToRoot = (e: DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        rootItem.style.background = 'rgba(138, 180, 248, 0.2)';
+        rootItem.style.borderColor = '#8ab4f8';
+
+        let raw = e.dataTransfer?.getData('application/json');
+        if (!raw) {
+          try { raw = e.dataTransfer?.getData('text/plain') || ''; } catch { }
+        }
+        if (!raw) return;
+
+        let data: DragData | null = null;
+        try { data = JSON.parse(raw) as DragData; } catch { data = null; }
+        if (!data || data.type !== 'conversation' || !data.conversationId) return;
+
+        const conv: ConversationReference = {
+          conversationId: data.conversationId,
+          title: normalizeText(data.title) || this.t('conversation_untitled'),
+          url: data.url || '',
+          addedAt: now(),
+        };
+
+        // Add to uncategorized section
+        Object.keys(this.data.folderContents).forEach((fid) => {
+          if (fid === this.UNCATEGORIZED_KEY) return;
+          this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter(
+            (c) => c.conversationId !== conv.conversationId
+          );
+        });
+
+        const uncatArr = this.data.folderContents[this.UNCATEGORIZED_KEY] || [];
+        const existsInUncat = uncatArr.some((c) => c.conversationId === conv.conversationId);
+        if (!existsInUncat) {
+          uncatArr.push(conv);
+          this.data.folderContents[this.UNCATEGORIZED_KEY] = uncatArr;
+        }
+
+        this.save();
+        this.showNotification(this.t('conversation_saved_to_root') || 'Saved to Uncategorized', 'info');
+      };
+
+      rootItem.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        rootItem.style.background = 'rgba(138, 180, 248, 0.3)';
+        rootItem.style.borderColor = '#8ab4f8';
+      });
+      rootItem.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; } catch { }
+      });
+      rootItem.addEventListener('dragleave', (e) => {
+        e.stopPropagation();
+        rootItem.style.background = 'rgba(138, 180, 248, 0.1)';
+        rootItem.style.borderColor = 'rgba(138, 180, 248, 0.4)';
+      });
+      rootItem.addEventListener('drop', onDropToRoot);
+      folderList.appendChild(rootItem);
+
+      // Ensure at least one folder exists for the dedicated folder list section
+      if (this.data.folders.length === 0) {
+        const defaultFolder: Folder = {
+          id: uid(),
+          name: this.t('folder_default_name') || 'My Folder',
+          parentId: null,
+          isExpanded: true,
+          createdAt: now(),
+          updatedAt: now(),
+        };
+        this.data.folders.push(defaultFolder);
+        this.data.folderContents[defaultFolder.id] = [];
+        this.save();
+      }
+
+      // Render each folder as a drop target
+      this.data.folders.forEach((folder) => {
+        const folderItem = document.createElement('div');
+        folderItem.className = 'gv-library-folder-item';
+        folderItem.dataset.folderId = folder.id;
+        folderItem.style.cssText = `
+          padding: 10px 12px;
+          margin: 4px 0;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 8px;
+          color: #e8eaed;
+          font-size: 13px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: background 0.15s, border-color 0.15s;
+          border: 2px solid transparent;
+        `;
+        folderItem.innerHTML = `<span class="google-symbols" style="font-size: 16px; color: #8ab4f8;">folder</span>${folder.name}`;
+
+        // Bind drop events
+        folderItem.addEventListener('dragenter', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          folderItem.style.background = 'rgba(138, 180, 248, 0.2)';
+          folderItem.style.borderColor = '#8ab4f8';
+        });
+        folderItem.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; } catch { }
+        });
+        folderItem.addEventListener('dragleave', (e) => {
+          e.stopPropagation();
+          folderItem.style.background = 'rgba(255, 255, 255, 0.05)';
+          folderItem.style.borderColor = 'transparent';
+        });
+        folderItem.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          folderItem.style.background = 'rgba(255, 255, 255, 0.05)';
+          folderItem.style.borderColor = 'transparent';
+
+          let raw = e.dataTransfer?.getData('application/json');
+          if (!raw) {
+            try { raw = e.dataTransfer?.getData('text/plain') || ''; } catch { }
+          }
+          if (!raw) return;
+
+          let data: DragData | null = null;
+          try { data = JSON.parse(raw) as DragData; } catch { data = null; }
+          if (!data || data.type !== 'conversation' || !data.conversationId) return;
+
+          const conv: ConversationReference = {
+            conversationId: data.conversationId,
+            title: normalizeText(data.title) || this.t('conversation_untitled'),
+            url: data.url || '',
+            addedAt: now(),
+          };
+
+          // Add to this folder
+          const arr = this.data.folderContents[folder.id] || [];
+          const exists = arr.some((c) => c.conversationId === conv.conversationId);
+          if (!exists) {
+            arr.push(conv);
+            this.data.folderContents[folder.id] = arr;
+          }
+
+          // Remove from other folders
+          Object.keys(this.data.folderContents).forEach((fid) => {
+            if (fid === folder.id) return;
+            this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter(
+              (c) => c.conversationId !== conv.conversationId
+            );
+          });
+
+          this.save();
+          this.showNotification(`${this.t('conversation_added_to_folder') || 'Added to'} "${folder.name}"`, 'info');
+        });
+
+        folderList.appendChild(folderItem);
+      });
+    };
+
+    // Show/hide the floating zone on drag events
+    const showZone = () => {
+      updateFolderList();
+      floatingZone.style.opacity = '1';
+      floatingZone.style.pointerEvents = 'auto';
+      floatingZone.style.transform = 'translateY(0)';
+    };
+
+    const hideZone = () => {
+      floatingZone.style.opacity = '0';
+      floatingZone.style.pointerEvents = 'none';
+      floatingZone.style.transform = 'translateY(10px)';
+    };
+
+    // Listen for drag events on the document
+    const onDragStart = (e: DragEvent) => {
+      const target = e.target as HTMLElement;
+      // Check if the dragged element is or is within a library table row
+      const isLibraryRow = target.closest?.('tr.mat-mdc-row, tr[mat-row]');
+      if (isLibraryRow) {
+        // Also ensure it's not a row from some other table
+        const hasPromptLink = isLibraryRow.querySelector('a[href*="/prompts/"]');
+        if (hasPromptLink) {
+          setTimeout(showZone, 0);
+        }
+      }
+    };
+
+    document.addEventListener('dragstart', onDragStart);
+
+    document.addEventListener('dragend', () => {
+      setTimeout(hideZone, 100);
+    });
+
+    this.cleanupFns.push(() => {
+      try {
+        document.removeEventListener('dragstart', onDragStart);
+        document.body.removeChild(floatingZone);
+      } catch { }
     });
   }
 
@@ -670,7 +1072,8 @@ export class AIStudioFolderManager {
       exportedAt: new Date().toISOString(),
       data: this.data,
     };
-    downloadJSON(payload, `gemini-voyager-folders-${this.timestamp()}.json`);
+    downloadJSON(payload, `gemini-voyager-folders-${this.timestamp()
+      }.json`);
   }
 
   private handleImport(): void {
@@ -718,7 +1121,7 @@ export class AIStudioFolderManager {
   private timestamp(): string {
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())} -${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())} `;
   }
 
   private async loadFolderEnabledSetting(): Promise<void> {
@@ -804,8 +1207,8 @@ export class AIStudioFolderManager {
   private showNotification(message: string, level: 'info' | 'warning' | 'error' = 'error'): void {
     try {
       const notification = document.createElement('div');
-      notification.className = `gv-notification gv-notification-${level}`;
-      notification.textContent = `[Gemini Voyager] ${message}`;
+      notification.className = `gv - notification gv - notification - ${level} `;
+      notification.textContent = `[Gemini Voyager] ${message} `;
 
       // Color based on level
       const colors = {
@@ -926,10 +1329,10 @@ export class AIStudioFolderManager {
     const isExpanded = navContent.classList.contains('expanded');
 
     if (isExpanded || force) {
-      navContent.style.width = `${this.sidebarWidth}px`;
-      navContent.style.minWidth = `${this.sidebarWidth}px`;
-      navContent.style.maxWidth = `${this.sidebarWidth}px`;
-      navContent.style.flex = `0 0 ${this.sidebarWidth}px`;
+      navContent.style.width = `${this.sidebarWidth} px`;
+      navContent.style.minWidth = `${this.sidebarWidth} px`;
+      navContent.style.maxWidth = `${this.sidebarWidth} px`;
+      navContent.style.flex = `0 0 ${this.sidebarWidth} px`;
     } else {
       // Remove our width overrides when collapsed to allow native behavior
       navContent.style.width = '';
@@ -1072,7 +1475,7 @@ export class AIStudioFolderManager {
         if (handle.parentElement) {
           handle.parentElement.removeChild(handle);
         }
-      } catch {}
+      } catch { }
     });
   }
 }
