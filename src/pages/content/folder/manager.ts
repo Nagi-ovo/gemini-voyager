@@ -2755,10 +2755,29 @@ export class FolderManager {
     menuItem.addEventListener('click', (e) => {
       e.stopPropagation();
       this.showMoveToFolderDialog(conversationId, title, url);
-      // Close the menu
-      const menu = menuContent.closest('.mat-mdc-menu-panel');
-      if (menu) {
-        menu.remove();
+
+      // Close the native menu properly
+      // Strategy 1: Simulate click on backdrop to trigger Angular's native cleanup
+      // We look for the last backdrop as it's likely the one covering the screen for the current menu
+      const backdrops = document.querySelectorAll('.cdk-overlay-backdrop');
+      const backdrop = backdrops.length > 0 ? backdrops[backdrops.length - 1] : null;
+
+      if (backdrop instanceof HTMLElement) {
+        this.debug('Closing menu by clicking backdrop');
+        backdrop.click();
+      } else {
+        // Strategy 2: Fallback manual cleanup if backdrop logic fails
+        this.debug('Backdrop not found, performing manual cleanup');
+        const menu = menuContent.closest('.mat-mdc-menu-panel');
+        if (menu) {
+          menu.remove();
+        }
+
+        // Also try to remove any orphaned backdrop that might be blocking the screen
+        const orphanedBackdrop = document.querySelector('.cdk-overlay-backdrop');
+        if (orphanedBackdrop) {
+          orphanedBackdrop.remove();
+        }
       }
     });
 
