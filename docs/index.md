@@ -59,7 +59,7 @@ features:
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">每一次下载，都是信任的刻度</h3>
-  <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">来自 GitHub 与 Chrome Web Store 的实时数据。致敬每一位与我们同行的 Voyager。</p>
+  <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">来自 Chrome Web Store 与 GitHub 的实时数据。致敬每一位与我们同行的 Voyager。</p>
   <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
     <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Star">
     <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Fork">

@@ -45,19 +45,27 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
 
 ## 📚 Table of Contents
 
-- [Features](#-features)
-  - [Timeline Navigation](#-timeline-navigation)
-  - [Folder Organization](#-folder-organization)
-  - [Prompt Library](#-prompt-library)
-  - [Formula Copy](#-formula-copy)
-  - [NanoBanana Option](#-nanobanana-option)
-  - [Deep Research Export](#-deep-research-export)
-  - [Chat Export](#-chat-export)
-  - [Adjustable Width](#-adjustable-chat-width)
-- [Installation](#-installation)
-- [For Developers](#-for-developers)
-- [Contributing](#-contributing)
-- [Support](#-support-this-project)
+- [👋 Why Gemini Voyager?](#-why-gemini-voyager)
+- [📚 Table of Contents](#-table-of-contents)
+- [✨ Features](#-features)
+  - [📍 Timeline Navigation](#-timeline-navigation)
+  - [📂 Folder Organization](#-folder-organization)
+  - [💡 Prompt Library](#-prompt-library)
+  - [📐 Formula Copy](#-formula-copy)
+  - [🍌 NanoBanana Option](#-nanobanana-option)
+  - [🔬 Deep Research Export](#-deep-research-export)
+  - [💾 Chat Export](#-chat-export)
+  - [📏 Adjustable Chat Width](#-adjustable-chat-width)
+- [📥 Installation](#-installation)
+  - [Option 1: Chrome Web Store (Easier)](#option-1-chrome-web-store-easier)
+  - [Option 2: Manual Installation (Latest Features)](#option-2-manual-installation-latest-features)
+    - [1) Temporary (developer) install — quick \& safe](#1-temporary-developer-install--quick--safe)
+    - [2) Permanent install (Firefox ESR — install unsigned add-ons)](#2-permanent-install-firefox-esr--install-unsigned-add-ons)
+- [🛠️ For Developers](#️-for-developers)
+  - [Safari Development](#safari-development)
+- [🌟 Related Projects \& Credits](#-related-projects--credits)
+- [🤝 Contributing](#-contributing)
+- [☕ Support This Project](#-support-this-project)
 
 ---
 
@@ -205,10 +213,42 @@ Wide screen? Make use of it. Customize the chat container width (400px - 1400px)
 
 ## 📥 Installation
 
-> **⚠️ Recommended:** Download the latest version from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)  
-> The Chrome Web Store version may lag behind due to review delays.
+> **⚠️ Note:** The Chrome Web Store version may lag behind due to review delays. For the latest features, use [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 
-### Option 1: Manual Installation (Recommended)
+### Option 1: Chrome Web Store (Easier)
+
+<div align="center">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
+    <img src="https://img.shields.io/badge/Install%20from-Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store" height="50">
+  </a>
+</div>
+
+The easiest installation method, but may not have the latest features:
+
+1. Click the button above to visit the Chrome Web Store
+2. Click "Add to Chrome"
+3. The extension will activate automatically on Gemini
+
+**Works on:** Chrome, Edge, Opera, Brave, Vivaldi, Arc, and other Chromium browsers
+
+<details>
+<summary>Installation tips for Edge and Opera users</summary>
+
+**For Microsoft Edge users:**
+1. Visit Chrome Web Store via the button above
+2. You'll see a prompt "Allow extensions from other stores"
+3. Click "Allow" and install normally
+
+**For Opera users:**
+1. First install [Install Chrome Extensions](https://addons.opera.com/extensions/details/install-chrome-extensions/) (official Opera extension)
+2. Then visit Chrome Web Store
+3. Install like you would on Chrome
+
+**For Brave, Vivaldi, Arc, and other Chromium browsers:**  
+No extra steps needed—just install directly from Chrome Web Store!
+</details>
+
+### Option 2: Manual Installation (Latest Features)
 
 **For Chromium browsers (Chrome, Edge, Opera, Brave, Vivaldi, Arc):**
 
@@ -259,39 +299,6 @@ Cautions:
 **Requirements:** macOS 11+, Xcode Command Line Tools (`xcode-select --install`), Safari 14+
 
 **Note:** No Apple Developer account needed for local use! For detailed instructions, see the [installation guide](.github/docs/safari/INSTALLATION.md) ([中文](.github/docs/safari/INSTALLATION_ZH.md)).
-</details>
-
-### Option 2: Chrome Web Store (Easier but may be outdated)
-
-<div align="center">
-  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
-    <img src="https://img.shields.io/badge/Install%20from-Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store" height="50">
-  </a>
-</div>
-
-The easiest installation method, but may not have the latest features:
-
-1. Click the button above to visit the Chrome Web Store
-2. Click "Add to Chrome"
-3. The extension will activate automatically on Gemini
-
-**Works on:** Chrome, Edge, Opera, Brave, Vivaldi, Arc, and other Chromium browsers
-
-<details>
-<summary>Installation tips for Edge and Opera users</summary>
-
-**For Microsoft Edge users:**
-1. Visit Chrome Web Store via the button above
-2. You'll see a prompt "Allow extensions from other stores"
-3. Click "Allow" and install normally
-
-**For Opera users:**
-1. First install [Install Chrome Extensions](https://addons.opera.com/extensions/details/install-chrome-extensions/) (official Opera extension)
-2. Then visit Chrome Web Store
-3. Install like you would on Chrome
-
-**For Brave, Vivaldi, Arc, and other Chromium browsers:**  
-No extra steps needed—just install directly from Chrome Web Store!
 </details>
 
 ---

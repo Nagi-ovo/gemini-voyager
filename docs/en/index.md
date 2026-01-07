@@ -59,7 +59,7 @@ When you use Gemini Voyager, you stop fighting the interface and start flowing w
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Every install is a vote of trust</h3>
-  <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Live numbers from GitHub and Chrome Web Store. Thanks for riding with us, fellow Voyagers.</p>
+  <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Live numbers from Chrome Web Store and GitHub. Thanks for riding with us, fellow Voyagers.</p>
   <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
     <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Stars">
     <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Forks">

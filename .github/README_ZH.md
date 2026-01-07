@@ -52,15 +52,15 @@
   - [📂 文件夹管理](#-文件夹管理)
   - [💡 提示词库](#-提示词库)
   - [📐 公式复制](#-公式复制)
-  - [🍌 NanoBanana 水印去除](#-nanobanana-选项)
+  - [🍌 NanoBanana 选项](#-nanobanana-选项)
   - [🔬 Deep Research 导出](#-deep-research-导出)
   - [💾 对话导出](#-对话导出)
   - [📏 对话宽度调整](#-对话宽度调整)
 - [📥 安装方式](#-安装方式)
-  - [方式一：手动安装（推荐）](#方式一手动安装推荐)
+  - [方式一：Chrome 应用商店（更方便）](#方式一chrome-应用商店更方便)
+  - [方式二：手动安装（抢鲜版）](#方式二手动安装抢鲜版)
     - [1）临时安装（开发者模式）—— 简单且安全](#1临时安装开发者模式-简单且安全)
     - [2）永久安装（适用于 Firefox ESR，可安装未签名插件）](#2永久安装适用于-firefox-esr可安装未签名插件)
-  - [方式二：Chrome 应用商店（更方便但可能不是最新版）](#方式二chrome-应用商店更方便但可能不是最新版)
 - [🛠️ 开发者指南](#️-开发者指南)
   - [Safari 开发](#safari-开发)
 - [🌟 相关项目与致谢](#-相关项目与致谢)
@@ -157,7 +157,7 @@
 
 ### 🔬 Deep Research 导出
 **提取 Deep Research 对话的思考内容。**
-一键导出为 Markdown 格式,保留所有思考阶段和研究链接。在 Deep Research 对话中点击分享和导出按钮即可下载。
+一键导出为 Markdown 格式，保留所有思考阶段和研究链接。在 Deep Research 对话中点击分享和导出按钮即可下载。
 
 ### 💾 对话导出
 **你的数据，你做主。**
@@ -213,10 +213,42 @@
 
 ## 📥 安装方式
 
-> **⚠️ 推荐：** 从 [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载最新版本  
-> Chrome 应用商店的版本可能因审核延迟而不是最新的
+> **⚠️ 注意：** Chrome 应用商店的版本可能因审核延迟而不是最新的。如需最新功能，请使用 [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)。
 
-### 方式一：手动安装（推荐）
+### 方式一：Chrome 应用商店（更方便）
+
+<div align="center">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
+    <img src="https://img.shields.io/badge/从这里安装-Chrome%20应用商店-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 应用商店安装" height="50">
+  </a>
+</div>
+
+最简单的安装方法，但可能没有最新功能：
+
+1. 点击上方按钮访问 Chrome 应用商店
+2. 点击"添加至 Chrome"
+3. 扩展会自动在 Gemini 上激活
+
+**适用于：** Chrome、Edge、Opera、Brave、Vivaldi、Arc 等所有 Chromium 浏览器
+
+<details>
+<summary>Edge 和 Opera 用户的安装说明</summary>
+
+**Microsoft Edge 用户：**
+1. 通过上方按钮访问 Chrome 应用商店
+2. 浏览器会提示"允许来自其他商店的扩展"
+3. 点击"允许"后即可正常安装
+
+**Opera 用户：**
+1. 先安装 [Install Chrome Extensions](https://addons.opera.com/extensions/details/install-chrome-extensions/)（Opera 官方扩展）
+2. 然后访问 Chrome 应用商店
+3. 像在 Chrome 上一样安装即可
+
+**Brave、Vivaldi、Arc 等其他 Chromium 浏览器：**  
+无需任何额外步骤，直接从 Chrome 应用商店安装即可！
+</details>
+
+### 方式二：手动安装（抢鲜版）
 
 **Chromium 浏览器（Chrome、Edge、Opera、Brave、Vivaldi、Arc）：**
 
@@ -267,39 +299,6 @@
 **系统要求：** macOS 11+、Xcode Command Line Tools（`xcode-select --install`）、Safari 14+
 
 **注意：** 本地使用无需 Apple Developer 账号！详细说明请查看 [安装指南](../.github/docs/safari/INSTALLATION_ZH.md)。
-</details>
-
-### 方式二：Chrome 应用商店（更方便但可能不是最新版）
-
-<div align="center">
-  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
-    <img src="https://img.shields.io/badge/从这里安装-Chrome%20应用商店-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 应用商店安装" height="50">
-  </a>
-</div>
-
-最简单的安装方法，但可能没有最新功能：
-
-1. 点击上方按钮访问 Chrome 应用商店
-2. 点击"添加至 Chrome"
-3. 扩展会自动在 Gemini 上激活
-
-**适用于：** Chrome、Edge、Opera、Brave、Vivaldi、Arc 等所有 Chromium 浏览器
-
-<details>
-<summary>Edge 和 Opera 用户的安装说明</summary>
-
-**Microsoft Edge 用户：**
-1. 通过上方按钮访问 Chrome 应用商店
-2. 浏览器会提示"允许来自其他商店的扩展"
-3. 点击"允许"后即可正常安装
-
-**Opera 用户：**
-1. 先安装 [Install Chrome Extensions](https://addons.opera.com/extensions/details/install-chrome-extensions/)（Opera 官方扩展）
-2. 然后访问 Chrome 应用商店
-3. 像在 Chrome 上一样安装即可
-
-**Brave、Vivaldi、Arc 等其他 Chromium 浏览器：**  
-无需任何额外步骤，直接从 Chrome 应用商店安装即可！
 </details>
 
 ---
