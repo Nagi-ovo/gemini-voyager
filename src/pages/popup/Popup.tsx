@@ -99,6 +99,7 @@ interface SettingsUpdate {
   hideArchivedConversations?: boolean;
   customWebsites?: string[];
   watermarkRemoverEnabled?: boolean;
+  hidePromptManager?: boolean;
 }
 
 export default function Popup() {
@@ -116,6 +117,7 @@ export default function Popup() {
   const [extVersion, setExtVersion] = useState<string | null>(null);
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
+  const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
 
   const handleFormulaCopyFormatChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,6 +160,7 @@ export default function Popup() {
     if (settings.resetPosition) payload.geminiTimelinePosition = null;
     if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
     if (typeof settings.watermarkRemoverEnabled === 'boolean') payload.geminiWatermarkRemoverEnabled = settings.watermarkRemoverEnabled;
+    if (typeof settings.hidePromptManager === 'boolean') payload.gvHidePromptManager = settings.hidePromptManager;
     void setSyncStorage(payload);
   }, [setSyncStorage]);
 
@@ -293,6 +296,7 @@ export default function Popup() {
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
           geminiWatermarkRemoverEnabled: true,
+          gvHidePromptManager: false,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -308,6 +312,7 @@ export default function Popup() {
             : [];
           setCustomWebsites(loadedCustomWebsites);
           setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
+          setHidePromptManager(!!res?.gvHidePromptManager);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -807,6 +812,23 @@ export default function Popup() {
         <Card className="p-4 hover:shadow-lg transition-shadow">
           <CardTitle className="mb-4 text-xs uppercase">{t('promptManagerOptions')}</CardTitle>
           <CardContent className="p-0 space-y-3">
+            {/* Hide Prompt Manager Toggle */}
+            <div className="flex items-center justify-between group">
+              <div className="flex-1">
+                <Label htmlFor="hide-prompt-manager" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                  {t('hidePromptManager')}
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">{t('hidePromptManagerHint')}</p>
+              </div>
+              <Switch
+                id="hide-prompt-manager"
+                checked={hidePromptManager}
+                onChange={(e) => {
+                  setHidePromptManager(e.target.checked);
+                  apply({ hidePromptManager: e.target.checked });
+                }}
+              />
+            </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">{t('customWebsites')}</Label>
               <p className="text-xs text-muted-foreground mb-3">{t('customWebsitesHint')}</p>

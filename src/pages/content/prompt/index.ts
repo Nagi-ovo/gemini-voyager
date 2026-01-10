@@ -244,6 +244,18 @@ function computeAnchoredPosition(trigger: HTMLElement, panel: HTMLElement): { to
 export async function startPromptManager(): Promise<{ destroy: () => void }> {
   let marked: any;
   try {
+    // Check if the prompt manager should be hidden
+    try {
+      const result = await browser.storage.sync.get({ gvHidePromptManager: false });
+      if (result?.gvHidePromptManager === true) {
+        pmLogger.info('Prompt Manager is hidden by user settings');
+        // Return a no-op destroy function to maintain interface compatibility
+        return { destroy: () => { } };
+      }
+    } catch (error) {
+      pmLogger.warn('Failed to check hide prompt manager setting, continuing with default behavior', { error });
+    }
+
     // Monkey patch console.warn to suppress KaTeX quirks mode warning in content script
     const originalWarn = console.warn;
     console.warn = function (...args) {
@@ -997,6 +1009,20 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           langSel.value = next.startsWith('zh') ? 'zh' : 'en';
         } catch { }
         refreshUITexts();
+      }
+      // Handle hide prompt manager setting changes
+      if (area === 'sync' && changes?.gvHidePromptManager) {
+        const shouldHide = changes.gvHidePromptManager.newValue === true;
+        pmLogger.info('Hide prompt manager setting changed', { shouldHide });
+        if (shouldHide) {
+          // Hide trigger and panel
+          trigger.style.display = 'none';
+          panel.classList.add('gv-hidden');
+          open = false;
+        } else {
+          // Show trigger
+          trigger.style.display = '';
+        }
       }
       // Handle prompt data changes from cloud sync (local storage)
       if (area === 'local' && changes?.gvPromptItems) {

@@ -539,6 +539,14 @@
     "message": "Prompt Manager",
     "description": "Prompt Manager options section label"
   },
+  "hidePromptManager": {
+    "message": "Hide Prompt Manager",
+    "description": "Hide the prompt manager floating ball"
+  },
+  "hidePromptManagerHint": {
+    "message": "Hide the Prompt Manager floating ball on the page",
+    "description": "Hint for hiding prompt manager feature"
+  },
   "customWebsites": {
     "message": "Custom websites",
     "description": "Custom websites for prompt manager"

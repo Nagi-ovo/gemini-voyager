@@ -539,6 +539,14 @@
     "message": "提示词管理器",
     "description": "提示词管理器选项区域标签"
   },
+  "hidePromptManager": {
+    "message": "隐藏提示词管理器",
+    "description": "隐藏提示词管理器悬浮球"
+  },
+  "hidePromptManagerHint": {
+    "message": "隐藏页面上的提示词管理器悬浮球",
+    "description": "隐藏提示词管理器功能提示"
+  },
   "customWebsites": {
     "message": "自定义网站",
     "description": "提示词管理器的自定义网站"
