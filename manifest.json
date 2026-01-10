@@ -19,7 +19,8 @@
   },
   "permissions": [
     "storage",
-    "identity"
+    "identity",
+    "scripting"
   ],
   "oauth2": {
     "client_id": "462948120910-vvunu0k3b4vi37u23mqnh77mbgdjcg78.apps.googleusercontent.com",
@@ -28,10 +29,18 @@
     ]
   },
   "host_permissions": [
+    "https://gemini.google.com/*",
+    "https://aistudio.google.com/*",
+    "https://aistudio.google.cn/*",
+    "https://*.googleapis.com/*",
+    "https://accounts.google.com/*",
     "https://*.googleusercontent.com/*",
     "https://lh3.google.com/*",
-    "https://*.ggpht.com/*",
-    "<all_urls>"
+    "https://*.ggpht.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; worker-src 'self'"
@@ -43,7 +52,9 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "https://gemini.google.com/*",
+        "https://aistudio.google.com/*",
+        "https://aistudio.google.cn/*"
       ],
       "js": [
         "src/pages/content/index.tsx"
@@ -60,6 +71,7 @@
         "icon-128.png",
         "icon-32.png",
         "katex-config.js",
+        "assets/*.js",
         "assets/*.png"
       ],
       "matches": [

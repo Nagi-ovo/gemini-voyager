@@ -188,7 +188,7 @@ export class TimelineManager {
                   topPercent: (position.top / viewportHeight) * 100,
                   leftPercent: (position.left / viewportWidth) * 100,
                 };
-                chrome.storage.sync.set({ geminiTimelinePosition: migratedPosition });
+                chrome?.storage?.sync?.set?.({ geminiTimelinePosition: migratedPosition });
               }
             }
           }
@@ -1764,7 +1764,7 @@ export class TimelineManager {
       leftPercent: (rect.left / viewportWidth) * 100,
     };
 
-    chrome.storage.sync.set({ geminiTimelinePosition: position });
+    chrome?.storage?.sync?.set?.({ geminiTimelinePosition: position });
   }
 
   /**
@@ -1793,7 +1793,10 @@ export class TimelineManager {
   private reapplyPosition(): void {
     if (!this.ui.timelineBar) return;
 
-    chrome.storage.sync.get(['geminiTimelinePosition'], (res: any) => {
+    const syncStorage = chrome?.storage?.sync;
+    if (!syncStorage?.get) return;
+
+    syncStorage.get(['geminiTimelinePosition'], (res: any) => {
       const position = res?.geminiTimelinePosition;
       if (!position) return;
 

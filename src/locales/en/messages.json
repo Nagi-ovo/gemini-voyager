@@ -432,8 +432,8 @@
     "description": "Fallback title for conversations without a name"
   },
   "geminiOnlyNotice": {
-    "message": "All settings only support Gemini",
-    "description": "Notice that all settings only work with Gemini"
+    "message": "Runs on Gemini & AI Studio by default. Add other sites below to enable the Prompt Manager there.",
+    "description": "Notice that defaults are limited to Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
     "message": "⚠️ Warning: Failed to load folder data. Your folders may have been corrupted. Please check the browser console for details and try restoring from backup if available.",
@@ -575,9 +575,13 @@
     "message": "Permission denied. Please allow access to this website.",
     "description": "Permission denied error message"
   },
+  "permissionRequestFailed": {
+    "message": "Permission request failed. Please try again or grant access in the extension settings.",
+    "description": "Permission request failure message"
+  },
   "customWebsitesNote": {
-    "message": "Note: After adding websites, please reload the page for changes to take effect. Only the Prompt Manager will be activated on custom sites.",
-    "description": "Custom websites reload note"
+    "message": "Tip: You'll be asked to allow access when adding a site. After granting permission, reload that site so the Prompt Manager can start.",
+    "description": "Custom websites reload/permission note"
   },
   "starredHistory": {
     "message": "Starred History",

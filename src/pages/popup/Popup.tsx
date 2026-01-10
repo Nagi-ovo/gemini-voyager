@@ -130,6 +130,23 @@ export default function Popup() {
     []
   );
 
+  const setSyncStorage = useCallback(async (payload: Record<string, any>) => {
+    try {
+      await browser.storage.sync.set(payload);
+      return;
+    } catch {
+      // Fallback to chrome.* if polyfill is unavailable in this context.
+    }
+
+    await new Promise<void>((resolve) => {
+      try {
+        chrome.storage?.sync?.set(payload, () => resolve());
+      } catch {
+        resolve();
+      }
+    });
+  }, []);
+
   // Helper function to apply settings to storage
   const apply = useCallback((settings: SettingsUpdate) => {
     const payload: any = {};
@@ -141,10 +158,8 @@ export default function Popup() {
     if (settings.resetPosition) payload.geminiTimelinePosition = null;
     if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
     if (typeof settings.watermarkRemoverEnabled === 'boolean') payload.geminiWatermarkRemoverEnabled = settings.watermarkRemoverEnabled;
-    try {
-      chrome.storage?.sync?.set(payload);
-    } catch { }
-  }, []);
+    void setSyncStorage(payload);
+  }, [setSyncStorage]);
 
   // Width adjuster for chat width
   const chatWidthAdjuster = useWidthAdjuster({
@@ -288,12 +303,59 @@ export default function Popup() {
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
-          setCustomWebsites(Array.isArray(res?.gvPromptCustomWebsites) ? res.gvPromptCustomWebsites : []);
+          const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
+            ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
+            : [];
+          setCustomWebsites(loadedCustomWebsites);
           setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
+
+          // Reconcile stored custom websites with actual granted permissions.
+          // If the user denied a permission request, the popup may have closed before we could revert storage.
+          void (async () => {
+            if (!loadedCustomWebsites.length) return;
+            if (!browser.permissions?.contains) return;
+
+            const hasAnyPermission = async (domain: string) => {
+              try {
+                const normalized = domain
+                  .trim()
+                  .toLowerCase()
+                  .replace(/^https?:\/\//, '')
+                  .replace(/^www\./, '')
+                  .replace(/\/.*$/, '')
+                  .replace(/^\*\./, '');
+                if (!normalized) return false;
+
+                const origins = [`https://*.${normalized}/*`, `http://*.${normalized}/*`];
+                for (const origin of origins) {
+                  if (await browser.permissions.contains({ origins: [origin] })) return true;
+                }
+                return false;
+              } catch {
+                return true; // fail open to avoid destructive cleanup on unexpected errors
+              }
+            };
+
+            const filtered = (
+              await Promise.all(
+                loadedCustomWebsites.map(async (domain: string) => ({
+                  domain,
+                  ok: await hasAnyPermission(domain),
+                }))
+              )
+            )
+              .filter((item) => item.ok)
+              .map((item) => item.domain);
+
+            if (filtered.length !== loadedCustomWebsites.length) {
+              setCustomWebsites(filtered);
+              await setSyncStorage({ gvPromptCustomWebsites: filtered });
+            }
+          })();
         }
       );
     } catch { }
-  }, []);
+  }, [setSyncStorage]);
 
   // Validate and normalize URL
   const normalizeUrl = useCallback((url: string): string | null => {
@@ -320,8 +382,69 @@ export default function Popup() {
     }
   }, []);
 
+  const originPatternsForDomain = useCallback((domain: string): string[] | null => {
+    try {
+      const normalized = domain
+        .trim()
+        .toLowerCase()
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+        .replace(/\/.*$/, '')
+        .replace(/^\*\./, '');
+      if (!normalized) return null;
+      return [`https://*.${normalized}/*`, `http://*.${normalized}/*`];
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const requestCustomWebsitePermission = useCallback(
+    async (domain: string): Promise<boolean> => {
+      const originPatterns = originPatternsForDomain(domain);
+      if (!originPatterns) {
+        setWebsiteError(t('invalidUrl'));
+        return false;
+      }
+
+      if (!browser.permissions?.request || !browser.permissions?.contains) {
+        setWebsiteError(t('permissionRequestFailed'));
+        return false;
+      }
+
+      try {
+        const alreadyGranted = await browser.permissions.contains({ origins: originPatterns });
+        if (alreadyGranted) return true;
+
+        const granted = await browser.permissions.request({ origins: originPatterns });
+        if (!granted) {
+          setWebsiteError(t('permissionDenied'));
+        }
+        return granted;
+      } catch (err) {
+        console.error('[Gemini Voyager] Failed to request permissions for custom website:', err);
+        setWebsiteError(t('permissionRequestFailed'));
+        return false;
+      }
+    },
+    [originPatternsForDomain, t]
+  );
+
+  const revokeCustomWebsitePermission = useCallback(
+    async (domain: string) => {
+      const originPatterns = originPatternsForDomain(domain);
+      if (!originPatterns || !browser.permissions?.remove) return;
+
+      try {
+        await browser.permissions.remove({ origins: originPatterns });
+      } catch (err) {
+        console.warn('[Gemini Voyager] Failed to revoke permission for', domain, err);
+      }
+    },
+    [originPatternsForDomain]
+  );
+
   // Add website handler
-  const handleAddWebsite = useCallback(() => {
+  const handleAddWebsite = useCallback(async () => {
     setWebsiteError('');
 
     if (!newWebsiteInput.trim()) {
@@ -341,18 +464,50 @@ export default function Popup() {
       return;
     }
 
+    // Persist the user's selection first. Popup may close during the permission prompt.
     const updatedWebsites = [...customWebsites, normalized];
     setCustomWebsites(updatedWebsites);
-    apply({ customWebsites: updatedWebsites });
+    await setSyncStorage({ gvPromptCustomWebsites: updatedWebsites });
     setNewWebsiteInput('');
-  }, [newWebsiteInput, customWebsites, normalizeUrl, apply, t]);
+
+    const granted = await requestCustomWebsitePermission(normalized);
+    if (!granted) {
+      setCustomWebsites(customWebsites);
+      await setSyncStorage({ gvPromptCustomWebsites: customWebsites });
+    }
+  }, [newWebsiteInput, customWebsites, normalizeUrl, t, requestCustomWebsitePermission, setSyncStorage]);
 
   // Remove website handler
-  const handleRemoveWebsite = useCallback((website: string) => {
+  const handleRemoveWebsite = useCallback(async (website: string) => {
     const updatedWebsites = customWebsites.filter(w => w !== website);
     setCustomWebsites(updatedWebsites);
-    apply({ customWebsites: updatedWebsites });
-  }, [customWebsites, apply]);
+    await setSyncStorage({ gvPromptCustomWebsites: updatedWebsites });
+    await revokeCustomWebsitePermission(website);
+  }, [customWebsites, revokeCustomWebsitePermission, setSyncStorage]);
+
+  const toggleQuickWebsite = useCallback(
+    async (domain: string, isEnabled: boolean) => {
+      if (isEnabled) {
+        const updated = customWebsites.filter(w => w !== domain);
+        setCustomWebsites(updated);
+        await setSyncStorage({ gvPromptCustomWebsites: updated });
+        await revokeCustomWebsitePermission(domain);
+        return;
+      }
+
+      // Persist the user's selection first. Popup may close during the permission prompt.
+      const updated = [...customWebsites, domain];
+      setCustomWebsites(updated);
+      await setSyncStorage({ gvPromptCustomWebsites: updated });
+
+      const granted = await requestCustomWebsitePermission(domain);
+      if (!granted) {
+        setCustomWebsites(customWebsites);
+        await setSyncStorage({ gvPromptCustomWebsites: customWebsites });
+      }
+    },
+    [customWebsites, requestCustomWebsitePermission, revokeCustomWebsitePermission, setSyncStorage]
+  );
 
   const normalizedCurrentVersion = normalizeVersionString(extVersion);
   const normalizedLatestVersion = normalizeVersionString(latestVersion);
@@ -672,17 +827,7 @@ export default function Popup() {
                   return (
                     <button
                       key={domain}
-                      onClick={() => {
-                        if (isEnabled) {
-                          const updated = customWebsites.filter(w => w !== domain);
-                          setCustomWebsites(updated);
-                          apply({ customWebsites: updated });
-                        } else {
-                          const updated = [...customWebsites, domain];
-                          setCustomWebsites(updated);
-                          apply({ customWebsites: updated });
-                        }
-                      }}
+                      onClick={() => { void toggleQuickWebsite(domain, isEnabled); }}
                       className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-full text-[11px] font-medium transition-all flex-grow justify-center min-w-[30%] ${isEnabled
                         ? 'bg-primary text-primary-foreground shadow-sm'
                         : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
@@ -711,7 +856,7 @@ export default function Popup() {
                     >
                       <span className="text-sm font-mono text-foreground/90">{website}</span>
                       <button
-                        onClick={() => handleRemoveWebsite(website)}
+                        onClick={() => { void handleRemoveWebsite(website); }}
                         className="text-xs text-destructive hover:text-destructive/80 font-medium opacity-70 group-hover:opacity-100 transition-opacity"
                       >
                         {t('removeWebsite')}
@@ -733,14 +878,14 @@ export default function Popup() {
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleAddWebsite();
+                        void handleAddWebsite();
                       }
                     }}
                     placeholder={t('customWebsitesPlaceholder')}
                     className="flex-1 min-w-0 px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                   />
                   <Button
-                    onClick={handleAddWebsite}
+                    onClick={() => { void handleAddWebsite(); }}
                     size="sm"
                     className="shrink-0 whitespace-nowrap"
                   >

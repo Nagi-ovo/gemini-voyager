@@ -1,10 +1,166 @@
 /* Background service worker - handles cross-origin image fetch, popup opening, and sync */
 
+import browser from 'webextension-polyfill';
+
 import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type { SyncMode, SyncData, PromptItem } from '@/core/types/sync';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
+
+const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
+const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
+
+const MANIFEST_DEFAULT_DOMAINS = new Set(
+  [
+    ...(chrome.runtime.getManifest().host_permissions || []),
+    ...(chrome.runtime.getManifest().content_scripts?.flatMap((c) => c.matches || []) || []),
+  ]
+    .map(patternToDomain)
+    .filter((d): d is string => !!d)
+);
+
+function patternToDomain(pattern: string | undefined): string | null {
+  if (!pattern) return null;
+  try {
+    const withoutScheme = pattern.replace(/^[^:]+:\/\//, '');
+    const hostPart = withoutScheme.replace(/\/.*$/, '').replace(/^\*\./, '');
+    return hostPart || null;
+  } catch {
+    return null;
+  }
+}
+
+function toMatchPatterns(domain: string): string[] {
+  const normalized = domain
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/.*$/, '')
+    .replace(/^\*\./, '');
+
+  if (!normalized) return [];
+  return [`https://*.${normalized}/*`, `http://*.${normalized}/*`];
+}
+
+function extractDomainsFromOrigins(origins?: string[]): string[] {
+  if (!Array.isArray(origins)) return [];
+  const domains = origins
+    .map(patternToDomain)
+    .filter((d): d is string => !!d)
+    .filter((d) => !MANIFEST_DEFAULT_DOMAINS.has(d));
+  return Array.from(new Set(domains));
+}
+
+async function filterGrantedOrigins(patterns: string[]): Promise<string[]> {
+  const granted: string[] = [];
+
+  for (const origin of patterns) {
+    try {
+      const hasPermission = await browser.permissions.contains({ origins: [origin] });
+      if (hasPermission) {
+        granted.push(origin);
+      }
+    } catch (error) {
+      console.warn('[Background] Failed to check permission for', origin, error);
+    }
+  }
+
+  return granted;
+}
+
+async function syncCustomContentScripts(domains?: string[]): Promise<void> {
+  if (!chrome.scripting?.registerContentScripts) return;
+
+  const manifestContentScript = chrome.runtime.getManifest().content_scripts?.[0];
+  if (!manifestContentScript) return;
+
+  const domainList =
+    domains ??
+    (
+      await chrome.storage.sync.get({
+        [CUSTOM_WEBSITE_KEY]: [],
+      })
+    )[CUSTOM_WEBSITE_KEY];
+
+  const matchPatterns = Array.from(
+    new Set(
+      (Array.isArray(domainList) ? domainList : []).flatMap(toMatchPatterns).filter(Boolean)
+    )
+  );
+
+  const grantedMatches = await filterGrantedOrigins(matchPatterns);
+
+  try {
+    await chrome.scripting.unregisterContentScripts({ ids: [CUSTOM_CONTENT_SCRIPT_ID] });
+  } catch {
+    // No-op if script was not registered
+  }
+
+  if (!grantedMatches.length) return;
+
+  const runAt =
+    manifestContentScript.run_at === 'document_start'
+      ? 'document_start'
+      : manifestContentScript.run_at === 'document_end'
+        ? 'document_end'
+        : 'document_idle';
+
+  try {
+    await chrome.scripting.registerContentScripts([
+      {
+        id: CUSTOM_CONTENT_SCRIPT_ID,
+        js: manifestContentScript.js || [],
+        css: manifestContentScript.css,
+        matches: grantedMatches,
+        allFrames: manifestContentScript.all_frames,
+        runAt,
+        persistAcrossSessions: true,
+      },
+    ]);
+    console.log('[Background] Custom content scripts registered for', grantedMatches);
+  } catch (error) {
+    console.error('[Background] Failed to register custom content scripts:', error);
+  }
+}
+
+// Initial sync for persisted permissions
+void syncCustomContentScripts();
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== 'sync') return;
+
+  if (Object.prototype.hasOwnProperty.call(changes, CUSTOM_WEBSITE_KEY)) {
+    const newValue = changes[CUSTOM_WEBSITE_KEY]?.newValue;
+    const domains = Array.isArray(newValue) ? newValue : [];
+    void syncCustomContentScripts(domains);
+  }
+});
+
+chrome.permissions.onAdded.addListener(({ origins }) => {
+  const domains = extractDomainsFromOrigins(origins);
+  if (domains.length) {
+    void browser.storage.sync
+      .get({ [CUSTOM_WEBSITE_KEY]: [] })
+      .then((current) => {
+        const existing = Array.isArray(current[CUSTOM_WEBSITE_KEY]) ? current[CUSTOM_WEBSITE_KEY] : [];
+        const merged = Array.from(new Set([...existing, ...domains]));
+        if (merged.length !== existing.length) {
+          return browser.storage.sync.set({ [CUSTOM_WEBSITE_KEY]: merged });
+        }
+      })
+      .catch((error) => {
+        console.warn('[Background] Failed to persist domains from permissions.onAdded:', error);
+      });
+  }
+
+  void syncCustomContentScripts();
+});
+
+chrome.permissions.onRemoved.addListener(() => {
+  void syncCustomContentScripts();
+});
 
 /**
  * Centralized starred messages management to prevent race conditions.

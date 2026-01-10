@@ -432,8 +432,8 @@
     "description": "无标题对话的回退标题"
   },
   "geminiOnlyNotice": {
-    "message": "所有设置仅支持 Gemini",
-    "description": "提示所有设置仅适用于 Gemini"
+    "message": "默认仅在 Gemini 和 AI Studio 生效。想在其他网站用提示词管理器，请在下方添加并授权。",
+    "description": "提示默认范围为 Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
     "message": "⚠️ 警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。",
@@ -575,9 +575,13 @@
     "message": "权限被拒绝。请允许访问此网站。",
     "description": "权限被拒绝错误消息"
   },
+  "permissionRequestFailed": {
+    "message": "请求权限失败，请重试或在扩展设置中手动授权。",
+    "description": "请求权限失败消息"
+  },
   "customWebsitesNote": {
-    "message": "注意：添加网站后，请刷新页面以使更改生效。自定义网站上只会激活提示词管理器。",
-    "description": "自定义网站重新加载提示"
+    "message": "提示：添加网站时会弹出授权，请先允许，再刷新该站点即可启用提示词管理器。",
+    "description": "自定义网站重新加载/权限提示"
   },
   "starredHistory": {
     "message": "星标历史",
