@@ -551,6 +551,8 @@ export class FolderManager {
     if (folder.isExpanded) {
       const content = document.createElement('div');
       content.className = 'gv-folder-content';
+      // Fix: Allow dropping into the content area of the folder (not just the header)
+      this.setupDropZone(content, folder.id);
 
       // Render conversations in this folder (sorted: starred first)
       const conversations = this.data.folderContents[folder.id] || [];
