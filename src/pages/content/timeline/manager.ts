@@ -2359,8 +2359,6 @@ export class TimelineManager {
     this.contextMenu = menu;
     const menuWidth = menu.offsetWidth;
     const menuHeight = menu.offsetHeight;
-    // const menuWidth = 180;
-    // const menuHeight = canCollapse || isCollapsed ? 220 : 180;
 
     let left = x;
     let top = y;
