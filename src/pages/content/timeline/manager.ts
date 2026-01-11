@@ -1,8 +1,9 @@
+import { initI18n, getTranslationSync } from '../../../utils/i18n';
 
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
-import { DotElement } from './types';
+import type { DotElement, MarkerLevel} from './types';
 
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { StorageKeys } from '@/core/types/common';
@@ -107,6 +108,11 @@ export class TimelineManager {
   > = new Map();
   private conversationId: string | null = null;
   private userTurnSelector: string = '';
+  private markerLevels: Map<string, MarkerLevel> = new Map();
+  private collapsedMarkers: Set<string> = new Set(); 
+  private contextMenu: HTMLElement | null = null;
+  private onContextMenu: ((ev: MouseEvent) => void) | null = null;
+  private onDocumentClick: ((ev: MouseEvent) => void) | null = null;
   private onPointerDown: ((ev: PointerEvent) => void) | null = null;
   private onPointerMove: ((ev: PointerEvent) => void) | null = null;
   private onPointerUp: ((ev: PointerEvent) => void) | null = null;
@@ -136,6 +142,7 @@ export class TimelineManager {
   private isNavigating: boolean = false;
 
   async init(): Promise<void> {
+    await initI18n();
     const ok = await this.findCriticalElements();
     if (!ok) return;
     this.injectTimelineUI();
@@ -144,6 +151,8 @@ export class TimelineManager {
     this.conversationId = this.computeConversationId();
     await this.loadStars();
     await this.syncStarredFromService();
+    this.loadMarkerLevels();
+    this.loadCollapsedMarkers();
     // Handle URL hash for starred message navigation
     this.handleStarredMessageNavigation();
     // Initialize keyboard shortcuts
@@ -736,18 +745,28 @@ export class TimelineManager {
     const pad = this.getTrackPadding();
     const minGap = this.getMinGap();
     const N = this.markers.length;
-    const desired = Math.max(H, N > 0 ? 2 * pad + Math.max(0, N - 1) * minGap : H);
+    // Get hidden markers for collapse feature
+    const hiddenIndices = this.getHiddenMarkerIndices();
+    const visibleCount = N - hiddenIndices.size;
+    const desired = Math.max(H, visibleCount > 0 ? 2 * pad + Math.max(0, visibleCount - 1) * minGap : H);
     this.contentHeight = Math.ceil(desired);
     this.scale = H > 0 ? this.contentHeight / H : 1;
     this.ui.trackContent.style.height = `${this.contentHeight}px`;
 
     const usableC = Math.max(1, this.contentHeight - 2 * pad);
-    const desiredY = this.markers.map(
-      (m) => pad + Math.max(0, Math.min(1, m.baseN ?? m.n ?? 0)) * usableC
-    );
-    const adjusted = this.applyMinGap(desiredY, pad, pad + usableC, minGap);
+    // Calculate Y positions with collapse - using effective baseN for repositioning
+    const { desiredY } = this.calculateCollapsedPositions(hiddenIndices, pad, usableC);
+    
+    // Apply min gap only to visible markers
+    const gapMultipliers: number[] = new Array(N).fill(1.0);
+    const adjusted = this.applyMinGapWithHidden(desiredY, pad, pad + usableC, minGap, hiddenIndices, gapMultipliers);
     this.yPositions = adjusted;
+    
     for (let i = 0; i < N; i++) {
+      if (hiddenIndices.has(i)) {
+        this.markers[i].n = -1; 
+        continue;
+      }
       const top = adjusted[i];
       const n = (top - pad) / usableC;
       this.markers[i].n = Math.max(0, Math.min(1, n));
@@ -764,6 +783,64 @@ export class TimelineManager {
     const barH = this.ui.timelineBar.clientHeight || 0;
     this.sliderAlwaysVisible = this.contentHeight > barH + 1;
     if (this.sliderAlwaysVisible) this.showSlider();
+  }
+
+  /* Apply minimum gap between visible markers, skipping hidden ones */
+  private applyMinGapWithHidden(
+    positions: number[], 
+    minTop: number, 
+    maxTop: number, 
+    gap: number,
+    hiddenIndices: Set<number>,
+    gapMultipliers: number[]
+  ): number[] {
+    const n = positions.length;
+    if (n === 0) return positions;
+    
+    const out = positions.slice();
+    let prevVisibleIdx = -1;
+    for (let i = 0; i < n; i++) {
+      if (hiddenIndices.has(i)) continue;
+      
+      if (prevVisibleIdx === -1) {
+        out[i] = Math.max(minTop, Math.min(positions[i], maxTop));
+      } else {
+        const currentGap = gap * gapMultipliers[i];
+        const minAllowed = out[prevVisibleIdx] + currentGap;
+        out[i] = Math.max(positions[i], minAllowed);
+      }
+      prevVisibleIdx = i;
+    }
+    let lastVisibleIdx = -1;
+    for (let i = n - 1; i >= 0; i--) {
+      if (!hiddenIndices.has(i)) {
+        lastVisibleIdx = i;
+        break;
+      }
+    }
+    
+    if (lastVisibleIdx >= 0 && out[lastVisibleIdx] > maxTop) {
+      out[lastVisibleIdx] = maxTop;
+      
+      let nextVisibleIdx = lastVisibleIdx;
+      for (let i = lastVisibleIdx - 1; i >= 0; i--) {
+        if (hiddenIndices.has(i)) continue;
+        
+        const currentGap = gap * gapMultipliers[nextVisibleIdx];
+        const maxAllowed = out[nextVisibleIdx] - currentGap;
+        out[i] = Math.min(out[i], maxAllowed);
+        nextVisibleIdx = i;
+      }
+    }
+    
+    // Clamp all visible markers
+    for (let i = 0; i < n; i++) {
+      if (hiddenIndices.has(i)) continue;
+      if (out[i] < minTop) out[i] = minTop;
+      if (out[i] > maxTop) out[i] = maxTop;
+    }
+    
+    return out;
   }
 
   private applyMinGap(positions: number[], minTop: number, maxTop: number, gap: number): number[] {
@@ -969,6 +1046,24 @@ export class TimelineManager {
     };
     this.ui.timelineBar!.addEventListener('mouseover', this.onTimelineBarOver);
     this.ui.timelineBar!.addEventListener('mouseout', this.onTimelineBarOut);
+
+    // Right-click context menu for level selection
+    this.onContextMenu = (ev: MouseEvent) => {
+      const dot = (ev.target as HTMLElement).closest('.timeline-dot') as DotElement | null;
+      if (!dot) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      this.showContextMenu(dot, ev.clientX, ev.clientY);
+    };
+    this.ui.timelineBar!.addEventListener('contextmenu', this.onContextMenu);
+
+    // Close context menu when clicking elsewhere
+    this.onDocumentClick = (ev: MouseEvent) => {
+      if (this.contextMenu && !this.contextMenu.contains(ev.target as Node)) {
+        this.hideContextMenu();
+      }
+    };
+    document.addEventListener('click', this.onDocumentClick);
 
     this.onPointerDown = (ev: PointerEvent) => {
       const dot = (ev.target as HTMLElement).closest('.timeline-dot') as DotElement | null;
@@ -1576,6 +1671,8 @@ export class TimelineManager {
     const start = this.lowerBound(this.yPositions, minY);
     const end = Math.max(start - 1, this.upperBound(this.yPositions, maxY));
 
+    const hiddenIndices = this.getHiddenMarkerIndices();
+
     let prevStart = this.visibleRange.start;
     let prevEnd = this.visibleRange.end;
     const len = this.markers.length;
@@ -1612,6 +1709,17 @@ export class TimelineManager {
     for (let i = start; i <= end; i++) {
       const marker = this.markers[i];
       if (!marker) continue;
+            
+      if (hiddenIndices.has(i)) {
+        if (marker.dotElement) {
+          marker.dotElement.remove();
+          marker.dotElement = null;
+        }
+        continue;
+      }
+      
+      const isCollapsed = this.isMarkerCollapsed(marker.id);
+
       if (!marker.dotElement) {
         const dot = document.createElement('button') as DotElement;
         dot.className = 'timeline-dot';
@@ -1624,7 +1732,12 @@ export class TimelineManager {
         if (this.usePixelTop) dot.style.top = `${Math.round(this.yPositions[i])}px`;
         dot.classList.toggle('active', marker.id === this.activeTurnId);
         dot.classList.toggle('starred', !!marker.starred);
+        dot.classList.toggle('collapsed', isCollapsed);
         dot.setAttribute('aria-pressed', marker.starred ? 'true' : 'false');
+        dot.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+        // Apply marker level
+        const level = this.getMarkerLevel(marker.id);
+        dot.setAttribute('data-level', String(level));
         marker.dotElement = dot;
         frag.appendChild(dot);
       } else {
@@ -1632,7 +1745,12 @@ export class TimelineManager {
         marker.dotElement.style.setProperty('--n', String(marker.n || 0));
         if (this.usePixelTop) marker.dotElement.style.top = `${Math.round(this.yPositions[i])}px`;
         marker.dotElement.classList.toggle('starred', !!marker.starred);
+        marker.dotElement.classList.toggle('collapsed', isCollapsed);
         marker.dotElement.setAttribute('aria-pressed', marker.starred ? 'true' : 'false');
+        marker.dotElement.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+        // Apply marker level
+        const level = this.getMarkerLevel(marker.id);
+        marker.dotElement.setAttribute('data-level', String(level));
       }
     }
     if (localVersion !== this.markersVersion) return;
@@ -1909,6 +2027,363 @@ export class TimelineManager {
     }
   }
 
+  // ===== Marker Level Methods =====
+
+  private getLevelsStorageKey(): string | null {
+    return this.conversationId ? `geminiTimelineLevels:${this.conversationId}` : null;
+  }
+
+  /* Load marker levels from localStorage */
+  private loadMarkerLevels(): void {
+    this.markerLevels.clear();
+    const key = this.getLevelsStorageKey();
+    if (!key) return;
+
+    const raw = this.safeLocalStorageGet(key);
+    if (!raw) return;
+
+    try {
+      const obj = JSON.parse(raw);
+      if (obj && typeof obj === 'object') {
+        Object.entries(obj).forEach(([turnId, level]) => {
+          if (typeof level === 'number' && level >= 1 && level <= 4) {
+            this.markerLevels.set(turnId, level as MarkerLevel);
+          }
+        });
+      }
+    } catch (error) {
+      console.warn('[Timeline] Failed to parse marker levels:', error);
+    }
+  }
+
+  /* Save marker levels to localStorage */
+  private saveMarkerLevels(): void {
+    const key = this.getLevelsStorageKey();
+    if (!key) return;
+
+    const obj: Record<string, MarkerLevel> = {};
+    this.markerLevels.forEach((level, turnId) => {
+      obj[turnId] = level;
+    });
+
+    this.safeLocalStorageSet(key, JSON.stringify(obj));
+  }
+
+  // ===== Collapsed Markers Methods =====
+
+  private getCollapsedStorageKey(): string | null {
+    return this.conversationId ? `geminiTimelineCollapsed:${this.conversationId}` : null;
+  }
+
+  private loadCollapsedMarkers(): void {
+    this.collapsedMarkers.clear();
+    const key = this.getCollapsedStorageKey();
+    if (!key) return;
+
+    const raw = this.safeLocalStorageGet(key);
+    if (!raw) return;
+
+    try {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) {
+        arr.forEach((id: any) => this.collapsedMarkers.add(String(id)));
+      }
+    } catch (error) {
+      console.warn('[Timeline] Failed to parse collapsed markers:', error);
+    }
+  }
+
+  private saveCollapsedMarkers(): void {
+    const key = this.getCollapsedStorageKey();
+    if (!key) return;
+    this.safeLocalStorageSet(key, JSON.stringify(Array.from(this.collapsedMarkers)));
+  }
+
+  private isMarkerCollapsed(turnId: string): boolean {
+    return this.collapsedMarkers.has(turnId);
+  }
+
+  private toggleCollapse(turnId: string): void {
+    if (this.collapsedMarkers.has(turnId)) {
+      this.collapsedMarkers.delete(turnId);
+    } else {
+      this.collapsedMarkers.add(turnId);
+    }
+    this.saveCollapsedMarkers();
+    this.updateTimelineGeometry();
+    this.updateVirtualRangeAndRender();
+  }
+
+  private getHiddenMarkerIndices(): Set<number> {
+    const hidden = new Set<number>();
+    
+    for (let i = 0; i < this.markers.length; i++) {
+      // Skip markers that are already hidden by a parent collapse
+      if (hidden.has(i)) continue;
+      
+      const marker = this.markers[i];
+      const level = this.getMarkerLevel(marker.id);
+      
+      // If this marker is collapsed, hide all subsequent lower-level markers
+      if (this.collapsedMarkers.has(marker.id)) {
+        for (let j = i + 1; j < this.markers.length; j++) {
+          const nextMarker = this.markers[j];
+          const nextLevel = this.getMarkerLevel(nextMarker.id);
+          
+          // Stop when we reach a marker of same or higher level (lower number)
+          if (nextLevel <= level) {
+            break;
+          }
+          
+          // Hide this marker (only direct descendants of this collapsed parent)
+          hidden.add(j);
+        }
+      }
+    }
+    
+    return hidden;
+  }
+
+  private calculateEffectiveBaseN(markerIndex: number, hiddenIndices: Set<number>): number {
+    const marker = this.markers[markerIndex];
+    if (!marker) return 0;
+    
+    const baseN = marker.baseN ?? marker.n ?? 0;
+    
+    // If this marker is not collapsed, just return its baseN
+    if (!this.collapsedMarkers.has(marker.id)) {
+      return baseN;
+    }
+    
+    // Find the range of hidden children
+    const level = this.getMarkerLevel(marker.id);
+    let childContribution = 0;
+    
+    for (let j = markerIndex + 1; j < this.markers.length; j++) {
+      const nextMarker = this.markers[j];
+      const nextLevel = this.getMarkerLevel(nextMarker.id);
+      
+      // Stop when we reach a marker of same or higher level
+      if (nextLevel <= level) {
+        break;
+      }
+      
+      // Add half of child's contribution based on level difference
+      const childBaseN = nextMarker.baseN ?? nextMarker.n ?? 0;
+      const prevBaseN = j > 0 ? (this.markers[j - 1].baseN ?? this.markers[j - 1].n ?? 0) : 0;
+      const childLength = childBaseN - prevBaseN;
+      const levelDiff = nextLevel - level;
+      childContribution += childLength * Math.pow(0.5, levelDiff);
+    }
+    
+    return baseN + childContribution;
+  }
+
+  private calculateCollapsedPositions(
+    hiddenIndices: Set<number>,
+    pad: number,
+    usableC: number
+  ): { desiredY: number[], effectiveBaseNs: number[] } {
+    const N = this.markers.length;
+    const desiredY: number[] = new Array(N).fill(-1);
+    const effectiveBaseNs: number[] = new Array(N).fill(0);
+    
+    // First pass: calculate effective baseN for all visible markers
+    const visibleMarkers: { index: number; effectiveN: number }[] = [];
+    
+    for (let i = 0; i < N; i++) {
+      if (hiddenIndices.has(i)) continue;
+      
+      const effectiveN = this.calculateEffectiveBaseN(i, hiddenIndices);
+      effectiveBaseNs[i] = effectiveN;
+      visibleMarkers.push({ index: i, effectiveN });
+    }
+    
+    // Sort visible markers by their effective baseN (maintains relative order based on length)
+    visibleMarkers.sort((a, b) => a.effectiveN - b.effectiveN);
+    
+    // Calculate total effective range
+    if (visibleMarkers.length === 0) {
+      return { desiredY, effectiveBaseNs };
+    }
+    
+    const minEffectiveN = visibleMarkers[0].effectiveN;
+    const maxEffectiveN = visibleMarkers[visibleMarkers.length - 1].effectiveN;
+    const effectiveRange = maxEffectiveN - minEffectiveN;
+    
+    // Distribute positions proportionally
+    for (const vm of visibleMarkers) {
+      let normalizedN: number;
+      if (effectiveRange > 0) {
+        normalizedN = (vm.effectiveN - minEffectiveN) / effectiveRange;
+      } else {
+        normalizedN = visibleMarkers.indexOf(vm) / Math.max(1, visibleMarkers.length - 1);
+      }
+      
+      desiredY[vm.index] = pad + normalizedN * usableC;
+    }
+    
+    return { desiredY, effectiveBaseNs };
+  }
+
+  /**
+   * Check if a marker can be collapsed (has lower-level children)
+   */
+  private canCollapseMarker(turnId: string): boolean {
+    const markerIndex = this.markers.findIndex(m => m.id === turnId);
+    if (markerIndex < 0 || markerIndex >= this.markers.length - 1) return false;
+    
+    const level = this.getMarkerLevel(turnId);
+    
+    const nextMarker = this.markers[markerIndex + 1];
+    if (!nextMarker) return false;
+    
+    const nextLevel = this.getMarkerLevel(nextMarker.id);
+    return nextLevel > level;
+  }
+
+  private getMarkerLevel(turnId: string): MarkerLevel {
+    return this.markerLevels.get(turnId) || 1;
+  }
+
+  private setMarkerLevel(turnId: string, level: MarkerLevel): void {
+    if (level === 1) {
+      // Level 1 is default, remove from storage to save space
+      this.markerLevels.delete(turnId);
+    } else {
+      this.markerLevels.set(turnId, level);
+    }
+    this.saveMarkerLevels();
+
+    // Update all dots with this turnId
+    this.markers.forEach((marker) => {
+      if (marker.id === turnId && marker.dotElement) {
+        marker.dotElement.setAttribute('data-level', String(level));
+      }
+    });
+  }
+
+  private showContextMenu(dot: DotElement, x: number, y: number): void {
+    this.hideContextMenu();
+
+    const turnId = dot.dataset.targetTurnId;
+    if (!turnId) return;
+
+    const currentLevel = this.getMarkerLevel(turnId);
+    const isCollapsed = this.isMarkerCollapsed(turnId);
+    const canCollapse = this.canCollapseMarker(turnId);
+
+    const menu = document.createElement('div');
+    menu.className = 'timeline-context-menu';
+
+    const title = document.createElement('div');
+    title.className = 'timeline-context-menu-title';
+    title.textContent = getTranslationSync('timelineLevelTitle');
+    menu.appendChild(title);
+
+    const levels: { level: MarkerLevel; label: string }[] = [
+      { level: 1, label: getTranslationSync('timelineLevel1') },
+      { level: 2, label: getTranslationSync('timelineLevel2') },
+      { level: 3, label: getTranslationSync('timelineLevel3') },
+    ];
+
+    levels.forEach(({ level, label }) => {
+      const item = document.createElement('button');
+      item.className = 'timeline-context-menu-item';
+      if (level === currentLevel) {
+        item.classList.add('active');
+      }
+      item.setAttribute('data-level', String(level));
+
+      const indicator = document.createElement('span');
+      indicator.className = 'level-indicator';
+      const dotEl = document.createElement('span');
+      dotEl.className = 'level-dot';
+      indicator.appendChild(dotEl);
+      item.appendChild(indicator);
+
+      const labelSpan = document.createElement('span');
+      labelSpan.textContent = label;
+      item.appendChild(labelSpan);
+
+      if (level === currentLevel) {
+        const check = document.createElement('span');
+        check.className = 'check-icon';
+        check.textContent = '✓';
+        item.appendChild(check);
+      }
+
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setMarkerLevel(turnId, level);
+        this.hideContextMenu();
+      });
+
+      menu.appendChild(item);
+    });
+
+    if (canCollapse || isCollapsed) {
+      // Add separator
+      const separator = document.createElement('div');
+      separator.className = 'timeline-context-menu-separator';
+      menu.appendChild(separator);
+
+      const collapseItem = document.createElement('button');
+      collapseItem.className = 'timeline-context-menu-item collapse-item';
+      
+      const icon = document.createElement('span');
+      icon.className = 'collapse-icon';
+      icon.textContent = isCollapsed ? '▶' : '▼';
+      collapseItem.appendChild(icon);
+
+      const collapseLabel = document.createElement('span');
+      collapseLabel.textContent = isCollapsed 
+        ? getTranslationSync('timelineExpand')
+        : getTranslationSync('timelineCollapse');
+      collapseItem.appendChild(collapseLabel);
+
+      collapseItem.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleCollapse(turnId);
+        this.hideContextMenu();
+      });
+
+      menu.appendChild(collapseItem);
+    }
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    document.body.appendChild(menu);
+    this.contextMenu = menu;
+    const menuWidth = menu.offsetWidth;
+    const menuHeight = menu.offsetHeight;
+
+    let left = x;
+    let top = y;
+
+    if (left + menuWidth > vw - 10) {
+      left = vw - menuWidth - 10;
+    }
+    if (top + menuHeight > vh - 10) {
+      top = vh - menuHeight - 10;
+    }
+
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+
+    document.body.appendChild(menu);
+    this.contextMenu = menu;
+  }
+
+  private hideContextMenu(): void {
+    if (this.contextMenu) {
+      this.contextMenu.remove();
+      this.contextMenu = null;
+    }
+  }
+
   private cancelLongPress(): void {
     if (this.longPressTimer) {
       clearTimeout(this.longPressTimer);
@@ -1941,6 +2416,7 @@ export class TimelineManager {
       console.warn('[Timeline] Failed to initialize keyboard shortcuts:', error);
     }
   }
+
 
   /**
    * Enqueue navigation action (supports rapid key presses)
@@ -2156,6 +2632,14 @@ export class TimelineManager {
       } catch {}
       this.onChromeStorageChanged = null;
     }
+    // Cleanup context menu
+    this.hideContextMenu();
+    try {
+      this.ui.timelineBar?.removeEventListener('contextmenu', this.onContextMenu!);
+    } catch {}
+    try {
+      document.removeEventListener('click', this.onDocumentClick!);
+    } catch {}
     try {
       this.ui.timelineBar?.removeEventListener('pointerdown', this.onPointerDown!);
     } catch {}
