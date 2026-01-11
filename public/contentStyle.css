@@ -179,16 +179,17 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
 
 /* ===== Timeline Marker Levels (shape-based: circle, triangle, square) ===== */
 .timeline-dot[data-level="1"]::after {
+
   width: var(--timeline-dot-size);
   height: var(--timeline-dot-size);
-  border-radius: 0;
+  border-radius: 50%;
   clip-path: none;
 }
 
 .timeline-dot[data-level="2"]::after {
   width: var(--timeline-dot-size);
   height: var(--timeline-dot-size);
-  border-radius: 50%;
+  border-radius: 0;
   clip-path: none;
 }
 
@@ -273,15 +274,15 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   background-color: var(--timeline-dot-color);
 }
 
-/* Level 1: Square */
+/* Level 1: Circle */
 .timeline-context-menu-item[data-level="1"] .level-dot {
-  border-radius: 0;
+  border-radius: 50%;
   clip-path: none;
 }
 
-/* Level 2: Circle */
+/* Level 2: Square */
 .timeline-context-menu-item[data-level="2"] .level-dot {
-  border-radius: 50%;
+  border-radius: 0;
   clip-path: none;
 }
 
