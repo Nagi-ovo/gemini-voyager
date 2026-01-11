@@ -2201,13 +2201,17 @@ export class FolderManager {
       (el as HTMLElement).classList.remove('gv-conversation-selected');
       (el as HTMLElement).style.opacity = '1';
     });
-
     // Remove selection classes from all folder conversations
     const folderConvs = this.containerElement?.querySelectorAll('.gv-folder-conversation');
     folderConvs?.forEach((el) => {
       (el as HTMLElement).classList.remove('gv-folder-conversation-selected');
       (el as HTMLElement).style.opacity = '1';
     });
+
+    // Restore active conversation highlight in folders
+    // This ensures that the currently active conversation remains highlighted
+    // after drag-and-drop or multi-select operations
+    this.highlightActiveConversationInFolders();
   }
 
   /**
