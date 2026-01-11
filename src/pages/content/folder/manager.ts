@@ -1217,22 +1217,40 @@ export class FolderManager {
   }
 
   private extractConversationId(element: HTMLElement): string {
-    // Extract from jslog attribute which contains the conversation ID
+    // Strategy 1: Extract from jslog attribute
+    // This is the preferred method as it follows the internal ID format
     const jslog = element.getAttribute('jslog');
     if (jslog) {
       // Match conversation ID - it appears in quotes like ["c_3456c77162722c1a",...]
-      // Also try without quotes in case format changes
       const match = jslog.match(/[",\[]c_([a-f0-9]+)[",\]]/);
       if (match) {
         const conversationId = `c_${match[1]}`;
         this.debug('Extracted conversation ID:', conversationId, 'from jslog:', jslog);
         return conversationId;
       }
-      // Fallback: try matching without surrounding characters
+      // Fallback: match without surrounding characters
       const simpleMatch = jslog.match(/c_[a-f0-9]+/);
       if (simpleMatch) {
         this.debug('Extracted conversation ID (simple):', simpleMatch[0]);
         return simpleMatch[0];
+      }
+    }
+
+    // Strategy 2: Extract from href (fallback when jslog is missing/broken)
+    // This ensures we can still identify conversations even if Gemini UI changes traits
+    const link = element.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+    if (link) {
+      const href = link.href;
+      // Try /app/<hexId>
+      let match = href.match(/\/app\/([^\/?#]+)/);
+      if (match && match[1]) {
+        // Enforce c_ prefix to match jslog format standard
+        return `c_${match[1]}`;
+      }
+      // Try /gem/<gemId>/<hexId>
+      match = href.match(/\/gem\/[^/]+\/([^\/?#]+)/);
+      if (match && match[1]) {
+        return `c_${match[1]}`;
       }
     }
 
@@ -1244,25 +1262,45 @@ export class FolderManager {
     // Generate unique ID combining title, index, random, and timestamp
     const uniqueString = `${title}_${index}_${Math.random()}_${Date.now()}`;
     const fallbackId = `conv_${this.hashString(uniqueString)}`;
-    this.debugWarn('Could not extract ID from jslog, using fallback:', fallbackId);
+    this.debugWarn('Could not extract ID from jslog or href, using fallback:', fallbackId);
     return fallbackId;
   }
 
   private extractConversationData(element: HTMLElement): { url: string; isGem: boolean; gemId?: string } {
-    // Extract conversation ID from jslog
+    // Try to extract from jslog first
     const jslog = element.getAttribute('jslog');
-    if (!jslog) {
-      return { url: window.location.href, isGem: false };
+    let hexId: string | null = null;
+
+    if (jslog) {
+      const match = jslog.match(/[",\[]c_([a-f0-9]+)[",\]]/);
+      if (match) {
+        hexId = match[1];
+        this.debug('Extracted hex ID from jslog:', hexId);
+      }
     }
 
-    // Match conversation ID from jslog - extract just the hex part without c_ prefix
-    const match = jslog.match(/[",\[]c_([a-f0-9]+)[",\]]/);
-    if (!match) {
-      return { url: window.location.href, isGem: false };
+    // Try to extract from href if jslog failed
+    if (!hexId) {
+      const link = element.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+      if (link) {
+        const href = link.href;
+        // Try /app/<hexId>
+        let match = href.match(/\/app\/([^\/?#]+)/);
+        if (match && match[1]) {
+          hexId = match[1];
+        } else {
+          // Try /gem/<gemId>/<hexId>
+          match = href.match(/\/gem\/[^/]+\/([^\/?#]+)/);
+          if (match && match[1]) {
+            hexId = match[1];
+          }
+        }
+      }
     }
 
-    const hexId = match[1]; // Just the hex part, e.g., "9bf19194f9afaf90"
-    this.debug('Extracted hex ID:', hexId);
+    if (!hexId) {
+      return { url: window.location.href, isGem: false };
+    }
 
     const currentPath = window.location.pathname;
 
@@ -1288,8 +1326,6 @@ export class FolderManager {
     }
 
     this.debug('Built URL:', url);
-    // Don't try to detect if it's a Gem at drag time - just store the /app/ URL
-    // After first navigation, we'll detect and update to the correct /gem/ URL
     return { url, isGem: false, gemId: undefined };
   }
 
@@ -3818,7 +3854,22 @@ export class FolderManager {
     // Check if conversation exists in any folder
     for (const folderId in this.data.folderContents) {
       const conversations = this.data.folderContents[folderId];
-      if (conversations.some(c => c.conversationId === conversationId)) {
+      if (conversations.some(c => {
+        // Direct ID match
+        if (c.conversationId === conversationId) return true;
+
+        // Robustness fallback: check if one ID contains the other (e.g. c_ prefix mismatch)
+        // or if URL contains the ID (common if one is hex and other is full ID)
+        const cleanId = conversationId.replace(/^c_/, '');
+        const cleanStoredId = c.conversationId.replace(/^c_/, '');
+
+        if (cleanId && cleanId === cleanStoredId) return true;
+
+        // Check if URL contains the hex ID
+        if (cleanId && cleanId.length > 8 && c.url.includes(cleanId)) return true;
+
+        return false;
+      })) {
         return true;
       }
     }
