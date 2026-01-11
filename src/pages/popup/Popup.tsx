@@ -94,6 +94,7 @@ interface SettingsUpdate {
   mode?: ScrollMode | null;
   hideContainer?: boolean;
   draggableTimeline?: boolean;
+  markerLevelEnabled?: boolean;
   resetPosition?: boolean;
   folderEnabled?: boolean;
   hideArchivedConversations?: boolean;
@@ -107,6 +108,7 @@ export default function Popup() {
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
+  const [markerLevelEnabled, setMarkerLevelEnabled] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
   const [customWebsites, setCustomWebsites] = useState<string[]>([]);
@@ -155,6 +157,7 @@ export default function Popup() {
     if (settings.mode) payload.geminiTimelineScrollMode = settings.mode;
     if (typeof settings.hideContainer === 'boolean') payload.geminiTimelineHideContainer = settings.hideContainer;
     if (typeof settings.draggableTimeline === 'boolean') payload.geminiTimelineDraggable = settings.draggableTimeline;
+    if (typeof settings.markerLevelEnabled === 'boolean') payload.geminiTimelineMarkerLevel = settings.markerLevelEnabled;
     if (typeof settings.folderEnabled === 'boolean') payload.geminiFolderEnabled = settings.folderEnabled;
     if (typeof settings.hideArchivedConversations === 'boolean') payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
     if (settings.resetPosition) payload.geminiTimelinePosition = null;
@@ -291,6 +294,7 @@ export default function Popup() {
           geminiTimelineScrollMode: 'flow',
           geminiTimelineHideContainer: false,
           geminiTimelineDraggable: false,
+          geminiTimelineMarkerLevel: false,
           geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
           gvPromptCustomWebsites: [],
@@ -305,6 +309,7 @@ export default function Popup() {
           if (format === 'latex' || format === 'unicodemath' || format === 'no-dollar') setFormulaCopyFormat(format);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
+          setMarkerLevelEnabled(!!res?.geminiTimelineMarkerLevel);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
           const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
@@ -649,6 +654,29 @@ export default function Popup() {
                 onChange={(e) => {
                   setDraggableTimeline(e.target.checked);
                   apply({ draggableTimeline: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between group">
+              <div className="flex-1">
+                <Label htmlFor="marker-level-enabled" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors flex items-center gap-1">
+                  {t('enableMarkerLevel')}
+                  <span
+                    className="material-symbols-outlined text-[16px] leading-none opacity-50 hover:opacity-100 transition-opacity cursor-help"
+                    title={t('experimentalLabel')}
+                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                  >
+                    experiment
+                  </span>
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">{t('enableMarkerLevelHint')}</p>
+              </div>
+              <Switch
+                id="marker-level-enabled"
+                checked={markerLevelEnabled}
+                onChange={(e) => {
+                  setMarkerLevelEnabled(e.target.checked);
+                  apply({ markerLevelEnabled: e.target.checked });
                 }}
               />
             </div>

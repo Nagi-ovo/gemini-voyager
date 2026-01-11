@@ -81,6 +81,7 @@ Visual nodes let you see the structure of your chat at a glance.
 - **Jump instantly**: Click a node to scroll right to that message.
 - **Peek content**: Hover to see what was said without scrolling.
 - **Mark what matters**: Long-press to star important messages (synced across tabs!).
+- **Node Levels (Experimental)**: Right-click a node to set its level (1-3) or collapse sub-nodes. Perfect for organizing branched or hierarchical conversations.
 
 ### 📂 Folder Organization
 **Keep your ideas sorted.**

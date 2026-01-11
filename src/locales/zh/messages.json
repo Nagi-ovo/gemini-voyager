@@ -27,6 +27,18 @@
     "message": "可拖拽时间线",
     "description": "可拖拽时间线标签"
   },
+  "enableMarkerLevel": {
+    "message": "启用节点层级",
+    "description": "启用时间线节点层级功能"
+  },
+  "enableMarkerLevelHint": {
+    "message": "右键点击时间线节点可设置其层级和折叠子节点",
+    "description": "节点层级功能提示"
+  },
+  "experimentalLabel": {
+    "message": "实验性",
+    "description": "实验性功能标签"
+  },
   "resetPosition": {
     "message": "重置位置",
     "description": "重置位置按钮"

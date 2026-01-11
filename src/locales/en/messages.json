@@ -27,6 +27,18 @@
     "message": "Draggable Timeline",
     "description": "Draggable Timeline label"
   },
+  "enableMarkerLevel": {
+    "message": "Enable Node Levels",
+    "description": "Enable timeline node level feature"
+  },
+  "enableMarkerLevelHint": {
+    "message": "Right-click timeline nodes to set their level and collapse children",
+    "description": "Node level feature hint"
+  },
+  "experimentalLabel": {
+    "message": "Experimental",
+    "description": "Experimental feature label"
+  },
   "resetPosition": {
     "message": "Reset Position",
     "description": "Reset Position button"

@@ -3,7 +3,7 @@ import { initI18n, getTranslationSync } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
-import type { DotElement, MarkerLevel} from './types';
+import type { DotElement, MarkerLevel } from './types';
 
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { StorageKeys } from '@/core/types/common';
@@ -109,7 +109,8 @@ export class TimelineManager {
   private conversationId: string | null = null;
   private userTurnSelector: string = '';
   private markerLevels: Map<string, MarkerLevel> = new Map();
-  private collapsedMarkers: Set<string> = new Set(); 
+  private collapsedMarkers: Set<string> = new Set();
+  private markerLevelEnabled = false;
   private contextMenu: HTMLElement | null = null;
   private onContextMenu: ((ev: MouseEvent) => void) | null = null;
   private onDocumentClick: ((ev: MouseEvent) => void) | null = null;
@@ -165,6 +166,7 @@ export class TimelineManager {
             geminiTimelineScrollMode: 'flow',
             geminiTimelineHideContainer: false,
             geminiTimelineDraggable: false,
+            geminiTimelineMarkerLevel: false,
             geminiTimelinePosition: null,
           },
           (res: any) => {
@@ -173,6 +175,7 @@ export class TimelineManager {
             this.hideContainer = !!res?.geminiTimelineHideContainer;
             this.applyContainerVisibility();
             this.toggleDraggable(!!res?.geminiTimelineDraggable);
+            this.toggleMarkerLevel(!!res?.geminiTimelineMarkerLevel);
 
             // Load position with auto-migration from v1 to v2
             const position = res?.geminiTimelinePosition;
@@ -217,17 +220,20 @@ export class TimelineManager {
             if (changes?.geminiTimelineDraggable) {
               this.toggleDraggable(!!changes.geminiTimelineDraggable.newValue);
             }
+            if (changes?.geminiTimelineMarkerLevel) {
+              this.toggleMarkerLevel(!!changes.geminiTimelineMarkerLevel.newValue);
+            }
             if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
               this.ui.timelineBar!.style.top = '';
               this.ui.timelineBar!.style.left = '';
             }
           });
-        } catch {}
+        } catch { }
       } else {
         const saved = localStorage.getItem('geminiTimelineScrollMode');
         if (saved === 'flow' || saved === 'jump') this.scrollMode = saved;
       }
-    } catch {}
+    } catch { }
   }
 
   private applyContainerVisibility(): void {
@@ -352,12 +358,12 @@ export class TimelineManager {
       const title = titleElement.textContent?.trim();
       // Filter out generic titles
       if (title &&
-          title !== 'Gemini' &&
-          title !== 'Google Gemini' &&
-          title !== 'Google AI Studio' &&
-          !title.startsWith('Gemini -') &&
-          !title.startsWith('Google AI Studio -') &&
-          title.length > 0) {
+        title !== 'Gemini' &&
+        title !== 'Google Gemini' &&
+        title !== 'Google AI Studio' &&
+        !title.startsWith('Gemini -') &&
+        !title.startsWith('Google AI Studio -') &&
+        title.length > 0) {
         return title;
       }
     }
@@ -419,18 +425,18 @@ export class TimelineManager {
         if (el) {
           try {
             obs.disconnect();
-          } catch {}
+          } catch { }
           resolve(el);
         }
       });
       try {
         obs.observe(document.body, { childList: true, subtree: true });
-      } catch {}
+      } catch { }
       if (timeoutMs > 0) {
         setTimeout(() => {
           try {
             obs.disconnect();
-          } catch {}
+          } catch { }
           resolve(null);
         }, timeoutMs);
       }
@@ -442,7 +448,7 @@ export class TimelineManager {
     let userOverride = '';
     try {
       userOverride = localStorage.getItem('geminiTimelineUserTurnSelector') || '';
-    } catch {}
+    } catch { }
     const defaultCandidates = [
       // Angular-based Gemini UI user bubble (primary)
       '.user-query-bubble-with-background',
@@ -493,13 +499,13 @@ export class TimelineManager {
       if (!userOverride && matchedSelector) {
         try {
           localStorage.setItem('geminiTimelineUserTurnSelectorAuto', matchedSelector);
-        } catch {}
+        } catch { }
       }
       // If a stale user override failed (matchedSelector differs), clear it so we don't keep retrying it
       if (userOverride && matchedSelector && matchedSelector !== userOverride) {
         try {
           localStorage.removeItem('geminiTimelineUserTurnSelector');
-        } catch {}
+        } catch { }
       }
     }
     let p: HTMLElement | null = (firstTurn as HTMLElement) || this.conversationContainer;
@@ -716,7 +722,7 @@ export class TimelineManager {
       id = `u-${hashString(basis)}`;
       try {
         (asEl.dataset as any).turnId = id;
-      } catch {}
+      } catch { }
     }
     return id;
   }
@@ -756,15 +762,15 @@ export class TimelineManager {
     const usableC = Math.max(1, this.contentHeight - 2 * pad);
     // Calculate Y positions with collapse - using effective baseN for repositioning
     const { desiredY } = this.calculateCollapsedPositions(hiddenIndices, pad, usableC);
-    
+
     // Apply min gap only to visible markers
     const gapMultipliers: number[] = new Array(N).fill(1.0);
     const adjusted = this.applyMinGapWithHidden(desiredY, pad, pad + usableC, minGap, hiddenIndices, gapMultipliers);
     this.yPositions = adjusted;
-    
+
     for (let i = 0; i < N; i++) {
       if (hiddenIndices.has(i)) {
-        this.markers[i].n = -1; 
+        this.markers[i].n = -1;
         continue;
       }
       const top = adjusted[i];
@@ -787,21 +793,21 @@ export class TimelineManager {
 
   /* Apply minimum gap between visible markers, skipping hidden ones */
   private applyMinGapWithHidden(
-    positions: number[], 
-    minTop: number, 
-    maxTop: number, 
+    positions: number[],
+    minTop: number,
+    maxTop: number,
     gap: number,
     hiddenIndices: Set<number>,
     gapMultipliers: number[]
   ): number[] {
     const n = positions.length;
     if (n === 0) return positions;
-    
+
     const out = positions.slice();
     let prevVisibleIdx = -1;
     for (let i = 0; i < n; i++) {
       if (hiddenIndices.has(i)) continue;
-      
+
       if (prevVisibleIdx === -1) {
         out[i] = Math.max(minTop, Math.min(positions[i], maxTop));
       } else {
@@ -818,28 +824,28 @@ export class TimelineManager {
         break;
       }
     }
-    
+
     if (lastVisibleIdx >= 0 && out[lastVisibleIdx] > maxTop) {
       out[lastVisibleIdx] = maxTop;
-      
+
       let nextVisibleIdx = lastVisibleIdx;
       for (let i = lastVisibleIdx - 1; i >= 0; i--) {
         if (hiddenIndices.has(i)) continue;
-        
+
         const currentGap = gap * gapMultipliers[nextVisibleIdx];
         const maxAllowed = out[nextVisibleIdx] - currentGap;
         out[i] = Math.min(out[i], maxAllowed);
         nextVisibleIdx = i;
       }
     }
-    
+
     // Clamp all visible markers
     for (let i = 0; i < n; i++) {
       if (hiddenIndices.has(i)) continue;
       if (out[i] < minTop) out[i] = minTop;
       if (out[i] > maxTop) out[i] = maxTop;
     }
-    
+
     return out;
   }
 
@@ -1049,6 +1055,7 @@ export class TimelineManager {
 
     // Right-click context menu for level selection
     this.onContextMenu = (ev: MouseEvent) => {
+      if (!this.markerLevelEnabled) return;
       const dot = (ev.target as HTMLElement).closest('.timeline-dot') as DotElement | null;
       if (!dot) return;
       ev.preventDefault();
@@ -1133,7 +1140,7 @@ export class TimelineManager {
       if (!this.ui.sliderHandle) return;
       try {
         (this.ui.sliderHandle as any).setPointerCapture(ev.pointerId);
-      } catch {}
+      } catch { }
       this.sliderDragging = true;
       this.showSlider();
       this.sliderStartClientY = ev.clientY;
@@ -1709,7 +1716,7 @@ export class TimelineManager {
     for (let i = start; i <= end; i++) {
       const marker = this.markers[i];
       if (!marker) continue;
-            
+
       if (hiddenIndices.has(i)) {
         if (marker.dotElement) {
           marker.dotElement.remove();
@@ -1717,7 +1724,7 @@ export class TimelineManager {
         }
         continue;
       }
-      
+
       const isCollapsed = this.isMarkerCollapsed(marker.id);
 
       if (!marker.dotElement) {
@@ -1838,7 +1845,7 @@ export class TimelineManager {
     this.sliderDragging = false;
     try {
       window.removeEventListener('pointermove', this.onSliderMove!);
-    } catch {}
+    } catch { }
     this.onSliderMove = null;
     this.onSliderUp = null;
     this.hideSliderDeferred();
@@ -1853,6 +1860,17 @@ export class TimelineManager {
       this.ui.timelineBar!.removeEventListener('pointerdown', this.onBarPointerDown!);
       this.ui.timelineBar!.style.cursor = 'default';
     }
+  }
+
+  private toggleMarkerLevel(enabled: boolean): void {
+    this.markerLevelEnabled = enabled;
+    // Hide context menu when feature is disabled
+    if (!enabled) {
+      this.hideContextMenu();
+    }
+    // Trigger re-layout to show/hide collapsed states
+    this.updateTimelineGeometry();
+    this.updateVirtualRangeAndRender();
   }
 
   private handleBarDrag(e: PointerEvent): void {
@@ -2116,58 +2134,63 @@ export class TimelineManager {
 
   private getHiddenMarkerIndices(): Set<number> {
     const hidden = new Set<number>();
-    
+
+    // If marker level feature is disabled, no markers are hidden
+    if (!this.markerLevelEnabled) {
+      return hidden;
+    }
+
     for (let i = 0; i < this.markers.length; i++) {
       // Skip markers that are already hidden by a parent collapse
       if (hidden.has(i)) continue;
-      
+
       const marker = this.markers[i];
       const level = this.getMarkerLevel(marker.id);
-      
+
       // If this marker is collapsed, hide all subsequent lower-level markers
       if (this.collapsedMarkers.has(marker.id)) {
         for (let j = i + 1; j < this.markers.length; j++) {
           const nextMarker = this.markers[j];
           const nextLevel = this.getMarkerLevel(nextMarker.id);
-          
+
           // Stop when we reach a marker of same or higher level (lower number)
           if (nextLevel <= level) {
             break;
           }
-          
+
           // Hide this marker (only direct descendants of this collapsed parent)
           hidden.add(j);
         }
       }
     }
-    
+
     return hidden;
   }
 
   private calculateEffectiveBaseN(markerIndex: number, hiddenIndices: Set<number>): number {
     const marker = this.markers[markerIndex];
     if (!marker) return 0;
-    
+
     const baseN = marker.baseN ?? marker.n ?? 0;
-    
+
     // If this marker is not collapsed, just return its baseN
     if (!this.collapsedMarkers.has(marker.id)) {
       return baseN;
     }
-    
+
     // Find the range of hidden children
     const level = this.getMarkerLevel(marker.id);
     let childContribution = 0;
-    
+
     for (let j = markerIndex + 1; j < this.markers.length; j++) {
       const nextMarker = this.markers[j];
       const nextLevel = this.getMarkerLevel(nextMarker.id);
-      
+
       // Stop when we reach a marker of same or higher level
       if (nextLevel <= level) {
         break;
       }
-      
+
       // Add half of child's contribution based on level difference
       const childBaseN = nextMarker.baseN ?? nextMarker.n ?? 0;
       const prevBaseN = j > 0 ? (this.markers[j - 1].baseN ?? this.markers[j - 1].n ?? 0) : 0;
@@ -2175,7 +2198,7 @@ export class TimelineManager {
       const levelDiff = nextLevel - level;
       childContribution += childLength * Math.pow(0.5, levelDiff);
     }
-    
+
     return baseN + childContribution;
   }
 
@@ -2187,30 +2210,30 @@ export class TimelineManager {
     const N = this.markers.length;
     const desiredY: number[] = new Array(N).fill(-1);
     const effectiveBaseNs: number[] = new Array(N).fill(0);
-    
+
     // First pass: calculate effective baseN for all visible markers
     const visibleMarkers: { index: number; effectiveN: number }[] = [];
-    
+
     for (let i = 0; i < N; i++) {
       if (hiddenIndices.has(i)) continue;
-      
+
       const effectiveN = this.calculateEffectiveBaseN(i, hiddenIndices);
       effectiveBaseNs[i] = effectiveN;
       visibleMarkers.push({ index: i, effectiveN });
     }
-    
+
     // Sort visible markers by their effective baseN (maintains relative order based on length)
     visibleMarkers.sort((a, b) => a.effectiveN - b.effectiveN);
-    
+
     // Calculate total effective range
     if (visibleMarkers.length === 0) {
       return { desiredY, effectiveBaseNs };
     }
-    
+
     const minEffectiveN = visibleMarkers[0].effectiveN;
     const maxEffectiveN = visibleMarkers[visibleMarkers.length - 1].effectiveN;
     const effectiveRange = maxEffectiveN - minEffectiveN;
-    
+
     // Distribute positions proportionally
     for (const vm of visibleMarkers) {
       let normalizedN: number;
@@ -2219,10 +2242,10 @@ export class TimelineManager {
       } else {
         normalizedN = visibleMarkers.indexOf(vm) / Math.max(1, visibleMarkers.length - 1);
       }
-      
+
       desiredY[vm.index] = pad + normalizedN * usableC;
     }
-    
+
     return { desiredY, effectiveBaseNs };
   }
 
@@ -2232,12 +2255,12 @@ export class TimelineManager {
   private canCollapseMarker(turnId: string): boolean {
     const markerIndex = this.markers.findIndex(m => m.id === turnId);
     if (markerIndex < 0 || markerIndex >= this.markers.length - 1) return false;
-    
+
     const level = this.getMarkerLevel(turnId);
-    
+
     const nextMarker = this.markers[markerIndex + 1];
     if (!nextMarker) return false;
-    
+
     const nextLevel = this.getMarkerLevel(nextMarker.id);
     return nextLevel > level;
   }
@@ -2331,14 +2354,14 @@ export class TimelineManager {
 
       const collapseItem = document.createElement('button');
       collapseItem.className = 'timeline-context-menu-item collapse-item';
-      
+
       const icon = document.createElement('span');
       icon.className = 'collapse-icon';
       icon.textContent = isCollapsed ? '▶' : '▼';
       collapseItem.appendChild(icon);
 
       const collapseLabel = document.createElement('span');
-      collapseLabel.textContent = isCollapsed 
+      collapseLabel.textContent = isCollapsed
         ? getTranslationSync('timelineExpand')
         : getTranslationSync('timelineCollapse');
       collapseItem.appendChild(collapseLabel);
@@ -2600,110 +2623,110 @@ export class TimelineManager {
     // Ensure draggable listeners are removed
     try {
       this.toggleDraggable(false);
-    } catch {}
+    } catch { }
     // Also remove any in-flight drag listeners
     try {
       if (this.onBarPointerMove) window.removeEventListener('pointermove', this.onBarPointerMove);
-    } catch {}
+    } catch { }
     try {
       if (this.onBarPointerUp) window.removeEventListener('pointerup', this.onBarPointerUp);
-    } catch {}
+    } catch { }
     try {
       this.mutationObserver?.disconnect();
-    } catch {}
+    } catch { }
     try {
       this.resizeObserver?.disconnect();
-    } catch {}
+    } catch { }
     try {
       this.intersectionObserver?.disconnect();
-    } catch {}
+    } catch { }
     this.visibleUserTurns.clear();
     if (this.ui.timelineBar && this.onTimelineBarClick) {
       try {
         this.ui.timelineBar.removeEventListener('click', this.onTimelineBarClick);
-      } catch {}
+      } catch { }
     }
     try {
       window.removeEventListener('storage', this.onStorage!);
-    } catch {}
+    } catch { }
     if (this.onChromeStorageChanged && typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       try {
         chrome.storage.onChanged.removeListener(this.onChromeStorageChanged);
-      } catch {}
+      } catch { }
       this.onChromeStorageChanged = null;
     }
     // Cleanup context menu
     this.hideContextMenu();
     try {
       this.ui.timelineBar?.removeEventListener('contextmenu', this.onContextMenu!);
-    } catch {}
+    } catch { }
     try {
       document.removeEventListener('click', this.onDocumentClick!);
-    } catch {}
+    } catch { }
     try {
       this.ui.timelineBar?.removeEventListener('pointerdown', this.onPointerDown!);
-    } catch {}
+    } catch { }
     try {
       window.removeEventListener('pointermove', this.onPointerMove!);
-    } catch {}
+    } catch { }
     try {
       window.removeEventListener('pointerup', this.onPointerUp!);
-    } catch {}
+    } catch { }
     try {
       window.removeEventListener('pointercancel', this.onPointerCancel!);
-    } catch {}
+    } catch { }
     try {
       this.ui.timelineBar?.removeEventListener('pointerleave', this.onPointerLeave!);
-    } catch {}
+    } catch { }
     if (this.scrollContainer && this.onScroll) {
       try {
         this.scrollContainer.removeEventListener('scroll', this.onScroll);
-      } catch {}
+      } catch { }
     }
     if (this.ui.timelineBar) {
       try {
         this.ui.timelineBar.removeEventListener('wheel', this.onTimelineWheel!);
-      } catch {}
+      } catch { }
       try {
         this.ui.timelineBar.removeEventListener('pointerenter', this.onBarEnter!);
-      } catch {}
+      } catch { }
       try {
         this.ui.timelineBar.removeEventListener('pointerleave', this.onBarLeave!);
-      } catch {}
+      } catch { }
       try {
         this.ui.slider?.removeEventListener('pointerenter', this.onSliderEnter!);
-      } catch {}
+      } catch { }
       try {
         this.ui.slider?.removeEventListener('pointerleave', this.onSliderLeave!);
-      } catch {}
+      } catch { }
     }
     try {
       this.ui.sliderHandle?.removeEventListener('pointerdown', this.onSliderDown!);
-    } catch {}
+    } catch { }
     try {
       window.removeEventListener('resize', this.onWindowResize!);
-    } catch {}
+    } catch { }
     if (this.onVisualViewportResize && window.visualViewport) {
       try {
         window.visualViewport.removeEventListener('resize', this.onVisualViewportResize);
-      } catch {}
+      } catch { }
       this.onVisualViewportResize = null;
     }
     if (this.scrollRafId !== null) {
       try {
         cancelAnimationFrame(this.scrollRafId);
-      } catch {}
+      } catch { }
       this.scrollRafId = null;
     }
     try {
       this.ui.timelineBar?.remove();
-    } catch {}
+    } catch { }
     try {
       this.ui.tooltip?.remove();
-    } catch {}
+    } catch { }
     try {
       this.measureEl?.remove();
-    } catch {}
+    } catch { }
     try {
       if (this.ui.slider) {
         this.ui.slider.style.pointerEvents = 'none';
@@ -2714,7 +2737,7 @@ export class TimelineManager {
         (stray as HTMLElement).style.pointerEvents = 'none';
         stray.remove();
       }
-    } catch {}
+    } catch { }
     this.ui.slider = null;
     this.ui.sliderHandle = null;
     this.ui = { timelineBar: null, tooltip: null } as any;
@@ -2739,7 +2762,7 @@ export class TimelineManager {
         (window as any).cancelIdleCallback(this.resizeIdleRICId);
         this.resizeIdleRICId = null;
       }
-    } catch {}
+    } catch { }
     if (this.sliderFadeTimer) {
       clearTimeout(this.sliderFadeTimer);
       this.sliderFadeTimer = null;
