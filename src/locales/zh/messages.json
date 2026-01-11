@@ -727,6 +727,14 @@
     "message": "从未同步",
     "description": "从未同步消息"
   },
+  "lastUploaded": {
+    "message": "上次上传：{time}",
+    "description": "上次上传时间戳"
+  },
+  "neverUploaded": {
+    "message": "从未上传",
+    "description": "从未上传消息"
+  },
   "syncSuccess": {
     "message": "✓ 同步成功",
     "description": "同步成功消息"
@@ -738,6 +746,14 @@
   "syncInProgress": {
     "message": "同步中...",
     "description": "同步进行中消息"
+  },
+  "syncUpload": {
+    "message": "上传到云端",
+    "description": "上传到云端按钮"
+  },
+  "syncMerge": {
+    "message": "从云端下载合并",
+    "description": "同步（合并）按钮"
   },
   "signOut": {
     "message": "退出登录",

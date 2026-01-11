@@ -147,6 +147,9 @@ export class FolderManager {
       // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
 
+      // Set up message listener (for popup communication)
+      this.setupMessageListener();
+
       // If folder feature is disabled, skip initialization
       if (!this.folderEnabled) {
         this.debug('Folder feature is disabled, skipping initialization');
@@ -3788,21 +3791,100 @@ export class FolderManager {
       if (result.gvSyncMode === 'auto') {
         console.log('[FolderManager] Auto-sync is enabled, triggering sync in 1s...');
         // Delay to ensure service worker is ready
-        setTimeout(() => {
-          // Fire and forget - don't wait for response
-          // The background script will save data to storage, which triggers
-          // the storage change listener to refresh the UI
-          chrome.runtime.sendMessage({ type: 'gv.sync.download' })
-            .catch(() => {
-              // Ignore message channel errors - the sync may still succeed
-              // and trigger storage change listeners
+        setTimeout(async () => {
+          try {
+            // Download cloud data
+            const response = await chrome.runtime.sendMessage({ type: 'gv.sync.download' });
+
+            if (!response?.ok || !response.data) {
+              console.log('[FolderManager] Auto-sync: No cloud data or download failed');
+              return;
+            }
+
+            // Extract cloud data
+            const cloudFolderData = response.data.folders?.data || { folders: [], folderContents: {} };
+            const cloudPromptItems = response.data.prompts?.items || [];
+
+            // Get current local data (from memory - this.data is the source of truth)
+            const localFolderData = this.data;
+
+            // Perform merge using the same logic as popup
+            // For folders: merge by ID, prefer newer updatedAt
+            const mergedFolders = this.mergeFolderDataForAutoSync(localFolderData, cloudFolderData);
+
+            // Save merged data
+            await chrome.storage.local.set({
+              gvFolderData: mergedFolders,
             });
-          console.log('[FolderManager] Auto-sync message sent');
+
+            // Reload from storage to ensure UI is updated
+            await this.loadData();
+            this.renderAllFolders();
+
+            console.log('[FolderManager] Auto-sync completed with merge');
+          } catch (error) {
+            console.warn('[FolderManager] Auto-sync failed:', error);
+          }
         }, 1000);
       }
     } catch (error) {
       console.warn('[FolderManager] Failed to check auto-sync setting:', error);
     }
+  }
+
+  /**
+   * Merge folder data for auto-sync (same logic as popup's mergeFolderData)
+   */
+  private mergeFolderDataForAutoSync(local: FolderData, cloud: FolderData): FolderData {
+    // Merge folders list
+    const folderMap = new Map<string, Folder>();
+
+    // Add all local folders first
+    local.folders.forEach((folder) => {
+      folderMap.set(folder.id, folder);
+    });
+
+    // Merge cloud folders
+    cloud.folders.forEach((cloudFolder) => {
+      const localFolder = folderMap.get(cloudFolder.id);
+      if (!localFolder) {
+        // New folder from cloud
+        folderMap.set(cloudFolder.id, cloudFolder);
+      } else {
+        // Conflict: compare timestamps
+        const cloudTime = cloudFolder.updatedAt || cloudFolder.createdAt || 0;
+        const localTime = localFolder.updatedAt || localFolder.createdAt || 0;
+        if (cloudTime > localTime) {
+          folderMap.set(cloudFolder.id, cloudFolder);
+        }
+        // If local is newer or equal, keep local
+      }
+    });
+
+    // Merge folder contents
+    const mergedContents: Record<string, ConversationReference[]> = { ...local.folderContents };
+
+    const allFolderIds = new Set([
+      ...Object.keys(local.folderContents),
+      ...Object.keys(cloud.folderContents)
+    ]);
+
+    allFolderIds.forEach(folderId => {
+      const localConvos = local.folderContents[folderId] || [];
+      const cloudConvos = cloud.folderContents[folderId] || [];
+
+      const convoMap = new Map<string, ConversationReference>();
+      // Add cloud first, then local overwrites (local preferred)
+      cloudConvos.forEach(c => convoMap.set(c.conversationId, c));
+      localConvos.forEach(c => convoMap.set(c.conversationId, c));
+
+      mergedContents[folderId] = Array.from(convoMap.values());
+    });
+
+    return {
+      folders: Array.from(folderMap.values()),
+      folderContents: mergedContents,
+    };
   }
 
   private applyFolderEnabledSetting(): void {
@@ -4116,6 +4198,37 @@ export class FolderManager {
   private t(key: string): string {
     // Use the centralized i18n system that respects user's language preference
     return getTranslationSync(key);
+  }
+
+  private setupMessageListener(): void {
+    browser.runtime.onMessage.addListener((message: any, sender: any, sendResponse: any) => {
+      // Handle request for current folder data
+      if (message.type === 'gv.sync.requestData') {
+        this.debug('Received request for folder data from popup');
+        sendResponse({
+          ok: true,
+          data: this.data
+        });
+        // Return true to indicate we might respond asynchronously (though we responded synchronously above)
+        // This is good practice in some browser implementations or if we change logic later
+        return true;
+      }
+
+      // Handle reload request (existing functionality might be handled elsewhere, but safe to add log)
+      if (message.type === 'gv.folders.reload') {
+        this.debug('Received reload request');
+        this.loadData().then(() => {
+          this.refresh();
+          // We can't easily respond to reload since it's fire-and-forget in some contexts,
+          // but if sendResponse is provided we can use it
+          try { sendResponse({ ok: true }); } catch (e) { /* ignore */ }
+        });
+        return true;
+      }
+
+      // Return true for all messages to keep the channel open
+      return true;
+    });
   }
 
   // Tooltip methods

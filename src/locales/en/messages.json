@@ -727,6 +727,14 @@
     "message": "Never synced",
     "description": "Never synced message"
   },
+  "lastUploaded": {
+    "message": "Uploaded: {time}",
+    "description": "Last upload timestamp"
+  },
+  "neverUploaded": {
+    "message": "Never uploaded",
+    "description": "Never uploaded message"
+  },
   "syncSuccess": {
     "message": "✓ Synced successfully",
     "description": "Sync success message"

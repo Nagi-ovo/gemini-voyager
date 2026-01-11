@@ -141,8 +141,8 @@ export class GoogleDriveSyncService {
             await this.uploadFileWithRetry(token, this.promptsFileId!, promptPayload);
             console.log('[GoogleDriveSyncService] Prompts uploaded successfully');
 
-            const syncTime = Date.now();
-            this.updateState({ isSyncing: false, lastSyncTime: syncTime, error: null });
+            const uploadTime = Date.now();
+            this.updateState({ isSyncing: false, lastUploadTime: uploadTime, error: null });
             await this.saveState();
 
             console.log('[GoogleDriveSyncService] Upload successful - 2 files');
@@ -491,10 +491,11 @@ export class GoogleDriveSyncService {
 
     private async loadState(): Promise<void> {
         try {
-            const result = await chrome.storage.local.get(['gvSyncMode', 'gvLastSyncTime', 'gvSyncError']);
+            const result = await chrome.storage.local.get(['gvSyncMode', 'gvLastSyncTime', 'gvLastUploadTime', 'gvSyncError']);
             this.state = {
                 mode: (result.gvSyncMode as SyncMode) || 'disabled',
                 lastSyncTime: result.gvLastSyncTime || null,
+                lastUploadTime: result.gvLastUploadTime || null,
                 error: result.gvSyncError || null,
                 isSyncing: false,
                 isAuthenticated: false,
@@ -511,6 +512,7 @@ export class GoogleDriveSyncService {
             await chrome.storage.local.set({
                 gvSyncMode: this.state.mode,
                 gvLastSyncTime: this.state.lastSyncTime,
+                gvLastUploadTime: this.state.lastUploadTime,
                 gvSyncError: this.state.error,
             });
         } catch (error) {

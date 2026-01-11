@@ -321,17 +321,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           }
           case 'gv.sync.download': {
             const data = await googleDriveSyncService.download();
-            // Automatically save downloaded data to chrome.storage.local
-            // This triggers storage change listeners to refresh UI
-            if (data) {
-              const folderData = data.folders?.data || { folders: [], folderContents: {} };
-              const promptItems = data.prompts?.items || [];
-              await chrome.storage.local.set({
-                gvFolderData: folderData,
-                gvPromptItems: promptItems,
-              });
-              console.log('[Background] Downloaded data saved to storage, folders:', folderData.folders?.length || 0, 'prompts:', promptItems.length);
-            }
+            // NOTE: We intentionally do NOT save to storage here.
+            // The caller (Popup) is responsible for merging with local data and saving.
+            // This prevents data loss from overwriting local changes.
+            console.log('[Background] Downloaded data, returning to caller for merge');
             sendResponse({
               ok: true,
               data,

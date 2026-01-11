@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 
+
+
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Label } from '../../../components/ui/label';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { mergeFolderData, mergePrompts } from '../../../utils/merge';
 
 import type { SyncState, SyncMode } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
@@ -58,6 +61,32 @@ export function CloudSyncSettings() {
         }
 
         return t('lastSynced').replace('{time}', timeStr);
+    }, [t]);
+
+    // Format upload timestamp for display
+    const formatLastUpload = useCallback((timestamp: number | null): string => {
+        if (!timestamp) return t('neverUploaded') || 'Never uploaded';
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        let timeStr: string;
+        if (diffMins < 1) {
+            timeStr = t('justNow');
+        } else if (diffMins < 60) {
+            timeStr = `${diffMins} min ago`;
+        } else if (diffHours < 24) {
+            timeStr = `${diffHours} ${t('hoursAgo')}`;
+        } else if (diffDays === 1) {
+            timeStr = t('yesterday');
+        } else {
+            timeStr = date.toLocaleDateString();
+        }
+
+        return (t('lastUploaded') || 'Uploaded {time}').replace('{time}', timeStr);
     }, [t]);
 
     // Handle mode change
@@ -118,42 +147,48 @@ export function CloudSyncSettings() {
                 setSyncState(authResponse.state);
             }
 
-            // Get current folder and prompt data from chrome.storage.local first, fallback to localStorage
-            // Note: localStorage in popup is isolated from content script localStorage on different origins
+            // Get current data - prioritizing active tab content script for folders
             let folders = { folders: [], folderContents: {} };
             let prompts: any[] = [];
 
+            // 1. Try to get fresh folder data from active tab
             try {
-                // Try chrome.storage.local first (used by Safari and for sync data)
-                const storageResult = await chrome.storage.local.get(['gvFolderData', 'gvPromptItems']);
+                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                if (tab?.id) {
+                    // Short timeout to avoid blocking
+                    const response = await Promise.race([
+                        chrome.tabs.sendMessage(tab.id, { type: 'gv.sync.requestData' }),
+                        new Promise((_, reject) => setTimeout(() => reject('Timeout'), 500))
+                    ]) as any;
 
-                if (storageResult.gvFolderData) {
-                    folders = storageResult.gvFolderData;
-                    console.log('[CloudSyncSettings] Loaded folders from chrome.storage.local:', folders);
-                } else {
-                    // Fallback to localStorage (only works when popup opened from same origin)
-                    const foldersStr = localStorage.getItem('gvFolderData');
-                    if (foldersStr) {
-                        folders = JSON.parse(foldersStr);
-                        console.log('[CloudSyncSettings] Loaded folders from localStorage:', folders);
+                    if (response?.ok && response.data) {
+                        folders = response.data;
+                        console.log('[CloudSyncSettings] Got fresh folder data from content script');
                     }
                 }
+            } catch (e) {
+                console.log('[CloudSyncSettings] Tab fetch failed/skipped:', e);
+            }
 
+            // 2. Fallback to storage
+            try {
+                const storageResult = await chrome.storage.local.get(['gvFolderData', 'gvPromptItems']);
+
+                // Only use storage folders if we didn't get them from tab
+                if ((!folders.folders || (folders.folders as any[]).length === 0) && storageResult.gvFolderData) {
+                    folders = storageResult.gvFolderData;
+                    console.log('[CloudSyncSettings] Loaded folders from chrome.storage.local (fallback)');
+                }
+
+                // Prompts usually sync well to storage
                 if (storageResult.gvPromptItems) {
                     prompts = storageResult.gvPromptItems;
-                    console.log('[CloudSyncSettings] Loaded prompts from chrome.storage.local:', prompts.length, 'items');
-                } else {
-                    const promptsStr = localStorage.getItem('gvPromptItems');
-                    if (promptsStr) {
-                        prompts = JSON.parse(promptsStr);
-                        console.log('[CloudSyncSettings] Loaded prompts from localStorage:', prompts.length, 'items');
-                    }
                 }
             } catch (err) {
                 console.error('[CloudSyncSettings] Error loading data:', err);
             }
 
-            console.log('[CloudSyncSettings] Uploading folders:', folders.folders?.length || 0, 'prompts:', prompts.length);
+            console.log('[CloudSyncSettings] Uploading folders:', (folders.folders as any[])?.length || 0, 'prompts:', prompts.length);
 
             // Upload to Google Drive
             const response = await chrome.runtime.sendMessage({
@@ -176,7 +211,7 @@ export function CloudSyncSettings() {
         }
     }, [syncState.isAuthenticated, t]);
 
-    // Handle download from Drive (restore data)
+    // Handle download from Drive (restore data) - NOW MERGES instead of overwrite
     const handleDownloadFromDrive = useCallback(async () => {
         setStatusMessage(null);
         setIsDownloading(true);
@@ -204,16 +239,72 @@ export function CloudSyncSettings() {
                 return;
             }
 
-            // Save to chrome.storage.local
+            // Get current local data for merging - prioritize Content Script
+            let localFolders = { folders: [], folderContents: {} };
+            let localPrompts: any[] = [];
+
+            // 1. Try to get fresh folder data from active tab
+            try {
+                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                console.log('[CloudSyncSettings] Active tab:', tab?.id, tab?.url);
+                if (tab?.id) {
+                    const tabResponse = await Promise.race([
+                        chrome.tabs.sendMessage(tab.id, { type: 'gv.sync.requestData' }),
+                        new Promise((_, reject) => setTimeout(() => reject('Timeout after 2s'), 2000))
+                    ]) as any;
+
+                    console.log('[CloudSyncSettings] Tab response:', tabResponse);
+                    if (tabResponse?.ok && tabResponse.data) {
+                        localFolders = tabResponse.data;
+                        console.log('[CloudSyncSettings] Got fresh folder data from content script:',
+                            'folders:', localFolders.folders?.length,
+                            'folderContents keys:', Object.keys(localFolders.folderContents || {}).length
+                        );
+                    }
+                }
+            } catch (e) {
+                console.warn('[CloudSyncSettings] Tab fetch failed/skipped:', e);
+            }
+
+            // 2. Fallback to storage
+            try {
+                const storageResult = await chrome.storage.local.get(['gvFolderData', 'gvPromptItems']);
+
+                // Only use storage folders if we didn't get them from tab
+                if ((!localFolders.folders || (localFolders.folders as any[]).length === 0) && storageResult.gvFolderData) {
+                    localFolders = storageResult.gvFolderData;
+                    console.log('[CloudSyncSettings] Loaded folders from chrome.storage.local (fallback)');
+                }
+
+                if (storageResult.gvPromptItems) {
+                    localPrompts = storageResult.gvPromptItems;
+                }
+            } catch (err) {
+                console.error('[CloudSyncSettings] Error loading local data for merge:', err);
+            }
+
             // SyncData contains FolderExportPayload.data and PromptExportPayload.items
-            const { folders, prompts } = response.data;
-            const folderData = folders?.data || { folders: [], folderContents: {} };
-            const promptItems = prompts?.items || [];
-            console.log('[CloudSyncSettings] Downloaded folders:', folderData.folders?.length || 0, 'prompts:', promptItems.length);
+            const { folders: cloudFoldersPayload, prompts: cloudPromptsPayload } = response.data;
+            const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
+            const cloudPromptItems = cloudPromptsPayload?.items || [];
+
+            console.log('[CloudSyncSettings] === MERGE DEBUG ===');
+            console.log('[CloudSyncSettings] Local folders count:', (localFolders.folders as any[])?.length || 0);
+            console.log('[CloudSyncSettings] Local folderContents:', JSON.stringify(Object.keys(localFolders.folderContents || {})));
+            console.log('[CloudSyncSettings] Cloud folders count:', cloudFolderData.folders?.length || 0);
+            console.log('[CloudSyncSettings] Cloud folderContents:', JSON.stringify(Object.keys(cloudFolderData.folderContents || {})));
+
+            // Perform Merge
+            const mergedFolders = mergeFolderData(localFolders as any, cloudFolderData);
+            const mergedPrompts = mergePrompts(localPrompts, cloudPromptItems);
+
+            console.log('[CloudSyncSettings] Merged folders count:', mergedFolders.folders?.length || 0);
+            console.log('[CloudSyncSettings] Merged folderContents:', JSON.stringify(Object.keys(mergedFolders.folderContents || {})));
+            console.log('[CloudSyncSettings] === END MERGE DEBUG ===');
 
             await chrome.storage.local.set({
-                gvFolderData: folderData,
-                gvPromptItems: promptItems,
+                gvFolderData: mergedFolders,
+                gvPromptItems: mergedPrompts,
             });
 
             // Notify content script to reload folders
@@ -316,7 +407,7 @@ export function CloudSyncSettings() {
                                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
                                         </svg>
                                     )}
-                                    Upload
+                                    {t('syncUpload')}
                                 </span>
                             </Button>
 
@@ -340,15 +431,16 @@ export function CloudSyncSettings() {
                                             <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" />
                                         </svg>
                                     )}
-                                    {t('syncNow')}
+                                    {t('syncMerge')}
                                 </span>
                             </Button>
                         </div>
 
-                        {/* Last Sync Time */}
-                        <p className="text-xs text-muted-foreground text-center">
-                            {formatLastSync(syncState.lastSyncTime)}
-                        </p>
+                        {/* Sync Times */}
+                        <div className="text-xs text-muted-foreground text-center space-y-0.5">
+                            <p>↑ {formatLastUpload(syncState.lastUploadTime)}</p>
+                            <p>↓ {formatLastSync(syncState.lastSyncTime)}</p>
+                        </div>
 
                         {/* Sign Out Button - Only show if authenticated */}
                         {syncState.isAuthenticated && (
