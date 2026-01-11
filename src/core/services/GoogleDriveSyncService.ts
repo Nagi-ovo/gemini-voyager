@@ -22,6 +22,7 @@ import { EXTENSION_VERSION } from '@/core/utils/version';
 
 const FOLDERS_FILE_NAME = 'gemini-voyager-folders.json';
 const PROMPTS_FILE_NAME = 'gemini-voyager-prompts.json';
+const BACKUP_FOLDER_NAME = 'Gemini Voyager Data';
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_BASE = 'https://www.googleapis.com/upload/drive/v3';
 
@@ -37,6 +38,7 @@ export class GoogleDriveSyncService {
     private state: SyncState = { ...DEFAULT_SYNC_STATE };
     private foldersFileId: string | null = null;
     private promptsFileId: string | null = null;
+    private backupFolderId: string | null = null;
     private stateChangeCallback: ((state: SyncState) => void) | null = null;
     private accessToken: string | null = null;
     private tokenExpiry: number = 0;
@@ -94,6 +96,7 @@ export class GoogleDriveSyncService {
         await this.clearToken();
         this.foldersFileId = null;
         this.promptsFileId = null;
+        this.backupFolderId = null;
         this.updateState({ isAuthenticated: false, lastSyncTime: null, error: null });
         await this.saveState();
     }
@@ -303,23 +306,116 @@ export class GoogleDriveSyncService {
     }
 
     private async ensureFileId(token: string, fileName: string, type: 'folders' | 'prompts'): Promise<void> {
+        // 1. Ensure backup folder exists
+        const folderId = await this.ensureBackupFolder(token);
+
+        // 2. Check if we have a valid cached file ID
         const currentId = type === 'folders' ? this.foldersFileId : this.promptsFileId;
 
         if (currentId) {
-            const exists = await this.checkFileExists(token, currentId);
-            if (exists) return;
+            const parents = await this.getFileParents(token, currentId);
+            if (parents) {
+                // File exists
+                if (!parents.includes(folderId)) {
+                    // File exists but not in the backup folder, move it
+                    console.log(`[GoogleDriveSyncService] Moving ${fileName} to backup folder`);
+                    await this.moveFile(token, currentId, folderId, parents);
+                }
+                return;
+            }
+            // If checkFileParents returns null, the file doesn't exist (e.g. deleted externally), proceed to find/create
         }
 
+        // 3. Search for the file globally (in case it was created before but we lost the ID reference)
         const existingId = await this.findFile(token, fileName);
         if (existingId) {
+            // Found existing file
             if (type === 'folders') this.foldersFileId = existingId;
             else this.promptsFileId = existingId;
+
+            // Check if it needs moving
+            const parents = await this.getFileParents(token, existingId);
+            if (parents && !parents.includes(folderId)) {
+                console.log(`[GoogleDriveSyncService] Moving existing ${fileName} to backup folder`);
+                await this.moveFile(token, existingId, folderId, parents);
+            }
             return;
         }
 
-        const newId = await this.createFile(token, fileName);
+        // 4. Create new file in the backup folder
+        console.log(`[GoogleDriveSyncService] Creating new file ${fileName} in backup folder`);
+        const newId = await this.createFile(token, fileName, folderId);
         if (type === 'folders') this.foldersFileId = newId;
         else this.promptsFileId = newId;
+    }
+
+    private async ensureBackupFolder(token: string): Promise<string> {
+        if (this.backupFolderId) {
+            // Verify it still exists
+            const exists = await this.checkFileExists(token, this.backupFolderId);
+            if (exists) return this.backupFolderId;
+        }
+
+        // Search for folder
+        const query = encodeURIComponent(`name='${BACKUP_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+        const url = `${DRIVE_API_BASE}/files?q=${query}&fields=files(id)`;
+        const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (!response.ok) throw new Error('Failed to search for backup folder');
+
+        const data = await response.json();
+        const existingId = data.files?.[0]?.id;
+
+        if (existingId) {
+            this.backupFolderId = existingId;
+            return existingId;
+        }
+
+        // Create folder
+        const metadata = {
+            name: BACKUP_FOLDER_NAME,
+            mimeType: 'application/vnd.google-apps.folder',
+        };
+        const createResponse = await fetch(`${DRIVE_API_BASE}/files`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(metadata),
+        });
+
+        if (!createResponse.ok) throw new Error('Failed to create backup folder');
+        const folderData = await createResponse.json();
+        this.backupFolderId = folderData.id;
+        console.log('[GoogleDriveSyncService] Created backup folder:', this.backupFolderId);
+        return folderData.id;
+    }
+
+    private async getFileParents(token: string, fileId: string): Promise<string[] | null> {
+        try {
+            const response = await fetch(`${DRIVE_API_BASE}/files/${fileId}?fields=parents`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.status === 404) return null;
+            if (!response.ok) return null;
+            const data = await response.json();
+            return data.parents || [];
+        } catch {
+            return null;
+        }
+    }
+
+    private async moveFile(token: string, fileId: string, targetFolderId: string, currentParents: string[]): Promise<void> {
+        const previousParents = currentParents.join(',');
+        const url = `${DRIVE_API_BASE}/files/${fileId}?addParents=${targetFolderId}&removeParents=${previousParents}&fields=id,parents`;
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) {
+            console.error('[GoogleDriveSyncService] Failed to move file:', await response.text());
+            // Don't throw, just log. It's not critical if move fails, as long as we can access the file.
+        }
     }
 
     private async checkFileExists(token: string, fileId: string): Promise<boolean> {
@@ -333,8 +429,12 @@ export class GoogleDriveSyncService {
         }
     }
 
-    private async createFile(token: string, fileName: string): Promise<string> {
-        const metadata = { name: fileName, mimeType: 'application/json' };
+    private async createFile(token: string, fileName: string, parentId?: string): Promise<string> {
+        const metadata: any = { name: fileName, mimeType: 'application/json' };
+        if (parentId) {
+            metadata.parents = [parentId];
+        }
+
         const response = await fetch(`${DRIVE_API_BASE}/files`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
