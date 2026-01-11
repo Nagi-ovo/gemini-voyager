@@ -578,25 +578,8 @@ export default function Popup() {
             </div>
           </Card>
         )}
-        {/* Gemini Only Notice */}
-        <Card className="p-3 bg-primary/10 border-primary/20 hover:shadow-lg transition-shadow">
-          <div className="flex items-center gap-2">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-primary shrink-0"
-            >
-              <path
-                d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 11c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm1-4H7V5h2v3z"
-                fill="currentColor"
-              />
-            </svg>
-            <p className="text-xs text-primary font-medium">{t('geminiOnlyNotice')}</p>
-          </div>
-        </Card>
+        {/* Cloud Sync - First priority - Hidden on Safari due to API limitations */}
+        {!isSafari() && <CloudSyncSettings />}
         {/* Timeline Options */}
         <Card className="p-4 hover:shadow-lg transition-shadow">
           <CardTitle className="mb-4 text-xs uppercase">{t('timelineOptions')}</CardTitle>
@@ -749,8 +732,6 @@ export default function Popup() {
             </div>
           </CardContent>
         </Card>
-        {/* Cloud Sync - Hidden on Safari due to API limitations */}
-        {!isSafari() && <CloudSyncSettings />}
         {/* Chat Width */}
         <WidthSlider
           label={t('chatWidth')}
@@ -859,7 +840,23 @@ export default function Popup() {
             </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">{t('customWebsites')}</Label>
-              <p className="text-xs text-muted-foreground mb-3">{t('customWebsitesHint')}</p>
+              {/* Gemini Only Notice - moved here since it's about Prompt Manager */}
+              <div className="flex items-center gap-2 p-2 mb-2 rounded-md bg-primary/10 border border-primary/20">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-primary shrink-0"
+                >
+                  <path
+                    d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 11c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm1-4H7V5h2v3z"
+                    fill="currentColor"
+                  />
+                </svg>
+                <p className="text-xs text-primary font-medium">{t('geminiOnlyNotice')}</p>
+              </div>
 
               {/* Quick-select buttons for popular websites */}
               <div className="flex flex-wrap gap-1.5 mb-3">
