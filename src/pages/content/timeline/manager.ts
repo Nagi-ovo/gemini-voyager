@@ -3,7 +3,7 @@ import { initI18n, getTranslationSync } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
-import type { DotElement, MarkerLevel, MarkerLevelsData } from './types';
+import type { DotElement, MarkerLevel} from './types';
 
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { StorageKeys } from '@/core/types/common';
@@ -2355,8 +2355,12 @@ export class TimelineManager {
 
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const menuWidth = 180;
-    const menuHeight = canCollapse || isCollapsed ? 220 : 180;
+    document.body.appendChild(menu);
+    this.contextMenu = menu;
+    const menuWidth = menu.offsetWidth;
+    const menuHeight = menu.offsetHeight;
+    // const menuWidth = 180;
+    // const menuHeight = canCollapse || isCollapsed ? 220 : 180;
 
     let left = x;
     let top = y;

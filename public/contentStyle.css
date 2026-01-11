@@ -186,15 +186,15 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
 }
 
 .timeline-dot[data-level="2"]::after {
-  width: calc(var(--timeline-dot-size));
-  height: calc(var(--timeline-dot-size));
+  width: var(--timeline-dot-size);
+  height: var(--timeline-dot-size);
   border-radius: 50%;
   clip-path: none;
 }
 
 .timeline-dot[data-level="3"]::after {
-  width: calc(var(--timeline-dot-size));
-  height: calc(var(--timeline-dot-size));
+  width: var(--timeline-dot-size);
+  height: var(--timeline-dot-size);
   border-radius: 0;
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
@@ -251,11 +251,11 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
 }
 
 .timeline-context-menu-item:hover {
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: --timeline-dot-active-color;
 }
 
 .timeline-context-menu-item.active {
-  background-color: rgba(59, 130, 246, 0.15);
+  background-color: --timeline-dot-active-color;
   font-weight: 500;
 }
 
@@ -273,19 +273,19 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   background-color: var(--timeline-dot-color);
 }
 
-/* Level 1: Circle */
+/* Level 1: Square */
 .timeline-context-menu-item[data-level="1"] .level-dot {
   border-radius: 0;
   clip-path: none;
 }
 
-/* Level 2: Triangle */
+/* Level 2: Circle */
 .timeline-context-menu-item[data-level="2"] .level-dot {
   border-radius: 50%;
   clip-path: none;
 }
 
-/* Level 3: Square */
+/* Level 3: Triangle */
 .timeline-context-menu-item[data-level="3"] .level-dot {
   border-radius: 0;
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
