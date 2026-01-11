@@ -177,6 +177,159 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   background-color: var(--timeline-star-color);
 }
 
+/* ===== Timeline Marker Levels (shape-based: circle, triangle, square) ===== */
+.timeline-dot[data-level="1"]::after {
+  width: var(--timeline-dot-size);
+  height: var(--timeline-dot-size);
+  border-radius: 0;
+  clip-path: none;
+}
+
+.timeline-dot[data-level="2"]::after {
+  width: calc(var(--timeline-dot-size));
+  height: calc(var(--timeline-dot-size));
+  border-radius: 50%;
+  clip-path: none;
+}
+
+.timeline-dot[data-level="3"]::after {
+  width: calc(var(--timeline-dot-size));
+  height: calc(var(--timeline-dot-size));
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* ===== Timeline Context Menu ===== */
+.timeline-context-menu {
+  position: fixed;
+  background-color: var(--timeline-tooltip-bg);
+  border: 1px solid var(--timeline-tooltip-border);
+  border-radius: 8px;
+  box-shadow: var(--timeline-tooltip-shadow);
+  padding: 4px 0;
+  z-index: 2147483647;
+  min-width: 160px;
+  animation: timeline-menu-in 0.12s ease-out;
+}
+
+@keyframes timeline-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.timeline-context-menu-title {
+  padding: 8px 12px 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--timeline-tooltip-text);
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--timeline-tooltip-border);
+  margin-bottom: 4px;
+}
+
+.timeline-context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--timeline-tooltip-text);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.1s ease;
+}
+
+.timeline-context-menu-item:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.timeline-context-menu-item.active {
+  background-color: rgba(59, 130, 246, 0.15);
+  font-weight: 500;
+}
+
+.timeline-context-menu-item .level-indicator {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-context-menu-item .level-dot {
+  width: 10px;
+  height: 10px;
+  background-color: var(--timeline-dot-color);
+}
+
+/* Level 1: Circle */
+.timeline-context-menu-item[data-level="1"] .level-dot {
+  border-radius: 0;
+  clip-path: none;
+}
+
+/* Level 2: Triangle */
+.timeline-context-menu-item[data-level="2"] .level-dot {
+  border-radius: 50%;
+  clip-path: none;
+}
+
+/* Level 3: Square */
+.timeline-context-menu-item[data-level="3"] .level-dot {
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.timeline-context-menu-item .check-icon {
+  margin-left: auto;
+  color: var(--timeline-dot-active-color);
+  font-size: 14px;
+}
+
+/* Context menu separator */
+.timeline-context-menu-separator {
+  height: 1px;
+  background-color: var(--timeline-tooltip-border);
+  margin: 4px 0;
+}
+
+/* Collapse menu item */
+.timeline-context-menu-item.collapse-item {
+  margin-top: 2px;
+}
+
+.timeline-context-menu-item .collapse-icon {
+  font-size: 12px;
+  color: var(--timeline-dot-color);
+  transition: transform 0.2s ease;
+}
+
+/* Collapsed dot style - visual indicator */
+.timeline-dot.collapsed::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--timeline-dot-size) + 10px);
+  height: calc(var(--timeline-dot-size) + 10px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px dashed var(--timeline-dot-active-color);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .timeline-dot.holding::before {
   content: '';
   position: absolute;

@@ -762,5 +762,29 @@
   "folder_uncategorized": {
     "message": "未分类",
     "description": "根目录下未分类对话的标签"
+  },
+  "timelineLevelTitle": {
+    "message": "节点层级",
+    "description": "时间线节点层级右键菜单标题"
+  },
+  "timelineLevel1": {
+    "message": "一级",
+    "description": "时间线节点一级选项"
+  },
+  "timelineLevel2": {
+    "message": "二级",
+    "description": "时间线节点二级选项"
+  },
+  "timelineLevel3": {
+    "message": "三级",
+    "description": "时间线节点三级选项"
+  },
+  "timelineCollapse": {
+    "message": "收起",
+    "description": "收起子节点"
+  },
+  "timelineExpand": {
+    "message": "展开",
+    "description": "展开子节点"
   }
 }

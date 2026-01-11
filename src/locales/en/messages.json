@@ -762,5 +762,29 @@
   "folder_uncategorized": {
     "message": "Uncategorized",
     "description": "Label for root-level conversations not in any folder"
+  },
+  "timelineLevelTitle": {
+    "message": "Node Level",
+    "description": "Title for timeline node level context menu"
+  },
+  "timelineLevel1": {
+    "message": "Level 1",
+    "description": "Timeline node level 1 option"
+  },
+  "timelineLevel2": {
+    "message": "Level 2",
+    "description": "Timeline node level 2 option"
+  },
+  "timelineLevel3": {
+    "message": "Level 3",
+    "description": "Timeline node level 3 option"
+  },
+  "timelineCollapse": {
+    "message": "Collapse",
+    "description": "Collapse children"
+  },
+  "timelineExpand": {
+    "message": "Expand",
+    "description": "Expand children"
   }
 }
