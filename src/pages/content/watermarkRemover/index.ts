@@ -6,6 +6,11 @@
  * License: MIT - Copyright (c) 2025 Jad
  *
  * Automatically detects and removes watermarks from Gemini-generated images on the page.
+ * 
+ * The fetch interceptor (running in MAIN world) handles download requests:
+ * - Intercepts download requests and modifies URL to get original size
+ * - Sends image data to this content script for watermark removal
+ * - Returns processed image to complete the download
  */
 
 import { WatermarkEngine } from './watermarkEngine';
@@ -61,6 +66,12 @@ const canvasToBlob = (canvas: HTMLCanvasElement, type = 'image/png'): Promise<Bl
     });
 
 /**
+ * Convert canvas to base64 data URL
+ */
+const canvasToDataURL = (canvas: HTMLCanvasElement, type = 'image/png'): string =>
+    canvas.toDataURL(type);
+
+/**
  * Check if an image element is a valid Gemini-generated image
  */
 const isValidGeminiImage = (img: HTMLImageElement): boolean =>
@@ -83,10 +94,10 @@ const replaceWithNormalSize = (src: string): string => {
 };
 
 /**
- * Add a direct download button for the unwatermarked image
- * Completely replaces the native download button
+ * Add a visual indicator (🍌) to the native download button
+ * The click goes through to the native button, which triggers the fetch interceptor
  */
-function addDownloadButton(imgElement: HTMLImageElement, processedUrl: string): void {
+function addDownloadIndicator(imgElement: HTMLImageElement): void {
     const container = imgElement.closest('generated-image,.generated-image-container');
     if (!container) return;
 
@@ -96,62 +107,39 @@ function addDownloadButton(imgElement: HTMLImageElement, processedUrl: string): 
 
     if (!nativeButton) return;
 
-    // Check if our button already exists
-    if (container.querySelector('.nanobanana-download-btn')) return;
+    // Check if indicator already exists
+    if (container.querySelector('.nanobanana-indicator')) return;
 
-    // Hide native button instead of removing it (safer for Angular apps)
-    (nativeButton as HTMLElement).style.display = 'none';
+    // Create the banana indicator badge
+    const indicator = document.createElement('span');
+    indicator.className = 'nanobanana-indicator';
+    indicator.textContent = '🍌';
+    indicator.title = chrome.i18n.getMessage('nanobananaDownloadTooltip') || 'NanoBanana: Downloads will have watermark removed';
 
-    // Create our banana button
-    const bananaBtn = document.createElement('button');
-    bananaBtn.className = 'nanobanana-download-btn';
-    bananaBtn.innerHTML = '🍌';
-    bananaBtn.title = chrome.i18n.getMessage('nanobananaDownloadTooltip') || 'Download unwatermarked image (NanoBanana)';
-
-    // Style it to match Gemini's UI feel (circular, semi-transparent background)
-    Object.assign(bananaBtn.style, {
-        background: 'rgba(0, 0, 0, 0.5)',
-        color: 'white',
-        border: 'none',
-        borderRadius: '50%',
-        width: '32px',
-        height: '32px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        fontSize: '18px',
-        transition: 'background 0.2s, transform 0.1s',
+    // Style it as a small badge on the button
+    Object.assign(indicator.style, {
+        position: 'absolute',
+        top: '-4px',
+        right: '-4px',
+        fontSize: '12px',
+        pointerEvents: 'none', // Let clicks pass through to the native button
         zIndex: '10',
-        padding: '0'
+        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
     });
 
-    bananaBtn.onmouseenter = () => {
-        bananaBtn.style.background = 'rgba(0, 0, 0, 0.7)';
-        bananaBtn.style.transform = 'scale(1.1)';
-    };
-    bananaBtn.onmouseleave = () => {
-        bananaBtn.style.background = 'rgba(0, 0, 0, 0.5)';
-        bananaBtn.style.transform = 'scale(1.0)';
-    };
-
-    bananaBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const a = document.createElement('a');
-        a.href = processedUrl;
-        a.download = `gemini-voyager-nanobanana-${Date.now()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    };
-
-    // Insert next to the native button (which is hidden)
-    nativeButton.parentNode?.insertBefore(bananaBtn, nativeButton);
+    // Make the button container relative for absolute positioning
+    const buttonContainer = nativeButton.parentElement;
+    if (buttonContainer) {
+        const currentPosition = getComputedStyle(buttonContainer).position;
+        if (currentPosition === 'static') {
+            (buttonContainer as HTMLElement).style.position = 'relative';
+        }
+        buttonContainer.appendChild(indicator);
+    }
 }
 
 /**
- * Process a single image to remove watermark
+ * Process a single image to remove watermark (for preview images)
  */
 async function processImage(imgElement: HTMLImageElement): Promise<void> {
     if (!engine || processingQueue.has(imgElement)) return;
@@ -173,12 +161,12 @@ async function processImage(imgElement: HTMLImageElement): Promise<void> {
         const processedUrl = URL.createObjectURL(processedBlob);
         imgElement.src = processedUrl;
         imgElement.dataset.watermarkProcessed = 'true';
-        imgElement.dataset.processedUrl = processedUrl; // Store for the button
+        imgElement.dataset.processedUrl = processedUrl; // Store for reference
 
-        console.log('[Gemini Voyager] Watermark removed from image');
+        console.log('[Gemini Voyager] Watermark removed from preview image');
 
-        // Add download button
-        addDownloadButton(imgElement, processedUrl);
+        // Add indicator to download button
+        addDownloadIndicator(imgElement);
     } catch (error) {
         console.warn('[Gemini Voyager] Failed to process image for watermark removal:', error);
         imgElement.dataset.watermarkProcessed = 'failed';
@@ -194,13 +182,11 @@ const processAllImages = (): void => {
     const images = findGeminiImages();
     images.forEach(processImage);
 
-    // Also check existing processed images to see if they need a button 
+    // Also check existing processed images to see if they need an indicator 
     // (e.g. if the native buttons loaded after the image was processed)
     const processedImages = document.querySelectorAll<HTMLImageElement>('img[data-watermark-processed="true"]');
     processedImages.forEach(img => {
-        if (img.dataset.processedUrl) {
-            addDownloadButton(img, img.dataset.processedUrl);
-        }
+        addDownloadIndicator(img);
     });
 };
 
@@ -219,13 +205,94 @@ const setupMutationObserver = (): void => {
 };
 
 /**
+ * Current watermark remover enabled state (for query responses)
+ */
+let currentWatermarkState = false;
+
+/**
+ * Notify the MAIN world fetch interceptor about watermark remover state
+ * Uses CustomEvent to communicate across worlds (CSP-safe approach)
+ */
+function notifyFetchInterceptor(enabled: boolean): void {
+    currentWatermarkState = enabled;
+    window.dispatchEvent(new CustomEvent('gv-watermark-state', {
+        detail: { enabled }
+    }));
+}
+
+/**
+ * Setup listener for state queries from MAIN world fetch interceptor
+ */
+function setupStateQueryListener(): void {
+    window.addEventListener('gv-watermark-state-query', () => {
+        window.dispatchEvent(new CustomEvent('gv-watermark-state-response', {
+            detail: { enabled: currentWatermarkState }
+        }));
+    });
+}
+
+/**
+ * Setup event listener to handle image processing requests from MAIN world fetch interceptor
+ */
+function setupFetchInterceptorBridge(): void {
+    window.addEventListener('gv-process-image', async (event: Event) => {
+        const customEvent = event as CustomEvent<{ requestId: string; base64: string }>;
+        const { requestId, base64 } = customEvent.detail;
+
+        if (!engine) {
+            // Send error response
+            window.dispatchEvent(new CustomEvent('gv-processed-image', {
+                detail: { requestId, error: 'Watermark engine not initialized' }
+            }));
+            return;
+        }
+
+        try {
+            // Convert base64 to image element
+            const img = new Image();
+            await new Promise<void>((resolve, reject) => {
+                img.onload = () => resolve();
+                img.onerror = () => reject(new Error('Failed to load image'));
+                img.src = base64;
+            });
+
+            // Process image to remove watermark
+            const processedCanvas = await engine.removeWatermarkFromImage(img);
+            const processedDataUrl = canvasToDataURL(processedCanvas);
+
+            // Send processed image back
+            window.dispatchEvent(new CustomEvent('gv-processed-image', {
+                detail: { requestId, base64: processedDataUrl }
+            }));
+
+            console.log('[Gemini Voyager] Processed image for download via fetch interceptor');
+        } catch (error) {
+            console.error('[Gemini Voyager] Failed to process image from fetch interceptor:', error);
+            window.dispatchEvent(new CustomEvent('gv-processed-image', {
+                detail: { requestId, error: String(error) }
+            }));
+        }
+    });
+
+    console.log('[Gemini Voyager] Fetch interceptor bridge ready');
+}
+
+/**
  * Start the watermark remover
  */
 export async function startWatermarkRemover(): Promise<void> {
     try {
+        // Setup state query listener first (so fetch interceptor can query even before we're fully ready)
+        setupStateQueryListener();
+
         // Check if feature is enabled
         const result = await chrome.storage?.sync?.get({ geminiWatermarkRemoverEnabled: true });
-        if (result?.geminiWatermarkRemoverEnabled === false) {
+        const isEnabled = result?.geminiWatermarkRemoverEnabled !== false;
+
+        // Notify MAIN world fetch interceptor about state
+        notifyFetchInterceptor(isEnabled);
+
+        if (!isEnabled) {
             console.log('[Gemini Voyager] Watermark remover is disabled');
             return;
         }
@@ -233,6 +300,10 @@ export async function startWatermarkRemover(): Promise<void> {
         console.log('[Gemini Voyager] Initializing watermark remover...');
         engine = await WatermarkEngine.create();
 
+        // Setup bridge to handle requests from fetch interceptor
+        setupFetchInterceptorBridge();
+
+        // Process preview images
         processAllImages();
         setupMutationObserver();
 

@@ -10,6 +10,55 @@ import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeli
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
 const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
+const FETCH_INTERCEPTOR_SCRIPT_ID = 'gv-fetch-interceptor';
+
+// Gemini domains where the fetch interceptor should run
+const GEMINI_MATCHES = [
+  'https://gemini.google.com/*',
+  'https://aistudio.google.com/*',
+  'https://aistudio.google.cn/*',
+];
+
+/**
+ * Register the fetch interceptor script into MAIN world
+ * This allows intercepting fetch calls made by the page itself
+ */
+async function registerFetchInterceptor(): Promise<void> {
+  if (!chrome.scripting?.registerContentScripts) return;
+
+  // Check if watermark remover feature is enabled
+  const result = await chrome.storage.sync.get({ geminiWatermarkRemoverEnabled: true });
+  const isEnabled = result.geminiWatermarkRemoverEnabled !== false;
+
+  try {
+    // Always unregister first to update settings
+    await chrome.scripting.unregisterContentScripts({ ids: [FETCH_INTERCEPTOR_SCRIPT_ID] });
+  } catch {
+    // No-op if script was not registered
+  }
+
+  // Only register if watermark remover is enabled
+  if (!isEnabled) {
+    console.log('[Background] Fetch interceptor not registered (watermark remover disabled)');
+    return;
+  }
+
+  try {
+    await chrome.scripting.registerContentScripts([
+      {
+        id: FETCH_INTERCEPTOR_SCRIPT_ID,
+        js: ['fetchInterceptor.js'],
+        matches: GEMINI_MATCHES,
+        world: 'MAIN',
+        runAt: 'document_start',
+        persistAcrossSessions: true,
+      },
+    ]);
+    console.log('[Background] Fetch interceptor registered for MAIN world');
+  } catch (error) {
+    console.error('[Background] Failed to register fetch interceptor:', error);
+  }
+}
 
 const MANIFEST_DEFAULT_DOMAINS = new Set(
   [
@@ -128,6 +177,9 @@ async function syncCustomContentScripts(domains?: string[]): Promise<void> {
 // Initial sync for persisted permissions
 void syncCustomContentScripts();
 
+// Initial fetch interceptor registration
+void registerFetchInterceptor();
+
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'sync') return;
 
@@ -135,6 +187,11 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     const newValue = changes[CUSTOM_WEBSITE_KEY]?.newValue;
     const domains = Array.isArray(newValue) ? newValue : [];
     void syncCustomContentScripts(domains);
+  }
+
+  // Re-register fetch interceptor when watermark remover setting changes
+  if (Object.prototype.hasOwnProperty.call(changes, 'geminiWatermarkRemoverEnabled')) {
+    void registerFetchInterceptor();
   }
 });
 

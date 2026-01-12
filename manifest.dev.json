@@ -14,6 +14,7 @@
         "dev-icon-32.png",
         "icon-32.png",
         "icon-128.png",
+        "fetchInterceptor.js",
         "assets/*.js",
         "assets/*.png"
       ],
@@ -29,8 +30,12 @@
         "https://aistudio.google.com/*",
         "https://aistudio.google.cn/*"
       ],
-      "js": ["src/pages/content/index.tsx"],
-      "css": ["contentStyle.css"]
+      "js": [
+        "src/pages/content/index.tsx"
+      ],
+      "css": [
+        "contentStyle.css"
+      ]
     }
   ],
   "host_permissions": [
