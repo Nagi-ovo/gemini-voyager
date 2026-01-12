@@ -1,0 +1,22 @@
+name: Auto Label
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Code-Hex/first-label-interaction@v1.0.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-labels: '["good first issue", "help wanted"]'
+          pr-labels: '["help wanted"]'
