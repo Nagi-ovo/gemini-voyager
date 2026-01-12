@@ -3,9 +3,32 @@ run-name: >
   ${{
     (github.event_name == 'workflow_dispatch' && inputs.version && format('chore(release): v{0}', inputs.version)) ||
     (github.event_name == 'workflow_dispatch' && !inputs.version && 'chore(release): auto-increment') ||
-    (startsWith(github.ref, 'refs/tags/') && format('chore(release): {0}', github.ref_name)) ||
+    (startsWith(github.ref, 'refs/tags/') && format('Release {0}', github.ref_name)) ||
     format('Release #{0}', github.run_number)
   }}
+
+# 🚀 Release Workflow Guide
+# -------------------------
+# This workflow supports two modes of operation:
+#
+# 1. Manual Release (Recommended for "One-Click" Releases)
+#    - How: Go to "Actions" -> "Release" -> "Run workflow".
+#    - Input: Optional "Version" (e.g., 1.2.0). If left empty, it auto-increments the patch version.
+#    - What it does:
+#      1. Calculates the next version.
+#      2. Bumps version in package.json & manifest.json.
+#      3. Commits "chore(release): vX.Y.Z".
+#      4. Creates git tag "vX.Y.Z".
+#      5. Pushes commit & tag to main.
+#      6. Builds artifacts and creates a GitHub Release.
+#
+# 2. Tag-based Release (Manual Tagging)
+#    - How: run `git commit -m "..." && git tag v1.2.0 && git push origin v1.2.0` locally.
+#    - What it does:
+#      1. Detects the pushed tag (v1.2.0).
+#      2. SKIPS version calculation and bumping (assumes you already did it).
+#      3. Builds artifacts from that tag.
+#      4. Creates a GitHub Release for that tag.
 
 on:
   push:
@@ -14,7 +37,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g. 0.2.0) - leave empty to auto-increment patch version'
+        description: 'Version to release (e.g. 1.0.8) - leave empty to auto-increment patch version'
         required: false
         type: string
       notes:
@@ -26,12 +49,96 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  # Job 1: Calculate & Bump Version (Only runs on manual trigger)
+  bump-version:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.next_version.outputs.version }}
+      tag_name: ${{ steps.tag.outputs.name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Calculate next version
+        id: next_version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            echo "Using manual version: ${{ inputs.version }}"
+          else
+            CURRENT=$(node -e "console.log(require('./package.json').version)")
+            echo "Current version: ${CURRENT}"
+            
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+            PATCH=$((PATCH + 1))
+            
+            # Simple carry logic
+            if [ $PATCH -ge 10 ]; then
+              MINOR=$((MINOR + 1))
+              PATCH=0
+            fi
+            if [ $MINOR -ge 10 ]; then
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+            fi
+            
+            NEXT="${MAJOR}.${MINOR}.${PATCH}"
+            echo "version=${NEXT}" >> $GITHUB_OUTPUT
+            echo "Auto-calculated next version: ${NEXT}"
+          fi
+
+      - name: Compute tag name
+        id: tag
+        run: echo "name=v${{ steps.next_version.outputs.version }}" >> $GITHUB_OUTPUT
+
+      - name: Update files, commit and push
+        env:
+          VERSION: ${{ steps.next_version.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Bumping to version ${VERSION}"
+          
+          # Update package.json and manifest.json
+          node -e "const fs=require('fs');const v=process.env.VERSION;const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=v;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));m.version=v;fs.writeFileSync('manifest.json',JSON.stringify(m,null,2)+'\n');"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add package.json manifest.json
+          git commit -m "chore(release): v${VERSION}" || echo "No changes to commit"
+          git tag v${VERSION} || echo "Tag exists"
+          
+          # Push commit and tag
+          git push origin HEAD:main --tags
+
+  # Job 2: Build & Release (Runs on both manual and tag push)
+  build-and-release:
+    needs: bump-version
+    if: always() && (needs.bump-version.result == 'success' || github.event_name == 'push')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Release Tag Variable
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "tag_name=${{ needs.bump-version.outputs.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.vars.outputs.tag_name }}
           fetch-depth: 0
 
       - name: Setup Bun
@@ -39,132 +146,42 @@ jobs:
         with:
           bun-version: 'latest'
 
-      # Calculate next version automatically if not provided
-      - name: Calculate next version
-        id: next_version
-        run: |
-          if [ -n "${{ inputs.version }}" ]; then
-            # Use manually provided version
-            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
-            echo "Using manual version: ${{ inputs.version }}"
-          else
-            # Auto-calculate next patch version with proper carry logic
-            CURRENT=$(node -e "console.log(require('./package.json').version)")
-            echo "Current version: ${CURRENT}"
-
-            # Split version into major.minor.patch
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
-
-            # Increment patch
-            PATCH=$((PATCH + 1))
-
-            # Handle carry: if patch >= 10, increment minor and reset patch
-            if [ $PATCH -ge 10 ]; then
-              MINOR=$((MINOR + 1))
-              PATCH=0
-            fi
-
-            # Handle carry: if minor >= 10, increment major and reset minor
-            if [ $MINOR -ge 10 ]; then
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-            fi
-
-            NEXT="${MAJOR}.${MINOR}.${PATCH}"
-            echo "version=${NEXT}" >> $GITHUB_OUTPUT
-            echo "Auto-calculated next version: ${NEXT}"
-          fi
-
-      # Bump files, commit and create tag (works for both manual and auto versions)
-      - name: Bump version, commit and tag
-        env:
-          VERSION: ${{ steps.next_version.outputs.version }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Bumping to version ${VERSION}"
-          node -e "const fs=require('fs');const v=process.env.VERSION;const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=v;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));m.version=v;fs.writeFileSync('manifest.json',JSON.stringify(m,null,2)+'\n');"
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add package.json manifest.json
-          git commit -m "chore(release): v${VERSION}" || echo "No changes to commit"
-          git tag v${VERSION} || echo "Tag exists"
-          git push origin HEAD:main --tags
-
-      - name: Compute tag name
-        id: tag
-        run: |
-          echo "name=v${{ steps.next_version.outputs.version }}" >> $GITHUB_OUTPUT
-
       - name: Install deps
         run: bun i
 
-      - name: Build (Chrome)
-        run: bun run build:chrome
+      - name: Build All
+        run: bun run build:all
 
-      - name: Build (Firefox)
-        run: bun run build:firefox
-
-      - name: Build (Safari)
-        run: bun run build:safari
-
-      - name: Archive dist_chrome
+      - name: Archive artifacts
         run: |
-          cd dist_chrome
-          zip -r ../gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip .
+          TAG=${{ steps.vars.outputs.tag_name }}
+          
+          cd dist_chrome && zip -r ../gemini-voyager-chrome-${TAG}.zip . && cd ..
+          
+          cd dist_firefox && zip -r ../gemini-voyager-firefox-${TAG}.zip . && cd ..
+          cp gemini-voyager-firefox-${TAG}.zip gemini-voyager-firefox-${TAG}.xpi
+          
+          cd dist_safari && zip -r ../gemini-voyager-safari-${TAG}.zip . && cd ..
 
-      - name: Archive dist_firefox
-        run: |
-          cd dist_firefox
-          zip -r ../gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip .
-
-      - name: Create firefox .xpi (same content as zip)
-        run: |
-          # copy the zip to .xpi so contents are identical, only the extension differs
-          cp gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip gemini-voyager-firefox-${{ steps.tag.outputs.name }}.xpi
-          # verify sizes (optional) - exit non-zero if mismatch
-          # Uncomment the following lines to enforce identical size check:
-          # if [ "$(stat -c%s gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip)" != "$(stat -c%s gemini-voyager-firefox-${{ steps.tag.outputs.name }}.xpi)" ]; then
-          #   echo "Mismatch between zip and xpi sizes"; exit 1
-          # fi
-
-      - name: Archive dist_safari
-        run: |
-          cd dist_safari
-          zip -r ../gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip .
-
-      # Optional: upload to Actions artifacts (can be removed if not needed)
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gemini-voyager-artifacts-${{ steps.tag.outputs.name }}
-          path: |
-            gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip
-            gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip
-            gemini-voyager-firefox-${{ steps.tag.outputs.name }}.xpi
-            gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip
-
-      - name: Generate release body
+      - name: Prepare Release Notes
         id: release_body
         run: |
-          if [ -n "${{ inputs.notes }}" ]; then
-            # Use provided notes
+          TAG=${{ steps.vars.outputs.tag_name }}
+          NOTES="${{ inputs.notes }}"
+          
+          if [ -n "$NOTES" ]; then
             echo "body<<EOF" >> $GITHUB_OUTPUT
-            echo "${{ inputs.notes }}" >> $GITHUB_OUTPUT
+            echo "$NOTES" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
-            # Use template with installation instructions
-            cat > release_body.md << 'EOF'
+            cat > release_body.md << EOF
           ## 📥 Installation
-
-          Download the latest version for your browser:
-          - **Chrome/Edge/Opera/Brave**: `gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip`
-          - **Firefox**: `gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip` or `gemini-voyager-firefox-${{ steps.tag.outputs.name }}.xpi` (same contents, .xpi is provided for convenience)
-          - **Safari**: `gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip`
-
-          See [README](https://github.com/Nagi-ovo/gemini-voyager#-installation) for detailed installation instructions.
-
-          ---
-
+          
+          - **Chrome**: \`gemini-voyager-chrome-${TAG}.zip\`
+          - **Firefox**: \`gemini-voyager-firefox-${TAG}.xpi\`
+          - **Safari**: \`gemini-voyager-safari-${TAG}.zip\`
+          
+          [View Full Changelog](https://github.com/Nagi-ovo/gemini-voyager/compare/v...${TAG})
           EOF
             echo "body<<EOF" >> $GITHUB_OUTPUT
             cat release_body.md >> $GITHUB_OUTPUT
@@ -174,15 +191,13 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          name: Gemini Voyager ${{ steps.vars.outputs.tag_name }}
+          tag_name: ${{ steps.vars.outputs.tag_name }}
           files: |
-            gemini-voyager-chrome-${{ steps.tag.outputs.name }}.zip
-            gemini-voyager-firefox-${{ steps.tag.outputs.name }}.zip
-            gemini-voyager-firefox-${{ steps.tag.outputs.name }}.xpi
-            gemini-voyager-safari-${{ steps.tag.outputs.name }}.zip
-          name: Gemini Voyager ${{ steps.tag.outputs.name }}
-          tag_name: ${{ steps.tag.outputs.name }}
+            gemini-voyager-chrome-*.zip
+            gemini-voyager-firefox-*.zip
+            gemini-voyager-firefox-*.xpi
+            gemini-voyager-safari-*.zip
           body: ${{ steps.release_body.outputs.body }}
           generate_release_notes: true
           append_body: ${{ inputs.notes == '' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
