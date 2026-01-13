@@ -10,6 +10,12 @@
       "32": "icon-32.png"
     }
   },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "gemini-voyager@nagi-ovo",
+      "strict_min_version": "109.0"
+    }
+  },
   "options_ui": {
     "page": "src/pages/options/index.html",
     "open_in_tab": true

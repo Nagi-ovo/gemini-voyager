@@ -274,6 +274,7 @@ export class GoogleDriveSyncService {
         }
 
         const redirectUrl = chrome.identity.getRedirectURL();
+        console.log('[GoogleDriveSyncService] Auth flow starting with redirectUrl:', redirectUrl);
         const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
         authUrl.searchParams.set('client_id', clientId);
         authUrl.searchParams.set('redirect_uri', redirectUrl);
