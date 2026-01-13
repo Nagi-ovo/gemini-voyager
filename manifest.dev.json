@@ -55,5 +55,6 @@
   "background": {
     "service_worker": "src/pages/background/index.ts",
     "type": "module"
-  }
+  },
+  "version": "1.0.9"
 }
