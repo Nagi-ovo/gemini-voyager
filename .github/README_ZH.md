@@ -52,6 +52,7 @@
   - [📂 文件夹管理](#-文件夹管理)
   - [💡 提示词库](#-提示词库)
   - [📐 公式复制](#-公式复制)
+  - [🧜‍♀️ Mermaid 图表渲染](#️-mermaid-图表渲染)
   - [🍌 NanoBanana 选项](#-nanobanana-选项)
   - [🔬 Deep Research 导出](#-deep-research-导出)
   - [💾 对话导出](#-对话导出)
@@ -132,6 +133,22 @@
 
 <div align="center">
   <img src="../docs/public/assets/gemini-math-copy.png" alt="公式复制" style="max-width: 100%;"/>
+</div>
+
+</details>
+
+### 🧜‍♀️ Mermaid 图表渲染
+**让图表即刻可视化。**
+当 Gemini 输出 Mermaid 代码（流程图、时序图、甘特图等）时，Voyager 会自动将其渲染为可交互的图表。
+- **一键切换**：在渲染图表和源代码之间自由切换。
+- **全屏模式**：点击图表即可打开全屏查看器，支持缩放和拖拽。
+- **自动检测**：支持所有主流 Mermaid 图表类型。
+
+<details>
+<summary>👀 查看截图</summary>
+
+<div align="center">
+  <img src="../docs/public/assets/mermaid-preview.png" alt="Mermaid 图表渲染" style="max-width: 100%;"/>
 </div>
 
 </details>

@@ -52,6 +52,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - [📂 Folder Organization](#-folder-organization)
   - [💡 Prompt Library](#-prompt-library)
   - [📐 Formula Copy](#-formula-copy)
+  - [🧜‍♀️ Mermaid Diagram Rendering](#️-mermaid-diagram-rendering)
   - [🍌 NanoBanana Option](#-nanobanana-option)
   - [🔬 Deep Research Export](#-deep-research-export)
   - [💾 Chat Export](#-chat-export)
@@ -132,6 +133,22 @@ See a beautiful LaTeX formula? One click copies the source code. No more manual 
 
 <div align="center">
   <img src="docs/public/assets/gemini-math-copy.png" alt="Formula copy" style="max-width: 100%;"/>
+</div>
+
+</details>
+
+### 🧜‍♀️ Mermaid Diagram Rendering
+**Visualize diagrams instantly.**
+When Gemini outputs Mermaid code (flowcharts, sequence diagrams, Gantt charts, etc.), Voyager automatically renders it as an interactive diagram.
+- **Toggle view**: Switch between rendered diagram and source code with one click.
+- **Fullscreen mode**: Click the diagram to open a fullscreen viewer with zoom and pan support.
+- **Auto-detection**: Supports all major Mermaid diagram types.
+
+<details>
+<summary>👀 View screenshot</summary>
+
+<div align="center">
+  <img src="docs/public/assets/mermaid-preview.png" alt="Mermaid diagram rendering" style="max-width: 100%;"/>
 </div>
 
 </details>

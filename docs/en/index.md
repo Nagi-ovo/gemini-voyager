@@ -26,6 +26,9 @@ features:
   - icon: ✨
     title: Library
     details: Your genius, captured. Save and reuse your best prompts.
+  - icon: 🧜‍♀️
+    title: Mermaid Diagrams
+    details: Code to visuals. Flowcharts, sequence diagrams, Gantt charts rendered instantly.
   - icon: 🍌
     title: NanoBanana Watermark Removal
     details: Lossless watermark removal. Keeping AI moments pure.

@@ -1,0 +1,465 @@
+import mermaid from 'mermaid';
+
+/**
+ * Initialize Mermaid configuration
+ */
+const initMermaid = () => {
+    const isDarkMode = document.body.classList.contains('dark-theme') ||
+        document.body.getAttribute('data-theme') === 'dark' ||
+        document.documentElement.classList.contains('dark') ||
+        window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    mermaid.initialize({
+        startOnLoad: false,
+        theme: isDarkMode ? 'dark' : 'default',
+        securityLevel: 'loose',
+        fontFamily: 'Google Sans, Roboto, sans-serif',
+    });
+};
+
+/**
+ * Check if a code block contains Mermaid syntax
+ */
+const isMermaidCode = (code: string): boolean => {
+    const codeTrimmed = code.trim();
+    const keywords = [
+        'graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram',
+        'erDiagram', 'gantt', 'pie', 'gitGraph', 'journey', 'mindmap',
+        'timeline', 'zenuml', 'sankey-beta', 'quadrantChart', 'requirementDiagram'
+    ];
+
+    if (codeTrimmed.startsWith('%%')) return true;
+
+    return keywords.some(keyword => codeTrimmed.toLowerCase().startsWith(keyword.toLowerCase()));
+};
+
+/**
+ * Create styles for mermaid components and fullscreen viewer
+ */
+const createStyles = () => {
+    if (document.getElementById('gv-mermaid-styles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'gv-mermaid-styles';
+    style.textContent = `
+    .gv-mermaid-wrapper {
+      position: relative;
+    }
+    
+    .gv-mermaid-toggle {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 10;
+      display: flex;
+      gap: 4px;
+      background: var(--gemini-surface-container, rgba(0,0,0,0.05));
+      border-radius: 8px;
+      padding: 2px;
+      border: 1px solid var(--gemini-outline-variant, rgba(0,0,0,0.1));
+    }
+    
+    .gv-mermaid-toggle button {
+      padding: 4px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Google Sans', sans-serif;
+      transition: all 0.2s ease;
+      background: transparent;
+      color: var(--gemini-on-surface-variant, #666);
+    }
+    
+    .gv-mermaid-toggle button:hover {
+      background: var(--gemini-surface-container-high, rgba(0,0,0,0.08));
+    }
+    
+    .gv-mermaid-toggle button.active {
+      background: var(--gemini-primary, #1a73e8);
+      color: white;
+    }
+    
+    .gv-mermaid-diagram {
+      padding: 16px;
+      text-align: center;
+      overflow-x: auto;
+      min-height: 100px;
+      cursor: zoom-in;
+    }
+    
+    .gv-mermaid-diagram svg {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* Fullscreen Modal */
+    .gv-mermaid-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .gv-mermaid-modal.visible {
+      opacity: 1;
+    }
+    
+    .gv-mermaid-modal-toolbar {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+      z-index: 1000000;
+    }
+    
+    .gv-mermaid-modal-toolbar button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .gv-mermaid-modal-toolbar button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+    
+    .gv-mermaid-modal-content {
+      position: relative;
+      cursor: grab;
+      user-select: none;
+    }
+    
+    .gv-mermaid-modal-content.dragging {
+      cursor: grabbing;
+    }
+    
+    .gv-mermaid-modal-content svg {
+      max-width: none;
+      max-height: none;
+    }
+    
+    .gv-mermaid-modal-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+      font-family: 'Google Sans', sans-serif;
+      pointer-events: none;
+    }
+  `;
+    document.head.appendChild(style);
+};
+
+/**
+ * Fullscreen viewer state
+ */
+let currentModal: HTMLElement | null = null;
+let scale = 1;
+let translateX = 0;
+let translateY = 0;
+let isDragging = false;
+let startX = 0;
+let startY = 0;
+
+/**
+ * Open fullscreen viewer for SVG
+ */
+const openFullscreen = (svgHtml: string) => {
+    if (currentModal) return;
+
+    // Reset state
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'gv-mermaid-modal';
+
+    // Toolbar
+    const toolbar = document.createElement('div');
+    toolbar.className = 'gv-mermaid-modal-toolbar';
+
+    const zoomInBtn = document.createElement('button');
+    zoomInBtn.innerHTML = '+';
+    zoomInBtn.title = 'Zoom In';
+
+    const zoomOutBtn = document.createElement('button');
+    zoomOutBtn.innerHTML = '−';
+    zoomOutBtn.title = 'Zoom Out';
+
+    const resetBtn = document.createElement('button');
+    resetBtn.innerHTML = '⊙';
+    resetBtn.title = 'Reset';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕';
+    closeBtn.title = 'Close (ESC)';
+
+    toolbar.appendChild(zoomInBtn);
+    toolbar.appendChild(zoomOutBtn);
+    toolbar.appendChild(resetBtn);
+    toolbar.appendChild(closeBtn);
+
+    // Content container
+    const content = document.createElement('div');
+    content.className = 'gv-mermaid-modal-content';
+    content.innerHTML = svgHtml;
+
+    // Hint
+    const hint = document.createElement('div');
+    hint.className = 'gv-mermaid-modal-hint';
+    hint.textContent = 'Scroll to zoom • Drag to pan • ESC to close';
+
+    modal.appendChild(toolbar);
+    modal.appendChild(content);
+    modal.appendChild(hint);
+    document.body.appendChild(modal);
+    currentModal = modal;
+
+    // Apply transform
+    const applyTransform = () => {
+        content.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    };
+
+    // Zoom functions
+    const zoomIn = () => {
+        scale = Math.min(scale * 1.2, 10);
+        applyTransform();
+    };
+
+    const zoomOut = () => {
+        scale = Math.max(scale / 1.2, 0.1);
+        applyTransform();
+    };
+
+    const resetView = () => {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        applyTransform();
+    };
+
+    const closeModal = () => {
+        modal.classList.remove('visible');
+        setTimeout(() => {
+            modal.remove();
+            currentModal = null;
+        }, 300);
+    };
+
+    // Event listeners
+    zoomInBtn.addEventListener('click', zoomIn);
+    zoomOutBtn.addEventListener('click', zoomOut);
+    resetBtn.addEventListener('click', resetView);
+    closeBtn.addEventListener('click', closeModal);
+
+    // Click backdrop to close
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // ESC to close
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            document.removeEventListener('keydown', handleKeyDown);
+        }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Mouse wheel zoom
+    modal.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+            scale = Math.min(scale * 1.1, 10);
+        } else {
+            scale = Math.max(scale / 1.1, 0.1);
+        }
+        applyTransform();
+    }, { passive: false });
+
+    // Drag to pan
+    content.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        content.classList.add('dragging');
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        applyTransform();
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        content.classList.remove('dragging');
+    });
+
+    // Show modal with animation
+    requestAnimationFrame(() => {
+        modal.classList.add('visible');
+    });
+};
+
+/**
+ * Render Mermaid diagram for a code block
+ */
+const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
+    if (codeBlock.dataset.mermaidCode === code) return;
+    if (codeBlock.dataset.mermaidProcessing === 'true') return;
+
+    codeBlock.dataset.mermaidProcessing = 'true';
+
+    try {
+        const codeBlockHost = codeBlock.closest('code-block') as HTMLElement;
+        if (!codeBlockHost) {
+            codeBlock.dataset.mermaidProcessing = 'false';
+            return;
+        }
+
+        let wrapper = codeBlockHost.parentElement;
+        if (!wrapper?.classList.contains('gv-mermaid-wrapper')) {
+            wrapper = document.createElement('div');
+            wrapper.className = 'gv-mermaid-wrapper';
+            codeBlockHost.parentElement?.insertBefore(wrapper, codeBlockHost);
+            wrapper.appendChild(codeBlockHost);
+
+            // Toggle buttons
+            const toggleContainer = document.createElement('div');
+            toggleContainer.className = 'gv-mermaid-toggle';
+
+            const diagramBtn = document.createElement('button');
+            diagramBtn.textContent = '📊 Diagram';
+            diagramBtn.className = 'active';
+            diagramBtn.dataset.view = 'diagram';
+
+            const codeBtn = document.createElement('button');
+            codeBtn.textContent = '</> Code';
+            codeBtn.dataset.view = 'code';
+
+            toggleContainer.appendChild(diagramBtn);
+            toggleContainer.appendChild(codeBtn);
+            wrapper.appendChild(toggleContainer);
+
+            // Diagram container
+            const diagramContainer = document.createElement('div');
+            diagramContainer.className = 'gv-mermaid-diagram';
+            wrapper.appendChild(diagramContainer);
+
+            codeBlockHost.style.display = 'none';
+
+            const updateView = (view: 'diagram' | 'code') => {
+                if (view === 'diagram') {
+                    codeBlockHost.style.display = 'none';
+                    diagramContainer.style.display = 'block';
+                    diagramBtn.classList.add('active');
+                    codeBtn.classList.remove('active');
+                } else {
+                    codeBlockHost.style.display = '';
+                    diagramContainer.style.display = 'none';
+                    diagramBtn.classList.remove('active');
+                    codeBtn.classList.add('active');
+                }
+            };
+
+            diagramBtn.addEventListener('click', () => updateView('diagram'));
+            codeBtn.addEventListener('click', () => updateView('code'));
+
+            // Click diagram to fullscreen
+            diagramContainer.addEventListener('click', () => {
+                const svgHtml = diagramContainer.innerHTML;
+                if (svgHtml) openFullscreen(svgHtml);
+            });
+        }
+
+        const diagramContainer = wrapper.querySelector('.gv-mermaid-diagram') as HTMLElement;
+        if (!diagramContainer) {
+            codeBlock.dataset.mermaidProcessing = 'false';
+            return;
+        }
+
+        const uniqueId = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+        const { svg } = await mermaid.render(uniqueId, code);
+        diagramContainer.innerHTML = svg;
+
+        codeBlock.dataset.mermaidCode = code;
+        codeBlock.dataset.mermaidProcessing = 'false';
+        console.log('[Gemini Voyager] Mermaid diagram rendered:', uniqueId);
+
+    } catch (error) {
+        console.debug('[Gemini Voyager] Render failed (possibly incomplete):', error);
+        codeBlock.dataset.mermaidProcessing = 'false';
+
+        const codeBlockHost = codeBlock.closest('code-block') as HTMLElement;
+        if (codeBlockHost) {
+            codeBlockHost.style.display = '';
+        }
+    }
+};
+
+/**
+ * Find and process code blocks
+ */
+const processCodeBlocks = () => {
+    const codeElements = document.querySelectorAll('code[data-test-id="code-content"]');
+
+    codeElements.forEach(codeEl => {
+        const codeText = codeEl.textContent || '';
+        if (isMermaidCode(codeText)) {
+            renderMermaid(codeEl as HTMLElement, codeText);
+        }
+    });
+};
+
+/**
+ * Start Mermaid feature
+ */
+export const startMermaid = () => {
+    createStyles();
+    initMermaid();
+
+    processCodeBlocks();
+
+    let timeout: ReturnType<typeof setTimeout>;
+    const debouncedProcess = () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(processCodeBlocks, 1000);
+    };
+
+    const observer = new MutationObserver(() => {
+        debouncedProcess();
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true
+    });
+
+    console.log('[Gemini Voyager] Mermaid integration started');
+};

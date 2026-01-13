@@ -9,6 +9,7 @@ import { startPromptManager } from './prompt/index';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startWatermarkRemover } from './watermarkRemover/index';
+import { startMermaid } from './mermaid/index';
 
 
 import { startFormulaCopy } from '@/features/formulaCopy';
@@ -129,6 +130,10 @@ async function initializeFeatures(): Promise<void> {
     ) {
       promptManagerInstance = await startPromptManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
+
+      // Initialize Mermaid rendering (lightweight)
+      startMermaid();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
     if (location.hostname === 'aistudio.google.com' || location.hostname === 'aistudio.google.cn') {

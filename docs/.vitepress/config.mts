@@ -37,7 +37,8 @@ export default defineConfig({
                             { text: '导出', link: '/guide/export' },
                             { text: 'Deep Research 导出', link: '/guide/deep-research' },
                             { text: '设置', link: '/guide/settings' },
-                            { text: 'NanoBanana 水印去除', link: '/guide/nanobanana' }
+                            { text: 'NanoBanana 水印去除', link: '/guide/nanobanana' },
+                            { text: 'Mermaid 图表渲染', link: '/guide/mermaid' }
                         ]
                     }
                 ],
@@ -74,7 +75,8 @@ export default defineConfig({
                             { text: 'Chat Export', link: '/en/guide/export' },
                             { text: 'Deep Research Export', link: '/en/guide/deep-research' },
                             { text: 'Settings & Customization', link: '/en/guide/settings' },
-                            { text: 'NanoBanana (Watermark Remover)', link: '/en/guide/nanobanana' }
+                            { text: 'NanoBanana (Watermark Remover)', link: '/en/guide/nanobanana' },
+                            { text: 'Mermaid Diagram Rendering', link: '/en/guide/mermaid' }
                         ]
                     }
                 ],
