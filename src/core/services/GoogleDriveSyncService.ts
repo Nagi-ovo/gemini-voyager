@@ -68,11 +68,16 @@ export class GoogleDriveSyncService {
         this.notifyStateChange();
     }
 
-    async authenticate(): Promise<boolean> {
+    async authenticate(interactive: boolean = true): Promise<boolean> {
         try {
             this.updateState({ isSyncing: true, error: null });
-            const token = await this.getAuthToken(true);
+            const token = await this.getAuthToken(interactive);
             if (!token) {
+                // If not interactive and no token, just return false silently
+                if (!interactive) {
+                    this.updateState({ isAuthenticated: false, isSyncing: false });
+                    return false;
+                }
                 throw new Error('Failed to obtain auth token');
             }
             this.updateState({ isAuthenticated: true, isSyncing: false });
@@ -104,12 +109,17 @@ export class GoogleDriveSyncService {
     /**
      * Upload folders and prompts as separate files to Google Drive
      */
-    async upload(folders: FolderData, prompts: PromptItem[]): Promise<boolean> {
+    async upload(folders: FolderData, prompts: PromptItem[], interactive: boolean = true): Promise<boolean> {
         try {
             this.updateState({ isSyncing: true, error: null });
 
-            const token = await this.getAuthToken(true);
+            const token = await this.getAuthToken(interactive);
             if (!token) {
+                if (!interactive) {
+                    console.log('[GoogleDriveSyncService] Upload skipped: Not authenticated (non-interactive)');
+                    this.updateState({ isSyncing: false, isAuthenticated: false });
+                    return false;
+                }
                 throw new Error('Not authenticated');
             }
 
@@ -159,12 +169,17 @@ export class GoogleDriveSyncService {
      * Download folders and prompts from separate files in Google Drive
      * Returns { folders, prompts } or null if no files exist
      */
-    async download(): Promise<{ folders: FolderExportPayload | null; prompts: PromptExportPayload | null } | null> {
+    async download(interactive: boolean = true): Promise<{ folders: FolderExportPayload | null; prompts: PromptExportPayload | null } | null> {
         try {
             this.updateState({ isSyncing: true, error: null });
 
-            const token = await this.getAuthToken(true);
+            const token = await this.getAuthToken(interactive);
             if (!token) {
+                if (!interactive) {
+                    console.log('[GoogleDriveSyncService] Download skipped: Not authenticated (non-interactive)');
+                    this.updateState({ isSyncing: false, isAuthenticated: false });
+                    return null;
+                }
                 throw new Error('Not authenticated');
             }
 

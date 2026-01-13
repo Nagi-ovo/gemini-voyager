@@ -358,7 +358,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if (message && message.type && message.type.startsWith('gv.sync.')) {
         switch (message.type) {
           case 'gv.sync.authenticate': {
-            const success = await googleDriveSyncService.authenticate();
+            const interactive = message.payload?.interactive !== false;
+            const success = await googleDriveSyncService.authenticate(interactive);
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;
           }
@@ -368,16 +369,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             return;
           }
           case 'gv.sync.upload': {
-            const { folders, prompts } = message.payload as {
+            const { folders, prompts, interactive } = message.payload as {
               folders: FolderData;
               prompts: PromptItem[];
+              interactive?: boolean;
             };
-            const success = await googleDriveSyncService.upload(folders, prompts);
+            const success = await googleDriveSyncService.upload(folders, prompts, interactive !== false);
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;
           }
           case 'gv.sync.download': {
-            const data = await googleDriveSyncService.download();
+            const interactive = message.payload?.interactive !== false;
+            const data = await googleDriveSyncService.download(interactive);
             // NOTE: We intentionally do NOT save to storage here.
             // The caller (Popup) is responsible for merging with local data and saving.
             // This prevents data loss from overwriting local changes.

@@ -711,10 +711,6 @@
     "message": "手动",
     "description": "同步模式手动选项"
   },
-  "syncModeAuto": {
-    "message": "自动",
-    "description": "同步模式自动选项"
-  },
   "syncNow": {
     "message": "立即同步",
     "description": "立即同步按钮"

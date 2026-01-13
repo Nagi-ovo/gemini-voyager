@@ -3764,8 +3764,8 @@ export class FolderManager {
       return true;
     });
 
-    // Check for auto-sync on page load
-    this.checkAutoSync();
+    // Perform migration from legacy settings
+    this.performMigration();
   }
 
   /**
@@ -3782,55 +3782,22 @@ export class FolderManager {
   }
 
   /**
-   * Check if auto-sync is enabled and trigger sync on page load
+   * Migrate legacy settings
    */
-  private async checkAutoSync(): Promise<void> {
+  private async performMigration(): Promise<void> {
     try {
       const result = await chrome.storage.local.get('gvSyncMode');
-      console.log('[FolderManager] Auto-sync check, mode:', result.gvSyncMode);
+      // Migration: Auto sync is deprecated, switch to manual
       if (result.gvSyncMode === 'auto') {
-        console.log('[FolderManager] Auto-sync is enabled, triggering sync in 1s...');
-        // Delay to ensure service worker is ready
-        setTimeout(async () => {
-          try {
-            // Download cloud data
-            const response = await chrome.runtime.sendMessage({ type: 'gv.sync.download' });
-
-            if (!response?.ok || !response.data) {
-              console.log('[FolderManager] Auto-sync: No cloud data or download failed');
-              return;
-            }
-
-            // Extract cloud data
-            const cloudFolderData = response.data.folders?.data || { folders: [], folderContents: {} };
-            const cloudPromptItems = response.data.prompts?.items || [];
-
-            // Get current local data (from memory - this.data is the source of truth)
-            const localFolderData = this.data;
-
-            // Perform merge using the same logic as popup
-            // For folders: merge by ID, prefer newer updatedAt
-            const mergedFolders = this.mergeFolderDataForAutoSync(localFolderData, cloudFolderData);
-
-            // Save merged data
-            await chrome.storage.local.set({
-              gvFolderData: mergedFolders,
-            });
-
-            // Reload from storage to ensure UI is updated
-            await this.loadData();
-            this.renderAllFolders();
-
-            console.log('[FolderManager] Auto-sync completed with merge');
-          } catch (error) {
-            console.warn('[FolderManager] Auto-sync failed:', error);
-          }
-        }, 1000);
+        console.log('[FolderManager] Migrating legacy "auto" sync mode to "manual"');
+        await chrome.storage.local.set({ gvSyncMode: 'manual' });
       }
     } catch (error) {
-      console.warn('[FolderManager] Failed to check auto-sync setting:', error);
+      console.error('[FolderManager] Migration failed:', error);
     }
   }
+
+
 
   /**
    * Merge folder data for auto-sync (same logic as popup's mergeFolderData)

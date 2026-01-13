@@ -711,10 +711,6 @@
     "message": "Manual",
     "description": "Sync mode manual option"
   },
-  "syncModeAuto": {
-    "message": "Auto",
-    "description": "Sync mode auto option"
-  },
   "syncNow": {
     "message": "Sync Now",
     "description": "Sync now button"

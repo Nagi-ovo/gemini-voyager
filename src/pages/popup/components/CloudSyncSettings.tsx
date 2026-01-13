@@ -347,16 +347,14 @@ export function CloudSyncSettings() {
                 {/* Sync Mode Toggle */}
                 <div>
                     <Label className="text-sm font-medium mb-2 block">Sync Mode</Label>
-                    <div className="relative grid grid-cols-3 rounded-lg bg-secondary/50 p-1 gap-1">
+                    <div className="relative grid grid-cols-2 rounded-lg bg-secondary/50 p-1 gap-1">
                         <div
-                            className="absolute top-1 bottom-1 w-[calc(33.333%-6px)] rounded-md bg-primary shadow-md pointer-events-none transition-all duration-300 ease-out"
+                            className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md bg-primary shadow-md pointer-events-none transition-all duration-300 ease-out"
                             style={{
                                 left:
                                     syncState.mode === 'disabled'
                                         ? '4px'
-                                        : syncState.mode === 'manual'
-                                            ? 'calc(33.333% + 2px)'
-                                            : 'calc(66.666% + 0px)',
+                                        : 'calc(50% + 2px)',
                             }}
                         />
                         <button
@@ -372,13 +370,6 @@ export function CloudSyncSettings() {
                             onClick={() => handleModeChange('manual')}
                         >
                             {t('syncModeManual')}
-                        </button>
-                        <button
-                            className={`relative z-10 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${syncState.mode === 'auto' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            onClick={() => handleModeChange('auto')}
-                        >
-                            {t('syncModeAuto')}
                         </button>
                     </div>
                 </div>
