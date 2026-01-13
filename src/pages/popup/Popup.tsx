@@ -237,6 +237,15 @@ export default function Popup() {
     const fetchLatestVersion = async () => {
       if (!extVersion) return;
 
+      // Check for store installation (Chrome/Edge Web Store)
+      // Store-installed extensions have an 'update_url' in the manifest.
+      // We skip manual version checks for these users to rely on store auto-updates
+      // and prevent confusing "new version" prompts when GitHub is ahead of the store.
+      const manifest = chrome?.runtime?.getManifest?.() as Record<string, any> | undefined;
+      if (manifest?.update_url) {
+        return;
+      }
+
       try {
         const cache = await browser.storage.local.get(LATEST_VERSION_CACHE_KEY);
         const cached = cache?.[LATEST_VERSION_CACHE_KEY] as { version?: string; fetchedAt?: number } | undefined;
