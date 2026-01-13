@@ -14,23 +14,40 @@ const initMermaid = () => {
         theme: isDarkMode ? 'dark' : 'default',
         securityLevel: 'loose',
         fontFamily: 'Google Sans, Roboto, sans-serif',
-    });
+        logLevel: 'fatal', // Only log fatal errors, suppress syntax warnings
+    } as Parameters<typeof mermaid.initialize>[0]);
 };
 
 /**
- * Check if a code block contains Mermaid syntax
+ * Check if a code block contains Mermaid syntax and appears complete enough to render
  */
 const isMermaidCode = (code: string): boolean => {
     const codeTrimmed = code.trim();
+
+    // Minimum length to avoid parsing incomplete/streaming content
+    if (codeTrimmed.length < 50) return false;
+
     const keywords = [
         'graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram',
         'erDiagram', 'gantt', 'pie', 'gitGraph', 'journey', 'mindmap',
         'timeline', 'zenuml', 'sankey-beta', 'quadrantChart', 'requirementDiagram'
     ];
 
-    if (codeTrimmed.startsWith('%%')) return true;
+    const startsWithKeyword = codeTrimmed.startsWith('%%') ||
+        keywords.some(keyword => codeTrimmed.toLowerCase().startsWith(keyword.toLowerCase()));
 
-    return keywords.some(keyword => codeTrimmed.toLowerCase().startsWith(keyword.toLowerCase()));
+    if (!startsWithKeyword) return false;
+
+    // Check if code looks complete (has multiple lines and doesn't end mid-statement)
+    const lines = codeTrimmed.split('\n').filter(l => l.trim().length > 0);
+    if (lines.length < 3) return false;
+
+    // Check last line doesn't look incomplete (ending with operators or open brackets)
+    const lastLine = lines[lines.length - 1].trim();
+    const incompleteEndings = ['-->', '---', '-.', '==>', ':::', '[', '(', '{', '|', '&', ','];
+    if (incompleteEndings.some(ending => lastLine.endsWith(ending))) return false;
+
+    return true;
 };
 
 /**
@@ -342,6 +359,43 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
             return;
         }
 
+        // First, try to render to validate the code
+        const uniqueId = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+        let svg: string;
+        let hasError = false;
+
+        try {
+            const result = await mermaid.render(uniqueId, code);
+            svg = result.svg;
+        } catch (renderError) {
+            // Mermaid failed - likely incomplete or invalid syntax
+            hasError = true;
+
+            // Clean up any error SVGs mermaid may have created
+            const errorSvg = document.getElementById(uniqueId);
+            if (errorSvg) errorSvg.remove();
+
+            // Also clean up any floating error containers mermaid creates
+            document.querySelectorAll('[id^="d"]').forEach(el => {
+                if (el.textContent?.includes('Syntax error') || el.querySelector('.error-icon')) {
+                    el.remove();
+                }
+            });
+
+            // Create a friendly error message
+            const errorMsg = renderError instanceof Error ? renderError.message : 'Unknown error';
+            const shortError = errorMsg.length > 100 ? errorMsg.substring(0, 100) + '...' : errorMsg;
+            svg = `
+                <div style="padding: 24px; text-align: center; color: var(--gemini-on-surface-variant, #666);">
+                    <div style="font-size: 32px; margin-bottom: 12px;">⚠️</div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">Mermaid Syntax Error</div>
+                    <div style="font-size: 12px; opacity: 0.7; font-family: monospace; max-width: 400px; margin: 0 auto; word-break: break-word;">${shortError}</div>
+                    <div style="margin-top: 12px; font-size: 13px;">Click <b>"&lt;/&gt; Code"</b> to view source</div>
+                </div>
+            `;
+        }
+
+        // Rendering succeeded! Now create or update the UI
         let wrapper = codeBlockHost.parentElement;
         if (!wrapper?.classList.contains('gv-mermaid-wrapper')) {
             wrapper = document.createElement('div');
@@ -390,10 +444,12 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
             diagramBtn.addEventListener('click', () => updateView('diagram'));
             codeBtn.addEventListener('click', () => updateView('code'));
 
-            // Click diagram to fullscreen
+            // Click diagram to fullscreen (only if it's a valid SVG, not error)
             diagramContainer.addEventListener('click', () => {
-                const svgHtml = diagramContainer.innerHTML;
-                if (svgHtml) openFullscreen(svgHtml);
+                const svgElement = diagramContainer.querySelector('svg');
+                if (svgElement) {
+                    openFullscreen(diagramContainer.innerHTML);
+                }
             });
         }
 
@@ -403,8 +459,7 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
             return;
         }
 
-        const uniqueId = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
-        const { svg } = await mermaid.render(uniqueId, code);
+        // Insert the successfully rendered SVG
         diagramContainer.innerHTML = svg;
 
         codeBlock.dataset.mermaidCode = code;
@@ -412,7 +467,6 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
         console.log('[Gemini Voyager] Mermaid diagram rendered:', uniqueId);
 
     } catch (error) {
-        console.debug('[Gemini Voyager] Render failed (possibly incomplete):', error);
         codeBlock.dataset.mermaidProcessing = 'false';
 
         const codeBlockHost = codeBlock.closest('code-block') as HTMLElement;
