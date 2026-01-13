@@ -32,6 +32,15 @@ features:
   - icon: 🍌
     title: NanoBanana 水印去除
     details: 无损去水印。让 AI 生成的瞬间回归纯净。
+  - icon: 🔬
+    title: Deep Research 导出
+    details: 留存思考。一键导出深度研究的思维链与引用。
+  - icon: 💾
+    title: 对话导出
+    details: 数据归你。多种格式一键存档，知识不再流失。
+  - icon: 🚀
+    title: 无限可能
+    details: 持续进化。更多实用功能，敬请期待。
 ---
 
 <div class="vp-doc" style="margin-top: 4rem; text-align: center;">

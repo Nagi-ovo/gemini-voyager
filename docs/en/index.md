@@ -32,6 +32,15 @@ features:
   - icon: 🍌
     title: NanoBanana Watermark Removal
     details: Lossless watermark removal. Keeping AI moments pure.
+  - icon: 🔬
+    title: Deep Research Export
+    details: Preserve your thoughts. Export deep research reasoning chains and citations with one click.
+  - icon: 💾
+    title: Chat Export
+    details: Data sovereignty. Archive in multiple formats so knowledge is never lost.
+  - icon: 🚀
+    title: Infinite Possibilities
+    details: Continuous evolution. More features are on the way.
 ---
 
 <div class="vp-doc" style="margin-top: 4rem; text-align: center;">
