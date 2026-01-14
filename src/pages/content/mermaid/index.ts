@@ -14,8 +14,8 @@ const initMermaid = () => {
         theme: isDarkMode ? 'dark' : 'default',
         securityLevel: 'loose',
         fontFamily: 'Google Sans, Roboto, sans-serif',
-        logLevel: 'fatal', // Only log fatal errors, suppress syntax warnings
-    } as Parameters<typeof mermaid.initialize>[0]);
+        logLevel: 5, // 5 = fatal, only log fatal errors (v9.x uses numbers)
+    });
 };
 
 /**
@@ -365,8 +365,9 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
         let hasError = false;
 
         try {
+            // v9.x render returns string directly, v10.x returns {svg: string}
             const result = await mermaid.render(uniqueId, code);
-            svg = result.svg;
+            svg = typeof result === 'string' ? result : (result as { svg: string }).svg;
         } catch (renderError) {
             // Mermaid failed - likely incomplete or invalid syntax
             hasError = true;
@@ -494,6 +495,7 @@ const processCodeBlocks = () => {
  * Start Mermaid feature
  */
 export const startMermaid = () => {
+
     createStyles();
     initMermaid();
 

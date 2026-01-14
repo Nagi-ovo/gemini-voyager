@@ -5,11 +5,11 @@ import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderManager } from './folder/index';
 import { initKaTeXConfig } from './katexConfig';
+import { startMermaid } from './mermaid/index';
 import { startPromptManager } from './prompt/index';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startWatermarkRemover } from './watermarkRemover/index';
-import { startMermaid } from './mermaid/index';
 
 
 import { startFormulaCopy } from '@/features/formulaCopy';

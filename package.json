@@ -1,6 +1,6 @@
 {
   "name": "gemini-voyager",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Supercharge your Gemini experience with timeline navigation, folder organization, prompt library, and chat export.",
   "license": "MIT",
   "author": "Jesse Zhang",
@@ -41,12 +41,12 @@
     "lucide-react": "^0.553.0",
     "marked": "16.4.1",
     "marked-katex-extension": "^4",
+    "mermaid": "9.2.2",
     "prettier": "^3.6.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.3.1",
-    "webextension-polyfill": "^0.12.0",
-    "mermaid": "^10.9.3"
+    "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "2.2.1",

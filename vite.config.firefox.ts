@@ -22,6 +22,7 @@ export default mergeConfig(
           },
           background: {
             scripts: ['src/pages/background/index.ts'],
+            type: 'module',
           },
         } as unknown as ManifestV3Export,
         browser: 'firefox',
