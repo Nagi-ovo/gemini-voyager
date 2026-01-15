@@ -1594,7 +1594,7 @@ export class TimelineManager {
   }
 
   private computeActiveByScroll(): void {
-    if (!this.scrollContainer || this.markers.length === 0) return;
+    if (this.isScrolling || !this.scrollContainer || this.markers.length === 0) return;
     const containerRect = this.scrollContainer.getBoundingClientRect();
     const scrollTop = this.scrollContainer.scrollTop;
     const ref = scrollTop + this.scrollContainer.clientHeight * 0.45;
@@ -2428,11 +2428,11 @@ export class TimelineManager {
       await keyboardShortcutService.init();
 
       // Register shortcut handler with queue support
-      this.shortcutUnsubscribe = keyboardShortcutService.on((action) => {
+      this.shortcutUnsubscribe = keyboardShortcutService.on((action, event) => {
         if (action === 'timeline:previous') {
-          this.enqueueNavigation('previous');
+          this.enqueueNavigation('previous', event.repeat);
         } else if (action === 'timeline:next') {
-          this.enqueueNavigation('next');
+          this.enqueueNavigation('next', event.repeat);
         }
       });
     } catch (error) {
@@ -2444,7 +2444,16 @@ export class TimelineManager {
   /**
    * Enqueue navigation action (supports rapid key presses)
    */
-  private enqueueNavigation(direction: 'previous' | 'next'): void {
+  private enqueueNavigation(direction: 'previous' | 'next', isRepeat: boolean = false): void {
+    // Prevent accumulation during long presses
+    if (isRepeat && this.navigationQueue.length > 0) {
+      return;
+    }
+    // Limit queue size for rapid tapping as well
+    if (this.navigationQueue.length >= 3) {
+      return;
+    }
+
     this.navigationQueue.push(direction);
     this.processNavigationQueue();
   }
@@ -2478,6 +2487,13 @@ export class TimelineManager {
    */
   private async performNodeNavigation(targetIndex: number, currentIndex: number): Promise<void> {
     if (targetIndex < 0 || targetIndex >= this.markers.length) return;
+
+    // Clear any pending scroll updates to prevent interference
+    if (this.activeChangeTimer) {
+      clearTimeout(this.activeChangeTimer);
+      this.activeChangeTimer = null;
+      this.pendingActiveId = null;
+    }
 
     const targetMarker = this.markers[targetIndex];
     if (!targetMarker?.element) return;
