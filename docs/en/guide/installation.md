@@ -23,11 +23,18 @@ The Web Store review process can be slow. If you want the cutting-edge version i
 5. Click **Load unpacked** and select the folder you just unzipped.
 
 ## 3. Firefox
+
+**Method 1: Permanent Install (.xpi)**
+1. Download the latest `gemini-voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+2. Open the Add-ons Manager (`about:addons`).
+3. Drag and drop the `.xpi` file to install (or click the gear icon ⚙️ -> **Install Add-on From File**).
+
+**Method 2: Temporary Debug (Unpacked)**
 1. Download `gemini-voyager-firefox-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Unzip it.
 3. Go to `about:debugging` > **This Firefox**.
 4. Click **Load Temporary Add-on...** and select the `manifest.json` file inside the folder.
-*(Note: This persists until you restart Firefox. For permanent installation, see the [developer guide](https://github.com/Nagi-ovo/gemini-voyager).)*
+*(Note: This persists until you restart Firefox.)*
 
 ## 4. Safari (macOS)
 1. Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).

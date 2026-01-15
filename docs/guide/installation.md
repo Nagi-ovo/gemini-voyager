@@ -23,11 +23,18 @@ Chrome, Edge, Brave, Opera 用户首选。
 5. 点 **加载已解压的扩展程序**，选刚才的文件夹。
 
 ## 3. Firefox
+
+**方法一：永久安装 (.xpi)**
+1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下最新的 `gemini-voyager-firefox-vX.Y.Z.xpi`。
+2. 打开扩展管理页 (`about:addons`)。
+3. 把下载的 `.xpi` 文件拖进去安装（或者点右上角齿轮 ⚙️ -> **从文件安装附加组件**）。
+
+**方法二：临时调试 (解压安装)**
 1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下 `gemini-voyager-firefox-vX.Y.Z.zip`。
 2. 解压。
 3. 进 `about:debugging` > **此 Firefox**。
 4. 点 **临时载入附加组件...**，选文件夹里的 `manifest.json`。
-*（注：这是临时调试模式。Firefox 重启后会消失。想永久用？看 [开发者指南](https://github.com/Nagi-ovo/gemini-voyager)。）*
+*（注：这是临时调试模式。Firefox 重启后会消失。）*
 
 ## 4. Safari (macOS)
 1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下 `gemini-voyager-safari-vX.Y.Z.zip`。
