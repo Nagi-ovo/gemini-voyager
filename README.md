@@ -51,6 +51,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - [📍 Timeline Navigation](#-timeline-navigation)
   - [📂 Folder Organization](#-folder-organization)
   - [💡 Prompt Library](#-prompt-library)
+  - [💬 Quote Reply](#-quote-reply)
   - [📐 Formula Copy](#-formula-copy)
   - [🧜‍♀️ Mermaid Diagram Rendering](#️-mermaid-diagram-rendering)
   - [🍌 NanoBanana Option](#-nanobanana-option)
@@ -120,6 +121,23 @@ Don't rewrite the same instructions. Save your best prompts and use them anywher
 
 <div align="center">
   <img src="docs/public/assets/gemini-prompt-manager.png" alt="Prompt manager" style="max-width: 100%;"/>
+</div>
+
+</details>
+
+</details>
+
+### 💬 Quote Reply
+**Reply with context.**
+Select text in any message to see a floating quote button. Click it to insert the selected text as a quote into your reply box instantly.
+- **Context-aware**: Works for both user and model messages.
+- **Standard format**: Uses standard Markdown blockquote syntax (`> ...`).
+
+<details>
+<summary>👀 View screenshot</summary>
+
+<div align="center">
+  <img src="docs/public/assets/quote-reply.png" alt="Quote Reply" style="max-width: 100%;"/>
 </div>
 
 </details>

@@ -51,6 +51,7 @@
   - [📍 时间线导航](#-时间线导航)
   - [📂 文件夹管理](#-文件夹管理)
   - [💡 提示词库](#-提示词库)
+  - [💬 引用回复](#-引用回复)
   - [📐 公式复制](#-公式复制)
   - [🧜‍♀️ Mermaid 图表渲染](#️-mermaid-图表渲染)
   - [🍌 NanoBanana 选项](#-nanobanana-选项)
@@ -120,6 +121,23 @@
 
 <div align="center">
   <img src="../docs/public/assets/gemini-prompt-manager.png" alt="提示词管理器" style="max-width: 100%;"/>
+</div>
+
+</details>
+
+</details>
+
+### 💬 引用回复
+**有据可依的沟通。**
+选中任何消息中的文本，立即出现悬浮引用按钮。点击即可将选中文本以引用格式插入输入框。
+- **上下文感知**：支持用户和模型的任何消息。
+- **标准格式**：使用标准 Markdown 引用语法 (`> ...`)。
+
+<details>
+<summary>👀 查看截图</summary>
+
+<div align="center">
+  <img src="../docs/public/assets/quote-reply.png" alt="引用回复" style="max-width: 100%;"/>
 </div>
 
 </details>
