@@ -802,5 +802,9 @@
   "timelineExpand": {
     "message": "Expand",
     "description": "Expand children"
+  },
+  "quoteReply": {
+    "message": "Quote Reply",
+    "description": "Quote reply button text"
   }
 }

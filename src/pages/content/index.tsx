@@ -12,8 +12,10 @@ import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startWatermarkRemover } from './watermarkRemover/index';
 
-
 import { startFormulaCopy } from '@/features/formulaCopy';
+import { initI18n } from '@/utils/i18n';
+
+
 
 
 /**
@@ -204,6 +206,8 @@ function handleVisibilityChange(): void {
     // This must run before any formulas are rendered on the page
     if (isSupportedSite) {
       initKaTeXConfig();
+      // Initialize i18n early to ensure translations are available
+      initI18n().catch(e => console.error('[Gemini Voyager] i18n init error:', e));
     }
 
     // If not a known site, check if it's a custom website (async)

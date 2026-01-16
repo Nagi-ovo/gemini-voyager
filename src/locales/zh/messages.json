@@ -810,5 +810,9 @@
   "timelineExpand": {
     "message": "展开",
     "description": "展开子节点"
+  },
+  "quoteReply": {
+    "message": "引用回复",
+    "description": "引用回复按钮文本"
   }
 }

@@ -1,3 +1,4 @@
+import { getTranslationSync } from '../../../utils/i18n';
 import { startPromptManager } from '../prompt/index'; // Just for type reference/consistency if needed
 
 // SVGs
@@ -110,8 +111,8 @@ export function startQuoteReply() {
         quoteBtn = document.createElement('div');
         quoteBtn.className = 'gv-quote-btn gv-hidden';
         // Check language roughly (or just use "Quote")
-        const isZh = document.documentElement.lang?.startsWith('zh') || navigator.language.startsWith('zh');
-        const text = isZh ? '引用回复' : 'Quote Reply';
+        // Check language roughly (or just use "Quote")
+        const text = getTranslationSync('quoteReply');
 
         quoteBtn.innerHTML = `${QUOTE_ICON}<span>${text}</span>`;
 
