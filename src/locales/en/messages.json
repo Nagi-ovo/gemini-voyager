@@ -806,5 +806,21 @@
   "quoteReply": {
     "message": "Quote Reply",
     "description": "Quote reply button text"
+  },
+  "inputCollapseOptions": {
+    "message": "Input Collapse",
+    "description": "Input collapse options section label"
+  },
+  "enableInputCollapse": {
+    "message": "Enable input collapse",
+    "description": "Enable input collapse toggle label"
+  },
+  "enableInputCollapseHint": {
+    "message": "Collapse the input area when empty to gain more reading space",
+    "description": "Input collapse feature hint"
+  },
+  "inputCollapsePlaceholder": {
+    "message": "Message Gemini",
+    "description": "Placeholder text shown in collapsed input"
   }
 }

@@ -12,6 +12,8 @@ import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startWatermarkRemover } from './watermarkRemover/index';
 
+import { startInputCollapse } from './inputCollapse/index';
+
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 
@@ -114,6 +116,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startSidebarWidthAdjuster();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startInputCollapse();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startFormulaCopy();

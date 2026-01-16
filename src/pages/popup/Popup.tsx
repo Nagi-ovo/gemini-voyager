@@ -101,6 +101,7 @@ interface SettingsUpdate {
   customWebsites?: string[];
   watermarkRemoverEnabled?: boolean;
   hidePromptManager?: boolean;
+  inputCollapseEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -120,6 +121,7 @@ export default function Popup() {
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
+  const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(true);
 
   const handleFormulaCopyFormatChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,6 +166,7 @@ export default function Popup() {
     if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
     if (typeof settings.watermarkRemoverEnabled === 'boolean') payload.geminiWatermarkRemoverEnabled = settings.watermarkRemoverEnabled;
     if (typeof settings.hidePromptManager === 'boolean') payload.gvHidePromptManager = settings.hidePromptManager;
+    if (typeof settings.inputCollapseEnabled === 'boolean') payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
     void setSyncStorage(payload);
   }, [setSyncStorage]);
 
@@ -310,6 +313,7 @@ export default function Popup() {
           gvFormulaCopyFormat: 'latex',
           geminiWatermarkRemoverEnabled: true,
           gvHidePromptManager: false,
+          gvInputCollapseEnabled: true,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -327,6 +331,7 @@ export default function Popup() {
           setCustomWebsites(loadedCustomWebsites);
           setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
           setHidePromptManager(!!res?.gvHidePromptManager);
+          setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -825,6 +830,29 @@ export default function Popup() {
 
         {/* Keyboard Shortcuts */}
         <KeyboardShortcutSettings />
+
+        {/* Input Collapse Options */}
+        <Card className="p-4 hover:shadow-lg transition-shadow">
+          <CardTitle className="mb-4 text-xs uppercase">{t('inputCollapseOptions')}</CardTitle>
+          <CardContent className="p-0 space-y-4">
+            <div className="flex items-center justify-between group">
+              <div className="flex-1">
+                <Label htmlFor="input-collapse-enabled" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                  {t('enableInputCollapse')}
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">{t('enableInputCollapseHint')}</p>
+              </div>
+              <Switch
+                id="input-collapse-enabled"
+                checked={inputCollapseEnabled}
+                onChange={(e) => {
+                  setInputCollapseEnabled(e.target.checked);
+                  apply({ inputCollapseEnabled: e.target.checked });
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Prompt Manager Options */}
         <Card className="p-4 hover:shadow-lg transition-shadow">
