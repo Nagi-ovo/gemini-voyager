@@ -7,6 +7,7 @@ import { startFolderManager } from './folder/index';
 import { initKaTeXConfig } from './katexConfig';
 import { startMermaid } from './mermaid/index';
 import { startPromptManager } from './prompt/index';
+import { startQuoteReply } from './quoteReply/index';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startWatermarkRemover } from './watermarkRemover/index';
@@ -35,7 +36,9 @@ const BACKGROUND_TAB_MAX_DELAY = 8000; // Maximum delay for background tabs (300
 let initialized = false;
 let initializationTimer: number | null = null;
 let folderManagerInstance: Awaited<ReturnType<typeof startFolderManager>> | null = null;
+
 let promptManagerInstance: Awaited<ReturnType<typeof startPromptManager>> | null = null;
+let quoteReplyCleanup: (() => void) | null = null;
 
 /**
  * Check if current hostname matches any custom websites
@@ -112,6 +115,10 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startFormulaCopy();
+
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      quoteReplyCleanup = startQuoteReply();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Watermark remover - based on gemini-watermark-remover by journey-ad
@@ -248,6 +255,10 @@ function handleVisibilityChange(): void {
         if (promptManagerInstance) {
           promptManagerInstance.destroy();
           promptManagerInstance = null;
+        }
+        if (quoteReplyCleanup) {
+          quoteReplyCleanup();
+          quoteReplyCleanup = null;
         }
       } catch (e) {
         console.error('[Gemini Voyager] Cleanup error:', e);
