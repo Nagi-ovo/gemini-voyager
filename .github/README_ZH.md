@@ -245,6 +245,19 @@
 
 </details>
 
+### 🫥 输入框折叠
+**一方净土，专心阅读。**
+输入框为空时自动折叠，点击即可展开输入。
+
+<details>
+<summary>👀 查看截图</summary>
+
+<div align="center">
+  <img src="../docs/public/assets/hide-input-area.png" alt="输入框折叠" style="max-width: 100%;"/>
+</div>
+
+</details>
+
 ---
 
 ## 📥 安装方式

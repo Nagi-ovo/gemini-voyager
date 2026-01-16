@@ -25,3 +25,4 @@ Click the extension icon to access the control center.
     <img src="/assets/gemini-chatwidth.png" alt="Chat width adjustment" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
 </div>
+

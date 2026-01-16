@@ -245,6 +245,19 @@ Wide screen? Make use of it. Customize the chat container width (400px - 1400px)
 
 </details>
 
+### 🫥 Input Collapse
+**More room to read.**
+The input area auto-collapses when empty. Click to expand and start typing.
+
+<details>
+<summary>👀 View screenshot</summary>
+
+<div align="center">
+  <img src="docs/public/assets/hide-input-area.png" alt="Input collapse" style="max-width: 100%;"/>
+</div>
+
+</details>
+
 ---
 
 ## 📥 Installation
