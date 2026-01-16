@@ -12,7 +12,7 @@ Voyager simplifies this process:
 2. **Floating Button**: A "Quote Reply" button will automatically appear near the selected text.
 3. **One-Click Insert**: Click the button, and the selected text will be automatically inserted into your input box in standard Markdown blockquote format (`> content`).
 
-![Quote Reply](/assets/gemini-quote-reply.png)
+![Quote Reply](/assets/quote-reply.png)
 
 ## Features
 

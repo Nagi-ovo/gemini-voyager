@@ -36,7 +36,7 @@ export default defineConfig({
                             { text: '自定义网站', link: '/guide/custom-websites' },
                             { text: '导出', link: '/guide/export' },
                             { text: 'Deep Research 导出', link: '/guide/deep-research' },
-                            { text: '设置', link: '/guide/settings' },
+                            { text: '对话宽度调整', link: '/guide/settings' },
                             { text: 'NanoBanana 水印去除', link: '/guide/nanobanana' },
                             { text: '引用回复', link: '/guide/quote-reply' },
                             { text: 'Mermaid 图表渲染', link: '/guide/mermaid' }
@@ -75,7 +75,7 @@ export default defineConfig({
                             { text: 'Custom Websites', link: '/en/guide/custom-websites' },
                             { text: 'Chat Export', link: '/en/guide/export' },
                             { text: 'Deep Research Export', link: '/en/guide/deep-research' },
-                            { text: 'Settings & Customization', link: '/en/guide/settings' },
+                            { text: 'Chat Width Adjustment', link: '/en/guide/settings' },
                             { text: 'NanoBanana (Watermark Remover)', link: '/en/guide/nanobanana' },
                             { text: 'Quote Reply', link: '/en/guide/quote-reply' },
                             { text: 'Mermaid Diagram Rendering', link: '/en/guide/mermaid' }
