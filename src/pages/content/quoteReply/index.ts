@@ -216,6 +216,21 @@ export function startQuoteReply() {
             if (!anchor) return;
 
             const element = anchor.nodeType === Node.TEXT_NODE ? anchor.parentElement : anchor as HTMLElement;
+
+            // Check if selection is inside main content area
+            // Gemini uses <main> or sometimes specific classes. We want to avoid nav, sidebar, etc.
+            const mainContent = document.querySelector('main');
+            if (mainContent && !mainContent.contains(element)) {
+                hideButton();
+                return;
+            }
+
+            // Also explicitly check for sidebar classes just in case
+            if (element?.closest('nav') || element?.closest('[role="navigation"]') || element?.closest('.sidebar') || element?.closest('.mat-drawer')) {
+                hideButton();
+                return;
+            }
+
             // Selectors for valid areas: user-query-container, model-response, conversation-container
             // Or just check if it's not the input box itself
             if (element?.closest('[contenteditable="true"]')) {
