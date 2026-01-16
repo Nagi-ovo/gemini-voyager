@@ -26,6 +26,14 @@ export function stripDevIcons(isDev: boolean) {
         console.log(`Deleted assets/ directory from prod build`)
       );
     },
+    writeBundle(outputOptions: any) {
+      const outDir = outputOptions.dir;
+      // Remove .vite directory (Vite's internal manifest, not needed for extension)
+      const viteDir = resolve(outDir, '.vite');
+      fs.rm(viteDir, { recursive: true, force: true }, () =>
+        console.log(`Deleted .vite/ directory from prod build`)
+      );
+    },
   };
 }
 
