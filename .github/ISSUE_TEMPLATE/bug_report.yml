@@ -1,0 +1,65 @@
+name: '🐛 反馈缺陷 Bug Report'
+description: '反馈一个问题缺陷 | Report a bug'
+title: '[Bug] '
+labels: '🐛 Bug'
+body:
+  - type: dropdown
+    attributes:
+      label: '💻 系统环境 | Operating System'
+      options:
+        - Windows
+        - macOS
+        - Ubuntu
+        - Other Linux
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: '🌐 浏览器 | Browser'
+      description: 'Which browser are you using?'
+      options:
+        - Chrome
+        - Edge
+        - Safari
+        - Firefox
+        - Other
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: '📦 扩展版本 | Extension Version'
+      description: 'Which version of Gemini Voyager are you using? (e.g., 1.1.3)'
+      placeholder: '1.1.3'
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '🐛 问题描述 | Bug Description'
+      description: 'A clear and concise description of the bug.'
+      placeholder: 'Describe what happened...'
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '🚦 期望结果 | Expected Behavior'
+      description: 'A clear and concise description of what you expected to happen.'
+      placeholder: 'Describe what you expected...'
+  - type: textarea
+    attributes:
+      label: '📷 复现步骤 | Recurrence Steps'
+      description: 'Steps to reproduce the behavior.'
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+  - type: textarea
+    attributes:
+      label: '📸 截图 | Screenshots'
+      description: 'If applicable, add screenshots to help explain your problem.'
+      placeholder: 'Drag and drop images here or paste image URLs'
+  - type: textarea
+    attributes:
+      label: '📝 补充信息 | Additional Information'
+      description: 'If your problem needs further explanation, please add more information here.'
+      placeholder: 'Any additional context, error messages, or console logs...'
