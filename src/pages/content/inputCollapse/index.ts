@@ -252,13 +252,13 @@ export function startInputCollapse() {
 
 let observer: MutationObserver | null = null;
 let initialized = false;
-let urlChangeHandler: (() => void) | null = null;
+let eventController: AbortController | null = null;
 
 function cleanup() {
-    // Remove URL change listener
-    if (urlChangeHandler) {
-        window.removeEventListener('popstate', urlChangeHandler);
-        urlChangeHandler = null;
+    // Abort all event listeners managed by the controller
+    if (eventController) {
+        eventController.abort();
+        eventController = null;
     }
 
     // Remove styles
@@ -297,8 +297,12 @@ function initInputCollapse() {
     let isFocused = false;
     let lastPathname = window.location.pathname;
 
+    // Create AbortController for managing all event listeners
+    eventController = new AbortController();
+    const { signal } = eventController;
+
     // Handle URL changes for SPA navigation
-    urlChangeHandler = () => {
+    const urlChangeHandler = () => {
         const currentPathname = window.location.pathname;
         if (currentPathname === lastPathname) return;
 
@@ -317,7 +321,7 @@ function initInputCollapse() {
     };
 
     // Listen for URL changes (browser back/forward)
-    window.addEventListener('popstate', urlChangeHandler);
+    window.addEventListener('popstate', urlChangeHandler, { signal });
 
     // MutationObserver to re-apply when Gemini re-renders and detect SPA navigation
     // Use MutationObserver so we re-apply if Gemini re-renders (common in SPAs)
@@ -332,16 +336,16 @@ function initInputCollapse() {
 
             ensurePlaceholder(container);
 
-            // Events
+            // Events - use signal for automatic cleanup
             container.addEventListener('click', () => {
                 expand(container);
-            });
+            }, { signal });
 
             // Capture focus events deeply
             container.addEventListener('focusin', () => {
                 isFocused = true;
                 expand(container);
-            });
+            }, { signal });
 
             container.addEventListener('focusout', (e) => {
                 const newFocus = e.relatedTarget as HTMLElement;
@@ -351,7 +355,7 @@ function initInputCollapse() {
 
                 isFocused = false;
                 tryCollapse(container);
-            });
+            }, { signal });
 
             // Initial check - only collapse if not on homepage
             if (!isHomepageOrNewConversation()) {
