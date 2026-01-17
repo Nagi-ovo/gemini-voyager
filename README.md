@@ -262,7 +262,13 @@ The input area auto-collapses when empty. Click to expand and start typing.
 
 ## 📥 Installation
 
-> **⚠️ Note:** The Chrome Web Store version may lag behind due to review delays. For the latest features, use [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+> **Store Availability Updates:**
+> 1. Applications for **Edge** and **Firefox** stores are in progress. Once approved, persistent installation will be available.
+> 2. **Firefox Persistent Installation:**
+>    - (a) Currently only possible via **Firefox Developer Edition**.
+>    - (b) Once listed and signed, you will be able to permanently install directly via the `.xpi` file.
+> 3. **Safari:** We will also push to the official App Store soon to enable persistent installation.
+
 
 ### Option 1: Chrome Web Store (Easier)
 
@@ -272,7 +278,8 @@ The input area auto-collapses when empty. Click to expand and start typing.
   </a>
 </div>
 
-The easiest installation method, but may not have the latest features:
+The easiest way to install.
+> **Note:** The extension **updates automatically**, so you'll generally get the latest features without manual intervention. (Store reviews may cause slight delays compared to GitHub, but it's hassle-free).
 
 1. Click the button above to visit the Chrome Web Store
 2. Click "Add to Chrome"
