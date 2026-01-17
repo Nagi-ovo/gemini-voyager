@@ -6,6 +6,25 @@ const COLLAPSED_CLASS = 'gv-input-collapsed';
 const PLACEHOLDER_CLASS = 'gv-collapse-placeholder';
 
 /**
+ * Checks if the current page is the homepage or a new conversation page.
+ * These pages have the URL pattern /app or /u/<num>/app without a conversation ID.
+ * Examples of homepage/new conversation:
+ *   - /app
+ *   - /u/0/app
+ *   - /u/1/app
+ * Examples of existing conversations (should NOT match):
+ *   - /app/abc123def456
+ *   - /u/0/app/abc123def456
+ *   - /gem/xxx/abc123
+ */
+function isHomepageOrNewConversation(): boolean {
+    const pathname = window.location.pathname;
+    // Match /app or /u/<num>/app exactly (no conversation ID after /app)
+    // Must NOT have anything after /app except optional trailing slash
+    return /^\/(?:u\/\d+\/)?app\/?$/.test(pathname);
+}
+
+/**
  * Injects the CSS styles for the collapsed input state.
  */
 function injectStyles() {
@@ -233,8 +252,15 @@ export function startInputCollapse() {
 
 let observer: MutationObserver | null = null;
 let initialized = false;
+let urlChangeHandler: (() => void) | null = null;
 
 function cleanup() {
+    // Remove URL change listener
+    if (urlChangeHandler) {
+        window.removeEventListener('popstate', urlChangeHandler);
+        urlChangeHandler = null;
+    }
+
     // Remove styles
     const style = document.getElementById(STYLE_ID);
     if (style) style.remove();
@@ -269,9 +295,36 @@ function initInputCollapse() {
     injectStyles();
 
     let isFocused = false;
+    let lastPathname = window.location.pathname;
 
+    // Handle URL changes for SPA navigation
+    urlChangeHandler = () => {
+        const currentPathname = window.location.pathname;
+        if (currentPathname === lastPathname) return;
+
+        lastPathname = currentPathname;
+
+        const container = getInputContainer();
+        if (!container) return;
+
+        if (isHomepageOrNewConversation()) {
+            // On homepage/new conversation: expand the input
+            container.classList.remove(COLLAPSED_CLASS);
+        } else {
+            // On conversation page: try to collapse if appropriate
+            tryCollapse(container);
+        }
+    };
+
+    // Listen for URL changes (browser back/forward)
+    window.addEventListener('popstate', urlChangeHandler);
+
+    // MutationObserver to re-apply when Gemini re-renders and detect SPA navigation
     // Use MutationObserver so we re-apply if Gemini re-renders (common in SPAs)
     observer = new MutationObserver(() => {
+        // Check for URL changes on DOM mutations (catches SPA navigation)
+        urlChangeHandler?.();
+
         const container = getInputContainer();
         if (container && !container.classList.contains('gv-processed')) {
             container.classList.add('gv-processed');
@@ -300,8 +353,10 @@ function initInputCollapse() {
                 tryCollapse(container);
             });
 
-            // Initial check
-            tryCollapse(container);
+            // Initial check - only collapse if not on homepage
+            if (!isHomepageOrNewConversation()) {
+                tryCollapse(container);
+            }
         }
     });
 
@@ -319,10 +374,11 @@ function expand(container: HTMLElement) {
     if (container.classList.contains(COLLAPSED_CLASS)) {
         container.classList.remove(COLLAPSED_CLASS);
 
-        // Auto-focus the child textarea
-        const textarea = container.querySelector('rich-textarea p') || container.querySelector('rich-textarea') || container.querySelector('[contenteditable]');
-        if (textarea && textarea instanceof HTMLElement) {
-            textarea.focus();
+        // Auto-focus the Quill editor
+        // .ql-editor is the actual contenteditable div inside rich-textarea
+        const editor = container.querySelector('.ql-editor') || container.querySelector('[contenteditable]') || container.querySelector('rich-textarea');
+        if (editor && editor instanceof HTMLElement) {
+            editor.focus();
         }
     }
 }
@@ -330,6 +386,12 @@ function expand(container: HTMLElement) {
 function tryCollapse(container: HTMLElement) {
     // We need a small delay to handle transient states
     setTimeout(() => {
+        // Don't collapse on homepage or new conversation page
+        if (isHomepageOrNewConversation()) {
+            container.classList.remove(COLLAPSED_CLASS);
+            return;
+        }
+
         const active = document.activeElement;
         const isStillFocused = container.contains(active);
 
