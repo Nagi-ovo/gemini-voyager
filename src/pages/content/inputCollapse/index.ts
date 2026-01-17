@@ -25,6 +25,23 @@ function isHomepageOrNewConversation(): boolean {
 }
 
 /**
+ * Checks if the current page is a gems editor page (create or edit).
+ * These pages should not have auto-collapse behavior.
+ */
+function isGemsEditorPage(): boolean {
+    const pathname = window.location.pathname;
+    // Match /gems/create, /gems/edit/*, or /u/<num>/gems/create, /u/<num>/gems/edit/*
+    return /^\/(?:u\/\d+\/)?gems\/(?:create|edit)\/?/.test(pathname);
+}
+
+/**
+ * Checks if auto-collapse should be disabled on the current page.
+ */
+function shouldDisableAutoCollapse(): boolean {
+    return isHomepageOrNewConversation() || isGemsEditorPage();
+}
+
+/**
  * Injects the CSS styles for the collapsed input state.
  */
 function injectStyles() {
@@ -311,8 +328,8 @@ function initInputCollapse() {
         const container = getInputContainer();
         if (!container) return;
 
-        if (isHomepageOrNewConversation()) {
-            // On homepage/new conversation: expand the input
+        if (shouldDisableAutoCollapse()) {
+            // On homepage/new conversation/gems create: expand the input
             container.classList.remove(COLLAPSED_CLASS);
         } else {
             // On conversation page: try to collapse if appropriate
@@ -357,8 +374,8 @@ function initInputCollapse() {
                 tryCollapse(container);
             }, { signal });
 
-            // Initial check - only collapse if not on homepage
-            if (!isHomepageOrNewConversation()) {
+            // Initial check - only collapse if not on excluded pages
+            if (!shouldDisableAutoCollapse()) {
                 tryCollapse(container);
             }
         }
@@ -390,8 +407,8 @@ function expand(container: HTMLElement) {
 function tryCollapse(container: HTMLElement) {
     // We need a small delay to handle transient states
     setTimeout(() => {
-        // Don't collapse on homepage or new conversation page
-        if (isHomepageOrNewConversation()) {
+        // Don't collapse on excluded pages (homepage, new conversation, gems create)
+        if (shouldDisableAutoCollapse()) {
             container.classList.remove(COLLAPSED_CLASS);
             return;
         }
