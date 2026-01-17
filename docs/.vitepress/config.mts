@@ -24,7 +24,8 @@ export default defineConfig({
                         text: '启程',
                         items: [
                             { text: '安装', link: '/guide/installation' },
-                            { text: '快速上手', link: '/guide/getting-started' }
+                            { text: '快速上手', link: '/guide/getting-started' },
+                            { text: '赞助', link: '/guide/sponsor' }
                         ]
                     },
                     {
@@ -64,7 +65,8 @@ export default defineConfig({
                         text: 'Introduction',
                         items: [
                             { text: 'Installation', link: '/en/guide/installation' },
-                            { text: 'Getting Started', link: '/en/guide/getting-started' }
+                            { text: 'Getting Started', link: '/en/guide/getting-started' },
+                            { text: 'Sponsor', link: '/en/guide/sponsor' }
                         ]
                     },
                     {
