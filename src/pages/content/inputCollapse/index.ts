@@ -216,7 +216,7 @@ function isInputEmpty(container: HTMLElement): boolean {
 
     // Check for attachments. If attachments exist, the input is not considered empty.
     const attachmentsArea = container.querySelector('uploader-file-preview') || container.querySelector('.file-preview-wrapper');
-    if(attachmentsArea) return false;            
+    if (attachmentsArea) return false;
 
     const text = textarea.textContent?.trim() || '';
     return text.length === 0;
@@ -324,7 +324,7 @@ function initInputCollapse() {
 
     // Auto-expand the input area when a file is dragged into the window.
     document.addEventListener('dragenter', (e) => {
-        if (e.dataTransfer) {
+        if (e.dataTransfer?.types.includes('Files')) {
              const container = getInputContainer();
              if (container && container.classList.contains(COLLAPSED_CLASS)) {
                  expand(container);
