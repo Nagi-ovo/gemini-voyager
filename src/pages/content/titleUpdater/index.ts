@@ -17,6 +17,19 @@ const TITLE_CANDIDATES = [
 let lastTitle = '';
 
 /**
+ * Simple debounce utility to limit function execution frequency.
+ * @param func The function to debounce
+ * @param wait The time to wait in milliseconds
+ */
+function debounce(func: (...args: any[]) => void, wait: number) {
+  let timeout: ReturnType<typeof setTimeout>;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
+/**
  * Starts the title updater service.
  * Uses MutationObserver to detect page changes and updates title accordingly.
  */
@@ -34,8 +47,10 @@ export async function startTitleUpdater() {
   logger.info('TitleUpdater: Starting service');
 
   // Use MutationObserver so we react to page navigation/updates without polling
+  // Wrap tryUpdateTitle inside a debounce to prevent frequent firing
+  const debouncedUpdate = debounce(tryUpdateTitle, 250);
   const observer = new MutationObserver(() => {
-    tryUpdateTitle();
+    debouncedUpdate();
   });
 
   observer.observe(document.body, {
@@ -108,9 +123,8 @@ function findChatTitle(): string | null {
         const itemPath = new URL(anchor.href).pathname;
         const currentPath = location.pathname;
         
-        // Only use this title if paths match significantly
-        // This avoids matching when we are at "/app" and the link is "/app/abc..." (no match)
-        if (itemPath !== currentPath && !currentPath.startsWith(itemPath)) {
+        // Strict equality check to ensure we only match the exact sidebar item
+        if (itemPath !== currentPath) {
           return null;
         }
       } catch (e) {
