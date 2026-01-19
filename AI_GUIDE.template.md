@@ -1,9 +1,4 @@
-# GEMINI.md - AI Assistant Guide for Gemini Voyager
-
-<!--
-This file is generated from AI_GUIDE.template.md.
-Do not edit directly; update the template and run `node scripts/generate-ai-guides.js`.
--->
+# {{GUIDE_FILE}} - AI Assistant Guide for Gemini Voyager
 
 > **Last Updated**: 2025-11-20
 > **Version**: 0.9.6
@@ -113,7 +108,7 @@ gemini-voyager/
 ├── tsconfig.json                # TypeScript configuration
 ├── vitest.config.ts             # Testing configuration
 ├── custom-vite-plugins.ts       # Custom Vite plugins
-├── GEMINI.md                    # AI assistant guide (this file)
+├── {{GUIDE_FILE}}                    # AI assistant guide (this file)
 └── TESTING_GUIDE.md             # Data loss prevention testing guide
 ```
 
@@ -848,7 +843,7 @@ For manifest differences, use separate configs:
 
 | File | Purpose |
 |------|---------|
-| `GEMINI.md` | AI assistant guide (this file) |
+| `{{GUIDE_FILE}}` | AI assistant guide (this file) |
 | `README.md` | Main user-facing documentation |
 | `TESTING_GUIDE.md` | Testing guide for data protection features |
 | `docs/` | VitePress documentation site |

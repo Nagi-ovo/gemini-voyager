@@ -1,5 +1,10 @@
 # CLAUDE.md - AI Assistant Guide for Gemini Voyager
 
+<!--
+This file is generated from AI_GUIDE.template.md.
+Do not edit directly; update the template and run `node scripts/generate-ai-guides.js`.
+-->
+
 > **Last Updated**: 2025-11-20
 > **Version**: 0.9.6
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
