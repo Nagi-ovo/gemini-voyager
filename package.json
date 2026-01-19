@@ -17,6 +17,7 @@
     "build:all": "bun run build:chrome && bun run build:firefox && bun run build:safari",
     "dev": "nodemon --config nodemon.chrome.json",
     "dev:chrome": "nodemon --config nodemon.chrome.json",
+    "dev:chrome-open": "node scripts/launch-chrome-dev.js",
     "dev:firefox": "nodemon --config nodemon.firefox.json",
     "dev:safari": "nodemon --config nodemon.safari.json",
     "test": "vitest run",
