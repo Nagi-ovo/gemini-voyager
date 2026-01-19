@@ -8,25 +8,23 @@ const templatePath = resolve(rootDir, 'AI_GUIDE.template.md');
 const outputFiles = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md'];
 
 const template = await readFile(templatePath, 'utf8');
+if (!template.includes('{{NOTICE}}')) {
+  throw new Error('AI_GUIDE.template.md must include a {{NOTICE}} placeholder.');
+}
 
 const noticeLines = [
   '<!--',
   'This file is generated from AI_GUIDE.template.md.',
   'Do not edit directly; update the template and run `bun run generate:ai-guides`.',
   '-->',
-  '',
 ];
 
 const notice = noticeLines.join('\n');
 
 for (const outputFile of outputFiles) {
-  const replaced = template.replace(/\{\{GUIDE_FILE\}\}/g, outputFile);
-  const firstNewline = replaced.indexOf('\n');
-
-  const output =
-    firstNewline === -1
-      ? `${replaced}\n\n${notice}`
-      : `${replaced.slice(0, firstNewline)}\n\n${notice}${replaced.slice(firstNewline + 1)}`;
+  const output = template
+    .replace(/\{\{GUIDE_FILE\}\}/g, outputFile)
+    .replace(/\{\{NOTICE\}\}/g, notice);
 
   await writeFile(resolve(rootDir, outputFile), output, 'utf8');
 }

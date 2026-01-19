@@ -2,7 +2,7 @@
 
 <!--
 This file is generated from AI_GUIDE.template.md.
-Do not edit directly; update the template and run `node scripts/generate-ai-guides.js`.
+Do not edit directly; update the template and run `bun run generate:ai-guides`.
 -->
 
 > **Last Updated**: 2025-11-20

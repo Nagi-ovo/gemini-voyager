@@ -1,5 +1,7 @@
 # {{GUIDE_FILE}} - AI Assistant Guide for Gemini Voyager
 
+{{NOTICE}}
+
 > **Last Updated**: 2025-11-20
 > **Version**: 0.9.6
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
