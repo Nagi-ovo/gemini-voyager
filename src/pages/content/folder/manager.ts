@@ -93,6 +93,11 @@ export class FolderManager {
   private sidebarClickListener: ((e: Event) => void) | null = null;
   private nativeMenuObserver: MutationObserver | null = null;
 
+  // Batch delete related properties
+  private readonly MAX_BATCH_DELETE_COUNT = 50; // Maximum number of conversations to delete at once
+  private batchDeleteInProgress = false; // Lock to prevent concurrent batch deletes
+  private batchDeleteProgressElement: HTMLElement | null = null; // Progress indicator element
+
   constructor() {
     // Create storage adapter based on browser (Factory Pattern)
     this.storage = createFolderStorageAdapter();
@@ -2135,6 +2140,418 @@ export class FolderManager {
     this.debug(`Batch deleted ${count} conversations from folder ${folderId}`);
   }
 
+  /**
+   * Batch delete native Gemini conversations by simulating user clicks
+   * This triggers the actual deletion on Gemini's servers
+   */
+  private async batchDeleteNativeConversations(): Promise<void> {
+    if (this.batchDeleteInProgress) {
+      this.debug('Batch delete already in progress');
+      return;
+    }
+
+    const count = this.selectedConversations.size;
+    if (count === 0) return;
+
+    // Show confirmation dialog
+    const confirmMessage = this.t('batch_delete_confirm').replace('{count}', String(count));
+    const confirmed = confirm(confirmMessage);
+    if (!confirmed) return;
+
+    this.batchDeleteInProgress = true;
+    const conversationIds = Array.from(this.selectedConversations);
+    let successCount = 0;
+    let failedCount = 0;
+
+    try {
+      // Show progress indicator
+      this.showBatchDeleteProgress(0, count);
+
+      for (let i = 0; i < conversationIds.length; i++) {
+        const conversationId = conversationIds[i];
+        this.debug(`Deleting conversation ${i + 1}/${count}: ${conversationId}`);
+
+        // Update progress
+        this.updateBatchDeleteProgress(i + 1, count);
+
+        try {
+          const success = await this.triggerNativeDeleteForConversation(conversationId);
+          if (success) {
+            successCount++;
+          } else {
+            failedCount++;
+            this.debugWarn(`Failed to delete conversation: ${conversationId}`);
+          }
+        } catch (error) {
+          failedCount++;
+          console.error(`[FolderManager] Error deleting conversation ${conversationId}:`, error);
+        }
+
+        // Add delay between deletions to avoid rate limiting (500ms)
+        if (i < conversationIds.length - 1) {
+          await this.delay(500);
+        }
+      }
+
+      // Hide progress indicator
+      this.hideBatchDeleteProgress();
+
+      // Show result summary
+      if (failedCount === 0) {
+        const successMessage = this.t('batch_delete_success').replace('{count}', String(successCount));
+        this.showNotification(successMessage, 'success');
+      } else {
+        const partialMessage = this.t('batch_delete_partial')
+          .replace('{success}', String(successCount))
+          .replace('{failed}', String(failedCount));
+        this.showNotification(partialMessage, 'info');
+      }
+
+      // Exit multi-select mode
+      this.exitMultiSelectMode();
+
+      // Refresh page after deletion
+      if (successCount > 0) {
+        this.debug('Refreshing page after batch delete');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } finally {
+      this.batchDeleteInProgress = false;
+    }
+  }
+
+  /**
+   * Trigger native delete for a single conversation by simulating UI interactions
+   */
+  private async triggerNativeDeleteForConversation(conversationId: string): Promise<boolean> {
+    try {
+      // Step 1: Find the conversation element in the sidebar
+      const conversationEl = this.findNativeConversationElement(conversationId);
+      if (!conversationEl) {
+        this.debugWarn(`Could not find conversation element for: ${conversationId}`);
+        return false;
+      }
+
+      // Step 2: Find and click the more options button
+      const moreButton = await this.findAndClickMoreButton(conversationEl);
+      if (!moreButton) {
+        this.debugWarn(`Could not find more button for: ${conversationId}`);
+        return false;
+      }
+
+      // Wait for menu to appear
+      await this.delay(300);
+
+      // Step 3: Find and click the delete button in the menu
+      const deleteSuccess = await this.waitForDeleteButtonAndClick();
+      if (!deleteSuccess) {
+        this.debugWarn(`Could not click delete button for: ${conversationId}`);
+        // Try to close the menu by clicking the backdrop
+        this.clickBackdropToCloseMenu();
+        return false;
+      }
+
+      // Wait for confirmation dialog (if any)
+      await this.delay(300);
+
+      // Step 4: Confirm deletion if confirmation dialog appears
+      await this.confirmDeleteIfNeeded();
+
+      // Wait for deletion to complete
+      await this.delay(500);
+
+      return true;
+    } catch (error) {
+      console.error(`[FolderManager] Error in triggerNativeDeleteForConversation:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Find native conversation element by conversation ID
+   */
+  private findNativeConversationElement(conversationId: string): HTMLElement | null {
+    // Try multiple strategies to find the conversation
+    const allConversations = this.sidebarContainer?.querySelectorAll('[data-test-id="conversation"]');
+    if (!allConversations) return null;
+
+    for (const conv of allConversations) {
+      const id = this.extractConversationId(conv as HTMLElement);
+      if (id === conversationId) {
+        return conv as HTMLElement;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Find and click the more options button for a conversation
+   */
+  private async findAndClickMoreButton(conversationEl: HTMLElement): Promise<HTMLElement | null> {
+    // The more button might be in the actions container which is a sibling
+    let moreButton: HTMLElement | null = null;
+
+    // Strategy 1: Look for actions container as a sibling
+    const parent = conversationEl.parentElement;
+    if (parent) {
+      const actionsContainer = parent.querySelector('.conversation-actions-container');
+      if (actionsContainer) {
+        moreButton = actionsContainer.querySelector('[data-test-id="actions-menu-button"]') as HTMLElement;
+      }
+    }
+
+    // Strategy 2: Look within the conversation element
+    if (!moreButton) {
+      moreButton = conversationEl.querySelector('[data-test-id="actions-menu-button"]') as HTMLElement;
+    }
+
+    // Strategy 3: Look for any visible button with the actions-menu-button test id near this element
+    if (!moreButton) {
+      // Find the closest list item that contains both the conversation and actions
+      const listItem = conversationEl.closest('li');
+      if (listItem) {
+        moreButton = listItem.querySelector('[data-test-id="actions-menu-button"]') as HTMLElement;
+      }
+    }
+
+    if (moreButton) {
+      moreButton.click();
+      this.debug('Clicked more button');
+      return moreButton;
+    }
+
+    return null;
+  }
+
+  /**
+   * Wait for delete button to appear in the menu and click it
+   */
+  private async waitForDeleteButtonAndClick(): Promise<boolean> {
+    const maxWaitTime = 3000;
+    const checkInterval = 100;
+    let elapsed = 0;
+
+    while (elapsed < maxWaitTime) {
+      // Look for delete button in the menu
+      const deleteButton = document.querySelector('[data-test-id="delete-button"]') as HTMLElement;
+      if (deleteButton) {
+        deleteButton.click();
+        this.debug('Clicked delete button');
+        return true;
+      }
+
+      await this.delay(checkInterval);
+      elapsed += checkInterval;
+    }
+
+    return false;
+  }
+
+  /**
+   * Check for and confirm the delete confirmation dialog if it appears
+   */
+  private async confirmDeleteIfNeeded(): Promise<void> {
+    // Look for confirmation dialog buttons
+    // Gemini typically uses a dialog with confirm/cancel buttons
+    const maxWaitTime = 3000;
+    const checkInterval = 100;
+    let elapsed = 0;
+
+    while (elapsed < maxWaitTime) {
+      // Strategy 1: Look for button with data-test-id containing "confirm" or "delete"
+      const confirmByTestId = document.querySelector(
+        '[data-test-id*="confirm"], [data-test-id*="delete"]:not([data-test-id="delete-button"])'
+      ) as HTMLElement;
+      if (confirmByTestId && this.isVisibleElement(confirmByTestId)) {
+        confirmByTestId.click();
+        this.debug('Clicked confirmation button (by test-id)');
+        return;
+      }
+
+      // Strategy 2: Look for primary/action buttons in dialogs
+      const primaryButtons = document.querySelectorAll(
+        '.mat-mdc-dialog-container button.mat-primary, ' +
+        '.mat-mdc-dialog-container button.mat-accent, ' +
+        '.mat-mdc-dialog-container .mat-mdc-dialog-actions button:last-child, ' +
+        '.cdk-overlay-container .mat-mdc-dialog-actions button:last-child, ' +
+        '.cdk-overlay-container button[color="primary"], ' +
+        '.cdk-overlay-container button[color="warn"]'
+      );
+
+      for (const btn of primaryButtons) {
+        if (this.isVisibleElement(btn as HTMLElement)) {
+          const text = btn.textContent?.toLowerCase().trim() || '';
+          // Match delete-related text
+          if (text.includes('delete') || text.includes('confirm') ||
+            text.includes('删除') || text.includes('确认') ||
+            text === 'yes' || text === 'ok') {
+            (btn as HTMLElement).click();
+            this.debug('Clicked confirmation button (primary button):', text);
+            return;
+          }
+        }
+      }
+
+      // Strategy 3: Look for any button in overlay with delete/confirm text
+      const allOverlayButtons = document.querySelectorAll(
+        '.cdk-overlay-container button, .mat-mdc-dialog-container button'
+      );
+
+      for (const btn of allOverlayButtons) {
+        if (!this.isVisibleElement(btn as HTMLElement)) continue;
+
+        const text = btn.textContent?.toLowerCase().trim() || '';
+        // Be more specific - look for standalone delete/confirm words
+        if (text === 'delete' || text === 'confirm' ||
+          text === 'yes' || text === 'ok' ||
+          text === '删除' || text === '确认' || text === '确定') {
+          (btn as HTMLElement).click();
+          this.debug('Clicked confirmation button (overlay button):', text);
+          return;
+        }
+      }
+
+      // Strategy 4: Look for the second/right button in a two-button dialog (usually the confirm button)
+      const dialogActions = document.querySelector('.mat-mdc-dialog-actions, .cdk-overlay-container .mat-dialog-actions');
+      if (dialogActions) {
+        const buttons = dialogActions.querySelectorAll('button');
+        if (buttons.length >= 2) {
+          // The last button is typically the confirm/destructive action
+          const confirmBtn = buttons[buttons.length - 1] as HTMLElement;
+          if (this.isVisibleElement(confirmBtn)) {
+            confirmBtn.click();
+            this.debug('Clicked last button in dialog actions');
+            return;
+          }
+        }
+      }
+
+      await this.delay(checkInterval);
+      elapsed += checkInterval;
+    }
+
+    // No confirmation dialog found, which is fine
+    this.debug('No confirmation dialog detected after', maxWaitTime, 'ms');
+  }
+
+  /**
+   * Check if an element is visible
+   */
+  private isVisibleElement(el: HTMLElement): boolean {
+    if (!el) return false;
+    const style = window.getComputedStyle(el);
+    return style.display !== 'none' &&
+      style.visibility !== 'hidden' &&
+      style.opacity !== '0' &&
+      el.offsetParent !== null;
+  }
+
+  /**
+   * Click backdrop to close any open menu
+   */
+  private clickBackdropToCloseMenu(): void {
+    const backdrop = document.querySelector('.cdk-overlay-backdrop') as HTMLElement;
+    if (backdrop) {
+      backdrop.click();
+      this.debug('Clicked backdrop to close menu');
+    }
+  }
+
+  /**
+   * Show batch delete progress indicator
+   */
+  private showBatchDeleteProgress(current: number, total: number): void {
+    // Remove existing progress element if any
+    this.hideBatchDeleteProgress();
+
+    const progress = document.createElement('div');
+    progress.className = 'gv-batch-delete-progress';
+    progress.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(32, 33, 36, 0.95);
+      color: #e8eaed;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      z-index: 2147483647;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Google Sans', Roboto, Arial, sans-serif;
+      font-size: 14px;
+    `;
+
+    const spinner = document.createElement('div');
+    spinner.style.cssText = `
+      width: 20px;
+      height: 20px;
+      border: 2px solid #8ab4f8;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: gv-spin 1s linear infinite;
+    `;
+
+    // Add spinner animation if not already present
+    if (!document.querySelector('#gv-batch-delete-styles')) {
+      const style = document.createElement('style');
+      style.id = 'gv-batch-delete-styles';
+      style.textContent = `
+        @keyframes gv-spin {
+          to { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    const text = document.createElement('span');
+    text.className = 'gv-batch-delete-progress-text';
+    text.textContent = this.t('batch_delete_in_progress')
+      .replace('{current}', String(current))
+      .replace('{total}', String(total));
+
+    progress.appendChild(spinner);
+    progress.appendChild(text);
+    document.body.appendChild(progress);
+
+    this.batchDeleteProgressElement = progress;
+  }
+
+  /**
+   * Update batch delete progress indicator
+   */
+  private updateBatchDeleteProgress(current: number, total: number): void {
+    if (this.batchDeleteProgressElement) {
+      const textEl = this.batchDeleteProgressElement.querySelector('.gv-batch-delete-progress-text');
+      if (textEl) {
+        textEl.textContent = this.t('batch_delete_in_progress')
+          .replace('{current}', String(current))
+          .replace('{total}', String(total));
+      }
+    }
+  }
+
+  /**
+   * Hide batch delete progress indicator
+   */
+  private hideBatchDeleteProgress(): void {
+    if (this.batchDeleteProgressElement) {
+      this.batchDeleteProgressElement.remove();
+      this.batchDeleteProgressElement = null;
+    }
+  }
+
+  /**
+   * Helper function to create a delay
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   // Multi-select helper methods
   private clearSelection(): void {
     this.selectedConversations.clear();
@@ -2148,6 +2565,12 @@ export class FolderManager {
     if (this.selectedConversations.has(conversationId)) {
       this.selectedConversations.delete(conversationId);
     } else {
+      // Check if we've reached the maximum selection limit
+      if (this.selectedConversations.size >= this.MAX_BATCH_DELETE_COUNT) {
+        const message = this.t('batch_delete_limit_reached').replace('{max}', String(this.MAX_BATCH_DELETE_COUNT));
+        this.showNotification(message, 'info');
+        return;
+      }
       this.selectedConversations.add(conversationId);
     }
   }
@@ -2309,12 +2732,20 @@ export class FolderManager {
       actionsContainer.innerHTML = ''; // Clear existing buttons
 
       if (this.multiSelectSource === 'folder') {
-        // Delete button for folder multi-select
+        // Delete button for folder multi-select (removes from folder only)
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'gv-multi-select-action-btn gv-multi-select-delete-btn';
         deleteBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">delete</mat-icon>';
-        deleteBtn.title = 'Delete selected conversations';
+        deleteBtn.title = this.t('batch_delete_button');
         deleteBtn.addEventListener('click', () => this.batchDeleteConversations());
+        actionsContainer.appendChild(deleteBtn);
+      } else if (this.multiSelectSource === 'native') {
+        // Delete button for native multi-select (deletes from Gemini)
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'gv-multi-select-action-btn gv-multi-select-delete-btn';
+        deleteBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">delete</mat-icon>';
+        deleteBtn.title = this.t('batch_delete_button');
+        deleteBtn.addEventListener('click', () => this.batchDeleteNativeConversations());
         actionsContainer.appendChild(deleteBtn);
       }
 

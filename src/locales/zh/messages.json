@@ -830,5 +830,29 @@
   "inputCollapsePlaceholder": {
     "message": "给 Gemini 发消息",
     "description": "折叠输入框时显示的占位符文本"
+  },
+  "batch_delete_confirm": {
+    "message": "确定要删除 {count} 个会话吗？此操作无法撤销。",
+    "description": "批量删除确认消息"
+  },
+  "batch_delete_in_progress": {
+    "message": "正在删除... ({current}/{total})",
+    "description": "批量删除进度消息"
+  },
+  "batch_delete_success": {
+    "message": "✓ 已删除 {count} 个会话",
+    "description": "批量删除成功消息"
+  },
+  "batch_delete_partial": {
+    "message": "删除完成：{success} 个成功，{failed} 个失败",
+    "description": "批量删除部分成功消息"
+  },
+  "batch_delete_limit_reached": {
+    "message": "一次最多可选择 {max} 个会话",
+    "description": "批量删除数量限制警告"
+  },
+  "batch_delete_button": {
+    "message": "删除所选",
+    "description": "多选模式下的批量删除按钮提示"
   }
 }
