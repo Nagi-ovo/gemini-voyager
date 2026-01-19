@@ -39,6 +39,7 @@ export default defineConfig({
                             { text: 'Deep Research 导出', link: '/guide/deep-research' },
                             { text: '对话宽度调整', link: '/guide/settings' },
                             { text: 'NanoBanana 水印去除', link: '/guide/nanobanana' },
+                            { text: '标签页标题同步', link: '/guide/tab-title' },
                             { text: '引用回复', link: '/guide/quote-reply' },
                             { text: 'Mermaid 图表渲染', link: '/guide/mermaid' },
                             { text: '输入框折叠', link: '/guide/input-collapse' }
@@ -80,6 +81,7 @@ export default defineConfig({
                             { text: 'Deep Research Export', link: '/en/guide/deep-research' },
                             { text: 'Chat Width Adjustment', link: '/en/guide/settings' },
                             { text: 'NanoBanana (Watermark Remover)', link: '/en/guide/nanobanana' },
+                            { text: 'Tab Title Sync', link: '/en/guide/tab-title' },
                             { text: 'Quote Reply', link: '/en/guide/quote-reply' },
                             { text: 'Mermaid Diagram Rendering', link: '/en/guide/mermaid' },
                             { text: 'Input Collapse', link: '/en/guide/input-collapse' }

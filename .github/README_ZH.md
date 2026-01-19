@@ -62,6 +62,8 @@
   - [🔬 Deep Research 导出](#-deep-research-导出)
   - [💾 对话导出](#-对话导出)
   - [📏 对话宽度调整](#-对话宽度调整)
+  - [🫥 输入框折叠](#-输入框折叠)
+  - [🏷️ 标签页标题同步](#️-标签页标题同步)
 - [📥 安装方式](#-安装方式)
   - [方式一：Chrome 应用商店（更方便）](#方式一chrome-应用商店更方便)
   - [方式二：手动安装（抢鲜版）](#方式二手动安装抢鲜版)
@@ -258,6 +260,19 @@
 
 <div align="center">
   <img src="../docs/public/assets/hide-input-area.png" alt="输入框折叠" style="max-width: 100%;"/>
+</div>
+
+</details>
+
+### 🏷️ 标签页标题同步
+**一眼即知。**
+自动将浏览器标签页标题同步为当前 Gemini 对话的标题。再也不用面对满屏的 "Gemini" 标签页。
+
+<details>
+<summary>👀 查看截图</summary>
+
+<div align="center">
+  <img src="../docs/public/assets/tab-title.png" alt="标签页标题同步" style="max-width: 100%;"/>
 </div>
 
 </details>

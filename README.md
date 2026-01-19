@@ -62,6 +62,8 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - [🔬 Deep Research Export](#-deep-research-export)
   - [💾 Chat Export](#-chat-export)
   - [📏 Adjustable Chat Width](#-adjustable-chat-width)
+  - [🫥 Input Collapse](#-input-collapse)
+  - [🏷️ Tab Title Sync](#️-tab-title-sync)
 - [📥 Installation](#-installation)
   - [Option 1: Chrome Web Store (Easier)](#option-1-chrome-web-store-easier)
   - [Option 2: Manual Installation (Latest Features)](#option-2-manual-installation-latest-features)
@@ -258,6 +260,19 @@ The input area auto-collapses when empty. Click to expand and start typing.
 
 <div align="center">
   <img src="docs/public/assets/hide-input-area.png" alt="Input collapse" style="max-width: 100%;"/>
+</div>
+
+</details>
+
+### 🏷️ Tab Title Sync
+**Know at a glance.**
+Automatically syncs the browser tab title with the current Gemini chat title. No more "Gemini" on every tab.
+
+<details>
+<summary>👀 View screenshot</summary>
+
+<div align="center">
+  <img src="docs/public/assets/tab-title.png" alt="Tab Title Sync" style="max-width: 100%;"/>
 </div>
 
 </details>

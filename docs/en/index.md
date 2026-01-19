@@ -32,9 +32,9 @@ features:
   - icon: 🍌
     title: NanoBanana Watermark Removal
     details: Lossless watermark removal. Keeping AI moments pure.
-  - icon: 🔬
-    title: Deep Research Export
-    details: Preserve your thoughts. Export deep research reasoning chains and citations with one click.
+  - icon: 🏷️
+    title: Tab Title Sync
+    details: Know at a glance. Auto-sync browser tab title with your chat.
   - icon: 💾
     title: Chat Export
     details: Data sovereignty. Archive in multiple formats so knowledge is never lost.
