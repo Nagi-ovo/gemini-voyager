@@ -98,7 +98,7 @@ export async function startTitleUpdater() {
  */
 function tryUpdateTitle() {
   const currentTitle = findChatTitle();
-  
+
   // Restore default title if not on conversation page
   if (!currentTitle) {
     if (document.title !== 'Google Gemini') {
@@ -107,7 +107,7 @@ function tryUpdateTitle() {
     }
     return;
   }
-  
+
   // Update only if title actually changed
   if (currentTitle !== lastTitle) {
     document.title = `${currentTitle} - Gemini`;
@@ -120,8 +120,9 @@ function tryUpdateTitle() {
  * Returns null if not on a conversation page or title not found.
  */
 function findChatTitle(): string | null {
-  // Only run on conversation pages: /app/<id>
-  if (!/^\/app\/[a-zA-Z0-9%\-_]+/.test(location.pathname)) {
+  // Only run on conversation pages: /app/<id> or /gem/<name>/<id>
+  // Also support multi-user prefix: /u/0/, /u/1/, etc.
+  if (!/^(?:\/u\/\d+)?\/(?:app|gem\/[a-zA-Z0-9%\-_]+)\/[a-zA-Z0-9%\-_]+/.test(location.pathname)) {
     return null;
   }
 
@@ -142,3 +143,4 @@ function findChatTitle(): string | null {
 
   return null;
 }
+
