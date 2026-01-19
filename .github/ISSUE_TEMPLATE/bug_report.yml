@@ -3,6 +3,16 @@ description: '反馈一个问题缺陷 | Report a bug'
 title: '[Bug] '
 labels: '🐛 Bug'
 body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 💡 想要贡献修复？| Want to contribute a fix?
+        
+        如果你愿意为此问题贡献修复代码，请在提交 issue 后评论 `/claim` 来认领它。
+        
+        If you'd like to contribute a fix for this bug, comment `/claim` after submitting to assign yourself.
+        
+        ---
   - type: dropdown
     attributes:
       label: '💻 系统环境 | Operating System'
