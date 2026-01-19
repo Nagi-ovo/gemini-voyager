@@ -21,10 +21,12 @@ const noticeLines = [
 
 const notice = noticeLines.join('\n');
 
-for (const outputFile of outputFiles) {
-  const output = template
-    .replace(/\{\{GUIDE_FILE\}\}/g, outputFile)
-    .replace(/\{\{NOTICE\}\}/g, notice);
+await Promise.all(
+  outputFiles.map((outputFile) => {
+    const output = template
+      .replace(/\{\{GUIDE_FILE\}\}/g, outputFile)
+      .replace(/\{\{NOTICE\}\}/g, notice);
 
-  await writeFile(resolve(rootDir, outputFile), output, 'utf8');
-}
+    return writeFile(resolve(rootDir, outputFile), output, 'utf8');
+  }),
+);
