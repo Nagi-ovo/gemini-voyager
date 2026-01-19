@@ -846,5 +846,9 @@
   "batch_delete_button": {
     "message": "Delete selected",
     "description": "Batch delete button tooltip in multi-select mode"
+  },
+  "batch_delete_match_patterns": {
+    "message": "delete,confirm,yes,ok,remove",
+    "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
   }
 }

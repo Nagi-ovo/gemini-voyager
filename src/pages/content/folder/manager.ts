@@ -2335,6 +2335,8 @@ export class FolderManager {
     const checkInterval = 100;
     let elapsed = 0;
 
+    const keywords = this.getDeleteKeywords();
+
     while (elapsed < maxWaitTime) {
       // Strategy 1: Look for delete button by data-test-id (primary method)
       const deleteByTestId = document.querySelector('[data-test-id="delete-button"]') as HTMLElement;
@@ -2356,9 +2358,8 @@ export class FolderManager {
         if (!this.isVisibleElement(item as HTMLElement)) continue;
 
         const text = item.textContent?.toLowerCase().trim() || '';
-        // Match "delete" in various languages
-        if (text === 'delete' || text === '删除' || text === '刪除' ||
-          text.includes('delete') && text.length < 20) {
+        // Match keywords from i18n
+        if (text && keywords.some((keyword: string) => text === keyword || (text.includes(keyword) && text.length < 20))) {
           (item as HTMLElement).click();
           this.debug('Clicked delete button (by text):', text);
           return true;
@@ -2400,6 +2401,8 @@ export class FolderManager {
     const checkInterval = 100;
     let elapsed = 0;
 
+    const keywords = this.getDeleteKeywords();
+
     while (elapsed < maxWaitTime) {
       // Strategy 1: Look for button with data-test-id containing "confirm" or "delete"
       const confirmByTestId = document.querySelector(
@@ -2424,10 +2427,8 @@ export class FolderManager {
       for (const btn of primaryButtons) {
         if (this.isVisibleElement(btn as HTMLElement)) {
           const text = btn.textContent?.toLowerCase().trim() || '';
-          // Match delete-related text
-          if (text.includes('delete') || text.includes('confirm') ||
-            text.includes('删除') || text.includes('确认') ||
-            text === 'yes' || text === 'ok') {
+          // Match keywords from i18n
+          if (text && keywords.some((keyword: string) => text.includes(keyword) || text === keyword)) {
             (btn as HTMLElement).click();
             this.debug('Clicked confirmation button (primary button):', text);
             return;
@@ -2444,15 +2445,15 @@ export class FolderManager {
         if (!this.isVisibleElement(btn as HTMLElement)) continue;
 
         const text = btn.textContent?.toLowerCase().trim() || '';
-        // Be more specific - look for standalone delete/confirm words
-        if (text === 'delete' || text === 'confirm' ||
-          text === 'yes' || text === 'ok' ||
-          text === '删除' || text === '确认' || text === '确定') {
+        // Be more specific - look for exact match or simple inclusion for keywords
+        if (text && keywords.some((keyword: string) => text === keyword)) {
           (btn as HTMLElement).click();
           this.debug('Clicked confirmation button (overlay button):', text);
           return;
         }
       }
+
+
 
       // Strategy 4: Look for the second/right button in a two-button dialog (usually the confirm button)
       const dialogActions = document.querySelector('.mat-mdc-dialog-actions, .cdk-overlay-container .mat-dialog-actions');
@@ -2475,6 +2476,14 @@ export class FolderManager {
 
     // No confirmation dialog found, which is fine
     this.debug('No confirmation dialog detected after', maxWaitTime, 'ms');
+  }
+
+  /**
+   * Get delete/confirm keywords from i18n settings to avoid hardcoding
+   */
+  private getDeleteKeywords(): string[] {
+    const rawPatterns = this.t('batch_delete_match_patterns') || '';
+    return rawPatterns.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s.length > 0);
   }
 
   /**
