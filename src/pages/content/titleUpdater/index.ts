@@ -1,37 +1,20 @@
-import { logger } from '@/core/services/LoggerService';
-
 /**
  * Feature: Auto Update Tab Title
  * Description: Automatically updates the browser tab title to match the current Gemini chat title.
  */
 
-// Candidate selectors for the chat title. 
-// These are tried in order to find the most accurate title element in the DOM.
-const TITLE_CANDIDATES = [
-  'h1[data-test-id="conversation-title"]',
-  '.conversation-title',
-  'div[role="main"] h1',
-  'header h1'
+// Fallback selectors - from Gemini Voyager folder manager
+const FOLDER_MANAGER_SELECTORS = [
+  '.gv-folder-conversation-selected .gv-conversation-title',
+  '.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title',
 ];
 
 let lastTitle = '';
-
-/**
- * Simple debounce utility to limit function execution frequency.
- * @param func The function to debounce
- * @param wait The time to wait in milliseconds
- */
-function debounce(func: (...args: any[]) => void, wait: number) {
-  let timeout: ReturnType<typeof setTimeout>;
-  return (...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
+let lastUrl = '';
 
 /**
  * Starts the title updater service.
- * Uses MutationObserver to detect page changes and updates title accordingly.
+ * Uses MutationObserver with throttle for responsive title updates.
  */
 export async function startTitleUpdater() {
   // Check setting before starting
@@ -40,24 +23,83 @@ export async function startTitleUpdater() {
   });
 
   if (!gvTabTitleUpdateEnabled) {
-    logger.info('TitleUpdater: Disabled by setting');
     return;
   }
 
-  logger.info('TitleUpdater: Starting service');
+  // Initialize URL tracking
+  lastUrl = location.href;
 
-  // Use MutationObserver so we react to page navigation/updates without polling
-  // Wrap tryUpdateTitle inside a debounce to prevent frequent firing
-  const debouncedUpdate = debounce(tryUpdateTitle, 250);
-  const observer = new MutationObserver(() => {
-    debouncedUpdate();
+  // Throttled check function - limits execution frequency
+  let isThrottled = false;
+  const throttledCheck = () => {
+    if (isThrottled) return;
+    isThrottled = true;
+    
+    setTimeout(() => {
+      isThrottled = false;
+      
+      // Check URL change
+      if (location.href !== lastUrl) {
+        lastUrl = location.href;
+        lastTitle = ''; // Reset to allow new title
+      }
+      
+      // Check if page title changed
+      const currentPageTitle = findChatTitle();
+      if (currentPageTitle && currentPageTitle !== lastTitle) {
+        tryUpdateTitle();
+      }
+    }, 500); // 500ms throttle
+  };
+
+  // Strategy 1: Listen for browser back/forward navigation
+  window.addEventListener('popstate', () => {
+    lastUrl = location.href;
+    lastTitle = '';
+    tryUpdateTitle();
   });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: true // Watch for text changes in title element
-  });
+  // Strategy 2: MutationObserver on header only (where title lives)
+  // This is very lightweight - header changes rarely
+  const observer = new MutationObserver(throttledCheck);
+  
+  const setupObserver = () => {
+    // Only observe header element - title is inside header
+    const header = document.querySelector('header');
+    if (header) {
+      observer.observe(header, {
+        childList: true,
+        subtree: true,
+        characterData: true // Watch text changes in header (title text)
+      });
+    } else {
+      // Fallback: observe body's direct children only (very lightweight)
+      observer.observe(document.body, {
+        childList: true,
+        subtree: false
+      });
+    }
+  };
+
+  // Set up observer when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupObserver);
+  } else {
+    setupObserver();
+  }
+
+  // Strategy 3: Low-frequency polling as fallback (every 3 seconds)
+  // Catches edge cases where observer might miss changes
+  setInterval(() => {
+    if (location.href !== lastUrl) {
+      lastUrl = location.href;
+      lastTitle = '';
+    }
+    const currentPageTitle = findChatTitle();
+    if (currentPageTitle && currentPageTitle !== lastTitle) {
+      tryUpdateTitle();
+    }
+  }, 3000);
 
   // Initial run
   tryUpdateTitle();
@@ -65,17 +107,26 @@ export async function startTitleUpdater() {
 
 /**
  * Attempts to update the document title if a valid chat title is found.
+ * Restores default title when not on a conversation page.
  */
 function tryUpdateTitle() {
   const currentTitle = findChatTitle();
   
-  // If we found a valid title and it's different from the current document title (and not just "Gemini")
-  if (currentTitle && currentTitle !== document.title && currentTitle !== lastTitle) {
+  // If not on a conversation page or no title found, restore default
+  if (!currentTitle) {
+    if (lastTitle !== '' && document.title !== 'Google Gemini') {
+      document.title = 'Google Gemini';
+      lastTitle = '';
+    }
+    return;
+  }
+  
+  // If we found a valid title and it's different from the last one
+  if (currentTitle !== lastTitle) {
     // We only update if it looks like a real specific title, not "Gemini" generic title
-    if (currentTitle.trim().length > 0 && currentTitle !== 'Gemini') {
+    if (currentTitle.trim().length > 0 && currentTitle !== 'Gemini' && currentTitle !== 'Google Gemini') {
       document.title = `${currentTitle} - Gemini`;
       lastTitle = currentTitle;
-      logger.debug('TitleUpdater: Updated tab title to', { title: document.title });
     }
   }
 }
@@ -83,6 +134,7 @@ function tryUpdateTitle() {
 /**
  * Locates the current chat title from the DOM.
  * Includes strict checks to ensure we only extract titles on actual conversation pages.
+ * IMPORTANT: Only get title from header area to avoid picking up sidebar items during page load.
  */
 function findChatTitle(): string | null {
   const pathname = location.pathname;
@@ -97,49 +149,49 @@ function findChatTitle(): string | null {
     return null;
   }
 
-  // 1. Try specific selectors in the main view
-  for (const selector of TITLE_CANDIDATES) {
-    const el = document.querySelector(selector);
-    if (el && el.textContent) {
-      return el.textContent.trim();
-    }
-  }
-
-  // 2. Try to find the active item in the sidebar (fallback)
-  // Gemini usually marks the active conversation in the history list
-  const activeSidebarItem = document.querySelector<HTMLElement>(
-    'nav a[href][aria-current="page"], nav a[href].active, [data-test-id="conversation"][aria-selected="true"]'
-  );
-
-  if (activeSidebarItem) {
-    // Verify strict URL match to prevent picking random items on homepage
-    // The sidebar item should link to the current page
-    const anchor = activeSidebarItem instanceof HTMLAnchorElement 
-      ? activeSidebarItem 
-      : activeSidebarItem.querySelector('a') || activeSidebarItem.closest('a');
-
-    if (anchor instanceof HTMLAnchorElement) {
-      try {
-        const itemPath = new URL(anchor.href).pathname;
-        const currentPath = location.pathname;
-        
-        // Strict equality check to ensure we only match the exact sidebar item
-        if (itemPath !== currentPath) {
-          return null;
-        }
-      } catch (e) {
-        // Ignore URL parsing errors
-      }
-    } else {
-      // If we found a sidebar item but it doesn't have a link (unlikely for a conversation),
-      // we shouldn't assume it matches the current page, so strictly return null.
+  // Helper to extract and validate text
+  const getText = (el: Element | null): string | null => {
+    const text = el?.textContent?.trim();
+    // Filter out generic/invalid titles
+    if (!text || text.length === 0 || text === 'New chat' || text === 'Gemini' || text === 'Google Gemini') {
       return null;
     }
+    return text;
+  };
 
-    // Isolate text content from nested elements like tooltips or icons
-    // This is a simplified extraction; might need refinement based on exact DOM
-    return activeSidebarItem.textContent?.trim() || null; 
+  // Helper to check if element is inside sidebar/nav (should be excluded)
+  const isInSidebar = (el: Element): boolean => {
+    return el.closest('nav') !== null || el.closest('[role="navigation"]') !== null;
+  };
+
+  // Strategy 1: Find conversation-title that is NOT in sidebar
+  try {
+    const allTitles = document.querySelectorAll('span.conversation-title.gds-title-m, .conversation-title.gds-title-m');
+    for (const el of allTitles) {
+      if (!isInSidebar(el)) {
+        const title = getText(el);
+        if (title) {
+          return title;
+        }
+      }
+    }
+  } catch {
+    // Ignore errors
   }
 
+  // Strategy 2: Try Gemini Voyager folder manager (if installed and active)
+  for (const selector of FOLDER_MANAGER_SELECTORS) {
+    try {
+      const el = document.querySelector(selector);
+      const title = getText(el);
+      if (title) {
+        return title;
+      }
+    } catch {
+      // Ignore selector errors
+    }
+  }
+
+  // Don't fall back to sidebar selectors - they can pick up wrong items during page load
   return null;
 }
