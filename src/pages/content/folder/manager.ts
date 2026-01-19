@@ -2372,14 +2372,14 @@ export class FolderManager {
       }
 
       // Strategy 2: Look for primary/action buttons in dialogs
-      const primaryButtons = document.querySelectorAll(
-        '.mat-mdc-dialog-container button.mat-primary, ' +
-        '.mat-mdc-dialog-container button.mat-accent, ' +
-        '.mat-mdc-dialog-container .mat-mdc-dialog-actions button:last-child, ' +
-        '.cdk-overlay-container .mat-mdc-dialog-actions button:last-child, ' +
-        '.cdk-overlay-container button[color="primary"], ' +
-        '.cdk-overlay-container button[color="warn"]'
-      );
+      const primaryButtons = document.querySelectorAll(`
+        .mat-mdc-dialog-container button.mat-primary,
+        .mat-mdc-dialog-container button.mat-accent,
+        .mat-mdc-dialog-container .mat-mdc-dialog-actions button:last-child,
+        .cdk-overlay-container .mat-mdc-dialog-actions button:last-child,
+        .cdk-overlay-container button[color="primary"],
+        .cdk-overlay-container button[color="warn"]
+      `);
 
       for (const btn of primaryButtons) {
         if (this.isVisibleElement(btn as HTMLElement)) {
