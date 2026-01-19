@@ -1,7 +1,7 @@
 import { spawn, execSync } from 'child_process';
-import path from 'path';
 import fs from 'fs';
 import os from 'os';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
 // ESM dirname equivalent
@@ -134,10 +134,9 @@ async function main() {
   }
 
   console.log('🚀 Starting build process...');
-  const buildProcess = spawn('bun', [
-    'x', 'nodemon',
-    '--config', 'nodemon.chrome.json',
-    '--exec', 'bun x vite build --config vite.config.chrome.ts --mode development'
+  const buildProcess = spawn('npx', [
+    'nodemon',
+    '--config', 'nodemon.chrome.json'
   ], {
     shell: true,
     cwd: PROJECT_ROOT,
