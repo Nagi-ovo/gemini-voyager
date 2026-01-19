@@ -39,10 +39,10 @@ function getChromePath() {
 
   if (platform === 'win32') {
     const commonPaths = [
-      process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe',
-      process.env.PROGRAMFILES + '\\Google\\Chrome\\Application\\chrome.exe',
-      process.env['PROGRAMFILES(X86)'] + '\\Google\\Chrome\\Application\\chrome.exe'
-    ];
+      process.env.LOCALAPPDATA,
+      process.env.PROGRAMFILES,
+      process.env['PROGRAMFILES(X86)'],
+    ].filter(Boolean).map(p => path.join(p, 'Google', 'Chrome', 'Application', 'chrome.exe'));
     return commonPaths.find(p => fs.existsSync(p));
   } else if (platform === 'darwin') {
     return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -78,11 +78,9 @@ function cleanupExistingProcess() {
         }
       }
     } else {
-      try {
-        execSync(`pkill -f "${USER_DATA_DIR}"`, { stdio: 'ignore' });
-      } catch {
-        // No matching process
-      }
+      // pkill exits with 1 if no processes are found, causing execSync to throw.
+      // Let the outer catch handle this for consistent behavior with the Windows implementation.
+      execSync(`pkill -f "${USER_DATA_DIR}"`, { stdio: 'ignore' });
     }
     console.log('   Done.');
   } catch {
@@ -139,7 +137,7 @@ async function main() {
   const buildProcess = spawn('bun', [
     'x', 'nodemon',
     '--config', 'nodemon.chrome.json',
-    '--exec', '"bun x vite build --config vite.config.chrome.ts --mode development"'
+    '--exec', 'bun x vite build --config vite.config.chrome.ts --mode development'
   ], {
     shell: true,
     cwd: PROJECT_ROOT,
