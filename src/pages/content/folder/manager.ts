@@ -2328,6 +2328,7 @@ export class FolderManager {
 
   /**
    * Wait for delete button to appear in the menu and click it
+   * Uses multiple strategies to find the delete button for resilience to UI changes
    */
   private async waitForDeleteButtonAndClick(): Promise<boolean> {
     const maxWaitTime = 3000;
@@ -2335,12 +2336,51 @@ export class FolderManager {
     let elapsed = 0;
 
     while (elapsed < maxWaitTime) {
-      // Look for delete button in the menu
-      const deleteButton = document.querySelector('[data-test-id="delete-button"]') as HTMLElement;
-      if (deleteButton) {
-        deleteButton.click();
-        this.debug('Clicked delete button');
+      // Strategy 1: Look for delete button by data-test-id (primary method)
+      const deleteByTestId = document.querySelector('[data-test-id="delete-button"]') as HTMLElement;
+      if (deleteByTestId && this.isVisibleElement(deleteByTestId)) {
+        deleteByTestId.click();
+        this.debug('Clicked delete button (by test-id)');
         return true;
+      }
+
+      // Strategy 2: Look for menu items containing delete text (supports translations)
+      const menuItems = document.querySelectorAll(
+        '.cdk-overlay-container button, ' +
+        '.cdk-overlay-container [role="menuitem"], ' +
+        '.mat-mdc-menu-content button, ' +
+        '.mat-menu-content button'
+      );
+
+      for (const item of menuItems) {
+        if (!this.isVisibleElement(item as HTMLElement)) continue;
+
+        const text = item.textContent?.toLowerCase().trim() || '';
+        // Match "delete" in various languages
+        if (text === 'delete' || text === '删除' || text === '刪除' ||
+          text.includes('delete') && text.length < 20) {
+          (item as HTMLElement).click();
+          this.debug('Clicked delete button (by text):', text);
+          return true;
+        }
+      }
+
+      // Strategy 3: Look for button with delete icon (mat-icon containing 'delete')
+      const deleteIcons = document.querySelectorAll(
+        '.cdk-overlay-container mat-icon, .cdk-overlay-container .material-icons'
+      );
+
+      for (const icon of deleteIcons) {
+        const iconText = icon.textContent?.toLowerCase().trim() || '';
+        if (iconText === 'delete' || iconText === 'delete_forever' || iconText === 'delete_outline') {
+          // Find the parent button and click it
+          const parentButton = icon.closest('button, [role="menuitem"]') as HTMLElement;
+          if (parentButton && this.isVisibleElement(parentButton)) {
+            parentButton.click();
+            this.debug('Clicked delete button (by icon)');
+            return true;
+          }
+        }
       }
 
       await this.delay(checkInterval);
