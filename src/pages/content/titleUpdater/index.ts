@@ -75,7 +75,7 @@ function tryUpdateTitle() {
     if (currentTitle.trim().length > 0 && currentTitle !== 'Gemini') {
       document.title = `${currentTitle} - Gemini`;
       lastTitle = currentTitle;
-      logger.debug('TitleUpdater: Updated tab title to', document.title);
+      logger.debug('TitleUpdater: Updated tab title to', { title: document.title });
     }
   }
 }
