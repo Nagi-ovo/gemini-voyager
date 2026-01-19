@@ -27,3 +27,9 @@ body:
       label: '📝 补充信息 | Additional Information'
       description: 'Add any other context, mockups, or screenshots about the feature request here.'
       placeholder: 'Any additional context, mockups, or related examples...'
+  - type: checkboxes
+    attributes:
+      label: '💻 贡献意愿 | Contribution'
+      description: 'Would you like to contribute code for this feature? You can also comment `/claim` in the issue to assign yourself.'
+      options:
+        - label: '我愿意为该功能贡献代码 / I am willing to contribute code for this feature'

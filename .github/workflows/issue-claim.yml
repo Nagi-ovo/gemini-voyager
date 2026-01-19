@@ -1,0 +1,126 @@
+name: Issue Claim
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  claim-issue:
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request == null && contains(github.event.comment.body, '/claim')
+    
+    permissions:
+      issues: write
+    
+    steps:
+      - name: Check if issue is already assigned
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const commenter = context.payload.comment.user.login;
+            
+            // Check if already assigned
+            if (issue.assignees && issue.assignees.length > 0) {
+              const assigneeNames = issue.assignees.map(a => a.login).join(', ');
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `❌ This issue is already assigned to: **${assigneeNames}**\n\nIf you'd like to work on this issue, please coordinate with the current assignee(s) or ask a maintainer to reassign.`
+              });
+              return;
+            }
+            
+            // Assign the commenter
+            try {
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                assignees: [commenter]
+              });
+              
+              // Add "claimed" label if it exists
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: ['👷 Claimed']
+                });
+              } catch (labelError) {
+                // Label doesn't exist, skip
+                console.log('Claimed label not found, skipping...');
+              }
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `🎉 **@${commenter}** has claimed this issue!\n\nThank you for your contribution! Here are some tips:\n- Please read our [Contributing Guide](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/.github/CONTRIBUTING.md)\n- Feel free to ask questions if you need help\n- When you're ready, submit a PR and reference this issue\n\nIf you're no longer able to work on this, please comment \`/unclaim\` so others can pick it up.`
+              });
+            } catch (error) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `❌ Failed to assign **@${commenter}** to this issue. This may happen if the user doesn't have permission to be assigned.\n\nMaintainers: Please manually assign if appropriate.`
+              });
+            }
+
+  unclaim-issue:
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request == null && contains(github.event.comment.body, '/unclaim')
+    
+    permissions:
+      issues: write
+    
+    steps:
+      - name: Unclaim issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const commenter = context.payload.comment.user.login;
+            
+            // Check if commenter is assigned
+            const isAssigned = issue.assignees && issue.assignees.some(a => a.login === commenter);
+            
+            if (!isAssigned) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `❌ **@${commenter}** is not currently assigned to this issue.`
+              });
+              return;
+            }
+            
+            // Remove assignment
+            await github.rest.issues.removeAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              assignees: [commenter]
+            });
+            
+            // Remove "claimed" label if present
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                name: '👷 Claimed'
+              });
+            } catch (labelError) {
+              // Label not present, skip
+            }
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: `👋 **@${commenter}** has unclaimed this issue. It's now available for others to work on!\n\nIf you'd like to claim this issue, comment \`/claim\`.`
+            });

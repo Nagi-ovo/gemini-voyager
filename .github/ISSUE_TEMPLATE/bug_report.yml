@@ -63,3 +63,9 @@ body:
       label: '📝 补充信息 | Additional Information'
       description: 'If your problem needs further explanation, please add more information here.'
       placeholder: 'Any additional context, error messages, or console logs...'
+  - type: checkboxes
+    attributes:
+      label: '💻 贡献意愿 | Contribution'
+      description: 'Would you like to contribute code for this bug fix? You can also comment `/claim` in the issue to assign yourself.'
+      options:
+        - label: '我愿意为该问题贡献修复代码 / I am willing to contribute a fix for this bug'
