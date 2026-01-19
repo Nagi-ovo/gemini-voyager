@@ -830,5 +830,17 @@
   "inputCollapsePlaceholder": {
     "message": "给 Gemini 发消息",
     "description": "折叠输入框时显示的占位符文本"
+  },
+  "generalOptions": {
+    "message": "通用选项",
+    "description": "通用选项部分标题"
+  },
+  "enableTabTitleUpdate": {
+    "message": "同步标签页标题",
+    "description": "标签页标题更新复选框标签"
+  },
+  "enableTabTitleUpdateHint": {
+    "message": "将浏览器标签页标题修改为当前对话标题",
+    "description": "标签页标题更新复选框提示"
   }
 }

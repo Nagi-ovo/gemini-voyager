@@ -822,5 +822,17 @@
   "inputCollapsePlaceholder": {
     "message": "Message Gemini",
     "description": "Placeholder text shown in collapsed input"
+  },
+  "generalOptions": {
+    "message": "General Options",
+    "description": "General options section title"
+  },
+  "enableTabTitleUpdate": {
+    "message": "Update Tab Title",
+    "description": "Tab title update checkbox label"
+  },
+  "enableTabTitleUpdateHint": {
+    "message": "Sync browser tab title with chat title",
+    "description": "Tab title update checkbox hint"
   }
 }
