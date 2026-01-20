@@ -24,17 +24,18 @@ The Web Store review process can be slow. If you want the cutting-edge version i
 
 ## 3. Firefox
 
-**Method 1: Permanent Install (.xpi)**
+**Method 1: Firefox Add-ons (Recommended)**
+
+[![Install from Firefox Add-ons](https://img.shields.io/badge/Firefox_Add--ons-Download-FF7139?style=for-the-badge&logo=firefox&logoColor=white)](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
+
+The easiest way. Install from the official store with automatic updates.
+
+**Method 2: XPI File (Manual Install)**
 1. Download the latest `gemini-voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Open the Add-ons Manager (`about:addons`).
 3. Drag and drop the `.xpi` file to install (or click the gear icon ⚙️ -> **Install Add-on From File**).
 
-**Method 2: Temporary Debug (Unpacked)**
-1. Download `gemini-voyager-firefox-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
-2. Unzip it.
-3. Go to `about:debugging` > **This Firefox**.
-4. Click **Load Temporary Add-on...** and select the `manifest.json` file inside the folder.
-*(Note: This persists until you restart Firefox.)*
+> 💡 The XPI file is officially signed by Mozilla and can be permanently installed in all Firefox versions.
 
 ## 4. Safari (macOS)
 1. Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
