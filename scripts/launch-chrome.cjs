@@ -1,68 +1,165 @@
-const { spawn, execSync } = require('child_process');
-const { existsSync, mkdirSync } = require('fs');
-const { join } = require('path');
+'use strict';
+
+const fs = require('fs');
+const net = require('net');
 const os = require('os');
+const path = require('path');
+const { spawn } = require('child_process');
 
-const IS_WIN = os.platform() === 'win32';
-const ROOT = process.cwd();
-const DIST = join(ROOT, 'dist_chrome');
-const USER_DATA = join(ROOT, '.chrome-dev-profile');
-const MANIFEST = join(DIST, 'manifest.json');
+const TARGET_URL = 'https://gemini.google.com/';
+const BUILD_TIMEOUT_MS = 120000;
+const BUILD_POLL_INTERVAL_MS = 500;
 
-// Paths
-const CHROME_BIN = IS_WIN
-  ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-  : (os.platform() === 'darwin'
-    ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    : '/usr/bin/google-chrome');
+const repoRoot = path.resolve(__dirname, '..');
+const distDir = path.join(repoRoot, 'dist_chrome');
+const manifestPath = path.join(distDir, 'manifest.json');
+const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gemini-voyager-chrome-'));
 
-// Utils
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const log = (c, msg) => console.log(`${c}${msg}\x1b[0m`);
+let devProcess, chromeRunner, debugPort, reloadTimer, lastBuildTime = 0, shuttingDown = false;
+
+main().catch((error) => {
+  log(`Fatal error: ${error.message}`);
+  process.exit(1);
+});
 
 async function main() {
-  log('\x1b[36m', '\n🤖 Gemini Voyager Dev Launcher');
+  debugPort = await getAvailablePort();
 
-  // 1. Check Chrome
-  if (!existsSync(CHROME_BIN)) {
-    console.error(`❌ Chrome not found at: ${CHROME_BIN}`);
-    process.exit(1);
-  }
-  if (!existsSync(USER_DATA)) mkdirSync(USER_DATA, { recursive: true });
+  devProcess = startDevBuild();
+  await waitForManifest(Date.now());
+  lastBuildTime = manifestMtime();
 
-  // 2. Kill old instances (Simple One-Liner for each OS)
-  try {
-    const cmd = IS_WIN
-      ? `wmic process where "name='chrome.exe' and commandline like '%chrome-dev-profile%'" call terminate`
-      : `pkill -f ".chrome-dev-profile"`; // pkill is cleaner than ps|grep|awk
-    execSync(cmd, { stdio: 'ignore' });
-    await sleep(500); // Wait for cleanup
-  } catch (e) { /* Ignore if no process found */ }
+  chromeRunner = await launchChrome();
+  attachProcessHandlers();
+  log('Chrome launched with the latest build.');
 
-  // 3. Wait for Build (Simple polling)
-  log('\x1b[33m', '⏳ Waiting for build...');
-  let attempts = 0;
-  while (!existsSync(MANIFEST)) {
-    if (attempts++ > 60) {
-      console.error('❌ Timeout waiting for build.');
-      process.exit(1);
-    }
-    await sleep(1000);
-  }
-  await sleep(1000); // Flush write buffers
-
-  // 4. Launch
-  log('\x1b[32m', '🚀 Launching Chrome...');
-  const child = spawn(CHROME_BIN, [
-    `--load-extension=${DIST}`,
-    `--user-data-dir=${USER_DATA}`,
-    '--no-first-run',
-    '--no-default-browser-check',
-    'https://gemini.google.com',
-    'chrome://extensions'
-  ], { detached: true, stdio: 'inherit' });
-
-  child.unref();
+  if (debugPort) startReloadWatcher();
 }
 
-main();
+function startDevBuild() {
+  const args = ['run', 'dev:chrome'];
+  log(`Starting dev build: bun ${args.join(' ')}`);
+  const child = spawn('bun', args, { cwd: repoRoot, stdio: 'inherit', env: process.env });
+  child.on('exit', (code, signal) => {
+    if (shuttingDown) return;
+    log(`Dev build process exited (${signal ? `signal ${signal}` : `code ${code}`}).`);
+    process.exit(code ?? 0);
+  });
+  return child;
+}
+
+async function launchChrome() {
+  const webExt = await import('web-ext-run').then((mod) => mod.default ?? mod);
+  const args = ['--no-first-run', '--no-default-browser-check'];
+  if (debugPort) args.push('--remote-debugging-address=127.0.0.1', `--remote-debugging-port=${debugPort}`);
+  const config = {
+    target: 'chromium',
+    sourceDir: distDir,
+    startUrl: [TARGET_URL],
+    keepProfileChanges: true,
+    chromiumProfile: profileDir,
+    args,
+    noInput: true,
+  };
+  if (process.env.CHROME_BIN) config.chromiumBinary = process.env.CHROME_BIN;
+  log('Launching Chrome via web-ext-run.');
+  return webExt.cmd.run(config, { shouldExitProgram: false });
+}
+
+function attachProcessHandlers() {
+  const cleanup = () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    devProcess?.kill('SIGTERM');
+    chromeRunner?.exit?.();
+    if (reloadTimer) clearInterval(reloadTimer);
+    fs.rmSync(profileDir, { recursive: true, force: true });
+  };
+  process.on('SIGINT', () => { cleanup(); process.exit(0); });
+  process.on('SIGTERM', () => { cleanup(); process.exit(0); });
+  process.on('exit', cleanup);
+}
+
+async function waitForManifest(startTime) {
+  const deadline = Date.now() + BUILD_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    try {
+      const stat = fs.statSync(manifestPath);
+      if (stat.mtimeMs >= startTime && stat.size > 0) return;
+    } catch {}
+    await new Promise((r) => setTimeout(r, BUILD_POLL_INTERVAL_MS));
+  }
+  throw new Error('Timed out waiting for dist_chrome/manifest.json');
+}
+
+function startReloadWatcher() {
+  if (reloadTimer) return;
+  reloadTimer = setInterval(async () => {
+    if (shuttingDown) return;
+    const mtime = manifestMtime();
+    if (mtime <= lastBuildTime) return;
+    lastBuildTime = mtime;
+    try { await reloadTargetTabs(); } catch {}
+  }, BUILD_POLL_INTERVAL_MS);
+}
+
+function manifestMtime() {
+  try { return fs.statSync(manifestPath).mtimeMs; } catch { return 0; }
+}
+
+async function reloadTargetTabs() {
+  const targets = await fetchJson(`http://127.0.0.1:${debugPort}/json`);
+  const matches = Array.isArray(targets)
+    ? targets.filter((t) => t?.type === 'page' && typeof t?.url === 'string' && t.url.startsWith(TARGET_URL))
+    : [];
+  if (matches.length === 0) return;
+  await Promise.all(matches.map((t) =>
+    t?.webSocketDebuggerUrl
+      ? sendDevtoolsCommand(t.webSocketDebuggerUrl, 'Page.reload', { ignoreCache: true })
+      : Promise.resolve()
+  ));
+}
+
+async function fetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Devtools endpoint returned ${res.status}`);
+  return res.json();
+}
+
+function sendDevtoolsCommand(url, method, params) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(url);
+    const id = 1;
+    const timer = setTimeout(() => { ws.close(); reject(new Error(`Devtools command timeout: ${method}`)); }, 5000);
+    ws.onopen = () => ws.send(JSON.stringify({ id, method, params }));
+    ws.onmessage = (event) => {
+      const payload = typeof event.data === 'string' ? event.data : event.data?.toString?.() ?? '';
+      if (!payload) return;
+      try {
+        if (JSON.parse(payload).id === id) {
+          clearTimeout(timer);
+          ws.close();
+          resolve();
+        }
+      } catch {}
+    };
+    ws.onerror = (error) => { clearTimeout(timer); reject(error); };
+    ws.onclose = () => { clearTimeout(timer); resolve(); };
+  });
+}
+
+function getAvailablePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const addr = server.address();
+      const port = typeof addr === 'object' && addr ? addr.port : null;
+      server.close(() => (port ? resolve(port) : reject(new Error('Unable to determine open port.'))));
+    });
+  });
+}
+
+function log(message) {
+  console.log(`[chrome-open] ${message}`);
+}
