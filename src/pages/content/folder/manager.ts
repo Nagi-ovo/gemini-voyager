@@ -502,7 +502,10 @@ export class FolderManager {
     folderIcon.textContent = 'folder';
     folderIcon.style.cursor = 'pointer';
     folderIcon.style.userSelect = 'none';
-    folderIcon.addEventListener('dblclick', () => this.toggleFolder(folder.id));
+    folderIcon.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent bubbling issues
+      this.toggleFolder(folder.id);
+    });
 
     // Folder name
     const folderName = document.createElement('span');
