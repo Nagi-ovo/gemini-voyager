@@ -93,11 +93,23 @@ export class FolderManager {
   private routeChangeCleanup: (() => void) | null = null;
   private sidebarClickListener: ((e: Event) => void) | null = null;
   private nativeMenuObserver: MutationObserver | null = null;
+  private outsideClickHandler: ((e: MouseEvent) => void) | null = null; // For exiting multi-select on outside click
 
   // Batch delete related properties
   private readonly MAX_BATCH_DELETE_COUNT = 50; // Maximum number of conversations to delete at once
   private batchDeleteInProgress = false; // Lock to prevent concurrent batch deletes
   private batchDeleteProgressElement: HTMLElement | null = null; // Progress indicator element
+
+  // Batch delete timing configuration (in milliseconds)
+  private readonly BATCH_DELETE_CONFIG = {
+    DELAY_BETWEEN_DELETIONS: 500,   // Delay between each deletion to avoid rate limiting
+    MENU_APPEAR_DELAY: 300,         // Wait for context menu to appear after clicking "more" button
+    DIALOG_APPEAR_DELAY: 300,       // Wait for confirmation dialog to appear
+    DELETION_COMPLETE_DELAY: 500,   // Wait for deletion animation/API call to complete
+    MAX_BUTTON_WAIT_TIME: 3000,     // Maximum time to wait for delete/confirm button to appear
+    BUTTON_CHECK_INTERVAL: 100,     // Interval for polling button appearance
+    PAGE_REFRESH_DELAY: 1500,       // Delay before refreshing page after batch delete
+  } as const;
 
   constructor() {
     // Create storage adapter based on browser (Factory Pattern)
@@ -238,6 +250,9 @@ export class FolderManager {
       }
       this.sidebarClickListener = null;
     }
+
+    // Remove outside click handler for multi-select
+    this.removeOutsideClickHandler();
 
     // Remove tooltip
     if (this.tooltipElement) {
@@ -2246,9 +2261,9 @@ export class FolderManager {
           console.error(`[FolderManager] Error deleting conversation ${conversationId}:`, error);
         }
 
-        // Add delay between deletions to avoid rate limiting (500ms)
+        // Add delay between deletions to avoid rate limiting
         if (i < conversationIds.length - 1) {
-          await this.delay(500);
+          await this.delay(this.BATCH_DELETE_CONFIG.DELAY_BETWEEN_DELETIONS);
         }
       }
 
@@ -2274,7 +2289,7 @@ export class FolderManager {
         this.debug('Refreshing page after batch delete');
         setTimeout(() => {
           window.location.reload();
-        }, 1500);
+        }, this.BATCH_DELETE_CONFIG.PAGE_REFRESH_DELAY);
       }
     } finally {
       this.batchDeleteInProgress = false;
@@ -2301,7 +2316,7 @@ export class FolderManager {
       }
 
       // Wait for menu to appear
-      await this.delay(300);
+      await this.delay(this.BATCH_DELETE_CONFIG.MENU_APPEAR_DELAY);
 
       // Step 3: Find and click the delete button in the menu
       const deleteSuccess = await this.waitForDeleteButtonAndClick();
@@ -2313,13 +2328,13 @@ export class FolderManager {
       }
 
       // Wait for confirmation dialog (if any)
-      await this.delay(300);
+      await this.delay(this.BATCH_DELETE_CONFIG.DIALOG_APPEAR_DELAY);
 
       // Step 4: Confirm deletion if confirmation dialog appears
       await this.confirmDeleteIfNeeded();
 
       // Wait for deletion to complete
-      await this.delay(500);
+      await this.delay(this.BATCH_DELETE_CONFIG.DELETION_COMPLETE_DELAY);
 
       return true;
     } catch (error) {
@@ -2390,8 +2405,8 @@ export class FolderManager {
    * Uses multiple strategies to find the delete button for resilience to UI changes
    */
   private async waitForDeleteButtonAndClick(): Promise<boolean> {
-    const maxWaitTime = 3000;
-    const checkInterval = 100;
+    const maxWaitTime = this.BATCH_DELETE_CONFIG.MAX_BUTTON_WAIT_TIME;
+    const checkInterval = this.BATCH_DELETE_CONFIG.BUTTON_CHECK_INTERVAL;
     let elapsed = 0;
 
     const keywords = this.getDeleteKeywords();
@@ -2456,8 +2471,8 @@ export class FolderManager {
   private async confirmDeleteIfNeeded(): Promise<void> {
     // Look for confirmation dialog buttons
     // Gemini typically uses a dialog with confirm/cancel buttons
-    const maxWaitTime = 3000;
-    const checkInterval = 100;
+    const maxWaitTime = this.BATCH_DELETE_CONFIG.MAX_BUTTON_WAIT_TIME;
+    const checkInterval = this.BATCH_DELETE_CONFIG.BUTTON_CHECK_INTERVAL;
     let elapsed = 0;
 
     const keywords = this.getDeleteKeywords();
@@ -2672,6 +2687,12 @@ export class FolderManager {
   private toggleConversationSelection(conversationId: string): void {
     if (this.selectedConversations.has(conversationId)) {
       this.selectedConversations.delete(conversationId);
+
+      // Auto-exit multi-select mode when all selections are cleared
+      if (this.selectedConversations.size === 0 && this.isMultiSelectMode) {
+        this.exitMultiSelectMode();
+        return;
+      }
     } else {
       // Check if we've reached the maximum selection limit
       if (this.selectedConversations.size >= this.MAX_BATCH_DELETE_COUNT) {
@@ -2720,7 +2741,6 @@ export class FolderManager {
     this.updateMultiSelectModeUI();
   }
 
-  // Multi-select mode methods
   private enterMultiSelectMode(
     initialConversationId?: string,
     source: 'folder' | 'native' = 'native',
@@ -2743,6 +2763,9 @@ export class FolderManager {
     if ('vibrate' in navigator) {
       navigator.vibrate(50);
     }
+
+    // Add click-outside listener to exit multi-select mode
+    this.setupOutsideClickHandler();
   }
 
   private exitMultiSelectMode(): void {
@@ -2750,6 +2773,9 @@ export class FolderManager {
     this.isMultiSelectMode = false;
     this.multiSelectSource = null;
     this.multiSelectFolderId = null;
+
+    // Remove click-outside listener
+    this.removeOutsideClickHandler();
 
     // First update UI to remove selection styles
     this.updateConversationSelectionUI();
@@ -2762,6 +2788,46 @@ export class FolderManager {
 
     // Force cleanup of any remaining visual artifacts
     this.cleanupSelectionArtifacts();
+  }
+
+  /**
+   * Setup a document-level click handler to exit multi-select mode when clicking outside the sidebar
+   */
+  private setupOutsideClickHandler(): void {
+    // Remove any existing handler first
+    this.removeOutsideClickHandler();
+
+    this.outsideClickHandler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Check if click is inside the sidebar or folder container
+      const isInsideSidebar = this.sidebarContainer?.contains(target);
+      const isInsideFolderContainer = this.containerElement?.contains(target);
+
+      // Check if click is on an overlay (menus, dialogs, etc.)
+      const isOnOverlay = target.closest('.cdk-overlay-container, .mat-mdc-dialog-container');
+
+      // If click is outside all relevant areas, exit multi-select mode
+      if (!isInsideSidebar && !isInsideFolderContainer && !isOnOverlay) {
+        this.debug('Click outside sidebar detected, exiting multi-select mode');
+        this.exitMultiSelectMode();
+      }
+    };
+
+    // Use setTimeout to avoid the current click event from triggering the handler
+    setTimeout(() => {
+      document.addEventListener('click', this.outsideClickHandler!, true);
+    }, 0);
+  }
+
+  /**
+   * Remove the outside click handler
+   */
+  private removeOutsideClickHandler(): void {
+    if (this.outsideClickHandler) {
+      document.removeEventListener('click', this.outsideClickHandler, true);
+      this.outsideClickHandler = null;
+    }
   }
 
   private cleanupSelectionArtifacts(): void {
