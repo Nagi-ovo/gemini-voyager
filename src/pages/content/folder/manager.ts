@@ -87,6 +87,7 @@ export class FolderManager {
   private pendingRemovals: Map<string, number> = new Map(); // Pending conversation removals with timer IDs
   private removalCheckDelay: number = 300; // Delay (ms) before confirming conversation deletion
   private isDestroyed: boolean = false; // Flag to prevent callbacks after destruction
+  private reinitializePromise: Promise<void> | null = null; // Prevent duplicate reinitialization cascades
 
   // Cleanup references
   private routeChangeCleanup: (() => void) | null = null;
@@ -1542,17 +1543,69 @@ export class FolderManager {
    * This can happen during window resize or split-screen operations
    */
   private reinitializeFolderUI(): void {
-    this.debug('Reinitializing folder UI...');
+    if (this.reinitializePromise) {
+      this.debug('Reinitialization already in progress, skipping duplicate request');
+      return;
+    }
 
-    // Clear existing references
-    this.containerElement = null;
-    this.sidebarContainer = null;
-    this.recentSection = null;
+    this.reinitializePromise = (async () => {
+      this.debug('Reinitializing folder UI...');
 
-    // Reinitialize asynchronously
-    this.initializeFolderUI().catch((error) => {
-      this.debugWarn('Failed to reinitialize folder UI:', error);
-    });
+      // Clean up observers/listeners tied to stale DOM nodes
+      if (this.sideNavObserver) {
+        this.sideNavObserver.disconnect();
+        this.sideNavObserver = null;
+      }
+
+      if (this.conversationObserver) {
+        this.conversationObserver.disconnect();
+        this.conversationObserver = null;
+      }
+
+      if (this.nativeMenuObserver) {
+        this.nativeMenuObserver.disconnect();
+        this.nativeMenuObserver = null;
+      }
+
+      if (this.routeChangeCleanup) {
+        try {
+          this.routeChangeCleanup();
+        } catch (error) {
+          this.debugWarn('Route change cleanup during reinit failed:', error);
+        }
+        this.routeChangeCleanup = null;
+      }
+
+      if (this.sidebarClickListener && this.sidebarContainer) {
+        try {
+          this.sidebarContainer.removeEventListener('click', this.sidebarClickListener, true);
+        } catch (error) {
+          this.debugWarn('Sidebar click listener cleanup failed:', error);
+        }
+        this.sidebarClickListener = null;
+      }
+
+      if (this.containerElement?.isConnected) {
+        try {
+          this.containerElement.remove();
+        } catch (error) {
+          this.debugWarn('Failed to remove existing folder container during reinit:', error);
+        }
+      }
+
+      // Clear existing references so initialization starts from a clean slate
+      this.containerElement = null;
+      this.sidebarContainer = null;
+      this.recentSection = null;
+
+      await this.initializeFolderUI();
+    })()
+      .catch((error) => {
+        this.debugWarn('Failed to reinitialize folder UI:', error);
+      })
+      .finally(() => {
+        this.reinitializePromise = null;
+      });
   }
 
   private createFolder(parentId: string | null = null): void {
