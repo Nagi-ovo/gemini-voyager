@@ -10,8 +10,11 @@ const outputFiles = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md'];
 
 const main = async () => {
   const template = await readFile(templatePath, 'utf8');
-  if (!template.includes('{{NOTICE}}')) {
-    throw new Error('AI_GUIDE.template.md must include a {{NOTICE}} placeholder.');
+  const requiredPlaceholders = ['{{NOTICE}}', '{{GUIDE_FILE}}', '{{VERSION}}', '{{DATE}}'];
+  for (const placeholder of requiredPlaceholders) {
+    if (!template.includes(placeholder)) {
+      throw new Error(`AI_GUIDE.template.md must include a ${placeholder} placeholder.`);
+    }
   }
 
   const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
