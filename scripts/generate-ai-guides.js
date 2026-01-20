@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(scriptDir, '..');
 const templatePath = resolve(rootDir, 'AI_GUIDE.template.md');
+const packageJsonPath = resolve(rootDir, 'package.json');
 const outputFiles = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md'];
 
 const main = async () => {
@@ -12,6 +13,10 @@ const main = async () => {
   if (!template.includes('{{NOTICE}}')) {
     throw new Error('AI_GUIDE.template.md must include a {{NOTICE}} placeholder.');
   }
+
+  const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+  const version = packageJson.version || '0.0.0';
+  const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
   const noticeLines = [
     '<!--',
@@ -26,7 +31,9 @@ const main = async () => {
     outputFiles.map((outputFile) => {
       const output = template
         .replace(/\{\{GUIDE_FILE\}\}/g, outputFile)
-        .replace(/\{\{NOTICE\}\}/g, notice);
+        .replace(/\{\{NOTICE\}\}/g, notice)
+        .replace(/\{\{VERSION\}\}/g, version)
+        .replace(/\{\{DATE\}\}/g, date);
 
       return writeFile(resolve(rootDir, outputFile), output, 'utf8');
     }),
