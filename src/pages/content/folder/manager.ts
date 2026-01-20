@@ -79,6 +79,7 @@ export class FolderManager {
   private longPressTimeout: number | null = null; // For long-press detection
   private longPressThreshold: number = 500; // Long-press duration in ms
   private folderEnabled: boolean = true; // Whether folder feature is enabled
+  private accountIsolationEnabled: boolean = false; // Whether to show only current account's folders
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
@@ -143,6 +144,9 @@ export class FolderManager {
 
       // Load hide archived setting
       await this.loadHideArchivedSetting();
+
+      // Load account isolation setting
+      await this.loadAccountIsolationSetting();
 
       // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
@@ -362,6 +366,9 @@ export class FolderManager {
 
     // Apply initial folder enabled setting
     this.applyFolderEnabledSetting();
+
+    // Update header UI for isolation setting
+    this.updateHeaderUI();
   }
 
   private createMultiSelectIndicator(): HTMLElement {
@@ -415,6 +422,21 @@ export class FolderManager {
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'gv-folder-header-actions';
 
+    // Account Isolation button
+    const isolationBtn = document.createElement('button');
+    isolationBtn.className = 'gv-folder-action-btn gv-folder-account-isolation-btn';
+    isolationBtn.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">person</mat-icon>`;
+    const isolationTitle = this.t('folder_account_isolation');
+    isolationBtn.title = isolationTitle === 'folder_account_isolation' ? 'Show current account folders only' : isolationTitle;
+    isolationBtn.addEventListener('click', async () => {
+      this.accountIsolationEnabled = !this.accountIsolationEnabled;
+      await browser.storage.sync.set({
+        geminiFolderAccountIsolation: this.accountIsolationEnabled,
+      });
+      this.refresh();
+    });
+    actionsContainer.appendChild(isolationBtn);
+
     // Import button
     const importButton = document.createElement('button');
     importButton.className = 'gv-folder-action-btn';
@@ -466,7 +488,14 @@ export class FolderManager {
     }
 
     // Render root level folders (sorted)
-    const rootFolders = this.data.folders.filter((f) => f.parentId === null);
+    let rootFolders = this.data.folders.filter((f) => f.parentId === null);
+
+    // Filter by user ID if isolation is enabled
+    if (this.accountIsolationEnabled) {
+      const currentUserId = this.getCurrentUserId();
+      rootFolders = rootFolders.filter((f) => !f.userId || f.userId === currentUserId);
+    }
+
     const sortedRootFolders = this.sortFolders(rootFolders);
     sortedRootFolders.forEach((folder) => {
       const folderElement = this.createFolderElement(folder);
@@ -566,7 +595,14 @@ export class FolderManager {
       });
 
       // Render subfolders (sorted)
-      const subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
+      let subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
+
+      // Filter by user ID if isolation is enabled
+      if (this.accountIsolationEnabled) {
+        const currentUserId = this.getCurrentUserId();
+        subfolders = subfolders.filter((f) => !f.userId || f.userId === currentUserId);
+      }
+
       const sortedSubfolders = this.sortFolders(subfolders);
       sortedSubfolders.forEach((subfolder) => {
         const subfolderEl = this.createFolderElement(subfolder, level + 1);
@@ -1594,6 +1630,7 @@ export class FolderManager {
         isExpanded: true,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        userId: this.getCurrentUserId(),
       };
 
       this.data.folders.push(folder);
@@ -3446,6 +3483,9 @@ export class FolderManager {
     // Re-apply hide archived setting after refresh
     this.applyHideArchivedSetting();
 
+    // Update header UI (isolation button state)
+    this.updateHeaderUI();
+
     // Update active highlight after re-render
     this.highlightActiveConversationInFolders();
 
@@ -3730,6 +3770,17 @@ export class FolderManager {
     }
   }
 
+  private async loadAccountIsolationSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({ geminiFolderAccountIsolation: false });
+      this.accountIsolationEnabled = !!result.geminiFolderAccountIsolation;
+      this.debug('Loaded account isolation setting:', this.accountIsolationEnabled);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load account isolation setting:', error);
+      this.accountIsolationEnabled = false;
+    }
+  }
+
   private setupStorageListener(): void {
     // Listen for sync settings changes
     browser.storage.onChanged.addListener((changes, areaName) => {
@@ -3745,6 +3796,11 @@ export class FolderManager {
           this.debug('Hide archived setting changed:', this.hideArchivedConversations);
           // Apply the change to all conversations
           this.applyHideArchivedSetting();
+        }
+        if (changes.geminiFolderAccountIsolation) {
+          this.accountIsolationEnabled = !!changes.geminiFolderAccountIsolation.newValue;
+          this.debug('Account isolation setting changed:', this.accountIsolationEnabled);
+          this.refresh();
         }
       }
       // Listen for folder data changes from cloud sync
@@ -3874,6 +3930,25 @@ export class FolderManager {
         this.debug('Folder feature disabled');
       }
     }
+  }
+
+  private updateHeaderUI(): void {
+    if (!this.containerElement) return;
+    const isolationBtn = this.containerElement.querySelector(
+      '.gv-folder-account-isolation-btn'
+    ) as HTMLElement;
+    if (isolationBtn) {
+      if (this.accountIsolationEnabled) {
+        isolationBtn.style.color = '#8ab4f8'; // Active color
+      } else {
+        isolationBtn.style.color = '';
+      }
+    }
+  }
+
+  private getCurrentUserId(): string {
+    const match = window.location.pathname.match(/\/u\/(\d+)(?:\/|$)/);
+    return match ? match[1] : '0';
   }
 
   private applyHideArchivedSetting(): void {

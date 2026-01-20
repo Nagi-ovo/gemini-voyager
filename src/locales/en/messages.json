@@ -834,5 +834,9 @@
   "enableTabTitleUpdateHint": {
     "message": "Sync browser tab title with chat title",
     "description": "Tab title update checkbox hint"
+  },
+  "folder_account_isolation": {
+    "message": "Show current account folders only",
+    "description": "Folder button tooltip for the current account"
   }
 }

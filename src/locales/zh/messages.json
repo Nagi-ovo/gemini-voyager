@@ -842,5 +842,9 @@
   "enableTabTitleUpdateHint": {
     "message": "将浏览器标签页标题修改为当前对话标题",
     "description": "标签页标题更新复选框提示"
+  },
+  "folder_account_isolation": {
+    "message": "仅显示当前账户的文件夹",
+    "description": "当前账户的文件夹按钮提示"
   }
 }
