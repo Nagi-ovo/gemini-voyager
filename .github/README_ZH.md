@@ -69,6 +69,7 @@
   - [📏 对话宽度调整](#-对话宽度调整)
   - [🫥 输入框折叠](#-输入框折叠)
   - [🏷️ 标签页标题同步](#️-标签页标题同步)
+  - [🗑️ 批量删除](#️-批量删除)
 - [📥 安装方式](#-安装方式)
 - [☕ 支持本项目](#-支持本项目)
 - [🌟 致谢](#-致谢)
@@ -272,6 +273,21 @@
 
 <div align="center">
   <img src="../docs/public/assets/tab-title.png" alt="标签页标题同步" style="max-width: 100%;"/>
+</div>
+
+</details>
+
+### 🗑️ 批量删除
+**批量清理，一键搞定。**
+选中多个对话，一次性删除，告别逐个删除的繁琐。
+- **多选模式**：长按进入多选模式，勾选要删除的对话。
+- **一键删除**：点击删除按钮，批量清理所选对话。
+
+<details>
+<summary>👀 查看截图</summary>
+
+<div align="center">
+  <img src="../docs/public/assets/batch-delete.png" alt="批量删除" style="max-width: 100%;"/>
 </div>
 
 </details>

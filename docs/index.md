@@ -41,9 +41,9 @@ features:
   - icon: 💾
     title: 对话导出
     details: 数据归你。多种格式一键存档，知识不再流失。
-  - icon: 🚀
-    title: 无限可能
-    details: 持续进化。更多实用功能，敬请期待。
+  - icon: 🗑️
+    title: 批量删除对话
+    details: 一键清理。选中多个对话，批量删除，告别繁琐。
 ---
 
 <div class="vp-doc" style="margin-top: 4rem; text-align: center;">

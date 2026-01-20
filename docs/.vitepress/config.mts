@@ -29,20 +29,21 @@ export default defineConfig({
                         ]
                     },
                     {
-                        text: '核心',
+                        text: '核心功能',
                         items: [
                             { text: '时间轴', link: '/guide/timeline' },
+                            { text: '引用回复', link: '/guide/quote-reply' },
                             { text: '文件夹', link: '/guide/folders' },
+                            { text: '批量删除', link: '/guide/batch-delete' },
                             { text: '灵感库', link: '/guide/prompts' },
                             { text: '自定义网站', link: '/guide/custom-websites' },
-                            { text: '导出', link: '/guide/export' },
+                            { text: '对话导出', link: '/guide/export' },
                             { text: 'Deep Research 导出', link: '/guide/deep-research' },
-                            { text: '对话宽度调整', link: '/guide/settings' },
-                            { text: 'NanoBanana 水印去除', link: '/guide/nanobanana' },
-                            { text: '标签页标题同步', link: '/guide/tab-title' },
-                            { text: '引用回复', link: '/guide/quote-reply' },
                             { text: 'Mermaid 图表渲染', link: '/guide/mermaid' },
-                            { text: '输入框折叠', link: '/guide/input-collapse' }
+                            { text: 'NanoBanana 水印去除', link: '/guide/nanobanana' },
+                            { text: '对话宽度调整', link: '/guide/settings' },
+                            { text: '输入框折叠', link: '/guide/input-collapse' },
+                            { text: '标签页标题同步', link: '/guide/tab-title' }
                         ]
                     }
                 ],
@@ -74,17 +75,18 @@ export default defineConfig({
                         text: 'Features',
                         items: [
                             { text: 'Timeline Navigation', link: '/en/guide/timeline' },
+                            { text: 'Quote Reply', link: '/en/guide/quote-reply' },
                             { text: 'Folder Organization', link: '/en/guide/folders' },
+                            { text: 'Batch Delete', link: '/en/guide/batch-delete' },
                             { text: 'Prompt Library', link: '/en/guide/prompts' },
                             { text: 'Custom Websites', link: '/en/guide/custom-websites' },
                             { text: 'Chat Export', link: '/en/guide/export' },
                             { text: 'Deep Research Export', link: '/en/guide/deep-research' },
-                            { text: 'Chat Width Adjustment', link: '/en/guide/settings' },
-                            { text: 'NanoBanana (Watermark Remover)', link: '/en/guide/nanobanana' },
-                            { text: 'Tab Title Sync', link: '/en/guide/tab-title' },
-                            { text: 'Quote Reply', link: '/en/guide/quote-reply' },
                             { text: 'Mermaid Diagram Rendering', link: '/en/guide/mermaid' },
-                            { text: 'Input Collapse', link: '/en/guide/input-collapse' }
+                            { text: 'NanoBanana (Watermark Remover)', link: '/en/guide/nanobanana' },
+                            { text: 'Chat Width Adjustment', link: '/en/guide/settings' },
+                            { text: 'Input Collapse', link: '/en/guide/input-collapse' },
+                            { text: 'Tab Title Sync', link: '/en/guide/tab-title' }
                         ]
                     }
                 ],

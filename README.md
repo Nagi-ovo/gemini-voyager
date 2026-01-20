@@ -69,6 +69,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - [📏 Adjustable Chat Width](#-adjustable-chat-width)
   - [🫥 Input Collapse](#-input-collapse)
   - [🏷️ Tab Title Sync](#️-tab-title-sync)
+  - [🗑️ Batch Delete](#️-batch-delete)
 - [📥 Installation](#-installation)
 - [☕ Support This Project](#-support-this-project)
 - [🌟 Credits](#-credits)
@@ -272,6 +273,21 @@ Automatically syncs the browser tab title with the current Gemini chat title. No
 
 <div align="center">
   <img src="docs/public/assets/tab-title.png" alt="Tab Title Sync" style="max-width: 100%;"/>
+</div>
+
+</details>
+
+### 🗑️ Batch Delete
+**Clean up in bulk.**
+Select multiple conversations and delete them all at once. No more deleting one by one.
+- **Multi-select**: Long-press to enter multi-select mode, then check the conversations you want to delete.
+- **One-click delete**: Delete all selected conversations with a single click.
+
+<details>
+<summary>👀 View screenshot</summary>
+
+<div align="center">
+  <img src="docs/public/assets/batch-delete.png" alt="Batch Delete" style="max-width: 100%;"/>
 </div>
 
 </details>

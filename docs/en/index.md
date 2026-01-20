@@ -26,6 +26,9 @@ features:
   - icon: ✨
     title: Library
     details: Your genius, captured. Save and reuse your best prompts.
+  - icon: 💬
+    title: Quote Reply
+    details: Select to quote. Context-aware replies for efficient communication.
   - icon: 🧜‍♀️
     title: Mermaid Diagrams
     details: Code to visuals. Flowcharts, sequence diagrams, Gantt charts rendered instantly.
@@ -38,9 +41,9 @@ features:
   - icon: 💾
     title: Chat Export
     details: Data sovereignty. Archive in multiple formats so knowledge is never lost.
-  - icon: 🚀
-    title: Infinite Possibilities
-    details: Continuous evolution. More features are on the way.
+  - icon: 🗑️
+    title: Batch Delete
+    details: Clean up in bulk. Select multiple conversations and delete them all at once.
 ---
 
 <div class="vp-doc" style="margin-top: 4rem; text-align: center;">
