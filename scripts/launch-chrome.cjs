@@ -6,7 +6,7 @@ const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 
-const TARGET_URL = 'https://gemini.google.com/';
+const TARGET_URL = process.env.CHROME_OPEN_URL || 'https://gemini.google.com/';
 const BUILD_TIMEOUT_MS = 120000;
 const BUILD_POLL_INTERVAL_MS = 500;
 
@@ -16,6 +16,7 @@ const manifestPath = path.join(distDir, 'manifest.json');
 const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gemini-voyager-chrome-'));
 
 let devProcess, chromeRunner, debugPort, reloadTimer, lastBuildTime = 0, shuttingDown = false;
+let devtoolsCommandId = 0;
 
 main().catch((error) => {
   log(`Fatal error: ${error.message}`);
@@ -129,7 +130,7 @@ async function fetchJson(url) {
 function sendDevtoolsCommand(url, method, params) {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
-    const id = 1;
+    const id = (devtoolsCommandId += 1);
     const timer = setTimeout(() => { ws.close(); reject(new Error(`Devtools command timeout: ${method}`)); }, 5000);
     ws.onopen = () => ws.send(JSON.stringify({ id, method, params }));
     ws.onmessage = (event) => {

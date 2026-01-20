@@ -42,6 +42,3 @@ docs/.vitepress/cache
 # Sync Service (Commercial - Private)
 SYNC_SERVICE_ARCHITECTURE.md
 .env.sync
-
-# Chrome development profile
-.chrome-dev-profile/
