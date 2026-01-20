@@ -436,6 +436,12 @@ Thank you for helping make Gemini Voyager better! ❤️
   </a>
 </div>
 
+<p align="center">
+  If you like Gemini Voyager, please consider upvoting on Product Hunt to help more people discover it! ❤️<br>
+  It only takes a minute, which is far less than the time this extension saves you.<br>
+  <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager - All-in-one Gemini suite: folders, chat export and much more | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
+</p>
+
 If Gemini Voyager makes your life easier, consider buying me a coffee. It helps keep the updates coming!
 
 <div align="center">

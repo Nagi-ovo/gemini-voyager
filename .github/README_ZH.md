@@ -434,6 +434,12 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
   </a>
 </div>
 
+<p align="center">
+  如果你喜欢 Gemini Voyager，请考虑在 Product Hunt 上投一票，帮助更多人发现它！❤️<br>
+  去 Product Hunt 上面点赞可能只花一分钟时间，这远小于该插件能为你节省的时间。<br>
+  <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager - All-in-one Gemini suite: folders, chat export and much more | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
+</p>
+
 如果 Gemini Voyager 让你的工作效率提升了，不妨请我喝杯咖啡，这将支持我持续维护和更新！
 
 <div align="center">
