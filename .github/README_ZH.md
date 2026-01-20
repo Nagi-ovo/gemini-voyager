@@ -65,13 +65,9 @@
   - [🫥 输入框折叠](#-输入框折叠)
   - [🏷️ 标签页标题同步](#️-标签页标题同步)
 - [📥 安装方式](#-安装方式)
-  - [方式一：Chrome 应用商店（更方便）](#方式一chrome-应用商店更方便)
-  - [方式二：手动安装（抢鲜版）](#方式二手动安装抢鲜版)
-- [🛠️ 开发者指南](#️-开发者指南)
-  - [Safari 开发](#safari-开发)
-- [🌟 相关项目与致谢](#-相关项目与致谢)
-- [🤝 参与贡献](#-参与贡献)
 - [☕ 支持本项目](#-支持本项目)
+- [🌟 致谢](#-致谢)
+- [🤝 参与贡献与开发](#-参与贡献与开发)
 
 ---
 
@@ -279,148 +275,38 @@
 
 ## 📥 安装方式
 
-> **商店上架进度：**
-> - **Chrome 应用商店**：✅ 已上架
-> - **Firefox Add-ons**：✅ 已上架
-> - **Edge 应用商店**：申请中
-> - **Safari App Store**：即将推出
-
-
-### 方式一：Chrome 应用商店（更方便）
+### 🌐 从扩展商店安装（推荐）
 
 <div align="center">
-  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
-    <img src="https://img.shields.io/badge/从这里安装-Chrome%20应用商店-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 应用商店安装" height="50">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol" target="_blank">
+    <img src="https://img.shields.io/badge/Chrome%20应用商店-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome 应用商店" height="36">
   </a>
-</div>
-
-最简单的安装方法。
-> **说明：** 扩展支持**自动更新**，因此您基本无需担心版本滞后，总能省心地接收到最新功能。（虽因商店审核可能比 GitHub 稍晚，但稳定可靠）。
-
-1. 点击上方按钮访问 Chrome 应用商店
-2. 点击"添加至 Chrome"
-3. 扩展会自动在 Gemini 上激活
-
-**适用于：** Chrome、Edge、Opera、Brave、Vivaldi、Arc 等所有 Chromium 浏览器
-
-<details>
-<summary>Edge 和 Opera 用户的安装说明</summary>
-
-**Microsoft Edge 用户：**
-1. 通过上方按钮访问 Chrome 应用商店
-2. 浏览器会提示"允许来自其他商店的扩展"
-3. 点击"允许"后即可正常安装
-
-**Opera 用户：**
-1. 先安装 [Install Chrome Extensions](https://addons.opera.com/extensions/details/install-chrome-extensions/)（Opera 官方扩展）
-2. 然后访问 Chrome 应用商店
-3. 像在 Chrome 上一样安装即可
-
-**Brave、Vivaldi、Arc 等其他 Chromium 浏览器：**  
-无需任何额外步骤，直接从 Chrome 应用商店安装即可！
-</details>
-
-### 方式二：手动安装（抢鲜版）
-
-**Chromium 浏览器（Chrome、Edge、Opera、Brave、Vivaldi、Arc）：**
-
-1. 前往[项目 Releases 页面](https://github.com/Nagi-ovo/gemini-voyager/releases)，下载最新的 `gemini-voyager-chrome-vX.Y.Z.zip`
-2. 解压到任意文件夹（可看到根目录下的 `manifest.json` 文件）
-3. 打开浏览器的扩展管理页面并启用"开发者模式"：
-   - Chrome：访问 `chrome://extensions`
-   - Edge：访问 `edge://extensions`
-   - Opera：访问 `opera://extensions`
-4. 点击"加载已解压的扩展程序"
-5. 选择刚才解压的文件夹
-
-<details>
-<summary>Firefox 安装方法</summary>
-
-**方法一：Firefox Add-ons 商店（推荐）**
-
-<div align="center">
+  &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
-    <img src="https://img.shields.io/badge/从这里安装-Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="从 Firefox Add-ons 安装" height="40">
+    <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
 </div>
 
-最简单的方式。从官方商店安装，自动更新。
+<p align="center">
+  <sub><b>Chrome 应用商店</b>同样适用于 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 浏览器。</sub>
+</p>
 
-**方法二：XPI 文件（手动安装）**
-1. 从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载 `gemini-voyager-firefox-vX.Y.Z.xpi`
-2. 在 Firefox 打开 `about:addons`
-3. 将 `.xpi` 文件拖入窗口，或点击齿轮图标 ⚙️ → **从文件安装附加组件**
-
-> 💡 XPI 文件已获 Mozilla 官方签名，可在所有 Firefox 版本中永久安装。
-</details>
+> **商店状态：** Chrome ✅ · Firefox ✅ · Edge（审核中）· Safari（即将推出）
 
 <details>
-<summary>Safari 安装方法</summary>
+<summary>📦 手动安装</summary>
 
-1. 从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载 `gemini-voyager-safari-vX.Y.Z.zip`
-2. 解压并转换：`xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"`
-3. 在 Xcode 中打开并运行（⌘R）
-4. 在 Safari → 设置 → 扩展中启用
+**Chromium 浏览器（Chrome、Edge、Brave 等）：**
+1. 从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载 `gemini-voyager-chrome-vX.Y.Z.zip`
+2. 解压后访问 `chrome://extensions` → 开启开发者模式 → 加载已解压的扩展
 
-**系统要求：** macOS 11+、Xcode Command Line Tools（`xcode-select --install`）、Safari 14+
+**Firefox：**
+从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载 `gemini-voyager-firefox-vX.Y.Z.xpi` 并拖入 `about:addons` 安装。
+> 💡 XPI 已获 Mozilla 官方签名，可永久安装。
 
-**注意：** 本地使用无需 Apple Developer 账号！详细说明请查看 [安装指南](../.github/docs/safari/INSTALLATION_ZH.md)。
+**Safari：**
+从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载 `gemini-voyager-safari-vX.Y.Z.zip`。详见 [Safari 安装指南](../.github/docs/safari/INSTALLATION_ZH.md)。
 </details>
-
----
-
-## 🛠️ 开发者指南
-
-<details>
-<summary>点击查看开发环境配置方法</summary>
-
-想要参与贡献或自定义扩展？以下是开发环境配置方法：
-
-```bash
-# 安装依赖（推荐使用 Bun）
-bun i
-
-# 开发模式（支持热重载）
-bun run dev:chrome   # Chrome 和 Chromium 浏览器
-bun run dev:firefox  # Firefox
-bun run dev:safari   # Safari（需要 macOS）
-
-# 生产构建
-bun run build:chrome   # Chrome
-bun run build:firefox  # Firefox
-bun run build:safari   # Safari
-bun run build:all      # 所有浏览器
-```
-
-### Safari 开发
-
-Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/README_ZH.md) 了解：
-- 从源代码构建
-- 开发工作流与自动重载
-- 添加 Swift 原生代码
-- 调试与发布
-
-开发规范和最佳实践请参考 [CONTRIBUTING.md](./CONTRIBUTING.md)。
-</details>
-
----
-
-## 🌟 相关项目与致谢
-
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Gemini Voyager 的 Fork 版本，为 DeepSeek 适配，为 DeepSeek 用户带来时间线导航和对话管理功能！
-
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 为 ChatGPT 设计的时间线导航扩展，本项目的灵感来源：Gemini Voyager 为 Gemini 适配了时间线概念，并添加了文件夹管理、提示词库、聊天导出等大量新功能。
-
-
-## 🤝 参与贡献
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
-
-欢迎参与贡献！无论是报告问题、提出功能建议、改进文档还是提交代码：
-
-- **Issue**：使用我们的 [Bug 报告模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md)或[功能请求模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feat_request.md)
-- **Pull Request**：查看[贡献指南](./CONTRIBUTING.md)了解详细说明
-
-感谢你帮助 Gemini Voyager 变得更好！❤️
 
 ---
 
@@ -433,12 +319,11 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
 </div>
 
 <p align="center">
-  如果你喜欢 Gemini Voyager，请考虑在 Product Hunt 上投一票，帮助更多人发现它！❤️<br>
-  去 Product Hunt 上面点赞可能只花一分钟时间，这远小于该插件能为你节省的时间。<br>
-  <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager - All-in-one Gemini suite: folders, chat export and much more | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
+  ✨ 我们已在 Product Hunt 上线！欢迎来分享你的想法和反馈。❤️<br>
+  <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager on Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
 </p>
 
-如果 Gemini Voyager 让你的工作效率提升了，不妨请我喝杯咖啡，这将支持我持续维护和更新！
+如果 Gemini Voyager 让你的工作效率提升了，不妨请我喝杯咖啡，这将支持我持续维护和更新！赞赏者将被列入项目的致谢名单。❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -472,6 +357,49 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
 
 ---
 
+## 🌟 致谢
+
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Gemini Voyager 的 Fork 版本，为 DeepSeek 适配，为 DeepSeek 用户带来时间线导航和对话管理功能！
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 为 ChatGPT 设计的时间线导航扩展，本项目的灵感来源：Gemini Voyager 为 Gemini 适配了时间线概念，并添加了文件夹管理、提示词库、聊天导出等大量新功能。
+
+---
+
+## 🤝 参与贡献与开发
+
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
+
+欢迎参与贡献！无论是报告问题、提出功能建议、改进文档还是提交代码：
+
+- **Issue**：使用我们的 [Bug 报告模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.yml)或[功能请求模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml)
+- **Pull Request**：查看[贡献指南](./CONTRIBUTING.md)了解详细说明
+
+<details>
+<summary>开发环境配置</summary>
+
+```bash
+# 安装依赖（推荐使用 Bun）
+bun i
+
+# 开发模式（支持热重载）
+bun run dev:chrome   # Chrome 和 Chromium 浏览器
+bun run dev:firefox  # Firefox
+bun run dev:safari   # Safari（需要 macOS）
+
+# 生产构建
+bun run build:chrome   # Chrome
+bun run build:firefox  # Firefox
+bun run build:safari   # Safari
+bun run build:all      # 所有浏览器
+```
+
+**Safari 开发**：查看 [safari/README_ZH.md](../safari/README_ZH.md) 了解额外构建步骤。
+</details>
+
+感谢你帮助 Gemini Voyager 变得更好！❤️
+
+---
+
 <div align="center">
   <a href="https://www.star-history.com/#Nagi-ovo/gemini-voyager&type=date&legend=top-left">
    <picture>
@@ -483,4 +411,3 @@ Safari 需要额外的构建步骤。查看 [safari/README_ZH.md](../safari/READ
   <p>Made with ❤️ by Jesse Zhang</p>
   <sub>MIT License © 2025</sub>
 </div>
-</content>
