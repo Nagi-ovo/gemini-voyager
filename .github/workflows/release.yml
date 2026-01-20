@@ -157,11 +157,18 @@ jobs:
           TAG=${{ steps.vars.outputs.tag_name }}
           
           cd dist_chrome && zip -r ../gemini-voyager-chrome-${TAG}.zip . && cd ..
-          
-          cd dist_firefox && zip -r ../gemini-voyager-firefox-${TAG}.zip . && cd ..
-          cp gemini-voyager-firefox-${TAG}.zip gemini-voyager-firefox-${TAG}.xpi
-          
           cd dist_safari && zip -r ../gemini-voyager-safari-${TAG}.zip . && cd ..
+
+      - name: Sign Firefox Extension and Submit to AMO
+        run: |
+          TAG=${{ steps.vars.outputs.tag_name }}
+          npx web-ext sign \
+            --source-dir=dist_firefox \
+            --api-key=${{ secrets.AMO_JWT_ISSUER }} \
+            --api-secret=${{ secrets.AMO_JWT_SECRET }} \
+            --channel=listed
+          # Move signed XPI to root with proper naming
+          mv web-ext-artifacts/*.xpi gemini-voyager-firefox-${TAG}.xpi
 
       - name: Prepare Release Notes
         id: release_body
@@ -195,7 +202,6 @@ jobs:
           tag_name: ${{ steps.vars.outputs.tag_name }}
           files: |
             gemini-voyager-chrome-*.zip
-            gemini-voyager-firefox-*.zip
             gemini-voyager-firefox-*.xpi
             gemini-voyager-safari-*.zip
           body: ${{ steps.release_body.outputs.body }}
