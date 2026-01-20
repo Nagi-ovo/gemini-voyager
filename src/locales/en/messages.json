@@ -823,16 +823,32 @@
     "message": "Message Gemini",
     "description": "Placeholder text shown in collapsed input"
   },
-  "generalOptions": {
-    "message": "General Options",
-    "description": "General options section title"
+  "batch_delete_confirm": {
+    "message": "Are you sure you want to delete {count} conversation(s)? This action cannot be undone.",
+    "description": "Batch delete confirmation message"
   },
-  "enableTabTitleUpdate": {
-    "message": "Update Tab Title",
-    "description": "Tab title update checkbox label"
+  "batch_delete_in_progress": {
+    "message": "Deleting... ({current}/{total})",
+    "description": "Batch delete progress message"
   },
-  "enableTabTitleUpdateHint": {
-    "message": "Sync browser tab title with chat title",
-    "description": "Tab title update checkbox hint"
+  "batch_delete_success": {
+    "message": "✓ Deleted {count} conversation(s)",
+    "description": "Batch delete success message"
+  },
+  "batch_delete_partial": {
+    "message": "Deletion complete: {success} succeeded, {failed} failed",
+    "description": "Batch delete partial success message"
+  },
+  "batch_delete_limit_reached": {
+    "message": "Maximum {max} conversations can be selected at once",
+    "description": "Batch delete limit warning"
+  },
+  "batch_delete_button": {
+    "message": "Delete selected",
+    "description": "Batch delete button tooltip in multi-select mode"
+  },
+  "batch_delete_match_patterns": {
+    "message": "delete,confirm,yes,ok,remove,删除,确认,确定,是",
+    "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
   }
 }
