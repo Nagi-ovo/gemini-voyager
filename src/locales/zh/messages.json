@@ -858,5 +858,17 @@
   "batch_delete_match_patterns": {
     "message": "删除,确认,确定,是,delete,confirm,yes,ok,remove",
     "description": "匹配原生删除/确认按钮的关键词列表（逗号分隔）"
+  },
+  "generalOptions": {
+    "message": "通用选项",
+    "description": "通用选项区域标签"
+  },
+  "enableTabTitleUpdate": {
+    "message": "同步标签页标题与对话",
+    "description": "启用标签页标题同步开关标签"
+  },
+  "enableTabTitleUpdateHint": {
+    "message": "自动将浏览器标签页标题更新为当前对话的标题",
+    "description": "标签页标题同步功能提示"
   }
 }

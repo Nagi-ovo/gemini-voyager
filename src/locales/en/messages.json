@@ -850,5 +850,17 @@
   "batch_delete_match_patterns": {
     "message": "delete,confirm,yes,ok,remove,删除,确认,确定,是",
     "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
+  },
+  "generalOptions": {
+    "message": "General Options",
+    "description": "General options section label"
+  },
+  "enableTabTitleUpdate": {
+    "message": "Sync tab title with conversation",
+    "description": "Enable tab title sync toggle label"
+  },
+  "enableTabTitleUpdateHint": {
+    "message": "Automatically update the browser tab title to match the current conversation title",
+    "description": "Tab title sync feature hint"
   }
 }
