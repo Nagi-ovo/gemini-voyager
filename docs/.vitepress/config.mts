@@ -25,7 +25,8 @@ export default defineConfig({
                         items: [
                             { text: '安装', link: '/guide/installation' },
                             { text: '快速上手', link: '/guide/getting-started' },
-                            { text: '赞助', link: '/guide/sponsor' }
+                            { text: '赞助', link: '/guide/sponsor' },
+                            { text: '交流与反馈', link: '/guide/community' }
                         ]
                     },
                     {
@@ -68,7 +69,8 @@ export default defineConfig({
                         items: [
                             { text: 'Installation', link: '/en/guide/installation' },
                             { text: 'Getting Started', link: '/en/guide/getting-started' },
-                            { text: 'Sponsor', link: '/en/guide/sponsor' }
+                            { text: 'Sponsor', link: '/en/guide/sponsor' },
+                            { text: 'Community', link: '/en/guide/community' }
                         ]
                     },
                     {

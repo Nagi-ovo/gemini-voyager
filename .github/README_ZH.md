@@ -416,6 +416,19 @@ bun run build:all      # 所有浏览器
 
 感谢你帮助 Gemini Voyager 变得更好！❤️
 
+
+---
+
+## 💬 交流与反馈
+
+欢迎加入我们的 Discord 服务器，在这里你可以与其他用户交流心得、分享提示词，并获取最新的开发动态！
+
+<div align="center">
+  <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
+    <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=加入%20Discord" alt="Discord">
+  </a>
+</div>
+
 ---
 
 <div align="center">

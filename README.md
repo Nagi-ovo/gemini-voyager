@@ -416,6 +416,19 @@ bun run build:all      # All browsers
 
 Thank you for helping make Gemini Voyager better! ❤️
 
+
+---
+
+## 💬 Community
+
+Join our Discord server to chat with other users, share your prompts, and get the latest updates!
+
+<div align="center">
+  <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
+    <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20our%20Discord" alt="Discord">
+  </a>
+</div>
+
 ---
 
 <div align="center">
@@ -429,3 +442,4 @@ Thank you for helping make Gemini Voyager better! ❤️
   <p>Made with ❤️ by Jesse Zhang</p>
   <sub>MIT License © 2025</sub>
 </div>
+
