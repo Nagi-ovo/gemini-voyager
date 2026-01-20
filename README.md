@@ -21,10 +21,15 @@
     <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="Latest version">
     <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome Web Store users">
     <img src="https://img.shields.io/chrome-web-store/rating/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome Web Store rating">
+    <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons users">
+    <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons rating">
   </p>
   <p>
     <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="Nagi-ovo%2Fgemini-voyager | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
     <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager - All-in-one Gemini suite: folders, chat export and much more | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
+  </p>
+  <p align="center">
+    ✨ We're live on Product Hunt! We'd love to hear your thoughts and feedback. ❤️
   </p>
 </div>
 
@@ -65,15 +70,9 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - [🫥 Input Collapse](#-input-collapse)
   - [🏷️ Tab Title Sync](#️-tab-title-sync)
 - [📥 Installation](#-installation)
-  - [Option 1: Chrome Web Store (Easier)](#option-1-chrome-web-store-easier)
-  - [Option 2: Manual Installation (Latest Features)](#option-2-manual-installation-latest-features)
-    - [1) Temporary (developer) install — quick \& safe](#1-temporary-developer-install--quick--safe)
-    - [2) Permanent install (Firefox ESR — install unsigned add-ons)](#2-permanent-install-firefox-esr--install-unsigned-add-ons)
-- [🛠️ For Developers](#️-for-developers)
-  - [Safari Development](#safari-development)
-- [🌟 Related Projects \& Credits](#-related-projects--credits)
-- [🤝 Contributing](#-contributing)
 - [☕ Support This Project](#-support-this-project)
+- [🌟 Credits](#-credits)
+- [🤝 Contributing & Development](#-contributing--development)
 
 ---
 
@@ -281,150 +280,38 @@ Automatically syncs the browser tab title with the current Gemini chat title. No
 
 ## 📥 Installation
 
-> **Store Availability:**
-> - **Chrome Web Store**: ✅ Available
-> - **Firefox Add-ons**: ✅ Available
-> - **Edge Add-ons**: In progress
-> - **Safari App Store**: Coming soon
-
-
-### Option 1: Chrome Web Store (Easier)
+### 🌐 From Extension Stores (Recommended)
 
 <div align="center">
-  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=item-share-cb" target="_blank">
-    <img src="https://img.shields.io/badge/Install%20from-Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store" height="50">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol" target="_blank">
+    <img src="https://img.shields.io/badge/Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store" height="36">
   </a>
-</div>
-
-The easiest way to install.
-> **Note:** The extension **updates automatically**, so you'll generally get the latest features without manual intervention. (Store reviews may cause slight delays compared to GitHub, but it's hassle-free).
-
-1. Click the button above to visit the Chrome Web Store
-2. Click "Add to Chrome"
-3. The extension will activate automatically on Gemini
-
-**Works on:** Chrome, Edge, Opera, Brave, Vivaldi, Arc, and other Chromium browsers
-
-<details>
-<summary>Installation tips for Edge and Opera users</summary>
-
-**For Microsoft Edge users:**
-1. Visit Chrome Web Store via the button above
-2. You'll see a prompt "Allow extensions from other stores"
-3. Click "Allow" and install normally
-
-**For Opera users:**
-1. First install [Install Chrome Extensions](https://addons.opera.com/extensions/details/install-chrome-extensions/) (official Opera extension)
-2. Then visit Chrome Web Store
-3. Install like you would on Chrome
-
-**For Brave, Vivaldi, Arc, and other Chromium browsers:**  
-No extra steps needed—just install directly from Chrome Web Store!
-</details>
-
-### Option 2: Manual Installation (Latest Features)
-
-**For Chromium browsers (Chrome, Edge, Opera, Brave, Vivaldi, Arc):**
-
-1. Go to the [repository Releases page](https://github.com/Nagi-ovo/gemini-voyager/releases) and download the latest `gemini-voyager-chrome-vX.Y.Z.zip`
-2. Unzip it to a folder (you will see `manifest.json` at the root)
-3. Open your extensions page and enable Developer mode:
-   - Chrome: `chrome://extensions`
-   - Edge: `edge://extensions`
-   - Opera: `opera://extensions`
-4. Click "Load unpacked"
-5. Select the unzipped folder
-
-<details>
-<summary>Firefox Installation</summary>
-
-**Option 1: Firefox Add-ons (Recommended)**
-
-<div align="center">
+  &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
-    <img src="https://img.shields.io/badge/Install%20from-Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Install from Firefox Add-ons" height="40">
+    <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
 </div>
 
-The easiest way. Install from the official store with automatic updates.
+<p align="center">
+  <sub><b>Chrome Web Store</b> also works on Edge, Opera, Brave, Vivaldi, Arc, and other Chromium browsers.</sub>
+</p>
 
-**Option 2: XPI File (Manual Install)**
-1. Download `gemini-voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
-2. Open `about:addons` in Firefox
-3. Drag the `.xpi` file into the window, or click the gear icon ⚙️ → **Install Add-on From File**
-
-> 💡 The XPI file is officially signed by Mozilla and can be permanently installed in all Firefox versions.
-</details>
+> **Store Status:** Chrome ✅ · Firefox ✅ · Edge (pending) · Safari (coming soon)
 
 <details>
-<summary>Safari Installation</summary>
+<summary>📦 Manual Installation</summary>
 
-1. Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
-2. Unzip and convert: `xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"`
-3. Open in Xcode and run (⌘R)
-4. Enable in Safari → Settings → Extensions
+**Chromium browsers (Chrome, Edge, Brave, etc.):**
+1. Download `gemini-voyager-chrome-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
+2. Unzip and go to `chrome://extensions` → Enable Developer mode → Load unpacked
 
-**Requirements:** macOS 11+, Xcode Command Line Tools (`xcode-select --install`), Safari 14+
+**Firefox:**
+Download `gemini-voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) and drag into `about:addons`.
+> 💡 XPI is Mozilla-signed for permanent installation.
 
-**Note:** No Apple Developer account needed for local use! For detailed instructions, see the [installation guide](.github/docs/safari/INSTALLATION.md) ([中文](.github/docs/safari/INSTALLATION_ZH.md)).
+**Safari:**
+Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases). See [Safari installation guide](.github/docs/safari/INSTALLATION.md) for build steps.
 </details>
-
----
-
-## 🛠️ For Developers
-
-<details>
-<summary>Click to see development setup instructions</summary>
-
-Want to contribute or customize the extension? Here's how to set up the development environment:
-
-```bash
-# Install dependencies (Bun recommended)
-bun i
-
-# Development mode (with auto-reload)
-bun run dev:chrome   # Chrome & Chromium browsers
-bun run dev:firefox  # Firefox
-bun run dev:safari   # Safari (requires macOS)
-
-# Production builds
-bun run build:chrome   # Chrome
-bun run build:firefox  # Firefox
-bun run build:safari   # Safari
-bun run build:all      # All browsers
-```
-
-### Safari Development
-
-Safari requires additional build steps. See [safari/README.md](safari/README.md) for:
-- Building from source
-- Development workflow with auto-reload
-- Adding Swift native code
-- Debugging and distribution
-
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
-
-For contribution guidelines and best practices, see [CONTRIBUTING.md](./.github/CONTRIBUTING.md).
-</details>
-
----
-
-## 🌟 Related Projects & Credits
-
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Gemini Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
-
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Gemini Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt library, and chat export.
-
-
-## 🤝 Contributing
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
-
-We welcome contributions! Whether you want to report bugs, suggest features, improve documentation, or submit code:
-
-- **Issues**: Use our [bug report](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) or [feature request](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feat_request.md) templates
-- **Pull Requests**: Check out [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for guidelines
-
-Thank you for helping make Gemini Voyager better! ❤️
 
 ---
 
@@ -436,7 +323,9 @@ Thank you for helping make Gemini Voyager better! ❤️
   </a>
 </div>
 
-If Gemini Voyager makes your life easier, consider buying me a coffee. It helps keep the updates coming!
+
+
+If Gemini Voyager makes your life easier, consider buying me a coffee. It helps keep the updates coming! Sponsors will be featured in our Special Thanks section. ❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -467,6 +356,49 @@ If Gemini Voyager makes your life easier, consider buying me a coffee. It helps 
     </tr>
   </table>
 </div>
+
+---
+
+## 🌟 Credits
+
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Gemini Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Gemini Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt library, and chat export.
+
+---
+
+## 🤝 Contributing & Development
+
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
+
+We welcome contributions! Whether you want to report bugs, suggest features, improve documentation, or submit code:
+
+- **Issues**: Use our [bug report](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) or [feature request](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml) templates
+- **Pull Requests**: Check out [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for guidelines
+
+<details>
+<summary>Development Setup</summary>
+
+```bash
+# Install dependencies (Bun recommended)
+bun i
+
+# Development mode (with auto-reload)
+bun run dev:chrome   # Chrome & Chromium browsers
+bun run dev:firefox  # Firefox
+bun run dev:safari   # Safari (requires macOS)
+
+# Production builds
+bun run build:chrome   # Chrome
+bun run build:firefox  # Firefox
+bun run build:safari   # Safari
+bun run build:all      # All browsers
+```
+
+**Safari Development**: See [safari/README.md](safari/README.md) for additional build steps.
+</details>
+
+Thank you for helping make Gemini Voyager better! ❤️
 
 ---
 

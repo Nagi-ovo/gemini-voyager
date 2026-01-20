@@ -43,3 +43,6 @@ docs/.vitepress/cache
 SYNC_SERVICE_ARCHITECTURE.md
 .env.sync
 .chrome-dev-data/
+
+# Dev Tools
+scripts/chrome-profile/

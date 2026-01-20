@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: '💬 讨论区 Discussions'
+    url: https://github.com/Nagi-ovo/gemini-voyager/discussions
+    about: '讨论想法或提问，而非提交 Bug 或 Feature | For general discussions, questions, and ideas'
