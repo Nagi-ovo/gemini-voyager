@@ -3,6 +3,16 @@ description: '需求或建议 | Suggest an idea for Gemini Voyager'
 title: '[Feature] '
 labels: '🌠 Feature Request'
 body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 💡 想要贡献代码？| Want to contribute?
+        
+        如果你愿意为此功能贡献代码，请在提交 issue 后评论 `/claim` 来认领它。
+        
+        If you'd like to contribute code for this feature, comment `/claim` after submitting to assign yourself.
+        
+        ---
   - type: textarea
     attributes:
       label: '🥰 需求描述 | Feature Description'
@@ -27,3 +37,9 @@ body:
       label: '📝 补充信息 | Additional Information'
       description: 'Add any other context, mockups, or screenshots about the feature request here.'
       placeholder: 'Any additional context, mockups, or related examples...'
+  - type: checkboxes
+    attributes:
+      label: '💻 贡献意愿 | Contribution'
+      description: 'Would you like to contribute code for this feature? You can also comment `/claim` in the issue to assign yourself.'
+      options:
+        - label: '我愿意为该功能贡献代码 / I am willing to contribute code for this feature'

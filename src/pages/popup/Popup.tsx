@@ -102,6 +102,7 @@ interface SettingsUpdate {
   watermarkRemoverEnabled?: boolean;
   hidePromptManager?: boolean;
   inputCollapseEnabled?: boolean;
+  tabTitleUpdateEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -122,6 +123,7 @@ export default function Popup() {
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(true);
+  const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
 
   const handleFormulaCopyFormatChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,6 +169,7 @@ export default function Popup() {
     if (typeof settings.watermarkRemoverEnabled === 'boolean') payload.geminiWatermarkRemoverEnabled = settings.watermarkRemoverEnabled;
     if (typeof settings.hidePromptManager === 'boolean') payload.gvHidePromptManager = settings.hidePromptManager;
     if (typeof settings.inputCollapseEnabled === 'boolean') payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
+    if (typeof settings.tabTitleUpdateEnabled === 'boolean') payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
     void setSyncStorage(payload);
   }, [setSyncStorage]);
 
@@ -314,6 +317,7 @@ export default function Popup() {
           geminiWatermarkRemoverEnabled: true,
           gvHidePromptManager: false,
           gvInputCollapseEnabled: true,
+          gvTabTitleUpdateEnabled: true,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -332,6 +336,7 @@ export default function Popup() {
           setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
           setHidePromptManager(!!res?.gvHidePromptManager);
           setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
+          setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -985,6 +990,29 @@ export default function Popup() {
               <div className="mt-3 p-2 bg-primary/5 border border-primary/20 rounded-md">
                 <p className="text-xs text-muted-foreground">{t('customWebsitesNote')}</p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* General Options */}
+        <Card className="p-4 hover:shadow-lg transition-shadow">
+          <CardTitle className="mb-4 text-xs uppercase">{t('generalOptions')}</CardTitle>
+          <CardContent className="p-0 space-y-4">
+            <div className="flex items-center justify-between group">
+              <div className="flex-1">
+                <Label htmlFor="tab-title-update" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                  {t('enableTabTitleUpdate')}
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">{t('enableTabTitleUpdateHint')}</p>
+              </div>
+              <Switch
+                id="tab-title-update"
+                checked={tabTitleUpdateEnabled}
+                onChange={(e) => {
+                  setTabTitleUpdateEnabled(e.target.checked);
+                  apply({ tabTitleUpdateEnabled: e.target.checked });
+                }}
+              />
             </div>
           </CardContent>
         </Card>

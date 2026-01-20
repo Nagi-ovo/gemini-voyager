@@ -20,6 +20,7 @@
     "dev:chrome-open": "node scripts/launch-chrome-dev.js",
     "dev:firefox": "nodemon --config nodemon.firefox.json",
     "dev:safari": "nodemon --config nodemon.safari.json",
+    "generate:ai-guides": "node scripts/generate-ai-guides.js",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",

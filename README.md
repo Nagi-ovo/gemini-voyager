@@ -24,6 +24,7 @@
   </p>
   <p>
     <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="Nagi-ovo%2Fgemini-voyager | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+    <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager - All-in-one Gemini suite: folders, chat export and much more | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
   </p>
 </div>
 
@@ -61,6 +62,8 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - [🔬 Deep Research Export](#-deep-research-export)
   - [💾 Chat Export](#-chat-export)
   - [📏 Adjustable Chat Width](#-adjustable-chat-width)
+  - [🫥 Input Collapse](#-input-collapse)
+  - [🏷️ Tab Title Sync](#️-tab-title-sync)
 - [📥 Installation](#-installation)
   - [Option 1: Chrome Web Store (Easier)](#option-1-chrome-web-store-easier)
   - [Option 2: Manual Installation (Latest Features)](#option-2-manual-installation-latest-features)
@@ -261,16 +264,28 @@ The input area auto-collapses when empty. Click to expand and start typing.
 
 </details>
 
+### 🏷️ Tab Title Sync
+**Know at a glance.**
+Automatically syncs the browser tab title with the current Gemini chat title. No more "Gemini" on every tab.
+
+<details>
+<summary>👀 View screenshot</summary>
+
+<div align="center">
+  <img src="docs/public/assets/tab-title.png" alt="Tab Title Sync" style="max-width: 100%;"/>
+</div>
+
+</details>
+
 ---
 
 ## 📥 Installation
 
-> **Store Availability Updates:**
-> 1. Applications for **Edge** and **Firefox** stores are in progress. Once approved, persistent installation will be available.
-> 2. **Firefox Persistent Installation:**
->    - (a) Currently only possible via **Firefox Developer Edition**.
->    - (b) Once listed and signed, you will be able to permanently install directly via the `.xpi` file.
-> 3. **Safari:** We will also push to the official App Store soon to enable persistent installation.
+> **Store Availability:**
+> - **Chrome Web Store**: ✅ Available
+> - **Firefox Add-ons**: ✅ Available
+> - **Edge Add-ons**: In progress
+> - **Safari App Store**: Coming soon
 
 
 ### Option 1: Chrome Web Store (Easier)
@@ -323,28 +338,22 @@ No extra steps needed—just install directly from Chrome Web Store!
 <details>
 <summary>Firefox Installation</summary>
 
-#### 1) Temporary (developer) install — quick & safe
-1. Go to the [repository Releases page](https://github.com/Nagi-ovo/gemini-voyager/releases) and download `gemini-voyager-firefox-vX.Y.Z.zip`
-2. Unzip it
-3. Open `about:debugging#/runtime/this-firefox` in Firefox
-4. Click "Load Temporary Add-on…"
-5. Select the `manifest.json` inside the unzipped folder
+**Option 1: Firefox Add-ons (Recommended)**
 
-> Note: This method is temporary — the add-on will be removed when Firefox restarts.
+<div align="center">
+  <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
+    <img src="https://img.shields.io/badge/Install%20from-Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Install from Firefox Add-ons" height="40">
+  </a>
+</div>
 
-#### 2) Permanent install (Firefox ESR — install unsigned add-ons)
-If you prefer a persistent installation and are using Firefox ESR (Extended Support Release), you can enable installation of unsigned add-ons. This allows you to install the release build directly:
+The easiest way. Install from the official store with automatic updates.
 
-1. Install [`firefox-esr`](https://www.mozilla.org/firefox/enterprise/) (ESR builds provide the configuration option described below).
-2. In the address bar enter `about:config` and accept the risk prompt.
-3. Search for `xpinstall.signatures.required` and set its value to `false`.
-4. Download `gemini-voyager-firefox-vX.Y.Z.xpi` from Releases.
-5. Drag the `.xpi` file into an open Firefox ESR window, or open the Add-ons Manager and install the file.
+**Option 2: XPI File (Manual Install)**
+1. Download `gemini-voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
+2. Open `about:addons` in Firefox
+3. Drag the `.xpi` file into the window, or click the gear icon ⚙️ → **Install Add-on From File**
 
-Cautions:
-- Disabling signature enforcement allows installation of unsigned extensions and reduces security. Only install trusted builds.
-- This preference is typically available in Firefox ESR; recent standard Firefox releases no longer allow unsigned extensions. If the preference is unavailable, use the temporary developer install or official signed releases.
-- After installing, you may wish to keep `xpinstall.signatures.required` set to `false` for continued use, or revert it to `true` if you later install only signed extensions.
+> 💡 The XPI file is officially signed by Mozilla and can be permanently installed in all Firefox versions.
 </details>
 
 <details>

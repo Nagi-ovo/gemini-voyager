@@ -24,17 +24,18 @@ Chrome, Edge, Brave, Opera 用户首选。
 
 ## 3. Firefox
 
-**方法一：永久安装 (.xpi)**
+**方法一：Firefox Add-ons 商店（推荐）**
+
+[![从 Firefox Add-ons 安装](https://img.shields.io/badge/Firefox_Add--ons-前往下载-FF7139?style=for-the-badge&logo=firefox&logoColor=white)](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
+
+最简单的方式。从官方商店安装，自动更新。
+
+**方法二：XPI 文件（手动安装）**
 1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下最新的 `gemini-voyager-firefox-vX.Y.Z.xpi`。
 2. 打开扩展管理页 (`about:addons`)。
 3. 把下载的 `.xpi` 文件拖进去安装（或者点右上角齿轮 ⚙️ -> **从文件安装附加组件**）。
 
-**方法二：临时调试 (解压安装)**
-1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下 `gemini-voyager-firefox-vX.Y.Z.zip`。
-2. 解压。
-3. 进 `about:debugging` > **此 Firefox**。
-4. 点 **临时载入附加组件...**，选文件夹里的 `manifest.json`。
-*（注：这是临时调试模式。Firefox 重启后会消失。）*
+> 💡 XPI 文件已获 Mozilla 官方签名，可在所有 Firefox 版本中永久安装。
 
 ## 4. Safari (macOS)
 1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下 `gemini-voyager-safari-vX.Y.Z.zip`。

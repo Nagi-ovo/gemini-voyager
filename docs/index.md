@@ -35,9 +35,9 @@ features:
   - icon: 🍌
     title: NanoBanana 水印去除
     details: 无损去水印。让 AI 生成的瞬间回归纯净。
-  - icon: 🔬
-    title: Deep Research 导出
-    details: 留存思考。一键导出深度研究的思维链与引用。
+  - icon: 🏷️
+    title: 标签页标题同步
+    details: 一眼即知。自动将标签页标题同步为对话标题。
   - icon: 💾
     title: 对话导出
     details: 数据归你。多种格式一键存档，知识不再流失。
@@ -82,8 +82,9 @@ features:
     <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店用户数">
     <img src="https://img.shields.io/chrome-web-store/rating/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店评分">
   </div>
-  <div style="margin-top: 16px; display: flex; justify-content: center;">
+  <div style="margin-top: 16px; display: flex; justify-content: center; flex-wrap: wrap; gap: 12px;">
     <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="Nagi-ovo%2Fgemini-voyager | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+    <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager - All-in-one Gemini suite: folders, chat export and much more | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
   </div>
 </div>
 

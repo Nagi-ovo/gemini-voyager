@@ -1,4 +1,4 @@
-# CLAUDE.md - AI Assistant Guide for Gemini Voyager
+# GEMINI.md - AI Assistant Guide for Gemini Voyager
 
 <!--
 This file is generated from AI_GUIDE.template.md.
@@ -113,7 +113,7 @@ gemini-voyager/
 ├── tsconfig.json                # TypeScript configuration
 ├── vitest.config.ts             # Testing configuration
 ├── custom-vite-plugins.ts       # Custom Vite plugins
-├── CLAUDE.md                    # AI assistant guide (this file)
+├── GEMINI.md                    # AI assistant guide (this file)
 └── TESTING_GUIDE.md             # Data loss prevention testing guide
 ```
 
@@ -848,7 +848,7 @@ For manifest differences, use separate configs:
 
 | File | Purpose |
 |------|---------|
-| `CLAUDE.md` | AI assistant guide (this file) |
+| `GEMINI.md` | AI assistant guide (this file) |
 | `README.md` | Main user-facing documentation |
 | `TESTING_GUIDE.md` | Testing guide for data protection features |
 | `docs/` | VitePress documentation site |
