@@ -7,8 +7,8 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 const TARGET_URL = process.env.CHROME_OPEN_URL || 'https://gemini.google.com/';
-const BUILD_TIMEOUT_MS = 120000;
-const BUILD_POLL_INTERVAL_MS = 500;
+const BUILD_TIMEOUT_MS = Number(process.env.CHROME_OPEN_BUILD_TIMEOUT_MS) || 120000; // ms
+const BUILD_POLL_INTERVAL_MS = Number(process.env.CHROME_OPEN_POLL_INTERVAL_MS) || 500; // ms
 
 const repoRoot = path.resolve(__dirname, '..');
 const distDir = path.join(repoRoot, 'dist_chrome');
@@ -100,7 +100,7 @@ function startReloadWatcher() {
     const mtime = manifestMtime();
     if (mtime <= lastBuildTime) return;
     lastBuildTime = mtime;
-    try { await reloadTargetTabs(); } catch {}
+    try { await reloadTargetTabs(); } catch (error) { log(`Tab reload failed: ${error.message}`); }
   }, BUILD_POLL_INTERVAL_MS);
 }
 
@@ -131,21 +131,34 @@ function sendDevtoolsCommand(url, method, params) {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
     const id = (devtoolsCommandId += 1);
-    const timer = setTimeout(() => { ws.close(); reject(new Error(`Devtools command timeout: ${method}`)); }, 5000);
+    let settled = false;
+    const settle = (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      if (error) reject(error);
+      else resolve();
+    };
+    const timeoutId = setTimeout(() => {
+      settle(new Error(`Devtools command timeout: ${method}`));
+      ws.close();
+    }, 5000);
+
     ws.onopen = () => ws.send(JSON.stringify({ id, method, params }));
     ws.onmessage = (event) => {
       const payload = typeof event.data === 'string' ? event.data : event.data?.toString?.() ?? '';
       if (!payload) return;
       try {
         if (JSON.parse(payload).id === id) {
-          clearTimeout(timer);
           ws.close();
-          resolve();
+          settle();
         }
-      } catch {}
+      } catch (error) {
+        log(`Devtools message parse error: ${error.message}`);
+      }
     };
-    ws.onerror = (error) => { clearTimeout(timer); reject(error); };
-    ws.onclose = () => { clearTimeout(timer); resolve(); };
+    ws.onerror = (error) => settle(error);
+    ws.onclose = () => settle(new Error('Devtools connection closed before response.'));
   });
 }
 
