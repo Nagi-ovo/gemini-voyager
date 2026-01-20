@@ -67,8 +67,6 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
 - [📥 Installation](#-installation)
   - [Option 1: Chrome Web Store (Easier)](#option-1-chrome-web-store-easier)
   - [Option 2: Manual Installation (Latest Features)](#option-2-manual-installation-latest-features)
-    - [1) Temporary (developer) install — quick \& safe](#1-temporary-developer-install--quick--safe)
-    - [2) Permanent install (Firefox ESR — install unsigned add-ons)](#2-permanent-install-firefox-esr--install-unsigned-add-ons)
 - [🛠️ For Developers](#️-for-developers)
   - [Safari Development](#safari-development)
 - [🌟 Related Projects \& Credits](#-related-projects--credits)
