@@ -86,29 +86,7 @@ Strictly adhere to these protocols to prevent errors and ensure data integrity.
 
 ---
 
-## 4. Architecture & Impact Analysis
-
-The project follows a strict strict unidirectional dependency flow. Understanding this map is critical for assessing the "Blast Radius" of your changes.
-
-### Dependency Flow & Blast Radius
-
-```mermaid
-graph TD
-    Core[src/core] --> Features[src/features]
-    Core --> Pages[src/pages]
-    UI[src/components/ui] --> Features
-    UI --> Pages
-    Features --> Pages
-```
-
-| Component | Level | Blast Radius | Description |
-|-----------|-------|--------------|-------------|
-| **Core** | 🔴 Critical | **High** | Changes here affect EVERYTHING. Requires full regression testing. |
-| **UI** | 🟡 Shared | **Medium** | Changes affect visual consistency across all pages. |
-| **Features** | 🟢 Isolated | **Low** | Changes usually only affect that specific feature (e.g., Export, Backup). |
-| **Pages** | 🔵 Entry | **Minimal** | Glue code. Changes rarely affect other parts of the system. |
-
-### Module Glossary & Complexity Hotspots
+## 4. Module Glossary & Complexity Hotspots
 
 | Module (Path) | Responsibility | Complexity | Notes |
 |---------------|----------------|------------|-------|
