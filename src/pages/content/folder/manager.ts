@@ -500,6 +500,9 @@ export class FolderManager {
     const folderIcon = document.createElement('span');
     folderIcon.className = 'gv-folder-icon google-symbols';
     folderIcon.textContent = 'folder';
+    folderIcon.style.cursor = 'pointer';
+    folderIcon.style.userSelect = 'none';
+    folderIcon.addEventListener('dblclick', () => this.toggleFolder(folder.id));
 
     // Folder name
     const folderName = document.createElement('span');
