@@ -862,5 +862,13 @@
   "enableTabTitleUpdateHint": {
     "message": "Automatically update the browser tab title to match the current conversation title",
     "description": "Tab title sync feature hint"
+  },
+  "enableMermaidRendering": {
+    "message": "Enable Mermaid diagram rendering",
+    "description": "Enable Mermaid diagram rendering toggle label"
+  },
+  "enableMermaidRenderingHint": {
+    "message": "Automatically render Mermaid diagrams in code blocks",
+    "description": "Mermaid rendering feature hint"
   }
 }

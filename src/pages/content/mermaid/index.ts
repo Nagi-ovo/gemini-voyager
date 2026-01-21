@@ -527,30 +527,73 @@ const processCodeBlocks = () => {
 };
 
 /**
+ * Track whether Mermaid is enabled
+ */
+let mermaidEnabled = true;
+let observer: MutationObserver | null = null;
+
+/**
  * Start Mermaid feature
  */
 export const startMermaid = () => {
+    // Check if Mermaid rendering is enabled in settings
+    chrome.storage?.sync?.get({ gvMermaidEnabled: true }, (result) => {
+        mermaidEnabled = result?.gvMermaidEnabled !== false;
 
+        if (mermaidEnabled) {
+            initializeMermaid();
+        } else {
+            console.log('[Gemini Voyager] Mermaid rendering is disabled');
+        }
+    });
+
+    // Listen for setting changes
+    chrome.storage?.onChanged?.addListener((changes, areaName) => {
+        if (areaName === 'sync' && changes.gvMermaidEnabled) {
+            mermaidEnabled = changes.gvMermaidEnabled.newValue !== false;
+            if (mermaidEnabled) {
+                initializeMermaid();
+                console.log('[Gemini Voyager] Mermaid rendering enabled');
+            } else {
+                // Stop observing when disabled
+                if (observer) {
+                    observer.disconnect();
+                    observer = null;
+                }
+                console.log('[Gemini Voyager] Mermaid rendering disabled');
+            }
+        }
+    });
+};
+
+/**
+ * Initialize Mermaid rendering
+ */
+const initializeMermaid = () => {
     createStyles();
     initMermaid();
 
     processCodeBlocks();
 
-    let timeout: ReturnType<typeof setTimeout>;
-    const debouncedProcess = () => {
-        clearTimeout(timeout);
-        timeout = setTimeout(processCodeBlocks, 1000);
-    };
+    // Only create observer if not already exists
+    if (!observer) {
+        let timeout: ReturnType<typeof setTimeout>;
+        const debouncedProcess = () => {
+            if (!mermaidEnabled) return;
+            clearTimeout(timeout);
+            timeout = setTimeout(processCodeBlocks, 1000);
+        };
 
-    const observer = new MutationObserver(() => {
-        debouncedProcess();
-    });
+        observer = new MutationObserver(() => {
+            debouncedProcess();
+        });
 
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        characterData: true
-    });
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
 
     console.log('[Gemini Voyager] Mermaid integration started');
 };

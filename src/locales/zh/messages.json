@@ -870,5 +870,13 @@
   "enableTabTitleUpdateHint": {
     "message": "自动将浏览器标签页标题更新为当前对话的标题",
     "description": "标签页标题同步功能提示"
+  },
+  "enableMermaidRendering": {
+    "message": "启用 Mermaid 图表渲染",
+    "description": "启用 Mermaid 图表渲染开关标签"
+  },
+  "enableMermaidRenderingHint": {
+    "message": "自动将代码块中的 Mermaid 代码渲染为图表",
+    "description": "Mermaid 渲染功能提示"
   }
 }

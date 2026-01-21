@@ -103,6 +103,7 @@ interface SettingsUpdate {
   hidePromptManager?: boolean;
   inputCollapseEnabled?: boolean;
   tabTitleUpdateEnabled?: boolean;
+  mermaidEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -124,6 +125,7 @@ export default function Popup() {
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(true);
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
+  const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
 
   const handleFormulaCopyFormatChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,6 +172,7 @@ export default function Popup() {
     if (typeof settings.hidePromptManager === 'boolean') payload.gvHidePromptManager = settings.hidePromptManager;
     if (typeof settings.inputCollapseEnabled === 'boolean') payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
     if (typeof settings.tabTitleUpdateEnabled === 'boolean') payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
+    if (typeof settings.mermaidEnabled === 'boolean') payload.gvMermaidEnabled = settings.mermaidEnabled;
     void setSyncStorage(payload);
   }, [setSyncStorage]);
 
@@ -318,6 +321,7 @@ export default function Popup() {
           gvHidePromptManager: false,
           gvInputCollapseEnabled: true,
           gvTabTitleUpdateEnabled: true,
+          gvMermaidEnabled: true,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -337,6 +341,7 @@ export default function Popup() {
           setHidePromptManager(!!res?.gvHidePromptManager);
           setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
+          setMermaidEnabled(res?.gvMermaidEnabled !== false);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -1011,6 +1016,22 @@ export default function Popup() {
                 onChange={(e) => {
                   setTabTitleUpdateEnabled(e.target.checked);
                   apply({ tabTitleUpdateEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between group">
+              <div className="flex-1">
+                <Label htmlFor="mermaid-enabled" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                  {t('enableMermaidRendering')}
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">{t('enableMermaidRenderingHint')}</p>
+              </div>
+              <Switch
+                id="mermaid-enabled"
+                checked={mermaidEnabled}
+                onChange={(e) => {
+                  setMermaidEnabled(e.target.checked);
+                  apply({ mermaidEnabled: e.target.checked });
                 }}
               />
             </div>
