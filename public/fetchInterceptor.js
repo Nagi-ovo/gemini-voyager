@@ -6,11 +6,15 @@
  * without watermark parameters.
  * 
  * The script respects the user's watermark remover setting and communicates with the
- * content script via CustomEvents for watermark removal processing.
+ * content script via DOM-based bridge for watermark removal processing.
+ * (CustomEvents don't cross world boundaries in Firefox, so we use a hidden DOM element)
  */
 
 (function () {
     'use strict';
+
+    /** Timeout for watermark processing in milliseconds */
+    const WATERMARK_PROCESSING_TIMEOUT_MS = 30000;
 
     // Prevent double injection
     if (window.__gvFetchInterceptorInstalled) {
@@ -138,11 +142,11 @@
                         reader.onerror = () => reject(new Error('Failed to read blob'));
                         reader.readAsDataURL(blob);
 
-                        // Timeout after 30 seconds
+                        // Timeout for watermark processing
                         setTimeout(() => {
                             observer.disconnect();
                             reject(new Error('Processing timeout'));
-                        }, 30000);
+                        }, WATERMARK_PROCESSING_TIMEOUT_MS);
                     });
 
                     // Return processed response
