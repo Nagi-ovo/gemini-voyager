@@ -500,6 +500,27 @@ const getCodeBlockLanguage = (codeEl: Element): string | null => {
 };
 
 /**
+ * Generic/non-specific language labels that should still allow Mermaid detection
+ * These are labels that don't represent a specific programming language
+ */
+const GENERIC_LANGUAGE_LABELS = new Set([
+    // Chinese
+    '代码段', '代码', '代码块', '示例', '示例代码',
+    // English
+    'code', 'code snippet', 'snippet', 'example', 'code example', 'sample',
+    // Common generic terms
+    'text', 'plain', 'plaintext', 'raw', 'output', 'result',
+]);
+
+/**
+ * Check if a language label is generic (not a specific programming language)
+ */
+const isGenericLanguageLabel = (language: string | null): boolean => {
+    if (!language) return true; // No label = generic
+    return GENERIC_LANGUAGE_LABELS.has(language.toLowerCase());
+};
+
+/**
  * Find and process code blocks
  */
 const processCodeBlocks = () => {
@@ -511,16 +532,20 @@ const processCodeBlocks = () => {
         // Check the language label from Gemini's code block header
         const language = getCodeBlockLanguage(codeEl);
 
-        // If language is explicitly set and NOT mermaid, skip Mermaid rendering
-        // This prevents false positives for MATLAB (%% comments), and other languages
-        if (language && language !== 'mermaid') {
+        // Case 1: Language is explicitly "mermaid" - always render
+        if (language === 'mermaid') {
+            renderMermaid(codeEl as HTMLElement, codeText);
             return;
         }
 
-        // Only attempt Mermaid rendering if:
-        // 1. Language is explicitly "mermaid", OR
-        // 2. No language label is present and content looks like Mermaid code
-        if (language === 'mermaid' || isMermaidCode(codeText)) {
+        // Case 2: Language is a specific programming language (not generic) - skip rendering
+        // This prevents false positives for MATLAB (%% comments), Python, etc.
+        if (language && !isGenericLanguageLabel(language)) {
+            return;
+        }
+
+        // Case 3: No language label or generic label - use content detection
+        if (isMermaidCode(codeText)) {
             renderMermaid(codeEl as HTMLElement, codeText);
         }
     });
