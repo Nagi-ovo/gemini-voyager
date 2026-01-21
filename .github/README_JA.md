@@ -73,8 +73,9 @@
   - [🗑️ 一括削除](#️-一括削除)
 - [📥 インストール](#-インストール)
 - [☕ プロジェクトを支援する](#-プロジェクトを支援する)
-- [🌟 クレジット](#-クレジット)
+- [💬 コミュニティ](#-コミュニティ)
 - [🤝 貢献と開発](#-貢献と開発)
+- [🌟 クレジット](#-クレジット)
 
 ---
 
@@ -373,11 +374,28 @@ Gemini Voyager があなたの仕事の効率を高める役に立ったなら�
 
 ---
 
-## 🌟 クレジット
+## 💬 コミュニティ
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Gemini Voyager のフォーク版です。DeepSeek に適応し、DeepSeek ユーザーにもタイムラインナビゲーションとチャット管理機能を提供しています！
-
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - ChatGPT 用のタイムラインナビゲーション拡張機能です。このプロジェクトのインスピレーションの源となりました。Gemini Voyager は、このタイムラインの概念を Gemini に適合させ、さらにフォルダ管理、プロンプトライブラリ、チャットエクスポートなど、多くの新機能を追加しました。
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank">
+        <img src="https://img.shields.io/badge/Follow%20on-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X">
+      </a>
+      <br><br>
+      <b>最新情報をフォロー</b><br>
+      <sub>新リリース、機能アナウンス、開発アップデート。</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
+        <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord">
+      </a>
+      <br><br>
+      <b>コミュニティに参加</b><br>
+      <sub>他のユーザーと交流、プロンプトを共有、ヘルプを取得。</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -414,18 +432,13 @@ bun run build:all      # 全ブラウザ
 
 Gemini Voyager をより良くするためにご協力いただき、ありがとうございます！❤️
 
-
 ---
 
-## 💬 ココミュニティ
+## 🌟 クレジット
 
-Discord サーバーに参加して、他のユーザーと交流したり、プロンプトを共有したり、最新の開発情報を入手したりしませんか？
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Gemini Voyager のフォーク版です。DeepSeek に適応し、DeepSeek ユーザーにもタイムラインナビゲーションとチャット管理機能を提供しています！
 
-<div align="center">
-  <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
-    <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20our%20Discord" alt="Discord">
-  </a>
-</div>
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - ChatGPT 用のタイムラインナビゲーション拡張機能です。このプロジェクトのインスピレーションの源となりました。Gemini Voyager は、このタイムラインの概念を Gemini に適合させ、さらにフォルダ管理、プロンプトライブラリ、チャットエクスポートなど、多くの新機能を追加しました。
 
 ---
 

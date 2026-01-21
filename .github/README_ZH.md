@@ -73,8 +73,9 @@
   - [🗑️ 批量删除](#️-批量删除)
 - [📥 安装方式](#-安装方式)
 - [☕ 支持本项目](#-支持本项目)
-- [🌟 致谢](#-致谢)
+- [💬 交流与反馈](#-交流与反馈)
 - [🤝 参与贡献与开发](#-参与贡献与开发)
+- [🌟 致谢](#-致谢)
 
 ---
 
@@ -376,11 +377,28 @@
 
 ---
 
-## 🌟 致谢
+## 💬 交流与反馈
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Gemini Voyager 的 Fork 版本，为 DeepSeek 适配，为 DeepSeek 用户带来时间线导航和对话管理功能！
-
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 为 ChatGPT 设计的时间线导航扩展，本项目的灵感来源：Gemini Voyager 为 Gemini 适配了时间线概念，并添加了文件夹管理、提示词库、聊天导出等大量新功能。
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://x.com/Nag1ovo/status/2012609459663634589" target="_blank">
+        <img src="https://img.shields.io/badge/关注-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="关注 X">
+      </a>
+      <br><br>
+      <b>关注动态</b><br>
+      <sub>新版本发布、功能预告、开发进展。</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
+        <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=加入%20Discord" alt="Discord">
+      </a>
+      <br><br>
+      <b>加入社区</b><br>
+      <sub>与其他用户交流、分享提示词、获取帮助。</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -417,18 +435,13 @@ bun run build:all      # 所有浏览器
 
 感谢你帮助 Gemini Voyager 变得更好！❤️
 
-
 ---
 
-## 💬 交流与反馈
+## 🌟 致谢
 
-欢迎加入我们的 Discord 服务器，在这里你可以与其他用户交流心得、分享提示词，并获取最新的开发动态！
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Gemini Voyager 的 Fork 版本，为 DeepSeek 适配，为 DeepSeek 用户带来时间线导航和对话管理功能！
 
-<div align="center">
-  <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
-    <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=加入%20Discord" alt="Discord">
-  </a>
-</div>
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 为 ChatGPT 设计的时间线导航扩展，本项目的灵感来源：Gemini Voyager 为 Gemini 适配了时间线概念，并添加了文件夹管理、提示词库、聊天导出等大量新功能。
 
 ---
 

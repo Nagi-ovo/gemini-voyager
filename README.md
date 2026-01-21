@@ -73,8 +73,9 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - [🗑️ Batch Delete](#️-batch-delete)
 - [📥 Installation](#-installation)
 - [☕ Support This Project](#-support-this-project)
-- [🌟 Credits](#-credits)
+- [💬 Community](#-community)
 - [🤝 Contributing & Development](#-contributing--development)
+- [🌟 Credits](#-credits)
 
 ---
 
@@ -376,11 +377,28 @@ If Gemini Voyager makes your life easier, consider buying me a coffee. It helps 
 
 ---
 
-## 🌟 Credits
+## 💬 Community
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Gemini Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
-
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Gemini Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt library, and chat export.
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank">
+        <img src="https://img.shields.io/badge/Follow%20on-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X">
+      </a>
+      <br><br>
+      <b>Follow for Updates</b><br>
+      <sub>New releases, feature announcements, and development updates.</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
+        <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord">
+      </a>
+      <br><br>
+      <b>Join the Community</b><br>
+      <sub>Chat with other users, share prompts, and get help.</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -417,18 +435,13 @@ bun run build:all      # All browsers
 
 Thank you for helping make Gemini Voyager better! ❤️
 
-
 ---
 
-## 💬 Community
+## 🌟 Credits
 
-Join our Discord server to chat with other users, share your prompts, and get the latest updates!
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Gemini Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
 
-<div align="center">
-  <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
-    <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20our%20Discord" alt="Discord">
-  </a>
-</div>
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Gemini Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt library, and chat export.
 
 ---
 
