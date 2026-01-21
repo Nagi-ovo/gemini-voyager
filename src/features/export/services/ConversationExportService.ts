@@ -152,10 +152,15 @@ export class ConversationExportService {
         }
       }
       if (!blob) return; // leave original URL
+      
+      // Firefox fix: Convert Blob to Uint8Array in current context to avoid prototype chain issues
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(Array.from(new Uint8Array(arrayBuffer)));
+      
       const ext = pickExt(contentType, url);
       const fileName = `img-${String(idx++).padStart(3, '0')}.${ext}`;
       // Store inside the 'assets' folder WITHOUT duplicating the folder name
-      await assetsFolder?.file(fileName, blob);
+      assetsFolder?.file(fileName, uint8Array);
       // Reference in markdown should include the 'assets/' prefix
       mapping.set(url, `assets/${fileName}`);
     }));
