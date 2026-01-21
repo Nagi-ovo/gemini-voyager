@@ -125,7 +125,7 @@
                                         if (data.error) reject(new Error(data.error));
                                         else fetch(data.base64).then(r => r.blob()).then(resolve).catch(reject);
                                     }
-                                } catch (e) { /* ignore parse errors */ }
+                                } catch (e) { console.warn('[Gemini Voyager] Failed to parse bridge response:', e); }
                             }
                         });
                         observer.observe(bridge, { attributes: true, attributeFilter: ['data-response'] });
