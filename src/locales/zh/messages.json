@@ -751,6 +751,30 @@
     "message": "从云端下载合并",
     "description": "同步（合并）按钮"
   },
+  "syncMode": {
+    "message": "同步模式",
+    "description": "同步模式标签"
+  },
+  "minutesAgo": {
+    "message": "分钟前",
+    "description": "分钟前标签"
+  },
+  "syncNoData": {
+    "message": "未在云端找到同步数据",
+    "description": "Error message when no data is found in Drive"
+  },
+  "syncUploadFailed": {
+    "message": "上传失败",
+    "description": "Error message when upload fails"
+  },
+  "syncDownloadFailed": {
+    "message": "下载失败",
+    "description": "Error message when download fails"
+  },
+  "syncAuthFailed": {
+    "message": "认证失败",
+    "description": "Error message when authentication fails"
+  },
   "signOut": {
     "message": "退出登录",
     "description": "退出登录按钮"

@@ -51,7 +51,7 @@ export function CloudSyncSettings() {
         if (diffMins < 1) {
             timeStr = t('justNow');
         } else if (diffMins < 60) {
-            timeStr = `${diffMins} min ago`;
+            timeStr = `${diffMins} ${t('minutesAgo')}`;
         } else if (diffHours < 24) {
             timeStr = `${diffHours} ${t('hoursAgo')}`;
         } else if (diffDays === 1) {
@@ -77,7 +77,7 @@ export function CloudSyncSettings() {
         if (diffMins < 1) {
             timeStr = t('justNow');
         } else if (diffMins < 60) {
-            timeStr = `${diffMins} min ago`;
+            timeStr = `${diffMins} ${t('minutesAgo')}`;
         } else if (diffHours < 24) {
             timeStr = `${diffHours} ${t('hoursAgo')}`;
         } else if (diffDays === 1) {
@@ -200,7 +200,7 @@ export function CloudSyncSettings() {
                 setSyncState(response.state);
                 setStatusMessage({ text: t('syncSuccess'), kind: 'ok' });
             } else {
-                throw new Error(response?.error || 'Upload failed');
+                throw new Error(response?.error || t('syncUploadFailed'));
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Sync failed';
@@ -221,7 +221,7 @@ export function CloudSyncSettings() {
             if (!syncState.isAuthenticated) {
                 const authResponse = await chrome.runtime.sendMessage({ type: 'gv.sync.authenticate' });
                 if (!authResponse?.ok) {
-                    throw new Error(authResponse?.error || 'Authentication failed');
+                    throw new Error(authResponse?.error || t('syncAuthFailed'));
                 }
                 setSyncState(authResponse.state);
             }
@@ -230,11 +230,11 @@ export function CloudSyncSettings() {
             const response = await chrome.runtime.sendMessage({ type: 'gv.sync.download' });
 
             if (!response?.ok) {
-                throw new Error(response?.error || 'Download failed');
+                throw new Error(response?.error || t('syncDownloadFailed'));
             }
 
             if (!response.data) {
-                setStatusMessage({ text: 'No sync data found in Drive', kind: 'err' });
+                setStatusMessage({ text: t('syncNoData'), kind: 'err' });
                 setIsDownloading(false);
                 return;
             }
@@ -346,7 +346,7 @@ export function CloudSyncSettings() {
 
                 {/* Sync Mode Toggle */}
                 <div>
-                    <Label className="text-sm font-medium mb-2 block">Sync Mode</Label>
+                    <Label className="text-sm font-medium mb-2 block">{t('syncMode')}</Label>
                     <div className="relative grid grid-cols-2 rounded-lg bg-secondary/50 p-1 gap-1">
                         <div
                             className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md bg-primary shadow-md pointer-events-none transition-all duration-300 ease-out"

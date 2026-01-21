@@ -68,7 +68,7 @@ function safeParseJSON<T>(raw: string, fallback: T): T {
 function createI18n() {
   return {
     t: (key: string): string => getTranslationSync(key),
-    set: async (lang: 'en' | 'zh') => {
+    set: async (lang: 'en' | 'zh' | 'ja') => {
       try {
         // Check if extension context is still valid
         if (!browser.runtime?.id) {
@@ -84,7 +84,7 @@ function createI18n() {
         console.warn('[PromptManager] Failed to set language:', e);
       }
     },
-    get: async (): Promise<'en' | 'zh'> => await getCurrentLanguage(),
+    get: async (): Promise<'en' | 'zh' | 'ja'> => await getCurrentLanguage(),
   };
 }
 
@@ -467,8 +467,12 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const optZh = createEl('option');
     optZh.value = 'zh';
     optZh.textContent = '中文';
+    const optJa = createEl('option');
+    optJa.value = 'ja';
+    optJa.textContent = '日本語';
     langSel.appendChild(optEn);
     langSel.appendChild(optZh);
+    langSel.appendChild(optJa);
     // Set initial language value asynchronously
     i18n.get().then((lang) => {
       langSel.value = lang;
@@ -1007,7 +1011,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (area === 'sync' && changes?.language?.newValue) {
         const next = changes.language.newValue;
         try {
-          langSel.value = next.startsWith('zh') ? 'zh' : 'en';
+          if (next.startsWith('zh')) langSel.value = 'zh';
+          else if (next.startsWith('ja')) langSel.value = 'ja';
+          else langSel.value = 'en';
         } catch { }
         refreshUITexts();
       }

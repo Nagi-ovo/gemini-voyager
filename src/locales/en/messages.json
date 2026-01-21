@@ -743,6 +743,38 @@
     "message": "Syncing...",
     "description": "Sync in progress message"
   },
+  "syncUpload": {
+    "message": "Upload (Local → Drive)",
+    "description": "Upload button label"
+  },
+  "syncMerge": {
+    "message": "Merge (Drive → Local)",
+    "description": "Merge button label"
+  },
+  "syncMode": {
+    "message": "Sync Mode",
+    "description": "Sync mode label"
+  },
+  "minutesAgo": {
+    "message": "minutes ago",
+    "description": "Minutes ago label"
+  },
+  "syncNoData": {
+    "message": "No sync data found in Drive",
+    "description": "Error message when no data is found in Drive"
+  },
+  "syncUploadFailed": {
+    "message": "Upload failed",
+    "description": "Error message when upload fails"
+  },
+  "syncDownloadFailed": {
+    "message": "Download failed",
+    "description": "Error message when download fails"
+  },
+  "syncAuthFailed": {
+    "message": "Authentication failed",
+    "description": "Error message when authentication fails"
+  },
   "signOut": {
     "message": "Sign out",
     "description": "Sign out button"

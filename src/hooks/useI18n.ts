@@ -1,11 +1,17 @@
 import enMessages from '@locales/en/messages.json';
 import zhMessages from '@locales/zh/messages.json';
+import jaMessages from '@locales/ja/messages.json';
 import { useState, useEffect } from 'react';
 import browser from 'webextension-polyfill';
 
 const useI18n = () => {
-  const normalizeLang = (lang: string | undefined) =>
-    (lang && lang.toLowerCase().startsWith('zh')) ? 'zh' : 'en';
+  const normalizeLang = (lang: string | undefined) => {
+    if (!lang) return 'en';
+    const lower = lang.toLowerCase();
+    if (lower.startsWith('zh')) return 'zh';
+    if (lower.startsWith('ja')) return 'ja';
+    return 'en';
+  };
 
   const initialUiLang = (() => {
     try {
@@ -29,6 +35,7 @@ const useI18n = () => {
   const dictionaries: Record<string, Record<string, string>> = {
     en: extract(enMessages as any),
     zh: extract(zhMessages as any),
+    ja: extract(jaMessages as any),
   };
 
   const [language, setLanguage] = useState<string>(normalizeLang(initialUiLang));

@@ -1,11 +1,16 @@
 import enMessages from '@locales/en/messages.json';
 import zhMessages from '@locales/zh/messages.json';
+import jaMessages from '@locales/ja/messages.json';
 import browser from 'webextension-polyfill';
 
-type Language = 'en' | 'zh';
+type Language = 'en' | 'zh' | 'ja';
 
 const normalizeLang = (lang: string | undefined): Language => {
-  return (lang && lang.toLowerCase().startsWith('zh')) ? 'zh' : 'en';
+  if (!lang) return 'en';
+  const lower = lang.toLowerCase();
+  if (lower.startsWith('zh')) return 'zh';
+  if (lower.startsWith('ja')) return 'ja';
+  return 'en';
 };
 
 const extract = (raw: any): Record<string, string> => {
@@ -22,6 +27,7 @@ const extract = (raw: any): Record<string, string> => {
 const dictionaries: Record<Language, Record<string, string>> = {
   en: extract(enMessages as any),
   zh: extract(zhMessages as any),
+  ja: extract(jaMessages as any),
 };
 
 /**
