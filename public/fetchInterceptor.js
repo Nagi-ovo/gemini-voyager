@@ -6,11 +6,15 @@
  * without watermark parameters.
  * 
  * The script respects the user's watermark remover setting and communicates with the
- * content script via CustomEvents for watermark removal processing.
+ * content script via DOM-based bridge for watermark removal processing.
+ * (CustomEvents don't cross world boundaries in Firefox, so we use a hidden DOM element)
  */
 
 (function () {
     'use strict';
+
+    /** Timeout for watermark processing in milliseconds */
+    const WATERMARK_PROCESSING_TIMEOUT_MS = 30000;
 
     // Prevent double injection
     if (window.__gvFetchInterceptorInstalled) {
@@ -39,30 +43,29 @@
     };
 
     /**
-     * Watermark remover state - updated via CustomEvent from content script
-     * Using events instead of inline script to avoid CSP violations
+     * DOM-based communication bridge
+     * CustomEvents don't cross world boundaries in Firefox, so we use a hidden DOM element
      */
-    let watermarkRemoverEnabled = false;
+    const GV_BRIDGE_ID = 'gv-watermark-bridge';
 
-    // Listen for state updates from content script
-    window.addEventListener('gv-watermark-state', (event) => {
-        watermarkRemoverEnabled = event.detail?.enabled === true;
-        console.log('[Gemini Voyager] Watermark remover state:', watermarkRemoverEnabled ? 'enabled' : 'disabled');
-    });
-
-    // Listen for state query responses (for initial sync)
-    window.addEventListener('gv-watermark-state-response', (event) => {
-        watermarkRemoverEnabled = event.detail?.enabled === true;
-        console.log('[Gemini Voyager] Watermark remover state (from query):', watermarkRemoverEnabled ? 'enabled' : 'disabled');
-    });
-
-    // Request current state from content script (it may already be loaded)
-    window.dispatchEvent(new CustomEvent('gv-watermark-state-query'));
+    const getBridgeElement = () => {
+        let bridge = document.getElementById(GV_BRIDGE_ID);
+        if (!bridge) {
+            bridge = document.createElement('div');
+            bridge.id = GV_BRIDGE_ID;
+            bridge.style.display = 'none';
+            document.documentElement.appendChild(bridge);
+        }
+        return bridge;
+    };
 
     /**
-     * Check if watermark remover is enabled
+     * Check if watermark remover is enabled by reading from bridge element
      */
-    const isWatermarkRemoverEnabled = () => watermarkRemoverEnabled;
+    const isWatermarkRemoverEnabled = () => {
+        const bridge = getBridgeElement();
+        return bridge.dataset.enabled === 'true';
+    };
 
     // Store original fetch
     const originalFetch = window.fetch;
@@ -73,11 +76,8 @@
 
         // Check if this is a Gemini download request (specifically rd-gg-dl for downloads)
         if (url && typeof url === 'string' && GEMINI_DOWNLOAD_PATTERN.test(url)) {
-            console.log('[Gemini Voyager] Intercepting download request:', url);
-
             // Replace with original size URL
             const origSizeUrl = replaceWithOriginalSize(url);
-            console.log('[Gemini Voyager] Using original size URL:', origSizeUrl);
 
             // Modify the request to use original size
             if (typeof args[0] === 'string') {
@@ -101,56 +101,53 @@
 
             // Only process watermark removal if enabled
             if (isWatermarkRemoverEnabled()) {
+                console.log('[Gemini Voyager] Intercepting download for watermark removal');
                 try {
                     // Fetch the original size image
                     const response = await originalFetch.apply(this, args);
 
-                    if (!response.ok) {
-                        return response;
-                    }
+                    if (!response.ok) return response;
 
                     // Clone response to read blob
                     const blob = await response.blob();
 
-                    // Send blob to content script for watermark removal via custom event
+                    // Send blob to content script for watermark removal via DOM bridge
                     const processedBlob = await new Promise((resolve, reject) => {
                         const requestId = 'gv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                        const bridge = getBridgeElement();
 
-                        // Listen for response from content script
-                        const handler = (event) => {
-                            if (event.detail?.requestId === requestId) {
-                                window.removeEventListener('gv-processed-image', handler);
-                                if (event.detail.error) {
-                                    reject(new Error(event.detail.error));
-                                } else {
-                                    // Convert base64 back to blob
-                                    fetch(event.detail.base64)
-                                        .then(res => res.blob())
-                                        .then(resolve)
-                                        .catch(reject);
-                                }
+                        // Watch for response via MutationObserver (works across worlds in Firefox)
+                        const observer = new MutationObserver(() => {
+                            const response = bridge.dataset.response;
+                            if (response) {
+                                try {
+                                    const data = JSON.parse(response);
+                                    if (data.requestId === requestId) {
+                                        observer.disconnect();
+                                        bridge.removeAttribute('data-response');
+
+                                        if (data.error) reject(new Error(data.error));
+                                        else fetch(data.base64).then(r => r.blob()).then(resolve).catch(reject);
+                                    }
+                                } catch (e) { console.warn('[Gemini Voyager] Failed to parse bridge response:', e); }
                             }
-                        };
-                        window.addEventListener('gv-processed-image', handler);
+                        });
+                        observer.observe(bridge, { attributes: true, attributeFilter: ['data-response'] });
 
-                        // Send request to content script (convert blob to base64 for transfer)
+                        // Send request via DOM bridge
                         const reader = new FileReader();
                         reader.onloadend = () => {
-                            window.dispatchEvent(new CustomEvent('gv-process-image', {
-                                detail: { requestId, base64: reader.result }
-                            }));
+                            bridge.dataset.request = JSON.stringify({ requestId, base64: reader.result });
                         };
                         reader.onerror = () => reject(new Error('Failed to read blob'));
                         reader.readAsDataURL(blob);
 
-                        // Timeout after 30 seconds
+                        // Timeout for watermark processing
                         setTimeout(() => {
-                            window.removeEventListener('gv-processed-image', handler);
+                            observer.disconnect();
                             reject(new Error('Processing timeout'));
-                        }, 30000);
+                        }, WATERMARK_PROCESSING_TIMEOUT_MS);
                     });
-
-                    console.log('[Gemini Voyager] Download processed successfully with watermark removal');
 
                     // Return processed response
                     return new Response(processedBlob, {
@@ -162,8 +159,6 @@
                     console.warn('[Gemini Voyager] Watermark processing failed, using original:', error);
                     // Fall through to return original fetch with modified URL
                 }
-            } else {
-                console.log('[Gemini Voyager] Watermark remover disabled, downloading original size without processing');
             }
         }
 
@@ -171,5 +166,5 @@
         return originalFetch.apply(this, args);
     };
 
-    console.log('[Gemini Voyager] Fetch interceptor installed (MAIN world)');
+    console.log('[Gemini Voyager] Fetch interceptor active');
 })();

@@ -122,11 +122,15 @@ export class WatermarkEngine {
             new Promise<void>((resolve, reject) => {
                 bg48.onload = () => resolve();
                 bg48.onerror = (e) => reject(new Error(`Failed to load bg_48.png from ${bg48Path}: ${e instanceof Event ? 'Image load error' : e}`));
+                // Set crossOrigin before src to prevent canvas tainting in Firefox
+                bg48.crossOrigin = 'anonymous';
                 bg48.src = bg48Path;
             }),
             new Promise<void>((resolve, reject) => {
                 bg96.onload = () => resolve();
                 bg96.onerror = (e) => reject(new Error(`Failed to load bg_96.png from ${bg96Path}: ${e instanceof Event ? 'Image load error' : e}`));
+                // Set crossOrigin before src to prevent canvas tainting in Firefox
+                bg96.crossOrigin = 'anonymous';
                 bg96.src = bg96Path;
             }),
         ]);

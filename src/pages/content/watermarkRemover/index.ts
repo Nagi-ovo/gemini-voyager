@@ -49,6 +49,8 @@ const fetchImageViaBackground = async (url: string): Promise<HTMLImageElement> =
             const img = new Image();
             img.onload = () => resolve(img);
             img.onerror = () => reject(new Error('Failed to decode image'));
+            // Set crossOrigin before src to prevent canvas tainting in Firefox
+            img.crossOrigin = 'anonymous';
             img.src = `data:${response.contentType};base64,${response.base64}`;
         });
     });
@@ -203,78 +205,86 @@ const setupMutationObserver = (): void => {
     });
     console.log('[Gemini Voyager] Watermark remover MutationObserver active');
 };
-
 /**
- * Current watermark remover enabled state (for query responses)
+ * DOM-based communication bridge ID (must match fetchInterceptor.js)
+ * CustomEvents don't cross world boundaries in Firefox, so we use a hidden DOM element
  */
-let currentWatermarkState = false;
+const GV_BRIDGE_ID = 'gv-watermark-bridge';
+
+function getBridgeElement(): HTMLElement {
+    let bridge = document.getElementById(GV_BRIDGE_ID);
+    if (!bridge) {
+        bridge = document.createElement('div');
+        bridge.id = GV_BRIDGE_ID;
+        bridge.style.display = 'none';
+        document.documentElement.appendChild(bridge);
+    }
+    return bridge;
+}
 
 /**
  * Notify the MAIN world fetch interceptor about watermark remover state
- * Uses CustomEvent to communicate across worlds (CSP-safe approach)
+ * Uses DOM element to communicate across worlds (works in Firefox)
  */
 function notifyFetchInterceptor(enabled: boolean): void {
-    currentWatermarkState = enabled;
-    window.dispatchEvent(new CustomEvent('gv-watermark-state', {
-        detail: { enabled }
-    }));
+    const bridge = getBridgeElement();
+    bridge.dataset.enabled = String(enabled);
 }
 
 /**
- * Setup listener for state queries from MAIN world fetch interceptor
- */
-function setupStateQueryListener(): void {
-    window.addEventListener('gv-watermark-state-query', () => {
-        window.dispatchEvent(new CustomEvent('gv-watermark-state-response', {
-            detail: { enabled: currentWatermarkState }
-        }));
-    });
-}
-
-/**
- * Setup event listener to handle image processing requests from MAIN world fetch interceptor
+ * Setup DOM-based bridge to handle image processing requests from MAIN world
+ * Uses MutationObserver to watch for requests in the bridge element
  */
 function setupFetchInterceptorBridge(): void {
-    window.addEventListener('gv-process-image', async (event: Event) => {
-        const customEvent = event as CustomEvent<{ requestId: string; base64: string }>;
-        const { requestId, base64 } = customEvent.detail;
+    const bridge = getBridgeElement();
 
-        if (!engine) {
-            // Send error response
-            window.dispatchEvent(new CustomEvent('gv-processed-image', {
-                detail: { requestId, error: 'Watermark engine not initialized' }
-            }));
-            return;
-        }
-
-        try {
-            // Convert base64 to image element
-            const img = new Image();
-            await new Promise<void>((resolve, reject) => {
-                img.onload = () => resolve();
-                img.onerror = () => reject(new Error('Failed to load image'));
-                img.src = base64;
-            });
-
-            // Process image to remove watermark
-            const processedCanvas = await engine.removeWatermarkFromImage(img);
-            const processedDataUrl = canvasToDataURL(processedCanvas);
-
-            // Send processed image back
-            window.dispatchEvent(new CustomEvent('gv-processed-image', {
-                detail: { requestId, base64: processedDataUrl }
-            }));
-
-            console.log('[Gemini Voyager] Processed image for download via fetch interceptor');
-        } catch (error) {
-            console.error('[Gemini Voyager] Failed to process image from fetch interceptor:', error);
-            window.dispatchEvent(new CustomEvent('gv-processed-image', {
-                detail: { requestId, error: String(error) }
-            }));
+    // Watch for requests from MAIN world via MutationObserver
+    const observer = new MutationObserver(async () => {
+        const requestData = bridge.dataset.request;
+        if (requestData) {
+            bridge.removeAttribute('data-request');
+            try {
+                const { requestId, base64 } = JSON.parse(requestData);
+                await processImageRequest(requestId, base64, bridge);
+            } catch (e) {
+                console.error('[Gemini Voyager] Failed to parse request:', e);
+            }
         }
     });
 
+    observer.observe(bridge, { attributes: true, attributeFilter: ['data-request'] });
     console.log('[Gemini Voyager] Fetch interceptor bridge ready');
+}
+
+/**
+ * Process an image request from the fetch interceptor
+ */
+async function processImageRequest(requestId: string, base64: string, bridge: HTMLElement): Promise<void> {
+    if (!engine) {
+        bridge.dataset.response = JSON.stringify({ requestId, error: 'Watermark engine not initialized' });
+        return;
+    }
+
+    try {
+        // Convert base64 to image element
+        const img = new Image();
+        await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error('Failed to load image'));
+            img.crossOrigin = 'anonymous';
+            img.src = base64;
+        });
+
+        // Process image to remove watermark
+        const processedCanvas = await engine.removeWatermarkFromImage(img);
+        const processedDataUrl = canvasToDataURL(processedCanvas);
+
+        // Send response via bridge element
+        bridge.dataset.response = JSON.stringify({ requestId, base64: processedDataUrl });
+    } catch (error) {
+        console.error('[Gemini Voyager] Failed to process image:', error);
+        bridge.dataset.response = JSON.stringify({ requestId, error: String(error) });
+    }
 }
 
 /**
@@ -282,8 +292,8 @@ function setupFetchInterceptorBridge(): void {
  */
 export async function startWatermarkRemover(): Promise<void> {
     try {
-        // Setup state query listener first (so fetch interceptor can query even before we're fully ready)
-        setupStateQueryListener();
+        // Initialize bridge element first (so it exists when fetch interceptor loads)
+        getBridgeElement();
 
         // Check if feature is enabled
         const result = await chrome.storage?.sync?.get({ geminiWatermarkRemoverEnabled: true });
