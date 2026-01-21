@@ -63,6 +63,8 @@ export class FolderManager {
   private storage: IFolderStorageAdapter; // Storage adapter (Strategy Pattern)
   private backupService: DataBackupService<FolderData>; // Multi-layer backup system
   private data: FolderData = { folders: [], folderContents: {} };
+  private globalData: FolderData = { folders: [], folderContents: {} };
+  private userDatas: Record<string, FolderData> = {}; // Map userId -> FolderData
   private containerElement: HTMLElement | null = null;
   private sidebarContainer: HTMLElement | null = null;
   private recentSection: HTMLElement | null = null;
@@ -137,6 +139,9 @@ export class FolderManager {
       // Start monitoring
       storageMonitor.startMonitoring();
 
+      // Load account isolation setting first so loadData uses the correct view
+      await this.loadAccountIsolationSetting();
+
       // Load folder data (async, works for both Safari and non-Safari)
       await this.loadData();
 
@@ -145,9 +150,6 @@ export class FolderManager {
 
       // Load hide archived setting
       await this.loadHideArchivedSetting();
-
-      // Load account isolation setting
-      await this.loadAccountIsolationSetting();
 
       // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
@@ -491,12 +493,6 @@ export class FolderManager {
     // Render root level folders (sorted)
     let rootFolders = this.data.folders.filter((f) => f.parentId === null);
 
-    // Filter by user ID if isolation is enabled
-    if (this.accountIsolationEnabled) {
-      const currentUserId = this.getCurrentUserId();
-      rootFolders = rootFolders.filter((f) => !f.userId || f.userId === currentUserId);
-    }
-
     const sortedRootFolders = this.sortFolders(rootFolders);
     sortedRootFolders.forEach((folder) => {
       const folderElement = this.createFolderElement(folder);
@@ -603,12 +599,6 @@ export class FolderManager {
 
       // Render subfolders (sorted)
       let subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
-
-      // Filter by user ID if isolation is enabled
-      if (this.accountIsolationEnabled) {
-        const currentUserId = this.getCurrentUserId();
-        subfolders = subfolders.filter((f) => !f.userId || f.userId === currentUserId);
-      }
 
       const sortedSubfolders = this.sortFolders(subfolders);
       sortedSubfolders.forEach((subfolder) => {
@@ -1689,11 +1679,14 @@ export class FolderManager {
         isExpanded: true,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        userId: this.getCurrentUserId(),
       };
 
-      this.data.folders.push(folder);
-      this.data.folderContents[folder.id] = [];
+      // Determine target storage based on isolation setting
+      const targetData = this.getTargetDataForCreation();
+      targetData.folders.push(folder);
+      targetData.folderContents[folder.id] = [];
+
+      this.rebuildView();
       this.saveData();
       this.refresh();
     };
@@ -1775,6 +1768,7 @@ export class FolderManager {
 
       folder.name = newName;
       folder.updatedAt = Date.now();
+      // No need to rebuild view as we modified the object reference directly
       this.saveData();
       this.refresh();
     };
@@ -1851,13 +1845,17 @@ export class FolderManager {
     yesBtn?.addEventListener('click', () => {
       // Remove folder and all subfolders recursively
       const foldersToDelete = this.getFolderAndDescendants(folderId);
-      this.data.folders = this.data.folders.filter((f) => !foldersToDelete.includes(f.id));
-
-      // Remove folder contents
-      foldersToDelete.forEach((id) => {
-        delete this.data.folderContents[id];
+      
+      // Iterate over all folders to delete and remove them from their respective sources
+      foldersToDelete.forEach(id => {
+        const source = this.getSourceDataForFolder(id);
+        if (source) {
+          source.folders = source.folders.filter(f => f.id !== id);
+          delete source.folderContents[id];
+        }
       });
 
+      this.rebuildView();
       this.saveData();
       this.refresh();
       cleanup();
@@ -1940,18 +1938,22 @@ export class FolderManager {
       dragData,
     });
 
-    if (!this.data.folderContents[folderId]) {
-      this.data.folderContents[folderId] = [];
+    // Find source data for this folder
+    const targetData = this.getSourceDataForFolder(folderId);
+    if (!targetData) return;
+
+    if (!targetData.folderContents[folderId]) {
+      targetData.folderContents[folderId] = [];
     }
 
     // Check if conversation is already in this folder
-    const exists = this.data.folderContents[folderId].some(
+    const exists = targetData.folderContents[folderId].some(
       (c) => c.conversationId === dragData.conversationId
     );
 
     if (exists) {
       this.debug('Conversation already in folder:', dragData.conversationId);
-      this.debug('Existing conversations:', this.data.folderContents[folderId]);
+      this.debug('Existing conversations:', targetData.folderContents[folderId]);
       return;
     }
 
@@ -1964,8 +1966,8 @@ export class FolderManager {
       gemId: dragData.gemId,
     };
 
-    this.data.folderContents[folderId].push(conv);
-    this.debug('Conversation added. Total in folder:', this.data.folderContents[folderId].length);
+    targetData.folderContents[folderId].push(conv);
+    this.debug('Conversation added. Total in folder:', targetData.folderContents[folderId].length);
 
     // If this was dragged from another folder, remove it from the source
     if (dragData.sourceFolderId && dragData.sourceFolderId !== folderId) {
@@ -1975,6 +1977,7 @@ export class FolderManager {
       return;
     }
 
+    this.rebuildView();
     // Save immediately before refresh to persist data
     this.saveData();
     this.refresh();
@@ -1992,8 +1995,12 @@ export class FolderManager {
       sourceFolderId,
     });
 
-    if (!this.data.folderContents[folderId]) {
-      this.data.folderContents[folderId] = [];
+    // Find source data for this folder
+    const targetData = this.getSourceDataForFolder(folderId);
+    if (!targetData) return;
+
+    if (!targetData.folderContents[folderId]) {
+      targetData.folderContents[folderId] = [];
     }
 
     let addedCount = 0;
@@ -2001,7 +2008,7 @@ export class FolderManager {
 
     conversations.forEach(conv => {
       // Check if conversation is already in this folder
-      const exists = this.data.folderContents[folderId].some(
+      const exists = targetData.folderContents[folderId].some(
         (c) => c.conversationId === conv.conversationId
       );
 
@@ -2012,7 +2019,7 @@ export class FolderManager {
           addedAt: Date.now(),
         };
 
-        this.data.folderContents[folderId].push(newConv);
+        targetData.folderContents[folderId].push(newConv);
         addedCount++;
 
         // Track conversations to remove from source folder
@@ -2022,18 +2029,20 @@ export class FolderManager {
       }
     });
 
-    this.debug(`Added ${addedCount} conversations. Total in folder:`, this.data.folderContents[folderId].length);
+    this.debug(`Added ${addedCount} conversations. Total in folder:`, targetData.folderContents[folderId].length);
 
     // Remove from source folder if moving
     if (sourceFolderId && sourceFolderId !== folderId && conversationsToRemove.length > 0) {
       this.debug('Removing conversations from source folder:', sourceFolderId);
-      conversationsToRemove.forEach(convId => {
-        this.data.folderContents[sourceFolderId] = this.data.folderContents[sourceFolderId].filter(
-          (c) => c.conversationId !== convId
+      const sourceData = this.getSourceDataForFolder(sourceFolderId);
+      if (sourceData && sourceData.folderContents[sourceFolderId]) {
+        sourceData.folderContents[sourceFolderId] = sourceData.folderContents[sourceFolderId].filter(
+          (c) => !conversationsToRemove.includes(c.conversationId)
         );
-      });
+      }
     }
 
+    this.rebuildView();
     // Save immediately before refresh to persist data
     this.saveData();
     this.refresh();
@@ -2196,12 +2205,16 @@ export class FolderManager {
   }
 
   private removeConversationFromFolder(folderId: string, conversationId: string): void {
-    if (!this.data.folderContents[folderId]) return;
+    const sourceData = this.getSourceDataForFolder(folderId);
+    if (!sourceData || !sourceData.folderContents[folderId]) return;
 
-    this.data.folderContents[folderId] = this.data.folderContents[folderId].filter(
+    sourceData.folderContents[folderId] = sourceData.folderContents[folderId].filter(
       (c) => c.conversationId !== conversationId
     );
 
+    // We modified the source array, but this.data.folderContents[folderId] might still point to the old array reference
+    // depending on how filter works (it creates a new array). So we must rebuild view.
+    this.rebuildView();
     this.saveData();
     this.refresh();
   }
@@ -2216,12 +2229,14 @@ export class FolderManager {
 
     // Remove all selected conversations from the folder
     const folderId = this.multiSelectFolderId;
-    if (!this.data.folderContents[folderId]) return;
+    const sourceData = this.getSourceDataForFolder(folderId);
+    if (!sourceData || !sourceData.folderContents[folderId]) return;
 
-    this.data.folderContents[folderId] = this.data.folderContents[folderId].filter(
+    sourceData.folderContents[folderId] = sourceData.folderContents[folderId].filter(
       (c) => !this.selectedConversations.has(c.conversationId)
     );
 
+    this.rebuildView();
     this.saveData();
 
     // Exit multi-select mode and refresh
@@ -2675,18 +2690,21 @@ export class FolderManager {
     gemId?: string
   ): void {
     // Add to folder
-    if (!this.data.folderContents[folderId]) {
-      this.data.folderContents[folderId] = [];
+    const targetData = this.getSourceDataForFolder(folderId);
+    if (!targetData) return;
+
+    if (!targetData.folderContents[folderId]) {
+      targetData.folderContents[folderId] = [];
     }
 
     // Check if conversation already exists in folder
-    const existingIndex = this.data.folderContents[folderId].findIndex(
+    const existingIndex = targetData.folderContents[folderId].findIndex(
       (c) => c.conversationId === conversationId
     );
 
     if (existingIndex === -1) {
       // Add new conversation
-      this.data.folderContents[folderId].push({
+      targetData.folderContents[folderId].push({
         conversationId,
         title,
         url,
@@ -2696,6 +2714,7 @@ export class FolderManager {
       });
     }
 
+    this.rebuildView();
     this.saveData();
     this.refresh();
   }
@@ -3355,22 +3374,28 @@ export class FolderManager {
     // Remove this conversation from all folders when the original conversation is deleted
     let removed = false;
 
-    for (const folderId in this.data.folderContents) {
-      const conversations = this.data.folderContents[folderId];
-      const initialLength = conversations.length;
+    // We need to iterate over all source data
+    const allDataSources = [this.globalData, ...Object.values(this.userDatas)];
+    
+    for (const dataSource of allDataSources) {
+      for (const folderId in dataSource.folderContents) {
+        const conversations = dataSource.folderContents[folderId];
+        const initialLength = conversations.length;
 
-      // Filter out the deleted conversation
-      this.data.folderContents[folderId] = conversations.filter(
-        (conv) => conv.conversationId !== conversationId && !conv.url.includes(conversationId)
-      );
+        // Filter out the deleted conversation
+        dataSource.folderContents[folderId] = conversations.filter(
+          (conv) => conv.conversationId !== conversationId && !conv.url.includes(conversationId)
+        );
 
-      if (this.data.folderContents[folderId].length < initialLength) {
-        removed = true;
-        this.debug(`Removed deleted conversation ${conversationId} from folder ${folderId}`);
+        if (dataSource.folderContents[folderId].length < initialLength) {
+          removed = true;
+          this.debug(`Removed deleted conversation ${conversationId} from folder ${folderId}`);
+        }
       }
     }
 
     if (removed) {
+      this.rebuildView();
       this.saveData();
       // Re-render folders to reflect the removal
       this.renderAllFolders();
@@ -3594,26 +3619,20 @@ export class FolderManager {
    * This method is called by both loadData() and saveData() to maintain consistency.
    */
   private ensureDataIntegrity(): void {
-    // Ensure folderContents object exists
-    if (!this.data.folderContents) {
-      this.data.folderContents = {};
-      this.debugWarn('folderContents was missing, initialized');
-    }
+    const validate = (d: FolderData) => {
+      if (!d.folderContents) d.folderContents = {};
+      if (!d.folders) d.folders = [];
+      d.folders.forEach((folder) => {
+        if (!d.folderContents[folder.id]) {
+          d.folderContents[folder.id] = [];
+        }
+      });
+    };
 
-    // Ensure folders array exists
-    if (!this.data.folders) {
-      this.data.folders = [];
-      this.debugWarn('folders was missing, initialized');
-    }
-
-    // Ensure all folders have a folderContents entry (even if empty)
-    // This is critical for empty folders to persist correctly
-    this.data.folders.forEach((folder) => {
-      if (!this.data.folderContents[folder.id]) {
-        this.data.folderContents[folder.id] = [];
-        this.debugWarn(`Initialized missing folderContents for folder: ${folder.name}`);
-      }
-    });
+    validate(this.globalData);
+    Object.values(this.userDatas).forEach(validate);
+    // this.data is derived, so we don't validate it directly here, 
+    // but rebuildView will ensure it's correct structure.
   }
 
   /**
@@ -3622,33 +3641,61 @@ export class FolderManager {
    */
   private async loadData(): Promise<void> {
     try {
-      const loadedData = await this.storage.loadData(STORAGE_KEY);
+      // Load Global Data
+      const global = await this.storage.loadData(STORAGE_KEY);
+      this.globalData = (global && validateFolderData(global)) ? global : { folders: [], folderContents: {} };
 
-      if (loadedData && validateFolderData(loadedData)) {
-        this.data = loadedData;
-
-        // Validate and repair data integrity
-        this.ensureDataIntegrity();
-
-        // Clean up orphaned folderContents (folders that no longer exist)
-        const validFolderIds = new Set(this.data.folders.map(f => f.id));
-        validFolderIds.add(ROOT_CONVERSATIONS_ID); // Keep root conversations
-        Object.keys(this.data.folderContents).forEach((folderId) => {
-          if (!validFolderIds.has(folderId)) {
-            this.debugWarn(`Removing orphaned folderContents for: ${folderId}`);
-            delete this.data.folderContents[folderId];
-          }
-        });
-
-        // Create primary backup on successful load
-        this.backupService.createPrimaryBackup(this.data);
-
-        this.debug('Data loaded and validated successfully');
-      } else {
-        // Don't immediately clear data - try to recover from backup
-        console.warn('[FolderManager] Storage returned no valid data, attempting recovery from backup');
-        this.attemptDataRecovery(null);
+      // Load User Data
+      this.userDatas = {};
+      const currentUserId = this.getCurrentUserId();
+      
+      // Scan for all user data keys to support "Show All" mode
+      let allKeys: string[] = [];
+      try {
+        // Try to get keys from browser storage
+        const storage = await browser.storage.local.get(null);
+        allKeys = Object.keys(storage);
+      } catch (e) {
+        // Fallback to localStorage keys
+        try {
+          allKeys = Object.keys(localStorage);
+        } catch (e2) {
+          this.debugWarn('Failed to scan storage keys:', e2);
+        }
       }
+
+      // Filter for user data keys (gvFolderData_u{userId})
+      const userKeyPrefix = `${STORAGE_KEY}_u`;
+      const userKeys = allKeys.filter(k => k.startsWith(userKeyPrefix) && !k.includes('_chunk_') && !k.includes('_backup'));
+
+      // Ensure current user key is included
+      const currentUserKey = `${userKeyPrefix}${currentUserId}`;
+      if (!userKeys.includes(currentUserKey)) {
+        userKeys.push(currentUserKey);
+      }
+
+      // Load all identified user datasets
+      for (const key of userKeys) {
+        const uid = key.substring(userKeyPrefix.length);
+        if (!uid) continue;
+
+        const data = await this.storage.loadData(key);
+        if (data && validateFolderData(data)) {
+          this.userDatas[uid] = data;
+        } else if (uid === currentUserId) {
+          this.userDatas[uid] = { folders: [], folderContents: {} };
+        }
+      }
+      
+      this.ensureDataIntegrity();
+      this.rebuildView();
+      
+      // Create primary backup (of the merged view or global? Backup service expects one object)
+      // Let's backup the merged view for safety, or maybe we need separate backups?
+      // For now, backing up the view is safer than nothing.
+      this.backupService.createPrimaryBackup(this.data);
+
+      this.debug('Data loaded and validated successfully');
     } catch (error) {
       console.error('[FolderManager] Load data error:', error);
 
@@ -3656,6 +3703,66 @@ export class FolderManager {
       // Instead, try to recover from backup or keep existing data
       this.attemptDataRecovery(error);
     }
+  }
+
+  /**
+   * Rebuilds the `this.data` view by merging global and user data
+   */
+  private rebuildView(): void {
+    const currentUserId = this.getCurrentUserId();
+    const currentUserData = this.userDatas[currentUserId] || { folders: [], folderContents: {} };
+
+    let mergedFolders: Folder[] = [];
+    let mergedContents: Record<string, ConversationReference[]> = {};
+
+    if (this.accountIsolationEnabled) {
+      // Isolation ON
+      
+      // Always include current user data
+      mergedFolders = [...currentUserData.folders];
+      mergedContents = { ...currentUserData.folderContents };
+
+      // Include Global Data ONLY if current user is Default (0)
+      // This treats Global Data as "Legacy Default Account Data" rather than "Public Data"
+      // preventing other accounts from seeing the default account's old folders
+      if (currentUserId === '0') {
+        mergedFolders = [...this.globalData.folders, ...mergedFolders];
+        
+        // Merge contents (careful with Root Conversations)
+        const globalRoot = this.globalData.folderContents[ROOT_CONVERSATIONS_ID] || [];
+        const userRoot = mergedContents[ROOT_CONVERSATIONS_ID] || [];
+        
+        mergedContents = { ...this.globalData.folderContents, ...mergedContents };
+        
+        if (globalRoot.length > 0 || userRoot.length > 0) {
+             mergedContents[ROOT_CONVERSATIONS_ID] = [...globalRoot, ...userRoot];
+        }
+      }
+    } else {
+      // Isolation OFF: Show Everything (Global + All Users)
+      mergedFolders = [...this.globalData.folders];
+      mergedContents = { ...this.globalData.folderContents };
+
+      Object.values(this.userDatas).forEach(ud => {
+        mergedFolders = [...mergedFolders, ...ud.folders];
+        
+        // Merge contents
+        Object.keys(ud.folderContents).forEach(key => {
+            if (key === ROOT_CONVERSATIONS_ID) {
+                const existing = mergedContents[key] || [];
+                const adding = ud.folderContents[key] || [];
+                mergedContents[key] = [...existing, ...adding];
+            } else {
+                mergedContents[key] = ud.folderContents[key];
+            }
+        });
+      });
+    }
+
+    this.data = {
+      folders: mergedFolders,
+      folderContents: mergedContents
+    };
   }
 
   /**
@@ -3770,25 +3877,18 @@ export class FolderManager {
       // CRITICAL: Create emergency backup BEFORE saving (snapshot of previous state)
       this.backupService.createEmergencyBackup(this.data);
 
-      // Additional safety check: warn if saving empty data
-      if (this.data.folders.length === 0 && Object.keys(this.data.folderContents).length === 0) {
-        // Check if we're about to overwrite non-empty data
-        const existingData = await this.storage.loadData(STORAGE_KEY);
-        if (existingData && (existingData.folders.length > 0 || Object.keys(existingData.folderContents).length > 0)) {
-          console.warn('[FolderManager] WARNING: Attempting to save empty data over existing non-empty data');
-          console.warn('[FolderManager] This may indicate a bug.');
-          // Still proceed, but log it prominently
-        }
+      // Save Global Data
+      const promises: Promise<boolean>[] = [];
+      promises.push(this.storage.saveData(STORAGE_KEY, this.globalData));
+      
+      // Save All Loaded User Data
+      for (const uid in this.userDatas) {
+        const userKey = `${STORAGE_KEY}_u${uid}`;
+        promises.push(this.storage.saveData(userKey, this.userDatas[uid]));
       }
 
-      // Save via storage adapter (handles both Safari and non-Safari)
-      success = await this.storage.saveData(STORAGE_KEY, this.data);
-
-      // Retry once if the first attempt fails (for transient errors)
-      if (!success) {
-        console.warn('[FolderManager] Save failed, retrying once...');
-        success = await this.storage.saveData(STORAGE_KEY, this.data);
-      }
+      const results = await Promise.all(promises);
+      success = results.every(r => r);
 
       if (success) {
         // Create primary backup AFTER successful save
@@ -3805,6 +3905,37 @@ export class FolderManager {
     }
 
     return success;
+  }
+
+  /**
+   * Helper to determine where to create a new folder
+   */
+  private getTargetDataForCreation(): FolderData {
+    if (this.accountIsolationEnabled) {
+      const uid = this.getCurrentUserId();
+      if (!this.userDatas[uid]) {
+        this.userDatas[uid] = { folders: [], folderContents: {} };
+      }
+      return this.userDatas[uid];
+    }
+    return this.globalData;
+  }
+
+  /**
+   * Helper to find which dataset a folder belongs to
+   */
+  private getSourceDataForFolder(folderId: string): FolderData | null {
+    // Check Global
+    if (this.globalData.folders.some(f => f.id === folderId)) return this.globalData;
+    if (this.globalData.folderContents[folderId]) return this.globalData; // Check contents too just in case
+
+    // Check Users
+    for (const uid in this.userDatas) {
+      if (this.userDatas[uid].folders.some(f => f.id === folderId)) return this.userDatas[uid];
+      if (this.userDatas[uid].folderContents[folderId]) return this.userDatas[uid];
+    }
+    
+    return null;
   }
 
   private async loadFolderEnabledSetting(): Promise<void> {
@@ -3859,6 +3990,7 @@ export class FolderManager {
         if (changes.geminiFolderAccountIsolation) {
           this.accountIsolationEnabled = !!changes.geminiFolderAccountIsolation.newValue;
           this.debug('Account isolation setting changed:', this.accountIsolationEnabled);
+          this.rebuildView(); // Rebuild view based on new setting
           this.refresh();
         }
       }
@@ -4182,6 +4314,7 @@ export class FolderManager {
                 // Update URL to use /gem/ instead of /app/
                 conv.url = conv.url.replace(/\/app\/([^/?]+)/, `/gem/${gemId}/$1`);
                 updated = true;
+                // Note: Since we modified the object in place, and this.data holds references, the source is updated.
                 this.debug('Updated conversation:', conv.title);
                 this.debug('Old URL:', oldUrl);
                 this.debug('New URL:', conv.url);
@@ -4402,8 +4535,19 @@ export class FolderManager {
     this.exportInProgress = true;
 
     try {
+      // Determine source data based on isolation setting
+      let sourceData: FolderData;
+      if (this.accountIsolationEnabled) {
+        // Export only current user's data
+        const uid = this.getCurrentUserId();
+        sourceData = this.userDatas[uid] || { folders: [], folderContents: {} };
+      } else {
+        // Export everything (Global + All Users)
+        sourceData = this.data;
+      }
+
       // Type assertion to match the service's expected type
-      const payload = FolderImportExportService.exportToPayload(this.data as any);
+      const payload = FolderImportExportService.exportToPayload(sourceData as any);
       FolderImportExportService.downloadJSON(payload);
       this.showNotification(this.t('folder_export_success'), 'success');
       this.debug('Folders exported successfully');
@@ -4583,10 +4727,22 @@ export class FolderManager {
         return;
       }
 
+      // Determine target storage based on isolation setting
+      let targetData: FolderData;
+      if (this.accountIsolationEnabled) {
+        const uid = this.getCurrentUserId();
+        if (!this.userDatas[uid]) {
+          this.userDatas[uid] = { folders: [], folderContents: {} };
+        }
+        targetData = this.userDatas[uid];
+      } else {
+        targetData = this.globalData;
+      }
+
       // Import data (now async with concurrency protection)
       const importResult = await FolderImportExportService.importFromPayload(
         validationResult.data,
-        this.data as any,
+        targetData,
         { strategy, createBackup: true }
       );
 
@@ -4599,7 +4755,15 @@ export class FolderManager {
       }
 
       // Update data and save
-      this.data = importResult.data.data as any;
+      const importedData = importResult.data.data as any;
+      if (this.accountIsolationEnabled) {
+        const uid = this.getCurrentUserId();
+        this.userDatas[uid] = importedData;
+      } else {
+        this.globalData = importedData;
+      }
+
+      this.rebuildView();
       this.saveData();
       this.refresh();
 

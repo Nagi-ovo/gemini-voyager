@@ -6,7 +6,6 @@ export interface Folder {
   pinned?: boolean; // Whether folder is pinned to the top
   createdAt: number;
   updatedAt: number;
-  userId?: string; // The user ID (e.g. "0", "1") this folder belongs to
 }
 
 export interface ConversationReference {
