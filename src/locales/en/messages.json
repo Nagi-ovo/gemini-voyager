@@ -823,20 +823,48 @@
     "message": "Message Gemini",
     "description": "Placeholder text shown in collapsed input"
   },
+  "batch_delete_confirm": {
+    "message": "Are you sure you want to delete {count} conversation(s)? This action cannot be undone.",
+    "description": "Batch delete confirmation message"
+  },
+  "batch_delete_in_progress": {
+    "message": "Deleting... ({current}/{total})",
+    "description": "Batch delete progress message"
+  },
+  "batch_delete_success": {
+    "message": "✓ Deleted {count} conversation(s)",
+    "description": "Batch delete success message"
+  },
+  "batch_delete_partial": {
+    "message": "Deletion complete: {success} succeeded, {failed} failed",
+    "description": "Batch delete partial success message"
+  },
+  "batch_delete_limit_reached": {
+    "message": "Maximum {max} conversations can be selected at once",
+    "description": "Batch delete limit warning"
+  },
+  "batch_delete_button": {
+    "message": "Delete selected",
+    "description": "Batch delete button tooltip in multi-select mode"
+  },
+  "batch_delete_match_patterns": {
+    "message": "delete,confirm,yes,ok,remove,删除,确认,确定,是",
+    "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
+  },
   "generalOptions": {
     "message": "General Options",
-    "description": "General options section title"
+    "description": "General options section label"
   },
   "enableTabTitleUpdate": {
-    "message": "Update Tab Title",
-    "description": "Tab title update checkbox label"
+    "message": "Sync tab title with conversation",
+    "description": "Enable tab title sync toggle label"
   },
   "enableTabTitleUpdateHint": {
-    "message": "Sync browser tab title with chat title",
-    "description": "Tab title update checkbox hint"
+    "message": "Automatically update the browser tab title to match the current conversation title",
+    "description": "Tab title sync feature hint"
   },
   "folder_account_isolation": {
     "message": "Show current account folders only",
     "description": "Folder button tooltip for the current account"
-  }
+   }
 }
