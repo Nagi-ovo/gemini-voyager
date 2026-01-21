@@ -97,6 +97,50 @@ export default defineConfig({
                     copyright: 'Released under the MIT License | Copyright © 2025 Jesse Zhang | <a href="/en/privacy">Privacy Policy</a>'
                 }
             }
+        },
+        ja: {
+            label: '日本語',
+            lang: 'ja-JP',
+            link: '/ja/',
+            themeConfig: {
+                nav: [
+                    { text: 'ホーム', link: '/ja/' },
+                    { text: 'ガイド', link: '/ja/guide/installation' },
+                ],
+                sidebar: [
+                    {
+                        text: 'はじめに',
+                        items: [
+                            { text: 'インストール', link: '/ja/guide/installation' },
+                            { text: 'クイックスタート', link: '/ja/guide/getting-started' },
+                            { text: 'スポンサー', link: '/ja/guide/sponsor' },
+                            { text: 'コミュニティ', link: '/ja/guide/community' }
+                        ]
+                    },
+                    {
+                        text: '機能',
+                        items: [
+                            { text: 'タイムライン', link: '/ja/guide/timeline' },
+                            { text: '引用返信', link: '/ja/guide/quote-reply' },
+                            { text: 'フォルダ管理', link: '/ja/guide/folders' },
+                            { text: '一括削除', link: '/ja/guide/batch-delete' },
+                            { text: 'プロンプト', link: '/ja/guide/prompts' },
+                            { text: 'カスタムサイト', link: '/ja/guide/custom-websites' },
+                            { text: 'エクスポート', link: '/ja/guide/export' },
+                            { text: 'Deep Research', link: '/ja/guide/deep-research' },
+                            { text: 'Mermaid', link: '/ja/guide/mermaid' },
+                            { text: 'NanoBanana', link: '/ja/guide/nanobanana' },
+                            { text: 'チャット幅', link: '/ja/guide/settings' },
+                            { text: '入力欄の自動非表示', link: '/ja/guide/input-collapse' },
+                            { text: 'タブタイトルの同期', link: '/ja/guide/tab-title' }
+                        ]
+                    }
+                ],
+                footer: {
+                    message: 'オープンソースプロジェクトです。<a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> でスター ⭐ をつけて応援してください。',
+                    copyright: 'MIT ライセンス | Copyright © 2025 Jesse Zhang | <a href="/ja/privacy">プライバシーポリシー</a>'
+                }
+            }
         }
     },
 
