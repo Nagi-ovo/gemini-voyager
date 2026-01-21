@@ -478,6 +478,28 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
 };
 
 /**
+ * Get the language label from a code block's header decoration
+ * Returns the language name (lowercase) or null if not found
+ */
+const getCodeBlockLanguage = (codeEl: Element): string | null => {
+    // Navigate up to find the code-block container
+    const codeBlock = codeEl.closest('.code-block, code-block');
+    if (!codeBlock) return null;
+
+    // Look for the language label in the header decoration
+    // Gemini uses: <div class="code-block-decoration"><span>Language</span>...</div>
+    const decoration = codeBlock.querySelector('.code-block-decoration');
+    if (!decoration) return null;
+
+    // The first span child typically contains the language name
+    const langSpan = decoration.querySelector(':scope > span');
+    if (!langSpan) return null;
+
+    const language = langSpan.textContent?.trim().toLowerCase();
+    return language || null;
+};
+
+/**
  * Find and process code blocks
  */
 const processCodeBlocks = () => {
@@ -485,7 +507,20 @@ const processCodeBlocks = () => {
 
     codeElements.forEach(codeEl => {
         const codeText = codeEl.textContent || '';
-        if (isMermaidCode(codeText)) {
+
+        // Check the language label from Gemini's code block header
+        const language = getCodeBlockLanguage(codeEl);
+
+        // If language is explicitly set and NOT mermaid, skip Mermaid rendering
+        // This prevents false positives for MATLAB (%% comments), and other languages
+        if (language && language !== 'mermaid') {
+            return;
+        }
+
+        // Only attempt Mermaid rendering if:
+        // 1. Language is explicitly "mermaid", OR
+        // 2. No language label is present and content looks like Mermaid code
+        if (language === 'mermaid' || isMermaidCode(codeText)) {
             renderMermaid(codeEl as HTMLElement, codeText);
         }
     });
