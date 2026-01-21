@@ -38,7 +38,7 @@
   </p>
 
 <p align="center">
-  <a href="https://www.nagi.fun/gemini-voyager/ja">📖 ドキュメント</a> • 
+  <a href="https://voyager.nagi.fun/ja">📖 ドキュメント</a> • 
   <a href="../README.md">English</a> • 
   <a href="./README_ZH.md">简体中文</a>
 </p>
