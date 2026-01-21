@@ -47,10 +47,11 @@ const LATEST_VERSION_CACHE_KEY = 'gvLatestVersionCache';
 const LATEST_VERSION_MAX_AGE = 1000 * 60 * 60 * 6; // 6 hours
 
 function getRuntimeUrl(path: string): string {
+  // Try the standard Web Extensions API first (mainly for Firefox)
   try {
-    return (window as any).chrome?.runtime?.getURL?.(path) || path;
+    return browser.runtime.getURL(path);
   } catch {
-    return path;
+    return (window as any).chrome?.runtime?.getURL?.(path) || path;
   }
 }
 
