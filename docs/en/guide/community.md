@@ -2,6 +2,19 @@
 
 We value every user's voice. Whether you've found a bug, have a feature suggestion, or want to share your prompt library, there are several ways to get in touch.
 
+## 📢 Follow for Updates
+
+Follow us on X (Twitter) to get the latest development updates.
+
+- **New Releases**: Be the first to know about updates.
+- **Feature Previews**: Get a sneak peek at upcoming features.
+
+<div style="margin: 2rem 0;">
+  <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/Follow%20on-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X">
+  </a>
+</div>
+
 ## 💬 Discord Community
 
 Join our Discord server to chat with other Voyagers!

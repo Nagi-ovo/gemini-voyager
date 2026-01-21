@@ -383,7 +383,7 @@ If Gemini Voyager makes your life easier, consider buying me a coffee. It helps 
   <tr>
     <td align="center" width="50%">
       <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank">
-        <img src="https://img.shields.io/badge/Follow%20on-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X">
+        <img src="https://img.shields.io/badge/Follow%20on-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X" height="36">
       </a>
       <br><br>
       <b>Follow for Updates</b><br>
@@ -391,7 +391,7 @@ If Gemini Voyager makes your life easier, consider buying me a coffee. It helps 
     </td>
     <td align="center" width="50%">
       <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
-        <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord">
+        <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord" height="36">
       </a>
       <br><br>
       <b>Join the Community</b><br>

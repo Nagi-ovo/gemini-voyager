@@ -383,7 +383,7 @@
   <tr>
     <td align="center" width="50%">
       <a href="https://x.com/Nag1ovo/status/2012609459663634589" target="_blank">
-        <img src="https://img.shields.io/badge/关注-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="关注 X">
+        <img src="https://img.shields.io/badge/关注-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="关注 X" height="36">
       </a>
       <br><br>
       <b>关注动态</b><br>
@@ -391,7 +391,7 @@
     </td>
     <td align="center" width="50%">
       <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
-        <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=加入%20Discord" alt="Discord">
+        <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=加入%20Discord" alt="Discord" height="36">
       </a>
       <br><br>
       <b>加入社区</b><br>

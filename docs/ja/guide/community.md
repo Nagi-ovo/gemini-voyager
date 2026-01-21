@@ -2,6 +2,19 @@
 
 私たちは、すべてのユーザーの声を大切にしています。バグを見つけた時、機能のアイデアがある時、あるいは自慢のプロンプト集を共有したい時など、以下の方法でいつでもご連絡ください。
 
+## 📢 最新情報
+
+X (Twitter) でフォローして、最新の開発状況をチェックしましょう。
+
+- **新バージョン**：アップデート情報をいち早くお届け。
+- **機能プレビュー**：今後追加される機能を先行公開。
+
+<div style="margin: 2rem 0;">
+  <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/Follow%20on-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X">
+  </a>
+</div>
+
 ## 💬 Discord コミュニティ
 
 Discord サーバーに参加して、他の Voyager ユーザーと交流しましょう！

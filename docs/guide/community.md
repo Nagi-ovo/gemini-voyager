@@ -2,6 +2,19 @@
 
 我们非常重视每一位用户的声音。无论你是遇到了 Bug、有功能建议，还是想分享你构建的提示词库，都可以通过以下方式与我们联系。
 
+## 📢 关注动态
+
+关注我们的 X (Twitter) 账号，获取最新开发进展。
+
+- **新版本发布**：第一时间了解更新内容。
+- **功能预告**：提前知晓即将到来的功能。
+
+<div style="margin: 2rem 0;">
+  <a href="https://x.com/Nag1ovo/status/2012609459663634589" target="_blank" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/关注-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="关注 X">
+  </a>
+</div>
+
 ## 💬 Discord 社区
 
 加入我们的 Discord 服务器，与其他 Voyager 交流心得！

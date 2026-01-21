@@ -380,7 +380,7 @@ Gemini Voyager があなたの仕事の効率を高める役に立ったなら�
   <tr>
     <td align="center" width="50%">
       <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank">
-        <img src="https://img.shields.io/badge/Follow%20on-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X">
+        <img src="https://img.shields.io/badge/Follow%20on-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X" height="36">
       </a>
       <br><br>
       <b>最新情報をフォロー</b><br>
@@ -388,7 +388,7 @@ Gemini Voyager があなたの仕事の効率を高める役に立ったなら�
     </td>
     <td align="center" width="50%">
       <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
-        <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord">
+        <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord" height="36">
       </a>
       <br><br>
       <b>コミュニティに参加</b><br>
