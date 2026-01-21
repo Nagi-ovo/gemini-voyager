@@ -49,6 +49,8 @@ const fetchImageViaBackground = async (url: string): Promise<HTMLImageElement> =
             const img = new Image();
             img.onload = () => resolve(img);
             img.onerror = () => reject(new Error('Failed to decode image'));
+            // Set crossOrigin before src to prevent canvas tainting in Firefox
+            img.crossOrigin = 'anonymous';
             img.src = `data:${response.contentType};base64,${response.base64}`;
         });
     });
@@ -253,6 +255,8 @@ function setupFetchInterceptorBridge(): void {
             await new Promise<void>((resolve, reject) => {
                 img.onload = () => resolve();
                 img.onerror = () => reject(new Error('Failed to load image'));
+                // Set crossOrigin before src to prevent canvas tainting in Firefox
+                img.crossOrigin = 'anonymous';
                 img.src = base64;
             });
 
