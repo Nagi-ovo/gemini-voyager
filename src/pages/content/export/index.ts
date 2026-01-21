@@ -406,9 +406,21 @@ function normalizeLang(lang: string | undefined): 'en' | 'zh' {
 
 async function getLanguage(): Promise<'en' | 'zh'> {
   try {
-    const stored = await new Promise<any>((resolve) => {
-      try { (window as any).chrome?.storage?.sync?.get?.('language', resolve); } catch { resolve({}); }
-    });
+    // Add timeout to prevent hanging in Firefox
+    const stored = await Promise.race([
+      new Promise<any>((resolve) => {
+        try {
+          if ((window as any).chrome?.storage?.sync?.get) {
+            (window as any).chrome.storage.sync.get('language', resolve);
+          } else if ((window as any).browser?.storage?.sync?.get) {
+            (window as any).browser.storage.sync.get('language').then(resolve).catch(() => resolve({}));
+          } else {
+            resolve({});
+          }
+        } catch { resolve({}); }
+      }),
+      new Promise<any>((resolve) => setTimeout(() => resolve({}), 1000))
+    ]);
     const v = typeof stored?.language === 'string' ? stored.language : undefined;
     return normalizeLang(v || (navigator.language || 'en'));
   } catch {
