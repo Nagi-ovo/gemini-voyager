@@ -155,7 +155,7 @@ export class ConversationExportService {
       
       // Firefox fix: Convert Blob to Uint8Array in current context to avoid prototype chain issues
       const arrayBuffer = await blob.arrayBuffer();
-      const uint8Array = new Uint8Array(Array.from(new Uint8Array(arrayBuffer)));
+      const uint8Array = new Uint8Array(arrayBuffer.slice(0));
       
       const ext = pickExt(contentType, url);
       const fileName = `img-${String(idx++).padStart(3, '0')}.${ext}`;
