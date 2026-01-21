@@ -47,16 +47,11 @@ const LATEST_VERSION_CACHE_KEY = 'gvLatestVersionCache';
 const LATEST_VERSION_MAX_AGE = 1000 * 60 * 60 * 6; // 6 hours
 
 function getRuntimeUrl(path: string): string {
+  // 优先尝试标准 Web Extensions API (主要针对 Firefox)
   try {
-    // Use browser.runtime.getURL for cross-browser compatibility (Chrome, Firefox, Safari)
     return browser.runtime.getURL(path);
   } catch {
-    // Fallback to chrome.runtime.getURL if browser is not available
-    try {
-      return (window as any).chrome?.runtime?.getURL?.(path) || path;
-    } catch {
-      return path;
-    }
+    return (window as any).chrome?.runtime?.getURL?.(path) || path;
   }
 }
 
