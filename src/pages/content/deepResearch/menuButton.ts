@@ -10,6 +10,8 @@ import { StorageKeys } from '@/core/types/common';
 import { normalizeLanguage, type AppLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
 
+type Dictionaries = Record<AppLanguage, Record<string, string>>;
+
 /**
  * Wait for an element to appear in the DOM
  */
@@ -43,7 +45,7 @@ function waitForElement(selector: string, timeout: number = 5000): Promise<Eleme
 /**
  * Load i18n dictionaries
  */
-async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, string>>> {
+async function loadDictionaries(): Promise<Dictionaries> {
     try {
         const [enRaw, zhRaw, jaRaw] = await Promise.all([
             import(/* @vite-ignore */ '../../../locales/en/messages.json'),
@@ -59,6 +61,24 @@ async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, st
     } catch (error) {
         console.error('[Gemini Voyager] Error loading dictionaries:', error);
         return { en: {}, zh: {}, ja: {} };
+    }
+}
+
+export function applyDeepResearchDownloadButtonI18n(
+    button: HTMLButtonElement,
+    dict: Dictionaries,
+    lang: AppLanguage,
+): void {
+    const t = (key: string) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+    const text = t('deepResearchDownload');
+    const tooltip = t('deepResearchDownloadTooltip');
+
+    button.title = tooltip;
+    button.setAttribute('aria-label', tooltip);
+
+    const span = button.querySelector('.mat-mdc-menu-item-text');
+    if (span) {
+        span.textContent = ` ${text}`;
     }
 }
 
@@ -148,6 +168,23 @@ function createDownloadButton(text: string, tooltip: string): HTMLButtonElement 
     return button;
 }
 
+type StorageChange = { newValue?: unknown };
+type StorageChanges = Record<string, StorageChange>;
+
+type StorageOnChanged = {
+    addListener: (fn: (changes: StorageChanges, area: string) => void) => void;
+    removeListener: (fn: (changes: StorageChanges, area: string) => void) => void;
+};
+
+type ExtensionStorage = {
+    onChanged?: StorageOnChanged;
+};
+
+function getExtensionStorage(): ExtensionStorage | null {
+    const w = window as unknown as { chrome?: { storage?: ExtensionStorage }; browser?: { storage?: ExtensionStorage } };
+    return w.chrome?.storage ?? w.browser?.storage ?? null;
+}
+
 /**
  * Inject download button into menu
  */
@@ -184,6 +221,40 @@ export async function injectDownloadButton(): Promise<void> {
 
         // Insert button after the copy button (last item)
         menuContent.appendChild(button);
+
+        // Keep button text/tooltip in sync with runtime language changes
+        const storage = getExtensionStorage();
+        const onChanged = storage?.onChanged;
+        if (onChanged?.addListener && onChanged?.removeListener) {
+            let currentLang: AppLanguage = lang;
+            const handler = (changes: StorageChanges, area: string) => {
+                if (area !== 'sync') return;
+                const nextRaw = changes?.[StorageKeys.LANGUAGE]?.newValue;
+                if (typeof nextRaw !== 'string') return;
+                currentLang = normalizeLanguage(nextRaw);
+                applyDeepResearchDownloadButtonI18n(button, dict, currentLang);
+            };
+
+            onChanged.addListener(handler);
+
+            const cleanup = () => {
+                try { onChanged.removeListener(handler); } catch { }
+            };
+
+            const observer = new MutationObserver(() => {
+                if (!document.contains(button)) {
+                    cleanup();
+                    observer.disconnect();
+                }
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            window.addEventListener('beforeunload', () => {
+                cleanup();
+                try { observer.disconnect(); } catch { }
+            }, { once: true });
+        }
 
         console.log('[Gemini Voyager] Deep Research download button injected successfully');
     } catch (error) {
