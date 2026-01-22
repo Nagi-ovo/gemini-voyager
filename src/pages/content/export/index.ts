@@ -3,6 +3,10 @@ import { ConversationExportService } from '../../../features/export/services/Con
 import type { ConversationMetadata } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 
+import { StorageKeys } from '@/core/types/common';
+import { normalizeLanguage, type AppLanguage } from '@/utils/language';
+import { extractMessageDictionary } from '@/utils/localeMessages';
+
 function hashString(input: string): string {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < input.length; i++) {
@@ -302,23 +306,21 @@ function formatFilename(): string {
   return `gemini-chat-${y}${m}${day}-${hh}${mm}${ss}.json`;
 }
 
-async function loadDictionaries(): Promise<Record<'en' | 'zh', Record<string, string>>> {
+async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, string>>> {
   try {
-    const enRaw: any = await import(/* @vite-ignore */ '../../../locales/en/messages.json');
-    const zhRaw: any = await import(/* @vite-ignore */ '../../../locales/zh/messages.json');
-    const extract = (raw: any): Record<string, string> => {
-      const out: Record<string, string> = {};
-      if (raw && typeof raw === 'object') {
-        Object.keys(raw).forEach((k) => {
-          const v = (raw as any)[k];
-          if (v && typeof v.message === 'string') out[k] = v.message;
-        });
-      }
-      return out;
+    const [enRaw, zhRaw, jaRaw] = await Promise.all([
+      import(/* @vite-ignore */ '../../../locales/en/messages.json'),
+      import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
+      import(/* @vite-ignore */ '../../../locales/ja/messages.json'),
+    ]);
+
+    return {
+      en: extractMessageDictionary(enRaw),
+      zh: extractMessageDictionary(zhRaw),
+      ja: extractMessageDictionary(jaRaw),
     };
-    return { en: extract(enRaw), zh: extract(zhRaw) } as any;
   } catch {
-    return { en: {}, zh: {} } as any;
+    return { en: {}, zh: {}, ja: {} };
   }
 }
 
@@ -400,28 +402,30 @@ function getConversationTitleForExport(): string {
   return 'Untitled Conversation';
 }
 
-function normalizeLang(lang: string | undefined): 'en' | 'zh' {
-  return lang && lang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+function normalizeLang(lang: string | undefined): AppLanguage {
+  return normalizeLanguage(lang);
 }
 
-async function getLanguage(): Promise<'en' | 'zh'> {
+async function getLanguage(): Promise<AppLanguage> {
   try {
     // Add timeout to prevent hanging in Firefox
     const stored = await Promise.race([
-      new Promise<any>((resolve) => {
+      new Promise<unknown>((resolve) => {
         try {
           if ((window as any).chrome?.storage?.sync?.get) {
-            (window as any).chrome.storage.sync.get('language', resolve);
+            (window as any).chrome.storage.sync.get(StorageKeys.LANGUAGE, resolve);
           } else if ((window as any).browser?.storage?.sync?.get) {
-            (window as any).browser.storage.sync.get('language').then(resolve).catch(() => resolve({}));
+            (window as any).browser.storage.sync.get(StorageKeys.LANGUAGE).then(resolve).catch(() => resolve({}));
           } else {
             resolve({});
           }
         } catch { resolve({}); }
       }),
-      new Promise<any>((resolve) => setTimeout(() => resolve({}), 1000))
+      new Promise<unknown>((resolve) => setTimeout(() => resolve({}), 1000))
     ]);
-    const v = typeof stored?.language === 'string' ? stored.language : undefined;
+    const rec = stored && typeof stored === 'object' ? (stored as Record<string, unknown>) : {};
+    const v =
+      typeof rec[StorageKeys.LANGUAGE] === 'string' ? (rec[StorageKeys.LANGUAGE] as string) : undefined;
     return normalizeLang(v || (navigator.language || 'en'));
   } catch {
     return 'en';
@@ -455,17 +459,19 @@ export async function startExportButton(): Promise<void> {
 
   // i18n setup for tooltip
   const dict = await loadDictionaries();
-  const lang = await getLanguage();
+  let lang = await getLanguage();
   const t = (key: string) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
   const title = t('exportChatJson');
   btn.title = title;
   btn.setAttribute('aria-label', title);
 
   // listen for runtime language changes
-  const storageChangeHandler = (changes: any, area: string) => {
+  const storageChangeHandler = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
     if (area !== 'sync') return;
-    if (changes?.language) {
-      const next = normalizeLang(changes.language.newValue);
+    const nextRaw = changes[StorageKeys.LANGUAGE]?.newValue;
+    if (typeof nextRaw === 'string') {
+      const next = normalizeLang(nextRaw);
+      lang = next;
       const ttl = (dict[next]?.['exportChatJson'] ?? dict.en?.['exportChatJson'] ?? 'Export chat history (JSON)');
       btn.title = ttl;
       btn.setAttribute('aria-label', ttl);
@@ -497,7 +503,7 @@ export async function startExportButton(): Promise<void> {
   });
 }
 
-async function showExportDialog(dict: Record<'en' | 'zh', Record<string, string>>, lang: 'en' | 'zh'): Promise<void> {
+async function showExportDialog(dict: Record<AppLanguage, Record<string, string>>, lang: AppLanguage): Promise<void> {
   const t = (key: string) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
   // Collect conversation data BEFORE showing dialog to avoid page state changes
@@ -542,5 +548,3 @@ async function showExportDialog(dict: Record<'en' | 'zh', Record<string, string>
 }
 
 export default { startExportButton };
-
-

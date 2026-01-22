@@ -6,6 +6,10 @@ import { downloadMarkdown } from './download';
 import { extractThinkingPanels } from './extractor';
 import { formatToMarkdown } from './formatter';
 
+import { StorageKeys } from '@/core/types/common';
+import { normalizeLanguage, type AppLanguage } from '@/utils/language';
+import { extractMessageDictionary } from '@/utils/localeMessages';
+
 /**
  * Wait for an element to appear in the DOM
  */
@@ -39,45 +43,41 @@ function waitForElement(selector: string, timeout: number = 5000): Promise<Eleme
 /**
  * Load i18n dictionaries
  */
-async function loadDictionaries(): Promise<Record<'en' | 'zh', Record<string, string>>> {
+async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, string>>> {
     try {
-        const enRaw: any = await import(/* @vite-ignore */ '../../../locales/en/messages.json');
-        const zhRaw: any = await import(/* @vite-ignore */ '../../../locales/zh/messages.json');
+        const [enRaw, zhRaw, jaRaw] = await Promise.all([
+            import(/* @vite-ignore */ '../../../locales/en/messages.json'),
+            import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
+            import(/* @vite-ignore */ '../../../locales/ja/messages.json'),
+        ]);
 
-        const extract = (raw: any): Record<string, string> => {
-            const out: Record<string, string> = {};
-            if (raw && typeof raw === 'object') {
-                Object.keys(raw).forEach((k) => {
-                    const v = (raw as any)[k];
-                    if (v && typeof v.message === 'string') out[k] = v.message;
-                });
-            }
-            return out;
+        return {
+            en: extractMessageDictionary(enRaw),
+            zh: extractMessageDictionary(zhRaw),
+            ja: extractMessageDictionary(jaRaw),
         };
-
-        return { en: extract(enRaw), zh: extract(zhRaw) } as any;
     } catch (error) {
         console.error('[Gemini Voyager] Error loading dictionaries:', error);
-        return { en: {}, zh: {} } as any;
+        return { en: {}, zh: {}, ja: {} };
     }
 }
 
 /**
  * Get user language preference
  */
-async function getLanguage(): Promise<'en' | 'zh'> {
+async function getLanguage(): Promise<AppLanguage> {
     try {
-        const stored = await new Promise<any>((resolve) => {
+        const stored = await new Promise<unknown>((resolve) => {
             try {
-                (window as any).chrome?.storage?.sync?.get?.('language', resolve);
+                (window as any).chrome?.storage?.sync?.get?.(StorageKeys.LANGUAGE, resolve);
             } catch {
                 resolve({});
             }
         });
 
-        const lang = typeof stored?.language === 'string' ? stored.language : undefined;
-        const normalized = lang && lang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
-        return normalized;
+        const rec = stored && typeof stored === 'object' ? (stored as Record<string, unknown>) : {};
+        const lang = typeof rec[StorageKeys.LANGUAGE] === 'string' ? (rec[StorageKeys.LANGUAGE] as string) : undefined;
+        return normalizeLanguage(lang || (navigator.language || 'en'));
     } catch {
         return 'en';
     }
