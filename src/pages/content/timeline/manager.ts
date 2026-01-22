@@ -69,6 +69,7 @@ export class TimelineManager {
   private scale = 1;
   private contentHeight = 0;
   private yPositions: number[] = [];
+  private markerTops: number[] = [];
   private visibleRange: { start: number; end: number } = { start: 0, end: -1 };
   private firstUserTurnOffset = 0;
   private contentSpanPx = 1;
@@ -154,6 +155,8 @@ export class TimelineManager {
     await this.syncStarredFromService();
     this.loadMarkerLevels();
     this.loadCollapsedMarkers();
+    // Ensure initial render even when Gemini DOM is already stable (no mutations after observer attaches)
+    this.recalculateAndRenderMarkers();
     // Handle URL hash for starred message navigation
     this.handleStarredMessageNavigation();
     // Initialize keyboard shortcuts
@@ -234,6 +237,40 @@ export class TimelineManager {
         if (saved === 'flow' || saved === 'jump') this.scrollMode = saved;
       }
     } catch { }
+  }
+
+  private computeElementTopsInScrollContainer(elements: HTMLElement[]): number[] {
+    if (!this.scrollContainer || elements.length === 0) return [];
+
+    const containerRect = this.scrollContainer.getBoundingClientRect();
+    const scrollTop = this.scrollContainer.scrollTop;
+
+    const first = elements[0];
+    const firstOffsetParent = first.offsetParent;
+    const firstOffsetTop = first.offsetTop;
+    const firstTop = first.getBoundingClientRect().top - containerRect.top + scrollTop;
+
+    const sameOffsetParent =
+      firstOffsetParent !== null && elements.every((el) => el.offsetParent === firstOffsetParent);
+
+    const tops = elements.map((el) => {
+      if (sameOffsetParent) {
+        return firstTop + (el.offsetTop - firstOffsetTop);
+      }
+      return el.getBoundingClientRect().top - containerRect.top + scrollTop;
+    });
+
+    for (let i = 1; i < tops.length; i++) {
+      if (tops[i] < tops[i - 1]) return [];
+    }
+
+    return tops;
+  }
+
+  private updateIntersectionObserverTargetsFromMarkers(): void {
+    if (!this.intersectionObserver) return;
+    this.intersectionObserver.disconnect();
+    this.markers.forEach((m) => this.intersectionObserver!.observe(m.element));
   }
 
   private applyContainerVisibility(): void {
@@ -443,6 +480,44 @@ export class TimelineManager {
     });
   }
 
+  private waitForAnyElement(
+    selectors: string[],
+    timeoutMs: number = 5000
+  ): Promise<{ element: Element; selector: string } | null> {
+    return new Promise((resolve) => {
+      for (const selector of selectors) {
+        const found = document.querySelector(selector);
+        if (found) return resolve({ element: found, selector });
+      }
+
+      const obs = new MutationObserver(() => {
+        for (const selector of selectors) {
+          const el = document.querySelector(selector);
+          if (el) {
+            try {
+              obs.disconnect();
+            } catch { }
+            resolve({ element: el, selector });
+            return;
+          }
+        }
+      });
+
+      try {
+        obs.observe(document.body, { childList: true, subtree: true });
+      } catch { }
+
+      if (timeoutMs > 0) {
+        setTimeout(() => {
+          try {
+            obs.disconnect();
+          } catch { }
+          resolve(null);
+        }, timeoutMs);
+      }
+    });
+  }
+
   private async findCriticalElements(): Promise<boolean> {
     const configured = this.getConfiguredUserTurnSelector();
     let userOverride = '';
@@ -468,13 +543,11 @@ export class TimelineManager {
       : defaultCandidates;
     let firstTurn: Element | null = null;
     let matchedSelector = '';
-    for (const sel of candidates) {
-      firstTurn = await this.waitForElement(sel, 4000);
-      if (firstTurn) {
-        this.userTurnSelector = sel;
-        matchedSelector = sel;
-        break;
-      }
+    const found = await this.waitForAnyElement(candidates, 4000);
+    if (found) {
+      firstTurn = found.element;
+      matchedSelector = found.selector;
+      this.userTurnSelector = matchedSelector;
     }
     if (!firstTurn) {
       this.conversationContainer =
@@ -916,6 +989,7 @@ export class TimelineManager {
 
     const firstTurnOffset = (allEls[0] as HTMLElement).offsetTop;
     allEls = this.dedupeByTextAndOffset(allEls, firstTurnOffset);
+    this.markerTops = this.computeElementTopsInScrollContainer(allEls);
 
     let contentSpan: number;
     if (allEls.length < 2) {
@@ -951,6 +1025,7 @@ export class TimelineManager {
     this.updateTimelineGeometry();
     if (!this.activeTurnId && this.markers.length > 0)
       this.activeTurnId = this.markers[this.markers.length - 1].id;
+    this.updateIntersectionObserverTargetsFromMarkers();
     this.syncTimelineTrackToMain();
     this.updateVirtualRangeAndRender();
     this.updateActiveDotUI();
@@ -960,7 +1035,6 @@ export class TimelineManager {
   private setupObservers(): void {
     this.mutationObserver = new MutationObserver(() => {
       this.debouncedRecalc();
-      this.updateIntersectionObserverTargets();
     });
     if (this.conversationContainer)
       this.mutationObserver.observe(this.conversationContainer, { childList: true, subtree: true });
@@ -978,7 +1052,6 @@ export class TimelineManager {
       },
       { root: this.scrollContainer, threshold: 0.1, rootMargin: '-40% 0px -59% 0px' }
     );
-    this.updateIntersectionObserverTargets();
   }
 
   private setupEventListeners(): void {
@@ -1595,15 +1668,21 @@ export class TimelineManager {
 
   private computeActiveByScroll(): void {
     if (this.isScrolling || !this.scrollContainer || this.markers.length === 0) return;
-    const containerRect = this.scrollContainer.getBoundingClientRect();
     const scrollTop = this.scrollContainer.scrollTop;
     const ref = scrollTop + this.scrollContainer.clientHeight * 0.45;
     let activeId = this.markers[0].id;
-    for (let i = 0; i < this.markers.length; i++) {
-      const m = this.markers[i];
-      const top = m.element.getBoundingClientRect().top - containerRect.top + scrollTop;
-      if (top <= ref) activeId = m.id;
-      else break;
+
+    if (this.markerTops.length === this.markers.length && this.markerTops.length > 0) {
+      const idx = Math.max(0, Math.min(this.markers.length - 1, this.upperBound(this.markerTops, ref)));
+      activeId = this.markers[idx].id;
+    } else {
+      const containerRect = this.scrollContainer.getBoundingClientRect();
+      for (let i = 0; i < this.markers.length; i++) {
+        const m = this.markers[i];
+        const top = m.element.getBoundingClientRect().top - containerRect.top + scrollTop;
+        if (top <= ref) activeId = m.id;
+        else break;
+      }
     }
     if (this.activeTurnId !== activeId) {
       const now =
@@ -2758,6 +2837,7 @@ export class TimelineManager {
     this.ui.sliderHandle = null;
     this.ui = { timelineBar: null, tooltip: null } as any;
     this.markers = [];
+    this.markerTops = [];
     this.activeTurnId = null;
     this.scrollContainer = null;
     this.conversationContainer = null;

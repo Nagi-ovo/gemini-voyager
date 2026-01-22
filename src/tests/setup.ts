@@ -20,6 +20,7 @@ globalThis.chrome = {
   },
   runtime: {
     lastError: null,
+    id: 'test-extension-id',
   },
 } as any;
 

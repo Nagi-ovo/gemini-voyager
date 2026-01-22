@@ -6,6 +6,8 @@ function isGeminiConversationRoute(pathname = location.pathname): boolean {
   return /^\/(?:u\/\d+\/)?(app|gem)(\/|$)/.test(pathname);
 }
 
+type HistoryStateArgs = Parameters<History['pushState']>;
+
 let timelineManagerInstance: TimelineManager | null = null;
 let currentUrl = location.href;
 let currentPathAndSearch = location.pathname + location.search;
@@ -13,6 +15,9 @@ let routeCheckIntervalId: number | null = null;
 let routeListenersAttached = false;
 let activeObservers: MutationObserver[] = [];
 let cleanupHandlers: (() => void)[] = [];
+let historyPatched = false;
+let originalPushState: History['pushState'] | null = null;
+let originalReplaceState: History['replaceState'] | null = null;
 
 function initializeTimeline(): void {
   if (timelineManagerInstance) {
@@ -89,9 +94,39 @@ function handleUrlChange(): void {
   }
 }
 
+function patchHistoryOnce(): void {
+  if (historyPatched) return;
+  try {
+    originalPushState = history.pushState;
+    originalReplaceState = history.replaceState;
+
+    history.pushState = (...args: HistoryStateArgs): void => {
+      originalPushState?.apply(history, args);
+      handleUrlChange();
+    };
+    history.replaceState = (...args: HistoryStateArgs): void => {
+      originalReplaceState?.apply(history, args);
+      handleUrlChange();
+    };
+
+    historyPatched = true;
+    cleanupHandlers.push(() => {
+      if (!historyPatched) return;
+      if (originalPushState) history.pushState = originalPushState;
+      if (originalReplaceState) history.replaceState = originalReplaceState;
+      historyPatched = false;
+      originalPushState = null;
+      originalReplaceState = null;
+    });
+  } catch (e) {
+    console.warn('[Timeline] Failed to patch history API:', e);
+  }
+}
+
 function attachRouteListenersOnce(): void {
   if (routeListenersAttached) return;
   routeListenersAttached = true;
+  patchHistoryOnce();
   window.addEventListener('popstate', handleUrlChange);
   window.addEventListener('hashchange', handleUrlChange);
   routeCheckIntervalId = window.setInterval(() => {
@@ -110,6 +145,12 @@ function attachRouteListenersOnce(): void {
  * Disconnects all observers, clears intervals, and removes event listeners
  */
 function cleanup(): void {
+  // Cancel any pending delayed initialization
+  if (urlChangeTimer) {
+    clearTimeout(urlChangeTimer);
+    urlChangeTimer = null;
+  }
+
   // Disconnect all active MutationObservers
   activeObservers.forEach((observer) => {
     try {
@@ -141,35 +182,33 @@ function cleanup(): void {
 }
 
 export function startTimeline(): void {
-  // Immediately initialize if we're already on a conversation page
-  if (document.body && isGeminiConversationRoute()) {
-    initializeTimeline();
-  }
+  const setup = (): void => {
+    attachRouteListenersOnce();
+    if (isGeminiConversationRoute() && !timelineManagerInstance) {
+      initializeTimeline();
+    }
+  };
 
-  const initialObserver = new MutationObserver(() => {
-    if (document.body) {
-      if (isGeminiConversationRoute()) initializeTimeline();
+  if (document.body) {
+    setup();
+  } else {
+    const initialObserver = new MutationObserver(() => {
+      if (!document.body) return;
 
       // Disconnect and remove from tracking
       initialObserver.disconnect();
       activeObservers = activeObservers.filter((obs) => obs !== initialObserver);
 
-      // Create page observer for URL changes
-      const pageObserver = new MutationObserver(handleUrlChange);
-      pageObserver.observe(document.body, { childList: true, subtree: true });
-      activeObservers.push(pageObserver);
+      setup();
+    });
 
-      attachRouteListenersOnce();
-    }
-  });
-
-  // Track observer for cleanup
-  activeObservers.push(initialObserver);
-
-  initialObserver.observe(document.documentElement || document.body, {
-    childList: true,
-    subtree: true,
-  });
+    // Track observer for cleanup
+    activeObservers.push(initialObserver);
+    initialObserver.observe(document.documentElement || document.body, {
+      childList: true,
+      subtree: true,
+    });
+  }
 
   // Setup cleanup on page unload
   window.addEventListener('beforeunload', cleanup, { once: true });
