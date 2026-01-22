@@ -6,6 +6,7 @@ import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 import { StorageKeys } from '@/core/types/common';
 import { normalizeLanguage, type AppLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
+import type { TranslationKey } from '@/utils/translations';
 
 function hashString(input: string): string {
   let h = 2166136261 >>> 0;
@@ -460,7 +461,7 @@ export async function startExportButton(): Promise<void> {
   // i18n setup for tooltip
   const dict = await loadDictionaries();
   let lang = await getLanguage();
-  const t = (key: string) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+  const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
   const title = t('exportChatJson');
   btn.title = title;
   btn.setAttribute('aria-label', title);
@@ -504,7 +505,7 @@ export async function startExportButton(): Promise<void> {
 }
 
 async function showExportDialog(dict: Record<AppLanguage, Record<string, string>>, lang: AppLanguage): Promise<void> {
-  const t = (key: string) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+  const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
   // Collect conversation data BEFORE showing dialog to avoid page state changes
   const pairs = collectChatPairs();

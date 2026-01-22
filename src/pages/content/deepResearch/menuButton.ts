@@ -9,6 +9,7 @@ import { formatToMarkdown } from './formatter';
 import { StorageKeys } from '@/core/types/common';
 import { normalizeLanguage, type AppLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
+import type { TranslationKey } from '@/utils/translations';
 
 type Dictionaries = Record<AppLanguage, Record<string, string>>;
 
@@ -69,7 +70,7 @@ export function applyDeepResearchDownloadButtonI18n(
     dict: Dictionaries,
     lang: AppLanguage,
 ): void {
-    const t = (key: string) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+    const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
     const text = t('deepResearchDownload');
     const tooltip = t('deepResearchDownloadTooltip');
 
