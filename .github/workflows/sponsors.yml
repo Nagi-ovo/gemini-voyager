@@ -31,7 +31,7 @@ jobs:
         run: npx sponsorkit
         working-directory: .github/sponsors
         env:
-          SPONSORKIT_GITHUB_TOKEN: ${{ secrets.SPONSORKIT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SPONSORKIT_GITHUB_TOKEN }}
           SPONSORKIT_GITHUB_LOGIN: Nagi-ovo
 
       - name: Commit changes

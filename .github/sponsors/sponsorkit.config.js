@@ -35,12 +35,24 @@ export default {
   },
 
   tiers: [
+    // GitHub Sponsors (with avatars) - shown at the top
+    {
+      title: 'GitHub Sponsors',
+      monthlyDollars: -1, // Any amount from GitHub Sponsors
+      preset: 'medium', // Uses built-in avatar rendering
+      // Only include sponsors from GitHub (not manual)
+      includes: sponsor => sponsor.provider !== 'manual',
+    },
+    // Tipping Friends (manual sponsors, text only)
     {
       title: 'Tipping Friends',
       monthlyDollars: 0,
       compose: (composer, sponsors, config) => {
-        if (sponsors.length === 0) return
-        const count = sponsors.length
+        // Only show manual sponsors in this tier
+        const manualSponsors = sponsors.filter(s => s.provider === 'manual')
+        if (manualSponsors.length === 0) return
+
+        const count = manualSponsors.length
         composer.addTitle(`${count} Tipping Friends`).addSpan(20)
 
         const width = config.width || 800
@@ -48,8 +60,8 @@ export default {
         const boxWidth = width / perLine
         const fontSize = 14
 
-        for (let i = 0; i < Math.ceil(sponsors.length / perLine); i++) {
-          const row = sponsors.slice(i * perLine, (i + 1) * perLine)
+        for (let i = 0; i < Math.ceil(manualSponsors.length / perLine); i++) {
+          const row = manualSponsors.slice(i * perLine, (i + 1) * perLine)
           row.forEach((s, j) => {
             const x = j * boxWidth + boxWidth / 2
             const y = composer.height
