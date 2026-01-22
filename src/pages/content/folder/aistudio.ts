@@ -82,7 +82,7 @@ export class AIStudioFolderManager {
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private backupService!: DataBackupService<FolderData>; // Initialized in init()
-  private sidebarWidth: number = 280; // Default sidebar width
+  private sidebarWidth: number = 360; // Default sidebar width (increased to reduce text truncation)
   private readonly SIDEBAR_WIDTH_KEY = 'gvAIStudioSidebarWidth';
   private readonly MIN_SIDEBAR_WIDTH = 240;
   private readonly MAX_SIDEBAR_WIDTH = 600;
@@ -568,19 +568,38 @@ export class AIStudioFolderManager {
   }
 
   private bindDropZone(el: HTMLElement, targetFolderId: string | null): void {
+    // Use a counter to properly track nested dragenter/dragleave events
+    // This fixes the issue where child elements trigger spurious leave events
+    let dragEnterCounter = 0;
+
     el.addEventListener('dragenter', (e) => {
       e.preventDefault();
-      el.classList.add('gv-folder-dragover');
+      dragEnterCounter++;
+      // Only add class on first enter
+      if (dragEnterCounter === 1) {
+        el.classList.add('gv-folder-dragover');
+      }
     });
     el.addEventListener('dragover', (e) => {
       e.preventDefault();
       try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; } catch { }
     });
-    el.addEventListener('dragleave', () => {
-      el.classList.remove('gv-folder-dragover');
+    el.addEventListener('dragleave', (e) => {
+      dragEnterCounter--;
+      // Only remove class when truly leaving the container (counter reaches 0)
+      // Also check relatedTarget as a fallback
+      if (dragEnterCounter <= 0) {
+        dragEnterCounter = 0; // Prevent negative values
+        // Double-check: if relatedTarget is still inside, don't remove
+        const related = e.relatedTarget as Node | null;
+        if (!related || !el.contains(related)) {
+          el.classList.remove('gv-folder-dragover');
+        }
+      }
     });
     el.addEventListener('drop', (e) => {
       e.preventDefault();
+      dragEnterCounter = 0; // Reset counter on drop
       el.classList.remove('gv-folder-dragover');
       let raw = e.dataTransfer?.getData('application/json');
       if (!raw) {
@@ -627,6 +646,7 @@ export class AIStudioFolderManager {
       this.save().then(() => this.render());
     });
   }
+
 
   private observePromptList(): void {
     const root = this.historyRoot;

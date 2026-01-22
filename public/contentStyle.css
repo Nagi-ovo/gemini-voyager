@@ -2341,14 +2341,17 @@ html.dark-theme .gv-pm-expand-btn:hover {
   flex-direction: column;
   gap: 2px;
   margin-top: 2px;
+  margin-left: 12px;
+  padding-left: 8px;
+  border-left: 1px solid var(--folder-border);
 }
 
 /* Conversation Item in Folder */
 .gv-folder-conversation {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 4px;
+  padding: 8px 6px;
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.15s ease, opacity 0.2s;
@@ -2581,9 +2584,9 @@ html.dark-theme .gv-pm-expand-btn:hover {
 }
 
 .gv-conversation-icon {
-  font-size: 13px !important;
-  width: 13px !important;
-  height: 13px !important;
+  font-size: 12px !important;
+  width: 12px !important;
+  height: 12px !important;
   color: var(--folder-icon-color);
   flex-shrink: 0;
   display: inline-flex;
@@ -2606,16 +2609,16 @@ html.dark-theme .gv-pm-expand-btn:hover {
 .gv-conversation-actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   margin-left: auto;
   flex-shrink: 0;
 }
 
-/* Star button - always visible but subtle */
+/* Star button - hidden by default, show on hover to save space */
 .gv-conversation-star-btn {
-  min-width: 28px;
-  width: 28px;
-  height: 28px;
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
   color: #9ca3af;
@@ -2627,7 +2630,7 @@ html.dark-theme .gv-pm-expand-btn:hover {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
   padding: 0;
-  opacity: 0.4;
+  opacity: 0;
 }
 
 .gv-folder-conversation:hover .gv-conversation-star-btn {
@@ -2663,9 +2666,9 @@ html.dark-theme .gv-pm-expand-btn:hover {
 
 /* Remove button - only visible on hover */
 .gv-conversation-remove-btn {
-  min-width: 28px;
-  width: 28px;
-  height: 28px;
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
   color: #9ca3af;
@@ -3160,8 +3163,8 @@ html.dark .gv-folder-action-btn:hover,
 .gv-aistudio .gv-folder-item-header {
   gap: 6px;
   padding: 6px 10px;
-  /* Reserve space for absolute action buttons */
-  padding-right: 88px;
+  /* Reserve space for more button only (pin is hidden by default) */
+  padding-right: 10px;
   overflow: visible;
   min-height: 28px;
 }
@@ -3170,8 +3173,12 @@ html.dark .gv-folder-action-btn:hover,
   font-size: 12px;
   /* Allow a bit more width visually */
   letter-spacing: 0.1px;
-  min-width: 0;
-  /* allow ellipsis to work with flex */
+  /* Ensure folder name has minimum width to display at least a few characters */
+  min-width: 40px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gv-aistudio .gv-folder-expand-btn {
@@ -3185,13 +3192,13 @@ html.dark .gv-folder-action-btn:hover,
 
 /* Reduce container/list side paddings to utilize width */
 .gv-aistudio.gv-folder-container {
-  padding-left: 4px;
-  padding-right: 4px;
+  padding-left: 2px;
+  padding-right: 2px;
 }
 
 .gv-aistudio .gv-folder-list {
-  padding-left: 2px;
-  padding-right: 2px;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 /* Make action buttons absolute so they don’t steal inline space */
@@ -3203,10 +3210,20 @@ html.dark .gv-folder-action-btn:hover,
   top: 50%;
   transform: translateY(-50%);
   margin: 0;
-  opacity: 0.8;
-  /* Always visible in AI Studio */
   overflow: visible;
   z-index: 1;
+}
+
+/* Pin button: hidden by default, show on hover to save space */
+.gv-aistudio .gv-folder-pin-btn {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* More button: hidden by default, show on hover to save space */
+.gv-aistudio .gv-folder-actions-btn {
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .gv-aistudio .gv-folder-item-header:hover .gv-folder-pin-btn,
@@ -3215,11 +3232,11 @@ html.dark .gv-folder-action-btn:hover,
 }
 
 .gv-aistudio .gv-folder-actions-btn {
-  right: 16px;
+  right: 6px;
 }
 
 .gv-aistudio .gv-folder-pin-btn {
-  right: 52px;
+  right: 28px;
 }
 
 .gv-aistudio .gv-folder-header-actions .gv-folder-action-btn {
@@ -3364,10 +3381,11 @@ html.dark .gv-folder-action-btn:hover,
   margin-left: auto;
 }
 
-/* AI Studio: keep conversations readable without subfolder hierarchy */
+/* AI Studio: keep conversations readable with clear hierarchy */
 .gv-aistudio .gv-folder-content {
-  margin-left: 8px;
-  padding-left: 8px;
+  margin-left: 16px;
+  padding-left: 10px;
+  border-left: 1px solid var(--folder-border);
 }
 
 /* Root drop zone visuals */
@@ -3939,10 +3957,10 @@ html.dark .gv-export-dialog-btn-secondary:hover,
 
 .gv-aistudio .gv-conversation-title {
   min-width: 0;
+  font-size: 12px;
 }
 
-/* Ensure conversation icon uses our larger box and isn't forced to 13px */
+/* Hide conversation icon to save space */
 .gv-aistudio .gv-conversation-icon.google-symbols {
-  width: 20px !important;
-  height: 20px !important;
+  display: none;
 }
