@@ -349,7 +349,9 @@ Gemini Voyager があなたの仕事の効率を高める役に立ったなら�
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
     <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" >
   </a>
-  <iframe src="https://github.com/sponsors/Nagi-ovo/button" title="Sponsor Nagi-ovo" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
+  <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
+    <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="41">
+  </a>
   
   <p><b>または WeChat / Alipay / Afdian での支援：</b></p>
   <table align="center" border="0" cellpadding="0" cellspacing="0">
