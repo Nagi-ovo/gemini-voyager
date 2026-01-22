@@ -24,7 +24,7 @@ features:
     title: フォルダ
     details: 混沌に別れを。直感的な操作で、驚くほど整理整頓。
   - icon: ✨
-    title: 霊感ライブラリ
+    title: プロンプトライブラリ
     details: 閃きを逃さない。珠玉のアイデアを、大切に保管。
   - icon: 💬
     title: 引用返信
@@ -51,7 +51,7 @@ features:
 ## インタラクションを再定義する。
 
 私たちは拡張機能を作るのではありません。思考そのものを再構築するのです。
-Gemini Voyager があれば、人がインターフェースに合わせる必要はありません。インターフェースが、あなたの心流（フロー）に寄り添うのです。
+Gemini Voyager があれば、人がインターフェースに合わせる必要はありません。インターフェースが、あなたの思考の流れに寄り添うのです。
 
 <img src="/assets/teaser.png" alt="Gemini Voyager Interface" style="margin: 40px auto; border-radius: 12px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.3);" />
 

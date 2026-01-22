@@ -5,15 +5,15 @@ Deep Research の会話における完全な「思考」内容を、美しく整
 ## 機能の特長
 
 - **ワンクリック・エクスポート**: 共有・エクスポートボタンをクリックするだけでダウンロードできます。
-- **構造化フォーマット**: 思考フェーズ、思考項目、研究ウェブサイトを元の順序通りに保持します。
-- **バイリンガル見出し**: Markdown ファイルには、英語と日本語（または中国語）のバイリンガル見出しが含まれます。
+- **構造化されたフォーマット**: 思考フェーズ、思考項目、参照したウェブサイトを元の順序どおりに保持します。
+- **バイリンガル見出し**: Markdown ファイルには、中国語と英語のバイリンガル見出しが含まれます（現状）。
 - **自動ファイル名**: ファイル名にはタイムスタンプが使用され、整理が容易です（例: `deep-research-thinking-20240128-153045.md`）。
 
 ## 使い方
 
 1. Gemini で Deep Research の会話を開きます。
 2. 会話の **共有とエクスポート** ボタンをクリックします。
-3. "Download Thinking Content" (思考内容をダウンロード) を選択します。
+3. 「Download Thinking Content（思考内容をダウンロード）」を選択します。
 4. Markdown ファイルが自動的にダウンロードされます。
 
 ![Deep Research Export](/assets/deepresearch_download_thinking.png)
@@ -26,19 +26,19 @@ Deep Research の会話における完全な「思考」内容を、美しく整
 - **メタデータ**: エクスポート日時、総思考フェーズ数
 - **思考フェーズ**: 各フェーズには以下が含まれます:
   - 思考項目（タイトルと内容）
-  - 研究ウェブサイト（リンクとタイトル）
+  - 参照したウェブサイト（リンクとページタイトル）
 
 ### 出力例
 
 ```markdown
 # Deep Research 会話タイトル
 
-**Exported At / 导出时间:** 2025-12-28 17:25:35
-**Total Phases / 总思考阶段:** 3
+**导出时间 / Exported At:** 2025-12-28 17:25:35
+**总思考阶段 / Total Phases:** 3
 
 ---
 
-## Thinking Phase 1 / 思考阶段 1
+## 思考阶段 1 / Thinking Phase 1
 
 ### 思考タイトル 1
 思考内容...
@@ -46,13 +46,13 @@ Deep Research の会話における完全な「思考」内容を、美しく整
 ### 思考タイトル 2
 思考内容...
 
-#### Researched Websites / 研究网站
+#### 研究网站 / Researched Websites
 - [domain.com](https://example.com) - ページタイトル
 - [another.com](https://another.com) - 別のタイトル
 
 ---
 
-## Thinking Phase 2 / 思考阶段 2
+## 思考阶段 2 / Thinking Phase 2
 
 ...
 ```

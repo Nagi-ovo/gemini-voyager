@@ -3,8 +3,8 @@
 道はいくつかあります。お好きな方法を選んでください。
 
 ## 1. 極めてシンプル（Chrome ウェブストア）
-Chrome, Edge, Brave, Opera ユーザーに推奨。
-最も簡単で、自動更新され、心配無用です。
+Chrome / Edge / Brave / Opera ユーザーにおすすめ。
+最も簡単で、自動更新され、手間いらずで安心です。
 
 [<img src="https://img.shields.io/badge/Chrome_ウェブストア-ダウンロード-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome ウェブストアからインストール" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol)
 
@@ -48,4 +48,4 @@ Chrome, Edge, Brave, Opera ユーザーに推奨。
 5. Safari の設定 > 拡張機能で有効にします。
 
 ---
-*コードに貢献したいですか？開発者の方は [貢献ガイド](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md) へどうぞ。*
+*コードに貢献したいですか？ 開発者の方は [貢献ガイド](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md) へどうぞ。*
