@@ -350,10 +350,10 @@ If Gemini Voyager makes your life easier, consider buying me a coffee. It helps 
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
-    <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" >
+    <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" height="36">
   </a>
   <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
-    <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="41">
+    <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="36">
   </a>
   
   <p><b>Or support via WeChat / Alipay / Afdian:</b></p>
