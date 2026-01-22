@@ -539,6 +539,14 @@
     "message": "Open Options Page",
     "description": "Open options page button"
   },
+  "optionsPageSubtitle": {
+    "message": "Extension Options",
+    "description": "Options page subtitle"
+  },
+  "optionsComingSoon": {
+    "message": "More options coming soon...",
+    "description": "Options page placeholder text"
+  },
   "backupDataAccessNotice": {
     "message": "Data Access Limitation",
     "description": "Backup data access limitation title"

@@ -1,34 +1,9 @@
-import enMessages from '@locales/en/messages.json';
-import jaMessages from '@locales/ja/messages.json';
-import zhMessages from '@locales/zh/messages.json';
 import browser from 'webextension-polyfill';
 
-type Language = 'en' | 'zh' | 'ja';
+import { normalizeLanguage, type AppLanguage } from './language';
+import { isTranslationKey, TRANSLATIONS, type TranslationKey } from './translations';
 
-const normalizeLang = (lang: string | undefined): Language => {
-  if (!lang) return 'en';
-  const lower = lang.toLowerCase();
-  if (lower.startsWith('zh')) return 'zh';
-  if (lower.startsWith('ja')) return 'ja';
-  return 'en';
-};
-
-const extract = (raw: any): Record<string, string> => {
-  const out: Record<string, string> = {};
-  if (raw && typeof raw === 'object') {
-    Object.keys(raw).forEach((k) => {
-      const v = (raw as any)[k];
-      if (v && typeof v.message === 'string') out[k] = v.message;
-    });
-  }
-  return out;
-};
-
-const dictionaries: Record<Language, Record<string, string>> = {
-  en: extract(enMessages as any),
-  zh: extract(zhMessages as any),
-  ja: extract(jaMessages as any),
-};
+import { StorageKeys } from '@/core/types/common';
 
 /**
  * Get the current language preference
@@ -36,12 +11,13 @@ const dictionaries: Record<Language, Record<string, string>> = {
  * 2. Fall back to browser UI language
  * 3. Default to English
  */
-export async function getCurrentLanguage(): Promise<Language> {
+export async function getCurrentLanguage(): Promise<AppLanguage> {
   try {
     // Try to get user's saved language preference
-    const stored = await browser.storage.sync.get('language');
-    if (stored?.language && typeof stored.language === 'string') {
-      return normalizeLang(stored.language);
+    const stored = await browser.storage.sync.get(StorageKeys.LANGUAGE);
+    const raw = (stored as Record<string, unknown> | null | undefined)?.[StorageKeys.LANGUAGE];
+    if (typeof raw === 'string') {
+      return normalizeLanguage(raw);
     }
   } catch (error) {
     console.warn('[i18n] Failed to get saved language:', error);
@@ -50,7 +26,7 @@ export async function getCurrentLanguage(): Promise<Language> {
   // Fall back to browser UI language
   try {
     const browserLang = browser.i18n.getUILanguage();
-    return normalizeLang(browserLang);
+    return normalizeLanguage(browserLang);
   } catch {
     return 'en';
   }
@@ -60,20 +36,25 @@ export async function getCurrentLanguage(): Promise<Language> {
  * Get translation for a key using the current language preference
  * This function works in both React and non-React contexts (e.g., content scripts)
  */
-export async function getTranslation(key: string): Promise<string> {
+export async function getTranslation(key: TranslationKey): Promise<string> {
   const language = await getCurrentLanguage();
-  return dictionaries[language][key] ?? dictionaries.en[key] ?? key;
+  return TRANSLATIONS[language][key] ?? TRANSLATIONS.en[key] ?? key;
 }
 
 /**
  * Get translation synchronously using cached language
  * This is less accurate but faster for scenarios where async is not possible
  */
-let cachedLanguage: Language | null = null;
+let cachedLanguage: AppLanguage | null = null;
 
-export function getTranslationSync(key: string): string {
+export function getTranslationSync(key: TranslationKey): string {
   const language = cachedLanguage || 'en';
-  return dictionaries[language][key] ?? dictionaries.en[key] ?? key;
+  return TRANSLATIONS[language][key] ?? TRANSLATIONS.en[key] ?? key;
+}
+
+export function getTranslationSyncUnsafe(key: string): string {
+  if (!isTranslationKey(key)) return key;
+  return getTranslationSync(key);
 }
 
 /**
@@ -85,8 +66,9 @@ export async function initI18n(): Promise<void> {
 
   // Listen for language changes
   browser.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName === 'sync' && changes.language?.newValue && typeof changes.language.newValue === 'string') {
-      cachedLanguage = normalizeLang(changes.language.newValue);
+    const next = changes[StorageKeys.LANGUAGE]?.newValue;
+    if (areaName === 'sync' && typeof next === 'string') {
+      cachedLanguage = normalizeLanguage(next);
     }
   });
 }
@@ -96,5 +78,5 @@ export async function initI18n(): Promise<void> {
  * This is useful for classes that need a simple t() function
  */
 export function createTranslator(): (key: string) => string {
-  return (key: string) => getTranslationSync(key);
+  return (key: string) => getTranslationSyncUnsafe(key);
 }

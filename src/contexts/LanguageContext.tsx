@@ -1,64 +1,39 @@
-import enMessages from '@locales/en/messages.json';
-import jaMessages from '@locales/ja/messages.json';
-import zhMessages from '@locales/zh/messages.json';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import browser from 'webextension-polyfill';
 
-type Language = 'en' | 'zh' | 'ja';
+import { StorageKeys } from '@/core/types/common';
+import { normalizeLanguage, type AppLanguage } from '@/utils/language';
+import { TRANSLATIONS, type TranslationKey } from '@/utils/translations';
 
 interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  language: AppLanguage;
+  setLanguage: (lang: AppLanguage) => void;
+  t: (key: TranslationKey) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const normalizeLang = (lang: string | undefined): Language => {
-  if (!lang) return 'en';
-  const lower = lang.toLowerCase();
-  if (lower.startsWith('zh')) return 'zh';
-  if (lower.startsWith('ja')) return 'ja';
-  return 'en';
-};
-
-const extract = (raw: any): Record<string, string> => {
-  const out: Record<string, string> = {};
-  if (raw && typeof raw === 'object') {
-    Object.keys(raw).forEach((k) => {
-      const v = (raw as any)[k];
-      if (v && typeof v.message === 'string') out[k] = v.message;
-    });
-  }
-  return out;
-};
-
-const dictionaries: Record<Language, Record<string, string>> = {
-  en: extract(enMessages as any),
-  zh: extract(zhMessages as any),
-  ja: extract(jaMessages as any),
-};
-
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Get initial language from browser UI language
-  const getInitialLanguage = (): Language => {
+  const getInitialLanguage = (): AppLanguage => {
     try {
       const browserLang = browser.i18n.getUILanguage();
-      return normalizeLang(browserLang);
+      return normalizeLanguage(browserLang);
     } catch {
       return 'en';
     }
   };
 
-  const [language, setLanguageState] = useState<Language>(getInitialLanguage());
+  const [language, setLanguageState] = useState<AppLanguage>(getInitialLanguage());
 
   // Load saved language preference on mount
   useEffect(() => {
     const loadLanguage = async () => {
       try {
-        const stored = await browser.storage.sync.get('language');
-        if (stored?.language && typeof stored.language === 'string') {
-          setLanguageState(normalizeLang(stored.language));
+        const stored = await browser.storage.sync.get(StorageKeys.LANGUAGE);
+        const raw = (stored as Record<string, unknown> | null | undefined)?.[StorageKeys.LANGUAGE];
+        if (typeof raw === 'string') {
+          setLanguageState(normalizeLanguage(raw));
         }
       } catch (error) {
         console.error('Failed to load language preference:', error);
@@ -73,8 +48,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       changes: { [key: string]: browser.Storage.StorageChange },
       areaName: string
     ) => {
-      if (areaName === 'sync' && changes.language?.newValue && typeof changes.language.newValue === 'string') {
-        setLanguageState(normalizeLang(changes.language.newValue));
+      const next = changes[StorageKeys.LANGUAGE]?.newValue;
+      if (areaName === 'sync' && typeof next === 'string') {
+        setLanguageState(normalizeLanguage(next));
       }
     };
 
@@ -84,17 +60,17 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
   }, []);
 
-  const setLanguage = async (lang: Language) => {
+  const setLanguage = async (lang: AppLanguage) => {
     try {
-      await browser.storage.sync.set({ language: lang });
+      await browser.storage.sync.set({ [StorageKeys.LANGUAGE]: lang });
       setLanguageState(lang);
     } catch (error) {
       console.error('Failed to save language preference:', error);
     }
   };
 
-  const t = (key: string): string => {
-    return dictionaries[language][key] ?? dictionaries.en[key] ?? key;
+  const t = (key: TranslationKey): string => {
+    return TRANSLATIONS[language][key] ?? TRANSLATIONS.en[key] ?? key;
   };
 
   return (

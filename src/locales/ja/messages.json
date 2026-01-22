@@ -539,6 +539,14 @@
         "message": "オプションページを開く",
         "description": "Open options page button"
     },
+    "optionsPageSubtitle": {
+        "message": "拡張機能のオプション",
+        "description": "Options page subtitle"
+    },
+    "optionsComingSoon": {
+        "message": "さらに多くのオプションを近日追加予定です...",
+        "description": "Options page placeholder text"
+    },
     "backupDataAccessNotice": {
         "message": "データアクセスの制限",
         "description": "Backup data access limitation title"

@@ -18,6 +18,8 @@ import { StorageKeys, type StorageKey } from '@/core/types/common';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import { compareVersions } from '@/core/utils/version';
 import { initI18n, getTranslationSync, getCurrentLanguage } from '@/utils/i18n';
+import { APP_LANGUAGES, APP_LANGUAGE_LABELS, isAppLanguage, normalizeLanguage, type AppLanguage } from '@/utils/language';
+import type { TranslationKey } from '@/utils/translations';
 
 type PromptItem = {
   id: string;
@@ -67,8 +69,8 @@ function safeParseJSON<T>(raw: string, fallback: T): T {
 // Use centralized i18n system
 function createI18n() {
   return {
-    t: (key: string): string => getTranslationSync(key),
-    set: async (lang: 'en' | 'zh' | 'ja') => {
+    t: (key: TranslationKey): string => getTranslationSync(key),
+    set: async (lang: AppLanguage) => {
       try {
         // Check if extension context is still valid
         if (!browser.runtime?.id) {
@@ -84,7 +86,7 @@ function createI18n() {
         console.warn('[PromptManager] Failed to set language:', e);
       }
     },
-    get: async (): Promise<'en' | 'zh' | 'ja'> => await getCurrentLanguage(),
+    get: async (): Promise<AppLanguage> => await getCurrentLanguage(),
   };
 }
 
@@ -461,18 +463,12 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const controls = createEl('div', 'gv-pm-controls');
 
     const langSel = createEl('select', 'gv-pm-lang');
-    const optEn = createEl('option');
-    optEn.value = 'en';
-    optEn.textContent = 'English';
-    const optZh = createEl('option');
-    optZh.value = 'zh';
-    optZh.textContent = '中文';
-    const optJa = createEl('option');
-    optJa.value = 'ja';
-    optJa.textContent = '日本語';
-    langSel.appendChild(optEn);
-    langSel.appendChild(optZh);
-    langSel.appendChild(optJa);
+    for (const lang of APP_LANGUAGES) {
+      const opt = createEl('option');
+      opt.value = lang;
+      opt.textContent = APP_LANGUAGE_LABELS[lang];
+      langSel.appendChild(opt);
+    }
     // Set initial language value asynchronously
     i18n.get().then((lang) => {
       langSel.value = lang;
@@ -998,7 +994,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     window.addEventListener('pointerup', onTriggerDragEnd, { passive: true });
 
     langSel.addEventListener('change', async () => {
-      const next = langSel.value as 'en' | 'zh';
+      const next = langSel.value;
+      if (!isAppLanguage(next)) return;
       await i18n.set(next);
       refreshUITexts();
     });
@@ -1006,14 +1003,12 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // Listen to external language changes (popup/options)
     // Note: The centralized i18n system already handles storage changes,
     // we just need to update the UI when language changes
-    const storageChangeHandler = (changes: any, area: string) => {
+    const storageChangeHandler = (changes: Record<string, browser.Storage.StorageChange>, area: string) => {
       // Handle language changes from sync storage
-      if (area === 'sync' && changes?.language?.newValue) {
-        const next = changes.language.newValue;
+      const nextRaw = changes[StorageKeys.LANGUAGE]?.newValue;
+      if (area === 'sync' && typeof nextRaw === 'string') {
         try {
-          if (next.startsWith('zh')) langSel.value = 'zh';
-          else if (next.startsWith('ja')) langSel.value = 'ja';
-          else langSel.value = 'en';
+          langSel.value = normalizeLanguage(nextRaw);
         } catch { }
         refreshUITexts();
       }
@@ -1349,5 +1344,3 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 }
 
 export default { startPromptManager };
-
-

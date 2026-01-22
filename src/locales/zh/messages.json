@@ -539,6 +539,14 @@
     "message": "打开选项页面",
     "description": "打开选项页面按钮"
   },
+  "optionsPageSubtitle": {
+    "message": "扩展选项",
+    "description": "选项页副标题"
+  },
+  "optionsComingSoon": {
+    "message": "更多选项即将上线...",
+    "description": "选项页占位提示"
+  },
   "backupDataAccessNotice": {
     "message": "数据访问限制",
     "description": "备份数据访问限制标题"

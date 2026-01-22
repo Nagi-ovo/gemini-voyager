@@ -16,7 +16,7 @@ import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
-import { initI18n, getTranslationSync } from '@/utils/i18n';
+import { initI18n, getTranslationSync, getTranslationSyncUnsafe } from '@/utils/i18n';
 
 const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
@@ -4769,7 +4769,7 @@ export class FolderManager {
 
   private t(key: string): string {
     // Use the centralized i18n system that respects user's language preference
-    return getTranslationSync(key);
+    return getTranslationSyncUnsafe(key);
   }
 
   private setupMessageListener(): void {

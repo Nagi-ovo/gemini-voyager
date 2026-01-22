@@ -2,26 +2,16 @@ import { Globe } from 'lucide-react';
 import React from 'react';
 
 import { useLanguage } from '../contexts/LanguageContext';
+import { APP_LANGUAGE_LABELS, getNextLanguage } from '../utils/language';
 
 import { Button } from './ui/button';
 
 export const LanguageSwitcher: React.FC = () => {
   const { language, setLanguage } = useLanguage();
+  const nextLanguage = getNextLanguage(language);
 
   const toggleLanguage = () => {
-    if (language === 'en') {
-      setLanguage('zh');
-    } else if (language === 'zh') {
-      setLanguage('ja');
-    } else {
-      setLanguage('en');
-    }
-  };
-
-  const getNextLangLabel = () => {
-    if (language === 'en') return '中文';
-    if (language === 'zh') return '日本語';
-    return 'English';
+    setLanguage(nextLanguage);
   };
 
   return (
@@ -29,7 +19,7 @@ export const LanguageSwitcher: React.FC = () => {
       variant="ghost"
       size="icon"
       onClick={toggleLanguage}
-      title={`Switch to ${getNextLangLabel()}`}
+      title={`Switch to ${APP_LANGUAGE_LABELS[nextLanguage]}`}
       className="h-9 w-9"
     >
       <Globe className="h-4 w-4" />
