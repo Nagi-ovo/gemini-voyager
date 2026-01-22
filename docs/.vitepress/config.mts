@@ -141,6 +141,50 @@ export default defineConfig({
                     copyright: 'MIT ライセンス | Copyright © 2025 Jesse Zhang | <a href="/ja/privacy">プライバシーポリシー</a>'
                 }
             }
+        },
+        fr: {
+            label: 'Français',
+            lang: 'fr-FR',
+            link: '/fr/',
+            themeConfig: {
+                nav: [
+                    { text: 'Accueil', link: '/fr/' },
+                    { text: 'Guide', link: '/fr/guide/installation' },
+                ],
+                sidebar: [
+                    {
+                        text: 'Introduction',
+                        items: [
+                            { text: 'Installation', link: '/fr/guide/installation' },
+                            { text: 'Commencer', link: '/fr/guide/getting-started' },
+                            { text: 'Sponsor', link: '/fr/guide/sponsor' },
+                            { text: 'Communauté', link: '/fr/guide/community' }
+                        ]
+                    },
+                    {
+                        text: 'Fonctionnalités',
+                        items: [
+                            { text: 'Navigation Temporelle', link: '/fr/guide/timeline' },
+                            { text: 'Réponse avec Citation', link: '/fr/guide/quote-reply' },
+                            { text: 'Dossiers', link: '/fr/guide/folders' },
+                            { text: 'Suppression par Lot', link: '/fr/guide/batch-delete' },
+                            { text: 'Bibliothèque de Prompts', link: '/fr/guide/prompts' },
+                            { text: 'Sites Personnalisés', link: '/fr/guide/custom-websites' },
+                            { text: 'Export de Chat', link: '/fr/guide/export' },
+                            { text: 'Export Deep Research', link: '/fr/guide/deep-research' },
+                            { text: 'Diagrammes Mermaid', link: '/fr/guide/mermaid' },
+                            { text: 'NanoBanana', link: '/fr/guide/nanobanana' },
+                            { text: 'Largeur de Chat', link: '/fr/guide/settings' },
+                            { text: 'Réduction Entrée', link: '/fr/guide/input-collapse' },
+                            { text: 'Synchro Titre Onglet', link: '/fr/guide/tab-title' }
+                        ]
+                    }
+                ],
+                footer: {
+                    message: 'Projet Open Source. Mettez une ⭐ sur <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> si vous aimez.',
+                    copyright: 'Licence MIT | Copyright © 2025 Jesse Zhang | <a href="/fr/privacy">Politique de Confidentialité</a>'
+                }
+            }
         }
     },
 
