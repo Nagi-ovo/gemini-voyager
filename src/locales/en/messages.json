@@ -752,11 +752,11 @@
     "description": "Sync in progress message"
   },
   "syncUpload": {
-    "message": "Upload (Local → Drive)",
+    "message": "Upload",
     "description": "Upload button label"
   },
   "syncMerge": {
-    "message": "Merge (Drive → Local)",
+    "message": "Download & Merge",
     "description": "Merge button label"
   },
   "syncMode": {
