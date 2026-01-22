@@ -17,6 +17,7 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
       en: { deepResearchDownload: 'Download', deepResearchDownloadTooltip: 'Download (MD)' },
       zh: { deepResearchDownload: '下载', deepResearchDownloadTooltip: '下载（MD）' },
       ja: { deepResearchDownload: 'ダウンロード', deepResearchDownloadTooltip: 'ダウンロード（MD）' },
+      fr: { deepResearchDownload: 'Télécharger', deepResearchDownloadTooltip: 'Télécharger (MD)' },
     };
 
     applyDeepResearchDownloadButtonI18n(button, dict, 'ja');

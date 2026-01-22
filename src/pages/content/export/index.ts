@@ -309,19 +309,21 @@ function formatFilename(): string {
 
 async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, string>>> {
   try {
-    const [enRaw, zhRaw, jaRaw] = await Promise.all([
+    const [enRaw, zhRaw, jaRaw, frRaw] = await Promise.all([
       import(/* @vite-ignore */ '../../../locales/en/messages.json'),
       import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
       import(/* @vite-ignore */ '../../../locales/ja/messages.json'),
+      import(/* @vite-ignore */ '../../../locales/fr/messages.json'),
     ]);
 
     return {
       en: extractMessageDictionary(enRaw),
       zh: extractMessageDictionary(zhRaw),
       ja: extractMessageDictionary(jaRaw),
+      fr: extractMessageDictionary(frRaw),
     };
   } catch {
-    return { en: {}, zh: {}, ja: {} };
+    return { en: {}, zh: {}, ja: {}, fr: {} };
   }
 }
 

@@ -1,4 +1,5 @@
 import enMessages from '@locales/en/messages.json';
+import frMessages from '@locales/fr/messages.json';
 import jaMessages from '@locales/ja/messages.json';
 import zhMessages from '@locales/zh/messages.json';
 
@@ -11,6 +12,7 @@ const rawMessagesByLanguage = {
   en: enMessages,
   zh: zhMessages,
   ja: jaMessages,
+  fr: frMessages,
 } satisfies Record<AppLanguage, RawLocaleMessages>;
 
 export type TranslationKey = keyof RawLocaleMessages;
@@ -30,6 +32,7 @@ export const TRANSLATIONS: Record<AppLanguage, Translation> = {
   en: extractTranslations(rawMessagesByLanguage.en),
   zh: extractTranslations(rawMessagesByLanguage.zh),
   ja: extractTranslations(rawMessagesByLanguage.ja),
+  fr: extractTranslations(rawMessagesByLanguage.fr),
 };
 
 export function isTranslationKey(value: string): value is TranslationKey {
