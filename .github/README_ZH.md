@@ -378,6 +378,12 @@
   </table>
 </div>
 
+### 🎙️ 特别推荐: Typeless
+
+我非常推荐 **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)** 这款 AI 语音输入工具。在开发 Gemini Voyager 的过程中，我将其整合进了日常工作流，极大地节省了我的时间并显著提升了整体开发效率。
+
+> 🎁 **[点击我的邀请链接注册](https://www.typeless.com/refer?code=MZRYZP1)**（邀请码 **`MZRYZP1`**）即可获得 **5 美元免费额度**，同时也能支持本项目的开发。❤️
+
 ---
 
 ## 💬 交流与反馈
