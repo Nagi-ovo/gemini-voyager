@@ -347,7 +347,7 @@ Gemini Voyager があなたの仕事の効率を高める役に立ったなら�
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
-    <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" height="36">
+    <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" height="36">
   </a>
   <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="36">
@@ -390,15 +390,15 @@ Gemini Voyager があなたの仕事の効率を高める役に立ったなら�
 
 <table>
   <tr>
-    <td align="center" width="50%">
+    <td align="center" width="50%" valign="top">
       <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank">
         <img src="https://img.shields.io/badge/Follow%20on-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X" height="36">
       </a>
       <br><br>
       <b>最新情報をフォロー</b><br>
-      <sub>新リリース、機能アナウンス、開発アップデート。</sub>
+      <sub>最新情報をチェック。</sub>
     </td>
-    <td align="center" width="50%">
+    <td align="center" width="50%" valign="top">
       <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
         <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord" height="36">
       </a>

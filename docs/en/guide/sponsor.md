@@ -10,7 +10,7 @@ Maintaining open-source projects is mainly driven by passion (and coffee) ☕
 
 <div class="sponsor-badges">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
-    <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 40px;">
+    <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" style="height: 40px;">
   </a>
   <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" style="height: 40px;">

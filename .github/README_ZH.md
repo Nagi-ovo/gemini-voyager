@@ -350,7 +350,7 @@
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
-    <img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" height="36">
+    <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" height="36">
   </a>
   <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="36">
@@ -393,15 +393,15 @@
 
 <table>
   <tr>
-    <td align="center" width="50%">
+    <td align="center" width="50%" valign="top">
       <a href="https://x.com/Nag1ovo/status/2012609459663634589" target="_blank">
         <img src="https://img.shields.io/badge/关注-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="关注 X" height="36">
       </a>
       <br><br>
       <b>关注动态</b><br>
-      <sub>新版本发布、功能预告、开发进展。</sub>
+      <sub>获取最新动态。</sub>
     </td>
-    <td align="center" width="50%">
+    <td align="center" width="50%" valign="top">
       <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
         <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=加入%20Discord" alt="Discord" height="36">
       </a>
