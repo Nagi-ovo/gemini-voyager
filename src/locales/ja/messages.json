@@ -444,7 +444,7 @@
         "description": "Fallback title for conversations without a name"
     },
     "geminiOnlyNotice": {
-        "message": "デフォルトでは Gemini と AI Studio で動作します。他のサイトでプロンプトマネージャーを使用するには、以下で追加してください。",
+        "message": "デフォルトでは Gemini（Enterprise 版含む）と AI Studio で動作します。他のサイトでプロンプトマネージャーを使用するには、以下で追加してください。",
         "description": "Notice that defaults are limited to Gemini/AI Studio"
     },
     "folderManager_dataLossWarning": {

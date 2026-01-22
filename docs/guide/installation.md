@@ -1,6 +1,7 @@
 # 安装
 
 选一条路。
+> ⚠️ 提示词管理器是唯一支持 Gemini 企业版的功能。
 
 ## 1. 极简（Chrome 应用店）
 Chrome, Edge, Brave, Opera 用户首选。

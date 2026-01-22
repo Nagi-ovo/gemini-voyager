@@ -444,7 +444,7 @@
     "description": "无标题对话的回退标题"
   },
   "geminiOnlyNotice": {
-    "message": "默认仅在 Gemini 和 AI Studio 生效。想在其他网站用提示词管理器，请在下方添加并授权。",
+    "message": "默认仅在 Gemini（含企业版）和 AI Studio 生效。想在其他网站用提示词管理器，请在下方添加并授权。",
     "description": "提示默认范围为 Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {

@@ -1,6 +1,7 @@
 # Installation
 
 Choose your path.
+> ⚠️ Note: Prompt Manager is the only feature that supports Gemini for Enterprise.
 
 ## 1. The Easy Way (Chrome Web Store)
 For Chrome, Edge, Brave, and Opera users.

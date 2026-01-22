@@ -15,6 +15,7 @@ import { startTitleUpdater } from './titleUpdater';
 import { startWatermarkRemover } from './watermarkRemover/index';
 
 
+import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 
@@ -101,6 +102,22 @@ async function initializeFeatures(): Promise<void> {
     }
 
     console.log('[Gemini Voyager] Not a custom website, checking for Gemini/AI Studio');
+
+    const isEnterprise = isGeminiEnterpriseEnvironment(
+      {
+        hostname: location.hostname,
+        pathname: location.pathname,
+        search: location.search,
+        hash: location.hash,
+      },
+      document
+    );
+
+    if (isEnterprise) {
+      console.log('[Gemini Voyager] Gemini Enterprise detected, starting Prompt Manager only');
+      promptManagerInstance = await startPromptManager();
+      return;
+    }
 
     if (location.hostname === 'gemini.google.com') {
       // Timeline is most resource-intensive, start it first
@@ -208,6 +225,7 @@ function handleVisibilityChange(): void {
     const hostname = location.hostname.toLowerCase();
     const isSupportedSite =
       hostname.includes('gemini.google.com') ||
+      hostname.includes('business.gemini.google') ||
       hostname.includes('aistudio.google.com') ||
       hostname.includes('aistudio.google.cn');
 

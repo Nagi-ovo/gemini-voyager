@@ -37,6 +37,7 @@
   },
   "host_permissions": [
     "https://gemini.google.com/*",
+    "https://business.gemini.google/*",
     "https://aistudio.google.com/*",
     "https://aistudio.google.cn/*",
     "https://*.googleapis.com/*",
@@ -60,6 +61,7 @@
     {
       "matches": [
         "https://gemini.google.com/*",
+        "https://business.gemini.google/*",
         "https://aistudio.google.com/*",
         "https://aistudio.google.cn/*"
       ],

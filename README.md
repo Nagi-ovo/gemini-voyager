@@ -299,6 +299,8 @@ Select multiple conversations and delete them all at once. No more deleting one 
 
 ## 📥 Installation
 
+> ⚠️ Note: Prompt Manager is the only feature that supports Gemini for Enterprise.
+
 ### 🌐 From Extension Stores (Recommended)
 
 <div align="center">
@@ -457,4 +459,3 @@ Thank you for helping make Gemini Voyager better! ❤️
   <p>Made with ❤️ by Jesse Zhang</p>
   <sub>MIT License © 2025</sub>
 </div>
-

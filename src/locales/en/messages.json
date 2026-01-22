@@ -444,7 +444,7 @@
     "description": "Fallback title for conversations without a name"
   },
   "geminiOnlyNotice": {
-    "message": "Runs on Gemini & AI Studio by default. Add other sites below to enable the Prompt Manager there.",
+    "message": "Runs on Gemini (including Enterprise) & AI Studio by default. Add other sites below to enable the Prompt Manager there.",
     "description": "Notice that defaults are limited to Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
