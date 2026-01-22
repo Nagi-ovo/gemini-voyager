@@ -123,7 +123,7 @@ export default function Popup() {
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
-  const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(true);
+  const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
 

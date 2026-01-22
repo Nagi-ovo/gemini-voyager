@@ -245,8 +245,8 @@ function ensurePlaceholder(container: HTMLElement) {
 }
 
 export function startInputCollapse() {
-    // Check if feature is enabled (default: true)
-    chrome.storage?.sync?.get({ gvInputCollapseEnabled: true }, (res) => {
+    // Check if feature is enabled (default: false)
+    chrome.storage?.sync?.get({ gvInputCollapseEnabled: false }, (res) => {
         if (res?.gvInputCollapseEnabled === false) {
             // Feature is disabled, don't initialize
             console.log('[Gemini Voyager] Input collapse is disabled');
@@ -325,10 +325,10 @@ function initInputCollapse() {
     // Auto-expand the input area when a file is dragged into the window.
     document.addEventListener('dragenter', (e) => {
         if (e.dataTransfer?.types.includes('Files')) {
-             const container = getInputContainer();
-             if (container && container.classList.contains(COLLAPSED_CLASS)) {
-                 expand(container);
-             }
+            const container = getInputContainer();
+            if (container && container.classList.contains(COLLAPSED_CLASS)) {
+                expand(container);
+            }
         }
     }, { signal, capture: true });
 
