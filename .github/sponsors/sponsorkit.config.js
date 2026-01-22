@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 export default {
   github: {
     login: 'Nagi-ovo',
+    includePastSponsors: true, // Include one-time sponsors (marked as "past" after ~1 month)
   },
 
   outputDir: '../../docs/public/assets',
