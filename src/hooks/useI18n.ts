@@ -1,6 +1,6 @@
 import enMessages from '@locales/en/messages.json';
-import zhMessages from '@locales/zh/messages.json';
 import jaMessages from '@locales/ja/messages.json';
+import zhMessages from '@locales/zh/messages.json';
 import { useState, useEffect } from 'react';
 import browser from 'webextension-polyfill';
 
