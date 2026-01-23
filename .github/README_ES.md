@@ -134,9 +134,11 @@ Selecciona múltiples conversaciones y elimínalas todas a la vez. No más borra
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Ir_a_descargar-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store" height="36">](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol)
 &nbsp;&nbsp;
+[<img src="https://img.shields.io/badge/Microsoft_Edge-Ir_a_descargar-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Microsoft Edge Add-ons" height="36">](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+&nbsp;&nbsp;
 [<img src="https://img.shields.io/badge/Firefox_Add--ons-Ir_a_descargar-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
 
-> **Estado en Tienda:** Chrome ✅ · Firefox ✅ · Edge (pendiente) · Safari (próximamente)
+> **Estado en Tienda:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (próximamente)
 
 ---
 

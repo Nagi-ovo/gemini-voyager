@@ -22,6 +22,7 @@
     <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub 下载量">
     <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店用户数">
     <img src="https://img.shields.io/chrome-web-store/rating/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店评分">
+    <img src="https://img.shields.io/badge/Edge-✓-0078D7?style=flat-square&logo=microsoft-edge" alt="Edge 商店">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店用户数">
     <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店评分">
   </p>
@@ -328,6 +329,10 @@
     <img src="https://img.shields.io/badge/Chrome%20应用商店-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome 应用商店" height="36">
   </a>
   &nbsp;&nbsp;
+  <a href="https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank">
+    <img src="https://img.shields.io/badge/Microsoft%20Edge-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Microsoft Edge Add-ons" height="36">
+  </a>
+  &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
@@ -337,7 +342,7 @@
   <sub><b>Chrome 应用商店</b>同样适用于 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 浏览器。</sub>
 </p>
 
-> **商店状态：** Chrome ✅ · Firefox ✅ · Edge（审核中）· Safari（即将推出）
+> **商店状态：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari（即将推出）
 
 <details>
 <summary>📦 手动安装</summary>

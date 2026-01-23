@@ -4,16 +4,21 @@
 
 > ⚠️ プロンプトマネージャーは Gemini Enterprise 版で唯一対応している機能です。
 
-## 1. 極めてシンプル（Chrome ウェブストア）
+## 1. 公式ストア（推奨）
 
-Chrome / Edge / Brave / Opera ユーザーにおすすめ。
-最も簡単で、自動更新され、手間いらずで安心です。
+最も簡単な方法で、自動更新に対応しています。
+
+**Chrome / Brave / Opera / Vivaldi：**
 
 [<img src="https://img.shields.io/badge/Chrome_ウェブストア-ダウンロード-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome ウェブストアからインストール" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol)
 
-1. 上のボタンをクリックします。
-2. **Chrome に追加** をクリックします。
-3. 完了。
+**Microsoft Edge：**
+
+[<img src="https://img.shields.io/badge/Microsoft_Edge-ダウンロード-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Microsoft Edge Add-ons からインストール" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+
+**Firefox：**
+
+[<img src="https://img.shields.io/badge/Firefox_Add--ons-ダウンロード-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons からインストール" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
 
 ## 2. 手動インストール（最新版）
 
@@ -27,15 +32,7 @@ Chrome / Edge / Brave / Opera ユーザーにおすすめ。
 4. **デベロッパーモード**（右上）をオンにします。
 5. **パッケージ化されていない拡張機能を読み込む** をクリックし、先ほど解凍したフォルダを選択します。
 
-## 3. Firefox
-
-**方法 1：Firefox Add-ons ストア（推奨）**
-
-[![Firefox Add-ons からインストール](https://img.shields.io/badge/Firefox_Add--ons-ダウンロード-FF7139?style=for-the-badge&logo=firefox&logoColor=white)](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
-
-最も簡単な方法です。公式ストアからインストールし、自動更新されます。
-
-**方法 2：XPI ファイル（手動インストール）**
+**Firefox：**
 
 1. [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) から最新の `gemini-voyager-firefox-vX.Y.Z.xpi` をダウンロードします。
 2. アドオン管理ページ (`about:addons`) を開きます。
@@ -43,7 +40,7 @@ Chrome / Edge / Brave / Opera ユーザーにおすすめ。
 
 > 💡 XPI ファイルは Mozilla 公式の署名済みであり、すべての Firefox バージョンで恒久的にインストール可能です。
 
-## 4. Safari (macOS)
+## 3. Safari (macOS)
 
 1. [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) から `gemini-voyager-safari-vX.Y.Z.zip` をダウンロードします。
 2. 解凍します。

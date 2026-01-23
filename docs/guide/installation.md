@@ -4,16 +4,21 @@
 
 > ⚠️ 提示词管理器是唯一支持 Gemini 企业版的功能。
 
-## 1. 极简（Chrome 应用店）
+## 1. 官方商店（推荐）
 
-Chrome, Edge, Brave, Opera 用户首选。
-最简单，自动更新，无忧无虑。
+最简单的方式，支持自动更新。
+
+**Chrome / Brave / Opera / Vivaldi：**
 
 [<img src="https://img.shields.io/badge/Chrome_应用店-前往下载-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 网上应用店安装" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol)
 
-1. 点上面按钮。
-2. 点 **添加至 Chrome**。
-3. 搞定。
+**Microsoft Edge：**
+
+[<img src="https://img.shields.io/badge/Microsoft_Edge-前往下载-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="从 Microsoft Edge Add-ons 安装" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+
+**Firefox：**
+
+[<img src="https://img.shields.io/badge/Firefox_Add--ons-前往下载-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="从 Firefox Add-ons 安装" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
 
 ## 2. 手动（抢鲜版）
 
@@ -27,15 +32,7 @@ Chrome, Edge, Brave, Opera 用户首选。
 4. 开 **开发者模式** (右上角)。
 5. 点 **加载已解压的扩展程序**，选刚才的文件夹。
 
-## 3. Firefox
-
-**方法一：Firefox Add-ons 商店（推荐）**
-
-[![从 Firefox Add-ons 安装](https://img.shields.io/badge/Firefox_Add--ons-前往下载-FF7139?style=for-the-badge&logo=firefox&logoColor=white)](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
-
-最简单的方式。从官方商店安装，自动更新。
-
-**方法二：XPI 文件（手动安装）**
+**Firefox：**
 
 1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下最新的 `gemini-voyager-firefox-vX.Y.Z.xpi`。
 2. 打开扩展管理页 (`about:addons`)。
@@ -43,7 +40,7 @@ Chrome, Edge, Brave, Opera 用户首选。
 
 > 💡 XPI 文件已获 Mozilla 官方签名，可在所有 Firefox 版本中永久安装。
 
-## 4. Safari (macOS)
+## 3. Safari (macOS)
 
 1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下 `gemini-voyager-safari-vX.Y.Z.zip`。
 2. 解压。

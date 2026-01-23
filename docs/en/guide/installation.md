@@ -4,16 +4,21 @@ Choose your path.
 
 > ⚠️ Note: Prompt Manager is the only feature that supports Gemini for Enterprise.
 
-## 1. The Easy Way (Chrome Web Store)
+## 1. Extension Stores (Recommended)
 
-For Chrome, Edge, Brave, and Opera users.
-This is the simplest way to get started. Updates are automatic.
+The simplest way to get started. Updates are automatic.
+
+**Chrome / Brave / Opera / Vivaldi:**
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol)
 
-1. Click the button above.
-2. Click **Add to Chrome**.
-3. You're done.
+**Microsoft Edge:**
+
+[<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Install from Microsoft Edge Add-ons" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+
+**Firefox:**
+
+[<img src="https://img.shields.io/badge/Firefox_Add--ons-Download-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Install from Firefox Add-ons" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
 
 ## 2. The Manual Way (Latest Features)
 
@@ -27,15 +32,7 @@ The Web Store review process can be slow. If you want the cutting-edge version i
 4. Enable **Developer mode** (top right).
 5. Click **Load unpacked** and select the folder you just unzipped.
 
-## 3. Firefox
-
-**Method 1: Firefox Add-ons (Recommended)**
-
-[![Install from Firefox Add-ons](https://img.shields.io/badge/Firefox_Add--ons-Download-FF7139?style=for-the-badge&logo=firefox&logoColor=white)](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
-
-The easiest way. Install from the official store with automatic updates.
-
-**Method 2: XPI File (Manual Install)**
+**For Firefox:**
 
 1. Download the latest `gemini-voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Open the Add-ons Manager (`about:addons`).
@@ -43,7 +40,7 @@ The easiest way. Install from the official store with automatic updates.
 
 > 💡 The XPI file is officially signed by Mozilla and can be permanently installed in all Firefox versions.
 
-## 4. Safari (macOS)
+## 3. Safari (macOS)
 
 1. Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Unzip the file.
