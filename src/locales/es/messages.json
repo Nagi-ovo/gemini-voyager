@@ -720,7 +720,7 @@
     "description": "Sync mode manual option"
   },
   "syncNow": {
-    "message": "Sincronizar Ahora",
+    "message": "Sincronizar",
     "description": "Sync now button"
   },
   "lastSynced": {
@@ -756,11 +756,11 @@
     "description": "Upload button label"
   },
   "syncMerge": {
-    "message": "Descargar y Fusionar",
+    "message": "Fusionar",
     "description": "Merge button label"
   },
   "syncMode": {
-    "message": "Modo de Sincronización",
+    "message": "Modo sinc.",
     "description": "Sync mode label"
   },
   "minutesAgo": {
