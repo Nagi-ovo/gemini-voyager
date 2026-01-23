@@ -107,7 +107,7 @@ interface SettingsUpdate {
 }
 
 export default function Popup() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
@@ -557,6 +557,8 @@ export default function Popup() {
   const releaseUrl = extVersion
     ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/${currentReleaseTag ?? `v${extVersion}`}`
     : 'https://github.com/Nagi-ovo/gemini-voyager/releases';
+
+  const websiteUrl = language === 'zh' ? 'https://voyager.nagi.fun' : `https://voyager.nagi.fun/${language}`;
 
   // Show starred history if requested
   if (showStarredHistory) {
@@ -1063,24 +1065,41 @@ export default function Popup() {
       </div>
 
       {/* Footer */}
-      <div className="bg-linear-to-br from-secondary/30 via-accent/10 to-transparent border-t border-border/50 px-5 py-4 flex items-center justify-between gap-3 backdrop-blur-sm">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground/80">{t('extensionVersion')}</span>
+      <div className="bg-linear-to-br from-secondary/30 via-accent/10 to-transparent border-t border-border/50 px-5 py-4 flex flex-col gap-3 backdrop-blur-sm">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground/80">{t('extensionVersion')}</span>
+            <a
+              href={releaseUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-primary hover:text-primary/80 transition-colors"
+              title={extVersion ? extVersion : undefined}
+            >
+              {extVersion ?? '...'}
+            </a>
+          </div>
+
           <a
-            href={releaseUrl}
+            href={websiteUrl}
             target="_blank"
             rel="noreferrer"
-            className="font-semibold text-primary hover:text-primary/80 transition-colors"
-            title={extVersion ? extVersion : undefined}
+            className="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5"
           >
-            {extVersion ?? '...'}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            {t('officialWebsite')}
           </a>
         </div>
+
         <a
           href="https://github.com/Nagi-ovo/gemini-voyager"
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:scale-105 active:scale-95"
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
           title={t('starProject')}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">

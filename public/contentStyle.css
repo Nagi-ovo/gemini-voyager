@@ -1647,14 +1647,15 @@ html.dark-theme .gv-pm-expand-btn:hover {
   display: none;
 }
 
-/* Primary button (Backup) */
-.gv-pm-backup-btn {
+/* Primary actions row (Backup & Docs) - Outlined style */
+.gv-pm-backup-btn,
+.gv-pm-website-btn {
   height: 36px;
   border-radius: 8px;
   padding: 0 16px;
-  background: oklch(0.7227 0.1920 149.5793);
-  border: none;
-  color: #ffffff;
+  background: transparent;
+  border: 1px solid oklch(0.7227 0.1920 149.5793);
+  color: oklch(0.7227 0.1920 149.5793);
   flex: 1;
   font-size: 13px;
   font-weight: 600;
@@ -1666,18 +1667,30 @@ html.dark-theme .gv-pm-expand-btn:hover {
   box-sizing: border-box;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  box-shadow: none;
 }
 
-.gv-pm-backup-btn:hover {
-  background: oklch(0.7527 0.2120 149.5793);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+.gv-pm-backup-btn:hover,
+.gv-pm-website-btn:hover {
+  background: oklch(0.7227 0.1920 149.5793 / 0.1);
   transform: translateY(-1px);
 }
 
-.gv-pm-backup-btn:active {
+.gv-pm-backup-btn:active,
+.gv-pm-website-btn:active {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.theme-host.dark-theme .gv-pm-backup-btn,
+.theme-host.dark-theme .gv-pm-website-btn {
+  border-color: oklch(0.7729 0.1535 163.2231);
+  color: oklch(0.7729 0.1535 163.2231);
+}
+
+.theme-host.dark-theme .gv-pm-backup-btn:hover,
+.theme-host.dark-theme .gv-pm-website-btn:hover {
+  background: oklch(0.7729 0.1535 163.2231 / 0.15);
 }
 
 /* Secondary buttons (Import/Export) */

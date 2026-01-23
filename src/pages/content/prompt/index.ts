@@ -512,9 +512,16 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     backupBtn.textContent = '💾 ' + i18n.t('pm_backup');
     backupBtn.title = i18n.t('pm_backup_tooltip');
 
+    // Official Website button - primary action (right side)
+    const websiteBtn = createEl('a', 'gv-pm-website-btn');
+    websiteBtn.target = '_blank';
+    websiteBtn.rel = 'noreferrer';
+    // Initial text/href will be set in refreshUITexts
+
     // Primary actions container
     const primaryActions = createEl('div', 'gv-pm-footer-actions');
     primaryActions.appendChild(backupBtn);
+    primaryActions.appendChild(websiteBtn);
 
     // Secondary actions container
     const secondaryActions = createEl('div', 'gv-pm-footer-secondary');
@@ -841,6 +848,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       exportBtn.textContent = i18n.t('pm_export');
       backupBtn.textContent = '💾 ' + i18n.t('pm_backup');
       backupBtn.title = i18n.t('pm_backup_tooltip');
+      
+      // Update website button
+      websiteBtn.textContent = '🌐 ' + i18n.t('officialDocs');
+      i18n.get().then(lang => {
+        websiteBtn.href = lang === 'zh' ? 'https://voyager.nagi.fun/guide/sponsor' : `https://voyager.nagi.fun/${lang}/guide/sponsor`;
+      });
+
       settingsBtn.textContent = i18n.t('pm_settings');
       settingsBtn.title = i18n.t('pm_settings_tooltip');
       gh.title = i18n.t('starProject');

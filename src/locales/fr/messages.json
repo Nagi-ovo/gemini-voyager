@@ -223,6 +223,10 @@
     "message": "Me soutenir ⭐",
     "description": "Github callout"
   },
+  "officialDocs": {
+    "message": "Documentation",
+    "description": "Official docs link"
+  },
   "exportChatJson": {
     "message": "Exporter l'historique",
     "description": "Tooltip for export button"

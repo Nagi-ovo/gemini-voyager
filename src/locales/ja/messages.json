@@ -219,12 +219,15 @@
         "message": "更新する",
         "description": "CTA to update to latest version"
     },
-    "starProject": {
-        "message": "応援する ⭐",
-        "description": "Github callout"
-    },
-    "exportChatJson": {
-        "message": "チャット履歴をエクスポート",
+        "starProject": {
+          "message": "応援する ⭐",
+          "description": "Github callout"
+        },
+        "officialDocs": {
+          "message": "公式ドキュメント",
+          "description": "Official docs link"
+        },
+        "exportChatJson": {        "message": "チャット履歴をエクスポート",
         "description": "Tooltip for export button"
     },
     "folder_title": {
