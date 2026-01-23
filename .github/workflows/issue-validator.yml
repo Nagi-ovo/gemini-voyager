@@ -42,7 +42,7 @@ jobs:
             if (!version || version === PLACEHOLDER_VERSION) {
               failureReason = 'Missing or default extension version.';
             }
-            
+
             // 2. Check Steps
             else if (!steps || steps.length < MIN_STEPS_LENGTH) {
                failureReason = 'Reproduction steps are too short (less than 10 characters).';

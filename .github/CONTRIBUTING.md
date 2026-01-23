@@ -13,6 +13,7 @@ This document provides guidelines and instructions for contributing. We welcome 
 **We explicitly reject AI-generated PRs that have not been manually verified.**
 
 While AI tools are great assistants, "lazy" copy-paste contributions waste maintainer time.
+
 - **Low-quality AI PRs** will be closed immediately without discussion.
 - **PRs without explanation** of the logic or missing necessary tests will be rejected.
 - You must understand and take responsibility for every line of code you submit.
@@ -278,6 +279,7 @@ By contributing, you agree that your contributions will be licensed under the [M
 **本项目拒绝接受任何未经人工复核的 AI 生成的 PR。**
 
 虽然 AI 是很好的辅助工具，但“懒惰”的复制粘贴贡献会浪费维护者的时间。
+
 - **低质量的 AI PR** 如果发现，将直接关闭且不予讨论。
 - **缺乏逻辑解释** 或缺少必要测试的 PR 将被拒绝。
 - 你必须理解并对你提交的每一行代码负责。

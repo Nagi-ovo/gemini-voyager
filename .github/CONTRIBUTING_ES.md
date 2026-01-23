@@ -9,6 +9,7 @@ Este documento proporciona pautas e instrucciones para contribuir. Damos la bien
 **Rechazamos explícitamente los PR generados por IA que no hayan sido verificados manualmente.**
 
 Aunque las herramientas de IA son grandes asistentes, las contribuciones de "copiar y pegar" sin revisión hacen perder tiempo a los mantenedores.
+
 - **Los PR de IA de baja calidad** se cerrarán inmediatamente sin discusión.
 - **Los PR sin explicación** de la lógica o que carezcan de las pruebas necesarias serán rechazados.
 - Debes entender y asumir la responsabilidad de cada línea de código que envíes.
@@ -224,13 +225,13 @@ Para agregar soporte para un nuevo Gem (Gems oficiales de Google o Gems personal
 
 Usa nombres de iconos válidos de [Google Material Symbols](https://fonts.google.com/icons):
 
-| Icono          | Caso de Uso             |
-| -------------- | ----------------------- |
-| `auto_stories` | Aprendizaje, Educación  |
-| `lightbulb`    | Ideas, Lluvia de ideas  |
-| `work`         | Carrera, Profesional    |
-| `code`         | Programación, Técnica   |
-| `analytics`    | Datos, Análisis         |
+| Icono          | Caso de Uso            |
+| -------------- | ---------------------- |
+| `auto_stories` | Aprendizaje, Educación |
+| `lightbulb`    | Ideas, Lluvia de ideas |
+| `work`         | Carrera, Profesional   |
+| `code`         | Programación, Técnica  |
+| `analytics`    | Datos, Análisis        |
 
 ---
 

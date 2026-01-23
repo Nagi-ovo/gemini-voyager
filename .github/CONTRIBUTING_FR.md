@@ -9,6 +9,7 @@ Ce document fournit des directives et des instructions pour contribuer. Nous acc
 **Nous rejetons explicitement les PR générées par l'IA qui n'ont pas été vérifiées manuellement.**
 
 Bien que les outils d'IA soient d'excellents assistants, les contributions "paresseuses" de copier-coller font perdre du temps aux mainteneurs.
+
 - **Les PR d'IA de mauvaise qualité** seront fermées immédiatement sans discussion.
 - **Les PR sans explication** de la logique ou manquant de tests nécessaires seront rejetées.
 - Vous devez comprendre et assumer la responsabilité de chaque ligne de code que vous soumettez.
@@ -82,16 +83,16 @@ bun install
 
 ### Commandes Disponibles
 
-| Commande              | Description                                             |
-| --------------------- | ------------------------------------------------------- |
-| `bun run dev`         | Démarrer le mode dev Chrome avec rechargement à chaud   |
-| `bun run dev:firefox` | Démarrer le mode dev Firefox                            |
-| `bun run dev:safari`  | Démarrer le mode dev Safari (macOS uniquement)          |
-| `bun run build`       | Build de production pour Chrome                         |
-| `bun run build:all`   | Build de production pour tous les navigateurs           |
-| `bun run lint`        | Exécuter ESLint avec correction automatique             |
-| `bun run typecheck`   | Exécuter la vérification de type TypeScript             |
-| `bun run test`        | Exécuter la suite de tests                              |
+| Commande              | Description                                           |
+| --------------------- | ----------------------------------------------------- |
+| `bun run dev`         | Démarrer le mode dev Chrome avec rechargement à chaud |
+| `bun run dev:firefox` | Démarrer le mode dev Firefox                          |
+| `bun run dev:safari`  | Démarrer le mode dev Safari (macOS uniquement)        |
+| `bun run build`       | Build de production pour Chrome                       |
+| `bun run build:all`   | Build de production pour tous les navigateurs         |
+| `bun run lint`        | Exécuter ESLint avec correction automatique           |
+| `bun run typecheck`   | Exécuter la vérification de type TypeScript           |
+| `bun run test`        | Exécuter la suite de tests                            |
 
 ### Charger l'Extension
 
@@ -224,13 +225,13 @@ Pour ajouter le support d'un nouveau Gem (Gems officiels Google ou Gems personna
 
 Utilisez des noms d'icônes valides de [Google Material Symbols](https://fonts.google.com/icons) :
 
-| Icône          | Cas d'Utilisation      |
-| -------------- | ---------------------- |
-| `auto_stories` | Apprentissage, Éducation|
-| `lightbulb`    | Idées, Brainstorming   |
-| `work`         | Carrière, Professionnel|
-| `code`         | Programmation, Technique|
-| `analytics`    | Données, Analyse       |
+| Icône          | Cas d'Utilisation        |
+| -------------- | ------------------------ |
+| `auto_stories` | Apprentissage, Éducation |
+| `lightbulb`    | Idées, Brainstorming     |
+| `work`         | Carrière, Professionnel  |
+| `code`         | Programmation, Technique |
+| `analytics`    | Données, Analyse         |
 
 ---
 
