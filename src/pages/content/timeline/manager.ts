@@ -2562,8 +2562,39 @@ export class TimelineManager {
       return;
     }
 
+    if (!this.canEnqueueNavigation(direction)) {
+      return;
+    }
+
     this.navigationQueue.push(direction);
     this.processNavigationQueue();
+  }
+
+  private canEnqueueNavigation(direction: 'previous' | 'next'): boolean {
+    if (this.markers.length === 0) return false;
+
+    const currentIndex = this.getActiveIndex();
+    if (currentIndex < 0) return true;
+
+    const isAtStart = currentIndex === 0;
+    const isAtEnd = currentIndex === this.markers.length - 1;
+
+    const isBoundaryBlocked =
+      (direction === 'previous' && isAtStart) || (direction === 'next' && isAtEnd);
+    if (!isBoundaryBlocked) return true;
+
+    return this.shouldAttemptRefreshForNavigation();
+  }
+
+  private shouldAttemptRefreshForNavigation(): boolean {
+    if (!this.userTurnSelector) return false;
+
+    const documentCount = document.querySelectorAll(this.userTurnSelector).length;
+    const containersDisconnected =
+      (this.conversationContainer ? !this.conversationContainer.isConnected : true) ||
+      (this.scrollContainer ? !this.scrollContainer.isConnected : true);
+
+    return containersDisconnected || documentCount > this.markers.length;
   }
 
   /**
@@ -2627,6 +2658,7 @@ export class TimelineManager {
   private async navigateToPreviousNode(): Promise<void> {
     if (this.markers.length === 0) return;
 
+    this.maybeRefreshMarkersForNavigation('previous');
     const currentIndex = this.getActiveIndex();
     const targetIndex = currentIndex <= 0 ? 0 : currentIndex - 1;
 
@@ -2639,10 +2671,95 @@ export class TimelineManager {
   private async navigateToNextNode(): Promise<void> {
     if (this.markers.length === 0) return;
 
+    this.maybeRefreshMarkersForNavigation('next');
     const currentIndex = this.getActiveIndex();
     const targetIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, this.markers.length - 1);
 
     await this.performNodeNavigation(targetIndex, currentIndex);
+  }
+
+  private maybeRefreshMarkersForNavigation(direction: 'previous' | 'next'): void {
+    if (!this.userTurnSelector) return;
+
+    const currentIndex = this.getActiveIndex();
+    const isAtStart = currentIndex === 0;
+    const isAtEnd = currentIndex >= 0 && currentIndex === this.markers.length - 1;
+
+    const shouldAttemptRefresh =
+      (direction === 'previous' && isAtStart) || (direction === 'next' && isAtEnd);
+    if (!shouldAttemptRefresh) return;
+
+    if (!this.shouldAttemptRefreshForNavigation()) return;
+
+    const refreshed = this.refreshCriticalElementsFromDocument();
+    if (!refreshed) return;
+
+    this.recalculateAndRenderMarkers();
+  }
+
+  private refreshCriticalElementsFromDocument(): boolean {
+    if (!this.userTurnSelector) return false;
+
+    const firstTurn = document.querySelector(this.userTurnSelector) as HTMLElement | null;
+    if (!firstTurn) return false;
+
+    const nextConversationContainer =
+      (document.querySelector('main') as HTMLElement | null) || (document.body as HTMLElement);
+    this.conversationContainer = nextConversationContainer;
+
+    let nextScrollContainer: HTMLElement | null = null;
+    let p: HTMLElement | null = firstTurn;
+    while (p && p !== document.body) {
+      const st = getComputedStyle(p);
+      if (st.overflowY === 'auto' || st.overflowY === 'scroll') {
+        nextScrollContainer = p;
+        break;
+      }
+      p = p.parentElement;
+    }
+    if (!nextScrollContainer) {
+      nextScrollContainer =
+        (document.scrollingElement as HTMLElement | null) ||
+        (document.documentElement as HTMLElement | null) ||
+        (document.body as unknown as HTMLElement);
+    }
+
+    const scrollContainerChanged = this.scrollContainer !== nextScrollContainer;
+    if (scrollContainerChanged) {
+      if (this.scrollContainer && this.onScroll) {
+        try {
+          this.scrollContainer.removeEventListener('scroll', this.onScroll);
+        } catch {}
+      }
+      this.scrollContainer = nextScrollContainer;
+      if (this.scrollContainer && this.onScroll) {
+        this.scrollContainer.addEventListener('scroll', this.onScroll, { passive: true });
+      }
+    }
+
+    if (this.mutationObserver && this.conversationContainer) {
+      try {
+        this.mutationObserver.disconnect();
+        this.mutationObserver.observe(this.conversationContainer, {
+          childList: true,
+          subtree: true,
+        });
+      } catch {}
+    }
+
+    if (this.intersectionObserver && this.scrollContainer) {
+      try {
+        this.intersectionObserver.disconnect();
+        this.intersectionObserver = new IntersectionObserver(
+          () => {
+            this.scheduleScrollSync();
+          },
+          { root: this.scrollContainer, threshold: 0.1, rootMargin: '-40% 0px -59% 0px' }
+        );
+      } catch {}
+    }
+
+    return true;
   }
 
   /**
