@@ -45,7 +45,9 @@
 <p align="center">
   <a href="https://voyager.nagi.fun">📖 文档</a> • 
   <a href="../README.md">English</a> • 
-  <a href="./README_JA.md">日本語</a>
+  <a href="./README_JA.md">日本語</a> •
+  <a href="./README_FR.md">Français</a> •
+  <a href="./README_ES.md">Español</a>
 </p>
 
 ---
