@@ -42,7 +42,8 @@
   <a href="https://voyager.nagi.fun/en">📖 Documentation</a> • 
   <a href="./.github/README_ZH.md">中文说明</a> •
   <a href="./.github/README_JA.md">日本語</a> •
-  <a href="./.github/README_FR.md">Français</a>
+  <a href="./.github/README_FR.md">Français</a> •
+  <a href="./.github/README_ES.md">Español</a>
 </p>
 
 ---

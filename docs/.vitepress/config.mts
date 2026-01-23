@@ -185,6 +185,50 @@ export default defineConfig({
                     copyright: 'Licence MIT | Copyright © 2025 Jesse Zhang | <a href="/fr/privacy">Politique de Confidentialité</a>'
                 }
             }
+        },
+        es: {
+            label: 'Español',
+            lang: 'es-ES',
+            link: '/es/',
+            themeConfig: {
+                nav: [
+                    { text: 'Inicio', link: '/es/' },
+                    { text: 'Guía', link: '/es/guide/installation' },
+                ],
+                sidebar: [
+                    {
+                        text: 'Introducción',
+                        items: [
+                            { text: 'Instalación', link: '/es/guide/installation' },
+                            { text: 'Comenzar', link: '/es/guide/getting-started' },
+                            { text: 'Patrocinar', link: '/es/guide/sponsor' },
+                            { text: 'Comunidad', link: '/es/guide/community' }
+                        ]
+                    },
+                    {
+                        text: 'Funcionalidades',
+                        items: [
+                            { text: 'Navegación de Línea de Tiempo', link: '/es/guide/timeline' },
+                            { text: 'Respuesta con Cita', link: '/es/guide/quote-reply' },
+                            { text: 'Carpetas', link: '/es/guide/folders' },
+                            { text: 'Eliminación por Lote', link: '/es/guide/batch-delete' },
+                            { text: 'Biblioteca de Prompts', link: '/es/guide/prompts' },
+                            { text: 'Sitios Personalizados', link: '/es/guide/custom-websites' },
+                            { text: 'Exportación de Chat', link: '/es/guide/export' },
+                            { text: 'Exportación Deep Research', link: '/es/guide/deep-research' },
+                            { text: 'Gráficos Mermaid', link: '/es/guide/mermaid' },
+                            { text: 'NanoBanana', link: '/es/guide/nanobanana' },
+                            { text: 'Ancho de Chat', link: '/es/guide/settings' },
+                            { text: 'Colapso de Entrada', link: '/es/guide/input-collapse' },
+                            { text: 'Sincronización de Título de Pestaña', link: '/es/guide/tab-title' }
+                        ]
+                    }
+                ],
+                footer: {
+                    message: 'Proyecto de Código Abierto. Danos una ⭐ en <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> si te gusta.',
+                    copyright: 'Licencia MIT | Copyright © 2025 Jesse Zhang | <a href="/es/privacy">Política de Privacidad</a>'
+                }
+            }
         }
     },
 
