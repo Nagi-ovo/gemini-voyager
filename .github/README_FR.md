@@ -35,6 +35,9 @@
   </p>
 </div>
 
+> [!CAUTION]
+> **Déclaration de l'Auteur** : Ce projet **N'ACCEPTE AUCUNE** forme de parrainage ou de publicité provenant de sites miroirs LLM, de produits illégaux ou de produits impliquant des fuites de données privées des utilisateurs.
+
 <p align="center">
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>

@@ -23,6 +23,9 @@
   </p>
 </div>
 
+> [!CAUTION]
+> **Declaración del Autor**: Este proyecto **NO acepta** ninguna forma de patrocinio o publicidad de sitios espejo de LLM, productos ilegales o productos que involucren filtraciones de privacidad del usuario.
+
 <p align="center">
   <a href="https://voyager.nagi.fun/es">📖 Documentación</a> • 
   <a href="../README.md">English</a> •
