@@ -618,7 +618,7 @@ html.dark-theme .gv-pm-trigger {
 
 .gv-pm-panel {
   position: fixed;
-  width: 460px;
+  width: 440px;
   max-width: calc(100vw - 20px);
   max-height: min(75vh, 600px);
   overflow: hidden;
