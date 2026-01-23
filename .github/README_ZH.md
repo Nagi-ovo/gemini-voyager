@@ -35,6 +35,9 @@
   </p>
 </div>
 
+> [!CAUTION]
+> **作者严正声明**：本项目**不接受**任何形式的 LLM 镜像站、违法产品或涉及用户隐私泄露产品的广告位赞助。请勿扰，谢谢。
+
 <p align="center">
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>

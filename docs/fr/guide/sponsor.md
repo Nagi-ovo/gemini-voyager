@@ -1,5 +1,8 @@
 # Sponsor
 
+> [!CAUTION]
+> **Déclaration de l'Auteur** : Ce projet **N'ACCEPTE AUCUNE** forme de parrainage ou de publicité provenant de sites miroirs LLM, de produits illégaux ou de produits impliquant des fuites de données privées des utilisateurs.
+
 Maintenir des projets open-source est principalement motivé par la passion (et le café) ☕
 
 **[Gemini Voyager](https://github.com/Nagi-ovo/gemini-voyager)** est une extension de navigateur entièrement gratuite et open-source conçue pour améliorer votre expérience Gemini. Si cette extension vous aide à utiliser Gemini plus efficacement, envisagez de soutenir le développement continu et la maintenance de ce projet.

@@ -1,5 +1,8 @@
 # Sponsor
 
+> [!CAUTION]
+> **Author's Statement**: This project **DOES NOT accept** any form of sponsorship or advertising from LLM mirror sites, illegal products, or products involving user privacy leaks. Please do not contact for such inquiries.
+
 Maintaining open-source projects is mainly driven by passion (and coffee) ☕
 
 **[Gemini Voyager](https://github.com/Nagi-ovo/gemini-voyager)** is a completely free and open-source browser extension designed to enhance your Gemini experience. If this extension helps you use Gemini more efficiently, please consider supporting the continued development and maintenance of this project.

@@ -1,5 +1,8 @@
 # Patrocinar
 
+> [!CAUTION]
+> **Declaración del Autor**: Este proyecto **NO acepta** ninguna forma de patrocinio o publicidad de sitios espejo de LLM, productos ilegales o productos que involucren filtraciones de privacidad del usuario.
+
 El mantenimiento de proyectos de código abierto se alimenta principalmente de pasión (y café) ☕
 
 **[Gemini Voyager](https://github.com/Nagi-ovo/gemini-voyager)** es una extensión de navegador completamente gratuita y de código abierto diseñada para mejorar tu experiencia con Gemini. Si esta extensión te ayuda a usar Gemini de manera más eficiente, te agradezco tu apoyo para seguir desarrollando y manteniendo este proyecto a través de los siguientes métodos.
