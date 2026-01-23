@@ -1836,7 +1836,8 @@ html.dark-theme .gv-pm-expand-btn:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  text-align: center;
 }
 
 .theme-host.light-theme .gv-pm-gh {
