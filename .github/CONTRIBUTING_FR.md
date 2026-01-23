@@ -221,7 +221,7 @@ Gemini Voyager améliore l'expérience de chat Gemini AI avec :
 
 - Navigation par chronologie
 - Organisation par dossiers
-- Bibliothèque de prompts
+- Coffre-fort de prompts
 - Exportation de chat
 - Personnalisation de l'interface utilisateur
 

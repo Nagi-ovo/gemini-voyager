@@ -24,7 +24,7 @@ features:
     title: Carpetas
     details: Adiós al caos. Sensación nativa, operación intuitiva, todo organizado.
   - icon: ✨
-    title: Biblioteca de Prompts
+    title: Bóveda de Prompts
     details: Captura la inspiración. Atesora cada uno de tus momentos brillantes.
   - icon: 💬
     title: Respuesta con Cita

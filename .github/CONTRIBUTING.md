@@ -225,7 +225,7 @@ Gemini Voyager enhances the Gemini AI chat experience with:
 
 - Timeline navigation
 - Folder organization
-- Prompt library
+- Prompt vault
 - Chat export
 - UI customization
 
@@ -458,7 +458,7 @@ Gemini Voyager 通过以下功能增强 Gemini AI 聊天体验：
 
 - 时间线导航
 - 文件夹组织
-- 提示词库
+- 指令宝库
 - 聊天导出
 - UI 自定义
 

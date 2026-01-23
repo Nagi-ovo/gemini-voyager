@@ -221,7 +221,7 @@ Gemini Voyager mejora la experiencia de chat de Gemini AI con:
 
 - Navegación por línea de tiempo
 - Organización de carpetas
-- Biblioteca de prompts
+- Bóveda de prompts
 - Exportación de chat
 - Personalización de UI
 

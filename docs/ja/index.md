@@ -24,7 +24,7 @@ features:
     title: フォルダ
     details: 混沌に別れを。直感的な操作で、驚くほど整理整頓。
   - icon: ✨
-    title: プロンプトライブラリ
+    title: プロンプトヴォルト
     details: 閃きを逃さない。珠玉のアイデアを、大切に保管。
   - icon: 💬
     title: 引用返信

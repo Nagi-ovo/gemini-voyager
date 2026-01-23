@@ -1,6 +1,6 @@
 # Comunidad y Comentarios
 
-Valoramos mucho la voz de cada usuario. Ya sea que encuentres un error, tengas una sugerencia de funcionalidad o quieras compartir tu biblioteca de prompts, puedes contactarnos a través de los siguientes canales.
+Valoramos mucho la voz de cada usuario. Ya sea que encuentres un error, tengas una sugerencia de funcionalidad o quieras compartir tu bóveda de prompts, puedes contactarnos a través de los siguientes canales.
 
 ## 📢 Mantente Informado
 

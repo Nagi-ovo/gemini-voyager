@@ -24,7 +24,7 @@ features:
     title: Folders
     details: Order from chaos. Drag, drop, done.
   - icon: ✨
-    title: Library
+    title: Vault
     details: Your genius, captured. Save and reuse your best prompts.
   - icon: 💬
     title: Quote Reply

@@ -1,6 +1,6 @@
 # Community & Feedback
 
-We value every user's voice. Whether you've found a bug, have a feature suggestion, or want to share your prompt library, there are several ways to get in touch.
+We value every user's voice. Whether you've found a bug, have a feature suggestion, or want to share your prompt vault, there are several ways to get in touch.
 
 ## 📢 Follow for Updates
 

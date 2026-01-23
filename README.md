@@ -3,7 +3,7 @@
   <h1>Gemini Voyager</h1>
   <h3>Make Your Gemini Experience Truly Yours ✨</h3>
   <p>
-    Navigate conversations with an elegant timeline, organize chats with folders, and build your own prompt library.<br>
+    Navigate conversations with an elegant timeline, organize chats with folders, and build your own prompt vault.<br>
     <b>It's the missing power-up for Google Gemini.</b>
   </p>
   
@@ -67,7 +67,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
 - [✨ Features](#-features)
   - [📍 Timeline Navigation](#-timeline-navigation)
   - [📂 Folder Organization](#-folder-organization)
-  - [💡 Prompt Library](#-prompt-library)
+  - [💡 Prompt Vault](#-prompt-vault)
   - [💬 Quote Reply](#-quote-reply)
   - [📐 Formula Copy](#-formula-copy)
   - [🧜‍♀️ Mermaid Diagram Rendering](#️-mermaid-diagram-rendering)
@@ -129,9 +129,9 @@ Stop digging through a messy history list. Drag and drop your chats into folders
 
 </details>
 
-### 💡 Prompt Library
+### 💡 Prompt Vault
 
-**Your personal prompt library.**
+**Your personal prompt vault.**
 Don't rewrite the same instructions. Save your best prompts and use them anywhere.
 
 - **Tag & Search**: Find the right prompt in seconds.
@@ -485,7 +485,7 @@ Thank you for helping make Gemini Voyager better! ❤️
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Gemini Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Gemini Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt library, and chat export.
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Gemini Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt vault, and chat export.
 
 ---
 

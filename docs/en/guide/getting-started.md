@@ -28,14 +28,14 @@ Look at your chat list on the left. Notice something new?
 Pick up a chat. Drag it. Drop it into a folder.
 It feels natural, doesn't it? That’s because it is. You can nest them, rename them, and finally clear the clutter from your mind.
 
-## 4. The Library
+## 4. The Vault
 
 You just wrote the perfect prompt. Don't let it disappear into the void.
 Click the **Sparkle Icon** (✨) in the input box.
 Save it. Tag it.
 
 Next time? Just click the icon to find and insert it.
-You aren't just chatting anymore. You are building a library of your own genius.
+You aren't just chatting anymore. You are building a vault of your own genius.
 
 ---
 

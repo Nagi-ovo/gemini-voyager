@@ -4,14 +4,14 @@ Vous rédigez un prompt parfait. Il résout un problème de code complexe ou éc
 Le jetez-vous ?
 Non. Vous le sauvegardez.
 
-## La Bibliothèque de Prompts
+## Le Coffre-fort de Prompts
 
 C'est votre dépôt personnel de génie.
 
 ### 1. Capturer
 
 Quand vous écrivez quelque chose de génial, cliquez sur l'icône du **Gestionnaire de Prompts** (flottant près de la zone de saisie).
-Cela fait maintenant partie de votre bibliothèque.
+Cela fait maintenant partie de votre coffre-fort.
 
 ### 2. Catégoriser
 

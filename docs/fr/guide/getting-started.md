@@ -28,14 +28,9 @@ Regardez votre liste de chats sur la gauche. Remarquez quelque chose de nouveau 
 Prenez un chat. Glissez-le. Déposez-le dans un dossier.
 Cela semble naturel, n'est-ce pas ? C'est parce que ça l'est. Vous pouvez les imbriquer, les renommer, et enfin vider votre esprit de tout désordre.
 
-## 4. La Bibliothèque
+## 4. Le Coffre-fort
 
-Vous venez d'écrire le prompt parfait. Ne le laissez pas disparaître dans le néant.
-Cliquez sur l'**Icône Étincelle** (✨) dans la zone de saisie.
-Enregistrez-le. Étiquetez-le.
-
-La prochaine fois ? Cliquez simplement sur l'icône pour le trouver et l'insérer.
-Vous ne faites plus que discuter. Vous construisez une bibliothèque de votre propre génie.
+Vous ne faites plus que discuter. Vous construisez un coffre-fort de votre propre génie.
 
 ---
 

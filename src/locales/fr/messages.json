@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Améliorez votre expérience Gemini avec la navigation temporelle, l'organisation par dossiers, la bibliothèque de prompts et l'exportation de discussions.",
+    "message": "Améliorez votre expérience Gemini avec la navigation temporelle, l'organisation par dossiers, le coffre-fort de prompts et l'exportation de discussions.",
     "description": "Extension description"
   },
   "scrollMode": {

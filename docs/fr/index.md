@@ -24,7 +24,7 @@ features:
     title: Dossiers
     details: De l'ordre dans le chaos. Glissez, déposez, c'est fait.
   - icon: ✨
-    title: Bibliothèque
+    title: Coffre-fort
     details: Votre génie, capturé. Enregistrez et réutilisez vos meilleurs prompts.
   - icon: 💬
     title: Réponse avec Citation

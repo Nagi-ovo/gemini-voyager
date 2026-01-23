@@ -1,6 +1,6 @@
 # Communauté & Feedback
 
-Nous apprécions la voix de chaque utilisateur. Que vous ayez trouvé un bug, une suggestion de fonctionnalité, ou que vous souhaitiez partager votre bibliothèque de prompts, il existe plusieurs façons de nous contacter.
+Nous apprécions la voix de chaque utilisateur. Que vous ayez trouvé un bug, une suggestion de fonctionnalité, ou que vous souhaitiez partager votre coffre-fort de prompts, il existe plusieurs façons de nous contacter.
 
 ## 📢 Suivre les Mises à Jour
 
