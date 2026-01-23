@@ -12,6 +12,7 @@
     "bump": "node scripts/bump-version.js",
     "build": "vite build --config vite.config.chrome.ts",
     "build:chrome": "vite build --config vite.config.chrome.ts",
+    "build:edge": "node scripts/build-edge.js",
     "build:firefox": "vite build --config vite.config.firefox.ts",
     "build:safari": "vite build --config vite.config.safari.ts",
     "build:all": "bun run build:chrome && bun run build:firefox && bun run build:safari",

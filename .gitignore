@@ -2,6 +2,7 @@ node_modules/
 /dist_chrome/
 /dist_firefox/
 /dist_safari/
+gemini-voyager-edge-*.zip
 
 # Vitest
 coverage/
