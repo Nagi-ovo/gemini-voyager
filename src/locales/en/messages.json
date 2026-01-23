@@ -164,8 +164,8 @@
     "description": "Settings open failed message"
   },
   "pm_backup": {
-    "message": "Backup All",
-    "description": "One-click backup button"
+    "message": "Local Backup",
+    "description": "Local backup button"
   },
   "pm_backup_tooltip": {
     "message": "Backup prompts and folders to a timestamped folder",
@@ -192,7 +192,7 @@
     "description": "Backup step 2"
   },
   "pm_backup_step3": {
-    "message": "Click the \"💾 Backup All\" button and select a backup folder",
+    "message": "Click the \"💾 Local Backup\" button and select a backup folder",
     "description": "Backup step 3"
   },
   "pm_backup_note": {

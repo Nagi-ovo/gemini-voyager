@@ -164,8 +164,8 @@
     "description": "Settings open failed message"
   },
   "pm_backup": {
-    "message": "Tout sauvegarder",
-    "description": "One-click backup button"
+    "message": "Sauvegarde locale",
+    "description": "Local backup button"
   },
   "pm_backup_tooltip": {
     "message": "Sauvegarder les prompts et dossiers dans un dossier horodaté",
@@ -192,7 +192,7 @@
     "description": "Backup step 2"
   },
   "pm_backup_step3": {
-    "message": "Cliquez sur le bouton \"💾 Tout sauvegarder\" et sélectionnez un dossier",
+    "message": "Cliquez sur le bouton \"💾 Sauvegarde locale\" et sélectionnez un dossier",
     "description": "Backup step 3"
   },
   "pm_backup_note": {

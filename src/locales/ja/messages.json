@@ -164,8 +164,8 @@
         "description": "Settings open failed message"
     },
     "pm_backup": {
-        "message": "すべてバックアップ",
-        "description": "One-click backup button"
+        "message": "ローカルバックアップ",
+        "description": "Local backup button"
     },
     "pm_backup_tooltip": {
         "message": "プロンプトとフォルダをタイムスタンプ付きフォルダにバックアップ",
@@ -192,7 +192,7 @@
         "description": "Backup step 2"
     },
     "pm_backup_step3": {
-        "message": "「💾 すべてバックアップ」ボタンをクリックし、バックアップ先フォルダを選択します",
+        "message": "「💾 ローカルバックアップ」ボタンをクリックし、バックアップ先フォルダを選択します",
         "description": "Backup step 3"
     },
     "pm_backup_note": {

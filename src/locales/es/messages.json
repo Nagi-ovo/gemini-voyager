@@ -164,8 +164,8 @@
     "description": "Settings open failed message"
   },
   "pm_backup": {
-    "message": "Respaldar Todo",
-    "description": "One-click backup button"
+    "message": "Respaldo local",
+    "description": "Local backup button"
   },
   "pm_backup_tooltip": {
     "message": "Respaldar prompts y carpetas en una carpeta con marca de tiempo",
@@ -192,7 +192,7 @@
     "description": "Backup step 2"
   },
   "pm_backup_step3": {
-    "message": "Haz clic en el botón \"💾 Respaldar Todo\" y selecciona una carpeta de respaldo",
+    "message": "Haz clic en el botón \"💾 Respaldo local\" y selecciona una carpeta de respaldo",
     "description": "Backup step 3"
   },
   "pm_backup_note": {
