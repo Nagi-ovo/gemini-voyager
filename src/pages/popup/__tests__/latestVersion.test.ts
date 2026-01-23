@@ -63,12 +63,14 @@ describe('Popup latest version helpers', () => {
       const now = 1_000_000;
       const maxAgeMs = 10_000;
 
-      expect(getCachedLatestVersion({ version: 'v1.2.3', fetchedAt: now - maxAgeMs }, now, maxAgeMs))
-        .toBeNull();
+      expect(
+        getCachedLatestVersion({ version: 'v1.2.3', fetchedAt: now - maxAgeMs }, now, maxAgeMs)
+      ).toBeNull();
       expect(getCachedLatestVersion({ version: '', fetchedAt: now - 1 }, now, maxAgeMs)).toBeNull();
-      expect(getCachedLatestVersion({ version: 'v1.2.3', fetchedAt: 'x' }, now, maxAgeMs)).toBeNull();
+      expect(
+        getCachedLatestVersion({ version: 'v1.2.3', fetchedAt: 'x' }, now, maxAgeMs)
+      ).toBeNull();
       expect(getCachedLatestVersion('x', now, maxAgeMs)).toBeNull();
     });
   });
 });
-
