@@ -8,6 +8,15 @@ Thank you for considering contributing to Gemini Voyager! 🚀
 
 This document provides guidelines and instructions for contributing. We welcome all contributions, whether it's bug fixes, new features, documentation improvements, or translations.
 
+## 🚫 AI Policy
+
+**We explicitly reject AI-generated PRs that have not been manually verified.**
+
+While AI tools are great assistants, "lazy" copy-paste contributions waste maintainer time.
+- **Low-quality AI PRs** will be closed immediately without discussion.
+- **PRs without explanation** of the logic or missing necessary tests will be rejected.
+- You must understand and take responsibility for every line of code you submit.
+
 ## Table of Contents
 
 - [Getting Started](#getting-started)
@@ -124,6 +133,16 @@ bun run test       # Run tests
 
 ---
 
+## Testing Strategy
+
+We follow a "ROI-based" testing strategy: **Test Logic, Not DOM.**
+
+1. **Must Have (Logic)**: Core services (Storage, Backup), Data parsers, and Utils. TDD is required here.
+2. **Should Have (State)**: Complex UI state (e.g., Folder reducer).
+3. **Skip (Fragile)**: Direct DOM manipulation (Content Scripts) and pure UI components. Use defensive programming instead.
+
+---
+
 ## Submitting a Pull Request
 
 ### PR Guidelines
@@ -131,8 +150,9 @@ bun run test       # Run tests
 1. **Title**: Use a clear, descriptive title (e.g., "feat: add dark mode toggle" or "fix: timeline scroll sync")
 2. **Description**: Explain what changes you made and why
 3. **User Impact**: Describe how users will be affected
-4. **Screenshots**: Include screenshots for UI changes
+4. **Visual Proof (Strict)**: For ANY UI changes or new features, you **MUST** provide screenshots or screen recordings. **No screenshot = No review/reply.**
 5. **Issue Reference**: Link related issues (e.g., "Closes #123")
+6. **Tests & Logic**: PRs must include unit tests and a clear explanation of the logic. "Magic" fixes without context are not accepted.
 
 ### Commit Message Format
 
@@ -253,6 +273,15 @@ By contributing, you agree that your contributions will be licensed under the [M
 
 本文档提供贡献的指南和说明。我们欢迎所有形式的贡献，无论是错误修复、新功能、文档改进还是翻译。
 
+## 🚫 AI 政策
+
+**本项目拒绝接受任何未经人工复核的 AI 生成的 PR。**
+
+虽然 AI 是很好的辅助工具，但“懒惰”的复制粘贴贡献会浪费维护者的时间。
+- **低质量的 AI PR** 如果发现，将直接关闭且不予讨论。
+- **缺乏逻辑解释** 或缺少必要测试的 PR 将被拒绝。
+- 你必须理解并对你提交的每一行代码负责。
+
 ## 目录
 
 - [快速开始](#快速开始)
@@ -369,6 +398,16 @@ bun run test       # 运行测试
 
 ---
 
+## 测试策略
+
+我们遵循“基于 ROI”的测试策略：**测逻辑，不测 DOM。**
+
+1. **必须测 (Logic)**：核心服务（Storage, Backup）、数据解析和工具函数。必须使用 TDD。
+2. **建议测 (State)**：复杂的 UI 状态（如文件夹 Reducer）。
+3. **跳过 (Fragile)**：直接 DOM 操作（Content Scripts）和纯 UI 组件。请使用防御性编程代替。
+
+---
+
 ## 提交 Pull Request
 
 ### PR 指南
@@ -376,8 +415,9 @@ bun run test       # 运行测试
 1. **标题**：使用清晰的描述性标题（如 "feat: add dark mode toggle" 或 "fix: timeline scroll sync"）
 2. **描述**：解释你做了什么更改以及原因
 3. **用户影响**：描述用户将如何受到影响
-4. **截图**：UI 更改请包含截图
+4. **可视化证据（严格）**：对于任何 UI 修改或新功能，**必须**提供截图或屏幕录制。**没有截图 = 不予审核/回复。**
 5. **Issue 引用**：链接相关 issue（如 "Closes #123"）
+6. **测试与逻辑**：PR 必须包含单元测试并清晰解释修改逻辑。不接受没有上下文的“魔法”修复。
 
 ### 提交信息格式
 

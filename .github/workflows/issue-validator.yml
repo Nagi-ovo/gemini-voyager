@@ -1,0 +1,95 @@
+name: Issue Validator
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Validate Issue Quality
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+
+            // --- Configuration ---
+            const MIN_STEPS_LENGTH = 10;
+            const PLACEHOLDER_VERSION = '1.1.3';
+            const PLACEHOLDER_STEPS_PART = "Go to '...'”; // Part of the default template text
+
+            // --- Parsing Logic ---
+            // Helper to extract content between markdown headers
+            function extractSection(text, headerPattern) {
+              const match = text.match(new RegExp(`${headerPattern}\s+([\s\S]*?)(?=\n###|$))`));
+              return match ? match[1].trim() : '';
+            }
+
+            // Extract fields based on ISSUE_TEMPLATE/bug_report.yml labels
+            const version = extractSection(body, '### 📦 扩展版本 \| Extension Version');
+            const steps = extractSection(body, '### 📷 复现步骤 \| Recurrence Steps');
+            const os = extractSection(body, '### 💻 系统环境 \| Operating System');
+            const browser = extractSection(body, '### 🌐 浏览器 \| Browser');
+
+            // --- Validation Logic ---
+            let failureReason = '';
+
+            // 1. Check Version
+            if (!version || version === PLACEHOLDER_VERSION) {
+              failureReason = 'Missing or default extension version.';
+            }
+            
+            // 2. Check Steps
+            else if (!steps || steps.length < MIN_STEPS_LENGTH) {
+               failureReason = 'Reproduction steps are too short (less than 10 characters).';
+            }
+            else if (steps.includes(PLACEHOLDER_STEPS_PART)) {
+               failureReason = 'Reproduction steps contain default template text.';
+            }
+
+            // --- Action ---
+            if (failureReason) {
+              console.log(`Closing issue #${issue.number}: ${failureReason}`);
+
+              // 1. Close the issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+
+              // 2. Add 'invalid' label
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['invalid']
+              });
+
+              // 3. Post strict comment
+              const comment = `
+              ❌ **Issue Closed: Low Quality Report**
+
+              This issue has been automatically closed because it lacks necessary information or uses default template text.
+              
+              Reason: **${failureReason}**
+
+              To reopen, please edit your issue to provide:
+              1. The exact **Extension Version** you are using.
+              2. Clear, detailed **Reproduction Steps** (do not use the "Go to..." template text).
+
+              > *This looks like a low quality issue report.*
+              `;
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: comment
+              });
+            }

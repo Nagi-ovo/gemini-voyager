@@ -25,8 +25,8 @@ body:
   - type: textarea
     attributes:
       label: '📝 补充信息 | Additional Information'
-      description: 'Add any other context, mockups, or screenshots about the feature request here.'
-      placeholder: 'Any additional context, mockups, or related examples...'
+      description: 'REQUIRED for UI features: Please provide mockups or screenshots. / UI 功能必填：请提供设计图或截图。'
+      placeholder: 'No screenshot = No reply (for UI features).'
   - type: checkboxes
     attributes:
       label: '💻 贡献意愿 | Contribution'

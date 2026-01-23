@@ -4,6 +4,15 @@ Merci d'envisager de contribuer à Gemini Voyager ! 🚀
 
 Ce document fournit des directives et des instructions pour contribuer. Nous accueillons toutes les contributions, qu'il s'agisse de corrections de bugs, de nouvelles fonctionnalités, d'améliorations de la documentation ou de traductions.
 
+## 🚫 Politique IA
+
+**Nous rejetons explicitement les PR générées par l'IA qui n'ont pas été vérifiées manuellement.**
+
+Bien que les outils d'IA soient d'excellents assistants, les contributions "paresseuses" de copier-coller font perdre du temps aux mainteneurs.
+- **Les PR d'IA de mauvaise qualité** seront fermées immédiatement sans discussion.
+- **Les PR sans explication** de la logique ou manquant de tests nécessaires seront rejetées.
+- Vous devez comprendre et assumer la responsabilité de chaque ligne de code que vous soumettez.
+
 ## Table des Matières
 
 - [Commencer](#commencer)
@@ -120,6 +129,16 @@ bun run test       # Exécuter les tests
 
 ---
 
+## Stratégie de Test
+
+Nous suivons une stratégie de test basée sur le ROI : **Testez la logique, pas le DOM.**
+
+1. **Indispensable (Logique)** : Services principaux (Stockage, Sauvegarde), analyseurs de données et utilitaires. Le TDD est requis ici.
+2. **Recommandé (État)** : État d'interface utilisateur complexe (ex: Reducer de dossiers).
+3. **Ignorer (Fragile)** : Manipulation directe du DOM (Scripts de contenu) et composants d'interface utilisateur purs. Utilisez plutôt la programmation défensive.
+
+---
+
 ## Soumettre une Pull Request
 
 ### Directives de PR
@@ -127,7 +146,7 @@ bun run test       # Exécuter les tests
 1. **Titre** : Utilisez un titre clair et descriptif (ex: "feat: add dark mode toggle" ou "fix: timeline scroll sync")
 2. **Description** : Expliquez quels changements vous avez effectués et pourquoi
 3. **Impact Utilisateur** : Décrivez comment les utilisateurs seront affectés
-4. **Captures d'écran** : Incluez des captures d'écran pour les changements d'interface utilisateur
+4. **Preuve Visuelle (Strict)** : Pour TOUT changement d'interface ou nouvelle fonctionnalité, vous **DEVEZ** fournir des captures d'écran ou des enregistrements. **Pas de capture = Pas de revue/réponse.**
 5. **Référence de Ticket** : Liez les tickets associés (ex: "Closes #123")
 
 ### Format du Message de Commit

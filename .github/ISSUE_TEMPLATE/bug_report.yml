@@ -3,6 +3,18 @@ description: '反馈一个问题缺陷 | Report a bug'
 title: '[Bug] '
 labels: '🐛 Bug'
 body:
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: '⚠️ 前置检查 | Essential Checklist'
+      description: '请确认您已完成以下操作 | Please confirm you have done the following'
+      options:
+        - label: '我已在 Issue 中搜索过类似问题，确认这不是一个重复的问题 / I have searched existing issues'
+          required: true
+        - label: '我理解如果未提供清晰的复现步骤或环境信息，Issue 可能会被关闭 / I understand my issue may be closed if repro steps are missing'
+          required: true
+        - label: '我确认使用的是插件的最新版本 / I am using the latest version of the extension'
+          required: true
   - type: dropdown
     attributes:
       label: '💻 系统环境 | Operating System'
@@ -56,7 +68,7 @@ body:
   - type: textarea
     attributes:
       label: '📸 截图 | Screenshots'
-      description: 'If applicable, add screenshots to help explain your problem.'
+      description: 'REQUIRED for UI issues. If we cannot see it, we will not fix it. / UI 问题必填。如果看不到问题，我们将不会修复。'
       placeholder: 'Drag and drop images here or paste image URLs'
   - type: textarea
     attributes:

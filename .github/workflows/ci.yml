@@ -23,6 +23,8 @@ jobs:
 
       - name: Install
         run: bun i
+      - name: Check Formatting
+        run: bun x prettier --check .
       - name: Lint
         run: bun run lint
       - name: Typecheck

@@ -4,6 +4,15 @@
 
 Este documento proporciona pautas e instrucciones para contribuir. Damos la bienvenida a todas las contribuciones, ya sea corrección de errores, nuevas funcionalidades, mejoras en la documentación o traducciones.
 
+## 🚫 Política de IA
+
+**Rechazamos explícitamente los PR generados por IA que no hayan sido verificados manualmente.**
+
+Aunque las herramientas de IA son grandes asistentes, las contribuciones de "copiar y pegar" sin revisión hacen perder tiempo a los mantenedores.
+- **Los PR de IA de baja calidad** se cerrarán inmediatamente sin discusión.
+- **Los PR sin explicación** de la lógica o que carezcan de las pruebas necesarias serán rechazados.
+- Debes entender y asumir la responsabilidad de cada línea de código que envíes.
+
 ## Tabla de Contenidos
 
 - [Comenzando](#comenzando)
@@ -120,6 +129,16 @@ bun run test       # Ejecutar pruebas
 
 ---
 
+## Estrategia de Pruebas
+
+Seguimos una estrategia de pruebas basada en el ROI: **Prueba la lógica, no el DOM.**
+
+1. **Imprescindible (Lógica)**: Servicios principales (Almacenamiento, Copia de seguridad), analizadores de datos y utilidades. Aquí se requiere TDD.
+2. **Recomendable (Estado)**: Estado de UI complejo (ej: Reducer de carpetas).
+3. **Omitir (Frágil)**: Manipulación directa del DOM (Content Scripts) y componentes de UI puros. Usa programación defensiva en su lugar.
+
+---
+
 ## Enviar un Pull Request
 
 ### Pautas de PR
@@ -127,7 +146,7 @@ bun run test       # Ejecutar pruebas
 1. **Título**: Usa un título claro y descriptivo (ej: "feat: add dark mode toggle" o "fix: timeline scroll sync")
 2. **Descripción**: Explica qué cambios hiciste y por qué
 3. **Impacto en el Usuario**: Describe cómo se verán afectados los usuarios
-4. **Capturas de Pantalla**: Incluye capturas de pantalla para cambios en la UI
+4. **Prueba Visual (Estricto)**: Para CUALQUIER cambio de UI o nueva funcionalidad, **DEBES** proporcionar capturas de pantalla o grabaciones. **Sin captura = Sin revisión/respuesta.**
 5. **Referencia de Problema**: Enlaza problemas relacionados (ej: "Closes #123")
 
 ### Formato de Mensaje de Commit
