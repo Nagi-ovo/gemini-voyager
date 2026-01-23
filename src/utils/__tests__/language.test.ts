@@ -19,8 +19,8 @@ describe('normalizeLanguage', () => {
   });
 
   it('falls back to en for unknown languages', () => {
-    expect(normalizeLanguage('fr')).toBe('en');
-    expect(normalizeLanguage('ko-KR')).toBe('en');
+    expect(normalizeLanguage('ko')).toBe('en');
+    expect(normalizeLanguage('de-DE')).toBe('en');
   });
 });
 
@@ -58,4 +58,3 @@ describe('extractMessageDictionary', () => {
     expect(dict).toEqual({ hello: 'Hello' });
   });
 });
-
