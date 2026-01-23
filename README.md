@@ -131,7 +131,7 @@ Stop digging through a messy history list. Drag and drop your chats into folders
 
 ### 💡 Prompt Library
 
-**Your personal prompt arsenal.**
+**Your personal prompt library.**
 Don't rewrite the same instructions. Save your best prompts and use them anywhere.
 
 - **Tag & Search**: Find the right prompt in seconds.

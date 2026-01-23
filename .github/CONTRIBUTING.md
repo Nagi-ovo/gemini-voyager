@@ -1,4 +1,4 @@
-> **🌐 Language / 语言**: [English](#contributing-to-gemini-voyager) | [中文](#贡献指南)
+> **🌐 Language / 语言**: [English](#contributing-to-gemini-voyager) | [中文](#贡献指南) | [Español](CONTRIBUTING_ES.md) | [Français](CONTRIBUTING_FR.md) | [日本語](CONTRIBUTING_JA.md)
 
 ---
 

@@ -6,7 +6,7 @@ No, guárdalo.
 
 ## Biblioteca de Inspiración
 
-Este es tu arsenal.
+Esta es tu biblioteca.
 
 ### 1. Capturar
 
