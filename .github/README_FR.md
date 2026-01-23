@@ -49,7 +49,7 @@
 
 ## 👋 Pourquoi Gemini Voyager ?
 
-Nous aimons Gemini, mais parfois nous aimerions qu'il ait juste un *peu* plus de structure.
+Nous aimons Gemini, mais parfois nous aimerions qu'il ait juste un _peu_ plus de structure.
 
 C'est pourquoi nous avons créé **Gemini Voyager**. Ce n'est pas juste un outil, c'est un compagnon qui vous aide à garder vos conversations IA organisées, accessibles et productives. Que vous soyez un chercheur jonglant avec des dizaines de fils, un développeur sauvegardant des snippets de code, ou simplement quelqu'un qui aime l'ordre, Voyager est conçu pour vous.
 
@@ -88,16 +88,20 @@ C'est pourquoi nous avons créé **Gemini Voyager**. Ce n'est pas juste un outil
 </div>
 
 ### 📍 Navigation Temporelle
+
 **Ne vous perdez plus jamais dans une longue conversation.**
 Des nœuds visuels vous permettent de voir la structure de votre chat en un coup d'œil.
+
 - **Saut instantané** : Cliquez sur un nœud pour faire défiler directement jusqu'à ce message.
 - **Aperçu du contenu** : Survolez pour voir ce qui a été dit sans faire défiler.
 - **Marquez l'essentiel** : Appui long pour mettre en favori les messages importants (synchro entre onglets !).
 - **Niveaux de Nœuds (Expérimental)** : Clic droit sur un nœud pour définir son niveau (1-3) ou réduire les sous-nœuds. Parfait pour organiser des conversations ramifiées ou hiérarchiques.
 
 ### 📂 Organisation par Dossiers
+
 **Gardez vos idées triées.**
 Arrêtez de fouiller dans une liste d'historique désordonnée. Glissez-déposez vos chats dans des dossiers qui ont du sens pour vous.
+
 - **Hiérarchie à deux niveaux** : Dossiers et sous-dossiers pour une organisation approfondie.
 - **Gestion facile** : Double-clic pour renommer, appui long pour la multi-sélection.
 - **Synchro partout** : Importez/exportez votre structure pour garder vos appareils synchronisés.
@@ -121,8 +125,10 @@ Arrêtez de fouiller dans une liste d'historique désordonnée. Glissez-déposez
 </details>
 
 ### 💡 Bibliothèque de Prompts
+
 **Votre arsenal personnel de prompts.**
 Ne réécrivez pas les mêmes instructions. Enregistrez vos meilleurs prompts et utilisez-les partout.
+
 - **Tag & Recherche** : Trouvez le bon prompt en quelques secondes.
 - **Accès Universel** : Fonctionne sur Gemini, AI Studio, et maintenant **n'importe quel site web** de votre choix.
 
@@ -138,8 +144,10 @@ Ne réécrivez pas les mêmes instructions. Enregistrez vos meilleurs prompts et
 </details>
 
 ### 💬 Réponse avec Citation
+
 **Répondez avec contexte.**
 Sélectionnez du texte dans n'importe quel message pour voir un bouton de citation flottant. Cliquez dessus pour insérer instantanément le texte sélectionné comme citation dans votre boîte de réponse.
+
 - **Conscient du contexte** : Fonctionne pour les messages utilisateur et modèle.
 - **Format standard** : Utilise la syntaxe de bloc de citation Markdown standard (`> ...`).
 
@@ -153,6 +161,7 @@ Sélectionnez du texte dans n'importe quel message pour voir un bouton de citati
 </details>
 
 ### 📐 Copie de Formule
+
 **Pour les magiciens des maths.**
 Vous voyez une belle formule LaTeX ? Un clic copie le code source. Plus de retapage manuel.
 
@@ -166,8 +175,10 @@ Vous voyez une belle formule LaTeX ? Un clic copie le code source. Plus de retap
 </details>
 
 ### 🧜‍♀️ Rendu de Diagrammes Mermaid
+
 **Visualisez les diagrammes instantanément.**
 Quand Gemini génère du code Mermaid (organigrammes, diagrammes de séquence, Gantt, etc.), Voyager le rend automatiquement sous forme de diagramme interactif.
+
 - **Basculer la vue** : Passez du diagramme rendu au code source en un clic.
 - **Mode plein écran** : Cliquez sur le diagramme pour ouvrir une visionneuse plein écran avec support du zoom et panoramique.
 - **Auto-détection** : Supporte tous les types majeurs de diagrammes Mermaid.
@@ -182,8 +193,10 @@ Quand Gemini génère du code Mermaid (organigrammes, diagrammes de séquence, G
 </details>
 
 ### 🍌 Option NanoBanana
+
 **Suppression de filigrane sans perte pour les images Gemini.**
 Supprime automatiquement le filigrane "Gemini" visible des images générées par IA (NanoBanana) en utilisant un algorithme de mélange alpha inversé.
+
 - **Zéro perte de qualité** : Reconstruit les pixels originaux pour une image parfaitement propre.
 - **Configurez et oubliez** : Activez-le une fois dans les paramètres et il fonctionne automatiquement.
 - **Téléchargement Direct** : Remplace le bouton de téléchargement natif par un bouton 🍌 qui enregistre directement l'image propre et traitée.
@@ -202,12 +215,15 @@ Supprime automatiquement le filigrane "Gemini" visible des images générées pa
 </details>
 
 ### 🔬 Export Deep Research
+
 **Extrayez le contenu de réflexion des conversations Deep Research.**
 Export en un clic au format Markdown préservant toutes les phases de réflexion et les liens de recherche. Cliquez sur le bouton de partage et d'export dans les conversations Deep Research pour télécharger.
 
 ### 💾 Export de Chat
+
 **Vos données, votre format.**
 Emportez vos conversations avec vous.
+
 - **Formats** : JSON structuré ou Markdown/PDF imprimable.
 - **Propre** : Nous retirons le bruit de l'interface pour que vous n'ayez que le contenu.
 - **Complet** : Les images sont automatiquement empaquetées dans un dossier `assets/`.
@@ -256,6 +272,7 @@ Grand écran ? Profitez-en. Personnalisez la largeur du conteneur de chat (400px
 </details>
 
 ### 🫥 Réduction de l'Entrée
+
 **Plus d'espace pour lire.**
 La zone de saisie se réduit automatiquement quand elle est vide. Cliquez pour étendre et commencer à taper.
 
@@ -269,6 +286,7 @@ La zone de saisie se réduit automatiquement quand elle est vide. Cliquez pour �
 </details>
 
 ### 🏷️ Synchro du Titre d'Onglet
+
 **Sachez en un coup d'œil.**
 Synchronise automatiquement le titre de l'onglet du navigateur avec le titre du chat Gemini actuel. Plus de "Gemini" sur chaque onglet.
 
@@ -282,8 +300,10 @@ Synchronise automatiquement le titre de l'onglet du navigateur avec le titre du 
 </details>
 
 ### 🗑️ Suppression par Lot
+
 **Nettoyez en masse.**
 Sélectionnez plusieurs conversations et supprimez-les toutes en une fois. Plus besoin de supprimer un par un.
+
 - **Multi-sélection** : Appui long pour entrer en mode multi-sélection, puis cochez les conversations à supprimer.
 - **Suppression en un clic** : Supprimez toutes les conversations sélectionnées en un seul clic.
 
@@ -324,15 +344,18 @@ Sélectionnez plusieurs conversations et supprimez-les toutes en une fois. Plus 
 <summary>📦 Installation Manuelle</summary>
 
 **Navigateurs Chromium (Chrome, Edge, Brave, etc.) :**
+
 1. Téléchargez `gemini-voyager-chrome-vX.Y.Z.zip` depuis les [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
 2. Dézippez et allez sur `chrome://extensions` → Activez le mode développeur → Charger l'extension non empaquetée
 
 **Firefox :**
 Téléchargez `gemini-voyager-firefox-vX.Y.Z.xpi` depuis les [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) et glissez-le dans `about:addons`.
+
 > 💡 Le fichier XPI est signé par Mozilla pour une installation permanente.
 
 **Safari :**
 Téléchargez `gemini-voyager-safari-vX.Y.Z.zip` depuis les [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases). Voir le [guide d'installation Safari](docs/safari/INSTALLATION.md) pour les étapes de build.
+
 </details>
 
 ---
@@ -442,6 +465,7 @@ bun run build:all      # Tous les navigateurs
 ```
 
 **Développement Safari** : Voir [safari/README.md](../safari/README.md) pour les étapes de build supplémentaires.
+
 </details>
 
 Merci d'aider à rendre Gemini Voyager meilleur ! ❤️

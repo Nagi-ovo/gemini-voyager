@@ -5,6 +5,7 @@ El Gestor de Prompts ahora se puede utilizar en cualquier sitio web que elijas, 
 ## Cómo Funciona
 
 Cuando añades un sitio web personalizado:
+
 1. La extensión solicitará permiso para acceder a ese sitio web específico.
 2. El Gestor de Prompts se inyectará en ese sitio web.
 3. **Solo** se activará la función del Gestor de Prompts (sin línea de tiempo, carpetas u otras funciones).
@@ -20,6 +21,7 @@ Cuando añades un sitio web personalizado:
 ## Formatos de URL Soportados
 
 Puedes ingresar URLs en varios formatos:
+
 - `chatgpt.com`
 - `www.chatgpt.com`
 - `https://chatgpt.com`
@@ -36,6 +38,7 @@ La extensión normalizará automáticamente la URL y solicitará permisos para a
 ## Ejemplos
 
 Sitios web de chat de IA populares donde podrías querer usar el Gestor de Prompts:
+
 - `chatgpt.com` - ChatGPT
 - `claude.ai` - Claude
 - `copilot.microsoft.com` - Microsoft Copilot
@@ -60,6 +63,7 @@ Sitios web de chat de IA populares donde podrías querer usar el Gestor de Promp
 ### Cómo comprobar si está funcionando correctamente
 
 Abre la consola del navegador (F12) y busca:
+
 ```
 [Gemini Voyager] Checking custom websites: ...
 [Gemini Voyager] Is custom website: true

@@ -13,6 +13,7 @@
 **Role**: You are an expert Full-Stack Engineer and Chrome Extension Specialist working on Gemini Voyager. Your goal is to deliver high-quality, robust, and idiomatic code that enhances the Google Gemini experience.
 
 **Core Mandates**:
+
 1.  **Safety First**: Never commit secrets. Validate all system operations.
 2.  **Code Consistency**: Strictly follow the project's architectural patterns (Services, Stores, functional React).
 3.  **Type Safety**: No `any`. Use `unknown` with narrowing. Use Branded Types for IDs.
@@ -26,24 +27,29 @@
 Before writing code, apply this "Linus-style" problem-solving framework to ensure robust and simple solutions.
 
 ### Phase 1: The Three Questions
+
 Ask yourself before starting:
+
 1.  **"Is this a real problem?"** - Reject over-engineering.
 2.  **"Is there a simpler way?"** - Always seek the simplest solution (KISS).
 3.  **"Will it break anything?"** - Backward compatibility is an iron law.
 
 ### Phase 2: Requirements Analysis
+
 When analyzing a request:
+
 1.  **Data Structure First**: "Bad programmers worry about the code. Good programmers worry about data structures."
-    *   What is the core data? Who owns it?
-    *   Can we redesign data structures to eliminate branches/complexity?
+    - What is the core data? Who owns it?
+    - Can we redesign data structures to eliminate branches/complexity?
 2.  **Eliminate Special Cases**: "Good code has no special cases."
-    *   Identify `if/else` branches that patch bad design.
-    *   Refactor to make the "special case" the normal case.
+    - Identify `if/else` branches that patch bad design.
+    - Refactor to make the "special case" the normal case.
 3.  **Destructive Analysis**:
-    *   List all existing features that might be affected.
-    *   Ensure zero destructiveness to user data (especially `localStorage`).
+    - List all existing features that might be affected.
+    - Ensure zero destructiveness to user data (especially `localStorage`).
 
 ### Phase 3: Decision Output
+
 If a task is complex or ambiguous, present your analysis in this format:
 
 ```text
@@ -68,14 +74,16 @@ If a task is complex or ambiguous, present your analysis in this format:
 Strictly adhere to these protocols to prevent errors and ensure data integrity.
 
 ### 🛡️ The "Read-Write-Verify" Loop
+
 1.  **READ**: Always read the target file **before** editing. Do not rely on memory or assumptions.
-    *   *Tool*: `read_file`
+    - _Tool_: `read_file`
 2.  **WRITE**: Apply atomic changes. Use sufficient context for `replace`.
-    *   *Tool*: `write_file` or `replace`
+    - _Tool_: `write_file` or `replace`
 3.  **VERIFY**: Check the file content **after** editing to ensure the change was applied correctly and didn't break syntax.
-    *   *Tool*: `read_file` or `run_shell_command` (grep/cat)
+    - _Tool_: `read_file` or `run_shell_command` (grep/cat)
 
 ### 🚨 Critical Safety Checks
+
 - **Never** modify `dist_*` folders directly.
 - **Never** commit `.env` or secrets.
 - **Always** run `bun run typecheck` after modifying TypeScript definitions.
@@ -85,14 +93,14 @@ Strictly adhere to these protocols to prevent errors and ensure data integrity.
 
 ## 4. Module Glossary & Complexity Hotspots
 
-| Module (Path) | Responsibility | Complexity | Notes |
-|---------------|----------------|------------|-------|
-| `core/services/StorageService` | **Single Source of Truth** for persistence. | 🌶️ High | Handles sync/local/session logic + migration. **Do not modify lightly.** |
-| `core/services/DataBackupService` | Multi-layer backup protection. | 🌶️ High | Critical for data safety. Race conditions possible during unload. |
-| `features/folder` | Drag-and-drop folder logic. | 🌶️ High | DOM manipulation + State sync is tricky. Watch out for infinite loops. |
-| `features/export` | Chat export (JSON/MD/PDF). | 🟡 Medium | PDF generation relies on specific DOM structure. Fragile to Gemini UI changes. |
-| `features/backup` | File System Access API. | 🟡 Medium | Browser compatibility issues (Safari fallback). |
-| `pages/content` | **DOM Injection**. | 🟡 Medium | Bridge between Gemini UI and Extension. |
+| Module (Path)                     | Responsibility                              | Complexity | Notes                                                                          |
+| --------------------------------- | ------------------------------------------- | ---------- | ------------------------------------------------------------------------------ |
+| `core/services/StorageService`    | **Single Source of Truth** for persistence. | 🌶️ High    | Handles sync/local/session logic + migration. **Do not modify lightly.**       |
+| `core/services/DataBackupService` | Multi-layer backup protection.              | 🌶️ High    | Critical for data safety. Race conditions possible during unload.              |
+| `features/folder`                 | Drag-and-drop folder logic.                 | 🌶️ High    | DOM manipulation + State sync is tricky. Watch out for infinite loops.         |
+| `features/export`                 | Chat export (JSON/MD/PDF).                  | 🟡 Medium  | PDF generation relies on specific DOM structure. Fragile to Gemini UI changes. |
+| `features/backup`                 | File System Access API.                     | 🟡 Medium  | Browser compatibility issues (Safari fallback).                                |
+| `pages/content`                   | **DOM Injection**.                          | 🟡 Medium  | Bridge between Gemini UI and Extension.                                        |
 
 ---
 
@@ -123,12 +131,14 @@ Strictly adhere to these protocols to prevent errors and ensure data integrity.
 **Framework**: Vitest 4.0.6 (jsdom environment)
 
 ### TDD Workflow Guidelines
+
 1.  **Write the Test First**: Define the expected behavior in `*.test.ts`.
 2.  **Fail**: Ensure the test fails (validates the test itself).
 3.  **Implement**: Write the minimal code to pass the test.
 4.  **Refactor**: Clean up the code while keeping tests green.
 
 ### Mocking Patterns
+
 This project relies heavily on `vi.mock` for Chrome APIs and external services.
 
 **Mocking Chrome API**:
@@ -142,6 +152,7 @@ beforeEach(() => {
 ```
 
 **Running Tests**:
+
 ```bash
 bun run test                # Run all tests
 bun run test <filename>     # Run specific test file
@@ -154,11 +165,13 @@ bun run test:coverage       # Check coverage
 ## 7. Workflows & Definition of Done
 
 ### Setup
+
 ```bash
 bun install
 ```
 
 ### Development
+
 ```bash
 # Start Dev Server (Chrome)
 bun run dev:chrome
@@ -166,9 +179,11 @@ bun run dev:chrome
 # Start Dev Server (Firefox)
 bun run dev:firefox
 ```
-*Note: Uses Nodemon for hot-reloading content scripts.*
+
+_Note: Uses Nodemon for hot-reloading content scripts._
 
 ### Definition of Done (DoD)
+
 Before claiming a task is complete, verify:
 
 1.  **Functionality**: Does it meet the requirements?
@@ -228,15 +243,15 @@ gemini-voyager/
 
 ### 📍 Where to Look (Task Map)
 
-| Task | File Path / Directory |
-|------|-----------------------|
-| **Add new storage key** | `src/core/types/common.ts` (StorageKeys) |
-| **Change storage logic** | `src/core/services/StorageService.ts` |
-| **Update translations** | `src/locales/{en,zh}/messages.json` |
-| **Modify export format** | `src/features/export/services/` |
-| **Fix backup issues** | `src/core/services/DataBackupService.ts` or `src/features/backup/` |
-| **Adjust UI styles** | `src/components/ui/` or `src/assets/styles/` |
-| **Change DOM injection** | `src/pages/content/` |
+| Task                     | File Path / Directory                                              |
+| ------------------------ | ------------------------------------------------------------------ |
+| **Add new storage key**  | `src/core/types/common.ts` (StorageKeys)                           |
+| **Change storage logic** | `src/core/services/StorageService.ts`                              |
+| **Update translations**  | `src/locales/{en,zh}/messages.json`                                |
+| **Modify export format** | `src/features/export/services/`                                    |
+| **Fix backup issues**    | `src/core/services/DataBackupService.ts` or `src/features/backup/` |
+| **Adjust UI styles**     | `src/components/ui/` or `src/assets/styles/`                       |
+| **Change DOM injection** | `src/pages/content/`                                               |
 
 ---
 

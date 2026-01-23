@@ -37,10 +37,7 @@ function normalizeWidth(value: number): { normalized: number; unit: 'px' | 'perc
 function buildStyle(widthValue: number): string {
   const { normalized, unit } = normalizeWidth(widthValue);
 
-  const clampedWidth =
-    unit === 'px'
-      ? `${normalized}px`
-      : `clamp(200px, ${normalized}vw, 800px)`; // preserve vw behavior for legacy %
+  const clampedWidth = unit === 'px' ? `${normalized}px` : `clamp(200px, ${normalized}vw, 800px)`; // preserve vw behavior for legacy %
 
   const closedWidth = 'var(--bard-sidenav-closed-width, 72px)'; // fallback matches collapsed rail width
   const openClosedDiff = `max(0px, calc(${clampedWidth} - ${closedWidth}))`;
@@ -233,7 +230,7 @@ export function startSidebarWidthAdjuster(): void {
     if (topBarObserver) {
       try {
         topBarObserver.disconnect();
-      } catch { }
+      } catch {}
       topBarObserver = null;
     }
   });

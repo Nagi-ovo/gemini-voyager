@@ -42,8 +42,7 @@ export class FormulaCopyService {
     typeof browser.storage.onChanged.addListener
   >[0] = (changes, areaName) => {
     if (areaName === 'sync' && changes[StorageKeys.FORMULA_COPY_FORMAT]) {
-      const newFormat = changes[StorageKeys.FORMULA_COPY_FORMAT]
-        .newValue as FormulaCopyFormat;
+      const newFormat = changes[StorageKeys.FORMULA_COPY_FORMAT].newValue as FormulaCopyFormat;
       if (newFormat === 'latex' || newFormat === 'unicodemath' || newFormat === 'no-dollar') {
         this.currentFormat = newFormat;
         this.logger.debug('Formula format changed', { format: newFormat });
@@ -178,11 +177,7 @@ export class FormulaCopyService {
   /**
    * Copy formula to clipboard and show notification
    */
-  private async copyFormula(
-    formula: string,
-    x: number,
-    y: number
-  ): Promise<void> {
+  private async copyFormula(formula: string, x: number, y: number): Promise<void> {
     try {
       const success = await this.copyToClipboard(formula);
 
@@ -274,10 +269,7 @@ export class FormulaCopyService {
    * Check if element is a math container
    */
   private isMathContainer(element: HTMLElement): boolean {
-    return (
-      element.classList.contains('math-inline') ||
-      element.classList.contains('math-block')
-    );
+    return element.classList.contains('math-inline') || element.classList.contains('math-block');
   }
 
   /**
@@ -325,10 +317,7 @@ export class FormulaCopyService {
   /**
    * Search for data-math attribute in element subtree
    */
-  private findDataMathInSubtree(
-    root: HTMLElement,
-    currentDepth: number
-  ): HTMLElement | null {
+  private findDataMathInSubtree(root: HTMLElement, currentDepth: number): HTMLElement | null {
     let searchElement: HTMLElement | null = root;
     let depth = currentDepth;
 
@@ -346,12 +335,7 @@ export class FormulaCopyService {
   /**
    * Show toast notification
    */
-  private showToast(
-    message: string,
-    x: number,
-    y: number,
-    isSuccess: boolean
-  ): void {
+  private showToast(message: string, x: number, y: number, isSuccess: boolean): void {
     if (!this.copyToast) {
       this.copyToast = this.createCopyToast();
     }

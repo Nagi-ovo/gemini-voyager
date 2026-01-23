@@ -7,10 +7,10 @@ const QUOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="1
 const STYLE_ID = 'gemini-voyager-quote-reply-style';
 
 function injectStyles() {
-    if (document.getElementById(STYLE_ID)) return;
-    const style = document.createElement('style');
-    style.id = STYLE_ID;
-    style.textContent = `
+  if (document.getElementById(STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = `
     .gv-quote-btn {
       position: fixed;
       z-index: 9999;
@@ -69,212 +69,222 @@ function injectStyles() {
        background-color: #f5f5f5;
     }
   `;
-    document.head.appendChild(style);
+  document.head.appendChild(style);
 }
 
 // Function to find the chat input
 function getChatInput(): HTMLElement | null {
-    // Gemini usually has a rich-textarea
-    // Try multiple selectors from most specific to generic
-    const selectors = [
-        'rich-textarea [contenteditable="true"]',
-        'div[contenteditable="true"][role="textbox"]',
-        '.input-area textarea',
-        'textarea[placeholder*="Ask"]',
-        'textarea' // Fallback, might be dangerous
-    ];
+  // Gemini usually has a rich-textarea
+  // Try multiple selectors from most specific to generic
+  const selectors = [
+    'rich-textarea [contenteditable="true"]',
+    'div[contenteditable="true"][role="textbox"]',
+    '.input-area textarea',
+    'textarea[placeholder*="Ask"]',
+    'textarea', // Fallback, might be dangerous
+  ];
 
-    for (const selector of selectors) {
-        // We probably want the one in the main footer/input area, not others (like edit mode)
-        // Usually the main input is visible and larger.
-        const els = document.querySelectorAll(selector);
-        for (const el of Array.from(els)) {
-            // Check if it's visible
-            if (el.getBoundingClientRect().height > 0) {
-                return el as HTMLElement;
-            }
-        }
+  for (const selector of selectors) {
+    // We probably want the one in the main footer/input area, not others (like edit mode)
+    // Usually the main input is visible and larger.
+    const els = document.querySelectorAll(selector);
+    for (const el of Array.from(els)) {
+      // Check if it's visible
+      if (el.getBoundingClientRect().height > 0) {
+        return el as HTMLElement;
+      }
     }
-    return null;
+  }
+  return null;
 }
 
 export function startQuoteReply() {
-    injectStyles();
+  injectStyles();
 
-    let quoteBtn: HTMLElement | null = null;
-    let currentSelectionRange: Range | null = null;
-    let isInternalClick = false;
+  let quoteBtn: HTMLElement | null = null;
+  let currentSelectionRange: Range | null = null;
+  let isInternalClick = false;
 
-    // Create button
-    function createButton() {
-        if (quoteBtn) return;
-        quoteBtn = document.createElement('div');
-        quoteBtn.className = 'gv-quote-btn gv-hidden';
-        // Check language roughly (or just use "Quote")
-        // Check language roughly (or just use "Quote")
-        const text = getTranslationSync('quoteReply');
+  // Create button
+  function createButton() {
+    if (quoteBtn) return;
+    quoteBtn = document.createElement('div');
+    quoteBtn.className = 'gv-quote-btn gv-hidden';
+    // Check language roughly (or just use "Quote")
+    // Check language roughly (or just use "Quote")
+    const text = getTranslationSync('quoteReply');
 
-        quoteBtn.innerHTML = `${QUOTE_ICON}<span>${text}</span>`;
+    quoteBtn.innerHTML = `${QUOTE_ICON}<span>${text}</span>`;
 
-        quoteBtn.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            isInternalClick = true;
-            handleQuoteClick();
-        });
-
-        document.body.appendChild(quoteBtn);
-    }
-
-    function handleQuoteClick() {
-        if (!currentSelectionRange) return;
-        const selectedText = currentSelectionRange.toString().trim();
-        if (!selectedText) return;
-
-        const input = getChatInput();
-        if (input) {
-            input.focus();
-
-            // Format format: > selection
-            // We split by newlines to quote nicely
-            const quoted = selectedText.split('\n').map(line => `> ${line}`).join('\n') + '\n\n';
-
-            // Insert text
-            // execCommand is reliable for contenteditable
-            const success = document.execCommand('insertText', false, quoted);
-            if (!success) {
-                // Fallback for textareas
-                if (input instanceof HTMLTextAreaElement) {
-                    const start = input.selectionStart;
-                    const end = input.selectionEnd;
-                    const val = input.value;
-                    input.value = val.substring(0, start) + quoted + val.substring(end);
-                    input.selectionStart = input.selectionEnd = start + quoted.length;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                } else {
-                    // Fallback for contenteditable
-                    input.innerText += quoted; // Very basic
-                }
-            }
-
-            // Dispatch input event for contenteditable just in case framework needs it
-            if (!(input instanceof HTMLTextAreaElement)) {
-                // Dispatch input event to notify frameworks (React/Lit)
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-
-            // Hide button
-            hideButton();
-            // Clear selection
-            window.getSelection()?.removeAllRanges();
-        } else {
-            console.warn('[Gemini Voyager] Could not find chat input.');
-        }
-    }
-
-    function showButton(rect: DOMRect) {
-        if (!quoteBtn) createButton();
-        if (!quoteBtn) return;
-
-        quoteBtn.classList.remove('gv-hidden');
-
-        // Position above the selection
-        const btnRect = quoteBtn.getBoundingClientRect();
-        const top = rect.top - btnRect.height - 10 + window.scrollY;
-        const left = rect.left + (rect.width / 2) - (btnRect.width / 2) + window.scrollX;
-
-        quoteBtn.style.top = `${Math.max(10, top)}px`;
-        quoteBtn.style.left = `${Math.max(10, left)}px`;
-    }
-
-    function hideButton() {
-        if (quoteBtn) {
-            quoteBtn.classList.add('gv-hidden');
-        }
-    }
-
-    function handleSelectionChange() {
-        // Use a small timeout to let selection settle
-        setTimeout(() => {
-            const selection = window.getSelection();
-            if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-                hideButton();
-                currentSelectionRange = null;
-                return;
-            }
-
-            const text = selection.toString().trim();
-            if (!text) {
-                hideButton();
-                currentSelectionRange = null;
-                return;
-            }
-
-            // Check if selection is within a message user/model bubble
-            // We don't want to quote random UI elements
-            const anchor = selection.anchorNode;
-            if (!anchor) return;
-
-            const element = anchor.nodeType === Node.TEXT_NODE ? anchor.parentElement : anchor as HTMLElement;
-
-            // Check if selection is inside main content area
-            // Gemini uses <main> or sometimes specific classes. We want to avoid nav, sidebar, etc.
-            const mainContent = document.querySelector('main');
-            if (mainContent && !mainContent.contains(element)) {
-                hideButton();
-                return;
-            }
-
-            // Also explicitly check for sidebar classes just in case
-            if (element?.closest('nav') || element?.closest('[role="navigation"]') || element?.closest('.sidebar') || element?.closest('.mat-drawer')) {
-                hideButton();
-                return;
-            }
-
-            // Selectors for valid areas: user-query-container, model-response, conversation-container
-            // Or just check if it's not the input box itself
-            if (element?.closest('[contenteditable="true"]')) {
-                hideButton();
-                return;
-            }
-
-            // Also check if we are selecting code block content? Might be fine.
-
-            const range = selection.getRangeAt(0);
-            currentSelectionRange = range;
-            const rect = range.getBoundingClientRect();
-
-            // If rect is zero (e.g. invisible), don't show
-            if (rect.width === 0 && rect.height === 0) return;
-
-            showButton(rect);
-        }, 10);
-    }
-
-    function onMouseUp(e: MouseEvent) {
-        if (isInternalClick) {
-            isInternalClick = false;
-            return;
-        }
-        handleSelectionChange();
-    }
-
-    // Listen to selection changes via mouseup (often better for "finished" selection)
-    // selectionchange event fires too often while dragging.
-    document.addEventListener('mouseup', onMouseUp);
-
-    // Also listen to keyup for keyboard selection
-    document.addEventListener('keyup', (e) => {
-        if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
-            handleSelectionChange();
-        }
+    quoteBtn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      isInternalClick = true;
+      handleQuoteClick();
     });
 
-    // Cleanup
-    return () => {
-        document.removeEventListener('mouseup', onMouseUp);
-        if (quoteBtn) quoteBtn.remove();
-        const style = document.getElementById(STYLE_ID);
-        if (style) style.remove();
-    };
+    document.body.appendChild(quoteBtn);
+  }
+
+  function handleQuoteClick() {
+    if (!currentSelectionRange) return;
+    const selectedText = currentSelectionRange.toString().trim();
+    if (!selectedText) return;
+
+    const input = getChatInput();
+    if (input) {
+      input.focus();
+
+      // Format format: > selection
+      // We split by newlines to quote nicely
+      const quoted =
+        selectedText
+          .split('\n')
+          .map((line) => `> ${line}`)
+          .join('\n') + '\n\n';
+
+      // Insert text
+      // execCommand is reliable for contenteditable
+      const success = document.execCommand('insertText', false, quoted);
+      if (!success) {
+        // Fallback for textareas
+        if (input instanceof HTMLTextAreaElement) {
+          const start = input.selectionStart;
+          const end = input.selectionEnd;
+          const val = input.value;
+          input.value = val.substring(0, start) + quoted + val.substring(end);
+          input.selectionStart = input.selectionEnd = start + quoted.length;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        } else {
+          // Fallback for contenteditable
+          input.innerText += quoted; // Very basic
+        }
+      }
+
+      // Dispatch input event for contenteditable just in case framework needs it
+      if (!(input instanceof HTMLTextAreaElement)) {
+        // Dispatch input event to notify frameworks (React/Lit)
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+
+      // Hide button
+      hideButton();
+      // Clear selection
+      window.getSelection()?.removeAllRanges();
+    } else {
+      console.warn('[Gemini Voyager] Could not find chat input.');
+    }
+  }
+
+  function showButton(rect: DOMRect) {
+    if (!quoteBtn) createButton();
+    if (!quoteBtn) return;
+
+    quoteBtn.classList.remove('gv-hidden');
+
+    // Position above the selection
+    const btnRect = quoteBtn.getBoundingClientRect();
+    const top = rect.top - btnRect.height - 10 + window.scrollY;
+    const left = rect.left + rect.width / 2 - btnRect.width / 2 + window.scrollX;
+
+    quoteBtn.style.top = `${Math.max(10, top)}px`;
+    quoteBtn.style.left = `${Math.max(10, left)}px`;
+  }
+
+  function hideButton() {
+    if (quoteBtn) {
+      quoteBtn.classList.add('gv-hidden');
+    }
+  }
+
+  function handleSelectionChange() {
+    // Use a small timeout to let selection settle
+    setTimeout(() => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+        hideButton();
+        currentSelectionRange = null;
+        return;
+      }
+
+      const text = selection.toString().trim();
+      if (!text) {
+        hideButton();
+        currentSelectionRange = null;
+        return;
+      }
+
+      // Check if selection is within a message user/model bubble
+      // We don't want to quote random UI elements
+      const anchor = selection.anchorNode;
+      if (!anchor) return;
+
+      const element =
+        anchor.nodeType === Node.TEXT_NODE ? anchor.parentElement : (anchor as HTMLElement);
+
+      // Check if selection is inside main content area
+      // Gemini uses <main> or sometimes specific classes. We want to avoid nav, sidebar, etc.
+      const mainContent = document.querySelector('main');
+      if (mainContent && !mainContent.contains(element)) {
+        hideButton();
+        return;
+      }
+
+      // Also explicitly check for sidebar classes just in case
+      if (
+        element?.closest('nav') ||
+        element?.closest('[role="navigation"]') ||
+        element?.closest('.sidebar') ||
+        element?.closest('.mat-drawer')
+      ) {
+        hideButton();
+        return;
+      }
+
+      // Selectors for valid areas: user-query-container, model-response, conversation-container
+      // Or just check if it's not the input box itself
+      if (element?.closest('[contenteditable="true"]')) {
+        hideButton();
+        return;
+      }
+
+      // Also check if we are selecting code block content? Might be fine.
+
+      const range = selection.getRangeAt(0);
+      currentSelectionRange = range;
+      const rect = range.getBoundingClientRect();
+
+      // If rect is zero (e.g. invisible), don't show
+      if (rect.width === 0 && rect.height === 0) return;
+
+      showButton(rect);
+    }, 10);
+  }
+
+  function onMouseUp(e: MouseEvent) {
+    if (isInternalClick) {
+      isInternalClick = false;
+      return;
+    }
+    handleSelectionChange();
+  }
+
+  // Listen to selection changes via mouseup (often better for "finished" selection)
+  // selectionchange event fires too often while dragging.
+  document.addEventListener('mouseup', onMouseUp);
+
+  // Also listen to keyup for keyboard selection
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
+      handleSelectionChange();
+    }
+  });
+
+  // Cleanup
+  return () => {
+    document.removeEventListener('mouseup', onMouseUp);
+    if (quoteBtn) quoteBtn.remove();
+    const style = document.getElementById(STYLE_ID);
+    if (style) style.remove();
+  };
 }

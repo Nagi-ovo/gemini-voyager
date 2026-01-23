@@ -4,61 +4,76 @@ import mermaid from 'mermaid';
  * Initialize Mermaid configuration
  */
 const initMermaid = () => {
-    const isDarkMode = document.body.classList.contains('dark-theme') ||
-        document.body.getAttribute('data-theme') === 'dark' ||
-        document.documentElement.classList.contains('dark') ||
-        window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDarkMode =
+    document.body.classList.contains('dark-theme') ||
+    document.body.getAttribute('data-theme') === 'dark' ||
+    document.documentElement.classList.contains('dark') ||
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    mermaid.initialize({
-        startOnLoad: false,
-        theme: isDarkMode ? 'dark' : 'default',
-        securityLevel: 'loose',
-        fontFamily: 'Google Sans, Roboto, sans-serif',
-        logLevel: 5, // 5 = fatal, only log fatal errors (v9.x uses numbers)
-    });
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: isDarkMode ? 'dark' : 'default',
+    securityLevel: 'loose',
+    fontFamily: 'Google Sans, Roboto, sans-serif',
+    logLevel: 5, // 5 = fatal, only log fatal errors (v9.x uses numbers)
+  });
 };
 
 /**
  * Check if a code block contains Mermaid syntax and appears complete enough to render
  */
 const isMermaidCode = (code: string): boolean => {
-    const codeTrimmed = code.trim();
+  const codeTrimmed = code.trim();
 
-    // Minimum length to avoid parsing incomplete/streaming content
-    if (codeTrimmed.length < 50) return false;
+  // Minimum length to avoid parsing incomplete/streaming content
+  if (codeTrimmed.length < 50) return false;
 
-    const keywords = [
-        'graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram',
-        'erDiagram', 'gantt', 'pie', 'gitGraph', 'journey', 'mindmap',
-        'timeline', 'zenuml', 'sankey-beta', 'quadrantChart', 'requirementDiagram'
-    ];
+  const keywords = [
+    'graph',
+    'flowchart',
+    'sequenceDiagram',
+    'classDiagram',
+    'stateDiagram',
+    'erDiagram',
+    'gantt',
+    'pie',
+    'gitGraph',
+    'journey',
+    'mindmap',
+    'timeline',
+    'zenuml',
+    'sankey-beta',
+    'quadrantChart',
+    'requirementDiagram',
+  ];
 
-    const startsWithKeyword = codeTrimmed.startsWith('%%') ||
-        keywords.some(keyword => codeTrimmed.toLowerCase().startsWith(keyword.toLowerCase()));
+  const startsWithKeyword =
+    codeTrimmed.startsWith('%%') ||
+    keywords.some((keyword) => codeTrimmed.toLowerCase().startsWith(keyword.toLowerCase()));
 
-    if (!startsWithKeyword) return false;
+  if (!startsWithKeyword) return false;
 
-    // Check if code looks complete (has multiple lines and doesn't end mid-statement)
-    const lines = codeTrimmed.split('\n').filter(l => l.trim().length > 0);
-    if (lines.length < 3) return false;
+  // Check if code looks complete (has multiple lines and doesn't end mid-statement)
+  const lines = codeTrimmed.split('\n').filter((l) => l.trim().length > 0);
+  if (lines.length < 3) return false;
 
-    // Check last line doesn't look incomplete (ending with operators or open brackets)
-    const lastLine = lines[lines.length - 1].trim();
-    const incompleteEndings = ['-->', '---', '-.', '==>', ':::', '[', '(', '{', '|', '&', ','];
-    if (incompleteEndings.some(ending => lastLine.endsWith(ending))) return false;
+  // Check last line doesn't look incomplete (ending with operators or open brackets)
+  const lastLine = lines[lines.length - 1].trim();
+  const incompleteEndings = ['-->', '---', '-.', '==>', ':::', '[', '(', '{', '|', '&', ','];
+  if (incompleteEndings.some((ending) => lastLine.endsWith(ending))) return false;
 
-    return true;
+  return true;
 };
 
 /**
  * Create styles for mermaid components and fullscreen viewer
  */
 const createStyles = () => {
-    if (document.getElementById('gv-mermaid-styles')) return;
+  if (document.getElementById('gv-mermaid-styles')) return;
 
-    const style = document.createElement('style');
-    style.id = 'gv-mermaid-styles';
-    style.textContent = `
+  const style = document.createElement('style');
+  style.id = 'gv-mermaid-styles';
+  style.textContent = `
     .gv-mermaid-wrapper {
       position: relative;
     }
@@ -185,7 +200,7 @@ const createStyles = () => {
       pointer-events: none;
     }
   `;
-    document.head.appendChild(style);
+  document.head.appendChild(style);
 };
 
 /**
@@ -203,190 +218,194 @@ let startY = 0;
  * Open fullscreen viewer for SVG
  */
 const openFullscreen = (svgHtml: string) => {
-    if (currentModal) return;
+  if (currentModal) return;
 
-    // Reset state
+  // Reset state
+  scale = 1;
+  translateX = 0;
+  translateY = 0;
+
+  // Create modal
+  const modal = document.createElement('div');
+  modal.className = 'gv-mermaid-modal';
+
+  // Toolbar
+  const toolbar = document.createElement('div');
+  toolbar.className = 'gv-mermaid-modal-toolbar';
+
+  const zoomInBtn = document.createElement('button');
+  zoomInBtn.innerHTML = '+';
+  zoomInBtn.title = 'Zoom In';
+
+  const zoomOutBtn = document.createElement('button');
+  zoomOutBtn.innerHTML = '−';
+  zoomOutBtn.title = 'Zoom Out';
+
+  const resetBtn = document.createElement('button');
+  resetBtn.innerHTML = '⊙';
+  resetBtn.title = 'Reset';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.title = 'Close (ESC)';
+
+  toolbar.appendChild(zoomInBtn);
+  toolbar.appendChild(zoomOutBtn);
+  toolbar.appendChild(resetBtn);
+  toolbar.appendChild(closeBtn);
+
+  // Content container
+  const content = document.createElement('div');
+  content.className = 'gv-mermaid-modal-content';
+  content.innerHTML = svgHtml;
+
+  // Hint
+  const hint = document.createElement('div');
+  hint.className = 'gv-mermaid-modal-hint';
+  hint.textContent = 'Scroll to zoom • Drag to pan • ESC to close';
+
+  modal.appendChild(toolbar);
+  modal.appendChild(content);
+  modal.appendChild(hint);
+  document.body.appendChild(modal);
+  currentModal = modal;
+
+  // Apply transform
+  const applyTransform = () => {
+    content.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+  };
+
+  // Zoom functions
+  const zoomIn = () => {
+    scale = Math.min(scale * 1.2, 10);
+    applyTransform();
+  };
+
+  const zoomOut = () => {
+    scale = Math.max(scale / 1.2, 0.1);
+    applyTransform();
+  };
+
+  const resetView = () => {
     scale = 1;
     translateX = 0;
     translateY = 0;
+    applyTransform();
+  };
 
-    // Create modal
-    const modal = document.createElement('div');
-    modal.className = 'gv-mermaid-modal';
+  const closeModal = () => {
+    modal.classList.remove('visible');
+    setTimeout(() => {
+      modal.remove();
+      currentModal = null;
+    }, 300);
+  };
 
-    // Toolbar
-    const toolbar = document.createElement('div');
-    toolbar.className = 'gv-mermaid-modal-toolbar';
+  // Event listeners
+  zoomInBtn.addEventListener('click', zoomIn);
+  zoomOutBtn.addEventListener('click', zoomOut);
+  resetBtn.addEventListener('click', resetView);
+  closeBtn.addEventListener('click', closeModal);
 
-    const zoomInBtn = document.createElement('button');
-    zoomInBtn.innerHTML = '+';
-    zoomInBtn.title = 'Zoom In';
+  // Click backdrop to close
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
 
-    const zoomOutBtn = document.createElement('button');
-    zoomOutBtn.innerHTML = '−';
-    zoomOutBtn.title = 'Zoom Out';
+  // ESC to close
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.removeEventListener('keydown', handleKeyDown);
+    }
+  };
+  document.addEventListener('keydown', handleKeyDown);
 
-    const resetBtn = document.createElement('button');
-    resetBtn.innerHTML = '⊙';
-    resetBtn.title = 'Reset';
+  // Mouse wheel zoom
+  modal.addEventListener(
+    'wheel',
+    (e) => {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        scale = Math.min(scale * 1.1, 10);
+      } else {
+        scale = Math.max(scale / 1.1, 0.1);
+      }
+      applyTransform();
+    },
+    { passive: false }
+  );
 
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '✕';
-    closeBtn.title = 'Close (ESC)';
+  // Drag to pan
+  content.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    startX = e.clientX - translateX;
+    startY = e.clientY - translateY;
+    content.classList.add('dragging');
+  });
 
-    toolbar.appendChild(zoomInBtn);
-    toolbar.appendChild(zoomOutBtn);
-    toolbar.appendChild(resetBtn);
-    toolbar.appendChild(closeBtn);
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
+    applyTransform();
+  });
 
-    // Content container
-    const content = document.createElement('div');
-    content.className = 'gv-mermaid-modal-content';
-    content.innerHTML = svgHtml;
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    content.classList.remove('dragging');
+  });
 
-    // Hint
-    const hint = document.createElement('div');
-    hint.className = 'gv-mermaid-modal-hint';
-    hint.textContent = 'Scroll to zoom • Drag to pan • ESC to close';
-
-    modal.appendChild(toolbar);
-    modal.appendChild(content);
-    modal.appendChild(hint);
-    document.body.appendChild(modal);
-    currentModal = modal;
-
-    // Apply transform
-    const applyTransform = () => {
-        content.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-    };
-
-    // Zoom functions
-    const zoomIn = () => {
-        scale = Math.min(scale * 1.2, 10);
-        applyTransform();
-    };
-
-    const zoomOut = () => {
-        scale = Math.max(scale / 1.2, 0.1);
-        applyTransform();
-    };
-
-    const resetView = () => {
-        scale = 1;
-        translateX = 0;
-        translateY = 0;
-        applyTransform();
-    };
-
-    const closeModal = () => {
-        modal.classList.remove('visible');
-        setTimeout(() => {
-            modal.remove();
-            currentModal = null;
-        }, 300);
-    };
-
-    // Event listeners
-    zoomInBtn.addEventListener('click', zoomIn);
-    zoomOutBtn.addEventListener('click', zoomOut);
-    resetBtn.addEventListener('click', resetView);
-    closeBtn.addEventListener('click', closeModal);
-
-    // Click backdrop to close
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
-
-    // ESC to close
-    const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            closeModal();
-            document.removeEventListener('keydown', handleKeyDown);
-        }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-
-    // Mouse wheel zoom
-    modal.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        if (e.deltaY < 0) {
-            scale = Math.min(scale * 1.1, 10);
-        } else {
-            scale = Math.max(scale / 1.1, 0.1);
-        }
-        applyTransform();
-    }, { passive: false });
-
-    // Drag to pan
-    content.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX - translateX;
-        startY = e.clientY - translateY;
-        content.classList.add('dragging');
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        translateX = e.clientX - startX;
-        translateY = e.clientY - startY;
-        applyTransform();
-    });
-
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-        content.classList.remove('dragging');
-    });
-
-    // Show modal with animation
-    requestAnimationFrame(() => {
-        modal.classList.add('visible');
-    });
+  // Show modal with animation
+  requestAnimationFrame(() => {
+    modal.classList.add('visible');
+  });
 };
 
 /**
  * Render Mermaid diagram for a code block
  */
 const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
-    if (codeBlock.dataset.mermaidCode === code) return;
-    if (codeBlock.dataset.mermaidProcessing === 'true') return;
+  if (codeBlock.dataset.mermaidCode === code) return;
+  if (codeBlock.dataset.mermaidProcessing === 'true') return;
 
-    codeBlock.dataset.mermaidProcessing = 'true';
+  codeBlock.dataset.mermaidProcessing = 'true';
+
+  try {
+    const codeBlockHost = codeBlock.closest('code-block') as HTMLElement;
+    if (!codeBlockHost) {
+      codeBlock.dataset.mermaidProcessing = 'false';
+      return;
+    }
+
+    // First, try to render to validate the code
+    const uniqueId = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+    let svg: string;
+    let hasError = false;
 
     try {
-        const codeBlockHost = codeBlock.closest('code-block') as HTMLElement;
-        if (!codeBlockHost) {
-            codeBlock.dataset.mermaidProcessing = 'false';
-            return;
+      // v9.x render returns string directly, v10.x returns {svg: string}
+      const result = await mermaid.render(uniqueId, code);
+      svg = typeof result === 'string' ? result : (result as { svg: string }).svg;
+    } catch (renderError) {
+      // Mermaid failed - likely incomplete or invalid syntax
+      hasError = true;
+
+      // Clean up any error SVGs mermaid may have created
+      const errorSvg = document.getElementById(uniqueId);
+      if (errorSvg) errorSvg.remove();
+
+      // Also clean up any floating error containers mermaid creates
+      document.querySelectorAll('[id^="d"]').forEach((el) => {
+        if (el.textContent?.includes('Syntax error') || el.querySelector('.error-icon')) {
+          el.remove();
         }
+      });
 
-        // First, try to render to validate the code
-        const uniqueId = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
-        let svg: string;
-        let hasError = false;
-
-        try {
-            // v9.x render returns string directly, v10.x returns {svg: string}
-            const result = await mermaid.render(uniqueId, code);
-            svg = typeof result === 'string' ? result : (result as { svg: string }).svg;
-        } catch (renderError) {
-            // Mermaid failed - likely incomplete or invalid syntax
-            hasError = true;
-
-            // Clean up any error SVGs mermaid may have created
-            const errorSvg = document.getElementById(uniqueId);
-            if (errorSvg) errorSvg.remove();
-
-            // Also clean up any floating error containers mermaid creates
-            document.querySelectorAll('[id^="d"]').forEach(el => {
-                if (el.textContent?.includes('Syntax error') || el.querySelector('.error-icon')) {
-                    el.remove();
-                }
-            });
-
-            // Create a friendly error message
-            const errorMsg = renderError instanceof Error ? renderError.message : 'Unknown error';
-            const shortError = errorMsg.length > 100 ? errorMsg.substring(0, 100) + '...' : errorMsg;
-            svg = `
+      // Create a friendly error message
+      const errorMsg = renderError instanceof Error ? renderError.message : 'Unknown error';
+      const shortError = errorMsg.length > 100 ? errorMsg.substring(0, 100) + '...' : errorMsg;
+      svg = `
                 <div style="padding: 24px; text-align: center; color: var(--gemini-on-surface-variant, #666);">
                     <div style="font-size: 32px; margin-bottom: 12px;">⚠️</div>
                     <div style="font-weight: 500; margin-bottom: 8px;">Mermaid Syntax Error</div>
@@ -394,87 +413,86 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
                     <div style="margin-top: 12px; font-size: 13px;">Click <b>"&lt;/&gt; Code"</b> to view source</div>
                 </div>
             `;
-        }
-
-        // Rendering succeeded! Now create or update the UI
-        let wrapper = codeBlockHost.parentElement;
-        if (!wrapper?.classList.contains('gv-mermaid-wrapper')) {
-            wrapper = document.createElement('div');
-            wrapper.className = 'gv-mermaid-wrapper';
-            codeBlockHost.parentElement?.insertBefore(wrapper, codeBlockHost);
-            wrapper.appendChild(codeBlockHost);
-
-            // Toggle buttons
-            const toggleContainer = document.createElement('div');
-            toggleContainer.className = 'gv-mermaid-toggle';
-
-            const diagramBtn = document.createElement('button');
-            diagramBtn.textContent = '📊 Diagram';
-            diagramBtn.className = 'active';
-            diagramBtn.dataset.view = 'diagram';
-
-            const codeBtn = document.createElement('button');
-            codeBtn.textContent = '</> Code';
-            codeBtn.dataset.view = 'code';
-
-            toggleContainer.appendChild(diagramBtn);
-            toggleContainer.appendChild(codeBtn);
-            wrapper.appendChild(toggleContainer);
-
-            // Diagram container
-            const diagramContainer = document.createElement('div');
-            diagramContainer.className = 'gv-mermaid-diagram';
-            wrapper.appendChild(diagramContainer);
-
-            codeBlockHost.style.display = 'none';
-
-            const updateView = (view: 'diagram' | 'code') => {
-                if (view === 'diagram') {
-                    codeBlockHost.style.display = 'none';
-                    diagramContainer.style.display = 'block';
-                    diagramBtn.classList.add('active');
-                    codeBtn.classList.remove('active');
-                } else {
-                    codeBlockHost.style.display = '';
-                    diagramContainer.style.display = 'none';
-                    diagramBtn.classList.remove('active');
-                    codeBtn.classList.add('active');
-                }
-            };
-
-            diagramBtn.addEventListener('click', () => updateView('diagram'));
-            codeBtn.addEventListener('click', () => updateView('code'));
-
-            // Click diagram to fullscreen (only if it's a valid SVG, not error)
-            diagramContainer.addEventListener('click', () => {
-                const svgElement = diagramContainer.querySelector('svg');
-                if (svgElement) {
-                    openFullscreen(diagramContainer.innerHTML);
-                }
-            });
-        }
-
-        const diagramContainer = wrapper.querySelector('.gv-mermaid-diagram') as HTMLElement;
-        if (!diagramContainer) {
-            codeBlock.dataset.mermaidProcessing = 'false';
-            return;
-        }
-
-        // Insert the successfully rendered SVG
-        diagramContainer.innerHTML = svg;
-
-        codeBlock.dataset.mermaidCode = code;
-        codeBlock.dataset.mermaidProcessing = 'false';
-        console.log('[Gemini Voyager] Mermaid diagram rendered:', uniqueId);
-
-    } catch (error) {
-        codeBlock.dataset.mermaidProcessing = 'false';
-
-        const codeBlockHost = codeBlock.closest('code-block') as HTMLElement;
-        if (codeBlockHost) {
-            codeBlockHost.style.display = '';
-        }
     }
+
+    // Rendering succeeded! Now create or update the UI
+    let wrapper = codeBlockHost.parentElement;
+    if (!wrapper?.classList.contains('gv-mermaid-wrapper')) {
+      wrapper = document.createElement('div');
+      wrapper.className = 'gv-mermaid-wrapper';
+      codeBlockHost.parentElement?.insertBefore(wrapper, codeBlockHost);
+      wrapper.appendChild(codeBlockHost);
+
+      // Toggle buttons
+      const toggleContainer = document.createElement('div');
+      toggleContainer.className = 'gv-mermaid-toggle';
+
+      const diagramBtn = document.createElement('button');
+      diagramBtn.textContent = '📊 Diagram';
+      diagramBtn.className = 'active';
+      diagramBtn.dataset.view = 'diagram';
+
+      const codeBtn = document.createElement('button');
+      codeBtn.textContent = '</> Code';
+      codeBtn.dataset.view = 'code';
+
+      toggleContainer.appendChild(diagramBtn);
+      toggleContainer.appendChild(codeBtn);
+      wrapper.appendChild(toggleContainer);
+
+      // Diagram container
+      const diagramContainer = document.createElement('div');
+      diagramContainer.className = 'gv-mermaid-diagram';
+      wrapper.appendChild(diagramContainer);
+
+      codeBlockHost.style.display = 'none';
+
+      const updateView = (view: 'diagram' | 'code') => {
+        if (view === 'diagram') {
+          codeBlockHost.style.display = 'none';
+          diagramContainer.style.display = 'block';
+          diagramBtn.classList.add('active');
+          codeBtn.classList.remove('active');
+        } else {
+          codeBlockHost.style.display = '';
+          diagramContainer.style.display = 'none';
+          diagramBtn.classList.remove('active');
+          codeBtn.classList.add('active');
+        }
+      };
+
+      diagramBtn.addEventListener('click', () => updateView('diagram'));
+      codeBtn.addEventListener('click', () => updateView('code'));
+
+      // Click diagram to fullscreen (only if it's a valid SVG, not error)
+      diagramContainer.addEventListener('click', () => {
+        const svgElement = diagramContainer.querySelector('svg');
+        if (svgElement) {
+          openFullscreen(diagramContainer.innerHTML);
+        }
+      });
+    }
+
+    const diagramContainer = wrapper.querySelector('.gv-mermaid-diagram') as HTMLElement;
+    if (!diagramContainer) {
+      codeBlock.dataset.mermaidProcessing = 'false';
+      return;
+    }
+
+    // Insert the successfully rendered SVG
+    diagramContainer.innerHTML = svg;
+
+    codeBlock.dataset.mermaidCode = code;
+    codeBlock.dataset.mermaidProcessing = 'false';
+    console.log('[Gemini Voyager] Mermaid diagram rendered:', uniqueId);
+  } catch (error) {
+    codeBlock.dataset.mermaidProcessing = 'false';
+
+    const codeBlockHost = codeBlock.closest('code-block') as HTMLElement;
+    if (codeBlockHost) {
+      codeBlockHost.style.display = '';
+    }
+  }
 };
 
 /**
@@ -482,21 +500,21 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
  * Returns the language name (lowercase) or null if not found
  */
 const getCodeBlockLanguage = (codeEl: Element): string | null => {
-    // Navigate up to find the code-block container
-    const codeBlock = codeEl.closest('.code-block, code-block');
-    if (!codeBlock) return null;
+  // Navigate up to find the code-block container
+  const codeBlock = codeEl.closest('.code-block, code-block');
+  if (!codeBlock) return null;
 
-    // Look for the language label in the header decoration
-    // Gemini uses: <div class="code-block-decoration"><span>Language</span>...</div>
-    const decoration = codeBlock.querySelector('.code-block-decoration');
-    if (!decoration) return null;
+  // Look for the language label in the header decoration
+  // Gemini uses: <div class="code-block-decoration"><span>Language</span>...</div>
+  const decoration = codeBlock.querySelector('.code-block-decoration');
+  if (!decoration) return null;
 
-    // The first span child typically contains the language name
-    const langSpan = decoration.querySelector(':scope > span');
-    if (!langSpan) return null;
+  // The first span child typically contains the language name
+  const langSpan = decoration.querySelector(':scope > span');
+  if (!langSpan) return null;
 
-    const language = langSpan.textContent?.trim().toLowerCase();
-    return language || null;
+  const language = langSpan.textContent?.trim().toLowerCase();
+  return language || null;
 };
 
 /**
@@ -504,51 +522,65 @@ const getCodeBlockLanguage = (codeEl: Element): string | null => {
  * These are labels that don't represent a specific programming language
  */
 const GENERIC_LANGUAGE_LABELS = new Set([
-    // Chinese
-    '代码段', '代码', '代码块', '示例', '示例代码',
-    // English
-    'code', 'code snippet', 'snippet', 'example', 'code example', 'sample',
-    // Common generic terms
-    'text', 'plain', 'plaintext', 'raw', 'output', 'result',
+  // Chinese
+  '代码段',
+  '代码',
+  '代码块',
+  '示例',
+  '示例代码',
+  // English
+  'code',
+  'code snippet',
+  'snippet',
+  'example',
+  'code example',
+  'sample',
+  // Common generic terms
+  'text',
+  'plain',
+  'plaintext',
+  'raw',
+  'output',
+  'result',
 ]);
 
 /**
  * Check if a language label is generic (not a specific programming language)
  */
 const isGenericLanguageLabel = (language: string | null): boolean => {
-    if (!language) return true; // No label = generic
-    return GENERIC_LANGUAGE_LABELS.has(language.toLowerCase());
+  if (!language) return true; // No label = generic
+  return GENERIC_LANGUAGE_LABELS.has(language.toLowerCase());
 };
 
 /**
  * Find and process code blocks
  */
 const processCodeBlocks = () => {
-    const codeElements = document.querySelectorAll('code[data-test-id="code-content"]');
+  const codeElements = document.querySelectorAll('code[data-test-id="code-content"]');
 
-    codeElements.forEach(codeEl => {
-        const codeText = codeEl.textContent || '';
+  codeElements.forEach((codeEl) => {
+    const codeText = codeEl.textContent || '';
 
-        // Check the language label from Gemini's code block header
-        const language = getCodeBlockLanguage(codeEl);
+    // Check the language label from Gemini's code block header
+    const language = getCodeBlockLanguage(codeEl);
 
-        // Case 1: Language is explicitly "mermaid" - always render
-        if (language === 'mermaid') {
-            renderMermaid(codeEl as HTMLElement, codeText);
-            return;
-        }
+    // Case 1: Language is explicitly "mermaid" - always render
+    if (language === 'mermaid') {
+      renderMermaid(codeEl as HTMLElement, codeText);
+      return;
+    }
 
-        // Case 2: Language is a specific programming language (not generic) - skip rendering
-        // This prevents false positives for MATLAB (%% comments), Python, etc.
-        if (language && !isGenericLanguageLabel(language)) {
-            return;
-        }
+    // Case 2: Language is a specific programming language (not generic) - skip rendering
+    // This prevents false positives for MATLAB (%% comments), Python, etc.
+    if (language && !isGenericLanguageLabel(language)) {
+      return;
+    }
 
-        // Case 3: No language label or generic label - use content detection
-        if (isMermaidCode(codeText)) {
-            renderMermaid(codeEl as HTMLElement, codeText);
-        }
-    });
+    // Case 3: No language label or generic label - use content detection
+    if (isMermaidCode(codeText)) {
+      renderMermaid(codeEl as HTMLElement, codeText);
+    }
+  });
 };
 
 /**
@@ -561,64 +593,64 @@ let observer: MutationObserver | null = null;
  * Start Mermaid feature
  */
 export const startMermaid = () => {
-    // Check if Mermaid rendering is enabled in settings
-    chrome.storage?.sync?.get({ gvMermaidEnabled: true }, (result) => {
-        mermaidEnabled = result?.gvMermaidEnabled !== false;
+  // Check if Mermaid rendering is enabled in settings
+  chrome.storage?.sync?.get({ gvMermaidEnabled: true }, (result) => {
+    mermaidEnabled = result?.gvMermaidEnabled !== false;
 
-        if (mermaidEnabled) {
-            initializeMermaid();
-        } else {
-            console.log('[Gemini Voyager] Mermaid rendering is disabled');
-        }
-    });
+    if (mermaidEnabled) {
+      initializeMermaid();
+    } else {
+      console.log('[Gemini Voyager] Mermaid rendering is disabled');
+    }
+  });
 
-    // Listen for setting changes
-    chrome.storage?.onChanged?.addListener((changes, areaName) => {
-        if (areaName === 'sync' && changes.gvMermaidEnabled) {
-            mermaidEnabled = changes.gvMermaidEnabled.newValue !== false;
-            if (mermaidEnabled) {
-                initializeMermaid();
-                console.log('[Gemini Voyager] Mermaid rendering enabled');
-            } else {
-                // Stop observing when disabled
-                if (observer) {
-                    observer.disconnect();
-                    observer = null;
-                }
-                console.log('[Gemini Voyager] Mermaid rendering disabled');
-            }
+  // Listen for setting changes
+  chrome.storage?.onChanged?.addListener((changes, areaName) => {
+    if (areaName === 'sync' && changes.gvMermaidEnabled) {
+      mermaidEnabled = changes.gvMermaidEnabled.newValue !== false;
+      if (mermaidEnabled) {
+        initializeMermaid();
+        console.log('[Gemini Voyager] Mermaid rendering enabled');
+      } else {
+        // Stop observing when disabled
+        if (observer) {
+          observer.disconnect();
+          observer = null;
         }
-    });
+        console.log('[Gemini Voyager] Mermaid rendering disabled');
+      }
+    }
+  });
 };
 
 /**
  * Initialize Mermaid rendering
  */
 const initializeMermaid = () => {
-    createStyles();
-    initMermaid();
+  createStyles();
+  initMermaid();
 
-    processCodeBlocks();
+  processCodeBlocks();
 
-    // Only create observer if not already exists
-    if (!observer) {
-        let timeout: ReturnType<typeof setTimeout>;
-        const debouncedProcess = () => {
-            if (!mermaidEnabled) return;
-            clearTimeout(timeout);
-            timeout = setTimeout(processCodeBlocks, 1000);
-        };
+  // Only create observer if not already exists
+  if (!observer) {
+    let timeout: ReturnType<typeof setTimeout>;
+    const debouncedProcess = () => {
+      if (!mermaidEnabled) return;
+      clearTimeout(timeout);
+      timeout = setTimeout(processCodeBlocks, 1000);
+    };
 
-        observer = new MutationObserver(() => {
-            debouncedProcess();
-        });
+    observer = new MutationObserver(() => {
+      debouncedProcess();
+    });
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
-    }
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+  }
 
-    console.log('[Gemini Voyager] Mermaid integration started');
+  console.log('[Gemini Voyager] Mermaid integration started');
 };

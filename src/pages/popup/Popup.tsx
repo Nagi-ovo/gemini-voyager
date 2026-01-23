@@ -56,7 +56,12 @@ const normalizePercent = (
 
 const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LEGACY_BASELINE_PX };
 const EDIT_PERCENT = { min: 30, max: 100, defaultValue: 60, legacyBaselinePx: LEGACY_BASELINE_PX };
-const SIDEBAR_PERCENT = { min: 15, max: 45, defaultValue: 26, legacyBaselinePx: LEGACY_BASELINE_PX };
+const SIDEBAR_PERCENT = {
+  min: 15,
+  max: 45,
+  defaultValue: 26,
+  legacyBaselinePx: LEGACY_BASELINE_PX,
+};
 const SIDEBAR_PX = {
   min: Math.round(pxFromPercent(SIDEBAR_PERCENT.min)),
   max: Math.round(pxFromPercent(SIDEBAR_PERCENT.max)),
@@ -118,7 +123,9 @@ export default function Popup() {
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
   const [websiteError, setWebsiteError] = useState<string>('');
   const [showStarredHistory, setShowStarredHistory] = useState<boolean>(false);
-  const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath' | 'no-dollar'>('latex');
+  const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath' | 'no-dollar'>(
+    'latex'
+  );
   const [extVersion, setExtVersion] = useState<string | null>(null);
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
@@ -127,18 +134,15 @@ export default function Popup() {
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
 
-  const handleFormulaCopyFormatChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const format = e.target.value as 'latex' | 'unicodemath' | 'no-dollar';
-      setFormulaCopyFormat(format);
-      try {
-        chrome.storage?.sync?.set({ gvFormulaCopyFormat: format });
-      } catch (err) {
-        console.error('[Gemini Voyager] Failed to save formula copy format:', err);
-      }
-    },
-    []
-  );
+  const handleFormulaCopyFormatChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const format = e.target.value as 'latex' | 'unicodemath' | 'no-dollar';
+    setFormulaCopyFormat(format);
+    try {
+      chrome.storage?.sync?.set({ gvFormulaCopyFormat: format });
+    } catch (err) {
+      console.error('[Gemini Voyager] Failed to save formula copy format:', err);
+    }
+  }, []);
 
   const setSyncStorage = useCallback(async (payload: Record<string, any>) => {
     try {
@@ -158,30 +162,49 @@ export default function Popup() {
   }, []);
 
   // Helper function to apply settings to storage
-  const apply = useCallback((settings: SettingsUpdate) => {
-    const payload: any = {};
-    if (settings.mode) payload.geminiTimelineScrollMode = settings.mode;
-    if (typeof settings.hideContainer === 'boolean') payload.geminiTimelineHideContainer = settings.hideContainer;
-    if (typeof settings.draggableTimeline === 'boolean') payload.geminiTimelineDraggable = settings.draggableTimeline;
-    if (typeof settings.markerLevelEnabled === 'boolean') payload.geminiTimelineMarkerLevel = settings.markerLevelEnabled;
-    if (typeof settings.folderEnabled === 'boolean') payload.geminiFolderEnabled = settings.folderEnabled;
-    if (typeof settings.hideArchivedConversations === 'boolean') payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
-    if (settings.resetPosition) payload.geminiTimelinePosition = null;
-    if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
-    if (typeof settings.watermarkRemoverEnabled === 'boolean') payload.geminiWatermarkRemoverEnabled = settings.watermarkRemoverEnabled;
-    if (typeof settings.hidePromptManager === 'boolean') payload.gvHidePromptManager = settings.hidePromptManager;
-    if (typeof settings.inputCollapseEnabled === 'boolean') payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
-    if (typeof settings.tabTitleUpdateEnabled === 'boolean') payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
-    if (typeof settings.mermaidEnabled === 'boolean') payload.gvMermaidEnabled = settings.mermaidEnabled;
-    void setSyncStorage(payload);
-  }, [setSyncStorage]);
+  const apply = useCallback(
+    (settings: SettingsUpdate) => {
+      const payload: any = {};
+      if (settings.mode) payload.geminiTimelineScrollMode = settings.mode;
+      if (typeof settings.hideContainer === 'boolean')
+        payload.geminiTimelineHideContainer = settings.hideContainer;
+      if (typeof settings.draggableTimeline === 'boolean')
+        payload.geminiTimelineDraggable = settings.draggableTimeline;
+      if (typeof settings.markerLevelEnabled === 'boolean')
+        payload.geminiTimelineMarkerLevel = settings.markerLevelEnabled;
+      if (typeof settings.folderEnabled === 'boolean')
+        payload.geminiFolderEnabled = settings.folderEnabled;
+      if (typeof settings.hideArchivedConversations === 'boolean')
+        payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
+      if (settings.resetPosition) payload.geminiTimelinePosition = null;
+      if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
+      if (typeof settings.watermarkRemoverEnabled === 'boolean')
+        payload.geminiWatermarkRemoverEnabled = settings.watermarkRemoverEnabled;
+      if (typeof settings.hidePromptManager === 'boolean')
+        payload.gvHidePromptManager = settings.hidePromptManager;
+      if (typeof settings.inputCollapseEnabled === 'boolean')
+        payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
+      if (typeof settings.tabTitleUpdateEnabled === 'boolean')
+        payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
+      if (typeof settings.mermaidEnabled === 'boolean')
+        payload.gvMermaidEnabled = settings.mermaidEnabled;
+      void setSyncStorage(payload);
+    },
+    [setSyncStorage]
+  );
 
   // Width adjuster for chat width
   const chatWidthAdjuster = useWidthAdjuster({
     storageKey: 'geminiChatWidth',
     defaultValue: CHAT_PERCENT.defaultValue,
     normalize: (v) =>
-      normalizePercent(v, CHAT_PERCENT.defaultValue, CHAT_PERCENT.min, CHAT_PERCENT.max, CHAT_PERCENT.legacyBaselinePx),
+      normalizePercent(
+        v,
+        CHAT_PERCENT.defaultValue,
+        CHAT_PERCENT.min,
+        CHAT_PERCENT.max,
+        CHAT_PERCENT.legacyBaselinePx
+      ),
     onApply: useCallback((widthPercent: number) => {
       const normalized = normalizePercent(
         widthPercent,
@@ -192,7 +215,7 @@ export default function Popup() {
       );
       try {
         chrome.storage?.sync?.set({ geminiChatWidth: normalized });
-      } catch { }
+      } catch {}
     }, []),
   });
 
@@ -201,7 +224,13 @@ export default function Popup() {
     storageKey: 'geminiEditInputWidth',
     defaultValue: EDIT_PERCENT.defaultValue,
     normalize: (v) =>
-      normalizePercent(v, EDIT_PERCENT.defaultValue, EDIT_PERCENT.min, EDIT_PERCENT.max, EDIT_PERCENT.legacyBaselinePx),
+      normalizePercent(
+        v,
+        EDIT_PERCENT.defaultValue,
+        EDIT_PERCENT.min,
+        EDIT_PERCENT.max,
+        EDIT_PERCENT.legacyBaselinePx
+      ),
     onApply: useCallback((widthPercent: number) => {
       const normalized = normalizePercent(
         widthPercent,
@@ -212,7 +241,7 @@ export default function Popup() {
       );
       try {
         chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
-      } catch { }
+      } catch {}
     }, []),
   });
 
@@ -225,7 +254,7 @@ export default function Popup() {
       const clamped = normalizeSidebarPx(widthPx);
       try {
         chrome.storage?.sync?.set({ geminiSidebarWidth: clamped });
-      } catch { }
+      } catch {}
     }, []),
   });
 
@@ -257,18 +286,26 @@ export default function Popup() {
 
       try {
         const cache = await browser.storage.local.get(LATEST_VERSION_CACHE_KEY);
-        const cached = cache?.[LATEST_VERSION_CACHE_KEY] as { version?: string; fetchedAt?: number } | undefined;
+        const cached = cache?.[LATEST_VERSION_CACHE_KEY] as
+          | { version?: string; fetchedAt?: number }
+          | undefined;
         const now = Date.now();
 
         let latest =
-          cached && cached.version && cached.fetchedAt && now - cached.fetchedAt < LATEST_VERSION_MAX_AGE
+          cached &&
+          cached.version &&
+          cached.fetchedAt &&
+          now - cached.fetchedAt < LATEST_VERSION_MAX_AGE
             ? cached.version
             : null;
 
         if (!latest) {
-          const resp = await fetch('https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest', {
-            headers: { Accept: 'application/vnd.github+json' },
-          });
+          const resp = await fetch(
+            'https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest',
+            {
+              headers: { Accept: 'application/vnd.github+json' },
+            }
+          );
 
           if (!resp.ok) {
             throw new Error(`HTTP ${resp.status}`);
@@ -278,7 +315,9 @@ export default function Popup() {
           const candidate =
             typeof data.tag_name === 'string'
               ? data.tag_name
-              : (typeof data.name === 'string' ? data.name : null);
+              : typeof data.name === 'string'
+                ? data.name
+                : null;
 
           if (candidate) {
             latest = candidate;
@@ -327,7 +366,8 @@ export default function Popup() {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
           if (m === 'jump' || m === 'flow') setMode(m);
           const format = res?.gvFormulaCopyFormat as 'latex' | 'unicodemath' | 'no-dollar';
-          if (format === 'latex' || format === 'unicodemath' || format === 'no-dollar') setFormulaCopyFormat(format);
+          if (format === 'latex' || format === 'unicodemath' || format === 'no-dollar')
+            setFormulaCopyFormat(format);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
           setMarkerLevelEnabled(!!res?.geminiTimelineMarkerLevel);
@@ -388,7 +428,7 @@ export default function Popup() {
           })();
         }
       );
-    } catch { }
+    } catch {}
   }, [setSyncStorage]);
 
   // Validate and normalize URL
@@ -509,20 +549,30 @@ export default function Popup() {
       setCustomWebsites(customWebsites);
       await setSyncStorage({ gvPromptCustomWebsites: customWebsites });
     }
-  }, [newWebsiteInput, customWebsites, normalizeUrl, t, requestCustomWebsitePermission, setSyncStorage]);
+  }, [
+    newWebsiteInput,
+    customWebsites,
+    normalizeUrl,
+    t,
+    requestCustomWebsitePermission,
+    setSyncStorage,
+  ]);
 
   // Remove website handler
-  const handleRemoveWebsite = useCallback(async (website: string) => {
-    const updatedWebsites = customWebsites.filter(w => w !== website);
-    setCustomWebsites(updatedWebsites);
-    await setSyncStorage({ gvPromptCustomWebsites: updatedWebsites });
-    await revokeCustomWebsitePermission(website);
-  }, [customWebsites, revokeCustomWebsitePermission, setSyncStorage]);
+  const handleRemoveWebsite = useCallback(
+    async (website: string) => {
+      const updatedWebsites = customWebsites.filter((w) => w !== website);
+      setCustomWebsites(updatedWebsites);
+      await setSyncStorage({ gvPromptCustomWebsites: updatedWebsites });
+      await revokeCustomWebsitePermission(website);
+    },
+    [customWebsites, revokeCustomWebsitePermission, setSyncStorage]
+  );
 
   const toggleQuickWebsite = useCallback(
     async (domain: string, isEnabled: boolean) => {
       if (isEnabled) {
-        const updated = customWebsites.filter(w => w !== domain);
+        const updated = customWebsites.filter((w) => w !== domain);
         setCustomWebsites(updated);
         await setSyncStorage({ gvPromptCustomWebsites: updated });
         await revokeCustomWebsitePermission(domain);
@@ -558,7 +608,8 @@ export default function Popup() {
     ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/${currentReleaseTag ?? `v${extVersion}`}`
     : 'https://github.com/Nagi-ovo/gemini-voyager/releases';
 
-  const websiteUrl = language === 'zh' ? 'https://voyager.nagi.fun' : `https://voyager.nagi.fun/${language}`;
+  const websiteUrl =
+    language === 'zh' ? 'https://voyager.nagi.fun' : `https://voyager.nagi.fun/${language}`;
 
   // Show starred history if requested
   if (showStarredHistory) {
@@ -583,14 +634,21 @@ export default function Popup() {
           <Card className="p-3 bg-amber-50 border-amber-200 text-amber-900 shadow-sm">
             <div className="flex items-start gap-3">
               <div className="mt-1 text-amber-600">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
                   <path d="M12 2l4 4h-3v7h-2V6H8l4-4zm6 11v6H6v-6H4v8h16v-8h-2z" />
                 </svg>
               </div>
               <div className="flex-1 space-y-1">
                 <p className="text-sm font-semibold leading-tight">{t('newVersionAvailable')}</p>
                 <p className="text-xs leading-tight">
-                  {t('currentVersionLabel')}: v{normalizedCurrentVersion} · {t('latestVersionLabel')}: v{normalizedLatestVersion}
+                  {t('currentVersionLabel')}: v{normalizedCurrentVersion} ·{' '}
+                  {t('latestVersionLabel')}: v{normalizedLatestVersion}
                 </p>
               </div>
               <a
@@ -619,8 +677,11 @@ export default function Popup() {
                   style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
                 />
                 <button
-                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${mode === 'flow' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                    }`}
+                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                    mode === 'flow'
+                      ? 'text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => {
                     setMode('flow');
                     apply({ mode: 'flow' });
@@ -629,8 +690,11 @@ export default function Popup() {
                   {t('flow')}
                 </button>
                 <button
-                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${mode === 'jump' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                    }`}
+                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                    mode === 'jump'
+                      ? 'text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => {
                     setMode('jump');
                     apply({ mode: 'jump' });
@@ -641,7 +705,10 @@ export default function Popup() {
               </div>
             </div>
             <div className="flex items-center justify-between group">
-              <Label htmlFor="hide-container" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+              <Label
+                htmlFor="hide-container"
+                className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+              >
                 {t('hideOuterContainer')}
               </Label>
               <Switch
@@ -654,7 +721,10 @@ export default function Popup() {
               />
             </div>
             <div className="flex items-center justify-between group">
-              <Label htmlFor="draggable-timeline" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+              <Label
+                htmlFor="draggable-timeline"
+                className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+              >
                 {t('draggableTimeline')}
               </Label>
               <Switch
@@ -668,7 +738,10 @@ export default function Popup() {
             </div>
             <div className="flex items-center justify-between group">
               <div className="flex-1">
-                <Label htmlFor="marker-level-enabled" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors flex items-center gap-1">
+                <Label
+                  htmlFor="marker-level-enabled"
+                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors flex items-center gap-1"
+                >
                   {t('enableMarkerLevel')}
                   <span
                     className="material-symbols-outlined text-[16px] leading-none opacity-50 hover:opacity-100 transition-opacity cursor-help"
@@ -698,7 +771,9 @@ export default function Popup() {
                 apply({ resetPosition: true });
               }}
             >
-              <span className="group-hover:scale-105 transition-transform text-xs">{t('resetTimelinePosition')}</span>
+              <span className="group-hover:scale-105 transition-transform text-xs">
+                {t('resetTimelinePosition')}
+              </span>
             </Button>
             {/* View Starred History Button */}
             <Button
@@ -731,7 +806,10 @@ export default function Popup() {
           <CardTitle className="mb-4 text-xs uppercase">{t('folderOptions')}</CardTitle>
           <CardContent className="p-0 space-y-4">
             <div className="flex items-center justify-between group">
-              <Label htmlFor="folder-enabled" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+              <Label
+                htmlFor="folder-enabled"
+                className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+              >
                 {t('enableFolderFeature')}
               </Label>
               <Switch
@@ -744,7 +822,10 @@ export default function Popup() {
               />
             </div>
             <div className="flex items-center justify-between group">
-              <Label htmlFor="hide-archived" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+              <Label
+                htmlFor="hide-archived"
+                className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+              >
                 {t('hideArchivedConversations')}
               </Label>
               <Switch
@@ -849,7 +930,10 @@ export default function Popup() {
           <CardContent className="p-0 space-y-4">
             <div className="flex items-center justify-between group">
               <div className="flex-1">
-                <Label htmlFor="input-collapse-enabled" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                <Label
+                  htmlFor="input-collapse-enabled"
+                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                >
                   {t('enableInputCollapse')}
                 </Label>
                 <p className="text-xs text-muted-foreground mt-1">{t('enableInputCollapseHint')}</p>
@@ -873,7 +957,10 @@ export default function Popup() {
             {/* Hide Prompt Manager Toggle */}
             <div className="flex items-center justify-between group">
               <div className="flex-1">
-                <Label htmlFor="hide-prompt-manager" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                <Label
+                  htmlFor="hide-prompt-manager"
+                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                >
                   {t('hidePromptManager')}
                 </Label>
                 <p className="text-xs text-muted-foreground mt-1">{t('hidePromptManagerHint')}</p>
@@ -923,18 +1010,23 @@ export default function Popup() {
                   return (
                     <button
                       key={domain}
-                      onClick={() => { void toggleQuickWebsite(domain, isEnabled); }}
-                      className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-full text-[11px] font-medium transition-all flex-grow justify-center min-w-[30%] ${isEnabled
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
-                        }`}
+                      onClick={() => {
+                        void toggleQuickWebsite(domain, isEnabled);
+                      }}
+                      className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-full text-[11px] font-medium transition-all flex-grow justify-center min-w-[30%] ${
+                        isEnabled
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
+                      }`}
                       title={label}
                     >
                       <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
                         <Icon />
                       </span>
                       <span className="truncate">{label}</span>
-                      <span className={`shrink-0 w-2.5 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}>
+                      <span
+                        className={`shrink-0 w-2.5 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}
+                      >
                         ✓
                       </span>
                     </button>
@@ -952,7 +1044,9 @@ export default function Popup() {
                     >
                       <span className="text-sm font-mono text-foreground/90">{website}</span>
                       <button
-                        onClick={() => { void handleRemoveWebsite(website); }}
+                        onClick={() => {
+                          void handleRemoveWebsite(website);
+                        }}
                         className="text-xs text-destructive hover:text-destructive/80 font-medium opacity-70 group-hover:opacity-100 transition-opacity"
                       >
                         {t('removeWebsite')}
@@ -981,16 +1075,16 @@ export default function Popup() {
                     className="flex-1 min-w-0 px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                   />
                   <Button
-                    onClick={() => { void handleAddWebsite(); }}
+                    onClick={() => {
+                      void handleAddWebsite();
+                    }}
                     size="sm"
                     className="shrink-0 whitespace-nowrap"
                   >
                     {t('addWebsite')}
                   </Button>
                 </div>
-                {websiteError && (
-                  <p className="text-xs text-destructive">{websiteError}</p>
-                )}
+                {websiteError && <p className="text-xs text-destructive">{websiteError}</p>}
               </div>
 
               {/* Note about reloading */}
@@ -1007,10 +1101,15 @@ export default function Popup() {
           <CardContent className="p-0 space-y-4">
             <div className="flex items-center justify-between group">
               <div className="flex-1">
-                <Label htmlFor="tab-title-update" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                <Label
+                  htmlFor="tab-title-update"
+                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                >
                   {t('enableTabTitleUpdate')}
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">{t('enableTabTitleUpdateHint')}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('enableTabTitleUpdateHint')}
+                </p>
               </div>
               <Switch
                 id="tab-title-update"
@@ -1023,10 +1122,15 @@ export default function Popup() {
             </div>
             <div className="flex items-center justify-between group">
               <div className="flex-1">
-                <Label htmlFor="mermaid-enabled" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                <Label
+                  htmlFor="mermaid-enabled"
+                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                >
                   {t('enableMermaidRendering')}
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">{t('enableMermaidRenderingHint')}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('enableMermaidRenderingHint')}
+                </p>
               </div>
               <Switch
                 id="mermaid-enabled"
@@ -1046,10 +1150,15 @@ export default function Popup() {
           <CardContent className="p-0 space-y-4">
             <div className="flex items-center justify-between group">
               <div className="flex-1">
-                <Label htmlFor="watermark-remover" className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors">
+                <Label
+                  htmlFor="watermark-remover"
+                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                >
                   {t('enableNanobananaWatermarkRemover')}
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">{t('nanobananaWatermarkRemoverHint')}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('nanobananaWatermarkRemoverHint')}
+                </p>
               </div>
               <Switch
                 id="watermark-remover"
@@ -1086,7 +1195,16 @@ export default function Popup() {
             rel="noreferrer"
             className="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="2" y1="12" x2="22" y2="12"></line>
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>

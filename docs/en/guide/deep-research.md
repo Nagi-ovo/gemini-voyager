@@ -41,12 +41,15 @@ The exported Markdown file includes:
 ## 思考阶段 1 / Thinking Phase 1
 
 ### Thought Title 1
+
 Thought content...
 
 ### Thought Title 2
+
 Thought content...
 
 #### 研究网站 / Researched Websites
+
 - [domain.com](https://example.com) - Page Title
 - [another.com](https://another.com) - Another Title
 

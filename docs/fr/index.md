@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: "Gemini Voyager"
+  name: 'Gemini Voyager'
   text: "L'OS manquant pour Gemini."
   tagline: "Nous aimons Gemini. Nous voulions juste qu'il soit parfait."
   image:

@@ -10,7 +10,11 @@ describe('TimelineManager active marker', () => {
     Object.defineProperty(scrollContainer, 'clientHeight', { value: 400, configurable: true });
     scrollContainer.scrollTop = 0;
 
-    const elements = [document.createElement('div'), document.createElement('div'), document.createElement('div')];
+    const elements = [
+      document.createElement('div'),
+      document.createElement('div'),
+      document.createElement('div'),
+    ];
     const rectSpies = elements.map((el) => vi.spyOn(el, 'getBoundingClientRect'));
 
     const markers = elements.map((element, index) => ({
@@ -42,4 +46,3 @@ describe('TimelineManager active marker', () => {
     rectSpies.forEach((spy) => expect(spy).not.toHaveBeenCalled());
   });
 });
-

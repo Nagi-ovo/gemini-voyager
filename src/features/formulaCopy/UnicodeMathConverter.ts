@@ -12,18 +12,18 @@ function toMathBold(char: string): string {
   const code = char.charCodeAt(0);
 
   // Uppercase letters A-Z (U+0041 to U+005A) -> Mathematical Bold (U+1D400 to U+1D419)
-  if (code >= 0x41 && code <= 0x5A) {
-    return String.fromCodePoint(0x1D400 + (code - 0x41));
+  if (code >= 0x41 && code <= 0x5a) {
+    return String.fromCodePoint(0x1d400 + (code - 0x41));
   }
 
   // Lowercase letters a-z (U+0061 to U+007A) -> Mathematical Bold (U+1D41A to U+1D433)
-  if (code >= 0x61 && code <= 0x7A) {
-    return String.fromCodePoint(0x1D41A + (code - 0x61));
+  if (code >= 0x61 && code <= 0x7a) {
+    return String.fromCodePoint(0x1d41a + (code - 0x61));
   }
 
   // Numbers 0-9 (U+0030 to U+0039) -> Mathematical Bold Digits (U+1D7CE to U+1D7D7)
   if (code >= 0x30 && code <= 0x39) {
-    return String.fromCodePoint(0x1D7CE + (code - 0x30));
+    return String.fromCodePoint(0x1d7ce + (code - 0x30));
   }
 
   // If not alphanumeric, return as-is
@@ -36,7 +36,9 @@ function toMathBold(char: string): string {
  * @returns Unicode mathematical bold text
  */
 function toBoldText(text: string): string {
-  return Array.from(text).map(char => toMathBold(char)).join('');
+  return Array.from(text)
+    .map((char) => toMathBold(char))
+    .join('');
 }
 
 /**
@@ -51,16 +53,16 @@ export function latexToUnicodeMath(latex: string): string {
 
   // Combining diacritical marks for accents (must be processed before other replacements)
   const accentMarks: Record<string, string> = {
-    '\\hat': '\u0302',      // Combining circumflex accent
-    '\\tilde': '\u0303',    // Combining tilde
-    '\\bar': '\u0305',      // Combining overline
-    '\\vec': '\u20D7',      // Combining right arrow above
-    '\\dot': '\u0307',      // Combining dot above
-    '\\ddot': '\u0308',     // Combining diaeresis (two dots)
-    '\\acute': '\u0301',    // Combining acute accent
-    '\\grave': '\u0300',    // Combining grave accent
-    '\\check': '\u030C',    // Combining caron
-    '\\breve': '\u0306',    // Combining breve
+    '\\hat': '\u0302', // Combining circumflex accent
+    '\\tilde': '\u0303', // Combining tilde
+    '\\bar': '\u0305', // Combining overline
+    '\\vec': '\u20D7', // Combining right arrow above
+    '\\dot': '\u0307', // Combining dot above
+    '\\ddot': '\u0308', // Combining diaeresis (two dots)
+    '\\acute': '\u0301', // Combining acute accent
+    '\\grave': '\u0300', // Combining grave accent
+    '\\check': '\u030C', // Combining caron
+    '\\breve': '\u0306', // Combining breve
   };
 
   // Process accents: \hat{x} -> x̂
@@ -81,10 +83,7 @@ export function latexToUnicodeMath(latex: string): string {
     // Handle non-braced form:
     // - \hat x       -> x̂
     // - \hat\alpha   -> α̂
-    const unbracedPattern = new RegExp(
-      `${escaped}\\s*(\\\\[a-zA-Z]+|[a-zA-Z])`,
-      'g'
-    );
+    const unbracedPattern = new RegExp(`${escaped}\\s*(\\\\[a-zA-Z]+|[a-zA-Z])`, 'g');
     result = result.replace(unbracedPattern, (match, token) => token + combining);
   }
 
@@ -138,7 +137,7 @@ export function latexToUnicodeMath(latex: string): string {
 
   // Mathematical operators and symbols
   const symbols: Record<string, string> = {
-    '\\mid': '|',           // Vertical bar (divisibility, conditional)
+    '\\mid': '|', // Vertical bar (divisibility, conditional)
     '\\infty': '∞',
     '\\partial': '∂',
     '\\nabla': '∇',
@@ -272,12 +271,34 @@ export function latexToUnicodeMath(latex: string): string {
 
   // Handle common functions
   const functions = [
-    'sin', 'cos', 'tan', 'cot', 'sec', 'csc',
-    'arcsin', 'arccos', 'arctan',
-    'sinh', 'cosh', 'tanh', 'coth',
-    'exp', 'log', 'ln', 'lg',
-    'det', 'dim', 'ker', 'max', 'min', 'sup', 'inf',
-    'gcd', 'lcm', 'arg', 'deg',
+    'sin',
+    'cos',
+    'tan',
+    'cot',
+    'sec',
+    'csc',
+    'arcsin',
+    'arccos',
+    'arctan',
+    'sinh',
+    'cosh',
+    'tanh',
+    'coth',
+    'exp',
+    'log',
+    'ln',
+    'lg',
+    'det',
+    'dim',
+    'ker',
+    'max',
+    'min',
+    'sup',
+    'inf',
+    'gcd',
+    'lcm',
+    'arg',
+    'deg',
   ];
 
   for (const func of functions) {
@@ -286,15 +307,18 @@ export function latexToUnicodeMath(latex: string): string {
 
   // Handle matrices (basic support)
   // \begin{matrix}...\end{matrix} -> [■(...)]
-  result = result.replace(/\\begin\{(?:matrix|pmatrix|bmatrix|vmatrix|Vmatrix)\}([\s\S]*?)\\end\{(?:matrix|pmatrix|bmatrix|vmatrix|Vmatrix)\}/g, (match, content) => {
-    // Replace \\ with @ (row separator in UnicodeMath)
-    const rows = content
-      .trim()
-      .split('\\\\')
-      .map((row: string) => row.trim()) // & is column separator in both LaTeX and UnicodeMath
-      .join('@');
-    return `[■(${rows})]`;
-  });
+  result = result.replace(
+    /\\begin\{(?:matrix|pmatrix|bmatrix|vmatrix|Vmatrix)\}([\s\S]*?)\\end\{(?:matrix|pmatrix|bmatrix|vmatrix|Vmatrix)\}/g,
+    (match, content) => {
+      // Replace \\ with @ (row separator in UnicodeMath)
+      const rows = content
+        .trim()
+        .split('\\\\')
+        .map((row: string) => row.trim()) // & is column separator in both LaTeX and UnicodeMath
+        .join('@');
+      return `[■(${rows})]`;
+    }
+  );
 
   // Handle common LaTeX commands that should be removed
   result = result.replace(/\\left/g, '');

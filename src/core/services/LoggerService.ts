@@ -26,7 +26,8 @@ export class LoggerService implements ILogger {
 
   private constructor(config: Partial<LoggerConfig> = {}) {
     this.config = {
-      level: config.level ?? (process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.DEBUG),
+      level:
+        config.level ?? (process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.DEBUG),
       prefix: config.prefix ?? '[GeminiVoyager]',
       enableTimestamp: config.enableTimestamp ?? true,
       enableContext: config.enableContext ?? true,
@@ -71,19 +72,12 @@ export class LoggerService implements ILogger {
       return;
     }
 
-    const timestamp = this.config.enableTimestamp
-      ? new Date().toISOString()
-      : '';
+    const timestamp = this.config.enableTimestamp ? new Date().toISOString() : '';
 
     const prefix = this.config.prefix;
     const levelStr = LogLevel[level];
 
-    const parts = [
-      timestamp,
-      prefix,
-      `[${levelStr}]`,
-      message,
-    ].filter(Boolean);
+    const parts = [timestamp, prefix, `[${levelStr}]`, message].filter(Boolean);
 
     const logMessage = parts.join(' ');
 

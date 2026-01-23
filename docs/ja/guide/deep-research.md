@@ -41,12 +41,15 @@ Deep Research の会話における完全な「思考」内容を、美しく整
 ## 思考阶段 1 / Thinking Phase 1
 
 ### 思考タイトル 1
+
 思考内容...
 
 ### 思考タイトル 2
+
 思考内容...
 
 #### 研究网站 / Researched Websites
+
 - [domain.com](https://example.com) - ページタイトル
 - [another.com](https://another.com) - 別のタイトル
 

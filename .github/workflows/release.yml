@@ -106,17 +106,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Bumping to version ${VERSION}"
-          
+
           # Update package.json and manifest.json
           node -e "const fs=require('fs');const v=process.env.VERSION;const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=v;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));m.version=v;fs.writeFileSync('manifest.json',JSON.stringify(m,null,2)+'\n');"
-          
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           git add package.json manifest.json
           git commit -m "chore(release): v${VERSION}" || echo "No changes to commit"
           git tag v${VERSION} || echo "Tag exists"
-          
+
           # Push commit and tag
           git push origin HEAD:main --tags
 
@@ -155,7 +155,7 @@ jobs:
       - name: Archive artifacts
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
-          
+
           cd dist_chrome && zip -r ../gemini-voyager-chrome-${TAG}.zip . && cd ..
           cd dist_safari && zip -r ../gemini-voyager-safari-${TAG}.zip . && cd ..
 
@@ -175,7 +175,7 @@ jobs:
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
           NOTES="${{ inputs.notes }}"
-          
+
           if [ -n "$NOTES" ]; then
             echo "body<<EOF" >> $GITHUB_OUTPUT
             echo "$NOTES" >> $GITHUB_OUTPUT
@@ -183,11 +183,11 @@ jobs:
           else
             cat > release_body.md << EOF
           ## 📥 Installation
-          
+
           - **Chrome**: \`gemini-voyager-chrome-${TAG}.zip\`
           - **Firefox**: \`gemini-voyager-firefox-${TAG}.xpi\`
           - **Safari**: \`gemini-voyager-safari-${TAG}.zip\`
-          
+
           [View Full Changelog](https://github.com/Nagi-ovo/gemini-voyager/compare/v...${TAG})
           EOF
             echo "body<<EOF" >> $GITHUB_OUTPUT

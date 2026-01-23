@@ -25,10 +25,7 @@ export class DOMService {
     selector: string,
     options: WaitForElementOptions = {}
   ): Promise<Result<HTMLElement>> {
-    const {
-      timeout = 5000,
-      rootElement = document.body,
-    } = options;
+    const { timeout = 5000, rootElement = document.body } = options;
 
     this.logger.debug(`Waiting for element: ${selector}`);
 
@@ -69,11 +66,10 @@ export class DOMService {
           observer.disconnect();
           resolve({
             success: false,
-            error: new DOMError(
-              ErrorCode.ELEMENT_NOT_FOUND,
-              `Element not found: ${selector}`,
-              { selector, timeout }
-            ),
+            error: new DOMError(ErrorCode.ELEMENT_NOT_FOUND, `Element not found: ${selector}`, {
+              selector,
+              timeout,
+            }),
           });
         }, timeout);
       }
@@ -94,11 +90,9 @@ export class DOMService {
         this.logger.debug(`Element not found: ${selector}`);
         return {
           success: false,
-          error: new DOMError(
-            ErrorCode.ELEMENT_NOT_FOUND,
-            `Element not found: ${selector}`,
-            { selector }
-          ),
+          error: new DOMError(ErrorCode.ELEMENT_NOT_FOUND, `Element not found: ${selector}`, {
+            selector,
+          }),
         };
       }
 
@@ -221,10 +215,7 @@ export class DOMService {
   /**
    * Get computed style value
    */
-  getComputedStyleValue(
-    element: Element,
-    property: string
-  ): string {
+  getComputedStyleValue(element: Element, property: string): string {
     return getComputedStyle(element).getPropertyValue(property);
   }
 
@@ -238,10 +229,7 @@ export class DOMService {
   /**
    * Find closest ancestor matching selector
    */
-  closest<T extends HTMLElement = HTMLElement>(
-    element: Element,
-    selector: string
-  ): Nullable<T> {
+  closest<T extends HTMLElement = HTMLElement>(element: Element, selector: string): Nullable<T> {
     return element.closest(selector) as Nullable<T>;
   }
 }

@@ -40,12 +40,15 @@ El archivo Markdown exportado contiene:
 ## Fase de Pensamiento 1 / Thinking Phase 1
 
 ### Título del Pensamiento 1
+
 Contenido del pensamiento...
 
 ### Título del Pensamiento 2
+
 Contenido del pensamiento...
 
 #### Sitios Web Investigados / Researched Websites
+
 - [domain.com](https://example.com) - Título de la página
 - [another.com](https://another.com) - Otro título
 

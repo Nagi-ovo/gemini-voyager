@@ -65,34 +65,21 @@ export class AppError extends Error {
 }
 
 export class StorageError extends AppError {
-  constructor(
-    code: ErrorCode,
-    message: string,
-    context?: ErrorContext,
-    originalError?: Error
-  ) {
+  constructor(code: ErrorCode, message: string, context?: ErrorContext, originalError?: Error) {
     super(code, message, context, originalError);
     this.name = 'StorageError';
   }
 }
 
 export class DOMError extends AppError {
-  constructor(
-    code: ErrorCode,
-    message: string,
-    context?: ErrorContext,
-    originalError?: Error
-  ) {
+  constructor(code: ErrorCode, message: string, context?: ErrorContext, originalError?: Error) {
     super(code, message, context, originalError);
     this.name = 'DOMError';
   }
 }
 
 export class ValidationError extends AppError {
-  constructor(
-    message: string,
-    context?: ErrorContext
-  ) {
+  constructor(message: string, context?: ErrorContext) {
     super(ErrorCode.VALIDATION_ERROR, message, context);
     this.name = 'ValidationError';
   }
@@ -108,26 +95,14 @@ export class ErrorHandler {
     }
 
     if (error instanceof Error) {
-      return new AppError(
-        ErrorCode.UNKNOWN_ERROR,
-        error.message,
-        context,
-        error
-      );
+      return new AppError(ErrorCode.UNKNOWN_ERROR, error.message, context, error);
     }
 
-    return new AppError(
-      ErrorCode.UNKNOWN_ERROR,
-      String(error),
-      context
-    );
+    return new AppError(ErrorCode.UNKNOWN_ERROR, String(error), context);
   }
 
   static isRecoverable(error: AppError): boolean {
-    const recoverableCodes = [
-      ErrorCode.ELEMENT_NOT_FOUND,
-      ErrorCode.STORAGE_READ_FAILED,
-    ];
+    const recoverableCodes = [ErrorCode.ELEMENT_NOT_FOUND, ErrorCode.STORAGE_READ_FAILED];
 
     return recoverableCodes.includes(error.code);
   }

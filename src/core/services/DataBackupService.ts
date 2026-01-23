@@ -88,7 +88,10 @@ export class DataBackupService<T = any> {
       console.log(`[BackupService:${this.namespace}] BeforeUnload backup created`);
       return true;
     } catch (error) {
-      console.error(`[BackupService:${this.namespace}] Failed to create beforeUnload backup:`, error);
+      console.error(
+        `[BackupService:${this.namespace}] Failed to create beforeUnload backup:`,
+        error
+      );
       return false;
     }
   }
@@ -161,7 +164,9 @@ export class DataBackupService<T = any> {
         return null;
       }
 
-      console.log(`[BackupService:${this.namespace}] Successfully loaded ${type} backup from ${backup.metadata.timestamp}`);
+      console.log(
+        `[BackupService:${this.namespace}] Successfully loaded ${type} backup from ${backup.metadata.timestamp}`
+      );
       return backup.data;
     } catch (error) {
       console.error(`[BackupService:${this.namespace}] Failed to load ${type} backup:`, error);
@@ -201,7 +206,9 @@ export class DataBackupService<T = any> {
       }
 
       if (age > this.maxBackupAge) {
-        console.warn(`[BackupService:${this.namespace}] Backup is too old: ${Math.floor(age / (24 * 60 * 60 * 1000))} days`);
+        console.warn(
+          `[BackupService:${this.namespace}] Backup is too old: ${Math.floor(age / (24 * 60 * 60 * 1000))} days`
+        );
         return false;
       }
 

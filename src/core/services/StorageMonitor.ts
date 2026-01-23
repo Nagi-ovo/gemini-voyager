@@ -13,11 +13,11 @@
  */
 
 export interface StorageQuotaInfo {
-  usage: number;        // Bytes used
-  quota: number;        // Total bytes available
+  usage: number; // Bytes used
+  quota: number; // Total bytes available
   usagePercent: number; // Usage percentage (0-1)
-  usageMB: number;      // Usage in megabytes
-  quotaMB: number;      // Quota in megabytes
+  usageMB: number; // Usage in megabytes
+  quotaMB: number; // Quota in megabytes
 }
 
 export interface StorageMonitorConfig {

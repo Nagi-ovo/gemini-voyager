@@ -86,7 +86,8 @@ export class DOMContentExtractor {
    * Extract assistant response content with rich formatting
    */
   static extractAssistantContent(element: HTMLElement): ExtractedContent {
-    if (this.DEBUG) console.log('[DOMContentExtractor] extractAssistantContent called, element:', element);
+    if (this.DEBUG)
+      console.log('[DOMContentExtractor] extractAssistantContent called, element:', element);
 
     const result: ExtractedContent = {
       text: '',
@@ -103,9 +104,7 @@ export class DOMContentExtractor {
     if (!messageContent) {
       // Try markdown container
       messageContent = element.querySelector(
-        '.markdown-main-panel, ' +
-          '.markdown, ' +
-          '.model-response-text',
+        '.markdown-main-panel, ' + '.markdown, ' + '.model-response-text'
       );
     }
 
@@ -125,7 +124,12 @@ export class DOMContentExtractor {
       messageContent = element;
     }
 
-    if (this.DEBUG) console.log('[DOMContentExtractor] Using container:', messageContent.tagName, messageContent.className);
+    if (this.DEBUG)
+      console.log(
+        '[DOMContentExtractor] Using container:',
+        messageContent.tagName,
+        messageContent.className
+      );
 
     // Don't clone! Angular custom elements may lose content when cloned
     // Instead, skip model-thoughts during processNodes
@@ -146,7 +150,10 @@ export class DOMContentExtractor {
       if (this.DEBUG) {
         console.log('[DOMContentExtractor] markdownDiv tagName:', markdownDiv.tagName);
         console.log('[DOMContentExtractor] markdownDiv className:', markdownDiv.className);
-        console.log('[DOMContentExtractor] markdownDiv innerHTML preview:', (markdownDiv as HTMLElement).innerHTML.substring(0, 300));
+        console.log(
+          '[DOMContentExtractor] markdownDiv innerHTML preview:',
+          (markdownDiv as HTMLElement).innerHTML.substring(0, 300)
+        );
       }
 
       // First, process all direct children of markdown that are NOT response-element
@@ -163,8 +170,15 @@ export class DOMContentExtractor {
     // These might be siblings to message-content in response-element containers
     // IMPORTANT: Angular may use Shadow DOM, so we need to search both light DOM and shadow DOM
     if (this.DEBUG) {
-      console.log('[DOMContentExtractor] Searching for code blocks in:', element.tagName, element.className);
-      console.log('[DOMContentExtractor] Element HTML preview:', element.outerHTML.substring(0, 200));
+      console.log(
+        '[DOMContentExtractor] Searching for code blocks in:',
+        element.tagName,
+        element.className
+      );
+      console.log(
+        '[DOMContentExtractor] Element HTML preview:',
+        element.outerHTML.substring(0, 200)
+      );
     }
 
     // Helper function to search in both light DOM and shadow DOM
@@ -192,13 +206,21 @@ export class DOMContentExtractor {
 
     // Also search for raw code elements regardless of presence of code-block
     const altCodeBlocks = searchAll(messageContent, 'pre > code, [data-test-id="code-content"]');
-    if (this.DEBUG) console.log('[DOMContentExtractor] Found', altCodeBlocks.length, 'raw code elements with alternative selector');
+    if (this.DEBUG)
+      console.log(
+        '[DOMContentExtractor] Found',
+        altCodeBlocks.length,
+        'raw code elements with alternative selector'
+      );
     altCodeBlocks.forEach((codeEl, idx) => {
       // Avoid duplicates if already processed
       if ((codeEl as any).processedByGV) return;
       // Skip if inside a code-block (already handled by processNodes)
       if (codeEl.closest && codeEl.closest('code-block')) return;
-      if (this.DEBUG) console.log(`[DOMContentExtractor] Processing raw code element ${idx + 1}/${altCodeBlocks.length}`);
+      if (this.DEBUG)
+        console.log(
+          `[DOMContentExtractor] Processing raw code element ${idx + 1}/${altCodeBlocks.length}`
+        );
       const extracted = this.extractCodeFromCodeElement(codeEl as HTMLElement);
       if (extracted.text) {
         (codeEl as any).processedByGV = true;
@@ -222,7 +244,8 @@ export class DOMContentExtractor {
         (element.querySelector('message-content') as HTMLElement | null) ||
         (element as HTMLElement);
       try {
-        const plain = (fallbackContainer as HTMLElement).innerText || fallbackContainer.textContent || '';
+        const plain =
+          (fallbackContainer as HTMLElement).innerText || fallbackContainer.textContent || '';
         combinedText = this.normalizeText(plain);
       } catch {
         /* ignore */
@@ -240,21 +263,28 @@ export class DOMContentExtractor {
     container: Element,
     htmlParts: string[],
     textParts: string[],
-    flags: Pick<ExtractedContent, 'hasImages' | 'hasFormulas' | 'hasTables' | 'hasCode'>,
+    flags: Pick<ExtractedContent, 'hasImages' | 'hasFormulas' | 'hasTables' | 'hasCode'>
   ): void {
     const children = Array.from(container.children);
-    if (this.DEBUG) console.log(`[DOMContentExtractor] processNodes: ${children.length} children in`, container.tagName, container.className);
+    if (this.DEBUG)
+      console.log(
+        `[DOMContentExtractor] processNodes: ${children.length} children in`,
+        container.tagName,
+        container.className
+      );
 
     // Check for Shadow DOM
     const shadowRoot = (container as any).shadowRoot;
     if (shadowRoot) {
-      if (this.DEBUG) console.log('[DOMContentExtractor] Found Shadow DOM! Processing shadow children');
+      if (this.DEBUG)
+        console.log('[DOMContentExtractor] Found Shadow DOM! Processing shadow children');
       this.processNodes(shadowRoot, htmlParts, textParts, flags);
     }
 
     for (const child of children) {
       const tagName = child.tagName.toLowerCase();
-      if (this.DEBUG) console.log('[DOMContentExtractor] Processing child:', tagName, child.className);
+      if (this.DEBUG)
+        console.log('[DOMContentExtractor] Processing child:', tagName, child.className);
 
       // Skip certain elements
       if (this.shouldSkipElement(child)) {
@@ -355,7 +385,8 @@ export class DOMContentExtractor {
         child.classList.contains('horizontal-scroll-wrapper') ||
         child.classList.contains('table-block-component')
       ) {
-        if (this.DEBUG) console.log('[DOMContentExtractor] Recursing into container:', tagName, child.className);
+        if (this.DEBUG)
+          console.log('[DOMContentExtractor] Recursing into container:', tagName, child.className);
         // Recursively process children instead of extracting text directly
         this.processNodes(child, htmlParts, textParts, flags);
         continue;
@@ -402,7 +433,11 @@ export class DOMContentExtractor {
   /**
    * Process inline content (text with inline formulas)
    */
-  private static processInlineContent(element: HTMLElement): { html: string; text: string; hasFormulas: boolean } {
+  private static processInlineContent(element: HTMLElement): {
+    html: string;
+    text: string;
+    hasFormulas: boolean;
+  } {
     let hasFormulas = false;
     const htmlParts: string[] = [];
     const textParts: string[] = [];
@@ -477,7 +512,10 @@ export class DOMContentExtractor {
   /**
    * Extract text with inline formulas
    */
-  private static extractTextWithInlineFormulas(element: HTMLElement): { html: string; text: string } {
+  private static extractTextWithInlineFormulas(element: HTMLElement): {
+    html: string;
+    text: string;
+  } {
     const processed = this.processInlineContent(element);
     return { html: processed.html, text: processed.text };
   }
@@ -577,7 +615,7 @@ export class DOMContentExtractor {
       const firstBodyRow = table.querySelector('tbody tr');
       if (firstBodyRow) {
         const header = Array.from(firstBodyRow.querySelectorAll('td, th')).map((cell) =>
-          this.normalizeText(cell.textContent || ''),
+          this.normalizeText(cell.textContent || '')
         );
         if (header.length > 0) {
           markdownLines.push('| ' + header.join(' | ') + ' |');
@@ -585,7 +623,7 @@ export class DOMContentExtractor {
           const rest = Array.from(table.querySelectorAll('tbody tr')).slice(1);
           rest.forEach((row) => {
             const cells = Array.from(row.querySelectorAll('td, th')).map((cell) =>
-              this.normalizeText(cell.textContent || ''),
+              this.normalizeText(cell.textContent || '')
             );
             markdownLines.push('| ' + cells.join(' | ') + ' |');
           });
@@ -602,7 +640,10 @@ export class DOMContentExtractor {
   /**
    * Extract list content with support for nested lists
    */
-  private static extractList(element: HTMLElement, depth: number = 0): { html: string; text: string } {
+  private static extractList(
+    element: HTMLElement,
+    depth: number = 0
+  ): { html: string; text: string } {
     const isOrdered = element.tagName === 'OL';
     const items = Array.from(element.querySelectorAll(':scope > li'));
     const indent = '  '.repeat(depth); // 2 spaces per level

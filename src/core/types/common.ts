@@ -3,9 +3,7 @@
  * Following strict type safety principles
  */
 
-export type Result<T, E = Error> =
-  | { success: true; data: T }
-  | { success: false; error: E };
+export type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
 export interface IDisposable {
   dispose(): void;
@@ -62,4 +60,4 @@ export const StorageKeys = {
   FORMULA_COPY_FORMAT: 'gvFormulaCopyFormat',
 } as const;
 
-export type StorageKey = typeof StorageKeys[keyof typeof StorageKeys];
+export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

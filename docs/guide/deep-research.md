@@ -41,12 +41,15 @@
 ## 思考阶段 1 / Thinking Phase 1
 
 ### 思考标题 1
+
 思考内容...
 
 ### 思考标题 2
+
 思考内容...
 
 #### 研究网站 / Researched Websites
+
 - [domain.com](https://example.com) - 页面标题
 - [another.com](https://another.com) - 另一个标题
 

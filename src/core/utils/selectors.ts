@@ -51,21 +51,14 @@ export function getAssistantTurnSelectors(): string[] {
  * Get conversation selectors
  */
 export function getConversationSelectors(): string[] {
-  return [
-    '[data-test-id="conversation"]',
-    '[data-test-id^="history-item"]',
-    '.conversation-card',
-  ];
+  return ['[data-test-id="conversation"]', '[data-test-id^="history-item"]', '.conversation-card'];
 }
 
 /**
  * Get conversation link selectors
  */
 export function getConversationLinkSelectors(): string[] {
-  return [
-    'a[href*="/app/"]',
-    'a[href*="/gem/"]',
-  ];
+  return ['a[href*="/app/"]', 'a[href*="/gem/"]'];
 }
 
 /**

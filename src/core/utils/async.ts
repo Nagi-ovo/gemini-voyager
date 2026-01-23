@@ -54,12 +54,7 @@ export async function retry<T>(
     backoffFactor?: number;
   } = {}
 ): Promise<T> {
-  const {
-    maxAttempts = 3,
-    initialDelay = 100,
-    maxDelay = 5000,
-    backoffFactor = 2,
-  } = options;
+  const { maxAttempts = 3, initialDelay = 100, maxDelay = 5000, backoffFactor = 2 } = options;
 
   let lastError: Error | undefined;
   let delay = initialDelay;
@@ -84,7 +79,7 @@ export async function retry<T>(
  * Sleep for specified milliseconds
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -97,8 +92,6 @@ export async function withTimeout<T>(
 ): Promise<T> {
   return Promise.race([
     promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(timeoutError), timeoutMs)
-    ),
+    new Promise<T>((_, reject) => setTimeout(() => reject(timeoutError), timeoutMs)),
   ]);
 }

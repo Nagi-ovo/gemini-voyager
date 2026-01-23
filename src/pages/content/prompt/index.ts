@@ -18,7 +18,13 @@ import { StorageKeys, type StorageKey } from '@/core/types/common';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import { compareVersions } from '@/core/utils/version';
 import { initI18n, getTranslationSync, getCurrentLanguage } from '@/utils/i18n';
-import { APP_LANGUAGES, APP_LANGUAGE_LABELS, isAppLanguage, normalizeLanguage, type AppLanguage } from '@/utils/language';
+import {
+  APP_LANGUAGES,
+  APP_LANGUAGE_LABELS,
+  isAppLanguage,
+  normalizeLanguage,
+  type AppLanguage,
+} from '@/utils/language';
 import type { TranslationKey } from '@/utils/translations';
 
 type PromptItem = {
@@ -134,7 +140,7 @@ async function writeStorage<T>(key: StorageKey, value: T): Promise<void> {
   if (!result.success) {
     pmLogger.error(`Failed to write key: ${key}`, {
       error: result.error?.message || 'Unknown error',
-      errorDetails: result.error
+      errorDetails: result.error,
     });
   }
 }
@@ -145,14 +151,24 @@ async function getLatestVersionCached(): Promise<string | null> {
 
     const now = Date.now();
     const cache = await browser.storage.local.get(LATEST_VERSION_CACHE_KEY);
-    const cached = cache?.[LATEST_VERSION_CACHE_KEY] as { version?: string; fetchedAt?: number } | undefined;
-    if (cached && cached.version && cached.fetchedAt && now - cached.fetchedAt < LATEST_VERSION_MAX_AGE) {
+    const cached = cache?.[LATEST_VERSION_CACHE_KEY] as
+      | { version?: string; fetchedAt?: number }
+      | undefined;
+    if (
+      cached &&
+      cached.version &&
+      cached.fetchedAt &&
+      now - cached.fetchedAt < LATEST_VERSION_MAX_AGE
+    ) {
       return cached.version;
     }
 
-    const resp = await fetch('https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest', {
-      headers: { Accept: 'application/vnd.github+json' },
-    });
+    const resp = await fetch(
+      'https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest',
+      {
+        headers: { Accept: 'application/vnd.github+json' },
+      }
+    );
     if (!resp.ok) {
       throw new Error(`HTTP ${resp.status}`);
     }
@@ -161,10 +177,14 @@ async function getLatestVersionCached(): Promise<string | null> {
     const candidate =
       typeof data.tag_name === 'string'
         ? data.tag_name
-        : (typeof data.name === 'string' ? data.name : null);
+        : typeof data.name === 'string'
+          ? data.name
+          : null;
 
     if (candidate) {
-      await browser.storage.local.set({ [LATEST_VERSION_CACHE_KEY]: { version: candidate, fetchedAt: now } });
+      await browser.storage.local.set({
+        [LATEST_VERSION_CACHE_KEY]: { version: candidate, fetchedAt: now },
+      });
       return candidate;
     }
   } catch (error) {
@@ -173,7 +193,10 @@ async function getLatestVersionCached(): Promise<string | null> {
   return null;
 }
 
-function createEl<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string): HTMLElementTagNameMap[K] {
+function createEl<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  className?: string
+): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
   if (className) el.className = className;
   return el;
@@ -227,14 +250,17 @@ function copyText(text: string): Promise<void> {
       ta.select();
       try {
         document.execCommand('copy');
-      } catch { }
+      } catch {}
       ta.remove();
       resolve();
     });
   }
 }
 
-function computeAnchoredPosition(trigger: HTMLElement, panel: HTMLElement): { top: number; left: number } {
+function computeAnchoredPosition(
+  trigger: HTMLElement,
+  panel: HTMLElement
+): { top: number; left: number } {
   const rect = trigger.getBoundingClientRect();
   const vw = window.innerWidth;
   const pad = 8;
@@ -253,20 +279,25 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (result?.gvHidePromptManager === true) {
         pmLogger.info('Prompt Manager is hidden by user settings');
         // Return a no-op destroy function to maintain interface compatibility
-        return { destroy: () => { } };
+        return { destroy: () => {} };
       }
     } catch (error) {
-      pmLogger.warn('Failed to check hide prompt manager setting, continuing with default behavior', { error });
+      pmLogger.warn(
+        'Failed to check hide prompt manager setting, continuing with default behavior',
+        { error }
+      );
     }
 
     // Monkey patch console.warn to suppress KaTeX quirks mode warning in content script
     const originalWarn = console.warn;
     console.warn = function (...args) {
       const message = args[0];
-      if (typeof message === 'string' &&
+      if (
+        typeof message === 'string' &&
         (message.includes("KaTeX doesn't work in quirks mode") ||
           message.includes('unicodeTextInMathMode') ||
-          message.includes('LaTeX-incompatible input and strict mode'))) {
+          message.includes('LaTeX-incompatible input and strict mode'))
+      ) {
         return;
       }
       return originalWarn.apply(console, args);
@@ -307,20 +338,22 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     // markdown config: respect single newlines as <br> and KaTeX inline/display math
     try {
-      marked.use(markedKatex({
-        throwOnError: false,
-        output: 'html',
-        trust: true,        // Trust the rendering environment (content script context)
-        strict: false,      // Disable strict mode checks including quirks mode detection
-      } as any));
+      marked.use(
+        markedKatex({
+          throwOnError: false,
+          output: 'html',
+          trust: true, // Trust the rendering environment (content script context)
+          strict: false, // Disable strict mode checks including quirks mode detection
+        } as any)
+      );
       marked.setOptions({ breaks: true });
-    } catch { }
+    } catch {}
     // Initialize centralized i18n system
     await initI18n();
     const i18n = createI18n();
 
     // Prevent duplicate injection
-    if (document.getElementById(ID.trigger)) return { destroy: () => { } };
+    if (document.getElementById(ID.trigger)) return { destroy: () => {} };
 
     // Trigger button
     const trigger = createEl('button', 'gv-pm-trigger');
@@ -331,17 +364,23 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     img.height = 24;
     img.alt = 'pm';
     img.src = getRuntimeUrl('icon-32.png');
-    img.addEventListener('error', () => {
-      // dev fallback
-      const devUrl = getRuntimeUrl('icon-32.png');
-      if (img.src !== devUrl) img.src = devUrl;
-    }, { once: true });
+    img.addEventListener(
+      'error',
+      () => {
+        // dev fallback
+        const devUrl = getRuntimeUrl('icon-32.png');
+        if (img.src !== devUrl) img.src = devUrl;
+      },
+      { once: true }
+    );
     trigger.appendChild(img);
     document.body.appendChild(trigger);
     // Helper: place trigger near a target element (e.g. Gemini FAB touch target)
     function placeTriggerNextToHost(): void {
       try {
-        const candidates = Array.from(document.querySelectorAll('span.mat-mdc-button-touch-target')) as HTMLElement[];
+        const candidates = Array.from(
+          document.querySelectorAll('span.mat-mdc-button-touch-target')
+        ) as HTMLElement[];
         if (!candidates.length) return;
         const vw = window.innerWidth;
         const vh = window.innerHeight;
@@ -349,18 +388,18 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           .map((el) => ({ el, r: el.getBoundingClientRect() }))
           .filter((x) => x.r.width > 0 && x.r.height > 0)
           // choose the element closest to bottom-right corner
-          .sort((a, b) => (a.r.bottom + a.r.right) - (b.r.bottom + b.r.right))
+          .sort((a, b) => a.r.bottom + a.r.right - (b.r.bottom + b.r.right))
           .reduce((_, x) => x, undefined as any) as { el: HTMLElement; r: DOMRect } | undefined;
         if (!pick) return;
         const r = pick.r;
-        const tw = (trigger.getBoundingClientRect().width || 36);
-        const th = (trigger.getBoundingClientRect().height || 36);
+        const tw = trigger.getBoundingClientRect().width || 36;
+        const th = trigger.getBoundingClientRect().height || 36;
         const gap = 10;
         const right = Math.max(6, Math.round(vw - r.left + gap));
         const bottom = Math.max(6, Math.round(vh - (r.top + r.height / 2 + th / 2)));
         trigger.style.right = `${right}px`;
         trigger.style.bottom = `${bottom}px`;
-      } catch { }
+      } catch {}
     }
 
     // Helper: constrain trigger position to viewport bounds
@@ -387,7 +426,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
         trigger.style.right = `${Math.round(right)}px`;
         trigger.style.bottom = `${Math.round(bottom)}px`;
-      } catch { }
+      } catch {}
     }
 
     // Restore trigger position if saved; otherwise place next to host button
@@ -404,7 +443,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         requestAnimationFrame(placeTriggerNextToHost);
         window.setTimeout(placeTriggerNextToHost, 350);
       }
-    } catch { placeTriggerNextToHost(); }
+    } catch {
+      placeTriggerNextToHost();
+    }
 
     // Panel root
     const panel = createEl('div', 'gv-pm-panel gv-hidden');
@@ -434,7 +475,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     versionBadge.href = releaseUrl;
     versionBadge.target = '_blank';
     versionBadge.rel = 'noreferrer';
-    versionBadge.title = manifestVersion ? `${i18n.t('extensionVersion')} ${manifestVersion}` : i18n.t('extensionVersion');
+    versionBadge.title = manifestVersion
+      ? `${i18n.t('extensionVersion')} ${manifestVersion}`
+      : i18n.t('extensionVersion');
     versionBadge.textContent = manifestVersion ?? '...';
 
     titleRow.appendChild(title);
@@ -470,11 +513,14 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       langSel.appendChild(opt);
     }
     // Set initial language value asynchronously
-    i18n.get().then((lang) => {
-      langSel.value = lang;
-    }).catch(() => {
-      langSel.value = 'en';
-    });
+    i18n
+      .get()
+      .then((lang) => {
+        langSel.value = lang;
+      })
+      .catch(() => {
+        langSel.value = 'en';
+      });
 
     const lockBtn = createEl('button', 'gv-pm-lock');
     lockBtn.setAttribute('aria-pressed', 'false');
@@ -564,17 +610,17 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const addForm = elFromHTML(
       `<form class="gv-pm-add-form gv-hidden">
         <textarea class="gv-pm-input-text" placeholder="${escapeHtml(
-        i18n.t('pm_prompt_placeholder') || 'Prompt text'
-      )}" rows="3"></textarea>
+          i18n.t('pm_prompt_placeholder') || 'Prompt text'
+        )}" rows="3"></textarea>
         <input class="gv-pm-input-tags" type="text" placeholder="${escapeHtml(
-        i18n.t('pm_tags_placeholder') || 'Tags (comma separated)'
-      )}" />
+          i18n.t('pm_tags_placeholder') || 'Tags (comma separated)'
+        )}" />
         <div class="gv-pm-add-actions">
           <span class="gv-pm-inline-hint" aria-live="polite"></span>
           <button type="submit" class="gv-pm-save">${escapeHtml(i18n.t('pm_save') || 'Save')}</button>
           <button type="button" class="gv-pm-cancel">${escapeHtml(
-        i18n.t('pm_cancel') || 'Cancel'
-      )}</button>
+            i18n.t('pm_cancel') || 'Cancel'
+          )}</button>
         </div>
       </form>`
     );
@@ -652,7 +698,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       const q = (searchInput.value || '').trim().toLowerCase();
       const selectedTagList = Array.from(selectedTags);
       const filtered = items.filter((it) => {
-        const okTag = selectedTagList.length === 0 || selectedTagList.every((t) => it.tags.includes(t));
+        const okTag =
+          selectedTagList.length === 0 || selectedTagList.every((t) => it.tags.includes(t));
         if (!okTag) return false;
         if (!q) return true;
         return it.text.toLowerCase().includes(q) || it.tags.some((t) => t.includes(q));
@@ -692,7 +739,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
             if (typeof out === 'string') {
               md.innerHTML = DOMPurify.sanitize(out);
             } else {
-              out.then((html: string) => { md.innerHTML = DOMPurify.sanitize(html); }).catch(() => { md.textContent = it.text; });
+              out
+                .then((html: string) => {
+                  md.innerHTML = DOMPurify.sanitize(html);
+                })
+                .catch(() => {
+                  md.textContent = it.text;
+                });
             }
           } catch {
             md.textContent = it.text;
@@ -710,7 +763,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         // Add expand/collapse button
         const expandBtn = createEl('button', 'gv-pm-expand-btn');
         expandBtn.innerHTML = isExpanded ? '▲' : '▼';
-        expandBtn.title = isExpanded ? (i18n.t('pm_collapse') || 'Collapse') : (i18n.t('pm_expand') || 'Expand');
+        expandBtn.title = isExpanded
+          ? i18n.t('pm_collapse') || 'Collapse'
+          : i18n.t('pm_expand') || 'Expand';
         expandBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           if (expandedItems.has(it.id)) {
@@ -732,7 +787,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           e.stopPropagation();
           // Start inline edit using the add form fields
           (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value = it.text;
-          (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).value = (it.tags || []).join(', ');
+          (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).value = (
+            it.tags || []
+          ).join(', ');
           addForm.classList.remove('gv-hidden');
           (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).focus();
           editingId = it.id;
@@ -776,16 +833,33 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           const vw = window.innerWidth;
           const side: 'left' | 'right' = r.right + 220 > vw ? 'left' : 'right';
           const top = Math.max(8, r.top + window.scrollY - 6);
-          const left = side === 'right' ? r.right + window.scrollX + 10 : r.left + window.scrollX - pop.offsetWidth - 10;
+          const left =
+            side === 'right'
+              ? r.right + window.scrollX + 10
+              : r.left + window.scrollX - pop.offsetWidth - 10;
           pop.style.top = `${Math.round(top)}px`;
           pop.style.left = `${Math.round(Math.max(8, left))}px`;
           pop.setAttribute('data-side', side);
-          const cleanup = () => { try { pop.remove(); } catch { } window.removeEventListener('keydown', onKey); window.removeEventListener('click', onOutside, true); };
-          const onOutside = (ev: MouseEvent) => { const t = ev.target as HTMLElement; if (!t.closest('.gv-pm-confirm')) cleanup(); };
-          const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape') cleanup(); };
+          const cleanup = () => {
+            try {
+              pop.remove();
+            } catch {}
+            window.removeEventListener('keydown', onKey);
+            window.removeEventListener('click', onOutside, true);
+          };
+          const onOutside = (ev: MouseEvent) => {
+            const t = ev.target as HTMLElement;
+            if (!t.closest('.gv-pm-confirm')) cleanup();
+          };
+          const onKey = (ev: KeyboardEvent) => {
+            if (ev.key === 'Escape') cleanup();
+          };
           window.addEventListener('click', onOutside, true);
           window.addEventListener('keydown', onKey, { passive: true } as any);
-          no.addEventListener('click', (ev) => { ev.stopPropagation(); cleanup(); });
+          no.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            cleanup();
+          });
           yes.addEventListener('click', async (ev) => {
             ev.stopPropagation();
             items = items.filter((x) => x.id !== it.id);
@@ -835,7 +909,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       lockBtn.setAttribute('aria-pressed', locked ? 'true' : 'false');
       // When locked, show 🔒; when unlocked, show 🔓.
       lockBtn.setAttribute('data-icon', locked ? '🔒' : '🔓');
-      lockBtn.title = locked ? (i18n.t('pm_unlock') || 'Unlock') : (i18n.t('pm_lock') || 'Lock');
+      lockBtn.title = locked ? i18n.t('pm_unlock') || 'Unlock' : i18n.t('pm_lock') || 'Lock';
       panel.classList.toggle('gv-locked', locked);
     }
 
@@ -848,11 +922,14 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       exportBtn.textContent = i18n.t('pm_export');
       backupBtn.textContent = '💾 ' + i18n.t('pm_backup');
       backupBtn.title = i18n.t('pm_backup_tooltip');
-      
+
       // Update website button
       websiteBtn.textContent = '🌐 ' + i18n.t('officialDocs');
-      i18n.get().then(lang => {
-        websiteBtn.href = lang === 'zh' ? 'https://voyager.nagi.fun/guide/sponsor' : `https://voyager.nagi.fun/${lang}/guide/sponsor`;
+      i18n.get().then((lang) => {
+        websiteBtn.href =
+          lang === 'zh'
+            ? 'https://voyager.nagi.fun/guide/sponsor'
+            : `https://voyager.nagi.fun/${lang}/guide/sponsor`;
       });
 
       settingsBtn.textContent = i18n.t('pm_settings');
@@ -864,8 +941,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         i18n.t('pm_prompt_placeholder');
       (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).placeholder =
         i18n.t('pm_tags_placeholder');
-      (addForm.querySelector('.gv-pm-save') as HTMLButtonElement).textContent =
-        i18n.t('pm_save');
+      (addForm.querySelector('.gv-pm-save') as HTMLButtonElement).textContent = i18n.t('pm_save');
       (addForm.querySelector('.gv-pm-cancel') as HTMLButtonElement).textContent =
         i18n.t('pm_cancel');
       applyLockUI();
@@ -889,7 +965,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       dragStart = { x: ev.clientX, y: ev.clientY };
       try {
         panel.setPointerCapture?.(ev.pointerId);
-      } catch { }
+      } catch {}
     }
 
     async function endDrag(_ev: PointerEvent): Promise<void> {
@@ -964,7 +1040,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       locked = !locked;
       await writeStorage(STORAGE_KEYS.locked, locked);
       applyLockUI();
-      try { (ev.currentTarget as HTMLButtonElement)?.blur?.(); } catch { }
+      try {
+        (ev.currentTarget as HTMLButtonElement)?.blur?.();
+      } catch {}
       if (locked) {
         const rect = panel.getBoundingClientRect();
         savedPos = { left: rect.left, top: rect.top };
@@ -986,7 +1064,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (typeof ev.button === 'number' && ev.button !== 0) return;
       draggingTrigger = true;
       triggerDragStartPos = { x: ev.clientX, y: ev.clientY };
-      try { trigger.setPointerCapture?.(ev.pointerId); } catch { }
+      try {
+        trigger.setPointerCapture?.(ev.pointerId);
+      } catch {}
     });
 
     const onTriggerDragEnd = async (ev: PointerEvent) => {
@@ -1017,13 +1097,16 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // Listen to external language changes (popup/options)
     // Note: The centralized i18n system already handles storage changes,
     // we just need to update the UI when language changes
-    const storageChangeHandler = (changes: Record<string, browser.Storage.StorageChange>, area: string) => {
+    const storageChangeHandler = (
+      changes: Record<string, browser.Storage.StorageChange>,
+      area: string
+    ) => {
       // Handle language changes from sync storage
       const nextRaw = changes[StorageKeys.LANGUAGE]?.newValue;
       if (area === 'sync' && typeof nextRaw === 'string') {
         try {
           langSel.value = normalizeLanguage(nextRaw);
-        } catch { }
+        } catch {}
         refreshUITexts();
       }
       // Handle hide prompt manager setting changes
@@ -1055,7 +1138,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     try {
       browser.storage.onChanged.addListener(storageChangeHandler);
-    } catch { }
+    } catch {}
 
     addBtn.addEventListener('click', (ev) => {
       ev.preventDefault();
@@ -1072,33 +1155,50 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         // Check if extension context is still valid
         if (!browser.runtime?.id) {
           // Extension context invalidated, show fallback message
-          setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
+          setNotice(
+            i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
+            'err'
+          );
           return;
         }
 
         // Send message to background to open popup
-        const response = await browser.runtime.sendMessage({ type: 'gv.openPopup' }) as { ok?: boolean };
+        const response = (await browser.runtime.sendMessage({ type: 'gv.openPopup' })) as {
+          ok?: boolean;
+        };
         if (!response?.ok) {
           // If programmatic opening failed, show a helpful message
-          setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
+          setNotice(
+            i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
+            'err'
+          );
         }
       } catch (err) {
         // Silently handle extension context errors
         if (err instanceof Error && err.message.includes('Extension context invalidated')) {
-          setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
+          setNotice(
+            i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
+            'err'
+          );
           return;
         }
         console.warn('[PromptManager] Failed to open settings:', err);
-        setNotice(i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置', 'err');
+        setNotice(
+          i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
+          'err'
+        );
       }
     });
 
-    (addForm.querySelector('.gv-pm-cancel') as HTMLButtonElement).addEventListener('click', (ev) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      editingId = null;
-      addForm.classList.add('gv-hidden');
-    });
+    (addForm.querySelector('.gv-pm-cancel') as HTMLButtonElement).addEventListener(
+      'click',
+      (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        editingId = null;
+        addForm.classList.add('gv-hidden');
+      }
+    );
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value.trim();
@@ -1106,7 +1206,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       const tags = dedupeTags((tagsRaw || '').split(',').map((s) => s.trim()));
       if (!text) return;
       if (editingId) {
-        const dup = items.some((x) => x.id !== editingId && x.text.trim().toLowerCase() === text.toLowerCase());
+        const dup = items.some(
+          (x) => x.id !== editingId && x.text.trim().toLowerCase() === text.toLowerCase()
+        );
         if (dup) {
           setInlineHint(i18n.t('pm_duplicate') || 'Duplicate prompt', 'err');
           return;
@@ -1176,7 +1278,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
         // Read folders (Safari-compatible: uses storage adapter)
         const folderStorage = createFolderStorageAdapter();
-        const folderData = await folderStorage.loadData('gvFolderData') || { folders: [], folderContents: {} };
+        const folderData = (await folderStorage.loadData('gvFolderData')) || {
+          folders: [],
+          folderContents: {},
+        };
 
         // Create folder export payload with correct format
         const folderPayload = {
@@ -1190,8 +1295,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         };
 
         // Count conversations
-        const conversationCount = Object.values(folderData.folderContents || {})
-          .reduce((sum: number, convs: any) => sum + (Array.isArray(convs) ? convs.length : 0), 0);
+        const conversationCount = Object.values(folderData.folderContents || {}).reduce(
+          (sum: number, convs: any) => sum + (Array.isArray(convs) ? convs.length : 0),
+          0
+        );
 
         // Create metadata
         const metadata = {
@@ -1237,7 +1344,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           await metaWritable.write(JSON.stringify(metadata, null, 2));
           await metaWritable.close();
 
-          setNotice(`✓ Backed up ${prompts.length} prompts, ${folderData.folders?.length || 0} folders`, 'ok');
+          setNotice(
+            `✓ Backed up ${prompts.length} prompts, ${folderData.folders?.length || 0} folders`,
+            'ok'
+          );
         } else {
           // Fallback for Firefox, Safari - download as ZIP file
           const zip = new JSZip();
@@ -1260,7 +1370,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           a.remove();
           URL.revokeObjectURL(url);
 
-          setNotice(`✓ Downloaded ${folderName}.zip (${prompts.length} prompts, ${folderData.folders?.length || 0} folders)`, 'ok');
+          setNotice(
+            `✓ Downloaded ${folderName}.zip (${prompts.length} prompts, ${folderData.folders?.length || 0} folders)`,
+            'ok'
+          );
         }
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
@@ -1283,13 +1396,19 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           setNotice(i18n.t('pm_import_invalid') || 'Invalid file format', 'err');
           return;
         }
-        const arr: PromptItem[] = Array.isArray(json) ? json : Array.isArray(json.items) ? json.items : [];
+        const arr: PromptItem[] = Array.isArray(json)
+          ? json
+          : Array.isArray(json.items)
+            ? json.items
+            : [];
         const valid: PromptItem[] = [];
         const seen = new Set<string>();
         for (const it of arr) {
           const text = String((it && (it as any).text) || '').trim();
           if (!text) continue;
-          const tags = Array.isArray((it as any).tags) ? (it as any).tags.map((t: any) => String(t)) : [];
+          const tags = Array.isArray((it as any).tags)
+            ? (it as any).tags.map((t: any) => String(t))
+            : [];
           const key = `${text.toLowerCase()}|${tags.sort().join(',')}`;
           if (seen.has(key)) continue;
           seen.add(key);
@@ -1313,7 +1432,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           }
           items = Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
           await writeStorage(STORAGE_KEYS.items, items);
-          setNotice((i18n.t('pm_import_success') || 'Imported').replace('{count}', String(valid.length)), 'ok');
+          setNotice(
+            (i18n.t('pm_import_success') || 'Imported').replace('{count}', String(valid.length)),
+            'ok'
+          );
           renderTags();
           renderList();
         } else {
@@ -1345,15 +1467,17 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
           trigger.remove();
           panel.remove();
-          document.querySelectorAll('.gv-pm-confirm').forEach(el => el.remove());
+          document.querySelectorAll('.gv-pm-confirm').forEach((el) => el.remove());
         } catch (e) {
           console.error('[PromptManager] Destroy error:', e);
         }
-      }
+      },
     };
   } catch (err) {
-    try { (window as any).console?.error?.('Prompt Manager init failed', err); } catch { }
-    return { destroy: () => { } };
+    try {
+      (window as any).console?.error?.('Prompt Manager init failed', err);
+    } catch {}
+    return { destroy: () => {} };
   }
 }
 

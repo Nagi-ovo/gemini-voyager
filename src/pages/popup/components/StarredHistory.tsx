@@ -36,8 +36,9 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
     const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const targetUrl = `${message.conversationUrl}#gv-turn-${message.turnId}`;
 
-    const isGeminiPage = currentTab?.url?.includes('gemini.google.com') ||
-                         currentTab?.url?.includes('aistudio.google.com');
+    const isGeminiPage =
+      currentTab?.url?.includes('gemini.google.com') ||
+      currentTab?.url?.includes('aistudio.google.com');
 
     if (isGeminiPage && currentTab?.id) {
       // Navigate in the same tab (SPA navigation)
@@ -54,10 +55,7 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
     e.stopPropagation();
 
     try {
-      await StarredMessagesService.removeStarredMessage(
-        message.conversationId,
-        message.turnId
-      );
+      await StarredMessagesService.removeStarredMessage(message.conversationId, message.turnId);
       // Reload messages
       await loadStarredMessages();
     } catch (error) {
@@ -207,9 +205,7 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
                         {message.conversationTitle}
                       </p>
                     )}
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(message.starredAt)}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{formatDate(message.starredAt)}</p>
                   </div>
                 </div>
               </Card>

@@ -187,7 +187,11 @@ export class TimelineManager {
               const viewportHeight = window.innerHeight;
 
               // v2 format: use percentage (responsive)
-              if (position.version === 2 && position.topPercent !== undefined && position.leftPercent !== undefined) {
+              if (
+                position.version === 2 &&
+                position.topPercent !== undefined &&
+                position.leftPercent !== undefined
+              ) {
                 const top = (position.topPercent / 100) * viewportHeight;
                 const left = (position.leftPercent / 100) * viewportWidth;
                 this.applyPosition(top, left);
@@ -231,12 +235,12 @@ export class TimelineManager {
               this.ui.timelineBar!.style.left = '';
             }
           });
-        } catch { }
+        } catch {}
       } else {
         const saved = localStorage.getItem('geminiTimelineScrollMode');
         if (saved === 'flow' || saved === 'jump') this.scrollMode = saved;
       }
-    } catch { }
+    } catch {}
   }
 
   private computeElementTopsInScrollContainer(elements: HTMLElement[]): number[] {
@@ -394,13 +398,15 @@ export class TimelineManager {
     if (titleElement) {
       const title = titleElement.textContent?.trim();
       // Filter out generic titles
-      if (title &&
+      if (
+        title &&
         title !== 'Gemini' &&
         title !== 'Google Gemini' &&
         title !== 'Google AI Studio' &&
         !title.startsWith('Gemini -') &&
         !title.startsWith('Google AI Studio -') &&
-        title.length > 0) {
+        title.length > 0
+      ) {
         return title;
       }
     }
@@ -462,18 +468,18 @@ export class TimelineManager {
         if (el) {
           try {
             obs.disconnect();
-          } catch { }
+          } catch {}
           resolve(el);
         }
       });
       try {
         obs.observe(document.body, { childList: true, subtree: true });
-      } catch { }
+      } catch {}
       if (timeoutMs > 0) {
         setTimeout(() => {
           try {
             obs.disconnect();
-          } catch { }
+          } catch {}
           resolve(null);
         }, timeoutMs);
       }
@@ -496,7 +502,7 @@ export class TimelineManager {
           if (el) {
             try {
               obs.disconnect();
-            } catch { }
+            } catch {}
             resolve({ element: el, selector });
             return;
           }
@@ -505,13 +511,13 @@ export class TimelineManager {
 
       try {
         obs.observe(document.body, { childList: true, subtree: true });
-      } catch { }
+      } catch {}
 
       if (timeoutMs > 0) {
         setTimeout(() => {
           try {
             obs.disconnect();
-          } catch { }
+          } catch {}
           resolve(null);
         }, timeoutMs);
       }
@@ -523,7 +529,7 @@ export class TimelineManager {
     let userOverride = '';
     try {
       userOverride = localStorage.getItem('geminiTimelineUserTurnSelector') || '';
-    } catch { }
+    } catch {}
     const defaultCandidates = [
       // Angular-based Gemini UI user bubble (primary)
       '.user-query-bubble-with-background',
@@ -572,13 +578,13 @@ export class TimelineManager {
       if (!userOverride && matchedSelector) {
         try {
           localStorage.setItem('geminiTimelineUserTurnSelectorAuto', matchedSelector);
-        } catch { }
+        } catch {}
       }
       // If a stale user override failed (matchedSelector differs), clear it so we don't keep retrying it
       if (userOverride && matchedSelector && matchedSelector !== userOverride) {
         try {
           localStorage.removeItem('geminiTimelineUserTurnSelector');
-        } catch { }
+        } catch {}
       }
     }
     let p: HTMLElement | null = (firstTurn as HTMLElement) || this.conversationContainer;
@@ -718,11 +724,18 @@ export class TimelineManager {
 
     // Sort by depth (shallower first) to optimize checking
     const sorted = arr.slice().sort((a, b) => {
-      let aDepth = 0, bDepth = 0;
+      let aDepth = 0,
+        bDepth = 0;
       let node: Element | null = a;
-      while (node.parentElement) { aDepth++; node = node.parentElement; }
+      while (node.parentElement) {
+        aDepth++;
+        node = node.parentElement;
+      }
       node = b;
-      while (node.parentElement) { bDepth++; node = node.parentElement; }
+      while (node.parentElement) {
+        bDepth++;
+        node = node.parentElement;
+      }
       return aDepth - bDepth;
     });
 
@@ -737,7 +750,7 @@ export class TimelineManager {
       }
     }
 
-    return arr.filter(el => !descendants.has(el));
+    return arr.filter((el) => !descendants.has(el));
   }
 
   /**
@@ -795,7 +808,7 @@ export class TimelineManager {
       id = `u-${hashString(basis)}`;
       try {
         (asEl.dataset as any).turnId = id;
-      } catch { }
+      } catch {}
     }
     return id;
   }
@@ -827,7 +840,10 @@ export class TimelineManager {
     // Get hidden markers for collapse feature
     const hiddenIndices = this.getHiddenMarkerIndices();
     const visibleCount = N - hiddenIndices.size;
-    const desired = Math.max(H, visibleCount > 0 ? 2 * pad + Math.max(0, visibleCount - 1) * minGap : H);
+    const desired = Math.max(
+      H,
+      visibleCount > 0 ? 2 * pad + Math.max(0, visibleCount - 1) * minGap : H
+    );
     this.contentHeight = Math.ceil(desired);
     this.scale = H > 0 ? this.contentHeight / H : 1;
     this.ui.trackContent.style.height = `${this.contentHeight}px`;
@@ -838,7 +854,14 @@ export class TimelineManager {
 
     // Apply min gap only to visible markers
     const gapMultipliers: number[] = new Array(N).fill(1.0);
-    const adjusted = this.applyMinGapWithHidden(desiredY, pad, pad + usableC, minGap, hiddenIndices, gapMultipliers);
+    const adjusted = this.applyMinGapWithHidden(
+      desiredY,
+      pad,
+      pad + usableC,
+      minGap,
+      hiddenIndices,
+      gapMultipliers
+    );
     this.yPositions = adjusted;
 
     for (let i = 0; i < N; i++) {
@@ -1213,7 +1236,7 @@ export class TimelineManager {
       if (!this.ui.sliderHandle) return;
       try {
         (this.ui.sliderHandle as any).setPointerCapture(ev.pointerId);
-      } catch { }
+      } catch {}
       this.sliderDragging = true;
       this.showSlider();
       this.sliderStartClientY = ev.clientY;
@@ -1673,7 +1696,10 @@ export class TimelineManager {
     let activeId = this.markers[0].id;
 
     if (this.markerTops.length === this.markers.length && this.markerTops.length > 0) {
-      const idx = Math.max(0, Math.min(this.markers.length - 1, this.upperBound(this.markerTops, ref)));
+      const idx = Math.max(
+        0,
+        Math.min(this.markers.length - 1, this.upperBound(this.markerTops, ref))
+      );
       activeId = this.markers[idx].id;
     } else {
       const containerRect = this.scrollContainer.getBoundingClientRect();
@@ -1924,7 +1950,7 @@ export class TimelineManager {
     this.sliderDragging = false;
     try {
       window.removeEventListener('pointermove', this.onSliderMove!);
-    } catch { }
+    } catch {}
     this.onSliderMove = null;
     this.onSliderUp = null;
     this.hideSliderDeferred();
@@ -2019,7 +2045,11 @@ export class TimelineManager {
       const viewportHeight = window.innerHeight;
 
       // v2 format: use percentage (responsive)
-      if (position.version === 2 && position.topPercent !== undefined && position.leftPercent !== undefined) {
+      if (
+        position.version === 2 &&
+        position.topPercent !== undefined &&
+        position.leftPercent !== undefined
+      ) {
         const top = (position.topPercent / 100) * viewportHeight;
         const left = (position.leftPercent / 100) * viewportWidth;
         this.applyPosition(top, left);
@@ -2285,7 +2315,7 @@ export class TimelineManager {
     hiddenIndices: Set<number>,
     pad: number,
     usableC: number
-  ): { desiredY: number[], effectiveBaseNs: number[] } {
+  ): { desiredY: number[]; effectiveBaseNs: number[] } {
     const N = this.markers.length;
     const desiredY: number[] = new Array(N).fill(-1);
     const effectiveBaseNs: number[] = new Array(N).fill(0);
@@ -2332,7 +2362,7 @@ export class TimelineManager {
    * Check if a marker can be collapsed (has lower-level children)
    */
   private canCollapseMarker(turnId: string): boolean {
-    const markerIndex = this.markers.findIndex(m => m.id === turnId);
+    const markerIndex = this.markers.findIndex((m) => m.id === turnId);
     if (markerIndex < 0 || markerIndex >= this.markers.length - 1) return false;
 
     const level = this.getMarkerLevel(turnId);
@@ -2519,7 +2549,6 @@ export class TimelineManager {
     }
   }
 
-
   /**
    * Enqueue navigation action (supports rapid key presses)
    */
@@ -2665,11 +2694,7 @@ export class TimelineManager {
         attempts++;
         if (attempts >= maxAttempts) {
           console.warn('[Timeline] Failed to find starred message');
-          window.history.replaceState(
-            null,
-            '',
-            window.location.pathname + window.location.search
-          );
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
           return;
         }
 
@@ -2718,110 +2743,110 @@ export class TimelineManager {
     // Ensure draggable listeners are removed
     try {
       this.toggleDraggable(false);
-    } catch { }
+    } catch {}
     // Also remove any in-flight drag listeners
     try {
       if (this.onBarPointerMove) window.removeEventListener('pointermove', this.onBarPointerMove);
-    } catch { }
+    } catch {}
     try {
       if (this.onBarPointerUp) window.removeEventListener('pointerup', this.onBarPointerUp);
-    } catch { }
+    } catch {}
     try {
       this.mutationObserver?.disconnect();
-    } catch { }
+    } catch {}
     try {
       this.resizeObserver?.disconnect();
-    } catch { }
+    } catch {}
     try {
       this.intersectionObserver?.disconnect();
-    } catch { }
+    } catch {}
     this.visibleUserTurns.clear();
     if (this.ui.timelineBar && this.onTimelineBarClick) {
       try {
         this.ui.timelineBar.removeEventListener('click', this.onTimelineBarClick);
-      } catch { }
+      } catch {}
     }
     try {
       window.removeEventListener('storage', this.onStorage!);
-    } catch { }
+    } catch {}
     if (this.onChromeStorageChanged && typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       try {
         chrome.storage.onChanged.removeListener(this.onChromeStorageChanged);
-      } catch { }
+      } catch {}
       this.onChromeStorageChanged = null;
     }
     // Cleanup context menu
     this.hideContextMenu();
     try {
       this.ui.timelineBar?.removeEventListener('contextmenu', this.onContextMenu!);
-    } catch { }
+    } catch {}
     try {
       document.removeEventListener('click', this.onDocumentClick!);
-    } catch { }
+    } catch {}
     try {
       this.ui.timelineBar?.removeEventListener('pointerdown', this.onPointerDown!);
-    } catch { }
+    } catch {}
     try {
       window.removeEventListener('pointermove', this.onPointerMove!);
-    } catch { }
+    } catch {}
     try {
       window.removeEventListener('pointerup', this.onPointerUp!);
-    } catch { }
+    } catch {}
     try {
       window.removeEventListener('pointercancel', this.onPointerCancel!);
-    } catch { }
+    } catch {}
     try {
       this.ui.timelineBar?.removeEventListener('pointerleave', this.onPointerLeave!);
-    } catch { }
+    } catch {}
     if (this.scrollContainer && this.onScroll) {
       try {
         this.scrollContainer.removeEventListener('scroll', this.onScroll);
-      } catch { }
+      } catch {}
     }
     if (this.ui.timelineBar) {
       try {
         this.ui.timelineBar.removeEventListener('wheel', this.onTimelineWheel!);
-      } catch { }
+      } catch {}
       try {
         this.ui.timelineBar.removeEventListener('pointerenter', this.onBarEnter!);
-      } catch { }
+      } catch {}
       try {
         this.ui.timelineBar.removeEventListener('pointerleave', this.onBarLeave!);
-      } catch { }
+      } catch {}
       try {
         this.ui.slider?.removeEventListener('pointerenter', this.onSliderEnter!);
-      } catch { }
+      } catch {}
       try {
         this.ui.slider?.removeEventListener('pointerleave', this.onSliderLeave!);
-      } catch { }
+      } catch {}
     }
     try {
       this.ui.sliderHandle?.removeEventListener('pointerdown', this.onSliderDown!);
-    } catch { }
+    } catch {}
     try {
       window.removeEventListener('resize', this.onWindowResize!);
-    } catch { }
+    } catch {}
     if (this.onVisualViewportResize && window.visualViewport) {
       try {
         window.visualViewport.removeEventListener('resize', this.onVisualViewportResize);
-      } catch { }
+      } catch {}
       this.onVisualViewportResize = null;
     }
     if (this.scrollRafId !== null) {
       try {
         cancelAnimationFrame(this.scrollRafId);
-      } catch { }
+      } catch {}
       this.scrollRafId = null;
     }
     try {
       this.ui.timelineBar?.remove();
-    } catch { }
+    } catch {}
     try {
       this.ui.tooltip?.remove();
-    } catch { }
+    } catch {}
     try {
       this.measureEl?.remove();
-    } catch { }
+    } catch {}
     try {
       if (this.ui.slider) {
         this.ui.slider.style.pointerEvents = 'none';
@@ -2832,7 +2857,7 @@ export class TimelineManager {
         (stray as HTMLElement).style.pointerEvents = 'none';
         stray.remove();
       }
-    } catch { }
+    } catch {}
     this.ui.slider = null;
     this.ui.sliderHandle = null;
     this.ui = { timelineBar: null, tooltip: null } as any;
@@ -2858,7 +2883,7 @@ export class TimelineManager {
         (window as any).cancelIdleCallback(this.resizeIdleRICId);
         this.resizeIdleRICId = null;
       }
-    } catch { }
+    } catch {}
     if (this.sliderFadeTimer) {
       clearTimeout(this.sliderFadeTimer);
       this.sliderFadeTimer = null;

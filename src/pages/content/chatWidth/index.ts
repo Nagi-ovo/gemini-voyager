@@ -62,8 +62,8 @@ function applyWidth(widthPercent: number) {
   const assistantSelectors = getAssistantSelectors();
 
   // Build comprehensive CSS rules
-  const userRules = userSelectors.map(sel => `${sel}`).join(',\n    ');
-  const assistantRules = assistantSelectors.map(sel => `${sel}`).join(',\n    ');
+  const userRules = userSelectors.map((sel) => `${sel}`).join(',\n    ');
+  const assistantRules = assistantSelectors.map((sel) => `${sel}`).join(',\n    ');
 
   // A small gap to account for scrollbars
   const GAP_PX = 10;
@@ -239,14 +239,18 @@ export function startChatWidthAdjuster() {
   }
 
   // Clean up on unload to prevent memory leaks
-  window.addEventListener('beforeunload', () => {
-    observer.disconnect();
-    removeStyles();
-    // Remove storage listener
-    try {
-      chrome.storage?.onChanged?.removeListener(storageChangeHandler);
-    } catch (e) {
-      console.error('[Gemini Voyager] Failed to remove storage listener on unload:', e);
-    }
-  }, { once: true });
+  window.addEventListener(
+    'beforeunload',
+    () => {
+      observer.disconnect();
+      removeStyles();
+      // Remove storage listener
+      try {
+        chrome.storage?.onChanged?.removeListener(storageChangeHandler);
+      } catch (e) {
+        console.error('[Gemini Voyager] Failed to remove storage listener on unload:', e);
+      }
+    },
+    { once: true }
+  );
 }

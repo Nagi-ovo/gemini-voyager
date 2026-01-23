@@ -14,13 +14,9 @@ import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
 import { startWatermarkRemover } from './watermarkRemover/index';
 
-
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
-
-
-
 
 /**
  * Staggered initialization to prevent "thundering herd" problem when multiple tabs
@@ -34,8 +30,8 @@ import { initI18n } from '@/utils/i18n';
  */
 
 // Initialization delay constants (in milliseconds)
-const HEAVY_FEATURE_INIT_DELAY = 100;  // For resource-intensive features (Timeline, Folder)
-const LIGHT_FEATURE_INIT_DELAY = 50;   // For lightweight features
+const HEAVY_FEATURE_INIT_DELAY = 100; // For resource-intensive features (Timeline, Folder)
+const LIGHT_FEATURE_INIT_DELAY = 50; // For lightweight features
 const BACKGROUND_TAB_MIN_DELAY = 3000; // Minimum delay for background tabs
 const BACKGROUND_TAB_MAX_DELAY = 8000; // Maximum delay for background tabs (3000 + 5000)
 
@@ -52,7 +48,9 @@ let quoteReplyCleanup: (() => void) | null = null;
 async function isCustomWebsite(): Promise<boolean> {
   try {
     const result = await chrome.storage?.sync?.get({ gvPromptCustomWebsites: [] });
-    const customWebsites = Array.isArray(result?.gvPromptCustomWebsites) ? result.gvPromptCustomWebsites : [];
+    const customWebsites = Array.isArray(result?.gvPromptCustomWebsites)
+      ? result.gvPromptCustomWebsites
+      : [];
 
     // Normalize current hostname
     const currentHost = location.hostname.toLowerCase().replace(/^www\./, '');
@@ -60,12 +58,13 @@ async function isCustomWebsite(): Promise<boolean> {
     console.log('[Gemini Voyager] Checking custom websites:', {
       currentHost,
       customWebsites,
-      hostname: location.hostname
+      hostname: location.hostname,
     });
 
     const isCustom = customWebsites.some((website: string) => {
       const normalizedWebsite = website.toLowerCase().replace(/^www\./, '');
-      const matches = currentHost === normalizedWebsite || currentHost.endsWith('.' + normalizedWebsite);
+      const matches =
+        currentHost === normalizedWebsite || currentHost.endsWith('.' + normalizedWebsite);
       console.log('[Gemini Voyager] Comparing:', { currentHost, normalizedWebsite, matches });
       return matches;
     });
@@ -88,7 +87,7 @@ async function initializeFeatures(): Promise<void> {
   try {
     // Sequential initialization with small delays between features
     // to further reduce simultaneous resource usage
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     // Check if this is a custom website (only prompt manager should be enabled)
     const isCustomSite = await isCustomWebsite();
@@ -197,7 +196,9 @@ function getInitializationDelay(): number {
     // Background tab: add random delay to distribute load across multiple tabs
     const randomRange = BACKGROUND_TAB_MAX_DELAY - BACKGROUND_TAB_MIN_DELAY;
     const randomDelay = BACKGROUND_TAB_MIN_DELAY + Math.random() * randomRange;
-    console.log(`[Gemini Voyager] Background tab detected, delaying initialization by ${Math.round(randomDelay)}ms`);
+    console.log(
+      `[Gemini Voyager] Background tab detected, delaying initialization by ${Math.round(randomDelay)}ms`
+    );
     return randomDelay;
   }
 }
@@ -234,14 +235,16 @@ function handleVisibilityChange(): void {
     if (isSupportedSite) {
       initKaTeXConfig();
       // Initialize i18n early to ensure translations are available
-      initI18n().catch(e => console.error('[Gemini Voyager] i18n init error:', e));
+      initI18n().catch((e) => console.error('[Gemini Voyager] i18n init error:', e));
     }
 
     // If not a known site, check if it's a custom website (async)
     if (!isSupportedSite) {
       // For unknown sites, check storage asynchronously
       chrome.storage?.sync?.get({ gvPromptCustomWebsites: [] }, (result) => {
-        const customWebsites = Array.isArray(result?.gvPromptCustomWebsites) ? result.gvPromptCustomWebsites : [];
+        const customWebsites = Array.isArray(result?.gvPromptCustomWebsites)
+          ? result.gvPromptCustomWebsites
+          : [];
         const currentHost = hostname.replace(/^www\./, '');
 
         const isCustomSite = customWebsites.some((website: string) => {
@@ -295,7 +298,6 @@ function handleVisibilityChange(): void {
         console.error('[Gemini Voyager] Cleanup error:', e);
       }
     });
-
   } catch (e) {
     console.error('[Gemini Voyager] Fatal initialization error:', e);
   }

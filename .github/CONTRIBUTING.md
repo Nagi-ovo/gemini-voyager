@@ -50,15 +50,19 @@ bun run dev
 To avoid duplicate work and coordinate contributions:
 
 ### 1. Check for Existing Work
+
 Before starting, check if the issue is already assigned to someone by looking at the **Assignees** section.
 
 ### 2. Claim an Issue
+
 Comment `/claim` on any unassigned issue to automatically assign yourself. A bot will confirm the assignment.
 
 ### 3. Unclaim if Needed
+
 If you can no longer work on an issue, comment `/unclaim` to release it for others.
 
 ### 4. Contribution Checkbox
+
 When creating issues, you can check the "I am willing to contribute code" checkbox to indicate your interest in implementing the feature or fix.
 
 ---
@@ -73,16 +77,16 @@ bun install
 
 ### Available Commands
 
-| Command | Description |
-|---------|-------------|
-| `bun run dev` | Start Chrome development mode with hot reload |
-| `bun run dev:firefox` | Start Firefox development mode |
-| `bun run dev:safari` | Start Safari development mode (macOS only) |
-| `bun run build` | Production build for Chrome |
-| `bun run build:all` | Production build for all browsers |
-| `bun run lint` | Run ESLint with auto-fix |
-| `bun run typecheck` | Run TypeScript type checking |
-| `bun run test` | Run test suite |
+| Command               | Description                                   |
+| --------------------- | --------------------------------------------- |
+| `bun run dev`         | Start Chrome development mode with hot reload |
+| `bun run dev:firefox` | Start Firefox development mode                |
+| `bun run dev:safari`  | Start Safari development mode (macOS only)    |
+| `bun run build`       | Production build for Chrome                   |
+| `bun run build:all`   | Production build for all browsers             |
+| `bun run lint`        | Run ESLint with auto-fix                      |
+| `bun run typecheck`   | Run TypeScript type checking                  |
+| `bun run test`        | Run test suite                                |
 
 ### Loading the Extension
 
@@ -98,6 +102,7 @@ bun install
 ### Before You Start
 
 1. **Create a branch** from `main`:
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -204,19 +209,20 @@ To add support for a new Gem (official Google Gems or custom Gems):
 
 Use valid [Google Material Symbols](https://fonts.google.com/icons) icon names:
 
-| Icon | Use Case |
-|------|----------|
-| `auto_stories` | Learning, Education |
-| `lightbulb` | Ideas, Brainstorming |
-| `work` | Career, Professional |
-| `code` | Programming, Technical |
-| `analytics` | Data, Analysis |
+| Icon           | Use Case               |
+| -------------- | ---------------------- |
+| `auto_stories` | Learning, Education    |
+| `lightbulb`    | Ideas, Brainstorming   |
+| `work`         | Career, Professional   |
+| `code`         | Programming, Technical |
+| `analytics`    | Data, Analysis         |
 
 ---
 
 ## Project Scope
 
 Gemini Voyager enhances the Gemini AI chat experience with:
+
 - Timeline navigation
 - Folder organization
 - Prompt library
@@ -289,15 +295,19 @@ bun run dev
 为避免重复工作并协调贡献：
 
 ### 1. 检查现有工作
+
 在开始之前，检查 issue 的 **Assignees** 部分，确认是否已有人被分配。
 
 ### 2. 认领 Issue
+
 在任何未分配的 issue 上评论 `/claim`，机器人将自动将你分配为负责人。
 
 ### 3. 取消认领
+
 如果你无法继续处理某个 issue，评论 `/unclaim` 即可释放它供他人处理。
 
 ### 4. 贡献意愿复选框
+
 创建 issue 时，你可以勾选"我愿意贡献代码"复选框，表明你有兴趣实现该功能或修复。
 
 ---
@@ -312,16 +322,16 @@ bun install
 
 ### 可用命令
 
-| 命令 | 描述 |
-|------|------|
-| `bun run dev` | 启动 Chrome 开发模式（热重载）|
-| `bun run dev:firefox` | 启动 Firefox 开发模式 |
-| `bun run dev:safari` | 启动 Safari 开发模式（仅 macOS）|
-| `bun run build` | Chrome 生产构建 |
-| `bun run build:all` | 所有浏览器生产构建 |
-| `bun run lint` | 运行 ESLint 并自动修复 |
-| `bun run typecheck` | 运行 TypeScript 类型检查 |
-| `bun run test` | 运行测试套件 |
+| 命令                  | 描述                             |
+| --------------------- | -------------------------------- |
+| `bun run dev`         | 启动 Chrome 开发模式（热重载）   |
+| `bun run dev:firefox` | 启动 Firefox 开发模式            |
+| `bun run dev:safari`  | 启动 Safari 开发模式（仅 macOS） |
+| `bun run build`       | Chrome 生产构建                  |
+| `bun run build:all`   | 所有浏览器生产构建               |
+| `bun run lint`        | 运行 ESLint 并自动修复           |
+| `bun run typecheck`   | 运行 TypeScript 类型检查         |
+| `bun run test`        | 运行测试套件                     |
 
 ### 加载扩展
 
@@ -337,6 +347,7 @@ bun install
 ### 开始之前
 
 1. **从 `main` 创建分支**：
+
    ```bash
    git checkout -b feature/your-feature-name
    # 或
@@ -431,19 +442,20 @@ bun run test       # 运行测试
 
 使用有效的 [Google Material Symbols](https://fonts.google.com/icons) 图标名称：
 
-| 图标 | 用途 |
-|------|------|
-| `auto_stories` | 学习、教育 |
-| `lightbulb` | 创意、头脑风暴 |
-| `work` | 职业、专业 |
-| `code` | 编程、技术 |
-| `analytics` | 数据、分析 |
+| 图标           | 用途           |
+| -------------- | -------------- |
+| `auto_stories` | 学习、教育     |
+| `lightbulb`    | 创意、头脑风暴 |
+| `work`         | 职业、专业     |
+| `code`         | 编程、技术     |
+| `analytics`    | 数据、分析     |
 
 ---
 
 ## 项目范围
 
 Gemini Voyager 通过以下功能增强 Gemini AI 聊天体验：
+
 - 时间线导航
 - 文件夹组织
 - 提示词库

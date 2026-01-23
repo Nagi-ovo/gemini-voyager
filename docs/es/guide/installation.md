@@ -1,9 +1,11 @@
 # Instalación
 
 Elige tu camino.
+
 > ⚠️ El Gestor de Prompts es la única función compatible con Gemini para Empresas.
 
 ## 1. Simple (Chrome Web Store)
+
 La mejor opción para usuarios de Chrome, Edge, Brave y Opera.
 Lo más sencillo, actualizaciones automáticas, sin preocupaciones.
 
@@ -14,9 +16,11 @@ Lo más sencillo, actualizaciones automáticas, sin preocupaciones.
 3. Listo.
 
 ## 2. Manual (Versión más reciente)
+
 Las revisiones de la tienda son lentas. Si quieres las últimas funciones, toma este camino.
 
 **Chrome / Edge / Brave / Opera:**
+
 1. Ve a [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) y descarga el último `gemini-voyager-chrome-vX.Y.Z.zip`.
 2. Descomprímelo.
 3. Abre la página de extensiones (`chrome://extensions`).
@@ -32,6 +36,7 @@ Las revisiones de la tienda son lentas. Si quieres las últimas funciones, toma 
 La forma más sencilla. Instala desde la tienda oficial, actualizaciones automáticas.
 
 **Método 2: Archivo XPI (Instalación manual)**
+
 1. Ve a [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) y descarga el último `gemini-voyager-firefox-vX.Y.Z.xpi`.
 2. Abre la gestión de complementos (`about:addons`).
 3. Arrastra el archivo `.xpi` descargado allí para instalarlo (o haz clic en el engranaje ⚙️ arriba a la derecha -> **Instalar complemento desde archivo**).
@@ -39,6 +44,7 @@ La forma más sencilla. Instala desde la tienda oficial, actualizaciones automá
 > 💡 El archivo XPI está firmado oficialmente por Mozilla y se puede instalar permanentemente en todas las versiones de Firefox.
 
 ## 4. Safari (macOS)
+
 1. Ve a [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) y descarga `gemini-voyager-safari-vX.Y.Z.zip`.
 2. Descomprímelo.
 3. Ejecuta este comando en la terminal (necesitas Xcode):
@@ -49,4 +55,5 @@ La forma más sencilla. Instala desde la tienda oficial, actualizaciones automá
 5. Actívalo en Safari Preferencias > Extensiones.
 
 ---
-*¿Quieres contribuir con código? Desarrolladores, por favor consulten la [Guía de Contribución](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md).*
+
+_¿Quieres contribuir con código? Desarrolladores, por favor consulten la [Guía de Contribución](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md)._

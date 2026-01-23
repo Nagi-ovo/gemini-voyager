@@ -37,6 +37,7 @@ xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini
 This creates a `Gemini Voyager/` folder with the Xcode project.
 
 **💡 Tip:** If you see `xcrun: command not found`, install Xcode Command Line Tools first:
+
 ```bash
 xcode-select --install
 ```
@@ -48,6 +49,7 @@ open "Gemini Voyager/Gemini Voyager.xcodeproj"
 ```
 
 In Xcode:
+
 1. Select **Signing & Capabilities** tab
 2. Choose your Team (free personal account works fine)
 3. Set target to **My Mac**
@@ -58,6 +60,7 @@ Safari will open automatically with the extension loaded.
 ### 5. Enable in Safari
 
 After running:
+
 1. Open **Safari → Settings** (or Preferences)
 2. Go to **Extensions** tab
 3. Check **Gemini Voyager** to enable
@@ -87,6 +90,7 @@ Done! 🎉
 ## For Developers
 
 Want to build from source or contribute? See the [Safari Development Guide](../../../safari/README.md) for:
+
 - Building from source
 - Development workflow
 - Adding Swift native code
@@ -101,4 +105,3 @@ Want to build from source or contribute? See the [Safari Development Guide](../.
 ---
 
 **Need help?** Open an issue on [GitHub](https://github.com/Nagi-ovo/gemini-voyager/issues)
-

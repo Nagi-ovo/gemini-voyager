@@ -7,7 +7,6 @@ import { describe, it, expect } from 'vitest';
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
 import { MarkdownFormatter } from '../MarkdownFormatter';
 
-
 describe('MarkdownFormatter', () => {
   const mockMetadata: ConversationMetadata = {
     url: 'https://gemini.google.com/app/test-conversation',

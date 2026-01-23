@@ -5,6 +5,7 @@ This folder contains the implementation of the conversation folder management fe
 ## Overview
 
 The folder manager allows users to:
+
 - Create and manage folders and subfolders (2-level nesting)
 - Drag and drop conversations from the sidebar into folders
 - Move conversations between folders
@@ -19,11 +20,11 @@ The folder manager allows users to:
 - **`index.ts`** - Entry point that initializes the folder manager
 - **`README.md`** - This file
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
 ## Adding Support for New Gems
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
 To add support for a new Gem (either official Google Gems or custom Gems):
 
@@ -41,6 +42,7 @@ To add support for a new Gem (either official Google Gems or custom Gems):
 ### Finding the Gem ID
 
 The Gem ID is the URL slug used by Gemini:
+
 - Open a conversation with the Gem
 - Check the URL: `https://gemini.google.com/app/gem/[GEM_ID]/...`
 - Use this ID in the configuration
@@ -48,6 +50,7 @@ The Gem ID is the URL slug used by Gemini:
 ### Choosing an Icon
 
 Icons should be valid [Google Material Symbols](https://fonts.google.com/icons) icon names. Common examples:
+
 - `auto_stories` - Learning Coach
 - `lightbulb` - Brainstorm Buddy
 - `work` - Career Guide
@@ -74,16 +77,18 @@ export const GEM_CONFIG: GemConfig[] = [
 ## Contributing
 
 If you're adding support for a new official Google Gem, please submit a pull request with:
+
 1. The new entry in `gemConfig.ts`
 2. A brief description of the Gem in your PR
 
 ## Technical Details
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
 ### Gem Detection
 
 The folder manager detects Gem conversations by analyzing the `jslog` attribute:
+
 - **Regular conversations**: `BardVeMetadataKey:[...,[id,null,0,1]]` (4 elements)
 - **Gem conversations**: `BardVeMetadataKey:[...,[id,null,0]]` (3 elements)
 
@@ -96,12 +101,14 @@ The folder manager detects Gem conversations by analyzing the `jslog` attribute:
 ### Icon Mapping
 
 The system uses a two-way mapping:
+
 - **Gem ID → Icon**: Used when rendering conversations in folders
 - **Icon → Gem ID**: Used when detecting Gem type from DOM elements
 
 ## Future Enhancements
 
 Potential improvements that could be contributed:
+
 - Custom user-defined Gems
 - Gem icon customization
 - Support for more than 2 levels of folder nesting

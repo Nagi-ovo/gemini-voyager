@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: "Gemini Voyager"
-  text: "Finalmente, está completo."
-  tagline: "Pensamiento tangible, todo en su lugar."
+  name: 'Gemini Voyager'
+  text: 'Finalmente, está completo.'
+  tagline: 'Pensamiento tangible, todo en su lugar.'
   image:
     src: /logo.png
     alt: Logo de Gemini Voyager

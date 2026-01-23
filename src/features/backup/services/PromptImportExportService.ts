@@ -10,7 +10,6 @@ import { AppError, ErrorCode } from '@/core/errors/AppError';
 import type { Result } from '@/core/types/common';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 
-
 const EXPORT_FORMAT = 'gemini-voyager.prompts.v1' as const;
 const STORAGE_KEY = 'gvPromptItems';
 
@@ -39,11 +38,9 @@ export class PromptImportExportService {
     if (!payload || typeof payload !== 'object') {
       return {
         success: false,
-        error: new AppError(
-          ErrorCode.VALIDATION_ERROR,
-          'Invalid payload: expected an object',
-          { payload }
-        ),
+        error: new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid payload: expected an object', {
+          payload,
+        }),
       };
     }
 
@@ -78,11 +75,7 @@ export class PromptImportExportService {
       if (!item || typeof item !== 'object') {
         return {
           success: false,
-          error: new AppError(
-            ErrorCode.VALIDATION_ERROR,
-            'Invalid prompt item object',
-            { item }
-          ),
+          error: new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid prompt item object', { item }),
         };
       }
 
@@ -239,9 +232,7 @@ export class PromptImportExportService {
         if (existingMap.has(key)) {
           // Merge tags if duplicate
           const existing = existingMap.get(key)!;
-          const mergedTags = Array.from(
-            new Set([...(existing.tags || []), ...(item.tags || [])])
-          );
+          const mergedTags = Array.from(new Set([...(existing.tags || []), ...(item.tags || [])]));
           existing.tags = mergedTags;
           existing.updatedAt = Date.now();
           duplicates++;

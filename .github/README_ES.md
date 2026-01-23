@@ -35,7 +35,7 @@
 
 ## 👋 ¿Por qué Gemini Voyager?
 
-Amamos Gemini, pero a veces desearíamos que tuviera un *poco* más de estructura. 
+Amamos Gemini, pero a veces desearíamos que tuviera un _poco_ más de estructura.
 
 Por eso construimos **Gemini Voyager**. No es solo una herramienta; es un compañero que te ayuda a mantener tus conversaciones de IA organizadas, accesibles y productivas. Ya seas un investigador manejando docenas de hilos, un desarrollador guardando fragmentos de código, o simplemente alguien que ama el orden, Voyager está diseñado para ti.
 
@@ -44,66 +44,83 @@ Por eso construimos **Gemini Voyager**. No es solo una herramienta; es un compa�
 ## ✨ Características
 
 ### 📍 Navegación de Línea de Tiempo
+
 **Nunca más te pierdas en una larga conversación.**
 Los nodos visuales te permiten ver la estructura de tu chat de un vistazo.
+
 - **Salta al instante**: Haz clic en un nodo para desplazarte directamente a ese mensaje.
 - **Vistazo de contenido**: Pasa el ratón para ver qué se dijo sin desplazarte.
 - **Marca lo importante**: Mantén presionado para destacar mensajes importantes (¡sincronizado entre pestañas!).
 - **Niveles de Nodo (Experimental)**: Clic derecho en un nodo para establecer su nivel (1-3) o contraer hijos. Perfecto para organizar conversaciones ramificadas o jerárquicas.
 
 ### 📂 Organización de Carpetas
+
 **Mantén tus ideas ordenadas.**
 Deja de buscar en una lista de historial desordenada. Arrastra y suelta tus chats en carpetas que tengan sentido para ti.
+
 - **Jerarquía de dos niveles**: Carpetas y subcarpetas para una organización profunda.
 - **Gestión fácil**: Doble clic para renombrar, mantener presionado para selección múltiple.
 - **Sincronización en todas partes**: Importa/exporta tu estructura para mantener tus dispositivos sincronizados.
 
 ### 💡 Biblioteca de Prompts
+
 **Tu arsenal personal de prompts.**
 No reescribas las mismas instrucciones. Guarda tus mejores prompts y úsalos en cualquier lugar.
+
 - **Etiquetar y Buscar**: Encuentra el prompt correcto en segundos.
 - **Acceso Universal**: Funciona en Gemini, AI Studio, y ahora en **cualquier sitio web** que elijas.
 
 ### 💬 Respuesta con Cita
+
 **Responde con contexto.**
 Selecciona texto en cualquier mensaje para ver un botón de cita flotante. Haz clic para insertar el texto seleccionado como una cita en tu cuadro de respuesta al instante.
 
 ### 📐 Copia de Fórmulas
+
 **Para los magos de las matemáticas.**
 ¿Ves una hermosa fórmula LaTeX? Un clic copia el código fuente. No más reescritura manual.
 
 ### 🧜‍♀️ Renderizado de Gráficos Mermaid
+
 **Visualiza diagramas al instante.**
 Cuando Gemini genera código Mermaid, Voyager lo renderiza automáticamente como un diagrama interactivo.
 
 ### 🍌 Opción NanoBanana
+
 **Eliminación de marca de agua sin pérdidas para imágenes de Gemini.**
 Elimina automáticamente la marca de agua visible "Gemini" de las imágenes generadas por IA utilizando un algoritmo de mezcla alfa inversa.
 
 ### 🔬 Exportación de Deep Research
+
 **Extrae el contenido de pensamiento de las conversaciones de Deep Research.**
 Exportación en un clic a formato Markdown preservando todas las fases de pensamiento y enlaces de investigación.
 
 ### 💾 Exportación de Chat
+
 **Tus datos, tu formato.**
 Lleva tus conversaciones contigo.
+
 - **Formatos**: JSON estructurado o Markdown/PDF amigable para imprimir.
 - **Limpio**: Eliminamos el ruido de la interfaz de usuario para que obtengas solo el contenido.
 - **Completo**: Las imágenes se empaquetan automáticamente en una carpeta `assets/`.
 
 ### 📏 Ancho de Chat Ajustable
+
 **Lee cómodamente.**
 ¿Pantalla ancha? Aprovéchala. Personaliza el ancho del contenedor de chat (400px - 1400px) para adaptarse a tu preferencia de lectura.
 
 ### 🫥 Colapso de Entrada
+
 **Más espacio para leer.**
 El área de entrada se colapsa automáticamente cuando está vacía. Haz clic para expandir y comenzar a escribir.
 
 ### 🏷️ Sincronización de Título de Pestaña
+
 **Sabe de un vistazo.**
 Sincroniza automáticamente el título de la pestaña del navegador con el título actual del chat de Gemini.
 
 ### 🗑️ Eliminación por Lote
+
 **Limpieza en masa.**
 Selecciona múltiples conversaciones y elimínalas todas a la vez. No más borrar una por una.
 

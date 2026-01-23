@@ -4,14 +4,17 @@ Los datos bloqueados son la peor experiencia.
 Nuestro credo es simple: lo que creas, es tuyo.
 
 ## Llévatelo Todo
+
 Gemini Voyager te ayuda a bajar tus datos de la nube a tu palma.
 
 ### Elige tu Formato
+
 - **Markdown**: Para usar en Obsidian o Notion. Limpio y fresco.
 - **PDF**: Para enviar a otros o imprimir. Maquetación hermosa, texto e imágenes.
 - **JSON**: Para desarrolladores. Datos brutos, juega con ellos como quieras.
 
 ### Cómo Exportar
+
 1. Busca el **icono de exportación** junto al logo de Gemini.
 2. Elige el formato.
 3. Llévatelo.

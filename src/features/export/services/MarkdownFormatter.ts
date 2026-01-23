@@ -63,7 +63,10 @@ export class MarkdownFormatter {
   /**
    * Async formatter that tries to inline images as data URLs
    */
-  static async formatWithAssets(turns: ChatTurn[], metadata: ConversationMetadata): Promise<string> {
+  static async formatWithAssets(
+    turns: ChatTurn[],
+    metadata: ConversationMetadata
+  ): Promise<string> {
     const md = this.format(turns, metadata);
     const urls = this.extractImageUrls(md);
     if (urls.length === 0) return md;
@@ -73,7 +76,7 @@ export class MarkdownFormatter {
       urls.map(async (u) => {
         const data = await this.fetchAsDataURL(u);
         if (data) urlToData.set(u, data);
-      }),
+      })
     );
     if (urlToData.size === 0) return md;
 

@@ -33,10 +33,7 @@ export function filterTopLevel<T extends Element>(elements: T[]): T[] {
 /**
  * Deduplicate array by key function
  */
-export function deduplicateBy<T>(
-  items: T[],
-  keyFn: (item: T) => string
-): T[] {
+export function deduplicateBy<T>(items: T[], keyFn: (item: T) => string): T[] {
   const seen = new Set<string>();
   const result: T[] = [];
 
@@ -108,9 +105,7 @@ export function chunk<T>(array: T[], size: number): T[][] {
 /**
  * Sort folders with pinned folders first, then by name using localized collation
  */
-export function sortFolders<T extends { name: string; pinned?: boolean }>(
-  folders: T[]
-): T[] {
+export function sortFolders<T extends { name: string; pinned?: boolean }>(folders: T[]): T[] {
   return [...folders].sort((a, b) => {
     // Pinned folders always come first
     if (a.pinned && !b.pinned) return -1;

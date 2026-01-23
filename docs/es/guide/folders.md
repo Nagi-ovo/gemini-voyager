@@ -4,12 +4,15 @@ Organizar los chats de IA, ¿por qué era tan difícil antes?
 Lo hemos arreglado. Instala un sistema de archivos para tus pensamientos.
 
 ## Intuición Organizada
+
 Cuando se siente bien, todo está bien.
+
 - **Arrastrar y Soltar**: Agarra, suelta. Retroalimentación física real.
 - **Anidación**: Grandes proyectos dentro de pequeños proyectos. Niveles infinitos, como quieras.
 - **Sincronización**: Organízalo en tu PC, úsalo en tu portátil.
 
 ## Trucos Maestros
+
 - **Selección Múltiple**: Mantén presionado un elemento de chat para entrar en modo de selección múltiple, opera en lote, listo de una vez.
 - **Renombrar**: Doble clic en la carpeta, cámbialo directamente.
 - **Reconocimiento**: Código, escritura, charla... Identificamos automáticamente el tipo de Gema y asignamos un icono. Tú solo úsalo, déjanos el resto a nosotros.

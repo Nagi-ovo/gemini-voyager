@@ -4,7 +4,6 @@ import { applyDeepResearchDownloadButtonI18n } from '../menuButton';
 
 import type { AppLanguage } from '@/utils/language';
 
-
 describe('applyDeepResearchDownloadButtonI18n', () => {
   it('updates label and tooltip according to language', () => {
     const button = document.createElement('button');
@@ -16,7 +15,10 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
     const dict: Record<AppLanguage, Record<string, string>> = {
       en: { deepResearchDownload: 'Download', deepResearchDownloadTooltip: 'Download (MD)' },
       zh: { deepResearchDownload: '下载', deepResearchDownloadTooltip: '下载（MD）' },
-      ja: { deepResearchDownload: 'ダウンロード', deepResearchDownloadTooltip: 'ダウンロード（MD）' },
+      ja: {
+        deepResearchDownload: 'ダウンロード',
+        deepResearchDownloadTooltip: 'ダウンロード（MD）',
+      },
       fr: { deepResearchDownload: 'Télécharger', deepResearchDownloadTooltip: 'Télécharger (MD)' },
       es: { deepResearchDownload: 'Descargar', deepResearchDownloadTooltip: 'Descargar (MD)' },
     };
@@ -28,4 +30,3 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
     expect(span.textContent).toBe(' ダウンロード');
   });
 });
-

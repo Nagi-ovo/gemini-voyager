@@ -87,10 +87,7 @@ export class StarredMessagesService {
   /**
    * Remove a starred message - delegated to background script
    */
-  static async removeStarredMessage(
-    conversationId: string,
-    turnId: string
-  ): Promise<void> {
+  static async removeStarredMessage(conversationId: string, turnId: string): Promise<void> {
     try {
       const response = await this.sendMessage<{ ok: boolean; removed: boolean }>(
         'gv.starred.remove',

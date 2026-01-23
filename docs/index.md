@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: "Gemini Voyager"
-  text: "终于，它完整了。"
-  tagline: "思维有形，万物归位。"
+  name: 'Gemini Voyager'
+  text: '终于，它完整了。'
+  tagline: '思维有形，万物归位。'
   image:
     src: /logo.png
     alt: Gemini Voyager Logo

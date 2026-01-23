@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: "Gemini Voyager"
-  text: "ついに、完成。"
-  tagline: "思考を形に、すべてをあるべき場所へ。"
+  name: 'Gemini Voyager'
+  text: 'ついに、完成。'
+  tagline: '思考を形に、すべてをあるべき場所へ。'
   image:
     src: /logo.png
     alt: Gemini Voyager Logo

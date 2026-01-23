@@ -41,8 +41,8 @@
  */
 
 export const WATERMARK_REMOVER_CREDITS = {
-    author: 'journey-ad (Jad)',
-    repository: 'https://github.com/journey-ad/gemini-watermark-remover',
-    license: 'MIT',
-    copyright: 'Copyright (c) 2025 Jad',
+  author: 'journey-ad (Jad)',
+  repository: 'https://github.com/journey-ad/gemini-watermark-remover',
+  license: 'MIT',
+  copyright: 'Copyright (c) 2025 Jad',
 } as const;

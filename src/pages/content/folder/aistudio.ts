@@ -8,21 +8,30 @@ import { storageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
 import { initI18n, createTranslator } from '@/utils/i18n';
 
-function waitForElement<T extends Element = Element>(selector: string, timeoutMs = 10000): Promise<T | null> {
+function waitForElement<T extends Element = Element>(
+  selector: string,
+  timeoutMs = 10000
+): Promise<T | null> {
   return new Promise((resolve) => {
     const found = document.querySelector(selector) as T | null;
     if (found) return resolve(found);
     const obs = new MutationObserver(() => {
       const el = document.querySelector(selector) as T | null;
       if (el) {
-        try { obs.disconnect(); } catch { }
+        try {
+          obs.disconnect();
+        } catch {}
         resolve(el);
       }
     });
-    try { obs.observe(document.body, { childList: true, subtree: true }); } catch { }
+    try {
+      obs.observe(document.body, { childList: true, subtree: true });
+    } catch {}
     if (timeoutMs > 0) {
       setTimeout(() => {
-        try { obs.disconnect(); } catch { }
+        try {
+          obs.disconnect();
+        } catch {}
         resolve(null);
       }, timeoutMs);
     }
@@ -31,14 +40,18 @@ function waitForElement<T extends Element = Element>(selector: string, timeoutMs
 
 function normalizeText(text: string | null | undefined): string {
   try {
-    return String(text || '').replace(/\s+/g, ' ').trim();
+    return String(text || '')
+      .replace(/\s+/g, ' ')
+      .trim();
   } catch {
     return '';
   }
 }
 
 function downloadJSON(data: any, filename: string): void {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: 'application/json;charset=utf-8',
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -46,7 +59,9 @@ function downloadJSON(data: any, filename: string): void {
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {
-    try { document.body.removeChild(a); } catch { }
+    try {
+      document.body.removeChild(a);
+    } catch {}
     URL.revokeObjectURL(url);
   }, 0);
 }
@@ -92,7 +107,9 @@ export class AIStudioFolderManager {
   private createIcon(name: string): HTMLSpanElement {
     const span = document.createElement('span');
     span.className = 'google-symbols';
-    try { span.dataset.icon = name; } catch { }
+    try {
+      span.dataset.icon = name;
+    } catch {}
     span.textContent = name;
     return span;
   }
@@ -102,10 +119,7 @@ export class AIStudioFolderManager {
     this.t = createTranslator();
 
     // Initialize backup service
-    this.backupService = new DataBackupService<FolderData>(
-      'aistudio-folders',
-      validateFolderData
-    );
+    this.backupService = new DataBackupService<FolderData>('aistudio-folders', validateFolderData);
 
     // Setup automatic backup before page unload
     this.backupService.setupBeforeUnloadBackup(() => this.data);
@@ -125,7 +139,8 @@ export class AIStudioFolderManager {
 
     // Only enable on prompts, library, or root pages
     // Root path (/) is where the main playground is, prompts are saved chats, library is history
-    const isValidPath = /^\/(prompts|library)(\/|$)/.test(location.pathname) || location.pathname === '/';
+    const isValidPath =
+      /^\/(prompts|library)(\/|$)/.test(location.pathname) || location.pathname === '/';
     if (!isValidPath) return;
 
     // Load folder enabled setting
@@ -156,7 +171,9 @@ export class AIStudioFolderManager {
 
     if (!this.historyRoot && !isLibraryPage) return;
 
-    try { document.documentElement.classList.add('gv-aistudio-root'); } catch { }
+    try {
+      document.documentElement.classList.add('gv-aistudio-root');
+    } catch {}
 
     await this.load();
 
@@ -194,7 +211,9 @@ export class AIStudioFolderManager {
         this.backupService.createPrimaryBackup(this.data);
       } else {
         // Don't immediately clear data - try to recover from backup
-        console.warn('[AIStudioFolderManager] Storage returned no data, attempting recovery from backup');
+        console.warn(
+          '[AIStudioFolderManager] Storage returned no data, attempting recovery from backup'
+        );
         this.attemptDataRecovery(null);
       }
     } catch (error) {
@@ -322,13 +341,17 @@ export class AIStudioFolderManager {
     try {
       const m = (location.pathname || '').match(/\/prompts\/([^/?#]+)/);
       return m ? m[1] : null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   }
 
   private highlightActiveConversation(): void {
     if (!this.container) return;
     const currentId = this.getCurrentPromptIdFromLocation();
-    const rows = this.container.querySelectorAll('.gv-folder-conversation') as NodeListOf<HTMLElement>;
+    const rows = this.container.querySelectorAll(
+      '.gv-folder-conversation'
+    ) as NodeListOf<HTMLElement>;
     rows.forEach((row) => {
       const isActive = currentId && row.dataset.conversationId === currentId;
       row.classList.toggle('gv-folder-conversation-selected', !!isActive);
@@ -337,20 +360,24 @@ export class AIStudioFolderManager {
 
   private installRouteChangeListener(): void {
     const update = () => setTimeout(() => this.highlightActiveConversation(), 0);
-    try { window.addEventListener('popstate', update); } catch { }
+    try {
+      window.addEventListener('popstate', update);
+    } catch {}
     try {
       const hist = history as any;
       const wrap = (method: 'pushState' | 'replaceState') => {
         const orig = hist[method];
         hist[method] = function (...args: any[]) {
           const ret = orig.apply(this, args);
-          try { update(); } catch { }
+          try {
+            update();
+          } catch {}
           return ret;
         };
       };
       wrap('pushState');
       wrap('replaceState');
-    } catch { }
+    } catch {}
     // Fallback poller for routers that bypass events
     try {
       let last = location.pathname;
@@ -361,8 +388,12 @@ export class AIStudioFolderManager {
           update();
         }
       }, 400);
-      this.cleanupFns.push(() => { try { clearInterval(id); } catch { } });
-    } catch { }
+      this.cleanupFns.push(() => {
+        try {
+          clearInterval(id);
+        } catch {}
+      });
+    } catch {}
   }
 
   private renderFolder(folder: Folder): HTMLElement {
@@ -401,7 +432,9 @@ export class AIStudioFolderManager {
     const pinBtn = document.createElement('button');
     pinBtn.className = 'gv-folder-pin-btn';
     pinBtn.title = folder.pinned ? this.t('folder_unpin') : this.t('folder_pin');
-    try { (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned'; } catch { }
+    try {
+      (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned';
+    } catch {}
     pinBtn.appendChild(this.createIcon('push_pin'));
     pinBtn.addEventListener('click', () => {
       folder.pinned = !folder.pinned;
@@ -448,9 +481,10 @@ export class AIStudioFolderManager {
     title.textContent = conv.title || this.t('conversation_untitled');
     row.appendChild(title);
 
-
     const starBtn = document.createElement('button');
-    starBtn.className = conv.starred ? 'gv-conversation-star-btn starred' : 'gv-conversation-star-btn';
+    starBtn.className = conv.starred
+      ? 'gv-conversation-star-btn starred'
+      : 'gv-conversation-star-btn';
     starBtn.appendChild(this.createIcon(conv.starred ? 'star' : 'star_outline'));
     starBtn.title = conv.starred ? this.t('conversation_unstar') : this.t('conversation_star');
     starBtn.addEventListener('click', (e) => {
@@ -481,8 +515,12 @@ export class AIStudioFolderManager {
         url: conv.url,
         sourceFolderId: folderId,
       };
-      try { e.dataTransfer?.setData('application/json', JSON.stringify(data)); } catch { }
-      try { e.dataTransfer?.setDragImage(row, 10, 10); } catch { }
+      try {
+        e.dataTransfer?.setData('application/json', JSON.stringify(data));
+      } catch {}
+      try {
+        e.dataTransfer?.setDragImage(row, 10, 10);
+      } catch {}
     });
 
     return row;
@@ -496,13 +534,17 @@ export class AIStudioFolderManager {
     rename.textContent = this.t('folder_rename');
     rename.addEventListener('click', () => {
       this.renameFolder(folderId);
-      try { document.body.removeChild(menu); } catch { }
+      try {
+        document.body.removeChild(menu);
+      } catch {}
     });
     const del = document.createElement('button');
     del.textContent = this.t('folder_delete');
     del.addEventListener('click', () => {
       this.deleteFolder(folderId);
-      try { document.body.removeChild(menu); } catch { }
+      try {
+        document.body.removeChild(menu);
+      } catch {}
     });
     menu.appendChild(rename);
     menu.appendChild(del);
@@ -518,7 +560,9 @@ export class AIStudioFolderManager {
     document.body.appendChild(menu);
     const onClickAway = (e: MouseEvent) => {
       if (e.target instanceof Node && !menu.contains(e.target)) {
-        try { document.body.removeChild(menu); } catch { }
+        try {
+          document.body.removeChild(menu);
+        } catch {}
         window.removeEventListener('click', onClickAway, true);
       }
     };
@@ -582,7 +626,9 @@ export class AIStudioFolderManager {
     });
     el.addEventListener('dragover', (e) => {
       e.preventDefault();
-      try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; } catch { }
+      try {
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      } catch {}
     });
     el.addEventListener('dragleave', (e) => {
       dragEnterCounter--;
@@ -603,11 +649,17 @@ export class AIStudioFolderManager {
       el.classList.remove('gv-folder-dragover');
       let raw = e.dataTransfer?.getData('application/json');
       if (!raw) {
-        try { raw = e.dataTransfer?.getData('text/plain') || ''; } catch { }
+        try {
+          raw = e.dataTransfer?.getData('text/plain') || '';
+        } catch {}
       }
       if (!raw) return;
       let data: DragData | null = null;
-      try { data = JSON.parse(raw) as DragData; } catch { data = null; }
+      try {
+        data = JSON.parse(raw) as DragData;
+      } catch {
+        data = null;
+      }
       if (!data || data.type !== 'conversation' || !data.conversationId) return;
       const conv: ConversationReference = {
         conversationId: data.conversationId,
@@ -621,7 +673,9 @@ export class AIStudioFolderManager {
         // First remove from any existing folder
         Object.keys(this.data.folderContents).forEach((fid) => {
           if (fid === this.UNCATEGORIZED_KEY) return; // Don't remove from uncategorized yet
-          this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter((c) => c.conversationId !== conv.conversationId);
+          this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter(
+            (c) => c.conversationId !== conv.conversationId
+          );
         });
         // Add to uncategorized if not already there
         const uncatArr = this.data.folderContents[this.UNCATEGORIZED_KEY] || [];
@@ -640,13 +694,14 @@ export class AIStudioFolderManager {
         // If moving from another folder (including uncategorized), remove there
         Object.keys(this.data.folderContents).forEach((fid) => {
           if (fid === folderId) return;
-          this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter((c) => c.conversationId !== conv.conversationId);
+          this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter(
+            (c) => c.conversationId !== conv.conversationId
+          );
         });
       }
       this.save().then(() => this.render());
     });
   }
-
 
   private observePromptList(): void {
     const root = this.historyRoot;
@@ -656,9 +711,13 @@ export class AIStudioFolderManager {
       // Update highlight when the list updates
       this.highlightActiveConversation();
     });
-    try { observer.observe(root, { childList: true, subtree: true }); } catch { }
+    try {
+      observer.observe(root, { childList: true, subtree: true });
+    } catch {}
     this.cleanupFns.push(() => {
-      try { observer.disconnect(); } catch { }
+      try {
+        observer.disconnect();
+      } catch {}
     });
 
     // Also update on clicks within the prompt list (SPA navigation)
@@ -670,14 +729,20 @@ export class AIStudioFolderManager {
         setTimeout(() => this.highlightActiveConversation(), 0);
       }
     };
-    try { root.addEventListener('click', onClick, true); } catch { }
+    try {
+      root.addEventListener('click', onClick, true);
+    } catch {}
     this.cleanupFns.push(() => {
-      try { root.removeEventListener('click', onClick, true); } catch { }
+      try {
+        root.removeEventListener('click', onClick, true);
+      } catch {}
     });
   }
 
   private bindDraggablesInPromptList(): void {
-    const anchors = document.querySelectorAll('ms-prompt-history-v3 a.prompt-link[href^="/prompts/"]');
+    const anchors = document.querySelectorAll(
+      'ms-prompt-history-v3 a.prompt-link[href^="/prompts/"]'
+    );
     anchors.forEach((a) => {
       const anchor = a as HTMLAnchorElement;
       const li = anchor.closest('li');
@@ -697,8 +762,10 @@ export class AIStudioFolderManager {
             // Fallback to text/plain to interop with stricter DnD
             e.dataTransfer.setData('text/plain', JSON.stringify(data));
           }
-        } catch { }
-        try { e.dataTransfer?.setDragImage(hostEl, 10, 10); } catch { }
+        } catch {}
+        try {
+          e.dataTransfer?.setDragImage(hostEl, 10, 10);
+        } catch {}
       });
     });
   }
@@ -709,7 +776,9 @@ export class AIStudioFolderManager {
    */
   private observeLibraryTable(): void {
     // The library table is within a mat-table element
-    const tableRoot = document.querySelector('table.mat-mdc-table, mat-table') as HTMLElement | null;
+    const tableRoot = document.querySelector(
+      'table.mat-mdc-table, mat-table'
+    ) as HTMLElement | null;
     if (!tableRoot) {
       // Fallback: observe entire body for table appearance
       const bodyObserver = new MutationObserver(() => {
@@ -718,9 +787,13 @@ export class AIStudioFolderManager {
           this.bindDraggablesInLibraryTable();
         }
       });
-      try { bodyObserver.observe(document.body, { childList: true, subtree: true }); } catch { }
+      try {
+        bodyObserver.observe(document.body, { childList: true, subtree: true });
+      } catch {}
       this.cleanupFns.push(() => {
-        try { bodyObserver.disconnect(); } catch { }
+        try {
+          bodyObserver.disconnect();
+        } catch {}
       });
       return;
     }
@@ -728,9 +801,13 @@ export class AIStudioFolderManager {
     const observer = new MutationObserver(() => {
       this.bindDraggablesInLibraryTable();
     });
-    try { observer.observe(tableRoot, { childList: true, subtree: true }); } catch { }
+    try {
+      observer.observe(tableRoot, { childList: true, subtree: true });
+    } catch {}
     this.cleanupFns.push(() => {
-      try { observer.disconnect(); } catch { }
+      try {
+        observer.disconnect();
+      } catch {}
     });
   }
 
@@ -746,7 +823,9 @@ export class AIStudioFolderManager {
       const tr = row as HTMLElement;
       // Find the anchor with prompt link in this row
       // Matches: a[href^="/prompts/"] or a.name-btn with /prompts/ in href
-      const anchor = tr.querySelector('a[href^="/prompts/"], a.name-btn[href*="/prompts/"]') as HTMLAnchorElement | null;
+      const anchor = tr.querySelector(
+        'a[href^="/prompts/"], a.name-btn[href*="/prompts/"]'
+      ) as HTMLAnchorElement | null;
       if (!anchor) return;
 
       // Skip if already bound
@@ -768,8 +847,10 @@ export class AIStudioFolderManager {
             // Fallback to text/plain to interop with stricter DnD
             e.dataTransfer.setData('text/plain', JSON.stringify(data));
           }
-        } catch { }
-        try { e.dataTransfer?.setDragImage(tr, 10, 10); } catch { }
+        } catch {}
+        try {
+          e.dataTransfer?.setDragImage(tr, 10, 10);
+        } catch {}
 
         // Visual feedback
         tr.style.opacity = '0.5';
@@ -861,12 +942,18 @@ export class AIStudioFolderManager {
 
         let raw = e.dataTransfer?.getData('application/json');
         if (!raw) {
-          try { raw = e.dataTransfer?.getData('text/plain') || ''; } catch { }
+          try {
+            raw = e.dataTransfer?.getData('text/plain') || '';
+          } catch {}
         }
         if (!raw) return;
 
         let data: DragData | null = null;
-        try { data = JSON.parse(raw) as DragData; } catch { data = null; }
+        try {
+          data = JSON.parse(raw) as DragData;
+        } catch {
+          data = null;
+        }
         if (!data || data.type !== 'conversation' || !data.conversationId) return;
 
         const conv: ConversationReference = {
@@ -892,7 +979,10 @@ export class AIStudioFolderManager {
         }
 
         this.save();
-        this.showNotification(this.t('conversation_saved_to_root') || 'Saved to Uncategorized', 'info');
+        this.showNotification(
+          this.t('conversation_saved_to_root') || 'Saved to Uncategorized',
+          'info'
+        );
       };
 
       rootItem.addEventListener('dragenter', (e) => {
@@ -904,7 +994,9 @@ export class AIStudioFolderManager {
       rootItem.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; } catch { }
+        try {
+          if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        } catch {}
       });
       rootItem.addEventListener('dragleave', (e) => {
         e.stopPropagation();
@@ -960,7 +1052,9 @@ export class AIStudioFolderManager {
         folderItem.addEventListener('dragover', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; } catch { }
+          try {
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+          } catch {}
         });
         folderItem.addEventListener('dragleave', (e) => {
           e.stopPropagation();
@@ -975,12 +1069,18 @@ export class AIStudioFolderManager {
 
           let raw = e.dataTransfer?.getData('application/json');
           if (!raw) {
-            try { raw = e.dataTransfer?.getData('text/plain') || ''; } catch { }
+            try {
+              raw = e.dataTransfer?.getData('text/plain') || '';
+            } catch {}
           }
           if (!raw) return;
 
           let data: DragData | null = null;
-          try { data = JSON.parse(raw) as DragData; } catch { data = null; }
+          try {
+            data = JSON.parse(raw) as DragData;
+          } catch {
+            data = null;
+          }
           if (!data || data.type !== 'conversation' || !data.conversationId) return;
 
           const conv: ConversationReference = {
@@ -1007,7 +1107,10 @@ export class AIStudioFolderManager {
           });
 
           this.save();
-          this.showNotification(`${this.t('conversation_added_to_folder') || 'Added to'} "${folder.name}"`, 'info');
+          this.showNotification(
+            `${this.t('conversation_added_to_folder') || 'Added to'} "${folder.name}"`,
+            'info'
+          );
         });
 
         folderList.appendChild(folderItem);
@@ -1052,7 +1155,7 @@ export class AIStudioFolderManager {
       try {
         document.removeEventListener('dragstart', onDragStart);
         document.body.removeChild(floatingZone);
-      } catch { }
+      } catch {}
     });
   }
 
@@ -1092,49 +1195,52 @@ export class AIStudioFolderManager {
       exportedAt: new Date().toISOString(),
       data: this.data,
     };
-    downloadJSON(payload, `gemini-voyager-folders-${this.timestamp()
-      }.json`);
+    downloadJSON(payload, `gemini-voyager-folders-${this.timestamp()}.json`);
   }
 
   private handleImport(): void {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'application/json';
-    input.addEventListener('change', async () => {
-      const f = input.files && input.files[0];
-      if (!f) return;
-      try {
-        const text = await f.text();
-        const json = JSON.parse(text);
-        const next = (json && (json.data || json)) as FolderData;
-        if (!next || !Array.isArray(next.folders) || typeof next.folderContents !== 'object') {
-          alert(this.t('folder_import_invalid_format') || 'Invalid file format');
-          return;
-        }
-        // Merge mode by default: simple union without duplicates
-        const existingIds = new Set(this.data.folders.map((x) => x.id));
-        for (const f of next.folders) {
-          if (!existingIds.has(f.id)) {
-            this.data.folders.push(f);
-            this.data.folderContents[f.id] = next.folderContents[f.id] || [];
-          } else {
-            // Merge conversations
-            const base = this.data.folderContents[f.id] || [];
-            const add = next.folderContents[f.id] || [];
-            const seen = new Set(base.map((c) => c.conversationId));
-            for (const c of add) {
-              if (!seen.has(c.conversationId)) base.push(c);
-            }
-            this.data.folderContents[f.id] = base;
+    input.addEventListener(
+      'change',
+      async () => {
+        const f = input.files && input.files[0];
+        if (!f) return;
+        try {
+          const text = await f.text();
+          const json = JSON.parse(text);
+          const next = (json && (json.data || json)) as FolderData;
+          if (!next || !Array.isArray(next.folders) || typeof next.folderContents !== 'object') {
+            alert(this.t('folder_import_invalid_format') || 'Invalid file format');
+            return;
           }
+          // Merge mode by default: simple union without duplicates
+          const existingIds = new Set(this.data.folders.map((x) => x.id));
+          for (const f of next.folders) {
+            if (!existingIds.has(f.id)) {
+              this.data.folders.push(f);
+              this.data.folderContents[f.id] = next.folderContents[f.id] || [];
+            } else {
+              // Merge conversations
+              const base = this.data.folderContents[f.id] || [];
+              const add = next.folderContents[f.id] || [];
+              const seen = new Set(base.map((c) => c.conversationId));
+              for (const c of add) {
+                if (!seen.has(c.conversationId)) base.push(c);
+              }
+              this.data.folderContents[f.id] = base;
+            }
+          }
+          await this.save();
+          this.render();
+          alert(this.t('folder_import_success') || 'Imported');
+        } catch (e) {
+          alert(this.t('folder_import_error') || 'Import failed');
         }
-        await this.save();
-        this.render();
-        alert(this.t('folder_import_success') || 'Imported');
-      } catch (e) {
-        alert(this.t('folder_import_error') || 'Import failed');
-      }
-    }, { once: true });
+      },
+      { once: true }
+    );
     input.click();
   }
 
@@ -1256,7 +1362,8 @@ export class AIStudioFolderManager {
       document.body.appendChild(notification);
 
       // Auto-remove after timeout (longer for errors/warnings)
-      const timeout = level === 'info' ? 3000 : level === 'warning' ? 7000 : NOTIFICATION_TIMEOUT_MS;
+      const timeout =
+        level === 'info' ? 3000 : level === 'warning' ? 7000 : NOTIFICATION_TIMEOUT_MS;
       setTimeout(() => {
         try {
           document.body.removeChild(notification);
@@ -1290,13 +1397,20 @@ export class AIStudioFolderManager {
       if (this.isExtensionContextValid()) {
         const result = await browser.storage.sync.get({ [this.SIDEBAR_WIDTH_KEY]: 280 });
         const width = result[this.SIDEBAR_WIDTH_KEY];
-        if (typeof width === 'number' && width >= this.MIN_SIDEBAR_WIDTH && width <= this.MAX_SIDEBAR_WIDTH) {
+        if (
+          typeof width === 'number' &&
+          width >= this.MIN_SIDEBAR_WIDTH &&
+          width <= this.MAX_SIDEBAR_WIDTH
+        ) {
           this.sidebarWidth = width;
           return;
         }
       }
     } catch (error) {
-      console.warn('[AIStudioFolderManager] Failed to load from sync storage, trying localStorage:', error);
+      console.warn(
+        '[AIStudioFolderManager] Failed to load from sync storage, trying localStorage:',
+        error
+      );
     }
 
     // Fallback to localStorage
@@ -1304,12 +1418,19 @@ export class AIStudioFolderManager {
       const stored = localStorage.getItem(this.SIDEBAR_WIDTH_KEY);
       if (stored) {
         const width = parseInt(stored, 10);
-        if (typeof width === 'number' && width >= this.MIN_SIDEBAR_WIDTH && width <= this.MAX_SIDEBAR_WIDTH) {
+        if (
+          typeof width === 'number' &&
+          width >= this.MIN_SIDEBAR_WIDTH &&
+          width <= this.MAX_SIDEBAR_WIDTH
+        ) {
           this.sidebarWidth = width;
         }
       }
     } catch (error) {
-      console.error('[AIStudioFolderManager] Failed to load sidebar width from localStorage:', error);
+      console.error(
+        '[AIStudioFolderManager] Failed to load sidebar width from localStorage:',
+        error
+      );
     }
   }
 
@@ -1495,7 +1616,7 @@ export class AIStudioFolderManager {
         if (handle.parentElement) {
           handle.parentElement.removeChild(handle);
         }
-      } catch { }
+      } catch {}
     });
   }
 }

@@ -36,5 +36,4 @@ If you've found a bug or have a specific feature request, please open an issue o
 - [Report a Bug](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
 - [Suggest a Feature](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
 
-
 Thank you for supporting Gemini Voyager! ❤️

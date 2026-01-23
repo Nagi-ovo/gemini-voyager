@@ -36,5 +36,4 @@
 - [提交 Bug 报告](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
 - [提交功能建议](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
 
-
 感谢你对 Gemini Voyager 的支持！❤️

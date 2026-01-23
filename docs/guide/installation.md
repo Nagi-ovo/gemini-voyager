@@ -1,9 +1,11 @@
 # 安装
 
 选一条路。
+
 > ⚠️ 提示词管理器是唯一支持 Gemini 企业版的功能。
 
 ## 1. 极简（Chrome 应用店）
+
 Chrome, Edge, Brave, Opera 用户首选。
 最简单，自动更新，无忧无虑。
 
@@ -14,9 +16,11 @@ Chrome, Edge, Brave, Opera 用户首选。
 3. 搞定。
 
 ## 2. 手动（抢鲜版）
+
 应用店审核慢。如果你追求最新功能，走这条路。
 
 **Chrome / Edge / Brave / Opera：**
+
 1. 去 [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下最新的 `gemini-voyager-chrome-vX.Y.Z.zip`。
 2. 解压。
 3. 打开扩展页 (`chrome://extensions`)。
@@ -32,6 +36,7 @@ Chrome, Edge, Brave, Opera 用户首选。
 最简单的方式。从官方商店安装，自动更新。
 
 **方法二：XPI 文件（手动安装）**
+
 1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下最新的 `gemini-voyager-firefox-vX.Y.Z.xpi`。
 2. 打开扩展管理页 (`about:addons`)。
 3. 把下载的 `.xpi` 文件拖进去安装（或者点右上角齿轮 ⚙️ -> **从文件安装附加组件**）。
@@ -39,6 +44,7 @@ Chrome, Edge, Brave, Opera 用户首选。
 > 💡 XPI 文件已获 Mozilla 官方签名，可在所有 Firefox 版本中永久安装。
 
 ## 4. Safari (macOS)
+
 1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下 `gemini-voyager-safari-vX.Y.Z.zip`。
 2. 解压。
 3. 终端跑这行命令 (得有 Xcode)：
@@ -49,4 +55,5 @@ Chrome, Edge, Brave, Opera 用户首选。
 5. Safari 设置 > 扩展里打开。
 
 ---
-*想贡献代码？开发者请移步 [贡献指南](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md)。*
+
+_想贡献代码？开发者请移步 [贡献指南](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md)。_

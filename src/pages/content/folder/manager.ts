@@ -1,11 +1,6 @@
 import browser from 'webextension-polyfill';
 
-import {
-  getGemIcon,
-  DEFAULT_GEM_ICON,
-  DEFAULT_CONVERSATION_ICON,
-  GEM_CONFIG,
-} from './gemConfig';
+import { getGemIcon, DEFAULT_GEM_ICON, DEFAULT_CONVERSATION_ICON, GEM_CONFIG } from './gemConfig';
 import {
   createFolderStorageAdapter,
   type IFolderStorageAdapter,
@@ -102,13 +97,13 @@ export class FolderManager {
 
   // Batch delete timing configuration (in milliseconds)
   private readonly BATCH_DELETE_CONFIG = {
-    DELAY_BETWEEN_DELETIONS: 500,   // Delay between each deletion to avoid rate limiting
-    MENU_APPEAR_DELAY: 300,         // Wait for context menu to appear after clicking "more" button
-    DIALOG_APPEAR_DELAY: 300,       // Wait for confirmation dialog to appear
-    DELETION_COMPLETE_DELAY: 500,   // Wait for deletion animation/API call to complete
-    MAX_BUTTON_WAIT_TIME: 3000,     // Maximum time to wait for delete/confirm button to appear
-    BUTTON_CHECK_INTERVAL: 100,     // Interval for polling button appearance
-    PAGE_REFRESH_DELAY: 1500,       // Delay before refreshing page after batch delete
+    DELAY_BETWEEN_DELETIONS: 500, // Delay between each deletion to avoid rate limiting
+    MENU_APPEAR_DELAY: 300, // Wait for context menu to appear after clicking "more" button
+    DIALOG_APPEAR_DELAY: 300, // Wait for confirmation dialog to appear
+    DELETION_COMPLETE_DELAY: 500, // Wait for deletion animation/API call to complete
+    MAX_BUTTON_WAIT_TIME: 3000, // Maximum time to wait for delete/confirm button to appear
+    BUTTON_CHECK_INTERVAL: 100, // Interval for polling button appearance
+    PAGE_REFRESH_DELAY: 1500, // Delay before refreshing page after batch delete
   } as const;
 
   constructor() {
@@ -117,10 +112,7 @@ export class FolderManager {
     this.debug(`Using storage backend: ${this.storage.getBackendName()}`);
 
     // Initialize backup service with localStorage
-    this.backupService = new DataBackupService<FolderData>(
-      'gemini-folders',
-      validateFolderData
-    );
+    this.backupService = new DataBackupService<FolderData>('gemini-folders', validateFolderData);
 
     // Note: Data loading moved to init() for async support
     // This allows Safari to use async browser.storage API
@@ -322,7 +314,9 @@ export class FolderManager {
 
     // Find conversations-list (Recent section) by looking for the conversations container
     // Try multiple selectors to find the Recent section
-    let conversationsList = this.sidebarContainer.querySelector('[data-test-id="all-conversations"]');
+    let conversationsList = this.sidebarContainer.querySelector(
+      '[data-test-id="all-conversations"]'
+    );
 
     if (!conversationsList) {
       // Fallback: find by class name
@@ -331,7 +325,9 @@ export class FolderManager {
 
     if (!conversationsList) {
       // Fallback: find the element that contains conversation items
-      const conversationItems = this.sidebarContainer.querySelectorAll('[data-test-id="conversation"]');
+      const conversationItems = this.sidebarContainer.querySelectorAll(
+        '[data-test-id="conversation"]'
+      );
       if (conversationItems.length > 0) {
         // Find the parent that contains these conversations
         conversationsList = conversationItems[0].closest('.chat-history, [class*="conversation"]');
@@ -534,9 +530,7 @@ export class FolderManager {
     folderName.addEventListener('dblclick', () => this.renameFolder(folder.id));
 
     // Add tooltip event listeners
-    folderName.addEventListener('mouseenter', () =>
-      this.showTooltip(folderName, folder.name),
-    );
+    folderName.addEventListener('mouseenter', () => this.showTooltip(folderName, folder.name));
     folderName.addEventListener('mouseleave', () => this.hideTooltip());
 
     // Pin button
@@ -612,7 +606,9 @@ export class FolderManager {
     level: number
   ): HTMLElement {
     const convEl = document.createElement('div');
-    convEl.className = conv.starred ? 'gv-folder-conversation gv-starred' : 'gv-folder-conversation';
+    convEl.className = conv.starred
+      ? 'gv-folder-conversation gv-starred'
+      : 'gv-folder-conversation';
     convEl.dataset.conversationId = conv.conversationId;
     convEl.dataset.folderId = folderId;
     // Increase indentation for conversations under folders
@@ -660,16 +656,20 @@ export class FolderManager {
       e.dataTransfer!.setData('application/json', JSON.stringify(dragData));
 
       // Apply opacity to all selected conversations
-      this.selectedConversations.forEach(id => {
-        const el = this.containerElement?.querySelector(`[data-conversation-id="${id}"]`) as HTMLElement;
+      this.selectedConversations.forEach((id) => {
+        const el = this.containerElement?.querySelector(
+          `[data-conversation-id="${id}"]`
+        ) as HTMLElement;
         if (el) el.style.opacity = '0.5';
       });
     });
 
     convEl.addEventListener('dragend', () => {
       // Restore opacity for all selected conversations
-      this.selectedConversations.forEach(id => {
-        const el = this.containerElement?.querySelector(`[data-conversation-id="${id}"]`) as HTMLElement;
+      this.selectedConversations.forEach((id) => {
+        const el = this.containerElement?.querySelector(
+          `[data-conversation-id="${id}"]`
+        ) as HTMLElement;
         if (el) el.style.opacity = '1';
       });
 
@@ -682,7 +682,8 @@ export class FolderManager {
 
     // Conversation icon - use Gem-specific icons
     const icon = document.createElement('mat-icon');
-    icon.className = 'mat-icon notranslate gv-conversation-icon google-symbols mat-ligature-font mat-icon-no-color';
+    icon.className =
+      'mat-icon notranslate gv-conversation-icon google-symbols mat-ligature-font mat-icon-no-color';
     icon.setAttribute('role', 'img');
     icon.setAttribute('aria-hidden', 'true');
 
@@ -709,7 +710,9 @@ export class FolderManager {
 
     // Star button
     const starBtn = document.createElement('button');
-    starBtn.className = conv.starred ? 'gv-conversation-star-btn starred' : 'gv-conversation-star-btn';
+    starBtn.className = conv.starred
+      ? 'gv-conversation-star-btn starred'
+      : 'gv-conversation-star-btn';
     const starIcon = conv.starred ? 'star' : 'star_outline';
     starBtn.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">${starIcon}</mat-icon>`;
     starBtn.title = conv.starred ? this.t('conversation_unstar') : this.t('conversation_star');
@@ -721,7 +724,8 @@ export class FolderManager {
     // Remove button
     const removeBtn = document.createElement('button');
     removeBtn.className = 'gv-conversation-remove-btn';
-    removeBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
+    removeBtn.innerHTML =
+      '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
     removeBtn.title = this.t('folder_remove_conversation');
     removeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -772,7 +776,11 @@ export class FolderManager {
         e.stopPropagation();
 
         // Prevent cross-folder selection
-        if (this.multiSelectSource === 'folder' && this.multiSelectFolderId && this.multiSelectFolderId !== folderId) {
+        if (
+          this.multiSelectSource === 'folder' &&
+          this.multiSelectFolderId &&
+          this.multiSelectFolderId !== folderId
+        ) {
           // Provide visual feedback for invalid selection attempt
           this.showInvalidSelectionFeedback(convEl);
           return;
@@ -823,7 +831,7 @@ export class FolderManager {
 
         // Pre-cleanup: Restore opacity immediately before processing drop
         // This prevents visual artifacts if dragend doesn't fire properly
-        this.selectedConversations.forEach(id => {
+        this.selectedConversations.forEach((id) => {
           const el = this.findConversationElement(id);
           if (el) el.style.opacity = '1';
         });
@@ -838,7 +846,11 @@ export class FolderManager {
           if (dragData.conversations && dragData.conversations.length > 0) {
             // Multi-select drag
             this.debug('Dropping multiple conversations:', dragData.conversations.length);
-            this.addConversationsToFolder(folderId, dragData.conversations, dragData.sourceFolderId);
+            this.addConversationsToFolder(
+              folderId,
+              dragData.conversations,
+              dragData.sourceFolderId
+            );
           } else {
             // Legacy single conversation drag (backward compatibility)
             this.addConversationToFolder(folderId, dragData);
@@ -870,12 +882,7 @@ export class FolderManager {
       const x = (e as DragEvent).clientX;
       const y = (e as DragEvent).clientY;
 
-      if (
-        x <= rect.left ||
-        x >= rect.right ||
-        y <= rect.top ||
-        y >= rect.bottom
-      ) {
+      if (x <= rect.left || x >= rect.right || y <= rect.top || y >= rect.bottom) {
         element.classList.remove('gv-folder-list-dragover');
       }
     });
@@ -893,7 +900,7 @@ export class FolderManager {
 
         // Pre-cleanup: Restore opacity immediately before processing drop
         // This prevents visual artifacts if dragend doesn't fire properly
-        this.selectedConversations.forEach(id => {
+        this.selectedConversations.forEach((id) => {
           const el = this.findConversationElement(id);
           if (el) el.style.opacity = '1';
         });
@@ -905,8 +912,15 @@ export class FolderManager {
           // Handle conversation drop - supports both single and multiple conversations
           if (dragData.conversations && dragData.conversations.length > 0) {
             // Multi-select drag
-            this.debug('Adding multiple conversations to root level:', dragData.conversations.length);
-            this.addConversationsToFolder(ROOT_CONVERSATIONS_ID, dragData.conversations, dragData.sourceFolderId);
+            this.debug(
+              'Adding multiple conversations to root level:',
+              dragData.conversations.length
+            );
+            this.addConversationsToFolder(
+              ROOT_CONVERSATIONS_ID,
+              dragData.conversations,
+              dragData.sourceFolderId
+            );
           } else {
             // Legacy single conversation drag (backward compatibility)
             this.debug('Adding conversation to root level:', dragData.title);
@@ -1007,7 +1021,12 @@ export class FolderManager {
       (e as DragEvent).dataTransfer?.setData('application/json', JSON.stringify(dragData));
       element.style.opacity = '0.5';
 
-      this.debug('Folder drag start:', folder.name, 'canBeDragged:', this.canFolderBeDragged(folder.id));
+      this.debug(
+        'Folder drag start:',
+        folder.name,
+        'canBeDragged:',
+        this.canFolderBeDragged(folder.id)
+      );
     };
 
     const handleDragEnd = () => {
@@ -1100,33 +1119,37 @@ export class FolderManager {
 
     // Click handler for multi-select mode
     const originalClickHandler = element.onclick;
-    element.addEventListener('click', (e) => {
-      // Prevent navigation if long-press was triggered
-      if (longPressTriggered) {
-        e.preventDefault();
-        e.stopPropagation();
-        longPressTriggered = false;
-        return;
-      }
-
-      if (this.isMultiSelectMode) {
-        // Multi-select mode: toggle selection
-        e.preventDefault();
-        e.stopPropagation();
-        const conversationId = this.extractConversationId(element);
-        this.toggleConversationSelection(conversationId);
-
-        // Update visual state
-        if (this.selectedConversations.has(conversationId)) {
-          element.classList.add('gv-conversation-selected');
-        } else {
-          element.classList.remove('gv-conversation-selected');
+    element.addEventListener(
+      'click',
+      (e) => {
+        // Prevent navigation if long-press was triggered
+        if (longPressTriggered) {
+          e.preventDefault();
+          e.stopPropagation();
+          longPressTriggered = false;
+          return;
         }
 
-        this.updateConversationSelectionUI();
-        return;
-      }
-    }, true); // Use capture phase to intercept before navigation
+        if (this.isMultiSelectMode) {
+          // Multi-select mode: toggle selection
+          e.preventDefault();
+          e.stopPropagation();
+          const conversationId = this.extractConversationId(element);
+          this.toggleConversationSelection(conversationId);
+
+          // Update visual state
+          if (this.selectedConversations.has(conversationId)) {
+            element.classList.add('gv-conversation-selected');
+          } else {
+            element.classList.remove('gv-conversation-selected');
+          }
+
+          this.updateConversationSelectionUI();
+          return;
+        }
+      },
+      true
+    ); // Use capture phase to intercept before navigation
 
     element.addEventListener('dragstart', (e) => {
       const title = element.querySelector('.conversation-title')?.textContent?.trim() || 'Untitled';
@@ -1154,10 +1177,11 @@ export class FolderManager {
         // Multi-select drag - collect all selected conversations
         const selectedConvs: ConversationReference[] = [];
 
-        this.selectedConversations.forEach(id => {
+        this.selectedConversations.forEach((id) => {
           const convEl = this.findConversationElement(id);
           if (convEl) {
-            const convTitle = convEl.querySelector('.conversation-title')?.textContent?.trim() || 'Untitled';
+            const convTitle =
+              convEl.querySelector('.conversation-title')?.textContent?.trim() || 'Untitled';
             const convData = this.extractConversationData(convEl);
 
             selectedConvs.push({
@@ -1180,7 +1204,7 @@ export class FolderManager {
         e.dataTransfer?.setData('application/json', JSON.stringify(dragData));
 
         // Apply opacity to all selected conversations
-        this.selectedConversations.forEach(id => {
+        this.selectedConversations.forEach((id) => {
           const el = this.findConversationElement(id);
           if (el) el.style.opacity = '0.5';
         });
@@ -1190,7 +1214,7 @@ export class FolderManager {
           title,
           isGem: conversationData.isGem,
           gemId: conversationData.gemId,
-          url: conversationData.url
+          url: conversationData.url,
         });
 
         const dragData: DragData = {
@@ -1210,7 +1234,7 @@ export class FolderManager {
     element.addEventListener('dragend', () => {
       // Restore opacity for all selected conversations
       if (this.selectedConversations.size > 1) {
-        this.selectedConversations.forEach(id => {
+        this.selectedConversations.forEach((id) => {
           const el = this.findConversationElement(id);
           if (el) el.style.opacity = '1';
         });
@@ -1229,7 +1253,9 @@ export class FolderManager {
   // Helper method to find conversation element by ID
   private findConversationElement(conversationId: string): HTMLElement | null {
     // Check in folder conversations
-    const folderConv = this.containerElement?.querySelector(`[data-conversation-id="${conversationId}"]`) as HTMLElement;
+    const folderConv = this.containerElement?.querySelector(
+      `[data-conversation-id="${conversationId}"]`
+    ) as HTMLElement;
     if (folderConv) return folderConv;
 
     // Check in native conversations (Recent section)
@@ -1268,7 +1294,9 @@ export class FolderManager {
 
     // Strategy 2: Extract from href (fallback when jslog is missing/broken)
     // This ensures we can still identify conversations even if Gemini UI changes traits
-    const link = element.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+    const link = element.querySelector(
+      'a[href*="/app/"], a[href*="/gem/"]'
+    ) as HTMLAnchorElement | null;
     if (link) {
       const href = link.href;
       // Try /app/<hexId>
@@ -1296,7 +1324,11 @@ export class FolderManager {
     return fallbackId;
   }
 
-  private extractConversationData(element: HTMLElement): { url: string; isGem: boolean; gemId?: string } {
+  private extractConversationData(element: HTMLElement): {
+    url: string;
+    isGem: boolean;
+    gemId?: string;
+  } {
     // Try to extract from jslog first
     const jslog = element.getAttribute('jslog');
     let hexId: string | null = null;
@@ -1311,7 +1343,9 @@ export class FolderManager {
 
     // Try to extract from href if jslog failed
     if (!hexId) {
-      const link = element.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+      const link = element.querySelector(
+        'a[href*="/app/"], a[href*="/gem/"]'
+      ) as HTMLAnchorElement | null;
       if (link) {
         const href = link.href;
         // Try /app/<hexId>
@@ -1382,7 +1416,9 @@ export class FolderManager {
     }
 
     // Strategy 2: Extract from href
-    const link = element.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+    const link = element.querySelector(
+      'a[href*="/app/"], a[href*="/gem/"]'
+    ) as HTMLAnchorElement | null;
     if (link) {
       const href = link.href;
       const appMatch = href.match(/\/app\/([^\/?#]+)/);
@@ -1446,7 +1482,9 @@ export class FolderManager {
           if (node instanceof HTMLElement) {
             const isConv = node.matches('[data-test-id="conversation"]');
             // Check if it contains conversations (e.g. a container was removed)
-            const containedConvsCount = node.querySelectorAll('[data-test-id="conversation"]').length;
+            const containedConvsCount = node.querySelectorAll(
+              '[data-test-id="conversation"]'
+            ).length;
 
             if (isConv) {
               totalRemovedCount++;
@@ -1466,7 +1504,9 @@ export class FolderManager {
       // Users typically delete conversations one by one.
       // EXCEPTION: If we are in multi-select mode, the user might be performing a bulk delete.
       if (totalRemovedCount > 1 && !this.isMultiSelectMode) {
-        this.debugWarn(`Ignored bulk removal of ${totalRemovedCount} conversations - likely UI refresh`);
+        this.debugWarn(
+          `Ignored bulk removal of ${totalRemovedCount} conversations - likely UI refresh`
+        );
         return;
       }
 
@@ -1647,12 +1687,14 @@ export class FolderManager {
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'gv-folder-inline-btn gv-folder-inline-save';
-    saveBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">check</mat-icon>';
+    saveBtn.innerHTML =
+      '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">check</mat-icon>';
     saveBtn.title = this.t('pm_save');
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'gv-folder-inline-btn gv-folder-inline-cancel';
-    cancelBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
+    cancelBtn.innerHTML =
+      '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
     cancelBtn.title = this.t('pm_cancel');
 
     inputContainer.appendChild(input);
@@ -1739,11 +1781,13 @@ export class FolderManager {
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'gv-folder-inline-btn gv-folder-inline-save';
-    saveBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">check</mat-icon>';
+    saveBtn.innerHTML =
+      '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">check</mat-icon>';
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'gv-folder-inline-btn gv-folder-inline-cancel';
-    cancelBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
+    cancelBtn.innerHTML =
+      '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
 
     inputContainer.appendChild(input);
     inputContainer.appendChild(saveBtn);
@@ -1917,7 +1961,10 @@ export class FolderManager {
     });
   }
 
-  private addConversationToFolder(folderId: string, dragData: DragData & { sourceFolderId?: string }): void {
+  private addConversationToFolder(
+    folderId: string,
+    dragData: DragData & { sourceFolderId?: string }
+  ): void {
     this.debug('Adding conversation to folder:', {
       folderId,
       dragData,
@@ -1982,7 +2029,7 @@ export class FolderManager {
     let addedCount = 0;
     const conversationsToRemove: string[] = [];
 
-    conversations.forEach(conv => {
+    conversations.forEach((conv) => {
       // Check if conversation is already in this folder
       const exists = this.data.folderContents[folderId].some(
         (c) => c.conversationId === conv.conversationId
@@ -2005,12 +2052,15 @@ export class FolderManager {
       }
     });
 
-    this.debug(`Added ${addedCount} conversations. Total in folder:`, this.data.folderContents[folderId].length);
+    this.debug(
+      `Added ${addedCount} conversations. Total in folder:`,
+      this.data.folderContents[folderId].length
+    );
 
     // Remove from source folder if moving
     if (sourceFolderId && sourceFolderId !== folderId && conversationsToRemove.length > 0) {
       this.debug('Removing conversations from source folder:', sourceFolderId);
-      conversationsToRemove.forEach(convId => {
+      conversationsToRemove.forEach((convId) => {
         this.data.folderContents[sourceFolderId] = this.data.folderContents[sourceFolderId].filter(
           (c) => c.conversationId !== convId
         );
@@ -2096,7 +2146,7 @@ export class FolderManager {
     const conversations = this.data.folderContents[folderId];
     if (!conversations) return;
 
-    const conv = conversations.find(c => c.conversationId === conversationId);
+    const conv = conversations.find((c) => c.conversationId === conversationId);
     if (!conv) return;
 
     // Toggle starred state
@@ -2193,7 +2243,9 @@ export class FolderManager {
     if (!this.multiSelectFolderId || this.selectedConversations.size === 0) return;
 
     const count = this.selectedConversations.size;
-    const confirmed = confirm(`Delete ${count} selected conversation${count > 1 ? 's' : ''} from this folder?`);
+    const confirmed = confirm(
+      `Delete ${count} selected conversation${count > 1 ? 's' : ''} from this folder?`
+    );
 
     if (!confirmed) return;
 
@@ -2272,7 +2324,10 @@ export class FolderManager {
 
       // Show result summary
       if (failedCount === 0) {
-        const successMessage = this.t('batch_delete_success').replace('{count}', String(successCount));
+        const successMessage = this.t('batch_delete_success').replace(
+          '{count}',
+          String(successCount)
+        );
         this.showNotification(successMessage, 'success');
       } else {
         const partialMessage = this.t('batch_delete_partial')
@@ -2348,7 +2403,9 @@ export class FolderManager {
    */
   private findNativeConversationElement(conversationId: string): HTMLElement | null {
     // Try multiple strategies to find the conversation
-    const allConversations = this.sidebarContainer?.querySelectorAll('[data-test-id="conversation"]');
+    const allConversations = this.sidebarContainer?.querySelectorAll(
+      '[data-test-id="conversation"]'
+    );
     if (!allConversations) return null;
 
     for (const conv of allConversations) {
@@ -2373,13 +2430,17 @@ export class FolderManager {
     if (parent) {
       const actionsContainer = parent.querySelector('.conversation-actions-container');
       if (actionsContainer) {
-        moreButton = actionsContainer.querySelector('[data-test-id="actions-menu-button"]') as HTMLElement;
+        moreButton = actionsContainer.querySelector(
+          '[data-test-id="actions-menu-button"]'
+        ) as HTMLElement;
       }
     }
 
     // Strategy 2: Look within the conversation element
     if (!moreButton) {
-      moreButton = conversationEl.querySelector('[data-test-id="actions-menu-button"]') as HTMLElement;
+      moreButton = conversationEl.querySelector(
+        '[data-test-id="actions-menu-button"]'
+      ) as HTMLElement;
     }
 
     // Strategy 3: Look for any visible button with the actions-menu-button test id near this element
@@ -2413,7 +2474,9 @@ export class FolderManager {
 
     while (elapsed < maxWaitTime) {
       // Strategy 1: Look for delete button by data-test-id (primary method)
-      const deleteByTestId = document.querySelector('[data-test-id="delete-button"]') as HTMLElement;
+      const deleteByTestId = document.querySelector(
+        '[data-test-id="delete-button"]'
+      ) as HTMLElement;
       if (deleteByTestId && this.isVisibleElement(deleteByTestId)) {
         deleteByTestId.click();
         this.debug('Clicked delete button (by test-id)');
@@ -2423,9 +2486,9 @@ export class FolderManager {
       // Strategy 2: Look for menu items containing delete text (supports translations)
       const menuItems = document.querySelectorAll(
         '.cdk-overlay-container button, ' +
-        '.cdk-overlay-container [role="menuitem"], ' +
-        '.mat-mdc-menu-content button, ' +
-        '.mat-menu-content button'
+          '.cdk-overlay-container [role="menuitem"], ' +
+          '.mat-mdc-menu-content button, ' +
+          '.mat-menu-content button'
       );
 
       for (const item of menuItems) {
@@ -2433,7 +2496,12 @@ export class FolderManager {
 
         const text = item.textContent?.toLowerCase().trim() || '';
         // Match keywords from i18n
-        if (text && keywords.some((keyword: string) => text === keyword || (text.includes(keyword) && text.length < 20))) {
+        if (
+          text &&
+          keywords.some(
+            (keyword: string) => text === keyword || (text.includes(keyword) && text.length < 20)
+          )
+        ) {
           (item as HTMLElement).click();
           this.debug('Clicked delete button (by text):', text);
           return true;
@@ -2447,7 +2515,11 @@ export class FolderManager {
 
       for (const icon of deleteIcons) {
         const iconText = icon.textContent?.toLowerCase().trim() || '';
-        if (iconText === 'delete' || iconText === 'delete_forever' || iconText === 'delete_outline') {
+        if (
+          iconText === 'delete' ||
+          iconText === 'delete_forever' ||
+          iconText === 'delete_outline'
+        ) {
           // Find the parent button and click it
           const parentButton = icon.closest('button, [role="menuitem"]') as HTMLElement;
           if (parentButton && this.isVisibleElement(parentButton)) {
@@ -2502,7 +2574,10 @@ export class FolderManager {
         if (this.isVisibleElement(btn as HTMLElement)) {
           const text = btn.textContent?.toLowerCase().trim() || '';
           // Match keywords from i18n
-          if (text && keywords.some((keyword: string) => text.includes(keyword) || text === keyword)) {
+          if (
+            text &&
+            keywords.some((keyword: string) => text.includes(keyword) || text === keyword)
+          ) {
             (btn as HTMLElement).click();
             this.debug('Clicked confirmation button (primary button):', text);
             return;
@@ -2527,10 +2602,10 @@ export class FolderManager {
         }
       }
 
-
-
       // Strategy 4: Look for the second/right button in a two-button dialog (usually the confirm button)
-      const dialogActions = document.querySelector('.mat-mdc-dialog-actions, .cdk-overlay-container .mat-dialog-actions');
+      const dialogActions = document.querySelector(
+        '.mat-mdc-dialog-actions, .cdk-overlay-container .mat-dialog-actions'
+      );
       if (dialogActions) {
         const buttons = dialogActions.querySelectorAll('button');
         if (buttons.length >= 2) {
@@ -2557,7 +2632,10 @@ export class FolderManager {
    */
   private getDeleteKeywords(): string[] {
     const rawPatterns = this.t('batch_delete_match_patterns') || '';
-    return rawPatterns.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s.length > 0);
+    return rawPatterns
+      .split(',')
+      .map((s: string) => s.trim().toLowerCase())
+      .filter((s: string) => s.length > 0);
   }
 
   /**
@@ -2566,10 +2644,12 @@ export class FolderManager {
   private isVisibleElement(el: HTMLElement): boolean {
     if (!el) return false;
     const style = window.getComputedStyle(el);
-    return style.display !== 'none' &&
+    return (
+      style.display !== 'none' &&
       style.visibility !== 'hidden' &&
       style.opacity !== '0' &&
-      el.offsetParent !== null;
+      el.offsetParent !== null
+    );
   }
 
   /**
@@ -2649,7 +2729,9 @@ export class FolderManager {
    */
   private updateBatchDeleteProgress(current: number, total: number): void {
     if (this.batchDeleteProgressElement) {
-      const textEl = this.batchDeleteProgressElement.querySelector('.gv-batch-delete-progress-text');
+      const textEl = this.batchDeleteProgressElement.querySelector(
+        '.gv-batch-delete-progress-text'
+      );
       if (textEl) {
         textEl.textContent = this.t('batch_delete_in_progress')
           .replace('{current}', String(current))
@@ -2672,7 +2754,7 @@ export class FolderManager {
    * Helper function to create a delay
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   // Multi-select helper methods
@@ -2696,7 +2778,10 @@ export class FolderManager {
     } else {
       // Check if we've reached the maximum selection limit
       if (this.selectedConversations.size >= this.MAX_BATCH_DELETE_COUNT) {
-        const message = this.t('batch_delete_limit_reached').replace('{max}', String(this.MAX_BATCH_DELETE_COUNT));
+        const message = this.t('batch_delete_limit_reached').replace(
+          '{max}',
+          String(this.MAX_BATCH_DELETE_COUNT)
+        );
         this.showNotification(message, 'info');
         return;
       }
@@ -2901,7 +2986,9 @@ export class FolderManager {
     }
 
     // Update action buttons based on source
-    const actionsContainer = this.containerElement?.querySelector('[data-multi-select-actions="true"]');
+    const actionsContainer = this.containerElement?.querySelector(
+      '[data-multi-select-actions="true"]'
+    );
     if (actionsContainer && this.isMultiSelectMode) {
       actionsContainer.innerHTML = ''; // Clear existing buttons
 
@@ -2909,7 +2996,8 @@ export class FolderManager {
         // Delete button for folder multi-select (removes from folder only)
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'gv-multi-select-action-btn gv-multi-select-delete-btn';
-        deleteBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">delete</mat-icon>';
+        deleteBtn.innerHTML =
+          '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">delete</mat-icon>';
         deleteBtn.title = this.t('batch_delete_button');
         deleteBtn.addEventListener('click', () => this.batchDeleteConversations());
         actionsContainer.appendChild(deleteBtn);
@@ -2917,7 +3005,8 @@ export class FolderManager {
         // Delete button for native multi-select (deletes from Gemini)
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'gv-multi-select-action-btn gv-multi-select-delete-btn';
-        deleteBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">delete</mat-icon>';
+        deleteBtn.innerHTML =
+          '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">delete</mat-icon>';
         deleteBtn.title = this.t('batch_delete_button');
         deleteBtn.addEventListener('click', () => this.batchDeleteNativeConversations());
         actionsContainer.appendChild(deleteBtn);
@@ -2926,7 +3015,8 @@ export class FolderManager {
       // Exit button (always present)
       const exitBtn = document.createElement('button');
       exitBtn.className = 'gv-multi-select-action-btn gv-multi-select-exit-btn';
-      exitBtn.innerHTML = '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
+      exitBtn.innerHTML =
+        '<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">close</mat-icon>';
       exitBtn.title = 'Exit multi-select mode';
       exitBtn.addEventListener('click', () => this.exitMultiSelectMode());
       actionsContainer.appendChild(exitBtn);
@@ -2941,7 +3031,7 @@ export class FolderManager {
     // Collect from all folders since selection can span folders
     for (const fId in this.data.folderContents) {
       const conversations = this.data.folderContents[fId];
-      conversations.forEach(conv => {
+      conversations.forEach((conv) => {
         if (this.selectedConversations.has(conv.conversationId)) {
           result.push(conv);
         }
@@ -2951,9 +3041,15 @@ export class FolderManager {
     return result;
   }
 
-  private renameConversation(folderId: string, conversationId: string, titleElement: HTMLElement): void {
+  private renameConversation(
+    folderId: string,
+    conversationId: string,
+    titleElement: HTMLElement
+  ): void {
     // Get current title
-    const conv = this.data.folderContents[folderId]?.find((c) => c.conversationId === conversationId);
+    const conv = this.data.folderContents[folderId]?.find(
+      (c) => c.conversationId === conversationId
+    );
     if (!conv) return;
 
     const currentTitle = conv.title;
@@ -2976,8 +3072,16 @@ export class FolderManager {
 
     let finished = false;
     const cleanup = () => {
-      try { input.removeEventListener('blur', onBlur); } catch (e) { this.debug('Failed to remove blur listener:', e); }
-      try { input.removeEventListener('keydown', onKeyDown); } catch (e) { this.debug('Failed to remove keydown listener:', e); }
+      try {
+        input.removeEventListener('blur', onBlur);
+      } catch (e) {
+        this.debug('Failed to remove blur listener:', e);
+      }
+      try {
+        input.removeEventListener('keydown', onKeyDown);
+      } catch (e) {
+        this.debug('Failed to remove keydown listener:', e);
+      }
     };
     const finalize = (commit: boolean) => {
       if (finished) return;
@@ -2992,11 +3096,25 @@ export class FolderManager {
             this.saveData();
           }
         }
-      } catch (e) { this.debug('Failed to save renamed conversation:', e); }
+      } catch (e) {
+        this.debug('Failed to save renamed conversation:', e);
+      }
       // Restore title element gracefully even if DOM re-rendered
-      try { if (input.isConnected) input.remove(); } catch (e) { this.debug('Failed to remove input:', e); }
-      try { titleElement.style.display = ''; } catch (e) { this.debug('Failed to restore title display:', e); }
-      try { titleElement.textContent = conv.title; } catch (e) { this.debug('Failed to restore title text:', e); }
+      try {
+        if (input.isConnected) input.remove();
+      } catch (e) {
+        this.debug('Failed to remove input:', e);
+      }
+      try {
+        titleElement.style.display = '';
+      } catch (e) {
+        this.debug('Failed to restore title display:', e);
+      }
+      try {
+        titleElement.textContent = conv.title;
+      } catch (e) {
+        this.debug('Failed to restore title text:', e);
+      }
     };
     const onBlur = () => {
       // Defer finalize to let Angular/SPA navigation settle
@@ -3032,7 +3150,7 @@ export class FolderManager {
     const menuItems = [
       {
         label: folder.pinned ? this.t('folder_unpin') : this.t('folder_pin'),
-        action: () => this.togglePinFolder(folderId)
+        action: () => this.togglePinFolder(folderId),
       },
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
@@ -3062,7 +3180,13 @@ export class FolderManager {
     setTimeout(() => document.addEventListener('click', closeMenu), 0);
   }
 
-  private showMoveToFolderDialog(conversationId: string, conversationTitle: string, url: string, isGem?: boolean, gemId?: string): void {
+  private showMoveToFolderDialog(
+    conversationId: string,
+    conversationTitle: string,
+    url: string,
+    isGem?: boolean,
+    gemId?: string
+  ): void {
     // Create dialog overlay
     const overlay = document.createElement('div');
     overlay.className = 'gv-folder-dialog-overlay';
@@ -3104,7 +3228,14 @@ export class FolderManager {
         folderItem.appendChild(name);
 
         folderItem.addEventListener('click', () => {
-          this.addConversationToFolderFromNative(folder.id, conversationId, conversationTitle, url, isGem, gemId);
+          this.addConversationToFolderFromNative(
+            folder.id,
+            conversationId,
+            conversationTitle,
+            url,
+            isGem,
+            gemId
+          );
           overlay.remove();
         });
 
@@ -3242,7 +3373,8 @@ export class FolderManager {
         mutation.removedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
             // Check if a menu panel was removed
-            const isMenuPanel = node.classList?.contains('mat-mdc-menu-panel') ||
+            const isMenuPanel =
+              node.classList?.contains('mat-mdc-menu-panel') ||
               node.querySelector('.mat-mdc-menu-panel');
             if (isMenuPanel) {
               this.debug('Observer: menu closed, clearing conversation state');
@@ -3378,7 +3510,8 @@ export class FolderManager {
 
     // Icon
     const icon = document.createElement('mat-icon');
-    icon.className = 'mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color';
+    icon.className =
+      'mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color';
     icon.setAttribute('role', 'img');
     icon.setAttribute('fonticon', 'folder_open');
     icon.setAttribute('aria-hidden', 'true');
@@ -3452,7 +3585,9 @@ export class FolderManager {
     // No fallback - if we don't have the clicked conversation element, we should not guess
     // The previous fallback logic using '.conversation-actions-container.selected' was incorrect
     // as it would select the currently focused conversation instead of the one user clicked
-    this.debugWarn('findConversationElementFromMenu: no conversation element found (lastClickedConversation is null)');
+    this.debugWarn(
+      'findConversationElementFromMenu: no conversation element found (lastClickedConversation is null)'
+    );
     return null;
   }
 
@@ -3461,124 +3596,146 @@ export class FolderManager {
 
   private setupConversationClickTracking(): void {
     // Track clicks on conversation more buttons
-    document.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      const moreButton = target.closest('[data-test-id="actions-menu-button"]');
-      if (moreButton) {
-        this.debug('More button clicked:', moreButton);
+    document.addEventListener(
+      'click',
+      (e) => {
+        const target = e.target as HTMLElement;
+        const moreButton = target.closest('[data-test-id="actions-menu-button"]');
+        if (moreButton) {
+          this.debug('More button clicked:', moreButton);
 
-        let conversationEl: HTMLElement | null = null;
+          let conversationEl: HTMLElement | null = null;
 
-        // Strategy 1: In Gemini's new UI, the conversation div and actions-menu-button are siblings!
-        // Find the actions container first, then look for sibling conversation div
-        const actionsContainer = moreButton.closest('.conversation-actions-container');
-        if (actionsContainer) {
-          this.debug('Found actions container, looking for sibling conversation...');
-          // Look for previous sibling with data-test-id="conversation"
-          let sibling = actionsContainer.previousElementSibling;
-          while (sibling) {
-            if (sibling.getAttribute('data-test-id') === 'conversation') {
-              conversationEl = sibling as HTMLElement;
-              this.debug('Found conversation as sibling:', conversationEl);
-              break;
-            }
-            sibling = sibling.previousElementSibling;
-          }
-        }
-
-        // Strategy 2: Try traditional closest approach (for older UI patterns)
-        if (!conversationEl) {
-          this.debug('Trying closest with conversation selector...');
-          conversationEl = moreButton.closest('[data-test-id="conversation"]') as HTMLElement | null;
-        }
-
-        if (!conversationEl) {
-          this.debug('Trying history-item selector...');
-          conversationEl = moreButton.closest('[data-test-id^="history-item"]') as HTMLElement | null;
-        }
-
-        if (!conversationEl) {
-          this.debug('Trying conversation-card selector...');
-          conversationEl = moreButton.closest('.conversation-card') as HTMLElement | null;
-        }
-
-        // Strategy 3: Check parent container for conversation children
-        if (!conversationEl && actionsContainer && actionsContainer.parentElement) {
-          this.debug('Trying to find conversation in parent container...');
-          const parentContainer = actionsContainer.parentElement;
-          const conversationInParent = parentContainer.querySelector('[data-test-id="conversation"]') as HTMLElement | null;
-          if (conversationInParent) {
-            // Verify this is the right conversation by checking it's close to the actions container
-            const actionsIndex = Array.from(parentContainer.children).indexOf(actionsContainer);
-            const convIndex = Array.from(parentContainer.children).indexOf(conversationInParent);
-            if (Math.abs(actionsIndex - convIndex) <= 1) {
-              conversationEl = conversationInParent;
-              this.debug('Found conversation in parent container');
-            }
-          }
-        }
-
-        // Last resort fallback
-        if (!conversationEl) {
-          this.debugWarn('Could not find precise conversation element, using broader fallback');
-          conversationEl = moreButton.closest('[jslog]') as HTMLElement | null;
-        }
-
-        if (conversationEl) {
-          this.lastClickedConversation = conversationEl as HTMLElement;
-
-          // Debug: verify this element and show its attributes
-          const linkCount = conversationEl.querySelectorAll('a[href*="/app/"], a[href*="/gem/"]').length;
-          const jslogAttr = conversationEl.getAttribute('jslog');
-          const dataTestId = conversationEl.getAttribute('data-test-id');
-          this.debug('Tracked conversation element:', {
-            element: conversationEl,
-            linkCount,
-            jslog: jslogAttr,
-            dataTestId
-          });
-
-          // Extract conversation info immediately to avoid issues with multiple links later
-          const conversationId = this.extractNativeConversationId(conversationEl);
-          const title = this.extractNativeConversationTitle(conversationEl);
-          const url = this.extractNativeConversationUrl(conversationEl);
-
-          if (conversationId && title && url) {
-            this.lastClickedConversationInfo = { id: conversationId, title, url };
-            this.debug('✅ Extracted conversation info on click:', this.lastClickedConversationInfo);
-          } else {
-            this.debugWarn('⚠️ Failed to extract complete conversation info on click', { conversationId, title, url });
-            this.lastClickedConversationInfo = null;
-          }
-
-          // Fallback: after the click, the Angular Material menu is rendered
-          // into a global overlay container. Poll briefly to inject our item
-          // even if the mutation observer misses the insertion.
-          let attempts = 0;
-          const maxAttempts = 20; // ~1s at 50ms intervals
-          const timer = window.setInterval(() => {
-            attempts++;
-            const menuContent = document.querySelector('.mat-mdc-menu-panel .mat-mdc-menu-content') as HTMLElement | null;
-            if (menuContent) {
-              this.debug('Overlay poll: menu content found on attempt', attempts);
-              if (!menuContent.querySelector('.gv-move-to-folder-btn')) {
-                this.debug('Overlay poll: injecting Move to Folder');
-                this.injectMoveToFolderButton(menuContent);
+          // Strategy 1: In Gemini's new UI, the conversation div and actions-menu-button are siblings!
+          // Find the actions container first, then look for sibling conversation div
+          const actionsContainer = moreButton.closest('.conversation-actions-container');
+          if (actionsContainer) {
+            this.debug('Found actions container, looking for sibling conversation...');
+            // Look for previous sibling with data-test-id="conversation"
+            let sibling = actionsContainer.previousElementSibling;
+            while (sibling) {
+              if (sibling.getAttribute('data-test-id') === 'conversation') {
+                conversationEl = sibling as HTMLElement;
+                this.debug('Found conversation as sibling:', conversationEl);
+                break;
               }
-              window.clearInterval(timer);
-            } else if (attempts >= maxAttempts) {
-              this.debugWarn('Overlay poll: menu not found within attempts', maxAttempts);
-              window.clearInterval(timer);
+              sibling = sibling.previousElementSibling;
             }
-          }, 50);
+          }
+
+          // Strategy 2: Try traditional closest approach (for older UI patterns)
+          if (!conversationEl) {
+            this.debug('Trying closest with conversation selector...');
+            conversationEl = moreButton.closest(
+              '[data-test-id="conversation"]'
+            ) as HTMLElement | null;
+          }
+
+          if (!conversationEl) {
+            this.debug('Trying history-item selector...');
+            conversationEl = moreButton.closest(
+              '[data-test-id^="history-item"]'
+            ) as HTMLElement | null;
+          }
+
+          if (!conversationEl) {
+            this.debug('Trying conversation-card selector...');
+            conversationEl = moreButton.closest('.conversation-card') as HTMLElement | null;
+          }
+
+          // Strategy 3: Check parent container for conversation children
+          if (!conversationEl && actionsContainer && actionsContainer.parentElement) {
+            this.debug('Trying to find conversation in parent container...');
+            const parentContainer = actionsContainer.parentElement;
+            const conversationInParent = parentContainer.querySelector(
+              '[data-test-id="conversation"]'
+            ) as HTMLElement | null;
+            if (conversationInParent) {
+              // Verify this is the right conversation by checking it's close to the actions container
+              const actionsIndex = Array.from(parentContainer.children).indexOf(actionsContainer);
+              const convIndex = Array.from(parentContainer.children).indexOf(conversationInParent);
+              if (Math.abs(actionsIndex - convIndex) <= 1) {
+                conversationEl = conversationInParent;
+                this.debug('Found conversation in parent container');
+              }
+            }
+          }
+
+          // Last resort fallback
+          if (!conversationEl) {
+            this.debugWarn('Could not find precise conversation element, using broader fallback');
+            conversationEl = moreButton.closest('[jslog]') as HTMLElement | null;
+          }
+
+          if (conversationEl) {
+            this.lastClickedConversation = conversationEl as HTMLElement;
+
+            // Debug: verify this element and show its attributes
+            const linkCount = conversationEl.querySelectorAll(
+              'a[href*="/app/"], a[href*="/gem/"]'
+            ).length;
+            const jslogAttr = conversationEl.getAttribute('jslog');
+            const dataTestId = conversationEl.getAttribute('data-test-id');
+            this.debug('Tracked conversation element:', {
+              element: conversationEl,
+              linkCount,
+              jslog: jslogAttr,
+              dataTestId,
+            });
+
+            // Extract conversation info immediately to avoid issues with multiple links later
+            const conversationId = this.extractNativeConversationId(conversationEl);
+            const title = this.extractNativeConversationTitle(conversationEl);
+            const url = this.extractNativeConversationUrl(conversationEl);
+
+            if (conversationId && title && url) {
+              this.lastClickedConversationInfo = { id: conversationId, title, url };
+              this.debug(
+                '✅ Extracted conversation info on click:',
+                this.lastClickedConversationInfo
+              );
+            } else {
+              this.debugWarn('⚠️ Failed to extract complete conversation info on click', {
+                conversationId,
+                title,
+                url,
+              });
+              this.lastClickedConversationInfo = null;
+            }
+
+            // Fallback: after the click, the Angular Material menu is rendered
+            // into a global overlay container. Poll briefly to inject our item
+            // even if the mutation observer misses the insertion.
+            let attempts = 0;
+            const maxAttempts = 20; // ~1s at 50ms intervals
+            const timer = window.setInterval(() => {
+              attempts++;
+              const menuContent = document.querySelector(
+                '.mat-mdc-menu-panel .mat-mdc-menu-content'
+              ) as HTMLElement | null;
+              if (menuContent) {
+                this.debug('Overlay poll: menu content found on attempt', attempts);
+                if (!menuContent.querySelector('.gv-move-to-folder-btn')) {
+                  this.debug('Overlay poll: injecting Move to Folder');
+                  this.injectMoveToFolderButton(menuContent);
+                }
+                window.clearInterval(timer);
+              } else if (attempts >= maxAttempts) {
+                this.debugWarn('Overlay poll: menu not found within attempts', maxAttempts);
+                window.clearInterval(timer);
+              }
+            }, 50);
+          }
         }
-      }
-    }, true);
+      },
+      true
+    );
   }
 
   private extractNativeConversationId(conversationEl: HTMLElement): string | null {
     // Support both /app/<hexId> and /gem/<gemId>/<hexId>
-    const scope = (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
+    const scope =
+      (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
 
     // Get all conversation links
     const links = scope.querySelectorAll('a[href*="/app/"], a[href*="/gem/"]');
@@ -3594,7 +3751,9 @@ export class FolderManager {
     // If there are multiple links, try to find the most specific one
     let link: Element;
     if (links.length > 1) {
-      this.debugWarn(`extractId: found ${links.length} links, attempting to select the most appropriate one`);
+      this.debugWarn(
+        `extractId: found ${links.length} links, attempting to select the most appropriate one`
+      );
 
       // Strategy 1: Find the link with the smallest bounding box (most likely the actual conversation item)
       let minArea = Infinity;
@@ -3636,9 +3795,12 @@ export class FolderManager {
   }
 
   private extractNativeConversationTitle(conversationEl: HTMLElement): string | null {
-    const scope = (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
+    const scope =
+      (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
     // 1) Known title selectors
-    const titleEl = scope.querySelector('.gds-label-l, .conversation-title-text, [data-test-id="conversation-title"], h3');
+    const titleEl = scope.querySelector(
+      '.gds-label-l, .conversation-title-text, [data-test-id="conversation-title"], h3'
+    );
     let title = titleEl?.textContent?.trim() || null;
     if (title && !this.isGemLabel(title)) {
       this.debug('extractTitle(selectors):', title);
@@ -3646,7 +3808,9 @@ export class FolderManager {
     }
 
     // 2) Link attributes
-    const link = scope.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+    const link = scope.querySelector(
+      'a[href*="/app/"], a[href*="/gem/"]'
+    ) as HTMLAnchorElement | null;
     const aria = link?.getAttribute('aria-label')?.trim();
     if (aria && !this.isGemLabel(aria)) {
       this.debug('extractTitle(link aria-label):', aria);
@@ -3693,7 +3857,9 @@ export class FolderManager {
         }
 
         // Also check by href
-        const link = convEl.querySelector('a[href*="/app/"], a[href*="/gem/"]') as HTMLAnchorElement | null;
+        const link = convEl.querySelector(
+          'a[href*="/app/"], a[href*="/gem/"]'
+        ) as HTMLAnchorElement | null;
         if (link && link.href.includes(conversationId)) {
           const currentTitle = this.extractNativeConversationTitle(convEl as HTMLElement);
           if (currentTitle) {
@@ -3716,7 +3882,10 @@ export class FolderManager {
       const conversations = this.data.folderContents[folderId];
       for (const conv of conversations) {
         // Match by conversation ID (check both direct match and URL match)
-        if ((conv.conversationId === conversationId || conv.url.includes(conversationId)) && !conv.customTitle) {
+        if (
+          (conv.conversationId === conversationId || conv.url.includes(conversationId)) &&
+          !conv.customTitle
+        ) {
           conv.title = newTitle;
           updated = true;
           this.debug(`Updated title for conversation ${conversationId} in folder ${folderId}`);
@@ -3749,7 +3918,9 @@ export class FolderManager {
     }, this.removalCheckDelay);
 
     this.pendingRemovals.set(conversationId, timerId);
-    this.debug(`Scheduled removal check for ${conversationId} (delay: ${this.removalCheckDelay}ms)`);
+    this.debug(
+      `Scheduled removal check for ${conversationId} (delay: ${this.removalCheckDelay}ms)`
+    );
   }
 
   /**
@@ -3945,13 +4116,16 @@ export class FolderManager {
         const gemId = gemMatch[1];
         return `https://gemini.google.com/gem/${gemId}/${hexId}`;
       }
-    } catch (e) { this.debug('Failed to extract gem URL:', e); }
+    } catch (e) {
+      this.debug('Failed to extract gem URL:', e);
+    }
     return `https://gemini.google.com/app/${hexId}`;
   }
 
   private extractFallbackTitle(conversationEl: HTMLElement): string | null {
     try {
-      const scope = (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
+      const scope =
+        (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
       // Prefer explicit attributes if present
       const aria = scope.getAttribute('aria-label');
       if (aria && aria.trim()) {
@@ -3973,7 +4147,11 @@ export class FolderManager {
       // Fall back to trimmed text content (first line, clipped)
       const raw = scope.textContent?.trim() || '';
       if (raw) {
-        const firstLine = raw.split('\n').map((s) => s.trim()).filter(Boolean)[0] || raw;
+        const firstLine =
+          raw
+            .split('\n')
+            .map((s) => s.trim())
+            .filter(Boolean)[0] || raw;
         const clipped = firstLine.slice(0, 80);
         this.debug('fallbackTitle(textContent):', clipped);
         return clipped;
@@ -4002,11 +4180,12 @@ export class FolderManager {
     // Get visible textual lines from the link
     const text = (link.innerText || '').trim();
     if (!text) return null;
-    const parts = text.split('\n')
-      .map(s => s.trim())
+    const parts = text
+      .split('\n')
+      .map((s) => s.trim())
       .filter(Boolean)
-      .filter(s => !this.isGemLabel(s))
-      .filter(s => s.length >= 2);
+      .filter((s) => !this.isGemLabel(s))
+      .filter((s) => s.length >= 2);
     this.debug('extractTitleFromLinkText parts:', parts);
     if (parts.length === 0) return null;
     // Heuristic: pick the longest part
@@ -4015,7 +4194,8 @@ export class FolderManager {
   }
 
   private extractNativeConversationUrl(conversationEl: HTMLElement): string | null {
-    const scope = (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
+    const scope =
+      (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
     const link = scope.querySelector('a[href*="/app/"], a[href*="/gem/"]');
     if (!link) {
       this.debugWarn('extractUrl: no conversation link found under scope');
@@ -4058,16 +4238,18 @@ export class FolderManager {
     if (this.pendingTitleUpdates.size > 0) {
       this.debug(`Flushing ${this.pendingTitleUpdates.size} pending title updates`);
       // Save once after all title updates are applied (async, fire-and-forget)
-      this.saveData().then((saved) => {
-        // Only clear after confirmed successful save to avoid losing updates
-        if (saved) {
-          this.pendingTitleUpdates.clear();
-        } else {
-          this.debugWarn('Save failed, retaining pending title updates for next attempt');
-        }
-      }).catch((error) => {
-        console.error('[FolderManager] Failed to save pending title updates:', error);
-      });
+      this.saveData()
+        .then((saved) => {
+          // Only clear after confirmed successful save to avoid losing updates
+          if (saved) {
+            this.pendingTitleUpdates.clear();
+          } else {
+            this.debugWarn('Save failed, retaining pending title updates for next attempt');
+          }
+        })
+        .catch((error) => {
+          console.error('[FolderManager] Failed to save pending title updates:', error);
+        });
     }
   }
 
@@ -4137,7 +4319,7 @@ export class FolderManager {
         this.ensureDataIntegrity();
 
         // Clean up orphaned folderContents (folders that no longer exist)
-        const validFolderIds = new Set(this.data.folders.map(f => f.id));
+        const validFolderIds = new Set(this.data.folders.map((f) => f.id));
         validFolderIds.add(ROOT_CONVERSATIONS_ID); // Keep root conversations
         Object.keys(this.data.folderContents).forEach((folderId) => {
           if (!validFolderIds.has(folderId)) {
@@ -4152,7 +4334,9 @@ export class FolderManager {
         this.debug('Data loaded and validated successfully');
       } else {
         // Don't immediately clear data - try to recover from backup
-        console.warn('[FolderManager] Storage returned no valid data, attempting recovery from backup');
+        console.warn(
+          '[FolderManager] Storage returned no valid data, attempting recovery from backup'
+        );
         this.attemptDataRecovery(null);
       }
     } catch (error) {
@@ -4204,7 +4388,7 @@ export class FolderManager {
   private showDataLossNotification(): void {
     this.showNotificationByLevel(
       getTranslationSync('folderManager_dataLossWarning') ||
-      'Warning: Failed to load folder data. Please check your browser console for details.',
+        'Warning: Failed to load folder data. Please check your browser console for details.',
       'error'
     );
   }
@@ -4212,7 +4396,10 @@ export class FolderManager {
   /**
    * Show a notification to the user with customizable level
    */
-  private showNotificationByLevel(message: string, level: 'info' | 'warning' | 'error' = 'error'): void {
+  private showNotificationByLevel(
+    message: string,
+    level: 'info' | 'warning' | 'error' = 'error'
+  ): void {
     try {
       // Color based on level
       const colors = {
@@ -4242,7 +4429,8 @@ export class FolderManager {
       document.body.appendChild(notification);
 
       // Auto-remove after timeout (longer for errors/warnings)
-      const timeout = level === 'info' ? 3000 : level === 'warning' ? 7000 : NOTIFICATION_TIMEOUT_MS;
+      const timeout =
+        level === 'info' ? 3000 : level === 'warning' ? 7000 : NOTIFICATION_TIMEOUT_MS;
       setTimeout(() => {
         try {
           document.body.removeChild(notification);
@@ -4280,8 +4468,13 @@ export class FolderManager {
       if (this.data.folders.length === 0 && Object.keys(this.data.folderContents).length === 0) {
         // Check if we're about to overwrite non-empty data
         const existingData = await this.storage.loadData(STORAGE_KEY);
-        if (existingData && (existingData.folders.length > 0 || Object.keys(existingData.folderContents).length > 0)) {
-          console.warn('[FolderManager] WARNING: Attempting to save empty data over existing non-empty data');
+        if (
+          existingData &&
+          (existingData.folders.length > 0 || Object.keys(existingData.folderContents).length > 0)
+        ) {
+          console.warn(
+            '[FolderManager] WARNING: Attempting to save empty data over existing non-empty data'
+          );
           console.warn('[FolderManager] This may indicate a bug.');
           // Still proceed, but log it prominently
         }
@@ -4326,7 +4519,9 @@ export class FolderManager {
 
   private async loadHideArchivedSetting(): Promise<void> {
     try {
-      const result = await browser.storage.sync.get({ geminiFolderHideArchivedConversations: false });
+      const result = await browser.storage.sync.get({
+        geminiFolderHideArchivedConversations: false,
+      });
       this.hideArchivedConversations = !!result.geminiFolderHideArchivedConversations;
       this.debug('Loaded hide archived setting:', this.hideArchivedConversations);
     } catch (error) {
@@ -4402,8 +4597,6 @@ export class FolderManager {
     }
   }
 
-
-
   /**
    * Merge folder data for auto-sync (same logic as popup's mergeFolderData)
    */
@@ -4438,17 +4631,17 @@ export class FolderManager {
 
     const allFolderIds = new Set([
       ...Object.keys(local.folderContents),
-      ...Object.keys(cloud.folderContents)
+      ...Object.keys(cloud.folderContents),
     ]);
 
-    allFolderIds.forEach(folderId => {
+    allFolderIds.forEach((folderId) => {
       const localConvos = local.folderContents[folderId] || [];
       const cloudConvos = cloud.folderContents[folderId] || [];
 
       const convoMap = new Map<string, ConversationReference>();
       // Add cloud first, then local overwrites (local preferred)
-      cloudConvos.forEach(c => convoMap.set(c.conversationId, c));
-      localConvos.forEach(c => convoMap.set(c.conversationId, c));
+      cloudConvos.forEach((c) => convoMap.set(c.conversationId, c));
+      localConvos.forEach((c) => convoMap.set(c.conversationId, c));
 
       mergedContents[folderId] = Array.from(convoMap.values());
     });
@@ -4508,22 +4701,24 @@ export class FolderManager {
     // Check if conversation exists in any folder
     for (const folderId in this.data.folderContents) {
       const conversations = this.data.folderContents[folderId];
-      if (conversations.some(c => {
-        // Direct ID match
-        if (c.conversationId === conversationId) return true;
+      if (
+        conversations.some((c) => {
+          // Direct ID match
+          if (c.conversationId === conversationId) return true;
 
-        // Robustness fallback: check if one ID contains the other (e.g. c_ prefix mismatch)
-        // or if URL contains the ID (common if one is hex and other is full ID)
-        const cleanId = conversationId.replace(/^c_/, '');
-        const cleanStoredId = c.conversationId.replace(/^c_/, '');
+          // Robustness fallback: check if one ID contains the other (e.g. c_ prefix mismatch)
+          // or if URL contains the ID (common if one is hex and other is full ID)
+          const cleanId = conversationId.replace(/^c_/, '');
+          const cleanStoredId = c.conversationId.replace(/^c_/, '');
 
-        if (cleanId && cleanId === cleanStoredId) return true;
+          if (cleanId && cleanId === cleanStoredId) return true;
 
-        // Check if URL contains the hex ID
-        if (cleanId && cleanId.length > 8 && c.url.includes(cleanId)) return true;
+          // Check if URL contains the hex ID
+          if (cleanId && cleanId.length > 8 && c.url.includes(cleanId)) return true;
 
-        return false;
-      })) {
+          return false;
+        })
+      ) {
         return true;
       }
     }
@@ -4546,7 +4741,9 @@ export class FolderManager {
 
   private navigateToConversationById(folderId: string, conversationId: string): void {
     // Look up the latest conversation data from storage
-    const conv = this.data.folderContents[folderId]?.find((c) => c.conversationId === conversationId);
+    const conv = this.data.folderContents[folderId]?.find(
+      (c) => c.conversationId === conversationId
+    );
     if (!conv) {
       console.error('[FolderManager] Conversation not found:', conversationId);
       return;
@@ -4701,7 +4898,9 @@ export class FolderManager {
     try {
       window.addEventListener('popstate', update);
       cleanupFns.push(() => window.removeEventListener('popstate', update));
-    } catch (e) { this.debug('Failed to add popstate listener:', e); }
+    } catch (e) {
+      this.debug('Failed to add popstate listener:', e);
+    }
 
     try {
       const hist = history as any;
@@ -4711,7 +4910,11 @@ export class FolderManager {
       const wrap = (method: 'pushState' | 'replaceState', original: any) => {
         hist[method] = function (...args: any[]) {
           const ret = original.apply(this, args);
-          try { update(); } catch { /* Ignore - update is non-critical */ }
+          try {
+            update();
+          } catch {
+            /* Ignore - update is non-critical */
+          }
           return ret;
         };
       };
@@ -4722,7 +4925,9 @@ export class FolderManager {
         hist.pushState = originalPushState;
         hist.replaceState = originalReplaceState;
       });
-    } catch (e) { this.debug('Failed to wrap history methods:', e); }
+    } catch (e) {
+      this.debug('Failed to wrap history methods:', e);
+    }
 
     // Fallback poller for routers/flows that don't emit events
     try {
@@ -4738,10 +4943,12 @@ export class FolderManager {
           update();
         }
       }, 400);
-    } catch (e) { this.debug('Failed to setup navigation poller:', e); }
+    } catch (e) {
+      this.debug('Failed to setup navigation poller:', e);
+    }
 
     this.routeChangeCleanup = () => {
-      cleanupFns.forEach(fn => fn());
+      cleanupFns.forEach((fn) => fn());
       if (this.navPoller) {
         clearInterval(this.navPoller);
         this.navPoller = null;
@@ -4764,7 +4971,11 @@ export class FolderManager {
       }
     };
 
-    try { root.addEventListener('click', this.sidebarClickListener, true); } catch (e) { this.debug('Failed to add sidebar click listener:', e); }
+    try {
+      root.addEventListener('click', this.sidebarClickListener, true);
+    } catch (e) {
+      this.debug('Failed to add sidebar click listener:', e);
+    }
   }
 
   private t(key: string): string {
@@ -4779,7 +4990,7 @@ export class FolderManager {
         this.debug('Received request for folder data from popup');
         sendResponse({
           ok: true,
-          data: this.data
+          data: this.data,
         });
         // Return true to indicate we might respond asynchronously (though we responded synchronously above)
         // This is good practice in some browser implementations or if we change logic later
@@ -4793,7 +5004,11 @@ export class FolderManager {
           this.refresh();
           // We can't easily respond to reload since it's fire-and-forget in some contexts,
           // but if sendResponse is provided we can use it
-          try { sendResponse({ ok: true }); } catch (e) { /* ignore */ }
+          try {
+            sendResponse({ ok: true });
+          } catch (e) {
+            /* ignore */
+          }
         });
         return true;
       }
@@ -4866,7 +5081,10 @@ export class FolderManager {
   private exportFolders(): void {
     // Prevent concurrent exports
     if (this.exportInProgress) {
-      this.showNotification(this.t('folder_export_in_progress') || 'Export already in progress', 'info');
+      this.showNotification(
+        this.t('folder_export_in_progress') || 'Export already in progress',
+        'info'
+      );
       return;
     }
 
@@ -4916,7 +5134,11 @@ export class FolderManager {
     strategyOptions.className = 'gv-folder-import-strategy-options';
 
     const mergeOption = this.createRadioOption('merge', this.t('folder_import_merge'), true);
-    const overwriteOption = this.createRadioOption('overwrite', this.t('folder_import_overwrite'), false);
+    const overwriteOption = this.createRadioOption(
+      'overwrite',
+      this.t('folder_import_overwrite'),
+      false
+    );
 
     strategyOptions.appendChild(mergeOption);
     strategyOptions.appendChild(overwriteOption);
@@ -5015,7 +5237,10 @@ export class FolderManager {
   private async handleImport(fileInput: HTMLInputElement, strategy: ImportStrategy): Promise<void> {
     // Prevent concurrent imports to avoid data corruption
     if (this.importInProgress) {
-      this.showNotification(this.t('folder_import_in_progress') || 'Import already in progress', 'info');
+      this.showNotification(
+        this.t('folder_import_in_progress') || 'Import already in progress',
+        'info'
+      );
       return;
     }
 
@@ -5080,8 +5305,12 @@ export class FolderManager {
         .replace('{folders}', String(stats.foldersImported))
         .replace('{conversations}', String(stats.conversationsImported));
 
-      if (strategy === 'merge' && (stats.duplicatesFoldersSkipped || stats.duplicatesConversationsSkipped)) {
-        const totalSkipped = (stats.duplicatesFoldersSkipped || 0) + (stats.duplicatesConversationsSkipped || 0);
+      if (
+        strategy === 'merge' &&
+        (stats.duplicatesFoldersSkipped || stats.duplicatesConversationsSkipped)
+      ) {
+        const totalSkipped =
+          (stats.duplicatesFoldersSkipped || 0) + (stats.duplicatesConversationsSkipped || 0);
         message = this.t('folder_import_success_skipped')
           .replace('{folders}', String(stats.foldersImported))
           .replace('{conversations}', String(stats.conversationsImported))

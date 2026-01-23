@@ -17,4 +17,3 @@ describe('TRANSLATIONS', () => {
     expect(isTranslationKey('__not_a_real_key__')).toBe(false);
   });
 });
-

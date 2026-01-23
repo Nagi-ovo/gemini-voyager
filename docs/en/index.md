@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: "Gemini Voyager"
-  text: "The missing OS for Gemini."
-  tagline: "We love Gemini. We just wanted it to be perfect."
+  name: 'Gemini Voyager'
+  text: 'The missing OS for Gemini.'
+  tagline: 'We love Gemini. We just wanted it to be perfect.'
   image:
     src: /logo.png
     alt: Gemini Voyager Logo

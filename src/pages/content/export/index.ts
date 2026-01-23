@@ -24,17 +24,33 @@ function waitForElement(selector: string, timeoutMs: number = 6000): Promise<Ele
     const obs = new MutationObserver(() => {
       const found = document.querySelector(selector);
       if (found) {
-        try { obs.disconnect(); } catch {}
+        try {
+          obs.disconnect();
+        } catch {}
         resolve(found);
       }
     });
-    try { obs.observe(document.body, { childList: true, subtree: true }); } catch {}
-    if (timeoutMs > 0) setTimeout(() => { try { obs.disconnect(); } catch {}; resolve(null); }, timeoutMs);
+    try {
+      obs.observe(document.body, { childList: true, subtree: true });
+    } catch {}
+    if (timeoutMs > 0)
+      setTimeout(() => {
+        try {
+          obs.disconnect();
+        } catch {}
+        resolve(null);
+      }, timeoutMs);
   });
 }
 
 function normalizeText(text: string | null): string {
-  try { return String(text || '').replace(/\s+/g, ' ').trim(); } catch { return ''; }
+  try {
+    return String(text || '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  } catch {
+    return '';
+  }
 }
 
 // Note: cleaning of thinking toggles is handled at DOM level in extractAssistantText
@@ -48,7 +64,10 @@ function filterTopLevel(elements: Element[]): HTMLElement[] {
     for (let j = 0; j < arr.length; j++) {
       if (i === j) continue;
       const other = arr[j];
-      if (other.contains(el)) { isDescendant = true; break; }
+      if (other.contains(el)) {
+        isDescendant = true;
+        break;
+      }
     }
     if (!isDescendant) out.push(el);
   }
@@ -66,7 +85,15 @@ function computeConversationId(): string {
 
 function getUserSelectors(): string[] {
   const configured = (() => {
-    try { return localStorage.getItem('geminiTimelineUserTurnSelector') || localStorage.getItem('geminiTimelineUserTurnSelectorAuto') || ''; } catch { return ''; }
+    try {
+      return (
+        localStorage.getItem('geminiTimelineUserTurnSelector') ||
+        localStorage.getItem('geminiTimelineUserTurnSelectorAuto') ||
+        ''
+      );
+    } catch {
+      return '';
+    }
   })();
   const defaults = [
     '.user-query-bubble-with-background',
@@ -117,7 +144,9 @@ function ensureTurnId(el: Element, index: number): string {
   if (!id) {
     const basis = normalizeText(asEl.textContent || '') || `user-${index}`;
     id = `u-${index}-${hashString(basis)}`;
-    try { (asEl.dataset as any).turnId = id; } catch {}
+    try {
+      (asEl.dataset as any).turnId = id;
+    } catch {}
   }
   return id;
 }
@@ -138,7 +167,9 @@ function readStarredSet(): Set<string> {
 function extractAssistantText(el: HTMLElement): string {
   // Prefer direct text from message container if available (connected to DOM)
   try {
-    const mc = (el.querySelector('message-content, .markdown, .markdown-main-panel') as HTMLElement | null);
+    const mc = el.querySelector(
+      'message-content, .markdown, .markdown-main-panel'
+    ) as HTMLElement | null;
     if (mc) {
       const raw = mc.textContent || mc.innerText || '';
       const txt = normalizeText(raw);
@@ -161,18 +192,21 @@ function extractAssistantText(el: HTMLElement): string {
     const aria = (node.getAttribute('aria-label') || '').toLowerCase();
     const txt = node.textContent || '';
     if (matchesReasonToggle(txt)) return true;
-    if (role === 'button' && (/thinking|reasoning/i.test(txt) || /思路|推理/u.test(txt))) return true;
+    if (role === 'button' && (/thinking|reasoning/i.test(txt) || /思路|推理/u.test(txt)))
+      return true;
     if (/thinking|reasoning/i.test(aria) || /思路|推理/u.test(aria)) return true;
     return false;
   };
   try {
-    const candidates = clone.querySelectorAll('button, [role="button"], [aria-label], span, div, a');
+    const candidates = clone.querySelectorAll(
+      'button, [role="button"], [aria-label], span, div, a'
+    );
     candidates.forEach((n) => {
       const eln = n as HTMLElement;
       if (shouldDrop(eln)) eln.remove();
     });
   } catch {}
-  const text = normalizeText((clone.innerText || clone.textContent || ''));
+  const text = normalizeText(clone.innerText || clone.textContent || '');
   return text;
 }
 
@@ -215,7 +249,10 @@ function collectChatPairs(): ChatTurn[] {
     for (let k = 0; k < assistants.length; k++) {
       const off = assistantOffsets[k];
       if (off >= start && off < end) {
-        if (off < bestOff) { bestOff = off; bestIdx = k; }
+        if (off < bestOff) {
+          bestOff = off;
+          bestIdx = k;
+        }
       }
     }
     if (bestIdx >= 0) {
@@ -225,7 +262,7 @@ function collectChatPairs(): ChatTurn[] {
       // Fallback: search next siblings up to a small window
       let sib: HTMLElement | null = uEl;
       for (let step = 0; step < 8 && sib; step++) {
-        sib = (sib.nextElementSibling as HTMLElement | null);
+        sib = sib.nextElementSibling as HTMLElement | null;
         if (!sib) break;
         if (sib.matches(userSelectors.join(','))) break;
         if (sib.matches(assistantSelectors.join(','))) {
@@ -245,7 +282,9 @@ function collectChatPairs(): ChatTurn[] {
           (aEl.querySelector('message-content') as HTMLElement | null) ||
           (aEl.querySelector('.markdown, .markdown-main-panel') as HTMLElement | null) ||
           (aEl.closest('.presented-response-container') as HTMLElement | null) ||
-          (aEl.querySelector('.presented-response-container, .response-content') as HTMLElement | null) ||
+          (aEl.querySelector(
+            '.presented-response-container, .response-content'
+          ) as HTMLElement | null) ||
           (aEl.querySelector('response-element') as HTMLElement | null) ||
           aEl;
         finalAssistantEl = pick || undefined;
@@ -263,14 +302,21 @@ function collectChatPairs(): ChatTurn[] {
 }
 
 function downloadJSON(data: any, filename: string): void {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: 'application/json;charset=utf-8',
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  setTimeout(() => { try { document.body.removeChild(a); } catch {}; URL.revokeObjectURL(url); }, 0);
+  setTimeout(() => {
+    try {
+      document.body.removeChild(a);
+    } catch {}
+    URL.revokeObjectURL(url);
+  }, 0);
 }
 
 function buildExportPayload(pairs: ChatTurn[]) {
@@ -285,7 +331,8 @@ function buildExportPayload(pairs: ChatTurn[]) {
 
 function ensureButtonInjected(container: Element): HTMLButtonElement | null {
   const host = container as HTMLElement;
-  if (!host || host.querySelector('.gv-export-btn')) return host.querySelector('.gv-export-btn') as HTMLButtonElement | null;
+  if (!host || host.querySelector('.gv-export-btn'))
+    return host.querySelector('.gv-export-btn') as HTMLButtonElement | null;
   const btn = document.createElement('button');
   btn.className = 'gv-export-btn';
   btn.type = 'button';
@@ -338,14 +385,17 @@ function getConversationTitleForExport(): string {
   // Strategy 1: Get from active conversation in Gemini Voyager Folder UI (most accurate)
   try {
     const activeFolderTitle =
-      document.querySelector('.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title') ||
-      document.querySelector('.gv-folder-conversation-selected .gv-conversation-title');
+      document.querySelector(
+        '.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title'
+      ) || document.querySelector('.gv-folder-conversation-selected .gv-conversation-title');
 
     if (activeFolderTitle?.textContent?.trim()) {
       return activeFolderTitle.textContent.trim();
     }
   } catch (error) {
-    try { console.debug('[Export] Failed to get title from Folder Manager:', error); } catch {}
+    try {
+      console.debug('[Export] Failed to get title from Folder Manager:', error);
+    } catch {}
   }
 
   // Strategy 1b: Get from Gemini's native sidebar using the selected actions container
@@ -363,7 +413,7 @@ function getConversationTitleForExport(): string {
     try {
       console.debug(
         '[Export] Failed to get title from native sidebar selected conversation:',
-        error,
+        error
       );
     } catch {}
   }
@@ -401,7 +451,9 @@ function getConversationTitleForExport(): string {
       }
     }
   } catch (error) {
-    try { console.debug('[Export] Failed to get title from sidebar:', error); } catch {}
+    try {
+      console.debug('[Export] Failed to get title from sidebar:', error);
+    } catch {}
   }
 
   return 'Untitled Conversation';
@@ -420,18 +472,25 @@ async function getLanguage(): Promise<AppLanguage> {
           if ((window as any).chrome?.storage?.sync?.get) {
             (window as any).chrome.storage.sync.get(StorageKeys.LANGUAGE, resolve);
           } else if ((window as any).browser?.storage?.sync?.get) {
-            (window as any).browser.storage.sync.get(StorageKeys.LANGUAGE).then(resolve).catch(() => resolve({}));
+            (window as any).browser.storage.sync
+              .get(StorageKeys.LANGUAGE)
+              .then(resolve)
+              .catch(() => resolve({}));
           } else {
             resolve({});
           }
-        } catch { resolve({}); }
+        } catch {
+          resolve({});
+        }
       }),
-      new Promise<unknown>((resolve) => setTimeout(() => resolve({}), 1000))
+      new Promise<unknown>((resolve) => setTimeout(() => resolve({}), 1000)),
     ]);
     const rec = stored && typeof stored === 'object' ? (stored as Record<string, unknown>) : {};
     const v =
-      typeof rec[StorageKeys.LANGUAGE] === 'string' ? (rec[StorageKeys.LANGUAGE] as string) : undefined;
-    return normalizeLang(v || (navigator.language || 'en'));
+      typeof rec[StorageKeys.LANGUAGE] === 'string'
+        ? (rec[StorageKeys.LANGUAGE] as string)
+        : undefined;
+    return normalizeLang(v || navigator.language || 'en');
   } catch {
     return 'en';
   }
@@ -442,10 +501,10 @@ export async function startExportButton(): Promise<void> {
     location.hostname !== 'gemini.google.com' &&
     location.hostname !== 'aistudio.google.com' &&
     location.hostname !== 'aistudio.google.cn'
-  ) return;
+  )
+    return;
   const logo =
-    (await waitForElement('[data-test-id="logo"]', 6000)) ||
-    (await waitForElement('.logo', 2000));
+    (await waitForElement('[data-test-id="logo"]', 6000)) || (await waitForElement('.logo', 2000));
   if (!logo) return;
   const btn = ensureButtonInjected(logo);
   if (!btn) return;
@@ -454,12 +513,18 @@ export async function startExportButton(): Promise<void> {
 
   // Swallow events on the button to avoid parent navigation (logo click -> /app)
   const swallow = (e: Event) => {
-    try { e.preventDefault(); } catch {}
-    try { e.stopPropagation(); } catch {}
+    try {
+      e.preventDefault();
+    } catch {}
+    try {
+      e.stopPropagation();
+    } catch {}
   };
   // Capture low-level press events to avoid parent logo navigation, but do NOT capture 'click'
   ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((type) => {
-    try { btn.addEventListener(type, swallow, true); } catch {}
+    try {
+      btn.addEventListener(type, swallow, true);
+    } catch {}
   });
 
   // i18n setup for tooltip
@@ -471,13 +536,19 @@ export async function startExportButton(): Promise<void> {
   btn.setAttribute('aria-label', title);
 
   // listen for runtime language changes
-  const storageChangeHandler = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
+  const storageChangeHandler = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    area: string
+  ) => {
     if (area !== 'sync') return;
     const nextRaw = changes[StorageKeys.LANGUAGE]?.newValue;
     if (typeof nextRaw === 'string') {
       const next = normalizeLang(nextRaw);
       lang = next;
-      const ttl = (dict[next]?.['exportChatJson'] ?? dict.en?.['exportChatJson'] ?? 'Export chat history (JSON)');
+      const ttl =
+        dict[next]?.['exportChatJson'] ??
+        dict.en?.['exportChatJson'] ??
+        'Export chat history (JSON)';
       btn.title = ttl;
       btn.setAttribute('aria-label', ttl);
     }
@@ -487,13 +558,17 @@ export async function startExportButton(): Promise<void> {
     chrome.storage?.onChanged?.addListener(storageChangeHandler);
 
     // Cleanup listener on page unload to prevent memory leaks
-    window.addEventListener('beforeunload', () => {
-      try {
-        chrome.storage?.onChanged?.removeListener(storageChangeHandler);
-      } catch (e) {
-        console.error('[Gemini Voyager] Failed to remove storage listener on unload:', e);
-      }
-    }, { once: true });
+    window.addEventListener(
+      'beforeunload',
+      () => {
+        try {
+          chrome.storage?.onChanged?.removeListener(storageChangeHandler);
+        } catch (e) {
+          console.error('[Gemini Voyager] Failed to remove storage listener on unload:', e);
+        }
+      },
+      { once: true }
+    );
   } catch {}
 
   btn.addEventListener('click', (ev) => {
@@ -503,12 +578,17 @@ export async function startExportButton(): Promise<void> {
       // Show export dialog instead of directly exporting
       showExportDialog(dict, lang);
     } catch (err) {
-      try { console.error('Gemini Voyager export failed', err); } catch {}
+      try {
+        console.error('Gemini Voyager export failed', err);
+      } catch {}
     }
   });
 }
 
-async function showExportDialog(dict: Record<AppLanguage, Record<string, string>>, lang: AppLanguage): Promise<void> {
+async function showExportDialog(
+  dict: Record<AppLanguage, Record<string, string>>,
+  lang: AppLanguage
+): Promise<void> {
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
   // Collect conversation data BEFORE showing dialog to avoid page state changes

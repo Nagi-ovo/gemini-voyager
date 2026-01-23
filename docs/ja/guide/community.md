@@ -36,5 +36,4 @@ Discord サーバーに参加して、他の Voyager ユーザーと交流しま
 - [バグ報告を提出する](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
 - [機能提案を提出する](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
 
-
 Gemini Voyager をサポートしていただき、ありがとうございます！❤️

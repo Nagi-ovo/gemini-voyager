@@ -227,7 +227,7 @@ describe('Version Management', () => {
     it('should handle version ranges correctly', () => {
       const versions = ['0.6.9', '0.7.0', '0.7.1', '0.7.7', '0.8.0', '1.0.0'];
       const format = 'gemini-voyager.folders.v1';
-      
+
       versions.forEach((version) => {
         const compatible = isVersionCompatible(version, format);
         const shouldBeCompatible = compareVersions(version, '0.7.0') >= 0;
@@ -236,4 +236,3 @@ describe('Version Management', () => {
     });
   });
 });
-

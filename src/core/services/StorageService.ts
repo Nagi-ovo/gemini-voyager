@@ -44,11 +44,7 @@ abstract class BaseChromeStorageService implements IStorageService {
         this.logger.debug(`Key not found: ${key}`);
         return {
           success: false,
-          error: new StorageError(
-            ErrorCode.STORAGE_READ_FAILED,
-            `Key not found: ${key}`,
-            { key }
-          ),
+          error: new StorageError(ErrorCode.STORAGE_READ_FAILED, `Key not found: ${key}`, { key }),
         };
       }
 
@@ -193,11 +189,7 @@ export class LocalStorageService implements IStorageService {
         this.logger.debug(`Key not found: ${key}`);
         return {
           success: false,
-          error: new StorageError(
-            ErrorCode.STORAGE_READ_FAILED,
-            `Key not found: ${key}`,
-            { key }
-          ),
+          error: new StorageError(ErrorCode.STORAGE_READ_FAILED, `Key not found: ${key}`, { key }),
         };
       }
 

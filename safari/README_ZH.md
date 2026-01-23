@@ -29,6 +29,7 @@ open "Gemini Voyager/Gemini Voyager.xcodeproj"
 ```
 
 在 Xcode 中：
+
 1. 选择 **Signing & Capabilities** → 选择你的 Team
 2. 设置目标为 **My Mac**
 3. 按 **⌘R** 构建并运行
@@ -42,6 +43,7 @@ bun run dev:safari
 ```
 
 这会监听文件变更并自动重新构建。每次重新构建后：
+
 1. 在 Xcode 中按 **⌘R** 重新加载
 2. Safari 会刷新扩展
 
@@ -56,7 +58,7 @@ bun run build:safari
 
 ## 添加 Swift 原生代码（可选）
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
 本项目包含用于原生 macOS 功能的 Swift 代码。添加它是**可选的**，但推荐使用。
 
@@ -82,6 +84,7 @@ safari/
 ### 原生功能
 
 添加后，你可以：
+
 - 访问 macOS 钥匙串（未来）
 - 使用原生通知
 - 通过原生选择器访问文件系统
@@ -90,9 +93,10 @@ safari/
 
 ### 原生消息 API
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
 **从 JavaScript 调用：**
+
 ```javascript
 // 健康检查
 browser.runtime.sendNativeMessage({ action: 'ping' }, (response) => {
@@ -106,6 +110,7 @@ browser.runtime.sendNativeMessage({ action: 'getVersion' }, (response) => {
 ```
 
 **可用操作：**
+
 - `ping` - 健康检查
 - `getVersion` - 获取扩展版本信息
 - `syncStorage` - 同步存储（未来功能的占位符）
@@ -115,9 +120,11 @@ browser.runtime.sendNativeMessage({ action: 'getVersion' }, (response) => {
 ### 查看扩展日志
 
 **Web 控制台：**
+
 - Safari → 开发 → Web Extension Background Pages → Gemini Voyager
 
 **原生日志：**
+
 ```bash
 log stream --predicate 'subsystem == "com.gemini-voyager.safari"' --level debug
 ```
@@ -125,12 +132,15 @@ log stream --predicate 'subsystem == "com.gemini-voyager.safari"' --level debug
 ### 常见问题
 
 **"Module 'SafariServices' not found"**
+
 - 确保 Swift 文件添加到 "Gemini Voyager Extension" 目标，而不是主应用
 
 **原生消息不工作**
+
 - 检查 `Info.plist` 是否将 `SafariWebExtensionHandler` 设置为主类
 
 **Swift 文件未编译**
+
 - 在 Xcode 文件检查器中验证目标成员资格
 
 ## 构建分发版本
@@ -145,6 +155,7 @@ log stream --predicate 'subsystem == "com.gemini-voyager.safari"' --level debug
 ### 发布到 App Store
 
 需要：
+
 - Apple Developer 账号（$99/年）
 - App Store Connect 设置
 - 应用审核提交
@@ -153,7 +164,7 @@ log stream --predicate 'subsystem == "com.gemini-voyager.safari"' --level debug
 
 ## 项目结构
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
 ```
 ├── dist_safari/              # 构建的扩展（已忽略）
@@ -184,6 +195,7 @@ bun run build:all      # 为所有浏览器构建
 查看 [CONTRIBUTING.md](../.github/CONTRIBUTING.md) 了解贡献指南。
 
 添加原生功能时：
+
 1. 在 `SafariMessage.swift` 中定义操作
 2. 在 `SafariWebExtensionHandler.swift` 中实现处理器
 3. 在 web 扩展中添加 JavaScript API

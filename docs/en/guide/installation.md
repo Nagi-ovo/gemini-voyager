@@ -1,9 +1,11 @@
 # Installation
 
 Choose your path.
+
 > ⚠️ Note: Prompt Manager is the only feature that supports Gemini for Enterprise.
 
 ## 1. The Easy Way (Chrome Web Store)
+
 For Chrome, Edge, Brave, and Opera users.
 This is the simplest way to get started. Updates are automatic.
 
@@ -14,9 +16,11 @@ This is the simplest way to get started. Updates are automatic.
 3. You're done.
 
 ## 2. The Manual Way (Latest Features)
+
 The Web Store review process can be slow. If you want the cutting-edge version immediately, install manually.
 
 **For Chrome / Edge / Brave / Opera:**
+
 1. Download the latest `gemini-voyager-chrome-vX.Y.Z.zip` from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Unzip the file.
 3. Open your browser's Extensions page (`chrome://extensions`).
@@ -32,6 +36,7 @@ The Web Store review process can be slow. If you want the cutting-edge version i
 The easiest way. Install from the official store with automatic updates.
 
 **Method 2: XPI File (Manual Install)**
+
 1. Download the latest `gemini-voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Open the Add-ons Manager (`about:addons`).
 3. Drag and drop the `.xpi` file to install (or click the gear icon ⚙️ -> **Install Add-on From File**).
@@ -39,6 +44,7 @@ The easiest way. Install from the official store with automatic updates.
 > 💡 The XPI file is officially signed by Mozilla and can be permanently installed in all Firefox versions.
 
 ## 4. Safari (macOS)
+
 1. Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Unzip the file.
 3. Run the following command in Terminal to convert it (requires Xcode):
@@ -49,4 +55,5 @@ The easiest way. Install from the official store with automatic updates.
 5. Enable in Safari Settings > Extensions.
 
 ---
-*Development setup? If you are a developer looking to contribute, check out our [Contributing Guide](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md).*
+
+_Development setup? If you are a developer looking to contribute, check out our [Contributing Guide](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md)._

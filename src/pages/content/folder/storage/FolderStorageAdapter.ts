@@ -124,7 +124,10 @@ export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
       try {
         await chrome.storage.local.set({ [key]: data });
       } catch (storageError) {
-        console.warn('[LocalStorageFolderAdapter] Failed to mirror to chrome.storage.local:', storageError);
+        console.warn(
+          '[LocalStorageFolderAdapter] Failed to mirror to chrome.storage.local:',
+          storageError
+        );
       }
 
       return true;

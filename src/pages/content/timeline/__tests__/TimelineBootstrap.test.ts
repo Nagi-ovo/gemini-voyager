@@ -48,4 +48,3 @@ describe('Timeline bootstrap', () => {
     expect(timelineManagerSpies.init).toHaveBeenCalledTimes(1);
   });
 });
-

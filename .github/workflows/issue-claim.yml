@@ -8,10 +8,10 @@ jobs:
   claim-issue:
     runs-on: ubuntu-latest
     if: github.event.issue.pull_request == null && contains(github.event.comment.body, '/claim')
-    
+
     permissions:
       issues: write
-    
+
     steps:
       - name: Check if issue is already assigned
         id: check
@@ -20,7 +20,7 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const commenter = context.payload.comment.user.login;
-            
+
             // Check if already assigned
             if (issue.assignees && issue.assignees.length > 0) {
               const assigneeNames = issue.assignees.map(a => a.login).join(', ');
@@ -32,7 +32,7 @@ jobs:
               });
               return;
             }
-            
+
             // Assign the commenter
             try {
               await github.rest.issues.addAssignees({
@@ -73,10 +73,10 @@ jobs:
   unclaim-issue:
     runs-on: ubuntu-latest
     if: github.event.issue.pull_request == null && contains(github.event.comment.body, '/unclaim')
-    
+
     permissions:
       issues: write
-    
+
     steps:
       - name: Unclaim issue
         uses: actions/github-script@v7
@@ -84,10 +84,10 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const commenter = context.payload.comment.user.login;
-            
+
             // Check if commenter is assigned
             const isAssigned = issue.assignees && issue.assignees.some(a => a.login === commenter);
-            
+
             if (!isAssigned) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -97,7 +97,7 @@ jobs:
               });
               return;
             }
-            
+
             // Remove assignment
             await github.rest.issues.removeAssignees({
               owner: context.repo.owner,
@@ -105,7 +105,7 @@ jobs:
               issue_number: issue.number,
               assignees: [commenter]
             });
-            
+
             // Remove "claimed" label if present
             try {
               await github.rest.issues.removeLabel({
@@ -117,7 +117,7 @@ jobs:
             } catch (labelError) {
               // Label not present, skip
             }
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,

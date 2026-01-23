@@ -11,6 +11,7 @@ Gemini Voyager ("nous", "notre", ou "nos") s'engage à protéger votre vie priv�
 **Nous ne collectons aucune information personnelle.**
 
 Gemini Voyager fonctionne entièrement dans votre navigateur. Toutes les données générées ou gérées par l'extension (comme les dossiers, les modèles de prompts et les paramètres) sont stockées :
+
 1. Localement sur votre appareil (`chrome.storage.local`)
 2. Dans le stockage synchronisé de votre navigateur (`chrome.storage.sync`) s'il est disponible, pour synchroniser les paramètres entre vos appareils.
 
@@ -19,6 +20,7 @@ Nous n'avons accès à aucune de vos données personnelles, historiques de chat 
 ## Permissions
 
 L'extension demande le minimum de permissions nécessaires pour fonctionner :
+
 - **Storage (Stockage)** : Pour enregistrer vos préférences, dossiers et prompts.
 - **ActiveTab (Onglet Actif)** : Pour interagir avec l'interface Gemini lorsque vous utilisez l'extension.
 

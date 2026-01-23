@@ -240,4 +240,3 @@ export class OperationQueue {
  * Global operation queue for storage operations
  */
 export const storageQueue = new OperationQueue();
-

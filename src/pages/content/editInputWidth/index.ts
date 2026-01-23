@@ -28,11 +28,7 @@ const normalizePercent = (value: number, fallback: number) => {
  * Based on actual DOM structure: .query-content.edit-mode
  */
 function getEditModeSelectors(): string[] {
-  return [
-    '.query-content.edit-mode',
-    'div.edit-mode',
-    '[class*="edit-mode"]',
-  ];
+  return ['.query-content.edit-mode', 'div.edit-mode', '[class*="edit-mode"]'];
 }
 
 /**
@@ -51,7 +47,7 @@ function applyWidth(widthPercent: number): void {
   }
 
   const editModeSelectors = getEditModeSelectors();
-  const editModeRules = editModeSelectors.map(sel => `${sel}`).join(',\n    ');
+  const editModeRules = editModeSelectors.map((sel) => `${sel}`).join(',\n    ');
 
   style.textContent = `
     /* Remove width constraints from outer containers that contain edit mode (similar to chatWidth) */

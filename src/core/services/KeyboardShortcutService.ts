@@ -89,10 +89,14 @@ export class KeyboardShortcutService {
     try {
       if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
         const result = await chrome.storage.sync.get(StorageKeys.TIMELINE_SHORTCUTS);
-        const stored = result[StorageKeys.TIMELINE_SHORTCUTS] as KeyboardShortcutStorage | undefined;
+        const stored = result[StorageKeys.TIMELINE_SHORTCUTS] as
+          | KeyboardShortcutStorage
+          | undefined;
 
         if (stored?.shortcuts) {
-          this.config = this.validateConfig(stored.shortcuts) ? stored.shortcuts : DEFAULT_SHORTCUTS;
+          this.config = this.validateConfig(stored.shortcuts)
+            ? stored.shortcuts
+            : DEFAULT_SHORTCUTS;
           this.enabled = stored.enabled ?? true;
         }
       } else {
@@ -100,7 +104,9 @@ export class KeyboardShortcutService {
         const stored = localStorage.getItem(StorageKeys.TIMELINE_SHORTCUTS);
         if (stored) {
           const parsed = JSON.parse(stored) as KeyboardShortcutStorage;
-          this.config = this.validateConfig(parsed.shortcuts) ? parsed.shortcuts : DEFAULT_SHORTCUTS;
+          this.config = this.validateConfig(parsed.shortcuts)
+            ? parsed.shortcuts
+            : DEFAULT_SHORTCUTS;
           this.enabled = parsed.enabled ?? true;
         }
       }
@@ -215,7 +221,9 @@ export class KeyboardShortcutService {
       this.storageChangeHandler = (changes, areaName) => {
         if (areaName !== 'sync') return;
         if (changes[StorageKeys.TIMELINE_SHORTCUTS]) {
-          const newValue = changes[StorageKeys.TIMELINE_SHORTCUTS].newValue as KeyboardShortcutStorage | undefined;
+          const newValue = changes[StorageKeys.TIMELINE_SHORTCUTS].newValue as
+            | KeyboardShortcutStorage
+            | undefined;
           if (newValue?.shortcuts) {
             this.config = this.validateConfig(newValue.shortcuts)
               ? newValue.shortcuts

@@ -5,6 +5,7 @@
 ## 仕組み
 
 カスタムウェブサイトを追加すると、次の処理が行われます：
+
 1. 拡張機能が、そのウェブサイトへのアクセス権限を求めます。
 2. そのウェブサイトでも、プロンプトマネージャーが使えるようになります。
 3. 有効になるのは **プロンプトマネージャーのみ** です（タイムライン、フォルダなどは対象外）。
@@ -20,6 +21,7 @@
 ## 対応する URL 形式
 
 さまざまな形式の URL を入力できます：
+
 - `chatgpt.com`
 - `www.chatgpt.com`
 - `https://chatgpt.com`
@@ -36,6 +38,7 @@
 ## 例
 
 プロンプトマネージャーを使いたくなるような人気 AI チャットサイトの例です：
+
 - `chatgpt.com` - ChatGPT
 - `claude.ai` - Claude
 - `copilot.microsoft.com` - Microsoft Copilot
@@ -60,6 +63,7 @@
 ### 正常に動作しているか確認する方法
 
 ブラウザのコンソール (F12) を開き、以下を探してください：
+
 ```
 [Gemini Voyager] Checking custom websites: ...
 [Gemini Voyager] Is custom website: true

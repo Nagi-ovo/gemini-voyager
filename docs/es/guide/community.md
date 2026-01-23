@@ -36,5 +36,4 @@ Si encuentras un error (Bug) o tienes una solicitud de función clara (Feature R
 - [Reportar un Bug](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
 - [Solicitar una función](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
 
-
 ¡Gracias por tu apoyo a Gemini Voyager! ❤️

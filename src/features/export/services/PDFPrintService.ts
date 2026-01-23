@@ -47,7 +47,10 @@ export class PDFPrintService {
   /**
    * Create HTML container for printing
    */
-  private static createPrintContainer(turns: ChatTurn[], metadata: ConversationMetadata): HTMLElement {
+  private static createPrintContainer(
+    turns: ChatTurn[],
+    metadata: ConversationMetadata
+  ): HTMLElement {
     const container = document.createElement('div');
     container.id = this.PRINT_CONTAINER_ID;
     container.className = 'gv-print-only';
@@ -101,7 +104,7 @@ export class PDFPrintService {
             img.src = data;
           } catch {}
         }
-      }),
+      })
     );
 
     // Attempt to wait for image decoding
@@ -109,8 +112,8 @@ export class PDFPrintService {
       imgs.map((img) =>
         (img as any).decode?.().catch(() => {
           /* ignore */
-        }),
-      ),
+        })
+      )
     );
   }
 
@@ -122,8 +125,9 @@ export class PDFPrintService {
     try {
       // Prefer the folder row that is marked as selected for the current conversation
       const activeFolderTitle =
-        document.querySelector('.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title') ||
-        document.querySelector('.gv-folder-conversation-selected .gv-conversation-title');
+        document.querySelector(
+          '.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title'
+        ) || document.querySelector('.gv-folder-conversation-selected .gv-conversation-title');
 
       if (activeFolderTitle?.textContent?.trim()) {
         return activeFolderTitle.textContent.trim();
@@ -148,7 +152,10 @@ export class PDFPrintService {
         }
       }
     } catch (error) {
-      console.debug('[PDF Export] Failed to get title from native sidebar selected conversation:', error);
+      console.debug(
+        '[PDF Export] Failed to get title from native sidebar selected conversation:',
+        error
+      );
     }
 
     // Strategy 2: Try to get from page title

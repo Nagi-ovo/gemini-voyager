@@ -134,9 +134,7 @@ async function syncCustomContentScripts(domains?: string[]): Promise<void> {
     )[CUSTOM_WEBSITE_KEY];
 
   const matchPatterns = Array.from(
-    new Set(
-      (Array.isArray(domainList) ? domainList : []).flatMap(toMatchPatterns).filter(Boolean)
-    )
+    new Set((Array.isArray(domainList) ? domainList : []).flatMap(toMatchPatterns).filter(Boolean))
   );
 
   const grantedMatches = await filterGrantedOrigins(matchPatterns);
@@ -201,7 +199,9 @@ chrome.permissions.onAdded.addListener(({ origins }) => {
     void browser.storage.sync
       .get({ [CUSTOM_WEBSITE_KEY]: [] })
       .then((current) => {
-        const existing = Array.isArray(current[CUSTOM_WEBSITE_KEY]) ? current[CUSTOM_WEBSITE_KEY] : [];
+        const existing = Array.isArray(current[CUSTOM_WEBSITE_KEY])
+          ? current[CUSTOM_WEBSITE_KEY]
+          : [];
         const merged = Array.from(new Set([...existing, ...domains]));
         if (merged.length !== existing.length) {
           return browser.storage.sync.set({ [CUSTOM_WEBSITE_KEY]: merged });
@@ -231,7 +231,7 @@ class StarredMessagesManager {
    */
   private serialize<T>(operation: () => Promise<T>): Promise<T> {
     const promise = this.operationQueue.then(operation, operation);
-    this.operationQueue = promise.catch(() => { }); // Prevent error propagation
+    this.operationQueue = promise.catch(() => {}); // Prevent error propagation
     return promise;
   }
 
@@ -258,9 +258,7 @@ class StarredMessagesManager {
       }
 
       // Check if message already exists
-      const exists = data.messages[message.conversationId].some(
-        (m) => m.turnId === message.turnId
-      );
+      const exists = data.messages[message.conversationId].some((m) => m.turnId === message.turnId);
 
       if (!exists) {
         data.messages[message.conversationId].push(message);
@@ -374,7 +372,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               prompts: PromptItem[];
               interactive?: boolean;
             };
-            const success = await googleDriveSyncService.upload(folders, prompts, interactive !== false);
+            const success = await googleDriveSyncService.upload(
+              folders,
+              prompts,
+              interactive !== false
+            );
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;
           }
@@ -438,7 +440,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       const b64 = arrayBufferToBase64(ab);
       sendResponse({ ok: true, contentType, base64: b64 });
     } catch (e: any) {
-      try { sendResponse({ ok: false, error: String(e?.message || e) }); } catch { }
+      try {
+        sendResponse({ ok: false, error: String(e?.message || e) });
+      } catch {}
     }
   })();
   return true; // keep channel open for async sendResponse

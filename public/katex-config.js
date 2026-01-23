@@ -13,11 +13,13 @@
     const message = args[0];
 
     // Suppress KaTeX Unicode warnings
-    if (typeof message === 'string' &&
+    if (
+      typeof message === 'string' &&
       (message.includes('unicodeTextInMathMode') ||
         message.includes('LaTeX-incompatible input and strict mode') ||
         message.includes("KaTeX doesn't work in quirks mode") ||
-        message.includes('No ID or name found in config'))) {
+        message.includes('No ID or name found in config'))
+    ) {
       // Silently ignore these warnings
       return;
     }

@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      
+
       - name: Enable Corepack and Setup pnpm
         run: |
           corepack enable
@@ -37,5 +37,5 @@ jobs:
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: update sponsors.svg"
+          commit_message: 'chore: update sponsors.svg'
           file_pattern: 'docs/public/assets/sponsors.*'

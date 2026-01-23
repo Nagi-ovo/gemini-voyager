@@ -1,13 +1,6 @@
-const ENTERPRISE_HINTS = [
-  'enterprise',
-  'workspace',
-  'workspaces',
-  'business',
-] as const;
+const ENTERPRISE_HINTS = ['enterprise', 'workspace', 'workspaces', 'business'] as const;
 
-const ENTERPRISE_HOSTS = new Set([
-  'business.gemini.google',
-]);
+const ENTERPRISE_HOSTS = new Set(['business.gemini.google']);
 
 type UrlParts = {
   hostname: string;
@@ -21,7 +14,12 @@ function includesEnterpriseHint(value: string): boolean {
   return ENTERPRISE_HINTS.some((hint) => haystack.includes(hint));
 }
 
-export function isGeminiEnterpriseUrl({ hostname, pathname = '', search = '', hash = '' }: UrlParts): boolean {
+export function isGeminiEnterpriseUrl({
+  hostname,
+  pathname = '',
+  search = '',
+  hash = '',
+}: UrlParts): boolean {
   const normalizedHost = hostname.toLowerCase();
   if (ENTERPRISE_HOSTS.has(normalizedHost)) return true;
   if (normalizedHost !== 'gemini.google.com') return false;

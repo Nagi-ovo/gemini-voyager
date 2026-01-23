@@ -14,9 +14,7 @@ function OptionsContent() {
       </div>
 
       <div className="p-6 rounded-lg border border-border bg-card">
-        <p className="text-muted-foreground">
-          {t('optionsComingSoon')}
-        </p>
+        <p className="text-muted-foreground">{t('optionsComingSoon')}</p>
       </div>
     </div>
   );

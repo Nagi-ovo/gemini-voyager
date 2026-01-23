@@ -50,7 +50,7 @@
 
 ## 👋 Why Gemini Voyager?
 
-We love Gemini, but sometimes we wish it had just a *bit* more structure. 
+We love Gemini, but sometimes we wish it had just a _bit_ more structure.
 
 That's why we built **Gemini Voyager**. It's not just a tool; it's a companion that helps you keep your AI conversations organized, accessible, and productive. Whether you're a researcher juggling dozens of threads, a developer saving code snippets, or just someone who loves order, Voyager is designed for you.
 
@@ -89,16 +89,20 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
 </div>
 
 ### 📍 Timeline Navigation
+
 **Never get lost in a long conversation again.**
 Visual nodes let you see the structure of your chat at a glance.
+
 - **Jump instantly**: Click a node to scroll right to that message.
 - **Peek content**: Hover to see what was said without scrolling.
 - **Mark what matters**: Long-press to star important messages (synced across tabs!).
 - **Node Levels (Experimental)**: Right-click a node to set its level (1-3) or collapse sub-nodes. Perfect for organizing branched or hierarchical conversations.
 
 ### 📂 Folder Organization
+
 **Keep your ideas sorted.**
 Stop digging through a messy history list. Drag and drop your chats into folders that make sense to you.
+
 - **Two-level hierarchy**: Folders and subfolders for deep organization.
 - **Easy management**: Double-click to rename, long-press to multi-select.
 - **Syncs everywhere**: Import/export your structure to keep your devices in sync.
@@ -122,8 +126,10 @@ Stop digging through a messy history list. Drag and drop your chats into folders
 </details>
 
 ### 💡 Prompt Library
+
 **Your personal prompt arsenal.**
 Don't rewrite the same instructions. Save your best prompts and use them anywhere.
+
 - **Tag & Search**: Find the right prompt in seconds.
 - **Universal Access**: Works on Gemini, AI Studio, and now **any website** you choose.
 
@@ -139,8 +145,10 @@ Don't rewrite the same instructions. Save your best prompts and use them anywher
 </details>
 
 ### 💬 Quote Reply
+
 **Reply with context.**
 Select text in any message to see a floating quote button. Click it to insert the selected text as a quote into your reply box instantly.
+
 - **Context-aware**: Works for both user and model messages.
 - **Standard format**: Uses standard Markdown blockquote syntax (`> ...`).
 
@@ -154,6 +162,7 @@ Select text in any message to see a floating quote button. Click it to insert th
 </details>
 
 ### 📐 Formula Copy
+
 **For the math wizards.**
 See a beautiful LaTeX formula? One click copies the source code. No more manual re-typing.
 
@@ -167,8 +176,10 @@ See a beautiful LaTeX formula? One click copies the source code. No more manual 
 </details>
 
 ### 🧜‍♀️ Mermaid Diagram Rendering
+
 **Visualize diagrams instantly.**
 When Gemini outputs Mermaid code (flowcharts, sequence diagrams, Gantt charts, etc.), Voyager automatically renders it as an interactive diagram.
+
 - **Toggle view**: Switch between rendered diagram and source code with one click.
 - **Fullscreen mode**: Click the diagram to open a fullscreen viewer with zoom and pan support.
 - **Auto-detection**: Supports all major Mermaid diagram types.
@@ -183,8 +194,10 @@ When Gemini outputs Mermaid code (flowcharts, sequence diagrams, Gantt charts, e
 </details>
 
 ### 🍌 NanoBanana Option
+
 **Lossless watermark removal for Gemini images.**
 Automatically removes the visible "Gemini" watermark from AI-generated images (NanoBanana) using a reverse alpha blending algorithm.
+
 - **Zero quality loss**: Reconstructs original pixels for a perfectly clean image.
 - **Set and forget**: Just enable it once in settings and it works automatically.
 - **Direct Download**: Replaces the native download button with a 🍌 button that saves the clean, processed image directly.
@@ -203,12 +216,15 @@ Automatically removes the visible "Gemini" watermark from AI-generated images (N
 </details>
 
 ### 🔬 Deep Research Export
+
 **Extract thinking content from Deep Research conversations.**
 One-click export to Markdown format preserving all thinking phases and research links. Click the share & export button in Deep Research conversations to download.
 
 ### 💾 Chat Export
+
 **Your data, your format.**
 Take your conversations with you.
+
 - **Formats**: Structured JSON or print-friendly Markdown/PDF.
 - **Clean**: We strip out the UI noise so you get just the content.
 - **Complete**: Images are automatically packaged into an `assets/` folder.
@@ -257,6 +273,7 @@ Wide screen? Make use of it. Customize the chat container width (400px - 1400px)
 </details>
 
 ### 🫥 Input Collapse
+
 **More room to read.**
 The input area auto-collapses when empty. Click to expand and start typing.
 
@@ -270,6 +287,7 @@ The input area auto-collapses when empty. Click to expand and start typing.
 </details>
 
 ### 🏷️ Tab Title Sync
+
 **Know at a glance.**
 Automatically syncs the browser tab title with the current Gemini chat title. No more "Gemini" on every tab.
 
@@ -283,8 +301,10 @@ Automatically syncs the browser tab title with the current Gemini chat title. No
 </details>
 
 ### 🗑️ Batch Delete
+
 **Clean up in bulk.**
 Select multiple conversations and delete them all at once. No more deleting one by one.
+
 - **Multi-select**: Long-press to enter multi-select mode, then check the conversations you want to delete.
 - **One-click delete**: Delete all selected conversations with a single click.
 
@@ -325,15 +345,18 @@ Select multiple conversations and delete them all at once. No more deleting one 
 <summary>📦 Manual Installation</summary>
 
 **Chromium browsers (Chrome, Edge, Brave, etc.):**
+
 1. Download `gemini-voyager-chrome-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
 2. Unzip and go to `chrome://extensions` → Enable Developer mode → Load unpacked
 
 **Firefox:**
 Download `gemini-voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) and drag into `about:addons`.
+
 > 💡 XPI is Mozilla-signed for permanent installation.
 
 **Safari:**
 Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases). See [Safari installation guide](.github/docs/safari/INSTALLATION.md) for build steps.
+
 </details>
 
 ---
@@ -345,8 +368,6 @@ Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/N
     <img src="https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
   </a>
 </div>
-
-
 
 If Gemini Voyager makes your life easier, consider buying me a coffee. It helps keep the updates coming! Sponsors will be featured in our Special Thanks section. ❤️
 
@@ -445,6 +466,7 @@ bun run build:all      # All browsers
 ```
 
 **Safari Development**: See [safari/README.md](safari/README.md) for additional build steps.
+
 </details>
 
 Thank you for helping make Gemini Voyager better! ❤️

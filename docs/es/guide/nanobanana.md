@@ -7,6 +7,7 @@ Las imágenes generadas por Gemini vienen con una marca de agua visible por defe
 ## Restauración Sin Pérdidas
 
 NanoBanana utiliza un **Algoritmo de Mezcla Alfa Inversa (Reverse Alpha Blending)**.
+
 - **Sin Repintado AI**: La eliminación de marcas de agua tradicional a menudo utiliza IA para difuminar, lo que puede destruir los detalles de la imagen.
 - **Precisión a Nivel de Píxel**: A través del cálculo matemático, eliminamos con precisión la capa transparente de la marca de agua superpuesta en los píxeles, restaurando el 100% de los puntos de píxel originales.
 - **Cero Pérdida de Calidad**: La imagen antes y después del procesamiento es completamente idéntica en las áreas sin marca de agua.

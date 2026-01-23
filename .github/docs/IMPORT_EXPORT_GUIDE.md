@@ -24,12 +24,14 @@ The folder configuration import/export feature allows you to sync folder configu
 ## Import Strategies
 
 ### Merge Mode
+
 - ✅ Keeps all existing folders and conversations
 - ✅ Only adds new folders and conversations
 - ✅ Automatically skips duplicates (by ID)
 - 💡 Best for: Importing partial configurations from other devices
 
 ### Overwrite Mode
+
 - ⚠️ Deletes all existing folders
 - ✅ Completely uses imported configuration
 - 🔒 Automatically creates backup (stored in sessionStorage)
@@ -38,6 +40,7 @@ The folder configuration import/export feature allows you to sync folder configu
 ## 🔄 Backup & Recovery
 
 ### Backup Information
+
 - **Auto Backup**: Automatically created during overwrite import
 - **Storage Location**: Browser sessionStorage (temporary storage)
 - **Validity**: Valid until current tab is closed
@@ -115,18 +118,23 @@ sessionStorage.removeItem('gvFolderBackupTimestamp');
 ## FAQ
 
 ### Q: Where is the backup stored?
+
 A: Stored in the browser's `sessionStorage`, only valid for the current tab, automatically cleared when the tab is closed.
 
 ### Q: Why can't I see the backup file?
+
 A: The backup is temporarily stored in memory and does not generate a file. For permanent storage, use the export feature.
 
 ### Q: Can it sync automatically?
+
 A: Currently requires manual export/import. Automatic sync would require cloud service support, which is not provided to protect privacy.
 
 ### Q: What if the configuration is wrong after import?
+
 A: If the tab is still open, you can restore the backup through the console (see instructions above).
 
 ### Q: Does it support cross-browser sync?
+
 A: Yes! Simply export from one browser and import to another.
 
 ## Best Practices
@@ -149,4 +157,3 @@ A: Yes! Simply export from one browser and import to another.
 
 For issues or suggestions, please visit:
 https://github.com/Nagi-ovo/gemini-voyager/issues/36
-

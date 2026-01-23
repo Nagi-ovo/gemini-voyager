@@ -14,7 +14,7 @@ let observer: MutationObserver | null = null;
  */
 export async function startTitleUpdater() {
   const { gvTabTitleUpdateEnabled } = await chrome.storage.sync.get({
-    gvTabTitleUpdateEnabled: true
+    gvTabTitleUpdateEnabled: true,
   });
 
   if (!gvTabTitleUpdateEnabled) return;
@@ -66,7 +66,7 @@ export async function startTitleUpdater() {
     observer.observe(target, {
       childList: true,
       subtree: true,
-      characterData: true
+      characterData: true,
     });
   };
 
@@ -130,8 +130,8 @@ function findChatTitle(): string | null {
   // Target the title inside conversation-title-container or top-bar-actions
   const titleEl = document.querySelector(
     '.conversation-title-container .conversation-title.gds-title-m, ' +
-    'top-bar-actions .conversation-title.gds-title-m, ' +
-    '.top-bar-actions .conversation-title.gds-title-m'
+      'top-bar-actions .conversation-title.gds-title-m, ' +
+      '.top-bar-actions .conversation-title.gds-title-m'
   );
 
   if (titleEl) {
@@ -143,4 +143,3 @@ function findChatTitle(): string | null {
 
   return null;
 }
-

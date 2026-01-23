@@ -23,12 +23,12 @@ describe('Concurrency Control', () => {
 
     it('should prevent concurrent access to same resource', async () => {
       const results: number[] = [];
-      
+
       const task = async (id: number) => {
         const release = await lock.acquire('resource');
         try {
           results.push(id);
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
           results.push(id);
         } finally {
           release();
@@ -48,20 +48,20 @@ describe('Concurrency Control', () => {
     it('should allow concurrent access to different resources', async () => {
       const release1 = await lock.acquire('resource1');
       const release2 = await lock.acquire('resource2');
-      
+
       expect(lock.isLocked('resource1')).toBe(true);
       expect(lock.isLocked('resource2')).toBe(true);
-      
+
       release1();
       release2();
     });
 
     it('should timeout if lock is held too long', async () => {
       const release = await lock.acquire('test', 100);
-      
+
       // Don't release, try to acquire with short timeout
       await expect(lock.acquire('test', 50)).rejects.toThrow('Lock timeout');
-      
+
       release();
     });
 
@@ -91,21 +91,17 @@ describe('Concurrency Control', () => {
 
     it('should execute function with lock protection', async () => {
       let counter = 0;
-      
+
       const increment = async () => {
         return await lock.withLock('counter', async () => {
           const current = counter;
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
           counter = current + 1;
           return counter;
         });
       };
 
-      const results = await Promise.all([
-        increment(),
-        increment(),
-        increment(),
-      ]);
+      const results = await Promise.all([increment(), increment(), increment()]);
 
       expect(counter).toBe(3);
       expect(results).toEqual([1, 2, 3]);
@@ -124,12 +120,12 @@ describe('Concurrency Control', () => {
 
     it('tryAcquire should return null if lock is held', async () => {
       const release = await lock.acquire('test');
-      
+
       const tryRelease = lock.tryAcquire('test');
       expect(tryRelease).toBeNull();
-      
+
       release();
-      
+
       const tryRelease2 = lock.tryAcquire('test');
       expect(tryRelease2).not.toBeNull();
       tryRelease2!();
@@ -138,12 +134,12 @@ describe('Concurrency Control', () => {
     it('should clear all locks', async () => {
       await lock.acquire('test1');
       await lock.acquire('test2');
-      
+
       expect(lock.isLocked('test1')).toBe(true);
       expect(lock.isLocked('test2')).toBe(true);
-      
+
       lock.clearAll();
-      
+
       expect(lock.isLocked('test1')).toBe(false);
       expect(lock.isLocked('test2')).toBe(false);
     });
@@ -158,14 +154,14 @@ describe('Concurrency Control', () => {
 
     it('should execute operations in order', async () => {
       const results: number[] = [];
-      
+
       const promises = [
         queue.enqueue(async () => {
-          await new Promise(resolve => setTimeout(resolve, 30));
+          await new Promise((resolve) => setTimeout(resolve, 30));
           results.push(1);
         }),
         queue.enqueue(async () => {
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
           results.push(2);
         }),
         queue.enqueue(async () => {
@@ -174,14 +170,14 @@ describe('Concurrency Control', () => {
       ];
 
       await Promise.all(promises);
-      
+
       expect(results).toEqual([1, 2, 3]);
     });
 
     it('should return operation results', async () => {
       const result1 = queue.enqueue(async () => 'first');
       const result2 = queue.enqueue(async () => 'second');
-      
+
       expect(await result1).toBe('first');
       expect(await result2).toBe('second');
     });
@@ -200,53 +196,53 @@ describe('Concurrency Control', () => {
 
     it('should track queue length', async () => {
       expect(queue.length).toBe(0);
-      
+
       const promise1 = queue.enqueue(async () => {
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       });
-      
+
       // Queue might be processing already
       const promise2 = queue.enqueue(async () => {});
       const promise3 = queue.enqueue(async () => {});
-      
+
       // Length should be at least 1 (might be 2 if first is still processing)
       expect(queue.length).toBeGreaterThanOrEqual(0);
-      
+
       await Promise.all([promise1, promise2, promise3]);
-      
+
       expect(queue.length).toBe(0);
     });
 
     it('should indicate when processing', async () => {
       const longOperation = queue.enqueue(async () => {
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       });
 
       // Give it a moment to start processing
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       expect(queue.isProcessing).toBe(true);
-      
+
       await longOperation;
-      
+
       expect(queue.isProcessing).toBe(false);
     });
 
     it('should clear queue', async () => {
       queue.enqueue(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       });
       queue.enqueue(async () => {});
       queue.enqueue(async () => {});
-      
+
       queue.clear();
-      
+
       expect(queue.length).toBe(0);
     });
 
     it('should handle multiple concurrent enqueues', async () => {
       const results: number[] = [];
-      
+
       const operations = Array.from({ length: 10 }, (_, i) =>
         queue.enqueue(async () => {
           results.push(i);
@@ -254,7 +250,7 @@ describe('Concurrency Control', () => {
       );
 
       await Promise.all(operations);
-      
+
       expect(results).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     });
   });
@@ -282,7 +278,7 @@ describe('Concurrency Control', () => {
       const simulateImport = async (id: string) => {
         return await lock.withLock(LOCK_KEYS.FOLDER_IMPORT, async () => {
           importResults.push(`start-${id}`);
-          await new Promise(resolve => setTimeout(resolve, 20));
+          await new Promise((resolve) => setTimeout(resolve, 20));
           importResults.push(`end-${id}`);
           return `imported-${id}`;
         });
@@ -295,12 +291,8 @@ describe('Concurrency Control', () => {
       ]);
 
       // Imports should not interleave
-      expect(importResults).toEqual([
-        'start-A', 'end-A',
-        'start-B', 'end-B',
-        'start-C', 'end-C',
-      ]);
-      
+      expect(importResults).toEqual(['start-A', 'end-A', 'start-B', 'end-B', 'start-C', 'end-C']);
+
       expect(results).toEqual(['imported-A', 'imported-B', 'imported-C']);
     });
 
@@ -312,17 +304,13 @@ describe('Concurrency Control', () => {
         return await queue.enqueue(async () => {
           // Simulate read-modify-write
           const current = storageValue;
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
           storageValue = current + value;
           return storageValue;
         });
       };
 
-      const results = await Promise.all([
-        writeOperation(1),
-        writeOperation(2),
-        writeOperation(3),
-      ]);
+      const results = await Promise.all([writeOperation(1), writeOperation(2), writeOperation(3)]);
 
       expect(storageValue).toBe(6); // 1 + 2 + 3
       expect(results).toEqual([1, 3, 6]);
@@ -335,7 +323,7 @@ describe('Concurrency Control', () => {
       // Simulate concurrent reads (should be fast)
       const readPromises = Array.from({ length: 5 }, () =>
         lock.withLock(LOCK_KEYS.FOLDER_DATA_READ, async () => {
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
           return data.value;
         })
       );
@@ -346,10 +334,9 @@ describe('Concurrency Control', () => {
 
       // All reads should return same value
       expect(results).toEqual([100, 100, 100, 100, 100]);
-      
+
       // Should take at least 50ms (5 * 10ms) since they're sequential
       expect(duration).toBeGreaterThanOrEqual(50);
     });
   });
 });
-

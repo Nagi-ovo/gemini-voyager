@@ -5,6 +5,7 @@ The Prompt Manager can now be used on any website you choose, not just Gemini an
 ## How It Works
 
 When you add a custom website:
+
 1. The extension requests permission to access only that specific website
 2. The Prompt Manager is injected into the site
 3. **Only** the Prompt Manager feature is activated (no timeline, folders, or other features)
@@ -20,6 +21,7 @@ When you add a custom website:
 ## Supported URL Formats
 
 You can enter URLs in various formats:
+
 - `chatgpt.com`
 - `www.chatgpt.com`
 - `https://chatgpt.com`
@@ -36,6 +38,7 @@ The extension will automatically normalize the URL and request permission for bo
 ## Examples
 
 Popular AI chat websites where you might want to use the Prompt Manager:
+
 - `chatgpt.com` - ChatGPT
 - `claude.ai` - Claude
 - `copilot.microsoft.com` - Microsoft Copilot
@@ -60,6 +63,7 @@ Popular AI chat websites where you might want to use the Prompt Manager:
 ### How to check if it's working
 
 Open the browser console (F12) and look for:
+
 ```
 [Gemini Voyager] Checking custom websites: ...
 [Gemini Voyager] Is custom website: true
@@ -69,4 +73,3 @@ Open the browser console (F12) and look for:
 ### Want to use other features on custom websites?
 
 Currently, only the Prompt Manager is supported on custom websites. Other features (Timeline, Folders, etc.) are specifically designed for Gemini and AI Studio and won't work on other sites.
-

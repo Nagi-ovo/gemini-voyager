@@ -8,7 +8,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
 import { ConversationExportService } from '../ConversationExportService';
 
-
 // Setup DOM environment
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');

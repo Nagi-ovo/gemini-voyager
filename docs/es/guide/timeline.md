@@ -4,10 +4,12 @@ Las conversaciones largas son un desastre. Arriba y abajo, perdido.
 Gemini Voyager convierte la conversación en una línea.
 
 ## Ver el Ritmo
+
 Mira el lado derecho de la pantalla.
 Cada punto es una frase. Ese es el pulso de tu conversación.
 
 ## Navegación, Paso a Paso
+
 - **Teletransporte**: Haz clic y ve, sin demoras.
 - **Vistazo**: Pasa el ratón por encima, ve el contenido sin saltar.
 - **Marcador**: Mantén presionado un nodo para **destacar**. Pon un marcador para tu cerebro.
@@ -17,15 +19,18 @@ Cada punto es una frase. Ese es el pulso de tu conversación.
 ![Navegación de Línea de Tiempo](/assets/teaser.png)
 
 ## Teclado, Más Rápido
+
 ¿No quieres usar el ratón? Usa el teclado.
 
 **Es como activar el Modo Vim en Gemini.**
 
 ### Atajos Predeterminados
+
 - `k` - Saltar al nodo anterior
 - `j` - Saltar al nodo siguiente
 
 ### Personalizar
+
 Abre la configuración de la extensión, haz clic en el cuadro de atajos y presiona la tecla que quieras usar.
 Cualquier tecla, cualquier combinación. ¿`n`/`p`? ¿`,`/`.`? Tú decides.
 

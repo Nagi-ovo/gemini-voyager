@@ -74,7 +74,9 @@ export async function migrateFromLocalStorage(
       try {
         parsedValue = JSON.parse(localValue);
       } catch (parseError) {
-        migrationLogger.error(`Failed to parse localStorage value for key "${key}"`, { parseError });
+        migrationLogger.error(`Failed to parse localStorage value for key "${key}"`, {
+          parseError,
+        });
         result.errors.push({ key, error: 'Failed to parse JSON' });
         result.success = false;
         continue;
@@ -84,11 +86,11 @@ export async function migrateFromLocalStorage(
       const writeResult = await targetStorage.set(key, parsedValue);
       if (!writeResult.success) {
         migrationLogger.error(`Failed to write to target storage for key "${key}"`, {
-          error: writeResult.error
+          error: writeResult.error,
         });
         result.errors.push({
           key,
-          error: writeResult.error?.message || 'Failed to write to target storage'
+          error: writeResult.error?.message || 'Failed to write to target storage',
         });
         result.success = false;
         continue;
@@ -111,7 +113,7 @@ export async function migrateFromLocalStorage(
       migrationLogger.error(`Unexpected error migrating key "${key}"`, { error });
       result.errors.push({
         key,
-        error: error instanceof Error ? error.message : 'Unexpected error'
+        error: error instanceof Error ? error.message : 'Unexpected error',
       });
       result.success = false;
     }

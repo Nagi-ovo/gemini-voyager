@@ -20,8 +20,6 @@ import type { FolderData } from '@/core/types/folder';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 
-
-
 /**
  * Core backup service implementation
  */
@@ -250,8 +248,7 @@ export class BackupService implements IBackupService {
         data: result,
       };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error during backup';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error during backup';
 
       return {
         success: false,

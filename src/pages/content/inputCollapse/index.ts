@@ -1,4 +1,3 @@
-
 import { getTranslationSync } from '../../../utils/i18n';
 
 const STYLE_ID = 'gemini-voyager-input-collapse';
@@ -18,10 +17,10 @@ const PLACEHOLDER_CLASS = 'gv-collapse-placeholder';
  *   - /gem/xxx/abc123
  */
 function isHomepageOrNewConversation(): boolean {
-    const pathname = window.location.pathname;
-    // Match /app or /u/<num>/app exactly (no conversation ID after /app)
-    // Must NOT have anything after /app except optional trailing slash
-    return /^\/(?:u\/\d+\/)?app\/?$/.test(pathname);
+  const pathname = window.location.pathname;
+  // Match /app or /u/<num>/app exactly (no conversation ID after /app)
+  // Must NOT have anything after /app except optional trailing slash
+  return /^\/(?:u\/\d+\/)?app\/?$/.test(pathname);
 }
 
 /**
@@ -29,27 +28,27 @@ function isHomepageOrNewConversation(): boolean {
  * These pages should not have auto-collapse behavior.
  */
 function isGemsEditorPage(): boolean {
-    const pathname = window.location.pathname;
-    // Match /gems/create, /gems/edit/*, or /u/<num>/gems/create, /u/<num>/gems/edit/*
-    return /^\/(?:u\/\d+\/)?gems\/(?:create|edit)\/?/.test(pathname);
+  const pathname = window.location.pathname;
+  // Match /gems/create, /gems/edit/*, or /u/<num>/gems/create, /u/<num>/gems/edit/*
+  return /^\/(?:u\/\d+\/)?gems\/(?:create|edit)\/?/.test(pathname);
 }
 
 /**
  * Checks if auto-collapse should be disabled on the current page.
  */
 function shouldDisableAutoCollapse(): boolean {
-    return isHomepageOrNewConversation() || isGemsEditorPage();
+  return isHomepageOrNewConversation() || isGemsEditorPage();
 }
 
 /**
  * Injects the CSS styles for the collapsed input state.
  */
 function injectStyles() {
-    if (document.getElementById(STYLE_ID)) return;
+  if (document.getElementById(STYLE_ID)) return;
 
-    const style = document.createElement('style');
-    style.id = STYLE_ID;
-    style.textContent = `
+  const style = document.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = `
     /* Transitions for the input container */
     .element-to-collapse {
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -160,7 +159,7 @@ function injectStyles() {
         color: #e8eaed;
     }
   `;
-    document.head.appendChild(style);
+  document.head.appendChild(style);
 }
 
 /**
@@ -168,107 +167,117 @@ function injectStyles() {
  * We need the container that holds the background color and the full width.
  */
 function getInputContainer(): HTMLElement | null {
-    const textarea = document.querySelector('rich-textarea');
-    if (!textarea) return null;
+  const textarea = document.querySelector('rich-textarea');
+  if (!textarea) return null;
 
-    let current = textarea.parentElement;
-    let bestCandidate: HTMLElement | null = null;
+  let current = textarea.parentElement;
+  let bestCandidate: HTMLElement | null = null;
 
-    // Traverse up to 8 levels
-    for (let i = 0; i < 8; i++) {
-        if (!current) break;
+  // Traverse up to 8 levels
+  for (let i = 0; i < 8; i++) {
+    if (!current) break;
 
-        // Check computed style for background color to find the visual "island"
-        const style = window.getComputedStyle(current);
-        const hasBackground = style.backgroundColor !== 'rgba(0, 0, 0, 0)' && style.backgroundColor !== 'transparent';
-        const isFlex = style.display.includes('flex');
+    // Check computed style for background color to find the visual "island"
+    const style = window.getComputedStyle(current);
+    const hasBackground =
+      style.backgroundColor !== 'rgba(0, 0, 0, 0)' && style.backgroundColor !== 'transparent';
+    const isFlex = style.display.includes('flex');
 
-        // Check for specific Gemini/Material classes or roles
-        // We prioritize the container that has a background color
-        if (hasBackground) {
-            bestCandidate = current as HTMLElement;
-            // If we found a substantial container (flex + background), it's a strong candidate.
-            if (isFlex) {
-                // Continue one more level just in case there's a wrapper, but update bestCandidate
-            }
-        }
-
-        // Stop if we hit the limit or dangerous nodes
-        if (current.tagName === 'MAIN' || current.tagName === 'BODY' || current.classList.contains('content-wrapper')) {
-            break;
-        }
-
-        current = current.parentElement;
+    // Check for specific Gemini/Material classes or roles
+    // We prioritize the container that has a background color
+    if (hasBackground) {
+      bestCandidate = current as HTMLElement;
+      // If we found a substantial container (flex + background), it's a strong candidate.
+      if (isFlex) {
+        // Continue one more level just in case there's a wrapper, but update bestCandidate
+      }
     }
 
-    // If we found a candidate with a background, use it.
-    // Otherwise fallback to heuristic parents.
-    return bestCandidate || textarea.parentElement?.parentElement || textarea.parentElement;
+    // Stop if we hit the limit or dangerous nodes
+    if (
+      current.tagName === 'MAIN' ||
+      current.tagName === 'BODY' ||
+      current.classList.contains('content-wrapper')
+    ) {
+      break;
+    }
+
+    current = current.parentElement;
+  }
+
+  // If we found a candidate with a background, use it.
+  // Otherwise fallback to heuristic parents.
+  return bestCandidate || textarea.parentElement?.parentElement || textarea.parentElement;
 }
 
 /**
  * Checks if the input is effectively empty.
  */
 function isInputEmpty(container: HTMLElement): boolean {
-    // Check the text content of the rich-textarea
-    const textarea = container.querySelector('rich-textarea') || container.querySelector('textarea') || container.querySelector('[contenteditable="true"]');
-    if (!textarea) return true;
+  // Check the text content of the rich-textarea
+  const textarea =
+    container.querySelector('rich-textarea') ||
+    container.querySelector('textarea') ||
+    container.querySelector('[contenteditable="true"]');
+  if (!textarea) return true;
 
-    // Check for attachments. If attachments exist, the input is not considered empty.
-    const attachmentsArea = container.querySelector('uploader-file-preview') || container.querySelector('.file-preview-wrapper');
-    if (attachmentsArea) return false;
+  // Check for attachments. If attachments exist, the input is not considered empty.
+  const attachmentsArea =
+    container.querySelector('uploader-file-preview') ||
+    container.querySelector('.file-preview-wrapper');
+  if (attachmentsArea) return false;
 
-    const text = textarea.textContent?.trim() || '';
-    return text.length === 0;
+  const text = textarea.textContent?.trim() || '';
+  return text.length === 0;
 }
 
 /**
  * Adds the placeholder element to the container if it doesn't exist.
  */
 function ensurePlaceholder(container: HTMLElement) {
-    if (container.querySelector(`.${PLACEHOLDER_CLASS}`)) return;
+  if (container.querySelector(`.${PLACEHOLDER_CLASS}`)) return;
 
-    const placeholder = document.createElement('div');
-    placeholder.className = PLACEHOLDER_CLASS;
+  const placeholder = document.createElement('div');
+  placeholder.className = PLACEHOLDER_CLASS;
 
-    // Use i18n for the placeholder text
-    let text = getTranslationSync('inputCollapsePlaceholder') || 'Message Gemini';
+  // Use i18n for the placeholder text
+  let text = getTranslationSync('inputCollapsePlaceholder') || 'Message Gemini';
 
-    placeholder.innerHTML = `
+  placeholder.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
         <path d="M240-400h320v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z"/>
       </svg>
       <span>${text}</span>
     `;
 
-    container.appendChild(placeholder);
+  container.appendChild(placeholder);
 }
 
 export function startInputCollapse() {
-    // Check if feature is enabled (default: false)
-    chrome.storage?.sync?.get({ gvInputCollapseEnabled: false }, (res) => {
-        if (res?.gvInputCollapseEnabled === false) {
-            // Feature is disabled, don't initialize
-            console.log('[Gemini Voyager] Input collapse is disabled');
-            return;
-        }
+  // Check if feature is enabled (default: false)
+  chrome.storage?.sync?.get({ gvInputCollapseEnabled: false }, (res) => {
+    if (res?.gvInputCollapseEnabled === false) {
+      // Feature is disabled, don't initialize
+      console.log('[Gemini Voyager] Input collapse is disabled');
+      return;
+    }
 
-        // Feature is enabled, proceed with initialization
+    // Feature is enabled, proceed with initialization
+    initInputCollapse();
+  });
+
+  // Listen for setting changes
+  chrome.storage?.onChanged?.addListener((changes, area) => {
+    if (area === 'sync' && changes.gvInputCollapseEnabled) {
+      if (changes.gvInputCollapseEnabled.newValue === false) {
+        // Disable: remove styles and classes
+        cleanup();
+      } else {
+        // Enable: re-initialize
         initInputCollapse();
-    });
-
-    // Listen for setting changes
-    chrome.storage?.onChanged?.addListener((changes, area) => {
-        if (area === 'sync' && changes.gvInputCollapseEnabled) {
-            if (changes.gvInputCollapseEnabled.newValue === false) {
-                // Disable: remove styles and classes
-                cleanup();
-            } else {
-                // Enable: re-initialize
-                initInputCollapse();
-            }
-        }
-    });
+      }
+    }
+  });
 }
 
 let observer: MutationObserver | null = null;
@@ -276,162 +285,181 @@ let initialized = false;
 let eventController: AbortController | null = null;
 
 function cleanup() {
-    // Abort all event listeners managed by the controller
-    if (eventController) {
-        eventController.abort();
-        eventController = null;
-    }
+  // Abort all event listeners managed by the controller
+  if (eventController) {
+    eventController.abort();
+    eventController = null;
+  }
 
-    // Remove styles
-    const style = document.getElementById(STYLE_ID);
-    if (style) style.remove();
+  // Remove styles
+  const style = document.getElementById(STYLE_ID);
+  if (style) style.remove();
 
-    // Remove classes from containers
-    document.querySelectorAll(`.${COLLAPSED_CLASS}`).forEach(el => {
-        el.classList.remove(COLLAPSED_CLASS);
-    });
-    document.querySelectorAll('.element-to-collapse').forEach(el => {
-        el.classList.remove('element-to-collapse');
-    });
-    document.querySelectorAll('.gv-processed').forEach(el => {
-        el.classList.remove('gv-processed');
-    });
-    document.querySelectorAll(`.${PLACEHOLDER_CLASS}`).forEach(el => {
-        el.remove();
-    });
+  // Remove classes from containers
+  document.querySelectorAll(`.${COLLAPSED_CLASS}`).forEach((el) => {
+    el.classList.remove(COLLAPSED_CLASS);
+  });
+  document.querySelectorAll('.element-to-collapse').forEach((el) => {
+    el.classList.remove('element-to-collapse');
+  });
+  document.querySelectorAll('.gv-processed').forEach((el) => {
+    el.classList.remove('gv-processed');
+  });
+  document.querySelectorAll(`.${PLACEHOLDER_CLASS}`).forEach((el) => {
+    el.remove();
+  });
 
-    // Disconnect observer
-    if (observer) {
-        observer.disconnect();
-        observer = null;
-    }
+  // Disconnect observer
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
 
-    initialized = false;
+  initialized = false;
 }
 
 function initInputCollapse() {
-    if (initialized) return;
-    initialized = true;
+  if (initialized) return;
+  initialized = true;
 
-    injectStyles();
+  injectStyles();
 
-    let isFocused = false;
-    let lastPathname = window.location.pathname;
+  let isFocused = false;
+  let lastPathname = window.location.pathname;
 
-    // Create AbortController for managing all event listeners
-    eventController = new AbortController();
-    const { signal } = eventController;
+  // Create AbortController for managing all event listeners
+  eventController = new AbortController();
+  const { signal } = eventController;
 
-    // Auto-expand the input area when a file is dragged into the window.
-    document.addEventListener('dragenter', (e) => {
-        if (e.dataTransfer?.types.includes('Files')) {
-            const container = getInputContainer();
-            if (container && container.classList.contains(COLLAPSED_CLASS)) {
-                expand(container);
-            }
-        }
-    }, { signal, capture: true });
-
-    // Handle URL changes for SPA navigation
-    const urlChangeHandler = () => {
-        const currentPathname = window.location.pathname;
-        if (currentPathname === lastPathname) return;
-
-        lastPathname = currentPathname;
-
+  // Auto-expand the input area when a file is dragged into the window.
+  document.addEventListener(
+    'dragenter',
+    (e) => {
+      if (e.dataTransfer?.types.includes('Files')) {
         const container = getInputContainer();
-        if (!container) return;
-
-        if (shouldDisableAutoCollapse()) {
-            // On homepage/new conversation/gems create: expand the input
-            container.classList.remove(COLLAPSED_CLASS);
-        } else {
-            // On conversation page: try to collapse if appropriate
-            tryCollapse(container);
+        if (container && container.classList.contains(COLLAPSED_CLASS)) {
+          expand(container);
         }
-    };
+      }
+    },
+    { signal, capture: true }
+  );
 
-    // Listen for URL changes (browser back/forward)
-    window.addEventListener('popstate', urlChangeHandler, { signal });
+  // Handle URL changes for SPA navigation
+  const urlChangeHandler = () => {
+    const currentPathname = window.location.pathname;
+    if (currentPathname === lastPathname) return;
 
-    // MutationObserver to re-apply when Gemini re-renders and detect SPA navigation
-    // Use MutationObserver so we re-apply if Gemini re-renders (common in SPAs)
-    observer = new MutationObserver(() => {
-        // Check for URL changes on DOM mutations (catches SPA navigation)
-        urlChangeHandler?.();
+    lastPathname = currentPathname;
 
-        const container = getInputContainer();
-        if (container && !container.classList.contains('gv-processed')) {
-            container.classList.add('gv-processed');
-            container.classList.add('element-to-collapse'); // Add transition class
-
-            ensurePlaceholder(container);
-
-            // Events - use signal for automatic cleanup
-            container.addEventListener('click', () => {
-                expand(container);
-            }, { signal });
-
-            // Capture focus events deeply
-            container.addEventListener('focusin', () => {
-                isFocused = true;
-                expand(container);
-            }, { signal });
-
-            container.addEventListener('focusout', (e) => {
-                const newFocus = e.relatedTarget as HTMLElement;
-                if (newFocus && container.contains(newFocus)) {
-                    return; // Focus is still inside
-                }
-
-                isFocused = false;
-                tryCollapse(container);
-            }, { signal });
-
-            // Initial check - only collapse if not on excluded pages
-            if (!shouldDisableAutoCollapse()) {
-                tryCollapse(container);
-            }
-        }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // Try once immediately
     const container = getInputContainer();
-    if (container) {
-        // trigger logic manually just in case
-        container.classList.remove('gv-processed');
+    if (!container) return;
+
+    if (shouldDisableAutoCollapse()) {
+      // On homepage/new conversation/gems create: expand the input
+      container.classList.remove(COLLAPSED_CLASS);
+    } else {
+      // On conversation page: try to collapse if appropriate
+      tryCollapse(container);
     }
+  };
+
+  // Listen for URL changes (browser back/forward)
+  window.addEventListener('popstate', urlChangeHandler, { signal });
+
+  // MutationObserver to re-apply when Gemini re-renders and detect SPA navigation
+  // Use MutationObserver so we re-apply if Gemini re-renders (common in SPAs)
+  observer = new MutationObserver(() => {
+    // Check for URL changes on DOM mutations (catches SPA navigation)
+    urlChangeHandler?.();
+
+    const container = getInputContainer();
+    if (container && !container.classList.contains('gv-processed')) {
+      container.classList.add('gv-processed');
+      container.classList.add('element-to-collapse'); // Add transition class
+
+      ensurePlaceholder(container);
+
+      // Events - use signal for automatic cleanup
+      container.addEventListener(
+        'click',
+        () => {
+          expand(container);
+        },
+        { signal }
+      );
+
+      // Capture focus events deeply
+      container.addEventListener(
+        'focusin',
+        () => {
+          isFocused = true;
+          expand(container);
+        },
+        { signal }
+      );
+
+      container.addEventListener(
+        'focusout',
+        (e) => {
+          const newFocus = e.relatedTarget as HTMLElement;
+          if (newFocus && container.contains(newFocus)) {
+            return; // Focus is still inside
+          }
+
+          isFocused = false;
+          tryCollapse(container);
+        },
+        { signal }
+      );
+
+      // Initial check - only collapse if not on excluded pages
+      if (!shouldDisableAutoCollapse()) {
+        tryCollapse(container);
+      }
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Try once immediately
+  const container = getInputContainer();
+  if (container) {
+    // trigger logic manually just in case
+    container.classList.remove('gv-processed');
+  }
 }
 
 function expand(container: HTMLElement) {
-    if (container.classList.contains(COLLAPSED_CLASS)) {
-        container.classList.remove(COLLAPSED_CLASS);
+  if (container.classList.contains(COLLAPSED_CLASS)) {
+    container.classList.remove(COLLAPSED_CLASS);
 
-        // Auto-focus the Quill editor
-        // .ql-editor is the actual contenteditable div inside rich-textarea
-        const editor = container.querySelector('.ql-editor') || container.querySelector('[contenteditable]') || container.querySelector('rich-textarea');
-        if (editor && editor instanceof HTMLElement) {
-            editor.focus();
-        }
+    // Auto-focus the Quill editor
+    // .ql-editor is the actual contenteditable div inside rich-textarea
+    const editor =
+      container.querySelector('.ql-editor') ||
+      container.querySelector('[contenteditable]') ||
+      container.querySelector('rich-textarea');
+    if (editor && editor instanceof HTMLElement) {
+      editor.focus();
     }
+  }
 }
 
 function tryCollapse(container: HTMLElement) {
-    // We need a small delay to handle transient states
-    setTimeout(() => {
-        // Don't collapse on excluded pages (homepage, new conversation, gems create)
-        if (shouldDisableAutoCollapse()) {
-            container.classList.remove(COLLAPSED_CLASS);
-            return;
-        }
+  // We need a small delay to handle transient states
+  setTimeout(() => {
+    // Don't collapse on excluded pages (homepage, new conversation, gems create)
+    if (shouldDisableAutoCollapse()) {
+      container.classList.remove(COLLAPSED_CLASS);
+      return;
+    }
 
-        const active = document.activeElement;
-        const isStillFocused = container.contains(active);
+    const active = document.activeElement;
+    const isStillFocused = container.contains(active);
 
-        if (!isStillFocused && isInputEmpty(container)) {
-            container.classList.add(COLLAPSED_CLASS);
-        }
-    }, 150);
+    if (!isStillFocused && isInputEmpty(container)) {
+      container.classList.add(COLLAPSED_CLASS);
+    }
+  }, 150);
 }

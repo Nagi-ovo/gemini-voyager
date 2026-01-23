@@ -1,0 +1,7 @@
+gemini-voyager-sync/
+dist_chrome/
+dist_firefox/
+dist_safari/
+coverage/
+.vitepress/dist
+.vitepress/cache

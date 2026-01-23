@@ -6,9 +6,9 @@
 :root {
   /* Shadcn Primary Color (Light Mode): oklch(0.7227 0.1920 149.5793) */
   /* Converted to approx Hex for compatibility if needed, but trying OKLCH first */
-  --vp-c-brand-1: oklch(0.7227 0.1920 149.5793);
-  --vp-c-brand-2: oklch(0.65 0.1920 149.5793); /* Slightly darker */
-  --vp-c-brand-3: oklch(0.60 0.1920 149.5793); /* Even darker */
+  --vp-c-brand-1: oklch(0.7227 0.192 149.5793);
+  --vp-c-brand-2: oklch(0.65 0.192 149.5793); /* Slightly darker */
+  --vp-c-brand-3: oklch(0.6 0.192 149.5793); /* Even darker */
 }
 
 .dark {

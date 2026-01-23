@@ -5,17 +5,21 @@ Do you throw it away?
 No. You save it.
 
 ## The Prompt Library
+
 This is your personal repository of genius.
 
 ### 1. Capture
+
 When you write something great, click the **Prompt Manager** icon (floating near the input box).
 It’s now part of your library.
 
 ### 2. Categorize
+
 Add tags like `#coding`, `#email`, or `#research`.
 Keep your tools sharpened and sorted.
 
 ### 3. Deploy
+
 Next time you need it, don't type it again.
 Open the manager, search by tag or keyword, and click to insert.
 One click. Infinite leverage.

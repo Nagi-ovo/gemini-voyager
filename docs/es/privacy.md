@@ -11,6 +11,7 @@ Gemini Voyager (en adelante "nosotros") se compromete a proteger su privacidad. 
 **Queremos enfatizar que: No recopilamos ninguna información personal.**
 
 Gemini Voyager se ejecuta completamente en local en su navegador. Todos los datos generados o gestionados por la extensión (como carpetas, plantillas de prompts y configuraciones) se almacenan en:
+
 1. Su dispositivo local (`chrome.storage.local`)
 2. El almacenamiento sincronizado de su navegador (`chrome.storage.sync`, si está habilitado en la configuración), para sincronizar configuraciones entre sus dispositivos.
 
@@ -19,6 +20,7 @@ No tenemos acceso a sus datos personales, historial de chat ni ninguna otra info
 ## Permisos
 
 Esta extensión solo solicita los permisos mínimos necesarios para mantener su funcionalidad:
+
 - **Storage (Almacenamiento)**: Para guardar sus preferencias, estructura de carpetas y prompts.
 - **ActiveTab (Pestaña Activa)**: Para interactuar con la interfaz de Gemini cuando utiliza la extensión.
 

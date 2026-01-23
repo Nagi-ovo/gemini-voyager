@@ -92,14 +92,14 @@ export const DEFAULT_CONVERSATION_ICON = 'chat_bubble';
  * Get Gem configuration by ID
  */
 export function getGemConfig(gemId: string): GemConfig | undefined {
-  return GEM_CONFIG.find(gem => gem.id === gemId);
+  return GEM_CONFIG.find((gem) => gem.id === gemId);
 }
 
 /**
  * Get Gem ID from icon name (for reverse lookup)
  */
 export function getGemIdFromIcon(iconName: string): string | undefined {
-  const gem = GEM_CONFIG.find(gem => gem.icon === iconName);
+  const gem = GEM_CONFIG.find((gem) => gem.icon === iconName);
   return gem?.id;
 }
 
@@ -115,14 +115,14 @@ export function getGemIcon(gemId: string): string {
  * Check if a Gem ID is known/configured
  */
 export function isKnownGem(gemId: string): boolean {
-  return GEM_CONFIG.some(gem => gem.id === gemId);
+  return GEM_CONFIG.some((gem) => gem.id === gemId);
 }
 
 /**
  * Get all known Gem icons (useful for DOM searching)
  */
 export function getAllGemIcons(): string[] {
-  return GEM_CONFIG.map(gem => gem.icon);
+  return GEM_CONFIG.map((gem) => gem.icon);
 }
 
 /**
@@ -130,7 +130,7 @@ export function getAllGemIcons(): string[] {
  */
 export function createIconToGemMap(): Record<string, string> {
   const map: Record<string, string> = {};
-  GEM_CONFIG.forEach(gem => {
+  GEM_CONFIG.forEach((gem) => {
     map[gem.icon] = gem.id;
   });
   return map;

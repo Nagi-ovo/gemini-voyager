@@ -5,6 +5,7 @@
 ## 工作原理
 
 当您添加自定义网站时：
+
 1. 扩展会请求访问该特定网站的权限
 2. 提示词管理器会被注入到该网站
 3. **仅**激活提示词管理器功能（不包括时间线、文件夹或其他功能）
@@ -20,6 +21,7 @@
 ## 支持的 URL 格式
 
 您可以输入各种格式的 URL：
+
 - `chatgpt.com`
 - `www.chatgpt.com`
 - `https://chatgpt.com`
@@ -36,6 +38,7 @@
 ## 示例
 
 您可能想要使用提示词管理器的热门 AI 聊天网站：
+
 - `chatgpt.com` - ChatGPT
 - `claude.ai` - Claude
 - `copilot.microsoft.com` - Microsoft Copilot
@@ -60,6 +63,7 @@
 ### 如何检查是否正常工作
 
 打开浏览器控制台（F12）查找：
+
 ```
 [Gemini Voyager] Checking custom websites: ...
 [Gemini Voyager] Is custom website: true
@@ -69,4 +73,3 @@
 ### 想在自定义网站上使用其他功能？
 
 目前，自定义网站上仅支持提示词管理器。其他功能（时间线、文件夹等）是专门为 Gemini 和 AI Studio 设计的，在其他网站上无法使用。
-

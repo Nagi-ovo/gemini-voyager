@@ -15,7 +15,12 @@ const distDir = path.join(repoRoot, 'dist_chrome');
 const manifestPath = path.join(distDir, 'manifest.json');
 const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gemini-voyager-chrome-'));
 
-let devProcess, chromeRunner, debugPort, reloadTimer, lastBuildTime = 0, shuttingDown = false;
+let devProcess,
+  chromeRunner,
+  debugPort,
+  reloadTimer,
+  lastBuildTime = 0,
+  shuttingDown = false;
 let devtoolsCommandId = 0;
 
 main().catch((error) => {
@@ -52,7 +57,8 @@ function startDevBuild() {
 async function launchChrome() {
   const webExt = await import('web-ext-run').then((mod) => mod.default ?? mod);
   const args = ['--no-first-run', '--no-default-browser-check'];
-  if (debugPort) args.push('--remote-debugging-address=127.0.0.1', `--remote-debugging-port=${debugPort}`);
+  if (debugPort)
+    args.push('--remote-debugging-address=127.0.0.1', `--remote-debugging-port=${debugPort}`);
   const config = {
     target: 'chromium',
     sourceDir: distDir,
@@ -76,8 +82,14 @@ function attachProcessHandlers() {
     if (reloadTimer) clearInterval(reloadTimer);
     fs.rmSync(profileDir, { recursive: true, force: true });
   };
-  process.on('SIGINT', () => { cleanup(); process.exit(0); });
-  process.on('SIGTERM', () => { cleanup(); process.exit(0); });
+  process.on('SIGINT', () => {
+    cleanup();
+    process.exit(0);
+  });
+  process.on('SIGTERM', () => {
+    cleanup();
+    process.exit(0);
+  });
   process.on('exit', cleanup);
 }
 
@@ -100,25 +112,37 @@ function startReloadWatcher() {
     const mtime = manifestMtime();
     if (mtime <= lastBuildTime) return;
     lastBuildTime = mtime;
-    try { await reloadTargetTabs(); } catch (error) { log(`Tab reload failed: ${error.message}`); }
+    try {
+      await reloadTargetTabs();
+    } catch (error) {
+      log(`Tab reload failed: ${error.message}`);
+    }
   }, BUILD_POLL_INTERVAL_MS);
 }
 
 function manifestMtime() {
-  try { return fs.statSync(manifestPath).mtimeMs; } catch { return 0; }
+  try {
+    return fs.statSync(manifestPath).mtimeMs;
+  } catch {
+    return 0;
+  }
 }
 
 async function reloadTargetTabs() {
   const targets = await fetchJson(`http://127.0.0.1:${debugPort}/json`);
   const matches = Array.isArray(targets)
-    ? targets.filter((t) => t?.type === 'page' && typeof t?.url === 'string' && t.url.startsWith(TARGET_URL))
+    ? targets.filter(
+        (t) => t?.type === 'page' && typeof t?.url === 'string' && t.url.startsWith(TARGET_URL)
+      )
     : [];
   if (matches.length === 0) return;
-  await Promise.all(matches.map((t) =>
-    t?.webSocketDebuggerUrl
-      ? sendDevtoolsCommand(t.webSocketDebuggerUrl, 'Page.reload', { ignoreCache: true })
-      : Promise.resolve()
-  ));
+  await Promise.all(
+    matches.map((t) =>
+      t?.webSocketDebuggerUrl
+        ? sendDevtoolsCommand(t.webSocketDebuggerUrl, 'Page.reload', { ignoreCache: true })
+        : Promise.resolve()
+    )
+  );
 }
 
 async function fetchJson(url) {
@@ -146,7 +170,8 @@ function sendDevtoolsCommand(url, method, params) {
 
     ws.onopen = () => ws.send(JSON.stringify({ id, method, params }));
     ws.onmessage = (event) => {
-      const payload = typeof event.data === 'string' ? event.data : event.data?.toString?.() ?? '';
+      const payload =
+        typeof event.data === 'string' ? event.data : (event.data?.toString?.() ?? '');
       if (!payload) return;
       try {
         if (JSON.parse(payload).id === id) {
@@ -169,7 +194,9 @@ function getAvailablePort() {
     server.listen(0, '127.0.0.1', () => {
       const addr = server.address();
       const port = typeof addr === 'object' && addr ? addr.port : null;
-      server.close(() => (port ? resolve(port) : reject(new Error('Unable to determine open port.'))));
+      server.close(() =>
+        port ? resolve(port) : reject(new Error('Unable to determine open port.'))
+      );
     });
   });
 }

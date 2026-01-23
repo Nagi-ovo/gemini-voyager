@@ -9,9 +9,7 @@ export function normalizeText(text: string | null | undefined): string {
   if (!text) return '';
 
   try {
-    return String(text)
-      .replace(/\s+/g, ' ')
-      .trim();
+    return String(text).replace(/\s+/g, ' ').trim();
   } catch {
     return '';
   }
@@ -32,8 +30,9 @@ export function truncateText(text: string, maxLength: number): string {
  * Extract first N lines from text
  */
 export function getFirstLines(text: string, count: number): string {
-  const lines = text.split('\n')
-    .map(line => line.trim())
+  const lines = text
+    .split('\n')
+    .map((line) => line.trim())
     .filter(Boolean);
 
   return lines.slice(0, count).join('\n');
@@ -43,6 +42,5 @@ export function getFirstLines(text: string, count: number): string {
  * Check if text is likely truncated
  */
 export function isTruncated(element: HTMLElement): boolean {
-  return element.scrollWidth > element.clientWidth ||
-         element.scrollHeight > element.clientHeight;
+  return element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
 }

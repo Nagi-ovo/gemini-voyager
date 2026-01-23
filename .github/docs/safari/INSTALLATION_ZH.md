@@ -37,6 +37,7 @@ xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini
 这会创建一个包含 Xcode 项目的 `Gemini Voyager/` 文件夹。
 
 **💡 提示：** 如果提示 `xcrun: command not found`，请先安装 Xcode Command Line Tools：
+
 ```bash
 xcode-select --install
 ```
@@ -48,6 +49,7 @@ open "Gemini Voyager/Gemini Voyager.xcodeproj"
 ```
 
 在 Xcode 中：
+
 1. 选择 **Signing & Capabilities** 标签
 2. 选择你的 Team（免费个人账号即可）
 3. 设置目标为 **My Mac**
@@ -58,6 +60,7 @@ Safari 会自动打开并加载扩展。
 ### 5. 在 Safari 中启用
 
 运行后：
+
 1. 打开 **Safari → 设置**（或偏好设置）
 2. 前往 **扩展** 标签页
 3. 勾选 **Gemini Voyager** 启用
@@ -87,6 +90,7 @@ Safari 会自动打开并加载扩展。
 ## 开发者
 
 想从源代码构建或参与开发？查看 [Safari 开发指南](../../../safari/README.md) 了解：
+
 - 从源代码构建
 - 开发工作流
 - 添加 Swift 原生代码

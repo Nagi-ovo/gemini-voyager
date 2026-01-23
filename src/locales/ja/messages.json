@@ -1,917 +1,918 @@
 {
-    "extName": {
-        "message": "Gemini Voyager",
-        "description": "Extension name"
-    },
-    "extDescription": {
-        "message": "タイムラインナビゲーション、フォルダ整理、プロンプトライブラリ、チャットのエクスポートなどで、Gemini の体験を強化します。",
-        "description": "Extension description"
-    },
-    "scrollMode": {
-        "message": "スクロールモード",
-        "description": "Scroll mode label"
-    },
-    "flow": {
-        "message": "フロー",
-        "description": "Flow mode"
-    },
-    "jump": {
-        "message": "ジャンプ",
-        "description": "Jump mode"
-    },
-    "hideOuterContainer": {
-        "message": "外側のコンテナを隠す",
-        "description": "Hide outer container label"
-    },
-    "draggableTimeline": {
-        "message": "ドラッグ可能なタイムライン",
-        "description": "Draggable Timeline label"
-    },
-    "enableMarkerLevel": {
-        "message": "ノード階層を有効化",
-        "description": "Enable timeline node level feature"
-    },
-    "enableMarkerLevelHint": {
-        "message": "タイムラインノードを右クリックして階層を設定し、子ノードを折りたたみます",
-        "description": "Node level feature hint"
-    },
-    "experimentalLabel": {
-        "message": "実験的",
-        "description": "Experimental feature label"
-    },
-    "resetPosition": {
-        "message": "位置をリセット",
-        "description": "Reset Position button"
-    },
-    "resetTimelinePosition": {
-        "message": "タイムラインの位置をリセット",
-        "description": "Reset timeline position button in timeline options"
-    },
-    "language": {
-        "message": "言語",
-        "description": "Language label"
-    },
-    "pm_title": {
-        "message": "Gemini Voyager",
-        "description": "Prompt Manager title"
-    },
-    "pm_add": {
-        "message": "追加",
-        "description": "Add prompt button"
-    },
-    "pm_search_placeholder": {
-        "message": "プロンプトまたはタグを検索",
-        "description": "Search placeholder"
-    },
-    "pm_import": {
-        "message": "インポート",
-        "description": "Import button"
-    },
-    "pm_export": {
-        "message": "エクスポート",
-        "description": "Export button"
-    },
-    "pm_prompt_placeholder": {
-        "message": "プロンプトのテキスト",
-        "description": "Prompt textarea placeholder"
-    },
-    "pm_tags_placeholder": {
-        "message": "タグ (カンマ区切り)",
-        "description": "Tags input placeholder"
-    },
-    "pm_save": {
-        "message": "保存",
-        "description": "Save prompt"
-    },
-    "pm_cancel": {
-        "message": "キャンセル",
-        "description": "Cancel"
-    },
-    "pm_all_tags": {
-        "message": "すべて",
-        "description": "All tags chip"
-    },
-    "pm_empty": {
-        "message": "まだプロンプトがありません",
-        "description": "Empty state"
-    },
-    "pm_copy": {
-        "message": "コピー",
-        "description": "Copy prompt"
-    },
-    "pm_copied": {
-        "message": "コピーしました",
-        "description": "Copied notice"
-    },
-    "pm_delete": {
-        "message": "削除",
-        "description": "Delete prompt"
-    },
-    "pm_delete_confirm": {
-        "message": "このプロンプトを削除しますか？",
-        "description": "Delete confirm"
-    },
-    "pm_lock": {
-        "message": "位置を固定",
-        "description": "Lock panel position"
-    },
-    "pm_unlock": {
-        "message": "位置固定を解除",
-        "description": "Unlock panel position"
-    },
-    "pm_import_invalid": {
-        "message": "無効なファイル形式です",
-        "description": "Import invalid"
-    },
-    "pm_import_success": {
-        "message": "{count} 件のプロンプトをインポートしました",
-        "description": "Import success"
-    },
-    "pm_duplicate": {
-        "message": "プロンプトを複製",
-        "description": "Duplicate on add"
-    },
-    "pm_deleted": {
-        "message": "削除しました",
-        "description": "Deleted notice"
-    },
-    "pm_edit": {
-        "message": "編集",
-        "description": "Edit prompt"
-    },
-    "pm_expand": {
-        "message": "展開",
-        "description": "Expand prompt text"
-    },
-    "pm_collapse": {
-        "message": "折りたたむ",
-        "description": "Collapse prompt text"
-    },
-    "pm_saved": {
-        "message": "保存しました",
-        "description": "Saved notice"
-    },
-    "pm_settings": {
-        "message": "設定",
-        "description": "Settings button"
-    },
-    "pm_settings_tooltip": {
-        "message": "拡張機能の設定を開く",
-        "description": "Settings button tooltip"
-    },
-    "pm_settings_fallback": {
-        "message": "ブラウザツールバーの拡張機能アイコンをクリックして設定を開いてください",
-        "description": "Settings open failed message"
-    },
-    "pm_backup": {
-        "message": "ローカルバックアップ",
-        "description": "Local backup button"
-    },
-    "pm_backup_tooltip": {
-        "message": "プロンプトとフォルダをタイムスタンプ付きフォルダにバックアップ",
-        "description": "Backup button tooltip"
-    },
-    "pm_backup_cancelled": {
-        "message": "バックアップをキャンセルしました",
-        "description": "Backup cancelled hint"
-    },
-    "pm_backup_error": {
-        "message": "✗ バックアップに失敗しました",
-        "description": "Backup failed hint"
-    },
-    "pm_backup_hint_options": {
-        "message": "この機能は Gemini ページのプロンプトマネージャーに統合されています。",
-        "description": "Backup hint in options page"
-    },
-    "pm_backup_step1": {
-        "message": "Gemini のページ (gemini.google.com) を開きます",
-        "description": "Backup step 1"
-    },
-    "pm_backup_step2": {
-        "message": "右下の拡張機能アイコンをクリックしてプロンプトマネージャーを開きます",
-        "description": "Backup step 2"
-    },
-    "pm_backup_step3": {
-        "message": "「💾 ローカルバックアップ」ボタンをクリックし、バックアップ先フォルダを選択します",
-        "description": "Backup step 3"
-    },
-    "pm_backup_note": {
-        "message": "すべてのプロンプトとフォルダが含まれ、タイムスタンプ付きのフォルダに保存されます (形式: backup-YYYYMMDD-HHMMSS)",
-        "description": "Backup feature note"
-    },
-    "extensionVersion": {
-        "message": "バージョン",
-        "description": "Extension version label"
-    },
-    "newVersionAvailable": {
-        "message": "新しいバージョンが利用可能です",
-        "description": "Update reminder title"
-    },
-    "currentVersionLabel": {
-        "message": "現在のバージョン",
-        "description": "Label for current version number"
-    },
-    "latestVersionLabel": {
-        "message": "最新バージョン",
-        "description": "Label for latest version number"
-    },
-    "updateNow": {
-        "message": "更新する",
-        "description": "CTA to update to latest version"
-    },
-        "starProject": {
-          "message": "応援する ⭐",
-          "description": "Github callout"
-        },
-        "officialDocs": {
-          "message": "公式ドキュメント",
-          "description": "Official docs link"
-        },
-        "exportChatJson": {        "message": "チャット履歴をエクスポート",
-        "description": "Tooltip for export button"
-    },
-    "folder_title": {
-        "message": "フォルダ",
-        "description": "Folder section title"
-    },
-    "folder_create": {
-        "message": "フォルダを作成",
-        "description": "Create folder button tooltip"
-    },
-    "folder_name_prompt": {
-        "message": "フォルダ名を入力:",
-        "description": "Create folder name prompt"
-    },
-    "folder_rename_prompt": {
-        "message": "新しい名前を入力:",
-        "description": "Rename folder prompt"
-    },
-    "folder_delete_confirm": {
-        "message": "このフォルダとその中身をすべて削除しますか？",
-        "description": "Delete folder confirmation"
-    },
-    "folder_create_subfolder": {
-        "message": "サブフォルダを作成",
-        "description": "Create subfolder menu item"
-    },
-    "folder_rename": {
-        "message": "名前を変更",
-        "description": "Rename folder menu item"
-    },
-    "folder_delete": {
-        "message": "削除",
-        "description": "Delete folder menu item"
-    },
-    "folder_pin": {
-        "message": "フォルダをピン留め",
-        "description": "Pin folder menu item"
-    },
-    "folder_unpin": {
-        "message": "ピン留めを解除",
-        "description": "Unpin folder menu item"
-    },
-    "folder_remove_conversation": {
-        "message": "フォルダから削除",
-        "description": "Remove conversation button tooltip"
-    },
-    "folder_remove_conversation_confirm": {
-        "message": "「{title}」をこのフォルダから削除しますか？",
-        "description": "Remove conversation confirmation"
-    },
-    "conversation_more": {
-        "message": "その他のオプション",
-        "description": "Conversation more options button tooltip"
-    },
-    "conversation_move_to_folder": {
-        "message": "フォルダへ移動",
-        "description": "Move conversation to folder menu item"
-    },
-    "conversation_move_to_folder_title": {
-        "message": "フォルダへ移動",
-        "description": "Move conversation to folder dialog title"
-    },
-    "chatWidth": {
-        "message": "チャットの幅",
-        "description": "Chat width adjustment label"
-    },
-    "chatWidthNarrow": {
-        "message": "狭い",
-        "description": "Narrow chat width label"
-    },
-    "chatWidthWide": {
-        "message": "広い",
-        "description": "Wide chat width label"
-    },
-    "sidebarWidth": {
-        "message": "サイドバーの幅",
-        "description": "Sidebar width adjustment label"
-    },
-    "sidebarWidthNarrow": {
-        "message": "狭い",
-        "description": "Narrow sidebar width label"
-    },
-    "sidebarWidthWide": {
-        "message": "広い",
-        "description": "Wide sidebar width label"
-    },
-    "formula_copied": {
-        "message": "✓ 数式をコピーしました",
-        "description": "Formula copied success message"
-    },
-    "formula_copy_failed": {
-        "message": "✗ コピーに失敗しました",
-        "description": "Formula copy failed message"
-    },
-    "formulaCopyFormat": {
-        "message": "数式コピー形式",
-        "description": "Formula copy format setting label"
-    },
-    "formulaCopyFormatLatex": {
-        "message": "LaTeX",
-        "description": "LaTeX format option"
-    },
-    "formulaCopyFormatUnicodeMath": {
-        "message": "UnicodeMath (Word)",
-        "description": "UnicodeMath format option for Word"
-    },
-    "formulaCopyFormatHint": {
-        "message": "数式をクリックしてコピーする際の形式を選択します",
-        "description": "Formula copy format hint"
-    },
-    "formulaCopyFormatNoDollar": {
-        "message": "LaTeX (ドル記号なし)",
-        "description": "LaTeX format option without dollar signs"
-    },
-    "folder_export": {
-        "message": "フォルダをエクスポート",
-        "description": "Export folders button tooltip"
-    },
-    "folder_import": {
-        "message": "フォルダをインポート",
-        "description": "Import folders button tooltip"
-    },
-    "folder_import_title": {
-        "message": "フォルダ設定のインポート",
-        "description": "Import dialog title"
-    },
-    "folder_import_strategy": {
-        "message": "インポート方法:",
-        "description": "Import strategy label"
-    },
-    "folder_import_merge": {
-        "message": "既存のフォルダと統合する",
-        "description": "Merge import strategy"
-    },
-    "folder_import_overwrite": {
-        "message": "既存のフォルダを上書きする",
-        "description": "Overwrite import strategy"
-    },
-    "folder_import_select_file": {
-        "message": "インポートする JSON ファイルを選択",
-        "description": "Import file selection prompt"
-    },
-    "folder_import_success": {
-        "message": "✓ フォルダ {folders} 件、会話 {conversations} 件をインポートしました",
-        "description": "Import success message"
-    },
-    "folder_import_success_skipped": {
-        "message": "✓ フォルダ {folders} 件、会話 {conversations} 件をインポートしました (重複 {skipped} 件をスキップ)",
-        "description": "Import success with skipped message"
-    },
-    "folder_import_error": {
-        "message": "✗ インポート失敗: {error}",
-        "description": "Import error message"
-    },
-    "folder_export_success": {
-        "message": "✓ フォルダをエクスポートしました",
-        "description": "Export success message"
-    },
-    "folder_import_invalid_format": {
-        "message": "無効なファイル形式です。正しいフォルダ設定ファイルを選択してください。",
-        "description": "Invalid format error"
-    },
-    "folder_import_confirm_overwrite": {
-        "message": "既存のフォルダ構造がすべて置換されます。バックアップが作成されます。続行しますか？",
-        "description": "Overwrite confirmation"
-    },
-    "export_dialog_title": {
-        "message": "会話のエクスポート",
-        "description": "Export dialog title"
-    },
-    "export_dialog_select": {
-        "message": "エクスポート形式を選択:",
-        "description": "Export format selection label"
-    },
-    "export_dialog_warning": {
-        "message": "⚠️ Gemini は古いメッセージを後から読み込むため、エクスポートする前にタイムラインを使って会話の最初のメッセージまでジャンプしてください。そうしないと、エクスポートが不完全になる可能性があります。",
-        "description": "Warning about lazy loading affecting export completeness"
-    },
-    "editInputWidth": {
-        "message": "入力欄の幅",
-        "description": "Edit input width adjustment label"
-    },
-    "editInputWidthNarrow": {
-        "message": "狭い",
-        "description": "Narrow edit input width label"
-    },
-    "editInputWidthWide": {
-        "message": "広い",
-        "description": "Wide edit input width label"
-    },
-    "timelineOptions": {
-        "message": "タイムラインオプション",
-        "description": "Timeline options section label"
-    },
-    "folderOptions": {
-        "message": "フォルダオプション",
-        "description": "Folder options section label"
-    },
-    "enableFolderFeature": {
-        "message": "フォルダ機能を有効化",
-        "description": "Enable or disable the folder feature"
-    },
-    "hideArchivedConversations": {
-        "message": "フォルダに入れた会話をメインリストから隠す",
-        "description": "Hide conversations that are in folders from the main list"
-    },
-    "conversation_star": {
-        "message": "会話にスターを付ける",
-        "description": "Star conversation button tooltip"
-    },
-    "conversation_unstar": {
-        "message": "スターを外す",
-        "description": "Unstar conversation button tooltip"
-    },
-    "conversation_untitled": {
-        "message": "無題",
-        "description": "Fallback title for conversations without a name"
-    },
-    "geminiOnlyNotice": {
-        "message": "デフォルトでは Gemini（Enterprise 版含む）と AI Studio で動作します。他のサイトでプロンプトマネージャーを使用するには、以下で追加してください。",
-        "description": "Notice that defaults are limited to Gemini/AI Studio"
-    },
-    "folderManager_dataLossWarning": {
-        "message": "⚠️ 警告: フォルダデータの読み込みに失敗しました。データが破損している可能性があります。ブラウザのコンソールで詳細を確認し、可能であればバックアップから復元してください。",
-        "description": "Warning shown when folder data fails to load"
-    },
-    "backupOptions": {
-        "message": "自動バックアップ",
-        "description": "Backup options section label"
-    },
-    "backupEnabled": {
-        "message": "自動バックアップを有効化",
-        "description": "Enable auto backup toggle"
-    },
-    "backupNow": {
-        "message": "今すぐバックアップ",
-        "description": "Backup now button"
-    },
-    "backupSelectFolder": {
-        "message": "バックアップ先を選択",
-        "description": "Select backup folder button"
-    },
-    "backupFolderSelected": {
-        "message": "バックアップフォルダ: {folder}",
-        "description": "Shows selected backup folder"
-    },
-    "backupIncludePrompts": {
-        "message": "プロンプトを含める",
-        "description": "Include prompts in backup toggle"
-    },
-    "backupIncludeFolders": {
-        "message": "フォルダを含める",
-        "description": "Include folders in backup toggle"
-    },
-    "backupIntervalLabel": {
-        "message": "バックアップ間隔",
-        "description": "Backup interval label"
-    },
-    "backupIntervalManual": {
-        "message": "手動のみ",
-        "description": "Manual backup mode"
-    },
-    "backupIntervalDaily": {
-        "message": "毎日",
-        "description": "Daily backup interval"
-    },
-    "backupIntervalWeekly": {
-        "message": "毎週 (7日ごと)",
-        "description": "Weekly backup interval"
-    },
-    "backupLastBackup": {
-        "message": "前回のバックアップ: {time}",
-        "description": "Last backup timestamp"
-    },
-    "backupNever": {
-        "message": "なし",
-        "description": "Never backed up"
-    },
-    "backupSuccess": {
-        "message": "✓ バックアップ完了: プロンプト {prompts} 件, フォルダ {folders} 件, 会話 {conversations} 件",
-        "description": "Backup success message"
-    },
-    "backupError": {
-        "message": "✗ バックアップ失敗: {error}",
-        "description": "Backup error message"
-    },
-    "backupNotSupported": {
-        "message": "⚠️ 自動バックアップには File System Access API に対応した最新のブラウザが必要です",
-        "description": "Browser not supported message"
-    },
-    "backupSelectFolderFirst": {
-        "message": "先にバックアップフォルダを選択してください",
-        "description": "No folder selected warning"
-    },
-    "backupUserCancelled": {
-        "message": "バックアップをキャンセルしました",
-        "description": "User cancelled folder selection"
-    },
-    "backupConfigSaved": {
-        "message": "✓ バックアップ設定を保存しました",
-        "description": "Config saved message"
-    },
-    "backupPermissionDenied": {
-        "message": "⚠️ このディレクトリにはアクセスできません。別の場所（ドキュメント、ダウンロード、デスクトップなど）を選択してください。",
-        "description": "Permission denied for restricted directory"
-    },
-    "backupConfigureInOptions": {
-        "message": "バックアップの設定はオプションページで行う必要があります。下のボタンをクリックして開いてください（拡張機能アイコン横の3点リーダ → オプション）。",
-        "description": "Backup configure in options page explanation"
-    },
-    "openOptionsPage": {
-        "message": "オプションページを開く",
-        "description": "Open options page button"
-    },
-    "optionsPageSubtitle": {
-        "message": "拡張機能のオプション",
-        "description": "Options page subtitle"
-    },
-    "optionsComingSoon": {
-        "message": "さらに多くのオプションを近日追加予定です...",
-        "description": "Options page placeholder text"
-    },
-    "backupDataAccessNotice": {
-        "message": "データアクセスの制限",
-        "description": "Backup data access limitation title"
-    },
-    "backupDataAccessHint": {
-        "message": "ブラウザのセキュリティ制限により、このオプションページからは Gemini ページ上のプロンプトやフォルダデータに直接アクセスできません。手動バックアップには、Gemini ページ上のプロンプトマネージャーとフォルダエクスポート機能をご利用ください。",
-        "description": "Backup data access limitation explanation"
-    },
-    "promptManagerOptions": {
-        "message": "プロンプトマネージャー",
-        "description": "Prompt Manager options section label"
-    },
-    "hidePromptManager": {
-        "message": "プロンプトマネージャーを隠す",
-        "description": "Hide the prompt manager floating ball"
-    },
-    "hidePromptManagerHint": {
-        "message": "ページ上のプロンプトマネージャーのフローティングアイコンを非表示にします",
-        "description": "Hint for hiding prompt manager feature"
-    },
-    "customWebsites": {
-        "message": "カスタムウェブサイト",
-        "description": "Custom websites for prompt manager"
-    },
-    "customWebsitesPlaceholder": {
-        "message": "ウェブサイトの URL を入力 (例: chatgpt.com)",
-        "description": "Custom websites input placeholder"
-    },
-    "customWebsitesHint": {
-        "message": "プロンプトマネージャーを使用したいウェブサイトを追加します。これらのサイトではプロンプトマネージャーのみが有効になります。",
-        "description": "Custom websites hint"
-    },
-    "addWebsite": {
-        "message": "ウェブサイトを追加",
-        "description": "Add website button"
-    },
-    "removeWebsite": {
-        "message": "削除",
-        "description": "Remove website button"
-    },
-    "invalidUrl": {
-        "message": "無効な URL 形式です",
-        "description": "Invalid URL error message"
-    },
-    "websiteAdded": {
-        "message": "ウェブサイトを追加しました",
-        "description": "Website added success message"
-    },
-    "websiteRemoved": {
-        "message": "ウェブサイトを削除しました",
-        "description": "Website removed success message"
-    },
-    "permissionDenied": {
-        "message": "権限が拒否されました。このウェブサイトへのアクセスを許可してください。",
-        "description": "Permission denied error message"
-    },
-    "permissionRequestFailed": {
-        "message": "権限のリクエストに失敗しました。もう一度試すか、拡張機能の設定でアクセスを許可してください。",
-        "description": "Permission request failure message"
-    },
-    "customWebsitesNote": {
-        "message": "ヒント: サイトを追加するとアクセスの許可を求められます。許可した後、プロンプトマネージャーを開始するにはそのサイトを再読み込みしてください。",
-        "description": "Custom websites reload/permission note"
-    },
-    "starredHistory": {
-        "message": "スター付き履歴",
-        "description": "Starred history title"
-    },
-    "viewStarredHistory": {
-        "message": "スター付き履歴を表示",
-        "description": "View starred history button"
-    },
-    "noStarredMessages": {
-        "message": "スター付きメッセージはまだありません",
-        "description": "No starred messages placeholder"
-    },
-    "removeFromStarred": {
-        "message": "スターを外す",
-        "description": "Remove from starred tooltip"
-    },
-    "justNow": {
-        "message": "たった今",
-        "description": "Just now time label"
-    },
-    "hoursAgo": {
-        "message": "時間前",
-        "description": "Hours ago label"
-    },
-    "yesterday": {
-        "message": "昨日",
-        "description": "Yesterday date label"
-    },
-    "daysAgo": {
-        "message": "日前",
-        "description": "Days ago label"
-    },
-    "loading": {
-        "message": "読み込み中...",
-        "description": "Loading message"
-    },
-    "keyboardShortcuts": {
-        "message": "キーボードショートカット",
-        "description": "Keyboard shortcuts section title"
-    },
-    "enableShortcuts": {
-        "message": "キーボードショートカットを有効化",
-        "description": "Enable shortcuts toggle label"
-    },
-    "previousNode": {
-        "message": "前のノードへ",
-        "description": "Previous timeline node shortcut label"
-    },
-    "nextNode": {
-        "message": "次のノードへ",
-        "description": "Next timeline node shortcut label"
-    },
-    "shortcutKey": {
-        "message": "キー",
-        "description": "Shortcut key label"
-    },
-    "shortcutModifiers": {
-        "message": "修飾キー",
-        "description": "Shortcut modifiers label"
-    },
-    "resetShortcuts": {
-        "message": "デフォルトに戻す",
-        "description": "Reset shortcuts button"
-    },
-    "shortcutsResetSuccess": {
-        "message": "ショートカットをデフォルトに戻しました",
-        "description": "Shortcuts reset success message"
-    },
-    "shortcutsDescription": {
-        "message": "キーボードショートカットを使ってタイムラインを移動します",
-        "description": "Shortcuts description"
-    },
-    "modifierNone": {
-        "message": "なし",
-        "description": "No modifier key"
-    },
-    "modifierAlt": {
-        "message": "Alt",
-        "description": "Alt modifier key"
-    },
-    "modifierCtrl": {
-        "message": "Ctrl",
-        "description": "Ctrl modifier key"
-    },
-    "modifierShift": {
-        "message": "Shift",
-        "description": "Shift modifier key"
-    },
-    "modifierMeta": {
-        "message": "Cmd/Win",
-        "description": "Meta/Command/Windows modifier key"
-    },
-    "cloudSync": {
-        "message": "クラウド同期",
-        "description": "Cloud sync section title"
-    },
-    "cloudSyncDescription": {
-        "message": "フォルダとプロンプトを Google ドライブに同期します",
-        "description": "Cloud sync description"
-    },
-    "syncModeDisabled": {
-        "message": "無効",
-        "description": "Sync mode disabled option"
-    },
-    "syncModeManual": {
-        "message": "手動",
-        "description": "Sync mode manual option"
-    },
-    "syncNow": {
-        "message": "今すぐ同期",
-        "description": "Sync now button"
-    },
-    "lastSynced": {
-        "message": "最終同期: {time}",
-        "description": "Last sync timestamp"
-    },
-    "neverSynced": {
-        "message": "未同期",
-        "description": "Never synced message"
-    },
-    "lastUploaded": {
-        "message": "アップロード: {time}",
-        "description": "Last upload timestamp"
-    },
-    "neverUploaded": {
-        "message": "未アップロード",
-        "description": "Never uploaded message"
-    },
-    "syncSuccess": {
-        "message": "✓ 同期に成功しました",
-        "description": "Sync success message"
-    },
-    "syncError": {
-        "message": "✗ 同期に失敗しました: {error}",
-        "description": "Sync error message"
-    },
-    "syncInProgress": {
-        "message": "同期中...",
-        "description": "Sync in progress message"
-    },
-    "syncUpload": {
-        "message": "ドライブへ保存",
-        "description": "Upload button label"
-    },
-    "syncMerge": {
-        "message": "ドライブからマージ",
-        "description": "Merge button label"
-    },
-    "syncMode": {
-        "message": "同期モード",
-        "description": "Sync mode label"
-    },
-    "minutesAgo": {
-        "message": "分前",
-        "description": "Minutes ago label"
-    },
-    "syncNoData": {
-        "message": "ドライブに同期データが見つかりません",
-        "description": "Error message when no data is found in Drive"
-    },
-    "syncUploadFailed": {
-        "message": "アップロードに失敗しました",
-        "description": "Error message when upload fails"
-    },
-    "syncDownloadFailed": {
-        "message": "ダウンロードに失敗しました",
-        "description": "Error message when download fails"
-    },
-    "syncAuthFailed": {
-        "message": "認証に失敗しました",
-        "description": "Error message when authentication fails"
-    },
-    "signOut": {
-        "message": "サインアウト",
-        "description": "Sign out button"
-    },
-    "signInWithGoogle": {
-        "message": "Google でサインイン",
-        "description": "Sign in with Google button"
-    },
-    "nanobananaOptions": {
-        "message": "NanoBanana オプション",
-        "description": "NanoBanana options section label"
-    },
-    "enableNanobananaWatermarkRemover": {
-        "message": "NanoBanana 透かし除去",
-        "description": "Enable automatic watermark removal for NanoBanana images"
-    },
-    "nanobananaWatermarkRemoverHint": {
-        "message": "生成された画像から目に見える Gemini の透かしを自動的に除去します",
-        "description": "Watermark remover feature hint"
-    },
-    "nanobananaDownloadTooltip": {
-        "message": "透かしなし画像をダウンロード (NanoBanana)",
-        "description": "Download button tooltip"
-    },
-    "deepResearchDownload": {
-        "message": "思考内容をダウンロード",
-        "description": "Deep Research download button text"
-    },
-    "deepResearchDownloadTooltip": {
-        "message": "思考内容をMarkdown形式でダウンロード",
-        "description": "Deep Research download button tooltip"
-    },
-    "folder_uncategorized": {
-        "message": "未分類",
-        "description": "Label for root-level conversations not in any folder"
-    },
-    "timelineLevelTitle": {
-        "message": "ノード階層",
-        "description": "Title for timeline node level context menu"
-    },
-    "timelineLevel1": {
-        "message": "レベル 1",
-        "description": "Timeline node level 1 option"
-    },
-    "timelineLevel2": {
-        "message": "レベル 2",
-        "description": "Timeline node level 2 option"
-    },
-    "timelineLevel3": {
-        "message": "レベル 3",
-        "description": "Timeline node level 3 option"
-    },
-    "timelineCollapse": {
-        "message": "折りたたむ",
-        "description": "Collapse children"
-    },
-    "timelineExpand": {
-        "message": "展開",
-        "description": "Expand children"
-    },
-    "quoteReply": {
-        "message": "引用返信",
-        "description": "Quote reply button text"
-    },
-    "inputCollapseOptions": {
-        "message": "入力欄の自動非表示",
-        "description": "Input collapse options section label"
-    },
-    "enableInputCollapse": {
-        "message": "入力欄の自動非表示を有効化",
-        "description": "Enable input collapse toggle label"
-    },
-    "enableInputCollapseHint": {
-        "message": "空の時に入力欄を折りたたみ、広い読書スペースを確保します",
-        "description": "Input collapse feature hint"
-    },
-    "inputCollapsePlaceholder": {
-        "message": "Gemini にメッセージを送信",
-        "description": "Placeholder text shown in collapsed input"
-    },
-    "batch_delete_confirm": {
-        "message": "{count} 件の会話を削除してもよろしいですか？この操作は取り消せません。",
-        "description": "Batch delete confirmation message"
-    },
-    "batch_delete_in_progress": {
-        "message": "削除中... ({current}/{total})",
-        "description": "Batch delete progress message"
-    },
-    "batch_delete_success": {
-        "message": "✓ {count} 件の会話を削除しました",
-        "description": "Batch delete success message"
-    },
-    "batch_delete_partial": {
-        "message": "削除完了: 成功 {success} 件, 失敗 {failed} 件",
-        "description": "Batch delete partial success message"
-    },
-    "batch_delete_limit_reached": {
-        "message": "一度に選択できる会話は最大 {max} 件です",
-        "description": "Batch delete limit warning"
-    },
-    "batch_delete_button": {
-        "message": "選択した項目を削除",
-        "description": "Batch delete button tooltip in multi-select mode"
-    },
-    "batch_delete_match_patterns": {
-        "message": "delete,confirm,yes,ok,remove,削除,確認,確定,はい",
-        "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
-    },
-    "generalOptions": {
-        "message": "一般オプション",
-        "description": "General options section label"
-    },
-    "enableTabTitleUpdate": {
-        "message": "タブタイトルの同期",
-        "description": "Enable tab title sync toggle label"
-    },
-    "enableTabTitleUpdateHint": {
-        "message": "ブラウザのタブタイトルを、現在の会話タイトルと自動的に同期します",
-        "description": "Tab title sync feature hint"
-    },
-    "enableMermaidRendering": {
-        "message": "Mermaid 図表のレンダリング",
-        "description": "Enable Mermaid diagram rendering toggle label"
-    },
-    "enableMermaidRenderingHint": {
-        "message": "コードブロック内の Mermaid ダイアグラムを自動的にレンダリングします",
-        "description": "Mermaid rendering feature hint"
-    }
+  "extName": {
+    "message": "Gemini Voyager",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "タイムラインナビゲーション、フォルダ整理、プロンプトライブラリ、チャットのエクスポートなどで、Gemini の体験を強化します。",
+    "description": "Extension description"
+  },
+  "scrollMode": {
+    "message": "スクロールモード",
+    "description": "Scroll mode label"
+  },
+  "flow": {
+    "message": "フロー",
+    "description": "Flow mode"
+  },
+  "jump": {
+    "message": "ジャンプ",
+    "description": "Jump mode"
+  },
+  "hideOuterContainer": {
+    "message": "外側のコンテナを隠す",
+    "description": "Hide outer container label"
+  },
+  "draggableTimeline": {
+    "message": "ドラッグ可能なタイムライン",
+    "description": "Draggable Timeline label"
+  },
+  "enableMarkerLevel": {
+    "message": "ノード階層を有効化",
+    "description": "Enable timeline node level feature"
+  },
+  "enableMarkerLevelHint": {
+    "message": "タイムラインノードを右クリックして階層を設定し、子ノードを折りたたみます",
+    "description": "Node level feature hint"
+  },
+  "experimentalLabel": {
+    "message": "実験的",
+    "description": "Experimental feature label"
+  },
+  "resetPosition": {
+    "message": "位置をリセット",
+    "description": "Reset Position button"
+  },
+  "resetTimelinePosition": {
+    "message": "タイムラインの位置をリセット",
+    "description": "Reset timeline position button in timeline options"
+  },
+  "language": {
+    "message": "言語",
+    "description": "Language label"
+  },
+  "pm_title": {
+    "message": "Gemini Voyager",
+    "description": "Prompt Manager title"
+  },
+  "pm_add": {
+    "message": "追加",
+    "description": "Add prompt button"
+  },
+  "pm_search_placeholder": {
+    "message": "プロンプトまたはタグを検索",
+    "description": "Search placeholder"
+  },
+  "pm_import": {
+    "message": "インポート",
+    "description": "Import button"
+  },
+  "pm_export": {
+    "message": "エクスポート",
+    "description": "Export button"
+  },
+  "pm_prompt_placeholder": {
+    "message": "プロンプトのテキスト",
+    "description": "Prompt textarea placeholder"
+  },
+  "pm_tags_placeholder": {
+    "message": "タグ (カンマ区切り)",
+    "description": "Tags input placeholder"
+  },
+  "pm_save": {
+    "message": "保存",
+    "description": "Save prompt"
+  },
+  "pm_cancel": {
+    "message": "キャンセル",
+    "description": "Cancel"
+  },
+  "pm_all_tags": {
+    "message": "すべて",
+    "description": "All tags chip"
+  },
+  "pm_empty": {
+    "message": "まだプロンプトがありません",
+    "description": "Empty state"
+  },
+  "pm_copy": {
+    "message": "コピー",
+    "description": "Copy prompt"
+  },
+  "pm_copied": {
+    "message": "コピーしました",
+    "description": "Copied notice"
+  },
+  "pm_delete": {
+    "message": "削除",
+    "description": "Delete prompt"
+  },
+  "pm_delete_confirm": {
+    "message": "このプロンプトを削除しますか？",
+    "description": "Delete confirm"
+  },
+  "pm_lock": {
+    "message": "位置を固定",
+    "description": "Lock panel position"
+  },
+  "pm_unlock": {
+    "message": "位置固定を解除",
+    "description": "Unlock panel position"
+  },
+  "pm_import_invalid": {
+    "message": "無効なファイル形式です",
+    "description": "Import invalid"
+  },
+  "pm_import_success": {
+    "message": "{count} 件のプロンプトをインポートしました",
+    "description": "Import success"
+  },
+  "pm_duplicate": {
+    "message": "プロンプトを複製",
+    "description": "Duplicate on add"
+  },
+  "pm_deleted": {
+    "message": "削除しました",
+    "description": "Deleted notice"
+  },
+  "pm_edit": {
+    "message": "編集",
+    "description": "Edit prompt"
+  },
+  "pm_expand": {
+    "message": "展開",
+    "description": "Expand prompt text"
+  },
+  "pm_collapse": {
+    "message": "折りたたむ",
+    "description": "Collapse prompt text"
+  },
+  "pm_saved": {
+    "message": "保存しました",
+    "description": "Saved notice"
+  },
+  "pm_settings": {
+    "message": "設定",
+    "description": "Settings button"
+  },
+  "pm_settings_tooltip": {
+    "message": "拡張機能の設定を開く",
+    "description": "Settings button tooltip"
+  },
+  "pm_settings_fallback": {
+    "message": "ブラウザツールバーの拡張機能アイコンをクリックして設定を開いてください",
+    "description": "Settings open failed message"
+  },
+  "pm_backup": {
+    "message": "ローカルバックアップ",
+    "description": "Local backup button"
+  },
+  "pm_backup_tooltip": {
+    "message": "プロンプトとフォルダをタイムスタンプ付きフォルダにバックアップ",
+    "description": "Backup button tooltip"
+  },
+  "pm_backup_cancelled": {
+    "message": "バックアップをキャンセルしました",
+    "description": "Backup cancelled hint"
+  },
+  "pm_backup_error": {
+    "message": "✗ バックアップに失敗しました",
+    "description": "Backup failed hint"
+  },
+  "pm_backup_hint_options": {
+    "message": "この機能は Gemini ページのプロンプトマネージャーに統合されています。",
+    "description": "Backup hint in options page"
+  },
+  "pm_backup_step1": {
+    "message": "Gemini のページ (gemini.google.com) を開きます",
+    "description": "Backup step 1"
+  },
+  "pm_backup_step2": {
+    "message": "右下の拡張機能アイコンをクリックしてプロンプトマネージャーを開きます",
+    "description": "Backup step 2"
+  },
+  "pm_backup_step3": {
+    "message": "「💾 ローカルバックアップ」ボタンをクリックし、バックアップ先フォルダを選択します",
+    "description": "Backup step 3"
+  },
+  "pm_backup_note": {
+    "message": "すべてのプロンプトとフォルダが含まれ、タイムスタンプ付きのフォルダに保存されます (形式: backup-YYYYMMDD-HHMMSS)",
+    "description": "Backup feature note"
+  },
+  "extensionVersion": {
+    "message": "バージョン",
+    "description": "Extension version label"
+  },
+  "newVersionAvailable": {
+    "message": "新しいバージョンが利用可能です",
+    "description": "Update reminder title"
+  },
+  "currentVersionLabel": {
+    "message": "現在のバージョン",
+    "description": "Label for current version number"
+  },
+  "latestVersionLabel": {
+    "message": "最新バージョン",
+    "description": "Label for latest version number"
+  },
+  "updateNow": {
+    "message": "更新する",
+    "description": "CTA to update to latest version"
+  },
+  "starProject": {
+    "message": "応援する ⭐",
+    "description": "Github callout"
+  },
+  "officialDocs": {
+    "message": "公式ドキュメント",
+    "description": "Official docs link"
+  },
+  "exportChatJson": {
+    "message": "チャット履歴をエクスポート",
+    "description": "Tooltip for export button"
+  },
+  "folder_title": {
+    "message": "フォルダ",
+    "description": "Folder section title"
+  },
+  "folder_create": {
+    "message": "フォルダを作成",
+    "description": "Create folder button tooltip"
+  },
+  "folder_name_prompt": {
+    "message": "フォルダ名を入力:",
+    "description": "Create folder name prompt"
+  },
+  "folder_rename_prompt": {
+    "message": "新しい名前を入力:",
+    "description": "Rename folder prompt"
+  },
+  "folder_delete_confirm": {
+    "message": "このフォルダとその中身をすべて削除しますか？",
+    "description": "Delete folder confirmation"
+  },
+  "folder_create_subfolder": {
+    "message": "サブフォルダを作成",
+    "description": "Create subfolder menu item"
+  },
+  "folder_rename": {
+    "message": "名前を変更",
+    "description": "Rename folder menu item"
+  },
+  "folder_delete": {
+    "message": "削除",
+    "description": "Delete folder menu item"
+  },
+  "folder_pin": {
+    "message": "フォルダをピン留め",
+    "description": "Pin folder menu item"
+  },
+  "folder_unpin": {
+    "message": "ピン留めを解除",
+    "description": "Unpin folder menu item"
+  },
+  "folder_remove_conversation": {
+    "message": "フォルダから削除",
+    "description": "Remove conversation button tooltip"
+  },
+  "folder_remove_conversation_confirm": {
+    "message": "「{title}」をこのフォルダから削除しますか？",
+    "description": "Remove conversation confirmation"
+  },
+  "conversation_more": {
+    "message": "その他のオプション",
+    "description": "Conversation more options button tooltip"
+  },
+  "conversation_move_to_folder": {
+    "message": "フォルダへ移動",
+    "description": "Move conversation to folder menu item"
+  },
+  "conversation_move_to_folder_title": {
+    "message": "フォルダへ移動",
+    "description": "Move conversation to folder dialog title"
+  },
+  "chatWidth": {
+    "message": "チャットの幅",
+    "description": "Chat width adjustment label"
+  },
+  "chatWidthNarrow": {
+    "message": "狭い",
+    "description": "Narrow chat width label"
+  },
+  "chatWidthWide": {
+    "message": "広い",
+    "description": "Wide chat width label"
+  },
+  "sidebarWidth": {
+    "message": "サイドバーの幅",
+    "description": "Sidebar width adjustment label"
+  },
+  "sidebarWidthNarrow": {
+    "message": "狭い",
+    "description": "Narrow sidebar width label"
+  },
+  "sidebarWidthWide": {
+    "message": "広い",
+    "description": "Wide sidebar width label"
+  },
+  "formula_copied": {
+    "message": "✓ 数式をコピーしました",
+    "description": "Formula copied success message"
+  },
+  "formula_copy_failed": {
+    "message": "✗ コピーに失敗しました",
+    "description": "Formula copy failed message"
+  },
+  "formulaCopyFormat": {
+    "message": "数式コピー形式",
+    "description": "Formula copy format setting label"
+  },
+  "formulaCopyFormatLatex": {
+    "message": "LaTeX",
+    "description": "LaTeX format option"
+  },
+  "formulaCopyFormatUnicodeMath": {
+    "message": "UnicodeMath (Word)",
+    "description": "UnicodeMath format option for Word"
+  },
+  "formulaCopyFormatHint": {
+    "message": "数式をクリックしてコピーする際の形式を選択します",
+    "description": "Formula copy format hint"
+  },
+  "formulaCopyFormatNoDollar": {
+    "message": "LaTeX (ドル記号なし)",
+    "description": "LaTeX format option without dollar signs"
+  },
+  "folder_export": {
+    "message": "フォルダをエクスポート",
+    "description": "Export folders button tooltip"
+  },
+  "folder_import": {
+    "message": "フォルダをインポート",
+    "description": "Import folders button tooltip"
+  },
+  "folder_import_title": {
+    "message": "フォルダ設定のインポート",
+    "description": "Import dialog title"
+  },
+  "folder_import_strategy": {
+    "message": "インポート方法:",
+    "description": "Import strategy label"
+  },
+  "folder_import_merge": {
+    "message": "既存のフォルダと統合する",
+    "description": "Merge import strategy"
+  },
+  "folder_import_overwrite": {
+    "message": "既存のフォルダを上書きする",
+    "description": "Overwrite import strategy"
+  },
+  "folder_import_select_file": {
+    "message": "インポートする JSON ファイルを選択",
+    "description": "Import file selection prompt"
+  },
+  "folder_import_success": {
+    "message": "✓ フォルダ {folders} 件、会話 {conversations} 件をインポートしました",
+    "description": "Import success message"
+  },
+  "folder_import_success_skipped": {
+    "message": "✓ フォルダ {folders} 件、会話 {conversations} 件をインポートしました (重複 {skipped} 件をスキップ)",
+    "description": "Import success with skipped message"
+  },
+  "folder_import_error": {
+    "message": "✗ インポート失敗: {error}",
+    "description": "Import error message"
+  },
+  "folder_export_success": {
+    "message": "✓ フォルダをエクスポートしました",
+    "description": "Export success message"
+  },
+  "folder_import_invalid_format": {
+    "message": "無効なファイル形式です。正しいフォルダ設定ファイルを選択してください。",
+    "description": "Invalid format error"
+  },
+  "folder_import_confirm_overwrite": {
+    "message": "既存のフォルダ構造がすべて置換されます。バックアップが作成されます。続行しますか？",
+    "description": "Overwrite confirmation"
+  },
+  "export_dialog_title": {
+    "message": "会話のエクスポート",
+    "description": "Export dialog title"
+  },
+  "export_dialog_select": {
+    "message": "エクスポート形式を選択:",
+    "description": "Export format selection label"
+  },
+  "export_dialog_warning": {
+    "message": "⚠️ Gemini は古いメッセージを後から読み込むため、エクスポートする前にタイムラインを使って会話の最初のメッセージまでジャンプしてください。そうしないと、エクスポートが不完全になる可能性があります。",
+    "description": "Warning about lazy loading affecting export completeness"
+  },
+  "editInputWidth": {
+    "message": "入力欄の幅",
+    "description": "Edit input width adjustment label"
+  },
+  "editInputWidthNarrow": {
+    "message": "狭い",
+    "description": "Narrow edit input width label"
+  },
+  "editInputWidthWide": {
+    "message": "広い",
+    "description": "Wide edit input width label"
+  },
+  "timelineOptions": {
+    "message": "タイムラインオプション",
+    "description": "Timeline options section label"
+  },
+  "folderOptions": {
+    "message": "フォルダオプション",
+    "description": "Folder options section label"
+  },
+  "enableFolderFeature": {
+    "message": "フォルダ機能を有効化",
+    "description": "Enable or disable the folder feature"
+  },
+  "hideArchivedConversations": {
+    "message": "フォルダに入れた会話をメインリストから隠す",
+    "description": "Hide conversations that are in folders from the main list"
+  },
+  "conversation_star": {
+    "message": "会話にスターを付ける",
+    "description": "Star conversation button tooltip"
+  },
+  "conversation_unstar": {
+    "message": "スターを外す",
+    "description": "Unstar conversation button tooltip"
+  },
+  "conversation_untitled": {
+    "message": "無題",
+    "description": "Fallback title for conversations without a name"
+  },
+  "geminiOnlyNotice": {
+    "message": "デフォルトでは Gemini（Enterprise 版含む）と AI Studio で動作します。他のサイトでプロンプトマネージャーを使用するには、以下で追加してください。",
+    "description": "Notice that defaults are limited to Gemini/AI Studio"
+  },
+  "folderManager_dataLossWarning": {
+    "message": "⚠️ 警告: フォルダデータの読み込みに失敗しました。データが破損している可能性があります。ブラウザのコンソールで詳細を確認し、可能であればバックアップから復元してください。",
+    "description": "Warning shown when folder data fails to load"
+  },
+  "backupOptions": {
+    "message": "自動バックアップ",
+    "description": "Backup options section label"
+  },
+  "backupEnabled": {
+    "message": "自動バックアップを有効化",
+    "description": "Enable auto backup toggle"
+  },
+  "backupNow": {
+    "message": "今すぐバックアップ",
+    "description": "Backup now button"
+  },
+  "backupSelectFolder": {
+    "message": "バックアップ先を選択",
+    "description": "Select backup folder button"
+  },
+  "backupFolderSelected": {
+    "message": "バックアップフォルダ: {folder}",
+    "description": "Shows selected backup folder"
+  },
+  "backupIncludePrompts": {
+    "message": "プロンプトを含める",
+    "description": "Include prompts in backup toggle"
+  },
+  "backupIncludeFolders": {
+    "message": "フォルダを含める",
+    "description": "Include folders in backup toggle"
+  },
+  "backupIntervalLabel": {
+    "message": "バックアップ間隔",
+    "description": "Backup interval label"
+  },
+  "backupIntervalManual": {
+    "message": "手動のみ",
+    "description": "Manual backup mode"
+  },
+  "backupIntervalDaily": {
+    "message": "毎日",
+    "description": "Daily backup interval"
+  },
+  "backupIntervalWeekly": {
+    "message": "毎週 (7日ごと)",
+    "description": "Weekly backup interval"
+  },
+  "backupLastBackup": {
+    "message": "前回のバックアップ: {time}",
+    "description": "Last backup timestamp"
+  },
+  "backupNever": {
+    "message": "なし",
+    "description": "Never backed up"
+  },
+  "backupSuccess": {
+    "message": "✓ バックアップ完了: プロンプト {prompts} 件, フォルダ {folders} 件, 会話 {conversations} 件",
+    "description": "Backup success message"
+  },
+  "backupError": {
+    "message": "✗ バックアップ失敗: {error}",
+    "description": "Backup error message"
+  },
+  "backupNotSupported": {
+    "message": "⚠️ 自動バックアップには File System Access API に対応した最新のブラウザが必要です",
+    "description": "Browser not supported message"
+  },
+  "backupSelectFolderFirst": {
+    "message": "先にバックアップフォルダを選択してください",
+    "description": "No folder selected warning"
+  },
+  "backupUserCancelled": {
+    "message": "バックアップをキャンセルしました",
+    "description": "User cancelled folder selection"
+  },
+  "backupConfigSaved": {
+    "message": "✓ バックアップ設定を保存しました",
+    "description": "Config saved message"
+  },
+  "backupPermissionDenied": {
+    "message": "⚠️ このディレクトリにはアクセスできません。別の場所（ドキュメント、ダウンロード、デスクトップなど）を選択してください。",
+    "description": "Permission denied for restricted directory"
+  },
+  "backupConfigureInOptions": {
+    "message": "バックアップの設定はオプションページで行う必要があります。下のボタンをクリックして開いてください（拡張機能アイコン横の3点リーダ → オプション）。",
+    "description": "Backup configure in options page explanation"
+  },
+  "openOptionsPage": {
+    "message": "オプションページを開く",
+    "description": "Open options page button"
+  },
+  "optionsPageSubtitle": {
+    "message": "拡張機能のオプション",
+    "description": "Options page subtitle"
+  },
+  "optionsComingSoon": {
+    "message": "さらに多くのオプションを近日追加予定です...",
+    "description": "Options page placeholder text"
+  },
+  "backupDataAccessNotice": {
+    "message": "データアクセスの制限",
+    "description": "Backup data access limitation title"
+  },
+  "backupDataAccessHint": {
+    "message": "ブラウザのセキュリティ制限により、このオプションページからは Gemini ページ上のプロンプトやフォルダデータに直接アクセスできません。手動バックアップには、Gemini ページ上のプロンプトマネージャーとフォルダエクスポート機能をご利用ください。",
+    "description": "Backup data access limitation explanation"
+  },
+  "promptManagerOptions": {
+    "message": "プロンプトマネージャー",
+    "description": "Prompt Manager options section label"
+  },
+  "hidePromptManager": {
+    "message": "プロンプトマネージャーを隠す",
+    "description": "Hide the prompt manager floating ball"
+  },
+  "hidePromptManagerHint": {
+    "message": "ページ上のプロンプトマネージャーのフローティングアイコンを非表示にします",
+    "description": "Hint for hiding prompt manager feature"
+  },
+  "customWebsites": {
+    "message": "カスタムウェブサイト",
+    "description": "Custom websites for prompt manager"
+  },
+  "customWebsitesPlaceholder": {
+    "message": "ウェブサイトの URL を入力 (例: chatgpt.com)",
+    "description": "Custom websites input placeholder"
+  },
+  "customWebsitesHint": {
+    "message": "プロンプトマネージャーを使用したいウェブサイトを追加します。これらのサイトではプロンプトマネージャーのみが有効になります。",
+    "description": "Custom websites hint"
+  },
+  "addWebsite": {
+    "message": "ウェブサイトを追加",
+    "description": "Add website button"
+  },
+  "removeWebsite": {
+    "message": "削除",
+    "description": "Remove website button"
+  },
+  "invalidUrl": {
+    "message": "無効な URL 形式です",
+    "description": "Invalid URL error message"
+  },
+  "websiteAdded": {
+    "message": "ウェブサイトを追加しました",
+    "description": "Website added success message"
+  },
+  "websiteRemoved": {
+    "message": "ウェブサイトを削除しました",
+    "description": "Website removed success message"
+  },
+  "permissionDenied": {
+    "message": "権限が拒否されました。このウェブサイトへのアクセスを許可してください。",
+    "description": "Permission denied error message"
+  },
+  "permissionRequestFailed": {
+    "message": "権限のリクエストに失敗しました。もう一度試すか、拡張機能の設定でアクセスを許可してください。",
+    "description": "Permission request failure message"
+  },
+  "customWebsitesNote": {
+    "message": "ヒント: サイトを追加するとアクセスの許可を求められます。許可した後、プロンプトマネージャーを開始するにはそのサイトを再読み込みしてください。",
+    "description": "Custom websites reload/permission note"
+  },
+  "starredHistory": {
+    "message": "スター付き履歴",
+    "description": "Starred history title"
+  },
+  "viewStarredHistory": {
+    "message": "スター付き履歴を表示",
+    "description": "View starred history button"
+  },
+  "noStarredMessages": {
+    "message": "スター付きメッセージはまだありません",
+    "description": "No starred messages placeholder"
+  },
+  "removeFromStarred": {
+    "message": "スターを外す",
+    "description": "Remove from starred tooltip"
+  },
+  "justNow": {
+    "message": "たった今",
+    "description": "Just now time label"
+  },
+  "hoursAgo": {
+    "message": "時間前",
+    "description": "Hours ago label"
+  },
+  "yesterday": {
+    "message": "昨日",
+    "description": "Yesterday date label"
+  },
+  "daysAgo": {
+    "message": "日前",
+    "description": "Days ago label"
+  },
+  "loading": {
+    "message": "読み込み中...",
+    "description": "Loading message"
+  },
+  "keyboardShortcuts": {
+    "message": "キーボードショートカット",
+    "description": "Keyboard shortcuts section title"
+  },
+  "enableShortcuts": {
+    "message": "キーボードショートカットを有効化",
+    "description": "Enable shortcuts toggle label"
+  },
+  "previousNode": {
+    "message": "前のノードへ",
+    "description": "Previous timeline node shortcut label"
+  },
+  "nextNode": {
+    "message": "次のノードへ",
+    "description": "Next timeline node shortcut label"
+  },
+  "shortcutKey": {
+    "message": "キー",
+    "description": "Shortcut key label"
+  },
+  "shortcutModifiers": {
+    "message": "修飾キー",
+    "description": "Shortcut modifiers label"
+  },
+  "resetShortcuts": {
+    "message": "デフォルトに戻す",
+    "description": "Reset shortcuts button"
+  },
+  "shortcutsResetSuccess": {
+    "message": "ショートカットをデフォルトに戻しました",
+    "description": "Shortcuts reset success message"
+  },
+  "shortcutsDescription": {
+    "message": "キーボードショートカットを使ってタイムラインを移動します",
+    "description": "Shortcuts description"
+  },
+  "modifierNone": {
+    "message": "なし",
+    "description": "No modifier key"
+  },
+  "modifierAlt": {
+    "message": "Alt",
+    "description": "Alt modifier key"
+  },
+  "modifierCtrl": {
+    "message": "Ctrl",
+    "description": "Ctrl modifier key"
+  },
+  "modifierShift": {
+    "message": "Shift",
+    "description": "Shift modifier key"
+  },
+  "modifierMeta": {
+    "message": "Cmd/Win",
+    "description": "Meta/Command/Windows modifier key"
+  },
+  "cloudSync": {
+    "message": "クラウド同期",
+    "description": "Cloud sync section title"
+  },
+  "cloudSyncDescription": {
+    "message": "フォルダとプロンプトを Google ドライブに同期します",
+    "description": "Cloud sync description"
+  },
+  "syncModeDisabled": {
+    "message": "無効",
+    "description": "Sync mode disabled option"
+  },
+  "syncModeManual": {
+    "message": "手動",
+    "description": "Sync mode manual option"
+  },
+  "syncNow": {
+    "message": "今すぐ同期",
+    "description": "Sync now button"
+  },
+  "lastSynced": {
+    "message": "最終同期: {time}",
+    "description": "Last sync timestamp"
+  },
+  "neverSynced": {
+    "message": "未同期",
+    "description": "Never synced message"
+  },
+  "lastUploaded": {
+    "message": "アップロード: {time}",
+    "description": "Last upload timestamp"
+  },
+  "neverUploaded": {
+    "message": "未アップロード",
+    "description": "Never uploaded message"
+  },
+  "syncSuccess": {
+    "message": "✓ 同期に成功しました",
+    "description": "Sync success message"
+  },
+  "syncError": {
+    "message": "✗ 同期に失敗しました: {error}",
+    "description": "Sync error message"
+  },
+  "syncInProgress": {
+    "message": "同期中...",
+    "description": "Sync in progress message"
+  },
+  "syncUpload": {
+    "message": "ドライブへ保存",
+    "description": "Upload button label"
+  },
+  "syncMerge": {
+    "message": "ドライブからマージ",
+    "description": "Merge button label"
+  },
+  "syncMode": {
+    "message": "同期モード",
+    "description": "Sync mode label"
+  },
+  "minutesAgo": {
+    "message": "分前",
+    "description": "Minutes ago label"
+  },
+  "syncNoData": {
+    "message": "ドライブに同期データが見つかりません",
+    "description": "Error message when no data is found in Drive"
+  },
+  "syncUploadFailed": {
+    "message": "アップロードに失敗しました",
+    "description": "Error message when upload fails"
+  },
+  "syncDownloadFailed": {
+    "message": "ダウンロードに失敗しました",
+    "description": "Error message when download fails"
+  },
+  "syncAuthFailed": {
+    "message": "認証に失敗しました",
+    "description": "Error message when authentication fails"
+  },
+  "signOut": {
+    "message": "サインアウト",
+    "description": "Sign out button"
+  },
+  "signInWithGoogle": {
+    "message": "Google でサインイン",
+    "description": "Sign in with Google button"
+  },
+  "nanobananaOptions": {
+    "message": "NanoBanana オプション",
+    "description": "NanoBanana options section label"
+  },
+  "enableNanobananaWatermarkRemover": {
+    "message": "NanoBanana 透かし除去",
+    "description": "Enable automatic watermark removal for NanoBanana images"
+  },
+  "nanobananaWatermarkRemoverHint": {
+    "message": "生成された画像から目に見える Gemini の透かしを自動的に除去します",
+    "description": "Watermark remover feature hint"
+  },
+  "nanobananaDownloadTooltip": {
+    "message": "透かしなし画像をダウンロード (NanoBanana)",
+    "description": "Download button tooltip"
+  },
+  "deepResearchDownload": {
+    "message": "思考内容をダウンロード",
+    "description": "Deep Research download button text"
+  },
+  "deepResearchDownloadTooltip": {
+    "message": "思考内容をMarkdown形式でダウンロード",
+    "description": "Deep Research download button tooltip"
+  },
+  "folder_uncategorized": {
+    "message": "未分類",
+    "description": "Label for root-level conversations not in any folder"
+  },
+  "timelineLevelTitle": {
+    "message": "ノード階層",
+    "description": "Title for timeline node level context menu"
+  },
+  "timelineLevel1": {
+    "message": "レベル 1",
+    "description": "Timeline node level 1 option"
+  },
+  "timelineLevel2": {
+    "message": "レベル 2",
+    "description": "Timeline node level 2 option"
+  },
+  "timelineLevel3": {
+    "message": "レベル 3",
+    "description": "Timeline node level 3 option"
+  },
+  "timelineCollapse": {
+    "message": "折りたたむ",
+    "description": "Collapse children"
+  },
+  "timelineExpand": {
+    "message": "展開",
+    "description": "Expand children"
+  },
+  "quoteReply": {
+    "message": "引用返信",
+    "description": "Quote reply button text"
+  },
+  "inputCollapseOptions": {
+    "message": "入力欄の自動非表示",
+    "description": "Input collapse options section label"
+  },
+  "enableInputCollapse": {
+    "message": "入力欄の自動非表示を有効化",
+    "description": "Enable input collapse toggle label"
+  },
+  "enableInputCollapseHint": {
+    "message": "空の時に入力欄を折りたたみ、広い読書スペースを確保します",
+    "description": "Input collapse feature hint"
+  },
+  "inputCollapsePlaceholder": {
+    "message": "Gemini にメッセージを送信",
+    "description": "Placeholder text shown in collapsed input"
+  },
+  "batch_delete_confirm": {
+    "message": "{count} 件の会話を削除してもよろしいですか？この操作は取り消せません。",
+    "description": "Batch delete confirmation message"
+  },
+  "batch_delete_in_progress": {
+    "message": "削除中... ({current}/{total})",
+    "description": "Batch delete progress message"
+  },
+  "batch_delete_success": {
+    "message": "✓ {count} 件の会話を削除しました",
+    "description": "Batch delete success message"
+  },
+  "batch_delete_partial": {
+    "message": "削除完了: 成功 {success} 件, 失敗 {failed} 件",
+    "description": "Batch delete partial success message"
+  },
+  "batch_delete_limit_reached": {
+    "message": "一度に選択できる会話は最大 {max} 件です",
+    "description": "Batch delete limit warning"
+  },
+  "batch_delete_button": {
+    "message": "選択した項目を削除",
+    "description": "Batch delete button tooltip in multi-select mode"
+  },
+  "batch_delete_match_patterns": {
+    "message": "delete,confirm,yes,ok,remove,削除,確認,確定,はい",
+    "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
+  },
+  "generalOptions": {
+    "message": "一般オプション",
+    "description": "General options section label"
+  },
+  "enableTabTitleUpdate": {
+    "message": "タブタイトルの同期",
+    "description": "Enable tab title sync toggle label"
+  },
+  "enableTabTitleUpdateHint": {
+    "message": "ブラウザのタブタイトルを、現在の会話タイトルと自動的に同期します",
+    "description": "Tab title sync feature hint"
+  },
+  "enableMermaidRendering": {
+    "message": "Mermaid 図表のレンダリング",
+    "description": "Enable Mermaid diagram rendering toggle label"
+  },
+  "enableMermaidRenderingHint": {
+    "message": "コードブロック内の Mermaid ダイアグラムを自動的にレンダリングします",
+    "description": "Mermaid rendering feature hint"
+  }
 }

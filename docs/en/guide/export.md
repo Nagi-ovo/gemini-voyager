@@ -4,14 +4,17 @@ Data lock-in is the enemy.
 We believe that if you create it, you own it.
 
 ## Export Everything
+
 Gemini Voyager lets you pull your data out of the cloud and into your hands.
 
 ### The Formats
+
 - **Markdown**: For your Obsidian vault or Notion. Clean, formatted text.
 - **PDF**: For sharing or printing. Beautifully laid out, images included.
 - **JSON**: Raw data. For developers who want to build on top of their history.
 
 ### How to Export
+
 1. Look for the **Export Icon** next to the Gemini logo.
 2. Choose your format.
 3. Done.

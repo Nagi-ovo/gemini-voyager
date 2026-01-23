@@ -21,7 +21,11 @@ export function KeyboardShortcutSettings() {
   const { t } = useLanguage();
   const [enabled, setEnabled] = useState<boolean>(true);
   const [config, setConfig] = useState<KeyboardShortcutConfig | null>(null);
-  const [recording, setRecording] = useState<RecordingState>({ action: null, modifiers: [], key: null });
+  const [recording, setRecording] = useState<RecordingState>({
+    action: null,
+    modifiers: [],
+    key: null,
+  });
   const [loading, setLoading] = useState<boolean>(true);
 
   // Use refs to avoid stale closures in event handlers
@@ -50,7 +54,8 @@ export function KeyboardShortcutSettings() {
         await keyboardShortcutService.init();
 
         // Then get the loaded config
-        const { config: currentConfig, enabled: currentEnabled } = keyboardShortcutService.getConfig();
+        const { config: currentConfig, enabled: currentEnabled } =
+          keyboardShortcutService.getConfig();
         setConfig(currentConfig);
         setEnabled(currentEnabled);
       } catch (error) {
@@ -171,7 +176,9 @@ export function KeyboardShortcutSettings() {
   if (loading || !config) {
     return (
       <Card className="p-4">
-        <CardTitle className="mb-4 text-xs uppercase tracking-wide">{t('keyboardShortcuts')}</CardTitle>
+        <CardTitle className="mb-4 text-xs uppercase tracking-wide">
+          {t('keyboardShortcuts')}
+        </CardTitle>
         <CardContent className="p-0">
           <p className="text-xs text-muted-foreground">{t('loading')}</p>
         </CardContent>
@@ -181,7 +188,9 @@ export function KeyboardShortcutSettings() {
 
   return (
     <Card className="p-4 hover:shadow-lg transition-shadow">
-      <CardTitle className="mb-4 text-xs uppercase tracking-wide">{t('keyboardShortcuts')}</CardTitle>
+      <CardTitle className="mb-4 text-xs uppercase tracking-wide">
+        {t('keyboardShortcuts')}
+      </CardTitle>
       <CardContent className="p-0 space-y-6">
         {/* Enable/Disable Toggle */}
         <div className="flex items-center justify-between">
@@ -201,7 +210,9 @@ export function KeyboardShortcutSettings() {
             <div className="grid grid-cols-2 gap-4 pt-2">
               {/* Previous Node */}
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground font-medium">{t('previousNode')}</Label>
+                <Label className="text-xs text-muted-foreground font-medium">
+                  {t('previousNode')}
+                </Label>
                 <button
                   type="button"
                   onClick={() => startRecording('previous')}
@@ -218,8 +229,7 @@ export function KeyboardShortcutSettings() {
                 >
                   {recording.action === 'previous'
                     ? 'Press key...'
-                    : keyboardShortcutService.formatShortcut(config.previous)
-                  }
+                    : keyboardShortcutService.formatShortcut(config.previous)}
                 </button>
               </div>
 
@@ -242,8 +252,7 @@ export function KeyboardShortcutSettings() {
                 >
                   {recording.action === 'next'
                     ? 'Press key...'
-                    : keyboardShortcutService.formatShortcut(config.next)
-                  }
+                    : keyboardShortcutService.formatShortcut(config.next)}
                 </button>
               </div>
             </div>

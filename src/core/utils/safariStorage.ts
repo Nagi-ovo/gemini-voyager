@@ -116,7 +116,9 @@ export class SafariStorage implements SafariStorageAdapter {
       await this.setItem(key, localData);
       await this.setItem(migrationKey, 'true');
 
-      console.log(`[SafariStorage] Successfully migrated ${key} from localStorage to browser.storage.local`);
+      console.log(
+        `[SafariStorage] Successfully migrated ${key} from localStorage to browser.storage.local`
+      );
       return true;
     } catch (error) {
       console.error('[SafariStorage] Migration failed:', error);

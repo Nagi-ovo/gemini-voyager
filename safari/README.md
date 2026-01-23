@@ -29,6 +29,7 @@ open "Gemini Voyager/Gemini Voyager.xcodeproj"
 ```
 
 In Xcode:
+
 1. Select **Signing & Capabilities** → Choose your Team
 2. Set target to **My Mac**
 3. Press **⌘R** to build and run
@@ -42,6 +43,7 @@ bun run dev:safari
 ```
 
 This watches for file changes and rebuilds automatically. After each rebuild:
+
 1. Press **⌘R** in Xcode to reload
 2. Safari will refresh the extension
 
@@ -56,7 +58,7 @@ bun run build:safari
 
 ## Adding Swift Native Code (Optional)
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
 This project includes Swift code for native macOS features. Adding it is **optional** but recommended.
 
@@ -82,6 +84,7 @@ safari/
 ### Native Features
 
 Once added, you can:
+
 - Access macOS Keychain (future)
 - Use native notifications
 - Access file system with native pickers
@@ -90,9 +93,10 @@ Once added, you can:
 
 ### Native Messaging API
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
 **From JavaScript:**
+
 ```javascript
 // Health check
 browser.runtime.sendNativeMessage({ action: 'ping' }, (response) => {
@@ -106,6 +110,7 @@ browser.runtime.sendNativeMessage({ action: 'getVersion' }, (response) => {
 ```
 
 **Available Actions:**
+
 - `ping` - Health check
 - `getVersion` - Get extension version info
 - `syncStorage` - Sync storage (placeholder for future)
@@ -115,9 +120,11 @@ browser.runtime.sendNativeMessage({ action: 'getVersion' }, (response) => {
 ### View Extension Logs
 
 **Web Console:**
+
 - Safari → Develop → Web Extension Background Pages → Gemini Voyager
 
 **Native Logs:**
+
 ```bash
 log stream --predicate 'subsystem == "com.gemini-voyager.safari"' --level debug
 ```
@@ -125,12 +132,15 @@ log stream --predicate 'subsystem == "com.gemini-voyager.safari"' --level debug
 ### Common Issues
 
 **"Module 'SafariServices' not found"**
+
 - Ensure Swift files are added to "Gemini Voyager Extension" target, not the main app
 
 **Native messaging not working**
+
 - Check `Info.plist` has `SafariWebExtensionHandler` as principal class
 
 **Swift files not compiling**
+
 - Verify Target Membership in Xcode file inspector
 
 ## Building for Distribution
@@ -145,6 +155,7 @@ log stream --predicate 'subsystem == "com.gemini-voyager.safari"' --level debug
 ### For App Store
 
 Requires:
+
 - Apple Developer account ($99/year)
 - App Store Connect setup
 - App review submission
@@ -153,7 +164,7 @@ See [Apple's official guide](https://developer.apple.com/documentation/safariser
 
 ## Project Structure
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager )
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
 ```
 ├── dist_safari/              # Built extension (gitignored)
@@ -184,6 +195,7 @@ bun run build:all      # Build for all browsers
 See [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for contribution guidelines.
 
 When adding native features:
+
 1. Define action in `SafariMessage.swift`
 2. Implement handler in `SafariWebExtensionHandler.swift`
 3. Add JavaScript API in web extension
