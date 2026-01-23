@@ -19,47 +19,47 @@ const manifestPath = path.join(distDir, 'manifest.json');
 const EDGE_INCOMPATIBLE_FIELDS = ['key'];
 
 async function buildForEdge() {
-    console.log('🔨 Building Chrome extension...');
+  console.log('🔨 Building Chrome extension...');
 
-    try {
-        execSync('bun run build:chrome', {
-            cwd: rootDir,
-            stdio: 'inherit'
-        });
-    } catch (error) {
-        console.error('❌ Build failed:', error.message);
-        process.exit(1);
+  try {
+    execSync('bun run build:chrome', {
+      cwd: rootDir,
+      stdio: 'inherit',
+    });
+  } catch (error) {
+    console.error('❌ Build failed:', error.message);
+    process.exit(1);
+  }
+
+  console.log('\n🔧 Preparing for Edge submission...');
+
+  // Read and parse manifest
+  if (!fs.existsSync(manifestPath)) {
+    console.error('❌ manifest.json not found in dist_chrome/');
+    process.exit(1);
+  }
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+  // Remove incompatible fields
+  let removedFields = [];
+  for (const field of EDGE_INCOMPATIBLE_FIELDS) {
+    if (field in manifest) {
+      delete manifest[field];
+      removedFields.push(field);
     }
+  }
 
-    console.log('\n🔧 Preparing for Edge submission...');
+  if (removedFields.length > 0) {
+    console.log(`   Removed fields: ${removedFields.join(', ')}`);
+  }
 
-    // Read and parse manifest
-    if (!fs.existsSync(manifestPath)) {
-        console.error('❌ manifest.json not found in dist_chrome/');
-        process.exit(1);
-    }
+  // Write back the cleaned manifest
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-
-    // Remove incompatible fields
-    let removedFields = [];
-    for (const field of EDGE_INCOMPATIBLE_FIELDS) {
-        if (field in manifest) {
-            delete manifest[field];
-            removedFields.push(field);
-        }
-    }
-
-    if (removedFields.length > 0) {
-        console.log(`   Removed fields: ${removedFields.join(', ')}`);
-    }
-
-    // Write back the cleaned manifest
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
-
-    console.log('✅ Edge build ready!');
-    console.log(`   Output: ${distDir}/`);
-    console.log('\n📦 You can now zip dist_chrome/ and submit to Edge Add-ons store.');
+  console.log('✅ Edge build ready!');
+  console.log(`   Output: ${distDir}/`);
+  console.log('\n📦 You can now zip dist_chrome/ and submit to Edge Add-ons store.');
 }
 
 buildForEdge();
