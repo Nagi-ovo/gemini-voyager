@@ -27,6 +27,11 @@ import WidthSlider from './components/WidthSlider';
 
 import { isSafari } from '@/core/utils/browser';
 import { compareVersions } from '@/core/utils/version';
+import {
+  extractLatestReleaseVersion,
+  getCachedLatestVersion,
+  getManifestUpdateUrl,
+} from '@/pages/popup/utils/latestVersion';
 
 type ScrollMode = 'jump' | 'flow';
 
@@ -144,7 +149,7 @@ export default function Popup() {
     }
   }, []);
 
-  const setSyncStorage = useCallback(async (payload: Record<string, any>) => {
+  const setSyncStorage = useCallback(async (payload: Record<string, unknown>) => {
     try {
       await browser.storage.sync.set(payload);
       return;
@@ -164,7 +169,7 @@ export default function Popup() {
   // Helper function to apply settings to storage
   const apply = useCallback(
     (settings: SettingsUpdate) => {
-      const payload: any = {};
+      const payload: Record<string, unknown> = {};
       if (settings.mode) payload.geminiTimelineScrollMode = settings.mode;
       if (typeof settings.hideContainer === 'boolean')
         payload.geminiTimelineHideContainer = settings.hideContainer;
@@ -279,25 +284,20 @@ export default function Popup() {
       // Store-installed extensions have an 'update_url' in the manifest.
       // We skip manual version checks for these users to rely on store auto-updates
       // and prevent confusing "new version" prompts when GitHub is ahead of the store.
-      const manifest = chrome?.runtime?.getManifest?.() as Record<string, any> | undefined;
-      if (manifest?.update_url) {
+      const manifest = chrome?.runtime?.getManifest?.();
+      if (getManifestUpdateUrl(manifest)) {
         return;
       }
 
       try {
         const cache = await browser.storage.local.get(LATEST_VERSION_CACHE_KEY);
-        const cached = cache?.[LATEST_VERSION_CACHE_KEY] as
-          | { version?: string; fetchedAt?: number }
-          | undefined;
         const now = Date.now();
 
-        let latest =
-          cached &&
-          cached.version &&
-          cached.fetchedAt &&
-          now - cached.fetchedAt < LATEST_VERSION_MAX_AGE
-            ? cached.version
-            : null;
+        let latest = getCachedLatestVersion(
+          cache?.[LATEST_VERSION_CACHE_KEY],
+          now,
+          LATEST_VERSION_MAX_AGE
+        );
 
         if (!latest) {
           const resp = await fetch(
@@ -311,13 +311,8 @@ export default function Popup() {
             throw new Error(`HTTP ${resp.status}`);
           }
 
-          const data = await resp.json();
-          const candidate =
-            typeof data.tag_name === 'string'
-              ? data.tag_name
-              : typeof data.name === 'string'
-                ? data.name
-                : null;
+          const data: unknown = await resp.json();
+          const candidate = extractLatestReleaseVersion(data);
 
           if (candidate) {
             latest = candidate;
