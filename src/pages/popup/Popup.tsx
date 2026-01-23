@@ -358,7 +358,7 @@ export default function Popup() {
           gvFormulaCopyFormat: 'latex',
           geminiWatermarkRemoverEnabled: true,
           gvHidePromptManager: false,
-          gvInputCollapseEnabled: true,
+          gvInputCollapseEnabled: false,
           gvTabTitleUpdateEnabled: true,
           gvMermaidEnabled: true,
         },
