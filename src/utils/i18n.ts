@@ -74,6 +74,16 @@ export async function initI18n(): Promise<void> {
 }
 
 /**
+ * Immediately update the cached language value.
+ * This should be called after setting the language in storage to ensure
+ * synchronous translation calls use the new language immediately,
+ * avoiding race conditions with the async storage.onChanged listener.
+ */
+export function setCachedLanguage(lang: AppLanguage): void {
+  cachedLanguage = lang;
+}
+
+/**
  * Create a translator function that uses cached language
  * This is useful for classes that need a simple t() function
  */

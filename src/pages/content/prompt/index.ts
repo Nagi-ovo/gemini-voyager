@@ -17,7 +17,7 @@ import { promptStorageService } from '@/core/services/StorageService';
 import { StorageKeys, type StorageKey } from '@/core/types/common';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import { compareVersions } from '@/core/utils/version';
-import { initI18n, getTranslationSync, getCurrentLanguage } from '@/utils/i18n';
+import { initI18n, getTranslationSync, getCurrentLanguage, setCachedLanguage } from '@/utils/i18n';
 import {
   APP_LANGUAGES,
   APP_LANGUAGE_LABELS,
@@ -84,6 +84,8 @@ function createI18n() {
           return;
         }
         await browser.storage.sync.set({ language: lang });
+        // Immediately update cached language to avoid race condition with async onChanged listener
+        setCachedLanguage(lang);
       } catch (e) {
         // Silently ignore extension context errors
         if (e instanceof Error && e.message.includes('Extension context invalidated')) {
