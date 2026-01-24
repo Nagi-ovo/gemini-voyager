@@ -2036,7 +2036,12 @@ export class TimelineManager {
       leftPercent: (rect.left / viewportWidth) * 100,
     };
 
-    chrome?.storage?.sync?.set?.({ geminiTimelinePosition: position });
+    const g = globalThis as any;
+    if (g.chrome?.storage?.sync?.set) {
+      g.chrome.storage.sync.set({ geminiTimelinePosition: position });
+    } else if (g.browser?.storage?.sync?.set) {
+      g.browser.storage.sync.set({ geminiTimelinePosition: position });
+    }
   }
 
   /**
@@ -2062,34 +2067,61 @@ export class TimelineManager {
   /**
    * Reapply position from storage (for window resize)
    */
-  private reapplyPosition(): void {
+  private async reapplyPosition(): Promise<void> {
     if (!this.ui.timelineBar) return;
 
-    const syncStorage = chrome?.storage?.sync;
-    if (!syncStorage?.get) return;
+    const g = globalThis as any;
+    if (!g.chrome?.storage?.sync && !g.browser?.storage?.sync) return;
 
-    syncStorage.get(['geminiTimelinePosition'], (res: any) => {
-      const position = res?.geminiTimelinePosition;
-      if (!position) return;
+    let res: any = null;
+    try {
+      res = await new Promise((resolve) => {
+        if (g.chrome?.storage?.sync?.get) {
+          g.chrome.storage.sync.get(['geminiTimelinePosition'], (items: any) => {
+            if (g.chrome.runtime?.lastError) {
+              console.error(
+                `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`
+              );
+              resolve(null);
+            } else {
+              resolve(items);
+            }
+          });
+        } else {
+          g.browser.storage.sync
+            .get(['geminiTimelinePosition'])
+            .then(resolve)
+            .catch((error: Error) => {
+              console.error(`[Timeline] browser.storage.get failed: ${error.message}`);
+              resolve(null);
+            });
+        }
+      });
+    } catch (error) {
+      console.error('[Timeline] reapplyPosition storage access failed:', error);
+      return;
+    }
 
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
+    const position = res?.geminiTimelinePosition;
+    if (!position) return;
 
-      // v2 format: use percentage (responsive)
-      if (
-        position.version === 2 &&
-        position.topPercent !== undefined &&
-        position.leftPercent !== undefined
-      ) {
-        const top = (position.topPercent / 100) * viewportHeight;
-        const left = (position.leftPercent / 100) * viewportWidth;
-        this.applyPosition(top, left);
-      }
-      // v1 format: keep absolute position (no resize adjustment for legacy)
-      else if (position.top !== undefined && position.left !== undefined) {
-        this.applyPosition(position.top, position.left);
-      }
-    });
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // v2 format: use percentage (responsive)
+    if (
+      position.version === 2 &&
+      position.topPercent !== undefined &&
+      position.leftPercent !== undefined
+    ) {
+      const top = (position.topPercent / 100) * viewportHeight;
+      const left = (position.leftPercent / 100) * viewportWidth;
+      this.applyPosition(top, left);
+    }
+    // v1 format: keep absolute position (no resize adjustment for legacy)
+    else if (position.top !== undefined && position.left !== undefined) {
+      this.applyPosition(position.top, position.left);
+    }
   }
 
   private hideTooltip(immediate = false): void {
