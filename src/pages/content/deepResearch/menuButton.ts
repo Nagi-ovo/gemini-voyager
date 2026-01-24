@@ -94,7 +94,20 @@ async function getLanguage(): Promise<AppLanguage> {
   try {
     const stored = await new Promise<unknown>((resolve) => {
       try {
-        (window as any).chrome?.storage?.sync?.get?.(StorageKeys.LANGUAGE, resolve);
+        const w = window as any;
+        // Chrome uses callback-based API
+        if (w.chrome?.storage?.sync?.get) {
+          w.chrome.storage.sync.get(StorageKeys.LANGUAGE, resolve);
+        }
+        // Firefox uses Promise-based API
+        else if (w.browser?.storage?.sync?.get) {
+          w.browser.storage.sync
+            .get(StorageKeys.LANGUAGE)
+            .then(resolve)
+            .catch(() => resolve({}));
+        } else {
+          resolve({});
+        }
       } catch {
         resolve({});
       }
