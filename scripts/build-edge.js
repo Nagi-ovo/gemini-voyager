@@ -59,7 +59,33 @@ async function buildForEdge() {
 
   console.log('✅ Edge build ready!');
   console.log(`   Output: ${distDir}/`);
-  console.log('\n📦 You can now zip dist_chrome/ and submit to Edge Add-ons store.');
+
+  // Zip the output
+  const packageJsonPath = path.join(rootDir, 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  const version = packageJson.version;
+  const zipName = `gemini-voyager-edge-v${version}.zip`;
+  const zipPath = path.join(rootDir, zipName);
+
+  console.log(`\n📦 Zipping into ${zipName}...`);
+
+  try {
+    // Remove existing zip if it exists
+    if (fs.existsSync(zipPath)) {
+      fs.unlinkSync(zipPath);
+    }
+
+    // Zip the *contents* of dist_chrome
+    execSync(`zip -r "${zipPath}" .`, {
+      cwd: distDir,
+      stdio: 'inherit'
+    });
+
+    console.log(`✨ Successfully created: ${zipName}`);
+  } catch (error) {
+    console.error('❌ Zipping failed:', error.message);
+    process.exit(1);
+  }
 }
 
 buildForEdge();
