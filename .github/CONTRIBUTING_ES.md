@@ -129,6 +129,7 @@ bun run test       # Ejecutar pruebas
 ```
 
 Asegúrate de que:
+
 1. Tus cambios logran la funcionalidad deseada.
 2. Tus cambios no afectan negativamente a las funciones existentes.
 

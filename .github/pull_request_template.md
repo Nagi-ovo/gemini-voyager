@@ -8,18 +8,22 @@
 ---
 
 ### Description / 描述
+
 <!-- Explain the goal of this PR and what changes were made. -->
 <!-- 请解释此 PR 的目标以及做了哪些更改。 -->
 
 ### Related Issue / 相关 Issue
+
 <!-- Link the issue this PR resolves (e.g., Closes #123). -->
 <!-- 链接此 PR 解决的 issue（例如：Closes #123）。 -->
 
 ### Visual Proof / 可视化证据
+
 <!-- REQUIRED for UI changes: Please provide screenshots or screen recordings. -->
 <!-- UI 修改必填：请提供截图或屏幕录制。 -->
 
 ### Checklist / 检查清单
+
 - [ ] I have manually verified that the feature works as intended. / 我已手动验证功能按预期工作。
 - [ ] I have confirmed that this PR does not break existing functionality. / 我已确认此 PR 不会破坏原有功能。
 - [ ] I have run `bun run lint`, `bun run typecheck`, `bun run format` and `bun run build`. / 我已运行代码校验、类型检查、格式化及构建。
