@@ -31,8 +31,7 @@ Bien que les outils d'IA soient d'excellents assistants, les contributions "pare
 
 ### Prérequis
 
-- **Node.js** 20+
-- **Bun** 1.0+ (recommandé) ou pnpm/npm
+- **Bun** 1.0+ (Requis)
 - Un navigateur basé sur Chromium pour les tests (Chrome, Edge, Brave, etc.)
 
 ### Démarrage Rapide

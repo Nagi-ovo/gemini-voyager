@@ -35,8 +35,7 @@ While AI tools are great assistants, "lazy" copy-paste contributions waste maint
 
 ### Prerequisites
 
-- **Node.js** 20+
-- **Bun** 1.0+ (recommended) or pnpm/npm
+- **Bun** 1.0+ (Required)
 - A Chromium-based browser for testing (Chrome, Edge, Brave, etc.)
 
 ### Quick Start
@@ -301,8 +300,7 @@ By contributing, you agree that your contributions will be licensed under the [M
 
 ### 前置要求
 
-- **Node.js** 20+
-- **Bun** 1.0+（推荐）或 pnpm/npm
+- **Bun** 1.0+（必需）
 - 用于测试的 Chromium 内核浏览器（Chrome、Edge、Brave 等）
 
 ### 快速启动

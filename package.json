@@ -9,10 +9,10 @@
     "url": "https://github.com/Nagi-ovo/gemini-voyager.git"
   },
   "scripts": {
-    "bump": "node scripts/bump-version.js",
+    "bump": "bun scripts/bump-version.js",
     "build": "vite build --config vite.config.chrome.ts",
     "build:chrome": "vite build --config vite.config.chrome.ts",
-    "build:edge": "node scripts/build-edge.js",
+    "build:edge": "bun scripts/build-edge.js",
     "build:firefox": "vite build --config vite.config.firefox.ts",
     "build:safari": "vite build --config vite.config.safari.ts",
     "build:all": "bun run build:chrome && bun run build:firefox && bun run build:safari",
@@ -21,7 +21,7 @@
     "dev:chrome-open": "bun scripts/launch-chrome.cjs",
     "dev:firefox": "nodemon --config nodemon.firefox.json",
     "dev:safari": "nodemon --config nodemon.safari.json",
-    "generate:ai-guides": "node scripts/generate-ai-guides.js",
+    "generate:ai-guides": "bun scripts/generate-ai-guides.js",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",

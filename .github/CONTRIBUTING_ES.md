@@ -31,8 +31,7 @@ Aunque las herramientas de IA son grandes asistentes, las contribuciones de "cop
 
 ### Requisitos Previos
 
-- **Node.js** 20+
-- **Bun** 1.0+ (recomendado) o pnpm/npm
+- **Bun** 1.0+ (Requerido)
 - Un navegador basado en Chromium para pruebas (Chrome, Edge, Brave, etc.)
 
 ### Inicio Rápido
