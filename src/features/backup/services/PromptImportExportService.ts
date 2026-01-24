@@ -3,12 +3,11 @@
  * Follows enterprise best practices with proper validation and error handling
  * Extracted from prompt manager to follow DRY principle
  */
-
-import type { PromptItem, PromptExportPayload } from '../types/backup';
-
 import { AppError, ErrorCode } from '@/core/errors/AppError';
 import type { Result } from '@/core/types/common';
 import { EXTENSION_VERSION } from '@/core/utils/version';
+
+import type { PromptExportPayload, PromptItem } from '../types/backup';
 
 const EXPORT_FORMAT = 'gemini-voyager.prompts.v1' as const;
 const STORAGE_KEY = 'gvPromptItems';
@@ -53,7 +52,7 @@ export class PromptImportExportService {
         error: new AppError(
           ErrorCode.VALIDATION_ERROR,
           `Unsupported format: expected "${EXPORT_FORMAT}", got "${p.format}"`,
-          { format: p.format }
+          { format: p.format },
         ),
       };
     }
@@ -65,7 +64,7 @@ export class PromptImportExportService {
         error: new AppError(
           ErrorCode.VALIDATION_ERROR,
           'Invalid "items" field: expected an array',
-          { items: p.items }
+          { items: p.items },
         ),
       };
     }
@@ -86,7 +85,7 @@ export class PromptImportExportService {
           error: new AppError(
             ErrorCode.VALIDATION_ERROR,
             'Prompt item missing valid "text" field',
-            { item }
+            { item },
           ),
         };
       }
@@ -97,7 +96,7 @@ export class PromptImportExportService {
           error: new AppError(
             ErrorCode.VALIDATION_ERROR,
             'Prompt item missing valid "tags" field',
-            { item }
+            { item },
           ),
         };
       }
@@ -134,7 +133,7 @@ export class PromptImportExportService {
           ErrorCode.STORAGE_READ_FAILED,
           'Failed to load prompts from localStorage',
           { key: STORAGE_KEY },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -158,7 +157,7 @@ export class PromptImportExportService {
           ErrorCode.STORAGE_WRITE_FAILED,
           'Failed to save prompts to localStorage',
           { key: STORAGE_KEY, itemCount: items.length },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -247,7 +246,7 @@ export class PromptImportExportService {
 
       // Save merged results
       const mergedItems = Array.from(existingMap.values()).sort(
-        (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
+        (a, b) => (b.createdAt || 0) - (a.createdAt || 0),
       );
 
       const saveResult = await this.savePrompts(mergedItems);
@@ -270,7 +269,7 @@ export class PromptImportExportService {
           ErrorCode.UNKNOWN_ERROR,
           'Failed to import prompts',
           { payload },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -316,7 +315,7 @@ export class PromptImportExportService {
           ErrorCode.VALIDATION_ERROR,
           'Failed to parse JSON file',
           { fileName: file.name },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }

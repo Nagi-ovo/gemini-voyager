@@ -4,28 +4,27 @@
  * - Panel supports: i18n language switch, add prompt, tag chips, search, copy, import/export
  * - Optional lock to pin panel position; when locked, panel is draggable and persisted
  */
-
 import DOMPurify from 'dompurify';
 import JSZip from 'jszip';
-import browser from 'webextension-polyfill';
 import 'katex/dist/katex.min.css';
-
-import { createFolderStorageAdapter } from '../folder/storage/FolderStorageAdapter';
+import browser from 'webextension-polyfill';
 
 import { logger } from '@/core/services/LoggerService';
 import { promptStorageService } from '@/core/services/StorageService';
-import { StorageKeys, type StorageKey } from '@/core/types/common';
+import { type StorageKey, StorageKeys } from '@/core/types/common';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import { compareVersions } from '@/core/utils/version';
-import { initI18n, getTranslationSync, getCurrentLanguage, setCachedLanguage } from '@/utils/i18n';
+import { getCurrentLanguage, getTranslationSync, initI18n, setCachedLanguage } from '@/utils/i18n';
 import {
   APP_LANGUAGES,
   APP_LANGUAGE_LABELS,
+  type AppLanguage,
   isAppLanguage,
   normalizeLanguage,
-  type AppLanguage,
 } from '@/utils/language';
 import type { TranslationKey } from '@/utils/translations';
+
+import { createFolderStorageAdapter } from '../folder/storage/FolderStorageAdapter';
 
 type PromptItem = {
   id: string;
@@ -169,7 +168,7 @@ async function getLatestVersionCached(): Promise<string | null> {
       'https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest',
       {
         headers: { Accept: 'application/vnd.github+json' },
-      }
+      },
     );
     if (!resp.ok) {
       throw new Error(`HTTP ${resp.status}`);
@@ -197,7 +196,7 @@ async function getLatestVersionCached(): Promise<string | null> {
 
 function createEl<K extends keyof HTMLElementTagNameMap>(
   tag: K,
-  className?: string
+  className?: string,
 ): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
   if (className) el.className = className;
@@ -261,7 +260,7 @@ function copyText(text: string): Promise<void> {
 
 function computeAnchoredPosition(
   trigger: HTMLElement,
-  panel: HTMLElement
+  panel: HTMLElement,
 ): { top: number; left: number } {
   const rect = trigger.getBoundingClientRect();
   const vw = window.innerWidth;
@@ -286,7 +285,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     } catch (error) {
       pmLogger.warn(
         'Failed to check hide prompt manager setting, continuing with default behavior',
-        { error }
+        { error },
       );
     }
 
@@ -346,7 +345,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           output: 'html',
           trust: true, // Trust the rendering environment (content script context)
           strict: false, // Disable strict mode checks including quirks mode detection
-        } as any)
+        } as any),
       );
       marked.setOptions({ breaks: true });
     } catch {}
@@ -373,7 +372,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const devUrl = getRuntimeUrl('icon-32.png');
         if (img.src !== devUrl) img.src = devUrl;
       },
-      { once: true }
+      { once: true },
     );
     trigger.appendChild(img);
     document.body.appendChild(trigger);
@@ -381,7 +380,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     function placeTriggerNextToHost(): void {
       try {
         const candidates = Array.from(
-          document.querySelectorAll('span.mat-mdc-button-touch-target')
+          document.querySelectorAll('span.mat-mdc-button-touch-target'),
         ) as HTMLElement[];
         if (!candidates.length) return;
         const vw = window.innerWidth;
@@ -612,19 +611,19 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const addForm = elFromHTML(
       `<form class="gv-pm-add-form gv-hidden">
         <textarea class="gv-pm-input-text" placeholder="${escapeHtml(
-          i18n.t('pm_prompt_placeholder') || 'Prompt text'
+          i18n.t('pm_prompt_placeholder') || 'Prompt text',
         )}" rows="3"></textarea>
         <input class="gv-pm-input-tags" type="text" placeholder="${escapeHtml(
-          i18n.t('pm_tags_placeholder') || 'Tags (comma separated)'
+          i18n.t('pm_tags_placeholder') || 'Tags (comma separated)',
         )}" />
         <div class="gv-pm-add-actions">
           <span class="gv-pm-inline-hint" aria-live="polite"></span>
           <button type="submit" class="gv-pm-save">${escapeHtml(i18n.t('pm_save') || 'Save')}</button>
           <button type="button" class="gv-pm-cancel">${escapeHtml(
-            i18n.t('pm_cancel') || 'Cancel'
+            i18n.t('pm_cancel') || 'Cancel',
           )}</button>
         </div>
-      </form>`
+      </form>`,
     );
 
     // Notice as floating toast (not in footer layout)
@@ -1101,7 +1100,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // we just need to update the UI when language changes
     const storageChangeHandler = (
       changes: Record<string, browser.Storage.StorageChange>,
-      area: string
+      area: string,
     ) => {
       // Handle language changes from sync storage
       const nextRaw = changes[StorageKeys.LANGUAGE]?.newValue;
@@ -1159,7 +1158,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           // Extension context invalidated, show fallback message
           setNotice(
             i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
-            'err'
+            'err',
           );
           return;
         }
@@ -1172,7 +1171,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           // If programmatic opening failed, show a helpful message
           setNotice(
             i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
-            'err'
+            'err',
           );
         }
       } catch (err) {
@@ -1180,14 +1179,14 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         if (err instanceof Error && err.message.includes('Extension context invalidated')) {
           setNotice(
             i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
-            'err'
+            'err',
           );
           return;
         }
         console.warn('[PromptManager] Failed to open settings:', err);
         setNotice(
           i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
-          'err'
+          'err',
         );
       }
     });
@@ -1199,7 +1198,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         ev.stopPropagation();
         editingId = null;
         addForm.classList.add('gv-hidden');
-      }
+      },
     );
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1209,7 +1208,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (!text) return;
       if (editingId) {
         const dup = items.some(
-          (x) => x.id !== editingId && x.text.trim().toLowerCase() === text.toLowerCase()
+          (x) => x.id !== editingId && x.text.trim().toLowerCase() === text.toLowerCase(),
         );
         if (dup) {
           setInlineHint(i18n.t('pm_duplicate') || 'Duplicate prompt', 'err');
@@ -1299,7 +1298,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         // Count conversations
         const conversationCount = Object.values(folderData.folderContents || {}).reduce(
           (sum: number, convs: any) => sum + (Array.isArray(convs) ? convs.length : 0),
-          0
+          0,
         );
 
         // Create metadata
@@ -1348,7 +1347,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
           setNotice(
             `✓ Backed up ${prompts.length} prompts, ${folderData.folders?.length || 0} folders`,
-            'ok'
+            'ok',
           );
         } else {
           // Fallback for Firefox, Safari - download as ZIP file
@@ -1374,7 +1373,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
           setNotice(
             `✓ Downloaded ${folderName}.zip (${prompts.length} prompts, ${folderData.folders?.length || 0} folders)`,
-            'ok'
+            'ok',
           );
         }
       } catch (err) {
@@ -1436,7 +1435,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           await writeStorage(STORAGE_KEYS.items, items);
           setNotice(
             (i18n.t('pm_import_success') || 'Imported').replace('{count}', String(valid.length)),
-            'ok'
+            'ok',
           );
           renderTags();
           renderList();

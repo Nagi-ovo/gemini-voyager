@@ -12,15 +12,14 @@
  * - Type-safe action handling
  * - Collision detection with browser shortcuts
  */
-
 import { StorageKeys } from '@/core/types/common';
 import type {
   KeyboardShortcut,
   KeyboardShortcutConfig,
   KeyboardShortcutStorage,
   ModifierKey,
-  ShortcutKey,
   ShortcutAction,
+  ShortcutKey,
   ShortcutMatch,
 } from '@/core/types/keyboardShortcut';
 

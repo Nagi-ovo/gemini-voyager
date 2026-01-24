@@ -3,7 +3,6 @@
  * Unified service for exporting conversations in multiple formats
  * Uses Strategy pattern for format-specific implementations
  */
-
 import JSZip from 'jszip';
 
 import type {
@@ -13,7 +12,6 @@ import type {
   ExportOptions,
   ExportResult,
 } from '../types/export';
-
 import { MarkdownFormatter } from './MarkdownFormatter';
 import { PDFPrintService } from './PDFPrintService';
 
@@ -28,7 +26,7 @@ export class ConversationExportService {
   static async export(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
-    options: ExportOptions
+    options: ExportOptions,
   ): Promise<ExportResult> {
     try {
       switch (options.format) {
@@ -63,7 +61,7 @@ export class ConversationExportService {
   private static exportJSON(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
-    options: ExportOptions
+    options: ExportOptions,
   ): ExportResult {
     const payload = {
       format: 'gemini-voyager.chat.v1' as const,
@@ -90,7 +88,7 @@ export class ConversationExportService {
   private static async exportMarkdown(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
-    options: ExportOptions
+    options: ExportOptions,
   ): Promise<ExportResult> {
     // First create a clean markdown (no inlining)
     const markdown = MarkdownFormatter.format(turns, metadata);
@@ -178,7 +176,7 @@ export class ConversationExportService {
         assetsFolder?.file(fileName, uint8Array);
         // Reference in markdown should include the 'assets/' prefix
         mapping.set(url, `assets/${fileName}`);
-      })
+      }),
     );
 
     const packagedMd = MarkdownFormatter.rewriteImageUrls(markdown, mapping);
@@ -187,7 +185,7 @@ export class ConversationExportService {
     const zipBlob = await zip.generateAsync({ type: 'blob' });
     const filename = (options.filename || MarkdownFormatter.generateFilename()).replace(
       /\.md$/i,
-      '.zip'
+      '.zip',
     );
     const url = URL.createObjectURL(zipBlob);
     const a = document.createElement('a');
@@ -211,7 +209,7 @@ export class ConversationExportService {
   private static async exportPDF(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
-    options: ExportOptions
+    options: ExportOptions,
   ): Promise<ExportResult> {
     await PDFPrintService.export(turns, metadata);
 

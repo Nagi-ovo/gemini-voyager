@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import type {
   KeyboardShortcutConfig,
-  ShortcutKey,
   ModifierKey,
+  ShortcutKey,
 } from '@/core/types/keyboardShortcut';
 
 interface RecordingState {
@@ -176,22 +176,22 @@ export function KeyboardShortcutSettings() {
   if (loading || !config) {
     return (
       <Card className="p-4">
-        <CardTitle className="mb-4 text-xs uppercase tracking-wide">
+        <CardTitle className="mb-4 text-xs tracking-wide uppercase">
           {t('keyboardShortcuts')}
         </CardTitle>
         <CardContent className="p-0">
-          <p className="text-xs text-muted-foreground">{t('loading')}</p>
+          <p className="text-muted-foreground text-xs">{t('loading')}</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="p-4 hover:shadow-lg transition-shadow">
-      <CardTitle className="mb-4 text-xs uppercase tracking-wide">
+    <Card className="p-4 transition-shadow hover:shadow-lg">
+      <CardTitle className="mb-4 text-xs tracking-wide uppercase">
         {t('keyboardShortcuts')}
       </CardTitle>
-      <CardContent className="p-0 space-y-6">
+      <CardContent className="space-y-6 p-0">
         {/* Enable/Disable Toggle */}
         <div className="flex items-center justify-between">
           <Label htmlFor="shortcuts-enabled" className="cursor-pointer text-sm font-medium">
@@ -210,22 +210,17 @@ export function KeyboardShortcutSettings() {
             <div className="grid grid-cols-2 gap-4 pt-2">
               {/* Previous Node */}
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground font-medium">
+                <Label className="text-muted-foreground text-xs font-medium">
                   {t('previousNode')}
                 </Label>
                 <button
                   type="button"
                   onClick={() => startRecording('previous')}
-                  className={`
-                    w-full px-4 py-3 rounded-lg border-2 transition-all
-                    flex items-center justify-center
-                    font-mono text-sm font-semibold
-                    ${
-                      recording.action === 'previous'
-                        ? 'border-primary bg-primary/5 text-primary animate-pulse'
-                        : 'border-border hover:border-primary/50 hover:bg-accent'
-                    }
-                  `}
+                  className={`flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold transition-all ${
+                    recording.action === 'previous'
+                      ? 'border-primary bg-primary/5 text-primary animate-pulse'
+                      : 'border-border hover:border-primary/50 hover:bg-accent'
+                  } `}
                 >
                   {recording.action === 'previous'
                     ? 'Press key...'
@@ -235,20 +230,15 @@ export function KeyboardShortcutSettings() {
 
               {/* Next Node */}
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground font-medium">{t('nextNode')}</Label>
+                <Label className="text-muted-foreground text-xs font-medium">{t('nextNode')}</Label>
                 <button
                   type="button"
                   onClick={() => startRecording('next')}
-                  className={`
-                    w-full px-4 py-3 rounded-lg border-2 transition-all
-                    flex items-center justify-center
-                    font-mono text-sm font-semibold
-                    ${
-                      recording.action === 'next'
-                        ? 'border-primary bg-primary/5 text-primary animate-pulse'
-                        : 'border-border hover:border-primary/50 hover:bg-accent'
-                    }
-                  `}
+                  className={`flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold transition-all ${
+                    recording.action === 'next'
+                      ? 'border-primary bg-primary/5 text-primary animate-pulse'
+                      : 'border-border hover:border-primary/50 hover:bg-accent'
+                  } `}
                 >
                   {recording.action === 'next'
                     ? 'Press key...'
@@ -259,17 +249,17 @@ export function KeyboardShortcutSettings() {
 
             {/* Hint text */}
             {recording.action && (
-              <p className="text-xs text-muted-foreground text-center animate-in fade-in">
+              <p className="text-muted-foreground animate-in fade-in text-center text-xs">
                 Press Esc to cancel
               </p>
             )}
 
             {/* Reset button */}
-            <div className="pt-2 flex justify-center">
+            <div className="flex justify-center pt-2">
               <button
                 type="button"
                 onClick={handleReset}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
+                className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 transition-colors hover:underline"
               >
                 {t('resetShortcuts')}
               </button>

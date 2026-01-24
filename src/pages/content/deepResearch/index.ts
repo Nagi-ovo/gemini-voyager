@@ -2,7 +2,6 @@
  * Deep Research export feature - Main entry point
  * Detects Deep Research conversations and injects download button into menu
  */
-
 import { injectDownloadButton } from './menuButton';
 
 /**

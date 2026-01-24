@@ -11,7 +11,6 @@
  * - Use browser.storage.local (persistent, 10MB quota)
  * - Fallback to localStorage if storage API unavailable
  */
-
 import browser from 'webextension-polyfill';
 
 interface SafariStorageAdapter {
@@ -117,7 +116,7 @@ export class SafariStorage implements SafariStorageAdapter {
       await this.setItem(migrationKey, 'true');
 
       console.log(
-        `[SafariStorage] Successfully migrated ${key} from localStorage to browser.storage.local`
+        `[SafariStorage] Successfully migrated ${key} from localStorage to browser.storage.local`,
       );
       return true;
     } catch (error) {

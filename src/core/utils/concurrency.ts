@@ -158,7 +158,7 @@ export function withLock(lockKey: string, timeout?: number) {
       return await importExportLock.withLock(
         lockKey,
         () => originalMethod.apply(this, args),
-        timeout
+        timeout,
       );
     };
 

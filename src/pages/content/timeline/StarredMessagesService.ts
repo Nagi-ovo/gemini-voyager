@@ -2,7 +2,6 @@
  * Service for managing starred messages across all conversations
  * Uses message passing to background script to prevent race conditions
  */
-
 import { eventBus } from './EventBus';
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
 
@@ -32,7 +31,7 @@ export class StarredMessagesService {
   static async getAllStarredMessages(): Promise<StarredMessagesData> {
     try {
       const response = await this.sendMessage<{ ok: boolean; data: StarredMessagesData }>(
-        'gv.starred.getAll'
+        'gv.starred.getAll',
       );
       return response.data || { messages: {} };
     } catch (error) {
@@ -45,12 +44,12 @@ export class StarredMessagesService {
    * Get starred messages for a specific conversation
    */
   static async getStarredMessagesForConversation(
-    conversationId: string
+    conversationId: string,
   ): Promise<StarredMessage[]> {
     try {
       const response = await this.sendMessage<{ ok: boolean; messages: StarredMessage[] }>(
         'gv.starred.getForConversation',
-        { conversationId }
+        { conversationId },
       );
       return response.messages || [];
     } catch (error) {
@@ -66,7 +65,7 @@ export class StarredMessagesService {
     try {
       const response = await this.sendMessage<{ ok: boolean; added: boolean }>(
         'gv.starred.add',
-        message
+        message,
       );
 
       if (response.added) {
@@ -91,7 +90,7 @@ export class StarredMessagesService {
     try {
       const response = await this.sendMessage<{ ok: boolean; removed: boolean }>(
         'gv.starred.remove',
-        { conversationId, turnId }
+        { conversationId, turnId },
       );
 
       if (response.removed) {
@@ -116,7 +115,7 @@ export class StarredMessagesService {
   private static updateLegacyStorage(
     conversationId: string,
     turnId: string,
-    action: 'add' | 'remove'
+    action: 'add' | 'remove',
   ): void {
     try {
       const key = `geminiTimelineStars:${conversationId}`;

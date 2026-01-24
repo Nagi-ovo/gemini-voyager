@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { expandInputCollapseIfNeeded } from '../../inputCollapse/index';
+import { startQuoteReply } from '../index';
+
 vi.mock('../../inputCollapse/index', () => ({
   expandInputCollapseIfNeeded: vi.fn(),
 }));
-
-import { expandInputCollapseIfNeeded } from '../../inputCollapse/index';
-import { startQuoteReply } from '../index';
 
 describe('quote reply', () => {
   beforeEach(() => {
@@ -50,7 +50,7 @@ describe('quote reply', () => {
             x: 0,
             y: 0,
             toJSON: () => {},
-          }) as DOMRect
+          }) as DOMRect,
       ),
       configurable: true,
     });

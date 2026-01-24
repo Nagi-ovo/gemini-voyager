@@ -39,7 +39,7 @@ const main = async () => {
         .replace(/\{\{DATE\}\}/g, date);
 
       return writeFile(resolve(rootDir, outputFile), output, 'utf8');
-    })
+    }),
   );
 };
 

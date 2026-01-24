@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
-import { normalizeLanguage, type AppLanguage } from '@/utils/language';
+import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { TRANSLATIONS, type TranslationKey } from '@/utils/translations';
 
 interface LanguageContextType {
@@ -46,7 +47,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     const handleStorageChange = (
       changes: { [key: string]: browser.Storage.StorageChange },
-      areaName: string
+      areaName: string,
     ) => {
       const next = changes[StorageKeys.LANGUAGE]?.newValue;
       if (areaName === 'sync' && typeof next === 'string') {

@@ -3,9 +3,7 @@
  * Implements elegant "paper book" style PDF export using browser's print function
  * Philosophy: Content over design, readability over fidelity
  */
-
 import type { ChatTurn, ConversationMetadata } from '../types/export';
-
 import { DOMContentExtractor } from './DOMContentExtractor';
 
 /**
@@ -49,7 +47,7 @@ export class PDFPrintService {
    */
   private static createPrintContainer(
     turns: ChatTurn[],
-    metadata: ConversationMetadata
+    metadata: ConversationMetadata,
   ): HTMLElement {
     const container = document.createElement('div');
     container.id = this.PRINT_CONTAINER_ID;
@@ -104,7 +102,7 @@ export class PDFPrintService {
             img.src = data;
           } catch {}
         }
-      })
+      }),
     );
 
     // Attempt to wait for image decoding
@@ -112,8 +110,8 @@ export class PDFPrintService {
       imgs.map((img) =>
         (img as any).decode?.().catch(() => {
           /* ignore */
-        })
-      )
+        }),
+      ),
     );
   }
 
@@ -126,7 +124,7 @@ export class PDFPrintService {
       // Prefer the folder row that is marked as selected for the current conversation
       const activeFolderTitle =
         document.querySelector(
-          '.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title'
+          '.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title',
         ) || document.querySelector('.gv-folder-conversation-selected .gv-conversation-title');
 
       if (activeFolderTitle?.textContent?.trim()) {
@@ -154,7 +152,7 @@ export class PDFPrintService {
     } catch (error) {
       console.debug(
         '[PDF Export] Failed to get title from native sidebar selected conversation:',
-        error
+        error,
       );
     }
 

@@ -2,8 +2,7 @@
  * StorageService unit tests
  * Demonstrates testing best practices for the refactored code
  */
-
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '../../types/common';
 import { LocalStorageService } from '../StorageService';

@@ -348,7 +348,7 @@ function initInputCollapse() {
         }
       }
     },
-    { signal, capture: true }
+    { signal, capture: true },
   );
 
   // Handle URL changes for SPA navigation
@@ -392,7 +392,7 @@ function initInputCollapse() {
         () => {
           expand(container);
         },
-        { signal }
+        { signal },
       );
 
       // Capture focus events deeply
@@ -402,7 +402,7 @@ function initInputCollapse() {
           isFocused = true;
           expand(container);
         },
-        { signal }
+        { signal },
       );
 
       container.addEventListener(
@@ -416,7 +416,7 @@ function initInputCollapse() {
           isFocused = false;
           tryCollapse(container);
         },
-        { signal }
+        { signal },
       );
 
       // Initial check - only collapse if not on excluded pages

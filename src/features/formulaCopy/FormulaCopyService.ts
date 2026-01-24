@@ -3,14 +3,13 @@
  * Handles copying LaTeX/MathJax formulas from Gemini chat conversations
  * Uses enterprise patterns: Singleton, Service Layer, Event Delegation
  */
-
 import browser from 'webextension-polyfill';
-
-import { latexToUnicodeMath } from './UnicodeMathConverter';
 
 import { logger } from '@/core';
 import { StorageKeys } from '@/core/types/common';
 import type { ILogger } from '@/core/types/common';
+
+import { latexToUnicodeMath } from './UnicodeMathConverter';
 
 /**
  * Formula copy format options

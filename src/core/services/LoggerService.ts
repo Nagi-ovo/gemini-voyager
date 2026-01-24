@@ -2,7 +2,6 @@
  * Centralized logging service
  * Replaces scattered console.log statements
  */
-
 import type { ILogger } from '../types/common';
 
 export enum LogLevel {

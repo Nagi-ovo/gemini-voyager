@@ -6,14 +6,14 @@ export interface SwitchProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
 
 const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(({ className, ...props }, ref) => {
   return (
-    <label className="relative inline-flex items-center cursor-pointer">
-      <input ref={ref} type="checkbox" className="sr-only peer" {...props} />
+    <label className="relative inline-flex cursor-pointer items-center">
+      <input ref={ref} type="checkbox" className="peer sr-only" {...props} />
       <div
         className={cn(
-          'w-11 h-6 bg-input peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring peer-focus:ring-offset-2 rounded-full peer shadow-sm',
-          "peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all",
+          'bg-input peer-focus:ring-ring peer h-6 w-11 rounded-full shadow-sm peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:outline-none',
+          "after:border-border after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white",
           'peer-checked:bg-primary',
-          className
+          className,
         )}
       ></div>
     </label>

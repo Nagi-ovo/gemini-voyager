@@ -1,8 +1,7 @@
 /**
  * Markdown formatting module for Deep Research thinking content
  */
-
-import type { ThinkingContent, ThinkingSection, ThinkingItem, BrowseChip } from './types';
+import type { BrowseChip, ThinkingContent, ThinkingItem, ThinkingSection } from './types';
 
 /**
  * Format a single thought item as Markdown

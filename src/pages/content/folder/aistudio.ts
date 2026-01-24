@@ -1,16 +1,16 @@
 import browser from 'webextension-polyfill';
 
-import type { Folder, FolderData, ConversationReference, DragData } from './types';
-
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { storageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
-import { initI18n, createTranslator } from '@/utils/i18n';
+import { createTranslator, initI18n } from '@/utils/i18n';
+
+import type { ConversationReference, DragData, Folder, FolderData } from './types';
 
 function waitForElement<T extends Element = Element>(
   selector: string,
-  timeoutMs = 10000
+  timeoutMs = 10000,
 ): Promise<T | null> {
   return new Promise((resolve) => {
     const found = document.querySelector(selector) as T | null;
@@ -212,7 +212,7 @@ export class AIStudioFolderManager {
       } else {
         // Don't immediately clear data - try to recover from backup
         console.warn(
-          '[AIStudioFolderManager] Storage returned no data, attempting recovery from backup'
+          '[AIStudioFolderManager] Storage returned no data, attempting recovery from backup',
         );
         this.attemptDataRecovery(null);
       }
@@ -350,7 +350,7 @@ export class AIStudioFolderManager {
     if (!this.container) return;
     const currentId = this.getCurrentPromptIdFromLocation();
     const rows = this.container.querySelectorAll(
-      '.gv-folder-conversation'
+      '.gv-folder-conversation',
     ) as NodeListOf<HTMLElement>;
     rows.forEach((row) => {
       const isActive = currentId && row.dataset.conversationId === currentId;
@@ -674,7 +674,7 @@ export class AIStudioFolderManager {
         Object.keys(this.data.folderContents).forEach((fid) => {
           if (fid === this.UNCATEGORIZED_KEY) return; // Don't remove from uncategorized yet
           this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter(
-            (c) => c.conversationId !== conv.conversationId
+            (c) => c.conversationId !== conv.conversationId,
           );
         });
         // Add to uncategorized if not already there
@@ -695,7 +695,7 @@ export class AIStudioFolderManager {
         Object.keys(this.data.folderContents).forEach((fid) => {
           if (fid === folderId) return;
           this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter(
-            (c) => c.conversationId !== conv.conversationId
+            (c) => c.conversationId !== conv.conversationId,
           );
         });
       }
@@ -741,7 +741,7 @@ export class AIStudioFolderManager {
 
   private bindDraggablesInPromptList(): void {
     const anchors = document.querySelectorAll(
-      'ms-prompt-history-v3 a.prompt-link[href^="/prompts/"]'
+      'ms-prompt-history-v3 a.prompt-link[href^="/prompts/"]',
     );
     anchors.forEach((a) => {
       const anchor = a as HTMLAnchorElement;
@@ -777,7 +777,7 @@ export class AIStudioFolderManager {
   private observeLibraryTable(): void {
     // The library table is within a mat-table element
     const tableRoot = document.querySelector(
-      'table.mat-mdc-table, mat-table'
+      'table.mat-mdc-table, mat-table',
     ) as HTMLElement | null;
     if (!tableRoot) {
       // Fallback: observe entire body for table appearance
@@ -824,7 +824,7 @@ export class AIStudioFolderManager {
       // Find the anchor with prompt link in this row
       // Matches: a[href^="/prompts/"] or a.name-btn with /prompts/ in href
       const anchor = tr.querySelector(
-        'a[href^="/prompts/"], a.name-btn[href*="/prompts/"]'
+        'a[href^="/prompts/"], a.name-btn[href*="/prompts/"]',
       ) as HTMLAnchorElement | null;
       if (!anchor) return;
 
@@ -967,7 +967,7 @@ export class AIStudioFolderManager {
         Object.keys(this.data.folderContents).forEach((fid) => {
           if (fid === this.UNCATEGORIZED_KEY) return;
           this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter(
-            (c) => c.conversationId !== conv.conversationId
+            (c) => c.conversationId !== conv.conversationId,
           );
         });
 
@@ -981,7 +981,7 @@ export class AIStudioFolderManager {
         this.save();
         this.showNotification(
           this.t('conversation_saved_to_root') || 'Saved to Uncategorized',
-          'info'
+          'info',
         );
       };
 
@@ -1102,14 +1102,14 @@ export class AIStudioFolderManager {
           Object.keys(this.data.folderContents).forEach((fid) => {
             if (fid === folder.id) return;
             this.data.folderContents[fid] = (this.data.folderContents[fid] || []).filter(
-              (c) => c.conversationId !== conv.conversationId
+              (c) => c.conversationId !== conv.conversationId,
             );
           });
 
           this.save();
           this.showNotification(
             `${this.t('conversation_added_to_folder') || 'Added to'} "${folder.name}"`,
-            'info'
+            'info',
           );
         });
 
@@ -1239,7 +1239,7 @@ export class AIStudioFolderManager {
           alert(this.t('folder_import_error') || 'Import failed');
         }
       },
-      { once: true }
+      { once: true },
     );
     input.click();
   }
@@ -1409,7 +1409,7 @@ export class AIStudioFolderManager {
     } catch (error) {
       console.warn(
         '[AIStudioFolderManager] Failed to load from sync storage, trying localStorage:',
-        error
+        error,
       );
     }
 
@@ -1429,7 +1429,7 @@ export class AIStudioFolderManager {
     } catch (error) {
       console.error(
         '[AIStudioFolderManager] Failed to load sidebar width from localStorage:',
-        error
+        error,
       );
     }
   }
@@ -1543,7 +1543,7 @@ export class AIStudioFolderManager {
       const delta = e.clientX - startX;
       const newWidth = Math.max(
         this.MIN_SIDEBAR_WIDTH,
-        Math.min(this.MAX_SIDEBAR_WIDTH, startWidth + delta)
+        Math.min(this.MAX_SIDEBAR_WIDTH, startWidth + delta),
       );
 
       this.sidebarWidth = newWidth;

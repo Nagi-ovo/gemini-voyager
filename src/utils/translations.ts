@@ -21,7 +21,7 @@ export type TranslationKey = keyof RawLocaleMessages;
 export type Translation = Record<TranslationKey, string>;
 
 function extractTranslations<M extends Record<string, { message: string }>>(
-  raw: M
+  raw: M,
 ): Record<keyof M, string> {
   const out = {} as Record<keyof M, string>;
   for (const key of Object.keys(raw) as Array<keyof M>) {

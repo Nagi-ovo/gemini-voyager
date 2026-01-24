@@ -1,8 +1,7 @@
 /**
  * MarkdownFormatter unit tests
  */
-
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
 import { MarkdownFormatter } from '../MarkdownFormatter';

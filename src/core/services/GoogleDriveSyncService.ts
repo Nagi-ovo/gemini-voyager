@@ -8,14 +8,13 @@
  * - gemini-voyager-folders.json
  * - gemini-voyager-prompts.json
  */
-
 import type { FolderData } from '@/core/types/folder';
 import type {
-  SyncState,
-  SyncMode,
-  PromptItem,
   FolderExportPayload,
   PromptExportPayload,
+  PromptItem,
+  SyncMode,
+  SyncState,
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 import { EXTENSION_VERSION } from '@/core/utils/version';
@@ -112,7 +111,7 @@ export class GoogleDriveSyncService {
   async upload(
     folders: FolderData,
     prompts: PromptItem[],
-    interactive: boolean = true
+    interactive: boolean = true,
   ): Promise<boolean> {
     try {
       this.updateState({ isSyncing: true, error: null });
@@ -121,7 +120,7 @@ export class GoogleDriveSyncService {
       if (!token) {
         if (!interactive) {
           console.log(
-            '[GoogleDriveSyncService] Upload skipped: Not authenticated (non-interactive)'
+            '[GoogleDriveSyncService] Upload skipped: Not authenticated (non-interactive)',
           );
           this.updateState({ isSyncing: false, isAuthenticated: false });
           return false;
@@ -176,7 +175,7 @@ export class GoogleDriveSyncService {
    * Returns { folders, prompts } or null if no files exist
    */
   async download(
-    interactive: boolean = true
+    interactive: boolean = true,
   ): Promise<{ folders: FolderExportPayload | null; prompts: PromptExportPayload | null } | null> {
     try {
       this.updateState({ isSyncing: true, error: null });
@@ -185,7 +184,7 @@ export class GoogleDriveSyncService {
       if (!token) {
         if (!interactive) {
           console.log(
-            '[GoogleDriveSyncService] Download skipped: Not authenticated (non-interactive)'
+            '[GoogleDriveSyncService] Download skipped: Not authenticated (non-interactive)',
           );
           this.updateState({ isSyncing: false, isAuthenticated: false });
           return null;
@@ -303,7 +302,7 @@ export class GoogleDriveSyncService {
             } else {
               reject(new Error('No response from auth flow'));
             }
-          }
+          },
         );
       });
 
@@ -337,7 +336,7 @@ export class GoogleDriveSyncService {
   private async ensureFileId(
     token: string,
     fileName: string,
-    type: 'folders' | 'prompts'
+    type: 'folders' | 'prompts',
   ): Promise<void> {
     // 1. Ensure backup folder exists
     const folderId = await this.ensureBackupFolder(token);
@@ -391,7 +390,7 @@ export class GoogleDriveSyncService {
 
     // Search for folder
     const query = encodeURIComponent(
-      `name='${BACKUP_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`
+      `name='${BACKUP_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     );
     const url = `${DRIVE_API_BASE}/files?q=${query}&fields=files(id)`;
     const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -444,7 +443,7 @@ export class GoogleDriveSyncService {
     token: string,
     fileId: string,
     targetFolderId: string,
-    currentParents: string[]
+    currentParents: string[],
   ): Promise<void> {
     const previousParents = currentParents.join(',');
     const url = `${DRIVE_API_BASE}/files/${fileId}?addParents=${targetFolderId}&removeParents=${previousParents}&fields=id,parents`;

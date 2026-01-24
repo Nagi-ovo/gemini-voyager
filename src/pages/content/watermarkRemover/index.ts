@@ -12,7 +12,6 @@
  * - Sends image data to this content script for watermark removal
  * - Returns processed image to complete the download
  */
-
 import { WatermarkEngine } from './watermarkEngine';
 
 let engine: WatermarkEngine | null = null;
@@ -84,7 +83,7 @@ const isValidGeminiImage = (img: HTMLImageElement): boolean =>
  */
 const findGeminiImages = (): HTMLImageElement[] =>
   [...document.querySelectorAll<HTMLImageElement>('img[src*="googleusercontent.com"]')].filter(
-    (img) => isValidGeminiImage(img) && img.dataset.watermarkProcessed !== 'true'
+    (img) => isValidGeminiImage(img) && img.dataset.watermarkProcessed !== 'true',
   );
 
 /**
@@ -105,7 +104,7 @@ function addDownloadIndicator(imgElement: HTMLImageElement): void {
 
   // Try to find Gemini's native download button area
   const nativeDownloadIcon = container.querySelector(
-    'mat-icon[fonticon="download"], .google-symbols[data-mat-icon-name="download"]'
+    'mat-icon[fonticon="download"], .google-symbols[data-mat-icon-name="download"]',
   );
   const nativeButton = nativeDownloadIcon?.closest('button');
 
@@ -191,7 +190,7 @@ const processAllImages = (): void => {
   // Also check existing processed images to see if they need an indicator
   // (e.g. if the native buttons loaded after the image was processed)
   const processedImages = document.querySelectorAll<HTMLImageElement>(
-    'img[data-watermark-processed="true"]'
+    'img[data-watermark-processed="true"]',
   );
   processedImages.forEach((img) => {
     addDownloadIndicator(img);
@@ -268,7 +267,7 @@ function setupFetchInterceptorBridge(): void {
 async function processImageRequest(
   requestId: string,
   base64: string,
-  bridge: HTMLElement
+  bridge: HTMLElement,
 ): Promise<void> {
   if (!engine) {
     bridge.dataset.response = JSON.stringify({

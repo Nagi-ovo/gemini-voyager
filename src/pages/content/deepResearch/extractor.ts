@@ -1,13 +1,12 @@
 /**
  * DOM extraction module for Deep Research thinking content
  */
-
 import type {
-  ThoughtItem,
   BrowseChip,
-  ThinkingSection,
   ThinkingContent,
   ThinkingItem,
+  ThinkingSection,
+  ThoughtItem,
 } from './types';
 
 /**
@@ -45,7 +44,7 @@ function extractBrowseChips(browseListElement: Element): BrowseChip[] {
   try {
     const chips: BrowseChip[] = [];
     const chipElements = browseListElement.querySelectorAll(
-      'browse-web-chip a[data-test-id="browse-chip-link"]'
+      'browse-web-chip a[data-test-id="browse-chip-link"]',
     );
 
     chipElements.forEach((chipEl) => {

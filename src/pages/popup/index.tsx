@@ -1,9 +1,11 @@
-import Popup from '@pages/popup/Popup';
 import { createRoot } from 'react-dom/client';
 
-import { LanguageProvider } from '../../contexts/LanguageContext';
+import Popup from '@pages/popup/Popup';
 import '@pages/popup/index.css';
+
 import '@assets/styles/tailwind.css';
+
+import { LanguageProvider } from '../../contexts/LanguageContext';
 
 function init() {
   const rootContainer = document.querySelector('#__root');
@@ -12,7 +14,7 @@ function init() {
   root.render(
     <LanguageProvider>
       <Popup />
-    </LanguageProvider>
+    </LanguageProvider>,
   );
 }
 

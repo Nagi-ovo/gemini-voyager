@@ -1,10 +1,9 @@
 /**
  * Tests for concurrency control utilities
  */
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-import { AsyncLock, OperationQueue, LOCK_KEYS } from '../concurrency';
+import { AsyncLock, LOCK_KEYS, OperationQueue } from '../concurrency';
 
 describe('Concurrency Control', () => {
   describe('AsyncLock', () => {
@@ -111,7 +110,7 @@ describe('Concurrency Control', () => {
       await expect(
         lock.withLock('test', async () => {
           throw new Error('Test error');
-        })
+        }),
       ).rejects.toThrow('Test error');
 
       // Lock should be released
@@ -246,7 +245,7 @@ describe('Concurrency Control', () => {
       const operations = Array.from({ length: 10 }, (_, i) =>
         queue.enqueue(async () => {
           results.push(i);
-        })
+        }),
       );
 
       await Promise.all(operations);
@@ -325,7 +324,7 @@ describe('Concurrency Control', () => {
         lock.withLock(LOCK_KEYS.FOLDER_DATA_READ, async () => {
           await new Promise((resolve) => setTimeout(resolve, 10));
           return data.value;
-        })
+        }),
       );
 
       const startTime = Date.now();

@@ -1,15 +1,14 @@
 /**
  * Menu button injection module for Deep Research export
  */
+import { StorageKeys } from '@/core/types/common';
+import { type AppLanguage, normalizeLanguage } from '@/utils/language';
+import { extractMessageDictionary } from '@/utils/localeMessages';
+import type { TranslationKey } from '@/utils/translations';
 
 import { downloadMarkdown } from './download';
 import { extractThinkingPanels } from './extractor';
 import { formatToMarkdown } from './formatter';
-
-import { StorageKeys } from '@/core/types/common';
-import { normalizeLanguage, type AppLanguage } from '@/utils/language';
-import { extractMessageDictionary } from '@/utils/localeMessages';
-import type { TranslationKey } from '@/utils/translations';
 
 type Dictionaries = Record<AppLanguage, Record<string, string>>;
 
@@ -72,7 +71,7 @@ async function loadDictionaries(): Promise<Dictionaries> {
 export function applyDeepResearchDownloadButtonI18n(
   button: HTMLButtonElement,
   dict: Dictionaries,
-  lang: AppLanguage
+  lang: AppLanguage,
 ): void {
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
   const text = t('deepResearchDownload');
@@ -285,7 +284,7 @@ export async function injectDownloadButton(): Promise<void> {
             observer.disconnect();
           } catch {}
         },
-        { once: true }
+        { once: true },
       );
     }
 

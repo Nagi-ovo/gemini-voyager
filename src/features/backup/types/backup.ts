@@ -2,7 +2,6 @@
  * Types for auto-backup functionality
  * Follows enterprise best practices with comprehensive type safety
  */
-
 import type { Result } from '@/core/types/common';
 
 /**
@@ -90,7 +89,7 @@ export interface IBackupService {
    */
   createBackup(
     directoryHandle: FileSystemDirectoryHandle,
-    config: BackupConfig
+    config: BackupConfig,
   ): Promise<Result<BackupResult>>;
 
   /**

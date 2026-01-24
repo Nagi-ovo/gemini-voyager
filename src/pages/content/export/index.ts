@@ -1,12 +1,12 @@
 // Static imports to avoid CSP issues with dynamic imports in content scripts
+import { StorageKeys } from '@/core/types/common';
+import { type AppLanguage, normalizeLanguage } from '@/utils/language';
+import { extractMessageDictionary } from '@/utils/localeMessages';
+import type { TranslationKey } from '@/utils/translations';
+
 import { ConversationExportService } from '../../../features/export/services/ConversationExportService';
 import type { ConversationMetadata } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
-
-import { StorageKeys } from '@/core/types/common';
-import { normalizeLanguage, type AppLanguage } from '@/utils/language';
-import { extractMessageDictionary } from '@/utils/localeMessages';
-import type { TranslationKey } from '@/utils/translations';
 
 function hashString(input: string): string {
   let h = 2166136261 >>> 0;
@@ -168,7 +168,7 @@ function extractAssistantText(el: HTMLElement): string {
   // Prefer direct text from message container if available (connected to DOM)
   try {
     const mc = el.querySelector(
-      'message-content, .markdown, .markdown-main-panel'
+      'message-content, .markdown, .markdown-main-panel',
     ) as HTMLElement | null;
     if (mc) {
       const raw = mc.textContent || mc.innerText || '';
@@ -199,7 +199,7 @@ function extractAssistantText(el: HTMLElement): string {
   };
   try {
     const candidates = clone.querySelectorAll(
-      'button, [role="button"], [aria-label], span, div, a'
+      'button, [role="button"], [aria-label], span, div, a',
     );
     candidates.forEach((n) => {
       const eln = n as HTMLElement;
@@ -283,7 +283,7 @@ function collectChatPairs(): ChatTurn[] {
           (aEl.querySelector('.markdown, .markdown-main-panel') as HTMLElement | null) ||
           (aEl.closest('.presented-response-container') as HTMLElement | null) ||
           (aEl.querySelector(
-            '.presented-response-container, .response-content'
+            '.presented-response-container, .response-content',
           ) as HTMLElement | null) ||
           (aEl.querySelector('response-element') as HTMLElement | null) ||
           aEl;
@@ -386,7 +386,7 @@ function getConversationTitleForExport(): string {
   try {
     const activeFolderTitle =
       document.querySelector(
-        '.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title'
+        '.gv-folder-conversation.gv-folder-conversation-selected .gv-conversation-title',
       ) || document.querySelector('.gv-folder-conversation-selected .gv-conversation-title');
 
     if (activeFolderTitle?.textContent?.trim()) {
@@ -413,7 +413,7 @@ function getConversationTitleForExport(): string {
     try {
       console.debug(
         '[Export] Failed to get title from native sidebar selected conversation:',
-        error
+        error,
       );
     } catch {}
   }
@@ -538,7 +538,7 @@ export async function startExportButton(): Promise<void> {
   // listen for runtime language changes
   const storageChangeHandler = (
     changes: Record<string, chrome.storage.StorageChange>,
-    area: string
+    area: string,
   ) => {
     if (area !== 'sync') return;
     const nextRaw = changes[StorageKeys.LANGUAGE]?.newValue;
@@ -567,7 +567,7 @@ export async function startExportButton(): Promise<void> {
           console.error('[Gemini Voyager] Failed to remove storage listener on unload:', e);
         }
       },
-      { once: true }
+      { once: true },
     );
   } catch {}
 
@@ -587,7 +587,7 @@ export async function startExportButton(): Promise<void> {
 
 async function showExportDialog(
   dict: Record<AppLanguage, Record<string, string>>,
-  lang: AppLanguage
+  lang: AppLanguage,
 ): Promise<void> {
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 

@@ -5,6 +5,7 @@ gemini-voyager-sync/
 dist_chrome/
 dist_firefox/
 dist_safari/
+dist/
 
 # Dependencies
 node_modules/
@@ -12,6 +13,7 @@ node_modules/
 # Lock files
 bun.lockb
 package-lock.json
+pnpm-lock.yaml
 
 # VitePress
 .vitepress/dist
@@ -19,3 +21,7 @@ package-lock.json
 
 # Coverage
 coverage/
+
+# System & Misc
+.DS_Store
+*.zip

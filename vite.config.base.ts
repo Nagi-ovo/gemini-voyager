@@ -1,12 +1,11 @@
-import { resolve } from 'path';
-
 import { ManifestV3Export } from '@crxjs/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig, BuildOptions } from 'vite';
+import { resolve } from 'path';
+import { BuildOptions, defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-import { stripDevIcons, crxI18n } from './custom-vite-plugins';
+import { crxI18n, stripDevIcons } from './custom-vite-plugins';
 import devManifest from './manifest.dev.json';
 import manifest from './manifest.json';
 import pkg from './package.json';

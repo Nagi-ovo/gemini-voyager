@@ -2,7 +2,6 @@
  * Storage Migration Utility
  * Handles migration from localStorage to chrome.storage for cross-domain data sharing
  */
-
 import { logger } from '@/core/services/LoggerService';
 import type { IStorageService } from '@/core/services/StorageService';
 import type { StorageKey } from '@/core/types/common';
@@ -37,7 +36,7 @@ export async function migrateFromLocalStorage(
   options: {
     deleteAfterMigration?: boolean; // Whether to delete from localStorage after successful migration
     skipExisting?: boolean; // Skip keys that already exist in target storage
-  } = {}
+  } = {},
 ): Promise<MigrationResult> {
   const migrationLogger = logger.createChild('StorageMigration');
   const result: MigrationResult = {
@@ -138,7 +137,7 @@ export async function migrateFromLocalStorage(
  */
 export async function isMigrationCompleted(
   key: StorageKey,
-  targetStorage: IStorageService
+  targetStorage: IStorageService,
 ): Promise<boolean> {
   const result = await targetStorage.get(key);
   return result.success;
@@ -153,14 +152,14 @@ export async function isMigrationCompleted(
  */
 export async function getMigrationStatus(
   keys: StorageKey[],
-  targetStorage: IStorageService
+  targetStorage: IStorageService,
 ): Promise<Record<string, boolean>> {
   const status: Record<string, boolean> = {};
 
   await Promise.all(
     keys.map(async (key) => {
       status[key] = await isMigrationCompleted(key, targetStorage);
-    })
+    }),
   );
 
   return status;

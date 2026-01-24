@@ -3,9 +3,7 @@
  * Converts conversation to clean, standard Markdown format
  * Following the "paper book" philosophy - content over design
  */
-
 import type { ChatTurn, ConversationMetadata } from '../types/export';
-
 import { DOMContentExtractor } from './DOMContentExtractor';
 
 /**
@@ -65,7 +63,7 @@ export class MarkdownFormatter {
    */
   static async formatWithAssets(
     turns: ChatTurn[],
-    metadata: ConversationMetadata
+    metadata: ConversationMetadata,
   ): Promise<string> {
     const md = this.format(turns, metadata);
     const urls = this.extractImageUrls(md);
@@ -76,7 +74,7 @@ export class MarkdownFormatter {
       urls.map(async (u) => {
         const data = await this.fetchAsDataURL(u);
         if (data) urlToData.set(u, data);
-      })
+      }),
     );
     if (urlToData.size === 0) return md;
 

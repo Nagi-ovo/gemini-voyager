@@ -7,12 +7,11 @@
  *
  * Coordinates watermark detection, alpha map calculation, and removal operations.
  */
-
 import { calculateAlphaMap } from './alphaMap';
 // Import watermark background capture images - Vite will bundle these
 import BG_48_IMPORT from './assets/bg_48.png';
 import BG_96_IMPORT from './assets/bg_96.png';
-import { removeWatermark, type WatermarkPosition } from './blendModes';
+import { type WatermarkPosition, removeWatermark } from './blendModes';
 
 // For content scripts, we need to use chrome.runtime.getURL to resolve asset paths
 // The imported paths are relative to the bundle, which works in extension context
@@ -79,7 +78,7 @@ export function detectWatermarkConfig(imageWidth: number, imageHeight: number): 
 export function calculateWatermarkPosition(
   imageWidth: number,
   imageHeight: number,
-  config: WatermarkConfig
+  config: WatermarkConfig,
 ): WatermarkPosition {
   const { logoSize, marginRight, marginBottom } = config;
 
@@ -124,8 +123,8 @@ export class WatermarkEngine {
         bg48.onerror = (e) =>
           reject(
             new Error(
-              `Failed to load bg_48.png from ${bg48Path}: ${e instanceof Event ? 'Image load error' : e}`
-            )
+              `Failed to load bg_48.png from ${bg48Path}: ${e instanceof Event ? 'Image load error' : e}`,
+            ),
           );
         // Set crossOrigin before src to prevent canvas tainting in Firefox
         bg48.crossOrigin = 'anonymous';
@@ -136,8 +135,8 @@ export class WatermarkEngine {
         bg96.onerror = (e) =>
           reject(
             new Error(
-              `Failed to load bg_96.png from ${bg96Path}: ${e instanceof Event ? 'Image load error' : e}`
-            )
+              `Failed to load bg_96.png from ${bg96Path}: ${e instanceof Event ? 'Image load error' : e}`,
+            ),
           );
         // Set crossOrigin before src to prevent canvas tainting in Firefox
         bg96.crossOrigin = 'anonymous';
@@ -189,7 +188,7 @@ export class WatermarkEngine {
    * @returns Processed canvas
    */
   async removeWatermarkFromImage(
-    image: HTMLImageElement | HTMLCanvasElement
+    image: HTMLImageElement | HTMLCanvasElement,
   ): Promise<HTMLCanvasElement> {
     // Create canvas to process image
     const canvas = document.createElement('canvas');

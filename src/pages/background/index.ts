@@ -1,11 +1,10 @@
 /* Background service worker - handles cross-origin image fetch, popup opening, and sync */
-
 import browser from 'webextension-polyfill';
 
 import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
-import type { SyncMode, SyncData, PromptItem } from '@/core/types/sync';
+import type { PromptItem, SyncData, SyncMode } from '@/core/types/sync';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
@@ -66,7 +65,7 @@ const MANIFEST_DEFAULT_DOMAINS = new Set(
     ...(chrome.runtime.getManifest().content_scripts?.flatMap((c) => c.matches || []) || []),
   ]
     .map(patternToDomain)
-    .filter((d): d is string => !!d)
+    .filter((d): d is string => !!d),
 );
 
 function patternToDomain(pattern: string | undefined): string | null {
@@ -134,7 +133,7 @@ async function syncCustomContentScripts(domains?: string[]): Promise<void> {
     )[CUSTOM_WEBSITE_KEY];
 
   const matchPatterns = Array.from(
-    new Set((Array.isArray(domainList) ? domainList : []).flatMap(toMatchPatterns).filter(Boolean))
+    new Set((Array.isArray(domainList) ? domainList : []).flatMap(toMatchPatterns).filter(Boolean)),
   );
 
   const grantedMatches = await filterGrantedOrigins(matchPatterns);
@@ -276,7 +275,7 @@ class StarredMessagesManager {
       if (data.messages[conversationId]) {
         const initialLength = data.messages[conversationId].length;
         data.messages[conversationId] = data.messages[conversationId].filter(
-          (m) => m.turnId !== turnId
+          (m) => m.turnId !== turnId,
         );
 
         if (data.messages[conversationId].length < initialLength) {
@@ -324,7 +323,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           case 'gv.starred.remove': {
             const removed = await starredMessagesManager.removeStarredMessage(
               message.payload.conversationId,
-              message.payload.turnId
+              message.payload.turnId,
             );
             sendResponse({ ok: true, removed });
             return;
@@ -336,7 +335,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           }
           case 'gv.starred.getForConversation': {
             const messages = await starredMessagesManager.getStarredMessagesForConversation(
-              message.payload.conversationId
+              message.payload.conversationId,
             );
             sendResponse({ ok: true, messages });
             return;
@@ -344,7 +343,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           case 'gv.starred.isStarred': {
             const isStarred = await starredMessagesManager.isMessageStarred(
               message.payload.conversationId,
-              message.payload.turnId
+              message.payload.turnId,
             );
             sendResponse({ ok: true, isStarred });
             return;
@@ -375,7 +374,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             const success = await googleDriveSyncService.upload(
               folders,
               prompts,
-              interactive !== false
+              interactive !== false,
             );
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;

@@ -2,7 +2,6 @@
  * Test setup file
  * Configure test environment
  */
-
 import { vi } from 'vitest';
 
 // Mock chrome API

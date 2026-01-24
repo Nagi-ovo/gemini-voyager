@@ -2,10 +2,8 @@
  * DOM manipulation service
  * Centralizes DOM queries and mutations with error handling
  */
-
 import { DOMError, ErrorCode } from '../errors/AppError';
-import type { Result, Nullable } from '../types/common';
-
+import type { Nullable, Result } from '../types/common';
 import { logger } from './LoggerService';
 
 export interface WaitForElementOptions {
@@ -23,7 +21,7 @@ export class DOMService {
    */
   async waitForElement(
     selector: string,
-    options: WaitForElementOptions = {}
+    options: WaitForElementOptions = {},
   ): Promise<Result<HTMLElement>> {
     const { timeout = 5000, rootElement = document.body } = options;
 
@@ -81,7 +79,7 @@ export class DOMService {
    */
   querySelector<T extends HTMLElement = HTMLElement>(
     selector: string,
-    root: Element | Document = document
+    root: Element | Document = document,
   ): Result<T> {
     try {
       const element = root.querySelector(selector);
@@ -105,7 +103,7 @@ export class DOMService {
           ErrorCode.ELEMENT_QUERY_FAILED,
           `Query failed: ${selector}`,
           { selector },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -116,7 +114,7 @@ export class DOMService {
    */
   querySelectorAll<T extends HTMLElement = HTMLElement>(
     selector: string,
-    root: Element | Document = document
+    root: Element | Document = document,
   ): Result<T[]> {
     try {
       const elements = Array.from(root.querySelectorAll(selector)) as T[];
@@ -132,7 +130,7 @@ export class DOMService {
           ErrorCode.ELEMENT_QUERY_FAILED,
           `Query failed: ${selector}`,
           { selector },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -144,7 +142,7 @@ export class DOMService {
   createElement<K extends keyof HTMLElementTagNameMap>(
     tagName: K,
     attributes?: Partial<Record<string, string>>,
-    children?: (HTMLElement | string)[]
+    children?: (HTMLElement | string)[],
   ): HTMLElementTagNameMap[K] {
     const element = document.createElement(tagName);
 
@@ -175,7 +173,7 @@ export class DOMService {
   observeElement(
     element: Element,
     callback: MutationCallback,
-    options: MutationObserverInit = { childList: true, subtree: true }
+    options: MutationObserverInit = { childList: true, subtree: true },
   ): string {
     const observerId = `observer-${Date.now()}-${Math.random()}`;
 

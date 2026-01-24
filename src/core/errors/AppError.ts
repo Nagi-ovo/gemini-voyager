@@ -41,7 +41,7 @@ export class AppError extends Error {
     public readonly code: ErrorCode,
     message: string,
     public readonly context?: ErrorContext,
-    public readonly originalError?: Error
+    public readonly originalError?: Error,
   ) {
     super(message);
     this.name = 'AppError';

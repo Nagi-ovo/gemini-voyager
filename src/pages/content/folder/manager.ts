@@ -1,17 +1,17 @@
 import browser from 'webextension-polyfill';
 
-import { getGemIcon, DEFAULT_GEM_ICON, DEFAULT_CONVERSATION_ICON, GEM_CONFIG } from './gemConfig';
-import {
-  createFolderStorageAdapter,
-  type IFolderStorageAdapter,
-} from './storage/FolderStorageAdapter';
-import type { Folder, FolderData, ConversationReference, DragData } from './types';
-
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
-import { initI18n, getTranslationSync, getTranslationSyncUnsafe } from '@/utils/i18n';
+import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
+
+import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
+import {
+  type IFolderStorageAdapter,
+  createFolderStorageAdapter,
+} from './storage/FolderStorageAdapter';
+import type { ConversationReference, DragData, Folder, FolderData } from './types';
 
 const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
@@ -315,7 +315,7 @@ export class FolderManager {
     // Find conversations-list (Recent section) by looking for the conversations container
     // Try multiple selectors to find the Recent section
     let conversationsList = this.sidebarContainer.querySelector(
-      '[data-test-id="all-conversations"]'
+      '[data-test-id="all-conversations"]',
     );
 
     if (!conversationsList) {
@@ -326,7 +326,7 @@ export class FolderManager {
     if (!conversationsList) {
       // Fallback: find the element that contains conversation items
       const conversationItems = this.sidebarContainer.querySelectorAll(
-        '[data-test-id="conversation"]'
+        '[data-test-id="conversation"]',
       );
       if (conversationItems.length > 0) {
         // Find the parent that contains these conversations
@@ -611,7 +611,7 @@ export class FolderManager {
   private createConversationElement(
     conv: ConversationReference,
     folderId: string,
-    level: number
+    level: number,
   ): HTMLElement {
     const convEl = document.createElement('div');
     convEl.className = conv.starred
@@ -666,7 +666,7 @@ export class FolderManager {
       // Apply opacity to all selected conversations
       this.selectedConversations.forEach((id) => {
         const el = this.containerElement?.querySelector(
-          `[data-conversation-id="${id}"]`
+          `[data-conversation-id="${id}"]`,
         ) as HTMLElement;
         if (el) el.style.opacity = '0.5';
       });
@@ -676,7 +676,7 @@ export class FolderManager {
       // Restore opacity for all selected conversations
       this.selectedConversations.forEach((id) => {
         const el = this.containerElement?.querySelector(
-          `[data-conversation-id="${id}"]`
+          `[data-conversation-id="${id}"]`,
         ) as HTMLElement;
         if (el) el.style.opacity = '1';
       });
@@ -857,7 +857,7 @@ export class FolderManager {
             this.addConversationsToFolder(
               folderId,
               dragData.conversations,
-              dragData.sourceFolderId
+              dragData.sourceFolderId,
             );
           } else {
             // Legacy single conversation drag (backward compatibility)
@@ -922,12 +922,12 @@ export class FolderManager {
             // Multi-select drag
             this.debug(
               'Adding multiple conversations to root level:',
-              dragData.conversations.length
+              dragData.conversations.length,
             );
             this.addConversationsToFolder(
               ROOT_CONVERSATIONS_ID,
               dragData.conversations,
-              dragData.sourceFolderId
+              dragData.sourceFolderId,
             );
           } else {
             // Legacy single conversation drag (backward compatibility)
@@ -1033,7 +1033,7 @@ export class FolderManager {
         'Folder drag start:',
         folder.name,
         'canBeDragged:',
-        this.canFolderBeDragged(folder.id)
+        this.canFolderBeDragged(folder.id),
       );
     };
 
@@ -1156,7 +1156,7 @@ export class FolderManager {
           return;
         }
       },
-      true
+      true,
     ); // Use capture phase to intercept before navigation
 
     element.addEventListener('dragstart', (e) => {
@@ -1262,7 +1262,7 @@ export class FolderManager {
   private findConversationElement(conversationId: string): HTMLElement | null {
     // Check in folder conversations
     const folderConv = this.containerElement?.querySelector(
-      `[data-conversation-id="${conversationId}"]`
+      `[data-conversation-id="${conversationId}"]`,
     ) as HTMLElement;
     if (folderConv) return folderConv;
 
@@ -1303,7 +1303,7 @@ export class FolderManager {
     // Strategy 2: Extract from href (fallback when jslog is missing/broken)
     // This ensures we can still identify conversations even if Gemini UI changes traits
     const link = element.querySelector(
-      'a[href*="/app/"], a[href*="/gem/"]'
+      'a[href*="/app/"], a[href*="/gem/"]',
     ) as HTMLAnchorElement | null;
     if (link) {
       const href = link.href;
@@ -1352,7 +1352,7 @@ export class FolderManager {
     // Try to extract from href if jslog failed
     if (!hexId) {
       const link = element.querySelector(
-        'a[href*="/app/"], a[href*="/gem/"]'
+        'a[href*="/app/"], a[href*="/gem/"]',
       ) as HTMLAnchorElement | null;
       if (link) {
         const href = link.href;
@@ -1425,7 +1425,7 @@ export class FolderManager {
 
     // Strategy 2: Extract from href
     const link = element.querySelector(
-      'a[href*="/app/"], a[href*="/gem/"]'
+      'a[href*="/app/"], a[href*="/gem/"]',
     ) as HTMLAnchorElement | null;
     if (link) {
       const href = link.href;
@@ -1491,7 +1491,7 @@ export class FolderManager {
             const isConv = node.matches('[data-test-id="conversation"]');
             // Check if it contains conversations (e.g. a container was removed)
             const containedConvsCount = node.querySelectorAll(
-              '[data-test-id="conversation"]'
+              '[data-test-id="conversation"]',
             ).length;
 
             if (isConv) {
@@ -1513,7 +1513,7 @@ export class FolderManager {
       // EXCEPTION: If we are in multi-select mode, the user might be performing a bulk delete.
       if (totalRemovedCount > 1 && !this.isMultiSelectMode) {
         this.debugWarn(
-          `Ignored bulk removal of ${totalRemovedCount} conversations - likely UI refresh`
+          `Ignored bulk removal of ${totalRemovedCount} conversations - likely UI refresh`,
         );
         return;
       }
@@ -1971,7 +1971,7 @@ export class FolderManager {
 
   private addConversationToFolder(
     folderId: string,
-    dragData: DragData & { sourceFolderId?: string }
+    dragData: DragData & { sourceFolderId?: string },
   ): void {
     this.debug('Adding conversation to folder:', {
       folderId,
@@ -1984,7 +1984,7 @@ export class FolderManager {
 
     // Check if conversation is already in this folder
     const exists = this.data.folderContents[folderId].some(
-      (c) => c.conversationId === dragData.conversationId
+      (c) => c.conversationId === dragData.conversationId,
     );
 
     if (exists) {
@@ -2022,7 +2022,7 @@ export class FolderManager {
   private addConversationsToFolder(
     folderId: string,
     conversations: ConversationReference[],
-    sourceFolderId?: string
+    sourceFolderId?: string,
   ): void {
     this.debug('Adding multiple conversations to folder:', {
       folderId,
@@ -2040,7 +2040,7 @@ export class FolderManager {
     conversations.forEach((conv) => {
       // Check if conversation is already in this folder
       const exists = this.data.folderContents[folderId].some(
-        (c) => c.conversationId === conv.conversationId
+        (c) => c.conversationId === conv.conversationId,
       );
 
       if (!exists) {
@@ -2062,7 +2062,7 @@ export class FolderManager {
 
     this.debug(
       `Added ${addedCount} conversations. Total in folder:`,
-      this.data.folderContents[folderId].length
+      this.data.folderContents[folderId].length,
     );
 
     // Remove from source folder if moving
@@ -2070,7 +2070,7 @@ export class FolderManager {
       this.debug('Removing conversations from source folder:', sourceFolderId);
       conversationsToRemove.forEach((convId) => {
         this.data.folderContents[sourceFolderId] = this.data.folderContents[sourceFolderId].filter(
-          (c) => c.conversationId !== convId
+          (c) => c.conversationId !== convId,
         );
       });
     }
@@ -2173,7 +2173,7 @@ export class FolderManager {
     folderId: string,
     conversationId: string,
     title: string,
-    event: MouseEvent
+    event: MouseEvent,
   ): void {
     // Create inline confirmation dialog using safe DOM API
     const confirmDialog = document.createElement('div');
@@ -2240,7 +2240,7 @@ export class FolderManager {
     if (!this.data.folderContents[folderId]) return;
 
     this.data.folderContents[folderId] = this.data.folderContents[folderId].filter(
-      (c) => c.conversationId !== conversationId
+      (c) => c.conversationId !== conversationId,
     );
 
     this.saveData();
@@ -2252,7 +2252,7 @@ export class FolderManager {
 
     const count = this.selectedConversations.size;
     const confirmed = confirm(
-      `Delete ${count} selected conversation${count > 1 ? 's' : ''} from this folder?`
+      `Delete ${count} selected conversation${count > 1 ? 's' : ''} from this folder?`,
     );
 
     if (!confirmed) return;
@@ -2262,7 +2262,7 @@ export class FolderManager {
     if (!this.data.folderContents[folderId]) return;
 
     this.data.folderContents[folderId] = this.data.folderContents[folderId].filter(
-      (c) => !this.selectedConversations.has(c.conversationId)
+      (c) => !this.selectedConversations.has(c.conversationId),
     );
 
     this.saveData();
@@ -2334,7 +2334,7 @@ export class FolderManager {
       if (failedCount === 0) {
         const successMessage = this.t('batch_delete_success').replace(
           '{count}',
-          String(successCount)
+          String(successCount),
         );
         this.showNotification(successMessage, 'success');
       } else {
@@ -2412,7 +2412,7 @@ export class FolderManager {
   private findNativeConversationElement(conversationId: string): HTMLElement | null {
     // Try multiple strategies to find the conversation
     const allConversations = this.sidebarContainer?.querySelectorAll(
-      '[data-test-id="conversation"]'
+      '[data-test-id="conversation"]',
     );
     if (!allConversations) return null;
 
@@ -2439,7 +2439,7 @@ export class FolderManager {
       const actionsContainer = parent.querySelector('.conversation-actions-container');
       if (actionsContainer) {
         moreButton = actionsContainer.querySelector(
-          '[data-test-id="actions-menu-button"]'
+          '[data-test-id="actions-menu-button"]',
         ) as HTMLElement;
       }
     }
@@ -2447,7 +2447,7 @@ export class FolderManager {
     // Strategy 2: Look within the conversation element
     if (!moreButton) {
       moreButton = conversationEl.querySelector(
-        '[data-test-id="actions-menu-button"]'
+        '[data-test-id="actions-menu-button"]',
       ) as HTMLElement;
     }
 
@@ -2483,7 +2483,7 @@ export class FolderManager {
     while (elapsed < maxWaitTime) {
       // Strategy 1: Look for delete button by data-test-id (primary method)
       const deleteByTestId = document.querySelector(
-        '[data-test-id="delete-button"]'
+        '[data-test-id="delete-button"]',
       ) as HTMLElement;
       if (deleteByTestId && this.isVisibleElement(deleteByTestId)) {
         deleteByTestId.click();
@@ -2496,7 +2496,7 @@ export class FolderManager {
         '.cdk-overlay-container button, ' +
           '.cdk-overlay-container [role="menuitem"], ' +
           '.mat-mdc-menu-content button, ' +
-          '.mat-menu-content button'
+          '.mat-menu-content button',
       );
 
       for (const item of menuItems) {
@@ -2507,7 +2507,7 @@ export class FolderManager {
         if (
           text &&
           keywords.some(
-            (keyword: string) => text === keyword || (text.includes(keyword) && text.length < 20)
+            (keyword: string) => text === keyword || (text.includes(keyword) && text.length < 20),
           )
         ) {
           (item as HTMLElement).click();
@@ -2518,7 +2518,7 @@ export class FolderManager {
 
       // Strategy 3: Look for button with delete icon (mat-icon containing 'delete')
       const deleteIcons = document.querySelectorAll(
-        '.cdk-overlay-container mat-icon, .cdk-overlay-container .material-icons'
+        '.cdk-overlay-container mat-icon, .cdk-overlay-container .material-icons',
       );
 
       for (const icon of deleteIcons) {
@@ -2560,7 +2560,7 @@ export class FolderManager {
     while (elapsed < maxWaitTime) {
       // Strategy 1: Look for button with data-test-id containing "confirm" or "delete"
       const confirmByTestId = document.querySelector(
-        '[data-test-id*="confirm"], [data-test-id*="delete"]:not([data-test-id="delete-button"])'
+        '[data-test-id*="confirm"], [data-test-id*="delete"]:not([data-test-id="delete-button"])',
       ) as HTMLElement;
       if (confirmByTestId && this.isVisibleElement(confirmByTestId)) {
         confirmByTestId.click();
@@ -2595,7 +2595,7 @@ export class FolderManager {
 
       // Strategy 3: Look for any button in overlay with delete/confirm text
       const allOverlayButtons = document.querySelectorAll(
-        '.cdk-overlay-container button, .mat-mdc-dialog-container button'
+        '.cdk-overlay-container button, .mat-mdc-dialog-container button',
       );
 
       for (const btn of allOverlayButtons) {
@@ -2612,7 +2612,7 @@ export class FolderManager {
 
       // Strategy 4: Look for the second/right button in a two-button dialog (usually the confirm button)
       const dialogActions = document.querySelector(
-        '.mat-mdc-dialog-actions, .cdk-overlay-container .mat-dialog-actions'
+        '.mat-mdc-dialog-actions, .cdk-overlay-container .mat-dialog-actions',
       );
       if (dialogActions) {
         const buttons = dialogActions.querySelectorAll('button');
@@ -2738,7 +2738,7 @@ export class FolderManager {
   private updateBatchDeleteProgress(current: number, total: number): void {
     if (this.batchDeleteProgressElement) {
       const textEl = this.batchDeleteProgressElement.querySelector(
-        '.gv-batch-delete-progress-text'
+        '.gv-batch-delete-progress-text',
       );
       if (textEl) {
         textEl.textContent = this.t('batch_delete_in_progress')
@@ -2788,7 +2788,7 @@ export class FolderManager {
       if (this.selectedConversations.size >= this.MAX_BATCH_DELETE_COUNT) {
         const message = this.t('batch_delete_limit_reached').replace(
           '{max}',
-          String(this.MAX_BATCH_DELETE_COUNT)
+          String(this.MAX_BATCH_DELETE_COUNT),
         );
         this.showNotification(message, 'info');
         return;
@@ -2837,7 +2837,7 @@ export class FolderManager {
   private enterMultiSelectMode(
     initialConversationId?: string,
     source: 'folder' | 'native' = 'native',
-    folderId?: string
+    folderId?: string,
   ): void {
     this.debug('Entering multi-select mode', { source, folderId });
     this.isMultiSelectMode = true;
@@ -2969,7 +2969,7 @@ export class FolderManager {
       () => {
         element.classList.remove('gv-invalid-selection');
       },
-      { once: true }
+      { once: true },
     );
 
     // Optional: Haptic feedback on mobile devices
@@ -2995,7 +2995,7 @@ export class FolderManager {
 
     // Update action buttons based on source
     const actionsContainer = this.containerElement?.querySelector(
-      '[data-multi-select-actions="true"]'
+      '[data-multi-select-actions="true"]',
     );
     if (actionsContainer && this.isMultiSelectMode) {
       actionsContainer.innerHTML = ''; // Clear existing buttons
@@ -3052,11 +3052,11 @@ export class FolderManager {
   private renameConversation(
     folderId: string,
     conversationId: string,
-    titleElement: HTMLElement
+    titleElement: HTMLElement,
   ): void {
     // Get current title
     const conv = this.data.folderContents[folderId]?.find(
-      (c) => c.conversationId === conversationId
+      (c) => c.conversationId === conversationId,
     );
     if (!conv) return;
 
@@ -3193,7 +3193,7 @@ export class FolderManager {
     conversationTitle: string,
     url: string,
     isGem?: boolean,
-    gemId?: string
+    gemId?: string,
   ): void {
     // Create dialog overlay
     const overlay = document.createElement('div');
@@ -3242,7 +3242,7 @@ export class FolderManager {
             conversationTitle,
             url,
             isGem,
-            gemId
+            gemId,
           );
           overlay.remove();
         });
@@ -3283,12 +3283,12 @@ export class FolderManager {
   private moveConversationToFolder(
     sourceFolderId: string,
     targetFolderId: string,
-    conv: ConversationReference
+    conv: ConversationReference,
   ): void {
     // Remove from source folder
     if (this.data.folderContents[sourceFolderId]) {
       this.data.folderContents[sourceFolderId] = this.data.folderContents[sourceFolderId].filter(
-        (c) => c.conversationId !== conv.conversationId
+        (c) => c.conversationId !== conv.conversationId,
       );
     }
 
@@ -3299,7 +3299,7 @@ export class FolderManager {
 
     // Check if conversation already exists in target folder
     const existingIndex = this.data.folderContents[targetFolderId].findIndex(
-      (c) => c.conversationId === conv.conversationId
+      (c) => c.conversationId === conv.conversationId,
     );
 
     if (existingIndex === -1) {
@@ -3320,7 +3320,7 @@ export class FolderManager {
     title: string,
     url: string,
     isGem?: boolean,
-    gemId?: string
+    gemId?: string,
   ): void {
     // Add to folder
     if (!this.data.folderContents[folderId]) {
@@ -3329,7 +3329,7 @@ export class FolderManager {
 
     // Check if conversation already exists in folder
     const existingIndex = this.data.folderContents[folderId].findIndex(
-      (c) => c.conversationId === conversationId
+      (c) => c.conversationId === conversationId,
     );
 
     if (existingIndex === -1) {
@@ -3594,7 +3594,7 @@ export class FolderManager {
     // The previous fallback logic using '.conversation-actions-container.selected' was incorrect
     // as it would select the currently focused conversation instead of the one user clicked
     this.debugWarn(
-      'findConversationElementFromMenu: no conversation element found (lastClickedConversation is null)'
+      'findConversationElementFromMenu: no conversation element found (lastClickedConversation is null)',
     );
     return null;
   }
@@ -3635,14 +3635,14 @@ export class FolderManager {
           if (!conversationEl) {
             this.debug('Trying closest with conversation selector...');
             conversationEl = moreButton.closest(
-              '[data-test-id="conversation"]'
+              '[data-test-id="conversation"]',
             ) as HTMLElement | null;
           }
 
           if (!conversationEl) {
             this.debug('Trying history-item selector...');
             conversationEl = moreButton.closest(
-              '[data-test-id^="history-item"]'
+              '[data-test-id^="history-item"]',
             ) as HTMLElement | null;
           }
 
@@ -3656,7 +3656,7 @@ export class FolderManager {
             this.debug('Trying to find conversation in parent container...');
             const parentContainer = actionsContainer.parentElement;
             const conversationInParent = parentContainer.querySelector(
-              '[data-test-id="conversation"]'
+              '[data-test-id="conversation"]',
             ) as HTMLElement | null;
             if (conversationInParent) {
               // Verify this is the right conversation by checking it's close to the actions container
@@ -3680,7 +3680,7 @@ export class FolderManager {
 
             // Debug: verify this element and show its attributes
             const linkCount = conversationEl.querySelectorAll(
-              'a[href*="/app/"], a[href*="/gem/"]'
+              'a[href*="/app/"], a[href*="/gem/"]',
             ).length;
             const jslogAttr = conversationEl.getAttribute('jslog');
             const dataTestId = conversationEl.getAttribute('data-test-id');
@@ -3700,7 +3700,7 @@ export class FolderManager {
               this.lastClickedConversationInfo = { id: conversationId, title, url };
               this.debug(
                 '✅ Extracted conversation info on click:',
-                this.lastClickedConversationInfo
+                this.lastClickedConversationInfo,
               );
             } else {
               this.debugWarn('⚠️ Failed to extract complete conversation info on click', {
@@ -3719,7 +3719,7 @@ export class FolderManager {
             const timer = window.setInterval(() => {
               attempts++;
               const menuContent = document.querySelector(
-                '.mat-mdc-menu-panel .mat-mdc-menu-content'
+                '.mat-mdc-menu-panel .mat-mdc-menu-content',
               ) as HTMLElement | null;
               if (menuContent) {
                 this.debug('Overlay poll: menu content found on attempt', attempts);
@@ -3736,7 +3736,7 @@ export class FolderManager {
           }
         }
       },
-      true
+      true,
     );
   }
 
@@ -3760,7 +3760,7 @@ export class FolderManager {
     let link: Element;
     if (links.length > 1) {
       this.debugWarn(
-        `extractId: found ${links.length} links, attempting to select the most appropriate one`
+        `extractId: found ${links.length} links, attempting to select the most appropriate one`,
       );
 
       // Strategy 1: Find the link with the smallest bounding box (most likely the actual conversation item)
@@ -3807,7 +3807,7 @@ export class FolderManager {
       (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
     // 1) Known title selectors
     const titleEl = scope.querySelector(
-      '.gds-label-l, .conversation-title-text, [data-test-id="conversation-title"], h3'
+      '.gds-label-l, .conversation-title-text, [data-test-id="conversation-title"], h3',
     );
     let title = titleEl?.textContent?.trim() || null;
     if (title && !this.isGemLabel(title)) {
@@ -3817,7 +3817,7 @@ export class FolderManager {
 
     // 2) Link attributes
     const link = scope.querySelector(
-      'a[href*="/app/"], a[href*="/gem/"]'
+      'a[href*="/app/"], a[href*="/gem/"]',
     ) as HTMLAnchorElement | null;
     const aria = link?.getAttribute('aria-label')?.trim();
     if (aria && !this.isGemLabel(aria)) {
@@ -3866,7 +3866,7 @@ export class FolderManager {
 
         // Also check by href
         const link = convEl.querySelector(
-          'a[href*="/app/"], a[href*="/gem/"]'
+          'a[href*="/app/"], a[href*="/gem/"]',
         ) as HTMLAnchorElement | null;
         if (link && link.href.includes(conversationId)) {
           const currentTitle = this.extractNativeConversationTitle(convEl as HTMLElement);
@@ -3927,7 +3927,7 @@ export class FolderManager {
 
     this.pendingRemovals.set(conversationId, timerId);
     this.debug(
-      `Scheduled removal check for ${conversationId} (delay: ${this.removalCheckDelay}ms)`
+      `Scheduled removal check for ${conversationId} (delay: ${this.removalCheckDelay}ms)`,
     );
   }
 
@@ -3962,7 +3962,7 @@ export class FolderManager {
     try {
       // Check by jslog attribute
       const byJslog = this.sidebarContainer.querySelector(
-        `[data-test-id="conversation"][jslog*="c_${conversationId}"]`
+        `[data-test-id="conversation"][jslog*="c_${conversationId}"]`,
       );
       if (byJslog) {
         this.debug(`Found conversation ${conversationId} in DOM by jslog`);
@@ -3971,7 +3971,7 @@ export class FolderManager {
 
       // Check by href
       const byHref = this.sidebarContainer.querySelector(
-        `[data-test-id="conversation"] a[href*="${conversationId}"]`
+        `[data-test-id="conversation"] a[href*="${conversationId}"]`,
       );
       if (byHref) {
         this.debug(`Found conversation ${conversationId} in DOM by href`);
@@ -4049,7 +4049,7 @@ export class FolderManager {
 
       // Filter out the deleted conversation
       this.data.folderContents[folderId] = conversations.filter(
-        (conv) => conv.conversationId !== conversationId && !conv.url.includes(conversationId)
+        (conv) => conv.conversationId !== conversationId && !conv.url.includes(conversationId),
       );
 
       if (this.data.folderContents[folderId].length < initialLength) {
@@ -4343,13 +4343,13 @@ export class FolderManager {
       } else if (loadedData) {
         // Data exists but validation failed - this is a real corruption case
         console.warn(
-          '[FolderManager] Storage returned invalid data structure, attempting recovery from backup'
+          '[FolderManager] Storage returned invalid data structure, attempting recovery from backup',
         );
         this.attemptDataRecovery({ reason: 'corrupted', originalData: loadedData });
       } else {
         // No data found - likely a first-time user
         console.log(
-          '[FolderManager] No folder data found, initializing empty state (likely first-time user)'
+          '[FolderManager] No folder data found, initializing empty state (likely first-time user)',
         );
         this.data = { folders: [], folderContents: {} };
         // No notification needed - this is expected for new users
@@ -4406,7 +4406,7 @@ export class FolderManager {
     this.showNotificationByLevel(
       getTranslationSync('folderManager_dataLossWarning') ||
         'Warning: Failed to load folder data. Please check your browser console for details.',
-      'error'
+      'error',
     );
   }
 
@@ -4415,7 +4415,7 @@ export class FolderManager {
    */
   private showNotificationByLevel(
     message: string,
-    level: 'info' | 'warning' | 'error' = 'error'
+    level: 'info' | 'warning' | 'error' = 'error',
   ): void {
     try {
       // Color based on level
@@ -4490,7 +4490,7 @@ export class FolderManager {
           (existingData.folders.length > 0 || Object.keys(existingData.folderContents).length > 0)
         ) {
           console.warn(
-            '[FolderManager] WARNING: Attempting to save empty data over existing non-empty data'
+            '[FolderManager] WARNING: Attempting to save empty data over existing non-empty data',
           );
           console.warn('[FolderManager] This may indicate a bug.');
           // Still proceed, but log it prominently
@@ -4759,7 +4759,7 @@ export class FolderManager {
   private navigateToConversationById(folderId: string, conversationId: string): void {
     // Look up the latest conversation data from storage
     const conv = this.data.folderContents[folderId]?.find(
-      (c) => c.conversationId === conversationId
+      (c) => c.conversationId === conversationId,
     );
     if (!conv) {
       console.error('[FolderManager] Conversation not found:', conversationId);
@@ -5100,7 +5100,7 @@ export class FolderManager {
     if (this.exportInProgress) {
       this.showNotification(
         this.t('folder_export_in_progress') || 'Export already in progress',
-        'info'
+        'info',
       );
       return;
     }
@@ -5117,7 +5117,7 @@ export class FolderManager {
       console.error('[FolderManager] Export error:', error);
       this.showNotification(
         this.t('folder_import_error').replace('{error}', String(error)),
-        'error'
+        'error',
       );
     } finally {
       // Always release the lock
@@ -5154,7 +5154,7 @@ export class FolderManager {
     const overwriteOption = this.createRadioOption(
       'overwrite',
       this.t('folder_import_overwrite'),
-      false
+      false,
     );
 
     strategyOptions.appendChild(mergeOption);
@@ -5256,7 +5256,7 @@ export class FolderManager {
     if (this.importInProgress) {
       this.showNotification(
         this.t('folder_import_in_progress') || 'Import already in progress',
-        'info'
+        'info',
       );
       return;
     }
@@ -5291,7 +5291,7 @@ export class FolderManager {
       if (!validationResult.success) {
         this.showNotification(
           this.t('folder_import_invalid_format') + ': ' + validationResult.error.message,
-          'error'
+          'error',
         );
         return;
       }
@@ -5300,13 +5300,13 @@ export class FolderManager {
       const importResult = await FolderImportExportService.importFromPayload(
         validationResult.data,
         this.data as any,
-        { strategy, createBackup: true }
+        { strategy, createBackup: true },
       );
 
       if (!importResult.success) {
         this.showNotification(
           this.t('folder_import_error').replace('{error}', String(importResult.error)),
-          'error'
+          'error',
         );
         return;
       }
@@ -5340,7 +5340,7 @@ export class FolderManager {
       console.error('[FolderManager] Import error:', error);
       this.showNotification(
         this.t('folder_import_error').replace('{error}', String(error)),
-        'error'
+        'error',
       );
     } finally {
       // Always release the lock, even if an error occurred

@@ -1,3 +1,7 @@
+import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
+import { startFormulaCopy } from '@/features/formulaCopy';
+import { initI18n } from '@/utils/i18n';
+
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { startDeepResearchExport } from './deepResearch/index';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
@@ -13,10 +17,6 @@ import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
 import { startWatermarkRemover } from './watermarkRemover/index';
-
-import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
-import { startFormulaCopy } from '@/features/formulaCopy';
-import { initI18n } from '@/utils/i18n';
 
 /**
  * Staggered initialization to prevent "thundering herd" problem when multiple tabs
@@ -109,7 +109,7 @@ async function initializeFeatures(): Promise<void> {
         search: location.search,
         hash: location.hash,
       },
-      document
+      document,
     );
 
     if (isEnterprise) {
@@ -207,7 +207,7 @@ function getInitializationDelay(): number {
     const randomRange = BACKGROUND_TAB_MAX_DELAY - BACKGROUND_TAB_MIN_DELAY;
     const randomDelay = BACKGROUND_TAB_MIN_DELAY + Math.random() * randomRange;
     console.log(
-      `[Gemini Voyager] Background tab detected, delaying initialization by ${Math.round(randomDelay)}ms`
+      `[Gemini Voyager] Background tab detected, delaying initialization by ${Math.round(randomDelay)}ms`,
     );
     return randomDelay;
   }

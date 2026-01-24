@@ -35,10 +35,10 @@ export default function WidthSlider({
   const formatValue = valueFormatter ?? ((v: number) => `${v}%`);
 
   return (
-    <Card className="p-4 hover:shadow-lg transition-shadow">
-      <div className="flex items-center justify-between mb-3">
+    <Card className="p-4 transition-shadow hover:shadow-lg">
+      <div className="mb-3 flex items-center justify-between">
         <CardTitle className="text-xs uppercase">{label}</CardTitle>
-        <span className="text-sm font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md shadow-sm">
+        <span className="text-primary bg-primary/10 rounded-md px-2.5 py-1 text-sm font-bold shadow-sm">
           {formatValue(value)}
         </span>
       </div>
@@ -52,7 +52,7 @@ export default function WidthSlider({
             onValueChange={onChange}
             onValueCommit={onChangeComplete}
           />
-          <div className="flex justify-between items-center mt-3 text-xs text-muted-foreground font-medium">
+          <div className="text-muted-foreground mt-3 flex items-center justify-between text-xs font-medium">
             <span>{narrowLabel}</span>
             <span>{wideLabel}</span>
           </div>

@@ -54,6 +54,7 @@
   "devDependencies": {
     "@crxjs/vite-plugin": "2.2.1",
     "@tailwindcss/vite": "^4.1.15",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/chrome": "^0.1.24",
     "@types/jsdom": "^27.0.0",
     "@types/jszip": "^3.4.1",
@@ -75,6 +76,7 @@
     "fs-extra": "^11.3.0",
     "jsdom": "^27.1.0",
     "nodemon": "^3.1.10",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.1.15",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",

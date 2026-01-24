@@ -68,7 +68,7 @@ export default {
             const y = composer.height;
             const name = s.sponsor.name || s.sponsor.login;
             composer.addRaw(
-              `<text x="${x}" y="${y}" text-anchor="middle" class="sponsorkit-name" font-size="${fontSize}">${name}</text>`
+              `<text x="${x}" y="${y}" text-anchor="middle" class="sponsorkit-name" font-size="${fontSize}">${name}</text>`,
             );
           });
           composer.addSpan(25);

@@ -1,4 +1,4 @@
-import type { FolderData, Folder, ConversationReference } from '@/core/types/folder';
+import type { ConversationReference, Folder, FolderData } from '@/core/types/folder';
 import type { PromptItem } from '@/core/types/sync';
 
 /**
@@ -7,7 +7,7 @@ import type { PromptItem } from '@/core/types/sync';
  */
 function mergeItems<T extends { id: string; updatedAt?: number; createdAt?: number }>(
   localItems: T[],
-  cloudItems: T[]
+  cloudItems: T[],
 ): T[] {
   const itemMap = new Map<string, T>();
 

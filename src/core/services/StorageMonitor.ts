@@ -124,7 +124,7 @@ export class StorageMonitor {
 
     // Find the highest threshold exceeded
     const exceededThresholds = this.config.warningThresholds.filter(
-      (threshold) => info.usagePercent >= threshold
+      (threshold) => info.usagePercent >= threshold,
     );
 
     if (exceededThresholds.length === 0) {
@@ -256,7 +256,7 @@ export class StorageMonitor {
     }
 
     console.log(
-      `[StorageMonitor] Starting automatic monitoring (interval: ${this.config.checkIntervalMs}ms)`
+      `[StorageMonitor] Starting automatic monitoring (interval: ${this.config.checkIntervalMs}ms)`,
     );
 
     // Check immediately

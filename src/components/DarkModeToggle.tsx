@@ -1,8 +1,8 @@
-import { Moon, Sun } from 'lucide-react';
 import React from 'react';
 
-import { useDarkMode } from '../hooks/useDarkMode';
+import { Moon, Sun } from 'lucide-react';
 
+import { useDarkMode } from '../hooks/useDarkMode';
 import { Button } from './ui/button';
 
 export const DarkModeToggle: React.FC = () => {

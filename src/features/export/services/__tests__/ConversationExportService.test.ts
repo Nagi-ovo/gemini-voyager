@@ -1,9 +1,8 @@
 /**
  * ConversationExportService unit tests
  */
-
 import { JSDOM } from 'jsdom';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
 import { ConversationExportService } from '../ConversationExportService';

@@ -3,7 +3,6 @@
  * Suppresses KaTeX strict mode warnings for Unicode text in math mode
  * This allows formulas to contain CJK characters without console warnings
  */
-
 import browser from 'webextension-polyfill';
 
 import { logger } from '@/core';

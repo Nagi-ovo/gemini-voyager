@@ -2,8 +2,7 @@
  * Folder-specific types
  * Extracted from the monolithic FolderManager
  */
-
-import type { FolderId, ConversationId } from './common';
+import type { ConversationId, FolderId } from './common';
 
 export interface Folder {
   readonly id: FolderId;

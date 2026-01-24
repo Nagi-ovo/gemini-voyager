@@ -10,35 +10,35 @@ describe('gemini enterprise detection', () => {
   it('returns false for non-gemini hosts', () => {
     expect(isGeminiEnterpriseUrl({ hostname: 'example.com', pathname: '/enterprise' })).toBe(false);
     expect(
-      isGeminiEnterpriseEnvironment({ hostname: 'aistudio.google.com', pathname: '/enterprise' })
+      isGeminiEnterpriseEnvironment({ hostname: 'aistudio.google.com', pathname: '/enterprise' }),
     ).toBe(false);
   });
 
   it('detects enterprise hints in URL parts', () => {
     expect(isGeminiEnterpriseUrl({ hostname: 'gemini.google.com', pathname: '/enterprise' })).toBe(
-      true
+      true,
     );
     expect(
-      isGeminiEnterpriseUrl({ hostname: 'gemini.google.com', search: '?workspace=true' })
+      isGeminiEnterpriseUrl({ hostname: 'gemini.google.com', search: '?workspace=true' }),
     ).toBe(true);
     expect(isGeminiEnterpriseUrl({ hostname: 'gemini.google.com', hash: '#enterprise=acme' })).toBe(
-      true
+      true,
     );
   });
 
   it('returns false for standard Gemini app URLs', () => {
     expect(isGeminiEnterpriseUrl({ hostname: 'gemini.google.com', pathname: '/app' })).toBe(false);
     expect(isGeminiEnterpriseUrl({ hostname: 'gemini.google.com', pathname: '/gem/abc123' })).toBe(
-      false
+      false,
     );
   });
 
   it('treats business.gemini.google as enterprise', () => {
     expect(isGeminiEnterpriseUrl({ hostname: 'business.gemini.google', pathname: '/home' })).toBe(
-      true
+      true,
     );
     expect(
-      isGeminiEnterpriseEnvironment({ hostname: 'business.gemini.google', pathname: '/' })
+      isGeminiEnterpriseEnvironment({ hostname: 'business.gemini.google', pathname: '/' }),
     ).toBe(true);
   });
 

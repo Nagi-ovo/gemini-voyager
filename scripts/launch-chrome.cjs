@@ -132,7 +132,7 @@ async function reloadTargetTabs() {
   const targets = await fetchJson(`http://127.0.0.1:${debugPort}/json`);
   const matches = Array.isArray(targets)
     ? targets.filter(
-        (t) => t?.type === 'page' && typeof t?.url === 'string' && t.url.startsWith(TARGET_URL)
+        (t) => t?.type === 'page' && typeof t?.url === 'string' && t.url.startsWith(TARGET_URL),
       )
     : [];
   if (matches.length === 0) return;
@@ -140,8 +140,8 @@ async function reloadTargetTabs() {
     matches.map((t) =>
       t?.webSocketDebuggerUrl
         ? sendDevtoolsCommand(t.webSocketDebuggerUrl, 'Page.reload', { ignoreCache: true })
-        : Promise.resolve()
-    )
+        : Promise.resolve(),
+    ),
   );
 }
 
@@ -195,7 +195,7 @@ function getAvailablePort() {
       const addr = server.address();
       const port = typeof addr === 'object' && addr ? addr.port : null;
       server.close(() =>
-        port ? resolve(port) : reject(new Error('Unable to determine open port.'))
+        port ? resolve(port) : reject(new Error('Unable to determine open port.')),
       );
     });
   });

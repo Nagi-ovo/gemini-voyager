@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyDeepResearchDownloadButtonI18n } from '../menuButton';
-
 import type { AppLanguage } from '@/utils/language';
+
+import { applyDeepResearchDownloadButtonI18n } from '../menuButton';
 
 describe('applyDeepResearchDownloadButtonI18n', () => {
   it('updates label and tooltip according to language', () => {

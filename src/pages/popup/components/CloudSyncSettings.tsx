@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+
+import type { SyncMode, SyncState } from '@/core/types/sync';
+import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Label } from '../../../components/ui/label';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { mergeFolderData, mergePrompts } from '../../../utils/merge';
-
-import type { SyncState, SyncMode } from '@/core/types/sync';
-import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 
 /**
  * CloudSyncSettings component for popup
@@ -17,7 +17,7 @@ export function CloudSyncSettings() {
   const { t } = useLanguage();
   const [syncState, setSyncState] = useState<SyncState>(DEFAULT_SYNC_STATE);
   const [statusMessage, setStatusMessage] = useState<{ text: string; kind: 'ok' | 'err' } | null>(
-    null
+    null,
   );
   const [isUploading, setIsUploading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -63,7 +63,7 @@ export function CloudSyncSettings() {
 
       return t('lastSynced').replace('{time}', timeStr);
     },
-    [t]
+    [t],
   );
 
   // Format upload timestamp for display
@@ -92,7 +92,7 @@ export function CloudSyncSettings() {
 
       return (t('lastUploaded') || 'Uploaded {time}').replace('{time}', timeStr);
     },
-    [t]
+    [t],
   );
 
   // Handle mode change
@@ -201,7 +201,7 @@ export function CloudSyncSettings() {
         '[CloudSyncSettings] Uploading folders:',
         (folders.folders as any[])?.length || 0,
         'prompts:',
-        prompts.length
+        prompts.length,
       );
 
       // Upload to Google Drive
@@ -275,7 +275,7 @@ export function CloudSyncSettings() {
               'folders:',
               localFolders.folders?.length,
               'folderContents keys:',
-              Object.keys(localFolders.folderContents || {}).length
+              Object.keys(localFolders.folderContents || {}).length,
             );
           }
         }
@@ -311,16 +311,16 @@ export function CloudSyncSettings() {
       console.log('[CloudSyncSettings] === MERGE DEBUG ===');
       console.log(
         '[CloudSyncSettings] Local folders count:',
-        (localFolders.folders as any[])?.length || 0
+        (localFolders.folders as any[])?.length || 0,
       );
       console.log(
         '[CloudSyncSettings] Local folderContents:',
-        JSON.stringify(Object.keys(localFolders.folderContents || {}))
+        JSON.stringify(Object.keys(localFolders.folderContents || {})),
       );
       console.log('[CloudSyncSettings] Cloud folders count:', cloudFolderData.folders?.length || 0);
       console.log(
         '[CloudSyncSettings] Cloud folderContents:',
-        JSON.stringify(Object.keys(cloudFolderData.folderContents || {}))
+        JSON.stringify(Object.keys(cloudFolderData.folderContents || {})),
       );
 
       // Perform Merge
@@ -330,7 +330,7 @@ export function CloudSyncSettings() {
       console.log('[CloudSyncSettings] Merged folders count:', mergedFolders.folders?.length || 0);
       console.log(
         '[CloudSyncSettings] Merged folderContents:',
-        JSON.stringify(Object.keys(mergedFolders.folderContents || {}))
+        JSON.stringify(Object.keys(mergedFolders.folderContents || {})),
       );
       console.log('[CloudSyncSettings] === END MERGE DEBUG ===');
 
@@ -370,24 +370,24 @@ export function CloudSyncSettings() {
   }, [statusMessage]);
 
   return (
-    <Card className="p-4 hover:shadow-lg transition-shadow">
+    <Card className="p-4 transition-shadow hover:shadow-lg">
       <CardTitle className="mb-4 text-xs uppercase">{t('cloudSync')}</CardTitle>
-      <CardContent className="p-0 space-y-4">
+      <CardContent className="space-y-4 p-0">
         {/* Description */}
-        <p className="text-xs text-muted-foreground">{t('cloudSyncDescription')}</p>
+        <p className="text-muted-foreground text-xs">{t('cloudSyncDescription')}</p>
 
         {/* Sync Mode Toggle */}
         <div>
-          <Label className="text-sm font-medium mb-2 block">{t('syncMode')}</Label>
-          <div className="relative grid grid-cols-2 rounded-lg bg-secondary/50 p-1 gap-1">
+          <Label className="mb-2 block text-sm font-medium">{t('syncMode')}</Label>
+          <div className="bg-secondary/50 relative grid grid-cols-2 gap-1 rounded-lg p-1">
             <div
-              className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md bg-primary shadow-md pointer-events-none transition-all duration-300 ease-out"
+              className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md shadow-md transition-all duration-300 ease-out"
               style={{
                 left: syncState.mode === 'disabled' ? '4px' : 'calc(50% + 2px)',
               }}
             />
             <button
-              className={`relative z-10 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${
+              className={`relative z-10 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200 ${
                 syncState.mode === 'disabled'
                   ? 'text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -397,7 +397,7 @@ export function CloudSyncSettings() {
               {t('syncModeDisabled')}
             </button>
             <button
-              className={`relative z-10 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${
+              className={`relative z-10 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200 ${
                 syncState.mode === 'manual'
                   ? 'text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -418,13 +418,13 @@ export function CloudSyncSettings() {
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 group hover:border-primary/50"
+                className="group hover:border-primary/50 flex-1"
                 onClick={handleSyncNow}
                 disabled={isUploading || isDownloading}
               >
-                <span className="group-hover:scale-105 transition-transform text-xs flex items-center gap-1">
+                <span className="flex items-center gap-1 text-xs transition-transform group-hover:scale-105">
                   {isUploading ? (
-                    <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                    <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
                       <circle
                         className="opacity-25"
                         cx="12"
@@ -459,13 +459,13 @@ export function CloudSyncSettings() {
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 group hover:border-primary/50"
+                className="group hover:border-primary/50 flex-1"
                 onClick={handleDownloadFromDrive}
                 disabled={isUploading || isDownloading}
               >
-                <span className="group-hover:scale-105 transition-transform text-xs flex items-center gap-1">
+                <span className="flex items-center gap-1 text-xs transition-transform group-hover:scale-105">
                   {isDownloading ? (
-                    <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                    <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
                       <circle
                         className="opacity-25"
                         cx="12"
@@ -499,7 +499,7 @@ export function CloudSyncSettings() {
             </div>
 
             {/* Sync Times */}
-            <div className="text-xs text-muted-foreground text-center space-y-0.5">
+            <div className="text-muted-foreground space-y-0.5 text-center text-xs">
               <p>↑ {formatLastUpload(syncState.lastUploadTime)}</p>
               <p>↓ {formatLastSync(syncState.lastSyncTime)}</p>
             </div>
@@ -509,7 +509,7 @@ export function CloudSyncSettings() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-xs text-muted-foreground hover:text-destructive"
+                className="text-muted-foreground hover:text-destructive w-full text-xs"
                 onClick={handleSignOut}
               >
                 {t('signOut')}
@@ -521,7 +521,7 @@ export function CloudSyncSettings() {
         {/* Status Message */}
         {statusMessage && (
           <p
-            className={`text-xs text-center ${
+            className={`text-center text-xs ${
               statusMessage.kind === 'ok' ? 'text-green-600' : 'text-destructive'
             }`}
           >
@@ -531,7 +531,7 @@ export function CloudSyncSettings() {
 
         {/* Error Display */}
         {syncState.error && !statusMessage && (
-          <p className="text-xs text-destructive text-center">
+          <p className="text-destructive text-center text-xs">
             {t('syncError').replace('{error}', syncState.error)}
           </p>
         )}

@@ -34,7 +34,7 @@ export interface WatermarkPosition {
 export function removeWatermark(
   imageData: ImageData,
   alphaMap: Float32Array,
-  position: WatermarkPosition
+  position: WatermarkPosition,
 ): void {
   const { x, y, width, height } = position;
 

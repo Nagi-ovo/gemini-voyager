@@ -3,6 +3,11 @@
  * Uses File System Access API for persistent backup storage
  * Follows enterprise best practices with comprehensive error handling
  */
+import { AppError, ErrorCode } from '@/core/errors/AppError';
+import type { Result } from '@/core/types/common';
+import type { FolderData } from '@/core/types/folder';
+import { EXTENSION_VERSION } from '@/core/utils/version';
+import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 
 import type {
   BackupConfig,
@@ -11,14 +16,7 @@ import type {
   BackupResult,
   IBackupService,
 } from '../types/backup';
-
 import { PromptImportExportService } from './PromptImportExportService';
-
-import { AppError, ErrorCode } from '@/core/errors/AppError';
-import type { Result } from '@/core/types/common';
-import type { FolderData } from '@/core/types/folder';
-import { EXTENSION_VERSION } from '@/core/utils/version';
-import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 
 /**
  * Core backup service implementation
@@ -61,7 +59,7 @@ export class BackupService implements IBackupService {
         throw new AppError(
           ErrorCode.UNKNOWN_ERROR,
           'File System Access API is not supported in this browser',
-          {}
+          {},
         );
       }
 
@@ -101,7 +99,7 @@ export class BackupService implements IBackupService {
         throw new AppError(
           ErrorCode.UNKNOWN_ERROR,
           'Cannot access this directory. Please choose a different location (e.g., Documents, Downloads, or a custom folder on Desktop)',
-          { originalError: error }
+          { originalError: error },
         );
       }
 
@@ -156,7 +154,7 @@ export class BackupService implements IBackupService {
         folderCount = folderData.folders.length;
         conversationCount = Object.values(folderData.folderContents).reduce(
           (sum, convs) => sum + convs.length,
-          0
+          0,
         );
 
         files.push({
@@ -192,7 +190,7 @@ export class BackupService implements IBackupService {
           ErrorCode.UNKNOWN_ERROR,
           'Failed to generate backup files',
           { config },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -203,7 +201,7 @@ export class BackupService implements IBackupService {
    */
   async createBackup(
     directoryHandle: FileSystemDirectoryHandle,
-    config: BackupConfig
+    config: BackupConfig,
   ): Promise<Result<BackupResult>> {
     try {
       // Generate backup files
@@ -233,7 +231,7 @@ export class BackupService implements IBackupService {
 
       // Parse metadata to extract counts
       const metadata = JSON.parse(
-        files.find((f) => f.name === 'metadata.json')?.content || '{}'
+        files.find((f) => f.name === 'metadata.json')?.content || '{}',
       ) as BackupMetadata;
 
       const result: BackupResult = {
@@ -256,7 +254,7 @@ export class BackupService implements IBackupService {
           ErrorCode.UNKNOWN_ERROR,
           'Backup operation failed',
           { config, error: errorMessage },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -323,7 +321,7 @@ export class BackupService implements IBackupService {
           ErrorCode.STORAGE_READ_FAILED,
           'Failed to load folder data',
           {},
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }

@@ -131,7 +131,7 @@ function findChatTitle(): string | null {
   const titleEl = document.querySelector(
     '.conversation-title-container .conversation-title.gds-title-m, ' +
       'top-bar-actions .conversation-title.gds-title-m, ' +
-      '.top-bar-actions .conversation-title.gds-title-m'
+      '.top-bar-actions .conversation-title.gds-title-m',
   );
 
   if (titleEl) {

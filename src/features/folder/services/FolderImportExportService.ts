@@ -2,6 +2,18 @@
  * Service for importing and exporting folder configurations
  * Follows enterprise best practices with proper validation and error handling
  */
+import { AppError, ErrorCode } from '@/core/errors/AppError';
+import type { Result } from '@/core/types/common';
+import type { ConversationReference, Folder, FolderData } from '@/core/types/folder';
+import { LOCK_KEYS, importExportLock } from '@/core/utils/concurrency';
+import {
+  EXTENSION_VERSION,
+  type FormatVersion,
+  applyMigrations,
+  getCompatibilityInfo,
+  isSupportedFormat,
+} from '@/core/utils/version';
+import { SESSION_BACKUP_KEY, SESSION_BACKUP_TIMESTAMP_KEY } from '@/pages/content/folder/manager';
 
 import {
   type FolderExportPayload,
@@ -10,19 +22,6 @@ import {
   type ValidationError,
   ValidationErrorType,
 } from '../types/import-export';
-
-import { AppError, ErrorCode } from '@/core/errors/AppError';
-import type { Result } from '@/core/types/common';
-import type { FolderData, Folder, ConversationReference } from '@/core/types/folder';
-import { importExportLock, LOCK_KEYS } from '@/core/utils/concurrency';
-import {
-  EXTENSION_VERSION,
-  type FormatVersion,
-  getCompatibilityInfo,
-  isSupportedFormat,
-  applyMigrations,
-} from '@/core/utils/version';
-import { SESSION_BACKUP_KEY, SESSION_BACKUP_TIMESTAMP_KEY } from '@/pages/content/folder/manager';
 
 const EXPORT_FORMAT: FormatVersion = 'gemini-voyager.folders.v1' as const;
 
@@ -179,7 +178,7 @@ export class FolderImportExportService {
    */
   static mergeData(
     existing: FolderData,
-    imported: FolderData
+    imported: FolderData,
   ): { merged: FolderData; stats: ImportResult } {
     const existingFolderIds = new Set(existing.folders.map((f) => f.id));
     const newFolders: Folder[] = [];
@@ -243,7 +242,7 @@ export class FolderImportExportService {
   private static importFromPayloadInternal(
     payload: FolderExportPayload,
     currentData: FolderData,
-    options: ImportOptions
+    options: ImportOptions,
   ): Result<{ data: FolderData; stats: ImportResult }> {
     try {
       const { strategy, createBackup = true } = options;
@@ -287,7 +286,7 @@ export class FolderImportExportService {
 
         const totalConversations = Object.values(importData.folderContents).reduce(
           (sum, convs) => sum + convs.length,
-          0
+          0,
         );
 
         stats = {
@@ -339,13 +338,13 @@ export class FolderImportExportService {
   static async importFromPayload(
     payload: FolderExportPayload,
     currentData: FolderData,
-    options: ImportOptions
+    options: ImportOptions,
   ): Promise<Result<{ data: FolderData; stats: ImportResult }>> {
     // Use lock to prevent concurrent imports
     return await importExportLock.withLock(
       LOCK_KEYS.FOLDER_IMPORT,
       () => Promise.resolve(this.importFromPayloadInternal(payload, currentData, options)),
-      30000 // 30 second timeout
+      30000, // 30 second timeout
     );
   }
 

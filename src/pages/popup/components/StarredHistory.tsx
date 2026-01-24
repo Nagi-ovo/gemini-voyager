@@ -91,18 +91,18 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
   };
 
   return (
-    <div className="w-[360px] h-[600px] bg-background text-foreground flex flex-col">
+    <div className="bg-background text-foreground flex h-[600px] w-[360px] flex-col">
       {/* Header */}
-      <div className="bg-linear-to-br from-primary/10 via-accent/5 to-transparent border-b border-border/50 px-5 py-4 backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-xl font-bold bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+      <div className="from-primary/10 via-accent/5 border-border/50 border-b bg-linear-to-br to-transparent px-5 py-4 backdrop-blur-sm">
+        <div className="mb-2 flex items-center justify-between">
+          <h1 className="from-primary to-primary/70 bg-linear-to-r bg-clip-text text-xl font-bold text-transparent">
             {t('starredHistory')}
           </h1>
           <Button
             onClick={onClose}
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full hover:bg-primary/10"
+            className="hover:bg-primary/10 h-8 w-8 rounded-full"
           >
             <svg
               width="20"
@@ -125,11 +125,11 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex h-full items-center justify-center">
             <div className="text-muted-foreground">{t('loading')}</div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-2">
+          <div className="flex h-full flex-col items-center justify-center gap-2">
             <svg
               width="48"
               height="48"
@@ -151,13 +151,13 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
             {messages.map((message) => (
               <Card
                 key={`${message.conversationId}-${message.turnId}`}
-                className="p-3 hover:shadow-md transition-all cursor-pointer group relative"
+                className="group relative cursor-pointer p-3 transition-all hover:shadow-md"
                 onClick={() => handleMessageClick(message)}
               >
                 {/* Delete button */}
                 <button
                   onClick={(e) => handleDeleteMessage(message, e)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/10 rounded-full"
+                  className="hover:bg-destructive/10 absolute top-2 right-2 rounded-full p-1 opacity-0 transition-opacity group-hover:opacity-100"
                   title={t('removeFromStarred')}
                 >
                   <svg
@@ -179,21 +179,21 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
 
                 {/* Message content */}
                 <div className="pr-6">
-                  <div className="flex items-start gap-2 mb-1">
+                  <div className="mb-1 flex items-start gap-2">
                     <svg
                       width="16"
                       height="16"
                       viewBox="0 0 24 24"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
-                      className="text-primary shrink-0 mt-0.5"
+                      className="text-primary mt-0.5 shrink-0"
                     >
                       <path
                         d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
                         fill="currentColor"
                       />
                     </svg>
-                    <p className="text-sm font-medium line-clamp-2">
+                    <p className="line-clamp-2 text-sm font-medium">
                       {truncateText(message.content, 100)}
                     </p>
                   </div>
@@ -201,11 +201,11 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
                   {/* Conversation info */}
                   <div className="ml-6 space-y-1">
                     {message.conversationTitle && (
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-muted-foreground truncate text-xs">
                         {message.conversationTitle}
                       </p>
                     )}
-                    <p className="text-xs text-muted-foreground">{formatDate(message.starredAt)}</p>
+                    <p className="text-muted-foreground text-xs">{formatDate(message.starredAt)}</p>
                   </div>
                 </div>
               </Card>

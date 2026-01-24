@@ -2,7 +2,6 @@
  * Version management utilities
  * Provides centralized version handling and semantic version comparison
  */
-
 // Import version from manifest to ensure single source of truth
 import manifestChrome from '../../../manifest.json';
 
@@ -138,7 +137,7 @@ export interface CompatibilityInfo {
  */
 export function getCompatibilityInfo(
   importVersion: string,
-  formatVersion: string
+  formatVersion: string,
 ): CompatibilityInfo {
   const info: CompatibilityInfo = {
     compatible: false,
@@ -210,7 +209,7 @@ export const VERSION_MIGRATIONS: VersionMigration[] = [
  */
 export function applyMigrations(
   data: any,
-  fromVersion: string
+  fromVersion: string,
 ): { data: any; migrationsApplied: string[] } {
   let currentData = data;
   const migrationsApplied: string[] = [];
@@ -224,11 +223,11 @@ export function applyMigrations(
       try {
         currentData = migration.migrate(currentData);
         migrationsApplied.push(
-          `${migration.fromVersion} → ${migration.toVersion}: ${migration.description}`
+          `${migration.fromVersion} → ${migration.toVersion}: ${migration.description}`,
         );
       } catch (error) {
         throw new Error(
-          `Migration failed (${migration.fromVersion} → ${migration.toVersion}): ${error}`
+          `Migration failed (${migration.fromVersion} → ${migration.toVersion}): ${error}`,
         );
       }
     }

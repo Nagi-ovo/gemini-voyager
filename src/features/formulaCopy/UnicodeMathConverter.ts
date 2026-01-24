@@ -317,7 +317,7 @@ export function latexToUnicodeMath(latex: string): string {
         .map((row: string) => row.trim()) // & is column separator in both LaTeX and UnicodeMath
         .join('@');
       return `[■(${rows})]`;
-    }
+    },
   );
 
   // Handle common LaTeX commands that should be removed

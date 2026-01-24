@@ -1,6 +1,5 @@
 import fs from 'fs';
 import { resolve } from 'path';
-
 import type { PluginOption } from 'vite';
 
 // plugin to remove dev icons from prod build
@@ -15,15 +14,15 @@ export function stripDevIcons(isDev: boolean) {
     renderStart(outputOptions: any, inputOptions: any) {
       const outDir = outputOptions.dir;
       fs.rm(resolve(outDir, 'dev-icon-32.png'), () =>
-        console.log(`Deleted dev-icon-32.png from prod build`)
+        console.log(`Deleted dev-icon-32.png from prod build`),
       );
       fs.rm(resolve(outDir, 'dev-icon-128.png'), () =>
-        console.log(`Deleted dev-icon-128.png from prod build`)
+        console.log(`Deleted dev-icon-128.png from prod build`),
       );
       // Remove assets directory if it exists
       const assetsDir = resolve(outDir, 'assets');
       fs.rm(assetsDir, { recursive: true, force: true }, () =>
-        console.log(`Deleted assets/ directory from prod build`)
+        console.log(`Deleted assets/ directory from prod build`),
       );
     },
     writeBundle(outputOptions: any) {
@@ -31,7 +30,7 @@ export function stripDevIcons(isDev: boolean) {
       // Remove .vite directory (Vite's internal manifest, not needed for extension)
       const viteDir = resolve(outDir, '.vite');
       fs.rm(viteDir, { recursive: true, force: true }, () =>
-        console.log(`Deleted .vite/ directory from prod build`)
+        console.log(`Deleted .vite/ directory from prod build`),
       );
     },
   };

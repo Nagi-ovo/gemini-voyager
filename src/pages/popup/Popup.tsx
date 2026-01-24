@@ -1,5 +1,14 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+
 import browser from 'webextension-polyfill';
+
+import { isSafari } from '@/core/utils/browser';
+import { compareVersions } from '@/core/utils/version';
+import {
+  extractLatestReleaseVersion,
+  getCachedLatestVersion,
+  getManifestUpdateUrl,
+} from '@/pages/popup/utils/latestVersion';
 
 import { DarkModeToggle } from '../../components/DarkModeToggle';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
@@ -9,29 +18,20 @@ import { Label } from '../../components/ui/label';
 import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
-
 import { CloudSyncSettings } from './components/CloudSyncSettings';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { StarredHistory } from './components/StarredHistory';
 import {
   IconChatGPT,
   IconClaude,
-  IconGrok,
   IconDeepSeek,
-  IconQwen,
+  IconGrok,
   IconKimi,
-  IconNotebookLM,
   IconMidjourney,
+  IconNotebookLM,
+  IconQwen,
 } from './components/WebsiteLogos';
 import WidthSlider from './components/WidthSlider';
-
-import { isSafari } from '@/core/utils/browser';
-import { compareVersions } from '@/core/utils/version';
-import {
-  extractLatestReleaseVersion,
-  getCachedLatestVersion,
-  getManifestUpdateUrl,
-} from '@/pages/popup/utils/latestVersion';
 
 type ScrollMode = 'jump' | 'flow';
 
@@ -49,7 +49,7 @@ const normalizePercent = (
   fallback: number,
   min: number,
   max: number,
-  legacyBaselinePx: number
+  legacyBaselinePx: number,
 ) => {
   if (!Number.isFinite(value)) return fallback;
   if (value > max) {
@@ -130,7 +130,7 @@ export default function Popup() {
   const [websiteError, setWebsiteError] = useState<string>('');
   const [showStarredHistory, setShowStarredHistory] = useState<boolean>(false);
   const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath' | 'no-dollar'>(
-    'latex'
+    'latex',
   );
   const [extVersion, setExtVersion] = useState<string | null>(null);
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
@@ -199,7 +199,7 @@ export default function Popup() {
         payload.gvQuoteReplyEnabled = settings.quoteReplyEnabled;
       void setSyncStorage(payload);
     },
-    [setSyncStorage]
+    [setSyncStorage],
   );
 
   // Width adjuster for chat width
@@ -212,7 +212,7 @@ export default function Popup() {
         CHAT_PERCENT.defaultValue,
         CHAT_PERCENT.min,
         CHAT_PERCENT.max,
-        CHAT_PERCENT.legacyBaselinePx
+        CHAT_PERCENT.legacyBaselinePx,
       ),
     onApply: useCallback((widthPercent: number) => {
       const normalized = normalizePercent(
@@ -220,7 +220,7 @@ export default function Popup() {
         CHAT_PERCENT.defaultValue,
         CHAT_PERCENT.min,
         CHAT_PERCENT.max,
-        CHAT_PERCENT.legacyBaselinePx
+        CHAT_PERCENT.legacyBaselinePx,
       );
       try {
         chrome.storage?.sync?.set({ geminiChatWidth: normalized });
@@ -238,7 +238,7 @@ export default function Popup() {
         EDIT_PERCENT.defaultValue,
         EDIT_PERCENT.min,
         EDIT_PERCENT.max,
-        EDIT_PERCENT.legacyBaselinePx
+        EDIT_PERCENT.legacyBaselinePx,
       ),
     onApply: useCallback((widthPercent: number) => {
       const normalized = normalizePercent(
@@ -246,7 +246,7 @@ export default function Popup() {
         EDIT_PERCENT.defaultValue,
         EDIT_PERCENT.min,
         EDIT_PERCENT.max,
-        EDIT_PERCENT.legacyBaselinePx
+        EDIT_PERCENT.legacyBaselinePx,
       );
       try {
         chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
@@ -300,7 +300,7 @@ export default function Popup() {
         let latest = getCachedLatestVersion(
           cache?.[LATEST_VERSION_CACHE_KEY],
           now,
-          LATEST_VERSION_MAX_AGE
+          LATEST_VERSION_MAX_AGE,
         );
 
         if (!latest) {
@@ -308,7 +308,7 @@ export default function Popup() {
             'https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest',
             {
               headers: { Accept: 'application/vnd.github+json' },
-            }
+            },
           );
 
           if (!resp.ok) {
@@ -416,7 +416,7 @@ export default function Popup() {
                 loadedCustomWebsites.map(async (domain: string) => ({
                   domain,
                   ok: await hasAnyPermission(domain),
-                }))
+                })),
               )
             )
               .filter((item) => item.ok)
@@ -427,7 +427,7 @@ export default function Popup() {
               await setSyncStorage({ gvPromptCustomWebsites: filtered });
             }
           })();
-        }
+        },
       );
     } catch {}
   }, [setSyncStorage]);
@@ -501,7 +501,7 @@ export default function Popup() {
         return false;
       }
     },
-    [originPatternsForDomain, t]
+    [originPatternsForDomain, t],
   );
 
   const revokeCustomWebsitePermission = useCallback(
@@ -515,7 +515,7 @@ export default function Popup() {
         console.warn('[Gemini Voyager] Failed to revoke permission for', domain, err);
       }
     },
-    [originPatternsForDomain]
+    [originPatternsForDomain],
   );
 
   // Add website handler
@@ -567,7 +567,7 @@ export default function Popup() {
       await setSyncStorage({ gvPromptCustomWebsites: updatedWebsites });
       await revokeCustomWebsitePermission(website);
     },
-    [customWebsites, revokeCustomWebsitePermission, setSyncStorage]
+    [customWebsites, revokeCustomWebsitePermission, setSyncStorage],
   );
 
   const toggleQuickWebsite = useCallback(
@@ -591,7 +591,7 @@ export default function Popup() {
         await setSyncStorage({ gvPromptCustomWebsites: customWebsites });
       }
     },
-    [customWebsites, requestCustomWebsitePermission, revokeCustomWebsitePermission, setSyncStorage]
+    [customWebsites, requestCustomWebsitePermission, revokeCustomWebsitePermission, setSyncStorage],
   );
 
   const normalizedCurrentVersion = normalizeVersionString(extVersion);
@@ -618,10 +618,10 @@ export default function Popup() {
   }
 
   return (
-    <div className="w-[360px] bg-background text-foreground">
+    <div className="bg-background text-foreground w-[360px]">
       {/* Header */}
-      <div className="bg-linear-to-br from-primary/10 via-accent/5 to-transparent border-b border-border/50 px-5 py-4 flex items-center justify-between backdrop-blur-sm">
-        <h1 className="text-xl font-bold bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+      <div className="from-primary/10 via-accent/5 border-border/50 flex items-center justify-between border-b bg-linear-to-br to-transparent px-5 py-4 backdrop-blur-sm">
+        <h1 className="from-primary to-primary/70 bg-linear-to-r bg-clip-text text-xl font-bold text-transparent">
           {t('extName')}
         </h1>
         <div className="flex items-center gap-1">
@@ -630,9 +630,9 @@ export default function Popup() {
         </div>
       </div>
 
-      <div className="p-5 space-y-4">
+      <div className="space-y-4 p-5">
         {hasUpdate && normalizedLatestVersion && normalizedCurrentVersion && (
-          <Card className="p-3 bg-amber-50 border-amber-200 text-amber-900 shadow-sm">
+          <Card className="border-amber-200 bg-amber-50 p-3 text-amber-900 shadow-sm">
             <div className="flex items-start gap-3">
               <div className="mt-1 text-amber-600">
                 <svg
@@ -646,7 +646,7 @@ export default function Popup() {
                 </svg>
               </div>
               <div className="flex-1 space-y-1">
-                <p className="text-sm font-semibold leading-tight">{t('newVersionAvailable')}</p>
+                <p className="text-sm leading-tight font-semibold">{t('newVersionAvailable')}</p>
                 <p className="text-xs leading-tight">
                   {t('currentVersionLabel')}: v{normalizedCurrentVersion} ·{' '}
                   {t('latestVersionLabel')}: v{normalizedLatestVersion}
@@ -656,7 +656,7 @@ export default function Popup() {
                 href={latestReleaseUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-md transition-colors"
+                className="rounded-md bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-200"
               >
                 {t('updateNow')}
               </a>
@@ -666,19 +666,19 @@ export default function Popup() {
         {/* Cloud Sync - First priority - Hidden on Safari due to API limitations */}
         {!isSafari() && <CloudSyncSettings />}
         {/* Timeline Options */}
-        <Card className="p-4 hover:shadow-lg transition-shadow">
+        <Card className="p-4 transition-shadow hover:shadow-lg">
           <CardTitle className="mb-4 text-xs uppercase">{t('timelineOptions')}</CardTitle>
-          <CardContent className="p-0 space-y-4">
+          <CardContent className="space-y-4 p-0">
             {/* Scroll Mode */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">{t('scrollMode')}</Label>
-              <div className="relative grid grid-cols-2 rounded-lg bg-secondary/50 p-1 gap-1">
+              <Label className="mb-2 block text-sm font-medium">{t('scrollMode')}</Label>
+              <div className="bg-secondary/50 relative grid grid-cols-2 gap-1 rounded-lg p-1">
                 <div
-                  className="absolute top-1 bottom-1 w-[calc(50%-6px)] rounded-md bg-primary shadow-md pointer-events-none transition-all duration-300 ease-out"
+                  className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-6px)] rounded-md shadow-md transition-all duration-300 ease-out"
                   style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
                 />
                 <button
-                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
                     mode === 'flow'
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
@@ -691,7 +691,7 @@ export default function Popup() {
                   {t('flow')}
                 </button>
                 <button
-                  className={`relative z-10 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
                     mode === 'jump'
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
@@ -705,10 +705,10 @@ export default function Popup() {
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-between group">
+            <div className="group flex items-center justify-between">
               <Label
                 htmlFor="hide-container"
-                className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
               >
                 {t('hideOuterContainer')}
               </Label>
@@ -721,10 +721,10 @@ export default function Popup() {
                 }}
               />
             </div>
-            <div className="flex items-center justify-between group">
+            <div className="group flex items-center justify-between">
               <Label
                 htmlFor="draggable-timeline"
-                className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
               >
                 {t('draggableTimeline')}
               </Label>
@@ -737,22 +737,22 @@ export default function Popup() {
                 }}
               />
             </div>
-            <div className="flex items-center justify-between group">
+            <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label
                   htmlFor="marker-level-enabled"
-                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors flex items-center gap-1"
+                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
                 >
                   {t('enableMarkerLevel')}
                   <span
-                    className="material-symbols-outlined text-[16px] leading-none opacity-50 hover:opacity-100 transition-opacity cursor-help"
+                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
                     title={t('experimentalLabel')}
                     style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
                   >
                     experiment
                   </span>
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">{t('enableMarkerLevelHint')}</p>
+                <p className="text-muted-foreground mt-1 text-xs">{t('enableMarkerLevelHint')}</p>
               </div>
               <Switch
                 id="marker-level-enabled"
@@ -767,12 +767,12 @@ export default function Popup() {
             <Button
               variant="outline"
               size="sm"
-              className="w-full group hover:border-primary/50 mt-2"
+              className="group hover:border-primary/50 mt-2 w-full"
               onClick={() => {
                 apply({ resetPosition: true });
               }}
             >
-              <span className="group-hover:scale-105 transition-transform text-xs">
+              <span className="text-xs transition-transform group-hover:scale-105">
                 {t('resetTimelinePosition')}
               </span>
             </Button>
@@ -780,10 +780,10 @@ export default function Popup() {
             <Button
               variant="outline"
               size="sm"
-              className="w-full group hover:border-primary/50 mt-2"
+              className="group hover:border-primary/50 mt-2 w-full"
               onClick={() => setShowStarredHistory(true)}
             >
-              <span className="group-hover:scale-105 transition-transform text-xs flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 text-xs transition-transform group-hover:scale-105">
                 <svg
                   width="14"
                   height="14"
@@ -803,13 +803,13 @@ export default function Popup() {
           </CardContent>
         </Card>
         {/* Folder Options */}
-        <Card className="p-4 hover:shadow-lg transition-shadow">
+        <Card className="p-4 transition-shadow hover:shadow-lg">
           <CardTitle className="mb-4 text-xs uppercase">{t('folderOptions')}</CardTitle>
-          <CardContent className="p-0 space-y-4">
-            <div className="flex items-center justify-between group">
+          <CardContent className="space-y-4 p-0">
+            <div className="group flex items-center justify-between">
               <Label
                 htmlFor="folder-enabled"
-                className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
               >
                 {t('enableFolderFeature')}
               </Label>
@@ -822,10 +822,10 @@ export default function Popup() {
                 }}
               />
             </div>
-            <div className="flex items-center justify-between group">
+            <div className="group flex items-center justify-between">
               <Label
                 htmlFor="hide-archived"
-                className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
               >
                 {t('hideArchivedConversations')}
               </Label>
@@ -880,41 +880,41 @@ export default function Popup() {
         />
 
         {/* Formula Copy Options */}
-        <Card className="p-4 hover:shadow-lg transition-shadow">
+        <Card className="p-4 transition-shadow hover:shadow-lg">
           <CardTitle className="mb-4 text-xs uppercase">{t('formulaCopyFormat')}</CardTitle>
-          <CardContent className="p-0 space-y-3">
-            <p className="text-xs text-muted-foreground mb-3">{t('formulaCopyFormatHint')}</p>
+          <CardContent className="space-y-3 p-0">
+            <p className="text-muted-foreground mb-3 text-xs">{t('formulaCopyFormatHint')}</p>
             <div className="space-y-2">
-              <label className="flex items-center space-x-3 cursor-pointer">
+              <label className="flex cursor-pointer items-center space-x-3">
                 <input
                   type="radio"
                   name="formulaCopyFormat"
                   value="latex"
                   checked={formulaCopyFormat === 'latex'}
                   onChange={handleFormulaCopyFormatChange}
-                  className="w-4 h-4"
+                  className="h-4 w-4"
                 />
                 <span className="text-sm">{t('formulaCopyFormatLatex')}</span>
               </label>
-              <label className="flex items-center space-x-3 cursor-pointer">
+              <label className="flex cursor-pointer items-center space-x-3">
                 <input
                   type="radio"
                   name="formulaCopyFormat"
                   value="unicodemath"
                   checked={formulaCopyFormat === 'unicodemath'}
                   onChange={handleFormulaCopyFormatChange}
-                  className="w-4 h-4"
+                  className="h-4 w-4"
                 />
                 <span className="text-sm">{t('formulaCopyFormatUnicodeMath')}</span>
               </label>
-              <label className="flex items-center space-x-3 cursor-pointer">
+              <label className="flex cursor-pointer items-center space-x-3">
                 <input
                   type="radio"
                   name="formulaCopyFormat"
                   value="no-dollar"
                   checked={formulaCopyFormat === 'no-dollar'}
                   onChange={handleFormulaCopyFormatChange}
-                  className="w-4 h-4"
+                  className="h-4 w-4"
                 />
                 <span className="text-sm">{t('formulaCopyFormatNoDollar')}</span>
               </label>
@@ -926,18 +926,18 @@ export default function Popup() {
         <KeyboardShortcutSettings />
 
         {/* Input Collapse Options */}
-        <Card className="p-4 hover:shadow-lg transition-shadow">
+        <Card className="p-4 transition-shadow hover:shadow-lg">
           <CardTitle className="mb-4 text-xs uppercase">{t('inputCollapseOptions')}</CardTitle>
-          <CardContent className="p-0 space-y-4">
-            <div className="flex items-center justify-between group">
+          <CardContent className="space-y-4 p-0">
+            <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label
                   htmlFor="input-collapse-enabled"
-                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                 >
                   {t('enableInputCollapse')}
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">{t('enableInputCollapseHint')}</p>
+                <p className="text-muted-foreground mt-1 text-xs">{t('enableInputCollapseHint')}</p>
               </div>
               <Switch
                 id="input-collapse-enabled"
@@ -952,19 +952,19 @@ export default function Popup() {
         </Card>
 
         {/* Prompt Manager Options */}
-        <Card className="p-4 hover:shadow-lg transition-shadow">
+        <Card className="p-4 transition-shadow hover:shadow-lg">
           <CardTitle className="mb-4 text-xs uppercase">{t('promptManagerOptions')}</CardTitle>
-          <CardContent className="p-0 space-y-3">
+          <CardContent className="space-y-3 p-0">
             {/* Hide Prompt Manager Toggle */}
-            <div className="flex items-center justify-between group">
+            <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label
                   htmlFor="hide-prompt-manager"
-                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                 >
                   {t('hidePromptManager')}
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">{t('hidePromptManagerHint')}</p>
+                <p className="text-muted-foreground mt-1 text-xs">{t('hidePromptManagerHint')}</p>
               </div>
               <Switch
                 id="hide-prompt-manager"
@@ -976,9 +976,9 @@ export default function Popup() {
               />
             </div>
             <div>
-              <Label className="text-sm font-medium mb-2 block">{t('customWebsites')}</Label>
+              <Label className="mb-2 block text-sm font-medium">{t('customWebsites')}</Label>
               {/* Gemini Only Notice - moved here since it's about Prompt Manager */}
-              <div className="flex items-center gap-2 p-2 mb-2 rounded-md bg-primary/10 border border-primary/20">
+              <div className="bg-primary/10 border-primary/20 mb-2 flex items-center gap-2 rounded-md border p-2">
                 <svg
                   width="14"
                   height="14"
@@ -992,11 +992,11 @@ export default function Popup() {
                     fill="currentColor"
                   />
                 </svg>
-                <p className="text-xs text-primary font-medium">{t('geminiOnlyNotice')}</p>
+                <p className="text-primary text-xs font-medium">{t('geminiOnlyNotice')}</p>
               </div>
 
               {/* Quick-select buttons for popular websites */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
+              <div className="mb-3 flex flex-wrap gap-1.5">
                 {[
                   { domain: 'chatgpt.com', label: 'ChatGPT', Icon: IconChatGPT },
                   { domain: 'claude.ai', label: 'Claude', Icon: IconClaude },
@@ -1014,19 +1014,19 @@ export default function Popup() {
                       onClick={() => {
                         void toggleQuickWebsite(domain, isEnabled);
                       }}
-                      className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-full text-[11px] font-medium transition-all flex-grow justify-center min-w-[30%] ${
+                      className={`inline-flex min-w-[30%] flex-grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
                         isEnabled
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
                       }`}
                       title={label}
                     >
-                      <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
+                      <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
                         <Icon />
                       </span>
                       <span className="truncate">{label}</span>
                       <span
-                        className={`shrink-0 w-2.5 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}
+                        className={`w-2.5 shrink-0 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}
                       >
                         ✓
                       </span>
@@ -1037,18 +1037,18 @@ export default function Popup() {
 
               {/* Website List */}
               {customWebsites.length > 0 && (
-                <div className="space-y-2 mb-3">
+                <div className="mb-3 space-y-2">
                   {customWebsites.map((website) => (
                     <div
                       key={website}
-                      className="flex items-center justify-between bg-secondary/30 rounded-md px-3 py-2 group hover:bg-secondary/50 transition-colors"
+                      className="bg-secondary/30 group hover:bg-secondary/50 flex items-center justify-between rounded-md px-3 py-2 transition-colors"
                     >
-                      <span className="text-sm font-mono text-foreground/90">{website}</span>
+                      <span className="text-foreground/90 font-mono text-sm">{website}</span>
                       <button
                         onClick={() => {
                           void handleRemoveWebsite(website);
                         }}
-                        className="text-xs text-destructive hover:text-destructive/80 font-medium opacity-70 group-hover:opacity-100 transition-opacity"
+                        className="text-destructive hover:text-destructive/80 text-xs font-medium opacity-70 transition-opacity group-hover:opacity-100"
                       >
                         {t('removeWebsite')}
                       </button>
@@ -1059,7 +1059,7 @@ export default function Popup() {
 
               {/* Add Website Input */}
               <div className="space-y-2">
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex flex-wrap gap-2">
                   <input
                     type="text"
                     value={newWebsiteInput}
@@ -1073,7 +1073,7 @@ export default function Popup() {
                       }
                     }}
                     placeholder={t('customWebsitesPlaceholder')}
-                    className="flex-1 min-w-0 px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    className="bg-background border-border focus:ring-primary/50 min-w-0 flex-1 rounded-md border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
                   />
                   <Button
                     onClick={() => {
@@ -1085,30 +1085,30 @@ export default function Popup() {
                     {t('addWebsite')}
                   </Button>
                 </div>
-                {websiteError && <p className="text-xs text-destructive">{websiteError}</p>}
+                {websiteError && <p className="text-destructive text-xs">{websiteError}</p>}
               </div>
 
               {/* Note about reloading */}
-              <div className="mt-3 p-2 bg-primary/5 border border-primary/20 rounded-md">
-                <p className="text-xs text-muted-foreground">{t('customWebsitesNote')}</p>
+              <div className="bg-primary/5 border-primary/20 mt-3 rounded-md border p-2">
+                <p className="text-muted-foreground text-xs">{t('customWebsitesNote')}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* General Options */}
-        <Card className="p-4 hover:shadow-lg transition-shadow">
+        <Card className="p-4 transition-shadow hover:shadow-lg">
           <CardTitle className="mb-4 text-xs uppercase">{t('generalOptions')}</CardTitle>
-          <CardContent className="p-0 space-y-4">
-            <div className="flex items-center justify-between group">
+          <CardContent className="space-y-4 p-0">
+            <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label
                   htmlFor="tab-title-update"
-                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                 >
                   {t('enableTabTitleUpdate')}
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-muted-foreground mt-1 text-xs">
                   {t('enableTabTitleUpdateHint')}
                 </p>
               </div>
@@ -1121,15 +1121,15 @@ export default function Popup() {
                 }}
               />
             </div>
-            <div className="flex items-center justify-between group">
+            <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label
                   htmlFor="mermaid-enabled"
-                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                 >
                   {t('enableMermaidRendering')}
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-muted-foreground mt-1 text-xs">
                   {t('enableMermaidRenderingHint')}
                 </p>
               </div>
@@ -1142,15 +1142,15 @@ export default function Popup() {
                 }}
               />
             </div>
-            <div className="flex items-center justify-between group">
+            <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label
                   htmlFor="quote-reply-enabled"
-                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                 >
                   {t('enableQuoteReply')}
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">{t('enableQuoteReplyHint')}</p>
+                <p className="text-muted-foreground mt-1 text-xs">{t('enableQuoteReplyHint')}</p>
               </div>
               <Switch
                 id="quote-reply-enabled"
@@ -1165,18 +1165,18 @@ export default function Popup() {
         </Card>
 
         {/* NanoBanana Options */}
-        <Card className="p-4 hover:shadow-lg transition-shadow">
+        <Card className="p-4 transition-shadow hover:shadow-lg">
           <CardTitle className="mb-4 text-xs uppercase">{t('nanobananaOptions')}</CardTitle>
-          <CardContent className="p-0 space-y-4">
-            <div className="flex items-center justify-between group">
+          <CardContent className="space-y-4 p-0">
+            <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label
                   htmlFor="watermark-remover"
-                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                 >
                   {t('enableNanobananaWatermarkRemover')}
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-muted-foreground mt-1 text-xs">
                   {t('nanobananaWatermarkRemoverHint')}
                 </p>
               </div>
@@ -1194,15 +1194,15 @@ export default function Popup() {
       </div>
 
       {/* Footer */}
-      <div className="bg-linear-to-br from-secondary/30 via-accent/10 to-transparent border-t border-border/50 px-5 py-4 flex flex-col gap-3 backdrop-blur-sm">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground/80">{t('extensionVersion')}</span>
+      <div className="from-secondary/30 via-accent/10 border-border/50 flex flex-col gap-3 border-t bg-linear-to-br to-transparent px-5 py-4 backdrop-blur-sm">
+        <div className="flex w-full items-center justify-between">
+          <div className="text-muted-foreground flex items-center gap-2 text-xs">
+            <span className="text-foreground/80 font-semibold">{t('extensionVersion')}</span>
             <a
               href={releaseUrl}
               target="_blank"
               rel="noreferrer"
-              className="font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="text-primary hover:text-primary/80 font-semibold transition-colors"
               title={extVersion ? extVersion : undefined}
             >
               {extVersion ?? '...'}
@@ -1213,7 +1213,7 @@ export default function Popup() {
             href={websiteUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5"
+            className="text-muted-foreground hover:text-primary flex items-center gap-1.5 text-xs font-semibold transition-colors"
           >
             <svg
               width="14"
@@ -1237,7 +1237,7 @@ export default function Popup() {
           href="https://github.com/Nagi-ovo/gemini-voyager"
           target="_blank"
           rel="noreferrer"
-          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
           title={t('starProject')}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">

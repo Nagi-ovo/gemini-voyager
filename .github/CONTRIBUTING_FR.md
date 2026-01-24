@@ -193,14 +193,14 @@ Suivez [Conventional Commits](https://www.conventionalcommits.org/) :
 
 ```typescript
 import React, { useState } from 'react';
+
 import { marked } from 'marked';
 
-import { StorageService } from '@/core/services/StorageService';
 import { Button } from '@/components/ui/Button';
+import { StorageService } from '@/core/services/StorageService';
+import type { FolderData } from '@/core/types/folder';
 
 import { parseData } from './parser';
-
-import type { FolderData } from '@/core/types/folder';
 ```
 
 ---

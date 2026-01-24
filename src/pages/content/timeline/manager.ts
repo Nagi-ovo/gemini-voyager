@@ -1,13 +1,12 @@
-import { initI18n, getTranslationSync } from '../../../utils/i18n';
+import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
+import { StorageKeys } from '@/core/types/common';
+import type { ShortcutAction } from '@/core/types/keyboardShortcut';
 
+import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
 import type { DotElement, MarkerLevel } from './types';
-
-import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
-import { StorageKeys } from '@/core/types/common';
-import type { ShortcutAction } from '@/core/types/keyboardShortcut';
 
 function hashString(input: string): string {
   let h = 2166136261 >>> 0;
@@ -179,7 +178,7 @@ export class TimelineManager {
             g.chrome.storage.sync.get(defaults, (items: any) => {
               if (g.chrome.runtime.lastError) {
                 console.error(
-                  `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`
+                  `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`,
                 );
                 resolve(null);
               } else {
@@ -378,7 +377,7 @@ export class TimelineManager {
 
     if (this.ui.tooltip?.classList.contains('visible')) {
       const currentDot = this.ui.timelineBar?.querySelector(
-        '.timeline-dot:hover, .timeline-dot:focus'
+        '.timeline-dot:hover, .timeline-dot:focus',
       ) as DotElement | null;
       if (currentDot) this.refreshTooltipForDot(currentDot);
     }
@@ -398,7 +397,7 @@ export class TimelineManager {
     if (!this.conversationId) return;
     try {
       const messages = await StarredMessagesService.getStarredMessagesForConversation(
-        this.conversationId
+        this.conversationId,
       );
       const nextSet = new Set(messages.map((message) => String(message.turnId)));
       this.applyStarredIdSet(nextSet);
@@ -416,7 +415,7 @@ export class TimelineManager {
     // Strategy 1: Prefer the currently selected conversation in folder view
     try {
       const selected = document.querySelector(
-        '.gv-folder-conversation-selected .gv-conversation-title'
+        '.gv-folder-conversation-selected .gv-conversation-title',
       );
       const title = getText(selected);
       if (title) return title;
@@ -519,7 +518,7 @@ export class TimelineManager {
 
   private waitForAnyElement(
     selectors: string[],
-    timeoutMs: number = 5000
+    timeoutMs: number = 5000,
   ): Promise<{ element: Element; selector: string } | null> {
     return new Promise((resolve) => {
       for (const selector of selectors) {
@@ -873,7 +872,7 @@ export class TimelineManager {
     const visibleCount = N - hiddenIndices.size;
     const desired = Math.max(
       H,
-      visibleCount > 0 ? 2 * pad + Math.max(0, visibleCount - 1) * minGap : H
+      visibleCount > 0 ? 2 * pad + Math.max(0, visibleCount - 1) * minGap : H,
     );
     this.contentHeight = Math.ceil(desired);
     this.scale = H > 0 ? this.contentHeight / H : 1;
@@ -891,7 +890,7 @@ export class TimelineManager {
       pad + usableC,
       minGap,
       hiddenIndices,
-      gapMultipliers
+      gapMultipliers,
     );
     this.yPositions = adjusted;
 
@@ -925,7 +924,7 @@ export class TimelineManager {
     maxTop: number,
     gap: number,
     hiddenIndices: Set<number>,
-    gapMultipliers: number[]
+    gapMultipliers: number[],
   ): number[] {
     const n = positions.length;
     if (n === 0) return positions;
@@ -1104,7 +1103,7 @@ export class TimelineManager {
       () => {
         this.scheduleScrollSync();
       },
-      { root: this.scrollContainer, threshold: 0.1, rootMargin: '-40% 0px -59% 0px' }
+      { root: this.scrollContainer, threshold: 0.1, rootMargin: '-40% 0px -59% 0px' },
     );
   }
 
@@ -1137,7 +1136,7 @@ export class TimelineManager {
         const targetId = dot.dataset.targetTurnId!;
         targetElement =
           (this.conversationContainer!.querySelector(
-            `[data-turn-id="${targetId}"]`
+            `[data-turn-id="${targetId}"]`,
           ) as HTMLElement | null) ||
           this.markers.find((m) => m.id === targetId)?.element ||
           null;
@@ -1241,7 +1240,7 @@ export class TimelineManager {
     this.onWindowResize = () => {
       if (this.ui.tooltip?.classList.contains('visible')) {
         const activeDot = this.ui.timelineBar!.querySelector(
-          '.timeline-dot:hover, .timeline-dot:focus'
+          '.timeline-dot:hover, .timeline-dot:focus',
         ) as DotElement | null;
         if (activeDot) this.refreshTooltipForDot(activeDot);
       }
@@ -1350,7 +1349,7 @@ export class TimelineManager {
 
           console.log('[Timeline] Starred removed via EventBus:', turnId);
         }
-      })
+      }),
     );
 
     this.eventBusUnsubscribers.push(
@@ -1373,7 +1372,7 @@ export class TimelineManager {
 
           console.log('[Timeline] Starred added via EventBus:', turnId);
         }
-      })
+      }),
     );
   }
 
@@ -1546,7 +1545,7 @@ export class TimelineManager {
 
   private truncateToThreeLines(
     text: string,
-    targetWidth: number
+    targetWidth: number,
   ): { text: string; height: number } {
     if (!this.measureEl || !this.ui.tooltip) return { text, height: 0 };
     const tip = this.ui.tooltip;
@@ -1646,7 +1645,7 @@ export class TimelineManager {
     dot: HTMLElement,
     placement: 'left' | 'right',
     width: number,
-    height: number
+    height: number,
   ): void {
     if (!this.ui.tooltip) return;
     const tip = this.ui.tooltip;
@@ -1729,7 +1728,7 @@ export class TimelineManager {
     if (this.markerTops.length === this.markers.length && this.markerTops.length > 0) {
       const idx = Math.max(
         0,
-        Math.min(this.markers.length - 1, this.upperBound(this.markerTops, ref))
+        Math.min(this.markers.length - 1, this.upperBound(this.markerTops, ref)),
       );
       activeId = this.markers[idx].id;
     } else {
@@ -1967,7 +1966,7 @@ export class TimelineManager {
     const delta = e.clientY - this.sliderStartClientY;
     let top = Math.max(
       0,
-      Math.min(maxTop, this.sliderStartTop + delta - (parseFloat(this.ui.slider!.style.top) || 0))
+      Math.min(maxTop, this.sliderStartTop + delta - (parseFloat(this.ui.slider!.style.top) || 0)),
     );
     const r = maxTop > 0 ? top / maxTop : 0;
     const range = Math.max(1, this.contentHeight - barH);
@@ -2080,7 +2079,7 @@ export class TimelineManager {
           g.chrome.storage.sync.get(['geminiTimelinePosition'], (items: any) => {
             if (g.chrome.runtime?.lastError) {
               console.error(
-                `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`
+                `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`,
               );
               resolve(null);
             } else {
@@ -2377,7 +2376,7 @@ export class TimelineManager {
   private calculateCollapsedPositions(
     hiddenIndices: Set<number>,
     pad: number,
-    usableC: number
+    usableC: number,
   ): { desiredY: number[]; effectiveBaseNs: number[] } {
     const N = this.markers.length;
     const desiredY: number[] = new Array(N).fill(-1);
@@ -2817,7 +2816,7 @@ export class TimelineManager {
           () => {
             this.scheduleScrollSync();
           },
-          { root: this.scrollContainer, threshold: 0.1, rootMargin: '-40% 0px -59% 0px' }
+          { root: this.scrollContainer, threshold: 0.1, rootMargin: '-40% 0px -59% 0px' },
         );
       } catch {}
     }
@@ -2858,7 +2857,7 @@ export class TimelineManager {
               window.history.replaceState(
                 null,
                 '',
-                window.location.pathname + window.location.search
+                window.location.pathname + window.location.search,
               );
             }, 900);
           }, 100);

@@ -333,7 +333,7 @@ const openFullscreen = (svgHtml: string) => {
       }
       applyTransform();
     },
-    { passive: false }
+    { passive: false },
   );
 
   // Drag to pan

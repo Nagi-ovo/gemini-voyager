@@ -1,19 +1,18 @@
 /**
  * Tests for version management utilities
  */
-
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   EXTENSION_VERSION,
   FORMAT_VERSIONS,
-  parseVersion,
-  compareVersions,
-  isVersionCompatible,
-  isSupportedFormat,
-  getCompatibilityInfo,
-  applyMigrations,
   type SemanticVersion,
+  applyMigrations,
+  compareVersions,
+  getCompatibilityInfo,
+  isSupportedFormat,
+  isVersionCompatible,
+  parseVersion,
 } from '../version';
 
 describe('Version Management', () => {

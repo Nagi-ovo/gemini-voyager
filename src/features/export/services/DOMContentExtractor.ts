@@ -104,7 +104,7 @@ export class DOMContentExtractor {
     if (!messageContent) {
       // Try markdown container
       messageContent = element.querySelector(
-        '.markdown-main-panel, ' + '.markdown, ' + '.model-response-text'
+        '.markdown-main-panel, ' + '.markdown, ' + '.model-response-text',
       );
     }
 
@@ -128,7 +128,7 @@ export class DOMContentExtractor {
       console.log(
         '[DOMContentExtractor] Using container:',
         messageContent.tagName,
-        messageContent.className
+        messageContent.className,
       );
 
     // Don't clone! Angular custom elements may lose content when cloned
@@ -152,7 +152,7 @@ export class DOMContentExtractor {
         console.log('[DOMContentExtractor] markdownDiv className:', markdownDiv.className);
         console.log(
           '[DOMContentExtractor] markdownDiv innerHTML preview:',
-          (markdownDiv as HTMLElement).innerHTML.substring(0, 300)
+          (markdownDiv as HTMLElement).innerHTML.substring(0, 300),
         );
       }
 
@@ -173,11 +173,11 @@ export class DOMContentExtractor {
       console.log(
         '[DOMContentExtractor] Searching for code blocks in:',
         element.tagName,
-        element.className
+        element.className,
       );
       console.log(
         '[DOMContentExtractor] Element HTML preview:',
-        element.outerHTML.substring(0, 200)
+        element.outerHTML.substring(0, 200),
       );
     }
 
@@ -210,7 +210,7 @@ export class DOMContentExtractor {
       console.log(
         '[DOMContentExtractor] Found',
         altCodeBlocks.length,
-        'raw code elements with alternative selector'
+        'raw code elements with alternative selector',
       );
     altCodeBlocks.forEach((codeEl, idx) => {
       // Avoid duplicates if already processed
@@ -219,7 +219,7 @@ export class DOMContentExtractor {
       if (codeEl.closest && codeEl.closest('code-block')) return;
       if (this.DEBUG)
         console.log(
-          `[DOMContentExtractor] Processing raw code element ${idx + 1}/${altCodeBlocks.length}`
+          `[DOMContentExtractor] Processing raw code element ${idx + 1}/${altCodeBlocks.length}`,
         );
       const extracted = this.extractCodeFromCodeElement(codeEl as HTMLElement);
       if (extracted.text) {
@@ -263,14 +263,14 @@ export class DOMContentExtractor {
     container: Element,
     htmlParts: string[],
     textParts: string[],
-    flags: Pick<ExtractedContent, 'hasImages' | 'hasFormulas' | 'hasTables' | 'hasCode'>
+    flags: Pick<ExtractedContent, 'hasImages' | 'hasFormulas' | 'hasTables' | 'hasCode'>,
   ): void {
     const children = Array.from(container.children);
     if (this.DEBUG)
       console.log(
         `[DOMContentExtractor] processNodes: ${children.length} children in`,
         container.tagName,
-        container.className
+        container.className,
       );
 
     // Check for Shadow DOM
@@ -615,7 +615,7 @@ export class DOMContentExtractor {
       const firstBodyRow = table.querySelector('tbody tr');
       if (firstBodyRow) {
         const header = Array.from(firstBodyRow.querySelectorAll('td, th')).map((cell) =>
-          this.normalizeText(cell.textContent || '')
+          this.normalizeText(cell.textContent || ''),
         );
         if (header.length > 0) {
           markdownLines.push('| ' + header.join(' | ') + ' |');
@@ -623,7 +623,7 @@ export class DOMContentExtractor {
           const rest = Array.from(table.querySelectorAll('tbody tr')).slice(1);
           rest.forEach((row) => {
             const cells = Array.from(row.querySelectorAll('td, th')).map((cell) =>
-              this.normalizeText(cell.textContent || '')
+              this.normalizeText(cell.textContent || ''),
             );
             markdownLines.push('| ' + cells.join(' | ') + ' |');
           });
@@ -642,7 +642,7 @@ export class DOMContentExtractor {
    */
   private static extractList(
     element: HTMLElement,
-    depth: number = 0
+    depth: number = 0,
   ): { html: string; text: string } {
     const isOrdered = element.tagName === 'OL';
     const items = Array.from(element.querySelectorAll(':scope > li'));

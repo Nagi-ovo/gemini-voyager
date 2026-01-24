@@ -15,11 +15,10 @@
  * - Dependency Inversion: FolderManager depends on interface, not implementation
  * - Testability: Easy to mock storage in unit tests
  */
-
-import type { FolderData } from '../types';
-
 import { isSafari } from '@/core/utils/browser';
 import { safariStorage } from '@/core/utils/safariStorage';
+
+import type { FolderData } from '../types';
 
 /**
  * Unified storage interface for folder data
@@ -126,7 +125,7 @@ export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
       } catch (storageError) {
         console.warn(
           '[LocalStorageFolderAdapter] Failed to mirror to chrome.storage.local:',
-          storageError
+          storageError,
         );
       }
 

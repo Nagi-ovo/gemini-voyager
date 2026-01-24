@@ -251,6 +251,6 @@ export function startChatWidthAdjuster() {
         console.error('[Gemini Voyager] Failed to remove storage listener on unload:', e);
       }
     },
-    { once: true }
+    { once: true },
   );
 }

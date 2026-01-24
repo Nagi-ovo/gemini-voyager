@@ -4,7 +4,6 @@
  * Edge doesn't accept the 'key' field in manifest.json
  * This script builds the Chrome extension and removes incompatible fields.
  */
-
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';

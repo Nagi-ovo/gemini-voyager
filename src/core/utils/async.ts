@@ -7,7 +7,7 @@
  */
 export function debounce<T extends (...args: Parameters<T>) => void>(
   func: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let timeoutId: number | null = null;
 
@@ -28,7 +28,7 @@ export function debounce<T extends (...args: Parameters<T>) => void>(
  */
 export function throttle<T extends (...args: Parameters<T>) => void>(
   func: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let lastCall = 0;
 
@@ -52,7 +52,7 @@ export async function retry<T>(
     initialDelay?: number;
     maxDelay?: number;
     backoffFactor?: number;
-  } = {}
+  } = {},
 ): Promise<T> {
   const { maxAttempts = 3, initialDelay = 100, maxDelay = 5000, backoffFactor = 2 } = options;
 
@@ -88,7 +88,7 @@ export function sleep(ms: number): Promise<void> {
 export async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
-  timeoutError = new Error('Operation timed out')
+  timeoutError = new Error('Operation timed out'),
 ): Promise<T> {
   return Promise.race([
     promise,

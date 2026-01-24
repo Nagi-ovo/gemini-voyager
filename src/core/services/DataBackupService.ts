@@ -39,7 +39,7 @@ export class DataBackupService<T = any> {
 
   constructor(
     private readonly namespace: string,
-    private readonly validateData: (data: any) => boolean = () => true
+    private readonly validateData: (data: any) => boolean = () => true,
   ) {
     this.primaryKey = `gvBackup_${namespace}_primary`;
     this.emergencyKey = `gvBackup_${namespace}_emergency`;
@@ -90,7 +90,7 @@ export class DataBackupService<T = any> {
     } catch (error) {
       console.error(
         `[BackupService:${this.namespace}] Failed to create beforeUnload backup:`,
-        error
+        error,
       );
       return false;
     }
@@ -165,7 +165,7 @@ export class DataBackupService<T = any> {
       }
 
       console.log(
-        `[BackupService:${this.namespace}] Successfully loaded ${type} backup from ${backup.metadata.timestamp}`
+        `[BackupService:${this.namespace}] Successfully loaded ${type} backup from ${backup.metadata.timestamp}`,
       );
       return backup.data;
     } catch (error) {
@@ -207,7 +207,7 @@ export class DataBackupService<T = any> {
 
       if (age > this.maxBackupAge) {
         console.warn(
-          `[BackupService:${this.namespace}] Backup is too old: ${Math.floor(age / (24 * 60 * 60 * 1000))} days`
+          `[BackupService:${this.namespace}] Backup is too old: ${Math.floor(age / (24 * 60 * 60 * 1000))} days`,
         );
         return false;
       }

@@ -1,7 +1,6 @@
 /**
  * Types for folder configuration import/export
  */
-
 import type { FolderData } from '@/core/types/folder';
 
 /**

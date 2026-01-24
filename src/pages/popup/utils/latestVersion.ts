@@ -27,7 +27,7 @@ export function extractLatestReleaseVersion(data: unknown): string | null {
 export function getCachedLatestVersion(
   cachedValue: unknown,
   now: number,
-  maxAgeMs: number
+  maxAgeMs: number,
 ): string | null {
   if (!isRecord(cachedValue)) return null;
 

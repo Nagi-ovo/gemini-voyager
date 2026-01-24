@@ -3,10 +3,8 @@
  * Replaces direct localStorage and chrome.storage calls
  * Implements Repository pattern with type safety
  */
-
-import { StorageError, ErrorCode, ErrorHandler } from '../errors/AppError';
+import { ErrorCode, ErrorHandler, StorageError } from '../errors/AppError';
 import type { Result, StorageKey } from '../types/common';
-
 import { logger } from './LoggerService';
 
 export interface IStorageService {
@@ -58,7 +56,7 @@ abstract class BaseChromeStorageService implements IStorageService {
           ErrorCode.STORAGE_READ_FAILED,
           `Failed to read key: ${key}`,
           { key },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -88,7 +86,7 @@ abstract class BaseChromeStorageService implements IStorageService {
           ErrorCode.STORAGE_WRITE_FAILED,
           `Failed to write key: ${key}`,
           { key, value },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -118,7 +116,7 @@ abstract class BaseChromeStorageService implements IStorageService {
           ErrorCode.STORAGE_WRITE_FAILED,
           `Failed to remove key: ${key}`,
           { key },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -148,7 +146,7 @@ abstract class BaseChromeStorageService implements IStorageService {
           ErrorCode.STORAGE_WRITE_FAILED,
           'Failed to clear storage',
           {},
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -205,7 +203,7 @@ export class LocalStorageService implements IStorageService {
           ErrorCode.STORAGE_PARSE_FAILED,
           `Failed to read/parse key: ${key}`,
           { key },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -228,7 +226,7 @@ export class LocalStorageService implements IStorageService {
           ErrorCode.STORAGE_WRITE_FAILED,
           `Failed to write key: ${key}`,
           { key, value },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -250,7 +248,7 @@ export class LocalStorageService implements IStorageService {
           ErrorCode.STORAGE_WRITE_FAILED,
           `Failed to remove key: ${key}`,
           { key },
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }
@@ -272,7 +270,7 @@ export class LocalStorageService implements IStorageService {
           ErrorCode.STORAGE_WRITE_FAILED,
           'Failed to clear storage',
           {},
-          error instanceof Error ? error : undefined
+          error instanceof Error ? error : undefined,
         ),
       };
     }

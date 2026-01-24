@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   extractLatestReleaseVersion,
@@ -24,7 +24,7 @@ describe('Popup latest version helpers', () => {
 
     it('returns update_url when present', () => {
       expect(getManifestUpdateUrl({ update_url: 'https://example.com/update.xml' })).toBe(
-        'https://example.com/update.xml'
+        'https://example.com/update.xml',
       );
     });
   });
@@ -55,7 +55,7 @@ describe('Popup latest version helpers', () => {
       const now = 1_000_000;
       const maxAgeMs = 10_000;
       expect(getCachedLatestVersion({ version: 'v1.2.3', fetchedAt: now - 1 }, now, maxAgeMs)).toBe(
-        'v1.2.3'
+        'v1.2.3',
       );
     });
 
@@ -64,11 +64,11 @@ describe('Popup latest version helpers', () => {
       const maxAgeMs = 10_000;
 
       expect(
-        getCachedLatestVersion({ version: 'v1.2.3', fetchedAt: now - maxAgeMs }, now, maxAgeMs)
+        getCachedLatestVersion({ version: 'v1.2.3', fetchedAt: now - maxAgeMs }, now, maxAgeMs),
       ).toBeNull();
       expect(getCachedLatestVersion({ version: '', fetchedAt: now - 1 }, now, maxAgeMs)).toBeNull();
       expect(
-        getCachedLatestVersion({ version: 'v1.2.3', fetchedAt: 'x' }, now, maxAgeMs)
+        getCachedLatestVersion({ version: 'v1.2.3', fetchedAt: 'x' }, now, maxAgeMs),
       ).toBeNull();
       expect(getCachedLatestVersion('x', now, maxAgeMs)).toBeNull();
     });

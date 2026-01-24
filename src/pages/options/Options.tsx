@@ -1,19 +1,20 @@
 import React from 'react';
 
-import { LanguageProvider, useLanguage } from '../../contexts/LanguageContext';
 import '@pages/options/Options.css';
+
+import { LanguageProvider, useLanguage } from '../../contexts/LanguageContext';
 
 function OptionsContent() {
   const { t } = useLanguage();
 
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-background text-foreground min-h-screen">
+    <div className="bg-background text-foreground mx-auto min-h-screen max-w-4xl p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{t('extName')}</h1>
+        <h1 className="mb-2 text-3xl font-bold">{t('extName')}</h1>
         <p className="text-muted-foreground">{t('optionsPageSubtitle')}</p>
       </div>
 
-      <div className="p-6 rounded-lg border border-border bg-card">
+      <div className="border-border bg-card rounded-lg border p-6">
         <p className="text-muted-foreground">{t('optionsComingSoon')}</p>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { APP_LANGUAGES } from '@/utils/language';
-import { isTranslationKey, TRANSLATIONS } from '@/utils/translations';
+import { TRANSLATIONS, isTranslationKey } from '@/utils/translations';
 
 describe('TRANSLATIONS', () => {
   it('contains the same keys for all languages at runtime', () => {

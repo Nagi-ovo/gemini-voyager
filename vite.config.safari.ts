@@ -1,9 +1,8 @@
+import { ManifestV3Export, crx } from '@crxjs/vite-plugin';
 import { resolve } from 'path';
+import { defineConfig, mergeConfig } from 'vite';
 
-import { crx, ManifestV3Export } from '@crxjs/vite-plugin';
-import { mergeConfig, defineConfig } from 'vite';
-
-import baseConfig, { baseManifest, baseBuildOptions } from './vite.config.base';
+import baseConfig, { baseBuildOptions, baseManifest } from './vite.config.base';
 
 const outDir = resolve(__dirname, 'dist_safari');
 
@@ -33,5 +32,5 @@ export default mergeConfig(
       // Safari-specific build optimizations
       target: 'safari14', // Safari 14+ for better extension support
     },
-  })
+  }),
 );

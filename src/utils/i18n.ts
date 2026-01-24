@@ -1,9 +1,9 @@
 import browser from 'webextension-polyfill';
 
-import { normalizeLanguage, type AppLanguage } from './language';
-import { isTranslationKey, TRANSLATIONS, type TranslationKey } from './translations';
-
 import { StorageKeys } from '@/core/types/common';
+
+import { type AppLanguage, normalizeLanguage } from './language';
+import { TRANSLATIONS, type TranslationKey, isTranslationKey } from './translations';
 
 /**
  * Get the current language preference

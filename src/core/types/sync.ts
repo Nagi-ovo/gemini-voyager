@@ -2,7 +2,6 @@
  * Sync-related type definitions for Google Drive sync feature
  * Provides type safety for sync state management and data transfer
  */
-
 import type { FolderData } from './folder';
 
 /**

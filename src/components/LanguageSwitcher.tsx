@@ -1,9 +1,9 @@
-import { Globe } from 'lucide-react';
 import React from 'react';
+
+import { Globe } from 'lucide-react';
 
 import { useLanguage } from '../contexts/LanguageContext';
 import { APP_LANGUAGE_LABELS, getNextLanguage } from '../utils/language';
-
 import { Button } from './ui/button';
 
 export const LanguageSwitcher: React.FC = () => {
