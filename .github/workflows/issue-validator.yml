@@ -38,18 +38,25 @@ jobs:
             // --- Validation Logic ---
             let failureReason = '';
 
-            // 1. Check Version
-            if (!version || version === PLACEHOLDER_VERSION) {
-              failureReason = 'Missing or default extension version.';
+            // 0. Skip validation if it's not a bug report (missing version field)
+            const isBugReport = !!body.match(/### 📦 扩展版本 \| Extension Version/);
+            
+            if (isBugReport) {
+                // 1. Check Version
+                if (!version || version === PLACEHOLDER_VERSION) {
+                  failureReason = 'Missing or default extension version.';
+                }
+
+                // 2. Check Steps
+                else if (!steps || steps.length < MIN_STEPS_LENGTH) {
+                   failureReason = 'Reproduction steps are too short (less than 10 characters).';
+                }
+                else if (steps.includes(PLACEHOLDER_STEPS_PART)) {
+                   failureReason = 'Reproduction steps contain default template text.';
+                }
             }
 
-            // 2. Check Steps
-            else if (!steps || steps.length < MIN_STEPS_LENGTH) {
-               failureReason = 'Reproduction steps are too short (less than 10 characters).';
-            }
-            else if (steps.includes(PLACEHOLDER_STEPS_PART)) {
-               failureReason = 'Reproduction steps contain default template text.';
-            }
+
 
             // --- Action ---
             if (failureReason) {
