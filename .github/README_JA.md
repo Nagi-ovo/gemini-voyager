@@ -35,16 +35,6 @@
   </p>
 </div>
 
-> [!IMPORTANT]
-> **プロジェクトの状態: 低頻度メンテナンス。** 返信が遅れる可能性があります。テスト付きのPRが優先されます。
-
-> [!CAUTION]
-> **作者の声明**: 本プロジェクトは、LLMミラーサイト、違法製品、またはユーザーのプライバシー漏洩に関わる製品からのスポンサーシップや広告はいかなる形式でも**受け付けません**。
-
-<p align="center">
-    <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
-  </p>
-
 <p align="center">
   <a href="https://voyager.nagi.fun/ja">📖 ドキュメント</a> • 
   <a href="../README.md">English</a> • 
@@ -52,6 +42,16 @@
   <a href="./README_FR.md">Français</a> •
   <a href="./README_ES.md">Español</a>
 </p>
+
+<p align="center">
+    <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
+  </p>
+
+> [!IMPORTANT]
+> **プロジェクトの状態: 低頻度メンテナンス。** 返信が遅れる可能性があります。テスト付きのPRが優先されます。
+
+> [!CAUTION]
+> **作者の声明**: 本プロジェクトは、LLMミラーサイト、違法製品、またはユーザーのプライバシー漏洩に関わる製品からのスポンサーシップや広告はいかなる形式でも**受け付けません**。
 
 ---
 

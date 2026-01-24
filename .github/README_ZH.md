@@ -35,16 +35,6 @@
   </p>
 </div>
 
-> [!IMPORTANT]
-> **项目状态：低频维护。** 回复较慢。优先处理带测试的 PR。
-
-> [!CAUTION]
-> **作者严正声明**：本项目**不接受**任何形式的 LLM 镜像站、违法产品或涉及用户隐私泄露产品的广告位赞助。请勿扰，谢谢。
-
-<p align="center">
-    <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
-  </p>
-
 <p align="center">
   <a href="https://voyager.nagi.fun">📖 文档</a> • 
   <a href="../README.md">English</a> • 
@@ -52,6 +42,16 @@
   <a href="./README_FR.md">Français</a> •
   <a href="./README_ES.md">Español</a>
 </p>
+
+<p align="center">
+    <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
+  </p>
+
+> [!IMPORTANT]
+> **项目状态：低频维护。** 回复较慢。优先处理带测试的 PR。
+
+> [!CAUTION]
+> **作者严正声明**：本项目**不接受**任何形式的 LLM 镜像站、违法产品或涉及用户隐私泄露产品的广告位赞助。请勿扰，谢谢。
 
 ---
 

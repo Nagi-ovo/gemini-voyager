@@ -23,12 +23,6 @@
   </p>
 </div>
 
-> [!IMPORTANT]
-> **Estado del proyecto: Mantenimiento bajo.** Espere retrasos en las respuestas. Se priorizan los PR con pruebas.
-
-> [!CAUTION]
-> **Declaración del Autor**: Este proyecto **NO acepta** ninguna forma de patrocinio o publicidad de sitios espejo de LLM, productos ilegales o productos que involucren filtraciones de privacidad del usuario.
-
 <p align="center">
   <a href="https://voyager.nagi.fun/es">📖 Documentación</a> • 
   <a href="../README.md">English</a> •
@@ -36,6 +30,12 @@
   <a href="./README_JA.md">日本語</a> •
   <a href="./README_FR.md">Français</a>
 </p>
+
+> [!IMPORTANT]
+> **Estado del proyecto: Mantenimiento bajo.** Espere retrasos en las respuestas. Se priorizan los PR con pruebas.
+
+> [!CAUTION]
+> **Declaración del Autor**: Este proyecto **NO acepta** ninguna forma de patrocinio o publicidad de sitios espejo de LLM, productos ilegales o productos que involucren filtraciones de privacidad del usuario.
 
 ---
 
