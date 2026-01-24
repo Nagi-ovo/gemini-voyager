@@ -914,5 +914,13 @@
   "enableMermaidRenderingHint": {
     "message": "自动将代码块中的 Mermaid 代码渲染为图表",
     "description": "Mermaid 渲染功能提示"
+  },
+  "enableQuoteReply": {
+    "message": "启用引用回复",
+    "description": "启用引用回复开关标签"
+  },
+  "enableQuoteReplyHint": {
+    "message": "在对话中选中文字时显示悬浮按钮，用于引用所选内容",
+    "description": "引用回复功能提示"
   }
 }

@@ -914,5 +914,13 @@
   "enableMermaidRenderingHint": {
     "message": "コードブロック内の Mermaid ダイアグラムを自動的にレンダリングします",
     "description": "Mermaid rendering feature hint"
+  },
+  "enableQuoteReply": {
+    "message": "引用返信を有効化",
+    "description": "Enable quote reply toggle label"
+  },
+  "enableQuoteReplyHint": {
+    "message": "会話でテキストを選択したときに、選択したテキストを引用するフローティングボタンを表示します",
+    "description": "Quote reply feature hint"
   }
 }

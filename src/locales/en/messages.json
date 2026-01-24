@@ -914,5 +914,13 @@
   "enableMermaidRenderingHint": {
     "message": "Automatically render Mermaid diagrams in code blocks",
     "description": "Mermaid rendering feature hint"
+  },
+  "enableQuoteReply": {
+    "message": "Enable quote reply",
+    "description": "Enable quote reply toggle label"
+  },
+  "enableQuoteReplyHint": {
+    "message": "Show a floating button to quote selected text when text is selected in conversations",
+    "description": "Quote reply feature hint"
   }
 }

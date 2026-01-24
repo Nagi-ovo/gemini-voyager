@@ -142,7 +142,17 @@ async function initializeFeatures(): Promise<void> {
 
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      quoteReplyCleanup = startQuoteReply();
+      // Quote Reply - conditionally start based on storage setting
+      const quoteReplyResult = await new Promise<{ gvQuoteReplyEnabled?: boolean }>((resolve) => {
+        try {
+          chrome.storage?.sync?.get({ gvQuoteReplyEnabled: true }, resolve);
+        } catch {
+          resolve({ gvQuoteReplyEnabled: true });
+        }
+      });
+      if (quoteReplyResult.gvQuoteReplyEnabled !== false) {
+        quoteReplyCleanup = startQuoteReply();
+      }
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Watermark remover - based on gemini-watermark-remover by journey-ad

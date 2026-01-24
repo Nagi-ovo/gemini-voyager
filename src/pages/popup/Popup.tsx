@@ -114,6 +114,7 @@ interface SettingsUpdate {
   inputCollapseEnabled?: boolean;
   tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
+  quoteReplyEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -138,6 +139,7 @@ export default function Popup() {
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
+  const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
 
   const handleFormulaCopyFormatChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const format = e.target.value as 'latex' | 'unicodemath' | 'no-dollar';
@@ -193,6 +195,8 @@ export default function Popup() {
         payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
       if (typeof settings.mermaidEnabled === 'boolean')
         payload.gvMermaidEnabled = settings.mermaidEnabled;
+      if (typeof settings.quoteReplyEnabled === 'boolean')
+        payload.gvQuoteReplyEnabled = settings.quoteReplyEnabled;
       void setSyncStorage(payload);
     },
     [setSyncStorage]
@@ -356,6 +360,7 @@ export default function Popup() {
           gvInputCollapseEnabled: false,
           gvTabTitleUpdateEnabled: true,
           gvMermaidEnabled: true,
+          gvQuoteReplyEnabled: true,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -377,6 +382,7 @@ export default function Popup() {
           setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
+          setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -1133,6 +1139,25 @@ export default function Popup() {
                 onChange={(e) => {
                   setMermaidEnabled(e.target.checked);
                   apply({ mermaidEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between group">
+              <div className="flex-1">
+                <Label
+                  htmlFor="quote-reply-enabled"
+                  className="cursor-pointer text-sm font-medium group-hover:text-primary transition-colors"
+                >
+                  {t('enableQuoteReply')}
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">{t('enableQuoteReplyHint')}</p>
+              </div>
+              <Switch
+                id="quote-reply-enabled"
+                checked={quoteReplyEnabled}
+                onChange={(e) => {
+                  setQuoteReplyEnabled(e.target.checked);
+                  apply({ quoteReplyEnabled: e.target.checked });
                 }}
               />
             </div>
