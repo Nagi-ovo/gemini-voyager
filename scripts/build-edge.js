@@ -78,7 +78,7 @@ async function buildForEdge() {
     // Zip the *contents* of dist_chrome
     execSync(`zip -r "${zipPath}" .`, {
       cwd: distDir,
-      stdio: 'inherit'
+      stdio: 'inherit',
     });
 
     console.log(`✨ Successfully created: ${zipName}`);

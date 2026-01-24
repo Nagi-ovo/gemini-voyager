@@ -24,16 +24,10 @@
   "icons": {
     "128": "icon-128.png"
   },
-  "permissions": [
-    "storage",
-    "identity",
-    "scripting"
-  ],
+  "permissions": ["storage", "identity", "scripting"],
   "oauth2": {
     "client_id": "462948120910-vvunu0k3b4vi37u23mqnh77mbgdjcg78.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/drive.file"
-    ]
+    "scopes": ["https://www.googleapis.com/auth/drive.file"]
   },
   "host_permissions": [
     "https://gemini.google.com/*",
@@ -46,10 +40,7 @@
     "https://lh3.google.com/*",
     "https://*.ggpht.com/*"
   ],
-  "optional_host_permissions": [
-    "https://*/*",
-    "http://*/*"
-  ],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; worker-src 'self'"
   },
@@ -65,12 +56,8 @@
         "https://aistudio.google.com/*",
         "https://aistudio.google.cn/*"
       ],
-      "js": [
-        "src/pages/content/index.tsx"
-      ],
-      "css": [
-        "contentStyle.css"
-      ]
+      "js": ["src/pages/content/index.tsx"],
+      "css": ["contentStyle.css"]
     }
   ],
   "web_accessible_resources": [
@@ -84,9 +71,7 @@
         "assets/*.js",
         "assets/*.png"
       ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "matches": ["<all_urls>"]
     }
   ]
 }
