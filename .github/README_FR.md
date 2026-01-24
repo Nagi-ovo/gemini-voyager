@@ -35,6 +35,9 @@
   </p>
 </div>
 
+> [!IMPORTANT]
+> **Statut du projet : Maintenance réduite.** Attendez-vous à des délais de réponse. Les PR avec tests sont prioritaires.
+
 > [!CAUTION]
 > **Déclaration de l'Auteur** : Ce projet **N'ACCEPTE AUCUNE** forme de parrainage ou de publicité provenant de sites miroirs LLM, de produits illégaux ou de produits impliquant des fuites de données privées des utilisateurs.
 

@@ -126,10 +126,15 @@ Before submitting, always run:
 
 ```bash
 bun run lint       # Fix linting issues
+bun run format     # Format code
 bun run typecheck  # Check types
 bun run build      # Verify build succeeds
 bun run test       # Run tests
 ```
+
+Ensure that:
+1. Your changes achieve the desired functionality.
+2. Your changes do not negatively affect existing features.
 
 ---
 
@@ -391,10 +396,15 @@ bun install
 
 ```bash
 bun run lint       # 修复代码风格问题
+bun run format     # 格式化代码
 bun run typecheck  # 检查类型
 bun run build      # 验证构建成功
 bun run test       # 运行测试
 ```
+
+并确保：
+1. 你的更改实现了预期功能。
+2. 你的更改没有影响现有的原有功能。
 
 ---
 

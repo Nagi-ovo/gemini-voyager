@@ -3,18 +3,17 @@ description: '反馈一个问题缺陷 | Report a bug'
 title: '[Bug] '
 labels: '🐛 Bug'
 body:
-  - type: markdown
-    attributes:
-      value: |
-        ### ⚠️ Maintenance Status
-
-        **This project is currently in Low Maintenance mode.**
-
-        - We prioritize Pull Requests with tests over Issues.
-        - Non-critical bugs without minimal reproduction steps may be closed directly.
-        - Please be patient with response times.
-  - type: checkboxes
-    id: checklist
+    - type: markdown
+      attributes:
+        value: |
+          ### ⚠️ 项目维护状态 | Maintenance Status
+          
+          **本项目目前处于低频维护模式。 | This project is currently in Low Maintenance mode.**
+          
+          - 我们将优先处理带有测试代码的 Pull Request，而非 Issue。 | We prioritize Pull Requests with tests over Issues.
+          - 对于未提供清晰复现步骤或环境信息的非核心 Bug，可能会被直接关闭。 | Non-critical bugs without minimal reproduction steps may be closed directly.
+          - 维护者精力有限，回复可能会有显著延迟，请谅解。 | Please be patient as response times will be significantly delayed.
+    - type: checkboxes    id: checklist
     attributes:
       label: '⚠️ 前置检查 | Essential Checklist'
       description: '请确认您已完成以下操作 | Please confirm you have done the following'

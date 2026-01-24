@@ -35,6 +35,9 @@
   </p>
 </div>
 
+> [!IMPORTANT]
+> **Project Status: Low Maintenance.** Expect delays in response. PRs with tests are prioritized.
+
 > [!CAUTION]
 > **Author's Statement**: This project **DOES NOT accept** any form of sponsorship or advertising from LLM mirror sites, illegal products, or products involving user privacy leaks. Please do not contact for such inquiries.
 

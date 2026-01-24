@@ -122,10 +122,15 @@ bun install
 
 ```bash
 bun run lint       # リンティングの問題を修正
+bun run format     # コードの整形
 bun run typecheck  # 型をチェック
 bun run build      # ビルドが成功することを確認
 bun run test       # テストを実行
 ```
+
+以下を確認してください：
+1. 変更内容が期待通りに機能すること。
+2. 既存の機能に影響を与えていないこと。
 
 ---
 

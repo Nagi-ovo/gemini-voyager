@@ -122,10 +122,15 @@ Antes de enviar, ejecuta siempre:
 
 ```bash
 bun run lint       # Corregir problemas de linting
+bun run format     # Formatear código
 bun run typecheck  # Comprobar tipos
 bun run build      # Verificar que la compilación tiene éxito
 bun run test       # Ejecutar pruebas
 ```
+
+Asegúrate de que:
+1. Tus cambios logran la funcionalidad deseada.
+2. Tus cambios no afectan negativamente a las funciones existentes.
 
 ---
 

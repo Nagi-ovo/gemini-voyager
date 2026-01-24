@@ -122,10 +122,15 @@ Avant de soumettre, exécutez toujours :
 
 ```bash
 bun run lint       # Corriger les problèmes de linting
+bun run format     # Formater le code
 bun run typecheck  # Vérifier les types
 bun run build      # Vérifier que le build réussit
 bun run test       # Exécuter les tests
 ```
+
+Assurez-vous que :
+1. Vos modifications réalisent la fonctionnalité souhaitée.
+2. Vos modifications n'affectent pas négativement les fonctionnalités existantes.
 
 ---
 

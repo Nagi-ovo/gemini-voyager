@@ -6,14 +6,14 @@ body:
   - type: markdown
     attributes:
       value: |
-        ### ⚠️ Maintenance Status
-
-        **This project is currently in Low Maintenance mode.**
-
-        - We prioritize Pull Requests with tests over Issues.
-        - Please be patient with response times.
-  - type: textarea
-    attributes:
+        ### ⚠️ 项目维护状态 | Maintenance Status
+        
+        **本项目目前处于低频维护模式。 | This project is currently in Low Maintenance mode.**
+        
+        - 维护者目前无法投入精力实现新的功能需求。 | The maintainer is currently unable to dedicate time to implementing new features.
+        - 我们非常**欢迎并鼓励社区贡献**！ | However, we **welcome and encourage community contributions**!
+        - 如果您希望该功能被实现，提交高质量的 Pull Request 是最佳途径。 | The best way to see this feature realized is to submit a Pull Request.
+  - type: textarea    attributes:
       label: '🥰 需求描述 | Feature Description'
       description: 'Please add a clear and concise description of the problem you are seeking to solve with this feature request.'
       placeholder: "Is your feature request related to a problem? Please describe.\nExample: I'm always frustrated when..."
