@@ -1,7 +1,21 @@
+# Sync project
 gemini-voyager-sync/
+
+# Build outputs
 dist_chrome/
 dist_firefox/
 dist_safari/
-coverage/
+
+# Dependencies
+node_modules/
+
+# Lock files
+bun.lockb
+package-lock.json
+
+# VitePress
 .vitepress/dist
 .vitepress/cache
+
+# Coverage
+coverage/
