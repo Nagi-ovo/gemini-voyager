@@ -71,19 +71,21 @@ describe('quote reply', () => {
     const cleanup = startQuoteReply();
 
     const selection = window.getSelection();
-    const textNode = document.getElementById('source')?.firstChild as Text | null;
-    expect(textNode).not.toBeNull();
+    const textNode = document.getElementById('source')?.firstChild;
+    if (!(textNode instanceof Text)) {
+      throw new Error('Expected a Text node for quote selection.');
+    }
 
     const range = document.createRange();
-    range.setStart(textNode as Text, 0);
-    range.setEnd(textNode as Text, 5);
+    range.setStart(textNode, 0);
+    range.setEnd(textNode, 5);
     selection?.removeAllRanges();
     selection?.addRange(range);
 
     document.dispatchEvent(new MouseEvent('mouseup'));
     vi.runAllTimers();
 
-    const quoteButton = document.querySelector('.gv-quote-btn') as HTMLElement | null;
+    const quoteButton = document.querySelector<HTMLElement>('.gv-quote-btn');
     expect(quoteButton).not.toBeNull();
 
     quoteButton?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
