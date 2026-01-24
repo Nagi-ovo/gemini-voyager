@@ -2272,8 +2272,8 @@ html.dark-theme .gv-pm-expand-btn:hover {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-height: 40px;
-  /* Ensure there's always a drop zone even when empty */
+  min-height: 24px;
+  /* Reduced min-height for better visual balance when empty */
   padding: 4px;
   border-radius: 8px;
   transition:
@@ -2284,6 +2284,15 @@ html.dark-theme .gv-pm-expand-btn:hover {
 .gv-folder-list-dragover {
   background-color: var(--folder-dragover-bg);
   border: 2px dashed var(--folder-dragover-border);
+}
+
+/* Empty state placeholder */
+.gv-folder-empty {
+  padding: 4px 16px;
+  font-size: 12px;
+  color: var(--folder-icon-color);
+  opacity: 0.7;
+  user-select: none;
 }
 
 /* Folder Item */

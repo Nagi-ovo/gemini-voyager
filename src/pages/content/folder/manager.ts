@@ -490,6 +490,14 @@ export class FolderManager {
       list.appendChild(folderElement);
     });
 
+    // If no folders and no root conversations, show empty state placeholder
+    if (rootFolders.length === 0 && rootConversations.length === 0) {
+      const emptyState = document.createElement('div');
+      emptyState.className = 'gv-folder-empty';
+      emptyState.textContent = this.t('folder_empty');
+      list.appendChild(emptyState);
+    }
+
     return list;
   }
 

@@ -263,6 +263,10 @@
     "message": "削除",
     "description": "Delete folder menu item"
   },
+  "folder_empty": {
+    "message": "フォルダがありません",
+    "description": "Empty state placeholder when no folders exist"
+  },
   "folder_pin": {
     "message": "フォルダをピン留め",
     "description": "Pin folder menu item"

@@ -263,6 +263,10 @@
     "message": "删除",
     "description": "删除文件夹菜单项"
   },
+  "folder_empty": {
+    "message": "暂无文件夹",
+    "description": "没有文件夹时显示的占位提示"
+  },
   "folder_pin": {
     "message": "置顶文件夹",
     "description": "置顶文件夹菜单项"

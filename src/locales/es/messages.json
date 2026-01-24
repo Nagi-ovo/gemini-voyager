@@ -263,6 +263,10 @@
     "message": "Eliminar",
     "description": "Delete folder menu item"
   },
+  "folder_empty": {
+    "message": "No hay carpetas",
+    "description": "Empty state placeholder when no folders exist"
+  },
   "folder_pin": {
     "message": "Fijar carpeta",
     "description": "Pin folder menu item"

@@ -263,6 +263,10 @@
     "message": "Delete",
     "description": "Delete folder menu item"
   },
+  "folder_empty": {
+    "message": "No folders yet",
+    "description": "Empty state placeholder when no folders exist"
+  },
   "folder_pin": {
     "message": "Pin folder",
     "description": "Pin folder menu item"
