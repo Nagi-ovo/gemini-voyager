@@ -210,6 +210,12 @@ function getInputContainer(): HTMLElement | null {
   return bestCandidate || textarea.parentElement?.parentElement || textarea.parentElement;
 }
 
+export function expandInputCollapseIfNeeded(): void {
+  const container = getInputContainer();
+  if (!container) return;
+  expand(container);
+}
+
 /**
  * Checks if the input is effectively empty.
  */
