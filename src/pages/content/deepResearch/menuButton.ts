@@ -94,7 +94,13 @@ async function getLanguage(): Promise<AppLanguage> {
   try {
     const stored = await new Promise<unknown>((resolve) => {
       try {
-        (window as any).chrome?.storage?.sync?.get?.(StorageKeys.LANGUAGE, resolve);
+        const w = window as any;
+        const storage = w.chrome?.storage?.sync ?? w.browser?.storage?.sync;
+        if (storage?.get) {
+          storage.get(StorageKeys.LANGUAGE, resolve);
+        } else {
+          resolve({});
+        }
       } catch {
         resolve({});
       }
