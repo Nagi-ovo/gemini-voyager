@@ -133,6 +133,7 @@ bun run test       # Run tests
 ```
 
 Ensure that:
+
 1. Your changes achieve the desired functionality.
 2. Your changes do not negatively affect existing features.
 
@@ -403,6 +404,7 @@ bun run test       # 运行测试
 ```
 
 并确保：
+
 1. 你的更改实现了预期功能。
 2. 你的更改没有影响现有的原有功能。
 
