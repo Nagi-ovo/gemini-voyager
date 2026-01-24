@@ -40,7 +40,7 @@ jobs:
 
             // 0. Skip validation if it's not a bug report (missing version field)
             const isBugReport = !!body.match(/### 📦 扩展版本 \| Extension Version/);
-            
+
             if (isBugReport) {
                 // 1. Check Version
                 if (!version || version === PLACEHOLDER_VERSION) {
