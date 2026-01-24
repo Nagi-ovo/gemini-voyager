@@ -162,85 +162,99 @@ export class TimelineManager {
     // Initialize keyboard shortcuts
     await this.initKeyboardShortcuts();
     try {
-      // prefer chrome.storage if available to sync with popup
-      if ((window as any).chrome?.storage?.sync) {
-        (window as any).chrome.storage.sync.get(
-          {
-            geminiTimelineScrollMode: 'flow',
-            geminiTimelineHideContainer: false,
-            geminiTimelineDraggable: false,
-            geminiTimelineMarkerLevel: false,
-            geminiTimelinePosition: null,
-          },
-          (res: any) => {
-            const m = res?.geminiTimelineScrollMode;
-            if (m === 'flow' || m === 'jump') this.scrollMode = m;
-            this.hideContainer = !!res?.geminiTimelineHideContainer;
-            this.applyContainerVisibility();
-            this.toggleDraggable(!!res?.geminiTimelineDraggable);
-            this.toggleMarkerLevel(!!res?.geminiTimelineMarkerLevel);
+      const g = globalThis as any;
+      const defaults = {
+        geminiTimelineScrollMode: 'flow',
+        geminiTimelineHideContainer: false,
+        geminiTimelineDraggable: false,
+        geminiTimelineMarkerLevel: false,
+        geminiTimelinePosition: null,
+      };
 
-            // Load position with auto-migration from v1 to v2
-            const position = res?.geminiTimelinePosition;
-            if (position) {
-              const viewportWidth = window.innerWidth;
-              const viewportHeight = window.innerHeight;
-
-              // v2 format: use percentage (responsive)
-              if (
-                position.version === 2 &&
-                position.topPercent !== undefined &&
-                position.leftPercent !== undefined
-              ) {
-                const top = (position.topPercent / 100) * viewportHeight;
-                const left = (position.leftPercent / 100) * viewportWidth;
-                this.applyPosition(top, left);
-              }
-              // v1 format: migrate to v2 (auto-upgrade)
-              else if (position.top !== undefined && position.left !== undefined) {
-                // Apply old position first
-                this.applyPosition(position.top, position.left);
-
-                // Migrate to v2 format (percentage-based)
-                const migratedPosition = {
-                  version: 2,
-                  topPercent: (position.top / viewportHeight) * 100,
-                  leftPercent: (position.left / viewportWidth) * 100,
-                };
-                chrome?.storage?.sync?.set?.({ geminiTimelinePosition: migratedPosition });
-              }
-            }
+      let res: any = null;
+      // prefer chrome.storage or browser.storage if available to sync with popup
+      if (g.chrome?.storage?.sync || g.browser?.storage?.sync) {
+        res = await new Promise((resolve) => {
+          if (g.chrome?.storage?.sync?.get) {
+            g.chrome.storage.sync.get(defaults, resolve);
+          } else {
+            g.browser.storage.sync
+              .get(defaults)
+              .then(resolve)
+              .catch(() => resolve(null));
           }
-        );
-        // listen for changes from popup and update mode live
-        try {
-          (window as any).chrome.storage.onChanged.addListener((changes: any, area: string) => {
-            if (area !== 'sync') return;
-            if (changes?.geminiTimelineScrollMode) {
-              const n = changes.geminiTimelineScrollMode.newValue;
-              if (n === 'flow' || n === 'jump') this.scrollMode = n;
-            }
-            if (changes?.geminiTimelineHideContainer) {
-              this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
-              this.applyContainerVisibility();
-            }
-            if (changes?.geminiTimelineDraggable) {
-              this.toggleDraggable(!!changes.geminiTimelineDraggable.newValue);
-            }
-            if (changes?.geminiTimelineMarkerLevel) {
-              this.toggleMarkerLevel(!!changes.geminiTimelineMarkerLevel.newValue);
-            }
-            if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
-              this.ui.timelineBar!.style.top = '';
-              this.ui.timelineBar!.style.left = '';
-            }
-          });
-        } catch {}
+        });
       } else {
+        // No extension storage available, try to load critical fallback from localStorage
         const saved = localStorage.getItem('geminiTimelineScrollMode');
-        if (saved === 'flow' || saved === 'jump') this.scrollMode = saved;
+        if (saved === 'flow' || saved === 'jump') res = { geminiTimelineScrollMode: saved };
       }
-    } catch {}
+
+      const m = res?.geminiTimelineScrollMode;
+      if (m === 'flow' || m === 'jump') this.scrollMode = m;
+      this.hideContainer = !!res?.geminiTimelineHideContainer;
+      this.applyContainerVisibility();
+      this.toggleDraggable(!!res?.geminiTimelineDraggable);
+      this.toggleMarkerLevel(!!res?.geminiTimelineMarkerLevel);
+
+      // Load position with auto-migration from v1 to v2
+      const position = res?.geminiTimelinePosition;
+      if (position) {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        // v2 format: use percentage (responsive)
+        if (
+          position.version === 2 &&
+          position.topPercent !== undefined &&
+          position.leftPercent !== undefined
+        ) {
+          const top = (position.topPercent / 100) * viewportHeight;
+          const left = (position.leftPercent / 100) * viewportWidth;
+          this.applyPosition(top, left);
+        }
+        // v1 format: migrate to v2 (auto-upgrade)
+        else if (position.top !== undefined && position.left !== undefined) {
+          // Apply old position first
+          this.applyPosition(position.top, position.left);
+
+          // Migrate to v2 format (percentage-based)
+          const migratedPosition = {
+            version: 2,
+            topPercent: (position.top / viewportHeight) * 100,
+            leftPercent: (position.left / viewportWidth) * 100,
+          };
+          chrome?.storage?.sync?.set?.({ geminiTimelinePosition: migratedPosition });
+        }
+      }
+
+      // listen for changes from popup and update mode live
+      try {
+        (window as any).chrome.storage.onChanged.addListener((changes: any, area: string) => {
+          if (area !== 'sync') return;
+          if (changes?.geminiTimelineScrollMode) {
+            const n = changes.geminiTimelineScrollMode.newValue;
+            if (n === 'flow' || n === 'jump') this.scrollMode = n;
+          }
+          if (changes?.geminiTimelineHideContainer) {
+            this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
+            this.applyContainerVisibility();
+          }
+          if (changes?.geminiTimelineDraggable) {
+            this.toggleDraggable(!!changes.geminiTimelineDraggable.newValue);
+          }
+          if (changes?.geminiTimelineMarkerLevel) {
+            this.toggleMarkerLevel(!!changes.geminiTimelineMarkerLevel.newValue);
+          }
+          if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
+            this.ui.timelineBar!.style.top = '';
+            this.ui.timelineBar!.style.left = '';
+          }
+        });
+      } catch {}
+    } catch (err) {
+      console.error('[Timeline] Init storage error:', err);
+    }
   }
 
   private computeElementTopsInScrollContainer(elements: HTMLElement[]): number[] {
