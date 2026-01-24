@@ -3,6 +3,16 @@ description: '反馈一个问题缺陷 | Report a bug'
 title: '[Bug] '
 labels: '🐛 Bug'
 body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️ Maintenance Status
+
+        **This project is currently in Low Maintenance mode.**
+
+        - We prioritize Pull Requests with tests over Issues.
+        - Non-critical bugs without minimal reproduction steps may be closed directly.
+        - Please be patient with response times.
   - type: checkboxes
     id: checklist
     attributes:
