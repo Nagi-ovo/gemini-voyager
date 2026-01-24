@@ -176,12 +176,24 @@ export class TimelineManager {
       if (g.chrome?.storage?.sync || g.browser?.storage?.sync) {
         res = await new Promise((resolve) => {
           if (g.chrome?.storage?.sync?.get) {
-            g.chrome.storage.sync.get(defaults, resolve);
+            g.chrome.storage.sync.get(defaults, (items: any) => {
+              if (g.chrome.runtime.lastError) {
+                console.error(
+                  `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`
+                );
+                resolve(null);
+              } else {
+                resolve(items);
+              }
+            });
           } else {
             g.browser.storage.sync
               .get(defaults)
               .then(resolve)
-              .catch(() => resolve(null));
+              .catch((error: Error) => {
+                console.error(`[Timeline] browser.storage.get failed: ${error.message}`);
+                resolve(null);
+              });
           }
         });
       } else {
@@ -224,7 +236,9 @@ export class TimelineManager {
             topPercent: (position.top / viewportHeight) * 100,
             leftPercent: (position.left / viewportWidth) * 100,
           };
-          chrome?.storage?.sync?.set?.({ geminiTimelinePosition: migratedPosition });
+          (g.chrome?.storage?.sync || g.browser?.storage?.sync)?.set?.({
+            geminiTimelinePosition: migratedPosition,
+          });
         }
       }
 
