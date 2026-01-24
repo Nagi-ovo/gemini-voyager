@@ -33,23 +33,24 @@ describe('quote reply', () => {
         right: 100,
         x: 0,
         y: 0,
-        toJSON: () => { },
+        toJSON: () => {},
       }) as DOMRect;
     input.focus = vi.fn();
 
     Object.defineProperty(Range.prototype, 'getBoundingClientRect', {
-      value: vi.fn(() =>
-        ({
-          height: 10,
-          width: 10,
-          top: 0,
-          left: 0,
-          bottom: 10,
-          right: 10,
-          x: 0,
-          y: 0,
-          toJSON: () => { },
-        }) as DOMRect
+      value: vi.fn(
+        () =>
+          ({
+            height: 10,
+            width: 10,
+            top: 0,
+            left: 0,
+            bottom: 10,
+            right: 10,
+            x: 0,
+            y: 0,
+            toJSON: () => {},
+          }) as DOMRect
       ),
       configurable: true,
     });
