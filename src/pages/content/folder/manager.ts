@@ -4340,12 +4340,19 @@ export class FolderManager {
         this.backupService.createPrimaryBackup(this.data);
 
         this.debug('Data loaded and validated successfully');
-      } else {
-        // Don't immediately clear data - try to recover from backup
+      } else if (loadedData) {
+        // Data exists but validation failed - this is a real corruption case
         console.warn(
-          '[FolderManager] Storage returned no valid data, attempting recovery from backup'
+          '[FolderManager] Storage returned invalid data structure, attempting recovery from backup'
         );
-        this.attemptDataRecovery(null);
+        this.attemptDataRecovery({ reason: 'corrupted', originalData: loadedData });
+      } else {
+        // No data found - likely a first-time user
+        console.log(
+          '[FolderManager] No folder data found, initializing empty state (likely first-time user)'
+        );
+        this.data = { folders: [], folderContents: {} };
+        // No notification needed - this is expected for new users
       }
     } catch (error) {
       console.error('[FolderManager] Load data error:', error);
@@ -4357,7 +4364,8 @@ export class FolderManager {
   }
 
   /**
-   * Attempt to recover data when loadData() fails
+   * Attempt to recover data when loadData() encounters corrupted data or errors.
+   * This method is only called when there's an actual problem (not for first-time users).
    * Priority: localStorage backup (primary/emergency/beforeUnload) > keep existing data > initialize empty
    */
   private attemptDataRecovery(error: unknown): void {
@@ -4372,6 +4380,7 @@ export class FolderManager {
       this.showNotificationByLevel('Folder data has been recovered from a backup.', 'warning');
       // Save recovered data to persistent storage
       this.saveData();
+      return; // Successfully recovered, no need to continue
     }
 
     // Step 2: If current this.data already has valid structure, keep it
