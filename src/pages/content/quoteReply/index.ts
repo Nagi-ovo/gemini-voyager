@@ -1,4 +1,5 @@
 import { getTranslationSync } from '../../../utils/i18n';
+import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
 import { startPromptManager } from '../prompt/index'; // Just for type reference/consistency if needed
 
 // SVGs
@@ -133,6 +134,7 @@ export function startQuoteReply() {
 
     const input = getChatInput();
     if (input) {
+      expandInputCollapseIfNeeded();
       input.focus();
 
       // Format format: > selection
