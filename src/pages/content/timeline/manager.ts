@@ -230,27 +230,30 @@ export class TimelineManager {
 
       // listen for changes from popup and update mode live
       try {
-        (window as any).chrome.storage.onChanged.addListener((changes: any, area: string) => {
-          if (area !== 'sync') return;
-          if (changes?.geminiTimelineScrollMode) {
-            const n = changes.geminiTimelineScrollMode.newValue;
-            if (n === 'flow' || n === 'jump') this.scrollMode = n;
-          }
-          if (changes?.geminiTimelineHideContainer) {
-            this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
-            this.applyContainerVisibility();
-          }
-          if (changes?.geminiTimelineDraggable) {
-            this.toggleDraggable(!!changes.geminiTimelineDraggable.newValue);
-          }
-          if (changes?.geminiTimelineMarkerLevel) {
-            this.toggleMarkerLevel(!!changes.geminiTimelineMarkerLevel.newValue);
-          }
-          if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
-            this.ui.timelineBar!.style.top = '';
-            this.ui.timelineBar!.style.left = '';
-          }
-        });
+        const onChanged = g.chrome?.storage?.onChanged || g.browser?.storage?.onChanged;
+        if (onChanged) {
+          onChanged.addListener((changes: any, area: string) => {
+            if (area !== 'sync') return;
+            if (changes?.geminiTimelineScrollMode) {
+              const n = changes.geminiTimelineScrollMode.newValue;
+              if (n === 'flow' || n === 'jump') this.scrollMode = n;
+            }
+            if (changes?.geminiTimelineHideContainer) {
+              this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
+              this.applyContainerVisibility();
+            }
+            if (changes?.geminiTimelineDraggable) {
+              this.toggleDraggable(!!changes.geminiTimelineDraggable.newValue);
+            }
+            if (changes?.geminiTimelineMarkerLevel) {
+              this.toggleMarkerLevel(!!changes.geminiTimelineMarkerLevel.newValue);
+            }
+            if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
+              this.ui.timelineBar!.style.top = '';
+              this.ui.timelineBar!.style.left = '';
+            }
+          });
+        }
       } catch {}
     } catch (err) {
       console.error('[Timeline] Init storage error:', err);
