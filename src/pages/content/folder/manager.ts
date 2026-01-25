@@ -412,7 +412,6 @@ export class FolderManager {
       backgroundColor: 'var(--gem-sys-color-surface-container, #f0f4f9)', // Fallback color
       borderRadius: '24px',
       padding: '8px 16px',
-      display: 'flex',
       alignItems: 'center',
       gap: '12px',
       border: '1px solid var(--gem-sys-color-outline-variant, rgba(0,0,0,0.1))',
@@ -441,8 +440,6 @@ export class FolderManager {
     };
 
     const dragEnd = () => {
-      initialX = currentX;
-      initialY = currentY;
       isDragging = false;
       indicator.style.cursor = 'move';
     };
@@ -461,20 +458,6 @@ export class FolderManager {
     };
 
     const setTranslate = (xPos: number, yPos: number, el: HTMLElement) => {
-      // Keep translateX(-50%) involved by combining it or handling layout differently.
-      // Since we center it with left: 50% and transform: translateX(-50%),
-      // simple translation might be tricky.
-      // Let's use left/top positioning instead for simpler drag logic relative to viewport.
-      // But first time initialization used transform.
-      //
-      // Better approach for floating element:
-      // Remove the initial transform centering and calculate initial "centered" position via JS if needed,
-      // or just rely on the offset.
-      //
-      // Actually, maintaining `transform: translate3d(...)` is performant.
-      // We need to account for the initial -50% X offset if we keep it.
-      //
-      // Simplified approach: just use translate3d including the offset.
       el.style.transform = `translate3d(calc(-50% + ${xPos}px), ${yPos}px, 0)`;
     };
 
@@ -486,6 +469,7 @@ export class FolderManager {
     // Since we attach to document, we MUST clean this up in destroy()
     // We'll wrap these in a cleanup function and store it
     this.addCleanupTask(() => {
+      indicator.removeEventListener('mousedown', dragStart);
       document.removeEventListener('mousemove', drag);
       document.removeEventListener('mouseup', dragEnd);
     });
@@ -1734,6 +1718,10 @@ export class FolderManager {
     this.reinitializePromise = (async () => {
       this.debug('Reinitializing folder UI...');
 
+      // Execute general cleanup tasks first (including event listeners)
+      this.cleanupTasks.forEach((task) => task());
+      this.cleanupTasks = [];
+
       // Clean up observers/listeners tied to stale DOM nodes
       if (this.sideNavObserver) {
         this.sideNavObserver.disconnect();
@@ -2603,9 +2591,9 @@ export class FolderManager {
       // Strategy 2: Look for menu items containing delete text (supports translations)
       const menuItems = document.querySelectorAll(
         '.cdk-overlay-container button, ' +
-          '.cdk-overlay-container [role="menuitem"], ' +
-          '.mat-mdc-menu-content button, ' +
-          '.mat-menu-content button',
+        '.cdk-overlay-container [role="menuitem"], ' +
+        '.mat-mdc-menu-content button, ' +
+        '.mat-menu-content button',
       );
 
       for (const item of menuItems) {
@@ -4514,7 +4502,7 @@ export class FolderManager {
   private showDataLossNotification(): void {
     this.showNotificationByLevel(
       getTranslationSync('folderManager_dataLossWarning') ||
-        'Warning: Failed to load folder data. Please check your browser console for details.',
+      'Warning: Failed to load folder data. Please check your browser console for details.',
       'error',
     );
   }
