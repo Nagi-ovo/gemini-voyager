@@ -43,11 +43,10 @@ interface Review {
 
 const reviews: Review[] = [
   {
-    name: 'Hi Sanzee',
+    name: 'Shuyun Yang',
     avatar:
-      'https://lh3.googleusercontent.com/a-/ALV-UjVKp0gzYvVWOcKVbXxpZqAwo8tZer5qv6isJoYeVfZet7C28aQh=s48-w48-h48',
-    content:
-      'This is a god send. Thank you so much. Someone who Designs and Develops. This is a gold mine I was searching for.',
+      'https://lh3.googleusercontent.com/a/ACg8ocI4nd0KLo2Cgi8PSmkl9oUxy6Dm-fIMqepv-uR0hpGHt7Zw3A=s48-w48-h48',
+    content: '非常好用，最全最顺滑的扩展！',
     source: 'Chrome Web Store',
   },
   {
@@ -66,10 +65,11 @@ const reviews: Review[] = [
     source: 'X',
   },
   {
-    name: 'Shuyun Yang',
+    name: 'Hi Sanzee',
     avatar:
-      'https://lh3.googleusercontent.com/a/ACg8ocI4nd0KLo2Cgi8PSmkl9oUxy6Dm-fIMqepv-uR0hpGHt7Zw3A=s48-w48-h48',
-    content: '非常好用，最全最顺滑的扩展！',
+      'https://lh3.googleusercontent.com/a-/ALV-UjVKp0gzYvVWOcKVbXxpZqAwo8tZer5qv6isJoYeVfZet7C28aQh=s48-w48-h48',
+    content:
+      'This is a god send. Thank you so much. Someone who Designs and Develops. This is a gold mine I was searching for.',
     source: 'Chrome Web Store',
   },
   {
