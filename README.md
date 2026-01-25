@@ -208,6 +208,7 @@ Automatically removes the visible "Gemini" watermark from AI-generated images (N
 - **Zero quality loss**: Reconstructs original pixels for a perfectly clean image.
 - **Set and forget**: Just enable it once in settings and it works automatically.
 - **Direct Download**: Replaces the native download button with a 🍌 button that saves the clean, processed image directly.
+- **Instant Feedback**: Shows processing status and large file warnings.
 - **Privacy focus**: All processing happens 100% locally in your browser.
 
 > [!NOTE]

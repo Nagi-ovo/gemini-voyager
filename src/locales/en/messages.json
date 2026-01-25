@@ -926,5 +926,25 @@
   "enableQuoteReplyHint": {
     "message": "Show a floating button to quote selected text when text is selected in conversations",
     "description": "Quote reply feature hint"
+  },
+  "nanobananaDownloadTooltip": {
+    "message": "NanoBanana: Downloads will have watermark removed",
+    "description": "Tooltip for the banana indicator on download button"
+  },
+  "downloadProcessing": {
+    "message": "Processing image (removing watermark)...",
+    "description": "Toast message when download starts"
+  },
+  "downloadSuccess": {
+    "message": "Processing complete, downloading...",
+    "description": "Toast message when download succeeds"
+  },
+  "downloadError": {
+    "message": "Download failed",
+    "description": "Toast message prefix when download fails"
+  },
+  "downloadLargeFile": {
+    "message": "Large file, please wait...",
+    "description": "Toast message for large files"
   }
 }

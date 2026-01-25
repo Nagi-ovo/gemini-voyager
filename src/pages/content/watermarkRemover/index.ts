@@ -325,6 +325,9 @@ export async function startWatermarkRemover(): Promise<void> {
     // Setup bridge to handle requests from fetch interceptor
     setupFetchInterceptorBridge();
 
+    // Setup status listener for UI feedback
+    setupStatusListener();
+
     // Process preview images
     processAllImages();
     setupMutationObserver();
@@ -333,4 +336,197 @@ export async function startWatermarkRemover(): Promise<void> {
   } catch (error) {
     console.error('[Gemini Voyager] Watermark remover initialization failed:', error);
   }
+}
+
+/**
+ * Toast Notification System
+ * Handles displaying status messages to the user during download processing
+ */
+class ToastManager {
+  private container: HTMLDivElement | null = null;
+  private currentToast: HTMLDivElement | null = null;
+  private hideTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    this.createContainer();
+  }
+
+  private createContainer() {
+    this.container = document.createElement('div');
+    this.container.id = 'gv-toast-container';
+    Object.assign(this.container.style, {
+      position: 'fixed',
+      bottom: '24px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: '10000',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '10px',
+      pointerEvents: 'none', // Allow clicks to pass through
+    });
+    document.body.appendChild(this.container);
+  }
+
+  show(message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info', duration = 3000) {
+    if (!this.container) this.createContainer();
+
+    // Clear existing toast if any (showing one at a time for simplicity)
+    if (this.currentToast) {
+      this.currentToast.remove();
+      if (this.hideTimeout) clearTimeout(this.hideTimeout);
+    }
+
+    const toast = document.createElement('div');
+    this.currentToast = toast;
+
+    // Icon based on type
+    let icon = '';
+    switch (type) {
+      case 'success':
+        icon = 'check_circle';
+        break;
+      case 'error':
+        icon = 'error';
+        break;
+      case 'warning':
+        icon = 'warning';
+        break;
+      default:
+        icon = 'info';
+        break;
+    }
+
+    // Material Design-ish Toast Style
+    Object.assign(toast.style, {
+      backgroundColor: '#323232',
+      color: 'white',
+      padding: '12px 24px',
+      borderRadius: '24px', // Pill shape
+      boxShadow:
+        '0 3px 5px -1px rgba(0,0,0,.2), 0 6px 10px 0 rgba(0,0,0,.14), 0 1px 18px 0 rgba(0,0,0,.12)',
+      fontSize: '14px',
+      fontFamily: 'Google Sans, Roboto, Arial, sans-serif',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      opacity: '0',
+      transition: 'opacity 0.3s ease, transform 0.3s ease',
+      transform: 'translateY(20px)',
+      whiteSpace: 'nowrap',
+    });
+
+    toast.innerHTML = `
+      <span class="material-icons-outlined" style="font-size: 20px; color: ${this.getColor(type)}">${icon}</span>
+      <span>${message}</span>
+    `;
+
+    this.container?.appendChild(toast);
+
+    // Animate in
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+
+    // Auto hide
+    if (duration > 0) {
+      this.hideTimeout = setTimeout(() => {
+        this.hide(toast);
+      }, duration);
+    }
+  }
+
+  private getColor(type: string): string {
+    switch (type) {
+      case 'success':
+        return '#81c995'; // Light Green
+      case 'error':
+        return '#f28b82'; // Light Red
+      case 'warning':
+        return '#fdd663'; // Light Yellow
+      default:
+        return '#8ab4f8'; // Light Blue
+    }
+  }
+
+  private hide(toast: HTMLDivElement) {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+      toast.remove();
+      if (this.currentToast === toast) {
+        this.currentToast = null;
+      }
+    }, 300);
+  }
+}
+
+let toastManager: ToastManager | null = null;
+
+/**
+ * Setup listener for status events from fetchInterceptor
+ */
+function setupStatusListener() {
+  const bridge = getBridgeElement();
+
+  const observer = new MutationObserver(() => {
+    const statusData = bridge.dataset.status;
+    if (statusData) {
+      try {
+        const { type, message } = JSON.parse(statusData);
+        bridge.removeAttribute('data-status'); // Clear to allow same status again if needed? Or just acknowledgment.
+
+        if (!toastManager) toastManager = new ToastManager();
+
+        // Translate status to user messages
+        switch (type) {
+          case 'START':
+            toastManager.show(
+              chrome.i18n.getMessage('downloadProcessing') || '正在处理图片 (去除水印)...',
+              'info',
+              0,
+            ); // 0 duration = persistent until next status
+            break;
+          case 'PROCESSING':
+            // Can update message if needed, or keep 'START' message
+            toastManager.show(
+              chrome.i18n.getMessage('downloadProcessing') || '正在处理图片 (去除水印)...',
+              'info',
+              0,
+            );
+            break;
+          case 'SUCCESS':
+            toastManager.show(
+              chrome.i18n.getMessage('downloadSuccess') || '处理完成，开始下载',
+              'success',
+              3000,
+            );
+            break;
+          case 'ERROR':
+            toastManager.show(
+              `${chrome.i18n.getMessage('downloadError') || '下载失败'}: ${message}`,
+              'error',
+              5000,
+            );
+            break;
+          case 'WARNING':
+            if (message === 'LARGE_FILE') {
+              toastManager.show(
+                chrome.i18n.getMessage('downloadLargeFile') || '图片较大，请耐心等待...',
+                'warning',
+                4000,
+              );
+            }
+            break;
+        }
+      } catch (e) {
+        console.error('[Gemini Voyager] Failed to parse status update:', e);
+      }
+    }
+  });
+
+  observer.observe(bridge, { attributes: true, attributeFilter: ['data-status'] });
+  console.log('[Gemini Voyager] Status listener active');
 }
