@@ -417,10 +417,17 @@ class ToastManager {
       whiteSpace: 'nowrap',
     });
 
-    toast.innerHTML = `
-      <span class="material-icons-outlined" style="font-size: 20px; color: ${this.getColor(type)}">${icon}</span>
-      <span>${message}</span>
-    `;
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'material-icons-outlined';
+    iconSpan.style.fontSize = '20px';
+    iconSpan.style.color = this.getColor(type);
+    iconSpan.textContent = icon;
+
+    const messageSpan = document.createElement('span');
+    messageSpan.textContent = message;
+
+    toast.appendChild(iconSpan);
+    toast.appendChild(messageSpan);
 
     this.container?.appendChild(toast);
 
