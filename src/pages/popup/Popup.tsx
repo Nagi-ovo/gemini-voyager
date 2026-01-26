@@ -19,6 +19,7 @@ import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 import { CloudSyncSettings } from './components/CloudSyncSettings';
+import { ContextSyncSettings } from './components/ContextSyncSettings';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { StarredHistory } from './components/StarredHistory';
 import {
@@ -665,6 +666,8 @@ export default function Popup() {
         )}
         {/* Cloud Sync - First priority - Hidden on Safari due to API limitations */}
         {!isSafari() && <CloudSyncSettings />}
+        {/* Context Sync */}
+        <ContextSyncSettings />
         {/* Timeline Options */}
         <Card className="p-4 transition-shadow hover:shadow-lg">
           <CardTitle className="mb-4 text-xs uppercase">{t('timelineOptions')}</CardTitle>

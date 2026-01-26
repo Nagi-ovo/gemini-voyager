@@ -7,6 +7,7 @@ import { startDeepResearchExport } from './deepResearch/index';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
+import { startContextSync } from './contextSync';
 import { startFolderManager } from './folder/index';
 import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';
@@ -164,6 +165,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startDeepResearchExport();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startContextSync();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 

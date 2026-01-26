@@ -926,5 +926,42 @@
   "enableQuoteReplyHint": {
     "message": "Show a floating button to quote selected text when text is selected in conversations",
     "description": "Quote reply feature hint"
+  },
+  "contextSync": {
+    "message": "Context Sync",
+    "description": "Context Sync title"
+  },
+  "contextSyncDescription": {
+    "message": "Sync chat context to your local IDE",
+    "description": "Context Sync description"
+  },
+  "syncToIDE": {
+    "message": "Sync to IDE",
+    "description": "Sync to IDE button"
+  },
+  "ideOnline": {
+    "message": "IDE Online",
+    "description": "IDE Online status"
+  },
+  "ideOffline": {
+    "message": "IDE Offline",
+    "description": "IDE Offline status"
+  },
+  "syncing": {
+    "message": "Syncing...",
+    "description": "Syncing status"
+  },
+  "checkServer": {
+    "message": "Please start AI Sync server in VS Code",
+    "description": "Check server hint"
+  },
+  "capturing": {
+    "message": "Capturing dialogue...",
+    "description": "Capturing status"
+  },
+  "syncedSuccess": {
+    "message": "Synced successfully!",
+    "description": "Synced success message"
   }
+
 }

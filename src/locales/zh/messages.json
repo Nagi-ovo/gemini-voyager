@@ -926,5 +926,42 @@
   "enableQuoteReplyHint": {
     "message": "在对话中选中文字时显示悬浮按钮，用于引用所选内容",
     "description": "引用回复功能提示"
+  },
+  "contextSync": {
+    "message": "上下文同步",
+    "description": "上下文同步标题"
+  },
+  "contextSyncDescription": {
+    "message": "将对话上下文同步到本地 IDE",
+    "description": "上下文同步描述"
+  },
+  "syncToIDE": {
+    "message": "同步到 IDE",
+    "description": "同步到 IDE 按钮"
+  },
+  "ideOnline": {
+    "message": "IDE 在线",
+    "description": "IDE 在线状态"
+  },
+  "ideOffline": {
+    "message": "IDE 离线",
+    "description": "IDE 离线状态"
+  },
+  "syncing": {
+    "message": "同步中...",
+    "description": "同步中状态"
+  },
+  "checkServer": {
+    "message": "请在 VS Code 中启动 AI Sync 服务器",
+    "description": "检查服务器提示"
+  },
+  "capturing": {
+    "message": "正在获取对话...",
+    "description": "获取对话状态"
+  },
+  "syncedSuccess": {
+    "message": "同步成功！",
+    "description": "同步成功消息"
   }
+
 }
