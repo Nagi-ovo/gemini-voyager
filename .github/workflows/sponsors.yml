@@ -20,7 +20,7 @@ jobs:
           node-version: 20
 
       - name: Generate sponsors SVG
-        run: node sponsorkit/generate-sponsors.cjs
+        run: node scripts/generate-sponsors.cjs
         env:
           GITHUB_TOKEN: ${{ secrets.SPONSORKIT_GITHUB_TOKEN }}
           AFDIAN_USER_ID: ${{ secrets.AFDIAN_USER_ID }}
