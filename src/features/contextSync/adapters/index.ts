@@ -6,18 +6,6 @@ export const ADAPTERS: Record<string, AdapterConfig> = {
     user_selector: ['.query-content'],
     ai_selector: ['.response-content'],
   },
-  // chatgpt
-  'chatgpt.com': {
-    selectors: ['[data-testid^="conversation-turn-"]'],
-    aiMarkers: ['assistant'],
-    userMarkers: ['user'],
-  },
-  // claude
-  'claude.ai': {
-    selectors: ['.font-user-message', '.font-claude-message'],
-    aiMarkers: ['claude'],
-    userMarkers: ['user'],
-  },
   // default
   default: {
     selectors: ['div', 'p'],
