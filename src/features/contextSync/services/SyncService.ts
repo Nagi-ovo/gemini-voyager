@@ -18,12 +18,12 @@ export class SyncService {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 200);
-      
+
       await fetch(SYNC_SERVER_URL, {
         method: 'GET',
         signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
       return true;
     } catch (err) {

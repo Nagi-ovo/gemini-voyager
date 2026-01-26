@@ -1,5 +1,6 @@
-import { ContextCaptureService } from './capture';
 import { SyncService } from '@/features/contextSync/services/SyncService';
+
+import { ContextCaptureService } from './capture';
 
 export function startContextSync() {
   console.log('🚀 AI Context Sync Feature Initialized');
@@ -20,7 +21,7 @@ async function handleSyncRequest(sendResponse: (response: any) => void) {
 
     const data = captureService.captureDialogue();
     const result = await syncService.syncToIDE(data);
-    
+
     sendResponse({ status: 'success', data: result });
   } catch (err) {
     console.error('Sync failed', err);

@@ -3,11 +3,11 @@ import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 
 import { startChatWidthAdjuster } from './chatWidth/index';
+import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
-import { startContextSync } from './contextSync';
 import { startFolderManager } from './folder/index';
 import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';

@@ -1,5 +1,5 @@
-import { DialogNode } from '@/features/contextSync/types';
 import { getMatchedAdapter } from '@/features/contextSync/adapters';
+import { DialogNode } from '@/features/contextSync/types';
 
 export class ContextCaptureService {
   private static instance: ContextCaptureService;
@@ -40,9 +40,13 @@ export class ContextCaptureService {
       // querySelectorAll(['.a']) works? No. It converts to string ".a".
       // So effectively it works for single selector.
       // I'll handle array properly by joining with comma.
-      
-      queries = adapter.user_selector ? Array.from(document.querySelectorAll(adapter.user_selector.join(','))) as HTMLElement[] : [];
-      responses = adapter.ai_selector ? Array.from(document.querySelectorAll(adapter.ai_selector.join(','))) as HTMLElement[] : [];
+
+      queries = adapter.user_selector
+        ? (Array.from(document.querySelectorAll(adapter.user_selector.join(','))) as HTMLElement[])
+        : [];
+      responses = adapter.ai_selector
+        ? (Array.from(document.querySelectorAll(adapter.ai_selector.join(','))) as HTMLElement[])
+        : [];
     } else if (adapter.selectors) {
       // General selectors (ChatGPT style)
       // This part requires more complex logic from original script?
@@ -60,7 +64,6 @@ export class ContextCaptureService {
       // const responses = getNodes(adapter.ai_selector);
       // If adapter is ChatGPT, these are undefined. getNodes(undefined) -> querySelectorAll(undefined) -> Error or empty?
       // querySelectorAll(undefined) throws error "is not a valid selector".
-      
       // So the user's script for ChatGPT was likely broken or incomplete in the provided snippet.
       // However, I must fix it.
       // For Gemini, it works. For ChatGPT, I should probably implement the logic to distinguish user/ai based on markers if I want to support it.
@@ -122,9 +125,13 @@ export class ContextCaptureService {
     }
   }
 
-  private extractNodeInfo(el: HTMLElement, forceRole: 'user' | 'assistant' | null = null): DialogNode | null {
+  private extractNodeInfo(
+    el: HTMLElement,
+    forceRole: 'user' | 'assistant' | null = null,
+  ): DialogNode | null {
     if (el.offsetParent === null) return null;
-    if (['SCRIPT', 'STYLE', 'NAV', 'HEADER', 'FOOTER', 'SVG', 'PATH'].includes(el.tagName)) return null;
+    if (['SCRIPT', 'STYLE', 'NAV', 'HEADER', 'FOOTER', 'SVG', 'PATH'].includes(el.tagName))
+      return null;
 
     const clone = el.cloneNode(true) as HTMLElement;
 
