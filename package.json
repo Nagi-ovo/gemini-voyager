@@ -32,7 +32,8 @@
     "commitlint": "commitlint --edit $GIT_PARAMS",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "sponsors:update": "bun run scripts/generate-sponsors.cjs"
   },
   "type": "module",
   "dependencies": {

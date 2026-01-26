@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/sponsors/sponsors.json'
+      - 'sponsorkit/sponsors.json'
 
 jobs:
   update-sponsors:
@@ -17,22 +17,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
-      - name: Enable Corepack and Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@latest --activate
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Update sponsors
-        run: npx sponsorkit
-        working-directory: .github/sponsors
+      - name: Generate sponsors SVG
+        run: node sponsorkit/generate-sponsors.cjs
         env:
           GITHUB_TOKEN: ${{ secrets.SPONSORKIT_GITHUB_TOKEN }}
-          SPONSORKIT_GITHUB_LOGIN: Nagi-ovo
+          AFDIAN_USER_ID: ${{ secrets.AFDIAN_USER_ID }}
+          AFDIAN_TOKEN: ${{ secrets.AFDIAN_TOKEN }}
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
