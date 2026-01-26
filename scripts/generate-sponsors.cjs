@@ -323,9 +323,9 @@ async function embedAvatarData(sponsors) {
 }
 
 function renderSponsorGrid({ sponsors, title, x, y, width, sponsorUrl }) {
-  const avatarSize = 64;
-  const baseGap = 32;
-  const gapY = 40;
+  const avatarSize = 48;
+  const baseGap = 24;
+  const gapY = 24;
   let cols = Math.floor(width / (avatarSize + baseGap));
   const rows = Math.max(1, Math.ceil(sponsors.length / cols));
   let spacing = baseGap;
