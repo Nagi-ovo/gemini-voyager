@@ -6,8 +6,8 @@ import { FolderImportExportService } from '@/features/folder/services/FolderImpo
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 
-import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
 import { FOLDER_COLORS, getFolderColor, getFolderColorConfig, isDarkMode } from './folderColors';
+import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
 import {
   type IFolderStorageAdapter,
   createFolderStorageAdapter,
@@ -620,22 +620,24 @@ export class FolderManager {
     folderIcon.textContent = 'folder';
     folderIcon.style.cursor = 'pointer';
     folderIcon.style.userSelect = 'none';
-    
+
     // Apply folder color if set
     if (folder.color && folder.color !== 'default') {
       const colorValue = getFolderColor(folder.color, isDarkMode());
       folderIcon.style.color = colorValue;
     }
-    
+
     folderIcon.addEventListener('click', (e) => {
       e.stopPropagation(); // Prevent bubbling issues
-      this.toggleFolder(folder.id);
+      this.showColorPicker(folder.id, e);
     });
 
     // Folder name
     const folderName = document.createElement('span');
     folderName.className = 'gv-folder-name gds-label-l';
     folderName.textContent = folder.name;
+    folderName.style.cursor = 'pointer';
+    folderName.addEventListener('click', () => this.toggleFolder(folder.id));
     folderName.addEventListener('dblclick', () => this.renameFolder(folder.id));
 
     // Add tooltip event listeners
@@ -3306,7 +3308,7 @@ export class FolderManager {
     // Create color picker dialog
     const dialog = document.createElement('div');
     dialog.className = 'gv-color-picker-dialog';
-    
+
     // Position near the menu click (slightly offset to avoid overlap)
     dialog.style.position = 'fixed';
     dialog.style.left = `${sourceEvent.clientX + 10}px`;
@@ -3318,21 +3320,21 @@ export class FolderManager {
       const colorBtn = document.createElement('button');
       colorBtn.className = 'gv-color-picker-item';
       colorBtn.title = this.t(colorConfig.nameKey);
-      
+
       // Apply color based on current theme
       const colorValue = getFolderColor(colorConfig.id, isDarkMode());
       colorBtn.style.backgroundColor = colorValue;
-      
+
       // Mark current color as selected
       if (folder.color === colorConfig.id || (!folder.color && colorConfig.id === 'default')) {
         colorBtn.classList.add('selected');
       }
-      
+
       colorBtn.addEventListener('click', () => {
         this.changeFolderColor(folderId, colorConfig.id);
         dialog.remove();
       });
-      
+
       dialog.appendChild(colorBtn);
     });
 
@@ -3359,7 +3361,7 @@ export class FolderManager {
 
     folder.color = colorId;
     folder.updatedAt = Date.now();
-    
+
     this.saveData();
     this.refresh();
   }
