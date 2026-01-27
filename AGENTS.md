@@ -198,6 +198,7 @@ Use Conventional Commits format:
 - summary: lowercase, imperative, no trailing period
 
 Examples:
+
 - `fix(copy): handle clipboard fallback`
 - `refactor(copy): introduce temml to convert tex2mathml`
 - `chore: update sponsors.svg`
