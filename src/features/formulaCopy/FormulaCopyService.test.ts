@@ -1,4 +1,4 @@
-import katex from 'katex';
+import temml from 'temml';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FormulaCopyService } from './FormulaCopyService';
@@ -21,7 +21,7 @@ vi.mock('webextension-polyfill', () => ({
   },
 }));
 
-vi.mock('katex', () => ({
+vi.mock('temml', () => ({
   default: {
     renderToString: vi.fn(),
   },
@@ -97,8 +97,8 @@ describe('FormulaCopyService', () => {
 
   it('should generate MathML when format is unicodemath (now mapped to MathML)', async () => {
     // Setup
-    vi.mocked(katex.renderToString).mockReturnValue(
-      '<span class="katex"><math><semantics><mrow><mtext>Result</mtext></mrow><annotation encoding="application/x-tex">x^2</annotation></semantics></math></span>',
+    vi.mocked(temml.renderToString).mockReturnValue(
+      '<math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>Result</mtext></mrow><annotation encoding="application/x-tex">x^2</annotation></semantics></math>',
     );
 
     // Reset instance first
@@ -124,11 +124,15 @@ describe('FormulaCopyService', () => {
     await Promise.resolve();
 
     // Assertions
-    expect(katex.renderToString).toHaveBeenCalledWith(
+    expect(temml.renderToString).toHaveBeenCalledWith(
       'x^2',
       expect.objectContaining({
-        output: 'mathml',
-        throwOnError: false,
+        annotate: false,
+        colorIsTextColor: true,
+        displayMode: false,
+        throwOnError: true,
+        trust: false,
+        xml: true,
       }),
     );
 

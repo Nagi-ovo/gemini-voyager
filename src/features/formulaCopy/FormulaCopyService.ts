@@ -3,7 +3,7 @@
  * Handles copying LaTeX/MathJax formulas from Gemini chat conversations
  * Uses enterprise patterns: Singleton, Service Layer, Event Delegation
  */
-import katex from 'katex';
+import temml from 'temml';
 import browser from 'webextension-polyfill';
 
 import { logger } from '@/core';
@@ -299,14 +299,17 @@ export class FormulaCopyService {
     if (this.currentFormat === 'unicodemath') {
       // Convert to Word-friendly MathML (replaces previous UnicodeMath)
       try {
-        const katexOutput = katex.renderToString(formula, {
-          output: 'mathml',
-          throwOnError: false,
+        const strippedFormula = this.stripMathDelimiters(formula);
+        const rawMathML = temml.renderToString(strippedFormula, {
           displayMode: isDisplayMode,
+          xml: true,
+          annotate: false,
+          throwOnError: true,
+          colorIsTextColor: true,
+          trust: false,
         });
-
-        const rawMathML = this.extractMathMLFromKaTeX(katexOutput);
-        const namespacedMathML = this.ensureMathMLNamespace(rawMathML);
+        const sanitizedMathML = this.stripMathMLAnnotations(rawMathML);
+        const namespacedMathML = this.ensureMathMLNamespace(sanitizedMathML);
         const wordMathML = this.toWordMathML(namespacedMathML);
         const htmlWrapped = this.wrapMathMLForWordHtml(wordMathML);
 
@@ -326,11 +329,6 @@ export class FormulaCopyService {
     return { text: wrapped };
   }
 
-  private extractMathMLFromKaTeX(katexOutput: string): string {
-    const match = katexOutput.match(/<math[\s\S]*?<\/math>/);
-    return match ? match[0] : katexOutput;
-  }
-
   private ensureMathMLNamespace(mathML: string): string {
     if (mathML.includes('xmlns=')) {
       return mathML;
@@ -342,34 +340,12 @@ export class FormulaCopyService {
   private toWordMathML(mathML: string): string {
     const parsed = new DOMParser().parseFromString(mathML, 'application/xml');
     if (parsed.getElementsByTagName('parsererror').length > 0) {
-      return this.fallbackStripMathMLAnnotations(mathML);
+      return this.stripMathMLAnnotations(mathML);
     }
 
     const root = parsed.documentElement;
     if (root.localName !== 'math') {
-      return this.fallbackStripMathMLAnnotations(mathML);
-    }
-
-    // Remove annotations (KaTeX embeds the original TeX inside <annotation>)
-    for (const annotation of Array.from(root.getElementsByTagName('annotation'))) {
-      annotation.parentNode?.removeChild(annotation);
-    }
-    for (const annotationXml of Array.from(root.getElementsByTagName('annotation-xml'))) {
-      annotationXml.parentNode?.removeChild(annotationXml);
-    }
-
-    // Unwrap <semantics> if present to reduce special-case handling in Word importers
-    const semantics = Array.from(root.getElementsByTagName('semantics')).find(
-      (node) => node.parentElement === root,
-    );
-    if (semantics) {
-      const presentation = semantics.firstElementChild;
-      if (presentation) {
-        while (root.firstChild) {
-          root.removeChild(root.firstChild);
-        }
-        root.appendChild(presentation);
-      }
+      return this.stripMathMLAnnotations(mathML);
     }
 
     const output = document.implementation.createDocument(
@@ -438,10 +414,32 @@ export class FormulaCopyService {
     ].join('');
   }
 
-  private fallbackStripMathMLAnnotations(mathML: string): string {
+  private stripMathMLAnnotations(mathML: string): string {
     return mathML
       .replace(/<annotation(?:-xml)?[\s\S]*?<\/annotation(?:-xml)?>/g, '')
       .replace(/<semantics>\s*([\s\S]*?)\s*<\/semantics>/g, '$1');
+  }
+
+  private stripMathDelimiters(formula: string): string {
+    const trimmed = formula.trim();
+
+    if (trimmed.startsWith('$$') && trimmed.endsWith('$$')) {
+      return trimmed.slice(2, -2);
+    }
+
+    if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
+      return trimmed.slice(2, -2);
+    }
+
+    if (trimmed.startsWith('\\(') && trimmed.endsWith('\\)')) {
+      return trimmed.slice(2, -2);
+    }
+
+    if (trimmed.startsWith('$') && trimmed.endsWith('$')) {
+      return trimmed.slice(1, -1);
+    }
+
+    return formula;
   }
 
   /**
