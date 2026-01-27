@@ -181,4 +181,62 @@ describe('FormulaCopyService', () => {
 
     document.body.removeChild(mathElement);
   });
+
+  it('should find data-math inside math container subtree', async () => {
+    const clipboard = navigator.clipboard as unknown as { write?: unknown };
+    clipboard.write = undefined;
+
+    resetSingleton();
+    service = FormulaCopyService.getInstance({ format: 'latex' });
+
+    const container = document.createElement('span');
+    container.classList.add('math-inline');
+
+    const inner = document.createElement('span');
+    inner.setAttribute('data-math', 'x^2');
+    inner.textContent = 'x²';
+    container.appendChild(inner);
+    document.body.appendChild(container);
+
+    service.initialize();
+    container.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    expect(writeTextMock).toHaveBeenCalledWith('$x^2$');
+
+    document.body.removeChild(container);
+  });
+
+  it('should copy when clicking deep descendant inside math container', async () => {
+    const clipboard = navigator.clipboard as unknown as { write?: unknown };
+    clipboard.write = undefined;
+
+    resetSingleton();
+    service = FormulaCopyService.getInstance({ format: 'latex' });
+
+    const container = document.createElement('span');
+    container.classList.add('math-inline');
+
+    const dataMathEl = document.createElement('span');
+    dataMathEl.setAttribute('data-math', 'x^2');
+    container.appendChild(dataMathEl);
+
+    let deepest: HTMLElement = dataMathEl;
+    for (let i = 0; i < 25; i += 1) {
+      const next = document.createElement('span');
+      next.textContent = `d${i}`;
+      deepest.appendChild(next);
+      deepest = next;
+    }
+
+    document.body.appendChild(container);
+
+    service.initialize();
+    deepest.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    expect(writeTextMock).toHaveBeenCalledWith('$x^2$');
+
+    document.body.removeChild(container);
+  });
 });

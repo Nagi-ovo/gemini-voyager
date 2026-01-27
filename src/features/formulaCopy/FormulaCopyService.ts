@@ -262,25 +262,14 @@ export class FormulaCopyService {
    * Find the nearest math element in the DOM tree
    */
   private findMathElement(target: HTMLElement): HTMLElement | null {
-    let current: HTMLElement | null = target;
-    let depth = 0;
+    const direct = target.closest('[data-math]');
+    if (direct instanceof HTMLElement) {
+      return direct;
+    }
 
-    while (current && depth < this.config.maxTraversalDepth) {
-      // Direct data-math attribute check
-      if (current.hasAttribute('data-math')) {
-        return current;
-      }
-
-      // Check if element is a math container
-      if (this.isMathContainer(current)) {
-        const mathElement = this.findDataMathInSubtree(current, depth);
-        if (mathElement) {
-          return mathElement;
-        }
-      }
-
-      current = current.parentElement;
-      depth++;
+    const container = target.closest('.math-inline, .math-block');
+    if (container instanceof HTMLElement) {
+      return this.findDataMathInSubtree(container);
     }
 
     return null;
@@ -297,19 +286,7 @@ export class FormulaCopyService {
    * Check if formula is in display mode (block formula)
    */
   private isDisplayMode(element: HTMLElement): boolean {
-    let current: HTMLElement | null = element;
-    let depth = 0;
-
-    // Traverse up to find display mode indicator
-    while (current && depth < this.config.maxTraversalDepth) {
-      if (current.classList.contains('math-block')) {
-        return true;
-      }
-      current = current.parentElement;
-      depth++;
-    }
-
-    return false;
+    return element.closest('.math-block') !== null;
   }
 
   /**
@@ -470,19 +447,9 @@ export class FormulaCopyService {
   /**
    * Search for data-math attribute in element subtree
    */
-  private findDataMathInSubtree(root: HTMLElement, currentDepth: number): HTMLElement | null {
-    let searchElement: HTMLElement | null = root;
-    let depth = currentDepth;
-
-    while (searchElement && depth < this.config.maxTraversalDepth) {
-      if (searchElement.hasAttribute('data-math')) {
-        return searchElement;
-      }
-      searchElement = searchElement.parentElement;
-      depth++;
-    }
-
-    return null;
+  private findDataMathInSubtree(root: HTMLElement): HTMLElement | null {
+    const direct = root.querySelector('[data-math]');
+    return direct instanceof HTMLElement ? direct : null;
   }
 
   /**
