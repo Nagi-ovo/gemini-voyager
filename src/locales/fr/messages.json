@@ -727,6 +727,10 @@
     "message": "Manuel",
     "description": "Sync mode manual option"
   },
+  "syncServerPort": {
+    "message": "Port du serveur",
+    "description": "Port number for the sync server"
+  },
   "syncNow": {
     "message": "Synchro",
     "description": "Sync now button"
@@ -926,5 +930,41 @@
   "enableQuoteReplyHint": {
     "message": "Affiche un bouton flottant pour citer le texte sélectionné dans les conversations",
     "description": "Quote reply feature hint"
+  },
+  "contextSync": {
+    "message": "Synchro du contexte",
+    "description": "Context Sync title"
+  },
+  "contextSyncDescription": {
+    "message": "Synchronisez le contexte du chat avec votre IDE local",
+    "description": "Context Sync description"
+  },
+  "syncToIDE": {
+    "message": "Synchroniser vers l'IDE",
+    "description": "Sync to IDE button"
+  },
+  "ideOnline": {
+    "message": "IDE en ligne",
+    "description": "IDE Online status"
+  },
+  "ideOffline": {
+    "message": "IDE hors ligne",
+    "description": "IDE Offline status"
+  },
+  "syncing": {
+    "message": "Synchronisation...",
+    "description": "Syncing status"
+  },
+  "checkServer": {
+    "message": "Veuillez démarrer le serveur AI Sync dans VS Code",
+    "description": "Check server hint"
+  },
+  "capturing": {
+    "message": "Capture du dialogue...",
+    "description": "Capturing status"
+  },
+  "syncedSuccess": {
+    "message": "Synchronisé avec succès !",
+    "description": "Synced success message"
   }
 }
