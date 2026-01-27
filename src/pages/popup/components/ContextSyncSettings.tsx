@@ -50,8 +50,12 @@ export function ContextSyncSettings() {
       setPort('');
       return;
     }
-    const newPort = parseInt(val, 10);
+    let newPort = parseInt(val, 10);
     if (!isNaN(newPort)) {
+      // Range validation 1-65535
+      if (newPort < 1) newPort = 1;
+      if (newPort > 65535) newPort = 65535;
+
       setPort(newPort);
       chrome.storage.sync.set({ [STORAGE_KEY_PORT]: newPort });
     }
@@ -181,6 +185,8 @@ export function ContextSyncSettings() {
                 type="number"
                 value={port}
                 onChange={handlePortChange}
+                min="1"
+                max="65535"
                 className="border-input placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>

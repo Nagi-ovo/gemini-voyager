@@ -932,39 +932,39 @@
     "description": "Quote reply feature hint"
   },
   "contextSync": {
-    "message": "Context Sync",
+    "message": "コンテキスト同期",
     "description": "Context Sync title"
   },
   "contextSyncDescription": {
-    "message": "Sync chat context to your local IDE",
+    "message": "チャットのコンテキストをローカルIDEに同期します",
     "description": "Context Sync description"
   },
   "syncToIDE": {
-    "message": "Sync to IDE",
+    "message": "IDEに同期",
     "description": "Sync to IDE button"
   },
   "ideOnline": {
-    "message": "IDE Online",
+    "message": "IDE オンライン",
     "description": "IDE Online status"
   },
   "ideOffline": {
-    "message": "IDE Offline",
+    "message": "IDE オフライン",
     "description": "IDE Offline status"
   },
   "syncing": {
-    "message": "Syncing...",
+    "message": "同期中...",
     "description": "Syncing status"
   },
   "checkServer": {
-    "message": "Please start AI Sync server in VS Code",
+    "message": "VS CodeでAI Syncサーバーを起動してください",
     "description": "Check server hint"
   },
   "capturing": {
-    "message": "Capturing dialogue...",
+    "message": "対話をキャプチャ中...",
     "description": "Capturing status"
   },
   "syncedSuccess": {
-    "message": "Synced successfully!",
+    "message": "同期に成功しました！",
     "description": "Synced success message"
   }
 }
