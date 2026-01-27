@@ -98,7 +98,7 @@ describe('FormulaCopyService', () => {
   it('should generate MathML when format is unicodemath (now mapped to MathML)', async () => {
     // Setup
     vi.mocked(temml.renderToString).mockReturnValue(
-      '<math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>Result</mtext></mrow><annotation encoding="application/x-tex">x^2</annotation></semantics></math>',
+      '<math xmlns="http://www.w3.org/1998/Math/MathML" class="tml-display" style="display:block math;"><semantics><mrow><mtext class="tml-text">Result</mtext></mrow><annotation encoding="application/x-tex">x^2</annotation></semantics></math>',
     );
 
     // Reset instance first
@@ -158,12 +158,60 @@ describe('FormulaCopyService', () => {
     expect(htmlContent).toContain('<!--StartFragment-->');
     expect(htmlContent).toContain('<mml:math');
     expect(htmlContent).not.toContain('<annotation');
+    expect(htmlContent).not.toContain('class=');
+    expect(htmlContent).not.toContain('style=');
     expect(textContent).toContain('<mml:math');
-    expect(textContent).not.toContain('<annotation');
     expect(mathmlContent).toContain('<mml:math');
 
     // Cleanup
     document.body.removeChild(mathElement);
+  });
+
+  it('should fall back to legacy copy when MathML MIME is rejected', async () => {
+    vi.mocked(temml.renderToString).mockReturnValue(
+      '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mtext>Result</mtext></mrow></math>',
+    );
+
+    const originalExecCommand = document.execCommand;
+    Object.assign(document, {
+      execCommand: vi.fn().mockReturnValue(true),
+    });
+
+    const unsupportedError =
+      typeof DOMException === 'function'
+        ? new DOMException('Type application/mathml+xml not supported on write.', 'NotAllowedError')
+        : Object.assign(new Error('Type application/mathml+xml not supported on write.'), {
+            name: 'NotAllowedError',
+          });
+
+    writeMock.mockRejectedValueOnce(unsupportedError).mockResolvedValueOnce(undefined);
+
+    resetSingleton();
+    service = FormulaCopyService.getInstance({ format: 'unicodemath' });
+
+    const mathElement = document.createElement('span');
+    mathElement.setAttribute('data-math', 'x^2');
+    mathElement.classList.add('math-inline');
+    document.body.appendChild(mathElement);
+
+    service.initialize();
+    mathElement.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    expect(writeMock).toHaveBeenCalledTimes(1);
+
+    const firstItemsUnknown = writeMock.mock.calls[0]?.[0] as unknown;
+    const firstItems = firstItemsUnknown as TestClipboardItem[];
+    const firstClipboardItem = firstItems[0];
+    expect(firstClipboardItem.dataByType['application/mathml+xml']).toBeDefined();
+    expect(
+      (document.execCommand as unknown as { mock?: { calls: unknown[] } }).mock?.calls.length,
+    ).toBeGreaterThan(0);
+
+    document.body.removeChild(mathElement);
+    Object.assign(document, {
+      execCommand: originalExecCommand,
+    });
   });
 
   it('should fall back to writeText if write is not available', async () => {

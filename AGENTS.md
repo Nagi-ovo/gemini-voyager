@@ -5,8 +5,8 @@ This file is generated from AI_GUIDE.template.md.
 Do not edit directly; update the template and run `bun run generate:ai-guides`.
 -->
 
-> **Last Updated**: 2026-01-20
-> **Version**: 1.1.3
+> **Last Updated**: 2026-01-27
+> **Version**: 1.1.7
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
 
 ---
@@ -184,6 +184,23 @@ bun run dev:firefox
 ```
 
 _Note: Uses Nodemon for hot-reloading content scripts._
+
+### Commit Messages (commitlint)
+
+Use Conventional Commits format:
+
+```
+<type>(<scope>): <imperative summary>
+```
+
+- `type`: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `build`, `ci`, `perf`, `style`
+- `scope`: short, feature-focused (e.g., `copy`, `export`, `popup`)
+- summary: lowercase, imperative, no trailing period
+
+Examples:
+- `fix(copy): handle clipboard fallback`
+- `refactor(copy): introduce temml to convert tex2mathml`
+- `chore: update sponsors.svg`
 
 ### Definition of Done (DoD)
 

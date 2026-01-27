@@ -182,6 +182,23 @@ bun run dev:firefox
 
 _Note: Uses Nodemon for hot-reloading content scripts._
 
+### Commit Messages (commitlint)
+
+Use Conventional Commits format:
+
+```
+<type>(<scope>): <imperative summary>
+```
+
+- `type`: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `build`, `ci`, `perf`, `style`
+- `scope`: short, feature-focused (e.g., `copy`, `export`, `popup`)
+- summary: lowercase, imperative, no trailing period
+
+Examples:
+- `fix(copy): handle clipboard fallback`
+- `refactor(copy): introduce temml to convert tex2mathml`
+- `chore: update sponsors.svg`
+
 ### Definition of Done (DoD)
 
 Before claiming a task is complete, verify:

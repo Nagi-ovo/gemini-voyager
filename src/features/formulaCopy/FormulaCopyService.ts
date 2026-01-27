@@ -202,36 +202,45 @@ export class FormulaCopyService {
    * Copy text to clipboard using modern API with fallback
    */
   private async copyToClipboard(text: string, html?: string): Promise<boolean> {
-    try {
-      // Try modern Clipboard API first (supports MIME types)
-      if (navigator.clipboard?.write) {
-        const items: Record<string, Blob> = {
-          'text/plain': new Blob([text], { type: 'text/plain' }),
-        };
+    // Try modern Clipboard API first (supports MIME types)
+    if (navigator.clipboard?.write) {
+      const items: Record<string, Blob> = {
+        'text/plain': new Blob([text], { type: 'text/plain' }),
+      };
 
-        if (html) {
-          items['text/html'] = new Blob([html], { type: 'text/html' });
-          if (html.includes(`xmlns:mml="${FormulaCopyService.MATHML_NS}"`)) {
-            items['application/mathml+xml'] = new Blob([text], { type: 'application/mathml+xml' });
-          }
+      if (html) {
+        items['text/html'] = new Blob([html], { type: 'text/html' });
+        if (html.includes(`xmlns:mml="${FormulaCopyService.MATHML_NS}"`)) {
+          items['application/mathml+xml'] = new Blob([text], { type: 'application/mathml+xml' });
         }
+      }
 
+      try {
         await navigator.clipboard.write([new ClipboardItem(items)]);
         return true;
-      }
+      } catch (error) {
+        if (this.isMathMLClipboardUnsupported(error)) {
+          return this.copyToClipboardLegacy(text);
+        }
 
-      // Fallback: If only writeText is available (no MIME support)
-      if (navigator.clipboard?.writeText && !html) {
+        this.logger.error('Clipboard API failed, trying fallback', { error });
+        return this.copyToClipboardLegacy(text);
+      }
+    }
+
+    // Fallback: If only writeText is available (no MIME support)
+    if (navigator.clipboard?.writeText && !html) {
+      try {
         await navigator.clipboard.writeText(text);
         return true;
+      } catch (error) {
+        this.logger.error('Clipboard API failed, trying fallback', { error });
+        return this.copyToClipboardLegacy(text);
       }
-
-      // Fallback to execCommand for older browsers (text only)
-      return this.copyToClipboardLegacy(text);
-    } catch (error) {
-      this.logger.error('Clipboard API failed, trying fallback', { error });
-      return this.copyToClipboardLegacy(text);
     }
+
+    // Fallback to execCommand for older browsers (text only)
+    return this.copyToClipboardLegacy(text);
   }
 
   /**
@@ -256,6 +265,42 @@ export class FormulaCopyService {
       this.logger.error('Legacy clipboard copy failed', { error });
       return false;
     }
+  }
+
+  private isMathMLClipboardUnsupported(error: unknown): boolean {
+    const name = this.getErrorName(error);
+    const nameMatches = name === 'notallowederror' || name === 'notsupportederror';
+    if (!nameMatches) {
+      return false;
+    }
+
+    const message = this.getErrorMessage(error);
+    if (!message) {
+      return true;
+    }
+
+    const lowerMessage = message.toLowerCase();
+    return lowerMessage.includes('mathml') || lowerMessage.includes('application/mathml+xml');
+  }
+
+  private getErrorMessage(error: unknown): string | null {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return typeof error === 'string' ? error : null;
+  }
+
+  private getErrorName(error: unknown): string | null {
+    if (error instanceof DOMException) {
+      return error.name.toLowerCase();
+    }
+
+    if (error instanceof Error) {
+      return error.name.toLowerCase();
+    }
+
+    return null;
   }
 
   /**
@@ -348,6 +393,30 @@ export class FormulaCopyService {
       return this.stripMathMLAnnotations(mathML);
     }
 
+    // Remove annotations (<annotation> and <annotation-xml>)
+    for (const annotation of Array.from(root.getElementsByTagName('annotation'))) {
+      annotation.parentNode?.removeChild(annotation);
+    }
+    for (const annotationXml of Array.from(root.getElementsByTagName('annotation-xml'))) {
+      annotationXml.parentNode?.removeChild(annotationXml);
+    }
+
+    // Unwrap <semantics> if present at root
+    const semantics = Array.from(root.getElementsByTagName('semantics')).find(
+      (node) => node.parentElement === root,
+    );
+    if (semantics) {
+      const presentation = semantics.firstElementChild;
+      if (presentation) {
+        while (root.firstChild) {
+          root.removeChild(root.firstChild);
+        }
+        root.appendChild(presentation);
+      }
+    }
+
+    this.stripPresentationAttributes(root);
+
     const output = document.implementation.createDocument(
       FormulaCopyService.MATHML_NS,
       'mml:math',
@@ -418,6 +487,24 @@ export class FormulaCopyService {
     return mathML
       .replace(/<annotation(?:-xml)?[\s\S]*?<\/annotation(?:-xml)?>/g, '')
       .replace(/<semantics>\s*([\s\S]*?)\s*<\/semantics>/g, '$1');
+  }
+
+  private stripPresentationAttributes(root: Element): void {
+    if (root.hasAttribute('class')) {
+      root.removeAttribute('class');
+    }
+    if (root.hasAttribute('style')) {
+      root.removeAttribute('style');
+    }
+
+    for (const element of Array.from(root.getElementsByTagName('*'))) {
+      if (element.hasAttribute('class')) {
+        element.removeAttribute('class');
+      }
+      if (element.hasAttribute('style')) {
+        element.removeAttribute('style');
+      }
+    }
   }
 
   private stripMathDelimiters(formula: string): string {
