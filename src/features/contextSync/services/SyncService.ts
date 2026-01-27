@@ -1,9 +1,8 @@
 import { DialogNode, SyncResponse } from '../types';
 
-const SYNC_SERVER_URL = 'http://127.0.0.1:3030/sync';
-
 export class SyncService {
   private static instance: SyncService;
+  private readonly DEFAULT_PORT = 3030;
 
   private constructor() {}
 
@@ -14,12 +13,22 @@ export class SyncService {
     return this.instance;
   }
 
+  private async getServerUrl(): Promise<string> {
+    return new Promise((resolve) => {
+      chrome.storage.sync.get(['contextSyncPort'], (result) => {
+        const port = result.contextSyncPort || this.DEFAULT_PORT;
+        resolve(`http://127.0.0.1:${port}/sync`);
+      });
+    });
+  }
+
   async checkServerStatus(): Promise<boolean> {
     try {
+      const url = await this.getServerUrl();
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 200);
 
-      await fetch(SYNC_SERVER_URL, {
+      await fetch(url, {
         method: 'GET',
         signal: controller.signal,
       });
@@ -34,7 +43,8 @@ export class SyncService {
   async syncToIDE(data: DialogNode[]): Promise<SyncResponse> {
     console.log('📡 Syncing to Code Editor server...', data);
     try {
-      const response = await fetch(SYNC_SERVER_URL, {
+      const url = await this.getServerUrl();
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         mode: 'cors',

@@ -5,12 +5,14 @@ import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Label } from '../../../components/ui/label';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
-const SYNC_SERVER_URL = 'http://127.0.0.1:3030/sync';
-const STORAGE_KEY = 'contextSyncEnabled';
+const STORAGE_KEY_ENABLED = 'contextSyncEnabled';
+const STORAGE_KEY_PORT = 'contextSyncPort';
+const DEFAULT_PORT = 3030;
 
 export function ContextSyncSettings() {
   const { t } = useLanguage();
   const [isEnabled, setIsEnabled] = useState(false);
+  const [port, setPort] = useState(DEFAULT_PORT);
   const [isOnline, setIsOnline] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{
@@ -25,40 +27,61 @@ export function ContextSyncSettings() {
   }, [t]);
 
   useEffect(() => {
-    chrome.storage.sync.get([STORAGE_KEY], (result) => {
-      setIsEnabled(result[STORAGE_KEY] === true);
+    chrome.storage.sync.get([STORAGE_KEY_ENABLED, STORAGE_KEY_PORT], (result) => {
+      setIsEnabled(result[STORAGE_KEY_ENABLED] === true);
+      setPort(result[STORAGE_KEY_PORT] || DEFAULT_PORT);
     });
   }, []);
 
   const handleModeChange = (enabled: boolean) => {
     setIsEnabled(enabled);
-    chrome.storage.sync.set({ [STORAGE_KEY]: enabled });
+    chrome.storage.sync.set({ [STORAGE_KEY_ENABLED]: enabled });
     if (!enabled) {
       setIsOnline(false);
       setStatusMessage(null);
     }
   };
 
+  const handlePortChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // Allow empty string to let user delete everything and type
+    if (val === '') {
+      // @ts-ignore - temporary state allow
+      setPort('');
+      return;
+    }
+    const newPort = parseInt(val, 10);
+    if (!isNaN(newPort)) {
+      setPort(newPort);
+      chrome.storage.sync.set({ [STORAGE_KEY_PORT]: newPort });
+    }
+  };
+
   const checkConnection = useCallback(async () => {
     if (!isEnabled) return;
+
+    // If port is invalid (e.g. empty string during typing), don't check
+    if (!port) return;
+
+    const url = `http://127.0.0.1:${port}/sync`;
 
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 200);
 
-      await fetch(SYNC_SERVER_URL, {
+      await fetch(url, {
         method: 'GET',
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
       setIsOnline(true);
-      setStatusMessage({ text: tRef.current('ideOnline'), kind: 'ok' });
+      // setStatusMessage({ text: tRef.current('ideOnline'), kind: 'ok' });
     } catch (err) {
       setIsOnline(false);
-      setStatusMessage({ text: tRef.current('ideOffline'), kind: 'err' });
+      // setStatusMessage({ text: tRef.current('ideOffline'), kind: 'err' });
     }
-  }, [isEnabled]);
+  }, [isEnabled, port]);
 
   useEffect(() => {
     if (isEnabled) {
@@ -95,6 +118,8 @@ export function ContextSyncSettings() {
 
       if (response && response.status === 'success') {
         setStatusMessage({ text: t('syncedSuccess'), kind: 'ok' });
+        // Clear success message after 3 seconds
+        setTimeout(() => setStatusMessage(null), 3000);
       } else {
         throw new Error(response?.message || 'Unknown error');
       }
@@ -147,6 +172,17 @@ export function ContextSyncSettings() {
 
         {isEnabled && (
           <>
+            {/* Port Configuration */}
+            <div>
+              <Label className="mb-2 block text-sm font-medium">{t('syncServerPort')}</Label>
+              <input
+                type="number"
+                value={port}
+                onChange={handlePortChange}
+                className="border-input placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div
@@ -197,9 +233,18 @@ export function ContextSyncSettings() {
                 </span>
               </Button>
             </div>
-
-            {!isOnline && (
-              <p className="text-muted-foreground text-center text-xs">{t('checkServer')}</p>
+            {statusMessage && (
+              <div
+                className={`text-xs ${
+                  statusMessage.kind === 'ok'
+                    ? 'text-green-500'
+                    : statusMessage.kind === 'err'
+                      ? 'text-red-500'
+                      : 'text-blue-500'
+                }`}
+              >
+                {statusMessage.text}
+              </div>
             )}
           </>
         )}

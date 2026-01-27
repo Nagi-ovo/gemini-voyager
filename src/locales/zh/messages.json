@@ -727,6 +727,10 @@
     "message": "手动",
     "description": "同步模式手动选项"
   },
+  "syncServerPort": {
+    "message": "服务端口",
+    "description": "同步服务端口号"
+  },
   "syncNow": {
     "message": "立即同步",
     "description": "立即同步按钮"

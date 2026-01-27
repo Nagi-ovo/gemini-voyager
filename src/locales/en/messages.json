@@ -727,6 +727,10 @@
     "message": "Manual",
     "description": "Sync mode manual option"
   },
+  "syncServerPort": {
+    "message": "Server Port",
+    "description": "Port number for the sync server"
+  },
   "syncNow": {
     "message": "Sync Now",
     "description": "Sync now button"
