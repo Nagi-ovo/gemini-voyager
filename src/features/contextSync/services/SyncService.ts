@@ -23,20 +23,22 @@ export class SyncService {
   }
 
   async checkServerStatus(): Promise<boolean> {
+    let timeoutId: any;
     try {
       const url = await this.getServerUrl();
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 200);
+      timeoutId = setTimeout(() => controller.abort(), 200);
 
       await fetch(url, {
         method: 'GET',
         signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
       return true;
     } catch (err) {
       return false;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
     }
   }
 

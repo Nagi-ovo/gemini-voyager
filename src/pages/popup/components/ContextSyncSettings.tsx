@@ -65,21 +65,23 @@ export function ContextSyncSettings() {
 
     const url = `http://127.0.0.1:${port}/sync`;
 
+    let timeoutId: any;
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 200);
+      timeoutId = setTimeout(() => controller.abort(), 200);
 
       await fetch(url, {
         method: 'GET',
         signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
       setIsOnline(true);
       // setStatusMessage({ text: tRef.current('ideOnline'), kind: 'ok' });
     } catch (err) {
       setIsOnline(false);
       // setStatusMessage({ text: tRef.current('ideOffline'), kind: 'err' });
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
     }
   }, [isEnabled, port]);
 
