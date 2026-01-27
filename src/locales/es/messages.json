@@ -259,9 +259,45 @@
     "message": "Renombrar",
     "description": "Rename folder menu item"
   },
+  "folder_change_color": {
+    "message": "Cambiar color",
+    "description": "Change folder color menu item"
+  },
   "folder_delete": {
     "message": "Eliminar",
     "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "Predeterminado",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "Rojo",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "Naranja",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "Amarillo",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "Verde",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "Azul",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "Morado",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "Rosa",
+    "description": "Pink folder color name"
   },
   "folder_empty": {
     "message": "No hay carpetas",

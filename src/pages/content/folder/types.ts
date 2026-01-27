@@ -4,6 +4,7 @@ export interface Folder {
   parentId: string | null; // null for root-level folders
   isExpanded: boolean;
   pinned?: boolean; // Whether folder is pinned to the top
+  color?: string; // Optional folder color identifier
   createdAt: number;
   updatedAt: number;
 }

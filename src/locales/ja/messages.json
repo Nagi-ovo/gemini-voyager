@@ -259,9 +259,45 @@
     "message": "名前を変更",
     "description": "Rename folder menu item"
   },
+  "folder_change_color": {
+    "message": "色を変更",
+    "description": "Change folder color menu item"
+  },
   "folder_delete": {
     "message": "削除",
     "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "デフォルト",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "赤",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "オレンジ",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "黄色",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "緑",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "青",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "紫",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "ピンク",
+    "description": "Pink folder color name"
   },
   "folder_empty": {
     "message": "フォルダがありません",

@@ -7,6 +7,7 @@ import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 
 import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
+import { FOLDER_COLORS, getFolderColor, getFolderColorConfig, isDarkMode } from './folderColors';
 import {
   type IFolderStorageAdapter,
   createFolderStorageAdapter,
@@ -619,6 +620,13 @@ export class FolderManager {
     folderIcon.textContent = 'folder';
     folderIcon.style.cursor = 'pointer';
     folderIcon.style.userSelect = 'none';
+    
+    // Apply folder color if set
+    if (folder.color && folder.color !== 'default') {
+      const colorValue = getFolderColor(folder.color, isDarkMode());
+      folderIcon.style.color = colorValue;
+    }
+    
     folderIcon.addEventListener('click', (e) => {
       e.stopPropagation(); // Prevent bubbling issues
       this.toggleFolder(folder.id);
@@ -3259,6 +3267,7 @@ export class FolderManager {
       },
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
+      { label: this.t('folder_change_color'), action: () => this.showColorPicker(folderId, event) },
       { label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) },
     ];
 
@@ -3283,6 +3292,76 @@ export class FolderManager {
       }
     };
     setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
+
+  /**
+   * Show color picker dialog for a folder
+   * @param folderId The folder ID to change color
+   * @param sourceEvent The source mouse event (for positioning)
+   */
+  private showColorPicker(folderId: string, sourceEvent: MouseEvent): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    // Create color picker dialog
+    const dialog = document.createElement('div');
+    dialog.className = 'gv-color-picker-dialog';
+    
+    // Position near the menu click (slightly offset to avoid overlap)
+    dialog.style.position = 'fixed';
+    dialog.style.left = `${sourceEvent.clientX + 10}px`;
+    dialog.style.top = `${sourceEvent.clientY}px`;
+    dialog.style.zIndex = '10001';
+
+    // Create color options
+    FOLDER_COLORS.forEach((colorConfig) => {
+      const colorBtn = document.createElement('button');
+      colorBtn.className = 'gv-color-picker-item';
+      colorBtn.title = this.t(colorConfig.nameKey);
+      
+      // Apply color based on current theme
+      const colorValue = getFolderColor(colorConfig.id, isDarkMode());
+      colorBtn.style.backgroundColor = colorValue;
+      
+      // Mark current color as selected
+      if (folder.color === colorConfig.id || (!folder.color && colorConfig.id === 'default')) {
+        colorBtn.classList.add('selected');
+      }
+      
+      colorBtn.addEventListener('click', () => {
+        this.changeFolderColor(folderId, colorConfig.id);
+        dialog.remove();
+      });
+      
+      dialog.appendChild(colorBtn);
+    });
+
+    document.body.appendChild(dialog);
+
+    // Close dialog on click outside
+    const closeDialog = (e: MouseEvent) => {
+      if (!dialog.contains(e.target as Node)) {
+        dialog.remove();
+        document.removeEventListener('click', closeDialog);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeDialog), 0);
+  }
+
+  /**
+   * Change folder color
+   * @param folderId The folder ID to change
+   * @param colorId The new color ID
+   */
+  private changeFolderColor(folderId: string, colorId: string): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    folder.color = colorId;
+    folder.updatedAt = Date.now();
+    
+    this.saveData();
+    this.refresh();
   }
 
   private showMoveToFolderDialog(

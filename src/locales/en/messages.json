@@ -259,9 +259,45 @@
     "message": "Rename",
     "description": "Rename folder menu item"
   },
+  "folder_change_color": {
+    "message": "Change Color",
+    "description": "Change folder color menu item"
+  },
   "folder_delete": {
     "message": "Delete",
     "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "Default",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "Red",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "Orange",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "Yellow",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "Green",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "Blue",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "Purple",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "Pink",
+    "description": "Pink folder color name"
   },
   "folder_empty": {
     "message": "No folders yet",
