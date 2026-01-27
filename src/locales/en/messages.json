@@ -336,8 +336,8 @@
     "description": "LaTeX format option"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath format option for Word"
+    "message": "MathML (Word)",
+    "description": "Label for MathML formula copy format option (formerly UnicodeMath)"
   },
   "formulaCopyFormatHint": {
     "message": "Choose the format when copying formulas by clicking",

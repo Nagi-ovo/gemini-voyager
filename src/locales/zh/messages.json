@@ -336,8 +336,8 @@
     "description": "LaTeX 格式选项"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath 格式选项，用于 Word"
+    "message": "MathML (Word)",
+    "description": "Label for UnicodeMath formula copy format option"
   },
   "formulaCopyFormatHint": {
     "message": "选择点击公式时复制的格式",
