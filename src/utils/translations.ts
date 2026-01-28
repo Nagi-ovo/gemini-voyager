@@ -3,6 +3,7 @@ import esMessages from '@locales/es/messages.json';
 import frMessages from '@locales/fr/messages.json';
 import jaMessages from '@locales/ja/messages.json';
 import zhMessages from '@locales/zh/messages.json';
+import zhTWMessages from '@locales/zh_TW/messages.json';
 
 import type { AppLanguage } from './language';
 
@@ -12,6 +13,7 @@ type RawLocaleMessages = typeof enMessages;
 const rawMessagesByLanguage = {
   en: enMessages,
   zh: zhMessages,
+  zh_TW: zhTWMessages,
   ja: jaMessages,
   fr: frMessages,
   es: esMessages,
@@ -33,6 +35,7 @@ function extractTranslations<M extends Record<string, { message: string }>>(
 export const TRANSLATIONS: Record<AppLanguage, Translation> = {
   en: extractTranslations(rawMessagesByLanguage.en),
   zh: extractTranslations(rawMessagesByLanguage.zh),
+  zh_TW: extractTranslations(rawMessagesByLanguage.zh_TW),
   ja: extractTranslations(rawMessagesByLanguage.ja),
   fr: extractTranslations(rawMessagesByLanguage.fr),
   es: extractTranslations(rawMessagesByLanguage.es),
@@ -41,3 +44,4 @@ export const TRANSLATIONS: Record<AppLanguage, Translation> = {
 export function isTranslationKey(value: string): value is TranslationKey {
   return value in rawMessagesByLanguage.en;
 }
+
