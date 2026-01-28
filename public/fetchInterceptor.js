@@ -195,7 +195,12 @@
         } catch (error) {
           console.warn('[Gemini Voyager] Watermark processing failed, using original:', error);
           updateStatus('ERROR', { message: error.message || 'Unknown error' });
-          // Fall through to return original fetch with modified URL
+          // Return the original blob that was already fetched instead of making another request
+          return new Response(blob, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+          });
         }
       }
     }
