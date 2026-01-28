@@ -44,4 +44,3 @@ export const TRANSLATIONS: Record<AppLanguage, Translation> = {
 export function isTranslationKey(value: string): value is TranslationKey {
   return value in rawMessagesByLanguage.en;
 }
-
