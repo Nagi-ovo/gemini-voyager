@@ -169,12 +169,22 @@ describe('ConversationExportService', () => {
         },
       ];
 
+      const downloadSpy = vi.spyOn(ConversationExportService as any, 'downloadJSON');
       const result = await ConversationExportService.export(turnsWithoutDom, mockMetadata, {
         format: 'json' as any,
       });
 
       expect(result.success).toBe(true);
       expect(result.format).toBe('json');
+
+      expect(downloadSpy).toHaveBeenCalledOnce();
+      const payload = downloadSpy.mock.calls[0][0] as any;
+
+      expect(payload.items).toHaveLength(1);
+      expect(payload.items[0].user).toBe('Plain text user');
+      expect(payload.items[0].assistant).toBe('Plain text assistant');
+
+      expect(payload.items[0].userElement).toBeUndefined();
     });
 
     // Note: Testing DOMContentExtractor integration is skipped per ROI testing strategy.

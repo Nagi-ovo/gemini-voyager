@@ -90,9 +90,6 @@ export class ConversationExportService {
         user: userContent,
         assistant: assistantContent,
         starred: turn.starred,
-        // Exclude DOM elements from JSON output (not serializable)
-        userElement: {},
-        assistantElement: {},
       };
     });
 
