@@ -15,8 +15,8 @@
 import { getTranslationSync } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import { findNativeDownloadButton, DOWNLOAD_ICON_SELECTOR } from './downloadButton';
-import { createStatusToastManager, type StatusToastManager } from './statusToast';
+import { DOWNLOAD_ICON_SELECTOR, findNativeDownloadButton } from './downloadButton';
+import { type StatusToastManager, createStatusToastManager } from './statusToast';
 import { WatermarkEngine } from './watermarkEngine';
 
 let engine: WatermarkEngine | null = null;
@@ -421,16 +421,8 @@ function setupDownloadButtonTracking(): void {
     showImmediateDownloadToast(button);
   };
 
-  document.addEventListener(
-    'pointerdown',
-    captureAnchor,
-    true,
-  );
-  document.addEventListener(
-    'click',
-    captureAnchor,
-    true,
-  );
+  document.addEventListener('pointerdown', captureAnchor, true);
+  document.addEventListener('click', captureAnchor, true);
 }
 
 /**

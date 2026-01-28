@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import browser from 'webextension-polyfill';
+
+import { getCurrentLanguage } from '../i18n';
 
 vi.mock('webextension-polyfill', () => {
   const storageArea = { get: vi.fn(), set: vi.fn() };
@@ -13,10 +16,6 @@ vi.mock('webextension-polyfill', () => {
     },
   };
 });
-
-import browser from 'webextension-polyfill';
-
-import { getCurrentLanguage } from '../i18n';
 
 describe('getCurrentLanguage', () => {
   beforeEach(() => {

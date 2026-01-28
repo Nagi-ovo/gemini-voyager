@@ -165,7 +165,6 @@ html.dark .gv-status-toast {
     document.head.appendChild(style);
   };
 
-
   const ensureContainer = (): HTMLDivElement => {
     const existing = document.getElementById(containerId);
     if (existing instanceof HTMLDivElement) return existing;
@@ -207,7 +206,10 @@ html.dark .gv-status-toast {
     const height =
       rect.height ||
       container.offsetHeight ||
-      Math.max(estimatedToastHeight, toasts.length * estimatedToastHeight + (toasts.length - 1) * 10);
+      Math.max(
+        estimatedToastHeight,
+        toasts.length * estimatedToastHeight + (toasts.length - 1) * 10,
+      );
     const gap = 14;
     const padding = 12;
 
