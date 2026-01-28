@@ -15,6 +15,7 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
     const dict: Record<AppLanguage, Record<string, string>> = {
       en: { deepResearchDownload: 'Download', deepResearchDownloadTooltip: 'Download (MD)' },
       zh: { deepResearchDownload: '下载', deepResearchDownloadTooltip: '下载（MD）' },
+      zh_TW: { deepResearchDownload: '下載', deepResearchDownloadTooltip: '下載（MD）' },
       ja: {
         deepResearchDownload: 'ダウンロード',
         deepResearchDownloadTooltip: 'ダウンロード（MD）',
