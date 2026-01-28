@@ -1003,20 +1003,28 @@
     "message": "Synced successfully!",
     "description": "Synced success message"
   },
+  "downloadingOriginal": {
+    "message": "Downloading original image",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "Downloading original image (large file)",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "Large file warning",
+    "description": "Warning shown for large downloads"
+  },
   "downloadProcessing": {
-    "message": "Processing image (removing watermark)...",
-    "description": "Toast message when download starts"
+    "message": "Processing watermark",
+    "description": "Status when processing watermark removal"
   },
   "downloadSuccess": {
-    "message": "Processing complete, downloading...",
-    "description": "Toast message when download succeeds"
+    "message": "Downloading...",
+    "description": "Status when download starts"
   },
   "downloadError": {
-    "message": "Download failed",
-    "description": "Toast message prefix when download fails"
-  },
-  "downloadLargeFile": {
-    "message": "Large file, please wait...",
-    "description": "Toast message for large files"
+    "message": "Failed",
+    "description": "Status prefix when download fails"
   }
 }

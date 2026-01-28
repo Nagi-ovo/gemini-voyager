@@ -1003,20 +1003,28 @@
     "message": "粉紅色",
     "description": "Pink folder color"
   },
+  "downloadingOriginal": {
+    "message": "正在下載原始圖片",
+    "description": "下載原始圖片時的狀態"
+  },
+  "downloadingOriginalLarge": {
+    "message": "正在下載原始圖片（大檔案）",
+    "description": "下載較大原始圖片時的狀態"
+  },
+  "downloadLargeWarning": {
+    "message": "大檔案警告",
+    "description": "大檔案下載提示"
+  },
   "downloadProcessing": {
-    "message": "正在處理圖片 (去除浮水印)...",
-    "description": "開始下載時的提示"
+    "message": "正在處理浮水印中",
+    "description": "處理浮水印時的狀態"
   },
   "downloadSuccess": {
-    "message": "處理完成，開始下載",
-    "description": "下載成功時的提示"
+    "message": "正在下載",
+    "description": "開始下載時的狀態"
   },
   "downloadError": {
-    "message": "下載失敗",
-    "description": "下載失敗時的提示前置"
-  },
-  "downloadLargeFile": {
-    "message": "圖片較大，請耐心等待...",
-    "description": "大檔案提示"
+    "message": "失敗",
+    "description": "下載失敗時的狀態前置"
   }
 }

@@ -117,13 +117,14 @@
       if (isWatermarkRemoverEnabled()) {
         console.log('[Gemini Voyager] Intercepting download for watermark removal');
 
-        // Notify start
-        updateStatus('START');
-
         // Declare response and blob outside try block so they're accessible in catch
         let response, blob;
 
         try {
+          // Check content length first (via HEAD request) to show appropriate message
+          // But we'll just show "downloading" first and update if large
+          updateStatus('DOWNLOADING');
+
           // Fetch the original size image
           response = await originalFetch.apply(this, args);
 
@@ -132,15 +133,16 @@
             return response;
           }
 
-          // Check content length for large files (5MB)
+          // Check content length for large files (5MB) - update status
           const contentLength = response.headers.get('content-length');
           if (contentLength && parseInt(contentLength, 10) > 5 * 1024 * 1024) {
-            updateStatus('WARNING', { message: 'LARGE_FILE' });
+            updateStatus('DOWNLOADING_LARGE');
           }
 
           // Clone response to read blob
           blob = await response.blob();
 
+          // Step 2: Processing
           updateStatus('PROCESSING');
 
           // Send blob to content script for watermark removal via DOM bridge

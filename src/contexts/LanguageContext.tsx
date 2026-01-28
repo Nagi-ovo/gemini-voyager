@@ -3,6 +3,7 @@ import React, { ReactNode, createContext, useContext, useEffect, useState } from
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
+import { getCurrentLanguage, setCachedLanguage } from '@/utils/i18n';
 import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { TRANSLATIONS, type TranslationKey } from '@/utils/translations';
 
@@ -31,11 +32,8 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     const loadLanguage = async () => {
       try {
-        const stored = await browser.storage.sync.get(StorageKeys.LANGUAGE);
-        const raw = (stored as Record<string, unknown> | null | undefined)?.[StorageKeys.LANGUAGE];
-        if (typeof raw === 'string') {
-          setLanguageState(normalizeLanguage(raw));
-        }
+        const current = await getCurrentLanguage();
+        setLanguageState(current);
       } catch (error) {
         console.error('Failed to load language preference:', error);
       }
@@ -50,7 +48,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       areaName: string,
     ) => {
       const next = changes[StorageKeys.LANGUAGE]?.newValue;
-      if (areaName === 'sync' && typeof next === 'string') {
+      if ((areaName === 'sync' || areaName === 'local') && typeof next === 'string') {
         setLanguageState(normalizeLanguage(next));
       }
     };
@@ -62,11 +60,18 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, []);
 
   const setLanguage = async (lang: AppLanguage) => {
+    setLanguageState(lang);
+    setCachedLanguage(lang);
     try {
       await browser.storage.sync.set({ [StorageKeys.LANGUAGE]: lang });
-      setLanguageState(lang);
+      return;
     } catch (error) {
-      console.error('Failed to save language preference:', error);
+      try {
+        await browser.storage.local.set({ [StorageKeys.LANGUAGE]: lang });
+        return;
+      } catch (localError) {
+        console.error('Failed to save language preference:', error, localError);
+      }
     }
   };
 

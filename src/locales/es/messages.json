@@ -1003,20 +1003,28 @@
     "message": "¡Sincronizado con éxito!",
     "description": "Synced success message"
   },
+  "downloadingOriginal": {
+    "message": "Descargando imagen original",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "Descargando imagen original (archivo grande)",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "Advertencia de archivo grande",
+    "description": "Warning shown for large downloads"
+  },
   "downloadProcessing": {
-    "message": "Procesando imagen (eliminando marca de agua)...",
-    "description": "Toast message when download starts"
+    "message": "Procesando marca de agua",
+    "description": "Status when processing watermark removal"
   },
   "downloadSuccess": {
-    "message": "Procesamiento completo, descargando...",
-    "description": "Toast message when download succeeds"
+    "message": "Descargando...",
+    "description": "Status when download starts"
   },
   "downloadError": {
-    "message": "Error en la descarga",
-    "description": "Toast message prefix when download fails"
-  },
-  "downloadLargeFile": {
-    "message": "Archivo grande, por favor espere...",
-    "description": "Toast message for large files"
+    "message": "Error",
+    "description": "Status prefix when download fails"
   }
 }

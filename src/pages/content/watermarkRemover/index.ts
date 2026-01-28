@@ -12,6 +12,11 @@
  * - Sends image data to this content script for watermark removal
  * - Returns processed image to complete the download
  */
+import { getTranslationSync } from '@/utils/i18n';
+import type { TranslationKey } from '@/utils/translations';
+
+import { findNativeDownloadButton, DOWNLOAD_ICON_SELECTOR } from './downloadButton';
+import { createStatusToastManager, type StatusToastManager } from './statusToast';
 import { WatermarkEngine } from './watermarkEngine';
 
 let engine: WatermarkEngine | null = null;
@@ -103,9 +108,7 @@ function addDownloadIndicator(imgElement: HTMLImageElement): void {
   if (!container) return;
 
   // Try to find Gemini's native download button area
-  const nativeDownloadIcon = container.querySelector(
-    'mat-icon[fonticon="download"], .google-symbols[data-mat-icon-name="download"]',
-  );
+  const nativeDownloadIcon = container.querySelector(DOWNLOAD_ICON_SELECTOR);
   const nativeButton = nativeDownloadIcon?.closest('button');
 
   if (!nativeButton) return;
@@ -319,14 +322,15 @@ export async function startWatermarkRemover(): Promise<void> {
       return;
     }
 
+    // Setup status listener for UI feedback ASAP (avoid missing early signals)
+    setupStatusListener();
+    setupDownloadButtonTracking();
+
     console.log('[Gemini Voyager] Initializing watermark remover...');
     engine = await WatermarkEngine.create();
 
     // Setup bridge to handle requests from fetch interceptor
     setupFetchInterceptorBridge();
-
-    // Setup status listener for UI feedback
-    setupStatusListener();
 
     // Process preview images
     processAllImages();
@@ -338,238 +342,214 @@ export async function startWatermarkRemover(): Promise<void> {
   }
 }
 
-/**
- * Toast Notification System
- * Handles displaying status messages to the user during download processing
- */
-export class ToastManager {
-  private container: HTMLDivElement | null = null;
-  private activeToasts = new Map<
-    string,
-    { element: HTMLDivElement; timeout: ReturnType<typeof setTimeout> | null }
-  >();
+let statusToastManager: StatusToastManager | null = null;
+let downloadTrackingReady = false;
+let lastImmediateToastAt = 0;
+let sequenceCounter = 0;
 
-  constructor() {
-    this.createContainer();
+type DownloadToastSequence = {
+  id: number;
+  downloadToastId: string | null;
+  warningToastId: string | null;
+  processingToastId: string | null;
+  processingTimer: ReturnType<typeof setTimeout> | null;
+};
+
+let activeSequence: DownloadToastSequence | null = null;
+
+const getStatusToastManager = (): StatusToastManager => {
+  if (!statusToastManager) {
+    statusToastManager = createStatusToastManager({ maxToasts: 4, anchorTtlMs: 30000 });
+  }
+  return statusToastManager;
+};
+
+const t = (key: TranslationKey, fallback: string): string => {
+  const value = getTranslationSync(key);
+  return value === key ? fallback : value;
+};
+
+function showImmediateDownloadToast(button: HTMLButtonElement): void {
+  const now = Date.now();
+  if (now - lastImmediateToastAt < 300) return;
+  lastImmediateToastAt = now;
+
+  const manager = getStatusToastManager();
+  manager.setAnchorElement(button);
+
+  const downloadMessage = t('downloadingOriginal', '正在下载原始图片');
+  const warningMessage = t('downloadLargeWarning', '大文件警告');
+  const processingMessage = t('downloadProcessing', '正在处理水印中');
+
+  if (activeSequence?.processingTimer) {
+    clearTimeout(activeSequence.processingTimer);
   }
 
-  private createContainer() {
-    this.container = document.createElement('div');
-    this.container.id = 'gv-toast-container';
-    Object.assign(this.container.style, {
-      position: 'fixed',
-      bottom: '24px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: '10000',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: '10px',
-      pointerEvents: 'none', // Allow clicks to pass through
-    });
-    document.body.appendChild(this.container);
-  }
+  const sequenceId = ++sequenceCounter;
+  const downloadToastId = manager.addToast(downloadMessage, 'info', { autoDismissMs: 3000 });
+  const warningToastId = manager.addToast(warningMessage, 'warning');
 
-  show(
-    message: string,
-    type: 'info' | 'success' | 'error' | 'warning' = 'info',
-    duration = 3000,
-    key?: string,
-  ) {
-    if (!this.container) this.createContainer();
-
-    // If key provided, check if we can update existing toast
-    if (key && this.activeToasts.has(key)) {
-      const existing = this.activeToasts.get(key)!;
-
-      // Update content
-      this.updateToastContent(existing.element, message, type);
-
-      // Clear existing timeout
-      if (existing.timeout) {
-        clearTimeout(existing.timeout);
-        existing.timeout = null;
-      }
-
-      // Set new timeout if needed
-      if (duration > 0) {
-        existing.timeout = setTimeout(() => {
-          this.hide(existing.element, key);
-        }, duration);
-      }
-      return;
+  const processingTimer = setTimeout(() => {
+    if (!activeSequence || activeSequence.id !== sequenceId) return;
+    if (activeSequence.downloadToastId) {
+      manager.removeToast(activeSequence.downloadToastId);
+      activeSequence.downloadToastId = null;
     }
-
-    const toast = document.createElement('div');
-
-    // Material Design-ish Toast Style
-    Object.assign(toast.style, {
-      backgroundColor: '#323232',
-      color: 'white',
-      padding: '12px 24px',
-      borderRadius: '24px', // Pill shape
-      boxShadow:
-        '0 3px 5px -1px rgba(0,0,0,.2), 0 6px 10px 0 rgba(0,0,0,.14), 0 1px 18px 0 rgba(0,0,0,.12)',
-      fontSize: '14px',
-      fontFamily: 'Google Sans, Roboto, Arial, sans-serif',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      opacity: '0',
-      transition: 'opacity 0.3s ease, transform 0.3s ease',
-      transform: 'translateY(20px)',
-      whiteSpace: 'nowrap',
-    });
-
-    this.updateToastContent(toast, message, type);
-
-    this.container?.appendChild(toast);
-
-    // Animate in
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
-    });
-
-    // Auto hide
-    let timeout: ReturnType<typeof setTimeout> | null = null;
-    if (duration > 0) {
-      timeout = setTimeout(() => {
-        this.hide(toast, key);
-      }, duration);
+    if (!activeSequence.processingToastId) {
+      activeSequence.processingToastId = manager.addToast(processingMessage, 'info', {
+        pending: true,
+      });
     }
+  }, 3000);
 
-    if (key) {
-      this.activeToasts.set(key, { element: toast, timeout });
-    }
-  }
-
-  private updateToastContent(toast: HTMLDivElement, message: string, type: string) {
-    toast.innerHTML = '';
-
-    // Icon based on type
-    let icon = '';
-    switch (type) {
-      case 'success':
-        icon = 'check_circle';
-        break;
-      case 'error':
-        icon = 'error';
-        break;
-      case 'warning':
-        icon = 'warning';
-        break;
-      default:
-        icon = 'info';
-        break;
-    }
-
-    const iconSpan = document.createElement('span');
-    iconSpan.className = 'material-icons-outlined';
-    iconSpan.style.fontSize = '20px';
-    iconSpan.style.color = this.getColor(type);
-    iconSpan.textContent = icon;
-
-    const messageSpan = document.createElement('span');
-    messageSpan.textContent = message;
-
-    toast.appendChild(iconSpan);
-    toast.appendChild(messageSpan);
-  }
-
-  private getColor(type: string): string {
-    switch (type) {
-      case 'success':
-        return '#81c995'; // Light Green
-      case 'error':
-        return '#f28b82'; // Light Red
-      case 'warning':
-        return '#fdd663'; // Light Yellow
-      default:
-        return '#8ab4f8'; // Light Blue
-    }
-  }
-
-  private hide(toast: HTMLDivElement, key?: string) {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(20px)';
-    setTimeout(() => {
-      toast.remove();
-      if (key) this.activeToasts.delete(key);
-    }, 300);
-  }
+  activeSequence = {
+    id: sequenceId,
+    downloadToastId,
+    warningToastId,
+    processingToastId: null,
+    processingTimer,
+  };
 }
 
-let toastManager: ToastManager | null = null;
+function setupDownloadButtonTracking(): void {
+  if (downloadTrackingReady) return;
+  downloadTrackingReady = true;
+
+  const captureAnchor = (event: Event): void => {
+    const button = findNativeDownloadButton(event.target);
+    if (!button) return;
+    showImmediateDownloadToast(button);
+  };
+
+  document.addEventListener(
+    'pointerdown',
+    captureAnchor,
+    true,
+  );
+  document.addEventListener(
+    'click',
+    captureAnchor,
+    true,
+  );
+}
 
 /**
  * Setup listener for status events from fetchInterceptor
  */
-function setupStatusListener() {
+function setupStatusListener(): void {
   const bridge = getBridgeElement();
+  const manager = getStatusToastManager();
+  const downloadMessage = t('downloadingOriginal', '正在下载原始图片');
+  const warningMessage = t('downloadLargeWarning', '大文件警告');
+  const processingMessage = t('downloadProcessing', '正在处理水印中');
+  const successMessage = t('downloadSuccess', '正在下载');
+  const errorPrefix = t('downloadError', '失败');
+
+  const finalizeSequence = (level: 'success' | 'error', message: string): void => {
+    if (activeSequence?.processingTimer) {
+      clearTimeout(activeSequence.processingTimer);
+      activeSequence.processingTimer = null;
+    }
+    if (activeSequence?.warningToastId) {
+      manager.removeToast(activeSequence.warningToastId);
+      activeSequence.warningToastId = null;
+    }
+    if (activeSequence?.downloadToastId) {
+      manager.removeToast(activeSequence.downloadToastId);
+      activeSequence.downloadToastId = null;
+    }
+
+    if (
+      activeSequence?.processingToastId &&
+      manager.updateToast(activeSequence.processingToastId, message, level, {
+        autoDismissMs: level === 'success' ? 2500 : 4000,
+        markFinal: true,
+      })
+    ) {
+      return;
+    }
+
+    if (
+      !manager.updateLatestPending(message, level, {
+        autoDismissMs: level === 'success' ? 2500 : 4000,
+        markFinal: true,
+      })
+    ) {
+      manager.addToast(message, level, {
+        autoDismissMs: level === 'success' ? 2500 : 4000,
+      });
+    }
+  };
+
+  const handleStatus = (statusData: string): void => {
+    console.log('[Gemini Voyager] Status data received:', statusData);
+    if (!statusData) return;
+
+    try {
+      const { type, message } = JSON.parse(statusData);
+      bridge.removeAttribute('data-status');
+
+      switch (type) {
+        case 'DOWNLOADING':
+          // Step 1: Downloading original image
+          if (activeSequence) {
+            if (!activeSequence.downloadToastId) {
+              activeSequence.downloadToastId = manager.addToast(downloadMessage, 'info', {
+                autoDismissMs: 3000,
+              });
+            }
+            if (!activeSequence.warningToastId) {
+              activeSequence.warningToastId = manager.addToast(warningMessage, 'warning');
+            }
+          }
+          break;
+        case 'DOWNLOADING_LARGE':
+          // Step 1 with large file warning
+          if (activeSequence) {
+            if (!activeSequence.downloadToastId) {
+              activeSequence.downloadToastId = manager.addToast(downloadMessage, 'info', {
+                autoDismissMs: 3000,
+              });
+            }
+            if (!activeSequence.warningToastId) {
+              activeSequence.warningToastId = manager.addToast(warningMessage, 'warning');
+            }
+          }
+          break;
+        case 'PROCESSING':
+          // Step 2: Processing watermark
+          if (activeSequence?.processingToastId) {
+            manager.updateToast(activeSequence.processingToastId, processingMessage, 'info');
+            break;
+          }
+          if (!activeSequence?.processingTimer) {
+            const processingToastId = manager.addToast(processingMessage, 'info', {
+              pending: true,
+            });
+            if (activeSequence) activeSequence.processingToastId = processingToastId;
+          }
+          break;
+        case 'SUCCESS':
+          // Step 3: Done, auto-dismiss after 2s
+          finalizeSequence('success', successMessage);
+          break;
+        case 'ERROR':
+          finalizeSequence('error', `${errorPrefix}: ${message}`);
+          break;
+      }
+    } catch (e) {
+      console.error('[Gemini Voyager] Failed to parse status:', e);
+    }
+  };
 
   const observer = new MutationObserver(() => {
     const statusData = bridge.dataset.status;
-    if (statusData) {
-      try {
-        const { type, message } = JSON.parse(statusData);
-        bridge.removeAttribute('data-status'); // Clear to allow same status again if needed? Or just acknowledgment.
-
-        if (!toastManager) toastManager = new ToastManager();
-
-        // Translate status to user messages
-        switch (type) {
-          case 'START':
-            toastManager.show(
-              chrome.i18n.getMessage('downloadProcessing') || '正在处理图片 (去除水印)...',
-              'info',
-              0,
-              'download-status',
-            ); // 0 duration = persistent until next status
-            break;
-          case 'PROCESSING':
-            // Can update message if needed, or keep 'START' message
-            toastManager.show(
-              chrome.i18n.getMessage('downloadProcessing') || '正在处理图片 (去除水印)...',
-              'info',
-              0,
-              'download-status',
-            );
-            break;
-          case 'SUCCESS':
-            toastManager.show(
-              chrome.i18n.getMessage('downloadSuccess') || '处理完成，开始下载',
-              'success',
-              3000,
-              'download-status',
-            );
-            break;
-          case 'ERROR':
-            toastManager.show(
-              `${chrome.i18n.getMessage('downloadError') || '下载失败'}: ${message}`,
-              'error',
-              5000,
-              'download-status',
-            );
-            break;
-          case 'WARNING':
-            if (message === 'LARGE_FILE') {
-              toastManager.show(
-                chrome.i18n.getMessage('downloadLargeFile') || '图片较大，请耐心等待...',
-                'warning',
-                4000,
-                'download-large-file', // Different key to allow stacking
-              );
-            }
-            break;
-        }
-      } catch (e) {
-        console.error('[Gemini Voyager] Failed to parse status update:', e);
-      }
-    }
+    if (!statusData) return;
+    handleStatus(statusData);
   });
 
   observer.observe(bridge, { attributes: true, attributeFilter: ['data-status'] });
-  console.log('[Gemini Voyager] Status listener active');
+  if (bridge.dataset.status) {
+    handleStatus(bridge.dataset.status);
+  }
 }
