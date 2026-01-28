@@ -259,9 +259,45 @@
     "message": "重命名",
     "description": "重命名文件夹菜单项"
   },
+  "folder_change_color": {
+    "message": "更改颜色",
+    "description": "更改文件夹颜色菜单项"
+  },
   "folder_delete": {
     "message": "删除",
     "description": "删除文件夹菜单项"
+  },
+  "folder_color_default": {
+    "message": "默认",
+    "description": "默认文件夹颜色名称"
+  },
+  "folder_color_red": {
+    "message": "红色（紧急）",
+    "description": "红色文件夹颜色名称"
+  },
+  "folder_color_orange": {
+    "message": "橙色（高优先级）",
+    "description": "橙色文件夹颜色名称"
+  },
+  "folder_color_yellow": {
+    "message": "黄色（需注意）",
+    "description": "黄色文件夹颜色名称"
+  },
+  "folder_color_green": {
+    "message": "绿色（已完成）",
+    "description": "绿色文件夹颜色名称"
+  },
+  "folder_color_blue": {
+    "message": "蓝色（参考）",
+    "description": "蓝色文件夹颜色名称"
+  },
+  "folder_color_purple": {
+    "message": "紫色（创意）",
+    "description": "紫色文件夹颜色名称"
+  },
+  "folder_color_pink": {
+    "message": "粉色（个人）",
+    "description": "粉色文件夹颜色名称"
   },
   "folder_empty": {
     "message": "暂无文件夹",
