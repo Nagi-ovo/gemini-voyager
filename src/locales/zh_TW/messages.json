@@ -1002,5 +1002,21 @@
   "folder_color_pink": {
     "message": "粉紅色",
     "description": "Pink folder color"
+  },
+  "downloadProcessing": {
+    "message": "正在處理圖片 (去除浮水印)...",
+    "description": "開始下載時的提示"
+  },
+  "downloadSuccess": {
+    "message": "處理完成，開始下載",
+    "description": "下載成功時的提示"
+  },
+  "downloadError": {
+    "message": "下載失敗",
+    "description": "下載失敗時的提示前置"
+  },
+  "downloadLargeFile": {
+    "message": "圖片較大，請耐心等待...",
+    "description": "大檔案提示"
   }
 }
