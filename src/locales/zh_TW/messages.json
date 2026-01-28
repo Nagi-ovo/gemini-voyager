@@ -966,5 +966,41 @@
   "syncedSuccess": {
     "message": "同步成功！",
     "description": "同步成功訊息"
+  },
+  "folder_change_color": {
+    "message": "更改顏色",
+    "description": "Change folder color tooltip"
+  },
+  "folder_color_default": {
+    "message": "預設",
+    "description": "Default folder color"
+  },
+  "folder_color_red": {
+    "message": "紅色",
+    "description": "Red folder color"
+  },
+  "folder_color_orange": {
+    "message": "橙色",
+    "description": "Orange folder color"
+  },
+  "folder_color_yellow": {
+    "message": "黃色",
+    "description": "Yellow folder color"
+  },
+  "folder_color_green": {
+    "message": "綠色",
+    "description": "Green folder color"
+  },
+  "folder_color_blue": {
+    "message": "藍色",
+    "description": "Blue folder color"
+  },
+  "folder_color_purple": {
+    "message": "紫色",
+    "description": "Purple folder color"
+  },
+  "folder_color_pink": {
+    "message": "粉紅色",
+    "description": "Pink folder color"
   }
 }
