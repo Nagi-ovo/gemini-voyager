@@ -336,8 +336,8 @@
     "description": "LaTeX format option"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath format option for Word"
+    "message": "MathML (Word)",
+    "description": "Label for UnicodeMath formula copy format option"
   },
   "formulaCopyFormatHint": {
     "message": "数式をクリックしてコピーする際の形式を選択します",
@@ -727,6 +727,10 @@
     "message": "手動",
     "description": "Sync mode manual option"
   },
+  "syncServerPort": {
+    "message": "サーバーポート",
+    "description": "Port number for the sync server"
+  },
   "syncNow": {
     "message": "今すぐ同期",
     "description": "Sync now button"
@@ -927,24 +931,40 @@
     "message": "会話でテキストを選択したときに、選択したテキストを引用するフローティングボタンを表示します",
     "description": "Quote reply feature hint"
   },
-  "nanobananaDownloadTooltip": {
-    "message": "NanoBanana: Downloads will have watermark removed",
-    "description": "Tooltip for the banana indicator on download button"
+  "contextSync": {
+    "message": "コンテキスト同期",
+    "description": "Context Sync title"
   },
-  "downloadProcessing": {
-    "message": "Processing image (removing watermark)...",
-    "description": "Toast message when download starts"
+  "contextSyncDescription": {
+    "message": "チャットのコンテキストをローカルIDEに同期します",
+    "description": "Context Sync description"
   },
-  "downloadSuccess": {
-    "message": "Processing complete, downloading...",
-    "description": "Toast message when download succeeds"
+  "syncToIDE": {
+    "message": "IDEに同期",
+    "description": "Sync to IDE button"
   },
-  "downloadError": {
-    "message": "Download failed",
-    "description": "Toast message prefix when download fails"
+  "ideOnline": {
+    "message": "IDE オンライン",
+    "description": "IDE Online status"
   },
-  "downloadLargeFile": {
-    "message": "Large file, please wait...",
-    "description": "Toast message for large files"
+  "ideOffline": {
+    "message": "IDE オフライン",
+    "description": "IDE Offline status"
+  },
+  "syncing": {
+    "message": "同期中...",
+    "description": "Syncing status"
+  },
+  "checkServer": {
+    "message": "VS CodeでAI Syncサーバーを起動してください",
+    "description": "Check server hint"
+  },
+  "capturing": {
+    "message": "対話をキャプチャ中...",
+    "description": "Capturing status"
+  },
+  "syncedSuccess": {
+    "message": "同期に成功しました！",
+    "description": "Synced success message"
   }
 }

@@ -3,6 +3,7 @@ import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 
 import { startChatWidthAdjuster } from './chatWidth/index';
+import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
@@ -164,6 +165,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startDeepResearchExport();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startContextSync();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 

@@ -336,8 +336,8 @@
     "description": "LaTeX format option"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath format option for Word"
+    "message": "MathML (Word)",
+    "description": "Label for MathML formula copy format option (formerly UnicodeMath)"
   },
   "formulaCopyFormatHint": {
     "message": "Choose the format when copying formulas by clicking",
@@ -727,6 +727,10 @@
     "message": "Manual",
     "description": "Sync mode manual option"
   },
+  "syncServerPort": {
+    "message": "Server Port",
+    "description": "Port number for the sync server"
+  },
   "syncNow": {
     "message": "Sync Now",
     "description": "Sync now button"
@@ -927,24 +931,40 @@
     "message": "Show a floating button to quote selected text when text is selected in conversations",
     "description": "Quote reply feature hint"
   },
-  "nanobananaDownloadTooltip": {
-    "message": "NanoBanana: Downloads will have watermark removed",
-    "description": "Tooltip for the banana indicator on download button"
+  "contextSync": {
+    "message": "Context Sync",
+    "description": "Context Sync title"
   },
-  "downloadProcessing": {
-    "message": "Processing image (removing watermark)...",
-    "description": "Toast message when download starts"
+  "contextSyncDescription": {
+    "message": "Sync chat context to your local IDE",
+    "description": "Context Sync description"
   },
-  "downloadSuccess": {
-    "message": "Processing complete, downloading...",
-    "description": "Toast message when download succeeds"
+  "syncToIDE": {
+    "message": "Sync to IDE",
+    "description": "Sync to IDE button"
   },
-  "downloadError": {
-    "message": "Download failed",
-    "description": "Toast message prefix when download fails"
+  "ideOnline": {
+    "message": "IDE Online",
+    "description": "IDE Online status"
   },
-  "downloadLargeFile": {
-    "message": "Large file, please wait...",
-    "description": "Toast message for large files"
+  "ideOffline": {
+    "message": "IDE Offline",
+    "description": "IDE Offline status"
+  },
+  "syncing": {
+    "message": "Syncing...",
+    "description": "Syncing status"
+  },
+  "checkServer": {
+    "message": "Please start AI Sync server in VS Code",
+    "description": "Check server hint"
+  },
+  "capturing": {
+    "message": "Capturing dialogue...",
+    "description": "Capturing status"
+  },
+  "syncedSuccess": {
+    "message": "Synced successfully!",
+    "description": "Synced success message"
   }
 }

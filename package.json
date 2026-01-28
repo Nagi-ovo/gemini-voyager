@@ -32,7 +32,8 @@
     "commitlint": "commitlint --edit $GIT_PARAMS",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "sponsors:update": "bun run scripts/generate-sponsors.cjs"
   },
   "type": "module",
   "dependencies": {
@@ -49,6 +50,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.3.1",
+    "temml": "^0.13.1",
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
@@ -85,6 +87,7 @@
     "vitepress": "^1.6.4",
     "vitest": "^4.0.6",
     "vue": "^3.5.24",
+    "vue3-marquee": "^4.2.2",
     "web-ext-run": "^0.2.4"
   },
   "overrides": {

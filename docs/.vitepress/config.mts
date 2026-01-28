@@ -244,4 +244,9 @@ export default defineConfig({
     logo: '/logo.png',
     socialLinks: [{ icon: 'github', link: 'https://github.com/Nagi-ovo/gemini-voyager' }],
   },
+  vite: {
+    ssr: {
+      noExternal: ['vue3-marquee'],
+    },
+  },
 });

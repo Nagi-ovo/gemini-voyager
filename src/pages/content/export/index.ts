@@ -7,6 +7,21 @@ import type { TranslationKey } from '@/utils/translations';
 import { ConversationExportService } from '../../../features/export/services/ConversationExportService';
 import type { ConversationMetadata } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
+import {
+  computeConversationFingerprint,
+  waitForConversationFingerprintChangeOrTimeout,
+} from './topNodePreload';
+
+// Storage key to persist export state across reloads (e.g. when clicking top node triggers refresh)
+const SESSION_KEY_PENDING_EXPORT = 'gv_export_pending';
+
+interface PendingExportState {
+  format: string; // ExportFormat
+  attempt: number;
+  url: string;
+  status: 'clicking';
+  timestamp: number;
+}
 
 function hashString(input: string): string {
   let h = 2166136261 >>> 0;
@@ -33,6 +48,44 @@ function waitForElement(selector: string, timeoutMs: number = 6000): Promise<Ele
     try {
       obs.observe(document.body, { childList: true, subtree: true });
     } catch {}
+    if (timeoutMs > 0)
+      setTimeout(() => {
+        try {
+          obs.disconnect();
+        } catch {}
+        resolve(null);
+      }, timeoutMs);
+  });
+}
+
+function waitForAnyElement(
+  selectors: string[],
+  timeoutMs: number = 10000,
+): Promise<Element | null> {
+  return new Promise((resolve) => {
+    // Check first
+    for (const s of selectors) {
+      const el = document.querySelector(s);
+      if (el) return resolve(el);
+    }
+
+    const obs = new MutationObserver(() => {
+      for (const s of selectors) {
+        const found = document.querySelector(s);
+        if (found) {
+          try {
+            obs.disconnect();
+          } catch {}
+          resolve(found);
+          return;
+        }
+      }
+    });
+
+    try {
+      obs.observe(document.body, { childList: true, subtree: true });
+    } catch {}
+
     if (timeoutMs > 0)
       setTimeout(() => {
         try {
@@ -496,7 +549,190 @@ async function getLanguage(): Promise<AppLanguage> {
   }
 }
 
+/**
+ * Finds the top-most user message element in the DOM.
+ */
+function getTopUserElement(): HTMLElement | null {
+  const selectors = getUserSelectors();
+  const all = document.querySelectorAll(selectors.join(','));
+  if (!all.length) return null;
+  const topLevel = filterTopLevel(Array.from(all));
+  return topLevel.length > 0 ? topLevel[0] : null;
+}
+
+/**
+ * Executes the export sequence:
+ * 1. Find top node and click it.
+ * 2. Wait to see if refresh happens.
+ * 3. If refresh -> script dies, on load we resume.
+ * 4. If no refresh -> we are stable, proceed to export.
+ */
+async function executeExportSequence(
+  format: string,
+  dict: Record<AppLanguage, Record<string, string>>,
+  lang: AppLanguage,
+  paramState?: PendingExportState,
+): Promise<void> {
+  const state: PendingExportState = paramState || {
+    format,
+    attempt: 0,
+    url: location.href,
+    status: 'clicking',
+    timestamp: Date.now(),
+  };
+
+  if (state.attempt > 25) {
+    console.warn('[Gemini Voyager] Export aborted: too many attempts.');
+    sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
+    alert('Export stopped: Too many attempts detected.');
+    return;
+  }
+
+  // 1. Find Top Node
+  if (state.attempt > 0) {
+    console.log('[Gemini Voyager] Resuming export... waiting for content load.');
+    const selectors = getUserSelectors();
+    await waitForAnyElement(selectors, 15000);
+  }
+
+  // Wait a bit if we just reloaded
+  let topNode = getTopUserElement();
+  if (!topNode) {
+    await waitForElement('body', 2000);
+    const pairs = collectChatPairs();
+    if (pairs.length > 0 && pairs[0].userElement) {
+      topNode = pairs[0].userElement;
+    }
+  }
+
+  if (!topNode) {
+    console.log('[Gemini Voyager] No top node found, proceeding to export directly.');
+    sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
+    await performFinalExport(format as any, dict, lang);
+    return;
+  }
+
+  const fingerprintSelectors = [...getUserSelectors(), ...getAssistantSelectors()];
+  const beforeFingerprint = computeConversationFingerprint(document.body, fingerprintSelectors, 10);
+
+  console.log(`[Gemini Voyager] Simulating click on top node (Attempt ${state.attempt + 1})...`);
+
+  // Update state before action to persist across potential reload
+  sessionStorage.setItem(
+    SESSION_KEY_PENDING_EXPORT,
+    JSON.stringify({ ...state, attempt: state.attempt + 1, timestamp: Date.now() }),
+  );
+
+  // Dispatch click logic
+  try {
+    topNode.scrollIntoView({ behavior: 'auto', block: 'center' });
+    const opts = { bubbles: true, cancelable: true, view: window };
+    topNode.dispatchEvent(new MouseEvent('mousedown', opts));
+    topNode.dispatchEvent(new MouseEvent('mouseup', opts));
+    topNode.click();
+  } catch (e) {
+    console.error('[Gemini Voyager] Failed to click top node:', e);
+  }
+
+  // 2. Wait for either hard refresh (page unload) OR a "soft refresh" that loads more history.
+  // If the page unloads, the script stops and `checkPendingExport()` resumes on next load via sessionStorage.
+  const { changed } = await waitForConversationFingerprintChangeOrTimeout(
+    document.body,
+    fingerprintSelectors,
+    beforeFingerprint,
+    { timeoutMs: 25000, idleMs: 550, pollIntervalMs: 90, maxSamples: 10 },
+  );
+
+  if (changed) {
+    console.log('[Gemini Voyager] History expanded (soft refresh). Clicking top node again...');
+    await executeExportSequence(format, dict, lang, {
+      ...state,
+      attempt: state.attempt + 1,
+      timestamp: Date.now(),
+    });
+    return;
+  }
+
+  console.log('[Gemini Voyager] No refresh or update detected. Exporting...');
+  sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
+  await performFinalExport(format as any, dict, lang);
+}
+
+/**
+ * Performs the actual file generation and download.
+ */
+async function performFinalExport(
+  format: string,
+  dict: Record<AppLanguage, Record<string, string>>,
+  lang: AppLanguage,
+) {
+  const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+
+  // Re-collect data (DOM might have updated with new history)
+  // We might need to wait for any final rendering?
+  await new Promise((r) => setTimeout(r, 500));
+
+  const pairs = collectChatPairs();
+  const metadata: ConversationMetadata = {
+    url: location.href,
+    exportedAt: new Date().toISOString(),
+    count: pairs.length,
+    title: getConversationTitleForExport(),
+  };
+
+  try {
+    const result = await ConversationExportService.export(pairs, metadata, {
+      format: format as any,
+    });
+
+    if (result.success) {
+      console.log(`[Gemini Voyager] Exported ${result.format} successfully`);
+    } else {
+      console.error(`[Gemini Voyager] Export failed: ${result.error}`);
+      alert(`${t('export_dialog_warning')}: ${result.error}`);
+    }
+  } catch (err) {
+    console.error('[Gemini Voyager] Export error:', err);
+    alert('Export error occurred.');
+  }
+}
+
+/**
+ * Check if there is a pending export operation from a previous page load.
+ */
+async function checkPendingExport() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY_PENDING_EXPORT);
+    if (!raw) return;
+
+    const state = JSON.parse(raw) as PendingExportState;
+
+    // Validate context
+    if (state.url !== location.href) {
+      // User navigated away? Abort.
+      sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
+      return;
+    }
+
+    // If state exists, it means we clicked and page refreshed.
+    // So we resume the sequence.
+    console.log('[Gemini Voyager] Resuming pending export sequence...');
+
+    // We need i18n for final export/alert
+    const dict = await loadDictionaries();
+    const lang = await getLanguage();
+
+    await executeExportSequence(state.format, dict, lang, state);
+  } catch (e) {
+    console.error('[Gemini Voyager] Failed to resume pending export:', e);
+    sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
+  }
+}
+
 export async function startExportButton(): Promise<void> {
+  // Check for pending export immediately
+  checkPendingExport();
+
   if (
     location.hostname !== 'gemini.google.com' &&
     location.hostname !== 'aistudio.google.com' &&
@@ -591,34 +827,19 @@ async function showExportDialog(
 ): Promise<void> {
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
-  // Collect conversation data BEFORE showing dialog to avoid page state changes
-  const pairs = collectChatPairs();
-  const metadata: ConversationMetadata = {
-    url: location.href,
-    exportedAt: new Date().toISOString(),
-    count: pairs.length,
-    title: getConversationTitleForExport(),
-  };
+  // We defer collection until after the export sequence (scrolling/refresh checks)
 
   const dialog = new ExportDialog();
 
   dialog.show({
     onExport: async (format) => {
       try {
-        // Use pre-collected conversation data
-        const result = await ConversationExportService.export(pairs, metadata, {
-          format: format as any,
-        });
-
-        if (result.success) {
-          console.log(`[Gemini Voyager] Exported ${result.format} successfully`);
-        } else {
-          console.error(`[Gemini Voyager] Export failed: ${result.error}`);
-        }
+        await executeExportSequence(format, dict, lang);
       } catch (err) {
         console.error('[Gemini Voyager] Export error:', err);
       }
     },
+
     onCancel: () => {
       // Dialog closed
     },

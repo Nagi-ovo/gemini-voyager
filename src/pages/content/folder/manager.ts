@@ -106,6 +106,8 @@ export class FolderManager {
     PAGE_REFRESH_DELAY: 1500, // Delay before refreshing page after batch delete
   } as const;
 
+  private cleanupTasks: (() => void)[] = [];
+
   constructor() {
     // Create storage adapter based on browser (Factory Pattern)
     this.storage = createFolderStorageAdapter();
@@ -258,7 +260,15 @@ export class FolderManager {
       this.containerElement = null;
     }
 
+    // Execute custom cleanup tasks
+    this.cleanupTasks.forEach((task) => task());
+    this.cleanupTasks = [];
+
     this.debug('Cleanup complete');
+  }
+
+  private addCleanupTask(task: () => void): void {
+    this.cleanupTasks.push(task);
   }
 
   private async initializeFolderUI(): Promise<void> {
@@ -386,8 +396,89 @@ export class FolderManager {
     indicator.className = 'gv-multi-select-indicator';
     indicator.dataset.multiSelectIndicator = 'true';
 
+    // Apply floating styles
+    Object.assign(indicator.style, {
+      position: 'fixed',
+      bottom: '24px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: '9999', // Ensure it's above everything
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      cursor: 'move', // Indicate it's draggable
+      transition: 'opacity 0.2s ease, transform 0.1s ease', // Only animate non-position props for performance
+      // Prevent text selection while dragging
+      userSelect: 'none',
+      // Ensure it has a background so IT covers content behind it
+      backgroundColor: 'var(--gem-sys-color-surface-container, #f0f4f9)', // Fallback color
+      borderRadius: '24px',
+      padding: '8px 16px',
+      alignItems: 'center',
+      gap: '12px',
+      border: '1px solid var(--gem-sys-color-outline-variant, rgba(0,0,0,0.1))',
+    });
+
+    // --- Draggable Logic Start ---
+    let isDragging = false;
+    let currentX: number;
+    let currentY: number;
+    let initialX: number;
+    let initialY: number;
+    let xOffset = 0;
+    let yOffset = 0;
+
+    const dragStart = (e: MouseEvent) => {
+      // Ignore if clicking buttons inside the indicator
+      if ((e.target as HTMLElement).closest('button')) return;
+
+      initialX = e.clientX - xOffset;
+      initialY = e.clientY - yOffset;
+
+      if (e.target === indicator || indicator.contains(e.target as Node)) {
+        isDragging = true;
+        indicator.style.cursor = 'grabbing';
+      }
+    };
+
+    const dragEnd = () => {
+      isDragging = false;
+      indicator.style.cursor = 'move';
+    };
+
+    const drag = (e: MouseEvent) => {
+      if (isDragging) {
+        e.preventDefault();
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
+
+        xOffset = currentX;
+        yOffset = currentY;
+
+        setTranslate(currentX, currentY, indicator);
+      }
+    };
+
+    const setTranslate = (xPos: number, yPos: number, el: HTMLElement) => {
+      el.style.transform = `translate3d(calc(-50% + ${xPos}px), ${yPos}px, 0)`;
+    };
+
+    indicator.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+
+    // Cleanup listeners when destroyed (adding to a cleanup list if possible, or attaching to element)
+    // Since we attach to document, we MUST clean this up in destroy()
+    // We'll wrap these in a cleanup function and store it
+    this.addCleanupTask(() => {
+      indicator.removeEventListener('mousedown', dragStart);
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('mouseup', dragEnd);
+    });
+    // --- Draggable Logic End ---
+
     const content = document.createElement('div');
     content.className = 'gv-multi-select-indicator-content';
+    // Ensure content (text/icon) doesn't capture drag events aggressively
+    content.style.pointerEvents = 'none';
 
     const icon = document.createElement('mat-icon');
     icon.className = 'mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color';
@@ -408,6 +499,8 @@ export class FolderManager {
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'gv-multi-select-actions';
     actionsContainer.dataset.multiSelectActions = 'true';
+    // Re-enable pointer events for buttons
+    actionsContainer.style.pointerEvents = 'auto';
     indicator.appendChild(actionsContainer);
 
     return indicator;
@@ -1624,6 +1717,10 @@ export class FolderManager {
 
     this.reinitializePromise = (async () => {
       this.debug('Reinitializing folder UI...');
+
+      // Execute general cleanup tasks first (including event listeners)
+      this.cleanupTasks.forEach((task) => task());
+      this.cleanupTasks = [];
 
       // Clean up observers/listeners tied to stale DOM nodes
       if (this.sideNavObserver) {

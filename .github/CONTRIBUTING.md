@@ -4,6 +4,9 @@
 
 # Contributing to Gemini Voyager
 
+> [!IMPORTANT]
+> **Project Status: Low Maintenance.** Expect delays in response. PRs with tests are prioritized.
+
 Thank you for considering contributing to Gemini Voyager! 🚀
 
 This document provides guidelines and instructions for contributing. We welcome all contributions, whether it's bug fixes, new features, documentation improvements, or translations.
@@ -274,6 +277,9 @@ By contributing, you agree that your contributions will be licensed under the [M
 ---
 
 # 贡献指南
+
+> [!IMPORTANT]
+> **项目状态：低频维护。** 回复较慢。优先处理带测试的 PR。
 
 感谢你考虑为 Gemini Voyager 做出贡献！🚀
 
