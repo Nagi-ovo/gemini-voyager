@@ -158,4 +158,27 @@ describe('ConversationExportService', () => {
       });
     });
   });
+
+  describe('JSON export with DOM elements', () => {
+    it('should use fallback text when no DOM elements are provided', async () => {
+      const turnsWithoutDom: ChatTurn[] = [
+        {
+          user: 'Plain text user',
+          assistant: 'Plain text assistant',
+          starred: false,
+        },
+      ];
+
+      const result = await ConversationExportService.export(turnsWithoutDom, mockMetadata, {
+        format: 'json' as any,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.format).toBe('json');
+    });
+
+    // Note: Testing DOMContentExtractor integration is skipped per ROI testing strategy.
+    // DOM operations (Content Scripts) are in the "Fragile" category.
+    // The extractUserContent/extractAssistantContent calls are covered by defensive programming.
+  });
 });

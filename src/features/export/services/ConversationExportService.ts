@@ -12,6 +12,7 @@ import type {
   ExportOptions,
   ExportResult,
 } from '../types/export';
+import { DOMContentExtractor } from './DOMContentExtractor';
 import { MarkdownFormatter } from './MarkdownFormatter';
 import { PDFPrintService } from './PDFPrintService';
 
@@ -57,19 +58,51 @@ export class ConversationExportService {
 
   /**
    * Export as JSON (existing format)
+   * Now extracts content with Markdown formatting using DOMContentExtractor
+   * to ensure consistency with Markdown export
    */
   private static exportJSON(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
     options: ExportOptions,
   ): ExportResult {
+    // Process turns to extract Markdown-formatted content from DOM elements
+    const processedItems = turns.map((turn) => {
+      let userContent = turn.user;
+      let assistantContent = turn.assistant;
+
+      // Extract rich content with Markdown formatting from DOM elements if available
+      if (turn.userElement) {
+        const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
+        if (extracted.text) {
+          userContent = extracted.text;
+        }
+      }
+
+      if (turn.assistantElement) {
+        const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
+        if (extracted.text) {
+          assistantContent = extracted.text;
+        }
+      }
+
+      return {
+        user: userContent,
+        assistant: assistantContent,
+        starred: turn.starred,
+        // Exclude DOM elements from JSON output (not serializable)
+        userElement: {},
+        assistantElement: {},
+      };
+    });
+
     const payload = {
       format: 'gemini-voyager.chat.v1' as const,
       url: metadata.url,
       exportedAt: metadata.exportedAt,
       count: metadata.count,
       title: metadata.title,
-      items: turns,
+      items: processedItems,
     };
 
     const filename = options.filename || this.generateFilename('json');
