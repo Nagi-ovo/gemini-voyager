@@ -325,6 +325,9 @@ export async function startWatermarkRemover(): Promise<void> {
     // Setup bridge to handle requests from fetch interceptor
     setupFetchInterceptorBridge();
 
+    // Setup status listener for UI feedback
+    setupStatusListener();
+
     // Process preview images
     processAllImages();
     setupMutationObserver();
@@ -333,4 +336,240 @@ export async function startWatermarkRemover(): Promise<void> {
   } catch (error) {
     console.error('[Gemini Voyager] Watermark remover initialization failed:', error);
   }
+}
+
+/**
+ * Toast Notification System
+ * Handles displaying status messages to the user during download processing
+ */
+export class ToastManager {
+  private container: HTMLDivElement | null = null;
+  private activeToasts = new Map<
+    string,
+    { element: HTMLDivElement; timeout: ReturnType<typeof setTimeout> | null }
+  >();
+
+  constructor() {
+    this.createContainer();
+  }
+
+  private createContainer() {
+    this.container = document.createElement('div');
+    this.container.id = 'gv-toast-container';
+    Object.assign(this.container.style, {
+      position: 'fixed',
+      bottom: '24px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: '10000',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '10px',
+      pointerEvents: 'none', // Allow clicks to pass through
+    });
+    document.body.appendChild(this.container);
+  }
+
+  show(
+    message: string,
+    type: 'info' | 'success' | 'error' | 'warning' = 'info',
+    duration = 3000,
+    key?: string,
+  ) {
+    if (!this.container) this.createContainer();
+
+    // If key provided, check if we can update existing toast
+    if (key && this.activeToasts.has(key)) {
+      const existing = this.activeToasts.get(key)!;
+
+      // Update content
+      this.updateToastContent(existing.element, message, type);
+
+      // Clear existing timeout
+      if (existing.timeout) {
+        clearTimeout(existing.timeout);
+        existing.timeout = null;
+      }
+
+      // Set new timeout if needed
+      if (duration > 0) {
+        existing.timeout = setTimeout(() => {
+          this.hide(existing.element, key);
+        }, duration);
+      }
+      return;
+    }
+
+    const toast = document.createElement('div');
+
+    // Material Design-ish Toast Style
+    Object.assign(toast.style, {
+      backgroundColor: '#323232',
+      color: 'white',
+      padding: '12px 24px',
+      borderRadius: '24px', // Pill shape
+      boxShadow:
+        '0 3px 5px -1px rgba(0,0,0,.2), 0 6px 10px 0 rgba(0,0,0,.14), 0 1px 18px 0 rgba(0,0,0,.12)',
+      fontSize: '14px',
+      fontFamily: 'Google Sans, Roboto, Arial, sans-serif',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      opacity: '0',
+      transition: 'opacity 0.3s ease, transform 0.3s ease',
+      transform: 'translateY(20px)',
+      whiteSpace: 'nowrap',
+    });
+
+    this.updateToastContent(toast, message, type);
+
+    this.container?.appendChild(toast);
+
+    // Animate in
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+
+    // Auto hide
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    if (duration > 0) {
+      timeout = setTimeout(() => {
+        this.hide(toast, key);
+      }, duration);
+    }
+
+    if (key) {
+      this.activeToasts.set(key, { element: toast, timeout });
+    }
+  }
+
+  private updateToastContent(toast: HTMLDivElement, message: string, type: string) {
+    toast.innerHTML = '';
+
+    // Icon based on type
+    let icon = '';
+    switch (type) {
+      case 'success':
+        icon = 'check_circle';
+        break;
+      case 'error':
+        icon = 'error';
+        break;
+      case 'warning':
+        icon = 'warning';
+        break;
+      default:
+        icon = 'info';
+        break;
+    }
+
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'material-icons-outlined';
+    iconSpan.style.fontSize = '20px';
+    iconSpan.style.color = this.getColor(type);
+    iconSpan.textContent = icon;
+
+    const messageSpan = document.createElement('span');
+    messageSpan.textContent = message;
+
+    toast.appendChild(iconSpan);
+    toast.appendChild(messageSpan);
+  }
+
+  private getColor(type: string): string {
+    switch (type) {
+      case 'success':
+        return '#81c995'; // Light Green
+      case 'error':
+        return '#f28b82'; // Light Red
+      case 'warning':
+        return '#fdd663'; // Light Yellow
+      default:
+        return '#8ab4f8'; // Light Blue
+    }
+  }
+
+  private hide(toast: HTMLDivElement, key?: string) {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+      toast.remove();
+      if (key) this.activeToasts.delete(key);
+    }, 300);
+  }
+}
+
+let toastManager: ToastManager | null = null;
+
+/**
+ * Setup listener for status events from fetchInterceptor
+ */
+function setupStatusListener() {
+  const bridge = getBridgeElement();
+
+  const observer = new MutationObserver(() => {
+    const statusData = bridge.dataset.status;
+    if (statusData) {
+      try {
+        const { type, message } = JSON.parse(statusData);
+        bridge.removeAttribute('data-status'); // Clear to allow same status again if needed? Or just acknowledgment.
+
+        if (!toastManager) toastManager = new ToastManager();
+
+        // Translate status to user messages
+        switch (type) {
+          case 'START':
+            toastManager.show(
+              chrome.i18n.getMessage('downloadProcessing') || '正在处理图片 (去除水印)...',
+              'info',
+              0,
+              'download-status',
+            ); // 0 duration = persistent until next status
+            break;
+          case 'PROCESSING':
+            // Can update message if needed, or keep 'START' message
+            toastManager.show(
+              chrome.i18n.getMessage('downloadProcessing') || '正在处理图片 (去除水印)...',
+              'info',
+              0,
+              'download-status',
+            );
+            break;
+          case 'SUCCESS':
+            toastManager.show(
+              chrome.i18n.getMessage('downloadSuccess') || '处理完成，开始下载',
+              'success',
+              3000,
+              'download-status',
+            );
+            break;
+          case 'ERROR':
+            toastManager.show(
+              `${chrome.i18n.getMessage('downloadError') || '下载失败'}: ${message}`,
+              'error',
+              5000,
+              'download-status',
+            );
+            break;
+          case 'WARNING':
+            if (message === 'LARGE_FILE') {
+              toastManager.show(
+                chrome.i18n.getMessage('downloadLargeFile') || '图片较大，请耐心等待...',
+                'warning',
+                4000,
+                'download-large-file', // Different key to allow stacking
+              );
+            }
+            break;
+        }
+      } catch (e) {
+        console.error('[Gemini Voyager] Failed to parse status update:', e);
+      }
+    }
+  });
+
+  observer.observe(bridge, { attributes: true, attributeFilter: ['data-status'] });
+  console.log('[Gemini Voyager] Status listener active');
 }

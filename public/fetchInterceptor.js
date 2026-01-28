@@ -60,6 +60,20 @@
   };
 
   /**
+   * Update status on the bridge for the content script to pick up (and show Toasts)
+   */
+  const updateStatus = (status, details = {}) => {
+    const bridge = getBridgeElement();
+    if (bridge) {
+      bridge.dataset.status = JSON.stringify({
+        type: status, // 'START', 'PROGRESS', 'SUCCESS', 'ERROR', 'WARNING'
+        timestamp: Date.now(),
+        ...details,
+      });
+    }
+  };
+
+  /**
    * Check if watermark remover is enabled by reading from bridge element
    */
   const isWatermarkRemoverEnabled = () => {
@@ -102,14 +116,29 @@
       // Only process watermark removal if enabled
       if (isWatermarkRemoverEnabled()) {
         console.log('[Gemini Voyager] Intercepting download for watermark removal');
+
+        // Notify start
+        updateStatus('START');
+
         try {
           // Fetch the original size image
           const response = await originalFetch.apply(this, args);
 
-          if (!response.ok) return response;
+          if (!response.ok) {
+            updateStatus('ERROR', { message: `HTTP Error: ${response.status}` });
+            return response;
+          }
+
+          // Check content length for large files (5MB)
+          const contentLength = response.headers.get('content-length');
+          if (contentLength && parseInt(contentLength, 10) > 5 * 1024 * 1024) {
+            updateStatus('WARNING', { message: 'LARGE_FILE' });
+          }
 
           // Clone response to read blob
           const blob = await response.blob();
+
+          updateStatus('PROCESSING');
 
           // Send blob to content script for watermark removal via DOM bridge
           const processedBlob = await new Promise((resolve, reject) => {
@@ -155,6 +184,8 @@
             }, WATERMARK_PROCESSING_TIMEOUT_MS);
           });
 
+          updateStatus('SUCCESS');
+
           // Return processed response
           return new Response(processedBlob, {
             status: response.status,
@@ -163,7 +194,13 @@
           });
         } catch (error) {
           console.warn('[Gemini Voyager] Watermark processing failed, using original:', error);
-          // Fall through to return original fetch with modified URL
+          updateStatus('ERROR', { message: error.message || 'Unknown error' });
+          // Return the original blob that was already fetched instead of making another request
+          return new Response(blob, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+          });
         }
       }
     }

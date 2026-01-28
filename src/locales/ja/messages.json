@@ -1002,5 +1002,21 @@
   "syncedSuccess": {
     "message": "同期に成功しました！",
     "description": "Synced success message"
+  },
+  "downloadProcessing": {
+    "message": "画像を処理中（透かしを削除中）...",
+    "description": "Toast message when download starts"
+  },
+  "downloadSuccess": {
+    "message": "処理完了、ダウンロード中...",
+    "description": "Toast message when download succeeds"
+  },
+  "downloadError": {
+    "message": "ダウンロードに失敗しました",
+    "description": "Toast message prefix when download fails"
+  },
+  "downloadLargeFile": {
+    "message": "ファイルサイズが大きいため、お待ちください...",
+    "description": "Toast message for large files"
   }
 }

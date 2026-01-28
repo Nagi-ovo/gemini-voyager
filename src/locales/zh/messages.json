@@ -1002,5 +1002,21 @@
   "syncedSuccess": {
     "message": "同步成功！",
     "description": "同步成功消息"
+  },
+  "downloadProcessing": {
+    "message": "正在处理图片 (去除水印)...",
+    "description": "开始下载时的提示"
+  },
+  "downloadSuccess": {
+    "message": "处理完成，开始下载",
+    "description": "下载成功时的提示"
+  },
+  "downloadError": {
+    "message": "下载失败",
+    "description": "下载失败时的提示前缀"
+  },
+  "downloadLargeFile": {
+    "message": "图片较大，请耐心等待...",
+    "description": "大文件提示"
   }
 }

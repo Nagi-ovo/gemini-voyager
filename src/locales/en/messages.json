@@ -1002,5 +1002,21 @@
   "syncedSuccess": {
     "message": "Synced successfully!",
     "description": "Synced success message"
+  },
+  "downloadProcessing": {
+    "message": "Processing image (removing watermark)...",
+    "description": "Toast message when download starts"
+  },
+  "downloadSuccess": {
+    "message": "Processing complete, downloading...",
+    "description": "Toast message when download succeeds"
+  },
+  "downloadError": {
+    "message": "Download failed",
+    "description": "Toast message prefix when download fails"
+  },
+  "downloadLargeFile": {
+    "message": "Large file, please wait...",
+    "description": "Toast message for large files"
   }
 }
