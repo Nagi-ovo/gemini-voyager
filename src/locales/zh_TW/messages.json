@@ -337,7 +337,7 @@
     },
     "formulaCopyFormatUnicodeMath": {
         "message": "MathML (Word)",
-        "description": "Label for UnicodeMath formula copy format option"
+        "description": "Label for MathML formula copy format option (formerly UnicodeMath)"
     },
     "formulaCopyFormatHint": {
         "message": "選擇點擊公式時複製的格式",
