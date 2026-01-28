@@ -342,7 +342,7 @@ export async function startWatermarkRemover(): Promise<void> {
  * Toast Notification System
  * Handles displaying status messages to the user during download processing
  */
-class ToastManager {
+export class ToastManager {
   private container: HTMLDivElement | null = null;
   private activeToasts = new Map<
     string,
