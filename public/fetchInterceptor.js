@@ -120,9 +120,12 @@
         // Notify start
         updateStatus('START');
 
+        // Declare response and blob outside try block so they're accessible in catch
+        let response, blob;
+
         try {
           // Fetch the original size image
-          const response = await originalFetch.apply(this, args);
+          response = await originalFetch.apply(this, args);
 
           if (!response.ok) {
             updateStatus('ERROR', { message: `HTTP Error: ${response.status}` });
@@ -136,7 +139,7 @@
           }
 
           // Clone response to read blob
-          const blob = await response.blob();
+          blob = await response.blob();
 
           updateStatus('PROCESSING');
 
@@ -195,12 +198,15 @@
         } catch (error) {
           console.warn('[Gemini Voyager] Watermark processing failed, using original:', error);
           updateStatus('ERROR', { message: error.message || 'Unknown error' });
-          // Return the original blob that was already fetched instead of making another request
-          return new Response(blob, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: response.headers,
-          });
+          // Return the original blob if available, otherwise fall through to originalFetch
+          if (blob && response) {
+            return new Response(blob, {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers,
+            });
+          }
+          // If blob/response not available (error before fetch completed), fall through
         }
       }
     }
