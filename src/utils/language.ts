@@ -19,7 +19,12 @@ export function normalizeLanguage(lang: string | undefined | null): AppLanguage 
   if (!lang) return 'en';
   const lower = lang.toLowerCase();
   // Check for Traditional Chinese first (zh-TW, zh-HK, zh-Hant)
-  if (lower.startsWith('zh-tw') || lower.startsWith('zh-hk') || lower.includes('hant'))
+  if (
+    lower.startsWith('zh-tw') ||
+    lower.startsWith('zh_tw') ||
+    lower.startsWith('zh-hk') ||
+    lower.includes('hant')
+  )
     return 'zh_TW';
   // Then check for Simplified Chinese
   if (lower.startsWith('zh')) return 'zh';
