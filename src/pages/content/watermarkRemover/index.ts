@@ -344,8 +344,10 @@ export async function startWatermarkRemover(): Promise<void> {
  */
 class ToastManager {
   private container: HTMLDivElement | null = null;
-  private currentToast: HTMLDivElement | null = null;
-  private hideTimeout: ReturnType<typeof setTimeout> | null = null;
+  private activeToasts = new Map<
+    string,
+    { element: HTMLDivElement; timeout: ReturnType<typeof setTimeout> | null }
+  >();
 
   constructor() {
     this.createContainer();
@@ -369,34 +371,37 @@ class ToastManager {
     document.body.appendChild(this.container);
   }
 
-  show(message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info', duration = 3000) {
+  show(
+    message: string,
+    type: 'info' | 'success' | 'error' | 'warning' = 'info',
+    duration = 3000,
+    key?: string,
+  ) {
     if (!this.container) this.createContainer();
 
-    // Clear existing toast if any (showing one at a time for simplicity)
-    if (this.currentToast) {
-      this.currentToast.remove();
-      if (this.hideTimeout) clearTimeout(this.hideTimeout);
+    // If key provided, check if we can update existing toast
+    if (key && this.activeToasts.has(key)) {
+      const existing = this.activeToasts.get(key)!;
+
+      // Update content
+      this.updateToastContent(existing.element, message, type);
+
+      // Clear existing timeout
+      if (existing.timeout) {
+        clearTimeout(existing.timeout);
+        existing.timeout = null;
+      }
+
+      // Set new timeout if needed
+      if (duration > 0) {
+        existing.timeout = setTimeout(() => {
+          this.hide(existing.element, key);
+        }, duration);
+      }
+      return;
     }
 
     const toast = document.createElement('div');
-    this.currentToast = toast;
-
-    // Icon based on type
-    let icon = '';
-    switch (type) {
-      case 'success':
-        icon = 'check_circle';
-        break;
-      case 'error':
-        icon = 'error';
-        break;
-      case 'warning':
-        icon = 'warning';
-        break;
-      default:
-        icon = 'info';
-        break;
-    }
 
     // Material Design-ish Toast Style
     Object.assign(toast.style, {
@@ -417,6 +422,49 @@ class ToastManager {
       whiteSpace: 'nowrap',
     });
 
+    this.updateToastContent(toast, message, type);
+
+    this.container?.appendChild(toast);
+
+    // Animate in
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+
+    // Auto hide
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    if (duration > 0) {
+      timeout = setTimeout(() => {
+        this.hide(toast, key);
+      }, duration);
+    }
+
+    if (key) {
+      this.activeToasts.set(key, { element: toast, timeout });
+    }
+  }
+
+  private updateToastContent(toast: HTMLDivElement, message: string, type: string) {
+    toast.innerHTML = '';
+
+    // Icon based on type
+    let icon = '';
+    switch (type) {
+      case 'success':
+        icon = 'check_circle';
+        break;
+      case 'error':
+        icon = 'error';
+        break;
+      case 'warning':
+        icon = 'warning';
+        break;
+      default:
+        icon = 'info';
+        break;
+    }
+
     const iconSpan = document.createElement('span');
     iconSpan.className = 'material-icons-outlined';
     iconSpan.style.fontSize = '20px';
@@ -428,21 +476,6 @@ class ToastManager {
 
     toast.appendChild(iconSpan);
     toast.appendChild(messageSpan);
-
-    this.container?.appendChild(toast);
-
-    // Animate in
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
-    });
-
-    // Auto hide
-    if (duration > 0) {
-      this.hideTimeout = setTimeout(() => {
-        this.hide(toast);
-      }, duration);
-    }
   }
 
   private getColor(type: string): string {
@@ -458,14 +491,12 @@ class ToastManager {
     }
   }
 
-  private hide(toast: HTMLDivElement) {
+  private hide(toast: HTMLDivElement, key?: string) {
     toast.style.opacity = '0';
     toast.style.transform = 'translateY(20px)';
     setTimeout(() => {
       toast.remove();
-      if (this.currentToast === toast) {
-        this.currentToast = null;
-      }
+      if (key) this.activeToasts.delete(key);
     }, 300);
   }
 }
@@ -494,6 +525,7 @@ function setupStatusListener() {
               chrome.i18n.getMessage('downloadProcessing') || '正在处理图片 (去除水印)...',
               'info',
               0,
+              'download-status',
             ); // 0 duration = persistent until next status
             break;
           case 'PROCESSING':
@@ -502,6 +534,7 @@ function setupStatusListener() {
               chrome.i18n.getMessage('downloadProcessing') || '正在处理图片 (去除水印)...',
               'info',
               0,
+              'download-status',
             );
             break;
           case 'SUCCESS':
@@ -509,6 +542,7 @@ function setupStatusListener() {
               chrome.i18n.getMessage('downloadSuccess') || '处理完成，开始下载',
               'success',
               3000,
+              'download-status',
             );
             break;
           case 'ERROR':
@@ -516,6 +550,7 @@ function setupStatusListener() {
               `${chrome.i18n.getMessage('downloadError') || '下载失败'}: ${message}`,
               'error',
               5000,
+              'download-status',
             );
             break;
           case 'WARNING':
@@ -524,6 +559,7 @@ function setupStatusListener() {
                 chrome.i18n.getMessage('downloadLargeFile') || '图片较大，请耐心等待...',
                 'warning',
                 4000,
+                'download-large-file', // Different key to allow stacking
               );
             }
             break;
