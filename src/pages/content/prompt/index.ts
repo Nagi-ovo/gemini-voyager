@@ -82,15 +82,20 @@ function createI18n() {
           // Extension context invalidated, skip
           return;
         }
-        await browser.storage.sync.set({ language: lang });
-        // Immediately update cached language to avoid race condition with async onChanged listener
         setCachedLanguage(lang);
+        await browser.storage.sync.set({ language: lang });
+        return;
       } catch (e) {
-        // Silently ignore extension context errors
-        if (e instanceof Error && e.message.includes('Extension context invalidated')) {
+        try {
+          await browser.storage.local.set({ language: lang });
           return;
+        } catch (localError) {
+          // Silently ignore extension context errors
+          if (e instanceof Error && e.message.includes('Extension context invalidated')) {
+            return;
+          }
+          console.warn('[PromptManager] Failed to set language:', e, localError);
         }
-        console.warn('[PromptManager] Failed to set language:', e);
       }
     },
     get: async (): Promise<AppLanguage> => await getCurrentLanguage(),

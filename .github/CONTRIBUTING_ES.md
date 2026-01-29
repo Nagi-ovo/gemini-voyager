@@ -1,5 +1,8 @@
 # Guía de Contribución
 
+> [!IMPORTANT]
+> **Estado del proyecto: Mantenimiento bajo.** Espere retrasos en las respuestas. Se priorizan los PR con pruebas.
+
 ¡Gracias por considerar contribuir a Gemini Voyager! 🚀
 
 Este documento proporciona pautas e instrucciones para contribuir. Damos la bienvenida a todas las contribuciones, ya sea corrección de errores, nuevas funcionalidades, mejoras en la documentación o traducciones.

@@ -259,9 +259,45 @@
     "message": "Renommer",
     "description": "Rename folder menu item"
   },
+  "folder_change_color": {
+    "message": "Changer la couleur",
+    "description": "Change folder color menu item"
+  },
   "folder_delete": {
     "message": "Supprimer",
     "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "Défaut",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "Rouge",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "Orange",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "Jaune",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "Vert",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "Bleu",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "Violet",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "Rose",
+    "description": "Pink folder color name"
   },
   "folder_empty": {
     "message": "Aucun dossier",
@@ -336,8 +372,8 @@
     "description": "LaTeX format option"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath format option for Word"
+    "message": "MathML (Word)",
+    "description": "Label for UnicodeMath formula copy format option"
   },
   "formulaCopyFormatHint": {
     "message": "Choisissez le format lors de la copie des formules par clic",
@@ -764,11 +800,11 @@
     "description": "Sync in progress message"
   },
   "syncUpload": {
-    "message": "Upload (Local → Drive)",
+    "message": "Envoyer",
     "description": "Upload button label"
   },
   "syncMerge": {
-    "message": "Fusion (Drive → Local)",
+    "message": "Récupérer",
     "description": "Merge button label"
   },
   "syncMode": {
@@ -966,5 +1002,29 @@
   "syncedSuccess": {
     "message": "Synchronisé avec succès !",
     "description": "Synced success message"
+  },
+  "downloadingOriginal": {
+    "message": "Téléchargement de l'image originale",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "Téléchargement de l'image originale (fichier volumineux)",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "Avertissement fichier volumineux",
+    "description": "Warning shown for large downloads"
+  },
+  "downloadProcessing": {
+    "message": "Traitement du filigrane",
+    "description": "Status when processing watermark removal"
+  },
+  "downloadSuccess": {
+    "message": "Téléchargement...",
+    "description": "Status when download starts"
+  },
+  "downloadError": {
+    "message": "Échec",
+    "description": "Status prefix when download fails"
   }
 }

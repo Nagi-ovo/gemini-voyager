@@ -259,9 +259,45 @@
     "message": "Renombrar",
     "description": "Rename folder menu item"
   },
+  "folder_change_color": {
+    "message": "Cambiar color",
+    "description": "Change folder color menu item"
+  },
   "folder_delete": {
     "message": "Eliminar",
     "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "Predeterminado",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "Rojo",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "Naranja",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "Amarillo",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "Verde",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "Azul",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "Morado",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "Rosa",
+    "description": "Pink folder color name"
   },
   "folder_empty": {
     "message": "No hay carpetas",
@@ -336,8 +372,8 @@
     "description": "LaTeX format option"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath format option for Word"
+    "message": "MathML (Word)",
+    "description": "Label for UnicodeMath formula copy format option"
   },
   "formulaCopyFormatHint": {
     "message": "Elige el formato al copiar fórmulas haciendo clic",
@@ -966,5 +1002,29 @@
   "syncedSuccess": {
     "message": "¡Sincronizado con éxito!",
     "description": "Synced success message"
+  },
+  "downloadingOriginal": {
+    "message": "Descargando imagen original",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "Descargando imagen original (archivo grande)",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "Advertencia de archivo grande",
+    "description": "Warning shown for large downloads"
+  },
+  "downloadProcessing": {
+    "message": "Procesando marca de agua",
+    "description": "Status when processing watermark removal"
+  },
+  "downloadSuccess": {
+    "message": "Descargando...",
+    "description": "Status when download starts"
+  },
+  "downloadError": {
+    "message": "Error",
+    "description": "Status prefix when download fails"
   }
 }

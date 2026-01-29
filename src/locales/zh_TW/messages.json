@@ -1,0 +1,1030 @@
+{
+  "extName": {
+    "message": "Gemini Voyager",
+    "description": "擴充功能名稱"
+  },
+  "extDescription": {
+    "message": "透過時間軸導覽、資料夾管理、提示詞庫和對話匯出功能，全面提升您的 Gemini 使用體驗。",
+    "description": "擴充功能描述"
+  },
+  "scrollMode": {
+    "message": "捲動模式",
+    "description": "捲動模式標籤"
+  },
+  "flow": {
+    "message": "流動",
+    "description": "流動模式"
+  },
+  "jump": {
+    "message": "跳躍",
+    "description": "跳躍模式"
+  },
+  "hideOuterContainer": {
+    "message": "隱藏外部容器",
+    "description": "隱藏外部容器標籤"
+  },
+  "draggableTimeline": {
+    "message": "可拖曳時間軸",
+    "description": "可拖曳時間軸標籤"
+  },
+  "enableMarkerLevel": {
+    "message": "啟用節點層級",
+    "description": "啟用時間軸節點層級功能"
+  },
+  "enableMarkerLevelHint": {
+    "message": "右鍵點擊時間軸節點可設定其層級和折疊子節點",
+    "description": "節點層級功能提示"
+  },
+  "experimentalLabel": {
+    "message": "實驗性",
+    "description": "實驗性功能標籤"
+  },
+  "resetPosition": {
+    "message": "重設位置",
+    "description": "重設位置按鈕"
+  },
+  "resetTimelinePosition": {
+    "message": "重設時間軸位置",
+    "description": "重設時間軸位置按鈕（在時間軸選項中）"
+  },
+  "language": {
+    "message": "語言",
+    "description": "語言標籤"
+  },
+  "pm_title": {
+    "message": "Gemini Voyager",
+    "description": "面板標題"
+  },
+  "pm_add": {
+    "message": "新增",
+    "description": "新增 prompt 按鈕"
+  },
+  "pm_search_placeholder": {
+    "message": "搜尋 prompt 或標籤",
+    "description": "搜尋佔位符"
+  },
+  "pm_import": {
+    "message": "匯入",
+    "description": "匯入按鈕"
+  },
+  "pm_export": {
+    "message": "匯出",
+    "description": "匯出按鈕"
+  },
+  "pm_prompt_placeholder": {
+    "message": "Prompt 文字",
+    "description": "Prompt 輸入佔位符"
+  },
+  "pm_tags_placeholder": {
+    "message": "標籤（逗號分隔）",
+    "description": "標籤輸入佔位符"
+  },
+  "pm_save": {
+    "message": "儲存",
+    "description": "儲存"
+  },
+  "pm_cancel": {
+    "message": "取消",
+    "description": "取消"
+  },
+  "pm_all_tags": {
+    "message": "全部",
+    "description": "全部標籤"
+  },
+  "pm_empty": {
+    "message": "暫無 prompt",
+    "description": "空狀態"
+  },
+  "pm_copy": {
+    "message": "複製",
+    "description": "複製 prompt"
+  },
+  "pm_copied": {
+    "message": "已複製",
+    "description": "複製成功"
+  },
+  "pm_delete": {
+    "message": "刪除",
+    "description": "刪除 prompt"
+  },
+  "pm_delete_confirm": {
+    "message": "確定刪除該 prompt 嗎？",
+    "description": "刪除確認"
+  },
+  "pm_lock": {
+    "message": "鎖定位置",
+    "description": "鎖定面板位置"
+  },
+  "pm_unlock": {
+    "message": "取消鎖定",
+    "description": "取消鎖定面板位置"
+  },
+  "pm_import_invalid": {
+    "message": "檔案格式不正確",
+    "description": "匯入失敗"
+  },
+  "pm_import_success": {
+    "message": "已匯入 {count} 條",
+    "description": "匯入成功"
+  },
+  "pm_duplicate": {
+    "message": "重複的 prompt",
+    "description": "新增重複"
+  },
+  "pm_deleted": {
+    "message": "已刪除",
+    "description": "刪除提示"
+  },
+  "pm_edit": {
+    "message": "編輯",
+    "description": "編輯 prompt"
+  },
+  "pm_expand": {
+    "message": "展開",
+    "description": "展開提示詞文字"
+  },
+  "pm_collapse": {
+    "message": "收起",
+    "description": "收起提示詞文字"
+  },
+  "pm_saved": {
+    "message": "已儲存",
+    "description": "儲存提示"
+  },
+  "pm_settings": {
+    "message": "設定",
+    "description": "設定按鈕"
+  },
+  "pm_settings_tooltip": {
+    "message": "調整擴充功能設定",
+    "description": "設定按鈕提示"
+  },
+  "pm_settings_fallback": {
+    "message": "請點擊瀏覽器工具列中的擴充功能圖示開啟設定",
+    "description": "設定開啟失敗提示"
+  },
+  "pm_backup": {
+    "message": "本機備份",
+    "description": "本機備份按鈕"
+  },
+  "pm_backup_tooltip": {
+    "message": "將提示詞和資料夾備份到帶時間戳記的資料夾",
+    "description": "備份按鈕提示"
+  },
+  "pm_backup_cancelled": {
+    "message": "備份已取消",
+    "description": "備份取消提示"
+  },
+  "pm_backup_error": {
+    "message": "✗ 備份失敗",
+    "description": "備份失敗提示"
+  },
+  "pm_backup_hint_options": {
+    "message": "功能已整合在 Gemini 頁面的提示詞管理器中。",
+    "description": "選項頁面的備份說明"
+  },
+  "pm_backup_step1": {
+    "message": "開啟 Gemini 頁面（gemini.google.com）",
+    "description": "備份步驟 1"
+  },
+  "pm_backup_step2": {
+    "message": "點擊右下角的擴充功能圖示開啟提示詞管理器",
+    "description": "備份步驟 2"
+  },
+  "pm_backup_step3": {
+    "message": "點擊 \"💾 本機備份\" 按鈕，選擇備份資料夾",
+    "description": "備份步驟 3"
+  },
+  "pm_backup_note": {
+    "message": "備份將包含所有提示詞和資料夾，並儲存在帶時間戳記的資料夾中（格式：backup-YYYYMMDD-HHMMSS）",
+    "description": "備份功能說明"
+  },
+  "extensionVersion": {
+    "message": "版本",
+    "description": "擴充功能版本標籤"
+  },
+  "newVersionAvailable": {
+    "message": "發現新版本",
+    "description": "更新提醒標題"
+  },
+  "currentVersionLabel": {
+    "message": "目前",
+    "description": "目前版本號標籤"
+  },
+  "latestVersionLabel": {
+    "message": "最新",
+    "description": "最新版本號標籤"
+  },
+  "updateNow": {
+    "message": "立即更新",
+    "description": "跳轉更新 CTA"
+  },
+  "starProject": {
+    "message": "為專案點亮 ⭐️",
+    "description": "Github 引導"
+  },
+  "officialDocs": {
+    "message": "官方文件",
+    "description": "Official docs link"
+  },
+  "exportChatJson": {
+    "message": "匯出聊天紀錄",
+    "description": "匯出按鈕提示"
+  },
+  "folder_title": {
+    "message": "資料夾",
+    "description": "資料夾區域標題"
+  },
+  "folder_create": {
+    "message": "建立資料夾",
+    "description": "建立資料夾按鈕提示"
+  },
+  "folder_name_prompt": {
+    "message": "輸入資料夾名稱：",
+    "description": "建立資料夾名稱提示"
+  },
+  "folder_rename_prompt": {
+    "message": "輸入新名稱：",
+    "description": "重新命名資料夾提示"
+  },
+  "folder_delete_confirm": {
+    "message": "確定刪除此資料夾及其所有內容嗎？",
+    "description": "刪除資料夾確認"
+  },
+  "folder_create_subfolder": {
+    "message": "建立子資料夾",
+    "description": "建立子資料夾選單項目"
+  },
+  "folder_rename": {
+    "message": "重新命名",
+    "description": "重新命名資料夾選單項目"
+  },
+  "folder_delete": {
+    "message": "刪除",
+    "description": "刪除資料夾選單項目"
+  },
+  "folder_empty": {
+    "message": "暫無資料夾",
+    "description": "沒有資料夾時顯示的佔位提示"
+  },
+  "folder_pin": {
+    "message": "置頂資料夾",
+    "description": "置頂資料夾選單項目"
+  },
+  "folder_unpin": {
+    "message": "取消置頂",
+    "description": "取消置頂資料夾選單項目"
+  },
+  "folder_remove_conversation": {
+    "message": "從資料夾中移除",
+    "description": "移除對話按鈕提示"
+  },
+  "folder_remove_conversation_confirm": {
+    "message": "從此資料夾中移除「{title}」？",
+    "description": "移除對話確認"
+  },
+  "conversation_more": {
+    "message": "更多選項",
+    "description": "對話更多選項按鈕提示"
+  },
+  "conversation_move_to_folder": {
+    "message": "移動到資料夾",
+    "description": "移動對話到資料夾選單項目"
+  },
+  "conversation_move_to_folder_title": {
+    "message": "移動到資料夾",
+    "description": "移動對話到資料夾對話框標題"
+  },
+  "chatWidth": {
+    "message": "對話區域寬度",
+    "description": "對話區域寬度調整標籤"
+  },
+  "chatWidthNarrow": {
+    "message": "窄",
+    "description": "窄對話區域寬度標籤"
+  },
+  "chatWidthWide": {
+    "message": "寬",
+    "description": "寬對話區域寬度標籤"
+  },
+  "sidebarWidth": {
+    "message": "側邊欄寬度",
+    "description": "側邊欄寬度調節標籤"
+  },
+  "sidebarWidthNarrow": {
+    "message": "窄",
+    "description": "側邊欄變窄標籤"
+  },
+  "sidebarWidthWide": {
+    "message": "寬",
+    "description": "側邊欄變寬標籤"
+  },
+  "formula_copied": {
+    "message": "✓ 公式已複製",
+    "description": "公式複製成功訊息"
+  },
+  "formula_copy_failed": {
+    "message": "✗ 複製失敗",
+    "description": "公式複製失敗訊息"
+  },
+  "formulaCopyFormat": {
+    "message": "公式複製格式",
+    "description": "公式複製格式設定標籤"
+  },
+  "formulaCopyFormatLatex": {
+    "message": "LaTeX",
+    "description": "LaTeX 格式選項"
+  },
+  "formulaCopyFormatUnicodeMath": {
+    "message": "MathML (Word)",
+    "description": "Label for MathML formula copy format option (formerly UnicodeMath)"
+  },
+  "formulaCopyFormatHint": {
+    "message": "選擇點擊公式時複製的格式",
+    "description": "公式複製格式提示"
+  },
+  "formulaCopyFormatNoDollar": {
+    "message": "LaTeX (純文字，無 $ 符號)",
+    "description": "LaTeX 格式選項，無美元符號"
+  },
+  "folder_export": {
+    "message": "匯出資料夾",
+    "description": "匯出資料夾按鈕提示"
+  },
+  "folder_import": {
+    "message": "匯入資料夾",
+    "description": "匯入資料夾按鈕提示"
+  },
+  "folder_import_title": {
+    "message": "匯入資料夾設定",
+    "description": "匯入對話框標題"
+  },
+  "folder_import_strategy": {
+    "message": "匯入策略：",
+    "description": "匯入策略標籤"
+  },
+  "folder_import_merge": {
+    "message": "與現有資料夾合併",
+    "description": "合併匯入策略"
+  },
+  "folder_import_overwrite": {
+    "message": "覆蓋現有資料夾",
+    "description": "覆蓋匯入策略"
+  },
+  "folder_import_select_file": {
+    "message": "選擇要匯入的 JSON 檔案",
+    "description": "匯入檔案選擇提示"
+  },
+  "folder_import_success": {
+    "message": "✓ 已匯入 {folders} 個資料夾，{conversations} 個對話",
+    "description": "匯入成功訊息"
+  },
+  "folder_import_success_skipped": {
+    "message": "✓ 已匯入 {folders} 個資料夾，{conversations} 個對話（略過 {skipped} 個重複項）",
+    "description": "匯入成功並略過重複項訊息"
+  },
+  "folder_import_error": {
+    "message": "✗ 匯入失敗：{error}",
+    "description": "匯入錯誤訊息"
+  },
+  "folder_export_success": {
+    "message": "✓ 資料夾匯出成功",
+    "description": "匯出成功訊息"
+  },
+  "folder_import_invalid_format": {
+    "message": "檔案格式無效。請選擇有效的資料夾設定檔。",
+    "description": "無效格式錯誤"
+  },
+  "folder_import_confirm_overwrite": {
+    "message": "這將取代所有現有資料夾。系統將建立備份。是否繼續？",
+    "description": "覆蓋確認"
+  },
+  "export_dialog_title": {
+    "message": "匯出對話",
+    "description": "匯出對話框標題"
+  },
+  "export_dialog_select": {
+    "message": "選擇匯出格式：",
+    "description": "匯出格式選擇標籤"
+  },
+  "export_dialog_warning": {
+    "message": "⚠️ 由於 Gemini 的久遠訊息會延遲載入，請在匯出前透過時間軸跳轉到該對話的第一則訊息，否則匯出內容可能不完整。",
+    "description": "關於延遲載入影響匯出完整性的警告"
+  },
+  "editInputWidth": {
+    "message": "編輯輸入框寬度",
+    "description": "編輯輸入框寬度調整標籤"
+  },
+  "editInputWidthNarrow": {
+    "message": "窄",
+    "description": "窄編輯輸入框寬度標籤"
+  },
+  "editInputWidthWide": {
+    "message": "寬",
+    "description": "寬編輯輸入框寬度標籤"
+  },
+  "timelineOptions": {
+    "message": "時間軸選項",
+    "description": "時間軸選項區域標籤"
+  },
+  "folderOptions": {
+    "message": "資料夾選項",
+    "description": "資料夾選項區域標籤"
+  },
+  "enableFolderFeature": {
+    "message": "啟用資料夾功能",
+    "description": "啟用或停用資料夾功能"
+  },
+  "hideArchivedConversations": {
+    "message": "隱藏已歸檔對話",
+    "description": "從主清單隱藏已新增到資料夾的對話"
+  },
+  "conversation_star": {
+    "message": "星號標記對話",
+    "description": "星號標記對話按鈕提示"
+  },
+  "conversation_unstar": {
+    "message": "取消星號標記",
+    "description": "取消星號標記對話按鈕提示"
+  },
+  "conversation_untitled": {
+    "message": "未命名",
+    "description": "無標題對話的備用標題"
+  },
+  "geminiOnlyNotice": {
+    "message": "預設僅在 Gemini（含企業版）和 AI Studio 生效。想在其他網站使用提示詞管理器，請在下方新增並授權。",
+    "description": "提示預設範圍為 Gemini/AI Studio"
+  },
+  "folderManager_dataLossWarning": {
+    "message": "⚠️ 警告：無法載入資料夾資料。您的資料夾可能已損壞。請檢查瀏覽器主控台以取得詳細資訊，並在可用時嘗試從備份還原。",
+    "description": "資料夾資料載入失敗時顯示的警告"
+  },
+  "backupOptions": {
+    "message": "自動備份",
+    "description": "備份選項區域標籤"
+  },
+  "backupEnabled": {
+    "message": "啟用自動備份",
+    "description": "啟用自動備份開關"
+  },
+  "backupNow": {
+    "message": "立即備份",
+    "description": "立即備份按鈕"
+  },
+  "backupSelectFolder": {
+    "message": "選擇備份資料夾",
+    "description": "選擇備份資料夾按鈕"
+  },
+  "backupFolderSelected": {
+    "message": "備份資料夾：{folder}",
+    "description": "顯示已選擇的備份資料夾"
+  },
+  "backupIncludePrompts": {
+    "message": "包含提示詞",
+    "description": "備份中包含提示詞開關"
+  },
+  "backupIncludeFolders": {
+    "message": "包含資料夾",
+    "description": "備份中包含資料夾開關"
+  },
+  "backupIntervalLabel": {
+    "message": "備份間隔",
+    "description": "備份間隔標籤"
+  },
+  "backupIntervalManual": {
+    "message": "僅手動",
+    "description": "手動備份模式"
+  },
+  "backupIntervalDaily": {
+    "message": "每天",
+    "description": "每天備份間隔"
+  },
+  "backupIntervalWeekly": {
+    "message": "每週（7 天）",
+    "description": "每週備份間隔"
+  },
+  "backupLastBackup": {
+    "message": "上次備份：{time}",
+    "description": "上次備份時間戳記"
+  },
+  "backupNever": {
+    "message": "從未",
+    "description": "從未備份過"
+  },
+  "backupSuccess": {
+    "message": "✓ 備份建立成功：{prompts} 個提示詞、{folders} 個資料夾、{conversations} 個對話",
+    "description": "備份成功訊息"
+  },
+  "backupError": {
+    "message": "✗ 備份失敗：{error}",
+    "description": "備份錯誤訊息"
+  },
+  "backupNotSupported": {
+    "message": "⚠️ 自動備份需要支援檔案系統存取 API 的現代瀏覽器",
+    "description": "瀏覽器不支援訊息"
+  },
+  "backupSelectFolderFirst": {
+    "message": "請先選擇備份資料夾",
+    "description": "未選擇資料夾警告"
+  },
+  "backupUserCancelled": {
+    "message": "備份已取消",
+    "description": "使用者取消資料夾選擇"
+  },
+  "backupConfigSaved": {
+    "message": "✓ 備份設定已儲存",
+    "description": "設定儲存訊息"
+  },
+  "backupPermissionDenied": {
+    "message": "⚠️ 無法存取此目錄。請選擇其他位置（例如：文件、下載，或桌面中的自訂資料夾）",
+    "description": "受限目錄權限被拒絕"
+  },
+  "backupConfigureInOptions": {
+    "message": "備份功能需要在選項頁面中設定。點擊下方按鈕開啟選項頁面（點擊擴充功能圖示旁的三個點 → 選項）。",
+    "description": "備份設定在選項頁面的說明"
+  },
+  "openOptionsPage": {
+    "message": "開啟選項頁面",
+    "description": "開啟選項頁面按鈕"
+  },
+  "optionsPageSubtitle": {
+    "message": "擴充功能選項",
+    "description": "選項頁面副標題"
+  },
+  "optionsComingSoon": {
+    "message": "更多選項即將推出...",
+    "description": "選項頁面佔位提示"
+  },
+  "backupDataAccessNotice": {
+    "message": "資料存取限制",
+    "description": "備份資料存取限制標題"
+  },
+  "backupDataAccessHint": {
+    "message": "由於瀏覽器安全限制，選項頁面無法直接讀取 Gemini 頁面的提示詞和資料夾資料。建議使用 Gemini 頁面上的提示詞管理器和資料夾匯出功能進行手動備份。",
+    "description": "備份資料存取限制說明"
+  },
+  "promptManagerOptions": {
+    "message": "提示詞管理器",
+    "description": "提示詞管理器選項區域標籤"
+  },
+  "hidePromptManager": {
+    "message": "隱藏提示詞管理器",
+    "description": "隱藏提示詞管理器懸浮球"
+  },
+  "hidePromptManagerHint": {
+    "message": "隱藏頁面上的提示詞管理器懸浮球",
+    "description": "隱藏提示詞管理器功能提示"
+  },
+  "customWebsites": {
+    "message": "自訂網站",
+    "description": "提示詞管理器的自訂網站"
+  },
+  "customWebsitesPlaceholder": {
+    "message": "輸入網站 URL（例如：chatgpt.com）",
+    "description": "自訂網站輸入佔位符"
+  },
+  "customWebsitesHint": {
+    "message": "新增您想要使用提示詞管理器的網站。這些網站上只會啟用提示詞管理器功能。",
+    "description": "自訂網站提示"
+  },
+  "addWebsite": {
+    "message": "新增網站",
+    "description": "新增網站按鈕"
+  },
+  "removeWebsite": {
+    "message": "移除",
+    "description": "移除網站按鈕"
+  },
+  "invalidUrl": {
+    "message": "URL 格式無效",
+    "description": "無效 URL 錯誤訊息"
+  },
+  "websiteAdded": {
+    "message": "網站已新增",
+    "description": "網站新增成功訊息"
+  },
+  "websiteRemoved": {
+    "message": "網站已移除",
+    "description": "網站移除成功訊息"
+  },
+  "permissionDenied": {
+    "message": "權限被拒絕。請允許存取此網站。",
+    "description": "權限被拒絕錯誤訊息"
+  },
+  "permissionRequestFailed": {
+    "message": "要求權限失敗，請重試或在擴充功能設定中手動授權。",
+    "description": "要求權限失敗訊息"
+  },
+  "customWebsitesNote": {
+    "message": "提示：新增網站時會彈出授權，請先允許，再重新整理該網站即可啟用提示詞管理器。",
+    "description": "自訂網站重新載入/權限提示"
+  },
+  "starredHistory": {
+    "message": "星號標記歷史",
+    "description": "星號標記歷史標題"
+  },
+  "viewStarredHistory": {
+    "message": "檢視星號標記歷史",
+    "description": "檢視星號標記歷史按鈕"
+  },
+  "noStarredMessages": {
+    "message": "暫無星號標記訊息",
+    "description": "無星號標記訊息佔位符"
+  },
+  "removeFromStarred": {
+    "message": "取消星號標記",
+    "description": "取消星號標記提示"
+  },
+  "justNow": {
+    "message": "剛剛",
+    "description": "剛剛時間標籤"
+  },
+  "hoursAgo": {
+    "message": "小時前",
+    "description": "小時前標籤"
+  },
+  "yesterday": {
+    "message": "昨天",
+    "description": "昨天日期標籤"
+  },
+  "daysAgo": {
+    "message": "天前",
+    "description": "天前標籤"
+  },
+  "loading": {
+    "message": "載入中...",
+    "description": "載入訊息"
+  },
+  "keyboardShortcuts": {
+    "message": "鍵盤快速鍵",
+    "description": "鍵盤快速鍵區段標題"
+  },
+  "enableShortcuts": {
+    "message": "啟用鍵盤快速鍵",
+    "description": "啟用快速鍵開關標籤"
+  },
+  "previousNode": {
+    "message": "上一個節點",
+    "description": "上一個時間軸節點快速鍵標籤"
+  },
+  "nextNode": {
+    "message": "下一個節點",
+    "description": "下一個時間軸節點快速鍵標籤"
+  },
+  "shortcutKey": {
+    "message": "按鍵",
+    "description": "快速鍵按鍵標籤"
+  },
+  "shortcutModifiers": {
+    "message": "修飾鍵",
+    "description": "快速鍵修飾鍵標籤"
+  },
+  "resetShortcuts": {
+    "message": "恢復預設",
+    "description": "重設快速鍵按鈕"
+  },
+  "shortcutsResetSuccess": {
+    "message": "快速鍵已恢復預設設定",
+    "description": "快速鍵重設成功訊息"
+  },
+  "shortcutsDescription": {
+    "message": "使用鍵盤快速鍵導覽時間軸節點",
+    "description": "快速鍵描述"
+  },
+  "modifierNone": {
+    "message": "無",
+    "description": "無修飾鍵"
+  },
+  "modifierAlt": {
+    "message": "Alt",
+    "description": "Alt 修飾鍵"
+  },
+  "modifierCtrl": {
+    "message": "Ctrl",
+    "description": "Ctrl 修飾鍵"
+  },
+  "modifierShift": {
+    "message": "Shift",
+    "description": "Shift 修飾鍵"
+  },
+  "modifierMeta": {
+    "message": "Cmd/Win",
+    "description": "Meta/Command/Windows 修飾鍵"
+  },
+  "cloudSync": {
+    "message": "雲端同步",
+    "description": "雲端同步區域標題"
+  },
+  "cloudSyncDescription": {
+    "message": "將資料夾和提示詞同步到 Google Drive",
+    "description": "雲端同步描述"
+  },
+  "syncModeDisabled": {
+    "message": "已停用",
+    "description": "同步模式停用選項"
+  },
+  "syncModeManual": {
+    "message": "手動",
+    "description": "同步模式手動選項"
+  },
+  "syncServerPort": {
+    "message": "服務埠號",
+    "description": "同步服務埠號"
+  },
+  "syncNow": {
+    "message": "立即同步",
+    "description": "立即同步按鈕"
+  },
+  "lastSynced": {
+    "message": "上次同步：{time}",
+    "description": "上次同步時間戳記"
+  },
+  "neverSynced": {
+    "message": "從未同步",
+    "description": "從未同步訊息"
+  },
+  "lastUploaded": {
+    "message": "上次上傳：{time}",
+    "description": "上次上傳時間戳記"
+  },
+  "neverUploaded": {
+    "message": "從未上傳",
+    "description": "從未上傳訊息"
+  },
+  "syncSuccess": {
+    "message": "✓ 同步成功",
+    "description": "同步成功訊息"
+  },
+  "syncError": {
+    "message": "✗ 同步失敗：{error}",
+    "description": "同步錯誤訊息"
+  },
+  "syncInProgress": {
+    "message": "同步中...",
+    "description": "同步進行中訊息"
+  },
+  "syncUpload": {
+    "message": "上傳到雲端",
+    "description": "上傳到雲端按鈕"
+  },
+  "syncMerge": {
+    "message": "從雲端下載合併",
+    "description": "同步（合併）按鈕"
+  },
+  "syncMode": {
+    "message": "同步模式",
+    "description": "同步模式標籤"
+  },
+  "minutesAgo": {
+    "message": "分鐘前",
+    "description": "分鐘前標籤"
+  },
+  "syncNoData": {
+    "message": "未在雲端找到同步資料",
+    "description": "Error message when no data is found in Drive"
+  },
+  "syncUploadFailed": {
+    "message": "上傳失敗",
+    "description": "Error message when upload fails"
+  },
+  "syncDownloadFailed": {
+    "message": "下載失敗",
+    "description": "Error message when download fails"
+  },
+  "syncAuthFailed": {
+    "message": "認證失敗",
+    "description": "Error message when authentication fails"
+  },
+  "signOut": {
+    "message": "登出",
+    "description": "登出按鈕"
+  },
+  "signInWithGoogle": {
+    "message": "使用 Google 登入",
+    "description": "使用 Google 登入按鈕"
+  },
+  "nanobananaOptions": {
+    "message": "NanoBanana 選項",
+    "description": "NanoBanana options section label"
+  },
+  "enableNanobananaWatermarkRemover": {
+    "message": "移除 NanoBanana 浮水印",
+    "description": "啟用自動移除生成圖片浮水印功能"
+  },
+  "nanobananaWatermarkRemoverHint": {
+    "message": "自動移除 Gemini 生成圖片上的可見浮水印",
+    "description": "浮水印移除功能提示"
+  },
+  "nanobananaDownloadTooltip": {
+    "message": "下載無浮水印圖片 (NanoBanana)",
+    "description": "Download button tooltip"
+  },
+  "deepResearchDownload": {
+    "message": "下載 Thinking 內容",
+    "description": "Deep Research download button text"
+  },
+  "deepResearchDownloadTooltip": {
+    "message": "將 Thinking 內容匯出為 Markdown 檔案",
+    "description": "Deep Research download button tooltip"
+  },
+  "folder_uncategorized": {
+    "message": "未分類",
+    "description": "根目錄下未分類對話的標籤"
+  },
+  "timelineLevelTitle": {
+    "message": "節點層級",
+    "description": "時間軸節點層級右鍵選單標題"
+  },
+  "timelineLevel1": {
+    "message": "一級",
+    "description": "時間軸節點一級選項"
+  },
+  "timelineLevel2": {
+    "message": "二級",
+    "description": "時間軸節點二級選項"
+  },
+  "timelineLevel3": {
+    "message": "三級",
+    "description": "時間軸節點三級選項"
+  },
+  "timelineCollapse": {
+    "message": "收起",
+    "description": "收起子節點"
+  },
+  "timelineExpand": {
+    "message": "展開",
+    "description": "展開子節點"
+  },
+  "quoteReply": {
+    "message": "引用回覆",
+    "description": "引用回覆按鈕文字"
+  },
+  "inputCollapseOptions": {
+    "message": "輸入框摺疊",
+    "description": "輸入框摺疊選項區域標籤"
+  },
+  "enableInputCollapse": {
+    "message": "啟用輸入框摺疊",
+    "description": "啟用輸入框摺疊開關標籤"
+  },
+  "enableInputCollapseHint": {
+    "message": "輸入框為空時自動摺疊，獲得更多閱讀空間",
+    "description": "輸入框摺疊功能提示"
+  },
+  "inputCollapsePlaceholder": {
+    "message": "傳送訊息給 Gemini",
+    "description": "摺疊輸入框時顯示的佔位符文字"
+  },
+  "batch_delete_confirm": {
+    "message": "確定要刪除 {count} 個對話嗎？此操作無法復原。",
+    "description": "批次刪除確認訊息"
+  },
+  "batch_delete_in_progress": {
+    "message": "正在刪除... ({current}/{total})",
+    "description": "批次刪除進度訊息"
+  },
+  "batch_delete_success": {
+    "message": "✓ 已刪除 {count} 個對話",
+    "description": "批次刪除成功訊息"
+  },
+  "batch_delete_partial": {
+    "message": "刪除完成：{success} 個成功，{failed} 個失敗",
+    "description": "批次刪除部分成功訊息"
+  },
+  "batch_delete_limit_reached": {
+    "message": "一次最多可選擇 {max} 個對話",
+    "description": "批次刪除數量限制警告"
+  },
+  "batch_delete_button": {
+    "message": "刪除所選",
+    "description": "多選模式下的批次刪除按鈕提示"
+  },
+  "batch_delete_match_patterns": {
+    "message": "刪除,確認,確定,是,delete,confirm,yes,ok,remove",
+    "description": "符合原生刪除/確認按鈕的關鍵字清單（逗號分隔）"
+  },
+  "generalOptions": {
+    "message": "一般選項",
+    "description": "一般選項區域標籤"
+  },
+  "enableTabTitleUpdate": {
+    "message": "同步分頁標題與對話",
+    "description": "啟用分頁標題同步開關標籤"
+  },
+  "enableTabTitleUpdateHint": {
+    "message": "自動將瀏覽器分頁標題更新為目前對話的標題",
+    "description": "分頁標題同步功能提示"
+  },
+  "enableMermaidRendering": {
+    "message": "啟用 Mermaid 圖表轉譯",
+    "description": "啟用 Mermaid 圖表轉譯開關標籤"
+  },
+  "enableMermaidRenderingHint": {
+    "message": "自動將程式碼區塊中的 Mermaid 程式碼轉譯為圖表",
+    "description": "Mermaid 轉譯功能提示"
+  },
+  "enableQuoteReply": {
+    "message": "啟用引用回覆",
+    "description": "啟用引用回覆開關標籤"
+  },
+  "enableQuoteReplyHint": {
+    "message": "在對話中選取文字時顯示懸浮按鈕，用於引用所選內容",
+    "description": "引用回覆功能提示"
+  },
+  "contextSync": {
+    "message": "上下文同步",
+    "description": "上下文同步標題"
+  },
+  "contextSyncDescription": {
+    "message": "將對話上下文同步到本機 IDE",
+    "description": "上下文同步描述"
+  },
+  "syncToIDE": {
+    "message": "同步到 IDE",
+    "description": "同步到 IDE 按鈕"
+  },
+  "ideOnline": {
+    "message": "IDE 線上",
+    "description": "IDE 線上狀態"
+  },
+  "ideOffline": {
+    "message": "IDE 離線",
+    "description": "IDE 離線狀態"
+  },
+  "syncing": {
+    "message": "同步中...",
+    "description": "同步中狀態"
+  },
+  "checkServer": {
+    "message": "請在 VS Code 中啟動 AI Sync 伺服器",
+    "description": "檢查伺服器提示"
+  },
+  "capturing": {
+    "message": "正在取得對話...",
+    "description": "取得對話狀態"
+  },
+  "syncedSuccess": {
+    "message": "同步成功！",
+    "description": "同步成功訊息"
+  },
+  "folder_change_color": {
+    "message": "更改顏色",
+    "description": "Change folder color tooltip"
+  },
+  "folder_color_default": {
+    "message": "預設",
+    "description": "Default folder color"
+  },
+  "folder_color_red": {
+    "message": "紅色",
+    "description": "Red folder color"
+  },
+  "folder_color_orange": {
+    "message": "橙色",
+    "description": "Orange folder color"
+  },
+  "folder_color_yellow": {
+    "message": "黃色",
+    "description": "Yellow folder color"
+  },
+  "folder_color_green": {
+    "message": "綠色",
+    "description": "Green folder color"
+  },
+  "folder_color_blue": {
+    "message": "藍色",
+    "description": "Blue folder color"
+  },
+  "folder_color_purple": {
+    "message": "紫色",
+    "description": "Purple folder color"
+  },
+  "folder_color_pink": {
+    "message": "粉紅色",
+    "description": "Pink folder color"
+  },
+  "downloadingOriginal": {
+    "message": "正在下載原始圖片",
+    "description": "下載原始圖片時的狀態"
+  },
+  "downloadingOriginalLarge": {
+    "message": "正在下載原始圖片（大檔案）",
+    "description": "下載較大原始圖片時的狀態"
+  },
+  "downloadLargeWarning": {
+    "message": "大檔案警告",
+    "description": "大檔案下載提示"
+  },
+  "downloadProcessing": {
+    "message": "正在處理浮水印中",
+    "description": "處理浮水印時的狀態"
+  },
+  "downloadSuccess": {
+    "message": "正在下載",
+    "description": "開始下載時的狀態"
+  },
+  "downloadError": {
+    "message": "失敗",
+    "description": "下載失敗時的狀態前置"
+  }
+}

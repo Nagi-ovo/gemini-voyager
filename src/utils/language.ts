@@ -1,13 +1,17 @@
-export const APP_LANGUAGES = ['en', 'zh', 'ja', 'fr', 'es'] as const;
+export const APP_LANGUAGES = ['en', 'zh', 'zh_TW', 'ja', 'fr', 'es', 'pt', 'ar', 'ru'] as const;
 
 export type AppLanguage = (typeof APP_LANGUAGES)[number];
 
 export const APP_LANGUAGE_LABELS: Record<AppLanguage, string> = {
   en: 'English',
-  zh: '中文',
+  zh: '简体中文',
+  zh_TW: '繁體中文',
   ja: '日本語',
   fr: 'Français',
   es: 'Español',
+  pt: 'Português',
+  ar: 'العربية',
+  ru: 'Русский',
 };
 
 export function isAppLanguage(value: unknown): value is AppLanguage {
@@ -17,10 +21,22 @@ export function isAppLanguage(value: unknown): value is AppLanguage {
 export function normalizeLanguage(lang: string | undefined | null): AppLanguage {
   if (!lang) return 'en';
   const lower = lang.toLowerCase();
+  // Check for Traditional Chinese first (zh-TW, zh-HK, zh-Hant)
+  if (
+    lower.startsWith('zh-tw') ||
+    lower.startsWith('zh_tw') ||
+    lower.startsWith('zh-hk') ||
+    lower.includes('hant')
+  )
+    return 'zh_TW';
+  // Then check for Simplified Chinese
   if (lower.startsWith('zh')) return 'zh';
   if (lower.startsWith('ja')) return 'ja';
   if (lower.startsWith('fr')) return 'fr';
   if (lower.startsWith('es')) return 'es';
+  if (lower.startsWith('pt')) return 'pt';
+  if (lower.startsWith('ar')) return 'ar';
+  if (lower.startsWith('ru')) return 'ru';
   return 'en';
 }
 
