@@ -36,6 +36,7 @@ describe('quote reply', () => {
         toJSON: () => {},
       }) as DOMRect;
     input.focus = vi.fn();
+    input.scrollIntoView = vi.fn();
 
     Object.defineProperty(Range.prototype, 'getBoundingClientRect', {
       value: vi.fn(

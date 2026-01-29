@@ -18,6 +18,7 @@
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "tailwind-merge": "^3.3.1",
+        "temml": "^0.13.1",
         "webextension-polyfill": "^0.12.0",
       },
       "devDependencies": {
@@ -1566,6 +1567,8 @@
     "tailwindcss": ["tailwindcss@4.1.16", "", {}, "sha512-pONL5awpaQX4LN5eiv7moSiSPd/DLDzKVRJz8Q9PgzmAdd1R4307GQS2ZpfiN7ZmekdQrfhZZiSE5jkLR4WNaA=="],
 
     "tapable": ["tapable@2.3.0", "", {}, "sha512-g9ljZiwki/LfxmQADO3dEY1CbpmXT5Hm2fJ+QaGKwSXUylMybePR7/67YW7jOrrvjEgL1Fmz5kzyAjWVWLlucg=="],
+
+    "temml": ["temml@0.13.1", "", {}, "sha512-/fL1utq8QUD9YpcLeZHPRnp9Cbzbexq5hZl5uSBhf8mNYiKkcS4eYbLidDB+/nF8C+RHAcBQbKw2bKoS83mz1Q=="],
 
     "thread-stream": ["thread-stream@3.1.0", "https://registry.npmmirror.com/thread-stream/-/thread-stream-3.1.0.tgz", { "dependencies": { "real-require": "^0.2.0" } }, "sha512-OqyPZ9u96VohAyMfJykzmivOrY2wfMSf3C5TtFJVgN+Hm6aj+voFhlK+kZEIv2FBh1X6Xp3DlnCOfEQ3B2J86A=="],
 

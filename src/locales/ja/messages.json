@@ -259,9 +259,45 @@
     "message": "名前を変更",
     "description": "Rename folder menu item"
   },
+  "folder_change_color": {
+    "message": "色を変更",
+    "description": "Change folder color menu item"
+  },
   "folder_delete": {
     "message": "削除",
     "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "デフォルト",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "赤",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "オレンジ",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "黄色",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "緑",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "青",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "紫",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "ピンク",
+    "description": "Pink folder color name"
   },
   "folder_empty": {
     "message": "フォルダがありません",
@@ -336,8 +372,8 @@
     "description": "LaTeX format option"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath format option for Word"
+    "message": "MathML (Word)",
+    "description": "Label for UnicodeMath formula copy format option"
   },
   "formulaCopyFormatHint": {
     "message": "数式をクリックしてコピーする際の形式を選択します",
@@ -966,5 +1002,29 @@
   "syncedSuccess": {
     "message": "同期に成功しました！",
     "description": "Synced success message"
+  },
+  "downloadingOriginal": {
+    "message": "元画像をダウンロード中",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "元画像をダウンロード中（大きいファイル）",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "大容量ファイル警告",
+    "description": "Warning shown for large downloads"
+  },
+  "downloadProcessing": {
+    "message": "透かしを処理中",
+    "description": "Status when processing watermark removal"
+  },
+  "downloadSuccess": {
+    "message": "ダウンロード中...",
+    "description": "Status when download starts"
+  },
+  "downloadError": {
+    "message": "失敗",
+    "description": "Status prefix when download fails"
   }
 }

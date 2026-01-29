@@ -2351,6 +2351,7 @@ html.dark-theme .gv-pm-expand-btn:hover {
   font-size: 20px;
   color: var(--folder-icon-color);
   flex-shrink: 0;
+  transition: color 0.2s ease;
 }
 
 .gv-folder-name {
@@ -2832,6 +2833,66 @@ html.dark-theme .gv-pm-expand-btn:hover {
 
 .gv-folder-menu-item:hover {
   background-color: var(--folder-hover-bg);
+}
+
+/* Color Picker Dialog */
+.gv-color-picker-dialog {
+  position: fixed;
+  background: var(--folder-menu-bg);
+  border: 1px solid var(--folder-border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: var(--folder-menu-shadow);
+  z-index: 10001;
+  display: grid;
+  grid-template-columns: repeat(4, 36px);
+  gap: 8px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.gv-color-picker-item {
+  width: 36px;
+  height: 36px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.gv-color-picker-item:hover {
+  transform: scale(1.1);
+  border-color: var(--folder-text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.gv-color-picker-item.selected {
+  border-color: var(--folder-text);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.gv-color-picker-item.selected::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Drag cursor for original conversation elements */

@@ -1,0 +1,201 @@
+<div align="center">
+  <img src="../public/icon-128.png" alt="logo"/>
+  <h1>Gemini Voyager</h1>
+  <h3>Сделайте ваш Gemini по-настоящему вашим ✨</h3>
+  <p>
+    Элегантная навигация по таймлайну, организация чатов по папкам и собственное хранилище промптов.<br>
+    <b>Это недостающий элемент для Google Gemini.</b>
+  </p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Chrome-✓-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome">
+    <img src="https://img.shields.io/badge/Edge-✓-0078D7?style=flat-square&logo=microsoftedge&logoColor=white" alt="Edge">
+    <img src="https://img.shields.io/badge/Firefox-✓-FF7139?style=flat-square&logo=firefox&logoColor=white" alt="Firefox">
+    <img src="https://img.shields.io/badge/Safari-✓-000000?style=flat-square&logo=safari&logoColor=white" alt="Safari">
+    <img src="https://img.shields.io/badge/Opera-✓-FF1B2D?style=flat-square&logo=opera&logoColor=white" alt="Opera">
+    <img src="https://img.shields.io/badge/Brave-✓-FB542B?style=flat-square&logo=brave&logoColor=white" alt="Brave">
+  </p>
+  <p>
+    <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub stars">
+    <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub forks">
+    <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="Latest version">
+    <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub downloads">
+    <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome Web Store users">
+    <img src="https://img.shields.io/chrome-web-store/rating/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome Web Store rating">
+    <img src="https://img.shields.io/badge/Edge-✓-0078D7?style=flat-square&logo=microsoft-edge" alt="Edge Add-ons">
+    <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons users">
+    <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons rating">
+  </p>
+  <p>
+    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="Nagi-ovo%2Fgemini-voyager | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+    <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager - All-in-one Gemini suite: folders, chat export and much more | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
+  </p>
+  <p align="center">
+    ✨ Мы на Product Hunt! Будем рады вашим отзывам. ❤️
+  </p>
+</div>
+
+<p align="center">
+  <a href="https://voyager.nagi.fun/ru">📖 Документация</a> • 
+  <a href="../README.md">English</a> • 
+  <a href="./README_ZH.md">简体中文</a> •
+  <a href="./README_ZH_TW.md">繁體中文</a> •
+  <a href="./README_JA.md">日本語</a> •
+  <a href="./README_FR.md">Français</a> •
+  <a href="./README_ES.md">Español</a> •
+  <a href="./README_PT.md">Português</a> •
+  <a href="./README_AR.md">العربية</a>
+</p>
+
+<p align="center">
+    <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
+  </p>
+
+> [!CAUTION]
+> **Заявление автора**: Этот проект **НЕ ПРИНИМАЕТ** спонсорство или рекламу от зеркальных сайтов LLM, нелегальных продуктов или продуктов, связанных с утечкой данных пользователей.
+
+---
+
+## 👋 Почему Gemini Voyager?
+
+Мы любим Gemini, но иногда хочется, чтобы в нем было чуть больше порядка.
+
+Именно поэтому мы создали **Gemini Voyager**. Это не просто инструмент, а помощник, который помогает организовать ваши диалоги с ИИ, сделать их доступными и продуктивными. Будь вы исследователем, ведущим десятки веток, разработчиком, сохраняющим фрагменты кода, или просто любителем порядка — Voyager создан для вас.
+
+---
+
+## ✨ Возможности
+
+<div align="center">
+  <img src="../docs/public/assets/teaser.png" alt="teaser"/>
+</div>
+
+Полное руководство доступно в нашей [Документации](https://voyager.nagi.fun/ru).
+
+- **📍 [Навигация по таймлайну](https://voyager.nagi.fun/ru/guide/timeline)**: Визуальные узлы для быстрого перехода между сообщениями, отметки важных моментов и управления ветками диалога.
+- **📂 [Организация по папкам](https://voyager.nagi.fun/ru/guide/folders)**: Группируйте чаты в двухуровневую иерархию папок простым перетаскиванием.
+- **💡 [Хранилище промптов](https://voyager.nagi.fun/ru/guide/prompts)**: Сохраняйте и повторно используйте лучшие промпты в Gemini, AI Studio и на [любых сайтах](https://voyager.nagi.fun/ru/guide/custom-websites).
+- **💾 [Экспорт чатов](https://voyager.nagi.fun/ru/guide/export)**: Сохраняйте диалоги в форматах JSON, Markdown или PDF вместе с изображениями.
+- **🍌 [NanoBanana](https://voyager.nagi.fun/ru/guide/nanobanana)**: Автоматическое удаление водяных знаков с изображений, созданных Gemini, без потери качества.
+- **🧜‍♀️ [Рендеринг Mermaid](https://voyager.nagi.fun/ru/guide/mermaid)**: Автоматическая отрисовка блок-схем и диаграмм Mermaid.
+- **🔬 [Deep Research](https://voyager.nagi.fun/ru/guide/deep-research)**: Извлечение цепочек рассуждений и ссылок из сессий Deep Research.
+- **📐 Копирование формул**: Копирование исходного кода LaTeX и MathML (Word) в один клик.
+- **🛠️ Инструменты продуктивности**:
+  - **[Пакетное удаление](https://voyager.nagi.fun/ru/guide/batch-delete)**: Массовая очистка истории диалогов.
+  - **[Ответ с цитированием](https://voyager.nagi.fun/ru/guide/quote-reply)**: Цитирование выделенного текста при ответе.
+  - **[Синхронизация заголовка](https://voyager.nagi.fun/ru/guide/tab-title)**: Автоматическое обновление названия вкладки браузера.
+  - **[Сворачивание ввода](https://voyager.nagi.fun/ru/guide/input-collapse)**: Сворачивание пустого поля ввода для увеличения области чтения.
+
+---
+
+## 📥 Установка
+
+> ⚠️ Примечание: Prompt Manager — единственная функция, поддерживающая Gemini для предприятий.
+
+<div align="center">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol" target="_blank">
+    <img src="https://img.shields.io/badge/Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store" height="36">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank">
+    <img src="https://img.shields.io/badge/Microsoft%20Edge-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Microsoft Edge Add-ons" height="36">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
+    <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
+  </a>
+</div>
+
+<p align="center">
+  <sub>Версия для <b>Chrome Web Store</b> также работает в Edge, Opera, Brave, Vivaldi, Arc и других браузерах на базе Chromium.</sub>
+</p>
+
+> **Статус в магазинах:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (Скоро)
+
+Для **ручной установки** или **сборки для разработки**, пожалуйста, обратитесь к [Руководству по установке](https://voyager.nagi.fun/ru/guide/installation).
+
+---
+
+## ☕ Поддержать проект
+
+<div align="center">
+  <a href="https://github.com/Nagi-ovo/gemini-voyager">
+    <img src="https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
+  </a>
+</div>
+
+Если Gemini Voyager делает вашу жизнь проще, вы можете угостить меня кофе. Это помогает продолжать работу над обновлениями! Спонсоры будут отмечены в разделе благодарностей. ❤️
+
+<div align="center">
+  <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
+    <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" height="36">
+  </a>
+  <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
+    <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="36">
+  </a>
+  
+  <p><b>Или через WeChat / Alipay / Afdian:</b></p>
+  <table align="center" border="0" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center">
+        <img src="../docs/public/assets/wechat-sponsor.png" alt="WeChat Pay" height="160"><br>
+        <sub><b>WeChat Pay</b></sub>
+      </td>
+      <td align="center">
+        <img src="../docs/public/assets/alipay-sponsor.jpg" alt="Alipay" height="160"><br>
+        <sub><b>Alipay</b></sub>
+      </td>
+      <td align="center">
+        <a href="https://afdian.com/a/nagi-ovo" target="_blank">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
+            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
+            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
+          </picture>
+        </a><br>
+        <sub><b>Afdian</b></sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
+### 🎙️ Рекомендуемый инструмент: Typeless
+
+Я настоятельно рекомендую **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)** — инструмент для перевода голоса в текст с ИИ, который я активно использовал во время разработки Gemini Voyager.
+
+> 🎁 **[Присоединяйтесь по моей ссылке](https://www.typeless.com/refer?code=MZRYZP1)** (Код: **`MZRYZP1`**), чтобы получить **$5 бесплатных бонусов**. ❤️
+
+---
+
+## 🤝 Участие в разработке
+
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
+
+Мы приветствуем любую помощь!
+
+- **Issues**: Используйте наши шаблоны для [отчетов об ошибках](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) или [предложений новых функций](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml).
+- **Pull Requests**: Ознакомьтесь с [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+Спасибо, что помогаете делать Gemini Voyager лучше! ❤️
+
+---
+
+## 🌟 Благодарности
+
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Форк Gemini Voyager, адаптированный для DeepSeek.
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - Оригинальное расширение с таймлайном для ChatGPT, вдохновившее этот проект.
+
+---
+
+<div align="center">
+  <a href="https://www.star-history.com/#Nagi-ovo/gemini-voyager&type=date&legend=top-left">
+   <picture>
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
+   </picture>
+  </a>
+  <p>Сделано с ❤️ Jesse Zhang</p>
+  <sub>MIT License © 2025</sub>
+</div>

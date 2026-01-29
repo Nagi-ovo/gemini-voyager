@@ -60,6 +60,20 @@
   };
 
   /**
+   * Update status on the bridge for the content script to pick up (and show Toasts)
+   */
+  const updateStatus = (status, details = {}) => {
+    const bridge = getBridgeElement();
+    if (bridge) {
+      bridge.dataset.status = JSON.stringify({
+        type: status, // 'START', 'PROGRESS', 'SUCCESS', 'ERROR', 'WARNING'
+        timestamp: Date.now(),
+        ...details,
+      });
+    }
+  };
+
+  /**
    * Check if watermark remover is enabled by reading from bridge element
    */
   const isWatermarkRemoverEnabled = () => {
@@ -102,14 +116,34 @@
       // Only process watermark removal if enabled
       if (isWatermarkRemoverEnabled()) {
         console.log('[Gemini Voyager] Intercepting download for watermark removal');
-        try {
-          // Fetch the original size image
-          const response = await originalFetch.apply(this, args);
 
-          if (!response.ok) return response;
+        // Declare response and blob outside try block so they're accessible in catch
+        let response, blob;
+
+        try {
+          // Check content length first (via HEAD request) to show appropriate message
+          // But we'll just show "downloading" first and update if large
+          updateStatus('DOWNLOADING');
+
+          // Fetch the original size image
+          response = await originalFetch.apply(this, args);
+
+          if (!response.ok) {
+            updateStatus('ERROR', { message: `HTTP Error: ${response.status}` });
+            return response;
+          }
+
+          // Check content length for large files (5MB) - update status
+          const contentLength = response.headers.get('content-length');
+          if (contentLength && parseInt(contentLength, 10) > 5 * 1024 * 1024) {
+            updateStatus('DOWNLOADING_LARGE');
+          }
 
           // Clone response to read blob
-          const blob = await response.blob();
+          blob = await response.blob();
+
+          // Step 2: Processing
+          updateStatus('PROCESSING');
 
           // Send blob to content script for watermark removal via DOM bridge
           const processedBlob = await new Promise((resolve, reject) => {
@@ -155,6 +189,8 @@
             }, WATERMARK_PROCESSING_TIMEOUT_MS);
           });
 
+          updateStatus('SUCCESS');
+
           // Return processed response
           return new Response(processedBlob, {
             status: response.status,
@@ -163,7 +199,16 @@
           });
         } catch (error) {
           console.warn('[Gemini Voyager] Watermark processing failed, using original:', error);
-          // Fall through to return original fetch with modified URL
+          updateStatus('ERROR', { message: error.message || 'Unknown error' });
+          // Return the original blob if available, otherwise fall through to originalFetch
+          if (blob && response) {
+            return new Response(blob, {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers,
+            });
+          }
+          // If blob/response not available (error before fetch completed), fall through
         }
       }
     }

@@ -1,0 +1,1030 @@
+{
+  "extName": {
+    "message": "Gemini Voyager",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "عزز تجربتك في Gemini من خلال التنقل عبر الجدول الزمني، وتنظيم المجلدات، ومخزن المطالبات، وتصدير الدردشة.",
+    "description": "Extension description"
+  },
+  "scrollMode": {
+    "message": "وضع التمرير",
+    "description": "Scroll mode label"
+  },
+  "flow": {
+    "message": "تدفق",
+    "description": "Flow mode"
+  },
+  "jump": {
+    "message": "قفز",
+    "description": "Jump mode"
+  },
+  "hideOuterContainer": {
+    "message": "إخفاء الحاوية الخارجية",
+    "description": "Hide outer container label"
+  },
+  "draggableTimeline": {
+    "message": "جدول زمني قابل للسحب",
+    "description": "Draggable Timeline label"
+  },
+  "enableMarkerLevel": {
+    "message": "تمكين مستويات العقدة",
+    "description": "Enable timeline node level feature"
+  },
+  "enableMarkerLevelHint": {
+    "message": "انقر بزر الماوس الأيمن فوق عقد الجدول الزمني لتعيين مستواها وطي العناصر الفرعية",
+    "description": "Node level feature hint"
+  },
+  "experimentalLabel": {
+    "message": "تجريبي",
+    "description": "Experimental feature label"
+  },
+  "resetPosition": {
+    "message": "إعادة تعيين الموضع",
+    "description": "Reset Position button"
+  },
+  "resetTimelinePosition": {
+    "message": "إعادة تعيين موضع الجدول الزمني",
+    "description": "Reset timeline position button in timeline options"
+  },
+  "language": {
+    "message": "اللغة",
+    "description": "Language label"
+  },
+  "pm_title": {
+    "message": "Gemini Voyager",
+    "description": "Prompt Manager title"
+  },
+  "pm_add": {
+    "message": "إضافة",
+    "description": "Add prompt button"
+  },
+  "pm_search_placeholder": {
+    "message": "البحث في المطالبات أو العلامات",
+    "description": "Search placeholder"
+  },
+  "pm_import": {
+    "message": "استيراد",
+    "description": "Import button"
+  },
+  "pm_export": {
+    "message": "تصدير",
+    "description": "Export button"
+  },
+  "pm_prompt_placeholder": {
+    "message": "نص المطالبة",
+    "description": "Prompt textarea placeholder"
+  },
+  "pm_tags_placeholder": {
+    "message": "العلامات (مفصولة بفواصل)",
+    "description": "Tags input placeholder"
+  },
+  "pm_save": {
+    "message": "حفظ",
+    "description": "Save prompt"
+  },
+  "pm_cancel": {
+    "message": "إلغاء",
+    "description": "Cancel"
+  },
+  "pm_all_tags": {
+    "message": "الكل",
+    "description": "All tags chip"
+  },
+  "pm_empty": {
+    "message": "لا توجد مطالبات حتى الآن",
+    "description": "Empty state"
+  },
+  "pm_copy": {
+    "message": "نسخ",
+    "description": "Copy prompt"
+  },
+  "pm_copied": {
+    "message": "تم النسخ",
+    "description": "Copied notice"
+  },
+  "pm_delete": {
+    "message": "حذف",
+    "description": "Delete prompt"
+  },
+  "pm_delete_confirm": {
+    "message": "هل تريد حذف هذه المطالبة؟",
+    "description": "Delete confirm"
+  },
+  "pm_lock": {
+    "message": "قفل الموضع",
+    "description": "Lock panel position"
+  },
+  "pm_unlock": {
+    "message": "فتح الموضع",
+    "description": "Unlock panel position"
+  },
+  "pm_import_invalid": {
+    "message": "تنسيق ملف غير صالح",
+    "description": "Import invalid"
+  },
+  "pm_import_success": {
+    "message": "تم استيراد {count} مطالبة",
+    "description": "Import success"
+  },
+  "pm_duplicate": {
+    "message": "تكرار المطالبة",
+    "description": "Duplicate on add"
+  },
+  "pm_deleted": {
+    "message": "تم الحذف",
+    "description": "Deleted notice"
+  },
+  "pm_edit": {
+    "message": "تعديل",
+    "description": "Edit prompt"
+  },
+  "pm_expand": {
+    "message": "توسيع",
+    "description": "Expand prompt text"
+  },
+  "pm_collapse": {
+    "message": "طي",
+    "description": "Collapse prompt text"
+  },
+  "pm_saved": {
+    "message": "تم الحفظ",
+    "description": "Saved notice"
+  },
+  "pm_settings": {
+    "message": "الإعدادات",
+    "description": "Settings button"
+  },
+  "pm_settings_tooltip": {
+    "message": "فتح إعدادات الامتداد",
+    "description": "Settings button tooltip"
+  },
+  "pm_settings_fallback": {
+    "message": "يرجى النقر فوق رمز الامتداد في شريط المتصفح لفتح الإعدادات",
+    "description": "Settings open failed message"
+  },
+  "pm_backup": {
+    "message": "نسخ احتياطي محلي",
+    "description": "Local backup button"
+  },
+  "pm_backup_tooltip": {
+    "message": "نسخ احتياطي للمطالبات والمجلدات في مجلد محدد بختم زمني",
+    "description": "Backup button tooltip"
+  },
+  "pm_backup_cancelled": {
+    "message": "تم إلغاء النسخ الاحتياطي",
+    "description": "Backup cancelled hint"
+  },
+  "pm_backup_error": {
+    "message": "✗ فشل النسخ الاحتياطي",
+    "description": "Backup failed hint"
+  },
+  "pm_backup_hint_options": {
+    "message": "تم دمج الميزة في مدير المطالبات على صفحة Gemini.",
+    "description": "Backup hint in options page"
+  },
+  "pm_backup_step1": {
+    "message": "افتح صفحة Gemini (gemini.google.com)",
+    "description": "Backup step 1"
+  },
+  "pm_backup_step2": {
+    "message": "انقر فوق رمز الامتداد في أسفل اليمين لفتح مدير المطالبات",
+    "description": "Backup step 2"
+  },
+  "pm_backup_step3": {
+    "message": "انقر فوق زر \"💾 نسخ احتياطي محلي\" وحدد مجلد النسخ الاحتياطي",
+    "description": "Backup step 3"
+  },
+  "pm_backup_note": {
+    "message": "تشمل النسخ الاحتياطية جميع المطالبات والمجلدات، ويتم حفظها في مجلد بختم زمني (التنسيق: backup-YYYYMMDD-HHMMSS)",
+    "description": "Backup feature note"
+  },
+  "extensionVersion": {
+    "message": "الإصدار",
+    "description": "Extension version label"
+  },
+  "newVersionAvailable": {
+    "message": "يتوفر إصدار جديد",
+    "description": "Update reminder title"
+  },
+  "currentVersionLabel": {
+    "message": "الحالي",
+    "description": "Label for current version number"
+  },
+  "latestVersionLabel": {
+    "message": "الأحدث",
+    "description": "Label for latest version number"
+  },
+  "updateNow": {
+    "message": "تحديث",
+    "description": "CTA to update to latest version"
+  },
+  "starProject": {
+    "message": "ادعمني ⭐",
+    "description": "Github callout"
+  },
+  "officialDocs": {
+    "message": "الوثائق الرسمية",
+    "description": "Official docs link"
+  },
+  "exportChatJson": {
+    "message": "تصدير سجل الدردشة",
+    "description": "Tooltip for export button"
+  },
+  "folder_title": {
+    "message": "المجلدات",
+    "description": "Folder section title"
+  },
+  "folder_create": {
+    "message": "إنشاء مجلد",
+    "description": "Create folder button tooltip"
+  },
+  "folder_name_prompt": {
+    "message": "أدخل اسم المجلد:",
+    "description": "Create folder name prompt"
+  },
+  "folder_rename_prompt": {
+    "message": "أدخل الاسم الجديد:",
+    "description": "Rename folder prompt"
+  },
+  "folder_delete_confirm": {
+    "message": "هل تريد حذف هذا المجلد وجميع محتوياته؟",
+    "description": "Delete folder confirmation"
+  },
+  "folder_create_subfolder": {
+    "message": "إنشاء مجلد فرعي",
+    "description": "Create subfolder menu item"
+  },
+  "folder_rename": {
+    "message": "إعادة تسمية",
+    "description": "Rename folder menu item"
+  },
+  "folder_change_color": {
+    "message": "تغيير اللون",
+    "description": "Change folder color menu item"
+  },
+  "folder_delete": {
+    "message": "حذف",
+    "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "افتراضي",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "أحمر",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "برتقالي",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "أصفر",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "أخضر",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "أزرق",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "أرجواني",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "وردي",
+    "description": "Pink folder color name"
+  },
+  "folder_empty": {
+    "message": "لا توجد مجلدات حتى الآن",
+    "description": "Empty state placeholder when no folders exist"
+  },
+  "folder_pin": {
+    "message": "تثبيت المجلد",
+    "description": "Pin folder menu item"
+  },
+  "folder_unpin": {
+    "message": "إلغاء تثبيت المجلد",
+    "description": "Unpin folder menu item"
+  },
+  "folder_remove_conversation": {
+    "message": "إزالة من المجلد",
+    "description": "Remove conversation button tooltip"
+  },
+  "folder_remove_conversation_confirm": {
+    "message": "هل تريد إزالة \"{title}\" من هذا المجلد؟",
+    "description": "Remove conversation confirmation"
+  },
+  "conversation_more": {
+    "message": "خيارات إضافية",
+    "description": "Conversation more options button tooltip"
+  },
+  "conversation_move_to_folder": {
+    "message": "نقل إلى مجلد",
+    "description": "Move conversation to folder menu item"
+  },
+  "conversation_move_to_folder_title": {
+    "message": "نقل إلى مجلد",
+    "description": "Move conversation to folder dialog title"
+  },
+  "chatWidth": {
+    "message": "عرض الدردشة",
+    "description": "Chat width adjustment label"
+  },
+  "chatWidthNarrow": {
+    "message": "ضيق",
+    "description": "Narrow chat width label"
+  },
+  "chatWidthWide": {
+    "message": "عريض",
+    "description": "Wide chat width label"
+  },
+  "sidebarWidth": {
+    "message": "عرض الشريط الجانبي",
+    "description": "Sidebar width adjustment label"
+  },
+  "sidebarWidthNarrow": {
+    "message": "ضيق",
+    "description": "Narrow sidebar width label"
+  },
+  "sidebarWidthWide": {
+    "message": "عريض",
+    "description": "Wide sidebar width label"
+  },
+  "formula_copied": {
+    "message": "✓ تم نسخ الصيغة",
+    "description": "Formula copied success message"
+  },
+  "formula_copy_failed": {
+    "message": "✗ فشل النسخ",
+    "description": "Formula copy failed message"
+  },
+  "formulaCopyFormat": {
+    "message": "تنسيق نسخ الصيغة",
+    "description": "Formula copy format setting label"
+  },
+  "formulaCopyFormatLatex": {
+    "message": "LaTeX",
+    "description": "LaTeX format option"
+  },
+  "formulaCopyFormatUnicodeMath": {
+    "message": "MathML (Word)",
+    "description": "Label for UnicodeMath formula copy format option"
+  },
+  "formulaCopyFormatHint": {
+    "message": "اختر التنسيق عند نسخ الصيغ بالنقر",
+    "description": "Formula copy format hint"
+  },
+  "formulaCopyFormatNoDollar": {
+    "message": "LaTeX (بدون علامة الدولار)",
+    "description": "LaTeX format option without dollar signs"
+  },
+  "folder_export": {
+    "message": "تصدير المجلدات",
+    "description": "Export folders button tooltip"
+  },
+  "folder_import": {
+    "message": "استيراد المجلدات",
+    "description": "Import folders button tooltip"
+  },
+  "folder_import_title": {
+    "message": "استيراد تكوين المجلد",
+    "description": "Import dialog title"
+  },
+  "folder_import_strategy": {
+    "message": "استراتيجية الاستيراد:",
+    "description": "Import strategy label"
+  },
+  "folder_import_merge": {
+    "message": "دمج مع المجلدات الموجودة",
+    "description": "Merge import strategy"
+  },
+  "folder_import_overwrite": {
+    "message": "الكتابة فوق المجلدات الموجودة",
+    "description": "Overwrite import strategy"
+  },
+  "folder_import_select_file": {
+    "message": "حدد ملف JSON للاستيراد",
+    "description": "Import file selection prompt"
+  },
+  "folder_import_success": {
+    "message": "✓ تم استيراد {folders} مجلد، و {conversations} محادثة",
+    "description": "Import success message"
+  },
+  "folder_import_success_skipped": {
+    "message": "✓ تم استيراد {folders} مجلد، و {conversations} محادثة (تم تخطي {skipped} مكرر)",
+    "description": "Import success with skipped message"
+  },
+  "folder_import_error": {
+    "message": "✗ فشل الاستيراد: {error}",
+    "description": "Import error message"
+  },
+  "folder_export_success": {
+    "message": "✓ تم تصدير المجلدات بنجاح",
+    "description": "Export success message"
+  },
+  "folder_import_invalid_format": {
+    "message": "تنسيق ملف غير صالح. يرجى تحديد ملف تكوين مجلد صالح.",
+    "description": "Invalid format error"
+  },
+  "folder_import_confirm_overwrite": {
+    "message": "سيؤدي هذا إلى استبدال جميع المجلدات الموجودة. سيتم إنشاء نسخة احتياطية. متابعة؟",
+    "description": "Overwrite confirmation"
+  },
+  "export_dialog_title": {
+    "message": "تصدير المحادثة",
+    "description": "Export dialog title"
+  },
+  "export_dialog_select": {
+    "message": "اختر تنسيق التصدير:",
+    "description": "Export format selection label"
+  },
+  "export_dialog_warning": {
+    "message": "⚠️ نظرًا للتحميل البطيء للرسائل القديمة في Gemini، يرجى استخدام الجدول الزمني للانتقال إلى الرسالة الأولى في المحادثة قبل التصدير. وإلا فقد يكون التصدير غير مكتمل.",
+    "description": "Warning about lazy loading affecting export completeness"
+  },
+  "editInputWidth": {
+    "message": "عرض حقل التحرير",
+    "description": "Edit input width adjustment label"
+  },
+  "editInputWidthNarrow": {
+    "message": "ضيق",
+    "description": "Narrow edit input width label"
+  },
+  "editInputWidthWide": {
+    "message": "عريض",
+    "description": "Wide edit input width label"
+  },
+  "timelineOptions": {
+    "message": "خيارات الجدول الزمني",
+    "description": "Timeline options section label"
+  },
+  "folderOptions": {
+    "message": "خيارات المجلد",
+    "description": "Folder options section label"
+  },
+  "enableFolderFeature": {
+    "message": "تمكين ميزة المجلد",
+    "description": "Enable or disable the folder feature"
+  },
+  "hideArchivedConversations": {
+    "message": "إخفاء المحادثات المؤرشفة",
+    "description": "Hide conversations that are in folders from the main list"
+  },
+  "conversation_star": {
+    "message": "تمييز المحادثة بنجمة",
+    "description": "Star conversation button tooltip"
+  },
+  "conversation_unstar": {
+    "message": "إزالة النجمة من المحادثة",
+    "description": "Unstar conversation button tooltip"
+  },
+  "conversation_untitled": {
+    "message": "بدون عنوان",
+    "description": "Fallback title for conversations without a name"
+  },
+  "geminiOnlyNotice": {
+    "message": "يعمل على Gemini (بما في ذلك Enterprise) و AI Studio بشكل افتراضي. أضف مواقع أخرى أدناه لتمكين مدير المطالبات هناك.",
+    "description": "Notice that defaults are limited to Gemini/AI Studio"
+  },
+  "folderManager_dataLossWarning": {
+    "message": "⚠️ تحذير: فشل تحميل بيانات المجلد. ربما تكون مجلداتك تالفة. يرجى التحقق من وحدة تحكم المتصفح للحصول على التفاصيل ومحاولة الاستعادة من النسخة الاحتياطية إذا كانت متوفرة.",
+    "description": "Warning shown when folder data fails to load"
+  },
+  "backupOptions": {
+    "message": "نسخ احتياطي تلقائي",
+    "description": "Backup options section label"
+  },
+  "backupEnabled": {
+    "message": "تمكين النسخ الاحتياطي التلقائي",
+    "description": "Enable auto backup toggle"
+  },
+  "backupNow": {
+    "message": "نسخ احتياطي الآن",
+    "description": "Backup now button"
+  },
+  "backupSelectFolder": {
+    "message": "تحديد مجلد النسخ الاحتياطي",
+    "description": "Select backup folder button"
+  },
+  "backupFolderSelected": {
+    "message": "مجلد النسخ الاحتياطي: {folder}",
+    "description": "Shows selected backup folder"
+  },
+  "backupIncludePrompts": {
+    "message": "تضمين المطالبات",
+    "description": "Include prompts in backup toggle"
+  },
+  "backupIncludeFolders": {
+    "message": "تضمين المجلدات",
+    "description": "Include folders in backup toggle"
+  },
+  "backupIntervalLabel": {
+    "message": "فاصل النسخ الاحتياطي",
+    "description": "Backup interval label"
+  },
+  "backupIntervalManual": {
+    "message": "يدوي فقط",
+    "description": "Manual backup mode"
+  },
+  "backupIntervalDaily": {
+    "message": "يومي",
+    "description": "Daily backup interval"
+  },
+  "backupIntervalWeekly": {
+    "message": "أسبوعي (7 أيام)",
+    "description": "Weekly backup interval"
+  },
+  "backupLastBackup": {
+    "message": "آخر نسخ احتياطي: {time}",
+    "description": "Last backup timestamp"
+  },
+  "backupNever": {
+    "message": "أبدا",
+    "description": "Never backed up"
+  },
+  "backupSuccess": {
+    "message": "✓ تم إنشاء النسخ الاحتياطي: {prompts} مطالبة، {folders} مجلد، {conversations} محادثة",
+    "description": "Backup success message"
+  },
+  "backupError": {
+    "message": "✗ فشل النسخ الاحتياطي: {error}",
+    "description": "Backup error message"
+  },
+  "backupNotSupported": {
+    "message": "⚠️ يتطلب النسخ الاحتياطي التلقائي متصفحًا حديثًا يدعم File System Access API",
+    "description": "Browser not supported message"
+  },
+  "backupSelectFolderFirst": {
+    "message": "يرجى تحديد مجلد نسخ احتياطي أولاً",
+    "description": "No folder selected warning"
+  },
+  "backupUserCancelled": {
+    "message": "تم إلغاء النسخ الاحتياطي",
+    "description": "User cancelled folder selection"
+  },
+  "backupConfigSaved": {
+    "message": "✓ تم حفظ إعدادات النسخ الاحتياطي",
+    "description": "Config saved message"
+  },
+  "backupPermissionDenied": {
+    "message": "⚠️ لا يمكن الوصول إلى هذا الدليل. يرجى اختيار موقع مختلف (مثل المستندات أو التنزيلات أو مجلد في سطح المكتب)",
+    "description": "Permission denied for restricted directory"
+  },
+  "backupConfigureInOptions": {
+    "message": "يتطلب تكوين النسخ الاحتياطي صفحة الخيارات. انقر فوق الزر أدناه لفتحها (انقر فوق النقاط الثلاث بجوار رمز الامتداد ← خيارات).",
+    "description": "Backup configure in options page explanation"
+  },
+  "openOptionsPage": {
+    "message": "فتح صفحة الخيارات",
+    "description": "Open options page button"
+  },
+  "optionsPageSubtitle": {
+    "message": "خيارات الامتداد",
+    "description": "Options page subtitle"
+  },
+  "optionsComingSoon": {
+    "message": "المزيد من الخيارات قريبًا...",
+    "description": "Options page placeholder text"
+  },
+  "backupDataAccessNotice": {
+    "message": "قيود الوصول إلى البيانات",
+    "description": "Backup data access limitation title"
+  },
+  "backupDataAccessHint": {
+    "message": "نظرًا لقيود أمان المتصفح، لا يمكن لصفحة الخيارات هذه الوصول مباشرة إلى المطالبات وبيانات المجلد من صفحات Gemini. يرجى استخدام مدير المطالبات وميزات تصدير المجلد على صفحة Gemini للنسخ الاحتياطي اليدوي.",
+    "description": "Backup data access limitation explanation"
+  },
+  "promptManagerOptions": {
+    "message": "مدير المطالبات",
+    "description": "Prompt Manager options section label"
+  },
+  "hidePromptManager": {
+    "message": "إخفاء مدير المطالبات",
+    "description": "Hide the prompt manager floating ball"
+  },
+  "hidePromptManagerHint": {
+    "message": "إخفاء الزر العائم لمدير المطالبات على الصفحة",
+    "description": "Hint for hiding prompt manager feature"
+  },
+  "customWebsites": {
+    "message": "مواقع مخصصة",
+    "description": "Custom websites for prompt manager"
+  },
+  "customWebsitesPlaceholder": {
+    "message": "أدخل عنوان URL للموقع (مثل chatgpt.com)",
+    "description": "Custom websites input placeholder"
+  },
+  "customWebsitesHint": {
+    "message": "أضف مواقع الويب التي تريد استخدام مدير المطالبات فيها. سيتم تنشيط مدير المطالبات فقط في هذه المواقع.",
+    "description": "Custom websites hint"
+  },
+  "addWebsite": {
+    "message": "إضافة موقع ويب",
+    "description": "Add website button"
+  },
+  "removeWebsite": {
+    "message": "إزالة",
+    "description": "Remove website button"
+  },
+  "invalidUrl": {
+    "message": "تنسيق عنوان URL غير صالح",
+    "description": "Invalid URL error message"
+  },
+  "websiteAdded": {
+    "message": "تمت إضافة موقع الويب",
+    "description": "Website added success message"
+  },
+  "websiteRemoved": {
+    "message": "تمت إزالة موقع الويب",
+    "description": "Website removed success message"
+  },
+  "permissionDenied": {
+    "message": "تم رفض الإذن. يرجى السماح بالوصول إلى موقع الويب هذا.",
+    "description": "Permission denied error message"
+  },
+  "permissionRequestFailed": {
+    "message": "فشل طلب الإذن. يرجى المحاولة مرة أخرى أو منح الوصول في إعدادات الامتداد.",
+    "description": "Permission request failure message"
+  },
+  "customWebsitesNote": {
+    "message": "نصيحة: سيُطلب منك السماح بالوصول عند إضافة موقع. بعد منح الإذن، قم بإعادة تحميل هذا الموقع حتى يتمكن مدير المطالبات من البدء.",
+    "description": "Custom websites reload/permission note"
+  },
+  "starredHistory": {
+    "message": "السجل المميز بنجمة",
+    "description": "Starred history title"
+  },
+  "viewStarredHistory": {
+    "message": "عرض السجل المميز بنجمة",
+    "description": "View starred history button"
+  },
+  "noStarredMessages": {
+    "message": "لا توجد رسائل مميزة بنجمة حتى الآن",
+    "description": "No starred messages placeholder"
+  },
+  "removeFromStarred": {
+    "message": "إزالة من المفضلة",
+    "description": "Remove from starred tooltip"
+  },
+  "justNow": {
+    "message": "الآن",
+    "description": "Just now time label"
+  },
+  "hoursAgo": {
+    "message": "منذ ساعات",
+    "description": "Hours ago label"
+  },
+  "yesterday": {
+    "message": "أمس",
+    "description": "Yesterday date label"
+  },
+  "daysAgo": {
+    "message": "منذ أيام",
+    "description": "Days ago label"
+  },
+  "loading": {
+    "message": "جارٍ التحميل...",
+    "description": "Loading message"
+  },
+  "keyboardShortcuts": {
+    "message": "اختصارات لوحة المفاتيح",
+    "description": "Keyboard shortcuts section title"
+  },
+  "enableShortcuts": {
+    "message": "تمكين اختصارات لوحة المفاتيح",
+    "description": "Enable shortcuts toggle label"
+  },
+  "previousNode": {
+    "message": "العقدة السابقة",
+    "description": "Previous timeline node shortcut label"
+  },
+  "nextNode": {
+    "message": "العقدة التالية",
+    "description": "Next timeline node shortcut label"
+  },
+  "shortcutKey": {
+    "message": "مفتاح",
+    "description": "Shortcut key label"
+  },
+  "shortcutModifiers": {
+    "message": "معدّلات",
+    "description": "Shortcut modifiers label"
+  },
+  "resetShortcuts": {
+    "message": "إعادة التعيين إلى الافتراضيات",
+    "description": "Reset shortcuts button"
+  },
+  "shortcutsResetSuccess": {
+    "message": "تمت إعادة تعيين الاختصارات",
+    "description": "Shortcuts reset success message"
+  },
+  "shortcutsDescription": {
+    "message": "التنقل عبر عقد الجدول الزمني باستخدام اختصارات لوحة المفاتيح",
+    "description": "Shortcuts description"
+  },
+  "modifierNone": {
+    "message": "لا شيء",
+    "description": "No modifier key"
+  },
+  "modifierAlt": {
+    "message": "Alt",
+    "description": "Alt modifier key"
+  },
+  "modifierCtrl": {
+    "message": "Ctrl",
+    "description": "Ctrl modifier key"
+  },
+  "modifierShift": {
+    "message": "Shift",
+    "description": "Shift modifier key"
+  },
+  "modifierMeta": {
+    "message": "Cmd/Win",
+    "description": "Meta/Command/Windows modifier key"
+  },
+  "cloudSync": {
+    "message": "مزامنة سحابية",
+    "description": "Cloud sync section title"
+  },
+  "cloudSyncDescription": {
+    "message": "مزامنة المجلدات والمطالبات مع Google Drive",
+    "description": "Cloud sync description"
+  },
+  "syncModeDisabled": {
+    "message": "معطل",
+    "description": "Sync mode disabled option"
+  },
+  "syncModeManual": {
+    "message": "يدوي",
+    "description": "Sync mode manual option"
+  },
+  "syncServerPort": {
+    "message": "منفذ الخادم",
+    "description": "Port number for the sync server"
+  },
+  "syncNow": {
+    "message": "مزامنة الآن",
+    "description": "Sync now button"
+  },
+  "lastSynced": {
+    "message": "آخر مزامنة: {time}",
+    "description": "Last sync timestamp"
+  },
+  "neverSynced": {
+    "message": "لم تتم المزامنة من قبل",
+    "description": "Never synced message"
+  },
+  "lastUploaded": {
+    "message": "تم الرفع: {time}",
+    "description": "Last upload timestamp"
+  },
+  "neverUploaded": {
+    "message": "لم يتم الرفع من قبل",
+    "description": "Never uploaded message"
+  },
+  "syncSuccess": {
+    "message": "✓ تمت المزامنة بنجاح",
+    "description": "Sync success message"
+  },
+  "syncError": {
+    "message": "✗ فشلت المزامنة: {error}",
+    "description": "Sync error message"
+  },
+  "syncInProgress": {
+    "message": "جارٍ المزامنة...",
+    "description": "Sync in progress message"
+  },
+  "syncUpload": {
+    "message": "رفع",
+    "description": "Upload button label"
+  },
+  "syncMerge": {
+    "message": "دمج",
+    "description": "Merge button label"
+  },
+  "syncMode": {
+    "message": "وضع المزامنة",
+    "description": "Sync mode label"
+  },
+  "minutesAgo": {
+    "message": "منذ دقائق",
+    "description": "Minutes ago label"
+  },
+  "syncNoData": {
+    "message": "لم يتم العثور على بيانات مزامنة في Drive",
+    "description": "Error message when no data is found in Drive"
+  },
+  "syncUploadFailed": {
+    "message": "فشل الرفع",
+    "description": "Error message when upload fails"
+  },
+  "syncDownloadFailed": {
+    "message": "فشل التنزيل",
+    "description": "Error message when download fails"
+  },
+  "syncAuthFailed": {
+    "message": "فشل المصادقة",
+    "description": "Error message when authentication fails"
+  },
+  "signOut": {
+    "message": "تسجيل الخروج",
+    "description": "Sign out button"
+  },
+  "signInWithGoogle": {
+    "message": "تسجيل الدخول باستخدام Google",
+    "description": "Sign in with Google button"
+  },
+  "nanobananaOptions": {
+    "message": "خيارات NanoBanana",
+    "description": "NanoBanana options section label"
+  },
+  "enableNanobananaWatermarkRemover": {
+    "message": "إزالة علامة NanoBanana المائية",
+    "description": "Enable automatic watermark removal for NanoBanana images"
+  },
+  "nanobananaWatermarkRemoverHint": {
+    "message": "يزيل تلقائيًا علامات Gemini المائية المرئية من الصور التي تم إنشاؤها",
+    "description": "Watermark remover feature hint"
+  },
+  "nanobananaDownloadTooltip": {
+    "message": "تنزيل الصورة بدون علامة مائية (NanoBanana)",
+    "description": "Download button tooltip"
+  },
+  "deepResearchDownload": {
+    "message": "تنزيل محتوى التفكير",
+    "description": "Deep Research download button text"
+  },
+  "deepResearchDownloadTooltip": {
+    "message": "تنزيل محتوى التفكير بتنسيق Markdown",
+    "description": "Deep Research download button tooltip"
+  },
+  "folder_uncategorized": {
+    "message": "غير مصنف",
+    "description": "Label for root-level conversations not in any folder"
+  },
+  "timelineLevelTitle": {
+    "message": "مستوى العقدة",
+    "description": "Title for timeline node level context menu"
+  },
+  "timelineLevel1": {
+    "message": "مستوى 1",
+    "description": "Timeline node level 1 option"
+  },
+  "timelineLevel2": {
+    "message": "مستوى 2",
+    "description": "Timeline node level 2 option"
+  },
+  "timelineLevel3": {
+    "message": "مستوى 3",
+    "description": "Timeline node level 3 option"
+  },
+  "timelineCollapse": {
+    "message": "طي",
+    "description": "Collapse children"
+  },
+  "timelineExpand": {
+    "message": "توسيع",
+    "description": "Expand children"
+  },
+  "quoteReply": {
+    "message": "رد باقتباس",
+    "description": "Quote reply button text"
+  },
+  "inputCollapseOptions": {
+    "message": "طي الإدخال",
+    "description": "Input collapse options section label"
+  },
+  "enableInputCollapse": {
+    "message": "تمكين طي الإدخال",
+    "description": "Enable input collapse toggle label"
+  },
+  "enableInputCollapseHint": {
+    "message": "طي منطقة الإدخال عندما تكون فارغة للحصول على مساحة قراءة أكبر",
+    "description": "Input collapse feature hint"
+  },
+  "inputCollapsePlaceholder": {
+    "message": "راسل Gemini",
+    "description": "Placeholder text shown in collapsed input"
+  },
+  "batch_delete_confirm": {
+    "message": "هل أنت متأكد من أنك تريد حذف {count} محادثة؟ لا يمكن التراجع عن هذا الإجراء.",
+    "description": "Batch delete confirmation message"
+  },
+  "batch_delete_in_progress": {
+    "message": "جارٍ الحذف... ({current}/{total})",
+    "description": "Batch delete progress message"
+  },
+  "batch_delete_success": {
+    "message": "✓ تم حذف {count} محادثة",
+    "description": "Batch delete success message"
+  },
+  "batch_delete_partial": {
+    "message": "اكتمل الحذف: {success} بنجاح، {failed} فشل",
+    "description": "Batch delete partial success message"
+  },
+  "batch_delete_limit_reached": {
+    "message": "يمكن تحديد {max} محادثة كحد أقصى في وقت واحد",
+    "description": "Batch delete limit warning"
+  },
+  "batch_delete_button": {
+    "message": "حذف المحدد",
+    "description": "Batch delete button tooltip in multi-select mode"
+  },
+  "batch_delete_match_patterns": {
+    "message": "delete,confirm,yes,ok,remove,حذف,تأكيد,نعم,موافق,إزالة",
+    "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
+  },
+  "generalOptions": {
+    "message": "خيارات عامة",
+    "description": "General options section label"
+  },
+  "enableTabTitleUpdate": {
+    "message": "مزامنة عنوان علامة التبويب مع المحادثة",
+    "description": "Enable tab title sync toggle label"
+  },
+  "enableTabTitleUpdateHint": {
+    "message": "تحديث عنوان علامة تبويب المتصفح تلقائيًا لمطابقة عنوان المحادثة الحالية",
+    "description": "Tab title sync feature hint"
+  },
+  "enableMermaidRendering": {
+    "message": "تمكين عرض مخططات Mermaid",
+    "description": "Enable Mermaid diagram rendering toggle label"
+  },
+  "enableMermaidRenderingHint": {
+    "message": "عرض مخططات Mermaid تلقائيًا في كتل التعليمات البرمجية",
+    "description": "Mermaid rendering feature hint"
+  },
+  "enableQuoteReply": {
+    "message": "تمكين الرد بالاقتباس",
+    "description": "Enable quote reply toggle label"
+  },
+  "enableQuoteReplyHint": {
+    "message": "إظهار زر عائم لاقتباس النص المحدد عند تحديد نص في المحادثات",
+    "description": "Quote reply feature hint"
+  },
+  "contextSync": {
+    "message": "مزامنة السياق",
+    "description": "Context Sync title"
+  },
+  "contextSyncDescription": {
+    "message": "مزامنة سياق الدردشة مع IDE المحلي الخاص بك",
+    "description": "Context Sync description"
+  },
+  "syncToIDE": {
+    "message": "مزامنة مع IDE",
+    "description": "Sync to IDE button"
+  },
+  "ideOnline": {
+    "message": "IDE متصل",
+    "description": "IDE Online status"
+  },
+  "ideOffline": {
+    "message": "IDE غير متصل",
+    "description": "IDE Offline status"
+  },
+  "syncing": {
+    "message": "جارٍ المزامنة...",
+    "description": "Syncing status"
+  },
+  "checkServer": {
+    "message": "يرجى تشغيل خادم AI Sync في VS Code",
+    "description": "Check server hint"
+  },
+  "capturing": {
+    "message": "جارٍ التقاط الحوار...",
+    "description": "Capturing status"
+  },
+  "syncedSuccess": {
+    "message": "تمت المزامنة بنجاح!",
+    "description": "Synced success message"
+  },
+  "downloadingOriginal": {
+    "message": "جارٍ تنزيل الصورة الأصلية",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "جارٍ تنزيل الصورة الأصلية (ملف كبير)",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "تحذير ملف كبير",
+    "description": "Warning shown for large downloads"
+  },
+  "downloadProcessing": {
+    "message": "جارٍ معالجة العلامة المائية",
+    "description": "Status when processing watermark removal"
+  },
+  "downloadSuccess": {
+    "message": "جارٍ التنزيل...",
+    "description": "Status when download starts"
+  },
+  "downloadError": {
+    "message": "فشل",
+    "description": "Status prefix when download fails"
+  }
+}

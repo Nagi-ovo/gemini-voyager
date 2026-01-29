@@ -16,6 +16,18 @@ hero:
       text: 旅を始める
       link: ./guide/getting-started
 
+teaser:
+  title: 'インタラクションを再定義する。'
+  description: '私たちは拡張機能を作るのではありません。思考そのものを再構築するのです。<br>Gemini Voyager があれば、人がインターフェースに合わせる必要はありません。インターフェースが、あなたの思考の流れに寄り添うのです。'
+  image: '/assets/teaser.png'
+  features:
+    - title: 'タイムライン'
+      details: '会話の鼓動を見る。<br>直線的な時間を、触れられる空間へと変える。'
+    - title: 'フォルダ'
+      details: '思考に家を与える。<br>一瞬の閃きでさえ、丁重に扱われる価値がある。'
+    - title: '主導権'
+      details: 'データはあなたのもの。<br>クラウドの壁を越え、知識を真にあなたの手に。'
+
 features:
   - icon: 🧭
     title: タイムライン
@@ -28,10 +40,12 @@ features:
     details: 閃きを逃さない。珠玉のアイデアを、大切に保管。
   - icon: 💬
     title: 引用返信
-    details: 選択して引用。文脈を捉えた、正確で効率的な対話を。
+    details: テキストを選択してワンクリックで引用。文脈に応じた返信で、効率的なコミュニケーションを。
+  - icon: 📐
+    title: 数式コピー
+    details: LaTeX および MathML (Word) のソースコードを一クリックでコピー。
   - icon: 🧜‍♀️
-    title: Mermaid ダイアグラム
-    details: コードを、図へ。フローチャートやシーケンス図を一瞬で可視化。
+    title: Mermaid
   - icon: 🍌
     title: NanoBanana 透かし除去
     details: 生成された瞬間を、純粋なままに。ノイズのない美しさを。
@@ -45,32 +59,6 @@ features:
     title: 一括削除
     details: 整理も一瞬。複数の会話を選んで、まとめて消去。
 ---
-
-<div class="vp-doc" style="margin-top: 4rem; text-align: center;">
-
-## インタラクションを再定義する。
-
-私たちは拡張機能を作るのではありません。思考そのものを再構築するのです。
-Gemini Voyager があれば、人がインターフェースに合わせる必要はありません。インターフェースが、あなたの思考の流れに寄り添うのです。
-
-<img src="/assets/teaser.png" alt="Gemini Voyager Interface" style="margin: 40px auto; border-radius: 12px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.3);" />
-
-<div style="display: flex; gap: 20px; justify-content: center; margin: 60px 0;">
-  <div style="flex: 1; max-width: 300px;">
-    <h3>タイムライン</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">会話の鼓動を見る。<br>直線的な時間を、触れられる空間へと変える。</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>フォルダ</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">思考に家を与える。<br>一瞬の閃きでさえ、丁重に扱われる価値がある。</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>主導権</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">データはあなたのもの。<br>クラウドの壁を越え、知識を真にあなたの手に。</p>
-  </div>
-</div>
-
-</div>
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">すべてのダウンロードは、信頼の証</h3>

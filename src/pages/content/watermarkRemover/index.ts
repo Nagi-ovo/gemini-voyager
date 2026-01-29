@@ -12,6 +12,11 @@
  * - Sends image data to this content script for watermark removal
  * - Returns processed image to complete the download
  */
+import { getTranslationSync } from '@/utils/i18n';
+import type { TranslationKey } from '@/utils/translations';
+
+import { DOWNLOAD_ICON_SELECTOR, findNativeDownloadButton } from './downloadButton';
+import { type StatusToastManager, createStatusToastManager } from './statusToast';
 import { WatermarkEngine } from './watermarkEngine';
 
 let engine: WatermarkEngine | null = null;
@@ -103,9 +108,7 @@ function addDownloadIndicator(imgElement: HTMLImageElement): void {
   if (!container) return;
 
   // Try to find Gemini's native download button area
-  const nativeDownloadIcon = container.querySelector(
-    'mat-icon[fonticon="download"], .google-symbols[data-mat-icon-name="download"]',
-  );
+  const nativeDownloadIcon = container.querySelector(DOWNLOAD_ICON_SELECTOR);
   const nativeButton = nativeDownloadIcon?.closest('button');
 
   if (!nativeButton) return;
@@ -319,6 +322,10 @@ export async function startWatermarkRemover(): Promise<void> {
       return;
     }
 
+    // Setup status listener for UI feedback ASAP (avoid missing early signals)
+    setupStatusListener();
+    setupDownloadButtonTracking();
+
     console.log('[Gemini Voyager] Initializing watermark remover...');
     engine = await WatermarkEngine.create();
 
@@ -332,5 +339,209 @@ export async function startWatermarkRemover(): Promise<void> {
     console.log('[Gemini Voyager] Watermark remover ready');
   } catch (error) {
     console.error('[Gemini Voyager] Watermark remover initialization failed:', error);
+  }
+}
+
+let statusToastManager: StatusToastManager | null = null;
+let downloadTrackingReady = false;
+let lastImmediateToastAt = 0;
+let sequenceCounter = 0;
+
+type DownloadToastSequence = {
+  id: number;
+  downloadToastId: string | null;
+  warningToastId: string | null;
+  processingToastId: string | null;
+  processingTimer: ReturnType<typeof setTimeout> | null;
+};
+
+let activeSequence: DownloadToastSequence | null = null;
+
+const getStatusToastManager = (): StatusToastManager => {
+  if (!statusToastManager) {
+    statusToastManager = createStatusToastManager({ maxToasts: 4, anchorTtlMs: 30000 });
+  }
+  return statusToastManager;
+};
+
+const t = (key: TranslationKey, fallback: string): string => {
+  const value = getTranslationSync(key);
+  return value === key ? fallback : value;
+};
+
+function showImmediateDownloadToast(button: HTMLButtonElement): void {
+  const now = Date.now();
+  if (now - lastImmediateToastAt < 300) return;
+  lastImmediateToastAt = now;
+
+  const manager = getStatusToastManager();
+  manager.setAnchorElement(button);
+
+  const downloadMessage = t('downloadingOriginal', '正在下载原始图片');
+  const warningMessage = t('downloadLargeWarning', '大文件警告');
+  const processingMessage = t('downloadProcessing', '正在处理水印中');
+
+  if (activeSequence?.processingTimer) {
+    clearTimeout(activeSequence.processingTimer);
+  }
+
+  const sequenceId = ++sequenceCounter;
+  const downloadToastId = manager.addToast(downloadMessage, 'info', { autoDismissMs: 3000 });
+  const warningToastId = manager.addToast(warningMessage, 'warning');
+
+  const processingTimer = setTimeout(() => {
+    if (!activeSequence || activeSequence.id !== sequenceId) return;
+    if (activeSequence.downloadToastId) {
+      manager.removeToast(activeSequence.downloadToastId);
+      activeSequence.downloadToastId = null;
+    }
+    if (!activeSequence.processingToastId) {
+      activeSequence.processingToastId = manager.addToast(processingMessage, 'info', {
+        pending: true,
+      });
+    }
+  }, 3000);
+
+  activeSequence = {
+    id: sequenceId,
+    downloadToastId,
+    warningToastId,
+    processingToastId: null,
+    processingTimer,
+  };
+}
+
+function setupDownloadButtonTracking(): void {
+  if (downloadTrackingReady) return;
+  downloadTrackingReady = true;
+
+  const captureAnchor = (event: Event): void => {
+    const button = findNativeDownloadButton(event.target);
+    if (!button) return;
+    showImmediateDownloadToast(button);
+  };
+
+  document.addEventListener('pointerdown', captureAnchor, true);
+  document.addEventListener('click', captureAnchor, true);
+}
+
+/**
+ * Setup listener for status events from fetchInterceptor
+ */
+function setupStatusListener(): void {
+  const bridge = getBridgeElement();
+  const manager = getStatusToastManager();
+  const downloadMessage = t('downloadingOriginal', '正在下载原始图片');
+  const warningMessage = t('downloadLargeWarning', '大文件警告');
+  const processingMessage = t('downloadProcessing', '正在处理水印中');
+  const successMessage = t('downloadSuccess', '正在下载');
+  const errorPrefix = t('downloadError', '失败');
+
+  const finalizeSequence = (level: 'success' | 'error', message: string): void => {
+    if (activeSequence?.processingTimer) {
+      clearTimeout(activeSequence.processingTimer);
+      activeSequence.processingTimer = null;
+    }
+    if (activeSequence?.warningToastId) {
+      manager.removeToast(activeSequence.warningToastId);
+      activeSequence.warningToastId = null;
+    }
+    if (activeSequence?.downloadToastId) {
+      manager.removeToast(activeSequence.downloadToastId);
+      activeSequence.downloadToastId = null;
+    }
+
+    if (
+      activeSequence?.processingToastId &&
+      manager.updateToast(activeSequence.processingToastId, message, level, {
+        autoDismissMs: level === 'success' ? 2500 : 4000,
+        markFinal: true,
+      })
+    ) {
+      return;
+    }
+
+    if (
+      !manager.updateLatestPending(message, level, {
+        autoDismissMs: level === 'success' ? 2500 : 4000,
+        markFinal: true,
+      })
+    ) {
+      manager.addToast(message, level, {
+        autoDismissMs: level === 'success' ? 2500 : 4000,
+      });
+    }
+  };
+
+  const handleStatus = (statusData: string): void => {
+    console.log('[Gemini Voyager] Status data received:', statusData);
+    if (!statusData) return;
+
+    try {
+      const { type, message } = JSON.parse(statusData);
+      bridge.removeAttribute('data-status');
+
+      switch (type) {
+        case 'DOWNLOADING':
+          // Step 1: Downloading original image
+          if (activeSequence) {
+            if (!activeSequence.downloadToastId) {
+              activeSequence.downloadToastId = manager.addToast(downloadMessage, 'info', {
+                autoDismissMs: 3000,
+              });
+            }
+            if (!activeSequence.warningToastId) {
+              activeSequence.warningToastId = manager.addToast(warningMessage, 'warning');
+            }
+          }
+          break;
+        case 'DOWNLOADING_LARGE':
+          // Step 1 with large file warning
+          if (activeSequence) {
+            if (!activeSequence.downloadToastId) {
+              activeSequence.downloadToastId = manager.addToast(downloadMessage, 'info', {
+                autoDismissMs: 3000,
+              });
+            }
+            if (!activeSequence.warningToastId) {
+              activeSequence.warningToastId = manager.addToast(warningMessage, 'warning');
+            }
+          }
+          break;
+        case 'PROCESSING':
+          // Step 2: Processing watermark
+          if (activeSequence?.processingToastId) {
+            manager.updateToast(activeSequence.processingToastId, processingMessage, 'info');
+            break;
+          }
+          if (!activeSequence?.processingTimer) {
+            const processingToastId = manager.addToast(processingMessage, 'info', {
+              pending: true,
+            });
+            if (activeSequence) activeSequence.processingToastId = processingToastId;
+          }
+          break;
+        case 'SUCCESS':
+          // Step 3: Done, auto-dismiss after 2s
+          finalizeSequence('success', successMessage);
+          break;
+        case 'ERROR':
+          finalizeSequence('error', `${errorPrefix}: ${message}`);
+          break;
+      }
+    } catch (e) {
+      console.error('[Gemini Voyager] Failed to parse status:', e);
+    }
+  };
+
+  const observer = new MutationObserver(() => {
+    const statusData = bridge.dataset.status;
+    if (!statusData) return;
+    handleStatus(statusData);
+  });
+
+  observer.observe(bridge, { attributes: true, attributeFilter: ['data-status'] });
+  if (bridge.dataset.status) {
+    handleStatus(bridge.dataset.status);
   }
 }
