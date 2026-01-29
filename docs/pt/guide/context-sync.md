@@ -1,4 +1,4 @@
-# Sincronização de Contexto: Transferindo Memórias
+# Sincronização de Contexto: Transferindo Memórias (Experimental)
 
 **Diferentes Dimensões, Compartilhamento Contínuo**
 

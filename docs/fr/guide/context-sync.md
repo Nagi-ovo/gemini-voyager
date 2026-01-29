@@ -1,4 +1,4 @@
-# Synchronisation du Contexte : Transfert de Mémoires
+# Synchronisation du Contexte : Transfert de Mémoires (Expérimental)
 
 **Différentes dimensions, partage fluide**
 
