@@ -21,7 +21,7 @@
 
     ![上下文同步面板](/assets/context-sync-console.png)
 
-3. **一键同步**：**一键同步**：点一下 **"Sync to IDE"**。
+3. **一键同步**：点一下 **"Sync to IDE"**。
 
    ![同步完成](/assets/sync-done.png)
 
