@@ -47,7 +47,7 @@ function waitForElement(selector: string, timeout: number = 5000): Promise<Eleme
  */
 async function loadDictionaries(): Promise<Dictionaries> {
   try {
-    const [enRaw, zhRaw, zhTWRaw, jaRaw, frRaw, esRaw, ptRaw, arRaw] = await Promise.all([
+    const [enRaw, zhRaw, zhTWRaw, jaRaw, frRaw, esRaw, ptRaw, arRaw, ruRaw] = await Promise.all([
       import(/* @vite-ignore */ '../../../locales/en/messages.json'),
       import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
       import(/* @vite-ignore */ '../../../locales/zh_TW/messages.json'),
@@ -56,6 +56,7 @@ async function loadDictionaries(): Promise<Dictionaries> {
       import(/* @vite-ignore */ '../../../locales/es/messages.json'),
       import(/* @vite-ignore */ '../../../locales/pt/messages.json'),
       import(/* @vite-ignore */ '../../../locales/ar/messages.json'),
+      import(/* @vite-ignore */ '../../../locales/ru/messages.json'),
     ]);
 
     return {
@@ -67,10 +68,11 @@ async function loadDictionaries(): Promise<Dictionaries> {
       es: extractMessageDictionary(esRaw),
       pt: extractMessageDictionary(ptRaw),
       ar: extractMessageDictionary(arRaw),
+      ru: extractMessageDictionary(ruRaw),
     };
   } catch (error) {
     console.error('[Gemini Voyager] Error loading dictionaries:', error);
-    return { en: {}, zh: {}, zh_TW: {}, ja: {}, fr: {}, es: {}, pt: {}, ar: {} };
+    return { en: {}, zh: {}, zh_TW: {}, ja: {}, fr: {}, es: {}, pt: {}, ar: {}, ru: {} };
   }
 }
 

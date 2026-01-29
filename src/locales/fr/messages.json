@@ -800,11 +800,11 @@
     "description": "Sync in progress message"
   },
   "syncUpload": {
-    "message": "Upload (Local → Drive)",
+    "message": "Envoyer",
     "description": "Upload button label"
   },
   "syncMerge": {
-    "message": "Fusion (Drive → Local)",
+    "message": "Récupérer",
     "description": "Merge button label"
   },
   "syncMode": {

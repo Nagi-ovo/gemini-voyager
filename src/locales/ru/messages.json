@@ -804,7 +804,7 @@
     "description": "Upload button label"
   },
   "syncMerge": {
-    "message": "Скачать и объединить",
+    "message": "Синхронизация",
     "description": "Merge button label"
   },
   "syncMode": {
