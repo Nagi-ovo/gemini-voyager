@@ -284,6 +284,99 @@ export default defineConfig({
         },
       },
     },
+    pt: {
+      label: 'Português',
+      lang: 'pt-PT',
+      link: '/pt/',
+      themeConfig: {
+        nav: [
+          { text: 'Início', link: '/pt/' },
+          { text: 'Guia', link: '/pt/guide/installation' },
+        ],
+        sidebar: [
+          {
+            text: 'Introdução',
+            items: [
+              { text: 'Instalação', link: '/pt/guide/installation' },
+              { text: 'Começar', link: '/pt/guide/getting-started' },
+              { text: 'Patrocinar', link: '/pt/guide/sponsor' },
+              { text: 'Comunidade', link: '/pt/guide/community' },
+            ],
+          },
+          {
+            text: 'Funcionalidades',
+            items: [
+              { text: 'Navegação na Linha do Tempo', link: '/pt/guide/timeline' },
+              { text: 'Resposta com Citação', link: '/pt/guide/quote-reply' },
+              { text: 'Pastas', link: '/pt/guide/folders' },
+              { text: 'Exclusão em Lote', link: '/pt/guide/batch-delete' },
+              { text: 'Biblioteca de Prompts', link: '/pt/guide/prompts' },
+              { text: 'Sites Personalizados', link: '/pt/guide/custom-websites' },
+              { text: 'Exportação de Chat', link: '/pt/guide/export' },
+              { text: 'Exportação Deep Research', link: '/pt/guide/deep-research' },
+              { text: 'Gráficos Mermaid', link: '/pt/guide/mermaid' },
+              { text: 'NanoBanana', link: '/pt/guide/nanobanana' },
+              { text: 'Largura do Chat', link: '/pt/guide/settings' },
+              { text: 'Colapso de Entrada', link: '/pt/guide/input-collapse' },
+              { text: 'Sincronização do Título da Aba', link: '/pt/guide/tab-title' },
+            ],
+          },
+        ],
+        footer: {
+          message:
+            'Projeto Open Source. Dê uma ⭐ no <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> se você gostar.',
+          copyright:
+            'Licença MIT | Copyright © 2025 Jesse Zhang | <a href="/pt/privacy">Política de Privacidade</a>',
+        },
+      },
+    },
+    ar: {
+      label: 'العربية',
+      lang: 'ar-SA',
+      link: '/ar/',
+      dir: 'rtl',
+      themeConfig: {
+        nav: [
+          { text: 'الرئيسية', link: '/ar/' },
+          { text: 'الدليل', link: '/ar/guide/installation' },
+        ],
+        sidebar: [
+          {
+            text: 'مقدمة',
+            items: [
+              { text: 'التثبيت', link: '/ar/guide/installation' },
+              { text: 'البدء', link: '/ar/guide/getting-started' },
+              { text: 'رعاية', link: '/ar/guide/sponsor' },
+              { text: 'المجتمع', link: '/ar/guide/community' },
+            ],
+          },
+          {
+            text: 'الميزات',
+            items: [
+              { text: 'تصفح الجدول الزمني', link: '/ar/guide/timeline' },
+              { text: 'الرد مع اقتباس', link: '/ar/guide/quote-reply' },
+              { text: 'المجلدات', link: '/ar/guide/folders' },
+              { text: 'الحذف الجماعي', link: '/ar/guide/batch-delete' },
+              { text: 'مكتبة المطالبات', link: '/ar/guide/prompts' },
+              { text: 'مواقع مخصصة', link: '/ar/guide/custom-websites' },
+              { text: 'تصدير الدردشة', link: '/ar/guide/export' },
+              { text: 'تصدير البحث العميق', link: '/ar/guide/deep-research' },
+              { text: 'رسوم بيانية Mermaid', link: '/ar/guide/mermaid' },
+              { text: 'NanoBanana', link: '/ar/guide/nanobanana' },
+              { text: 'عرض الدردشة', link: '/ar/guide/settings' },
+              { text: 'طي الإدخال', link: '/ar/guide/input-collapse' },
+              { text: 'مزامنة عنوان علامة التبويب', link: '/ar/guide/tab-title' },
+            ],
+          },
+        ],
+        footer: {
+          message:
+            'مشروع مفتوح المصدر. امنحنا ⭐ على <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> إذا أعجبك.',
+          copyright:
+            'رخصة MIT | حقوق النشر © 2025 Jesse Zhang | <a href="/ar/privacy">سياسة الخصوصية</a>',
+        },
+      },
+    },
   },
 
   themeConfig: {
