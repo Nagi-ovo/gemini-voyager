@@ -409,13 +409,15 @@ function formatFilename(): string {
 
 async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, string>>> {
   try {
-    const [enRaw, zhRaw, zhTWRaw, jaRaw, frRaw, esRaw] = await Promise.all([
+    const [enRaw, zhRaw, zhTWRaw, jaRaw, frRaw, esRaw, ptRaw, arRaw] = await Promise.all([
       import(/* @vite-ignore */ '../../../locales/en/messages.json'),
       import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
       import(/* @vite-ignore */ '../../../locales/zh_TW/messages.json'),
       import(/* @vite-ignore */ '../../../locales/ja/messages.json'),
       import(/* @vite-ignore */ '../../../locales/fr/messages.json'),
       import(/* @vite-ignore */ '../../../locales/es/messages.json'),
+      import(/* @vite-ignore */ '../../../locales/pt/messages.json'),
+      import(/* @vite-ignore */ '../../../locales/ar/messages.json'),
     ]);
 
     return {
@@ -425,9 +427,11 @@ async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, st
       ja: extractMessageDictionary(jaRaw),
       fr: extractMessageDictionary(frRaw),
       es: extractMessageDictionary(esRaw),
+      pt: extractMessageDictionary(ptRaw),
+      ar: extractMessageDictionary(arRaw),
     };
   } catch {
-    return { en: {}, zh: {}, zh_TW: {}, ja: {}, fr: {}, es: {} };
+    return { en: {}, zh: {}, zh_TW: {}, ja: {}, fr: {}, es: {}, pt: {}, ar: {} };
   }
 }
 

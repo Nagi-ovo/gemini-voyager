@@ -54,6 +54,52 @@ export default defineConfig({
         },
       },
     },
+    zh_TW: {
+      label: '繁體中文',
+      lang: 'zh-TW',
+      link: '/zh_TW/',
+      themeConfig: {
+        nav: [
+          { text: '首頁', link: '/zh_TW/' },
+          { text: '指南', link: '/zh_TW/guide/installation' },
+        ],
+        sidebar: [
+          {
+            text: '介紹',
+            items: [
+              { text: '安裝', link: '/zh_TW/guide/installation' },
+              { text: '快速開始', link: '/zh_TW/guide/getting-started' },
+              { text: '贊助', link: '/zh_TW/guide/sponsor' },
+              { text: '社群', link: '/zh_TW/guide/community' },
+            ],
+          },
+          {
+            text: '功能',
+            items: [
+              { text: '時間軸導航', link: '/zh_TW/guide/timeline' },
+              { text: '引用回覆', link: '/zh_TW/guide/quote-reply' },
+              { text: '資料夾', link: '/zh_TW/guide/folders' },
+              { text: '批次刪除', link: '/zh_TW/guide/batch-delete' },
+              { text: '提示詞庫', link: '/zh_TW/guide/prompts' },
+              { text: '自定義網站', link: '/zh_TW/guide/custom-websites' },
+              { text: '對話導出', link: '/zh_TW/guide/export' },
+              { text: 'Deep Research 導出', link: '/zh_TW/guide/deep-research' },
+              { text: 'Mermaid 圖表', link: '/zh_TW/guide/mermaid' },
+              { text: 'NanoBanana', link: '/zh_TW/guide/nanobanana' },
+              { text: '對話寬度', link: '/zh_TW/guide/settings' },
+              { text: '輸入框摺疊', link: '/zh_TW/guide/input-collapse' },
+              { text: '標籤標題同步', link: '/zh_TW/guide/tab-title' },
+            ],
+          },
+        ],
+        footer: {
+          message:
+            '開源專案。如果您喜歡，請在 <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> 上給我們一顆 ⭐。',
+          copyright:
+            'MIT 授權 | Copyright © 2025 Jesse Zhang | <a href="/zh_TW/privacy">隱私政策</a>',
+        },
+      },
+    },
     en: {
       label: 'English',
       lang: 'en-US',

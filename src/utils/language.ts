@@ -1,4 +1,4 @@
-export const APP_LANGUAGES = ['en', 'zh', 'zh_TW', 'ja', 'fr', 'es'] as const;
+export const APP_LANGUAGES = ['en', 'zh', 'zh_TW', 'ja', 'fr', 'es', 'pt', 'ar'] as const;
 
 export type AppLanguage = (typeof APP_LANGUAGES)[number];
 
@@ -9,6 +9,8 @@ export const APP_LANGUAGE_LABELS: Record<AppLanguage, string> = {
   ja: '日本語',
   fr: 'Français',
   es: 'Español',
+  pt: 'Português',
+  ar: 'العربية',
 };
 
 export function isAppLanguage(value: unknown): value is AppLanguage {
@@ -31,6 +33,8 @@ export function normalizeLanguage(lang: string | undefined | null): AppLanguage 
   if (lower.startsWith('ja')) return 'ja';
   if (lower.startsWith('fr')) return 'fr';
   if (lower.startsWith('es')) return 'es';
+  if (lower.startsWith('pt')) return 'pt';
+  if (lower.startsWith('ar')) return 'ar';
   return 'en';
 }
 
