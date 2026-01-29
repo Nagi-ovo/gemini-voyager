@@ -84,6 +84,7 @@ export class FolderManager {
   private removalCheckDelay: number = 300; // Delay (ms) before confirming conversation deletion
   private isDestroyed: boolean = false; // Flag to prevent callbacks after destruction
   private reinitializePromise: Promise<void> | null = null; // Prevent duplicate reinitialization cascades
+  private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
 
   // Cleanup references
   private routeChangeCleanup: (() => void) | null = null;
@@ -253,6 +254,12 @@ export class FolderManager {
     if (this.tooltipElement) {
       this.tooltipElement.remove();
       this.tooltipElement = null;
+    }
+
+    // Remove active color picker
+    if (this.activeColorPicker) {
+      this.activeColorPicker.remove();
+      this.activeColorPicker = null;
     }
 
     // Remove container
@@ -629,7 +636,7 @@ export class FolderManager {
 
     folderIcon.addEventListener('click', (e) => {
       e.stopPropagation(); // Prevent bubbling issues
-      this.showColorPicker(folder.id, e);
+      this.showColorPicker(folder.id, e, true); // Allow toggle behavior
     });
 
     // Folder name
@@ -3301,9 +3308,23 @@ export class FolderManager {
    * @param folderId The folder ID to change color
    * @param sourceEvent The source mouse event (for positioning)
    */
-  private showColorPicker(folderId: string, sourceEvent: MouseEvent): void {
+  private showColorPicker(
+    folderId: string,
+    sourceEvent: MouseEvent,
+    allowToggle: boolean = true,
+  ): void {
     const folder = this.data.folders.find((f) => f.id === folderId);
     if (!folder) return;
+
+    // If a color picker is already open, close it first
+    if (this.activeColorPicker) {
+      this.activeColorPicker.remove();
+      this.activeColorPicker = null;
+      // If clicking the same folder icon again and toggle is allowed, just close the picker
+      if (allowToggle) {
+        return;
+      }
+    }
 
     // Create color picker dialog
     const dialog = document.createElement('div');
@@ -3333,17 +3354,20 @@ export class FolderManager {
       colorBtn.addEventListener('click', () => {
         this.changeFolderColor(folderId, colorConfig.id);
         dialog.remove();
+        this.activeColorPicker = null;
       });
 
       dialog.appendChild(colorBtn);
     });
 
     document.body.appendChild(dialog);
+    this.activeColorPicker = dialog;
 
     // Close dialog on click outside
     const closeDialog = (e: MouseEvent) => {
       if (!dialog.contains(e.target as Node)) {
         dialog.remove();
+        this.activeColorPicker = null;
         document.removeEventListener('click', closeDialog);
       }
     };
