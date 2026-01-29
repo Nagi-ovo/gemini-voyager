@@ -16,6 +16,18 @@ hero:
       text: Iniciar Jornada
       link: ./guide/getting-started
 
+teaser:
+  title: 'Simplesmente funciona.'
+  description: 'Não queríamos criar apenas mais uma extensão. Queríamos criar uma melhor forma de pensar.<br>Quando usa o Gemini Voyager, deixa de lutar contra a interface e passa a fluir com ela.'
+  image: '/assets/teaser.png'
+  features:
+    - title: 'Linha do Tempo'
+      details: 'Não faça scroll. Voe. Salte para qualquer ponto da sua conversa instantaneamente.'
+    - title: 'Pastas'
+      details: 'Finalmente, um sistema de ficheiros para a sua IA. Nativo, intuitivo, poderoso.'
+    - title: 'Liberdade'
+      details: 'Os seus dados são seus. Exporte para JSON, Markdown ou PDF com um clique.'
+
 features:
   - icon: 🧭
     title: Linha do Tempo
@@ -45,32 +57,6 @@ features:
     title: Eliminação em Lote
     details: Limpeza em massa. Selecione várias conversas e elimine-as todas de uma vez.
 ---
-
-<div class="vp-doc" style="margin-top: 4rem; text-align: center;">
-
-## Simplesmente funciona.
-
-Não queríamos criar apenas mais uma extensão. Queríamos criar uma melhor forma de pensar.
-Quando usa o Gemini Voyager, deixa de lutar contra a interface e passa a fluir com ela.
-
-<img src="/assets/teaser.png" alt="Interface do Gemini Voyager" style="margin: 40px auto; border-radius: 12px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.3);" />
-
-<div style="display: flex; gap: 20px; justify-content: center; margin: 60px 0;">
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Linha do Tempo</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Não faça scroll. Voe. Salte para qualquer ponto da sua conversa instantaneamente.</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Pastas</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Finalmente, um sistema de ficheiros para a sua IA. Nativo, intuitivo, poderoso.</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Liberdade</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Os seus dados são seus. Exporte para JSON, Markdown ou PDF com um clique.</p>
-  </div>
-</div>
-
-</div>
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Cada instalação é um voto de confiança</h3>

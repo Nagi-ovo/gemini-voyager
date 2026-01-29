@@ -16,6 +16,18 @@ hero:
       text: 開始旅程
       link: /zh_TW/guide/getting-started
 
+teaser:
+  title: '重新定義交互。'
+  description: '我們不造擴充功能，我們重塑思考。<br>用 Gemini Voyager，不再是人適應介面，而是介面順應心流。'
+  image: '/assets/teaser.png'
+  features:
+    - title: '時間軸'
+      details: '看見對話的脈搏。<br>讓線性的時間，變成可觸摸的空間。'
+    - title: '資料夾'
+      details: '給思想安個家。<br>哪怕是一閃而過的念頭，也值得被鄭重對待。'
+    - title: '掌控權'
+      details: '數據歸你。<br>打破雲端的圍牆，讓知識真正屬於你。'
+
 features:
   - icon: 🧭
     title: 時間軸
@@ -45,32 +57,6 @@ features:
     title: 批次刪除對話
     details: 一鍵清理。選中多個對話，批次刪除，告別繁瑣。
 ---
-
-<div class="vp-doc" style="margin-top: 4rem; text-align: center;">
-
-## 重新定義交互。
-
-我們不造擴充功能，我們重塑思考。
-用 Gemini Voyager，不再是人適應介面，而是介面順應心流。
-
-<img src="/assets/teaser.png" alt="Gemini Voyager Interface" style="margin: 40px auto; border-radius: 12px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.3);" />
-
-<div style="display: flex; gap: 20px; justify-content: center; margin: 60px 0;">
-  <div style="flex: 1; max-width: 300px;">
-    <h3>時間軸</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">看見對話的脈搏。<br>讓線性的時間，變成可觸摸的空間。</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>資料夾</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">給思想安個家。<br>哪怕是一閃而過的念頭，也值得被鄭重對待。</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>掌控權</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">數據歸你。<br>打破雲端的圍牆，讓知識真正屬於你。</p>
-  </div>
-</div>
-
-</div>
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">每一次下載，都是信任的刻度</h3>

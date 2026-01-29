@@ -16,6 +16,18 @@ hero:
       text: Commencer
       link: ./guide/getting-started
 
+teaser:
+  title: 'Ça marche, tout simplement.'
+  description: 'Nous ne voulions pas créer une autre extension. Nous voulions créer une meilleure façon de penser.<br>Quand vous utilisez Gemini Voyager, vous arrêtez de vous battre avec l’interface pour couler avec elle.'
+  image: '/assets/teaser.png'
+  features:
+    - title: 'Chronologie'
+      details: 'Ne scrollez plus. Volez. Sautez à n’importe quel point de votre conversation instantanément.'
+    - title: 'Dossiers'
+      details: 'Enfin un système de fichiers pour votre IA. Natif, intuitif, puissant.'
+    - title: 'Liberté'
+      details: 'Vos données sont à vous. Exportez en JSON, Markdown ou PDF en un clic.'
+
 features:
   - icon: 🧭
     title: Chronologie
@@ -45,32 +57,6 @@ features:
     title: Suppression par Lot
     details: Nettoyage en masse. Sélectionnez plusieurs conversations et supprimez-les en une fois.
 ---
-
-<div class="vp-doc" style="margin-top: 4rem; text-align: center;">
-
-## Ça marche, tout simplement.
-
-Nous ne voulions pas créer une autre extension. Nous voulions créer une meilleure façon de penser.
-Quand vous utilisez Gemini Voyager, vous arrêtez de vous battre avec l'interface pour couler avec elle.
-
-<img src="/assets/teaser.png" alt="Interface Gemini Voyager" style="margin: 40px auto; border-radius: 12px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.3);" />
-
-<div style="display: flex; gap: 20px; justify-content: center; margin: 60px 0;">
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Chronologie</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Ne scrollez plus. Volez. Sautez à n'importe quel point de votre conversation instantanément.</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Dossiers</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Enfin un système de fichiers pour votre IA. Natif, intuitif, puissant.</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Liberté</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Vos données sont à vous. Exportez en JSON, Markdown ou PDF en un clic.</p>
-  </div>
-</div>
-
-</div>
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Chaque installation est un vote de confiance</h3>

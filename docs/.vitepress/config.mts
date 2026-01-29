@@ -377,6 +377,52 @@ export default defineConfig({
         },
       },
     },
+    ru: {
+      label: 'Русский',
+      lang: 'ru-RU',
+      link: '/ru/',
+      themeConfig: {
+        nav: [
+          { text: 'Главная', link: '/ru/' },
+          { text: 'Руководство', link: '/ru/guide/installation' },
+        ],
+        sidebar: [
+          {
+            text: 'Введение',
+            items: [
+              { text: 'Установка', link: '/ru/guide/installation' },
+              { text: 'Начало работы', link: '/ru/guide/getting-started' },
+              { text: 'Поддержать', link: '/ru/guide/sponsor' },
+              { text: 'Сообщество', link: '/ru/guide/community' },
+            ],
+          },
+          {
+            text: 'Функции',
+            items: [
+              { text: 'Навигация по таймлайну', link: '/ru/guide/timeline' },
+              { text: 'Ответ с цитированием', link: '/ru/guide/quote-reply' },
+              { text: 'Папки', link: '/ru/guide/folders' },
+              { text: 'Пакетное удаление', link: '/ru/guide/batch-delete' },
+              { text: 'Библиотека промптов', link: '/ru/guide/prompts' },
+              { text: 'Пользовательские сайты', link: '/ru/guide/custom-websites' },
+              { text: 'Экспорт чата', link: '/ru/guide/export' },
+              { text: 'Экспорт Deep Research', link: '/ru/guide/deep-research' },
+              { text: 'Mermaid диаграммы', link: '/ru/guide/mermaid' },
+              { text: 'NanoBanana', link: '/ru/guide/nanobanana' },
+              { text: 'Ширина чата', link: '/ru/guide/settings' },
+              { text: 'Сворачивание ввода', link: '/ru/guide/input-collapse' },
+              { text: 'Синхронизация заголовка', link: '/ru/guide/tab-title' },
+            ],
+          },
+        ],
+        footer: {
+          message:
+            'Проект с открытым исходным кодом. Поставьте ⭐ на <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a>, если вам нравится.',
+          copyright:
+            'Лицензия MIT | Copyright © 2025 Jesse Zhang | <a href="/ru/privacy">Политика конфиденциальности</a>',
+        },
+      },
+    },
   },
 
   themeConfig: {

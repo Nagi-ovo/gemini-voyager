@@ -16,6 +16,18 @@ hero:
       text: Comenzar el viaje
       link: ./guide/getting-started
 
+teaser:
+  title: 'Redefiniendo la interacción.'
+  description: 'No construimos extensiones, remodelamos el pensamiento.<br>Con Gemini Voyager, no es el humano adaptándose a la interfaz, sino la interfaz fluyendo con tu mente.'
+  image: '/assets/teaser.png'
+  features:
+    - title: 'Línea de Tiempo'
+      details: 'Ve el pulso de la conversación.<br>Haz que el tiempo lineal se convierta en espacio tangible.'
+    - title: 'Carpetas'
+      details: 'Dale un hogar a tus ideas.<br>Incluso un pensamiento fugaz merece ser tratado con seriedad.'
+    - title: 'Control'
+      details: 'Tus datos son yours.<br>Rompe los muros de la nube, haz que el conocimiento te pertenezca.'
+
 features:
   - icon: 🧭
     title: Línea de Tiempo
@@ -45,32 +57,6 @@ features:
     title: Eliminación por Lote
     details: Limpieza en un clic. Selecciona múltiples conversaciones, elimina por lote, adiós a lo tedioso.
 ---
-
-<div class="vp-doc" style="margin-top: 4rem; text-align: center;">
-
-## Redefiniendo la interacción.
-
-No construimos extensiones, remodelamos el pensamiento.
-Con Gemini Voyager, no es el humano adaptándose a la interfaz, sino la interfaz fluyendo con tu mente.
-
-<img src="/assets/teaser.png" alt="Interfaz de Gemini Voyager" style="margin: 40px auto; border-radius: 12px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.3);" />
-
-<div style="display: flex; gap: 20px; justify-content: center; margin: 60px 0;">
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Línea de Tiempo</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Ve el pulso de la conversación.<br>Haz que el tiempo lineal se convierta en espacio tangible.</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Carpetas</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Dale un hogar a tus ideas.<br>Incluso un pensamiento fugaz merece ser tratado con seriedad.</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Control</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Tus datos son tuyos.<br>Rompe los muros de la nube, haz que el conocimiento te pertenezca.</p>
-  </div>
-</div>
-
-</div>
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Cada descarga es una medida de confianza</h3>
