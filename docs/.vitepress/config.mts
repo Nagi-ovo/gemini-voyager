@@ -184,7 +184,7 @@ export default defineConfig({
               { text: 'Largeur de Chat', link: '/fr/guide/settings' },
               { text: 'Réduction Entrée', link: '/fr/guide/input-collapse' },
               { text: 'Synchro Titre Onglet', link: '/fr/guide/tab-title' },
-              { text: 'Sync du contexte vers l\'IDE', link: '/fr/guide/context-sync' },
+              { text: "Sync du contexte vers l'IDE", link: '/fr/guide/context-sync' },
             ],
           },
         ],

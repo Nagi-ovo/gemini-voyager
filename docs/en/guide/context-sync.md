@@ -11,15 +11,15 @@ The biggest pain for developers: after discussing a solution thoroughly on the w
 ## Three Simple Steps to Synchronize
 
 1. **Wake up CoBridge**: Install the **CoBridge** extension from the VS Code Marketplace and start it. It's the bridge connecting the web and your local machine.
-    ![CoBridge Extension](/assets/CoBridge-extension.png)
+   ![CoBridge Extension](/assets/CoBridge-extension.png)
 
-    ![CoBridge Server On](/assets/CoBridge-on.png)
+   ![CoBridge Server On](/assets/CoBridge-on.png)
 
 2. **Handshake Connection**:
    - Enable "Context Sync" in Voyager settings.
    - Align the port numbers. When you see "IDE Online," they are connected.
 
-    ![Context Sync Console](/assets/context-sync-console.png)
+   ![Context Sync Console](/assets/context-sync-console.png)
 
 3. **One-Click Sync**: Click **"Sync to IDE"**.
 

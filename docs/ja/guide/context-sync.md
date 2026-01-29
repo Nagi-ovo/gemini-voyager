@@ -11,15 +11,15 @@
 ## 3つの簡単なステップで同期
 
 1. **CoBridgeの起動**：VS Codeマーケットプレイスから**CoBridge**拡張機能をインストールして起動します。これはウェブとローカルをつなぐ架け橋です。
-    ![CoBridge拡張機能](/assets/CoBridge-extension.png)
+   ![CoBridge拡張機能](/assets/CoBridge-extension.png)
 
-    ![CoBridgeサーバー起動](/assets/CoBridge-on.png)
+   ![CoBridgeサーバー起動](/assets/CoBridge-on.png)
 
 2. **接続の確立**：
    - Voyagerの設定で「コンテキスト同期」を有効にします。
    - ポート番号を合わせます。「IDE オンライン」と表示されれば接続完了です。
 
-    ![コンテキスト同期コンソール](/assets/context-sync-console.png)
+   ![コンテキスト同期コンソール](/assets/context-sync-console.png)
 
 3. **ワンクリック同期**：**"IDEに同期"**をクリックします。
 

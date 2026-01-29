@@ -11,15 +11,15 @@
 ## 极简三步，同频呼吸
 
 1. **唤醒 CoBridge**：在 VS Code 市场安装 **CoBridge** 插件并启动。它是对接网页与本地的桥梁。
-    ![CoBridge扩展](/assets/CoBridge-extension.png)
+   ![CoBridge扩展](/assets/CoBridge-extension.png)
 
-    ![CoBridge服务器开启](/assets/CoBridge-on.png)
+   ![CoBridge服务器开启](/assets/CoBridge-on.png)
 
 2. **握手对接**：
    - 在 Voyager 设置中开启“上下文同步”。
    - 对齐端口号。看到 “IDE Online”，说明它们已经连上了。
 
-    ![上下文同步面板](/assets/context-sync-console.png)
+   ![上下文同步面板](/assets/context-sync-console.png)
 
 3. **一键同步**：点一下 **"Sync to IDE"**。
 

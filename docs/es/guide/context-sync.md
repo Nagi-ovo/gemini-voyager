@@ -11,15 +11,15 @@ El mayor dolor de cabeza de los desarrolladores: después de discutir a fondo un
 ## Tres sencillos pasos para sincronizar
 
 1. **Activa CoBridge**: Instala la extensión **CoBridge** desde el Marketplace de VS Code y iníciala. Es el puente que conecta la web con tu máquina local.
-    ![Extensión CoBridge](/assets/CoBridge-extension.png)
+   ![Extensión CoBridge](/assets/CoBridge-extension.png)
 
-    ![Servidor CoBridge activado](/assets/CoBridge-on.png)
+   ![Servidor CoBridge activado](/assets/CoBridge-on.png)
 
 2. **Conexión y saludo**:
    - Activa la "Sincronización de contexto" en los ajustes de Voyager.
    - Alinea los números de puerto. Cuando veas "IDE en línea", significa que están conectados.
 
-    ![Consola de sincronización de contexto](/assets/context-sync-console.png)
+   ![Consola de sincronización de contexto](/assets/context-sync-console.png)
 
 3. **Sincronización con un clic**: Haz clic en **"Sincronizar con IDE"**.
 
