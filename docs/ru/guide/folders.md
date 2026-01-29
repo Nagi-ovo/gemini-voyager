@@ -16,11 +16,16 @@
 - **Множественный выбор**: Длительное нажатие на разговор, чтобы войти в режим множественного выбора, затем выберите несколько чатов и переместите их все сразу.
 - **Переименование**: Дважды щелкните по любой папке, чтобы переименовать её.
 - **Значки**: Мы автоматически определяем тип Gem (Кодинг, Творчество и т.д.) и назначаем правильный значок. Вам ничего не нужно делать.
+- **Цвета**: Нажмите на три точки рядом с папкой, чтобы выбрать один из 8 ярких цветов. Сделайте свою боковую панель такой же уникальной, как ваши мысли.
 
 <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 300px; text-align: center;">
     <p><b>Gemini</b></p>
     <img src="/assets/gemini-folders.png" alt="Папки Gemini" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  </div>
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>Цвета папок</b></p>
+    <img src="/assets/folder-color.png" alt="Цвета папок" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
   <div style="flex: 1; min-width: 300px; text-align: center;">
     <p><b>AI Studio</b></p>
