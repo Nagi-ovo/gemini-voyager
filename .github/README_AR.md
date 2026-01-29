@@ -1,10 +1,10 @@
-<div align="center">
+<div align="center" dir="rtl">
   <img src="../public/icon-128.png" alt="logo"/>
   <h1>Gemini Voyager</h1>
-  <h3>Personnalisez votre expérience Gemini ✨</h3>
+  <h3>اجعل تجربتك مع Gemini ملكك حقاً ✨</h3>
   <p>
-    Navigation temporelle élégante, organisation des chats par dossiers, et coffre-fort de prompts personnel.<br>
-    <b>C'est l'extension indispensable pour Google Gemini.</b>
+    تصفح المحادثات بجدول زمني أنيق، ونظم الدردشات في مجلدات، وقم ببناء مستودع المطالبات الخاص بك.<br>
+    <b>إنه الترقية المفقودة لـ Google Gemini.</b>
   </p>
   
   <p>
@@ -31,20 +31,20 @@
     <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager - All-in-one Gemini suite: folders, chat export and much more | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
   </p>
   <p align="center">
-    ✨ Nous sommes en direct sur Product Hunt ! Vos retours sont les bienvenus. ❤️
+    ✨ نحن متواجدون الآن على Product Hunt! يسعدنا سماع آرائكم. ❤️
   </p>
 </div>
 
 <p align="center">
-  <a href="https://voyager.nagi.fun/fr">📖 Documentation</a> • 
+  <a href="https://voyager.nagi.fun/ar">📖 التوثيق</a> • 
   <a href="../README.md">English</a> • 
   <a href="./README_ZH.md">简体中文</a> •
   <a href="./README_ZH_TW.md">繁體中文</a> •
   <a href="./README_JA.md">日本語</a> •
+  <a href="./README_FR.md">Français</a> •
   <a href="./README_ES.md">Español</a> •
   <a href="./README_PT.md">Português</a> •
-  <a href="./README_RU.md">Русский</a> •
-  <a href="./README_AR.md">العربية</a>
+  <a href="./README_RU.md">Русский</a>
 </p>
 
 <p align="center">
@@ -52,45 +52,45 @@
   </p>
 
 > [!CAUTION]
-> **Déclaration de l'auteur** : Ce projet n'accepte **aucune** forme de parrainage ou de publicité provenant de sites miroirs LLM, de produits illégaux ou de produits impliquant des fuites de données privées.
+> **بيان المؤلف**: هذا المشروع **لا يقبل** أي شكل من أشكال الرعاية أو الإعلانات من مواقع مرآة LLM، أو المنتجات غير القانونية، أو المنتجات التي تنطوي على تسريب خصوصية المستخدم.
 
 ---
 
-## 👋 Pourquoi Gemini Voyager ?
+## 👋 لماذا Gemini Voyager؟
 
-Nous adorons Gemini, mais nous aimerions parfois qu'il soit un peu plus "ordonné".
+نحن نحب Gemini، لكننا تمنينا أحياناً لو كان لديه المزيد من "التنظيم".
 
-C'est pourquoi nous avons créé **Gemini Voyager**. Plus qu'un simple outil, c'est un compagnon qui vous aide à garder vos conversations IA organisées, accessibles et productives. Que vous soyez un chercheur gérant des dizaines de fils, un développeur sauvegardant des extraits de code, ou simplement quelqu'un qui aime l'ordre, Voyager est fait pour vous.
+لهذا السبب قمنا ببناء **Gemini Voyager**. إنه ليس مجرد أداة؛ إنه رفيق يساعدك في الحفاظ على تنظيم محادثاتك مع الذكاء الاصطناعي وجعلها سهلة الوصول ومنتجة. سواء كنت باحثاً تدير عشرات الخيوط، أو مطوراً يحفظ مقتطفات برمجية، أو مجرد شخص يحب النظام، فإن Voyager مصمم لك.
 
 ---
 
-## ✨ Fonctionnalités
+## ✨ الميزات
 
 <div align="center">
   <img src="../docs/public/assets/teaser.png" alt="teaser"/>
 </div>
 
-Pour un guide complet, visitez notre [Documentation](https://voyager.nagi.fun/fr).
+للحصول على دليل كامل، قم بزيارة [التوثيق الخاص بنا](https://voyager.nagi.fun/ar).
 
-- **📍 [Navigation Temporelle](https://voyager.nagi.fun/fr/guide/timeline)** : Des nœuds visuels pour naviguer entre les messages, marquer les moments clés et gérer les branches de conversation.
-- **📂 [Dossiers](https://voyager.nagi.fun/fr/guide/folders)** : Organisez vos chats dans une hiérarchie à deux niveaux avec support du glisser-déposer.
-- **💡 [Coffre-fort de Prompts](https://voyager.nagi.fun/fr/guide/prompts)** : Enregistrez et réutilisez vos meilleurs prompts sur Gemini, AI Studio et [sites personnalisés](https://voyager.nagi.fun/fr/guide/custom-websites).
-- **💾 [Export de Chat](https://voyager.nagi.fun/fr/guide/export)** : Exportez vos conversations en JSON, Markdown ou PDF avec les images incluses.
-- **🍌 [NanoBanana](https://voyager.nagi.fun/fr/guide/nanobanana)** : Suppression sans perte du filigrane Gemini sur les images générées.
-- **🧜‍♀️ [Rendu Mermaid](https://voyager.nagi.fun/fr/guide/mermaid)** : Rendu automatique des diagrammes Mermaid (flux, séquences, etc.).
-- **🔬 [Deep Research](https://voyager.nagi.fun/fr/guide/deep-research)** : Extrayez les processus de réflexion et les liens de recherche des sessions Deep Research.
-- **📐 Copie de Formules**: Copie en un clic des codes sources LaTeX et MathML (Word).
-- **🛠️ Outils de Productivité** :
-  - **[Suppression par Lot](https://voyager.nagi.fun/fr/guide/batch-delete)** : Nettoyage massif de votre historique.
-  - **[Réponse avec Citation](https://voyager.nagi.fun/fr/guide/quote-reply)** : Répondez avec contexte en sélectionnant simplement du texte.
-  - **[Synchro Titre Onglet](https://voyager.nagi.fun/fr/guide/tab-title)** : Synchronisation automatique du titre de l'onglet avec le titre du chat.
-  - **[Réduction Entrée](https://voyager.nagi.fun/fr/guide/input-collapse)** : Zone de saisie auto-réductible pour plus d'espace de lecture.
+- **📍 [تصفح الجدول الزمني](https://voyager.nagi.fun/ar/guide/timeline)**: عقد بصرية للتنقل بين الرسائل، وتمييز اللحظات الرئيسية، وإدارة فروع المحادثة.
+- **📂 [تنظيم المجلدات](https://voyager.nagi.fun/ar/guide/folders)**: نظم دردشاتك في تسلسل هرمي للمجلدات من مستويين مع دعم السحب والإفلات.
+- **💡 [مستودع المطالبات](https://voyager.nagi.fun/ar/guide/prompts)**: احفظ وأعد استخدام أفضل مطالباتك في Gemini و AI Studio و[المواقع المخصصة](https://voyager.nagi.fun/ar/guide/custom-websites).
+- **💾 [تصدير الدردشة](https://voyager.nagi.fun/ar/guide/export)**: صَدّر المحادثات إلى تنسيقات JSON أو Markdown أو PDF مع تضمين الصور.
+- **🍌 [NanoBanana](https://voyager.nagi.fun/ar/guide/nanobanana)**: إزالة العلامة المائية بدون فقدان الجودة للصور التي ينتجها Gemini.
+- **🧜‍♀️ [رسم Mermaid](https://voyager.nagi.fun/ar/guide/mermaid)**: عرض تلقائي للمخططات الانسيابية ومخططات التتابع وغيرها من رسوم Mermaid.
+- **🔬 [البحث العميق](https://voyager.nagi.fun/ar/guide/deep-research)**: استخرج عمليات التفكير وروابط البحث من جلسات البحث العميق.
+- **📐 نسخ الصيغ**: نسخ بنقرة واحدة لأكواد المصدر LaTeX و MathML (Word).
+- **🛠️ أدوات القوة**:
+  - **[الحذف الجماعي](https://voyager.nagi.fun/ar/guide/batch-delete)**: تنظيف السجل الخاص بك دفعة واحدة.
+  - **[الرد مع اقتباس](https://voyager.nagi.fun/ar/guide/quote-reply)**: الرد مع السياق عن طريق تحديد النص.
+  - **[مزامنة عنوان علامة التبويب](https://voyager.nagi.fun/ar/guide/tab-title)**: مزامنة عنوان علامة تبويب المتصفح تلقائياً مع عنوان الدردشة.
+  - **[طي الإدخال](https://voyager.nagi.fun/ar/guide/input-collapse)**: منطقة إدخال قابلة للطي تلقائياً لتوفير مساحة قراءة أكبر.
 
 ---
 
-## 📥 Installation
+## 📥 التثبيت
 
-> ⚠️ Note : Le Gestionnaire de Prompts est la seule fonctionnalité supportant Gemini for Enterprise.
+> ⚠️ ملاحظة: مدير المطالبات هو الميزة الوحيدة التي تدعم Gemini للمؤسسات.
 
 <div align="center">
   <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol" target="_blank">
@@ -107,16 +107,16 @@ Pour un guide complet, visitez notre [Documentation](https://voyager.nagi.fun/fr
 </div>
 
 <p align="center">
-  <sub>Le <b>Chrome Web Store</b> fonctionne aussi sur Edge, Opera, Brave, Vivaldi, Arc et autres navigateurs Chromium.</sub>
+  <sub>متجر <b>Chrome Web Store</b> يعمل أيضاً على متصفحات Edge و Opera و Brave و Vivaldi و Arc وغيرها من المتصفحات القائمة على Chromium.</sub>
 </p>
 
-> **Statut des Stores :** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (Prochainement)
+> **حالة المتجر:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (قريباً)
 
-Pour une **installation manuelle** ou des **builds de développement**, veuillez vous référer au [Guide d'Installation](https://voyager.nagi.fun/fr/guide/installation).
+لـ **التثبيت اليدوي** أو **بناء التطوير**، يرجى الرجوع إلى [دليل التثبيت](https://voyager.nagi.fun/ar/guide/installation).
 
 ---
 
-## ☕ Soutenir le Projet
+## ☕ دعم هذا المشروع
 
 <div align="center">
   <a href="https://github.com/Nagi-ovo/gemini-voyager">
@@ -124,7 +124,7 @@ Pour une **installation manuelle** ou des **builds de développement**, veuillez
   </a>
 </div>
 
-Si Gemini Voyager facilite votre vie, considérez m'offrir un café. Cela aide à maintenir les mises à jour ! Les donateurs seront cités dans notre section remerciements. ❤️
+إذا كان Gemini Voyager يسهل حياتك، فكر في دعوتي لتناول القهوة. يساعد ذلك في استمرار التحديثات! سيتم إدراج الداعمين في قسم الشكر الخاص بنا. ❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -134,7 +134,7 @@ Si Gemini Voyager facilite votre vie, considérez m'offrir un café. Cela aide �
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="36">
   </a>
   
-  <p><b>Ou via WeChat / Alipay / Afdian :</b></p>
+  <p><b>أو الدعم عبر WeChat / Alipay / Afdian:</b></p>
   <table align="center" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
@@ -159,32 +159,32 @@ Si Gemini Voyager facilite votre vie, considérez m'offrir un café. Cela aide �
   </table>
 </div>
 
-### 🎙️ Outil recommandé : Typeless
+### 🎙️ أداة موصى بها: Typeless
 
-Je recommande vivement **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, un outil de synthèse vocale IA que j'ai utilisé intensivement durant le développement. Il booste considérablement la productivité.
+أوصي بشدة بـ **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**، وهي أداة تحويل الصوت إلى نص بالذكاء الاصطناعي استخدمتها على نطاق واسع أثناء تطوير Gemini Voyager. لقد وفرت لي الكثير من الوقت وزادت من إنتاجيتي بشكل كبير.
 
-> 🎁 **[Rejoignez via mon lien](https://www.typeless.com/refer?code=MZRYZP1)** (Code : **`MZRYZP1`**) pour obtenir **5$ de crédits gratuits**. ❤️
+> 🎁 **[انضم عبر رابط الإحالة الخاص بي](https://www.typeless.com/refer?code=MZRYZP1)** (الكود: **`MZRYZP1`**) للحصول على **5 دولارات رصيد مجاني**. ❤️
 
 ---
 
-## 🤝 Contribution & Développement
+## 🤝 المساهمة والتطوير
 
 [<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
-Toute contribution est la bienvenue !
+نرحب بالمساهمات!
 
-- **Issues** : Utilisez nos templates de [bug report](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) ou [feature request](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml).
-- **Pull Requests** : Consultez [CONTRIBUTING.md](./CONTRIBUTING.md).
+- **Issues**: استخدم نماذجنا لـ [تقرير الأخطاء](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) أو [طلب الميزات](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml).
+- **Pull Requests**: تحقق من [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-Merci d'aider à rendre Gemini Voyager meilleur ! ❤️
+شكراً لمساعدتك في جعل Gemini Voyager أفضل! ❤️
 
 ---
 
-## 🌟 Crédits
+## 🌟 الاعتمادات
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Un fork de Gemini Voyager adapté pour DeepSeek.
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - نسخة مشتقة من Gemini Voyager مخصصة لـ DeepSeek.
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - La source d'inspiration originale pour la navigation temporelle.
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - مصدر الإلهام الأصلي للتنقل في الجدول الزمني للمحادثة.
 
 ---
 
@@ -196,6 +196,6 @@ Merci d'aider à rendre Gemini Voyager meilleur ! ❤️
      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/gemini-voyager&type=date&legend=top-left" />
    </picture>
   </a>
-  <p>Fait avec ❤️ par Jesse Zhang</p>
-  <sub>MIT License © 2025</sub>
+  <p>صنع بكل ❤️ بواسطة Jesse Zhang</p>
+  <sub>رخصة MIT © 2025</sub>
 </div>

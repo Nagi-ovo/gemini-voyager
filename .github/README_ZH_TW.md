@@ -1,10 +1,10 @@
 <div align="center">
   <img src="../public/icon-128.png" alt="logo"/>
   <h1>Gemini Voyager</h1>
-  <h3>打造属于你的 Gemini 体验 ✨</h3>
+  <h3>打造屬於你的 Gemini 體驗 ✨</h3>
   <p>
-    优雅的时间轴导航、文件夹管理对话、构建专属提示词库。<br>
-    <b>这是 Google Gemini 缺失的那块拼图。</b>
+    優雅的時間軸導航、資料夾管理對話、構建專屬提示詞庫。<br>
+    <b>這是 Google Gemini 缺失的那塊拼圖。</b>
   </p>
   
   <p>
@@ -19,26 +19,26 @@
     <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Star">
     <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Fork">
     <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="最新版本">
-    <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub 下载量">
-    <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店用户数">
-    <img src="https://img.shields.io/chrome-web-store/rating/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店评分">
+    <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub 下載量">
+    <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店用戶數">
+    <img src="https://img.shields.io/chrome-web-store/rating/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店評分">
     <img src="https://img.shields.io/badge/Edge-✓-0078D7?style=flat-square&logo=microsoft-edge" alt="Edge 商店">
-    <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店用户数">
-    <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店评分">
+    <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店用戶數">
+    <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店評分">
   </p>
   <p>
     <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="Nagi-ovo%2Fgemini-voyager | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
     <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager - All-in-one Gemini suite: folders, chat export and much more | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
   </p>
   <p align="center">
-    ✨ 我们已在 Product Hunt 上线！欢迎来分享你的想法和反馈。❤️
+    ✨ 我們已在 Product Hunt 上線！歡迎來分享你的想法和回饋。❤️
   </p>
 </div>
 
 <p align="center">
-  <a href="https://voyager.nagi.fun">📖 文档</a> • 
+  <a href="https://voyager.nagi.fun/zh_TW">📖 文檔</a> • 
   <a href="../README.md">English</a> • 
-  <a href="./README_ZH_TW.md">繁體中文</a> •
+  <a href="./README_ZH.md">简体中文</a> •
   <a href="./README_JA.md">日本語</a> •
   <a href="./README_FR.md">Français</a> •
   <a href="./README_ES.md">Español</a> •
@@ -52,15 +52,15 @@
   </p>
 
 > [!CAUTION]
-> **作者严正声明**：本项目**不接受**任何形式的 LLM 镜像站、违法产品或涉及用户隐私泄露产品的广告位赞助。请勿扰，谢谢。
+> **作者嚴正聲明**：本項目**不接受**任何形式的 LLM 鏡像站、違法產品或涉及用戶隱私洩漏產品的廣告位贊助。請勿擾，謝謝。
 
 ---
 
-## 👋 为什么开发 Gemini Voyager？
+## 👋 為什麼開發 Gemini Voyager？
 
-我们都很喜欢 Gemini，但有时候总觉得它少了一点"秩序感"。
+我們都很喜歡 Gemini，但有時候總覺得它少了一點"秩序感"。
 
-这就是我们开发 **Gemini Voyager** 的初衷。它不仅仅是一个工具，更是一个能帮你把 AI 对话变得井井有条、触手可及的得力助手。无论你是需要处理大量对话的研究人员，还是喜欢收藏代码片段的开发者，亦或是单纯的整理控，Voyager 都是为你准备的。
+這就是我們開發 **Gemini Voyager** 的初衷。它不僅僅是一個工具，更是一個能幫你把 AI 對話變得井井有條、觸手可及的得力助手。無論你是需要處理大量對話的研究人員，還是喜歡收藏代碼片段的開發者，亦或是單純的整理控，Voyager 都是為你準備的。
 
 ---
 
@@ -70,31 +70,31 @@
   <img src="../docs/public/assets/teaser.png" alt="teaser"/>
 </div>
 
-查看完整功能，请访问我们的 [官方文档](https://voyager.nagi.fun)。
+查看完整功能，請訪問我們的 [官方文檔](https://voyager.nagi.fun/zh_TW)。
 
-- **📍 [时间线导航](https://voyager.nagi.fun/guide/timeline)**: 可视化节点，瞬间跳转消息，星标重点，管理对话分支。
-- **📂 [文件夹管理](https://voyager.nagi.fun/guide/folders)**: 双层目录结构，支持拖拽，让对话井井有条。
-- **💡 [提示词库](https://voyager.nagi.fun/guide/prompts)**: 跨平台同步提示词，支持 Gemini、AI Studio 及 [自定义网站](https://voyager.nagi.fun/guide/custom-websites)。
-- **💾 [对话导出](https://voyager.nagi.fun/guide/export)**: 支持导出为 JSON、Markdown 或 PDF（含图片）。
-- **🍌 [NanoBanana](https://voyager.nagi.fun/guide/nanobanana)**: 自动去除 Gemini 生成图片的无损水印。
-- **🧜‍♀️ [Mermaid 渲染](https://voyager.nagi.fun/guide/mermaid)**: 自动渲染流程图、时序图等 Mermaid 图表。
-- **🔬 [Deep Research](https://voyager.nagi.fun/guide/deep-research)**: 一键提取 Deep Research 对话的思考过程和研究链接。
-- **📐 公式复制**: 一键复制 LaTeX 和 MathML (Word) 源码。
+- **📍 [時間線導航](https://voyager.nagi.fun/zh_TW/guide/timeline)**: 可視化節點，瞬間跳轉訊息，星標重點，管理對話分支。
+- **📂 [資料夾管理](https://voyager.nagi.fun/zh_TW/guide/folders)**: 雙層目錄結構，支持拖拽，讓對話井井有條。
+- **💡 [提示詞庫](https://voyager.nagi.fun/zh_TW/guide/prompts)**: 跨平台同步提示詞，支持 Gemini、AI Studio 及 [自定義網站](https://voyager.nagi.fun/zh_TW/guide/custom-websites)。
+- **💾 [對話導出](https://voyager.nagi.fun/zh_TW/guide/export)**: 支持導出為 JSON、Markdown 或 PDF（含圖片）。
+- **🍌 [NanoBanana](https://voyager.nagi.fun/zh_TW/guide/nanobanana)**: 自動去除 Gemini 生成圖片的無損浮水印。
+- **🧜‍♀️ [Mermaid 渲染](https://voyager.nagi.fun/zh_TW/guide/mermaid)**: 自動渲染流程圖、時序圖等 Mermaid 圖表。
+- **🔬 [Deep Research](https://voyager.nagi.fun/zh_TW/guide/deep-research)**: 一鍵提取 Deep Research 對話的思考過程和研究鏈接。
+- **📐 公式複製**: 一鍵複製 LaTeX 和 MathML (Word) 源碼。
 - **🛠️ 效率工具**:
-  - **[批量删除](https://voyager.nagi.fun/guide/batch-delete)**: 批量清理对话记录。
-  - **[引用回复](https://voyager.nagi.fun/guide/quote-reply)**: 选中对话文本即可一键引用回复。
-  - **[标签页标题同步](https://voyager.nagi.fun/guide/tab-title)**: 自动将标签页标题设为对话标题。
-  - **[输入框折叠](https://voyager.nagi.fun/guide/input-collapse)**: 输入框自动收纳，释放阅读空间。
+  - **[批量刪除](https://voyager.nagi.fun/zh_TW/guide/batch-delete)**: 批量清理對話記錄。
+  - **[引用回覆](https://voyager.nagi.fun/zh_TW/guide/quote-reply)**: 選中對話文本即可一鍵引用回覆。
+  - **[標籤頁標題同步](https://voyager.nagi.fun/zh_TW/guide/tab-title)**: 自動將標籤頁標題設為對話標題。
+  - **[輸入框摺疊](https://voyager.nagi.fun/zh_TW/guide/input-collapse)**: 輸入框自動收納，釋放閱讀空間。
 
 ---
 
-## 📥 安装方式
+## 📥 安裝方式
 
-> ⚠️ 注意：提示词管理器是唯一支持 Gemini 企业版的功能。
+> ⚠️ 注意：提示詞管理器是唯一支持 Gemini 企業版的功能。
 
 <div align="center">
   <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol" target="_blank">
-    <img src="https://img.shields.io/badge/Chrome%20应用商店-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome 应用商店" height="36">
+    <img src="https://img.shields.io/badge/Chrome%20應用商店-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome 應用商店" height="36">
   </a>
   &nbsp;&nbsp;
   <a href="https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank">
@@ -107,16 +107,16 @@
 </div>
 
 <p align="center">
-  <sub><b>Chrome 应用商店</b>同样适用于 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 浏览器。</sub>
+  <sub><b>Chrome 應用商店</b>同樣適用於 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 瀏覽器。</sub>
 </p>
 
-> **商店状态：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari（即将推出）
+> **商店狀態：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari（即將推出）
 
-关于 **手动安装** 或 **开发构建**，请参阅 [安装指南](https://voyager.nagi.fun/guide/installation)。
+關於 **手動安裝** 或 **開發構建**，請參閱 [安裝指南](https://voyager.nagi.fun/zh_TW/guide/installation)。
 
 ---
 
-## ☕ 支持本项目
+## ☕ 支持本項目
 
 <div align="center">
   <a href="https://github.com/Nagi-ovo/gemini-voyager">
@@ -124,7 +124,7 @@
   </a>
 </div>
 
-如果 Gemini Voyager 提升了你的体验，欢迎请我喝杯咖啡。赞助者将被列入致谢名单。❤️
+如果 Gemini Voyager 提升了你的體驗，歡迎請我喝杯咖啡。贊助者將被列入致謝名單。❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -134,7 +134,7 @@
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="36">
   </a>
   
-  <p><b>或通过微信 / 支付宝 / 爱发电支持：</b></p>
+  <p><b>或通過微信 / 支付寶 / 愛發電支持：</b></p>
   <table align="center" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
@@ -142,8 +142,8 @@
         <sub><b>微信支付</b></sub>
       </td>
       <td align="center">
-        <img src="../docs/public/assets/alipay-sponsor.jpg" alt="支付宝" height="160"><br>
-        <sub><b>支付宝</b></sub>
+        <img src="../docs/public/assets/alipay-sponsor.jpg" alt="支付寶" height="160"><br>
+        <sub><b>支付寶</b></sub>
       </td>
       <td align="center">
         <a href="https://afdian.com/a/nagi-ovo" target="_blank">
@@ -153,86 +153,86 @@
             <img alt="Nagi-ovo's Profile" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
           </picture>
         </a><br>
-        <sub><b>爱发电</b></sub>
+        <sub><b>愛發電</b></sub>
       </td>
     </tr>
   </table>
 </div>
 
-### 🎙️ 特别推荐: Typeless
+### 🎙️ 特別推薦: Typeless
 
-我非常推荐 **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**，一款 AI 语音转文字工具。我在开发过程中一直在使用它，极大地提升了我的工作效率。
+我非常推薦 **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**，一款 AI 語音轉文字工具。我在開發過程中一直在使用它，極大地提升了我的工作效率。
 
-> 🎁 **[点击我的邀请链接](https://www.typeless.com/refer?code=MZRYZP1)**（邀请码 **`MZRYZP1`**）可获得 **5 美元免费额度**。这也是支持本项目的一种免费方式！❤️
+> 🎁 **[點擊我的邀請鏈接](https://www.typeless.com/refer?code=MZRYZP1)**（邀請碼 **`MZRYZP1`**）可獲得 **5 美元免費額度**。這也是支持本項目的一種免費方式！❤️
 
 ---
 
-## 💬 交流与反馈
+## 💬 交流與回饋
 
 <table>
   <tr>
     <td align="center" width="50%" valign="top">
       <a href="https://x.com/Nag1ovo/status/2012609459663634589" target="_blank">
-        <img src="https://img.shields.io/badge/关注-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="关注 X" height="36">
+        <img src="https://img.shields.io/badge/關注-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="關注 X" height="36">
       </a>
       <br><br>
-      <b>关注动态</b><br>
-      <sub>获取最新动态。</sub>
+      <b>關注動態</b><br>
+      <sub>獲取最新動態。</sub>
     </td>
     <td align="center" width="50%" valign="top">
       <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
         <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=加入%20Discord" alt="Discord" height="36">
       </a>
       <br><br>
-      <b>加入社区</b><br>
-      <sub>与其他用户交流、分享提示词、获取帮助。</sub>
+      <b>加入社區</b><br>
+      <sub>與其他用戶交流、分享提示詞、獲取幫助。</sub>
     </td>
   </tr>
 </table>
 
 ---
 
-## 🤝 参与贡献与开发
+## 🤝 參與貢獻與開發
 
 [<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
-欢迎参与贡献！
+歡迎參與貢獻！
 
-- **Issue**：使用 [Bug 报告](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.yml) 或 [功能请求](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml) 模板。
-- **Pull Request**：请查看 [贡献指南](./CONTRIBUTING.md)。
+- **Issue**：使用 [Bug 報告](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.yml) 或 [功能請求](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml) 模板。
+- **Pull Request**：請查看 [貢獻指南](./CONTRIBUTING.md)。
 
 <details>
-<summary>开发环境配置</summary>
+<summary>開發環境配置</summary>
 
 ```bash
-# 安装依赖 (推荐 Bun)
+# 安裝依賴 (推薦 Bun)
 bun i
 
-# 开发模式
+# 開發模式
 bun run dev:chrome
 bun run dev:firefox
 bun run dev:safari
 
-# 生产构建
+# 生產構建
 bun run build:chrome
 bun run build:firefox
 bun run build:safari
 bun run build:all
 ```
 
-**Safari 开发**：详见 [safari/README.md](../safari/README.md)。
+**Safari 開發**：詳見 [safari/README.md](../safari/README.md)。
 
 </details>
 
-感谢你让 Gemini Voyager 变得更好！❤️
+感謝你讓 Gemini Voyager 變得更好！❤️
 
 ---
 
-## 🌟 致谢
+## 🌟 致謝
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - 为 DeepSeek 适配的 Fork 版本。
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - 為 DeepSeek 適配的 Fork 版本。
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 本项目的灵感来源。
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 本項目的靈感來源。
 
 ---
 

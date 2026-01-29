@@ -40,10 +40,13 @@ features:
     details: Captura la inspiración. Atesora cada uno de tus momentos brillantes.
   - icon: 💬
     title: Respuesta con Cita
-    details: Selecciona y cita. Respuestas precisas con contexto, comunicación más eficiente.
+    details: Selecciona para citar. Respuestas contextualizadas para una comunicación eficiente.
+  - icon: 📐
+    title: Copia de Fórmulas
+    details: Copia en un clic los códigos fuente LaTeX y MathML (Word).
   - icon: 🧜‍♀️
     title: Gráficos Mermaid
-    details: Código a gráfico. Diagramas de flujo, secuencia y Gantt visualizados en un clic.
+
   - icon: 🍌
     title: Eliminación de Marca de Agua NanoBanana
     details: Eliminación sin pérdidas. Deja que los momentos generados por IA vuelvan a ser puros.

@@ -40,10 +40,12 @@ features:
     details: 閃きを逃さない。珠玉のアイデアを、大切に保管。
   - icon: 💬
     title: 引用返信
-    details: 選択して引用。文脈を捉えた、正確で効率的な対話を。
+    details: テキストを選択してワンクリックで引用。文脈に応じた返信で、効率的なコミュニケーションを。
+  - icon: 📐
+    title: 数式コピー
+    details: LaTeX および MathML (Word) のソースコードを一クリックでコピー。
   - icon: 🧜‍♀️
-    title: Mermaid ダイアグラム
-    details: コードを、図へ。フローチャートやシーケンス図を一瞬で可視化。
+    title: Mermaid
   - icon: 🍌
     title: NanoBanana 透かし除去
     details: 生成された瞬間を、純粋なままに。ノイズのない美しさを。

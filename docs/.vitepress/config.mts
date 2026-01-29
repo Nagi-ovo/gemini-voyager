@@ -32,6 +32,7 @@ export default defineConfig({
             items: [
               { text: '时间轴', link: '/guide/timeline' },
               { text: '引用回复', link: '/guide/quote-reply' },
+              { text: '公式复制', link: '/guide/formula-copy' },
               { text: '文件夹', link: '/guide/folders' },
               { text: '批量删除', link: '/guide/batch-delete' },
               { text: '灵感库', link: '/guide/prompts' },
@@ -78,6 +79,7 @@ export default defineConfig({
             items: [
               { text: '時間軸導航', link: '/zh_TW/guide/timeline' },
               { text: '引用回覆', link: '/zh_TW/guide/quote-reply' },
+              { text: '公式複製', link: '/zh_TW/guide/formula-copy' },
               { text: '資料夾', link: '/zh_TW/guide/folders' },
               { text: '批次刪除', link: '/zh_TW/guide/batch-delete' },
               { text: '提示詞庫', link: '/zh_TW/guide/prompts' },
@@ -124,6 +126,7 @@ export default defineConfig({
             items: [
               { text: 'Timeline Navigation', link: '/en/guide/timeline' },
               { text: 'Quote Reply', link: '/en/guide/quote-reply' },
+              { text: 'Formula Copy', link: '/en/guide/formula-copy' },
               { text: 'Folder Organization', link: '/en/guide/folders' },
               { text: 'Batch Delete', link: '/en/guide/batch-delete' },
               { text: 'Prompt Library', link: '/en/guide/prompts' },
@@ -170,6 +173,7 @@ export default defineConfig({
             items: [
               { text: 'タイムライン', link: '/ja/guide/timeline' },
               { text: '引用返信', link: '/ja/guide/quote-reply' },
+              { text: '数式コピー', link: '/ja/guide/formula-copy' },
               { text: 'フォルダ管理', link: '/ja/guide/folders' },
               { text: '一括削除', link: '/ja/guide/batch-delete' },
               { text: 'プロンプト', link: '/ja/guide/prompts' },
@@ -216,6 +220,7 @@ export default defineConfig({
             items: [
               { text: 'Navigation Temporelle', link: '/fr/guide/timeline' },
               { text: 'Réponse avec Citation', link: '/fr/guide/quote-reply' },
+              { text: 'Copie de Formules', link: '/fr/guide/formula-copy' },
               { text: 'Dossiers', link: '/fr/guide/folders' },
               { text: 'Suppression par Lot', link: '/fr/guide/batch-delete' },
               { text: 'Bibliothèque de Prompts', link: '/fr/guide/prompts' },
@@ -262,6 +267,7 @@ export default defineConfig({
             items: [
               { text: 'Navegación de Línea de Tiempo', link: '/es/guide/timeline' },
               { text: 'Respuesta con Cita', link: '/es/guide/quote-reply' },
+              { text: 'Copia de Fórmulas', link: '/es/guide/formula-copy' },
               { text: 'Carpetas', link: '/es/guide/folders' },
               { text: 'Eliminación por Lote', link: '/es/guide/batch-delete' },
               { text: 'Biblioteca de Prompts', link: '/es/guide/prompts' },
@@ -308,6 +314,7 @@ export default defineConfig({
             items: [
               { text: 'Navegação na Linha do Tempo', link: '/pt/guide/timeline' },
               { text: 'Resposta com Citação', link: '/pt/guide/quote-reply' },
+              { text: 'Cópia de Fórmulas', link: '/pt/guide/formula-copy' },
               { text: 'Pastas', link: '/pt/guide/folders' },
               { text: 'Exclusão em Lote', link: '/pt/guide/batch-delete' },
               { text: 'Biblioteca de Prompts', link: '/pt/guide/prompts' },
@@ -355,6 +362,7 @@ export default defineConfig({
             items: [
               { text: 'تصفح الجدول الزمني', link: '/ar/guide/timeline' },
               { text: 'الرد مع اقتباس', link: '/ar/guide/quote-reply' },
+              { text: 'نسخ الصيغ', link: '/ar/guide/formula-copy' },
               { text: 'المجلدات', link: '/ar/guide/folders' },
               { text: 'الحذف الجماعي', link: '/ar/guide/batch-delete' },
               { text: 'مكتبة المطالبات', link: '/ar/guide/prompts' },
@@ -401,6 +409,7 @@ export default defineConfig({
             items: [
               { text: 'Навигация по таймлайну', link: '/ru/guide/timeline' },
               { text: 'Ответ с цитированием', link: '/ru/guide/quote-reply' },
+              { text: 'Копирование формул', link: '/ru/guide/formula-copy' },
               { text: 'Папки', link: '/ru/guide/folders' },
               { text: 'Пакетное удаление', link: '/ru/guide/batch-delete' },
               { text: 'Библиотека промптов', link: '/ru/guide/prompts' },

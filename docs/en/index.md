@@ -41,6 +41,9 @@ features:
   - icon: 💬
     title: Quote Reply
     details: Select to quote. Context-aware replies for efficient communication.
+  - icon: 📐
+    title: Formula Copy
+    details: One-click copy for LaTeX and MathML (Word) source codes.
   - icon: 🧜‍♀️
     title: Mermaid Diagrams
     details: Code to visuals. Flowcharts, sequence diagrams, Gantt charts rendered instantly.

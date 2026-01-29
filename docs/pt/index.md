@@ -40,10 +40,13 @@ features:
     details: O seu génio, capturado. Guarde e reutilize os seus melhores prompts.
   - icon: 💬
     title: Resposta com Citação
-    details: Selecione para citar. Respostas sensíveis ao contexto para uma comunicação eficiente.
+    details: Selecione para citar. Respostas contextualizadas para uma comunicação eficiente.
+  - icon: 📐
+    title: Cópia de Fórmulas
+    details: Cópia com um clique de códigos-fonte LaTeX e MathML (Word).
   - icon: 🧜‍♀️
-    title: Diagramas Mermaid
-    details: De código a visual. Fluxogramas, diagramas de sequência e Gantt renderizados instantaneamente.
+    title: Gráficos Mermaid
+
   - icon: 🍌
     title: Remoção de Marca de Água NanoBanana
     details: Remoção de marca de água sem perdas. Mantenha os momentos de IA puros.

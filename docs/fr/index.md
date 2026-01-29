@@ -40,10 +40,13 @@ features:
     details: Votre génie, capturé. Enregistrez et réutilisez vos meilleurs prompts.
   - icon: 💬
     title: Réponse avec Citation
-    details: Sélectionnez pour citer. Réponses contextuelles pour une communication efficace.
+    details: Sélectionnez pour citer. Réponses contextualisées pour une communication efficace.
+  - icon: 📐
+    title: Copie de Formules
+    details: Copie en un clic des codes sources LaTeX et MathML (Word).
   - icon: 🧜‍♀️
     title: Diagrammes Mermaid
-    details: Du code au visuel. Organigrammes, séquences, Gantt rendus instantanément.
+
   - icon: 🍌
     title: Suppression Filigrane
     details: Suppression sans perte du filigrane. Gardez les moments IA purs.
