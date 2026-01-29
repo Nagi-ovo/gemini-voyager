@@ -137,43 +137,84 @@ export function startQuoteReply() {
     const input = getChatInput();
     if (input) {
       expandInputCollapseIfNeeded();
-      input.focus();
+      
+      // Determine if this is the first content in the input
+      const currentContent = input instanceof HTMLTextAreaElement ? input.value : input.textContent || '';
+      const isInputEmpty = currentContent.trim().length === 0;
 
-      // Format format: > selection
-      // We split by newlines to quote nicely
-      const quoted =
-        selectedText
-          .split('\n')
-          .map((line) => `> ${line}`)
-          .join('\n') + '\n\n';
+      // Format: > selection
+      const quoteBody = selectedText
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n');
+      
+      // 1. Add a newline at the end (any quote)
+      // 2. Add a newline at the start if not the first quote
+      // Example:
+      // ------------
+      // |> Quote 1 |
+      // |New text 1|
+      // |> Quote 2 |
+      // |New text 2|
+      // ------------
+      const quoted = isInputEmpty ? `${quoteBody}\n` : `\n${quoteBody}\n`;
 
-      // Insert text
-      // execCommand is reliable for contenteditable
-      const success = document.execCommand('insertText', false, quoted);
-      if (!success) {
-        // Fallback for textareas
+      // Ensure the input is visible
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Robust insertion and focus logic
+      const performInsertion = () => {
+        // First focus attempt
+        input.focus();
+        
         if (input instanceof HTMLTextAreaElement) {
-          const start = input.selectionStart;
-          const end = input.selectionEnd;
-          const val = input.value;
-          input.value = val.substring(0, start) + quoted + val.substring(end);
-          input.selectionStart = input.selectionEnd = start + quoted.length;
+          // Standard Textarea logic
+          const length = input.value.length;
+          input.selectionStart = input.selectionEnd = length;
+          input.value = input.value.substring(0, length) + quoted;
+          input.selectionStart = input.selectionEnd = length + quoted.length;
           input.dispatchEvent(new Event('input', { bubbles: true }));
         } else {
-          // Fallback for contenteditable
-          input.innerText += quoted; // Very basic
+          // Contenteditable (Gemini/Quill) logic
+          const sel = window.getSelection();
+          if (sel) {
+            const range = document.createRange();
+            range.selectNodeContents(input);
+            range.collapse(false); // Move cursor to very end
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+
+          // Insert text
+          const success = document.execCommand('insertText', false, quoted);
+          
+          if (!success) {
+            // Fallback manual append
+            const textNode = document.createTextNode(quoted);
+            input.appendChild(textNode);
+          }
+          
+          // Re-force cursor to the end after insertion
+          const finalRange = document.createRange();
+          finalRange.selectNodeContents(input);
+          finalRange.collapse(false);
+          sel?.removeAllRanges();
+          sel?.addRange(finalRange);
+          
+          input.dispatchEvent(new Event('input', { bubbles: true }));
         }
-      }
 
-      // Dispatch input event for contenteditable just in case framework needs it
-      if (!(input instanceof HTMLTextAreaElement)) {
-        // Dispatch input event to notify frameworks (React/Lit)
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-      }
+        // Final focus force
+        input.focus();
+        // Some editors need an extra click or focus to show the cursor
+        setTimeout(() => input.focus(), 50);
+      };
 
-      // Hide button
+      // Use a slightly longer delay to wait for any expansion transitions
+      setTimeout(performInsertion, 200);
+
+      // Hide button and clear original selection
       hideButton();
-      // Clear selection
       window.getSelection()?.removeAllRanges();
     } else {
       console.warn('[Gemini Voyager] Could not find chat input.');
