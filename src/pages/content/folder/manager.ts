@@ -85,6 +85,7 @@ export class FolderManager {
   private isDestroyed: boolean = false; // Flag to prevent callbacks after destruction
   private reinitializePromise: Promise<void> | null = null; // Prevent duplicate reinitialization cascades
   private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
+  private activeColorPickerFolderId: string | null = null; // Folder ID of currently open color picker
 
   // Cleanup references
   private routeChangeCleanup: (() => void) | null = null;
@@ -260,6 +261,7 @@ export class FolderManager {
     if (this.activeColorPicker) {
       this.activeColorPicker.remove();
       this.activeColorPicker = null;
+      this.activeColorPickerFolderId = null;
     }
 
     // Remove container
@@ -3318,10 +3320,12 @@ export class FolderManager {
 
     // If a color picker is already open, close it first
     if (this.activeColorPicker) {
+      const wasSameFolder = this.activeColorPickerFolderId === folderId;
       this.activeColorPicker.remove();
       this.activeColorPicker = null;
+      this.activeColorPickerFolderId = null;
       // If clicking the same folder icon again and toggle is allowed, just close the picker
-      if (allowToggle) {
+      if (allowToggle && wasSameFolder) {
         return;
       }
     }
@@ -3355,6 +3359,7 @@ export class FolderManager {
         this.changeFolderColor(folderId, colorConfig.id);
         dialog.remove();
         this.activeColorPicker = null;
+        this.activeColorPickerFolderId = null;
       });
 
       dialog.appendChild(colorBtn);
@@ -3362,12 +3367,14 @@ export class FolderManager {
 
     document.body.appendChild(dialog);
     this.activeColorPicker = dialog;
+    this.activeColorPickerFolderId = folderId;
 
     // Close dialog on click outside
     const closeDialog = (e: MouseEvent) => {
       if (!dialog.contains(e.target as Node)) {
         dialog.remove();
         this.activeColorPicker = null;
+        this.activeColorPickerFolderId = null;
         document.removeEventListener('click', closeDialog);
       }
     };
