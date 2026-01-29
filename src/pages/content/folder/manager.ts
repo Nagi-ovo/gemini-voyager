@@ -86,6 +86,7 @@ export class FolderManager {
   private reinitializePromise: Promise<void> | null = null; // Prevent duplicate reinitialization cascades
   private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
   private activeColorPickerFolderId: string | null = null; // Folder ID of currently open color picker
+  private activeColorPickerCloseHandler: ((e: MouseEvent) => void) | null = null; // Event handler for closing color picker
 
   // Cleanup references
   private routeChangeCleanup: (() => void) | null = null;
@@ -260,6 +261,10 @@ export class FolderManager {
     // Remove active color picker
     if (this.activeColorPicker) {
       this.activeColorPicker.remove();
+      if (this.activeColorPickerCloseHandler) {
+        document.removeEventListener('click', this.activeColorPickerCloseHandler);
+        this.activeColorPickerCloseHandler = null;
+      }
       this.activeColorPicker = null;
       this.activeColorPickerFolderId = null;
     }
@@ -3322,6 +3327,11 @@ export class FolderManager {
     if (this.activeColorPicker) {
       const wasSameFolder = this.activeColorPickerFolderId === folderId;
       this.activeColorPicker.remove();
+      // Clean up the old event listener to prevent memory leak
+      if (this.activeColorPickerCloseHandler) {
+        document.removeEventListener('click', this.activeColorPickerCloseHandler);
+        this.activeColorPickerCloseHandler = null;
+      }
       this.activeColorPicker = null;
       this.activeColorPickerFolderId = null;
       // If clicking the same folder icon again and toggle is allowed, just close the picker
@@ -3358,6 +3368,10 @@ export class FolderManager {
       colorBtn.addEventListener('click', () => {
         this.changeFolderColor(folderId, colorConfig.id);
         dialog.remove();
+        if (this.activeColorPickerCloseHandler) {
+          document.removeEventListener('click', this.activeColorPickerCloseHandler);
+          this.activeColorPickerCloseHandler = null;
+        }
         this.activeColorPicker = null;
         this.activeColorPickerFolderId = null;
       });
@@ -3375,9 +3389,13 @@ export class FolderManager {
         dialog.remove();
         this.activeColorPicker = null;
         this.activeColorPickerFolderId = null;
-        document.removeEventListener('click', closeDialog);
+        if (this.activeColorPickerCloseHandler) {
+          document.removeEventListener('click', this.activeColorPickerCloseHandler);
+          this.activeColorPickerCloseHandler = null;
+        }
       }
     };
+    this.activeColorPickerCloseHandler = closeDialog;
     setTimeout(() => document.addEventListener('click', closeDialog), 0);
   }
 
