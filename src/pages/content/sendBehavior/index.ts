@@ -6,44 +6,177 @@
  * - Ctrl+Enter sends the message
  *
  * This feature is controlled by the `gvCtrlEnterSend` storage setting.
+ *
+ * ARCHITECTURE:
+ * - Observer and listeners are ONLY active when the feature is enabled
+ * - When disabled, no DOM observation or event handling occurs (zero performance overhead)
+ * - Storage listener remains active to respond to setting changes
  */
 import { StorageKeys } from '@/core/types/common';
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/** Selectors for finding the send button */
+const SEND_BUTTON_SELECTORS = [
+  'button[aria-label*="Send"]',
+  'button[aria-label*="send"]',
+  'button[data-tooltip*="Send"]',
+  'button[data-tooltip*="send"]',
+  'button mat-icon[fonticon="send"]',
+  '[data-send-button]',
+  '.send-button',
+] as const;
+
+/** Selector for editable elements */
+const EDITABLE_SELECTORS = '[contenteditable="true"], [role="textbox"], textarea';
+
+/** Log prefix for consistent logging */
+const LOG_PREFIX = '[SendBehavior]';
+
+// ============================================================================
+// State
+// ============================================================================
 
 let isEnabled = false;
 let observer: MutationObserver | null = null;
 let cleanupFns: (() => void)[] = [];
+let storageListener:
+  | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
+  | null = null;
+
+/** Track elements that already have listeners attached to prevent duplicates */
+const attachedElements = new WeakSet<HTMLElement>();
+
+// ============================================================================
+// DOM Helpers
+// ============================================================================
+
+/**
+ * Find the send button in the Gemini UI
+ */
+function findSendButton(): HTMLElement | null {
+  // Try predefined selectors
+  for (const selector of SEND_BUTTON_SELECTORS) {
+    try {
+      const element = document.querySelector(selector);
+      if (element) {
+        const button = element.closest('button') ?? element;
+        if (button instanceof HTMLElement) {
+          return button;
+        }
+      }
+    } catch {
+      // Invalid selector, continue to next
+    }
+  }
+
+  // Fallback: Find button with send icon by icon text
+  const allButtons = document.querySelectorAll('button');
+  for (const button of allButtons) {
+    const iconElement = button.querySelector('.material-symbols-outlined, mat-icon');
+    if (iconElement?.textContent?.trim().toLowerCase() === 'send') {
+      return button;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Insert a newline in a contenteditable element
+ *
+ * Gemini uses Quill editor (identified by class "ql-editor").
+ * Direct DOM manipulation with <br> elements doesn't work well with Quill
+ * because it manages its own DOM state.
+ *
+ * Strategy:
+ * 1. First try document.execCommand('insertLineBreak') - works in most browsers
+ * 2. If that fails, simulate a Shift+Enter keypress which Quill handles natively
+ */
+function insertNewlineInContentEditable(target: HTMLElement): void {
+  // Method 1: Try execCommand (deprecated but still works in most browsers)
+  // This is the most reliable method for contenteditable elements
+  const success = document.execCommand('insertLineBreak', false);
+
+  if (success) {
+    // Trigger input event to notify any listeners (including Quill)
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+    return;
+  }
+
+  // Method 2: Try insertHTML with a <br> tag
+  const htmlSuccess = document.execCommand('insertHTML', false, '<br><br>');
+
+  if (htmlSuccess) {
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+    return;
+  }
+
+  // Method 3: Simulate Shift+Enter keypress as fallback
+  // This tells Quill to handle the newline in its own way
+  const shiftEnterEvent = new KeyboardEvent('keydown', {
+    key: 'Enter',
+    code: 'Enter',
+    keyCode: 13,
+    which: 13,
+    shiftKey: true,
+    bubbles: true,
+    cancelable: true,
+  });
+
+  target.dispatchEvent(shiftEnterEvent);
+}
+
+/**
+ * Insert a newline in a textarea
+ */
+function insertNewlineInTextarea(textarea: HTMLTextAreaElement): void {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const value = textarea.value;
+
+  textarea.value = value.substring(0, start) + '\n' + value.substring(end);
+  textarea.selectionStart = textarea.selectionEnd = start + 1;
+
+  // Trigger input event to notify any listeners
+  textarea.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// ============================================================================
+// Event Handlers
+// ============================================================================
 
 /**
  * Handle keydown events on the input area
  */
 function handleKeyDown(event: KeyboardEvent): void {
+  // Early exit if feature is disabled (should not happen, but defensive check)
   if (!isEnabled) return;
 
   // Only handle Enter key
   if (event.key !== 'Enter') return;
 
-  // Get the target element
   const target = event.target as HTMLElement;
 
-  // Check if we're in a contenteditable input area (Gemini uses contenteditable divs)
+  // Check if we're in an editable area (Gemini uses contenteditable divs)
   const isContentEditable =
     target.isContentEditable || target.getAttribute('contenteditable') === 'true';
   const isTextarea = target.tagName === 'TEXTAREA';
 
-  // We explicitly ignore INPUT elements because they are usually single-line (search, rename)
-  // and pressing Enter there should trigger the default submit action, not insert a newline.
+  // Ignore INPUT elements - they are usually single-line (search, rename)
+  // and pressing Enter there should trigger the default submit action
   if (!isContentEditable && !isTextarea) return;
 
-  // Ctrl+Enter or Cmd+Enter: Allow default behavior (send message)
+  // Ctrl+Enter or Cmd+Enter: Send the message
   if (event.ctrlKey || event.metaKey) {
-    // Find and click the send button
     const sendButton = findSendButton();
     if (sendButton) {
       event.preventDefault();
       event.stopPropagation();
       sendButton.click();
     }
-    // If no send button found, let the default behavior happen
     return;
   }
 
@@ -55,82 +188,15 @@ function handleKeyDown(event: KeyboardEvent): void {
   event.stopPropagation();
 
   if (isContentEditable) {
-    // For contenteditable, insert a line break manually using Range API
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      const br = document.createElement('br');
-      range.deleteContents();
-      range.insertNode(br);
-      // Move cursor after the br
-      range.setStartAfter(br);
-      range.setEndAfter(br);
-      selection.removeAllRanges();
-      selection.addRange(range);
-      // Scroll to view
-      br.scrollIntoView({ block: 'nearest' });
-    }
-    // Trigger input event to notify any listeners (e.g. Quill editor)
-    target.dispatchEvent(new Event('input', { bubbles: true }));
+    insertNewlineInContentEditable(target);
   } else if (isTextarea) {
-    // For textarea, insert a newline at cursor position
-    const textarea = target as HTMLTextAreaElement;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const value = textarea.value;
-    textarea.value = value.substring(0, start) + '\n' + value.substring(end);
-    textarea.selectionStart = textarea.selectionEnd = start + 1;
-    // Trigger input event to notify any listeners
-    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    insertNewlineInTextarea(target as HTMLTextAreaElement);
   }
 }
 
-/**
- * Find the send button in the Gemini UI
- */
-function findSendButton(): HTMLElement | null {
-  // Try multiple selectors as Gemini's UI may vary
-  const selectors = [
-    'button[aria-label*="Send"]',
-    'button[aria-label*="send"]',
-    'button[data-tooltip*="Send"]',
-    'button[data-tooltip*="send"]',
-    // Material icon button with send icon
-    'button mat-icon[fonticon="send"]',
-    // Fallback: look for send button by class or data attributes
-    '[data-send-button]',
-    '.send-button',
-  ];
-
-  for (const selector of selectors) {
-    try {
-      const element = document.querySelector(selector);
-      if (element) {
-        // If we found a child element, get the button parent
-        const button = element.closest('button') || element;
-        if (button instanceof HTMLElement) {
-          return button;
-        }
-      }
-    } catch {
-      // Selector may be invalid, skip it
-    }
-  }
-
-  // Alternative: Find button with send icon by looking for the icon text
-  const allButtons = document.querySelectorAll('button');
-  for (const button of allButtons) {
-    const iconElement = button.querySelector('.material-symbols-outlined, mat-icon');
-    if (iconElement && iconElement.textContent?.trim().toLowerCase() === 'send') {
-      return button;
-    }
-  }
-
-  return null;
-}
-
-// Track elements that already have listeners attached to prevent duplicates
-const attachedElements = new WeakSet<HTMLElement>();
+// ============================================================================
+// Attachment Logic
+// ============================================================================
 
 /**
  * Attach event listener to an input element
@@ -153,42 +219,37 @@ function attachToInput(element: HTMLElement): void {
  * Find and attach to all input areas on the page
  */
 function attachToAllInputs(): void {
-  // Contenteditable divs (Gemini's main input)
-  const contentEditables = document.querySelectorAll<HTMLElement>(
-    '[contenteditable="true"], [role="textbox"]',
-  );
-  contentEditables.forEach(attachToInput);
-
-  // Textareas (fallback)
-  const textareas = document.querySelectorAll<HTMLTextAreaElement>('textarea');
-  textareas.forEach(attachToInput);
+  const editables = document.querySelectorAll<HTMLElement>(EDITABLE_SELECTORS);
+  editables.forEach(attachToInput);
 }
+
+// ============================================================================
+// Observer Management
+// ============================================================================
 
 /**
  * Setup observer to watch for dynamically added input elements
+ * NOTE: Only call this when the feature is enabled!
  */
 function setupObserver(): void {
   if (observer) return;
 
   observer = new MutationObserver((mutations) => {
-    if (!isEnabled) return;
-
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
         if (!(node instanceof HTMLElement)) continue;
 
         // Check if the node itself is an input
-        if (node.isContentEditable || node.getAttribute('role') === 'textbox') {
-          attachToInput(node);
-        }
-        if (node.tagName === 'TEXTAREA') {
+        if (
+          node.isContentEditable ||
+          node.getAttribute('role') === 'textbox' ||
+          node.tagName === 'TEXTAREA'
+        ) {
           attachToInput(node);
         }
 
         // Check descendants
-        const editables = node.querySelectorAll<HTMLElement>(
-          '[contenteditable="true"], [role="textbox"], textarea',
-        );
+        const editables = node.querySelectorAll<HTMLElement>(EDITABLE_SELECTORS);
         editables.forEach(attachToInput);
       }
     }
@@ -201,90 +262,140 @@ function setupObserver(): void {
 }
 
 /**
+ * Disconnect the observer
+ */
+function disconnectObserver(): void {
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
+}
+
+// ============================================================================
+// Feature Enable/Disable
+// ============================================================================
+
+/**
+ * Enable the feature: attach listeners and start observing
+ */
+function enableFeature(): void {
+  if (isEnabled) return;
+
+  isEnabled = true;
+  attachToAllInputs();
+  setupObserver();
+
+  console.log(LOG_PREFIX, 'Feature enabled');
+}
+
+/**
+ * Disable the feature: remove all listeners and stop observing
+ */
+function disableFeature(): void {
+  if (!isEnabled) return;
+
+  isEnabled = false;
+
+  // Remove all event listeners
+  cleanupFns.forEach((fn) => fn());
+  cleanupFns = [];
+
+  // Stop observing DOM changes
+  disconnectObserver();
+
+  console.log(LOG_PREFIX, 'Feature disabled');
+}
+
+// ============================================================================
+// Storage & Initialization
+// ============================================================================
+
+/**
  * Load the enabled state from storage
  */
-async function loadSettings(): Promise<void> {
+async function loadSettings(): Promise<boolean> {
   return new Promise((resolve) => {
     try {
       if (!chrome.storage?.sync?.get) {
-        resolve();
+        resolve(false);
         return;
       }
       chrome.storage.sync.get({ [StorageKeys.CTRL_ENTER_SEND]: false }, (result) => {
-        isEnabled = result?.[StorageKeys.CTRL_ENTER_SEND] === true;
-        resolve();
+        const enabled = result?.[StorageKeys.CTRL_ENTER_SEND] === true;
+        resolve(enabled);
       });
-    } catch {
-      resolve();
+    } catch (error) {
+      console.warn(LOG_PREFIX, 'Failed to load settings:', error);
+      resolve(false);
     }
   });
 }
 
 /**
- * Listen for storage changes
+ * Setup storage change listener
+ * NOTE: This listener remains active even when feature is disabled,
+ * so we can respond to setting changes.
  */
-let storageListener:
-  | ((changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => void)
-  | null = null;
-
 function setupStorageListener(): void {
   if (storageListener) return;
 
+  storageListener = (changes, areaName) => {
+    if (areaName !== 'sync') return;
+    if (!(StorageKeys.CTRL_ENTER_SEND in changes)) return;
+
+    const newValue = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
+
+    if (newValue && !isEnabled) {
+      enableFeature();
+    } else if (!newValue && isEnabled) {
+      disableFeature();
+    }
+  };
+
   try {
-    storageListener = (changes, areaName) => {
-      if (areaName !== 'sync') return;
-      if (StorageKeys.CTRL_ENTER_SEND in changes) {
-        isEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
-
-        if (isEnabled) {
-          // Changed from disabled to enabled: connect everything
-          attachToAllInputs();
-        } else {
-          // Changed from enabled to disabled: remove only event listeners
-          // We don't verify full cleanup here because observer should stay active
-          // to be ready if user enables it again, but we must remove listeners
-          cleanupFns.forEach((fn) => fn());
-          cleanupFns = [];
-        }
-      }
-    };
-
     chrome.storage?.onChanged?.addListener(storageListener);
-  } catch {
-    // Storage API not available
+  } catch (error) {
+    console.warn(LOG_PREFIX, 'Failed to setup storage listener:', error);
   }
 }
 
 /**
- * Cleanup all event listeners
+ * Cleanup all resources
  */
 function cleanup(): void {
-  cleanupFns.forEach((fn) => fn());
-  cleanupFns = [];
-
-  if (observer) {
-    observer.disconnect();
-    observer = null;
-  }
+  disableFeature();
 
   if (storageListener) {
-    chrome.storage?.onChanged?.removeListener(storageListener);
+    try {
+      chrome.storage?.onChanged?.removeListener(storageListener);
+    } catch {
+      // Ignore cleanup errors
+    }
     storageListener = null;
   }
+
+  console.log(LOG_PREFIX, 'Cleanup complete');
 }
+
+// ============================================================================
+// Public API
+// ============================================================================
 
 /**
  * Initialize the send behavior module
+ * @returns A cleanup function to be called on unmount
  */
 export async function startSendBehavior(): Promise<() => void> {
-  await loadSettings();
+  // Always setup storage listener first (to respond to setting changes)
   setupStorageListener();
 
-  if (isEnabled) {
-    attachToAllInputs();
+  // Load initial setting and enable if needed
+  const initialEnabled = await loadSettings();
+  if (initialEnabled) {
+    enableFeature();
+  } else {
+    console.log(LOG_PREFIX, 'Feature disabled, skipping initialization');
   }
-
-  setupObserver();
 
   return cleanup;
 }
