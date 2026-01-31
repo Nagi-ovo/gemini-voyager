@@ -896,8 +896,8 @@
     "description": "Quote reply button text"
   },
   "inputCollapseOptions": {
-    "message": "Сворачивание ввода",
-    "description": "Input collapse options section label"
+    "message": "Параметры ввода",
+    "description": "Input options section label"
   },
   "enableInputCollapse": {
     "message": "Включить сворачивание ввода",
@@ -910,6 +910,14 @@
   "inputCollapsePlaceholder": {
     "message": "Сообщение Gemini",
     "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter для отправки",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "Нажмите Ctrl+Enter для отправки сообщений, Enter для новой строки",
+    "description": "Ctrl+Enter to send feature hint"
   },
   "batch_delete_confirm": {
     "message": "Вы уверены, что хотите удалить {count} разговор(ов)? Это действие нельзя отменить.",

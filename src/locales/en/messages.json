@@ -896,8 +896,8 @@
     "description": "Quote reply button text"
   },
   "inputCollapseOptions": {
-    "message": "Input Collapse",
-    "description": "Input collapse options section label"
+    "message": "Input Options",
+    "description": "Input options section label"
   },
   "enableInputCollapse": {
     "message": "Enable input collapse",
@@ -910,6 +910,14 @@
   "inputCollapsePlaceholder": {
     "message": "Message Gemini",
     "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter to send",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "Press Ctrl+Enter to send messages, Enter to add a new line",
+    "description": "Ctrl+Enter to send feature hint"
   },
   "batch_delete_confirm": {
     "message": "Are you sure you want to delete {count} conversation(s)? This action cannot be undone.",

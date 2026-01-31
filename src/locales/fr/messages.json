@@ -896,8 +896,8 @@
     "description": "Quote reply button text"
   },
   "inputCollapseOptions": {
-    "message": "Réduction de l'entrée",
-    "description": "Input collapse options section label"
+    "message": "Options de saisie",
+    "description": "Input options section label"
   },
   "enableInputCollapse": {
     "message": "Activer la réduction de l'entrée",
@@ -910,6 +910,14 @@
   "inputCollapsePlaceholder": {
     "message": "Message à Gemini",
     "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Entrée pour envoyer",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "Appuyez sur Ctrl+Entrée pour envoyer, Entrée pour un saut de ligne",
+    "description": "Ctrl+Enter to send feature hint"
   },
   "batch_delete_confirm": {
     "message": "Voulez-vous vraiment supprimer {count} discussion(s) ? Cette action est irréversible.",

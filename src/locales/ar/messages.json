@@ -896,8 +896,8 @@
     "description": "Quote reply button text"
   },
   "inputCollapseOptions": {
-    "message": "طي الإدخال",
-    "description": "Input collapse options section label"
+    "message": "خيارات الإدخال",
+    "description": "Input options section label"
   },
   "enableInputCollapse": {
     "message": "تمكين طي الإدخال",
@@ -910,6 +910,14 @@
   "inputCollapsePlaceholder": {
     "message": "راسل Gemini",
     "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter للإرسال",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "اضغط Ctrl+Enter لإرسال الرسائل، Enter لإضافة سطر جديد",
+    "description": "Ctrl+Enter to send feature hint"
   },
   "batch_delete_confirm": {
     "message": "هل أنت متأكد من أنك تريد حذف {count} محادثة؟ لا يمكن التراجع عن هذا الإجراء.",

@@ -860,8 +860,8 @@
     "description": "引用回覆按鈕文字"
   },
   "inputCollapseOptions": {
-    "message": "輸入框摺疊",
-    "description": "輸入框摺疊選項區域標籤"
+    "message": "輸入選項",
+    "description": "輸入選項區域標籤"
   },
   "enableInputCollapse": {
     "message": "啟用輸入框摺疊",
@@ -874,6 +874,14 @@
   "inputCollapsePlaceholder": {
     "message": "傳送訊息給 Gemini",
     "description": "摺疊輸入框時顯示的佔位符文字"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter 傳送",
+    "description": "Ctrl+Enter 傳送開關標籤"
+  },
+  "ctrlEnterSendHint": {
+    "message": "按 Ctrl+Enter 傳送訊息，Enter 鍵僅換行",
+    "description": "Ctrl+Enter 傳送功能提示"
   },
   "batch_delete_confirm": {
     "message": "確定要刪除 {count} 個對話嗎？此操作無法復原。",
