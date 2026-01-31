@@ -116,6 +116,7 @@ interface SettingsUpdate {
   tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
+  ctrlEnterSendEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -141,6 +142,7 @@ export default function Popup() {
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
+  const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
 
   const handleFormulaCopyFormatChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const format = e.target.value as 'latex' | 'unicodemath' | 'no-dollar';
@@ -198,6 +200,8 @@ export default function Popup() {
         payload.gvMermaidEnabled = settings.mermaidEnabled;
       if (typeof settings.quoteReplyEnabled === 'boolean')
         payload.gvQuoteReplyEnabled = settings.quoteReplyEnabled;
+      if (typeof settings.ctrlEnterSendEnabled === 'boolean')
+        payload.gvCtrlEnterSend = settings.ctrlEnterSendEnabled;
       void setSyncStorage(payload);
     },
     [setSyncStorage],
@@ -362,6 +366,7 @@ export default function Popup() {
           gvTabTitleUpdateEnabled: true,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
+          gvCtrlEnterSend: false,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -384,6 +389,7 @@ export default function Popup() {
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
+          setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -948,6 +954,25 @@ export default function Popup() {
                 onChange={(e) => {
                   setInputCollapseEnabled(e.target.checked);
                   apply({ inputCollapseEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
+                  htmlFor="ctrl-enter-send"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                >
+                  {t('ctrlEnterSend')}
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">{t('ctrlEnterSendHint')}</p>
+              </div>
+              <Switch
+                id="ctrl-enter-send"
+                checked={ctrlEnterSendEnabled}
+                onChange={(e) => {
+                  setCtrlEnterSendEnabled(e.target.checked);
+                  apply({ ctrlEnterSendEnabled: e.target.checked });
                 }}
               />
             </div>

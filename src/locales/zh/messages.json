@@ -896,8 +896,8 @@
     "description": "引用回复按钮文本"
   },
   "inputCollapseOptions": {
-    "message": "输入框折叠",
-    "description": "输入框折叠选项区域标签"
+    "message": "输入选项",
+    "description": "输入选项区域标签"
   },
   "enableInputCollapse": {
     "message": "启用输入框折叠",
@@ -910,6 +910,14 @@
   "inputCollapsePlaceholder": {
     "message": "给 Gemini 发消息",
     "description": "折叠输入框时显示的占位符文本"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter 发送",
+    "description": "Ctrl+Enter 发送开关标签"
+  },
+  "ctrlEnterSendHint": {
+    "message": "按 Ctrl+Enter 发送消息，Enter 键仅换行",
+    "description": "Ctrl+Enter 发送功能提示"
   },
   "batch_delete_confirm": {
     "message": "确定要删除 {count} 个会话吗？此操作无法撤销。",

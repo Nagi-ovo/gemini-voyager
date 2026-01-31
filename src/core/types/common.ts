@@ -58,6 +58,9 @@ export const StorageKeys = {
   // Global settings
   LANGUAGE: 'language',
   FORMULA_COPY_FORMAT: 'gvFormulaCopyFormat',
+
+  // Input behavior
+  CTRL_ENTER_SEND: 'gvCtrlEnterSend',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

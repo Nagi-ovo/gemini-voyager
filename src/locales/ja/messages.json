@@ -896,8 +896,8 @@
     "description": "Quote reply button text"
   },
   "inputCollapseOptions": {
-    "message": "入力欄の自動非表示",
-    "description": "Input collapse options section label"
+    "message": "入力オプション",
+    "description": "Input options section label"
   },
   "enableInputCollapse": {
     "message": "入力欄の自動非表示を有効化",
@@ -910,6 +910,14 @@
   "inputCollapsePlaceholder": {
     "message": "Gemini にメッセージを送信",
     "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter で送信",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "Ctrl+Enter でメッセージを送信、Enter で改行",
+    "description": "Ctrl+Enter to send feature hint"
   },
   "batch_delete_confirm": {
     "message": "{count} 件の会話を削除してもよろしいですか？この操作は取り消せません。",

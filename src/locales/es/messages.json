@@ -896,8 +896,8 @@
     "description": "Quote reply button text"
   },
   "inputCollapseOptions": {
-    "message": "Contraer entrada",
-    "description": "Input collapse options section label"
+    "message": "Opciones de entrada",
+    "description": "Input options section label"
   },
   "enableInputCollapse": {
     "message": "Habilitar contracción de entrada",
@@ -910,6 +910,14 @@
   "inputCollapsePlaceholder": {
     "message": "Mensaje a Gemini",
     "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter para enviar",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "Presiona Ctrl+Enter para enviar mensajes, Enter para agregar una nueva línea",
+    "description": "Ctrl+Enter to send feature hint"
   },
   "batch_delete_confirm": {
     "message": "¿Estás seguro de que quieres eliminar {count} conversación(es)? Esta acción no se puede deshacer.",
