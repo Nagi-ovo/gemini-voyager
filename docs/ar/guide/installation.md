@@ -10,7 +10,7 @@
 
 **Chrome / Brave / Opera / Vivaldi:**
 
-[<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="التثبيت من سوق Chrome الإلكتروني" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol)
+[<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="التثبيت من سوق Chrome الإلكتروني" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ar)
 
 **Microsoft Edge:**
 
