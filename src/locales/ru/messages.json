@@ -1046,5 +1046,21 @@
   "recentsShow": {
     "message": "Показать недавние элементы",
     "description": "Подсказка для отображения раздела недавних элементов"
+  },
+  "setAsDefaultModel": {
+    "message": "Set as default model",
+    "description": "Tooltip for setting default model"
+  },
+  "cancelDefaultModel": {
+    "message": "Cancel default model",
+    "description": "Tooltip for cancelling default model"
+  },
+  "defaultModelSet": {
+    "message": "Default model set: $1",
+    "description": "Toast message when default model is set"
+  },
+  "defaultModelCleared": {
+    "message": "Default model cleared",
+    "description": "Toast message when default model is cleared"
   }
 }

@@ -1046,5 +1046,21 @@
   "recentsShow": {
     "message": "显示最近项目",
     "description": "显示最近预览区域的提示"
+  },
+  "setAsDefaultModel": {
+    "message": "设为新对话的默认模型",
+    "description": "Tooltip for setting default model"
+  },
+  "cancelDefaultModel": {
+    "message": "取消默认模型",
+    "description": "Tooltip for cancelling default model"
+  },
+  "defaultModelSet": {
+    "message": "已设置默认模型：$1",
+    "description": "Toast message when default model is set"
+  },
+  "defaultModelCleared": {
+    "message": "已取消默认模型",
+    "description": "Toast message when default model is cleared"
   }
 }

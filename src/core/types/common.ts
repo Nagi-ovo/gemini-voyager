@@ -61,6 +61,9 @@ export const StorageKeys = {
 
   // Input behavior
   CTRL_ENTER_SEND: 'gvCtrlEnterSend',
+
+  // Default Model
+  DEFAULT_MODEL: 'gvDefaultModel',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

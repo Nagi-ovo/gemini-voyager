@@ -1,0 +1,50 @@
+/* Default model star button */
+.gv-default-star-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #5f6368;
+  position: relative;
+  margin-left: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: auto;
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    background-color 0.2s,
+    color 0.2s;
+}
+
+/* Show on hover or if it's the default model */
+[role='menuitemradio']:hover .gv-default-star-btn,
+.gv-default-star-btn.is-default {
+  opacity: 1;
+}
+
+.gv-default-star-btn:hover {
+  background-color: rgba(60, 64, 67, 0.08);
+}
+
+.gv-default-star-btn.is-default {
+  color: #fbbc04;
+  /* Google Yellow / Star color */
+}
+
+.gv-default-star-btn svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  /* Let clicks pass to button */
+}
+
+/* Ensure parent menu item has relative positioning */
+[role='menuitemradio'] {
+  position: relative;
+}

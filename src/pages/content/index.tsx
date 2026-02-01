@@ -5,6 +5,7 @@ import { initI18n } from '@/utils/i18n';
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
+import DefaultModelManager from './defaultModel/modelLocker';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
@@ -179,6 +180,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Recents hider - hide/show toggle for recent items section
       startRecentsHider();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Default Model Manager
+      DefaultModelManager.getInstance().init();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
