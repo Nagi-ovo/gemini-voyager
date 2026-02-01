@@ -32,6 +32,8 @@ yarn-error.log*
 
 *.mov
 *.mp4
+!docs/public/assets/*.mov
+!docs/public/assets/*.mp4
 *.xpi
 *.srt
 
