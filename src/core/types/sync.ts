@@ -2,6 +2,8 @@
  * Sync-related type definitions for Google Drive sync feature
  * Provides type safety for sync state management and data transfer
  */
+import type { StarredMessagesData } from '@/pages/content/timeline/starredTypes';
+
 import type { FolderData } from './folder';
 
 /**
@@ -59,6 +61,24 @@ export interface PromptExportPayload {
   exportedAt: string;
   version?: string;
   items: PromptItem[];
+}
+/**
+ * Re-export starred message types from their canonical source
+ * These are used for Google Drive sync
+ */
+export type {
+  StarredMessage as StarredMessageSync,
+  StarredMessagesData as StarredMessagesDataSync,
+} from '@/pages/content/timeline/starredTypes';
+
+/**
+ * Starred messages export payload format
+ */
+export interface StarredExportPayload {
+  format: 'gemini-voyager.starred.v1';
+  exportedAt: string;
+  version?: string;
+  data: StarredMessagesData;
 }
 
 /**

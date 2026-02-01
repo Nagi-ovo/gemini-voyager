@@ -7,7 +7,7 @@ import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Label } from '../../../components/ui/label';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { mergeFolderData, mergePrompts } from '../../../utils/merge';
+import { mergeFolderData, mergePrompts, mergeStarredMessages } from '../../../utils/merge';
 
 /**
  * CloudSyncSettings component for popup
@@ -303,10 +303,15 @@ export function CloudSyncSettings() {
         console.error('[CloudSyncSettings] Error loading local data for merge:', err);
       }
 
-      // SyncData contains FolderExportPayload.data and PromptExportPayload.items
-      const { folders: cloudFoldersPayload, prompts: cloudPromptsPayload } = response.data;
+      // SyncData contains FolderExportPayload.data, PromptExportPayload.items, and StarredExportPayload.data
+      const {
+        folders: cloudFoldersPayload,
+        prompts: cloudPromptsPayload,
+        starred: cloudStarredPayload,
+      } = response.data;
       const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
       const cloudPromptItems = cloudPromptsPayload?.items || [];
+      const cloudStarredData = cloudStarredPayload?.data || { messages: {} };
 
       console.log('[CloudSyncSettings] === MERGE DEBUG ===');
       console.log(
@@ -322,21 +327,42 @@ export function CloudSyncSettings() {
         '[CloudSyncSettings] Cloud folderContents:',
         JSON.stringify(Object.keys(cloudFolderData.folderContents || {})),
       );
+      console.log(
+        '[CloudSyncSettings] Cloud starred conversations:',
+        Object.keys(cloudStarredData.messages || {}).length,
+      );
+
+      // Get local starred messages for merge
+      let localStarred = { messages: {} };
+      try {
+        const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
+        if (starredResult.geminiTimelineStarredMessages) {
+          localStarred = starredResult.geminiTimelineStarredMessages;
+        }
+      } catch (err) {
+        console.warn('[CloudSyncSettings] Could not get local starred messages:', err);
+      }
 
       // Perform Merge
       const mergedFolders = mergeFolderData(localFolders as any, cloudFolderData);
       const mergedPrompts = mergePrompts(localPrompts, cloudPromptItems);
+      const mergedStarred = mergeStarredMessages(localStarred, cloudStarredData);
 
       console.log('[CloudSyncSettings] Merged folders count:', mergedFolders.folders?.length || 0);
       console.log(
         '[CloudSyncSettings] Merged folderContents:',
         JSON.stringify(Object.keys(mergedFolders.folderContents || {})),
       );
+      console.log(
+        '[CloudSyncSettings] Merged starred conversations:',
+        Object.keys(mergedStarred.messages || {}).length,
+      );
       console.log('[CloudSyncSettings] === END MERGE DEBUG ===');
 
       await chrome.storage.local.set({
         gvFolderData: mergedFolders,
         gvPromptItems: mergedPrompts,
+        geminiTimelineStarredMessages: mergedStarred,
       });
 
       // Notify content script to reload folders
