@@ -98,4 +98,131 @@ describe('DefaultModelManager (default model locker)', () => {
 
     expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
   });
+
+  it('locks to Pro without matching "pro" inside "problems" (Thinking description)', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: 'Pro' });
+      },
+    );
+
+    history.replaceState({}, '', '/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Thinking';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const menuPanel = document.createElement('div');
+    menuPanel.className = 'mat-mdc-menu-panel';
+    menuPanel.setAttribute('role', 'menu');
+
+    const thinkingItem = document.createElement('button');
+    thinkingItem.setAttribute('role', 'menuitemradio');
+    thinkingItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Thinking</div>
+      </div>
+      <span class="mode-desc">Solves complex problems</span>
+    `;
+    thinkingItem.click = vi.fn();
+
+    const proItem = document.createElement('button');
+    proItem.setAttribute('role', 'menuitemradio');
+    proItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Pro</div>
+      </div>
+      <span class="mode-desc">Thinks longer for advanced math &amp; code</span>
+    `;
+    proItem.click = vi.fn();
+
+    menuPanel.appendChild(thinkingItem);
+    menuPanel.appendChild(proItem);
+    document.body.appendChild(menuPanel);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    // Wait for the first interval tick (1s) and then the menu handling delay (500ms).
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(proItem.click).toHaveBeenCalledTimes(1);
+    expect(thinkingItem.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('locks by data-mode-id so it works across languages (e.g. Japanese titles)', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultModel: {
+            id: 'e051ce1aa80aa576',
+            name: 'Thinking',
+          },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Pro';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const menuPanel = document.createElement('div');
+    menuPanel.className = 'mat-mdc-menu-panel';
+    menuPanel.setAttribute('role', 'menu');
+
+    const fastItem = document.createElement('button');
+    fastItem.setAttribute('role', 'menuitemradio');
+    fastItem.setAttribute('data-mode-id', '56fdd199312815e2');
+    fastItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">高速モード</div>
+      </div>
+    `;
+    fastItem.click = vi.fn();
+
+    const thinkingItem = document.createElement('button');
+    thinkingItem.setAttribute('role', 'menuitemradio');
+    thinkingItem.setAttribute('data-mode-id', 'e051ce1aa80aa576');
+    thinkingItem.setAttribute('aria-checked', 'false');
+    thinkingItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">思考モード</div>
+      </div>
+      <span class="mode-desc">複雑な問題を解決</span>
+    `;
+    thinkingItem.click = vi.fn();
+
+    const proItem = document.createElement('button');
+    proItem.setAttribute('role', 'menuitemradio');
+    proItem.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    proItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Pro</div>
+      </div>
+    `;
+    proItem.click = vi.fn();
+
+    menuPanel.appendChild(fastItem);
+    menuPanel.appendChild(thinkingItem);
+    menuPanel.appendChild(proItem);
+    document.body.appendChild(menuPanel);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(thinkingItem.click).toHaveBeenCalledTimes(1);
+    expect(proItem.click).toHaveBeenCalledTimes(0);
+  });
 });

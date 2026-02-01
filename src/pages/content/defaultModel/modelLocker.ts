@@ -2,12 +2,18 @@ import { storageService } from '../../../core/services/StorageService';
 import { StorageKeys } from '../../../core/types/common';
 import './styles.css';
 
+type DefaultModelSetting =
+  | { kind: 'id'; id: string; name: string }
+  | { kind: 'name'; name: string };
+
+type StoredDefaultModelSetting = { id: string; name: string };
+
 class DefaultModelManager {
   private static instance: DefaultModelManager;
   private observer: MutationObserver | null = null;
   private checkTimer: number | null = null;
   private isLocked = false;
-  private currentDefaultModel: string | null = null;
+  private currentDefaultModel: DefaultModelSetting | null = null;
   private initialized = false;
   private pendingMenuPanelInjections = new WeakSet<HTMLElement>();
   private menuPanelInjectAttempts = new WeakMap<HTMLElement, number>();
@@ -30,8 +36,8 @@ class DefaultModelManager {
     this.started = true;
 
     // Initialize cache
-    const result = await storageService.get<string>(StorageKeys.DEFAULT_MODEL);
-    this.currentDefaultModel = result.success ? result.data : null;
+    const result = await storageService.get<unknown>(StorageKeys.DEFAULT_MODEL);
+    this.currentDefaultModel = result.success ? this.parseStoredDefaultModel(result.data) : null;
     this.initialized = true;
 
     this.initObserver();
@@ -114,6 +120,25 @@ class DefaultModelManager {
     this.observer.observe(document.body, { childList: true, subtree: true });
   }
 
+  private getModeSwitchMenuPanel(): HTMLElement | null {
+    return (
+      document.querySelector<HTMLElement>(
+        '.mat-mdc-menu-panel.gds-mode-switch-menu[role="menu"]',
+      ) ?? document.querySelector<HTMLElement>('.mat-mdc-menu-panel[role="menu"]')
+    );
+  }
+
+  private async waitForModeSwitchMenuPanel(timeoutMs: number): Promise<HTMLElement | null> {
+    const startedAt = Date.now();
+    const pollIntervalMs = 50;
+    while (Date.now() - startedAt < timeoutMs) {
+      const panel = this.getModeSwitchMenuPanel();
+      if (panel?.isConnected) return panel;
+      await new Promise<void>((resolve) => window.setTimeout(resolve, pollIntervalMs));
+    }
+    return null;
+  }
+
   private scheduleMenuPanelInjection(menuPanel: HTMLElement) {
     if (this.pendingMenuPanelInjections.has(menuPanel)) return;
     this.pendingMenuPanelInjections.add(menuPanel);
@@ -149,8 +174,8 @@ class DefaultModelManager {
 
     // Use cached value efficiently
     if (!this.initialized) {
-      const result = await storageService.get<string>(StorageKeys.DEFAULT_MODEL);
-      this.currentDefaultModel = result.success ? result.data : null;
+      const result = await storageService.get<unknown>(StorageKeys.DEFAULT_MODEL);
+      this.currentDefaultModel = result.success ? this.parseStoredDefaultModel(result.data) : null;
       this.initialized = true;
     }
 
@@ -221,7 +246,31 @@ class DefaultModelManager {
     return titleEl?.textContent?.trim() || '';
   }
 
-  private updateStarState(item: HTMLElement, modelName: string, currentDefault: string | null) {
+  private getModelIdFromItem(item: HTMLElement): string | null {
+    const raw = item.getAttribute('data-mode-id') || item.dataset.modeId;
+    if (typeof raw !== 'string') return null;
+    const id = raw.trim();
+    return id.length ? id : null;
+  }
+
+  private isDefaultForItem(
+    currentDefault: DefaultModelSetting | null,
+    item: HTMLElement,
+    modelName: string,
+  ): boolean {
+    if (!currentDefault) return false;
+    if (currentDefault.kind === 'id') {
+      const id = this.getModelIdFromItem(item);
+      return id === currentDefault.id;
+    }
+    return currentDefault.name === modelName;
+  }
+
+  private updateStarState(
+    item: HTMLElement,
+    modelName: string,
+    currentDefault: DefaultModelSetting | null,
+  ) {
     const btn = item.querySelector('.gv-default-star-btn') as HTMLElement;
     if (!btn) return;
 
@@ -232,7 +281,7 @@ class DefaultModelManager {
       btn.addEventListener('click', (e) => e.stopPropagation());
     }
 
-    const isDefault = currentDefault === modelName;
+    const isDefault = this.isDefaultForItem(currentDefault, item, modelName);
     if (isDefault) {
       btn.classList.add('is-default');
       btn.innerHTML = this.getStarIcon(true);
@@ -253,21 +302,33 @@ class DefaultModelManager {
   }
 
   private async handleStarClick(modelName: string, btn: HTMLElement) {
+    const closestItem = btn.closest('[role="menuitemradio"]');
+    const modelItem = closestItem instanceof HTMLElement ? closestItem : null;
+    const modelId = modelItem ? this.getModelIdFromItem(modelItem) : null;
+
     // 1. Optimistic UI Update (Instant feedback)
-    const isCurrentlyDefault = this.currentDefaultModel === modelName;
-    const newDefault = isCurrentlyDefault ? null : modelName;
+    const isCurrentlyDefault = modelItem
+      ? this.isDefaultForItem(this.currentDefaultModel, modelItem, modelName)
+      : this.currentDefaultModel?.kind === 'name'
+        ? this.currentDefaultModel.name === modelName
+        : false;
+
+    const nextDefault: DefaultModelSetting | null = isCurrentlyDefault
+      ? null
+      : modelId
+        ? { kind: 'id', id: modelId, name: modelName }
+        : { kind: 'name', name: modelName };
 
     // Update cache immediately
-    this.currentDefaultModel = newDefault;
+    this.currentDefaultModel = nextDefault;
 
     // Update current button immediately
-    const item = btn.closest('[role="menuitemradio"]');
-    if (item instanceof HTMLElement) {
-      this.updateStarState(item, modelName, newDefault);
+    if (modelItem) {
+      this.updateStarState(modelItem, modelName, nextDefault);
     }
 
     // Show Toast immediately
-    if (newDefault) {
+    if (nextDefault) {
       this.showToast(chrome.i18n.getMessage('defaultModelSet', [modelName]));
     } else {
       this.showToast(chrome.i18n.getMessage('defaultModelCleared'));
@@ -284,7 +345,15 @@ class DefaultModelManager {
     if (isCurrentlyDefault) {
       await storageService.remove(StorageKeys.DEFAULT_MODEL);
     } else {
-      await storageService.set(StorageKeys.DEFAULT_MODEL, modelName);
+      if (nextDefault?.kind === 'id') {
+        const toStore: StoredDefaultModelSetting = {
+          id: nextDefault.id,
+          name: nextDefault.name,
+        };
+        await storageService.set(StorageKeys.DEFAULT_MODEL, toStore);
+      } else {
+        await storageService.set(StorageKeys.DEFAULT_MODEL, modelName);
+      }
     }
   }
 
@@ -318,8 +387,10 @@ class DefaultModelManager {
     // Only lock on new conversation pages
     if (!this.isNewConversation()) return;
 
-    const result = await storageService.get<string>(StorageKeys.DEFAULT_MODEL);
-    const targetModel = result.success ? result.data : null;
+    const result = await storageService.get<unknown>(StorageKeys.DEFAULT_MODEL);
+    const targetModel = result.success ? this.parseStoredDefaultModel(result.data) : null;
+    this.currentDefaultModel = targetModel;
+    this.initialized = true;
 
     if (!targetModel) return;
 
@@ -345,10 +416,12 @@ class DefaultModelManager {
     return path === '/app' || path === '/app/';
   }
 
-  private async tryLockToModel(targetModel: string) {
+  private async tryLockToModel(targetModel: DefaultModelSetting) {
     // Ported from https://github.com/urzeye/tampermonkey-scripts (Gemini Helper)
     const normalize = (s: string) => s.toLowerCase().trim();
-    const target = normalize(targetModel);
+    const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const targetName = normalize(targetModel.name);
+    const targetAsWholeWord = new RegExp(`(^|\\b)${escapeRegExp(targetName)}(\\b|$)`, 'i');
 
     // 1. Find selector button
     const selectorBtn =
@@ -360,7 +433,7 @@ class DefaultModelManager {
 
     // 2. Check current model text
     const currentText = selectorBtn.textContent || '';
-    if (normalize(currentText).includes(target)) {
+    if (targetModel.kind === 'name' && targetAsWholeWord.test(normalize(currentText))) {
       // Already correct
       if (this.checkTimer) clearInterval(this.checkTimer);
       return;
@@ -374,33 +447,87 @@ class DefaultModelManager {
     try {
       (selectorBtn as HTMLElement).click();
 
-      // Wait for menu
-      setTimeout(() => {
-        const menuPanel = document.querySelector('.mat-mdc-menu-panel');
-        if (menuPanel) {
-          const items = menuPanel.querySelectorAll('[role="menuitemradio"]');
-          let found = false;
-          for (const item of Array.from(items)) {
-            const text = (item as HTMLElement).textContent || '';
-            if (normalize(text).includes(target)) {
-              (item as HTMLElement).click();
-              found = true;
-              if (this.checkTimer) clearInterval(this.checkTimer);
-              break;
-            }
+      const menuPanel = await this.waitForModeSwitchMenuPanel(1500);
+      if (!menuPanel) return;
+
+      const items = menuPanel.querySelectorAll('[role="menuitemradio"]');
+      let found = false;
+
+      if (targetModel.kind === 'id') {
+        const targetItem = Array.from(items).find((item) => {
+          if (!(item instanceof HTMLElement)) return false;
+          return this.getModelIdFromItem(item) === targetModel.id;
+        });
+
+        if (targetItem instanceof HTMLElement) {
+          const alreadySelected =
+            targetItem.getAttribute('aria-checked') === 'true' ||
+            targetItem.classList.contains('is-selected');
+
+          if (!alreadySelected) {
+            targetItem.click();
           }
 
-          if (!found) {
-            // Close menu if not found to avoid stuck menu
-            document.body.click();
+          found = true;
+        }
+      } else {
+        for (const item of Array.from(items)) {
+          const modelName = this.getModelNameFromItem(item as HTMLElement);
+          if (normalize(modelName) === targetName) {
+            (item as HTMLElement).click();
+            found = true;
+            break;
           }
         }
-        this.isLocked = false;
-      }, 500);
+      }
+
+      if (!found) {
+        // Fallback: whole-word match on the full text content (includes description).
+        for (const item of Array.from(items)) {
+          const text = (item as HTMLElement).textContent || '';
+          if (targetAsWholeWord.test(normalize(text))) {
+            (item as HTMLElement).click();
+            found = true;
+            break;
+          }
+        }
+      }
+
+      if (found && this.checkTimer) {
+        clearInterval(this.checkTimer);
+      }
+
+      if (!found) {
+        // Close menu if not found to avoid stuck menu
+        document.body.click();
+      }
     } catch (e) {
       console.error('Auto lock failed', e);
+    } finally {
       this.isLocked = false;
     }
+  }
+
+  private parseStoredDefaultModel(value: unknown): DefaultModelSetting | null {
+    if (typeof value === 'string') {
+      const name = value.trim();
+      return name.length ? { kind: 'name', name } : null;
+    }
+
+    if (this.isStoredDefaultModelSetting(value)) {
+      const id = value.id.trim();
+      const name = value.name.trim();
+      if (!id.length || !name.length) return null;
+      return { kind: 'id', id, name };
+    }
+
+    return null;
+  }
+
+  private isStoredDefaultModelSetting(value: unknown): value is StoredDefaultModelSetting {
+    if (typeof value !== 'object' || value === null) return false;
+    const record = value as Record<string, unknown>;
+    return typeof record.id === 'string' && typeof record.name === 'string';
   }
 }
 
