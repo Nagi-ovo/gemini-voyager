@@ -106,7 +106,7 @@ describe('DefaultModelManager (default model locker)', () => {
       },
     );
 
-    history.replaceState({}, '', '/app');
+    history.replaceState({}, '', '/u/0/app?hl=zh&pageId=none');
 
     const selectorBtn = document.createElement('button');
     selectorBtn.className = 'input-area-switch-label';
@@ -166,7 +166,7 @@ describe('DefaultModelManager (default model locker)', () => {
       },
     );
 
-    history.replaceState({}, '', '/app');
+    history.replaceState({}, '', '/u/1/app?hl=zh&pageId=none');
 
     const selectorBtn = document.createElement('button');
     selectorBtn.className = 'input-area-switch-label';

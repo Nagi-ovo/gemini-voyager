@@ -413,7 +413,8 @@ class DefaultModelManager {
 
   private isNewConversation() {
     const path = window.location.pathname;
-    return path === '/app' || path === '/app/';
+    // Supports multi-profile paths like /u/0/app as well as /app.
+    return /^\/(u\/\d+\/)?app\/?$/.test(path);
   }
 
   private async tryLockToModel(targetModel: DefaultModelSetting) {
