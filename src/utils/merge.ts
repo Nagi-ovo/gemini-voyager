@@ -60,18 +60,33 @@ export function mergeFolderData(local: FolderData, cloud: FolderData): FolderDat
     const localConvos = local.folderContents[folderId] || [];
     const cloudConvos = cloud.folderContents[folderId] || [];
 
-    // Simple de-duplication by conversationId
-    // We don't have updatedAt for conversation references typically,
-    // but we can check if they are identical.
-    // If valid conflict resolution is needed for convos, we'd need more data.
-    // For now: Union by conversationId.
-    // If dup, keep LOCAL version (preserves local state if there's any diff, though refs are usually static).
+    // Merge conversation references: Cloud-first strategy
+    // This ensures renamed titles from cloud sync are applied to local
+    // - If user renamed title locally and uploaded, cloud has the new title
+    // - If user downloads on another device, cloud title should override local
+    // - If conversation only exists locally, keep it (new local addition)
 
     const convoMap = new Map<string, ConversationReference>();
 
-    // Add Cloud first (so Local can overwrite)
-    cloudConvos.forEach((c) => convoMap.set(c.conversationId, c));
+    // Add local conversations first
     localConvos.forEach((c) => convoMap.set(c.conversationId, c));
+
+    // Cloud conversations override local (this is the key change)
+    cloudConvos.forEach((c) => {
+      const existing = convoMap.get(c.conversationId);
+      if (!existing) {
+        // New from cloud
+        convoMap.set(c.conversationId, c);
+      } else {
+        // Merge: cloud properties override, but keep local-only properties
+        convoMap.set(c.conversationId, {
+          ...existing, // Keep any local-only properties
+          ...c, // Cloud overrides (title, customTitle, etc.)
+          // Preserve starred if set locally but not in cloud
+          starred: c.starred ?? existing.starred,
+        });
+      }
+    });
 
     mergedContents[folderId] = Array.from(convoMap.values());
   });

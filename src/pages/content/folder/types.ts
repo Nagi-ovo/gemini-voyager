@@ -14,6 +14,7 @@ export interface ConversationReference {
   title: string; // The conversation title
   url: string; // The conversation URL
   addedAt: number; // When it was added to the folder
+  updatedAt?: number; // Timestamp when the reference was last updated (e.g., renamed)
   isGem?: boolean; // Whether this is a Gem conversation
   gemId?: string; // Gem identifier if applicable
   starred?: boolean; // Whether this conversation is starred in the folder

@@ -3222,6 +3222,7 @@ export class FolderManager {
           if (newTitle && newTitle !== currentTitle) {
             conv.title = newTitle;
             conv.customTitle = true; // mark as manually renamed, don't auto-sync from native
+            conv.updatedAt = Date.now(); // record update time for sync conflict resolution
             this.saveData();
           }
         }
