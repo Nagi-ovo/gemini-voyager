@@ -27,10 +27,21 @@
 
 ## 落地生根
 
-同步完成后，你的 IDE 根目录会多出一个 `.vscode/AI_CONTEXT_SYNC.md`。 无论是 Trae、Cursor 还是 Copilot，它们会通过各自的 Rule 文件自动读取这份“记忆”。 **大模型从此不再失忆，上手即战。**
+同步完成后，你的 IDE 根目录会多出一个 `.vscode/AI_CONTEXT_SYNC.md`。 无论是 Trae、Cursor 还是 Copilot，它们会通过各自的 Rule 文件自动读取这份“记忆”。
 
 ## 它的原则
 
 - **零污染**：CoBridge 自动操作 `.gitignore`，不会把你这些私密对话推到 Git 仓库里。
 - **懂行**：全 Markdown 格式，IDE 里的 AI 读起来就像读说明书一样顺畅。
 - **小贴士**：如果对话太久远，先用【时间线】向上划一下，让网页把记忆“想起来”，再同步效果更佳。
+
+---
+
+## 立刻起航
+
+**思维已在云端就绪，现在，让它在本地落地生根。**
+
+- **[安装 CoBridge 插件](https://open-vsx.org/extension/windfall/co-bridge)**：找到你的次元传送门，一键开启“同频呼吸”。
+- **[访问 GitHub 仓库](https://github.com/Winddfall/CoBridge)**：深入了解 CoBridge 的底层逻辑，或者为这个“同步灵魂”的项目点个 Star。
+
+> **大模型从此不再失忆，上手即战。**

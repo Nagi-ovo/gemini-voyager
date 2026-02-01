@@ -34,3 +34,14 @@ Una vez completada la sincronización, aparecerá un archivo `.vscode/AI_CONTEXT
 - **Cero contaminación**: CoBridge gestiona automáticamente el archivo `.gitignore`, garantizando que tus conversaciones privadas nunca se suban a los repositorios de Git.
 - **Optimizado para IA**: Formato Markdown completo, lo que hace que la lectura por parte de la IA en tu IDE sea tan fluida como leer un manual de instrucciones.
 - **Consejo**: Si la conversación es de hace tiempo, desplázate primero hacia arriba usando la [Línea de tiempo] para que la web "recuerde" el contexto y obtener mejores resultados de sincronización.
+
+---
+
+## Listos para el Despegue
+
+**La lógica ya está lista en la nube; ahora, permite que eche raíces localmente.**
+
+- **[Instalar la extensión CoBridge](https://open-vsx.org/extension/windfall/co-bridge)** : Encuentra tu portal dimensional y activa la "respiración sincronizada" con un solo clic.
+- **[Visitar el repositorio en GitHub](https://github.com/Winddfall/CoBridge)** : Explora la lógica subyacente de CoBridge o dale una estrella a este proyecto de "sincronización de almas".
+
+> **El modelo ya no pierde la memoria: listo para la acción inmediata.**

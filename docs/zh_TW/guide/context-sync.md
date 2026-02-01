@@ -34,3 +34,12 @@
 - **零污染**：CoBridge 會自動處理 `.gitignore`，確保您的私密對話永遠不會被推送到 Git 儲存庫。
 - **業界標準**：完整的 Markdown 格式，讓您 IDE 中的 AI 閱讀起來就像閱讀說明書一樣順暢。
 - **專業提示**：如果對話是發生在一段時間之前，請先使用 [Timeline]（時間軸）向上捲動，讓網頁端「回憶」起上下文，以獲得更好的同步效果。
+
+---
+
+## 立刻起航
+
+**思維已在雲端就緒，現在，讓它在本地落地生根。**
+
+- **[安裝 CoBridge 插件](https://open-vsx.org/extension/windfall/co-bridge)**：找到你的次元傳送門，一鍵開啟「同頻呼吸」。
+- **[訪問 GitHub 倉庫](https://github.com/Winddfall/CoBridge)**：深入了解 CoBridge 的底層邏輯，或者為這個「同步靈魂」的項目點個 Star。

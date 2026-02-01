@@ -15,22 +15,33 @@ A maior dor para os desenvolvedores: depois de discutir uma solução minuciosam
 
    ![Servidor CoBridge Ligado](/assets/CoBridge-on.png)
 
-2. **Conexão de Handshake**:
-   - Ative "Context Sync" nas configurações do Voyager.
-   - Alinhe os números das portas. Quando você vir "IDE Online", eles estão conectados.
+2. **Aperto de mão**:
+   - Ative a "Sincronização de Contexto" nas configurações do Voyager.
+   - Alinhe o número da porta. Quando vir "IDE Online", significa que eles estão conectados.
 
-   ![Console de Sincronização de Contexto](/assets/context-sync-console.png)
+   ![Painel de Sincronização de Contexto](/assets/context-sync-console.png)
 
-3. **Sincronização em Um Clique**: Clique em **"Sync to IDE"**.
+3. **Sincronização em um clique**: Clique em **"Sync to IDE"**.
 
    ![Sincronização Concluída](/assets/sync-done.png)
 
-## Enraizando no IDE
+## Criando Raízes
 
-Após a sincronização, um arquivo `.vscode/AI_CONTEXT_SYNC.md` aparecerá no diretório raiz do seu IDE. Seja Trae, Cursor ou Copilot, eles lerão automaticamente essa "memória" através de seus respectivos arquivos de regra. **Os modelos de IA não sofrerão mais de perda de memória, começando com tudo.**
+Após a sincronização, um arquivo `.vscode/AI_CONTEXT_SYNC.md` aparecerá no diretório raiz do seu IDE. Seja no Trae, Cursor ou Copilot, eles lerão automaticamente esta "memória" através de seus respectivos arquivos de regras.
 
-## Princípios
+## Seus Princípios
 
-- **Poluição Zero**: O CoBridge lida automaticamente com o `.gitignore`, garantindo que suas conversas privadas nunca sejam enviadas para repositórios Git.
-- **Expertise da Indústria**: Formato Markdown completo, tornando a leitura tão suave para a IA no seu IDE quanto um manual de instruções.
-- **Dica Profissional**: Se a conversa for de algum tempo atrás, role para cima usando a [Timeline] primeiro para permitir que a web "lembre" do contexto para melhores resultados de sincronização.
+- **Zero Poluição**: O CoBridge gerencia automaticamente o `.gitignore`, garantindo que suas conversas privadas não sejam enviadas para repositórios Git.
+- **Especialista**: Formato Markdown completo, fazendo com que a IA no IDE leia de forma tão fluida quanto um manual de instruções.
+- **Dica**: Se a conversa for antiga, use a [Linha do Tempo] para rolar para cima e fazer com que a web "lembre" do contexto antes de sincronizar para melhores resultados.
+
+---
+
+## Parta Agora
+
+**O pensamento já está pronto na nuvem, agora, deixe-o criar raízes localmente.**
+
+- **[Instalar o Plugin CoBridge](https://open-vsx.org/extension/windfall/co-bridge)**: Encontre seu portal dimensional e ative a "respiración sincronizada" com um clique.
+- **[Visitar o Repositório GitHub](https://github.com/Winddfall/CoBridge)**: Saiba mais sobre a lógica por trás do CoBridge ou dê uma Star para este projeto de "sincronização de almas".
+
+> **Modelos de IA não perdem mais a memória, prontos para a ação.**

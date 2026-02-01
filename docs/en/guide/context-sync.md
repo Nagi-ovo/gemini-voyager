@@ -34,3 +34,14 @@ After synchronization, a `.vscode/AI_CONTEXT_SYNC.md` file will appear in your I
 - **Zero Pollution**: CoBridge automatically handles `.gitignore`, ensuring your private conversations are never pushed to Git repositories.
 - **Industry Savvy**: Full Markdown format, making it as smooth for the AI in your IDE to read as an instruction manual.
 - **Pro Tip**: If the conversation is from a while ago, scroll up using the [Timeline] first to let the web "remember" the context for better sync results.
+
+---
+
+## Ready for Liftoff
+
+**The logic is primed in the cloud; now, let it take root locally.**
+
+- **[Install CoBridge Extension](https://open-vsx.org/extension/windfall/co-bridge)**: Find your dimensional portal and activate "synchronized breathing" with a single click.
+- **[Access GitHub Repository](https://github.com/Winddfall/CoBridge)**: Dive deep into the underlying logic of CoBridge, or give a Star to this "soul-syncing" project.
+
+> **No more LLM amnesia—just pure, instant productivity.**
