@@ -2,6 +2,8 @@
  * Sync-related type definitions for Google Drive sync feature
  * Provides type safety for sync state management and data transfer
  */
+import type { StarredMessagesData } from '@/pages/content/timeline/starredTypes';
+
 import type { FolderData } from './folder';
 
 /**
@@ -68,8 +70,6 @@ export type {
   StarredMessage as StarredMessageSync,
   StarredMessagesData as StarredMessagesDataSync,
 } from '@/pages/content/timeline/starredTypes';
-
-import type { StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 /**
  * Starred messages export payload format

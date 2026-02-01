@@ -1,5 +1,6 @@
 import type { ConversationReference, FolderData } from '@/core/types/folder';
 import type { PromptItem } from '@/core/types/sync';
+import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 /**
  * Merges two lists of items based on ID and updatedAt timestamp.
@@ -87,11 +88,6 @@ export function mergeFolderData(local: FolderData, cloud: FolderData): FolderDat
 export function mergePrompts(local: PromptItem[], cloud: PromptItem[]): PromptItem[] {
   return mergeItems(local, cloud);
 }
-
-import type {
-  StarredMessage,
-  StarredMessagesData,
-} from '@/pages/content/timeline/starredTypes';
 
 /**
  * Merges local and cloud starred messages.
