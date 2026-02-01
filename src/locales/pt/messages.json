@@ -1047,6 +1047,14 @@
     "message": "Mostrar itens recentes",
     "description": "Dica para mostrar a seção de itens recentes"
   },
+  "gemsHide": {
+    "message": "Ocultar Gems",
+    "description": "Dica para ocultar a seção da lista de Gems"
+  },
+  "gemsShow": {
+    "message": "Mostrar Gems",
+    "description": "Dica para mostrar a seção da lista de Gems"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

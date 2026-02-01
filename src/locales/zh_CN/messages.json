@@ -1039,6 +1039,22 @@
     "message": "失败",
     "description": "下载失败时的状态前缀"
   },
+  "recentsHide": {
+    "message": "隐藏最近项目",
+    "description": "隐藏最近预览区域的提示"
+  },
+  "recentsShow": {
+    "message": "显示最近项目",
+    "description": "显示最近预览区域的提示"
+  },
+  "gemsHide": {
+    "message": "隐藏 Gems",
+    "description": "隐藏 Gems 列表区域的提示"
+  },
+  "gemsShow": {
+    "message": "显示 Gems",
+    "description": "显示 Gems 列表区域的提示"
+  },
   "setAsDefaultModel": {
     "message": "设为新对话的默认模型",
     "description": "Tooltip for setting default model"

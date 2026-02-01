@@ -1047,6 +1047,14 @@
     "message": "顯示最近項目",
     "description": "顯示最近預覽區域的提示"
   },
+  "gemsHide": {
+    "message": "隱藏 Gems",
+    "description": "隱藏 Gems 列表區域的提示"
+  },
+  "gemsShow": {
+    "message": "顯示 Gems",
+    "description": "顯示 Gems 列表區域的提示"
+  },
   "setAsDefaultModel": {
     "message": "設為新對話的預設模型",
     "description": "Tooltip for setting default model"

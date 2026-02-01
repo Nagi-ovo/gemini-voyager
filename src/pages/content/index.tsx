@@ -10,6 +10,7 @@ import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderManager } from './folder/index';
+import { startGemsHider } from './gemsHider/index';
 import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';
 import { startMermaid } from './mermaid/index';
@@ -180,6 +181,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Recents hider - hide/show toggle for recent items section
       startRecentsHider();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Gems hider - hide/show toggle for Gems list section
+      startGemsHider();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Default Model Manager

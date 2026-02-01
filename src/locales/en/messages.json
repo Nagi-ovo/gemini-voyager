@@ -1047,6 +1047,14 @@
     "message": "Show recent items",
     "description": "Tooltip for showing recents preview section"
   },
+  "gemsHide": {
+    "message": "Hide Gems",
+    "description": "Tooltip for hiding Gems list section"
+  },
+  "gemsShow": {
+    "message": "Show Gems",
+    "description": "Tooltip for showing Gems list section"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

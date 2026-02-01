@@ -4,7 +4,7 @@
 **Note**: Cette fonctionnalité sera supportée dans la prochaine version (1.1.9) et n'est pas supportée actuellement.
 :::
 
-Ajoutez un bouton élégant pour masquer la section "Récemment enregistré" sur la page d'accueil de Gemini pour une interface plus propre.
+Ajoutez une bascule élégante pour masquer la section « Enregistrements récents » sur la page d'accueil de Gemini pour une interface plus propre. Prend désormais également en charge le masquage de la liste **Gems** dans la barre latérale !
 
 <div style="text-align: center; margin-top: 20px;">
   <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
