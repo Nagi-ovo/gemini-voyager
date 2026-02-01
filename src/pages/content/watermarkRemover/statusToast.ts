@@ -274,6 +274,7 @@ html.dark .gv-status-toast {
       timeoutId: null,
     };
     toasts.push(record);
+    toast.addEventListener('click', () => removeToast(record));
 
     if (toasts.length > maxToasts) {
       removeToast(toasts[0]);

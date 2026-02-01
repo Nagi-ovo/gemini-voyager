@@ -47,6 +47,28 @@ describe('StatusToastManager', () => {
     expect(updated).toBe(false);
   });
 
+  it('auto-dismisses a toast after the configured time', () => {
+    const manager = createStatusToastManager();
+
+    manager.addToast('Bye', 'info', { autoDismissMs: 1000 });
+    vi.advanceTimersByTime(999);
+    expect(manager.getToastElements()).toHaveLength(1);
+
+    vi.advanceTimersByTime(1);
+    expect(manager.getToastElements()).toHaveLength(0);
+  });
+
+  it('dismisses a toast when clicked', () => {
+    const manager = createStatusToastManager();
+
+    manager.addToast('Click me', 'warning');
+    const [toast] = manager.getToastElements();
+    expect(toast).toBeDefined();
+
+    toast.click();
+    expect(manager.getToastElements()).toHaveLength(0);
+  });
+
   it('positions the container near the anchor element', () => {
     const manager = createStatusToastManager();
     const anchor = document.createElement('button');
