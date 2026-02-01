@@ -41,7 +41,7 @@
 
 **思維已在雲端就緒，現在，讓它在本地落地生根。**
 
-* **[安裝 CoBridge 插件](https://open-vsx.org/extension/windfall/co-bridge)**：找到你的次元傳送門，一鍵開啟「同頻呼吸」。
-* **[訪問 GitHub 倉庫](https://github.com/Winddfall/CoBridge)**：深入了解 CoBridge 的底層邏輯，或者為這個「同步靈魂」的項目點個 Star。
+- **[安裝 CoBridge 插件](https://open-vsx.org/extension/windfall/co-bridge)**：找到你的次元傳送門，一鍵開啟「同頻呼吸」。
+- **[訪問 GitHub 倉庫](https://github.com/Winddfall/CoBridge)**：深入了解 CoBridge 的底層邏輯，或者為這個「同步靈魂」的項目點個 Star。
 
 > **大模型從此不再失憶，上手即戰。**

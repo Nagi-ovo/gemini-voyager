@@ -41,7 +41,7 @@ Une fois la synchronisation terminée, un fichier `.vscode/AI_CONTEXT_SYNC.md` a
 
 **La réflexion est prête dans le cloud, laissez-la maintenant s'enraciner localement.**
 
-* **Installer l'extension CoBridge** : Trouvez votre portail dimensionnel et activez la « respiration synchronisée » en un clic.
-* **Visiter le dépôt GitHub** : Plongez dans la logique profonde de CoBridge ou donnez une Star à ce projet de « synchronisation d'âme ».
+- **Installer l'extension CoBridge** : Trouvez votre portail dimensionnel et activez la « respiration synchronisée » en un clic.
+- **Visiter le dépôt GitHub** : Plongez dans la logique profonde de CoBridge ou donnez une Star à ce projet de « synchronisation d'âme ».
 
 > **L'IA ne perd plus la mémoire : elle est prête pour le combat.**

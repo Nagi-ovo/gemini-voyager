@@ -41,7 +41,7 @@ Após a sincronização, um arquivo `.vscode/AI_CONTEXT_SYNC.md` aparecerá no d
 
 **O pensamento já está pronto na nuvem, agora, deixe-o criar raízes localmente.**
 
-* **[Instalar o Plugin CoBridge](https://open-vsx.org/extension/windfall/co-bridge)**: Encontre seu portal dimensional e ative a "respiración sincronizada" com um clique.
-* **[Visitar o Repositório GitHub](https://github.com/Winddfall/CoBridge)**: Saiba mais sobre a lógica por trás do CoBridge ou dê uma Star para este projeto de "sincronização de almas".
+- **[Instalar o Plugin CoBridge](https://open-vsx.org/extension/windfall/co-bridge)**: Encontre seu portal dimensional e ative a "respiración sincronizada" com um clique.
+- **[Visitar o Repositório GitHub](https://github.com/Winddfall/CoBridge)**: Saiba mais sobre a lógica por trás do CoBridge ou dê uma Star para este projeto de "sincronização de almas".
 
 > **Modelos de IA não perdem mais a memória, prontos para a ação.**

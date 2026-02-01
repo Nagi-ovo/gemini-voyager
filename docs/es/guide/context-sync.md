@@ -41,7 +41,7 @@ Una vez completada la sincronización, aparecerá un archivo `.vscode/AI_CONTEXT
 
 **La lógica ya está lista en la nube; ahora, permite que eche raíces localmente.**
 
-* **Instalar la extensión CoBridge** : Encuentra tu portal dimensional y activa la "respiración sincronizada" con un solo clic.
-* **Visitar el repositorio en GitHub** : Explora la lógica subyacente de CoBridge o dale una estrella a este proyecto de "sincronización de almas".
+- **Instalar la extensión CoBridge** : Encuentra tu portal dimensional y activa la "respiración sincronizada" con un solo clic.
+- **Visitar el repositorio en GitHub** : Explora la lógica subyacente de CoBridge o dale una estrella a este proyecto de "sincronización de almas".
 
 > **El modelo ya no pierde la memoria: listo para la acción inmediata.**
