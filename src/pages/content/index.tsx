@@ -3,6 +3,7 @@ import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 
 import { startChatWidthAdjuster } from './chatWidth/index';
+import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
@@ -13,6 +14,8 @@ import { initKaTeXConfig } from './katexConfig';
 import { startMermaid } from './mermaid/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
+import { startRecentsHider } from './recentsHider/index';
+import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
@@ -41,6 +44,7 @@ let folderManagerInstance: Awaited<ReturnType<typeof startFolderManager>> | null
 
 let promptManagerInstance: Awaited<ReturnType<typeof startPromptManager>> | null = null;
 let quoteReplyCleanup: (() => void) | null = null;
+let sendBehaviorCleanup: (() => void) | null = null;
 
 /**
  * Check if current hostname matches any custom websites
@@ -164,6 +168,17 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startDeepResearchExport();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startContextSync();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Send behavior (Ctrl+Enter to send)
+      sendBehaviorCleanup = await startSendBehavior();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Recents hider - hide/show toggle for recent items section
+      startRecentsHider();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
@@ -303,6 +318,10 @@ function handleVisibilityChange(): void {
         if (quoteReplyCleanup) {
           quoteReplyCleanup();
           quoteReplyCleanup = null;
+        }
+        if (sendBehaviorCleanup) {
+          sendBehaviorCleanup();
+          sendBehaviorCleanup = null;
         }
       } catch (e) {
         console.error('[Gemini Voyager] Cleanup error:', e);

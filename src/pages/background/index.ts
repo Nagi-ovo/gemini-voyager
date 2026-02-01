@@ -371,9 +371,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               prompts: PromptItem[];
               interactive?: boolean;
             };
+            // Also get starred messages from local storage
+            const starredData = await starredMessagesManager.getAllStarredMessages();
             const success = await googleDriveSyncService.upload(
               folders,
               prompts,
+              starredData,
               interactive !== false,
             );
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });

@@ -259,9 +259,49 @@
     "message": "Rename",
     "description": "Rename folder menu item"
   },
+  "folder_change_color": {
+    "message": "Change Color",
+    "description": "Change folder color menu item"
+  },
   "folder_delete": {
     "message": "Delete",
     "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "Default",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "Red",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "Orange",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "Yellow",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "Green",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "Blue",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "Purple",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "Pink",
+    "description": "Pink folder color name"
+  },
+  "folder_color_custom": {
+    "message": "Custom",
+    "description": "Custom folder color name"
   },
   "folder_empty": {
     "message": "No folders yet",
@@ -336,8 +376,8 @@
     "description": "LaTeX format option"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath format option for Word"
+    "message": "MathML (Word)",
+    "description": "Label for MathML formula copy format option (formerly UnicodeMath)"
   },
   "formulaCopyFormatHint": {
     "message": "Choose the format when copying formulas by clicking",
@@ -727,6 +767,10 @@
     "message": "Manual",
     "description": "Sync mode manual option"
   },
+  "syncServerPort": {
+    "message": "Server Port",
+    "description": "Port number for the sync server"
+  },
   "syncNow": {
     "message": "Sync Now",
     "description": "Sync now button"
@@ -856,8 +900,8 @@
     "description": "Quote reply button text"
   },
   "inputCollapseOptions": {
-    "message": "Input Collapse",
-    "description": "Input collapse options section label"
+    "message": "Input Options",
+    "description": "Input options section label"
   },
   "enableInputCollapse": {
     "message": "Enable input collapse",
@@ -870,6 +914,14 @@
   "inputCollapsePlaceholder": {
     "message": "Message Gemini",
     "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter to send",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "Press Ctrl+Enter to send messages, Enter to add a new line",
+    "description": "Ctrl+Enter to send feature hint"
   },
   "batch_delete_confirm": {
     "message": "Are you sure you want to delete {count} conversation(s)? This action cannot be undone.",
@@ -926,5 +978,73 @@
   "enableQuoteReplyHint": {
     "message": "Show a floating button to quote selected text when text is selected in conversations",
     "description": "Quote reply feature hint"
+  },
+  "contextSync": {
+    "message": "Context Sync",
+    "description": "Context Sync title"
+  },
+  "contextSyncDescription": {
+    "message": "Sync chat context to your local IDE",
+    "description": "Context Sync description"
+  },
+  "syncToIDE": {
+    "message": "Sync to IDE",
+    "description": "Sync to IDE button"
+  },
+  "ideOnline": {
+    "message": "IDE Online",
+    "description": "IDE Online status"
+  },
+  "ideOffline": {
+    "message": "IDE Offline",
+    "description": "IDE Offline status"
+  },
+  "syncing": {
+    "message": "Syncing...",
+    "description": "Syncing status"
+  },
+  "checkServer": {
+    "message": "Please start AI Sync server in VS Code",
+    "description": "Check server hint"
+  },
+  "capturing": {
+    "message": "Capturing dialogue...",
+    "description": "Capturing status"
+  },
+  "syncedSuccess": {
+    "message": "Synced successfully!",
+    "description": "Synced success message"
+  },
+  "downloadingOriginal": {
+    "message": "Downloading original image",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "Downloading original image (large file)",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "Large file warning",
+    "description": "Warning shown for large downloads"
+  },
+  "downloadProcessing": {
+    "message": "Processing watermark",
+    "description": "Status when processing watermark removal"
+  },
+  "downloadSuccess": {
+    "message": "Downloading...",
+    "description": "Status when download starts"
+  },
+  "downloadError": {
+    "message": "Failed",
+    "description": "Status prefix when download fails"
+  },
+  "recentsHide": {
+    "message": "Hide recent items",
+    "description": "Tooltip for hiding recents preview section"
+  },
+  "recentsShow": {
+    "message": "Show recent items",
+    "description": "Tooltip for showing recents preview section"
   }
 }

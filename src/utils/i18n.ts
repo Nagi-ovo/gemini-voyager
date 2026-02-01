@@ -5,6 +5,46 @@ import { StorageKeys } from '@/core/types/common';
 import { type AppLanguage, normalizeLanguage } from './language';
 import { TRANSLATIONS, type TranslationKey, isTranslationKey } from './translations';
 
+type StorageAreaName = 'sync' | 'local';
+
+const readStorageValue = async (area: StorageAreaName): Promise<unknown> => {
+  try {
+    const storageArea = browser.storage?.[area];
+    if (storageArea?.get) {
+      const result = await storageArea.get(StorageKeys.LANGUAGE);
+      if (result && typeof result === 'object') {
+        return (result as Record<string, unknown>)[StorageKeys.LANGUAGE];
+      }
+    }
+  } catch {
+    // Fall through to chrome.* fallback below.
+  }
+
+  try {
+    const chromeStorage = chrome?.storage?.[area];
+    if (!chromeStorage?.get) return null;
+    return await new Promise<unknown>((resolve) => {
+      chromeStorage.get(StorageKeys.LANGUAGE, (result) => {
+        if (result && typeof result === 'object') {
+          resolve((result as Record<string, unknown>)[StorageKeys.LANGUAGE]);
+        } else {
+          resolve(null);
+        }
+      });
+    });
+  } catch {
+    return null;
+  }
+};
+
+const getStoredLanguage = async (): Promise<string | null> => {
+  const syncValue = await readStorageValue('sync');
+  if (typeof syncValue === 'string') return syncValue;
+  const localValue = await readStorageValue('local');
+  if (typeof localValue === 'string') return localValue;
+  return null;
+};
+
 /**
  * Get the current language preference
  * 1. First check user's saved preference in storage
@@ -12,15 +52,9 @@ import { TRANSLATIONS, type TranslationKey, isTranslationKey } from './translati
  * 3. Default to English
  */
 export async function getCurrentLanguage(): Promise<AppLanguage> {
-  try {
-    // Try to get user's saved language preference
-    const stored = await browser.storage.sync.get(StorageKeys.LANGUAGE);
-    const raw = (stored as Record<string, unknown> | null | undefined)?.[StorageKeys.LANGUAGE];
-    if (typeof raw === 'string') {
-      return normalizeLanguage(raw);
-    }
-  } catch (error) {
-    console.warn('[i18n] Failed to get saved language:', error);
+  const stored = await getStoredLanguage();
+  if (typeof stored === 'string') {
+    return normalizeLanguage(stored);
   }
 
   // Fall back to browser UI language
@@ -67,7 +101,7 @@ export async function initI18n(): Promise<void> {
   // Listen for language changes
   browser.storage.onChanged.addListener((changes, areaName) => {
     const next = changes[StorageKeys.LANGUAGE]?.newValue;
-    if (areaName === 'sync' && typeof next === 'string') {
+    if ((areaName === 'sync' || areaName === 'local') && typeof next === 'string') {
       cachedLanguage = normalizeLanguage(next);
     }
   });

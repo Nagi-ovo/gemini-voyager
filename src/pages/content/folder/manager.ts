@@ -6,6 +6,7 @@ import { FolderImportExportService } from '@/features/folder/services/FolderImpo
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 
+import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
 import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
 import {
   type IFolderStorageAdapter,
@@ -83,6 +84,9 @@ export class FolderManager {
   private removalCheckDelay: number = 300; // Delay (ms) before confirming conversation deletion
   private isDestroyed: boolean = false; // Flag to prevent callbacks after destruction
   private reinitializePromise: Promise<void> | null = null; // Prevent duplicate reinitialization cascades
+  private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
+  private activeColorPickerFolderId: string | null = null; // Folder ID of currently open color picker
+  private activeColorPickerCloseHandler: ((e: MouseEvent) => void) | null = null; // Event handler for closing color picker
 
   // Cleanup references
   private routeChangeCleanup: (() => void) | null = null;
@@ -252,6 +256,17 @@ export class FolderManager {
     if (this.tooltipElement) {
       this.tooltipElement.remove();
       this.tooltipElement = null;
+    }
+
+    // Remove active color picker
+    if (this.activeColorPicker) {
+      this.activeColorPicker.remove();
+      if (this.activeColorPickerCloseHandler) {
+        document.removeEventListener('click', this.activeColorPickerCloseHandler);
+        this.activeColorPickerCloseHandler = null;
+      }
+      this.activeColorPicker = null;
+      this.activeColorPickerFolderId = null;
     }
 
     // Remove container
@@ -619,15 +634,24 @@ export class FolderManager {
     folderIcon.textContent = 'folder';
     folderIcon.style.cursor = 'pointer';
     folderIcon.style.userSelect = 'none';
+
+    // Apply folder color if set
+    if (folder.color && folder.color !== 'default') {
+      const colorValue = getFolderColor(folder.color, isDarkMode());
+      folderIcon.style.color = colorValue;
+    }
+
     folderIcon.addEventListener('click', (e) => {
       e.stopPropagation(); // Prevent bubbling issues
-      this.toggleFolder(folder.id);
+      this.showColorPicker(folder.id, e, true); // Allow toggle behavior
     });
 
     // Folder name
     const folderName = document.createElement('span');
     folderName.className = 'gv-folder-name gds-label-l';
     folderName.textContent = folder.name;
+    folderName.style.cursor = 'pointer';
+    folderName.addEventListener('click', () => this.toggleFolder(folder.id));
     folderName.addEventListener('dblclick', () => this.renameFolder(folder.id));
 
     // Add tooltip event listeners
@@ -3259,6 +3283,7 @@ export class FolderManager {
       },
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
+      { label: this.t('folder_change_color'), action: () => this.showColorPicker(folderId, event) },
       { label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) },
     ];
 
@@ -3283,6 +3308,167 @@ export class FolderManager {
       }
     };
     setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
+
+  /**
+   * Show color picker dialog for a folder
+   * @param folderId The folder ID to change color
+   * @param sourceEvent The source mouse event (for positioning)
+   */
+  private showColorPicker(
+    folderId: string,
+    sourceEvent: MouseEvent,
+    allowToggle: boolean = true,
+  ): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    // If a color picker is already open, close it first
+    if (this.activeColorPicker) {
+      const wasSameFolder = this.activeColorPickerFolderId === folderId;
+      this.activeColorPicker.remove();
+      // Clean up the old event listener to prevent memory leak
+      if (this.activeColorPickerCloseHandler) {
+        document.removeEventListener('click', this.activeColorPickerCloseHandler);
+        this.activeColorPickerCloseHandler = null;
+      }
+      this.activeColorPicker = null;
+      this.activeColorPickerFolderId = null;
+      // If clicking the same folder icon again and toggle is allowed, just close the picker
+      if (allowToggle && wasSameFolder) {
+        return;
+      }
+    }
+
+    // Create color picker dialog
+    const dialog = document.createElement('div');
+    dialog.className = 'gv-color-picker-dialog';
+
+    // Position near the menu click (slightly offset to avoid overlap)
+    dialog.style.position = 'fixed';
+    dialog.style.left = `${sourceEvent.clientX + 10}px`;
+    dialog.style.top = `${sourceEvent.clientY}px`;
+    dialog.style.zIndex = '10001';
+
+    // Create color options
+    FOLDER_COLORS.forEach((colorConfig) => {
+      const colorBtn = document.createElement('button');
+      colorBtn.className = 'gv-color-picker-item';
+      colorBtn.title = this.t(colorConfig.nameKey);
+
+      // Apply color based on current theme
+      const colorValue = getFolderColor(colorConfig.id, isDarkMode());
+      colorBtn.style.backgroundColor = colorValue;
+
+      // Mark current color as selected
+      if (folder.color === colorConfig.id || (!folder.color && colorConfig.id === 'default')) {
+        colorBtn.classList.add('selected');
+      }
+
+      colorBtn.addEventListener('click', () => {
+        this.changeFolderColor(folderId, colorConfig.id);
+        dialog.remove();
+        if (this.activeColorPickerCloseHandler) {
+          document.removeEventListener('click', this.activeColorPickerCloseHandler);
+          this.activeColorPickerCloseHandler = null;
+        }
+        this.activeColorPicker = null;
+        this.activeColorPickerFolderId = null;
+      });
+
+      dialog.appendChild(colorBtn);
+    });
+
+    // Add Custom Color Picker Button
+    const customBtn = document.createElement('button');
+    customBtn.className = 'gv-color-picker-item gv-color-picker-custom';
+    customBtn.title = this.t('folder_color_custom');
+
+    // Create hidden color input
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    // Style to be invisible but functional
+    Object.assign(colorInput.style, {
+      position: 'absolute',
+      opacity: '0',
+      width: '100%',
+      height: '100%',
+      top: '0',
+      left: '0',
+      cursor: 'pointer',
+    });
+
+    // Set initial state
+    if (folder.color && folder.color.startsWith('#')) {
+      colorInput.value = folder.color;
+      customBtn.classList.add('selected');
+      customBtn.style.background = folder.color;
+    } else {
+      // Rainbow gradient to indicate color picker
+      customBtn.style.background =
+        'conic-gradient(from 180deg at 50% 50%, #D9231E 0deg, #F06800 66.47deg, #E6A300 125.68deg, #2D9CDB 195.91deg, #9B51E0 262.24deg, #D9231E 360deg)';
+    }
+
+    // Handle color change
+    colorInput.addEventListener('change', (e) => {
+      const hex = (e.target as HTMLInputElement).value;
+      this.changeFolderColor(folderId, hex);
+      dialog.remove(); // Close picker dialog
+      if (this.activeColorPickerCloseHandler) {
+        document.removeEventListener('click', this.activeColorPickerCloseHandler);
+        this.activeColorPickerCloseHandler = null;
+      }
+      this.activeColorPicker = null;
+      this.activeColorPickerFolderId = null;
+    });
+
+    // Prevent button click from closing the dialog immediately (if bubbling)
+    customBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Trigger the input (if not clicked directly via the overlay input)
+      // Since input covers the button, this might not be strictly needed, but good for safety
+      if (e.target === customBtn) {
+        colorInput.click();
+      }
+    });
+
+    customBtn.appendChild(colorInput);
+    dialog.appendChild(customBtn);
+
+    document.body.appendChild(dialog);
+    this.activeColorPicker = dialog;
+    this.activeColorPickerFolderId = folderId;
+
+    // Close dialog on click outside
+    const closeDialog = (e: MouseEvent) => {
+      if (!dialog.contains(e.target as Node)) {
+        dialog.remove();
+        this.activeColorPicker = null;
+        this.activeColorPickerFolderId = null;
+        if (this.activeColorPickerCloseHandler) {
+          document.removeEventListener('click', this.activeColorPickerCloseHandler);
+          this.activeColorPickerCloseHandler = null;
+        }
+      }
+    };
+    this.activeColorPickerCloseHandler = closeDialog;
+    setTimeout(() => document.addEventListener('click', closeDialog), 0);
+  }
+
+  /**
+   * Change folder color
+   * @param folderId The folder ID to change
+   * @param colorId The new color ID
+   */
+  private changeFolderColor(folderId: string, colorId: string): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    folder.color = colorId;
+    folder.updatedAt = Date.now();
+
+    this.saveData();
+    this.refresh();
   }
 
   private showMoveToFolderDialog(
