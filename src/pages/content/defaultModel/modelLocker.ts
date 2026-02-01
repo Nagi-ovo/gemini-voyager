@@ -21,6 +21,9 @@ class DefaultModelManager {
   private popStateHandler: (() => void) | null = null;
   private originalPushState: History['pushState'] | null = null;
   private originalReplaceState: History['replaceState'] | null = null;
+  private lastCheckedPath: string | null = null;
+  private sidebarClickHandler: ((e: Event) => void) | null = null;
+  private urlCheckTimer: number | null = null;
 
   private constructor() {}
 
@@ -44,10 +47,11 @@ class DefaultModelManager {
     void this.checkAndLockModel();
     // Listen for URL changes (SPA navigation)
     this.popStateHandler = () => {
-      void this.checkAndLockModel();
+      void this.checkAndLockModelWithDelay();
     };
     window.addEventListener('popstate', this.popStateHandler);
-    // Hack for SPA: poll URL or hook into history
+
+    // Hack for SPA: hook into history methods
     if (!this.originalPushState) {
       this.originalPushState = history.pushState;
     }
@@ -57,12 +61,33 @@ class DefaultModelManager {
 
     history.pushState = (...args: Parameters<History['pushState']>) => {
       this.originalPushState?.apply(history, args);
-      void this.checkAndLockModel();
+      void this.checkAndLockModelWithDelay();
     };
     history.replaceState = (...args: Parameters<History['replaceState']>) => {
       this.originalReplaceState?.apply(history, args);
-      void this.checkAndLockModel();
+      void this.checkAndLockModelWithDelay();
     };
+
+    // Listen for sidebar "New Chat" link clicks (SPA internal navigation)
+    this.sidebarClickHandler = (e: Event) => {
+      const target = e.target as HTMLElement;
+      // Check if clicked on a link that leads to /app (new conversation)
+      const link = target.closest('a[href*="/app"]');
+      if (link) {
+        // Delay to allow SPA navigation to complete
+        void this.checkAndLockModelWithDelay();
+      }
+    };
+    document.addEventListener('click', this.sidebarClickHandler, true);
+
+    // Periodic URL check as a fallback for edge cases
+    this.urlCheckTimer = window.setInterval(() => {
+      const currentPath = window.location.pathname;
+      if (currentPath !== this.lastCheckedPath && this.isNewConversation()) {
+        this.lastCheckedPath = currentPath;
+        void this.checkAndLockModel();
+      }
+    }, 500);
   }
 
   public destroy(): void {
@@ -79,9 +104,19 @@ class DefaultModelManager {
       this.checkTimer = null;
     }
 
+    if (this.urlCheckTimer) {
+      clearInterval(this.urlCheckTimer);
+      this.urlCheckTimer = null;
+    }
+
     if (this.popStateHandler) {
       window.removeEventListener('popstate', this.popStateHandler);
       this.popStateHandler = null;
+    }
+
+    if (this.sidebarClickHandler) {
+      document.removeEventListener('click', this.sidebarClickHandler, true);
+      this.sidebarClickHandler = null;
     }
 
     if (this.originalPushState) {
@@ -383,9 +418,22 @@ class DefaultModelManager {
 
   // ==================== Auto Lock Logic ====================
 
+  /**
+   * Delayed version of checkAndLockModel for SPA navigation.
+   * Adds a small delay to ensure the URL has actually changed.
+   */
+  private async checkAndLockModelWithDelay() {
+    // Wait for SPA navigation to complete
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 150));
+    void this.checkAndLockModel();
+  }
+
   private async checkAndLockModel() {
     // Only lock on new conversation pages
     if (!this.isNewConversation()) return;
+
+    // Update last checked path
+    this.lastCheckedPath = window.location.pathname;
 
     const result = await storageService.get<unknown>(StorageKeys.DEFAULT_MODEL);
     const targetModel = result.success ? this.parseStoredDefaultModel(result.data) : null;
@@ -467,6 +515,9 @@ class DefaultModelManager {
 
           if (!alreadySelected) {
             targetItem.click();
+          } else {
+            // Already selected, close menu to avoid stuck UI
+            document.body.click();
           }
 
           found = true;
@@ -475,7 +526,16 @@ class DefaultModelManager {
         for (const item of Array.from(items)) {
           const modelName = this.getModelNameFromItem(item as HTMLElement);
           if (normalize(modelName) === targetName) {
-            (item as HTMLElement).click();
+            const alreadySelected =
+              (item as HTMLElement).getAttribute('aria-checked') === 'true' ||
+              (item as HTMLElement).classList.contains('is-selected');
+
+            if (!alreadySelected) {
+              (item as HTMLElement).click();
+            } else {
+              // Already selected, close menu to avoid stuck UI
+              document.body.click();
+            }
             found = true;
             break;
           }
@@ -487,7 +547,16 @@ class DefaultModelManager {
         for (const item of Array.from(items)) {
           const text = (item as HTMLElement).textContent || '';
           if (targetAsWholeWord.test(normalize(text))) {
-            (item as HTMLElement).click();
+            const alreadySelected =
+              (item as HTMLElement).getAttribute('aria-checked') === 'true' ||
+              (item as HTMLElement).classList.contains('is-selected');
+
+            if (!alreadySelected) {
+              (item as HTMLElement).click();
+            } else {
+              // Already selected, close menu to avoid stuck UI
+              document.body.click();
+            }
             found = true;
             break;
           }
