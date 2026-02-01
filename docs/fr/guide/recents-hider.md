@@ -7,7 +7,7 @@
 Ajoutez un bouton élégant pour masquer la section "Récemment enregistré" sur la page d'accueil de Gemini pour une interface plus propre.
 
 <div style="text-align: center; margin-top: 20px;">
-  <video src="/assets/hide-my-stuff.mov" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
 </div>
 
 ## Caractéristiques

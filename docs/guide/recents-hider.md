@@ -7,7 +7,7 @@
 为 Gemini 首页的“最近保存”部分添加一个优雅的切换开关，让界面更加简洁。
 
 <div style="text-align: center; margin-top: 20px;">
-  <video src="/assets/hide-my-stuff.mov" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
 </div>
 
 ## 功能特点

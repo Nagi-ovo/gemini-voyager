@@ -1,5 +1,9 @@
 # Modelo Predeterminado
 
+::: info
+**Nota**: Esta función estará disponible en la próxima versión (1.1.9) y no es compatible actualmente.
+:::
+
 Establece un modelo de Gemini preferido como predeterminado para evitar el cambio manual en cada nueva conversación.
 
 ## Características

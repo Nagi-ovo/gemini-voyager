@@ -1,5 +1,9 @@
 # Default Model
 
+::: info
+**Note**: This feature will be supported in the next version (1.1.9) and is currently not supported.
+:::
+
 Set a preferred Gemini model as your default to avoid manual switching for every new conversation.
 
 ## Features
