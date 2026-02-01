@@ -1034,5 +1034,13 @@
   "downloadError": {
     "message": "Failed",
     "description": "Status prefix when download fails"
+  },
+  "recentsHide": {
+    "message": "Hide recent items",
+    "description": "Tooltip for hiding recents preview section"
+  },
+  "recentsShow": {
+    "message": "Show recent items",
+    "description": "Tooltip for showing recents preview section"
   }
 }

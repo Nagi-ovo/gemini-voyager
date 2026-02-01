@@ -14,6 +14,7 @@ import { initKaTeXConfig } from './katexConfig';
 import { startMermaid } from './mermaid/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
+import { startRecentsHider } from './recentsHider/index';
 import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
@@ -174,6 +175,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Send behavior (Ctrl+Enter to send)
       sendBehaviorCleanup = await startSendBehavior();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Recents hider - hide/show toggle for recent items section
+      startRecentsHider();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 

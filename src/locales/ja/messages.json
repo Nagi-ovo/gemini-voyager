@@ -1034,5 +1034,13 @@
   "downloadError": {
     "message": "失敗",
     "description": "Status prefix when download fails"
+  },
+  "recentsHide": {
+    "message": "最近の項目を非表示",
+    "description": "最近のプレビューセクションを非表示にするツールチップ"
+  },
+  "recentsShow": {
+    "message": "最近の項目を表示",
+    "description": "最近のプレビューセクションを表示するツールチップ"
   }
 }

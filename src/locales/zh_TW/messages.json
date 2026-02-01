@@ -1034,5 +1034,13 @@
   "downloadError": {
     "message": "失敗",
     "description": "下載失敗時的狀態前置"
+  },
+  "recentsHide": {
+    "message": "隱藏最近項目",
+    "description": "隱藏最近預覽區域的提示"
+  },
+  "recentsShow": {
+    "message": "顯示最近項目",
+    "description": "顯示最近預覽區域的提示"
   }
 }

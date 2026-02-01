@@ -1034,5 +1034,13 @@
   "downloadError": {
     "message": "失败",
     "description": "下载失败时的状态前缀"
+  },
+  "recentsHide": {
+    "message": "隐藏最近项目",
+    "description": "隐藏最近预览区域的提示"
+  },
+  "recentsShow": {
+    "message": "显示最近项目",
+    "description": "显示最近预览区域的提示"
   }
 }

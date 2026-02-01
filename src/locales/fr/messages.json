@@ -1034,5 +1034,13 @@
   "downloadError": {
     "message": "Échec",
     "description": "Status prefix when download fails"
+  },
+  "recentsHide": {
+    "message": "Masquer les éléments récents",
+    "description": "Info-bulle pour masquer la section des éléments récents"
+  },
+  "recentsShow": {
+    "message": "Afficher les éléments récents",
+    "description": "Info-bulle pour afficher la section des éléments récents"
   }
 }
