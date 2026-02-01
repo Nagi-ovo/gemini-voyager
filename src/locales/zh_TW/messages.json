@@ -1009,7 +1009,11 @@
   },
   "folder_color_pink": {
     "message": "粉紅色",
-    "description": "Pink folder color"
+    "description": "粉紅色資料夾顏色名稱"
+  },
+  "folder_color_custom": {
+    "message": "自定義",
+    "description": "自定義資料夾顏色名稱"
   },
   "downloadingOriginal": {
     "message": "正在下載原始圖片",

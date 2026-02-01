@@ -299,6 +299,10 @@
     "message": "粉色（个人）",
     "description": "粉色文件夹颜色名称"
   },
+  "folder_color_custom": {
+    "message": "自定义",
+    "description": "自定义文件夹颜色名称"
+  },
   "folder_empty": {
     "message": "暂无文件夹",
     "description": "没有文件夹时显示的占位提示"

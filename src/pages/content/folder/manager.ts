@@ -3379,6 +3379,62 @@ export class FolderManager {
       dialog.appendChild(colorBtn);
     });
 
+    // Add Custom Color Picker Button
+    const customBtn = document.createElement('button');
+    customBtn.className = 'gv-color-picker-item gv-color-picker-custom';
+    customBtn.title = this.t('folder_color_custom');
+
+    // Create hidden color input
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    // Style to be invisible but functional
+    Object.assign(colorInput.style, {
+      position: 'absolute',
+      opacity: '0',
+      width: '100%',
+      height: '100%',
+      top: '0',
+      left: '0',
+      cursor: 'pointer',
+    });
+
+    // Set initial state
+    if (folder.color && folder.color.startsWith('#')) {
+      colorInput.value = folder.color;
+      customBtn.classList.add('selected');
+      customBtn.style.background = folder.color;
+    } else {
+      // Rainbow gradient to indicate color picker
+      customBtn.style.background =
+        'conic-gradient(from 180deg at 50% 50%, #D9231E 0deg, #F06800 66.47deg, #E6A300 125.68deg, #2D9CDB 195.91deg, #9B51E0 262.24deg, #D9231E 360deg)';
+    }
+
+    // Handle color change
+    colorInput.addEventListener('change', (e) => {
+      const hex = (e.target as HTMLInputElement).value;
+      this.changeFolderColor(folderId, hex);
+      dialog.remove(); // Close picker dialog
+      if (this.activeColorPickerCloseHandler) {
+        document.removeEventListener('click', this.activeColorPickerCloseHandler);
+        this.activeColorPickerCloseHandler = null;
+      }
+      this.activeColorPicker = null;
+      this.activeColorPickerFolderId = null;
+    });
+
+    // Prevent button click from closing the dialog immediately (if bubbling)
+    customBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Trigger the input (if not clicked directly via the overlay input)
+      // Since input covers the button, this might not be strictly needed, but good for safety
+      if (e.target === customBtn) {
+        colorInput.click();
+      }
+    });
+
+    customBtn.appendChild(colorInput);
+    dialog.appendChild(customBtn);
+
     document.body.appendChild(dialog);
     this.activeColorPicker = dialog;
     this.activeColorPickerFolderId = folderId;

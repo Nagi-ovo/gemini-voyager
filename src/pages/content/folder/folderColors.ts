@@ -89,24 +89,27 @@ export const FOLDER_COLORS: FolderColorConfig[] = [
     darkColor: '#c084fc', // purple-400
     priority: 'low',
   },
-  {
-    id: 'pink',
-    nameKey: 'folder_color_pink',
-    lightColor: '#ec4899', // pink-500
-    darkColor: '#f472b6', // pink-400
-    priority: 'low',
-  },
 ];
 
 /**
  * Get color value for a given color ID based on theme
- * @param colorId Color identifier (e.g., 'red', 'blue')
+ * @param colorId Color identifier (e.g., 'red', 'blue') or hex code
  * @param isDarkMode Whether dark mode is active
  * @returns Hex color string
  */
 export function getFolderColor(colorId: string | undefined, isDarkMode: boolean): string {
   if (!colorId || colorId === 'default') {
     return isDarkMode ? '#9ca3af' : '#6b7280';
+  }
+
+  // Support custom hex colors
+  if (colorId.startsWith('#')) {
+    return colorId;
+  }
+
+  // Legacy support for 'pink'
+  if (colorId === 'pink') {
+    return isDarkMode ? '#f472b6' : '#ec4899';
   }
 
   const config = FOLDER_COLORS.find((c) => c.id === colorId);

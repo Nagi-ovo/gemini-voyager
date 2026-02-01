@@ -299,6 +299,10 @@
     "message": "Rosa",
     "description": "Pink folder color name"
   },
+  "folder_color_custom": {
+    "message": "Personalizado",
+    "description": "Custom folder color name"
+  },
   "folder_empty": {
     "message": "No hay carpetas",
     "description": "Empty state placeholder when no folders exist"

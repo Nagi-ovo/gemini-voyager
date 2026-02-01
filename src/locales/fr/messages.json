@@ -299,6 +299,10 @@
     "message": "Rose",
     "description": "Pink folder color name"
   },
+  "folder_color_custom": {
+    "message": "Personnalisé",
+    "description": "Custom folder color name"
+  },
   "folder_empty": {
     "message": "Aucun dossier",
     "description": "Empty state placeholder when no folders exist"

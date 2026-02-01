@@ -299,6 +299,10 @@
     "message": "وردي",
     "description": "Pink folder color name"
   },
+  "folder_color_custom": {
+    "message": "مخصص",
+    "description": "Custom folder color name"
+  },
   "folder_empty": {
     "message": "لا توجد مجلدات حتى الآن",
     "description": "Empty state placeholder when no folders exist"
