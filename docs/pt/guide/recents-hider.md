@@ -1,5 +1,9 @@
 # Ocultar itens recentes
 
+::: info
+**Nota**: Este recurso será suportado na próxima versão (1.1.9) e não é suportado atualmente.
+:::
+
 Adicione um botão elegante para ocultar a seção "Salvos recentemente" na página inicial do Gemini para uma interface mais limpa.
 
 <div style="text-align: center; margin-top: 20px;">

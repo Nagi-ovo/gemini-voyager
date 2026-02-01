@@ -1,5 +1,9 @@
 # Ocultar elementos recientes
 
+::: info
+**Nota**: Esta función será compatible en la próxima versión (1.1.9) y no es compatible actualmente.
+:::
+
 Añade un elegante interruptor para ocultar la sección "Guardado recientemente" en la página de inicio de Gemini para una interfaz más limpia.
 
 <div style="text-align: center; margin-top: 20px;">

@@ -1,4 +1,4 @@
-# 你的數位資產
+# 你的數位資產：提示詞庫
 
 磨了半天寫出個神級 Prompt，幫大忙了。
 用完就丟？
@@ -25,3 +25,26 @@
 一鍵調用，效率翻倍。
 
 ![提示詞管理器](/assets/gemini-prompt-manager.png)
+
+## 任何網站皆可用
+
+提示詞管理器現在可以在您選擇的任何網站上使用，不僅限於 Gemini 和 AI Studio。
+
+### 如何啟用
+
+1. 點擊瀏覽器擴充功能欄的 Voyager 圖標。
+2. 滾動到 **提示詞管理器** 部分。
+3. 輸入網站 URL（例如：`chatgpt.com` 或 `claude.ai`）。
+4. 點擊 **添加網站** 並授予權限。
+5. **刷新目標網頁**，即可看到懸浮球。
+
+### 常見 AI 網站示例
+
+- `chatgpt.com` - ChatGPT
+- `claude.ai` - Claude
+- `copilot.microsoft.com` - Microsoft Copilot
+- `poe.com` - Poe
+
+::: tip
+在自定義網站上，**僅**激活提示詞管理器功能。時間線、資料夾等其他功能是專為 Gemini 設計的，不會加載。
+:::

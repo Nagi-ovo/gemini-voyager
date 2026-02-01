@@ -1,5 +1,9 @@
 # Masquer les éléments récents
 
+::: info
+**Note**: Cette fonctionnalité sera supportée dans la prochaine version (1.1.9) et n'est pas supportée actuellement.
+:::
+
 Ajoutez un bouton élégant pour masquer la section "Récemment enregistré" sur la page d'accueil de Gemini pour une interface plus propre.
 
 <div style="text-align: center; margin-top: 20px;">
