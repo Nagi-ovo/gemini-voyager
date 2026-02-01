@@ -88,21 +88,10 @@ export function mergePrompts(local: PromptItem[], cloud: PromptItem[]): PromptIt
   return mergeItems(local, cloud);
 }
 
-/**
- * Starred message structure for merge (matching StarredMessageSync from sync.ts)
- */
-interface StarredMessage {
-  turnId: string;
-  content: string;
-  conversationId: string;
-  conversationUrl: string;
-  conversationTitle?: string;
-  starredAt: number;
-}
-
-interface StarredMessagesData {
-  messages: Record<string, StarredMessage[]>;
-}
+import type {
+  StarredMessage,
+  StarredMessagesData,
+} from '@/pages/content/timeline/starredTypes';
 
 /**
  * Merges local and cloud starred messages.

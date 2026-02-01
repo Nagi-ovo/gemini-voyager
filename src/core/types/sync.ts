@@ -60,32 +60,16 @@ export interface PromptExportPayload {
   version?: string;
   items: PromptItem[];
 }
-
 /**
- * Starred message structure for sync
+ * Re-export starred message types from their canonical source
+ * These are used for Google Drive sync
  */
-export interface StarredMessageSync {
-  /** Unique ID of the starred turn */
-  turnId: string;
-  /** Content preview of the message */
-  content: string;
-  /** Conversation ID (computed hash) */
-  conversationId: string;
-  /** Conversation URL */
-  conversationUrl: string;
-  /** Conversation title (optional) */
-  conversationTitle?: string;
-  /** Timestamp when the message was starred */
-  starredAt: number;
-}
+export type {
+  StarredMessage as StarredMessageSync,
+  StarredMessagesData as StarredMessagesDataSync,
+} from '@/pages/content/timeline/starredTypes';
 
-/**
- * Starred messages data structure for sync
- */
-export interface StarredMessagesDataSync {
-  /** Map of conversationId -> array of starred messages */
-  messages: Record<string, StarredMessageSync[]>;
-}
+import type { StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 /**
  * Starred messages export payload format
@@ -94,7 +78,7 @@ export interface StarredExportPayload {
   format: 'gemini-voyager.starred.v1';
   exportedAt: string;
   version?: string;
-  data: StarredMessagesDataSync;
+  data: StarredMessagesData;
 }
 
 /**
