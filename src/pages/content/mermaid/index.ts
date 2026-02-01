@@ -363,10 +363,35 @@ const openFullscreen = (svgHtml: string) => {
 };
 
 /**
+ * Normalize whitespace characters in Mermaid code
+ * Replaces non-breaking spaces (NBSP \u00A0) and other special whitespace
+ * with standard spaces to prevent Mermaid parsing errors.
+ *
+ * Common problematic characters:
+ * - \u00A0 (NBSP): From web pages, Word, Notion, WeChat, etc.
+ * - \u2003 (Em Space)
+ * - \u2002 (En Space)
+ * - \u2009 (Thin Space)
+ * - \u200B (Zero-width Space)
+ * - \u3000 (Ideographic Space - CJK full-width space)
+ */
+const normalizeWhitespace = (code: string): string => {
+  return (
+    code
+      // Replace various special space characters with standard space
+      .replace(/[\u00A0\u2002\u2003\u2009\u3000]/g, ' ')
+      // Remove zero-width characters that can cause issues
+      .replace(/[\u200B\u200C\u200D\uFEFF]/g, '')
+  );
+};
+
+/**
  * Render Mermaid diagram for a code block
  */
 const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
-  if (codeBlock.dataset.mermaidCode === code) return;
+  // Normalize whitespace before processing
+  const normalizedCode = normalizeWhitespace(code);
+  if (codeBlock.dataset.mermaidCode === normalizedCode) return;
   if (codeBlock.dataset.mermaidProcessing === 'true') return;
 
   codeBlock.dataset.mermaidProcessing = 'true';
@@ -385,7 +410,7 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
 
     try {
       // v9.x render returns string directly, v10.x returns {svg: string}
-      const result = await mermaid.render(uniqueId, code);
+      const result = await mermaid.render(uniqueId, normalizedCode);
       svg = typeof result === 'string' ? result : (result as { svg: string }).svg;
     } catch (renderError) {
       // Mermaid failed - likely incomplete or invalid syntax
@@ -482,7 +507,7 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
     // Insert the successfully rendered SVG
     diagramContainer.innerHTML = svg;
 
-    codeBlock.dataset.mermaidCode = code;
+    codeBlock.dataset.mermaidCode = normalizedCode;
     codeBlock.dataset.mermaidProcessing = 'false';
     console.log('[Gemini Voyager] Mermaid diagram rendered:', uniqueId);
   } catch (error) {
