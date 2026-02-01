@@ -10,9 +10,13 @@
 
 ## 3つの簡単なステップで同期
 
-1. **CoBridgeの起動**：VS Codeマーケットプレイスから**CoBridge**拡張機能をインストールして起動します。これはウェブとローカルをつなぐ架け橋です。
+1. **CoBridgeのインストールと起動**：
+   VS Codeで**CoBridge**拡張機能をインストールします。これはウェブインターフェースとローカルIDEを接続する中核的な架け橋です。
+   - **[VS Code マーケットプレイス経由でインストール](https://open-vsx.org/extension/windfall/co-bridge)**
+
    ![CoBridge拡張機能](/assets/CoBridge-extension.png)
 
+   インストール後、左側のサイドバーにあるアイコンをクリックしてサーバーを起動します。
    ![CoBridgeサーバー起動](/assets/CoBridge-on.png)
 
 2. **接続の確立**：

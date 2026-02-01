@@ -10,9 +10,13 @@
 
 ## 极简三步，同频呼吸
 
-1. **唤醒 CoBridge**：在 VS Code 市场安装 **CoBridge** 插件并启动。它是对接网页与本地的桥梁。
+1. **安装并唤醒桥接器**：
+   在 VS Code 中安装 **CoBridge** 插件。它是连接网页与本地 IDE 的核心桥梁。
+   - **[前往 VS Code 市场安装](https://open-vsx.org/extension/windfall/co-bridge)**
+
    ![CoBridge扩展](/assets/CoBridge-extension.png)
 
+   安装完成后，点击左侧图标并启动服务器。
    ![CoBridge服务器开启](/assets/CoBridge-on.png)
 
 2. **握手对接**：

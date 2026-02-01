@@ -10,9 +10,13 @@
 
 ## 簡單三步即可同步
 
-1. **喚醒 CoBridge**：從 VS Code Marketplace 安裝 **CoBridge** 擴充功能並啟動它。它是連接網頁端和您本機的橋樑。
+1. **安裝並喚醒橋接器**：
+   在 VS Code 中安裝 **CoBridge** 插件。它是連接網頁與本地 IDE 的核心橋梁。
+   - **[前往 VS Code 市場安裝](https://open-vsx.org/extension/windfall/co-bridge)**
+
    ![CoBridge 擴充功能](/assets/CoBridge-extension.png)
 
+   安裝完成後，點擊左側圖示並啟動伺服器。
    ![CoBridge 伺服器已開啟](/assets/CoBridge-on.png)
 
 2. **握手連接**：

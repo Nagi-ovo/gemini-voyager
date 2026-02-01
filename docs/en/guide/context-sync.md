@@ -10,9 +10,13 @@ The biggest pain for developers: after discussing a solution thoroughly on the w
 
 ## Three Simple Steps to Synchronize
 
-1. **Wake up CoBridge**: Install the **CoBridge** extension from the VS Code Marketplace and start it. It's the bridge connecting the web and your local machine.
+1. **Install and Wake Up CoBridge**:
+   Install the **CoBridge** extension in VS Code. It serves as the core bridge connecting the web interface and your local IDE.
+   - **[Install via VS Code Marketplace](https://open-vsx.org/extension/windfall/co-bridge)**
+
    ![CoBridge Extension](/assets/CoBridge-extension.png)
 
+   After installation, click the icon on the left sidebar and start the server.
    ![CoBridge Server On](/assets/CoBridge-on.png)
 
 2. **Handshake Connection**:

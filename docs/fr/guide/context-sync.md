@@ -4,15 +4,19 @@
 
 Élaborez la logique sur le web et implémentez le code dans l'IDE. Gemini Voyager brise les barrières dimensionnelles, dotant instantanément votre IDE du « processus de réflexion » du web.
 
-## Dites adieu aux allers-retours incessants
+## Dites adieu aux allers-retour incessants
 
 Le plus grand calvaire des développeurs : après avoir discuté longuement d'une solution sur le web, vous retournez sur VS Code/Trae/Cursor et devez réexpliquer les besoins comme à un étranger. En raison des quotas et de la vitesse de réponse, le web est le « cerveau » et l'IDE les « mains ». Voyager leur permet de partager une même âme.
 
 ## Trois étapes simples pour synchroniser
 
-1. **Réveillez CoBridge** : Installez l'extension **CoBridge** depuis le VS Code Marketplace et lancez-la. C'est le pont qui relie le web à votre machine locale.
+1. **Installer et activer CoBridge** :
+   Installez l'extension **CoBridge** dans VS Code. C'est le pont central qui relie l'interface web à votre IDE local.
+   - **[Installer via le VS Code Marketplace](https://open-vsx.org/extension/windfall/co-bridge)**
+
    ![Extension CoBridge](/assets/CoBridge-extension.png)
 
+   Après l'installation, cliquez sur l'icône dans la barre latérale gauche et lancez le serveur.
    ![Serveur CoBridge activé](/assets/CoBridge-on.png)
 
 2. **Connexion et poignée de main** :

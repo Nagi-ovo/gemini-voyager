@@ -10,9 +10,13 @@ El mayor dolor de cabeza de los desarrolladores: después de discutir a fondo un
 
 ## Tres sencillos pasos para sincronizar
 
-1. **Activa CoBridge**: Instala la extensión **CoBridge** desde el Marketplace de VS Code y iníciala. Es el puente que conecta la web con tu máquina local.
+1. **Instalar y activar CoBridge**:
+   Instala la extensión **CoBridge** en VS Code. Es el puente central que conecta la web con tu IDE local.
+   - **[Instalar desde el Marketplace de VS Code](https://open-vsx.org/extension/windfall/co-bridge)**
+
    ![Extensión CoBridge](/assets/CoBridge-extension.png)
 
+   Después de la instalación, haz clic en el icono de la barra lateral izquierda y activa el servidor.
    ![Servidor CoBridge activado](/assets/CoBridge-on.png)
 
 2. **Conexión y saludo**:
