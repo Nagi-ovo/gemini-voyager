@@ -85,6 +85,7 @@ For a complete guide, visit our [Documentation](https://voyager.nagi.fun/en).
   - **[Quote Reply](https://voyager.nagi.fun/en/guide/quote-reply)**: Reply with context by selecting text.
   - **[Tab Title Sync](https://voyager.nagi.fun/en/guide/tab-title)**: Auto-sync browser tab titles.
   - **[Input Collapse](https://voyager.nagi.fun/en/guide/input-collapse)**: Auto-expandable input area for more reading space.
+  - **[Default Model](https://voyager.nagi.fun/en/guide/default-model)**: Set your favorite model as default.
 
 ---
 

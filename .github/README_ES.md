@@ -85,6 +85,7 @@ Para una guía completa, visita nuestra [Documentación](https://voyager.nagi.fu
   - **[Respuesta con Cita](https://voyager.nagi.fun/es/guide/quote-reply)**: Responde con contexto seleccionando texto.
   - **[Sincronización de Título de Pestaña](https://voyager.nagi.fun/es/guide/tab-title)**: Sincroniza automáticamente el título de la pestaña del navegador.
   - **[Colapso de Entrada](https://voyager.nagi.fun/es/guide/input-collapse)**: Área de entrada auto-colapsable para más espacio de lectura.
+  - **[Modelo Predeterminado](https://voyager.nagi.fun/es/guide/default-model)**: Establece tu modelo preferido por defecto.
 
 ---
 

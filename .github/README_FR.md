@@ -85,6 +85,7 @@ Pour un guide complet, visitez notre [Documentation](https://voyager.nagi.fun/fr
   - **[Réponse avec Citation](https://voyager.nagi.fun/fr/guide/quote-reply)** : Répondez avec contexte en sélectionnant simplement du texte.
   - **[Synchro Titre Onglet](https://voyager.nagi.fun/fr/guide/tab-title)** : Synchronisation automatique du titre de l'onglet avec le titre du chat.
   - **[Réduction Entrée](https://voyager.nagi.fun/fr/guide/input-collapse)** : Zone de saisie auto-réductible pour plus d'espace de lecture.
+  - **[Modèle par Défaut](https://voyager.nagi.fun/fr/guide/default-model)** : Définissez votre modèle préféré par défaut.
 
 ---
 
