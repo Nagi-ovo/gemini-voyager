@@ -63,7 +63,7 @@ describe('DefaultModelManager (default model locker)', () => {
     }
 
     await Promise.resolve(); // flush MutationObserver microtasks
-    await vi.runAllTimersAsync();
+    await vi.advanceTimersByTimeAsync(100); // Use a finite time advance to avoid infinite setInterval loop
 
     const selectors = querySelectorSpy.mock.calls.map((call) => call[0]);
     expect(selectors).not.toContain('.mat-mdc-menu-panel');
@@ -94,7 +94,7 @@ describe('DefaultModelManager (default model locker)', () => {
     menuPanel.appendChild(item);
 
     await Promise.resolve();
-    await vi.runAllTimersAsync();
+    await vi.advanceTimersByTimeAsync(500); // Use a finite time advance to avoid infinite setInterval loop
 
     expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
   });
