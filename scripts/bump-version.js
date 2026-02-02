@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -74,6 +75,10 @@ async function main() {
     }
 
     console.log('Version bump complete! 🚀');
+
+    console.log('Running format...');
+    execSync('bun run format', { stdio: 'inherit' });
+    console.log('Format complete! ✨');
   } catch (error) {
     console.error('Error bumping version:', error);
     process.exit(1);
