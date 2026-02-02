@@ -349,7 +349,7 @@
   },
   "folder_filter_current_user": {
     "message": "帳號隔離模式",
-    "description": "點擊後僅顯示目前 Google 帳號的對話"
+    "description": "Show only conversations from the current Google account"
   },
   "folder_export": {
     "message": "匯出資料夾",

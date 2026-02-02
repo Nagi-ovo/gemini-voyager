@@ -389,7 +389,7 @@
   },
   "folder_filter_current_user": {
     "message": "عزل الحساب",
-    "description": "إظهار المحادثات من حساب Google الحالي فقط"
+    "description": "Show only conversations from the current Google account"
   },
   "folder_export": {
     "message": "تصدير المجلدات",

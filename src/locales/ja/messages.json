@@ -389,7 +389,7 @@
   },
   "folder_filter_current_user": {
     "message": "アカウント隔離",
-    "description": "現在のアカウントの会話のみを表示します"
+    "description": "Show only conversations from the current Google account"
   },
   "folder_export": {
     "message": "フォルダをエクスポート",

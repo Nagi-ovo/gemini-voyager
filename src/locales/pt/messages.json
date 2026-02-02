@@ -389,7 +389,7 @@
   },
   "folder_filter_current_user": {
     "message": "Isolamento de conta",
-    "description": "Mostrar apenas conversas da conta atual do Google"
+    "description": "Show only conversations from the current Google account"
   },
   "folder_export": {
     "message": "Exportar pastas",

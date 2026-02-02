@@ -389,7 +389,7 @@
   },
   "folder_filter_current_user": {
     "message": "账号隔离模式",
-    "description": "点击后仅显示当前 Google 账号的对话"
+    "description": "Show only conversations from the current Google account"
   },
   "folder_export": {
     "message": "导出文件夹",

@@ -389,7 +389,7 @@
   },
   "folder_filter_current_user": {
     "message": "Изоляция аккаунтов",
-    "description": "Показывать только диалоги текущего аккаунта Google"
+    "description": "Show only conversations from the current Google account"
   },
   "folder_export": {
     "message": "Экспорт папок",
