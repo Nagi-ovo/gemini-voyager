@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -74,6 +75,10 @@ async function main() {
     }
 
     console.log('Version bump complete! 🚀');
+
+    console.log('Running format...');
+    execSync('bun run format', { stdio: 'inherit' });
+    console.log('Format complete! ✨');
   } catch (error) {
     console.error('Error bumping version:', error);
     process.exit(1);
