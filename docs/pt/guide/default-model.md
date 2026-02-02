@@ -6,6 +6,10 @@
 
 Defina um modelo Gemini preferido como padrão para evitar a troca manual a cada nova conversa.
 
+<div style="text-align: center; margin-top: 20px;">
+  <video src="/assets/default-model.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+</div>
+
 ## Recursos
 
 - **Configuração Interativa**: Adiciona um botão de "Estrela" diretamente no menu nativo de seleção de modelos do Gemini.

@@ -6,6 +6,10 @@
 
 お気に入りの Gemini モデルをデフォルトとして設定し、新しい会話を始めるたびに手動で切り替える手間を省きます。
 
+<div style="text-align: center; margin-top: 20px;">
+  <video src="/assets/default-model.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+</div>
+
 ## 機能の特徴
 
 - **直感的な設定**：Gemini のモデル選択メニューに「スター」ボタンを直接追加します。

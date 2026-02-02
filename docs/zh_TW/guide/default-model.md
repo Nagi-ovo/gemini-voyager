@@ -6,6 +6,10 @@
 
 為 Gemini 添加設置預設模型的功能，避免每次開啟新對話時都需要手動切換。
 
+<div style="text-align: center; margin-top: 20px;">
+  <video src="/assets/default-model.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+</div>
+
 ## 功能特點
 
 - **互動式設置**：在 Gemini 的模型選擇選單中直接注入「星標」按鈕。
