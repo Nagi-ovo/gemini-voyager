@@ -1,7 +1,7 @@
 # Modèle par Défaut
 
 ::: info
-**Note** : Cette fonctionnalité sera prise en charge dans la prochaine version (1.1.9) et n'est pas encore disponible.
+**Note** : Cette fonctionnalité est prise en charge dans la version 1.1.9 et ultérieure.
 :::
 
 Définissez un modèle Gemini préféré par défaut pour éviter de changer manuellement à chaque nouvelle conversation.

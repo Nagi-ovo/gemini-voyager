@@ -1,7 +1,7 @@
 # Modelo Padrão
 
 ::: info
-**Nota**: Este recurso será suportado na próxima versão (1.1.9) e não é suportado atualmente.
+**Nota**: Este recurso é suportado na versão 1.1.9 e posteriores.
 :::
 
 Defina um modelo Gemini preferido como padrão para evitar a troca manual a cada nova conversa.

@@ -1,7 +1,7 @@
 # Masquer les éléments récents
 
 ::: info
-**Note**: Cette fonctionnalité sera supportée dans la prochaine version (1.1.9) et n'est pas supportée actuellement.
+**Note**: Cette fonctionnalité est supportée dans la version 1.1.9 et ultérieure.
 :::
 
 Ajoutez une bascule élégante pour masquer la section « Enregistrements récents » sur la page d'accueil de Gemini pour une interface plus propre. Prend désormais également en charge le masquage de la liste **Gems** dans la barre latérale !

@@ -1,7 +1,7 @@
 # Hide Recent Items
 
 ::: info
-**Note**: This feature will be supported in the next version (1.1.9) and is currently not supported.
+**Note**: This feature is supported in version 1.1.9 and later.
 :::
 
 Add an elegant toggle to hide the "Recently saved" section on the Gemini homepage for a cleaner interface. Now also supports hiding the **Gems** list in the sidebar!
