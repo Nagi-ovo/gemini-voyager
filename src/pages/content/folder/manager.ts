@@ -76,6 +76,7 @@ export class FolderManager {
   private longPressThreshold: number = 500; // Long-press duration in ms
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
+  private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
   private saveInProgress: boolean = false; // Lock to prevent concurrent saves
@@ -540,6 +541,17 @@ export class FolderManager {
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'gv-folder-header-actions';
 
+    // Filter current user button
+    const filterUserButton = document.createElement('button');
+    filterUserButton.className = 'gv-folder-action-btn';
+    filterUserButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">person</mat-icon>`;
+    filterUserButton.title = this.t('folder_filter_current_user');
+    // Apply active state if filter is enabled
+    if (this.filterCurrentUserOnly) {
+      filterUserButton.classList.add('gv-filter-active');
+    }
+    filterUserButton.addEventListener('click', () => this.toggleFilterCurrentUser());
+
     // Import button
     const importButton = document.createElement('button');
     importButton.className = 'gv-folder-action-btn';
@@ -561,6 +573,7 @@ export class FolderManager {
     addButton.title = this.t('folder_create');
     addButton.addEventListener('click', () => this.createFolder());
 
+    actionsContainer.appendChild(filterUserButton);
     actionsContainer.appendChild(importButton);
     actionsContainer.appendChild(exportButton);
     actionsContainer.appendChild(addButton);
@@ -583,8 +596,9 @@ export class FolderManager {
 
     // Render root-level conversations (favorites/pinned conversations)
     const rootConversations = this.data.folderContents[ROOT_CONVERSATIONS_ID] || [];
-    if (rootConversations.length > 0) {
-      rootConversations.forEach((conv) => {
+    const filteredRootConversations = this.filterConversationsByCurrentUser(rootConversations);
+    if (filteredRootConversations.length > 0) {
+      filteredRootConversations.forEach((conv) => {
         const convEl = this.createConversationElement(conv, ROOT_CONVERSATIONS_ID, 0);
         list.appendChild(convEl);
       });
@@ -705,7 +719,8 @@ export class FolderManager {
 
       // Render conversations in this folder (sorted: starred first)
       const conversations = this.data.folderContents[folder.id] || [];
-      const sortedConversations = this.sortConversations(conversations);
+      const filteredConversations = this.filterConversationsByCurrentUser(conversations);
+      const sortedConversations = this.sortConversations(filteredConversations);
       sortedConversations.forEach((conv) => {
         const convEl = this.createConversationElement(conv, folder.id, level + 1);
         content.appendChild(convEl);
@@ -5630,6 +5645,81 @@ export class FolderManager {
       // Always release the lock, even if an error occurred
       this.importInProgress = false;
     }
+  }
+
+  /**
+   * Filter conversations to show only those belonging to the current user.
+   * If filterCurrentUserOnly is false, returns all conversations.
+   */
+  private filterConversationsByCurrentUser(
+    conversations: ConversationReference[],
+  ): ConversationReference[] {
+    if (!this.filterCurrentUserOnly) {
+      return conversations;
+    }
+    const currentUserId = this.getCurrentUserId();
+    return conversations.filter((conv) => {
+      const convUserId = this.getUserIdFromUrl(conv.url);
+      return convUserId === currentUserId;
+    });
+  }
+
+  /**
+   * Get the current user ID from the URL.
+   * URL patterns:
+   * - /u/0/app/xxx → user "0"
+   * - /u/1/app/xxx → user "1"
+   * - /app?hl=zh&pageId=none → user "0" (default)
+   */
+  private getCurrentUserId(): string {
+    try {
+      const path = window.location.pathname;
+      const match = path.match(/^\/u\/(\d+)\//);
+      return match ? match[1] : '0';
+    } catch {
+      return '0';
+    }
+  }
+
+  /**
+   * Extract user ID from a conversation URL.
+   * @param url The conversation URL
+   * @returns User ID string, defaults to "0"
+   */
+  private getUserIdFromUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      const match = urlObj.pathname.match(/^\/u\/(\d+)\//);
+      return match ? match[1] : '0';
+    } catch {
+      return '0';
+    }
+  }
+
+  /**
+   * Toggle the "show only current user" filter and refresh the UI.
+   */
+  private toggleFilterCurrentUser(): void {
+    this.filterCurrentUserOnly = !this.filterCurrentUserOnly;
+    this.debug('Filter current user only:', this.filterCurrentUserOnly);
+
+    // Refresh the entire folder container to update button state and list
+    if (this.containerElement) {
+      // Update the filter button state
+      const filterBtn = this.containerElement.querySelector(
+        '.gv-folder-header-actions button:first-child',
+      );
+      if (filterBtn) {
+        if (this.filterCurrentUserOnly) {
+          filterBtn.classList.add('gv-filter-active');
+        } else {
+          filterBtn.classList.remove('gv-filter-active');
+        }
+      }
+    }
+
+    // Refresh the folders list to apply the filter
+    this.refresh();
   }
 
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {

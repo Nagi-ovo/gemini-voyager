@@ -219,6 +219,7 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -2855,6 +2856,7 @@ html.dark-theme .gv-pm-expand-btn:hover {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -3295,6 +3297,28 @@ html.dark .gv-folder-action-btn:hover,
   font-size: 18px;
   width: 18px;
   height: 18px;
+}
+
+/* Filter active state */
+.gv-folder-action-btn.gv-filter-active {
+  background-color: rgba(66, 133, 244, 0.15);
+  opacity: 1;
+}
+
+.gv-folder-action-btn.gv-filter-active mat-icon {
+  color: #4285f4;
+}
+
+html.dark .gv-folder-action-btn.gv-filter-active,
+[data-theme='dark'] .gv-folder-action-btn.gv-filter-active,
+[data-color-scheme='dark'] .gv-folder-action-btn.gv-filter-active {
+  background-color: rgba(138, 180, 248, 0.2);
+}
+
+html.dark .gv-folder-action-btn.gv-filter-active mat-icon,
+[data-theme='dark'] .gv-folder-action-btn.gv-filter-active mat-icon,
+[data-color-scheme='dark'] .gv-folder-action-btn.gv-filter-active mat-icon {
+  color: #8ab4f8;
 }
 
 /* ==========================

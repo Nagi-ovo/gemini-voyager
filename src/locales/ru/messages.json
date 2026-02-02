@@ -387,6 +387,10 @@
     "message": "LaTeX (без знака доллара)",
     "description": "LaTeX format option without dollar signs"
   },
+  "folder_filter_current_user": {
+    "message": "Только текущий аккаунт",
+    "description": "Filter to show only conversations from current account"
+  },
   "folder_export": {
     "message": "Экспорт папок",
     "description": "Export folders button tooltip"

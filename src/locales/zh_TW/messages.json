@@ -347,6 +347,10 @@
     "message": "LaTeX (純文字，無 $ 符號)",
     "description": "LaTeX 格式選項，無美元符號"
   },
+  "folder_filter_current_user": {
+    "message": "僅顯示目前帳戶",
+    "description": "過濾僅顯示目前帳戶的對話"
+  },
   "folder_export": {
     "message": "匯出資料夾",
     "description": "匯出資料夾按鈕提示"

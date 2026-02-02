@@ -387,6 +387,10 @@
     "message": "LaTeX (ドル記号なし)",
     "description": "LaTeX format option without dollar signs"
   },
+  "folder_filter_current_user": {
+    "message": "現在のアカウントのみ表示",
+    "description": "Filter to show only conversations from current account"
+  },
   "folder_export": {
     "message": "フォルダをエクスポート",
     "description": "Export folders button tooltip"

@@ -387,6 +387,10 @@
     "message": "LaTeX (Sans dollars)",
     "description": "LaTeX format option without dollar signs"
   },
+  "folder_filter_current_user": {
+    "message": "Compte actuel uniquement",
+    "description": "Filter to show only conversations from current account"
+  },
   "folder_export": {
     "message": "Exporter dossiers",
     "description": "Export folders button tooltip"

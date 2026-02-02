@@ -387,6 +387,10 @@
     "message": "LaTeX (بدون علامة الدولار)",
     "description": "LaTeX format option without dollar signs"
   },
+  "folder_filter_current_user": {
+    "message": "إظهار الحساب الحالي فقط",
+    "description": "Filter to show only conversations from current account"
+  },
   "folder_export": {
     "message": "تصدير المجلدات",
     "description": "Export folders button tooltip"
