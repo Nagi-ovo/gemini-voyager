@@ -388,8 +388,8 @@
     "description": "LaTeX 格式选项，无美元符号"
   },
   "folder_filter_current_user": {
-    "message": "仅显示当前账户",
-    "description": "过滤仅显示当前账户的对话"
+    "message": "账号隔离模式",
+    "description": "点击后仅显示当前 Google 账号的对话"
   },
   "folder_export": {
     "message": "导出文件夹",

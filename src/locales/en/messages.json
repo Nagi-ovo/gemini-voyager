@@ -388,8 +388,8 @@
     "description": "LaTeX format option without dollar signs"
   },
   "folder_filter_current_user": {
-    "message": "Show current account only",
-    "description": "Filter to show only conversations from current account"
+    "message": "Account Isolation",
+    "description": "Show only conversations from the current Google account"
   },
   "folder_export": {
     "message": "Export folders",

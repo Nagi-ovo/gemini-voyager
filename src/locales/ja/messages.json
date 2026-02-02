@@ -388,8 +388,8 @@
     "description": "LaTeX format option without dollar signs"
   },
   "folder_filter_current_user": {
-    "message": "現在のアカウントのみ表示",
-    "description": "Filter to show only conversations from current account"
+    "message": "アカウント隔離",
+    "description": "現在のアカウントの会話のみを表示します"
   },
   "folder_export": {
     "message": "フォルダをエクスポート",

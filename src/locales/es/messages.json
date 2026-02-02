@@ -388,8 +388,8 @@
     "description": "LaTeX format option without dollar signs"
   },
   "folder_filter_current_user": {
-    "message": "Mostrar solo cuenta actual",
-    "description": "Filter to show only conversations from current account"
+    "message": "Aislamiento de cuenta",
+    "description": "Mostrar solo las conversaciones de la cuenta actual"
   },
   "folder_export": {
     "message": "Exportar carpetas",

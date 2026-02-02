@@ -1,34 +1,37 @@
-# Carpetas, Como Deben Ser
+# Carpetas bien hechas
 
-Organizar los chats de IA, ¿por qué era tan difícil antes?
-Lo hemos arreglado. Instala un sistema de archivos para tus pensamientos.
+¿Por qué es tan difícil organizar los chats de IA?
+Lo hemos solucionado. Hemos construido un sistema de archivos para tus pensamientos.
 
-## Intuición Organizada
+<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; margin-bottom: 40px;">
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>Gemini</b></p>
+    <img src="/assets/gemini-folders.png" alt="Carpetas Gemini" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  </div>
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>AI Studio</b></p>
+    <img src="/assets/aistudio-folders.png" alt="Carpetas AI Studio" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  </div>
+</div>
 
-Cuando se siente bien, todo está bien.
+## La física de la organización
 
-- **Arrastrar y Soltar**: Agarra, suelta. Retroalimentación física real.
-- **Anidación**: Grandes proyectos dentro de pequeños proyectos. Niveles infinitos, como quieras.
-- **Sincronización**: Organízalo en tu PC, úsalo en tu portátil.
+Simplemente se siente bien.
 
-## Trucos Maestros
+- **Arrastrar y soltar**: Toma un chat. Suéltalo en una carpeta. Es táctil.
+- **Jerarquía anidada**: Los proyectos tienen subproyectos. Crea carpetas dentro de carpetas. Estructúralo a _tu_ manera.
+- **Sincronización instantánea**: Organiza en tu escritorio. Míralo en tu portátil.
+
+## Consejos profesionales
 
 - **Selección Múltiple**: Mantén presionado un elemento de chat para entrar en modo de selección múltiple, opera en lote, listo de una vez.
 - **Renombrar**: Doble clic en la carpeta, cámbialo directamente.
 - **Reconocimiento**: Código, escritura, charla... Identificamos automáticamente el tipo de Gema y asignamos un icono. Tú solo úsalo, déjanos el resto a nosotros.
-- **Colores**: Haz clic en los tres puntos al lado de una carpeta para elegir entre 8 colores vibrantes. Haz que tu barra lateral sea tan única como tus pensamientos.
 
-<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>Gemini</b></p>
-    <img src="/assets/gemini-folders.png" alt="Carpetas en Gemini" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>Colores de Carpeta</b></p>
-    <img src="/assets/folder-color.png" alt="Colores de Carpeta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>AI Studio</b></p>
-    <img src="/assets/aistudio-folders.png" alt="Carpetas en AI Studio" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-</div>
+## Características avanzadas
+
+- **Colores**: Haz clic en los tres puntos al lado de una carpeta para personalizar su color. 8 opciones vibrantes para que tu barra lateral destaque.
+  <img src="/assets/folder-color.png" alt="Colores de carpeta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+- **Aislamiento de cuenta**: Haz clic en el icono "persona" en el encabezado para filtrar instantáneamente los chats de otras cuentas de Google. Mantén tu espacio de trabajo limpio cuando uses varias cuentas.
+  <img src="/assets/current-user-only.png" alt="Aislamiento de cuenta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
