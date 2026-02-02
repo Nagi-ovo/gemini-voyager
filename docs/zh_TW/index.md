@@ -31,34 +31,40 @@ teaser:
 features:
   - icon: 🧭
     title: 時間軸
-    details: 別滾屏，去飛。瞬間抵達思維的任何落點。
+    details: 看見對話的脈搏。<br>讓線性的時間，變成可觸摸的空間。
   - icon: 🗂️
     title: 資料夾
-    details: 告別混沌。原生手感，直覺操作，井井有條。
+    details: 給思想安個家。<br>哪怕是一閃而過的念頭，也值得被鄭重對待。
   - icon: ✨
     title: 指令寶庫
     details: 捕捉靈光。珍藏你的每一次神來之筆。
   - icon: 💬
     title: 引用回覆
     details: 選中即引。上下文精確回覆，溝通更高效。
+  - icon: ↔️
+    title: 對話寬度
+    details: 視野全開。自由調節對話框寬度，程式碼表格完整呈現。
+  - icon: 💾
+    title: 對話導出
+    details: 數據歸你。多種格式一鍵存檔，知識不再流失。
+  - icon: 🍌
+    title: NanoBanana 水印去除
+    details: 無損去水印。讓 AI 生成的瞬間回歸純淨。
   - icon: 📐
     title: 公式複製
     details: 一鍵複製 LaTeX 和 MathML (Word) 源碼。
   - icon: 🧜‍♀️
     title: Mermaid 圖表
     details: 代碼變圖表。流程圖、時序圖、甘特圖一鍵可視化。
-  - icon: 🍌
-    title: NanoBanana 水印去除
-    details: 無損去水印。讓 AI 生成的瞬間回歸純淨。
   - icon: 🏷️
     title: 標籤頁標題同步
     details: 一眼即知。自動將標籤頁標題同步為對話標題。
-  - icon: 💾
-    title: 對話導出
-    details: 數據歸你。多種格式一鍵存檔，知識不再流失。
   - icon: 🗑️
     title: 批次刪除對話
     details: 一鍵清理。選中多個對話，批次刪除，告別繁瑣。
+  - icon: ⚡️
+    title: 預設模型
+    details: 拒絕重複勞動。新建對話自動切換至你最愛的模型。
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

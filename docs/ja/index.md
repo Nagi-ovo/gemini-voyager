@@ -41,23 +41,29 @@ features:
   - icon: 💬
     title: 引用返信
     details: テキストを選択してワンクリックで引用。文脈に応じた返信で、効率的なコミュニケーションを。
+  - icon: ↔️
+    title: チャット幅
+    details: 視野を広げよう。チャットの幅を自由に調整して、より良い閲覧体験を。
+  - icon: 💾
+    title: 会話のエクスポート
+    details: データは、あなたのもの。多様な形式でアーカイブし、知識を永続化。
+  - icon: 🍌
+    title: NanoBanana 透かし除去
+    details: 生成された瞬間を、純粋なままに。ノイズのない美しさを。
   - icon: 📐
     title: 数式コピー
     details: LaTeX および MathML (Word) のソースコードを一クリックでコピー。
   - icon: 🧜‍♀️
     title: Mermaid
-  - icon: 🍌
-    title: NanoBanana 透かし除去
-    details: 生成された瞬間を、純粋なままに。ノイズのない美しさを。
   - icon: 🏷️
     title: タブタイトルの同期
     details: 一目で分かる。タブのタイトルが、会話の内容に自動で変化。
-  - icon: 💾
-    title: 会話のエクスポート
-    details: データは、あなたのもの。多様な形式でアーカイブし、知識を永続化。
   - icon: 🗑️
     title: 一括削除
     details: 整理も一瞬。複数の会話を選んで、まとめて消去。
+  - icon: ⚡️
+    title: デフォルトモデル
+    details: 繰り返し作業は不要です。新しいチャットでお気に入りのモデルに自動切り替え。
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

@@ -41,24 +41,29 @@ features:
   - icon: 💬
     title: Resposta com Citação
     details: Selecione para citar. Respostas contextualizadas para uma comunicação eficiente.
+  - icon: ↔️
+    title: Largura do chat
+    details: Amplie sua visão. Ajuste livremente a largura do chat para uma melhor experiência de visualização.
+  - icon: 💾
+    title: Exportar Chat
+    details: Soberania dos dados. Arquive em vários formatos para que o conhecimento nunca se perca.
+  - icon: 🍌
+    title: Remoção de Marca de Água NanoBanana
+    details: Remoção de marca de água sem perdas. Mantenha os momentos de IA puros.
   - icon: 📐
     title: Cópia de Fórmulas
     details: Cópia com um clique de códigos-fonte LaTeX e MathML (Word).
   - icon: 🧜‍♀️
     title: Gráficos Mermaid
-
-  - icon: 🍌
-    title: Remoção de Marca de Água NanoBanana
-    details: Remoção de marca de água sem perdas. Mantenha os momentos de IA puros.
   - icon: 🏷️
     title: Sinc. Título da Aba
     details: Saiba num relance. Sincronize automaticamente o título da aba do navegador com o seu chat.
-  - icon: 💾
-    title: Exportar Chat
-    details: Soberania dos dados. Arquive em vários formatos para que o conhecimento nunca se perca.
   - icon: 🗑️
     title: Eliminação em Lote
     details: Limpeza em massa. Selecione várias conversas e elimine-as todas de uma vez.
+  - icon: ⚡️
+    title: Modelo padrão
+    details: Pare de se repetir. Mude automaticamente para seu modelo preferido em novos chats.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

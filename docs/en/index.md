@@ -41,24 +41,30 @@ features:
   - icon: 💬
     title: Quote Reply
     details: Select to quote. Context-aware replies for efficient communication.
+  - icon: ↔️
+    title: Chat Width
+    details: Go wide. Freely adjust the chat width for a better viewing experience.
+  - icon: 💾
+    title: Chat Export
+    details: Data sovereignty. Archive in multiple formats so knowledge is never lost.
+  - icon: 🍌
+    title: NanoBanana Watermark Removal
+    details: Lossless watermark removal. Keeping AI moments pure.
   - icon: 📐
     title: Formula Copy
     details: One-click copy for LaTeX and MathML (Word) source codes.
   - icon: 🧜‍♀️
     title: Mermaid Diagrams
     details: Code to visuals. Flowcharts, sequence diagrams, Gantt charts rendered instantly.
-  - icon: 🍌
-    title: NanoBanana Watermark Removal
-    details: Lossless watermark removal. Keeping AI moments pure.
   - icon: 🏷️
     title: Tab Title Sync
     details: Know at a glance. Auto-sync browser tab title with your chat.
-  - icon: 💾
-    title: Chat Export
-    details: Data sovereignty. Archive in multiple formats so knowledge is never lost.
   - icon: 🗑️
     title: Batch Delete
     details: Clean up in bulk. Select multiple conversations and delete them all at once.
+  - icon: ⚡️
+    title: Default Model
+    details: Stop repeating yourself. Auto-switch to your preferred model on new chats.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

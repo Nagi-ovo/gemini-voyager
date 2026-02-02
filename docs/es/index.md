@@ -41,24 +41,29 @@ features:
   - icon: 💬
     title: Respuesta con Cita
     details: Selecciona para citar. Respuestas contextualizadas para una comunicación eficiente.
-  - icon: 📐
-    title: Copia de Fórmulas
-    details: Copia en un clic los códigos fuente LaTeX y MathML (Word).
-  - icon: 🧜‍♀️
-    title: Gráficos Mermaid
-
-  - icon: 🍌
-    title: Eliminación de Marca de Agua NanoBanana
-    details: Eliminación sin pérdidas. Deja que los momentos generados por IA vuelvan a ser puros.
-  - icon: 🏷️
-    title: Sincronización de Título de Pestaña
-    details: De un vistazo. Sincroniza automáticamente el título de la pestaña con el título de la conversación.
+  - icon: ↔️
+    title: Ancho del chat
+    details: Amplía tu visión. Ajusta libremente el ancho del chat para una mejor experiencia de visualización.
   - icon: 💾
     title: Exportación de Chat
     details: Tus datos son tuyos. Múltiples formatos para archivar en un clic, el conocimiento no se pierde.
+  - icon: 🍌
+    title: Eliminación de Marca de Agua NanoBanana
+    details: Eliminación sin pérdidas. Deja que los momentos generados por IA vuelvan a ser puros.
+  - icon: 📐
+    title: Copie de Fórmulas
+    details: Copia en un clic los códigos fuente LaTeX y MathML (Word).
+  - icon: 🧜‍♀️
+    title: Gráficos Mermaid
+  - icon: 🏷️
+    title: Sincronización de Título de Pestaña
+    details: De un vistazo. Sincroniza automáticamente el título de la pestaña con el título de la conversación.
   - icon: 🗑️
     title: Eliminación por Lote
     details: Limpieza en un clic. Selecciona múltiples conversaciones, elimina por lote, adiós a lo tedioso.
+  - icon: ⚡️
+    title: Modelo predeterminado
+    details: Deja de repetirte. Cambia automáticamente a tu modelo preferido en nuevos chats.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
