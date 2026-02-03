@@ -924,23 +924,15 @@ export const ConversationCollector = {
    * This mimics the single export logic to ensure complete history is loaded
    */
   triggerLazyLoad: async (): Promise<void> => {
-    const root = getConversationRoot();
     const userSelectors = getUserSelectors();
     const allSelectors = [...userSelectors, ...getAssistantSelectors()];
 
     // Wait for user selectors to be present
     await waitForAnyElement(userSelectors, 5000);
 
-    const userNodeList = root.querySelectorAll(userSelectors.join(','));
-    if (!userNodeList || userNodeList.length === 0) return;
-
-    let users = filterTopLevel(Array.from(userNodeList));
-    if (users.length === 0) return;
-
-    const topNode = users[0] as HTMLElement;
-
     // Recursively click top node until no more content loads (similar to executeExportSequence)
-    await recursivelyLoadHistory(topNode, allSelectors, 0);
+    // The function will re-fetch the top node on each attempt to handle prepended messages
+    await recursivelyLoadHistory(allSelectors, 0);
 
     // CRITICAL: Wait for DOM to fully stabilize after all clicks
     // This matches the behavior in performFinalExport
@@ -952,17 +944,20 @@ export const ConversationCollector = {
 
 /**
  * Recursively click top node to load all historical messages
- * @param topNode - The first user message element
  * @param selectors - CSS selectors for fingerprint computation
  * @param attempt - Current attempt number (max 25)
  */
-async function recursivelyLoadHistory(
-  topNode: HTMLElement,
-  selectors: string[],
-  attempt: number,
-): Promise<void> {
+async function recursivelyLoadHistory(selectors: string[], attempt: number): Promise<void> {
   if (attempt > 25) {
     console.warn('[BatchExport] Stopped after 25 attempts to prevent infinite loop');
+    return;
+  }
+
+  // Re-fetch the top user element on each attempt to handle lazy loading
+  // where new messages are prepended to the conversation
+  const topNode = getTopUserElement();
+  if (!topNode) {
+    console.log('[BatchExport] No top user element found, lazy loading complete');
     return;
   }
 
@@ -995,7 +990,7 @@ async function recursivelyLoadHistory(
   if (changed) {
     console.log('[BatchExport] ✓ Content expanded, clicking again...');
     // More content loaded, click again
-    await recursivelyLoadHistory(topNode, selectors, attempt + 1);
+    await recursivelyLoadHistory(selectors, attempt + 1);
   } else {
     console.log('[BatchExport] ✓ No more content to load, history complete');
   }

@@ -4,7 +4,7 @@
  */
 import JSZip from 'jszip';
 
-import { collectChatPairs } from '../../../pages/content/export';
+import { ConversationCollector } from '../../../pages/content/export';
 
 /**
  * Represents a single conversation link in the sidebar
@@ -214,16 +214,17 @@ export class BatchExportService {
     // Wait for content to stabilize after page load
     await this.delay(this.EXPORT_DELAY);
 
-    // Trigger lazy loading by recursively clicking the top message
-    await this.triggerLazyLoading();
+    // Trigger lazy loading using ConversationCollector
+    // This ensures all historical messages are loaded before export
+    await ConversationCollector.triggerLazyLoad();
 
     // Get conversation metadata
     const title = this.getConversationTitle();
     const url = window.location.href;
     const exportedAt = new Date().toISOString();
 
-    // Reuse the proven collectChatPairs logic from single export
-    const turns = collectChatPairs();
+    // Collect chat pairs using ConversationCollector
+    const turns = ConversationCollector.collectCurrentPairs();
 
     return {
       format: 'gemini-voyager.chat.v1',
@@ -233,135 +234,6 @@ export class BatchExportService {
       turnCount: turns.length,
       turns,
     };
-  }
-
-  /**
-   * Trigger lazy loading by repeatedly clicking the top message
-   * This mimics the recursive logic in executeExportSequence
-   */
-  private static async triggerLazyLoading(): Promise<void> {
-    const userSelectors = [
-      '.user-query-bubble-with-background',
-      '.user-query-bubble-container',
-      '.user-query-container',
-      '[data-message-author-role="user"]',
-      'article[data-author="user"]',
-    ];
-
-    const assistantSelectors = [
-      '[aria-label="Gemini response"]',
-      '[data-message-author-role="assistant"]',
-      '[data-message-author-role="model"]',
-      'article[data-author="assistant"]',
-      'article[data-turn="assistant"]',
-      'article[data-turn="model"]',
-      '.model-response',
-      'model-response',
-      '.response-container',
-      'div[role="listitem"]:not([data-user="true"])',
-    ];
-
-    const allSelectors = [...userSelectors, ...assistantSelectors];
-
-    // Wait for user messages to be present
-    await this.waitForAnyElement(userSelectors, 5000);
-
-    // Recursively click top node until all history is loaded
-    // Pass selectors so topNode can be re-fetched on each attempt
-    await this.recursivelyLoadHistory(allSelectors, 0);
-
-    // CRITICAL: Wait for DOM to stabilize after all clicks
-    console.log('[BatchExport] Waiting for DOM to stabilize...');
-    await this.delay(500);
-    console.log('[BatchExport] ✓ DOM stabilized');
-  }
-
-  /**
-   * Recursively click top node to load all historical messages
-   */
-  private static async recursivelyLoadHistory(selectors: string[], attempt: number): Promise<void> {
-    if (attempt > 25) {
-      console.warn('[BatchExport] Stopped after 25 attempts');
-      return;
-    }
-
-    // Re-fetch the top user element on each attempt to handle lazy loading
-    // where new messages are prepended to the conversation
-    const topNode = this.getTopUserElement();
-    if (!topNode) {
-      console.log('[BatchExport] No top user element found, lazy loading complete');
-      return;
-    }
-
-    const beforeFingerprint = this.computeFingerprint(document.body, selectors, 10);
-
-    console.log(`[BatchExport] Clicking top node (attempt ${attempt + 1}/25)...`);
-
-    // Click the top message
-    try {
-      topNode.scrollIntoView({ behavior: 'auto', block: 'center' });
-      const opts = { bubbles: true, cancelable: true, view: window };
-      topNode.dispatchEvent(new MouseEvent('mousedown', opts));
-      await this.delay(50);
-      topNode.dispatchEvent(new MouseEvent('mouseup', opts));
-      await this.delay(50);
-      topNode.click();
-    } catch (e) {
-      console.error('[BatchExport] Failed to click top node:', e);
-      return;
-    }
-
-    // Wait for fingerprint change
-    const result = await this.waitForFingerprintChange(
-      document.body,
-      selectors,
-      beforeFingerprint,
-      {
-        timeoutMs: 10000,
-        idleMs: 550,
-        pollIntervalMs: 90,
-        maxSamples: 10,
-      },
-    );
-
-    if (result.changed) {
-      console.log('[BatchExport] ✓ Content expanded, clicking again...');
-      await this.recursivelyLoadHistory(selectors, attempt + 1);
-    } else {
-      console.log('[BatchExport] ✓ No more content to load, history complete');
-    }
-  }
-
-  /**
-   * Get the top user element from the conversation
-   */
-  private static getTopUserElement(): HTMLElement | null {
-    const userSelectors = [
-      '.user-query-bubble-with-background',
-      '.user-query-bubble-container',
-      '.user-query-container',
-      '[data-message-author-role="user"]',
-      'article[data-author="user"]',
-    ];
-
-    const main = document.querySelector('main') || document.body;
-    const userElements = Array.from(main.querySelectorAll(userSelectors.join(',')));
-
-    if (userElements.length === 0) return null;
-
-    // Filter to get only top-level elements (not nested)
-    const topLevel = userElements.filter((el) => {
-      let parent = el.parentElement;
-      while (parent) {
-        if (userSelectors.some((sel) => parent?.matches(sel))) {
-          return false; // This element is nested inside another user element
-        }
-        parent = parent.parentElement;
-      }
-      return true;
-    });
-
-    return topLevel.length > 0 ? (topLevel[0] as HTMLElement) : (userElements[0] as HTMLElement);
   }
 
   /**
@@ -410,109 +282,6 @@ export class BatchExportService {
     }
 
     return 'Untitled Conversation';
-  }
-
-  /**
-   * Compute conversation fingerprint for change detection
-   */
-  private static computeFingerprint(
-    root: ParentNode,
-    selectors: string[],
-    maxSamples: number,
-  ): {
-    signature: string;
-    count: number;
-  } {
-    const selector = selectors.join(',');
-    if (!selector) return { signature: '', count: 0 };
-
-    const nodes = Array.from(root.querySelectorAll(selector));
-    const texts: string[] = [];
-
-    for (let i = 0; i < Math.min(nodes.length, maxSamples); i++) {
-      const text = (nodes[i]?.textContent || '').replace(/\s+/g, ' ').trim();
-      if (text) texts.push(text);
-    }
-
-    const signature = this.hashString(texts.join('|'));
-    return { signature, count: nodes.length };
-  }
-
-  /**
-   * Hash a string to create fingerprint
-   */
-  private static hashString(input: string): string {
-    let h = 2166136261 >>> 0;
-    for (let i = 0; i < input.length; i++) {
-      h ^= input.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return (h >>> 0).toString(36);
-  }
-
-  /**
-   * Wait for conversation fingerprint to change or timeout
-   */
-  private static async waitForFingerprintChange(
-    root: ParentNode,
-    selectors: string[],
-    before: { signature: string; count: number },
-    options: { timeoutMs: number; idleMs: number; pollIntervalMs: number; maxSamples: number },
-  ): Promise<{ changed: boolean; fingerprint: { signature: string; count: number } }> {
-    const start = Date.now();
-    let lastMutationAt = Date.now();
-    let sawMutation = false;
-
-    const observer = new MutationObserver(() => {
-      sawMutation = true;
-      lastMutationAt = Date.now();
-    });
-
-    try {
-      observer.observe(root as Node, { childList: true, subtree: true, characterData: true });
-    } catch {
-      // Ignore if observe fails
-    }
-
-    while (Date.now() - start < options.timeoutMs) {
-      await this.delay(options.pollIntervalMs);
-
-      const current = this.computeFingerprint(root, selectors, options.maxSamples);
-
-      // Check if fingerprint changed
-      if (current.signature !== before.signature || current.count !== before.count) {
-        observer.disconnect();
-        return { changed: true, fingerprint: current };
-      }
-
-      // Check if DOM has been stable for long enough
-      const timeSinceLastMutation = Date.now() - lastMutationAt;
-      if (sawMutation && timeSinceLastMutation > options.idleMs) {
-        break;
-      }
-    }
-
-    observer.disconnect();
-    const finalFingerprint = this.computeFingerprint(root, selectors, options.maxSamples);
-    const changed =
-      finalFingerprint.signature !== before.signature || finalFingerprint.count !== before.count;
-
-    return { changed, fingerprint: finalFingerprint };
-  }
-
-  /**
-   * Wait for any element to appear
-   */
-  private static async waitForAnyElement(selectors: string[], timeoutMs: number): Promise<void> {
-    const start = Date.now();
-    while (Date.now() - start < timeoutMs) {
-      for (const selector of selectors) {
-        if (document.querySelector(selector)) {
-          return;
-        }
-      }
-      await this.delay(100);
-    }
   }
 
   /**
