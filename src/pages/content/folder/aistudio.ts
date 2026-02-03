@@ -19,18 +19,18 @@ function waitForElement<T extends Element = Element>(
       if (el) {
         try {
           obs.disconnect();
-        } catch {}
+        } catch { }
         resolve(el);
       }
     });
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch {}
+    } catch { }
     if (timeoutMs > 0) {
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch {}
+        } catch { }
         resolve(null);
       }, timeoutMs);
     }
@@ -60,7 +60,7 @@ function downloadJSON(data: any, filename: string): void {
   setTimeout(() => {
     try {
       document.body.removeChild(a);
-    } catch {}
+    } catch { }
     URL.revokeObjectURL(url);
   }, 0);
 }
@@ -108,7 +108,7 @@ export class AIStudioFolderManager {
     span.className = 'google-symbols';
     try {
       span.dataset.icon = name;
-    } catch {}
+    } catch { }
     span.textContent = name;
     return span;
   }
@@ -280,7 +280,7 @@ export class AIStudioFolderManager {
 
     try {
       document.documentElement.classList.add('gv-aistudio-root');
-    } catch {}
+    } catch { }
 
     await this.load();
 
@@ -472,7 +472,7 @@ export class AIStudioFolderManager {
     const update = () => setTimeout(() => this.highlightActiveConversation(), 0);
     try {
       window.addEventListener('popstate', update);
-    } catch {}
+    } catch { }
     try {
       const hist = history as any;
       const wrap = (method: 'pushState' | 'replaceState') => {
@@ -481,13 +481,13 @@ export class AIStudioFolderManager {
           const ret = orig.apply(this, args);
           try {
             update();
-          } catch {}
+          } catch { }
           return ret;
         };
       };
       wrap('pushState');
       wrap('replaceState');
-    } catch {}
+    } catch { }
     // Fallback poller for routers that bypass events
     try {
       let last = location.pathname;
@@ -501,19 +501,22 @@ export class AIStudioFolderManager {
       this.cleanupFns.push(() => {
         try {
           clearInterval(id);
-        } catch {}
+        } catch { }
       });
-    } catch {}
+    } catch { }
   }
 
-  private renderFolder(folder: Folder): HTMLElement {
+  private renderFolder(folder: Folder, level: number = 0): HTMLElement {
     const item = document.createElement('div');
     item.className = 'gv-folder-item';
     item.dataset.folderId = folder.id;
     item.dataset.pinned = folder.pinned ? 'true' : 'false';
+    item.dataset.level = String(level);
 
     const header = document.createElement('div');
     header.className = 'gv-folder-item-header';
+    // Add left padding for nested folders
+    header.style.paddingLeft = `${level * 16 + 8}px`;
     item.appendChild(header);
     // Allow dropping directly on folder header
     this.bindDropZone(header, folder.id);
@@ -544,7 +547,7 @@ export class AIStudioFolderManager {
     pinBtn.title = folder.pinned ? this.t('folder_unpin') : this.t('folder_pin');
     try {
       (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned';
-    } catch {}
+    } catch { }
     pinBtn.appendChild(this.createIcon('push_pin'));
     pinBtn.addEventListener('click', () => {
       folder.pinned = !folder.pinned;
@@ -558,16 +561,36 @@ export class AIStudioFolderManager {
     moreBtn.addEventListener('click', (e) => this.openFolderMenu(e, folder.id));
     header.appendChild(moreBtn);
 
-    // Content (conversations only; subfolders are not supported in AI Studio)
+    // Content (conversations and subfolders)
     if (folder.isExpanded) {
       const content = document.createElement('div');
       content.className = 'gv-folder-content';
       this.bindDropZone(content, folder.id);
 
+      // Render conversations in this folder
       const convs = this.data.folderContents[folder.id] || [];
       for (const conv of convs) {
-        content.appendChild(this.renderConversation(folder.id, conv));
+        const convEl = this.renderConversation(folder.id, conv);
+        // Add indentation for nested conversations
+        convEl.style.paddingLeft = `${(level + 1) * 16 + 8}px`;
+        content.appendChild(convEl);
       }
+
+      // Render subfolders (only for root-level folders, creating 2-level hierarchy)
+      if (level === 0) {
+        const subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
+        // Sort subfolders: pinned first, then by creation time
+        subfolders.sort((a, b) => {
+          const ap = a.pinned ? 1 : 0;
+          const bp = b.pinned ? 1 : 0;
+          if (ap !== bp) return bp - ap;
+          return a.createdAt - b.createdAt;
+        });
+        for (const subfolder of subfolders) {
+          content.appendChild(this.renderFolder(subfolder, level + 1));
+        }
+      }
+
       item.appendChild(content);
     }
 
@@ -627,10 +650,10 @@ export class AIStudioFolderManager {
       };
       try {
         e.dataTransfer?.setData('application/json', JSON.stringify(data));
-      } catch {}
+      } catch { }
       try {
         e.dataTransfer?.setDragImage(row, 10, 10);
-      } catch {}
+      } catch { }
     });
 
     return row;
@@ -638,25 +661,43 @@ export class AIStudioFolderManager {
 
   private openFolderMenu(ev: MouseEvent, folderId: string): void {
     ev.stopPropagation();
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
     const menu = document.createElement('div');
     menu.className = 'gv-context-menu';
+
+    // Only show "Create subfolder" for root-level folders (to maintain 2-level hierarchy)
+    if (!folder.parentId) {
+      const createSub = document.createElement('button');
+      createSub.textContent = this.t('folder_create_subfolder') || 'Create Subfolder';
+      createSub.addEventListener('click', () => {
+        this.createFolder(folderId);
+        try {
+          document.body.removeChild(menu);
+        } catch { }
+      });
+      menu.appendChild(createSub);
+    }
+
     const rename = document.createElement('button');
     rename.textContent = this.t('folder_rename');
     rename.addEventListener('click', () => {
       this.renameFolder(folderId);
       try {
         document.body.removeChild(menu);
-      } catch {}
+      } catch { }
     });
+    menu.appendChild(rename);
+
     const del = document.createElement('button');
     del.textContent = this.t('folder_delete');
     del.addEventListener('click', () => {
       this.deleteFolder(folderId);
       try {
         document.body.removeChild(menu);
-      } catch {}
+      } catch { }
     });
-    menu.appendChild(rename);
     menu.appendChild(del);
 
     // Apply styles with proper typing
@@ -672,7 +713,7 @@ export class AIStudioFolderManager {
       if (e.target instanceof Node && !menu.contains(e.target)) {
         try {
           document.body.removeChild(menu);
-        } catch {}
+        } catch { }
         window.removeEventListener('click', onClickAway, true);
       }
     };
@@ -709,8 +750,20 @@ export class AIStudioFolderManager {
 
   private async deleteFolder(folderId: string): Promise<void> {
     if (!confirm(this.t('folder_delete_confirm'))) return;
-    this.data.folders = this.data.folders.filter((f) => f.id !== folderId);
-    delete this.data.folderContents[folderId];
+
+    // Collect all folder IDs to delete (including subfolders)
+    const folderIdsToDelete: string[] = [folderId];
+    const subfolders = this.data.folders.filter((f) => f.parentId === folderId);
+    for (const subfolder of subfolders) {
+      folderIdsToDelete.push(subfolder.id);
+    }
+
+    // Delete all collected folders and their contents
+    this.data.folders = this.data.folders.filter((f) => !folderIdsToDelete.includes(f.id));
+    for (const id of folderIdsToDelete) {
+      delete this.data.folderContents[id];
+    }
+
     await this.save();
     this.render();
   }
@@ -728,6 +781,7 @@ export class AIStudioFolderManager {
 
     el.addEventListener('dragenter', (e) => {
       e.preventDefault();
+      e.stopPropagation(); // Prevent bubbling to parent drop zones
       dragEnterCounter++;
       // Only add class on first enter
       if (dragEnterCounter === 1) {
@@ -736,11 +790,13 @@ export class AIStudioFolderManager {
     });
     el.addEventListener('dragover', (e) => {
       e.preventDefault();
+      e.stopPropagation(); // Prevent bubbling to parent drop zones
       try {
         if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-      } catch {}
+      } catch { }
     });
     el.addEventListener('dragleave', (e) => {
+      e.stopPropagation(); // Prevent bubbling to parent drop zones
       dragEnterCounter--;
       // Only remove class when truly leaving the container (counter reaches 0)
       // Also check relatedTarget as a fallback
@@ -755,13 +811,14 @@ export class AIStudioFolderManager {
     });
     el.addEventListener('drop', (e) => {
       e.preventDefault();
+      e.stopPropagation(); // Prevent bubbling to parent drop zones
       dragEnterCounter = 0; // Reset counter on drop
       el.classList.remove('gv-folder-dragover');
       let raw = e.dataTransfer?.getData('application/json');
       if (!raw) {
         try {
           raw = e.dataTransfer?.getData('text/plain') || '';
-        } catch {}
+        } catch { }
       }
       if (!raw) return;
       let data: DragData | null = null;
@@ -823,11 +880,11 @@ export class AIStudioFolderManager {
     });
     try {
       observer.observe(root, { childList: true, subtree: true });
-    } catch {}
+    } catch { }
     this.cleanupFns.push(() => {
       try {
         observer.disconnect();
-      } catch {}
+      } catch { }
     });
 
     // Also update on clicks within the prompt list (SPA navigation)
@@ -841,11 +898,11 @@ export class AIStudioFolderManager {
     };
     try {
       root.addEventListener('click', onClick, true);
-    } catch {}
+    } catch { }
     this.cleanupFns.push(() => {
       try {
         root.removeEventListener('click', onClick, true);
-      } catch {}
+      } catch { }
     });
   }
 
@@ -872,10 +929,10 @@ export class AIStudioFolderManager {
             // Fallback to text/plain to interop with stricter DnD
             e.dataTransfer.setData('text/plain', JSON.stringify(data));
           }
-        } catch {}
+        } catch { }
         try {
           e.dataTransfer?.setDragImage(hostEl, 10, 10);
-        } catch {}
+        } catch { }
       });
     });
   }
@@ -899,11 +956,11 @@ export class AIStudioFolderManager {
       });
       try {
         bodyObserver.observe(document.body, { childList: true, subtree: true });
-      } catch {}
+      } catch { }
       this.cleanupFns.push(() => {
         try {
           bodyObserver.disconnect();
-        } catch {}
+        } catch { }
       });
       return;
     }
@@ -913,11 +970,11 @@ export class AIStudioFolderManager {
     });
     try {
       observer.observe(tableRoot, { childList: true, subtree: true });
-    } catch {}
+    } catch { }
     this.cleanupFns.push(() => {
       try {
         observer.disconnect();
-      } catch {}
+      } catch { }
     });
   }
 
@@ -946,21 +1003,28 @@ export class AIStudioFolderManager {
       tr.style.cursor = 'grab';
 
       tr.addEventListener('dragstart', (e) => {
+        // Prevent interference from Angular Material's own drag handling if any
+        e.stopPropagation();
+
         const id = this.extractPromptId(anchor);
         const title = normalizeText(anchor.textContent || '');
-        const url = anchor.href || `${location.origin}${anchor.getAttribute('href') || ''}`;
+        // Ensure accurate URL construction
+        const rawHref = anchor.getAttribute('href') || anchor.href || '';
+        const url = rawHref.startsWith('http') ? rawHref : `${location.origin}${rawHref.startsWith('/') ? '' : '/'}${rawHref}`;
+
         const data: DragData = { type: 'conversation', conversationId: id, title, url };
         try {
           if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('application/json', JSON.stringify(data));
+            e.dataTransfer.effectAllowed = 'copyMove';
+            const json = JSON.stringify(data);
+            e.dataTransfer.setData('application/json', json);
             // Fallback to text/plain to interop with stricter DnD
-            e.dataTransfer.setData('text/plain', JSON.stringify(data));
+            e.dataTransfer.setData('text/plain', json);
           }
-        } catch {}
+        } catch { }
         try {
           e.dataTransfer?.setDragImage(tr, 10, 10);
-        } catch {}
+        } catch { }
 
         // Visual feedback
         tr.style.opacity = '0.5';
@@ -1054,7 +1118,7 @@ export class AIStudioFolderManager {
         if (!raw) {
           try {
             raw = e.dataTransfer?.getData('text/plain') || '';
-          } catch {}
+          } catch { }
         }
         if (!raw) return;
 
@@ -1106,7 +1170,7 @@ export class AIStudioFolderManager {
         e.stopPropagation();
         try {
           if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-        } catch {}
+        } catch { }
       });
       rootItem.addEventListener('dragleave', (e) => {
         e.stopPropagation();
@@ -1131,13 +1195,24 @@ export class AIStudioFolderManager {
         this.save();
       }
 
-      // Render each folder as a drop target
-      this.data.folders.forEach((folder) => {
+      // Render folders with proper hierarchy (root folders + their subfolders)
+      const rootFolders = this.data.folders.filter((f) => !f.parentId);
+      // Sort root folders: pinned first, then by creation time
+      rootFolders.sort((a, b) => {
+        const ap = a.pinned ? 1 : 0;
+        const bp = b.pinned ? 1 : 0;
+        if (ap !== bp) return bp - ap;
+        return a.createdAt - b.createdAt;
+      });
+
+      // Helper function to create a folder drop item
+      const createFolderDropItem = (folder: Folder, isSubfolder: boolean) => {
         const folderItem = document.createElement('div');
         folderItem.className = 'gv-library-folder-item';
         folderItem.dataset.folderId = folder.id;
+        const paddingLeft = isSubfolder ? '28px' : '12px';
         folderItem.style.cssText = `
-          padding: 10px 12px;
+          padding: 10px ${paddingLeft};
           margin: 4px 0;
           background: rgba(255, 255, 255, 0.05);
           border-radius: 8px;
@@ -1150,7 +1225,8 @@ export class AIStudioFolderManager {
           transition: background 0.15s, border-color 0.15s;
           border: 2px solid transparent;
         `;
-        folderItem.innerHTML = `<span class="google-symbols" style="font-size: 16px; color: #8ab4f8;">folder</span>${folder.name}`;
+        const iconName = isSubfolder ? 'subdirectory_arrow_right' : 'folder';
+        folderItem.innerHTML = `<span class="google-symbols" style="font-size: 16px; color: #8ab4f8;">${iconName}</span>${folder.name}`;
 
         // Bind drop events
         folderItem.addEventListener('dragenter', (e) => {
@@ -1164,7 +1240,7 @@ export class AIStudioFolderManager {
           e.stopPropagation();
           try {
             if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-          } catch {}
+          } catch { }
         });
         folderItem.addEventListener('dragleave', (e) => {
           e.stopPropagation();
@@ -1181,7 +1257,7 @@ export class AIStudioFolderManager {
           if (!raw) {
             try {
               raw = e.dataTransfer?.getData('text/plain') || '';
-            } catch {}
+            } catch { }
           }
           if (!raw) return;
 
@@ -1223,7 +1299,24 @@ export class AIStudioFolderManager {
           );
         });
 
-        folderList.appendChild(folderItem);
+        return folderItem;
+      };
+
+      // Render root folders and their subfolders
+      rootFolders.forEach((rootFolder) => {
+        folderList.appendChild(createFolderDropItem(rootFolder, false));
+
+        // Render subfolders of this root folder
+        const subfolders = this.data.folders.filter((f) => f.parentId === rootFolder.id);
+        subfolders.sort((a, b) => {
+          const ap = a.pinned ? 1 : 0;
+          const bp = b.pinned ? 1 : 0;
+          if (ap !== bp) return bp - ap;
+          return a.createdAt - b.createdAt;
+        });
+        subfolders.forEach((subfolder) => {
+          folderList.appendChild(createFolderDropItem(subfolder, true));
+        });
       });
     };
 
@@ -1265,19 +1358,26 @@ export class AIStudioFolderManager {
       try {
         document.removeEventListener('dragstart', onDragStart);
         document.body.removeChild(floatingZone);
-      } catch {}
+      } catch { }
     });
   }
 
   private extractPromptId(anchor: HTMLAnchorElement): string {
+    const rawHref = anchor.getAttribute('href') || anchor.href || '';
+    // Prefer regex match for stability
+    const m = rawHref.match(/\/prompts\/([^\/?#]+)/);
+    if (m && m[1]) return m[1];
+
     try {
-      const u = new URL(anchor.href || anchor.getAttribute('href') || '', location.origin);
+      const u = new URL(rawHref, location.origin);
       const parts = (u.pathname || '').split('/').filter(Boolean);
-      return parts[1] || anchor.href;
+      // Expected format: /prompts/{id} -> ['', 'prompts', '{id}']
+      if (parts.length >= 2 && parts[0] === 'prompts') {
+        return parts[1];
+      }
+      return parts[1] || rawHref;
     } catch {
-      const href = anchor.getAttribute('href') || anchor.href || '';
-      const m = href.match(/\/prompts\/([^/?#]+)/);
-      return (m && m[1]) || href;
+      return rawHref;
     }
   }
 
@@ -1739,7 +1839,7 @@ export class AIStudioFolderManager {
         if (handle.parentElement) {
           handle.parentElement.removeChild(handle);
         }
-      } catch {}
+      } catch { }
     });
   }
 }
