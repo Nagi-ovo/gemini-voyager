@@ -830,7 +830,9 @@ export async function startExportButton(): Promise<void> {
   });
 }
 
-async function executeBatchExport(dict: Record<AppLanguage, Record<string, string>>): Promise<void> {
+async function executeBatchExport(
+  dict: Record<AppLanguage, Record<string, string>>,
+): Promise<void> {
   const t = (key: TranslationKey) => dict['en']?.[key] ?? key;
 
   // Show confirmation dialog

@@ -3,7 +3,8 @@
  * Automatically traverses all conversations and exports them as individual JSON files
  */
 import JSZip from 'jszip';
-import { collectChatPairs, type ChatTurn } from '../../../pages/content/export';
+
+import { type ChatTurn, collectChatPairs } from '../../../pages/content/export';
 
 /**
  * Represents a single conversation link in the sidebar
@@ -117,7 +118,9 @@ export class BatchExportService {
     const zipFilename = `gemini-conversations-${timestamp}.zip`;
     this.downloadBlob(zipBlob, zipFilename);
 
-    console.log(`[BatchExport] ✓ Exported ${results.filter((r) => r.success).length}/${links.length} conversations`);
+    console.log(
+      `[BatchExport] ✓ Exported ${results.filter((r) => r.success).length}/${links.length} conversations`,
+    );
 
     // 6. Optionally return to original conversation
     if (originalUrl && originalUrl !== window.location.href) {
@@ -149,7 +152,9 @@ export class BatchExportService {
     for (let i = 0; i < links.length; i++) {
       const link = links[i] as HTMLAnchorElement;
       const titleEl = link.querySelector('.conversation-title');
-      const title = titleEl ? titleEl.textContent?.trim() || `Conversation ${i + 1}` : `Conversation ${i + 1}`;
+      const title = titleEl
+        ? titleEl.textContent?.trim() || `Conversation ${i + 1}`
+        : `Conversation ${i + 1}`;
 
       // Skip if no href (shouldn't happen)
       if (!link.href) continue;
@@ -312,12 +317,17 @@ export class BatchExportService {
     }
 
     // Wait for fingerprint change
-    const result = await this.waitForFingerprintChange(document.body, selectors, beforeFingerprint, {
-      timeoutMs: 10000,
-      idleMs: 550,
-      pollIntervalMs: 90,
-      maxSamples: 10,
-    });
+    const result = await this.waitForFingerprintChange(
+      document.body,
+      selectors,
+      beforeFingerprint,
+      {
+        timeoutMs: 10000,
+        idleMs: 550,
+        pollIntervalMs: 90,
+        maxSamples: 10,
+      },
+    );
 
     if (result.changed) {
       console.log('[BatchExport] ✓ Content expanded, clicking again...');
@@ -378,7 +388,11 @@ export class BatchExportService {
   /**
    * Compute conversation fingerprint for change detection
    */
-  private static computeFingerprint(root: ParentNode, selectors: string[], maxSamples: number): {
+  private static computeFingerprint(
+    root: ParentNode,
+    selectors: string[],
+    maxSamples: number,
+  ): {
     signature: string;
     count: number;
   } {
@@ -453,7 +467,8 @@ export class BatchExportService {
 
     observer.disconnect();
     const finalFingerprint = this.computeFingerprint(root, selectors, options.maxSamples);
-    const changed = finalFingerprint.signature !== before.signature || finalFingerprint.count !== before.count;
+    const changed =
+      finalFingerprint.signature !== before.signature || finalFingerprint.count !== before.count;
 
     return { changed, fingerprint: finalFingerprint };
   }
