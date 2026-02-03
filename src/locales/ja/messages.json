@@ -455,6 +455,18 @@
     "message": "⚠️ Gemini は古いメッセージを後から読み込むため、エクスポートする前にタイムラインを使って会話の最初のメッセージまでジャンプしてください。そうしないと、エクスポートが不完全になる可能性があります。",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "pm_batch_export": {
+    "message": "Export All Conversations",
+    "description": "Batch export button label"
+  },
+  "batch_export_description": {
+    "message": "Export all conversations as individual JSON files (ZIP)",
+    "description": "Batch export feature description"
+  },
+  "batch_export_confirm": {
+    "message": "This will export all conversations. The process may take several minutes. Continue?",
+    "description": "Batch export confirmation message"
+  },
   "editInputWidth": {
     "message": "入力欄の幅",
     "description": "Edit input width adjustment label"

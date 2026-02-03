@@ -455,6 +455,18 @@
     "message": "⚠️ Devido ao carregamento lento de mensagens antigas no Gemini, use a linha do tempo para pular para a primeira mensagem da conversa antes de exportar. Caso contrário, a exportação pode ficar incompleta.",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "pm_batch_export": {
+    "message": "Export All Conversations",
+    "description": "Batch export button label"
+  },
+  "batch_export_description": {
+    "message": "Export all conversations as individual JSON files (ZIP)",
+    "description": "Batch export feature description"
+  },
+  "batch_export_confirm": {
+    "message": "This will export all conversations. The process may take several minutes. Continue?",
+    "description": "Batch export confirmation message"
+  },
   "editInputWidth": {
     "message": "Largura da entrada de edição",
     "description": "Edit input width adjustment label"

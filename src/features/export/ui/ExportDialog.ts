@@ -7,6 +7,7 @@ import type { ExportFormat } from '../types/export';
 
 export interface ExportDialogOptions {
   onExport: (format: ExportFormat) => void;
+  onBatchExport?: () => void;
   onCancel: () => void;
   translations: {
     title: string;
@@ -14,6 +15,8 @@ export interface ExportDialogOptions {
     warning: string;
     cancel: string;
     export: string;
+    batchExport?: string;
+    batchExportDescription?: string;
   };
 }
 
@@ -105,6 +108,33 @@ export class ExportDialog {
 
     buttons.appendChild(cancelBtn);
     buttons.appendChild(exportBtn);
+
+    // Batch export button (if handler provided)
+    if (options.onBatchExport && options.translations.batchExport) {
+      const batchExportBtn = document.createElement('button');
+      batchExportBtn.className = 'gv-export-dialog-btn gv-export-dialog-btn-secondary';
+      batchExportBtn.textContent = options.translations.batchExport;
+      batchExportBtn.addEventListener('click', () => {
+        options.onBatchExport?.();
+        this.hide();
+      });
+
+      // Insert before cancel button
+      buttons.insertBefore(batchExportBtn, cancelBtn);
+
+      // Add batch export description
+      if (options.translations.batchExportDescription) {
+        const batchDesc = document.createElement('div');
+        batchDesc.className = 'gv-export-dialog-batch-description';
+        batchDesc.textContent = options.translations.batchExportDescription;
+
+        // Insert before the format list
+        const warningElement = dialog.querySelector('.gv-export-dialog-warning');
+        if (warningElement) {
+          warningElement.after(batchDesc);
+        }
+      }
+    }
 
     // Assemble dialog
     dialog.appendChild(title);

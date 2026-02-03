@@ -4,6 +4,7 @@ import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
 import type { TranslationKey } from '@/utils/translations';
 
+import { BatchExportService } from '../../../features/export/services/BatchExportService';
 import { ConversationExportService } from '../../../features/export/services/ConversationExportService';
 import type { ConversationMetadata } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
@@ -263,7 +264,7 @@ function extractAssistantText(el: HTMLElement): string {
   return text;
 }
 
-type ChatTurn = {
+export type ChatTurn = {
   user: string;
   assistant: string;
   starred: boolean;
@@ -271,7 +272,7 @@ type ChatTurn = {
   assistantElement?: HTMLElement;
 };
 
-function collectChatPairs(): ChatTurn[] {
+export function collectChatPairs(): ChatTurn[] {
   const root = getConversationRoot();
   const userSelectors = getUserSelectors();
   const assistantSelectors = getAssistantSelectors();
@@ -829,6 +830,39 @@ export async function startExportButton(): Promise<void> {
   });
 }
 
+async function executeBatchExport(dict: Record<AppLanguage, Record<string, string>>): Promise<void> {
+  const t = (key: TranslationKey) => dict['en']?.[key] ?? key;
+
+  // Show confirmation dialog
+  const confirmed = confirm(
+    '⚠️ ' +
+      (t('batch_export_confirm') ||
+        'This will export all conversations. The process may take several minutes. Continue?'),
+  );
+
+  if (!confirmed) return;
+
+  console.log('[Gemini Voyager] Starting batch export...');
+
+  try {
+    const result = await BatchExportService.exportAllConversations();
+
+    console.log('[Gemini Voyager] Batch export completed:', result);
+
+    // Show summary
+    alert(
+      `✅ Batch Export Complete\n\n` +
+        `Total: ${result.total}\n` +
+        `✓ Successful: ${result.successful}\n` +
+        `✗ Failed: ${result.failed}\n\n` +
+        `ZIP file has been downloaded.`,
+    );
+  } catch (error) {
+    console.error('[Gemini Voyager] Batch export error:', error);
+    alert('❌ Batch export failed: ' + (error instanceof Error ? error.message : String(error)));
+  }
+}
+
 async function showExportDialog(
   dict: Record<AppLanguage, Record<string, string>>,
   lang: AppLanguage,
@@ -848,6 +882,14 @@ async function showExportDialog(
       }
     },
 
+    onBatchExport: async () => {
+      try {
+        await executeBatchExport(dict);
+      } catch (err) {
+        console.error('[Gemini Voyager] Batch export error:', err);
+      }
+    },
+
     onCancel: () => {
       // Dialog closed
     },
@@ -857,8 +899,102 @@ async function showExportDialog(
       warning: t('export_dialog_warning'),
       cancel: t('pm_cancel'),
       export: t('pm_export'),
+      batchExport: t('pm_batch_export') || 'Export All Conversations',
+      batchExportDescription:
+        t('batch_export_description') || 'Export all conversations as individual JSON files (ZIP)',
     },
   });
 }
 
 export default { startExportButton };
+
+/**
+ * Export conversation collection helper for batch export
+ * BatchExportService uses this to ensure consistent data collection
+ */
+export const ConversationCollector = {
+  collectCurrentPairs: (): ChatTurn[] => {
+    return collectChatPairs();
+  },
+
+  /**
+   * Trigger lazy loading by repeatedly clicking the top node
+   * This mimics the single export logic to ensure complete history is loaded
+   */
+  triggerLazyLoad: async (): Promise<void> => {
+    const root = getConversationRoot();
+    const userSelectors = getUserSelectors();
+    const allSelectors = [...userSelectors, ...getAssistantSelectors()];
+
+    // Wait for user selectors to be present
+    await waitForAnyElement(userSelectors, 5000);
+
+    const userNodeList = root.querySelectorAll(userSelectors.join(','));
+    if (!userNodeList || userNodeList.length === 0) return;
+
+    let users = filterTopLevel(Array.from(userNodeList));
+    if (users.length === 0) return;
+
+    const topNode = users[0] as HTMLElement;
+
+    // Recursively click top node until no more content loads (similar to executeExportSequence)
+    await recursivelyLoadHistory(topNode, allSelectors, 0);
+
+    // CRITICAL: Wait for DOM to fully stabilize after all clicks
+    // This matches the behavior in performFinalExport
+    console.log('[BatchExport] Waiting for DOM to stabilize after lazy loading...');
+    await new Promise((r) => setTimeout(r, 500));
+    console.log('[BatchExport] ✓ DOM stabilized, ready to collect');
+  },
+};
+
+/**
+ * Recursively click top node to load all historical messages
+ * @param topNode - The first user message element
+ * @param selectors - CSS selectors for fingerprint computation
+ * @param attempt - Current attempt number (max 25)
+ */
+async function recursivelyLoadHistory(
+  topNode: HTMLElement,
+  selectors: string[],
+  attempt: number,
+): Promise<void> {
+  if (attempt > 25) {
+    console.warn('[BatchExport] Stopped after 25 attempts to prevent infinite loop');
+    return;
+  }
+
+  const beforeFingerprint = computeConversationFingerprint(document.body, selectors, 10);
+
+  console.log(`[BatchExport] Clicking top node (attempt ${attempt + 1}/25)...`);
+
+  // Click the top node
+  try {
+    topNode.scrollIntoView({ behavior: 'auto', block: 'center' });
+    const opts = { bubbles: true, cancelable: true, view: window };
+    topNode.dispatchEvent(new MouseEvent('mousedown', opts));
+    await new Promise((r) => setTimeout(r, 50));
+    topNode.dispatchEvent(new MouseEvent('mouseup', opts));
+    await new Promise((r) => setTimeout(r, 50));
+    topNode.click();
+  } catch (e) {
+    console.error('[BatchExport] Failed to click top node:', e);
+    return;
+  }
+
+  // Wait for content to load
+  const { changed } = await waitForConversationFingerprintChangeOrTimeout(
+    document.body,
+    selectors,
+    beforeFingerprint,
+    { timeoutMs: 10000, idleMs: 550, pollIntervalMs: 90, maxSamples: 10, minWaitMs: 800 },
+  );
+
+  if (changed) {
+    console.log('[BatchExport] ✓ Content expanded, clicking again...');
+    // More content loaded, click again
+    await recursivelyLoadHistory(topNode, selectors, attempt + 1);
+  } else {
+    console.log('[BatchExport] ✓ No more content to load, history complete');
+  }
+}

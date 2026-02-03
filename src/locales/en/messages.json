@@ -455,6 +455,18 @@
     "message": "⚠️ Due to Gemini's lazy loading of older messages, please use the timeline to jump to the first message of the conversation before exporting. Otherwise, the export may be incomplete.",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "pm_batch_export": {
+    "message": "Export All Conversations",
+    "description": "Batch export button label"
+  },
+  "batch_export_description": {
+    "message": "Export all conversations as individual JSON files (ZIP)",
+    "description": "Batch export feature description"
+  },
+  "batch_export_confirm": {
+    "message": "This will export all conversations. The process may take several minutes. Continue?",
+    "description": "Batch export confirmation message"
+  },
   "editInputWidth": {
     "message": "Edit input width",
     "description": "Edit input width adjustment label"

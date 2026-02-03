@@ -455,6 +455,18 @@
     "message": "⚠️ 由于 Gemini 的久远消息会惰性加载，请在导出前通过时间线跳转到该对话的第一条消息，否则导出内容可能不完整。",
     "description": "关于惰性加载影响导出完整性的警告"
   },
+  "pm_batch_export": {
+    "message": "Export All Conversations",
+    "description": "Batch export button label"
+  },
+  "batch_export_description": {
+    "message": "Export all conversations as individual JSON files (ZIP)",
+    "description": "Batch export feature description"
+  },
+  "batch_export_confirm": {
+    "message": "This will export all conversations. The process may take several minutes. Continue?",
+    "description": "Batch export confirmation message"
+  },
   "editInputWidth": {
     "message": "编辑输入框宽度",
     "description": "编辑输入框宽度调整标签"
