@@ -3518,13 +3518,17 @@ html.dark .gv-folder-action-btn.gv-filter-active mat-icon,
   font-size: 14px;
 }
 
-.gv-aistudio .gv-folder-item[data-pinned='true'] .gv-folder-pin-btn .google-symbols::before {
+.gv-aistudio
+  .gv-folder-item[data-pinned='true']
+  > .gv-folder-item-header
+  .gv-folder-pin-btn
+  .google-symbols::before {
   content: '📌';
   color: #f59e0b;
 }
 
 /* Subtle highlight for pinned folders */
-.gv-aistudio .gv-folder-item[data-pinned='true'] .gv-folder-item-header {
+.gv-aistudio .gv-folder-item[data-pinned='true'] > .gv-folder-item-header {
   background-color: rgba(245, 158, 11, 0.08);
 }
 

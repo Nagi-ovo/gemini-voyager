@@ -19,18 +19,18 @@ function waitForElement<T extends Element = Element>(
       if (el) {
         try {
           obs.disconnect();
-        } catch { }
+        } catch {}
         resolve(el);
       }
     });
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch { }
+    } catch {}
     if (timeoutMs > 0) {
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch { }
+        } catch {}
         resolve(null);
       }, timeoutMs);
     }
@@ -60,7 +60,7 @@ function downloadJSON(data: any, filename: string): void {
   setTimeout(() => {
     try {
       document.body.removeChild(a);
-    } catch { }
+    } catch {}
     URL.revokeObjectURL(url);
   }, 0);
 }
@@ -108,7 +108,7 @@ export class AIStudioFolderManager {
     span.className = 'google-symbols';
     try {
       span.dataset.icon = name;
-    } catch { }
+    } catch {}
     span.textContent = name;
     return span;
   }
@@ -280,7 +280,7 @@ export class AIStudioFolderManager {
 
     try {
       document.documentElement.classList.add('gv-aistudio-root');
-    } catch { }
+    } catch {}
 
     await this.load();
 
@@ -472,7 +472,7 @@ export class AIStudioFolderManager {
     const update = () => setTimeout(() => this.highlightActiveConversation(), 0);
     try {
       window.addEventListener('popstate', update);
-    } catch { }
+    } catch {}
     try {
       const hist = history as any;
       const wrap = (method: 'pushState' | 'replaceState') => {
@@ -481,13 +481,13 @@ export class AIStudioFolderManager {
           const ret = orig.apply(this, args);
           try {
             update();
-          } catch { }
+          } catch {}
           return ret;
         };
       };
       wrap('pushState');
       wrap('replaceState');
-    } catch { }
+    } catch {}
     // Fallback poller for routers that bypass events
     try {
       let last = location.pathname;
@@ -501,9 +501,9 @@ export class AIStudioFolderManager {
       this.cleanupFns.push(() => {
         try {
           clearInterval(id);
-        } catch { }
+        } catch {}
       });
-    } catch { }
+    } catch {}
   }
 
   private renderFolder(folder: Folder, level: number = 0): HTMLElement {
@@ -547,7 +547,7 @@ export class AIStudioFolderManager {
     pinBtn.title = folder.pinned ? this.t('folder_unpin') : this.t('folder_pin');
     try {
       (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned';
-    } catch { }
+    } catch {}
     pinBtn.appendChild(this.createIcon('push_pin'));
     pinBtn.addEventListener('click', () => {
       folder.pinned = !folder.pinned;
@@ -650,10 +650,10 @@ export class AIStudioFolderManager {
       };
       try {
         e.dataTransfer?.setData('application/json', JSON.stringify(data));
-      } catch { }
+      } catch {}
       try {
         e.dataTransfer?.setDragImage(row, 10, 10);
-      } catch { }
+      } catch {}
     });
 
     return row;
@@ -675,7 +675,7 @@ export class AIStudioFolderManager {
         this.createFolder(folderId);
         try {
           document.body.removeChild(menu);
-        } catch { }
+        } catch {}
       });
       menu.appendChild(createSub);
     }
@@ -686,7 +686,7 @@ export class AIStudioFolderManager {
       this.renameFolder(folderId);
       try {
         document.body.removeChild(menu);
-      } catch { }
+      } catch {}
     });
     menu.appendChild(rename);
 
@@ -696,7 +696,7 @@ export class AIStudioFolderManager {
       this.deleteFolder(folderId);
       try {
         document.body.removeChild(menu);
-      } catch { }
+      } catch {}
     });
     menu.appendChild(del);
 
@@ -713,7 +713,7 @@ export class AIStudioFolderManager {
       if (e.target instanceof Node && !menu.contains(e.target)) {
         try {
           document.body.removeChild(menu);
-        } catch { }
+        } catch {}
         window.removeEventListener('click', onClickAway, true);
       }
     };
@@ -793,7 +793,7 @@ export class AIStudioFolderManager {
       e.stopPropagation(); // Prevent bubbling to parent drop zones
       try {
         if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-      } catch { }
+      } catch {}
     });
     el.addEventListener('dragleave', (e) => {
       e.stopPropagation(); // Prevent bubbling to parent drop zones
@@ -818,7 +818,7 @@ export class AIStudioFolderManager {
       if (!raw) {
         try {
           raw = e.dataTransfer?.getData('text/plain') || '';
-        } catch { }
+        } catch {}
       }
       if (!raw) return;
       let data: DragData | null = null;
@@ -880,11 +880,11 @@ export class AIStudioFolderManager {
     });
     try {
       observer.observe(root, { childList: true, subtree: true });
-    } catch { }
+    } catch {}
     this.cleanupFns.push(() => {
       try {
         observer.disconnect();
-      } catch { }
+      } catch {}
     });
 
     // Also update on clicks within the prompt list (SPA navigation)
@@ -898,11 +898,11 @@ export class AIStudioFolderManager {
     };
     try {
       root.addEventListener('click', onClick, true);
-    } catch { }
+    } catch {}
     this.cleanupFns.push(() => {
       try {
         root.removeEventListener('click', onClick, true);
-      } catch { }
+      } catch {}
     });
   }
 
@@ -929,10 +929,10 @@ export class AIStudioFolderManager {
             // Fallback to text/plain to interop with stricter DnD
             e.dataTransfer.setData('text/plain', JSON.stringify(data));
           }
-        } catch { }
+        } catch {}
         try {
           e.dataTransfer?.setDragImage(hostEl, 10, 10);
-        } catch { }
+        } catch {}
       });
     });
   }
@@ -956,11 +956,11 @@ export class AIStudioFolderManager {
       });
       try {
         bodyObserver.observe(document.body, { childList: true, subtree: true });
-      } catch { }
+      } catch {}
       this.cleanupFns.push(() => {
         try {
           bodyObserver.disconnect();
-        } catch { }
+        } catch {}
       });
       return;
     }
@@ -970,11 +970,11 @@ export class AIStudioFolderManager {
     });
     try {
       observer.observe(tableRoot, { childList: true, subtree: true });
-    } catch { }
+    } catch {}
     this.cleanupFns.push(() => {
       try {
         observer.disconnect();
-      } catch { }
+      } catch {}
     });
   }
 
@@ -1010,7 +1010,9 @@ export class AIStudioFolderManager {
         const title = normalizeText(anchor.textContent || '');
         // Ensure accurate URL construction
         const rawHref = anchor.getAttribute('href') || anchor.href || '';
-        const url = rawHref.startsWith('http') ? rawHref : `${location.origin}${rawHref.startsWith('/') ? '' : '/'}${rawHref}`;
+        const url = rawHref.startsWith('http')
+          ? rawHref
+          : `${location.origin}${rawHref.startsWith('/') ? '' : '/'}${rawHref}`;
 
         const data: DragData = { type: 'conversation', conversationId: id, title, url };
         try {
@@ -1021,10 +1023,10 @@ export class AIStudioFolderManager {
             // Fallback to text/plain to interop with stricter DnD
             e.dataTransfer.setData('text/plain', json);
           }
-        } catch { }
+        } catch {}
         try {
           e.dataTransfer?.setDragImage(tr, 10, 10);
-        } catch { }
+        } catch {}
 
         // Visual feedback
         tr.style.opacity = '0.5';
@@ -1118,7 +1120,7 @@ export class AIStudioFolderManager {
         if (!raw) {
           try {
             raw = e.dataTransfer?.getData('text/plain') || '';
-          } catch { }
+          } catch {}
         }
         if (!raw) return;
 
@@ -1170,7 +1172,7 @@ export class AIStudioFolderManager {
         e.stopPropagation();
         try {
           if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-        } catch { }
+        } catch {}
       });
       rootItem.addEventListener('dragleave', (e) => {
         e.stopPropagation();
@@ -1240,7 +1242,7 @@ export class AIStudioFolderManager {
           e.stopPropagation();
           try {
             if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-          } catch { }
+          } catch {}
         });
         folderItem.addEventListener('dragleave', (e) => {
           e.stopPropagation();
@@ -1257,7 +1259,7 @@ export class AIStudioFolderManager {
           if (!raw) {
             try {
               raw = e.dataTransfer?.getData('text/plain') || '';
-            } catch { }
+            } catch {}
           }
           if (!raw) return;
 
@@ -1358,7 +1360,7 @@ export class AIStudioFolderManager {
       try {
         document.removeEventListener('dragstart', onDragStart);
         document.body.removeChild(floatingZone);
-      } catch { }
+      } catch {}
     });
   }
 
@@ -1839,7 +1841,7 @@ export class AIStudioFolderManager {
         if (handle.parentElement) {
           handle.parentElement.removeChild(handle);
         }
-      } catch { }
+      } catch {}
     });
   }
 }
