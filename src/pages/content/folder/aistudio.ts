@@ -1372,9 +1372,22 @@ export class AIStudioFolderManager {
 
   private setupStorageListener(): void {
     browser.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName === 'sync' && changes.geminiFolderEnabled) {
-        this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
-        this.applyFolderEnabledSetting();
+      if (areaName === 'sync') {
+        if (changes.geminiFolderEnabled) {
+          this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
+          this.applyFolderEnabledSetting();
+        }
+        if (changes[this.SIDEBAR_WIDTH_KEY]) {
+          const w = changes[this.SIDEBAR_WIDTH_KEY].newValue;
+          if (typeof w === 'number') {
+            const clamped = Math.min(
+              this.MAX_SIDEBAR_WIDTH,
+              Math.max(this.MIN_SIDEBAR_WIDTH, Math.round(w)),
+            );
+            this.sidebarWidth = clamped;
+            this.applySidebarWidth();
+          }
+        }
       }
     });
   }
@@ -1580,10 +1593,10 @@ export class AIStudioFolderManager {
     const isExpanded = navContent.classList.contains('expanded');
 
     if (isExpanded || force) {
-      navContent.style.width = `${this.sidebarWidth} px`;
-      navContent.style.minWidth = `${this.sidebarWidth} px`;
-      navContent.style.maxWidth = `${this.sidebarWidth} px`;
-      navContent.style.flex = `0 0 ${this.sidebarWidth} px`;
+      navContent.style.width = `${this.sidebarWidth}px`;
+      navContent.style.minWidth = `${this.sidebarWidth}px`;
+      navContent.style.maxWidth = `${this.sidebarWidth}px`;
+      navContent.style.flex = `0 0 ${this.sidebarWidth}px`;
     } else {
       // Remove our width overrides when collapsed to allow native behavior
       navContent.style.width = '';

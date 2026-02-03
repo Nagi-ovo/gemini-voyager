@@ -73,6 +73,11 @@ const SIDEBAR_PX = {
   max: Math.round(pxFromPercent(SIDEBAR_PERCENT.max)),
   defaultValue: Math.round(pxFromPercent(SIDEBAR_PERCENT.defaultValue)),
 };
+const AI_STUDIO_SIDEBAR_PX = {
+  min: 240,
+  max: 600,
+  defaultValue: 280,
+};
 
 const clampSidebarPx = (value: number) => clampNumber(value, SIDEBAR_PX.min, SIDEBAR_PX.max);
 const normalizeSidebarPx = (value: number) => {
@@ -143,6 +148,19 @@ export default function Popup() {
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
+  const [isAIStudio, setIsAIStudio] = useState<boolean>(false);
+
+  useEffect(() => {
+    browser.tabs
+      .query({ active: true, currentWindow: true })
+      .then((tabs) => {
+        const url = tabs[0]?.url || '';
+        if (url.includes('aistudio.google.com') || url.includes('aistudio.google.cn')) {
+          setIsAIStudio(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleFormulaCopyFormatChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const format = e.target.value as 'latex' | 'unicodemath' | 'no-dollar';
@@ -259,17 +277,36 @@ export default function Popup() {
     }, []),
   });
 
-  // Width adjuster for sidebar width (px-based UI, stored as px; content will migrate >max to %)
+  // Width adjuster for sidebar width (Context-aware: Gemini vs AI Studio)
+  const sidebarConfig = isAIStudio
+    ? {
+        key: 'gvAIStudioSidebarWidth',
+        min: AI_STUDIO_SIDEBAR_PX.min,
+        max: AI_STUDIO_SIDEBAR_PX.max,
+        def: AI_STUDIO_SIDEBAR_PX.defaultValue,
+        norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
+      }
+    : {
+        key: 'geminiSidebarWidth',
+        min: SIDEBAR_PX.min,
+        max: SIDEBAR_PX.max,
+        def: SIDEBAR_PX.defaultValue,
+        norm: normalizeSidebarPx,
+      };
+
   const sidebarWidthAdjuster = useWidthAdjuster({
-    storageKey: 'geminiSidebarWidth',
-    defaultValue: SIDEBAR_PX.defaultValue,
-    normalize: normalizeSidebarPx,
-    onApply: useCallback((widthPx: number) => {
-      const clamped = normalizeSidebarPx(widthPx);
-      try {
-        chrome.storage?.sync?.set({ geminiSidebarWidth: clamped });
-      } catch {}
-    }, []),
+    storageKey: sidebarConfig.key,
+    defaultValue: sidebarConfig.def,
+    normalize: sidebarConfig.norm,
+    onApply: useCallback(
+      (widthPx: number) => {
+        const clamped = sidebarConfig.norm(widthPx);
+        try {
+          chrome.storage?.sync?.set({ [sidebarConfig.key]: clamped });
+        } catch {}
+      },
+      [sidebarConfig],
+    ),
   });
 
   useEffect(() => {
@@ -876,10 +913,10 @@ export default function Popup() {
 
         {/* Sidebar Width */}
         <WidthSlider
-          label={t('sidebarWidth')}
+          label={isAIStudio ? 'AI Studio Sidebar' : t('sidebarWidth')}
           value={sidebarWidthAdjuster.width}
-          min={SIDEBAR_PX.min}
-          max={SIDEBAR_PX.max}
+          min={sidebarConfig.min}
+          max={sidebarConfig.max}
           step={8}
           narrowLabel={t('sidebarWidthNarrow')}
           wideLabel={t('sidebarWidthWide')}
