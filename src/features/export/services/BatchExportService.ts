@@ -4,7 +4,7 @@
  */
 import JSZip from 'jszip';
 
-import { type ChatTurn, collectChatPairs } from '../../../pages/content/export';
+import { collectChatPairs } from '../../../pages/content/export';
 
 /**
  * Represents a single conversation link in the sidebar
@@ -262,22 +262,13 @@ export class BatchExportService {
     ];
 
     const allSelectors = [...userSelectors, ...assistantSelectors];
-    const main = document.querySelector('main') || document.body;
 
     // Wait for user messages to be present
     await this.waitForAnyElement(userSelectors, 5000);
 
-    const userElements = Array.from(main.querySelectorAll(userSelectors.join(',')));
-    if (userElements.length === 0) {
-      console.log('[BatchExport] No user messages found, skipping lazy load trigger');
-      return;
-    }
-
-    // Use the first user message element for lazy loading
-    const topNode = userElements[0] as HTMLElement;
-
     // Recursively click top node until all history is loaded
-    await this.recursivelyLoadHistory(topNode, allSelectors, 0);
+    // Pass selectors so topNode can be re-fetched on each attempt
+    await this.recursivelyLoadHistory(allSelectors, 0);
 
     // CRITICAL: Wait for DOM to stabilize after all clicks
     console.log('[BatchExport] Waiting for DOM to stabilize...');
@@ -288,13 +279,17 @@ export class BatchExportService {
   /**
    * Recursively click top node to load all historical messages
    */
-  private static async recursivelyLoadHistory(
-    topNode: HTMLElement,
-    selectors: string[],
-    attempt: number,
-  ): Promise<void> {
+  private static async recursivelyLoadHistory(selectors: string[], attempt: number): Promise<void> {
     if (attempt > 25) {
       console.warn('[BatchExport] Stopped after 25 attempts');
+      return;
+    }
+
+    // Re-fetch the top user element on each attempt to handle lazy loading
+    // where new messages are prepended to the conversation
+    const topNode = this.getTopUserElement();
+    if (!topNode) {
+      console.log('[BatchExport] No top user element found, lazy loading complete');
       return;
     }
 
@@ -331,10 +326,42 @@ export class BatchExportService {
 
     if (result.changed) {
       console.log('[BatchExport] ✓ Content expanded, clicking again...');
-      await this.recursivelyLoadHistory(topNode, selectors, attempt + 1);
+      await this.recursivelyLoadHistory(selectors, attempt + 1);
     } else {
       console.log('[BatchExport] ✓ No more content to load, history complete');
     }
+  }
+
+  /**
+   * Get the top user element from the conversation
+   */
+  private static getTopUserElement(): HTMLElement | null {
+    const userSelectors = [
+      '.user-query-bubble-with-background',
+      '.user-query-bubble-container',
+      '.user-query-container',
+      '[data-message-author-role="user"]',
+      'article[data-author="user"]',
+    ];
+
+    const main = document.querySelector('main') || document.body;
+    const userElements = Array.from(main.querySelectorAll(userSelectors.join(',')));
+
+    if (userElements.length === 0) return null;
+
+    // Filter to get only top-level elements (not nested)
+    const topLevel = userElements.filter((el) => {
+      let parent = el.parentElement;
+      while (parent) {
+        if (userSelectors.some((sel) => parent?.matches(sel))) {
+          return false; // This element is nested inside another user element
+        }
+        parent = parent.parentElement;
+      }
+      return true;
+    });
+
+    return topLevel.length > 0 ? (topLevel[0] as HTMLElement) : (userElements[0] as HTMLElement);
   }
 
   /**

@@ -109,6 +109,13 @@ export class ExportDialog {
     buttons.appendChild(cancelBtn);
     buttons.appendChild(exportBtn);
 
+    // Assemble dialog
+    dialog.appendChild(title);
+    dialog.appendChild(subtitle);
+    dialog.appendChild(warning);
+    dialog.appendChild(formatsList);
+    dialog.appendChild(buttons);
+
     // Batch export button (if handler provided)
     if (options.onBatchExport && options.translations.batchExport) {
       const batchExportBtn = document.createElement('button');
@@ -128,20 +135,11 @@ export class ExportDialog {
         batchDesc.className = 'gv-export-dialog-batch-description';
         batchDesc.textContent = options.translations.batchExportDescription;
 
-        // Insert before the format list
-        const warningElement = dialog.querySelector('.gv-export-dialog-warning');
-        if (warningElement) {
-          warningElement.after(batchDesc);
-        }
+        // Insert after warning element (use warning variable directly)
+        warning.after(batchDesc);
       }
     }
 
-    // Assemble dialog
-    dialog.appendChild(title);
-    dialog.appendChild(subtitle);
-    dialog.appendChild(warning);
-    dialog.appendChild(formatsList);
-    dialog.appendChild(buttons);
     overlay.appendChild(dialog);
 
     // Close on overlay click
