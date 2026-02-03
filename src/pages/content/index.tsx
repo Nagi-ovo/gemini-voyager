@@ -13,6 +13,7 @@ import { startFolderManager } from './folder/index';
 import { startGemsHider } from './gemsHider/index';
 import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';
+import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startMermaid } from './mermaid/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
@@ -185,6 +186,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Gems hider - hide/show toggle for Gems list section
       startGemsHider();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Markdown Patcher - fixes broken bold tags due to HTML injection
+      startMarkdownPatcher();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Default Model Manager
