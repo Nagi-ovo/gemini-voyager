@@ -267,4 +267,4 @@ Gemini Voyager mejora la experiencia de chat de Gemini AI con:
 
 ## Licencia
 
-Al contribuir, aceptas que tus contribuciones se licenciarán bajo la [Licencia MIT](../LICENSE).
+Al contribuir, aceptas que tus contribuciones se licenciarán bajo la [Licencia GPLv3](../LICENSE).

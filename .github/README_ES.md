@@ -198,5 +198,5 @@ Recomiendo encarecidamente **[Typeless (typeless.com)](https://www.typeless.com/
    </picture>
   </a>
   <p>Hecho con ❤️ por Jesse Zhang</p>
-  <sub>MIT License © 2025</sub>
+  <sub>GPLv3 License © 2026</sub>
 </div>

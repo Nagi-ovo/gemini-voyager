@@ -198,5 +198,5 @@
    </picture>
   </a>
   <p>Сделано с ❤️ Jesse Zhang</p>
-  <sub>MIT License © 2025</sub>
+  <sub>GPLv3 License © 2026</sub>
 </div>

@@ -272,7 +272,7 @@ Gemini Voyager enhances the Gemini AI chat experience with:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the [MIT License](../LICENSE).
+By contributing, you agree that your contributions will be licensed under the [GPLv3 License](../LICENSE).
 
 ---
 
@@ -534,4 +534,4 @@ Gemini Voyager 通过以下功能增强 Gemini AI 聊天体验：
 
 ## 许可证
 
-提交贡献即表示你同意你的贡献将采用 [MIT 许可证](../LICENSE)。
+提交贡献即表示你同意你的贡献将采用 [GPLv3 许可证](../LICENSE)。

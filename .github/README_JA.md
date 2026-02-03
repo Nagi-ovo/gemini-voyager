@@ -218,5 +218,5 @@ Gemini Voyager をより良くするために協力してくださり、あり�
    </picture>
   </a>
   <p>Made with ❤️ by Jesse Zhang</p>
-  <sub>MIT License © 2025</sub>
+  <sub>GPLv3 License © 2026</sub>
 </div>

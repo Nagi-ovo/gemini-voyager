@@ -267,4 +267,4 @@ Gemini Voyager améliore l'expérience de chat Gemini AI avec :
 
 ## Licence
 
-En contribuant, vous acceptez que vos contributions soient licenciées sous la [Licence MIT](../LICENSE).
+En contribuant, vous acceptez que vos contributions soient licenciées sous la [Licence GPLv3](../LICENSE).

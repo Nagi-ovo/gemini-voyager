@@ -198,5 +198,5 @@ Obrigado por ajudar a tornar o Gemini Voyager melhor! ❤️
    </picture>
   </a>
   <p>Feito com ❤️ por Jesse Zhang</p>
-  <sub>MIT License © 2025</sub>
+  <sub>GPLv3 License © 2026</sub>
 </div>

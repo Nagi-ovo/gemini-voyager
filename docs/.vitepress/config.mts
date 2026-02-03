@@ -54,7 +54,7 @@ export default defineConfig({
           message:
             '本项目开源。欢迎在 <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> 上给一颗 ⭐ 支持。',
           copyright:
-            '基于 MIT 协议发布 | Copyright © 2025 Jesse Zhang | <a href="/privacy">隐私政策</a>',
+            '基于 GPLv3 协议发布 | Copyright © 2026 Jesse Zhang | <a href="/privacy">隐私政策</a>',
         },
       },
     },
@@ -104,7 +104,7 @@ export default defineConfig({
           message:
             '開源專案。如果您喜歡，請在 <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> 上給我們一顆 ⭐。',
           copyright:
-            'MIT 授權 | Copyright © 2025 Jesse Zhang | <a href="/zh_TW/privacy">隱私政策</a>',
+            'GPLv3 授權 | Copyright © 2026 Jesse Zhang | <a href="/zh_TW/privacy">隱私政策</a>',
         },
       },
     },
@@ -154,7 +154,7 @@ export default defineConfig({
           message:
             'Open source project. Star us on <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> if you like it ⭐.',
           copyright:
-            'Released under the MIT License | Copyright © 2025 Jesse Zhang | <a href="/en/privacy">Privacy Policy</a>',
+            'Released under the GPLv3 License | Copyright © 2026 Jesse Zhang | <a href="/en/privacy">Privacy Policy</a>',
         },
       },
     },
@@ -204,7 +204,7 @@ export default defineConfig({
           message:
             'オープンソースプロジェクトです。<a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> でスター ⭐ をつけて応援してください。',
           copyright:
-            'MIT ライセンス | Copyright © 2025 Jesse Zhang | <a href="/ja/privacy">プライバシーポリシー</a>',
+            'GPLv3 ライセンス | Copyright © 2026 Jesse Zhang | <a href="/ja/privacy">プライバシーポリシー</a>',
         },
       },
     },
@@ -257,7 +257,7 @@ export default defineConfig({
           message:
             'Projet Open Source. Mettez une ⭐ sur <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> si vous aimez.',
           copyright:
-            'Licence MIT | Copyright © 2025 Jesse Zhang | <a href="/fr/privacy">Politique de Confidentialité</a>',
+            'Licence GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/fr/privacy">Politique de Confidentialité</a>',
         },
       },
     },
@@ -310,7 +310,7 @@ export default defineConfig({
           message:
             'Proyecto de Código Abierto. Danos una ⭐ en <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> si te gusta.',
           copyright:
-            'Licencia MIT | Copyright © 2025 Jesse Zhang | <a href="/es/privacy">Política de Privacidad</a>',
+            'Licencia GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/es/privacy">Política de Privacidad</a>',
         },
       },
     },
@@ -360,7 +360,7 @@ export default defineConfig({
           message:
             'Projeto Open Source. Dê uma ⭐ no <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> se você gostar.',
           copyright:
-            'Licença MIT | Copyright © 2025 Jesse Zhang | <a href="/pt/privacy">Política de Privacidade</a>',
+            'Licença GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/pt/privacy">Política de Privacidade</a>',
         },
       },
     },
@@ -411,7 +411,7 @@ export default defineConfig({
           message:
             'مشروع مفتوح المصدر. امنحنا ⭐ على <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> إذا أعجبك.',
           copyright:
-            'رخصة MIT | حقوق النشر © 2025 Jesse Zhang | <a href="/ar/privacy">سياسة الخصوصية</a>',
+            'رخصة GPLv3 | حقوق النشر © 2026 Jesse Zhang | <a href="/ar/privacy">سياسة الخصوصية</a>',
         },
       },
     },
@@ -464,7 +464,7 @@ export default defineConfig({
           message:
             'Проект с открытым исходным кодом. Поставьте ⭐ на <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a>, если вам нравится.',
           copyright:
-            'Лицензия MIT | Copyright © 2025 Jesse Zhang | <a href="/ru/privacy">Политика конфиденциальности</a>',
+            'Лицензия GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/ru/privacy">Политика конфиденциальности</a>',
         },
       },
     },

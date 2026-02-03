@@ -198,5 +198,5 @@
    </picture>
   </a>
   <p>صنع بكل ❤️ بواسطة Jesse Zhang</p>
-  <sub>رخصة MIT © 2025</sub>
+  <sub>رخصة GPLv3 © 2025</sub>
 </div>
