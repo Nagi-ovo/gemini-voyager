@@ -2,7 +2,6 @@ import browser from 'webextension-polyfill';
 
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
-import { storageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
 import { createTranslator, initI18n } from '@/utils/i18n';
 
@@ -137,6 +136,9 @@ export class AIStudioFolderManager {
     // Start monitoring
     storageMonitor.startMonitoring();
 
+    // Migrate data from chrome.storage.sync to chrome.storage.local (one-time)
+    await this.migrateFromSyncToLocal();
+
     // Only enable on prompts, library, or root pages
     // Root path (/) is where the main playground is, prompts are saved chats, library is history
     const isValidPath =
@@ -152,6 +154,9 @@ export class AIStudioFolderManager {
     // Set up storage change listener (always needed to respond to setting changes)
     this.setupStorageListener();
 
+    // Setup message listener for sync operations (always needed)
+    this.setupMessageListener();
+
     // If folder feature is disabled, skip initialization
     if (!this.folderEnabled) {
       return;
@@ -159,6 +164,108 @@ export class AIStudioFolderManager {
 
     // Initialize folder UI
     await this.initializeFolderUI();
+  }
+
+  /**
+   * Migrate folder data from chrome.storage.sync to chrome.storage.local
+   * This is a one-time migration for users upgrading from older versions
+   * Benefits: No 100KB quota limit, consistent with Gemini storage
+   */
+  private async migrateFromSyncToLocal(): Promise<void> {
+    try {
+      // Check if there's data in chrome.storage.sync
+      const syncResult = await chrome.storage.sync.get(this.STORAGE_KEY);
+      const syncData = syncResult[this.STORAGE_KEY];
+
+      if (syncData && validateFolderData(syncData)) {
+        // Check if chrome.storage.local already has data
+        const localResult = await chrome.storage.local.get(this.STORAGE_KEY);
+        const localData = localResult[this.STORAGE_KEY];
+
+        if (!localData || !validateFolderData(localData)) {
+          // Migrate sync data to local storage
+          await chrome.storage.local.set({ [this.STORAGE_KEY]: syncData });
+          console.log('[AIStudioFolderManager] Migrated folder data from sync to local storage');
+
+          // Optionally clear sync storage after successful migration
+          // await chrome.storage.sync.remove(this.STORAGE_KEY);
+        } else {
+          // Both have data - merge them (local takes priority for conflicts)
+          const mergedFolders = this.mergeFolderData(localData, syncData);
+          await chrome.storage.local.set({ [this.STORAGE_KEY]: mergedFolders });
+          console.log('[AIStudioFolderManager] Merged sync and local folder data');
+        }
+      }
+    } catch (error) {
+      console.warn('[AIStudioFolderManager] Migration from sync to local failed:', error);
+      // Don't throw - migration failure should not block normal operation
+    }
+  }
+
+  /**
+   * Simple merge of folder data (used during migration)
+   * Local data takes priority for conflicts
+   */
+  private mergeFolderData(local: FolderData, sync: FolderData): FolderData {
+    const mergedFolders = [...local.folders];
+    const localFolderIds = new Set(local.folders.map((f) => f.id));
+
+    // Add folders from sync that don't exist in local
+    for (const folder of sync.folders) {
+      if (!localFolderIds.has(folder.id)) {
+        mergedFolders.push(folder);
+      }
+    }
+
+    // Merge folder contents
+    const mergedContents = { ...local.folderContents };
+    for (const [folderId, conversations] of Object.entries(sync.folderContents)) {
+      if (!mergedContents[folderId]) {
+        mergedContents[folderId] = conversations;
+      } else {
+        // Merge conversations, avoiding duplicates
+        const existingIds = new Set(mergedContents[folderId].map((c) => c.conversationId));
+        for (const conv of conversations) {
+          if (!existingIds.has(conv.conversationId)) {
+            mergedContents[folderId].push(conv);
+          }
+        }
+      }
+    }
+
+    return { folders: mergedFolders, folderContents: mergedContents };
+  }
+
+  /**
+   * Setup message listener for sync operations
+   * Handles gv.sync.requestData and gv.folders.reload messages from popup
+   */
+  private setupMessageListener(): void {
+    browser.runtime.onMessage.addListener((message: any, _sender: any, sendResponse: any) => {
+      // Handle request for folder data (for cloud sync upload)
+      if (message?.type === 'gv.sync.requestData') {
+        console.log('[AIStudioFolderManager] Received request for folder data from popup');
+        sendResponse({
+          ok: true,
+          data: this.data,
+        });
+        return true;
+      }
+
+      // Handle reload request (after cloud sync download)
+      if (message?.type === 'gv.folders.reload') {
+        console.log('[AIStudioFolderManager] Received reload request from sync');
+        this.load().then(() => {
+          this.render();
+          console.log('[AIStudioFolderManager] Folder data reloaded from sync');
+        });
+        sendResponse({ ok: true });
+        return true;
+      }
+
+      // Return true for all messages to keep the channel open
+      return true;
+    });
   }
 
   private async initializeFolderUI(): Promise<void> {
@@ -204,9 +311,12 @@ export class AIStudioFolderManager {
 
   private async load(): Promise<void> {
     try {
-      const res = await storageService.get<FolderData>(this.STORAGE_KEY);
-      if (res.success && res.data && validateFolderData(res.data)) {
-        this.data = res.data;
+      // Use chrome.storage.local (migrated from sync)
+      const result = await chrome.storage.local.get(this.STORAGE_KEY);
+      const data = result[this.STORAGE_KEY];
+
+      if (data && validateFolderData(data)) {
+        this.data = data;
         // Create primary backup on successful load
         this.backupService.createPrimaryBackup(this.data);
       } else {
@@ -228,8 +338,8 @@ export class AIStudioFolderManager {
       // Create emergency backup BEFORE saving (snapshot of previous state)
       this.backupService.createEmergencyBackup(this.data);
 
-      // Attempt to save to main storage
-      await storageService.set<FolderData>(this.STORAGE_KEY, this.data);
+      // Save to chrome.storage.local (migrated from sync)
+      await chrome.storage.local.set({ [this.STORAGE_KEY]: this.data });
 
       // Create primary backup AFTER successful save
       this.backupService.createPrimaryBackup(this.data);

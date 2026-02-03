@@ -17,12 +17,14 @@ import type {
   StarredExportPayload,
   StarredMessagesDataSync,
   SyncMode,
+  SyncPlatform,
   SyncState,
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 
 const FOLDERS_FILE_NAME = 'gemini-voyager-folders.json';
+const AISTUDIO_FOLDERS_FILE_NAME = 'gemini-voyager-aistudio-folders.json';
 const PROMPTS_FILE_NAME = 'gemini-voyager-prompts.json';
 const STARRED_FILE_NAME = 'gemini-voyager-starred.json';
 const BACKUP_FOLDER_NAME = 'Gemini Voyager Data';
@@ -40,6 +42,7 @@ const INITIAL_RETRY_DELAY_MS = 1000;
 export class GoogleDriveSyncService {
   private state: SyncState = { ...DEFAULT_SYNC_STATE };
   private foldersFileId: string | null = null;
+  private aistudioFoldersFileId: string | null = null;
   private promptsFileId: string | null = null;
   private starredFileId: string | null = null;
   private backupFolderId: string | null = null;
@@ -113,12 +116,18 @@ export class GoogleDriveSyncService {
 
   /**
    * Upload folders, prompts, and starred messages as separate files to Google Drive
+   * @param folders Folder data to upload
+   * @param prompts Prompt items (only for Gemini platform)
+   * @param starred Starred messages (only for Gemini platform)
+   * @param interactive Whether to show auth prompt if needed
+   * @param platform Platform to upload for ('gemini' | 'aistudio')
    */
   async upload(
     folders: FolderData,
     prompts: PromptItem[],
     starred: StarredMessagesDataSync | null = null,
     interactive: boolean = true,
+    platform: SyncPlatform = 'gemini',
   ): Promise<boolean> {
     try {
       this.updateState({ isSyncing: true, error: null });
@@ -153,34 +162,50 @@ export class GoogleDriveSyncService {
         items: prompts,
       };
 
-      // Upload folders file
-      await this.ensureFileId(token, FOLDERS_FILE_NAME, 'folders');
-      await this.uploadFileWithRetry(token, this.foldersFileId!, folderPayload);
-      console.log('[GoogleDriveSyncService] Folders uploaded successfully');
+      // Upload folders file (platform-specific)
+      const foldersFileName =
+        platform === 'aistudio' ? AISTUDIO_FOLDERS_FILE_NAME : FOLDERS_FILE_NAME;
+      const foldersType = platform === 'aistudio' ? 'aistudio-folders' : 'folders';
+      await this.ensureFileId(token, foldersFileName, foldersType);
+      const foldersFileIdToUse =
+        platform === 'aistudio' ? this.aistudioFoldersFileId! : this.foldersFileId!;
+      await this.uploadFileWithRetry(token, foldersFileIdToUse, folderPayload);
+      console.log(`[GoogleDriveSyncService] ${platform} folders uploaded successfully`);
 
-      // Upload prompts file
-      await this.ensureFileId(token, PROMPTS_FILE_NAME, 'prompts');
-      await this.uploadFileWithRetry(token, this.promptsFileId!, promptPayload);
-      console.log('[GoogleDriveSyncService] Prompts uploaded successfully');
+      // Only upload prompts and starred for Gemini platform
+      if (platform === 'gemini') {
+        // Upload prompts file
+        await this.ensureFileId(token, PROMPTS_FILE_NAME, 'prompts');
+        await this.uploadFileWithRetry(token, this.promptsFileId!, promptPayload);
+        console.log('[GoogleDriveSyncService] Prompts uploaded successfully');
 
-      // Upload starred messages file (if provided)
-      if (starred) {
-        const starredPayload: StarredExportPayload = {
-          format: 'gemini-voyager.starred.v1',
-          exportedAt: now.toISOString(),
-          version: EXTENSION_VERSION,
-          data: starred,
-        };
-        await this.ensureFileId(token, STARRED_FILE_NAME, 'starred');
-        await this.uploadFileWithRetry(token, this.starredFileId!, starredPayload);
-        console.log('[GoogleDriveSyncService] Starred messages uploaded successfully');
+        // Upload starred messages file (if provided)
+        if (starred) {
+          const starredPayload: StarredExportPayload = {
+            format: 'gemini-voyager.starred.v1',
+            exportedAt: now.toISOString(),
+            version: EXTENSION_VERSION,
+            data: starred,
+          };
+          await this.ensureFileId(token, STARRED_FILE_NAME, 'starred');
+          await this.uploadFileWithRetry(token, this.starredFileId!, starredPayload);
+          console.log('[GoogleDriveSyncService] Starred messages uploaded successfully');
+        }
       }
 
       const uploadTime = Date.now();
-      this.updateState({ isSyncing: false, lastUploadTime: uploadTime, error: null });
+      // Update platform-specific upload time
+      if (platform === 'aistudio') {
+        this.updateState({ isSyncing: false, lastUploadTimeAIStudio: uploadTime, error: null });
+      } else {
+        this.updateState({ isSyncing: false, lastUploadTime: uploadTime, error: null });
+      }
       await this.saveState();
 
-      console.log('[GoogleDriveSyncService] Upload successful -', starred ? '3 files' : '2 files');
+      const fileCount = platform === 'gemini' ? (starred ? 3 : 2) : 1;
+      console.log(
+        `[GoogleDriveSyncService] Upload successful - ${fileCount} file(s) for ${platform}`,
+      );
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
@@ -193,8 +218,13 @@ export class GoogleDriveSyncService {
   /**
    * Download folders, prompts, and starred messages from separate files in Google Drive
    * Returns { folders, prompts, starred } or null if no files exist
+   * @param interactive Whether to show auth prompt if needed
+   * @param platform Platform to download for ('gemini' | 'aistudio')
    */
-  async download(interactive: boolean = true): Promise<{
+  async download(
+    interactive: boolean = true,
+    platform: SyncPlatform = 'gemini',
+  ): Promise<{
     folders: FolderExportPayload | null;
     prompts: PromptExportPayload | null;
     starred: StarredExportPayload | null;
@@ -214,38 +244,49 @@ export class GoogleDriveSyncService {
         throw new Error('Not authenticated');
       }
 
-      // Download folders file
-      const foldersFileId = await this.findFile(token, FOLDERS_FILE_NAME);
+      // Download folders file (platform-specific)
+      const foldersFileName =
+        platform === 'aistudio' ? AISTUDIO_FOLDERS_FILE_NAME : FOLDERS_FILE_NAME;
+      const foldersFileId = await this.findFile(token, foldersFileName);
       let folders: FolderExportPayload | null = null;
       if (foldersFileId) {
         folders = await this.downloadFileWithRetry(token, foldersFileId);
-        console.log('[GoogleDriveSyncService] Folders downloaded');
+        console.log(`[GoogleDriveSyncService] ${platform} folders downloaded`);
       }
 
-      // Download prompts file
-      const promptsFileId = await this.findFile(token, PROMPTS_FILE_NAME);
+      // Only download prompts and starred for Gemini platform
       let prompts: PromptExportPayload | null = null;
-      if (promptsFileId) {
-        prompts = await this.downloadFileWithRetry(token, promptsFileId);
-        console.log('[GoogleDriveSyncService] Prompts downloaded');
-      }
-
-      // Download starred messages file
-      const starredFileId = await this.findFile(token, STARRED_FILE_NAME);
       let starred: StarredExportPayload | null = null;
-      if (starredFileId) {
-        starred = await this.downloadFileWithRetry(token, starredFileId);
-        console.log('[GoogleDriveSyncService] Starred messages downloaded');
+
+      if (platform === 'gemini') {
+        // Download prompts file
+        const promptsFileId = await this.findFile(token, PROMPTS_FILE_NAME);
+        if (promptsFileId) {
+          prompts = await this.downloadFileWithRetry(token, promptsFileId);
+          console.log('[GoogleDriveSyncService] Prompts downloaded');
+        }
+
+        // Download starred messages file
+        const starredFileId = await this.findFile(token, STARRED_FILE_NAME);
+        if (starredFileId) {
+          starred = await this.downloadFileWithRetry(token, starredFileId);
+          console.log('[GoogleDriveSyncService] Starred messages downloaded');
+        }
       }
 
       if (!folders && !prompts && !starred) {
-        console.log('[GoogleDriveSyncService] No sync files found');
+        console.log(`[GoogleDriveSyncService] No sync files found for ${platform}`);
         this.updateState({ isSyncing: false });
         return null;
       }
 
       const syncTime = Date.now();
-      this.updateState({ isSyncing: false, lastSyncTime: syncTime, error: null });
+      // Update platform-specific sync time
+      if (platform === 'aistudio') {
+        this.updateState({ isSyncing: false, lastSyncTimeAIStudio: syncTime, error: null });
+      } else {
+        this.updateState({ isSyncing: false, lastSyncTime: syncTime, error: null });
+      }
       await this.saveState();
 
       return { folders, prompts, starred };
@@ -366,7 +407,7 @@ export class GoogleDriveSyncService {
   private async ensureFileId(
     token: string,
     fileName: string,
-    type: 'folders' | 'prompts' | 'starred',
+    type: 'folders' | 'aistudio-folders' | 'prompts' | 'starred',
   ): Promise<void> {
     // 1. Ensure backup folder exists
     const folderId = await this.ensureBackupFolder(token);
@@ -375,9 +416,11 @@ export class GoogleDriveSyncService {
     const currentId =
       type === 'folders'
         ? this.foldersFileId
-        : type === 'prompts'
-          ? this.promptsFileId
-          : this.starredFileId;
+        : type === 'aistudio-folders'
+          ? this.aistudioFoldersFileId
+          : type === 'prompts'
+            ? this.promptsFileId
+            : this.starredFileId;
 
     if (currentId) {
       const parents = await this.getFileParents(token, currentId);
@@ -398,6 +441,7 @@ export class GoogleDriveSyncService {
     if (existingId) {
       // Found existing file
       if (type === 'folders') this.foldersFileId = existingId;
+      else if (type === 'aistudio-folders') this.aistudioFoldersFileId = existingId;
       else if (type === 'prompts') this.promptsFileId = existingId;
       else this.starredFileId = existingId;
 
@@ -414,6 +458,7 @@ export class GoogleDriveSyncService {
     console.log(`[GoogleDriveSyncService] Creating new file ${fileName} in backup folder`);
     const newId = await this.createFile(token, fileName, folderId);
     if (type === 'folders') this.foldersFileId = newId;
+    else if (type === 'aistudio-folders') this.aistudioFoldersFileId = newId;
     else if (type === 'prompts') this.promptsFileId = newId;
     else this.starredFileId = newId;
   }
@@ -571,12 +616,16 @@ export class GoogleDriveSyncService {
         'gvSyncMode',
         'gvLastSyncTime',
         'gvLastUploadTime',
+        'gvLastSyncTimeAIStudio',
+        'gvLastUploadTimeAIStudio',
         'gvSyncError',
       ]);
       this.state = {
         mode: (result.gvSyncMode as SyncMode) || 'disabled',
         lastSyncTime: result.gvLastSyncTime || null,
         lastUploadTime: result.gvLastUploadTime || null,
+        lastSyncTimeAIStudio: result.gvLastSyncTimeAIStudio || null,
+        lastUploadTimeAIStudio: result.gvLastUploadTimeAIStudio || null,
         error: result.gvSyncError || null,
         isSyncing: false,
         isAuthenticated: false,
@@ -594,6 +643,8 @@ export class GoogleDriveSyncService {
         gvSyncMode: this.state.mode,
         gvLastSyncTime: this.state.lastSyncTime,
         gvLastUploadTime: this.state.lastUploadTime,
+        gvLastSyncTimeAIStudio: this.state.lastSyncTimeAIStudio,
+        gvLastUploadTimeAIStudio: this.state.lastUploadTimeAIStudio,
         gvSyncError: this.state.error,
       });
     } catch (error) {

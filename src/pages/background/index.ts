@@ -366,29 +366,35 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             return;
           }
           case 'gv.sync.upload': {
-            const { folders, prompts, interactive } = message.payload as {
+            const { folders, prompts, interactive, platform } = message.payload as {
               folders: FolderData;
               prompts: PromptItem[];
               interactive?: boolean;
+              platform?: 'gemini' | 'aistudio';
             };
-            // Also get starred messages from local storage
-            const starredData = await starredMessagesManager.getAllStarredMessages();
+            // Also get starred messages from local storage (only for Gemini platform)
+            const starredData =
+              platform !== 'aistudio' ? await starredMessagesManager.getAllStarredMessages() : null;
             const success = await googleDriveSyncService.upload(
               folders,
               prompts,
               starredData,
               interactive !== false,
+              platform || 'gemini',
             );
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;
           }
           case 'gv.sync.download': {
             const interactive = message.payload?.interactive !== false;
-            const data = await googleDriveSyncService.download(interactive);
+            const platform = (message.payload?.platform as 'gemini' | 'aistudio') || 'gemini';
+            const data = await googleDriveSyncService.download(interactive, platform);
             // NOTE: We intentionally do NOT save to storage here.
             // The caller (Popup) is responsible for merging with local data and saving.
             // This prevents data loss from overwriting local changes.
-            console.log('[Background] Downloaded data, returning to caller for merge');
+            console.log(
+              `[Background] Downloaded data for ${platform}, returning to caller for merge`,
+            );
             sendResponse({
               ok: true,
               data,
