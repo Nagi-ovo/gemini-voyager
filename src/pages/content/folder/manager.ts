@@ -2,6 +2,7 @@ import browser from 'webextension-polyfill';
 
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
+import { StorageKeys } from '@/core/types/common';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
@@ -160,6 +161,9 @@ export class FolderManager {
 
       // Load hide archived setting
       await this.loadHideArchivedSetting();
+
+      // Load filter user setting
+      await this.loadFilterUserSetting();
 
       // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
@@ -608,6 +612,9 @@ export class FolderManager {
     const rootFolders = this.data.folders.filter((f) => f.parentId === null);
     const sortedRootFolders = this.sortFolders(rootFolders);
     sortedRootFolders.forEach((folder) => {
+      // Filter out empty folders if "Show current user only" is enabled
+      if (!this.hasVisibleContent(folder.id)) return;
+
       const folderElement = this.createFolderElement(folder);
       list.appendChild(folderElement);
     });
@@ -730,6 +737,9 @@ export class FolderManager {
       const subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
       const sortedSubfolders = this.sortFolders(subfolders);
       sortedSubfolders.forEach((subfolder) => {
+        // Filter out empty folders if "Show current user only" is enabled
+        if (!this.hasVisibleContent(subfolder.id)) return;
+
         const subfolderEl = this.createFolderElement(subfolder, level + 1);
         content.appendChild(subfolderEl);
       });
@@ -4846,6 +4856,19 @@ export class FolderManager {
     }
   }
 
+  private async loadFilterUserSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.GV_FOLDER_FILTER_USER_ONLY]: false,
+      });
+      this.filterCurrentUserOnly = !!result[StorageKeys.GV_FOLDER_FILTER_USER_ONLY];
+      this.debug('Loaded filter user setting:', this.filterCurrentUserOnly);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load filter user setting:', error);
+      this.filterCurrentUserOnly = false;
+    }
+  }
+
   private setupStorageListener(): void {
     // Listen for sync settings changes
     browser.storage.onChanged.addListener((changes, areaName) => {
@@ -5648,6 +5671,31 @@ export class FolderManager {
   }
 
   /**
+   * Check if a folder has any visible content for the current user.
+   * - If filter is disabled, always returns true (show everything).
+   * - If filter is enabled:
+   *   - Returns true if folder has any conversations matching current user.
+   *   - Returns true if any subfolder has visible content.
+   *   - Returns false otherwise.
+   */
+  private hasVisibleContent(folderId: string): boolean {
+    if (!this.filterCurrentUserOnly) return true;
+
+    // Check direct conversations
+    const conversations = this.data.folderContents[folderId] || [];
+    const userConversations = this.filterConversationsByCurrentUser(conversations);
+    if (userConversations.length > 0) return true;
+
+    // Check subfolders recursively
+    const subfolders = this.data.folders.filter((f) => f.parentId === folderId);
+    for (const subfolder of subfolders) {
+      if (this.hasVisibleContent(subfolder.id)) return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Filter conversations to show only those belonging to the current user.
    * If filterCurrentUserOnly is false, returns all conversations.
    */
@@ -5660,6 +5708,8 @@ export class FolderManager {
     const currentUserId = this.getCurrentUserId();
     return conversations.filter((conv) => {
       const convUserId = this.getUserIdFromUrl(conv.url);
+      // Always show conversations with unspecified user (e.g. /app/...) as they might redirect to current user
+      if (convUserId === null) return true;
       return convUserId === currentUserId;
     });
   }
@@ -5684,15 +5734,15 @@ export class FolderManager {
   /**
    * Extract user ID from a conversation URL.
    * @param url The conversation URL
-   * @returns User ID string, defaults to "0"
+   * @returns User ID string, or null if unspecified (e.g. /app/...)
    */
-  private getUserIdFromUrl(url: string): string {
+  private getUserIdFromUrl(url: string): string | null {
     try {
       const urlObj = new URL(url);
       const match = urlObj.pathname.match(/^\/u\/(\d+)\//);
-      return match ? match[1] : '0';
+      return match ? match[1] : null;
     } catch {
-      return '0';
+      return null;
     }
   }
 
@@ -5702,6 +5752,13 @@ export class FolderManager {
   private toggleFilterCurrentUser(): void {
     this.filterCurrentUserOnly = !this.filterCurrentUserOnly;
     this.debug('Filter current user only:', this.filterCurrentUserOnly);
+
+    // Save setting to storage
+    browser.storage.sync
+      .set({
+        [StorageKeys.GV_FOLDER_FILTER_USER_ONLY]: this.filterCurrentUserOnly,
+      })
+      .catch((e) => console.error('Failed to save filter user setting:', e));
 
     // Refresh the entire folder container to update button state and list
     if (this.containerElement) {
