@@ -355,6 +355,18 @@
     "message": "匯出資料夾",
     "description": "匯出資料夾按鈕提示"
   },
+  "folder_import_export": {
+    "message": "匯入/匯出資料夾",
+    "description": "合併的匯入匯出按鈕提示"
+  },
+  "folder_cloud_upload": {
+    "message": "上傳到雲端",
+    "description": "雲端上傳按鈕提示"
+  },
+  "folder_cloud_sync": {
+    "message": "從雲端同步",
+    "description": "雲端同步按鈕提示"
+  },
   "folder_import": {
     "message": "匯入資料夾",
     "description": "匯入資料夾按鈕提示"

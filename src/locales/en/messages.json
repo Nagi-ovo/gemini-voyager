@@ -395,6 +395,18 @@
     "message": "Export folders",
     "description": "Export folders button tooltip"
   },
+  "folder_import_export": {
+    "message": "Import/Export folders",
+    "description": "Combined import/export button tooltip"
+  },
+  "folder_cloud_upload": {
+    "message": "Upload to Cloud",
+    "description": "Cloud upload button tooltip"
+  },
+  "folder_cloud_sync": {
+    "message": "Sync from Cloud",
+    "description": "Cloud sync button tooltip"
+  },
   "folder_import": {
     "message": "Import folders",
     "description": "Import folders button tooltip"

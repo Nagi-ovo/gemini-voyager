@@ -556,19 +556,36 @@ export class FolderManager {
     }
     filterUserButton.addEventListener('click', () => this.toggleFilterCurrentUser());
 
-    // Import button
-    const importButton = document.createElement('button');
-    importButton.className = 'gv-folder-action-btn';
-    importButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">upload</mat-icon>`;
-    importButton.title = this.t('folder_import');
-    importButton.addEventListener('click', () => this.showImportDialog());
+    // Import/Export combined button (shows dropdown menu)
+    const importExportButton = document.createElement('button');
+    importExportButton.className = 'gv-folder-action-btn';
+    importExportButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">folder_managed</mat-icon>`;
+    importExportButton.title = this.t('folder_import_export');
+    importExportButton.addEventListener('click', (e) => this.showImportExportMenu(e));
 
-    // Export button
-    const exportButton = document.createElement('button');
-    exportButton.className = 'gv-folder-action-btn';
-    exportButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">download</mat-icon>`;
-    exportButton.title = this.t('folder_export');
-    exportButton.addEventListener('click', () => this.exportFolders());
+    // Cloud upload button
+    const cloudUploadButton = document.createElement('button');
+    cloudUploadButton.className = 'gv-folder-action-btn';
+    cloudUploadButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q25-92 100-149t170-57q117 0 198.5 81.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H520q-33 0-56.5-23.5T440-240v-206l-64 62-56-56 160-160 160 160-56 56-64-62v206h220q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-83-58.5-141.5T480-720q-83 0-141.5 58.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h100v80H260Zm220-280Z"/></svg>`;
+    cloudUploadButton.title = this.t('folder_cloud_upload');
+    cloudUploadButton.addEventListener('click', () => this.handleCloudUpload());
+    // Add dynamic tooltip on mouseenter
+    cloudUploadButton.addEventListener('mouseenter', async () => {
+      const tooltip = await this.getCloudUploadTooltip();
+      cloudUploadButton.title = tooltip;
+    });
+
+    // Cloud sync button
+    const cloudSyncButton = document.createElement('button');
+    cloudSyncButton.className = 'gv-folder-action-btn';
+    cloudSyncButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"/></svg>`;
+    cloudSyncButton.title = this.t('folder_cloud_sync');
+    cloudSyncButton.addEventListener('click', () => this.handleCloudSync());
+    // Add dynamic tooltip on mouseenter
+    cloudSyncButton.addEventListener('mouseenter', async () => {
+      const tooltip = await this.getCloudSyncTooltip();
+      cloudSyncButton.title = tooltip;
+    });
 
     // Add folder button
     const addButton = document.createElement('button');
@@ -578,8 +595,9 @@ export class FolderManager {
     addButton.addEventListener('click', () => this.createFolder());
 
     actionsContainer.appendChild(filterUserButton);
-    actionsContainer.appendChild(importButton);
-    actionsContainer.appendChild(exportButton);
+    actionsContainer.appendChild(importExportButton);
+    actionsContainer.appendChild(cloudUploadButton);
+    actionsContainer.appendChild(cloudSyncButton);
     actionsContainer.appendChild(addButton);
 
     header.appendChild(titleContainer);
@@ -5796,5 +5814,235 @@ export class FolderManager {
       notification.classList.remove('show');
       setTimeout(() => notification.remove(), 300);
     }, 3000);
+  }
+
+  /**
+   * Show import/export dropdown menu
+   */
+  private showImportExportMenu(event: MouseEvent): void {
+    event.stopPropagation();
+
+    // Create context menu
+    const menu = document.createElement('div');
+    menu.className = 'gv-folder-menu';
+    menu.style.position = 'fixed';
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
+
+    const menuItems = [
+      {
+        label: this.t('folder_import'),
+        icon: 'upload',
+        action: () => this.showImportDialog(),
+      },
+      {
+        label: this.t('folder_export'),
+        icon: 'download',
+        action: () => this.exportFolders(),
+      },
+    ];
+
+    menuItems.forEach((item) => {
+      const menuItem = document.createElement('button');
+      menuItem.className = 'gv-folder-menu-item';
+      menuItem.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true" style="font-size: 18px; margin-right: 8px;">${item.icon}</mat-icon>${item.label}`;
+      menuItem.addEventListener('click', () => {
+        item.action();
+        menu.remove();
+      });
+      menu.appendChild(menuItem);
+    });
+
+    document.body.appendChild(menu);
+
+    // Close menu on click outside
+    const closeMenu = (e: MouseEvent) => {
+      if (!menu.contains(e.target as Node)) {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
+
+  /**
+   * Handle cloud upload - upload folder data to Google Drive
+   */
+  private async handleCloudUpload(): Promise<void> {
+    try {
+      this.showNotification(this.t('syncInProgress'), 'info');
+
+      // Get current folder data
+      const folders = this.data;
+
+      // Send upload request to background script
+      const response = (await browser.runtime.sendMessage({
+        type: 'gv.sync.upload',
+        payload: { folders, prompts: [], platform: 'gemini' },
+      })) as { ok?: boolean; error?: string } | undefined;
+
+      if (response?.ok) {
+        this.showNotification(this.t('syncSuccess'), 'success');
+      } else {
+        const errorMsg = response?.error || 'Unknown error';
+        this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[FolderManager] Cloud upload failed:', error);
+      this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+    }
+  }
+
+  /**
+   * Handle cloud sync - download and merge folder data from Google Drive
+   */
+  private async handleCloudSync(): Promise<void> {
+    try {
+      this.showNotification(this.t('syncInProgress'), 'info');
+
+      // Send download request to background script
+      const response = (await browser.runtime.sendMessage({
+        type: 'gv.sync.download',
+        payload: { platform: 'gemini' },
+      })) as
+        | { ok?: boolean; error?: string; data?: { folders?: { data?: FolderData } } }
+        | undefined;
+
+      if (!response?.ok) {
+        const errorMsg = response?.error || 'Download failed';
+        this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+        return;
+      }
+
+      if (!response.data) {
+        this.showNotification(this.t('syncNoData') || 'No data in cloud', 'info');
+        return;
+      }
+
+      // Get cloud folder data
+      const cloudFoldersPayload = response.data?.folders;
+      const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
+
+      // Merge with local data using the same logic as CloudSyncSettings
+      const localFolders = this.data;
+      const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
+
+      // Apply merged data
+      this.data = mergedFolders;
+      await this.saveData();
+      this.refresh();
+
+      this.showNotification(this.t('syncSuccess'), 'success');
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[FolderManager] Cloud sync failed:', error);
+      this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+    }
+  }
+
+  /**
+   * Merge two FolderData objects (local + cloud)
+   * Uses folder/conversation IDs to deduplicate
+   */
+  private mergeFolderData(local: FolderData, cloud: FolderData): FolderData {
+    // Merge folders by ID
+    const folderMap = new Map<string, Folder>();
+    local.folders.forEach((f) => folderMap.set(f.id, f));
+    cloud.folders.forEach((f) => {
+      if (!folderMap.has(f.id)) {
+        folderMap.set(f.id, f);
+      }
+      // If exists, keep local version (local takes priority)
+    });
+
+    // Merge folderContents
+    const mergedContents: FolderData['folderContents'] = { ...local.folderContents };
+    Object.entries(cloud.folderContents).forEach(([folderId, conversations]) => {
+      if (!mergedContents[folderId]) {
+        mergedContents[folderId] = conversations;
+      } else {
+        // Merge conversations in folder by conversationId
+        const existingIds = new Set(mergedContents[folderId].map((c) => c.conversationId));
+        conversations.forEach((conv) => {
+          if (!existingIds.has(conv.conversationId)) {
+            mergedContents[folderId].push(conv);
+          }
+        });
+      }
+    });
+
+    return {
+      folders: Array.from(folderMap.values()),
+      folderContents: mergedContents,
+    };
+  }
+
+  /**
+   * Get dynamic tooltip for cloud upload button showing last upload time
+   */
+  private async getCloudUploadTooltip(): Promise<string> {
+    try {
+      const response = (await browser.runtime.sendMessage({ type: 'gv.sync.getState' })) as
+        | { ok?: boolean; state?: { lastUploadTime?: number | null } }
+        | undefined;
+      if (response?.ok && response.state) {
+        const lastUploadTime = response.state.lastUploadTime;
+        const timeStr = this.formatRelativeTime(lastUploadTime ?? null);
+        const baseTooltip = this.t('folder_cloud_upload');
+        return lastUploadTime
+          ? `${baseTooltip}\n${this.t('lastUploaded').replace('{time}', timeStr)}`
+          : `${baseTooltip}\n${this.t('neverUploaded')}`;
+      }
+    } catch (e) {
+      console.warn('[FolderManager] Failed to get sync state for tooltip:', e);
+    }
+    return this.t('folder_cloud_upload');
+  }
+
+  /**
+   * Get dynamic tooltip for cloud sync button showing last sync time
+   */
+  private async getCloudSyncTooltip(): Promise<string> {
+    try {
+      const response = (await browser.runtime.sendMessage({ type: 'gv.sync.getState' })) as
+        | { ok?: boolean; state?: { lastSyncTime?: number | null } }
+        | undefined;
+      if (response?.ok && response.state) {
+        const lastSyncTime = response.state.lastSyncTime;
+        const timeStr = this.formatRelativeTime(lastSyncTime ?? null);
+        const baseTooltip = this.t('folder_cloud_sync');
+        return lastSyncTime
+          ? `${baseTooltip}\n${this.t('lastSynced').replace('{time}', timeStr)}`
+          : `${baseTooltip}\n${this.t('neverSynced')}`;
+      }
+    } catch (e) {
+      console.warn('[FolderManager] Failed to get sync state for tooltip:', e);
+    }
+    return this.t('folder_cloud_sync');
+  }
+
+  /**
+   * Format a timestamp as relative time (e.g. "5 minutes ago")
+   */
+  private formatRelativeTime(timestamp: number | null): string {
+    if (!timestamp) return '';
+    const now = Date.now();
+    const diffMs = now - timestamp;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) {
+      return this.t('justNow');
+    } else if (diffMins < 60) {
+      return `${diffMins} ${this.t('minutesAgo')}`;
+    } else if (diffHours < 24) {
+      return `${diffHours} ${this.t('hoursAgo')}`;
+    } else if (diffDays === 1) {
+      return this.t('yesterday');
+    } else {
+      return new Date(timestamp).toLocaleDateString();
+    }
   }
 }

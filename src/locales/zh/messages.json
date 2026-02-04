@@ -395,6 +395,18 @@
     "message": "导出文件夹",
     "description": "导出文件夹按钮提示"
   },
+  "folder_import_export": {
+    "message": "导入/导出文件夹",
+    "description": "合并的导入导出按钮提示"
+  },
+  "folder_cloud_upload": {
+    "message": "上传到云端",
+    "description": "云上传按钮提示"
+  },
+  "folder_cloud_sync": {
+    "message": "从云端同步",
+    "description": "云同步按钮提示"
+  },
   "folder_import": {
     "message": "导入文件夹",
     "description": "导入文件夹按钮提示"

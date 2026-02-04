@@ -395,6 +395,18 @@
     "message": "تصدير المجلدات",
     "description": "Export folders button tooltip"
   },
+  "folder_import_export": {
+    "message": "استيراد/تصدير المجلدات",
+    "description": "Combined import/export button tooltip"
+  },
+  "folder_cloud_upload": {
+    "message": "رفع إلى السحابة",
+    "description": "Cloud upload button tooltip"
+  },
+  "folder_cloud_sync": {
+    "message": "مزامنة من السحابة",
+    "description": "Cloud sync button tooltip"
+  },
   "folder_import": {
     "message": "استيراد المجلدات",
     "description": "Import folders button tooltip"

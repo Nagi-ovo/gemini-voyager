@@ -395,6 +395,18 @@
     "message": "Exportar carpetas",
     "description": "Export folders button tooltip"
   },
+  "folder_import_export": {
+    "message": "Importar/Exportar carpetas",
+    "description": "Combined import/export button tooltip"
+  },
+  "folder_cloud_upload": {
+    "message": "Subir a la nube",
+    "description": "Cloud upload button tooltip"
+  },
+  "folder_cloud_sync": {
+    "message": "Sincronizar desde la nube",
+    "description": "Cloud sync button tooltip"
+  },
   "folder_import": {
     "message": "Importar carpetas",
     "description": "Import folders button tooltip"
