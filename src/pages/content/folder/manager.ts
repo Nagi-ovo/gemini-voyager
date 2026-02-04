@@ -2032,12 +2032,22 @@ export class FolderManager {
     confirmDialog.appendChild(actions);
 
     // Position near the folder
+    // Position near the folder header
     const folderEl = this.containerElement?.querySelector(`[data-folder-id="${folderId}"]`);
-    if (folderEl) {
-      const rect = folderEl.getBoundingClientRect();
+    const headerEl = folderEl?.querySelector('.gv-folder-item-header');
+
+    if (headerEl) {
+      const rect = headerEl.getBoundingClientRect();
       confirmDialog.style.position = 'fixed';
       confirmDialog.style.top = `${rect.bottom + 4}px`;
+      confirmDialog.style.left = `${rect.left + 24}px`; // Align with folder name
+      confirmDialog.style.zIndex = '10002'; // Ensure it's on top
+    } else if (folderEl) {
+      const rect = folderEl.getBoundingClientRect();
+      confirmDialog.style.position = 'fixed';
+      confirmDialog.style.top = `${rect.top + 32}px`; // Fallback approximate height
       confirmDialog.style.left = `${rect.left}px`;
+      confirmDialog.style.zIndex = '10002';
     }
 
     document.body.appendChild(confirmDialog);
@@ -2658,9 +2668,9 @@ export class FolderManager {
       // Strategy 2: Look for menu items containing delete text (supports translations)
       const menuItems = document.querySelectorAll(
         '.cdk-overlay-container button, ' +
-          '.cdk-overlay-container [role="menuitem"], ' +
-          '.mat-mdc-menu-content button, ' +
-          '.mat-menu-content button',
+        '.cdk-overlay-container [role="menuitem"], ' +
+        '.mat-mdc-menu-content button, ' +
+        '.mat-menu-content button',
       );
 
       for (const item of menuItems) {
@@ -4732,7 +4742,7 @@ export class FolderManager {
   private showDataLossNotification(): void {
     this.showNotificationByLevel(
       getTranslationSync('folderManager_dataLossWarning') ||
-        'Warning: Failed to load folder data. Please check your browser console for details.',
+      'Warning: Failed to load folder data. Please check your browser console for details.',
       'error',
     );
   }
