@@ -33,7 +33,7 @@ const SEND_BUTTON_SELECTORS = [
   // Fallback selectors
   'button[aria-label*="Update"]',
   'button[aria-label*="Save"]',
-  'button[aria-label*="更新"]', 
+  'button[aria-label*="更新"]',
 ] as const;
 
 /** Selector for editable elements */
@@ -62,38 +62,39 @@ const attachedElements = new WeakSet<HTMLElement>();
 
 /**
  * Find the send button associated with the current input element.
- * 
+ *
  * Strategy:
  * 1. Contextual Search: Look for `.update-button` or similar in the container.
  * 2. Global Search: Fallback to the main send button (Main chat).
  */
 function findSendButton(inputElement: HTMLElement): HTMLElement | null {
   // --- 1. Contextual Search ---
-  
+
   // Traverse up to find a container
   let parent = inputElement.parentElement;
   let attempts = 0;
   // Gemini structure: input -> div -> div.edit-container (so ~3 levels up)
-  const MAX_LEVELS = 5; 
+  const MAX_LEVELS = 5;
 
   while (parent && attempts < MAX_LEVELS) {
     // 1. Explicitly check for the ".update-button" class (User provided)
     const updateButton = parent.querySelector('.update-button');
     if (updateButton instanceof HTMLElement && updateButton.offsetParent !== null) {
-        // Double check: if it's disabled, we might want to return it anyway (to block default enter)
-        // or ignore it? Logic: If disabled, clicking does nothing, but we should consume the event
-        // to prevent newline insertion if it was a submit attempt.
-        // However, standard behavior is usually: click logic handles validity.
-        // We'll return it so we can click() it (which does nothing if disabled).
-        return updateButton.closest('button') ?? updateButton;
+      // Double check: if it's disabled, we might want to return it anyway (to block default enter)
+      // or ignore it? Logic: If disabled, clicking does nothing, but we should consume the event
+      // to prevent newline insertion if it was a submit attempt.
+      // However, standard behavior is usually: click logic handles validity.
+      // We'll return it so we can click() it (which does nothing if disabled).
+      return updateButton.closest('button') ?? updateButton;
     }
 
     // 2. Fallback Contextual: Regex on aria-labels
     const UPDATE_REGEX = /update|save|confirm|submit|更新|保存|提交|修改/i;
     const buttons = Array.from(parent.querySelectorAll('button'));
-    
-    const matchedBtn = buttons.find(btn => {
-      const label = btn.getAttribute('aria-label') || btn.getAttribute('data-tooltip') || btn.textContent || '';
+
+    const matchedBtn = buttons.find((btn) => {
+      const label =
+        btn.getAttribute('aria-label') || btn.getAttribute('data-tooltip') || btn.textContent || '';
       return UPDATE_REGEX.test(label) && btn.offsetParent !== null;
     });
 
@@ -103,11 +104,13 @@ function findSendButton(inputElement: HTMLElement): HTMLElement | null {
 
     // 3. Proximity Check for generic Send buttons (very close only)
     if (attempts <= 2) {
-       const localSend = buttons.find(btn => {
-          const hasSendIcon = btn.querySelector('mat-icon[fonticon="send"]') || btn.querySelector('.material-symbols-outlined')?.textContent === 'send';
-          return hasSendIcon && btn.offsetParent !== null;
-       });
-       if (localSend) return localSend;
+      const localSend = buttons.find((btn) => {
+        const hasSendIcon =
+          btn.querySelector('mat-icon[fonticon="send"]') ||
+          btn.querySelector('.material-symbols-outlined')?.textContent === 'send';
+        return hasSendIcon && btn.offsetParent !== null;
+      });
+      if (localSend) return localSend;
     }
 
     parent = parent.parentElement;
@@ -115,7 +118,7 @@ function findSendButton(inputElement: HTMLElement): HTMLElement | null {
   }
 
   // --- 2. Global Search (Fallback for Main Chat) ---
-  
+
   // Try predefined selectors
   for (const selector of SEND_BUTTON_SELECTORS) {
     try {
@@ -142,7 +145,6 @@ function findSendButton(inputElement: HTMLElement): HTMLElement | null {
 
   return null;
 }
-
 
 /**
  * Insert a newline in a contenteditable element
