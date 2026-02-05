@@ -1,4 +1,4 @@
-# Hide Recent Items
+# Hide Recent Items and Gems
 
 ::: info
 **Note**: This feature is supported in version 1.1.9 and later.

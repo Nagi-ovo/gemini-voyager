@@ -1,4 +1,4 @@
-# Masquer les éléments récents
+# Masquer les éléments récents et les Gems
 
 ::: info
 **Note**: Cette fonctionnalité est supportée dans la version 1.1.9 et ultérieure.

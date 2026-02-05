@@ -1,4 +1,4 @@
-# Ocultar elementos recientes
+# Ocultar elementos recientes y Gems
 
 ::: info
 **Nota**: Esta función es compatible con la versión 1.1.9 y posteriores.

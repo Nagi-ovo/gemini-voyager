@@ -1,4 +1,4 @@
-# Ocultar itens recentes
+# Ocultar itens recentes e Gems
 
 ::: info
 **Nota**: Este recurso é suportado na versão 1.1.9 e posteriores.
