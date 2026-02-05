@@ -210,7 +210,9 @@ function handleMenuClick(e: Event): void {
   }
 
   // Check for three-dot menu buttons (options buttons)
-  const optionsButton = target.closest('[data-test-id*="options"], [aria-label*="选项"], [aria-label*="Options"], [aria-label*="More"]');
+  const optionsButton = target.closest(
+    '[data-test-id*="options"], [aria-label*="选项"], [aria-label*="Options"], [aria-label*="More"]',
+  );
   if (optionsButton) {
     pauseAutoCollapse(MENU_CLICK_PAUSE_MS);
     return;
