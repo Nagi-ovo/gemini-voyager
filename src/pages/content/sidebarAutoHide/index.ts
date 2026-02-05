@@ -11,18 +11,26 @@ const STYLE_ID = 'gv-sidebar-auto-hide-style';
 const STORAGE_KEY = 'gvSidebarAutoHide';
 
 // Debounce delay to avoid rapid toggling
-const LEAVE_DELAY_MS = 300;
+const LEAVE_DELAY_MS = 500;
 // Interval to check for sidenav element reappearing
 const SIDENAV_CHECK_INTERVAL_MS = 1000;
+// Debounce delay for resize events
+const RESIZE_DEBOUNCE_MS = 200;
+// Pause duration after menu item click (wait for dialog to appear)
+const MENU_CLICK_PAUSE_MS = 1500;
 
 let enabled = false;
 let leaveTimeoutId: number | null = null;
 let sidenavElement: HTMLElement | null = null;
 let observer: MutationObserver | null = null;
 let resizeHandler: (() => void) | null = null;
+let resizeDebounceTimer: number | null = null;
 let sidenavCheckTimer: number | null = null;
+let menuClickHandler: ((e: Event) => void) | null = null;
 // Track whether sidebar was collapsed by our feature (to avoid fighting with user)
 let autoCollapsed = false;
+// Temporarily pause auto-collapse after menu actions
+let pausedUntil = 0;
 
 /**
  * CSS to enable smooth transitions for the sidebar collapse/expand
@@ -117,6 +125,99 @@ function isSidebarVisible(): boolean {
 }
 
 /**
+ * Check if auto-collapse is currently paused
+ */
+function isPaused(): boolean {
+  return Date.now() < pausedUntil;
+}
+
+/**
+ * Pause auto-collapse for a duration
+ */
+function pauseAutoCollapse(durationMs: number): void {
+  pausedUntil = Date.now() + durationMs;
+}
+
+/**
+ * Check if there's a visible popup/dialog/menu open that should prevent sidebar collapse
+ * This includes delete confirmation dialogs, context menus, etc.
+ */
+function isPopupOrDialogOpen(): boolean {
+  // Check for Angular Material dialogs - must be visible
+  const matDialogs = document.querySelectorAll<HTMLElement>('.mat-mdc-dialog-container');
+  for (const dialog of matDialogs) {
+    const rect = dialog.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) return true;
+  }
+
+  // Check for Angular Material menus - must be visible
+  const matMenus = document.querySelectorAll<HTMLElement>('.mat-mdc-menu-panel');
+  for (const menu of matMenus) {
+    const rect = menu.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) return true;
+  }
+
+  // Check for Gemini-specific popup elements
+  const geminiPopup = document.querySelector('.gv-folder-dialog, .gv-confirm-dialog');
+  if (geminiPopup) return true;
+
+  return false;
+}
+
+/**
+ * Check if mouse is currently over the sidebar or any related popup element
+ */
+function isMouseOverSidebarArea(): boolean {
+  // Check if mouse is over the sidenav
+  if (sidenavElement?.matches(':hover')) return true;
+
+  // Check if mouse is over visible dialogs/menus
+  const matDialogs = document.querySelectorAll<HTMLElement>('.mat-mdc-dialog-container');
+  for (const dialog of matDialogs) {
+    if (dialog.matches(':hover')) return true;
+  }
+
+  const matMenus = document.querySelectorAll<HTMLElement>('.mat-mdc-menu-panel');
+  for (const menu of matMenus) {
+    if (menu.matches(':hover')) return true;
+  }
+
+  return false;
+}
+
+/**
+ * Handle click on menu items - pause auto-collapse to wait for potential dialogs
+ */
+function handleMenuClick(e: Event): void {
+  if (!enabled) return;
+
+  const target = e.target as HTMLElement;
+
+  // Check if clicked on a menu item (especially delete actions)
+  const menuItem = target.closest('[role="menuitem"], [role="menuitemradio"], .mat-mdc-menu-item');
+  if (menuItem) {
+    // Pause auto-collapse to allow dialog to appear
+    pauseAutoCollapse(MENU_CLICK_PAUSE_MS);
+    return;
+  }
+
+  // Check if clicked on any button inside the sidebar that might trigger a dialog
+  const sidebarButton = target.closest('bard-sidenav button, bard-sidenav [role="button"]');
+  if (sidebarButton) {
+    // Pause auto-collapse briefly
+    pauseAutoCollapse(MENU_CLICK_PAUSE_MS);
+    return;
+  }
+
+  // Check for three-dot menu buttons (options buttons)
+  const optionsButton = target.closest('[data-test-id*="options"], [aria-label*="选项"], [aria-label*="Options"], [aria-label*="More"]');
+  if (optionsButton) {
+    pauseAutoCollapse(MENU_CLICK_PAUSE_MS);
+    return;
+  }
+}
+
+/**
  * Click the toggle button to switch sidebar state
  */
 function clickToggleButton(): boolean {
@@ -128,9 +229,18 @@ function clickToggleButton(): boolean {
 }
 
 /**
- * Collapse the sidebar (if currently expanded)
+ * Collapse the sidebar (if currently expanded and no popup is open)
  */
 function collapseSidebar(): void {
+  // Don't collapse if paused
+  if (isPaused()) return;
+
+  // Don't collapse if a popup/dialog is open
+  if (isPopupOrDialogOpen()) return;
+
+  // Don't collapse if mouse is still over sidebar area
+  if (isMouseOverSidebarArea()) return;
+
   if (!isSidebarCollapsed()) {
     if (clickToggleButton()) {
       autoCollapsed = true;
@@ -178,6 +288,10 @@ function handleMouseLeave(): void {
 
   leaveTimeoutId = window.setTimeout(() => {
     leaveTimeoutId = null;
+
+    // Double-check conditions before collapsing
+    if (!enabled) return;
+
     collapseSidebar();
   }, LEAVE_DELAY_MS);
 }
@@ -248,13 +362,20 @@ function checkAndReattach(): void {
 }
 
 /**
- * Handle window resize - reattach listeners if sidebar reappears
+ * Handle window resize - reattach listeners if sidebar reappears (with debounce)
  */
 function handleResize(): void {
   if (!enabled) return;
 
   // Debounce resize handling
-  checkAndReattach();
+  if (resizeDebounceTimer !== null) {
+    window.clearTimeout(resizeDebounceTimer);
+  }
+
+  resizeDebounceTimer = window.setTimeout(() => {
+    resizeDebounceTimer = null;
+    checkAndReattach();
+  }, RESIZE_DEBOUNCE_MS);
 }
 
 /**
@@ -285,6 +406,7 @@ function enable(): void {
   if (enabled) return;
   enabled = true;
   autoCollapsed = false;
+  pausedUntil = 0;
 
   insertTransitionStyle();
   attachEventListeners();
@@ -306,12 +428,18 @@ function enable(): void {
     window.addEventListener('resize', resizeHandler);
   }
 
+  // Listen for clicks on menu items to pause auto-collapse
+  if (!menuClickHandler) {
+    menuClickHandler = handleMenuClick;
+    document.addEventListener('click', menuClickHandler, true);
+  }
+
   // Start periodic check for sidenav element reappearing
   startSidenavCheck();
 
-  // Initial collapse if mouse is not on sidebar
+  // Initial collapse if mouse is not on sidebar and no popup is open
   setTimeout(() => {
-    if (enabled && sidenavElement && !sidenavElement.matches(':hover')) {
+    if (enabled && sidenavElement && !sidenavElement.matches(':hover') && !isPopupOrDialogOpen()) {
       collapseSidebar();
     }
   }, 500);
@@ -330,6 +458,12 @@ function disable(): void {
     leaveTimeoutId = null;
   }
 
+  // Cancel any pending resize debounce
+  if (resizeDebounceTimer !== null) {
+    window.clearTimeout(resizeDebounceTimer);
+    resizeDebounceTimer = null;
+  }
+
   // Stop periodic check
   stopSidenavCheck();
 
@@ -338,6 +472,7 @@ function disable(): void {
     clickToggleButton();
   }
   autoCollapsed = false;
+  pausedUntil = 0;
 
   detachEventListeners();
   removeTransitionStyle();
@@ -350,6 +485,11 @@ function disable(): void {
   if (resizeHandler) {
     window.removeEventListener('resize', resizeHandler);
     resizeHandler = null;
+  }
+
+  if (menuClickHandler) {
+    document.removeEventListener('click', menuClickHandler, true);
+    menuClickHandler = null;
   }
 }
 
