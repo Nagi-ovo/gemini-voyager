@@ -19,6 +19,7 @@ import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
 import { startRecentsHider } from './recentsHider/index';
 import { startSendBehavior } from './sendBehavior/index';
+import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
@@ -140,6 +141,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startSidebarWidthAdjuster();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startSidebarAutoHide();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startInputCollapse();

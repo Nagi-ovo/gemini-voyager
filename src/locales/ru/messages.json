@@ -1086,5 +1086,13 @@
   "defaultModelCleared": {
     "message": "Default model cleared",
     "description": "Toast message when default model is cleared"
+  },
+  "sidebarAutoHide": {
+    "message": "Авто-скрытие боковой панели",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "sidebarAutoHideHint": {
+    "message": "Автоматически сворачивать боковую панель при уходе мыши, разворачивать при наведении",
+    "description": "Auto-hide sidebar feature hint"
   }
 }

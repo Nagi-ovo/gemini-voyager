@@ -1086,5 +1086,13 @@
   "defaultModelCleared": {
     "message": "已取消默认模型",
     "description": "Toast message when default model is cleared"
+  },
+  "sidebarAutoHide": {
+    "message": "侧边栏自动收起",
+    "description": "侧边栏自动收起开关标签"
+  },
+  "sidebarAutoHideHint": {
+    "message": "鼠标离开时自动收起侧边栏，鼠标进入时展开",
+    "description": "侧边栏自动收起功能提示"
   }
 }

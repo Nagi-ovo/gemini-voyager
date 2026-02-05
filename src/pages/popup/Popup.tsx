@@ -122,6 +122,7 @@ interface SettingsUpdate {
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
+  sidebarAutoHideEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -148,6 +149,7 @@ export default function Popup() {
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
+  const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
   const [isAIStudio, setIsAIStudio] = useState<boolean>(false);
 
   useEffect(() => {
@@ -220,6 +222,8 @@ export default function Popup() {
         payload.gvQuoteReplyEnabled = settings.quoteReplyEnabled;
       if (typeof settings.ctrlEnterSendEnabled === 'boolean')
         payload.gvCtrlEnterSend = settings.ctrlEnterSendEnabled;
+      if (typeof settings.sidebarAutoHideEnabled === 'boolean')
+        payload.gvSidebarAutoHide = settings.sidebarAutoHideEnabled;
       void setSyncStorage(payload);
     },
     [setSyncStorage],
@@ -404,6 +408,7 @@ export default function Popup() {
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
           gvCtrlEnterSend: false,
+          gvSidebarAutoHide: false,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -427,6 +432,7 @@ export default function Popup() {
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
+          setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -924,6 +930,33 @@ export default function Popup() {
           onChange={sidebarWidthAdjuster.handleChange}
           onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
         />
+
+        {/* Sidebar Auto-Hide - Gemini only */}
+        {!isAIStudio && (
+          <Card className="p-4 transition-shadow hover:shadow-lg">
+            <CardContent className="p-0">
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="sidebar-auto-hide"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('sidebarAutoHide')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('sidebarAutoHideHint')}</p>
+                </div>
+                <Switch
+                  id="sidebar-auto-hide"
+                  checked={sidebarAutoHideEnabled}
+                  onChange={(e) => {
+                    setSidebarAutoHideEnabled(e.target.checked);
+                    apply({ sidebarAutoHideEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Formula Copy Options */}
         <Card className="p-4 transition-shadow hover:shadow-lg">

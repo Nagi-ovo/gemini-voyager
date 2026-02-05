@@ -1086,5 +1086,13 @@
   "defaultModelCleared": {
     "message": "Default model cleared",
     "description": "Toast message when default model is cleared"
+  },
+  "sidebarAutoHide": {
+    "message": "Masquer auto barre latérale",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "sidebarAutoHideHint": {
+    "message": "Réduit automatiquement la barre latérale quand la souris la quitte, l'étend quand elle y entre",
+    "description": "Auto-hide sidebar feature hint"
   }
 }

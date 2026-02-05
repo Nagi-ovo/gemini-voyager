@@ -1086,5 +1086,13 @@
   "defaultModelCleared": {
     "message": "Default model cleared",
     "description": "Toast message when default model is cleared"
+  },
+  "sidebarAutoHide": {
+    "message": "サイドバー自動非表示",
+    "description": "サイドバー自動非表示トグルラベル"
+  },
+  "sidebarAutoHideHint": {
+    "message": "マウスが離れると自動でサイドバーを折りたたみ、マウスが入ると展開します",
+    "description": "サイドバー自動非表示機能のヒント"
   }
 }
