@@ -23,8 +23,8 @@ Sync your folders, prompt library, and other data to Google Drive to keep your e
 **安全上の推奨事項：二重保護**  
 クラウド同期は非常に便利ですが、データの万全を期すため、定期的に**ローカルファイル形式**でコアデータを手動バックアップすることを強くお勧めします。
 
-1. **すべての設定をエクスポート**: 設定パネル下部の「バックアップと復元」から完全なバックアップパッケージをエクスポートします。
-   <img src="/assets/manual-export-all.png" alt="すべての設定をエクスポート" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. **個別のフォルダーをエクスポート**: フォルダーのメニューで「フォルダーをエクスポート」をクリックして、そのプロジェクトのみをバックアップします。
-   <img src="/assets/manual-folder-export.png" alt="個別のフォルダーをエクスポート" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+1. **全設定をエクスポート**: 設定パネル下部の「バックアップと復元」から、すべての設定、フォルダー、プロンプトを含む完全なパッケージをエクスポートします。
+   <img src="/assets/manual-export-all.png" alt="全設定をエクスポート" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+2. **すべてのフォルダーをエクスポート**: 設定パネルの「フォルダー」セクションで「エクスポート」をクリックし、すべてのフォルダー構造と会話のみをバックアップします（プロンプトは含まれません）。
+   <img src="/assets/manual-folder-export.png" alt="すべてのフォルダーをエクスポート" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
    :::

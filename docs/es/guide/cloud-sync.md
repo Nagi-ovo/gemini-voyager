@@ -23,8 +23,8 @@ Sync your folders, prompt library, and other data to Google Drive to keep your e
 **Security Recommendation: Double Protection**  
 While Cloud Sync offers great convenience, we strongly recommend that you also periodically back up your core data using **local files**.
 
-1. **Export All Settings**: Export a complete backup package from "Backup & Restore" at the bottom of the settings panel.
-   <img src="/assets/manual-export-all.png" alt="Export All Settings" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. **Export Individual Folder**: In the folder menu, click "Export Folder" to back up only that specific project.
-   <img src="/assets/manual-folder-export.png" alt="Export Individual Folder" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+1. **Exportación completa**: Exporta un paquete completo con todas las configuraciones, carpetas y prompts desde "Copia de seguridad y restauración" al final del panel.
+   <img src="/assets/manual-export-all.png" alt="Exportación completa" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+2. **Exportar todas las carpetas**: Haz clic en "Exportar" en la sección "Carpetas" del panel para guardar todas tus carpetas y conversaciones, excluyendo los prompts.
+   <img src="/assets/manual-folder-export.png" alt="Exportar todas las carpetas" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
    :::

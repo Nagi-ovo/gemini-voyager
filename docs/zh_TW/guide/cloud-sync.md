@@ -23,8 +23,8 @@
 **安全建議：雙重保護**  
 雖然雲同步提供了極大的便利，但為了您的數據萬無一失，我們强烈建議您定期通過**本地文件方式**手動備份核心數據。
 
-1. **導出所有配置**：在設置面板底部的「備份與恢復」中導出完整備份包。
-   <img src="/assets/manual-export-all.png" alt="導出所有配置" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. **導出單個資料夾**：在資料夾的菜單中，點擊「導出資料夾」僅備份該項目。
-   <img src="/assets/manual-folder-export.png" alt="導出單個資料夾" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+1. **匯出全量配置**：在設置面板底部的「備份與恢復」中匯出包含所有設置、資料夾和提示詞的完整備份。
+   <img src="/assets/manual-export-all.png" alt="匯出全量配置" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+2. **匯出所有資料夾**：在設置面板的「資料夾」區域點擊「匯出」，僅備份所有資料夾結構及對話，不包含提示詞。
+   <img src="/assets/manual-folder-export.png" alt="匯出所有資料夾" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
    :::
