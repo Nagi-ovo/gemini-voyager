@@ -9,7 +9,8 @@ const logger = LoggerService.getInstance().createChild('MarkdownPatcher');
  * Specific target pattern:
  * TextNode containing "**" -> ElementNode(b[data-path-to-node]) -> TextNode containing "**"
  */
-function fixBrokenBoldTags(root: HTMLElement) {
+// Export for testing
+export function fixBrokenBoldTags(root: HTMLElement) {
   // Use a TreeWalker to safely iterate text nodes
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
   const textNodes: Text[] = [];
@@ -24,14 +25,65 @@ function fixBrokenBoldTags(root: HTMLElement) {
   for (const startNode of textNodes) {
     if (!startNode.isConnected) continue;
 
-    const startText = startNode.textContent || '';
+    let currentNode = startNode;
+    const originalText = currentNode.textContent || '';
+
+    // Phase 1: Fix intra-node bolds (e.g., "start **bold** end")
+    // We match all complete pairs of **...** within the node
+    const matches = Array.from(originalText.matchAll(/\*\*(.*?)\*\*/g));
+
+    if (matches.length > 0) {
+      const fragment = document.createDocumentFragment();
+      let lastCursor = 0;
+      let lastTextNode: Text | null = null;
+
+      matches.forEach((m) => {
+        const matchStart = m.index!;
+        const matchEnd = matchStart + m[0].length;
+        const content = m[1];
+
+        // Text before
+        if (matchStart > lastCursor) {
+          fragment.appendChild(document.createTextNode(originalText.slice(lastCursor, matchStart)));
+        }
+
+        // Bold content
+        const strong = document.createElement('strong');
+        strong.textContent = content;
+        fragment.appendChild(strong);
+
+        lastCursor = matchEnd;
+      });
+
+      // Text after (this might contain a trailing unmatched '**' for Phase 2)
+      if (lastCursor < originalText.length) {
+        lastTextNode = document.createTextNode(originalText.slice(lastCursor));
+        fragment.appendChild(lastTextNode);
+      }
+
+      // Replace the original node with our processed fragment
+      if (currentNode.parentNode) {
+        currentNode.parentNode.replaceChild(fragment, currentNode);
+      }
+
+      // Prepare for Phase 2:
+      // If we created a trailing text node, that is now the candidate for the "split" check.
+      // If we didn't (node ended with bold), there's no dangling start marker, so we're done with this node.
+      if (lastTextNode) {
+        currentNode = lastTextNode;
+      } else {
+        continue;
+      }
+    }
+
+    // Phase 2: Fix split-node bolds (e.g., "text**" -> element -> "text**")
+    // This logic handles cases where the bold marker is interrupted by an injected element
+    const startText = currentNode.textContent || '';
     const startIdx = startText.lastIndexOf('**');
 
-    // Currently we only handle the case where the opening delimiter is the last one in the node
-    // or we just take the last one found.
     if (startIdx === -1) continue;
 
-    const nextNode = startNode.nextSibling;
+    const nextNode = currentNode.nextSibling;
 
     // Check if the next sibling is the interfering element
     if (
@@ -54,26 +106,19 @@ function fixBrokenBoldTags(root: HTMLElement) {
             // 1. Create wrapper
             const strong = document.createElement('strong');
 
-            // 2. Insert the strong tag into the DOM first (before modifying/moving siblings)
-            // We insert it before the middleElement (newNode).
-            // Current state: [startNode] [middleElement] [endNode]
-            // Desired state: [startNode] [strong] [endNode]
-            //                 strong contains [text] [middleElement] [text]
-            if (startNode.parentNode) {
-              startNode.parentNode.insertBefore(strong, nextNode);
+            // 2. Insert the strong tag into the DOM first
+            if (currentNode.parentNode) {
+              currentNode.parentNode.insertBefore(strong, nextNode);
             }
 
             // 3. Extract and move content INTO the strong tag
-            // Moving middleElement removes it from its original position, which is fine
-            // because we already used it as the reference for insertion.
-
             // Content from start node (after the **)
             const afterStart = startText.substring(startIdx + 2);
             if (afterStart) {
               strong.appendChild(document.createTextNode(afterStart));
             }
 
-            // The middle element (citation/highlight)
+            // The middle element
             strong.appendChild(middleElement);
 
             // Content from end node (before the **)
@@ -83,10 +128,7 @@ function fixBrokenBoldTags(root: HTMLElement) {
             }
 
             // 4. Cleanup original text nodes
-            // Remove the ** and the moved text from startNode
-            startNode.textContent = startText.substring(0, startIdx);
-
-            // Remove the ** and the moved text from endNode
+            currentNode.textContent = startText.substring(0, startIdx);
             endNode.textContent = endText.substring(endIdx + 2);
           } catch (e) {
             logger.error('Failed to apply markdown fix', { error: e });
