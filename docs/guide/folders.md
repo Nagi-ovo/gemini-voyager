@@ -39,7 +39,7 @@
 
 ### Gemini 专属增强
 
-- **自定义颜色**：点击文件夹侧边的三个点自定义颜色，8 种亮丽色彩任你选。
+- **自定义颜色**：点击文件夹图标自定义颜色。内置 7 种默认配色，亦支持通过调色盘选取你的专属色彩。
   <img src="/assets/folder-color.png" alt="文件夹配色" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 - **账号隔离**：自动隔离不同 Google 账号的对话列表，防止数据混淆。
   <img src="/assets/current-user-only.png" alt="账号隔离模式" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>

@@ -30,7 +30,7 @@ It just feels right.
 
 ## Advanced Features
 
-- **Colors**: Click the three dots on a folder's side to customize its color. 8 vibrant choices to make your sidebar pop.
+- **Colors**: Click the folder icon to customize its color. Choose from 7 default colors or use the color picker to select any custom color.
   <img src="/assets/folder-color.png" alt="Folder Colors" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 
 - **Account Isolation**: Click the "person" icon in the header to instantly filter out chats from other Google accounts. Keep your workspace clean when using multiple accounts.

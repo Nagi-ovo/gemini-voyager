@@ -30,7 +30,7 @@ Simplesmente parece certo.
 
 ## Recursos Avançados
 
-- **Cores**: Clique nos três pontos ao lado de uma pasta para personalizar sua cor. 8 opções vibrantes para destacar sua barra lateral.
+- **Cores**: Clique no ícone da pasta para personalizar sua cor. Escolha entre 7 cores padrão ou use o seletor de cores para escolher qualquer cor.
   <img src="/assets/folder-color.png" alt="Cores das pastas" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 
 - **Isolamento de conta**: Clique no ícone "pessoa" no cabeçalho para filtrar instantaneamente os chats de outras contas do Google. Mantenha seu espaço de trabalho limpo ao usar várias contas.

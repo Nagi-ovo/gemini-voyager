@@ -30,7 +30,7 @@ Simplemente se siente bien.
 
 ## Características avanzadas
 
-- **Colores**: Haz clic en los tres puntos al lado de una carpeta para personalizar su color. 8 opciones vibrantes para que tu barra lateral destaque.
+- **Colores**: Haz clic en el icono de la carpeta para personalizar su color. Elige entre 7 colores predeterminados o usa el selector de colores para elegir cualquier color.
   <img src="/assets/folder-color.png" alt="Colores de carpeta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 
 - **Aislamiento de cuenta**: Haz clic en el icono "persona" en el encabezado para filtrar instantáneamente los chats de otras cuentas de Google. Mantén tu espacio de trabajo limpio cuando uses varias cuentas.

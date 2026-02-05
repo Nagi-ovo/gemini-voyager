@@ -30,7 +30,7 @@ C'est tout simplement naturel.
 
 ## Fonctionnalités Avancées
 
-- **Couleurs**: Cliquez sur les trois points sur le côté d'un dossier pour personnaliser sa couleur. 8 choix éclatants pour faire ressortir votre barre latérale.
+- **Couleurs**: Cliquez sur l'icône du dossier pour personnaliser sa couleur. Choisissez parmi 7 couleurs par défaut ou utilisez le sélecteur de couleurs pour choisir n'importe quelle couleur.
   <img src="/assets/folder-color.png" alt="Couleurs des dossiers" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 
 - **Isolation de compte** : Cliquez sur l'icône « personne » dans l'en-tête pour filtrer instantanément les chats des autres comptes Google. Gardez votre espace de travail propre lorsque vous utilisez plusieurs comptes.
