@@ -19,18 +19,18 @@ function waitForElement<T extends Element = Element>(
       if (el) {
         try {
           obs.disconnect();
-        } catch {}
+        } catch { }
         resolve(el);
       }
     });
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch {}
+    } catch { }
     if (timeoutMs > 0) {
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch {}
+        } catch { }
         resolve(null);
       }, timeoutMs);
     }
@@ -60,7 +60,7 @@ function downloadJSON(data: any, filename: string): void {
   setTimeout(() => {
     try {
       document.body.removeChild(a);
-    } catch {}
+    } catch { }
     URL.revokeObjectURL(url);
   }, 0);
 }
@@ -108,7 +108,7 @@ export class AIStudioFolderManager {
     span.className = 'google-symbols';
     try {
       span.dataset.icon = name;
-    } catch {}
+    } catch { }
     span.textContent = name;
     return span;
   }
@@ -280,7 +280,7 @@ export class AIStudioFolderManager {
 
     try {
       document.documentElement.classList.add('gv-aistudio-root');
-    } catch {}
+    } catch { }
 
     await this.load();
 
@@ -370,6 +370,32 @@ export class AIStudioFolderManager {
     header.appendChild(actions);
 
     // For AI Studio, hide import/export for now to simplify UI
+
+    // Cloud upload button
+    const cloudUploadButton = document.createElement('button');
+    cloudUploadButton.className = 'gv-folder-action-btn';
+    cloudUploadButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q25-92 100-149t170-57q117 0 198.5 81.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H520q-33 0-56.5-23.5T440-240v-206l-64 62-56-56 160-160 160 160-56 56-64-62v206h220q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-83-58.5-141.5T480-720q-83 0-141.5 58.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h100v80H260Zm220-280Z"/></svg>`;
+    cloudUploadButton.title = this.t('folder_cloud_upload');
+    cloudUploadButton.addEventListener('click', () => this.handleCloudUpload());
+    // Add dynamic tooltip on mouseenter
+    cloudUploadButton.addEventListener('mouseenter', async () => {
+      const tooltip = await this.getCloudUploadTooltip();
+      cloudUploadButton.title = tooltip;
+    });
+    actions.appendChild(cloudUploadButton);
+
+    // Cloud sync button
+    const cloudSyncButton = document.createElement('button');
+    cloudSyncButton.className = 'gv-folder-action-btn';
+    cloudSyncButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"/></svg>`;
+    cloudSyncButton.title = this.t('folder_cloud_sync');
+    cloudSyncButton.addEventListener('click', () => this.handleCloudSync());
+    // Add dynamic tooltip on mouseenter
+    cloudSyncButton.addEventListener('mouseenter', async () => {
+      const tooltip = await this.getCloudSyncTooltip();
+      cloudSyncButton.title = tooltip;
+    });
+    actions.appendChild(cloudSyncButton);
 
     // Add folder
     const addBtn = document.createElement('button');
@@ -472,7 +498,7 @@ export class AIStudioFolderManager {
     const update = () => setTimeout(() => this.highlightActiveConversation(), 0);
     try {
       window.addEventListener('popstate', update);
-    } catch {}
+    } catch { }
     try {
       const hist = history as any;
       const wrap = (method: 'pushState' | 'replaceState') => {
@@ -481,13 +507,13 @@ export class AIStudioFolderManager {
           const ret = orig.apply(this, args);
           try {
             update();
-          } catch {}
+          } catch { }
           return ret;
         };
       };
       wrap('pushState');
       wrap('replaceState');
-    } catch {}
+    } catch { }
     // Fallback poller for routers that bypass events
     try {
       let last = location.pathname;
@@ -501,9 +527,9 @@ export class AIStudioFolderManager {
       this.cleanupFns.push(() => {
         try {
           clearInterval(id);
-        } catch {}
+        } catch { }
       });
-    } catch {}
+    } catch { }
   }
 
   private renderFolder(folder: Folder, level: number = 0): HTMLElement {
@@ -547,7 +573,7 @@ export class AIStudioFolderManager {
     pinBtn.title = folder.pinned ? this.t('folder_unpin') : this.t('folder_pin');
     try {
       (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned';
-    } catch {}
+    } catch { }
     pinBtn.appendChild(this.createIcon('push_pin'));
     pinBtn.addEventListener('click', () => {
       folder.pinned = !folder.pinned;
@@ -650,10 +676,10 @@ export class AIStudioFolderManager {
       };
       try {
         e.dataTransfer?.setData('application/json', JSON.stringify(data));
-      } catch {}
+      } catch { }
       try {
         e.dataTransfer?.setDragImage(row, 10, 10);
-      } catch {}
+      } catch { }
     });
 
     return row;
@@ -675,7 +701,7 @@ export class AIStudioFolderManager {
         this.createFolder(folderId);
         try {
           document.body.removeChild(menu);
-        } catch {}
+        } catch { }
       });
       menu.appendChild(createSub);
     }
@@ -686,7 +712,7 @@ export class AIStudioFolderManager {
       this.renameFolder(folderId);
       try {
         document.body.removeChild(menu);
-      } catch {}
+      } catch { }
     });
     menu.appendChild(rename);
 
@@ -696,7 +722,7 @@ export class AIStudioFolderManager {
       this.deleteFolder(folderId);
       try {
         document.body.removeChild(menu);
-      } catch {}
+      } catch { }
     });
     menu.appendChild(del);
 
@@ -713,7 +739,7 @@ export class AIStudioFolderManager {
       if (e.target instanceof Node && !menu.contains(e.target)) {
         try {
           document.body.removeChild(menu);
-        } catch {}
+        } catch { }
         window.removeEventListener('click', onClickAway, true);
       }
     };
@@ -793,7 +819,7 @@ export class AIStudioFolderManager {
       e.stopPropagation(); // Prevent bubbling to parent drop zones
       try {
         if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-      } catch {}
+      } catch { }
     });
     el.addEventListener('dragleave', (e) => {
       e.stopPropagation(); // Prevent bubbling to parent drop zones
@@ -818,7 +844,7 @@ export class AIStudioFolderManager {
       if (!raw) {
         try {
           raw = e.dataTransfer?.getData('text/plain') || '';
-        } catch {}
+        } catch { }
       }
       if (!raw) return;
       let data: DragData | null = null;
@@ -880,11 +906,11 @@ export class AIStudioFolderManager {
     });
     try {
       observer.observe(root, { childList: true, subtree: true });
-    } catch {}
+    } catch { }
     this.cleanupFns.push(() => {
       try {
         observer.disconnect();
-      } catch {}
+      } catch { }
     });
 
     // Also update on clicks within the prompt list (SPA navigation)
@@ -898,11 +924,11 @@ export class AIStudioFolderManager {
     };
     try {
       root.addEventListener('click', onClick, true);
-    } catch {}
+    } catch { }
     this.cleanupFns.push(() => {
       try {
         root.removeEventListener('click', onClick, true);
-      } catch {}
+      } catch { }
     });
   }
 
@@ -929,10 +955,10 @@ export class AIStudioFolderManager {
             // Fallback to text/plain to interop with stricter DnD
             e.dataTransfer.setData('text/plain', JSON.stringify(data));
           }
-        } catch {}
+        } catch { }
         try {
           e.dataTransfer?.setDragImage(hostEl, 10, 10);
-        } catch {}
+        } catch { }
       });
     });
   }
@@ -956,11 +982,11 @@ export class AIStudioFolderManager {
       });
       try {
         bodyObserver.observe(document.body, { childList: true, subtree: true });
-      } catch {}
+      } catch { }
       this.cleanupFns.push(() => {
         try {
           bodyObserver.disconnect();
-        } catch {}
+        } catch { }
       });
       return;
     }
@@ -970,11 +996,11 @@ export class AIStudioFolderManager {
     });
     try {
       observer.observe(tableRoot, { childList: true, subtree: true });
-    } catch {}
+    } catch { }
     this.cleanupFns.push(() => {
       try {
         observer.disconnect();
-      } catch {}
+      } catch { }
     });
   }
 
@@ -1023,10 +1049,10 @@ export class AIStudioFolderManager {
             // Fallback to text/plain to interop with stricter DnD
             e.dataTransfer.setData('text/plain', json);
           }
-        } catch {}
+        } catch { }
         try {
           e.dataTransfer?.setDragImage(tr, 10, 10);
-        } catch {}
+        } catch { }
 
         // Visual feedback
         tr.style.opacity = '0.5';
@@ -1120,7 +1146,7 @@ export class AIStudioFolderManager {
         if (!raw) {
           try {
             raw = e.dataTransfer?.getData('text/plain') || '';
-          } catch {}
+          } catch { }
         }
         if (!raw) return;
 
@@ -1172,7 +1198,7 @@ export class AIStudioFolderManager {
         e.stopPropagation();
         try {
           if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-        } catch {}
+        } catch { }
       });
       rootItem.addEventListener('dragleave', (e) => {
         e.stopPropagation();
@@ -1242,7 +1268,7 @@ export class AIStudioFolderManager {
           e.stopPropagation();
           try {
             if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-          } catch {}
+          } catch { }
         });
         folderItem.addEventListener('dragleave', (e) => {
           e.stopPropagation();
@@ -1259,7 +1285,7 @@ export class AIStudioFolderManager {
           if (!raw) {
             try {
               raw = e.dataTransfer?.getData('text/plain') || '';
-            } catch {}
+            } catch { }
           }
           if (!raw) return;
 
@@ -1360,7 +1386,7 @@ export class AIStudioFolderManager {
       try {
         document.removeEventListener('dragstart', onDragStart);
         document.body.removeChild(floatingZone);
-      } catch {}
+      } catch { }
     });
   }
 
@@ -1841,8 +1867,152 @@ export class AIStudioFolderManager {
         if (handle.parentElement) {
           handle.parentElement.removeChild(handle);
         }
-      } catch {}
+      } catch { }
     });
+  }
+
+  /**
+   * Handle cloud upload - upload folder data to Google Drive
+   */
+  private async handleCloudUpload(): Promise<void> {
+    try {
+      this.showNotification(this.t('syncInProgress'), 'info');
+
+      // Get current folder data
+      const folders = this.data;
+
+      // Send upload request to background script
+      const response = (await browser.runtime.sendMessage({
+        type: 'gv.sync.upload',
+        payload: { folders, prompts: [], platform: 'aistudio' },
+      })) as { ok?: boolean; error?: string } | undefined;
+
+      if (response?.ok) {
+        this.showNotification(this.t('syncSuccess'), 'info');
+      } else {
+        const errorMsg = response?.error || 'Unknown error';
+        this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[AIStudioFolderManager] Cloud upload failed:', error);
+      this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+    }
+  }
+
+  /**
+   * Handle cloud sync - download and merge folder data from Google Drive
+   */
+  private async handleCloudSync(): Promise<void> {
+    try {
+      this.showNotification(this.t('syncInProgress'), 'info');
+
+      // Send download request to background script
+      const response = (await browser.runtime.sendMessage({
+        type: 'gv.sync.download',
+        payload: { platform: 'aistudio' },
+      })) as
+        | { ok?: boolean; error?: string; data?: { folders?: { data?: FolderData } } }
+        | undefined;
+
+      if (!response?.ok) {
+        const errorMsg = response?.error || 'Download failed';
+        this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+        return;
+      }
+
+      if (!response.data) {
+        this.showNotification(this.t('syncNoData') || 'No data in cloud', 'info');
+        return;
+      }
+
+      // Get cloud folder data
+      const cloudFoldersPayload = response.data?.folders;
+      const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
+
+      // Merge with local data
+      const localFolders = this.data;
+      const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
+
+      // Apply merged data
+      this.data = mergedFolders;
+      await this.save();
+      this.render();
+
+      this.showNotification(this.t('syncSuccess'), 'info');
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[AIStudioFolderManager] Cloud sync failed:', error);
+      this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+    }
+  }
+
+  /**
+   * Get dynamic tooltip for cloud upload button showing last upload time
+   */
+  private async getCloudUploadTooltip(): Promise<string> {
+    try {
+      const response = (await browser.runtime.sendMessage({ type: 'gv.sync.getState' })) as
+        | { ok?: boolean; state?: { lastUploadTime?: number | null } }
+        | undefined;
+      if (response?.ok && response.state) {
+        const lastUploadTime = response.state.lastUploadTime;
+        const timeStr = this.formatRelativeTime(lastUploadTime ?? null);
+        const baseTooltip = this.t('folder_cloud_upload');
+        return lastUploadTime
+          ? `${baseTooltip}\n${this.t('lastUploaded').replace('{time}', timeStr)}`
+          : `${baseTooltip}\n${this.t('neverUploaded')}`;
+      }
+    } catch (e) {
+      console.warn('[AIStudioFolderManager] Failed to get sync state for tooltip:', e);
+    }
+    return this.t('folder_cloud_upload');
+  }
+
+  /**
+   * Get dynamic tooltip for cloud sync button showing last sync time
+   */
+  private async getCloudSyncTooltip(): Promise<string> {
+    try {
+      const response = (await browser.runtime.sendMessage({ type: 'gv.sync.getState' })) as
+        | { ok?: boolean; state?: { lastSyncTime?: number | null } }
+        | undefined;
+      if (response?.ok && response.state) {
+        const lastSyncTime = response.state.lastSyncTime;
+        const timeStr = this.formatRelativeTime(lastSyncTime ?? null);
+        const baseTooltip = this.t('folder_cloud_sync');
+        return lastSyncTime
+          ? `${baseTooltip}\n${this.t('lastSynced').replace('{time}', timeStr)}`
+          : `${baseTooltip}\n${this.t('neverSynced')}`;
+      }
+    } catch (e) {
+      console.warn('[AIStudioFolderManager] Failed to get sync state for tooltip:', e);
+    }
+    return this.t('folder_cloud_sync');
+  }
+
+  /**
+   * Format a timestamp as relative time (e.g. "5 minutes ago")
+   */
+  private formatRelativeTime(timestamp: number | null): string {
+    if (!timestamp) return '';
+    const now = Date.now();
+    const diffMs = now - timestamp;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) {
+      return this.t('justNow');
+    } else if (diffMins < 60) {
+      return `${diffMins} ${this.t('minutesAgo')}`;
+    } else if (diffHours < 24) {
+      return `${diffHours} ${this.t('hoursAgo')}`;
+    } else if (diffDays === 1) {
+      return this.t('yesterday');
+    } else {
+      return new Date(timestamp).toLocaleDateString();
+    }
   }
 }
 
