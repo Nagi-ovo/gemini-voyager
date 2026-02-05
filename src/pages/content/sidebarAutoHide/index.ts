@@ -18,6 +18,14 @@ const SIDENAV_CHECK_INTERVAL_MS = 1000;
 const RESIZE_DEBOUNCE_MS = 200;
 // Pause duration after menu item click (wait for dialog to appear)
 const MENU_CLICK_PAUSE_MS = 1500;
+const CUSTOM_POPUP_SELECTORS = [
+  '.gv-folder-dialog',
+  '.gv-folder-dialog-overlay',
+  '.gv-folder-confirm-dialog',
+  '.gv-folder-import-dialog',
+  '.gv-folder-menu',
+  '.gv-color-picker-dialog',
+];
 
 let enabled = false;
 let leaveTimeoutId: number | null = null;
@@ -31,6 +39,16 @@ let menuClickHandler: ((e: Event) => void) | null = null;
 let autoCollapsed = false;
 // Temporarily pause auto-collapse after menu actions
 let pausedUntil = 0;
+
+function isElementVisible(element: HTMLElement): boolean {
+  const style = window.getComputedStyle(element);
+  if (style.display === 'none' || style.visibility === 'hidden') {
+    return false;
+  }
+
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 || rect.height > 0;
+}
 
 /**
  * CSS to enable smooth transitions for the sidebar collapse/expand
@@ -146,20 +164,22 @@ function isPopupOrDialogOpen(): boolean {
   // Check for Angular Material dialogs - must be visible
   const matDialogs = document.querySelectorAll<HTMLElement>('.mat-mdc-dialog-container');
   for (const dialog of matDialogs) {
-    const rect = dialog.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) return true;
+    if (isElementVisible(dialog)) return true;
   }
 
   // Check for Angular Material menus - must be visible
   const matMenus = document.querySelectorAll<HTMLElement>('.mat-mdc-menu-panel');
   for (const menu of matMenus) {
-    const rect = menu.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) return true;
+    if (isElementVisible(menu)) return true;
   }
 
-  // Check for Gemini-specific popup elements
-  const geminiPopup = document.querySelector('.gv-folder-dialog, .gv-confirm-dialog');
-  if (geminiPopup) return true;
+  // Check for Gemini Voyager popup elements
+  for (const selector of CUSTOM_POPUP_SELECTORS) {
+    const customPopups = document.querySelectorAll<HTMLElement>(selector);
+    for (const popup of customPopups) {
+      if (isElementVisible(popup)) return true;
+    }
+  }
 
   return false;
 }
@@ -180,6 +200,13 @@ function isMouseOverSidebarArea(): boolean {
   const matMenus = document.querySelectorAll<HTMLElement>('.mat-mdc-menu-panel');
   for (const menu of matMenus) {
     if (menu.matches(':hover')) return true;
+  }
+
+  for (const selector of CUSTOM_POPUP_SELECTORS) {
+    const customPopups = document.querySelectorAll<HTMLElement>(selector);
+    for (const popup of customPopups) {
+      if (popup.matches(':hover')) return true;
+    }
   }
 
   return false;
