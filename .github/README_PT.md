@@ -72,20 +72,29 @@ Foi por isso que criámos o **Gemini Voyager**. Não é apenas uma ferramenta; �
 
 Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/pt).
 
-- **📍 [Navegação na Linha do Tempo](https://voyager.nagi.fun/pt/guide/timeline)**: Nós visuais para saltar entre mensagens, marcar momentos importantes e gerir ramos da conversa.
-- **📂 [Organização por Pastas](https://voyager.nagi.fun/pt/guide/folders)**: Organize os seus chats numa hierarquia de dois níveis com suporte para arrastar e largar.
+### 🌌 Núcleo Comum (Gemini & AI Studio)
+
+- **📂 [Organização por Pastas](https://voyager.nagi.fun/pt/guide/folders)**: Organize os seus chats numa hierarquia de dois níveis com suporte para **arrastar e largar** e **sincronização com o Google Drive**.
+  - **Gemini**: Suporta o **Modo de Isolamento de Conta** e **Cores de Pastas Personalizadas**.
 - **💡 [Cofre de Prompts](https://voyager.nagi.fun/pt/guide/prompts)**: Guarde e reutilize os seus melhores prompts no Gemini, AI Studio e [sites personalizados](https://voyager.nagi.fun/pt/guide/custom-websites).
-- **💾 [Exportação de Chat](https://voyager.nagi.fun/pt/guide/export)**: Exporte conversas para JSON, Markdown ou PDF com imagens incluídas.
-- **🍌 [NanoBanana](https://voyager.nagi.fun/pt/guide/nanobanana)**: Remoção de marca de água sem perdas para imagens geradas pelo Gemini.
-- **🧜‍♀️ [Renderização Mermaid](https://voyager.nagi.fun/pt/guide/mermaid)**: Renderização automática de fluxogramas, diagramas de sequência e outros gráficos Mermaid.
-- **🔬 [Deep Research](https://voyager.nagi.fun/pt/guide/deep-research)**: Extraia processos de pensamento e links de pesquisa de sessões de Deep Research.
+- **☁️ [Sincronização na Nuvem](https://voyager.nagi.fun/pt/guide/cloud-sync)**: Sincronize as suas pastas e cofre de prompts com o Google Drive.
 - **📐 Cópia de Fórmulas**: Cópia com um clique de códigos-fonte LaTeX e MathML (Word).
+
+### ✨ Recursos Exclusivos do Gemini
+
+- **📍 [Navegação na Linha do Tempo](https://voyager.nagi.fun/pt/guide/timeline)**: Nós visuais para saltar entre mensagens, marcar momentos importantes e gerir ramos da conversa.
+- **💾 [Exportação de Chat](https://voyager.nagi.fun/pt/guide/export)**: Exporte conversas para JSON, Markdown ou PDF com imagens incluídas.
+- **🧜‍♀️ [Renderização Mermaid](https://voyager.nagi.fun/pt/guide/mermaid)**: Renderização automática de fluxogramas, diagramas de sequência e outros gráficos Mermaid.
+- **📝 [Correção de Renderização Markdown](https://voyager.nagi.fun/pt/guide/markdown-fix)**: Corrige automaticamente a sintaxe de negrito do Markdown quebrada pelos elementos HTML injetados pelo Gemini.
+- **🍌 [NanoBanana](https://voyager.nagi.fun/pt/guide/nanobanana)**: Remoção de marca de água sem perdas para imagens geradas pelo Gemini.
+- **🔬 [Deep Research](https://voyager.nagi.fun/pt/guide/deep-research)**: Extraia processos de pensamento e links de pesquisa de sessões de Deep Research.
 - **🛠️ Ferramentas de Produtividade**:
   - **[Exclusão em Lote](https://voyager.nagi.fun/pt/guide/batch-delete)**: Limpe o seu histórico em massa.
   - **[Resposta com Citação](https://voyager.nagi.fun/pt/guide/quote-reply)**: Responda com contexto selecionando o texto.
   - **[Sincronização do Título da Aba](https://voyager.nagi.fun/pt/guide/tab-title)**: Sincroniza automaticamente o título da aba do navegador.
   - **[Colapso de Entrada](https://voyager.nagi.fun/pt/guide/input-collapse)**: Área de entrada auto-colapsável para mais espaço de leitura.
   - **[Modelo Padrão](https://voyager.nagi.fun/pt/guide/default-model)**: Defina o seu modelo favorito como padrão.
+  - **[Ocultar itens recentes e Gems](https://voyager.nagi.fun/pt/guide/recents-hider)**: Oculta a lista "Recentes" na barra lateral para reduzir distrações.
 
 ---
 

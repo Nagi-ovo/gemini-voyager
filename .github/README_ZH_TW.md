@@ -72,20 +72,29 @@
 
 查看完整功能，請訪問我們的 [官方文檔](https://voyager.nagi.fun/zh_TW)。
 
-- **📍 [時間線導航](https://voyager.nagi.fun/zh_TW/guide/timeline)**: 可視化節點，瞬間跳轉訊息，星標重點，管理對話分支。
-- **📂 [資料夾管理](https://voyager.nagi.fun/zh_TW/guide/folders)**: 雙層目錄結構，支持拖拽，讓對話井井有條。
+### 🌌 通用核心 (Gemini & AI Studio)
+
+- **📂 [資料夾管理](https://voyager.nagi.fun/zh_TW/guide/folders)**: 支持 **多級目錄**、**拖拽排序** 及 **Google Drive 同步**。
+  - **Gemini**: 支持 **多帳號隔離模式** 及 **自定義資料夾顏色**。
 - **💡 [提示詞庫](https://voyager.nagi.fun/zh_TW/guide/prompts)**: 跨平台同步提示詞，支持 Gemini、AI Studio 及 [自定義網站](https://voyager.nagi.fun/zh_TW/guide/custom-websites)。
-- **💾 [對話導出](https://voyager.nagi.fun/zh_TW/guide/export)**: 支持導出為 JSON、Markdown 或 PDF（含圖片）。
-- **🍌 [NanoBanana](https://voyager.nagi.fun/zh_TW/guide/nanobanana)**: 自動去除 Gemini 生成圖片的無損浮水印。
-- **🧜‍♀️ [Mermaid 渲染](https://voyager.nagi.fun/zh_TW/guide/mermaid)**: 自動渲染流程圖、時序圖等 Mermaid 圖表。
-- **🔬 [Deep Research](https://voyager.nagi.fun/zh_TW/guide/deep-research)**: 一鍵提取 Deep Research 對話的思考過程和研究鏈接。
+- **☁️ [雲同步](https://voyager.nagi.fun/zh_TW/guide/cloud-sync)**: 支持將資料夾和提示詞庫同步到 Google Drive。
 - **📐 公式複製**: 一鍵複製 LaTeX 和 MathML (Word) 源碼。
+
+### ✨ Gemini 專屬增強
+
+- **📍 [時間線導航](https://voyager.nagi.fun/zh_TW/guide/timeline)**: 可視化節點，瞬間跳轉訊息，星標重點，管理對話分支。
+- **💾 [對話導出](https://voyager.nagi.fun/zh_TW/guide/export)**: 支持導出為 JSON、Markdown 或 PDF（含圖片）。
+- **🧜‍♀️ [Mermaid 圖表渲染](https://voyager.nagi.fun/zh_TW/guide/mermaid)**: 自動渲染流程圖、時序圖等 Mermaid 圖表。
+- **📝 [Markdown 渲染修復](https://voyager.nagi.fun/zh_TW/guide/markdown-fix)**: 自動修復 Gemini 注入 HTML 導致的 Markdown 加粗失效問題。
+- **🍌 [NanoBanana](https://voyager.nagi.fun/zh_TW/guide/nanobanana)**: 自動去除 Gemini 生成圖片的無損浮水印。
+- **🔬 [Deep Research](https://voyager.nagi.fun/zh_TW/guide/deep-research)**: 一鍵提取 Deep Research 對話的思考過程和研究鏈接。
 - **🛠️ 效率工具**:
   - **[批量刪除](https://voyager.nagi.fun/zh_TW/guide/batch-delete)**: 批量清理對話記錄。
   - **[引用回覆](https://voyager.nagi.fun/zh_TW/guide/quote-reply)**: 選中對話文本即可一鍵引用回覆。
   - **[標籤頁標題同步](https://voyager.nagi.fun/zh_TW/guide/tab-title)**: 自動將標籤頁標題設為對話標題。
   - **[輸入框摺疊](https://voyager.nagi.fun/zh_TW/guide/input-collapse)**: 輸入框自動收納，釋放閱讀空間。
   - **[預設模型](https://voyager.nagi.fun/zh_TW/guide/default-model)**: 為新對話設置預設選中的模型。
+  - **[隱藏最近項目和 Gem](https://voyager.nagi.fun/zh_TW/guide/recents-hider)**: 隱藏側邊欄的“最近”列表，減少干擾。
 
 ---
 
