@@ -3493,7 +3493,8 @@ html.dark .gv-folder-action-btn.gv-filter-active mat-icon,
 .gv-aistudio .gv-conversation-icon.google-symbols,
 .gv-aistudio .gv-folder-action-btn .google-symbols,
 .gv-aistudio .gv-conversation-star-btn .google-symbols,
-.gv-aistudio .gv-conversation-remove-btn .google-symbols {
+.gv-aistudio .gv-conversation-remove-btn .google-symbols,
+.gv-aistudio .gv-folder-uncategorized-header .google-symbols {
   font-family: inherit !important;
   /* Don’t rely on Material Symbols in aistudio */
   font-weight: 400;
