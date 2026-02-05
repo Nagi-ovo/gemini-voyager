@@ -18,3 +18,13 @@
 2. 找到 **雲同步** 區域。
 3. 點擊 **使用 Google 登錄** 並完成授權。
 4. 授權成功後，點擊 **上傳到雲端** 將本地數據同步到雲端，或點擊 **從雲端下載合併** 將雲端數據同步到本地。
+
+::: warning
+**安全建議：雙重保護**  
+雖然雲同步提供了極大的便利，但為了您的數據萬無一失，我們强烈建議您定期通過**本地文件方式**手動備份核心數據。
+
+1. **導出所有配置**：在設置面板底部的「備份與恢復」中導出完整備份包。
+   <img src="/assets/manual-export-all.png" alt="導出所有配置" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+2. **導出單個資料夾**：在資料夾的菜單中，點擊「導出資料夾」僅備份該項目。
+   <img src="/assets/manual-folder-export.png" alt="導出單個資料夾" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+   :::

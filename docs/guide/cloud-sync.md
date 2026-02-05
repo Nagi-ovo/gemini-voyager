@@ -15,3 +15,13 @@
 2. 找到 **云同步** 区域。
 3. 点击 **使用 Google 登录** 并完成授权。
 4. 授权成功后，点击 **上传到云端** 将本地数据同步到云端，或点击 **从云端下载合并** 将云端数据同步到本地。
+
+::: warning
+**安全建议：双重保护**  
+虽然云同步提供了极大的便利，但为了您的数据万无一失，我们强烈建议您定期通过**本地文件方式**手动备份核心数据。
+
+1. **导出所有配置**：在设置面板底部的“备份与恢复”中导出完整备份包。
+   <img src="/assets/manual-export-all.png" alt="导出所有配置" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+2. **导出单个文件夹**：在文件夹的菜单中，点击“导出文件夹”仅备份该项目。
+   <img src="/assets/manual-folder-export.png" alt="导出单个文件夹" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+   :::
