@@ -159,9 +159,10 @@ export class FormulaCopyService {
       return;
     }
 
-    const latexSource = mathElement.getAttribute('data-math');
+    // Try to extract LaTeX: first from data-math (Gemini), then from annotation (AI Studio)
+    const latexSource = this.extractLatexSource(mathElement);
     if (!latexSource) {
-      this.logger.warn('Math element found but no data-math attribute');
+      this.logger.warn('Math element found but no LaTeX source available');
       return;
     }
 
@@ -172,6 +173,32 @@ export class FormulaCopyService {
     this.copyFormula(text, html, event.clientX, event.clientY);
     event.stopPropagation();
   };
+
+  /**
+   * Extract LaTeX source from a math element
+   * Supports both Gemini (data-math attribute) and AI Studio (annotation element)
+   */
+  private extractLatexSource(element: HTMLElement): string | null {
+    // 1. Try Gemini's data-math attribute
+    const dataMath = element.getAttribute('data-math');
+    if (dataMath) {
+      return dataMath;
+    }
+
+    // 2. Try AI Studio's annotation element with encoding="application/x-tex"
+    const annotation = element.querySelector('annotation[encoding="application/x-tex"]');
+    if (annotation?.textContent) {
+      return annotation.textContent.trim();
+    }
+
+    // 3. Fallback: try any annotation element
+    const anyAnnotation = element.querySelector('annotation');
+    if (anyAnnotation?.textContent) {
+      return anyAnnotation.textContent.trim();
+    }
+
+    return null;
+  }
 
   /**
    * Copy formula to clipboard and show notification
@@ -305,16 +332,35 @@ export class FormulaCopyService {
 
   /**
    * Find the nearest math element in the DOM tree
+   * Supports both Gemini (data-math attribute) and AI Studio (ms-katex container)
    */
   private findMathElement(target: HTMLElement): HTMLElement | null {
+    // 1. Try Gemini's data-math attribute (direct)
     const direct = target.closest('[data-math]');
     if (direct instanceof HTMLElement) {
       return direct;
     }
 
-    const container = target.closest('.math-inline, .math-block');
-    if (container instanceof HTMLElement) {
-      return this.findDataMathInSubtree(container);
+    // 2. Try Gemini's .math-inline, .math-block containers
+    const geminiContainer = target.closest('.math-inline, .math-block');
+    if (geminiContainer instanceof HTMLElement) {
+      return this.findDataMathInSubtree(geminiContainer);
+    }
+
+    // 3. Try AI Studio's ms-katex container
+    const aiStudioContainer = target.closest('ms-katex');
+    if (aiStudioContainer instanceof HTMLElement) {
+      return aiStudioContainer;
+    }
+
+    // 4. Try AI Studio: clicked inside .katex element
+    const katexElement = target.closest('.katex');
+    if (katexElement instanceof HTMLElement) {
+      // Find the parent ms-katex container
+      const parentMsKatex = katexElement.closest('ms-katex');
+      if (parentMsKatex instanceof HTMLElement) {
+        return parentMsKatex;
+      }
     }
 
     return null;
@@ -329,9 +375,30 @@ export class FormulaCopyService {
 
   /**
    * Check if formula is in display mode (block formula)
+   * Supports both Gemini (.math-block class) and AI Studio (math display="block" attribute)
    */
   private isDisplayMode(element: HTMLElement): boolean {
-    return element.closest('.math-block') !== null;
+    // 1. Gemini: check for .math-block container
+    if (element.closest('.math-block') !== null) {
+      return true;
+    }
+
+    // 2. AI Studio: check for math element with display="block" attribute
+    const mathElement = element.querySelector('math[display="block"]');
+    if (mathElement) {
+      return true;
+    }
+
+    // 3. AI Studio: check if ms-katex container has block-like styling
+    // (display formulas are typically block-level in AI Studio)
+    if (element.tagName.toLowerCase() === 'ms-katex') {
+      const style = window.getComputedStyle(element);
+      if (style.display === 'block' || style.display === 'flex') {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**

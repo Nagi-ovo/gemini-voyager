@@ -291,4 +291,128 @@ describe('FormulaCopyService', () => {
 
     document.body.removeChild(container);
   });
+
+  it('should copy formula from AI Studio ms-katex container with annotation', async () => {
+    const clipboard = navigator.clipboard as unknown as { write?: unknown };
+    clipboard.write = undefined;
+
+    resetSingleton();
+    service = FormulaCopyService.getInstance({ format: 'latex' });
+
+    // Create AI Studio ms-katex structure based on the real DOM
+    const msKatex = document.createElement('ms-katex');
+    msKatex.classList.add('inline', 'ng-star-inserted');
+
+    const pre = document.createElement('pre');
+    const code = document.createElement('code');
+    code.classList.add('rendered');
+
+    const katexSpan = document.createElement('span');
+    katexSpan.classList.add('katex');
+
+    // Create the katex-mathml part with annotation
+    const katexMathml = document.createElement('span');
+    katexMathml.classList.add('katex-mathml');
+
+    const math = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'math');
+    const semantics = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'semantics');
+
+    const mrow = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mrow');
+    const msub = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'msub');
+    const mi1 = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mi');
+    mi1.textContent = 'π';
+    const mi2 = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mi');
+    mi2.textContent = 'θ';
+    msub.appendChild(mi1);
+    msub.appendChild(mi2);
+    mrow.appendChild(msub);
+
+    const annotation = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'annotation');
+    annotation.setAttribute('encoding', 'application/x-tex');
+    annotation.textContent = '\\pi_\\theta';
+
+    semantics.appendChild(mrow);
+    semantics.appendChild(annotation);
+    math.appendChild(semantics);
+    katexMathml.appendChild(math);
+
+    // Create the katex-html part (visual rendering)
+    const katexHtml = document.createElement('span');
+    katexHtml.classList.add('katex-html');
+    katexHtml.setAttribute('aria-hidden', 'true');
+    katexHtml.innerHTML = '<span class="base"><span class="mord">π<sub>θ</sub></span></span>';
+
+    katexSpan.appendChild(katexMathml);
+    katexSpan.appendChild(katexHtml);
+    code.appendChild(katexSpan);
+    pre.appendChild(code);
+    msKatex.appendChild(pre);
+    document.body.appendChild(msKatex);
+
+    service.initialize();
+
+    // Click on the katex-html part (where users typically click)
+    katexHtml.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    expect(writeTextMock).toHaveBeenCalledWith('$\\pi_\\theta$');
+
+    document.body.removeChild(msKatex);
+  });
+
+  it('should detect display mode for AI Studio block formulas', async () => {
+    const clipboard = navigator.clipboard as unknown as { write?: unknown };
+    clipboard.write = undefined;
+
+    resetSingleton();
+    service = FormulaCopyService.getInstance({ format: 'latex' });
+
+    // Create AI Studio ms-katex structure with display="block"
+    const msKatex = document.createElement('ms-katex');
+    msKatex.classList.add('block');
+
+    const pre = document.createElement('pre');
+    const code = document.createElement('code');
+    code.classList.add('rendered');
+
+    const katexSpan = document.createElement('span');
+    katexSpan.classList.add('katex');
+
+    const katexMathml = document.createElement('span');
+    katexMathml.classList.add('katex-mathml');
+
+    // Math element with display="block" attribute
+    const math = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'math');
+    math.setAttribute('display', 'block');
+
+    const semantics = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'semantics');
+    const mrow = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mrow');
+    const mi = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mi');
+    mi.textContent = 'E';
+    mrow.appendChild(mi);
+
+    const annotation = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'annotation');
+    annotation.setAttribute('encoding', 'application/x-tex');
+    annotation.textContent = 'E = mc^2';
+
+    semantics.appendChild(mrow);
+    semantics.appendChild(annotation);
+    math.appendChild(semantics);
+    katexMathml.appendChild(math);
+
+    katexSpan.appendChild(katexMathml);
+    code.appendChild(katexSpan);
+    pre.appendChild(code);
+    msKatex.appendChild(pre);
+    document.body.appendChild(msKatex);
+
+    service.initialize();
+    msKatex.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    // Display mode should use $$ delimiters
+    expect(writeTextMock).toHaveBeenCalledWith('$$E = mc^2$$');
+
+    document.body.removeChild(msKatex);
+  });
 });

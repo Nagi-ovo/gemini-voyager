@@ -213,6 +213,10 @@ async function initializeFeatures(): Promise<void> {
     if (location.hostname === 'aistudio.google.com' || location.hostname === 'aistudio.google.cn') {
       startAIStudioFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
+
+      // Formula copy support for AI Studio
+      startFormulaCopy();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
     startExportButton();

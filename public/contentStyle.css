@@ -3257,6 +3257,34 @@ html[data-color-scheme='light'] .gv-copy-toast-error {
     0 2px 8px rgba(234, 67, 53, 0.2);
 }
 
+/* AI Studio formula hover effect - make ms-katex elements clickable */
+ms-katex {
+  cursor: pointer !important;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+ms-katex:hover {
+  background-color: rgba(66, 133, 244, 0.1) !important;
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+/* AI Studio: Also style .katex elements inside ms-katex for better hit area feedback */
+ms-katex .katex {
+  transition: opacity 0.2s ease;
+}
+
+ms-katex:hover .katex {
+  opacity: 0.9;
+}
+
+/* AI Studio light theme formula hover - detect via body background or explicit theme */
+html[data-color-scheme='light'] ms-katex:hover,
+body.light-theme ms-katex:hover {
+  background-color: rgba(66, 133, 244, 0.08) !important;
+}
+
 /* ==========================================================================
    Folder Import/Export Styles
    ========================================================================== */
