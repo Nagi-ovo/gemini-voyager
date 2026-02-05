@@ -8,6 +8,7 @@
 ## 如何调整
 
 1. 打开 Gemini Voyager 的设置面板（点击浏览器右上角的插件图标）。
+   <img src="/assets/extension-instruction.png" alt="如何打开设置面板" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 2. 在 **通用设置** 中找到 **侧边栏宽度** 选项。
 3. 拖动滑块，选择你觉得最舒适的宽度。
 

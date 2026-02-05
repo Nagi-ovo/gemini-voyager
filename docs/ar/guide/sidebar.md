@@ -8,6 +8,7 @@
 ## كيفية الضبط
 
 1. افتح لوحة إعدادات Gemini Voyager (انقر فوق أيقونة الإضافة في أعلى يمين المتصفح).
+   <img src="/assets/extension-instruction.png" alt="كيفية فتح لوحة الإعدادات" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 2. ابحث عن خيار **عرض الشريط الجانبي**.
 3. اسحب المؤشر لاختيار العرض المناسب لك.
 

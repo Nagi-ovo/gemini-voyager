@@ -8,6 +8,7 @@
 ## 調整方法
 
 1. Gemini Voyager の設定パネルを開きます（ブラウザ右上の拡張機能アイコンをクリック）。
+   <img src="/assets/extension-instruction.png" alt="設定パネルの開き方" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 2. **一般設定** にある **サイドバーの幅** オプションを見つけます。
 3. スライダーをドラッグして、最適な幅を選択してください。
 

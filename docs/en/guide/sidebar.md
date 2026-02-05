@@ -8,6 +8,7 @@ Now you can freely adjust the width of the sidebar.
 ## How to Adjust
 
 1. Open the Gemini Voyager settings panel (click the extension icon in the top right of your browser).
+   <img src="/assets/extension-instruction.png" alt="How to open settings panel" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 2. Find the **Sidebar width** option in **General Settings**.
 3. Drag the slider to choose the width that feels right for you.
 
