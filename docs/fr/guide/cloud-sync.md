@@ -1,27 +1,33 @@
 # Synchronisation Cloud
 
-Sync your folders, prompt library, and other data to Google Drive to keep your experience consistent across devices.
+Synchronisez vos dossiers, votre bibliothèque de prompts et d'autres données sur Google Drive pour garder votre expérience cohérente sur tous vos appareils.
 
-## Features
+## Fonctionnalités
 
-- **Multi-Device Sync**: Keep your configurations in sync across multiple computers using Google Drive.
-- **Data Privacy**: Data is stored directly in your own Google Drive storage, ensuring privacy without third-party servers.
-- **Flexible Sync**: Support for manual uploading and downloading/merging of data.
+- **Synchronisation multi-appareils** : Gardez vos configurations synchronisées sur plusieurs ordinateurs grâce à Google Drive.
+- **Confidentialité des données** : Les données sont stockées directement dans votre propre espace Google Drive, garantissant la confidentialité sans serveurs tiers.
+- **Synchronisation flexible** : Prise en charge du téléchargement manuel et de la fusion des données.
 
 ::: info
-**Coming Soon**: The next version will support syncing starred conversations.
+**Bientôt disponible** : La prochaine version prendra en charge la synchronisation des conversations favorites.
 :::
 
-## How to Use
+## Comment utiliser
 
-1. Click the extension icon in the bottom-right corner of the Gemini page to open the settings panel.
-2. Locate the **Cloud Sync** section.
-3. Click **Sign in with Google** and complete the authorization.
-4. Once authorized, click **Upload to Cloud** to sync your local data to the cloud, or **Download & Merge** to bring cloud data to your local machine.
+1. Cliquez sur l'icône de l'extension dans le coin inférieur droit de la page Gemini pour ouvrir le panneau des paramètres.
+2. Localisez la section **Synchronisation Cloud**.
+3. Cliquez sur **Se connecter avec Google** et complétez l'autorisation.
+4. Une fois autorisé, cliquez sur **Télécharger vers le Cloud** pour synchroniser vos données locales vers le cloud, ou sur **Télécharger et fusionner** pour ramener les données du cloud vers votre machine locale.
+
+### 💡 Synchronisation rapide
+
+La façon la plus simple est de cliquer sur les boutons **"Télécharger vers le Cloud"** ou **"Télécharger et fusionner"** en haut de la zone des dossiers dans la barre latérale gauche.
+
+<img src="/assets/cloud-sync.png" alt="Boutons de synchronisation rapide Cloud" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 
 ::: warning
-**Security Recommendation: Double Protection**  
-While Cloud Sync offers great convenience, we strongly recommend that you also periodically back up your core data using **local files**.
+**Recommandation de sécurité : Double protection**  
+Bien que la synchronisation Cloud offre une grande commodité, nous vous recommandons vivement de sauvegarder également périodiquement vos données de base à l'aide de **fichiers locaux**.
 
 1. **Exportation complète** : Exportez un package complet contenant tous les paramètres, dossiers et prompts depuis « Sauvegarde et restauration » en bas du panneau de configuration.
    <img src="/assets/manual-export-all.png" alt="Exportation complète" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>

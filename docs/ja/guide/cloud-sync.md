@@ -1,23 +1,29 @@
 # クラウド同期
 
-Sync your folders, prompt library, and other data to Google Drive to keep your experience consistent across devices.
+フォルダ、プロンプトライブラリ、その他のデータを Google ドライブに同期して、デバイス間で一貫した体験を維持します。
 
-## Features
+## 機能の特徴
 
-- **Multi-Device Sync**: Keep your configurations in sync across multiple computers using Google Drive.
-- **Data Privacy**: Data is stored directly in your own Google Drive storage, ensuring privacy without third-party servers.
-- **Flexible Sync**: Support for manual uploading and downloading/merging of data.
+- **マルチデバイス同期**: Google ドライブを使用して、複数のコンピュータで設定を同期させます。
+- **データのプライバシー**: データはご自身の Google ドライブ ストレージに直接保存されるため、サードパーティのサーバーを介さずプライバシーが確保されます。
+- **柔軟な同期**: 手動でのアップロードおよびデータのダウンロード・マージをサポートしています。
 
 ::: info
-**Coming Soon**: The next version will support syncing starred conversations.
+**近日公開**: 次のバージョンでは、スター付きの会話の同期をサポートする予定です。
 :::
 
-## How to Use
+## 使用方法
 
-1. Click the extension icon in the bottom-right corner of the Gemini page to open the settings panel.
-2. Locate the **Cloud Sync** section.
-3. Click **Sign in with Google** and complete the authorization.
-4. Once authorized, click **Upload to Cloud** to sync your local data to the cloud, or **Download & Merge** to bring cloud data to your local machine.
+1. Gemini ページの右下隅にある拡張機能アイコンをクリックして、設定パネルを開きます。
+2. **クラウド同期**セクションを見つけます。
+3. **Google でサインイン**をクリックし、認証を完了します。
+4. 認証されたら、**クラウドにアップロード**をクリックしてローカルデータをクラウドに同期するか、**ダウンロードしてマージ**をクリックしてクラウドデータをローカルマシンに取り込みます。
+
+### 💡 クイック同期
+
+最も簡単な方法は、左側のサイドバーの**フォルダエリア上部**にある「クラウドにアップロード」または「ダウンロードしてマージ」ボタンをクリックすることです。
+
+<img src="/assets/cloud-sync.png" alt="クラウド同期クイックボタン" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 
 ::: warning
 **安全上の推奨事項：二重保護**  
@@ -25,6 +31,6 @@ Sync your folders, prompt library, and other data to Google Drive to keep your e
 
 1. **全設定をエクスポート**: 設定パネル下部の「バックアップと復元」から、すべての設定、フォルダー、プロンプトを含む完全なパッケージをエクスポートします。
    <img src="/assets/manual-export-all.png" alt="全設定をエクスポート" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. **すべてのフォルダーをエクスポート**: 設定パネルの「フォルダー」セクションで「エクスポート」をクリックし、すべてのフォルダー構造と会話のみをバックアップします（プロンプトは含まれません）。
+2. **すべてのフォルダーをエクスポート**: 設定パネル의「フォルダー」セクションで「エクスポート」をクリックし、すべてのフォルダー構造と会話のみをバックアップします（プロンプトは含まれません）。
    <img src="/assets/manual-folder-export.png" alt="すべてのフォルダーをエクスポート" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
    :::

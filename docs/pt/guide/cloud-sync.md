@@ -1,27 +1,33 @@
 # Sincronização na Nuvem
 
-Sync your folders, prompt library, and other data to Google Drive to keep your experience consistent across devices.
+Sincronize suas pastas, biblioteca de prompts e outros dados no Google Drive para manter sua experiência consistente em todos os seus dispositivos.
 
-## Features
+## Recursos
 
-- **Multi-Device Sync**: Keep your configurations in sync across multiple computers using Google Drive.
-- **Data Privacy**: Data is stored directly in your own Google Drive storage, ensuring privacy without third-party servers.
-- **Flexible Sync**: Support for manual uploading and downloading/merging of data.
+- **Sincronização entre dispositivos**: Mantenha suas configurações sincronizadas em vários computadores usando o Google Drive.
+- **Privacidade de dados**: Os dados são armazenados diretamente no seu próprio armazenamento do Google Drive, garantindo a privacidade sem servidores de terceiros.
+- **Sincronização flexível**: Suporte para upload manual e download/mesclagem de dados.
 
 ::: info
-**Coming Soon**: The next version will support syncing starred conversations.
+**Em breve**: A próxima versão suportará a sincronização de conversas marcadas com estrela.
 :::
 
-## How to Use
+## Como usar
 
-1. Click the extension icon in the bottom-right corner of the Gemini page to open the settings panel.
-2. Locate the **Cloud Sync** section.
-3. Click **Sign in with Google** and complete the authorization.
-4. Once authorized, click **Upload to Cloud** to sync your local data to the cloud, or **Download & Merge** to bring cloud data to your local machine.
+1. Clique no ícone da extensão no canto inferior direito da página do Gemini para abrir o painel de configurações.
+2. Localize a seção **Sincronização na Nuvem**.
+3. Clique em **Fazer login com o Google** e conclua a autorização.
+4. Uma vez autorizado, clique em **Fazer upload para a nuvem** para sincronizar seus dados locais com a nuvem, ou em **Baixar e mesclar** para trazer os dados da nuvem para sua máquina local.
+
+### 💡 Sincronização rápida
+
+A maneira mais fácil é clicar nos botões **"Fazer upload para a nuvem"** ou **"Baixar e mesclar"** na parte superior da área de pastas na barra lateral esquerda.
+
+<img src="/assets/cloud-sync.png" alt="Botões de sincronização rápida na nuvem" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 
 ::: warning
-**Security Recommendation: Double Protection**  
-While Cloud Sync offers great convenience, we strongly recommend that you also periodically back up your core data using **local files**.
+**Recomendação de segurança: Proteção dupla**  
+Embora a sincronização na nuvem ofereça grande conveniência, recomendamos enfaticamente que você também faça backups periódicos dos seus dados principais usando **arquivos locais**.
 
 1. **Exportação Completa**: Exporte um pacote completo contendo todas as configurações, pastas e prompts em "Backup e Restauração" na parte inferior do painel.
    <img src="/assets/manual-export-all.png" alt="Exportação Completa" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
