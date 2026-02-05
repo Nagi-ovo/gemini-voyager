@@ -14,6 +14,8 @@
  */
 import { StorageKeys } from '@/core/types/common';
 
+import { getTextOffset, setCaretPosition } from './utils';
+
 // ============================================================================
 // Constants
 // ============================================================================
@@ -98,14 +100,34 @@ function findSendButton(): HTMLElement | null {
 function insertNewlineInContentEditable(target: HTMLElement): void {
   // Method 1: Try execCommand (deprecated but still works in most browsers)
   // This is the most reliable method for contenteditable elements
+  // 1. SNAPSHOT: Remember where the cursor is (text offset)
+  const currentOffset = getTextOffset(target);
+
+  // 2. EXECUTE: Native command
+  // This might trigger a React re-render, creating a new DOM structure
   const success = document.execCommand('insertLineBreak', false);
 
   if (success) {
-    // Trigger input event to notify any listeners (including Quill)
+    // 3. RESTORE: Put the cursor back where it belongs
+    // Use requestAnimationFrame to wait for any immediate React re-renders to settle
+    if (currentOffset !== null) {
+      // +1 to account for the newly inserted newline character
+      const newOffset = currentOffset + 1;
+
+      // Try immediate restore (for synchronous DOM updates)
+      setCaretPosition(target, newOffset);
+
+      // Also try next frame (for asynchronous React updates)
+      requestAnimationFrame(() => {
+        setCaretPosition(target, newOffset);
+      });
+    }
+
+    // Trigger input event to notify listeners (ensure data sync)
+    // NOTE: Maintainer's code had this. We kept it but manage the cursor consequence.
     target.dispatchEvent(new Event('input', { bubbles: true }));
     return;
   }
-
   // Method 2: Try insertHTML with a <br> tag
   const htmlSuccess = document.execCommand('insertHTML', false, '<br><br>');
 
