@@ -27,11 +27,10 @@
 
   /**
    * Pattern to match Gemini download URLs
-   * Matches both rd-gg and rd-gg-dl paths
-   * Reference: /^https:\/\/lh3\.googleusercontent\.com\/rd-gg(?:-dl)?\/.+=s(?!0-d\?).* /
-   * We use a slightly broader pattern to ensure we catch all download attempts
+   * Only matches rd-gg-dl paths (dl = download) to avoid intercepting normal image display
+   * User-uploaded image previews use rd-gg/ path without -dl suffix
    */
-  const GEMINI_DOWNLOAD_PATTERN = /^https:\/\/lh3\.googleusercontent\.com\/rd-gg(?:-dl)?\//;
+  const GEMINI_DOWNLOAD_PATTERN = /^https:\/\/lh3\.googleusercontent\.com\/rd-gg-dl\//;
 
   /**
    * Replace size parameter with =s0 for original size
