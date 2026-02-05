@@ -245,16 +245,16 @@ gemini-voyager/
 │   ├── components/               # 🧱 UI COMPONENTS (Presentation)
 │   │   └── ui/                   #   - Generic UI (Buttons, Dialogs)
 │   │
-│   └── locales/                  # 🌍 TRANSLATIONS
-│       ├── en/messages.json      #   - English
-│       └── zh/messages.json      #   - Chinese
+│   ├── locales/                  # 🌍 TRANSLATIONS
+│   │   ├── en/messages.json      #   - English
+│   │   └── zh/messages.json      #   - Chinese
+│   │
+│   └── tests/                    # 🧪 GLOBAL TESTS
+│       └── setup.ts              #   - Vitest setup & mocks
 │
 ├── public/                       # 📦 STATIC ASSETS
 │   ├── katex-config.js           #   - KaTeX configuration
 │   └── fetchInterceptor.js       #   - Network interception
-│
-├── tests/                        # 🧪 GLOBAL TESTS
-│   └── setup.ts                  #   - Vitest setup & mocks
 │
 └── ... (config files)
 ```

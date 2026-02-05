@@ -5,8 +5,8 @@ This file is generated from AI_GUIDE.template.md.
 Do not edit directly; update the template and run `bun run generate:ai-guides`.
 -->
 
-> **Last Updated**: 2026-01-27
-> **Version**: 1.1.7
+> **Last Updated**: 2026-02-04
+> **Version**: 1.1.9
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
 
 ---
@@ -248,16 +248,16 @@ gemini-voyager/
 │   ├── components/               # 🧱 UI COMPONENTS (Presentation)
 │   │   └── ui/                   #   - Generic UI (Buttons, Dialogs)
 │   │
-│   └── locales/                  # 🌍 TRANSLATIONS
-│       ├── en/messages.json      #   - English
-│       └── zh/messages.json      #   - Chinese
+│   ├── locales/                  # 🌍 TRANSLATIONS
+│   │   ├── en/messages.json      #   - English
+│   │   └── zh/messages.json      #   - Chinese
+│   │
+│   └── tests/                    # 🧪 GLOBAL TESTS
+│       └── setup.ts              #   - Vitest setup & mocks
 │
 ├── public/                       # 📦 STATIC ASSETS
 │   ├── katex-config.js           #   - KaTeX configuration
 │   └── fetchInterceptor.js       #   - Network interception
-│
-├── tests/                        # 🧪 GLOBAL TESTS
-│   └── setup.ts                  #   - Vitest setup & mocks
 │
 └── ... (config files)
 ```

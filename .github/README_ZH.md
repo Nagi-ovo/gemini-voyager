@@ -66,26 +66,32 @@
 
 ## ✨ 功能特性
 
-<div align="center">
-  <img src="../docs/public/assets/teaser.png" alt="teaser"/>
-</div>
+### 🌌 通用核心 (Gemini & AI Studio)
 
-查看完整功能，请访问我们的 [官方文档](https://voyager.nagi.fun)。
+- **📂 [文件夹管理](https://voyager.nagi.fun/guide/folders)**: 支持 **多级目录**、**拖拽排序** 及 **Google Drive 同步**。
+  - **Gemini**: 支持 **多账号隔离模式** 及 **自定义文件夹颜色**。
+- **💡 [提示词库](https://voyager.nagi.fun/guide/prompts)**: 跨平台同步提示词，支持 Gemini、AI Studio 及 [自定义网站](https://voyager.nagi.fun/guide/custom-websites)。
+- **☁️ [云同步](https://voyager.nagi.fun/guide/cloud-sync)**: 支持将文件夹和提示词库同步到 Google Drive。
+- **📐 公式复制**: 一键复制 LaTeX 和 MathML (Word) 源码。
+
+### ✨ Gemini 专属增强
 
 - **📍 [时间线导航](https://voyager.nagi.fun/guide/timeline)**: 可视化节点，瞬间跳转消息，星标重点，管理对话分支。
-- **📂 [文件夹管理](https://voyager.nagi.fun/guide/folders)**: 双层目录结构，支持拖拽，让对话井井有条。
-- **💡 [提示词库](https://voyager.nagi.fun/guide/prompts)**: 跨平台同步提示词，支持 Gemini、AI Studio 及 [自定义网站](https://voyager.nagi.fun/guide/custom-websites)。
 - **💾 [对话导出](https://voyager.nagi.fun/guide/export)**: 支持导出为 JSON、Markdown 或 PDF（含图片）。
-- **🍌 [NanoBanana](https://voyager.nagi.fun/guide/nanobanana)**: 自动去除 Gemini 生成图片的无损水印。
 - **🧜‍♀️ [Mermaid 渲染](https://voyager.nagi.fun/guide/mermaid)**: 自动渲染流程图、时序图等 Mermaid 图表。
+- **🍌 [NanoBanana](https://voyager.nagi.fun/guide/nanobanana)**: 自动去除 Gemini 生成图片的无损水印。
 - **🔬 [Deep Research](https://voyager.nagi.fun/guide/deep-research)**: 一键提取 Deep Research 对话的思考过程和研究链接。
-- **📐 公式复制**: 一键复制 LaTeX 和 MathML (Word) 源码。
 - **🛠️ 效率工具**:
   - **[批量删除](https://voyager.nagi.fun/guide/batch-delete)**: 批量清理对话记录。
   - **[引用回复](https://voyager.nagi.fun/guide/quote-reply)**: 选中对话文本即可一键引用回复。
   - **[标签页标题同步](https://voyager.nagi.fun/guide/tab-title)**: 自动将标签页标题设为对话标题。
   - **[输入框折叠](https://voyager.nagi.fun/guide/input-collapse)**: 输入框自动收纳，释放阅读空间。
   - **[默认模型](https://voyager.nagi.fun/guide/default-model)**: 为新对话设置默认选中的模型。
+  - **[隐藏最近项目](https://voyager.nagi.fun/guide/recents-hider)**: 隐藏侧边栏的“最近”列表，减少干扰。
+
+### 🔧 体验修复
+
+- **Markdown 修复**: 修复官方网站存在的 Markdown 粗体渲染问题（非插件导致，自带修复）。
 
 ---
 
