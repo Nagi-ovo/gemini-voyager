@@ -8,6 +8,14 @@ type DefaultModelSetting =
 
 type StoredDefaultModelSetting = { id: string; name: string };
 
+// Known Flash/Fast model IDs that should skip auto-selection (page defaults to these)
+const FAST_MODEL_IDS = new Set([
+  '56fdd199312815e2', // Gemini 2.0 Flash
+]);
+
+// Known Flash/Fast model name patterns (case-insensitive)
+const FAST_MODEL_NAMES = ['flash', '2.0 flash', 'gemini 2.0 flash', 'fast', '高速', '高速モード'];
+
 class DefaultModelManager {
   private static instance: DefaultModelManager;
   private observer: MutationObserver | null = null;
@@ -24,6 +32,11 @@ class DefaultModelManager {
   private lastCheckedPath: string | null = null;
   private sidebarClickHandler: ((e: Event) => void) | null = null;
   private urlCheckTimer: number | null = null;
+  // Track if we've already auto-selected for this navigation to prevent duplicates
+  private autoSelectSessionId: string | null = null;
+  // Track consecutive failures to stop retrying when model is unavailable
+  private consecutiveFailures = 0;
+  private readonly maxConsecutiveFailures = 3;
 
   private constructor() {}
 
@@ -442,6 +455,17 @@ class DefaultModelManager {
 
     if (!targetModel) return;
 
+    // Check if the target model is a Flash/Fast model (default model, skip auto-selection)
+    if (this.isFastModel(targetModel)) {
+      return;
+    }
+
+    // Generate a unique session ID to prevent duplicate selections in the same navigation
+    const sessionId = `${window.location.pathname}-${Date.now()}`;
+    this.autoSelectSessionId = sessionId;
+    // Reset failure counter for new session
+    this.consecutiveFailures = 0;
+
     // Start checking loop
     let attempts = 0;
     const maxAttempts = 20;
@@ -449,6 +473,12 @@ class DefaultModelManager {
     if (this.checkTimer) clearInterval(this.checkTimer);
 
     this.checkTimer = window.setInterval(async () => {
+      // Abort if session changed (e.g., user navigated away and came back)
+      if (this.autoSelectSessionId !== sessionId) {
+        if (this.checkTimer) clearInterval(this.checkTimer);
+        return;
+      }
+
       attempts++;
       if (attempts > maxAttempts) {
         if (this.checkTimer) clearInterval(this.checkTimer);
@@ -463,6 +493,20 @@ class DefaultModelManager {
     const path = window.location.pathname;
     // Supports multi-profile paths like /u/0/app as well as /app.
     return /^\/(u\/\d+\/)?app\/?$/.test(path);
+  }
+
+  /**
+   * Check if the given model is a Flash/Fast model (Gemini's default model).
+   * If yes, we don't need to auto-switch since the page already defaults to it.
+   */
+  private isFastModel(model: DefaultModelSetting): boolean {
+    if (model.kind === 'id') {
+      return FAST_MODEL_IDS.has(model.id);
+    }
+    const normalizedName = model.name.toLowerCase().trim();
+    return FAST_MODEL_NAMES.some(
+      (fastName) => normalizedName === fastName || normalizedName.includes(fastName),
+    );
   }
 
   private async tryLockToModel(targetModel: DefaultModelSetting) {
@@ -480,9 +524,13 @@ class DefaultModelManager {
 
     if (!selectorBtn) return;
 
-    // 2. Check current model text
+    // 2. Check current model text - early return if already correct
     const currentText = selectorBtn.textContent || '';
-    if (targetModel.kind === 'name' && targetAsWholeWord.test(normalize(currentText))) {
+    const normalizedCurrent = normalize(currentText);
+
+    // For both 'id' and 'name' kinds, we can check if the button text matches the target name
+    // This helps avoid unnecessary menu clicks when the model is already selected
+    if (targetAsWholeWord.test(normalizedCurrent) || normalizedCurrent === targetName) {
       // Already correct
       if (this.checkTimer) clearInterval(this.checkTimer);
       return;
@@ -565,11 +613,21 @@ class DefaultModelManager {
 
       if (found && this.checkTimer) {
         clearInterval(this.checkTimer);
+        this.consecutiveFailures = 0;
       }
 
       if (!found) {
         // Close menu if not found to avoid stuck menu
         document.body.click();
+
+        // Track consecutive failures - if model is consistently not found,
+        // stop trying to avoid endless flashing (e.g., model not available for this account)
+        this.consecutiveFailures++;
+        if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+          if (this.checkTimer) {
+            clearInterval(this.checkTimer);
+          }
+        }
       }
     } catch (e) {
       console.error('Auto lock failed', e);

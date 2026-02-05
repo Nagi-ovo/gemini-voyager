@@ -225,4 +225,117 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(thinkingItem.click).toHaveBeenCalledTimes(1);
     expect(proItem.click).toHaveBeenCalledTimes(0);
   });
+
+  it('skips auto-selection when default model is Flash (Gemini default)', async () => {
+    // Set default model to Flash (by ID)
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultModel: {
+            id: '56fdd199312815e2', // Flash model ID
+            name: 'Flash',
+          },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app?hl=en');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    // Wait for the interval tick and menu handling delay
+    await vi.advanceTimersByTimeAsync(1500);
+
+    // Since Flash is the default model, no click should be triggered
+    expect(selectorBtn.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('skips auto-selection when default model name contains "flash" (case insensitive)', async () => {
+    // Set default model to Flash (by name)
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: '2.0 Flash' });
+      },
+    );
+
+    history.replaceState({}, '', '/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    // Wait for the interval tick and menu handling delay
+    await vi.advanceTimersByTimeAsync(1500);
+
+    // Since Flash is the default model, no click should be triggered
+    expect(selectorBtn.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('stops retrying after consecutive failures when target model is not found', async () => {
+    // Set default model to a model that won't be found
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultModel: {
+            id: 'nonexistent-model-id',
+            name: 'Nonexistent Model',
+          },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/u/2/app?hl=zh');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Flash'; // Current model is Flash, not the target
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    // Create menu panel with items that don't include the target model
+    const menuPanel = document.createElement('div');
+    menuPanel.className = 'mat-mdc-menu-panel';
+    menuPanel.setAttribute('role', 'menu');
+
+    const flashItem = document.createElement('button');
+    flashItem.setAttribute('role', 'menuitemradio');
+    flashItem.setAttribute('data-mode-id', '56fdd199312815e2');
+    flashItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Flash</div>
+      </div>
+    `;
+    flashItem.click = vi.fn();
+
+    menuPanel.appendChild(flashItem);
+    document.body.appendChild(menuPanel);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    // Advance timers for 3 retry attempts (1 second each) + initial delay
+    // Each attempt should open the menu and fail to find the target
+    await vi.advanceTimersByTimeAsync(4000);
+
+    // The selector button should have been clicked at most 3 times (maxConsecutiveFailures)
+    // because after 3 consecutive failures, it should stop retrying
+    expect((selectorBtn.click as ReturnType<typeof vi.fn>).mock.calls.length).toBeLessThanOrEqual(
+      3,
+    );
+  });
 });
