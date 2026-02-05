@@ -1,0 +1,74 @@
+/**
+ * DOMContentExtractor unit tests
+ */
+import { describe, expect, it } from 'vitest';
+
+import { DOMContentExtractor } from '../DOMContentExtractor';
+
+describe('DOMContentExtractor', () => {
+  it('should strip Gemini inline source chips (link icons) from assistant export', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <p>Hello</p>
+          <sources-carousel-inline>
+            <source-inline-chips>
+              <source-inline-chip>
+                <div class="source-inline-chip-container">
+                  <button aria-label="View source details. Opens side panel.">
+                    <mat-icon fonticon="link">link</mat-icon>
+                  </button>
+                </div>
+              </source-inline-chip>
+            </source-inline-chips>
+          </sources-carousel-inline>
+          <p>World</p>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.text).toContain('Hello');
+    expect(extracted.text).toContain('World');
+    expect(extracted.text).not.toMatch(/\blink\b/i);
+
+    expect(extracted.html).toContain('<p>Hello</p>');
+    expect(extracted.html).toContain('<p>World</p>');
+    expect(extracted.html).not.toContain('sources-carousel-inline');
+    expect(extracted.html).not.toContain('source-inline-chip');
+    expect(extracted.html).not.toContain('mat-icon');
+  });
+
+  it('should strip source chips nested in lists from exported HTML', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <ul>
+            <li>
+              Item 1
+              <sources-carousel-inline>
+                <mat-icon fonticon="link">link</mat-icon>
+              </sources-carousel-inline>
+            </li>
+            <li>Item 2</li>
+          </ul>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.text).toContain('Item 1');
+    expect(extracted.text).toContain('Item 2');
+    expect(extracted.text).not.toMatch(/\blink\b/i);
+
+    expect(extracted.html).toContain('<ul>');
+    expect(extracted.html).toMatch(/<li[^>]*>\s*Item 1/i);
+    expect(extracted.html).toMatch(/<li[^>]*>\s*Item 2/i);
+    expect(extracted.html).not.toContain('sources-carousel-inline');
+    expect(extracted.html).not.toContain('mat-icon');
+  });
+});

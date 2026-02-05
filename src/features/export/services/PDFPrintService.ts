@@ -526,6 +526,14 @@ export class PDFPrintService {
           text-decoration: none;
         }
 
+        /* Hide Gemini inline source/citation chips (render as link icons) */
+        sources-carousel-inline,
+        source-inline-chips,
+        source-inline-chip,
+        .source-inline-chip-container {
+          display: none !important;
+        }
+
         a[href]:after {
           content: " (" attr(href) ")";
           font-size: 9pt;

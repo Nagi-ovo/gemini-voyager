@@ -407,7 +407,14 @@ export class DOMContentExtractor {
    */
   private static shouldSkipElement(element: Element): boolean {
     // Skip buttons, tooltips, and action elements
-    if (element.tagName === 'BUTTON' || element.tagName === 'MAT-ICON') {
+    if (
+      element.tagName === 'BUTTON' ||
+      element.tagName === 'MAT-ICON' ||
+      // Gemini inline sources/citation chips (appear as link icons in export/print)
+      element.tagName === 'SOURCES-CAROUSEL-INLINE' ||
+      element.tagName === 'SOURCE-INLINE-CHIPS' ||
+      element.tagName === 'SOURCE-INLINE-CHIP'
+    ) {
       return true;
     }
 
@@ -422,7 +429,9 @@ export class DOMContentExtractor {
       element.classList.contains('action-button') ||
       element.classList.contains('table-footer') ||
       element.classList.contains('export-sheets-button') ||
-      element.classList.contains('thoughts-header')
+      element.classList.contains('thoughts-header') ||
+      // Gemini inline source/citation container
+      element.classList.contains('source-inline-chip-container')
     ) {
       return true;
     }
@@ -452,6 +461,10 @@ export class DOMContentExtractor {
         }
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         const el = node as Element;
+
+        if (this.shouldSkipElement(el)) {
+          return;
+        }
 
         // Inline formula - check both class and data-math attribute
         if (el.classList.contains('math-inline') || el.hasAttribute('data-math')) {
@@ -584,8 +597,7 @@ export class DOMContentExtractor {
 
     // Extract HTML (clean version)
     const cleanTable = table.cloneNode(true) as HTMLElement;
-    // Remove any action buttons
-    cleanTable.querySelectorAll('button, mat-icon').forEach((el) => el.remove());
+    this.stripExportArtifacts(cleanTable);
 
     // Convert to Markdown
     const rows: string[][] = [];
@@ -683,10 +695,37 @@ export class DOMContentExtractor {
       });
     });
 
+    const cleanList = element.cloneNode(true) as HTMLElement;
+    this.stripExportArtifacts(cleanList);
+
     return {
-      html: element.outerHTML,
+      html: cleanList.outerHTML,
       text: textLines.join('\n'),
     };
+  }
+
+  /**
+   * Strip non-content UI artifacts from exported HTML fragments.
+   * Best-effort: safe to call multiple times.
+   */
+  private static stripExportArtifacts(root: HTMLElement): void {
+    const selector = [
+      'button',
+      'mat-icon',
+      'model-thoughts',
+      'sources-carousel-inline',
+      'source-inline-chips',
+      'source-inline-chip',
+      '.model-thoughts',
+      '.copy-button',
+      '.action-button',
+      '.table-footer',
+      '.export-sheets-button',
+      '.thoughts-header',
+      '.source-inline-chip-container',
+    ].join(',');
+
+    root.querySelectorAll(selector).forEach((el) => el.remove());
   }
 
   /**
