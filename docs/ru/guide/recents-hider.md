@@ -6,8 +6,15 @@
 
 Добавьте элегантный переключатель для скрытия раздела «Недавние сохранения» на главной странице Gemini для более чистого интерфейса. Теперь также поддерживается скрытие списка Gems на боковой панели!
 
-<div style="text-align: center; margin-top: 20px;">
-  <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>Скрыть недавние сохранения</b></p>
+    <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  </div>
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>Скрыть список Gems</b></p>
+    <video src="/assets/hide-gem-list.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  </div>
 </div>
 
 ## Особенности

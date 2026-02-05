@@ -6,8 +6,15 @@
 
 Add an elegant toggle to hide the "Recently saved" section on the Gemini homepage for a cleaner interface. Now also supports hiding the **Gems** list in the sidebar!
 
-<div style="text-align: center; margin-top: 20px;">
-  <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>Hide Recently Saved</b></p>
+    <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  </div>
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>Hide Gems List</b></p>
+    <video src="/assets/hide-gem-list.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  </div>
 </div>
 
 ## Features

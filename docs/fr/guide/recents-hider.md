@@ -6,8 +6,15 @@
 
 Ajoutez une bascule élégante pour masquer la section « Enregistrements récents » sur la page d'accueil de Gemini pour une interface plus propre. Prend désormais également en charge le masquage de la liste **Gems** dans la barre latérale !
 
-<div style="text-align: center; margin-top: 20px;">
-  <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>Masquer les enregistrements récents</b></p>
+    <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  </div>
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>Masquer la liste des Gems</b></p>
+    <video src="/assets/hide-gem-list.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  </div>
 </div>
 
 ## Caractéristiques

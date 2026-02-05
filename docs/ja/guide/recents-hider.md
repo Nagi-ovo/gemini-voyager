@@ -6,8 +6,15 @@
 
 Gemini ホームページの「最近の保存」セクションを非表示にするエレガントなトグルを追加し、インターフェースをよりすっきりとさせます。サイドバーの **Gems** リストの非表示にも対応しました！
 
-<div style="text-align: center; margin-top: 20px;">
-  <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>最近の保存を非表示</b></p>
+    <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  </div>
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>Gems リストを非表示</b></p>
+    <video src="/assets/hide-gem-list.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  </div>
 </div>
 
 ## 特徴

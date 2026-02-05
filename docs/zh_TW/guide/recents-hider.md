@@ -6,8 +6,15 @@
 
 為 Gemini 首頁的「最近保存」部分添加一個優雅的切換開關，讓界面更加簡潔。現在也支持隱藏側邊欄的 Gems 列表！
 
-<div style="text-align: center; margin-top: 20px;">
-  <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>隱藏最近保存</b></p>
+    <video src="/assets/hide-my-stuff.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  </div>
+  <div style="flex: 1; min-width: 300px; text-align: center;">
+    <p><b>隱藏 Gems 列表</b></p>
+    <video src="/assets/hide-gem-list.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>
+  </div>
 </div>
 
 ## 功能特點
