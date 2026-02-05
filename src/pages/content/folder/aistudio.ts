@@ -19,18 +19,18 @@ function waitForElement<T extends Element = Element>(
       if (el) {
         try {
           obs.disconnect();
-        } catch { }
+        } catch {}
         resolve(el);
       }
     });
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch { }
+    } catch {}
     if (timeoutMs > 0) {
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch { }
+        } catch {}
         resolve(null);
       }, timeoutMs);
     }
@@ -60,7 +60,7 @@ function downloadJSON(data: any, filename: string): void {
   setTimeout(() => {
     try {
       document.body.removeChild(a);
-    } catch { }
+    } catch {}
     URL.revokeObjectURL(url);
   }, 0);
 }
@@ -108,7 +108,7 @@ export class AIStudioFolderManager {
     span.className = 'google-symbols';
     try {
       span.dataset.icon = name;
-    } catch { }
+    } catch {}
     span.textContent = name;
     return span;
   }
@@ -280,7 +280,7 @@ export class AIStudioFolderManager {
 
     try {
       document.documentElement.classList.add('gv-aistudio-root');
-    } catch { }
+    } catch {}
 
     await this.load();
 
@@ -417,10 +417,94 @@ export class AIStudioFolderManager {
     host.insertAdjacentElement('beforebegin', container);
 
     this.container = container;
+    this.injectStyles();
     this.render();
 
     // Apply initial folder enabled setting
     this.applyFolderEnabledSetting();
+  }
+
+  private injectStyles(): void {
+    const styleId = 'gv-aistudio-folder-styles';
+    if (document.getElementById(styleId)) return;
+
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .gv-folder-confirm-dialog.gv-aistudio-confirm {
+        background: var(--gem-sys-color-surface, #fff);
+        border: 1px solid var(--gem-sys-color-outline-variant, #e5e7eb);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        padding: 16px;
+        min-width: 280px;
+        font-family: 'Google Sans', 'Segoe UI', sans-serif;
+        animation: gv-fade-in 0.2s ease-out;
+      }
+      
+      .gv-confirm-message {
+        margin-bottom: 16px;
+        color: var(--gem-sys-color-on-surface, #1f2937);
+        font-size: 14px;
+        line-height: 1.5;
+        font-weight: 500;
+      }
+
+      .gv-confirm-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end; /* Default right align, but we override order */
+      }
+
+      .gv-confirm-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        outline: none;
+      }
+
+      .gv-confirm-delete {
+        background-color: #ef4444; /* Red color */
+        color: white;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+      }
+      
+      .gv-confirm-delete:hover {
+        background-color: #dc2626;
+        box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+      }
+
+      .gv-confirm-cancel {
+        background-color: transparent;
+        color: var(--gem-sys-color-on-surface-variant, #4b5563);
+        border: 1px solid var(--gem-sys-color-outline, #d1d5db);
+      }
+
+      .gv-confirm-cancel:hover {
+        background-color: var(--gem-sys-color-surface-container-high, #f3f4f6);
+        color: var(--gem-sys-color-on-surface, #111827);
+      }
+
+      /* Hover effect for remove button in list */
+      .gv-conversation-remove-btn:hover {
+        background-color: rgba(239, 68, 68, 0.1) !important;
+        color: #ef4444 !important;
+      }
+
+      .gv-conversation-remove-btn:hover span {
+        font-variation-settings: 'FILL' 1, 'wght' 600 !important;
+      }
+
+      @keyframes gv-fade-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   private render(): void {
@@ -498,7 +582,7 @@ export class AIStudioFolderManager {
     const update = () => setTimeout(() => this.highlightActiveConversation(), 0);
     try {
       window.addEventListener('popstate', update);
-    } catch { }
+    } catch {}
     try {
       const hist = history as any;
       const wrap = (method: 'pushState' | 'replaceState') => {
@@ -507,13 +591,13 @@ export class AIStudioFolderManager {
           const ret = orig.apply(this, args);
           try {
             update();
-          } catch { }
+          } catch {}
           return ret;
         };
       };
       wrap('pushState');
       wrap('replaceState');
-    } catch { }
+    } catch {}
     // Fallback poller for routers that bypass events
     try {
       let last = location.pathname;
@@ -527,9 +611,9 @@ export class AIStudioFolderManager {
       this.cleanupFns.push(() => {
         try {
           clearInterval(id);
-        } catch { }
+        } catch {}
       });
-    } catch { }
+    } catch {}
   }
 
   private renderFolder(folder: Folder, level: number = 0): HTMLElement {
@@ -573,7 +657,7 @@ export class AIStudioFolderManager {
     pinBtn.title = folder.pinned ? this.t('folder_unpin') : this.t('folder_pin');
     try {
       (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned';
-    } catch { }
+    } catch {}
     pinBtn.appendChild(this.createIcon('push_pin'));
     pinBtn.addEventListener('click', () => {
       folder.pinned = !folder.pinned;
@@ -659,7 +743,7 @@ export class AIStudioFolderManager {
     removeBtn.title = this.t('folder_remove_conversation');
     removeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      this.removeConversationFromFolder(folderId, conv.conversationId);
+      this.confirmRemoveConversation(folderId, conv.conversationId, conv.title || '', e);
     });
     row.appendChild(removeBtn);
 
@@ -676,10 +760,10 @@ export class AIStudioFolderManager {
       };
       try {
         e.dataTransfer?.setData('application/json', JSON.stringify(data));
-      } catch { }
+      } catch {}
       try {
         e.dataTransfer?.setDragImage(row, 10, 10);
-      } catch { }
+      } catch {}
     });
 
     return row;
@@ -701,7 +785,7 @@ export class AIStudioFolderManager {
         this.createFolder(folderId);
         try {
           document.body.removeChild(menu);
-        } catch { }
+        } catch {}
       });
       menu.appendChild(createSub);
     }
@@ -712,7 +796,7 @@ export class AIStudioFolderManager {
       this.renameFolder(folderId);
       try {
         document.body.removeChild(menu);
-      } catch { }
+      } catch {}
     });
     menu.appendChild(rename);
 
@@ -722,7 +806,7 @@ export class AIStudioFolderManager {
       this.deleteFolder(folderId);
       try {
         document.body.removeChild(menu);
-      } catch { }
+      } catch {}
     });
     menu.appendChild(del);
 
@@ -739,7 +823,7 @@ export class AIStudioFolderManager {
       if (e.target instanceof Node && !menu.contains(e.target)) {
         try {
           document.body.removeChild(menu);
-        } catch { }
+        } catch {}
         window.removeEventListener('click', onClickAway, true);
       }
     };
@@ -800,6 +884,84 @@ export class AIStudioFolderManager {
     this.save().then(() => this.render());
   }
 
+  private confirmRemoveConversation(
+    folderId: string,
+    conversationId: string,
+    title: string,
+    event: MouseEvent,
+  ): void {
+    const dialog = document.createElement('div');
+    dialog.className = 'gv-folder-confirm-dialog gv-aistudio-confirm';
+
+    // Position near the button
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+
+    dialog.style.position = 'fixed';
+    dialog.style.zIndex = '2147483647';
+    // Position logic: prefer left side if space available
+    // AI Studio sidebar is on the left, so we might want to pop out to the right or below
+    // But usually context menus appear near the cursor.
+    // Let's position it below the button, aligned right
+    dialog.style.top = `${rect.bottom + 4}px`;
+    dialog.style.left = `${rect.right - 200}px`; // Align right edge roughly
+
+    // Ensure it's on screen
+    if (parseInt(dialog.style.left) < 10) dialog.style.left = '10px';
+
+    const msg = document.createElement('div');
+    msg.className = 'gv-confirm-message';
+    msg.textContent = this.t('folder_remove_conversation_confirm').replace(
+      '{title}',
+      title || this.t('conversation_untitled'),
+    );
+    dialog.appendChild(msg);
+
+    const actions = document.createElement('div');
+    actions.className = 'gv-confirm-actions';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'gv-confirm-btn gv-confirm-delete';
+    confirmBtn.textContent = this.t('pm_delete') || 'Delete';
+    confirmBtn.addEventListener('click', () => {
+      this.removeConversationFromFolder(folderId, conversationId);
+      dialog.remove();
+      document.removeEventListener('click', closeOnOutside);
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'gv-confirm-btn gv-confirm-cancel';
+    cancelBtn.textContent = this.t('pm_cancel') || 'Cancel';
+    cancelBtn.addEventListener('click', () => {
+      dialog.remove();
+      document.removeEventListener('click', closeOnOutside);
+    });
+
+    // Delete on left, Cancel on right
+    actions.appendChild(confirmBtn);
+    actions.appendChild(cancelBtn);
+    dialog.appendChild(actions);
+
+    document.body.appendChild(dialog);
+
+    // Close when clicking outside
+    const closeOnOutside = (e: MouseEvent) => {
+      if (
+        !dialog.contains(e.target as Node) &&
+        e.target !== target &&
+        !target.contains(e.target as Node)
+      ) {
+        dialog.remove();
+        document.removeEventListener('click', closeOnOutside);
+      }
+    };
+
+    // Delay adding the listener to avoid immediate closing
+    setTimeout(() => {
+      document.addEventListener('click', closeOnOutside);
+    }, 10);
+  }
+
   private bindDropZone(el: HTMLElement, targetFolderId: string | null): void {
     // Use a counter to properly track nested dragenter/dragleave events
     // This fixes the issue where child elements trigger spurious leave events
@@ -819,7 +981,7 @@ export class AIStudioFolderManager {
       e.stopPropagation(); // Prevent bubbling to parent drop zones
       try {
         if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-      } catch { }
+      } catch {}
     });
     el.addEventListener('dragleave', (e) => {
       e.stopPropagation(); // Prevent bubbling to parent drop zones
@@ -844,7 +1006,7 @@ export class AIStudioFolderManager {
       if (!raw) {
         try {
           raw = e.dataTransfer?.getData('text/plain') || '';
-        } catch { }
+        } catch {}
       }
       if (!raw) return;
       let data: DragData | null = null;
@@ -906,11 +1068,11 @@ export class AIStudioFolderManager {
     });
     try {
       observer.observe(root, { childList: true, subtree: true });
-    } catch { }
+    } catch {}
     this.cleanupFns.push(() => {
       try {
         observer.disconnect();
-      } catch { }
+      } catch {}
     });
 
     // Also update on clicks within the prompt list (SPA navigation)
@@ -924,11 +1086,11 @@ export class AIStudioFolderManager {
     };
     try {
       root.addEventListener('click', onClick, true);
-    } catch { }
+    } catch {}
     this.cleanupFns.push(() => {
       try {
         root.removeEventListener('click', onClick, true);
-      } catch { }
+      } catch {}
     });
   }
 
@@ -955,10 +1117,10 @@ export class AIStudioFolderManager {
             // Fallback to text/plain to interop with stricter DnD
             e.dataTransfer.setData('text/plain', JSON.stringify(data));
           }
-        } catch { }
+        } catch {}
         try {
           e.dataTransfer?.setDragImage(hostEl, 10, 10);
-        } catch { }
+        } catch {}
       });
     });
   }
@@ -982,11 +1144,11 @@ export class AIStudioFolderManager {
       });
       try {
         bodyObserver.observe(document.body, { childList: true, subtree: true });
-      } catch { }
+      } catch {}
       this.cleanupFns.push(() => {
         try {
           bodyObserver.disconnect();
-        } catch { }
+        } catch {}
       });
       return;
     }
@@ -996,11 +1158,11 @@ export class AIStudioFolderManager {
     });
     try {
       observer.observe(tableRoot, { childList: true, subtree: true });
-    } catch { }
+    } catch {}
     this.cleanupFns.push(() => {
       try {
         observer.disconnect();
-      } catch { }
+      } catch {}
     });
   }
 
@@ -1049,10 +1211,10 @@ export class AIStudioFolderManager {
             // Fallback to text/plain to interop with stricter DnD
             e.dataTransfer.setData('text/plain', json);
           }
-        } catch { }
+        } catch {}
         try {
           e.dataTransfer?.setDragImage(tr, 10, 10);
-        } catch { }
+        } catch {}
 
         // Visual feedback
         tr.style.opacity = '0.5';
@@ -1146,7 +1308,7 @@ export class AIStudioFolderManager {
         if (!raw) {
           try {
             raw = e.dataTransfer?.getData('text/plain') || '';
-          } catch { }
+          } catch {}
         }
         if (!raw) return;
 
@@ -1198,7 +1360,7 @@ export class AIStudioFolderManager {
         e.stopPropagation();
         try {
           if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-        } catch { }
+        } catch {}
       });
       rootItem.addEventListener('dragleave', (e) => {
         e.stopPropagation();
@@ -1268,7 +1430,7 @@ export class AIStudioFolderManager {
           e.stopPropagation();
           try {
             if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-          } catch { }
+          } catch {}
         });
         folderItem.addEventListener('dragleave', (e) => {
           e.stopPropagation();
@@ -1285,7 +1447,7 @@ export class AIStudioFolderManager {
           if (!raw) {
             try {
               raw = e.dataTransfer?.getData('text/plain') || '';
-            } catch { }
+            } catch {}
           }
           if (!raw) return;
 
@@ -1386,7 +1548,7 @@ export class AIStudioFolderManager {
       try {
         document.removeEventListener('dragstart', onDragStart);
         document.body.removeChild(floatingZone);
-      } catch { }
+      } catch {}
     });
   }
 
@@ -1867,7 +2029,7 @@ export class AIStudioFolderManager {
         if (handle.parentElement) {
           handle.parentElement.removeChild(handle);
         }
-      } catch { }
+      } catch {}
     });
   }
 
