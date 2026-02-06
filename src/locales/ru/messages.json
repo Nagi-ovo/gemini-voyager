@@ -467,6 +467,10 @@
     "message": "⚠️ Из-за ленивой загрузки старых сообщений в Gemini, пожалуйста, используйте таймлайн, чтобы перейти к первому сообщению разговора перед экспортом. В противном случае экспорт может быть неполным.",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Совет для Safari: нажмите «Экспорт» ниже, подождите немного, затем нажмите ⌘P и выберите «Сохранить как PDF».",
+    "description": "Safari-specific hint for PDF export"
+  },
   "editInputWidth": {
     "message": "Ширина поля ввода",
     "description": "Edit input width adjustment label"

@@ -31,3 +31,14 @@ Gemini Voyager 帮你把数据从云端拽回手心。
     <img src="/assets/gemini-export-guide-2.png" alt="导出指南步骤 2" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
 </div>
+
+### Safari PDF 导出特别说明
+
+在 Safari 上导出 PDF 步骤略有不同（需手动打印）：
+
+1. 点击 **导出** 按钮，选择 PDF 格式。
+2. **等待一秒左右**（让页面准备好打印样式）。
+3. 按 `Command + P` 调出打印界面。
+4. 在打印界面中选择 **"Save to PDF"**（或 "存储为 PDF"）。
+
+<img src="/assets/safari-export-pdf.png" alt="Safari Export PDF" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 20px;"/>

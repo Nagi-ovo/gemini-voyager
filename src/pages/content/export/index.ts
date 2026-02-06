@@ -855,6 +855,7 @@ async function showExportDialog(
       title: t('export_dialog_title'),
       selectFormat: t('export_dialog_select'),
       warning: t('export_dialog_warning'),
+      safariCmdpHint: t('export_dialog_safari_cmdp_hint'),
       cancel: t('pm_cancel'),
       export: t('pm_export'),
     },

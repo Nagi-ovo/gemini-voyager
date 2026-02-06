@@ -31,3 +31,14 @@ Gemini Voyager를 사용하면 데이터를 클라우드에서 꺼내어 당신�
     <img src="/assets/gemini-export-guide-2.png" alt="내보내기 가이드 2단계" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
 </div>
+
+### Safari PDF 내보내기 참고 사항
+
+Safari에서 PDF를 내보내는 과정은 조금 다릅니다(수동 인쇄 필요):
+
+1. **내보내기(Export)** 버튼을 클릭하고 PDF 형식을 선택합니다.
+2. **1초 정도 기다립니다** (페이지가 인쇄 스타일을 준비할 시간을 줍니다).
+3. `Command + P`를 눌러 인쇄 대화상자를 엽니다.
+4. 인쇄 대화상자에서 **"Save to PDF"**(또는 "PDF로 저장")를 선택합니다.
+
+<img src="/assets/safari-export-pdf.png" alt="Safari Export PDF" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 20px;"/>

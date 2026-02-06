@@ -3,6 +3,8 @@
  * Implements elegant "paper book" style PDF export using browser's print function
  * Philosophy: Content over design, readability over fidelity
  */
+import { isSafari } from '@/core/utils/browser';
+
 import type { ChatTurn, ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
 
@@ -13,11 +15,18 @@ import { DOMContentExtractor } from './DOMContentExtractor';
 export class PDFPrintService {
   private static PRINT_STYLES_ID = 'gv-pdf-print-styles';
   private static PRINT_CONTAINER_ID = 'gv-pdf-print-container';
+  private static CLEANUP_FALLBACK_DELAY_MS = 60_000;
+  private static INLINE_FETCH_TIMEOUT_MS = 2_000;
+  private static INLINE_DECODE_TIMEOUT_MS = 1_000;
+  private static cleanupFallbackTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
    * Export conversation as PDF using browser print
    */
   static async export(turns: ChatTurn[], metadata: ConversationMetadata): Promise<void> {
+    // Ensure we don't leave a previous export container around (e.g. if a prior export failed)
+    this.cleanup();
+
     // Create print container
     const container = this.createPrintContainer(turns, metadata);
     document.body.appendChild(container);
@@ -25,21 +34,85 @@ export class PDFPrintService {
     // Inject print styles
     this.injectPrintStyles();
 
-    // Inline images as data URLs (best-effort) to avoid auth-bound links failing in print
-    await this.inlineImages(container);
+    const safari = isSafari();
 
-    // Small delay to ensure styles are applied
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Inline images as data URLs (best-effort) to avoid auth-bound links failing in print.
+    // Safari is very strict about `window.print()` being called with a user gesture; awaiting here
+    // may cause the print dialog to be blocked. So on Safari we do not await.
+    const inlineImagesPromise = this.inlineImages(container).catch(() => {
+      /* ignore */
+    });
 
-    // Trigger print dialog
-    window.print();
+    if (safari) {
+      this.forceStyleFlush(container);
+      this.triggerPrint();
+      this.registerCleanupHandlers();
+      void inlineImagesPromise;
+      return;
+    }
 
-    // Cleanup after print dialog closes
-    // Note: We can't reliably detect when print dialog closes,
-    // so we clean up after a reasonable delay
-    setTimeout(() => {
+    await inlineImagesPromise;
+    await this.delay(100);
+    this.triggerPrint();
+    this.registerCleanupHandlers();
+  }
+
+  private static triggerPrint(): void {
+    try {
+      window.print();
+    } catch {
+      // Ignore: some environments (tests/iframes) may not support printing
+    }
+  }
+
+  private static forceStyleFlush(container: HTMLElement): void {
+    try {
+      // Force a synchronous style/layout flush so the print-only DOM is "real" before printing.
+      // (Helps on Safari/WebKit where style application can lag behind DOM insertion.)
+      container.getBoundingClientRect();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private static delay(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.setTimeoutUnref(resolve, ms);
+    });
+  }
+
+  private static registerCleanupHandlers(): void {
+    // Prefer afterprint (reliable when supported); keep a fallback timer in case it never fires.
+    const cleanupNow = (): void => {
       this.cleanup();
-    }, 1000);
+    };
+
+    try {
+      window.addEventListener('afterprint', cleanupNow, { once: true });
+    } catch {
+      /* ignore */
+    }
+
+    if (this.cleanupFallbackTimer !== null) {
+      clearTimeout(this.cleanupFallbackTimer);
+    }
+    this.cleanupFallbackTimer = this.setTimeoutUnref(() => {
+      this.cleanup();
+    }, this.CLEANUP_FALLBACK_DELAY_MS);
+  }
+
+  private static setTimeoutUnref(callback: () => void, ms: number): ReturnType<typeof setTimeout> {
+    const handle = setTimeout(callback, ms);
+    // Node.js timers support unref(), which avoids keeping the process alive in tests.
+    if (
+      typeof handle === 'object' &&
+      handle !== null &&
+      'unref' in handle &&
+      typeof (handle as { unref?: unknown }).unref === 'function'
+    ) {
+      (handle as { unref: () => void }).unref();
+    }
+    return handle;
   }
 
   /**
@@ -72,8 +145,20 @@ export class PDFPrintService {
     const imgs = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
     if (imgs.length === 0) return;
     const toDataUrl = async (url: string): Promise<string | null> => {
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timeoutHandle = this.setTimeoutUnref(() => {
+        try {
+          controller?.abort();
+        } catch {
+          /* ignore */
+        }
+      }, this.INLINE_FETCH_TIMEOUT_MS);
+
       try {
-        const resp = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
+        const init: RequestInit = { credentials: 'include', mode: 'cors' as RequestMode };
+        if (controller) init.signal = controller.signal;
+
+        const resp = await fetch(url, init);
         if (!resp.ok) return null;
         const blob = await resp.blob();
         const data = await new Promise<string>((resolve, reject) => {
@@ -89,6 +174,8 @@ export class PDFPrintService {
         return data;
       } catch {
         return null;
+      } finally {
+        clearTimeout(timeoutHandle);
       }
     };
 
@@ -107,12 +194,23 @@ export class PDFPrintService {
     );
 
     // Attempt to wait for image decoding
+    type DecodableImage = HTMLImageElement & { decode?: () => Promise<void> };
     await Promise.all(
-      imgs.map((img) =>
-        (img as any).decode?.().catch(() => {
+      imgs.map(async (img) => {
+        const decode = (img as DecodableImage).decode;
+        if (typeof decode !== 'function') return;
+
+        try {
+          await Promise.race([
+            decode.call(img).catch(() => {
+              /* ignore */
+            }),
+            this.delay(this.INLINE_DECODE_TIMEOUT_MS),
+          ]);
+        } catch {
           /* ignore */
-        }),
-      ),
+        }
+      }),
     );
   }
 
@@ -555,6 +653,15 @@ export class PDFPrintService {
    * Cleanup print container and styles
    */
   private static cleanup(): void {
+    if (this.cleanupFallbackTimer !== null) {
+      try {
+        clearTimeout(this.cleanupFallbackTimer);
+      } catch {
+        /* ignore */
+      }
+      this.cleanupFallbackTimer = null;
+    }
+
     const container = document.getElementById(this.PRINT_CONTAINER_ID);
     if (container) {
       container.remove();

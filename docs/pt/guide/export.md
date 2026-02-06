@@ -31,3 +31,14 @@ It’s your data. Do what you want with it.
     <img src="/assets/gemini-export-guide-2.png" alt="Export guide step 2" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
 </div>
+
+### Safari PDF Export Note
+
+Exporting PDF on Safari requires a slightly different process (manual print):
+
+1. Click the **Export** button and select PDF format.
+2. **Wait for about a second** (allow the page to prepare print styles).
+3. Press `Command + P` to open the print dialog.
+4. Select **"Save to PDF"** in the print dialog.
+
+<img src="/assets/safari-export-pdf.png" alt="Safari Export PDF" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 20px;"/>

@@ -2,16 +2,6 @@ import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 
-// Suppress Vite's CSS preload errors in the Chrome extension content script context.
-// Dynamic imports (e.g., mermaid) trigger Vite's __vitePreload helper which tries to
-// create <link> elements with paths like "/assets/foo.css". In a content script, these
-// resolve to the web page origin (e.g., https://gemini.google.com/assets/foo.css)
-// instead of the extension, causing false "Unable to preload CSS" errors.
-// The CSS is already injected via contentStyle.css, so these preloads are unnecessary.
-window.addEventListener('vite:preloadError', (event) => {
-  event.preventDefault();
-});
-
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
@@ -34,6 +24,16 @@ import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
 import { startWatermarkRemover } from './watermarkRemover/index';
+
+// Suppress Vite's CSS preload errors in the Chrome extension content script context.
+// Dynamic imports (e.g., mermaid) trigger Vite's __vitePreload helper which tries to
+// create <link> elements with paths like "/assets/foo.css". In a content script, these
+// resolve to the web page origin (e.g., https://gemini.google.com/assets/foo.css)
+// instead of the extension, causing false "Unable to preload CSS" errors.
+// The CSS is already injected via contentStyle.css, so these preloads are unnecessary.
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+});
 
 /**
  * Staggered initialization to prevent "thundering herd" problem when multiple tabs

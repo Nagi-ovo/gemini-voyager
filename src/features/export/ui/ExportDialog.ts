@@ -2,6 +2,8 @@
  * Export Dialog UI
  * Material Design styled format selection dialog
  */
+import { isSafari } from '@/core/utils/browser';
+
 import { ConversationExportService } from '../services/ConversationExportService';
 import type { ExportFormat } from '../types/export';
 
@@ -12,6 +14,7 @@ export interface ExportDialogOptions {
     title: string;
     selectFormat: string;
     warning: string;
+    safariCmdpHint: string;
     cancel: string;
     export: string;
   };
@@ -79,7 +82,7 @@ export class ExportDialog {
 
     const formats = ConversationExportService.getAvailableFormats();
     formats.forEach((formatInfo) => {
-      const option = this.createFormatOption(formatInfo);
+      const option = this.createFormatOption(formatInfo, options.translations.safariCmdpHint);
       formatsList.appendChild(option);
     });
 
@@ -138,12 +141,15 @@ export class ExportDialog {
   /**
    * Create format option radio button
    */
-  private createFormatOption(formatInfo: {
-    format: ExportFormat;
-    label: string;
-    description: string;
-    recommended?: boolean;
-  }): HTMLElement {
+  private createFormatOption(
+    formatInfo: {
+      format: ExportFormat;
+      label: string;
+      description: string;
+      recommended?: boolean;
+    },
+    safariCmdpHint: string,
+  ): HTMLElement {
     const option = document.createElement('label');
     option.className = 'gv-export-format-option';
 
@@ -179,7 +185,10 @@ export class ExportDialog {
 
     const desc = document.createElement('div');
     desc.className = 'gv-export-format-description';
-    desc.textContent = formatInfo.description;
+    const shouldShowSafariHint = isSafari() && formatInfo.format === ('pdf' as ExportFormat);
+    desc.textContent = shouldShowSafariHint
+      ? `${formatInfo.description} ${safariCmdpHint}`
+      : formatInfo.description;
 
     content.appendChild(labelDiv);
     content.appendChild(desc);

@@ -427,6 +427,10 @@
     "message": "⚠️ 由於 Gemini 的久遠訊息會延遲載入，請在匯出前透過時間軸跳轉到該對話的第一則訊息，否則匯出內容可能不完整。",
     "description": "關於延遲載入影響匯出完整性的警告"
   },
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Safari 提示：請先點選下方「匯出」按鈕，稍等片刻，再按 ⌘P 選擇「儲存為 PDF」。",
+    "description": "Safari 下 PDF 匯出的提示"
+  },
   "editInputWidth": {
     "message": "編輯輸入框寬度",
     "description": "編輯輸入框寬度調整標籤"

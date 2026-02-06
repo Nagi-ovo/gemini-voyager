@@ -467,6 +467,10 @@
     "message": "⚠️ Gemini は古いメッセージを後から読み込むため、エクスポートする前にタイムラインを使って会話の最初のメッセージまでジャンプしてください。そうしないと、エクスポートが不完全になる可能性があります。",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Safari のヒント：下の「エクスポート」を選択し、少し待ってから ⌘P を押して「PDFとして保存」を選択してください。",
+    "description": "Safari-specific hint for PDF export"
+  },
   "editInputWidth": {
     "message": "入力欄の幅",
     "description": "Edit input width adjustment label"

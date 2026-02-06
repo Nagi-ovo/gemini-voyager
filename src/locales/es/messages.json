@@ -467,6 +467,10 @@
     "message": "⚠️ Debido a la carga diferida de mensajes antiguos en Gemini, por favor usa la línea de tiempo para ir al primer mensaje de la conversación antes de exportar. De lo contrario, la exportación puede estar incompleta.",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Consejo para Safari: haz clic en 'Exportar' abajo, espera un momento, luego presiona ⌘P y elige 'Guardar como PDF'.",
+    "description": "Safari-specific hint for PDF export"
+  },
   "editInputWidth": {
     "message": "Ancho del campo de edición",
     "description": "Edit input width adjustment label"
