@@ -15,8 +15,8 @@ import { mergeFolderData, mergePrompts, mergeStarredMessages } from '../../../ut
  * Allows users to configure Google Drive sync settings
  */
 export function CloudSyncSettings() {
-  if (isSafari()) return null;
   const { t } = useLanguage();
+  const isSafariBrowser = isSafari();
 
   const [syncState, setSyncState] = useState<SyncState>(DEFAULT_SYNC_STATE);
   const [statusMessage, setStatusMessage] = useState<{ text: string; kind: 'ok' | 'err' } | null>(
@@ -430,6 +430,9 @@ export function CloudSyncSettings() {
       return () => clearTimeout(timer);
     }
   }, [statusMessage]);
+
+  // Don't render on Safari
+  if (isSafariBrowser) return null;
 
   return (
     <Card className="p-4 transition-shadow hover:shadow-lg">

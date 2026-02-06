@@ -2038,7 +2038,9 @@ export class AIStudioFolderManager {
   }
 
   /**
-   * Handle cloud upload - upload folder data to Google Drive
+   * Handle cloud upload - upload folder data and prompts to Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleSyncNow()
+   * Note: AI Studio uses its own folder file but shares prompts with Gemini
    */
   private async handleCloudUpload(): Promise<void> {
     try {
@@ -2047,10 +2049,25 @@ export class AIStudioFolderManager {
       // Get current folder data
       const folders = this.data;
 
+      // Get prompts from storage (shared with Gemini)
+      let prompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          prompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[AIStudioFolderManager] Could not get prompts for upload:', err);
+      }
+
+      console.log(
+        `[AIStudioFolderManager] Uploading - folders: ${folders.folders?.length || 0}, prompts: ${prompts.length}`,
+      );
+
       // Send upload request to background script
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.upload',
-        payload: { folders, prompts: [], platform: 'aistudio' },
+        payload: { folders, prompts, platform: 'aistudio' },
       })) as { ok?: boolean; error?: string } | undefined;
 
       if (response?.ok) {
@@ -2067,7 +2084,9 @@ export class AIStudioFolderManager {
   }
 
   /**
-   * Handle cloud sync - download and merge folder data from Google Drive
+   * Handle cloud sync - download and merge folder data and prompts from Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleDownloadFromDrive()
+   * Note: AI Studio uses its own folder file but shares prompts with Gemini
    */
   private async handleCloudSync(): Promise<void> {
     try {
@@ -2078,7 +2097,14 @@ export class AIStudioFolderManager {
         type: 'gv.sync.download',
         payload: { platform: 'aistudio' },
       })) as
-        | { ok?: boolean; error?: string; data?: { folders?: { data?: FolderData } } }
+        | {
+            ok?: boolean;
+            error?: string;
+            data?: {
+              folders?: { data?: FolderData };
+              prompts?: { items?: any[] };
+            };
+          }
         | undefined;
 
       if (!response?.ok) {
@@ -2092,25 +2118,88 @@ export class AIStudioFolderManager {
         return;
       }
 
-      // Get cloud folder data
+      // Extract cloud data
       const cloudFoldersPayload = response.data?.folders;
+      const cloudPromptsPayload = response.data?.prompts;
       const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
+      const cloudPromptItems = cloudPromptsPayload?.items || [];
 
-      // Merge with local data
+      console.log(
+        `[AIStudioFolderManager] Downloaded - folders: ${cloudFolderData.folders?.length || 0}, prompts: ${cloudPromptItems.length}`,
+      );
+
+      // Get local prompts for merge (shared with Gemini)
+      let localPrompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          localPrompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[AIStudioFolderManager] Could not get local prompts for merge:', err);
+      }
+
+      // Merge folder data
       const localFolders = this.data;
       const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
 
-      // Apply merged data
+      // Merge prompts (simple ID-based merge)
+      const mergedPrompts = this.mergePromptsData(localPrompts, cloudPromptItems);
+
+      console.log(
+        `[AIStudioFolderManager] Merged - folders: ${mergedFolders.folders?.length || 0}, prompts: ${mergedPrompts.length}`,
+      );
+
+      // Apply merged folder data
       this.data = mergedFolders;
       await this.save();
-      this.render();
 
+      // Save merged prompts to storage (shared with Gemini)
+      try {
+        await chrome.storage.local.set({
+          gvPromptItems: mergedPrompts,
+        });
+      } catch (err) {
+        console.error('[AIStudioFolderManager] Failed to save merged prompts:', err);
+      }
+
+      this.render();
       this.showNotification(this.t('syncSuccess'), 'info');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('[AIStudioFolderManager] Cloud sync failed:', error);
       this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
     }
+  }
+
+  /**
+   * Merge prompts by ID (simple deduplication)
+   */
+  private mergePromptsData(local: any[], cloud: any[]): any[] {
+    const promptMap = new Map<string, any>();
+
+    // Add local prompts first
+    local.forEach((p) => {
+      if (p?.id) promptMap.set(p.id, p);
+    });
+
+    // Add cloud prompts (cloud takes priority for newer items)
+    cloud.forEach((p) => {
+      if (!p?.id) return;
+      const existing = promptMap.get(p.id);
+      if (!existing) {
+        promptMap.set(p.id, p);
+      } else {
+        // Compare timestamps, prefer newer
+        const cloudTime = p.updatedAt || p.createdAt || 0;
+        const localTime = existing.updatedAt || existing.createdAt || 0;
+        if (cloudTime > localTime) {
+          promptMap.set(p.id, p);
+        }
+      }
+    });
+
+    return Array.from(promptMap.values());
   }
 
   /**

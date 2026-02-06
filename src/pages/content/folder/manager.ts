@@ -5886,7 +5886,8 @@ export class FolderManager {
   }
 
   /**
-   * Handle cloud upload - upload folder data to Google Drive
+   * Handle cloud upload - upload folder data, prompts, and starred messages to Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleSyncNow()
    */
   private async handleCloudUpload(): Promise<void> {
     try {
@@ -5895,10 +5896,26 @@ export class FolderManager {
       // Get current folder data
       const folders = this.data;
 
+      // Get prompts from storage
+      let prompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          prompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[FolderManager] Could not get prompts for upload:', err);
+      }
+
+      this.debug(
+        `Uploading - folders: ${folders.folders?.length || 0}, prompts: ${prompts.length}`,
+      );
+
       // Send upload request to background script
+      // Background script will also fetch starred messages for Gemini platform
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.upload',
-        payload: { folders, prompts: [], platform: 'gemini' },
+        payload: { folders, prompts, platform: 'gemini' },
       })) as { ok?: boolean; error?: string } | undefined;
 
       if (response?.ok) {
@@ -5915,7 +5932,8 @@ export class FolderManager {
   }
 
   /**
-   * Handle cloud sync - download and merge folder data from Google Drive
+   * Handle cloud sync - download and merge folder data, prompts, and starred messages from Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleDownloadFromDrive()
    */
   private async handleCloudSync(): Promise<void> {
     try {
@@ -5926,7 +5944,15 @@ export class FolderManager {
         type: 'gv.sync.download',
         payload: { platform: 'gemini' },
       })) as
-        | { ok?: boolean; error?: string; data?: { folders?: { data?: FolderData } } }
+        | {
+            ok?: boolean;
+            error?: string;
+            data?: {
+              folders?: { data?: FolderData };
+              prompts?: { items?: any[] };
+              starred?: { data?: { messages: Record<string, any[]> } };
+            };
+          }
         | undefined;
 
       if (!response?.ok) {
@@ -5940,25 +5966,153 @@ export class FolderManager {
         return;
       }
 
-      // Get cloud folder data
+      // Extract cloud data
       const cloudFoldersPayload = response.data?.folders;
+      const cloudPromptsPayload = response.data?.prompts;
+      const cloudStarredPayload = response.data?.starred;
       const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
+      const cloudPromptItems = cloudPromptsPayload?.items || [];
+      const cloudStarredData = cloudStarredPayload?.data || { messages: {} };
 
-      // Merge with local data using the same logic as CloudSyncSettings
+      this.debug(
+        `Downloaded - folders: ${cloudFolderData.folders?.length || 0}, prompts: ${cloudPromptItems.length}, starred conversations: ${Object.keys(cloudStarredData.messages || {}).length}`,
+      );
+
+      // Get local prompts for merge
+      let localPrompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          localPrompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[FolderManager] Could not get local prompts for merge:', err);
+      }
+
+      // Get local starred messages for merge
+      let localStarred = { messages: {} as Record<string, any[]> };
+      try {
+        const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
+        if (starredResult.geminiTimelineStarredMessages) {
+          localStarred = starredResult.geminiTimelineStarredMessages;
+        }
+      } catch (err) {
+        console.warn('[FolderManager] Could not get local starred messages for merge:', err);
+      }
+
+      // Merge folder data
       const localFolders = this.data;
       const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
 
-      // Apply merged data
+      // Merge prompts (simple ID-based merge)
+      const mergedPrompts = this.mergePrompts(localPrompts, cloudPromptItems);
+
+      // Merge starred messages
+      const mergedStarred = this.mergeStarredMessages(localStarred, cloudStarredData);
+
+      this.debug(
+        `Merged - folders: ${mergedFolders.folders?.length || 0}, prompts: ${mergedPrompts.length}, starred conversations: ${Object.keys(mergedStarred.messages || {}).length}`,
+      );
+
+      // Apply merged folder data
       this.data = mergedFolders;
       await this.saveData();
-      this.refresh();
 
+      // Save merged prompts and starred to storage
+      try {
+        await chrome.storage.local.set({
+          gvPromptItems: mergedPrompts,
+          geminiTimelineStarredMessages: mergedStarred,
+        });
+      } catch (err) {
+        console.error('[FolderManager] Failed to save merged prompts/starred:', err);
+      }
+
+      this.refresh();
       this.showNotification(this.t('syncSuccess'), 'success');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('[FolderManager] Cloud sync failed:', error);
       this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
     }
+  }
+
+  /**
+   * Merge prompts by ID (simple deduplication)
+   */
+  private mergePrompts(local: any[], cloud: any[]): any[] {
+    const promptMap = new Map<string, any>();
+
+    // Add local prompts first
+    local.forEach((p) => {
+      if (p?.id) promptMap.set(p.id, p);
+    });
+
+    // Add cloud prompts (cloud takes priority for newer items)
+    cloud.forEach((p) => {
+      if (!p?.id) return;
+      const existing = promptMap.get(p.id);
+      if (!existing) {
+        promptMap.set(p.id, p);
+      } else {
+        // Compare timestamps, prefer newer
+        const cloudTime = p.updatedAt || p.createdAt || 0;
+        const localTime = existing.updatedAt || existing.createdAt || 0;
+        if (cloudTime > localTime) {
+          promptMap.set(p.id, p);
+        }
+      }
+    });
+
+    return Array.from(promptMap.values());
+  }
+
+  /**
+   * Merge starred messages by conversationId and turnId
+   */
+  private mergeStarredMessages(
+    local: { messages: Record<string, any[]> },
+    cloud: { messages: Record<string, any[]> },
+  ): { messages: Record<string, any[]> } {
+    const localMessages = local?.messages || {};
+    const cloudMessages = cloud?.messages || {};
+
+    const allConversationIds = new Set([
+      ...Object.keys(localMessages),
+      ...Object.keys(cloudMessages),
+    ]);
+
+    const mergedMessages: Record<string, any[]> = {};
+
+    allConversationIds.forEach((conversationId) => {
+      const localConvoMessages = localMessages[conversationId] || [];
+      const cloudConvoMessages = cloudMessages[conversationId] || [];
+
+      const messageMap = new Map<string, any>();
+
+      // Add cloud messages first
+      cloudConvoMessages.forEach((msg) => {
+        if (msg?.turnId) messageMap.set(msg.turnId, msg);
+      });
+
+      // Merge local messages - prefer newer starredAt
+      localConvoMessages.forEach((localMsg) => {
+        if (!localMsg?.turnId) return;
+        const existingMsg = messageMap.get(localMsg.turnId);
+        if (!existingMsg) {
+          messageMap.set(localMsg.turnId, localMsg);
+        } else if ((localMsg.starredAt || 0) >= (existingMsg.starredAt || 0)) {
+          messageMap.set(localMsg.turnId, localMsg);
+        }
+      });
+
+      const mergedArray = Array.from(messageMap.values());
+      if (mergedArray.length > 0) {
+        mergedMessages[conversationId] = mergedArray;
+      }
+    });
+
+    return { messages: mergedMessages };
   }
 
   /**
