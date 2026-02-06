@@ -181,11 +181,28 @@ export class GoogleDriveSyncService {
 
       // Upload starred messages file (only for Gemini platform)
       if (platform === 'gemini' && starred) {
+        // Truncate content in starred messages to save storage space
+        const MAX_CONTENT_LENGTH = 60;
+        const truncatedStarred: StarredMessagesDataSync = {
+          messages: Object.fromEntries(
+            Object.entries(starred.messages).map(([convId, messages]) => [
+              convId,
+              messages.map((msg) => ({
+                ...msg,
+                content:
+                  msg.content.length > MAX_CONTENT_LENGTH
+                    ? msg.content.slice(0, MAX_CONTENT_LENGTH) + '...'
+                    : msg.content,
+              })),
+            ]),
+          ),
+        };
+
         const starredPayload: StarredExportPayload = {
           format: 'gemini-voyager.starred.v1',
           exportedAt: now.toISOString(),
           version: EXTENSION_VERSION,
-          data: starred,
+          data: truncatedStarred,
         };
         await this.ensureFileId(token, STARRED_FILE_NAME, 'starred');
         await this.uploadFileWithRetry(token, this.starredFileId!, starredPayload);
@@ -506,12 +523,18 @@ export class GoogleDriveSyncService {
 
   private async getFileParents(token: string, fileId: string): Promise<string[] | null> {
     try {
-      const response = await fetch(`${DRIVE_API_BASE}/files/${fileId}?fields=parents`, {
+      // Also check if file is trashed - if so, treat as non-existent
+      const response = await fetch(`${DRIVE_API_BASE}/files/${fileId}?fields=parents,trashed`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.status === 404) return null;
       if (!response.ok) return null;
       const data = await response.json();
+      // If file is in trash, treat as non-existent so we create a new one
+      if (data.trashed) {
+        console.log(`[GoogleDriveSyncService] File ${fileId} is in trash, will create new one`);
+        return null;
+      }
       return data.parents || [];
     } catch {
       return null;

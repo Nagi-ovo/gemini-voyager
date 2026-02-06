@@ -260,7 +260,17 @@ class StarredMessagesManager {
       const exists = data.messages[message.conversationId].some((m) => m.turnId === message.turnId);
 
       if (!exists) {
-        data.messages[message.conversationId].push(message);
+        // Truncate content to save storage space
+        // Popup is ~360px wide with line-clamp-2, showing ~50-60 chars max
+        const MAX_CONTENT_LENGTH = 60;
+        const truncatedMessage: StarredMessage = {
+          ...message,
+          content:
+            message.content.length > MAX_CONTENT_LENGTH
+              ? message.content.slice(0, MAX_CONTENT_LENGTH) + '...'
+              : message.content,
+        };
+        data.messages[message.conversationId].push(truncatedMessage);
         await this.saveToStorage(data);
         return true;
       }
