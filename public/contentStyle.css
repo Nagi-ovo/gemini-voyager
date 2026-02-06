@@ -2680,19 +2680,28 @@ html.dark-theme .gv-pm-expand-btn:hover {
 
 .gv-conversation-icon {
   font-size: 12px !important;
-  width: 12px !important;
-  height: 12px !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: -2px;
+  margin-right: -2px;
   color: var(--folder-icon-color);
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  overflow: hidden !important;
   font-variation-settings:
     'FILL' 0,
     'wght' 400,
     'GRAD' 0,
     'opsz' 20;
+}
+
+.gv-conversation-icon::before,
+.gv-conversation-icon::after {
+  display: none !important;
+  content: none !important;
 }
 
 .gv-conversation-title {
