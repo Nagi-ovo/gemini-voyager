@@ -467,6 +467,18 @@
     "message": "⚠️ نظرًا للتحميل البطيء للرسائل القديمة في Gemini، يرجى استخدام الجدول الزمني للانتقال إلى الرسالة الأولى في المحادثة قبل التصدير. وإلا فقد يكون التصدير غير مكتمل.",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "pm_batch_export": {
+    "message": "Export All Conversations",
+    "description": "Batch export button label"
+  },
+  "batch_export_description": {
+    "message": "Export all conversations as individual JSON files (ZIP)",
+    "description": "Batch export feature description"
+  },
+  "batch_export_confirm": {
+    "message": "This will export all conversations. The process may take several minutes. Continue?",
+    "description": "Batch export confirmation message"
+  },
   "editInputWidth": {
     "message": "عرض حقل التحرير",
     "description": "Edit input width adjustment label"
