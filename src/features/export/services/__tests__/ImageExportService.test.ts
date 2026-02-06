@@ -54,6 +54,12 @@ describe('ImageExportService', () => {
     await ImageExportService.export(mockTurns, mockMetadata, { filename: 'chat.png' });
 
     expect(toBlob).toHaveBeenCalledOnce();
+    expect(toBlob).toHaveBeenCalledWith(
+      expect.any(HTMLElement),
+      expect.objectContaining({
+        pixelRatio: 1.2,
+      }),
+    );
     expect(global.URL.createObjectURL).toHaveBeenCalledOnce();
     const anchors = document.querySelectorAll('a');
     expect(anchors.length).toBeGreaterThan(0);
@@ -70,8 +76,9 @@ describe('ImageExportService', () => {
 
     await ImageExportService.export(mockTurns, mockMetadata, { filename: 'readable.png' });
 
-    expect(capturedStyle).toContain('font-size: 16px;');
-    expect(capturedStyle).toContain('line-height: 1.75;');
+    expect(capturedStyle).toContain('font-size: 20px;');
+    expect(capturedStyle).toContain('line-height: 1.9;');
+    expect(capturedStyle).toContain('font-size: 50px;');
     expect(capturedStyle).toContain('max-width: 100%;');
   });
 });

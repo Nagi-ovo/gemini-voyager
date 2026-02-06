@@ -13,17 +13,28 @@ describe('selection mode interaction', () => {
     expect(code).not.toContain('findSelectionStartIdAtLine(');
   });
 
-  it('pins selection bar to top and uses bottom-right progress toast styles', () => {
+  it('pins selection bar to top and uses top-center compact progress toast styles', () => {
     const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
     const overlayBlock = css.match(/\.gv-export-progress-overlay\s*{([\s\S]*?)}/)?.[1] ?? '';
+    const cardBlock = css.match(/\.gv-export-progress-card\s*{([\s\S]*?)}/)?.[1] ?? '';
 
     expect(css).toMatch(/\.gv-export-select-bar\s*{[\s\S]*top:\s*12px;/);
     expect(css).not.toContain('.gv-export-select-below-pill');
     expect(overlayBlock).toContain('position: fixed;');
-    expect(overlayBlock).toContain('inset: auto;');
-    expect(overlayBlock).toContain('right: 16px;');
-    expect(overlayBlock).toContain('bottom: 16px;');
+    expect(overlayBlock).toContain('left: 50%;');
+    expect(overlayBlock).toContain('transform: translateX(-50%);');
+    expect(overlayBlock).toContain('top: calc(env(safe-area-inset-top, 0px) + 76px);');
     expect(overlayBlock).toContain('pointer-events: none;');
-    expect(overlayBlock).not.toContain('backdrop-filter');
+    expect(cardBlock).toContain('border-radius: 999px;');
+    expect(cardBlock).toContain('backdrop-filter: blur(10px);');
+  });
+
+  it('supports dark-theme selectors for export dialog and progress toast', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+
+    expect(css).toContain('html.dark-theme .gv-export-dialog');
+    expect(css).toContain('body.dark-theme .gv-export-dialog');
+    expect(css).toContain('html.dark-theme .gv-export-progress-card');
+    expect(css).toContain("body[data-theme='dark'] .gv-export-progress-card");
   });
 });

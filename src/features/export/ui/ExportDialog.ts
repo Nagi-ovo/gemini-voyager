@@ -31,11 +31,9 @@ export class ExportDialog {
     this.overlay = this.createDialog(options);
     document.body.appendChild(this.overlay);
 
-    // Focus on dialog
-    setTimeout(() => {
-      const firstRadio = this.overlay?.querySelector('input[type="radio"]') as HTMLInputElement;
-      firstRadio?.focus();
-    }, 100);
+    // Keep initial focus on container to avoid showing a browser focus ring on JSON radio.
+    const dialog = this.overlay.querySelector('.gv-export-dialog') as HTMLElement | null;
+    dialog?.focus();
   }
 
   /**
@@ -57,6 +55,7 @@ export class ExportDialog {
 
     const dialog = document.createElement('div');
     dialog.className = 'gv-export-dialog';
+    dialog.tabIndex = -1;
 
     // Title
     const title = document.createElement('div');

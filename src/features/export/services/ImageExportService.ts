@@ -30,7 +30,7 @@ export class ImageExportService {
 
       const blob = await toBlob(target, {
         cacheBust: true,
-        pixelRatio: 2,
+        pixelRatio: 1.2,
         backgroundColor: '#ffffff',
         skipFonts: true,
       });
@@ -56,7 +56,7 @@ export class ImageExportService {
       position: 'fixed',
       left: '-10000px',
       top: '0',
-      width: '760px',
+      width: '620px',
       background: '#ffffff',
       color: '#111827',
       zIndex: '-1',
@@ -145,9 +145,9 @@ export class ImageExportService {
     style.textContent = `
       .gv-image-export-doc {
         font-family: Georgia, 'Times New Roman', serif;
-        font-size: 16px;
-        line-height: 1.75;
-        padding: 32px;
+        font-size: 20px;
+        line-height: 1.9;
+        padding: 26px;
       }
 
       .gv-image-export-header {
@@ -158,7 +158,7 @@ export class ImageExportService {
 
       .gv-image-export-title {
         margin: 0;
-        font-size: 36px;
+        font-size: 50px;
         line-height: 1.2;
         color: #111827;
         word-break: break-word;
@@ -167,37 +167,38 @@ export class ImageExportService {
       .gv-image-export-meta {
         margin-top: 10px;
         color: #6b7280;
-        font-size: 14px;
+        font-size: 18px;
         display: grid;
-        gap: 6px;
+        gap: 8px;
       }
 
       .gv-image-export-turn {
-        margin: 20px 0;
-        padding: 16px 0;
+        margin: 24px 0;
+        padding: 20px 0;
         border-bottom: 1px solid rgba(0,0,0,0.08);
       }
 
       .gv-image-export-turn-header {
         font-weight: 700;
-        font-size: 18px;
+        font-size: 24px;
         color: #374151;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
       }
 
       .gv-image-export-block {
-        margin: 14px 0;
+        margin: 16px 0;
       }
 
       .gv-image-export-label {
         font-weight: 700;
-        font-size: 15px;
-        margin-bottom: 8px;
+        font-size: 20px;
+        margin-bottom: 10px;
         color: #111827;
       }
 
       .gv-image-export-content {
-        padding-left: 14px;
+        font-size: 20px;
+        padding-left: 16px;
         border-left: 3px solid rgba(0,0,0,0.10);
       }
 
@@ -205,28 +206,28 @@ export class ImageExportService {
         max-width: 100%;
         height: auto;
         display: block;
-        margin: 10px 0;
+        margin: 12px 0;
       }
 
       .gv-image-export-content pre {
         background: rgba(0,0,0,0.05);
-        padding: 12px 14px;
+        padding: 14px 16px;
         border-radius: 8px;
         overflow-x: auto;
         white-space: pre-wrap;
         word-break: break-word;
-        font-size: 14px;
-        line-height: 1.6;
+        font-size: 18px;
+        line-height: 1.8;
       }
 
       .gv-image-export-footer {
-        margin-top: 20px;
-        padding-top: 12px;
+        margin-top: 24px;
+        padding-top: 14px;
         border-top: 1px solid rgba(0,0,0,0.12);
         color: #6b7280;
-        font-size: 13px;
+        font-size: 16px;
         display: grid;
-        gap: 6px;
+        gap: 8px;
       }
     `;
 
