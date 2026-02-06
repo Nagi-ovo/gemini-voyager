@@ -13,12 +13,17 @@ describe('selection mode interaction', () => {
     expect(code).not.toContain('findSelectionStartIdAtLine(');
   });
 
-  it('pins selection bar to top and includes export progress modal styles', () => {
+  it('pins selection bar to top and uses bottom-right progress toast styles', () => {
     const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const overlayBlock = css.match(/\.gv-export-progress-overlay\s*{([\s\S]*?)}/)?.[1] ?? '';
 
     expect(css).toMatch(/\.gv-export-select-bar\s*{[\s\S]*top:\s*12px;/);
     expect(css).not.toContain('.gv-export-select-below-pill');
-    expect(css).toContain('.gv-export-progress-overlay');
-    expect(css).toContain('.gv-export-progress-card');
+    expect(overlayBlock).toContain('position: fixed;');
+    expect(overlayBlock).toContain('inset: auto;');
+    expect(overlayBlock).toContain('right: 16px;');
+    expect(overlayBlock).toContain('bottom: 16px;');
+    expect(overlayBlock).toContain('pointer-events: none;');
+    expect(overlayBlock).not.toContain('backdrop-filter');
   });
 });

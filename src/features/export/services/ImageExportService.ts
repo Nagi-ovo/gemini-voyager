@@ -56,7 +56,7 @@ export class ImageExportService {
       position: 'fixed',
       left: '-10000px',
       top: '0',
-      width: '900px',
+      width: '760px',
       background: '#ffffff',
       color: '#111827',
       zIndex: '-1',
@@ -145,9 +145,9 @@ export class ImageExportService {
     style.textContent = `
       .gv-image-export-doc {
         font-family: Georgia, 'Times New Roman', serif;
-        font-size: 12px;
-        line-height: 1.6;
-        padding: 28px;
+        font-size: 16px;
+        line-height: 1.75;
+        padding: 32px;
       }
 
       .gv-image-export-header {
@@ -158,7 +158,7 @@ export class ImageExportService {
 
       .gv-image-export-title {
         margin: 0;
-        font-size: 26px;
+        font-size: 36px;
         line-height: 1.2;
         color: #111827;
         word-break: break-word;
@@ -167,64 +167,66 @@ export class ImageExportService {
       .gv-image-export-meta {
         margin-top: 10px;
         color: #6b7280;
-        font-size: 12px;
+        font-size: 14px;
         display: grid;
-        gap: 4px;
+        gap: 6px;
       }
 
       .gv-image-export-turn {
-        margin: 18px 0;
-        padding: 14px 0;
+        margin: 20px 0;
+        padding: 16px 0;
         border-bottom: 1px solid rgba(0,0,0,0.08);
       }
 
       .gv-image-export-turn-header {
         font-weight: 700;
-        font-size: 13px;
+        font-size: 18px;
         color: #374151;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
       }
 
       .gv-image-export-block {
-        margin: 10px 0;
+        margin: 14px 0;
       }
 
       .gv-image-export-label {
         font-weight: 700;
-        font-size: 12px;
-        margin-bottom: 6px;
+        font-size: 15px;
+        margin-bottom: 8px;
         color: #111827;
       }
 
       .gv-image-export-content {
-        padding-left: 10px;
+        padding-left: 14px;
         border-left: 3px solid rgba(0,0,0,0.10);
       }
 
       .gv-image-export-content img {
-        max-width: 70%;
+        max-width: 100%;
         height: auto;
         display: block;
-        margin: 8px 0;
+        margin: 10px 0;
       }
 
       .gv-image-export-content pre {
         background: rgba(0,0,0,0.05);
-        padding: 10px 12px;
+        padding: 12px 14px;
         border-radius: 8px;
         overflow-x: auto;
         white-space: pre-wrap;
         word-break: break-word;
+        font-size: 14px;
+        line-height: 1.6;
       }
 
       .gv-image-export-footer {
-        margin-top: 18px;
+        margin-top: 20px;
         padding-top: 12px;
         border-top: 1px solid rgba(0,0,0,0.12);
         color: #6b7280;
-        font-size: 11px;
+        font-size: 13px;
         display: grid;
-        gap: 4px;
+        gap: 6px;
       }
     `;
 

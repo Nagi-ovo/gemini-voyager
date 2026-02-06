@@ -4345,17 +4345,16 @@ html.dark .gv-export-dialog-btn-secondary:hover,
 
 .gv-export-progress-overlay {
   position: fixed;
-  inset: 0;
+  inset: auto;
+  right: 16px;
+  bottom: 16px;
   z-index: 2147483645;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.32);
-  backdrop-filter: blur(2px);
+  width: min(320px, calc(100vw - 24px));
+  pointer-events: none;
 }
 
 .gv-export-progress-card {
-  min-width: 220px;
+  width: 100%;
   padding: 14px 16px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -4422,5 +4421,11 @@ html.dark .gv-export-dialog-btn-secondary:hover,
   .gv-export-select-export-btn {
     min-width: 66px;
     padding: 0 10px;
+  }
+
+  .gv-export-progress-overlay {
+    right: 12px;
+    bottom: 12px;
+    width: calc(100vw - 24px);
   }
 }

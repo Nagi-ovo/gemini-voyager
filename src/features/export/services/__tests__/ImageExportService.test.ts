@@ -59,4 +59,19 @@ describe('ImageExportService', () => {
     expect(anchors.length).toBeGreaterThan(0);
     expect((anchors[0] as HTMLAnchorElement).download).toBe('chat.png');
   });
+
+  it('uses larger typography and media sizing for mobile readability', async () => {
+    let capturedStyle = '';
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (node: HTMLElement) => {
+      capturedStyle =
+        (node.parentElement?.querySelector('style') as HTMLStyleElement | null)?.textContent ?? '';
+      return new Blob(['x'], { type: 'image/png' });
+    });
+
+    await ImageExportService.export(mockTurns, mockMetadata, { filename: 'readable.png' });
+
+    expect(capturedStyle).toContain('font-size: 16px;');
+    expect(capturedStyle).toContain('line-height: 1.75;');
+    expect(capturedStyle).toContain('max-width: 100%;');
+  });
 });
