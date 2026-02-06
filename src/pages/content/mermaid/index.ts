@@ -84,6 +84,7 @@ const createStyles = () => {
       right: 8px;
       z-index: 10;
       display: flex;
+      align-items: center; /* Center items vertically */
       gap: 4px;
       background: var(--gemini-surface-container, rgba(0,0,0,0.05));
       border-radius: 8px;
@@ -451,6 +452,23 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
       // Toggle buttons
       const toggleContainer = document.createElement('div');
       toggleContainer.className = 'gv-mermaid-toggle';
+
+      // Try to find and move the native copy button to our toolbar
+      // This prevents overlap/covering issues and keeps the UI clean
+      // We look for .buttons container (newer Gemini) or .copy-button class
+      const parentElement = wrapper?.parentElement || codeBlockHost.parentElement;
+      const nativeCopyBtn =
+        parentElement?.querySelector('.buttons') || parentElement?.querySelector('.copy-button');
+
+      // Only move if it looks like the right button (close to the code block)
+      if (nativeCopyBtn) {
+        // Reset positioning that might conflict
+        (nativeCopyBtn as HTMLElement).style.position = 'static';
+        (nativeCopyBtn as HTMLElement).style.top = 'auto';
+        (nativeCopyBtn as HTMLElement).style.right = 'auto';
+        (nativeCopyBtn as HTMLElement).style.marginTop = '0';
+        toggleContainer.appendChild(nativeCopyBtn);
+      }
 
       const diagramBtn = document.createElement('button');
       diagramBtn.textContent = '📊 Diagram';
