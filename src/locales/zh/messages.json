@@ -819,6 +819,22 @@
     "message": "同步中...",
     "description": "同步进行中消息"
   },
+  "uploadInProgress": {
+    "message": "上传中...",
+    "description": "上传进行中消息"
+  },
+  "uploadSuccess": {
+    "message": "✓ 上传成功",
+    "description": "上传成功消息"
+  },
+  "downloadInProgress": {
+    "message": "下载中...",
+    "description": "下载进行中消息"
+  },
+  "downloadMergeSuccess": {
+    "message": "✓ 下载合并成功",
+    "description": "下载合并成功消息"
+  },
   "syncUpload": {
     "message": "上传到云端",
     "description": "上传到云端按钮"

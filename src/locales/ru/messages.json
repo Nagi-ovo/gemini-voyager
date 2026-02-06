@@ -819,6 +819,22 @@
     "message": "Синхронизация...",
     "description": "Sync in progress message"
   },
+  "uploadInProgress": {
+    "message": "Uploading...",
+    "description": "Upload in progress message"
+  },
+  "uploadSuccess": {
+    "message": "✓ Uploaded successfully",
+    "description": "Upload success message"
+  },
+  "downloadInProgress": {
+    "message": "Downloading...",
+    "description": "Download in progress message"
+  },
+  "downloadMergeSuccess": {
+    "message": "✓ Downloaded and merged",
+    "description": "Download and merge success message"
+  },
   "syncUpload": {
     "message": "Загрузить",
     "description": "Upload button label"

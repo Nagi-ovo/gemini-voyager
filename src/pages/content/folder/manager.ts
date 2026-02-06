@@ -2673,9 +2673,9 @@ export class FolderManager {
       // Strategy 2: Look for menu items containing delete text (supports translations)
       const menuItems = document.querySelectorAll(
         '.cdk-overlay-container button, ' +
-          '.cdk-overlay-container [role="menuitem"], ' +
-          '.mat-mdc-menu-content button, ' +
-          '.mat-menu-content button',
+        '.cdk-overlay-container [role="menuitem"], ' +
+        '.mat-mdc-menu-content button, ' +
+        '.mat-menu-content button',
       );
 
       for (const item of menuItems) {
@@ -4747,7 +4747,7 @@ export class FolderManager {
   private showDataLossNotification(): void {
     this.showNotificationByLevel(
       getTranslationSync('folderManager_dataLossWarning') ||
-        'Warning: Failed to load folder data. Please check your browser console for details.',
+      'Warning: Failed to load folder data. Please check your browser console for details.',
       'error',
     );
   }
@@ -5891,7 +5891,7 @@ export class FolderManager {
    */
   private async handleCloudUpload(): Promise<void> {
     try {
-      this.showNotification(this.t('syncInProgress'), 'info');
+      this.showNotification(this.t('uploadInProgress'), 'info');
 
       // Get current folder data
       const folders = this.data;
@@ -5919,7 +5919,7 @@ export class FolderManager {
       })) as { ok?: boolean; error?: string } | undefined;
 
       if (response?.ok) {
-        this.showNotification(this.t('syncSuccess'), 'success');
+        this.showNotification(this.t('uploadSuccess'), 'success');
       } else {
         const errorMsg = response?.error || 'Unknown error';
         this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
@@ -5937,7 +5937,7 @@ export class FolderManager {
    */
   private async handleCloudSync(): Promise<void> {
     try {
-      this.showNotification(this.t('syncInProgress'), 'info');
+      this.showNotification(this.t('downloadInProgress'), 'info');
 
       // Send download request to background script
       const response = (await browser.runtime.sendMessage({
@@ -5945,14 +5945,14 @@ export class FolderManager {
         payload: { platform: 'gemini' },
       })) as
         | {
-            ok?: boolean;
-            error?: string;
-            data?: {
-              folders?: { data?: FolderData };
-              prompts?: { items?: any[] };
-              starred?: { data?: { messages: Record<string, any[]> } };
-            };
-          }
+          ok?: boolean;
+          error?: string;
+          data?: {
+            folders?: { data?: FolderData };
+            prompts?: { items?: any[] };
+            starred?: { data?: { messages: Record<string, any[]> } };
+          };
+        }
         | undefined;
 
       if (!response?.ok) {
@@ -6029,7 +6029,7 @@ export class FolderManager {
       }
 
       this.refresh();
-      this.showNotification(this.t('syncSuccess'), 'success');
+      this.showNotification(this.t('downloadMergeSuccess'), 'success');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('[FolderManager] Cloud sync failed:', error);
