@@ -14,6 +14,7 @@
  */
 import { getTranslationSync } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
+import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import { DOWNLOAD_ICON_SELECTOR, findNativeDownloadButton } from './downloadButton';
 import { type StatusToastManager, createStatusToastManager } from './statusToast';
@@ -338,6 +339,9 @@ export async function startWatermarkRemover(): Promise<void> {
 
     console.log('[Gemini Voyager] Watermark remover ready');
   } catch (error) {
+    if (isExtensionContextInvalidatedError(error)) {
+      return;
+    }
     console.error('[Gemini Voyager] Watermark remover initialization failed:', error);
   }
 }
