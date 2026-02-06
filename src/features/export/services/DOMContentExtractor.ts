@@ -343,6 +343,47 @@ export class DOMContentExtractor {
         continue;
       }
 
+      // Generated images (model-generated images in assistant responses)
+      // These are typically wrapped in: <p> > <div.attachment-container.generated-images> >
+      //   <response-element> > <generated-image> > <single-image> > ... > <img>
+      // Also handle standalone generated-image / single-image custom elements
+      {
+        const generatedImgs = child.querySelectorAll(
+          'generated-image img, single-image img, .attachment-container.generated-images img',
+        );
+        if (generatedImgs.length > 0) {
+          for (const img of Array.from(generatedImgs)) {
+            const imgEl = img as HTMLImageElement;
+            const src = imgEl.src || imgEl.getAttribute('src') || '';
+            if (!src || src === 'about:blank') continue;
+            const alt = imgEl.alt || 'Generated image';
+            flags.hasImages = true;
+            htmlParts.push(`<img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" />`);
+            textParts.push(`\n![${alt}](${src})\n`);
+          }
+          if (this.DEBUG)
+            console.log(
+              '[DOMContentExtractor] Extracted',
+              generatedImgs.length,
+              'generated images',
+            );
+          continue;
+        }
+      }
+
+      // Standalone <img> element (e.g. direct image in response)
+      if (tagName === 'img') {
+        const imgEl = child as HTMLImageElement;
+        const src = imgEl.src || imgEl.getAttribute('src') || '';
+        if (src && src !== 'about:blank') {
+          const alt = imgEl.alt || 'Image';
+          flags.hasImages = true;
+          htmlParts.push(`<img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" />`);
+          textParts.push(`\n![${alt}](${src})\n`);
+        }
+        continue;
+      }
+
       // Horizontal rule
       if (tagName === 'hr') {
         htmlParts.push('<hr>');
@@ -382,6 +423,8 @@ export class DOMContentExtractor {
         tagName === 'div' ||
         tagName === 'section' ||
         tagName === 'article' ||
+        tagName === 'generated-image' ||
+        tagName === 'single-image' ||
         child.classList.contains('horizontal-scroll-wrapper') ||
         child.classList.contains('table-block-component')
       ) {
@@ -413,7 +456,11 @@ export class DOMContentExtractor {
       // Gemini inline sources/citation chips (appear as link icons in export/print)
       element.tagName === 'SOURCES-CAROUSEL-INLINE' ||
       element.tagName === 'SOURCE-INLINE-CHIPS' ||
-      element.tagName === 'SOURCE-INLINE-CHIP'
+      element.tagName === 'SOURCE-INLINE-CHIP' ||
+      // Generated image overlay controls (share, copy, download buttons)
+      element.tagName === 'SHARE-BUTTON' ||
+      element.tagName === 'COPY-BUTTON' ||
+      element.tagName === 'DOWNLOAD-GENERATED-IMAGE-BUTTON'
     ) {
       return true;
     }
@@ -431,7 +478,12 @@ export class DOMContentExtractor {
       element.classList.contains('export-sheets-button') ||
       element.classList.contains('thoughts-header') ||
       // Gemini inline source/citation container
-      element.classList.contains('source-inline-chip-container')
+      element.classList.contains('source-inline-chip-container') ||
+      // NanoBanana watermark remover indicator (🍌 emoji)
+      element.classList.contains('nanobanana-indicator') ||
+      // Generated image overlay controls (share/copy/download buttons)
+      element.classList.contains('generated-image-controls') ||
+      element.classList.contains('hide-from-message-actions')
     ) {
       return true;
     }
@@ -505,6 +557,20 @@ export class DOMContentExtractor {
           const text = this.normalizeText(el.textContent || '');
           htmlParts.push(`<code>${this.escapeHtml(text)}</code>`);
           textParts.push(`\`${text}\``);
+          return;
+        }
+
+        // Inline images
+        if (el.tagName === 'IMG') {
+          const imgEl = el as HTMLImageElement;
+          const src = imgEl.src || imgEl.getAttribute('src') || '';
+          if (src && src !== 'about:blank') {
+            const alt = imgEl.alt || 'Image';
+            htmlParts.push(
+              `<img src="${DOMContentExtractor.escapeHtml(src)}" alt="${DOMContentExtractor.escapeHtml(alt)}" />`,
+            );
+            textParts.push(`![${alt}](${src})`);
+          }
           return;
         }
 
@@ -716,6 +782,9 @@ export class DOMContentExtractor {
       'sources-carousel-inline',
       'source-inline-chips',
       'source-inline-chip',
+      'share-button',
+      'copy-button',
+      'download-generated-image-button',
       '.model-thoughts',
       '.copy-button',
       '.action-button',
@@ -723,6 +792,9 @@ export class DOMContentExtractor {
       '.export-sheets-button',
       '.thoughts-header',
       '.source-inline-chip-container',
+      '.nanobanana-indicator',
+      '.generated-image-controls',
+      '.hide-from-message-actions',
     ].join(',');
 
     root.querySelectorAll(selector).forEach((el) => el.remove());

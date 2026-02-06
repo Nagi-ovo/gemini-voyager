@@ -95,7 +95,8 @@ export class PDFPrintService {
     await Promise.all(
       imgs.map(async (img) => {
         const src = img.getAttribute('src') || '';
-        if (!/^https?:\/\//i.test(src)) return;
+        // Handle both http(s) and blob: URLs (watermark-removed images use blob: URLs)
+        if (!/^(https?:\/\/|blob:)/i.test(src)) return;
         const data = await toDataUrl(src);
         if (data) {
           try {

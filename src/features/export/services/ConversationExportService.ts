@@ -187,7 +187,8 @@ export class ConversationExportService {
           }
         } catch {}
         // If failed, try background fetch (bypasses page CORS)
-        if (!blob) {
+        // Note: blob: URLs are page-specific and cannot be fetched from background script
+        if (!blob && !url.startsWith('blob:')) {
           const bg = await bgFetch(url);
           if (bg) {
             blob = bg.blob;
