@@ -557,8 +557,10 @@ export class TimelineManager {
   private async findCriticalElements(): Promise<boolean> {
     const configured = this.getConfiguredUserTurnSelector();
     let userOverride = '';
+    let autoDetected = '';
     try {
       userOverride = localStorage.getItem('geminiTimelineUserTurnSelector') || '';
+      autoDetected = localStorage.getItem('geminiTimelineUserTurnSelectorAuto') || '';
     } catch {}
     const defaultCandidates = [
       // Angular-based Gemini UI user bubble (primary)
@@ -574,9 +576,16 @@ export class TimelineManager {
       '[data-message-author-role="user"]',
       'div[role="listitem"][data-user="true"]',
     ];
-    const candidates = configured.length
-      ? [configured, ...defaultCandidates.filter((s) => s !== configured)]
-      : defaultCandidates;
+    // Compatibility strategy:
+    // - Keep explicit user override as highest priority.
+    // - Prefer built-in defaults over auto-detected cache, so stale auto cache can self-heal after refresh.
+    let candidates = [...defaultCandidates];
+    if (userOverride.length) {
+      candidates = [userOverride, ...defaultCandidates.filter((s) => s !== userOverride)];
+    } else {
+      const cached = autoDetected || configured;
+      if (cached && !candidates.includes(cached)) candidates.push(cached);
+    }
     let firstTurn: Element | null = null;
     let matchedSelector = '';
     const found = await this.waitForAnyElement(candidates, 4000);
