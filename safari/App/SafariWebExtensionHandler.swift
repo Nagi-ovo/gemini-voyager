@@ -66,7 +66,7 @@ class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     }
 
     /// Handle storage synchronization (placeholder for future feature)
-    private func handleSyncStorage(payload: [String: AnyCodable]?, context: NSExtensionContext) {
+    private func handleSyncStorage(message: [String: Any], context: NSExtensionContext) {
         // Future: Implement native storage sync with UserDefaults or Keychain
         os_log(.info, log: logger, "Storage sync requested (not yet implemented)")
         respondWithSuccess(context: context, data: ["synced": false])

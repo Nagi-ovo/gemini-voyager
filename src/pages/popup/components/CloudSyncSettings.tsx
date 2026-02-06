@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import type { SyncMode, SyncPlatform, SyncState } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
+import { isSafari } from '@/core/utils/browser';
 
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
@@ -14,7 +15,9 @@ import { mergeFolderData, mergePrompts, mergeStarredMessages } from '../../../ut
  * Allows users to configure Google Drive sync settings
  */
 export function CloudSyncSettings() {
+  if (isSafari()) return null;
   const { t } = useLanguage();
+
   const [syncState, setSyncState] = useState<SyncState>(DEFAULT_SYNC_STATE);
   const [statusMessage, setStatusMessage] = useState<{ text: string; kind: 'ok' | 'err' } | null>(
     null,
