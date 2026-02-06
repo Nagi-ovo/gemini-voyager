@@ -153,6 +153,47 @@ export class ConversationExportService {
     };
 
     let idx = 1;
+
+    /**
+     * Helper: convert base64 response from background into Blob + contentType.
+     * Shared by bgFetch and pageContextFetch.
+     */
+    const base64ToBlob = (
+      base64: string,
+      contentType: string,
+    ): { blob: Blob; contentType: string } => {
+      const bin = atob(base64);
+      const len = bin.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+      return { blob: new Blob([bytes], { type: contentType }), contentType };
+    };
+
+    /**
+     * Helper: convert Blob → raw base64 string (without data URL prefix).
+     * Uses FileReader which works reliably across all browser contexts.
+     */
+    const blobToBase64 = (blob: Blob): Promise<string | null> => {
+      return new Promise((resolve) => {
+        try {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = String(reader.result || '');
+            const commaIdx = dataUrl.indexOf(',');
+            resolve(commaIdx >= 0 ? dataUrl.substring(commaIdx + 1) : null);
+          };
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        } catch {
+          resolve(null);
+        }
+      });
+    };
+
+    /**
+     * Fetch image via background script (extension context).
+     * Works on Chrome/Edge where extension context shares the browser cookie jar.
+     */
     const bgFetch = async (u: string): Promise<{ blob: Blob; contentType: string } | null> => {
       try {
         const resp = await new Promise<any>((resolve) => {
@@ -163,12 +204,31 @@ export class ConversationExportService {
           }
         });
         if (resp && resp.ok && resp.base64) {
-          const contentType = String(resp.contentType || 'application/octet-stream');
-          const bin = atob(resp.base64);
-          const len = bin.length;
-          const bytes = new Uint8Array(len);
-          for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
-          return { blob: new Blob([bytes], { type: contentType }), contentType };
+          return base64ToBlob(resp.base64, String(resp.contentType || 'application/octet-stream'));
+        }
+      } catch {}
+      return null;
+    };
+
+    /**
+     * Fetch image via page context (MAIN world).
+     * Uses chrome.scripting.executeScript so the fetch runs with the page's own
+     * cookies — essential on Firefox (Total Cookie Protection) and Safari (ITP)
+     * where the extension's cookie jar is partitioned away from Google's auth cookies.
+     */
+    const pageContextFetch = async (
+      u: string,
+    ): Promise<{ blob: Blob; contentType: string } | null> => {
+      try {
+        const resp = await new Promise<any>((resolve) => {
+          try {
+            chrome.runtime?.sendMessage?.({ type: 'gv.fetchImageViaPage', url: u }, resolve);
+          } catch {
+            resolve(null);
+          }
+        });
+        if (resp && resp.ok && resp.base64) {
+          return base64ToBlob(resp.base64, String(resp.contentType || 'application/octet-stream'));
         }
       } catch {}
       return null;
@@ -176,37 +236,58 @@ export class ConversationExportService {
 
     await Promise.all(
       imageUrls.map(async (url) => {
-        // Attempt content-script fetch first
-        let blob: Blob | null = null;
-        let contentType: string | null = null;
         try {
-          const resp = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
-          if (resp.ok) {
-            contentType = resp.headers.get('Content-Type');
-            blob = await resp.blob();
+          // Strategy 1: Content-script fetch (fast, works on Chrome/Edge, handles blob: URLs)
+          let blob: Blob | null = null;
+          let contentType: string | null = null;
+          try {
+            const resp = await fetch(url, {
+              credentials: 'include',
+              mode: 'cors' as RequestMode,
+            });
+            if (resp.ok) {
+              contentType = resp.headers.get('Content-Type');
+              blob = await resp.blob();
+            }
+          } catch {}
+
+          // Strategy 2: Background fetch (bypasses page CORS via host_permissions)
+          // Note: blob: URLs are page-specific and cannot be fetched from background script
+          if (!blob && !url.startsWith('blob:')) {
+            const bg = await bgFetch(url);
+            if (bg) {
+              blob = bg.blob;
+              contentType = bg.contentType;
+            }
           }
-        } catch {}
-        // If failed, try background fetch (bypasses page CORS)
-        // Note: blob: URLs are page-specific and cannot be fetched from background script
-        if (!blob && !url.startsWith('blob:')) {
-          const bg = await bgFetch(url);
-          if (bg) {
-            blob = bg.blob;
-            contentType = bg.contentType;
+
+          // Strategy 3: Page context fetch via MAIN world (handles Firefox/Safari
+          // cookie partitioning by using the page's own fetch with its auth cookies)
+          if (!blob && !url.startsWith('blob:')) {
+            const pc = await pageContextFetch(url);
+            if (pc) {
+              blob = pc.blob;
+              contentType = pc.contentType;
+            }
           }
+
+          if (!blob) return; // leave original URL in markdown
+
+          // Convert Blob to base64 string for JSZip.
+          // Using base64 strings avoids Firefox cross-compartment Uint8Array issues
+          // where JSZip fails with "Can't read the data" due to prototype chain mismatch.
+          const base64Data = await blobToBase64(blob);
+          if (!base64Data) return;
+
+          const ext = pickExt(contentType, url);
+          const fileName = `img-${String(idx++).padStart(3, '0')}.${ext}`;
+          // Store inside the 'assets' folder using base64 option for cross-browser safety
+          assetsFolder?.file(fileName, base64Data, { base64: true });
+          // Reference in markdown should include the 'assets/' prefix
+          mapping.set(url, `assets/${fileName}`);
+        } catch {
+          // Skip this image on any error to prevent one failed image from crashing the export
         }
-        if (!blob) return; // leave original URL
-
-        // Firefox fix: Convert Blob to Uint8Array in current context to avoid prototype chain issues
-        const arrayBuffer = await blob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer.slice(0));
-
-        const ext = pickExt(contentType, url);
-        const fileName = `img-${String(idx++).padStart(3, '0')}.${ext}`;
-        // Store inside the 'assets' folder WITHOUT duplicating the folder name
-        assetsFolder?.file(fileName, uint8Array);
-        // Reference in markdown should include the 'assets/' prefix
-        mapping.set(url, `assets/${fileName}`);
       }),
     );
 
