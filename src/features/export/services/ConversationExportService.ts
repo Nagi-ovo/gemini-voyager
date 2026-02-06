@@ -13,6 +13,7 @@ import type {
   ExportResult,
 } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
+import { ImageExportService } from './ImageExportService';
 import { MarkdownFormatter } from './MarkdownFormatter';
 import { PDFPrintService } from './PDFPrintService';
 
@@ -39,6 +40,9 @@ export class ConversationExportService {
 
         case 'pdf':
           return await this.exportPDF(turns, metadata, options);
+
+        case 'image':
+          return await this.exportImage(turns, metadata, options);
 
         default:
           return {
@@ -102,7 +106,7 @@ export class ConversationExportService {
       items: processedItems,
     };
 
-    const filename = options.filename || this.generateFilename('json');
+    const filename = options.filename || this.generateFilename('json', metadata.title);
     this.downloadJSON(payload, filename);
 
     return {
@@ -152,17 +156,35 @@ export class ConversationExportService {
       return 'bin';
     };
 
+    type BackgroundFetchImageResponse =
+      | {
+          ok: true;
+          base64: string;
+          contentType?: string;
+        }
+      | {
+          ok?: false;
+          base64?: unknown;
+          contentType?: unknown;
+        }
+      | null;
+
     let idx = 1;
     const bgFetch = async (u: string): Promise<{ blob: Blob; contentType: string } | null> => {
       try {
-        const resp = await new Promise<any>((resolve) => {
+        const resp = await new Promise<BackgroundFetchImageResponse>((resolve) => {
           try {
-            chrome.runtime?.sendMessage?.({ type: 'gv.fetchImage', url: u }, resolve);
+            chrome.runtime?.sendMessage?.(
+              { type: 'gv.fetchImage', url: u },
+              (response: unknown) => {
+                resolve((response as BackgroundFetchImageResponse) ?? null);
+              },
+            );
           } catch {
             resolve(null);
           }
         });
-        if (resp && resp.ok && resp.base64) {
+        if (resp && resp.ok && typeof resp.base64 === 'string') {
           const contentType = String(resp.contentType || 'application/octet-stream');
           const bin = atob(resp.base64);
           const len = bin.length;
@@ -248,8 +270,21 @@ export class ConversationExportService {
     return {
       success: true,
       format: 'pdf' as ExportFormat,
-      filename: options.filename || this.generateFilename('pdf'),
+      filename: options.filename || this.generateFilename('pdf', metadata.title),
     };
+  }
+
+  /**
+   * Export as image (PNG)
+   */
+  private static async exportImage(
+    turns: ChatTurn[],
+    metadata: ConversationMetadata,
+    options: ExportOptions,
+  ): Promise<ExportResult> {
+    const filename = options.filename || this.generateFilename('png', metadata.title);
+    await ImageExportService.export(turns, metadata, { filename });
+    return { success: true, format: 'image' as ExportFormat, filename };
   }
 
   /**
@@ -278,7 +313,12 @@ export class ConversationExportService {
   /**
    * Generate filename with timestamp
    */
-  private static generateFilename(extension: string): string {
+  private static generateFilename(extension: string, title?: string): string {
+    const titlePart = this.sanitizeFilenamePart(title);
+    if (titlePart) {
+      return `${titlePart}.${extension}`;
+    }
+
     const pad = (n: number) => String(n).padStart(2, '0');
     const d = new Date();
     const y = d.getFullYear();
@@ -288,6 +328,19 @@ export class ConversationExportService {
     const mm = pad(d.getMinutes());
     const ss = pad(d.getSeconds());
     return `gemini-chat-${y}${m}${day}-${hh}${mm}${ss}.${extension}`;
+  }
+
+  private static sanitizeFilenamePart(title?: string): string {
+    if (!title) return '';
+
+    const compact = title.trim().replace(/\s+/g, ' ');
+    if (!compact) return '';
+
+    return compact
+      .replace(/[\\/:*?"<>|]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/\.+$/g, '')
+      .slice(0, 80);
   }
 
   /**
@@ -315,6 +368,11 @@ export class ConversationExportService {
         format: 'pdf' as ExportFormat,
         label: 'PDF',
         description: 'Print-friendly format via Save as PDF',
+      },
+      {
+        format: 'image' as ExportFormat,
+        label: 'Image',
+        description: 'Single PNG image for sharing',
       },
     ];
   }

@@ -71,4 +71,26 @@ describe('DOMContentExtractor', () => {
     expect(extracted.html).not.toContain('sources-carousel-inline');
     expect(extracted.html).not.toContain('mat-icon');
   });
+
+  it('should extract assistant images as markdown and html', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <p>Hello</p>
+          <img src="https://example.com/a.png" alt="A" />
+          <p>World</p>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.hasImages).toBe(true);
+    expect(extracted.text).toContain('Hello');
+    expect(extracted.text).toContain('World');
+    expect(extracted.text).toContain('![A](https://example.com/a.png)');
+    expect(extracted.html).toContain('<img');
+    expect(extracted.html).toContain('https://example.com/a.png');
+  });
 });

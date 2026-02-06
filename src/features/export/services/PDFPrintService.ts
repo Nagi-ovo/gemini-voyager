@@ -18,6 +18,12 @@ export class PDFPrintService {
    * Export conversation as PDF using browser print
    */
   static async export(turns: ChatTurn[], metadata: ConversationMetadata): Promise<void> {
+    const originalTitle = document.title;
+    const exportTitle = this.getExportTitle(metadata);
+    if (exportTitle) {
+      document.title = exportTitle;
+    }
+
     // Create print container
     const container = this.createPrintContainer(turns, metadata);
     document.body.appendChild(container);
@@ -39,6 +45,7 @@ export class PDFPrintService {
     // so we clean up after a reasonable delay
     setTimeout(() => {
       this.cleanup();
+      document.title = originalTitle;
     }, 1000);
   }
 
@@ -108,7 +115,7 @@ export class PDFPrintService {
     // Attempt to wait for image decoding
     await Promise.all(
       imgs.map((img) =>
-        (img as any).decode?.().catch(() => {
+        (img as HTMLImageElement & { decode?: () => Promise<void> }).decode?.().catch(() => {
           /* ignore */
         }),
       ),
@@ -238,25 +245,16 @@ export class PDFPrintService {
   private static renderTurn(turn: ChatTurn, index: number): string {
     const starredClass = turn.starred ? 'gv-print-turn-starred' : '';
 
-    // Extract rich content if DOM elements available
-    let userContent: string;
-    let assistantContent: string;
+    const userContent = turn.userElement
+      ? DOMContentExtractor.extractUserContent(turn.userElement).html || '<em>No content</em>'
+      : this.formatContent(turn.user) || '<em>No content</em>';
 
-    if (turn.userElement) {
-      const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
-      userContent = extracted.html || '<em>No content</em>';
-    } else {
-      userContent = this.formatContent(turn.user);
-    }
+    const assistantContent = turn.assistantElement
+      ? DOMContentExtractor.extractAssistantContent(turn.assistantElement).html || '<em>No content</em>'
+      : this.formatContent(turn.assistant) || '<em>No content</em>';
 
-    if (turn.assistantElement) {
-      const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
-      assistantContent = extracted.html || '<em>No content</em>';
-    } else {
-      assistantContent = this.formatContent(turn.assistant);
-    }
-
-    return `
+    if (!turn.omitEmptySections) {
+      return `
       <article class="gv-print-turn ${starredClass}">
         <div class="gv-print-turn-header">
           <span class="gv-print-turn-number">Turn ${index}</span>
@@ -268,8 +266,37 @@ export class PDFPrintService {
           <div class="gv-print-turn-text">${userContent}</div>
         </div>
 
+        <div class="gv-print-turn-assistant">
+          <div class="gv-print-turn-label">🤖 Assistant</div>
+          <div class="gv-print-turn-text">${assistantContent}</div>
+        </div>
+      </article>
+    `;
+    }
+
+    const hasUser = !!turn.userElement || !!turn.user.trim();
+    const hasAssistant = !!turn.assistantElement || !!turn.assistant.trim();
+
+    return `
+      <article class="gv-print-turn ${starredClass}">
+        <div class="gv-print-turn-header">
+          <span class="gv-print-turn-number">Turn ${index}</span>
+          ${turn.starred ? '<span class="gv-print-star">⭐</span>' : ''}
+        </div>
+
         ${
-          assistantContent
+          hasUser
+            ? `
+        <div class="gv-print-turn-user">
+          <div class="gv-print-turn-label">👤 User</div>
+          <div class="gv-print-turn-text">${userContent}</div>
+        </div>
+        `
+            : ''
+        }
+
+        ${
+          hasAssistant
             ? `
           <div class="gv-print-turn-assistant">
             <div class="gv-print-turn-label">🤖 Assistant</div>
@@ -286,7 +313,7 @@ export class PDFPrintService {
    * Format content for HTML output
    */
   private static formatContent(content: string): string {
-    if (!content) return '<em>No content</em>';
+    if (!content) return '';
 
     // Escape HTML but preserve line breaks
     let formatted = this.escapeHTML(content);
@@ -310,6 +337,12 @@ export class PDFPrintService {
         <p>Generated on ${this.formatDate(metadata.exportedAt)}</p>
       </footer>
     `;
+  }
+
+  private static getExportTitle(metadata: ConversationMetadata): string {
+    const title = (metadata.title || this.getConversationTitle()).trim();
+    if (!title) return 'gemini-chat';
+    return title.replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').slice(0, 80);
   }
 
   /**

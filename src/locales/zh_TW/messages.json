@@ -427,6 +427,26 @@
     "message": "⚠️ 由於 Gemini 的久遠訊息會延遲載入，請在匯出前透過時間軸跳轉到該對話的第一則訊息，否則匯出內容可能不完整。",
     "description": "關於延遲載入影響匯出完整性的警告"
   },
+  "export_select_mode_select_all": {
+    "message": "全選",
+    "description": "選擇模式全選開關"
+  },
+  "export_select_mode_count": {
+    "message": "已選 {count} 則",
+    "description": "選擇模式已選訊息數量"
+  },
+  "export_select_mode_toggle": {
+    "message": "選擇訊息",
+    "description": "選擇模式單則訊息選擇按鈕提示"
+  },
+  "export_select_mode_select_below": {
+    "message": "點擊全選以下訊息",
+    "description": "選擇模式左上角選取以下訊息按鈕"
+  },
+  "export_select_mode_empty": {
+    "message": "請至少選擇一則訊息後再匯出。",
+    "description": "選擇模式未選擇任何訊息時的提示"
+  },
   "editInputWidth": {
     "message": "編輯輸入框寬度",
     "description": "編輯輸入框寬度調整標籤"

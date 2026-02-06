@@ -4,8 +4,15 @@
 import { JSDOM } from 'jsdom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('html-to-image', () => {
+  return {
+    toBlob: vi.fn(),
+  };
+});
+
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
 import { ConversationExportService } from '../ConversationExportService';
+import { toBlob } from 'html-to-image';
 
 // Setup DOM environment
 
@@ -18,6 +25,7 @@ describe('ConversationExportService', () => {
     url: 'https://gemini.google.com/app/test',
     exportedAt: '2025-01-15T10:30:00.000Z',
     count: 2,
+    title: 'Premier League Fantasy',
   };
 
   const mockTurns: ChatTurn[] = [
@@ -84,6 +92,21 @@ describe('ConversationExportService', () => {
       expect(result.success).toBe(true);
       expect(result.format).toBe('pdf');
       expect((global.window as any).print).toHaveBeenCalled();
+      expect(result.filename).toBe('Premier-League-Fantasy.pdf');
+    });
+
+    it('should export as Image', async () => {
+      (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Blob(['x'], { type: 'image/png' }),
+      );
+
+      const result = await ConversationExportService.export(mockTurns, mockMetadata, {
+        format: 'image' as any,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.format).toBe('image');
+      expect(result.filename).toBe('Premier-League-Fantasy.png');
     });
 
     it('should handle unsupported format', async () => {
@@ -138,8 +161,8 @@ describe('ConversationExportService', () => {
     it('should return all available formats', () => {
       const formats = ConversationExportService.getAvailableFormats();
 
-      expect(formats).toHaveLength(3);
-      expect(formats.map((f) => f.format)).toEqual(['json', 'markdown', 'pdf']);
+      expect(formats).toHaveLength(4);
+      expect(formats.map((f) => f.format)).toEqual(['json', 'markdown', 'pdf', 'image']);
     });
 
     it('should mark Markdown as recommended', () => {

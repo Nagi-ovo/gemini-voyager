@@ -467,6 +467,26 @@
     "message": "⚠️ نظرًا للتحميل البطيء للرسائل القديمة في Gemini، يرجى استخدام الجدول الزمني للانتقال إلى الرسالة الأولى في المحادثة قبل التصدير. وإلا فقد يكون التصدير غير مكتمل.",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "export_select_mode_select_all": {
+    "message": "تحديد الكل",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "تم تحديد {count}",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "تحديد الرسالة",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "تحديد الرسائل بالأسفل",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "يرجى تحديد رسالة واحدة على الأقل للتصدير.",
+    "description": "Selection mode validation when nothing is selected"
+  },
   "editInputWidth": {
     "message": "عرض حقل التحرير",
     "description": "Edit input width adjustment label"

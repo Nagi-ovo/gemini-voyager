@@ -467,6 +467,26 @@
     "message": "⚠️ Gemini は古いメッセージを後から読み込むため、エクスポートする前にタイムラインを使って会話の最初のメッセージまでジャンプしてください。そうしないと、エクスポートが不完全になる可能性があります。",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "export_select_mode_select_all": {
+    "message": "すべて選択",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "選択済み {count}",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "メッセージを選択",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "以下のメッセージをすべて選択",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "エクスポートするメッセージを少なくとも1件選択してください。",
+    "description": "Selection mode validation when nothing is selected"
+  },
   "editInputWidth": {
     "message": "入力欄の幅",
     "description": "Edit input width adjustment label"

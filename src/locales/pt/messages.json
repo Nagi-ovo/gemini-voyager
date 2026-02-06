@@ -467,6 +467,26 @@
     "message": "⚠️ Devido ao carregamento lento de mensagens antigas no Gemini, use a linha do tempo para pular para a primeira mensagem da conversa antes de exportar. Caso contrário, a exportação pode ficar incompleta.",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "export_select_mode_select_all": {
+    "message": "Selecionar tudo",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "Selecionadas {count}",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "Selecionar mensagem",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "Selecionar mensagens abaixo",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "Selecione pelo menos uma mensagem para exportar.",
+    "description": "Selection mode validation when nothing is selected"
+  },
   "editInputWidth": {
     "message": "Largura da entrada de edição",
     "description": "Edit input width adjustment label"

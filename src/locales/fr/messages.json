@@ -467,6 +467,26 @@
     "message": "⚠️ En raison du chargement différé de Gemini, veuillez utiliser la chronologie pour remonter au début de la discussion avant d'exporter pour éviter un export incomplet.",
     "description": "Warning about lazy loading affecting export completeness"
   },
+  "export_select_mode_select_all": {
+    "message": "Tout sélectionner",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "Sélectionné {count}",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "Sélectionner le message",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "Sélectionner les messages ci-dessous",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "Veuillez sélectionner au moins un message à exporter.",
+    "description": "Selection mode validation when nothing is selected"
+  },
   "editInputWidth": {
     "message": "Largeur de l'éditeur",
     "description": "Edit input width adjustment label"

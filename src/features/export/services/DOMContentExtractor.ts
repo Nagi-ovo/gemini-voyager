@@ -292,6 +292,23 @@ export class DOMContentExtractor {
         continue;
       }
 
+      // Images
+      if (tagName === 'img') {
+        const img = child as HTMLImageElement;
+        const src = img.getAttribute('src') || img.src || '';
+        if (src) {
+          flags.hasImages = true;
+          const altRaw = img.getAttribute('alt') || '';
+          const alt = altRaw.trim() || 'Image';
+          htmlParts.push(
+            `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
+          );
+          const mdAlt = alt.replace(/\]/g, '\\]');
+          textParts.push(`\n![${mdAlt}](${src})\n`);
+        }
+        continue;
+      }
+
       // Math block (display formula) - check both class and data-math attribute
       if (child.classList.contains('math-block') || child.hasAttribute('data-math')) {
         const latex = child.getAttribute('data-math') || '';
@@ -742,5 +759,17 @@ export class DOMContentExtractor {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Escape HTML for attribute context.
+   */
+  private static escapeHtmlAttribute(text: string): string {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/'/g, '&#39;');
   }
 }

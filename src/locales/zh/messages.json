@@ -467,6 +467,26 @@
     "message": "⚠️ 由于 Gemini 的久远消息会惰性加载，请在导出前通过时间线跳转到该对话的第一条消息，否则导出内容可能不完整。",
     "description": "关于惰性加载影响导出完整性的警告"
   },
+  "export_select_mode_select_all": {
+    "message": "全选",
+    "description": "选择模式全选开关"
+  },
+  "export_select_mode_count": {
+    "message": "已选 {count} 条",
+    "description": "选择模式已选消息数量"
+  },
+  "export_select_mode_toggle": {
+    "message": "选择消息",
+    "description": "选择模式单条消息选择按钮提示"
+  },
+  "export_select_mode_select_below": {
+    "message": "点击全选以下信息",
+    "description": "选择模式左上角选择以下消息按钮"
+  },
+  "export_select_mode_empty": {
+    "message": "请至少选择一条消息后再导出。",
+    "description": "选择模式未选择任何消息时的提示"
+  },
   "editInputWidth": {
     "message": "编辑输入框宽度",
     "description": "编辑输入框宽度调整标签"

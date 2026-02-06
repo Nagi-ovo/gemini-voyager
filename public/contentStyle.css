@@ -4188,3 +4188,239 @@ html.dark .gv-export-dialog-btn-secondary:hover,
 .gv-aistudio .gv-conversation-icon.google-symbols {
   display: none;
 }
+
+/* Message selection mode for export */
+.gv-export-select-mode .gv-export-msg-host {
+  position: relative;
+}
+
+.gv-export-msg-selector {
+  display: none;
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+}
+
+.gv-export-select-mode .gv-export-msg-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gv-export-msg-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(19, 22, 28, 0.9);
+  color: #8b98aa;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+
+.gv-export-msg-checkbox:hover {
+  border-color: rgba(128, 255, 176, 0.7);
+  box-shadow: 0 0 0 2px rgba(128, 255, 176, 0.15);
+}
+
+.gv-export-msg-checkbox-mark {
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  transform: rotate(-45deg) translate(0, -1px);
+}
+
+.gv-export-msg-checkbox[data-selected='true'] {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.gv-export-msg-checkbox[data-selected='true'] .gv-export-msg-checkbox-mark {
+  border-left-color: #fff;
+  border-bottom-color: #fff;
+}
+
+.gv-export-msg-selected {
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.55),
+    0 8px 18px rgba(34, 197, 94, 0.1);
+}
+
+.gv-export-select-bar {
+  position: fixed;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  z-index: 2147483600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(13, 17, 23, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  color: #e5ecf5;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.38),
+    0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.gv-export-select-all-toggle,
+.gv-export-select-export-btn,
+.gv-export-select-cancel-btn {
+  border: 0;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.gv-export-select-all-toggle {
+  min-width: 68px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5ecf5;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gv-export-select-all-toggle[data-checked='true'] {
+  background: rgba(22, 163, 74, 0.24);
+  color: #bbf7d0;
+}
+
+.gv-export-select-all-toggle:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.gv-export-select-count {
+  min-width: 92px;
+  text-align: center;
+  color: #cfd8e3;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gv-export-select-export-btn {
+  min-width: 74px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.gv-export-select-export-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.gv-export-select-export-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.gv-export-select-cancel-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: transparent;
+  color: #a8b6c8;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.gv-export-select-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #eef4ff;
+}
+
+.gv-export-progress-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483645;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(2px);
+}
+
+.gv-export-progress-card {
+  min-width: 220px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(13, 17, 23, 0.94);
+  color: #e5ecf5;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.45),
+    0 2px 10px rgba(0, 0, 0, 0.25);
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.gv-export-progress-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid rgba(148, 163, 184, 0.35);
+  border-top-color: #3b82f6;
+  animation: gv-export-progress-spin 0.8s linear infinite;
+}
+
+.gv-export-progress-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fbff;
+}
+
+.gv-export-progress-desc {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+@keyframes gv-export-progress-spin {
+  from {
+    transform: rotate(0);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .gv-export-select-bar {
+    left: 10px;
+    right: 10px;
+    top: 10px;
+    transform: none;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .gv-export-select-all-toggle {
+    min-width: 62px;
+    padding: 0 10px;
+  }
+
+  .gv-export-select-count {
+    min-width: 82px;
+    font-size: 12px;
+  }
+
+  .gv-export-select-export-btn {
+    min-width: 66px;
+    padding: 0 10px;
+  }
+}

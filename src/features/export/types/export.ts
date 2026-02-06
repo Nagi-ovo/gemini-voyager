@@ -10,6 +10,7 @@ export interface ChatTurn {
   user: string;
   assistant: string;
   starred: boolean;
+  omitEmptySections?: boolean;
   // Optional DOM elements for rich content extraction
   userElement?: HTMLElement;
   assistantElement?: HTMLElement;
@@ -32,6 +33,7 @@ export enum ExportFormat {
   JSON = 'json',
   MARKDOWN = 'markdown',
   PDF = 'pdf',
+  IMAGE = 'image',
 }
 
 /**
