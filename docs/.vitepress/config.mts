@@ -207,7 +207,7 @@ export default defineConfig({
               { text: 'フォルダ管理', link: '/ja/guide/folders' },
               { text: 'プロンプト', link: '/ja/guide/prompts' },
               { text: 'クラウド同期', link: '/ja/guide/cloud-sync' },
-              { text: '数式コピー', link: '/ja/guide/formula-copy' },
+              { text: '数식コピー', link: '/ja/guide/formula-copy' },
               { text: 'サイドバーの幅', link: '/ja/guide/sidebar' },
             ],
           },
@@ -237,6 +237,64 @@ export default defineConfig({
             'オープンソースプロジェクトです。<a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a> でスター ⭐ をつけて応援してください。',
           copyright:
             'GPLv3 ライセンス | Copyright © 2026 Jesse Zhang | <a href="/ja/privacy">プライバシーポリシー</a>',
+        },
+      },
+    },
+    ko: {
+      label: '한국어',
+      lang: 'ko-KR',
+      link: '/ko/',
+      themeConfig: {
+        nav: [
+          { text: '홈', link: '/ko/' },
+          { text: '가이드', link: '/ko/guide/installation' },
+        ],
+        sidebar: [
+          {
+            text: '소개',
+            items: [
+              { text: '설치', link: '/ko/guide/installation' },
+              { text: '시작하기', link: '/ko/guide/getting-started' },
+              { text: '후원', link: '/ko/guide/sponsor' },
+              { text: '커뮤니티', link: '/ko/guide/community' },
+            ],
+          },
+          {
+            text: '공통 기능 (Gemini & AI Studio)',
+            items: [
+              { text: '폴더 관리', link: '/ko/guide/folders' },
+              { text: '프롬프트 라이브러리', link: '/ko/guide/prompts' },
+              { text: '클라우드 동기화', link: '/ko/guide/cloud-sync' },
+              { text: '수식 복사', link: '/ko/guide/formula-copy' },
+              { text: '사이드바 너비', link: '/ko/guide/sidebar' },
+            ],
+          },
+          {
+            text: 'Gemini 전용 기능',
+            items: [
+              { text: '타임라인 탐색', link: '/ko/guide/timeline' },
+              { text: '대화 내보내기', link: '/ko/guide/export' },
+              { text: '인용 답장', link: '/ko/guide/quote-reply' },
+              { text: '대화 너비 조정', link: '/ko/guide/settings' },
+              { text: '일괄 삭제', link: '/ko/guide/batch-delete' },
+              { text: 'Deep Research 내보내기', link: '/ko/guide/deep-research' },
+              { text: 'Mermaid 다이어그램 렌더링', link: '/ko/guide/mermaid' },
+              { text: 'Markdown 렌더링 수정', link: '/ko/guide/markdown-fix' },
+              { text: 'NanoBanana (워터마크 제거)', link: '/ko/guide/nanobanana' },
+              { text: '사이드바 자동 숨김', link: '/ko/guide/sidebar-auto-hide' },
+              { text: '입력창 접기', link: '/ko/guide/input-collapse' },
+              { text: '최근 항목 및 Gem 숨기기', link: '/ko/guide/recents-hider' },
+              { text: '기본 모델', link: '/ko/guide/default-model' },
+              { text: '탭 제목 동기화', link: '/ko/guide/tab-title' },
+              { text: 'IDE 컨텍스트 동기화 (실험적)', link: '/ko/guide/context-sync' },
+            ],
+          },
+        ],
+        footer: {
+          message:
+            '오픈 소스 프로젝트입니다. 마음에 드신다면 <a href="https://github.com/Nagi-ovo/gemini-voyager" target="_blank">GitHub</a>에서 ⭐를 눌러주세요.',
+          copyright:
+            'GPLv3 라이선스 하에 배포됨 | Copyright © 2026 Jesse Zhang | <a href="/ko/privacy">개인정보 처리방침</a>',
         },
       },
     },

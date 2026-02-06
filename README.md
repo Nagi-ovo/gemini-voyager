@@ -44,7 +44,8 @@
   <a href="./.github/README_ES.md">Español</a> •
   <a href="./.github/README_PT.md">Português</a> •
   <a href="./.github/README_RU.md">Русский</a> •
-  <a href="./.github/README_AR.md">العربية</a>
+  <a href="./.github/README_AR.md">العربية</a> •
+  <a href="./.github/README_KO.md">한국어</a>
 </p>
 
 <p align="center">

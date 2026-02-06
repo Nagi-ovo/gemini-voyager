@@ -1,0 +1,1098 @@
+{
+  "extName": {
+    "message": "Gemini Voyager",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "타임라인 탐색, 폴더 관리, 프롬프트 저장소 및 채팅 내보내기 기능을 통해 Gemini 환경을 강화하세요.",
+    "description": "Extension description"
+  },
+  "scrollMode": {
+    "message": "스크롤 모드",
+    "description": "Scroll mode label"
+  },
+  "flow": {
+    "message": "플로우",
+    "description": "Flow mode"
+  },
+  "jump": {
+    "message": "점프",
+    "description": "Jump mode"
+  },
+  "hideOuterContainer": {
+    "message": "외부 컨테이너 숨기기",
+    "description": "Hide outer container label"
+  },
+  "draggableTimeline": {
+    "message": "드래그 가능한 타임라인",
+    "description": "Draggable Timeline label"
+  },
+  "enableMarkerLevel": {
+    "message": "노드 레벨 활성화",
+    "description": "Enable timeline node level feature"
+  },
+  "enableMarkerLevelHint": {
+    "message": "타임라인 노드를 우클릭하여 레벨을 설정하고 하위 노드를 접을 수 있습니다",
+    "description": "Node level feature hint"
+  },
+  "experimentalLabel": {
+    "message": "실험적",
+    "description": "Experimental feature label"
+  },
+  "resetPosition": {
+    "message": "위치 초기화",
+    "description": "Reset Position button"
+  },
+  "resetTimelinePosition": {
+    "message": "타임라인 위치 초기화",
+    "description": "Reset timeline position button in timeline options"
+  },
+  "language": {
+    "message": "언어",
+    "description": "Language label"
+  },
+  "pm_title": {
+    "message": "Gemini Voyager",
+    "description": "Prompt Manager title"
+  },
+  "pm_add": {
+    "message": "추가",
+    "description": "Add prompt button"
+  },
+  "pm_search_placeholder": {
+    "message": "프롬프트 또는 태그 검색",
+    "description": "Search placeholder"
+  },
+  "pm_import": {
+    "message": "가져오기",
+    "description": "Import button"
+  },
+  "pm_export": {
+    "message": "내보내기",
+    "description": "Export button"
+  },
+  "pm_prompt_placeholder": {
+    "message": "프롬프트 텍스트",
+    "description": "Prompt textarea placeholder"
+  },
+  "pm_tags_placeholder": {
+    "message": "태그 (쉼표로 구분)",
+    "description": "Tags input placeholder"
+  },
+  "pm_save": {
+    "message": "저장",
+    "description": "Save prompt"
+  },
+  "pm_cancel": {
+    "message": "취소",
+    "description": "Cancel"
+  },
+  "pm_all_tags": {
+    "message": "모두",
+    "description": "All tags chip"
+  },
+  "pm_empty": {
+    "message": "프롬프트가 없습니다",
+    "description": "Empty state"
+  },
+  "pm_copy": {
+    "message": "복사",
+    "description": "Copy prompt"
+  },
+  "pm_copied": {
+    "message": "복사됨",
+    "description": "Copied notice"
+  },
+  "pm_delete": {
+    "message": "삭제",
+    "description": "Delete prompt"
+  },
+  "pm_delete_confirm": {
+    "message": "이 프롬프트를 삭제하시겠습니까?",
+    "description": "Delete confirm"
+  },
+  "pm_lock": {
+    "message": "위치 고정",
+    "description": "Lock panel position"
+  },
+  "pm_unlock": {
+    "message": "위치 고정 해제",
+    "description": "Unlock panel position"
+  },
+  "pm_import_invalid": {
+    "message": "유효하지 않은 파일 형식",
+    "description": "Import invalid"
+  },
+  "pm_import_success": {
+    "message": "{count}개의 프롬프트를 가져왔습니다",
+    "description": "Import success"
+  },
+  "pm_duplicate": {
+    "message": "중복 프롬프트",
+    "description": "Duplicate on add"
+  },
+  "pm_deleted": {
+    "message": "삭제됨",
+    "description": "Deleted notice"
+  },
+  "pm_edit": {
+    "message": "편집",
+    "description": "Edit prompt"
+  },
+  "pm_expand": {
+    "message": "펼치기",
+    "description": "Expand prompt text"
+  },
+  "pm_collapse": {
+    "message": "접기",
+    "description": "Collapse prompt text"
+  },
+  "pm_saved": {
+    "message": "저장됨",
+    "description": "Saved notice"
+  },
+  "pm_settings": {
+    "message": "설정",
+    "description": "Settings button"
+  },
+  "pm_settings_tooltip": {
+    "message": "확장 프로그램 설정 열기",
+    "description": "Settings button tooltip"
+  },
+  "pm_settings_fallback": {
+    "message": "브라우저 툴바의 확장 프로그램 아이콘을 클릭하여 설정을 열어주세요",
+    "description": "Settings open failed message"
+  },
+  "pm_backup": {
+    "message": "로컬 백업",
+    "description": "Local backup button"
+  },
+  "pm_backup_tooltip": {
+    "message": "프롬프트와 폴더를 타임스탬프가 포함된 폴더로 백업합니다",
+    "description": "Backup button tooltip"
+  },
+  "pm_backup_cancelled": {
+    "message": "백업 취소됨",
+    "description": "Backup cancelled hint"
+  },
+  "pm_backup_error": {
+    "message": "✗ 백업 실패",
+    "description": "Backup failed hint"
+  },
+  "pm_backup_hint_options": {
+    "message": "이 기능은 Gemini 페이지의 프롬프트 관리자에 통합되어 있습니다.",
+    "description": "Backup hint in options page"
+  },
+  "pm_backup_step1": {
+    "message": "Gemini 페이지를 엽니다 (gemini.google.com)",
+    "description": "Backup step 1"
+  },
+  "pm_backup_step2": {
+    "message": "우측 하단의 확장 프로그램 아이콘을 클릭하여 프롬프트 관리자를 엽니다",
+    "description": "Backup step 2"
+  },
+  "pm_backup_step3": {
+    "message": "\"💾 로컬 백업\" 버튼을 클릭하고 백업 폴더를 선택합니다",
+    "description": "Backup step 3"
+  },
+  "pm_backup_note": {
+    "message": "백업에는 모든 프롬프트와 폴더가 포함되며, 타임스탬프 폴더 형식(backup-YYYYMMDD-HHMMSS)으로 저장됩니다",
+    "description": "Backup feature note"
+  },
+  "extensionVersion": {
+    "message": "버전",
+    "description": "Extension version label"
+  },
+  "newVersionAvailable": {
+    "message": "새 버전 사용 가능",
+    "description": "Update reminder title"
+  },
+  "currentVersionLabel": {
+    "message": "현재",
+    "description": "Label for current version number"
+  },
+  "latestVersionLabel": {
+    "message": "최신",
+    "description": "Label for latest version number"
+  },
+  "updateNow": {
+    "message": "업데이트",
+    "description": "CTA to update to latest version"
+  },
+  "starProject": {
+    "message": "지원하기 ⭐",
+    "description": "Github callout"
+  },
+  "officialDocs": {
+    "message": "공식 문서",
+    "description": "Official docs link"
+  },
+  "exportChatJson": {
+    "message": "대화 기록 내보내기",
+    "description": "Tooltip for export button"
+  },
+  "folder_title": {
+    "message": "폴더",
+    "description": "Folder section title"
+  },
+  "folder_create": {
+    "message": "폴더 생성",
+    "description": "Create folder button tooltip"
+  },
+  "folder_name_prompt": {
+    "message": "폴더 이름을 입력하세요:",
+    "description": "Create folder name prompt"
+  },
+  "folder_rename_prompt": {
+    "message": "새 이름을 입력하세요:",
+    "description": "Rename folder prompt"
+  },
+  "folder_delete_confirm": {
+    "message": "이 폴더와 모든 내용을 삭제하시겠습니까?",
+    "description": "Delete folder confirmation"
+  },
+  "folder_create_subfolder": {
+    "message": "하위 폴더 생성",
+    "description": "Create subfolder menu item"
+  },
+  "folder_rename": {
+    "message": "이름 바꾸기",
+    "description": "Rename folder menu item"
+  },
+  "folder_change_color": {
+    "message": "색상 변경",
+    "description": "Change folder color menu item"
+  },
+  "folder_delete": {
+    "message": "삭제",
+    "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "기본",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "빨간색",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "오렌지색",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "노란색",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "녹색",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "파란색",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "보라색",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "분홍색",
+    "description": "Pink folder color name"
+  },
+  "folder_color_custom": {
+    "message": "사용자 지정",
+    "description": "Custom folder color name"
+  },
+  "folder_empty": {
+    "message": "폴더가 없습니다",
+    "description": "Empty state placeholder when no folders exist"
+  },
+  "folder_pin": {
+    "message": "폴더 고정",
+    "description": "Pin folder menu item"
+  },
+  "folder_unpin": {
+    "message": "폴더 고정 해제",
+    "description": "Unpin folder menu item"
+  },
+  "folder_remove_conversation": {
+    "message": "폴더에서 제거",
+    "description": "Remove conversation button tooltip"
+  },
+  "folder_remove_conversation_confirm": {
+    "message": "이 폴더에서 \"{title}\"을(를) 제거하시겠습니까?",
+    "description": "Remove conversation confirmation"
+  },
+  "conversation_more": {
+    "message": "추가 옵션",
+    "description": "Conversation more options button tooltip"
+  },
+  "conversation_move_to_folder": {
+    "message": "폴더로 이동",
+    "description": "Move conversation to folder menu item"
+  },
+  "conversation_move_to_folder_title": {
+    "message": "폴더로 이동",
+    "description": "Move conversation to folder dialog title"
+  },
+  "chatWidth": {
+    "message": "대화 너비",
+    "description": "Chat width adjustment label"
+  },
+  "chatWidthNarrow": {
+    "message": "좁게",
+    "description": "Narrow chat width label"
+  },
+  "chatWidthWide": {
+    "message": "넓게",
+    "description": "Wide chat width label"
+  },
+  "sidebarWidth": {
+    "message": "사이드바 너비",
+    "description": "Sidebar width adjustment label"
+  },
+  "sidebarWidthNarrow": {
+    "message": "좁게",
+    "description": "Narrow sidebar width label"
+  },
+  "sidebarWidthWide": {
+    "message": "넓게",
+    "description": "Wide sidebar width label"
+  },
+  "formula_copied": {
+    "message": "✓ 수식 복사됨",
+    "description": "Formula copied success message"
+  },
+  "formula_copy_failed": {
+    "message": "✗ 복사 실패",
+    "description": "Formula copy failed message"
+  },
+  "formulaCopyFormat": {
+    "message": "수식 복사 형식",
+    "description": "Formula copy format setting label"
+  },
+  "formulaCopyFormatLatex": {
+    "message": "LaTeX",
+    "description": "LaTeX format option"
+  },
+  "formulaCopyFormatUnicodeMath": {
+    "message": "MathML (Word)",
+    "description": "Label for MathML formula copy format option (formerly UnicodeMath)"
+  },
+  "formulaCopyFormatHint": {
+    "message": "수식을 클릭하여 복사할 때 형식을 선택하세요",
+    "description": "Formula copy format hint"
+  },
+  "formulaCopyFormatNoDollar": {
+    "message": "LaTeX (달러 기호 없음)",
+    "description": "LaTeX format option without dollar signs"
+  },
+  "folder_filter_current_user": {
+    "message": "계정 분리",
+    "description": "Show only conversations from the current Google account"
+  },
+  "folder_export": {
+    "message": "폴더 내보내기",
+    "description": "Export folders button tooltip"
+  },
+  "folder_import_export": {
+    "message": "폴더 가져오기/내보내기",
+    "description": "Combined import/export button tooltip"
+  },
+  "folder_cloud_upload": {
+    "message": "클라우드에 업로드",
+    "description": "Cloud upload button tooltip"
+  },
+  "folder_cloud_sync": {
+    "message": "클라우드에서 동기화",
+    "description": "Cloud sync button tooltip"
+  },
+  "folder_import": {
+    "message": "폴더 가져오기",
+    "description": "Import folders button tooltip"
+  },
+  "folder_import_title": {
+    "message": "폴더 구성 가져오기",
+    "description": "Import dialog title"
+  },
+  "folder_import_strategy": {
+    "message": "가져오기 전략:",
+    "description": "Import strategy label"
+  },
+  "folder_import_merge": {
+    "message": "기존 폴더와 병합",
+    "description": "Merge import strategy"
+  },
+  "folder_import_overwrite": {
+    "message": "기존 폴더 덮어쓰기",
+    "description": "Overwrite import strategy"
+  },
+  "folder_import_select_file": {
+    "message": "가져올 JSON 파일을 선택하세요",
+    "description": "Import file selection prompt"
+  },
+  "folder_import_success": {
+    "message": "✓ {folders}개의 폴더, {conversations}개의 대화를 가져왔습니다",
+    "description": "Import success message"
+  },
+  "folder_import_success_skipped": {
+    "message": "✓ {folders}개의 폴더, {conversations}개의 대화를 가져왔습니다 ({skipped}개의 중복 항목 건너뜀)",
+    "description": "Import success with skipped message"
+  },
+  "folder_import_error": {
+    "message": "✗ 가져오기 실패: {error}",
+    "description": "Import error message"
+  },
+  "folder_export_success": {
+    "message": "✓ 폴더를 성공적으로 내보냈습니다",
+    "description": "Export success message"
+  },
+  "folder_import_invalid_format": {
+    "message": "유효하지 않은 파일 형식입니다. 올바른 폴더 구성 파일을 선택하세요.",
+    "description": "Invalid format error"
+  },
+  "folder_import_confirm_overwrite": {
+    "message": "모든 기존 폴더가 대체됩니다. 백업이 생성됩니다. 계속하시겠습니까?",
+    "description": "Overwrite confirmation"
+  },
+  "export_dialog_title": {
+    "message": "대화 내보내기",
+    "description": "Export dialog title"
+  },
+  "export_dialog_select": {
+    "message": "내보내기 형식 선택:",
+    "description": "Export format selection label"
+  },
+  "export_dialog_warning": {
+    "message": "⚠️ Gemini의 이전 메시지 지연 로딩으로 인해, 내보내기 전에 타임라인을 사용하여 대화의 첫 번째 메시지로 이동해 주세요. 그렇지 않으면 내보내기가 불완전할 수 있습니다.",
+    "description": "Warning about lazy loading affecting export completeness"
+  },
+  "editInputWidth": {
+    "message": "편집 입력창 너비",
+    "description": "Edit input width adjustment label"
+  },
+  "editInputWidthNarrow": {
+    "message": "좁게",
+    "description": "Narrow edit input width label"
+  },
+  "editInputWidthWide": {
+    "message": "넓게",
+    "description": "Wide edit input width label"
+  },
+  "timelineOptions": {
+    "message": "타임라인 옵션",
+    "description": "Timeline options section label"
+  },
+  "folderOptions": {
+    "message": "폴더 옵션",
+    "description": "Folder options section label"
+  },
+  "enableFolderFeature": {
+    "message": "폴더 기능 활성화",
+    "description": "Enable or disable the folder feature"
+  },
+  "hideArchivedConversations": {
+    "message": "보관된 대화 숨기기",
+    "description": "Hide conversations that are in folders from the main list"
+  },
+  "conversation_star": {
+    "message": "대화 별표 표시",
+    "description": "Star conversation button tooltip"
+  },
+  "conversation_unstar": {
+    "message": "대화 별표 해제",
+    "description": "Unstar conversation button tooltip"
+  },
+  "conversation_untitled": {
+    "message": "제목 없음",
+    "description": "Fallback title for conversations without a name"
+  },
+  "geminiOnlyNotice": {
+    "message": "기본적으로 Gemini (Enterprise 포함) 및 AI Studio에서 실행됩니다. 다른 사이트에서 프롬프트 관리자를 활성화하려면 아래에 추가하세요.",
+    "description": "Notice that defaults are limited to Gemini/AI Studio"
+  },
+  "folderManager_dataLossWarning": {
+    "message": "⚠️ 경고: 폴더 데이터를 로드하지 못했습니다. 폴더가 손상되었을 수 있습니다. 브라우저 콘솔에서 자세한 내용을 확인하고 가능한 경우 백업에서 복원을 시도하십시오.",
+    "description": "Warning shown when folder data fails to load"
+  },
+  "backupOptions": {
+    "message": "자동 백업",
+    "description": "Backup options section label"
+  },
+  "backupEnabled": {
+    "message": "자동 백업 활성화",
+    "description": "Enable auto backup toggle"
+  },
+  "backupNow": {
+    "message": "지금 백업",
+    "description": "Backup now button"
+  },
+  "backupSelectFolder": {
+    "message": "백업 폴더 선택",
+    "description": "Select backup folder button"
+  },
+  "backupFolderSelected": {
+    "message": "백업 폴더: {folder}",
+    "description": "Shows selected backup folder"
+  },
+  "backupIncludePrompts": {
+    "message": "프롬프트 포함",
+    "description": "Include prompts in backup toggle"
+  },
+  "backupIncludeFolders": {
+    "message": "폴더 포함",
+    "description": "Include folders in backup toggle"
+  },
+  "backupIntervalLabel": {
+    "message": "백업 간격",
+    "description": "Backup interval label"
+  },
+  "backupIntervalManual": {
+    "message": "수동 전용",
+    "description": "Manual backup mode"
+  },
+  "backupIntervalDaily": {
+    "message": "매일",
+    "description": "Daily backup interval"
+  },
+  "backupIntervalWeekly": {
+    "message": "매주 (7일)",
+    "description": "Weekly backup interval"
+  },
+  "backupLastBackup": {
+    "message": "마지막 백업: {time}",
+    "description": "Last backup timestamp"
+  },
+  "backupNever": {
+    "message": "안 함",
+    "description": "Never backed up"
+  },
+  "backupSuccess": {
+    "message": "✓ 백업 생성됨: {prompts}개의 프롬프트, {folders}개의 폴더, {conversations}개의 대화",
+    "description": "Backup success message"
+  },
+  "backupError": {
+    "message": "✗ 백업 실패: {error}",
+    "description": "Backup error message"
+  },
+  "backupNotSupported": {
+    "message": "⚠️ 자동 백업에는 File System Access API를 지원하는 최신 브라우저가 필요합니다",
+    "description": "Browser not supported message"
+  },
+  "backupSelectFolderFirst": {
+    "message": "먼저 백업 폴더를 선택하세요",
+    "description": "No folder selected warning"
+  },
+  "backupUserCancelled": {
+    "message": "백업 취소됨",
+    "description": "User cancelled folder selection"
+  },
+  "backupConfigSaved": {
+    "message": "✓ 백업 설정 저장됨",
+    "description": "Config saved message"
+  },
+  "backupPermissionDenied": {
+    "message": "⚠️ 이 디렉토리에 액세스할 수 없습니다. 다른 위치를 선택하세요 (예: 문서, 다운로드 또는 바탕 화면의 폴더)",
+    "description": "Permission denied for restricted directory"
+  },
+  "backupConfigureInOptions": {
+    "message": "백업 구성에는 옵션 페이지가 필요합니다. 아래 버튼을 클릭하여 여세요 (확장 프로그램 아이콘 옆의 세 개의 점 클릭 → 옵션).",
+    "description": "Backup configure in options page explanation"
+  },
+  "openOptionsPage": {
+    "message": "옵션 페이지 열기",
+    "description": "Open options page button"
+  },
+  "optionsPageSubtitle": {
+    "message": "확장 프로그램 옵션",
+    "description": "Options page subtitle"
+  },
+  "optionsComingSoon": {
+    "message": "더 많은 옵션이 곧 추가될 예정입니다...",
+    "description": "Options page placeholder text"
+  },
+  "backupDataAccessNotice": {
+    "message": "데이터 액세스 제한",
+    "description": "Backup data access limitation title"
+  },
+  "backupDataAccessHint": {
+    "message": "브라우저 보안 제한으로 인해, 이 옵션 페이지는 Gemini 페이지의 프롬프트 및 폴더 데이터에 직접 액세스할 수 없습니다. 수동 백업은 Gemini 페이지의 프롬프트 관리자 및 폴더 내보내기 기능을 사용하십시오.",
+    "description": "Backup data access limitation explanation"
+  },
+  "promptManagerOptions": {
+    "message": "프롬프트 관리자",
+    "description": "Prompt Manager options section label"
+  },
+  "hidePromptManager": {
+    "message": "프롬프트 관리자 숨기기",
+    "description": "Hide the prompt manager floating ball"
+  },
+  "hidePromptManagerHint": {
+    "message": "페이지의 프롬프트 관리자 플로팅 볼을 숨깁니다",
+    "description": "Hint for hiding prompt manager feature"
+  },
+  "customWebsites": {
+    "message": "사용자 지정 웹사이트",
+    "description": "Custom websites for prompt manager"
+  },
+  "customWebsitesPlaceholder": {
+    "message": "웹사이트 URL 입력 (예: chatgpt.com)",
+    "description": "Custom websites input placeholder"
+  },
+  "customWebsitesHint": {
+    "message": "프롬프트 관리자를 사용할 웹사이트를 추가하세요. 이 사이트들에서는 프롬프트 관리자만 활성화됩니다.",
+    "description": "Custom websites hint"
+  },
+  "addWebsite": {
+    "message": "웹사이트 추가",
+    "description": "Add website button"
+  },
+  "removeWebsite": {
+    "message": "제거",
+    "description": "Remove website button"
+  },
+  "invalidUrl": {
+    "message": "유효하지 않은 URL 형식",
+    "description": "Invalid URL error message"
+  },
+  "websiteAdded": {
+    "message": "웹사이트 추가됨",
+    "description": "Website added success message"
+  },
+  "websiteRemoved": {
+    "message": "웹사이트 제거됨",
+    "description": "Website removed success message"
+  },
+  "permissionDenied": {
+    "message": "권한이 거부되었습니다. 이 웹사이트에 대한 액세스를 허용하세요.",
+    "description": "Permission denied error message"
+  },
+  "permissionRequestFailed": {
+    "message": "권한 요청에 실패했습니다. 다시 시도하거나 확장 프로그램 설정에서 액세스 권한을 부여하세요.",
+    "description": "Permission request failure message"
+  },
+  "customWebsitesNote": {
+    "message": "팁: 사이트를 추가할 때 액세스 허용 요청을 받게 됩니다. 권한 부여 후 사이트를 새로 고침하면 프롬프트 관리자가 시작됩니다.",
+    "description": "Custom websites reload/permission note"
+  },
+  "starredHistory": {
+    "message": "별표 표시된 기록",
+    "description": "Starred history title"
+  },
+  "viewStarredHistory": {
+    "message": "별표 표시된 기록 보기",
+    "description": "View starred history button"
+  },
+  "noStarredMessages": {
+    "message": "별표 표시된 메시지가 없습니다",
+    "description": "No starred messages placeholder"
+  },
+  "removeFromStarred": {
+    "message": "별표 제거",
+    "description": "Remove from starred tooltip"
+  },
+  "justNow": {
+    "message": "방금 전",
+    "description": "Just now time label"
+  },
+  "hoursAgo": {
+    "message": "시간 전",
+    "description": "Hours ago label"
+  },
+  "yesterday": {
+    "message": "어제",
+    "description": "Yesterday date label"
+  },
+  "daysAgo": {
+    "message": "일 전",
+    "description": "Days ago label"
+  },
+  "loading": {
+    "message": "로드 중...",
+    "description": "Loading message"
+  },
+  "keyboardShortcuts": {
+    "message": "키보드 단축키",
+    "description": "Keyboard shortcuts section title"
+  },
+  "enableShortcuts": {
+    "message": "키보드 단축키 활성화",
+    "description": "Enable shortcuts toggle label"
+  },
+  "previousNode": {
+    "message": "이전 노드",
+    "description": "Previous timeline node shortcut label"
+  },
+  "nextNode": {
+    "message": "다음 노드",
+    "description": "Next timeline node shortcut label"
+  },
+  "shortcutKey": {
+    "message": "키",
+    "description": "Shortcut key label"
+  },
+  "shortcutModifiers": {
+    "message": "수정 키",
+    "description": "Shortcut modifiers label"
+  },
+  "resetShortcuts": {
+    "message": "기본값으로 초기화",
+    "description": "Reset shortcuts button"
+  },
+  "shortcutsResetSuccess": {
+    "message": "단축키가 기본값으로 초기화되었습니다",
+    "description": "Shortcuts reset success message"
+  },
+  "shortcutsDescription": {
+    "message": "키보드 단축키를 사용하여 타임라인 노드를 탐색합니다",
+    "description": "Shortcuts description"
+  },
+  "modifierNone": {
+    "message": "없음",
+    "description": "No modifier key"
+  },
+  "modifierAlt": {
+    "message": "Alt",
+    "description": "Alt modifier key"
+  },
+  "modifierCtrl": {
+    "message": "Ctrl",
+    "description": "Ctrl modifier key"
+  },
+  "modifierShift": {
+    "message": "Shift",
+    "description": "Shift modifier key"
+  },
+  "modifierMeta": {
+    "message": "Cmd/Win",
+    "description": "Meta/Command/Windows modifier key"
+  },
+  "cloudSync": {
+    "message": "클라우드 동기화",
+    "description": "Cloud sync section title"
+  },
+  "cloudSyncDescription": {
+    "message": "폴더와 프롬프트를 Google Drive에 동기화합니다",
+    "description": "Cloud sync description"
+  },
+  "syncModeDisabled": {
+    "message": "비활성화",
+    "description": "Sync mode disabled option"
+  },
+  "syncModeManual": {
+    "message": "수동",
+    "description": "Sync mode manual option"
+  },
+  "syncServerPort": {
+    "message": "서버 포트",
+    "description": "Port number for the sync server"
+  },
+  "syncNow": {
+    "message": "지금 동기화",
+    "description": "Sync now button"
+  },
+  "lastSynced": {
+    "message": "마지막 동기화: {time}",
+    "description": "Last sync timestamp"
+  },
+  "neverSynced": {
+    "message": "동기화된 적 없음",
+    "description": "Never synced message"
+  },
+  "lastUploaded": {
+    "message": "업로드됨: {time}",
+    "description": "Last upload timestamp"
+  },
+  "neverUploaded": {
+    "message": "업로드된 적 없음",
+    "description": "Never uploaded message"
+  },
+  "syncSuccess": {
+    "message": "✓ 성공적으로 동기화되었습니다",
+    "description": "Sync success message"
+  },
+  "syncError": {
+    "message": "✗ 동기화 실패: {error}",
+    "description": "Sync error message"
+  },
+  "syncInProgress": {
+    "message": "동기화 중...",
+    "description": "Sync in progress message"
+  },
+  "syncUpload": {
+    "message": "업로드",
+    "description": "Upload button label"
+  },
+  "syncMerge": {
+    "message": "다운로드 및 병합",
+    "description": "Merge button label"
+  },
+  "syncMode": {
+    "message": "동기화 모드",
+    "description": "Sync mode label"
+  },
+  "minutesAgo": {
+    "message": "분 전",
+    "description": "Minutes ago label"
+  },
+  "syncNoData": {
+    "message": "Drive에서 동기화 데이터를 찾을 수 없습니다",
+    "description": "Error message when no data is found in Drive"
+  },
+  "syncUploadFailed": {
+    "message": "업로드 실패",
+    "description": "Error message when upload fails"
+  },
+  "syncDownloadFailed": {
+    "message": "다운로드 실패",
+    "description": "Error message when download fails"
+  },
+  "syncAuthFailed": {
+    "message": "인증 실패",
+    "description": "Error message when authentication fails"
+  },
+  "signOut": {
+    "message": "로그아웃",
+    "description": "Sign out button"
+  },
+  "signInWithGoogle": {
+    "message": "Google 계정으로 로그인",
+    "description": "Sign in with Google button"
+  },
+  "nanobananaOptions": {
+    "message": "NanoBanana 옵션",
+    "description": "NanoBanana options section label"
+  },
+  "enableNanobananaWatermarkRemover": {
+    "message": "NanoBanana 워터마크 제거",
+    "description": "Enable automatic watermark removal for NanoBanana images"
+  },
+  "nanobananaWatermarkRemoverHint": {
+    "message": "생성된 이미지에서 가시적인 Gemini 워터마크를 자동으로 제거합니다",
+    "description": "Watermark remover feature hint"
+  },
+  "nanobananaDownloadTooltip": {
+    "message": "워터마크 없는 이미지 다운로드 (NanoBanana)",
+    "description": "Download button tooltip"
+  },
+  "deepResearchDownload": {
+    "message": "생각 내용 다운로드",
+    "description": "Deep Research download button text"
+  },
+  "deepResearchDownloadTooltip": {
+    "message": "생각 내용을 Markdown으로 다운로드",
+    "description": "Deep Research download button tooltip"
+  },
+  "folder_uncategorized": {
+    "message": "미분류",
+    "description": "Label for root-level conversations not in any folder"
+  },
+  "timelineLevelTitle": {
+    "message": "노드 레벨",
+    "description": "Title for timeline node level context menu"
+  },
+  "timelineLevel1": {
+    "message": "레벨 1",
+    "description": "Timeline node level 1 option"
+  },
+  "timelineLevel2": {
+    "message": "레벨 2",
+    "description": "Timeline node level 2 option"
+  },
+  "timelineLevel3": {
+    "message": "레벨 3",
+    "description": "Timeline node level 3 option"
+  },
+  "timelineCollapse": {
+    "message": "접기",
+    "description": "Collapse children"
+  },
+  "timelineExpand": {
+    "message": "펼치기",
+    "description": "Expand children"
+  },
+  "quoteReply": {
+    "message": "인용 답장",
+    "description": "Quote reply button text"
+  },
+  "inputCollapseOptions": {
+    "message": "입력 옵션",
+    "description": "Input options section label"
+  },
+  "enableInputCollapse": {
+    "message": "입력창 접기 활성화",
+    "description": "Enable input collapse toggle label"
+  },
+  "enableInputCollapseHint": {
+    "message": "입력창이 비어 있을 때 접어서 더 많은 읽기 공간을 확보합니다",
+    "description": "Input collapse feature hint"
+  },
+  "inputCollapsePlaceholder": {
+    "message": "Gemini에게 메시지 보내기",
+    "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter로 전송",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "Ctrl+Enter를 눌러 메시지를 전송하고, Enter로 줄바꿈을 합니다",
+    "description": "Ctrl+Enter to send feature hint"
+  },
+  "batch_delete_confirm": {
+    "message": "{count}개의 대화를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "description": "Batch delete confirmation message"
+  },
+  "batch_delete_in_progress": {
+    "message": "삭제 중... ({current}/{total})",
+    "description": "Batch delete progress message"
+  },
+  "batch_delete_success": {
+    "message": "✓ {count}개의 대화를 삭제했습니다",
+    "description": "Batch delete success message"
+  },
+  "batch_delete_partial": {
+    "message": "삭제 완료: {success}개 성공, {failed}개 실패",
+    "description": "Batch delete partial success message"
+  },
+  "batch_delete_limit_reached": {
+    "message": "한 번에 최대 {max}개의 대화만 선택할 수 있습니다",
+    "description": "Batch delete limit warning"
+  },
+  "batch_delete_button": {
+    "message": "선택한 항목 삭제",
+    "description": "Batch delete button tooltip in multi-select mode"
+  },
+  "batch_delete_match_patterns": {
+    "message": "delete,confirm,yes,ok,remove,삭제,확인,예,확인,제거",
+    "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
+  },
+  "generalOptions": {
+    "message": "일반 옵션",
+    "description": "General options section label"
+  },
+  "enableTabTitleUpdate": {
+    "message": "탭 제목을 대화와 동기화",
+    "description": "Enable tab title sync toggle label"
+  },
+  "enableTabTitleUpdateHint": {
+    "message": "브라우저 탭 제목을 현재 대화 제목과 일치하도록 자동으로 업데이트합니다",
+    "description": "Tab title sync feature hint"
+  },
+  "enableMermaidRendering": {
+    "message": "Mermaid 다이어그램 렌더링 활성화",
+    "description": "Enable Mermaid diagram rendering toggle label"
+  },
+  "enableMermaidRenderingHint": {
+    "message": "코드 블록에서 Mermaid 다이어그램을 자동으로 렌더링합니다",
+    "description": "Mermaid rendering feature hint"
+  },
+  "enableQuoteReply": {
+    "message": "인용 답장 활성화",
+    "description": "Enable quote reply toggle label"
+  },
+  "enableQuoteReplyHint": {
+    "message": "대화에서 텍스트를 선택할 때 선택한 텍스트를 인용할 수 있는 플로팅 버튼을 표시합니다",
+    "description": "Quote reply feature hint"
+  },
+  "contextSync": {
+    "message": "컨텍스트 동기화",
+    "description": "Context Sync title"
+  },
+  "contextSyncDescription": {
+    "message": "대화 컨텍스트를 로컬 IDE와 동기화합니다",
+    "description": "Context Sync description"
+  },
+  "syncToIDE": {
+    "message": "IDE로 동기화",
+    "description": "Sync to IDE button"
+  },
+  "ideOnline": {
+    "message": "IDE 온라인",
+    "description": "IDE Online status"
+  },
+  "ideOffline": {
+    "message": "IDE 오프라인",
+    "description": "IDE Offline status"
+  },
+  "syncing": {
+    "message": "동기화 중...",
+    "description": "Syncing status"
+  },
+  "checkServer": {
+    "message": "VS Code에서 AI Sync 서버를 시작해 주세요",
+    "description": "Check server hint"
+  },
+  "capturing": {
+    "message": "대화 캡처 중...",
+    "description": "Capturing status"
+  },
+  "syncedSuccess": {
+    "message": "성공적으로 동기화되었습니다!",
+    "description": "Synced success message"
+  },
+  "downloadingOriginal": {
+    "message": "원본 이미지 다운로드 중",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "원본 이미지 다운로드 중 (대용량 파일)",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "대용량 파일 경고",
+    "description": "Warning shown for large downloads"
+  },
+  "downloadProcessing": {
+    "message": "워터마크 처리 중",
+    "description": "Status when processing watermark removal"
+  },
+  "downloadSuccess": {
+    "message": "다운로드 중...",
+    "description": "Status when download starts"
+  },
+  "downloadError": {
+    "message": "실패",
+    "description": "Status prefix when download fails"
+  },
+  "recentsHide": {
+    "message": "최근 항목 숨기기",
+    "description": "Tooltip for hiding recents preview section"
+  },
+  "recentsShow": {
+    "message": "최근 항목 표시",
+    "description": "Tooltip for showing recents preview section"
+  },
+  "gemsHide": {
+    "message": "Gem 숨기기",
+    "description": "Tooltip for hiding Gems list section"
+  },
+  "gemsShow": {
+    "message": "Gem 표시",
+    "description": "Tooltip for showing Gems list section"
+  },
+  "setAsDefaultModel": {
+    "message": "기본 모델로 설정",
+    "description": "Tooltip for setting default model"
+  },
+  "cancelDefaultModel": {
+    "message": "기본 모델 취소",
+    "description": "Tooltip for cancelling default model"
+  },
+  "defaultModelSet": {
+    "message": "기본 모델 설정됨: $1",
+    "description": "Toast message when default model is set"
+  },
+  "defaultModelCleared": {
+    "message": "기본 모델 해제됨",
+    "description": "Toast message when default model is cleared"
+  },
+  "sidebarAutoHide": {
+    "message": "사이드바 자동 숨김",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "sidebarAutoHideHint": {
+    "message": "마우스가 벗어나면 사이드바를 자동으로 접고, 마우스가 들어오면 펼칩니다",
+    "description": "Auto-hide sidebar feature hint"
+  }
+}
