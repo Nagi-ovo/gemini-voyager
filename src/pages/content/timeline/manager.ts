@@ -1157,6 +1157,9 @@ export class TimelineManager {
         // toIdx is already determined above
         const dur = this.computeFlowDuration(fromIdx, toIdx);
         if (this.scrollMode === 'flow' && fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx) {
+          // Clear previous highlight immediately so runner motion is visually obvious.
+          this.activeTurnId = null;
+          this.updateActiveDotUI();
           this.startRunner(fromIdx, toIdx, dur);
         }
         this.smoothScrollTo(targetElement, dur);
