@@ -20,6 +20,65 @@ export function selectBelowIds(allIds: readonly string[], startId: string): Set<
   return out;
 }
 
+export type SelectableMessageRole = 'user' | 'assistant';
+
+export interface SelectedMessageForTurnGrouping<TElement = HTMLElement> {
+  messageId: string;
+  role: SelectableMessageRole;
+  text: string;
+  starred: boolean;
+  exportElement?: TElement;
+}
+
+export interface GroupedSelectedTurn<TElement = HTMLElement> {
+  turnId: string;
+  starred: boolean;
+  user?: SelectedMessageForTurnGrouping<TElement>;
+  assistant?: SelectedMessageForTurnGrouping<TElement>;
+}
+
+function parseMessageId(
+  messageId: string,
+): { turnId: string; roleHint: SelectableMessageRole | null } {
+  const match = /^(.*):(u|a)$/.exec(messageId);
+  if (!match) {
+    return { turnId: messageId, roleHint: null };
+  }
+  return {
+    turnId: match[1],
+    roleHint: match[2] === 'u' ? 'user' : 'assistant',
+  };
+}
+
+export function groupSelectedMessagesByTurn<TElement = HTMLElement>(
+  selectedMessages: readonly SelectedMessageForTurnGrouping<TElement>[],
+): GroupedSelectedTurn<TElement>[] {
+  const grouped = new Map<string, GroupedSelectedTurn<TElement>>();
+  const order: string[] = [];
+
+  for (const message of selectedMessages) {
+    const { turnId, roleHint } = parseMessageId(message.messageId);
+    const role: SelectableMessageRole = roleHint ?? message.role;
+
+    let turn = grouped.get(turnId);
+    if (!turn) {
+      turn = { turnId, starred: false };
+      grouped.set(turnId, turn);
+      order.push(turnId);
+    }
+
+    if (role === 'user') {
+      if (!turn.user) turn.user = message;
+    } else if (!turn.assistant) {
+      turn.assistant = message;
+    }
+
+    turn.starred = turn.starred || message.starred;
+  }
+
+  return order.map((turnId) => grouped.get(turnId) as GroupedSelectedTurn<TElement>);
+}
+
 export function findSelectionStartIdAtLine(
   items: readonly { id: string; top: number; bottom: number }[],
   lineY: number,
@@ -38,4 +97,3 @@ export function findSelectionStartIdAtLine(
 
   return null;
 }
-

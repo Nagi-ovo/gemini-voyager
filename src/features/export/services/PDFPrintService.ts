@@ -3,8 +3,18 @@
  * Implements elegant "paper book" style PDF export using browser's print function
  * Philosophy: Content over design, readability over fidelity
  */
+import { isSafari } from '@/core/utils/browser';
+
 import type { ChatTurn, ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
+
+export interface PrintableDocumentContent {
+  title: string;
+  url: string;
+  exportedAt: string;
+  markdown: string;
+  html: string;
+}
 
 /**
  * PDF print service using browser's native print dialog
@@ -13,40 +23,145 @@ import { DOMContentExtractor } from './DOMContentExtractor';
 export class PDFPrintService {
   private static PRINT_STYLES_ID = 'gv-pdf-print-styles';
   private static PRINT_CONTAINER_ID = 'gv-pdf-print-container';
+  private static CLEANUP_FALLBACK_DELAY_MS = 60_000;
+  private static INLINE_FETCH_TIMEOUT_MS = 2_000;
+  private static INLINE_DECODE_TIMEOUT_MS = 1_000;
+  private static cleanupFallbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private static originalDocumentTitle: string | null = null;
 
   /**
    * Export conversation as PDF using browser print
    */
   static async export(turns: ChatTurn[], metadata: ConversationMetadata): Promise<void> {
-    const originalTitle = document.title;
-    const exportTitle = this.getExportTitle(metadata);
-    if (exportTitle) {
-      document.title = exportTitle;
-    }
+    await this.exportInternal(turns, metadata, false);
+  }
+
+  static async exportDocument(content: PrintableDocumentContent): Promise<void> {
+    const metadata: ConversationMetadata = {
+      url: content.url,
+      exportedAt: content.exportedAt,
+      count: 1,
+      title: content.title,
+    };
+
+    const htmlContainer = document.createElement('div');
+    htmlContainer.innerHTML = content.html.trim();
+    const fallbackFromHtml = this.extractPlainTextFromHtml(content.html);
+    const assistant = fallbackFromHtml || content.markdown.trim() || 'No content';
+    const turns: ChatTurn[] = [
+      {
+        user: '',
+        assistant,
+        starred: false,
+        omitEmptySections: true,
+        assistantElement: htmlContainer,
+      },
+    ];
+
+    await this.exportInternal(turns, metadata, true);
+  }
+
+  private static async exportInternal(
+    turns: ChatTurn[],
+    metadata: ConversationMetadata,
+    preferMetadataTitle: boolean,
+  ): Promise<void> {
+    // Ensure we don't leave a previous export container around (e.g. if a prior export failed)
+    this.cleanup();
 
     // Create print container
-    const container = this.createPrintContainer(turns, metadata);
+    const container = this.createPrintContainer(turns, metadata, preferMetadataTitle);
     document.body.appendChild(container);
 
     // Inject print styles
     this.injectPrintStyles();
 
-    // Inline images as data URLs (best-effort) to avoid auth-bound links failing in print
-    await this.inlineImages(container);
+    // Keep print header/footer title aligned with conversation title in print dialog output.
+    this.originalDocumentTitle = document.title;
+    const printDialogTitle = this.getPrintDialogTitle(metadata, preferMetadataTitle);
+    if (printDialogTitle) {
+      document.title = printDialogTitle;
+    }
 
-    // Small delay to ensure styles are applied
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const safari = isSafari();
 
-    // Trigger print dialog
-    window.print();
+    // Inline images as data URLs (best-effort) to avoid auth-bound links failing in print.
+    // Safari is very strict about `window.print()` being called with a user gesture; awaiting here
+    // may cause the print dialog to be blocked. So on Safari we do not await.
+    const inlineImagesPromise = this.inlineImages(container).catch(() => {
+      /* ignore */
+    });
 
-    // Cleanup after print dialog closes
-    // Note: We can't reliably detect when print dialog closes,
-    // so we clean up after a reasonable delay
-    setTimeout(() => {
+    if (safari) {
+      this.forceStyleFlush(container);
+      this.triggerPrint();
+      this.registerCleanupHandlers();
+      void inlineImagesPromise;
+      return;
+    }
+
+    await inlineImagesPromise;
+    await this.delay(100);
+    this.triggerPrint();
+    this.registerCleanupHandlers();
+  }
+
+  private static triggerPrint(): void {
+    try {
+      window.print();
+    } catch {
+      // Ignore: some environments (tests/iframes) may not support printing
+    }
+  }
+
+  private static forceStyleFlush(container: HTMLElement): void {
+    try {
+      // Force a synchronous style/layout flush so the print-only DOM is "real" before printing.
+      // (Helps on Safari/WebKit where style application can lag behind DOM insertion.)
+      container.getBoundingClientRect();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private static delay(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.setTimeoutUnref(resolve, ms);
+    });
+  }
+
+  private static registerCleanupHandlers(): void {
+    // Prefer afterprint (reliable when supported); keep a fallback timer in case it never fires.
+    const cleanupNow = (): void => {
       this.cleanup();
-      document.title = originalTitle;
-    }, 1000);
+    };
+
+    try {
+      window.addEventListener('afterprint', cleanupNow, { once: true });
+    } catch {
+      /* ignore */
+    }
+
+    if (this.cleanupFallbackTimer !== null) {
+      clearTimeout(this.cleanupFallbackTimer);
+    }
+    this.cleanupFallbackTimer = this.setTimeoutUnref(() => {
+      this.cleanup();
+    }, this.CLEANUP_FALLBACK_DELAY_MS);
+  }
+
+  private static setTimeoutUnref(callback: () => void, ms: number): ReturnType<typeof setTimeout> {
+    const handle = setTimeout(callback, ms);
+    // Node.js timers support unref(), which avoids keeping the process alive in tests.
+    if (
+      typeof handle === 'object' &&
+      handle !== null &&
+      'unref' in handle &&
+      typeof (handle as { unref?: unknown }).unref === 'function'
+    ) {
+      (handle as { unref: () => void }).unref();
+    }
+    return handle;
   }
 
   /**
@@ -55,6 +170,7 @@ export class PDFPrintService {
   private static createPrintContainer(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
+    preferMetadataTitle: boolean,
   ): HTMLElement {
     const container = document.createElement('div');
     container.id = this.PRINT_CONTAINER_ID;
@@ -63,13 +179,26 @@ export class PDFPrintService {
     // Build HTML content
     container.innerHTML = `
       <div class="gv-print-document">
-        ${this.renderHeader(metadata)}
+        ${this.renderHeader(metadata, preferMetadataTitle)}
         ${this.renderContent(turns)}
         ${this.renderFooter(metadata)}
       </div>
     `;
 
     return container;
+  }
+
+  private static extractPlainTextFromHtml(html: string): string {
+    const trimmed = html.trim();
+    if (!trimmed) return '';
+    const container = document.createElement('div');
+    container.innerHTML = trimmed;
+    container.querySelectorAll('script, style, template').forEach((element) => element.remove());
+    return this.normalizeWhitespace(container.textContent || '');
+  }
+
+  private static normalizeWhitespace(text: string): string {
+    return text.replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   }
 
   /**
@@ -79,8 +208,20 @@ export class PDFPrintService {
     const imgs = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
     if (imgs.length === 0) return;
     const toDataUrl = async (url: string): Promise<string | null> => {
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timeoutHandle = this.setTimeoutUnref(() => {
+        try {
+          controller?.abort();
+        } catch {
+          /* ignore */
+        }
+      }, this.INLINE_FETCH_TIMEOUT_MS);
+
       try {
-        const resp = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
+        const init: RequestInit = { credentials: 'include', mode: 'cors' as RequestMode };
+        if (controller) init.signal = controller.signal;
+
+        const resp = await fetch(url, init);
         if (!resp.ok) return null;
         const blob = await resp.blob();
         const data = await new Promise<string>((resolve, reject) => {
@@ -96,13 +237,16 @@ export class PDFPrintService {
         return data;
       } catch {
         return null;
+      } finally {
+        clearTimeout(timeoutHandle);
       }
     };
 
     await Promise.all(
       imgs.map(async (img) => {
         const src = img.getAttribute('src') || '';
-        if (!/^https?:\/\//i.test(src)) return;
+        // Handle both http(s) and blob: URLs (watermark-removed images use blob: URLs)
+        if (!/^(https?:\/\/|blob:)/i.test(src)) return;
         const data = await toDataUrl(src);
         if (data) {
           try {
@@ -113,12 +257,23 @@ export class PDFPrintService {
     );
 
     // Attempt to wait for image decoding
+    type DecodableImage = HTMLImageElement & { decode?: () => Promise<void> };
     await Promise.all(
-      imgs.map((img) =>
-        (img as HTMLImageElement & { decode?: () => Promise<void> }).decode?.().catch(() => {
+      imgs.map(async (img) => {
+        const decode = (img as DecodableImage).decode;
+        if (typeof decode !== 'function') return;
+
+        try {
+          await Promise.race([
+            decode.call(img).catch(() => {
+              /* ignore */
+            }),
+            this.delay(this.INLINE_DECODE_TIMEOUT_MS),
+          ]);
+        } catch {
           /* ignore */
-        }),
-      ),
+        }
+      }),
     );
   }
 
@@ -141,42 +296,22 @@ export class PDFPrintService {
       console.debug('[PDF Export] Failed to get title from Folder Manager:', error);
     }
 
-    // Strategy 1b: Get from Gemini's native sidebar using the selected actions container
+    // Strategy 1b: Get from Gemini native sidebar via current conversation ID
     try {
-      // In new Gemini UI, the selected conversation row has a sibling
-      // actions container like: .conversation-actions-container.selected
-      const actionsContainer = document.querySelector('.conversation-actions-container.selected');
-      if (actionsContainer && actionsContainer.previousElementSibling) {
-        const convEl = actionsContainer.previousElementSibling as HTMLElement;
-        // Typical pattern: the conversation element itself carries the text title
-        // (or contains a child with it). Use textContent as a robust fallback.
-        const rawTitle = convEl.textContent || '';
-        const title = rawTitle.trim();
-        if (title) {
-          return title;
-        }
+      const conversationId = this.extractConversationIdFromURL(window.location.href);
+      if (conversationId) {
+        const byId = this.extractTitleFromNativeSidebarByConversationId(conversationId);
+        if (byId) return byId;
       }
     } catch (error) {
-      console.debug(
-        '[PDF Export] Failed to get title from native sidebar selected conversation:',
-        error,
-      );
+      console.debug('[PDF Export] Failed to get title from native sidebar by id:', error);
     }
 
     // Strategy 2: Try to get from page title
     const titleElement = document.querySelector('title');
     if (titleElement) {
       const title = titleElement.textContent?.trim();
-      // Filter out generic titles
-      if (
-        title &&
-        title !== 'Gemini' &&
-        title !== 'Google Gemini' &&
-        title !== 'Google AI Studio' &&
-        !title.startsWith('Gemini -') &&
-        !title.startsWith('Google AI Studio -') &&
-        title.length > 0
-      ) {
+      if (this.isMeaningfulConversationTitle(title)) {
         return title;
       }
     }
@@ -192,22 +327,148 @@ export class PDFPrintService {
 
       for (const selector of selectors) {
         const element = document.querySelector(selector);
-        if (element?.textContent?.trim() && element.textContent.trim() !== 'New chat') {
-          return element.textContent.trim();
+        const title = element?.textContent?.trim();
+        if (this.isMeaningfulConversationTitle(title)) {
+          return title;
         }
       }
     } catch (error) {
       console.debug('[PDF Export] Failed to get title from sidebar:', error);
     }
 
+    // Strategy 4: URL fallback
+    const conversationId = this.extractConversationIdFromURL(window.location.href);
+    if (conversationId) {
+      return `Conversation ${conversationId.slice(0, 8)}`;
+    }
+
     return 'Untitled Conversation';
+  }
+
+  private static isMeaningfulConversationTitle(title: string | null | undefined): title is string {
+    const t = (title || '').trim();
+    if (!t) return false;
+    if (
+      t === 'Untitled Conversation' ||
+      t === 'Gemini' ||
+      t === 'Google Gemini' ||
+      t === 'Google AI Studio' ||
+      t === 'New chat'
+    ) {
+      return false;
+    }
+    if (t.startsWith('Gemini -') || t.startsWith('Google AI Studio -')) return false;
+    return true;
+  }
+
+  private static isGemLabel(text: string | null | undefined): boolean {
+    const t = (text || '').trim().toLowerCase();
+    return t === 'gem' || t === 'gems';
+  }
+
+  private static extractConversationIdFromURL(url: string): string | null {
+    try {
+      const urlObj = new URL(url);
+      const appMatch = urlObj.pathname.match(/\/app\/([^/?#]+)/);
+      if (appMatch?.[1]) return appMatch[1];
+      const gemMatch = urlObj.pathname.match(/\/gem\/[^/]+\/([^/?#]+)/);
+      if (gemMatch?.[1]) return gemMatch[1];
+    } catch {
+      /* ignore */
+    }
+    return null;
+  }
+
+  private static extractTitleFromLinkText(link?: HTMLAnchorElement | null): string | null {
+    if (!link) return null;
+    const text = (link.innerText || '').trim();
+    if (!text) return null;
+    const parts = text
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .filter((s) => !this.isGemLabel(s))
+      .filter((s) => s.length >= 2);
+    if (parts.length === 0) return null;
+    return parts.reduce((a, b) => (b.length > a.length ? b : a), parts[0]) || null;
+  }
+
+  private static extractTitleFromConversationElement(conversationEl: HTMLElement): string | null {
+    const scope =
+      (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
+    const bySelector = scope.querySelector(
+      '.gds-label-l, .conversation-title-text, [data-test-id="conversation-title"], h3',
+    );
+    const selectorTitle = bySelector?.textContent?.trim();
+    if (this.isMeaningfulConversationTitle(selectorTitle) && !this.isGemLabel(selectorTitle)) {
+      return selectorTitle;
+    }
+
+    const link = scope.querySelector(
+      'a[href*="/app/"], a[href*="/gem/"]',
+    ) as HTMLAnchorElement | null;
+    const ariaTitle = link?.getAttribute('aria-label')?.trim();
+    if (this.isMeaningfulConversationTitle(ariaTitle) && !this.isGemLabel(ariaTitle)) {
+      return ariaTitle;
+    }
+    const linkTitle = link?.getAttribute('title')?.trim();
+    if (this.isMeaningfulConversationTitle(linkTitle) && !this.isGemLabel(linkTitle)) {
+      return linkTitle;
+    }
+    const fromLinkText = this.extractTitleFromLinkText(link);
+    if (this.isMeaningfulConversationTitle(fromLinkText)) {
+      return fromLinkText;
+    }
+
+    const label = scope.querySelector('.gds-body-m, .gds-label-m, .subtitle');
+    const labelText = label?.textContent?.trim();
+    if (this.isMeaningfulConversationTitle(labelText) && !this.isGemLabel(labelText)) {
+      return labelText;
+    }
+
+    const raw = scope.textContent?.trim() || '';
+    if (!raw) return null;
+    const firstLine =
+      raw
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean)[0] || raw;
+    if (this.isMeaningfulConversationTitle(firstLine) && !this.isGemLabel(firstLine)) {
+      return firstLine.slice(0, 80);
+    }
+
+    return null;
+  }
+
+  private static extractTitleFromNativeSidebarByConversationId(conversationId: string): string | null {
+    const byJslog = document.querySelector(
+      `[data-test-id="conversation"][jslog*="c_${conversationId}"]`,
+    ) as HTMLElement | null;
+    if (byJslog) {
+      const title = this.extractTitleFromConversationElement(byJslog);
+      if (title) return title;
+    }
+
+    const byHrefLink = document.querySelector(
+      `[data-test-id="conversation"] a[href*="${conversationId}"]`,
+    ) as HTMLElement | null;
+    if (byHrefLink) {
+      const title = this.extractTitleFromConversationElement(byHrefLink);
+      if (title) return title;
+    }
+
+    return null;
   }
 
   /**
    * Render document header with cover page
    */
-  private static renderHeader(metadata: ConversationMetadata): string {
-    const conversationTitle = this.getConversationTitle();
+  private static renderHeader(metadata: ConversationMetadata, preferMetadataTitle: boolean): string {
+    const metadataTitle = this.normalizeConversationTitle(metadata.title);
+    const pageConversationTitle = this.normalizeConversationTitle(this.getConversationTitle());
+    const conversationTitle = preferMetadataTitle
+      ? metadataTitle || pageConversationTitle || 'Untitled Conversation'
+      : pageConversationTitle || metadataTitle || 'Untitled Conversation';
     // For PDF, avoid repeating the same title in smaller text under the H1.
     // Always derive a neutral "source" label from the URL instead of using metadata.title.
     const urlTitle = this.extractTitleFromURL(metadata.url);
@@ -313,7 +574,7 @@ export class PDFPrintService {
    * Format content for HTML output
    */
   private static formatContent(content: string): string {
-    if (!content) return '';
+    if (!content) return '<em>No content</em>';
 
     // Escape HTML but preserve line breaks
     let formatted = this.escapeHTML(content);
@@ -337,12 +598,6 @@ export class PDFPrintService {
         <p>Generated on ${this.formatDate(metadata.exportedAt)}</p>
       </footer>
     `;
-  }
-
-  private static getExportTitle(metadata: ConversationMetadata): string {
-    const title = (metadata.title || this.getConversationTitle()).trim();
-    if (!title) return 'gemini-chat';
-    return title.replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').slice(0, 80);
   }
 
   /**
@@ -587,9 +842,27 @@ export class PDFPrintService {
    * Cleanup print container and styles
    */
   private static cleanup(): void {
+    if (this.cleanupFallbackTimer !== null) {
+      try {
+        clearTimeout(this.cleanupFallbackTimer);
+      } catch {
+        /* ignore */
+      }
+      this.cleanupFallbackTimer = null;
+    }
+
     const container = document.getElementById(this.PRINT_CONTAINER_ID);
     if (container) {
       container.remove();
+    }
+
+    if (this.originalDocumentTitle !== null) {
+      try {
+        document.title = this.originalDocumentTitle;
+      } catch {
+        /* ignore */
+      }
+      this.originalDocumentTitle = null;
     }
 
     // Keep styles for potential reuse
@@ -630,6 +903,33 @@ export class PDFPrintService {
     } catch {
       return isoString;
     }
+  }
+
+  private static normalizeConversationTitle(rawTitle: string | undefined): string {
+    if (!rawTitle) return '';
+    const normalized = rawTitle
+      .trim()
+      .replace(/\s+-\s+Gemini$/i, '')
+      .replace(/\s+-\s+Google Gemini$/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return this.isMeaningfulConversationTitle(normalized) ? normalized : '';
+  }
+
+  private static getPrintDialogTitle(
+    metadata: ConversationMetadata,
+    preferMetadataTitle: boolean,
+  ): string {
+    const metadataTitle = this.normalizeConversationTitle(metadata.title);
+    const conversationTitle = this.normalizeConversationTitle(this.getConversationTitle());
+
+    if (preferMetadataTitle) {
+      return metadataTitle || conversationTitle || 'Gemini Conversation';
+    }
+
+    const base = conversationTitle || metadataTitle;
+    if (!base) return 'Gemini Conversation';
+    return `${base} - Gemini`;
   }
 
   /**

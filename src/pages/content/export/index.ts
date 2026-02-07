@@ -15,6 +15,7 @@ import {
   computeConversationFingerprint,
   waitForConversationFingerprintChangeOrTimeout,
 } from './topNodePreload';
+import { groupSelectedMessagesByTurn } from './selectionUtils';
 
 // Storage key to persist export state across reloads (e.g. when clicking top node triggers refresh)
 const SESSION_KEY_PENDING_EXPORT = 'gv_export_pending';
@@ -454,6 +455,116 @@ async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, st
  * Used for JSON/Markdown metadata so all formats share the same title.
  * Mirrors the logic used by PDFPrintService.getConversationTitle.
  */
+function isMeaningfulConversationTitle(title: string | null | undefined): title is string {
+  const t = (title || '').trim();
+  if (!t) return false;
+  if (
+    t === 'Untitled Conversation' ||
+    t === 'Gemini' ||
+    t === 'Google Gemini' ||
+    t === 'Google AI Studio' ||
+    t === 'New chat'
+  ) {
+    return false;
+  }
+  if (t.startsWith('Gemini -') || t.startsWith('Google AI Studio -')) return false;
+  return true;
+}
+
+function extractConversationIdFromUrl(): string | null {
+  const appMatch = window.location.pathname.match(/\/app\/([^/?#]+)/);
+  if (appMatch?.[1]) return appMatch[1];
+  const gemMatch = window.location.pathname.match(/\/gem\/[^/]+\/([^/?#]+)/);
+  if (gemMatch?.[1]) return gemMatch[1];
+  return null;
+}
+
+function isGemLabel(text: string | null | undefined): boolean {
+  const t = (text || '').trim().toLowerCase();
+  return t === 'gem' || t === 'gems';
+}
+
+function extractTitleFromLinkText(link?: HTMLAnchorElement | null): string | null {
+  if (!link) return null;
+  const text = (link.innerText || '').trim();
+  if (!text) return null;
+  const parts = text
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((s) => !isGemLabel(s))
+    .filter((s) => s.length >= 2);
+  if (parts.length === 0) return null;
+  return parts.reduce((a, b) => (b.length > a.length ? b : a), parts[0]) || null;
+}
+
+function extractTitleFromConversationElement(conversationEl: HTMLElement): string | null {
+  const scope =
+    (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
+  const bySelector = scope.querySelector(
+    '.gds-label-l, .conversation-title-text, [data-test-id="conversation-title"], h3',
+  );
+  const selectorTitle = bySelector?.textContent?.trim();
+  if (isMeaningfulConversationTitle(selectorTitle) && !isGemLabel(selectorTitle)) {
+    return selectorTitle;
+  }
+
+  const link = scope.querySelector(
+    'a[href*="/app/"], a[href*="/gem/"]',
+  ) as HTMLAnchorElement | null;
+  const ariaTitle = link?.getAttribute('aria-label')?.trim();
+  if (isMeaningfulConversationTitle(ariaTitle) && !isGemLabel(ariaTitle)) {
+    return ariaTitle;
+  }
+  const linkTitle = link?.getAttribute('title')?.trim();
+  if (isMeaningfulConversationTitle(linkTitle) && !isGemLabel(linkTitle)) {
+    return linkTitle;
+  }
+  const fromLinkText = extractTitleFromLinkText(link);
+  if (isMeaningfulConversationTitle(fromLinkText)) {
+    return fromLinkText;
+  }
+
+  const label = scope.querySelector('.gds-body-m, .gds-label-m, .subtitle');
+  const labelText = label?.textContent?.trim();
+  if (isMeaningfulConversationTitle(labelText) && !isGemLabel(labelText)) {
+    return labelText;
+  }
+
+  const raw = scope.textContent?.trim() || '';
+  if (!raw) return null;
+  const firstLine =
+    raw
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)[0] || raw;
+  if (isMeaningfulConversationTitle(firstLine) && !isGemLabel(firstLine)) {
+    return firstLine.slice(0, 80);
+  }
+
+  return null;
+}
+
+function extractTitleFromNativeSidebarByConversationId(conversationId: string): string | null {
+  const byJslog = document.querySelector(
+    `[data-test-id="conversation"][jslog*="c_${conversationId}"]`,
+  ) as HTMLElement | null;
+  if (byJslog) {
+    const title = extractTitleFromConversationElement(byJslog);
+    if (title) return title;
+  }
+
+  const byHrefLink = document.querySelector(
+    `[data-test-id="conversation"] a[href*="${conversationId}"]`,
+  ) as HTMLElement | null;
+  if (byHrefLink) {
+    const title = extractTitleFromConversationElement(byHrefLink);
+    if (title) return title;
+  }
+
+  return null;
+}
+
 function getConversationTitleForExport(): string {
   // Strategy 1: Get from active conversation in Gemini Voyager Folder UI (most accurate)
   try {
@@ -471,23 +582,16 @@ function getConversationTitleForExport(): string {
     } catch {}
   }
 
-  // Strategy 1b: Get from Gemini's native sidebar using the selected actions container
+  // Strategy 1b: Get from Gemini native sidebar via current conversation ID
   try {
-    const actionsContainer = document.querySelector('.conversation-actions-container.selected');
-    if (actionsContainer && actionsContainer.previousElementSibling) {
-      const convEl = actionsContainer.previousElementSibling as HTMLElement;
-      const rawTitle = convEl.textContent || '';
-      const title = rawTitle.trim();
-      if (title) {
-        return title;
-      }
+    const conversationId = extractConversationIdFromUrl();
+    if (conversationId) {
+      const title = extractTitleFromNativeSidebarByConversationId(conversationId);
+      if (title) return title;
     }
   } catch (error) {
     try {
-      console.debug(
-        '[Export] Failed to get title from native sidebar selected conversation:',
-        error,
-      );
+      console.debug('[Export] Failed to get title from native sidebar by conversation id:', error);
     } catch {}
   }
 
@@ -495,15 +599,7 @@ function getConversationTitleForExport(): string {
   const titleElement = document.querySelector('title');
   if (titleElement) {
     const title = titleElement.textContent?.trim();
-    if (
-      title &&
-      title !== 'Gemini' &&
-      title !== 'Google Gemini' &&
-      title !== 'Google AI Studio' &&
-      !title.startsWith('Gemini -') &&
-      !title.startsWith('Google AI Studio -') &&
-      title.length > 0
-    ) {
+    if (isMeaningfulConversationTitle(title)) {
       return title;
     }
   }
@@ -519,14 +615,21 @@ function getConversationTitleForExport(): string {
 
     for (const selector of selectors) {
       const element = document.querySelector(selector);
-      if (element?.textContent?.trim() && element.textContent.trim() !== 'New chat') {
-        return element.textContent.trim();
+      const title = element?.textContent?.trim();
+      if (isMeaningfulConversationTitle(title)) {
+        return title;
       }
     }
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from sidebar:', error);
     } catch {}
+  }
+
+  // Strategy 4: URL fallback
+  const conversationId = extractConversationIdFromUrl();
+  if (conversationId) {
+    return `Conversation ${conversationId.slice(0, 8)}`;
   }
 
   return 'Untitled Conversation';
@@ -912,24 +1015,23 @@ async function performFinalExport(
     const sorted = computeSortedMessages(latestPairs);
     const selectedMessages = sorted.filter((m) => selectedIds.has(m.messageId));
 
-    const turnsForExport: ExportChatTurn[] = selectedMessages.map((m) => {
-      if (m.role === 'user') {
-        return {
-          user: m.text,
-          assistant: '',
-          starred: m.starred,
-          omitEmptySections: true,
-          userElement: m.exportElement,
-        };
-      }
-      return {
-        user: '',
-        assistant: m.text,
-        starred: m.starred,
+    const groupedTurns = groupSelectedMessagesByTurn(selectedMessages);
+    const turnsForExport: ExportChatTurn[] = groupedTurns
+      .map((turn) => ({
+        user: turn.user?.text || '',
+        assistant: turn.assistant?.text || '',
+        starred: turn.starred,
         omitEmptySections: true,
-        assistantElement: m.exportElement,
-      };
-    });
+        userElement: turn.user?.exportElement,
+        assistantElement: turn.assistant?.exportElement,
+      }))
+      .filter(
+        (turn) =>
+          turn.user.length > 0 ||
+          turn.assistant.length > 0 ||
+          !!turn.userElement ||
+          !!turn.assistantElement,
+      );
 
     // Cleanup before export so selection UI isn't captured.
     finish();

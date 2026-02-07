@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   filterItemsBySelectedIds,
   findSelectionStartIdAtLine,
+  groupSelectedMessagesByTurn,
   selectBelowIds,
 } from '../selectionUtils';
 
@@ -71,5 +72,46 @@ describe('selectionUtils', () => {
       expect(findSelectionStartIdAtLine(items, 0)).toBe(null);
     });
   });
-});
 
+  describe('groupSelectedMessagesByTurn', () => {
+    it('groups user and assistant messages of same turn', () => {
+      const selected = [
+        { messageId: 't1:u', role: 'user' as const, text: 'U1', starred: false },
+        { messageId: 't1:a', role: 'assistant' as const, text: 'A1', starred: true },
+      ];
+
+      const turns = groupSelectedMessagesByTurn(selected);
+
+      expect(turns).toHaveLength(1);
+      expect(turns[0].turnId).toBe('t1');
+      expect(turns[0].user?.text).toBe('U1');
+      expect(turns[0].assistant?.text).toBe('A1');
+      expect(turns[0].starred).toBe(true);
+    });
+
+    it('keeps assistant-only selections as one grouped turn', () => {
+      const selected = [
+        { messageId: 't2:a', role: 'assistant' as const, text: 'A2', starred: false },
+      ];
+
+      const turns = groupSelectedMessagesByTurn(selected);
+
+      expect(turns).toHaveLength(1);
+      expect(turns[0].turnId).toBe('t2');
+      expect(turns[0].user).toBeUndefined();
+      expect(turns[0].assistant?.text).toBe('A2');
+    });
+
+    it('preserves visual order by first selected message occurrence', () => {
+      const selected = [
+        { messageId: 't2:a', role: 'assistant' as const, text: 'A2', starred: false },
+        { messageId: 't1:u', role: 'user' as const, text: 'U1', starred: false },
+        { messageId: 't1:a', role: 'assistant' as const, text: 'A1', starred: false },
+      ];
+
+      const turns = groupSelectedMessagesByTurn(selected);
+
+      expect(turns.map((turn) => turn.turnId)).toEqual(['t2', 't1']);
+    });
+  });
+});
