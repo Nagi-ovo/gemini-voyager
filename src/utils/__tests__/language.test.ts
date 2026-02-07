@@ -16,6 +16,8 @@ describe('normalizeLanguage', () => {
     expect(normalizeLanguage('zh-CN')).toBe('zh');
     expect(normalizeLanguage('ja')).toBe('ja');
     expect(normalizeLanguage('ja-JP')).toBe('ja');
+    expect(normalizeLanguage('ko')).toBe('ko');
+    expect(normalizeLanguage('ko-KR')).toBe('ko');
   });
 
   it('normalizes traditional chinese variants', () => {
@@ -26,8 +28,8 @@ describe('normalizeLanguage', () => {
   });
 
   it('falls back to en for unknown languages', () => {
-    expect(normalizeLanguage('ko')).toBe('en');
     expect(normalizeLanguage('de-DE')).toBe('en');
+    expect(normalizeLanguage('it-IT')).toBe('en');
   });
 });
 
