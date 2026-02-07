@@ -447,8 +447,9 @@ export class PDFPrintService {
   private static extractTitleFromNativeSidebarByConversationId(
     conversationId: string,
   ): string | null {
+    const escapedConversationId = this.escapeCssAttributeValue(conversationId);
     const byJslog = document.querySelector(
-      `[data-test-id="conversation"][jslog*="c_${conversationId}"]`,
+      `[data-test-id="conversation"][jslog*="c_${escapedConversationId}"]`,
     ) as HTMLElement | null;
     if (byJslog) {
       const title = this.extractTitleFromConversationElement(byJslog);
@@ -456,7 +457,7 @@ export class PDFPrintService {
     }
 
     const byHrefLink = document.querySelector(
-      `[data-test-id="conversation"] a[href*="${conversationId}"]`,
+      `[data-test-id="conversation"] a[href*="${escapedConversationId}"]`,
     ) as HTMLElement | null;
     if (byHrefLink) {
       const title = this.extractTitleFromConversationElement(byHrefLink);
@@ -949,6 +950,14 @@ export class PDFPrintService {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  private static escapeCssAttributeValue(value: string): string {
+    const escape = globalThis.CSS?.escape;
+    if (typeof escape === 'function') {
+      return escape(value);
+    }
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   }
 
   private static escapeAttribute(text: string): string {

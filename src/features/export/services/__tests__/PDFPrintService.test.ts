@@ -172,4 +172,28 @@ describe('PDFPrintService', () => {
     expect(link?.getAttribute('onclick')).toBeNull();
     expect(link?.getAttribute('href')).toContain('" onclick="');
   });
+
+  it('handles special CSS characters in conversation id selectors', () => {
+    const conversationId = 'ab"]\\cd';
+    const nativeConversation = document.createElement('div');
+    nativeConversation.setAttribute('data-test-id', 'conversation');
+    nativeConversation.setAttribute('jslog', `x c_${conversationId} y`);
+
+    const link = document.createElement('a');
+    link.setAttribute('href', `/app/${conversationId}`);
+    const text = document.createElement('span');
+    text.className = 'conversation-title-text';
+    text.textContent = 'Escaped Selector Title';
+    link.appendChild(text);
+    nativeConversation.appendChild(link);
+    document.body.appendChild(nativeConversation);
+
+    let title: string | null = null;
+    expect(() => {
+      title = (PDFPrintService as any).extractTitleFromNativeSidebarByConversationId(
+        conversationId,
+      );
+    }).not.toThrow();
+    expect(title).toBe('Escaped Selector Title');
+  });
 });
