@@ -383,5 +383,83 @@ describe('ConversationExportService', () => {
       expect(mapping.get('https://example.com/slow.png')).toBe('assets/img-001.png');
       expect(mapping.get('https://example.com/fast.png')).toBe('assets/img-002.png');
     });
+
+    it('should fallback to gv.fetchImageViaPage when direct and background fetch fail', async () => {
+      const imageUrl = 'https://lh3.googleusercontent.com/export-image.png';
+      vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network blocked'));
+
+      const sendMessageMock = vi.fn(
+        (
+          message: { type?: string; url?: string },
+          callback?: (response: unknown) => void,
+        ): void => {
+          if (message.type === 'gv.fetchImage') {
+            callback?.({ ok: false, error: 'fetch_failed' });
+            return;
+          }
+          if (message.type === 'gv.fetchImageViaPage') {
+            callback?.({
+              ok: true,
+              base64: 'aGVsbG8=',
+              contentType: 'image/png',
+            });
+            return;
+          }
+          callback?.(null);
+        },
+      );
+
+      chrome.runtime.sendMessage =
+        sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
+
+      const fetched = await (ConversationExportService as any).fetchImageForMarkdownPackaging(
+        imageUrl,
+      );
+
+      expect(fetched).not.toBeNull();
+      expect(fetched?.contentType).toBe('image/png');
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        { type: 'gv.fetchImage', url: imageUrl },
+        expect.any(Function),
+      );
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        { type: 'gv.fetchImageViaPage', url: imageUrl },
+        expect.any(Function),
+      );
+    });
+
+    it('should skip gv.fetchImageViaPage for blob urls', async () => {
+      const blobUrl = 'blob:https://gemini.google.com/abc-123';
+      vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('blob fetch blocked'));
+
+      const sendMessageMock = vi.fn(
+        (
+          message: { type?: string; url?: string },
+          callback?: (response: unknown) => void,
+        ): void => {
+          if (message.type === 'gv.fetchImage') {
+            callback?.({ ok: false, error: 'invalid_url' });
+            return;
+          }
+          callback?.(null);
+        },
+      );
+      chrome.runtime.sendMessage =
+        sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
+
+      const fetched = await (ConversationExportService as any).fetchImageForMarkdownPackaging(
+        blobUrl,
+      );
+
+      expect(fetched).toBeNull();
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        { type: 'gv.fetchImage', url: blobUrl },
+        expect.any(Function),
+      );
+      expect(sendMessageMock).not.toHaveBeenCalledWith(
+        { type: 'gv.fetchImageViaPage', url: blobUrl },
+        expect.any(Function),
+      );
+    });
   });
 });

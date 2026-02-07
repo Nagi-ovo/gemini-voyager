@@ -445,7 +445,7 @@ export class ConversationExportService {
       /* ignore */
     }
 
-    type BackgroundFetchImageResponse =
+    type RuntimeFetchImageResponse =
       | {
           ok: true;
           base64: string;
@@ -458,28 +458,55 @@ export class ConversationExportService {
         }
       | null;
 
-    try {
-      const response = await new Promise<BackgroundFetchImageResponse>((resolve) => {
+    const decodeRuntimeResponse = (
+      response: RuntimeFetchImageResponse,
+    ): { blob: Blob; contentType: string } | null => {
+      if (!(response && response.ok && typeof response.base64 === 'string')) return null;
+      const contentType = String(response.contentType || 'application/octet-stream');
+      const binary = atob(response.base64);
+      const length = binary.length;
+      const bytes = new Uint8Array(length);
+      for (let idx = 0; idx < length; idx++) bytes[idx] = binary.charCodeAt(idx);
+      return {
+        blob: new Blob([bytes], { type: contentType }),
+        contentType,
+      };
+    };
+
+    const sendFetchMessage = async (
+      type: 'gv.fetchImage' | 'gv.fetchImageViaPage',
+    ): Promise<RuntimeFetchImageResponse> => {
+      const sendMessage = chrome.runtime?.sendMessage;
+      if (typeof sendMessage !== 'function') return null;
+      return await new Promise<RuntimeFetchImageResponse>((resolve) => {
         try {
-          chrome.runtime?.sendMessage?.({ type: 'gv.fetchImage', url }, (rawResponse: unknown) => {
-            resolve((rawResponse as BackgroundFetchImageResponse) ?? null);
-          });
+          (sendMessage as (...args: unknown[]) => void)(
+            { type, url },
+            (rawResponse: unknown) => {
+              resolve((rawResponse as RuntimeFetchImageResponse) ?? null);
+            },
+          );
         } catch {
           resolve(null);
         }
       });
+    };
 
-      if (response && response.ok && typeof response.base64 === 'string') {
-        const contentType = String(response.contentType || 'application/octet-stream');
-        const binary = atob(response.base64);
-        const length = binary.length;
-        const bytes = new Uint8Array(length);
-        for (let idx = 0; idx < length; idx++) bytes[idx] = binary.charCodeAt(idx);
-        return {
-          blob: new Blob([bytes], { type: contentType }),
-          contentType,
-        };
-      }
+    try {
+      const response = await sendFetchMessage('gv.fetchImage');
+      const decoded = decodeRuntimeResponse(response);
+      if (decoded) return decoded;
+    } catch {
+      /* ignore */
+    }
+
+    // blob: URLs are page-scoped and not fetchable via background/page-message strategy.
+    if (url.startsWith('blob:')) return null;
+
+    try {
+      const response = await sendFetchMessage('gv.fetchImageViaPage');
+      const decoded = decodeRuntimeResponse(response);
+      if (decoded) return decoded;
     } catch {
       /* ignore */
     }
