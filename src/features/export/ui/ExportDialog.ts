@@ -15,8 +15,10 @@ export interface ExportDialogOptions {
     selectFormat: string;
     warning: string;
     safariCmdpHint: string;
+    safariMarkdownHint: string;
     cancel: string;
     export: string;
+    formatDescriptions: Record<ExportFormat, string>;
   };
 }
 
@@ -82,7 +84,14 @@ export class ExportDialog {
 
     const formats = ConversationExportService.getAvailableFormats();
     formats.forEach((formatInfo) => {
-      const option = this.createFormatOption(formatInfo, options.translations.safariCmdpHint);
+      const localizedDescription =
+        options.translations.formatDescriptions[formatInfo.format] || formatInfo.description;
+
+      const option = this.createFormatOption(
+        { ...formatInfo, description: localizedDescription },
+        options.translations.safariCmdpHint,
+        options.translations.safariMarkdownHint,
+      );
       formatsList.appendChild(option);
     });
 
@@ -149,6 +158,7 @@ export class ExportDialog {
       recommended?: boolean;
     },
     safariCmdpHint: string,
+    safariMarkdownHint: string,
   ): HTMLElement {
     const option = document.createElement('label');
     option.className = 'gv-export-format-option';
@@ -185,10 +195,17 @@ export class ExportDialog {
 
     const desc = document.createElement('div');
     desc.className = 'gv-export-format-description';
-    const shouldShowSafariHint = isSafari() && formatInfo.format === ('pdf' as ExportFormat);
-    desc.textContent = shouldShowSafariHint
-      ? `${formatInfo.description} ${safariCmdpHint}`
-      : formatInfo.description;
+    let hintText = formatInfo.description;
+
+    if (isSafari()) {
+      if (formatInfo.format === ('pdf' as ExportFormat)) {
+        hintText = `${formatInfo.description} ${safariCmdpHint}`;
+      } else if (formatInfo.format === ('markdown' as ExportFormat)) {
+        hintText = `${formatInfo.description} ${safariMarkdownHint}`;
+      }
+    }
+
+    desc.textContent = hintText;
 
     content.appendChild(labelDiv);
     content.appendChild(desc);

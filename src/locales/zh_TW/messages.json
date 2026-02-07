@@ -431,6 +431,22 @@
     "message": "Safari 提示：請先點選下方「匯出」按鈕，稍等片刻，再按 ⌘P 選擇「儲存為 PDF」。",
     "description": "Safari 下 PDF 匯出的提示"
   },
+  "export_dialog_safari_markdown_hint": {
+    "message": "Safari 限制：無法提取圖片，建議使用 PDF 匯出。",
+    "description": "關於 Safari Markdown 匯出無法提取圖片的警告"
+  },
+  "export_format_json_description": {
+    "message": "開發者使用的機器可讀格式",
+    "description": "JSON 匯出格式描述"
+  },
+  "export_format_markdown_description": {
+    "message": "清晰便攜的文字格式（推薦）",
+    "description": "Markdown 匯出格式描述"
+  },
+  "export_format_pdf_description": {
+    "message": "適合列印的格式（透過另存為 PDF）",
+    "description": "PDF 匯出格式描述"
+  },
   "editInputWidth": {
     "message": "編輯輸入框寬度",
     "description": "編輯輸入框寬度調整標籤"

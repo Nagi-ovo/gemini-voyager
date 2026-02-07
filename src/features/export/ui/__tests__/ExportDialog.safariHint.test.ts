@@ -28,8 +28,14 @@ describe('ExportDialog (Safari hint)', () => {
       selectFormat: 'Select',
       warning: 'Warning',
       safariCmdpHint: 'Safari tip: press ⌘P.',
+      safariMarkdownHint: 'Safari tip: use PDF.',
       cancel: 'Cancel',
       export: 'Export',
+      formatDescriptions: {
+        json: 'JSON desc',
+        markdown: 'MD desc',
+        pdf: 'PDF desc',
+      },
     },
   };
 
@@ -76,5 +82,24 @@ describe('ExportDialog (Safari hint)', () => {
     const pdfOption = pdfRadio?.closest('.gv-export-format-option') as HTMLElement | null;
     const desc = pdfOption?.querySelector('.gv-export-format-description') as HTMLElement | null;
     expect(desc?.textContent || '').not.toContain(baseOptions.translations.safariCmdpHint);
+  });
+
+  it('appends warning hint to Markdown option description on Safari', () => {
+    setUserAgentVendor(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+      'Apple Computer, Inc.',
+    );
+
+    const dialog = new ExportDialog();
+    dialog.show(baseOptions);
+
+    const mdRadio = document.querySelector(
+      'input[type="radio"][name="export-format"][value="markdown"]',
+    ) as HTMLInputElement | null;
+    expect(mdRadio).not.toBeNull();
+
+    const mdOption = mdRadio?.closest('.gv-export-format-option') as HTMLElement | null;
+    const desc = mdOption?.querySelector('.gv-export-format-description') as HTMLElement | null;
+    expect(desc?.textContent || '').toContain(baseOptions.translations.safariMarkdownHint);
   });
 });

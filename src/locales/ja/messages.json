@@ -471,6 +471,22 @@
     "message": "Safari のヒント：下の「エクスポート」を選択し、少し待ってから ⌘P を押して「PDFとして保存」を選択してください。",
     "description": "Safari-specific hint for PDF export"
   },
+  "export_dialog_safari_markdown_hint": {
+    "message": "Safari 制限：画像を抽出できません。PDFエクスポートを使用してください。",
+    "description": "Warning about image references in Safari markdown export"
+  },
+  "export_format_json_description": {
+    "message": "開発者向けの機械可読形式",
+    "description": "Description for JSON export format"
+  },
+  "export_format_markdown_description": {
+    "message": "クリーンで汎用性の高いテキスト形式（推奨）",
+    "description": "Description for Markdown export format"
+  },
+  "export_format_pdf_description": {
+    "message": "印刷に適した形式（PDFとして保存）",
+    "description": "Description for PDF export format"
+  },
   "editInputWidth": {
     "message": "入力欄の幅",
     "description": "Edit input width adjustment label"

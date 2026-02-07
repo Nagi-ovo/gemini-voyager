@@ -471,6 +471,22 @@
     "message": "Dica Safari: Clique em 'Exportar' abaixo, aguarde um momento, depois pressione ⌘P e escolha 'Salvar como PDF'.",
     "description": "Safari-specific hint for PDF export"
   },
+  "export_dialog_safari_markdown_hint": {
+    "message": "Limitação do Safari: Imagens não suportadas. Use PDF.",
+    "description": "Warning about image references in Safari markdown export"
+  },
+  "export_format_json_description": {
+    "message": "Formato legível por máquina para desenvolvedores",
+    "description": "Description for JSON export format"
+  },
+  "export_format_markdown_description": {
+    "message": "Formato de texto limpo e portátil (recomendado)",
+    "description": "Description for Markdown export format"
+  },
+  "export_format_pdf_description": {
+    "message": "Formato amigável para impressão via Salvar como PDF",
+    "description": "Description for PDF export format"
+  },
   "editInputWidth": {
     "message": "Largura da entrada de edição",
     "description": "Edit input width adjustment label"

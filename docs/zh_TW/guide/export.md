@@ -9,7 +9,7 @@ Gemini Voyager 幫你把數據從雲端拽回手心。
 
 ### 格式隨你選
 
-- **Markdown**：給 Obsidian 或 Notion 用。乾淨清爽。
+- **Markdown**：給 Obsidian 或 Notion 用。乾淨清爽。（Safari 使用者注意：由於瀏覽器限制無法提取圖片，建議使用 PDF 匯出）
 - **PDF**：發給別人或列印。排版精美，圖文並茂。
 - **JSON**：給開發者。原始數據，怎麼玩隨你。
 

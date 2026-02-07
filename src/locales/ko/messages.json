@@ -471,6 +471,22 @@
     "message": "Safari 팁: 아래 '내보내기'를 클릭하고 잠시 기다린 다음, ⌘P를 누르고 'PDF로 저장'을 선택하세요.",
     "description": "Safari-specific hint for PDF export"
   },
+  "export_dialog_safari_markdown_hint": {
+    "message": "Safari 제한: 이미지를 추출할 수 없습니다. PDF 내보내기를 사용하세요.",
+    "description": "Warning about image references in Safari markdown export"
+  },
+  "export_format_json_description": {
+    "message": "개발자를 위한 기계 판독 가능 형식",
+    "description": "Description for JSON export format"
+  },
+  "export_format_markdown_description": {
+    "message": "깨끗하고 이식 가능한 텍스트 형식 (권장)",
+    "description": "Description for Markdown export format"
+  },
+  "export_format_pdf_description": {
+    "message": "PDF로 저장을 통한 인쇄 친화적 형식",
+    "description": "Description for PDF export format"
+  },
   "editInputWidth": {
     "message": "편집 입력창 너비",
     "description": "Edit input width adjustment label"

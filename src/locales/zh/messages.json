@@ -471,6 +471,22 @@
     "message": "Safari 提示：请先点击下方“导出”按钮，稍等片刻，再按 ⌘P 选择“保存为 PDF”。",
     "description": "Safari 下 PDF 导出的提示"
   },
+  "export_dialog_safari_markdown_hint": {
+    "message": "Safari 限制：无法提取图片，建议使用 PDF 导出。",
+    "description": "关于 Safari Markdown 导出无法提取图片的警告"
+  },
+  "export_format_json_description": {
+    "message": "开发者使用的机器可读格式",
+    "description": "JSON 导出格式描述"
+  },
+  "export_format_markdown_description": {
+    "message": "清晰便携的文本格式（推荐）",
+    "description": "Markdown 导出格式描述"
+  },
+  "export_format_pdf_description": {
+    "message": "适合打印的格式（通过保存为 PDF）",
+    "description": "PDF 导出格式描述"
+  },
   "editInputWidth": {
     "message": "编辑输入框宽度",
     "description": "编辑输入框宽度调整标签"

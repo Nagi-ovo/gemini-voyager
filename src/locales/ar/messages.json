@@ -471,6 +471,22 @@
     "message": "نصيحة Safari: انقر فوق 'تصدير' أدناه، وانتظر لحظة، ثم اضغط على ⌘P واختر 'حفظ بتنسيق PDF'.",
     "description": "Safari-specific hint for PDF export"
   },
+  "export_dialog_safari_markdown_hint": {
+    "message": "قيود سفاري: لا يمكن استخراج الصور. استخدم PDF.",
+    "description": "Warning about image references in Safari markdown export"
+  },
+  "export_format_json_description": {
+    "message": "تنسيق مقروء آلياً للمطورين",
+    "description": "Description for JSON export format"
+  },
+  "export_format_markdown_description": {
+    "message": "تنسيق نصي نظيف ومحمول (موصى به)",
+    "description": "Description for Markdown export format"
+  },
+  "export_format_pdf_description": {
+    "message": "تنسيق مناسب للطباعة عبر حفظ بتنسيق PDF",
+    "description": "Description for PDF export format"
+  },
   "editInputWidth": {
     "message": "عرض حقل التحرير",
     "description": "Edit input width adjustment label"

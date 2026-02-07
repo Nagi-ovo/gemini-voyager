@@ -856,8 +856,14 @@ async function showExportDialog(
       selectFormat: t('export_dialog_select'),
       warning: t('export_dialog_warning'),
       safariCmdpHint: t('export_dialog_safari_cmdp_hint'),
+      safariMarkdownHint: t('export_dialog_safari_markdown_hint'),
       cancel: t('pm_cancel'),
       export: t('pm_export'),
+      formatDescriptions: {
+        json: t('export_format_json_description'),
+        markdown: t('export_format_markdown_description'),
+        pdf: t('export_format_pdf_description'),
+      },
     },
   });
 }

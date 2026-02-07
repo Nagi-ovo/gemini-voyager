@@ -9,7 +9,7 @@ Gemini Voyager te ayuda a bajar tus datos de la nube a tu palma.
 
 ### Elige tu Formato
 
-- **Markdown**: Para usar en Obsidian o Notion. Limpio y fresco.
+- **Markdown**: Para usar en Obsidian o Notion. Limpio y fresco. (Usuarios de Safari: No se pueden extraer imágenes debido a limitaciones del navegador, use la exportación a PDF)
 - **PDF**: Para enviar a otros o imprimir. Maquetación hermosa, texto e imágenes.
 - **JSON**: Para desarrolladores. Datos brutos, juega con ellos como quieras.
 
