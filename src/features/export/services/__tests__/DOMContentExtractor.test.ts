@@ -93,4 +93,23 @@ describe('DOMContentExtractor', () => {
     expect(extracted.html).toContain('<img');
     expect(extracted.html).toContain('https://example.com/a.png');
   });
+
+  it('should skip about:blank images while preserving valid images', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <img src="about:blank" alt="placeholder" />
+          <img src="https://example.com/real.png" alt="Real" />
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.text).not.toContain('about:blank');
+    expect(extracted.html).not.toContain('about:blank');
+    expect(extracted.text).toContain('![Real](https://example.com/real.png)');
+    expect(extracted.html).toContain('https://example.com/real.png');
+  });
 });

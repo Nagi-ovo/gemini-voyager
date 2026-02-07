@@ -296,7 +296,7 @@ export class DOMContentExtractor {
       if (tagName === 'img') {
         const img = child as HTMLImageElement;
         const src = img.getAttribute('src') || img.src || '';
-        if (src) {
+        if (src && src !== 'about:blank') {
           flags.hasImages = true;
           const altRaw = img.getAttribute('alt') || '';
           const alt = altRaw.trim() || 'Image';
@@ -386,19 +386,6 @@ export class DOMContentExtractor {
             );
           continue;
         }
-      }
-
-      // Standalone <img> element (e.g. direct image in response)
-      if (tagName === 'img') {
-        const imgEl = child as HTMLImageElement;
-        const src = imgEl.src || imgEl.getAttribute('src') || '';
-        if (src && src !== 'about:blank') {
-          const alt = imgEl.alt || 'Image';
-          flags.hasImages = true;
-          htmlParts.push(`<img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" />`);
-          textParts.push(`\n![${alt}](${src})\n`);
-        }
-        continue;
       }
 
       // Horizontal rule

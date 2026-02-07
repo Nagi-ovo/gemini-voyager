@@ -346,4 +346,41 @@ describe('ConversationExportService', () => {
     // DOM operations (Content Scripts) are in the "Fragile" category.
     // The extractUserContent/extractAssistantContent calls are covered by defensive programming.
   });
+
+  describe('markdown zip packaging', () => {
+    it('should assign image filenames in source order even when fetch resolves out of order', async () => {
+      const imageUrls = ['https://example.com/slow.png', 'https://example.com/fast.png'];
+      vi.spyOn(MarkdownFormatter, 'extractImageUrls').mockReturnValue(imageUrls);
+
+      const rewriteSpy = vi
+        .spyOn(MarkdownFormatter, 'rewriteImageUrls')
+        .mockImplementation((markdown) => markdown);
+
+      vi.spyOn(ConversationExportService as any, 'fetchImageForMarkdownPackaging').mockImplementation(
+        async (rawUrl: unknown) => {
+          const url = String(rawUrl);
+          if (url.includes('slow')) {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+          return {
+            blob: {
+              arrayBuffer: async () => new TextEncoder().encode(url).buffer,
+            } as unknown as Blob,
+            contentType: 'image/png',
+          };
+        },
+      );
+
+      await (ConversationExportService as any).downloadMarkdownOrZip(
+        '![a](https://example.com/slow.png)\n![b](https://example.com/fast.png)',
+        'chat.md',
+        'chat.md',
+      );
+
+      expect(rewriteSpy).toHaveBeenCalledOnce();
+      const mapping = rewriteSpy.mock.calls[0][1] as Map<string, string>;
+      expect(mapping.get('https://example.com/slow.png')).toBe('assets/img-001.png');
+      expect(mapping.get('https://example.com/fast.png')).toBe('assets/img-002.png');
+    });
+  });
 });
