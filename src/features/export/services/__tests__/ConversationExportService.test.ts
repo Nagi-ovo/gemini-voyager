@@ -12,6 +12,7 @@ vi.mock('html-to-image', () => {
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
 import { ConversationExportService } from '../ConversationExportService';
+import { DeepResearchPDFPrintService } from '../DeepResearchPDFPrintService';
 import { ImageExportService } from '../ImageExportService';
 import { MarkdownFormatter } from '../MarkdownFormatter';
 import { PDFPrintService } from '../PDFPrintService';
@@ -209,6 +210,9 @@ describe('ConversationExportService', () => {
     });
 
     it('should use document PDF export path when layout is document', async () => {
+      const deepResearchPdfSpy = vi
+        .spyOn(DeepResearchPDFPrintService as any, 'export')
+        .mockResolvedValue(undefined);
       const pdfDocumentSpy = vi
         .spyOn(PDFPrintService as any, 'exportDocument')
         .mockResolvedValue(undefined);
@@ -219,7 +223,8 @@ describe('ConversationExportService', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(pdfDocumentSpy).toHaveBeenCalledOnce();
+      expect(deepResearchPdfSpy).toHaveBeenCalledOnce();
+      expect(pdfDocumentSpy).not.toHaveBeenCalled();
     });
 
     it('should use document image export path when layout is document', async () => {

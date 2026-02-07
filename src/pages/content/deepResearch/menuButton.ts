@@ -263,6 +263,39 @@ function buildReportFilename(format: ExportFormat, title: string): string {
   return `${base}.png`;
 }
 
+export function showDeepResearchExportProgressOverlay(
+  t: (key: TranslationKey) => string,
+): () => void {
+  const overlay = document.createElement('div');
+  overlay.className = 'gv-export-progress-overlay';
+
+  const card = document.createElement('div');
+  card.className = 'gv-export-progress-card';
+
+  const spinner = document.createElement('div');
+  spinner.className = 'gv-export-progress-spinner';
+
+  const title = document.createElement('div');
+  title.className = 'gv-export-progress-title';
+  title.textContent = `${t('pm_export')}...`;
+
+  const desc = document.createElement('div');
+  desc.className = 'gv-export-progress-desc';
+  desc.textContent = t('loading');
+
+  card.appendChild(spinner);
+  card.appendChild(title);
+  card.appendChild(desc);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  return () => {
+    try {
+      overlay.remove();
+    } catch {}
+  };
+}
+
 function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
   const reportRoot = findDeepResearchReportRoot();
   if (!reportRoot) {
@@ -292,18 +325,24 @@ function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
   const dialog = new ExportDialog();
   dialog.show({
     onExport: async (format) => {
+      const hideProgress = showDeepResearchExportProgressOverlay(t);
       try {
         const filename = buildReportFilename(format, reportTitle);
-        const result = await ConversationExportService.export(turns, metadata, {
+        const resultPromise = ConversationExportService.export(turns, metadata, {
           format,
           filename,
           layout: 'document',
         });
+        const minVisiblePromise = new Promise((resolve) => setTimeout(resolve, 420));
+        const [result] = await Promise.all([resultPromise, minVisiblePromise]);
         if (!result.success) {
-          console.error('[Gemini Voyager] Report export failed:', result.error);
+          alert(`${t('export_dialog_warning')}: ${result.error}`);
         }
       } catch (error) {
         console.error('[Gemini Voyager] Report export error:', error);
+        alert('Export error occurred.');
+      } finally {
+        hideProgress();
       }
     },
     onCancel: () => {},

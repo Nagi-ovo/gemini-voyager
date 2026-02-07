@@ -14,6 +14,7 @@ import type {
   ExportResult,
 } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
+import { DeepResearchPDFPrintService } from './DeepResearchPDFPrintService';
 import { ImageExportService } from './ImageExportService';
 import { MarkdownFormatter } from './MarkdownFormatter';
 import { PDFPrintService } from './PDFPrintService';
@@ -247,7 +248,7 @@ export class ConversationExportService {
     metadata: ConversationMetadata,
     options: ExportOptions,
   ): Promise<ExportResult> {
-    await PDFPrintService.exportDocument({
+    await DeepResearchPDFPrintService.export({
       title: metadata.title || 'Deep Research Report',
       url: metadata.url,
       exportedAt: metadata.exportedAt,

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import type { AppLanguage } from '@/utils/language';
+import type { TranslationKey } from '@/utils/translations';
 
 import {
   applyDeepResearchDownloadButtonI18n,
   applyDeepResearchSaveReportButtonI18n,
+  showDeepResearchExportProgressOverlay,
 } from '../menuButton';
 
 describe('applyDeepResearchDownloadButtonI18n', () => {
@@ -76,5 +78,36 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
     expect(button.title).toBe('保存报告');
     expect(button.getAttribute('aria-label')).toBe('保存报告');
     expect(span.textContent).toBe(' 保存报告');
+  });
+
+  it('renders and removes deep research export progress overlay', () => {
+    const dict: Record<AppLanguage, Record<string, string>> = {
+      en: { pm_export: 'Export', loading: 'Loading' },
+      zh: { pm_export: '导出', loading: '加载中' },
+      zh_TW: { pm_export: '匯出', loading: '載入中' },
+      ja: { pm_export: 'エクスポート', loading: '読み込み中' },
+      fr: { pm_export: 'Exporter', loading: 'Chargement' },
+      es: { pm_export: 'Exportar', loading: 'Cargando' },
+      pt: { pm_export: 'Exportar', loading: 'Carregando' },
+      ar: { pm_export: 'تصدير', loading: 'جارٍ التحميل' },
+      ru: { pm_export: 'Экспорт', loading: 'Загрузка' },
+    };
+
+    const t = (key: TranslationKey): string => {
+      if (key === 'pm_export' || key === 'loading') {
+        return dict.en[key];
+      }
+      return '';
+    };
+    const hide = showDeepResearchExportProgressOverlay(t);
+
+    const overlay = document.querySelector('.gv-export-progress-overlay');
+    expect(overlay).toBeTruthy();
+    expect(overlay?.textContent).toContain('Export...');
+    expect(overlay?.textContent).toContain('Loading');
+
+    hide();
+
+    expect(document.querySelector('.gv-export-progress-overlay')).toBeNull();
   });
 });
