@@ -112,4 +112,26 @@ describe('DOMContentExtractor', () => {
     expect(extracted.text).toContain('![Real](https://example.com/real.png)');
     expect(extracted.html).toContain('https://example.com/real.png');
   });
+
+  it('escapes generated image src/alt when rendered into html attributes', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <div class="attachment-container generated-images">
+            <generated-image><img /></generated-image>
+          </div>
+        </div>
+      </message-content>
+    `;
+
+    const generated = assistant.querySelector('img') as HTMLImageElement;
+    generated.setAttribute('src', 'https://example.com/a"b.png');
+    generated.setAttribute('alt', 'A "quoted" image');
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.html).toContain('src="https://example.com/a%22b.png"');
+    expect(extracted.html).toContain('alt="A &quot;quoted&quot; image"');
+  });
 });

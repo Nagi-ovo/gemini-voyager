@@ -156,4 +156,20 @@ describe('PDFPrintService', () => {
 
     expect(window.print).toHaveBeenCalledOnce();
   });
+
+  it('escapes quotes in header link href attribute', async () => {
+    window.print = vi.fn();
+
+    await PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/x" onclick="alert(1)',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: 'Attribute Escape',
+    });
+
+    const link = document.querySelector('.gv-print-meta a');
+    expect(link).toBeTruthy();
+    expect(link?.getAttribute('onclick')).toBeNull();
+    expect(link?.getAttribute('href')).toContain('" onclick="');
+  });
 });

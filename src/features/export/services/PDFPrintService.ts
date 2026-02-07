@@ -490,7 +490,7 @@ export class PDFPrintService {
           <h1 class="gv-print-cover-title">${this.escapeHTML(conversationTitle)}</h1>
           <div class="gv-print-meta">
             <p>${date}</p>
-            <p><a href="${this.escapeHTML(metadata.url)}">${this.escapeHTML(urlTitle)}</a></p>
+            <p><a href="${this.escapeAttribute(metadata.url)}">${this.escapeHTML(urlTitle)}</a></p>
             <p>${turnsCount} conversation turns</p>
           </div>
         </div>
@@ -949,5 +949,9 @@ export class PDFPrintService {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  private static escapeAttribute(text: string): string {
+    return this.escapeHTML(text).replace(/"/g, '&quot;');
   }
 }

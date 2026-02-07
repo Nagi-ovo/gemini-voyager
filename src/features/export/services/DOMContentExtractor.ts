@@ -375,8 +375,11 @@ export class DOMContentExtractor {
             if (!src || src === 'about:blank') continue;
             const alt = imgEl.alt || 'Generated image';
             flags.hasImages = true;
-            htmlParts.push(`<img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" />`);
-            textParts.push(`\n![${alt}](${src})\n`);
+            htmlParts.push(
+              `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
+            );
+            const mdAlt = alt.replace(/\]/g, '\\]');
+            textParts.push(`\n![${mdAlt}](${src})\n`);
           }
           if (this.DEBUG)
             console.log(
@@ -571,9 +574,10 @@ export class DOMContentExtractor {
           if (src && src !== 'about:blank') {
             const alt = imgEl.alt || 'Image';
             htmlParts.push(
-              `<img src="${DOMContentExtractor.escapeHtml(src)}" alt="${DOMContentExtractor.escapeHtml(alt)}" />`,
+              `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
             );
-            textParts.push(`![${alt}](${src})`);
+            const mdAlt = alt.replace(/\]/g, '\\]');
+            textParts.push(`![${mdAlt}](${src})`);
           }
           return;
         }
