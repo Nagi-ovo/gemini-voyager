@@ -903,6 +903,14 @@
     "message": "تنزيل محتوى التفكير بتنسيق Markdown",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchSaveReport": {
+    "message": "حفظ التقرير",
+    "description": "Deep Research save report button text"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "حفظ التقرير الكامل بصيغة JSON أو Markdown أو PDF أو صورة",
+    "description": "Deep Research save report button tooltip"
+  },
   "folder_uncategorized": {
     "message": "غير مصنف",
     "description": "Label for root-level conversations not in any folder"

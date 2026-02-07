@@ -36,4 +36,22 @@ describe('ExportDialog', () => {
     expect(document.activeElement).toBe(wrapper);
     expect(document.activeElement).not.toBe(firstRadio);
   });
+
+  it('does not render warning block when warning is empty', () => {
+    const dialog = new ExportDialog();
+    dialog.show({
+      onExport: () => {},
+      onCancel: () => {},
+      translations: {
+        title: 'Export',
+        selectFormat: 'Select format',
+        warning: '',
+        cancel: 'Cancel',
+        export: 'Export',
+      },
+    });
+
+    const warning = document.querySelector('.gv-export-dialog-warning') as HTMLElement | null;
+    expect(warning).toBeNull();
+  });
 });

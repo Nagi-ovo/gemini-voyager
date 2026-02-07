@@ -12,6 +12,9 @@ vi.mock('html-to-image', () => {
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
 import { ConversationExportService } from '../ConversationExportService';
+import { ImageExportService } from '../ImageExportService';
+import { MarkdownFormatter } from '../MarkdownFormatter';
+import { PDFPrintService } from '../PDFPrintService';
 import { toBlob } from 'html-to-image';
 
 // Setup DOM environment
@@ -95,6 +98,16 @@ describe('ConversationExportService', () => {
       expect(result.filename).toBe('Premier-League-Fantasy.pdf');
     });
 
+    it('triggers print for PDF export', async () => {
+      (global.window as any).print = vi.fn();
+
+      await ConversationExportService.export(mockTurns, mockMetadata, {
+        format: 'pdf' as any,
+      });
+
+      expect((global.window as any).print).toHaveBeenCalled();
+    });
+
     it('should export as Image', async () => {
       (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
         new Blob(['x'], { type: 'image/png' }),
@@ -107,6 +120,120 @@ describe('ConversationExportService', () => {
       expect(result.success).toBe(true);
       expect(result.format).toBe('image');
       expect(result.filename).toBe('Premier-League-Fantasy.png');
+    });
+
+    it('should export report markdown without turn wrappers in document layout', async () => {
+      const downloadSpy = vi.spyOn(MarkdownFormatter, 'download').mockImplementation(() => {});
+
+      const result = await ConversationExportService.export(
+        [
+          {
+            user: '',
+            assistant: '# Report title\n\nBody paragraph.',
+            starred: false,
+            omitEmptySections: true,
+          },
+        ],
+        mockMetadata,
+        {
+          format: 'markdown' as any,
+          layout: 'document' as any,
+          filename: 'report.md',
+        },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.format).toBe('markdown');
+      expect(downloadSpy).toHaveBeenCalledOnce();
+      const markdown = downloadSpy.mock.calls[0][0];
+      expect(markdown).toContain('# Report title');
+      expect(markdown).not.toContain('## Turn 1');
+      expect(markdown).not.toContain('### 🤖 Assistant');
+    });
+
+    it('should avoid duplicating heading for document markdown when content already has title', async () => {
+      const downloadSpy = vi.spyOn(MarkdownFormatter, 'download').mockImplementation(() => {});
+
+      await ConversationExportService.export(
+        [
+          {
+            user: '',
+            assistant: '# Revenue Deep Research Report\n\n正文内容',
+            starred: false,
+            omitEmptySections: true,
+          },
+        ],
+        {
+          ...mockMetadata,
+          title: 'Revenue Deep Research Report',
+        },
+        {
+          format: 'markdown' as any,
+          layout: 'document' as any,
+          filename: 'report.md',
+        },
+      );
+
+      const markdown = downloadSpy.mock.calls[0][0];
+      const titleMatches = String(markdown).match(/^# Revenue Deep Research Report$/gm) ?? [];
+      expect(titleMatches).toHaveLength(1);
+    });
+
+    it('should export report JSON payload in document layout', async () => {
+      const downloadSpy = vi.spyOn(ConversationExportService as any, 'downloadJSON');
+
+      const result = await ConversationExportService.export(
+        [
+          {
+            user: '',
+            assistant: 'Body paragraph.',
+            starred: false,
+            omitEmptySections: true,
+          },
+        ],
+        mockMetadata,
+        {
+          format: 'json' as any,
+          layout: 'document' as any,
+          filename: 'report.json',
+        },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.format).toBe('json');
+      expect(downloadSpy).toHaveBeenCalledOnce();
+      const payload = downloadSpy.mock.calls[0][0] as Record<string, unknown>;
+      expect(payload.format).toBe('gemini-voyager.report.v1');
+      expect(payload).toHaveProperty('content');
+      expect(payload).not.toHaveProperty('items');
+    });
+
+    it('should use document PDF export path when layout is document', async () => {
+      const pdfDocumentSpy = vi
+        .spyOn(PDFPrintService as any, 'exportDocument')
+        .mockResolvedValue(undefined);
+
+      const result = await ConversationExportService.export(mockTurns, mockMetadata, {
+        format: 'pdf' as any,
+        layout: 'document' as any,
+      });
+
+      expect(result.success).toBe(true);
+      expect(pdfDocumentSpy).toHaveBeenCalledOnce();
+    });
+
+    it('should use document image export path when layout is document', async () => {
+      const imageDocumentSpy = vi
+        .spyOn(ImageExportService as any, 'exportDocument')
+        .mockResolvedValue(undefined);
+
+      const result = await ConversationExportService.export(mockTurns, mockMetadata, {
+        format: 'image' as any,
+        layout: 'document' as any,
+      });
+
+      expect(result.success).toBe(true);
+      expect(imageDocumentSpy).toHaveBeenCalledOnce();
     });
 
     it('should handle unsupported format', async () => {

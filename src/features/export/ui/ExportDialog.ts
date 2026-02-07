@@ -67,11 +67,6 @@ export class ExportDialog {
     subtitle.className = 'gv-export-dialog-subtitle';
     subtitle.textContent = options.translations.selectFormat;
 
-    // Warning message
-    const warning = document.createElement('div');
-    warning.className = 'gv-export-dialog-warning';
-    warning.textContent = options.translations.warning;
-
     // Format options
     const formatsList = document.createElement('div');
     formatsList.className = 'gv-export-format-list';
@@ -108,7 +103,12 @@ export class ExportDialog {
     // Assemble dialog
     dialog.appendChild(title);
     dialog.appendChild(subtitle);
-    dialog.appendChild(warning);
+    if (options.translations.warning.trim()) {
+      const warning = document.createElement('div');
+      warning.className = 'gv-export-dialog-warning';
+      warning.textContent = options.translations.warning;
+      dialog.appendChild(warning);
+    }
     dialog.appendChild(formatsList);
     dialog.appendChild(buttons);
     overlay.appendChild(dialog);

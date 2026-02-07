@@ -5,10 +5,18 @@ import { StorageKeys } from '@/core/types/common';
 import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
 import type { TranslationKey } from '@/utils/translations';
+import { ConversationExportService } from '@/features/export/services/ConversationExportService';
+import type {
+  ChatTurn as ExportChatTurn,
+  ConversationMetadata,
+  ExportFormat,
+} from '@/features/export/types/export';
+import { ExportDialog } from '@/features/export/ui/ExportDialog';
 
 import { downloadMarkdown } from './download';
 import { extractThinkingPanels } from './extractor';
 import { formatToMarkdown } from './formatter';
+import { extractDeepResearchReportTitle, findDeepResearchReportRoot } from './reportExtractor';
 
 type Dictionaries = Record<AppLanguage, Record<string, string>>;
 
@@ -94,6 +102,24 @@ export function applyDeepResearchDownloadButtonI18n(
   }
 }
 
+export function applyDeepResearchSaveReportButtonI18n(
+  button: HTMLButtonElement,
+  dict: Dictionaries,
+  lang: AppLanguage,
+): void {
+  const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+  const text = t('deepResearchSaveReport');
+  const tooltip = t('deepResearchSaveReportTooltip');
+
+  button.title = tooltip;
+  button.setAttribute('aria-label', tooltip);
+
+  const span = button.querySelector('.mat-mdc-menu-item-text');
+  if (span) {
+    span.textContent = ` ${text}`;
+  }
+}
+
 /**
  * Get user language preference
  */
@@ -152,12 +178,23 @@ function handleDownload(): void {
 }
 
 /**
- * Create download button matching Material Design style
+ * Create menu button matching Material Design style
  */
-function createDownloadButton(text: string, tooltip: string): HTMLButtonElement {
+function createMenuButton({
+  text,
+  tooltip,
+  className,
+  iconName,
+  onClick,
+}: {
+  text: string;
+  tooltip: string;
+  className: string;
+  iconName: string;
+  onClick: () => void;
+}): HTMLButtonElement {
   const button = document.createElement('button');
-  button.className =
-    'mat-mdc-menu-item mat-focus-indicator menu-item-button gv-deep-research-download';
+  button.className = `mat-mdc-menu-item mat-focus-indicator menu-item-button ${className}`;
   button.setAttribute('mat-menu-item', '');
   button.setAttribute('role', 'menuitem');
   button.setAttribute('tabindex', '0');
@@ -167,11 +204,12 @@ function createDownloadButton(text: string, tooltip: string): HTMLButtonElement 
 
   // Create icon
   const icon = document.createElement('mat-icon');
-  icon.className = 'mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color';
+  icon.className =
+    'mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color';
   icon.setAttribute('role', 'img');
-  icon.setAttribute('fonticon', 'download');
+  icon.setAttribute('fonticon', iconName);
   icon.setAttribute('aria-hidden', 'true');
-  icon.textContent = 'download';
+  icon.textContent = iconName;
 
   // Create text span
   const span = document.createElement('span');
@@ -188,13 +226,113 @@ function createDownloadButton(text: string, tooltip: string): HTMLButtonElement 
   button.appendChild(ripple);
 
   // Add click handler
-  button.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleDownload();
+  button.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onClick();
   });
 
   return button;
+}
+
+function createDownloadButton(text: string, tooltip: string): HTMLButtonElement {
+  return createMenuButton({
+    text,
+    tooltip,
+    className: 'gv-deep-research-download',
+    iconName: 'download',
+    onClick: handleDownload,
+  });
+}
+
+function sanitizeFilenamePart(value: string): string {
+  const cleaned = value
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/\.+$/g, '')
+    .slice(0, 80);
+  return cleaned || 'deep-research-report';
+}
+
+function buildReportFilename(format: ExportFormat, title: string): string {
+  const base = sanitizeFilenamePart(title || 'deep-research-report');
+  if (format === 'json') return `${base}.json`;
+  if (format === 'markdown') return `${base}.md`;
+  if (format === 'pdf') return `${base}.pdf`;
+  return `${base}.png`;
+}
+
+function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
+  const reportRoot = findDeepResearchReportRoot();
+  if (!reportRoot) {
+    console.warn('[Gemini Voyager] Report content root not found');
+    return;
+  }
+
+  const reportTitle = extractDeepResearchReportTitle(reportRoot);
+  const metadata: ConversationMetadata = {
+    url: location.href,
+    exportedAt: new Date().toISOString(),
+    count: 1,
+    title: reportTitle,
+  };
+
+  const turns: ExportChatTurn[] = [
+    {
+      user: '',
+      assistant: '',
+      starred: false,
+      omitEmptySections: true,
+      assistantElement: reportRoot,
+    },
+  ];
+
+  const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+  const dialog = new ExportDialog();
+  dialog.show({
+    onExport: async (format) => {
+      try {
+        const filename = buildReportFilename(format, reportTitle);
+        const result = await ConversationExportService.export(turns, metadata, {
+          format,
+          filename,
+          layout: 'document',
+        });
+        if (!result.success) {
+          console.error('[Gemini Voyager] Report export failed:', result.error);
+        }
+      } catch (error) {
+        console.error('[Gemini Voyager] Report export error:', error);
+      }
+    },
+    onCancel: () => {},
+    translations: {
+      title: t('deepResearchSaveReport'),
+      selectFormat: t('export_dialog_select'),
+      warning: '',
+      cancel: t('pm_cancel'),
+      export: t('pm_export'),
+    },
+  });
+}
+
+function createSaveReportButton(
+  text: string,
+  tooltip: string,
+  dict: Dictionaries,
+): HTMLButtonElement {
+  return createMenuButton({
+    text,
+    tooltip,
+    className: 'gv-deep-research-save-report',
+    iconName: 'description',
+    onClick: () => {
+      void getLanguage().then((currentLanguage) => {
+        handleSaveReport(dict, currentLanguage);
+      });
+    },
+  });
 }
 
 type StorageChange = { newValue?: unknown };
@@ -225,17 +363,12 @@ export async function injectDownloadButton(): Promise<void> {
     // Load i18n
     const dict = await loadDictionaries();
     const lang = await getLanguage();
-    const t = (key: string) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+    const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
     // Wait for menu to appear
     const menuPanel = await waitForElement('.mat-mdc-menu-panel[role="menu"]');
     if (!menuPanel) {
       console.log('[Gemini Voyager] Menu panel not found');
-      return;
-    }
-
-    // Check if button already exists
-    if (menuPanel.querySelector('.gv-deep-research-download')) {
       return;
     }
 
@@ -246,13 +379,28 @@ export async function injectDownloadButton(): Promise<void> {
       return;
     }
 
-    // Create and insert button
-    const buttonText = t('deepResearchDownload');
-    const buttonTooltip = t('deepResearchDownloadTooltip');
-    const button = createDownloadButton(buttonText, buttonTooltip);
+    let downloadButton = menuPanel.querySelector(
+      '.gv-deep-research-download',
+    ) as HTMLButtonElement | null;
+    if (!downloadButton) {
+      downloadButton = createDownloadButton(t('deepResearchDownload'), t('deepResearchDownloadTooltip'));
+      menuContent.appendChild(downloadButton);
+    }
 
-    // Insert button after the copy button (last item)
-    menuContent.appendChild(button);
+    let saveReportButton = menuPanel.querySelector(
+      '.gv-deep-research-save-report',
+    ) as HTMLButtonElement | null;
+    if (!saveReportButton) {
+      saveReportButton = createSaveReportButton(
+        t('deepResearchSaveReport'),
+        t('deepResearchSaveReportTooltip'),
+        dict,
+      );
+      menuContent.appendChild(saveReportButton);
+    }
+
+    applyDeepResearchDownloadButtonI18n(downloadButton, dict, lang);
+    applyDeepResearchSaveReportButtonI18n(saveReportButton, dict, lang);
 
     // Keep button text/tooltip in sync with runtime language changes
     const storage = getExtensionStorage();
@@ -264,7 +412,8 @@ export async function injectDownloadButton(): Promise<void> {
         const nextRaw = changes?.[StorageKeys.LANGUAGE]?.newValue;
         if (typeof nextRaw !== 'string') return;
         currentLang = normalizeLanguage(nextRaw);
-        applyDeepResearchDownloadButtonI18n(button, dict, currentLang);
+        applyDeepResearchDownloadButtonI18n(downloadButton, dict, currentLang);
+        applyDeepResearchSaveReportButtonI18n(saveReportButton, dict, currentLang);
       };
 
       onChanged.addListener(handler);
@@ -276,7 +425,9 @@ export async function injectDownloadButton(): Promise<void> {
       };
 
       const observer = new MutationObserver(() => {
-        if (!document.contains(button)) {
+        const downloadDetached = !document.contains(downloadButton);
+        const saveReportDetached = !document.contains(saveReportButton);
+        if (downloadDetached && saveReportDetached) {
           cleanup();
           observer.disconnect();
         }
@@ -296,8 +447,8 @@ export async function injectDownloadButton(): Promise<void> {
       );
     }
 
-    console.log('[Gemini Voyager] Deep Research download button injected successfully');
+    console.log('[Gemini Voyager] Deep Research menu buttons injected successfully');
   } catch (error) {
-    console.error('[Gemini Voyager] Error injecting download button:', error);
+    console.error('[Gemini Voyager] Error injecting Deep Research menu buttons:', error);
   }
 }

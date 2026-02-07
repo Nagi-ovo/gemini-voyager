@@ -883,6 +883,14 @@
     "message": "将 Thinking 内容导出为 Markdown 文件",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchSaveReport": {
+    "message": "保存报告",
+    "description": "Deep Research save report button text"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "将完整报告导出为 JSON、Markdown、PDF 或图片",
+    "description": "Deep Research save report button tooltip"
+  },
   "folder_uncategorized": {
     "message": "未分类",
     "description": "根目录下未分类对话的标签"

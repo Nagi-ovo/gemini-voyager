@@ -36,6 +36,8 @@ export enum ExportFormat {
   IMAGE = 'image',
 }
 
+export type ExportLayout = 'conversation' | 'document';
+
 /**
  * Export format labels for UI
  */
@@ -52,6 +54,7 @@ export interface ExportFormatInfo {
  */
 export interface ExportOptions {
   format: ExportFormat;
+  layout?: ExportLayout;
   includeMetadata?: boolean;
   includeStarred?: boolean;
   filename?: string;

@@ -9,6 +9,14 @@ import { toBlob } from 'html-to-image';
 import type { ChatTurn, ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
 
+export interface RenderableDocumentContent {
+  title: string;
+  url: string;
+  exportedAt: string;
+  markdown: string;
+  html: string;
+}
+
 export class ImageExportService {
   static async export(
     turns: ChatTurn[],
@@ -28,6 +36,43 @@ export class ImageExportService {
       const target =
         (container.querySelector('.gv-image-export-doc') as HTMLElement | null) || container;
 
+      const blob = await toBlob(target, {
+        cacheBust: true,
+        pixelRatio: 1.2,
+        backgroundColor: '#ffffff',
+        skipFonts: true,
+      });
+
+      if (!blob) {
+        throw new Error('Image render failed');
+      }
+
+      this.downloadBlob(blob, filename);
+    } finally {
+      try {
+        container.remove();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  static async exportDocument(
+    content: RenderableDocumentContent,
+    options: { filename: string },
+  ): Promise<void> {
+    const filename = options.filename.toLowerCase().endsWith('.png')
+      ? options.filename
+      : `${options.filename}.png`;
+
+    const container = this.createDocumentRenderContainer(content);
+    document.body.appendChild(container);
+
+    try {
+      await this.inlineImages(container);
+
+      const target =
+        (container.querySelector('.gv-image-export-doc') as HTMLElement | null) || container;
       const blob = await toBlob(target, {
         cacheBust: true,
         pixelRatio: 1.2,
@@ -234,6 +279,118 @@ export class ImageExportService {
     const doc = document.createElement('div');
     doc.className = 'gv-image-export-doc';
     doc.innerHTML = `${headerHtml}${turnsHtml}${footerHtml}`;
+
+    outer.appendChild(style);
+    outer.appendChild(doc);
+    return outer;
+  }
+
+  private static createDocumentRenderContainer(content: RenderableDocumentContent): HTMLElement {
+    const outer = document.createElement('div');
+    outer.className = 'gv-image-export-container';
+    Object.assign(outer.style, {
+      position: 'fixed',
+      left: '-10000px',
+      top: '0',
+      width: '620px',
+      background: '#ffffff',
+      color: '#111827',
+      zIndex: '-1',
+      pointerEvents: 'none',
+    } as Partial<CSSStyleDeclaration>);
+
+    const date = this.formatDate(content.exportedAt);
+    const bodyHtml = content.html.trim() || this.formatPlainTextAsHtml(content.markdown);
+    const headerHtml = `
+      <header class="gv-image-export-header">
+        <h1 class="gv-image-export-title">${this.escapeHTML(content.title || 'Deep Research Report')}</h1>
+        <div class="gv-image-export-meta">
+          <div>${this.escapeHTML(date)}</div>
+          <div><a href="${this.escapeAttr(content.url)}">${this.escapeHTML(content.url)}</a></div>
+        </div>
+      </header>
+    `;
+
+    const footerHtml = `
+      <footer class="gv-image-export-footer">
+        <div>Exported from Gemini Voyager</div>
+        <div>Generated on ${this.escapeHTML(date)}</div>
+      </footer>
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      .gv-image-export-doc {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 20px;
+        line-height: 1.9;
+        padding: 26px;
+      }
+
+      .gv-image-export-header {
+        margin-bottom: 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(0,0,0,0.12);
+      }
+
+      .gv-image-export-title {
+        margin: 0;
+        font-size: 50px;
+        line-height: 1.2;
+        color: #111827;
+        word-break: break-word;
+      }
+
+      .gv-image-export-meta {
+        margin-top: 10px;
+        color: #6b7280;
+        font-size: 18px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .gv-image-export-report-content {
+        margin: 18px 0 24px;
+        color: #1a1a1a;
+        font-size: 20px;
+      }
+
+      .gv-image-export-report-content p {
+        margin: 12px 0;
+      }
+
+      .gv-image-export-report-content img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 12px 0;
+      }
+
+      .gv-image-export-report-content pre {
+        background: rgba(0,0,0,0.05);
+        padding: 14px 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 18px;
+        line-height: 1.8;
+      }
+
+      .gv-image-export-footer {
+        margin-top: 24px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(0,0,0,0.12);
+        color: #6b7280;
+        font-size: 16px;
+        display: grid;
+        gap: 8px;
+      }
+    `;
+
+    const doc = document.createElement('div');
+    doc.className = 'gv-image-export-doc';
+    doc.innerHTML = `${headerHtml}<main class="gv-image-export-report-content">${bodyHtml}</main>${footerHtml}`;
 
     outer.appendChild(style);
     outer.appendChild(doc);

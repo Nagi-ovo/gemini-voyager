@@ -903,6 +903,14 @@
     "message": "Télécharger le contenu de la réflexion en Markdown",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchSaveReport": {
+    "message": "Enregistrer le rapport",
+    "description": "Deep Research save report button text"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "Enregistrer le rapport complet en JSON, Markdown, PDF ou image",
+    "description": "Deep Research save report button tooltip"
+  },
   "folder_uncategorized": {
     "message": "Non classé",
     "description": "Label for root-level conversations not in any folder"

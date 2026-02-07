@@ -863,6 +863,14 @@
     "message": "將 Thinking 內容匯出為 Markdown 檔案",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchSaveReport": {
+    "message": "儲存報告",
+    "description": "Deep Research save report button text"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "將完整報告匯出為 JSON、Markdown、PDF 或圖片",
+    "description": "Deep Research save report button tooltip"
+  },
   "folder_uncategorized": {
     "message": "未分類",
     "description": "根目錄下未分類對話的標籤"

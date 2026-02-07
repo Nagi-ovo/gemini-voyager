@@ -903,6 +903,14 @@
     "message": "思考内容をMarkdown形式でダウンロード",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchSaveReport": {
+    "message": "レポートを保存",
+    "description": "Deep Research save report button text"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "完全なレポートを JSON、Markdown、PDF、または画像として保存",
+    "description": "Deep Research save report button tooltip"
+  },
   "folder_uncategorized": {
     "message": "未分類",
     "description": "Label for root-level conversations not in any folder"
