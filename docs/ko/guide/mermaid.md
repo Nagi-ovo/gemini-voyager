@@ -29,6 +29,14 @@ Gemini가 Mermaid 코드 블록(플로우차트, 시퀀스 다이어그램, 간�
 - **⊙**: 보기 초기화
 - **✕ / ESC**: 전체 화면 닫기
 
+## 호환성 및 문제 해결
+
+::: warning 안내
+
+- **Firefox 제한**: 환경 제한으로 인해 Firefox는 9.2.2 버전을 사용하며, **Timeline**, **Sankey** 등 최신 기능은 지원하지 않습니다.
+- **구문 오류**: 렌더링 실패는 주로 Gemini가 생성한 코드의 구문 오류 때문입니다. 현재 Bad Case를 수집 중이며, 향후 패치를 통해 일반적인 생성 오류를 자동 수정할 예정입니다.
+  :::
+
 <div align="center">
   <img src="/assets/mermaid-preview.png" alt="Mermaid 다이어그램 렌더링" style="max-width: 100%; border-radius: 8px;"/>
 </div>
