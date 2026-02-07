@@ -409,17 +409,19 @@ function formatFilename(): string {
 
 async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, string>>> {
   try {
-    const [enRaw, zhRaw, zhTWRaw, jaRaw, frRaw, esRaw, ptRaw, arRaw, ruRaw] = await Promise.all([
-      import(/* @vite-ignore */ '../../../locales/en/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/zh_TW/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/ja/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/fr/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/es/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/pt/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/ar/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/ru/messages.json'),
-    ]);
+    const [enRaw, zhRaw, zhTWRaw, jaRaw, frRaw, esRaw, ptRaw, arRaw, ruRaw, koRaw] =
+      await Promise.all([
+        import(/* @vite-ignore */ '../../../locales/en/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/zh_TW/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ja/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/fr/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/es/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/pt/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ar/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ru/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ko/messages.json'),
+      ]);
 
     return {
       en: extractMessageDictionary(enRaw),
@@ -431,9 +433,21 @@ async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, st
       pt: extractMessageDictionary(ptRaw),
       ar: extractMessageDictionary(arRaw),
       ru: extractMessageDictionary(ruRaw),
+      ko: extractMessageDictionary(koRaw),
     };
   } catch {
-    return { en: {}, zh: {}, zh_TW: {}, ja: {}, fr: {}, es: {}, pt: {}, ar: {}, ru: {} };
+    return {
+      en: {},
+      zh: {},
+      zh_TW: {},
+      ja: {},
+      fr: {},
+      es: {},
+      pt: {},
+      ar: {},
+      ru: {},
+      ko: {},
+    };
   }
 }
 

@@ -25,6 +25,7 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
       pt: { deepResearchDownload: 'Baixar', deepResearchDownloadTooltip: 'Baixar (MD)' },
       ar: { deepResearchDownload: 'تحميل', deepResearchDownloadTooltip: 'تحميل (MD)' },
       ru: { deepResearchDownload: 'Скачать', deepResearchDownloadTooltip: 'Скачать (MD)' },
+      ko: { deepResearchDownload: '다운로드', deepResearchDownloadTooltip: '다운로드 (MD)' },
     };
 
     applyDeepResearchDownloadButtonI18n(button, dict, 'ja');
