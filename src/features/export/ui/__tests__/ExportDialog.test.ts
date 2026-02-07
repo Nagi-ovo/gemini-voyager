@@ -13,14 +13,22 @@ describe('ExportDialog', () => {
 
     const dialog = new ExportDialog();
     dialog.show({
-      onExport: () => {},
-      onCancel: () => {},
+      onExport: () => { },
+      onCancel: () => { },
       translations: {
         title: 'Export Chat',
         selectFormat: 'Select format',
         warning: 'Warning',
+        safariCmdpHint: 'Safari tip',
+        safariMarkdownHint: 'Safari markdown tip',
         cancel: 'Cancel',
         export: 'Export',
+        formatDescriptions: {
+          json: 'JSON format',
+          markdown: 'Markdown format',
+          pdf: 'PDF format',
+          image: 'Image format',
+        },
       },
     });
 
@@ -40,14 +48,22 @@ describe('ExportDialog', () => {
   it('does not render warning block when warning is empty', () => {
     const dialog = new ExportDialog();
     dialog.show({
-      onExport: () => {},
-      onCancel: () => {},
+      onExport: () => { },
+      onCancel: () => { },
       translations: {
         title: 'Export',
         selectFormat: 'Select format',
         warning: '',
+        safariCmdpHint: 'Safari tip',
+        safariMarkdownHint: 'Safari markdown tip',
         cancel: 'Cancel',
         export: 'Export',
+        formatDescriptions: {
+          json: 'JSON format',
+          markdown: 'Markdown format',
+          pdf: 'PDF format',
+          image: 'Image format',
+        },
       },
     });
 

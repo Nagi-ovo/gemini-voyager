@@ -1,9 +1,50 @@
-import mermaid from 'mermaid';
+/**
+ * Lazily loaded Mermaid instance.
+ * Mermaid is dynamically imported to reduce initial content script bundle size.
+ * The library (~1 MB) is only loaded when a Mermaid code block is actually detected.
+ */
+let mermaidInstance: Awaited<typeof import('mermaid')>['default'] | null = null;
+let mermaidLoadFailed = false;
+
+/**
+ * Reset internal loader state. Only for testing.
+ * @internal
+ */
+export const _resetMermaidLoader = () => {
+  mermaidInstance = null;
+  mermaidLoadFailed = false;
+};
+
+/**
+ * Dynamically load the Mermaid library.
+ * Returns the mermaid default export, or null if loading fails.
+ * Once loaded (or failed), the result is cached.
+ */
+/**
+ * @internal Exported for testing
+ */
+export const loadMermaid = async (): Promise<typeof mermaidInstance> => {
+  if (mermaidInstance) return mermaidInstance;
+  if (mermaidLoadFailed) return null;
+
+  try {
+    const mod = await import('mermaid');
+    mermaidInstance = mod.default;
+    return mermaidInstance;
+  } catch (error) {
+    mermaidLoadFailed = true;
+    console.error('[Gemini Voyager] Failed to load Mermaid library:', error);
+    return null;
+  }
+};
 
 /**
  * Initialize Mermaid configuration
  */
-const initMermaid = () => {
+const initMermaid = async (): Promise<boolean> => {
+  const mermaid = await loadMermaid();
+  if (!mermaid) return false;
+
   const isDarkMode =
     document.body.classList.contains('dark-theme') ||
     document.body.getAttribute('data-theme') === 'dark' ||
@@ -17,18 +58,25 @@ const initMermaid = () => {
     fontFamily: 'Google Sans, Roboto, sans-serif',
     logLevel: 5, // 5 = fatal, only log fatal errors (v9.x uses numbers)
   });
+
+  return true;
 };
 
 /**
  * Check if a code block contains Mermaid syntax and appears complete enough to render
+ * @internal Exported for testing
  */
-const isMermaidCode = (code: string): boolean => {
+export const isMermaidCode = (code: string): boolean => {
   const codeTrimmed = code.trim();
 
   // Minimum length to avoid parsing incomplete/streaming content
   if (codeTrimmed.length < 50) return false;
 
+  // Keywords aligned with mermaid's own detector regexes.
+  // Order matters: longer/more-specific prefixes should come before shorter ones
+  // so that e.g. "flowchart-elk" isn't matched by "flowchart" and missed.
   const keywords = [
+    // Core diagram types (v9+)
     'graph',
     'flowchart',
     'sequenceDiagram',
@@ -42,9 +90,29 @@ const isMermaidCode = (code: string): boolean => {
     'mindmap',
     'timeline',
     'zenuml',
-    'sankey-beta',
     'quadrantChart',
     'requirementDiagram',
+    'requirement', // v11: requirement(Diagram)? — shorter form
+    'sankey-beta',
+    'sankey', // v11: sankey(-beta)?
+    // C4 diagrams (v9+, often overlooked)
+    'C4Context',
+    'C4Container',
+    'C4Component',
+    'C4Dynamic',
+    'C4Deployment',
+    // New diagram types (v10+/v11+, Chrome/Safari)
+    'xychart-beta',
+    'xychart', // v11: xychart(-beta)?
+    'block-beta',
+    'block', // v11: block(-beta)?
+    'packet-beta',
+    'packet', // v11: packet(-beta)?
+    'architecture-beta',
+    'architecture', // v11: architecture(-beta)?
+    'kanban',
+    'radar-beta', // v11
+    'treemap', // v11
   ];
 
   const startsWithKeyword =
@@ -84,6 +152,7 @@ const createStyles = () => {
       right: 8px;
       z-index: 10;
       display: flex;
+      align-items: center; /* Center items vertically */
       gap: 4px;
       background: var(--gemini-surface-container, rgba(0,0,0,0.05));
       border-radius: 8px;
@@ -375,7 +444,10 @@ const openFullscreen = (svgHtml: string) => {
  * - \u200B (Zero-width Space)
  * - \u3000 (Ideographic Space - CJK full-width space)
  */
-const normalizeWhitespace = (code: string): string => {
+/**
+ * @internal Exported for testing
+ */
+export const normalizeWhitespace = (code: string): string => {
   return (
     code
       // Replace various special space characters with standard space
@@ -399,6 +471,14 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
   try {
     const codeBlockHost = codeBlock.closest('code-block') as HTMLElement;
     if (!codeBlockHost) {
+      codeBlock.dataset.mermaidProcessing = 'false';
+      return;
+    }
+
+    // Ensure Mermaid is loaded before rendering
+    const mermaid = await loadMermaid();
+    if (!mermaid) {
+      // Mermaid failed to load — gracefully degrade by showing raw code
       codeBlock.dataset.mermaidProcessing = 'false';
       return;
     }
@@ -451,6 +531,23 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
       // Toggle buttons
       const toggleContainer = document.createElement('div');
       toggleContainer.className = 'gv-mermaid-toggle';
+
+      // Try to find and move the native copy button to our toolbar
+      // This prevents overlap/covering issues and keeps the UI clean
+      // We look for .buttons container (newer Gemini) or .copy-button class
+      const parentElement = wrapper?.parentElement || codeBlockHost.parentElement;
+      const nativeCopyBtn =
+        parentElement?.querySelector('.buttons') || parentElement?.querySelector('.copy-button');
+
+      // Only move if it looks like the right button (close to the code block)
+      if (nativeCopyBtn) {
+        // Reset positioning that might conflict
+        (nativeCopyBtn as HTMLElement).style.position = 'static';
+        (nativeCopyBtn as HTMLElement).style.top = 'auto';
+        (nativeCopyBtn as HTMLElement).style.right = 'auto';
+        (nativeCopyBtn as HTMLElement).style.marginTop = '0';
+        toggleContainer.appendChild(nativeCopyBtn);
+      }
 
       const diagramBtn = document.createElement('button');
       diagramBtn.textContent = '📊 Diagram';
@@ -572,7 +669,10 @@ const GENERIC_LANGUAGE_LABELS = new Set([
 /**
  * Check if a language label is generic (not a specific programming language)
  */
-const isGenericLanguageLabel = (language: string | null): boolean => {
+/**
+ * @internal Exported for testing
+ */
+export const isGenericLanguageLabel = (language: string | null): boolean => {
   if (!language) return true; // No label = generic
   return GENERIC_LANGUAGE_LABELS.has(language.toLowerCase());
 };
@@ -651,9 +751,14 @@ export const startMermaid = () => {
 /**
  * Initialize Mermaid rendering
  */
-const initializeMermaid = () => {
+const initializeMermaid = async () => {
   createStyles();
-  initMermaid();
+
+  const loaded = await initMermaid();
+  if (!loaded) {
+    console.warn('[Gemini Voyager] Mermaid library failed to load, diagrams will show as code');
+    return;
+  }
 
   processCodeBlocks();
 

@@ -50,18 +50,18 @@ function waitForElement(selector: string, timeoutMs: number = 6000): Promise<Ele
       if (found) {
         try {
           obs.disconnect();
-        } catch {}
+        } catch { }
         resolve(found);
       }
     });
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch {}
+    } catch { }
     if (timeoutMs > 0)
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch {}
+        } catch { }
         resolve(null);
       }, timeoutMs);
   });
@@ -84,7 +84,7 @@ function waitForAnyElement(
         if (found) {
           try {
             obs.disconnect();
-          } catch {}
+          } catch { }
           resolve(found);
           return;
         }
@@ -93,13 +93,13 @@ function waitForAnyElement(
 
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch {}
+    } catch { }
 
     if (timeoutMs > 0)
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch {}
+        } catch { }
         resolve(null);
       }, timeoutMs);
   });
@@ -208,7 +208,7 @@ function ensureTurnId(el: Element, index: number): string {
     id = `u-${index}-${hashString(basis)}`;
     try {
       (asEl.dataset as any).turnId = id;
-    } catch {}
+    } catch { }
   }
   return id;
 }
@@ -237,7 +237,7 @@ function extractAssistantText(el: HTMLElement): string {
       const txt = normalizeText(raw);
       if (txt) return txt;
     }
-  } catch {}
+  } catch { }
 
   // Clone and remove reasoning toggles/labels before reading text (detached fallback)
   const clone = el.cloneNode(true) as HTMLElement;
@@ -267,7 +267,7 @@ function extractAssistantText(el: HTMLElement): string {
       const eln = n as HTMLElement;
       if (shouldDrop(eln)) eln.remove();
     });
-  } catch {}
+  } catch { }
   const text = normalizeText(clone.innerText || clone.textContent || '');
   return text;
 }
@@ -422,17 +422,19 @@ function ensureButtonInjected(container: Element): HTMLButtonElement | null {
 
 async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, string>>> {
   try {
-    const [enRaw, zhRaw, zhTWRaw, jaRaw, frRaw, esRaw, ptRaw, arRaw, ruRaw] = await Promise.all([
-      import(/* @vite-ignore */ '../../../locales/en/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/zh_TW/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/ja/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/fr/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/es/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/pt/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/ar/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/ru/messages.json'),
-    ]);
+    const [enRaw, zhRaw, zhTWRaw, jaRaw, frRaw, esRaw, ptRaw, arRaw, ruRaw, koRaw] =
+      await Promise.all([
+        import(/* @vite-ignore */ '../../../locales/en/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/zh_TW/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ja/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/fr/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/es/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/pt/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ar/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ru/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ko/messages.json'),
+      ]);
 
     return {
       en: extractMessageDictionary(enRaw),
@@ -444,9 +446,21 @@ async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, st
       pt: extractMessageDictionary(ptRaw),
       ar: extractMessageDictionary(arRaw),
       ru: extractMessageDictionary(ruRaw),
+      ko: extractMessageDictionary(koRaw),
     };
   } catch {
-    return { en: {}, zh: {}, zh_TW: {}, ja: {}, fr: {}, es: {}, pt: {}, ar: {}, ru: {} };
+    return {
+      en: {},
+      zh: {},
+      zh_TW: {},
+      ja: {},
+      fr: {},
+      es: {},
+      pt: {},
+      ar: {},
+      ru: {},
+      ko: {},
+    };
   }
 }
 
@@ -579,7 +593,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from Folder Manager:', error);
-    } catch {}
+    } catch { }
   }
 
   // Strategy 1b: Get from Gemini native sidebar via current conversation ID
@@ -592,7 +606,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from native sidebar by conversation id:', error);
-    } catch {}
+    } catch { }
   }
 
   // Strategy 2: Try to get from page title
@@ -623,7 +637,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from sidebar:', error);
-    } catch {}
+    } catch { }
   }
 
   // Strategy 4: URL fallback
@@ -813,7 +827,7 @@ async function performFinalExport(
     cleanupTasks.forEach((fn) => {
       try {
         fn();
-      } catch {}
+      } catch { }
     });
     cleanupTasks.length = 0;
   };
@@ -881,10 +895,10 @@ async function performFinalExport(
     const swallow = (ev: Event) => {
       try {
         ev.preventDefault();
-      } catch {}
+      } catch { }
       try {
         ev.stopPropagation();
-      } catch {}
+      } catch { }
     };
 
     checkbox.addEventListener('click', (ev) => {
@@ -970,10 +984,10 @@ async function performFinalExport(
   const swallow = (ev: Event) => {
     try {
       ev.preventDefault();
-    } catch {}
+    } catch { }
     try {
       ev.stopPropagation();
-    } catch {}
+    } catch { }
   };
 
   selectAllBtn.addEventListener('click', (ev) => {
@@ -1072,7 +1086,7 @@ async function performFinalExport(
       try {
         syncMessages(collectChatPairs());
         updateBottomBar(bar);
-      } catch {}
+      } catch { }
     }, 250);
   };
 
@@ -1080,7 +1094,7 @@ async function performFinalExport(
   try {
     obs.observe(root, { childList: true, subtree: true });
     cleanupTasks.push(() => obs.disconnect());
-  } catch {}
+  } catch { }
 
   // Escape to cancel
   const onKeyDown = (e: KeyboardEvent) => {
@@ -1124,7 +1138,7 @@ function showExportProgressOverlay(t: (key: TranslationKey) => string): () => vo
   return () => {
     try {
       overlay.remove();
-    } catch {}
+    } catch { }
   };
 }
 
@@ -1199,16 +1213,16 @@ export async function startExportButton(): Promise<void> {
   const swallow = (e: Event) => {
     try {
       e.preventDefault();
-    } catch {}
+    } catch { }
     try {
       e.stopPropagation();
-    } catch {}
+    } catch { }
   };
   // Capture low-level press events to avoid parent logo navigation, but do NOT capture 'click'
   ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((type) => {
     try {
       btn.addEventListener(type, swallow, true);
-    } catch {}
+    } catch { }
   });
 
   // i18n setup for tooltip
@@ -1253,7 +1267,7 @@ export async function startExportButton(): Promise<void> {
       },
       { once: true },
     );
-  } catch {}
+  } catch { }
 
   btn.addEventListener('click', (ev) => {
     // Stop parent navigation, but allow this handler to run
@@ -1264,7 +1278,7 @@ export async function startExportButton(): Promise<void> {
     } catch (err) {
       try {
         console.error('Gemini Voyager export failed', err);
-      } catch {}
+      } catch { }
     }
   });
 }
@@ -1295,8 +1309,16 @@ async function showExportDialog(
       title: t('export_dialog_title'),
       selectFormat: t('export_dialog_select'),
       warning: t('export_dialog_warning'),
+      safariCmdpHint: t('export_dialog_safari_cmdp_hint'),
+      safariMarkdownHint: t('export_dialog_safari_markdown_hint'),
       cancel: t('pm_cancel'),
       export: t('pm_export'),
+      formatDescriptions: {
+        json: t('export_format_json_description'),
+        markdown: t('export_format_markdown_description'),
+        pdf: t('export_format_pdf_description'),
+        image: t('export_format_image_description'),
+      },
     },
   });
 }

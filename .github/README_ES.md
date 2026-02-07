@@ -44,7 +44,8 @@
   <a href="./README_FR.md">Français</a> •
   <a href="./README_PT.md">Português</a> •
   <a href="./README_RU.md">Русский</a> •
-  <a href="./README_AR.md">العربية</a>
+  <a href="./README_AR.md">العربية</a> •
+  <a href="./README_KO.md">한국어</a>
 </p>
 
 <p align="center">

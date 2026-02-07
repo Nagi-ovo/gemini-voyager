@@ -467,6 +467,10 @@
     "message": "⚠️ 由于 Gemini 的久远消息会惰性加载，请在导出前通过时间线跳转到该对话的第一条消息，否则导出内容可能不完整。",
     "description": "关于惰性加载影响导出完整性的警告"
   },
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Safari 提示：请先点击下方“导出”按钮，稍等片刻，再按 ⌘P 选择“保存为 PDF”。",
+    "description": "Safari 下 PDF 导出的提示"
+  },
   "editInputWidth": {
     "message": "编辑输入框宽度",
     "description": "编辑输入框宽度调整标签"
@@ -819,6 +823,22 @@
     "message": "同步中...",
     "description": "同步进行中消息"
   },
+  "uploadInProgress": {
+    "message": "Uploading...",
+    "description": "Upload in progress message"
+  },
+  "uploadSuccess": {
+    "message": "✓ Uploaded successfully",
+    "description": "Upload success message"
+  },
+  "downloadInProgress": {
+    "message": "Downloading...",
+    "description": "Download in progress message"
+  },
+  "downloadMergeSuccess": {
+    "message": "✓ Downloaded and merged",
+    "description": "Download and merge success message"
+  },
   "syncUpload": {
     "message": "上传到云端",
     "description": "上传到云端按钮"
@@ -882,14 +902,6 @@
   "deepResearchDownloadTooltip": {
     "message": "将 Thinking 内容导出为 Markdown 文件",
     "description": "Deep Research download button tooltip"
-  },
-  "deepResearchSaveReport": {
-    "message": "保存报告",
-    "description": "Deep Research save report button text"
-  },
-  "deepResearchSaveReportTooltip": {
-    "message": "将完整报告导出为 JSON、Markdown、PDF 或图片",
-    "description": "Deep Research save report button tooltip"
   },
   "folder_uncategorized": {
     "message": "未分类",

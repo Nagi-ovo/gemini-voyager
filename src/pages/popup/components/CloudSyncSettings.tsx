@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import type { SyncMode, SyncPlatform, SyncState } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
+import { isSafari } from '@/core/utils/browser';
 
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
@@ -15,6 +16,8 @@ import { mergeFolderData, mergePrompts, mergeStarredMessages } from '../../../ut
  */
 export function CloudSyncSettings() {
   const { t } = useLanguage();
+  const isSafariBrowser = isSafari();
+
   const [syncState, setSyncState] = useState<SyncState>(DEFAULT_SYNC_STATE);
   const [statusMessage, setStatusMessage] = useState<{ text: string; kind: 'ok' | 'err' } | null>(
     null,
@@ -427,6 +430,9 @@ export function CloudSyncSettings() {
       return () => clearTimeout(timer);
     }
   }, [statusMessage]);
+
+  // Don't render on Safari
+  if (isSafariBrowser) return null;
 
   return (
     <Card className="p-4 transition-shadow hover:shadow-lg">

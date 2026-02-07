@@ -172,25 +172,41 @@ export class GoogleDriveSyncService {
       await this.uploadFileWithRetry(token, foldersFileIdToUse, folderPayload);
       console.log(`[GoogleDriveSyncService] ${platform} folders uploaded successfully`);
 
-      // Only upload prompts and starred for Gemini platform
-      if (platform === 'gemini') {
-        // Upload prompts file
+      // Upload prompts file (shared between Gemini and AI Studio)
+      if (prompts.length > 0) {
         await this.ensureFileId(token, PROMPTS_FILE_NAME, 'prompts');
         await this.uploadFileWithRetry(token, this.promptsFileId!, promptPayload);
         console.log('[GoogleDriveSyncService] Prompts uploaded successfully');
+      }
 
-        // Upload starred messages file (if provided)
-        if (starred) {
-          const starredPayload: StarredExportPayload = {
-            format: 'gemini-voyager.starred.v1',
-            exportedAt: now.toISOString(),
-            version: EXTENSION_VERSION,
-            data: starred,
-          };
-          await this.ensureFileId(token, STARRED_FILE_NAME, 'starred');
-          await this.uploadFileWithRetry(token, this.starredFileId!, starredPayload);
-          console.log('[GoogleDriveSyncService] Starred messages uploaded successfully');
-        }
+      // Upload starred messages file (only for Gemini platform)
+      if (platform === 'gemini' && starred) {
+        // Truncate content in starred messages to save storage space
+        const MAX_CONTENT_LENGTH = 60;
+        const truncatedStarred: StarredMessagesDataSync = {
+          messages: Object.fromEntries(
+            Object.entries(starred.messages).map(([convId, messages]) => [
+              convId,
+              messages.map((msg) => ({
+                ...msg,
+                content:
+                  msg.content.length > MAX_CONTENT_LENGTH
+                    ? msg.content.slice(0, MAX_CONTENT_LENGTH) + '...'
+                    : msg.content,
+              })),
+            ]),
+          ),
+        };
+
+        const starredPayload: StarredExportPayload = {
+          format: 'gemini-voyager.starred.v1',
+          exportedAt: now.toISOString(),
+          version: EXTENSION_VERSION,
+          data: truncatedStarred,
+        };
+        await this.ensureFileId(token, STARRED_FILE_NAME, 'starred');
+        await this.uploadFileWithRetry(token, this.starredFileId!, starredPayload);
+        console.log('[GoogleDriveSyncService] Starred messages uploaded successfully');
       }
 
       const uploadTime = Date.now();
@@ -254,19 +270,17 @@ export class GoogleDriveSyncService {
         console.log(`[GoogleDriveSyncService] ${platform} folders downloaded`);
       }
 
-      // Only download prompts and starred for Gemini platform
+      // Download prompts file (shared between Gemini and AI Studio)
       let prompts: PromptExportPayload | null = null;
+      const promptsFileId = await this.findFile(token, PROMPTS_FILE_NAME);
+      if (promptsFileId) {
+        prompts = await this.downloadFileWithRetry(token, promptsFileId);
+        console.log('[GoogleDriveSyncService] Prompts downloaded');
+      }
+
+      // Download starred messages file (only for Gemini platform)
       let starred: StarredExportPayload | null = null;
-
       if (platform === 'gemini') {
-        // Download prompts file
-        const promptsFileId = await this.findFile(token, PROMPTS_FILE_NAME);
-        if (promptsFileId) {
-          prompts = await this.downloadFileWithRetry(token, promptsFileId);
-          console.log('[GoogleDriveSyncService] Prompts downloaded');
-        }
-
-        // Download starred messages file
         const starredFileId = await this.findFile(token, STARRED_FILE_NAME);
         if (starredFileId) {
           starred = await this.downloadFileWithRetry(token, starredFileId);
@@ -509,12 +523,18 @@ export class GoogleDriveSyncService {
 
   private async getFileParents(token: string, fileId: string): Promise<string[] | null> {
     try {
-      const response = await fetch(`${DRIVE_API_BASE}/files/${fileId}?fields=parents`, {
+      // Also check if file is trashed - if so, treat as non-existent
+      const response = await fetch(`${DRIVE_API_BASE}/files/${fileId}?fields=parents,trashed`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.status === 404) return null;
       if (!response.ok) return null;
       const data = await response.json();
+      // If file is in trash, treat as non-existent so we create a new one
+      if (data.trashed) {
+        console.log(`[GoogleDriveSyncService] File ${fileId} is in trash, will create new one`);
+        return null;
+      }
       return data.parents || [];
     } catch {
       return null;

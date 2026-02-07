@@ -3,6 +3,7 @@ import browser from 'webextension-polyfill';
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
+import { isSafari } from '@/core/utils/browser';
 import { createTranslator, initI18n } from '@/utils/i18n';
 
 import type { ConversationReference, DragData, Folder, FolderData } from './types';
@@ -371,31 +372,34 @@ export class AIStudioFolderManager {
 
     // For AI Studio, hide import/export for now to simplify UI
 
-    // Cloud upload button
-    const cloudUploadButton = document.createElement('button');
-    cloudUploadButton.className = 'gv-folder-action-btn';
-    cloudUploadButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q25-92 100-149t170-57q117 0 198.5 81.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H520q-33 0-56.5-23.5T440-240v-206l-64 62-56-56 160-160 160 160-56 56-64-62v206h220q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-83-58.5-141.5T480-720q-83 0-141.5 58.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h100v80H260Zm220-280Z"/></svg>`;
-    cloudUploadButton.title = this.t('folder_cloud_upload');
-    cloudUploadButton.addEventListener('click', () => this.handleCloudUpload());
-    // Add dynamic tooltip on mouseenter
-    cloudUploadButton.addEventListener('mouseenter', async () => {
-      const tooltip = await this.getCloudUploadTooltip();
-      cloudUploadButton.title = tooltip;
-    });
-    actions.appendChild(cloudUploadButton);
+    // Cloud buttons (Skip on Safari as it doesn't support cloud sync yet)
+    if (!isSafari()) {
+      // Cloud upload button
+      const cloudUploadButton = document.createElement('button');
+      cloudUploadButton.className = 'gv-folder-action-btn';
+      cloudUploadButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q25-92 100-149t170-57q117 0 198.5 81.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H520q-33 0-56.5-23.5T440-240v-206l-64 62-56-56 160-160 160 160-56 56-64-62v206h220q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-83-58.5-141.5T480-720q-83 0-141.5 58.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h100v80H260Zm220-280Z"/></svg>`;
+      cloudUploadButton.title = this.t('folder_cloud_upload');
+      cloudUploadButton.addEventListener('click', () => this.handleCloudUpload());
+      // Add dynamic tooltip on mouseenter
+      cloudUploadButton.addEventListener('mouseenter', async () => {
+        const tooltip = await this.getCloudUploadTooltip();
+        cloudUploadButton.title = tooltip;
+      });
+      actions.appendChild(cloudUploadButton);
 
-    // Cloud sync button
-    const cloudSyncButton = document.createElement('button');
-    cloudSyncButton.className = 'gv-folder-action-btn';
-    cloudSyncButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"/></svg>`;
-    cloudSyncButton.title = this.t('folder_cloud_sync');
-    cloudSyncButton.addEventListener('click', () => this.handleCloudSync());
-    // Add dynamic tooltip on mouseenter
-    cloudSyncButton.addEventListener('mouseenter', async () => {
-      const tooltip = await this.getCloudSyncTooltip();
-      cloudSyncButton.title = tooltip;
-    });
-    actions.appendChild(cloudSyncButton);
+      // Cloud sync button
+      const cloudSyncButton = document.createElement('button');
+      cloudSyncButton.className = 'gv-folder-action-btn';
+      cloudSyncButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"/></svg>`;
+      cloudSyncButton.title = this.t('folder_cloud_sync');
+      cloudSyncButton.addEventListener('click', () => this.handleCloudSync());
+      // Add dynamic tooltip on mouseenter
+      cloudSyncButton.addEventListener('mouseenter', async () => {
+        const tooltip = await this.getCloudSyncTooltip();
+        cloudSyncButton.title = tooltip;
+      });
+      actions.appendChild(cloudSyncButton);
+    }
 
     // Add folder
     const addBtn = document.createElement('button');
@@ -2034,23 +2038,40 @@ export class AIStudioFolderManager {
   }
 
   /**
-   * Handle cloud upload - upload folder data to Google Drive
+   * Handle cloud upload - upload folder data and prompts to Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleSyncNow()
+   * Note: AI Studio uses its own folder file but shares prompts with Gemini
    */
   private async handleCloudUpload(): Promise<void> {
     try {
-      this.showNotification(this.t('syncInProgress'), 'info');
+      this.showNotification(this.t('uploadInProgress'), 'info');
 
       // Get current folder data
       const folders = this.data;
 
+      // Get prompts from storage (shared with Gemini)
+      let prompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          prompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[AIStudioFolderManager] Could not get prompts for upload:', err);
+      }
+
+      console.log(
+        `[AIStudioFolderManager] Uploading - folders: ${folders.folders?.length || 0}, prompts: ${prompts.length}`,
+      );
+
       // Send upload request to background script
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.upload',
-        payload: { folders, prompts: [], platform: 'aistudio' },
+        payload: { folders, prompts, platform: 'aistudio' },
       })) as { ok?: boolean; error?: string } | undefined;
 
       if (response?.ok) {
-        this.showNotification(this.t('syncSuccess'), 'info');
+        this.showNotification(this.t('uploadSuccess'), 'info');
       } else {
         const errorMsg = response?.error || 'Unknown error';
         this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
@@ -2063,18 +2084,27 @@ export class AIStudioFolderManager {
   }
 
   /**
-   * Handle cloud sync - download and merge folder data from Google Drive
+   * Handle cloud sync - download and merge folder data and prompts from Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleDownloadFromDrive()
+   * Note: AI Studio uses its own folder file but shares prompts with Gemini
    */
   private async handleCloudSync(): Promise<void> {
     try {
-      this.showNotification(this.t('syncInProgress'), 'info');
+      this.showNotification(this.t('downloadInProgress'), 'info');
 
       // Send download request to background script
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.download',
         payload: { platform: 'aistudio' },
       })) as
-        | { ok?: boolean; error?: string; data?: { folders?: { data?: FolderData } } }
+        | {
+            ok?: boolean;
+            error?: string;
+            data?: {
+              folders?: { data?: FolderData };
+              prompts?: { items?: any[] };
+            };
+          }
         | undefined;
 
       if (!response?.ok) {
@@ -2088,25 +2118,88 @@ export class AIStudioFolderManager {
         return;
       }
 
-      // Get cloud folder data
+      // Extract cloud data
       const cloudFoldersPayload = response.data?.folders;
+      const cloudPromptsPayload = response.data?.prompts;
       const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
+      const cloudPromptItems = cloudPromptsPayload?.items || [];
 
-      // Merge with local data
+      console.log(
+        `[AIStudioFolderManager] Downloaded - folders: ${cloudFolderData.folders?.length || 0}, prompts: ${cloudPromptItems.length}`,
+      );
+
+      // Get local prompts for merge (shared with Gemini)
+      let localPrompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          localPrompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[AIStudioFolderManager] Could not get local prompts for merge:', err);
+      }
+
+      // Merge folder data
       const localFolders = this.data;
       const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
 
-      // Apply merged data
+      // Merge prompts (simple ID-based merge)
+      const mergedPrompts = this.mergePromptsData(localPrompts, cloudPromptItems);
+
+      console.log(
+        `[AIStudioFolderManager] Merged - folders: ${mergedFolders.folders?.length || 0}, prompts: ${mergedPrompts.length}`,
+      );
+
+      // Apply merged folder data
       this.data = mergedFolders;
       await this.save();
-      this.render();
 
-      this.showNotification(this.t('syncSuccess'), 'info');
+      // Save merged prompts to storage (shared with Gemini)
+      try {
+        await chrome.storage.local.set({
+          gvPromptItems: mergedPrompts,
+        });
+      } catch (err) {
+        console.error('[AIStudioFolderManager] Failed to save merged prompts:', err);
+      }
+
+      this.render();
+      this.showNotification(this.t('downloadMergeSuccess'), 'info');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('[AIStudioFolderManager] Cloud sync failed:', error);
       this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
     }
+  }
+
+  /**
+   * Merge prompts by ID (simple deduplication)
+   */
+  private mergePromptsData(local: any[], cloud: any[]): any[] {
+    const promptMap = new Map<string, any>();
+
+    // Add local prompts first
+    local.forEach((p) => {
+      if (p?.id) promptMap.set(p.id, p);
+    });
+
+    // Add cloud prompts (cloud takes priority for newer items)
+    cloud.forEach((p) => {
+      if (!p?.id) return;
+      const existing = promptMap.get(p.id);
+      if (!existing) {
+        promptMap.set(p.id, p);
+      } else {
+        // Compare timestamps, prefer newer
+        const cloudTime = p.updatedAt || p.createdAt || 0;
+        const localTime = existing.updatedAt || existing.createdAt || 0;
+        if (cloudTime > localTime) {
+          promptMap.set(p.id, p);
+        }
+      }
+    });
+
+    return Array.from(promptMap.values());
   }
 
   /**

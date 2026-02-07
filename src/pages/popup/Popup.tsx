@@ -60,6 +60,7 @@ const normalizePercent = (
   return clampPercent(value, min, max);
 };
 
+const FOLDER_SPACING = { min: 0, max: 16, defaultValue: 2 };
 const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LEGACY_BASELINE_PX };
 const EDIT_PERCENT = { min: 30, max: 100, defaultValue: 60, legacyBaselinePx: LEGACY_BASELINE_PX };
 const SIDEBAR_PERCENT = {
@@ -311,6 +312,19 @@ export default function Popup() {
       },
       [sidebarConfig],
     ),
+  });
+
+  // Folder spacing adjuster
+  const folderSpacingAdjuster = useWidthAdjuster({
+    storageKey: 'gvFolderSpacing',
+    defaultValue: FOLDER_SPACING.defaultValue,
+    normalize: (v) => clampNumber(v, FOLDER_SPACING.min, FOLDER_SPACING.max),
+    onApply: useCallback((spacing: number) => {
+      const clamped = clampNumber(spacing, FOLDER_SPACING.min, FOLDER_SPACING.max);
+      try {
+        chrome.storage?.sync?.set({ gvFolderSpacing: clamped });
+      } catch {}
+    }, []),
   });
 
   useEffect(() => {
@@ -892,6 +906,19 @@ export default function Popup() {
             </div>
           </CardContent>
         </Card>
+        {/* Folder Spacing */}
+        <WidthSlider
+          label={t('folderSpacing')}
+          value={folderSpacingAdjuster.width}
+          min={FOLDER_SPACING.min}
+          max={FOLDER_SPACING.max}
+          step={1}
+          narrowLabel={t('folderSpacingCompact')}
+          wideLabel={t('folderSpacingSpacious')}
+          valueFormatter={(v) => `${v}px`}
+          onChange={folderSpacingAdjuster.handleChange}
+          onChangeComplete={folderSpacingAdjuster.handleChangeComplete}
+        />
         {/* Chat Width */}
         <WidthSlider
           label={t('chatWidth')}

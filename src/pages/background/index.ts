@@ -260,7 +260,17 @@ class StarredMessagesManager {
       const exists = data.messages[message.conversationId].some((m) => m.turnId === message.turnId);
 
       if (!exists) {
-        data.messages[message.conversationId].push(message);
+        // Truncate content to save storage space
+        // Popup is ~360px wide with line-clamp-2, showing ~50-60 chars max
+        const MAX_CONTENT_LENGTH = 60;
+        const truncatedMessage: StarredMessage = {
+          ...message,
+          content:
+            message.content.length > MAX_CONTENT_LENGTH
+              ? message.content.slice(0, MAX_CONTENT_LENGTH) + '...'
+              : message.content,
+        };
+        data.messages[message.conversationId].push(truncatedMessage);
         await this.saveToStorage(data);
         return true;
       }
@@ -309,7 +319,7 @@ class StarredMessagesManager {
 
 const starredMessagesManager = new StarredMessagesManager();
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
       // Handle starred messages operations
@@ -426,6 +436,77 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           // Fallback: If openPopup fails, user can click the extension icon
           console.warn('[GV] Failed to open popup programmatically:', e);
           sendResponse({ ok: false, error: String(e?.message || e) });
+        }
+        return;
+      }
+
+      // Handle image fetch via page context (for Firefox/Safari cookie partitioning)
+      // Uses chrome.scripting.executeScript in MAIN world so the page's own fetch is used,
+      // which has access to the correct Google authentication cookies.
+      if (message?.type === 'gv.fetchImageViaPage') {
+        const url = String(message.url || '');
+        const tabId = sender?.tab?.id;
+        if (!tabId || !/^https?:\/\//i.test(url)) {
+          sendResponse({ ok: false, error: 'invalid' });
+          return;
+        }
+        if (!chrome.scripting?.executeScript) {
+          sendResponse({ ok: false, error: 'scripting_api_unavailable' });
+          return;
+        }
+        try {
+          const results = await chrome.scripting.executeScript({
+            target: { tabId },
+            world: 'MAIN' as chrome.scripting.ExecutionWorld,
+            func: (imageUrl: string) => {
+              return fetch(imageUrl, { credentials: 'include' })
+                .then((resp) => {
+                  if (!resp.ok) return null;
+                  return resp.blob();
+                })
+                .then((blob) => {
+                  if (!blob) return null;
+                  return new Promise<{
+                    contentType: string;
+                    base64: string;
+                  } | null>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const dataUrl = String(reader.result || '');
+                      const commaIdx = dataUrl.indexOf(',');
+                      if (commaIdx < 0) {
+                        resolve(null);
+                        return;
+                      }
+                      resolve({
+                        contentType: blob.type || 'application/octet-stream',
+                        base64: dataUrl.substring(commaIdx + 1),
+                      });
+                    };
+                    reader.onerror = () => resolve(null);
+                    reader.readAsDataURL(blob);
+                  });
+                })
+                .catch(() => null);
+            },
+            args: [url],
+          });
+          const result = results?.[0]?.result as {
+            contentType: string;
+            base64: string;
+          } | null;
+          if (result?.base64) {
+            sendResponse({
+              ok: true,
+              contentType: result.contentType,
+              base64: result.base64,
+            });
+          } else {
+            sendResponse({ ok: false, error: 'page_fetch_failed' });
+          }
+        } catch (e: unknown) {
+          const errMsg = e instanceof Error ? e.message : String(e);
+          sendResponse({ ok: false, error: errMsg });
         }
         return;
       }

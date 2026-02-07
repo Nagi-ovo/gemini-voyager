@@ -427,25 +427,25 @@
     "message": "⚠️ 由於 Gemini 的久遠訊息會延遲載入，請在匯出前透過時間軸跳轉到該對話的第一則訊息，否則匯出內容可能不完整。",
     "description": "關於延遲載入影響匯出完整性的警告"
   },
-  "export_select_mode_select_all": {
-    "message": "全選",
-    "description": "選擇模式全選開關"
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Safari 提示：請先點選下方「匯出」按鈕，稍等片刻，再按 ⌘P 選擇「儲存為 PDF」。",
+    "description": "Safari 下 PDF 匯出的提示"
   },
-  "export_select_mode_count": {
-    "message": "已選 {count} 則",
-    "description": "選擇模式已選訊息數量"
+  "export_dialog_safari_markdown_hint": {
+    "message": "Safari 限制：無法提取圖片，建議使用 PDF 匯出。",
+    "description": "關於 Safari Markdown 匯出無法提取圖片的警告"
   },
-  "export_select_mode_toggle": {
-    "message": "選擇訊息",
-    "description": "選擇模式單則訊息選擇按鈕提示"
+  "export_format_json_description": {
+    "message": "開發者使用的機器可讀格式",
+    "description": "JSON 匯出格式描述"
   },
-  "export_select_mode_select_below": {
-    "message": "點擊全選以下訊息",
-    "description": "選擇模式左上角選取以下訊息按鈕"
+  "export_format_markdown_description": {
+    "message": "清晰便攜的文字格式（推薦）",
+    "description": "Markdown 匯出格式描述"
   },
-  "export_select_mode_empty": {
-    "message": "請至少選擇一則訊息後再匯出。",
-    "description": "選擇模式未選擇任何訊息時的提示"
+  "export_format_pdf_description": {
+    "message": "適合列印的格式（透過另存為 PDF）",
+    "description": "PDF 匯出格式描述"
   },
   "editInputWidth": {
     "message": "編輯輸入框寬度",
@@ -799,6 +799,22 @@
     "message": "同步中...",
     "description": "同步進行中訊息"
   },
+  "uploadInProgress": {
+    "message": "上傳中...",
+    "description": "上傳進行中訊息"
+  },
+  "uploadSuccess": {
+    "message": "✓ 上傳成功",
+    "description": "上傳成功訊息"
+  },
+  "downloadInProgress": {
+    "message": "下載中...",
+    "description": "下載進行中訊息"
+  },
+  "downloadMergeSuccess": {
+    "message": "✓ 下載合併成功",
+    "description": "下載合併成功訊息"
+  },
   "syncUpload": {
     "message": "上傳到雲端",
     "description": "上傳到雲端按鈕"
@@ -862,14 +878,6 @@
   "deepResearchDownloadTooltip": {
     "message": "將 Thinking 內容匯出為 Markdown 檔案",
     "description": "Deep Research download button tooltip"
-  },
-  "deepResearchSaveReport": {
-    "message": "儲存報告",
-    "description": "Deep Research save report button text"
-  },
-  "deepResearchSaveReportTooltip": {
-    "message": "將完整報告匯出為 JSON、Markdown、PDF 或圖片",
-    "description": "Deep Research save report button tooltip"
   },
   "folder_uncategorized": {
     "message": "未分類",
@@ -1122,5 +1130,53 @@
   "sidebarAutoHideHint": {
     "message": "滑鼠離開時自動收起側邊欄，滑鼠進入時展開",
     "description": "側邊欄自動收起功能提示"
+  },
+  "folderSpacing": {
+    "message": "資料夾間距",
+    "description": "資料夾間距調節標籤"
+  },
+  "folderSpacingCompact": {
+    "message": "緊湊",
+    "description": "緊湊資料夾間距標籤"
+  },
+  "folderSpacingSpacious": {
+    "message": "寬鬆",
+    "description": "寬鬆資料夾間距標籤"
+  },
+  "export_select_mode_select_all": {
+    "message": "全選",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "已選擇 {count} 條",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "選擇訊息",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "選擇下方訊息",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "請至少選擇一條訊息進行匯出",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "單張 PNG 圖片，便於分享",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "正在產生圖片...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "儲存報告",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "匯出此研究報告",
+    "description": "Deep Research save report tooltip"
   }
 }

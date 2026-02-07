@@ -14,6 +14,7 @@ import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderManager } from './folder/index';
+import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { startGemsHider } from './gemsHider/index';
 import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';
@@ -28,6 +29,16 @@ import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
 import { startWatermarkRemover } from './watermarkRemover/index';
+
+// Suppress Vite's CSS preload errors in the Chrome extension content script context.
+// Dynamic imports (e.g., mermaid) trigger Vite's __vitePreload helper which tries to
+// create <link> elements with paths like "/assets/foo.css". In a content script, these
+// resolve to the web page origin (e.g., https://gemini.google.com/assets/foo.css)
+// instead of the extension, causing false "Unable to preload CSS" errors.
+// The CSS is already injected via contentStyle.css, so these preloads are unnecessary.
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+});
 
 /**
  * Staggered initialization to prevent "thundering herd" problem when multiple tabs
@@ -144,6 +155,9 @@ async function initializeFeatures(): Promise<void> {
       folderManagerInstance = await startFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
+      startFolderSpacingAdjuster();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
       startChatWidthAdjuster();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
@@ -227,6 +241,9 @@ async function initializeFeatures(): Promise<void> {
     if (location.hostname === 'aistudio.google.com' || location.hostname === 'aistudio.google.cn') {
       startAIStudioFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
+
+      startFolderSpacingAdjuster();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Formula copy support for AI Studio
       startFormulaCopy();

@@ -30,6 +30,7 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
       pt: { deepResearchDownload: 'Baixar', deepResearchDownloadTooltip: 'Baixar (MD)' },
       ar: { deepResearchDownload: 'تحميل', deepResearchDownloadTooltip: 'تحميل (MD)' },
       ru: { deepResearchDownload: 'Скачать', deepResearchDownloadTooltip: 'Скачать (MD)' },
+      ko: { deepResearchDownload: '다운로드', deepResearchDownloadTooltip: '다운로드 (MD)' },
     };
 
     applyDeepResearchDownloadButtonI18n(button, dict, 'ja');
@@ -71,6 +72,10 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
         deepResearchSaveReport: 'Сохранить отчет',
         deepResearchSaveReportTooltip: 'Сохранить отчет',
       },
+      ko: {
+        deepResearchSaveReport: '보고서 저장',
+        deepResearchSaveReportTooltip: '보고서 저장',
+      },
     };
 
     applyDeepResearchSaveReportButtonI18n(button, dict, 'zh');
@@ -91,6 +96,7 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
       pt: { pm_export: 'Exportar', loading: 'Carregando' },
       ar: { pm_export: 'تصدير', loading: 'جارٍ التحميل' },
       ru: { pm_export: 'Экспорт', loading: 'Загрузка' },
+      ko: { pm_export: '내보내기', loading: '로딩 중' },
     };
 
     const t = (key: TranslationKey): string => {

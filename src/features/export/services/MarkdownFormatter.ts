@@ -35,10 +35,10 @@ export class MarkdownFormatter {
   }
 
   /**
-   * Extract image URLs from Markdown (http/https only)
+   * Extract image URLs from Markdown (http/https and blob: URLs)
    */
   static extractImageUrls(markdown: string): string[] {
-    const imgRegex = /!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/g;
+    const imgRegex = /!\[[^\]]*\]\(((?:https?:\/\/|blob:)[^\s)]+)\)/g;
     const out = new Set<string>();
     let m: RegExpExecArray | null;
     while ((m = imgRegex.exec(markdown)) !== null) {
@@ -51,7 +51,7 @@ export class MarkdownFormatter {
    * Rewrite Markdown image URLs using provided mapping (original -> newUrl)
    */
   static rewriteImageUrls(markdown: string, mapping: Map<string, string>): string {
-    const imgRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+    const imgRegex = /!\[([^\]]*)\]\(((?:https?:\/\/|blob:)[^\s)]+)\)/g;
     return markdown.replace(imgRegex, (_all, alt, url) => {
       const next = mapping.get(url);
       return next ? `![${alt}](${next})` : _all;

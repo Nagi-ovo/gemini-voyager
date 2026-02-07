@@ -2,6 +2,8 @@
  * Export Dialog UI
  * Material Design styled format selection dialog
  */
+import { isSafari } from '@/core/utils/browser';
+
 import { ConversationExportService } from '../services/ConversationExportService';
 import type { ExportFormat } from '../types/export';
 
@@ -12,8 +14,11 @@ export interface ExportDialogOptions {
     title: string;
     selectFormat: string;
     warning: string;
+    safariCmdpHint: string;
+    safariMarkdownHint: string;
     cancel: string;
     export: string;
+    formatDescriptions: Record<ExportFormat, string>;
   };
 }
 
@@ -73,7 +78,14 @@ export class ExportDialog {
 
     const formats = ConversationExportService.getAvailableFormats();
     formats.forEach((formatInfo) => {
-      const option = this.createFormatOption(formatInfo);
+      const localizedDescription =
+        options.translations.formatDescriptions[formatInfo.format] || formatInfo.description;
+
+      const option = this.createFormatOption(
+        { ...formatInfo, description: localizedDescription },
+        options.translations.safariCmdpHint,
+        options.translations.safariMarkdownHint,
+      );
       formatsList.appendChild(option);
     });
 
@@ -137,12 +149,16 @@ export class ExportDialog {
   /**
    * Create format option radio button
    */
-  private createFormatOption(formatInfo: {
-    format: ExportFormat;
-    label: string;
-    description: string;
-    recommended?: boolean;
-  }): HTMLElement {
+  private createFormatOption(
+    formatInfo: {
+      format: ExportFormat;
+      label: string;
+      description: string;
+      recommended?: boolean;
+    },
+    safariCmdpHint: string,
+    safariMarkdownHint: string,
+  ): HTMLElement {
     const option = document.createElement('label');
     option.className = 'gv-export-format-option';
 
@@ -178,7 +194,17 @@ export class ExportDialog {
 
     const desc = document.createElement('div');
     desc.className = 'gv-export-format-description';
-    desc.textContent = formatInfo.description;
+    let hintText = formatInfo.description;
+
+    if (isSafari()) {
+      if (formatInfo.format === ('pdf' as ExportFormat)) {
+        hintText = `${formatInfo.description} ${safariCmdpHint}`;
+      } else if (formatInfo.format === ('markdown' as ExportFormat)) {
+        hintText = `${formatInfo.description} ${safariMarkdownHint}`;
+      }
+    }
+
+    desc.textContent = hintText;
 
     content.appendChild(labelDiv);
     content.appendChild(desc);

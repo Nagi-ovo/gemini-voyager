@@ -467,25 +467,25 @@
     "message": "⚠️ Devido ao carregamento lento de mensagens antigas no Gemini, use a linha do tempo para pular para a primeira mensagem da conversa antes de exportar. Caso contrário, a exportação pode ficar incompleta.",
     "description": "Warning about lazy loading affecting export completeness"
   },
-  "export_select_mode_select_all": {
-    "message": "Selecionar tudo",
-    "description": "Selection mode select all toggle"
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Dica Safari: Clique em 'Exportar' abaixo, aguarde um momento, depois pressione ⌘P e escolha 'Salvar como PDF'.",
+    "description": "Safari-specific hint for PDF export"
   },
-  "export_select_mode_count": {
-    "message": "Selecionadas {count}",
-    "description": "Selection mode selected message count"
+  "export_dialog_safari_markdown_hint": {
+    "message": "Limitação do Safari: Imagens não suportadas. Use PDF.",
+    "description": "Warning about image references in Safari markdown export"
   },
-  "export_select_mode_toggle": {
-    "message": "Selecionar mensagem",
-    "description": "Selection mode per-message toggle tooltip"
+  "export_format_json_description": {
+    "message": "Formato legível por máquina para desenvolvedores",
+    "description": "Description for JSON export format"
   },
-  "export_select_mode_select_below": {
-    "message": "Selecionar mensagens abaixo",
-    "description": "Selection mode top-left button to select messages below current line"
+  "export_format_markdown_description": {
+    "message": "Formato de texto limpo e portátil (recomendado)",
+    "description": "Description for Markdown export format"
   },
-  "export_select_mode_empty": {
-    "message": "Selecione pelo menos uma mensagem para exportar.",
-    "description": "Selection mode validation when nothing is selected"
+  "export_format_pdf_description": {
+    "message": "Formato amigável para impressão via Salvar como PDF",
+    "description": "Description for PDF export format"
   },
   "editInputWidth": {
     "message": "Largura da entrada de edição",
@@ -839,6 +839,22 @@
     "message": "Sincronizando...",
     "description": "Sync in progress message"
   },
+  "uploadInProgress": {
+    "message": "Uploading...",
+    "description": "Upload in progress message"
+  },
+  "uploadSuccess": {
+    "message": "✓ Uploaded successfully",
+    "description": "Upload success message"
+  },
+  "downloadInProgress": {
+    "message": "Downloading...",
+    "description": "Download in progress message"
+  },
+  "downloadMergeSuccess": {
+    "message": "✓ Downloaded and merged",
+    "description": "Download and merge success message"
+  },
   "syncUpload": {
     "message": "Enviar",
     "description": "Upload button label"
@@ -902,14 +918,6 @@
   "deepResearchDownloadTooltip": {
     "message": "Baixar conteúdo de pensamento como Markdown",
     "description": "Deep Research download button tooltip"
-  },
-  "deepResearchSaveReport": {
-    "message": "Salvar relatório",
-    "description": "Deep Research save report button text"
-  },
-  "deepResearchSaveReportTooltip": {
-    "message": "Salvar o relatório completo em JSON, Markdown, PDF ou imagem",
-    "description": "Deep Research save report button tooltip"
   },
   "folder_uncategorized": {
     "message": "Sem categoria",
@@ -1122,5 +1130,53 @@
   "sidebarAutoHideHint": {
     "message": "Contrai automaticamente a barra lateral quando o mouse sai, expande quando entra",
     "description": "Auto-hide sidebar feature hint"
+  },
+  "folderSpacing": {
+    "message": "Espaçamento de pastas",
+    "description": "Folder spacing adjustment label"
+  },
+  "folderSpacingCompact": {
+    "message": "Compacto",
+    "description": "Compact folder spacing label"
+  },
+  "folderSpacingSpacious": {
+    "message": "Espaçoso",
+    "description": "Spacious folder spacing label"
+  },
+  "export_select_mode_select_all": {
+    "message": "Select all",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "Selected {count}",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "Select message",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "Select messages below",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "Please select at least one message to export.",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "Single PNG image for sharing",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "Generating image...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "Save Report",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "Export this research report",
+    "description": "Deep Research save report tooltip"
   }
 }
