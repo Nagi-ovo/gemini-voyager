@@ -198,7 +198,11 @@ export class PDFPrintService {
   }
 
   private static normalizeWhitespace(text: string): string {
-    return text.replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    return text
+      .replace(/\r/g, '')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
   /**
@@ -440,7 +444,9 @@ export class PDFPrintService {
     return null;
   }
 
-  private static extractTitleFromNativeSidebarByConversationId(conversationId: string): string | null {
+  private static extractTitleFromNativeSidebarByConversationId(
+    conversationId: string,
+  ): string | null {
     const byJslog = document.querySelector(
       `[data-test-id="conversation"][jslog*="c_${conversationId}"]`,
     ) as HTMLElement | null;
@@ -463,7 +469,10 @@ export class PDFPrintService {
   /**
    * Render document header with cover page
    */
-  private static renderHeader(metadata: ConversationMetadata, preferMetadataTitle: boolean): string {
+  private static renderHeader(
+    metadata: ConversationMetadata,
+    preferMetadataTitle: boolean,
+  ): string {
     const metadataTitle = this.normalizeConversationTitle(metadata.title);
     const pageConversationTitle = this.normalizeConversationTitle(this.getConversationTitle());
     const conversationTitle = preferMetadataTitle
@@ -511,7 +520,8 @@ export class PDFPrintService {
       : this.formatContent(turn.user) || '<em>No content</em>';
 
     const assistantContent = turn.assistantElement
-      ? DOMContentExtractor.extractAssistantContent(turn.assistantElement).html || '<em>No content</em>'
+      ? DOMContentExtractor.extractAssistantContent(turn.assistantElement).html ||
+        '<em>No content</em>'
       : this.formatContent(turn.assistant) || '<em>No content</em>';
 
     if (!turn.omitEmptySections) {

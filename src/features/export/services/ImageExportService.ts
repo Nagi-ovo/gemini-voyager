@@ -94,7 +94,10 @@ export class ImageExportService {
     }
   }
 
-  private static createRenderContainer(turns: ChatTurn[], metadata: ConversationMetadata): HTMLElement {
+  private static createRenderContainer(
+    turns: ChatTurn[],
+    metadata: ConversationMetadata,
+  ): HTMLElement {
     const outer = document.createElement('div');
     outer.className = 'gv-image-export-container';
     Object.assign(outer.style, {

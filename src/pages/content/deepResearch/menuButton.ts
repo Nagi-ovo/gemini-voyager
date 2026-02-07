@@ -2,16 +2,16 @@
  * Menu button injection module for Deep Research export
  */
 import { StorageKeys } from '@/core/types/common';
-import { type AppLanguage, normalizeLanguage } from '@/utils/language';
-import { extractMessageDictionary } from '@/utils/localeMessages';
-import type { TranslationKey } from '@/utils/translations';
 import { ConversationExportService } from '@/features/export/services/ConversationExportService';
 import type {
-  ChatTurn as ExportChatTurn,
   ConversationMetadata,
+  ChatTurn as ExportChatTurn,
   ExportFormat,
 } from '@/features/export/types/export';
 import { ExportDialog } from '@/features/export/ui/ExportDialog';
+import { type AppLanguage, normalizeLanguage } from '@/utils/language';
+import { extractMessageDictionary } from '@/utils/localeMessages';
+import type { TranslationKey } from '@/utils/translations';
 
 import { downloadMarkdown } from './download';
 import { extractThinkingPanels } from './extractor';
@@ -306,7 +306,7 @@ export function showDeepResearchExportProgressOverlay(
   return () => {
     try {
       overlay.remove();
-    } catch { }
+    } catch {}
   };
 }
 
@@ -359,7 +359,7 @@ function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
         hideProgress();
       }
     },
-    onCancel: () => { },
+    onCancel: () => {},
     translations: {
       title: t('deepResearchSaveReport'),
       selectFormat: t('export_dialog_select'),
@@ -444,7 +444,10 @@ export async function injectDownloadButton(): Promise<void> {
       '.gv-deep-research-download',
     ) as HTMLButtonElement | null;
     if (!downloadButton) {
-      downloadButton = createDownloadButton(t('deepResearchDownload'), t('deepResearchDownloadTooltip'));
+      downloadButton = createDownloadButton(
+        t('deepResearchDownload'),
+        t('deepResearchDownloadTooltip'),
+      );
       menuContent.appendChild(downloadButton);
     }
 
@@ -482,7 +485,7 @@ export async function injectDownloadButton(): Promise<void> {
       const cleanup = () => {
         try {
           onChanged.removeListener(handler);
-        } catch { }
+        } catch {}
       };
 
       const observer = new MutationObserver(() => {
@@ -502,7 +505,7 @@ export async function injectDownloadButton(): Promise<void> {
           cleanup();
           try {
             observer.disconnect();
-          } catch { }
+          } catch {}
         },
         { once: true },
       );

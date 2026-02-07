@@ -1,8 +1,8 @@
-import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import {
   hasValidExtensionContext,
   isExtensionContextInvalidatedError,
 } from '@/core/utils/extensionContext';
+import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 

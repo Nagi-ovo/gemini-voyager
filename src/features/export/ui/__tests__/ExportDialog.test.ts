@@ -13,8 +13,8 @@ describe('ExportDialog', () => {
 
     const dialog = new ExportDialog();
     dialog.show({
-      onExport: () => { },
-      onCancel: () => { },
+      onExport: () => {},
+      onCancel: () => {},
       translations: {
         title: 'Export Chat',
         selectFormat: 'Select format',
@@ -48,8 +48,8 @@ describe('ExportDialog', () => {
   it('does not render warning block when warning is empty', () => {
     const dialog = new ExportDialog();
     dialog.show({
-      onExport: () => { },
-      onCancel: () => { },
+      onExport: () => {},
+      onCancel: () => {},
       translations: {
         title: 'Export',
         selectFormat: 'Select format',

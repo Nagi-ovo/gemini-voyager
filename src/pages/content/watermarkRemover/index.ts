@@ -12,9 +12,9 @@
  * - Sends image data to this content script for watermark removal
  * - Returns processed image to complete the download
  */
+import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { getTranslationSync } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
-import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import { DOWNLOAD_ICON_SELECTOR, findNativeDownloadButton } from './downloadButton';
 import { type StatusToastManager, createStatusToastManager } from './statusToast';

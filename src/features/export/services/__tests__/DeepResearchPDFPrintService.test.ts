@@ -58,9 +58,13 @@ describe('DeepResearchPDFPrintService', () => {
     const style = document.getElementById('gv-deep-research-pdf-print-styles');
     const styleText = style?.textContent || '';
 
-    expect(styleText).toContain('body.gv-deep-research-pdf-printing > *:not(#gv-deep-research-pdf-print-container)');
+    expect(styleText).toContain(
+      'body.gv-deep-research-pdf-printing > *:not(#gv-deep-research-pdf-print-container)',
+    );
     expect(styleText).toContain('display: none !important;');
-    expect(styleText).toContain('body.gv-deep-research-pdf-printing #gv-deep-research-pdf-print-container *');
+    expect(styleText).toContain(
+      'body.gv-deep-research-pdf-printing #gv-deep-research-pdf-print-container *',
+    );
     expect(styleText).toContain('display: revert !important;');
     expect(styleText).toContain('body.gv-deep-research-pdf-printing .gv-dr-print-cover-page');
     expect(styleText).toContain('display: flex !important;');

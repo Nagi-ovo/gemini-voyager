@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  extractDeepResearchReportTitle,
-  findDeepResearchReportRoot,
-} from '../reportExtractor';
+import { extractDeepResearchReportTitle, findDeepResearchReportRoot } from '../reportExtractor';
 
 describe('reportExtractor', () => {
   it('finds report markdown outside thinking panels', () => {
@@ -49,4 +46,3 @@ describe('reportExtractor', () => {
     expect(extractDeepResearchReportTitle(root)).toBe('Cross-border Analysis');
   });
 });
-

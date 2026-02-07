@@ -6,16 +6,16 @@ import type { TranslationKey } from '@/utils/translations';
 
 import { ConversationExportService } from '../../../features/export/services/ConversationExportService';
 import type {
-  ChatTurn as ExportChatTurn,
   ConversationMetadata,
+  ChatTurn as ExportChatTurn,
   ExportFormat,
 } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
+import { groupSelectedMessagesByTurn } from './selectionUtils';
 import {
   computeConversationFingerprint,
   waitForConversationFingerprintChangeOrTimeout,
 } from './topNodePreload';
-import { groupSelectedMessagesByTurn } from './selectionUtils';
 
 // Storage key to persist export state across reloads (e.g. when clicking top node triggers refresh)
 const SESSION_KEY_PENDING_EXPORT = 'gv_export_pending';
@@ -50,18 +50,18 @@ function waitForElement(selector: string, timeoutMs: number = 6000): Promise<Ele
       if (found) {
         try {
           obs.disconnect();
-        } catch { }
+        } catch {}
         resolve(found);
       }
     });
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch { }
+    } catch {}
     if (timeoutMs > 0)
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch { }
+        } catch {}
         resolve(null);
       }, timeoutMs);
   });
@@ -84,7 +84,7 @@ function waitForAnyElement(
         if (found) {
           try {
             obs.disconnect();
-          } catch { }
+          } catch {}
           resolve(found);
           return;
         }
@@ -93,13 +93,13 @@ function waitForAnyElement(
 
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch { }
+    } catch {}
 
     if (timeoutMs > 0)
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch { }
+        } catch {}
         resolve(null);
       }, timeoutMs);
   });
@@ -208,7 +208,7 @@ function ensureTurnId(el: Element, index: number): string {
     id = `u-${index}-${hashString(basis)}`;
     try {
       (asEl.dataset as any).turnId = id;
-    } catch { }
+    } catch {}
   }
   return id;
 }
@@ -237,7 +237,7 @@ function extractAssistantText(el: HTMLElement): string {
       const txt = normalizeText(raw);
       if (txt) return txt;
     }
-  } catch { }
+  } catch {}
 
   // Clone and remove reasoning toggles/labels before reading text (detached fallback)
   const clone = el.cloneNode(true) as HTMLElement;
@@ -267,7 +267,7 @@ function extractAssistantText(el: HTMLElement): string {
       const eln = n as HTMLElement;
       if (shouldDrop(eln)) eln.remove();
     });
-  } catch { }
+  } catch {}
   const text = normalizeText(clone.innerText || clone.textContent || '');
   return text;
 }
@@ -593,7 +593,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from Folder Manager:', error);
-    } catch { }
+    } catch {}
   }
 
   // Strategy 1b: Get from Gemini native sidebar via current conversation ID
@@ -606,7 +606,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from native sidebar by conversation id:', error);
-    } catch { }
+    } catch {}
   }
 
   // Strategy 2: Try to get from page title
@@ -637,7 +637,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from sidebar:', error);
-    } catch { }
+    } catch {}
   }
 
   // Strategy 4: URL fallback
@@ -827,7 +827,7 @@ async function performFinalExport(
     cleanupTasks.forEach((fn) => {
       try {
         fn();
-      } catch { }
+      } catch {}
     });
     cleanupTasks.length = 0;
   };
@@ -849,7 +849,9 @@ async function performFinalExport(
   };
 
   const updateBottomBar = (bar: HTMLElement) => {
-    const countEl = bar.querySelector('[data-gv-export-selection-count="true"]') as HTMLElement | null;
+    const countEl = bar.querySelector(
+      '[data-gv-export-selection-count="true"]',
+    ) as HTMLElement | null;
     if (countEl) {
       countEl.textContent = t('export_select_mode_count').replace(
         '{count}',
@@ -857,12 +859,16 @@ async function performFinalExport(
       );
     }
 
-    const exportBtn = bar.querySelector('[data-gv-export-action="export"]') as HTMLButtonElement | null;
+    const exportBtn = bar.querySelector(
+      '[data-gv-export-action="export"]',
+    ) as HTMLButtonElement | null;
     if (exportBtn) {
       exportBtn.disabled = selectedIds.size === 0;
     }
 
-    const selectAllBtn = bar.querySelector('[data-gv-export-action="selectAll"]') as HTMLButtonElement | null;
+    const selectAllBtn = bar.querySelector(
+      '[data-gv-export-action="selectAll"]',
+    ) as HTMLButtonElement | null;
     if (selectAllBtn) {
       const isAllSelected = allMessageIds.length > 0 && selectedIds.size === allMessageIds.length;
       selectAllBtn.dataset.checked = isAllSelected ? 'true' : 'false';
@@ -895,10 +901,10 @@ async function performFinalExport(
     const swallow = (ev: Event) => {
       try {
         ev.preventDefault();
-      } catch { }
+      } catch {}
       try {
         ev.stopPropagation();
-      } catch { }
+      } catch {}
     };
 
     checkbox.addEventListener('click', (ev) => {
@@ -906,7 +912,9 @@ async function performFinalExport(
       autoSelectAll = false;
       const next = !selectedIds.has(msg.messageId);
       setSelected(msg.messageId, next);
-      const bar = document.querySelector('[data-gv-export-select-bar="true"]') as HTMLElement | null;
+      const bar = document.querySelector(
+        '[data-gv-export-select-bar="true"]',
+      ) as HTMLElement | null;
       if (bar) updateBottomBar(bar);
     });
 
@@ -917,7 +925,9 @@ async function performFinalExport(
     idToCheckbox.set(msg.messageId, checkbox);
   };
 
-  const computeSortedMessages = (pairsInput: ChatTurn[]): Array<ExportMessage & { absTop: number }> => {
+  const computeSortedMessages = (
+    pairsInput: ChatTurn[],
+  ): Array<ExportMessage & { absTop: number }> => {
     const msgs = buildExportMessagesFromPairs(pairsInput);
     const withPos = msgs.map((m) => {
       const rect = m.hostElement.getBoundingClientRect();
@@ -984,10 +994,10 @@ async function performFinalExport(
   const swallow = (ev: Event) => {
     try {
       ev.preventDefault();
-    } catch { }
+    } catch {}
     try {
       ev.stopPropagation();
-    } catch { }
+    } catch {}
   };
 
   selectAllBtn.addEventListener('click', (ev) => {
@@ -1086,7 +1096,7 @@ async function performFinalExport(
       try {
         syncMessages(collectChatPairs());
         updateBottomBar(bar);
-      } catch { }
+      } catch {}
     }, 250);
   };
 
@@ -1094,7 +1104,7 @@ async function performFinalExport(
   try {
     obs.observe(root, { childList: true, subtree: true });
     cleanupTasks.push(() => obs.disconnect());
-  } catch { }
+  } catch {}
 
   // Escape to cancel
   const onKeyDown = (e: KeyboardEvent) => {
@@ -1138,7 +1148,7 @@ function showExportProgressOverlay(t: (key: TranslationKey) => string): () => vo
   return () => {
     try {
       overlay.remove();
-    } catch { }
+    } catch {}
   };
 }
 
@@ -1213,16 +1223,16 @@ export async function startExportButton(): Promise<void> {
   const swallow = (e: Event) => {
     try {
       e.preventDefault();
-    } catch { }
+    } catch {}
     try {
       e.stopPropagation();
-    } catch { }
+    } catch {}
   };
   // Capture low-level press events to avoid parent logo navigation, but do NOT capture 'click'
   ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((type) => {
     try {
       btn.addEventListener(type, swallow, true);
-    } catch { }
+    } catch {}
   });
 
   // i18n setup for tooltip
@@ -1267,7 +1277,7 @@ export async function startExportButton(): Promise<void> {
       },
       { once: true },
     );
-  } catch { }
+  } catch {}
 
   btn.addEventListener('click', (ev) => {
     // Stop parent navigation, but allow this handler to run
@@ -1278,7 +1288,7 @@ export async function startExportButton(): Promise<void> {
     } catch (err) {
       try {
         console.error('Gemini Voyager export failed', err);
-      } catch { }
+      } catch {}
     }
   });
 }

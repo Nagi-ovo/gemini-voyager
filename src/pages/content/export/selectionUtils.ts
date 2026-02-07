@@ -37,9 +37,10 @@ export interface GroupedSelectedTurn<TElement = HTMLElement> {
   assistant?: SelectedMessageForTurnGrouping<TElement>;
 }
 
-function parseMessageId(
-  messageId: string,
-): { turnId: string; roleHint: SelectableMessageRole | null } {
+function parseMessageId(messageId: string): {
+  turnId: string;
+  roleHint: SelectableMessageRole | null;
+} {
   const match = /^(.*):(u|a)$/.exec(messageId);
   if (!match) {
     return { turnId: messageId, roleHint: null };

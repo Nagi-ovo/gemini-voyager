@@ -201,7 +201,11 @@ export class DeepResearchPDFPrintService {
   }
 
   private static normalizeWhitespace(text: string): string {
-    return text.replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    return text
+      .replace(/\r/g, '')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
   private static formatPlainTextAsHtml(text: string): string {

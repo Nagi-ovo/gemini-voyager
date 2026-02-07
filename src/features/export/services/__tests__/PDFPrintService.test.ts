@@ -23,15 +23,12 @@ describe('PDFPrintService', () => {
     vi.useFakeTimers();
     window.print = vi.fn();
 
-    const exportPromise = PDFPrintService.export(
-      [{ user: 'u', assistant: 'a', starred: false }],
-      {
-        url: 'https://gemini.google.com/app/x',
-        exportedAt: new Date().toISOString(),
-        count: 1,
-        title: 'My Chat',
-      },
-    );
+    const exportPromise = PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/x',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: 'My Chat',
+    });
 
     await vi.advanceTimersByTimeAsync(100);
     await exportPromise;
@@ -70,15 +67,12 @@ describe('PDFPrintService', () => {
     document.title = 'Gemini';
     window.print = vi.fn();
 
-    await PDFPrintService.export(
-      [{ user: 'u', assistant: 'a', starred: false }],
-      {
-        url: 'https://gemini.google.com/app/x',
-        exportedAt: new Date().toISOString(),
-        count: 1,
-        title: '房贷还款方式对比分析 - Gemini',
-      },
-    );
+    await PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/x',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: '房贷还款方式对比分析 - Gemini',
+    });
 
     const coverTitle = document.querySelector('.gv-print-cover-title');
     expect(coverTitle?.textContent).toBe('房贷还款方式对比分析');
@@ -102,15 +96,12 @@ describe('PDFPrintService', () => {
     nativeConversation.appendChild(link);
     document.body.appendChild(nativeConversation);
 
-    const exportPromise = PDFPrintService.export(
-      [{ user: 'u', assistant: 'a', starred: false }],
-      {
-        url: 'https://gemini.google.com/app/abc12345',
-        exportedAt: new Date().toISOString(),
-        count: 1,
-        title: 'Untitled Conversation',
-      },
-    );
+    const exportPromise = PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/abc12345',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: 'Untitled Conversation',
+    });
 
     await vi.advanceTimersByTimeAsync(100);
     await exportPromise;
@@ -156,17 +147,13 @@ describe('PDFPrintService', () => {
     bridge.id = 'gv-print-bridge';
     document.body.appendChild(bridge);
 
-    await PDFPrintService.export(
-      [{ user: 'u', assistant: 'a', starred: false }],
-      {
-        url: 'https://gemini.google.com/app/x',
-        exportedAt: new Date().toISOString(),
-        count: 1,
-        title: 'Bridge Fallback',
-      },
-    );
+    await PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/x',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: 'Bridge Fallback',
+    });
 
     expect(window.print).toHaveBeenCalledOnce();
   });
-
 });

@@ -1,14 +1,9 @@
 /**
  * ConversationExportService unit tests
  */
+import { toBlob } from 'html-to-image';
 import { JSDOM } from 'jsdom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-vi.mock('html-to-image', () => {
-  return {
-    toBlob: vi.fn(),
-  };
-});
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
 import { ConversationExportService } from '../ConversationExportService';
@@ -16,7 +11,12 @@ import { DeepResearchPDFPrintService } from '../DeepResearchPDFPrintService';
 import { ImageExportService } from '../ImageExportService';
 import { MarkdownFormatter } from '../MarkdownFormatter';
 import { PDFPrintService } from '../PDFPrintService';
-import { toBlob } from 'html-to-image';
+
+vi.mock('html-to-image', () => {
+  return {
+    toBlob: vi.fn(),
+  };
+});
 
 // Setup DOM environment
 

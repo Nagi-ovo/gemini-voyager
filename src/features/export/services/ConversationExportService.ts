@@ -345,10 +345,7 @@ export class ConversationExportService {
 
   private static formatPlainTextAsHtml(content: string): string {
     if (!content.trim()) return '';
-    const escaped = content
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return escaped
       .split('\n\n')
       .map((paragraph) => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)

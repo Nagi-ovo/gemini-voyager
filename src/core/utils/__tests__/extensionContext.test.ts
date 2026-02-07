@@ -8,7 +8,9 @@ describe('extensionContext utils', () => {
       true,
     );
     expect(
-      isExtensionContextInvalidatedError({ message: 'Uncaught Error: Extension context invalidated' }),
+      isExtensionContextInvalidatedError({
+        message: 'Uncaught Error: Extension context invalidated',
+      }),
     ).toBe(true);
   });
 

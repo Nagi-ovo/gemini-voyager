@@ -17,8 +17,8 @@ export function isExtensionContextInvalidatedError(error: unknown): boolean {
 
 export function hasValidExtensionContext(): boolean {
   try {
-    const runtime = (globalThis as typeof globalThis & { chrome?: { runtime?: { id?: string } } }).chrome
-      ?.runtime;
+    const runtime = (globalThis as typeof globalThis & { chrome?: { runtime?: { id?: string } } })
+      .chrome?.runtime;
     return Boolean(runtime?.id);
   } catch {
     return false;

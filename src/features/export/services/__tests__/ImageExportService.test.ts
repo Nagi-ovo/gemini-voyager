@@ -1,3 +1,4 @@
+import { toBlob } from 'html-to-image';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
@@ -8,8 +9,6 @@ vi.mock('html-to-image', () => {
     toBlob: vi.fn(),
   };
 });
-
-import { toBlob } from 'html-to-image';
 
 describe('ImageExportService', () => {
   const mockMetadata: ConversationMetadata = {
@@ -68,11 +67,14 @@ describe('ImageExportService', () => {
 
   it('uses larger typography and media sizing for mobile readability', async () => {
     let capturedStyle = '';
-    (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (node: HTMLElement) => {
-      capturedStyle =
-        (node.parentElement?.querySelector('style') as HTMLStyleElement | null)?.textContent ?? '';
-      return new Blob(['x'], { type: 'image/png' });
-    });
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (node: HTMLElement) => {
+        capturedStyle =
+          (node.parentElement?.querySelector('style') as HTMLStyleElement | null)?.textContent ??
+          '';
+        return new Blob(['x'], { type: 'image/png' });
+      },
+    );
 
     await ImageExportService.export(mockTurns, mockMetadata, { filename: 'readable.png' });
 
