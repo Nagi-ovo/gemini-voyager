@@ -13,6 +13,7 @@
  * - Storage listener remains active to respond to setting changes
  */
 import { StorageKeys } from '@/core/types/common';
+import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import { getTextOffset, setCaretPosition } from './utils';
 
@@ -407,6 +408,10 @@ async function loadSettings(): Promise<boolean> {
         resolve(enabled);
       });
     } catch (error) {
+      if (isExtensionContextInvalidatedError(error)) {
+        resolve(false);
+        return;
+      }
       console.warn(LOG_PREFIX, 'Failed to load settings:', error);
       resolve(false);
     }
@@ -437,6 +442,9 @@ function setupStorageListener(): void {
   try {
     chrome.storage?.onChanged?.addListener(storageListener);
   } catch (error) {
+    if (isExtensionContextInvalidatedError(error)) {
+      return;
+    }
     console.warn(LOG_PREFIX, 'Failed to setup storage listener:', error);
   }
 }

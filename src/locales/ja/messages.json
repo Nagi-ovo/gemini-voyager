@@ -1142,5 +1142,41 @@
   "folderSpacingSpacious": {
     "message": "ゆったり",
     "description": "ゆったりフォルダ間隔ラベル"
+  },
+  "export_select_mode_select_all": {
+    "message": "すべて選択",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "{count}件選択中",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "メッセージを選択",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "以下のメッセージを選択",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "エクスポートするメッセージを1つ以上選択してください",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "共有用のPNG画像",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "画像を生成中...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "レポートを保存",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "この調査レポートをエクスポート",
+    "description": "Deep Research save report tooltip"
   }
 }

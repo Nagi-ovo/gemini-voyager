@@ -5,6 +5,10 @@
  */
 import { ErrorCode, ErrorHandler, StorageError } from '../errors/AppError';
 import type { Result, StorageKey } from '../types/common';
+import {
+  hasValidExtensionContext,
+  isExtensionContextInvalidatedError,
+} from '../utils/extensionContext';
 import { logger } from './LoggerService';
 
 export interface IStorageService {
@@ -26,12 +30,20 @@ abstract class BaseChromeStorageService implements IStorageService {
     return logger.createChild(this.loggerName);
   }
 
+  private isContextInvalidated(error: unknown): boolean {
+    return isExtensionContextInvalidatedError(error) || !hasValidExtensionContext();
+  }
+
   async get<T>(key: StorageKey): Promise<Result<T>> {
     try {
       this.logger.debug(`Reading key: ${key}`);
 
-      const result = await new Promise<Record<string, T>>((resolve) => {
+      const result = await new Promise<Record<string, T>>((resolve, reject) => {
         this.storageArea.get([key], (items) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
           resolve(items as Record<string, T>);
         });
       });
@@ -49,6 +61,18 @@ abstract class BaseChromeStorageService implements IStorageService {
       this.logger.debug(`Successfully read key: ${key}`);
       return { success: true, data: value };
     } catch (error) {
+      if (this.isContextInvalidated(error)) {
+        this.logger.debug(`Extension context invalidated while reading key: ${key}`);
+        return {
+          success: false,
+          error: new StorageError(
+            ErrorCode.STORAGE_READ_FAILED,
+            `Extension context invalidated while reading key: ${key}`,
+            { key },
+            error instanceof Error ? error : undefined,
+          ),
+        };
+      }
       this.logger.error(`Failed to read key: ${key}`, { error });
       return {
         success: false,
@@ -79,6 +103,18 @@ abstract class BaseChromeStorageService implements IStorageService {
       this.logger.debug(`Successfully wrote key: ${key}`);
       return { success: true, data: undefined };
     } catch (error) {
+      if (this.isContextInvalidated(error)) {
+        this.logger.debug(`Extension context invalidated while writing key: ${key}`);
+        return {
+          success: false,
+          error: new StorageError(
+            ErrorCode.STORAGE_WRITE_FAILED,
+            `Extension context invalidated while writing key: ${key}`,
+            { key, value },
+            error instanceof Error ? error : undefined,
+          ),
+        };
+      }
       this.logger.error(`Failed to write key: ${key}`, { error });
       return {
         success: false,
@@ -109,6 +145,18 @@ abstract class BaseChromeStorageService implements IStorageService {
       this.logger.debug(`Successfully removed key: ${key}`);
       return { success: true, data: undefined };
     } catch (error) {
+      if (this.isContextInvalidated(error)) {
+        this.logger.debug(`Extension context invalidated while removing key: ${key}`);
+        return {
+          success: false,
+          error: new StorageError(
+            ErrorCode.STORAGE_WRITE_FAILED,
+            `Extension context invalidated while removing key: ${key}`,
+            { key },
+            error instanceof Error ? error : undefined,
+          ),
+        };
+      }
       this.logger.error(`Failed to remove key: ${key}`, { error });
       return {
         success: false,
@@ -139,6 +187,18 @@ abstract class BaseChromeStorageService implements IStorageService {
       this.logger.debug('Successfully cleared storage');
       return { success: true, data: undefined };
     } catch (error) {
+      if (this.isContextInvalidated(error)) {
+        this.logger.debug('Extension context invalidated while clearing storage');
+        return {
+          success: false,
+          error: new StorageError(
+            ErrorCode.STORAGE_WRITE_FAILED,
+            'Extension context invalidated while clearing storage',
+            {},
+            error instanceof Error ? error : undefined,
+          ),
+        };
+      }
       this.logger.error('Failed to clear storage', { error });
       return {
         success: false,

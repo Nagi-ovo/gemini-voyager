@@ -1142,5 +1142,41 @@
   "folderSpacingSpacious": {
     "message": "넓게",
     "description": "Spacious folder spacing label"
+  },
+  "export_select_mode_select_all": {
+    "message": "전체 선택",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "{count}개 선택됨",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "메시지 선택",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "아래 메시지 선택",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "내보낼 메시지를 하나 이상 선택하세요",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "공유용 단일 PNG 이미지",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "이미지 생성 중...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "보고서 저장",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "이 연구 보고서 내보내기",
+    "description": "Deep Research save report tooltip"
   }
 }

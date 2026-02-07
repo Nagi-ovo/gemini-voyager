@@ -49,3 +49,12 @@ SYNC_SERVICE_ARCHITECTURE.md
 
 # Dev Tools
 scripts/chrome-profile/
+
+# Git worktrees (local dev only)
+.worktrees/
+
+# Local agent outputs
+.agent/
+docs/plans/
+output/
+src/pages/content/printBridge/

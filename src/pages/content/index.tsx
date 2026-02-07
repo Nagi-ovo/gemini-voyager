@@ -1,3 +1,7 @@
+import {
+  hasValidExtensionContext,
+  isExtensionContextInvalidatedError,
+} from '@/core/utils/extensionContext';
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
@@ -91,6 +95,9 @@ async function isCustomWebsite(): Promise<boolean> {
     console.log('[Gemini Voyager] Is custom website:', isCustom);
     return isCustom;
   } catch (e) {
+    if (isExtensionContextInvalidatedError(e)) {
+      return false;
+    }
     console.error('[Gemini Voyager] Error checking custom websites:', e);
     return false;
   }
@@ -104,6 +111,9 @@ async function initializeFeatures(): Promise<void> {
   initialized = true;
 
   try {
+    if (!hasValidExtensionContext()) {
+      return;
+    }
     // Sequential initialization with small delays between features
     // to further reduce simultaneous resource usage
     const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -242,6 +252,9 @@ async function initializeFeatures(): Promise<void> {
 
     startExportButton();
   } catch (e) {
+    if (isExtensionContextInvalidatedError(e)) {
+      return;
+    }
     console.error('[Gemini Voyager] Initialization error:', e);
   }
 }
@@ -287,6 +300,21 @@ function handleVisibilityChange(): void {
 // Main initialization logic
 (function () {
   try {
+    if (!hasValidExtensionContext()) return;
+
+    const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (isExtensionContextInvalidatedError(event.reason)) {
+        event.preventDefault();
+      }
+    };
+    const onWindowError = (event: ErrorEvent) => {
+      if (isExtensionContextInvalidatedError(event.error ?? event.message)) {
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('unhandledrejection', onUnhandledRejection);
+    window.addEventListener('error', onWindowError);
+
     // Quick check: only run on supported websites
     const hostname = location.hostname.toLowerCase();
     const isSupportedSite =
@@ -347,6 +375,8 @@ function handleVisibilityChange(): void {
     // Setup cleanup on page unload to prevent memory leaks
     window.addEventListener('beforeunload', () => {
       try {
+        window.removeEventListener('unhandledrejection', onUnhandledRejection);
+        window.removeEventListener('error', onWindowError);
         if (folderManagerInstance) {
           folderManagerInstance.destroy();
           folderManagerInstance = null;
@@ -364,10 +394,16 @@ function handleVisibilityChange(): void {
           sendBehaviorCleanup = null;
         }
       } catch (e) {
+        if (isExtensionContextInvalidatedError(e)) {
+          return;
+        }
         console.error('[Gemini Voyager] Cleanup error:', e);
       }
     });
   } catch (e) {
+    if (isExtensionContextInvalidatedError(e)) {
+      return;
+    }
     console.error('[Gemini Voyager] Fatal initialization error:', e);
   }
 })();

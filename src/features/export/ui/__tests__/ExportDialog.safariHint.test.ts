@@ -35,6 +35,7 @@ describe('ExportDialog (Safari hint)', () => {
         json: 'JSON desc',
         markdown: 'MD desc',
         pdf: 'PDF desc',
+        image: 'Image desc',
       },
     },
   };

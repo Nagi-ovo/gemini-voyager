@@ -31,6 +31,7 @@
    * User-uploaded image previews use rd-gg/ path without -dl suffix
    */
   const GEMINI_DOWNLOAD_PATTERN = /^https:\/\/lh3\.googleusercontent\.com\/rd-gg-dl\//;
+  const CSP_BLOCKED_TELEMETRY_PATTERNS = [/^https:\/\/www\.googletagmanager\.com\/td\?/i];
 
   /**
    * Replace size parameter with =s0 for original size
@@ -40,6 +41,9 @@
     // Match =sNNN and replace with =s0 (but keep the rest of the URL)
     return src.replace(/=s\d+(?=[-?#]|$)/, '=s0');
   };
+
+  const isKnownCspBlockedTelemetryRequest = (requestUrl) =>
+    CSP_BLOCKED_TELEMETRY_PATTERNS.some((pattern) => pattern.test(requestUrl));
 
   /**
    * DOM-based communication bridge
@@ -86,6 +90,14 @@
   // Intercept fetch
   window.fetch = async function (...args) {
     const url = typeof args[0] === 'string' ? args[0] : args[0]?.url;
+
+    // Gemini page regularly triggers GTM telemetry requests that are blocked by page CSP.
+    // Since this interceptor wraps window.fetch in MAIN world, those blocked requests get
+    // attributed to this extension in chrome://extensions. Short-circuit known blocked
+    // telemetry endpoints to avoid noisy extension error reports.
+    if (url && typeof url === 'string' && isKnownCspBlockedTelemetryRequest(url)) {
+      return new Response(null, { status: 204, statusText: 'No Content' });
+    }
 
     // Check if this is a Gemini download request (specifically rd-gg-dl for downloads)
     if (url && typeof url === 'string' && GEMINI_DOWNLOAD_PATTERN.test(url)) {

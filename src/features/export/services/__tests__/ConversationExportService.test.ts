@@ -1,11 +1,22 @@
 /**
  * ConversationExportService unit tests
  */
+import { toBlob } from 'html-to-image';
 import { JSDOM } from 'jsdom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
 import { ConversationExportService } from '../ConversationExportService';
+import { DeepResearchPDFPrintService } from '../DeepResearchPDFPrintService';
+import { ImageExportService } from '../ImageExportService';
+import { MarkdownFormatter } from '../MarkdownFormatter';
+import { PDFPrintService } from '../PDFPrintService';
+
+vi.mock('html-to-image', () => {
+  return {
+    toBlob: vi.fn(),
+  };
+});
 
 // Setup DOM environment
 
@@ -18,6 +29,7 @@ describe('ConversationExportService', () => {
     url: 'https://gemini.google.com/app/test',
     exportedAt: '2025-01-15T10:30:00.000Z',
     count: 2,
+    title: 'Premier League Fantasy',
   };
 
   const mockTurns: ChatTurn[] = [
@@ -84,6 +96,149 @@ describe('ConversationExportService', () => {
       expect(result.success).toBe(true);
       expect(result.format).toBe('pdf');
       expect((global.window as any).print).toHaveBeenCalled();
+      expect(result.filename).toBe('Premier-League-Fantasy.pdf');
+    });
+
+    it('triggers print for PDF export', async () => {
+      (global.window as any).print = vi.fn();
+
+      await ConversationExportService.export(mockTurns, mockMetadata, {
+        format: 'pdf' as any,
+      });
+
+      expect((global.window as any).print).toHaveBeenCalled();
+    });
+
+    it('should export as Image', async () => {
+      (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Blob(['x'], { type: 'image/png' }),
+      );
+
+      const result = await ConversationExportService.export(mockTurns, mockMetadata, {
+        format: 'image' as any,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.format).toBe('image');
+      expect(result.filename).toBe('Premier-League-Fantasy.png');
+    });
+
+    it('should export report markdown without turn wrappers in document layout', async () => {
+      const downloadSpy = vi.spyOn(MarkdownFormatter, 'download').mockImplementation(() => {});
+
+      const result = await ConversationExportService.export(
+        [
+          {
+            user: '',
+            assistant: '# Report title\n\nBody paragraph.',
+            starred: false,
+            omitEmptySections: true,
+          },
+        ],
+        mockMetadata,
+        {
+          format: 'markdown' as any,
+          layout: 'document' as any,
+          filename: 'report.md',
+        },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.format).toBe('markdown');
+      expect(downloadSpy).toHaveBeenCalledOnce();
+      const markdown = downloadSpy.mock.calls[0][0];
+      expect(markdown).toContain('# Report title');
+      expect(markdown).not.toContain('## Turn 1');
+      expect(markdown).not.toContain('### 🤖 Assistant');
+    });
+
+    it('should avoid duplicating heading for document markdown when content already has title', async () => {
+      const downloadSpy = vi.spyOn(MarkdownFormatter, 'download').mockImplementation(() => {});
+
+      await ConversationExportService.export(
+        [
+          {
+            user: '',
+            assistant: '# Revenue Deep Research Report\n\n正文内容',
+            starred: false,
+            omitEmptySections: true,
+          },
+        ],
+        {
+          ...mockMetadata,
+          title: 'Revenue Deep Research Report',
+        },
+        {
+          format: 'markdown' as any,
+          layout: 'document' as any,
+          filename: 'report.md',
+        },
+      );
+
+      const markdown = downloadSpy.mock.calls[0][0];
+      const titleMatches = String(markdown).match(/^# Revenue Deep Research Report$/gm) ?? [];
+      expect(titleMatches).toHaveLength(1);
+    });
+
+    it('should export report JSON payload in document layout', async () => {
+      const downloadSpy = vi.spyOn(ConversationExportService as any, 'downloadJSON');
+
+      const result = await ConversationExportService.export(
+        [
+          {
+            user: '',
+            assistant: 'Body paragraph.',
+            starred: false,
+            omitEmptySections: true,
+          },
+        ],
+        mockMetadata,
+        {
+          format: 'json' as any,
+          layout: 'document' as any,
+          filename: 'report.json',
+        },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.format).toBe('json');
+      expect(downloadSpy).toHaveBeenCalledOnce();
+      const payload = downloadSpy.mock.calls[0][0] as Record<string, unknown>;
+      expect(payload.format).toBe('gemini-voyager.report.v1');
+      expect(payload).toHaveProperty('content');
+      expect(payload).not.toHaveProperty('items');
+    });
+
+    it('should use document PDF export path when layout is document', async () => {
+      const deepResearchPdfSpy = vi
+        .spyOn(DeepResearchPDFPrintService as any, 'export')
+        .mockResolvedValue(undefined);
+      const pdfDocumentSpy = vi
+        .spyOn(PDFPrintService as any, 'exportDocument')
+        .mockResolvedValue(undefined);
+
+      const result = await ConversationExportService.export(mockTurns, mockMetadata, {
+        format: 'pdf' as any,
+        layout: 'document' as any,
+      });
+
+      expect(result.success).toBe(true);
+      expect(deepResearchPdfSpy).toHaveBeenCalledOnce();
+      expect(pdfDocumentSpy).not.toHaveBeenCalled();
+    });
+
+    it('should use document image export path when layout is document', async () => {
+      const imageDocumentSpy = vi
+        .spyOn(ImageExportService as any, 'exportDocument')
+        .mockResolvedValue(undefined);
+
+      const result = await ConversationExportService.export(mockTurns, mockMetadata, {
+        format: 'image' as any,
+        layout: 'document' as any,
+      });
+
+      expect(result.success).toBe(true);
+      expect(imageDocumentSpy).toHaveBeenCalledOnce();
     });
 
     it('should handle unsupported format', async () => {
@@ -138,8 +293,8 @@ describe('ConversationExportService', () => {
     it('should return all available formats', () => {
       const formats = ConversationExportService.getAvailableFormats();
 
-      expect(formats).toHaveLength(3);
-      expect(formats.map((f) => f.format)).toEqual(['json', 'markdown', 'pdf']);
+      expect(formats).toHaveLength(4);
+      expect(formats.map((f) => f.format)).toEqual(['json', 'markdown', 'pdf', 'image']);
     });
 
     it('should mark Markdown as recommended', () => {
@@ -190,5 +345,119 @@ describe('ConversationExportService', () => {
     // Note: Testing DOMContentExtractor integration is skipped per ROI testing strategy.
     // DOM operations (Content Scripts) are in the "Fragile" category.
     // The extractUserContent/extractAssistantContent calls are covered by defensive programming.
+  });
+
+  describe('markdown zip packaging', () => {
+    it('should assign image filenames in source order even when fetch resolves out of order', async () => {
+      const imageUrls = ['https://example.com/slow.png', 'https://example.com/fast.png'];
+      vi.spyOn(MarkdownFormatter, 'extractImageUrls').mockReturnValue(imageUrls);
+
+      const rewriteSpy = vi
+        .spyOn(MarkdownFormatter, 'rewriteImageUrls')
+        .mockImplementation((markdown) => markdown);
+
+      vi.spyOn(
+        ConversationExportService as any,
+        'fetchImageForMarkdownPackaging',
+      ).mockImplementation(async (rawUrl: unknown) => {
+        const url = String(rawUrl);
+        if (url.includes('slow')) {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+        return {
+          blob: {
+            arrayBuffer: async () => new TextEncoder().encode(url).buffer,
+          } as unknown as Blob,
+          contentType: 'image/png',
+        };
+      });
+
+      await (ConversationExportService as any).downloadMarkdownOrZip(
+        '![a](https://example.com/slow.png)\n![b](https://example.com/fast.png)',
+        'chat.md',
+        'chat.md',
+      );
+
+      expect(rewriteSpy).toHaveBeenCalledOnce();
+      const mapping = rewriteSpy.mock.calls[0][1] as Map<string, string>;
+      expect(mapping.get('https://example.com/slow.png')).toBe('assets/img-001.png');
+      expect(mapping.get('https://example.com/fast.png')).toBe('assets/img-002.png');
+    });
+
+    it('should fallback to gv.fetchImageViaPage when direct and background fetch fail', async () => {
+      const imageUrl = 'https://lh3.googleusercontent.com/export-image.png';
+      vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network blocked'));
+
+      const sendMessageMock = vi.fn(
+        (
+          message: { type?: string; url?: string },
+          callback?: (response: unknown) => void,
+        ): void => {
+          if (message.type === 'gv.fetchImage') {
+            callback?.({ ok: false, error: 'fetch_failed' });
+            return;
+          }
+          if (message.type === 'gv.fetchImageViaPage') {
+            callback?.({
+              ok: true,
+              base64: 'aGVsbG8=',
+              contentType: 'image/png',
+            });
+            return;
+          }
+          callback?.(null);
+        },
+      );
+
+      chrome.runtime.sendMessage = sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
+
+      const fetched = await (ConversationExportService as any).fetchImageForMarkdownPackaging(
+        imageUrl,
+      );
+
+      expect(fetched).not.toBeNull();
+      expect(fetched?.contentType).toBe('image/png');
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        { type: 'gv.fetchImage', url: imageUrl },
+        expect.any(Function),
+      );
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        { type: 'gv.fetchImageViaPage', url: imageUrl },
+        expect.any(Function),
+      );
+    });
+
+    it('should skip gv.fetchImageViaPage for blob urls', async () => {
+      const blobUrl = 'blob:https://gemini.google.com/abc-123';
+      vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('blob fetch blocked'));
+
+      const sendMessageMock = vi.fn(
+        (
+          message: { type?: string; url?: string },
+          callback?: (response: unknown) => void,
+        ): void => {
+          if (message.type === 'gv.fetchImage') {
+            callback?.({ ok: false, error: 'invalid_url' });
+            return;
+          }
+          callback?.(null);
+        },
+      );
+      chrome.runtime.sendMessage = sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
+
+      const fetched = await (ConversationExportService as any).fetchImageForMarkdownPackaging(
+        blobUrl,
+      );
+
+      expect(fetched).toBeNull();
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        { type: 'gv.fetchImage', url: blobUrl },
+        expect.any(Function),
+      );
+      expect(sendMessageMock).not.toHaveBeenCalledWith(
+        { type: 'gv.fetchImageViaPage', url: blobUrl },
+        expect.any(Function),
+      );
+    });
   });
 });

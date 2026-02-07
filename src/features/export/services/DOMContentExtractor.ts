@@ -292,6 +292,23 @@ export class DOMContentExtractor {
         continue;
       }
 
+      // Images
+      if (tagName === 'img') {
+        const img = child as HTMLImageElement;
+        const src = img.getAttribute('src') || img.src || '';
+        if (src && src !== 'about:blank') {
+          flags.hasImages = true;
+          const altRaw = img.getAttribute('alt') || '';
+          const alt = altRaw.trim() || 'Image';
+          htmlParts.push(
+            `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
+          );
+          const mdAlt = alt.replace(/\]/g, '\\]');
+          textParts.push(`\n![${mdAlt}](${src})\n`);
+        }
+        continue;
+      }
+
       // Math block (display formula) - check both class and data-math attribute
       if (child.classList.contains('math-block') || child.hasAttribute('data-math')) {
         const latex = child.getAttribute('data-math') || '';
@@ -358,8 +375,11 @@ export class DOMContentExtractor {
             if (!src || src === 'about:blank') continue;
             const alt = imgEl.alt || 'Generated image';
             flags.hasImages = true;
-            htmlParts.push(`<img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" />`);
-            textParts.push(`\n![${alt}](${src})\n`);
+            htmlParts.push(
+              `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
+            );
+            const mdAlt = alt.replace(/\]/g, '\\]');
+            textParts.push(`\n![${mdAlt}](${src})\n`);
           }
           if (this.DEBUG)
             console.log(
@@ -369,19 +389,6 @@ export class DOMContentExtractor {
             );
           continue;
         }
-      }
-
-      // Standalone <img> element (e.g. direct image in response)
-      if (tagName === 'img') {
-        const imgEl = child as HTMLImageElement;
-        const src = imgEl.src || imgEl.getAttribute('src') || '';
-        if (src && src !== 'about:blank') {
-          const alt = imgEl.alt || 'Image';
-          flags.hasImages = true;
-          htmlParts.push(`<img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" />`);
-          textParts.push(`\n![${alt}](${src})\n`);
-        }
-        continue;
       }
 
       // Horizontal rule
@@ -567,9 +574,10 @@ export class DOMContentExtractor {
           if (src && src !== 'about:blank') {
             const alt = imgEl.alt || 'Image';
             htmlParts.push(
-              `<img src="${DOMContentExtractor.escapeHtml(src)}" alt="${DOMContentExtractor.escapeHtml(alt)}" />`,
+              `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
             );
-            textParts.push(`![${alt}](${src})`);
+            const mdAlt = alt.replace(/\]/g, '\\]');
+            textParts.push(`![${mdAlt}](${src})`);
           }
           return;
         }
@@ -814,5 +822,17 @@ export class DOMContentExtractor {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Escape HTML for attribute context.
+   */
+  private static escapeHtmlAttribute(text: string): string {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/'/g, '&#39;');
   }
 }
