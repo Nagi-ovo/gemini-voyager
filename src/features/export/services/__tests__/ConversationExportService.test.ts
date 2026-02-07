@@ -356,20 +356,21 @@ describe('ConversationExportService', () => {
         .spyOn(MarkdownFormatter, 'rewriteImageUrls')
         .mockImplementation((markdown) => markdown);
 
-      vi.spyOn(ConversationExportService as any, 'fetchImageForMarkdownPackaging').mockImplementation(
-        async (rawUrl: unknown) => {
-          const url = String(rawUrl);
-          if (url.includes('slow')) {
-            await new Promise((resolve) => setTimeout(resolve, 10));
-          }
-          return {
-            blob: {
-              arrayBuffer: async () => new TextEncoder().encode(url).buffer,
-            } as unknown as Blob,
-            contentType: 'image/png',
-          };
-        },
-      );
+      vi.spyOn(
+        ConversationExportService as any,
+        'fetchImageForMarkdownPackaging',
+      ).mockImplementation(async (rawUrl: unknown) => {
+        const url = String(rawUrl);
+        if (url.includes('slow')) {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+        return {
+          blob: {
+            arrayBuffer: async () => new TextEncoder().encode(url).buffer,
+          } as unknown as Blob,
+          contentType: 'image/png',
+        };
+      });
 
       await (ConversationExportService as any).downloadMarkdownOrZip(
         '![a](https://example.com/slow.png)\n![b](https://example.com/fast.png)',
