@@ -20,6 +20,8 @@ It just feels right.
 
 - **Drag and Drop**: Pick up a chat. Drop it in a folder. It’s tactile.
 - **Nested Hierarchy**: Projects have sub-projects. Create folders inside folders. Structure it _your_ way.
+- **Folder Spacing**: Adjust vertical density from compact to spacious.
+  > _Note: On Mac Safari, adjustments may not be real-time; refresh the page to see the effect._
 - **Instant Sync**: Organize on your desktop. See it on your laptop.
 
 ## Pro Tips
@@ -35,3 +37,24 @@ It just feels right.
 
 - **Account Isolation**: Click the "person" icon in the header to instantly filter out chats from other Google accounts. Keep your workspace clean when using multiple accounts.
   <img src="/assets/current-user-only.png" alt="Account Isolation" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+## Platform Feature Differences
+
+### Common Features
+
+- **Basic Management**: Drag and drop, rename, multi-select.
+- **Smart Recognition**: Automatically detect chat types and assign icons.
+- **Nested Hierarchy**: Support for folder nesting.
+- **AI Studio Adaptive**: Advanced features coming soon to AI Studio.
+- **Google Drive Sync**: Sync folder structure to Google Drive.
+
+### Gemini Exclusive
+
+- **Custom Colors**: Personalize folders with any color.
+- **Account Isolation**: Keep personal and work chats separate.
+- **Deep Research Export**: Export thinking processes perfectly.
+
+### AI Studio Exclusive
+
+- **Sidebar Adjustment**: Drag to resize the sidebar width.
+- **Library Integration**: Drag directly from your Library into folders.

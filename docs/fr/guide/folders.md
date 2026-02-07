@@ -20,6 +20,8 @@ C'est tout simplement naturel.
 
 - **Glisser-Déposer** : Prenez un chat. Déposez-le dans un dossier. C'est tactile.
 - **Hiérarchie imbriquée** : Les projets ont des sous-projets. Créez des dossiers dans des dossiers. Structurez à _votre_ façon.
+- **Espacement des dossiers** : Ajustez la densité de la barre latérale, de compact à spacieux.
+  > _Note : Sur Mac Safari, les ajustements peuvent ne pas être en temps réel ; actualisez la page pour voir l'effet._
 - **Synchronisation Instantanée** : Organisez sur votre bureau. Retrouvez-le sur votre ordinateur portable.
 
 ## Astuces de Pro
@@ -35,3 +37,24 @@ C'est tout simplement naturel.
 
 - **Isolation de compte** : Cliquez sur l'icône « personne » dans l'en-tête pour filtrer instantanément les chats des autres comptes Google. Gardez votre espace de travail propre lorsque vous utilisez plusieurs comptes.
   <img src="/assets/current-user-only.png" alt="Isolation de compte" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+## Différences de fonctionnalités par plateforme
+
+### Fonctionnalités communes
+
+- **Gestion de base** : Glisser-déposer, renommer, multi-sélection.
+- **Reconnaissance intelligente** : Détecte automatiquement les types de chat et assigne des icônes.
+- **Hiérarchie imbriquée** : Support pour l'imbrication des dossiers.
+- **Adaptation AI Studio** : Les fonctionnalités avancées seront bientôt disponibles sur AI Studio.
+- **Sync Google Drive** : Synchronise la structure des dossiers avec Google Drive.
+
+### Exclusivité Gemini
+
+- **Couleurs personnalisées** : Personnalisez les dossiers avec n'importe quelle couleur.
+- **Isolation de compte** : Séparez les chats personnels et professionnels.
+- **Export Deep Research** : Exportez parfaitement les processus de pensée.
+
+### Exclusivité AI Studio
+
+- **Ajustement de la barre latérale** : Faites glisser pour redimensionner la largeur de la barre latérale.
+- **Intégration Library** : Glissez directement depuis votre Library vers les dossiers.

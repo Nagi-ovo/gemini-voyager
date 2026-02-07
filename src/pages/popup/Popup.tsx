@@ -314,17 +314,22 @@ export default function Popup() {
     ),
   });
 
-  // Folder spacing adjuster
+  // Folder spacing adjuster (Context-aware: Gemini vs AI Studio)
+  const folderSpacingKey = isAIStudio ? 'gvAIStudioFolderSpacing' : 'gvFolderSpacing';
+
   const folderSpacingAdjuster = useWidthAdjuster({
-    storageKey: 'gvFolderSpacing',
+    storageKey: folderSpacingKey,
     defaultValue: FOLDER_SPACING.defaultValue,
     normalize: (v) => clampNumber(v, FOLDER_SPACING.min, FOLDER_SPACING.max),
-    onApply: useCallback((spacing: number) => {
-      const clamped = clampNumber(spacing, FOLDER_SPACING.min, FOLDER_SPACING.max);
-      try {
-        chrome.storage?.sync?.set({ gvFolderSpacing: clamped });
-      } catch {}
-    }, []),
+    onApply: useCallback(
+      (spacing: number) => {
+        const clamped = clampNumber(spacing, FOLDER_SPACING.min, FOLDER_SPACING.max);
+        try {
+          chrome.storage?.sync?.set({ [folderSpacingKey]: clamped });
+        } catch {}
+      },
+      [folderSpacingKey],
+    ),
   });
 
   useEffect(() => {

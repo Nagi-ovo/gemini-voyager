@@ -145,7 +145,7 @@ async function initializeFeatures(): Promise<void> {
       folderManagerInstance = await startFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
-      startFolderSpacingAdjuster();
+      startFolderSpacingAdjuster('gemini');
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startChatWidthAdjuster();
@@ -232,7 +232,7 @@ async function initializeFeatures(): Promise<void> {
       startAIStudioFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
-      startFolderSpacingAdjuster();
+      startFolderSpacingAdjuster('aistudio');
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Formula copy support for AI Studio
