@@ -9,6 +9,7 @@
     "url": "https://github.com/Nagi-ovo/gemini-voyager.git"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "bump": "bun scripts/bump-version.js",
     "build": "vite build --config vite.config.chrome.ts",
     "build:chrome": "vite build --config vite.config.chrome.ts",
@@ -27,6 +28,7 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",
     "lint": "eslint . --fix",
+    "format:check": "prettier --check .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "commitlint": "commitlint --edit $GIT_PARAMS",

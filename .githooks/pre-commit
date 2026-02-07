@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+echo "[pre-commit] Running format check..."
+bun run format:check
