@@ -1294,33 +1294,35 @@ export default function Popup() {
           </CardContent>
         </Card>
 
-        {/* NanoBanana Options */}
-        <Card className="p-4 transition-shadow hover:shadow-lg">
-          <CardTitle className="mb-4 text-xs uppercase">{t('nanobananaOptions')}</CardTitle>
-          <CardContent className="space-y-4 p-0">
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="watermark-remover"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                >
-                  {t('enableNanobananaWatermarkRemover')}
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('nanobananaWatermarkRemoverHint')}
-                </p>
+        {/* NanoBanana Options - Hidden on Safari due to fetch interceptor limitations */}
+        {!isSafari() && (
+          <Card className="p-4 transition-shadow hover:shadow-lg">
+            <CardTitle className="mb-4 text-xs uppercase">{t('nanobananaOptions')}</CardTitle>
+            <CardContent className="space-y-4 p-0">
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="watermark-remover"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('enableNanobananaWatermarkRemover')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('nanobananaWatermarkRemoverHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="watermark-remover"
+                  checked={watermarkRemoverEnabled}
+                  onChange={(e) => {
+                    setWatermarkRemoverEnabled(e.target.checked);
+                    apply({ watermarkRemoverEnabled: e.target.checked });
+                  }}
+                />
               </div>
-              <Switch
-                id="watermark-remover"
-                checked={watermarkRemoverEnabled}
-                onChange={(e) => {
-                  setWatermarkRemoverEnabled(e.target.checked);
-                  apply({ watermarkRemoverEnabled: e.target.checked });
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Footer */}

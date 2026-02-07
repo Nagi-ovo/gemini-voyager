@@ -1,5 +1,11 @@
 # NanoBanana 選項
 
+::: warning 瀏覽器相容性
+目前 **NanoBanana** 去浮水印功能由於瀏覽器 API 限制，**暫不支持 Safari 瀏覽器**。如果您需要使用此功能，建議使用 **Chrome** 或 **Firefox**。
+
+Safari 用戶可以將下載的圖片上傳到 [banana.ovo.re](https://banana.ovo.re/) 等工具網站進行手動去除（但由於 Gemini 圖片尺寸的多樣性，不能保證每張圖片都能成功還原）。
+:::
+
 **AI 圖片，本該純淨。**
 
 Gemini 生成的圖片默認帶有可見的水印。雖然這是出於安全考慮，但在某些創作場景下，你可能需要一張完全乾淨的底稿。

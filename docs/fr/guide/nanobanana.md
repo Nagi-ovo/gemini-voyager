@@ -1,5 +1,11 @@
 # Option NanoBanana
 
+::: warning Compatibilité du navigateur
+Actuellement, la fonction **NanoBanana** n'est **pas prise en charge sur Safari** en raison des limitations de l'API du navigateur. Nous vous recommandons d'utiliser **Chrome** ou **Firefox** si vous avez besoin d'utiliser cette fonction.
+
+Les utilisateurs de Safari peuvent télécharger manuellement leurs images sur des sites d'outils comme [banana.ovo.re](https://banana.ovo.re/) pour le traitement (bien que le succès ne soit pas garanti pour toutes les images en raison des différentes résolutions).
+:::
+
 **Images IA, gardées pures.**
 
 Les images générées par Gemini comportent un filigrane visible par défaut. Bien que ce soit pour des raisons de sécurité, il existe des scénarios créatifs où vous avez besoin d'une image parfaitement vierge.

@@ -1,3 +1,4 @@
+import { isSafari } from '@/core/utils/browser';
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
@@ -182,7 +183,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Watermark remover - based on gemini-watermark-remover by journey-ad
       // https://github.com/journey-ad/gemini-watermark-remover
-      startWatermarkRemover();
+      // Skip on Safari due to fetch interceptor limitations in extension sandbox
+      if (!isSafari()) {
+        startWatermarkRemover();
+      }
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startTitleUpdater();
