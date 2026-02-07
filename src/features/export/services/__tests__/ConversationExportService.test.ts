@@ -409,8 +409,7 @@ describe('ConversationExportService', () => {
         },
       );
 
-      chrome.runtime.sendMessage =
-        sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
+      chrome.runtime.sendMessage = sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
 
       const fetched = await (ConversationExportService as any).fetchImageForMarkdownPackaging(
         imageUrl,
@@ -444,8 +443,7 @@ describe('ConversationExportService', () => {
           callback?.(null);
         },
       );
-      chrome.runtime.sendMessage =
-        sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
+      chrome.runtime.sendMessage = sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
 
       const fetched = await (ConversationExportService as any).fetchImageForMarkdownPackaging(
         blobUrl,

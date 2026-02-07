@@ -480,12 +480,9 @@ export class ConversationExportService {
       if (typeof sendMessage !== 'function') return null;
       return await new Promise<RuntimeFetchImageResponse>((resolve) => {
         try {
-          (sendMessage as (...args: unknown[]) => void)(
-            { type, url },
-            (rawResponse: unknown) => {
-              resolve((rawResponse as RuntimeFetchImageResponse) ?? null);
-            },
-          );
+          (sendMessage as (...args: unknown[]) => void)({ type, url }, (rawResponse: unknown) => {
+            resolve((rawResponse as RuntimeFetchImageResponse) ?? null);
+          });
         } catch {
           resolve(null);
         }
