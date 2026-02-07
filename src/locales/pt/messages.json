@@ -1130,5 +1130,17 @@
   "sidebarAutoHideHint": {
     "message": "Contrai automaticamente a barra lateral quando o mouse sai, expande quando entra",
     "description": "Auto-hide sidebar feature hint"
+  },
+  "folderSpacing": {
+    "message": "Espaçamento de pastas",
+    "description": "Folder spacing adjustment label"
+  },
+  "folderSpacingCompact": {
+    "message": "Compacto",
+    "description": "Compact folder spacing label"
+  },
+  "folderSpacingSpacious": {
+    "message": "Espaçoso",
+    "description": "Spacious folder spacing label"
   }
 }

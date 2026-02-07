@@ -1130,5 +1130,17 @@
   "sidebarAutoHideHint": {
     "message": "마우스가 벗어나면 사이드바를 자동으로 접고, 마우스가 들어오면 펼칩니다",
     "description": "Auto-hide sidebar feature hint"
+  },
+  "folderSpacing": {
+    "message": "폴더 간격",
+    "description": "Folder spacing adjustment label"
+  },
+  "folderSpacingCompact": {
+    "message": "좁게",
+    "description": "Compact folder spacing label"
+  },
+  "folderSpacingSpacious": {
+    "message": "넓게",
+    "description": "Spacious folder spacing label"
   }
 }

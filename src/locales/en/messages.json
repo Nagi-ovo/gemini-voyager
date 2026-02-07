@@ -1130,5 +1130,17 @@
   "sidebarAutoHideHint": {
     "message": "Automatically collapse sidebar when mouse leaves, expand when mouse enters",
     "description": "Auto-hide sidebar feature hint"
+  },
+  "folderSpacing": {
+    "message": "Folder spacing",
+    "description": "Folder spacing adjustment label"
+  },
+  "folderSpacingCompact": {
+    "message": "Compact",
+    "description": "Compact folder spacing label"
+  },
+  "folderSpacingSpacious": {
+    "message": "Spacious",
+    "description": "Spacious folder spacing label"
   }
 }

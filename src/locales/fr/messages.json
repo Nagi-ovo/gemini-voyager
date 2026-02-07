@@ -1130,5 +1130,17 @@
   "sidebarAutoHideHint": {
     "message": "Réduit automatiquement la barre latérale quand la souris la quitte, l'étend quand elle y entre",
     "description": "Auto-hide sidebar feature hint"
+  },
+  "folderSpacing": {
+    "message": "Espacement des dossiers",
+    "description": "Folder spacing adjustment label"
+  },
+  "folderSpacingCompact": {
+    "message": "Compact",
+    "description": "Compact folder spacing label"
+  },
+  "folderSpacingSpacious": {
+    "message": "Spacieux",
+    "description": "Spacious folder spacing label"
   }
 }

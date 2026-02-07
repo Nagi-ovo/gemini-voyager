@@ -70,6 +70,9 @@ export const StorageKeys = {
 
   // Sidebar behavior
   GV_SIDEBAR_AUTO_HIDE: 'gvSidebarAutoHide',
+
+  // Folder spacing
+  GV_FOLDER_SPACING: 'gvFolderSpacing',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

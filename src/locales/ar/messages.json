@@ -1130,5 +1130,17 @@
   "sidebarAutoHideHint": {
     "message": "طي الشريط الجانبي تلقائياً عند مغادرة الماوس، وتوسيعه عند الدخول",
     "description": "Auto-hide sidebar feature hint"
+  },
+  "folderSpacing": {
+    "message": "تباعد المجلدات",
+    "description": "Folder spacing adjustment label"
+  },
+  "folderSpacingCompact": {
+    "message": "مضغوط",
+    "description": "Compact folder spacing label"
+  },
+  "folderSpacingSpacious": {
+    "message": "واسع",
+    "description": "Spacious folder spacing label"
   }
 }

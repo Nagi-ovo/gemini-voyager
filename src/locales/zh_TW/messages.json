@@ -1130,5 +1130,17 @@
   "sidebarAutoHideHint": {
     "message": "滑鼠離開時自動收起側邊欄，滑鼠進入時展開",
     "description": "側邊欄自動收起功能提示"
+  },
+  "folderSpacing": {
+    "message": "資料夾間距",
+    "description": "資料夾間距調節標籤"
+  },
+  "folderSpacingCompact": {
+    "message": "緊湊",
+    "description": "緊湊資料夾間距標籤"
+  },
+  "folderSpacingSpacious": {
+    "message": "寬鬆",
+    "description": "寬鬆資料夾間距標籤"
   }
 }

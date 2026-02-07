@@ -10,6 +10,7 @@ import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderManager } from './folder/index';
+import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { startGemsHider } from './gemsHider/index';
 import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';
@@ -144,6 +145,9 @@ async function initializeFeatures(): Promise<void> {
       folderManagerInstance = await startFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
+      startFolderSpacingAdjuster();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
       startChatWidthAdjuster();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
@@ -227,6 +231,9 @@ async function initializeFeatures(): Promise<void> {
     if (location.hostname === 'aistudio.google.com' || location.hostname === 'aistudio.google.cn') {
       startAIStudioFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
+
+      startFolderSpacingAdjuster();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Formula copy support for AI Studio
       startFormulaCopy();

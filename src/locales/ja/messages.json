@@ -196,7 +196,7 @@
     "description": "Backup step 3"
   },
   "pm_backup_note": {
-    "message": "すべてのプロンプトとフォルダが含まれ、タイムスタンプ付きのフォルダに保存されます (形式: backup-YYYYMMDD-HHMMSS)",
+    "message": "すべてのプロンプトとフォルダが含まれ、タイムスタンプ付きのフォルダに保存されます (形式：backup-YYYYMMDD-HHMMSS)",
     "description": "Backup feature note"
   },
   "extensionVersion": {
@@ -240,11 +240,11 @@
     "description": "Create folder button tooltip"
   },
   "folder_name_prompt": {
-    "message": "フォルダ名を入力:",
+    "message": "フォルダ名を入力：",
     "description": "Create folder name prompt"
   },
   "folder_rename_prompt": {
-    "message": "新しい名前を入力:",
+    "message": "新しい名前を入力：",
     "description": "Rename folder prompt"
   },
   "folder_delete_confirm": {
@@ -416,7 +416,7 @@
     "description": "Import dialog title"
   },
   "folder_import_strategy": {
-    "message": "インポート方法:",
+    "message": "インポート方法：",
     "description": "Import strategy label"
   },
   "folder_import_merge": {
@@ -440,7 +440,7 @@
     "description": "Import success with skipped message"
   },
   "folder_import_error": {
-    "message": "✗ インポート失敗: {error}",
+    "message": "✗ インポート失敗：{error}",
     "description": "Import error message"
   },
   "folder_export_success": {
@@ -460,7 +460,7 @@
     "description": "Export dialog title"
   },
   "export_dialog_select": {
-    "message": "エクスポート形式を選択:",
+    "message": "エクスポート形式を選択：",
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
@@ -468,11 +468,11 @@
     "description": "Warning about lazy loading affecting export completeness"
   },
   "export_dialog_safari_cmdp_hint": {
-    "message": "Safari のヒント：下の「エクスポート」を選択し、少し待ってから ⌘P を押して「PDFとして保存」を選択してください。",
+    "message": "Safari のヒント：下の「エクスポート」を選択し、少し待ってから ⌘P を押して「PDF として保存」を選択してください。",
     "description": "Safari-specific hint for PDF export"
   },
   "export_dialog_safari_markdown_hint": {
-    "message": "Safari 制限：画像を抽出できません。PDFエクスポートを使用してください。",
+    "message": "Safari 制限：画像を抽出できません。PDF エクスポートを使用してください。",
     "description": "Warning about image references in Safari markdown export"
   },
   "export_format_json_description": {
@@ -484,7 +484,7 @@
     "description": "Description for Markdown export format"
   },
   "export_format_pdf_description": {
-    "message": "印刷に適した形式（PDFとして保存）",
+    "message": "印刷に適した形式（PDF として保存）",
     "description": "Description for PDF export format"
   },
   "editInputWidth": {
@@ -532,7 +532,7 @@
     "description": "Notice that defaults are limited to Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
-    "message": "⚠️ 警告: フォルダデータの読み込みに失敗しました。データが破損している可能性があります。ブラウザのコンソールで詳細を確認し、可能であればバックアップから復元してください。",
+    "message": "⚠️ 警告：フォルダデータの読み込みに失敗しました。データが破損している可能性があります。ブラウザのコンソールで詳細を確認し、可能であればバックアップから復元してください。",
     "description": "Warning shown when folder data fails to load"
   },
   "backupOptions": {
@@ -552,7 +552,7 @@
     "description": "Select backup folder button"
   },
   "backupFolderSelected": {
-    "message": "バックアップフォルダ: {folder}",
+    "message": "バックアップフォルダ：{folder}",
     "description": "Shows selected backup folder"
   },
   "backupIncludePrompts": {
@@ -576,11 +576,11 @@
     "description": "Daily backup interval"
   },
   "backupIntervalWeekly": {
-    "message": "毎週 (7日ごと)",
+    "message": "毎週 (7 日ごと)",
     "description": "Weekly backup interval"
   },
   "backupLastBackup": {
-    "message": "前回のバックアップ: {time}",
+    "message": "前回のバックアップ：{time}",
     "description": "Last backup timestamp"
   },
   "backupNever": {
@@ -588,11 +588,11 @@
     "description": "Never backed up"
   },
   "backupSuccess": {
-    "message": "✓ バックアップ完了: プロンプト {prompts} 件, フォルダ {folders} 件, 会話 {conversations} 件",
+    "message": "✓ バックアップ完了：プロンプト {prompts} 件，フォルダ {folders} 件，会話 {conversations} 件",
     "description": "Backup success message"
   },
   "backupError": {
-    "message": "✗ バックアップ失敗: {error}",
+    "message": "✗ バックアップ失敗：{error}",
     "description": "Backup error message"
   },
   "backupNotSupported": {
@@ -616,7 +616,7 @@
     "description": "Permission denied for restricted directory"
   },
   "backupConfigureInOptions": {
-    "message": "バックアップの設定はオプションページで行う必要があります。下のボタンをクリックして開いてください（拡張機能アイコン横の3点リーダ → オプション）。",
+    "message": "バックアップの設定はオプションページで行う必要があります。下のボタンをクリックして開いてください（拡張機能アイコン横の 3 点リーダ → オプション）。",
     "description": "Backup configure in options page explanation"
   },
   "openOptionsPage": {
@@ -656,7 +656,7 @@
     "description": "Custom websites for prompt manager"
   },
   "customWebsitesPlaceholder": {
-    "message": "ウェブサイトの URL を入力 (例: chatgpt.com)",
+    "message": "ウェブサイトの URL を入力 (例：chatgpt.com)",
     "description": "Custom websites input placeholder"
   },
   "customWebsitesHint": {
@@ -692,7 +692,7 @@
     "description": "Permission request failure message"
   },
   "customWebsitesNote": {
-    "message": "ヒント: サイトを追加するとアクセスの許可を求められます。許可した後、プロンプトマネージャーを開始するにはそのサイトを再読み込みしてください。",
+    "message": "ヒント：サイトを追加するとアクセスの許可を求められます。許可した後、プロンプトマネージャーを開始するにはそのサイトを再読み込みしてください。",
     "description": "Custom websites reload/permission note"
   },
   "starredHistory": {
@@ -812,7 +812,7 @@
     "description": "Sync now button"
   },
   "lastSynced": {
-    "message": "最終同期: {time}",
+    "message": "最終同期：{time}",
     "description": "Last sync timestamp"
   },
   "neverSynced": {
@@ -820,7 +820,7 @@
     "description": "Never synced message"
   },
   "lastUploaded": {
-    "message": "アップロード: {time}",
+    "message": "アップロード：{time}",
     "description": "Last upload timestamp"
   },
   "neverUploaded": {
@@ -832,7 +832,7 @@
     "description": "Sync success message"
   },
   "syncError": {
-    "message": "✗ 同期に失敗しました: {error}",
+    "message": "✗ 同期に失敗しました：{error}",
     "description": "Sync error message"
   },
   "syncInProgress": {
@@ -916,7 +916,7 @@
     "description": "Deep Research download button text"
   },
   "deepResearchDownloadTooltip": {
-    "message": "思考内容をMarkdown形式でダウンロード",
+    "message": "思考内容を Markdown 形式でダウンロード",
     "description": "Deep Research download button tooltip"
   },
   "folder_uncategorized": {
@@ -988,7 +988,7 @@
     "description": "Batch delete success message"
   },
   "batch_delete_partial": {
-    "message": "削除完了: 成功 {success} 件, 失敗 {failed} 件",
+    "message": "削除完了：成功 {success} 件，失敗 {failed} 件",
     "description": "Batch delete partial success message"
   },
   "batch_delete_limit_reached": {
@@ -1000,7 +1000,7 @@
     "description": "Batch delete button tooltip in multi-select mode"
   },
   "batch_delete_match_patterns": {
-    "message": "delete,confirm,yes,ok,remove,削除,確認,確定,はい",
+    "message": "delete,confirm,yes,ok,remove，削除，確認，確定，はい",
     "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
   },
   "generalOptions": {
@@ -1036,11 +1036,11 @@
     "description": "Context Sync title"
   },
   "contextSyncDescription": {
-    "message": "チャットのコンテキストをローカルIDEに同期します",
+    "message": "チャットのコンテキストをローカル IDE に同期します",
     "description": "Context Sync description"
   },
   "syncToIDE": {
-    "message": "IDEに同期",
+    "message": "IDE に同期",
     "description": "Sync to IDE button"
   },
   "ideOnline": {
@@ -1056,7 +1056,7 @@
     "description": "Syncing status"
   },
   "checkServer": {
-    "message": "VS CodeでAI Syncサーバーを起動してください",
+    "message": "VS Code で AI Sync サーバーを起動してください",
     "description": "Check server hint"
   },
   "capturing": {
@@ -1100,12 +1100,12 @@
     "description": "最近のプレビューセクションを表示するツールチップ"
   },
   "gemsHide": {
-    "message": "Gemsを非表示",
-    "description": "Gemsリストセクションを非表示にするツールチップ"
+    "message": "Gems を非表示",
+    "description": "Gems リストセクションを非表示にするツールチップ"
   },
   "gemsShow": {
-    "message": "Gemsを表示",
-    "description": "Gemsリストセクションを表示するツールチップ"
+    "message": "Gems を表示",
+    "description": "Gems リストセクションを表示するツールチップ"
   },
   "setAsDefaultModel": {
     "message": "Set as default model",
@@ -1130,5 +1130,17 @@
   "sidebarAutoHideHint": {
     "message": "マウスが離れると自動でサイドバーを折りたたみ、マウスが入ると展開します",
     "description": "サイドバー自動非表示機能のヒント"
+  },
+  "folderSpacing": {
+    "message": "フォルダ間隔",
+    "description": "フォルダ間隔調整ラベル"
+  },
+  "folderSpacingCompact": {
+    "message": "コンパクト",
+    "description": "コンパクトフォルダ間隔ラベル"
+  },
+  "folderSpacingSpacious": {
+    "message": "ゆったり",
+    "description": "ゆったりフォルダ間隔ラベル"
   }
 }

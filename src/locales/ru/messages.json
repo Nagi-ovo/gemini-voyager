@@ -1130,5 +1130,17 @@
   "sidebarAutoHideHint": {
     "message": "Автоматически сворачивать боковую панель при уходе мыши, разворачивать при наведении",
     "description": "Auto-hide sidebar feature hint"
+  },
+  "folderSpacing": {
+    "message": "Расстояние между папками",
+    "description": "Folder spacing adjustment label"
+  },
+  "folderSpacingCompact": {
+    "message": "Компактно",
+    "description": "Compact folder spacing label"
+  },
+  "folderSpacingSpacious": {
+    "message": "Просторно",
+    "description": "Spacious folder spacing label"
   }
 }

@@ -1130,5 +1130,17 @@
   "sidebarAutoHideHint": {
     "message": "鼠标离开时自动收起侧边栏，鼠标进入时展开",
     "description": "侧边栏自动收起功能提示"
+  },
+  "folderSpacing": {
+    "message": "文件夹间距",
+    "description": "文件夹间距调节标签"
+  },
+  "folderSpacingCompact": {
+    "message": "紧凑",
+    "description": "紧凑文件夹间距标签"
+  },
+  "folderSpacingSpacious": {
+    "message": "宽松",
+    "description": "宽松文件夹间距标签"
   }
 }
