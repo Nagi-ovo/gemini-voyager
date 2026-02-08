@@ -3,6 +3,7 @@ import browser from 'webextension-polyfill';
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
+import { isSafari } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
@@ -567,29 +568,37 @@ export class FolderManager {
     importExportButton.title = this.t('folder_import_export');
     importExportButton.addEventListener('click', (e) => this.showImportExportMenu(e));
 
-    // Cloud upload button
-    const cloudUploadButton = document.createElement('button');
-    cloudUploadButton.className = 'gv-folder-action-btn';
-    cloudUploadButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q25-92 100-149t170-57q117 0 198.5 81.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H520q-33 0-56.5-23.5T440-240v-206l-64 62-56-56 160-160 160 160-56 56-64-62v206h220q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-83-58.5-141.5T480-720q-83 0-141.5 58.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h100v80H260Zm220-280Z"/></svg>`;
-    cloudUploadButton.title = this.t('folder_cloud_upload');
-    cloudUploadButton.addEventListener('click', () => this.handleCloudUpload());
-    // Add dynamic tooltip on mouseenter
-    cloudUploadButton.addEventListener('mouseenter', async () => {
-      const tooltip = await this.getCloudUploadTooltip();
-      cloudUploadButton.title = tooltip;
-    });
+    actionsContainer.appendChild(filterUserButton);
+    actionsContainer.appendChild(importExportButton);
 
-    // Cloud sync button
-    const cloudSyncButton = document.createElement('button');
-    cloudSyncButton.className = 'gv-folder-action-btn';
-    cloudSyncButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"/></svg>`;
-    cloudSyncButton.title = this.t('folder_cloud_sync');
-    cloudSyncButton.addEventListener('click', () => this.handleCloudSync());
-    // Add dynamic tooltip on mouseenter
-    cloudSyncButton.addEventListener('mouseenter', async () => {
-      const tooltip = await this.getCloudSyncTooltip();
-      cloudSyncButton.title = tooltip;
-    });
+    // Cloud buttons (Skip on Safari as it doesn't support cloud sync yet)
+    if (!isSafari()) {
+      // Cloud upload button
+      const cloudUploadButton = document.createElement('button');
+      cloudUploadButton.className = 'gv-folder-action-btn';
+      cloudUploadButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q25-92 100-149t170-57q117 0 198.5 81.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H520q-33 0-56.5-23.5T440-240v-206l-64 62-56-56 160-160 160 160-56 56-64-62v206h220q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-83-58.5-141.5T480-720q-83 0-141.5 58.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h100v80H260Zm220-280Z"/></svg>`;
+      cloudUploadButton.title = this.t('folder_cloud_upload');
+      cloudUploadButton.addEventListener('click', () => this.handleCloudUpload());
+      // Add dynamic tooltip on mouseenter
+      cloudUploadButton.addEventListener('mouseenter', async () => {
+        const tooltip = await this.getCloudUploadTooltip();
+        cloudUploadButton.title = tooltip;
+      });
+      actionsContainer.appendChild(cloudUploadButton);
+
+      // Cloud sync button
+      const cloudSyncButton = document.createElement('button');
+      cloudSyncButton.className = 'gv-folder-action-btn';
+      cloudSyncButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"/></svg>`;
+      cloudSyncButton.title = this.t('folder_cloud_sync');
+      cloudSyncButton.addEventListener('click', () => this.handleCloudSync());
+      // Add dynamic tooltip on mouseenter
+      cloudSyncButton.addEventListener('mouseenter', async () => {
+        const tooltip = await this.getCloudSyncTooltip();
+        cloudSyncButton.title = tooltip;
+      });
+      actionsContainer.appendChild(cloudSyncButton);
+    }
 
     // Add folder button
     const addButton = document.createElement('button');
@@ -598,10 +607,6 @@ export class FolderManager {
     addButton.title = this.t('folder_create');
     addButton.addEventListener('click', () => this.createFolder());
 
-    actionsContainer.appendChild(filterUserButton);
-    actionsContainer.appendChild(importExportButton);
-    actionsContainer.appendChild(cloudUploadButton);
-    actionsContainer.appendChild(cloudSyncButton);
     actionsContainer.appendChild(addButton);
 
     header.appendChild(titleContainer);
@@ -5885,23 +5890,40 @@ export class FolderManager {
   }
 
   /**
-   * Handle cloud upload - upload folder data to Google Drive
+   * Handle cloud upload - upload folder data, prompts, and starred messages to Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleSyncNow()
    */
   private async handleCloudUpload(): Promise<void> {
     try {
-      this.showNotification(this.t('syncInProgress'), 'info');
+      this.showNotification(this.t('uploadInProgress'), 'info');
 
       // Get current folder data
       const folders = this.data;
 
+      // Get prompts from storage
+      let prompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          prompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[FolderManager] Could not get prompts for upload:', err);
+      }
+
+      this.debug(
+        `Uploading - folders: ${folders.folders?.length || 0}, prompts: ${prompts.length}`,
+      );
+
       // Send upload request to background script
+      // Background script will also fetch starred messages for Gemini platform
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.upload',
-        payload: { folders, prompts: [], platform: 'gemini' },
+        payload: { folders, prompts, platform: 'gemini' },
       })) as { ok?: boolean; error?: string } | undefined;
 
       if (response?.ok) {
-        this.showNotification(this.t('syncSuccess'), 'success');
+        this.showNotification(this.t('uploadSuccess'), 'success');
       } else {
         const errorMsg = response?.error || 'Unknown error';
         this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
@@ -5914,18 +5936,27 @@ export class FolderManager {
   }
 
   /**
-   * Handle cloud sync - download and merge folder data from Google Drive
+   * Handle cloud sync - download and merge folder data, prompts, and starred messages from Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleDownloadFromDrive()
    */
   private async handleCloudSync(): Promise<void> {
     try {
-      this.showNotification(this.t('syncInProgress'), 'info');
+      this.showNotification(this.t('downloadInProgress'), 'info');
 
       // Send download request to background script
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.download',
         payload: { platform: 'gemini' },
       })) as
-        | { ok?: boolean; error?: string; data?: { folders?: { data?: FolderData } } }
+        | {
+            ok?: boolean;
+            error?: string;
+            data?: {
+              folders?: { data?: FolderData };
+              prompts?: { items?: any[] };
+              starred?: { data?: { messages: Record<string, any[]> } };
+            };
+          }
         | undefined;
 
       if (!response?.ok) {
@@ -5939,25 +5970,153 @@ export class FolderManager {
         return;
       }
 
-      // Get cloud folder data
+      // Extract cloud data
       const cloudFoldersPayload = response.data?.folders;
+      const cloudPromptsPayload = response.data?.prompts;
+      const cloudStarredPayload = response.data?.starred;
       const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
+      const cloudPromptItems = cloudPromptsPayload?.items || [];
+      const cloudStarredData = cloudStarredPayload?.data || { messages: {} };
 
-      // Merge with local data using the same logic as CloudSyncSettings
+      this.debug(
+        `Downloaded - folders: ${cloudFolderData.folders?.length || 0}, prompts: ${cloudPromptItems.length}, starred conversations: ${Object.keys(cloudStarredData.messages || {}).length}`,
+      );
+
+      // Get local prompts for merge
+      let localPrompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          localPrompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[FolderManager] Could not get local prompts for merge:', err);
+      }
+
+      // Get local starred messages for merge
+      let localStarred = { messages: {} as Record<string, any[]> };
+      try {
+        const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
+        if (starredResult.geminiTimelineStarredMessages) {
+          localStarred = starredResult.geminiTimelineStarredMessages;
+        }
+      } catch (err) {
+        console.warn('[FolderManager] Could not get local starred messages for merge:', err);
+      }
+
+      // Merge folder data
       const localFolders = this.data;
       const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
 
-      // Apply merged data
+      // Merge prompts (simple ID-based merge)
+      const mergedPrompts = this.mergePrompts(localPrompts, cloudPromptItems);
+
+      // Merge starred messages
+      const mergedStarred = this.mergeStarredMessages(localStarred, cloudStarredData);
+
+      this.debug(
+        `Merged - folders: ${mergedFolders.folders?.length || 0}, prompts: ${mergedPrompts.length}, starred conversations: ${Object.keys(mergedStarred.messages || {}).length}`,
+      );
+
+      // Apply merged folder data
       this.data = mergedFolders;
       await this.saveData();
-      this.refresh();
 
-      this.showNotification(this.t('syncSuccess'), 'success');
+      // Save merged prompts and starred to storage
+      try {
+        await chrome.storage.local.set({
+          gvPromptItems: mergedPrompts,
+          geminiTimelineStarredMessages: mergedStarred,
+        });
+      } catch (err) {
+        console.error('[FolderManager] Failed to save merged prompts/starred:', err);
+      }
+
+      this.refresh();
+      this.showNotification(this.t('downloadMergeSuccess'), 'success');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('[FolderManager] Cloud sync failed:', error);
       this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
     }
+  }
+
+  /**
+   * Merge prompts by ID (simple deduplication)
+   */
+  private mergePrompts(local: any[], cloud: any[]): any[] {
+    const promptMap = new Map<string, any>();
+
+    // Add local prompts first
+    local.forEach((p) => {
+      if (p?.id) promptMap.set(p.id, p);
+    });
+
+    // Add cloud prompts (cloud takes priority for newer items)
+    cloud.forEach((p) => {
+      if (!p?.id) return;
+      const existing = promptMap.get(p.id);
+      if (!existing) {
+        promptMap.set(p.id, p);
+      } else {
+        // Compare timestamps, prefer newer
+        const cloudTime = p.updatedAt || p.createdAt || 0;
+        const localTime = existing.updatedAt || existing.createdAt || 0;
+        if (cloudTime > localTime) {
+          promptMap.set(p.id, p);
+        }
+      }
+    });
+
+    return Array.from(promptMap.values());
+  }
+
+  /**
+   * Merge starred messages by conversationId and turnId
+   */
+  private mergeStarredMessages(
+    local: { messages: Record<string, any[]> },
+    cloud: { messages: Record<string, any[]> },
+  ): { messages: Record<string, any[]> } {
+    const localMessages = local?.messages || {};
+    const cloudMessages = cloud?.messages || {};
+
+    const allConversationIds = new Set([
+      ...Object.keys(localMessages),
+      ...Object.keys(cloudMessages),
+    ]);
+
+    const mergedMessages: Record<string, any[]> = {};
+
+    allConversationIds.forEach((conversationId) => {
+      const localConvoMessages = localMessages[conversationId] || [];
+      const cloudConvoMessages = cloudMessages[conversationId] || [];
+
+      const messageMap = new Map<string, any>();
+
+      // Add cloud messages first
+      cloudConvoMessages.forEach((msg) => {
+        if (msg?.turnId) messageMap.set(msg.turnId, msg);
+      });
+
+      // Merge local messages - prefer newer starredAt
+      localConvoMessages.forEach((localMsg) => {
+        if (!localMsg?.turnId) return;
+        const existingMsg = messageMap.get(localMsg.turnId);
+        if (!existingMsg) {
+          messageMap.set(localMsg.turnId, localMsg);
+        } else if ((localMsg.starredAt || 0) >= (existingMsg.starredAt || 0)) {
+          messageMap.set(localMsg.turnId, localMsg);
+        }
+      });
+
+      const mergedArray = Array.from(messageMap.values());
+      if (mergedArray.length > 0) {
+        mergedMessages[conversationId] = mergedArray;
+      }
+    });
+
+    return { messages: mergedMessages };
   }
 
   /**
