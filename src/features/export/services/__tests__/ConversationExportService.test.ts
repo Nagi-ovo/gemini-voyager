@@ -2,6 +2,7 @@
  * ConversationExportService unit tests
  */
 import { toBlob } from 'html-to-image';
+import JSZip from 'jszip';
 import { JSDOM } from 'jsdom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -100,7 +101,7 @@ describe('ConversationExportService', () => {
 
       expect(result.success).toBe(true);
       expect(result.format).toBe('markdown');
-      expect(result.filename).toMatch(/\.md$/);
+      expect(result.filename).toBe('Premier-League-Fantasy.md');
     });
 
     it('should export as PDF', async () => {
@@ -416,9 +417,7 @@ describe('ConversationExportService', () => {
           await new Promise((resolve) => setTimeout(resolve, 10));
         }
         return {
-          blob: {
-            arrayBuffer: async () => new TextEncoder().encode(url).buffer,
-          } as unknown as Blob,
+          blob: new Blob([new TextEncoder().encode(url)], { type: 'image/png' }),
           contentType: 'image/png',
         };
       });
@@ -433,6 +432,43 @@ describe('ConversationExportService', () => {
       const mapping = rewriteSpy.mock.calls[0][1] as Map<string, string>;
       expect(mapping.get('https://example.com/slow.png')).toBe('assets/img-001.png');
       expect(mapping.get('https://example.com/fast.png')).toBe('assets/img-002.png');
+    });
+
+    it('stores markdown image assets as Blob payloads for cross-browser JSZip compatibility', async () => {
+      const imageUrl = 'https://example.com/photo.jpg';
+      vi.spyOn(MarkdownFormatter, 'extractImageUrls').mockReturnValue([imageUrl]);
+      vi.spyOn(MarkdownFormatter, 'rewriteImageUrls').mockImplementation((markdown) => markdown);
+
+      vi.spyOn(
+        ConversationExportService as any,
+        'fetchImageForMarkdownPackaging',
+      ).mockResolvedValue({
+        blob: new Blob(['jpeg-bytes'], { type: 'image/jpeg' }),
+        contentType: 'image/jpeg',
+      });
+
+      let capturedAssetPayload: unknown;
+      const originalFile = (JSZip.prototype as any).file;
+      vi.spyOn(JSZip.prototype as any, 'file').mockImplementation(function (
+        this: any,
+        name: any,
+        data?: any,
+        options?: any,
+      ) {
+        if (typeof name === 'string' && name.startsWith('img-')) {
+          capturedAssetPayload = data;
+        }
+        return originalFile.call(this, name, data, options);
+      });
+
+      const finalFilename = await (ConversationExportService as any).downloadMarkdownOrZip(
+        `![photo](${imageUrl})`,
+        'chat.md',
+        'chat.md',
+      );
+
+      expect(finalFilename).toBe('chat.zip');
+      expect(capturedAssetPayload).toBeInstanceOf(Blob);
     });
 
     it('should fallback to gv.fetchImageViaPage when direct and background fetch fail', async () => {

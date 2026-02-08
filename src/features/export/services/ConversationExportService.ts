@@ -163,7 +163,7 @@ export class ConversationExportService {
   ): Promise<ExportResult> {
     // First create a clean markdown (no inlining)
     const markdown = MarkdownFormatter.format(turns, metadata);
-    const filename = options.filename || MarkdownFormatter.generateFilename();
+    const filename = options.filename || this.generateFilename('md', metadata.title);
     const finalFilename = await this.downloadMarkdownOrZip(markdown, filename, 'chat.md');
     return { success: true, format: 'markdown' as ExportFormat, filename: finalFilename };
   }
@@ -381,11 +381,9 @@ export class ConversationExportService {
       imageUrls.map(async (url) => {
         const fetched = await this.fetchImageForMarkdownPackaging(url);
         if (!fetched) return null;
-        const arrayBuffer = await fetched.blob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer.slice(0));
         return {
           url,
-          bytes: uint8Array,
+          blob: fetched.blob,
           contentType: fetched.contentType,
         };
       }),
@@ -396,7 +394,7 @@ export class ConversationExportService {
       if (!item) continue;
       const extension = this.pickImageExtension(item.contentType, item.url);
       const fileName = `img-${String(index++).padStart(3, '0')}.${extension}`;
-      assetsFolder?.file(fileName, item.bytes);
+      assetsFolder?.file(fileName, item.blob);
       mapping.set(item.url, `assets/${fileName}`);
     }
 
