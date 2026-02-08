@@ -4922,6 +4922,16 @@ export class FolderManager {
           // Apply the change to all conversations
           this.applyHideArchivedSetting();
         }
+        // Listen for language changes and update UI text
+        if (changes[StorageKeys.LANGUAGE]) {
+          this.debug('Language changed, updating UI text...');
+          this.updateHeaderLanguageText();
+        }
+      }
+      // Also listen for language changes from local storage (fallback)
+      if (areaName === 'local' && changes[StorageKeys.LANGUAGE]) {
+        this.debug('Language changed (local), updating UI text...');
+        this.updateHeaderLanguageText();
       }
       // Listen for folder data changes from cloud sync
       if (areaName === 'local' && changes.gvFolderData) {
@@ -5357,6 +5367,58 @@ export class FolderManager {
   private t(key: string): string {
     // Use the centralized i18n system that respects user's language preference
     return getTranslationSyncUnsafe(key);
+  }
+
+  /**
+   * Update all translatable text in the folder header when language changes
+   */
+  private updateHeaderLanguageText(): void {
+    if (!this.containerElement) return;
+
+    // Update folder title
+    const title = this.containerElement.querySelector('.gv-folder-header .title');
+    if (title) {
+      title.textContent = this.t('folder_title');
+    }
+
+    // Update button tooltips in header actions
+    const actionsContainer = this.containerElement.querySelector('.gv-folder-header-actions');
+    if (actionsContainer) {
+      const buttons = actionsContainer.querySelectorAll('button');
+      buttons.forEach((btn) => {
+        // Identify buttons by their class or icon content
+        if (btn.classList.contains('gv-folder-add-btn')) {
+          btn.title = this.t('folder_create');
+        } else if (btn.classList.contains('gv-folder-action-btn')) {
+          // Check icon to identify button type
+          const icon = btn.querySelector('mat-icon');
+          if (icon?.textContent === 'person') {
+            btn.title = this.t('folder_filter_current_user');
+          } else if (icon?.textContent === 'folder_managed') {
+            btn.title = this.t('folder_import_export');
+          }
+          // Cloud buttons use SVG, check for SVG content
+          const svg = btn.querySelector('svg');
+          if (svg) {
+            const path = svg.querySelector('path')?.getAttribute('d') || '';
+            // Cloud upload icon contains specific path pattern
+            if (path.includes('520q-33 0-56.5-23.5')) {
+              btn.title = this.t('folder_cloud_upload');
+            } else if (path.includes('520-716v242')) {
+              btn.title = this.t('folder_cloud_sync');
+            }
+          }
+        }
+      });
+    }
+
+    // Update empty state text if present
+    const emptyState = this.containerElement.querySelector('.gv-folder-empty');
+    if (emptyState) {
+      emptyState.textContent = this.t('folder_empty');
+    }
+
+    this.debug('Header language text updated');
   }
 
   private setupMessageListener(): void {

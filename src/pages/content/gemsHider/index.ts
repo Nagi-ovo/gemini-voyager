@@ -6,6 +6,10 @@
  * a subtle hide button appears on hover. When hidden, a minimal "peek bar"
  * allows users to restore the section.
  */
+import browser from 'webextension-polyfill';
+
+import { StorageKeys } from '@/core/types/common';
+
 import { getTranslationSync } from '../../../utils/i18n';
 
 // Constants
@@ -340,6 +344,25 @@ async function setupGemsHider(containerEl: HTMLElement): Promise<void> {
 }
 
 /**
+ * Update UI text when language changes
+ */
+function updateLanguageText(): void {
+  // Update toggle buttons
+  document.querySelectorAll<HTMLButtonElement>(`.${TOGGLE_BTN_CLASS}`).forEach((btn) => {
+    const text = getTranslationSync('gemsHide') || 'Hide Gems';
+    btn.setAttribute('aria-label', text);
+    btn.title = text;
+  });
+
+  // Update peek bars
+  document.querySelectorAll<HTMLDivElement>(`.${PEEK_BAR_CLASS}`).forEach((bar) => {
+    const text = getTranslationSync('gemsShow') || 'Show Gems';
+    bar.setAttribute('data-tooltip', text);
+    bar.setAttribute('aria-label', text);
+  });
+}
+
+/**
  * Initialize the gems hider
  */
 function initGemsHider(): void {
@@ -369,6 +392,13 @@ function initGemsHider(): void {
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
+
+  // Listen for language changes and update UI text
+  browser.storage.onChanged.addListener((changes, areaName) => {
+    if ((areaName === 'sync' || areaName === 'local') && changes[StorageKeys.LANGUAGE]) {
+      updateLanguageText();
+    }
+  });
 }
 
 /**

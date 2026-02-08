@@ -1,3 +1,7 @@
+import browser from 'webextension-polyfill';
+
+import { StorageKeys } from '@/core/types/common';
+
 import { getTranslationSync } from '../../../utils/i18n';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
 
@@ -348,6 +352,16 @@ export function startQuoteReply() {
     handleSelectionChange();
   }
 
+  // Function to update button text when language changes
+  function updateButtonText() {
+    if (quoteBtn) {
+      const span = quoteBtn.querySelector('span');
+      if (span) {
+        span.textContent = getTranslationSync('quoteReply');
+      }
+    }
+  }
+
   // Listen to selection changes via mouseup (often better for "finished" selection)
   // selectionchange event fires too often while dragging.
   document.addEventListener('mouseup', onMouseUp);
@@ -356,6 +370,13 @@ export function startQuoteReply() {
   document.addEventListener('keyup', (e) => {
     if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
       handleSelectionChange();
+    }
+  });
+
+  // Listen for language changes and update button text
+  browser.storage.onChanged.addListener((changes, areaName) => {
+    if ((areaName === 'sync' || areaName === 'local') && changes[StorageKeys.LANGUAGE]) {
+      updateButtonText();
     }
   });
 
