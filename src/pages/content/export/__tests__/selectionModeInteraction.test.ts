@@ -36,4 +36,12 @@ describe('selection mode interaction', () => {
     expect(css).toContain('html.dark-theme .gv-export-progress-card');
     expect(css).toContain("body[data-theme='dark'] .gv-export-progress-card");
   });
+
+  it('wires Safari PDF success path to runtime toast guidance', () => {
+    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
+
+    expect(code).toContain("format === 'pdf'");
+    expect(code).toContain('isSafari()');
+    expect(code).toContain('showExportToast(');
+  });
 });

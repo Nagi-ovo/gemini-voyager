@@ -10,6 +10,17 @@ vi.mock('html-to-image', () => {
   };
 });
 
+function setUserAgentVendor(userAgent: string, vendor: string): void {
+  Object.defineProperty(global.navigator, 'userAgent', {
+    value: userAgent,
+    configurable: true,
+  });
+  Object.defineProperty(global.navigator, 'vendor', {
+    value: vendor,
+    configurable: true,
+  });
+}
+
 describe('ImageExportService', () => {
   const mockMetadata: ConversationMetadata = {
     url: 'https://gemini.google.com/app/test',
@@ -27,6 +38,10 @@ describe('ImageExportService', () => {
   ];
 
   beforeEach(() => {
+    setUserAgentVendor(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      'Google Inc.',
+    );
     global.URL.createObjectURL = vi.fn(() => 'blob:test');
     global.URL.revokeObjectURL = vi.fn();
 
@@ -82,5 +97,43 @@ describe('ImageExportService', () => {
     expect(capturedStyle).toContain('line-height: 1.9;');
     expect(capturedStyle).toContain('font-size: 50px;');
     expect(capturedStyle).toContain('max-width: 100%;');
+  });
+
+  it('retries image render without img elements on Safari when primary render fails', async () => {
+    setUserAgentVendor(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+      'Apple Computer, Inc.',
+    );
+
+    const assistantElement = document.createElement('div');
+    assistantElement.innerHTML =
+      '<p>Body</p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAgMBgA9N4FoAAAAASUVORK5CYII=" alt="img" />';
+
+    const turnsWithImage: ChatTurn[] = [
+      {
+        user: '',
+        assistant: 'fallback',
+        starred: false,
+        assistantElement,
+      },
+    ];
+
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (node: HTMLElement) => {
+      if (node.querySelector('img')) {
+        throw new Error('image blocked');
+      }
+      return new Blob(['ok'], { type: 'image/png' });
+    });
+
+    await ImageExportService.export(turnsWithImage, mockMetadata, { filename: 'safari.png' });
+
+    expect(toBlob).toHaveBeenCalledTimes(2);
+    expect(global.URL.createObjectURL).toHaveBeenCalledOnce();
+
+    const firstTarget = (toBlob as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0] as HTMLElement;
+    const secondTarget = (toBlob as unknown as ReturnType<typeof vi.fn>).mock.calls[1][0] as HTMLElement;
+    expect(firstTarget.querySelector('img')).not.toBeNull();
+    expect(secondTarget.querySelector('img')).toBeNull();
   });
 });

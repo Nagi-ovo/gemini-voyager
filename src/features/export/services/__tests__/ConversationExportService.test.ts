@@ -24,6 +24,17 @@ const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
 global.document = dom.window.document as any;
 global.window = dom.window as any;
 
+function setUserAgentVendor(userAgent: string, vendor: string): void {
+  Object.defineProperty(global.navigator, 'userAgent', {
+    value: userAgent,
+    configurable: true,
+  });
+  Object.defineProperty(global.navigator, 'vendor', {
+    value: vendor,
+    configurable: true,
+  });
+}
+
 describe('ConversationExportService', () => {
   const mockMetadata: ConversationMetadata = {
     url: 'https://gemini.google.com/app/test',
@@ -43,6 +54,10 @@ describe('ConversationExportService', () => {
   // Mock DOM methods
   beforeEach(() => {
     document.body.innerHTML = '';
+    setUserAgentVendor(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      'Google Inc.',
+    );
 
     // Mock URL.createObjectURL
     global.URL.createObjectURL = vi.fn(() => 'blob:test');
@@ -348,6 +363,42 @@ describe('ConversationExportService', () => {
   });
 
   describe('markdown zip packaging', () => {
+    it('degrades image markdown to text placeholders on Safari instead of zip packaging', async () => {
+      setUserAgentVendor(
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+        'Apple Computer, Inc.',
+      );
+
+      const downloadSpy = vi.spyOn(MarkdownFormatter, 'download').mockImplementation(() => {});
+      const fetchSpy = vi.spyOn(
+        ConversationExportService as any,
+        'fetchImageForMarkdownPackaging',
+      );
+      fetchSpy.mockResolvedValue(null);
+
+      const turnsWithImage: ChatTurn[] = [
+        {
+          user: '',
+          assistant: 'Summary ![chart](https://example.com/chart.png)',
+          starred: false,
+          omitEmptySections: true,
+        },
+      ];
+
+      const result = await ConversationExportService.export(turnsWithImage, mockMetadata, {
+        format: 'markdown' as any,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.filename).toMatch(/\.md$/);
+      expect(downloadSpy).toHaveBeenCalledOnce();
+      expect(fetchSpy).not.toHaveBeenCalled();
+
+      const markdown = String(downloadSpy.mock.calls[0][0] ?? '');
+      expect(markdown).toContain('[Image unavailable in Safari export: chart]');
+      expect(markdown).not.toContain('![chart](https://example.com/chart.png)');
+    });
+
     it('should assign image filenames in source order even when fetch resolves out of order', async () => {
       const imageUrls = ['https://example.com/slow.png', 'https://example.com/fast.png'];
       vi.spyOn(MarkdownFormatter, 'extractImageUrls').mockReturnValue(imageUrls);

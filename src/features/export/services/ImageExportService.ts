@@ -5,6 +5,7 @@
  * Uses DOM-to-image rendering and inlines remote images (best-effort).
  */
 import { toBlob } from 'html-to-image';
+import { isSafari } from '@/core/utils/browser';
 
 import type { ChatTurn, ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
@@ -32,20 +33,7 @@ export class ImageExportService {
 
     try {
       await this.inlineImages(container);
-
-      const target =
-        (container.querySelector('.gv-image-export-doc') as HTMLElement | null) || container;
-
-      const blob = await toBlob(target, {
-        cacheBust: true,
-        pixelRatio: 1.2,
-        backgroundColor: '#ffffff',
-        skipFonts: true,
-      });
-
-      if (!blob) {
-        throw new Error('Image render failed');
-      }
+      const blob = await this.renderWithSafariFallback(container);
 
       this.downloadBlob(blob, filename);
     } finally {
@@ -70,19 +58,7 @@ export class ImageExportService {
 
     try {
       await this.inlineImages(container);
-
-      const target =
-        (container.querySelector('.gv-image-export-doc') as HTMLElement | null) || container;
-      const blob = await toBlob(target, {
-        cacheBust: true,
-        pixelRatio: 1.2,
-        backgroundColor: '#ffffff',
-        skipFonts: true,
-      });
-
-      if (!blob) {
-        throw new Error('Image render failed');
-      }
+      const blob = await this.renderWithSafariFallback(container);
 
       this.downloadBlob(blob, filename);
     } finally {
@@ -477,6 +453,51 @@ export class ImageExportService {
         }),
       ),
     );
+  }
+
+  private static async renderWithSafariFallback(container: HTMLElement): Promise<Blob> {
+    const primaryTarget =
+      (container.querySelector('.gv-image-export-doc') as HTMLElement | null) || container;
+
+    try {
+      return await this.renderTargetToBlob(primaryTarget);
+    } catch (error) {
+      if (!isSafari()) {
+        throw error;
+      }
+    }
+
+    const fallbackContainer = container.cloneNode(true) as HTMLElement;
+    fallbackContainer.querySelectorAll('img').forEach((img) => img.remove());
+    document.body.appendChild(fallbackContainer);
+
+    try {
+      const fallbackTarget =
+        (fallbackContainer.querySelector('.gv-image-export-doc') as HTMLElement | null) ||
+        fallbackContainer;
+      return await this.renderTargetToBlob(fallbackTarget);
+    } finally {
+      try {
+        fallbackContainer.remove();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  private static async renderTargetToBlob(target: HTMLElement): Promise<Blob> {
+    const blob = await toBlob(target, {
+      cacheBust: true,
+      pixelRatio: 1.2,
+      backgroundColor: '#ffffff',
+      skipFonts: true,
+    });
+
+    if (!blob) {
+      throw new Error('Image render failed');
+    }
+
+    return blob;
   }
 
   private static downloadBlob(blob: Blob, filename: string): void {

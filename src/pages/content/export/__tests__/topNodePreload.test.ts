@@ -104,4 +104,41 @@ describe('topNodePreload', () => {
     expect(result.changed).toBe(false);
     expect(result.fingerprint.signature).toBe(before.signature);
   });
+
+  it('does not resolve unchanged fingerprint before the default minimum wait window', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+    document.body.innerHTML = '';
+
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+
+    const node = document.createElement('div');
+    node.className = 'msg';
+    node.textContent = 'stable';
+    root.appendChild(node);
+
+    const selectors = ['.msg'];
+    const before = computeConversationFingerprint(root, selectors, 5);
+
+    let resolved = false;
+    const promise = waitForConversationFingerprintChangeOrTimeout(root, selectors, before, {
+      timeoutMs: 3000,
+      idleMs: 120,
+      pollIntervalMs: 40,
+      maxSamples: 5,
+    }).then((result) => {
+      resolved = true;
+      return result;
+    });
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(resolved).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(800);
+
+    const result = await promise;
+    expect(result.changed).toBe(false);
+    expect(result.fingerprint.signature).toBe(before.signature);
+  });
 });

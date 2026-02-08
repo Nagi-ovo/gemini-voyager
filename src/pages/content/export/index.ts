@@ -1,5 +1,6 @@
 // Static imports to avoid CSP issues with dynamic imports in content scripts
 import { StorageKeys } from '@/core/types/common';
+import { isSafari } from '@/core/utils/browser';
 import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
 import type { TranslationKey } from '@/utils/translations';
@@ -11,6 +12,7 @@ import type {
   ExportFormat,
 } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
+import { showExportToast } from '../../../features/export/ui/ExportToast';
 import { groupSelectedMessagesByTurn } from './selectionUtils';
 import {
   computeConversationFingerprint,
@@ -786,7 +788,7 @@ async function executeExportSequence(
     document.body,
     fingerprintSelectors,
     beforeFingerprint,
-    { timeoutMs: 25000, idleMs: 550, pollIntervalMs: 90, maxSamples: 10 },
+    { timeoutMs: 25000, minWaitMs: 1600, idleMs: 650, pollIntervalMs: 90, maxSamples: 10 },
   );
 
   if (changed) {
@@ -1086,6 +1088,8 @@ async function performFinalExport(
 
       if (!result.success) {
         alert(`${t('export_dialog_warning')}: ${result.error}`);
+      } else if (format === 'pdf' && isSafari()) {
+        showExportToast(t('export_dialog_safari_cmdp_hint'));
       }
     } catch (err) {
       console.error('[Gemini Voyager] Export error:', err);

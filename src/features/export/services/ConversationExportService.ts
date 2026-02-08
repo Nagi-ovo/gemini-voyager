@@ -4,6 +4,7 @@
  * Uses Strategy pattern for format-specific implementations
  */
 import JSZip from 'jszip';
+import { isSafari } from '@/core/utils/browser';
 
 import type {
   ChatTurn,
@@ -358,6 +359,13 @@ export class ConversationExportService {
     markdownEntryName: string,
   ): Promise<string> {
     const normalizedFilename = filename.toLowerCase().endsWith('.md') ? filename : `${filename}.md`;
+
+    if (isSafari()) {
+      const degradedMarkdown = MarkdownFormatter.degradeImageMarkdownForSafari(markdown);
+      MarkdownFormatter.download(degradedMarkdown, normalizedFilename);
+      return normalizedFilename;
+    }
+
     const imageUrls = MarkdownFormatter.extractImageUrls(markdown);
 
     if (imageUrls.length === 0) {

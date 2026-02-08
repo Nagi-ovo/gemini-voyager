@@ -59,6 +59,18 @@ export class MarkdownFormatter {
   }
 
   /**
+   * Replace markdown image syntax with a Safari-safe text placeholder.
+   */
+  static degradeImageMarkdownForSafari(markdown: string): string {
+    const imgRegex = /!\[([^\]]*)\]\(((?:https?:\/\/|blob:)[^\s)]+)\)/g;
+    return markdown.replace(imgRegex, (_all, altText) => {
+      const alt = String(altText || '').trim();
+      const label = alt || 'image';
+      return `[Image unavailable in Safari export: ${label}]`;
+    });
+  }
+
+  /**
    * Async formatter that tries to inline images as data URLs
    */
   static async formatWithAssets(
