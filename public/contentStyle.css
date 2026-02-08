@@ -585,33 +585,86 @@ html.dark-theme .gv-pm-trigger {
   pointer-events: none;
 }
 
-.gv-export-btn {
+/* Logo hover dropdown for export */
+.gv-logo-dropdown-wrapper {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  margin-left: 8px;
+}
+
+.gv-logo-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  padding: 4px;
+  min-width: 140px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.96);
+  transform-origin: top left;
+  transition:
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.gv-logo-dropdown-wrapper:hover .gv-logo-dropdown,
+.gv-logo-dropdown:hover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Keep dropdown visible when hovering on it */
+.gv-logo-dropdown-wrapper:hover .gv-logo-dropdown {
+  transition-delay: 0.05s;
+}
+
+.gv-export-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   background: transparent;
-  position: relative;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.theme-host.light-theme .gv-export-btn {
-  color: #111827;
+.gv-export-dropdown-btn:hover {
+  background: linear-gradient(135deg, rgba(16, 163, 127, 0.12), rgba(59, 130, 246, 0.08));
 }
 
-.theme-host.dark-theme .gv-export-btn {
-  color: #e5e7eb;
+.gv-export-dropdown-btn:active {
+  background: linear-gradient(135deg, rgba(16, 163, 127, 0.2), rgba(59, 130, 246, 0.12));
 }
 
-.gv-export-btn::before {
-  content: '';
-  width: 16px;
-  height: 16px;
+.gv-export-dropdown-icon {
+  width: 18px;
+  height: 18px;
   display: block;
+  flex-shrink: 0;
   background: currentColor;
   -webkit-mask: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3e%3cpath fill=%22%23000%22 d=%22M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4.007 4.007a1 1 0 01-1.414 0L7.279 11.707a1 1 0 011.414-1.414L11 12.586V4a1 1 0 011-1zm-7 14a1 1 0 011-1h12a1 1 0 011 1v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z%22/%3e%3c/svg%3e')
     center / contain no-repeat;
@@ -619,13 +672,54 @@ html.dark-theme .gv-pm-trigger {
     center / contain no-repeat;
 }
 
-.gv-export-btn:hover {
-  filter: brightness(1.05);
-  background: rgba(31, 41, 55, 0.06);
+.gv-export-dropdown-label {
+  white-space: nowrap;
 }
 
-.theme-host.dark-theme .gv-export-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+/* Dark theme support */
+html.dark-theme .gv-logo-dropdown,
+body.dark-theme .gv-logo-dropdown,
+.theme-host.dark-theme .gv-logo-dropdown {
+  background: rgba(30, 30, 30, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+html.dark-theme .gv-export-dropdown-btn,
+body.dark-theme .gv-export-dropdown-btn,
+.theme-host.dark-theme .gv-export-dropdown-btn {
+  color: #e5e7eb;
+}
+
+html.dark-theme .gv-export-dropdown-btn:hover,
+body.dark-theme .gv-export-dropdown-btn:hover,
+.theme-host.dark-theme .gv-export-dropdown-btn:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(59, 130, 246, 0.12));
+}
+
+/* Add subtle indicator on logo when hovering */
+.gv-logo-dropdown-wrapper [data-test-id='logo']::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 4px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  vertical-align: middle;
+}
+
+.gv-logo-dropdown-wrapper:hover [data-test-id='logo']::after {
+  opacity: 0.5;
+  transform: translateY(0);
 }
 
 .gv-pm-panel {

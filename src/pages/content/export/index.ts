@@ -409,16 +409,50 @@ function buildExportMessagesFromPairs(pairs: ChatTurn[]): ExportMessage[] {
   return out;
 }
 
-function ensureButtonInjected(container: Element): HTMLButtonElement | null {
-  const host = container as HTMLElement;
-  if (!host || host.querySelector('.gv-export-btn'))
-    return host.querySelector('.gv-export-btn') as HTMLButtonElement | null;
+function ensureDropdownInjected(logoElement: Element): HTMLButtonElement | null {
+  // Check if already injected
+  const existingWrapper = document.querySelector('.gv-logo-dropdown-wrapper');
+  if (existingWrapper) {
+    return existingWrapper.querySelector('.gv-export-dropdown-btn') as HTMLButtonElement | null;
+  }
+
+  const logo = logoElement as HTMLElement;
+  const parent = logo.parentElement;
+  if (!parent) return null;
+
+  // Create wrapper that will contain both logo and dropdown
+  const wrapper = document.createElement('div');
+  wrapper.className = 'gv-logo-dropdown-wrapper';
+
+  // Move logo into wrapper
+  parent.insertBefore(wrapper, logo);
+  wrapper.appendChild(logo);
+
+  // Create dropdown container
+  const dropdown = document.createElement('div');
+  dropdown.className = 'gv-logo-dropdown';
+
+  // Create export button inside dropdown
   const btn = document.createElement('button');
-  btn.className = 'gv-export-btn';
+  btn.className = 'gv-export-dropdown-btn';
   btn.type = 'button';
-  btn.title = 'Export chat history (JSON)';
-  btn.setAttribute('aria-label', 'Export chat history (JSON)');
-  host.appendChild(btn);
+  btn.title = 'Export chat history';
+  btn.setAttribute('aria-label', 'Export chat history');
+
+  // Export icon
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'gv-export-dropdown-icon';
+  btn.appendChild(iconSpan);
+
+  // Export text label
+  const labelSpan = document.createElement('span');
+  labelSpan.className = 'gv-export-dropdown-label';
+  labelSpan.textContent = 'Export';
+  btn.appendChild(labelSpan);
+
+  dropdown.appendChild(btn);
+  wrapper.appendChild(dropdown);
+
   return btn;
 }
 
@@ -1227,7 +1261,7 @@ export async function startExportButton(): Promise<void> {
   const logo =
     (await waitForElement('[data-test-id="logo"]', 6000)) || (await waitForElement('.logo', 2000));
   if (!logo) return;
-  const btn = ensureButtonInjected(logo);
+  const btn = ensureDropdownInjected(logo);
   if (!btn) return;
   if ((btn as any)._gvBound) return;
   (btn as any)._gvBound = true;
@@ -1248,13 +1282,18 @@ export async function startExportButton(): Promise<void> {
     } catch {}
   });
 
-  // i18n setup for tooltip
+  // i18n setup for tooltip and label
   const dict = await loadDictionaries();
   let lang = await getLanguage();
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
   const title = t('exportChatJson');
+  const labelText = t('pm_export');
   btn.title = title;
   btn.setAttribute('aria-label', title);
+
+  // Update label text
+  const labelEl = btn.querySelector('.gv-export-dropdown-label');
+  if (labelEl) labelEl.textContent = labelText;
 
   // listen for runtime language changes
   const storageChangeHandler = (
@@ -1267,11 +1306,13 @@ export async function startExportButton(): Promise<void> {
       const next = normalizeLang(nextRaw);
       lang = next;
       const ttl =
-        dict[next]?.['exportChatJson'] ??
-        dict.en?.['exportChatJson'] ??
-        'Export chat history (JSON)';
+        dict[next]?.['exportChatJson'] ?? dict.en?.['exportChatJson'] ?? 'Export chat history';
       btn.title = ttl;
       btn.setAttribute('aria-label', ttl);
+
+      // Update visible label text
+      const lbl = btn.querySelector('.gv-export-dropdown-label');
+      if (lbl) lbl.textContent = dict[next]?.['pm_export'] ?? dict.en?.['pm_export'] ?? 'Export';
     }
   };
 
