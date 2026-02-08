@@ -464,8 +464,8 @@
     "description": "导出格式选择标签"
   },
   "export_dialog_warning": {
-    "message": "⚠️ 由于 Gemini 的久远消息会惰性加载，请在导出前通过时间线跳转到该对话的第一条消息，否则导出内容可能不完整。",
-    "description": "关于惰性加载影响导出完整性的警告"
+    "message": "⚠️ 点击导出后，系统将自动跳转至首条消息以加载完整内容。在此期间请勿操作，跳转完成后将自动继续导出。",
+    "description": "关于内容完整性和自动跳转的提示"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Safari 提示：请先点击下方“导出”按钮，稍等片刻，再按 ⌘P 选择“保存为 PDF”。",

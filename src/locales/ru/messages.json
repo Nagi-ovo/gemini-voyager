@@ -464,8 +464,8 @@
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ Из-за ленивой загрузки старых сообщений в Gemini, пожалуйста, используйте таймлайн, чтобы перейти к первому сообщению разговора перед экспортом. В противном случае экспорт может быть неполным.",
-    "description": "Warning about lazy loading affecting export completeness"
+    "message": "⚠️ После нажатия на экспорт система автоматически перейдет к первому сообщению для загрузки всего контента. Пожалуйста, не совершайте никаких действий; экспорт продолжится автоматически после перехода.",
+    "description": "Warning about auto-jump and loading completeness"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Совет для Safari: нажмите «Экспорт» ниже, подождите немного, затем нажмите ⌘P и выберите «Сохранить как PDF».",

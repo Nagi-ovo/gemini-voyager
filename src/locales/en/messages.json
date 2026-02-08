@@ -464,8 +464,8 @@
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ Due to Gemini's lazy loading of older messages, please use the timeline to jump to the first message of the conversation before exporting. Otherwise, the export may be incomplete.",
-    "description": "Warning about lazy loading affecting export completeness"
+    "message": "⚠️ After clicking export, the system will auto-jump to the beginning to load all content. Please do not operate; export will continue automatically after the jump.",
+    "description": "Warning about auto-jump and loading completeness"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Safari tip: Click 'Export' below, wait a moment, then press ⌘P and choose 'Save to PDF'.",

@@ -464,8 +464,8 @@
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ En raison du chargement différé de Gemini, veuillez utiliser la chronologie pour remonter au début de la discussion avant d'exporter pour éviter un export incomplet.",
-    "description": "Warning about lazy loading affecting export completeness"
+    "message": "⚠️ Après avoir cliqué sur exporter, le système sautera automatiquement au premier message pour charger tout le contenu. Veuillez ne pas effectuer d'opérations ; l'exportation continuera automatiquement après le saut.",
+    "description": "Warning about auto-jump and loading completeness"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Astuce Safari : cliquez sur 'Exporter' ci-dessous, attendez un instant, puis appuyez sur ⌘P et choisissez 'Enregistrer au format PDF'.",

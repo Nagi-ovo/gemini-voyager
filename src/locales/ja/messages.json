@@ -464,8 +464,8 @@
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ Gemini は古いメッセージを後から読み込むため、エクスポートする前にタイムラインを使って会話の最初のメッセージまでジャンプしてください。そうしないと、エクスポートが不完全になる可能性があります。",
-    "description": "Warning about lazy loading affecting export completeness"
+    "message": "⚠️ エクスポート開始後、全内容を読み込むために最初のメッセージへ自動移動します。移動中は何もしないでください。完了後、エクスポートが自動的に再開されます。",
+    "description": "Warning about auto-jump and loading completeness"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Safari のヒント：下の「エクスポート」を選択し、少し待ってから ⌘P を押して「PDF として保存」を選択してください。",

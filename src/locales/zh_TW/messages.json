@@ -424,8 +424,8 @@
     "description": "匯出格式選擇標籤"
   },
   "export_dialog_warning": {
-    "message": "⚠️ 由於 Gemini 的久遠訊息會延遲載入，請在匯出前透過時間軸跳轉到該對話的第一則訊息，否則匯出內容可能不完整。",
-    "description": "關於延遲載入影響匯出完整性的警告"
+    "message": "⚠️ 點擊匯出後，系統將自動跳轉至首則訊息以載入完整內容。在此期間請勿操作，跳轉完成後將自動繼續匯出。",
+    "description": "關於內容完整性和自動跳轉的提示"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Safari 提示：請先點選下方「匯出」按鈕，稍等片刻，再按 ⌘P 選擇「儲存為 PDF」。",
