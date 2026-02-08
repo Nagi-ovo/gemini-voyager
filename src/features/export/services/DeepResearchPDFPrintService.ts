@@ -150,7 +150,7 @@ export class DeepResearchPDFPrintService {
 
     container.innerHTML = `
       <div class="gv-dr-print-document">
-        <header class="gv-dr-print-cover-page">
+        <div class="gv-dr-print-cover-page">
           <div class="gv-dr-print-cover-content">
             <h1 class="gv-dr-print-cover-title">${this.escapeHTML(title)}</h1>
             <div class="gv-dr-print-meta">
@@ -159,14 +159,14 @@ export class DeepResearchPDFPrintService {
               <p>Deep Research Report</p>
             </div>
           </div>
-        </header>
-        <main class="gv-dr-print-content">
-          <article class="gv-dr-print-report">${bodyHtml}</article>
-        </main>
-        <footer class="gv-dr-print-footer">
+        </div>
+        <div class="gv-dr-print-content">
+          <div class="gv-dr-print-report">${bodyHtml}</div>
+        </div>
+        <div class="gv-dr-print-footer">
           <p>Exported from <a href="https://github.com/Nagi-ovo/gemini-voyager">Gemini Voyager</a></p>
           <p>Generated on ${this.escapeHTML(date)}</p>
-        </footer>
+        </div>
       </div>
     `;
 
@@ -268,6 +268,15 @@ export class DeepResearchPDFPrintService {
         body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID},
         body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} * {
           visibility: visible !important;
+        }
+
+        html,
+        body {
+          background: #fff !important;
+        }
+
+        body.${this.PRINT_BODY_CLASS} {
+          background: #fff !important;
         }
 
         body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} * {

@@ -23,6 +23,7 @@ export interface PrintableDocumentContent {
 export class PDFPrintService {
   private static PRINT_STYLES_ID = 'gv-pdf-print-styles';
   private static PRINT_CONTAINER_ID = 'gv-pdf-print-container';
+  private static PRINT_BODY_CLASS = 'gv-pdf-printing';
   private static CLEANUP_FALLBACK_DELAY_MS = 60_000;
   private static INLINE_FETCH_TIMEOUT_MS = 2_000;
   private static INLINE_DECODE_TIMEOUT_MS = 1_000;
@@ -75,6 +76,7 @@ export class PDFPrintService {
 
     // Inject print styles
     this.injectPrintStyles();
+    document.body.classList.add(this.PRINT_BODY_CLASS);
 
     // Keep print header/footer title aligned with conversation title in print dialog output.
     this.originalDocumentTitle = document.title;
@@ -486,7 +488,7 @@ export class PDFPrintService {
     const turnsCount = metadata.count;
 
     return `
-      <header class="gv-print-header gv-print-cover-page">
+      <div class="gv-print-header gv-print-cover-page">
         <div class="gv-print-cover-content">
           <h1 class="gv-print-cover-title">${this.escapeHTML(conversationTitle)}</h1>
           <div class="gv-print-meta">
@@ -495,7 +497,7 @@ export class PDFPrintService {
             <p>${turnsCount} conversation turns</p>
           </div>
         </div>
-      </header>
+      </div>
     `;
   }
 
@@ -504,9 +506,9 @@ export class PDFPrintService {
    */
   private static renderContent(turns: ChatTurn[]): string {
     return `
-      <main class="gv-print-content">
+      <div class="gv-print-content">
         ${turns.map((turn, index) => this.renderTurn(turn, index + 1)).join('\n')}
-      </main>
+      </div>
     `;
   }
 
@@ -527,7 +529,7 @@ export class PDFPrintService {
 
     if (!turn.omitEmptySections) {
       return `
-      <article class="gv-print-turn ${starredClass}">
+      <div class="gv-print-turn ${starredClass}">
         <div class="gv-print-turn-header">
           <span class="gv-print-turn-number">Turn ${index}</span>
           ${turn.starred ? '<span class="gv-print-star">⭐</span>' : ''}
@@ -542,7 +544,7 @@ export class PDFPrintService {
           <div class="gv-print-turn-label">🤖 Assistant</div>
           <div class="gv-print-turn-text">${assistantContent}</div>
         </div>
-      </article>
+      </div>
     `;
     }
 
@@ -550,7 +552,7 @@ export class PDFPrintService {
     const hasAssistant = !!turn.assistantElement || !!turn.assistant.trim();
 
     return `
-      <article class="gv-print-turn ${starredClass}">
+      <div class="gv-print-turn ${starredClass}">
         <div class="gv-print-turn-header">
           <span class="gv-print-turn-number">Turn ${index}</span>
           ${turn.starred ? '<span class="gv-print-star">⭐</span>' : ''}
@@ -577,7 +579,7 @@ export class PDFPrintService {
         `
             : ''
         }
-      </article>
+      </div>
     `;
   }
 
@@ -604,10 +606,10 @@ export class PDFPrintService {
    */
   private static renderFooter(metadata: ConversationMetadata): string {
     return `
-      <footer class="gv-print-footer">
+      <div class="gv-print-footer">
         <p>Exported from <a href="https://github.com/Nagi-ovo/gemini-voyager">Gemini Voyager</a> • ${metadata.count} conversation turns</p>
         <p>Generated on ${this.formatDate(metadata.exportedAt)}</p>
-      </footer>
+      </div>
     `;
   }
 
@@ -629,12 +631,29 @@ export class PDFPrintService {
       /* Show print container when printing */
       @media print {
         /* Hide everything except print container */
-        body > *:not(#${this.PRINT_CONTAINER_ID}) {
+        body.${this.PRINT_BODY_CLASS} > *:not(#${this.PRINT_CONTAINER_ID}) {
           display: none !important;
+          visibility: hidden !important;
         }
 
-        .gv-print-only {
+        body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} {
           display: block !important;
+          visibility: visible !important;
+        }
+
+        body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID},
+        body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} * {
+          visibility: visible !important;
+        }
+
+        /* Force white print canvas to avoid dark-theme background leaks on trailing pages */
+        html,
+        body {
+          background: #fff !important;
+        }
+
+        body.${this.PRINT_BODY_CLASS} {
+          background: #fff !important;
         }
 
         /* Reset page styles */
@@ -865,6 +884,12 @@ export class PDFPrintService {
     const container = document.getElementById(this.PRINT_CONTAINER_ID);
     if (container) {
       container.remove();
+    }
+
+    try {
+      document.body.classList.remove(this.PRINT_BODY_CLASS);
+    } catch {
+      /* ignore */
     }
 
     if (this.originalDocumentTitle !== null) {

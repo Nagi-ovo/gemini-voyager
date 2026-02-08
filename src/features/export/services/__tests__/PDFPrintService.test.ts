@@ -40,6 +40,25 @@ describe('PDFPrintService', () => {
     expect(document.getElementById('gv-pdf-print-container')).toBeNull();
   });
 
+  it('injects print rules scoped by pdf printing class with white page reset', async () => {
+    window.print = vi.fn();
+
+    await PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/x',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: 'Scoped Print Styles',
+    });
+
+    const style = document.getElementById('gv-pdf-print-styles');
+    const styleText = style?.textContent || '';
+
+    expect(styleText).toContain('body.gv-pdf-printing > *:not(#gv-pdf-print-container)');
+    expect(styleText).toContain('html,');
+    expect(styleText).toContain('body {');
+    expect(styleText).toContain('background: #fff !important;');
+  });
+
   it('reuses conversation print markup for document PDF content', async () => {
     document.title = 'Original Title';
     window.print = vi.fn();
@@ -61,6 +80,21 @@ describe('PDFPrintService', () => {
     expect(coverTitle?.textContent).toContain('Deep Research Report');
     expect(turnText?.textContent).toContain('HTML heading');
     expect(turnText?.textContent).not.toContain('Markdown heading');
+  });
+
+  it('uses classed div containers instead of semantic print tags', async () => {
+    window.print = vi.fn();
+
+    await PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/x',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: 'No Semantic Tags',
+    });
+
+    const container = document.getElementById('gv-pdf-print-container');
+    expect(container).toBeTruthy();
+    expect(container?.querySelector('header, main, article, footer')).toBeNull();
   });
 
   it('normalizes metadata title suffix when page title is generic', async () => {

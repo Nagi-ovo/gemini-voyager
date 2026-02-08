@@ -85,6 +85,9 @@ describe('DeepResearchPDFPrintService', () => {
     expect(styleText).toContain('position: relative;');
     expect(styleText).toContain('position: absolute;');
     expect(styleText).toContain('transform: translate(-50%, -50%);');
+    expect(styleText).toContain('html,');
+    expect(styleText).toContain('body {');
+    expect(styleText).toContain('background: #fff !important;');
   });
 
   it('applies Safari-only print override class and style rules', async () => {
