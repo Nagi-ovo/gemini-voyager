@@ -262,8 +262,10 @@ export class TimelineManager {
               this.toggleMarkerLevel(!!changes.geminiTimelineMarkerLevel.newValue);
             }
             if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
-              this.ui.timelineBar!.style.top = '';
-              this.ui.timelineBar!.style.left = '';
+              if (this.ui.timelineBar) {
+                this.ui.timelineBar.style.top = '';
+                this.ui.timelineBar.style.left = '';
+              }
             }
           });
         }
@@ -2000,12 +2002,14 @@ export class TimelineManager {
 
   private toggleDraggable(enabled: boolean): void {
     this.draggable = enabled;
+    // Guard against null timelineBar or onBarPointerDown (can happen if storage listener fires before UI init or after cleanup)
+    if (!this.ui.timelineBar || !this.onBarPointerDown) return;
     if (this.draggable) {
-      this.ui.timelineBar!.addEventListener('pointerdown', this.onBarPointerDown!);
-      this.ui.timelineBar!.style.cursor = 'move';
+      this.ui.timelineBar.addEventListener('pointerdown', this.onBarPointerDown);
+      this.ui.timelineBar.style.cursor = 'move';
     } else {
-      this.ui.timelineBar!.removeEventListener('pointerdown', this.onBarPointerDown!);
-      this.ui.timelineBar!.style.cursor = 'default';
+      this.ui.timelineBar.removeEventListener('pointerdown', this.onBarPointerDown);
+      this.ui.timelineBar.style.cursor = 'default';
     }
   }
 
