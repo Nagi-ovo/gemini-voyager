@@ -372,6 +372,8 @@ function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
       safariMarkdownHint: t('export_dialog_safari_markdown_hint'),
       cancel: t('pm_cancel'),
       export: t('pm_export'),
+      fontSizeLabel: t('export_fontsize_label'),
+      fontSizePreview: t('export_fontsize_preview'),
       formatDescriptions: {
         json: t('export_format_json_description'),
         markdown: t('export_format_markdown_description'),

@@ -24,6 +24,7 @@ const SESSION_KEY_PENDING_EXPORT = 'gv_export_pending';
 
 interface PendingExportState {
   format: ExportFormat;
+  fontSize?: number;
   attempt: number;
   url: string;
   status: 'clicking';
@@ -754,9 +755,11 @@ async function executeExportSequence(
   dict: Record<AppLanguage, Record<string, string>>,
   lang: AppLanguage,
   paramState?: PendingExportState,
+  fontSize?: number,
 ): Promise<void> {
   const state: PendingExportState = paramState || {
     format,
+    fontSize,
     attempt: 0,
     url: location.href,
     status: 'clicking',
@@ -790,7 +793,7 @@ async function executeExportSequence(
   if (!topNode) {
     console.log('[Gemini Voyager] No top node found, proceeding to export directly.');
     sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
-    await performFinalExport(format, dict, lang);
+    await performFinalExport(format, dict, lang, state.fontSize);
     return;
   }
 
@@ -837,7 +840,7 @@ async function executeExportSequence(
 
   console.log('[Gemini Voyager] No refresh or update detected. Exporting...');
   sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
-  await performFinalExport(format, dict, lang);
+  await performFinalExport(format, dict, lang, state.fontSize);
 }
 
 /**
@@ -847,6 +850,7 @@ async function performFinalExport(
   format: ExportFormat,
   dict: Record<AppLanguage, Record<string, string>>,
   lang: AppLanguage,
+  fontSize?: number,
 ) {
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
@@ -1116,6 +1120,7 @@ async function performFinalExport(
     try {
       const resultPromise = ConversationExportService.export(turnsForExport, metadata, {
         format,
+        fontSize,
       });
       const minVisiblePromise = new Promise((resolve) => setTimeout(resolve, 420));
       const [result] = await Promise.all([resultPromise, minVisiblePromise]);
@@ -1220,6 +1225,7 @@ async function checkPendingExport() {
     }
     const state: PendingExportState = {
       format: parsed.format,
+      fontSize: typeof parsed.fontSize === 'number' ? parsed.fontSize : undefined,
       attempt: parsed.attempt,
       url: parsed.url,
       status: parsed.status,
@@ -1358,9 +1364,9 @@ async function showExportDialog(
   const dialog = new ExportDialog();
 
   dialog.show({
-    onExport: async (format) => {
+    onExport: async (format, fontSize) => {
       try {
-        await executeExportSequence(format, dict, lang);
+        await executeExportSequence(format, dict, lang, undefined, fontSize);
       } catch (err) {
         console.error('[Gemini Voyager] Export error:', err);
       }
@@ -1377,6 +1383,8 @@ async function showExportDialog(
       safariMarkdownHint: t('export_dialog_safari_markdown_hint'),
       cancel: t('pm_cancel'),
       export: t('pm_export'),
+      fontSizeLabel: t('export_fontsize_label'),
+      fontSizePreview: t('export_fontsize_preview'),
       formatDescriptions: {
         json: t('export_format_json_description'),
         markdown: t('export_format_markdown_description'),

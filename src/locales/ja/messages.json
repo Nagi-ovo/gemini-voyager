@@ -1182,5 +1182,13 @@
   "deepResearchSaveReportTooltip": {
     "message": "この調査レポートをエクスポート",
     "description": "Deep Research save report tooltip"
+  },
+  "export_fontsize_label": {
+    "message": "フォントサイズ",
+    "description": "Label for font size slider in export dialog"
+  },
+  "export_fontsize_preview": {
+    "message": "吾輩は猫である。名前はまだない。",
+    "description": "Preview text for font size slider in export dialog"
   }
 }

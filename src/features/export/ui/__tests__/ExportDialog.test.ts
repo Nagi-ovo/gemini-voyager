@@ -23,6 +23,8 @@ describe('ExportDialog', () => {
         safariMarkdownHint: 'Safari markdown tip',
         cancel: 'Cancel',
         export: 'Export',
+        fontSizeLabel: 'Font Size',
+        fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
         formatDescriptions: {
           json: 'JSON format',
           markdown: 'Markdown format',
@@ -58,6 +60,8 @@ describe('ExportDialog', () => {
         safariMarkdownHint: 'Safari markdown tip',
         cancel: 'Cancel',
         export: 'Export',
+        fontSizeLabel: 'Font Size',
+        fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
         formatDescriptions: {
           json: 'JSON format',
           markdown: 'Markdown format',

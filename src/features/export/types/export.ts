@@ -62,6 +62,8 @@ export interface ExportOptions {
   // - 'inline': try to inline images as data URLs when possible
   // - 'none': keep remote URLs as-is
   embedImages?: 'inline' | 'none';
+  // Font size for PDF (pt) and Image (px) exports
+  fontSize?: number;
 }
 
 /**

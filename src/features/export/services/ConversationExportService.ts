@@ -177,7 +177,7 @@ export class ConversationExportService {
     metadata: ConversationMetadata,
     options: ExportOptions,
   ): Promise<ExportResult> {
-    await PDFPrintService.export(turns, metadata);
+    await PDFPrintService.export(turns, metadata, { fontSize: options.fontSize });
 
     // Note: We can't get the actual filename from print dialog
     // User chooses filename in Save as PDF dialog
@@ -197,7 +197,7 @@ export class ConversationExportService {
     options: ExportOptions,
   ): Promise<ExportResult> {
     const filename = options.filename || this.generateFilename('png', metadata.title);
-    await ImageExportService.export(turns, metadata, { filename });
+    await ImageExportService.export(turns, metadata, { filename, fontSize: options.fontSize });
     return { success: true, format: 'image' as ExportFormat, filename };
   }
 

@@ -31,6 +31,8 @@ describe('ExportDialog (Safari hint)', () => {
       safariMarkdownHint: 'Safari tip: use PDF.',
       cancel: 'Cancel',
       export: 'Export',
+      fontSizeLabel: 'Font Size',
+      fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
       formatDescriptions: {
         json: 'JSON desc',
         markdown: 'MD desc',

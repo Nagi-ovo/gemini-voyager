@@ -23,13 +23,13 @@ export class ImageExportService {
   static async export(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
-    options: { filename: string },
+    options: { filename: string; fontSize?: number },
   ): Promise<void> {
     const filename = options.filename.toLowerCase().endsWith('.png')
       ? options.filename
       : `${options.filename}.png`;
 
-    const container = this.createRenderContainer(turns, metadata);
+    const container = this.createRenderContainer(turns, metadata, options.fontSize);
     document.body.appendChild(container);
 
     try {
@@ -74,6 +74,7 @@ export class ImageExportService {
   private static createRenderContainer(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
+    fontSize?: number,
   ): HTMLElement {
     const outer = document.createElement('div');
     outer.className = 'gv-image-export-container';
@@ -166,11 +167,18 @@ export class ImageExportService {
       </footer>
     `;
 
+    const basePx = fontSize ?? 20;
+    const titlePx = Math.round(basePx * 2.5);
+    const metaPx = Math.max(basePx - 2, 10);
+    const headerPx = Math.round(basePx * 1.2);
+    const codePx = Math.max(basePx - 2, 10);
+    const footerPx = Math.max(basePx - 4, 10);
+
     const style = document.createElement('style');
     style.textContent = `
       .gv-image-export-doc {
         font-family: Georgia, 'Times New Roman', serif;
-        font-size: 20px;
+        font-size: ${basePx}px;
         line-height: 1.9;
         padding: 26px;
       }
@@ -183,7 +191,7 @@ export class ImageExportService {
 
       .gv-image-export-title {
         margin: 0;
-        font-size: 50px;
+        font-size: ${titlePx}px;
         line-height: 1.2;
         color: #111827;
         word-break: break-word;
@@ -192,7 +200,7 @@ export class ImageExportService {
       .gv-image-export-meta {
         margin-top: 10px;
         color: #6b7280;
-        font-size: 18px;
+        font-size: ${metaPx}px;
         display: grid;
         gap: 8px;
       }
@@ -205,7 +213,7 @@ export class ImageExportService {
 
       .gv-image-export-turn-header {
         font-weight: 700;
-        font-size: 24px;
+        font-size: ${headerPx}px;
         color: #374151;
         margin-bottom: 14px;
       }
@@ -216,13 +224,13 @@ export class ImageExportService {
 
       .gv-image-export-label {
         font-weight: 700;
-        font-size: 20px;
+        font-size: ${basePx}px;
         margin-bottom: 10px;
         color: #111827;
       }
 
       .gv-image-export-content {
-        font-size: 20px;
+        font-size: ${basePx}px;
         padding-left: 16px;
         border-left: 3px solid rgba(0,0,0,0.10);
       }
@@ -241,7 +249,7 @@ export class ImageExportService {
         overflow-x: auto;
         white-space: pre-wrap;
         word-break: break-word;
-        font-size: 18px;
+        font-size: ${codePx}px;
         line-height: 1.8;
       }
 
@@ -250,7 +258,7 @@ export class ImageExportService {
         padding-top: 14px;
         border-top: 1px solid rgba(0,0,0,0.12);
         color: #6b7280;
-        font-size: 16px;
+        font-size: ${footerPx}px;
         display: grid;
         gap: 8px;
       }

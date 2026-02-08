@@ -4375,6 +4375,135 @@ body[data-color-scheme='dark'] .gv-export-dialog-btn-secondary:hover {
   background: #2d2e30;
 }
 
+/* Font size control section in export dialog */
+.gv-export-fontsize-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+html.dark .gv-export-fontsize-section,
+[data-theme='dark'] .gv-export-fontsize-section,
+[data-color-scheme='dark'] .gv-export-fontsize-section,
+html.dark-theme .gv-export-fontsize-section,
+body.dark-theme .gv-export-fontsize-section,
+body[data-theme='dark'] .gv-export-fontsize-section,
+body[data-color-scheme='dark'] .gv-export-fontsize-section {
+  border-color: #3c4043;
+  background: #2d2e30;
+}
+
+.gv-export-fontsize-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.gv-export-fontsize-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #202124;
+}
+
+html.dark .gv-export-fontsize-label,
+[data-theme='dark'] .gv-export-fontsize-label,
+[data-color-scheme='dark'] .gv-export-fontsize-label,
+html.dark-theme .gv-export-fontsize-label,
+body.dark-theme .gv-export-fontsize-label,
+body[data-theme='dark'] .gv-export-fontsize-label,
+body[data-color-scheme='dark'] .gv-export-fontsize-label {
+  color: #e8eaed;
+}
+
+.gv-export-fontsize-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a73e8;
+  min-width: 40px;
+  text-align: right;
+}
+
+html.dark .gv-export-fontsize-value,
+[data-theme='dark'] .gv-export-fontsize-value,
+[data-color-scheme='dark'] .gv-export-fontsize-value,
+html.dark-theme .gv-export-fontsize-value,
+body.dark-theme .gv-export-fontsize-value,
+body[data-theme='dark'] .gv-export-fontsize-value,
+body[data-color-scheme='dark'] .gv-export-fontsize-value {
+  color: #8ab4f8;
+}
+
+.gv-export-fontsize-slider {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  border-radius: 2px;
+  background: #dadce0;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.gv-export-fontsize-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1a73e8;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.gv-export-fontsize-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1a73e8;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .gv-export-fontsize-slider,
+[data-theme='dark'] .gv-export-fontsize-slider,
+[data-color-scheme='dark'] .gv-export-fontsize-slider,
+html.dark-theme .gv-export-fontsize-slider,
+body.dark-theme .gv-export-fontsize-slider,
+body[data-theme='dark'] .gv-export-fontsize-slider,
+body[data-color-scheme='dark'] .gv-export-fontsize-slider {
+  background: #3c4043;
+}
+
+.gv-export-fontsize-preview {
+  padding: 10px 14px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  background: white;
+  color: #202124;
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.6;
+  max-height: 60px;
+  overflow: hidden;
+}
+
+html.dark .gv-export-fontsize-preview,
+[data-theme='dark'] .gv-export-fontsize-preview,
+[data-color-scheme='dark'] .gv-export-fontsize-preview,
+html.dark-theme .gv-export-fontsize-preview,
+body.dark-theme .gv-export-fontsize-preview,
+body[data-theme='dark'] .gv-export-fontsize-preview,
+body[data-color-scheme='dark'] .gv-export-fontsize-preview {
+  border-color: #3c4043;
+  background: #1e1e1e;
+  color: #e8eaed;
+}
+
 .gv-aistudio .gv-conversation-title {
   min-width: 0;
   font-size: 12px;

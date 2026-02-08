@@ -1182,5 +1182,13 @@
   "deepResearchSaveReportTooltip": {
     "message": "Export this research report",
     "description": "Deep Research save report tooltip"
+  },
+  "export_fontsize_label": {
+    "message": "Taille de police",
+    "description": "Label for font size slider in export dialog"
+  },
+  "export_fontsize_preview": {
+    "message": "Le vif renard brun saute par-dessus le chien paresseux.",
+    "description": "Preview text for font size slider in export dialog"
   }
 }

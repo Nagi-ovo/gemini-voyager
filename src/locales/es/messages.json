@@ -1182,5 +1182,13 @@
   "deepResearchSaveReportTooltip": {
     "message": "Export this research report",
     "description": "Deep Research save report tooltip"
+  },
+  "export_fontsize_label": {
+    "message": "Tamaño de fuente",
+    "description": "Label for font size slider in export dialog"
+  },
+  "export_fontsize_preview": {
+    "message": "El veloz murciélago hindú comía feliz cardillo y kiwi.",
+    "description": "Preview text for font size slider in export dialog"
   }
 }

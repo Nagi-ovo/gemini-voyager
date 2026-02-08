@@ -33,8 +33,12 @@ export class PDFPrintService {
   /**
    * Export conversation as PDF using browser print
    */
-  static async export(turns: ChatTurn[], metadata: ConversationMetadata): Promise<void> {
-    await this.exportInternal(turns, metadata, false);
+  static async export(
+    turns: ChatTurn[],
+    metadata: ConversationMetadata,
+    options?: { fontSize?: number },
+  ): Promise<void> {
+    await this.exportInternal(turns, metadata, false, options?.fontSize);
   }
 
   static async exportDocument(content: PrintableDocumentContent): Promise<void> {
@@ -66,6 +70,7 @@ export class PDFPrintService {
     turns: ChatTurn[],
     metadata: ConversationMetadata,
     preferMetadataTitle: boolean,
+    fontSize?: number,
   ): Promise<void> {
     // Ensure we don't leave a previous export container around (e.g. if a prior export failed)
     this.cleanup();
@@ -74,8 +79,12 @@ export class PDFPrintService {
     const container = this.createPrintContainer(turns, metadata, preferMetadataTitle);
     document.body.appendChild(container);
 
+    // Remove existing print styles so we can re-inject with new font size
+    const existingStyles = document.getElementById(this.PRINT_STYLES_ID);
+    if (existingStyles) existingStyles.remove();
+
     // Inject print styles
-    this.injectPrintStyles();
+    this.injectPrintStyles(fontSize);
     document.body.classList.add(this.PRINT_BODY_CLASS);
 
     // Keep print header/footer title aligned with conversation title in print dialog output.
@@ -616,9 +625,13 @@ export class PDFPrintService {
   /**
    * Inject print-optimized styles
    */
-  private static injectPrintStyles(): void {
+  private static injectPrintStyles(fontSize?: number): void {
     // Check if already injected
     if (document.getElementById(this.PRINT_STYLES_ID)) return;
+
+    const basePt = fontSize ?? 11;
+    const codePt = Math.max(basePt - 2, 6);
+    const footerPt = Math.max(basePt - 2, 6);
 
     const style = document.createElement('style');
     style.id = this.PRINT_STYLES_ID;
@@ -665,7 +678,7 @@ export class PDFPrintService {
         /* Document container */
         .gv-print-document {
           font-family: Georgia, 'Times New Roman', serif;
-          font-size: 11pt;
+          font-size: ${basePt}pt;
           line-height: 1.6;
           color: #000;
           background: #fff;
@@ -756,7 +769,7 @@ export class PDFPrintService {
 
         .gv-print-turn-label {
           font-weight: 600;
-          font-size: 11pt;
+          font-size: ${basePt}pt;
           margin-bottom: 0.5em;
           color: #222;
         }
@@ -792,7 +805,7 @@ export class PDFPrintService {
         .gv-print-turn-text code,
         .gv-print-turn-text pre {
           font-family: 'Courier New', monospace;
-          font-size: 9pt;
+          font-size: ${codePt}pt;
           background: #f5f5f5;
           padding: 0.2em 0.4em;
           border-radius: 3px;
@@ -829,7 +842,7 @@ export class PDFPrintService {
           margin-top: 2em;
           padding-top: 1em;
           border-top: 1px solid #ccc;
-          font-size: 9pt;
+          font-size: ${footerPt}pt;
           color: #666;
           text-align: center;
         }
@@ -854,7 +867,7 @@ export class PDFPrintService {
 
         a[href]:after {
           content: " (" attr(href) ")";
-          font-size: 9pt;
+          font-size: ${footerPt}pt;
           color: #666;
         }
 

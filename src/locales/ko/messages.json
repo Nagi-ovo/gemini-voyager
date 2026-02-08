@@ -1182,5 +1182,13 @@
   "deepResearchSaveReportTooltip": {
     "message": "이 연구 보고서 내보내기",
     "description": "Deep Research save report tooltip"
+  },
+  "export_fontsize_label": {
+    "message": "글꼴 크기",
+    "description": "Label for font size slider in export dialog"
+  },
+  "export_fontsize_preview": {
+    "message": "다람쥐 헌 쳇바퀴에 타고파.",
+    "description": "Preview text for font size slider in export dialog"
   }
 }

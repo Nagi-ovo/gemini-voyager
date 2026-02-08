@@ -1182,5 +1182,13 @@
   "deepResearchSaveReportTooltip": {
     "message": "Export this research report",
     "description": "Deep Research save report tooltip"
+  },
+  "export_fontsize_label": {
+    "message": "Tamanho da fonte",
+    "description": "Label for font size slider in export dialog"
+  },
+  "export_fontsize_preview": {
+    "message": "A rápida raposa marrom salta sobre o cão preguiçoso.",
+    "description": "Preview text for font size slider in export dialog"
   }
 }

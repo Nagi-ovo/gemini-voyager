@@ -1182,5 +1182,13 @@
   "deepResearchSaveReportTooltip": {
     "message": "匯出此研究報告",
     "description": "Deep Research save report tooltip"
+  },
+  "export_fontsize_label": {
+    "message": "字體大小",
+    "description": "Label for font size slider in export dialog"
+  },
+  "export_fontsize_preview": {
+    "message": "天地玄黃，宇宙洪荒。日月盈昃，辰宿列張。",
+    "description": "Preview text for font size slider in export dialog"
   }
 }
