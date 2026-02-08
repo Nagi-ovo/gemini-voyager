@@ -1089,7 +1089,7 @@ async function performFinalExport(
       if (!result.success) {
         alert(`${t('export_dialog_warning')}: ${result.error}`);
       } else if (format === 'pdf' && isSafari()) {
-        showExportToast(t('export_dialog_safari_cmdp_hint'));
+        showExportToast(t('export_toast_safari_pdf_ready'), { autoDismissMs: 5000 });
       }
     } catch (err) {
       console.error('[Gemini Voyager] Export error:', err);

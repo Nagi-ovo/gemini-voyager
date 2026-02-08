@@ -43,5 +43,6 @@ describe('selection mode interaction', () => {
     expect(code).toContain("format === 'pdf'");
     expect(code).toContain('isSafari()');
     expect(code).toContain('showExportToast(');
+    expect(code).toContain("t('export_toast_safari_pdf_ready')");
   });
 });

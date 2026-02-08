@@ -471,6 +471,10 @@
     "message": "Safari 提示：请先点击下方“导出”按钮，稍等片刻，再按 ⌘P 选择“保存为 PDF”。",
     "description": "Safari 下 PDF 导出的提示"
   },
+  "export_toast_safari_pdf_ready": {
+    "message": "现在可以按 Command + P 导出 PDF。",
+    "description": "Safari 中完成导出准备后的提示"
+  },
   "editInputWidth": {
     "message": "编辑输入框宽度",
     "description": "编辑输入框宽度调整标签"

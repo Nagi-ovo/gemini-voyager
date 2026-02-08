@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import type { AppLanguage } from '@/utils/language';
@@ -115,5 +117,14 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
     hide();
 
     expect(document.querySelector('.gv-export-progress-overlay')).toBeNull();
+  });
+
+  it('wires Safari PDF report export success to runtime toast guidance', () => {
+    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/deepResearch/menuButton.ts'), 'utf8');
+
+    expect(code).toContain("format === 'pdf'");
+    expect(code).toContain('isSafari()');
+    expect(code).toContain('showExportToast(');
+    expect(code).toContain("t('export_toast_safari_pdf_ready')");
   });
 });

@@ -431,6 +431,10 @@
     "message": "Safari 提示：請先點選下方「匯出」按鈕，稍等片刻，再按 ⌘P 選擇「儲存為 PDF」。",
     "description": "Safari 下 PDF 匯出的提示"
   },
+  "export_toast_safari_pdf_ready": {
+    "message": "現在可以按 Command + P 匯出 PDF。",
+    "description": "Safari 中完成匯出準備後的提示"
+  },
   "export_dialog_safari_markdown_hint": {
     "message": "Safari 限制：無法提取圖片，建議使用 PDF 匯出。",
     "description": "關於 Safari Markdown 匯出無法提取圖片的警告"

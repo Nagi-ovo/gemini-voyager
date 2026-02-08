@@ -2,6 +2,7 @@
  * Menu button injection module for Deep Research export
  */
 import { StorageKeys } from '@/core/types/common';
+import { isSafari } from '@/core/utils/browser';
 import { ConversationExportService } from '@/features/export/services/ConversationExportService';
 import type {
   ConversationMetadata,
@@ -9,6 +10,7 @@ import type {
   ExportFormat,
 } from '@/features/export/types/export';
 import { ExportDialog } from '@/features/export/ui/ExportDialog';
+import { showExportToast } from '@/features/export/ui/ExportToast';
 import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
 import type { TranslationKey } from '@/utils/translations';
@@ -351,6 +353,8 @@ function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
         const [result] = await Promise.all([resultPromise, minVisiblePromise]);
         if (!result.success) {
           alert(`${t('export_dialog_warning')}: ${result.error}`);
+        } else if (format === 'pdf' && isSafari()) {
+          showExportToast(t('export_toast_safari_pdf_ready'), { autoDismissMs: 5000 });
         }
       } catch (error) {
         console.error('[Gemini Voyager] Report export error:', error);

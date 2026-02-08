@@ -471,6 +471,10 @@
     "message": "Dica Safari: Clique em 'Exportar' abaixo, aguarde um momento, depois pressione ⌘P e escolha 'Salvar como PDF'.",
     "description": "Safari-specific hint for PDF export"
   },
+  "export_toast_safari_pdf_ready": {
+    "message": "Agora você pode pressionar Command + P para exportar o PDF.",
+    "description": "Safari-specific toast shown after PDF export is prepared"
+  },
   "export_dialog_safari_markdown_hint": {
     "message": "Limitação do Safari: Imagens não suportadas. Use PDF.",
     "description": "Warning about image references in Safari markdown export"
