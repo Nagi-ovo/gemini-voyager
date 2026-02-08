@@ -1,10 +1,22 @@
 /**
  * Adjusts the spacing (gap) between folders and conversations in the sidebar
  * based on user settings stored in chrome.storage.sync.
+ *
+ * Gemini and AI Studio use separate storage keys so users can configure
+ * each platform independently (similar to sidebar width).
+ *
+ * Platform differences:
+ * - Gemini: folder-item-header padding 8px 12px, conversation 8px 6px
+ * - AI Studio: folder-item-header padding 6px 10px, more compact sidebar
  */
 
+type FolderSpacingPlatform = 'gemini' | 'aistudio';
+
 const STYLE_ID = 'gv-folder-spacing-style';
-const STORAGE_KEY = 'gvFolderSpacing';
+const STORAGE_KEYS: Record<FolderSpacingPlatform, string> = {
+  gemini: 'gvFolderSpacing',
+  aistudio: 'gvAIStudioFolderSpacing',
+};
 const DEFAULT_SPACING = 2;
 const MIN_SPACING = 0;
 const MAX_SPACING = 16;
@@ -14,7 +26,56 @@ function clamp(value: number): number {
   return Math.min(MAX_SPACING, Math.max(MIN_SPACING, Math.round(value)));
 }
 
-function applySpacing(spacing: number) {
+function applyGeminiSpacing(clamped: number, style: HTMLStyleElement) {
+  // Gemini defaults: header 8px, conversation 8px
+  //   At spacing 0 → 4px, spacing 2 → 5px, spacing 16 → 12px
+  const vPad = Math.max(4, Math.round(4 + clamped * 0.5));
+
+  style.textContent = `
+    .gv-folder-list {
+      gap: ${clamped}px !important;
+    }
+    .gv-folder-content {
+      gap: ${clamped}px !important;
+    }
+    .gv-folder-item-header {
+      padding-top: ${vPad}px !important;
+      padding-bottom: ${vPad}px !important;
+    }
+    .gv-folder-conversation {
+      padding-top: ${vPad}px !important;
+      padding-bottom: ${vPad}px !important;
+    }
+  `;
+}
+
+function applyAIStudioSpacing(clamped: number, style: HTMLStyleElement) {
+  // AI Studio defaults: header 6px, more compact sidebar
+  //   At spacing 0 → 3px, spacing 2 → 4px, spacing 16 → 10px
+  const vPad = Math.max(3, Math.round(3 + clamped * 0.45));
+
+  style.textContent = `
+    .gv-aistudio .gv-folder-list {
+      gap: ${clamped}px !important;
+    }
+    .gv-aistudio .gv-folder-content {
+      gap: ${clamped}px !important;
+    }
+    .gv-aistudio .gv-folder-item-header {
+      padding-top: ${vPad}px !important;
+      padding-bottom: ${vPad}px !important;
+    }
+    .gv-aistudio .gv-folder-conversation {
+      padding-top: ${vPad}px !important;
+      padding-bottom: ${vPad}px !important;
+    }
+    .gv-aistudio .gv-folder-uncategorized-content {
+      gap: ${clamped}px !important;
+    }
+  `;
+}
+
+function applySpacing(spacing: number, platform: FolderSpacingPlatform) {
   const clamped = clamp(spacing);
 
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement;
@@ -24,33 +85,11 @@ function applySpacing(spacing: number) {
     document.head.appendChild(style);
   }
 
-  // Scale vertical padding proportionally:
-  // At spacing 0 → 4px (compact, no overlap thanks to min padding)
-  // At spacing 2 (default) → 5px
-  // At spacing 16 → 12px (spacious)
-  // The folder-item-header has horizontal padding 12px, conversation has 6px — keep those intact.
-  const itemVerticalPadding = Math.max(4, Math.round(4 + clamped * 0.5));
-
-  style.textContent = `
-    /* Gap between folder items */
-    .gv-folder-list {
-      gap: ${clamped}px !important;
-    }
-    /* Gap between conversation items within a folder */
-    .gv-folder-content {
-      gap: ${clamped}px !important;
-    }
-    /* Vertical padding on folder headers */
-    .gv-folder-item-header {
-      padding-top: ${itemVerticalPadding}px !important;
-      padding-bottom: ${itemVerticalPadding}px !important;
-    }
-    /* Vertical padding on conversation items */
-    .gv-folder-conversation {
-      padding-top: ${itemVerticalPadding}px !important;
-      padding-bottom: ${itemVerticalPadding}px !important;
-    }
-  `;
+  if (platform === 'aistudio') {
+    applyAIStudioSpacing(clamped, style);
+  } else {
+    applyGeminiSpacing(clamped, style);
+  }
 }
 
 function removeStyles() {
@@ -58,16 +97,21 @@ function removeStyles() {
   if (style) style.remove();
 }
 
-export function startFolderSpacingAdjuster() {
+/**
+ * Start the folder spacing adjuster for a specific platform.
+ * Each platform reads/writes its own storage key so settings are independent.
+ */
+export function startFolderSpacingAdjuster(platform: FolderSpacingPlatform = 'gemini') {
+  const storageKey = STORAGE_KEYS[platform];
   let currentSpacing = DEFAULT_SPACING;
 
   // Load initial spacing from storage
-  chrome.storage?.sync?.get({ [STORAGE_KEY]: DEFAULT_SPACING }, (res) => {
-    const stored = res?.[STORAGE_KEY];
+  chrome.storage?.sync?.get({ [storageKey]: DEFAULT_SPACING }, (res) => {
+    const stored = res?.[storageKey];
     if (typeof stored === 'number') {
       currentSpacing = clamp(stored);
     }
-    applySpacing(currentSpacing);
+    applySpacing(currentSpacing, platform);
   });
 
   // Listen for changes from popup or other sources
@@ -75,11 +119,11 @@ export function startFolderSpacingAdjuster() {
     changes: Record<string, chrome.storage.StorageChange>,
     area: string,
   ) => {
-    if (area === 'sync' && changes[STORAGE_KEY]) {
-      const newValue = changes[STORAGE_KEY].newValue;
+    if (area === 'sync' && changes[storageKey]) {
+      const newValue = changes[storageKey].newValue;
       if (typeof newValue === 'number') {
         currentSpacing = clamp(newValue);
-        applySpacing(currentSpacing);
+        applySpacing(currentSpacing, platform);
       }
     }
   };

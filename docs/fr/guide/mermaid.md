@@ -29,6 +29,14 @@ Lorsque Gemini produit des blocs de code Mermaid (organigrammes, diagrammes de s
 - **⊙** : Réinitialiser la vue
 - **✕ / ESC** : Fermer le plein écran
 
+## Compatibilité et Dépannage
+
+::: warning Note
+
+- **Limitation Firefox** : En raison de restrictions environnementales, Firefox utilise la version 9.2.2 et ne prend pas en charge les nouvelles fonctionnalités comme **Timeline** ou **Sankey**.
+- **Erreurs de syntaxe** : Les échecs de rendu sont souvent dus à des erreurs de syntaxe dans la sortie de Gemini. Nous collectons les "bad cases" pour implémenter des correctifs automatiques dans les futures mises à jour.
+  :::
+
 <div align="center">
   <img src="/assets/mermaid-preview.png" alt="Rendu diagramme Mermaid" style="max-width: 100%; border-radius: 8px;"/>
 </div>

@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Улучшите свой опыт работы с Gemini с помощью навигации по таймлайну, организации папок, хранилища промптов и экспорта чатов.",
+    "message": "Улучшите опыт Gemini: таймлайн, папки, промпты и экспорт чатов.",
     "description": "Extension description"
   },
   "scrollMode": {

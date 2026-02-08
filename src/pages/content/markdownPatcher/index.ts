@@ -17,6 +17,25 @@ export function fixBrokenBoldTags(root: HTMLElement) {
   let node: Node | null;
 
   while ((node = walker.nextNode())) {
+    const parent = node.parentElement;
+    // Skip if inside code block, pre tags, or math/formula containers
+    if (
+      parent &&
+      (parent.tagName === 'CODE' ||
+        parent.tagName === 'PRE' ||
+        parent.tagName === 'MATH-BLOCK' || // Gemini custom element
+        parent.tagName === 'MATH-INLINE' || // Gemini custom element
+        parent.classList.contains('math-block') ||
+        parent.classList.contains('math-inline') ||
+        parent.closest('code') ||
+        parent.closest('pre') ||
+        parent.closest('code-block') ||
+        parent.closest('.math-block') ||
+        parent.closest('.math-inline'))
+    ) {
+      continue;
+    }
+
     if (node.textContent?.includes('**')) {
       textNodes.push(node as Text);
     }
@@ -30,7 +49,13 @@ export function fixBrokenBoldTags(root: HTMLElement) {
 
     // Phase 1: Fix intra-node bolds (e.g., "start **bold** end")
     // We match all complete pairs of **...** within the node
-    const matches = Array.from(originalText.matchAll(/\*\*(.*?)\*\*/g));
+    // Improved Regex: require non-whitespace immediately inside the asterisks
+    // and prevent matching across long distances if not intended.
+    // However, maintaining the basic structure, let's enforce:
+    // **(non-space...non-space)** to be safer.
+    // Updated regex: \*\*([^\s].*?[^\s]|[^\s])\*\* OR \*\*([^\s])\*\*
+    // This prevents matching "** " or " **"
+    const matches = Array.from(originalText.matchAll(/\*\*([^\s].*?[^\s]|[^\s])\*\*/g));
 
     if (matches.length > 0) {
       const fragment = document.createDocumentFragment();

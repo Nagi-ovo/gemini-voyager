@@ -20,6 +20,8 @@ Simplemente se siente bien.
 
 - **Arrastrar y soltar**: Toma un chat. Suéltalo en una carpeta. Es táctil.
 - **Jerarquía anidada**: Los proyectos tienen subproyectos. Crea carpetas dentro de carpetas. Estructúralo a _tu_ manera.
+- **Espaciado de carpetas**: Ajusta la densidad de la barra lateral, de compacto a espacioso.
+  > _Nota: En Mac Safari, es posible que los ajustes no sean en tiempo real; actualiza la página para ver el efecto._
 - **Sincronización instantánea**: Organiza en tu escritorio. Míralo en tu portátil.
 
 ## Consejos profesionales
@@ -35,3 +37,24 @@ Simplemente se siente bien.
 
 - **Aislamiento de cuenta**: Haz clic en el icono "persona" en el encabezado para filtrar instantáneamente los chats de otras cuentas de Google. Mantén tu espacio de trabajo limpio cuando uses varias cuentas.
   <img src="/assets/current-user-only.png" alt="Aislamiento de cuenta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+## Diferencias de características por plataforma
+
+### Funciones comunes
+
+- **Gestión básica**: Arrastrar y soltar, renombrar, selección múltiple.
+- **Reconocimiento inteligente**: Detecta automáticamente tipos de chat y asigna iconos.
+- **Jerarquía anidada**: Soporte para anidamiento de carpetas.
+- **Adaptación para AI Studio**: Las funciones avanzadas estarán disponibles pronto en AI Studio.
+- **Sincronización con Google Drive**: Sincroniza la estructura de carpetas con Google Drive.
+
+### Exclusivo de Gemini
+
+- **Colores personalizados**: Personaliza las carpetas con cualquier color.
+- **Aislamiento de cuenta**: Separa los chats personales de los de trabajo.
+- **Exportación de Deep Research**: Exporta los procesos de pensamiento a la perfección.
+
+### Exclusivo de AI Studio
+
+- **Ajuste de barra lateral**: Arrastra para cambiar el ancho de la barra lateral.
+- **Integración con Library**: Arrastra directamente desde tu Library a las carpetas.

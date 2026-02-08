@@ -1,3 +1,4 @@
+import { isSafari } from '@/core/utils/browser';
 import {
   hasValidExtensionContext,
   isExtensionContextInvalidatedError,
@@ -155,7 +156,7 @@ async function initializeFeatures(): Promise<void> {
       folderManagerInstance = await startFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
-      startFolderSpacingAdjuster();
+      startFolderSpacingAdjuster('gemini');
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startChatWidthAdjuster();
@@ -192,7 +193,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Watermark remover - based on gemini-watermark-remover by journey-ad
       // https://github.com/journey-ad/gemini-watermark-remover
-      startWatermarkRemover();
+      // Skip on Safari due to fetch interceptor limitations in extension sandbox
+      if (!isSafari()) {
+        startWatermarkRemover();
+      }
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startTitleUpdater();
@@ -242,7 +246,7 @@ async function initializeFeatures(): Promise<void> {
       startAIStudioFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
-      startFolderSpacingAdjuster();
+      startFolderSpacingAdjuster('aistudio');
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Formula copy support for AI Studio

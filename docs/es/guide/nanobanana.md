@@ -1,5 +1,11 @@
 # Opción NanoBanana
 
+::: warning Compatibilidad de navegadores
+Actualmente, la función **NanoBanana** **no es compatible con Safari** debido a las limitaciones de la API del navegador. Recomendamos usar **Chrome** o **Firefox** si necesita usar esta función.
+
+Los usuarios de Safari pueden cargar manualmente sus imágenes descargadas en sitios de herramientas como [banana.ovo.re](https://banana.ovo.re/) para su procesamiento (aunque no se garantiza el éxito para todas las imágenes debido a las diferentes resoluciones).
+:::
+
 **Imágenes de IA, como deben ser: puras.**
 
 Las imágenes generadas por Gemini vienen con una marca de agua visible por defecto. Aunque esto es por razones de seguridad, en ciertos escenarios creativos, puedes necesitar un borrador completamente limpio.

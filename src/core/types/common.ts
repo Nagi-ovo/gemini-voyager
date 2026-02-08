@@ -73,6 +73,7 @@ export const StorageKeys = {
 
   // Folder spacing
   GV_FOLDER_SPACING: 'gvFolderSpacing',
+  GV_AISTUDIO_FOLDER_SPACING: 'gvAIStudioFolderSpacing',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

@@ -29,6 +29,14 @@ When Gemini outputs Mermaid code blocks (flowcharts, sequence diagrams, Gantt ch
 - **⊙**: Reset view
 - **✕ / ESC**: Close fullscreen
 
+## Compatibility & Troubleshooting
+
+::: warning Note
+
+- **Firefox Limitation**: Due to environment restrictions, Firefox uses version 9.2.2 and does not support new features like **Timeline** or **Sankey**.
+- **Syntax Errors**: Rendering failures are often due to syntax errors in Gemini's output. We are collecting "bad cases" to implement automatic patches for common generation errors in future updates.
+  :::
+
 <div align="center">
   <img src="/assets/mermaid-preview.png" alt="Mermaid diagram rendering" style="max-width: 100%; border-radius: 8px;"/>
 </div>
