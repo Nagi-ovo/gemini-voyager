@@ -8,6 +8,14 @@ import { isSafari } from '@/core/utils/browser';
 import type { ChatTurn, ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
 
+export interface PrintableDocumentContent {
+  title: string;
+  url: string;
+  exportedAt: string;
+  markdown: string;
+  html: string;
+}
+
 /**
  * PDF print service using browser's native print dialog
  * Injects optimized styles for paper-friendly output
@@ -15,24 +23,67 @@ import { DOMContentExtractor } from './DOMContentExtractor';
 export class PDFPrintService {
   private static PRINT_STYLES_ID = 'gv-pdf-print-styles';
   private static PRINT_CONTAINER_ID = 'gv-pdf-print-container';
+  private static PRINT_BODY_CLASS = 'gv-pdf-printing';
   private static CLEANUP_FALLBACK_DELAY_MS = 60_000;
   private static INLINE_FETCH_TIMEOUT_MS = 2_000;
   private static INLINE_DECODE_TIMEOUT_MS = 1_000;
   private static cleanupFallbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private static originalDocumentTitle: string | null = null;
 
   /**
    * Export conversation as PDF using browser print
    */
   static async export(turns: ChatTurn[], metadata: ConversationMetadata): Promise<void> {
+    await this.exportInternal(turns, metadata, false);
+  }
+
+  static async exportDocument(content: PrintableDocumentContent): Promise<void> {
+    const metadata: ConversationMetadata = {
+      url: content.url,
+      exportedAt: content.exportedAt,
+      count: 1,
+      title: content.title,
+    };
+
+    const htmlContainer = document.createElement('div');
+    htmlContainer.innerHTML = content.html.trim();
+    const fallbackFromHtml = this.extractPlainTextFromHtml(content.html);
+    const assistant = fallbackFromHtml || content.markdown.trim() || 'No content';
+    const turns: ChatTurn[] = [
+      {
+        user: '',
+        assistant,
+        starred: false,
+        omitEmptySections: true,
+        assistantElement: htmlContainer,
+      },
+    ];
+
+    await this.exportInternal(turns, metadata, true);
+  }
+
+  private static async exportInternal(
+    turns: ChatTurn[],
+    metadata: ConversationMetadata,
+    preferMetadataTitle: boolean,
+  ): Promise<void> {
     // Ensure we don't leave a previous export container around (e.g. if a prior export failed)
     this.cleanup();
 
     // Create print container
-    const container = this.createPrintContainer(turns, metadata);
+    const container = this.createPrintContainer(turns, metadata, preferMetadataTitle);
     document.body.appendChild(container);
 
     // Inject print styles
     this.injectPrintStyles();
+    document.body.classList.add(this.PRINT_BODY_CLASS);
+
+    // Keep print header/footer title aligned with conversation title in print dialog output.
+    this.originalDocumentTitle = document.title;
+    const printDialogTitle = this.getPrintDialogTitle(metadata, preferMetadataTitle);
+    if (printDialogTitle) {
+      document.title = printDialogTitle;
+    }
 
     const safari = isSafari();
 
@@ -121,6 +172,7 @@ export class PDFPrintService {
   private static createPrintContainer(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
+    preferMetadataTitle: boolean,
   ): HTMLElement {
     const container = document.createElement('div');
     container.id = this.PRINT_CONTAINER_ID;
@@ -129,13 +181,30 @@ export class PDFPrintService {
     // Build HTML content
     container.innerHTML = `
       <div class="gv-print-document">
-        ${this.renderHeader(metadata)}
+        ${this.renderHeader(metadata, preferMetadataTitle)}
         ${this.renderContent(turns)}
         ${this.renderFooter(metadata)}
       </div>
     `;
 
     return container;
+  }
+
+  private static extractPlainTextFromHtml(html: string): string {
+    const trimmed = html.trim();
+    if (!trimmed) return '';
+    const container = document.createElement('div');
+    container.innerHTML = trimmed;
+    container.querySelectorAll('script, style, template').forEach((element) => element.remove());
+    return this.normalizeWhitespace(container.textContent || '');
+  }
+
+  private static normalizeWhitespace(text: string): string {
+    return text
+      .replace(/\r/g, '')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
   /**
@@ -233,42 +302,22 @@ export class PDFPrintService {
       console.debug('[PDF Export] Failed to get title from Folder Manager:', error);
     }
 
-    // Strategy 1b: Get from Gemini's native sidebar using the selected actions container
+    // Strategy 1b: Get from Gemini native sidebar via current conversation ID
     try {
-      // In new Gemini UI, the selected conversation row has a sibling
-      // actions container like: .conversation-actions-container.selected
-      const actionsContainer = document.querySelector('.conversation-actions-container.selected');
-      if (actionsContainer && actionsContainer.previousElementSibling) {
-        const convEl = actionsContainer.previousElementSibling as HTMLElement;
-        // Typical pattern: the conversation element itself carries the text title
-        // (or contains a child with it). Use textContent as a robust fallback.
-        const rawTitle = convEl.textContent || '';
-        const title = rawTitle.trim();
-        if (title) {
-          return title;
-        }
+      const conversationId = this.extractConversationIdFromURL(window.location.href);
+      if (conversationId) {
+        const byId = this.extractTitleFromNativeSidebarByConversationId(conversationId);
+        if (byId) return byId;
       }
     } catch (error) {
-      console.debug(
-        '[PDF Export] Failed to get title from native sidebar selected conversation:',
-        error,
-      );
+      console.debug('[PDF Export] Failed to get title from native sidebar by id:', error);
     }
 
     // Strategy 2: Try to get from page title
     const titleElement = document.querySelector('title');
     if (titleElement) {
       const title = titleElement.textContent?.trim();
-      // Filter out generic titles
-      if (
-        title &&
-        title !== 'Gemini' &&
-        title !== 'Google Gemini' &&
-        title !== 'Google AI Studio' &&
-        !title.startsWith('Gemini -') &&
-        !title.startsWith('Google AI Studio -') &&
-        title.length > 0
-      ) {
+      if (this.isMeaningfulConversationTitle(title)) {
         return title;
       }
     }
@@ -284,22 +333,154 @@ export class PDFPrintService {
 
       for (const selector of selectors) {
         const element = document.querySelector(selector);
-        if (element?.textContent?.trim() && element.textContent.trim() !== 'New chat') {
-          return element.textContent.trim();
+        const title = element?.textContent?.trim();
+        if (this.isMeaningfulConversationTitle(title)) {
+          return title;
         }
       }
     } catch (error) {
       console.debug('[PDF Export] Failed to get title from sidebar:', error);
     }
 
+    // Strategy 4: URL fallback
+    const conversationId = this.extractConversationIdFromURL(window.location.href);
+    if (conversationId) {
+      return `Conversation ${conversationId.slice(0, 8)}`;
+    }
+
     return 'Untitled Conversation';
+  }
+
+  private static isMeaningfulConversationTitle(title: string | null | undefined): title is string {
+    const t = (title || '').trim();
+    if (!t) return false;
+    if (
+      t === 'Untitled Conversation' ||
+      t === 'Gemini' ||
+      t === 'Google Gemini' ||
+      t === 'Google AI Studio' ||
+      t === 'New chat'
+    ) {
+      return false;
+    }
+    if (t.startsWith('Gemini -') || t.startsWith('Google AI Studio -')) return false;
+    return true;
+  }
+
+  private static isGemLabel(text: string | null | undefined): boolean {
+    const t = (text || '').trim().toLowerCase();
+    return t === 'gem' || t === 'gems';
+  }
+
+  private static extractConversationIdFromURL(url: string): string | null {
+    try {
+      const urlObj = new URL(url);
+      const appMatch = urlObj.pathname.match(/\/app\/([^/?#]+)/);
+      if (appMatch?.[1]) return appMatch[1];
+      const gemMatch = urlObj.pathname.match(/\/gem\/[^/]+\/([^/?#]+)/);
+      if (gemMatch?.[1]) return gemMatch[1];
+    } catch {
+      /* ignore */
+    }
+    return null;
+  }
+
+  private static extractTitleFromLinkText(link?: HTMLAnchorElement | null): string | null {
+    if (!link) return null;
+    const text = (link.innerText || '').trim();
+    if (!text) return null;
+    const parts = text
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .filter((s) => !this.isGemLabel(s))
+      .filter((s) => s.length >= 2);
+    if (parts.length === 0) return null;
+    return parts.reduce((a, b) => (b.length > a.length ? b : a), parts[0]) || null;
+  }
+
+  private static extractTitleFromConversationElement(conversationEl: HTMLElement): string | null {
+    const scope =
+      (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
+    const bySelector = scope.querySelector(
+      '.gds-label-l, .conversation-title-text, [data-test-id="conversation-title"], h3',
+    );
+    const selectorTitle = bySelector?.textContent?.trim();
+    if (this.isMeaningfulConversationTitle(selectorTitle) && !this.isGemLabel(selectorTitle)) {
+      return selectorTitle;
+    }
+
+    const link = scope.querySelector(
+      'a[href*="/app/"], a[href*="/gem/"]',
+    ) as HTMLAnchorElement | null;
+    const ariaTitle = link?.getAttribute('aria-label')?.trim();
+    if (this.isMeaningfulConversationTitle(ariaTitle) && !this.isGemLabel(ariaTitle)) {
+      return ariaTitle;
+    }
+    const linkTitle = link?.getAttribute('title')?.trim();
+    if (this.isMeaningfulConversationTitle(linkTitle) && !this.isGemLabel(linkTitle)) {
+      return linkTitle;
+    }
+    const fromLinkText = this.extractTitleFromLinkText(link);
+    if (this.isMeaningfulConversationTitle(fromLinkText)) {
+      return fromLinkText;
+    }
+
+    const label = scope.querySelector('.gds-body-m, .gds-label-m, .subtitle');
+    const labelText = label?.textContent?.trim();
+    if (this.isMeaningfulConversationTitle(labelText) && !this.isGemLabel(labelText)) {
+      return labelText;
+    }
+
+    const raw = scope.textContent?.trim() || '';
+    if (!raw) return null;
+    const firstLine =
+      raw
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean)[0] || raw;
+    if (this.isMeaningfulConversationTitle(firstLine) && !this.isGemLabel(firstLine)) {
+      return firstLine.slice(0, 80);
+    }
+
+    return null;
+  }
+
+  private static extractTitleFromNativeSidebarByConversationId(
+    conversationId: string,
+  ): string | null {
+    const escapedConversationId = this.escapeCssAttributeValue(conversationId);
+    const byJslog = document.querySelector(
+      `[data-test-id="conversation"][jslog*="c_${escapedConversationId}"]`,
+    ) as HTMLElement | null;
+    if (byJslog) {
+      const title = this.extractTitleFromConversationElement(byJslog);
+      if (title) return title;
+    }
+
+    const byHrefLink = document.querySelector(
+      `[data-test-id="conversation"] a[href*="${escapedConversationId}"]`,
+    ) as HTMLElement | null;
+    if (byHrefLink) {
+      const title = this.extractTitleFromConversationElement(byHrefLink);
+      if (title) return title;
+    }
+
+    return null;
   }
 
   /**
    * Render document header with cover page
    */
-  private static renderHeader(metadata: ConversationMetadata): string {
-    const conversationTitle = this.getConversationTitle();
+  private static renderHeader(
+    metadata: ConversationMetadata,
+    preferMetadataTitle: boolean,
+  ): string {
+    const metadataTitle = this.normalizeConversationTitle(metadata.title);
+    const pageConversationTitle = this.normalizeConversationTitle(this.getConversationTitle());
+    const conversationTitle = preferMetadataTitle
+      ? metadataTitle || pageConversationTitle || 'Untitled Conversation'
+      : pageConversationTitle || metadataTitle || 'Untitled Conversation';
     // For PDF, avoid repeating the same title in smaller text under the H1.
     // Always derive a neutral "source" label from the URL instead of using metadata.title.
     const urlTitle = this.extractTitleFromURL(metadata.url);
@@ -307,16 +488,16 @@ export class PDFPrintService {
     const turnsCount = metadata.count;
 
     return `
-      <header class="gv-print-header gv-print-cover-page">
+      <div class="gv-print-header gv-print-cover-page">
         <div class="gv-print-cover-content">
           <h1 class="gv-print-cover-title">${this.escapeHTML(conversationTitle)}</h1>
           <div class="gv-print-meta">
             <p>${date}</p>
-            <p><a href="${this.escapeHTML(metadata.url)}">${this.escapeHTML(urlTitle)}</a></p>
+            <p><a href="${this.escapeAttribute(metadata.url)}">${this.escapeHTML(urlTitle)}</a></p>
             <p>${turnsCount} conversation turns</p>
           </div>
         </div>
-      </header>
+      </div>
     `;
   }
 
@@ -325,9 +506,9 @@ export class PDFPrintService {
    */
   private static renderContent(turns: ChatTurn[]): string {
     return `
-      <main class="gv-print-content">
+      <div class="gv-print-content">
         ${turns.map((turn, index) => this.renderTurn(turn, index + 1)).join('\n')}
-      </main>
+      </div>
     `;
   }
 
@@ -337,26 +518,18 @@ export class PDFPrintService {
   private static renderTurn(turn: ChatTurn, index: number): string {
     const starredClass = turn.starred ? 'gv-print-turn-starred' : '';
 
-    // Extract rich content if DOM elements available
-    let userContent: string;
-    let assistantContent: string;
+    const userContent = turn.userElement
+      ? DOMContentExtractor.extractUserContent(turn.userElement).html || '<em>No content</em>'
+      : this.formatContent(turn.user) || '<em>No content</em>';
 
-    if (turn.userElement) {
-      const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
-      userContent = extracted.html || '<em>No content</em>';
-    } else {
-      userContent = this.formatContent(turn.user);
-    }
+    const assistantContent = turn.assistantElement
+      ? DOMContentExtractor.extractAssistantContent(turn.assistantElement).html ||
+        '<em>No content</em>'
+      : this.formatContent(turn.assistant) || '<em>No content</em>';
 
-    if (turn.assistantElement) {
-      const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
-      assistantContent = extracted.html || '<em>No content</em>';
-    } else {
-      assistantContent = this.formatContent(turn.assistant);
-    }
-
-    return `
-      <article class="gv-print-turn ${starredClass}">
+    if (!turn.omitEmptySections) {
+      return `
+      <div class="gv-print-turn ${starredClass}">
         <div class="gv-print-turn-header">
           <span class="gv-print-turn-number">Turn ${index}</span>
           ${turn.starred ? '<span class="gv-print-star">⭐</span>' : ''}
@@ -367,8 +540,37 @@ export class PDFPrintService {
           <div class="gv-print-turn-text">${userContent}</div>
         </div>
 
+        <div class="gv-print-turn-assistant">
+          <div class="gv-print-turn-label">🤖 Assistant</div>
+          <div class="gv-print-turn-text">${assistantContent}</div>
+        </div>
+      </div>
+    `;
+    }
+
+    const hasUser = !!turn.userElement || !!turn.user.trim();
+    const hasAssistant = !!turn.assistantElement || !!turn.assistant.trim();
+
+    return `
+      <div class="gv-print-turn ${starredClass}">
+        <div class="gv-print-turn-header">
+          <span class="gv-print-turn-number">Turn ${index}</span>
+          ${turn.starred ? '<span class="gv-print-star">⭐</span>' : ''}
+        </div>
+
         ${
-          assistantContent
+          hasUser
+            ? `
+        <div class="gv-print-turn-user">
+          <div class="gv-print-turn-label">👤 User</div>
+          <div class="gv-print-turn-text">${userContent}</div>
+        </div>
+        `
+            : ''
+        }
+
+        ${
+          hasAssistant
             ? `
           <div class="gv-print-turn-assistant">
             <div class="gv-print-turn-label">🤖 Assistant</div>
@@ -377,7 +579,7 @@ export class PDFPrintService {
         `
             : ''
         }
-      </article>
+      </div>
     `;
   }
 
@@ -404,10 +606,10 @@ export class PDFPrintService {
    */
   private static renderFooter(metadata: ConversationMetadata): string {
     return `
-      <footer class="gv-print-footer">
+      <div class="gv-print-footer">
         <p>Exported from <a href="https://github.com/Nagi-ovo/gemini-voyager">Gemini Voyager</a> • ${metadata.count} conversation turns</p>
         <p>Generated on ${this.formatDate(metadata.exportedAt)}</p>
-      </footer>
+      </div>
     `;
   }
 
@@ -429,12 +631,29 @@ export class PDFPrintService {
       /* Show print container when printing */
       @media print {
         /* Hide everything except print container */
-        body > *:not(#${this.PRINT_CONTAINER_ID}) {
+        body.${this.PRINT_BODY_CLASS} > *:not(#${this.PRINT_CONTAINER_ID}) {
           display: none !important;
+          visibility: hidden !important;
         }
 
-        .gv-print-only {
+        body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} {
           display: block !important;
+          visibility: visible !important;
+        }
+
+        body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID},
+        body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} * {
+          visibility: visible !important;
+        }
+
+        /* Force white print canvas to avoid dark-theme background leaks on trailing pages */
+        html,
+        body {
+          background: #fff !important;
+        }
+
+        body.${this.PRINT_BODY_CLASS} {
+          background: #fff !important;
         }
 
         /* Reset page styles */
@@ -667,6 +886,21 @@ export class PDFPrintService {
       container.remove();
     }
 
+    try {
+      document.body.classList.remove(this.PRINT_BODY_CLASS);
+    } catch {
+      /* ignore */
+    }
+
+    if (this.originalDocumentTitle !== null) {
+      try {
+        document.title = this.originalDocumentTitle;
+      } catch {
+        /* ignore */
+      }
+      this.originalDocumentTitle = null;
+    }
+
     // Keep styles for potential reuse
     // They don't affect screen display anyway
   }
@@ -707,6 +941,33 @@ export class PDFPrintService {
     }
   }
 
+  private static normalizeConversationTitle(rawTitle: string | undefined): string {
+    if (!rawTitle) return '';
+    const normalized = rawTitle
+      .trim()
+      .replace(/\s+-\s+Gemini$/i, '')
+      .replace(/\s+-\s+Google Gemini$/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return this.isMeaningfulConversationTitle(normalized) ? normalized : '';
+  }
+
+  private static getPrintDialogTitle(
+    metadata: ConversationMetadata,
+    preferMetadataTitle: boolean,
+  ): string {
+    const metadataTitle = this.normalizeConversationTitle(metadata.title);
+    const conversationTitle = this.normalizeConversationTitle(this.getConversationTitle());
+
+    if (preferMetadataTitle) {
+      return metadataTitle || conversationTitle || 'Gemini Conversation';
+    }
+
+    const base = conversationTitle || metadataTitle;
+    if (!base) return 'Gemini Conversation';
+    return `${base} - Gemini`;
+  }
+
   /**
    * Helper: Escape HTML
    */
@@ -714,5 +975,17 @@ export class PDFPrintService {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  private static escapeCssAttributeValue(value: string): string {
+    const escape = globalThis.CSS?.escape;
+    if (typeof escape === 'function') {
+      return escape(value);
+    }
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
+  private static escapeAttribute(text: string): string {
+    return this.escapeHTML(text).replace(/"/g, '&quot;');
   }
 }

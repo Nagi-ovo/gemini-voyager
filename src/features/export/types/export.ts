@@ -10,6 +10,7 @@ export interface ChatTurn {
   user: string;
   assistant: string;
   starred: boolean;
+  omitEmptySections?: boolean;
   // Optional DOM elements for rich content extraction
   userElement?: HTMLElement;
   assistantElement?: HTMLElement;
@@ -32,7 +33,10 @@ export enum ExportFormat {
   JSON = 'json',
   MARKDOWN = 'markdown',
   PDF = 'pdf',
+  IMAGE = 'image',
 }
+
+export type ExportLayout = 'conversation' | 'document';
 
 /**
  * Export format labels for UI
@@ -50,6 +54,7 @@ export interface ExportFormatInfo {
  */
 export interface ExportOptions {
   format: ExportFormat;
+  layout?: ExportLayout;
   includeMetadata?: boolean;
   includeStarred?: boolean;
   filename?: string;

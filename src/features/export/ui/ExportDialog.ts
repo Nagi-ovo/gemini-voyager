@@ -36,11 +36,9 @@ export class ExportDialog {
     this.overlay = this.createDialog(options);
     document.body.appendChild(this.overlay);
 
-    // Focus on dialog
-    setTimeout(() => {
-      const firstRadio = this.overlay?.querySelector('input[type="radio"]') as HTMLInputElement;
-      firstRadio?.focus();
-    }, 100);
+    // Keep initial focus on container to avoid showing a browser focus ring on JSON radio.
+    const dialog = this.overlay.querySelector('.gv-export-dialog') as HTMLElement | null;
+    dialog?.focus();
   }
 
   /**
@@ -62,6 +60,7 @@ export class ExportDialog {
 
     const dialog = document.createElement('div');
     dialog.className = 'gv-export-dialog';
+    dialog.tabIndex = -1;
 
     // Title
     const title = document.createElement('div');
@@ -72,11 +71,6 @@ export class ExportDialog {
     const subtitle = document.createElement('div');
     subtitle.className = 'gv-export-dialog-subtitle';
     subtitle.textContent = options.translations.selectFormat;
-
-    // Warning message
-    const warning = document.createElement('div');
-    warning.className = 'gv-export-dialog-warning';
-    warning.textContent = options.translations.warning;
 
     // Format options
     const formatsList = document.createElement('div');
@@ -121,7 +115,12 @@ export class ExportDialog {
     // Assemble dialog
     dialog.appendChild(title);
     dialog.appendChild(subtitle);
-    dialog.appendChild(warning);
+    if (options.translations.warning.trim()) {
+      const warning = document.createElement('div');
+      warning.className = 'gv-export-dialog-warning';
+      warning.textContent = options.translations.warning;
+      dialog.appendChild(warning);
+    }
     dialog.appendChild(formatsList);
     dialog.appendChild(buttons);
     overlay.appendChild(dialog);
@@ -200,7 +199,10 @@ export class ExportDialog {
     if (isSafari()) {
       if (formatInfo.format === ('pdf' as ExportFormat)) {
         hintText = `${formatInfo.description} ${safariCmdpHint}`;
-      } else if (formatInfo.format === ('markdown' as ExportFormat)) {
+      } else if (
+        formatInfo.format === ('markdown' as ExportFormat) ||
+        formatInfo.format === ('image' as ExportFormat)
+      ) {
         hintText = `${formatInfo.description} ${safariMarkdownHint}`;
       }
     }

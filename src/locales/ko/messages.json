@@ -471,8 +471,12 @@
     "message": "Safari 팁: 아래 '내보내기'를 클릭하고 잠시 기다린 다음, ⌘P를 누르고 'PDF로 저장'을 선택하세요.",
     "description": "Safari-specific hint for PDF export"
   },
+  "export_toast_safari_pdf_ready": {
+    "message": "이제 Command + P를 눌러 PDF를 내보낼 수 있습니다.",
+    "description": "Safari-specific toast shown after PDF export is prepared"
+  },
   "export_dialog_safari_markdown_hint": {
-    "message": "Safari 제한: 이미지를 추출할 수 없습니다. PDF 내보내기를 사용하세요.",
+    "message": "안내: Safari 제한으로 인해 채팅 기록의 이미지를 추출할 수 없습니다. 전체 내보내기가 필요하면 PDF 내보내기를 사용하세요.",
     "description": "Warning about image references in Safari markdown export"
   },
   "export_format_json_description": {
@@ -1142,5 +1146,41 @@
   "folderSpacingSpacious": {
     "message": "넓게",
     "description": "Spacious folder spacing label"
+  },
+  "export_select_mode_select_all": {
+    "message": "전체 선택",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "{count}개 선택됨",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "메시지 선택",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "아래 메시지 선택",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "내보낼 메시지를 하나 이상 선택하세요",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "모바일 공유에 적합한 단일 PNG 이미지.",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "이미지 생성 중...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "보고서 저장",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "이 연구 보고서 내보내기",
+    "description": "Deep Research save report tooltip"
   }
 }

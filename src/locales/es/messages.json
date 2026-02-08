@@ -471,8 +471,12 @@
     "message": "Consejo para Safari: haz clic en 'Exportar' abajo, espera un momento, luego presiona ⌘P y elige 'Guardar como PDF'.",
     "description": "Safari-specific hint for PDF export"
   },
+  "export_toast_safari_pdf_ready": {
+    "message": "Ahora puedes pulsar Command + P para exportar el PDF.",
+    "description": "Safari-specific toast shown after PDF export is prepared"
+  },
   "export_dialog_safari_markdown_hint": {
-    "message": "Limitación de Safari: No se pueden extraer imágenes. Usa PDF.",
+    "message": "Aviso: debido a limitaciones de Safari, no se pueden extraer las imágenes del historial del chat. Para una exportación completa, usa la exportación en PDF.",
     "description": "Warning about image references in Safari markdown export"
   },
   "export_format_json_description": {
@@ -1142,5 +1146,41 @@
   "folderSpacingSpacious": {
     "message": "Espacioso",
     "description": "Spacious folder spacing label"
+  },
+  "export_select_mode_select_all": {
+    "message": "Select all",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "Selected {count}",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "Select message",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "Select messages below",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "Please select at least one message to export.",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "Imagen PNG única, ideal para compartir en móvil.",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "Generating image...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "Save Report",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "Export this research report",
+    "description": "Deep Research save report tooltip"
   }
 }

@@ -1,12 +1,19 @@
 // Static imports to avoid CSP issues with dynamic imports in content scripts
 import { StorageKeys } from '@/core/types/common';
+import { isSafari } from '@/core/utils/browser';
 import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
 import type { TranslationKey } from '@/utils/translations';
 
 import { ConversationExportService } from '../../../features/export/services/ConversationExportService';
-import type { ConversationMetadata } from '../../../features/export/types/export';
+import type {
+  ConversationMetadata,
+  ChatTurn as ExportChatTurn,
+  ExportFormat,
+} from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
+import { showExportToast } from '../../../features/export/ui/ExportToast';
+import { groupSelectedMessagesByTurn } from './selectionUtils';
 import {
   computeConversationFingerprint,
   waitForConversationFingerprintChangeOrTimeout,
@@ -16,7 +23,7 @@ import {
 const SESSION_KEY_PENDING_EXPORT = 'gv_export_pending';
 
 interface PendingExportState {
-  format: string; // ExportFormat
+  format: ExportFormat;
   attempt: number;
   url: string;
   status: 'clicking';
@@ -30,6 +37,10 @@ function hashString(input: string): string {
     h = Math.imul(h, 16777619);
   }
   return (h >>> 0).toString(36);
+}
+
+function isExportFormat(value: unknown): value is ExportFormat {
+  return value === 'json' || value === 'markdown' || value === 'pdf' || value === 'image';
 }
 
 function waitForElement(selector: string, timeoutMs: number = 6000): Promise<Element | null> {
@@ -264,11 +275,13 @@ function extractAssistantText(el: HTMLElement): string {
 }
 
 type ChatTurn = {
+  turnId: string;
   user: string;
   assistant: string;
   starred: boolean;
   userElement?: HTMLElement;
   assistantElement?: HTMLElement;
+  assistantHostElement?: HTMLElement;
 };
 
 function collectChatPairs(): ChatTurn[] {
@@ -343,43 +356,57 @@ function collectChatPairs(): ChatTurn[] {
         finalAssistantEl = pick || undefined;
       }
       pairs.push({
+        turnId,
         user: uText,
         assistant: aText,
         starred,
         userElement: uEl,
         assistantElement: finalAssistantEl,
+        assistantHostElement: aEl || undefined,
       });
     }
   }
   return pairs;
 }
 
-function downloadJSON(data: any, filename: string): void {
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: 'application/json;charset=utf-8',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    try {
-      document.body.removeChild(a);
-    } catch {}
-    URL.revokeObjectURL(url);
-  }, 0);
-}
+type ExportMessageRole = 'user' | 'assistant';
 
-function buildExportPayload(pairs: ChatTurn[]) {
-  return {
-    format: 'gemini-voyager.chat.v1',
-    url: location.href,
-    exportedAt: new Date().toISOString(),
-    count: pairs.length,
-    items: pairs,
-  };
+type ExportMessage = {
+  messageId: string;
+  role: ExportMessageRole;
+  hostElement: HTMLElement;
+  exportElement?: HTMLElement;
+  text: string;
+  starred: boolean;
+};
+
+function buildExportMessagesFromPairs(pairs: ChatTurn[]): ExportMessage[] {
+  const out: ExportMessage[] = [];
+  pairs.forEach((pair) => {
+    if (pair.userElement) {
+      out.push({
+        messageId: `${pair.turnId}:u`,
+        role: 'user',
+        hostElement: pair.userElement,
+        exportElement: pair.userElement,
+        text: pair.user,
+        starred: pair.starred,
+      });
+    }
+
+    const assistantHost = pair.assistantHostElement;
+    if (assistantHost) {
+      out.push({
+        messageId: `${pair.turnId}:a`,
+        role: 'assistant',
+        hostElement: assistantHost,
+        exportElement: pair.assistantElement || assistantHost,
+        text: pair.assistant,
+        starred: pair.starred,
+      });
+    }
+  });
+  return out;
 }
 
 function ensureButtonInjected(container: Element): HTMLButtonElement | null {
@@ -393,18 +420,6 @@ function ensureButtonInjected(container: Element): HTMLButtonElement | null {
   btn.setAttribute('aria-label', 'Export chat history (JSON)');
   host.appendChild(btn);
   return btn;
-}
-
-function formatFilename(): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = pad(d.getMonth() + 1);
-  const day = pad(d.getDate());
-  const hh = pad(d.getHours());
-  const mm = pad(d.getMinutes());
-  const ss = pad(d.getSeconds());
-  return `gemini-chat-${y}${m}${day}-${hh}${mm}${ss}.json`;
 }
 
 async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, string>>> {
@@ -456,6 +471,125 @@ async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, st
  * Used for JSON/Markdown metadata so all formats share the same title.
  * Mirrors the logic used by PDFPrintService.getConversationTitle.
  */
+function isMeaningfulConversationTitle(title: string | null | undefined): title is string {
+  const t = (title || '').trim();
+  if (!t) return false;
+  if (
+    t === 'Untitled Conversation' ||
+    t === 'Gemini' ||
+    t === 'Google Gemini' ||
+    t === 'Google AI Studio' ||
+    t === 'New chat'
+  ) {
+    return false;
+  }
+  if (t.startsWith('Gemini -') || t.startsWith('Google AI Studio -')) return false;
+  return true;
+}
+
+function extractConversationIdFromUrl(): string | null {
+  const appMatch = window.location.pathname.match(/\/app\/([^/?#]+)/);
+  if (appMatch?.[1]) return appMatch[1];
+  const gemMatch = window.location.pathname.match(/\/gem\/[^/]+\/([^/?#]+)/);
+  if (gemMatch?.[1]) return gemMatch[1];
+  return null;
+}
+
+function isGemLabel(text: string | null | undefined): boolean {
+  const t = (text || '').trim().toLowerCase();
+  return t === 'gem' || t === 'gems';
+}
+
+function extractTitleFromLinkText(link?: HTMLAnchorElement | null): string | null {
+  if (!link) return null;
+  const text = (link.innerText || '').trim();
+  if (!text) return null;
+  const parts = text
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((s) => !isGemLabel(s))
+    .filter((s) => s.length >= 2);
+  if (parts.length === 0) return null;
+  return parts.reduce((a, b) => (b.length > a.length ? b : a), parts[0]) || null;
+}
+
+function extractTitleFromConversationElement(conversationEl: HTMLElement): string | null {
+  const scope =
+    (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
+  const bySelector = scope.querySelector(
+    '.gds-label-l, .conversation-title-text, [data-test-id="conversation-title"], h3',
+  );
+  const selectorTitle = bySelector?.textContent?.trim();
+  if (isMeaningfulConversationTitle(selectorTitle) && !isGemLabel(selectorTitle)) {
+    return selectorTitle;
+  }
+
+  const link = scope.querySelector(
+    'a[href*="/app/"], a[href*="/gem/"]',
+  ) as HTMLAnchorElement | null;
+  const ariaTitle = link?.getAttribute('aria-label')?.trim();
+  if (isMeaningfulConversationTitle(ariaTitle) && !isGemLabel(ariaTitle)) {
+    return ariaTitle;
+  }
+  const linkTitle = link?.getAttribute('title')?.trim();
+  if (isMeaningfulConversationTitle(linkTitle) && !isGemLabel(linkTitle)) {
+    return linkTitle;
+  }
+  const fromLinkText = extractTitleFromLinkText(link);
+  if (isMeaningfulConversationTitle(fromLinkText)) {
+    return fromLinkText;
+  }
+
+  const label = scope.querySelector('.gds-body-m, .gds-label-m, .subtitle');
+  const labelText = label?.textContent?.trim();
+  if (isMeaningfulConversationTitle(labelText) && !isGemLabel(labelText)) {
+    return labelText;
+  }
+
+  const raw = scope.textContent?.trim() || '';
+  if (!raw) return null;
+  const firstLine =
+    raw
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)[0] || raw;
+  if (isMeaningfulConversationTitle(firstLine) && !isGemLabel(firstLine)) {
+    return firstLine.slice(0, 80);
+  }
+
+  return null;
+}
+
+function extractTitleFromNativeSidebarByConversationId(conversationId: string): string | null {
+  const escapedConversationId = escapeCssAttributeValue(conversationId);
+  const byJslog = document.querySelector(
+    `[data-test-id="conversation"][jslog*="c_${escapedConversationId}"]`,
+  ) as HTMLElement | null;
+  if (byJslog) {
+    const title = extractTitleFromConversationElement(byJslog);
+    if (title) return title;
+  }
+
+  const byHrefLink = document.querySelector(
+    `[data-test-id="conversation"] a[href*="${escapedConversationId}"]`,
+  ) as HTMLElement | null;
+  if (byHrefLink) {
+    const title = extractTitleFromConversationElement(byHrefLink);
+    if (title) return title;
+  }
+
+  return null;
+}
+
+function escapeCssAttributeValue(value: string): string {
+  const escape = globalThis.CSS?.escape;
+  if (typeof escape === 'function') {
+    return escape(value);
+  }
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
 function getConversationTitleForExport(): string {
   // Strategy 1: Get from active conversation in Gemini Voyager Folder UI (most accurate)
   try {
@@ -473,23 +607,16 @@ function getConversationTitleForExport(): string {
     } catch {}
   }
 
-  // Strategy 1b: Get from Gemini's native sidebar using the selected actions container
+  // Strategy 1b: Get from Gemini native sidebar via current conversation ID
   try {
-    const actionsContainer = document.querySelector('.conversation-actions-container.selected');
-    if (actionsContainer && actionsContainer.previousElementSibling) {
-      const convEl = actionsContainer.previousElementSibling as HTMLElement;
-      const rawTitle = convEl.textContent || '';
-      const title = rawTitle.trim();
-      if (title) {
-        return title;
-      }
+    const conversationId = extractConversationIdFromUrl();
+    if (conversationId) {
+      const title = extractTitleFromNativeSidebarByConversationId(conversationId);
+      if (title) return title;
     }
   } catch (error) {
     try {
-      console.debug(
-        '[Export] Failed to get title from native sidebar selected conversation:',
-        error,
-      );
+      console.debug('[Export] Failed to get title from native sidebar by conversation id:', error);
     } catch {}
   }
 
@@ -497,15 +624,7 @@ function getConversationTitleForExport(): string {
   const titleElement = document.querySelector('title');
   if (titleElement) {
     const title = titleElement.textContent?.trim();
-    if (
-      title &&
-      title !== 'Gemini' &&
-      title !== 'Google Gemini' &&
-      title !== 'Google AI Studio' &&
-      !title.startsWith('Gemini -') &&
-      !title.startsWith('Google AI Studio -') &&
-      title.length > 0
-    ) {
+    if (isMeaningfulConversationTitle(title)) {
       return title;
     }
   }
@@ -521,14 +640,21 @@ function getConversationTitleForExport(): string {
 
     for (const selector of selectors) {
       const element = document.querySelector(selector);
-      if (element?.textContent?.trim() && element.textContent.trim() !== 'New chat') {
-        return element.textContent.trim();
+      const title = element?.textContent?.trim();
+      if (isMeaningfulConversationTitle(title)) {
+        return title;
       }
     }
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from sidebar:', error);
     } catch {}
+  }
+
+  // Strategy 4: URL fallback
+  const conversationId = extractConversationIdFromUrl();
+  if (conversationId) {
+    return `Conversation ${conversationId.slice(0, 8)}`;
   }
 
   return 'Untitled Conversation';
@@ -590,7 +716,7 @@ function getTopUserElement(): HTMLElement | null {
  * 4. If no refresh -> we are stable, proceed to export.
  */
 async function executeExportSequence(
-  format: string,
+  format: ExportFormat,
   dict: Record<AppLanguage, Record<string, string>>,
   lang: AppLanguage,
   paramState?: PendingExportState,
@@ -630,7 +756,7 @@ async function executeExportSequence(
   if (!topNode) {
     console.log('[Gemini Voyager] No top node found, proceeding to export directly.');
     sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
-    await performFinalExport(format as any, dict, lang);
+    await performFinalExport(format, dict, lang);
     return;
   }
 
@@ -662,7 +788,7 @@ async function executeExportSequence(
     document.body,
     fingerprintSelectors,
     beforeFingerprint,
-    { timeoutMs: 25000, idleMs: 550, pollIntervalMs: 90, maxSamples: 10 },
+    { timeoutMs: 25000, minWaitMs: 1600, idleMs: 650, pollIntervalMs: 90, maxSamples: 10 },
   );
 
   if (changed) {
@@ -677,46 +803,366 @@ async function executeExportSequence(
 
   console.log('[Gemini Voyager] No refresh or update detected. Exporting...');
   sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
-  await performFinalExport(format as any, dict, lang);
+  await performFinalExport(format, dict, lang);
 }
 
 /**
  * Performs the actual file generation and download.
  */
 async function performFinalExport(
-  format: string,
+  format: ExportFormat,
   dict: Record<AppLanguage, Record<string, string>>,
   lang: AppLanguage,
 ) {
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
-  // Re-collect data (DOM might have updated with new history)
-  // We might need to wait for any final rendering?
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, 400));
 
   const pairs = collectChatPairs();
-  const metadata: ConversationMetadata = {
-    url: location.href,
-    exportedAt: new Date().toISOString(),
-    count: pairs.length,
-    title: getConversationTitleForExport(),
+  const messages = buildExportMessagesFromPairs(pairs);
+  if (messages.length === 0) {
+    alert(t('export_dialog_warning'));
+    return;
+  }
+
+  const selectedIds = new Set<string>();
+  let allMessageIds: string[] = [];
+  const cleanupTasks: Array<() => void> = [];
+  const idToHost = new Map<string, HTMLElement>();
+  const idToCheckbox = new Map<string, HTMLButtonElement>();
+  const knownIds = new Set<string>();
+
+  let autoSelectAll = false;
+
+  const cleanup = () => {
+    cleanupTasks.forEach((fn) => {
+      try {
+        fn();
+      } catch {}
+    });
+    cleanupTasks.length = 0;
   };
 
-  try {
-    const result = await ConversationExportService.export(pairs, metadata, {
-      format: format as any,
+  const setSelected = (id: string, next: boolean) => {
+    if (next) selectedIds.add(id);
+    else selectedIds.delete(id);
+
+    const btn = idToCheckbox.get(id);
+    if (btn) {
+      btn.setAttribute('aria-pressed', next ? 'true' : 'false');
+      btn.dataset.selected = next ? 'true' : 'false';
+    }
+    const host = idToHost.get(id);
+    if (host) {
+      if (next) host.classList.add('gv-export-msg-selected');
+      else host.classList.remove('gv-export-msg-selected');
+    }
+  };
+
+  const updateBottomBar = (bar: HTMLElement) => {
+    const countEl = bar.querySelector(
+      '[data-gv-export-selection-count="true"]',
+    ) as HTMLElement | null;
+    if (countEl) {
+      countEl.textContent = t('export_select_mode_count').replace(
+        '{count}',
+        String(selectedIds.size),
+      );
+    }
+
+    const exportBtn = bar.querySelector(
+      '[data-gv-export-action="export"]',
+    ) as HTMLButtonElement | null;
+    if (exportBtn) {
+      exportBtn.disabled = selectedIds.size === 0;
+    }
+
+    const selectAllBtn = bar.querySelector(
+      '[data-gv-export-action="selectAll"]',
+    ) as HTMLButtonElement | null;
+    if (selectAllBtn) {
+      const isAllSelected = allMessageIds.length > 0 && selectedIds.size === allMessageIds.length;
+      selectAllBtn.dataset.checked = isAllSelected ? 'true' : 'false';
+    }
+  };
+
+  const attachSelectorIfNeeded = (msg: ExportMessage) => {
+    if (knownIds.has(msg.messageId)) return;
+    knownIds.add(msg.messageId);
+
+    const host = msg.hostElement;
+    idToHost.set(msg.messageId, host);
+    host.classList.add('gv-export-msg-host');
+    cleanupTasks.push(() => host.classList.remove('gv-export-msg-host'));
+
+    const selector = document.createElement('div');
+    selector.className = 'gv-export-msg-selector';
+    selector.dataset.gvExportMessageId = msg.messageId;
+
+    const checkbox = document.createElement('button');
+    checkbox.type = 'button';
+    checkbox.className = 'gv-export-msg-checkbox';
+    checkbox.setAttribute('aria-pressed', 'false');
+    checkbox.title = t('export_select_mode_toggle');
+
+    const mark = document.createElement('span');
+    mark.className = 'gv-export-msg-checkbox-mark';
+    checkbox.appendChild(mark);
+
+    const swallow = (ev: Event) => {
+      try {
+        ev.preventDefault();
+      } catch {}
+      try {
+        ev.stopPropagation();
+      } catch {}
+    };
+
+    checkbox.addEventListener('click', (ev) => {
+      swallow(ev);
+      autoSelectAll = false;
+      const next = !selectedIds.has(msg.messageId);
+      setSelected(msg.messageId, next);
+      const bar = document.querySelector(
+        '[data-gv-export-select-bar="true"]',
+      ) as HTMLElement | null;
+      if (bar) updateBottomBar(bar);
     });
 
-    if (result.success) {
-      console.log(`[Gemini Voyager] Exported ${result.format} successfully`);
-    } else {
-      console.error(`[Gemini Voyager] Export failed: ${result.error}`);
-      alert(`${t('export_dialog_warning')}: ${result.error}`);
+    selector.appendChild(checkbox);
+    host.appendChild(selector);
+    cleanupTasks.push(() => selector.remove());
+
+    idToCheckbox.set(msg.messageId, checkbox);
+  };
+
+  const computeSortedMessages = (
+    pairsInput: ChatTurn[],
+  ): Array<ExportMessage & { absTop: number }> => {
+    const msgs = buildExportMessagesFromPairs(pairsInput);
+    const withPos = msgs.map((m) => {
+      const rect = m.hostElement.getBoundingClientRect();
+      const absTop = rect.top + window.scrollY;
+      return { ...m, absTop };
+    });
+    withPos.sort((a, b) => a.absTop - b.absTop);
+    return withPos;
+  };
+
+  const syncMessages = (pairsInput: ChatTurn[]) => {
+    const sorted = computeSortedMessages(pairsInput);
+    allMessageIds = sorted.map((m) => m.messageId);
+
+    sorted.forEach((m) => attachSelectorIfNeeded(m));
+
+    // Auto-select new messages when a policy is active.
+    if (autoSelectAll) {
+      for (const id of allMessageIds) setSelected(id, true);
     }
-  } catch (err) {
-    console.error('[Gemini Voyager] Export error:', err);
-    alert('Export error occurred.');
-  }
+  };
+
+  // Selection mode body class
+  document.body.classList.add('gv-export-select-mode');
+  cleanupTasks.push(() => document.body.classList.remove('gv-export-select-mode'));
+
+  // Bottom action bar
+  const bar = document.createElement('div');
+  bar.className = 'gv-export-select-bar';
+  bar.dataset.gvExportSelectBar = 'true';
+
+  const selectAllBtn = document.createElement('button');
+  selectAllBtn.type = 'button';
+  selectAllBtn.className = 'gv-export-select-all-toggle';
+  selectAllBtn.dataset.gvExportAction = 'selectAll';
+  selectAllBtn.textContent = t('export_select_mode_select_all');
+
+  const count = document.createElement('div');
+  count.className = 'gv-export-select-count';
+  count.dataset.gvExportSelectionCount = 'true';
+  count.textContent = t('export_select_mode_count').replace('{count}', '0');
+
+  const exportBtn = document.createElement('button');
+  exportBtn.type = 'button';
+  exportBtn.className = 'gv-export-select-export-btn';
+  exportBtn.dataset.gvExportAction = 'export';
+  exportBtn.textContent = t('pm_export');
+  exportBtn.disabled = true;
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'gv-export-select-cancel-btn';
+  cancelBtn.title = t('pm_cancel');
+  cancelBtn.textContent = '×';
+
+  bar.appendChild(selectAllBtn);
+  bar.appendChild(count);
+  bar.appendChild(exportBtn);
+  bar.appendChild(cancelBtn);
+
+  document.body.appendChild(bar);
+  cleanupTasks.push(() => bar.remove());
+
+  const swallow = (ev: Event) => {
+    try {
+      ev.preventDefault();
+    } catch {}
+    try {
+      ev.stopPropagation();
+    } catch {}
+  };
+
+  selectAllBtn.addEventListener('click', (ev) => {
+    swallow(ev);
+    const isAllSelected = allMessageIds.length > 0 && selectedIds.size === allMessageIds.length;
+    if (isAllSelected) {
+      selectedIds.clear();
+      autoSelectAll = false;
+      allMessageIds.forEach((id) => setSelected(id, false));
+    } else {
+      selectedIds.clear();
+      autoSelectAll = true;
+      allMessageIds.forEach((id) => setSelected(id, true));
+    }
+    updateBottomBar(bar);
+  });
+
+  const finish = () => {
+    allMessageIds.forEach((id) => setSelected(id, false));
+    selectedIds.clear();
+    autoSelectAll = false;
+    cleanup();
+  };
+
+  cancelBtn.addEventListener('click', (ev) => {
+    swallow(ev);
+    finish();
+  });
+
+  exportBtn.addEventListener('click', async (ev) => {
+    swallow(ev);
+    if (selectedIds.size === 0) {
+      alert(t('export_select_mode_empty'));
+      return;
+    }
+
+    // Recompute order just-in-time and build a "half-turns" list for export.
+    const latestPairs = collectChatPairs();
+    const sorted = computeSortedMessages(latestPairs);
+    const selectedMessages = sorted.filter((m) => selectedIds.has(m.messageId));
+
+    const groupedTurns = groupSelectedMessagesByTurn(selectedMessages);
+    const turnsForExport: ExportChatTurn[] = groupedTurns
+      .map((turn) => ({
+        user: turn.user?.text || '',
+        assistant: turn.assistant?.text || '',
+        starred: turn.starred,
+        omitEmptySections: true,
+        userElement: turn.user?.exportElement,
+        assistantElement: turn.assistant?.exportElement,
+      }))
+      .filter(
+        (turn) =>
+          turn.user.length > 0 ||
+          turn.assistant.length > 0 ||
+          !!turn.userElement ||
+          !!turn.assistantElement,
+      );
+
+    // Cleanup before export so selection UI isn't captured.
+    finish();
+
+    const metadata: ConversationMetadata = {
+      url: location.href,
+      exportedAt: new Date().toISOString(),
+      count: turnsForExport.length,
+      title: getConversationTitleForExport(),
+    };
+
+    const hideProgress = showExportProgressOverlay(t);
+    try {
+      const resultPromise = ConversationExportService.export(turnsForExport, metadata, {
+        format,
+      });
+      const minVisiblePromise = new Promise((resolve) => setTimeout(resolve, 420));
+      const [result] = await Promise.all([resultPromise, minVisiblePromise]);
+
+      if (!result.success) {
+        alert(`${t('export_dialog_warning')}: ${result.error}`);
+      } else if (format === 'pdf' && isSafari()) {
+        showExportToast(t('export_toast_safari_pdf_ready'), { autoDismissMs: 5000 });
+      }
+    } catch (err) {
+      console.error('[Gemini Voyager] Export error:', err);
+      alert('Export error occurred.');
+    } finally {
+      hideProgress();
+    }
+  });
+
+  // Observe new lazy-loaded messages while selection mode is active.
+  const root = getConversationRoot();
+  let refreshTimer: number | null = null;
+  const scheduleRefresh = () => {
+    if (refreshTimer) return;
+    refreshTimer = window.setTimeout(() => {
+      refreshTimer = null;
+      try {
+        syncMessages(collectChatPairs());
+        updateBottomBar(bar);
+      } catch {}
+    }, 250);
+  };
+
+  const obs = new MutationObserver(() => scheduleRefresh());
+  try {
+    obs.observe(root, { childList: true, subtree: true });
+    cleanupTasks.push(() => obs.disconnect());
+  } catch {}
+
+  // Escape to cancel
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      finish();
+      document.removeEventListener('keydown', onKeyDown);
+    }
+  };
+  document.addEventListener('keydown', onKeyDown);
+  cleanupTasks.push(() => document.removeEventListener('keydown', onKeyDown));
+
+  // Initial sync
+  syncMessages(pairs);
+  updateBottomBar(bar);
+}
+
+function showExportProgressOverlay(t: (key: TranslationKey) => string): () => void {
+  const overlay = document.createElement('div');
+  overlay.className = 'gv-export-progress-overlay';
+
+  const card = document.createElement('div');
+  card.className = 'gv-export-progress-card';
+
+  const spinner = document.createElement('div');
+  spinner.className = 'gv-export-progress-spinner';
+
+  const title = document.createElement('div');
+  title.className = 'gv-export-progress-title';
+  title.textContent = `${t('pm_export')}...`;
+
+  const desc = document.createElement('div');
+  desc.className = 'gv-export-progress-desc';
+  desc.textContent = t('loading');
+
+  card.appendChild(spinner);
+  card.appendChild(title);
+  card.appendChild(desc);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  return () => {
+    try {
+      overlay.remove();
+    } catch {}
+  };
 }
 
 /**
@@ -727,7 +1173,24 @@ async function checkPendingExport() {
     const raw = sessionStorage.getItem(SESSION_KEY_PENDING_EXPORT);
     if (!raw) return;
 
-    const state = JSON.parse(raw) as PendingExportState;
+    const parsed = JSON.parse(raw) as Partial<PendingExportState>;
+    if (
+      !isExportFormat(parsed.format) ||
+      typeof parsed.attempt !== 'number' ||
+      typeof parsed.url !== 'string' ||
+      parsed.status !== 'clicking' ||
+      typeof parsed.timestamp !== 'number'
+    ) {
+      sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
+      return;
+    }
+    const state: PendingExportState = {
+      format: parsed.format,
+      attempt: parsed.attempt,
+      url: parsed.url,
+      status: parsed.status,
+      timestamp: parsed.timestamp,
+    };
 
     // Validate context
     if (state.url !== location.href) {
@@ -877,6 +1340,7 @@ async function showExportDialog(
         json: t('export_format_json_description'),
         markdown: t('export_format_markdown_description'),
         pdf: t('export_format_pdf_description'),
+        image: t('export_format_image_description'),
       },
     },
   });

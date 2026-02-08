@@ -471,6 +471,10 @@
     "message": "Safari 提示：请先点击下方“导出”按钮，稍等片刻，再按 ⌘P 选择“保存为 PDF”。",
     "description": "Safari 下 PDF 导出的提示"
   },
+  "export_toast_safari_pdf_ready": {
+    "message": "现在可以按 Command + P 导出 PDF。",
+    "description": "Safari 中完成导出准备后的提示"
+  },
   "editInputWidth": {
     "message": "编辑输入框宽度",
     "description": "编辑输入框宽度调整标签"
@@ -1106,5 +1110,13 @@
   "defaultModelCleared": {
     "message": "已取消默认模型",
     "description": "Toast message when default model is cleared"
+  },
+  "export_dialog_safari_markdown_hint": {
+    "message": "提醒：由于Safari限制，无法提取聊天记录中的图片，如需完整导出，建议使用PDF导出",
+    "description": "Warning about image references in Safari markdown export"
+  },
+  "export_format_image_description": {
+    "message": "单张PNG图片，便于移动端分享。",
+    "description": "Description for Image export format"
   }
 }

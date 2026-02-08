@@ -4,6 +4,7 @@ import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
+import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
@@ -183,6 +184,9 @@ export class FolderManager {
 
       this.debug('Initialized successfully');
     } catch (error) {
+      if (isExtensionContextInvalidatedError(error)) {
+        return;
+      }
       console.error('[FolderManager] Initialization error:', error);
     }
   }

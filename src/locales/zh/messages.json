@@ -471,8 +471,12 @@
     "message": "Safari 提示：请先点击下方“导出”按钮，稍等片刻，再按 ⌘P 选择“保存为 PDF”。",
     "description": "Safari 下 PDF 导出的提示"
   },
+  "export_toast_safari_pdf_ready": {
+    "message": "现在可以按 Command + P 导出 PDF。",
+    "description": "Safari 中完成导出准备后的提示"
+  },
   "export_dialog_safari_markdown_hint": {
-    "message": "Safari 限制：无法提取图片，建议使用 PDF 导出。",
+    "message": "提醒：由于Safari限制，无法提取聊天记录中的图片，如需完整导出，建议使用PDF导出",
     "description": "关于 Safari Markdown 导出无法提取图片的警告"
   },
   "export_format_json_description": {
@@ -1142,5 +1146,41 @@
   "folderSpacingSpacious": {
     "message": "宽松",
     "description": "宽松文件夹间距标签"
+  },
+  "export_select_mode_select_all": {
+    "message": "全选",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "已选择 {count} 条",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "选择消息",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "选择下方消息",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "请至少选择一条消息进行导出",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "单张PNG图片，便于移动端分享。",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "正在生成图片...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "保存报告",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "导出此研究报告",
+    "description": "Deep Research save report tooltip"
   }
 }

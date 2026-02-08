@@ -35,6 +35,7 @@ describe('ExportDialog (Safari hint)', () => {
         json: 'JSON desc',
         markdown: 'MD desc',
         pdf: 'PDF desc',
+        image: 'Image desc',
       },
     },
   };
@@ -100,6 +101,25 @@ describe('ExportDialog (Safari hint)', () => {
 
     const mdOption = mdRadio?.closest('.gv-export-format-option') as HTMLElement | null;
     const desc = mdOption?.querySelector('.gv-export-format-description') as HTMLElement | null;
+    expect(desc?.textContent || '').toContain(baseOptions.translations.safariMarkdownHint);
+  });
+
+  it('appends warning hint to image option description on Safari', () => {
+    setUserAgentVendor(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+      'Apple Computer, Inc.',
+    );
+
+    const dialog = new ExportDialog();
+    dialog.show(baseOptions);
+
+    const imageRadio = document.querySelector(
+      'input[type="radio"][name="export-format"][value="image"]',
+    ) as HTMLInputElement | null;
+    expect(imageRadio).not.toBeNull();
+
+    const imageOption = imageRadio?.closest('.gv-export-format-option') as HTMLElement | null;
+    const desc = imageOption?.querySelector('.gv-export-format-description') as HTMLElement | null;
     expect(desc?.textContent || '').toContain(baseOptions.translations.safariMarkdownHint);
   });
 });

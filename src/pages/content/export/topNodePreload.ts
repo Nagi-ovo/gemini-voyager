@@ -65,8 +65,8 @@ export type WaitForConversationChangeResult = {
 
 const DEFAULT_OPTIONS: WaitForConversationChangeOptions = {
   timeoutMs: 20000,
-  idleMs: 450,
-  minWaitMs: 800,
+  idleMs: 550,
+  minWaitMs: 1200,
   pollIntervalMs: 80,
   maxSamples: 10,
 };
