@@ -476,7 +476,7 @@
     "description": "Safari-specific toast shown after PDF export is prepared"
   },
   "export_dialog_safari_markdown_hint": {
-    "message": "Safari 제한: 이미지를 추출할 수 없습니다. PDF 내보내기를 사용하세요.",
+    "message": "안내: Safari 제한으로 인해 채팅 기록의 이미지를 추출할 수 없습니다. 전체 내보내기가 필요하면 PDF 내보내기를 사용하세요.",
     "description": "Warning about image references in Safari markdown export"
   },
   "export_format_json_description": {
@@ -1168,7 +1168,7 @@
     "description": "Selection mode validation when nothing is selected"
   },
   "export_format_image_description": {
-    "message": "공유용 단일 PNG 이미지",
+    "message": "모바일 공유에 적합한 단일 PNG 이미지.",
     "description": "Description for Image export format"
   },
   "export_image_progress": {

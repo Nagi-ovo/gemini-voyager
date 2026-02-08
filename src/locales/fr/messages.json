@@ -476,7 +476,7 @@
     "description": "Safari-specific toast shown after PDF export is prepared"
   },
   "export_dialog_safari_markdown_hint": {
-    "message": "Limitation Safari : images non supportées. Utilisez l'export PDF.",
+    "message": "Remarque : en raison des limitations de Safari, les images de l'historique du chat ne peuvent pas être extraites. Pour une exportation complète, utilisez l'export PDF.",
     "description": "Warning about image references in Safari markdown export"
   },
   "export_format_json_description": {
@@ -1168,7 +1168,7 @@
     "description": "Selection mode validation when nothing is selected"
   },
   "export_format_image_description": {
-    "message": "Single PNG image for sharing",
+    "message": "Image PNG unique, pratique pour le partage mobile.",
     "description": "Description for Image export format"
   },
   "export_image_progress": {

@@ -476,7 +476,7 @@
     "description": "Safari 中完成导出准备后的提示"
   },
   "export_dialog_safari_markdown_hint": {
-    "message": "Safari 限制：无法提取图片，建议使用 PDF 导出。",
+    "message": "提醒：由于Safari限制，无法提取聊天记录中的图片，如需完整导出，建议使用PDF导出",
     "description": "关于 Safari Markdown 导出无法提取图片的警告"
   },
   "export_format_json_description": {
@@ -1168,7 +1168,7 @@
     "description": "Selection mode validation when nothing is selected"
   },
   "export_format_image_description": {
-    "message": "单张 PNG 图片，便于分享",
+    "message": "单张PNG图片，便于移动端分享。",
     "description": "Description for Image export format"
   },
   "export_image_progress": {

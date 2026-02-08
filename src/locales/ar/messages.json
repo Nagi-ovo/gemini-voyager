@@ -476,7 +476,7 @@
     "description": "Safari-specific toast shown after PDF export is prepared"
   },
   "export_dialog_safari_markdown_hint": {
-    "message": "قيود سفاري: لا يمكن استخراج الصور. استخدم PDF.",
+    "message": "تنبيه: بسبب قيود Safari، لا يمكن استخراج الصور من سجل المحادثة. للحصول على تصدير كامل، يُنصح باستخدام تصدير PDF.",
     "description": "Warning about image references in Safari markdown export"
   },
   "export_format_json_description": {
@@ -1168,7 +1168,7 @@
     "description": "Selection mode validation when nothing is selected"
   },
   "export_format_image_description": {
-    "message": "Single PNG image for sharing",
+    "message": "صورة PNG واحدة، مناسبة للمشاركة عبر الهاتف.",
     "description": "Description for Image export format"
   },
   "export_image_progress": {

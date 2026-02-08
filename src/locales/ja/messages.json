@@ -476,7 +476,7 @@
     "description": "Safari-specific toast shown after PDF export is prepared"
   },
   "export_dialog_safari_markdown_hint": {
-    "message": "Safari 制限：画像を抽出できません。PDF エクスポートを使用してください。",
+    "message": "注意: Safari の制限により、チャット履歴内の画像は抽出できません。完全にエクスポートするには、PDF エクスポートを使用してください。",
     "description": "Warning about image references in Safari markdown export"
   },
   "export_format_json_description": {
@@ -1168,7 +1168,7 @@
     "description": "Selection mode validation when nothing is selected"
   },
   "export_format_image_description": {
-    "message": "共有用のPNG画像",
+    "message": "モバイル共有に便利な単一のPNG画像。",
     "description": "Description for Image export format"
   },
   "export_image_progress": {
