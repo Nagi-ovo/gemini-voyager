@@ -10,6 +10,7 @@ export class DeepResearchPDFPrintService {
   private static PRINT_STYLES_ID = 'gv-deep-research-pdf-print-styles';
   private static PRINT_CONTAINER_ID = 'gv-deep-research-pdf-print-container';
   private static PRINT_BODY_CLASS = 'gv-deep-research-pdf-printing';
+  private static PRINT_SAFARI_BODY_CLASS = 'gv-deep-research-pdf-safari-printing';
   private static CLEANUP_FALLBACK_DELAY_MS = 60_000;
   private static INLINE_FETCH_TIMEOUT_MS = 2_000;
   private static INLINE_DECODE_TIMEOUT_MS = 1_000;
@@ -34,6 +35,7 @@ export class DeepResearchPDFPrintService {
     });
 
     if (safari) {
+      document.body.classList.add(this.PRINT_SAFARI_BODY_CLASS);
       this.forceStyleFlush(container);
       this.triggerPrint();
       this.registerCleanupHandlers();
@@ -110,6 +112,7 @@ export class DeepResearchPDFPrintService {
 
     try {
       document.body.classList.remove(this.PRINT_BODY_CLASS);
+      document.body.classList.remove(this.PRINT_SAFARI_BODY_CLASS);
     } catch {
       /* ignore */
     }
@@ -403,6 +406,29 @@ export class DeepResearchPDFPrintService {
           content: " (" attr(href) ")";
           font-size: 9pt;
           color: #666;
+        }
+
+        body.${this.PRINT_BODY_CLASS}.${this.PRINT_SAFARI_BODY_CLASS} .gv-dr-print-cover-page {
+          min-height: auto !important;
+          position: static !important;
+          display: block !important;
+          padding: 0 0 1.25em 0 !important;
+          border-bottom: 1px solid #e5e7eb !important;
+          text-align: left !important;
+        }
+
+        body.${this.PRINT_BODY_CLASS}.${this.PRINT_SAFARI_BODY_CLASS} .gv-dr-print-cover-content {
+          position: static !important;
+          top: auto !important;
+          left: auto !important;
+          transform: none !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        body.${this.PRINT_BODY_CLASS}.${this.PRINT_SAFARI_BODY_CLASS} .gv-dr-print-content {
+          break-before: auto !important;
+          page-break-before: auto !important;
         }
       }
     `;

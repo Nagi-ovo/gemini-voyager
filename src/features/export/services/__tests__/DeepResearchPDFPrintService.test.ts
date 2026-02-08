@@ -2,6 +2,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DeepResearchPDFPrintService } from '../DeepResearchPDFPrintService';
 
+function setUserAgentVendor(userAgent: string, vendor: string): void {
+  Object.defineProperty(global.navigator, 'userAgent', {
+    value: userAgent,
+    configurable: true,
+  });
+  Object.defineProperty(global.navigator, 'vendor', {
+    value: vendor,
+    configurable: true,
+  });
+}
+
 describe('DeepResearchPDFPrintService', () => {
   afterEach(() => {
     try {
@@ -74,5 +85,34 @@ describe('DeepResearchPDFPrintService', () => {
     expect(styleText).toContain('position: relative;');
     expect(styleText).toContain('position: absolute;');
     expect(styleText).toContain('transform: translate(-50%, -50%);');
+  });
+
+  it('applies Safari-only print override class and style rules', async () => {
+    setUserAgentVendor(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+      'Apple Computer, Inc.',
+    );
+    window.print = vi.fn();
+
+    await DeepResearchPDFPrintService.export({
+      title: 'Report',
+      url: 'https://gemini.google.com/app/abc12345',
+      exportedAt: new Date().toISOString(),
+      markdown: 'Body',
+      html: '<p>Body</p>',
+    });
+
+    expect(document.body.classList.contains('gv-deep-research-pdf-safari-printing')).toBe(true);
+
+    const style = document.getElementById('gv-deep-research-pdf-print-styles');
+    const styleText = style?.textContent || '';
+    expect(styleText).toContain(
+      'body.gv-deep-research-pdf-printing.gv-deep-research-pdf-safari-printing .gv-dr-print-cover-page',
+    );
+    expect(styleText).toContain('position: static !important;');
+    expect(styleText).toContain('transform: none !important;');
+
+    window.dispatchEvent(new Event('afterprint'));
+    expect(document.body.classList.contains('gv-deep-research-pdf-safari-printing')).toBe(false);
   });
 });
