@@ -199,7 +199,10 @@ export class ExportDialog {
     if (isSafari()) {
       if (formatInfo.format === ('pdf' as ExportFormat)) {
         hintText = `${formatInfo.description} ${safariCmdpHint}`;
-      } else if (formatInfo.format === ('markdown' as ExportFormat)) {
+      } else if (
+        formatInfo.format === ('markdown' as ExportFormat) ||
+        formatInfo.format === ('image' as ExportFormat)
+      ) {
         hintText = `${formatInfo.description} ${safariMarkdownHint}`;
       }
     }
