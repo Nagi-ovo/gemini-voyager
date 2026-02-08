@@ -4,6 +4,7 @@
  * Uses Strategy pattern for format-specific implementations
  */
 import JSZip from 'jszip';
+
 import { isSafari } from '@/core/utils/browser';
 
 import type {

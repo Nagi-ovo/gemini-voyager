@@ -119,20 +119,24 @@ describe('ImageExportService', () => {
     ];
 
     (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
-    (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (node: HTMLElement) => {
-      if (node.querySelector('img')) {
-        throw new Error('image blocked');
-      }
-      return new Blob(['ok'], { type: 'image/png' });
-    });
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (node: HTMLElement) => {
+        if (node.querySelector('img')) {
+          throw new Error('image blocked');
+        }
+        return new Blob(['ok'], { type: 'image/png' });
+      },
+    );
 
     await ImageExportService.export(turnsWithImage, mockMetadata, { filename: 'safari.png' });
 
     expect(toBlob).toHaveBeenCalledTimes(2);
     expect(global.URL.createObjectURL).toHaveBeenCalledOnce();
 
-    const firstTarget = (toBlob as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0] as HTMLElement;
-    const secondTarget = (toBlob as unknown as ReturnType<typeof vi.fn>).mock.calls[1][0] as HTMLElement;
+    const firstTarget = (toBlob as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as HTMLElement;
+    const secondTarget = (toBlob as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[1][0] as HTMLElement;
     expect(firstTarget.querySelector('img')).not.toBeNull();
     expect(secondTarget.querySelector('img')).toBeNull();
   });

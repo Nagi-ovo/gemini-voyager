@@ -5,6 +5,7 @@
  * Uses DOM-to-image rendering and inlines remote images (best-effort).
  */
 import { toBlob } from 'html-to-image';
+
 import { isSafari } from '@/core/utils/browser';
 
 import type { ChatTurn, ConversationMetadata } from '../types/export';

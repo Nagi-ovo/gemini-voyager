@@ -2,8 +2,8 @@
  * ConversationExportService unit tests
  */
 import { toBlob } from 'html-to-image';
-import JSZip from 'jszip';
 import { JSDOM } from 'jsdom';
+import JSZip from 'jszip';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
@@ -371,10 +371,7 @@ describe('ConversationExportService', () => {
       );
 
       const downloadSpy = vi.spyOn(MarkdownFormatter, 'download').mockImplementation(() => {});
-      const fetchSpy = vi.spyOn(
-        ConversationExportService as any,
-        'fetchImageForMarkdownPackaging',
-      );
+      const fetchSpy = vi.spyOn(ConversationExportService as any, 'fetchImageForMarkdownPackaging');
       fetchSpy.mockResolvedValue(null);
 
       const turnsWithImage: ChatTurn[] = [

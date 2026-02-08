@@ -120,7 +120,10 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
   });
 
   it('wires Safari PDF report export success to runtime toast guidance', () => {
-    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/deepResearch/menuButton.ts'), 'utf8');
+    const code = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/deepResearch/menuButton.ts'),
+      'utf8',
+    );
 
     expect(code).toContain("format === 'pdf'");
     expect(code).toContain('isSafari()');
