@@ -394,7 +394,9 @@ export class ConversationExportService {
       if (!item) continue;
       const extension = this.pickImageExtension(item.contentType, item.url);
       const fileName = `img-${String(index++).padStart(3, '0')}.${extension}`;
-      assetsFolder?.file(fileName, item.blob);
+      const base64Payload = await this.blobToBase64Payload(item.blob);
+      if (!base64Payload) continue;
+      assetsFolder?.file(fileName, base64Payload, { base64: true });
       mapping.set(item.url, `assets/${fileName}`);
     }
 
@@ -434,6 +436,23 @@ export class ConversationExportService {
     const match = url.split('?')[0].match(/\.(png|jpg|jpeg|gif|webp|svg)$/i);
     if (match) return match[1].toLowerCase() === 'jpeg' ? 'jpg' : match[1].toLowerCase();
     return 'bin';
+  }
+
+  private static blobToBase64Payload(blob: Blob): Promise<string | null> {
+    return new Promise((resolve) => {
+      try {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = String(reader.result || '');
+          const commaIndex = dataUrl.indexOf(',');
+          resolve(commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : null);
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      } catch {
+        resolve(null);
+      }
+    });
   }
 
   private static async fetchImageForMarkdownPackaging(

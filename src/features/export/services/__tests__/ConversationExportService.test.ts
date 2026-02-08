@@ -434,7 +434,7 @@ describe('ConversationExportService', () => {
       expect(mapping.get('https://example.com/fast.png')).toBe('assets/img-002.png');
     });
 
-    it('stores markdown image assets as Blob payloads for cross-browser JSZip compatibility', async () => {
+    it('stores markdown image assets as base64 payloads for Firefox JSZip compatibility', async () => {
       const imageUrl = 'https://example.com/photo.jpg';
       vi.spyOn(MarkdownFormatter, 'extractImageUrls').mockReturnValue([imageUrl]);
       vi.spyOn(MarkdownFormatter, 'rewriteImageUrls').mockImplementation((markdown) => markdown);
@@ -448,6 +448,7 @@ describe('ConversationExportService', () => {
       });
 
       let capturedAssetPayload: unknown;
+      let capturedAssetOptions: unknown;
       const originalFile = (JSZip.prototype as any).file;
       vi.spyOn(JSZip.prototype as any, 'file').mockImplementation(function (
         this: any,
@@ -457,6 +458,7 @@ describe('ConversationExportService', () => {
       ) {
         if (typeof name === 'string' && name.startsWith('img-')) {
           capturedAssetPayload = data;
+          capturedAssetOptions = options;
         }
         return originalFile.call(this, name, data, options);
       });
@@ -468,7 +470,9 @@ describe('ConversationExportService', () => {
       );
 
       expect(finalFilename).toBe('chat.zip');
-      expect(capturedAssetPayload).toBeInstanceOf(Blob);
+      expect(typeof capturedAssetPayload).toBe('string');
+      expect(capturedAssetPayload).toBeTruthy();
+      expect(capturedAssetOptions).toMatchObject({ base64: true });
     });
 
     it('should fallback to gv.fetchImageViaPage when direct and background fetch fail', async () => {
