@@ -1198,5 +1198,21 @@
   "export_error_refresh_retry": {
     "message": "Экспорт изображения не удался из-за проблем с сетью. Обновите страницу и попробуйте снова.",
     "description": "Подсказка при временной ошибке загрузки во время экспорта изображения"
+  },
+  "deepResearch_exportedAt": {
+    "message": "Экспортировано",
+    "description": "Метка временной метки экспорта Deep Research"
+  },
+  "deepResearch_totalPhases": {
+    "message": "Всего фаз",
+    "description": "Метка общего количества фаз размышления Deep Research"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "Фаза размышления",
+    "description": "Заголовок фазы размышления Deep Research"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "Исследованные сайты",
+    "description": "Заголовок раздела исследованных сайтов Deep Research"
   }
 }

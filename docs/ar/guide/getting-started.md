@@ -1,48 +1,48 @@
-# Welcome Aboard
+# مرحباً بك على متن الرحلة
 
-Congratulations. You’ve just upgraded your intellect.
-Gemini Voyager isn’t just a utility; it’s a workflow. Here is how to make the most of it in your first 5 minutes.
+تهانينا. لقد قمت للتو بترقية عقلك.
+Gemini Voyager ليس مجرد أداة مساعدة؛ إنه سير عمل. إليك كيفية الاستفادة منه إلى أقصى حد في أول 5 دقائق.
 
-## 1. The Setup
+## 1. الإعداد
 
-If you haven't installed it yet, head over to the [Installation Guide](/guide/installation).
-Once installed, refresh your Gemini tab. You’ll see the difference immediately.
+إذا لم تقم بتثبيته بعد، فانتقل إلى [دليل التثبيت](/ar/guide/installation).
+بمجرد التثبيت، قم بتحديث علامة تبويب Gemini. سترى الفرق على الفور.
 
-## 2. The Timeline
+## 2. الجدول الزمني
 
-Start a conversation. A long one. Ask about the history of typography or the physics of black holes.
-Look to the right.
-**That strip of dots? That’s your map.**
+ابدأ محادثة. واحدة طويلة. اسأل عن تاريخ الطباعة أو فيزياء الثقوب السوداء.
+انظر إلى اليمين (أو اليسار في RTL).
+**شريط النقاط ذاك؟ تلك هي خريطتك.**
 
-- **Hover** to peek at what you said.
-- **Click** to teleport there.
-- **Long-press** to star a moment you want to keep.
+- **مرر الماوس** لإلقاء نظرة خاطفة على ما قلته.
+- **انقر** للانتقال الفوري إلى هناك.
+- **اضغط مطولاً** لتمييز لحظة تريد الاحتفاظ بها بنجمة.
 
-No more endless scrolling. You are now navigating at the speed of thought.
+لا مزيد من التمرير اللانهائي. أنت الآن تتنقل بسرعة التفكير.
 
-## 3. Organization
+## 3. التنظيم
 
-Look at your chat list on the left. Notice something new?
-**Folders.**
+انظر إلى قائمة الدردشة الخاصة بك. هل لاحظت شيئاً جديداً؟
+**المجلدات.**
 
-Pick up a chat. Drag it. Drop it into a folder.
-It feels natural, doesn't it? That’s because it is. You can nest them, rename them, and finally clear the clutter from your mind.
+التقط محادثة. اسحبها. أسقطها في مجلد.
+يبدو الأمر طبيعياً، أليس كذلك؟ لأنه كذلك. يمكنك تداخلها، وإعادة تسميتها، وأخيراً إزالة الفوضى من عقلك.
 
-## 4. The Vault
+## 4. الخزنة
 
-You just wrote the perfect prompt. Don't let it disappear into the void.
-Click the **Sparkle Icon** (✨) in the input box.
-Save it. Tag it.
+لقد كتبت للتو المطالبة (Prompt) المثالية. لا تدعها تختفي في الفراغ.
+انقر فوق **أيقونة الشرارة** (✨) في مربع الإدخال.
+احفظها. ضع علامة عليها.
 
-Next time? Just click the icon to find and insert it.
-You aren't just chatting anymore. You are building a vault of your own genius.
+في المرة القادمة؟ فقط انقر فوق الأيقونة للعثور عليها وإدراجها.
+أنت لا تدردش فقط بعد الآن. أنت تبني خزنة لعبقريتك الخاصة.
 
 ---
 
-**You are ready.**
-Explore the specific guides for deep dives:
+**أنت جاهز.**
+استكشف الأدلة المحددة للتعمق أكثر:
 
-- [Timeline Mastery](/guide/timeline)
-- [Folder Management](/guide/folders)
-- [Prompt Engineering](/guide/prompts)
-- [Data Export](/guide/export)
+- [إتقان الجدول الزمني](/ar/guide/timeline)
+- [إدارة المجلدات](/ar/guide/folders)
+- [هندسة المطالبات](/ar/guide/prompts)
+- [تصدير البيانات](/ar/guide/export)

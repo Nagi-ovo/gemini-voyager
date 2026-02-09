@@ -1,38 +1,30 @@
-# Time Travel
+# تصفح الجدول الزمني
 
-Long conversations are messy. You scroll up, you scroll down, you lose your place.
-Gemini Voyager turns your conversation into a timeline.
+ميزة Voyager المميزة. طريقة بصرية ومكانية لتصفح محادثاتك.
 
-## See the Shape of Your Chat
+## المشكلة
 
-Look at the right side of your screen.
-Each node represents a message. The timeline visualizes the rhythm of your dialogue.
+يمكن أن تصبح محادثات الذكاء الاصطناعي طويلة. طويلة جداً.
+التمرير بطيء. "Cmd+F" غير عملي. تفقد السياق.
 
-## Navigation, Solved.
+## الحل
 
-- **Teleport**: Click a node to jump instantly to that message.
-- **Peek**: Hover to see what's inside without moving.
-- **Bookmark**: Long-press a node to **Star** it. It's like a bookmark for your brain.
-- **Levels (Experimental)**: Right-click a node to set various levels (1-3) or collapse children. Perfect for making branched conversations clear.
-- **Keyboard**: Navigate at the speed of thought. Default `j`/`k`, customize to anything.
+انظر إلى يمين (أو يسار) الشاشة. هذا هو الجدول الزمني.
+تمثل كل نقطة تبادلاً (سؤالك + إجابة Gemini).
 
-![Timeline Navigation](/assets/teaser.png)
+### التفاعلات
 
-## Even Faster with Keys
+- **تحويم (Hover)**: شاهد معاينة فورية لما تمت مناقشته في تلك النقطة. لا نقر، لا تمرير. مجرد نظرة خاطفة.
+- **نقر**: انتقل فوراً إلى تلك الرسالة. انتقال آني.
+- **تمييز السياق**: أثناء التمرير، تضيء النقطة المقابلة، حتى تعرف دائماً مكانك على "الخريطة".
 
-Don't want to use the mouse? Use your keyboard.
+## المفضلة (Stars)
 
-**It's like turning on Vim mode in Gemini.**
+اضغط مطولاً (أو انقر بزر الماوس الأيمن) على أي نقطة **لتمييزها بنجمة**.
+تصبح النقاط المميزة بنجمة أكبر وأكثر سطوعاً. استخدمها لتمييز:
 
-### Default Shortcuts
+- الكود النهائي الذي يعمل.
+- أفضل شرح لمفهوم ما.
+- المطالبة التي فتحت كل شيء.
 
-- `k` - Jump to previous node
-- `j` - Jump to next node
-
-### Customize It
-
-Open extension settings, click a shortcut box, press any key you want.
-Any key, any combo. `n`/`p`? `,`/`.`? Your call.
-
-**Flow mode**: Rapid presses queue up smoothly.
-**Jump mode**: Instant response, max speed.
+يحول الجدول الزمني جداراً من النص العادي إلى خريطة منظمة للمعرفة.

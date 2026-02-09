@@ -16,6 +16,7 @@ En plus du rapport final, vous pouvez également exporter le contenu complet de 
 
 - **Export en un clic** : Le bouton de téléchargement apparaît dans le menu de conversation (⋮).
 - **Format structuré** : Préserve les phases de réflexion, les éléments de pensée et les sites web recherchés dans leur ordre original.
+- **En-têtes bilingues** : Les fichiers Markdown incluent des en-têtes de section en anglais et dans votre langue actuelle.
 - **Nommage automatique** : Les fichiers sont horodatés pour une organisation facile (ex : `deep-research-thinking-20240128-153045.md`).
 
 ### Comment Utiliser

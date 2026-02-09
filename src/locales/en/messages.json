@@ -1198,5 +1198,21 @@
   "export_error_refresh_retry": {
     "message": "Image export failed due to network issues. Please refresh the page and try again.",
     "description": "Guidance shown when image export fails due to transient loading issues"
+  },
+  "deepResearch_exportedAt": {
+    "message": "Exported At",
+    "description": "Deep Research export timestamp label"
+  },
+  "deepResearch_totalPhases": {
+    "message": "Total Phases",
+    "description": "Deep Research total thinking phases label"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "Thinking Phase",
+    "description": "Deep Research thinking phase header"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "Researched Websites",
+    "description": "Deep Research researched websites section header"
   }
 }

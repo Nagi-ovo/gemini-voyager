@@ -1198,5 +1198,21 @@
   "export_error_refresh_retry": {
     "message": "因網路原因，圖片匯出失敗，請重新整理頁面後重試。",
     "description": "圖片匯出遇到暫時性載入失敗時的重新整理提示"
+  },
+  "deepResearch_exportedAt": {
+    "message": "匯出時間",
+    "description": "深度研究匯出時間戳標籤"
+  },
+  "deepResearch_totalPhases": {
+    "message": "總思考階段",
+    "description": "深度研究總思考階段標籤"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "思考階段",
+    "description": "深度研究思考階段標題"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "研究網站",
+    "description": "深度研究已研究網站章節標題"
   }
 }

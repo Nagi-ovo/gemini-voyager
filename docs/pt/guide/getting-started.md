@@ -1,48 +1,48 @@
-# Welcome Aboard
+# Bem-vindo a Bordo
 
-Congratulations. You’ve just upgraded your intellect.
-Gemini Voyager isn’t just a utility; it’s a workflow. Here is how to make the most of it in your first 5 minutes.
+Parabéns. Acabou de melhorar o seu intelecto.
+O Gemini Voyager não é apenas um utilitário; é um fluxo de trabalho. Veja como tirar o máximo partido dele nos seus primeiros 5 minutos.
 
-## 1. The Setup
+## 1. A Configuração
 
-If you haven't installed it yet, head over to the [Installation Guide](/guide/installation).
-Once installed, refresh your Gemini tab. You’ll see the difference immediately.
+Se ainda não o instalou, vá para o [Guia de Instalação](/pt/guide/installation).
+Uma vez instalado, atualize o seu separador do Gemini. Verá a diferença imediatamente.
 
-## 2. The Timeline
+## 2. A Linha do Tempo
 
-Start a conversation. A long one. Ask about the history of typography or the physics of black holes.
-Look to the right.
-**That strip of dots? That’s your map.**
+Inicie uma conversa. Uma longa. Pergunte sobre a história da tipografia ou a física dos buracos negros.
+Olhe para a direita.
+**Aquela faixa de pontos? É o seu mapa.**
 
-- **Hover** to peek at what you said.
-- **Click** to teleport there.
-- **Long-press** to star a moment you want to keep.
+- **Passe o rato** para espreitar o que disse.
+- **Clique** para se teletransportar para lá.
+- **Pressione longamente** para marcar com estrela um momento que queira guardar.
 
-No more endless scrolling. You are now navigating at the speed of thought.
+Acabou-se o scroll interminável. Agora navega à velocidade do pensamento.
 
-## 3. Organization
+## 3. Organização
 
-Look at your chat list on the left. Notice something new?
-**Folders.**
+Olhe para a sua lista de chats à esquerda. Nota algo novo?
+**Pastas.**
 
-Pick up a chat. Drag it. Drop it into a folder.
-It feels natural, doesn't it? That’s because it is. You can nest them, rename them, and finally clear the clutter from your mind.
+Pegue num chat. Arraste-o. Solte-o numa pasta.
+Parece natural, não é? É porque é. Pode aninhá-las, renomeá-las e, finalmente, limpar a desordem da sua mente.
 
-## 4. The Vault
+## 4. O Cofre
 
-You just wrote the perfect prompt. Don't let it disappear into the void.
-Click the **Sparkle Icon** (✨) in the input box.
-Save it. Tag it.
+Acabou de escrever o prompt perfeito. Não o deixe desaparecer no vazio.
+Clique no **Ícone de Faísca** (✨) na caixa de entrada.
+Guarde-o. Etiquete-o.
 
-Next time? Just click the icon to find and insert it.
-You aren't just chatting anymore. You are building a vault of your own genius.
+Da próxima vez? Basta clicar no ícone para o encontrar e inserir.
+Já não está apenas a conversar. Está a construir um cofre do seu próprio génio.
 
 ---
 
-**You are ready.**
-Explore the specific guides for deep dives:
+**Está pronto.**
+Explore os guias específicos para mergulhos profundos:
 
-- [Timeline Mastery](/guide/timeline)
-- [Folder Management](/guide/folders)
-- [Prompt Engineering](/guide/prompts)
-- [Data Export](/guide/export)
+- [Domínio da Linha do Tempo](/pt/guide/timeline)
+- [Gestão de Pastas](/pt/guide/folders)
+- [Engenharia de Prompts](/pt/guide/prompts)
+- [Exportação de Dados](/pt/guide/export)

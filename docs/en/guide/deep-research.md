@@ -16,7 +16,7 @@ In addition to the final report, you can also export the complete "thinking" con
 
 - **One-click export**: Download button appears in the conversation menu (⋮)
 - **Structured format**: Preserves thinking phases, thought items, and researched websites in their original order
-- **Bilingual headers**: Markdown files include both English and Chinese section headers
+- **Bilingual headers**: Markdown files include section headers in both English and your current language
 - **Automatic naming**: Files are timestamped for easy organization (e.g., `deep-research-thinking-20240128-153045.md`)
 
 ### How to Use
