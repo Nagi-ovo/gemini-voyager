@@ -92,6 +92,20 @@ describe('ImageExportService', () => {
     expect(global.URL.createObjectURL).toHaveBeenCalledOnce();
   });
 
+  it('does not retry non-retryable render failures on Chrome', async () => {
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('canvas too large'),
+    );
+
+    await expect(
+      ImageExportService.export(mockTurns, mockMetadata, { filename: 'fail.png' }),
+    ).rejects.toThrow('canvas too large');
+
+    expect(toBlob).toHaveBeenCalledTimes(1);
+    expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+  });
+
   it('uses larger typography and media sizing for mobile readability', async () => {
     let capturedStyle = '';
     (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(

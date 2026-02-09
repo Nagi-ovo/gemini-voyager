@@ -485,6 +485,7 @@ export class ImageExportService {
           await this.delay(this.PRIMARY_RENDER_RETRY_DELAY_MS * attempt);
           continue;
         }
+        break;
       }
     }
 
