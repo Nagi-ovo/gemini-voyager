@@ -134,4 +134,57 @@ describe('conversationMenuInjection', () => {
     expect(icon?.hasAttribute('fonticon')).toBe(false);
     expect((icon?.textContent || '').trim()).toBe('download');
   });
+
+  it('does not override native overlay positioning styles', () => {
+    const panel = createConversationMenuPanel();
+    const overlayBox = document.createElement('div');
+    overlayBox.className = 'cdk-overlay-connected-position-bounding-box';
+    const overlayPane = document.createElement('div');
+    overlayPane.className = 'cdk-overlay-pane';
+    overlayPane.style.position = 'static';
+    overlayPane.style.left = '12px';
+    overlayPane.style.right = '8px';
+    overlayPane.appendChild(panel);
+    overlayBox.appendChild(overlayPane);
+    document.body.appendChild(overlayBox);
+
+    const trigger = document.createElement('button');
+    trigger.setAttribute('aria-expanded', 'true');
+    trigger.setAttribute('aria-haspopup', 'menu');
+    trigger.setAttribute('aria-label', 'Open menu for conversation actions.');
+    document.body.appendChild(trigger);
+
+    const asRect = (left: number, top: number, width: number, height: number): DOMRect => {
+      const right = left + width;
+      const bottom = top + height;
+      return {
+        x: left,
+        y: top,
+        width,
+        height,
+        top,
+        left,
+        right,
+        bottom,
+        toJSON: () => ({}),
+      } as DOMRect;
+    };
+
+    vi.spyOn(trigger, 'getBoundingClientRect').mockImplementation(() => asRect(150, 16, 100, 40));
+    vi.spyOn(overlayBox, 'getBoundingClientRect').mockImplementation(() => asRect(0, 56, 400, 724));
+    vi.spyOn(overlayPane, 'getBoundingClientRect').mockImplementation(() =>
+      asRect(0, 56, 280, 256),
+    );
+
+    injectConversationMenuExportButton(panel, {
+      label: 'Export',
+      tooltip: 'Export chat history',
+      onClick: vi.fn(),
+    });
+
+    expect(overlayPane.style.position).toBe('static');
+    expect(overlayPane.style.left).toBe('12px');
+    expect(overlayPane.style.right).toBe('8px');
+    expect(panel.style.transformOrigin).toBe('');
+  });
 });
