@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "تصدير سجل الدردشة",
+    "message": "تصدير سجل المحادثة",
     "description": "Tooltip for export button"
   },
   "folder_title": {

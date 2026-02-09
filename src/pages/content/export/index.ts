@@ -14,6 +14,10 @@ import type {
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 import { resolveExportErrorMessage } from '../../../features/export/ui/ExportErrorMessage';
 import { showExportToast } from '../../../features/export/ui/ExportToast';
+import {
+  injectConversationMenuExportButton,
+  isConversationMenuPanel,
+} from './conversationMenuInjection';
 import { groupSelectedMessagesByTurn } from './selectionUtils';
 import {
   computeConversationFingerprint,
@@ -22,6 +26,8 @@ import {
 
 // Storage key to persist export state across reloads (e.g. when clicking top node triggers refresh)
 const SESSION_KEY_PENDING_EXPORT = 'gv_export_pending';
+const CONVERSATION_MENU_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
+let conversationMenuObserver: MutationObserver | null = null;
 
 interface PendingExportState {
   format: ExportFormat;
@@ -1255,6 +1261,77 @@ async function checkPendingExport() {
   }
 }
 
+function getConversationMenuPanelsFromNode(node: HTMLElement): HTMLElement[] {
+  const panels: HTMLElement[] = [];
+  if (node.matches(CONVERSATION_MENU_SELECTOR)) {
+    panels.push(node);
+  }
+  panels.push(...Array.from(node.querySelectorAll<HTMLElement>(CONVERSATION_MENU_SELECTOR)));
+  return panels;
+}
+
+function setupConversationMenuExportObserver({
+  dict,
+  getCurrentLanguage,
+  onExport,
+}: {
+  dict: Record<AppLanguage, Record<string, string>>;
+  getCurrentLanguage: () => AppLanguage;
+  onExport: () => void;
+}): void {
+  if (conversationMenuObserver) return;
+
+  const injectOnPanel = (menuPanel: HTMLElement) => {
+    window.setTimeout(() => {
+      if (!menuPanel.isConnected) return;
+      if (!isConversationMenuPanel(menuPanel)) return;
+
+      const currentLang = getCurrentLanguage();
+      const label =
+        dict[currentLang]?.['exportChatJson'] ??
+        dict.en?.['exportChatJson'] ??
+        'Export conversation history';
+      const tooltip =
+        dict[currentLang]?.['exportChatJson'] ??
+        dict.en?.['exportChatJson'] ??
+        'Export conversation history';
+
+      injectConversationMenuExportButton(menuPanel, {
+        label,
+        tooltip,
+        onClick: onExport,
+      });
+    }, 50);
+  };
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        const panels = getConversationMenuPanelsFromNode(node);
+        panels.forEach(injectOnPanel);
+      });
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+  conversationMenuObserver = observer;
+
+  const existingPanels = document.querySelectorAll<HTMLElement>(CONVERSATION_MENU_SELECTOR);
+  existingPanels.forEach(injectOnPanel);
+
+  window.addEventListener(
+    'beforeunload',
+    () => {
+      try {
+        conversationMenuObserver?.disconnect();
+      } catch {}
+      conversationMenuObserver = null;
+    },
+    { once: true },
+  );
+}
+
 export async function startExportButton(): Promise<void> {
   // Check for pending export immediately
   checkPendingExport();
@@ -1265,6 +1342,19 @@ export async function startExportButton(): Promise<void> {
     location.hostname !== 'aistudio.google.cn'
   )
     return;
+
+  // i18n setup for tooltip and label
+  const dict = await loadDictionaries();
+  let lang = await getLanguage();
+
+  setupConversationMenuExportObserver({
+    dict,
+    getCurrentLanguage: () => lang,
+    onExport: () => {
+      void showExportDialog(dict, lang);
+    },
+  });
+
   const logo =
     (await waitForElement('[data-test-id="logo"]', 6000)) || (await waitForElement('.logo', 2000));
   if (!logo) return;
@@ -1289,9 +1379,6 @@ export async function startExportButton(): Promise<void> {
     } catch {}
   });
 
-  // i18n setup for tooltip and label
-  const dict = await loadDictionaries();
-  let lang = await getLanguage();
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
   const title = t('exportChatJson');
   const labelText = t('pm_export');
