@@ -15,7 +15,7 @@ Gemini Voyager를 사용하면 데이터를 클라우드에서 꺼내어 당신�
 
 ### 내보내는 방법
 
-1. Gemini 로고 옆에 있는 **내보내기 아이콘**을 찾으세요.
+1. Gemini 로고 위에 마우스를 올리면 **내보내기 아이콘**이 나타납니다.
 2. 형식을 선택하세요.
 3. 끝입니다.
 
@@ -23,7 +23,7 @@ Gemini Voyager를 사용하면 데이터를 클라우드에서 꺼내어 당신�
 
 <div style="display: flex; gap: 20px; margin-top: 20px;">
   <div style="flex: 1; text-align: center;">
-    <p><b>1단계: 버튼 클릭</b></p>
+    <p><b>1단계: 로고 호버</b></p>
     <img src="/assets/gemini-export-guide-1.png" alt="내보내기 가이드 1단계" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
   <div style="flex: 1; text-align: center;">

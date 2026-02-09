@@ -15,7 +15,7 @@ Gemini Voyager vous permet de retirer vos données du cloud pour les mettre entr
 
 ### Comment Exporter
 
-1. Cherchez l'**Icône d'Export** à côté du logo Gemini.
+1. Survolez le logo Gemini pour voir l'**Icône d'Export**.
 2. Choisissez votre format.
 3. C'est fait.
 
@@ -23,7 +23,7 @@ Ce sont vos données. Faites-en ce que vous voulez.
 
 <div style="display: flex; gap: 20px; margin-top: 20px;">
   <div style="flex: 1; text-align: center;">
-    <p><b>Étape 1 : Le Bouton</b></p>
+    <p><b>Étape 1 : Survoler le Logo</b></p>
     <img src="/assets/gemini-export-guide-1.png" alt="Guide export étape 1" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
   <div style="flex: 1; text-align: center;">

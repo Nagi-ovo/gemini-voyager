@@ -15,7 +15,7 @@ Gemini Voyager 幫你把數據從雲端拽回手心。
 
 ### 怎麼導
 
-1. 找 Gemini 標旁邊的 **導出圖標**。
+1. 滑鼠懸停在 Gemini Logo 上，即可看到出現的 **匯出圖示**。
 2. 選格式。
 3. 拿走。
 
@@ -23,7 +23,7 @@ Gemini Voyager 幫你把數據從雲端拽回手心。
 
 <div style="display: flex; gap: 20px; margin-top: 20px;">
   <div style="flex: 1; text-align: center;">
-    <p><b>1. 找按鈕</b></p>
+    <p><b>1. 懸停 Logo</b></p>
     <img src="/assets/gemini-export-guide-1.png" alt="導出指南步驟 1" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
   <div style="flex: 1; text-align: center;">
