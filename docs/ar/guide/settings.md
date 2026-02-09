@@ -9,5 +9,5 @@
 - **تركيز**: قم بتضييقه للقراءة العميقة دون تشتيت.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/chat-width.png" alt="ضبط عرض الدردشة" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/gemini-chatwidth.png" alt="ضبط عرض الدردشة" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
