@@ -1190,5 +1190,13 @@
   "export_fontsize_preview": {
     "message": "A rápida raposa marrom salta sobre o cão preguiçoso.",
     "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "Falha na exportação: {error}",
+    "description": "Mensagem genérica de falha na exportação com detalhe"
+  },
+  "export_error_refresh_retry": {
+    "message": "A exportação da imagem falhou devido a problemas de rede. Atualize a página e tente novamente.",
+    "description": "Orientação exibida quando a exportação de imagem falha por carregamento temporário"
   }
 }

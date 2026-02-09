@@ -1190,5 +1190,13 @@
   "export_fontsize_preview": {
     "message": "The quick brown fox jumps over the lazy dog.",
     "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "Export failed: {error}",
+    "description": "Generic export failure with detailed reason"
+  },
+  "export_error_refresh_retry": {
+    "message": "Image export failed due to network issues. Please refresh the page and try again.",
+    "description": "Guidance shown when image export fails due to transient loading issues"
   }
 }

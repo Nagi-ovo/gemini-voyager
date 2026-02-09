@@ -8,6 +8,7 @@ import { toBlob } from 'html-to-image';
 
 import { isSafari } from '@/core/utils/browser';
 
+import { isEventLikeImageRenderError } from '../types/errors';
 import type { ChatTurn, ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
 
@@ -20,6 +21,10 @@ export interface RenderableDocumentContent {
 }
 
 export class ImageExportService {
+  private static readonly PRIMARY_RENDER_MAX_ATTEMPTS = 3;
+
+  private static readonly PRIMARY_RENDER_RETRY_DELAY_MS = 260;
+
   static async export(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
@@ -467,13 +472,25 @@ export class ImageExportService {
   private static async renderWithSafariFallback(container: HTMLElement): Promise<Blob> {
     const primaryTarget =
       (container.querySelector('.gv-image-export-doc') as HTMLElement | null) || container;
+    const maxPrimaryAttempts = isSafari() ? 1 : this.PRIMARY_RENDER_MAX_ATTEMPTS;
 
-    try {
-      return await this.renderTargetToBlob(primaryTarget);
-    } catch (error) {
-      if (!isSafari()) {
-        throw error;
+    let primaryError: unknown;
+    for (let attempt = 1; attempt <= maxPrimaryAttempts; attempt++) {
+      try {
+        return await this.renderTargetToBlob(primaryTarget);
+      } catch (error) {
+        primaryError = error;
+        const canRetry = attempt < maxPrimaryAttempts && this.shouldRetryPrimaryRender(error);
+        if (canRetry) {
+          await this.delay(this.PRIMARY_RENDER_RETRY_DELAY_MS * attempt);
+          continue;
+        }
+        break;
       }
+    }
+
+    if (!isSafari()) {
+      throw primaryError;
     }
 
     const fallbackContainer = container.cloneNode(true) as HTMLElement;
@@ -507,6 +524,21 @@ export class ImageExportService {
     }
 
     return blob;
+  }
+
+  private static shouldRetryPrimaryRender(error: unknown): boolean {
+    if (isEventLikeImageRenderError(error)) return true;
+
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      return message.includes('image') || message.includes('decode') || message.includes('network');
+    }
+
+    return false;
+  }
+
+  private static async delay(ms: number): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private static downloadBlob(blob: Blob, filename: string): void {

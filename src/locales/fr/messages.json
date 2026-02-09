@@ -1190,5 +1190,13 @@
   "export_fontsize_preview": {
     "message": "Le vif renard brun saute par-dessus le chien paresseux.",
     "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "Échec de l'exportation : {error}",
+    "description": "Message d'échec d'export avec raison détaillée"
+  },
+  "export_error_refresh_retry": {
+    "message": "Échec de l'exportation d'image en raison d'un problème réseau. Veuillez actualiser la page puis réessayer.",
+    "description": "Conseil affiché en cas d'échec temporaire du chargement lors de l'export image"
   }
 }

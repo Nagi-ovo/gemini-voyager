@@ -1190,5 +1190,13 @@
   "export_fontsize_preview": {
     "message": "다람쥐 헌 쳇바퀴에 타고파.",
     "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "내보내기 실패: {error}",
+    "description": "상세 원인을 포함한 일반 내보내기 실패 메시지"
+  },
+  "export_error_refresh_retry": {
+    "message": "네트워크 문제로 이미지 내보내기에 실패했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.",
+    "description": "이미지 내보내기에서 일시적 로딩 실패가 발생했을 때 표시되는 안내"
   }
 }

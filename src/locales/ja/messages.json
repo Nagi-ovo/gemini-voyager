@@ -1190,5 +1190,13 @@
   "export_fontsize_preview": {
     "message": "吾輩は猫である。名前はまだない。",
     "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "エクスポートに失敗しました: {error}",
+    "description": "詳細理由付きのエクスポート失敗メッセージ"
+  },
+  "export_error_refresh_retry": {
+    "message": "ネットワークの問題により画像のエクスポートに失敗しました。ページを再読み込みして再試行してください。",
+    "description": "画像エクスポートの一時的な読み込み失敗時に表示する再試行案内"
   }
 }
