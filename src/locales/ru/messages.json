@@ -1190,5 +1190,13 @@
   "export_fontsize_preview": {
     "message": "Съешь ещё этих мягких французских булок, да выпей чаю.",
     "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "Не удалось экспортировать: {error}",
+    "description": "Общее сообщение об ошибке экспорта с подробной причиной"
+  },
+  "export_error_refresh_retry": {
+    "message": "Экспорт изображения не удался из-за проблем с сетью. Обновите страницу и попробуйте снова.",
+    "description": "Подсказка при временной ошибке загрузки во время экспорта изображения"
   }
 }

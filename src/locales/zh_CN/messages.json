@@ -1126,5 +1126,13 @@
   "export_fontsize_preview": {
     "message": "天地玄黄，宇宙洪荒。日月盈昃，辰宿列张。",
     "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "导出失败：{error}",
+    "description": "带具体原因的导出失败提示"
+  },
+  "export_error_refresh_retry": {
+    "message": "因网络原因，图片导出失败，请刷新页面后重试。",
+    "description": "图片导出遇到瞬时加载失败时的刷新重试提示"
   }
 }

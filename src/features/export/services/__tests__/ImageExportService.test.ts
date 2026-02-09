@@ -80,6 +80,18 @@ describe('ImageExportService', () => {
     expect((anchors[0] as HTMLAnchorElement).download).toBe('chat.png');
   });
 
+  it('retries transient image render failures on Chrome and succeeds', async () => {
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
+    (toBlob as unknown as ReturnType<typeof vi.fn>)
+      .mockRejectedValueOnce(new Event('error'))
+      .mockResolvedValueOnce(new Blob(['ok'], { type: 'image/png' }));
+
+    await ImageExportService.export(mockTurns, mockMetadata, { filename: 'retry.png' });
+
+    expect(toBlob).toHaveBeenCalledTimes(2);
+    expect(global.URL.createObjectURL).toHaveBeenCalledOnce();
+  });
+
   it('uses larger typography and media sizing for mobile readability', async () => {
     let capturedStyle = '';
     (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(

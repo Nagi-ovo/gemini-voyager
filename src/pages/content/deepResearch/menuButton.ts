@@ -10,6 +10,7 @@ import type {
   ExportFormat,
 } from '@/features/export/types/export';
 import { ExportDialog } from '@/features/export/ui/ExportDialog';
+import { resolveExportErrorMessage } from '@/features/export/ui/ExportErrorMessage';
 import { showExportToast } from '@/features/export/ui/ExportToast';
 import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
@@ -352,7 +353,7 @@ function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
         const minVisiblePromise = new Promise((resolve) => setTimeout(resolve, 420));
         const [result] = await Promise.all([resultPromise, minVisiblePromise]);
         if (!result.success) {
-          alert(`${t('export_dialog_warning')}: ${result.error}`);
+          alert(resolveExportErrorMessage(result.error, t));
         } else if (format === 'pdf' && isSafari()) {
           showExportToast(t('export_toast_safari_pdf_ready'), { autoDismissMs: 5000 });
         }

@@ -1190,5 +1190,13 @@
   "export_fontsize_preview": {
     "message": "El veloz murciélago hindú comía feliz cardillo y kiwi.",
     "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "Error al exportar: {error}",
+    "description": "Mensaje genérico de error de exportación con detalle"
+  },
+  "export_error_refresh_retry": {
+    "message": "La exportación de imagen falló por problemas de red. Actualiza la página y vuelve a intentarlo.",
+    "description": "Sugerencia para reintentar cuando falla temporalmente la carga en exportación de imagen"
   }
 }

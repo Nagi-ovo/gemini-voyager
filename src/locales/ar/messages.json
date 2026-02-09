@@ -1190,5 +1190,13 @@
   "export_fontsize_preview": {
     "message": "نص عربي لمعاينة حجم الخط في التصدير.",
     "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "فشل التصدير: {error}",
+    "description": "رسالة فشل تصدير عامة مع السبب التفصيلي"
+  },
+  "export_error_refresh_retry": {
+    "message": "فشل تصدير الصورة بسبب مشكلة في الشبكة. يُرجى تحديث الصفحة ثم إعادة المحاولة.",
+    "description": "إرشاد يظهر عند فشل تحميل مؤقت أثناء تصدير الصورة"
   }
 }

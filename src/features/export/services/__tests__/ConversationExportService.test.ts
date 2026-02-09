@@ -303,6 +303,20 @@ describe('ConversationExportService', () => {
       // Restore
       JSON.stringify = originalStringify;
     });
+
+    it('normalizes image export Event errors for UI handling', async () => {
+      const imageExportSpy = vi
+        .spyOn(ImageExportService as any, 'export')
+        .mockRejectedValue(new Event('error'));
+
+      const result = await ConversationExportService.export(mockTurns, mockMetadata, {
+        format: 'image' as any,
+      });
+
+      expect(imageExportSpy).toHaveBeenCalledOnce();
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('image_render_event_error');
+    });
   });
 
   describe('getAvailableFormats', () => {

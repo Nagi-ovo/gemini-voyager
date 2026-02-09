@@ -12,6 +12,7 @@ import type {
   ExportFormat,
 } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
+import { resolveExportErrorMessage } from '../../../features/export/ui/ExportErrorMessage';
 import { showExportToast } from '../../../features/export/ui/ExportToast';
 import { groupSelectedMessagesByTurn } from './selectionUtils';
 import {
@@ -1126,7 +1127,7 @@ async function performFinalExport(
       const [result] = await Promise.all([resultPromise, minVisiblePromise]);
 
       if (!result.success) {
-        alert(`${t('export_dialog_warning')}: ${result.error}`);
+        alert(resolveExportErrorMessage(result.error, t));
       } else if (format === 'pdf' && isSafari()) {
         showExportToast(t('export_toast_safari_pdf_ready'), { autoDismissMs: 5000 });
       }
