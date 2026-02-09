@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for Gemini Voyager
 
-> **Last Updated**: 2026-02-08
-> **Version**: 1.2.1
+> **Last Updated**: 2026-02-09
+> **Version**: 1.2.2
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
 
 ---
