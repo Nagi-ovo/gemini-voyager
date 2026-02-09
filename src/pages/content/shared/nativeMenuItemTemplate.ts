@@ -31,7 +31,9 @@ function updateMenuItemLabel(button: HTMLButtonElement, label: string): void {
   const textContainer = button.querySelector('.mat-mdc-menu-item-text') as HTMLElement | null;
   if (!textContainer) return;
 
-  const styledLabel = textContainer.querySelector('.gds-body-m, .gds-label-m, .subtitle');
+  const styledLabel = textContainer.querySelector(
+    '.menu-text, .gds-body-m, .gds-label-m, .subtitle',
+  );
   if (styledLabel) {
     styledLabel.textContent = label;
     return;
@@ -49,6 +51,9 @@ function updateMenuItemIcon(button: HTMLButtonElement, iconName: string): void {
     icon.setAttribute('fonticon', iconName);
   } else {
     icon.removeAttribute('fonticon');
+  }
+  if (icon.hasAttribute('data-mat-icon-name')) {
+    icon.setAttribute('data-mat-icon-name', iconName);
   }
   icon.setAttribute('aria-hidden', 'true');
   icon.textContent = usesFontIconAttribute ? '' : iconName;
