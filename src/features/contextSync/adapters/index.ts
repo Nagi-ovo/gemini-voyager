@@ -3,7 +3,7 @@ import { AdapterConfig } from '../types';
 export const ADAPTERS: Record<string, AdapterConfig> = {
   // gemini
   'gemini.google.com': {
-    user_selector: ['.query-content'],
+    user_selector: ['div.user-query-container'],
     ai_selector: ['.response-content'],
   },
   // default

@@ -11,12 +11,12 @@
 ## 极简三步，同频呼吸
 
 1. **安装并唤醒桥接器**：
-   在 VS Code 中安装 **CoBridge** 插件。它是连接网页与本地 IDE 的核心桥梁。
-   - **[前往 VS Code 市场安装](https://open-vsx.org/extension/windfall/co-bridge)**
+   安装 **CoBridge** 插件。它是连接网页与本地 IDE 的核心桥梁。
+   - **[前往插件市场安装](https://open-vsx.org/extension/windfall/co-bridge)**
 
    ![CoBridge扩展](/assets/CoBridge-extension.png)
 
-   安装完成后，点击左侧图标并启动服务器。
+   安装完成后，点击右侧图标并启动服务器。
    ![CoBridge服务器开启](/assets/CoBridge-on.png)
 
 2. **握手对接**：
@@ -25,13 +25,27 @@
 
    ![上下文同步面板](/assets/context-sync-console.png)
 
-3. **一键同步**：点一下 **"Sync to IDE"**。
+3. **一键同步**：点一下 **"Sync to IDE"**。无论是复杂的**数据表格**，还是直观的**参考图片**，都能瞬间瞬移到你的 IDE 中。
 
    ![同步完成](/assets/sync-done.png)
 
 ## 落地生根
 
-同步完成后，你的 IDE 根目录会多出一个 `.vscode/AI_CONTEXT_SYNC.md`。 无论是 Trae、Cursor 还是 Copilot，它们会通过各自的 Rule 文件自动读取这份“记忆”。
+同步完成后，你的 IDE 根目录会多出一个 `.cobridge/AI_CONTEXT.md`。 无论是 Trae、Cursor 还是 Copilot，它们会通过各自的 Rule 文件自动读取这份“记忆”。
+
+```
+your-project/
+├── .cobridge/
+│   ├── images/
+│   │   ├── context_img_1_1.png
+│   │   └── context_img_1_2.png
+│   └── AI_CONTEXT.md
+├── .github/
+│   └── copilot-instructions.md
+├── .gitignore
+├── .traerules
+└── .cursorrules
+```
 
 ## 它的原则
 

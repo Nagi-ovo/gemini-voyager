@@ -2,6 +2,7 @@ export interface DialogNode {
   url: string;
   className: string;
   text: string;
+  images?: string[];
   is_ai_likely: boolean;
   is_user_likely: boolean;
   rect: {

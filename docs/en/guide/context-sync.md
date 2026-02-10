@@ -1,10 +1,10 @@
-# Context Sync: Transferring Memories (Experimental)
+# Memory Transport: Context Sync (Experimental)
 
 **Different Dimensions, Seamless Sharing**
 
 Iterate logic on the web, and implement code in the IDE. Gemini Voyager breaks down the dimensional barriers, giving your IDE the "thinking process" of the web instantly.
 
-## Say Goodbye to Constant Switching
+## No More Tab Hopping
 
 The biggest pain for developers: after discussing a solution thoroughly on the web, you return to VS Code/Trae/Cursor only to have to re-explain the requirements like a stranger. Due to quotas and response speeds, the web is the "brain" and the IDE is the "hands." Voyager lets them share the same soul.
 
@@ -16,7 +16,7 @@ The biggest pain for developers: after discussing a solution thoroughly on the w
 
    ![CoBridge Extension](/assets/CoBridge-extension.png)
 
-   After installation, click the icon on the left sidebar and start the server.
+   After installation, click the icon on the right and start the server.
    ![CoBridge Server On](/assets/CoBridge-on.png)
 
 2. **Handshake Connection**:
@@ -25,13 +25,27 @@ The biggest pain for developers: after discussing a solution thoroughly on the w
 
    ![Context Sync Console](/assets/context-sync-console.png)
 
-3. **One-Click Sync**: Click **"Sync to IDE"**.
+3. **One-Click Sync**: Click **"Sync to IDE"**. Whether it's complex **data tables** or intuitive **reference images**, everything can be instantly synchronized to your IDE.
 
    ![Sync Done](/assets/sync-done.png)
 
 ## Rooting in the IDE
 
-After synchronization, a `.vscode/AI_CONTEXT_SYNC.md` file will appear in your IDE's root directory. Whether it's Trae, Cursor, or Copilot, they will automatically read this "memory" through their respective rule files. **AI models will no longer suffer from memory loss, hitting the ground running.**
+After synchronization, a `.cobridge/AI_CONTEXT.md` file will appear in your IDE root directory. Whether it's Trae, Cursor, or Copilot, they will automatically read this "memory" through their respective Rule files.
+
+```
+your-project/
+├── .cobridge/
+│   ├── images/
+│   │   ├── context_img_1_1.png
+│   │   └── context_img_1_2.png
+│   └── AI_CONTEXT.md
+├── .github/
+│   └── copilot-instructions.md
+├── .gitignore
+├── .traerules
+└── .cursorrules
+```
 
 ## Principles
 
@@ -48,4 +62,4 @@ After synchronization, a `.vscode/AI_CONTEXT_SYNC.md` file will appear in your I
 - **[Install CoBridge Extension](https://open-vsx.org/extension/windfall/co-bridge)**: Find your dimensional portal and activate "synchronized breathing" with a single click.
 - **[Access GitHub Repository](https://github.com/Winddfall/CoBridge)**: Dive deep into the underlying logic of CoBridge, or give a Star to this "soul-syncing" project.
 
-> **No more LLM amnesia—just pure, instant productivity.**
+> **LLMs will never lose their memory again; ready for action right out of the box.**
