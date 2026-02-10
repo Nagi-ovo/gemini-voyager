@@ -736,18 +736,21 @@ export class TimelineManager {
     // Preview panel
     if (!this.previewPanel && this.ui.timelineBar) {
       this.previewPanel = new TimelinePreviewPanel(this.ui.timelineBar);
-      this.previewPanel.init((turnId, index) => {
-        const marker = this.markers[index];
-        if (!marker?.element) return;
-        const fromIdx = this.getActiveIndex();
-        const dur = this.computeFlowDuration(fromIdx, index);
-        if (this.scrollMode === 'flow' && fromIdx >= 0 && index >= 0 && fromIdx !== index) {
-          this.activeTurnId = null;
-          this.updateActiveDotUI();
-          this.startRunner(fromIdx, index, dur);
-        }
-        this.smoothScrollTo(marker.element, dur);
-      });
+      this.previewPanel.init(
+        (turnId, index) => {
+          const marker = this.markers[index];
+          if (!marker?.element) return;
+          const fromIdx = this.getActiveIndex();
+          const dur = this.computeFlowDuration(fromIdx, index);
+          if (this.scrollMode === 'flow' && fromIdx >= 0 && index >= 0 && fromIdx !== index) {
+            this.activeTurnId = null;
+            this.updateActiveDotUI();
+            this.startRunner(fromIdx, index, dur);
+          }
+          this.smoothScrollTo(marker.element, dur);
+        },
+        (query) => this.highlightSearchInDOM(query),
+      );
     }
   }
 
@@ -1475,6 +1478,48 @@ export class TimelineManager {
       marker.dotElement?.classList.toggle('active', marker.id === this.activeTurnId);
     });
     this.previewPanel?.updateActiveTurn(this.activeTurnId);
+  }
+
+  private static readonly SEARCH_HIGHLIGHT_CLASS = 'timeline-search-highlight';
+
+  private clearSearchHighlights(): void {
+    const cls = TimelineManager.SEARCH_HIGHLIGHT_CLASS;
+    const marks = this.conversationContainer?.querySelectorAll(`mark.${cls}`);
+    if (!marks) return;
+    marks.forEach((mark) => {
+      const parent = mark.parentNode;
+      if (!parent) return;
+      parent.replaceChild(document.createTextNode(mark.textContent || ''), mark);
+      parent.normalize();
+    });
+  }
+
+  private highlightSearchInDOM(query: string): void {
+    this.clearSearchHighlights();
+    if (!query || !this.conversationContainer) return;
+    const lowerQuery = query.toLowerCase();
+    for (const marker of this.markers) {
+      if (!marker.element) continue;
+      const walker = document.createTreeWalker(marker.element, NodeFilter.SHOW_TEXT);
+      const matches: { node: Text; index: number }[] = [];
+      let node: Text | null;
+      while ((node = walker.nextNode() as Text | null)) {
+        const idx = node.textContent?.toLowerCase().indexOf(lowerQuery) ?? -1;
+        if (idx !== -1) matches.push({ node, index: idx });
+      }
+      // Process in reverse to keep offsets stable
+      for (let i = matches.length - 1; i >= 0; i--) {
+        const { node: textNode, index: matchIdx } = matches[i];
+        const after = textNode.splitText(matchIdx + query.length);
+        const matchText = textNode.splitText(matchIdx);
+        const mark = document.createElement('mark');
+        mark.className = TimelineManager.SEARCH_HIGHLIGHT_CLASS;
+        mark.textContent = matchText.textContent;
+        matchText.parentNode!.replaceChild(mark, matchText);
+        // keep reference to 'after' to avoid TS unused warning
+        void after;
+      }
+    }
   }
 
   /**
@@ -3079,6 +3124,7 @@ export class TimelineManager {
     } catch {}
     this.ui.slider = null;
     this.ui.sliderHandle = null;
+    this.clearSearchHighlights();
     this.previewPanel?.destroy();
     this.previewPanel = null;
     this.ui = { timelineBar: null, tooltip: null } as any;

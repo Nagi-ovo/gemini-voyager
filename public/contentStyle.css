@@ -658,6 +658,23 @@ html.dark .timeline-left-slider::before {
   font-size: 13px;
 }
 
+/* Search highlights — preview panel */
+.timeline-preview-highlight {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0;
+  pointer-events: none;
+}
+
+/* Search highlights — SPA conversation page */
+mark.timeline-search-highlight {
+  background-color: oklch(0.7227 0.192 149.5793 / 0.25);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0;
+}
+
 /* Dark theme adjustments for preview panel */
 .theme-host.dark-theme .timeline-preview-panel {
   background-color: rgba(11, 18, 32, 0.95);
@@ -669,6 +686,12 @@ html.dark .timeline-left-slider::before {
 }
 .theme-host.dark-theme .timeline-preview-item.active {
   background-color: rgba(96, 165, 250, 0.12);
+}
+.theme-host.dark-theme .timeline-preview-highlight {
+  background-color: rgba(96, 165, 250, 0.25);
+}
+.theme-host.dark-theme mark.timeline-search-highlight {
+  background-color: oklch(0.7729 0.1535 163.2231 / 0.3);
 }
 
 .theme-host.light-theme .timeline-preview-panel {

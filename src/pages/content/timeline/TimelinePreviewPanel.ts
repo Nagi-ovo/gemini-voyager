@@ -24,6 +24,7 @@ export class TimelinePreviewPanel {
   private searchQuery = '';
   private searchDebounceTimer: number | null = null;
   private onNavigate: ((turnId: string, index: number) => void) | null = null;
+  private onSearchChange: ((query: string) => void) | null = null;
   private onDocumentPointerDown: ((e: PointerEvent) => void) | null = null;
   private onKeyDown: ((e: KeyboardEvent) => void) | null = null;
   private onWindowResize: (() => void) | null = null;
@@ -37,14 +38,19 @@ export class TimelinePreviewPanel {
     return this._isOpen;
   }
 
-  init(onNavigate: (turnId: string, index: number) => void): void {
+  init(
+    onNavigate: (turnId: string, index: number) => void,
+    onSearchChange?: (query: string) => void,
+  ): void {
     this.onNavigate = onNavigate;
+    this.onSearchChange = onSearchChange ?? null;
     this.createDOM();
     this.positionToggle();
     this.setupEventListeners();
   }
 
   updateMarkers(markers: ReadonlyArray<PreviewMarkerData>): void {
+    if (this.markersEqual(markers)) return;
     this.markers = markers;
     this.applyFilter();
   }
@@ -85,6 +91,7 @@ export class TimelinePreviewPanel {
       this.searchQuery = '';
       this.filteredMarkers = this.markers;
     }
+    this.onSearchChange?.('');
   }
 
   destroy(): void {
@@ -114,7 +121,9 @@ export class TimelinePreviewPanel {
     this.panelEl = null;
     this.listEl = null;
     this.searchInput = null;
+    this.onSearchChange?.('');
     this.onNavigate = null;
+    this.onSearchChange = null;
     this.markers = [];
     this.filteredMarkers = [];
   }
@@ -263,6 +272,7 @@ export class TimelinePreviewPanel {
     if (this._isOpen) {
       this.renderList();
     }
+    this.onSearchChange?.(this.searchQuery);
   }
 
   private handleSearchInput(): void {
@@ -317,7 +327,12 @@ export class TimelinePreviewPanel {
     const text = document.createElement('span');
     text.className = 'timeline-preview-text';
     const cleanSummary = marker.summary.replace(TURN_LABEL_PREFIXES, '');
-    text.textContent = this.truncateText(cleanSummary || marker.summary, 80);
+    const displayText = this.truncateText(cleanSummary || marker.summary, 80);
+    if (this.searchQuery) {
+      this.appendHighlighted(text, displayText, this.searchQuery);
+    } else {
+      text.textContent = displayText;
+    }
     item.appendChild(text);
 
     item.addEventListener('click', () => {
@@ -325,6 +340,28 @@ export class TimelinePreviewPanel {
     });
 
     return item;
+  }
+
+  /** Split text around case-insensitive query matches and wrap each match in <mark>. */
+  private appendHighlighted(container: HTMLElement, text: string, query: string): void {
+    const lowerText = text.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    let cursor = 0;
+    let idx = lowerText.indexOf(lowerQuery, cursor);
+    while (idx !== -1) {
+      if (idx > cursor) {
+        container.appendChild(document.createTextNode(text.slice(cursor, idx)));
+      }
+      const mark = document.createElement('mark');
+      mark.className = 'timeline-preview-highlight';
+      mark.textContent = text.slice(idx, idx + query.length);
+      container.appendChild(mark);
+      cursor = idx + query.length;
+      idx = lowerText.indexOf(lowerQuery, cursor);
+    }
+    if (cursor < text.length) {
+      container.appendChild(document.createTextNode(text.slice(cursor)));
+    }
   }
 
   private truncateText(text: string, maxLen: number): string {
@@ -347,5 +384,15 @@ export class TimelinePreviewPanel {
       '.timeline-preview-item.active',
     ) as HTMLElement | null;
     activeItem?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  private markersEqual(newMarkers: ReadonlyArray<PreviewMarkerData>): boolean {
+    if (newMarkers.length !== this.markers.length) return false;
+    for (let i = 0; i < newMarkers.length; i++) {
+      const a = this.markers[i];
+      const b = newMarkers[i];
+      if (a.id !== b.id || a.summary !== b.summary || a.starred !== b.starred) return false;
+    }
+    return true;
   }
 }
