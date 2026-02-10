@@ -1,26 +1,26 @@
-# Batch Delete
+# الحذف الجماعي
 
-Delete multiple conversations at once, no more deleting one by one.
+احذف محادثات متعددة في وقت واحد، وداعاً للحذف واحدة تلو الأخرى.
 
-## Features
+## المميزات
 
-- **Multi-select Mode**: Long-press any conversation to enter multi-select mode and check multiple conversations to delete.
-- **One-click Cleanup**: Once selected, click the delete button to remove all selected conversations at once.
-- **Progress Feedback**: Real-time progress is displayed during deletion so you know the current status.
-- **Safe Confirmation**: A confirmation dialog appears before deletion to prevent accidental operations.
+- **وضع التحديد المتعدد**: اضغط مطولاً على أي محادثة للدخول في وضع التحديد المتعدد وحدد محادثات متعددة لحذفها.
+- **تنظيف بنقرة واحدة**: بمجرد التحديد، انقر فوق زر الحذف لإزالة جميع المحادثات المحددة في وقت واحد.
+- **ملاحظات التقدم**: يتم عرض التقدم في الوقت الفعلي أثناء الحذف حتى تعرف الحالة الحالية.
+- **تأكيد آمن**: يظهر مربع حوار تأكيد قبل الحذف لمنع العمليات العرضية.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/batch-delete.png" alt="Batch Delete" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/batch-delete.png" alt="الحذف الجماعي" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
-## How to Use
+## كيفية الاستخدام
 
-1. In the sidebar conversation list, **long-press** any conversation item.
-2. After entering multi-select mode, checkboxes will appear on the left side of each conversation.
-3. Check the conversations you want to delete (up to 50 at a time).
-4. Click the **Delete button** that appears.
-5. Click "Confirm" in the red confirmation area that appears **above the folder list** to start the deletion.
+1. في قائمة المحادثات بالشريط الجانبي، **اضغط مطولاً** على أي عنصر محادثة.
+2. بعد الدخول في وضع التحديد المتعدد، ستظهر مربعات اختيار على الجانب الأيسر (أو الأيمن حسب الاتجاه) من كل محادثة.
+3. حدد المحادثات التي تريد حذفها (حتى 50 في المرة الواحدة).
+4. انقر فوق **زر الحذف** الذي يظهر.
+5. انقر فوق "تأكيد" في منطقة التأكيد الحمراء التي تظهر **فوق قائمة المجلدات** لبدء الحذف.
 
-::: tip Note
-The confirmation panel overlays the folder area to avoid blocking the conversation list. Batch delete operations cannot be undone, so please proceed with caution.
+::: tip ملاحظة
+تغطي لوحة التأكيد منطقة المجلد لتجنب حجب قائمة المحادثات. لا يمكن التراجع عن عمليات الحذف الجماعي، لذا يرجى المتابعة بحذر.
 :::

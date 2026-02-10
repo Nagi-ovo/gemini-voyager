@@ -1,22 +1,11 @@
-# Tab Title Sync
+# Sincronização de Título de Aba
 
-Automatically syncs the browser tab title with the current Gemini chat title.
+Nunca mais se perca num mar de separadores "Gemini".
 
-## Features
+Por defeito, todos os separadores do Gemini dizem apenas "Gemini". Quando tem 10 abertos, encontrar o certo é um pesadelo.
+O Gemini Voyager muda automaticamente o título do separador do navegador para corresponder ao título da conversa atual.
 
-- **Real-time Sync**: When the chat title changes (e.g., AI generates a new title or you manually rename it), the browser tab title updates instantly from "Gemini" to the specific conversation topic.
-- **Universal Support**: Works perfectly with standard chat pages, Gem conversations, and multi-account environments.
-- **Toggle Control**: If you prefer the default behavior, you can easily disable this feature in the "General Options" section of the settings panel.
+- **Antes**: Gemini, Gemini, Gemini
+- **Depois**: Física Quântica, Receita de Massa, Debugging Python
 
-<div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/tab-title.png" alt="Tab Title Sync" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-</div>
-
-## How to Use
-
-1. This feature is enabled by default upon installation.
-2. Open any Gemini conversation and observe the browser tab title; it will automatically update to match the chat title.
-3. To disable:
-   - Click the extension icon to open the settings panel.
-   - Find "General Options".
-   - Toggle off "Update Tab Title".
+Encontre o que precisa num relance.

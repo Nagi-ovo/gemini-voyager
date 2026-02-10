@@ -1198,5 +1198,21 @@
   "export_error_refresh_retry": {
     "message": "네트워크 문제로 이미지 내보내기에 실패했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.",
     "description": "이미지 내보내기에서 일시적 로딩 실패가 발생했을 때 표시되는 안내"
+  },
+  "deepResearch_exportedAt": {
+    "message": "내보내기 일시",
+    "description": "Deep Research 내보내기 타임스탬프 레이블"
+  },
+  "deepResearch_totalPhases": {
+    "message": "총 단계 수",
+    "description": "Deep Research 총 사고 단계 레이블"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "사고 단계",
+    "description": "Deep Research 사고 단계 헤더"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "조사한 웹사이트",
+    "description": "Deep Research 조사한 웹사이트 섹션 헤더"
   }
 }

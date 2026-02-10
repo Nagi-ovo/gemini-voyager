@@ -1,23 +1,34 @@
 # Exportación de Deep Research
 
-Exporta el contenido completo de "pensamiento" de las conversaciones de Deep Research como archivos Markdown bellamente formateados.
+Exporta el informe final generado por Deep Research o guarda su proceso de "pensamiento" completo como un archivo Markdown.
 
-## Características
+## 1. Exportación de informes (PDF / Imagen)
+
+Los informes generados por Deep Research se pueden exportar como PDF bellamente formateados o como imágenes individuales para compartir (también se admiten los formatos Markdown y JSON).
+
+![Exportación de informes](/assets/deep-research-report-export.png)
+
+## 2. Exportación del proceso de pensamiento (Markdown)
+
+Además del informe final, también puedes exportar el contenido completo de "pensamiento" de las conversaciones de Deep Research.
+
+### Características
 
 - **Exportación en un clic**: Haz clic en el botón de compartir y exportar para descargar.
 - **Formato Estructurado**: Conserva las fases de pensamiento, las entradas de pensamiento y los sitios web de investigación en su orden original.
+- **Encabezados bilingües**: Los archivos Markdown incluyen encabezados de sección en inglés y en tu idioma actual.
 - **Nombres Automáticos**: Los archivos se nombran con marcas de tiempo para una fácil organización (por ejemplo: `deep-research-thinking-20240128-153045.md`).
 
-## Cómo Usar
+### Cómo Usar
 
 1. Abre una conversación de Deep Research en Gemini.
 2. Haz clic en el botón **Compartir y exportar** de la conversación.
 3. Selecciona "Descargar contenido de pensamiento" (Download thinking content).
 4. El archivo Markdown se descargará automáticamente.
 
-![Exportación de Deep Research](/assets/deepresearch_download_thinking.png)
+![Exportación de pensamiento de Deep Research](/assets/deepresearch_download_thinking.png)
 
-## Formato del Archivo Exportado
+### Formato del Archivo Exportado
 
 El archivo Markdown exportado contiene:
 
@@ -27,7 +38,7 @@ El archivo Markdown exportado contiene:
   - Entradas de pensamiento (con título y contenido).
   - Sitios web investigados (con enlace y título).
 
-### Estructura de Ejemplo
+#### Estructura de Ejemplo
 
 ```markdown
 # Título de la conversación Deep Research

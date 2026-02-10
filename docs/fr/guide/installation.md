@@ -1,6 +1,10 @@
 # Installation
 
-Choisissez votre voie.
+::: info Nouvelles
+🍎 **L'extension native Safari arrive bientôt !** Elle sera entièrement gratuite et s'installera en un clic. Restez à l'écoute !
+:::
+
+Choisissez votre méthode.
 
 > ⚠️ Note : Le Gestionnaire de Prompts est la seule fonctionnalité compatible avec Gemini pour Entreprise.
 

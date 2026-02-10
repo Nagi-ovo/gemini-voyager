@@ -1,65 +1,75 @@
-# Deep Research Export
+# تصدير Deep Research
 
-Export the complete "thinking" content from Deep Research conversations as beautifully formatted Markdown files.
+قم بتصدير التقرير النهائي الذي أنشأته Deep Research، أو احفظ عملية "التفكير" الكاملة كملف Markdown.
 
-## Features
+## 1. تصدير التقرير (PDF / صورة)
 
-- **One-click export**: Download button appears in the conversation menu (⋮)
-- **Structured format**: Preserves thinking phases, thought items, and researched websites in their original order
-- **Bilingual headers**: Markdown files include both English and Chinese section headers
-- **Automatic naming**: Files are timestamped for easy organization (e.g., `deep-research-thinking-20240128-153045.md`)
+يمكن تصدير التقارير التي تم إنشاؤها بواسطة Deep Research كملفات PDF منسقة بشكل جميل أو كصور فردية قابلة للمشاركة (يتم دعم تنسيقات Markdown و JSON أيضاً).
 
-## How to Use
+![تصدير التقرير](/assets/deep-research-report-export.png)
 
-1. Open a Deep Research conversation on Gemini
-2. Click the **Share & Export** button in the conversation
-3. Select "Download thinking content" (下载 Thinking 内容)
-4. The Markdown file will be automatically downloaded
+## 2. تصدير عملية التفكير (Markdown)
 
-![Deep Research Export](/assets/deepresearch_download_thinking.png)
+بالإضافة إلى التقرير النهائي، يمكنك أيضاً تصدير محتوى "التفكير" الكامل من محادثات Deep Research.
 
-## Exported File Format
+### المميزات
 
-The exported Markdown file includes:
+- **تصدير بنقرة واحدة**: يظهر زر التنزيل في قائمة المحادثة (⋮)
+- **تنسيق منظم**: يحافظ على مراحل التفكير، وعناصر التفكير، والمواقع التي تم بحثها بترتيبها الأصلي
+- **عناوين ثنائية اللغة**: ملفات Markdown تتضمن عناوين الأقسام بالإنجليزية ولغتك الحالية
+- **تسمية تلقائية**: يتم وضع طابع زمني للملفات لسهولة التنظيم (مثال: `deep-research-thinking-20240128-153045.md`)
 
-- **Title**: The conversation title
-- **Metadata**: Export timestamp and total number of thinking phases
-- **Thinking Phases**: Each phase contains:
-  - Thought items (with headers and content)
-  - Researched websites (with links and titles)
+### كيفية الاستخدام
 
-### Example Structure
+1. افتح محادثة Deep Research في Gemini
+2. انقر فوق زر **مشاركة وتصدير** في المحادثة
+3. حدد "تنزيل محتوى التفكير" (Download thinking content)
+4. سيتم تنزيل ملف Markdown تلقائياً
+
+![تصدير تفكير Deep Research](/assets/deepresearch_download_thinking.png)
+
+### تنسيق الملف المصدر
+
+يتضمن ملف Markdown المصدر:
+
+- **العنوان**: عنوان المحادثة
+- **البيانات الوصفية**: وقت التصدير وإجمالي مراحل التفكير
+- **مراحل التفكير**: تحتوي كل مرحلة على:
+  - عناصر التفكير (مع العناوين والمحتوى)
+  - المواقع التي تم بحثها (مع الروابط والعناوين)
+
+#### مثال على البنية
 
 ```markdown
-# Deep Research Conversation Title
+# عنوان محادثة Deep Research
 
-**导出时间 / Exported At:** 2025-12-28 17:25:35
-**总思考阶段 / Total Phases:** 3
-
----
-
-## 思考阶段 1 / Thinking Phase 1
-
-### Thought Title 1
-
-Thought content...
-
-### Thought Title 2
-
-Thought content...
-
-#### 研究网站 / Researched Websites
-
-- [domain.com](https://example.com) - Page Title
-- [another.com](https://another.com) - Another Title
+**وقت التصدير / Exported At:** 2025-12-28 17:25:35
+**إجمالي المراحل / Total Phases:** 3
 
 ---
 
-## 思考阶段 2 / Thinking Phase 2
+## مرحلة التفكير 1 / Thinking Phase 1
+
+### عنوان التفكير 1
+
+محتوى التفكير...
+
+### عنوان التفكير 2
+
+محتوى التفكير...
+
+#### المواقع التي تم بحثها / Researched Websites
+
+- [domain.com](https://example.com) - عنوان الصفحة
+- [another.com](https://another.com) - عنوان آخر
+
+---
+
+## مرحلة التفكير 2 / Thinking Phase 2
 
 ...
 ```
 
-## Privacy
+## الخصوصية
 
-All extraction and formatting happens 100% locally in your browser. No data is sent to external servers.
+يتم كل الاستخراج والتنسيق بنسبة 100% محلياً في متصفحك. لا يتم إرسال أي بيانات إلى خوادم خارجية.

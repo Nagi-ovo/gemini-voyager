@@ -55,6 +55,7 @@ features:
     details: Copie en un clic des codes sources LaTeX et MathML (Word).
   - icon: 🧜‍♀️
     title: Diagrammes Mermaid
+    details: Du code aux visuels. Organigrammes, diagrammes de séquence, diagrammes de Gantt rendus instantanément.
   - icon: 🏷️
     title: Synchro Titre Onglet
     details: Sachez en un coup d'œil. Synchro auto du titre de l'onglet avec votre chat.

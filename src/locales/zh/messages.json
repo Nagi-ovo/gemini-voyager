@@ -1198,5 +1198,21 @@
   "export_error_refresh_retry": {
     "message": "因网络原因，图片导出失败，请刷新页面后重试。",
     "description": "图片导出遇到瞬时加载失败时的刷新重试提示"
+  },
+  "deepResearch_exportedAt": {
+    "message": "导出时间",
+    "description": "深度研究导出时间戳标签"
+  },
+  "deepResearch_totalPhases": {
+    "message": "总思考阶段",
+    "description": "深度研究总思考阶段标签"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "思考阶段",
+    "description": "深度研究思考阶段标题"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "研究网站",
+    "description": "深度研究已研究网站章节标题"
   }
 }

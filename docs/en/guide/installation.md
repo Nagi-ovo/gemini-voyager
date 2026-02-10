@@ -1,5 +1,9 @@
 # Installation
 
+::: info News
+🍎 **Safari Native Extension is coming soon!** It will be completely free and support one-click installation. Stay tuned!
+:::
+
 Choose your path.
 
 > ⚠️ Note: Prompt Manager is the only feature that supports Gemini for Enterprise.

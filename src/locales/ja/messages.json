@@ -1198,5 +1198,21 @@
   "export_error_refresh_retry": {
     "message": "ネットワークの問題により画像のエクスポートに失敗しました。ページを再読み込みして再試行してください。",
     "description": "画像エクスポートの一時的な読み込み失敗時に表示する再試行案内"
+  },
+  "deepResearch_exportedAt": {
+    "message": "エクスポート日時",
+    "description": "深層研究エクスポートタイムスタンプラベル"
+  },
+  "deepResearch_totalPhases": {
+    "message": "総思考フェーズ",
+    "description": "深層研究の総思考フェーズラベル"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "思考フェーズ",
+    "description": "深層研究思考フェーズヘッダー"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "調査済みサイト",
+    "description": "深層研究の調査済みウェブサイトセクションヘッダー"
   }
 }

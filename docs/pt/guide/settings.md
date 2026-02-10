@@ -1,31 +1,13 @@
-# Make It Yours
+# Largura do Chat
 
-The default experience is great. But you might want it perfect.
-Customize every pixel.
+Utilize totalmente o seu monitor ultrawide.
 
-## Cinema Mode
+O Gemini restringe o conteúdo principal a uma largura fixa. O Voyager liberta isso.
+Aceda ao painel de definições e arraste o slider **"Largura do Chat"**.
 
-Why view the future through a tiny keyhole?
-Gemini Voyager lets you expand the chat width.
+- **Alargar**: Perfeito para tabelas de código, análise de dados e janelas de ecrã dividido.
+- **Concentrar**: Estreite-o para leitura profunda sem distrações.
 
-- **Wide**: 1400px for coding and complex tables.
-- **Focused**: 800px for reading.
-- **You decide**: Use the slider to find your sweet spot.
-
-## Control
-
-Click the extension icon to access the control center.
-
-- **Scroll Mode**: Natural or classic.
-- **Timeline Position**: Put it where it feels right.
-
-<div style="display: flex; gap: 20px; margin-top: 20px;">
-  <div style="flex: 1; text-align: center;">
-    <p><b>Open Settings</b></p>
-    <img src="/assets/gemini-open-settings-guide.png" alt="Open settings guide" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <p><b>Adjust Width</b></p>
-    <img src="/assets/gemini-chatwidth.png" alt="Chat width adjustment" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
+<div style="text-align: center; margin-top: 20px;">
+  <img src="/assets/gemini-chatwidth.png" alt="Ajuste de Largura do Chat" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>

@@ -1,24 +1,34 @@
 # Export Deep Research
 
-Exportez le contenu complet de "réflexion" des conversations Deep Research sous forme de fichiers Markdown magnifiquement formatés.
+Exportez le rapport final généré par Deep Research ou enregistrez son processus de "réflexion" complet sous forme de fichier Markdown.
 
-## Fonctionnalités
+## 1. Exportation de rapport (PDF / Image)
+
+Les rapports générés par Deep Research peuvent être exportés sous forme de fichiers PDF magnifiquement mis en forme ou d'images uniques pour un partage facile (les formats Markdown et JSON sont également pris en charge).
+
+![Exportation de rapport](/assets/deep-research-report-export.png)
+
+## 2. Exportation du processus de réflexion (Markdown)
+
+En plus du rapport final, vous pouvez également exporter le contenu complet de "réflexion" des conversations Deep Research.
+
+### Fonctionnalités
 
 - **Export en un clic** : Le bouton de téléchargement apparaît dans le menu de conversation (⋮).
 - **Format structuré** : Préserve les phases de réflexion, les éléments de pensée et les sites web recherchés dans leur ordre original.
-- **En-têtes bilingues** : Les fichiers Markdown incluent des en-têtes de section en anglais et en chinois.
+- **En-têtes bilingues** : Les fichiers Markdown incluent des en-têtes de section en anglais et dans votre langue actuelle.
 - **Nommage automatique** : Les fichiers sont horodatés pour une organisation facile (ex : `deep-research-thinking-20240128-153045.md`).
 
-## Comment Utiliser
+### Comment Utiliser
 
 1. Ouvrez une conversation Deep Research sur Gemini.
 2. Cliquez sur le bouton **Partager et exporter** dans la conversation.
 3. Sélectionnez "Télécharger le contenu de réflexion" (Download thinking content).
 4. Le fichier Markdown sera automatiquement téléchargé.
 
-![Export Deep Research](/assets/deepresearch_download_thinking.png)
+![Exportation de réflexion Deep Research](/assets/deepresearch_download_thinking.png)
 
-## Format du Fichier Exporté
+### Format du Fichier Exporté
 
 Le fichier Markdown exporté inclut :
 
@@ -28,7 +38,7 @@ Le fichier Markdown exporté inclut :
   - Éléments de pensée (avec en-têtes et contenu).
   - Sites web recherchés (avec liens et titres).
 
-### Exemple de Structure
+#### Exemple de Structure
 
 ```markdown
 # Titre de la Conversation Deep Research

@@ -1,31 +1,13 @@
-# Make It Yours
+# عرض الدردشة
 
-The default experience is great. But you might want it perfect.
-Customize every pixel.
+استخدم شاشتك العريضة بالكامل.
 
-## Cinema Mode
+يقوم Gemini بتقييد المحتوى الرئيسي بعرض ثابت. يقوم Voyager بتحرير ذلك.
+انتقل إلى لوحة الإعدادات واسحب شريط تمرير **"عرض الدردشة"**.
 
-Why view the future through a tiny keyhole?
-Gemini Voyager lets you expand the chat width.
+- **توسيع**: مثالي جداول الكود، وتحليل البيانات، والنوافذ المقسمة.
+- **تركيز**: قم بتضييقه للقراءة العميقة دون تشتيت.
 
-- **Wide**: 1400px for coding and complex tables.
-- **Focused**: 800px for reading.
-- **You decide**: Use the slider to find your sweet spot.
-
-## Control
-
-Click the extension icon to access the control center.
-
-- **Scroll Mode**: Natural or classic.
-- **Timeline Position**: Put it where it feels right.
-
-<div style="display: flex; gap: 20px; margin-top: 20px;">
-  <div style="flex: 1; text-align: center;">
-    <p><b>Open Settings</b></p>
-    <img src="/assets/gemini-open-settings-guide.png" alt="Open settings guide" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <p><b>Adjust Width</b></p>
-    <img src="/assets/gemini-chatwidth.png" alt="Chat width adjustment" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
+<div style="text-align: center; margin-top: 20px;">
+  <img src="/assets/gemini-chatwidth.png" alt="ضبط عرض الدردشة" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>

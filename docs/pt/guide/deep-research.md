@@ -1,65 +1,75 @@
-# Deep Research Export
+# Exportação Deep Research
 
-Export the complete "thinking" content from Deep Research conversations as beautifully formatted Markdown files.
+Exporte o relatório final gerado pelo Deep Research, ou guarde o seu processo completo de "pensamento" como um ficheiro Markdown.
 
-## Features
+## 1. Exportação de Relatório (PDF / Imagem)
 
-- **One-click export**: Download button appears in the conversation menu (⋮)
-- **Structured format**: Preserves thinking phases, thought items, and researched websites in their original order
-- **Bilingual headers**: Markdown files include both English and Chinese section headers
-- **Automatic naming**: Files are timestamped for easy organization (e.g., `deep-research-thinking-20240128-153045.md`)
+Os relatórios gerados pelo Deep Research podem ser exportados como PDFs com formatação elegante ou como imagens individuais partilháveis (os formatos Markdown e JSON também são suportados).
 
-## How to Use
+![Exportação de Relatório](/assets/deep-research-report-export.png)
 
-1. Open a Deep Research conversation on Gemini
-2. Click the **Share & Export** button in the conversation
-3. Select "Download thinking content" (下载 Thinking 内容)
-4. The Markdown file will be automatically downloaded
+## 2. Exportação do Processo de Pensamento (Markdown)
 
-![Deep Research Export](/assets/deepresearch_download_thinking.png)
+Além do relatório final, também pode exportar o conteúdo completo de "pensamento" das conversas do Deep Research.
 
-## Exported File Format
+### Funcionalidades
 
-The exported Markdown file includes:
+- **Exportação num clique**: O botão de download aparece no menu da conversa (⋮)
+- **Formato estruturado**: Preserva as fases de pensamento, itens de pensamento e sites pesquisados na sua ordem original
+- **Cabeçalhos bilingues**: Ficheiros Markdown incluem cabeçalhos de secção em inglês e no seu idioma atual
+- **Nomeação automática**: Os ficheiros têm carimbo de data/hora para fácil organização (ex: `deep-research-thinking-20240128-153045.md`)
 
-- **Title**: The conversation title
-- **Metadata**: Export timestamp and total number of thinking phases
-- **Thinking Phases**: Each phase contains:
-  - Thought items (with headers and content)
-  - Researched websites (with links and titles)
+### Como Usar
 
-### Example Structure
+1. Abra uma conversa Deep Research no Gemini
+2. Clique no botão **Partilhar e Exportar** na conversa
+3. Selecione "Transferir conteúdo de pensamento" (Download thinking content)
+4. O ficheiro Markdown será transferido automaticamente
+
+![Exportação de Pensamento Deep Research](/assets/deepresearch_download_thinking.png)
+
+### Formato do Ficheiro Exportado
+
+O ficheiro Markdown exportado inclui:
+
+- **Título**: O título da conversa
+- **Metadados**: Data/hora da exportação e número total de fases de pensamento
+- **Fases de Pensamento**: Cada fase contém:
+  - Itens de pensamento (com cabeçalhos e conteúdo)
+  - Sites pesquisados (com links e títulos)
+
+#### Exemplo de Estrutura
 
 ```markdown
-# Deep Research Conversation Title
+# Título da Conversa Deep Research
 
-**导出时间 / Exported At:** 2025-12-28 17:25:35
-**总思考阶段 / Total Phases:** 3
-
----
-
-## 思考阶段 1 / Thinking Phase 1
-
-### Thought Title 1
-
-Thought content...
-
-### Thought Title 2
-
-Thought content...
-
-#### 研究网站 / Researched Websites
-
-- [domain.com](https://example.com) - Page Title
-- [another.com](https://another.com) - Another Title
+**Hora de exportação / Exported At:** 2025-12-28 17:25:35
+**Total de fases / Total Phases:** 3
 
 ---
 
-## 思考阶段 2 / Thinking Phase 2
+## Fase de Pensamento 1 / Thinking Phase 1
+
+### Título do Pensamento 1
+
+Conteúdo do pensamento...
+
+### Título do Pensamento 2
+
+Conteúdo do pensamento...
+
+#### Sites Pesquisados / Researched Websites
+
+- [domain.com](https://example.com) - Título da Página
+- [another.com](https://another.com) - Outro Título
+
+---
+
+## Fase de Pensamento 2 / Thinking Phase 2
 
 ...
 ```
 
-## Privacy
+## Privacidade
 
-All extraction and formatting happens 100% locally in your browser. No data is sent to external servers.
+Toda a extração e formatação ocorre 100% localmente no seu navegador. Nenhum dado é enviado para servidores externos.

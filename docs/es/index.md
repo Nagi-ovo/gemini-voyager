@@ -55,6 +55,7 @@ features:
     details: Copia en un clic los códigos fuente LaTeX y MathML (Word).
   - icon: 🧜‍♀️
     title: Gráficos Mermaid
+    details: De código a visuales. Diagramas de flujo, de secuencia y de Gantt renderizados al instante.
   - icon: 🏷️
     title: Sincronización de Título de Pestaña
     details: De un vistazo. Sincroniza automáticamente el título de la pestaña con el título de la conversación.

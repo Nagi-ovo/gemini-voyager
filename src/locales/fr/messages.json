@@ -1198,5 +1198,21 @@
   "export_error_refresh_retry": {
     "message": "Échec de l'exportation d'image en raison d'un problème réseau. Veuillez actualiser la page puis réessayer.",
     "description": "Conseil affiché en cas d'échec temporaire du chargement lors de l'export image"
+  },
+  "deepResearch_exportedAt": {
+    "message": "Exporté le",
+    "description": "Étiquette d'horodatage de l'exportation de Deep Research"
+  },
+  "deepResearch_totalPhases": {
+    "message": "Phases totales",
+    "description": "Étiquette du nombre total de phases de réflexion de Deep Research"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "Phase de réflexion",
+    "description": "En-tête de phase de réflexion de Deep Research"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "Sites web consultés",
+    "description": "En-tête de section des sites web recherchés de Deep Research"
   }
 }

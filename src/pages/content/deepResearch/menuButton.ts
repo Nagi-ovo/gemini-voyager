@@ -173,7 +173,7 @@ async function getLanguage(): Promise<AppLanguage> {
 /**
  * Handle download button click
  */
-function handleDownload(): void {
+async function handleDownload(): Promise<void> {
   try {
     console.log('[Gemini Voyager] Extracting Deep Research thinking content...');
 
@@ -183,7 +183,7 @@ function handleDownload(): void {
       return;
     }
 
-    const markdown = formatToMarkdown(content);
+    const markdown = await formatToMarkdown(content);
     downloadMarkdown(markdown);
   } catch (error) {
     console.error('[Gemini Voyager] Error handling download:', error);
@@ -299,7 +299,7 @@ function createDownloadButton(
     tooltip,
     className: DOWNLOAD_BUTTON_CLASS,
     iconName: 'download',
-    onClick: handleDownload,
+    onClick: () => void handleDownload(),
     menuContent,
   });
 }

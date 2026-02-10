@@ -1198,5 +1198,21 @@
   "export_error_refresh_retry": {
     "message": "فشل تصدير الصورة بسبب مشكلة في الشبكة. يُرجى تحديث الصفحة ثم إعادة المحاولة.",
     "description": "إرشاد يظهر عند فشل تحميل مؤقت أثناء تصدير الصورة"
+  },
+  "deepResearch_exportedAt": {
+    "message": "وقت التصدير",
+    "description": "تسمية الطابع الزمني للتصدير في Deep Research"
+  },
+  "deepResearch_totalPhases": {
+    "message": "إجمالي المراحل",
+    "description": "تسمية إجمالي مراحل التفكير في Deep Research"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "مرحلة التفكير",
+    "description": "عنوان مرحلة التفكير في Deep Research"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "المواقع المبحوثة",
+    "description": "عنوان قسم المواقع المبحوثة في Deep Research"
   }
 }
