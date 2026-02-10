@@ -517,6 +517,166 @@ html.dark .timeline-left-slider::before {
   contain: none;
 }
 
+/* ── Timeline Preview Panel ── */
+
+.timeline-preview-toggle {
+  position: fixed;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--timeline-bar-bg);
+  border: 1px solid var(--timeline-tooltip-border);
+  cursor: pointer;
+  padding: 0;
+  color: var(--timeline-dot-color);
+  border-radius: 6px;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    opacity 0.15s ease;
+  z-index: 2147483646;
+  opacity: 0;
+}
+.gemini-timeline-bar:hover ~ .timeline-preview-toggle,
+.timeline-preview-toggle:hover,
+.timeline-preview-toggle.active {
+  opacity: 1;
+}
+.timeline-preview-toggle:hover {
+  color: var(--timeline-dot-active-color);
+  background-color: var(--timeline-tooltip-bg);
+}
+.timeline-preview-toggle.active {
+  color: var(--timeline-dot-active-color);
+  background-color: var(--timeline-tooltip-bg);
+}
+
+.timeline-preview-panel {
+  position: fixed;
+  width: 320px;
+  background-color: var(--timeline-tooltip-bg);
+  border: 1px solid var(--timeline-tooltip-border);
+  border-radius: var(--timeline-tooltip-radius);
+  box-shadow: var(--timeline-tooltip-shadow);
+  z-index: 2147483645;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: scale(0.96) translateX(8px);
+  transition:
+    opacity var(--timeline-tooltip-anim-in),
+    transform var(--timeline-tooltip-anim-in);
+  pointer-events: none;
+  overflow: hidden;
+}
+.timeline-preview-panel.visible {
+  opacity: 1;
+  transform: scale(1) translateX(0);
+  pointer-events: auto;
+}
+
+.timeline-preview-search {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--timeline-tooltip-border);
+  flex-shrink: 0;
+}
+.timeline-preview-search input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--timeline-tooltip-border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  background: transparent;
+  color: var(--timeline-tooltip-text);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.timeline-preview-search input::placeholder {
+  color: var(--timeline-dot-color);
+  opacity: 0.7;
+}
+.timeline-preview-search input:focus {
+  border-color: var(--timeline-dot-active-color);
+}
+
+.timeline-preview-list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 0;
+  max-height: calc(100% - 42px);
+}
+
+.timeline-preview-item {
+  padding: 6px 10px 6px 6px;
+  cursor: pointer;
+  color: var(--timeline-tooltip-text);
+  font-size: 13px;
+  line-height: 1.4;
+  border-left: 3px solid transparent;
+  display: flex;
+  align-items: baseline;
+  gap: 0px;
+  transition: background-color 0.1s ease;
+}
+.timeline-preview-item:hover {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+.timeline-preview-item.active {
+  border-left-color: var(--timeline-dot-active-color);
+  background-color: rgba(59, 130, 246, 0.1);
+}
+.timeline-preview-item.starred .timeline-preview-index::after {
+  content: ' \2605';
+  color: var(--timeline-star-color);
+  font-size: 11px;
+}
+
+.timeline-preview-index {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--timeline-dot-color);
+  min-width: 14px;
+  text-align: left;
+}
+
+.timeline-preview-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeline-preview-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--timeline-dot-color);
+  font-size: 13px;
+}
+
+/* Dark theme adjustments for preview panel */
+.theme-host.dark-theme .timeline-preview-panel {
+  background-color: rgba(11, 18, 32, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.theme-host.dark-theme .timeline-preview-item:hover {
+  background-color: rgba(96, 165, 250, 0.08);
+}
+.theme-host.dark-theme .timeline-preview-item.active {
+  background-color: rgba(96, 165, 250, 0.12);
+}
+
+.theme-host.light-theme .timeline-preview-panel {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
 /* Prompt Manager styles (scoped) */
 .gv-pm-trigger {
   position: fixed;

@@ -951,6 +951,19 @@
     "message": "توسيع",
     "description": "Expand children"
   },
+
+  "timelinePreviewSearch": {
+    "message": "...بحث",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "لا توجد نتائج",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "لا توجد رسائل",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "رد باقتباس",
     "description": "Quote reply button text"

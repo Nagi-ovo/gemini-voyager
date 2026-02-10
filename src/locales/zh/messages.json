@@ -951,6 +951,19 @@
     "message": "展开",
     "description": "展开子节点"
   },
+
+  "timelinePreviewSearch": {
+    "message": "搜索...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "无结果",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "暂无消息",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "引用回复",
     "description": "引用回复按钮文本"

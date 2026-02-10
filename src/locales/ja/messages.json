@@ -951,6 +951,19 @@
     "message": "展開",
     "description": "Expand children"
   },
+
+  "timelinePreviewSearch": {
+    "message": "検索...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "結果なし",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "メッセージなし",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "引用返信",
     "description": "Quote reply button text"

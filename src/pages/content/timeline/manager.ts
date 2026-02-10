@@ -5,6 +5,7 @@ import type { ShortcutAction } from '@/core/types/keyboardShortcut';
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
+import { TimelinePreviewPanel } from './TimelinePreviewPanel';
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
 import type { DotElement, MarkerLevel } from './types';
 
@@ -141,6 +142,7 @@ export class TimelineManager {
   private shortcutUnsubscribe: (() => void) | null = null;
   private navigationQueue: Array<'previous' | 'next'> = [];
   private isNavigating: boolean = false;
+  private previewPanel: TimelinePreviewPanel | null = null;
 
   async init(): Promise<void> {
     await initI18n();
@@ -730,6 +732,23 @@ export class TimelineManager {
         this.measureCtx = this.measureCanvas.getContext('2d');
       }
     }
+
+    // Preview panel
+    if (!this.previewPanel && this.ui.timelineBar) {
+      this.previewPanel = new TimelinePreviewPanel(this.ui.timelineBar);
+      this.previewPanel.init((turnId, index) => {
+        const marker = this.markers[index];
+        if (!marker?.element) return;
+        const fromIdx = this.getActiveIndex();
+        const dur = this.computeFlowDuration(fromIdx, index);
+        if (this.scrollMode === 'flow' && fromIdx >= 0 && index >= 0 && fromIdx !== index) {
+          this.activeTurnId = null;
+          this.updateActiveDotUI();
+          this.startRunner(fromIdx, index, dur);
+        }
+        this.smoothScrollTo(marker.element, dur);
+      });
+    }
   }
 
   private updateIntersectionObserverTargets(): void {
@@ -1094,6 +1113,9 @@ export class TimelineManager {
     this.updateVirtualRangeAndRender();
     this.updateActiveDotUI();
     this.scheduleScrollSync();
+    this.previewPanel?.updateMarkers(
+      this.markers.map((m, i) => ({ id: m.id, summary: m.summary, index: i, starred: m.starred })),
+    );
   };
 
   private setupObservers(): void {
@@ -1452,6 +1474,7 @@ export class TimelineManager {
     this.markers.forEach((marker) => {
       marker.dotElement?.classList.toggle('active', marker.id === this.activeTurnId);
     });
+    this.previewPanel?.updateActiveTurn(this.activeTurnId);
   }
 
   /**
@@ -1631,6 +1654,7 @@ export class TimelineManager {
 
   private showTooltipForDot(dot: DotElement): void {
     if (!this.ui.tooltip) return;
+    if (this.previewPanel?.isOpen) return;
     if (this.tooltipHideTimer) {
       clearTimeout(this.tooltipHideTimer);
       this.tooltipHideTimer = null;
@@ -3055,6 +3079,8 @@ export class TimelineManager {
     } catch {}
     this.ui.slider = null;
     this.ui.sliderHandle = null;
+    this.previewPanel?.destroy();
+    this.previewPanel = null;
     this.ui = { timelineBar: null, tooltip: null } as any;
     this.markers = [];
     this.markerTops = [];

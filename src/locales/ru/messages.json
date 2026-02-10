@@ -951,6 +951,19 @@
     "message": "Развернуть",
     "description": "Expand children"
   },
+
+  "timelinePreviewSearch": {
+    "message": "Поиск...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "Нет результатов",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "Нет сообщений",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "Цитировать",
     "description": "Quote reply button text"

@@ -951,6 +951,19 @@
     "message": "Étendre",
     "description": "Expand children"
   },
+
+  "timelinePreviewSearch": {
+    "message": "Rechercher...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "Aucun résultat",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "Aucun message",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "Citer et répondre",
     "description": "Quote reply button text"

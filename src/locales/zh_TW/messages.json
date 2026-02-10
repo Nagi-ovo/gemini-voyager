@@ -911,6 +911,19 @@
     "message": "展開",
     "description": "展開子節點"
   },
+
+  "timelinePreviewSearch": {
+    "message": "搜尋...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "無結果",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "暫無訊息",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "引用回覆",
     "description": "引用回覆按鈕文字"

@@ -951,6 +951,19 @@
     "message": "펼치기",
     "description": "Expand children"
   },
+
+  "timelinePreviewSearch": {
+    "message": "검색...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "결과 없음",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "메시지 없음",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "인용 답장",
     "description": "Quote reply button text"
