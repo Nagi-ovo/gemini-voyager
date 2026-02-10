@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "Экспорт истории чата",
+    "message": "Экспорт истории диалога",
     "description": "Tooltip for export button"
   },
   "folder_title": {

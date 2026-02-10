@@ -14,7 +14,17 @@ import type {
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 import { resolveExportErrorMessage } from '../../../features/export/ui/ExportErrorMessage';
 import { showExportToast } from '../../../features/export/ui/ExportToast';
+import { filterOutDeepResearchImmersiveNodes, resolveConversationRoot } from './conversationDom';
+import {
+  getConversationMenuContext,
+  injectConversationMenuExportButton,
+} from './conversationMenuInjection';
 import { groupSelectedMessagesByTurn } from './selectionUtils';
+import { resolveSidebarConversationTarget } from './sidebarConversationTarget';
+import {
+  consumePendingSidebarExportIntent,
+  persistPendingSidebarExportIntent,
+} from './sidebarExportResume';
 import {
   computeConversationFingerprint,
   waitForConversationFingerprintChangeOrTimeout,
@@ -22,6 +32,8 @@ import {
 
 // Storage key to persist export state across reloads (e.g. when clicking top node triggers refresh)
 const SESSION_KEY_PENDING_EXPORT = 'gv_export_pending';
+const CONVERSATION_MENU_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
+let conversationMenuObserver: MutationObserver | null = null;
 
 interface PendingExportState {
   format: ExportFormat;
@@ -140,8 +152,8 @@ function filterTopLevel(elements: Element[]): HTMLElement[] {
   return out;
 }
 
-function getConversationRoot(): HTMLElement {
-  return (document.querySelector('main') as HTMLElement) || (document.body as HTMLElement);
+function getConversationRoot(userSelectors: string[]): HTMLElement {
+  return resolveConversationRoot({ userSelectors, doc: document });
 }
 
 function computeConversationId(): string {
@@ -287,19 +299,23 @@ type ChatTurn = {
 };
 
 function collectChatPairs(): ChatTurn[] {
-  const root = getConversationRoot();
   const userSelectors = getUserSelectors();
+  const root = getConversationRoot(userSelectors);
   const assistantSelectors = getAssistantSelectors();
-  const userNodeList = root.querySelectorAll(userSelectors.join(','));
+  const userNodeList = filterOutDeepResearchImmersiveNodes(
+    Array.from(root.querySelectorAll<HTMLElement>(userSelectors.join(','))),
+  );
   if (!userNodeList || userNodeList.length === 0) return [];
-  let users = filterTopLevel(Array.from(userNodeList));
+  let users = filterTopLevel(userNodeList);
   if (users.length === 0) return [];
 
   const firstOffset = (users[0] as HTMLElement).offsetTop || 0;
   users = dedupeByTextAndOffset(users, firstOffset);
   const userOffsets = users.map((el) => (el as HTMLElement).offsetTop || 0);
 
-  const assistantsAll = Array.from(root.querySelectorAll(assistantSelectors.join(',')));
+  const assistantsAll = filterOutDeepResearchImmersiveNodes(
+    Array.from(root.querySelectorAll<HTMLElement>(assistantSelectors.join(','))),
+  );
   const assistants = filterTopLevel(assistantsAll);
   const assistantOffsets = assistants.map((el) => (el as HTMLElement).offsetTop || 0);
 
@@ -531,6 +547,20 @@ function extractConversationIdFromUrl(): string | null {
   return null;
 }
 
+function extractConversationIdFromHref(href: string): string | null {
+  if (!href) return null;
+  try {
+    const parsed = new URL(href, window.location.origin);
+    const appMatch = parsed.pathname.match(/\/app\/([^/?#]+)/);
+    if (appMatch?.[1]) return appMatch[1];
+    const gemMatch = parsed.pathname.match(/\/gem\/[^/]+\/([^/?#]+)/);
+    if (gemMatch?.[1]) return gemMatch[1];
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function isGemLabel(text: string | null | undefined): boolean {
   const t = (text || '').trim().toLowerCase();
   return t === 'gem' || t === 'gems';
@@ -696,6 +726,97 @@ function getConversationTitleForExport(): string {
   return 'Untitled Conversation';
 }
 
+function findSidebarConversationLinkById(conversationId: string): HTMLAnchorElement | null {
+  const escapedConversationId = escapeCssAttributeValue(conversationId);
+  const byJslog = document.querySelector(
+    `[data-test-id="conversation"][jslog*="c_${escapedConversationId}"] a[href]`,
+  ) as HTMLAnchorElement | null;
+  if (byJslog) return byJslog;
+
+  const links = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>(
+      '[data-test-id="conversation"] a[href], a[data-test-id="conversation"][href]',
+    ),
+  );
+  for (const link of links) {
+    if (extractConversationIdFromHref(link.href) === conversationId) {
+      return link;
+    }
+  }
+
+  return null;
+}
+
+function triggerNativeClick(target: HTMLElement): void {
+  const opts = { bubbles: true, cancelable: true, view: window };
+  target.dispatchEvent(new MouseEvent('pointerdown', opts));
+  target.dispatchEvent(new MouseEvent('mousedown', opts));
+  target.dispatchEvent(new MouseEvent('mouseup', opts));
+  target.dispatchEvent(new MouseEvent('click', opts));
+}
+
+async function waitForConversationUrl(
+  conversationId: string,
+  timeoutMs: number = 10000,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (extractConversationIdFromUrl() === conversationId) return true;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+  }
+  return false;
+}
+
+type SidebarNavigationStatus = 'ready' | 'handoff' | 'failed';
+
+async function navigateToConversationAndWait(
+  conversationId: string,
+  fallbackUrl: string,
+): Promise<SidebarNavigationStatus> {
+  const currentConversationId = extractConversationIdFromUrl();
+  if (currentConversationId === conversationId) {
+    const existing = await waitForAnyElement(getUserSelectors(), 8000);
+    return existing ? 'ready' : 'failed';
+  }
+
+  const link = findSidebarConversationLinkById(conversationId);
+  if (link) {
+    triggerNativeClick(link);
+  } else if (fallbackUrl) {
+    persistPendingSidebarExportIntent(conversationId);
+    window.location.assign(fallbackUrl);
+    return 'handoff';
+  } else {
+    return 'failed';
+  }
+
+  const routeReady = await waitForConversationUrl(conversationId, 12000);
+  if (!routeReady) return 'failed';
+  const contentReady = await waitForAnyElement(getUserSelectors(), 15000);
+  return contentReady ? 'ready' : 'failed';
+}
+
+async function exportFromSidebarConversationTrigger(
+  trigger: HTMLElement,
+  dict: Record<AppLanguage, Record<string, string>>,
+  getCurrentLanguage: () => AppLanguage,
+): Promise<void> {
+  const target = resolveSidebarConversationTarget(trigger);
+  if (!target) {
+    alert('Unable to locate the selected conversation. Please open it first, then export.');
+    return;
+  }
+
+  const navigationStatus = await navigateToConversationAndWait(target.conversationId, target.url);
+  if (navigationStatus === 'handoff') return;
+  if (navigationStatus !== 'ready') {
+    alert('Failed to open the selected conversation for export. Please retry.');
+    return;
+  }
+
+  await showExportDialog(dict, getCurrentLanguage());
+}
+
 function normalizeLang(lang: string | undefined): AppLanguage {
   return normalizeLanguage(lang);
 }
@@ -736,11 +857,13 @@ async function getLanguage(): Promise<AppLanguage> {
 /**
  * Finds the top-most user message element in the DOM.
  */
-function getTopUserElement(): HTMLElement | null {
-  const selectors = getUserSelectors();
-  const all = document.querySelectorAll(selectors.join(','));
+function getTopUserElement(selectors: string[]): HTMLElement | null {
+  const root = getConversationRoot(selectors);
+  const all = filterOutDeepResearchImmersiveNodes(
+    Array.from(root.querySelectorAll<HTMLElement>(selectors.join(','))),
+  );
   if (!all.length) return null;
-  const topLevel = filterTopLevel(Array.from(all));
+  const topLevel = filterTopLevel(all);
   return topLevel.length > 0 ? topLevel[0] : null;
 }
 
@@ -777,12 +900,13 @@ async function executeExportSequence(
   // 1. Find Top Node
   if (state.attempt > 0) {
     console.log('[Gemini Voyager] Resuming export... waiting for content load.');
-    const selectors = getUserSelectors();
-    await waitForAnyElement(selectors, 15000);
+    const userSelectors = getUserSelectors();
+    await waitForAnyElement(userSelectors, 15000);
   }
 
   // Wait a bit if we just reloaded
-  let topNode = getTopUserElement();
+  const userSelectors = getUserSelectors();
+  let topNode = getTopUserElement(userSelectors);
   if (!topNode) {
     await waitForElement('body', 2000);
     const pairs = collectChatPairs();
@@ -1140,7 +1264,7 @@ async function performFinalExport(
   });
 
   // Observe new lazy-loaded messages while selection mode is active.
-  const root = getConversationRoot();
+  const root = getConversationRoot(getUserSelectors());
   let refreshTimer: number | null = null;
   const scheduleRefresh = () => {
     if (refreshTimer) return;
@@ -1255,6 +1379,78 @@ async function checkPendingExport() {
   }
 }
 
+function getConversationMenuPanelsFromNode(node: HTMLElement): HTMLElement[] {
+  const panels: HTMLElement[] = [];
+  if (node.matches(CONVERSATION_MENU_SELECTOR)) {
+    panels.push(node);
+  }
+  panels.push(...Array.from(node.querySelectorAll<HTMLElement>(CONVERSATION_MENU_SELECTOR)));
+  return panels;
+}
+
+function setupConversationMenuExportObserver({
+  dict,
+  getCurrentLanguage,
+  onExport,
+}: {
+  dict: Record<AppLanguage, Record<string, string>>;
+  getCurrentLanguage: () => AppLanguage;
+  onExport: (context: { menuType: 'top' | 'sidebar'; trigger: HTMLElement | null }) => void;
+}): void {
+  if (conversationMenuObserver) return;
+
+  const injectOnPanel = (menuPanel: HTMLElement) => {
+    window.setTimeout(() => {
+      if (!menuPanel.isConnected) return;
+      const menuContext = getConversationMenuContext(menuPanel);
+      if (!menuContext) return;
+
+      const currentLang = getCurrentLanguage();
+      const label =
+        dict[currentLang]?.['exportChatJson'] ??
+        dict.en?.['exportChatJson'] ??
+        'Export conversation history';
+      const tooltip =
+        dict[currentLang]?.['exportChatJson'] ??
+        dict.en?.['exportChatJson'] ??
+        'Export conversation history';
+
+      injectConversationMenuExportButton(menuPanel, {
+        label,
+        tooltip,
+        onClick: () => onExport(menuContext),
+      });
+    }, 50);
+  };
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        const panels = getConversationMenuPanelsFromNode(node);
+        panels.forEach(injectOnPanel);
+      });
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+  conversationMenuObserver = observer;
+
+  const existingPanels = document.querySelectorAll<HTMLElement>(CONVERSATION_MENU_SELECTOR);
+  existingPanels.forEach(injectOnPanel);
+
+  window.addEventListener(
+    'beforeunload',
+    () => {
+      try {
+        conversationMenuObserver?.disconnect();
+      } catch {}
+      conversationMenuObserver = null;
+    },
+    { once: true },
+  );
+}
+
 export async function startExportButton(): Promise<void> {
   // Check for pending export immediately
   checkPendingExport();
@@ -1265,6 +1461,27 @@ export async function startExportButton(): Promise<void> {
     location.hostname !== 'aistudio.google.cn'
   )
     return;
+
+  // i18n setup for tooltip and label
+  const dict = await loadDictionaries();
+  let lang = await getLanguage();
+
+  if (consumePendingSidebarExportIntent(extractConversationIdFromUrl())) {
+    void showExportDialog(dict, lang);
+  }
+
+  setupConversationMenuExportObserver({
+    dict,
+    getCurrentLanguage: () => lang,
+    onExport: (context) => {
+      if (context.menuType === 'sidebar' && context.trigger) {
+        void exportFromSidebarConversationTrigger(context.trigger, dict, () => lang);
+        return;
+      }
+      void showExportDialog(dict, lang);
+    },
+  });
+
   const logo =
     (await waitForElement('[data-test-id="logo"]', 6000)) || (await waitForElement('.logo', 2000));
   if (!logo) return;
@@ -1289,9 +1506,6 @@ export async function startExportButton(): Promise<void> {
     } catch {}
   });
 
-  // i18n setup for tooltip and label
-  const dict = await loadDictionaries();
-  let lang = await getLanguage();
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
   const title = t('exportChatJson');
   const labelText = t('pm_export');
