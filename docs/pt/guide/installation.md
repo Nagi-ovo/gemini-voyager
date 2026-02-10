@@ -1,5 +1,9 @@
 # Instalação
 
+::: info Notícias
+🍎 **A extensão nativa do Safari está a chegar!** Será totalmente gratuita e suportará a instalação com um clique. Fique atento!
+:::
+
 Escolha o seu caminho.
 
 > ⚠️ Nota: O Gestor de Prompts é a única funcionalidade que suporta Gemini para Enterprise.
