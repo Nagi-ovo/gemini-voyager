@@ -15,10 +15,11 @@ import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 import { resolveExportErrorMessage } from '../../../features/export/ui/ExportErrorMessage';
 import { showExportToast } from '../../../features/export/ui/ExportToast';
 import {
+  getConversationMenuContext,
   injectConversationMenuExportButton,
-  isConversationMenuPanel,
 } from './conversationMenuInjection';
 import { groupSelectedMessagesByTurn } from './selectionUtils';
+import { resolveSidebarConversationTarget } from './sidebarConversationTarget';
 import {
   computeConversationFingerprint,
   waitForConversationFingerprintChangeOrTimeout,
@@ -537,6 +538,20 @@ function extractConversationIdFromUrl(): string | null {
   return null;
 }
 
+function extractConversationIdFromHref(href: string): string | null {
+  if (!href) return null;
+  try {
+    const parsed = new URL(href, window.location.origin);
+    const appMatch = parsed.pathname.match(/\/app\/([^/?#]+)/);
+    if (appMatch?.[1]) return appMatch[1];
+    const gemMatch = parsed.pathname.match(/\/gem\/[^/]+\/([^/?#]+)/);
+    if (gemMatch?.[1]) return gemMatch[1];
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function isGemLabel(text: string | null | undefined): boolean {
   const t = (text || '').trim().toLowerCase();
   return t === 'gem' || t === 'gems';
@@ -700,6 +715,92 @@ function getConversationTitleForExport(): string {
   }
 
   return 'Untitled Conversation';
+}
+
+function findSidebarConversationLinkById(conversationId: string): HTMLAnchorElement | null {
+  const escapedConversationId = escapeCssAttributeValue(conversationId);
+  const byJslog = document.querySelector(
+    `[data-test-id="conversation"][jslog*="c_${escapedConversationId}"] a[href]`,
+  ) as HTMLAnchorElement | null;
+  if (byJslog) return byJslog;
+
+  const links = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>(
+      '[data-test-id="conversation"] a[href], a[data-test-id="conversation"][href]',
+    ),
+  );
+  for (const link of links) {
+    if (extractConversationIdFromHref(link.href) === conversationId) {
+      return link;
+    }
+  }
+
+  return null;
+}
+
+function triggerNativeClick(target: HTMLElement): void {
+  const opts = { bubbles: true, cancelable: true, view: window };
+  target.dispatchEvent(new MouseEvent('pointerdown', opts));
+  target.dispatchEvent(new MouseEvent('mousedown', opts));
+  target.dispatchEvent(new MouseEvent('mouseup', opts));
+  target.dispatchEvent(new MouseEvent('click', opts));
+}
+
+async function waitForConversationUrl(
+  conversationId: string,
+  timeoutMs: number = 10000,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (extractConversationIdFromUrl() === conversationId) return true;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+  }
+  return false;
+}
+
+async function navigateToConversationAndWait(
+  conversationId: string,
+  fallbackUrl: string,
+): Promise<boolean> {
+  const currentConversationId = extractConversationIdFromUrl();
+  if (currentConversationId === conversationId) {
+    const existing = await waitForAnyElement(getUserSelectors(), 8000);
+    return !!existing;
+  }
+
+  const link = findSidebarConversationLinkById(conversationId);
+  if (link) {
+    triggerNativeClick(link);
+  } else if (fallbackUrl) {
+    window.location.assign(fallbackUrl);
+  } else {
+    return false;
+  }
+
+  const routeReady = await waitForConversationUrl(conversationId, 12000);
+  if (!routeReady) return false;
+  const contentReady = await waitForAnyElement(getUserSelectors(), 15000);
+  return !!contentReady;
+}
+
+async function exportFromSidebarConversationTrigger(
+  trigger: HTMLElement,
+  dict: Record<AppLanguage, Record<string, string>>,
+  getCurrentLanguage: () => AppLanguage,
+): Promise<void> {
+  const target = resolveSidebarConversationTarget(trigger);
+  if (!target) {
+    alert('Unable to locate the selected conversation. Please open it first, then export.');
+    return;
+  }
+
+  const ready = await navigateToConversationAndWait(target.conversationId, target.url);
+  if (!ready) {
+    alert('Failed to open the selected conversation for export. Please retry.');
+    return;
+  }
+
+  await showExportDialog(dict, getCurrentLanguage());
 }
 
 function normalizeLang(lang: string | undefined): AppLanguage {
@@ -1277,14 +1378,15 @@ function setupConversationMenuExportObserver({
 }: {
   dict: Record<AppLanguage, Record<string, string>>;
   getCurrentLanguage: () => AppLanguage;
-  onExport: () => void;
+  onExport: (context: { menuType: 'top' | 'sidebar'; trigger: HTMLElement | null }) => void;
 }): void {
   if (conversationMenuObserver) return;
 
   const injectOnPanel = (menuPanel: HTMLElement) => {
     window.setTimeout(() => {
       if (!menuPanel.isConnected) return;
-      if (!isConversationMenuPanel(menuPanel)) return;
+      const menuContext = getConversationMenuContext(menuPanel);
+      if (!menuContext) return;
 
       const currentLang = getCurrentLanguage();
       const label =
@@ -1299,7 +1401,7 @@ function setupConversationMenuExportObserver({
       injectConversationMenuExportButton(menuPanel, {
         label,
         tooltip,
-        onClick: onExport,
+        onClick: () => onExport(menuContext),
       });
     }, 50);
   };
@@ -1350,7 +1452,11 @@ export async function startExportButton(): Promise<void> {
   setupConversationMenuExportObserver({
     dict,
     getCurrentLanguage: () => lang,
-    onExport: () => {
+    onExport: (context) => {
+      if (context.menuType === 'sidebar' && context.trigger) {
+        void exportFromSidebarConversationTrigger(context.trigger, dict, () => lang);
+        return;
+      }
       void showExportDialog(dict, lang);
     },
   });
