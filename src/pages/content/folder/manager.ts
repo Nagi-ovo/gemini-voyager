@@ -5025,6 +5025,12 @@ export class FolderManager {
         if (changes[StorageKeys.GV_FOLDER_TREE_INDENT]) {
           this.applyFolderTreeIndentSetting(changes[StorageKeys.GV_FOLDER_TREE_INDENT].newValue);
         }
+        if (changes[StorageKeys.GV_FOLDER_FILTER_USER_ONLY]) {
+          this.filterCurrentUserOnly = !!changes[StorageKeys.GV_FOLDER_FILTER_USER_ONLY].newValue;
+          this.debug('Filter current user setting changed:', this.filterCurrentUserOnly);
+          this.refresh();
+        }
+        }
         // Listen for language changes and update UI text
         if (changes[StorageKeys.LANGUAGE]) {
           this.debug('Language changed, updating UI text...');
