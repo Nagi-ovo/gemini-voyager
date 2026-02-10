@@ -8,10 +8,57 @@ import type { TranslationKey } from '@/utils/translations';
 import {
   applyDeepResearchDownloadButtonI18n,
   applyDeepResearchSaveReportButtonI18n,
+  isDeepResearchReportMenuPanel,
   showDeepResearchExportProgressOverlay,
 } from '../menuButton';
 
 describe('applyDeepResearchDownloadButtonI18n', () => {
+  it('identifies deep research report share/export menu panel', () => {
+    const panel = document.createElement('div');
+    panel.className = 'mat-mdc-menu-panel';
+    panel.setAttribute('role', 'menu');
+
+    const content = document.createElement('div');
+    content.className = 'mat-mdc-menu-content';
+
+    const shareContainer = document.createElement('div');
+    shareContainer.setAttribute('data-test-id', 'share-button-tooltip-container');
+    content.appendChild(shareContainer);
+
+    const exportToDocs = document.createElement('export-to-docs-button');
+    exportToDocs.setAttribute('data-test-id', 'export-to-docs-button');
+    content.appendChild(exportToDocs);
+
+    const copyButton = document.createElement('copy-button');
+    copyButton.setAttribute('data-test-id', 'copy-button');
+    content.appendChild(copyButton);
+
+    panel.appendChild(content);
+
+    expect(isDeepResearchReportMenuPanel(panel)).toBe(true);
+  });
+
+  it('rejects sidebar conversation menu panel for deep research injection', () => {
+    const panel = document.createElement('div');
+    panel.className = 'mat-mdc-menu-panel';
+    panel.setAttribute('role', 'menu');
+
+    const content = document.createElement('div');
+    content.className = 'mat-mdc-menu-content';
+
+    const pin = document.createElement('button');
+    pin.setAttribute('data-test-id', 'pin-button');
+    content.appendChild(pin);
+
+    const rename = document.createElement('button');
+    rename.setAttribute('data-test-id', 'rename-button');
+    content.appendChild(rename);
+
+    panel.appendChild(content);
+
+    expect(isDeepResearchReportMenuPanel(panel)).toBe(false);
+  });
+
   it('updates label and tooltip according to language', () => {
     const button = document.createElement('button');
     const span = document.createElement('span');

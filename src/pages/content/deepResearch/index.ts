@@ -11,6 +11,17 @@ function isDeepResearchConversation(): boolean {
   return !!document.querySelector('deep-research-immersive-panel');
 }
 
+function getMenuPanelsFromNode(node: HTMLElement): HTMLElement[] {
+  const panels: HTMLElement[] = [];
+  if (node.matches('.mat-mdc-menu-panel[role="menu"]')) {
+    panels.push(node);
+  }
+  panels.push(
+    ...Array.from(node.querySelectorAll<HTMLElement>('.mat-mdc-menu-panel[role="menu"]')),
+  );
+  return panels;
+}
+
 /**
  * Observe menu opening and inject button if needed
  */
@@ -20,19 +31,15 @@ function observeMenuOpening(): void {
     for (const mutation of mutations) {
       mutation.addedNodes.forEach((node) => {
         if (node instanceof HTMLElement) {
-          // Check if a menu panel was added
-          if (
-            node.matches('.mat-mdc-menu-panel[role="menu"]') ||
-            node.querySelector('.mat-mdc-menu-panel[role="menu"]')
-          ) {
-            // Check if we're in Deep Research conversation
-            if (isDeepResearchConversation()) {
-              // Small delay to ensure menu is fully rendered
-              setTimeout(() => {
-                injectDownloadButton();
-              }, 50);
-            }
-          }
+          const panels = getMenuPanelsFromNode(node);
+          if (panels.length === 0) return;
+          if (!isDeepResearchConversation()) return;
+          panels.forEach((panel) => {
+            // Small delay to ensure menu is fully rendered
+            setTimeout(() => {
+              void injectDownloadButton(panel);
+            }, 50);
+          });
         }
       });
     }

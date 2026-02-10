@@ -9,6 +9,13 @@ export type ConversationMenuExportOptions = {
   onClick: () => void;
 };
 
+export type ConversationMenuType = 'top' | 'sidebar';
+
+export type ConversationMenuContext = {
+  menuType: ConversationMenuType;
+  trigger: HTMLElement | null;
+};
+
 const MENU_BUTTON_CLASS = 'gv-export-conversation-menu-btn';
 const MENU_PANEL_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
 const SIDEBAR_CONTAINER_SELECTOR = '[data-test-id="overflow-container"]';
@@ -45,6 +52,14 @@ function resolveExpandedMenuTrigger(menuPanel: HTMLElement): HTMLElement | null 
 
 function isSidebarConversationTrigger(trigger: HTMLElement): boolean {
   return !!trigger.closest(SIDEBAR_CONTAINER_SELECTOR);
+}
+
+function hasDeepResearchReportMarkers(menuContent: HTMLElement): boolean {
+  return Boolean(
+    menuContent.querySelector('[data-test-id="share-button-tooltip-container"]') ||
+      menuContent.querySelector('[data-test-id="export-to-docs-button"]') ||
+      menuContent.querySelector('[data-test-id="copy-button"]'),
+  );
 }
 
 function updateButtonLabelAndTooltip(
@@ -102,18 +117,32 @@ export function isConversationMenuPanel(menuPanel: HTMLElement): boolean {
   if (!menuPanel.matches(MENU_PANEL_SELECTOR)) return false;
   if (menuPanel.classList.contains('gds-mode-switch-menu')) return false;
   if (menuPanel.querySelector('.bard-mode-list-button')) return false;
-  const trigger = resolveExpandedMenuTrigger(menuPanel);
-  if (trigger && isSidebarConversationTrigger(trigger)) return false;
 
   const menuContent = findMenuContent(menuPanel);
   if (!menuContent) return false;
+  if (hasDeepResearchReportMarkers(menuContent)) return false;
 
-  return Boolean(
-    menuContent.querySelector('[data-test-id="share-button"]') ||
-      menuContent.querySelector('[data-test-id="pin-button"]') ||
+  const hasConversationActions = Boolean(
+    menuContent.querySelector('[data-test-id="pin-button"]') ||
       menuContent.querySelector('[data-test-id="rename-button"]') ||
       menuContent.querySelector('[data-test-id="delete-button"]'),
   );
+  if (hasConversationActions) return true;
+
+  const hasShareButton = Boolean(menuContent.querySelector('[data-test-id="share-button"]'));
+  if (!hasShareButton) return false;
+
+  const trigger = resolveExpandedMenuTrigger(menuPanel);
+  return trigger?.getAttribute('data-test-id') === 'actions-menu-button';
+}
+
+export function getConversationMenuContext(menuPanel: HTMLElement): ConversationMenuContext | null {
+  if (!isConversationMenuPanel(menuPanel)) return null;
+  const trigger = resolveExpandedMenuTrigger(menuPanel);
+  return {
+    menuType: trigger && isSidebarConversationTrigger(trigger) ? 'sidebar' : 'top',
+    trigger,
+  };
 }
 
 export function injectConversationMenuExportButton(

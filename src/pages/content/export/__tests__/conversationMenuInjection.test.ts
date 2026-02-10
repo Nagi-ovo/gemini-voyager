@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  getConversationMenuContext,
   injectConversationMenuExportButton,
   isConversationMenuPanel,
 } from '../conversationMenuInjection';
@@ -62,6 +63,44 @@ function createConversationMenuPanel(useFontIcon: boolean = true): HTMLElement {
 }
 
 describe('conversationMenuInjection', () => {
+  it('does not treat deep research share/export menu as conversation menu', () => {
+    const panel = document.createElement('div');
+    panel.className = 'mat-mdc-menu-panel';
+    panel.setAttribute('role', 'menu');
+
+    const content = document.createElement('div');
+    content.className = 'mat-mdc-menu-content';
+
+    const shareContainer = document.createElement('div');
+    shareContainer.setAttribute('data-test-id', 'share-button-tooltip-container');
+    const shareButton = document.createElement('button');
+    shareButton.setAttribute('data-test-id', 'share-button');
+    shareContainer.appendChild(shareButton);
+    content.appendChild(shareContainer);
+
+    const exportToDocs = document.createElement('export-to-docs-button');
+    exportToDocs.setAttribute('data-test-id', 'export-to-docs-button');
+    content.appendChild(exportToDocs);
+
+    const copyButton = document.createElement('copy-button');
+    copyButton.setAttribute('data-test-id', 'copy-button');
+    content.appendChild(copyButton);
+
+    panel.appendChild(content);
+    document.body.appendChild(panel);
+
+    const deepResearchTrigger = document.createElement('button');
+    deepResearchTrigger.setAttribute('data-test-id', 'export-menu-button');
+    deepResearchTrigger.setAttribute('aria-haspopup', 'menu');
+    deepResearchTrigger.setAttribute('aria-expanded', 'true');
+    deepResearchTrigger.setAttribute('aria-controls', 'mat-menu-panel-dr');
+    panel.id = 'mat-menu-panel-dr';
+    document.body.appendChild(deepResearchTrigger);
+
+    expect(isConversationMenuPanel(panel)).toBe(false);
+    expect(getConversationMenuContext(panel)).toBeNull();
+  });
+
   it('identifies conversation menu panel by known conversation action test ids', () => {
     const panel = createConversationMenuPanel();
     expect(isConversationMenuPanel(panel)).toBe(true);
@@ -73,7 +112,7 @@ describe('conversationMenuInjection', () => {
     expect(isConversationMenuPanel(panel)).toBe(false);
   });
 
-  it('does not treat sidebar conversation menu as top title conversation menu', () => {
+  it('identifies sidebar conversation menu context from expanded trigger', () => {
     const sidebarContainer = document.createElement('div');
     sidebarContainer.setAttribute('data-test-id', 'overflow-container');
     const sidebarTrigger = document.createElement('button');
@@ -84,15 +123,19 @@ describe('conversationMenuInjection', () => {
     document.body.appendChild(sidebarContainer);
 
     const panel = createConversationMenuPanel();
+    panel.id = 'mat-menu-panel-32';
+    sidebarTrigger.setAttribute('aria-controls', 'mat-menu-panel-32');
 
-    expect(isConversationMenuPanel(panel)).toBe(false);
+    expect(isConversationMenuPanel(panel)).toBe(true);
+    const context = getConversationMenuContext(panel);
+    expect(context?.menuType).toBe('sidebar');
     expect(
       injectConversationMenuExportButton(panel, {
         label: 'Export',
         tooltip: 'Export chat history',
         onClick: vi.fn(),
       }),
-    ).toBeNull();
+    ).toBeTruthy();
 
     sidebarTrigger.setAttribute('aria-expanded', 'false');
     sidebarContainer.remove();
@@ -111,6 +154,8 @@ describe('conversationMenuInjection', () => {
     document.body.appendChild(topTrigger);
 
     expect(isConversationMenuPanel(panel)).toBe(true);
+    const context = getConversationMenuContext(panel);
+    expect(context?.menuType).toBe('top');
     const injected = injectConversationMenuExportButton(panel, {
       label: 'Export',
       tooltip: 'Export chat history',

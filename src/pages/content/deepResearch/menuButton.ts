@@ -423,22 +423,40 @@ function getExtensionStorage(): ExtensionStorage | null {
   return w.chrome?.storage ?? w.browser?.storage ?? null;
 }
 
+export function isDeepResearchReportMenuPanel(menuPanel: HTMLElement): boolean {
+  if (!menuPanel.matches('.mat-mdc-menu-panel[role="menu"]')) return false;
+  const menuContent = menuPanel.querySelector('.mat-mdc-menu-content');
+  if (!(menuContent instanceof HTMLElement)) return false;
+
+  const hasShareContainer = Boolean(
+    menuContent.querySelector('[data-test-id="share-button-tooltip-container"]'),
+  );
+  const hasReportExportActions = Boolean(
+    menuContent.querySelector('[data-test-id="export-to-docs-button"]') ||
+      menuContent.querySelector('[data-test-id="copy-button"]'),
+  );
+
+  return hasShareContainer && hasReportExportActions;
+}
+
 /**
  * Inject download button into menu
  */
-export async function injectDownloadButton(): Promise<void> {
+export async function injectDownloadButton(targetMenuPanel?: HTMLElement): Promise<void> {
   try {
     // Load i18n
     const dict = await loadDictionaries();
     const lang = await getLanguage();
     const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
-    // Wait for menu to appear
-    const menuPanel = await waitForElement('.mat-mdc-menu-panel[role="menu"]');
+    const menuPanel = targetMenuPanel ?? (await waitForElement('.mat-mdc-menu-panel[role="menu"]'));
     if (!menuPanel) {
       console.log('[Gemini Voyager] Menu panel not found');
       return;
     }
+    if (!(menuPanel instanceof HTMLElement)) return;
+    if (!menuPanel.isConnected) return;
+    if (!isDeepResearchReportMenuPanel(menuPanel)) return;
 
     // Find the menu content container
     const menuContent = menuPanel.querySelector('.mat-mdc-menu-content');
