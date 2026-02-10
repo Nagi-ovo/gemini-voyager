@@ -22,6 +22,10 @@ import {
 import { groupSelectedMessagesByTurn } from './selectionUtils';
 import { resolveSidebarConversationTarget } from './sidebarConversationTarget';
 import {
+  consumePendingSidebarExportIntent,
+  persistPendingSidebarExportIntent,
+} from './sidebarExportResume';
+import {
   computeConversationFingerprint,
   waitForConversationFingerprintChangeOrTimeout,
 } from './topNodePreload';
@@ -763,29 +767,33 @@ async function waitForConversationUrl(
   return false;
 }
 
+type SidebarNavigationStatus = 'ready' | 'handoff' | 'failed';
+
 async function navigateToConversationAndWait(
   conversationId: string,
   fallbackUrl: string,
-): Promise<boolean> {
+): Promise<SidebarNavigationStatus> {
   const currentConversationId = extractConversationIdFromUrl();
   if (currentConversationId === conversationId) {
     const existing = await waitForAnyElement(getUserSelectors(), 8000);
-    return !!existing;
+    return existing ? 'ready' : 'failed';
   }
 
   const link = findSidebarConversationLinkById(conversationId);
   if (link) {
     triggerNativeClick(link);
   } else if (fallbackUrl) {
+    persistPendingSidebarExportIntent(conversationId);
     window.location.assign(fallbackUrl);
+    return 'handoff';
   } else {
-    return false;
+    return 'failed';
   }
 
   const routeReady = await waitForConversationUrl(conversationId, 12000);
-  if (!routeReady) return false;
+  if (!routeReady) return 'failed';
   const contentReady = await waitForAnyElement(getUserSelectors(), 15000);
-  return !!contentReady;
+  return contentReady ? 'ready' : 'failed';
 }
 
 async function exportFromSidebarConversationTrigger(
@@ -799,8 +807,9 @@ async function exportFromSidebarConversationTrigger(
     return;
   }
 
-  const ready = await navigateToConversationAndWait(target.conversationId, target.url);
-  if (!ready) {
+  const navigationStatus = await navigateToConversationAndWait(target.conversationId, target.url);
+  if (navigationStatus === 'handoff') return;
+  if (navigationStatus !== 'ready') {
     alert('Failed to open the selected conversation for export. Please retry.');
     return;
   }
@@ -1456,6 +1465,10 @@ export async function startExportButton(): Promise<void> {
   // i18n setup for tooltip and label
   const dict = await loadDictionaries();
   let lang = await getLanguage();
+
+  if (consumePendingSidebarExportIntent(extractConversationIdFromUrl())) {
+    void showExportDialog(dict, lang);
+  }
 
   setupConversationMenuExportObserver({
     dict,
