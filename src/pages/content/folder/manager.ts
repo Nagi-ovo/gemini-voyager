@@ -9,9 +9,9 @@ import { FolderImportExportService } from '@/features/folder/services/FolderImpo
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 
-import { createMenuItemFromNativeTemplate } from '../shared/nativeMenuItemTemplate';
 import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
 import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
+import { createMoveToFolderMenuItem } from './moveToFolderMenuItem';
 import {
   type IFolderStorageAdapter,
   createFolderStorageAdapter,
@@ -3856,18 +3856,8 @@ export class FolderManager {
       return;
     }
 
-    const menuItem = createMenuItemFromNativeTemplate({
-      menuContent,
-      injectedClassName: 'gv-move-to-folder-btn',
-      iconName: 'folder_open',
-      label: this.t('conversation_move_to_folder'),
-      tooltip: this.t('conversation_move_to_folder'),
-      excludedClassNames: ['gv-export-conversation-menu-btn'],
-    });
-    if (!menuItem) {
-      this.debugWarn('injectMoveToFolderButton: failed to create menu item from native template');
-      return;
-    }
+    const moveToFolderLabel = this.t('conversation_move_to_folder');
+    const menuItem = createMoveToFolderMenuItem(menuContent, moveToFolderLabel, moveToFolderLabel);
 
     // Add click handler
     menuItem.addEventListener('click', (e) => {
