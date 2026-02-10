@@ -14,6 +14,7 @@ import type {
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 import { resolveExportErrorMessage } from '../../../features/export/ui/ExportErrorMessage';
 import { showExportToast } from '../../../features/export/ui/ExportToast';
+import { filterOutDeepResearchImmersiveNodes, resolveConversationRoot } from './conversationDom';
 import {
   getConversationMenuContext,
   injectConversationMenuExportButton,
@@ -147,8 +148,8 @@ function filterTopLevel(elements: Element[]): HTMLElement[] {
   return out;
 }
 
-function getConversationRoot(): HTMLElement {
-  return (document.querySelector('main') as HTMLElement) || (document.body as HTMLElement);
+function getConversationRoot(userSelectors: string[]): HTMLElement {
+  return resolveConversationRoot({ userSelectors, doc: document });
 }
 
 function computeConversationId(): string {
@@ -294,19 +295,23 @@ type ChatTurn = {
 };
 
 function collectChatPairs(): ChatTurn[] {
-  const root = getConversationRoot();
   const userSelectors = getUserSelectors();
+  const root = getConversationRoot(userSelectors);
   const assistantSelectors = getAssistantSelectors();
-  const userNodeList = root.querySelectorAll(userSelectors.join(','));
+  const userNodeList = filterOutDeepResearchImmersiveNodes(
+    Array.from(root.querySelectorAll<HTMLElement>(userSelectors.join(','))),
+  );
   if (!userNodeList || userNodeList.length === 0) return [];
-  let users = filterTopLevel(Array.from(userNodeList));
+  let users = filterTopLevel(userNodeList);
   if (users.length === 0) return [];
 
   const firstOffset = (users[0] as HTMLElement).offsetTop || 0;
   users = dedupeByTextAndOffset(users, firstOffset);
   const userOffsets = users.map((el) => (el as HTMLElement).offsetTop || 0);
 
-  const assistantsAll = Array.from(root.querySelectorAll(assistantSelectors.join(',')));
+  const assistantsAll = filterOutDeepResearchImmersiveNodes(
+    Array.from(root.querySelectorAll<HTMLElement>(assistantSelectors.join(','))),
+  );
   const assistants = filterTopLevel(assistantsAll);
   const assistantOffsets = assistants.map((el) => (el as HTMLElement).offsetTop || 0);
 
@@ -843,11 +848,13 @@ async function getLanguage(): Promise<AppLanguage> {
 /**
  * Finds the top-most user message element in the DOM.
  */
-function getTopUserElement(): HTMLElement | null {
-  const selectors = getUserSelectors();
-  const all = document.querySelectorAll(selectors.join(','));
+function getTopUserElement(selectors: string[]): HTMLElement | null {
+  const root = getConversationRoot(selectors);
+  const all = filterOutDeepResearchImmersiveNodes(
+    Array.from(root.querySelectorAll<HTMLElement>(selectors.join(','))),
+  );
   if (!all.length) return null;
-  const topLevel = filterTopLevel(Array.from(all));
+  const topLevel = filterTopLevel(all);
   return topLevel.length > 0 ? topLevel[0] : null;
 }
 
@@ -884,12 +891,13 @@ async function executeExportSequence(
   // 1. Find Top Node
   if (state.attempt > 0) {
     console.log('[Gemini Voyager] Resuming export... waiting for content load.');
-    const selectors = getUserSelectors();
-    await waitForAnyElement(selectors, 15000);
+    const userSelectors = getUserSelectors();
+    await waitForAnyElement(userSelectors, 15000);
   }
 
   // Wait a bit if we just reloaded
-  let topNode = getTopUserElement();
+  const userSelectors = getUserSelectors();
+  let topNode = getTopUserElement(userSelectors);
   if (!topNode) {
     await waitForElement('body', 2000);
     const pairs = collectChatPairs();
@@ -1247,7 +1255,7 @@ async function performFinalExport(
   });
 
   // Observe new lazy-loaded messages while selection mode is active.
-  const root = getConversationRoot();
+  const root = getConversationRoot(getUserSelectors());
   let refreshTimer: number | null = null;
   const scheduleRefresh = () => {
     if (refreshTimer) return;

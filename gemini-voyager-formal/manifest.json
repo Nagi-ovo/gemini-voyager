@@ -1,0 +1,222 @@
+{
+  "manifest_version": 3,
+  "default_locale": "en",
+  "name": "__MSG_extName__",
+  "description": "__MSG_extDescription__",
+  "version": "1.2.2",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8pi3aQ7jFvKKpNl4WFyahflS0NaRsq3a/HNQ9eQkphA4OwFIkir8kJRg4H4xL8KqtZvG8+N7+UfaGsnc0OqhU/hY2Fhl0TMngAGiSiKIXKzX+9Z3nhb0GiTWFBp/GyrQ7KcatrA2Lb+Okn44HzJPSo/uQA3ifjXd8CIBnJexO1PfALPqWqSUDqcO88DnM6a66xx5Kg7y82HYXkj03ipNlk48QJdWub/d+OWXpNiq7ze1z5mfBDhVhYEdckE6QWUh4aqs3arc76YLIYA2BlpLLMXi7zWlBL9ulCZMRMogki3dKYzIWEyBWHlWwYsbKpXM0Rg1CsqPi2iS9ZzSI8K2WQIDAQAB",
+  "action": {
+    "default_popup": "src/pages/popup/index.html",
+    "default_icon": {
+      "32": "icon-32.png"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "gemini-voyager@nagi-ovo",
+      "strict_min_version": "109.0"
+    }
+  },
+  "options_ui": {
+    "page": "src/pages/options/index.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "128": "icon-128.png"
+  },
+  "permissions": [
+    "storage",
+    "identity",
+    "scripting"
+  ],
+  "oauth2": {
+    "client_id": "462948120910-vvunu0k3b4vi37u23mqnh77mbgdjcg78.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/drive.file"
+    ]
+  },
+  "host_permissions": [
+    "https://gemini.google.com/*",
+    "https://business.gemini.google/*",
+    "https://aistudio.google.com/*",
+    "https://aistudio.google.cn/*",
+    "https://*.googleapis.com/*",
+    "https://accounts.google.com/*",
+    "https://*.googleusercontent.com/*",
+    "https://lh3.google.com/*",
+    "https://*.ggpht.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; worker-src 'self'"
+  },
+  "background": {
+    "service_worker": "service-worker-loader.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "assets/index.tsx-loader-DDA8WgT8.js"
+      ],
+      "matches": [
+        "https://gemini.google.com/*",
+        "https://business.gemini.google/*",
+        "https://aistudio.google.com/*",
+        "https://aistudio.google.cn/*"
+      ],
+      "css": [
+        "contentStyle.css",
+        "assets/index-Bky57a0u.css"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "resources": [
+        "contentStyle.css",
+        "icon-128.png",
+        "icon-32.png",
+        "katex-config.js",
+        "fetchInterceptor.js",
+        "assets/*.js",
+        "assets/*.png"
+      ],
+      "use_dynamic_url": false
+    },
+    {
+      "matches": [
+        "https://aistudio.google.cn/*",
+        "https://aistudio.google.com/*",
+        "https://business.gemini.google/*",
+        "https://gemini.google.com/*"
+      ],
+      "resources": [
+        "assets/bg_96-C2FFcR6-.png",
+        "assets/KaTeX_AMS-Regular-BQhdFMY1.woff2",
+        "assets/KaTeX_AMS-Regular-DMm9YOAa.woff",
+        "assets/KaTeX_AMS-Regular-DRggAlZN.ttf",
+        "assets/KaTeX_Caligraphic-Bold-Dq_IR9rO.woff2",
+        "assets/KaTeX_Caligraphic-Bold-BEiXGLvX.woff",
+        "assets/KaTeX_Caligraphic-Bold-ATXxdsX0.ttf",
+        "assets/KaTeX_Caligraphic-Regular-Di6jR-x-.woff2",
+        "assets/KaTeX_Caligraphic-Regular-CTRA-rTL.woff",
+        "assets/KaTeX_Caligraphic-Regular-wX97UBjC.ttf",
+        "assets/KaTeX_Fraktur-Bold-CL6g_b3V.woff2",
+        "assets/KaTeX_Fraktur-Bold-BsDP51OF.woff",
+        "assets/KaTeX_Fraktur-Bold-BdnERNNW.ttf",
+        "assets/KaTeX_Fraktur-Regular-CTYiF6lA.woff2",
+        "assets/KaTeX_Fraktur-Regular-Dxdc4cR9.woff",
+        "assets/KaTeX_Fraktur-Regular-CB_wures.ttf",
+        "assets/KaTeX_Main-Bold-Cx986IdX.woff2",
+        "assets/KaTeX_Main-Bold-Jm3AIy58.woff",
+        "assets/KaTeX_Main-Bold-waoOVXN0.ttf",
+        "assets/KaTeX_Main-BoldItalic-DxDJ3AOS.woff2",
+        "assets/KaTeX_Main-BoldItalic-SpSLRI95.woff",
+        "assets/KaTeX_Main-BoldItalic-DzxPMmG6.ttf",
+        "assets/KaTeX_Main-Italic-NWA7e6Wa.woff2",
+        "assets/KaTeX_Main-Italic-BMLOBm91.woff",
+        "assets/KaTeX_Main-Italic-3WenGoN9.ttf",
+        "assets/KaTeX_Main-Regular-B22Nviop.woff2",
+        "assets/KaTeX_Main-Regular-Dr94JaBh.woff",
+        "assets/KaTeX_Main-Regular-ypZvNtVU.ttf",
+        "assets/KaTeX_Math-BoldItalic-CZnvNsCZ.woff2",
+        "assets/KaTeX_Math-BoldItalic-iY-2wyZ7.woff",
+        "assets/KaTeX_Math-BoldItalic-B3XSjfu4.ttf",
+        "assets/KaTeX_Math-Italic-t53AETM-.woff2",
+        "assets/KaTeX_Math-Italic-DA0__PXp.woff",
+        "assets/KaTeX_Math-Italic-flOr_0UB.ttf",
+        "assets/KaTeX_SansSerif-Bold-D1sUS0GD.woff2",
+        "assets/KaTeX_SansSerif-Bold-DbIhKOiC.woff",
+        "assets/KaTeX_SansSerif-Bold-CFMepnvq.ttf",
+        "assets/KaTeX_SansSerif-Italic-C3H0VqGB.woff2",
+        "assets/KaTeX_SansSerif-Italic-DN2j7dab.woff",
+        "assets/KaTeX_SansSerif-Italic-YYjJ1zSn.ttf",
+        "assets/KaTeX_SansSerif-Regular-DDBCnlJ7.woff2",
+        "assets/KaTeX_SansSerif-Regular-CS6fqUqJ.woff",
+        "assets/KaTeX_SansSerif-Regular-BNo7hRIc.ttf",
+        "assets/KaTeX_Script-Regular-D3wIWfF6.woff2",
+        "assets/KaTeX_Script-Regular-D5yQViql.woff",
+        "assets/KaTeX_Script-Regular-C5JkGWo-.ttf",
+        "assets/KaTeX_Size1-Regular-mCD8mA8B.woff2",
+        "assets/KaTeX_Size1-Regular-C195tn64.woff",
+        "assets/KaTeX_Size1-Regular-Dbsnue_I.ttf",
+        "assets/KaTeX_Size2-Regular-Dy4dx90m.woff2",
+        "assets/KaTeX_Size2-Regular-oD1tc_U0.woff",
+        "assets/KaTeX_Size2-Regular-B7gKUWhC.ttf",
+        "assets/KaTeX_Size3-Regular-CTq5MqoE.woff",
+        "assets/KaTeX_Size3-Regular-DgpXs0kz.ttf",
+        "assets/KaTeX_Size4-Regular-Dl5lxZxV.woff2",
+        "assets/KaTeX_Size4-Regular-BF-4gkZK.woff",
+        "assets/KaTeX_Size4-Regular-DWFBv043.ttf",
+        "assets/KaTeX_Typewriter-Regular-CO6r4hn1.woff2",
+        "assets/KaTeX_Typewriter-Regular-C0xS9mPB.woff",
+        "assets/KaTeX_Typewriter-Regular-D3Ib7_Hf.ttf",
+        "assets/StarredMessagesService-Dd_FMgPB.js",
+        "assets/common-DScLtf9v.js",
+        "assets/i18n-CcLr9W9q.js",
+        "assets/version-BI7FQyLD.js",
+        "assets/mermaid.core-GTuBGjEb.js",
+        "assets/marked.esm-DKsjQqph.js",
+        "assets/index-Blnr25Sc.js",
+        "assets/index.tsx-BkQzImgR.js",
+        "assets/katex-qrhCpa0F.js",
+        "assets/dagre-6UL2VRFP-CHWUuQqB.js",
+        "assets/cose-bilkent-S5V4N54A-CRmvADqp.js",
+        "assets/c4Diagram-YG6GDRKO-CP4txMeG.js",
+        "assets/flowDiagram-NV44I4VS-D4kpFh_7.js",
+        "assets/erDiagram-Q2GNP2WA-DCwVQ3S7.js",
+        "assets/gitGraphDiagram-NY62KEGX-BWIFHWiI.js",
+        "assets/ganttDiagram-JELNMOA3-DR-hIIu8.js",
+        "assets/infoDiagram-WHAUD3N6-C540cABp.js",
+        "assets/pieDiagram-ADFJNKIX-RA2bjJbg.js",
+        "assets/quadrantDiagram-AYHSOK5B-CEdnA8o2.js",
+        "assets/xychartDiagram-PRI3JC2R-CyQr2GuK.js",
+        "assets/requirementDiagram-UZGBJVZJ-DApr4M9N.js",
+        "assets/sequenceDiagram-WL72ISMW-BDS_9cNI.js",
+        "assets/classDiagram-2ON5EDUG-DB_Iuidb.js",
+        "assets/classDiagram-v2-WZHVMYZB-DB_Iuidb.js",
+        "assets/stateDiagram-FKZM4ZOC-Db9su0tq.js",
+        "assets/stateDiagram-v2-4FDKWEC3-BpB_XSlz.js",
+        "assets/journeyDiagram-XKPGCS4Q-bjGXJuYr.js",
+        "assets/timeline-definition-IT6M3QCI-B7vfxToO.js",
+        "assets/mindmap-definition-VGOIOE7T-BNw8rm2L.js",
+        "assets/kanban-definition-3W4ZIXB7-DPVZxXcT.js",
+        "assets/sankeyDiagram-TZEHDZUN-Dk3y9cqZ.js",
+        "assets/diagram-S2PKOQOG-J0ccuNap.js",
+        "assets/diagram-QEK2KX5R-fO1oo1gL.js",
+        "assets/blockDiagram-VD42YOAC-CjLnUOlz.js",
+        "assets/architectureDiagram-VXUJARFQ-DQLnW6ce.js",
+        "assets/diagram-PSM6KHXK-U6wl-jRr.js",
+        "assets/graph-DW2xiFzA.js",
+        "assets/layout-D_dJywxt.js",
+        "assets/clone-sME560bZ.js",
+        "assets/min-Cvv_Lzr1.js",
+        "assets/_baseUniq-BPjJMXPn.js",
+        "assets/cytoscape.esm-DtBltrT8.js",
+        "assets/chunk-TZMSLE5B-CW7Ximzd.js",
+        "assets/chunk-FMBD7UC4-BBicODYo.js",
+        "assets/chunk-55IACEB6-DZhSXKb4.js",
+        "assets/chunk-QN33PNHL-CmfjvfDw.js",
+        "assets/channel-CwnwxRyp.js",
+        "assets/chunk-4BX2VUAB-CFvonpNr.js",
+        "assets/chunk-QZHKN3VN-CFo1HwbO.js",
+        "assets/treemap-KMMF4GRG-CabjxtNo.js",
+        "assets/linear-jm7fB0L7.js",
+        "assets/init-Gi6I4Gst.js",
+        "assets/defaultLocale-DNM2C9RQ.js",
+        "assets/arc-CzWbSlEY.js",
+        "assets/ordinal-Cboi1Yqb.js",
+        "assets/chunk-B4BG7PRW-BELjx4Vv.js",
+        "assets/chunk-DI55MBZ5-DwgnTjYK.js"
+      ],
+      "use_dynamic_url": false
+    }
+  ]
+}

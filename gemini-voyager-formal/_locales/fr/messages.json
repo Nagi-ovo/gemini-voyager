@@ -1,0 +1,1194 @@
+{
+  "extName": {
+    "message": "Gemini Voyager",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Améliorez votre expérience Gemini : chronologie, dossiers, prompts et export.",
+    "description": "Extension description"
+  },
+  "scrollMode": {
+    "message": "Mode défilement",
+    "description": "Scroll mode label"
+  },
+  "flow": {
+    "message": "Flux",
+    "description": "Flow mode"
+  },
+  "jump": {
+    "message": "Saut",
+    "description": "Jump mode"
+  },
+  "hideOuterContainer": {
+    "message": "Masquer le conteneur externe",
+    "description": "Hide outer container label"
+  },
+  "draggableTimeline": {
+    "message": "Chronologie déplaçable",
+    "description": "Draggable Timeline label"
+  },
+  "enableMarkerLevel": {
+    "message": "Activer les niveaux de nœuds",
+    "description": "Enable timeline node level feature"
+  },
+  "enableMarkerLevelHint": {
+    "message": "Clic droit sur les nœuds pour définir leur niveau et réduire les enfants",
+    "description": "Node level feature hint"
+  },
+  "experimentalLabel": {
+    "message": "Expérimental",
+    "description": "Experimental feature label"
+  },
+  "resetPosition": {
+    "message": "Réinitialiser la position",
+    "description": "Reset Position button"
+  },
+  "resetTimelinePosition": {
+    "message": "Réinitialiser la position de la chronologie",
+    "description": "Reset timeline position button in timeline options"
+  },
+  "language": {
+    "message": "Langue",
+    "description": "Language label"
+  },
+  "pm_title": {
+    "message": "Gemini Voyager",
+    "description": "Prompt Manager title"
+  },
+  "pm_add": {
+    "message": "Ajouter",
+    "description": "Add prompt button"
+  },
+  "pm_search_placeholder": {
+    "message": "Rechercher des prompts ou tags",
+    "description": "Search placeholder"
+  },
+  "pm_import": {
+    "message": "Importer",
+    "description": "Import button"
+  },
+  "pm_export": {
+    "message": "Exporter",
+    "description": "Export button"
+  },
+  "pm_prompt_placeholder": {
+    "message": "Texte du prompt",
+    "description": "Prompt textarea placeholder"
+  },
+  "pm_tags_placeholder": {
+    "message": "Tags (séparés par des virgules)",
+    "description": "Tags input placeholder"
+  },
+  "pm_save": {
+    "message": "Enregistrer",
+    "description": "Save prompt"
+  },
+  "pm_cancel": {
+    "message": "Annuler",
+    "description": "Cancel"
+  },
+  "pm_all_tags": {
+    "message": "Tous",
+    "description": "All tags chip"
+  },
+  "pm_empty": {
+    "message": "Aucun prompt pour le moment",
+    "description": "Empty state"
+  },
+  "pm_copy": {
+    "message": "Copier",
+    "description": "Copy prompt"
+  },
+  "pm_copied": {
+    "message": "Copié",
+    "description": "Copied notice"
+  },
+  "pm_delete": {
+    "message": "Supprimer",
+    "description": "Delete prompt"
+  },
+  "pm_delete_confirm": {
+    "message": "Supprimer ce prompt ?",
+    "description": "Delete confirm"
+  },
+  "pm_lock": {
+    "message": "Verrouiller la position",
+    "description": "Lock panel position"
+  },
+  "pm_unlock": {
+    "message": "Déverrouiller la position",
+    "description": "Unlock panel position"
+  },
+  "pm_import_invalid": {
+    "message": "Format de fichier invalide",
+    "description": "Import invalid"
+  },
+  "pm_import_success": {
+    "message": "{count} prompts importés",
+    "description": "Import success"
+  },
+  "pm_duplicate": {
+    "message": "Dupliquer le prompt",
+    "description": "Duplicate on add"
+  },
+  "pm_deleted": {
+    "message": "Supprimé",
+    "description": "Deleted notice"
+  },
+  "pm_edit": {
+    "message": "Éditer",
+    "description": "Edit prompt"
+  },
+  "pm_expand": {
+    "message": "Étendre",
+    "description": "Expand prompt text"
+  },
+  "pm_collapse": {
+    "message": "Réduire",
+    "description": "Collapse prompt text"
+  },
+  "pm_saved": {
+    "message": "Enregistré",
+    "description": "Saved notice"
+  },
+  "pm_settings": {
+    "message": "Paramètres",
+    "description": "Settings button"
+  },
+  "pm_settings_tooltip": {
+    "message": "Ouvrir les paramètres de l'extension",
+    "description": "Settings button tooltip"
+  },
+  "pm_settings_fallback": {
+    "message": "Veuillez cliquer sur l'icône de l'extension dans la barre d'outils pour ouvrir les paramètres",
+    "description": "Settings open failed message"
+  },
+  "pm_backup": {
+    "message": "Sauvegarde locale",
+    "description": "Local backup button"
+  },
+  "pm_backup_tooltip": {
+    "message": "Sauvegarder les prompts et dossiers dans un dossier horodaté",
+    "description": "Backup button tooltip"
+  },
+  "pm_backup_cancelled": {
+    "message": "Sauvegarde annulée",
+    "description": "Backup cancelled hint"
+  },
+  "pm_backup_error": {
+    "message": "✗ Échec de la sauvegarde",
+    "description": "Backup failed hint"
+  },
+  "pm_backup_hint_options": {
+    "message": "Cette fonctionnalité est intégrée au gestionnaire de prompts sur la page Gemini.",
+    "description": "Backup hint in options page"
+  },
+  "pm_backup_step1": {
+    "message": "Ouvrez la page Gemini (gemini.google.com)",
+    "description": "Backup step 1"
+  },
+  "pm_backup_step2": {
+    "message": "Cliquez sur l'icône de l'extension en bas à droite pour ouvrir le gestionnaire",
+    "description": "Backup step 2"
+  },
+  "pm_backup_step3": {
+    "message": "Cliquez sur le bouton \"💾 Sauvegarde locale\" et sélectionnez un dossier",
+    "description": "Backup step 3"
+  },
+  "pm_backup_note": {
+    "message": "Les sauvegardes incluent tous les prompts et dossiers (format : backup-YYYYMMDD-HHMMSS)",
+    "description": "Backup feature note"
+  },
+  "extensionVersion": {
+    "message": "Version",
+    "description": "Extension version label"
+  },
+  "newVersionAvailable": {
+    "message": "Nouvelle version disponible",
+    "description": "Update reminder title"
+  },
+  "currentVersionLabel": {
+    "message": "Actuelle",
+    "description": "Label for current version number"
+  },
+  "latestVersionLabel": {
+    "message": "Dernière",
+    "description": "Label for latest version number"
+  },
+  "updateNow": {
+    "message": "Mettre à jour",
+    "description": "CTA to update to latest version"
+  },
+  "starProject": {
+    "message": "Me soutenir ⭐",
+    "description": "Github callout"
+  },
+  "officialDocs": {
+    "message": "Documentation",
+    "description": "Official docs link"
+  },
+  "exportChatJson": {
+    "message": "Exporter l'historique",
+    "description": "Tooltip for export button"
+  },
+  "folder_title": {
+    "message": "Dossiers",
+    "description": "Folder section title"
+  },
+  "folder_create": {
+    "message": "Créer un dossier",
+    "description": "Create folder button tooltip"
+  },
+  "folder_name_prompt": {
+    "message": "Nom du dossier :",
+    "description": "Create folder name prompt"
+  },
+  "folder_rename_prompt": {
+    "message": "Nouveau nom :",
+    "description": "Rename folder prompt"
+  },
+  "folder_delete_confirm": {
+    "message": "Supprimer ce dossier et tout son contenu ?",
+    "description": "Delete folder confirmation"
+  },
+  "folder_create_subfolder": {
+    "message": "Créer un sous-dossier",
+    "description": "Create subfolder menu item"
+  },
+  "folder_rename": {
+    "message": "Renommer",
+    "description": "Rename folder menu item"
+  },
+  "folder_change_color": {
+    "message": "Changer la couleur",
+    "description": "Change folder color menu item"
+  },
+  "folder_delete": {
+    "message": "Supprimer",
+    "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "Défaut",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "Rouge",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "Orange",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "Jaune",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "Vert",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "Bleu",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "Violet",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "Rose",
+    "description": "Pink folder color name"
+  },
+  "folder_color_custom": {
+    "message": "Personnalisé",
+    "description": "Custom folder color name"
+  },
+  "folder_empty": {
+    "message": "Aucun dossier",
+    "description": "Empty state placeholder when no folders exist"
+  },
+  "folder_pin": {
+    "message": "Épingler le dossier",
+    "description": "Pin folder menu item"
+  },
+  "folder_unpin": {
+    "message": "Détacher le dossier",
+    "description": "Unpin folder menu item"
+  },
+  "folder_remove_conversation": {
+    "message": "Retirer du dossier",
+    "description": "Remove conversation button tooltip"
+  },
+  "folder_remove_conversation_confirm": {
+    "message": "Retirer \"{title}\" de ce dossier ?",
+    "description": "Remove conversation confirmation"
+  },
+  "conversation_more": {
+    "message": "Plus d'options",
+    "description": "Conversation more options button tooltip"
+  },
+  "conversation_move_to_folder": {
+    "message": "Déplacer vers un dossier",
+    "description": "Move conversation to folder menu item"
+  },
+  "conversation_move_to_folder_title": {
+    "message": "Déplacer vers un dossier",
+    "description": "Move conversation to folder dialog title"
+  },
+  "chatWidth": {
+    "message": "Largeur du chat",
+    "description": "Chat width adjustment label"
+  },
+  "chatWidthNarrow": {
+    "message": "Étroit",
+    "description": "Narrow chat width label"
+  },
+  "chatWidthWide": {
+    "message": "Large",
+    "description": "Wide chat width label"
+  },
+  "sidebarWidth": {
+    "message": "Largeur barre latérale",
+    "description": "Sidebar width adjustment label"
+  },
+  "sidebarWidthNarrow": {
+    "message": "Étroite",
+    "description": "Narrow sidebar width label"
+  },
+  "sidebarWidthWide": {
+    "message": "Large",
+    "description": "Wide sidebar width label"
+  },
+  "formula_copied": {
+    "message": "✓ Formule copiée",
+    "description": "Formula copied success message"
+  },
+  "formula_copy_failed": {
+    "message": "✗ Échec de la copie",
+    "description": "Formula copy failed message"
+  },
+  "formulaCopyFormat": {
+    "message": "Format de copie de formule",
+    "description": "Formula copy format setting label"
+  },
+  "formulaCopyFormatLatex": {
+    "message": "LaTeX",
+    "description": "LaTeX format option"
+  },
+  "formulaCopyFormatUnicodeMath": {
+    "message": "MathML (Word)",
+    "description": "Label for UnicodeMath formula copy format option"
+  },
+  "formulaCopyFormatHint": {
+    "message": "Choisissez le format lors de la copie des formules par clic",
+    "description": "Formula copy format hint"
+  },
+  "formulaCopyFormatNoDollar": {
+    "message": "LaTeX (Sans dollars)",
+    "description": "LaTeX format option without dollar signs"
+  },
+  "folder_filter_current_user": {
+    "message": "Isolation de compte",
+    "description": "Show only conversations from the current Google account"
+  },
+  "folder_export": {
+    "message": "Exporter dossiers",
+    "description": "Export folders button tooltip"
+  },
+  "folder_import_export": {
+    "message": "Importer/Exporter dossiers",
+    "description": "Combined import/export button tooltip"
+  },
+  "folder_cloud_upload": {
+    "message": "Téléverser vers le cloud",
+    "description": "Cloud upload button tooltip"
+  },
+  "folder_cloud_sync": {
+    "message": "Synchroniser depuis le cloud",
+    "description": "Cloud sync button tooltip"
+  },
+  "folder_import": {
+    "message": "Importer dossiers",
+    "description": "Import folders button tooltip"
+  },
+  "folder_import_title": {
+    "message": "Importer la configuration",
+    "description": "Import dialog title"
+  },
+  "folder_import_strategy": {
+    "message": "Stratégie :",
+    "description": "Import strategy label"
+  },
+  "folder_import_merge": {
+    "message": "Fusionner",
+    "description": "Merge import strategy"
+  },
+  "folder_import_overwrite": {
+    "message": "Écraser",
+    "description": "Overwrite import strategy"
+  },
+  "folder_import_select_file": {
+    "message": "Sélectionner un fichier JSON",
+    "description": "Import file selection prompt"
+  },
+  "folder_import_success": {
+    "message": "✓ {folders} dossiers, {conversations} discussions importés",
+    "description": "Import success message"
+  },
+  "folder_import_success_skipped": {
+    "message": "✓ {folders} dossiers, {conversations} discussions importés ({skipped} ignorés)",
+    "description": "Import success with skipped message"
+  },
+  "folder_import_error": {
+    "message": "✗ Échec : {error}",
+    "description": "Import error message"
+  },
+  "folder_export_success": {
+    "message": "✓ Dossiers exportés avec succès",
+    "description": "Export success message"
+  },
+  "folder_import_invalid_format": {
+    "message": "Format invalide. Veuillez sélectionner un fichier de configuration valide.",
+    "description": "Invalid format error"
+  },
+  "folder_import_confirm_overwrite": {
+    "message": "Ceci remplacera tous les dossiers existants. Une sauvegarde sera créée. Continuer ?",
+    "description": "Overwrite confirmation"
+  },
+  "export_dialog_title": {
+    "message": "Exporter la discussion",
+    "description": "Export dialog title"
+  },
+  "export_dialog_select": {
+    "message": "Format d'export :",
+    "description": "Export format selection label"
+  },
+  "export_dialog_warning": {
+    "message": "⚠️ Après avoir cliqué sur exporter, le système sautera automatiquement au premier message pour charger tout le contenu. Veuillez ne pas effectuer d'opérations ; l'exportation continuera automatiquement après le saut.",
+    "description": "Warning about auto-jump and loading completeness"
+  },
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Astuce Safari : cliquez sur 'Exporter' ci-dessous, attendez un instant, puis appuyez sur ⌘P et choisissez 'Enregistrer au format PDF'.",
+    "description": "Safari-specific hint for PDF export"
+  },
+  "export_toast_safari_pdf_ready": {
+    "message": "Vous pouvez maintenant appuyer sur Command + P pour exporter le PDF.",
+    "description": "Safari-specific toast shown after PDF export is prepared"
+  },
+  "export_dialog_safari_markdown_hint": {
+    "message": "Remarque : en raison des limitations de Safari, les images de l'historique du chat ne peuvent pas être extraites. Pour une exportation complète, utilisez l'export PDF.",
+    "description": "Warning about image references in Safari markdown export"
+  },
+  "export_format_json_description": {
+    "message": "Format lisible par machine pour les développeurs",
+    "description": "Description for JSON export format"
+  },
+  "export_format_markdown_description": {
+    "message": "Format texte propre et portable (recommandé)",
+    "description": "Description for Markdown export format"
+  },
+  "export_format_pdf_description": {
+    "message": "Format prêt pour l'impression via Enregistrer au format PDF",
+    "description": "Description for PDF export format"
+  },
+  "editInputWidth": {
+    "message": "Largeur de l'éditeur",
+    "description": "Edit input width adjustment label"
+  },
+  "editInputWidthNarrow": {
+    "message": "Étroit",
+    "description": "Narrow edit input width label"
+  },
+  "editInputWidthWide": {
+    "message": "Large",
+    "description": "Wide edit input width label"
+  },
+  "timelineOptions": {
+    "message": "Options de la chronologie",
+    "description": "Timeline options section label"
+  },
+  "folderOptions": {
+    "message": "Options des dossiers",
+    "description": "Folder options section label"
+  },
+  "enableFolderFeature": {
+    "message": "Activer les dossiers",
+    "description": "Enable or disable the folder feature"
+  },
+  "hideArchivedConversations": {
+    "message": "Masquer les discussions archivées",
+    "description": "Hide conversations that are in folders from the main list"
+  },
+  "conversation_star": {
+    "message": "Ajouter aux favoris",
+    "description": "Star conversation button tooltip"
+  },
+  "conversation_unstar": {
+    "message": "Retirer des favoris",
+    "description": "Unstar conversation button tooltip"
+  },
+  "conversation_untitled": {
+    "message": "Sans titre",
+    "description": "Fallback title for conversations without a name"
+  },
+  "geminiOnlyNotice": {
+    "message": "Fonctionne sur Gemini (et Enterprise) & AI Studio par défaut. Ajoutez d'autres sites ci-dessous.",
+    "description": "Notice that defaults are limited to Gemini/AI Studio"
+  },
+  "folderManager_dataLossWarning": {
+    "message": "⚠️ Attention : Échec du chargement des données. Vos dossiers peuvent être corrompus. Vérifiez la console et essayez de restaurer une sauvegarde.",
+    "description": "Warning shown when folder data fails to load"
+  },
+  "backupOptions": {
+    "message": "Sauvegarde auto",
+    "description": "Backup options section label"
+  },
+  "backupEnabled": {
+    "message": "Activer",
+    "description": "Enable auto backup toggle"
+  },
+  "backupNow": {
+    "message": "Sauvegarder",
+    "description": "Backup now button"
+  },
+  "backupSelectFolder": {
+    "message": "Choisir dossier",
+    "description": "Select backup folder button"
+  },
+  "backupFolderSelected": {
+    "message": "Dossier : {folder}",
+    "description": "Shows selected backup folder"
+  },
+  "backupIncludePrompts": {
+    "message": "Prompts",
+    "description": "Include prompts in backup toggle"
+  },
+  "backupIncludeFolders": {
+    "message": "Dossiers",
+    "description": "Include folders in backup toggle"
+  },
+  "backupIntervalLabel": {
+    "message": "Intervalle",
+    "description": "Backup interval label"
+  },
+  "backupIntervalManual": {
+    "message": "Manuel",
+    "description": "Manual backup mode"
+  },
+  "backupIntervalDaily": {
+    "message": "Quotidien",
+    "description": "Daily backup interval"
+  },
+  "backupIntervalWeekly": {
+    "message": "Hebdomadaire",
+    "description": "Weekly backup interval"
+  },
+  "backupLastBackup": {
+    "message": "Dernière : {time}",
+    "description": "Last backup timestamp"
+  },
+  "backupNever": {
+    "message": "Jamais",
+    "description": "Never backed up"
+  },
+  "backupSuccess": {
+    "message": "✓ Sauvegarde : {prompts} prompts, {folders} dossiers",
+    "description": "Backup success message"
+  },
+  "backupError": {
+    "message": "✗ Échec : {error}",
+    "description": "Backup error message"
+  },
+  "backupNotSupported": {
+    "message": "⚠️ API File System non supportée",
+    "description": "Browser not supported message"
+  },
+  "backupSelectFolderFirst": {
+    "message": "Sélectionnez un dossier d'abord",
+    "description": "No folder selected warning"
+  },
+  "backupUserCancelled": {
+    "message": "Annulé",
+    "description": "User cancelled folder selection"
+  },
+  "backupConfigSaved": {
+    "message": "✓ Paramètres enregistrés",
+    "description": "Config saved message"
+  },
+  "backupPermissionDenied": {
+    "message": "⚠️ Accès refusé. Changez d'emplacement.",
+    "description": "Permission denied for restricted directory"
+  },
+  "backupConfigureInOptions": {
+    "message": "Configurez via la page Options.",
+    "description": "Backup configure in options page explanation"
+  },
+  "openOptionsPage": {
+    "message": "Ouvrir Options",
+    "description": "Open options page button"
+  },
+  "optionsPageSubtitle": {
+    "message": "Options",
+    "description": "Options page subtitle"
+  },
+  "optionsComingSoon": {
+    "message": "Bientôt...",
+    "description": "Options page placeholder text"
+  },
+  "backupDataAccessNotice": {
+    "message": "Accès limité",
+    "description": "Backup data access limitation title"
+  },
+  "backupDataAccessHint": {
+    "message": "Sécurité : cette page ne peut accéder aux données. Utilisez la page Gemini.",
+    "description": "Backup data access limitation explanation"
+  },
+  "promptManagerOptions": {
+    "message": "Prompts",
+    "description": "Prompt Manager options section label"
+  },
+  "hidePromptManager": {
+    "message": "Masquer",
+    "description": "Hide the prompt manager floating ball"
+  },
+  "hidePromptManagerHint": {
+    "message": "Masquer le bouton flottant du gestionnaire",
+    "description": "Hint for hiding prompt manager feature"
+  },
+  "customWebsites": {
+    "message": "Sites personnalisés",
+    "description": "Custom websites for prompt manager"
+  },
+  "customWebsitesPlaceholder": {
+    "message": "URL (ex: chatgpt.com)",
+    "description": "Custom websites input placeholder"
+  },
+  "customWebsitesHint": {
+    "message": "Activer le gestionnaire sur ces sites.",
+    "description": "Custom websites hint"
+  },
+  "addWebsite": {
+    "message": "Ajouter",
+    "description": "Add website button"
+  },
+  "removeWebsite": {
+    "message": "Retirer",
+    "description": "Remove website button"
+  },
+  "invalidUrl": {
+    "message": "URL invalide",
+    "description": "Invalid URL error message"
+  },
+  "websiteAdded": {
+    "message": "Site ajouté",
+    "description": "Website added success message"
+  },
+  "websiteRemoved": {
+    "message": "Site retiré",
+    "description": "Website removed success message"
+  },
+  "permissionDenied": {
+    "message": "Accès refusé. Autorisez-le.",
+    "description": "Permission denied error message"
+  },
+  "permissionRequestFailed": {
+    "message": "Échec demande. Vérifiez les paramètres.",
+    "description": "Permission request failure message"
+  },
+  "customWebsitesNote": {
+    "message": "Note : rechargez le site après autorisation.",
+    "description": "Custom websites reload/permission note"
+  },
+  "starredHistory": {
+    "message": "Favoris",
+    "description": "Starred history title"
+  },
+  "viewStarredHistory": {
+    "message": "Voir les favoris",
+    "description": "View starred history button"
+  },
+  "noStarredMessages": {
+    "message": "Aucun favori",
+    "description": "No starred messages placeholder"
+  },
+  "removeFromStarred": {
+    "message": "Retirer",
+    "description": "Remove from starred tooltip"
+  },
+  "justNow": {
+    "message": "À l'instant",
+    "description": "Just now time label"
+  },
+  "hoursAgo": {
+    "message": "heures",
+    "description": "Hours ago label"
+  },
+  "yesterday": {
+    "message": "Hier",
+    "description": "Yesterday date label"
+  },
+  "daysAgo": {
+    "message": "jours",
+    "description": "Days ago label"
+  },
+  "loading": {
+    "message": "Chargement...",
+    "description": "Loading message"
+  },
+  "keyboardShortcuts": {
+    "message": "Raccourcis",
+    "description": "Keyboard shortcuts section title"
+  },
+  "enableShortcuts": {
+    "message": "Activer les raccourcis",
+    "description": "Enable shortcuts toggle label"
+  },
+  "previousNode": {
+    "message": "Précédent",
+    "description": "Previous timeline node shortcut label"
+  },
+  "nextNode": {
+    "message": "Suivant",
+    "description": "Next timeline node shortcut label"
+  },
+  "shortcutKey": {
+    "message": "Touche",
+    "description": "Shortcut key label"
+  },
+  "shortcutModifiers": {
+    "message": "Modif.",
+    "description": "Shortcut modifiers label"
+  },
+  "resetShortcuts": {
+    "message": "Réinitialiser",
+    "description": "Reset shortcuts button"
+  },
+  "shortcutsResetSuccess": {
+    "message": "Raccourcis réinitialisés",
+    "description": "Shortcuts reset success message"
+  },
+  "shortcutsDescription": {
+    "message": "Navigation clavier dans la chronologie",
+    "description": "Shortcuts description"
+  },
+  "modifierNone": {
+    "message": "Aucun",
+    "description": "No modifier key"
+  },
+  "modifierAlt": {
+    "message": "Alt",
+    "description": "Alt modifier key"
+  },
+  "modifierCtrl": {
+    "message": "Ctrl",
+    "description": "Ctrl modifier key"
+  },
+  "modifierShift": {
+    "message": "Maj",
+    "description": "Shift modifier key"
+  },
+  "modifierMeta": {
+    "message": "Cmd/Win",
+    "description": "Meta/Command/Windows modifier key"
+  },
+  "cloudSync": {
+    "message": "Synchro Cloud",
+    "description": "Cloud sync section title"
+  },
+  "cloudSyncDescription": {
+    "message": "Synchro dossiers & prompts sur Drive",
+    "description": "Cloud sync description"
+  },
+  "syncModeDisabled": {
+    "message": "Désactivé",
+    "description": "Sync mode disabled option"
+  },
+  "syncModeManual": {
+    "message": "Manuel",
+    "description": "Sync mode manual option"
+  },
+  "syncServerPort": {
+    "message": "Port du serveur",
+    "description": "Port number for the sync server"
+  },
+  "syncNow": {
+    "message": "Synchro",
+    "description": "Sync now button"
+  },
+  "lastSynced": {
+    "message": "Synchro : {time}",
+    "description": "Last sync timestamp"
+  },
+  "neverSynced": {
+    "message": "Jamais",
+    "description": "Never synced message"
+  },
+  "lastUploaded": {
+    "message": "Upload : {time}",
+    "description": "Last upload timestamp"
+  },
+  "neverUploaded": {
+    "message": "Jamais",
+    "description": "Never uploaded message"
+  },
+  "syncSuccess": {
+    "message": "✓ Succès",
+    "description": "Sync success message"
+  },
+  "syncError": {
+    "message": "✗ Échec : {error}",
+    "description": "Sync error message"
+  },
+  "syncInProgress": {
+    "message": "Synchro...",
+    "description": "Sync in progress message"
+  },
+  "uploadInProgress": {
+    "message": "Uploading...",
+    "description": "Upload in progress message"
+  },
+  "uploadSuccess": {
+    "message": "✓ Uploaded successfully",
+    "description": "Upload success message"
+  },
+  "downloadInProgress": {
+    "message": "Downloading...",
+    "description": "Download in progress message"
+  },
+  "downloadMergeSuccess": {
+    "message": "✓ Downloaded and merged",
+    "description": "Download and merge success message"
+  },
+  "syncUpload": {
+    "message": "Envoyer",
+    "description": "Upload button label"
+  },
+  "syncMerge": {
+    "message": "Récupérer",
+    "description": "Merge button label"
+  },
+  "syncMode": {
+    "message": "Mode",
+    "description": "Sync mode label"
+  },
+  "minutesAgo": {
+    "message": "min.",
+    "description": "Minutes ago label"
+  },
+  "syncNoData": {
+    "message": "Aucune donnée sur Drive",
+    "description": "Error message when no data is found in Drive"
+  },
+  "syncUploadFailed": {
+    "message": "Échec upload",
+    "description": "Error message when upload fails"
+  },
+  "syncDownloadFailed": {
+    "message": "Échec téléch.",
+    "description": "Error message when download fails"
+  },
+  "syncAuthFailed": {
+    "message": "Échec auth.",
+    "description": "Error message when authentication fails"
+  },
+  "signOut": {
+    "message": "Déconnexion",
+    "description": "Sign out button"
+  },
+  "signInWithGoogle": {
+    "message": "Connexion Google",
+    "description": "Sign in with Google button"
+  },
+  "nanobananaOptions": {
+    "message": "Options NanoBanana",
+    "description": "NanoBanana options section label"
+  },
+  "enableNanobananaWatermarkRemover": {
+    "message": "Retirer le filigrane NanoBanana",
+    "description": "Enable automatic watermark removal for NanoBanana images"
+  },
+  "nanobananaWatermarkRemoverHint": {
+    "message": "Retire automatiquement les filigranes visibles de Gemini sur les images",
+    "description": "Watermark remover feature hint"
+  },
+  "nanobananaDownloadTooltip": {
+    "message": "Télécharger l'image sans filigrane (NanoBanana)",
+    "description": "Download button tooltip"
+  },
+  "deepResearchDownload": {
+    "message": "Télécharger la réflexion",
+    "description": "Deep Research download button text"
+  },
+  "deepResearchDownloadTooltip": {
+    "message": "Télécharger le contenu de la réflexion en Markdown",
+    "description": "Deep Research download button tooltip"
+  },
+  "folder_uncategorized": {
+    "message": "Non classé",
+    "description": "Label for root-level conversations not in any folder"
+  },
+  "timelineLevelTitle": {
+    "message": "Niveau du nœud",
+    "description": "Title for timeline node level context menu"
+  },
+  "timelineLevel1": {
+    "message": "Niveau 1",
+    "description": "Timeline node level 1 option"
+  },
+  "timelineLevel2": {
+    "message": "Niveau 2",
+    "description": "Timeline node level 2 option"
+  },
+  "timelineLevel3": {
+    "message": "Niveau 3",
+    "description": "Timeline node level 3 option"
+  },
+  "timelineCollapse": {
+    "message": "Réduire",
+    "description": "Collapse children"
+  },
+  "timelineExpand": {
+    "message": "Étendre",
+    "description": "Expand children"
+  },
+  "quoteReply": {
+    "message": "Citer et répondre",
+    "description": "Quote reply button text"
+  },
+  "inputCollapseOptions": {
+    "message": "Options de saisie",
+    "description": "Input options section label"
+  },
+  "enableInputCollapse": {
+    "message": "Activer la réduction de l'entrée",
+    "description": "Enable input collapse toggle label"
+  },
+  "enableInputCollapseHint": {
+    "message": "Réduit la zone de saisie quand elle est vide pour gagner de l'espace",
+    "description": "Input collapse feature hint"
+  },
+  "inputCollapsePlaceholder": {
+    "message": "Message à Gemini",
+    "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Entrée pour envoyer",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "Appuyez sur Ctrl+Entrée pour envoyer, Entrée pour un saut de ligne",
+    "description": "Ctrl+Enter to send feature hint"
+  },
+  "batch_delete_confirm": {
+    "message": "Voulez-vous vraiment supprimer {count} discussion(s) ? Cette action est irréversible.",
+    "description": "Batch delete confirmation message"
+  },
+  "batch_delete_in_progress": {
+    "message": "Suppression... ({current}/{total})",
+    "description": "Batch delete progress message"
+  },
+  "batch_delete_success": {
+    "message": "✓ {count} discussion(s) supprimée(s)",
+    "description": "Batch delete success message"
+  },
+  "batch_delete_partial": {
+    "message": "Suppression terminée : {success} succès, {failed} échecs",
+    "description": "Batch delete partial success message"
+  },
+  "batch_delete_limit_reached": {
+    "message": "Maximum {max} discussions sélectionnables à la fois",
+    "description": "Batch delete limit warning"
+  },
+  "batch_delete_button": {
+    "message": "Supprimer la sélection",
+    "description": "Batch delete button tooltip in multi-select mode"
+  },
+  "batch_delete_match_patterns": {
+    "message": "delete,confirm,yes,ok,remove,supprimer,confirmer,oui,retirer,effacer",
+    "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
+  },
+  "generalOptions": {
+    "message": "Options générales",
+    "description": "General options section label"
+  },
+  "enableTabTitleUpdate": {
+    "message": "Synchroniser le titre de l'onglet",
+    "description": "Enable tab title sync toggle label"
+  },
+  "enableTabTitleUpdateHint": {
+    "message": "Met à jour automatiquement le titre de l'onglet avec celui de la discussion",
+    "description": "Tab title sync feature hint"
+  },
+  "enableMermaidRendering": {
+    "message": "Activer le rendu Mermaid",
+    "description": "Enable Mermaid diagram rendering toggle label"
+  },
+  "enableMermaidRenderingHint": {
+    "message": "Affiche automatiquement les diagrammes Mermaid dans les blocs de code",
+    "description": "Mermaid rendering feature hint"
+  },
+  "enableQuoteReply": {
+    "message": "Activer la citation",
+    "description": "Enable quote reply toggle label"
+  },
+  "enableQuoteReplyHint": {
+    "message": "Affiche un bouton flottant pour citer le texte sélectionné dans les conversations",
+    "description": "Quote reply feature hint"
+  },
+  "contextSync": {
+    "message": "Synchro du contexte",
+    "description": "Context Sync title"
+  },
+  "contextSyncDescription": {
+    "message": "Synchronisez le contexte du chat avec votre IDE local",
+    "description": "Context Sync description"
+  },
+  "syncToIDE": {
+    "message": "Synchroniser vers l'IDE",
+    "description": "Sync to IDE button"
+  },
+  "ideOnline": {
+    "message": "IDE en ligne",
+    "description": "IDE Online status"
+  },
+  "ideOffline": {
+    "message": "IDE hors ligne",
+    "description": "IDE Offline status"
+  },
+  "syncing": {
+    "message": "Synchronisation...",
+    "description": "Syncing status"
+  },
+  "checkServer": {
+    "message": "Veuillez démarrer le serveur AI Sync dans VS Code",
+    "description": "Check server hint"
+  },
+  "capturing": {
+    "message": "Capture du dialogue...",
+    "description": "Capturing status"
+  },
+  "syncedSuccess": {
+    "message": "Synchronisé avec succès !",
+    "description": "Synced success message"
+  },
+  "downloadingOriginal": {
+    "message": "Téléchargement de l'image originale",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "Téléchargement de l'image originale (fichier volumineux)",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "Avertissement fichier volumineux",
+    "description": "Warning shown for large downloads"
+  },
+  "downloadProcessing": {
+    "message": "Traitement du filigrane",
+    "description": "Status when processing watermark removal"
+  },
+  "downloadSuccess": {
+    "message": "Téléchargement...",
+    "description": "Status when download starts"
+  },
+  "downloadError": {
+    "message": "Échec",
+    "description": "Status prefix when download fails"
+  },
+  "recentsHide": {
+    "message": "Masquer les éléments récents",
+    "description": "Info-bulle pour masquer la section des éléments récents"
+  },
+  "recentsShow": {
+    "message": "Afficher les éléments récents",
+    "description": "Info-bulle pour afficher la section des éléments récents"
+  },
+  "gemsHide": {
+    "message": "Masquer les Gems",
+    "description": "Info-bulle pour masquer la section de la liste des Gems"
+  },
+  "gemsShow": {
+    "message": "Afficher les Gems",
+    "description": "Info-bulle pour afficher la section de la liste des Gems"
+  },
+  "setAsDefaultModel": {
+    "message": "Set as default model",
+    "description": "Tooltip for setting default model"
+  },
+  "cancelDefaultModel": {
+    "message": "Cancel default model",
+    "description": "Tooltip for cancelling default model"
+  },
+  "defaultModelSet": {
+    "message": "Default model set: $1",
+    "description": "Toast message when default model is set"
+  },
+  "defaultModelCleared": {
+    "message": "Default model cleared",
+    "description": "Toast message when default model is cleared"
+  },
+  "sidebarAutoHide": {
+    "message": "Masquer auto barre latérale",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "sidebarAutoHideHint": {
+    "message": "Réduit automatiquement la barre latérale quand la souris la quitte, l'étend quand elle y entre",
+    "description": "Auto-hide sidebar feature hint"
+  },
+  "folderSpacing": {
+    "message": "Espacement des dossiers",
+    "description": "Folder spacing adjustment label"
+  },
+  "folderSpacingCompact": {
+    "message": "Compact",
+    "description": "Compact folder spacing label"
+  },
+  "folderSpacingSpacious": {
+    "message": "Spacieux",
+    "description": "Spacious folder spacing label"
+  },
+  "export_select_mode_select_all": {
+    "message": "Select all",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "Selected {count}",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "Select message",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "Select messages below",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "Please select at least one message to export.",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "Image PNG unique, pratique pour le partage mobile.",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "Generating image...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "Save Report",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "Export this research report",
+    "description": "Deep Research save report tooltip"
+  },
+  "export_fontsize_label": {
+    "message": "Taille de police",
+    "description": "Label for font size slider in export dialog"
+  },
+  "export_fontsize_preview": {
+    "message": "Le vif renard brun saute par-dessus le chien paresseux.",
+    "description": "Preview text for font size slider in export dialog"
+  }
+}
