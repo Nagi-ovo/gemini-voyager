@@ -16,12 +16,20 @@ import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
 import type { TranslationKey } from '@/utils/translations';
 
+import {
+  createMenuItemFromNativeTemplate,
+  updateMenuItemTemplateLabel,
+} from '../shared/nativeMenuItemTemplate';
 import { downloadMarkdown } from './download';
 import { extractThinkingPanels } from './extractor';
 import { formatToMarkdown } from './formatter';
 import { extractDeepResearchReportTitle, findDeepResearchReportRoot } from './reportExtractor';
 
 type Dictionaries = Record<AppLanguage, Record<string, string>>;
+const DOWNLOAD_BUTTON_CLASS = 'gv-deep-research-download';
+const SAVE_REPORT_BUTTON_CLASS = 'gv-deep-research-save-report';
+const INJECTED_BUTTON_CLASSES = [DOWNLOAD_BUTTON_CLASS, SAVE_REPORT_BUTTON_CLASS];
+const TEMPLATE_EXCLUDED_CLASS_NAMES = [...INJECTED_BUTTON_CLASSES, 'share-button'];
 
 /**
  * Wait for an element to appear in the DOM
@@ -110,13 +118,7 @@ export function applyDeepResearchDownloadButtonI18n(
   const text = t('deepResearchDownload');
   const tooltip = t('deepResearchDownloadTooltip');
 
-  button.title = tooltip;
-  button.setAttribute('aria-label', tooltip);
-
-  const span = button.querySelector('.mat-mdc-menu-item-text');
-  if (span) {
-    span.textContent = ` ${text}`;
-  }
+  updateMenuItemTemplateLabel(button, text, tooltip);
 }
 
 export function applyDeepResearchSaveReportButtonI18n(
@@ -128,13 +130,7 @@ export function applyDeepResearchSaveReportButtonI18n(
   const text = t('deepResearchSaveReport');
   const tooltip = t('deepResearchSaveReportTooltip');
 
-  button.title = tooltip;
-  button.setAttribute('aria-label', tooltip);
-
-  const span = button.querySelector('.mat-mdc-menu-item-text');
-  if (span) {
-    span.textContent = ` ${text}`;
-  }
+  updateMenuItemTemplateLabel(button, text, tooltip);
 }
 
 /**
@@ -197,7 +193,7 @@ function handleDownload(): void {
 /**
  * Create menu button matching Material Design style
  */
-function createMenuButton({
+function createMenuButtonFallback({
   text,
   tooltip,
   className,
@@ -222,16 +218,16 @@ function createMenuButton({
   // Create icon
   const icon = document.createElement('mat-icon');
   icon.className =
-    'mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color';
+    'mat-icon notranslate menu-icon google-symbols mat-ligature-font mat-icon-no-color';
   icon.setAttribute('role', 'img');
   icon.setAttribute('fonticon', iconName);
   icon.setAttribute('aria-hidden', 'true');
-  icon.textContent = iconName;
+  icon.textContent = '';
 
   // Create text span
   const span = document.createElement('span');
   span.className = 'mat-mdc-menu-item-text';
-  span.textContent = ` ${text}`;
+  span.textContent = text;
 
   // Create ripple effect
   const ripple = document.createElement('div');
@@ -252,13 +248,59 @@ function createMenuButton({
   return button;
 }
 
-function createDownloadButton(text: string, tooltip: string): HTMLButtonElement {
+function createMenuButton({
+  text,
+  tooltip,
+  className,
+  iconName,
+  onClick,
+  menuContent,
+}: {
+  text: string;
+  tooltip: string;
+  className: string;
+  iconName: string;
+  onClick: () => void;
+  menuContent: HTMLElement;
+}): HTMLButtonElement {
+  const button =
+    createMenuItemFromNativeTemplate({
+      menuContent,
+      injectedClassName: className,
+      iconName,
+      label: text,
+      tooltip,
+      excludedClassNames: TEMPLATE_EXCLUDED_CLASS_NAMES,
+    }) ??
+    createMenuButtonFallback({
+      text,
+      tooltip,
+      className,
+      iconName,
+      onClick: () => {},
+    });
+
+  button.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onClick();
+  });
+
+  return button;
+}
+
+function createDownloadButton(
+  text: string,
+  tooltip: string,
+  menuContent: HTMLElement,
+): HTMLButtonElement {
   return createMenuButton({
     text,
     tooltip,
-    className: 'gv-deep-research-download',
+    className: DOWNLOAD_BUTTON_CLASS,
     iconName: 'download',
     onClick: handleDownload,
+    menuContent,
   });
 }
 
@@ -389,17 +431,19 @@ function createSaveReportButton(
   text: string,
   tooltip: string,
   dict: Dictionaries,
+  menuContent: HTMLElement,
 ): HTMLButtonElement {
   return createMenuButton({
     text,
     tooltip,
-    className: 'gv-deep-research-save-report',
+    className: SAVE_REPORT_BUTTON_CLASS,
     iconName: 'description',
     onClick: () => {
       void getLanguage().then((currentLanguage) => {
         handleSaveReport(dict, currentLanguage);
       });
     },
+    menuContent,
   });
 }
 
@@ -466,24 +510,26 @@ export async function injectDownloadButton(targetMenuPanel?: HTMLElement): Promi
     }
 
     let downloadButton = menuPanel.querySelector(
-      '.gv-deep-research-download',
+      `.${DOWNLOAD_BUTTON_CLASS}`,
     ) as HTMLButtonElement | null;
     if (!downloadButton) {
       downloadButton = createDownloadButton(
         t('deepResearchDownload'),
         t('deepResearchDownloadTooltip'),
+        menuContent as HTMLElement,
       );
       menuContent.appendChild(downloadButton);
     }
 
     let saveReportButton = menuPanel.querySelector(
-      '.gv-deep-research-save-report',
+      `.${SAVE_REPORT_BUTTON_CLASS}`,
     ) as HTMLButtonElement | null;
     if (!saveReportButton) {
       saveReportButton = createSaveReportButton(
         t('deepResearchSaveReport'),
         t('deepResearchSaveReportTooltip'),
         dict,
+        menuContent as HTMLElement,
       );
       menuContent.appendChild(saveReportButton);
     }
@@ -514,6 +560,11 @@ export async function injectDownloadButton(targetMenuPanel?: HTMLElement): Promi
       };
 
       const observer = new MutationObserver(() => {
+        if (typeof document === 'undefined') {
+          cleanup();
+          observer.disconnect();
+          return;
+        }
         const downloadDetached = !document.contains(downloadButton);
         const saveReportDetached = !document.contains(saveReportButton);
         if (downloadDetached && saveReportDetached) {

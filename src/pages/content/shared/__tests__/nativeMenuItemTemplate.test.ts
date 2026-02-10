@@ -38,6 +38,19 @@ function createMenuContent(): HTMLElement {
   return content;
 }
 
+function createWrappedMenuContent(): HTMLElement {
+  const content = document.createElement('div');
+  content.className = 'mat-mdc-menu-content';
+
+  const wrapper = document.createElement('div');
+  wrapper.setAttribute('data-test-id', 'share-button-tooltip-container');
+  wrapper.appendChild(createTemplateButton());
+  content.appendChild(wrapper);
+
+  document.body.appendChild(content);
+  return content;
+}
+
 describe('nativeMenuItemTemplate', () => {
   it('updates data-mat-icon-name to match injected icon', () => {
     const menuContent = createMenuContent();
@@ -88,5 +101,25 @@ describe('nativeMenuItemTemplate', () => {
     const textInner = button.querySelector('.mat-mdc-menu-item-text > .menu-text');
     expect(textInner).toBeTruthy();
     expect(textInner?.textContent).toBe('导出对话记录');
+  });
+
+  it('still finds nested native template when direct buttons are excluded', () => {
+    const menuContent = createWrappedMenuContent();
+    const injected = document.createElement('button');
+    injected.className = 'mat-mdc-menu-item gv-export-conversation-menu-btn';
+    menuContent.appendChild(injected);
+
+    const button = createMenuItemFromNativeTemplate({
+      menuContent,
+      injectedClassName: 'gv-export-conversation-menu-btn',
+      iconName: 'download',
+      label: 'Export conversation history',
+      tooltip: 'Export conversation history',
+      excludedClassNames: ['gv-export-conversation-menu-btn'],
+    });
+
+    expect(button).toBeTruthy();
+    expect(button?.classList.contains('gv-export-conversation-menu-btn')).toBe(true);
+    expect(button?.querySelector('mat-icon')?.className).toContain('menu-icon');
   });
 });

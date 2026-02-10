@@ -16,9 +16,15 @@ function findTemplateMenuItem(
       node instanceof HTMLButtonElement && node.classList.contains('mat-mdc-menu-item'),
   );
 
-  const candidates = directButtons.length
-    ? directButtons
-    : Array.from(menuContent.querySelectorAll<HTMLButtonElement>('button.mat-mdc-menu-item'));
+  const nestedButtons = Array.from(
+    menuContent.querySelectorAll<HTMLButtonElement>('button.mat-mdc-menu-item'),
+  );
+  const candidates: HTMLButtonElement[] = [...directButtons];
+  for (const button of nestedButtons) {
+    if (!candidates.includes(button)) {
+      candidates.push(button);
+    }
+  }
 
   return (
     candidates.find(
