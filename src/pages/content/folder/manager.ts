@@ -11,6 +11,7 @@ import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/
 
 import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
 import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
+import { createMoveToFolderMenuItem } from './moveToFolderMenuItem';
 import {
   type IFolderStorageAdapter,
   createFolderStorageAdapter,
@@ -3856,38 +3857,8 @@ export class FolderManager {
       return;
     }
 
-    // Create the menu item
-    const menuItem = document.createElement('button');
-    menuItem.className = 'mat-mdc-menu-item mat-focus-indicator gv-move-to-folder-btn';
-    menuItem.setAttribute('role', 'menuitem');
-    menuItem.setAttribute('tabindex', '0');
-    menuItem.setAttribute('aria-disabled', 'false');
-
-    // Icon
-    const icon = document.createElement('mat-icon');
-    icon.className =
-      'mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color';
-    icon.setAttribute('role', 'img');
-    icon.setAttribute('fonticon', 'folder_open');
-    icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = 'folder_open';
-
-    // Text
-    const textSpan = document.createElement('span');
-    textSpan.className = 'mat-mdc-menu-item-text';
-    const innerSpan = document.createElement('span');
-    innerSpan.className = 'gds-body-m';
-    innerSpan.textContent = this.t('conversation_move_to_folder');
-    textSpan.appendChild(innerSpan);
-
-    // Ripple effect
-    const ripple = document.createElement('div');
-    ripple.className = 'mat-ripple mat-mdc-menu-ripple';
-    ripple.setAttribute('matripple', '');
-
-    menuItem.appendChild(icon);
-    menuItem.appendChild(textSpan);
-    menuItem.appendChild(ripple);
+    const moveToFolderLabel = this.t('conversation_move_to_folder');
+    const menuItem = createMoveToFolderMenuItem(menuContent, moveToFolderLabel, moveToFolderLabel);
 
     // Add click handler
     menuItem.addEventListener('click', (e) => {

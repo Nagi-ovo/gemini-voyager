@@ -4,6 +4,7 @@ import {
   filterItemsBySelectedIds,
   findSelectionStartIdAtLine,
   groupSelectedMessagesByTurn,
+  resolveInitialSelectedMessageIds,
   selectBelowIds,
 } from '../selectionUtils';
 
@@ -112,6 +113,29 @@ describe('selectionUtils', () => {
       const turns = groupSelectedMessagesByTurn(selected);
 
       expect(turns.map((turn) => turn.turnId)).toEqual(['t2', 't1']);
+    });
+  });
+
+  describe('resolveInitialSelectedMessageIds', () => {
+    it('returns only the preferred id when it exists in all ids', () => {
+      const allIds = ['t1:u', 't1:a', 't2:u'];
+      const selected = resolveInitialSelectedMessageIds(allIds, 't1:a');
+
+      expect(Array.from(selected)).toEqual(['t1:a']);
+    });
+
+    it('returns empty set when preferred id is missing', () => {
+      const allIds = ['t1:u', 't1:a'];
+      const selected = resolveInitialSelectedMessageIds(allIds, 't9:a');
+
+      expect(selected.size).toBe(0);
+    });
+
+    it('returns empty set when preferred id is not provided', () => {
+      const allIds = ['t1:u', 't1:a'];
+      const selected = resolveInitialSelectedMessageIds(allIds, null);
+
+      expect(selected.size).toBe(0);
     });
   });
 });

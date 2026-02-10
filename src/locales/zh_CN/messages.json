@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "导出聊天记录",
+    "message": "导出对话记录",
     "description": "导出按钮提示"
   },
   "folder_title": {
