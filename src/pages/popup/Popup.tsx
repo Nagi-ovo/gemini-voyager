@@ -354,7 +354,7 @@ export default function Popup() {
       // We skip manual version checks for these users to rely on store auto-updates
       // and prevent confusing "new version" prompts when GitHub is ahead of the store.
       const manifest = chrome?.runtime?.getManifest?.();
-      if (getManifestUpdateUrl(manifest)) {
+      if (isSafari() || getManifestUpdateUrl(manifest)) {
         return;
       }
 
@@ -700,7 +700,7 @@ export default function Popup() {
       </div>
 
       <div className="space-y-4 p-5">
-        {hasUpdate && normalizedLatestVersion && normalizedCurrentVersion && (
+        {hasUpdate && normalizedLatestVersion && normalizedCurrentVersion && !isSafari() && (
           <Card className="border-amber-200 bg-amber-50 p-3 text-amber-900 shadow-sm">
             <div className="flex items-start gap-3">
               <div className="mt-1 text-amber-600">
