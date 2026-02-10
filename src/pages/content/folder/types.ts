@@ -5,6 +5,7 @@ export interface Folder {
   isExpanded: boolean;
   pinned?: boolean; // Whether folder is pinned to the top
   color?: string; // Optional folder color identifier
+  ownerId?: string; // The user ID who created this folder
   createdAt: number;
   updatedAt: number;
 }

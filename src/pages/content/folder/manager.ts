@@ -2005,6 +2005,7 @@ export class FolderManager {
         isExpanded: true,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        ownerId: this.getCurrentUserId(), // Set ownership
       };
 
       this.data.folders.push(folder);
@@ -5934,6 +5935,10 @@ export class FolderManager {
    */
   private hasVisibleContent(folderId: string): boolean {
     if (!this.filterCurrentUserOnly) return true;
+
+    // Check ownership first (handles empty folders)
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (folder?.ownerId === this.getCurrentUserId()) return true;
 
     // Check direct conversations
     const conversations = this.data.folderContents[folderId] || [];

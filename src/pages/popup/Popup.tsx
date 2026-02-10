@@ -117,6 +117,7 @@ interface SettingsUpdate {
   resetPosition?: boolean;
   folderEnabled?: boolean;
   hideArchivedConversations?: boolean;
+  filterCurrentUserOnly?: boolean;
   customWebsites?: string[];
   watermarkRemoverEnabled?: boolean;
   hidePromptManager?: boolean;
@@ -138,6 +139,7 @@ export default function Popup() {
   const [markerLevelEnabled, setMarkerLevelEnabled] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
+  const [filterCurrentUserOnly, setFilterCurrentUserOnly] = useState<boolean>(false);
   const [customWebsites, setCustomWebsites] = useState<string[]>([]);
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
   const [websiteError, setWebsiteError] = useState<string>('');
@@ -213,6 +215,8 @@ export default function Popup() {
         payload.geminiFolderEnabled = settings.folderEnabled;
       if (typeof settings.hideArchivedConversations === 'boolean')
         payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
+      if (typeof settings.filterCurrentUserOnly === 'boolean')
+        payload.gvFolderFilterUserOnly = settings.filterCurrentUserOnly;
       if (settings.resetPosition) payload.geminiTimelinePosition = null;
       if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
       if (typeof settings.watermarkRemoverEnabled === 'boolean')
@@ -452,6 +456,7 @@ export default function Popup() {
           geminiTimelineMarkerLevel: false,
           geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
+          gvFolderFilterUserOnly: false,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
           geminiWatermarkRemoverEnabled: true,
@@ -476,6 +481,7 @@ export default function Popup() {
           setMarkerLevelEnabled(!!res?.geminiTimelineMarkerLevel);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
+          setFilterCurrentUserOnly(!!res?.gvFolderFilterUserOnly);
           const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
             ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
             : [];
@@ -970,6 +976,22 @@ export default function Popup() {
                 onChange={(e) => {
                   setHideArchivedConversations(e.target.checked);
                   apply({ hideArchivedConversations: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <Label
+                htmlFor="filter-user"
+                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+              >
+                {t('folder_filter_current_user')}
+              </Label>
+              <Switch
+                id="filter-user"
+                checked={filterCurrentUserOnly}
+                onChange={(e) => {
+                  setFilterCurrentUserOnly(e.target.checked);
+                  apply({ filterCurrentUserOnly: e.target.checked });
                 }}
               />
             </div>
