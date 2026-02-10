@@ -493,6 +493,7 @@ export class ConversationExportService {
           ok: true;
           base64: string;
           contentType?: string;
+          data?: string;
         }
       | {
           ok?: false;
