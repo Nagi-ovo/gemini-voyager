@@ -5972,7 +5972,7 @@ export class FolderManager {
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          prompts = storageResult.gvPromptItems;
+          prompts = storageResult.gvPromptItems as any[];
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get prompts for upload:', err);
@@ -6054,7 +6054,7 @@ export class FolderManager {
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          localPrompts = storageResult.gvPromptItems;
+          localPrompts = storageResult.gvPromptItems as any[];
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get local prompts for merge:', err);
@@ -6065,7 +6065,9 @@ export class FolderManager {
       try {
         const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
         if (starredResult.geminiTimelineStarredMessages) {
-          localStarred = starredResult.geminiTimelineStarredMessages;
+          localStarred = starredResult.geminiTimelineStarredMessages as {
+            messages: Record<string, any[]>;
+          };
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get local starred messages for merge:', err);
