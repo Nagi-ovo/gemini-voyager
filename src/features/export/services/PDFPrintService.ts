@@ -669,6 +669,26 @@ export class PDFPrintService {
           background: #fff !important;
         }
 
+        /* Gemini immersive-mode print CSS may force descendants to display:none */
+        body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} * {
+          display: revert !important;
+        }
+
+        /* Keep key layouts after the global descendant display override above */
+        body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} .gv-print-cover-page {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+
+        body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} .gv-print-turn-header {
+          display: flex !important;
+        }
+
+        body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} .gv-print-turn-text img {
+          display: block !important;
+        }
+
         /* Reset page styles */
         @page {
           margin: 2cm;
