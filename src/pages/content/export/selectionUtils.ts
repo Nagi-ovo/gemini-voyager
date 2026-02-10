@@ -98,3 +98,12 @@ export function findSelectionStartIdAtLine(
 
   return null;
 }
+
+export function resolveInitialSelectedMessageIds(
+  allMessageIds: readonly string[],
+  preferredMessageId: string | null | undefined,
+): Set<string> {
+  if (!preferredMessageId) return new Set<string>();
+  if (!allMessageIds.includes(preferredMessageId)) return new Set<string>();
+  return new Set<string>([preferredMessageId]);
+}

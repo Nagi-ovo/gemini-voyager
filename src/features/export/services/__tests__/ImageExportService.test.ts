@@ -80,6 +80,17 @@ describe('ImageExportService', () => {
     expect((anchors[0] as HTMLAnchorElement).download).toBe('chat.png');
   });
 
+  it('renders conversation to blob without downloading', async () => {
+    const blob = new Blob(['blob'], { type: 'image/png' });
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(blob);
+
+    const result = await ImageExportService.renderConversationBlob(mockTurns, mockMetadata, {});
+
+    expect(result).toBe(blob);
+    expect(toBlob).toHaveBeenCalled();
+    expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+  });
+
   it('retries transient image render failures on Chrome and succeeds', async () => {
     (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
     (toBlob as unknown as ReturnType<typeof vi.fn>)

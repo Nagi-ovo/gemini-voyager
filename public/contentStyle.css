@@ -4672,7 +4672,7 @@ body[data-color-scheme='dark'] .gv-export-fontsize-preview {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  top: calc(env(safe-area-inset-top, 0px) + 76px);
+  top: 12px;
   z-index: 2147483645;
   pointer-events: none;
 }
@@ -4806,7 +4806,7 @@ body[data-color-scheme='dark'] .gv-export-progress-desc {
   }
 
   .gv-export-progress-overlay {
-    top: calc(env(safe-area-inset-top, 0px) + 68px);
+    top: 10px;
   }
 
   .gv-export-progress-card {
