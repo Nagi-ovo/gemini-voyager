@@ -73,6 +73,56 @@ describe('conversationMenuInjection', () => {
     expect(isConversationMenuPanel(panel)).toBe(false);
   });
 
+  it('does not treat sidebar conversation menu as top title conversation menu', () => {
+    const sidebarContainer = document.createElement('div');
+    sidebarContainer.setAttribute('data-test-id', 'overflow-container');
+    const sidebarTrigger = document.createElement('button');
+    sidebarTrigger.setAttribute('data-test-id', 'actions-menu-button');
+    sidebarTrigger.setAttribute('aria-haspopup', 'menu');
+    sidebarTrigger.setAttribute('aria-expanded', 'true');
+    sidebarContainer.appendChild(sidebarTrigger);
+    document.body.appendChild(sidebarContainer);
+
+    const panel = createConversationMenuPanel();
+
+    expect(isConversationMenuPanel(panel)).toBe(false);
+    expect(
+      injectConversationMenuExportButton(panel, {
+        label: 'Export',
+        tooltip: 'Export chat history',
+        onClick: vi.fn(),
+      }),
+    ).toBeNull();
+
+    sidebarTrigger.setAttribute('aria-expanded', 'false');
+    sidebarContainer.remove();
+    panel.remove();
+  });
+
+  it('still treats top title conversation menu as conversation menu with same trigger test id', () => {
+    const panel = createConversationMenuPanel();
+    panel.id = 'mat-menu-panel-25';
+
+    const topTrigger = document.createElement('button');
+    topTrigger.setAttribute('data-test-id', 'actions-menu-button');
+    topTrigger.setAttribute('aria-haspopup', 'menu');
+    topTrigger.setAttribute('aria-expanded', 'true');
+    topTrigger.setAttribute('aria-controls', 'mat-menu-panel-25');
+    document.body.appendChild(topTrigger);
+
+    expect(isConversationMenuPanel(panel)).toBe(true);
+    const injected = injectConversationMenuExportButton(panel, {
+      label: 'Export',
+      tooltip: 'Export chat history',
+      onClick: vi.fn(),
+    });
+    expect(injected).toBeTruthy();
+
+    topTrigger.setAttribute('aria-expanded', 'false');
+    topTrigger.remove();
+    panel.remove();
+  });
+
   it('injects export button after pin button and avoids duplicate injection', () => {
     const panel = createConversationMenuPanel();
     const onClick = vi.fn();

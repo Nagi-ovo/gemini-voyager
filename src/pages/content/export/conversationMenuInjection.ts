@@ -11,9 +11,40 @@ export type ConversationMenuExportOptions = {
 
 const MENU_BUTTON_CLASS = 'gv-export-conversation-menu-btn';
 const MENU_PANEL_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
+const SIDEBAR_CONTAINER_SELECTOR = '[data-test-id="overflow-container"]';
+const EXPANDED_MENU_TRIGGER_SELECTOR = '[aria-haspopup="menu"][aria-expanded="true"]';
 
 function findMenuContent(menuPanel: HTMLElement): HTMLElement | null {
   return menuPanel.querySelector('.mat-mdc-menu-content') as HTMLElement | null;
+}
+
+function parseControlledIds(trigger: HTMLElement): string[] {
+  const raw = `${trigger.getAttribute('aria-controls') || ''} ${
+    trigger.getAttribute('aria-owns') || ''
+  }`;
+  return raw
+    .split(/\s+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+function resolveExpandedMenuTrigger(menuPanel: HTMLElement): HTMLElement | null {
+  const triggers = Array.from(
+    document.querySelectorAll<HTMLElement>(EXPANDED_MENU_TRIGGER_SELECTOR),
+  );
+  if (triggers.length === 0) return null;
+
+  const panelId = menuPanel.id;
+  if (panelId) {
+    const matched = triggers.find((trigger) => parseControlledIds(trigger).includes(panelId));
+    if (matched) return matched;
+  }
+
+  return triggers[triggers.length - 1] || null;
+}
+
+function isSidebarConversationTrigger(trigger: HTMLElement): boolean {
+  return !!trigger.closest(SIDEBAR_CONTAINER_SELECTOR);
 }
 
 function updateButtonLabelAndTooltip(
@@ -71,6 +102,8 @@ export function isConversationMenuPanel(menuPanel: HTMLElement): boolean {
   if (!menuPanel.matches(MENU_PANEL_SELECTOR)) return false;
   if (menuPanel.classList.contains('gds-mode-switch-menu')) return false;
   if (menuPanel.querySelector('.bard-mode-list-button')) return false;
+  const trigger = resolveExpandedMenuTrigger(menuPanel);
+  if (trigger && isSidebarConversationTrigger(trigger)) return false;
 
   const menuContent = findMenuContent(menuPanel);
   if (!menuContent) return false;
