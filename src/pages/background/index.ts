@@ -500,6 +500,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               ok: true,
               contentType: result.contentType,
               base64: result.base64,
+              data: `data:${result.contentType};base64,${result.base64}`,
             });
           } else {
             sendResponse({ ok: false, error: 'page_fetch_failed' });
@@ -536,7 +537,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const b64 = arrayBufferToBase64(ab);
             const contentType = blob.type || 'image/png';
             const dataUrl = `data:${contentType};base64,${b64}`;
-            sendResponse({ ok: true, data: dataUrl });
+            sendResponse({
+              ok: true,
+              data: dataUrl,
+              contentType,
+              base64: b64,
+            });
           });
         })
         .catch((err) => {
