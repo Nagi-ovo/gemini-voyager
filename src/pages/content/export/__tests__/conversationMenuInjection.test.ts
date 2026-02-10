@@ -2,8 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   getConversationMenuContext,
+  getResponseMenuContext,
   injectConversationMenuExportButton,
+  injectResponseMenuExportButton,
   isConversationMenuPanel,
+  isResponseMenuPanel,
 } from '../conversationMenuInjection';
 
 function createNativeMenuButton(
@@ -57,6 +60,46 @@ function createConversationMenuPanel(useFontIcon: boolean = true): HTMLElement {
 
   content.appendChild(pin);
   content.appendChild(rename);
+  panel.appendChild(content);
+  document.body.appendChild(panel);
+  return panel;
+}
+
+function createResponseMenuPanel(useFontIcon: boolean = true): HTMLElement {
+  const panel = document.createElement('div');
+  panel.className = 'mat-mdc-menu-panel';
+  panel.setAttribute('role', 'menu');
+
+  const content = document.createElement('div');
+  content.className = 'mat-mdc-menu-content';
+
+  const exportToDocs = createNativeMenuButton(
+    'export-to-docs-button',
+    'Export to Docs',
+    'docs',
+    useFontIcon,
+  );
+  exportToDocs.removeAttribute('data-test-id');
+
+  const draftInGmail = createNativeMenuButton(
+    'draft-in-gmail-button',
+    'Draft in Gmail',
+    'gmail',
+    useFontIcon,
+  );
+  draftInGmail.removeAttribute('data-test-id');
+
+  const reportLegalIssue = createNativeMenuButton(
+    'report-legal-issue-button',
+    'Report legal issue',
+    'flag',
+    useFontIcon,
+  );
+  reportLegalIssue.removeAttribute('data-test-id');
+
+  content.appendChild(exportToDocs);
+  content.appendChild(draftInGmail);
+  content.appendChild(reportLegalIssue);
   panel.appendChild(content);
   document.body.appendChild(panel);
   return panel;
@@ -281,5 +324,79 @@ describe('conversationMenuInjection', () => {
     expect(overlayPane.style.left).toBe('12px');
     expect(overlayPane.style.right).toBe('8px');
     expect(panel.style.transformOrigin).toBe('');
+  });
+
+  it('identifies assistant response menu panel from expanded more-menu trigger', () => {
+    const panel = createResponseMenuPanel();
+    panel.id = 'mat-menu-panel-77';
+
+    const responseMoreTrigger = document.createElement('button');
+    responseMoreTrigger.setAttribute('data-test-id', 'more-menu-button');
+    responseMoreTrigger.setAttribute('aria-haspopup', 'menu');
+    responseMoreTrigger.setAttribute('aria-expanded', 'true');
+    responseMoreTrigger.setAttribute('aria-controls', 'mat-menu-panel-77');
+    document.body.appendChild(responseMoreTrigger);
+
+    expect(isResponseMenuPanel(panel)).toBe(true);
+    const context = getResponseMenuContext(panel);
+    expect(context?.trigger).toBe(responseMoreTrigger);
+  });
+
+  it('does not treat conversation menu as assistant response menu', () => {
+    const panel = createConversationMenuPanel();
+    panel.id = 'mat-menu-panel-78';
+
+    const conversationTrigger = document.createElement('button');
+    conversationTrigger.setAttribute('data-test-id', 'actions-menu-button');
+    conversationTrigger.setAttribute('aria-haspopup', 'menu');
+    conversationTrigger.setAttribute('aria-expanded', 'true');
+    conversationTrigger.setAttribute('aria-controls', 'mat-menu-panel-78');
+    document.body.appendChild(conversationTrigger);
+
+    expect(isResponseMenuPanel(panel)).toBe(false);
+    expect(getResponseMenuContext(panel)).toBeNull();
+  });
+
+  it('injects assistant-response export button after Export to Docs and avoids duplicate injection', () => {
+    const panel = createResponseMenuPanel();
+    panel.id = 'mat-menu-panel-79';
+    const onClick = vi.fn();
+
+    const responseMoreTrigger = document.createElement('button');
+    responseMoreTrigger.setAttribute('data-test-id', 'more-menu-button');
+    responseMoreTrigger.setAttribute('aria-haspopup', 'menu');
+    responseMoreTrigger.setAttribute('aria-expanded', 'true');
+    responseMoreTrigger.setAttribute('aria-controls', 'mat-menu-panel-79');
+    document.body.appendChild(responseMoreTrigger);
+
+    const first = injectResponseMenuExportButton(panel, {
+      label: '导出对话记录',
+      tooltip: '导出对话记录',
+      onClick,
+    });
+    const second = injectResponseMenuExportButton(panel, {
+      label: '导出对话记录',
+      tooltip: '导出对话记录',
+      onClick,
+    });
+
+    expect(first).toBeTruthy();
+    expect(second).toBe(first);
+
+    const content = panel.querySelector('.mat-mdc-menu-content') as HTMLElement;
+    const items = Array.from(content.children);
+    const exportToDocs = Array.from(content.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.querySelector('mat-icon')?.getAttribute('fonticon') === 'docs',
+    );
+    expect(exportToDocs).toBeTruthy();
+    expect(items[items.indexOf(exportToDocs as Element) + 1]).toBe(first);
+  });
+
+  it('identifies assistant response menu by native action icons even when trigger linkage is missing', () => {
+    document
+      .querySelectorAll('[aria-haspopup="menu"][aria-expanded="true"]')
+      .forEach((node) => node.remove());
+    const panel = createResponseMenuPanel();
+    expect(isResponseMenuPanel(panel)).toBe(true);
   });
 });

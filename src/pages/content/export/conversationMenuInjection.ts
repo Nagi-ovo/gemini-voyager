@@ -16,10 +16,16 @@ export type ConversationMenuContext = {
   trigger: HTMLElement | null;
 };
 
+export type ResponseMenuContext = {
+  trigger: HTMLElement | null;
+};
+
 const MENU_BUTTON_CLASS = 'gv-export-conversation-menu-btn';
+const RESPONSE_MENU_BUTTON_CLASS = 'gv-export-response-menu-btn';
 const MENU_PANEL_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
 const SIDEBAR_CONTAINER_SELECTOR = '[data-test-id="overflow-container"]';
 const EXPANDED_MENU_TRIGGER_SELECTOR = '[aria-haspopup="menu"][aria-expanded="true"]';
+const RESPONSE_MORE_MENU_TRIGGER_TEST_ID = 'more-menu-button';
 
 function findMenuContent(menuPanel: HTMLElement): HTMLElement | null {
   return menuPanel.querySelector('.mat-mdc-menu-content') as HTMLElement | null;
@@ -70,6 +76,24 @@ function updateButtonLabelAndTooltip(
   updateMenuItemTemplateLabel(button, label, tooltip);
 }
 
+function findMenuButtonByIcon(
+  menuContent: HTMLElement,
+  iconName: string,
+): HTMLButtonElement | null {
+  const buttons = Array.from(
+    menuContent.querySelectorAll<HTMLButtonElement>('button.mat-mdc-menu-item'),
+  );
+  return (
+    buttons.find((button) => {
+      const icon = button.querySelector('mat-icon');
+      if (!icon) return false;
+      const fontIcon = icon.getAttribute('fonticon') || icon.getAttribute('data-mat-icon-name');
+      if (fontIcon === iconName) return true;
+      return icon.textContent?.trim() === iconName;
+    }) ?? null
+  );
+}
+
 function closeMenuOverlay(menuPanel: HTMLElement): void {
   const backdrops = document.querySelectorAll<HTMLElement>('.cdk-overlay-backdrop');
   const backdrop = backdrops.length > 0 ? backdrops[backdrops.length - 1] : null;
@@ -89,17 +113,23 @@ function createMenuItemButton({
   onClick,
   menuContent,
   menuPanel,
+  injectedClassName,
+  iconName,
+  excludedClassNames = [],
 }: ConversationMenuExportOptions & {
   menuContent: HTMLElement;
   menuPanel: HTMLElement;
+  injectedClassName: string;
+  iconName: string;
+  excludedClassNames?: string[];
 }): HTMLButtonElement | null {
   const button = createMenuItemFromNativeTemplate({
     menuContent,
-    injectedClassName: MENU_BUTTON_CLASS,
-    iconName: 'download',
+    injectedClassName,
+    iconName,
     label,
     tooltip,
-    excludedClassNames: ['gv-move-to-folder-btn'],
+    excludedClassNames,
   });
   if (!button) return null;
 
@@ -145,6 +175,33 @@ export function getConversationMenuContext(menuPanel: HTMLElement): Conversation
   };
 }
 
+function isResponseMenuTrigger(trigger: HTMLElement | null): boolean {
+  return trigger?.getAttribute('data-test-id') === RESPONSE_MORE_MENU_TRIGGER_TEST_ID;
+}
+
+export function isResponseMenuPanel(menuPanel: HTMLElement): boolean {
+  if (!menuPanel.matches(MENU_PANEL_SELECTOR)) return false;
+  if (menuPanel.classList.contains('gds-mode-switch-menu')) return false;
+
+  const menuContent = findMenuContent(menuPanel);
+  if (!menuContent) return false;
+  if (hasDeepResearchReportMarkers(menuContent)) return false;
+
+  const trigger = resolveExpandedMenuTrigger(menuPanel);
+  if (isResponseMenuTrigger(trigger)) return true;
+
+  // Fallback for cases where panel/trigger linkage is not exposed during async menu rendering.
+  const hasDocsAction = !!findMenuButtonByIcon(menuContent, 'docs');
+  const hasGmailAction = !!findMenuButtonByIcon(menuContent, 'gmail');
+  const hasLegalReportAction = !!findMenuButtonByIcon(menuContent, 'flag');
+  return hasDocsAction && (hasGmailAction || hasLegalReportAction);
+}
+
+export function getResponseMenuContext(menuPanel: HTMLElement): ResponseMenuContext | null {
+  if (!isResponseMenuPanel(menuPanel)) return null;
+  return { trigger: resolveExpandedMenuTrigger(menuPanel) };
+}
+
 export function injectConversationMenuExportButton(
   menuPanel: HTMLElement,
   options: ConversationMenuExportOptions,
@@ -159,12 +216,61 @@ export function injectConversationMenuExportButton(
     return existing;
   }
 
-  const button = createMenuItemButton({ ...options, menuContent, menuPanel });
+  const button = createMenuItemButton({
+    ...options,
+    menuContent,
+    menuPanel,
+    injectedClassName: MENU_BUTTON_CLASS,
+    iconName: 'download',
+    excludedClassNames: ['gv-move-to-folder-btn', RESPONSE_MENU_BUTTON_CLASS],
+  });
   if (!button) return null;
   const pinButton = menuContent.querySelector('[data-test-id="pin-button"]');
   if (pinButton && pinButton.parentElement === menuContent) {
     if (pinButton.nextSibling) {
       menuContent.insertBefore(button, pinButton.nextSibling);
+    } else {
+      menuContent.appendChild(button);
+    }
+  } else if (menuContent.firstChild) {
+    menuContent.insertBefore(button, menuContent.firstChild);
+  } else {
+    menuContent.appendChild(button);
+  }
+
+  return button;
+}
+
+export function injectResponseMenuExportButton(
+  menuPanel: HTMLElement,
+  options: ConversationMenuExportOptions,
+): HTMLButtonElement | null {
+  if (!isResponseMenuPanel(menuPanel)) return null;
+  const menuContent = findMenuContent(menuPanel);
+  if (!menuContent) return null;
+
+  const existing = menuContent.querySelector(
+    `.${RESPONSE_MENU_BUTTON_CLASS}`,
+  ) as HTMLButtonElement | null;
+  if (existing) {
+    updateButtonLabelAndTooltip(existing, options.label, options.tooltip);
+    return existing;
+  }
+
+  const button = createMenuItemButton({
+    ...options,
+    menuContent,
+    menuPanel,
+    injectedClassName: RESPONSE_MENU_BUTTON_CLASS,
+    iconName: 'download',
+    excludedClassNames: [MENU_BUTTON_CLASS, 'gv-move-to-folder-btn'],
+  });
+  if (!button) return null;
+
+  const exportToDocsButton = findMenuButtonByIcon(menuContent, 'docs');
+  if (exportToDocsButton && exportToDocsButton.parentElement === menuContent) {
+    if (exportToDocsButton.nextSibling) {
+      menuContent.insertBefore(button, exportToDocsButton.nextSibling);
     } else {
       menuContent.appendChild(button);
     }

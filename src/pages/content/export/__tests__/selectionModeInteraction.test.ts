@@ -22,7 +22,7 @@ describe('selection mode interaction', () => {
     expect(overlayBlock).toContain('position: fixed;');
     expect(overlayBlock).toContain('left: 50%;');
     expect(overlayBlock).toContain('transform: translateX(-50%);');
-    expect(overlayBlock).toContain('top: calc(env(safe-area-inset-top, 0px) + 76px);');
+    expect(overlayBlock).toContain('top: 12px;');
     expect(overlayBlock).toContain('pointer-events: none;');
     expect(cardBlock).toContain('border-radius: 999px;');
     expect(cardBlock).toContain('backdrop-filter: blur(10px);');
@@ -44,5 +44,34 @@ describe('selection mode interaction', () => {
     expect(code).toContain('isSafari()');
     expect(code).toContain('showExportToast(');
     expect(code).toContain("t('export_toast_safari_pdf_ready')");
+  });
+
+  it('aligns selection bar and export progress toast with shared alignment hook', () => {
+    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
+
+    expect(code).toContain('function alignElementToConversationTitleCenter(');
+    expect(code).toContain('cleanupTasks.push(alignElementToConversationTitleCenter(bar));');
+    expect(code).toContain(
+      'const unbindAlignment = alignElementToConversationTitleCenter(overlay);',
+    );
+  });
+
+  it('falls back to direct download on Safari when clipboard copy fails', () => {
+    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
+
+    expect(code).toContain('let blobForFallback: Blob | null = null;');
+    expect(code).toContain('if (isSafari() && blobForFallback)');
+    expect(code).toContain('downloadImageBlob(blobForFallback, buildResponseImageFilename());');
+  });
+
+  it('uses conversation canvas based alignment and avoids sidebar title selectors', () => {
+    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
+
+    expect(code).toContain('function resolveConversationCanvasCenterX(');
+    expect(code).toContain('#chat-history');
+    expect(code).toContain('infinite-scroller.chat-history');
+    expect(code).toContain('function isLikelySidebarElement(');
+    expect(code).not.toContain('function resolveConversationTitleElement(');
+    expect(code).not.toContain('candidate.closest(\'[data-test-id="conversation"]\')');
   });
 });
