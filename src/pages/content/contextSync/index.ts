@@ -19,7 +19,7 @@ async function handleSyncRequest(sendResponse: (response: any) => void) {
     const captureService = ContextCaptureService.getInstance();
     const syncService = SyncService.getInstance();
 
-    const data = captureService.captureDialogue();
+    const data = await captureService.captureDialogue();
     const result = await syncService.syncToIDE(data);
 
     sendResponse({ status: 'success', data: result });

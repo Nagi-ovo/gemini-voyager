@@ -500,6 +500,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               ok: true,
               contentType: result.contentType,
               base64: result.base64,
+              data: `data:${result.contentType};base64,${result.base64}`,
             });
           } else {
             sendResponse({ ok: false, error: 'page_fetch_failed' });
@@ -518,16 +519,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ ok: false, error: 'invalid_url' });
         return;
       }
-      const resp = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
-      if (!resp.ok) {
-        sendResponse({ ok: false, status: resp.status });
-        return;
-      }
-      const contentType = resp.headers.get('Content-Type') || '';
-      const ab = await resp.arrayBuffer();
-      // Convert to base64
-      const b64 = arrayBufferToBase64(ab);
-      sendResponse({ ok: true, contentType, base64: b64 });
+
+      fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        redirect: 'follow',
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.blob();
+        })
+        .then((blob) => {
+          // In Service Worker, FileReader is not available.
+          // We use Response.arrayBuffer() and then convert to base64,
+          // or use a helper to create a Data URL.
+          return blob.arrayBuffer().then((ab) => {
+            const b64 = arrayBufferToBase64(ab);
+            const contentType = blob.type || 'image/png';
+            const dataUrl = `data:${contentType};base64,${b64}`;
+            sendResponse({
+              ok: true,
+              data: dataUrl,
+              contentType,
+              base64: b64,
+            });
+          });
+        })
+        .catch((err) => {
+          console.error('[Background] Fetch image failed:', err);
+          sendResponse({ ok: false, error: err.message });
+        });
+      return;
     } catch (e: any) {
       try {
         sendResponse({ ok: false, error: String(e?.message || e) });

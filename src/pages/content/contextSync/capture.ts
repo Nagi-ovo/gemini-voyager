@@ -13,62 +13,21 @@ export class ContextCaptureService {
     return this.instance;
   }
 
-  captureDialogue(): DialogNode[] {
+  async captureDialogue(): Promise<DialogNode[]> {
     const host = window.location.hostname;
     const adapter = getMatchedAdapter(host);
     const messages: DialogNode[] = [];
-
-    // Helper to get nodes
-    const getNodes = (sel: string | undefined): HTMLElement[] => {
-      if (!sel) return [];
-      return Array.from(document.querySelectorAll(sel));
-    };
 
     let queries: HTMLElement[] = [];
     let responses: HTMLElement[] = [];
 
     if (adapter.user_selector && adapter.ai_selector) {
-      // Specific selectors (Gemini style)
-      // adapter.user_selector is string[] in types but usage implies it might be used as selector string in querySelectorAll
-      // Let's fix types or usage. In content.js it was: user_selector: ['.query-content']
-      // and getNodes(adapter.user_selector) passed the array to querySelectorAll? No, querySelectorAll takes string.
-      // The original code: getNodes(adapter.user_selector) -> Array.from(document.querySelectorAll(sel))
-      // If sel is array, querySelectorAll(array) is invalid.
-      // Wait, original content.js:
-      // 'gemini.google.com': { user_selector: ['.query-content'], ... }
-      // const getNodes = (sel) => Array.from(document.querySelectorAll(sel));
-      // querySelectorAll(['.a']) works? No. It converts to string ".a".
-      // So effectively it works for single selector.
-      // I'll handle array properly by joining with comma.
-
       queries = adapter.user_selector
         ? (Array.from(document.querySelectorAll(adapter.user_selector.join(','))) as HTMLElement[])
         : [];
       responses = adapter.ai_selector
         ? (Array.from(document.querySelectorAll(adapter.ai_selector.join(','))) as HTMLElement[])
         : [];
-    } else if (adapter.selectors) {
-      // General selectors (ChatGPT style)
-      // This part requires more complex logic from original script?
-      // Original script for ChatGPT:
-      // selectors: ['[data-testid^="conversation-turn-"]']
-      // It seems the original script had a branch logic that I missed or it was implicit.
-      // Looking at original content.js:
-      // It only used `getNodes(adapter.user_selector)` and `getNodes(adapter.ai_selector)`.
-      // But ChatGPT adapter in original code didn't have user_selector/ai_selector!
-      // It had `selectors`, `aiMarkers`, `userMarkers`.
-      // AND... the original code `captureDialogue` ONLY used `adapter.user_selector` and `adapter.ai_selector`.
-      // So the ChatGPT part in original code was BROKEN or I missed something.
-      // Let's re-read content.js line 71-72:
-      // const queries = getNodes(adapter.user_selector);
-      // const responses = getNodes(adapter.ai_selector);
-      // If adapter is ChatGPT, these are undefined. getNodes(undefined) -> querySelectorAll(undefined) -> Error or empty?
-      // querySelectorAll(undefined) throws error "is not a valid selector".
-      // So the user's script for ChatGPT was likely broken or incomplete in the provided snippet.
-      // However, I must fix it.
-      // For Gemini, it works. For ChatGPT, I should probably implement the logic to distinguish user/ai based on markers if I want to support it.
-      // But for now, let's focus on Gemini as this is "Gemini Voyager".
-      // I will keep the structure but ensure it doesn't crash.
     }
 
     console.log(`[ContextSync] Found ${queries.length} queries and ${responses.length} responses.`);
@@ -77,16 +36,38 @@ export class ContextCaptureService {
 
     for (let i = 0; i < maxLength; i++) {
       if (i < queries.length) {
-        const info = this.extractNodeInfo(queries[i], 'user');
+        const info = await this.extractNodeInfo(queries[i], 'user');
         if (info) messages.push(info);
       }
       if (i < responses.length) {
-        const info = this.extractNodeInfo(responses[i], 'assistant');
+        const info = await this.extractNodeInfo(responses[i], 'assistant');
         if (info) messages.push(info);
       }
     }
 
     return messages;
+  }
+
+  private async getBase64Safe(url: string): Promise<string | null> {
+    return new Promise((resolve) => {
+      console.log('[ContextSync] Sending gv.fetchImage message for:', url);
+      const timeout = setTimeout(() => {
+        console.warn('[ContextSync] Image fetch timeout for:', url);
+        resolve(null);
+      }, 10000); // 10s timeout
+
+      chrome.runtime.sendMessage({ type: 'gv.fetchImage', url: url }, (response) => {
+        clearTimeout(timeout);
+        console.log('[ContextSync] Received response for gv.fetchImage:', response);
+        if (response && response.ok) {
+          // background/index.ts now returns { ok: true, data: "data:image/png;base64,..." }
+          resolve(response.data);
+        } else {
+          console.error('[ContextSync] Image fetch failed:', response?.error || 'unknown error');
+          resolve(null);
+        }
+      });
+    });
   }
 
   private convertTableToMarkdown(table: HTMLTableElement): string {
@@ -125,24 +106,43 @@ export class ContextCaptureService {
     }
   }
 
-  private extractNodeInfo(
+  private async extractNodeInfo(
     el: HTMLElement,
     forceRole: 'user' | 'assistant' | null = null,
-  ): DialogNode | null {
+  ): Promise<DialogNode | null> {
     if (el.offsetParent === null) return null;
     if (['SCRIPT', 'STYLE', 'NAV', 'HEADER', 'FOOTER', 'SVG', 'PATH'].includes(el.tagName))
       return null;
 
     const clone = el.cloneNode(true) as HTMLElement;
 
+    // 处理表格
     const tables = Array.from(clone.querySelectorAll('table')).reverse();
     tables.forEach((table) => {
       const md = this.convertTableToMarkdown(table as HTMLTableElement);
       table.replaceWith(document.createTextNode(md));
     });
 
+    // 处理图片
+    const imgBase64List: string[] = [];
+    const imgElements = Array.from(clone.querySelectorAll('.preview-image')) as HTMLImageElement[];
+    if (imgElements.length > 0) {
+      console.log(`Found ${imgElements.length} image(s)`);
+      for (const imgEl of imgElements) {
+        if (imgEl.src) {
+          console.log('Found image URL:', imgEl.src);
+          const base64 = await this.getBase64Safe(imgEl.src);
+          if (base64) {
+            imgBase64List.push(base64);
+            console.log('Converted to Base64 (length):', base64.length);
+          }
+        }
+      }
+      console.log(`Successfully converted ${imgBase64List.length} image(s) to Base64`);
+    }
+
     let text = clone.innerText.trim();
-    if (text.length < 1) return null;
+    if (text.length < 1 && imgBase64List.length === 0) return null;
 
     text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     text = text.replace(/___BR___/g, '<br>');
@@ -151,6 +151,7 @@ export class ContextCaptureService {
       url: window.location.hostname,
       className: el.className,
       text: text,
+      images: imgBase64List,
       is_ai_likely: forceRole === 'assistant',
       is_user_likely: forceRole === 'user',
       rect: {
