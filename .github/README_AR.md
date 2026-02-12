@@ -109,10 +109,14 @@
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Nagi-ovo/gemini-voyager/releases/latest/" target="_blank">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari تنزيل" height="36">
+  </a>
 </div>
 
 <p align="center">
-  <sub>متجر <b>Chrome Web Store</b> يعمل أيضاً على متصفحات Edge و Opera و Brave و Vivaldi و Arc وغيرها من المتصفحات القائمة على Chromium.</sub>
+  <sub>سوق <b>Chrome</b> الإلكتروني يعمل أيضاً على Edge و Opera و Brave و Vivaldi و Arc ومتصفحات Chromium الأخرى.</sub>
 </p>
 
 > **حالة المتجر:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (قريباً)

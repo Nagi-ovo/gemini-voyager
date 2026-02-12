@@ -46,14 +46,14 @@
 
 ## 3. Safari (macOS)
 
-1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下 `gemini-voyager-safari-vX.Y.Z.zip`。
-2. 解压。
-3. 终端跑这行命令 (得有 Xcode)：
-   ```bash
-   xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
-   ```
-4. Xcode 里运行。
-5. Safari 设置 > 扩展里打开。
+Safari 现在支持直接分发！下载预签名的应用：
+
+1. 下载 <SafariDownloadLink>最新 Safari 版本</SafariDownloadLink>。
+2. 解压后将 `Gemini Voyager.app` 拖到应用程序文件夹。
+3. 双击启动应用。
+4. 在 **Safari 设置 > 扩展** 中启用。
+
+> 💡 Safari 版本现已直接签名分发——不再需要 Xcode 转换！
 
 ---
 

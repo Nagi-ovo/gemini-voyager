@@ -46,14 +46,14 @@
 
 ## 3. Safari (macOS)
 
-1. [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)에서 `gemini-voyager-safari-vX.Y.Z.zip`을 다운로드합니다.
-2. 파일의 압축을 풉니다.
-3. 터미널에서 다음 명령어를 실행하여 변환합니다 (Xcode 필요):
-   ```bash
-   xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
-   ```
-4. Xcode에서 앱을 실행하여 설치합니다.
-5. Safari 설정 > 확장 프로그램에서 활성화합니다.
+Safari가 이제 직접 배포를 지원합니다! 사전 서명된 앱을 다운로드하세요:
+
+1. <SafariDownloadLink>최신 Safari 버전</SafariDownloadLink>을 다운로드합니다.
+2. 파일의 압축을 풀고 `Gemini Voyager.app`을 응용 프로그램 폴더로 드래그합니다.
+3. 더블 클릭하여 앱을 실행합니다.
+4. **Safari 설정 > 확장 프로그램**에서 활성화합니다.
+
+> 💡 Safari 빌드가 직접 서명 배포를 지원합니다 — Xcode 변환이 필요 없습니다!
 
 ---
 

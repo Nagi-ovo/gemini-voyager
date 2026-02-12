@@ -46,14 +46,14 @@ Las revisiones de la tienda son lentas. Si quieres las últimas funciones, toma 
 
 ## 3. Safari (macOS)
 
-1. Ve a [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) y descarga `gemini-voyager-safari-vX.Y.Z.zip`.
-2. Descomprímelo.
-3. Ejecuta este comando en la terminal (necesitas Xcode):
-   ```bash
-   xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
-   ```
-4. Ejecuta en Xcode.
-5. Actívalo en Safari Preferencias > Extensiones.
+¡Safari ahora soporta distribución directa! Descarga la aplicación pre-firmada:
+
+1. Descarga la <SafariDownloadLink>última versión de Safari</SafariDownloadLink>.
+2. Descomprime el archivo y arrastra `Gemini Voyager.app` a tu carpeta de Aplicaciones.
+3. Haz doble clic para iniciar la aplicación.
+4. Activa la extensión en **Preferencias de Safari > Extensiones**.
+
+> 💡 La versión de Safari ahora está firmada directamente para distribución — ¡no necesitas conversión con Xcode!
 
 ---
 

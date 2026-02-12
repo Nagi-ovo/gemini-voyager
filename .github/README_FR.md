@@ -109,6 +109,10 @@ C'est pourquoi nous avons créé **Gemini Voyager**. Plus qu'un simple outil, c'
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Nagi-ovo/gemini-voyager/releases/latest/" target="_blank">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari Télécharger" height="36">
+  </a>
 </div>
 
 <p align="center">
