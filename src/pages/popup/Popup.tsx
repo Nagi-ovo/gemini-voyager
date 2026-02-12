@@ -665,8 +665,11 @@ export default function Popup() {
 
   const normalizedCurrentVersion = normalizeVersionString(extVersion);
   const normalizedLatestVersion = normalizeVersionString(latestVersion);
+  // Only show update notification for versions before 1.2.3
+  const shouldShowUpdateNotification =
+    normalizedCurrentVersion && compareVersions(normalizedCurrentVersion, '1.2.3') < 0;
   const hasUpdate =
-    normalizedCurrentVersion && normalizedLatestVersion
+    shouldShowUpdateNotification && normalizedCurrentVersion && normalizedLatestVersion
       ? compareVersions(normalizedLatestVersion, normalizedCurrentVersion) > 0
       : false;
   const latestReleaseTag = toReleaseTag(latestVersion ?? normalizedLatestVersion ?? undefined);

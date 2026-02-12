@@ -496,6 +496,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     (async () => {
       if (isSafari()) return;
+      // Only show update notification for versions before 1.2.3
+      const shouldShowUpdateNotification =
+        currentVersionNormalized && compareVersions(currentVersionNormalized, '1.2.3') < 0;
+      if (!shouldShowUpdateNotification) return;
+
       const latest = await getLatestVersionCached();
       const latestNormalized = normalizeVersionString(latest);
       const hasUpdate =
