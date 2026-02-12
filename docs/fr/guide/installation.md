@@ -54,6 +54,8 @@ Safari prend désormais en charge la distribution directe ! Téléchargez l'appl
 4. Activez l'extension dans **Réglages Safari > Extensions**.
 
 > 💡 La version Safari est désormais directement signée pour la distribution — pas besoin de conversion Xcode !
+>
+> ⚠️ **Limitations** : En raison de la nature de Safari, (a) la suppression du filigrane (b) l'exportation d'images (PDF recommandé) ne sont pas prises en charge.
 
 ---
 

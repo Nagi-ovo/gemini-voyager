@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 
-const latestVersion = ref('1.2.3'); // Default fallback version
+const latestVersion = ref('1.2.4'); // Default fallback version
 const loading = ref(true);
 const error = ref(false);
 

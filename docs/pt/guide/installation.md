@@ -54,6 +54,8 @@ O Safari agora suporta distribuição direta! Descarregue a aplicação pré-ass
 4. Ative a extensão nas **Definições do Safari > Extensões**.
 
 > 💡 A versão do Safari está agora diretamente assinada para distribuição — não é necessária conversão com Xcode!
+>
+> ⚠️ **Limitações**: Devido à natureza do Safari, (a) a remoção de marca d'água (b) a exportação de imagens (PDF recomendado) não são suportadas.
 
 ---
 

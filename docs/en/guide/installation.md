@@ -54,6 +54,8 @@ Safari now supports direct distribution! Download the pre-signed app:
 4. Enable the extension in **Safari Settings > Extensions**.
 
 > 💡 The Safari build is now directly signed for distribution—no Xcode conversion needed!
+>
+> ⚠️ **Limitations**: Due to Safari's nature, (a) Watermark removal (b) Image export (PDF recommended) are not supported.
 
 ---
 

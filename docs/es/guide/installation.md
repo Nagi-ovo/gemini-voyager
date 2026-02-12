@@ -54,6 +54,8 @@ Las revisiones de la tienda son lentas. Si quieres las últimas funciones, toma 
 4. Activa la extensión en **Preferencias de Safari > Extensiones**.
 
 > 💡 La versión de Safari ahora está firmada directamente para distribución — ¡no necesitas conversión con Xcode!
+>
+> ⚠️ **Limitaciones**: Debido a la naturaleza de Safari, (a) la eliminación de marcas de agua (b) la exportación de imágenes (se recomienda PDF) no son compatibles.
 
 ---
 
