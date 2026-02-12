@@ -184,6 +184,18 @@ bun run dev:safari     # 开发模式（自动重载）
 bun run build:all      # 为所有浏览器构建
 ```
 
+## 更新提醒配置
+
+默认情况下，Safari 版本的更新提醒是**禁用的**，以避免与 App Store 自动更新冲突。
+
+如需启用更新提醒（用于手动分发）：
+
+```bash
+ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
+```
+
+**注意**：仅在手动分发扩展时启用此功能（非 App Store 分发）。App Store 版本应使用默认设置（禁用），以依赖自动更新。
+
 ## 资源
 
 - [Safari Web Extensions 文档](https://developer.apple.com/documentation/safariservices/safari_web_extensions)

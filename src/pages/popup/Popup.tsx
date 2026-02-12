@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
-import { isSafari } from '@/core/utils/browser';
+import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { compareVersions } from '@/core/utils/version';
 import {
   extractLatestReleaseVersion,
@@ -354,7 +354,15 @@ export default function Popup() {
       // We skip manual version checks for these users to rely on store auto-updates
       // and prevent confusing "new version" prompts when GitHub is ahead of the store.
       const manifest = chrome?.runtime?.getManifest?.();
-      if (isSafari() || getManifestUpdateUrl(manifest)) {
+
+      // For Safari: only skip update check if the feature is disabled (default)
+      // If shouldShowSafariUpdateReminder() returns true, allow update checks
+      if (isSafari() && !shouldShowSafariUpdateReminder()) {
+        return;
+      }
+
+      // For other browsers: skip if they have update_url (store installation)
+      if (!isSafari() && getManifestUpdateUrl(manifest)) {
         return;
       }
 
@@ -703,38 +711,41 @@ export default function Popup() {
       </div>
 
       <div className="space-y-4 p-5">
-        {hasUpdate && normalizedLatestVersion && normalizedCurrentVersion && !isSafari() && (
-          <Card className="border-amber-200 bg-amber-50 p-3 text-amber-900 shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="mt-1 text-amber-600">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
+        {hasUpdate &&
+          normalizedLatestVersion &&
+          normalizedCurrentVersion &&
+          (isSafari() ? shouldShowSafariUpdateReminder() : true) && (
+            <Card className="border-amber-200 bg-amber-50 p-3 text-amber-900 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 text-amber-600">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 2l4 4h-3v7h-2V6H8l4-4zm6 11v6H6v-6H4v8h16v-8h-2z" />
+                  </svg>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm leading-tight font-semibold">{t('newVersionAvailable')}</p>
+                  <p className="text-xs leading-tight">
+                    {t('currentVersionLabel')}: v{normalizedCurrentVersion} ·{' '}
+                    {t('latestVersionLabel')}: v{normalizedLatestVersion}
+                  </p>
+                </div>
+                <a
+                  href={latestReleaseUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-md bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-200"
                 >
-                  <path d="M12 2l4 4h-3v7h-2V6H8l4-4zm6 11v6H6v-6H4v8h16v-8h-2z" />
-                </svg>
+                  {t('updateNow')}
+                </a>
               </div>
-              <div className="flex-1 space-y-1">
-                <p className="text-sm leading-tight font-semibold">{t('newVersionAvailable')}</p>
-                <p className="text-xs leading-tight">
-                  {t('currentVersionLabel')}: v{normalizedCurrentVersion} ·{' '}
-                  {t('latestVersionLabel')}: v{normalizedLatestVersion}
-                </p>
-              </div>
-              <a
-                href={latestReleaseUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-md bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-200"
-              >
-                {t('updateNow')}
-              </a>
-            </div>
-          </Card>
-        )}
+            </Card>
+          )}
         {/* Cloud Sync - First priority - Hidden on Safari due to API limitations */}
         {!isSafari() && <CloudSyncSettings />}
         {/* Context Sync */}

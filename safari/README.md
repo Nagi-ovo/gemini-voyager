@@ -184,6 +184,18 @@ bun run dev:safari     # Development with auto-reload
 bun run build:all      # Build for all browsers
 ```
 
+## Update Reminder Configuration
+
+By default, update reminders are **disabled** for Safari builds to avoid conflicts with App Store auto-updates.
+
+To enable update reminders (for manual distribution):
+
+```bash
+ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
+```
+
+**Note**: Only enable this if you're distributing the extension manually (not via App Store). App Store versions should use the default (disabled) to rely on automatic updates.
+
 ## Resources
 
 - [Safari Web Extensions Docs](https://developer.apple.com/documentation/safariservices/safari_web_extensions)

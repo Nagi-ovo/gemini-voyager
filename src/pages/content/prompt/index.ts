@@ -12,7 +12,7 @@ import browser from 'webextension-polyfill';
 import { logger } from '@/core/services/LoggerService';
 import { promptStorageService } from '@/core/services/StorageService';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
-import { isSafari } from '@/core/utils/browser';
+import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import { compareVersions } from '@/core/utils/version';
@@ -495,7 +495,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     titleRow.appendChild(versionBadge);
 
     (async () => {
-      if (isSafari()) return;
+      // For Safari: only check updates if the feature is explicitly enabled
+      if (isSafari() && !shouldShowSafariUpdateReminder()) return;
       // Only show update notification for versions before 1.2.3
       const shouldShowUpdateNotification =
         currentVersionNormalized && compareVersions(currentVersionNormalized, '1.2.3') < 0;

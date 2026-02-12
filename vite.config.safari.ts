@@ -6,9 +6,18 @@ import baseConfig, { baseBuildOptions, baseManifest } from './vite.config.base';
 
 const outDir = resolve(__dirname, 'dist_safari');
 
+// Environment variable to control Safari update check
+// Set to 'true' to enable update reminders for Safari builds
+// Default: 'false' (disabled)
+const enableSafariUpdateCheck = process.env.ENABLE_SAFARI_UPDATE_CHECK === 'true';
+
 export default mergeConfig(
   baseConfig,
   defineConfig({
+    define: {
+      // Inject flag into the build
+      'import.meta.env.ENABLE_SAFARI_UPDATE_CHECK': JSON.stringify(enableSafariUpdateCheck),
+    },
     plugins: [
       crx({
         manifest: {
