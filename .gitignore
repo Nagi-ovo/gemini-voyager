@@ -13,6 +13,7 @@ coverage/
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 DerivedData/
+safari/Models/Gemini*
 
 .git-commit-message.txt
 

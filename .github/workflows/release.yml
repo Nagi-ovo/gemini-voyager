@@ -157,7 +157,6 @@ jobs:
           TAG=${{ steps.vars.outputs.tag_name }}
 
           cd dist_chrome && zip -r ../gemini-voyager-chrome-${TAG}.zip . && cd ..
-          cd dist_safari && zip -r ../gemini-voyager-safari-${TAG}.zip . && cd ..
 
       - name: Sign Firefox Extension and Submit to AMO
         run: |
@@ -200,7 +199,6 @@ jobs:
 
           - **Chrome**: \`gemini-voyager-chrome-${TAG}.zip\`
           - **Firefox**: \`gemini-voyager-firefox-${TAG}.xpi\`
-          - **Safari**: \`gemini-voyager-safari-${TAG}.zip\`
           - 🍎 For Safari Users (致 Safari 用户)
           > **Safari 插件商店版本即将到来！ / Safari Extension Store Version is coming soon!**
 
@@ -219,7 +217,6 @@ jobs:
           files: |
             gemini-voyager-chrome-*.zip
             gemini-voyager-firefox-*.xpi
-            gemini-voyager-safari-*.zip
           body: ${{ steps.release_body.outputs.body }}
           generate_release_notes: true
           append_body: ${{ inputs.notes == '' }}
