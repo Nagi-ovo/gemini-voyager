@@ -18,6 +18,10 @@ function hashString(input: string): string {
   return (h >>> 0).toString(36);
 }
 
+/** Accessibility prefixes injected by Gemini's DOM that should be stripped from previews effectively globally. */
+const TURN_LABEL_PREFIXES =
+  /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
+
 export class TimelineManager {
   private scrollContainer: HTMLElement | null = null;
   private conversationContainer: HTMLElement | null = null;
@@ -765,9 +769,11 @@ export class TimelineManager {
 
   private normalizeText(text: string | null): string {
     try {
-      return String(text || '')
-        .replace(/\s+/g, ' ')
-        .trim();
+      if (!text) return '';
+      // 1. Collapse whitespace
+      const collapsed = String(text).replace(/\s+/g, ' ').trim();
+      // 2. Strip prefixes (You said, etc.)
+      return collapsed.replace(TURN_LABEL_PREFIXES, '');
     } catch {
       return '';
     }

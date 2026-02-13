@@ -7,9 +7,6 @@ import type { PreviewMarkerData } from './types';
 
 const SEARCH_DEBOUNCE_MS = 200;
 
-/** Accessibility prefixes injected by Gemini's DOM that should be stripped from previews. */
-const TURN_LABEL_PREFIXES = /^(you said|you wrote|user message|your prompt)\s*/i;
-
 const LIST_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
 
 export class TimelinePreviewPanel {
@@ -265,9 +262,7 @@ export class TimelinePreviewPanel {
       this.filteredMarkers = this.markers;
     } else {
       const q = this.searchQuery.toLowerCase();
-      this.filteredMarkers = this.markers.filter((m) =>
-        m.summary.replace(TURN_LABEL_PREFIXES, '').toLowerCase().includes(q),
-      );
+      this.filteredMarkers = this.markers.filter((m) => m.summary.toLowerCase().includes(q));
     }
     if (this._isOpen) {
       this.renderList();
@@ -326,8 +321,7 @@ export class TimelinePreviewPanel {
 
     const text = document.createElement('span');
     text.className = 'timeline-preview-text';
-    const cleanSummary = marker.summary.replace(TURN_LABEL_PREFIXES, '');
-    const displayText = this.truncateText(cleanSummary || marker.summary, 80);
+    const displayText = this.truncateText(marker.summary, 80);
     if (this.searchQuery) {
       this.appendHighlighted(text, displayText, this.searchQuery);
     } else {
