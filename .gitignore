@@ -26,6 +26,7 @@ yarn-error.log*
 .vscode/
 .idea/
 .claude/
+.spec-workflow/
 .DS_Store
 
 *.local

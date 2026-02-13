@@ -1897,6 +1897,7 @@ export class FolderManager {
         isExpanded: true,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        ownerId: this.getCurrentUserId(), // Set ownership
       };
 
       this.data.folders.push(folder);
@@ -4893,6 +4894,11 @@ export class FolderManager {
           // Apply the change to all conversations
           this.applyHideArchivedSetting();
         }
+        if (changes[StorageKeys.GV_FOLDER_FILTER_USER_ONLY]) {
+          this.filterCurrentUserOnly = !!changes[StorageKeys.GV_FOLDER_FILTER_USER_ONLY].newValue;
+          this.debug('Filter current user setting changed:', this.filterCurrentUserOnly);
+          this.refresh();
+        }
         // Listen for language changes and update UI text
         if (changes[StorageKeys.LANGUAGE]) {
           this.debug('Language changed, updating UI text...');
@@ -5751,6 +5757,10 @@ export class FolderManager {
   private hasVisibleContent(folderId: string): boolean {
     if (!this.filterCurrentUserOnly) return true;
 
+    // Check ownership first (handles empty folders)
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (folder?.ownerId === this.getCurrentUserId()) return true;
+
     // Check direct conversations
     const conversations = this.data.folderContents[folderId] || [];
     const userConversations = this.filterConversationsByCurrentUser(conversations);
@@ -5938,7 +5948,7 @@ export class FolderManager {
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          prompts = storageResult.gvPromptItems;
+          prompts = storageResult.gvPromptItems as any[];
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get prompts for upload:', err);
@@ -6020,7 +6030,7 @@ export class FolderManager {
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          localPrompts = storageResult.gvPromptItems;
+          localPrompts = storageResult.gvPromptItems as any[];
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get local prompts for merge:', err);
@@ -6031,7 +6041,9 @@ export class FolderManager {
       try {
         const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
         if (starredResult.geminiTimelineStarredMessages) {
-          localStarred = starredResult.geminiTimelineStarredMessages;
+          localStarred = starredResult.geminiTimelineStarredMessages as {
+            messages: Record<string, any[]>;
+          };
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get local starred messages for merge:', err);
