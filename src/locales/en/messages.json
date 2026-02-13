@@ -1160,6 +1160,18 @@
     "message": "Spacious",
     "description": "Spacious folder spacing label"
   },
+  "folderTreeIndent": {
+    "message": "Subfolder indent",
+    "description": "Subfolder tree indentation adjustment label"
+  },
+  "folderTreeIndentCompact": {
+    "message": "Narrow",
+    "description": "Narrow subfolder indentation label"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "Wide",
+    "description": "Wide subfolder indentation label"
+  },
   "export_select_mode_select_all": {
     "message": "Select all",
     "description": "Selection mode select all toggle"

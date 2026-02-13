@@ -1160,6 +1160,18 @@
     "message": "Просторно",
     "description": "Spacious folder spacing label"
   },
+  "folderTreeIndent": {
+    "message": "Отступ подпапок",
+    "description": "Subfolder tree indentation adjustment label"
+  },
+  "folderTreeIndentCompact": {
+    "message": "Узкий",
+    "description": "Narrow subfolder indentation label"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "Широкий",
+    "description": "Wide subfolder indentation label"
+  },
   "export_select_mode_select_all": {
     "message": "Select all",
     "description": "Selection mode select all toggle"
