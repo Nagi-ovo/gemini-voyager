@@ -1160,6 +1160,18 @@
     "message": "Spacieux",
     "description": "Spacious folder spacing label"
   },
+  "folderTreeIndent": {
+    "message": "Retrait des sous-dossiers",
+    "description": "Subfolder tree indentation adjustment label"
+  },
+  "folderTreeIndentCompact": {
+    "message": "Étroit",
+    "description": "Narrow subfolder indentation label"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "Large",
+    "description": "Wide subfolder indentation label"
+  },
   "export_select_mode_select_all": {
     "message": "Select all",
     "description": "Selection mode select all toggle"

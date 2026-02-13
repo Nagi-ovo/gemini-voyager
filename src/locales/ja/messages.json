@@ -1160,6 +1160,18 @@
     "message": "ゆったり",
     "description": "ゆったりフォルダ間隔ラベル"
   },
+  "folderTreeIndent": {
+    "message": "サブフォルダのインデント",
+    "description": "サブフォルダ階層のインデント調整ラベル"
+  },
+  "folderTreeIndentCompact": {
+    "message": "狭い",
+    "description": "狭いサブフォルダインデントラベル"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "広い",
+    "description": "広いサブフォルダインデントラベル"
+  },
   "export_select_mode_select_all": {
     "message": "すべて選択",
     "description": "Selection mode select all toggle"

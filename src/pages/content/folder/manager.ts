@@ -22,10 +22,31 @@ const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
 const ROOT_CONVERSATIONS_ID = '__root_conversations__'; // Special ID for root-level conversations
 const NOTIFICATION_TIMEOUT_MS = 10000; // Duration to show data loss notification
+const FOLDER_TREE_INDENT_MIN = 8;
+const FOLDER_TREE_INDENT_MAX = 32;
+const FOLDER_TREE_INDENT_DEFAULT = 16;
 
 // Export session backup keys for use by FolderImportExportService (deprecated, kept for compatibility)
 export const SESSION_BACKUP_KEY = 'gvFolderBackup';
 export const SESSION_BACKUP_TIMESTAMP_KEY = 'gvFolderBackupTimestamp';
+
+export function clampFolderTreeIndent(value: unknown): number {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numeric)) return FOLDER_TREE_INDENT_DEFAULT;
+  return Math.min(FOLDER_TREE_INDENT_MAX, Math.max(FOLDER_TREE_INDENT_MIN, Math.round(numeric)));
+}
+
+export function calculateFolderHeaderPaddingLeft(level: number, indent: number): number {
+  return level * indent + 8;
+}
+
+export function calculateFolderConversationPaddingLeft(level: number, indent: number): number {
+  return level * indent + 24;
+}
+
+export function calculateFolderDialogPaddingLeft(level: number, indent: number): number {
+  return level * indent + 12;
+}
 
 /**
  * Validate folder data structure
@@ -80,6 +101,7 @@ export class FolderManager {
   private longPressThreshold: number = 500; // Long-press duration in ms
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
+  private folderTreeIndent: number = FOLDER_TREE_INDENT_DEFAULT; // Tree indentation width (px)
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
@@ -167,6 +189,7 @@ export class FolderManager {
 
       // Load filter user setting
       await this.loadFilterUserSetting();
+      await this.loadFolderTreeIndentSetting();
 
       // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
@@ -667,7 +690,7 @@ export class FolderManager {
     // Folder header
     const folderHeader = document.createElement('div');
     folderHeader.className = 'gv-folder-item-header';
-    folderHeader.style.paddingLeft = `${level * 16 + 8}px`;
+    folderHeader.style.paddingLeft = `${calculateFolderHeaderPaddingLeft(level, this.folderTreeIndent)}px`;
 
     // Expand/collapse button
     const expandBtn = document.createElement('button');
@@ -790,7 +813,7 @@ export class FolderManager {
     convEl.dataset.conversationId = conv.conversationId;
     convEl.dataset.folderId = folderId;
     // Increase indentation for conversations under folders
-    convEl.style.paddingLeft = `${level * 16 + 24}px`; // More indentation for tree structure
+    convEl.style.paddingLeft = `${calculateFolderConversationPaddingLeft(level, this.folderTreeIndent)}px`; // More indentation for tree structure
 
     // Try to sync title from native conversation
     // Decide what title to display, respecting manual renames and hidden native list
@@ -3566,7 +3589,7 @@ export class FolderManager {
       sortedFolders.forEach((folder) => {
         const folderItem = document.createElement('button');
         folderItem.className = 'gv-folder-dialog-item';
-        folderItem.style.paddingLeft = `${level * 16 + 12}px`;
+        folderItem.style.paddingLeft = `${calculateFolderDialogPaddingLeft(level, this.folderTreeIndent)}px`;
 
         // Folder icon
         const icon = document.createElement('mat-icon');
@@ -4877,6 +4900,31 @@ export class FolderManager {
     }
   }
 
+  private async loadFolderTreeIndentSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.GV_FOLDER_TREE_INDENT]: FOLDER_TREE_INDENT_DEFAULT,
+      });
+      this.folderTreeIndent = clampFolderTreeIndent(result[StorageKeys.GV_FOLDER_TREE_INDENT]);
+      this.debug('Loaded folder tree indent setting:', this.folderTreeIndent);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load folder tree indent setting:', error);
+      this.folderTreeIndent = FOLDER_TREE_INDENT_DEFAULT;
+    }
+  }
+
+  private applyFolderTreeIndentSetting(value: unknown): void {
+    const nextIndent = clampFolderTreeIndent(value);
+    if (nextIndent === this.folderTreeIndent) return;
+
+    this.folderTreeIndent = nextIndent;
+    this.debug('Folder tree indent changed:', this.folderTreeIndent);
+
+    if (this.folderEnabled && this.containerElement) {
+      this.renderAllFolders();
+    }
+  }
+
   private setupStorageListener(): void {
     // Listen for sync settings changes
     browser.storage.onChanged.addListener((changes, areaName) => {
@@ -4892,6 +4940,9 @@ export class FolderManager {
           this.debug('Hide archived setting changed:', this.hideArchivedConversations);
           // Apply the change to all conversations
           this.applyHideArchivedSetting();
+        }
+        if (changes[StorageKeys.GV_FOLDER_TREE_INDENT]) {
+          this.applyFolderTreeIndentSetting(changes[StorageKeys.GV_FOLDER_TREE_INDENT].newValue);
         }
         // Listen for language changes and update UI text
         if (changes[StorageKeys.LANGUAGE]) {

@@ -1160,6 +1160,18 @@
     "message": "Espacioso",
     "description": "Spacious folder spacing label"
   },
+  "folderTreeIndent": {
+    "message": "Sangría de subcarpetas",
+    "description": "Subfolder tree indentation adjustment label"
+  },
+  "folderTreeIndentCompact": {
+    "message": "Estrecha",
+    "description": "Narrow subfolder indentation label"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "Ancha",
+    "description": "Wide subfolder indentation label"
+  },
   "export_select_mode_select_all": {
     "message": "Select all",
     "description": "Selection mode select all toggle"

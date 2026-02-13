@@ -1160,6 +1160,18 @@
     "message": "宽松",
     "description": "宽松文件夹间距标签"
   },
+  "folderTreeIndent": {
+    "message": "子文件夹缩进",
+    "description": "子文件夹树形缩进调节标签"
+  },
+  "folderTreeIndentCompact": {
+    "message": "更窄",
+    "description": "较窄的子文件夹缩进标签"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "更宽",
+    "description": "较宽的子文件夹缩进标签"
+  },
   "export_select_mode_select_all": {
     "message": "全选",
     "description": "Selection mode select all toggle"

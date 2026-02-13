@@ -1160,6 +1160,18 @@
     "message": "넓게",
     "description": "Spacious folder spacing label"
   },
+  "folderTreeIndent": {
+    "message": "하위 폴더 들여쓰기",
+    "description": "Subfolder tree indentation adjustment label"
+  },
+  "folderTreeIndentCompact": {
+    "message": "좁게",
+    "description": "Narrow subfolder indentation label"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "넓게",
+    "description": "Wide subfolder indentation label"
+  },
   "export_select_mode_select_all": {
     "message": "전체 선택",
     "description": "Selection mode select all toggle"

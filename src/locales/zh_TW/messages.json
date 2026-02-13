@@ -1160,6 +1160,18 @@
     "message": "寬鬆",
     "description": "寬鬆資料夾間距標籤"
   },
+  "folderTreeIndent": {
+    "message": "子資料夾縮排",
+    "description": "子資料夾樹狀縮排調整標籤"
+  },
+  "folderTreeIndentCompact": {
+    "message": "更窄",
+    "description": "較窄的子資料夾縮排標籤"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "更寬",
+    "description": "較寬的子資料夾縮排標籤"
+  },
   "export_select_mode_select_all": {
     "message": "全選",
     "description": "Selection mode select all toggle"

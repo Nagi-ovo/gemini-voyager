@@ -61,6 +61,7 @@ const normalizePercent = (
 };
 
 const FOLDER_SPACING = { min: 0, max: 16, defaultValue: 2 };
+const FOLDER_TREE_INDENT = { min: 8, max: 32, defaultValue: 16 };
 const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LEGACY_BASELINE_PX };
 const EDIT_PERCENT = { min: 30, max: 100, defaultValue: 60, legacyBaselinePx: LEGACY_BASELINE_PX };
 const SIDEBAR_PERCENT = {
@@ -330,6 +331,18 @@ export default function Popup() {
       },
       [folderSpacingKey],
     ),
+  });
+
+  const folderTreeIndentAdjuster = useWidthAdjuster({
+    storageKey: 'gvFolderTreeIndent',
+    defaultValue: FOLDER_TREE_INDENT.defaultValue,
+    normalize: (v) => clampNumber(v, FOLDER_TREE_INDENT.min, FOLDER_TREE_INDENT.max),
+    onApply: useCallback((indent: number) => {
+      const clamped = clampNumber(indent, FOLDER_TREE_INDENT.min, FOLDER_TREE_INDENT.max);
+      try {
+        chrome.storage?.sync?.set({ gvFolderTreeIndent: clamped });
+      } catch {}
+    }, []),
   });
 
   useEffect(() => {
@@ -938,6 +951,20 @@ export default function Popup() {
           onChange={folderSpacingAdjuster.handleChange}
           onChangeComplete={folderSpacingAdjuster.handleChangeComplete}
         />
+        {!isAIStudio && (
+          <WidthSlider
+            label={t('folderTreeIndent')}
+            value={folderTreeIndentAdjuster.width}
+            min={FOLDER_TREE_INDENT.min}
+            max={FOLDER_TREE_INDENT.max}
+            step={1}
+            narrowLabel={t('folderTreeIndentCompact')}
+            wideLabel={t('folderTreeIndentSpacious')}
+            valueFormatter={(v) => `${v}px`}
+            onChange={folderTreeIndentAdjuster.handleChange}
+            onChangeComplete={folderTreeIndentAdjuster.handleChangeComplete}
+          />
+        )}
         {/* Chat Width */}
         <WidthSlider
           label={t('chatWidth')}
