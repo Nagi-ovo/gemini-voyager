@@ -119,7 +119,7 @@
   <sub><b>Chrome ストア版</b>は Edge, Opera, Brave, Vivaldi, Arc などの Chromium 系ブラウザでも動作します。</sub>
 </p>
 
-> **ストア状況:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (近日公開)
+> **ストア状況:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 **手動インストール**や**開発用ビルド**については、[インストールガイド](https://voyager.nagi.fun/ja/guide/installation)を参照してください。
 

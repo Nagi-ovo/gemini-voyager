@@ -119,7 +119,7 @@
   <sub>سوق <b>Chrome</b> الإلكتروني يعمل أيضاً على Edge و Opera و Brave و Vivaldi و Arc ومتصفحات Chromium الأخرى.</sub>
 </p>
 
-> **حالة المتجر:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (قريباً)
+> **حالة المتجر:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 لـ **التثبيت اليدوي** أو **بناء التطوير**، يرجى الرجوع إلى [دليل التثبيت](https://voyager.nagi.fun/ar/guide/installation).
 

@@ -125,7 +125,7 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
   <sub>A <b>Chrome Web Store</b> também funciona no Edge, Opera, Brave, Vivaldi, Arc e outros navegadores Chromium.</sub>
 </p>
 
-> **Estado da Loja:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (Em breve)
+> **Estado da Loja:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 Para **instalação manual** ou **builds de desenvolvimento**, consulte o [Guia de Instalação](https://voyager.nagi.fun/pt/guide/installation).
 

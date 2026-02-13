@@ -119,7 +119,7 @@
   <sub><b>Chrome 웹 스토어</b>는 Edge, Opera, Brave, Vivaldi, Arc 및 기타 Chromium 브라우저에서도 작동합니다.</sub>
 </p>
 
-> **스토어 상태:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (출시 예정)
+> **스토어 상태:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 **수동 설치** 또는 **개발 빌드**에 대해서는 [설치 가이드](https://voyager.nagi.fun/ko/guide/installation)를 참조하세요.
 

@@ -1,7 +1,7 @@
 # Installation
 
 ::: info News
-🍎 **Safari Native Extension is coming soon!** It will be completely free and support one-click installation. Stay tuned!
+🍎 **Safari Native Extension is launched!** It is completely free and supports one-click installation.
 :::
 
 Choose your path.

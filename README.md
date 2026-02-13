@@ -119,7 +119,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   <sub><b>Chrome Web Store</b> also works on Edge, Opera, Brave, Vivaldi, Arc, and other Chromium browsers.</sub>
 </p>
 
-> **Store Status:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (Coming Soon)
+> **Store Status:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 For **manual installation** or **development builds**, please refer to the [Installation Guide](https://voyager.nagi.fun/en/guide/installation).
 

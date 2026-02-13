@@ -125,7 +125,7 @@
   <sub><b>Chrome 應用商店</b>同樣適用於 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 瀏覽器。</sub>
 </p>
 
-> **商店狀態：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (即將推出)
+> **商店狀態：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 關於 **手動安裝** 或 **開發構建**，請參閱 [安裝指南](https://voyager.nagi.fun/zh_TW/guide/installation)。
 

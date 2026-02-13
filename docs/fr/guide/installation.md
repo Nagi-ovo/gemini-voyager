@@ -1,7 +1,7 @@
 # Installation
 
 ::: info Nouvelles
-🍎 **L'extension native Safari arrive bientôt !** Elle sera entièrement gratuite et s'installera en un clic. Restez à l'écoute !
+🍎 **L'extension native Safari est disponible !** Elle est entièrement gratuite et s'installe en un clic.
 :::
 
 Choisissez votre méthode.

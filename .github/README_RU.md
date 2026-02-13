@@ -119,7 +119,7 @@
   <sub>Версия для <b>Chrome Web Store</b> также работает в Edge, Opera, Brave, Vivaldi, Arc и других браузерах на базе Chromium.</sub>
 </p>
 
-> **Статус в магазинах:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (Скоро)
+> **Статус в магазинах:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 Для **ручной установки** или **сборки для разработки**, пожалуйста, обратитесь к [Руководству по установке](https://voyager.nagi.fun/ru/guide/installation).
 
