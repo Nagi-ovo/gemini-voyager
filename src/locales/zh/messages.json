@@ -1148,6 +1148,14 @@
     "message": "鼠标离开时自动收起侧边栏，鼠标进入时展开",
     "description": "侧边栏自动收起功能提示"
   },
+  "hideGeminiDisclaimer": {
+    "message": "隐藏 Gemini 免责声明",
+    "description": "隐藏 Gemini 免责声明开关标签"
+  },
+  "hideGeminiDisclaimerHint": {
+    "message": "隐藏页面底部免责声明文字并释放占用空间",
+    "description": "隐藏 Gemini 免责声明功能提示"
+  },
   "folderSpacing": {
     "message": "文件夹间距",
     "description": "文件夹间距调节标签"

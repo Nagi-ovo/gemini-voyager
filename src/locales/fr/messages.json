@@ -1148,6 +1148,14 @@
     "message": "Réduit automatiquement la barre latérale quand la souris la quitte, l'étend quand elle y entre",
     "description": "Auto-hide sidebar feature hint"
   },
+  "hideGeminiDisclaimer": {
+    "message": "Masquer l'avertissement Gemini",
+    "description": "Toggle label for hiding Gemini AI disclaimer sentence"
+  },
+  "hideGeminiDisclaimerHint": {
+    "message": "Masquer le texte d'avertissement en bas de page et libérer l'espace occupé",
+    "description": "Hint for hiding Gemini AI disclaimer sentence"
+  },
   "folderSpacing": {
     "message": "Espacement des dossiers",
     "description": "Folder spacing adjustment label"

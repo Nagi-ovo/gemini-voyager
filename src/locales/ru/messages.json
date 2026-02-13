@@ -1148,6 +1148,14 @@
     "message": "Автоматически сворачивать боковую панель при уходе мыши, разворачивать при наведении",
     "description": "Auto-hide sidebar feature hint"
   },
+  "hideGeminiDisclaimer": {
+    "message": "Скрыть предупреждение Gemini",
+    "description": "Toggle label for hiding Gemini AI disclaimer sentence"
+  },
+  "hideGeminiDisclaimerHint": {
+    "message": "Скрыть текст предупреждения внизу страницы и освободить занимаемое пространство",
+    "description": "Hint for hiding Gemini AI disclaimer sentence"
+  },
   "folderSpacing": {
     "message": "Расстояние между папками",
     "description": "Folder spacing adjustment label"

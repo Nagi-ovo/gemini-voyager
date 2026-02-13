@@ -1148,6 +1148,14 @@
     "message": "마우스가 벗어나면 사이드바를 자동으로 접고, 마우스가 들어오면 펼칩니다",
     "description": "Auto-hide sidebar feature hint"
   },
+  "hideGeminiDisclaimer": {
+    "message": "Gemini 안내 문구 숨기기",
+    "description": "Toggle label for hiding Gemini AI disclaimer sentence"
+  },
+  "hideGeminiDisclaimerHint": {
+    "message": "페이지 하단 안내 문구를 숨기고 차지하던 공간을 함께 제거합니다",
+    "description": "Hint for hiding Gemini AI disclaimer sentence"
+  },
   "folderSpacing": {
     "message": "폴더 간격",
     "description": "Folder spacing adjustment label"

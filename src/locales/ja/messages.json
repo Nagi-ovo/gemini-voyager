@@ -1148,6 +1148,14 @@
     "message": "マウスが離れると自動でサイドバーを折りたたみ、マウスが入ると展開します",
     "description": "サイドバー自動非表示機能のヒント"
   },
+  "hideGeminiDisclaimer": {
+    "message": "Gemini の免責文を非表示",
+    "description": "Toggle label for hiding Gemini AI disclaimer sentence"
+  },
+  "hideGeminiDisclaimerHint": {
+    "message": "ページ下部の免責文を非表示にし、占有スペースも解放します",
+    "description": "Hint for hiding Gemini AI disclaimer sentence"
+  },
   "folderSpacing": {
     "message": "フォルダ間隔",
     "description": "フォルダ間隔調整ラベル"

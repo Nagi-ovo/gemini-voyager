@@ -1148,6 +1148,14 @@
     "message": "Automatically collapse sidebar when mouse leaves, expand when mouse enters",
     "description": "Auto-hide sidebar feature hint"
   },
+  "hideGeminiDisclaimer": {
+    "message": "Hide Gemini disclaimer text",
+    "description": "Toggle label for hiding Gemini AI disclaimer sentence"
+  },
+  "hideGeminiDisclaimerHint": {
+    "message": "Hide the footer disclaimer and release its occupied space",
+    "description": "Hint for hiding Gemini AI disclaimer sentence"
+  },
   "folderSpacing": {
     "message": "Folder spacing",
     "description": "Folder spacing adjustment label"

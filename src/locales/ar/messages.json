@@ -1148,6 +1148,14 @@
     "message": "طي الشريط الجانبي تلقائياً عند مغادرة الماوس، وتوسيعه عند الدخول",
     "description": "Auto-hide sidebar feature hint"
   },
+  "hideGeminiDisclaimer": {
+    "message": "إخفاء تنبيه Gemini",
+    "description": "Toggle label for hiding Gemini AI disclaimer sentence"
+  },
+  "hideGeminiDisclaimerHint": {
+    "message": "إخفاء نص التنبيه في أسفل الصفحة وتحرير المساحة التي يشغلها",
+    "description": "Hint for hiding Gemini AI disclaimer sentence"
+  },
   "folderSpacing": {
     "message": "تباعد المجلدات",
     "description": "Folder spacing adjustment label"

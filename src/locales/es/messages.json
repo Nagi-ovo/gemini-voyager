@@ -1148,6 +1148,14 @@
     "message": "Contrae automáticamente la barra lateral cuando el ratón sale, la expande cuando entra",
     "description": "Auto-hide sidebar feature hint"
   },
+  "hideGeminiDisclaimer": {
+    "message": "Ocultar aviso de Gemini",
+    "description": "Toggle label for hiding Gemini AI disclaimer sentence"
+  },
+  "hideGeminiDisclaimerHint": {
+    "message": "Oculta el texto de aviso del pie de página y libera el espacio que ocupaba",
+    "description": "Hint for hiding Gemini AI disclaimer sentence"
+  },
   "folderSpacing": {
     "message": "Espaciado de carpetas",
     "description": "Folder spacing adjustment label"

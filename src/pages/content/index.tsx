@@ -10,6 +10,7 @@ import { initI18n } from '@/utils/i18n';
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
+import { startDisclaimerHider } from './disclaimerHider';
 import DefaultModelManager from './defaultModel/modelLocker';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
@@ -218,6 +219,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Gems hider - hide/show toggle for Gems list section
       startGemsHider();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Disclaimer hider - optional hide for the "Gemini can make mistakes" footer text
+      startDisclaimerHider();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Markdown Patcher - fixes broken bold tags due to HTML injection

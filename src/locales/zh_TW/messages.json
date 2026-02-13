@@ -1148,6 +1148,14 @@
     "message": "滑鼠離開時自動收起側邊欄，滑鼠進入時展開",
     "description": "側邊欄自動收起功能提示"
   },
+  "hideGeminiDisclaimer": {
+    "message": "隱藏 Gemini 免責聲明",
+    "description": "隱藏 Gemini 免責聲明開關標籤"
+  },
+  "hideGeminiDisclaimerHint": {
+    "message": "隱藏頁面底部免責聲明文字並釋放佔用空間",
+    "description": "隱藏 Gemini 免責聲明功能提示"
+  },
   "folderSpacing": {
     "message": "資料夾間距",
     "description": "資料夾間距調節標籤"
