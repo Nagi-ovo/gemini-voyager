@@ -119,6 +119,7 @@ interface SettingsUpdate {
   watermarkRemoverEnabled?: boolean;
   hidePromptManager?: boolean;
   inputCollapseEnabled?: boolean;
+  inputMinCollapseEnabled?: boolean;
   tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
@@ -146,6 +147,7 @@ export default function Popup() {
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
+  const [inputMinCollapseEnabled, setInputMinCollapseEnabled] = useState<boolean>(false);
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
@@ -215,6 +217,8 @@ export default function Popup() {
         payload.gvHidePromptManager = settings.hidePromptManager;
       if (typeof settings.inputCollapseEnabled === 'boolean')
         payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
+      if (typeof settings.inputMinCollapseEnabled === 'boolean')
+        payload.gvInputMinCollapseEnabled = settings.inputMinCollapseEnabled;
       if (typeof settings.tabTitleUpdateEnabled === 'boolean')
         payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
       if (typeof settings.mermaidEnabled === 'boolean')
@@ -431,6 +435,7 @@ export default function Popup() {
           geminiWatermarkRemoverEnabled: true,
           gvHidePromptManager: false,
           gvInputCollapseEnabled: false,
+          gvInputMinCollapseEnabled: false,
           gvTabTitleUpdateEnabled: true,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
@@ -454,7 +459,9 @@ export default function Popup() {
           setCustomWebsites(loadedCustomWebsites);
           setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
           setHidePromptManager(!!res?.gvHidePromptManager);
-          setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
+          const collapseEnabled = res?.gvInputCollapseEnabled !== false;
+          setInputCollapseEnabled(collapseEnabled);
+          setInputMinCollapseEnabled(collapseEnabled && res?.gvInputMinCollapseEnabled === true);
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
@@ -1068,8 +1075,37 @@ export default function Popup() {
                 id="input-collapse-enabled"
                 checked={inputCollapseEnabled}
                 onChange={(e) => {
-                  setInputCollapseEnabled(e.target.checked);
-                  apply({ inputCollapseEnabled: e.target.checked });
+                  const enabled = e.target.checked;
+                  setInputCollapseEnabled(enabled);
+                  if (!enabled) {
+                    setInputMinCollapseEnabled(false);
+                    apply({ inputCollapseEnabled: false, inputMinCollapseEnabled: false });
+                  } else {
+                    apply({ inputCollapseEnabled: true });
+                  }
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
+                  htmlFor="input-min-collapse-enabled"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                >
+                  {t('enableInputMinCollapse')}
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t('enableInputMinCollapseHint')}
+                </p>
+              </div>
+              <Switch
+                id="input-min-collapse-enabled"
+                checked={inputMinCollapseEnabled}
+                disabled={!inputCollapseEnabled}
+                onChange={(e) => {
+                  const enabled = e.target.checked;
+                  setInputMinCollapseEnabled(enabled);
+                  apply({ inputMinCollapseEnabled: enabled });
                 }}
               />
             </div>

@@ -980,6 +980,14 @@
     "message": "طي منطقة الإدخال عندما تكون فارغة للحصول على مساحة قراءة أكبر",
     "description": "Input collapse feature hint"
   },
+  "enableInputMinCollapse": {
+    "message": "تفعيل التصغير الكامل لمنطقة الإدخال",
+    "description": "Enable aggressive input collapse toggle label"
+  },
+  "enableInputMinCollapseHint": {
+    "message": "عند الطي، أخفِ منطقة الإدخال بالكامل واضغط Enter مرتين لفتحها",
+    "description": "Aggressive input collapse feature hint"
+  },
   "inputCollapsePlaceholder": {
     "message": "راسل Gemini",
     "description": "Placeholder text shown in collapsed input"

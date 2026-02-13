@@ -980,6 +980,14 @@
     "message": "Contrae el área de entrada cuando está vacía para ganar más espacio de lectura",
     "description": "Input collapse feature hint"
   },
+  "enableInputMinCollapse": {
+    "message": "Habilitar minimización completa del cuadro de entrada",
+    "description": "Enable aggressive input collapse toggle label"
+  },
+  "enableInputMinCollapseHint": {
+    "message": "Cuando esté contraído, oculta por completo el cuadro de entrada y pulsa Enter dos veces para expandirlo",
+    "description": "Aggressive input collapse feature hint"
+  },
   "inputCollapsePlaceholder": {
     "message": "Mensaje a Gemini",
     "description": "Placeholder text shown in collapsed input"

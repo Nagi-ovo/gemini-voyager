@@ -980,6 +980,14 @@
     "message": "输入框为空时自动折叠，获得更多阅读空间",
     "description": "输入框折叠功能提示"
   },
+  "enableInputMinCollapse": {
+    "message": "启用输入框最小化折叠",
+    "description": "启用输入框最小化折叠开关标签"
+  },
+  "enableInputMinCollapseHint": {
+    "message": "折叠时完全隐藏输入框并释放空间，双击 Enter 可自动弹开",
+    "description": "输入框最小化折叠功能提示"
+  },
   "inputCollapsePlaceholder": {
     "message": "给 Gemini 发消息",
     "description": "折叠输入框时显示的占位符文本"

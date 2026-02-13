@@ -940,6 +940,14 @@
     "message": "輸入框為空時自動摺疊，獲得更多閱讀空間",
     "description": "輸入框摺疊功能提示"
   },
+  "enableInputMinCollapse": {
+    "message": "啟用輸入框最小化摺疊",
+    "description": "啟用輸入框最小化摺疊開關標籤"
+  },
+  "enableInputMinCollapseHint": {
+    "message": "摺疊時完全隱藏輸入框並釋放空間，連按兩次 Enter 可自動展開",
+    "description": "輸入框最小化摺疊功能提示"
+  },
   "inputCollapsePlaceholder": {
     "message": "傳送訊息給 Gemini",
     "description": "摺疊輸入框時顯示的佔位符文字"

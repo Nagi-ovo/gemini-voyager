@@ -980,6 +980,14 @@
     "message": "Réduit la zone de saisie quand elle est vide pour gagner de l'espace",
     "description": "Input collapse feature hint"
   },
+  "enableInputMinCollapse": {
+    "message": "Activer la réduction minimale de l'entrée",
+    "description": "Enable aggressive input collapse toggle label"
+  },
+  "enableInputMinCollapseHint": {
+    "message": "Lorsqu'elle est réduite, masquer complètement la zone de saisie et appuyer deux fois sur Entrée pour l'ouvrir",
+    "description": "Aggressive input collapse feature hint"
+  },
   "inputCollapsePlaceholder": {
     "message": "Message à Gemini",
     "description": "Placeholder text shown in collapsed input"

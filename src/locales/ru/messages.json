@@ -980,6 +980,14 @@
     "message": "Сворачивать поле ввода, когда оно пустое, для увеличения пространства для чтения",
     "description": "Input collapse feature hint"
   },
+  "enableInputMinCollapse": {
+    "message": "Включить минимальное сворачивание поля ввода",
+    "description": "Enable aggressive input collapse toggle label"
+  },
+  "enableInputMinCollapseHint": {
+    "message": "При сворачивании полностью скрывать поле ввода; дважды нажмите Enter, чтобы развернуть",
+    "description": "Aggressive input collapse feature hint"
+  },
   "inputCollapsePlaceholder": {
     "message": "Сообщение Gemini",
     "description": "Placeholder text shown in collapsed input"

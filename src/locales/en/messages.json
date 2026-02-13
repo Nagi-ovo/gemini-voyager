@@ -980,6 +980,14 @@
     "message": "Collapse the input area when empty to gain more reading space",
     "description": "Input collapse feature hint"
   },
+  "enableInputMinCollapse": {
+    "message": "Enable input minimal collapse",
+    "description": "Enable aggressive input collapse toggle label"
+  },
+  "enableInputMinCollapseHint": {
+    "message": "When collapsed, fully hide the input area and press Enter twice to expand it",
+    "description": "Aggressive input collapse feature hint"
+  },
   "inputCollapsePlaceholder": {
     "message": "Message Gemini",
     "description": "Placeholder text shown in collapsed input"

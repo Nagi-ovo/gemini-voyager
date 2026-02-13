@@ -6,7 +6,9 @@ import { getTranslationSync } from '../../../utils/i18n';
 
 const STYLE_ID = 'gemini-voyager-input-collapse';
 const COLLAPSED_CLASS = 'gv-input-collapsed';
+const MIN_COLLAPSED_CLASS = 'gv-input-min-collapsed';
 const PLACEHOLDER_CLASS = 'gv-collapse-placeholder';
+const MIN_COLLAPSE_DOUBLE_ENTER_INTERVAL_MS = 350;
 
 /**
  * Checks if the current page is the homepage or a new conversation page.
@@ -143,6 +145,32 @@ function injectStyles() {
       pointer-events: none;
     }
 
+    /* Minimized collapse: fully hide the input container and release layout space */
+    .${MIN_COLLAPSED_CLASS} {
+      height: 0 !important;
+      min-height: 0 !important;
+      max-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      opacity: 0 !important;
+      overflow: hidden !important;
+      pointer-events: none !important;
+      transform: none !important;
+    }
+
+    .${MIN_COLLAPSED_CLASS} > * {
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      position: absolute !important;
+      pointer-events: none !important;
+    }
+
     /* Dark mode adjustments */
     @media (prefers-color-scheme: dark) {
       .${COLLAPSED_CLASS} {
@@ -265,20 +293,35 @@ function ensurePlaceholder(container: HTMLElement) {
 
 export function startInputCollapse() {
   // Check if feature is enabled (default: false)
-  chrome.storage?.sync?.get({ gvInputCollapseEnabled: false }, (res) => {
-    if (res?.gvInputCollapseEnabled === false) {
-      // Feature is disabled, don't initialize
-      console.log('[Gemini Voyager] Input collapse is disabled');
-      return;
-    }
+  chrome.storage?.sync?.get(
+    { gvInputCollapseEnabled: false, [StorageKeys.GV_INPUT_MIN_COLLAPSE]: false },
+    (res) => {
+      inputMinCollapseEnabled = res?.[StorageKeys.GV_INPUT_MIN_COLLAPSE] === true;
+      if (res?.gvInputCollapseEnabled === false) {
+        // Feature is disabled, don't initialize
+        console.log('[Gemini Voyager] Input collapse is disabled');
+        return;
+      }
 
-    // Feature is enabled, proceed with initialization
-    initInputCollapse();
-  });
+      // Feature is enabled, proceed with initialization
+      initInputCollapse();
+    },
+  );
 
   // Listen for setting changes
   chrome.storage?.onChanged?.addListener((changes, area) => {
-    if (area === 'sync' && changes.gvInputCollapseEnabled) {
+    if (area !== 'sync') return;
+
+    if (changes[StorageKeys.GV_INPUT_MIN_COLLAPSE]) {
+      inputMinCollapseEnabled = changes[StorageKeys.GV_INPUT_MIN_COLLAPSE].newValue === true;
+      if (!inputMinCollapseEnabled) {
+        document.querySelectorAll(`.${MIN_COLLAPSED_CLASS}`).forEach((el) => {
+          el.classList.remove(MIN_COLLAPSED_CLASS);
+        });
+      }
+    }
+
+    if (changes.gvInputCollapseEnabled) {
       if (changes.gvInputCollapseEnabled.newValue === false) {
         // Disable: remove styles and classes
         cleanup();
@@ -293,8 +336,26 @@ export function startInputCollapse() {
 let observer: MutationObserver | null = null;
 let initialized = false;
 let eventController: AbortController | null = null;
+let inputMinCollapseEnabled = false;
+let lastEnterKeyTime = 0;
+
+function setCollapsedState(container: HTMLElement): void {
+  container.classList.add(COLLAPSED_CLASS);
+  if (inputMinCollapseEnabled) {
+    container.classList.add(MIN_COLLAPSED_CLASS);
+  } else {
+    container.classList.remove(MIN_COLLAPSED_CLASS);
+  }
+}
+
+function clearCollapsedState(container: HTMLElement): void {
+  container.classList.remove(COLLAPSED_CLASS);
+  container.classList.remove(MIN_COLLAPSED_CLASS);
+}
 
 function cleanup() {
+  lastEnterKeyTime = 0;
+
   // Abort all event listeners managed by the controller
   if (eventController) {
     eventController.abort();
@@ -308,6 +369,9 @@ function cleanup() {
   // Remove classes from containers
   document.querySelectorAll(`.${COLLAPSED_CLASS}`).forEach((el) => {
     el.classList.remove(COLLAPSED_CLASS);
+  });
+  document.querySelectorAll(`.${MIN_COLLAPSED_CLASS}`).forEach((el) => {
+    el.classList.remove(MIN_COLLAPSED_CLASS);
   });
   document.querySelectorAll('.element-to-collapse').forEach((el) => {
     el.classList.remove('element-to-collapse');
@@ -341,6 +405,29 @@ function initInputCollapse() {
   eventController = new AbortController();
   const { signal } = eventController;
 
+  const handleMinCollapseExpandShortcut = (event: KeyboardEvent): void => {
+    if (!inputMinCollapseEnabled) return;
+    if (event.isComposing) return;
+    if (event.key !== 'Enter') return;
+    if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+
+    const container = getInputContainer();
+    if (!container || !container.classList.contains(MIN_COLLAPSED_CLASS)) return;
+
+    const now = Date.now();
+    if (now - lastEnterKeyTime <= MIN_COLLAPSE_DOUBLE_ENTER_INTERVAL_MS) {
+      event.preventDefault();
+      event.stopPropagation();
+      expand(container);
+      lastEnterKeyTime = 0;
+      return;
+    }
+
+    lastEnterKeyTime = now;
+  };
+
+  window.addEventListener('keydown', handleMinCollapseExpandShortcut, { signal, capture: true });
+
   // Auto-expand the input area when a file is dragged into the window.
   document.addEventListener(
     'dragenter',
@@ -367,7 +454,7 @@ function initInputCollapse() {
 
     if (shouldDisableAutoCollapse()) {
       // On homepage/new conversation/gems create: expand the input
-      container.classList.remove(COLLAPSED_CLASS);
+      clearCollapsedState(container);
     } else {
       // On conversation page: try to collapse if appropriate
       tryCollapse(container);
@@ -455,7 +542,7 @@ function initInputCollapse() {
 
 function expand(container: HTMLElement) {
   if (container.classList.contains(COLLAPSED_CLASS)) {
-    container.classList.remove(COLLAPSED_CLASS);
+    clearCollapsedState(container);
 
     // Auto-focus the Quill editor
     // .ql-editor is the actual contenteditable div inside rich-textarea
@@ -474,7 +561,7 @@ function tryCollapse(container: HTMLElement) {
   setTimeout(() => {
     // Don't collapse on excluded pages (homepage, new conversation, gems create)
     if (shouldDisableAutoCollapse()) {
-      container.classList.remove(COLLAPSED_CLASS);
+      clearCollapsedState(container);
       return;
     }
 
@@ -482,7 +569,7 @@ function tryCollapse(container: HTMLElement) {
     const isStillFocused = container.contains(active);
 
     if (!isStillFocused && isInputEmpty(container)) {
-      container.classList.add(COLLAPSED_CLASS);
+      setCollapsedState(container);
     }
   }, 150);
 }

@@ -980,6 +980,14 @@
     "message": "空の時に入力欄を折りたたみ、広い読書スペースを確保します",
     "description": "Input collapse feature hint"
   },
+  "enableInputMinCollapse": {
+    "message": "入力欄の最小化折りたたみを有効化",
+    "description": "Enable aggressive input collapse toggle label"
+  },
+  "enableInputMinCollapseHint": {
+    "message": "折りたたみ時に入力欄を完全に隠し、Enter を2回押すと展開します",
+    "description": "Aggressive input collapse feature hint"
+  },
   "inputCollapsePlaceholder": {
     "message": "Gemini にメッセージを送信",
     "description": "Placeholder text shown in collapsed input"

@@ -980,6 +980,14 @@
     "message": "입력창이 비어 있을 때 접어서 더 많은 읽기 공간을 확보합니다",
     "description": "Input collapse feature hint"
   },
+  "enableInputMinCollapse": {
+    "message": "입력창 완전 최소화 접기 활성화",
+    "description": "Enable aggressive input collapse toggle label"
+  },
+  "enableInputMinCollapseHint": {
+    "message": "접힌 상태에서 입력창을 완전히 숨기고 Enter를 두 번 누르면 다시 펼칩니다",
+    "description": "Aggressive input collapse feature hint"
+  },
   "inputCollapsePlaceholder": {
     "message": "Gemini에게 메시지 보내기",
     "description": "Placeholder text shown in collapsed input"
