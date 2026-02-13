@@ -724,6 +724,29 @@ mark.timeline-search-highlight {
     box-shadow 0.2s ease;
 }
 
+.gv-pm-trigger.gv-pm-trigger-inline {
+  position: relative !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  margin-right: 8px;
+  box-shadow: none;
+  z-index: auto;
+}
+
+.gv-pm-trigger.gv-pm-trigger-inline img {
+  width: 18px;
+  height: 18px;
+}
+
+.gv-pm-trigger.gv-pm-trigger-inline:hover,
+.gv-pm-trigger.gv-pm-trigger-inline:active {
+  transform: none;
+  box-shadow: none;
+}
+
 .gv-pm-trigger:hover {
   transform: scale(1.05);
   box-shadow:

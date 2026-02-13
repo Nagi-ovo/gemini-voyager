@@ -54,6 +54,33 @@ const ID = {
 
 const LATEST_VERSION_CACHE_KEY = 'gvLatestVersionCache';
 const LATEST_VERSION_MAX_AGE = 1000 * 60 * 60 * 6; // 6 hours
+const GEMINI_SHARE_SELECTOR = '[data-test-id="share-button"]';
+const GEMINI_ACTIONS_MENU_SELECTOR = '[data-test-id="actions-menu-button"]';
+
+export function isGeminiWebTopbarMode(hostname: string = window.location.hostname): boolean {
+  return hostname.toLowerCase() === 'gemini.google.com';
+}
+
+export function placePromptTriggerInTopbar(
+  trigger: HTMLElement,
+  root: ParentNode = document,
+): boolean {
+  const shareButton = root.querySelector<HTMLElement>(GEMINI_SHARE_SELECTOR);
+  const fallbackButton = root.querySelector<HTMLElement>(GEMINI_ACTIONS_MENU_SELECTOR);
+  const anchor = shareButton ?? fallbackButton;
+  if (!anchor || !anchor.parentElement) return false;
+
+  const container = anchor.parentElement;
+  trigger.classList.add('gv-pm-trigger-inline');
+  trigger.style.right = '';
+  trigger.style.bottom = '';
+
+  if (trigger.parentElement !== container || trigger.nextElementSibling !== anchor) {
+    container.insertBefore(trigger, anchor);
+  }
+
+  return true;
+}
 
 function getRuntimeUrl(path: string): string {
   // Try the standard Web Extensions API first (mainly for Firefox)
@@ -386,8 +413,52 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     );
     trigger.appendChild(img);
     document.body.appendChild(trigger);
+    const useTopbarPlacement = isGeminiWebTopbarMode();
+    let isInlineTrigger = false;
+    let inlineRetryAttempts = 0;
+    let inlineRetryTimer: number | null = null;
+    const INLINE_RETRY_MAX_ATTEMPTS = 20;
+    const INLINE_RETRY_INTERVAL_MS = 250;
+
+    function clearInlineRetryTimer(): void {
+      if (inlineRetryTimer !== null) {
+        window.clearTimeout(inlineRetryTimer);
+        inlineRetryTimer = null;
+      }
+    }
+
+    function applyInlineTriggerPlacement(): boolean {
+      if (!useTopbarPlacement) return false;
+      const placed = placePromptTriggerInTopbar(trigger, document);
+      if (!placed) return false;
+      isInlineTrigger = true;
+      clearInlineRetryTimer();
+      inlineRetryAttempts = 0;
+      return true;
+    }
+
+    function setFloatingTriggerMode(): void {
+      isInlineTrigger = false;
+      trigger.classList.remove('gv-pm-trigger-inline');
+      if (trigger.parentElement !== document.body) {
+        document.body.appendChild(trigger);
+      }
+    }
+
+    function scheduleInlinePlacementRetry(): void {
+      if (!useTopbarPlacement || isInlineTrigger) return;
+      if (inlineRetryAttempts >= INLINE_RETRY_MAX_ATTEMPTS) return;
+      clearInlineRetryTimer();
+      inlineRetryTimer = window.setTimeout(() => {
+        inlineRetryAttempts += 1;
+        if (applyInlineTriggerPlacement()) return;
+        scheduleInlinePlacementRetry();
+      }, INLINE_RETRY_INTERVAL_MS);
+    }
+
     // Helper: place trigger near a target element (e.g. Gemini FAB touch target)
     function placeTriggerNextToHost(): void {
+      if (isInlineTrigger) return;
       try {
         const candidates = Array.from(
           document.querySelectorAll('span.mat-mdc-button-touch-target'),
@@ -415,6 +486,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     // Helper: constrain trigger position to viewport bounds
     function constrainTriggerPosition(): void {
+      if (isInlineTrigger) return;
       try {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
@@ -443,19 +515,30 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // Restore trigger position if saved; otherwise place next to host button
     try {
       const pos = await readStorage<TriggerPosition | null>(STORAGE_KEYS.triggerPos, null);
-      if (pos && Number.isFinite(pos.bottom) && Number.isFinite(pos.right)) {
-        trigger.style.bottom = `${Math.max(6, Math.round(pos.bottom))}px`;
-        trigger.style.right = `${Math.max(6, Math.round(pos.right))}px`;
-        // Constrain position after restore to handle window resize/split screen
-        requestAnimationFrame(constrainTriggerPosition);
-      } else {
-        // defer a bit to wait for host DOM
-        placeTriggerNextToHost();
-        requestAnimationFrame(placeTriggerNextToHost);
-        window.setTimeout(placeTriggerNextToHost, 350);
+      if (!applyInlineTriggerPlacement()) {
+        setFloatingTriggerMode();
+        if (pos && Number.isFinite(pos.bottom) && Number.isFinite(pos.right)) {
+          trigger.style.bottom = `${Math.max(6, Math.round(pos.bottom))}px`;
+          trigger.style.right = `${Math.max(6, Math.round(pos.right))}px`;
+          // Constrain position after restore to handle window resize/split screen
+          requestAnimationFrame(constrainTriggerPosition);
+        } else {
+          // defer a bit to wait for host DOM
+          placeTriggerNextToHost();
+          requestAnimationFrame(placeTriggerNextToHost);
+          window.setTimeout(placeTriggerNextToHost, 350);
+        }
+
+        if (useTopbarPlacement) {
+          scheduleInlinePlacementRetry();
+        }
       }
     } catch {
+      setFloatingTriggerMode();
       placeTriggerNextToHost();
+      if (useTopbarPlacement) {
+        scheduleInlinePlacementRetry();
+      }
     }
 
     // Panel root
@@ -1000,7 +1083,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const y = ev.clientY - dragOffset.y;
         panel.style.left = `${Math.round(x)}px`;
         panel.style.top = `${Math.round(y)}px`;
-      } else if (draggingTrigger) {
+      } else if (draggingTrigger && !isInlineTrigger) {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
         const rect = trigger.getBoundingClientRect();
@@ -1026,12 +1109,32 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // Handle window resize - constrain trigger and reposition panel
     // Handle window resize - constrain trigger and reposition panel
     const onWindowResize = () => {
-      constrainTriggerPosition();
+      if (useTopbarPlacement) {
+        if (!applyInlineTriggerPlacement()) {
+          setFloatingTriggerMode();
+          scheduleInlinePlacementRetry();
+        }
+      }
+      if (!isInlineTrigger) {
+        constrainTriggerPosition();
+      }
       onReposition();
     };
     window.addEventListener('resize', onWindowResize, { passive: true });
 
     window.addEventListener('scroll', onReposition, { passive: true });
+
+    const topbarPlacementObserver = new MutationObserver(() => {
+      if (!useTopbarPlacement) return;
+
+      if (!applyInlineTriggerPlacement()) {
+        setFloatingTriggerMode();
+        scheduleInlinePlacementRetry();
+      }
+
+      onReposition();
+    });
+    topbarPlacementObserver.observe(document.body, { childList: true, subtree: true });
 
     // Close when clicking outside of the manager (panel/trigger/confirm are exceptions)
     const onWindowPointerDown = (ev: PointerEvent) => {
@@ -1079,6 +1182,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // Trigger drag (always draggable)
     let triggerDragStartPos: { x: number; y: number } | null = null;
     trigger.addEventListener('pointerdown', (ev: PointerEvent) => {
+      if (isInlineTrigger) return;
       if (typeof ev.button === 'number' && ev.button !== 0) return;
       draggingTrigger = true;
       triggerDragStartPos = { x: ev.clientX, y: ev.clientY };
@@ -1088,6 +1192,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     });
 
     const onTriggerDragEnd = async (ev: PointerEvent) => {
+      if (isInlineTrigger) {
+        draggingTrigger = false;
+        triggerDragStartPos = null;
+        return;
+      }
       if (draggingTrigger) {
         draggingTrigger = false;
         // Only save if the trigger actually moved (threshold: 5px)
@@ -1480,6 +1589,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           window.removeEventListener('pointermove', onDragMove);
           window.removeEventListener('pointerup', endDrag);
           window.removeEventListener('pointerup', onTriggerDragEnd);
+          topbarPlacementObserver.disconnect();
+          clearInlineRetryTimer();
 
           chrome.storage?.onChanged?.removeListener(storageChangeHandler);
 
