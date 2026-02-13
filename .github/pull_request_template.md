@@ -15,8 +15,8 @@
 
 ### Related Issue / 相关 Issue
 
-<!-- Link the issue this PR resolves (e.g., Closes #123). If no issue exists, please open one first. -->
-<!-- 链接此 PR 解决的 issue（例如：Closes #123）。如果不存在相关 issue，请先开启一个。 -->
+<!-- Link the issue this PR resolves (e.g., Closes #123). FOR NEW FEATURES: You MUST open an Issue for discussion first. PRs submitted without prior discussion will be closed. -->
+<!-- 链接此 PR 解决的 issue（例如：Closes #123）。对于新功能：请务必先开启一个 Issue 进行讨论，未经讨论直接提交的 PR 会被关闭。 -->
 
 ### Visual Proof / 可视化证据
 

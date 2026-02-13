@@ -123,7 +123,7 @@ bun install
    git checkout -b fix/your-bug-fix
    ```
 
-2. **关联 Issue** - 在实现一个新功能时，请检查 issue 中是否有相关的问题并建立联系；如果没有，请开启一个对应的 issue。
+2. **关联 Issue** - 在实现一个新功能时，请**务必先开启一个 Issue 进行讨论**。未经讨论直接提交的新功能 PR 将被关闭。在提交 PR 时，请链接该 Issue。
 
 ### 提交前检查清单
 
@@ -388,7 +388,7 @@ bun install
    git checkout -b fix/your-bug-fix
    ```
 
-2. **Link Issues** - When implementing a new feature, please check if a relevant issue exists and link it; if not, please open a new issue.
+2. **Link Issues** - When implementing a new feature, you **must first open an Issue for discussion**. PRs for new features submitted without prior discussion will be closed. When submitting a PR, please link that Issue.
 
 ### Pre-Commit Checklist
 

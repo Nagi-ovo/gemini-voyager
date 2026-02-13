@@ -117,7 +117,8 @@ bun install
    git checkout -b fix/tu-correccion-de-error
    ```
 
-2. **Mantén los cambios enfocados** - una funcionalidad o corrección por PR
+2. **Vincular Issues** - Al implementar una nueva funcionalidad, **primero debes abrir un Issue de discusión**. Los PR de nuevas funcionalidades enviados sin discusión previa serán cerrados. Al enviar un PR, por favor enlaza ese Issue.
+3. **Mantén los cambios enfocados** - una funcionalidad o corrección por PR
 
 ### Lista de Verificación Pre-Commit
 
