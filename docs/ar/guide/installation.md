@@ -48,8 +48,8 @@
 
 Safari يدعم الآن التوزيع المباشر! قم بتنزيل التطبيق الموقع مسبقاً:
 
-1. قم بتنزيل <SafariDownloadLink>أحدث إصدار Safari</SafariDownloadLink>.
-2. قم بفك ضغط الملف واسحب `Gemini Voyager.app` إلى مجلد التطبيقات.
+1. قم بتنزيل <SafariDownloadLink>أحدث إصدار Safari (.dmg)</SafariDownloadLink>.
+2. افتح الملف واتبع تعليمات التثبيت.
 3. انقر نقراً مزدوجاً لتشغيل التطبيق.
 4. قم بالتفعيل في **إعدادات Safari > الإضافات**.
 

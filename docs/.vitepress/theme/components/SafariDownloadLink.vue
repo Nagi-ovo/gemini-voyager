@@ -9,7 +9,7 @@ const CACHE_KEY = 'gemini-voyager-latest-version';
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 const downloadUrl = computed(() => {
-  return `https://github.com/Nagi-ovo/gemini-voyager/releases/download/v${latestVersion.value}/gemini-voyager-safari-v${latestVersion.value}.zip`;
+  return `https://github.com/Nagi-ovo/gemini-voyager/releases/download/v${latestVersion.value}/gemini-voyager-${latestVersion.value}.dmg`;
 });
 
 onMounted(async () => {

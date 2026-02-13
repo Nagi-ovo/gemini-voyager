@@ -14,7 +14,7 @@ Download the <SafariDownloadLink>latest Safari version</SafariDownloadLink>.
 
 1. On component mount, it fetches the latest release from GitHub API
 2. Extracts the version number from the tag name
-3. Generates the download URL: `https://github.com/Nagi-ovo/gemini-voyager/releases/download/v{version}/gemini-voyager-safari-v{version}.zip`
+3. Generates the download URL: `https://github.com/Nagi-ovo/gemini-voyager/releases/download/v{version}/gemini-voyager-v{version}.dmg`
 4. If the API call fails, it falls back to version `1.2.3`
 
 ## Features

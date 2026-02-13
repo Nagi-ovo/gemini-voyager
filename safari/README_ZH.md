@@ -5,7 +5,7 @@
 为 Safari 构建和扩展 Gemini Voyager 的开发者指南。
 
 > [!TIP]
-> **想要进行安装？** 你现在可以直接从 [最新发布页](https://github.com/Nagi-ovo/gemini-voyager/releases/latest) 下载预签名的应用。只需解压 ZIP 并将 `Gemini Voyager.app` 拖入 **应用程序 (Applications)** 文件夹即可。
+> **想要进行安装？** 你现在可以直接从 [最新发布页](https://github.com/Nagi-ovo/gemini-voyager/releases/latest) 下载预签名的应用。只需下载 `.dmg` 并按提示安装即可。
 
 ## 快速开始
 

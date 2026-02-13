@@ -48,8 +48,8 @@ O processo de revisão da Web Store pode ser lento. Se quiser a versão de ponta
 
 O Safari agora suporta distribuição direta! Descarregue a aplicação pré-assinada:
 
-1. Descarregue a <SafariDownloadLink>última versão do Safari</SafariDownloadLink>.
-2. Descompacte o ficheiro e arraste `Gemini Voyager.app` para a sua pasta de Aplicações.
+1. Descarregue a <SafariDownloadLink>última versão do Safari (.dmg)</SafariDownloadLink>.
+2. Abra o ficheiro e siga as instruções para instalar.
 3. Clique duas vezes para iniciar a aplicação.
 4. Ative a extensão nas **Definições do Safari > Extensões**.
 

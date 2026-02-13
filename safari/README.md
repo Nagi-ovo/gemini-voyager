@@ -5,7 +5,7 @@ English | [简体中文](README_ZH.md)
 Developer guide for building and extending Gemini Voyager for Safari.
 
 > [!TIP]
-> **Looking to install?** You can now download the pre-signed app directly from the [latest release](https://github.com/Nagi-ovo/gemini-voyager/releases/latest). Simply extract the ZIP and drag `Gemini Voyager.app` to your **Applications** folder.
+> **Looking to install?** You can now download the pre-signed app directly from the [latest release](https://github.com/Nagi-ovo/gemini-voyager/releases/latest). Simply download the `.dmg` and follow the prompts to install.
 
 ## Quick Start
 

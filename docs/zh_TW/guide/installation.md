@@ -48,8 +48,8 @@
 
 Safari 現在支持直接分發！下載預簽名的應用：
 
-1. 下載 <SafariDownloadLink>最新 Safari 版本</SafariDownloadLink>。
-2. 解壓後將 `Gemini Voyager.app` 拖到應用程式資料夾。
+1. 下載 <SafariDownloadLink>最新 Safari 版本 (.dmg)</SafariDownloadLink>。
+2. 雙擊打開後按提示安裝應用。
 3. 雙擊啟動應用。
 4. 在 **Safari 設置 > 擴充功能** 中啟用。
 

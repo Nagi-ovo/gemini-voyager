@@ -48,8 +48,8 @@
 
 Safari가 이제 직접 배포를 지원합니다! 사전 서명된 앱을 다운로드하세요:
 
-1. <SafariDownloadLink>최신 Safari 버전</SafariDownloadLink>을 다운로드합니다.
-2. 파일의 압축을 풀고 `Gemini Voyager.app`을 응용 프로그램 폴더로 드래그합니다.
+1. <SafariDownloadLink>최신 Safari 버전 (.dmg)</SafariDownloadLink>을 다운로드합니다.
+2. 파일을 더블 클릭하여 안내에 따라 설치합니다.
 3. 더블 클릭하여 앱을 실행합니다.
 4. **Safari 설정 > 확장 프로그램**에서 활성화합니다.
 
