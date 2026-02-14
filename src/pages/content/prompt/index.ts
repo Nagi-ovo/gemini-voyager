@@ -82,6 +82,14 @@ export function placePromptTriggerInTopbar(
   return true;
 }
 
+export function createTopbarPlacementObserver(
+  useTopbarPlacement: boolean,
+  callback: MutationCallback,
+): MutationObserver | null {
+  if (!useTopbarPlacement) return null;
+  return new MutationObserver(callback);
+}
+
 function getRuntimeUrl(path: string): string {
   // Try the standard Web Extensions API first (mainly for Firefox)
   try {
@@ -1124,9 +1132,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     window.addEventListener('scroll', onReposition, { passive: true });
 
-    const topbarPlacementObserver = new MutationObserver(() => {
-      if (!useTopbarPlacement) return;
-
+    const topbarPlacementObserver = createTopbarPlacementObserver(useTopbarPlacement, () => {
       if (!applyInlineTriggerPlacement()) {
         setFloatingTriggerMode();
         scheduleInlinePlacementRetry();
@@ -1134,7 +1140,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
       onReposition();
     });
-    topbarPlacementObserver.observe(document.body, { childList: true, subtree: true });
+    topbarPlacementObserver?.observe(document.body, { childList: true, subtree: true });
 
     // Close when clicking outside of the manager (panel/trigger/confirm are exceptions)
     const onWindowPointerDown = (ev: PointerEvent) => {
@@ -1589,7 +1595,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           window.removeEventListener('pointermove', onDragMove);
           window.removeEventListener('pointerup', endDrag);
           window.removeEventListener('pointerup', onTriggerDragEnd);
-          topbarPlacementObserver.disconnect();
+          topbarPlacementObserver?.disconnect();
           clearInlineRetryTimer();
 
           chrome.storage?.onChanged?.removeListener(storageChangeHandler);

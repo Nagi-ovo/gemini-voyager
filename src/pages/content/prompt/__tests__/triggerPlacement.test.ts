@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { isGeminiWebTopbarMode, placePromptTriggerInTopbar } from '../index';
+import {
+  createTopbarPlacementObserver,
+  isGeminiWebTopbarMode,
+  placePromptTriggerInTopbar,
+} from '../index';
 
 describe('prompt trigger topbar placement', () => {
   afterEach(() => {
@@ -51,5 +55,16 @@ describe('prompt trigger topbar placement', () => {
     expect(isGeminiWebTopbarMode('gemini.google.com')).toBe(true);
     expect(isGeminiWebTopbarMode('aistudio.google.com')).toBe(false);
     expect(isGeminiWebTopbarMode('example.com')).toBe(false);
+  });
+
+  it('creates mutation observer only when topbar mode is enabled', () => {
+    const callback: MutationCallback = () => {};
+    const observer = createTopbarPlacementObserver(true, callback);
+    const disabledObserver = createTopbarPlacementObserver(false, callback);
+
+    expect(observer).toBeInstanceOf(MutationObserver);
+    expect(disabledObserver).toBeNull();
+
+    observer?.disconnect();
   });
 });
