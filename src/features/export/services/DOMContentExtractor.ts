@@ -263,7 +263,7 @@ export class DOMContentExtractor {
     if (!combinedText) {
       const fallbackContainer =
         (messageContent as HTMLElement) ||
-        (queryOutsideThoughts<HTMLElement>(element, 'message-content')) ||
+        queryOutsideThoughts<HTMLElement>(element, 'message-content') ||
         (element as HTMLElement);
       try {
         const plain =

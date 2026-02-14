@@ -135,6 +135,13 @@ export class DeepResearchPDFPrintService {
       }
       this.originalDocumentTitle = null;
     }
+
+    // Notify other UI components that printing ended (mirrors PDFPrintService).
+    try {
+      window.dispatchEvent(new CustomEvent('gv-print-cleanup'));
+    } catch {
+      /* ignore */
+    }
   }
 
   private static createPrintContainer(content: PrintableDocumentContent): HTMLElement {

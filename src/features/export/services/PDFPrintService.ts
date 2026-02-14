@@ -936,6 +936,15 @@ export class PDFPrintService {
 
     // Keep styles for potential reuse
     // They don't affect screen display anyway
+
+    // Notify other UI components (export button, folder manager) that printing ended.
+    // Gemini may re-render parts of the DOM during print, removing plugin-injected elements.
+    // This event gives them a chance to detect the loss and re-inject.
+    try {
+      window.dispatchEvent(new CustomEvent('gv-print-cleanup'));
+    } catch {
+      /* ignore */
+    }
   }
 
   /**

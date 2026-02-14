@@ -81,18 +81,18 @@ function waitForElement(selector: string, timeoutMs: number = 6000): Promise<Ele
       if (found) {
         try {
           obs.disconnect();
-        } catch { }
+        } catch {}
         resolve(found);
       }
     });
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch { }
+    } catch {}
     if (timeoutMs > 0)
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch { }
+        } catch {}
         resolve(null);
       }, timeoutMs);
   });
@@ -115,7 +115,7 @@ function waitForAnyElement(
         if (found) {
           try {
             obs.disconnect();
-          } catch { }
+          } catch {}
           resolve(found);
           return;
         }
@@ -124,13 +124,13 @@ function waitForAnyElement(
 
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch { }
+    } catch {}
 
     if (timeoutMs > 0)
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch { }
+        } catch {}
         resolve(null);
       }, timeoutMs);
   });
@@ -258,7 +258,7 @@ function ensureTurnId(el: Element, index: number): string {
     id = `u-${index}-${hashString(basis)}`;
     try {
       (asEl.dataset as any).turnId = id;
-    } catch { }
+    } catch {}
   }
   return id;
 }
@@ -290,7 +290,7 @@ function extractAssistantText(el: HTMLElement): string {
       const txt = normalizeText(raw);
       if (txt) return txt;
     }
-  } catch { }
+  } catch {}
 
   // Clone and remove reasoning toggles/labels before reading text (detached fallback)
   const clone = el.cloneNode(true) as HTMLElement;
@@ -320,7 +320,7 @@ function extractAssistantText(el: HTMLElement): string {
       const eln = n as HTMLElement;
       if (shouldDrop(eln)) eln.remove();
     });
-  } catch { }
+  } catch {}
   const text = normalizeText(clone.innerText || clone.textContent || '');
   return text;
 }
@@ -403,7 +403,10 @@ function collectChatPairs(): ChatTurn[] {
           queryOutsideThoughts<HTMLElement>(aEl, 'message-content') ||
           queryOutsideThoughts<HTMLElement>(aEl, '.markdown, .markdown-main-panel') ||
           (aEl.closest('.presented-response-container') as HTMLElement | null) ||
-          queryOutsideThoughts<HTMLElement>(aEl, '.presented-response-container, .response-content') ||
+          queryOutsideThoughts<HTMLElement>(
+            aEl,
+            '.presented-response-container, .response-content',
+          ) ||
           queryOutsideThoughts<HTMLElement>(aEl, 'response-element') ||
           aEl;
         finalAssistantEl = pick || undefined;
@@ -775,7 +778,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from Folder Manager:', error);
-    } catch { }
+    } catch {}
   }
 
   // Strategy 1b: Get from Gemini native sidebar via current conversation ID
@@ -788,7 +791,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from native sidebar by conversation id:', error);
-    } catch { }
+    } catch {}
   }
 
   // Strategy 2: Try to get from page title
@@ -819,7 +822,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from sidebar:', error);
-    } catch { }
+    } catch {}
   }
 
   // Strategy 4: URL fallback
@@ -1284,7 +1287,7 @@ async function performFinalExport(
     cleanupTasks.forEach((fn) => {
       try {
         fn();
-      } catch { }
+      } catch {}
     });
     cleanupTasks.length = 0;
   };
@@ -1358,10 +1361,10 @@ async function performFinalExport(
     const swallow = (ev: Event) => {
       try {
         ev.preventDefault();
-      } catch { }
+      } catch {}
       try {
         ev.stopPropagation();
-      } catch { }
+      } catch {}
     };
 
     const toggleSelection = () => {
@@ -1455,10 +1458,10 @@ async function performFinalExport(
   const swallow = (ev: Event) => {
     try {
       ev.preventDefault();
-    } catch { }
+    } catch {}
     try {
       ev.stopPropagation();
-    } catch { }
+    } catch {}
   };
 
   selectAllBtn.addEventListener('click', (ev) => {
@@ -1555,7 +1558,7 @@ async function performFinalExport(
       try {
         syncMessages(collectChatPairs());
         updateBottomBar(bar);
-      } catch { }
+      } catch {}
     }, 250);
   };
 
@@ -1563,7 +1566,7 @@ async function performFinalExport(
   try {
     obs.observe(root, { childList: true, subtree: true });
     cleanupTasks.push(() => obs.disconnect());
-  } catch { }
+  } catch {}
 
   // Escape to cancel
   const onKeyDown = (e: KeyboardEvent) => {
@@ -1609,7 +1612,7 @@ function showExportProgressOverlay(t: (key: TranslationKey) => string): () => vo
     unbindAlignment();
     try {
       overlay.remove();
-    } catch { }
+    } catch {}
   };
 }
 
@@ -1677,8 +1680,9 @@ function getConversationMenuPanelsFromNode(node: HTMLElement): HTMLElement[] {
 }
 
 function parseMenuTriggerPanelIds(trigger: HTMLElement): string[] {
-  const raw = `${trigger.getAttribute('aria-controls') || ''} ${trigger.getAttribute('aria-owns') || ''
-    }`;
+  const raw = `${trigger.getAttribute('aria-controls') || ''} ${
+    trigger.getAttribute('aria-owns') || ''
+  }`;
   return raw
     .split(/\s+/)
     .map((item) => item.trim())
@@ -1852,7 +1856,7 @@ function setupResponseActionCopyImageObserver({
     () => {
       try {
         responseActionObserver?.disconnect();
-      } catch { }
+      } catch {}
       responseActionObserver = null;
     },
     { once: true },
@@ -1985,13 +1989,13 @@ function setupConversationMenuExportObserver({
     () => {
       try {
         conversationMenuObserver?.disconnect();
-      } catch { }
+      } catch {}
       try {
         document.removeEventListener('click', onMenuTriggerInteraction, true);
-      } catch { }
+      } catch {}
       try {
         document.removeEventListener('pointerdown', onMenuTriggerInteraction, true);
-      } catch { }
+      } catch {}
       conversationMenuObserver = null;
     },
     { once: true },
@@ -2045,16 +2049,16 @@ export async function startExportButton(): Promise<void> {
   const swallow = (e: Event) => {
     try {
       e.preventDefault();
-    } catch { }
+    } catch {}
     try {
       e.stopPropagation();
-    } catch { }
+    } catch {}
   };
   // Capture low-level press events to avoid parent logo navigation, but do NOT capture 'click'
   ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((type) => {
     try {
       btn.addEventListener(type, swallow, true);
-    } catch { }
+    } catch {}
   });
 
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
@@ -2105,7 +2109,7 @@ export async function startExportButton(): Promise<void> {
       },
       { once: true },
     );
-  } catch { }
+  } catch {}
 
   btn.addEventListener('click', (ev) => {
     // Stop parent navigation, but allow this handler to run
@@ -2116,9 +2120,82 @@ export async function startExportButton(): Promise<void> {
     } catch (err) {
       try {
         console.error('Gemini Voyager export failed', err);
-      } catch { }
+      } catch {}
     }
   });
+
+  // ─── DOM recovery (resize / print) ─────────────────────────────────────
+  // Gemini may re-render the logo/header area (and thus destroy the wrapper
+  // + export button) during window resize or window.print().  We use a
+  // single debounced handler that fires on resize, afterprint, and our own
+  // gv-print-cleanup event.  It checks whether the button is still attached
+  // and re-injects if not.
+  let currentBtn: HTMLButtonElement = btn;
+  let reinjectTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const reinjectExportButtonIfNeeded = () => {
+    // Debounce: Gemini fires many mutations during resize; wait until it
+    // settles before we attempt re-injection.
+    if (reinjectTimer !== null) clearTimeout(reinjectTimer);
+    reinjectTimer = setTimeout(() => {
+      reinjectTimer = null;
+      try {
+        // If the button is still in the document, nothing to do.
+        if (document.body.contains(currentBtn)) return;
+
+        // Remove stale wrapper if it somehow survived but lost the button.
+        const staleWrapper = document.querySelector('.gv-logo-dropdown-wrapper');
+        if (staleWrapper) staleWrapper.remove();
+
+        // Re-find the logo element (Gemini may have created a fresh one).
+        const newLogo =
+          document.querySelector('[data-test-id="logo"]') ?? document.querySelector('.logo');
+        if (!newLogo) return;
+
+        const newBtn = ensureDropdownInjected(newLogo);
+        if (!newBtn) return;
+        if ((newBtn as any)._gvBound) return;
+        (newBtn as any)._gvBound = true;
+
+        // Re-bind all event listeners on the fresh button.
+        ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((type) => {
+          try {
+            newBtn.addEventListener(type, swallow, true);
+          } catch {}
+        });
+
+        const freshT = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+        const ttl = freshT('exportChatJson');
+        const lbl = freshT('pm_export');
+        newBtn.title = ttl;
+        newBtn.setAttribute('aria-label', ttl);
+        const labelEl = newBtn.querySelector('.gv-export-dropdown-label');
+        if (labelEl) labelEl.textContent = lbl;
+
+        newBtn.addEventListener('click', (ev) => {
+          swallow(ev);
+          try {
+            showExportDialog(dict, lang);
+          } catch (err) {
+            try {
+              console.error('Gemini Voyager export failed', err);
+            } catch {}
+          }
+        });
+
+        // Update our tracking reference so the next check uses the new element.
+        currentBtn = newBtn;
+      } catch (e) {
+        try {
+          console.debug('[Gemini Voyager] Export button re-injection failed:', e);
+        } catch {}
+      }
+    }, 800);
+  };
+
+  window.addEventListener('resize', reinjectExportButtonIfNeeded);
+  window.addEventListener('gv-print-cleanup', reinjectExportButtonIfNeeded);
+  window.addEventListener('afterprint', reinjectExportButtonIfNeeded);
 }
 
 async function showExportDialog(

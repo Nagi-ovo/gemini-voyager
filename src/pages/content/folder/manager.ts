@@ -350,6 +350,52 @@ export class FolderManager {
     // Set up native conversation menu injection
     this.setupConversationClickTracking();
     this.setupNativeConversationMenuObserver();
+
+    // ─── DOM recovery (resize / print) ─────────────────────────────────────
+    // Gemini may re-render the sidebar DOM during window resize or
+    // window.print(), detaching the folder container.  The sideNavObserver
+    // (watching `side-nav-open` on #app-root) CANNOT catch all cases because
+    // when the sidebar closes AND the DOM is rebuilt simultaneously, the
+    // observer fires with isSideNavOpen=false and skips reinitialization.
+    // A debounced resize listener provides a reliable fallback.
+    let domRecoveryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const domRecoveryCheck = () => {
+      if (domRecoveryTimer !== null) clearTimeout(domRecoveryTimer);
+      domRecoveryTimer = setTimeout(() => {
+        domRecoveryTimer = null;
+        if (this.isDestroyed) return;
+        if (
+          this.containerElement &&
+          document.body.contains(this.containerElement) &&
+          this.sidebarContainer &&
+          document.body.contains(this.sidebarContainer)
+        ) {
+          return; // Everything still attached – nothing to do.
+        }
+        // Only reinitialize if the sidebar is currently visible (open).
+        // If it is closed, the sideNavObserver will trigger reinitialization
+        // when it reopens.
+        const appRoot = document.querySelector('#app-root');
+        if (appRoot && !appRoot.classList.contains('side-nav-open')) {
+          this.debug('DOM recovery: container lost but sidebar closed, deferring');
+          return;
+        }
+        this.debug('DOM recovery: folder UI lost from DOM, reinitializing');
+        this.reinitializeFolderUI();
+      }, 800);
+    };
+
+    window.addEventListener('resize', domRecoveryCheck);
+    window.addEventListener('gv-print-cleanup', domRecoveryCheck);
+    window.addEventListener('afterprint', domRecoveryCheck);
+
+    this.addCleanupTask(() => {
+      if (domRecoveryTimer !== null) clearTimeout(domRecoveryTimer);
+      window.removeEventListener('resize', domRecoveryCheck);
+      window.removeEventListener('gv-print-cleanup', domRecoveryCheck);
+      window.removeEventListener('afterprint', domRecoveryCheck);
+    });
   }
 
   private async waitForSidebar(): Promise<void> {
