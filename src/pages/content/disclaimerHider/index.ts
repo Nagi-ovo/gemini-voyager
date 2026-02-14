@@ -32,6 +32,7 @@ function resolveHideTarget(node: Text): HTMLElement | null {
   let current = node.parentElement;
   const text = normalizeDisclaimerText(node.textContent || '');
   if (!text) return null;
+  let bestMatch: HTMLElement | null = node.parentElement;
 
   for (
     let depth = 0;
@@ -39,11 +40,15 @@ function resolveHideTarget(node: Text): HTMLElement | null {
     depth += 1
   ) {
     const currentText = normalizeDisclaimerText(current.textContent || '');
-    if (currentText === text) return current;
+    if (currentText === text) {
+      bestMatch = current;
+      current = current.parentElement;
+      continue;
+    }
     current = current.parentElement;
   }
 
-  return node.parentElement;
+  return bestMatch;
 }
 
 export function findDisclaimerContainers(root?: ParentNode): HTMLElement[] {

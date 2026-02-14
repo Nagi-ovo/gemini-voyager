@@ -103,4 +103,35 @@ describe('disclaimerHider', () => {
     expect(disclaimer.style.height).toBe('30px');
     expect(disclaimer.style.color).toBe('rgb(255, 0, 0)');
   });
+
+  it('compresses the disclaimer outer row container to one-third height', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (
+        _defaults: Record<string, unknown>,
+        callback: (result: Record<string, unknown>) => void,
+      ) => {
+        callback({ gvHideGeminiDisclaimer: true });
+      },
+    );
+
+    const row = document.createElement('div');
+    row.style.height = '60px';
+    row.style.padding = '18px 0';
+    row.style.borderTop = '1px solid rgb(255, 255, 255)';
+
+    const text = document.createElement('p');
+    text.textContent = 'Gemini is AI and can make mistakes.';
+    text.style.height = '24px';
+    row.appendChild(text);
+    document.body.appendChild(row);
+
+    const { startDisclaimerHider } = await import('../index');
+    startDisclaimerHider();
+    await Promise.resolve();
+
+    expect(row.style.visibility).toBe('hidden');
+    expect(row.style.height).toBe('20px');
+    expect(row.style.padding).toBe('18px 0px');
+    expect(text.style.height).toBe('24px');
+  });
 });
