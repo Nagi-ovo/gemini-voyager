@@ -14,10 +14,7 @@ describe('disclaimerHider', () => {
     storageChangeListener = null;
 
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (
-        _defaults: Record<string, unknown>,
-        callback: (result: Record<string, unknown>) => void,
-      ) => {
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
         callback({ gvHideGeminiDisclaimer: false });
       },
     );
@@ -43,10 +40,7 @@ describe('disclaimerHider', () => {
 
   it('hides English and Chinese disclaimer text when enabled', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (
-        _defaults: Record<string, unknown>,
-        callback: (result: Record<string, unknown>) => void,
-      ) => {
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
         callback({ gvHideGeminiDisclaimer: true });
       },
     );
@@ -106,10 +100,7 @@ describe('disclaimerHider', () => {
 
   it('compresses the disclaimer outer row container to one-third height', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (
-        _defaults: Record<string, unknown>,
-        callback: (result: Record<string, unknown>) => void,
-      ) => {
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
         callback({ gvHideGeminiDisclaimer: true });
       },
     );
