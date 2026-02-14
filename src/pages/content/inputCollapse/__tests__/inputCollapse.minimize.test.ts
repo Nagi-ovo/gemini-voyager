@@ -133,6 +133,24 @@ describe('inputCollapse minimize mode', () => {
     expect(container.classList.contains('gv-input-collapsed')).toBe(true);
   });
 
+  it('adds minimized class immediately when toggle switches on for already-collapsed input', async () => {
+    const container = await initAndCollapse({ minCollapseEnabled: false });
+    expect(container.classList.contains('gv-input-collapsed')).toBe(true);
+    expect(container.classList.contains('gv-input-min-collapsed')).toBe(false);
+
+    storageChangeListener?.(
+      {
+        gvInputMinCollapseEnabled: {
+          oldValue: false,
+          newValue: true,
+        } as chrome.storage.StorageChange,
+      },
+      'sync',
+    );
+
+    expect(container.classList.contains('gv-input-min-collapsed')).toBe(true);
+  });
+
   it('cleans up collapse classes when main toggle is disabled', async () => {
     const container = await initAndCollapse({ minCollapseEnabled: true });
     expect(container.classList.contains('gv-input-min-collapsed')).toBe(true);

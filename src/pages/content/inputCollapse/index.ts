@@ -317,6 +317,10 @@ export function startInputCollapse() {
         document.querySelectorAll(`.${MIN_COLLAPSED_CLASS}`).forEach((el) => {
           el.classList.remove(MIN_COLLAPSED_CLASS);
         });
+      } else {
+        document.querySelectorAll(`.${COLLAPSED_CLASS}`).forEach((el) => {
+          el.classList.add(MIN_COLLAPSED_CLASS);
+        });
       }
     }
 
