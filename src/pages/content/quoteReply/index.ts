@@ -137,18 +137,16 @@ export function startQuoteReply() {
   let currentSelectionRange: Range | null = null;
   let isInternalClick = false;
   let scrollRafId: number | null = null;
+  let selectionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+  /** Update button position based on current selection range's viewport coordinates. */
   function updatePosition() {
-    // If listeners are removed (raf/listeners), we shouldn't be updating, but we need to check existence.
-    // However, we want to allow updating even if it WAS hidden temporarily.
-    // The key is: if listeners are active, we update.
     if (!quoteBtn || !currentSelectionRange) return;
 
     const rangeRect = currentSelectionRange.getBoundingClientRect();
-    const btnRect = quoteBtn.getBoundingClientRect(); // Get dimensions
+    const btnRect = quoteBtn.getBoundingClientRect();
 
-    // Check availability in viewport
-    // We add a small buffer (e.g. half button height) to prevent flickering at edges
+    // Hide when selection is scrolled out of viewport
     const isOffScreen = rangeRect.bottom < 0 || rangeRect.top > window.innerHeight;
 
     if (isOffScreen) {
@@ -158,24 +156,13 @@ export function startQuoteReply() {
       return;
     }
 
-    // If returning to screen, show it
     if (quoteBtn.classList.contains(CSS_CLASSES.HIDDEN)) {
       quoteBtn.classList.remove(CSS_CLASSES.HIDDEN);
     }
 
-    // Position relative to viewport (fixed), so NO window.scrollY/X additions
-    // We want the button above the selection
+    // position: fixed uses viewport coordinates, no scrollY/X needed
     const top = rangeRect.top - btnRect.height - POSITIONING.BUTTON_SELECTION_GAP_PX;
     const left = rangeRect.left + rangeRect.width / 2 - btnRect.width / 2;
-
-    // Ensure it doesn't stick to the very top edge if selection is at top of screen
-    // but still "in view" (e.g. only bottom half of selection visible)
-    // Actually, if rangeRect.top is negative, 'top' will be very negative.
-    // We probably want to clamp it or hide it if there isn't enough space?
-    // For now, simpler requirement: just hide if "content" is offscreen.
-    // The user said: "selected text content is out of screen".
-    // Our check `rangeRect.bottom < 0` covers "scrolled past UP".
-    // `rangeRect.top > window.innerHeight` covers "scrolled past DOWN".
 
     quoteBtn.style.top = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, top)}px`;
     quoteBtn.style.left = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, left)}px`;
@@ -303,8 +290,9 @@ export function startQuoteReply() {
       // Use a slightly longer delay to wait for any expansion transitions
       setTimeout(performInsertion, TIMING.INSERTION_DELAY_MS);
 
-      // Hide button and clear original selection
+      // Hide button and clear selection state
       hideButton();
+      currentSelectionRange = null;
       window.getSelection()?.removeAllRanges();
     } else {
       console.warn('[Gemini Voyager] Could not find chat input.');
@@ -315,14 +303,7 @@ export function startQuoteReply() {
     if (!quoteBtn) createButton();
     if (!quoteBtn) return;
 
-    quoteBtn.classList.remove(CSS_CLASSES.HIDDEN);
-
-    // Initial position logic - reuse updatePosition but we need to set range first?
-    // currentSelectionRange is already set in handleSelectionChange before calling showButton
-    // However, showButton accepts a 'rect' argument which was the range rect.
-    // Let's just use updatePosition() to be consistent and ignore the passed rect argument for positioning logic
-    // or use it for initial set. updatePosition uses currentSelectionRange directly.
-
+    // updatePosition() manages visibility (HIDDEN class) based on viewport check
     updatePosition();
 
     // Add listeners for scroll/resize
@@ -344,8 +325,9 @@ export function startQuoteReply() {
   }
 
   function handleSelectionChange() {
-    // Use a small timeout to let selection settle
-    setTimeout(() => {
+    // Debounce to let selection settle and avoid redundant updates on rapid key events
+    if (selectionDebounceTimer) clearTimeout(selectionDebounceTimer);
+    selectionDebounceTimer = setTimeout(() => {
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
         hideButton();
@@ -439,17 +421,23 @@ export function startQuoteReply() {
   document.addEventListener('keyup', onKeys);
 
   // Listen for language changes and update button text
-  browser.storage.onChanged.addListener((changes, areaName) => {
+  function onStorageChanged(
+    changes: Record<string, browser.Storage.StorageChange>,
+    areaName: string,
+  ) {
     if ((areaName === 'sync' || areaName === 'local') && changes[StorageKeys.LANGUAGE]) {
       updateButtonText();
     }
-  });
+  }
+  browser.storage.onChanged.addListener(onStorageChanged);
 
   // Cleanup
   return () => {
-    hideButton(); // Ensure scroll/resize listeners and RAF are cleared
+    hideButton();
+    if (selectionDebounceTimer) clearTimeout(selectionDebounceTimer);
     document.removeEventListener('mouseup', onMouseUp);
     document.removeEventListener('keyup', onKeys);
+    browser.storage.onChanged.removeListener(onStorageChanged);
     if (quoteBtn) quoteBtn.remove();
     const style = document.getElementById(STYLE_ID);
     if (style) style.remove();
