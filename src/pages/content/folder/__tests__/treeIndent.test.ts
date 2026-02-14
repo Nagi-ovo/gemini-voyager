@@ -23,16 +23,21 @@ describe('folder tree indentation', () => {
     document.body.innerHTML = '';
   });
 
-  it('clamps configured indent into [8, 32]', () => {
-    expect(clampFolderTreeIndent(-10)).toBe(8);
+  it('clamps configured indent into [-8, 32] and defaults to -8 for invalid values', () => {
+    expect(clampFolderTreeIndent(-40)).toBe(-8);
     expect(clampFolderTreeIndent(64)).toBe(32);
+    expect(clampFolderTreeIndent(0)).toBe(0);
     expect(clampFolderTreeIndent(16)).toBe(16);
+    expect(clampFolderTreeIndent('invalid')).toBe(-8);
   });
 
   it('calculates folder and conversation paddings from indent and level', () => {
     expect(calculateFolderHeaderPaddingLeft(2, 16)).toBe(40); // 2 * 16 + 8
     expect(calculateFolderConversationPaddingLeft(2, 16)).toBe(56); // 2 * 16 + 24
     expect(calculateFolderDialogPaddingLeft(2, 16)).toBe(44); // 2 * 16 + 12
+    expect(calculateFolderHeaderPaddingLeft(2, -16)).toBe(0);
+    expect(calculateFolderConversationPaddingLeft(3, -16)).toBe(0);
+    expect(calculateFolderDialogPaddingLeft(2, -16)).toBe(0);
   });
 
   it('updates indent and refreshes render when setting changes', () => {

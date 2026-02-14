@@ -22,9 +22,9 @@ const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
 const ROOT_CONVERSATIONS_ID = '__root_conversations__'; // Special ID for root-level conversations
 const NOTIFICATION_TIMEOUT_MS = 10000; // Duration to show data loss notification
-const FOLDER_TREE_INDENT_MIN = 8;
+const FOLDER_TREE_INDENT_MIN = -8;
 const FOLDER_TREE_INDENT_MAX = 32;
-const FOLDER_TREE_INDENT_DEFAULT = 16;
+const FOLDER_TREE_INDENT_DEFAULT = -8;
 
 // Export session backup keys for use by FolderImportExportService (deprecated, kept for compatibility)
 export const SESSION_BACKUP_KEY = 'gvFolderBackup';
@@ -37,15 +37,15 @@ export function clampFolderTreeIndent(value: unknown): number {
 }
 
 export function calculateFolderHeaderPaddingLeft(level: number, indent: number): number {
-  return level * indent + 8;
+  return Math.max(0, level * indent + 8);
 }
 
 export function calculateFolderConversationPaddingLeft(level: number, indent: number): number {
-  return level * indent + 24;
+  return Math.max(0, level * indent + 24);
 }
 
 export function calculateFolderDialogPaddingLeft(level: number, indent: number): number {
-  return level * indent + 12;
+  return Math.max(0, level * indent + 12);
 }
 
 /**
