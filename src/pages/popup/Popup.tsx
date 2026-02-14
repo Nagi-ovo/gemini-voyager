@@ -107,6 +107,18 @@ const toReleaseTag = (version?: string | null): string | null => {
   return trimmed.startsWith('v') ? trimmed : `v${trimmed}`;
 };
 
+export function getInputMinCollapseToneClass(inputCollapseEnabled: boolean): {
+  row: string;
+  label: string;
+} {
+  return {
+    row: `group flex items-center justify-between transition-opacity ${
+      inputCollapseEnabled ? 'opacity-100' : 'opacity-50'
+    }`,
+    label: `${inputCollapseEnabled ? 'group-hover:text-primary ' : ''}cursor-pointer text-sm font-medium transition-colors`,
+  };
+}
+
 interface SettingsUpdate {
   mode?: ScrollMode | null;
   hideContainer?: boolean;
@@ -698,6 +710,7 @@ export default function Popup() {
 
   const websiteUrl =
     language === 'zh' ? 'https://voyager.nagi.fun' : `https://voyager.nagi.fun/${language}`;
+  const inputMinCollapseToneClass = getInputMinCollapseToneClass(inputCollapseEnabled);
 
   // Show starred history if requested
   if (showStarredHistory) {
@@ -1086,11 +1099,11 @@ export default function Popup() {
                 }}
               />
             </div>
-            <div className="group flex items-center justify-between">
+            <div className={inputMinCollapseToneClass.row}>
               <div className="flex-1">
                 <Label
                   htmlFor="input-min-collapse-enabled"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  className={inputMinCollapseToneClass.label}
                 >
                   {t('enableInputMinCollapse')}
                 </Label>
