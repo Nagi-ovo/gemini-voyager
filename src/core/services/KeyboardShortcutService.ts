@@ -1,5 +1,5 @@
 /**
- * KeyboardShortcutService - Manages keyboard shortcuts for timeline navigation
+ * KeyboardShortcutService - Manages keyboard shortcuts for Gemini Voyager
  *
  * Design Patterns:
  * - Singleton: Ensures single instance across application
@@ -11,6 +11,7 @@
  * - Chrome storage integration for persistence
  * - Type-safe action handling
  * - Collision detection with browser shortcuts
+ * - Support for timeline navigation, chat export, folder toggle, and more
  */
 import { StorageKeys } from '@/core/types/common';
 import type {
@@ -25,9 +26,10 @@ import type {
 
 /**
  * Default keyboard shortcuts configuration
- * Using vim-style j/k (convenient, no modifiers needed)
+ * Using vim-style navigation and convenient shortcuts
  */
 const DEFAULT_SHORTCUTS: KeyboardShortcutConfig = {
+  // Timeline navigation
   previous: {
     action: 'timeline:previous',
     modifiers: [],
@@ -37,6 +39,38 @@ const DEFAULT_SHORTCUTS: KeyboardShortcutConfig = {
     action: 'timeline:next',
     modifiers: [],
     key: 'j',
+  },
+  scrollToTop: {
+    action: 'timeline:scrollToTop',
+    modifiers: ['Shift'],
+    key: 'K',
+  },
+  scrollToBottom: {
+    action: 'timeline:scrollToBottom',
+    modifiers: ['Shift'],
+    key: 'J',
+  },
+
+  // Feature shortcuts
+  exportChat: {
+    action: 'chat:export',
+    modifiers: ['Ctrl', 'Shift'],
+    key: 'e',
+  },
+  toggleFolder: {
+    action: 'folder:toggle',
+    modifiers: ['Ctrl', 'Shift'],
+    key: 'f',
+  },
+  openPrompt: {
+    action: 'prompt:open',
+    modifiers: ['Ctrl', 'Shift'],
+    key: 'p',
+  },
+  focusInput: {
+    action: 'input:focus',
+    modifiers: ['Ctrl', 'Shift'],
+    key: 'i',
   },
 };
 
@@ -149,12 +183,24 @@ export class KeyboardShortcutService {
    */
   private validateConfig(config: KeyboardShortcutConfig): boolean {
     try {
-      return !!(
-        config.previous &&
-        config.next &&
-        this.isValidShortcut(config.previous) &&
-        this.isValidShortcut(config.next)
-      );
+      // Check all required shortcuts exist
+      const requiredKeys: (keyof KeyboardShortcutConfig)[] = [
+        'previous',
+        'next',
+        'scrollToTop',
+        'scrollToBottom',
+        'exportChat',
+        'toggleFolder',
+        'openPrompt',
+        'focusInput',
+      ];
+
+      for (const key of requiredKeys) {
+        if (!config[key] || !this.isValidShortcut(config[key])) {
+          return false;
+        }
+      }
+      return true;
     } catch {
       return false;
     }
@@ -184,7 +230,17 @@ export class KeyboardShortcutService {
       if (!this.enabled) return;
 
       // Ignore shortcuts when user is typing in input fields
-      if (this.isTypingInInputField(event)) return;
+      // But allow some shortcuts like focus input
+      if (this.isTypingInInputField(event)) {
+        // Only allow focus input shortcut when typing
+        const match = this.matchShortcut(event);
+        if (match && match.action === 'input:focus') {
+          event.preventDefault();
+          event.stopPropagation();
+          this.notifyListeners(match.action, event);
+        }
+        return;
+      }
 
       const match = this.matchShortcut(event);
       if (match) {
@@ -243,6 +299,12 @@ export class KeyboardShortcutService {
     const shortcuts = [
       { action: 'timeline:previous' as const, config: this.config.previous },
       { action: 'timeline:next' as const, config: this.config.next },
+      { action: 'timeline:scrollToTop' as const, config: this.config.scrollToTop },
+      { action: 'timeline:scrollToBottom' as const, config: this.config.scrollToBottom },
+      { action: 'chat:export' as const, config: this.config.exportChat },
+      { action: 'folder:toggle' as const, config: this.config.toggleFolder },
+      { action: 'prompt:open' as const, config: this.config.openPrompt },
+      { action: 'input:focus' as const, config: this.config.focusInput },
     ];
 
     // Check if any shortcut matches
@@ -259,8 +321,10 @@ export class KeyboardShortcutService {
    * Check if specific shortcut is pressed
    */
   private isShortcutPressed(event: KeyboardEvent, shortcut: KeyboardShortcut): boolean {
-    // Check key match
-    if (event.key !== shortcut.key) return false;
+    // Check key match (case-insensitive for letters)
+    const eventKey = event.key.toLowerCase();
+    const shortcutKey = shortcut.key.toLowerCase();
+    if (eventKey !== shortcutKey) return false;
 
     // Check modifier matches
     const hasAlt = shortcut.modifiers.includes('Alt');
@@ -316,6 +380,13 @@ export class KeyboardShortcutService {
   }
 
   /**
+   * Get default shortcuts (for reference)
+   */
+  getDefaultConfig(): KeyboardShortcutConfig {
+    return { ...DEFAULT_SHORTCUTS };
+  }
+
+  /**
    * Reset to default shortcuts
    */
   async resetToDefaults(): Promise<void> {
@@ -356,6 +427,23 @@ export class KeyboardShortcutService {
 
     const parts = [...shortcut.modifiers, key];
     return parts.join(' + ');
+  }
+
+  /**
+   * Get action display label
+   */
+  getActionLabel(action: ShortcutAction): string {
+    const labels: Record<ShortcutAction, string> = {
+      'timeline:previous': 'Previous Message',
+      'timeline:next': 'Next Message',
+      'timeline:scrollToTop': 'Scroll to Top',
+      'timeline:scrollToBottom': 'Scroll to Bottom',
+      'chat:export': 'Export Chat',
+      'folder:toggle': 'Toggle Folder Panel',
+      'prompt:open': 'Open Prompt Library',
+      'input:focus': 'Focus Input',
+    };
+    return labels[action] || action;
   }
 
   /**

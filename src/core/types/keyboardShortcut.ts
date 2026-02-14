@@ -21,8 +21,17 @@ export type ShortcutKey = string;
 
 /**
  * Shortcut action types
+ * Extended to include more useful actions
  */
-export type ShortcutAction = 'timeline:previous' | 'timeline:next';
+export type ShortcutAction =
+  | 'timeline:previous'
+  | 'timeline:next'
+  | 'timeline:scrollToTop'
+  | 'timeline:scrollToBottom'
+  | 'chat:export'
+  | 'folder:toggle'
+  | 'prompt:open'
+  | 'input:focus';
 
 /**
  * Individual keyboard shortcut configuration
@@ -43,10 +52,20 @@ export interface ShortcutMatch {
 
 /**
  * Complete shortcuts configuration (single set, user-customizable)
+ * Extended with new shortcut categories
  */
 export interface KeyboardShortcutConfig {
+  // Timeline navigation
   previous: KeyboardShortcut;
   next: KeyboardShortcut;
+  scrollToTop: KeyboardShortcut;
+  scrollToBottom: KeyboardShortcut;
+
+  // Feature shortcuts
+  exportChat: KeyboardShortcut;
+  toggleFolder: KeyboardShortcut;
+  openPrompt: KeyboardShortcut;
+  focusInput: KeyboardShortcut;
 }
 
 /**
@@ -56,3 +75,17 @@ export interface KeyboardShortcutStorage {
   shortcuts: KeyboardShortcutConfig;
   enabled: boolean;
 }
+
+/**
+ * Display labels for shortcut actions (for UI)
+ */
+export const SHORTCUT_ACTION_LABELS: Record<ShortcutAction, string> = {
+  'timeline:previous': 'Previous Message',
+  'timeline:next': 'Next Message',
+  'timeline:scrollToTop': 'Scroll to Top',
+  'timeline:scrollToBottom': 'Scroll to Bottom',
+  'chat:export': 'Export Chat',
+  'folder:toggle': 'Toggle Folder Panel',
+  'prompt:open': 'Open Prompt Library',
+  'input:focus': 'Focus Input',
+};
