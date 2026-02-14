@@ -9,7 +9,8 @@ vi.mock('webextension-polyfill', () => ({
 }));
 
 vi.mock('../../../../utils/i18n', () => ({
-  getTranslationSync: (key: string) => (key === 'inputCollapsePlaceholder' ? 'Message Gemini' : key),
+  getTranslationSync: (key: string) =>
+    key === 'inputCollapsePlaceholder' ? 'Message Gemini' : key,
 }));
 
 type StorageChangeListener = (
@@ -43,10 +44,7 @@ describe('inputCollapse minimize mode', () => {
     storageChangeListener = null;
 
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (
-        _defaults: Record<string, unknown>,
-        callback: (result: Record<string, unknown>) => void,
-      ) => {
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
         callback({
           gvInputCollapseEnabled: true,
           gvInputMinCollapseEnabled: true,
@@ -76,10 +74,7 @@ describe('inputCollapse minimize mode', () => {
     minCollapseEnabled = true,
   }: { minCollapseEnabled?: boolean } = {}): Promise<HTMLElement> {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (
-        _defaults: Record<string, unknown>,
-        callback: (result: Record<string, unknown>) => void,
-      ) => {
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
         callback({
           gvInputCollapseEnabled: true,
           gvInputMinCollapseEnabled: minCollapseEnabled,

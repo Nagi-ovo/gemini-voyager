@@ -299,7 +299,6 @@ export function startInputCollapse() {
       inputMinCollapseEnabled = res?.[StorageKeys.GV_INPUT_MIN_COLLAPSE] === true;
       if (res?.gvInputCollapseEnabled === false) {
         // Feature is disabled, don't initialize
-        console.log('[Gemini Voyager] Input collapse is disabled');
         return;
       }
 
@@ -398,7 +397,6 @@ function initInputCollapse() {
 
   injectStyles();
 
-  let isFocused = false;
   let lastPathname = window.location.pathname;
 
   // Create AbortController for managing all event listeners
@@ -490,7 +488,6 @@ function initInputCollapse() {
       container.addEventListener(
         'focusin',
         () => {
-          isFocused = true;
           expand(container);
         },
         { signal },
@@ -504,7 +501,6 @@ function initInputCollapse() {
             return; // Focus is still inside
           }
 
-          isFocused = false;
           tryCollapse(container);
         },
         { signal },
