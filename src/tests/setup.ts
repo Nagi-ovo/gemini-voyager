@@ -15,6 +15,7 @@ globalThis.chrome = {
     },
     onChanged: {
       addListener: vi.fn(),
+      removeListener: vi.fn(),
     },
   },
   runtime: {

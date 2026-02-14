@@ -136,6 +136,45 @@ export function startQuoteReply() {
   let quoteBtn: HTMLElement | null = null;
   let currentSelectionRange: Range | null = null;
   let isInternalClick = false;
+  let scrollRafId: number | null = null;
+  let selectionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Update button position based on current selection range's viewport coordinates. */
+  function updatePosition() {
+    if (!quoteBtn || !currentSelectionRange) return;
+
+    const rangeRect = currentSelectionRange.getBoundingClientRect();
+    const btnRect = quoteBtn.getBoundingClientRect();
+
+    // Hide when selection is scrolled out of viewport
+    const isOffScreen = rangeRect.bottom < 0 || rangeRect.top > window.innerHeight;
+
+    if (isOffScreen) {
+      if (!quoteBtn.classList.contains(CSS_CLASSES.HIDDEN)) {
+        quoteBtn.classList.add(CSS_CLASSES.HIDDEN);
+      }
+      return;
+    }
+
+    if (quoteBtn.classList.contains(CSS_CLASSES.HIDDEN)) {
+      quoteBtn.classList.remove(CSS_CLASSES.HIDDEN);
+    }
+
+    // position: fixed uses viewport coordinates, no scrollY/X needed
+    const top = rangeRect.top - btnRect.height - POSITIONING.BUTTON_SELECTION_GAP_PX;
+    const left = rangeRect.left + rangeRect.width / 2 - btnRect.width / 2;
+
+    quoteBtn.style.top = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, top)}px`;
+    quoteBtn.style.left = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, left)}px`;
+  }
+
+  function onScrollOrResize() {
+    if (scrollRafId) return;
+    scrollRafId = requestAnimationFrame(() => {
+      updatePosition();
+      scrollRafId = null;
+    });
+  }
 
   // Create button
   function createButton() {
@@ -251,38 +290,44 @@ export function startQuoteReply() {
       // Use a slightly longer delay to wait for any expansion transitions
       setTimeout(performInsertion, TIMING.INSERTION_DELAY_MS);
 
-      // Hide button and clear original selection
+      // Hide button and clear selection state
       hideButton();
+      currentSelectionRange = null;
       window.getSelection()?.removeAllRanges();
     } else {
       console.warn('[Gemini Voyager] Could not find chat input.');
     }
   }
 
-  function showButton(rect: DOMRect) {
+  function showButton() {
     if (!quoteBtn) createButton();
     if (!quoteBtn) return;
 
-    quoteBtn.classList.remove(CSS_CLASSES.HIDDEN);
+    // updatePosition() manages visibility (HIDDEN class) based on viewport check
+    updatePosition();
 
-    // Position above the selection
-    const btnRect = quoteBtn.getBoundingClientRect();
-    const top = rect.top - btnRect.height - POSITIONING.BUTTON_SELECTION_GAP_PX + window.scrollY;
-    const left = rect.left + rect.width / 2 - btnRect.width / 2 + window.scrollX;
-
-    quoteBtn.style.top = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, top)}px`;
-    quoteBtn.style.left = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, left)}px`;
+    // Add listeners for scroll/resize
+    window.addEventListener('scroll', onScrollOrResize, { capture: true, passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
   }
 
   function hideButton() {
     if (quoteBtn) {
       quoteBtn.classList.add(CSS_CLASSES.HIDDEN);
     }
+    // Remove listeners
+    window.removeEventListener('scroll', onScrollOrResize, { capture: true });
+    window.removeEventListener('resize', onScrollOrResize);
+    if (scrollRafId) {
+      cancelAnimationFrame(scrollRafId);
+      scrollRafId = null;
+    }
   }
 
   function handleSelectionChange() {
-    // Use a small timeout to let selection settle
-    setTimeout(() => {
+    // Debounce to let selection settle and avoid redundant updates on rapid key events
+    if (selectionDebounceTimer) clearTimeout(selectionDebounceTimer);
+    selectionDebounceTimer = setTimeout(() => {
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
         hideButton();
@@ -340,11 +385,11 @@ export function startQuoteReply() {
       // If rect is zero (e.g. invisible), don't show
       if (rect.width === 0 && rect.height === 0) return;
 
-      showButton(rect);
+      showButton();
     }, TIMING.SELECTION_DEBOUNCE_MS);
   }
 
-  function onMouseUp(e: MouseEvent) {
+  function onMouseUp(_: MouseEvent) {
     if (isInternalClick) {
       isInternalClick = false;
       return;
@@ -366,23 +411,33 @@ export function startQuoteReply() {
   // selectionchange event fires too often while dragging.
   document.addEventListener('mouseup', onMouseUp);
 
-  // Also listen to keyup for keyboard selection
-  document.addEventListener('keyup', (e) => {
+  function onKeys(e: KeyboardEvent) {
     if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
       handleSelectionChange();
     }
-  });
+  }
+
+  // Also listen to keyup for keyboard selection
+  document.addEventListener('keyup', onKeys);
 
   // Listen for language changes and update button text
-  browser.storage.onChanged.addListener((changes, areaName) => {
+  function onStorageChanged(
+    changes: Record<string, browser.Storage.StorageChange>,
+    areaName: string,
+  ) {
     if ((areaName === 'sync' || areaName === 'local') && changes[StorageKeys.LANGUAGE]) {
       updateButtonText();
     }
-  });
+  }
+  browser.storage.onChanged.addListener(onStorageChanged);
 
   // Cleanup
   return () => {
+    hideButton();
+    if (selectionDebounceTimer) clearTimeout(selectionDebounceTimer);
     document.removeEventListener('mouseup', onMouseUp);
+    document.removeEventListener('keyup', onKeys);
+    browser.storage.onChanged.removeListener(onStorageChanged);
     if (quoteBtn) quoteBtn.remove();
     const style = document.getElementById(STYLE_ID);
     if (style) style.remove();
