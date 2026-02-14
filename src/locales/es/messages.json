@@ -1224,6 +1224,10 @@
     "message": "La exportación de imagen falló por problemas de red. Actualiza la página y vuelve a intentarlo.",
     "description": "Sugerencia para reintentar cuando falla temporalmente la carga en exportación de imagen"
   },
+  "export_md_include_source_confirm": {
+    "message": "El contenido exportado contiene imágenes de búsqueda web. ¿Incluir enlaces de origen de las imágenes en el Markdown?",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
   "deepResearch_exportedAt": {
     "message": "Exportado el",
     "description": "Etiqueta de marca de tiempo de exportación de Deep Research"

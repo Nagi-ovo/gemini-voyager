@@ -1224,6 +1224,10 @@
     "message": "Экспорт изображения не удался из-за проблем с сетью. Обновите страницу и попробуйте снова.",
     "description": "Подсказка при временной ошибке загрузки во время экспорта изображения"
   },
+  "export_md_include_source_confirm": {
+    "message": "Экспортируемый контент содержит изображения из веб-поиска. Включить ссылки на источники изображений в Markdown?",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
   "deepResearch_exportedAt": {
     "message": "Экспортировано",
     "description": "Метка временной метки экспорта Deep Research"

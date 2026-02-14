@@ -1224,6 +1224,10 @@
     "message": "فشل تصدير الصورة بسبب مشكلة في الشبكة. يُرجى تحديث الصفحة ثم إعادة المحاولة.",
     "description": "إرشاد يظهر عند فشل تحميل مؤقت أثناء تصدير الصورة"
   },
+  "export_md_include_source_confirm": {
+    "message": "يحتوي المحتوى المُصدَّر على صور من نتائج البحث. هل تريد تضمين روابط مصدر الصور في Markdown؟",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
   "deepResearch_exportedAt": {
     "message": "وقت التصدير",
     "description": "تسمية الطابع الزمني للتصدير في Deep Research"

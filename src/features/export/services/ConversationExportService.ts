@@ -180,7 +180,13 @@ export class ConversationExportService {
     options: ExportOptions,
   ): Promise<ExportResult> {
     // First create a clean markdown (no inlining)
-    const markdown = MarkdownFormatter.format(turns, metadata);
+    let markdown = MarkdownFormatter.format(turns, metadata);
+
+    // Strip image source attribution lines if user opted out
+    if (options.includeImageSource === false) {
+      markdown = markdown.replace(/\n\*Source: \[[^\]]*\]\([^)]*\)\*\n/g, '\n');
+    }
+
     const filename = options.filename || this.generateFilename('md', metadata.title);
     const finalFilename = await this.downloadMarkdownOrZip(markdown, filename, 'chat.md');
     return { success: true, format: 'markdown' as ExportFormat, filename: finalFilename };

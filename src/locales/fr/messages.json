@@ -1224,6 +1224,10 @@
     "message": "Échec de l'exportation d'image en raison d'un problème réseau. Veuillez actualiser la page puis réessayer.",
     "description": "Conseil affiché en cas d'échec temporaire du chargement lors de l'export image"
   },
+  "export_md_include_source_confirm": {
+    "message": "Le contenu exporté contient des images de recherche web. Inclure les liens source des images dans le Markdown ?",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
   "deepResearch_exportedAt": {
     "message": "Exporté le",
     "description": "Étiquette d'horodatage de l'exportation de Deep Research"

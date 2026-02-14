@@ -1224,6 +1224,10 @@
     "message": "네트워크 문제로 이미지 내보내기에 실패했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.",
     "description": "이미지 내보내기에서 일시적 로딩 실패가 발생했을 때 표시되는 안내"
   },
+  "export_md_include_source_confirm": {
+    "message": "내보내기 내용에 웹 검색 이미지가 포함되어 있습니다. Markdown에 이미지 출처 링크를 포함하시겠습니까？",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
   "deepResearch_exportedAt": {
     "message": "내보내기 일시",
     "description": "Deep Research 내보내기 타임스탬프 레이블"

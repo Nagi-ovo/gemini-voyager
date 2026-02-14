@@ -1491,11 +1491,23 @@ async function performFinalExport(
       title: getConversationTitleForExport(),
     };
 
+    let includeImageSource = true;
+    if (format === 'markdown') {
+      const hasSearchImages = turnsForExport.some(
+        (turn) =>
+          turn.assistantElement?.querySelector('.attachment-container.search-images') != null,
+      );
+      if (hasSearchImages) {
+        includeImageSource = confirm(t('export_md_include_source_confirm'));
+      }
+    }
+
     const hideProgress = showExportProgressOverlay(t);
     try {
       const resultPromise = ConversationExportService.export(turnsForExport, metadata, {
         format,
         fontSize,
+        includeImageSource,
       });
       const minVisiblePromise = new Promise((resolve) => setTimeout(resolve, 420));
       const [result] = await Promise.all([resultPromise, minVisiblePromise]);

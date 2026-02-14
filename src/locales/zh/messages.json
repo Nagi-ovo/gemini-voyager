@@ -1224,6 +1224,10 @@
     "message": "因网络原因，图片导出失败，请刷新页面后重试。",
     "description": "图片导出遇到瞬时加载失败时的刷新重试提示"
   },
+  "export_md_include_source_confirm": {
+    "message": "導出內容包含網路搜尋圖片。是否在 Markdown 中包含圖片來源連結？",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
   "deepResearch_exportedAt": {
     "message": "导出时间",
     "description": "深度研究导出时间戳标签"

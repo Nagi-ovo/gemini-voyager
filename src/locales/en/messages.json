@@ -1224,6 +1224,10 @@
     "message": "Image export failed due to network issues. Please refresh the page and try again.",
     "description": "Guidance shown when image export fails due to transient loading issues"
   },
+  "export_md_include_source_confirm": {
+    "message": "The exported content contains web search images. Include image source links in the Markdown?",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
   "deepResearch_exportedAt": {
     "message": "Exported At",
     "description": "Deep Research export timestamp label"

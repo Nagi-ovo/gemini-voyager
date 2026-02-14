@@ -1224,6 +1224,10 @@
     "message": "因網路原因，圖片匯出失敗，請重新整理頁面後重試。",
     "description": "圖片匯出遇到暫時性載入失敗時的重新整理提示"
   },
+  "export_md_include_source_confirm": {
+    "message": "匯出內容包含網路搜尋圖片。是否在 Markdown 中包含圖片來源連結？",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
   "deepResearch_exportedAt": {
     "message": "匯出時間",
     "description": "深度研究匯出時間戳標籤"
