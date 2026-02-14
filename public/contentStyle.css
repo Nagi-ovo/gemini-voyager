@@ -4744,9 +4744,9 @@ body[data-color-scheme='dark'] .gv-export-fontsize-preview {
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(19, 22, 28, 0.9);
-  color: #8b98aa;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.9);
+  color: #64748b;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -4755,8 +4755,8 @@ body[data-color-scheme='dark'] .gv-export-fontsize-preview {
 }
 
 .gv-export-msg-checkbox:hover {
-  border-color: rgba(128, 255, 176, 0.7);
-  box-shadow: 0 0 0 2px rgba(128, 255, 176, 0.15);
+  border-color: rgba(22, 163, 74, 0.6);
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.12);
 }
 
 .gv-export-msg-checkbox-mark {
@@ -4775,6 +4775,22 @@ body[data-color-scheme='dark'] .gv-export-fontsize-preview {
 .gv-export-msg-checkbox[data-selected='true'] .gv-export-msg-checkbox-mark {
   border-left-color: #fff;
   border-bottom-color: #fff;
+}
+
+/* Dark theme for checkbox */
+html.dark .gv-export-msg-checkbox,
+html.dark-theme .gv-export-msg-checkbox,
+.theme-host.dark-theme .gv-export-msg-checkbox {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(19, 22, 28, 0.9);
+  color: #8b98aa;
+}
+
+html.dark .gv-export-msg-checkbox:hover,
+html.dark-theme .gv-export-msg-checkbox:hover,
+.theme-host.dark-theme .gv-export-msg-checkbox:hover {
+  border-color: rgba(128, 255, 176, 0.7);
+  box-shadow: 0 0 0 2px rgba(128, 255, 176, 0.15);
 }
 
 .gv-export-msg-selected {
