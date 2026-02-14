@@ -28,7 +28,7 @@
 
 /* Gemini-like timeline styling with CSS variables and theme awareness */
 :root {
-  --timeline-dot-color: #cbd5e1;
+  --timeline-dot-color: #94a3b8;
   --timeline-dot-active-color: #3b82f6;
   --timeline-star-color: #f59e0b;
   --timeline-tooltip-bg: #ffffff;
@@ -66,6 +66,27 @@
     --timeline-tooltip-border: #1f2937;
     --timeline-bar-bg: rgba(2, 6, 23, 0.72);
   }
+}
+
+/* Gemini theme support - Overrides system preferences on Gemini site */
+.theme-host.dark-theme {
+  --timeline-dot-color: #475569;
+  --timeline-dot-active-color: #60a5fa;
+  --timeline-star-color: #f59e0b;
+  --timeline-tooltip-bg: #0b1220;
+  --timeline-tooltip-text: #e2e8f0;
+  --timeline-tooltip-border: #1f2937;
+  --timeline-bar-bg: rgba(2, 6, 23, 0.72);
+}
+
+.theme-host.light-theme {
+  --timeline-dot-color: #94a3b8;
+  --timeline-dot-active-color: #3b82f6;
+  --timeline-star-color: #f59e0b;
+  --timeline-tooltip-bg: #ffffff;
+  --timeline-tooltip-text: #0f172a;
+  --timeline-tooltip-border: #e2e8f0;
+  --timeline-bar-bg: rgba(248, 250, 252, 0.85);
 }
 
 /* Gemini theme hosts */
@@ -254,11 +275,11 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
 }
 
 .timeline-context-menu-item:hover {
-  background-color: --timeline-dot-active-color;
+  background-color: var(--timeline-dot-active-color);
 }
 
 .timeline-context-menu-item.active {
-  background-color: --timeline-dot-active-color;
+  background-color: var(--timeline-dot-active-color);
   font-weight: 500;
 }
 
@@ -3598,11 +3619,12 @@ body.light-theme ms-katex:hover {
   padding: 4px;
   cursor: pointer;
   border-radius: 50%;
+  color: var(--folder-icon-color);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s ease;
-  opacity: 0.7;
+  opacity: 0.9;
 }
 
 .gv-folder-action-btn:hover {
