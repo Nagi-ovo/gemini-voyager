@@ -136,6 +136,58 @@ export function startQuoteReply() {
   let quoteBtn: HTMLElement | null = null;
   let currentSelectionRange: Range | null = null;
   let isInternalClick = false;
+  let scrollRafId: number | null = null;
+
+  function updatePosition() {
+    // If listeners are removed (raf/listeners), we shouldn't be updating, but we need to check existence.
+    // However, we want to allow updating even if it WAS hidden temporarily.
+    // The key is: if listeners are active, we update.
+    if (!quoteBtn || !currentSelectionRange) return;
+
+    const rangeRect = currentSelectionRange.getBoundingClientRect();
+    const btnRect = quoteBtn.getBoundingClientRect(); // Get dimensions
+
+    // Check availability in viewport
+    // We add a small buffer (e.g. half button height) to prevent flickering at edges
+    const isOffScreen = rangeRect.bottom < 0 || rangeRect.top > window.innerHeight;
+
+    if (isOffScreen) {
+      if (!quoteBtn.classList.contains(CSS_CLASSES.HIDDEN)) {
+        quoteBtn.classList.add(CSS_CLASSES.HIDDEN);
+      }
+      return;
+    }
+
+    // If returning to screen, show it
+    if (quoteBtn.classList.contains(CSS_CLASSES.HIDDEN)) {
+      quoteBtn.classList.remove(CSS_CLASSES.HIDDEN);
+    }
+
+    // Position relative to viewport (fixed), so NO window.scrollY/X additions
+    // We want the button above the selection
+    const top = rangeRect.top - btnRect.height - POSITIONING.BUTTON_SELECTION_GAP_PX;
+    const left = rangeRect.left + rangeRect.width / 2 - btnRect.width / 2;
+
+    // Ensure it doesn't stick to the very top edge if selection is at top of screen
+    // but still "in view" (e.g. only bottom half of selection visible)
+    // Actually, if rangeRect.top is negative, 'top' will be very negative.
+    // We probably want to clamp it or hide it if there isn't enough space?
+    // For now, simpler requirement: just hide if "content" is offscreen.
+    // The user said: "selected text content is out of screen".
+    // Our check `rangeRect.bottom < 0` covers "scrolled past UP".
+    // `rangeRect.top > window.innerHeight` covers "scrolled past DOWN".
+
+    quoteBtn.style.top = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, top)}px`;
+    quoteBtn.style.left = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, left)}px`;
+  }
+
+  function onScrollOrResize() {
+    if (scrollRafId) return;
+    scrollRafId = requestAnimationFrame(() => {
+      updatePosition();
+      scrollRafId = null;
+    });
+  }
 
   // Create button
   function createButton() {
@@ -259,24 +311,35 @@ export function startQuoteReply() {
     }
   }
 
-  function showButton(rect: DOMRect) {
+  function showButton() {
     if (!quoteBtn) createButton();
     if (!quoteBtn) return;
 
     quoteBtn.classList.remove(CSS_CLASSES.HIDDEN);
 
-    // Position above the selection
-    const btnRect = quoteBtn.getBoundingClientRect();
-    const top = rect.top - btnRect.height - POSITIONING.BUTTON_SELECTION_GAP_PX + window.scrollY;
-    const left = rect.left + rect.width / 2 - btnRect.width / 2 + window.scrollX;
+    // Initial position logic - reuse updatePosition but we need to set range first?
+    // currentSelectionRange is already set in handleSelectionChange before calling showButton
+    // However, showButton accepts a 'rect' argument which was the range rect.
+    // Let's just use updatePosition() to be consistent and ignore the passed rect argument for positioning logic
+    // or use it for initial set. updatePosition uses currentSelectionRange directly.
 
-    quoteBtn.style.top = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, top)}px`;
-    quoteBtn.style.left = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, left)}px`;
+    updatePosition();
+
+    // Add listeners for scroll/resize
+    window.addEventListener('scroll', onScrollOrResize, { capture: true, passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
   }
 
   function hideButton() {
     if (quoteBtn) {
       quoteBtn.classList.add(CSS_CLASSES.HIDDEN);
+    }
+    // Remove listeners
+    window.removeEventListener('scroll', onScrollOrResize, { capture: true });
+    window.removeEventListener('resize', onScrollOrResize);
+    if (scrollRafId) {
+      cancelAnimationFrame(scrollRafId);
+      scrollRafId = null;
     }
   }
 
@@ -340,11 +403,11 @@ export function startQuoteReply() {
       // If rect is zero (e.g. invisible), don't show
       if (rect.width === 0 && rect.height === 0) return;
 
-      showButton(rect);
+      showButton();
     }, TIMING.SELECTION_DEBOUNCE_MS);
   }
 
-  function onMouseUp(e: MouseEvent) {
+  function onMouseUp(_: MouseEvent) {
     if (isInternalClick) {
       isInternalClick = false;
       return;
@@ -366,12 +429,14 @@ export function startQuoteReply() {
   // selectionchange event fires too often while dragging.
   document.addEventListener('mouseup', onMouseUp);
 
-  // Also listen to keyup for keyboard selection
-  document.addEventListener('keyup', (e) => {
+  function onKeys(e: KeyboardEvent) {
     if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
       handleSelectionChange();
     }
-  });
+  }
+
+  // Also listen to keyup for keyboard selection
+  document.addEventListener('keyup', onKeys);
 
   // Listen for language changes and update button text
   browser.storage.onChanged.addListener((changes, areaName) => {
@@ -382,7 +447,9 @@ export function startQuoteReply() {
 
   // Cleanup
   return () => {
+    hideButton(); // Ensure scroll/resize listeners and RAF are cleared
     document.removeEventListener('mouseup', onMouseUp);
+    document.removeEventListener('keyup', onKeys);
     if (quoteBtn) quoteBtn.remove();
     const style = document.getElementById(STYLE_ID);
     if (style) style.remove();
