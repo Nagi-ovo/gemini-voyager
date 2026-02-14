@@ -278,11 +278,10 @@ function collapseSidebar(): void {
 }
 
 /**
- * Expand the sidebar (if currently collapsed, and was auto-collapsed by us)
+ * Expand the sidebar (if currently collapsed)
  */
 function expandSidebar(): void {
-  // Only expand if we auto-collapsed it
-  if (isSidebarCollapsed() && autoCollapsed) {
+  if (isSidebarCollapsed()) {
     clickToggleButton();
     autoCollapsed = false;
   }
@@ -378,12 +377,20 @@ function checkAndReattach(): void {
 
   // If we have a reference but it's no longer in DOM, clear it
   if (sidenavElement && !sidenavElement.isConnected) {
-    sidenavElement = null;
-    autoCollapsed = false; // Reset auto-collapse state when element is removed
+    detachEventListeners(); // properly remove listeners and null the reference
+    autoCollapsed = false;
+  }
+
+  // If sidenav exists but is NOT visible (narrow window), clear the reference
+  // so that when it becomes visible again we treat it as a fresh element.
+  if (sidenavElement && !isSidebarVisible()) {
+    detachEventListeners();
+    return;
   }
 
   // If sidenav exists and is visible, try to attach
   if (currentSidenav && isSidebarVisible()) {
+    // Reattach if element changed OR if we lost our reference (e.g. after resize)
     if (currentSidenav !== sidenavElement) {
       attachEventListeners();
     }
@@ -404,6 +411,12 @@ function handleResize(): void {
   resizeDebounceTimer = window.setTimeout(() => {
     resizeDebounceTimer = null;
     checkAndReattach();
+
+    // Gemini's layout transitions may take longer than our debounce.
+    // Schedule a secondary check to catch late DOM changes.
+    setTimeout(() => {
+      if (enabled) checkAndReattach();
+    }, 600);
   }, RESIZE_DEBOUNCE_MS);
 }
 
