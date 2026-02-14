@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  applyFloatingTriggerPosition,
   createTopbarPlacementObserver,
   isGeminiWebTopbarMode,
   placePromptTriggerInTopbar,
@@ -66,5 +67,27 @@ describe('prompt trigger topbar placement', () => {
     expect(disabledObserver).toBeNull();
 
     observer?.disconnect();
+  });
+
+  it('restores floating trigger position from saved values', () => {
+    const trigger = document.createElement('button');
+
+    const applied = applyFloatingTriggerPosition(trigger, { right: 42.6, bottom: 88.2 });
+
+    expect(applied).toBe(true);
+    expect(trigger.style.right).toBe('43px');
+    expect(trigger.style.bottom).toBe('88px');
+  });
+
+  it('ignores invalid saved floating trigger position', () => {
+    const trigger = document.createElement('button');
+    trigger.style.right = '18px';
+    trigger.style.bottom = '18px';
+
+    const applied = applyFloatingTriggerPosition(trigger, { right: Number.NaN, bottom: 12 });
+
+    expect(applied).toBe(false);
+    expect(trigger.style.right).toBe('18px');
+    expect(trigger.style.bottom).toBe('18px');
   });
 });

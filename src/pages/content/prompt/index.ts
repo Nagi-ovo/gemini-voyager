@@ -38,6 +38,8 @@ type PromptItem = {
 
 type PanelPosition = { top: number; left: number };
 type TriggerPosition = { bottom: number; right: number };
+const MIN_TRIGGER_OFFSET_PX = 6;
+const DEFAULT_TRIGGER_OFFSET_PX = 18;
 
 const STORAGE_KEYS = {
   items: StorageKeys.PROMPT_ITEMS,
@@ -88,6 +90,28 @@ export function createTopbarPlacementObserver(
 ): MutationObserver | null {
   if (!useTopbarPlacement) return null;
   return new MutationObserver(callback);
+}
+
+function normalizeTriggerPosition(pos: TriggerPosition | null | undefined): TriggerPosition | null {
+  if (!pos) return null;
+  const right = Number(pos.right);
+  const bottom = Number(pos.bottom);
+  if (!Number.isFinite(right) || !Number.isFinite(bottom)) return null;
+  return {
+    right: Math.max(MIN_TRIGGER_OFFSET_PX, Math.round(right)),
+    bottom: Math.max(MIN_TRIGGER_OFFSET_PX, Math.round(bottom)),
+  };
+}
+
+export function applyFloatingTriggerPosition(
+  trigger: HTMLElement,
+  pos: TriggerPosition | null | undefined,
+): boolean {
+  const normalized = normalizeTriggerPosition(pos);
+  if (!normalized) return false;
+  trigger.style.right = `${normalized.right}px`;
+  trigger.style.bottom = `${normalized.bottom}px`;
+  return true;
 }
 
 function getRuntimeUrl(path: string): string {
@@ -425,6 +449,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     let isInlineTrigger = false;
     let inlineRetryAttempts = 0;
     let inlineRetryTimer: number | null = null;
+    let savedTriggerPos: TriggerPosition | null = null;
     const INLINE_RETRY_MAX_ATTEMPTS = 20;
     const INLINE_RETRY_INTERVAL_MS = 250;
 
@@ -450,6 +475,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       trigger.classList.remove('gv-pm-trigger-inline');
       if (trigger.parentElement !== document.body) {
         document.body.appendChild(trigger);
+      }
+      if (!applyFloatingTriggerPosition(trigger, savedTriggerPos)) {
+        trigger.style.right = `${DEFAULT_TRIGGER_OFFSET_PX}px`;
+        trigger.style.bottom = `${DEFAULT_TRIGGER_OFFSET_PX}px`;
       }
     }
 
@@ -523,11 +552,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // Restore trigger position if saved; otherwise place next to host button
     try {
       const pos = await readStorage<TriggerPosition | null>(STORAGE_KEYS.triggerPos, null);
+      savedTriggerPos = normalizeTriggerPosition(pos);
       if (!applyInlineTriggerPlacement()) {
         setFloatingTriggerMode();
-        if (pos && Number.isFinite(pos.bottom) && Number.isFinite(pos.right)) {
-          trigger.style.bottom = `${Math.max(6, Math.round(pos.bottom))}px`;
-          trigger.style.right = `${Math.max(6, Math.round(pos.right))}px`;
+        if (savedTriggerPos) {
           // Constrain position after restore to handle window resize/split screen
           requestAnimationFrame(constrainTriggerPosition);
         } else {
@@ -1210,9 +1238,15 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           const dx = Math.abs(ev.clientX - triggerDragStartPos.x);
           const dy = Math.abs(ev.clientY - triggerDragStartPos.y);
           if (dx > 5 || dy > 5) {
-            const r = parseFloat((trigger.style.right || '').replace('px', '')) || 18;
-            const b = parseFloat((trigger.style.bottom || '').replace('px', '')) || 18;
-            await writeStorage(STORAGE_KEYS.triggerPos, { right: r, bottom: b });
+            const r =
+              parseFloat((trigger.style.right || '').replace('px', '')) || DEFAULT_TRIGGER_OFFSET_PX;
+            const b =
+              parseFloat((trigger.style.bottom || '').replace('px', '')) ||
+              DEFAULT_TRIGGER_OFFSET_PX;
+            savedTriggerPos = normalizeTriggerPosition({ right: r, bottom: b });
+            if (savedTriggerPos) {
+              await writeStorage(STORAGE_KEYS.triggerPos, savedTriggerPos);
+            }
           }
         }
         triggerDragStartPos = null;
