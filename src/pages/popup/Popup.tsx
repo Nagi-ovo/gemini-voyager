@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
@@ -284,21 +284,25 @@ export default function Popup() {
   });
 
   // Width adjuster for sidebar width (Context-aware: Gemini vs AI Studio)
-  const sidebarConfig = isAIStudio
-    ? {
-        key: 'gvAIStudioSidebarWidth',
-        min: AI_STUDIO_SIDEBAR_PX.min,
-        max: AI_STUDIO_SIDEBAR_PX.max,
-        def: AI_STUDIO_SIDEBAR_PX.defaultValue,
-        norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
-      }
-    : {
-        key: 'geminiSidebarWidth',
-        min: SIDEBAR_PX.min,
-        max: SIDEBAR_PX.max,
-        def: SIDEBAR_PX.defaultValue,
-        norm: normalizeSidebarPx,
-      };
+  const sidebarConfig = useMemo(
+    () =>
+      isAIStudio
+        ? {
+            key: 'gvAIStudioSidebarWidth',
+            min: AI_STUDIO_SIDEBAR_PX.min,
+            max: AI_STUDIO_SIDEBAR_PX.max,
+            def: AI_STUDIO_SIDEBAR_PX.defaultValue,
+            norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
+          }
+        : {
+            key: 'geminiSidebarWidth',
+            min: SIDEBAR_PX.min,
+            max: SIDEBAR_PX.max,
+            def: SIDEBAR_PX.defaultValue,
+            norm: normalizeSidebarPx,
+          },
+    [isAIStudio],
+  );
 
   const sidebarWidthAdjuster = useWidthAdjuster({
     storageKey: sidebarConfig.key,
