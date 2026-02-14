@@ -1,7 +1,7 @@
 import { StorageKeys } from '@/core/types/common';
 
 const HIDDEN_ATTR = 'data-gv-disclaimer-hidden';
-const PREVIOUS_DISPLAY_ATTR = 'data-gv-disclaimer-prev-display';
+const PREVIOUS_INLINE_STYLE_ATTR = 'data-gv-disclaimer-prev-inline-style';
 const DISCLAIMER_ROOT_SELECTOR = 'body';
 
 const DISCLAIMER_PATTERNS: RegExp[] = [
@@ -78,18 +78,39 @@ function hideContainers(): void {
   const targets = findDisclaimerContainers(root);
   targets.forEach((element) => {
     if (element.getAttribute(HIDDEN_ATTR) === '1') return;
+    const previousInlineStyle = element.getAttribute('style') || '';
+    const inlineHeight = Number.parseFloat(element.style.height || '');
+    const computedHeight = Number.parseFloat(window.getComputedStyle(element).height || '');
+    const measuredHeight =
+      element.getBoundingClientRect().height ||
+      element.offsetHeight ||
+      element.scrollHeight ||
+      (Number.isFinite(inlineHeight) ? inlineHeight : 0) ||
+      (Number.isFinite(computedHeight) ? computedHeight : 0) ||
+      0;
+    const reservedHeightPx = measuredHeight > 0 ? Math.max(1, Math.round(measuredHeight / 3)) : 0;
+
     element.setAttribute(HIDDEN_ATTR, '1');
-    element.setAttribute(PREVIOUS_DISPLAY_ATTR, element.style.display || '');
-    element.style.display = 'none';
+    element.setAttribute(PREVIOUS_INLINE_STYLE_ATTR, previousInlineStyle);
+    element.style.visibility = 'hidden';
+    element.style.overflow = 'hidden';
+    element.style.pointerEvents = 'none';
+    element.style.height = `${reservedHeightPx}px`;
+    element.style.minHeight = `${reservedHeightPx}px`;
+    element.style.maxHeight = `${reservedHeightPx}px`;
   });
 }
 
 function restoreContainers(): void {
   if (typeof document === 'undefined') return;
   document.querySelectorAll<HTMLElement>(`[${HIDDEN_ATTR}="1"]`).forEach((element) => {
-    const previous = element.getAttribute(PREVIOUS_DISPLAY_ATTR) || '';
-    element.style.display = previous;
-    element.removeAttribute(PREVIOUS_DISPLAY_ATTR);
+    const previousInlineStyle = element.getAttribute(PREVIOUS_INLINE_STYLE_ATTR) || '';
+    if (previousInlineStyle) {
+      element.setAttribute('style', previousInlineStyle);
+    } else {
+      element.removeAttribute('style');
+    }
+    element.removeAttribute(PREVIOUS_INLINE_STYLE_ATTR);
     element.removeAttribute(HIDDEN_ATTR);
   });
 }

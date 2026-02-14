@@ -53,8 +53,10 @@ describe('disclaimerHider', () => {
 
     const englishDisclaimer = document.createElement('p');
     englishDisclaimer.textContent = 'Gemini is AI and can make mistakes.';
+    englishDisclaimer.style.height = '30px';
     const chineseDisclaimer = document.createElement('p');
     chineseDisclaimer.textContent = 'Gemini 可能会犯错。';
+    chineseDisclaimer.style.height = '30px';
     document.body.appendChild(englishDisclaimer);
     document.body.appendChild(chineseDisclaimer);
 
@@ -62,13 +64,17 @@ describe('disclaimerHider', () => {
     startDisclaimerHider();
     await Promise.resolve();
 
-    expect(englishDisclaimer.style.display).toBe('none');
-    expect(chineseDisclaimer.style.display).toBe('none');
+    expect(englishDisclaimer.style.visibility).toBe('hidden');
+    expect(englishDisclaimer.style.height).toBe('10px');
+    expect(chineseDisclaimer.style.visibility).toBe('hidden');
+    expect(chineseDisclaimer.style.height).toBe('10px');
   });
 
   it('responds to storage changes and restores space when disabled again', async () => {
     const disclaimer = document.createElement('p');
     disclaimer.textContent = 'Gemini is AI and can make mistakes.';
+    disclaimer.style.height = '30px';
+    disclaimer.style.color = 'rgb(255, 0, 0)';
     document.body.appendChild(disclaimer);
 
     const { startDisclaimerHider } = await import('../index');
@@ -84,7 +90,8 @@ describe('disclaimerHider', () => {
       },
       'sync',
     );
-    expect(disclaimer.style.display).toBe('none');
+    expect(disclaimer.style.visibility).toBe('hidden');
+    expect(disclaimer.style.height).toBe('10px');
 
     storageChangeListener?.(
       {
@@ -92,6 +99,8 @@ describe('disclaimerHider', () => {
       },
       'sync',
     );
-    expect(disclaimer.style.display).toBe('');
+    expect(disclaimer.style.visibility).toBe('');
+    expect(disclaimer.style.height).toBe('30px');
+    expect(disclaimer.style.color).toBe('rgb(255, 0, 0)');
   });
 });
