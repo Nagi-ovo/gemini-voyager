@@ -9,6 +9,7 @@ import { FolderImportExportService } from '@/features/folder/services/FolderImpo
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 
+import { sortConversationsByPriority } from './conversationSort';
 import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
 import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
 import { createMoveToFolderMenuItem } from './moveToFolderMenuItem';
@@ -699,7 +700,8 @@ export class FolderManager {
     const rootConversations = this.data.folderContents[ROOT_CONVERSATIONS_ID] || [];
     const filteredRootConversations = this.filterConversationsByCurrentUser(rootConversations);
     if (filteredRootConversations.length > 0) {
-      filteredRootConversations.forEach((conv) => {
+      const sortedRootConversations = this.sortConversations(filteredRootConversations);
+      sortedRootConversations.forEach((conv) => {
         const convEl = this.createConversationElement(conv, ROOT_CONVERSATIONS_ID, 0);
         list.appendChild(convEl);
       });
@@ -2212,14 +2214,7 @@ export class FolderManager {
   }
 
   private sortConversations(conversations: ConversationReference[]): ConversationReference[] {
-    return [...conversations].sort((a, b) => {
-      // Starred conversations always come first
-      if (a.starred && !b.starred) return -1;
-      if (!a.starred && b.starred) return 1;
-
-      // Within the same starred state, sort by addedAt (newest first)
-      return b.addedAt - a.addedAt;
-    });
+    return sortConversationsByPriority(conversations);
   }
 
   private addConversationToFolder(
@@ -5210,7 +5205,48 @@ export class FolderManager {
       gemId: conv.gemId,
     });
 
+    this.markConversationAsRecentlyOpened(conversationId);
     this.navigateToConversation(conv.url, conv);
+  }
+
+  private isSameConversation(targetId: string, conversation: ConversationReference): boolean {
+    if (conversation.conversationId === targetId) return true;
+
+    const cleanId = targetId.replace(/^c_/, '');
+    const cleanStoredId = conversation.conversationId.replace(/^c_/, '');
+
+    if (cleanId && cleanId === cleanStoredId) return true;
+
+    if (cleanId && cleanId.length > 8 && conversation.url.includes(cleanId)) return true;
+
+    return false;
+  }
+
+  private markConversationAsRecentlyOpened(conversationId: string): void {
+    const now = Date.now();
+    let changed = false;
+
+    for (const folderId in this.data.folderContents) {
+      const conversations = this.data.folderContents[folderId];
+      conversations.forEach((conversation) => {
+        if (!this.isSameConversation(conversationId, conversation)) return;
+
+        // De-duplicate near-simultaneous route/listener updates.
+        if (conversation.lastOpenedAt && now - conversation.lastOpenedAt < 1000) return;
+
+        conversation.lastOpenedAt = now;
+        conversation.updatedAt = now;
+        changed = true;
+      });
+    }
+
+    if (!changed) return;
+
+    void this.saveData();
+
+    if (this.folderEnabled && this.containerElement) {
+      this.renderAllFolders();
+    }
   }
 
   private navigateToConversation(url: string, conversation?: ConversationReference): void {
@@ -5344,7 +5380,13 @@ export class FolderManager {
   private installRouteChangeListener(): void {
     const update = () => {
       if (this.isDestroyed) return;
-      setTimeout(() => this.highlightActiveConversationInFolders(), 0);
+      setTimeout(() => {
+        this.highlightActiveConversationInFolders();
+        const currentConversationId = this.getCurrentConversationId();
+        if (currentConversationId) {
+          this.markConversationAsRecentlyOpened(currentConversationId);
+        }
+      }, 0);
     };
 
     const cleanupFns: (() => void)[] = [];
