@@ -23,11 +23,12 @@ describe('folder tree indentation', () => {
     document.body.innerHTML = '';
   });
 
-  it('clamps configured indent into [-16, 32]', () => {
-    expect(clampFolderTreeIndent(-40)).toBe(-16);
+  it('clamps configured indent into [-8, 32] and defaults to -8 for invalid values', () => {
+    expect(clampFolderTreeIndent(-40)).toBe(-8);
     expect(clampFolderTreeIndent(64)).toBe(32);
     expect(clampFolderTreeIndent(0)).toBe(0);
     expect(clampFolderTreeIndent(16)).toBe(16);
+    expect(clampFolderTreeIndent('invalid')).toBe(-8);
   });
 
   it('calculates folder and conversation paddings from indent and level', () => {

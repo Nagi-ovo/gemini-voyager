@@ -61,7 +61,7 @@ const normalizePercent = (
 };
 
 const FOLDER_SPACING = { min: 0, max: 16, defaultValue: 2 };
-const FOLDER_TREE_INDENT = { min: -16, max: 32, defaultValue: 16 };
+const FOLDER_TREE_INDENT = { min: -8, max: 32, defaultValue: -8 };
 const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LEGACY_BASELINE_PX };
 const EDIT_PERCENT = { min: 30, max: 100, defaultValue: 60, legacyBaselinePx: LEGACY_BASELINE_PX };
 const SIDEBAR_PERCENT = {
