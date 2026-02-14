@@ -1344,8 +1344,7 @@ async function performFinalExport(
       } catch {}
     };
 
-    checkbox.addEventListener('click', (ev) => {
-      swallow(ev);
+    const toggleSelection = () => {
       autoSelectAll = false;
       const next = !selectedIds.has(msg.messageId);
       setSelected(msg.messageId, next);
@@ -1353,7 +1352,15 @@ async function performFinalExport(
         '[data-gv-export-select-bar="true"]',
       ) as HTMLElement | null;
       if (bar) updateBottomBar(bar);
+    };
+
+    checkbox.addEventListener('click', (ev) => {
+      swallow(ev);
+      toggleSelection();
     });
+
+    host.addEventListener('click', toggleSelection);
+    cleanupTasks.push(() => host.removeEventListener('click', toggleSelection));
 
     selector.appendChild(checkbox);
     host.appendChild(selector);

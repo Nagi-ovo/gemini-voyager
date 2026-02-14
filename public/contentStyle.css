@@ -4722,6 +4722,7 @@ body[data-color-scheme='dark'] .gv-export-fontsize-preview {
 /* Message selection mode for export */
 .gv-export-select-mode .gv-export-msg-host {
   position: relative;
+  cursor: pointer;
 }
 
 .gv-export-msg-selector {
