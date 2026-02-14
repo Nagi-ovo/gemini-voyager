@@ -22,6 +22,25 @@ export interface ExtractedTurn {
  * Extracts structured content from Gemini's DOM
  * Preserves formatting including LaTeX formulas, code blocks, tables, etc.
  */
+
+/**
+ * querySelector variant that skips elements nested inside model-thoughts / thoughts-container.
+ * When the user expands Gemini's "thinking" section, a second `message-content` element
+ * appears *before* the real response in DOM order.  A plain `querySelector` would match
+ * the thinking panel first, causing exports to grab the wrong content.
+ */
+function queryOutsideThoughts<T extends Element = Element>(
+  root: Element,
+  selector: string,
+): T | null {
+  const candidates = root.querySelectorAll<T>(selector);
+  for (const el of Array.from(candidates)) {
+    if (!el.closest('model-thoughts, .thoughts-container, .thoughts-content')) {
+      return el;
+    }
+  }
+  return null;
+}
 export class DOMContentExtractor {
   private static DEBUG = false;
   /**
@@ -99,11 +118,14 @@ export class DOMContentExtractor {
     };
 
     // Find message-content first (contains main text and formulas)
-    let messageContent = element.querySelector('message-content');
+    // Use queryOutsideThoughts to avoid matching the message-content inside
+    // the expanded thinking/reasoning panel.
+    let messageContent = queryOutsideThoughts(element, 'message-content');
 
     if (!messageContent) {
       // Try markdown container
-      messageContent = element.querySelector(
+      messageContent = queryOutsideThoughts(
+        element,
         '.markdown-main-panel, ' + '.markdown, ' + '.model-response-text',
       );
     }
@@ -241,7 +263,7 @@ export class DOMContentExtractor {
     if (!combinedText) {
       const fallbackContainer =
         (messageContent as HTMLElement) ||
-        (element.querySelector('message-content') as HTMLElement | null) ||
+        (queryOutsideThoughts<HTMLElement>(element, 'message-content')) ||
         (element as HTMLElement);
       try {
         const plain =

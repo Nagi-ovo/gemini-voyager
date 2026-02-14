@@ -81,18 +81,18 @@ function waitForElement(selector: string, timeoutMs: number = 6000): Promise<Ele
       if (found) {
         try {
           obs.disconnect();
-        } catch {}
+        } catch { }
         resolve(found);
       }
     });
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch {}
+    } catch { }
     if (timeoutMs > 0)
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch {}
+        } catch { }
         resolve(null);
       }, timeoutMs);
   });
@@ -115,7 +115,7 @@ function waitForAnyElement(
         if (found) {
           try {
             obs.disconnect();
-          } catch {}
+          } catch { }
           resolve(found);
           return;
         }
@@ -124,13 +124,13 @@ function waitForAnyElement(
 
     try {
       obs.observe(document.body, { childList: true, subtree: true });
-    } catch {}
+    } catch { }
 
     if (timeoutMs > 0)
       setTimeout(() => {
         try {
           obs.disconnect();
-        } catch {}
+        } catch { }
         resolve(null);
       }, timeoutMs);
   });
@@ -147,6 +147,25 @@ function normalizeText(text: string | null): string {
 }
 
 // Note: cleaning of thinking toggles is handled at DOM level in extractAssistantText
+
+/**
+ * querySelector variant that skips elements nested inside model-thoughts / thoughts-container.
+ * When the user expands Gemini's "thinking" section, a second `message-content` element
+ * appears *before* the real response in DOM order.  A plain `querySelector` would match
+ * the thinking panel first, causing exports to grab the wrong content.
+ */
+function queryOutsideThoughts<T extends Element = Element>(
+  root: Element,
+  selector: string,
+): T | null {
+  const candidates = root.querySelectorAll<T>(selector);
+  for (const el of Array.from(candidates)) {
+    if (!el.closest('model-thoughts, .thoughts-container, .thoughts-content')) {
+      return el;
+    }
+  }
+  return null;
+}
 
 function filterTopLevel(elements: Element[]): HTMLElement[] {
   const arr = elements.map((e) => e as HTMLElement);
@@ -239,7 +258,7 @@ function ensureTurnId(el: Element, index: number): string {
     id = `u-${index}-${hashString(basis)}`;
     try {
       (asEl.dataset as any).turnId = id;
-    } catch {}
+    } catch { }
   }
   return id;
 }
@@ -259,16 +278,19 @@ function readStarredSet(): Set<string> {
 
 function extractAssistantText(el: HTMLElement): string {
   // Prefer direct text from message container if available (connected to DOM)
+  // Use queryOutsideThoughts to avoid matching the message-content inside
+  // the expanded thinking/reasoning panel.
   try {
-    const mc = el.querySelector(
+    const mc = queryOutsideThoughts<HTMLElement>(
+      el,
       'message-content, .markdown, .markdown-main-panel',
-    ) as HTMLElement | null;
+    );
     if (mc) {
       const raw = mc.textContent || mc.innerText || '';
       const txt = normalizeText(raw);
       if (txt) return txt;
     }
-  } catch {}
+  } catch { }
 
   // Clone and remove reasoning toggles/labels before reading text (detached fallback)
   const clone = el.cloneNode(true) as HTMLElement;
@@ -298,7 +320,7 @@ function extractAssistantText(el: HTMLElement): string {
       const eln = n as HTMLElement;
       if (shouldDrop(eln)) eln.remove();
     });
-  } catch {}
+  } catch { }
   const text = normalizeText(clone.innerText || clone.textContent || '');
   return text;
 }
@@ -378,13 +400,11 @@ function collectChatPairs(): ChatTurn[] {
       let finalAssistantEl: HTMLElement | undefined = undefined;
       if (aEl) {
         const pick =
-          (aEl.querySelector('message-content') as HTMLElement | null) ||
-          (aEl.querySelector('.markdown, .markdown-main-panel') as HTMLElement | null) ||
+          queryOutsideThoughts<HTMLElement>(aEl, 'message-content') ||
+          queryOutsideThoughts<HTMLElement>(aEl, '.markdown, .markdown-main-panel') ||
           (aEl.closest('.presented-response-container') as HTMLElement | null) ||
-          (aEl.querySelector(
-            '.presented-response-container, .response-content',
-          ) as HTMLElement | null) ||
-          (aEl.querySelector('response-element') as HTMLElement | null) ||
+          queryOutsideThoughts<HTMLElement>(aEl, '.presented-response-container, .response-content') ||
+          queryOutsideThoughts<HTMLElement>(aEl, 'response-element') ||
           aEl;
         finalAssistantEl = pick || undefined;
       }
@@ -755,7 +775,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from Folder Manager:', error);
-    } catch {}
+    } catch { }
   }
 
   // Strategy 1b: Get from Gemini native sidebar via current conversation ID
@@ -768,7 +788,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from native sidebar by conversation id:', error);
-    } catch {}
+    } catch { }
   }
 
   // Strategy 2: Try to get from page title
@@ -799,7 +819,7 @@ function getConversationTitleForExport(): string {
   } catch (error) {
     try {
       console.debug('[Export] Failed to get title from sidebar:', error);
-    } catch {}
+    } catch { }
   }
 
   // Strategy 4: URL fallback
@@ -1264,7 +1284,7 @@ async function performFinalExport(
     cleanupTasks.forEach((fn) => {
       try {
         fn();
-      } catch {}
+      } catch { }
     });
     cleanupTasks.length = 0;
   };
@@ -1338,10 +1358,10 @@ async function performFinalExport(
     const swallow = (ev: Event) => {
       try {
         ev.preventDefault();
-      } catch {}
+      } catch { }
       try {
         ev.stopPropagation();
-      } catch {}
+      } catch { }
     };
 
     const toggleSelection = () => {
@@ -1435,10 +1455,10 @@ async function performFinalExport(
   const swallow = (ev: Event) => {
     try {
       ev.preventDefault();
-    } catch {}
+    } catch { }
     try {
       ev.stopPropagation();
-    } catch {}
+    } catch { }
   };
 
   selectAllBtn.addEventListener('click', (ev) => {
@@ -1535,7 +1555,7 @@ async function performFinalExport(
       try {
         syncMessages(collectChatPairs());
         updateBottomBar(bar);
-      } catch {}
+      } catch { }
     }, 250);
   };
 
@@ -1543,7 +1563,7 @@ async function performFinalExport(
   try {
     obs.observe(root, { childList: true, subtree: true });
     cleanupTasks.push(() => obs.disconnect());
-  } catch {}
+  } catch { }
 
   // Escape to cancel
   const onKeyDown = (e: KeyboardEvent) => {
@@ -1589,7 +1609,7 @@ function showExportProgressOverlay(t: (key: TranslationKey) => string): () => vo
     unbindAlignment();
     try {
       overlay.remove();
-    } catch {}
+    } catch { }
   };
 }
 
@@ -1657,9 +1677,8 @@ function getConversationMenuPanelsFromNode(node: HTMLElement): HTMLElement[] {
 }
 
 function parseMenuTriggerPanelIds(trigger: HTMLElement): string[] {
-  const raw = `${trigger.getAttribute('aria-controls') || ''} ${
-    trigger.getAttribute('aria-owns') || ''
-  }`;
+  const raw = `${trigger.getAttribute('aria-controls') || ''} ${trigger.getAttribute('aria-owns') || ''
+    }`;
   return raw
     .split(/\s+/)
     .map((item) => item.trim())
@@ -1833,7 +1852,7 @@ function setupResponseActionCopyImageObserver({
     () => {
       try {
         responseActionObserver?.disconnect();
-      } catch {}
+      } catch { }
       responseActionObserver = null;
     },
     { once: true },
@@ -1966,13 +1985,13 @@ function setupConversationMenuExportObserver({
     () => {
       try {
         conversationMenuObserver?.disconnect();
-      } catch {}
+      } catch { }
       try {
         document.removeEventListener('click', onMenuTriggerInteraction, true);
-      } catch {}
+      } catch { }
       try {
         document.removeEventListener('pointerdown', onMenuTriggerInteraction, true);
-      } catch {}
+      } catch { }
       conversationMenuObserver = null;
     },
     { once: true },
@@ -2026,16 +2045,16 @@ export async function startExportButton(): Promise<void> {
   const swallow = (e: Event) => {
     try {
       e.preventDefault();
-    } catch {}
+    } catch { }
     try {
       e.stopPropagation();
-    } catch {}
+    } catch { }
   };
   // Capture low-level press events to avoid parent logo navigation, but do NOT capture 'click'
   ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((type) => {
     try {
       btn.addEventListener(type, swallow, true);
-    } catch {}
+    } catch { }
   });
 
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
@@ -2086,7 +2105,7 @@ export async function startExportButton(): Promise<void> {
       },
       { once: true },
     );
-  } catch {}
+  } catch { }
 
   btn.addEventListener('click', (ev) => {
     // Stop parent navigation, but allow this handler to run
@@ -2097,7 +2116,7 @@ export async function startExportButton(): Promise<void> {
     } catch (err) {
       try {
         console.error('Gemini Voyager export failed', err);
-      } catch {}
+      } catch { }
     }
   });
 }
