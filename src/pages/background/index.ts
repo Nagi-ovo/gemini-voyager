@@ -461,8 +461,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             func: (imageUrl: string) => {
               return fetch(imageUrl, { credentials: 'include' })
                 .then((resp) => {
-                  if (!resp.ok) return null;
+                  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                   return resp.blob();
+                })
+                .catch(() => {
+                  // Retry without credentials for wildcard CORS
+                  return fetch(imageUrl, { credentials: 'omit' }).then((resp) => {
+                    if (!resp.ok) return null;
+                    return resp.blob();
+                  });
                 })
                 .then((blob) => {
                   if (!blob) return null;
@@ -546,8 +553,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           });
         })
         .catch((err) => {
-          console.error('[Background] Fetch image failed:', err);
-          sendResponse({ ok: false, error: err.message });
+          // Retry without credentials for external domains (e.g., gstatic.com)
+          // Some servers return Access-Control-Allow-Origin: * which is
+          // incompatible with credentials: 'include'
+          return fetch(url, {
+            method: 'GET',
+            credentials: 'omit',
+            redirect: 'follow',
+          })
+            .then((response) => {
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              return response.blob();
+            })
+            .then((blob) => {
+              return blob.arrayBuffer().then((ab) => {
+                const b64 = arrayBufferToBase64(ab);
+                const contentType = blob.type || 'image/png';
+                const dataUrl = `data:${contentType};base64,${b64}`;
+                sendResponse({
+                  ok: true,
+                  data: dataUrl,
+                  contentType,
+                  base64: b64,
+                });
+              });
+            })
+            .catch((retryErr) => {
+              console.error('[Background] Fetch image failed (both modes):', retryErr);
+              sendResponse({ ok: false, error: retryErr.message });
+            });
         });
       return;
     } catch (e: any) {

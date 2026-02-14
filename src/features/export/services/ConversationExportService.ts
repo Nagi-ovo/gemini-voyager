@@ -488,6 +488,20 @@ export class ConversationExportService {
       /* ignore */
     }
 
+    // Retry without credentials for servers with wildcard CORS
+    // (Access-Control-Allow-Origin: * is incompatible with credentials: 'include')
+    try {
+      const response = await fetch(url, { credentials: 'omit', mode: 'cors' as RequestMode });
+      if (response.ok) {
+        return {
+          blob: await response.blob(),
+          contentType: response.headers.get('Content-Type'),
+        };
+      }
+    } catch {
+      /* ignore */
+    }
+
     type RuntimeFetchImageResponse =
       | {
           ok: true;

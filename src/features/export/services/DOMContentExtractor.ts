@@ -360,6 +360,55 @@ export class DOMContentExtractor {
         continue;
       }
 
+      // Search result images (web images found by Gemini)
+      // Structure: <div.attachment-container.search-images> > <response-element> >
+      //   <single-image> > <div.image-container[data-full-size-image-uri]> > ... > <img>
+      {
+        const searchImageContainers = child.querySelectorAll(
+          '.attachment-container.search-images .image-container[data-full-size-image-uri]',
+        );
+        if (searchImageContainers.length > 0) {
+          for (const container of Array.from(searchImageContainers)) {
+            const fullSizeUri = container.getAttribute('data-full-size-image-uri') || '';
+            const imgEl = container.querySelector('img.image') as HTMLImageElement | null;
+            if (!imgEl) continue;
+            // Use the Google-cached thumbnail (gstatic.com) as the downloadable src.
+            // The full-size URI points to arbitrary third-party domains that are blocked
+            // by both CORS and Gemini's CSP, so it's only usable as an attribution link.
+            const src = imgEl.src || '';
+            if (!src || src === 'about:blank') continue;
+            const alt = imgEl.alt || 'Search result image';
+            const sourceLink = container.querySelector('a.source') as HTMLAnchorElement | null;
+            const sourceUrl = sourceLink?.href || '';
+            const sourceLabel =
+              container.querySelector('.source .label')?.textContent?.trim() || '';
+
+            flags.hasImages = true;
+            htmlParts.push(
+              `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
+            );
+            const mdAlt = alt.replace(/\]/g, '\\]');
+            // Link to the full-size image or source when available
+            const linkUrl = fullSizeUri || sourceUrl;
+            const linkLabel = sourceLabel || (sourceUrl ? sourceUrl : '');
+            if (linkUrl) {
+              textParts.push(
+                `\n![${mdAlt}](${src})\n*Source: [${linkLabel || linkUrl}](${linkUrl})*\n`,
+              );
+            } else {
+              textParts.push(`\n![${mdAlt}](${src})\n`);
+            }
+          }
+          if (this.DEBUG)
+            console.log(
+              '[DOMContentExtractor] Extracted',
+              searchImageContainers.length,
+              'search result images',
+            );
+          continue;
+        }
+      }
+
       // Generated images (model-generated images in assistant responses)
       // These are typically wrapped in: <p> > <div.attachment-container.generated-images> >
       //   <response-element> > <generated-image> > <single-image> > ... > <img>
