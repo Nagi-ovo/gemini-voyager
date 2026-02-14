@@ -25,10 +25,55 @@ const normalizePercent = (value: number, fallback: number) => {
 
 /**
  * Selectors for edit mode containers
- * Based on actual DOM structure: .query-content.edit-mode
+ * Based on actual Gemini DOM structure with multiple fallbacks
  */
 function getEditModeSelectors(): string[] {
-  return ['.query-content.edit-mode', 'div.edit-mode', '[class*="edit-mode"]'];
+  return [
+    // Primary selectors based on Gemini's actual DOM structure
+    'user-query-content.editing',
+    'user-query-content.edit-mode',
+    '[data-test-id="edit-mode"]',
+    '[data-testid="edit-mode"]',
+
+    // Legacy selectors (kept for backward compatibility)
+    '.query-content.edit-mode',
+    'div.edit-mode',
+    '[class*="edit-mode"]',
+
+    // Additional fallback selectors
+    '.edit-form',
+    '[role="form"][data-author="user"]',
+    'user-query-content form',
+    'user-query-content .edit-container',
+  ];
+}
+
+/**
+ * Selectors for textarea elements in edit mode
+ */
+function getEditTextareaSelectors(): string[] {
+  return [
+    // Primary: direct textarea within editing containers
+    'user-query-content.editing textarea',
+    'user-query-content.edit-mode textarea',
+    '[data-test-id="edit-mode"] textarea',
+    '[data-testid="edit-mode"] textarea',
+
+    // Legacy selectors
+    '.edit-mode textarea',
+    '.edit-container textarea',
+    '.edit-form textarea',
+
+    // Material Design form fields
+    '.edit-mode .mat-mdc-input-element',
+    '.edit-mode .cdk-textarea-autosize',
+    '.edit-container .mat-mdc-input-element',
+
+    // Generic fallbacks
+    '[class*="edit-mode"] textarea',
+    'user-query-content textarea[aria-label*="Edit"]',
+    'user-query-content textarea[placeholder*="Edit"]',
+  ];
 }
 
 /**
@@ -47,69 +92,123 @@ function applyWidth(widthPercent: number): void {
   }
 
   const editModeSelectors = getEditModeSelectors();
-  const editModeRules = editModeSelectors.map((sel) => `${sel}`).join(',\n    ');
+  const editModeRules = editModeSelectors.join(',\n    ');
+
+  const textareaSelectors = getEditTextareaSelectors();
+  const textareaRules = textareaSelectors.join(',\n    ');
+
+  // A small gap to account for scrollbars
+  const GAP_PX = 10;
 
   style.textContent = `
     /* Remove width constraints from outer containers that contain edit mode (similar to chatWidth) */
+    .content-wrapper:has(user-query-content.editing),
     .content-wrapper:has(.edit-mode),
+    .main-content:has(user-query-content.editing),
     .main-content:has(.edit-mode),
+    .content-container:has(user-query-content.editing),
     .content-container:has(.edit-mode) {
       max-width: none !important;
     }
 
     /* Remove width constraints from main container when it has edit mode */
+    [role="main"]:has(user-query-content.editing),
     [role="main"]:has(.edit-mode) {
       max-width: none !important;
     }
 
+    main > div:has(user-query-content.editing),
     main > div:has(.edit-mode) {
       max-width: none !important;
       width: 100% !important;
     }
 
-    /* Target edit mode containers directly */
+    /* Target chat window and conversation containers when editing */
+    chat-window:has(user-query-content.editing),
+    chat-window:has(.edit-mode),
+    .chat-container:has(user-query-content.editing),
+    .chat-container:has(.edit-mode),
+    .conversation-container:has(user-query-content.editing),
+    .conversation-container:has(.edit-mode) {
+      max-width: none !important;
+    }
+
+    /* Target edit mode containers directly with centering */
     ${editModeRules} {
       max-width: ${widthValue} !important;
       width: min(100%, ${widthValue}) !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      padding-right: ${GAP_PX}px !important;
+      box-sizing: border-box !important;
     }
 
     /* Target the edit-container within edit-mode */
     .edit-mode .edit-container,
-    .query-content.edit-mode .edit-container {
+    .query-content.edit-mode .edit-container,
+    user-query-content.editing .edit-container,
+    user-query-content.edit-mode .edit-container {
       max-width: ${widthValue} !important;
       width: min(100%, ${widthValue}) !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
     }
 
     /* Target Material Design form field */
     .edit-mode .mat-mdc-form-field,
     .edit-container .mat-mdc-form-field,
-    .edit-mode .edit-form {
+    .edit-mode .edit-form,
+    user-query-content.editing .mat-mdc-form-field,
+    user-query-content.edit-mode .mat-mdc-form-field {
       max-width: ${widthValue} !important;
       width: 100% !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
     }
 
     /* Target text field wrapper and flex container */
     .edit-mode .mat-mdc-text-field-wrapper,
     .edit-mode .mat-mdc-form-field-flex,
-    .edit-mode .mdc-text-field {
+    .edit-mode .mdc-text-field,
+    user-query-content.editing .mat-mdc-text-field-wrapper,
+    user-query-content.editing .mat-mdc-form-field-flex,
+    user-query-content.editing .mdc-text-field,
+    user-query-content.edit-mode .mat-mdc-text-field-wrapper,
+    user-query-content.edit-mode .mat-mdc-form-field-flex,
+    user-query-content.edit-mode .mdc-text-field {
       max-width: ${widthValue} !important;
       width: 100% !important;
     }
 
     /* Target form field infix (contains the textarea) */
-    .edit-mode .mat-mdc-form-field-infix {
+    .edit-mode .mat-mdc-form-field-infix,
+    user-query-content.editing .mat-mdc-form-field-infix,
+    user-query-content.edit-mode .mat-mdc-form-field-infix {
       max-width: ${widthValue} !important;
       width: 100% !important;
     }
 
-    /* Target the textarea itself */
-    .edit-mode textarea,
-    .edit-container textarea,
-    .edit-mode .mat-mdc-input-element,
-    .edit-mode .cdk-textarea-autosize {
+    /* Target the textarea itself with comprehensive selectors */
+    ${textareaRules} {
       max-width: ${widthValue} !important;
       width: 100% !important;
       box-sizing: border-box !important;
+    }
+
+    /* Target user query content when in editing mode */
+    user-query-content.editing,
+    user-query-content.edit-mode {
+      max-width: ${widthValue} !important;
+      width: min(100%, ${widthValue}) !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+
+    /* Target user query bubble background in edit mode */
+    user-query-content.editing .user-query-bubble-with-background,
+    user-query-content.edit-mode .user-query-bubble-with-background {
+      max-width: ${widthValue} !important;
+      width: fit-content !important;
     }
 
     /* Fallback for browsers without :has() support */
