@@ -249,6 +249,7 @@
 
   /**
    * Extract timestamps from Gemini API response
+   * Tries to get real createTime from API, falls back to current time
    */
   const extractTimestampsFromResponse = (data) => {
     const timestamps = [];
@@ -265,9 +266,12 @@
               if (jsonData.candidates) {
                 for (const candidate of jsonData.candidates) {
                   if (candidate.content?.role === 'model') {
+                    // Try to get real timestamp from API response
+                    const realTimestamp =
+                      candidate.createTime || candidate.content?.createTime || jsonData.createTime;
                     timestamps.push({
                       role: 'model',
-                      timestamp: new Date().toISOString(),
+                      timestamp: realTimestamp || new Date().toISOString(),
                     });
                   }
                 }
@@ -282,9 +286,12 @@
         if (data.candidates) {
           for (const candidate of data.candidates) {
             if (candidate.content?.role === 'model') {
+              // Try to get real timestamp from API response
+              const realTimestamp =
+                candidate.createTime || candidate.content?.createTime || data.createTime;
               timestamps.push({
                 role: 'model',
-                timestamp: new Date().toISOString(),
+                timestamp: realTimestamp || new Date().toISOString(),
               });
             }
           }
