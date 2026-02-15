@@ -1,7 +1,7 @@
 /**
  * Message Timestamp Feature
  * Adds real timestamps to AI responses in Gemini conversations
- * 
+ *
  * Feature Request: Issue #303
  * https://github.com/Nagi-ovo/gemini-voyager/issues/303
  */
@@ -36,20 +36,20 @@ let currentSettings = { ...DEFAULT_SETTINGS };
  */
 function formatTimestamp(date: Date, settings: typeof DEFAULT_SETTINGS): string {
   const { use24Hour, showDate, showTime, dateFormat, customFormat } = settings;
-  
+
   // If custom format is provided, use it
   if (customFormat) {
     return formatWithCustomTemplate(date, customFormat, use24Hour);
   }
-  
+
   let result = '';
-  
+
   // Format date part
   if (showDate) {
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     const day = date.getDate();
-    
+
     switch (dateFormat) {
       case 'MM/DD/YY':
         result += `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year.toString().slice(-2)}`;
@@ -67,14 +67,14 @@ function formatTimestamp(date: Date, settings: typeof DEFAULT_SETTINGS): string 
         result += `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year.toString().slice(-2)}`;
     }
   }
-  
+
   // Format time part
   if (showTime) {
     if (result) result += ' ';
-    
+
     let hours = date.getHours();
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    
+
     if (use24Hour) {
       const hours24 = hours.toString().padStart(2, '0');
       result += `${hours24}:${minutes}`;
@@ -85,7 +85,7 @@ function formatTimestamp(date: Date, settings: typeof DEFAULT_SETTINGS): string 
       result += `${hours}:${minutes} ${ampm}`;
     }
   }
-  
+
   return result || date.toLocaleString();
 }
 
@@ -112,10 +112,10 @@ function formatWithCustomTemplate(date: Date, template: string, use24Hour: boole
   const day = date.getDate();
   let hours = date.getHours();
   const minutes = date.getMinutes();
-  
+
   const ampm = hours >= 12 ? 'PM' : 'AM';
   const hours12 = hours % 12 || 12;
-  
+
   return template
     .replace(/{YYYY}/g, year.toString())
     .replace(/{YY}/g, year.toString().slice(-2))
@@ -140,7 +140,7 @@ async function loadSettings(): Promise<typeof DEFAULT_SETTINGS> {
     const result = await new Promise<{ [SETTINGS_KEY]?: typeof DEFAULT_SETTINGS }>((resolve) => {
       chrome.storage?.sync?.get({ [SETTINGS_KEY]: DEFAULT_SETTINGS }, resolve);
     });
-    
+
     return { ...DEFAULT_SETTINGS, ...result[SETTINGS_KEY] };
   } catch {
     return DEFAULT_SETTINGS;
@@ -186,14 +186,16 @@ function addTimestampToMessage(messageEl: HTMLElement, settings: typeof DEFAULT_
   if (messageEl.querySelector('.gv-message-timestamp')) {
     return;
   }
-  
+
   const timestamp = getMessageTimestamp();
   const timestampEl = createTimestampElement(timestamp, settings);
-  
+
   // Find the appropriate place to insert timestamp
   // For model responses, add after the content
-  const contentWrapper = messageEl.querySelector('.model-response-content, .response-content, [data-test-id="model-response"]');
-  
+  const contentWrapper = messageEl.querySelector(
+    '.model-response-content, .response-content, [data-test-id="model-response"]',
+  );
+
   if (contentWrapper) {
     if (settings.position === 'above') {
       contentWrapper.insertBefore(timestampEl, contentWrapper.firstChild);
@@ -224,7 +226,7 @@ function processMessages(settings: typeof DEFAULT_SETTINGS): void {
     'response-container',
     '[role="article"]',
   ];
-  
+
   for (const selector of selectors) {
     const messages = document.querySelectorAll(selector);
     messages.forEach((msg) => {
@@ -239,16 +241,10 @@ function processMessages(settings: typeof DEFAULT_SETTINGS): void {
  * Generate CSS styles based on settings
  */
 function generateStyles(settings: typeof DEFAULT_SETTINGS): string {
-  const {
-    backgroundColor,
-    textColor,
-    fontSize,
-    borderRadius,
-    showIndicator,
-  } = settings;
-  
+  const { backgroundColor, textColor, fontSize, borderRadius, showIndicator } = settings;
+
   const bgColor = backgroundColor || 'rgba(66, 133, 244, 0.08)';
-  const bgColorHover = backgroundColor 
+  const bgColorHover = backgroundColor
     ? backgroundColor.replace(/[.]+%?\)$/g, (match) => {
         const num = parseFloat(match);
         return `${Math.min(num * 1.5, 1)})`;
@@ -258,7 +254,7 @@ function generateStyles(settings: typeof DEFAULT_SETTINGS): string {
   const txtColorDark = textColor || 'var(--gv-text-secondary-dark, #9aa0a6)';
   const fs = fontSize || '12';
   const br = borderRadius || '16';
-  
+
   return `
     .gv-message-timestamp {
       font-size: ${fs}px;
@@ -280,7 +276,9 @@ function generateStyles(settings: typeof DEFAULT_SETTINGS): string {
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
     
-    ${showIndicator ? `
+    ${
+      showIndicator
+        ? `
     .gv-message-timestamp::before {
       content: '';
       width: 6px;
@@ -289,7 +287,9 @@ function generateStyles(settings: typeof DEFAULT_SETTINGS): string {
       border-radius: 50%;
       flex-shrink: 0;
     }
-    ` : ''}
+    `
+        : ''
+    }
     
     .gv-message-timestamp:hover {
       opacity: 1;
@@ -307,11 +307,15 @@ function generateStyles(settings: typeof DEFAULT_SETTINGS): string {
         border-color: rgba(138, 180, 248, 0.2);
       }
       
-      ${showIndicator ? `
+      ${
+        showIndicator
+          ? `
       .gv-message-timestamp::before {
         background: linear-gradient(135deg, #8ab4f8 0%, #81c995 100%);
       }
-      ` : ''}
+      `
+          : ''
+      }
       
       .gv-message-timestamp:hover {
         background: ${bgColorHover.replace('244', '180').replace('248', '180')};
@@ -327,13 +331,13 @@ function generateStyles(settings: typeof DEFAULT_SETTINGS): string {
  */
 function injectStyles(settings: typeof DEFAULT_SETTINGS): void {
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement;
-  
+
   if (!style) {
     style = document.createElement('style');
     style.id = STYLE_ID;
     document.head.appendChild(style);
   }
-  
+
   style.textContent = generateStyles(settings);
 }
 
@@ -342,7 +346,7 @@ function injectStyles(settings: typeof DEFAULT_SETTINGS): void {
  */
 export function updateTimestampStyles(settings: typeof DEFAULT_SETTINGS): void {
   injectStyles(settings);
-  
+
   // Update existing timestamps
   const timestamps = document.querySelectorAll('.gv-message-timestamp');
   timestamps.forEach((ts) => {
@@ -365,7 +369,7 @@ function removeTimestamps(): void {
   if (style) {
     style.remove();
   }
-  
+
   // Remove all timestamp elements
   const timestamps = document.querySelectorAll('.gv-message-timestamp');
   timestamps.forEach((ts) => ts.remove());
@@ -377,7 +381,7 @@ function removeTimestamps(): void {
 function setupInterceptorListener(): void {
   document.addEventListener('gv-message-timestamps', ((event: CustomEvent) => {
     const { timestamps } = event.detail;
-    
+
     for (const ts of timestamps) {
       if (ts.role === 'model') {
         // Store the real timestamp from the API
@@ -394,27 +398,27 @@ function setupInterceptorListener(): void {
 export async function startMessageTimestamp(): Promise<() => void> {
   // Load settings
   currentSettings = await loadSettings();
-  
+
   if (!currentSettings.enabled) {
     console.log('[Gemini Voyager] Message timestamps disabled');
     return () => {};
   }
-  
+
   console.log('[Gemini Voyager] Starting message timestamps');
-  
+
   // Setup listener for fetch interceptor events
   setupInterceptorListener();
-  
+
   // Inject styles
   injectStyles(currentSettings);
-  
+
   // Process existing messages
   processMessages(currentSettings);
-  
+
   // Watch for new messages
   const observer = new MutationObserver((mutations) => {
     let shouldProcess = false;
-    
+
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
         for (const node of mutation.addedNodes) {
@@ -422,7 +426,9 @@ export async function startMessageTimestamp(): Promise<() => void> {
             // Check if added node is a message or contains messages
             if (
               node.matches?.('model-response, [data-test-id="model-response"], .model-response') ||
-              node.querySelector?.('model-response, [data-test-id="model-response"], .model-response')
+              node.querySelector?.(
+                'model-response, [data-test-id="model-response"], .model-response',
+              )
             ) {
               shouldProcess = true;
               break;
@@ -430,15 +436,15 @@ export async function startMessageTimestamp(): Promise<() => void> {
           }
         }
       }
-      
+
       if (shouldProcess) break;
     }
-    
+
     if (shouldProcess) {
       processMessages(currentSettings);
     }
   });
-  
+
   // Observe the main chat container
   const chatContainer = document.querySelector('main, [role="main"], chat-window, .chat-container');
   if (chatContainer) {
@@ -447,9 +453,12 @@ export async function startMessageTimestamp(): Promise<() => void> {
       subtree: true,
     });
   }
-  
+
   // Listen for storage changes
-  const storageListener = (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+  const storageListener = (
+    changes: { [key: string]: chrome.storage.StorageChange },
+    area: string,
+  ) => {
     if (area === 'sync') {
       if (changes[STORAGE_KEY]) {
         const enabled = changes[STORAGE_KEY].newValue;
@@ -460,16 +469,16 @@ export async function startMessageTimestamp(): Promise<() => void> {
           removeTimestamps();
         }
       }
-      
+
       if (changes[SETTINGS_KEY]) {
         currentSettings = { ...DEFAULT_SETTINGS, ...changes[SETTINGS_KEY].newValue };
         updateTimestampStyles(currentSettings);
       }
     }
   };
-  
+
   chrome.storage?.onChanged?.addListener(storageListener);
-  
+
   // Return cleanup function
   return () => {
     observer.disconnect();

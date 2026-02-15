@@ -2,7 +2,7 @@
  * Message Timestamp Tests
  * Tests for the message timestamp feature (Issue #303)
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the module
 vi.mock('../index', () => ({
@@ -38,14 +38,14 @@ describe('Message Timestamp Feature', () => {
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const day = date.getDate().toString().padStart(2, '0');
         const year = date.getFullYear().toString().slice(-2);
-        
+
         let hours = date.getHours();
         const minutes = date.getMinutes().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
-        
+
         hours = hours % 12;
         hours = hours ? hours : 12;
-        
+
         return `${month}/${day}/${year} ${hours}:${minutes} ${ampm}`;
       };
 
@@ -74,10 +74,7 @@ describe('Message Timestamp Feature', () => {
     });
 
     it('should include proper CSS classes', () => {
-      const expectedClasses = [
-        '.gv-message-timestamp',
-        '.gv-message-timestamp:hover',
-      ];
+      const expectedClasses = ['.gv-message-timestamp', '.gv-message-timestamp:hover'];
 
       expect(expectedClasses).toContain('.gv-message-timestamp');
       expect(expectedClasses).toContain('.gv-message-timestamp:hover');
@@ -160,12 +157,7 @@ describe('Message Timestamp Feature', () => {
     });
 
     it('should observe chat container', () => {
-      const expectedContainers = [
-        'main',
-        '[role="main"]',
-        'chat-window',
-        '.chat-container',
-      ];
+      const expectedContainers = ['main', '[role="main"]', 'chat-window', '.chat-container'];
 
       expect(expectedContainers).toContain('main');
       expect(expectedContainers).toContain('[role="main"]');
@@ -176,19 +168,19 @@ describe('Message Timestamp Feature', () => {
     it('should create element with correct class', () => {
       const timestamp = document.createElement('div');
       timestamp.className = 'gv-message-timestamp';
-      
+
       expect(timestamp.className).toBe('gv-message-timestamp');
     });
 
     it('should not duplicate timestamps', () => {
       // Create a mock message element
       const messageEl = document.createElement('div');
-      
+
       // Add first timestamp
       const timestamp1 = document.createElement('div');
       timestamp1.className = 'gv-message-timestamp';
       messageEl.appendChild(timestamp1);
-      
+
       // Check if timestamp exists
       const hasTimestamp = messageEl.querySelector('.gv-message-timestamp') !== null;
       expect(hasTimestamp).toBe(true);
@@ -198,18 +190,18 @@ describe('Message Timestamp Feature', () => {
   describe('Cleanup', () => {
     it('should remove style element on cleanup', () => {
       const STYLE_ID = 'gemini-voyager-message-timestamp';
-      
+
       // Create style element
       const style = document.createElement('style');
       style.id = STYLE_ID;
       document.head.appendChild(style);
-      
+
       // Verify it exists
       expect(document.getElementById(STYLE_ID)).toBe(style);
-      
+
       // Remove it
       style.remove();
-      
+
       // Verify it's gone
       expect(document.getElementById(STYLE_ID)).toBeNull();
     });
@@ -221,14 +213,14 @@ describe('Message Timestamp Feature', () => {
         ts.className = 'gv-message-timestamp';
         document.body.appendChild(ts);
       }
-      
+
       // Verify they exist
       let timestamps = document.querySelectorAll('.gv-message-timestamp');
       expect(timestamps.length).toBe(3);
-      
+
       // Remove all
       timestamps.forEach((ts) => ts.remove());
-      
+
       // Verify they're gone
       timestamps = document.querySelectorAll('.gv-message-timestamp');
       expect(timestamps.length).toBe(0);
