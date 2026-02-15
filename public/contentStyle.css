@@ -2473,8 +2473,9 @@ html.dark-theme .gv-pm-expand-btn:hover {
   }
 }
 
-/* Gemini theme support - Overrides system preferences on Gemini site */
-.theme-host.dark-theme {
+/* Theme support - Overrides system preferences on Gemini/AI Studio */
+.theme-host.dark-theme,
+body.dark-theme {
   --folder-bg: #1f2937;
   --folder-text: #e5e7eb;
   --folder-border: #374151;
@@ -2496,7 +2497,8 @@ html.dark-theme .gv-pm-expand-btn:hover {
   /* emerald-900 */
 }
 
-.theme-host.light-theme {
+.theme-host.light-theme,
+body.light-theme {
   --folder-bg: #ffffff;
   --folder-text: #1f2937;
   --folder-border: #e5e7eb;
@@ -3641,6 +3643,7 @@ body.light-theme ms-katex:hover {
 }
 
 html.dark .gv-folder-action-btn:hover,
+body.dark-theme .gv-folder-action-btn:hover,
 [data-theme='dark'] .gv-folder-action-btn:hover,
 [data-color-scheme='dark'] .gv-folder-action-btn:hover {
   background-color: rgba(255, 255, 255, 0.08);
@@ -3663,12 +3666,14 @@ html.dark .gv-folder-action-btn:hover,
 }
 
 html.dark .gv-folder-action-btn.gv-filter-active,
+body.dark-theme .gv-folder-action-btn.gv-filter-active,
 [data-theme='dark'] .gv-folder-action-btn.gv-filter-active,
 [data-color-scheme='dark'] .gv-folder-action-btn.gv-filter-active {
   background-color: rgba(138, 180, 248, 0.2);
 }
 
 html.dark .gv-folder-action-btn.gv-filter-active mat-icon,
+body.dark-theme .gv-folder-action-btn.gv-filter-active mat-icon,
 [data-theme='dark'] .gv-folder-action-btn.gv-filter-active mat-icon,
 [data-color-scheme='dark'] .gv-folder-action-btn.gv-filter-active mat-icon {
   color: #8ab4f8;

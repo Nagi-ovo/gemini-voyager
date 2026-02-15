@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
 import { AIStudioFolderManager, mutationAddsPromptLinks, parseDragDataPayload } from '../aistudio';
@@ -98,5 +100,25 @@ describe('AIStudio prompt binding performance guards', () => {
         ['text/plain', expect.stringContaining('"conversationId":"abc123"')],
       ]),
     );
+  });
+});
+
+describe('AIStudio theme compatibility', () => {
+  it('uses body light/dark theme selectors for folder palette variables', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+
+    expect(css).toContain('.theme-host.dark-theme,\nbody.dark-theme');
+    expect(css).toContain('.theme-host.light-theme,\nbody.light-theme');
+    expect(css).toContain('body.dark-theme .gv-folder-action-btn:hover');
+  });
+
+  it('renders cloud action icons with currentColor in AI Studio', () => {
+    const code = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/folder/aistudio.ts'),
+      'utf8',
+    );
+
+    expect(code).toContain('fill="currentColor"');
+    expect(code).not.toContain('fill="#e3e3e3"');
   });
 });
