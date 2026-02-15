@@ -75,6 +75,89 @@ function uid(): string {
 }
 
 const NOTIFICATION_TIMEOUT_MS = 5000;
+const PROMPT_LINK_SELECTOR = 'a.prompt-link[href^="/prompts/"]';
+const UNBOUND_PROMPT_LINK_SELECTOR = `${PROMPT_LINK_SELECTOR}:not([data-gv-drag-bound])`;
+const PROMPT_LIST_BIND_DEBOUNCE_MS = 120;
+const PROMPT_DRAG_HOST_SELECTORS = [
+  '[data-test-id^="history-item"]',
+  '[role="listitem"]',
+  '.mat-mdc-list-item',
+  'li',
+];
+
+function nodeContainsPromptLink(node: Node): boolean {
+  if (!(node instanceof Element)) return false;
+  if (node.matches(PROMPT_LINK_SELECTOR)) return true;
+  return !!node.querySelector(PROMPT_LINK_SELECTOR);
+}
+
+export function mutationAddsPromptLinks(mutations: MutationRecord[]): boolean {
+  for (const mutation of mutations) {
+    for (const node of Array.from(mutation.addedNodes)) {
+      if (nodeContainsPromptLink(node)) return true;
+    }
+  }
+  return false;
+}
+
+function extractPromptIdFromHref(rawHref: string): string | null {
+  const href = String(rawHref || '').trim();
+  if (!href) return null;
+  const match = href.match(/\/prompts\/([^/?#]+)/);
+  if (match && match[1]) return match[1];
+  try {
+    const url = new URL(href, location.origin);
+    const pathMatch = url.pathname.match(/\/prompts\/([^/?#]+)/);
+    return pathMatch?.[1] || null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeDroppedUrl(raw: string): string | null {
+  const firstLine = String(raw || '')
+    .split(/\r?\n/, 1)[0]
+    ?.trim();
+  if (!firstLine) return null;
+  if (/^https?:\/\//i.test(firstLine)) return firstLine;
+  if (firstLine.startsWith('/')) return `${location.origin}${firstLine}`;
+  return null;
+}
+
+export function parseDragDataPayload(raw: string): DragData | null {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      (parsed as { type?: unknown }).type === 'conversation' &&
+      typeof (parsed as { conversationId?: unknown }).conversationId === 'string'
+    ) {
+      const data = parsed as DragData;
+      return {
+        type: 'conversation',
+        conversationId: data.conversationId,
+        title: typeof data.title === 'string' ? data.title : '',
+        url: typeof data.url === 'string' ? data.url : '',
+      };
+    }
+  } catch {}
+
+  const normalizedUrl = normalizeDroppedUrl(trimmed);
+  if (!normalizedUrl) return null;
+  const conversationId = extractPromptIdFromHref(normalizedUrl);
+  if (!conversationId) return null;
+
+  return {
+    type: 'conversation',
+    conversationId,
+    title: '',
+    url: normalizedUrl,
+  };
+}
 
 /**
  * Validate folder data structure
@@ -94,6 +177,7 @@ export class AIStudioFolderManager {
   private container: HTMLElement | null = null;
   private historyRoot: HTMLElement | null = null;
   private cleanupFns: Array<() => void> = [];
+  private promptListBindTimer: number | null = null;
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private backupService!: DataBackupService<FolderData>; // Initialized in init()
@@ -1006,19 +1090,7 @@ export class AIStudioFolderManager {
       e.stopPropagation(); // Prevent bubbling to parent drop zones
       dragEnterCounter = 0; // Reset counter on drop
       el.classList.remove('gv-folder-dragover');
-      let raw = e.dataTransfer?.getData('application/json');
-      if (!raw) {
-        try {
-          raw = e.dataTransfer?.getData('text/plain') || '';
-        } catch {}
-      }
-      if (!raw) return;
-      let data: DragData | null = null;
-      try {
-        data = JSON.parse(raw) as DragData;
-      } catch {
-        data = null;
-      }
+      const data = this.parseDragDataFromEvent(e);
       if (!data || data.type !== 'conversation' || !data.conversationId) return;
       const conv: ConversationReference = {
         conversationId: data.conversationId,
@@ -1065,10 +1137,9 @@ export class AIStudioFolderManager {
   private observePromptList(): void {
     const root = this.historyRoot;
     if (!root) return;
-    const observer = new MutationObserver(() => {
-      this.bindDraggablesInPromptList();
-      // Update highlight when the list updates
-      this.highlightActiveConversation();
+    const observer = new MutationObserver((mutations) => {
+      if (!mutationAddsPromptLinks(mutations)) return;
+      this.schedulePromptListBinding();
     });
     try {
       observer.observe(root, { childList: true, subtree: true });
@@ -1077,6 +1148,10 @@ export class AIStudioFolderManager {
       try {
         observer.disconnect();
       } catch {}
+      if (this.promptListBindTimer !== null) {
+        clearTimeout(this.promptListBindTimer);
+        this.promptListBindTimer = null;
+      }
     });
 
     // Also update on clicks within the prompt list (SPA navigation)
@@ -1098,34 +1173,108 @@ export class AIStudioFolderManager {
     });
   }
 
-  private bindDraggablesInPromptList(): void {
-    const anchors = document.querySelectorAll(
-      'ms-prompt-history-v3 a.prompt-link[href^="/prompts/"]',
-    );
+  private schedulePromptListBinding(): void {
+    if (this.promptListBindTimer !== null) return;
+    this.promptListBindTimer = window.setTimeout(() => {
+      this.promptListBindTimer = null;
+      this.bindDraggablesInPromptList();
+    }, PROMPT_LIST_BIND_DEBOUNCE_MS);
+  }
+
+  private resolvePromptAnchorFromHost(hostEl: HTMLElement): HTMLAnchorElement | null {
+    if (hostEl.matches(PROMPT_LINK_SELECTOR)) {
+      return hostEl as HTMLAnchorElement;
+    }
+    return hostEl.querySelector(PROMPT_LINK_SELECTOR) as HTMLAnchorElement | null;
+  }
+
+  private resolvePromptAnchorFromDragEvent(
+    event: DragEvent,
+    hostEl: HTMLElement,
+  ): HTMLAnchorElement | null {
+    const target = event.target;
+    if (target instanceof Element) {
+      const targetAnchor = target.closest(PROMPT_LINK_SELECTOR) as HTMLAnchorElement | null;
+      if (targetAnchor) return targetAnchor;
+    }
+    return this.resolvePromptAnchorFromHost(hostEl);
+  }
+
+  private resolvePromptDragHost(anchor: HTMLAnchorElement): HTMLElement {
+    for (const selector of PROMPT_DRAG_HOST_SELECTORS) {
+      const match = anchor.closest(selector) as HTMLElement | null;
+      if (match) return match;
+    }
+    return anchor.parentElement || anchor;
+  }
+
+  private setPromptDragData(e: DragEvent, data: DragData, dragImageEl: HTMLElement): void {
+    try {
+      const transfer = e.dataTransfer;
+      if (!transfer) return;
+      const json = JSON.stringify(data);
+      transfer.effectAllowed = 'copyMove';
+      transfer.setData('application/json', json);
+      transfer.setData('text/plain', json);
+      if (data.url) {
+        transfer.setData('text/uri-list', data.url);
+        transfer.setData('text/x-moz-url', `${data.url}\n${data.title || ''}`);
+      }
+    } catch {}
+    try {
+      e.dataTransfer?.setDragImage(dragImageEl, 10, 10);
+    } catch {}
+  }
+
+  private parseDragDataFromEvent(event: DragEvent): DragData | null {
+    const transfer = event.dataTransfer;
+    if (!transfer) return null;
+
+    const candidates = [
+      transfer.getData('application/json'),
+      transfer.getData('text/plain'),
+      transfer.getData('text/uri-list'),
+      transfer.getData('text/x-moz-url'),
+      transfer.getData('URL'),
+    ];
+
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const parsed = parseDragDataPayload(candidate);
+      if (parsed) return parsed;
+    }
+
+    return null;
+  }
+
+  private bindDraggablesInPromptList(scope: ParentNode | null = this.historyRoot): void {
+    const root = scope ?? this.historyRoot;
+    if (!root) return;
+    const anchors = root.querySelectorAll(UNBOUND_PROMPT_LINK_SELECTOR);
     anchors.forEach((a) => {
       const anchor = a as HTMLAnchorElement;
-      const li = anchor.closest('li');
-      const hostEl = (li || anchor) as HTMLElement;
-      if ((hostEl as any)._gvDragBound) return;
-      (hostEl as any)._gvDragBound = true;
-      hostEl.draggable = true;
-      hostEl.addEventListener('dragstart', (e) => {
-        const id = this.extractPromptId(anchor);
-        const title = normalizeText(anchor.textContent || '');
-        const url = anchor.href || `${location.origin}${anchor.getAttribute('href') || ''}`;
-        const data: DragData = { type: 'conversation', conversationId: id, title, url };
-        try {
-          if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('application/json', JSON.stringify(data));
-            // Fallback to text/plain to interop with stricter DnD
-            e.dataTransfer.setData('text/plain', JSON.stringify(data));
-          }
-        } catch {}
-        try {
-          e.dataTransfer?.setDragImage(hostEl, 10, 10);
-        } catch {}
-      });
+      const hostEl = this.resolvePromptDragHost(anchor);
+      anchor.dataset.gvDragBound = '1';
+      if (!(hostEl as any)._gvDragBound) {
+        (hostEl as any)._gvDragBound = true;
+        hostEl.draggable = true;
+        if (!hostEl.style.cursor) {
+          hostEl.style.cursor = 'grab';
+        }
+        hostEl.addEventListener('dragstart', (e) => {
+          const promptAnchor = this.resolvePromptAnchorFromDragEvent(e, hostEl);
+          if (!promptAnchor) return;
+
+          const id = this.extractPromptId(promptAnchor);
+          const title = normalizeText(promptAnchor.textContent || '');
+          const rawHref = promptAnchor.getAttribute('href') || promptAnchor.href || '';
+          const url = rawHref.startsWith('http')
+            ? rawHref
+            : `${location.origin}${rawHref.startsWith('/') ? '' : '/'}${rawHref}`;
+          const data: DragData = { type: 'conversation', conversationId: id, title, url };
+          this.setPromptDragData(e, data, hostEl);
+        });
+      }
     });
   }
 
@@ -1207,18 +1356,7 @@ export class AIStudioFolderManager {
           : `${location.origin}${rawHref.startsWith('/') ? '' : '/'}${rawHref}`;
 
         const data: DragData = { type: 'conversation', conversationId: id, title, url };
-        try {
-          if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = 'copyMove';
-            const json = JSON.stringify(data);
-            e.dataTransfer.setData('application/json', json);
-            // Fallback to text/plain to interop with stricter DnD
-            e.dataTransfer.setData('text/plain', json);
-          }
-        } catch {}
-        try {
-          e.dataTransfer?.setDragImage(tr, 10, 10);
-        } catch {}
+        this.setPromptDragData(e, data, tr);
 
         // Visual feedback
         tr.style.opacity = '0.5';
@@ -1308,20 +1446,7 @@ export class AIStudioFolderManager {
         rootItem.style.background = 'rgba(138, 180, 248, 0.2)';
         rootItem.style.borderColor = '#8ab4f8';
 
-        let raw = e.dataTransfer?.getData('application/json');
-        if (!raw) {
-          try {
-            raw = e.dataTransfer?.getData('text/plain') || '';
-          } catch {}
-        }
-        if (!raw) return;
-
-        let data: DragData | null = null;
-        try {
-          data = JSON.parse(raw) as DragData;
-        } catch {
-          data = null;
-        }
+        const data = this.parseDragDataFromEvent(e);
         if (!data || data.type !== 'conversation' || !data.conversationId) return;
 
         const conv: ConversationReference = {
@@ -1447,20 +1572,7 @@ export class AIStudioFolderManager {
           folderItem.style.background = 'rgba(255, 255, 255, 0.05)';
           folderItem.style.borderColor = 'transparent';
 
-          let raw = e.dataTransfer?.getData('application/json');
-          if (!raw) {
-            try {
-              raw = e.dataTransfer?.getData('text/plain') || '';
-            } catch {}
-          }
-          if (!raw) return;
-
-          let data: DragData | null = null;
-          try {
-            data = JSON.parse(raw) as DragData;
-          } catch {
-            data = null;
-          }
+          const data = this.parseDragDataFromEvent(e);
           if (!data || data.type !== 'conversation' || !data.conversationId) return;
 
           const conv: ConversationReference = {
@@ -1558,9 +1670,8 @@ export class AIStudioFolderManager {
 
   private extractPromptId(anchor: HTMLAnchorElement): string {
     const rawHref = anchor.getAttribute('href') || anchor.href || '';
-    // Prefer regex match for stability
-    const m = rawHref.match(/\/prompts\/([^\/?#]+)/);
-    if (m && m[1]) return m[1];
+    const id = extractPromptIdFromHref(rawHref);
+    if (id) return id;
 
     try {
       const u = new URL(rawHref, location.origin);
