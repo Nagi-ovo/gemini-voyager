@@ -32,6 +32,7 @@ let messageCounter = 0;
 let currentSettings = { ...DEFAULT_SETTINGS };
 let conversationStartTime: Date | null = null;
 let isInitialLoad = true; // Track if we're processing existing messages
+const existingMessageIds = new Set<string>(); // Track messages that existed during initial load
 
 /**
  * Format date based on settings
@@ -197,6 +198,20 @@ function createTimestampElement(timestamp: Date, settings: typeof DEFAULT_SETTIN
 }
 
 /**
+ * Get unique ID for a message element
+ */
+function getMessageId(messageEl: HTMLElement): string {
+  // Use data attributes or generate from content
+  return (
+    messageEl.getAttribute('data-test-id') ||
+    messageEl.getAttribute('id') ||
+    messageEl.getAttribute('data-turn-id') ||
+    // Fallback: use text content hash
+    `msg_${messageEl.textContent?.slice(0, 50).replace(/\s+/g, '_') || Math.random().toString(36).slice(2, 10)}`
+  );
+}
+
+/**
  * Add timestamp to a message element
  */
 function addTimestampToMessage(messageEl: HTMLElement, settings: typeof DEFAULT_SETTINGS): void {
@@ -205,9 +220,16 @@ function addTimestampToMessage(messageEl: HTMLElement, settings: typeof DEFAULT_
     return;
   }
 
-  // Skip adding timestamps to existing messages on initial load
-  // Only add timestamps to new messages
+  const messageId = getMessageId(messageEl);
+
+  // During initial load, record existing messages but don't add timestamps
   if (isInitialLoad) {
+    existingMessageIds.add(messageId);
+    return;
+  }
+
+  // Skip if this message existed during initial load
+  if (existingMessageIds.has(messageId)) {
     return;
   }
 
