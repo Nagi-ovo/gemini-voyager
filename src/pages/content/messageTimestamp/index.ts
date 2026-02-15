@@ -201,14 +201,37 @@ function createTimestampElement(timestamp: Date, settings: typeof DEFAULT_SETTIN
  * Get unique ID for a message element
  */
 function getMessageId(messageEl: HTMLElement): string {
-  // Use data attributes or generate from content
-  return (
+  // Try to get ID from data attributes
+  const id =
     messageEl.getAttribute('data-test-id') ||
     messageEl.getAttribute('id') ||
-    messageEl.getAttribute('data-turn-id') ||
-    // Fallback: use text content hash
-    `msg_${messageEl.textContent?.slice(0, 50).replace(/\s+/g, '_') || Math.random().toString(36).slice(2, 10)}`
-  );
+    messageEl.getAttribute('data-turn-id');
+
+  if (id) {
+    return id;
+  }
+
+  // Fallback: use text content hash (first 100 chars to ensure uniqueness)
+  const textContent = messageEl.textContent?.slice(0, 100).trim() || '';
+  if (textContent) {
+    // Simple hash of the content
+    let hash = 0;
+    for (let i = 0; i < textContent.length; i++) {
+      const char = textContent.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return `msg_${hash.toString(16)}_${textContent.slice(0, 30).replace(/\s+/g, '_')}`;
+  }
+
+  // Last resort: use element's position in DOM
+  const parent = messageEl.parentElement;
+  if (parent) {
+    const index = Array.from(parent.children).indexOf(messageEl);
+    return `msg_idx_${index}_${Date.now()}`;
+  }
+
+  return `msg_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
 }
 
 /**
@@ -225,13 +248,17 @@ function addTimestampToMessage(messageEl: HTMLElement, settings: typeof DEFAULT_
   // During initial load, record existing messages but don't add timestamps
   if (isInitialLoad) {
     existingMessageIds.add(messageId);
+    console.log('[Gemini Voyager] Recording existing message:', messageId.slice(0, 50));
     return;
   }
 
   // Skip if this message existed during initial load
   if (existingMessageIds.has(messageId)) {
+    console.log('[Gemini Voyager] Skipping existing message:', messageId.slice(0, 50));
     return;
   }
+
+  console.log('[Gemini Voyager] Adding timestamp to new message:', messageId.slice(0, 50));
 
   const timestamp = getMessageTimestamp();
   if (!timestamp) return;
