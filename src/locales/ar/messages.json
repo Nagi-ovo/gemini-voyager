@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "تصدير سجل الدردشة",
+    "message": "تصدير سجل المحادثة",
     "description": "Tooltip for export button"
   },
   "folder_title": {
@@ -951,6 +951,19 @@
     "message": "توسيع",
     "description": "Expand children"
   },
+
+  "timelinePreviewSearch": {
+    "message": "...بحث",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "لا توجد نتائج",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "لا توجد رسائل",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "رد باقتباس",
     "description": "Quote reply button text"
@@ -1147,6 +1160,18 @@
     "message": "واسع",
     "description": "Spacious folder spacing label"
   },
+  "folderTreeIndent": {
+    "message": "إزاحة المجلدات الفرعية",
+    "description": "Subfolder tree indentation adjustment label"
+  },
+  "folderTreeIndentCompact": {
+    "message": "أضيق",
+    "description": "Narrow subfolder indentation label"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "أوسع",
+    "description": "Wide subfolder indentation label"
+  },
   "export_select_mode_select_all": {
     "message": "Select all",
     "description": "Selection mode select all toggle"
@@ -1198,5 +1223,25 @@
   "export_error_refresh_retry": {
     "message": "فشل تصدير الصورة بسبب مشكلة في الشبكة. يُرجى تحديث الصفحة ثم إعادة المحاولة.",
     "description": "إرشاد يظهر عند فشل تحميل مؤقت أثناء تصدير الصورة"
+  },
+  "export_md_include_source_confirm": {
+    "message": "يحتوي المحتوى المُصدَّر على صور من نتائج البحث. هل تريد تضمين روابط مصدر الصور في Markdown؟",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
+  "deepResearch_exportedAt": {
+    "message": "وقت التصدير",
+    "description": "تسمية الطابع الزمني للتصدير في Deep Research"
+  },
+  "deepResearch_totalPhases": {
+    "message": "إجمالي المراحل",
+    "description": "تسمية إجمالي مراحل التفكير في Deep Research"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "مرحلة التفكير",
+    "description": "عنوان مرحلة التفكير في Deep Research"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "المواقع المبحوثة",
+    "description": "عنوان قسم المواقع المبحوثة في Deep Research"
   }
 }

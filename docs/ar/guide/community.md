@@ -1,39 +1,39 @@
-# Community & Feedback
+# المجتمع والملاحظات
 
-We value every user's voice. Whether you've found a bug, have a feature suggestion, or want to share your prompt vault, there are several ways to get in touch.
+نحن نقدر صوت كل مستخدم. سواء واجهت خطأً (Bug)، أو كان لديك اقتراح لميزة، أو كنت ترغب في مشاركة مكتبة المطالبات الخاصة بك، يمكنك الاتصال بنا عبر القنوات التالية.
 
-## 📢 Follow for Updates
+## 📢 تابع التحديثات
 
-Follow us on X (Twitter) to get the latest development updates.
+تابع حسابنا على X (Twitter) للحصول على أحدث تطورات التطوير.
 
-- **New Releases**: Be the first to know about updates.
-- **Feature Previews**: Get a sneak peek at upcoming features.
+- **إصدارات جديدة**: كن أول من يعرف عن التحديثات.
+- **ميزات قادمة**: احصل على نظرة خاطفة عما هو قادم.
 
 <div style="margin: 2rem 0;">
-  <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank" style="text-decoration: none;">
-    <img src="https://img.shields.io/badge/Follow%20on-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X">
+  <a href="https://x.com/Nag1ovo/status/2012609459663634589" target="_blank" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/متابعة-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="متابعة X">
   </a>
 </div>
 
-## 💬 Discord Community
+## 💬 مجتمع Discord
 
-Join our Discord server to chat with other Voyagers!
+انضم إلى خادم Discord الخاص بنا وتبادل الأفكار مع Voyagers الآخرين!
 
-- **Real-time Chat**: Talk directly with other users and the developers.
-- **Prompt Sharing**: See how others are using Gemini and share your best prompts.
-- **Development Updates**: Get the latest news on upcoming features and releases.
+- **دردشة فورية**: تحدث مباشرة مع المستخدمين الآخرين والمطورين.
+- **مشاركة المطالبات**: انظر ما هي أنواع المطالبات التي يستخدمها الآخرون.
+- **تقدم التطوير**: احصل على أخبار حول تطوير الميزات الجديدة.
 
 <div style="margin: 2rem 0;">
   <a href="https://discord.gg/ghrQtZgWnv" target="_blank" style="text-decoration: none;">
-    <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20our%20Discord" alt="Discord">
+    <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=انضم%20إلى%20Discord" alt="Discord">
   </a>
 </div>
 
-## 🐙 GitHub Issues
+## 🐙 مشكلات GitHub
 
-If you've found a bug or have a specific feature request, please open an issue on GitHub:
+إذا وجدت خطأً في البرنامج (Bug) أو كان لديك طلب ميزة واضح (Feature Request)، نوصي بتقديم مشكلة (Issue) على GitHub:
 
-- [Report a Bug](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
-- [Suggest a Feature](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
+- [تقديم تقرير خطأ](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
+- [تقديم طلب ميزة](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
 
-Thank you for supporting Gemini Voyager! ❤️
+شكراً لدعمك لـ Gemini Voyager! ❤️

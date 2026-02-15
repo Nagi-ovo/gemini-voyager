@@ -1,13 +1,13 @@
-# Input Collapse
+# Colapso de Entrada
 
-Collapse the input area when empty to gain more reading space. Click the collapsed bar to expand and start typing.
+Recolha a área de entrada quando estiver vazia para ganhar mais espaço de leitura. Clique na barra recolhida para expandir e começar a escrever.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/hide-input-area.png" alt="Input collapse" style="max-width: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/hide-input-area.png" alt="Colapso de entrada" style="max-width: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
-## How to Use
+## Como Usar
 
-1. When the input area is empty and loses focus, it automatically collapses into a compact pill button
-2. Click the pill button to expand the input area and start typing
-3. You can enable or disable this feature in the settings panel (disabled by default)
+1. Quando a área de entrada está vazia e perde o foco, recolhe-se automaticamente num botão compacto.
+2. Clique no botão para expandir a área de entrada e começar a escrever.
+3. Pode ativar ou desativar esta funcionalidade no painel de definições (desativado por defeito).

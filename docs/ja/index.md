@@ -55,6 +55,7 @@ features:
     details: LaTeX および MathML (Word) のソースコードを一クリックでコピー。
   - icon: 🧜‍♀️
     title: Mermaid
+    details: コードを視覚化。フローチャート、シーケンス図、ガントチャートを瞬時にレンダリング。
   - icon: 🏷️
     title: タブタイトルの同期
     details: 一目で分かる。タブのタイトルが、会話の内容に自動で変化。

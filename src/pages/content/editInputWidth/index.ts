@@ -112,6 +112,29 @@ function applyWidth(widthPercent: number): void {
       box-sizing: border-box !important;
     }
 
+    /* ===== Main chat input area (input-container > input-area-v2) ===== */
+    input-container {
+      max-width: ${widthValue} !important;
+      width: min(100%, ${widthValue}) !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+
+    input-container .input-area-container {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+
+    input-area-v2 {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+
+    input-area-v2 .input-area {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+
     /* Fallback for browsers without :has() support */
     @supports not selector(:has(*)) {
       .content-wrapper,

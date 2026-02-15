@@ -59,6 +59,42 @@ describe('PDFPrintService', () => {
     expect(styleText).toContain('background: #fff !important;');
   });
 
+  it('injects descendant display override to survive immersive-mode print rules', async () => {
+    window.print = vi.fn();
+
+    await PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/x',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: 'Immersive Print Override',
+    });
+
+    const style = document.getElementById('gv-pdf-print-styles');
+    const styleText = style?.textContent || '';
+
+    expect(styleText).toMatch(
+      /body\.gv-pdf-printing #gv-pdf-print-container \*\s*\{\s*display:\s*revert !important;/,
+    );
+  });
+
+  it('keeps cover page centered under immersive-mode display override', async () => {
+    window.print = vi.fn();
+
+    await PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/x',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: 'Centered Cover',
+    });
+
+    const style = document.getElementById('gv-pdf-print-styles');
+    const styleText = style?.textContent || '';
+
+    expect(styleText).toMatch(
+      /body\.gv-pdf-printing #gv-pdf-print-container \.gv-print-cover-page\s*\{[\s\S]*display:\s*flex !important;/,
+    );
+  });
+
   it('reuses conversation print markup for document PDF content', async () => {
     document.title = 'Original Title';
     window.print = vi.fn();

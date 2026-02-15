@@ -4,13 +4,12 @@
  * Generates a single PNG image from a rendered export document.
  * Uses DOM-to-image rendering and inlines remote images (best-effort).
  */
-import { toBlob } from 'html-to-image';
-
 import { isSafari } from '@/core/utils/browser';
 
 import { isEventLikeImageRenderError } from '../types/errors';
 import type { ChatTurn, ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
+import { renderElementToImageBlob } from './ImageRenderService';
 
 export interface RenderableDocumentContent {
   title: string;
@@ -34,21 +33,8 @@ export class ImageExportService {
       ? options.filename
       : `${options.filename}.png`;
 
-    const container = this.createRenderContainer(turns, metadata, options.fontSize);
-    document.body.appendChild(container);
-
-    try {
-      await this.inlineImages(container);
-      const blob = await this.renderWithSafariFallback(container);
-
-      this.downloadBlob(blob, filename);
-    } finally {
-      try {
-        container.remove();
-      } catch {
-        /* ignore */
-      }
-    }
+    const blob = await this.renderConversationBlob(turns, metadata, options);
+    this.downloadBlob(blob, filename);
   }
 
   static async exportDocument(
@@ -59,21 +45,22 @@ export class ImageExportService {
       ? options.filename
       : `${options.filename}.png`;
 
+    const blob = await this.renderDocumentBlob(content);
+    this.downloadBlob(blob, filename);
+  }
+
+  static async renderConversationBlob(
+    turns: ChatTurn[],
+    metadata: ConversationMetadata,
+    options: { fontSize?: number },
+  ): Promise<Blob> {
+    const container = this.createRenderContainer(turns, metadata, options.fontSize);
+    return await this.renderContainerToBlob(container);
+  }
+
+  static async renderDocumentBlob(content: RenderableDocumentContent): Promise<Blob> {
     const container = this.createDocumentRenderContainer(content);
-    document.body.appendChild(container);
-
-    try {
-      await this.inlineImages(container);
-      const blob = await this.renderWithSafariFallback(container);
-
-      this.downloadBlob(blob, filename);
-    } finally {
-      try {
-        container.remove();
-      } catch {
-        /* ignore */
-      }
-    }
+    return await this.renderContainerToBlob(container);
   }
 
   private static createRenderContainer(
@@ -473,57 +460,29 @@ export class ImageExportService {
     const primaryTarget =
       (container.querySelector('.gv-image-export-doc') as HTMLElement | null) || container;
     const maxPrimaryAttempts = isSafari() ? 1 : this.PRIMARY_RENDER_MAX_ATTEMPTS;
+    return await renderElementToImageBlob(primaryTarget, {
+      maxAttempts: maxPrimaryAttempts,
+      retryDelayMs: this.PRIMARY_RENDER_RETRY_DELAY_MS,
+      shouldRetry: (error) => this.shouldRetryPrimaryRender(error),
+      enableSanitizedFallback: isSafari(),
+      sanitizeSelector: 'img',
+      shouldFallback: () => true,
+    });
+  }
 
-    let primaryError: unknown;
-    for (let attempt = 1; attempt <= maxPrimaryAttempts; attempt++) {
-      try {
-        return await this.renderTargetToBlob(primaryTarget);
-      } catch (error) {
-        primaryError = error;
-        const canRetry = attempt < maxPrimaryAttempts && this.shouldRetryPrimaryRender(error);
-        if (canRetry) {
-          await this.delay(this.PRIMARY_RENDER_RETRY_DELAY_MS * attempt);
-          continue;
-        }
-        break;
-      }
-    }
-
-    if (!isSafari()) {
-      throw primaryError;
-    }
-
-    const fallbackContainer = container.cloneNode(true) as HTMLElement;
-    fallbackContainer.querySelectorAll('img').forEach((img) => img.remove());
-    document.body.appendChild(fallbackContainer);
+  private static async renderContainerToBlob(container: HTMLElement): Promise<Blob> {
+    document.body.appendChild(container);
 
     try {
-      const fallbackTarget =
-        (fallbackContainer.querySelector('.gv-image-export-doc') as HTMLElement | null) ||
-        fallbackContainer;
-      return await this.renderTargetToBlob(fallbackTarget);
+      await this.inlineImages(container);
+      return await this.renderWithSafariFallback(container);
     } finally {
       try {
-        fallbackContainer.remove();
+        container.remove();
       } catch {
         /* ignore */
       }
     }
-  }
-
-  private static async renderTargetToBlob(target: HTMLElement): Promise<Blob> {
-    const blob = await toBlob(target, {
-      cacheBust: true,
-      pixelRatio: 1.2,
-      backgroundColor: '#ffffff',
-      skipFonts: true,
-    });
-
-    if (!blob) {
-      throw new Error('Image render failed');
-    }
-
-    return blob;
   }
 
   private static shouldRetryPrimaryRender(error: unknown): boolean {
@@ -536,11 +495,6 @@ export class ImageExportService {
 
     return false;
   }
-
-  private static async delay(ms: number): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   private static downloadBlob(blob: Blob, filename: string): void {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

@@ -52,8 +52,8 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
-> [!CAUTION]
-> **Author's Statement**: This project **DOES NOT accept** any form of sponsorship or advertising from LLM mirror sites, illegal products, or products involving user privacy leaks. Please do not contact for such inquiries.
+> [!NOTE]
+> If Gemini Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
 
 ---
 
@@ -109,13 +109,17 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Nagi-ovo/gemini-voyager/releases/latest/" target="_blank">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari Download" height="36">
+  </a>
 </div>
 
 <p align="center">
   <sub><b>Chrome Web Store</b> also works on Edge, Opera, Brave, Vivaldi, Arc, and other Chromium browsers.</sub>
 </p>
 
-> **Store Status:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (Coming Soon)
+> **Store Status:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 For **manual installation** or **development builds**, please refer to the [Installation Guide](https://voyager.nagi.fun/en/guide/installation).
 

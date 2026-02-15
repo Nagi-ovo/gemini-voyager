@@ -52,8 +52,8 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
-> [!CAUTION]
-> **Заявление автора**: Этот проект **НЕ ПРИНИМАЕТ** спонсорство или рекламу от зеркальных сайтов LLM, нелегальных продуктов или продуктов, связанных с утечкой данных пользователей.
+> [!NOTE]
+> Если Gemini Voyager вам полезен, поделитесь им в X, Reddit, YouTube и т.д. Каждый репост помогает большему числу людей узнать о проекте и улучшать опыт использования Gemini. Спасибо.
 
 ---
 
@@ -109,13 +109,17 @@
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Nagi-ovo/gemini-voyager/releases/latest/" target="_blank">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari Скачать" height="36">
+  </a>
 </div>
 
 <p align="center">
   <sub>Версия для <b>Chrome Web Store</b> также работает в Edge, Opera, Brave, Vivaldi, Arc и других браузерах на базе Chromium.</sub>
 </p>
 
-> **Статус в магазинах:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (Скоро)
+> **Статус в магазинах:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 Для **ручной установки** или **сборки для разработки**, пожалуйста, обратитесь к [Руководству по установке](https://voyager.nagi.fun/ru/guide/installation).
 

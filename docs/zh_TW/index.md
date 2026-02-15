@@ -11,10 +11,10 @@ hero:
   actions:
     - theme: brand
       text: 下載安裝
-      link: /zh_TW/guide/installation
+      link: ./guide/installation
     - theme: alt
       text: 開始旅程
-      link: /zh_TW/guide/getting-started
+      link: ./guide/getting-started
 
 teaser:
   title: '重新定義交互。'
@@ -31,10 +31,10 @@ teaser:
 features:
   - icon: 🧭
     title: 時間軸
-    details: 看見對話的脈搏。<br>讓線性的時間，變成可觸摸的空間。
+    details: 別滾屏，去飛。瞬間抵達思維的任何落點。
   - icon: 🗂️
     title: 資料夾
-    details: 給思想安個家。<br>哪怕是一閃而過的念頭，也值得被鄭重對待。
+    details: 告別混沌。原生手感，直覺操作，井井有條。
   - icon: ✨
     title: 指令寶庫
     details: 捕捉靈光。珍藏你的每一次神來之筆。

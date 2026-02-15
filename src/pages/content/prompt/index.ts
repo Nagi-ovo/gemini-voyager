@@ -12,8 +12,10 @@ import browser from 'webextension-polyfill';
 import { logger } from '@/core/services/LoggerService';
 import { promptStorageService } from '@/core/services/StorageService';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
+import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
+import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import { getCurrentLanguage, getTranslationSync, initI18n, setCachedLanguage } from '@/utils/i18n';
 import {
@@ -494,6 +496,19 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     titleRow.appendChild(versionBadge);
 
     (async () => {
+      const isSafariBrowser = isSafari();
+      const safariUpdateReminderEnabled = isSafariBrowser && shouldShowSafariUpdateReminder();
+
+      // For Safari, the feature flag controls whether reminders are shown for all versions.
+      if (isSafariBrowser && !safariUpdateReminderEnabled) return;
+
+      const shouldShowUpdateNotification = shouldShowUpdateReminderForCurrentVersion({
+        currentVersion: currentVersionNormalized,
+        isSafariBrowser,
+        safariReminderEnabled: safariUpdateReminderEnabled,
+      });
+      if (!shouldShowUpdateNotification) return;
+
       const latest = await getLatestVersionCached();
       const latestNormalized = normalizeVersionString(latest);
       const hasUpdate =

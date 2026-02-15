@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "导出聊天记录",
+    "message": "导出对话记录",
     "description": "导出按钮提示"
   },
   "folder_title": {
@@ -951,6 +951,19 @@
     "message": "展开",
     "description": "展开子节点"
   },
+
+  "timelinePreviewSearch": {
+    "message": "搜索...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "无结果",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "暂无消息",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "引用回复",
     "description": "引用回复按钮文本"
@@ -1147,6 +1160,18 @@
     "message": "宽松",
     "description": "宽松文件夹间距标签"
   },
+  "folderTreeIndent": {
+    "message": "子文件夹缩进",
+    "description": "子文件夹树形缩进调节标签"
+  },
+  "folderTreeIndentCompact": {
+    "message": "更窄",
+    "description": "较窄的子文件夹缩进标签"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "更宽",
+    "description": "较宽的子文件夹缩进标签"
+  },
   "export_select_mode_select_all": {
     "message": "全选",
     "description": "Selection mode select all toggle"
@@ -1198,5 +1223,25 @@
   "export_error_refresh_retry": {
     "message": "因网络原因，图片导出失败，请刷新页面后重试。",
     "description": "图片导出遇到瞬时加载失败时的刷新重试提示"
+  },
+  "export_md_include_source_confirm": {
+    "message": "導出內容包含網路搜尋圖片。是否在 Markdown 中包含圖片來源連結？",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
+  "deepResearch_exportedAt": {
+    "message": "导出时间",
+    "description": "深度研究导出时间戳标签"
+  },
+  "deepResearch_totalPhases": {
+    "message": "总思考阶段",
+    "description": "深度研究总思考阶段标签"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "思考阶段",
+    "description": "深度研究思考阶段标题"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "研究网站",
+    "description": "深度研究已研究网站章节标题"
   }
 }

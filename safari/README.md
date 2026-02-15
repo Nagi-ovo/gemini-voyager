@@ -4,6 +4,9 @@ English | [简体中文](README_ZH.md)
 
 Developer guide for building and extending Gemini Voyager for Safari.
 
+> [!TIP]
+> **Looking to install?** You can now download the pre-signed app directly from the [latest release](https://github.com/Nagi-ovo/gemini-voyager/releases/latest). Simply download the `.dmg` and follow the prompts to install.
+
 ## Quick Start
 
 ### Build from Source
@@ -183,6 +186,25 @@ bun run build:safari   # Production build
 bun run dev:safari     # Development with auto-reload
 bun run build:all      # Build for all browsers
 ```
+
+## Update Reminder Configuration
+
+By default, update reminders are **disabled** for Safari builds to avoid conflicts with App Store auto-updates.
+
+To enable update reminders (for manual distribution):
+
+```bash
+ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
+```
+
+**Note**: Only enable this if you're distributing the extension manually (not via App Store). App Store versions should use the default (disabled) to rely on automatic updates.
+
+## Known Limitations
+
+Due to Safari's technical architecture and security restrictions, the following features are currently unavailable in the Safari version:
+
+- **(a) Nano Banana Watermark Removal**: Watermark detection and removal for Gemini-generated images is not supported.
+- **(b) Image Export**: Direct export to image format is not supported (including in Chat Export). **Recommendation**: Use **PDF Export** instead.
 
 ## Resources
 

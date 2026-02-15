@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "Exportar histórico do chat",
+    "message": "Exportar histórico da conversa",
     "description": "Tooltip for export button"
   },
   "folder_title": {
@@ -951,6 +951,19 @@
     "message": "Expandir",
     "description": "Expand children"
   },
+
+  "timelinePreviewSearch": {
+    "message": "Pesquisar...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "Sem resultados",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "Sem mensagens",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "Responder Citação",
     "description": "Quote reply button text"
@@ -1147,6 +1160,18 @@
     "message": "Espaçoso",
     "description": "Spacious folder spacing label"
   },
+  "folderTreeIndent": {
+    "message": "Recuo de subpastas",
+    "description": "Subfolder tree indentation adjustment label"
+  },
+  "folderTreeIndentCompact": {
+    "message": "Estreito",
+    "description": "Narrow subfolder indentation label"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "Largo",
+    "description": "Wide subfolder indentation label"
+  },
   "export_select_mode_select_all": {
     "message": "Select all",
     "description": "Selection mode select all toggle"
@@ -1198,5 +1223,25 @@
   "export_error_refresh_retry": {
     "message": "A exportação da imagem falhou devido a problemas de rede. Atualize a página e tente novamente.",
     "description": "Orientação exibida quando a exportação de imagem falha por carregamento temporário"
+  },
+  "export_md_include_source_confirm": {
+    "message": "O conteúdo exportado contém imagens de pesquisa na web. Incluir links de origem das imagens no Markdown?",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
+  "deepResearch_exportedAt": {
+    "message": "Exportado em",
+    "description": "Etiqueta de carimbo de data/hora de exportação de Deep Research"
+  },
+  "deepResearch_totalPhases": {
+    "message": "Fases totais",
+    "description": "Etiqueta do total de fases de pensamento de Deep Research"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "Fase de pensamento",
+    "description": "Cabeçalho de fase de pensamento de Deep Research"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "Sites pesquisados",
+    "description": "Cabeçalho de secção de sites pesquisados de Deep Research"
   }
 }

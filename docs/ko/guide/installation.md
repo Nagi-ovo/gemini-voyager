@@ -1,5 +1,9 @@
 # 설치
 
+::: info 뉴스
+🍎 **Safari 네이티브 확장 프로그램이 출시되었습니다!** 완전 무료로 제공되며 클릭 한 번으로 설치할 수 있습니다.
+:::
+
 원하는 설치 방법을 선택하세요.
 
 > ⚠️ 참고: 프롬프트 관리자는 Gemini Enterprise를 지원하는 유일한 기능입니다.
@@ -42,14 +46,16 @@
 
 ## 3. Safari (macOS)
 
-1. [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)에서 `gemini-voyager-safari-vX.Y.Z.zip`을 다운로드합니다.
-2. 파일의 압축을 풉니다.
-3. 터미널에서 다음 명령어를 실행하여 변환합니다 (Xcode 필요):
-   ```bash
-   xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
-   ```
-4. Xcode에서 앱을 실행하여 설치합니다.
-5. Safari 설정 > 확장 프로그램에서 활성화합니다.
+Safari가 이제 직접 배포를 지원합니다! 사전 서명된 앱을 다운로드하세요:
+
+1. <SafariDownloadLink>최신 Safari 버전 (.dmg)</SafariDownloadLink>을 다운로드합니다.
+2. 파일을 더블 클릭하여 안내에 따라 설치합니다.
+3. 더블 클릭하여 앱을 실행합니다.
+4. **Safari 설정 > 확장 프로그램**에서 활성화합니다.
+
+> 💡 Safari 빌드가 직접 서명 배포를 지원합니다 — Xcode 변환이 필요 없습니다!
+>
+> ⚠️ **제한 사항**: Safari의 특성상 (a) 워터마크 제거 (b) 이미지 내보내기(PDF 권장)는 지원되지 않습니다.
 
 ---
 

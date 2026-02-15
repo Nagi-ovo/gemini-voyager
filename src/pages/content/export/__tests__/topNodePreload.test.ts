@@ -105,7 +105,7 @@ describe('topNodePreload', () => {
     expect(result.fingerprint.signature).toBe(before.signature);
   });
 
-  it('does not resolve unchanged fingerprint before the default minimum wait window', async () => {
+  it('resolves unchanged fingerprint within about one second by default', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
     document.body.innerHTML = '';
@@ -133,9 +133,7 @@ describe('topNodePreload', () => {
     });
 
     await vi.advanceTimersByTimeAsync(1000);
-    expect(resolved).toBe(false);
-
-    await vi.advanceTimersByTimeAsync(800);
+    expect(resolved).toBe(true);
 
     const result = await promise;
     expect(result.changed).toBe(false);

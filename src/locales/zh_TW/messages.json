@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "匯出聊天紀錄",
+    "message": "匯出對話記錄",
     "description": "匯出按鈕提示"
   },
   "folder_title": {
@@ -911,6 +911,19 @@
     "message": "展開",
     "description": "展開子節點"
   },
+
+  "timelinePreviewSearch": {
+    "message": "搜尋...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "無結果",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "暫無訊息",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "引用回覆",
     "description": "引用回覆按鈕文字"
@@ -1147,6 +1160,18 @@
     "message": "寬鬆",
     "description": "寬鬆資料夾間距標籤"
   },
+  "folderTreeIndent": {
+    "message": "子資料夾縮排",
+    "description": "子資料夾樹狀縮排調整標籤"
+  },
+  "folderTreeIndentCompact": {
+    "message": "更窄",
+    "description": "較窄的子資料夾縮排標籤"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "更寬",
+    "description": "較寬的子資料夾縮排標籤"
+  },
   "export_select_mode_select_all": {
     "message": "全選",
     "description": "Selection mode select all toggle"
@@ -1198,5 +1223,25 @@
   "export_error_refresh_retry": {
     "message": "因網路原因，圖片匯出失敗，請重新整理頁面後重試。",
     "description": "圖片匯出遇到暫時性載入失敗時的重新整理提示"
+  },
+  "export_md_include_source_confirm": {
+    "message": "匯出內容包含網路搜尋圖片。是否在 Markdown 中包含圖片來源連結？",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
+  "deepResearch_exportedAt": {
+    "message": "匯出時間",
+    "description": "深度研究匯出時間戳標籤"
+  },
+  "deepResearch_totalPhases": {
+    "message": "總思考階段",
+    "description": "深度研究總思考階段標籤"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "思考階段",
+    "description": "深度研究思考階段標題"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "研究網站",
+    "description": "深度研究已研究網站章節標題"
   }
 }

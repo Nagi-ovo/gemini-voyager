@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "Export chat history",
+    "message": "Export conversation history",
     "description": "Tooltip for export button"
   },
   "folder_title": {
@@ -951,6 +951,19 @@
     "message": "Expand",
     "description": "Expand children"
   },
+
+  "timelinePreviewSearch": {
+    "message": "Search...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "No results",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "No messages",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "Quote Reply",
     "description": "Quote reply button text"
@@ -1147,6 +1160,18 @@
     "message": "Spacious",
     "description": "Spacious folder spacing label"
   },
+  "folderTreeIndent": {
+    "message": "Subfolder indent",
+    "description": "Subfolder tree indentation adjustment label"
+  },
+  "folderTreeIndentCompact": {
+    "message": "Narrow",
+    "description": "Narrow subfolder indentation label"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "Wide",
+    "description": "Wide subfolder indentation label"
+  },
   "export_select_mode_select_all": {
     "message": "Select all",
     "description": "Selection mode select all toggle"
@@ -1198,5 +1223,25 @@
   "export_error_refresh_retry": {
     "message": "Image export failed due to network issues. Please refresh the page and try again.",
     "description": "Guidance shown when image export fails due to transient loading issues"
+  },
+  "export_md_include_source_confirm": {
+    "message": "The exported content contains web search images. Include image source links in the Markdown?",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
+  "deepResearch_exportedAt": {
+    "message": "Exported At",
+    "description": "Deep Research export timestamp label"
+  },
+  "deepResearch_totalPhases": {
+    "message": "Total Phases",
+    "description": "Deep Research total thinking phases label"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "Thinking Phase",
+    "description": "Deep Research thinking phase header"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "Researched Websites",
+    "description": "Deep Research researched websites section header"
   }
 }

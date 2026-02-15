@@ -52,8 +52,8 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
-> [!CAUTION]
-> **作者严正声明**：本项目**不接受**任何形式的 LLM 镜像站、违法产品或涉及用户隐私泄露产品的广告位赞助。请勿扰，谢谢。
+> [!NOTE]
+> 如果 Gemini Voyager 帮到了你，欢迎分享到 X、即刻、小红书、Linux.do、V2EX 等等，也欢迎推荐给海外 KOL。每一次分享都能让更多人看到这个项目，从而改善 Gemini 的使用体验。谢谢。
 
 ---
 
@@ -109,13 +109,17 @@
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Nagi-ovo/gemini-voyager/releases/latest/" target="_blank">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari 下载" height="36">
+  </a>
 </div>
 
 <p align="center">
   <sub><b>Chrome 应用商店</b>同样适用于 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 浏览器。</sub>
 </p>
 
-> **商店状态：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari（即将推出）
+> **商店状态：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 关于 **手动安装** 或 **开发构建**，请参阅 [安装指南](https://voyager.nagi.fun/guide/installation)。
 

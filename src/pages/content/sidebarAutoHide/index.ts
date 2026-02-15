@@ -12,6 +12,7 @@ const STORAGE_KEY = 'gvSidebarAutoHide';
 
 // Debounce delay to avoid rapid toggling
 const LEAVE_DELAY_MS = 500;
+const ENTER_DELAY_MS = 300;
 // Interval to check for sidenav element reappearing
 const SIDENAV_CHECK_INTERVAL_MS = 1000;
 // Debounce delay for resize events
@@ -29,6 +30,7 @@ const CUSTOM_POPUP_SELECTORS = [
 
 let enabled = false;
 let leaveTimeoutId: number | null = null;
+let enterTimeoutId: number | null = null;
 let sidenavElement: HTMLElement | null = null;
 let observer: MutationObserver | null = null;
 let resizeHandler: (() => void) | null = null;
@@ -278,11 +280,10 @@ function collapseSidebar(): void {
 }
 
 /**
- * Expand the sidebar (if currently collapsed, and was auto-collapsed by us)
+ * Expand the sidebar (if currently collapsed)
  */
 function expandSidebar(): void {
-  // Only expand if we auto-collapsed it
-  if (isSidebarCollapsed() && autoCollapsed) {
+  if (isSidebarCollapsed()) {
     clickToggleButton();
     autoCollapsed = false;
   }
@@ -300,8 +301,16 @@ function handleMouseEnter(): void {
     leaveTimeoutId = null;
   }
 
-  // Expand sidebar
-  expandSidebar();
+  // Debounce the expand to avoid accidental triggers while crossing screens
+  if (enterTimeoutId !== null) {
+    window.clearTimeout(enterTimeoutId);
+  }
+
+  enterTimeoutId = window.setTimeout(() => {
+    enterTimeoutId = null;
+    if (!enabled) return;
+    expandSidebar();
+  }, ENTER_DELAY_MS);
 }
 
 /**
@@ -309,6 +318,12 @@ function handleMouseEnter(): void {
  */
 function handleMouseLeave(): void {
   if (!enabled) return;
+
+  // Cancel any pending expand
+  if (enterTimeoutId !== null) {
+    window.clearTimeout(enterTimeoutId);
+    enterTimeoutId = null;
+  }
 
   // Debounce the collapse to avoid accidental triggers
   if (leaveTimeoutId !== null) {
@@ -378,12 +393,20 @@ function checkAndReattach(): void {
 
   // If we have a reference but it's no longer in DOM, clear it
   if (sidenavElement && !sidenavElement.isConnected) {
-    sidenavElement = null;
-    autoCollapsed = false; // Reset auto-collapse state when element is removed
+    detachEventListeners(); // properly remove listeners and null the reference
+    autoCollapsed = false;
+  }
+
+  // If sidenav exists but is NOT visible (narrow window), clear the reference
+  // so that when it becomes visible again we treat it as a fresh element.
+  if (sidenavElement && !isSidebarVisible()) {
+    detachEventListeners();
+    return;
   }
 
   // If sidenav exists and is visible, try to attach
   if (currentSidenav && isSidebarVisible()) {
+    // Reattach if element changed OR if we lost our reference (e.g. after resize)
     if (currentSidenav !== sidenavElement) {
       attachEventListeners();
     }
@@ -404,6 +427,12 @@ function handleResize(): void {
   resizeDebounceTimer = window.setTimeout(() => {
     resizeDebounceTimer = null;
     checkAndReattach();
+
+    // Gemini's layout transitions may take longer than our debounce.
+    // Schedule a secondary check to catch late DOM changes.
+    setTimeout(() => {
+      if (enabled) checkAndReattach();
+    }, 600);
   }, RESIZE_DEBOUNCE_MS);
 }
 
@@ -480,6 +509,12 @@ function enable(): void {
 function disable(): void {
   if (!enabled) return;
   enabled = false;
+
+  // Cancel any pending expand
+  if (enterTimeoutId !== null) {
+    window.clearTimeout(enterTimeoutId);
+    enterTimeoutId = null;
+  }
 
   // Cancel any pending collapse
   if (leaveTimeoutId !== null) {

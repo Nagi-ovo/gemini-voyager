@@ -1,113 +1,34 @@
-# Sponsor
+# رعاية المشروع
 
-> [!CAUTION]
-> **Author's Statement**: This project **DOES NOT accept** any form of sponsorship or advertising from LLM mirror sites, illegal products, or products involving user privacy leaks. Please do not contact for such inquiries.
+> [!NOTE]
+> إذا كان Gemini Voyager مفيداً لك، فشاركْه على X أو Reddit أو YouTube إلخ. كل مشاركة تساعد المزيد من الناس على اكتشاف المشروع وتحسين تجربة Gemini. شكراً.
 
-Maintaining open-source projects is mainly driven by passion (and coffee) ☕
+إذا كان Gemini Voyager يحسن إنتاجيتك اليومية، يرجى التفكير في رعاية المشروع. يساعدنا دعمك في الحفاظ على التطوير النشط، وإصلاح الأخطاء، وإضافة ميزات جديدة.
 
-**[Gemini Voyager](https://github.com/Nagi-ovo/gemini-voyager)** is a completely free and open-source browser extension designed to enhance your Gemini experience. If this extension helps you use Gemini more efficiently, please consider supporting the continued development and maintenance of this project.
+## طرق الدعم
 
----
+### 💖 رعاة GitHub
 
-## Online Platforms
+الطريقة المفضلة. يذهب 100% من رعايتك للمطور (لا يتقاضى GitHub رسوماً).
 
-<div class="sponsor-badges">
-  <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
-    <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" style="height: 40px;">
-  </a>
-  <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
-    <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" style="height: 40px;">
-  </a>
-</div>
+[<img src="https://img.shields.io/badge/Sponsor_via-GitHub_Sponsors-EA4AAA?style=for-the-badge&logo=github-sponsors&logoColor=white" alt="رعاة GitHub" height="50"/>](https://github.com/sponsors/Nagi-ovo)
 
-<a href="https://afdian.com/a/nagi-ovo" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
-    <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
-    <img alt="Afdian" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
-  </picture>
-</a>
+### ☕ اشتري لي قهوة
 
-### 🎙️ Recommended Tool: Typeless
+طريقة بسيطة لتقديم قهوة كشكر.
 
-I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, an AI voice-to-text tool that I used extensively during the development of Gemini Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
+[<img src="https://img.shields.io/badge/Buy_Me_a_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="اشتري لي قهوة" height="50"/>](https://buymeacoffee.com/nagiovo)
 
-> 🎁 **[Join via my referral link](https://www.typeless.com/refer?code=MZRYZP1)** (Code: **`MZRYZP1`**) to get **$5 free credits**. This also gives me credits to keep maintaining this project—a free way to support my work! ❤️
+### ⭐ نجمة على GitHub
 
----
+إنه مجاني ويساعد كثيراً! امنح مستودعنا نجمة لمساعدتنا في الوصول إلى المزيد من الأشخاص.
 
-## Buy Me a Coffee (QR) 🍵
+[<img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=social" alt="نجوم GitHub" height="30"/>](https://github.com/Nagi-ovo/gemini-voyager)
 
-<div class="qr-container">
-  <div class="qr-item">
-    <img src="/assets/wechat-sponsor.png" alt="WeChat Pay" />
-    <span>WeChat Pay</span>
-  </div>
-  <div class="qr-item">
-    <img src="/assets/alipay-sponsor.jpg" alt="Alipay" />
-    <span>Alipay</span>
-  </div>
-</div>
+## أين تذهب الأموال؟
 
-<style>
-.sponsor-badges {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin: 16px 0;
-}
+- **رسوم مطور Apple**: للحفاظ على إصدار Safari حياً وموقعاً ($99/سنة).
+- **الخادم والنطاق**: لاستضافة هذه الوثائق وخدمات الخلفية.
+- **القهوة**: وقود أساسي لتحويل الكود إلى ميزات.
 
-.sponsor-badges a img {
-  transition: transform 0.2s ease;
-}
-
-.sponsor-badges a:hover img {
-  transform: scale(1.05);
-}
-
-.qr-container {
-  display: flex;
-  gap: 32px;
-  flex-wrap: wrap;
-  margin: 16px 0;
-}
-
-.qr-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg-soft);
-}
-
-.qr-item img {
-  width: 200px;
-  height: 200px;
-  object-fit: contain;
-  border-radius: 4px;
-}
-
-.qr-item span {
-  font-weight: 600;
-  color: var(--vp-c-text-1);
-}
-
-@media (max-width: 640px) {
-  .qr-container {
-    justify-content: center;
-  }
-  
-  .qr-item img {
-    width: 150px;
-    height: 150px;
-  }
-}
-</style>
-
----
-
-Thank you for your support! Every contribution is a great encouragement to me ❤️
+شكراً لكونك Voyager! 🚀

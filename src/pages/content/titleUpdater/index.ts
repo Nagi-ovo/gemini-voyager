@@ -49,6 +49,7 @@ export async function startTitleUpdater() {
     const target =
       document.querySelector('top-bar-actions') ||
       document.querySelector('.conversation-title-container') ||
+      document.querySelector('.center-section') ||
       document.querySelector('header');
 
     if (!target) {
@@ -126,12 +127,13 @@ function findChatTitle(): string | null {
     return null;
   }
 
-  // Top bar title has class "gds-title-m", sidebar uses "gds-label-l"
-  // Target the title inside conversation-title-container or top-bar-actions
+  // Target the title using the stable data-test-id attribute, with class-based fallbacks
   const titleEl = document.querySelector(
-    '.conversation-title-container .conversation-title.gds-title-m, ' +
-      'top-bar-actions .conversation-title.gds-title-m, ' +
-      '.top-bar-actions .conversation-title.gds-title-m',
+    '.conversation-title-container [data-test-id="conversation-title"], ' +
+      'top-bar-actions [data-test-id="conversation-title"], ' +
+      '.top-bar-actions [data-test-id="conversation-title"], ' +
+      '.conversation-title-container .conversation-title.gds-title-m, ' +
+      'top-bar-actions .conversation-title.gds-title-m',
   );
 
   if (titleEl) {

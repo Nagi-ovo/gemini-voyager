@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
-import { isSafari } from '@/core/utils/browser';
+import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
+import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import {
   extractLatestReleaseVersion,
@@ -61,6 +62,7 @@ const normalizePercent = (
 };
 
 const FOLDER_SPACING = { min: 0, max: 16, defaultValue: 2 };
+const FOLDER_TREE_INDENT = { min: -8, max: 32, defaultValue: -8 };
 const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LEGACY_BASELINE_PX };
 const EDIT_PERCENT = { min: 30, max: 100, defaultValue: 60, legacyBaselinePx: LEGACY_BASELINE_PX };
 const SIDEBAR_PERCENT = {
@@ -283,21 +285,25 @@ export default function Popup() {
   });
 
   // Width adjuster for sidebar width (Context-aware: Gemini vs AI Studio)
-  const sidebarConfig = isAIStudio
-    ? {
-        key: 'gvAIStudioSidebarWidth',
-        min: AI_STUDIO_SIDEBAR_PX.min,
-        max: AI_STUDIO_SIDEBAR_PX.max,
-        def: AI_STUDIO_SIDEBAR_PX.defaultValue,
-        norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
-      }
-    : {
-        key: 'geminiSidebarWidth',
-        min: SIDEBAR_PX.min,
-        max: SIDEBAR_PX.max,
-        def: SIDEBAR_PX.defaultValue,
-        norm: normalizeSidebarPx,
-      };
+  const sidebarConfig = useMemo(
+    () =>
+      isAIStudio
+        ? {
+            key: 'gvAIStudioSidebarWidth',
+            min: AI_STUDIO_SIDEBAR_PX.min,
+            max: AI_STUDIO_SIDEBAR_PX.max,
+            def: AI_STUDIO_SIDEBAR_PX.defaultValue,
+            norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
+          }
+        : {
+            key: 'geminiSidebarWidth',
+            min: SIDEBAR_PX.min,
+            max: SIDEBAR_PX.max,
+            def: SIDEBAR_PX.defaultValue,
+            norm: normalizeSidebarPx,
+          },
+    [isAIStudio],
+  );
 
   const sidebarWidthAdjuster = useWidthAdjuster({
     storageKey: sidebarConfig.key,
@@ -332,6 +338,18 @@ export default function Popup() {
     ),
   });
 
+  const folderTreeIndentAdjuster = useWidthAdjuster({
+    storageKey: 'gvFolderTreeIndent',
+    defaultValue: FOLDER_TREE_INDENT.defaultValue,
+    normalize: (v) => clampNumber(v, FOLDER_TREE_INDENT.min, FOLDER_TREE_INDENT.max),
+    onApply: useCallback((indent: number) => {
+      const clamped = clampNumber(indent, FOLDER_TREE_INDENT.min, FOLDER_TREE_INDENT.max);
+      try {
+        chrome.storage?.sync?.set({ gvFolderTreeIndent: clamped });
+      } catch {}
+    }, []),
+  });
+
   useEffect(() => {
     try {
       const version = chrome?.runtime?.getManifest?.()?.version;
@@ -354,7 +372,15 @@ export default function Popup() {
       // We skip manual version checks for these users to rely on store auto-updates
       // and prevent confusing "new version" prompts when GitHub is ahead of the store.
       const manifest = chrome?.runtime?.getManifest?.();
-      if (getManifestUpdateUrl(manifest)) {
+
+      // For Safari: only skip update check if the feature is disabled (default)
+      // If shouldShowSafariUpdateReminder() returns true, allow update checks
+      if (isSafari() && !shouldShowSafariUpdateReminder()) {
+        return;
+      }
+
+      // For other browsers: skip if they have update_url (store installation)
+      if (!isSafari() && getManifestUpdateUrl(manifest)) {
         return;
       }
 
@@ -665,8 +691,15 @@ export default function Popup() {
 
   const normalizedCurrentVersion = normalizeVersionString(extVersion);
   const normalizedLatestVersion = normalizeVersionString(latestVersion);
+  const isSafariBrowser = isSafari();
+  const safariUpdateReminderEnabled = isSafariBrowser && shouldShowSafariUpdateReminder();
+  const shouldShowUpdateNotification = shouldShowUpdateReminderForCurrentVersion({
+    currentVersion: normalizedCurrentVersion,
+    isSafariBrowser,
+    safariReminderEnabled: safariUpdateReminderEnabled,
+  });
   const hasUpdate =
-    normalizedCurrentVersion && normalizedLatestVersion
+    shouldShowUpdateNotification && normalizedCurrentVersion && normalizedLatestVersion
       ? compareVersions(normalizedLatestVersion, normalizedCurrentVersion) > 0
       : false;
   const latestReleaseTag = toReleaseTag(latestVersion ?? normalizedLatestVersion ?? undefined);
@@ -733,7 +766,7 @@ export default function Popup() {
           </Card>
         )}
         {/* Cloud Sync - First priority - Hidden on Safari due to API limitations */}
-        {!isSafari() && <CloudSyncSettings />}
+        {!isSafariBrowser && <CloudSyncSettings />}
         {/* Context Sync */}
         <ContextSyncSettings />
         {/* Timeline Options */}
@@ -924,6 +957,20 @@ export default function Popup() {
           onChange={folderSpacingAdjuster.handleChange}
           onChangeComplete={folderSpacingAdjuster.handleChangeComplete}
         />
+        {!isAIStudio && (
+          <WidthSlider
+            label={t('folderTreeIndent')}
+            value={folderTreeIndentAdjuster.width}
+            min={FOLDER_TREE_INDENT.min}
+            max={FOLDER_TREE_INDENT.max}
+            step={1}
+            narrowLabel={t('folderTreeIndentCompact')}
+            wideLabel={t('folderTreeIndentSpacious')}
+            valueFormatter={(v) => `${v}px`}
+            onChange={folderTreeIndentAdjuster.handleChange}
+            onChangeComplete={folderTreeIndentAdjuster.handleChangeComplete}
+          />
+        )}
         {/* Chat Width */}
         <WidthSlider
           label={t('chatWidth')}
@@ -1295,7 +1342,7 @@ export default function Popup() {
         </Card>
 
         {/* NanoBanana Options - Hidden on Safari due to fetch interceptor limitations */}
-        {!isSafari() && (
+        {!isSafariBrowser && (
           <Card className="p-4 transition-shadow hover:shadow-lg">
             <CardTitle className="mb-4 text-xs uppercase">{t('nanobananaOptions')}</CardTitle>
             <CardContent className="space-y-4 p-0">

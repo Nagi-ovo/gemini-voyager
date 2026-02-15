@@ -1,5 +1,9 @@
 # Instalação
 
+::: info Notícias
+🍎 **A extensão nativa do Safari já está disponível!** É totalmente gratuita e suporta a instalação com um clique.
+:::
+
 Escolha o seu caminho.
 
 > ⚠️ Nota: O Gestor de Prompts é a única funcionalidade que suporta Gemini para Enterprise.
@@ -42,14 +46,16 @@ O processo de revisão da Web Store pode ser lento. Se quiser a versão de ponta
 
 ## 3. Safari (macOS)
 
-1. Descarregue `gemini-voyager-safari-vX.Y.Z.zip` das [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
-2. Descompacte o ficheiro.
-3. Execute o seguinte comando no Terminal para convertê-lo (requer Xcode):
-   ```bash
-   xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
-   ```
-4. Execute a app no Xcode para instalar.
-5. Ative nas Definições do Safari > Extensões.
+O Safari agora suporta distribuição direta! Descarregue a aplicação pré-assinada:
+
+1. Descarregue a <SafariDownloadLink>última versão do Safari (.dmg)</SafariDownloadLink>.
+2. Abra o ficheiro e siga as instruções para instalar.
+3. Clique duas vezes para iniciar a aplicação.
+4. Ative a extensão nas **Definições do Safari > Extensões**.
+
+> 💡 A versão do Safari está agora diretamente assinada para distribuição — não é necessária conversão com Xcode!
+>
+> ⚠️ **Limitações**: Devido à natureza do Safari, (a) a remoção de marca d'água (b) a exportação de imagens (PDF recomendado) não são suportadas.
 
 ---
 

@@ -52,8 +52,8 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
-> [!CAUTION]
-> **제작자 선언**: 이 프로젝트는 LLM 미러 사이트, 불법 제품 또는 사용자 개인정보 유출과 관련된 제품의 후원이나 광고를 **받지 않습니다**. 이러한 문의는 삼가해 주시기 바랍니다.
+> [!NOTE]
+> Gemini Voyager가 도움이 되었다면 X, YouTube, Reddit 등에서 공유해 주세요. 공유가 늘수록 더 많은 사용자가 프로젝트를 발견하고 Gemini 사용 경험도 함께 좋아집니다. 감사합니다.
 
 ---
 
@@ -109,13 +109,17 @@
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Nagi-ovo/gemini-voyager/releases/latest/" target="_blank">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari 다운로드" height="36">
+  </a>
 </div>
 
 <p align="center">
   <sub><b>Chrome 웹 스토어</b>는 Edge, Opera, Brave, Vivaldi, Arc 및 기타 Chromium 브라우저에서도 작동합니다.</sub>
 </p>
 
-> **스토어 상태:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (출시 예정)
+> **스토어 상태:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 **수동 설치** 또는 **개발 빌드**에 대해서는 [설치 가이드](https://voyager.nagi.fun/ko/guide/installation)를 참조하세요.
 

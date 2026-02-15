@@ -4,6 +4,9 @@
 
 为 Safari 构建和扩展 Gemini Voyager 的开发者指南。
 
+> [!TIP]
+> **想要进行安装？** 你现在可以直接从 [最新发布页](https://github.com/Nagi-ovo/gemini-voyager/releases/latest) 下载预签名的应用。只需下载 `.dmg` 并按提示安装即可。
+
 ## 快速开始
 
 ### 从源代码构建
@@ -183,6 +186,25 @@ bun run build:safari   # 生产构建
 bun run dev:safari     # 开发模式（自动重载）
 bun run build:all      # 为所有浏览器构建
 ```
+
+## 更新提醒配置
+
+默认情况下，Safari 版本的更新提醒是**禁用的**，以避免与 App Store 自动更新冲突。
+
+如需启用更新提醒（用于手动分发）：
+
+```bash
+ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
+```
+
+**注意**：仅在手动分发扩展时启用此功能（非 App Store 分发）。App Store 版本应使用默认设置（禁用），以依赖自动更新。
+
+## 已知限制
+
+由于 Safari 的技术架构和安全限制，以下功能目前在 Safari 版本中不可用：
+
+- **(a) Nano Banana 水印去除**：暂不支持对 Gemini 生成进行图片水印识别与去除。
+- **(b) 图片导出**：暂不支持直接导出为图片（包括在对话导出功能中）。**建议**：改用 **PDF 导出**。
 
 ## 资源
 

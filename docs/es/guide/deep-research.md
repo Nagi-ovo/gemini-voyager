@@ -16,6 +16,7 @@ Además del informe final, también puedes exportar el contenido completo de "pe
 
 - **Exportación en un clic**: Haz clic en el botón de compartir y exportar para descargar.
 - **Formato Estructurado**: Conserva las fases de pensamiento, las entradas de pensamiento y los sitios web de investigación en su orden original.
+- **Encabezados bilingües**: Los archivos Markdown incluyen encabezados de sección en inglés y en tu idioma actual.
 - **Nombres Automáticos**: Los archivos se nombran con marcas de tiempo para una fácil organización (por ejemplo: `deep-research-thinking-20240128-153045.md`).
 
 ### Cómo Usar

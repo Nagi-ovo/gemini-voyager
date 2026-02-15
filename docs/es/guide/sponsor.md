@@ -1,7 +1,7 @@
 # Patrocinar
 
-> [!CAUTION]
-> **Declaración del Autor**: Este proyecto **NO acepta** ninguna forma de patrocinio o publicidad de sitios espejo de LLM, productos ilegales o productos que involucren filtraciones de privacidad del usuario.
+> [!NOTE]
+> Si Gemini Voyager te resulta útil, compártelo en X, Reddit, YouTube, etc. Cada difusión ayuda a que más personas descubran el proyecto y mejoren la experiencia con Gemini. Gracias.
 
 El mantenimiento de proyectos de código abierto se alimenta principalmente de pasión (y café) ☕
 

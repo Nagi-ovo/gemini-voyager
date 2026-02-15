@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "Экспорт истории чата",
+    "message": "Экспорт истории диалога",
     "description": "Tooltip for export button"
   },
   "folder_title": {
@@ -951,6 +951,19 @@
     "message": "Развернуть",
     "description": "Expand children"
   },
+
+  "timelinePreviewSearch": {
+    "message": "Поиск...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "Нет результатов",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "Нет сообщений",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "Цитировать",
     "description": "Quote reply button text"
@@ -1147,6 +1160,18 @@
     "message": "Просторно",
     "description": "Spacious folder spacing label"
   },
+  "folderTreeIndent": {
+    "message": "Отступ подпапок",
+    "description": "Subfolder tree indentation adjustment label"
+  },
+  "folderTreeIndentCompact": {
+    "message": "Узкий",
+    "description": "Narrow subfolder indentation label"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "Широкий",
+    "description": "Wide subfolder indentation label"
+  },
   "export_select_mode_select_all": {
     "message": "Select all",
     "description": "Selection mode select all toggle"
@@ -1198,5 +1223,25 @@
   "export_error_refresh_retry": {
     "message": "Экспорт изображения не удался из-за проблем с сетью. Обновите страницу и попробуйте снова.",
     "description": "Подсказка при временной ошибке загрузки во время экспорта изображения"
+  },
+  "export_md_include_source_confirm": {
+    "message": "Экспортируемый контент содержит изображения из веб-поиска. Включить ссылки на источники изображений в Markdown?",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
+  "deepResearch_exportedAt": {
+    "message": "Экспортировано",
+    "description": "Метка временной метки экспорта Deep Research"
+  },
+  "deepResearch_totalPhases": {
+    "message": "Всего фаз",
+    "description": "Метка общего количества фаз размышления Deep Research"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "Фаза размышления",
+    "description": "Заголовок фазы размышления Deep Research"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "Исследованные сайты",
+    "description": "Заголовок раздела исследованных сайтов Deep Research"
   }
 }

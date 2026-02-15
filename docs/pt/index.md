@@ -55,6 +55,7 @@ features:
     details: Cópia com um clique de códigos-fonte LaTeX e MathML (Word).
   - icon: 🧜‍♀️
     title: Gráficos Mermaid
+    details: De código para visual. Fluxogramas, diagramas de sequência e gráficos de Gantt renderizados instantaneamente.
   - icon: 🏷️
     title: Sinc. Título da Aba
     details: Saiba num relance. Sincronize automaticamente o título da aba do navegador com o seu chat.

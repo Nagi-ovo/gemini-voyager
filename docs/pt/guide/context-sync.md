@@ -59,7 +59,7 @@ your-project/
 
 **O pensamento já está pronto na nuvem, agora, deixe-o criar raízes localmente.**
 
-- **[Instalar o Plugin CoBridge](https://open-vsx.org/extension/windfall/co-bridge)**: Encontre seu portal dimensional e ative a "respiración sincronizada" com um clique.
+- **[Instalar o Plugin CoBridge](https://open-vsx.org/extension/windfall/co-bridge)**: Encontre seu portal dimensional e ative a "respiração sincronizada" com um clique.
 - **[Visitar o Repositório GitHub](https://github.com/Winddfall/CoBridge)**: Saiba mais sobre a lógica por trás do CoBridge ou dê uma Star para este projeto de "sincronização de almas".
 
 > **Grandes modelos não perdem mais a memória; prontos para ação imediata.**

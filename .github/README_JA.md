@@ -52,8 +52,8 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
-> [!CAUTION]
-> **作者より声明**：当プロジェクトは、LLM ミラーサイト、違法な製品、またはユーザーのプライバシー漏洩に関わる製品からのスポンサーシップや広告は一切**受け付けません**。
+> [!NOTE]
+> もし Gemini Voyager が役に立っているなら、X、YouTube、Reddit などで共有してもらえると嬉しいです。シェアが増えるほど、このプロジェクトをより多くの人に届けられ、Gemini の体験改善にもつながります。ありがとう。
 
 ---
 
@@ -109,13 +109,17 @@
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20アドオン-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Nagi-ovo/gemini-voyager/releases/latest/" target="_blank">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari ダウンロード" height="36">
+  </a>
 </div>
 
 <p align="center">
   <sub><b>Chrome ストア版</b>は Edge, Opera, Brave, Vivaldi, Arc などの Chromium 系ブラウザでも動作します。</sub>
 </p>
 
-> **ストア状況:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (近日公開)
+> **ストア状況:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 **手動インストール**や**開発用ビルド**については、[インストールガイド](https://voyager.nagi.fun/ja/guide/installation)を参照してください。
 

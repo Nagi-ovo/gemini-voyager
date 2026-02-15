@@ -1,13 +1,13 @@
-# Input Collapse
+# طي الإدخال
 
-Collapse the input area when empty to gain more reading space. Click the collapsed bar to expand and start typing.
+قم بطي منطقة الإدخال عندما تكون فارغة للحصول على مساحة قراءة أكبر. انقر فوق الشريط المطوي للتوسيع والبدء في الكتابة.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/hide-input-area.png" alt="Input collapse" style="max-width: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/hide-input-area.png" alt="طي الإدخال" style="max-width: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
-## How to Use
+## كيفية الاستخدام
 
-1. When the input area is empty and loses focus, it automatically collapses into a compact pill button
-2. Click the pill button to expand the input area and start typing
-3. You can enable or disable this feature in the settings panel (disabled by default)
+1. عندما تكون منطقة الإدخال فارغة وتفقد التركيز، يتم طيها تلقائياً في زر مضغوط.
+2. انقر فوق الزر لتوسيع منطقة الإدخال والبدء في الكتابة.
+3. يمكنك تمكين هذه الميزة أو تعطيلها في لوحة الإعدادات (معطلة افتراضياً).

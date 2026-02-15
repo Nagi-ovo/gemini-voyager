@@ -180,7 +180,13 @@ export class ConversationExportService {
     options: ExportOptions,
   ): Promise<ExportResult> {
     // First create a clean markdown (no inlining)
-    const markdown = MarkdownFormatter.format(turns, metadata);
+    let markdown = MarkdownFormatter.format(turns, metadata);
+
+    // Strip image source attribution lines if user opted out
+    if (options.includeImageSource === false) {
+      markdown = markdown.replace(/\n\*Source: \[[^\]]*\]\([^)]*\)\*\n/g, '\n');
+    }
+
     const filename = options.filename || this.generateFilename('md', metadata.title);
     const finalFilename = await this.downloadMarkdownOrZip(markdown, filename, 'chat.md');
     return { success: true, format: 'markdown' as ExportFormat, filename: finalFilename };
@@ -478,6 +484,20 @@ export class ConversationExportService {
   ): Promise<{ blob: Blob; contentType: string | null } | null> {
     try {
       const response = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
+      if (response.ok) {
+        return {
+          blob: await response.blob(),
+          contentType: response.headers.get('Content-Type'),
+        };
+      }
+    } catch {
+      /* ignore */
+    }
+
+    // Retry without credentials for servers with wildcard CORS
+    // (Access-Control-Allow-Origin: * is incompatible with credentials: 'include')
+    try {
+      const response = await fetch(url, { credentials: 'omit', mode: 'cors' as RequestMode });
       if (response.ok) {
         return {
           blob: await response.blob(),

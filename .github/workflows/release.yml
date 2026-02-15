@@ -157,7 +157,6 @@ jobs:
           TAG=${{ steps.vars.outputs.tag_name }}
 
           cd dist_chrome && zip -r ../gemini-voyager-chrome-${TAG}.zip . && cd ..
-          cd dist_safari && zip -r ../gemini-voyager-safari-${TAG}.zip . && cd ..
 
       - name: Sign Firefox Extension and Submit to AMO
         run: |
@@ -184,11 +183,32 @@ jobs:
             cat > release_body.md << EOF
           ## 📥 Installation
 
+          <div align="center">
+            <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=en" target="_blank">
+              <img src="https://img.shields.io/badge/Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store" height="36">
+            </a>
+            &nbsp;&nbsp;
+            <a href="https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank">
+              <img src="https://img.shields.io/badge/Microsoft%20Edge-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Microsoft Edge Add-ons" height="36">
+            </a>
+            &nbsp;&nbsp;
+            <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
+              <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
+            </a>
+          </div>
+
           - **Chrome**: \`gemini-voyager-chrome-${TAG}.zip\`
           - **Firefox**: \`gemini-voyager-firefox-${TAG}.xpi\`
-          - **Safari**: \`gemini-voyager-safari-${TAG}.zip\`
+          - **Safari**: \`gemini-voyager-${TAG}.dmg\`
+          > **Safari 插件商店版本即将到来！**
+          > **Safari Extension Store Version is coming soon!**
 
-          [View Full Changelog](https://github.com/Nagi-ovo/gemini-voyager/compare/v...${TAG})
+          ### 🍎 Safari 安装与限制 (Safari Installation & Limitations)
+
+          - **安装 (Installation)**: 下载并打开 \`gemini-voyager-${TAG}.dmg\`，按提示安装应用。
+            Download and open \`gemini-voyager-${TAG}.dmg\`, then follow the prompts to install the app.
+          - **限制 (Limitations)**: 受限于 Safari 特性，以下功能暂不支持：(a) Nano Banana 水印去除 (b) 图片导出 (建议使用 PDF 导出)。
+            Due to Safari's nature, the following features are not supported: (a) Watermark removal (b) Image export (PDF recommended).
           EOF
             echo "body<<EOF" >> $GITHUB_OUTPUT
             cat release_body.md >> $GITHUB_OUTPUT
@@ -203,7 +223,7 @@ jobs:
           files: |
             gemini-voyager-chrome-*.zip
             gemini-voyager-firefox-*.xpi
-            gemini-voyager-safari-*.zip
+            gemini-voyager-*.dmg
           body: ${{ steps.release_body.outputs.body }}
           generate_release_notes: true
           append_body: ${{ inputs.notes == '' }}

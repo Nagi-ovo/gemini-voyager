@@ -1,5 +1,9 @@
 # 安裝
 
+::: info 新聞
+🍎 **Safari 瀏覽器原生外掛已推出！** 現在支援完全免費且一鍵安裝。
+:::
+
 選一條路。
 
 > ⚠️ 提示詞管理器是唯一支持 Gemini 企業版的功能。
@@ -42,14 +46,16 @@
 
 ## 3. Safari (macOS)
 
-1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下 `gemini-voyager-safari-vX.Y.Z.zip`。
-2. 解壓。
-3. 終端跑這行命令 (得有 Xcode)：
-   ```bash
-   xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
-   ```
-4. Xcode 裡運行。
-5. Safari 設置 > 擴充功能裡打開。
+Safari 現在支持直接分發！下載預簽名的應用：
+
+1. 下載 <SafariDownloadLink>最新 Safari 版本 (.dmg)</SafariDownloadLink>。
+2. 雙擊打開後按提示安裝應用。
+3. 雙擊啟動應用。
+4. 在 **Safari 設置 > 擴充功能** 中啟用。
+
+> 💡 Safari 版本現已直接簽名分發——不再需要 Xcode 轉換！
+>
+> ⚠️ **已知限制**：由於 Safari 特性，(a) 水印去除 (b) 圖片導出（推薦用 PDF）暫不支持。
 
 ---
 

@@ -8,10 +8,152 @@ import type { TranslationKey } from '@/utils/translations';
 import {
   applyDeepResearchDownloadButtonI18n,
   applyDeepResearchSaveReportButtonI18n,
+  injectDownloadButton,
+  isDeepResearchReportMenuPanel,
   showDeepResearchExportProgressOverlay,
 } from '../menuButton';
 
+function createNativeMenuButton({
+  testId,
+  label,
+  iconName,
+  buttonClassName,
+  iconClassName,
+}: {
+  testId: string;
+  label: string;
+  iconName: string;
+  buttonClassName: string;
+  iconClassName: string;
+}): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.className = buttonClassName;
+  button.setAttribute('role', 'menuitem');
+  button.setAttribute('tabindex', '0');
+  button.setAttribute('data-test-id', testId);
+
+  const icon = document.createElement('mat-icon');
+  icon.className = iconClassName;
+  icon.setAttribute('fonticon', iconName);
+  icon.setAttribute('aria-hidden', 'true');
+  icon.textContent = '';
+
+  const text = document.createElement('span');
+  text.className = 'mat-mdc-menu-item-text';
+  text.textContent = label;
+
+  const ripple = document.createElement('div');
+  ripple.className = 'mat-ripple mat-mdc-menu-ripple';
+  ripple.setAttribute('matripple', '');
+
+  button.appendChild(icon);
+  button.appendChild(text);
+  button.appendChild(ripple);
+  return button;
+}
+
+function createDeepResearchReportMenuPanel(): HTMLElement {
+  const panel = document.createElement('div');
+  panel.className = 'mat-mdc-menu-panel';
+  panel.setAttribute('role', 'menu');
+
+  const content = document.createElement('div');
+  content.className = 'mat-mdc-menu-content';
+
+  const shareContainer = document.createElement('div');
+  shareContainer.setAttribute('data-test-id', 'share-button-tooltip-container');
+  const shareButtonWrapper = document.createElement('share-button');
+  const shareButton = createNativeMenuButton({
+    testId: 'share-button',
+    label: 'Share',
+    iconName: 'share',
+    buttonClassName:
+      'mat-mdc-menu-item mat-focus-indicator share-button menu-item-button ng-star-inserted',
+    iconClassName:
+      'mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color',
+  });
+  shareButtonWrapper.appendChild(shareButton);
+  shareContainer.appendChild(shareButtonWrapper);
+  content.appendChild(shareContainer);
+
+  const exportToDocs = document.createElement('export-to-docs-button');
+  exportToDocs.setAttribute('data-test-id', 'export-to-docs-button');
+  const docsButton = createNativeMenuButton({
+    testId: 'export-to-docs-button',
+    label: 'Export to Docs',
+    iconName: 'docs',
+    buttonClassName: 'mat-mdc-menu-item mat-focus-indicator menu-item-button ng-star-inserted',
+    iconClassName:
+      'mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted',
+  });
+  exportToDocs.appendChild(docsButton);
+  content.appendChild(exportToDocs);
+
+  const copyButton = document.createElement('copy-button');
+  copyButton.setAttribute('data-test-id', 'copy-button');
+  const nativeCopyButton = createNativeMenuButton({
+    testId: 'copy-button',
+    label: 'Copy contents',
+    iconName: 'content_copy',
+    buttonClassName:
+      'mat-mdc-menu-item mat-focus-indicator copy-button menu-item-button ng-star-inserted',
+    iconClassName: 'mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color',
+  });
+  copyButton.appendChild(nativeCopyButton);
+  content.appendChild(copyButton);
+
+  panel.appendChild(content);
+  document.body.appendChild(panel);
+  return panel;
+}
+
 describe('applyDeepResearchDownloadButtonI18n', () => {
+  it('identifies deep research report share/export menu panel', () => {
+    const panel = document.createElement('div');
+    panel.className = 'mat-mdc-menu-panel';
+    panel.setAttribute('role', 'menu');
+
+    const content = document.createElement('div');
+    content.className = 'mat-mdc-menu-content';
+
+    const shareContainer = document.createElement('div');
+    shareContainer.setAttribute('data-test-id', 'share-button-tooltip-container');
+    content.appendChild(shareContainer);
+
+    const exportToDocs = document.createElement('export-to-docs-button');
+    exportToDocs.setAttribute('data-test-id', 'export-to-docs-button');
+    content.appendChild(exportToDocs);
+
+    const copyButton = document.createElement('copy-button');
+    copyButton.setAttribute('data-test-id', 'copy-button');
+    content.appendChild(copyButton);
+
+    panel.appendChild(content);
+
+    expect(isDeepResearchReportMenuPanel(panel)).toBe(true);
+  });
+
+  it('rejects sidebar conversation menu panel for deep research injection', () => {
+    const panel = document.createElement('div');
+    panel.className = 'mat-mdc-menu-panel';
+    panel.setAttribute('role', 'menu');
+
+    const content = document.createElement('div');
+    content.className = 'mat-mdc-menu-content';
+
+    const pin = document.createElement('button');
+    pin.setAttribute('data-test-id', 'pin-button');
+    content.appendChild(pin);
+
+    const rename = document.createElement('button');
+    rename.setAttribute('data-test-id', 'rename-button');
+    content.appendChild(rename);
+
+    panel.appendChild(content);
+
+    expect(isDeepResearchReportMenuPanel(panel)).toBe(false);
+  });
+
   it('updates label and tooltip according to language', () => {
     const button = document.createElement('button');
     const span = document.createElement('span');
@@ -39,7 +181,7 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
 
     expect(button.title).toBe('ダウンロード（MD）');
     expect(button.getAttribute('aria-label')).toBe('ダウンロード（MD）');
-    expect(span.textContent).toBe(' ダウンロード');
+    expect(span.textContent).toBe('ダウンロード');
   });
 
   it('updates save report label and tooltip according to language', () => {
@@ -84,7 +226,61 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
 
     expect(button.title).toBe('保存报告');
     expect(button.getAttribute('aria-label')).toBe('保存报告');
-    expect(span.textContent).toBe(' 保存报告');
+    expect(span.textContent).toBe('保存报告');
+  });
+
+  it('injects deep research export buttons using native menu item style baseline', async () => {
+    const w = window as unknown as {
+      chrome?: {
+        storage?: {
+          sync?: {
+            get: (key: string, cb: (result: Record<string, unknown>) => void) => void;
+          };
+          onChanged?: {
+            addListener: (fn: (...args: unknown[]) => void) => void;
+            removeListener: (fn: (...args: unknown[]) => void) => void;
+          };
+        };
+      };
+    };
+    w.chrome = {
+      storage: {
+        sync: {
+          get: (_key, cb) => cb({}),
+        },
+        onChanged: {
+          addListener: () => {},
+          removeListener: () => {},
+        },
+      },
+    };
+
+    const panel = createDeepResearchReportMenuPanel();
+    const templateButton = panel.querySelector(
+      'export-to-docs-button button.mat-mdc-menu-item',
+    ) as HTMLElement;
+    const templateIcon = templateButton.querySelector('mat-icon') as HTMLElement;
+    const templateText = templateButton.querySelector('.mat-mdc-menu-item-text') as HTMLElement;
+
+    await injectDownloadButton(panel);
+
+    const download = panel.querySelector('.gv-deep-research-download') as HTMLElement | null;
+    const saveReport = panel.querySelector('.gv-deep-research-save-report') as HTMLElement | null;
+    expect(download).toBeTruthy();
+    expect(saveReport).toBeTruthy();
+
+    const downloadIcon = download?.querySelector('mat-icon') as HTMLElement | null;
+    const saveReportIcon = saveReport?.querySelector('mat-icon') as HTMLElement | null;
+    const downloadText = download?.querySelector('.mat-mdc-menu-item-text') as HTMLElement | null;
+    const saveReportText = saveReport?.querySelector(
+      '.mat-mdc-menu-item-text',
+    ) as HTMLElement | null;
+
+    expect(downloadIcon?.className).toBe(templateIcon.className);
+    expect(saveReportIcon?.className).toBe(templateIcon.className);
+    expect(downloadText?.className).toBe(templateText?.className);
+    expect(saveReportText?.className).toBe(templateText?.className);
+    expect(saveReport?.textContent?.toLowerCase()).not.toContain('description');
   });
 
   it('renders and removes deep research export progress overlay', () => {

@@ -52,8 +52,8 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
-> [!CAUTION]
-> **بيان المؤلف**: هذا المشروع **لا يقبل** أي شكل من أشكال الرعاية أو الإعلانات من مواقع مرآة LLM، أو المنتجات غير القانونية، أو المنتجات التي تنطوي على تسريب خصوصية المستخدم.
+> [!NOTE]
+> إذا كان Gemini Voyager مفيداً لك، فشاركْه على X أو Reddit أو YouTube إلخ. كل مشاركة تساعد المزيد من الناس على اكتشاف المشروع وتحسين تجربة Gemini. شكراً.
 
 ---
 
@@ -109,13 +109,17 @@
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Nagi-ovo/gemini-voyager/releases/latest/" target="_blank">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari تنزيل" height="36">
+  </a>
 </div>
 
 <p align="center">
-  <sub>متجر <b>Chrome Web Store</b> يعمل أيضاً على متصفحات Edge و Opera و Brave و Vivaldi و Arc وغيرها من المتصفحات القائمة على Chromium.</sub>
+  <sub>سوق <b>Chrome</b> الإلكتروني يعمل أيضاً على Edge و Opera و Brave و Vivaldi و Arc ومتصفحات Chromium الأخرى.</sub>
 </p>
 
-> **حالة المتجر:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (قريباً)
+> **حالة المتجر:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 لـ **التثبيت اليدوي** أو **بناء التطوير**، يرجى الرجوع إلى [دليل التثبيت](https://voyager.nagi.fun/ar/guide/installation).
 

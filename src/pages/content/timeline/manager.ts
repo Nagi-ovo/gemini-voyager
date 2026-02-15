@@ -5,6 +5,7 @@ import type { ShortcutAction } from '@/core/types/keyboardShortcut';
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
+import { TimelinePreviewPanel } from './TimelinePreviewPanel';
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
 import type { DotElement, MarkerLevel } from './types';
 
@@ -16,6 +17,10 @@ function hashString(input: string): string {
   }
   return (h >>> 0).toString(36);
 }
+
+/** Accessibility prefixes injected by Gemini's DOM that should be stripped from previews effectively globally. */
+const TURN_LABEL_PREFIXES =
+  /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
 
 export class TimelineManager {
   private scrollContainer: HTMLElement | null = null;
@@ -141,6 +146,7 @@ export class TimelineManager {
   private shortcutUnsubscribe: (() => void) | null = null;
   private navigationQueue: Array<'previous' | 'next'> = [];
   private isNavigating: boolean = false;
+  private previewPanel: TimelinePreviewPanel | null = null;
 
   async init(): Promise<void> {
     await initI18n();
@@ -730,6 +736,26 @@ export class TimelineManager {
         this.measureCtx = this.measureCanvas.getContext('2d');
       }
     }
+
+    // Preview panel
+    if (!this.previewPanel && this.ui.timelineBar) {
+      this.previewPanel = new TimelinePreviewPanel(this.ui.timelineBar);
+      this.previewPanel.init(
+        (turnId, index) => {
+          const marker = this.markers[index];
+          if (!marker?.element) return;
+          const fromIdx = this.getActiveIndex();
+          const dur = this.computeFlowDuration(fromIdx, index);
+          if (this.scrollMode === 'flow' && fromIdx >= 0 && index >= 0 && fromIdx !== index) {
+            this.activeTurnId = null;
+            this.updateActiveDotUI();
+            this.startRunner(fromIdx, index, dur);
+          }
+          this.smoothScrollTo(marker.element, dur);
+        },
+        (query) => this.highlightSearchInDOM(query),
+      );
+    }
   }
 
   private updateIntersectionObserverTargets(): void {
@@ -743,9 +769,11 @@ export class TimelineManager {
 
   private normalizeText(text: string | null): string {
     try {
-      return String(text || '')
-        .replace(/\s+/g, ' ')
-        .trim();
+      if (!text) return '';
+      // 1. Collapse whitespace
+      const collapsed = String(text).replace(/\s+/g, ' ').trim();
+      // 2. Strip prefixes (You said, etc.)
+      return collapsed.replace(TURN_LABEL_PREFIXES, '');
     } catch {
       return '';
     }
@@ -1094,6 +1122,9 @@ export class TimelineManager {
     this.updateVirtualRangeAndRender();
     this.updateActiveDotUI();
     this.scheduleScrollSync();
+    this.previewPanel?.updateMarkers(
+      this.markers.map((m, i) => ({ id: m.id, summary: m.summary, index: i, starred: m.starred })),
+    );
   };
 
   private setupObservers(): void {
@@ -1452,6 +1483,49 @@ export class TimelineManager {
     this.markers.forEach((marker) => {
       marker.dotElement?.classList.toggle('active', marker.id === this.activeTurnId);
     });
+    this.previewPanel?.updateActiveTurn(this.activeTurnId);
+  }
+
+  private static readonly SEARCH_HIGHLIGHT_CLASS = 'timeline-search-highlight';
+
+  private clearSearchHighlights(): void {
+    const cls = TimelineManager.SEARCH_HIGHLIGHT_CLASS;
+    const marks = this.conversationContainer?.querySelectorAll(`mark.${cls}`);
+    if (!marks) return;
+    marks.forEach((mark) => {
+      const parent = mark.parentNode;
+      if (!parent) return;
+      parent.replaceChild(document.createTextNode(mark.textContent || ''), mark);
+      parent.normalize();
+    });
+  }
+
+  private highlightSearchInDOM(query: string): void {
+    this.clearSearchHighlights();
+    if (!query || !this.conversationContainer) return;
+    const lowerQuery = query.toLowerCase();
+    for (const marker of this.markers) {
+      if (!marker.element) continue;
+      const walker = document.createTreeWalker(marker.element, NodeFilter.SHOW_TEXT);
+      const matches: { node: Text; index: number }[] = [];
+      let node: Text | null;
+      while ((node = walker.nextNode() as Text | null)) {
+        const idx = node.textContent?.toLowerCase().indexOf(lowerQuery) ?? -1;
+        if (idx !== -1) matches.push({ node, index: idx });
+      }
+      // Process in reverse to keep offsets stable
+      for (let i = matches.length - 1; i >= 0; i--) {
+        const { node: textNode, index: matchIdx } = matches[i];
+        const after = textNode.splitText(matchIdx + query.length);
+        const matchText = textNode.splitText(matchIdx);
+        const mark = document.createElement('mark');
+        mark.className = TimelineManager.SEARCH_HIGHLIGHT_CLASS;
+        mark.textContent = matchText.textContent;
+        matchText.parentNode!.replaceChild(mark, matchText);
+        // keep reference to 'after' to avoid TS unused warning
+        void after;
+      }
+    }
   }
 
   /**
@@ -1631,6 +1705,7 @@ export class TimelineManager {
 
   private showTooltipForDot(dot: DotElement): void {
     if (!this.ui.tooltip) return;
+    if (this.previewPanel?.isOpen) return;
     if (this.tooltipHideTimer) {
       clearTimeout(this.tooltipHideTimer);
       this.tooltipHideTimer = null;
@@ -3055,6 +3130,9 @@ export class TimelineManager {
     } catch {}
     this.ui.slider = null;
     this.ui.sliderHandle = null;
+    this.clearSearchHighlights();
+    this.previewPanel?.destroy();
+    this.previewPanel = null;
     this.ui = { timelineBar: null, tooltip: null } as any;
     this.markers = [];
     this.markerTops = [];

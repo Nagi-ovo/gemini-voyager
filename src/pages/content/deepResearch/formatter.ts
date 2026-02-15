@@ -1,6 +1,8 @@
 /**
  * Markdown formatting module for Deep Research thinking content
  */
+import { getCurrentLanguage, getTranslation } from '@/utils/i18n';
+
 import type { BrowseChip, ThinkingContent, ThinkingItem, ThinkingSection } from './types';
 
 /**
@@ -27,12 +29,21 @@ function formatThoughtItem(header: string, content: string): string {
 /**
  * Format browse chips as Markdown list
  */
-function formatBrowseChips(chips: BrowseChip[]): string {
+async function formatBrowseChips(chips: BrowseChip[]): Promise<string> {
   if (chips.length === 0) {
     return '';
   }
 
-  const lines: string[] = ['#### 研究网站 / Researched Websites\n'];
+  const currentLang = await getCurrentLanguage();
+  const researchedWebsitesLabel = await getTranslation('deepResearch_researchedWebsites');
+
+  // If current language is English, only show English label (avoid duplication)
+  const header =
+    currentLang === 'en'
+      ? `#### Researched Websites\n`
+      : `#### ${researchedWebsitesLabel} / Researched Websites\n`;
+
+  const lines: string[] = [header];
 
   chips.forEach((chip) => {
     const title = chip.title ? ` - ${chip.title}` : '';
@@ -45,11 +56,11 @@ function formatBrowseChips(chips: BrowseChip[]): string {
 /**
  * Format a thinking item (either thought or browse chips)
  */
-function formatThinkingItem(item: ThinkingItem): string {
+async function formatThinkingItem(item: ThinkingItem): Promise<string> {
   if (item.type === 'thought') {
     return formatThoughtItem(item.header, item.content);
   } else if (item.type === 'browse-chips') {
-    return formatBrowseChips(item.chips);
+    return await formatBrowseChips(item.chips);
   }
   return '';
 }
@@ -57,20 +68,29 @@ function formatThinkingItem(item: ThinkingItem): string {
 /**
  * Format a thinking section as Markdown
  */
-function formatThinkingSection(section: ThinkingSection, index: number): string {
+async function formatThinkingSection(section: ThinkingSection, index: number): Promise<string> {
   const parts: string[] = [];
 
   // Section header
-  parts.push(`## 思考阶段 ${index + 1} / Thinking Phase ${index + 1}\n`);
+  const currentLang = await getCurrentLanguage();
+  const thinkingPhaseLabel = await getTranslation('deepResearch_thinkingPhase');
+
+  // If current language is English, only show English label (avoid duplication)
+  const header =
+    currentLang === 'en'
+      ? `## Thinking Phase ${index + 1}\n`
+      : `## ${thinkingPhaseLabel} ${index + 1} / Thinking Phase ${index + 1}\n`;
+
+  parts.push(header);
 
   // Format items in order
-  section.items.forEach((item) => {
-    const formatted = formatThinkingItem(item);
+  for (const item of section.items) {
+    const formatted = await formatThinkingItem(item);
     if (formatted) {
       parts.push(formatted);
       parts.push(''); // Add blank line between items
     }
-  });
+  }
 
   return parts.join('\n');
 }
@@ -98,20 +118,31 @@ function formatTimestamp(isoString: string): string {
 /**
  * Convert thinking content to Markdown format
  */
-export function formatToMarkdown(content: ThinkingContent): string {
+export async function formatToMarkdown(content: ThinkingContent): Promise<string> {
   const parts: string[] = [];
+
+  // Get current language and translations
+  const currentLang = await getCurrentLanguage();
+  const exportedAtLabel = await getTranslation('deepResearch_exportedAt');
+  const totalPhasesLabel = await getTranslation('deepResearch_totalPhases');
 
   // Title
   parts.push(`# ${content.title}\n`);
 
-  // Metadata
-  parts.push(`**导出时间 / Exported At:** ${formatTimestamp(content.exportedAt)}\n`);
-  parts.push(`**总思考阶段 / Total Phases:** ${content.sections.length}\n`);
+  // Metadata - if current language is English, only show English labels (avoid duplication)
+  if (currentLang === 'en') {
+    parts.push(`**Exported At:** ${formatTimestamp(content.exportedAt)}\n`);
+    parts.push(`**Total Phases:** ${content.sections.length}\n`);
+  } else {
+    parts.push(`**${exportedAtLabel} / Exported At:** ${formatTimestamp(content.exportedAt)}\n`);
+    parts.push(`**${totalPhasesLabel} / Total Phases:** ${content.sections.length}\n`);
+  }
   parts.push('---\n');
 
   // Format each section
-  content.sections.forEach((section, index) => {
-    const formatted = formatThinkingSection(section, index);
+  for (let index = 0; index < content.sections.length; index++) {
+    const section = content.sections[index];
+    const formatted = await formatThinkingSection(section, index);
     if (formatted) {
       parts.push(formatted);
       // Add separator between sections (except for the last one)
@@ -119,7 +150,7 @@ export function formatToMarkdown(content: ThinkingContent): string {
         parts.push('---\n');
       }
     }
-  });
+  }
 
   // Footer
   parts.push('\n---\n');
