@@ -440,6 +440,51 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
+      // Handle sync to IDE (bypasses page CSP)
+      if (message?.type === 'gv.syncToIDE') {
+        const url = String(message.url || '');
+        const data = message.data || [];
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            body: JSON.stringify(data),
+          });
+
+          if (!response.ok) {
+            sendResponse({ ok: false, error: `HTTP ${response.status}` });
+          } else {
+            const result = await response.json();
+            sendResponse({ ok: true, data: result });
+          }
+        } catch (e: any) {
+          sendResponse({ ok: false, error: e.message || String(e) });
+        }
+        return;
+      }
+
+      // Handle check sync server status (bypasses page CSP)
+      if (message?.type === 'gv.checkSyncStatus') {
+        const url = String(message.url || '');
+        const timeout = Number(message.timeout || 200);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+        try {
+          const response = await fetch(url, {
+            method: 'GET',
+            signal: controller.signal,
+          });
+          sendResponse({ ok: response.ok });
+        } catch (e) {
+          sendResponse({ ok: false });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+        return;
+      }
+
       // Handle image fetch via page context (for Firefox/Safari cookie partitioning)
       // Uses chrome.scripting.executeScript in MAIN world so the page's own fetch is used,
       // which has access to the correct Google authentication cookies.
@@ -458,43 +503,50 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           const results = await chrome.scripting.executeScript({
             target: { tabId },
             world: 'MAIN' as chrome.scripting.ExecutionWorld,
-            func: (imageUrl: string) => {
-              return fetch(imageUrl, { credentials: 'include' })
-                .then((resp) => {
-                  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                  return resp.blob();
-                })
-                .catch(() => {
-                  // Retry without credentials for wildcard CORS
-                  return fetch(imageUrl, { credentials: 'omit' }).then((resp) => {
-                    if (!resp.ok) return null;
-                    return resp.blob();
-                  });
-                })
-                .then((blob) => {
-                  if (!blob) return null;
-                  return new Promise<{
-                    contentType: string;
-                    base64: string;
-                  } | null>((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      const dataUrl = String(reader.result || '');
-                      const commaIdx = dataUrl.indexOf(',');
-                      if (commaIdx < 0) {
-                        resolve(null);
-                        return;
-                      }
-                      resolve({
-                        contentType: blob.type || 'application/octet-stream',
-                        base64: dataUrl.substring(commaIdx + 1),
-                      });
-                    };
-                    reader.onerror = () => resolve(null);
-                    reader.readAsDataURL(blob);
-                  });
-                })
-                .catch(() => null);
+            func: async (imageUrl: string) => {
+              const safeFetch = async (credentials: RequestCredentials) => {
+                try {
+                  console.log(`[PageContext] Fetching with ${credentials}:`, imageUrl);
+                  const resp = await fetch(imageUrl, { credentials });
+                  if (resp.ok) return await resp.blob();
+                  console.warn(`[PageContext] Fetch (${credentials}) HTTP error:`, resp.status);
+                } catch (e) {
+                  console.warn(`[PageContext] Fetch (${credentials}) error:`, e);
+                }
+                return null;
+              };
+
+              try {
+                // Try with credentials first, then without (fix for Firefox CSP/CORS)
+                const blob = (await safeFetch('include')) || (await safeFetch('omit'));
+                if (!blob) {
+                  console.error('[PageContext] All fetch attempts failed');
+                  return null;
+                }
+
+                return new Promise<{
+                  contentType: string;
+                  base64: string;
+                } | null>((resolve) => {
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const dataUrl = String(reader.result || '');
+                    const commaIdx = dataUrl.indexOf(',');
+                    if (commaIdx < 0) {
+                      resolve(null);
+                      return;
+                    }
+                    resolve({
+                      contentType: blob.type || 'application/octet-stream',
+                      base64: dataUrl.substring(commaIdx + 1),
+                    });
+                  };
+                  reader.onerror = () => resolve(null);
+                  reader.readAsDataURL(blob);
+                });
+              } catch {
+                return null;
+              }
             },
             args: [url],
           });
@@ -527,19 +579,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
-      fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-        redirect: 'follow',
-      })
+      const fetchWithFallback = async (fetchUrl: string) => {
+        try {
+          const r1 = await fetch(fetchUrl, { credentials: 'include', redirect: 'follow' });
+          if (r1.ok) return r1;
+        } catch (e) {
+          /* ignore include error */
+        }
+
+        try {
+          const r2 = await fetch(fetchUrl, { credentials: 'omit', redirect: 'follow' });
+          return r2;
+        } catch (e) {
+          throw e;
+        }
+      };
+
+      fetchWithFallback(url)
         .then((response) => {
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           return response.blob();
         })
         .then((blob) => {
-          // In Service Worker, FileReader is not available.
-          // We use Response.arrayBuffer() and then convert to base64,
-          // or use a helper to create a Data URL.
           return blob.arrayBuffer().then((ab) => {
             const b64 = arrayBufferToBase64(ab);
             const contentType = blob.type || 'image/png';
@@ -553,35 +614,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           });
         })
         .catch((err) => {
-          // Retry without credentials for external domains (e.g., gstatic.com)
-          // Some servers return Access-Control-Allow-Origin: * which is
-          // incompatible with credentials: 'include'
-          return fetch(url, {
-            method: 'GET',
-            credentials: 'omit',
-            redirect: 'follow',
-          })
-            .then((response) => {
-              if (!response.ok) throw new Error(`HTTP ${response.status}`);
-              return response.blob();
-            })
-            .then((blob) => {
-              return blob.arrayBuffer().then((ab) => {
-                const b64 = arrayBufferToBase64(ab);
-                const contentType = blob.type || 'image/png';
-                const dataUrl = `data:${contentType};base64,${b64}`;
-                sendResponse({
-                  ok: true,
-                  data: dataUrl,
-                  contentType,
-                  base64: b64,
-                });
-              });
-            })
-            .catch((retryErr) => {
-              console.error('[Background] Fetch image failed (both modes):', retryErr);
-              sendResponse({ ok: false, error: retryErr.message });
-            });
+          console.error('[Background] gv.fetchImage Final failure:', err);
+          sendResponse({ ok: false, error: err.message });
         });
       return;
     } catch (e: any) {
