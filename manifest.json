@@ -35,10 +35,11 @@
     "https://aistudio.google.com/*",
     "https://aistudio.google.cn/*",
     "https://*.googleapis.com/*",
-    "https://accounts.google.com/*",
+    "https://*.google-analytics.com/*",
     "https://*.googleusercontent.com/*",
     "https://lh3.google.com/*",
-    "https://*.ggpht.com/*"
+    "https://*.ggpht.com/*",
+    "http://127.0.0.1/*"
   ],
   "optional_host_permissions": ["https://*/*", "http://*/*"],
   "content_security_policy": {
