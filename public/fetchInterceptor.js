@@ -299,16 +299,37 @@
 
   /**
    * Dispatch timestamp event to content script
+   * Uses DOM-based bridge for Firefox compatibility (CustomEvents don't cross world boundaries)
    */
+  const TIMESTAMP_BRIDGE_ID = 'gv-timestamp-bridge';
+
+  const getTimestampBridge = () => {
+    let bridge = document.getElementById(TIMESTAMP_BRIDGE_ID);
+    if (!bridge) {
+      bridge = document.createElement('div');
+      bridge.id = TIMESTAMP_BRIDGE_ID;
+      bridge.style.display = 'none';
+      document.documentElement.appendChild(bridge);
+    }
+    return bridge;
+  };
+
   const dispatchTimestampEvent = (timestamps) => {
     if (timestamps.length === 0) return;
 
+    // Use DOM-based bridge for cross-world communication (Firefox compatible)
+    const bridge = getTimestampBridge();
+    bridge.dataset.timestamps = JSON.stringify({
+      timestamps: timestamps,
+      timestamp: Date.now(),
+    });
+
+    // Also dispatch CustomEvent for browsers that support it (Chrome/Edge)
     const event = new CustomEvent('gv-message-timestamps', {
       detail: {
         timestamps: timestamps,
       },
     });
-
     document.dispatchEvent(event);
   };
 

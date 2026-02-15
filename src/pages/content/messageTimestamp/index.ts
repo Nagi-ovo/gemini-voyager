@@ -30,6 +30,7 @@ const DEFAULT_SETTINGS = {
 const messageTimestamps = new Map<string, Date>();
 let messageCounter = 0;
 let currentSettings = { ...DEFAULT_SETTINGS };
+let conversationStartTime: Date | null = null;
 
 /**
  * Format date based on settings
@@ -137,11 +138,17 @@ function formatWithCustomTemplate(date: Date, template: string, use24Hour: boole
  */
 async function loadSettings(): Promise<typeof DEFAULT_SETTINGS> {
   try {
-    const result = await new Promise<{ [SETTINGS_KEY]?: typeof DEFAULT_SETTINGS }>((resolve) => {
-      chrome.storage?.sync?.get({ [SETTINGS_KEY]: DEFAULT_SETTINGS }, resolve);
+    const result = await new Promise<{
+      [SETTINGS_KEY]?: typeof DEFAULT_SETTINGS;
+      [STORAGE_KEY]?: boolean;
+    }>((resolve) => {
+      chrome.storage?.sync?.get({ [SETTINGS_KEY]: DEFAULT_SETTINGS, [STORAGE_KEY]: true }, resolve);
     });
 
-    return { ...DEFAULT_SETTINGS, ...result[SETTINGS_KEY] };
+    // Check both the old settings key and the new toggle key from popup
+    const enabled = result[STORAGE_KEY] !== false;
+
+    return { ...DEFAULT_SETTINGS, ...result[SETTINGS_KEY], enabled };
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -160,12 +167,16 @@ export function storeMessageTimestamp(messageId: string, timestamp: Date): void 
  * Returns stored timestamp or generates a new one based on counter
  */
 function getMessageTimestamp(): Date {
-  // Use current time as base, subtract minutes based on message counter
-  // This ensures each message has a distinct, realistic timestamp
-  const now = new Date();
+  // Initialize conversation start time on first call
+  if (!conversationStartTime) {
+    conversationStartTime = new Date(Date.now() - 60 * 60000); // Assume conversation started 1 hour ago
+  }
+
+  // Add time for each subsequent message
+  // This ensures messages get progressively newer timestamps
   const offset = messageCounter * 60000; // 1 minute between messages
   messageCounter++;
-  return new Date(now.getTime() - offset);
+  return new Date(conversationStartTime.getTime() + offset);
 }
 
 /**
@@ -377,19 +388,51 @@ function removeTimestamps(): void {
 
 /**
  * Listen for timestamps from the fetch interceptor
+ * Supports both CustomEvent (Chrome/Edge) and DOM-based bridge (Firefox)
  */
 function setupInterceptorListener(): void {
+  // Listen for CustomEvent (Chrome/Edge)
   document.addEventListener('gv-message-timestamps', ((event: CustomEvent) => {
     const { timestamps } = event.detail;
+    processTimestampsFromInterceptor(timestamps);
+  }) as EventListener);
 
-    for (const ts of timestamps) {
-      if (ts.role === 'model') {
-        // Store the real timestamp from the API
-        const messageId = `msg_${messageCounter}`;
-        storeMessageTimestamp(messageId, new Date(ts.timestamp));
+  // Also poll DOM-based bridge for Firefox compatibility
+  const TIMESTAMP_BRIDGE_ID = 'gv-timestamp-bridge';
+  let lastProcessedTimestamp = 0;
+
+  const checkBridge = () => {
+    const bridge = document.getElementById(TIMESTAMP_BRIDGE_ID);
+    if (bridge?.dataset.timestamps) {
+      try {
+        const data = JSON.parse(bridge.dataset.timestamps);
+        if (data.timestamp > lastProcessedTimestamp) {
+          lastProcessedTimestamp = data.timestamp;
+          processTimestampsFromInterceptor(data.timestamps);
+        }
+      } catch {
+        // Ignore parse errors
       }
     }
-  }) as EventListener);
+  };
+
+  // Check bridge periodically
+  setInterval(checkBridge, 500);
+}
+
+/**
+ * Process timestamps from fetch interceptor
+ */
+function processTimestampsFromInterceptor(
+  timestamps: Array<{ role: string; timestamp: string }>,
+): void {
+  for (const ts of timestamps) {
+    if (ts.role === 'model') {
+      // Store the real timestamp from the API
+      const messageId = `msg_${messageCounter}`;
+      storeMessageTimestamp(messageId, new Date(ts.timestamp));
+    }
+  }
 }
 
 /**
