@@ -12,6 +12,7 @@ const STORAGE_KEY = 'gvSidebarAutoHide';
 
 // Debounce delay to avoid rapid toggling
 const LEAVE_DELAY_MS = 500;
+const ENTER_DELAY_MS = 300;
 // Interval to check for sidenav element reappearing
 const SIDENAV_CHECK_INTERVAL_MS = 1000;
 // Debounce delay for resize events
@@ -29,6 +30,7 @@ const CUSTOM_POPUP_SELECTORS = [
 
 let enabled = false;
 let leaveTimeoutId: number | null = null;
+let enterTimeoutId: number | null = null;
 let sidenavElement: HTMLElement | null = null;
 let observer: MutationObserver | null = null;
 let resizeHandler: (() => void) | null = null;
@@ -299,8 +301,16 @@ function handleMouseEnter(): void {
     leaveTimeoutId = null;
   }
 
-  // Expand sidebar
-  expandSidebar();
+  // Debounce the expand to avoid accidental triggers while crossing screens
+  if (enterTimeoutId !== null) {
+    window.clearTimeout(enterTimeoutId);
+  }
+
+  enterTimeoutId = window.setTimeout(() => {
+    enterTimeoutId = null;
+    if (!enabled) return;
+    expandSidebar();
+  }, ENTER_DELAY_MS);
 }
 
 /**
@@ -308,6 +318,12 @@ function handleMouseEnter(): void {
  */
 function handleMouseLeave(): void {
   if (!enabled) return;
+
+  // Cancel any pending expand
+  if (enterTimeoutId !== null) {
+    window.clearTimeout(enterTimeoutId);
+    enterTimeoutId = null;
+  }
 
   // Debounce the collapse to avoid accidental triggers
   if (leaveTimeoutId !== null) {
@@ -493,6 +509,12 @@ function enable(): void {
 function disable(): void {
   if (!enabled) return;
   enabled = false;
+
+  // Cancel any pending expand
+  if (enterTimeoutId !== null) {
+    window.clearTimeout(enterTimeoutId);
+    enterTimeoutId = null;
+  }
 
   // Cancel any pending collapse
   if (leaveTimeoutId !== null) {

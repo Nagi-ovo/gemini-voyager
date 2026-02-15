@@ -64,4 +64,38 @@ describe('sidebarAutoHide', () => {
     vi.advanceTimersByTime(600);
     expect(toggleSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('does not expand on quick sidebar hover pass-through', async () => {
+    const sidenav = document.createElement('bard-sidenav');
+    mockVisibleRect(sidenav, 320, 800);
+
+    const sideNavigationContent = document.createElement('side-navigation-content');
+    const collapsedContainer = document.createElement('div');
+    collapsedContainer.className = 'collapsed';
+    sideNavigationContent.appendChild(collapsedContainer);
+    sidenav.appendChild(sideNavigationContent);
+    document.body.appendChild(sidenav);
+
+    const toggleButton = document.createElement('button');
+    toggleButton.setAttribute('data-test-id', 'side-nav-menu-button');
+    const toggleSpy = vi.fn();
+    toggleButton.addEventListener('click', toggleSpy);
+    document.body.appendChild(toggleButton);
+
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvSidebarAutoHide: true });
+      },
+    );
+
+    const { startSidebarAutoHide } = await import('../index');
+    startSidebarAutoHide();
+
+    sidenav.dispatchEvent(new Event('mouseenter'));
+    vi.advanceTimersByTime(150);
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(400);
+
+    expect(toggleSpy).not.toHaveBeenCalled();
+  });
 });
