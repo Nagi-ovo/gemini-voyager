@@ -52,8 +52,8 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
-> [!CAUTION]
-> **Заявление автора**: Этот проект **НЕ ПРИНИМАЕТ** спонсорство или рекламу от зеркальных сайтов LLM, нелегальных продуктов или продуктов, связанных с утечкой данных пользователей.
+> [!NOTE]
+> Если Gemini Voyager вам полезен, поделитесь им в X, Reddit, YouTube и т.д. Каждый репост помогает большему числу людей узнать о проекте и улучшать опыт использования Gemini. Спасибо.
 
 ---
 

@@ -1,5 +1,8 @@
 # Patrocinar o Projeto
 
+> [!NOTE]
+> Se o Gemini Voyager for útil para você, compartilhe no X, Reddit, YouTube, etc. Cada partilha ajuda mais pessoas a descobrir o projeto e a melhorar a experiência com Gemini. Obrigado.
+
 Se o Gemini Voyager melhora a sua produtividade diária, considere patrocinar o projeto. O seu apoio ajuda-nos a manter o desenvolvimento ativo, corrigir bugs e adicionar novas funcionalidades.
 
 ## Formas de Apoiar

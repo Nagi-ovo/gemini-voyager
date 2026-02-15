@@ -52,8 +52,8 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
-> [!CAUTION]
-> **作者嚴正聲明**：本項目**不接受**任何形式的 LLM 鏡像站、違法產品或涉及用戶隱私洩漏產品的廣告位贊助。請勿擾，謝謝。
+> [!NOTE]
+> 如果 Gemini Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案，從而改善 Gemini 的使用體驗。謝謝。
 
 ---
 
