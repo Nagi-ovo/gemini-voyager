@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
+import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import {
   extractLatestReleaseVersion,
@@ -690,9 +691,13 @@ export default function Popup() {
 
   const normalizedCurrentVersion = normalizeVersionString(extVersion);
   const normalizedLatestVersion = normalizeVersionString(latestVersion);
-  // Only show update notification for versions before 1.2.3
-  const shouldShowUpdateNotification =
-    normalizedCurrentVersion && compareVersions(normalizedCurrentVersion, '1.2.3') < 0;
+  const isSafariBrowser = isSafari();
+  const safariUpdateReminderEnabled = isSafariBrowser && shouldShowSafariUpdateReminder();
+  const shouldShowUpdateNotification = shouldShowUpdateReminderForCurrentVersion({
+    currentVersion: normalizedCurrentVersion,
+    isSafariBrowser,
+    safariReminderEnabled: safariUpdateReminderEnabled,
+  });
   const hasUpdate =
     shouldShowUpdateNotification && normalizedCurrentVersion && normalizedLatestVersion
       ? compareVersions(normalizedLatestVersion, normalizedCurrentVersion) > 0
@@ -728,43 +733,40 @@ export default function Popup() {
       </div>
 
       <div className="space-y-4 p-5">
-        {hasUpdate &&
-          normalizedLatestVersion &&
-          normalizedCurrentVersion &&
-          (isSafari() ? shouldShowSafariUpdateReminder() : true) && (
-            <Card className="border-amber-200 bg-amber-50 p-3 text-amber-900 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="mt-1 text-amber-600">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 2l4 4h-3v7h-2V6H8l4-4zm6 11v6H6v-6H4v8h16v-8h-2z" />
-                  </svg>
-                </div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm leading-tight font-semibold">{t('newVersionAvailable')}</p>
-                  <p className="text-xs leading-tight">
-                    {t('currentVersionLabel')}: v{normalizedCurrentVersion} ·{' '}
-                    {t('latestVersionLabel')}: v{normalizedLatestVersion}
-                  </p>
-                </div>
-                <a
-                  href={latestReleaseUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-md bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-200"
+        {hasUpdate && normalizedLatestVersion && normalizedCurrentVersion && (
+          <Card className="border-amber-200 bg-amber-50 p-3 text-amber-900 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="mt-1 text-amber-600">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
                 >
-                  {t('updateNow')}
-                </a>
+                  <path d="M12 2l4 4h-3v7h-2V6H8l4-4zm6 11v6H6v-6H4v8h16v-8h-2z" />
+                </svg>
               </div>
-            </Card>
-          )}
+              <div className="flex-1 space-y-1">
+                <p className="text-sm leading-tight font-semibold">{t('newVersionAvailable')}</p>
+                <p className="text-xs leading-tight">
+                  {t('currentVersionLabel')}: v{normalizedCurrentVersion} ·{' '}
+                  {t('latestVersionLabel')}: v{normalizedLatestVersion}
+                </p>
+              </div>
+              <a
+                href={latestReleaseUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-md bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-200"
+              >
+                {t('updateNow')}
+              </a>
+            </div>
+          </Card>
+        )}
         {/* Cloud Sync - First priority - Hidden on Safari due to API limitations */}
-        {!isSafari() && <CloudSyncSettings />}
+        {!isSafariBrowser && <CloudSyncSettings />}
         {/* Context Sync */}
         <ContextSyncSettings />
         {/* Timeline Options */}
@@ -1340,7 +1342,7 @@ export default function Popup() {
         </Card>
 
         {/* NanoBanana Options - Hidden on Safari due to fetch interceptor limitations */}
-        {!isSafari() && (
+        {!isSafariBrowser && (
           <Card className="p-4 transition-shadow hover:shadow-lg">
             <CardTitle className="mb-4 text-xs uppercase">{t('nanobananaOptions')}</CardTitle>
             <CardContent className="space-y-4 p-0">

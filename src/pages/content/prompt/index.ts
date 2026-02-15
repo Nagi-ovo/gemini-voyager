@@ -15,6 +15,7 @@ import { type StorageKey, StorageKeys } from '@/core/types/common';
 import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
+import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import { getCurrentLanguage, getTranslationSync, initI18n, setCachedLanguage } from '@/utils/i18n';
 import {
@@ -495,11 +496,17 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     titleRow.appendChild(versionBadge);
 
     (async () => {
-      // For Safari: only check updates if the feature is explicitly enabled
-      if (isSafari() && !shouldShowSafariUpdateReminder()) return;
-      // Only show update notification for versions before 1.2.3
-      const shouldShowUpdateNotification =
-        currentVersionNormalized && compareVersions(currentVersionNormalized, '1.2.3') < 0;
+      const isSafariBrowser = isSafari();
+      const safariUpdateReminderEnabled = isSafariBrowser && shouldShowSafariUpdateReminder();
+
+      // For Safari, the feature flag controls whether reminders are shown for all versions.
+      if (isSafariBrowser && !safariUpdateReminderEnabled) return;
+
+      const shouldShowUpdateNotification = shouldShowUpdateReminderForCurrentVersion({
+        currentVersion: currentVersionNormalized,
+        isSafariBrowser,
+        safariReminderEnabled: safariUpdateReminderEnabled,
+      });
       if (!shouldShowUpdateNotification) return;
 
       const latest = await getLatestVersionCached();
