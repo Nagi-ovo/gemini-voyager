@@ -1,6 +1,8 @@
 import { getMatchedAdapter } from '@/features/contextSync/adapters';
 import { DialogNode } from '@/features/contextSync/types';
 
+import { getBrowserName } from '../../../core/utils/browser';
+
 export class ContextCaptureService {
   private static instance: ContextCaptureService;
 
@@ -73,30 +75,63 @@ export class ContextCaptureService {
 
     // Determine the "best" URL to fetch.
     // For Google images, try to request the original size (=s0).
-    // Export feature doesn't always do this, but for sync we want to be sure.
-    // However, we only do it if we see a size parameter to avoid breaking other URLs.
     let targetUrl = url;
-    if (url.includes('googleusercontent.com')) {
-      // 1. Identify and convert preview URLs to download URLs to trigger interceptor matching
-      // User-uploaded previews use rd-gg/, while high-res downloads often use rd-gg-dl/
-      if (url.includes('/rd-gg/')) {
+    const isGoogleImage = url.includes('googleusercontent.com') || url.includes('ggpht.com');
+
+    if (isGoogleImage) {
+      // 1. Convert rd-gg to rd-gg-dl for better access to original resolution.
+      // NOTE: We only do this for Chrome-based browsers.
+      // Firefox handles rd-gg-dl poorly (NetworkError/CORS), so it stays on rd-gg.
+      const isFirefox = getBrowserName().includes('Firefox');
+      if (!isFirefox && targetUrl.includes('/rd-gg/')) {
         targetUrl = targetUrl.replace('/rd-gg/', '/rd-gg-dl/');
       }
 
       // 2. Request original size (=s0).
       // This is a known Google image parameter for full resolution.
-      targetUrl = targetUrl.replace(/=[swh]\d+.*?(?=[-?#]|$)/, '=s0');
+      if (targetUrl.match(/=[swh]\d+/)) {
+        targetUrl = targetUrl.replace(/=[swh]\d+.*?(?=[-?#]|$)/, '=s0');
+      } else if (!targetUrl.includes('=s0')) {
+        // If no sizing parameter found, append =s0
+        // We use =s0 which is generally safer for these types of URLs
+        if (targetUrl.includes('=')) {
+          // If there's already some other parameter, append another one?
+          // Usually Google params are =sNN-pp-kk. If it doesn't match [swh]\d, we just append.
+          targetUrl += '-s0';
+        } else {
+          targetUrl += '=s0';
+        }
+      }
     }
 
-    // Strategy 1: Attempt direct fetch from content script (preserves session/cookies)
+    // Helper for fetch with potential credentials fallback
+    const fetchToBlob = async (fetchUrl: string): Promise<Blob | null> => {
+      try {
+        const resp = await fetch(fetchUrl, {
+          credentials: 'include',
+          mode: 'cors' as RequestMode,
+        });
+        if (resp.ok) return await resp.blob();
+      } catch (e) {
+        /* ignore credentials error */
+      }
+
+      try {
+        const resp = await fetch(fetchUrl, {
+          credentials: 'omit',
+          mode: 'cors' as RequestMode,
+        });
+        if (resp.ok) return await resp.blob();
+      } catch (e) {
+        console.error('[ContextSync] Image fetch failed (all content-script attempts):', e);
+      }
+      return null;
+    };
+
+    // Strategy 1: Attempt direct fetch from content script
     try {
-      console.log('[ContextSync] Attempting direct fetch for:', targetUrl);
-      const resp = await fetch(targetUrl, {
-        credentials: 'include',
-        mode: 'cors' as RequestMode,
-      });
-      if (resp.ok) {
-        const blob = await resp.blob();
+      const blob = await fetchToBlob(targetUrl);
+      if (blob) {
         return new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as string);
@@ -105,16 +140,16 @@ export class ContextCaptureService {
         });
       }
     } catch (e) {
-      console.warn('[ContextSync] Direct fetch failed, falling back to background:', e);
+      console.warn('[ContextSync] Strategy 1 (Direct) exception:', e);
     }
 
-    // Strategy 2: Background fetch (bypasses some CORS restrictions)
+    // Strategy 2: Background fetch
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ type: 'gv.fetchImage', url: targetUrl }, (response) => {
         if (response && response.ok) {
           resolve(response.data);
         } else {
-          // Strategy 3: Fetch via page context (triggers fetch interceptor in MAIN world)
+          // Strategy 3: Fetch via page context
           chrome.runtime.sendMessage(
             { type: 'gv.fetchImageViaPage', url: targetUrl },
             (pageResponse) => {
