@@ -13,6 +13,7 @@ import { startDeepResearchExport } from './deepResearch/index';
 import DefaultModelManager from './defaultModel/modelLocker';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
+import { startMessageTimestamp } from './messageTimestamp/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderManager } from './folder/index';
 import { startFolderSpacingAdjuster } from './folderSpacing/index';
@@ -226,6 +227,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Default Model Manager
       DefaultModelManager.getInstance().init();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Message Timestamp - adds timestamps to AI responses (Issue #303)
+      await startMessageTimestamp();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
