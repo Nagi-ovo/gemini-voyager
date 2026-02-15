@@ -3,7 +3,6 @@ import React from 'react';
 import '@pages/options/Options.css';
 
 import { LanguageProvider, useLanguage } from '../../contexts/LanguageContext';
-import { MessageTimestampSettings } from './components/MessageTimestampSettings';
 
 function OptionsContent() {
   const { t } = useLanguage();
@@ -15,10 +14,6 @@ function OptionsContent() {
         <p className="text-muted-foreground">{t('optionsPageSubtitle')}</p>
       </div>
 
-      {/* Message Timestamp Settings */}
-      <MessageTimestampSettings />
-
-      {/* Placeholder for future settings */}
       <div className="border-border bg-card rounded-lg border p-6">
         <p className="text-muted-foreground">{t('optionsComingSoon')}</p>
       </div>
