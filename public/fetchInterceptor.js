@@ -228,5 +228,125 @@
     return originalFetch.apply(this, args);
   };
 
-  console.log('[Gemini Voyager] Fetch interceptor active');
+  // ============================================
+  // Message Timestamp Extraction (Issue #303)
+  // ============================================
+
+  /**
+   * Pattern to match Gemini API endpoints for message generation
+   */
+  const GEMINI_API_PATTERNS = [
+    /googleapis\.com\/.*v1beta\/models/,
+    /googleapis\.com\/.*v1alpha\/models/,
+    /googleapis\.com\/.*generateContent/,
+    /googleapis\.com\/.*streamGenerateContent/,
+  ];
+
+  /**
+   * Check if URL is a Gemini API endpoint
+   */
+  const isGeminiApiUrl = (url) => GEMINI_API_PATTERNS.some((pattern) => pattern.test(url));
+
+  /**
+   * Extract timestamps from Gemini API response
+   */
+  const extractTimestampsFromResponse = (data) => {
+    const timestamps = [];
+
+    try {
+      // Handle different response formats
+      if (typeof data === 'string') {
+        // Stream response - parse line by line
+        const lines = data.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const jsonData = JSON.parse(line.slice(6));
+              if (jsonData.candidates) {
+                for (const candidate of jsonData.candidates) {
+                  if (candidate.content?.role === 'model') {
+                    timestamps.push({
+                      role: 'model',
+                      timestamp: new Date().toISOString(),
+                    });
+                  }
+                }
+              }
+            } catch (e) {
+              // Ignore parse errors for individual lines
+            }
+          }
+        }
+      } else if (typeof data === 'object') {
+        // JSON response
+        if (data.candidates) {
+          for (const candidate of data.candidates) {
+            if (candidate.content?.role === 'model') {
+              timestamps.push({
+                role: 'model',
+                timestamp: new Date().toISOString(),
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Silently fail
+    }
+
+    return timestamps;
+  };
+
+  /**
+   * Dispatch timestamp event to content script
+   */
+  const dispatchTimestampEvent = (timestamps) => {
+    if (timestamps.length === 0) return;
+
+    const event = new CustomEvent('gv-message-timestamps', {
+      detail: {
+        timestamps: timestamps,
+      },
+    });
+
+    document.dispatchEvent(event);
+  };
+
+  // Store original fetch reference for timestamp extraction
+  const originalFetchForTimestamps = window.fetch;
+
+  // Override fetch to also extract timestamps
+  window.fetch = async function (...args) {
+    const url = typeof args[0] === 'string' ? args[0] : args[0]?.url;
+
+    // Call the watermark interceptor's fetch (which is the current window.fetch)
+    const response = await originalFetchForTimestamps.apply(this, args);
+
+    // Check if this is a Gemini API call for timestamps
+    if (url && typeof url === 'string' && isGeminiApiUrl(url)) {
+      try {
+        // Clone response to read body
+        const clonedResponse = response.clone();
+        const contentType = clonedResponse.headers.get('content-type');
+
+        if (contentType && contentType.includes('application/json')) {
+          // JSON response
+          const data = await clonedResponse.json();
+          const timestamps = extractTimestampsFromResponse(data);
+          dispatchTimestampEvent(timestamps);
+        } else if (contentType && contentType.includes('text/plain')) {
+          // Stream response
+          const text = await clonedResponse.text();
+          const timestamps = extractTimestampsFromResponse(text);
+          dispatchTimestampEvent(timestamps);
+        }
+      } catch (error) {
+        // Silently fail - don't break the original request
+      }
+    }
+
+    return response;
+  };
+
+  console.log('[Gemini Voyager] Fetch interceptor active (with timestamp extraction)');
 })();
