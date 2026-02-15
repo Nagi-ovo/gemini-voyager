@@ -41,7 +41,10 @@ describe('selection mode interaction', () => {
     const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
     const wrapperBlock = css.match(/\.gv-logo-dropdown-wrapper\s*{([\s\S]*?)}/)?.[1] ?? '';
     const logoBlock =
-      css.match(/\.gv-logo-dropdown-wrapper \[data-test-id='logo'\],\s*\.gv-logo-dropdown-wrapper \.logo\s*{([\s\S]*?)}/)
+      css
+        .match(
+          /\.gv-logo-dropdown-wrapper \[data-test-id='logo'\],\s*\.gv-logo-dropdown-wrapper \.logo\s*{([\s\S]*?)}/,
+        )
         ?.at(1) ?? '';
 
     expect(wrapperBlock).toContain('pointer-events: none;');

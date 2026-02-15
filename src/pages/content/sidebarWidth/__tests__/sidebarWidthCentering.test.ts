@@ -43,7 +43,7 @@ describe('sidebar width title centering', () => {
     );
 
     expect(code).not.toContain('#app-root > main > div > bard-mode-switcher * {');
-    expect(code).toContain("#app-root > main > div > bard-mode-switcher :is(");
+    expect(code).toContain('#app-root > main > div > bard-mode-switcher :is(');
     expect(code).toContain("[role='button']");
   });
 
