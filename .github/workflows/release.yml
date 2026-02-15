@@ -199,14 +199,14 @@ jobs:
 
           - **Chrome**: \`gemini-voyager-chrome-${TAG}.zip\`
           - **Firefox**: \`gemini-voyager-firefox-${TAG}.xpi\`
-          - **Safari**: \`gemini-voyager-safari-${TAG}.zip\`
+          - **Safari**: \`gemini-voyager-${TAG}.dmg\`
           > **Safari 插件商店版本即将到来！**
           > **Safari Extension Store Version is coming soon!**
 
           ### 🍎 Safari 安装与限制 (Safari Installation & Limitations)
 
-          - **安装 (Installation)**: 直接解压 ZIP 文件，将解压的 \`.app\` 拖动到 **Applications (应用程序)** 目录即可永久安装。
-            Extract the ZIP file and drag the \`.app\` to the **Applications** folder for permanent installation.
+          - **安装 (Installation)**: 下载并打开 \`gemini-voyager-${TAG}.dmg\`，按提示安装应用。
+            Download and open \`gemini-voyager-${TAG}.dmg\`, then follow the prompts to install the app.
           - **限制 (Limitations)**: 受限于 Safari 特性，以下功能暂不支持：(a) Nano Banana 水印去除 (b) 图片导出 (建议使用 PDF 导出)。
             Due to Safari's nature, the following features are not supported: (a) Watermark removal (b) Image export (PDF recommended).
           EOF
@@ -223,7 +223,7 @@ jobs:
           files: |
             gemini-voyager-chrome-*.zip
             gemini-voyager-firefox-*.xpi
-            gemini-voyager-safari-*.zip
+            gemini-voyager-*.dmg
           body: ${{ steps.release_body.outputs.body }}
           generate_release_notes: true
           append_body: ${{ inputs.notes == '' }}
