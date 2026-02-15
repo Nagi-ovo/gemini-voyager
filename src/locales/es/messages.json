@@ -1048,6 +1048,14 @@
     "message": "Muestra un botón flotante para citar el texto seleccionado en las conversaciones",
     "description": "Quote reply feature hint"
   },
+  "enableMessageTimestamp": {
+    "message": "Show message timestamps",
+    "description": "Enable message timestamp toggle label"
+  },
+  "enableMessageTimestampHint": {
+    "message": "Display the sent time below AI responses",
+    "description": "Message timestamp feature hint"
+  },
   "contextSync": {
     "message": "Sincronización de contexto",
     "description": "Context Sync title"

@@ -1048,6 +1048,14 @@
     "message": "会話でテキストを選択したときに、選択したテキストを引用するフローティングボタンを表示します",
     "description": "Quote reply feature hint"
   },
+  "enableMessageTimestamp": {
+    "message": "メッセージのタイムスタンプを表示",
+    "description": "Enable message timestamp toggle label"
+  },
+  "enableMessageTimestampHint": {
+    "message": "AI の返信の下に送信時刻を表示します",
+    "description": "Message timestamp feature hint"
+  },
   "contextSync": {
     "message": "コンテキスト同期",
     "description": "Context Sync title"

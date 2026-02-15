@@ -1048,6 +1048,14 @@
     "message": "Показывать плавающую кнопку для цитирования выделенного текста при выделении текста в разговорах",
     "description": "Quote reply feature hint"
   },
+  "enableMessageTimestamp": {
+    "message": "Show message timestamps",
+    "description": "Enable message timestamp toggle label"
+  },
+  "enableMessageTimestampHint": {
+    "message": "Display the sent time below AI responses",
+    "description": "Message timestamp feature hint"
+  },
   "contextSync": {
     "message": "Синхронизация контекста",
     "description": "Context Sync title"

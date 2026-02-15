@@ -1008,6 +1008,14 @@
     "message": "在對話中選取文字時顯示懸浮按鈕，用於引用所選內容",
     "description": "引用回覆功能提示"
   },
+  "enableMessageTimestamp": {
+    "message": "顯示訊息時間戳",
+    "description": "啟用訊息時間戳開關標籤"
+  },
+  "enableMessageTimestampHint": {
+    "message": "在AI回覆下方顯示發送時間",
+    "description": "訊息時間戳功能提示"
+  },
   "contextSync": {
     "message": "上下文同步",
     "description": "上下文同步標題"
