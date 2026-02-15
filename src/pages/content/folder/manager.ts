@@ -26,6 +26,7 @@ const NOTIFICATION_TIMEOUT_MS = 10000; // Duration to show data loss notificatio
 const FOLDER_TREE_INDENT_MIN = -8;
 const FOLDER_TREE_INDENT_MAX = 32;
 const FOLDER_TREE_INDENT_DEFAULT = -8;
+const FOLDER_NAME_SINGLE_CLICK_DELAY_MS = 220;
 
 // Export session backup keys for use by FolderImportExportService (deprecated, kept for compatibility)
 export const SESSION_BACKUP_KEY = 'gvFolderBackup';
@@ -99,6 +100,7 @@ export class FolderManager {
   private multiSelectSource: 'folder' | 'native' | null = null; // Track where multi-select was initiated
   private multiSelectFolderId: string | null = null; // Track which folder multi-select was initiated from
   private longPressTimeout: number | null = null; // For long-press detection
+  private folderNameClickTimeout: number | null = null; // Distinguish single-click toggle from double-click rename
   private longPressThreshold: number = 500; // Long-press duration in ms
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
@@ -241,6 +243,11 @@ export class FolderManager {
     if (this.longPressTimeout) {
       clearTimeout(this.longPressTimeout);
       this.longPressTimeout = null;
+    }
+
+    if (this.folderNameClickTimeout !== null) {
+      clearTimeout(this.folderNameClickTimeout);
+      this.folderNameClickTimeout = null;
     }
 
     if (this.tooltipTimeout) {
@@ -771,8 +778,8 @@ export class FolderManager {
     folderName.className = 'gv-folder-name gds-label-l';
     folderName.textContent = folder.name;
     folderName.style.cursor = 'pointer';
-    folderName.addEventListener('click', () => this.toggleFolder(folder.id));
-    folderName.addEventListener('dblclick', () => this.renameFolder(folder.id));
+    folderName.addEventListener('click', (event) => this.handleFolderNameClick(folder.id, event));
+    folderName.addEventListener('dblclick', () => this.handleFolderNameDoubleClick(folder.id));
 
     // Add tooltip event listeners
     folderName.addEventListener('mouseenter', () => this.showTooltip(folderName, folder.name));
@@ -847,6 +854,31 @@ export class FolderManager {
     }
 
     return folderEl;
+  }
+
+  private clearPendingFolderNameClick(): void {
+    if (this.folderNameClickTimeout === null) return;
+    clearTimeout(this.folderNameClickTimeout);
+    this.folderNameClickTimeout = null;
+  }
+
+  private handleFolderNameClick(folderId: string, event: MouseEvent): void {
+    // Double-click dispatches a second click with detail > 1; skip toggle for that sequence.
+    if (event.detail > 1) {
+      this.clearPendingFolderNameClick();
+      return;
+    }
+
+    this.clearPendingFolderNameClick();
+    this.folderNameClickTimeout = window.setTimeout(() => {
+      this.folderNameClickTimeout = null;
+      this.toggleFolder(folderId);
+    }, FOLDER_NAME_SINGLE_CLICK_DELAY_MS);
+  }
+
+  private handleFolderNameDoubleClick(folderId: string): void {
+    this.clearPendingFolderNameClick();
+    this.renameFolder(folderId);
   }
 
   private createConversationElement(
@@ -2012,6 +2044,8 @@ export class FolderManager {
   }
 
   private renameFolder(folderId: string): void {
+    this.clearPendingFolderNameClick();
+
     const folder = this.data.folders.find((f) => f.id === folderId);
     if (!folder) return;
 
