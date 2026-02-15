@@ -31,6 +31,7 @@ const messageTimestamps = new Map<string, Date>();
 let messageCounter = 0;
 let currentSettings = { ...DEFAULT_SETTINGS };
 let conversationStartTime: Date | null = null;
+let isInitialLoad = true; // Track if we're processing existing messages
 
 /**
  * Format date based on settings
@@ -165,11 +166,17 @@ export function storeMessageTimestamp(messageId: string, timestamp: Date): void 
 /**
  * Get timestamp for a message
  * Returns stored timestamp or generates a new one based on counter
+ * Returns null during initial load (old messages don't get timestamps)
  */
-function getMessageTimestamp(): Date {
-  // Initialize conversation start time on first call
+function getMessageTimestamp(): Date | null {
+  // During initial load, don't generate timestamps for existing messages
+  if (isInitialLoad) {
+    return null;
+  }
+
+  // Initialize conversation start time on first real message
   if (!conversationStartTime) {
-    conversationStartTime = new Date(Date.now() - 60 * 60000); // Assume conversation started 1 hour ago
+    conversationStartTime = new Date();
   }
 
   // Add time for each subsequent message
@@ -198,7 +205,15 @@ function addTimestampToMessage(messageEl: HTMLElement, settings: typeof DEFAULT_
     return;
   }
 
+  // Skip adding timestamps to existing messages on initial load
+  // Only add timestamps to new messages
+  if (isInitialLoad) {
+    return;
+  }
+
   const timestamp = getMessageTimestamp();
+  if (!timestamp) return;
+
   const timestampEl = createTimestampElement(timestamp, settings);
 
   // Find the appropriate place to insert timestamp
@@ -245,6 +260,12 @@ function processMessages(settings: typeof DEFAULT_SETTINGS): void {
         addTimestampToMessage(msg, settings);
       }
     });
+  }
+
+  // After first processing, mark initial load as complete
+  // New messages detected by MutationObserver will get timestamps
+  if (isInitialLoad) {
+    isInitialLoad = false;
   }
 }
 
