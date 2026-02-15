@@ -37,6 +37,18 @@ describe('selection mode interaction', () => {
     expect(css).toContain("body[data-theme='dark'] .gv-export-progress-card");
   });
 
+  it('keeps logo wrapper from blocking top-bar button clicks', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const wrapperBlock = css.match(/\.gv-logo-dropdown-wrapper\s*{([\s\S]*?)}/)?.[1] ?? '';
+    const logoBlock =
+      css.match(/\.gv-logo-dropdown-wrapper \[data-test-id='logo'\],\s*\.gv-logo-dropdown-wrapper \.logo\s*{([\s\S]*?)}/)
+        ?.at(1) ?? '';
+
+    expect(wrapperBlock).toContain('pointer-events: none;');
+    expect(wrapperBlock).toContain('width: fit-content;');
+    expect(logoBlock).toContain('pointer-events: auto;');
+  });
+
   it('wires Safari PDF success path to runtime toast guidance', () => {
     const code = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
 

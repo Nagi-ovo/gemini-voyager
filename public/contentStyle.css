@@ -794,6 +794,14 @@ html.dark-theme .gv-pm-trigger {
   position: relative;
   display: inline-flex;
   align-items: center;
+  width: fit-content;
+  max-width: max-content;
+  pointer-events: none;
+}
+
+.gv-logo-dropdown-wrapper [data-test-id='logo'],
+.gv-logo-dropdown-wrapper .logo {
+  pointer-events: auto;
 }
 
 .gv-logo-dropdown {

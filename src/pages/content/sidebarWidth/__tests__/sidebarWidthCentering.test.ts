@@ -35,4 +35,44 @@ describe('sidebar width title centering', () => {
     expect(code).not.toContain('div.right-section > div:nth-child(2)');
     expect(code).not.toContain('position: fixed !important;');
   });
+
+  it('does not enable pointer events on all mode-switcher descendants', () => {
+    const code = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
+      'utf8',
+    );
+
+    expect(code).not.toContain('#app-root > main > div > bard-mode-switcher * {');
+    expect(code).toContain("#app-root > main > div > bard-mode-switcher :is(");
+    expect(code).toContain("[role='button']");
+  });
+
+  it('adds search-button hit-test diagnostics for blocked clicks', () => {
+    const code = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
+      'utf8',
+    );
+
+    expect(code).toContain("window.addEventListener('pointerdown'");
+    expect(code).toContain('document.elementsFromPoint');
+    expect(code).toContain('[Gemini Voyager][sidebarWidth debug] Search button hit blocked');
+    expect(code).toContain("document.querySelector<HTMLElement>('search-nav-button button')");
+  });
+
+  it('keeps top-bar-actions container transparent while preserving search button clicks', () => {
+    const code = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
+      'utf8',
+    );
+
+    expect(code).toContain('.top-bar-actions {');
+    expect(code).toContain('top-bar-actions .top-bar-actions');
+    expect(code).toContain('top-bar-actions {');
+    expect(code).toContain('pointer-events: none !important;');
+    expect(code).toContain('search-nav-button');
+    expect(code).toContain('top-bar-actions :is(');
+    expect(code).toContain('top-bar-actions search-nav-button button');
+    expect(code).toContain('search-nav-button button');
+    expect(code).toContain('pointer-events: auto !important;');
+  });
 });
