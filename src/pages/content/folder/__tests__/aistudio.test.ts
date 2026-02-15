@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AIStudioFolderManager, mutationAddsPromptLinks, parseDragDataPayload } from '../aistudio';
 
@@ -33,6 +33,39 @@ function createPromptRow(
   document.body.appendChild(root);
   return { root, row, host: li, anchor };
 }
+
+type AIStudioManagerInternals = {
+  data: {
+    folders: Array<{
+      id: string;
+      name: string;
+      parentId: string | null;
+      isExpanded: boolean;
+      createdAt: number;
+      updatedAt: number;
+    }>;
+    folderContents: Record<
+      string,
+      Array<{
+        conversationId: string;
+        title: string;
+        url: string;
+        addedAt: number;
+        customTitle?: boolean;
+      }>
+    >;
+  };
+  historyRoot: HTMLElement | null;
+  observePromptList: () => void;
+  syncConversationTitlesFromPromptList: () => Promise<void>;
+  save: () => Promise<void>;
+  render: () => void;
+};
+
+afterEach(() => {
+  vi.useRealTimers();
+  document.body.innerHTML = '';
+});
 
 describe('AIStudio prompt binding performance guards', () => {
   it('detects prompt-link additions in mutations', () => {
@@ -120,5 +153,106 @@ describe('AIStudio theme compatibility', () => {
 
     expect(code).toContain('fill="currentColor"');
     expect(code).not.toContain('fill="#e3e3e3"');
+  });
+});
+
+describe('AIStudio conversation title sync', () => {
+  it('syncs stored conversation titles from native prompt links', async () => {
+    createPromptRow('abc123', 'Renamed in AI Studio');
+    const manager = new AIStudioFolderManager();
+    const internals = manager as unknown as AIStudioManagerInternals;
+
+    internals.data = {
+      folders: [],
+      folderContents: {
+        folderA: [
+          {
+            conversationId: 'abc123',
+            title: 'Old title',
+            url: '/prompts/abc123',
+            addedAt: Date.now(),
+          },
+        ],
+      },
+    };
+
+    const saveSpy = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    const renderSpy = vi.fn<() => void>();
+    internals.save = saveSpy;
+    internals.render = renderSpy;
+
+    await internals.syncConversationTitlesFromPromptList();
+
+    expect(internals.data.folderContents.folderA[0]?.title).toBe('Renamed in AI Studio');
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not overwrite custom titles during native sync', async () => {
+    createPromptRow('abc999', 'Native New Name');
+    const manager = new AIStudioFolderManager();
+    const internals = manager as unknown as AIStudioManagerInternals;
+
+    internals.data = {
+      folders: [],
+      folderContents: {
+        folderA: [
+          {
+            conversationId: 'abc999',
+            title: 'Manually Renamed',
+            url: '/prompts/abc999',
+            addedAt: Date.now(),
+            customTitle: true,
+          },
+        ],
+      },
+    };
+
+    const saveSpy = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    const renderSpy = vi.fn<() => void>();
+    internals.save = saveSpy;
+    internals.render = renderSpy;
+
+    await internals.syncConversationTitlesFromPromptList();
+
+    expect(internals.data.folderContents.folderA[0]?.title).toBe('Manually Renamed');
+    expect(saveSpy).not.toHaveBeenCalled();
+    expect(renderSpy).not.toHaveBeenCalled();
+  });
+
+  it('observes prompt title mutations and syncs with debounce', async () => {
+    vi.useFakeTimers();
+    const { root, anchor } = createPromptRow('debounce1', 'Before Rename');
+    const manager = new AIStudioFolderManager();
+    const internals = manager as unknown as AIStudioManagerInternals;
+
+    internals.data = {
+      folders: [],
+      folderContents: {
+        folderA: [
+          {
+            conversationId: 'debounce1',
+            title: 'Before Rename',
+            url: '/prompts/debounce1',
+            addedAt: Date.now(),
+          },
+        ],
+      },
+    };
+    internals.historyRoot = root;
+
+    const saveSpy = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    const renderSpy = vi.fn<() => void>();
+    internals.save = saveSpy;
+    internals.render = renderSpy;
+
+    internals.observePromptList();
+
+    anchor.textContent = 'After Rename';
+    await vi.advanceTimersByTimeAsync(350);
+
+    expect(internals.data.folderContents.folderA[0]?.title).toBe('After Rename');
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+    expect(renderSpy).toHaveBeenCalledTimes(1);
   });
 });

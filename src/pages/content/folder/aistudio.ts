@@ -78,6 +78,7 @@ const NOTIFICATION_TIMEOUT_MS = 5000;
 const PROMPT_LINK_SELECTOR = 'a.prompt-link[href^="/prompts/"]';
 const UNBOUND_PROMPT_LINK_SELECTOR = `${PROMPT_LINK_SELECTOR}:not([data-gv-drag-bound])`;
 const PROMPT_LIST_BIND_DEBOUNCE_MS = 120;
+const PROMPT_TITLE_SYNC_DEBOUNCE_MS = 280;
 const PROMPT_DRAG_HOST_SELECTORS = [
   '[data-test-id^="history-item"]',
   '[role="listitem"]',
@@ -95,6 +96,35 @@ export function mutationAddsPromptLinks(mutations: MutationRecord[]): boolean {
   for (const mutation of mutations) {
     for (const node of Array.from(mutation.addedNodes)) {
       if (nodeContainsPromptLink(node)) return true;
+    }
+  }
+  return false;
+}
+
+function mutationMayAffectPromptTitles(mutations: MutationRecord[]): boolean {
+  for (const mutation of mutations) {
+    if (mutation.type === 'characterData') {
+      if (mutation.target.parentElement?.closest(PROMPT_LINK_SELECTOR)) return true;
+      continue;
+    }
+
+    if (mutation.type === 'attributes') {
+      if (mutation.target instanceof Element && mutation.target.closest(PROMPT_LINK_SELECTOR))
+        return true;
+      continue;
+    }
+
+    if (mutation.type === 'childList') {
+      if (mutation.target instanceof Element && mutation.target.closest(PROMPT_LINK_SELECTOR)) {
+        return true;
+      }
+
+      for (const node of Array.from(mutation.addedNodes)) {
+        if (nodeContainsPromptLink(node)) return true;
+      }
+      for (const node of Array.from(mutation.removedNodes)) {
+        if (nodeContainsPromptLink(node)) return true;
+      }
     }
   }
   return false;
@@ -178,6 +208,8 @@ export class AIStudioFolderManager {
   private historyRoot: HTMLElement | null = null;
   private cleanupFns: Array<() => void> = [];
   private promptListBindTimer: number | null = null;
+  private promptTitleSyncTimer: number | null = null;
+  private promptTitleSyncInProgress: boolean = false;
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private backupService!: DataBackupService<FolderData>; // Initialized in init()
@@ -374,6 +406,7 @@ export class AIStudioFolderManager {
       this.injectUI();
       this.observePromptList();
       this.bindDraggablesInPromptList();
+      await this.syncConversationTitlesFromPromptList();
 
       // Highlight current conversation initially and on navigation
       this.highlightActiveConversation();
@@ -1138,11 +1171,21 @@ export class AIStudioFolderManager {
     const root = this.historyRoot;
     if (!root) return;
     const observer = new MutationObserver((mutations) => {
-      if (!mutationAddsPromptLinks(mutations)) return;
-      this.schedulePromptListBinding();
+      if (mutationAddsPromptLinks(mutations)) {
+        this.schedulePromptListBinding();
+      }
+      if (mutationMayAffectPromptTitles(mutations)) {
+        this.schedulePromptTitleSync();
+      }
     });
     try {
-      observer.observe(root, { childList: true, subtree: true });
+      observer.observe(root, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['title', 'aria-label', 'href'],
+      });
     } catch {}
     this.cleanupFns.push(() => {
       try {
@@ -1151,6 +1194,10 @@ export class AIStudioFolderManager {
       if (this.promptListBindTimer !== null) {
         clearTimeout(this.promptListBindTimer);
         this.promptListBindTimer = null;
+      }
+      if (this.promptTitleSyncTimer !== null) {
+        clearTimeout(this.promptTitleSyncTimer);
+        this.promptTitleSyncTimer = null;
       }
     });
 
@@ -1179,6 +1226,85 @@ export class AIStudioFolderManager {
       this.promptListBindTimer = null;
       this.bindDraggablesInPromptList();
     }, PROMPT_LIST_BIND_DEBOUNCE_MS);
+  }
+
+  private schedulePromptTitleSync(): void {
+    if (!this.hasStoredConversations()) return;
+    if (this.promptTitleSyncTimer !== null) return;
+
+    this.promptTitleSyncTimer = window.setTimeout(() => {
+      this.promptTitleSyncTimer = null;
+      void this.runPromptTitleSync();
+    }, PROMPT_TITLE_SYNC_DEBOUNCE_MS);
+  }
+
+  private async runPromptTitleSync(): Promise<void> {
+    if (this.promptTitleSyncInProgress) return;
+
+    this.promptTitleSyncInProgress = true;
+    try {
+      await this.syncConversationTitlesFromPromptList();
+    } finally {
+      this.promptTitleSyncInProgress = false;
+    }
+  }
+
+  private hasStoredConversations(): boolean {
+    return Object.values(this.data.folderContents).some(
+      (conversations) => conversations.length > 0,
+    );
+  }
+
+  private extractPromptTitle(anchor: HTMLAnchorElement | null): string | null {
+    if (!anchor) return null;
+
+    const aria = normalizeText(anchor.getAttribute('aria-label'));
+    if (aria) return aria;
+
+    const title = normalizeText(anchor.getAttribute('title'));
+    if (title) return title;
+
+    const text = normalizeText(anchor.textContent);
+    if (text) return text;
+
+    return null;
+  }
+
+  private getPromptTitleFromNative(conversationId: string): string | null {
+    const selectors = [
+      `a.prompt-link[href*="/prompts/${conversationId}"]`,
+      `a[href*="/prompts/${conversationId}"]`,
+      `a.name-btn[href*="/prompts/${conversationId}"]`,
+    ];
+
+    for (const selector of selectors) {
+      const anchor = document.querySelector(selector) as HTMLAnchorElement | null;
+      const title = this.extractPromptTitle(anchor);
+      if (title) return title;
+    }
+
+    return null;
+  }
+
+  private async syncConversationTitlesFromPromptList(): Promise<void> {
+    if (!this.hasStoredConversations()) return;
+
+    let hasUpdates = false;
+    for (const conversations of Object.values(this.data.folderContents)) {
+      for (const conversation of conversations) {
+        if (conversation.customTitle) continue;
+        const nativeTitle = this.getPromptTitleFromNative(conversation.conversationId);
+        if (!nativeTitle || nativeTitle === conversation.title) continue;
+        conversation.title = nativeTitle;
+        conversation.updatedAt = now();
+        hasUpdates = true;
+      }
+    }
+
+    if (!hasUpdates) return;
+
+    await this.save();
+    this.render();
   }
 
   private resolvePromptAnchorFromHost(hostEl: HTMLElement): HTMLAnchorElement | null {
