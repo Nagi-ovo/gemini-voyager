@@ -126,6 +126,7 @@ interface SettingsUpdate {
   quoteReplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
   sidebarAutoHideEnabled?: boolean;
+  snowEffectEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -153,6 +154,7 @@ export default function Popup() {
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
   const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
+  const [snowEffectEnabled, setSnowEffectEnabled] = useState<boolean>(false);
   const [isAIStudio, setIsAIStudio] = useState<boolean>(false);
 
   useEffect(() => {
@@ -227,6 +229,8 @@ export default function Popup() {
         payload.gvCtrlEnterSend = settings.ctrlEnterSendEnabled;
       if (typeof settings.sidebarAutoHideEnabled === 'boolean')
         payload.gvSidebarAutoHide = settings.sidebarAutoHideEnabled;
+      if (typeof settings.snowEffectEnabled === 'boolean')
+        payload.gvSnowEffect = settings.snowEffectEnabled;
       void setSyncStorage(payload);
     },
     [setSyncStorage],
@@ -454,6 +458,7 @@ export default function Popup() {
           gvQuoteReplyEnabled: true,
           gvCtrlEnterSend: false,
           gvSidebarAutoHide: false,
+          gvSnowEffect: false,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -478,6 +483,7 @@ export default function Popup() {
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
           setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
+          setSnowEffectEnabled(res?.gvSnowEffect === true);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -1030,6 +1036,33 @@ export default function Popup() {
                   onChange={(e) => {
                     setSidebarAutoHideEnabled(e.target.checked);
                     apply({ sidebarAutoHideEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Snow Effect - Gemini only */}
+        {!isAIStudio && (
+          <Card className="p-4 transition-shadow hover:shadow-lg">
+            <CardContent className="p-0">
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="snow-effect"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('snowEffect')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('snowEffectHint')}</p>
+                </div>
+                <Switch
+                  id="snow-effect"
+                  checked={snowEffectEnabled}
+                  onChange={(e) => {
+                    setSnowEffectEnabled(e.target.checked);
+                    apply({ snowEffectEnabled: e.target.checked });
                   }}
                 />
               </div>

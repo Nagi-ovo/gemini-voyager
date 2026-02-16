@@ -951,7 +951,6 @@
     "message": "Развернуть",
     "description": "Expand children"
   },
-
   "timelinePreviewSearch": {
     "message": "Поиск...",
     "description": "Timeline preview panel search placeholder"
@@ -1243,5 +1242,13 @@
   "deepResearch_researchedWebsites": {
     "message": "Исследованные сайты",
     "description": "Заголовок раздела исследованных сайтов Deep Research"
+  },
+  "snowEffect": {
+    "message": "Эффект снега",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "Снегопад на странице для зимней атмосферы",
+    "description": "Snow effect feature hint"
   }
 }

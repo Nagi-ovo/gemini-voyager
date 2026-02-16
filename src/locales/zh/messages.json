@@ -951,7 +951,6 @@
     "message": "展开",
     "description": "展开子节点"
   },
-
   "timelinePreviewSearch": {
     "message": "搜索...",
     "description": "Timeline preview panel search placeholder"
@@ -1243,5 +1242,13 @@
   "deepResearch_researchedWebsites": {
     "message": "研究网站",
     "description": "深度研究已研究网站章节标题"
+  },
+  "snowEffect": {
+    "message": "飘雪效果",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "在页面上飘雪，营造冬日氛围",
+    "description": "Snow effect feature hint"
   }
 }

@@ -951,7 +951,6 @@
     "message": "توسيع",
     "description": "Expand children"
   },
-
   "timelinePreviewSearch": {
     "message": "...بحث",
     "description": "Timeline preview panel search placeholder"
@@ -1243,5 +1242,13 @@
   "deepResearch_researchedWebsites": {
     "message": "المواقع المبحوثة",
     "description": "عنوان قسم المواقع المبحوثة في Deep Research"
+  },
+  "snowEffect": {
+    "message": "تأثير الثلج",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "اجعل الثلج يتساقط على الصفحة لأجواء شتوية",
+    "description": "Snow effect feature hint"
   }
 }

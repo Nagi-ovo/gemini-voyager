@@ -951,7 +951,6 @@
     "message": "Expand",
     "description": "Expand children"
   },
-
   "timelinePreviewSearch": {
     "message": "Search...",
     "description": "Timeline preview panel search placeholder"
@@ -1243,5 +1242,13 @@
   "deepResearch_researchedWebsites": {
     "message": "Researched Websites",
     "description": "Deep Research researched websites section header"
+  },
+  "snowEffect": {
+    "message": "Snow effect",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "Let it snow on the page for a festive winter vibe",
+    "description": "Snow effect feature hint"
   }
 }

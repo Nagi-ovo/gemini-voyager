@@ -911,7 +911,6 @@
     "message": "展開",
     "description": "展開子節點"
   },
-
   "timelinePreviewSearch": {
     "message": "搜尋...",
     "description": "Timeline preview panel search placeholder"
@@ -1243,5 +1242,13 @@
   "deepResearch_researchedWebsites": {
     "message": "研究網站",
     "description": "深度研究已研究網站章節標題"
+  },
+  "snowEffect": {
+    "message": "飄雪效果",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "在頁面上飄雪，營造冬日氛圍",
+    "description": "Snow effect feature hint"
   }
 }

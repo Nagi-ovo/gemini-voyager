@@ -951,7 +951,6 @@
     "message": "展開",
     "description": "Expand children"
   },
-
   "timelinePreviewSearch": {
     "message": "検索...",
     "description": "Timeline preview panel search placeholder"
@@ -1243,5 +1242,13 @@
   "deepResearch_researchedWebsites": {
     "message": "調査済みサイト",
     "description": "深層研究の調査済みウェブサイトセクションヘッダー"
+  },
+  "snowEffect": {
+    "message": "雪エフェクト",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "ページに雪を降らせて冬の雰囲気を演出",
+    "description": "Snow effect feature hint"
   }
 }

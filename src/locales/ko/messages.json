@@ -951,7 +951,6 @@
     "message": "펼치기",
     "description": "Expand children"
   },
-
   "timelinePreviewSearch": {
     "message": "검색...",
     "description": "Timeline preview panel search placeholder"
@@ -1243,5 +1242,13 @@
   "deepResearch_researchedWebsites": {
     "message": "조사한 웹사이트",
     "description": "Deep Research 조사한 웹사이트 섹션 헤더"
+  },
+  "snowEffect": {
+    "message": "눈 효과",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "페이지에 눈이 내리는 겨울 분위기 연출",
+    "description": "Snow effect feature hint"
   }
 }

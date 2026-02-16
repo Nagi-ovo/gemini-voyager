@@ -75,6 +75,9 @@ export const StorageKeys = {
   GV_FOLDER_SPACING: 'gvFolderSpacing',
   GV_AISTUDIO_FOLDER_SPACING: 'gvAIStudioFolderSpacing',
   GV_FOLDER_TREE_INDENT: 'gvFolderTreeIndent',
+
+  // Snow effect
+  GV_SNOW_EFFECT: 'gvSnowEffect',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

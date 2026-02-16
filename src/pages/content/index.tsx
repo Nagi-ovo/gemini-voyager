@@ -27,6 +27,7 @@ import { startRecentsHider } from './recentsHider/index';
 import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
+import { startSnowEffect } from './snowEffect/index';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
 import { startWatermarkRemover } from './watermarkRemover/index';
@@ -169,6 +170,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startSidebarAutoHide();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startSnowEffect();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startInputCollapse();

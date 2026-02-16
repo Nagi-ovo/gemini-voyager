@@ -951,7 +951,6 @@
     "message": "Étendre",
     "description": "Expand children"
   },
-
   "timelinePreviewSearch": {
     "message": "Rechercher...",
     "description": "Timeline preview panel search placeholder"
@@ -1243,5 +1242,13 @@
   "deepResearch_researchedWebsites": {
     "message": "Sites web consultés",
     "description": "En-tête de section des sites web recherchés de Deep Research"
+  },
+  "snowEffect": {
+    "message": "Effet de neige",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "Laissez la neige tomber sur la page pour une ambiance hivernale",
+    "description": "Snow effect feature hint"
   }
 }
