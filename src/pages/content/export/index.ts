@@ -2006,13 +2006,6 @@ export async function startExportButton(): Promise<void> {
   // Check for pending export immediately
   checkPendingExport();
 
-  if (
-    location.hostname !== 'gemini.google.com' &&
-    location.hostname !== 'aistudio.google.com' &&
-    location.hostname !== 'aistudio.google.cn'
-  )
-    return;
-
   // i18n setup for tooltip and label
   const dict = await loadDictionaries();
   let lang = await getLanguage();

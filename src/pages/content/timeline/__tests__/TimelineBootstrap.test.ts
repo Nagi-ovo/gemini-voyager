@@ -26,6 +26,24 @@ describe('Timeline bootstrap', () => {
     timelineManagerSpies.destroy.mockClear();
 
     document.body.innerHTML = '<main></main>';
+
+    // Mock location.hostname to simulate Gemini environment
+    Object.defineProperty(window, 'location', {
+      value: {
+        hostname: 'gemini.google.com',
+        pathname: '/app',
+        search: '',
+        hash: '',
+        href: 'https://gemini.google.com/app',
+        origin: 'https://gemini.google.com',
+        assign: vi.fn(),
+        replace: vi.fn(),
+        reload: vi.fn(),
+        toString: () => 'https://gemini.google.com/app',
+      },
+      writable: true,
+    });
+
     history.replaceState({}, '', '/app');
   });
 
