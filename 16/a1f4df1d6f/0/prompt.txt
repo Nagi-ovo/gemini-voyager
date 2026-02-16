@@ -1,0 +1,100 @@
+Implement the following plan:
+
+# Snow Effect Feature Plan
+
+## Context
+Add a "Snow Effect" toggle in the popup settings. When enabled, a fullscreen snow animation renders on the Gemini page. The effect must be visually polished but performance-conscious (no impact on page interactions).
+
+## Architecture
+Follow the exact same pattern as `sidebarAutoHide`: popup toggle → `chrome.storage.sync` → content script listens for changes → enable/disable effect.
+
+## Implementation Steps
+
+### 1. Add Storage Key
+**File**: `src/core/types/common.ts`
+- Add `GV_SNOW_EFFECT: 'gvSnowEffect'` to `StorageKeys`
+
+### 2. Add Translation Keys (all 10 locales)
+**Files**: `src/locales/{en,zh,zh_TW,ja,ko,ar,es,fr,pt,ru}/messages.json`
+- Add `snowEffect` (label) and `snowEffectHint` (description) keys
+
+### 3. Add Popup Toggle
+**File**: `src/pages/popup/Popup.tsx`
+- Add `snowEffectEnabled?: boolean` to `SettingsUpdate` interface (~line 128)
+- Add `const [snowEffectEnabled, setSnowEffectEnabled] = useState<boolean>(false)` (~line 155)
+- Add mapping in `apply()`: `payload.gvSnowEffect = settings.snowEffectEnabled` (~line 229)
+- Add default in `chrome.storage.sync.get()`: `gvSnowEffect: false` (~line 456)
+- Add load: `setSnowEffectEnabled(res?.gvSnowEffect === true)` (~line 480)
+- Add UI toggle card after sidebar auto-hide block (~line 1038), Gemini-only (`!isAIStudio`)
+
+### 4. Create Snow Effect Content Script
+**File**: `src/pages/content/snowEffect/index.ts`
+
+**Design**:
+- Use a single `<canvas>` element, `position: fixed`, `pointer-events: none`, full viewport, high z-index
+- `requestAnimationFrame` loop renders snowflakes
+- ~80-120 snowflakes with varied sizes (2-6px), opacity (0.4-1.0), and fall speeds
+- Gentle horizontal drift (sine wave) for natural look
+- Snowflakes recycle when they fall off-screen (reset to top with random x)
+- Canvas resizes on `window.resize`
+- When tab is hidden (`visibilitychange`), pause animation to save CPU
+- `enable()` creates canvas + starts animation
+- `disable()` removes canvas + cancels animation frame
+
+**Performance considerations**:
+- Canvas rendering (not DOM elements) — much lighter
+- `pointer-events: none` — zero interaction blocking
+- Pause when tab not visible
+- Limit particle count (~100)
+- Use simple circle drawing (arc), no complex shapes
+
+### 5. Register Content Script
+**File**: `src/pages/content/index.tsx`
+- Import `startSnowEffect` from `./snowEffect/index`
+- Call `startSnowEffect()` after sidebar auto-hide with `LIGHT_FEATURE_INIT_DELAY`
+
+### 6. Add Tests
+**File**: `src/pages/content/snowEffect/__tests__/snowEffect.test.ts`
+- Test enable/disable lifecycle
+- Test storage change listener
+- Test canvas creation/removal
+
+## File Changes Summary
+| File | Change |
+|------|--------|
+| `src/core/types/common.ts` | Add storage key |
+| `src/locales/*/messages.json` (10 files) | Add 2 translation keys each |
+| `src/pages/popup/Popup.tsx` | Add toggle state + UI |
+| `src/pages/content/snowEffect/index.ts` | **New** — snow effect module |
+| `src/pages/content/index.tsx` | Register new module |
+| `src/pages/content/snowEffect/__tests__/snowEffect.test.ts` | **New** — tests |
+
+## Verification
+1. `bun run typecheck` — no TS errors
+2. `bun run lint` — clean
+3. `bun run test` — all pass
+4. `bun run dev:chrome` — toggle in popup, verify snow renders on Gemini page, verify no interaction blocking
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/jessezhang/.REDACTED.jsonl
+
+---
+
+雪花太大了，量太少了，但也别太多，你作为审美专家决定一下
+
+---
+
+这个功能是 Gemini Only 的吗？在 aistudio 和其他平台也会不断检测吗？好像上一个 commit 修复了在firefox上 aistudio 卡顿的问题，你参考一下
+
+---
+
+那 Haerbin 这个 commit 是合理的吗？好像确实修复了firefox上的性能问题
+
+---
+
+飘雪的效果还是不够好，主要存在以下问题：
+1. 缺少特别小的雪花
+2. 雪花样式的丰富度不够
+3. 飘落速度过于单一，缺乏真实感
+
+同时要注意性能开销：不要占用太大资源，尽量做到几乎没有性能影响。

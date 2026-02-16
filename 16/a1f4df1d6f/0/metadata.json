@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "16a1f4df1d6f",
+  "session_id": "c5c01d3f-dbb6-436c-9179-17702671f6c0",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T10:52:12.73227Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "safari/Models/gemini-voyager-v1.2.5.dmg",
+    "src/core/types/common.ts",
+    "src/pages/content/index.tsx",
+    "src/pages/content/snowEffect/__tests__/snowEffect.test.ts",
+    "src/pages/content/snowEffect/index.ts",
+    "src/pages/popup/Popup.tsx"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 102,
+    "cache_creation_tokens": 187245,
+    "cache_read_tokens": 8493650,
+    "output_tokens": 12981,
+    "api_call_count": 92
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T10:52:11.926003Z",
+    "agent_lines": 392,
+    "human_added": 106,
+    "human_modified": 18,
+    "human_removed": 0,
+    "total_committed": 513,
+    "agent_percentage": 76.41325536062378
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/c5c01d3f-dbb6-436c-9179-17702671f6c0.jsonl"
+}
