@@ -1048,6 +1048,14 @@
     "message": "إظهار زر عائم لاقتباس النص المحدد عند تحديد نص في المحادثات",
     "description": "Quote reply feature hint"
   },
+  "enableMessageTimestamp": {
+    "message": "Show message timestamps",
+    "description": "Enable message timestamp toggle label"
+  },
+  "enableMessageTimestampHint": {
+    "message": "Display the sent time below AI responses",
+    "description": "Message timestamp feature hint"
+  },
   "contextSync": {
     "message": "مزامنة السياق",
     "description": "Context Sync title"

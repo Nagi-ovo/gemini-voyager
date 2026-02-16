@@ -21,6 +21,7 @@ import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';
 import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startMermaid } from './mermaid/index';
+import { startMessageTimestamp } from './messageTimestamp/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
 import { startRecentsHider } from './recentsHider/index';
@@ -226,6 +227,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Default Model Manager
       DefaultModelManager.getInstance().init();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Message Timestamp - adds timestamps to AI responses (Issue #303)
+      await startMessageTimestamp();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 

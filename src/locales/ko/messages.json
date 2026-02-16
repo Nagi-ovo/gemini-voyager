@@ -1048,6 +1048,14 @@
     "message": "대화에서 텍스트를 선택할 때 선택한 텍스트를 인용할 수 있는 플로팅 버튼을 표시합니다",
     "description": "Quote reply feature hint"
   },
+  "enableMessageTimestamp": {
+    "message": "Show message timestamps",
+    "description": "Enable message timestamp toggle label"
+  },
+  "enableMessageTimestampHint": {
+    "message": "Display the sent time below AI responses",
+    "description": "Message timestamp feature hint"
+  },
   "contextSync": {
     "message": "컨텍스트 동기화",
     "description": "Context Sync title"

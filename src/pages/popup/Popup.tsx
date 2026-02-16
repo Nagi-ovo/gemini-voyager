@@ -126,6 +126,7 @@ interface SettingsUpdate {
   quoteReplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
   sidebarAutoHideEnabled?: boolean;
+  messageTimestampEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -153,6 +154,7 @@ export default function Popup() {
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
   const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
+  const [messageTimestampEnabled, setMessageTimestampEnabled] = useState<boolean>(true);
   const [isAIStudio, setIsAIStudio] = useState<boolean>(false);
 
   useEffect(() => {
@@ -227,6 +229,8 @@ export default function Popup() {
         payload.gvCtrlEnterSend = settings.ctrlEnterSendEnabled;
       if (typeof settings.sidebarAutoHideEnabled === 'boolean')
         payload.gvSidebarAutoHide = settings.sidebarAutoHideEnabled;
+      if (typeof settings.messageTimestampEnabled === 'boolean')
+        payload.gvMessageTimestampEnabled = settings.messageTimestampEnabled;
       void setSyncStorage(payload);
     },
     [setSyncStorage],
@@ -454,6 +458,7 @@ export default function Popup() {
           gvQuoteReplyEnabled: true,
           gvCtrlEnterSend: false,
           gvSidebarAutoHide: false,
+          gvMessageTimestampEnabled: true,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -478,6 +483,7 @@ export default function Popup() {
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
           setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
+          setMessageTimestampEnabled(res?.gvMessageTimestampEnabled !== false);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -1335,6 +1341,27 @@ export default function Popup() {
                 onChange={(e) => {
                   setQuoteReplyEnabled(e.target.checked);
                   apply({ quoteReplyEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
+                  htmlFor="message-timestamp-enabled"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                >
+                  {t('enableMessageTimestamp') || '显示消息时间戳'}
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t('enableMessageTimestampHint') || '在AI回复下方显示发送时间'}
+                </p>
+              </div>
+              <Switch
+                id="message-timestamp-enabled"
+                checked={messageTimestampEnabled}
+                onChange={(e) => {
+                  setMessageTimestampEnabled(e.target.checked);
+                  apply({ messageTimestampEnabled: e.target.checked });
                 }}
               />
             </div>
