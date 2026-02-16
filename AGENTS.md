@@ -4,13 +4,8 @@ trigger: always_on
 
 # AGENTS.md - AI Assistant Guide for Gemini Voyager
 
-<!--
-This file is generated from AI_GUIDE.template.md.
-Do not edit directly; update the template and run `bun run generate:ai-guides`.
--->
-
-> **Last Updated**: 2026-02-04
-> **Version**: 1.1.9
+> **Last Updated**: 2026-02-15
+> **Version**: 1.2.5
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
 
 ---
@@ -100,14 +95,17 @@ Strictly adhere to these protocols to prevent errors and ensure data integrity.
 
 ## 4. Module Glossary & Complexity Hotspots
 
-| Module (Path)                     | Responsibility                              | Complexity | Notes                                                                          |
-| --------------------------------- | ------------------------------------------- | ---------- | ------------------------------------------------------------------------------ |
-| `core/services/StorageService`    | **Single Source of Truth** for persistence. | 🌶️ High    | Handles sync/local/session logic + migration. **Do not modify lightly.**       |
-| `core/services/DataBackupService` | Multi-layer backup protection.              | 🌶️ High    | Critical for data safety. Race conditions possible during unload.              |
-| `features/folder`                 | Drag-and-drop folder logic.                 | 🌶️ High    | DOM manipulation + State sync is tricky. Watch out for infinite loops.         |
-| `features/export`                 | Chat export (JSON/MD/PDF).                  | 🟡 Medium  | PDF generation relies on specific DOM structure. Fragile to Gemini UI changes. |
-| `features/backup`                 | File System Access API.                     | 🟡 Medium  | Browser compatibility issues (Safari fallback).                                |
-| `pages/content`                   | **DOM Injection**.                          | 🟡 Medium  | Bridge between Gemini UI and Extension.                                        |
+| Module (Path)                          | Responsibility                                    | Complexity | Notes                                                                          |
+| -------------------------------------- | ------------------------------------------------- | ---------- | ------------------------------------------------------------------------------ |
+| `core/services/StorageService`         | **Single Source of Truth** for persistence.       | 🌶️ High    | Handles sync/local/session logic + migration. **Do not modify lightly.**       |
+| `core/services/DataBackupService`      | Multi-layer backup protection.                    | 🌶️ High    | Critical for data safety. Race conditions possible during unload.              |
+| `core/services/GoogleDriveSyncService` | Google Drive cloud sync (OAuth2).                 | 🌶️ High    | Handles folders, prompts, and starred messages sync. Requires OAuth2 identity. |
+| `features/folder`                      | Drag-and-drop folder logic + cloud sync UI.       | 🌶️ High    | DOM manipulation + State sync is tricky. Watch out for infinite loops.         |
+| `features/export`                      | Chat export (JSON/MD/PDF/Image) + Deep Research.  | 🌶️ High    | Image export, message selection, multi-browser compat. Fragile to Gemini UI.   |
+| `features/backup`                      | File System Access API.                           | 🟡 Medium  | Browser compatibility issues (Safari fallback).                                |
+| `pages/content`                        | **DOM Injection** (24 content script modules).    | 🟡 Medium  | Bridge between Gemini UI and Extension. Each sub-module is self-contained.     |
+| `pages/content/mermaid`                | Mermaid diagram rendering.                        | 🟡 Medium  | Dynamic library loading with legacy fallback.                                  |
+| `pages/content/watermarkRemover`       | NanoBanana watermark removal via fetch intercept. | 🟡 Medium  | Disabled on Safari. Uses `fetchInterceptor.js` injected into page context.     |
 
 ---
 
@@ -180,11 +178,21 @@ bun install
 ### Development
 
 ```bash
-# Start Dev Server (Chrome)
+# Start Dev Server
 bun run dev:chrome
-
-# Start Dev Server (Firefox)
 bun run dev:firefox
+bun run dev:safari
+
+# Build for production
+bun run build:chrome
+bun run build:firefox
+bun run build:safari
+bun run build:edge        # Repackages Chrome build for Edge
+bun run build:all         # Build all platforms
+
+# Documentation site (VitePress)
+bun run docs:dev
+bun run docs:build
 ```
 
 _Note: Uses Nodemon for hot-reloading content scripts._
@@ -225,68 +233,125 @@ Before claiming a task is complete, verify:
 ```
 gemini-voyager/
 ├── src/
-│   ├── core/                     # 🧠 CORE LOGIC (Foundation)
-│   │   ├── services/             # Singleton Services
-│   │   │   ├── StorageService.ts #   - Central persistence layer
-│   │   │   ├── DOMService.ts     #   - Safe DOM manipulation
-│   │   │   ├── LoggerService.ts  #   - Structured logging
-│   │   │   └── ...
-│   │   ├── utils/                # Core utilities (hashing, concurrency)
-│   │   └── types/                # Global type definitions
+│   ├── core/                           # 🧠 CORE LOGIC (Foundation)
+│   │   ├── services/                   # Singleton Services
+│   │   │   ├── StorageService.ts       #   - Central persistence layer
+│   │   │   ├── DataBackupService.ts    #   - Multi-layer backup protection
+│   │   │   ├── GoogleDriveSyncService  #   - Google Drive cloud sync (OAuth2)
+│   │   │   ├── KeyboardShortcutService #   - Global keyboard shortcuts
+│   │   │   ├── StorageMonitor.ts       #   - Storage usage monitoring
+│   │   │   ├── DOMService.ts           #   - Safe DOM manipulation
+│   │   │   └── LoggerService.ts        #   - Structured logging
+│   │   ├── utils/                      # Core utilities
+│   │   │   ├── browser.ts             #   - Browser detection (isSafari, etc.)
+│   │   │   ├── extensionContext.ts    #   - Extension context invalidation
+│   │   │   ├── concurrency.ts         #   - Concurrency primitives
+│   │   │   ├── hash.ts                #   - Hashing utilities
+│   │   │   ├── storageMigration.ts    #   - Storage migration helpers
+│   │   │   ├── safariStorage.ts      #   - Safari storage helpers
+│   │   │   ├── updateReminder.ts     #   - Update reminder utility
+│   │   │   └── ...                    #   - (array, async, gemini, selectors, text, version)
+│   │   └── types/                      # Global type definitions
+│   │       ├── common.ts              #   - StorageKeys, shared types
+│   │       ├── folder.ts              #   - Folder data types
+│   │       ├── timeline.ts            #   - Timeline types
+│   │       ├── keyboardShortcut.ts    #   - Shortcut types
+│   │       └── sync.ts               #   - Cloud sync types
 │   │
-│   ├── features/                 # 🧩 FEATURES (Domain Logic)
-│   │   ├── export/               #   - Export (JSON/MD/PDF)
-│   │   ├── folder/               #   - Folder organization
-│   │   ├── backup/               #   - File System backup
-│   │   └── formulaCopy/          #   - LaTeX copy
+│   ├── features/                       # 🧩 FEATURES (Domain Logic)
+│   │   ├── export/                     #   - Export (JSON/MD/PDF/Image/Deep Research)
+│   │   ├── folder/                     #   - Folder organization
+│   │   ├── backup/                     #   - File System backup
+│   │   ├── formulaCopy/                #   - LaTeX copy
+│   │   ├── contextSync/                #   - Context/clipboard sync
+│   │   └── tableCopy/                  #   - Table copying
 │   │
-│   ├── pages/                    # 🚪 ENTRY POINTS (Application)
-│   │   ├── background/           #   - Service Worker
-│   │   ├── popup/                #   - Settings UI
-│   │   └── content/              #   - Content Scripts (Gemini Injection)
-│   │       ├── timeline/         #       * Timeline navigation
-│   │       ├── prompt/           #       * Prompt manager
-│   │       ├── deepResearch/     #       * Deep research tool
-│   │       └── ...               #       * (Feature integrations)
+│   ├── pages/                          # 🚪 ENTRY POINTS (Application)
+│   │   ├── background/                 #   - Service Worker
+│   │   ├── popup/                      #   - Settings UI
+│   │   │   └── components/            #   - CloudSync, KeyboardShortcut, StarredHistory, etc.
+│   │   ├── content/                    #   - Content Scripts (Gemini DOM Injection)
+│   │   │   ├── timeline/              #       * Timeline navigation
+│   │   │   ├── prompt/                #       * Prompt manager
+│   │   │   ├── deepResearch/          #       * Deep research tool
+│   │   │   ├── mermaid/               #       * Mermaid diagram rendering
+│   │   │   ├── watermarkRemover/      #       * NanoBanana watermark removal
+│   │   │   ├── sendBehavior/          #       * Send key behavior customization
+│   │   │   ├── folder/                #       * Folder sidebar management
+│   │   │   ├── export/                #       * Export button & selection mode
+│   │   │   ├── announcement/          #       * Announcement display
+│   │   │   ├── shared/                #       * Shared content script utilities
+│   │   │   └── ...                    #       * (chatWidth, defaultModel, folderSpacing,
+│   │   │                              #          gemsHider, inputCollapse, katexConfig,
+│   │   │                              #          markdownPatcher, quoteReply, recentsHider,
+│   │   │                              #          sidebarAutoHide, sidebarWidth, titleUpdater,
+│   │   │                              #          editInputWidth, contextSync)
+│   │   ├── devtools/                   #   - DevTools panel
+│   │   ├── options/                    #   - Options/Settings page
+│   │   └── panel/                      #   - Side panel
 │   │
-│   ├── components/               # 🧱 UI COMPONENTS (Presentation)
-│   │   └── ui/                   #   - Generic UI (Buttons, Dialogs)
+│   ├── components/                     # 🧱 UI COMPONENTS (Presentation)
+│   │   ├── ui/                         #   - Generic UI (Button, Card, Select, Slider, Switch, etc.)
+│   │   ├── DarkModeToggle.tsx          #   - Dark mode toggle
+│   │   └── LanguageSwitcher.tsx        #   - Language switcher
 │   │
-│   ├── locales/                  # 🌍 TRANSLATIONS
-│   │   ├── en/messages.json      #   - English
-│   │   └── zh/messages.json      #   - Chinese
+│   ├── contexts/                       # 🔗 REACT CONTEXTS
+│   │   └── LanguageContext.tsx          #   - Language/i18n context provider
 │   │
-│   └── tests/                    # 🧪 GLOBAL TESTS
-│       └── setup.ts              #   - Vitest setup & mocks
+│   ├── utils/                          # 🔧 APPLICATION UTILITIES
+│   │   ├── i18n.ts                     #   - Internationalization
+│   │   ├── language.ts                 #   - Language detection/normalization
+│   │   ├── merge.ts                    #   - Data merging (for cloud sync)
+│   │   └── translations.ts            #   - Translation helpers
+│   │
+│   ├── locales/                        # 🌍 TRANSLATIONS (10 languages)
+│   │   ├── en/    ar/    es/    fr/    #   - English, Arabic, Spanish, French
+│   │   ├── ja/    ko/    pt/    ru/    #   - Japanese, Korean, Portuguese, Russian
+│   │   └── zh/    zh_TW/              #   - Chinese (Simplified), Chinese (Traditional)
+│   │
+│   └── tests/                          # 🧪 GLOBAL TESTS
+│       └── setup.ts                    #   - Vitest setup & mocks
 │
-├── public/                       # 📦 STATIC ASSETS
-│   ├── katex-config.js           #   - KaTeX configuration
-│   └── fetchInterceptor.js       #   - Network interception
+├── public/                             # 📦 STATIC ASSETS
+│   ├── contentStyle.css                #   - Injected CSS styles
+│   ├── katex-config.js                 #   - KaTeX configuration
+│   └── fetchInterceptor.js             #   - Network interception (watermark)
+│
+├── docs/                               # 📖 DOCUMENTATION (VitePress)
 │
 └── ... (config files)
 ```
 
 ### 📍 Where to Look (Task Map)
 
-| Task                     | File Path / Directory                                              |
-| ------------------------ | ------------------------------------------------------------------ |
-| **Add new storage key**  | `src/core/types/common.ts` (StorageKeys)                           |
-| **Change storage logic** | `src/core/services/StorageService.ts`                              |
-| **Update translations**  | `src/locales/{en,zh}/messages.json`                                |
-| **Modify export format** | `src/features/export/services/`                                    |
-| **Fix backup issues**    | `src/core/services/DataBackupService.ts` or `src/features/backup/` |
-| **Adjust UI styles**     | `src/components/ui/` or `src/assets/styles/`                       |
-| **Change DOM injection** | `src/pages/content/`                                               |
+| Task                      | File Path / Directory                                              |
+| ------------------------- | ------------------------------------------------------------------ |
+| **Add new storage key**   | `src/core/types/common.ts` (StorageKeys)                           |
+| **Change storage logic**  | `src/core/services/StorageService.ts`                              |
+| **Update translations**   | `src/locales/*/messages.json` (all 10 locales)                     |
+| **Modify export format**  | `src/features/export/services/`                                    |
+| **Fix backup issues**     | `src/core/services/DataBackupService.ts` or `src/features/backup/` |
+| **Fix cloud sync issues** | `src/core/services/GoogleDriveSyncService.ts`                      |
+| **Adjust UI styles**      | `src/components/ui/` or `src/assets/styles/`                       |
+| **Change DOM injection**  | `src/pages/content/`                                               |
+| **Add keyboard shortcut** | `src/core/services/KeyboardShortcutService.ts` + types             |
+| **Modify popup settings** | `src/pages/popup/components/`                                      |
+| **Browser compatibility** | `src/core/utils/browser.ts` (detection) + feature-level guards     |
 
 ---
 
 ## 9. Important Files
 
-- `manifest.json` / `manifest.dev.json`: Extension capabilities.
-- `vite.config.*.ts`: Build configurations.
-- `src/core/types/common.ts`: Centralized types and constants.
+- `manifest.json` / `manifest.dev.json`: Extension capabilities (includes OAuth2 for Google Drive sync).
+- `vite.config.base.ts`: Shared build configuration.
+- `vite.config.chrome.ts` / `vite.config.firefox.ts` / `vite.config.safari.ts`: Platform-specific builds.
+- `src/core/types/common.ts`: Centralized types, StorageKeys, and constants.
 - `src/core/services/StorageService.ts`: Data persistence layer.
-- `src/locales/*`: Translation files.
+- `src/core/services/GoogleDriveSyncService.ts`: Cloud sync with Google Drive.
+- `src/core/utils/browser.ts`: Browser detection helpers (`isSafari()`, etc.).
+- `src/core/utils/extensionContext.ts`: Extension context invalidation handling.
+- `src/locales/*`: Translation files (10 languages).
+- `public/contentStyle.css`: Injected CSS styles for content scripts.
 
 ---
 
@@ -295,5 +360,7 @@ gemini-voyager/
 - **Build Errors**: Clear `dist_*` folders and `node_modules`. Run `bun install`.
 - **HMR Issues**: Reload the extension in `chrome://extensions`.
 - **Style Conflicts**: Ensure all CSS classes are prefixed (`gv-`) or use Shadow DOM (if applicable, though this project mostly uses main DOM injection with specific classes).
+- **Safari Limitations**: Some features (cloud sync, watermark removal, image export) are disabled or limited on Safari. Check `isSafari()` guards.
+- **Extension Context Invalidated**: After extension update/reload, content scripts lose access to `chrome.*` APIs. Use `isExtensionContextInvalidatedError()` to handle gracefully.
 
 ---

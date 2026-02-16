@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for Gemini Voyager
 
-> **Last Updated**: 2026-02-09
-> **Version**: 1.2.2
+> **Last Updated**: 2026-02-15
+> **Version**: 1.2.5
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
 
 ---
@@ -99,7 +99,7 @@ Strictly adhere to these protocols to prevent errors and ensure data integrity.
 | `features/folder`                      | Drag-and-drop folder logic + cloud sync UI.       | 🌶️ High    | DOM manipulation + State sync is tricky. Watch out for infinite loops.         |
 | `features/export`                      | Chat export (JSON/MD/PDF/Image) + Deep Research.  | 🌶️ High    | Image export, message selection, multi-browser compat. Fragile to Gemini UI.   |
 | `features/backup`                      | File System Access API.                           | 🟡 Medium  | Browser compatibility issues (Safari fallback).                                |
-| `pages/content`                        | **DOM Injection** (22 content script modules).    | 🟡 Medium  | Bridge between Gemini UI and Extension. Each sub-module is self-contained.     |
+| `pages/content`                        | **DOM Injection** (24 content script modules).    | 🟡 Medium  | Bridge between Gemini UI and Extension. Each sub-module is self-contained.     |
 | `pages/content/mermaid`                | Mermaid diagram rendering.                        | 🟡 Medium  | Dynamic library loading with legacy fallback.                                  |
 | `pages/content/watermarkRemover`       | NanoBanana watermark removal via fetch intercept. | 🟡 Medium  | Disabled on Safari. Uses `fetchInterceptor.js` injected into page context.     |
 
@@ -244,6 +244,8 @@ gemini-voyager/
 │   │   │   ├── concurrency.ts         #   - Concurrency primitives
 │   │   │   ├── hash.ts                #   - Hashing utilities
 │   │   │   ├── storageMigration.ts    #   - Storage migration helpers
+│   │   │   ├── safariStorage.ts      #   - Safari storage helpers
+│   │   │   ├── updateReminder.ts     #   - Update reminder utility
 │   │   │   └── ...                    #   - (array, async, gemini, selectors, text, version)
 │   │   └── types/                      # Global type definitions
 │   │       ├── common.ts              #   - StorageKeys, shared types
@@ -273,6 +275,8 @@ gemini-voyager/
 │   │   │   ├── sendBehavior/          #       * Send key behavior customization
 │   │   │   ├── folder/                #       * Folder sidebar management
 │   │   │   ├── export/                #       * Export button & selection mode
+│   │   │   ├── announcement/          #       * Announcement display
+│   │   │   ├── shared/                #       * Shared content script utilities
 │   │   │   └── ...                    #       * (chatWidth, defaultModel, folderSpacing,
 │   │   │                              #          gemsHider, inputCollapse, katexConfig,
 │   │   │                              #          markdownPatcher, quoteReply, recentsHider,
@@ -296,10 +300,10 @@ gemini-voyager/
 │   │   ├── merge.ts                    #   - Data merging (for cloud sync)
 │   │   └── translations.ts            #   - Translation helpers
 │   │
-│   ├── locales/                        # 🌍 TRANSLATIONS (11 languages)
+│   ├── locales/                        # 🌍 TRANSLATIONS (10 languages)
 │   │   ├── en/    ar/    es/    fr/    #   - English, Arabic, Spanish, French
 │   │   ├── ja/    ko/    pt/    ru/    #   - Japanese, Korean, Portuguese, Russian
-│   │   └── zh/    zh_CN/ zh_TW/       #   - Chinese (Traditional, Simplified, Taiwan)
+│   │   └── zh/    zh_TW/              #   - Chinese (Simplified), Chinese (Traditional)
 │   │
 │   └── tests/                          # 🧪 GLOBAL TESTS
 │       └── setup.ts                    #   - Vitest setup & mocks
@@ -320,7 +324,7 @@ gemini-voyager/
 | ------------------------- | ------------------------------------------------------------------ |
 | **Add new storage key**   | `src/core/types/common.ts` (StorageKeys)                           |
 | **Change storage logic**  | `src/core/services/StorageService.ts`                              |
-| **Update translations**   | `src/locales/*/messages.json` (all 11 locales)                     |
+| **Update translations**   | `src/locales/*/messages.json` (all 10 locales)                     |
 | **Modify export format**  | `src/features/export/services/`                                    |
 | **Fix backup issues**     | `src/core/services/DataBackupService.ts` or `src/features/backup/` |
 | **Fix cloud sync issues** | `src/core/services/GoogleDriveSyncService.ts`                      |
@@ -342,7 +346,7 @@ gemini-voyager/
 - `src/core/services/GoogleDriveSyncService.ts`: Cloud sync with Google Drive.
 - `src/core/utils/browser.ts`: Browser detection helpers (`isSafari()`, etc.).
 - `src/core/utils/extensionContext.ts`: Extension context invalidation handling.
-- `src/locales/*`: Translation files (11 languages).
+- `src/locales/*`: Translation files (10 languages).
 - `public/contentStyle.css`: Injected CSS styles for content scripts.
 
 ---
