@@ -227,6 +227,9 @@ async function initializeFeatures(): Promise<void> {
       // Default Model Manager
       DefaultModelManager.getInstance().init();
       await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startExportButton();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
     if (
@@ -236,7 +239,9 @@ async function initializeFeatures(): Promise<void> {
     ) {
       promptManagerInstance = await startPromptManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
+    }
 
+    if (location.hostname === 'gemini.google.com') {
       // Initialize Mermaid rendering (lightweight)
       startMermaid();
       await delay(LIGHT_FEATURE_INIT_DELAY);
@@ -253,8 +258,6 @@ async function initializeFeatures(): Promise<void> {
       startFormulaCopy();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
-
-    startExportButton();
   } catch (e) {
     if (isExtensionContextInvalidatedError(e)) {
       return;
