@@ -33,7 +33,7 @@
   const GEMINI_DOWNLOAD_PATTERN =
     /https:\/\/[^/]+(\.googleusercontent\.com|\.ggpht\.com)\/rd-gg-dl\//;
   const CSP_BLOCKED_TELEMETRY_PATTERNS = [/^https:\/\/www\.googletagmanager\.com\/td\?/i];
-  const GOOGLE_SIZE_PATTERN = /=[swh]\d+.*?(?=[-?#]|$)/;
+  const GOOGLE_SIZE_PATTERN = /=[swh]\d+[^?#]*/;
 
   /**
    * Replace size parameter with =s0 for original size

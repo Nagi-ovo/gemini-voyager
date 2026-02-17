@@ -90,7 +90,7 @@ export class ContextCaptureService {
       // 2. Request original size (=s0).
       // This is a known Google image parameter for full resolution.
       if (targetUrl.match(/=[swh]\d+/)) {
-        targetUrl = targetUrl.replace(/=[swh]\d+.*?(?=[-?#]|$)/, '=s0');
+        targetUrl = targetUrl.replace(/=[swh]\d+[^?#]*/, '=s0');
       } else if (!targetUrl.includes('=s0')) {
         // If no sizing parameter found, append =s0
         // We use =s0 which is generally safer for these types of URLs
