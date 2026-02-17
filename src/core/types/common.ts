@@ -58,6 +58,26 @@ export const StorageKeys = {
   // Global settings
   LANGUAGE: 'language',
   FORMULA_COPY_FORMAT: 'gvFormulaCopyFormat',
+
+  // Input behavior
+  CTRL_ENTER_SEND: 'gvCtrlEnterSend',
+
+  // Default Model
+  DEFAULT_MODEL: 'gvDefaultModel',
+
+  // Folder filtering
+  GV_FOLDER_FILTER_USER_ONLY: 'gvFolderFilterUserOnly',
+
+  // Sidebar behavior
+  GV_SIDEBAR_AUTO_HIDE: 'gvSidebarAutoHide',
+
+  // Folder spacing
+  GV_FOLDER_SPACING: 'gvFolderSpacing',
+  GV_AISTUDIO_FOLDER_SPACING: 'gvAIStudioFolderSpacing',
+  GV_FOLDER_TREE_INDENT: 'gvFolderTreeIndent',
+
+  // Snow effect
+  GV_SNOW_EFFECT: 'gvSnowEffect',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

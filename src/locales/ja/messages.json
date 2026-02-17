@@ -196,7 +196,7 @@
     "description": "Backup step 3"
   },
   "pm_backup_note": {
-    "message": "すべてのプロンプトとフォルダが含まれ、タイムスタンプ付きのフォルダに保存されます (形式: backup-YYYYMMDD-HHMMSS)",
+    "message": "すべてのプロンプトとフォルダが含まれ、タイムスタンプ付きのフォルダに保存されます (形式：backup-YYYYMMDD-HHMMSS)",
     "description": "Backup feature note"
   },
   "extensionVersion": {
@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "チャット履歴をエクスポート",
+    "message": "会話履歴をエクスポート",
     "description": "Tooltip for export button"
   },
   "folder_title": {
@@ -240,11 +240,11 @@
     "description": "Create folder button tooltip"
   },
   "folder_name_prompt": {
-    "message": "フォルダ名を入力:",
+    "message": "フォルダ名を入力：",
     "description": "Create folder name prompt"
   },
   "folder_rename_prompt": {
-    "message": "新しい名前を入力:",
+    "message": "新しい名前を入力：",
     "description": "Rename folder prompt"
   },
   "folder_delete_confirm": {
@@ -259,9 +259,49 @@
     "message": "名前を変更",
     "description": "Rename folder menu item"
   },
+  "folder_change_color": {
+    "message": "色を変更",
+    "description": "Change folder color menu item"
+  },
   "folder_delete": {
     "message": "削除",
     "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "デフォルト",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "赤",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "オレンジ",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "黄色",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "緑",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "青",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "紫",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "ピンク",
+    "description": "Pink folder color name"
+  },
+  "folder_color_custom": {
+    "message": "カスタム",
+    "description": "Custom folder color name"
   },
   "folder_empty": {
     "message": "フォルダがありません",
@@ -336,8 +376,8 @@
     "description": "LaTeX format option"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath format option for Word"
+    "message": "MathML (Word)",
+    "description": "Label for UnicodeMath formula copy format option"
   },
   "formulaCopyFormatHint": {
     "message": "数式をクリックしてコピーする際の形式を選択します",
@@ -347,9 +387,25 @@
     "message": "LaTeX (ドル記号なし)",
     "description": "LaTeX format option without dollar signs"
   },
+  "folder_filter_current_user": {
+    "message": "アカウント隔離",
+    "description": "Show only conversations from the current Google account"
+  },
   "folder_export": {
     "message": "フォルダをエクスポート",
     "description": "Export folders button tooltip"
+  },
+  "folder_import_export": {
+    "message": "フォルダのインポート/エクスポート",
+    "description": "Combined import/export button tooltip"
+  },
+  "folder_cloud_upload": {
+    "message": "クラウドにアップロード",
+    "description": "Cloud upload button tooltip"
+  },
+  "folder_cloud_sync": {
+    "message": "クラウドから同期",
+    "description": "Cloud sync button tooltip"
   },
   "folder_import": {
     "message": "フォルダをインポート",
@@ -360,7 +416,7 @@
     "description": "Import dialog title"
   },
   "folder_import_strategy": {
-    "message": "インポート方法:",
+    "message": "インポート方法：",
     "description": "Import strategy label"
   },
   "folder_import_merge": {
@@ -384,7 +440,7 @@
     "description": "Import success with skipped message"
   },
   "folder_import_error": {
-    "message": "✗ インポート失敗: {error}",
+    "message": "✗ インポート失敗：{error}",
     "description": "Import error message"
   },
   "folder_export_success": {
@@ -404,12 +460,36 @@
     "description": "Export dialog title"
   },
   "export_dialog_select": {
-    "message": "エクスポート形式を選択:",
+    "message": "エクスポート形式を選択：",
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ Gemini は古いメッセージを後から読み込むため、エクスポートする前にタイムラインを使って会話の最初のメッセージまでジャンプしてください。そうしないと、エクスポートが不完全になる可能性があります。",
-    "description": "Warning about lazy loading affecting export completeness"
+    "message": "⚠️ エクスポート開始後、全内容を読み込むために最初のメッセージへ自動移動します。移動中は何もしないでください。完了後、エクスポートが自動的に再開されます。",
+    "description": "Warning about auto-jump and loading completeness"
+  },
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Safari のヒント：下の「エクスポート」を選択し、少し待ってから ⌘P を押して「PDF として保存」を選択してください。",
+    "description": "Safari-specific hint for PDF export"
+  },
+  "export_toast_safari_pdf_ready": {
+    "message": "今すぐ Command + P を押して PDF を書き出せます。",
+    "description": "Safari-specific toast shown after PDF export is prepared"
+  },
+  "export_dialog_safari_markdown_hint": {
+    "message": "注意: Safari の制限により、チャット履歴内の画像は抽出できません。完全にエクスポートするには、PDF エクスポートを使用してください。",
+    "description": "Warning about image references in Safari markdown export"
+  },
+  "export_format_json_description": {
+    "message": "開発者向けの機械可読形式",
+    "description": "Description for JSON export format"
+  },
+  "export_format_markdown_description": {
+    "message": "クリーンで汎用性の高いテキスト形式（推奨）",
+    "description": "Description for Markdown export format"
+  },
+  "export_format_pdf_description": {
+    "message": "印刷に適した形式（PDF として保存）",
+    "description": "Description for PDF export format"
   },
   "editInputWidth": {
     "message": "入力欄の幅",
@@ -456,7 +536,7 @@
     "description": "Notice that defaults are limited to Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
-    "message": "⚠️ 警告: フォルダデータの読み込みに失敗しました。データが破損している可能性があります。ブラウザのコンソールで詳細を確認し、可能であればバックアップから復元してください。",
+    "message": "⚠️ 警告：フォルダデータの読み込みに失敗しました。データが破損している可能性があります。ブラウザのコンソールで詳細を確認し、可能であればバックアップから復元してください。",
     "description": "Warning shown when folder data fails to load"
   },
   "backupOptions": {
@@ -476,7 +556,7 @@
     "description": "Select backup folder button"
   },
   "backupFolderSelected": {
-    "message": "バックアップフォルダ: {folder}",
+    "message": "バックアップフォルダ：{folder}",
     "description": "Shows selected backup folder"
   },
   "backupIncludePrompts": {
@@ -500,11 +580,11 @@
     "description": "Daily backup interval"
   },
   "backupIntervalWeekly": {
-    "message": "毎週 (7日ごと)",
+    "message": "毎週 (7 日ごと)",
     "description": "Weekly backup interval"
   },
   "backupLastBackup": {
-    "message": "前回のバックアップ: {time}",
+    "message": "前回のバックアップ：{time}",
     "description": "Last backup timestamp"
   },
   "backupNever": {
@@ -512,11 +592,11 @@
     "description": "Never backed up"
   },
   "backupSuccess": {
-    "message": "✓ バックアップ完了: プロンプト {prompts} 件, フォルダ {folders} 件, 会話 {conversations} 件",
+    "message": "✓ バックアップ完了：プロンプト {prompts} 件，フォルダ {folders} 件，会話 {conversations} 件",
     "description": "Backup success message"
   },
   "backupError": {
-    "message": "✗ バックアップ失敗: {error}",
+    "message": "✗ バックアップ失敗：{error}",
     "description": "Backup error message"
   },
   "backupNotSupported": {
@@ -540,7 +620,7 @@
     "description": "Permission denied for restricted directory"
   },
   "backupConfigureInOptions": {
-    "message": "バックアップの設定はオプションページで行う必要があります。下のボタンをクリックして開いてください（拡張機能アイコン横の3点リーダ → オプション）。",
+    "message": "バックアップの設定はオプションページで行う必要があります。下のボタンをクリックして開いてください（拡張機能アイコン横の 3 点リーダ → オプション）。",
     "description": "Backup configure in options page explanation"
   },
   "openOptionsPage": {
@@ -580,7 +660,7 @@
     "description": "Custom websites for prompt manager"
   },
   "customWebsitesPlaceholder": {
-    "message": "ウェブサイトの URL を入力 (例: chatgpt.com)",
+    "message": "ウェブサイトの URL を入力 (例：chatgpt.com)",
     "description": "Custom websites input placeholder"
   },
   "customWebsitesHint": {
@@ -616,7 +696,7 @@
     "description": "Permission request failure message"
   },
   "customWebsitesNote": {
-    "message": "ヒント: サイトを追加するとアクセスの許可を求められます。許可した後、プロンプトマネージャーを開始するにはそのサイトを再読み込みしてください。",
+    "message": "ヒント：サイトを追加するとアクセスの許可を求められます。許可した後、プロンプトマネージャーを開始するにはそのサイトを再読み込みしてください。",
     "description": "Custom websites reload/permission note"
   },
   "starredHistory": {
@@ -727,12 +807,16 @@
     "message": "手動",
     "description": "Sync mode manual option"
   },
+  "syncServerPort": {
+    "message": "サーバーポート",
+    "description": "Port number for the sync server"
+  },
   "syncNow": {
     "message": "今すぐ同期",
     "description": "Sync now button"
   },
   "lastSynced": {
-    "message": "最終同期: {time}",
+    "message": "最終同期：{time}",
     "description": "Last sync timestamp"
   },
   "neverSynced": {
@@ -740,7 +824,7 @@
     "description": "Never synced message"
   },
   "lastUploaded": {
-    "message": "アップロード: {time}",
+    "message": "アップロード：{time}",
     "description": "Last upload timestamp"
   },
   "neverUploaded": {
@@ -752,12 +836,28 @@
     "description": "Sync success message"
   },
   "syncError": {
-    "message": "✗ 同期に失敗しました: {error}",
+    "message": "✗ 同期に失敗しました：{error}",
     "description": "Sync error message"
   },
   "syncInProgress": {
     "message": "同期中...",
     "description": "Sync in progress message"
+  },
+  "uploadInProgress": {
+    "message": "Uploading...",
+    "description": "Upload in progress message"
+  },
+  "uploadSuccess": {
+    "message": "✓ Uploaded successfully",
+    "description": "Upload success message"
+  },
+  "downloadInProgress": {
+    "message": "Downloading...",
+    "description": "Download in progress message"
+  },
+  "downloadMergeSuccess": {
+    "message": "✓ Downloaded and merged",
+    "description": "Download and merge success message"
   },
   "syncUpload": {
     "message": "ドライブへ保存",
@@ -820,7 +920,7 @@
     "description": "Deep Research download button text"
   },
   "deepResearchDownloadTooltip": {
-    "message": "思考内容をMarkdown形式でダウンロード",
+    "message": "思考内容を Markdown 形式でダウンロード",
     "description": "Deep Research download button tooltip"
   },
   "folder_uncategorized": {
@@ -851,13 +951,25 @@
     "message": "展開",
     "description": "Expand children"
   },
+  "timelinePreviewSearch": {
+    "message": "検索...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "結果なし",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "メッセージなし",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "引用返信",
     "description": "Quote reply button text"
   },
   "inputCollapseOptions": {
-    "message": "入力欄の自動非表示",
-    "description": "Input collapse options section label"
+    "message": "入力オプション",
+    "description": "Input options section label"
   },
   "enableInputCollapse": {
     "message": "入力欄の自動非表示を有効化",
@@ -870,6 +982,14 @@
   "inputCollapsePlaceholder": {
     "message": "Gemini にメッセージを送信",
     "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter で送信",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "Ctrl+Enter でメッセージを送信、Enter で改行",
+    "description": "Ctrl+Enter to send feature hint"
   },
   "batch_delete_confirm": {
     "message": "{count} 件の会話を削除してもよろしいですか？この操作は取り消せません。",
@@ -884,7 +1004,7 @@
     "description": "Batch delete success message"
   },
   "batch_delete_partial": {
-    "message": "削除完了: 成功 {success} 件, 失敗 {failed} 件",
+    "message": "削除完了：成功 {success} 件，失敗 {failed} 件",
     "description": "Batch delete partial success message"
   },
   "batch_delete_limit_reached": {
@@ -896,7 +1016,7 @@
     "description": "Batch delete button tooltip in multi-select mode"
   },
   "batch_delete_match_patterns": {
-    "message": "delete,confirm,yes,ok,remove,削除,確認,確定,はい",
+    "message": "delete,confirm,yes,ok,remove，削除，確認，確定，はい",
     "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
   },
   "generalOptions": {
@@ -926,5 +1046,209 @@
   "enableQuoteReplyHint": {
     "message": "会話でテキストを選択したときに、選択したテキストを引用するフローティングボタンを表示します",
     "description": "Quote reply feature hint"
+  },
+  "contextSync": {
+    "message": "コンテキスト同期",
+    "description": "Context Sync title"
+  },
+  "contextSyncDescription": {
+    "message": "チャットのコンテキストをローカル IDE に同期します",
+    "description": "Context Sync description"
+  },
+  "syncToIDE": {
+    "message": "IDE に同期",
+    "description": "Sync to IDE button"
+  },
+  "ideOnline": {
+    "message": "IDE オンライン",
+    "description": "IDE Online status"
+  },
+  "ideOffline": {
+    "message": "IDE オフライン",
+    "description": "IDE Offline status"
+  },
+  "syncing": {
+    "message": "同期中...",
+    "description": "Syncing status"
+  },
+  "checkServer": {
+    "message": "VS Code で AI Sync サーバーを起動してください",
+    "description": "Check server hint"
+  },
+  "capturing": {
+    "message": "対話をキャプチャ中...",
+    "description": "Capturing status"
+  },
+  "syncedSuccess": {
+    "message": "同期に成功しました！",
+    "description": "Synced success message"
+  },
+  "downloadingOriginal": {
+    "message": "元画像をダウンロード中",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "元画像をダウンロード中（大きいファイル）",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "大容量ファイル警告",
+    "description": "Warning shown for large downloads"
+  },
+  "downloadProcessing": {
+    "message": "透かしを処理中",
+    "description": "Status when processing watermark removal"
+  },
+  "downloadSuccess": {
+    "message": "ダウンロード中...",
+    "description": "Status when download starts"
+  },
+  "downloadError": {
+    "message": "失敗",
+    "description": "Status prefix when download fails"
+  },
+  "recentsHide": {
+    "message": "最近の項目を非表示",
+    "description": "最近のプレビューセクションを非表示にするツールチップ"
+  },
+  "recentsShow": {
+    "message": "最近の項目を表示",
+    "description": "最近のプレビューセクションを表示するツールチップ"
+  },
+  "gemsHide": {
+    "message": "Gems を非表示",
+    "description": "Gems リストセクションを非表示にするツールチップ"
+  },
+  "gemsShow": {
+    "message": "Gems を表示",
+    "description": "Gems リストセクションを表示するツールチップ"
+  },
+  "setAsDefaultModel": {
+    "message": "Set as default model",
+    "description": "Tooltip for setting default model"
+  },
+  "cancelDefaultModel": {
+    "message": "Cancel default model",
+    "description": "Tooltip for cancelling default model"
+  },
+  "defaultModelSet": {
+    "message": "Default model set: $1",
+    "description": "Toast message when default model is set"
+  },
+  "defaultModelCleared": {
+    "message": "Default model cleared",
+    "description": "Toast message when default model is cleared"
+  },
+  "sidebarAutoHide": {
+    "message": "サイドバー自動非表示",
+    "description": "サイドバー自動非表示トグルラベル"
+  },
+  "sidebarAutoHideHint": {
+    "message": "マウスが離れると自動でサイドバーを折りたたみ、マウスが入ると展開します",
+    "description": "サイドバー自動非表示機能のヒント"
+  },
+  "folderSpacing": {
+    "message": "フォルダ間隔",
+    "description": "フォルダ間隔調整ラベル"
+  },
+  "folderSpacingCompact": {
+    "message": "コンパクト",
+    "description": "コンパクトフォルダ間隔ラベル"
+  },
+  "folderSpacingSpacious": {
+    "message": "ゆったり",
+    "description": "ゆったりフォルダ間隔ラベル"
+  },
+  "folderTreeIndent": {
+    "message": "サブフォルダのインデント",
+    "description": "サブフォルダ階層のインデント調整ラベル"
+  },
+  "folderTreeIndentCompact": {
+    "message": "狭い",
+    "description": "狭いサブフォルダインデントラベル"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "広い",
+    "description": "広いサブフォルダインデントラベル"
+  },
+  "export_select_mode_select_all": {
+    "message": "すべて選択",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "{count}件選択中",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "メッセージを選択",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "以下のメッセージを選択",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "エクスポートするメッセージを1つ以上選択してください",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "モバイル共有に便利な単一のPNG画像。",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "画像を生成中...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "レポートを保存",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "この調査レポートをエクスポート",
+    "description": "Deep Research save report tooltip"
+  },
+  "export_fontsize_label": {
+    "message": "フォントサイズ",
+    "description": "Label for font size slider in export dialog"
+  },
+  "export_fontsize_preview": {
+    "message": "吾輩は猫である。名前はまだない。",
+    "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "エクスポートに失敗しました: {error}",
+    "description": "詳細理由付きのエクスポート失敗メッセージ"
+  },
+  "export_error_refresh_retry": {
+    "message": "ネットワークの問題により画像のエクスポートに失敗しました。ページを再読み込みして再試行してください。",
+    "description": "画像エクスポートの一時的な読み込み失敗時に表示する再試行案内"
+  },
+  "export_md_include_source_confirm": {
+    "message": "エクスポートするコンテンツにウェブ検索画像が含まれています。Markdownに画像のソースリンクを含めますか？",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
+  "deepResearch_exportedAt": {
+    "message": "エクスポート日時",
+    "description": "深層研究エクスポートタイムスタンプラベル"
+  },
+  "deepResearch_totalPhases": {
+    "message": "総思考フェーズ",
+    "description": "深層研究の総思考フェーズラベル"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "思考フェーズ",
+    "description": "深層研究思考フェーズヘッダー"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "調査済みサイト",
+    "description": "深層研究の調査済みウェブサイトセクションヘッダー"
+  },
+  "snowEffect": {
+    "message": "雪エフェクト",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "ページに雪を降らせて冬の雰囲気を演出",
+    "description": "Snow effect feature hint"
   }
 }

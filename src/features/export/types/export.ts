@@ -10,6 +10,7 @@ export interface ChatTurn {
   user: string;
   assistant: string;
   starred: boolean;
+  omitEmptySections?: boolean;
   // Optional DOM elements for rich content extraction
   userElement?: HTMLElement;
   assistantElement?: HTMLElement;
@@ -32,7 +33,10 @@ export enum ExportFormat {
   JSON = 'json',
   MARKDOWN = 'markdown',
   PDF = 'pdf',
+  IMAGE = 'image',
 }
+
+export type ExportLayout = 'conversation' | 'document';
 
 /**
  * Export format labels for UI
@@ -50,6 +54,7 @@ export interface ExportFormatInfo {
  */
 export interface ExportOptions {
   format: ExportFormat;
+  layout?: ExportLayout;
   includeMetadata?: boolean;
   includeStarred?: boolean;
   filename?: string;
@@ -57,6 +62,10 @@ export interface ExportOptions {
   // - 'inline': try to inline images as data URLs when possible
   // - 'none': keep remote URLs as-is
   embedImages?: 'inline' | 'none';
+  // Font size for PDF (pt) and Image (px) exports
+  fontSize?: number;
+  /** Whether to include image source attribution in markdown (default: true) */
+  includeImageSource?: boolean;
 }
 
 /**

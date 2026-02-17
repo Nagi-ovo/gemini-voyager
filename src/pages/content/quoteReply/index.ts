@@ -1,10 +1,39 @@
+import browser from 'webextension-polyfill';
+
+import { StorageKeys } from '@/core/types/common';
+
 import { getTranslationSync } from '../../../utils/i18n';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
-import { startPromptManager } from '../prompt/index';
 
-// Just for type reference/consistency if needed
+// ============================================================================
+// Constants
+// ============================================================================
 
-// SVGs
+/** CSS class names for quote reply button */
+const CSS_CLASSES = {
+  BUTTON: 'gv-quote-btn',
+  HIDDEN: 'gv-hidden',
+} as const;
+
+/** Timing constants (in milliseconds) */
+const TIMING = {
+  /** Delay before performing insertion to wait for UI expansion transitions */
+  INSERTION_DELAY_MS: 200,
+  /** Delay before retrying focus for editors that need extra time */
+  FOCUS_RETRY_DELAY_MS: 50,
+  /** Debounce delay for selection change detection */
+  SELECTION_DEBOUNCE_MS: 10,
+} as const;
+
+/** UI positioning constants (in pixels) */
+const POSITIONING = {
+  /** Minimum distance from viewport edge */
+  MIN_EDGE_OFFSET_PX: 10,
+  /** Gap between button and selection */
+  BUTTON_SELECTION_GAP_PX: 10,
+} as const;
+
+/** SVG icon for the quote button */
 const QUOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path></svg>`;
 
 const STYLE_ID = 'gemini-voyager-quote-reply-style';
@@ -107,14 +136,51 @@ export function startQuoteReply() {
   let quoteBtn: HTMLElement | null = null;
   let currentSelectionRange: Range | null = null;
   let isInternalClick = false;
+  let scrollRafId: number | null = null;
+  let selectionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Update button position based on current selection range's viewport coordinates. */
+  function updatePosition() {
+    if (!quoteBtn || !currentSelectionRange) return;
+
+    const rangeRect = currentSelectionRange.getBoundingClientRect();
+    const btnRect = quoteBtn.getBoundingClientRect();
+
+    // Hide when selection is scrolled out of viewport
+    const isOffScreen = rangeRect.bottom < 0 || rangeRect.top > window.innerHeight;
+
+    if (isOffScreen) {
+      if (!quoteBtn.classList.contains(CSS_CLASSES.HIDDEN)) {
+        quoteBtn.classList.add(CSS_CLASSES.HIDDEN);
+      }
+      return;
+    }
+
+    if (quoteBtn.classList.contains(CSS_CLASSES.HIDDEN)) {
+      quoteBtn.classList.remove(CSS_CLASSES.HIDDEN);
+    }
+
+    // position: fixed uses viewport coordinates, no scrollY/X needed
+    const top = rangeRect.top - btnRect.height - POSITIONING.BUTTON_SELECTION_GAP_PX;
+    const left = rangeRect.left + rangeRect.width / 2 - btnRect.width / 2;
+
+    quoteBtn.style.top = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, top)}px`;
+    quoteBtn.style.left = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, left)}px`;
+  }
+
+  function onScrollOrResize() {
+    if (scrollRafId) return;
+    scrollRafId = requestAnimationFrame(() => {
+      updatePosition();
+      scrollRafId = null;
+    });
+  }
 
   // Create button
   function createButton() {
     if (quoteBtn) return;
     quoteBtn = document.createElement('div');
-    quoteBtn.className = 'gv-quote-btn gv-hidden';
-    // Check language roughly (or just use "Quote")
-    // Check language roughly (or just use "Quote")
+    quoteBtn.className = `${CSS_CLASSES.BUTTON} ${CSS_CLASSES.HIDDEN}`;
     const text = getTranslationSync('quoteReply');
 
     quoteBtn.innerHTML = `${QUOTE_ICON}<span>${text}</span>`;
@@ -137,73 +203,131 @@ export function startQuoteReply() {
     const input = getChatInput();
     if (input) {
       expandInputCollapseIfNeeded();
-      input.focus();
 
-      // Format format: > selection
-      // We split by newlines to quote nicely
-      const quoted =
-        selectedText
-          .split('\n')
-          .map((line) => `> ${line}`)
-          .join('\n') + '\n\n';
+      // Format: > selection
+      // Prepare quote body (without leading/trailing newlines - those are added at insertion time)
+      const quoteBody = selectedText
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n');
 
-      // Insert text
-      // execCommand is reliable for contenteditable
-      const success = document.execCommand('insertText', false, quoted);
-      if (!success) {
-        // Fallback for textareas
+      // Ensure the input is visible
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Robust insertion and focus logic
+      const performInsertion = () => {
+        // First focus attempt
+        input.focus();
+
+        // Check input state at insertion time to avoid race conditions
+        // (user might type or another quote might be inserted during the delay)
+        const currentContent =
+          input instanceof HTMLTextAreaElement ? input.value : input.textContent || '';
+        const isInputEmpty = currentContent.trim().length === 0;
+
+        // 1. Add a newline at the end (any quote)
+        // 2. Add a newline at the start if not the first quote
+        // Example:
+        // ------------
+        // |> Quote 1 |
+        // |New text 1|
+        // |> Quote 2 |
+        // |New text 2|
+        // ------------
+        const quoted = isInputEmpty ? `${quoteBody}\n` : `\n${quoteBody}\n`;
+
         if (input instanceof HTMLTextAreaElement) {
-          const start = input.selectionStart;
-          const end = input.selectionEnd;
-          const val = input.value;
-          input.value = val.substring(0, start) + quoted + val.substring(end);
-          input.selectionStart = input.selectionEnd = start + quoted.length;
+          // Standard Textarea logic - simplified append
+          input.value += quoted;
+          input.selectionStart = input.selectionEnd = input.value.length;
           input.dispatchEvent(new Event('input', { bubbles: true }));
         } else {
-          // Fallback for contenteditable
-          input.innerText += quoted; // Very basic
+          // Contenteditable (Gemini/Quill) logic
+          // Use modern Range/Selection API instead of deprecated execCommand
+          const sel = window.getSelection();
+
+          // Move cursor to the end first
+          if (sel) {
+            const range = document.createRange();
+            range.selectNodeContents(input);
+            range.collapse(false); // Move cursor to very end
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+
+          // Insert text node directly (modern approach, no deprecated APIs)
+          const textNode = document.createTextNode(quoted);
+          if (sel && sel.rangeCount > 0) {
+            const insertRange = sel.getRangeAt(0);
+            insertRange.insertNode(textNode);
+
+            // Move cursor to after the inserted text
+            insertRange.setStartAfter(textNode);
+            insertRange.setEndAfter(textNode);
+            sel.removeAllRanges();
+            sel.addRange(insertRange);
+          } else {
+            // Fallback: just append to the input
+            input.appendChild(textNode);
+          }
+
+          // Re-force cursor to the end after insertion
+          const finalRange = document.createRange();
+          finalRange.selectNodeContents(input);
+          finalRange.collapse(false);
+          sel?.removeAllRanges();
+          sel?.addRange(finalRange);
+
+          input.dispatchEvent(new Event('input', { bubbles: true }));
         }
-      }
 
-      // Dispatch input event for contenteditable just in case framework needs it
-      if (!(input instanceof HTMLTextAreaElement)) {
-        // Dispatch input event to notify frameworks (React/Lit)
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-      }
+        // Final focus force
+        input.focus();
+        // Some editors need an extra click or focus to show the cursor
+        setTimeout(() => input.focus(), TIMING.FOCUS_RETRY_DELAY_MS);
+      };
 
-      // Hide button
+      // Use a slightly longer delay to wait for any expansion transitions
+      setTimeout(performInsertion, TIMING.INSERTION_DELAY_MS);
+
+      // Hide button and clear selection state
       hideButton();
-      // Clear selection
+      currentSelectionRange = null;
       window.getSelection()?.removeAllRanges();
     } else {
       console.warn('[Gemini Voyager] Could not find chat input.');
     }
   }
 
-  function showButton(rect: DOMRect) {
+  function showButton() {
     if (!quoteBtn) createButton();
     if (!quoteBtn) return;
 
-    quoteBtn.classList.remove('gv-hidden');
+    // updatePosition() manages visibility (HIDDEN class) based on viewport check
+    updatePosition();
 
-    // Position above the selection
-    const btnRect = quoteBtn.getBoundingClientRect();
-    const top = rect.top - btnRect.height - 10 + window.scrollY;
-    const left = rect.left + rect.width / 2 - btnRect.width / 2 + window.scrollX;
-
-    quoteBtn.style.top = `${Math.max(10, top)}px`;
-    quoteBtn.style.left = `${Math.max(10, left)}px`;
+    // Add listeners for scroll/resize
+    window.addEventListener('scroll', onScrollOrResize, { capture: true, passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
   }
 
   function hideButton() {
     if (quoteBtn) {
-      quoteBtn.classList.add('gv-hidden');
+      quoteBtn.classList.add(CSS_CLASSES.HIDDEN);
+    }
+    // Remove listeners
+    window.removeEventListener('scroll', onScrollOrResize, { capture: true });
+    window.removeEventListener('resize', onScrollOrResize);
+    if (scrollRafId) {
+      cancelAnimationFrame(scrollRafId);
+      scrollRafId = null;
     }
   }
 
   function handleSelectionChange() {
-    // Use a small timeout to let selection settle
-    setTimeout(() => {
+    // Debounce to let selection settle and avoid redundant updates on rapid key events
+    if (selectionDebounceTimer) clearTimeout(selectionDebounceTimer);
+    selectionDebounceTimer = setTimeout(() => {
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
         hideButton();
@@ -261,11 +385,11 @@ export function startQuoteReply() {
       // If rect is zero (e.g. invisible), don't show
       if (rect.width === 0 && rect.height === 0) return;
 
-      showButton(rect);
-    }, 10);
+      showButton();
+    }, TIMING.SELECTION_DEBOUNCE_MS);
   }
 
-  function onMouseUp(e: MouseEvent) {
+  function onMouseUp(_: MouseEvent) {
     if (isInternalClick) {
       isInternalClick = false;
       return;
@@ -273,20 +397,47 @@ export function startQuoteReply() {
     handleSelectionChange();
   }
 
+  // Function to update button text when language changes
+  function updateButtonText() {
+    if (quoteBtn) {
+      const span = quoteBtn.querySelector('span');
+      if (span) {
+        span.textContent = getTranslationSync('quoteReply');
+      }
+    }
+  }
+
   // Listen to selection changes via mouseup (often better for "finished" selection)
   // selectionchange event fires too often while dragging.
   document.addEventListener('mouseup', onMouseUp);
 
-  // Also listen to keyup for keyboard selection
-  document.addEventListener('keyup', (e) => {
+  function onKeys(e: KeyboardEvent) {
     if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
       handleSelectionChange();
     }
-  });
+  }
+
+  // Also listen to keyup for keyboard selection
+  document.addEventListener('keyup', onKeys);
+
+  // Listen for language changes and update button text
+  function onStorageChanged(
+    changes: Record<string, browser.Storage.StorageChange>,
+    areaName: string,
+  ) {
+    if ((areaName === 'sync' || areaName === 'local') && changes[StorageKeys.LANGUAGE]) {
+      updateButtonText();
+    }
+  }
+  browser.storage.onChanged.addListener(onStorageChanged);
 
   // Cleanup
   return () => {
+    hideButton();
+    if (selectionDebounceTimer) clearTimeout(selectionDebounceTimer);
     document.removeEventListener('mouseup', onMouseUp);
+    document.removeEventListener('keyup', onKeys);
+    browser.storage.onChanged.removeListener(onStorageChanged);
     if (quoteBtn) quoteBtn.remove();
     const style = document.getElementById(STYLE_ID);
     if (style) style.remove();

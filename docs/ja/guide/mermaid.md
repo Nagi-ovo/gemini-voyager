@@ -29,6 +29,14 @@ Gemini が Mermaid コードブロック（フローチャート、シーケン�
 - **⊙**: ビューのリセット
 - **✕ / ESC**: 全画面を閉じる
 
+## 互換性とトラブルシューティング
+
+::: warning 説明
+
+- **Firefox の制限**: 環境の制限により、Firefox では 9.2.2 バージョンを使用しており、**Timeline** や **Sankey** などの新機能は現在サポートされていません。
+- **構文エラー**: レンダリングの失敗は、通常 Gemini が生成したコードの構文エラーによるものです。現在 Bad Case を収集しており、今後のアップデートで一般的な生成エラーを自動修正するパッチを導入予定です。
+  :::
+
 <div align="center">
   <img src="/assets/mermaid-preview.png" alt="Mermaid Diagram Rendering" style="max-width: 100%; border-radius: 8px;"/>
 </div>

@@ -1,6 +1,10 @@
 # Installation
 
-Choisissez votre voie.
+::: info Nouvelles
+🍎 **L'extension native Safari est disponible !** Elle est entièrement gratuite et s'installe en un clic.
+:::
+
+Choisissez votre méthode.
 
 > ⚠️ Note : Le Gestionnaire de Prompts est la seule fonctionnalité compatible avec Gemini pour Entreprise.
 
@@ -10,7 +14,7 @@ La façon la plus simple de commencer. Les mises à jour sont automatiques.
 
 **Chrome / Brave / Opera / Vivaldi :**
 
-[<img src="https://img.shields.io/badge/Chrome_Web_Store-Télécharger-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Installer depuis le Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol)
+[<img src="https://img.shields.io/badge/Chrome_Web_Store-Télécharger-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Installer depuis le Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=fr)
 
 **Microsoft Edge :**
 
@@ -42,14 +46,16 @@ Le processus de validation des stores peut être lent. Si vous voulez la version
 
 ## 3. Safari (macOS)
 
-1. Téléchargez `gemini-voyager-safari-vX.Y.Z.zip` depuis les [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
-2. Décompressez le fichier.
-3. Exécutez la commande suivante dans le Terminal pour la convertir (nécessite Xcode) :
-   ```bash
-   xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
-   ```
-4. Lancez l'application dans Xcode pour l'installer.
-5. Activez-la dans Réglages Safari > Extensions.
+Safari prend désormais en charge la distribution directe ! Téléchargez l'application pré-signée :
+
+1. Téléchargez la <SafariDownloadLink>dernière version Safari (.dmg)</SafariDownloadLink>.
+2. Ouvrez le fichier et suivez les instructions pour l'installer.
+3. Double-cliquez pour lancer l'application.
+4. Activez l'extension dans **Réglages Safari > Extensions**.
+
+> 💡 La version Safari est désormais directement signée pour la distribution — pas besoin de conversion Xcode !
+>
+> ⚠️ **Limitations** : En raison de la nature de Safari, (a) la suppression du filigrane (b) l'exportation d'images (PDF recommandé) ne sont pas prises en charge.
 
 ---
 

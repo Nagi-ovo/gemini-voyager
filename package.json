@@ -1,8 +1,8 @@
 {
   "name": "gemini-voyager",
-  "version": "1.1.7",
+  "version": "1.2.6",
   "description": "Supercharge your Gemini experience with timeline navigation, folder organization, prompt vault, and chat export.",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "author": "Jesse Zhang",
   "repository": {
     "type": "git",
@@ -21,7 +21,6 @@
     "dev:chrome-open": "bun scripts/launch-chrome.cjs",
     "dev:firefox": "nodemon --config nodemon.firefox.json",
     "dev:safari": "nodemon --config nodemon.safari.json",
-    "generate:ai-guides": "bun scripts/generate-ai-guides.js",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
@@ -32,23 +31,27 @@
     "commitlint": "commitlint --edit $GIT_PARAMS",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "sponsors:update": "bun run scripts/generate-sponsors.cjs"
   },
   "type": "module",
   "dependencies": {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dompurify": "^3",
+    "html-to-image": "^1.11.13",
     "jszip": "^3.10.1",
     "katex": "^0.16",
     "lucide-react": "^0.553.0",
     "marked": "16.4.1",
     "marked-katex-extension": "^4",
-    "mermaid": "9.2.2",
+    "mermaid": "11.12.2",
+    "mermaid-legacy": "npm:mermaid@9.2.2",
     "prettier": "^3.6.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.3.1",
+    "temml": "^0.13.1",
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {

@@ -1,12 +1,31 @@
 // Static imports to avoid CSP issues with dynamic imports in content scripts
 import { StorageKeys } from '@/core/types/common';
+import { isSafari } from '@/core/utils/browser';
 import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
 import type { TranslationKey } from '@/utils/translations';
 
 import { ConversationExportService } from '../../../features/export/services/ConversationExportService';
-import type { ConversationMetadata } from '../../../features/export/types/export';
+import { ImageExportService } from '../../../features/export/services/ImageExportService';
+import type {
+  ConversationMetadata,
+  ChatTurn as ExportChatTurn,
+  ExportFormat,
+} from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
+import { resolveExportErrorMessage } from '../../../features/export/ui/ExportErrorMessage';
+import { showExportToast } from '../../../features/export/ui/ExportToast';
+import { filterOutDeepResearchImmersiveNodes, resolveConversationRoot } from './conversationDom';
+import {
+  getConversationMenuContext,
+  getResponseMenuContext,
+  injectConversationMenuExportButton,
+  injectResponseMenuExportButton,
+} from './conversationMenuInjection';
+import { injectResponseActionCopyImageButtons } from './responseActionImageButton';
+import { copyImageBlobToClipboard, downloadImageBlob } from './responseImageCopy';
+import { groupSelectedMessagesByTurn, resolveInitialSelectedMessageIds } from './selectionUtils';
+import { resolveSidebarConversationTarget } from './sidebarConversationTarget';
 import {
   computeConversationFingerprint,
   waitForConversationFingerprintChangeOrTimeout,
@@ -14,9 +33,26 @@ import {
 
 // Storage key to persist export state across reloads (e.g. when clicking top node triggers refresh)
 const SESSION_KEY_PENDING_EXPORT = 'gv_export_pending';
+const CONVERSATION_MENU_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
+const CONVERSATION_MENU_TRIGGER_TEST_ID = 'actions-menu-button';
+const RESPONSE_MENU_TRIGGER_TEST_ID = 'more-menu-button';
+const MENU_INJECTION_RETRY_LIMIT = 8;
+const MENU_INJECTION_RETRY_DELAY_MS = 80;
+const EXPORT_PRELOAD_WAIT_OPTIONS = {
+  timeoutMs: 12000,
+  minWaitMs: 700,
+  idleMs: 320,
+  pollIntervalMs: 90,
+  maxSamples: 10,
+} as const;
+const FINAL_EXPORT_PREPARE_DELAY_MS = 120;
+let conversationMenuObserver: MutationObserver | null = null;
+let responseActionObserver: MutationObserver | null = null;
 
 interface PendingExportState {
-  format: string; // ExportFormat
+  format: ExportFormat;
+  fontSize?: number;
+  initialSelectedMessageId?: string;
   attempt: number;
   url: string;
   status: 'clicking';
@@ -30,6 +66,10 @@ function hashString(input: string): string {
     h = Math.imul(h, 16777619);
   }
   return (h >>> 0).toString(36);
+}
+
+function isExportFormat(value: unknown): value is ExportFormat {
+  return value === 'json' || value === 'markdown' || value === 'pdf' || value === 'image';
 }
 
 function waitForElement(selector: string, timeoutMs: number = 6000): Promise<Element | null> {
@@ -108,6 +148,25 @@ function normalizeText(text: string | null): string {
 
 // Note: cleaning of thinking toggles is handled at DOM level in extractAssistantText
 
+/**
+ * querySelector variant that skips elements nested inside model-thoughts / thoughts-container.
+ * When the user expands Gemini's "thinking" section, a second `message-content` element
+ * appears *before* the real response in DOM order.  A plain `querySelector` would match
+ * the thinking panel first, causing exports to grab the wrong content.
+ */
+function queryOutsideThoughts<T extends Element = Element>(
+  root: Element,
+  selector: string,
+): T | null {
+  const candidates = root.querySelectorAll<T>(selector);
+  for (const el of Array.from(candidates)) {
+    if (!el.closest('model-thoughts, .thoughts-container, .thoughts-content')) {
+      return el;
+    }
+  }
+  return null;
+}
+
 function filterTopLevel(elements: Element[]): HTMLElement[] {
   const arr = elements.map((e) => e as HTMLElement);
   const out: HTMLElement[] = [];
@@ -127,8 +186,8 @@ function filterTopLevel(elements: Element[]): HTMLElement[] {
   return out;
 }
 
-function getConversationRoot(): HTMLElement {
-  return (document.querySelector('main') as HTMLElement) || (document.body as HTMLElement);
+function getConversationRoot(userSelectors: string[]): HTMLElement {
+  return resolveConversationRoot({ userSelectors, doc: document });
 }
 
 function computeConversationId(): string {
@@ -219,10 +278,13 @@ function readStarredSet(): Set<string> {
 
 function extractAssistantText(el: HTMLElement): string {
   // Prefer direct text from message container if available (connected to DOM)
+  // Use queryOutsideThoughts to avoid matching the message-content inside
+  // the expanded thinking/reasoning panel.
   try {
-    const mc = el.querySelector(
+    const mc = queryOutsideThoughts<HTMLElement>(
+      el,
       'message-content, .markdown, .markdown-main-panel',
-    ) as HTMLElement | null;
+    );
     if (mc) {
       const raw = mc.textContent || mc.innerText || '';
       const txt = normalizeText(raw);
@@ -264,27 +326,33 @@ function extractAssistantText(el: HTMLElement): string {
 }
 
 type ChatTurn = {
+  turnId: string;
   user: string;
   assistant: string;
   starred: boolean;
   userElement?: HTMLElement;
   assistantElement?: HTMLElement;
+  assistantHostElement?: HTMLElement;
 };
 
 function collectChatPairs(): ChatTurn[] {
-  const root = getConversationRoot();
   const userSelectors = getUserSelectors();
+  const root = getConversationRoot(userSelectors);
   const assistantSelectors = getAssistantSelectors();
-  const userNodeList = root.querySelectorAll(userSelectors.join(','));
+  const userNodeList = filterOutDeepResearchImmersiveNodes(
+    Array.from(root.querySelectorAll<HTMLElement>(userSelectors.join(','))),
+  );
   if (!userNodeList || userNodeList.length === 0) return [];
-  let users = filterTopLevel(Array.from(userNodeList));
+  let users = filterTopLevel(userNodeList);
   if (users.length === 0) return [];
 
   const firstOffset = (users[0] as HTMLElement).offsetTop || 0;
   users = dedupeByTextAndOffset(users, firstOffset);
   const userOffsets = users.map((el) => (el as HTMLElement).offsetTop || 0);
 
-  const assistantsAll = Array.from(root.querySelectorAll(assistantSelectors.join(',')));
+  const assistantsAll = filterOutDeepResearchImmersiveNodes(
+    Array.from(root.querySelectorAll<HTMLElement>(assistantSelectors.join(','))),
+  );
   const assistants = filterTopLevel(assistantsAll);
   const assistantOffsets = assistants.map((el) => (el as HTMLElement).offsetTop || 0);
 
@@ -332,100 +400,229 @@ function collectChatPairs(): ChatTurn[] {
       let finalAssistantEl: HTMLElement | undefined = undefined;
       if (aEl) {
         const pick =
-          (aEl.querySelector('message-content') as HTMLElement | null) ||
-          (aEl.querySelector('.markdown, .markdown-main-panel') as HTMLElement | null) ||
+          queryOutsideThoughts<HTMLElement>(aEl, 'message-content') ||
+          queryOutsideThoughts<HTMLElement>(aEl, '.markdown, .markdown-main-panel') ||
           (aEl.closest('.presented-response-container') as HTMLElement | null) ||
-          (aEl.querySelector(
+          queryOutsideThoughts<HTMLElement>(
+            aEl,
             '.presented-response-container, .response-content',
-          ) as HTMLElement | null) ||
-          (aEl.querySelector('response-element') as HTMLElement | null) ||
+          ) ||
+          queryOutsideThoughts<HTMLElement>(aEl, 'response-element') ||
           aEl;
         finalAssistantEl = pick || undefined;
       }
       pairs.push({
+        turnId,
         user: uText,
         assistant: aText,
         starred,
         userElement: uEl,
         assistantElement: finalAssistantEl,
+        assistantHostElement: aEl || undefined,
       });
     }
   }
   return pairs;
 }
 
-function downloadJSON(data: any, filename: string): void {
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: 'application/json;charset=utf-8',
+type ExportMessageRole = 'user' | 'assistant';
+
+type ExportMessage = {
+  messageId: string;
+  role: ExportMessageRole;
+  hostElement: HTMLElement;
+  exportElement?: HTMLElement;
+  text: string;
+  starred: boolean;
+};
+
+function buildExportMessagesFromPairs(pairs: ChatTurn[]): ExportMessage[] {
+  const out: ExportMessage[] = [];
+  pairs.forEach((pair) => {
+    if (pair.userElement) {
+      out.push({
+        messageId: `${pair.turnId}:u`,
+        role: 'user',
+        hostElement: pair.userElement,
+        exportElement: pair.userElement,
+        text: pair.user,
+        starred: pair.starred,
+      });
+    }
+
+    const assistantHost = pair.assistantHostElement;
+    if (assistantHost) {
+      out.push({
+        messageId: `${pair.turnId}:a`,
+        role: 'assistant',
+        hostElement: assistantHost,
+        exportElement: pair.assistantElement || assistantHost,
+        text: pair.assistant,
+        starred: pair.starred,
+      });
+    }
   });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    try {
-      document.body.removeChild(a);
-    } catch {}
-    URL.revokeObjectURL(url);
-  }, 0);
+  return out;
 }
 
-function buildExportPayload(pairs: ChatTurn[]) {
-  return {
-    format: 'gemini-voyager.chat.v1',
-    url: location.href,
-    exportedAt: new Date().toISOString(),
-    count: pairs.length,
-    items: pairs,
-  };
+function computeSortedMessages(pairsInput: ChatTurn[]): Array<ExportMessage & { absTop: number }> {
+  const msgs = buildExportMessagesFromPairs(pairsInput);
+  const withPos = msgs.map((message) => {
+    const rect = message.hostElement.getBoundingClientRect();
+    return {
+      ...message,
+      absTop: rect.top + window.scrollY,
+    };
+  });
+
+  withPos.sort((a, b) => a.absTop - b.absTop);
+  return withPos;
 }
 
-function ensureButtonInjected(container: Element): HTMLButtonElement | null {
-  const host = container as HTMLElement;
-  if (!host || host.querySelector('.gv-export-btn'))
-    return host.querySelector('.gv-export-btn') as HTMLButtonElement | null;
+function buildTurnsForSelectedMessages(
+  selectedMessages: readonly ExportMessage[],
+): ExportChatTurn[] {
+  const groupedTurns = groupSelectedMessagesByTurn(selectedMessages);
+  return groupedTurns
+    .map((turn) => ({
+      user: turn.user?.text || '',
+      assistant: turn.assistant?.text || '',
+      starred: turn.starred,
+      omitEmptySections: true,
+      userElement: turn.user?.exportElement,
+      assistantElement: turn.assistant?.exportElement,
+    }))
+    .filter(
+      (turn) =>
+        turn.user.length > 0 ||
+        turn.assistant.length > 0 ||
+        !!turn.userElement ||
+        !!turn.assistantElement,
+    );
+}
+
+function buildTurnsForSelectedMessageIds(
+  selectedMessageIds: ReadonlySet<string>,
+  pairsInput: ChatTurn[] = collectChatPairs(),
+): ExportChatTurn[] {
+  if (selectedMessageIds.size === 0) return [];
+  const selectedMessages = computeSortedMessages(pairsInput).filter((message) =>
+    selectedMessageIds.has(message.messageId),
+  );
+  return buildTurnsForSelectedMessages(selectedMessages);
+}
+
+function resolveAssistantMessageIdFromMenuTrigger(trigger: HTMLElement | null): string | null {
+  if (!trigger) return null;
+
+  const assistantHost = trigger.closest(
+    '.response-container, response-container, .model-response, model-response',
+  ) as HTMLElement | null;
+  if (!assistantHost) return null;
+
+  const messages = buildExportMessagesFromPairs(collectChatPairs());
+  const target = messages.find((message) => {
+    if (message.role !== 'assistant') return false;
+    const host = message.hostElement;
+    return (
+      host === assistantHost ||
+      host.contains(assistantHost) ||
+      assistantHost.contains(host) ||
+      host.contains(trigger)
+    );
+  });
+
+  return target?.messageId || null;
+}
+
+function ensureDropdownInjected(logoElement: Element): HTMLButtonElement | null {
+  // Check if already injected
+  const existingWrapper = document.querySelector('.gv-logo-dropdown-wrapper');
+  if (existingWrapper) {
+    return existingWrapper.querySelector('.gv-export-dropdown-btn') as HTMLButtonElement | null;
+  }
+
+  const logo = logoElement as HTMLElement;
+  const parent = logo.parentElement;
+  if (!parent) return null;
+
+  // Create wrapper that will contain both logo and dropdown
+  const wrapper = document.createElement('div');
+  wrapper.className = 'gv-logo-dropdown-wrapper';
+
+  // Move logo into wrapper
+  parent.insertBefore(wrapper, logo);
+  wrapper.appendChild(logo);
+
+  // Create dropdown container
+  const dropdown = document.createElement('div');
+  dropdown.className = 'gv-logo-dropdown';
+
+  // Create export button inside dropdown
   const btn = document.createElement('button');
-  btn.className = 'gv-export-btn';
+  btn.className = 'gv-export-dropdown-btn';
   btn.type = 'button';
-  btn.title = 'Export chat history (JSON)';
-  btn.setAttribute('aria-label', 'Export chat history (JSON)');
-  host.appendChild(btn);
-  return btn;
-}
+  btn.title = 'Export chat history';
+  btn.setAttribute('aria-label', 'Export chat history');
 
-function formatFilename(): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = pad(d.getMonth() + 1);
-  const day = pad(d.getDate());
-  const hh = pad(d.getHours());
-  const mm = pad(d.getMinutes());
-  const ss = pad(d.getSeconds());
-  return `gemini-chat-${y}${m}${day}-${hh}${mm}${ss}.json`;
+  // Export icon
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'gv-export-dropdown-icon';
+  btn.appendChild(iconSpan);
+
+  // Export text label
+  const labelSpan = document.createElement('span');
+  labelSpan.className = 'gv-export-dropdown-label';
+  labelSpan.textContent = 'Export';
+  btn.appendChild(labelSpan);
+
+  dropdown.appendChild(btn);
+  wrapper.appendChild(dropdown);
+
+  return btn;
 }
 
 async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, string>>> {
   try {
-    const [enRaw, zhRaw, jaRaw, frRaw, esRaw] = await Promise.all([
-      import(/* @vite-ignore */ '../../../locales/en/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/ja/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/fr/messages.json'),
-      import(/* @vite-ignore */ '../../../locales/es/messages.json'),
-    ]);
+    const [enRaw, zhRaw, zhTWRaw, jaRaw, frRaw, esRaw, ptRaw, arRaw, ruRaw, koRaw] =
+      await Promise.all([
+        import(/* @vite-ignore */ '../../../locales/en/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/zh/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/zh_TW/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ja/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/fr/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/es/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/pt/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ar/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ru/messages.json'),
+        import(/* @vite-ignore */ '../../../locales/ko/messages.json'),
+      ]);
 
     return {
       en: extractMessageDictionary(enRaw),
       zh: extractMessageDictionary(zhRaw),
+      zh_TW: extractMessageDictionary(zhTWRaw),
       ja: extractMessageDictionary(jaRaw),
       fr: extractMessageDictionary(frRaw),
       es: extractMessageDictionary(esRaw),
+      pt: extractMessageDictionary(ptRaw),
+      ar: extractMessageDictionary(arRaw),
+      ru: extractMessageDictionary(ruRaw),
+      ko: extractMessageDictionary(koRaw),
     };
   } catch {
-    return { en: {}, zh: {}, ja: {}, fr: {}, es: {} };
+    return {
+      en: {},
+      zh: {},
+      zh_TW: {},
+      ja: {},
+      fr: {},
+      es: {},
+      pt: {},
+      ar: {},
+      ru: {},
+      ko: {},
+    };
   }
 }
 
@@ -434,6 +631,139 @@ async function loadDictionaries(): Promise<Record<AppLanguage, Record<string, st
  * Used for JSON/Markdown metadata so all formats share the same title.
  * Mirrors the logic used by PDFPrintService.getConversationTitle.
  */
+function isMeaningfulConversationTitle(title: string | null | undefined): title is string {
+  const t = (title || '').trim();
+  if (!t) return false;
+  if (
+    t === 'Untitled Conversation' ||
+    t === 'Gemini' ||
+    t === 'Google Gemini' ||
+    t === 'Google AI Studio' ||
+    t === 'New chat'
+  ) {
+    return false;
+  }
+  if (t.startsWith('Gemini -') || t.startsWith('Google AI Studio -')) return false;
+  return true;
+}
+
+function extractConversationIdFromUrl(): string | null {
+  const appMatch = window.location.pathname.match(/\/app\/([^/?#]+)/);
+  if (appMatch?.[1]) return appMatch[1];
+  const gemMatch = window.location.pathname.match(/\/gem\/[^/]+\/([^/?#]+)/);
+  if (gemMatch?.[1]) return gemMatch[1];
+  return null;
+}
+
+function extractConversationIdFromHref(href: string): string | null {
+  if (!href) return null;
+  try {
+    const parsed = new URL(href, window.location.origin);
+    const appMatch = parsed.pathname.match(/\/app\/([^/?#]+)/);
+    if (appMatch?.[1]) return appMatch[1];
+    const gemMatch = parsed.pathname.match(/\/gem\/[^/]+\/([^/?#]+)/);
+    if (gemMatch?.[1]) return gemMatch[1];
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function isGemLabel(text: string | null | undefined): boolean {
+  const t = (text || '').trim().toLowerCase();
+  return t === 'gem' || t === 'gems';
+}
+
+function extractTitleFromLinkText(link?: HTMLAnchorElement | null): string | null {
+  if (!link) return null;
+  const text = (link.innerText || '').trim();
+  if (!text) return null;
+  const parts = text
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((s) => !isGemLabel(s))
+    .filter((s) => s.length >= 2);
+  if (parts.length === 0) return null;
+  return parts.reduce((a, b) => (b.length > a.length ? b : a), parts[0]) || null;
+}
+
+function extractTitleFromConversationElement(conversationEl: HTMLElement): string | null {
+  const scope =
+    (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
+  const bySelector = scope.querySelector(
+    '.gds-label-l, .conversation-title-text, [data-test-id="conversation-title"], h3',
+  );
+  const selectorTitle = bySelector?.textContent?.trim();
+  if (isMeaningfulConversationTitle(selectorTitle) && !isGemLabel(selectorTitle)) {
+    return selectorTitle;
+  }
+
+  const link = scope.querySelector(
+    'a[href*="/app/"], a[href*="/gem/"]',
+  ) as HTMLAnchorElement | null;
+  const ariaTitle = link?.getAttribute('aria-label')?.trim();
+  if (isMeaningfulConversationTitle(ariaTitle) && !isGemLabel(ariaTitle)) {
+    return ariaTitle;
+  }
+  const linkTitle = link?.getAttribute('title')?.trim();
+  if (isMeaningfulConversationTitle(linkTitle) && !isGemLabel(linkTitle)) {
+    return linkTitle;
+  }
+  const fromLinkText = extractTitleFromLinkText(link);
+  if (isMeaningfulConversationTitle(fromLinkText)) {
+    return fromLinkText;
+  }
+
+  const label = scope.querySelector('.gds-body-m, .gds-label-m, .subtitle');
+  const labelText = label?.textContent?.trim();
+  if (isMeaningfulConversationTitle(labelText) && !isGemLabel(labelText)) {
+    return labelText;
+  }
+
+  const raw = scope.textContent?.trim() || '';
+  if (!raw) return null;
+  const firstLine =
+    raw
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)[0] || raw;
+  if (isMeaningfulConversationTitle(firstLine) && !isGemLabel(firstLine)) {
+    return firstLine.slice(0, 80);
+  }
+
+  return null;
+}
+
+function extractTitleFromNativeSidebarByConversationId(conversationId: string): string | null {
+  const escapedConversationId = escapeCssAttributeValue(conversationId);
+  const byJslog = document.querySelector(
+    `[data-test-id="conversation"][jslog*="c_${escapedConversationId}"]`,
+  ) as HTMLElement | null;
+  if (byJslog) {
+    const title = extractTitleFromConversationElement(byJslog);
+    if (title) return title;
+  }
+
+  const byHrefLink = document.querySelector(
+    `[data-test-id="conversation"] a[href*="${escapedConversationId}"]`,
+  ) as HTMLElement | null;
+  if (byHrefLink) {
+    const title = extractTitleFromConversationElement(byHrefLink);
+    if (title) return title;
+  }
+
+  return null;
+}
+
+function escapeCssAttributeValue(value: string): string {
+  const escape = globalThis.CSS?.escape;
+  if (typeof escape === 'function') {
+    return escape(value);
+  }
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
 function getConversationTitleForExport(): string {
   // Strategy 1: Get from active conversation in Gemini Voyager Folder UI (most accurate)
   try {
@@ -451,23 +781,16 @@ function getConversationTitleForExport(): string {
     } catch {}
   }
 
-  // Strategy 1b: Get from Gemini's native sidebar using the selected actions container
+  // Strategy 1b: Get from Gemini native sidebar via current conversation ID
   try {
-    const actionsContainer = document.querySelector('.conversation-actions-container.selected');
-    if (actionsContainer && actionsContainer.previousElementSibling) {
-      const convEl = actionsContainer.previousElementSibling as HTMLElement;
-      const rawTitle = convEl.textContent || '';
-      const title = rawTitle.trim();
-      if (title) {
-        return title;
-      }
+    const conversationId = extractConversationIdFromUrl();
+    if (conversationId) {
+      const title = extractTitleFromNativeSidebarByConversationId(conversationId);
+      if (title) return title;
     }
   } catch (error) {
     try {
-      console.debug(
-        '[Export] Failed to get title from native sidebar selected conversation:',
-        error,
-      );
+      console.debug('[Export] Failed to get title from native sidebar by conversation id:', error);
     } catch {}
   }
 
@@ -475,15 +798,7 @@ function getConversationTitleForExport(): string {
   const titleElement = document.querySelector('title');
   if (titleElement) {
     const title = titleElement.textContent?.trim();
-    if (
-      title &&
-      title !== 'Gemini' &&
-      title !== 'Google Gemini' &&
-      title !== 'Google AI Studio' &&
-      !title.startsWith('Gemini -') &&
-      !title.startsWith('Google AI Studio -') &&
-      title.length > 0
-    ) {
+    if (isMeaningfulConversationTitle(title)) {
       return title;
     }
   }
@@ -499,8 +814,9 @@ function getConversationTitleForExport(): string {
 
     for (const selector of selectors) {
       const element = document.querySelector(selector);
-      if (element?.textContent?.trim() && element.textContent.trim() !== 'New chat') {
-        return element.textContent.trim();
+      const title = element?.textContent?.trim();
+      if (isMeaningfulConversationTitle(title)) {
+        return title;
       }
     }
   } catch (error) {
@@ -509,7 +825,99 @@ function getConversationTitleForExport(): string {
     } catch {}
   }
 
+  // Strategy 4: URL fallback
+  const conversationId = extractConversationIdFromUrl();
+  if (conversationId) {
+    return `Conversation ${conversationId.slice(0, 8)}`;
+  }
+
   return 'Untitled Conversation';
+}
+
+function findSidebarConversationLinkById(conversationId: string): HTMLAnchorElement | null {
+  const escapedConversationId = escapeCssAttributeValue(conversationId);
+  const byJslog = document.querySelector(
+    `[data-test-id="conversation"][jslog*="c_${escapedConversationId}"] a[href]`,
+  ) as HTMLAnchorElement | null;
+  if (byJslog) return byJslog;
+
+  const links = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>(
+      '[data-test-id="conversation"] a[href], a[data-test-id="conversation"][href]',
+    ),
+  );
+  for (const link of links) {
+    if (extractConversationIdFromHref(link.href) === conversationId) {
+      return link;
+    }
+  }
+
+  return null;
+}
+
+function triggerNativeClick(target: HTMLElement): void {
+  const opts = { bubbles: true, cancelable: true, view: window };
+  target.dispatchEvent(new MouseEvent('pointerdown', opts));
+  target.dispatchEvent(new MouseEvent('mousedown', opts));
+  target.dispatchEvent(new MouseEvent('mouseup', opts));
+  target.dispatchEvent(new MouseEvent('click', opts));
+}
+
+async function waitForConversationUrl(
+  conversationId: string,
+  timeoutMs: number = 10000,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (extractConversationIdFromUrl() === conversationId) return true;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+  }
+  return false;
+}
+
+async function navigateToConversationAndWait(
+  conversationId: string,
+  fallbackUrl: string,
+): Promise<boolean> {
+  const currentConversationId = extractConversationIdFromUrl();
+  if (currentConversationId === conversationId) {
+    const existing = await waitForAnyElement(getUserSelectors(), 8000);
+    return !!existing;
+  }
+
+  const link = findSidebarConversationLinkById(conversationId);
+  if (link) {
+    triggerNativeClick(link);
+  } else if (fallbackUrl) {
+    window.location.assign(fallbackUrl);
+  } else {
+    return false;
+  }
+
+  const routeReady = await waitForConversationUrl(conversationId, 12000);
+  if (!routeReady) return false;
+  const contentReady = await waitForAnyElement(getUserSelectors(), 15000);
+  return !!contentReady;
+}
+
+async function exportFromSidebarConversationTrigger(
+  trigger: HTMLElement,
+  dict: Record<AppLanguage, Record<string, string>>,
+  getCurrentLanguage: () => AppLanguage,
+): Promise<void> {
+  const target = resolveSidebarConversationTarget(trigger);
+  if (!target) {
+    alert('Unable to locate the selected conversation. Please open it first, then export.');
+    return;
+  }
+
+  const ready = await navigateToConversationAndWait(target.conversationId, target.url);
+  if (!ready) {
+    alert('Failed to open the selected conversation for export. Please retry.');
+    return;
+  }
+
+  await showExportDialog(dict, getCurrentLanguage());
 }
 
 function normalizeLang(lang: string | undefined): AppLanguage {
@@ -552,12 +960,176 @@ async function getLanguage(): Promise<AppLanguage> {
 /**
  * Finds the top-most user message element in the DOM.
  */
-function getTopUserElement(): HTMLElement | null {
-  const selectors = getUserSelectors();
-  const all = document.querySelectorAll(selectors.join(','));
+function getTopUserElement(selectors: string[]): HTMLElement | null {
+  const root = getConversationRoot(selectors);
+  const all = filterOutDeepResearchImmersiveNodes(
+    Array.from(root.querySelectorAll<HTMLElement>(selectors.join(','))),
+  );
   if (!all.length) return null;
-  const topLevel = filterTopLevel(Array.from(all));
+  const topLevel = filterTopLevel(all);
   return topLevel.length > 0 ? topLevel[0] : null;
+}
+
+function isElementVisibleForAlignment(el: HTMLElement): boolean {
+  const rect = el.getBoundingClientRect();
+  if (rect.width < 24 || rect.height < 12) return false;
+
+  const style = window.getComputedStyle(el);
+  if (style.display === 'none' || style.visibility === 'hidden') return false;
+  const opacity = Number.parseFloat(style.opacity || '1');
+  if (Number.isFinite(opacity) && opacity <= 0.01) return false;
+
+  return true;
+}
+
+function isLikelySidebarElement(el: HTMLElement): boolean {
+  if (
+    el.closest(
+      [
+        '[data-test-id="side-nav"]',
+        'side-navigation',
+        'mat-sidenav',
+        'aside',
+        'nav',
+        '.side-nav',
+        '.sidenav',
+        '.chat-history-nav',
+      ].join(','),
+    )
+  ) {
+    return true;
+  }
+
+  const rect = el.getBoundingClientRect();
+  const isNarrow = rect.width > 0 && rect.width <= Math.max(380, window.innerWidth * 0.45);
+  const isLeftRail = rect.left <= Math.max(40, window.innerWidth * 0.18);
+  const isTall = rect.height >= window.innerHeight * 0.35;
+  return isNarrow && isLeftRail && isTall;
+}
+
+function pickBestVisibleAlignmentTarget(
+  selectors: string[],
+  options?: {
+    minWidth?: number;
+    minHeight?: number;
+    allowSidebar?: boolean;
+  },
+): HTMLElement | null {
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>(selectors.join(',')));
+  let best: { el: HTMLElement; score: number } | null = null;
+  const minWidth = options?.minWidth ?? 220;
+  const minHeight = options?.minHeight ?? 24;
+  const viewportCenter = window.innerWidth / 2;
+
+  for (const candidate of candidates) {
+    if (!candidate.isConnected) continue;
+    if (!isElementVisibleForAlignment(candidate)) continue;
+    if (!options?.allowSidebar && isLikelySidebarElement(candidate)) continue;
+
+    const rect = candidate.getBoundingClientRect();
+    if (rect.width < minWidth || rect.height < minHeight) continue;
+    if (rect.bottom < -16 || rect.top > window.innerHeight + 16) continue;
+
+    const center = rect.left + rect.width / 2;
+    const area = rect.width * rect.height;
+    const distancePenalty = Math.abs(center - viewportCenter) * 120;
+    const score = area - distancePenalty;
+
+    if (!best || score > best.score) {
+      best = { el: candidate, score };
+    }
+  }
+
+  return best?.el || null;
+}
+
+function resolveConversationCanvasCenterX(): number {
+  const viewportCenter = window.innerWidth / 2;
+
+  const canvasTarget = pickBestVisibleAlignmentTarget(
+    [
+      '#chat-history',
+      'infinite-scroller.chat-history',
+      '.chat-history-scroll-container',
+      'chat-window-content',
+      'main chat-window-content',
+    ],
+    {
+      minWidth: Math.min(420, Math.max(280, window.innerWidth * 0.42)),
+      minHeight: 80,
+    },
+  );
+  if (canvasTarget) {
+    const rect = canvasTarget.getBoundingClientRect();
+    return rect.left + rect.width / 2;
+  }
+
+  const composerTarget = pickBestVisibleAlignmentTarget(
+    [
+      'rich-textarea',
+      '[aria-label*="Enter a prompt"]',
+      '[aria-label*="prompt"]',
+      '[aria-label*="Gemini"]',
+      '[contenteditable="true"][aria-label]',
+    ],
+    {
+      minWidth: Math.min(460, Math.max(240, window.innerWidth * 0.28)),
+      minHeight: 28,
+    },
+  );
+  if (composerTarget) {
+    const rect = composerTarget.getBoundingClientRect();
+    return rect.left + rect.width / 2;
+  }
+
+  const selectors = getUserSelectors();
+  const topUser = getTopUserElement(selectors);
+  if (topUser && !isLikelySidebarElement(topUser)) {
+    const rect = topUser.getBoundingClientRect();
+    if (rect.width > 24) return rect.left + rect.width / 2;
+  }
+
+  const root = getConversationRoot(selectors);
+  if (root && !isLikelySidebarElement(root)) {
+    const rect = root.getBoundingClientRect();
+    if (rect.width > Math.max(300, window.innerWidth * 0.42)) return rect.left + rect.width / 2;
+  }
+
+  const main = document.querySelector<HTMLElement>('main');
+  if (main && !isLikelySidebarElement(main)) {
+    const rect = main.getBoundingClientRect();
+    if (rect.width > 24) return rect.left + rect.width / 2;
+  }
+
+  return viewportCenter;
+}
+
+function alignElementToConversationTitleCenter(element: HTMLElement): () => void {
+  const apply = () => {
+    if (window.innerWidth <= 640) {
+      element.style.removeProperty('left');
+      element.style.removeProperty('transform');
+      return;
+    }
+
+    const rawCenter = resolveConversationCanvasCenterX();
+    const safeMargin = 24;
+    const clampedCenter = Math.round(
+      Math.max(safeMargin, Math.min(window.innerWidth - safeMargin, rawCenter)),
+    );
+    element.style.left = `${clampedCenter}px`;
+    element.style.transform = 'translateX(-50%)';
+  };
+
+  apply();
+  const resizeHandler = () => apply();
+  window.addEventListener('resize', resizeHandler);
+  const timeoutId = window.setTimeout(apply, 220);
+
+  return () => {
+    window.removeEventListener('resize', resizeHandler);
+    window.clearTimeout(timeoutId);
+  };
 }
 
 /**
@@ -568,13 +1140,17 @@ function getTopUserElement(): HTMLElement | null {
  * 4. If no refresh -> we are stable, proceed to export.
  */
 async function executeExportSequence(
-  format: string,
+  format: ExportFormat,
   dict: Record<AppLanguage, Record<string, string>>,
   lang: AppLanguage,
   paramState?: PendingExportState,
+  fontSize?: number,
+  initialSelectedMessageId?: string,
 ): Promise<void> {
   const state: PendingExportState = paramState || {
     format,
+    fontSize,
+    initialSelectedMessageId,
     attempt: 0,
     url: location.href,
     status: 'clicking',
@@ -591,12 +1167,13 @@ async function executeExportSequence(
   // 1. Find Top Node
   if (state.attempt > 0) {
     console.log('[Gemini Voyager] Resuming export... waiting for content load.');
-    const selectors = getUserSelectors();
-    await waitForAnyElement(selectors, 15000);
+    const userSelectors = getUserSelectors();
+    await waitForAnyElement(userSelectors, 15000);
   }
 
   // Wait a bit if we just reloaded
-  let topNode = getTopUserElement();
+  const userSelectors = getUserSelectors();
+  let topNode = getTopUserElement(userSelectors);
   if (!topNode) {
     await waitForElement('body', 2000);
     const pairs = collectChatPairs();
@@ -608,7 +1185,7 @@ async function executeExportSequence(
   if (!topNode) {
     console.log('[Gemini Voyager] No top node found, proceeding to export directly.');
     sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
-    await performFinalExport(format as any, dict, lang);
+    await performFinalExport(format, dict, lang, state.fontSize, state.initialSelectedMessageId);
     return;
   }
 
@@ -640,7 +1217,7 @@ async function executeExportSequence(
     document.body,
     fingerprintSelectors,
     beforeFingerprint,
-    { timeoutMs: 25000, idleMs: 550, pollIntervalMs: 90, maxSamples: 10 },
+    EXPORT_PRELOAD_WAIT_OPTIONS,
   );
 
   if (changed) {
@@ -655,46 +1232,388 @@ async function executeExportSequence(
 
   console.log('[Gemini Voyager] No refresh or update detected. Exporting...');
   sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
-  await performFinalExport(format as any, dict, lang);
+  await performFinalExport(format, dict, lang, state.fontSize, state.initialSelectedMessageId);
+}
+
+async function executeExportSequenceWithProgress(
+  format: ExportFormat,
+  dict: Record<AppLanguage, Record<string, string>>,
+  lang: AppLanguage,
+  paramState?: PendingExportState,
+  fontSize?: number,
+  initialSelectedMessageId?: string,
+): Promise<void> {
+  const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+  const hideProgress = showExportProgressOverlay(t);
+  try {
+    await executeExportSequence(format, dict, lang, paramState, fontSize, initialSelectedMessageId);
+  } finally {
+    hideProgress();
+  }
 }
 
 /**
  * Performs the actual file generation and download.
  */
 async function performFinalExport(
-  format: string,
+  format: ExportFormat,
   dict: Record<AppLanguage, Record<string, string>>,
   lang: AppLanguage,
+  fontSize?: number,
+  initialSelectedMessageId?: string,
 ) {
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
-  // Re-collect data (DOM might have updated with new history)
-  // We might need to wait for any final rendering?
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, FINAL_EXPORT_PREPARE_DELAY_MS));
 
   const pairs = collectChatPairs();
-  const metadata: ConversationMetadata = {
-    url: location.href,
-    exportedAt: new Date().toISOString(),
-    count: pairs.length,
-    title: getConversationTitleForExport(),
+  const messages = buildExportMessagesFromPairs(pairs);
+  if (messages.length === 0) {
+    alert(t('export_dialog_warning'));
+    return;
+  }
+
+  const selectedIds = new Set<string>();
+  let allMessageIds: string[] = [];
+  const cleanupTasks: Array<() => void> = [];
+  const idToHost = new Map<string, HTMLElement>();
+  const idToCheckbox = new Map<string, HTMLButtonElement>();
+  const knownIds = new Set<string>();
+  let pendingInitialSelectionId: string | null = initialSelectedMessageId || null;
+
+  let autoSelectAll = false;
+
+  const cleanup = () => {
+    cleanupTasks.forEach((fn) => {
+      try {
+        fn();
+      } catch {}
+    });
+    cleanupTasks.length = 0;
   };
 
-  try {
-    const result = await ConversationExportService.export(pairs, metadata, {
-      format: format as any,
+  const setSelected = (id: string, next: boolean) => {
+    if (next) selectedIds.add(id);
+    else selectedIds.delete(id);
+
+    const btn = idToCheckbox.get(id);
+    if (btn) {
+      btn.setAttribute('aria-pressed', next ? 'true' : 'false');
+      btn.dataset.selected = next ? 'true' : 'false';
+    }
+    const host = idToHost.get(id);
+    if (host) {
+      if (next) host.classList.add('gv-export-msg-selected');
+      else host.classList.remove('gv-export-msg-selected');
+    }
+  };
+
+  const updateBottomBar = (bar: HTMLElement) => {
+    const countEl = bar.querySelector(
+      '[data-gv-export-selection-count="true"]',
+    ) as HTMLElement | null;
+    if (countEl) {
+      countEl.textContent = t('export_select_mode_count').replace(
+        '{count}',
+        String(selectedIds.size),
+      );
+    }
+
+    const exportBtn = bar.querySelector(
+      '[data-gv-export-action="export"]',
+    ) as HTMLButtonElement | null;
+    if (exportBtn) {
+      exportBtn.disabled = selectedIds.size === 0;
+    }
+
+    const selectAllBtn = bar.querySelector(
+      '[data-gv-export-action="selectAll"]',
+    ) as HTMLButtonElement | null;
+    if (selectAllBtn) {
+      const isAllSelected = allMessageIds.length > 0 && selectedIds.size === allMessageIds.length;
+      selectAllBtn.dataset.checked = isAllSelected ? 'true' : 'false';
+    }
+  };
+
+  const attachSelectorIfNeeded = (msg: ExportMessage) => {
+    if (knownIds.has(msg.messageId)) return;
+    knownIds.add(msg.messageId);
+
+    const host = msg.hostElement;
+    idToHost.set(msg.messageId, host);
+    host.classList.add('gv-export-msg-host');
+    cleanupTasks.push(() => host.classList.remove('gv-export-msg-host'));
+
+    const selector = document.createElement('div');
+    selector.className = 'gv-export-msg-selector';
+    selector.dataset.gvExportMessageId = msg.messageId;
+
+    const checkbox = document.createElement('button');
+    checkbox.type = 'button';
+    checkbox.className = 'gv-export-msg-checkbox';
+    checkbox.setAttribute('aria-pressed', 'false');
+    checkbox.title = t('export_select_mode_toggle');
+
+    const mark = document.createElement('span');
+    mark.className = 'gv-export-msg-checkbox-mark';
+    checkbox.appendChild(mark);
+
+    const swallow = (ev: Event) => {
+      try {
+        ev.preventDefault();
+      } catch {}
+      try {
+        ev.stopPropagation();
+      } catch {}
+    };
+
+    const toggleSelection = () => {
+      autoSelectAll = false;
+      const next = !selectedIds.has(msg.messageId);
+      setSelected(msg.messageId, next);
+      const bar = document.querySelector(
+        '[data-gv-export-select-bar="true"]',
+      ) as HTMLElement | null;
+      if (bar) updateBottomBar(bar);
+    };
+
+    checkbox.addEventListener('click', (ev) => {
+      swallow(ev);
+      toggleSelection();
     });
 
-    if (result.success) {
-      console.log(`[Gemini Voyager] Exported ${result.format} successfully`);
-    } else {
-      console.error(`[Gemini Voyager] Export failed: ${result.error}`);
-      alert(`${t('export_dialog_warning')}: ${result.error}`);
+    host.addEventListener('click', toggleSelection);
+    cleanupTasks.push(() => host.removeEventListener('click', toggleSelection));
+
+    selector.appendChild(checkbox);
+    host.appendChild(selector);
+    cleanupTasks.push(() => selector.remove());
+
+    idToCheckbox.set(msg.messageId, checkbox);
+  };
+
+  const syncMessages = (pairsInput: ChatTurn[]) => {
+    const sorted = computeSortedMessages(pairsInput);
+    allMessageIds = sorted.map((m) => m.messageId);
+
+    sorted.forEach((m) => attachSelectorIfNeeded(m));
+
+    // Auto-select new messages when a policy is active.
+    if (autoSelectAll) {
+      for (const id of allMessageIds) setSelected(id, true);
     }
-  } catch (err) {
-    console.error('[Gemini Voyager] Export error:', err);
-    alert('Export error occurred.');
-  }
+
+    const initialSelected = resolveInitialSelectedMessageIds(
+      allMessageIds,
+      pendingInitialSelectionId,
+    );
+    if (initialSelected.size > 0) {
+      initialSelected.forEach((id) => setSelected(id, true));
+      pendingInitialSelectionId = null;
+    }
+  };
+
+  // Selection mode body class
+  document.body.classList.add('gv-export-select-mode');
+  cleanupTasks.push(() => document.body.classList.remove('gv-export-select-mode'));
+
+  // Bottom action bar
+  const bar = document.createElement('div');
+  bar.className = 'gv-export-select-bar';
+  bar.dataset.gvExportSelectBar = 'true';
+
+  const selectAllBtn = document.createElement('button');
+  selectAllBtn.type = 'button';
+  selectAllBtn.className = 'gv-export-select-all-toggle';
+  selectAllBtn.dataset.gvExportAction = 'selectAll';
+  selectAllBtn.textContent = t('export_select_mode_select_all');
+
+  const count = document.createElement('div');
+  count.className = 'gv-export-select-count';
+  count.dataset.gvExportSelectionCount = 'true';
+  count.textContent = t('export_select_mode_count').replace('{count}', '0');
+
+  const exportBtn = document.createElement('button');
+  exportBtn.type = 'button';
+  exportBtn.className = 'gv-export-select-export-btn';
+  exportBtn.dataset.gvExportAction = 'export';
+  exportBtn.textContent = t('pm_export');
+  exportBtn.disabled = true;
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'gv-export-select-cancel-btn';
+  cancelBtn.title = t('pm_cancel');
+  cancelBtn.textContent = '×';
+
+  bar.appendChild(selectAllBtn);
+  bar.appendChild(count);
+  bar.appendChild(exportBtn);
+  bar.appendChild(cancelBtn);
+
+  document.body.appendChild(bar);
+  cleanupTasks.push(() => bar.remove());
+  cleanupTasks.push(alignElementToConversationTitleCenter(bar));
+
+  const swallow = (ev: Event) => {
+    try {
+      ev.preventDefault();
+    } catch {}
+    try {
+      ev.stopPropagation();
+    } catch {}
+  };
+
+  selectAllBtn.addEventListener('click', (ev) => {
+    swallow(ev);
+    const isAllSelected = allMessageIds.length > 0 && selectedIds.size === allMessageIds.length;
+    if (isAllSelected) {
+      selectedIds.clear();
+      autoSelectAll = false;
+      allMessageIds.forEach((id) => setSelected(id, false));
+    } else {
+      selectedIds.clear();
+      autoSelectAll = true;
+      allMessageIds.forEach((id) => setSelected(id, true));
+    }
+    updateBottomBar(bar);
+  });
+
+  const finish = () => {
+    allMessageIds.forEach((id) => setSelected(id, false));
+    selectedIds.clear();
+    autoSelectAll = false;
+    cleanup();
+  };
+
+  cancelBtn.addEventListener('click', (ev) => {
+    swallow(ev);
+    finish();
+  });
+
+  exportBtn.addEventListener('click', async (ev) => {
+    swallow(ev);
+    if (selectedIds.size === 0) {
+      alert(t('export_select_mode_empty'));
+      return;
+    }
+
+    const turnsForExport = buildTurnsForSelectedMessageIds(selectedIds, collectChatPairs());
+    if (turnsForExport.length === 0) {
+      alert(t('export_select_mode_empty'));
+      return;
+    }
+
+    // Cleanup before export so selection UI isn't captured.
+    finish();
+
+    const metadata: ConversationMetadata = {
+      url: location.href,
+      exportedAt: new Date().toISOString(),
+      count: turnsForExport.length,
+      title: getConversationTitleForExport(),
+    };
+
+    let includeImageSource = true;
+    if (format === 'markdown') {
+      const hasSearchImages = turnsForExport.some(
+        (turn) =>
+          turn.assistantElement?.querySelector('.attachment-container.search-images') != null,
+      );
+      if (hasSearchImages) {
+        includeImageSource = confirm(t('export_md_include_source_confirm'));
+      }
+    }
+
+    const hideProgress = showExportProgressOverlay(t);
+    try {
+      const resultPromise = ConversationExportService.export(turnsForExport, metadata, {
+        format,
+        fontSize,
+        includeImageSource,
+      });
+      const minVisiblePromise = new Promise((resolve) => setTimeout(resolve, 420));
+      const [result] = await Promise.all([resultPromise, minVisiblePromise]);
+
+      if (!result.success) {
+        alert(resolveExportErrorMessage(result.error, t));
+      } else if (format === 'pdf' && isSafari()) {
+        showExportToast(t('export_toast_safari_pdf_ready'), { autoDismissMs: 5000 });
+      }
+    } catch (err) {
+      console.error('[Gemini Voyager] Export error:', err);
+      alert('Export error occurred.');
+    } finally {
+      hideProgress();
+    }
+  });
+
+  // Observe new lazy-loaded messages while selection mode is active.
+  const root = getConversationRoot(getUserSelectors());
+  let refreshTimer: number | null = null;
+  const scheduleRefresh = () => {
+    if (refreshTimer) return;
+    refreshTimer = window.setTimeout(() => {
+      refreshTimer = null;
+      try {
+        syncMessages(collectChatPairs());
+        updateBottomBar(bar);
+      } catch {}
+    }, 250);
+  };
+
+  const obs = new MutationObserver(() => scheduleRefresh());
+  try {
+    obs.observe(root, { childList: true, subtree: true });
+    cleanupTasks.push(() => obs.disconnect());
+  } catch {}
+
+  // Escape to cancel
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      finish();
+      document.removeEventListener('keydown', onKeyDown);
+    }
+  };
+  document.addEventListener('keydown', onKeyDown);
+  cleanupTasks.push(() => document.removeEventListener('keydown', onKeyDown));
+
+  // Initial sync
+  syncMessages(pairs);
+  updateBottomBar(bar);
+}
+
+function showExportProgressOverlay(t: (key: TranslationKey) => string): () => void {
+  const overlay = document.createElement('div');
+  overlay.className = 'gv-export-progress-overlay';
+
+  const card = document.createElement('div');
+  card.className = 'gv-export-progress-card';
+
+  const spinner = document.createElement('div');
+  spinner.className = 'gv-export-progress-spinner';
+
+  const title = document.createElement('div');
+  title.className = 'gv-export-progress-title';
+  title.textContent = `${t('pm_export')}...`;
+
+  const desc = document.createElement('div');
+  desc.className = 'gv-export-progress-desc';
+  desc.textContent = t('loading');
+
+  card.appendChild(spinner);
+  card.appendChild(title);
+  card.appendChild(desc);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  const unbindAlignment = alignElementToConversationTitleCenter(overlay);
+
+  return () => {
+    unbindAlignment();
+    try {
+      overlay.remove();
+    } catch {}
+  };
 }
 
 /**
@@ -705,7 +1624,29 @@ async function checkPendingExport() {
     const raw = sessionStorage.getItem(SESSION_KEY_PENDING_EXPORT);
     if (!raw) return;
 
-    const state = JSON.parse(raw) as PendingExportState;
+    const parsed = JSON.parse(raw) as Partial<PendingExportState>;
+    if (
+      !isExportFormat(parsed.format) ||
+      typeof parsed.attempt !== 'number' ||
+      typeof parsed.url !== 'string' ||
+      parsed.status !== 'clicking' ||
+      typeof parsed.timestamp !== 'number'
+    ) {
+      sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
+      return;
+    }
+    const state: PendingExportState = {
+      format: parsed.format,
+      fontSize: typeof parsed.fontSize === 'number' ? parsed.fontSize : undefined,
+      initialSelectedMessageId:
+        typeof parsed.initialSelectedMessageId === 'string'
+          ? parsed.initialSelectedMessageId
+          : undefined,
+      attempt: parsed.attempt,
+      url: parsed.url,
+      status: parsed.status,
+      timestamp: parsed.timestamp,
+    };
 
     // Validate context
     if (state.url !== location.href) {
@@ -722,27 +1663,377 @@ async function checkPendingExport() {
     const dict = await loadDictionaries();
     const lang = await getLanguage();
 
-    await executeExportSequence(state.format, dict, lang, state);
+    await executeExportSequenceWithProgress(state.format, dict, lang, state);
   } catch (e) {
     console.error('[Gemini Voyager] Failed to resume pending export:', e);
     sessionStorage.removeItem(SESSION_KEY_PENDING_EXPORT);
   }
 }
 
+function getConversationMenuPanelsFromNode(node: HTMLElement): HTMLElement[] {
+  const panels: HTMLElement[] = [];
+  if (node.matches(CONVERSATION_MENU_SELECTOR)) {
+    panels.push(node);
+  }
+  panels.push(...Array.from(node.querySelectorAll<HTMLElement>(CONVERSATION_MENU_SELECTOR)));
+  return panels;
+}
+
+function parseMenuTriggerPanelIds(trigger: HTMLElement): string[] {
+  const raw = `${trigger.getAttribute('aria-controls') || ''} ${
+    trigger.getAttribute('aria-owns') || ''
+  }`;
+  return raw
+    .split(/\s+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+type ResponseCopyImageTexts = {
+  label: string;
+  copied: string;
+  downloaded: string;
+  failed: string;
+  unsupported: string;
+  targetMissing: string;
+};
+
+function getResponseCopyImageTexts(lang: AppLanguage): ResponseCopyImageTexts {
+  if (lang === 'zh') {
+    return {
+      label: '复制回复为图片',
+      copied: '已复制回复图片',
+      downloaded: '已下载回复图片（Safari 剪贴板限制）',
+      failed: '复制回复图片失败',
+      unsupported: '当前浏览器不支持复制图片到剪贴板',
+      targetMissing: '未找到可复制的回复内容',
+    };
+  }
+
+  if (lang === 'zh_TW') {
+    return {
+      label: '複製回覆為圖片',
+      copied: '已複製回覆圖片',
+      downloaded: '已下載回覆圖片（Safari 剪貼簿限制）',
+      failed: '複製回覆圖片失敗',
+      unsupported: '目前瀏覽器不支援將圖片複製到剪貼簿',
+      targetMissing: '找不到可複製的回覆內容',
+    };
+  }
+
+  return {
+    label: 'Copy response as image',
+    copied: 'Response image copied',
+    downloaded: 'Downloaded response image (Safari clipboard limitation)',
+    failed: 'Failed to copy response image',
+    unsupported: 'Clipboard image copy is not supported in this browser',
+    targetMissing: 'Unable to locate response content',
+  };
+}
+
+function buildResponseImageFilename(): string {
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  return `gemini-response-${stamp}.png`;
+}
+
+function isUnsupportedClipboardError(error: unknown): boolean {
+  if (error instanceof DOMException) {
+    const name = error.name.toLowerCase();
+    if (name === 'notallowederror' || name === 'notsupportederror' || name === 'securityerror') {
+      return true;
+    }
+  }
+
+  if (!(error instanceof Error)) return false;
+
+  if (/clipboard image copy is not supported/i.test(error.message)) {
+    return true;
+  }
+
+  const lowerMessage = error.message.toLowerCase();
+  return (
+    lowerMessage.includes('clipboard') &&
+    (lowerMessage.includes('not allowed') ||
+      lowerMessage.includes('permission') ||
+      lowerMessage.includes('gesture') ||
+      lowerMessage.includes('unsupported'))
+  );
+}
+
+async function handleResponseCopyImageClick(
+  trigger: HTMLElement,
+  getCurrentLanguage: () => AppLanguage,
+): Promise<void> {
+  if (trigger.dataset.gvCopyImageBusy === '1') {
+    return;
+  }
+  trigger.dataset.gvCopyImageBusy = '1';
+
+  const texts = getResponseCopyImageTexts(getCurrentLanguage());
+  const messageId = resolveAssistantMessageIdFromMenuTrigger(trigger);
+  let blobForFallback: Blob | null = null;
+  try {
+    if (!messageId) {
+      showExportToast(texts.targetMissing);
+      return;
+    }
+
+    const selectedMessageIds = new Set<string>([messageId]);
+    const turnsForExport = buildTurnsForSelectedMessageIds(selectedMessageIds, collectChatPairs());
+    if (turnsForExport.length === 0) {
+      showExportToast(texts.targetMissing);
+      return;
+    }
+
+    const metadata: ConversationMetadata = {
+      url: location.href,
+      exportedAt: new Date().toISOString(),
+      count: turnsForExport.length,
+      title: getConversationTitleForExport(),
+    };
+
+    const blob = await ImageExportService.renderConversationBlob(turnsForExport, metadata, {});
+    blobForFallback = blob;
+    await copyImageBlobToClipboard(blob);
+    showExportToast(texts.copied);
+  } catch (error) {
+    if (isSafari() && blobForFallback) {
+      downloadImageBlob(blobForFallback, buildResponseImageFilename());
+      showExportToast(texts.downloaded, { autoDismissMs: 3200 });
+      return;
+    }
+    if (isUnsupportedClipboardError(error)) {
+      showExportToast(texts.unsupported, { autoDismissMs: 3200 });
+      return;
+    }
+    console.error('[Gemini Voyager] Failed to copy response image:', error);
+    showExportToast(texts.failed, { autoDismissMs: 3200 });
+  } finally {
+    delete trigger.dataset.gvCopyImageBusy;
+  }
+}
+
+function applyResponseActionCopyImageButtons(getCurrentLanguage: () => AppLanguage): void {
+  const texts = getResponseCopyImageTexts(getCurrentLanguage());
+  injectResponseActionCopyImageButtons(document, {
+    label: texts.label,
+    tooltip: texts.label,
+    onClick: (button) => {
+      void handleResponseCopyImageClick(button, getCurrentLanguage);
+    },
+  });
+}
+
+function setupResponseActionCopyImageObserver({
+  getCurrentLanguage,
+}: {
+  getCurrentLanguage: () => AppLanguage;
+}): void {
+  applyResponseActionCopyImageButtons(getCurrentLanguage);
+  if (responseActionObserver) return;
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        const texts = getResponseCopyImageTexts(getCurrentLanguage());
+        injectResponseActionCopyImageButtons(node, {
+          label: texts.label,
+          tooltip: texts.label,
+          onClick: (button) => {
+            void handleResponseCopyImageClick(button, getCurrentLanguage);
+          },
+        });
+      });
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+  responseActionObserver = observer;
+
+  window.addEventListener(
+    'beforeunload',
+    () => {
+      try {
+        responseActionObserver?.disconnect();
+      } catch {}
+      responseActionObserver = null;
+    },
+    { once: true },
+  );
+}
+
+function setupConversationMenuExportObserver({
+  dict,
+  getCurrentLanguage,
+  onExport,
+}: {
+  dict: Record<AppLanguage, Record<string, string>>;
+  getCurrentLanguage: () => AppLanguage;
+  onExport: (context: {
+    menuType: 'top' | 'sidebar' | 'message';
+    trigger: HTMLElement | null;
+  }) => void;
+}): void {
+  if (conversationMenuObserver) return;
+
+  const tryInjectOnPanel = (
+    menuPanel: HTMLElement,
+    retriesLeft: number = MENU_INJECTION_RETRY_LIMIT,
+  ) => {
+    if (!menuPanel.isConnected) return;
+    const currentLang = getCurrentLanguage();
+    const label =
+      dict[currentLang]?.['exportChatJson'] ??
+      dict.en?.['exportChatJson'] ??
+      'Export conversation history';
+    const tooltip =
+      dict[currentLang]?.['exportChatJson'] ??
+      dict.en?.['exportChatJson'] ??
+      'Export conversation history';
+
+    const menuContext = getConversationMenuContext(menuPanel);
+    if (menuContext) {
+      const injected = injectConversationMenuExportButton(menuPanel, {
+        label,
+        tooltip,
+        onClick: () => onExport(menuContext),
+      });
+      if (!injected && retriesLeft > 0) {
+        window.setTimeout(
+          () => tryInjectOnPanel(menuPanel, retriesLeft - 1),
+          MENU_INJECTION_RETRY_DELAY_MS,
+        );
+      }
+      return;
+    }
+
+    const responseMenuContext = getResponseMenuContext(menuPanel);
+    if (responseMenuContext) {
+      const injected = injectResponseMenuExportButton(menuPanel, {
+        label,
+        tooltip,
+        onClick: () =>
+          onExport({
+            menuType: 'message',
+            trigger: responseMenuContext.trigger,
+          }),
+      });
+      if (!injected && retriesLeft > 0) {
+        window.setTimeout(
+          () => tryInjectOnPanel(menuPanel, retriesLeft - 1),
+          MENU_INJECTION_RETRY_DELAY_MS,
+        );
+      }
+      return;
+    }
+
+    if (retriesLeft > 0) {
+      window.setTimeout(
+        () => tryInjectOnPanel(menuPanel, retriesLeft - 1),
+        MENU_INJECTION_RETRY_DELAY_MS,
+      );
+    }
+  };
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        const panelSet = new Set<HTMLElement>();
+        const panels = getConversationMenuPanelsFromNode(node);
+        panels.forEach((panel) => panelSet.add(panel));
+        const closestPanel = node.closest(CONVERSATION_MENU_SELECTOR) as HTMLElement | null;
+        if (closestPanel) panelSet.add(closestPanel);
+        panelSet.forEach((panel) => {
+          window.setTimeout(() => tryInjectOnPanel(panel), 30);
+        });
+      });
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+  conversationMenuObserver = observer;
+
+  const existingPanels = document.querySelectorAll<HTMLElement>(CONVERSATION_MENU_SELECTOR);
+  existingPanels.forEach((panel) => window.setTimeout(() => tryInjectOnPanel(panel), 30));
+
+  const onMenuTriggerInteraction = (event: Event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const trigger = target.closest(
+      `[data-test-id="${CONVERSATION_MENU_TRIGGER_TEST_ID}"], [data-test-id="${RESPONSE_MENU_TRIGGER_TEST_ID}"]`,
+    ) as HTMLElement | null;
+    if (!trigger) return;
+
+    const panelIds = parseMenuTriggerPanelIds(trigger);
+    if (panelIds.length === 0) return;
+
+    for (let attempt = 0; attempt <= MENU_INJECTION_RETRY_LIMIT; attempt++) {
+      window.setTimeout(() => {
+        panelIds.forEach((id) => {
+          const panel = document.getElementById(id);
+          if (!(panel instanceof HTMLElement)) return;
+          if (!panel.matches(CONVERSATION_MENU_SELECTOR)) return;
+          tryInjectOnPanel(panel);
+        });
+      }, attempt * MENU_INJECTION_RETRY_DELAY_MS);
+    }
+  };
+
+  document.addEventListener('click', onMenuTriggerInteraction, true);
+  document.addEventListener('pointerdown', onMenuTriggerInteraction, true);
+
+  window.addEventListener(
+    'beforeunload',
+    () => {
+      try {
+        conversationMenuObserver?.disconnect();
+      } catch {}
+      try {
+        document.removeEventListener('click', onMenuTriggerInteraction, true);
+      } catch {}
+      try {
+        document.removeEventListener('pointerdown', onMenuTriggerInteraction, true);
+      } catch {}
+      conversationMenuObserver = null;
+    },
+    { once: true },
+  );
+}
+
 export async function startExportButton(): Promise<void> {
   // Check for pending export immediately
   checkPendingExport();
 
-  if (
-    location.hostname !== 'gemini.google.com' &&
-    location.hostname !== 'aistudio.google.com' &&
-    location.hostname !== 'aistudio.google.cn'
-  )
-    return;
+  // i18n setup for tooltip and label
+  const dict = await loadDictionaries();
+  let lang = await getLanguage();
+
+  setupConversationMenuExportObserver({
+    dict,
+    getCurrentLanguage: () => lang,
+    onExport: (context) => {
+      if (context.menuType === 'sidebar' && context.trigger) {
+        void exportFromSidebarConversationTrigger(context.trigger, dict, () => lang);
+        return;
+      }
+      if (context.menuType === 'message') {
+        const initialSelectedMessageId = resolveAssistantMessageIdFromMenuTrigger(context.trigger);
+        void showExportDialog(dict, lang, { initialSelectedMessageId });
+        return;
+      }
+      void showExportDialog(dict, lang);
+    },
+  });
+  setupResponseActionCopyImageObserver({
+    getCurrentLanguage: () => lang,
+  });
+
   const logo =
     (await waitForElement('[data-test-id="logo"]', 6000)) || (await waitForElement('.logo', 2000));
   if (!logo) return;
-  const btn = ensureButtonInjected(logo);
+  const btn = ensureDropdownInjected(logo);
   if (!btn) return;
   if ((btn as any)._gvBound) return;
   (btn as any)._gvBound = true;
@@ -763,13 +2054,15 @@ export async function startExportButton(): Promise<void> {
     } catch {}
   });
 
-  // i18n setup for tooltip
-  const dict = await loadDictionaries();
-  let lang = await getLanguage();
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
   const title = t('exportChatJson');
+  const labelText = t('pm_export');
   btn.title = title;
   btn.setAttribute('aria-label', title);
+
+  // Update label text
+  const labelEl = btn.querySelector('.gv-export-dropdown-label');
+  if (labelEl) labelEl.textContent = labelText;
 
   // listen for runtime language changes
   const storageChangeHandler = (
@@ -782,11 +2075,15 @@ export async function startExportButton(): Promise<void> {
       const next = normalizeLang(nextRaw);
       lang = next;
       const ttl =
-        dict[next]?.['exportChatJson'] ??
-        dict.en?.['exportChatJson'] ??
-        'Export chat history (JSON)';
+        dict[next]?.['exportChatJson'] ?? dict.en?.['exportChatJson'] ?? 'Export chat history';
       btn.title = ttl;
       btn.setAttribute('aria-label', ttl);
+
+      // Update visible label text
+      const lbl = btn.querySelector('.gv-export-dropdown-label');
+      if (lbl) lbl.textContent = dict[next]?.['pm_export'] ?? dict.en?.['pm_export'] ?? 'Export';
+
+      applyResponseActionCopyImageButtons(() => lang);
     }
   };
 
@@ -819,11 +2116,87 @@ export async function startExportButton(): Promise<void> {
       } catch {}
     }
   });
+
+  // ─── DOM recovery (resize / print) ─────────────────────────────────────
+  // Gemini may re-render the logo/header area (and thus destroy the wrapper
+  // + export button) during window resize or window.print().  We use a
+  // single debounced handler that fires on resize, afterprint, and our own
+  // gv-print-cleanup event.  It checks whether the button is still attached
+  // and re-injects if not.
+  let currentBtn: HTMLButtonElement = btn;
+  let reinjectTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const reinjectExportButtonIfNeeded = () => {
+    // Debounce: Gemini fires many mutations during resize; wait until it
+    // settles before we attempt re-injection.
+    if (reinjectTimer !== null) clearTimeout(reinjectTimer);
+    reinjectTimer = setTimeout(() => {
+      reinjectTimer = null;
+      try {
+        // If the button is still in the document, nothing to do.
+        if (document.body.contains(currentBtn)) return;
+
+        // Remove stale wrapper if it somehow survived but lost the button.
+        const staleWrapper = document.querySelector('.gv-logo-dropdown-wrapper');
+        if (staleWrapper) staleWrapper.remove();
+
+        // Re-find the logo element (Gemini may have created a fresh one).
+        const newLogo =
+          document.querySelector('[data-test-id="logo"]') ?? document.querySelector('.logo');
+        if (!newLogo) return;
+
+        const newBtn = ensureDropdownInjected(newLogo);
+        if (!newBtn) return;
+        if ((newBtn as any)._gvBound) return;
+        (newBtn as any)._gvBound = true;
+
+        // Re-bind all event listeners on the fresh button.
+        ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((type) => {
+          try {
+            newBtn.addEventListener(type, swallow, true);
+          } catch {}
+        });
+
+        const freshT = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+        const ttl = freshT('exportChatJson');
+        const lbl = freshT('pm_export');
+        newBtn.title = ttl;
+        newBtn.setAttribute('aria-label', ttl);
+        const labelEl = newBtn.querySelector('.gv-export-dropdown-label');
+        if (labelEl) labelEl.textContent = lbl;
+
+        newBtn.addEventListener('click', (ev) => {
+          swallow(ev);
+          try {
+            showExportDialog(dict, lang);
+          } catch (err) {
+            try {
+              console.error('Gemini Voyager export failed', err);
+            } catch {}
+          }
+        });
+
+        // Update our tracking reference so the next check uses the new element.
+        currentBtn = newBtn;
+      } catch (e) {
+        try {
+          console.debug('[Gemini Voyager] Export button re-injection failed:', e);
+        } catch {}
+      }
+    }, 800);
+  };
+
+  window.addEventListener('resize', reinjectExportButtonIfNeeded);
+  window.addEventListener('gv-print-cleanup', reinjectExportButtonIfNeeded);
+  window.addEventListener('afterprint', reinjectExportButtonIfNeeded);
 }
 
 async function showExportDialog(
   dict: Record<AppLanguage, Record<string, string>>,
   lang: AppLanguage,
+  options?: {
+    initialSelectedMessageId?: string | null;
+  },
 ): Promise<void> {
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
@@ -832,9 +2205,16 @@ async function showExportDialog(
   const dialog = new ExportDialog();
 
   dialog.show({
-    onExport: async (format) => {
+    onExport: async (format, fontSize) => {
       try {
-        await executeExportSequence(format, dict, lang);
+        await executeExportSequenceWithProgress(
+          format,
+          dict,
+          lang,
+          undefined,
+          fontSize,
+          options?.initialSelectedMessageId || undefined,
+        );
       } catch (err) {
         console.error('[Gemini Voyager] Export error:', err);
       }
@@ -847,8 +2227,18 @@ async function showExportDialog(
       title: t('export_dialog_title'),
       selectFormat: t('export_dialog_select'),
       warning: t('export_dialog_warning'),
+      safariCmdpHint: t('export_dialog_safari_cmdp_hint'),
+      safariMarkdownHint: t('export_dialog_safari_markdown_hint'),
       cancel: t('pm_cancel'),
       export: t('pm_export'),
+      fontSizeLabel: t('export_fontsize_label'),
+      fontSizePreview: t('export_fontsize_preview'),
+      formatDescriptions: {
+        json: t('export_format_json_description'),
+        markdown: t('export_format_markdown_description'),
+        pdf: t('export_format_pdf_description'),
+        image: t('export_format_image_description'),
+      },
     },
   });
 }

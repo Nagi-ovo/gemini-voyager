@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "导出聊天记录",
+    "message": "导出对话记录",
     "description": "导出按钮提示"
   },
   "folder_title": {
@@ -259,9 +259,49 @@
     "message": "重命名",
     "description": "重命名文件夹菜单项"
   },
+  "folder_change_color": {
+    "message": "更改颜色",
+    "description": "更改文件夹颜色菜单项"
+  },
   "folder_delete": {
     "message": "删除",
     "description": "删除文件夹菜单项"
+  },
+  "folder_color_default": {
+    "message": "默认",
+    "description": "默认文件夹颜色名称"
+  },
+  "folder_color_red": {
+    "message": "红色（紧急）",
+    "description": "红色文件夹颜色名称"
+  },
+  "folder_color_orange": {
+    "message": "橙色（高优先级）",
+    "description": "橙色文件夹颜色名称"
+  },
+  "folder_color_yellow": {
+    "message": "黄色（需注意）",
+    "description": "黄色文件夹颜色名称"
+  },
+  "folder_color_green": {
+    "message": "绿色（已完成）",
+    "description": "绿色文件夹颜色名称"
+  },
+  "folder_color_blue": {
+    "message": "蓝色（参考）",
+    "description": "蓝色文件夹颜色名称"
+  },
+  "folder_color_purple": {
+    "message": "紫色（创意）",
+    "description": "紫色文件夹颜色名称"
+  },
+  "folder_color_pink": {
+    "message": "粉色（个人）",
+    "description": "粉色文件夹颜色名称"
+  },
+  "folder_color_custom": {
+    "message": "自定义",
+    "description": "自定义文件夹颜色名称"
   },
   "folder_empty": {
     "message": "暂无文件夹",
@@ -336,8 +376,8 @@
     "description": "LaTeX 格式选项"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath 格式选项，用于 Word"
+    "message": "MathML (Word)",
+    "description": "Label for UnicodeMath formula copy format option"
   },
   "formulaCopyFormatHint": {
     "message": "选择点击公式时复制的格式",
@@ -347,9 +387,25 @@
     "message": "LaTeX (纯文本，无 $ 符号)",
     "description": "LaTeX 格式选项，无美元符号"
   },
+  "folder_filter_current_user": {
+    "message": "账号隔离模式",
+    "description": "Show only conversations from the current Google account"
+  },
   "folder_export": {
     "message": "导出文件夹",
     "description": "导出文件夹按钮提示"
+  },
+  "folder_import_export": {
+    "message": "导入/导出文件夹",
+    "description": "合并的导入导出按钮提示"
+  },
+  "folder_cloud_upload": {
+    "message": "上传到云端",
+    "description": "云上传按钮提示"
+  },
+  "folder_cloud_sync": {
+    "message": "从云端同步",
+    "description": "云同步按钮提示"
   },
   "folder_import": {
     "message": "导入文件夹",
@@ -408,8 +464,32 @@
     "description": "导出格式选择标签"
   },
   "export_dialog_warning": {
-    "message": "⚠️ 由于 Gemini 的久远消息会惰性加载，请在导出前通过时间线跳转到该对话的第一条消息，否则导出内容可能不完整。",
-    "description": "关于惰性加载影响导出完整性的警告"
+    "message": "⚠️ 点击导出后，系统将自动跳转至首条消息以加载完整内容。在此期间请勿操作，跳转完成后将自动继续导出。",
+    "description": "关于内容完整性和自动跳转的提示"
+  },
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Safari 提示：请先点击下方“导出”按钮，稍等片刻，再按 ⌘P 选择“保存为 PDF”。",
+    "description": "Safari 下 PDF 导出的提示"
+  },
+  "export_toast_safari_pdf_ready": {
+    "message": "现在可以按 Command + P 导出 PDF。",
+    "description": "Safari 中完成导出准备后的提示"
+  },
+  "export_dialog_safari_markdown_hint": {
+    "message": "提醒：由于Safari限制，无法提取聊天记录中的图片，如需完整导出，建议使用PDF导出",
+    "description": "关于 Safari Markdown 导出无法提取图片的警告"
+  },
+  "export_format_json_description": {
+    "message": "开发者使用的机器可读格式",
+    "description": "JSON 导出格式描述"
+  },
+  "export_format_markdown_description": {
+    "message": "清晰便携的文本格式（推荐）",
+    "description": "Markdown 导出格式描述"
+  },
+  "export_format_pdf_description": {
+    "message": "适合打印的格式（通过保存为 PDF）",
+    "description": "PDF 导出格式描述"
   },
   "editInputWidth": {
     "message": "编辑输入框宽度",
@@ -727,6 +807,10 @@
     "message": "手动",
     "description": "同步模式手动选项"
   },
+  "syncServerPort": {
+    "message": "服务端口",
+    "description": "同步服务端口号"
+  },
   "syncNow": {
     "message": "立即同步",
     "description": "立即同步按钮"
@@ -758,6 +842,22 @@
   "syncInProgress": {
     "message": "同步中...",
     "description": "同步进行中消息"
+  },
+  "uploadInProgress": {
+    "message": "上传中...",
+    "description": "上传进行中消息"
+  },
+  "uploadSuccess": {
+    "message": "✓ 上传成功",
+    "description": "上传成功消息"
+  },
+  "downloadInProgress": {
+    "message": "下载中...",
+    "description": "下载进行中消息"
+  },
+  "downloadMergeSuccess": {
+    "message": "✓ 下载合并成功",
+    "description": "下载合并成功消息"
   },
   "syncUpload": {
     "message": "上传到云端",
@@ -851,13 +951,25 @@
     "message": "展开",
     "description": "展开子节点"
   },
+  "timelinePreviewSearch": {
+    "message": "搜索...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "无结果",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "暂无消息",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "引用回复",
     "description": "引用回复按钮文本"
   },
   "inputCollapseOptions": {
-    "message": "输入框折叠",
-    "description": "输入框折叠选项区域标签"
+    "message": "输入选项",
+    "description": "输入选项区域标签"
   },
   "enableInputCollapse": {
     "message": "启用输入框折叠",
@@ -870,6 +982,14 @@
   "inputCollapsePlaceholder": {
     "message": "给 Gemini 发消息",
     "description": "折叠输入框时显示的占位符文本"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter 发送",
+    "description": "Ctrl+Enter 发送开关标签"
+  },
+  "ctrlEnterSendHint": {
+    "message": "按 Ctrl+Enter 发送消息，Enter 键仅换行",
+    "description": "Ctrl+Enter 发送功能提示"
   },
   "batch_delete_confirm": {
     "message": "确定要删除 {count} 个会话吗？此操作无法撤销。",
@@ -926,5 +1046,209 @@
   "enableQuoteReplyHint": {
     "message": "在对话中选中文字时显示悬浮按钮，用于引用所选内容",
     "description": "引用回复功能提示"
+  },
+  "contextSync": {
+    "message": "上下文同步",
+    "description": "上下文同步标题"
+  },
+  "contextSyncDescription": {
+    "message": "将对话上下文同步到本地 IDE",
+    "description": "上下文同步描述"
+  },
+  "syncToIDE": {
+    "message": "同步到 IDE",
+    "description": "同步到 IDE 按钮"
+  },
+  "ideOnline": {
+    "message": "IDE 在线",
+    "description": "IDE 在线状态"
+  },
+  "ideOffline": {
+    "message": "IDE 离线",
+    "description": "IDE 离线状态"
+  },
+  "syncing": {
+    "message": "同步中...",
+    "description": "同步中状态"
+  },
+  "checkServer": {
+    "message": "请在 VS Code 中启动 AI Sync 服务器",
+    "description": "检查服务器提示"
+  },
+  "capturing": {
+    "message": "正在获取对话...",
+    "description": "获取对话状态"
+  },
+  "syncedSuccess": {
+    "message": "同步成功！",
+    "description": "同步成功消息"
+  },
+  "downloadingOriginal": {
+    "message": "正在下载原始图片",
+    "description": "下载原始图片时的状态"
+  },
+  "downloadingOriginalLarge": {
+    "message": "正在下载原始图片（大文件）",
+    "description": "下载较大原始图片时的状态"
+  },
+  "downloadLargeWarning": {
+    "message": "大文件警告",
+    "description": "大文件下载提示"
+  },
+  "downloadProcessing": {
+    "message": "正在处理水印中",
+    "description": "处理水印时的状态"
+  },
+  "downloadSuccess": {
+    "message": "正在下载",
+    "description": "开始下载时的状态"
+  },
+  "downloadError": {
+    "message": "失败",
+    "description": "下载失败时的状态前缀"
+  },
+  "recentsHide": {
+    "message": "隐藏最近项目",
+    "description": "隐藏最近预览区域的提示"
+  },
+  "recentsShow": {
+    "message": "显示最近项目",
+    "description": "显示最近预览区域的提示"
+  },
+  "gemsHide": {
+    "message": "隐藏 Gems",
+    "description": "隐藏 Gems 列表区域的提示"
+  },
+  "gemsShow": {
+    "message": "显示 Gems",
+    "description": "显示 Gems 列表区域的提示"
+  },
+  "setAsDefaultModel": {
+    "message": "设为新对话的默认模型",
+    "description": "Tooltip for setting default model"
+  },
+  "cancelDefaultModel": {
+    "message": "取消默认模型",
+    "description": "Tooltip for cancelling default model"
+  },
+  "defaultModelSet": {
+    "message": "已设置默认模型：$1",
+    "description": "Toast message when default model is set"
+  },
+  "defaultModelCleared": {
+    "message": "已取消默认模型",
+    "description": "Toast message when default model is cleared"
+  },
+  "sidebarAutoHide": {
+    "message": "侧边栏自动收起",
+    "description": "侧边栏自动收起开关标签"
+  },
+  "sidebarAutoHideHint": {
+    "message": "鼠标离开时自动收起侧边栏，鼠标进入时展开",
+    "description": "侧边栏自动收起功能提示"
+  },
+  "folderSpacing": {
+    "message": "文件夹间距",
+    "description": "文件夹间距调节标签"
+  },
+  "folderSpacingCompact": {
+    "message": "紧凑",
+    "description": "紧凑文件夹间距标签"
+  },
+  "folderSpacingSpacious": {
+    "message": "宽松",
+    "description": "宽松文件夹间距标签"
+  },
+  "folderTreeIndent": {
+    "message": "子文件夹缩进",
+    "description": "子文件夹树形缩进调节标签"
+  },
+  "folderTreeIndentCompact": {
+    "message": "更窄",
+    "description": "较窄的子文件夹缩进标签"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "更宽",
+    "description": "较宽的子文件夹缩进标签"
+  },
+  "export_select_mode_select_all": {
+    "message": "全选",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "已选择 {count} 条",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "选择消息",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "选择下方消息",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "请至少选择一条消息进行导出",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "单张PNG图片，便于移动端分享。",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "正在生成图片...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "保存报告",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "导出此研究报告",
+    "description": "Deep Research save report tooltip"
+  },
+  "export_fontsize_label": {
+    "message": "字体大小",
+    "description": "Label for font size slider in export dialog"
+  },
+  "export_fontsize_preview": {
+    "message": "天地玄黄，宇宙洪荒。日月盈昃，辰宿列张。",
+    "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "导出失败：{error}",
+    "description": "带具体原因的导出失败提示"
+  },
+  "export_error_refresh_retry": {
+    "message": "因网络原因，图片导出失败，请刷新页面后重试。",
+    "description": "图片导出遇到瞬时加载失败时的刷新重试提示"
+  },
+  "export_md_include_source_confirm": {
+    "message": "導出內容包含網路搜尋圖片。是否在 Markdown 中包含圖片來源連結？",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
+  "deepResearch_exportedAt": {
+    "message": "导出时间",
+    "description": "深度研究导出时间戳标签"
+  },
+  "deepResearch_totalPhases": {
+    "message": "总思考阶段",
+    "description": "深度研究总思考阶段标签"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "思考阶段",
+    "description": "深度研究思考阶段标题"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "研究网站",
+    "description": "深度研究已研究网站章节标题"
+  },
+  "snowEffect": {
+    "message": "飘雪效果",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "在页面上飘雪，营造冬日氛围",
+    "description": "Snow effect feature hint"
   }
 }

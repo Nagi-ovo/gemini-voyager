@@ -12,7 +12,10 @@ import browser from 'webextension-polyfill';
 import { logger } from '@/core/services/LoggerService';
 import { promptStorageService } from '@/core/services/StorageService';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
+import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
+import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
+import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import { getCurrentLanguage, getTranslationSync, initI18n, setCachedLanguage } from '@/utils/i18n';
 import {
@@ -82,15 +85,23 @@ function createI18n() {
           // Extension context invalidated, skip
           return;
         }
-        await browser.storage.sync.set({ language: lang });
-        // Immediately update cached language to avoid race condition with async onChanged listener
         setCachedLanguage(lang);
+        await browser.storage.sync.set({ language: lang });
+        return;
       } catch (e) {
-        // Silently ignore extension context errors
-        if (e instanceof Error && e.message.includes('Extension context invalidated')) {
+        try {
+          await browser.storage.local.set({ language: lang });
           return;
+        } catch (localError) {
+          // Silently ignore extension context errors
+          if (
+            isExtensionContextInvalidatedError(e) ||
+            isExtensionContextInvalidatedError(localError)
+          ) {
+            return;
+          }
+          console.warn('[PromptManager] Failed to set language:', e, localError);
         }
-        console.warn('[PromptManager] Failed to set language:', e);
       }
     },
     get: async (): Promise<AppLanguage> => await getCurrentLanguage(),
@@ -485,6 +496,19 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     titleRow.appendChild(versionBadge);
 
     (async () => {
+      const isSafariBrowser = isSafari();
+      const safariUpdateReminderEnabled = isSafariBrowser && shouldShowSafariUpdateReminder();
+
+      // For Safari, the feature flag controls whether reminders are shown for all versions.
+      if (isSafariBrowser && !safariUpdateReminderEnabled) return;
+
+      const shouldShowUpdateNotification = shouldShowUpdateReminderForCurrentVersion({
+        currentVersion: currentVersionNormalized,
+        isSafariBrowser,
+        safariReminderEnabled: safariUpdateReminderEnabled,
+      });
+      if (!shouldShowUpdateNotification) return;
+
       const latest = await getLatestVersionCached();
       const latestNormalized = normalizeVersionString(latest);
       const hasUpdate =
@@ -1176,7 +1200,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         }
       } catch (err) {
         // Silently handle extension context errors
-        if (err instanceof Error && err.message.includes('Extension context invalidated')) {
+        if (isExtensionContextInvalidatedError(err)) {
           setNotice(
             i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
             'err',
@@ -1476,6 +1500,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     };
   } catch (err) {
     try {
+      if (isExtensionContextInvalidatedError(err)) {
+        return { destroy: () => {} };
+      }
       (window as any).console?.error?.('Prompt Manager init failed', err);
     } catch {}
     return { destroy: () => {} };

@@ -35,10 +35,10 @@ export class MarkdownFormatter {
   }
 
   /**
-   * Extract image URLs from Markdown (http/https only)
+   * Extract image URLs from Markdown (http/https and blob: URLs)
    */
   static extractImageUrls(markdown: string): string[] {
-    const imgRegex = /!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/g;
+    const imgRegex = /!\[[^\]]*\]\(((?:https?:\/\/|blob:)[^\s)]+)\)/g;
     const out = new Set<string>();
     let m: RegExpExecArray | null;
     while ((m = imgRegex.exec(markdown)) !== null) {
@@ -51,10 +51,22 @@ export class MarkdownFormatter {
    * Rewrite Markdown image URLs using provided mapping (original -> newUrl)
    */
   static rewriteImageUrls(markdown: string, mapping: Map<string, string>): string {
-    const imgRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+    const imgRegex = /!\[([^\]]*)\]\(((?:https?:\/\/|blob:)[^\s)]+)\)/g;
     return markdown.replace(imgRegex, (_all, alt, url) => {
       const next = mapping.get(url);
       return next ? `![${alt}](${next})` : _all;
+    });
+  }
+
+  /**
+   * Replace markdown image syntax with a Safari-safe text placeholder.
+   */
+  static degradeImageMarkdownForSafari(markdown: string): string {
+    const imgRegex = /!\[([^\]]*)\]\(((?:https?:\/\/|blob:)[^\s)]+)\)/g;
+    return markdown.replace(imgRegex, (_all, altText) => {
+      const alt = String(altText || '').trim();
+      const label = alt || 'image';
+      return `[Image unavailable in Safari export: ${label}]`;
     });
   }
 
@@ -133,39 +145,80 @@ export class MarkdownFormatter {
   private static formatTurn(turn: ChatTurn, index: number): string {
     const lines: string[] = [];
 
-    // User question
     lines.push(`## Turn ${index}${turn.starred ? ' ⭐' : ''}`);
     lines.push('');
-    lines.push('### 👤 User');
-    lines.push('');
 
-    // Extract rich content if DOM element available
-    if (turn.userElement) {
-      const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
+    if (!turn.omitEmptySections) {
+      lines.push('### 👤 User');
+      lines.push('');
 
-      // Handle images
-      if (extracted.hasImages) {
-        lines.push('*[This turn includes uploaded images]*');
-        lines.push('');
+      if (turn.userElement) {
+        const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
+        if (extracted.hasImages) {
+          lines.push('*[This turn includes uploaded images]*');
+          lines.push('');
+        }
+        lines.push(extracted.text || '_No content_');
+      } else {
+        lines.push(this.formatContent(turn.user) || '_No content_');
       }
 
-      lines.push(extracted.text || '_No content_');
-    } else {
-      lines.push(this.formatContent(turn.user));
+      lines.push('');
+      lines.push('### 🤖 Assistant');
+      lines.push('');
+
+      if (turn.assistantElement) {
+        const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
+        const fallback = this.formatContent(turn.assistant);
+        lines.push(extracted.text || fallback || '_No content_');
+      } else {
+        lines.push(this.formatContent(turn.assistant) || '_No content_');
+      }
+
+      return lines.join('\n');
     }
 
-    // Assistant response (always show section, even if empty)
-    lines.push('');
-    lines.push('### 🤖 Assistant');
-    lines.push('');
+    let hasAnySection = false;
 
-    if (turn.assistantElement) {
-      const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
-      // Fallback to plain assistant text if rich extraction produced nothing
-      const fallback = this.formatContent(turn.assistant);
-      lines.push(extracted.text || fallback || '_No content_');
-    } else {
-      lines.push(this.formatContent(turn.assistant));
+    const userFallback = this.formatContent(turn.user);
+    const hasUser = !!turn.userElement || !!userFallback;
+    if (hasUser) {
+      lines.push('### 👤 User');
+      lines.push('');
+
+      if (turn.userElement) {
+        const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
+        if (extracted.hasImages) {
+          lines.push('*[This turn includes uploaded images]*');
+          lines.push('');
+        }
+        lines.push(extracted.text || userFallback || '_No content_');
+      } else {
+        lines.push(userFallback || '_No content_');
+      }
+
+      lines.push('');
+      hasAnySection = true;
+    }
+
+    const assistantFallback = this.formatContent(turn.assistant);
+    const hasAssistant = !!turn.assistantElement || !!assistantFallback;
+    if (hasAssistant) {
+      lines.push('### 🤖 Assistant');
+      lines.push('');
+
+      if (turn.assistantElement) {
+        const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
+        lines.push(extracted.text || assistantFallback || '_No content_');
+      } else {
+        lines.push(assistantFallback || '_No content_');
+      }
+
+      hasAnySection = true;
+    }
+
+    if (!hasAnySection) {
+      lines.push('_No content_');
     }
 
     return lines.join('\n');
@@ -176,7 +229,7 @@ export class MarkdownFormatter {
    * Preserves code blocks, lists, and other formatting
    */
   private static formatContent(content: string): string {
-    if (!content) return '_No content_';
+    if (!content) return '';
 
     // Content is already mostly plain text from DOM extraction
     // We just need to ensure proper escaping and structure

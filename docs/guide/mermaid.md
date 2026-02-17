@@ -29,6 +29,14 @@
 - **⊙**：重置视图
 - **✕ / ESC**：关闭全屏
 
+## 兼容性与故障排除
+
+::: warning 说明
+
+- **Firefox 限制**：由于环境限制，Firefox 使用 9.2.2 版本，暂不支持 **Timeline**、**Sankey** 等新特性。
+- **语法错误**：渲染失败通常是因为 Gemini 生成的代码有语法错误。我们正在收集 Bad Case，后续将通过补丁自动修复常见的生成错误。
+  :::
+
 <div align="center">
   <img src="/assets/mermaid-preview.png" alt="Mermaid 图表渲染" style="max-width: 100%; border-radius: 8px;"/>
 </div>

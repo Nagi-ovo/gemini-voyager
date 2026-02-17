@@ -1,5 +1,9 @@
 # Installation
 
+::: info News
+🍎 **Safari Native Extension is launched!** It is completely free and supports one-click installation.
+:::
+
 Choose your path.
 
 > ⚠️ Note: Prompt Manager is the only feature that supports Gemini for Enterprise.
@@ -10,7 +14,7 @@ The simplest way to get started. Updates are automatic.
 
 **Chrome / Brave / Opera / Vivaldi:**
 
-[<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol)
+[<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=en)
 
 **Microsoft Edge:**
 
@@ -42,14 +46,16 @@ The Web Store review process can be slow. If you want the cutting-edge version i
 
 ## 3. Safari (macOS)
 
-1. Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
-2. Unzip the file.
-3. Run the following command in Terminal to convert it (requires Xcode):
-   ```bash
-   xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
-   ```
-4. Run the app in Xcode to install.
-5. Enable in Safari Settings > Extensions.
+Safari now supports direct distribution! Download the pre-signed app:
+
+1. Download the <SafariDownloadLink>latest Safari version (.dmg)</SafariDownloadLink>.
+2. Double-click to open and follow the prompts to install.
+3. Double-click to launch the app.
+4. Enable the extension in **Safari Settings > Extensions**.
+
+> 💡 The Safari build is now directly signed for distribution—no Xcode conversion needed!
+>
+> ⚠️ **Limitations**: Due to Safari's nature, (a) Watermark removal (b) Image export (PDF recommended) are not supported.
 
 ---
 

@@ -10,6 +10,7 @@ export interface Folder {
   parentId: FolderId | null;
   isExpanded: boolean;
   pinned?: boolean;
+  color?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -19,8 +20,12 @@ export interface ConversationReference {
   title: string;
   url: string;
   addedAt: number;
+  lastOpenedAt?: number; // Timestamp when the conversation was last opened
+  updatedAt?: number; // Timestamp when the reference was last updated (e.g., renamed)
   isGem?: boolean;
   gemId?: string;
+  starred?: boolean; // Whether this conversation is starred in the folder
+  customTitle?: boolean; // Whether title was manually renamed in folder (don't auto-sync from native)
 }
 
 export interface FolderData {

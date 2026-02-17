@@ -1,5 +1,8 @@
 # Guía de Contribución
 
+> [!IMPORTANT]
+> **Estado del proyecto: Mantenimiento bajo.** Espere retrasos en las respuestas. Se priorizan los PR con pruebas.
+
 ¡Gracias por considerar contribuir a Gemini Voyager! 🚀
 
 Este documento proporciona pautas e instrucciones para contribuir. Damos la bienvenida a todas las contribuciones, ya sea corrección de errores, nuevas funcionalidades, mejoras en la documentación o traducciones.
@@ -114,7 +117,8 @@ bun install
    git checkout -b fix/tu-correccion-de-error
    ```
 
-2. **Mantén los cambios enfocados** - una funcionalidad o corrección por PR
+2. **Vincular Issues** - Al implementar una nueva funcionalidad, **primero debes abrir un Issue de discusión**. Los PR de nuevas funcionalidades enviados sin discusión previa serán cerrados. Al enviar un PR, por favor enlaza ese Issue.
+3. **Mantén los cambios enfocados** - una funcionalidad o corrección por PR
 
 ### Lista de Verificación Pre-Commit
 
@@ -264,4 +268,4 @@ Gemini Voyager mejora la experiencia de chat de Gemini AI con:
 
 ## Licencia
 
-Al contribuir, aceptas que tus contribuciones se licenciarán bajo la [Licencia MIT](../LICENSE).
+Al contribuir, aceptas que tus contribuciones se licenciarán bajo la [Licencia GPLv3](../LICENSE).

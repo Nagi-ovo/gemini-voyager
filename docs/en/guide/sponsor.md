@@ -1,7 +1,7 @@
 # Sponsor
 
-> [!CAUTION]
-> **Author's Statement**: This project **DOES NOT accept** any form of sponsorship or advertising from LLM mirror sites, illegal products, or products involving user privacy leaks. Please do not contact for such inquiries.
+> [!NOTE]
+> If Gemini Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
 
 Maintaining open-source projects is mainly driven by passion (and coffee) ☕
 

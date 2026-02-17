@@ -1,34 +1,44 @@
 # Deep Research 导出
 
-将 Deep Research 对话中的完整"思考"内容导出为格式优美的 Markdown 文件。
+导出 Deep Research 生成的最终报告，或将其完整的“思考”过程保存为 Markdown 文件。
 
-## 功能特性
+## 1. 报告导出 (PDF / 图片)
 
-- **一键导出**:点击分享和导出按钮即可下载
-- **结构化格式**:按原始顺序保留思考阶段、思考条目和研究网站
-- **双语标题**:Markdown 文件包含中英文双语章节标题
-- **自动命名**:文件使用时间戳命名,便于整理(例如:`deep-research-thinking-20240128-153045.md`)
+Deep Research 生成的报告支持导出为格式精美的 PDF 或方便分享的单张图片（同时也支持导出为 Markdown 和 JSON 格式）。
 
-## 使用方法
+![报告导出](/assets/deep-research-report-export.png)
+
+## 2. 思考过程导出 (Markdown)
+
+除了最终报告，您还可以将对话中的完整“思考”内容一键导出。
+
+### 功能特性
+
+- **一键导出**: 点击分享和导出按钮即可下载
+- **结构化格式**: 按原始顺序保留思考阶段、思考条目和研究网站
+- **双语标题**: Markdown 文件包含英文和当前语言的双语章节标题
+- **自动命名**: 文件使用时间戳命名,便于整理 (例如:`deep-research-thinking-20240128-153045.md`)
+
+### 使用方法
 
 1. 在 Gemini 上打开一个 Deep Research 对话
 2. 点击对话的**分享和导出**按钮
 3. 选择 "下载 Thinking 内容" (Download thinking content)
 4. Markdown 文件将自动下载
 
-![Deep Research 导出](/assets/deepresearch_download_thinking.png)
+![Deep Research 思考内容导出](/assets/deepresearch_download_thinking.png)
 
-## 导出文件格式
+### 导出文件格式
 
 导出的 Markdown 文件包含:
 
-- **标题**:对话标题
-- **元数据**:导出时间和思考阶段总数
-- **思考阶段**:每个阶段包含:
-  - 思考条目(包含标题和内容)
-  - 研究网站(包含链接和标题)
+- **标题**: 对话标题
+- **元数据**: 导出时间和思考阶段总数
+- **思考阶段**: 每个阶段包含:
+  - 思考条目 (包含标题和内容)
+  - 研究网站 (包含链接和标题)
 
-### 示例结构
+#### 示例结构
 
 ```markdown
 # Deep Research 对话标题

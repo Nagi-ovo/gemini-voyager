@@ -2,8 +2,8 @@ import browser from 'webextension-polyfill';
 
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
-import { storageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
+import { isSafari } from '@/core/utils/browser';
 import { createTranslator, initI18n } from '@/utils/i18n';
 
 import type { ConversationReference, DragData, Folder, FolderData } from './types';
@@ -75,6 +75,119 @@ function uid(): string {
 }
 
 const NOTIFICATION_TIMEOUT_MS = 5000;
+const PROMPT_LINK_SELECTOR = 'a.prompt-link[href^="/prompts/"]';
+const UNBOUND_PROMPT_LINK_SELECTOR = `${PROMPT_LINK_SELECTOR}:not([data-gv-drag-bound])`;
+const PROMPT_LIST_BIND_DEBOUNCE_MS = 120;
+const PROMPT_TITLE_SYNC_DEBOUNCE_MS = 280;
+const PROMPT_DRAG_HOST_SELECTORS = [
+  '[data-test-id^="history-item"]',
+  '[role="listitem"]',
+  '.mat-mdc-list-item',
+  'li',
+];
+
+function nodeContainsPromptLink(node: Node): boolean {
+  if (!(node instanceof Element)) return false;
+  if (node.matches(PROMPT_LINK_SELECTOR)) return true;
+  return !!node.querySelector(PROMPT_LINK_SELECTOR);
+}
+
+export function mutationAddsPromptLinks(mutations: MutationRecord[]): boolean {
+  for (const mutation of mutations) {
+    for (const node of Array.from(mutation.addedNodes)) {
+      if (nodeContainsPromptLink(node)) return true;
+    }
+  }
+  return false;
+}
+
+function mutationMayAffectPromptTitles(mutations: MutationRecord[]): boolean {
+  for (const mutation of mutations) {
+    if (mutation.type === 'characterData') {
+      if (mutation.target.parentElement?.closest(PROMPT_LINK_SELECTOR)) return true;
+      continue;
+    }
+
+    if (mutation.type === 'attributes') {
+      if (mutation.target instanceof Element && mutation.target.closest(PROMPT_LINK_SELECTOR))
+        return true;
+      continue;
+    }
+
+    if (mutation.type === 'childList') {
+      if (mutation.target instanceof Element && mutation.target.closest(PROMPT_LINK_SELECTOR)) {
+        return true;
+      }
+
+      for (const node of Array.from(mutation.addedNodes)) {
+        if (nodeContainsPromptLink(node)) return true;
+      }
+      for (const node of Array.from(mutation.removedNodes)) {
+        if (nodeContainsPromptLink(node)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function extractPromptIdFromHref(rawHref: string): string | null {
+  const href = String(rawHref || '').trim();
+  if (!href) return null;
+  const match = href.match(/\/prompts\/([^/?#]+)/);
+  if (match && match[1]) return match[1];
+  try {
+    const url = new URL(href, location.origin);
+    const pathMatch = url.pathname.match(/\/prompts\/([^/?#]+)/);
+    return pathMatch?.[1] || null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeDroppedUrl(raw: string): string | null {
+  const firstLine = String(raw || '')
+    .split(/\r?\n/, 1)[0]
+    ?.trim();
+  if (!firstLine) return null;
+  if (/^https?:\/\//i.test(firstLine)) return firstLine;
+  if (firstLine.startsWith('/')) return `${location.origin}${firstLine}`;
+  return null;
+}
+
+export function parseDragDataPayload(raw: string): DragData | null {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      (parsed as { type?: unknown }).type === 'conversation' &&
+      typeof (parsed as { conversationId?: unknown }).conversationId === 'string'
+    ) {
+      const data = parsed as DragData;
+      return {
+        type: 'conversation',
+        conversationId: data.conversationId,
+        title: typeof data.title === 'string' ? data.title : '',
+        url: typeof data.url === 'string' ? data.url : '',
+      };
+    }
+  } catch {}
+
+  const normalizedUrl = normalizeDroppedUrl(trimmed);
+  if (!normalizedUrl) return null;
+  const conversationId = extractPromptIdFromHref(normalizedUrl);
+  if (!conversationId) return null;
+
+  return {
+    type: 'conversation',
+    conversationId,
+    title: '',
+    url: normalizedUrl,
+  };
+}
 
 /**
  * Validate folder data structure
@@ -94,6 +207,9 @@ export class AIStudioFolderManager {
   private container: HTMLElement | null = null;
   private historyRoot: HTMLElement | null = null;
   private cleanupFns: Array<() => void> = [];
+  private promptListBindTimer: number | null = null;
+  private promptTitleSyncTimer: number | null = null;
+  private promptTitleSyncInProgress: boolean = false;
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private backupService!: DataBackupService<FolderData>; // Initialized in init()
@@ -137,6 +253,9 @@ export class AIStudioFolderManager {
     // Start monitoring
     storageMonitor.startMonitoring();
 
+    // Migrate data from chrome.storage.sync to chrome.storage.local (one-time)
+    await this.migrateFromSyncToLocal();
+
     // Only enable on prompts, library, or root pages
     // Root path (/) is where the main playground is, prompts are saved chats, library is history
     const isValidPath =
@@ -152,6 +271,9 @@ export class AIStudioFolderManager {
     // Set up storage change listener (always needed to respond to setting changes)
     this.setupStorageListener();
 
+    // Setup message listener for sync operations (always needed)
+    this.setupMessageListener();
+
     // If folder feature is disabled, skip initialization
     if (!this.folderEnabled) {
       return;
@@ -159,6 +281,108 @@ export class AIStudioFolderManager {
 
     // Initialize folder UI
     await this.initializeFolderUI();
+  }
+
+  /**
+   * Migrate folder data from chrome.storage.sync to chrome.storage.local
+   * This is a one-time migration for users upgrading from older versions
+   * Benefits: No 100KB quota limit, consistent with Gemini storage
+   */
+  private async migrateFromSyncToLocal(): Promise<void> {
+    try {
+      // Check if there's data in chrome.storage.sync
+      const syncResult = await chrome.storage.sync.get(this.STORAGE_KEY);
+      const syncData = syncResult[this.STORAGE_KEY];
+
+      if (syncData && validateFolderData(syncData)) {
+        // Check if chrome.storage.local already has data
+        const localResult = await chrome.storage.local.get(this.STORAGE_KEY);
+        const localData = localResult[this.STORAGE_KEY];
+
+        if (!localData || !validateFolderData(localData)) {
+          // Migrate sync data to local storage
+          await chrome.storage.local.set({ [this.STORAGE_KEY]: syncData });
+          console.log('[AIStudioFolderManager] Migrated folder data from sync to local storage');
+
+          // Optionally clear sync storage after successful migration
+          // await chrome.storage.sync.remove(this.STORAGE_KEY);
+        } else {
+          // Both have data - merge them (local takes priority for conflicts)
+          const mergedFolders = this.mergeFolderData(localData, syncData);
+          await chrome.storage.local.set({ [this.STORAGE_KEY]: mergedFolders });
+          console.log('[AIStudioFolderManager] Merged sync and local folder data');
+        }
+      }
+    } catch (error) {
+      console.warn('[AIStudioFolderManager] Migration from sync to local failed:', error);
+      // Don't throw - migration failure should not block normal operation
+    }
+  }
+
+  /**
+   * Simple merge of folder data (used during migration)
+   * Local data takes priority for conflicts
+   */
+  private mergeFolderData(local: FolderData, sync: FolderData): FolderData {
+    const mergedFolders = [...local.folders];
+    const localFolderIds = new Set(local.folders.map((f) => f.id));
+
+    // Add folders from sync that don't exist in local
+    for (const folder of sync.folders) {
+      if (!localFolderIds.has(folder.id)) {
+        mergedFolders.push(folder);
+      }
+    }
+
+    // Merge folder contents
+    const mergedContents = { ...local.folderContents };
+    for (const [folderId, conversations] of Object.entries(sync.folderContents)) {
+      if (!mergedContents[folderId]) {
+        mergedContents[folderId] = conversations;
+      } else {
+        // Merge conversations, avoiding duplicates
+        const existingIds = new Set(mergedContents[folderId].map((c) => c.conversationId));
+        for (const conv of conversations) {
+          if (!existingIds.has(conv.conversationId)) {
+            mergedContents[folderId].push(conv);
+          }
+        }
+      }
+    }
+
+    return { folders: mergedFolders, folderContents: mergedContents };
+  }
+
+  /**
+   * Setup message listener for sync operations
+   * Handles gv.sync.requestData and gv.folders.reload messages from popup
+   */
+  private setupMessageListener(): void {
+    browser.runtime.onMessage.addListener((message: any, _sender: any, sendResponse: any) => {
+      // Handle request for folder data (for cloud sync upload)
+      if (message?.type === 'gv.sync.requestData') {
+        console.log('[AIStudioFolderManager] Received request for folder data from popup');
+        sendResponse({
+          ok: true,
+          data: this.data,
+        });
+        return true;
+      }
+
+      // Handle reload request (after cloud sync download)
+      if (message?.type === 'gv.folders.reload') {
+        console.log('[AIStudioFolderManager] Received reload request from sync');
+        this.load().then(() => {
+          this.render();
+          console.log('[AIStudioFolderManager] Folder data reloaded from sync');
+        });
+        sendResponse({ ok: true });
+        return true;
+      }
+
+      // Return true for all messages to keep the channel open
+      return true;
+    });
   }
 
   private async initializeFolderUI(): Promise<void> {
@@ -182,6 +406,7 @@ export class AIStudioFolderManager {
       this.injectUI();
       this.observePromptList();
       this.bindDraggablesInPromptList();
+      await this.syncConversationTitlesFromPromptList();
 
       // Highlight current conversation initially and on navigation
       this.highlightActiveConversation();
@@ -204,9 +429,12 @@ export class AIStudioFolderManager {
 
   private async load(): Promise<void> {
     try {
-      const res = await storageService.get<FolderData>(this.STORAGE_KEY);
-      if (res.success && res.data && validateFolderData(res.data)) {
-        this.data = res.data;
+      // Use chrome.storage.local (migrated from sync)
+      const result = await chrome.storage.local.get(this.STORAGE_KEY);
+      const data = result[this.STORAGE_KEY];
+
+      if (data && validateFolderData(data)) {
+        this.data = data;
         // Create primary backup on successful load
         this.backupService.createPrimaryBackup(this.data);
       } else {
@@ -228,8 +456,8 @@ export class AIStudioFolderManager {
       // Create emergency backup BEFORE saving (snapshot of previous state)
       this.backupService.createEmergencyBackup(this.data);
 
-      // Attempt to save to main storage
-      await storageService.set<FolderData>(this.STORAGE_KEY, this.data);
+      // Save to chrome.storage.local (migrated from sync)
+      await chrome.storage.local.set({ [this.STORAGE_KEY]: this.data });
 
       // Create primary backup AFTER successful save
       this.backupService.createPrimaryBackup(this.data);
@@ -261,6 +489,35 @@ export class AIStudioFolderManager {
 
     // For AI Studio, hide import/export for now to simplify UI
 
+    // Cloud buttons (Skip on Safari as it doesn't support cloud sync yet)
+    if (!isSafari()) {
+      // Cloud upload button
+      const cloudUploadButton = document.createElement('button');
+      cloudUploadButton.className = 'gv-folder-action-btn';
+      cloudUploadButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q25-92 100-149t170-57q117 0 198.5 81.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H520q-33 0-56.5-23.5T440-240v-206l-64 62-56-56 160-160 160 160-56 56-64-62v206h220q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-83-58.5-141.5T480-720q-83 0-141.5 58.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h100v80H260Zm220-280Z"/></svg>`;
+      cloudUploadButton.title = this.t('folder_cloud_upload');
+      cloudUploadButton.addEventListener('click', () => this.handleCloudUpload());
+      // Add dynamic tooltip on mouseenter
+      cloudUploadButton.addEventListener('mouseenter', async () => {
+        const tooltip = await this.getCloudUploadTooltip();
+        cloudUploadButton.title = tooltip;
+      });
+      actions.appendChild(cloudUploadButton);
+
+      // Cloud sync button
+      const cloudSyncButton = document.createElement('button');
+      cloudSyncButton.className = 'gv-folder-action-btn';
+      cloudSyncButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"/></svg>`;
+      cloudSyncButton.title = this.t('folder_cloud_sync');
+      cloudSyncButton.addEventListener('click', () => this.handleCloudSync());
+      // Add dynamic tooltip on mouseenter
+      cloudSyncButton.addEventListener('mouseenter', async () => {
+        const tooltip = await this.getCloudSyncTooltip();
+        cloudSyncButton.title = tooltip;
+      });
+      actions.appendChild(cloudSyncButton);
+    }
+
     // Add folder
     const addBtn = document.createElement('button');
     addBtn.className = 'gv-folder-add-btn';
@@ -281,10 +538,94 @@ export class AIStudioFolderManager {
     host.insertAdjacentElement('beforebegin', container);
 
     this.container = container;
+    this.injectStyles();
     this.render();
 
     // Apply initial folder enabled setting
     this.applyFolderEnabledSetting();
+  }
+
+  private injectStyles(): void {
+    const styleId = 'gv-aistudio-folder-styles';
+    if (document.getElementById(styleId)) return;
+
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .gv-folder-confirm-dialog.gv-aistudio-confirm {
+        background: var(--gem-sys-color-surface, #fff);
+        border: 1px solid var(--gem-sys-color-outline-variant, #e5e7eb);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        padding: 16px;
+        min-width: 280px;
+        font-family: 'Google Sans', 'Segoe UI', sans-serif;
+        animation: gv-fade-in 0.2s ease-out;
+      }
+      
+      .gv-confirm-message {
+        margin-bottom: 16px;
+        color: var(--gem-sys-color-on-surface, #1f2937);
+        font-size: 14px;
+        line-height: 1.5;
+        font-weight: 500;
+      }
+
+      .gv-confirm-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end; /* Default right align, but we override order */
+      }
+
+      .gv-confirm-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        outline: none;
+      }
+
+      .gv-confirm-delete {
+        background-color: #ef4444; /* Red color */
+        color: white;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+      }
+      
+      .gv-confirm-delete:hover {
+        background-color: #dc2626;
+        box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+      }
+
+      .gv-confirm-cancel {
+        background-color: transparent;
+        color: var(--gem-sys-color-on-surface-variant, #4b5563);
+        border: 1px solid var(--gem-sys-color-outline, #d1d5db);
+      }
+
+      .gv-confirm-cancel:hover {
+        background-color: var(--gem-sys-color-surface-container-high, #f3f4f6);
+        color: var(--gem-sys-color-on-surface, #111827);
+      }
+
+      /* Hover effect for remove button in list */
+      .gv-conversation-remove-btn:hover {
+        background-color: rgba(239, 68, 68, 0.1) !important;
+        color: #ef4444 !important;
+      }
+
+      .gv-conversation-remove-btn:hover span {
+        font-variation-settings: 'FILL' 1, 'wght' 600 !important;
+      }
+
+      @keyframes gv-fade-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   private render(): void {
@@ -396,14 +737,17 @@ export class AIStudioFolderManager {
     } catch {}
   }
 
-  private renderFolder(folder: Folder): HTMLElement {
+  private renderFolder(folder: Folder, level: number = 0): HTMLElement {
     const item = document.createElement('div');
     item.className = 'gv-folder-item';
     item.dataset.folderId = folder.id;
     item.dataset.pinned = folder.pinned ? 'true' : 'false';
+    item.dataset.level = String(level);
 
     const header = document.createElement('div');
     header.className = 'gv-folder-item-header';
+    // Add left padding for nested folders
+    header.style.paddingLeft = `${level * 16 + 8}px`;
     item.appendChild(header);
     // Allow dropping directly on folder header
     this.bindDropZone(header, folder.id);
@@ -448,16 +792,36 @@ export class AIStudioFolderManager {
     moreBtn.addEventListener('click', (e) => this.openFolderMenu(e, folder.id));
     header.appendChild(moreBtn);
 
-    // Content (conversations only; subfolders are not supported in AI Studio)
+    // Content (conversations and subfolders)
     if (folder.isExpanded) {
       const content = document.createElement('div');
       content.className = 'gv-folder-content';
       this.bindDropZone(content, folder.id);
 
+      // Render conversations in this folder
       const convs = this.data.folderContents[folder.id] || [];
       for (const conv of convs) {
-        content.appendChild(this.renderConversation(folder.id, conv));
+        const convEl = this.renderConversation(folder.id, conv);
+        // Add indentation for nested conversations
+        convEl.style.paddingLeft = `${(level + 1) * 16 + 8}px`;
+        content.appendChild(convEl);
       }
+
+      // Render subfolders (only for root-level folders, creating 2-level hierarchy)
+      if (level === 0) {
+        const subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
+        // Sort subfolders: pinned first, then by creation time
+        subfolders.sort((a, b) => {
+          const ap = a.pinned ? 1 : 0;
+          const bp = b.pinned ? 1 : 0;
+          if (ap !== bp) return bp - ap;
+          return a.createdAt - b.createdAt;
+        });
+        for (const subfolder of subfolders) {
+          content.appendChild(this.renderFolder(subfolder, level + 1));
+        }
+      }
+
       item.appendChild(content);
     }
 
@@ -500,7 +864,7 @@ export class AIStudioFolderManager {
     removeBtn.title = this.t('folder_remove_conversation');
     removeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      this.removeConversationFromFolder(folderId, conv.conversationId);
+      this.confirmRemoveConversation(folderId, conv.conversationId, conv.title || '', e);
     });
     row.appendChild(removeBtn);
 
@@ -528,8 +892,25 @@ export class AIStudioFolderManager {
 
   private openFolderMenu(ev: MouseEvent, folderId: string): void {
     ev.stopPropagation();
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
     const menu = document.createElement('div');
     menu.className = 'gv-context-menu';
+
+    // Only show "Create subfolder" for root-level folders (to maintain 2-level hierarchy)
+    if (!folder.parentId) {
+      const createSub = document.createElement('button');
+      createSub.textContent = this.t('folder_create_subfolder') || 'Create Subfolder';
+      createSub.addEventListener('click', () => {
+        this.createFolder(folderId);
+        try {
+          document.body.removeChild(menu);
+        } catch {}
+      });
+      menu.appendChild(createSub);
+    }
+
     const rename = document.createElement('button');
     rename.textContent = this.t('folder_rename');
     rename.addEventListener('click', () => {
@@ -538,6 +919,8 @@ export class AIStudioFolderManager {
         document.body.removeChild(menu);
       } catch {}
     });
+    menu.appendChild(rename);
+
     const del = document.createElement('button');
     del.textContent = this.t('folder_delete');
     del.addEventListener('click', () => {
@@ -546,7 +929,6 @@ export class AIStudioFolderManager {
         document.body.removeChild(menu);
       } catch {}
     });
-    menu.appendChild(rename);
     menu.appendChild(del);
 
     // Apply styles with proper typing
@@ -599,8 +981,20 @@ export class AIStudioFolderManager {
 
   private async deleteFolder(folderId: string): Promise<void> {
     if (!confirm(this.t('folder_delete_confirm'))) return;
-    this.data.folders = this.data.folders.filter((f) => f.id !== folderId);
-    delete this.data.folderContents[folderId];
+
+    // Collect all folder IDs to delete (including subfolders)
+    const folderIdsToDelete: string[] = [folderId];
+    const subfolders = this.data.folders.filter((f) => f.parentId === folderId);
+    for (const subfolder of subfolders) {
+      folderIdsToDelete.push(subfolder.id);
+    }
+
+    // Delete all collected folders and their contents
+    this.data.folders = this.data.folders.filter((f) => !folderIdsToDelete.includes(f.id));
+    for (const id of folderIdsToDelete) {
+      delete this.data.folderContents[id];
+    }
+
     await this.save();
     this.render();
   }
@@ -611,6 +1005,84 @@ export class AIStudioFolderManager {
     this.save().then(() => this.render());
   }
 
+  private confirmRemoveConversation(
+    folderId: string,
+    conversationId: string,
+    title: string,
+    event: MouseEvent,
+  ): void {
+    const dialog = document.createElement('div');
+    dialog.className = 'gv-folder-confirm-dialog gv-aistudio-confirm';
+
+    // Position near the button
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+
+    dialog.style.position = 'fixed';
+    dialog.style.zIndex = '2147483647';
+    // Position logic: prefer left side if space available
+    // AI Studio sidebar is on the left, so we might want to pop out to the right or below
+    // But usually context menus appear near the cursor.
+    // Let's position it below the button, aligned right
+    dialog.style.top = `${rect.bottom + 4}px`;
+    dialog.style.left = `${rect.right - 200}px`; // Align right edge roughly
+
+    // Ensure it's on screen
+    if (parseInt(dialog.style.left) < 10) dialog.style.left = '10px';
+
+    const msg = document.createElement('div');
+    msg.className = 'gv-confirm-message';
+    msg.textContent = this.t('folder_remove_conversation_confirm').replace(
+      '{title}',
+      title || this.t('conversation_untitled'),
+    );
+    dialog.appendChild(msg);
+
+    const actions = document.createElement('div');
+    actions.className = 'gv-confirm-actions';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'gv-confirm-btn gv-confirm-delete';
+    confirmBtn.textContent = this.t('pm_delete') || 'Delete';
+    confirmBtn.addEventListener('click', () => {
+      this.removeConversationFromFolder(folderId, conversationId);
+      dialog.remove();
+      document.removeEventListener('click', closeOnOutside);
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'gv-confirm-btn gv-confirm-cancel';
+    cancelBtn.textContent = this.t('pm_cancel') || 'Cancel';
+    cancelBtn.addEventListener('click', () => {
+      dialog.remove();
+      document.removeEventListener('click', closeOnOutside);
+    });
+
+    // Delete on left, Cancel on right
+    actions.appendChild(confirmBtn);
+    actions.appendChild(cancelBtn);
+    dialog.appendChild(actions);
+
+    document.body.appendChild(dialog);
+
+    // Close when clicking outside
+    const closeOnOutside = (e: MouseEvent) => {
+      if (
+        !dialog.contains(e.target as Node) &&
+        e.target !== target &&
+        !target.contains(e.target as Node)
+      ) {
+        dialog.remove();
+        document.removeEventListener('click', closeOnOutside);
+      }
+    };
+
+    // Delay adding the listener to avoid immediate closing
+    setTimeout(() => {
+      document.addEventListener('click', closeOnOutside);
+    }, 10);
+  }
+
   private bindDropZone(el: HTMLElement, targetFolderId: string | null): void {
     // Use a counter to properly track nested dragenter/dragleave events
     // This fixes the issue where child elements trigger spurious leave events
@@ -618,6 +1090,7 @@ export class AIStudioFolderManager {
 
     el.addEventListener('dragenter', (e) => {
       e.preventDefault();
+      e.stopPropagation(); // Prevent bubbling to parent drop zones
       dragEnterCounter++;
       // Only add class on first enter
       if (dragEnterCounter === 1) {
@@ -626,11 +1099,13 @@ export class AIStudioFolderManager {
     });
     el.addEventListener('dragover', (e) => {
       e.preventDefault();
+      e.stopPropagation(); // Prevent bubbling to parent drop zones
       try {
         if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
       } catch {}
     });
     el.addEventListener('dragleave', (e) => {
+      e.stopPropagation(); // Prevent bubbling to parent drop zones
       dragEnterCounter--;
       // Only remove class when truly leaving the container (counter reaches 0)
       // Also check relatedTarget as a fallback
@@ -645,21 +1120,10 @@ export class AIStudioFolderManager {
     });
     el.addEventListener('drop', (e) => {
       e.preventDefault();
+      e.stopPropagation(); // Prevent bubbling to parent drop zones
       dragEnterCounter = 0; // Reset counter on drop
       el.classList.remove('gv-folder-dragover');
-      let raw = e.dataTransfer?.getData('application/json');
-      if (!raw) {
-        try {
-          raw = e.dataTransfer?.getData('text/plain') || '';
-        } catch {}
-      }
-      if (!raw) return;
-      let data: DragData | null = null;
-      try {
-        data = JSON.parse(raw) as DragData;
-      } catch {
-        data = null;
-      }
+      const data = this.parseDragDataFromEvent(e);
       if (!data || data.type !== 'conversation' || !data.conversationId) return;
       const conv: ConversationReference = {
         conversationId: data.conversationId,
@@ -706,18 +1170,35 @@ export class AIStudioFolderManager {
   private observePromptList(): void {
     const root = this.historyRoot;
     if (!root) return;
-    const observer = new MutationObserver(() => {
-      this.bindDraggablesInPromptList();
-      // Update highlight when the list updates
-      this.highlightActiveConversation();
+    const observer = new MutationObserver((mutations) => {
+      if (mutationAddsPromptLinks(mutations)) {
+        this.schedulePromptListBinding();
+      }
+      if (mutationMayAffectPromptTitles(mutations)) {
+        this.schedulePromptTitleSync();
+      }
     });
     try {
-      observer.observe(root, { childList: true, subtree: true });
+      observer.observe(root, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['title', 'aria-label', 'href'],
+      });
     } catch {}
     this.cleanupFns.push(() => {
       try {
         observer.disconnect();
       } catch {}
+      if (this.promptListBindTimer !== null) {
+        clearTimeout(this.promptListBindTimer);
+        this.promptListBindTimer = null;
+      }
+      if (this.promptTitleSyncTimer !== null) {
+        clearTimeout(this.promptTitleSyncTimer);
+        this.promptTitleSyncTimer = null;
+      }
     });
 
     // Also update on clicks within the prompt list (SPA navigation)
@@ -739,34 +1220,187 @@ export class AIStudioFolderManager {
     });
   }
 
-  private bindDraggablesInPromptList(): void {
-    const anchors = document.querySelectorAll(
-      'ms-prompt-history-v3 a.prompt-link[href^="/prompts/"]',
+  private schedulePromptListBinding(): void {
+    if (this.promptListBindTimer !== null) return;
+    this.promptListBindTimer = window.setTimeout(() => {
+      this.promptListBindTimer = null;
+      this.bindDraggablesInPromptList();
+    }, PROMPT_LIST_BIND_DEBOUNCE_MS);
+  }
+
+  private schedulePromptTitleSync(): void {
+    if (!this.hasStoredConversations()) return;
+    if (this.promptTitleSyncTimer !== null) return;
+
+    this.promptTitleSyncTimer = window.setTimeout(() => {
+      this.promptTitleSyncTimer = null;
+      void this.runPromptTitleSync();
+    }, PROMPT_TITLE_SYNC_DEBOUNCE_MS);
+  }
+
+  private async runPromptTitleSync(): Promise<void> {
+    if (this.promptTitleSyncInProgress) return;
+
+    this.promptTitleSyncInProgress = true;
+    try {
+      await this.syncConversationTitlesFromPromptList();
+    } finally {
+      this.promptTitleSyncInProgress = false;
+    }
+  }
+
+  private hasStoredConversations(): boolean {
+    return Object.values(this.data.folderContents).some(
+      (conversations) => conversations.length > 0,
     );
+  }
+
+  private extractPromptTitle(anchor: HTMLAnchorElement | null): string | null {
+    if (!anchor) return null;
+
+    const aria = normalizeText(anchor.getAttribute('aria-label'));
+    if (aria) return aria;
+
+    const title = normalizeText(anchor.getAttribute('title'));
+    if (title) return title;
+
+    const text = normalizeText(anchor.textContent);
+    if (text) return text;
+
+    return null;
+  }
+
+  private getPromptTitleFromNative(conversationId: string): string | null {
+    const selectors = [
+      `a.prompt-link[href*="/prompts/${conversationId}"]`,
+      `a[href*="/prompts/${conversationId}"]`,
+      `a.name-btn[href*="/prompts/${conversationId}"]`,
+    ];
+
+    for (const selector of selectors) {
+      const anchor = document.querySelector(selector) as HTMLAnchorElement | null;
+      const title = this.extractPromptTitle(anchor);
+      if (title) return title;
+    }
+
+    return null;
+  }
+
+  private async syncConversationTitlesFromPromptList(): Promise<void> {
+    if (!this.hasStoredConversations()) return;
+
+    let hasUpdates = false;
+    for (const conversations of Object.values(this.data.folderContents)) {
+      for (const conversation of conversations) {
+        if (conversation.customTitle) continue;
+        const nativeTitle = this.getPromptTitleFromNative(conversation.conversationId);
+        if (!nativeTitle || nativeTitle === conversation.title) continue;
+        conversation.title = nativeTitle;
+        conversation.updatedAt = now();
+        hasUpdates = true;
+      }
+    }
+
+    if (!hasUpdates) return;
+
+    await this.save();
+    this.render();
+  }
+
+  private resolvePromptAnchorFromHost(hostEl: HTMLElement): HTMLAnchorElement | null {
+    if (hostEl.matches(PROMPT_LINK_SELECTOR)) {
+      return hostEl as HTMLAnchorElement;
+    }
+    return hostEl.querySelector(PROMPT_LINK_SELECTOR) as HTMLAnchorElement | null;
+  }
+
+  private resolvePromptAnchorFromDragEvent(
+    event: DragEvent,
+    hostEl: HTMLElement,
+  ): HTMLAnchorElement | null {
+    const target = event.target;
+    if (target instanceof Element) {
+      const targetAnchor = target.closest(PROMPT_LINK_SELECTOR) as HTMLAnchorElement | null;
+      if (targetAnchor) return targetAnchor;
+    }
+    return this.resolvePromptAnchorFromHost(hostEl);
+  }
+
+  private resolvePromptDragHost(anchor: HTMLAnchorElement): HTMLElement {
+    for (const selector of PROMPT_DRAG_HOST_SELECTORS) {
+      const match = anchor.closest(selector) as HTMLElement | null;
+      if (match) return match;
+    }
+    return anchor.parentElement || anchor;
+  }
+
+  private setPromptDragData(e: DragEvent, data: DragData, dragImageEl: HTMLElement): void {
+    try {
+      const transfer = e.dataTransfer;
+      if (!transfer) return;
+      const json = JSON.stringify(data);
+      transfer.effectAllowed = 'copyMove';
+      transfer.setData('application/json', json);
+      transfer.setData('text/plain', json);
+      if (data.url) {
+        transfer.setData('text/uri-list', data.url);
+        transfer.setData('text/x-moz-url', `${data.url}\n${data.title || ''}`);
+      }
+    } catch {}
+    try {
+      e.dataTransfer?.setDragImage(dragImageEl, 10, 10);
+    } catch {}
+  }
+
+  private parseDragDataFromEvent(event: DragEvent): DragData | null {
+    const transfer = event.dataTransfer;
+    if (!transfer) return null;
+
+    const candidates = [
+      transfer.getData('application/json'),
+      transfer.getData('text/plain'),
+      transfer.getData('text/uri-list'),
+      transfer.getData('text/x-moz-url'),
+      transfer.getData('URL'),
+    ];
+
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const parsed = parseDragDataPayload(candidate);
+      if (parsed) return parsed;
+    }
+
+    return null;
+  }
+
+  private bindDraggablesInPromptList(scope: ParentNode | null = this.historyRoot): void {
+    const root = scope ?? this.historyRoot;
+    if (!root) return;
+    const anchors = root.querySelectorAll(UNBOUND_PROMPT_LINK_SELECTOR);
     anchors.forEach((a) => {
       const anchor = a as HTMLAnchorElement;
-      const li = anchor.closest('li');
-      const hostEl = (li || anchor) as HTMLElement;
-      if ((hostEl as any)._gvDragBound) return;
-      (hostEl as any)._gvDragBound = true;
-      hostEl.draggable = true;
-      hostEl.addEventListener('dragstart', (e) => {
-        const id = this.extractPromptId(anchor);
-        const title = normalizeText(anchor.textContent || '');
-        const url = anchor.href || `${location.origin}${anchor.getAttribute('href') || ''}`;
-        const data: DragData = { type: 'conversation', conversationId: id, title, url };
-        try {
-          if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('application/json', JSON.stringify(data));
-            // Fallback to text/plain to interop with stricter DnD
-            e.dataTransfer.setData('text/plain', JSON.stringify(data));
-          }
-        } catch {}
-        try {
-          e.dataTransfer?.setDragImage(hostEl, 10, 10);
-        } catch {}
-      });
+      const hostEl = this.resolvePromptDragHost(anchor);
+      anchor.dataset.gvDragBound = '1';
+      if (!(hostEl as any)._gvDragBound) {
+        (hostEl as any)._gvDragBound = true;
+        hostEl.draggable = true;
+        if (!hostEl.style.cursor) {
+          hostEl.style.cursor = 'grab';
+        }
+        hostEl.addEventListener('dragstart', (e) => {
+          const promptAnchor = this.resolvePromptAnchorFromDragEvent(e, hostEl);
+          if (!promptAnchor) return;
+
+          const id = this.extractPromptId(promptAnchor);
+          const title = normalizeText(promptAnchor.textContent || '');
+          const rawHref = promptAnchor.getAttribute('href') || promptAnchor.href || '';
+          const url = rawHref.startsWith('http')
+            ? rawHref
+            : `${location.origin}${rawHref.startsWith('/') ? '' : '/'}${rawHref}`;
+          const data: DragData = { type: 'conversation', conversationId: id, title, url };
+          this.setPromptDragData(e, data, hostEl);
+        });
+      }
     });
   }
 
@@ -836,21 +1470,19 @@ export class AIStudioFolderManager {
       tr.style.cursor = 'grab';
 
       tr.addEventListener('dragstart', (e) => {
+        // Prevent interference from Angular Material's own drag handling if any
+        e.stopPropagation();
+
         const id = this.extractPromptId(anchor);
         const title = normalizeText(anchor.textContent || '');
-        const url = anchor.href || `${location.origin}${anchor.getAttribute('href') || ''}`;
+        // Ensure accurate URL construction
+        const rawHref = anchor.getAttribute('href') || anchor.href || '';
+        const url = rawHref.startsWith('http')
+          ? rawHref
+          : `${location.origin}${rawHref.startsWith('/') ? '' : '/'}${rawHref}`;
+
         const data: DragData = { type: 'conversation', conversationId: id, title, url };
-        try {
-          if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('application/json', JSON.stringify(data));
-            // Fallback to text/plain to interop with stricter DnD
-            e.dataTransfer.setData('text/plain', JSON.stringify(data));
-          }
-        } catch {}
-        try {
-          e.dataTransfer?.setDragImage(tr, 10, 10);
-        } catch {}
+        this.setPromptDragData(e, data, tr);
 
         // Visual feedback
         tr.style.opacity = '0.5';
@@ -940,20 +1572,7 @@ export class AIStudioFolderManager {
         rootItem.style.background = 'rgba(138, 180, 248, 0.2)';
         rootItem.style.borderColor = '#8ab4f8';
 
-        let raw = e.dataTransfer?.getData('application/json');
-        if (!raw) {
-          try {
-            raw = e.dataTransfer?.getData('text/plain') || '';
-          } catch {}
-        }
-        if (!raw) return;
-
-        let data: DragData | null = null;
-        try {
-          data = JSON.parse(raw) as DragData;
-        } catch {
-          data = null;
-        }
+        const data = this.parseDragDataFromEvent(e);
         if (!data || data.type !== 'conversation' || !data.conversationId) return;
 
         const conv: ConversationReference = {
@@ -1021,13 +1640,24 @@ export class AIStudioFolderManager {
         this.save();
       }
 
-      // Render each folder as a drop target
-      this.data.folders.forEach((folder) => {
+      // Render folders with proper hierarchy (root folders + their subfolders)
+      const rootFolders = this.data.folders.filter((f) => !f.parentId);
+      // Sort root folders: pinned first, then by creation time
+      rootFolders.sort((a, b) => {
+        const ap = a.pinned ? 1 : 0;
+        const bp = b.pinned ? 1 : 0;
+        if (ap !== bp) return bp - ap;
+        return a.createdAt - b.createdAt;
+      });
+
+      // Helper function to create a folder drop item
+      const createFolderDropItem = (folder: Folder, isSubfolder: boolean) => {
         const folderItem = document.createElement('div');
         folderItem.className = 'gv-library-folder-item';
         folderItem.dataset.folderId = folder.id;
+        const paddingLeft = isSubfolder ? '28px' : '12px';
         folderItem.style.cssText = `
-          padding: 10px 12px;
+          padding: 10px ${paddingLeft};
           margin: 4px 0;
           background: rgba(255, 255, 255, 0.05);
           border-radius: 8px;
@@ -1040,7 +1670,8 @@ export class AIStudioFolderManager {
           transition: background 0.15s, border-color 0.15s;
           border: 2px solid transparent;
         `;
-        folderItem.innerHTML = `<span class="google-symbols" style="font-size: 16px; color: #8ab4f8;">folder</span>${folder.name}`;
+        const iconName = isSubfolder ? 'subdirectory_arrow_right' : 'folder';
+        folderItem.innerHTML = `<span class="google-symbols" style="font-size: 16px; color: #8ab4f8;">${iconName}</span>${folder.name}`;
 
         // Bind drop events
         folderItem.addEventListener('dragenter', (e) => {
@@ -1067,20 +1698,7 @@ export class AIStudioFolderManager {
           folderItem.style.background = 'rgba(255, 255, 255, 0.05)';
           folderItem.style.borderColor = 'transparent';
 
-          let raw = e.dataTransfer?.getData('application/json');
-          if (!raw) {
-            try {
-              raw = e.dataTransfer?.getData('text/plain') || '';
-            } catch {}
-          }
-          if (!raw) return;
-
-          let data: DragData | null = null;
-          try {
-            data = JSON.parse(raw) as DragData;
-          } catch {
-            data = null;
-          }
+          const data = this.parseDragDataFromEvent(e);
           if (!data || data.type !== 'conversation' || !data.conversationId) return;
 
           const conv: ConversationReference = {
@@ -1113,7 +1731,24 @@ export class AIStudioFolderManager {
           );
         });
 
-        folderList.appendChild(folderItem);
+        return folderItem;
+      };
+
+      // Render root folders and their subfolders
+      rootFolders.forEach((rootFolder) => {
+        folderList.appendChild(createFolderDropItem(rootFolder, false));
+
+        // Render subfolders of this root folder
+        const subfolders = this.data.folders.filter((f) => f.parentId === rootFolder.id);
+        subfolders.sort((a, b) => {
+          const ap = a.pinned ? 1 : 0;
+          const bp = b.pinned ? 1 : 0;
+          if (ap !== bp) return bp - ap;
+          return a.createdAt - b.createdAt;
+        });
+        subfolders.forEach((subfolder) => {
+          folderList.appendChild(createFolderDropItem(subfolder, true));
+        });
       });
     };
 
@@ -1160,14 +1795,20 @@ export class AIStudioFolderManager {
   }
 
   private extractPromptId(anchor: HTMLAnchorElement): string {
+    const rawHref = anchor.getAttribute('href') || anchor.href || '';
+    const id = extractPromptIdFromHref(rawHref);
+    if (id) return id;
+
     try {
-      const u = new URL(anchor.href || anchor.getAttribute('href') || '', location.origin);
+      const u = new URL(rawHref, location.origin);
       const parts = (u.pathname || '').split('/').filter(Boolean);
-      return parts[1] || anchor.href;
+      // Expected format: /prompts/{id} -> ['', 'prompts', '{id}']
+      if (parts.length >= 2 && parts[0] === 'prompts') {
+        return parts[1];
+      }
+      return parts[1] || rawHref;
     } catch {
-      const href = anchor.getAttribute('href') || anchor.href || '';
-      const m = href.match(/\/prompts\/([^/?#]+)/);
-      return (m && m[1]) || href;
+      return rawHref;
     }
   }
 
@@ -1262,9 +1903,22 @@ export class AIStudioFolderManager {
 
   private setupStorageListener(): void {
     browser.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName === 'sync' && changes.geminiFolderEnabled) {
-        this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
-        this.applyFolderEnabledSetting();
+      if (areaName === 'sync') {
+        if (changes.geminiFolderEnabled) {
+          this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
+          this.applyFolderEnabledSetting();
+        }
+        if (changes[this.SIDEBAR_WIDTH_KEY]) {
+          const w = changes[this.SIDEBAR_WIDTH_KEY].newValue;
+          if (typeof w === 'number') {
+            const clamped = Math.min(
+              this.MAX_SIDEBAR_WIDTH,
+              Math.max(this.MIN_SIDEBAR_WIDTH, Math.round(w)),
+            );
+            this.sidebarWidth = clamped;
+            this.applySidebarWidth();
+          }
+        }
       }
     });
   }
@@ -1470,10 +2124,10 @@ export class AIStudioFolderManager {
     const isExpanded = navContent.classList.contains('expanded');
 
     if (isExpanded || force) {
-      navContent.style.width = `${this.sidebarWidth} px`;
-      navContent.style.minWidth = `${this.sidebarWidth} px`;
-      navContent.style.maxWidth = `${this.sidebarWidth} px`;
-      navContent.style.flex = `0 0 ${this.sidebarWidth} px`;
+      navContent.style.width = `${this.sidebarWidth}px`;
+      navContent.style.minWidth = `${this.sidebarWidth}px`;
+      navContent.style.maxWidth = `${this.sidebarWidth}px`;
+      navContent.style.flex = `0 0 ${this.sidebarWidth}px`;
     } else {
       // Remove our width overrides when collapsed to allow native behavior
       navContent.style.width = '';
@@ -1618,6 +2272,239 @@ export class AIStudioFolderManager {
         }
       } catch {}
     });
+  }
+
+  /**
+   * Handle cloud upload - upload folder data and prompts to Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleSyncNow()
+   * Note: AI Studio uses its own folder file but shares prompts with Gemini
+   */
+  private async handleCloudUpload(): Promise<void> {
+    try {
+      this.showNotification(this.t('uploadInProgress'), 'info');
+
+      // Get current folder data
+      const folders = this.data;
+
+      // Get prompts from storage (shared with Gemini)
+      let prompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          prompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[AIStudioFolderManager] Could not get prompts for upload:', err);
+      }
+
+      console.log(
+        `[AIStudioFolderManager] Uploading - folders: ${folders.folders?.length || 0}, prompts: ${prompts.length}`,
+      );
+
+      // Send upload request to background script
+      const response = (await browser.runtime.sendMessage({
+        type: 'gv.sync.upload',
+        payload: { folders, prompts, platform: 'aistudio' },
+      })) as { ok?: boolean; error?: string } | undefined;
+
+      if (response?.ok) {
+        this.showNotification(this.t('uploadSuccess'), 'info');
+      } else {
+        const errorMsg = response?.error || 'Unknown error';
+        this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[AIStudioFolderManager] Cloud upload failed:', error);
+      this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+    }
+  }
+
+  /**
+   * Handle cloud sync - download and merge folder data and prompts from Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleDownloadFromDrive()
+   * Note: AI Studio uses its own folder file but shares prompts with Gemini
+   */
+  private async handleCloudSync(): Promise<void> {
+    try {
+      this.showNotification(this.t('downloadInProgress'), 'info');
+
+      // Send download request to background script
+      const response = (await browser.runtime.sendMessage({
+        type: 'gv.sync.download',
+        payload: { platform: 'aistudio' },
+      })) as
+        | {
+            ok?: boolean;
+            error?: string;
+            data?: {
+              folders?: { data?: FolderData };
+              prompts?: { items?: any[] };
+            };
+          }
+        | undefined;
+
+      if (!response?.ok) {
+        const errorMsg = response?.error || 'Download failed';
+        this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+        return;
+      }
+
+      if (!response.data) {
+        this.showNotification(this.t('syncNoData') || 'No data in cloud', 'info');
+        return;
+      }
+
+      // Extract cloud data
+      const cloudFoldersPayload = response.data?.folders;
+      const cloudPromptsPayload = response.data?.prompts;
+      const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
+      const cloudPromptItems = cloudPromptsPayload?.items || [];
+
+      console.log(
+        `[AIStudioFolderManager] Downloaded - folders: ${cloudFolderData.folders?.length || 0}, prompts: ${cloudPromptItems.length}`,
+      );
+
+      // Get local prompts for merge (shared with Gemini)
+      let localPrompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          localPrompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[AIStudioFolderManager] Could not get local prompts for merge:', err);
+      }
+
+      // Merge folder data
+      const localFolders = this.data;
+      const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
+
+      // Merge prompts (simple ID-based merge)
+      const mergedPrompts = this.mergePromptsData(localPrompts, cloudPromptItems);
+
+      console.log(
+        `[AIStudioFolderManager] Merged - folders: ${mergedFolders.folders?.length || 0}, prompts: ${mergedPrompts.length}`,
+      );
+
+      // Apply merged folder data
+      this.data = mergedFolders;
+      await this.save();
+
+      // Save merged prompts to storage (shared with Gemini)
+      try {
+        await chrome.storage.local.set({
+          gvPromptItems: mergedPrompts,
+        });
+      } catch (err) {
+        console.error('[AIStudioFolderManager] Failed to save merged prompts:', err);
+      }
+
+      this.render();
+      this.showNotification(this.t('downloadMergeSuccess'), 'info');
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[AIStudioFolderManager] Cloud sync failed:', error);
+      this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+    }
+  }
+
+  /**
+   * Merge prompts by ID (simple deduplication)
+   */
+  private mergePromptsData(local: any[], cloud: any[]): any[] {
+    const promptMap = new Map<string, any>();
+
+    // Add local prompts first
+    local.forEach((p) => {
+      if (p?.id) promptMap.set(p.id, p);
+    });
+
+    // Add cloud prompts (cloud takes priority for newer items)
+    cloud.forEach((p) => {
+      if (!p?.id) return;
+      const existing = promptMap.get(p.id);
+      if (!existing) {
+        promptMap.set(p.id, p);
+      } else {
+        // Compare timestamps, prefer newer
+        const cloudTime = p.updatedAt || p.createdAt || 0;
+        const localTime = existing.updatedAt || existing.createdAt || 0;
+        if (cloudTime > localTime) {
+          promptMap.set(p.id, p);
+        }
+      }
+    });
+
+    return Array.from(promptMap.values());
+  }
+
+  /**
+   * Get dynamic tooltip for cloud upload button showing last upload time
+   */
+  private async getCloudUploadTooltip(): Promise<string> {
+    try {
+      const response = (await browser.runtime.sendMessage({ type: 'gv.sync.getState' })) as
+        | { ok?: boolean; state?: { lastUploadTime?: number | null } }
+        | undefined;
+      if (response?.ok && response.state) {
+        const lastUploadTime = response.state.lastUploadTime;
+        const timeStr = this.formatRelativeTime(lastUploadTime ?? null);
+        const baseTooltip = this.t('folder_cloud_upload');
+        return lastUploadTime
+          ? `${baseTooltip}\n${this.t('lastUploaded').replace('{time}', timeStr)}`
+          : `${baseTooltip}\n${this.t('neverUploaded')}`;
+      }
+    } catch (e) {
+      console.warn('[AIStudioFolderManager] Failed to get sync state for tooltip:', e);
+    }
+    return this.t('folder_cloud_upload');
+  }
+
+  /**
+   * Get dynamic tooltip for cloud sync button showing last sync time
+   */
+  private async getCloudSyncTooltip(): Promise<string> {
+    try {
+      const response = (await browser.runtime.sendMessage({ type: 'gv.sync.getState' })) as
+        | { ok?: boolean; state?: { lastSyncTime?: number | null } }
+        | undefined;
+      if (response?.ok && response.state) {
+        const lastSyncTime = response.state.lastSyncTime;
+        const timeStr = this.formatRelativeTime(lastSyncTime ?? null);
+        const baseTooltip = this.t('folder_cloud_sync');
+        return lastSyncTime
+          ? `${baseTooltip}\n${this.t('lastSynced').replace('{time}', timeStr)}`
+          : `${baseTooltip}\n${this.t('neverSynced')}`;
+      }
+    } catch (e) {
+      console.warn('[AIStudioFolderManager] Failed to get sync state for tooltip:', e);
+    }
+    return this.t('folder_cloud_sync');
+  }
+
+  /**
+   * Format a timestamp as relative time (e.g. "5 minutes ago")
+   */
+  private formatRelativeTime(timestamp: number | null): string {
+    if (!timestamp) return '';
+    const now = Date.now();
+    const diffMs = now - timestamp;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) {
+      return this.t('justNow');
+    } else if (diffMins < 60) {
+      return `${diffMins} ${this.t('minutesAgo')}`;
+    } else if (diffHours < 24) {
+      return `${diffHours} ${this.t('hoursAgo')}`;
+    } else if (diffDays === 1) {
+      return this.t('yesterday');
+    } else {
+      return new Date(timestamp).toLocaleDateString();
+    }
   }
 }
 

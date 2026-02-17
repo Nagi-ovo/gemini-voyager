@@ -3,7 +3,7 @@
   <h1>Gemini Voyager</h1>
   <h3>打造属于你的 Gemini 体验 ✨</h3>
   <p>
-    优雅的时间线导航、文件夹管理对话、构建专属提示词库。<br>
+    优雅的时间轴导航、文件夹管理对话、构建专属提示词库。<br>
     <b>这是 Google Gemini 缺失的那块拼图。</b>
   </p>
   
@@ -38,20 +38,22 @@
 <p align="center">
   <a href="https://voyager.nagi.fun">📖 文档</a> • 
   <a href="../README.md">English</a> • 
+  <a href="./README_ZH_TW.md">繁體中文</a> •
   <a href="./README_JA.md">日本語</a> •
   <a href="./README_FR.md">Français</a> •
-  <a href="./README_ES.md">Español</a>
+  <a href="./README_ES.md">Español</a> •
+  <a href="./README_PT.md">Português</a> •
+  <a href="./README_RU.md">Русский</a> •
+  <a href="./README_AR.md">العربية</a> •
+  <a href="./README_KO.md">한국어</a>
 </p>
 
 <p align="center">
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
-> [!IMPORTANT]
-> **项目状态：低频维护。** 回复较慢。优先处理带测试的 PR。
-
-> [!CAUTION]
-> **作者严正声明**：本项目**不接受**任何形式的 LLM 镜像站、违法产品或涉及用户隐私泄露产品的广告位赞助。请勿扰，谢谢。
+> [!NOTE]
+> 如果 Gemini Voyager 帮到了你，欢迎分享到 X、即刻、小红书、Linux.do、V2EX 等等，也欢迎推荐给海外 KOL。每一次分享都能让更多人看到这个项目，从而改善 Gemini 的使用体验。谢谢。
 
 ---
 
@@ -63,266 +65,31 @@
 
 ---
 
-## 📚 目录
-
-- [👋 为什么开发 Gemini Voyager？](#-为什么开发-gemini-voyager)
-- [📚 目录](#-目录)
-- [✨ 功能特性](#-功能特性)
-  - [📍 时间线导航](#-时间线导航)
-  - [📂 文件夹管理](#-文件夹管理)
-  - [💡 提示词库](#-提示词库)
-  - [💬 引用回复](#-引用回复)
-  - [📐 公式复制](#-公式复制)
-  - [🧜‍♀️ Mermaid 图表渲染](#️-mermaid-图表渲染)
-  - [🍌 NanoBanana 选项](#-nanobanana-选项)
-  - [🔬 Deep Research 导出](#-deep-research-导出)
-  - [💾 对话导出](#-对话导出)
-  - [📏 对话宽度调整](#-对话宽度调整)
-  - [🫥 输入框折叠](#-输入框折叠)
-  - [🏷️ 标签页标题同步](#️-标签页标题同步)
-  - [🗑️ 批量删除](#️-批量删除)
-- [📥 安装方式](#-安装方式)
-- [☕ 支持本项目](#-支持本项目)
-- [💬 交流与反馈](#-交流与反馈)
-- [🤝 参与贡献与开发](#-参与贡献与开发)
-- [🌟 致谢](#-致谢)
-
----
-
 ## ✨ 功能特性
 
-<div align="center">
-  <img src="../docs/public/assets/teaser.png" alt="teaser"/>
-</div>
-
-### 📍 时间线导航
-
-**再也不在长对话中迷路。**
-通过可视化的节点，一眼看清对话结构。
-
-- **瞬间跳转**：点击节点即可直接滚动到对应消息。
-- **快速预览**：鼠标悬停即可查看内容，无需来回滚动。
-- **标记重点**：长按节点即可星标重要消息（跨标签页同步！）。
-- **节点层级 (实验性)**：右键点击节点可设置层级（1-3 级）或折叠子节点。特别适合整理具有分支或层级结构的深度对话。
-
-### 📂 文件夹管理
-
-**让灵感井井有条。**
-告别杂乱无章的历史记录列表。将你的对话拖拽到文件夹中，按照你的逻辑进行分类。
-
-- **两级层级**：支持文件夹和子文件夹，满足深度整理需求。
-- **轻松管理**：双击重命名，长按多选。
-- **多端同步**：支持导入/导出，让你的整理成果在不同设备间无缝衔接。
-
-<details>
-<summary>👀 查看演示</summary>
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <p><b>Gemini</b></p>
-      <img src="../docs/public/assets/gemini-folders.png" alt="Gemini 文件夹" style="max-width: 100%;"/>
-    </td>
-    <td align="center" width="50%">
-      <p><b>AI Studio</b></p>
-      <img src="../docs/public/assets/aistudio-folders.png" alt="AI Studio 文件夹" style="max-width: 100%;"/>
-    </td>
-  </tr>
-</table>
-
-</details>
-
-### 💡 提示词库
-
-**你的私人提示词宝库。**
-不要重复编写相同的指令。保存你最常用的提示词，随时随地调用。
-
-- **标签与搜索**：通过标签分类，秒级找到你需要的提示词。
-- **全网通用**：不仅支持 Gemini 和 AI Studio，现在更支持添加**自定义网站**，在任何网页使用提示词管理器。
-
-<details>
-<summary>👀 查看截图</summary>
-
-<div align="center">
-  <img src="../docs/public/assets/gemini-prompt-manager.png" alt="提示词管理器" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-</details>
-
-### 💬 引用回复
-
-**有据可依的沟通。**
-选中任何消息中的文本，立即出现悬浮引用按钮。点击即可将选中文本以引用格式插入输入框。
-
-- **上下文感知**：支持用户和模型的任何消息。
-- **标准格式**：使用标准 Markdown 引用语法 (`> ...`)。
-
-<details>
-<summary>👀 查看截图</summary>
-
-<div align="center">
-  <img src="../docs/public/assets/quote-reply.png" alt="引用回复" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 📐 公式复制
-
-**理科生的福音。**
-看到漂亮的 LaTeX 公式想复用？点击一下即可复制源代码，告别手动敲击。
-
-<details>
-<summary>👀 查看截图</summary>
-
-<div align="center">
-  <img src="../docs/public/assets/gemini-math-copy.png" alt="公式复制" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 🧜‍♀️ Mermaid 图表渲染
-
-**让图表即刻可视化。**
-当 Gemini 输出 Mermaid 代码（流程图、时序图、甘特图等）时，Voyager 会自动将其渲染为可交互的图表。
-
-- **一键切换**：在渲染图表和源代码之间自由切换。
-- **全屏模式**：点击图表即可打开全屏查看器，支持缩放和拖拽。
-- **自动检测**：支持所有主流 Mermaid 图表类型。
-
-<details>
-<summary>👀 查看截图</summary>
-
-<div align="center">
-  <img src="../docs/public/assets/mermaid-preview.png" alt="Mermaid 图表渲染" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 🍌 NanoBanana 选项
-
-**Gemini 图片无损去水印。**
-使用反向 Alpha 混合算法，自动去除 AI 生成图片 (NanoBanana) 上的可见 "Gemini" 水印。
-
-- **零质量损失**：完美还原原始像素，得到纯净图片。
-- **一键启用**：在设置面板开启后即可全程自动运行。
-- **直接下载**：使用 🍌 图标完全替代原生的下载按钮。点击即可直接下载 100% 无水印的已处理版本。
-- **隐私保护**：所有处理 100% 在浏览器本地完成。
-
-> [!NOTE]
-> 本功能基于 [journey-ad](https://github.com/journey-ad) 开发的 [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) 算法实现，其核心逻辑源自 [allenk](https://github.com/allenk) 的 [C++ 原始版本](https://github.com/allenk/GeminiWatermarkTool)。🧡
-
-<details>
-<summary>👀 查看截图</summary>
-
-<div align="center">
-  <img src="../docs/public/assets/nanobanana.png" alt="NanoBanana" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 🔬 Deep Research 导出
-
-**提取 Deep Research 对话的思考内容。**
-一键导出为 Markdown 格式，保留所有思考阶段和研究链接。在 Deep Research 对话中点击分享和导出按钮即可下载。
-
-### 💾 对话导出
-
-**你的数据，你做主。**
-将对话以你需要的格式保存下来。
-
-- **多种格式**：结构化的 JSON 或适合打印阅读的 Markdown/PDF。
-- **干净纯粹**：自动移除界面上的无关元素，只保留核心内容。
-- **完整无缺**：图片会自动打包到 `assets/` 文件夹中。
-
-<details>
-<summary>👀 查看导出指南</summary>
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <p><b>步骤 1：点击导出图标</b></p>
-      <img src="../docs/public/assets/gemini-export-guide-1.png" alt="导出指南步骤 1" style="max-width: 100%;"/>
-    </td>
-    <td align="center" width="50%">
-      <p><b>步骤 2：选择导出格式</b></p>
-      <img src="../docs/public/assets/gemini-export-guide-2.png" alt="导出指南步骤 2" style="max-width: 100%;"/>
-    </td>
-  </tr>
-</table>
-
-</details>
-
-### 📏 对话宽度调整
-
-**怎么舒服怎么来。**
-屏幕够大？那就利用起来。自定义对话框宽度（400px - 1400px），找到最适合你的阅读体验。
-
-> **设置面板**：点击扩展图标调整滚动模式、对话宽度和时间线选项。
-
-<details>
-<summary>查看教程</summary>
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <p><b>如何打开设置</b></p>
-      <img src="../docs/public/assets/gemini-open-settings-guide.png" alt="打开设置指南" style="max-width: 100%;"/>
-    </td>
-    <td align="center" width="50%">
-      <p><b>对话宽度调整</b></p>
-      <img src="../docs/public/assets/gemini-chatwidth.png" alt="对话宽度调整" style="max-width: 100%;"/>
-    </td>
-  </tr>
-</table>
-
-</details>
-
-### 🫥 输入框折叠
-
-**一方净土，专心阅读。**
-输入框为空时自动折叠，点击即可展开输入。
-
-<details>
-<summary>👀 查看截图</summary>
-
-<div align="center">
-  <img src="../docs/public/assets/hide-input-area.png" alt="输入框折叠" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 🏷️ 标签页标题同步
-
-**一眼即知。**
-自动将浏览器标签页标题同步为当前 Gemini 对话的标题。再也不用面对满屏的 "Gemini" 标签页。
-
-<details>
-<summary>👀 查看截图</summary>
-
-<div align="center">
-  <img src="../docs/public/assets/tab-title.png" alt="标签页标题同步" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 🗑️ 批量删除
-
-**批量清理，一键搞定。**
-选中多个对话，一次性删除，告别逐个删除的繁琐。
-
-- **多选模式**：长按进入多选模式，勾选要删除的对话。
-- **一键删除**：点击删除按钮，批量清理所选对话。
-
-<details>
-<summary>👀 查看截图</summary>
-
-<div align="center">
-  <img src="../docs/public/assets/batch-delete.png" alt="批量删除" style="max-width: 100%;"/>
-</div>
-
-</details>
+### 🌌 通用核心 (Gemini & AI Studio)
+
+- **📂 [文件夹管理](https://voyager.nagi.fun/guide/folders)**: 支持 **多级目录**、**拖拽排序** 及 **Google Drive 同步**。
+  - **Gemini**: 支持 **多账号隔离模式** 及 **自定义文件夹颜色**。
+- **💡 [提示词库](https://voyager.nagi.fun/guide/prompts)**: 跨平台同步提示词，支持 Gemini、AI Studio 及 [自定义网站](https://voyager.nagi.fun/guide/custom-websites)。
+- **☁️ [云同步](https://voyager.nagi.fun/guide/cloud-sync)**: 支持将文件夹和提示词库同步到 Google Drive。
+- **📐 公式复制**: 一键复制 LaTeX 和 MathML (Word) 源码。
+
+### ✨ Gemini 专属增强
+
+- **📍 [时间线导航](https://voyager.nagi.fun/guide/timeline)**: 可视化节点，瞬间跳转消息，星标重点，管理对话分支。
+- **💾 [对话导出](https://voyager.nagi.fun/guide/export)**: 支持导出为 JSON、Markdown 或 PDF（含图片）。
+- **🧜‍♀️ [Mermaid 渲染](https://voyager.nagi.fun/guide/mermaid)**: 自动渲染流程图、时序图等 Mermaid 图表。
+- **📝 [Markdown 渲染修复](https://voyager.nagi.fun/guide/markdown-fix)**: 自动修复 Gemini 注入 HTML 导致的 Markdown 加粗失效问题。
+- **🍌 [NanoBanana](https://voyager.nagi.fun/guide/nanobanana)**: 自动去除 Gemini 生成图片的无损水印。
+- **🔬 [Deep Research](https://voyager.nagi.fun/guide/deep-research)**: 一键提取 Deep Research 对话的思考过程和研究链接。
+- **🛠️ 效率工具**:
+  - **[批量删除](https://voyager.nagi.fun/guide/batch-delete)**: 批量清理对话记录。
+  - **[引用回复](https://voyager.nagi.fun/guide/quote-reply)**: 选中对话文本即可一键引用回复。
+  - **[标签页标题同步](https://voyager.nagi.fun/guide/tab-title)**: 自动将标签页标题设为对话标题。
+  - **[输入框折叠](https://voyager.nagi.fun/guide/input-collapse)**: 输入框自动收纳，释放阅读空间。
+  - **[默认模型](https://voyager.nagi.fun/guide/default-model)**: 为新对话设置默认选中的模型。
+  - **[隐藏最近项目](https://voyager.nagi.fun/guide/recents-hider)**: 隐藏侧边栏的“最近”列表，减少干扰。
 
 ---
 
@@ -330,10 +97,8 @@
 
 > ⚠️ 注意：提示词管理器是唯一支持 Gemini 企业版的功能。
 
-### 🌐 从扩展商店安装（推荐）
-
 <div align="center">
-  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol" target="_blank">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=zh" target="_blank">
     <img src="https://img.shields.io/badge/Chrome%20应用商店-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome 应用商店" height="36">
   </a>
   &nbsp;&nbsp;
@@ -344,31 +109,19 @@
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Nagi-ovo/gemini-voyager/releases/latest/" target="_blank">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari 下载" height="36">
+  </a>
 </div>
 
 <p align="center">
   <sub><b>Chrome 应用商店</b>同样适用于 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 浏览器。</sub>
 </p>
 
-> **商店状态：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari（即将推出）
+> **商店状态：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
-<details>
-<summary>📦 手动安装</summary>
-
-**Chromium 浏览器（Chrome、Edge、Brave 等）：**
-
-1. 从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载 `gemini-voyager-chrome-vX.Y.Z.zip`
-2. 解压后访问 `chrome://extensions` → 开启开发者模式 → 加载已解压的扩展
-
-**Firefox：**
-从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载 `gemini-voyager-firefox-vX.Y.Z.xpi` 并拖入 `about:addons` 安装。
-
-> 💡 XPI 已获 Mozilla 官方签名，可永久安装。
-
-**Safari：**
-从 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载 `gemini-voyager-safari-vX.Y.Z.zip`。详见 [Safari 安装指南](../.github/docs/safari/INSTALLATION_ZH.md)。
-
-</details>
+关于 **手动安装** 或 **开发构建**，请参阅 [安装指南](https://voyager.nagi.fun/guide/installation)。
 
 ---
 
@@ -380,7 +133,7 @@
   </a>
 </div>
 
-如果 Gemini Voyager 让你的工作效率提升了，不妨请我喝杯咖啡，这将支持我持续维护和更新！赞赏者将被列入项目的致谢名单。❤️
+如果 Gemini Voyager 提升了你的体验，欢迎请我喝杯咖啡。赞助者将被列入致谢名单。❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -417,9 +170,9 @@
 
 ### 🎙️ 特别推荐: Typeless
 
-我非常推荐 **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)** 这款 AI 语音输入工具。在开发 Gemini Voyager 的过程中，我将其整合进了日常工作流，极大地节省了我的时间并显著提升了整体开发效率。
+我非常推荐 **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**，一款 AI 语音转文字工具。我在开发过程中一直在使用它，极大地提升了我的工作效率。
 
-> 🎁 **[点击我的邀请链接注册](https://www.typeless.com/refer?code=MZRYZP1)**（邀请码 **`MZRYZP1`**）即可获得 **5 美元免费额度**，同时也能支持本项目的开发。❤️
+> 🎁 **[点击我的邀请链接](https://www.typeless.com/refer?code=MZRYZP1)**（邀请码 **`MZRYZP1`**）可获得 **5 美元免费额度**。这也是支持本项目的一种免费方式！❤️
 
 ---
 
@@ -452,43 +205,43 @@
 
 [<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
 
-欢迎参与贡献！无论是报告问题、提出功能建议、改进文档还是提交代码：
+欢迎参与贡献！
 
-- **Issue**：使用我们的 [Bug 报告模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.yml)或[功能请求模板](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml)
-- **Pull Request**：查看[贡献指南](./CONTRIBUTING.md)了解详细说明
+- **Issue**：使用 [Bug 报告](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.yml) 或 [功能请求](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml) 模板。
+- **Pull Request**：请查看 [贡献指南](./CONTRIBUTING.md)。
 
 <details>
 <summary>开发环境配置</summary>
 
 ```bash
-# 安装依赖（推荐使用 Bun）
+# 安装依赖 (推荐 Bun)
 bun i
 
-# 开发模式（支持热重载）
-bun run dev:chrome   # Chrome 和 Chromium 浏览器
-bun run dev:firefox  # Firefox
-bun run dev:safari   # Safari（需要 macOS）
+# 开发模式
+bun run dev:chrome
+bun run dev:firefox
+bun run dev:safari
 
 # 生产构建
-bun run build:chrome   # Chrome
-bun run build:firefox  # Firefox
-bun run build:safari   # Safari
-bun run build:all      # 所有浏览器
+bun run build:chrome
+bun run build:firefox
+bun run build:safari
+bun run build:all
 ```
 
-**Safari 开发**：查看 [safari/README_ZH.md](../safari/README_ZH.md) 了解额外构建步骤。
+**Safari 开发**：详见 [safari/README.md](../safari/README.md)。
 
 </details>
 
-感谢你帮助 Gemini Voyager 变得更好！❤️
+感谢你让 Gemini Voyager 变得更好！❤️
 
 ---
 
 ## 🌟 致谢
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Gemini Voyager 的 Fork 版本，为 DeepSeek 适配，为 DeepSeek 用户带来时间线导航和对话管理功能！
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - 为 DeepSeek 适配的 Fork 版本。
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 为 ChatGPT 设计的时间线导航扩展，本项目的灵感来源：Gemini Voyager 为 Gemini 适配了时间线概念，并添加了文件夹管理、提示词库、聊天导出等大量新功能。
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 本项目的灵感来源。
 
 ---
 
@@ -501,5 +254,5 @@ bun run build:all      # 所有浏览器
    </picture>
   </a>
   <p>Made with ❤️ by Jesse Zhang</p>
-  <sub>MIT License © 2025</sub>
+  <sub>GPLv3 License © 2026</sub>
 </div>

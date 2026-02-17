@@ -26,7 +26,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   echo ""
   echo "To convert this extension for Safari, run:"
   echo ""
-  echo "  xcrun safari-web-extension-converter dist_safari --app-name 'Gemini Voyager'"
+  echo "  xcrun safari-web-extension-converter dist_safari --app-name 'Gemini Voyager' --bundle-identifier com.nagi-ovo.Gemini-Voyager"
   echo ""
   echo "This will create a Safari App Extension project that you can:"
   echo "  1. Open in Xcode"

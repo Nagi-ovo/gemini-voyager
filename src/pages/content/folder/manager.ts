@@ -2,11 +2,17 @@ import browser from 'webextension-polyfill';
 
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
+import { StorageKeys } from '@/core/types/common';
+import { isSafari } from '@/core/utils/browser';
+import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 
+import { sortConversationsByPriority } from './conversationSort';
+import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
 import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
+import { createMoveToFolderMenuItem } from './moveToFolderMenuItem';
 import {
   type IFolderStorageAdapter,
   createFolderStorageAdapter,
@@ -17,10 +23,32 @@ const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
 const ROOT_CONVERSATIONS_ID = '__root_conversations__'; // Special ID for root-level conversations
 const NOTIFICATION_TIMEOUT_MS = 10000; // Duration to show data loss notification
+const FOLDER_TREE_INDENT_MIN = -8;
+const FOLDER_TREE_INDENT_MAX = 32;
+const FOLDER_TREE_INDENT_DEFAULT = -8;
+const FOLDER_NAME_SINGLE_CLICK_DELAY_MS = 220;
 
 // Export session backup keys for use by FolderImportExportService (deprecated, kept for compatibility)
 export const SESSION_BACKUP_KEY = 'gvFolderBackup';
 export const SESSION_BACKUP_TIMESTAMP_KEY = 'gvFolderBackupTimestamp';
+
+export function clampFolderTreeIndent(value: unknown): number {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numeric)) return FOLDER_TREE_INDENT_DEFAULT;
+  return Math.min(FOLDER_TREE_INDENT_MAX, Math.max(FOLDER_TREE_INDENT_MIN, Math.round(numeric)));
+}
+
+export function calculateFolderHeaderPaddingLeft(level: number, indent: number): number {
+  return Math.max(0, level * indent + 8);
+}
+
+export function calculateFolderConversationPaddingLeft(level: number, indent: number): number {
+  return Math.max(0, level * indent + 24);
+}
+
+export function calculateFolderDialogPaddingLeft(level: number, indent: number): number {
+  return Math.max(0, level * indent + 12);
+}
 
 /**
  * Validate folder data structure
@@ -72,9 +100,12 @@ export class FolderManager {
   private multiSelectSource: 'folder' | 'native' | null = null; // Track where multi-select was initiated
   private multiSelectFolderId: string | null = null; // Track which folder multi-select was initiated from
   private longPressTimeout: number | null = null; // For long-press detection
+  private folderNameClickTimeout: number | null = null; // Distinguish single-click toggle from double-click rename
   private longPressThreshold: number = 500; // Long-press duration in ms
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
+  private folderTreeIndent: number = FOLDER_TREE_INDENT_DEFAULT; // Tree indentation width (px)
+  private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
   private saveInProgress: boolean = false; // Lock to prevent concurrent saves
@@ -83,6 +114,9 @@ export class FolderManager {
   private removalCheckDelay: number = 300; // Delay (ms) before confirming conversation deletion
   private isDestroyed: boolean = false; // Flag to prevent callbacks after destruction
   private reinitializePromise: Promise<void> | null = null; // Prevent duplicate reinitialization cascades
+  private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
+  private activeColorPickerFolderId: string | null = null; // Folder ID of currently open color picker
+  private activeColorPickerCloseHandler: ((e: MouseEvent) => void) | null = null; // Event handler for closing color picker
 
   // Cleanup references
   private routeChangeCleanup: (() => void) | null = null;
@@ -156,6 +190,10 @@ export class FolderManager {
       // Load hide archived setting
       await this.loadHideArchivedSetting();
 
+      // Load filter user setting
+      await this.loadFilterUserSetting();
+      await this.loadFolderTreeIndentSetting();
+
       // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
 
@@ -173,6 +211,9 @@ export class FolderManager {
 
       this.debug('Initialized successfully');
     } catch (error) {
+      if (isExtensionContextInvalidatedError(error)) {
+        return;
+      }
       console.error('[FolderManager] Initialization error:', error);
     }
   }
@@ -202,6 +243,11 @@ export class FolderManager {
     if (this.longPressTimeout) {
       clearTimeout(this.longPressTimeout);
       this.longPressTimeout = null;
+    }
+
+    if (this.folderNameClickTimeout !== null) {
+      clearTimeout(this.folderNameClickTimeout);
+      this.folderNameClickTimeout = null;
     }
 
     if (this.tooltipTimeout) {
@@ -254,6 +300,17 @@ export class FolderManager {
       this.tooltipElement = null;
     }
 
+    // Remove active color picker
+    if (this.activeColorPicker) {
+      this.activeColorPicker.remove();
+      if (this.activeColorPickerCloseHandler) {
+        document.removeEventListener('click', this.activeColorPickerCloseHandler);
+        this.activeColorPickerCloseHandler = null;
+      }
+      this.activeColorPicker = null;
+      this.activeColorPickerFolderId = null;
+    }
+
     // Remove container
     if (this.containerElement) {
       this.containerElement.remove();
@@ -301,6 +358,52 @@ export class FolderManager {
     // Set up native conversation menu injection
     this.setupConversationClickTracking();
     this.setupNativeConversationMenuObserver();
+
+    // ─── DOM recovery (resize / print) ─────────────────────────────────────
+    // Gemini may re-render the sidebar DOM during window resize or
+    // window.print(), detaching the folder container.  The sideNavObserver
+    // (watching `side-nav-open` on #app-root) CANNOT catch all cases because
+    // when the sidebar closes AND the DOM is rebuilt simultaneously, the
+    // observer fires with isSideNavOpen=false and skips reinitialization.
+    // A debounced resize listener provides a reliable fallback.
+    let domRecoveryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const domRecoveryCheck = () => {
+      if (domRecoveryTimer !== null) clearTimeout(domRecoveryTimer);
+      domRecoveryTimer = setTimeout(() => {
+        domRecoveryTimer = null;
+        if (this.isDestroyed) return;
+        if (
+          this.containerElement &&
+          document.body.contains(this.containerElement) &&
+          this.sidebarContainer &&
+          document.body.contains(this.sidebarContainer)
+        ) {
+          return; // Everything still attached – nothing to do.
+        }
+        // Only reinitialize if the sidebar is currently visible (open).
+        // If it is closed, the sideNavObserver will trigger reinitialization
+        // when it reopens.
+        const appRoot = document.querySelector('#app-root');
+        if (appRoot && !appRoot.classList.contains('side-nav-open')) {
+          this.debug('DOM recovery: container lost but sidebar closed, deferring');
+          return;
+        }
+        this.debug('DOM recovery: folder UI lost from DOM, reinitializing');
+        this.reinitializeFolderUI();
+      }, 800);
+    };
+
+    window.addEventListener('resize', domRecoveryCheck);
+    window.addEventListener('gv-print-cleanup', domRecoveryCheck);
+    window.addEventListener('afterprint', domRecoveryCheck);
+
+    this.addCleanupTask(() => {
+      if (domRecoveryTimer !== null) clearTimeout(domRecoveryTimer);
+      window.removeEventListener('resize', domRecoveryCheck);
+      window.removeEventListener('gv-print-cleanup', domRecoveryCheck);
+      window.removeEventListener('afterprint', domRecoveryCheck);
+    });
   }
 
   private async waitForSidebar(): Promise<void> {
@@ -525,19 +628,55 @@ export class FolderManager {
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'gv-folder-header-actions';
 
-    // Import button
-    const importButton = document.createElement('button');
-    importButton.className = 'gv-folder-action-btn';
-    importButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">upload</mat-icon>`;
-    importButton.title = this.t('folder_import');
-    importButton.addEventListener('click', () => this.showImportDialog());
+    // Filter current user button
+    const filterUserButton = document.createElement('button');
+    filterUserButton.className = 'gv-folder-action-btn';
+    filterUserButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">person</mat-icon>`;
+    filterUserButton.title = this.t('folder_filter_current_user');
+    // Apply active state if filter is enabled
+    if (this.filterCurrentUserOnly) {
+      filterUserButton.classList.add('gv-filter-active');
+    }
+    filterUserButton.addEventListener('click', () => this.toggleFilterCurrentUser());
 
-    // Export button
-    const exportButton = document.createElement('button');
-    exportButton.className = 'gv-folder-action-btn';
-    exportButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">download</mat-icon>`;
-    exportButton.title = this.t('folder_export');
-    exportButton.addEventListener('click', () => this.exportFolders());
+    // Import/Export combined button (shows dropdown menu)
+    const importExportButton = document.createElement('button');
+    importExportButton.className = 'gv-folder-action-btn';
+    importExportButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">folder_managed</mat-icon>`;
+    importExportButton.title = this.t('folder_import_export');
+    importExportButton.addEventListener('click', (e) => this.showImportExportMenu(e));
+
+    actionsContainer.appendChild(filterUserButton);
+    actionsContainer.appendChild(importExportButton);
+
+    // Cloud buttons (Skip on Safari as it doesn't support cloud sync yet)
+    if (!isSafari()) {
+      // Cloud upload button
+      const cloudUploadButton = document.createElement('button');
+      cloudUploadButton.className = 'gv-folder-action-btn';
+      cloudUploadButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q25-92 100-149t170-57q117 0 198.5 81.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H520q-33 0-56.5-23.5T440-240v-206l-64 62-56-56 160-160 160 160-56 56-64-62v206h220q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-83-58.5-141.5T480-720q-83 0-141.5 58.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h100v80H260Zm220-280Z"/></svg>`;
+      cloudUploadButton.title = this.t('folder_cloud_upload');
+      cloudUploadButton.addEventListener('click', () => this.handleCloudUpload());
+      // Add dynamic tooltip on mouseenter
+      cloudUploadButton.addEventListener('mouseenter', async () => {
+        const tooltip = await this.getCloudUploadTooltip();
+        cloudUploadButton.title = tooltip;
+      });
+      actionsContainer.appendChild(cloudUploadButton);
+
+      // Cloud sync button
+      const cloudSyncButton = document.createElement('button');
+      cloudSyncButton.className = 'gv-folder-action-btn';
+      cloudSyncButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"/></svg>`;
+      cloudSyncButton.title = this.t('folder_cloud_sync');
+      cloudSyncButton.addEventListener('click', () => this.handleCloudSync());
+      // Add dynamic tooltip on mouseenter
+      cloudSyncButton.addEventListener('mouseenter', async () => {
+        const tooltip = await this.getCloudSyncTooltip();
+        cloudSyncButton.title = tooltip;
+      });
+      actionsContainer.appendChild(cloudSyncButton);
+    }
 
     // Add folder button
     const addButton = document.createElement('button');
@@ -546,8 +685,6 @@ export class FolderManager {
     addButton.title = this.t('folder_create');
     addButton.addEventListener('click', () => this.createFolder());
 
-    actionsContainer.appendChild(importButton);
-    actionsContainer.appendChild(exportButton);
     actionsContainer.appendChild(addButton);
 
     header.appendChild(titleContainer);
@@ -568,8 +705,10 @@ export class FolderManager {
 
     // Render root-level conversations (favorites/pinned conversations)
     const rootConversations = this.data.folderContents[ROOT_CONVERSATIONS_ID] || [];
-    if (rootConversations.length > 0) {
-      rootConversations.forEach((conv) => {
+    const filteredRootConversations = this.filterConversationsByCurrentUser(rootConversations);
+    if (filteredRootConversations.length > 0) {
+      const sortedRootConversations = this.sortConversations(filteredRootConversations);
+      sortedRootConversations.forEach((conv) => {
         const convEl = this.createConversationElement(conv, ROOT_CONVERSATIONS_ID, 0);
         list.appendChild(convEl);
       });
@@ -579,6 +718,9 @@ export class FolderManager {
     const rootFolders = this.data.folders.filter((f) => f.parentId === null);
     const sortedRootFolders = this.sortFolders(rootFolders);
     sortedRootFolders.forEach((folder) => {
+      // Filter out empty folders if "Show current user only" is enabled
+      if (!this.hasVisibleContent(folder.id)) return;
+
       const folderElement = this.createFolderElement(folder);
       list.appendChild(folderElement);
     });
@@ -603,7 +745,7 @@ export class FolderManager {
     // Folder header
     const folderHeader = document.createElement('div');
     folderHeader.className = 'gv-folder-item-header';
-    folderHeader.style.paddingLeft = `${level * 16 + 8}px`;
+    folderHeader.style.paddingLeft = `${calculateFolderHeaderPaddingLeft(level, this.folderTreeIndent)}px`;
 
     // Expand/collapse button
     const expandBtn = document.createElement('button');
@@ -619,16 +761,25 @@ export class FolderManager {
     folderIcon.textContent = 'folder';
     folderIcon.style.cursor = 'pointer';
     folderIcon.style.userSelect = 'none';
+
+    // Apply folder color if set
+    if (folder.color && folder.color !== 'default') {
+      const colorValue = getFolderColor(folder.color, isDarkMode());
+      folderIcon.style.color = colorValue;
+    }
+
     folderIcon.addEventListener('click', (e) => {
       e.stopPropagation(); // Prevent bubbling issues
-      this.toggleFolder(folder.id);
+      this.showColorPicker(folder.id, e, true); // Allow toggle behavior
     });
 
     // Folder name
     const folderName = document.createElement('span');
     folderName.className = 'gv-folder-name gds-label-l';
     folderName.textContent = folder.name;
-    folderName.addEventListener('dblclick', () => this.renameFolder(folder.id));
+    folderName.style.cursor = 'pointer';
+    folderName.addEventListener('click', (event) => this.handleFolderNameClick(folder.id, event));
+    folderName.addEventListener('dblclick', () => this.handleFolderNameDoubleClick(folder.id));
 
     // Add tooltip event listeners
     folderName.addEventListener('mouseenter', () => this.showTooltip(folderName, folder.name));
@@ -681,7 +832,8 @@ export class FolderManager {
 
       // Render conversations in this folder (sorted: starred first)
       const conversations = this.data.folderContents[folder.id] || [];
-      const sortedConversations = this.sortConversations(conversations);
+      const filteredConversations = this.filterConversationsByCurrentUser(conversations);
+      const sortedConversations = this.sortConversations(filteredConversations);
       sortedConversations.forEach((conv) => {
         const convEl = this.createConversationElement(conv, folder.id, level + 1);
         content.appendChild(convEl);
@@ -691,6 +843,9 @@ export class FolderManager {
       const subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
       const sortedSubfolders = this.sortFolders(subfolders);
       sortedSubfolders.forEach((subfolder) => {
+        // Filter out empty folders if "Show current user only" is enabled
+        if (!this.hasVisibleContent(subfolder.id)) return;
+
         const subfolderEl = this.createFolderElement(subfolder, level + 1);
         content.appendChild(subfolderEl);
       });
@@ -699,6 +854,31 @@ export class FolderManager {
     }
 
     return folderEl;
+  }
+
+  private clearPendingFolderNameClick(): void {
+    if (this.folderNameClickTimeout === null) return;
+    clearTimeout(this.folderNameClickTimeout);
+    this.folderNameClickTimeout = null;
+  }
+
+  private handleFolderNameClick(folderId: string, event: MouseEvent): void {
+    // Double-click dispatches a second click with detail > 1; skip toggle for that sequence.
+    if (event.detail > 1) {
+      this.clearPendingFolderNameClick();
+      return;
+    }
+
+    this.clearPendingFolderNameClick();
+    this.folderNameClickTimeout = window.setTimeout(() => {
+      this.folderNameClickTimeout = null;
+      this.toggleFolder(folderId);
+    }, FOLDER_NAME_SINGLE_CLICK_DELAY_MS);
+  }
+
+  private handleFolderNameDoubleClick(folderId: string): void {
+    this.clearPendingFolderNameClick();
+    this.renameFolder(folderId);
   }
 
   private createConversationElement(
@@ -713,7 +893,7 @@ export class FolderManager {
     convEl.dataset.conversationId = conv.conversationId;
     convEl.dataset.folderId = folderId;
     // Increase indentation for conversations under folders
-    convEl.style.paddingLeft = `${level * 16 + 24}px`; // More indentation for tree structure
+    convEl.style.paddingLeft = `${calculateFolderConversationPaddingLeft(level, this.folderTreeIndent)}px`; // More indentation for tree structure
 
     // Try to sync title from native conversation
     // Decide what title to display, respecting manual renames and hidden native list
@@ -1864,6 +2044,8 @@ export class FolderManager {
   }
 
   private renameFolder(folderId: string): void {
+    this.clearPendingFolderNameClick();
+
     const folder = this.data.folders.find((f) => f.id === folderId);
     if (!folder) return;
 
@@ -1965,12 +2147,22 @@ export class FolderManager {
     confirmDialog.appendChild(actions);
 
     // Position near the folder
+    // Position near the folder header
     const folderEl = this.containerElement?.querySelector(`[data-folder-id="${folderId}"]`);
-    if (folderEl) {
-      const rect = folderEl.getBoundingClientRect();
+    const headerEl = folderEl?.querySelector('.gv-folder-item-header');
+
+    if (headerEl) {
+      const rect = headerEl.getBoundingClientRect();
       confirmDialog.style.position = 'fixed';
       confirmDialog.style.top = `${rect.bottom + 4}px`;
+      confirmDialog.style.left = `${rect.left + 24}px`; // Align with folder name
+      confirmDialog.style.zIndex = '10002'; // Ensure it's on top
+    } else if (folderEl) {
+      const rect = folderEl.getBoundingClientRect();
+      confirmDialog.style.position = 'fixed';
+      confirmDialog.style.top = `${rect.top + 32}px`; // Fallback approximate height
       confirmDialog.style.left = `${rect.left}px`;
+      confirmDialog.style.zIndex = '10002';
     }
 
     document.body.appendChild(confirmDialog);
@@ -2056,14 +2248,7 @@ export class FolderManager {
   }
 
   private sortConversations(conversations: ConversationReference[]): ConversationReference[] {
-    return [...conversations].sort((a, b) => {
-      // Starred conversations always come first
-      if (a.starred && !b.starred) return -1;
-      if (!a.starred && b.starred) return 1;
-
-      // Within the same starred state, sort by addedAt (newest first)
-      return b.addedAt - a.addedAt;
-    });
+    return sortConversationsByPriority(conversations);
   }
 
   private addConversationToFolder(
@@ -3198,6 +3383,7 @@ export class FolderManager {
           if (newTitle && newTitle !== currentTitle) {
             conv.title = newTitle;
             conv.customTitle = true; // mark as manually renamed, don't auto-sync from native
+            conv.updatedAt = Date.now(); // record update time for sync conflict resolution
             this.saveData();
           }
         }
@@ -3259,6 +3445,7 @@ export class FolderManager {
       },
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
+      { label: this.t('folder_change_color'), action: () => this.showColorPicker(folderId, event) },
       { label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) },
     ];
 
@@ -3283,6 +3470,167 @@ export class FolderManager {
       }
     };
     setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
+
+  /**
+   * Show color picker dialog for a folder
+   * @param folderId The folder ID to change color
+   * @param sourceEvent The source mouse event (for positioning)
+   */
+  private showColorPicker(
+    folderId: string,
+    sourceEvent: MouseEvent,
+    allowToggle: boolean = true,
+  ): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    // If a color picker is already open, close it first
+    if (this.activeColorPicker) {
+      const wasSameFolder = this.activeColorPickerFolderId === folderId;
+      this.activeColorPicker.remove();
+      // Clean up the old event listener to prevent memory leak
+      if (this.activeColorPickerCloseHandler) {
+        document.removeEventListener('click', this.activeColorPickerCloseHandler);
+        this.activeColorPickerCloseHandler = null;
+      }
+      this.activeColorPicker = null;
+      this.activeColorPickerFolderId = null;
+      // If clicking the same folder icon again and toggle is allowed, just close the picker
+      if (allowToggle && wasSameFolder) {
+        return;
+      }
+    }
+
+    // Create color picker dialog
+    const dialog = document.createElement('div');
+    dialog.className = 'gv-color-picker-dialog';
+
+    // Position near the menu click (slightly offset to avoid overlap)
+    dialog.style.position = 'fixed';
+    dialog.style.left = `${sourceEvent.clientX + 10}px`;
+    dialog.style.top = `${sourceEvent.clientY}px`;
+    dialog.style.zIndex = '10001';
+
+    // Create color options
+    FOLDER_COLORS.forEach((colorConfig) => {
+      const colorBtn = document.createElement('button');
+      colorBtn.className = 'gv-color-picker-item';
+      colorBtn.title = this.t(colorConfig.nameKey);
+
+      // Apply color based on current theme
+      const colorValue = getFolderColor(colorConfig.id, isDarkMode());
+      colorBtn.style.backgroundColor = colorValue;
+
+      // Mark current color as selected
+      if (folder.color === colorConfig.id || (!folder.color && colorConfig.id === 'default')) {
+        colorBtn.classList.add('selected');
+      }
+
+      colorBtn.addEventListener('click', () => {
+        this.changeFolderColor(folderId, colorConfig.id);
+        dialog.remove();
+        if (this.activeColorPickerCloseHandler) {
+          document.removeEventListener('click', this.activeColorPickerCloseHandler);
+          this.activeColorPickerCloseHandler = null;
+        }
+        this.activeColorPicker = null;
+        this.activeColorPickerFolderId = null;
+      });
+
+      dialog.appendChild(colorBtn);
+    });
+
+    // Add Custom Color Picker Button
+    const customBtn = document.createElement('button');
+    customBtn.className = 'gv-color-picker-item gv-color-picker-custom';
+    customBtn.title = this.t('folder_color_custom');
+
+    // Create hidden color input
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    // Style to be invisible but functional
+    Object.assign(colorInput.style, {
+      position: 'absolute',
+      opacity: '0',
+      width: '100%',
+      height: '100%',
+      top: '0',
+      left: '0',
+      cursor: 'pointer',
+    });
+
+    // Set initial state
+    if (folder.color && folder.color.startsWith('#')) {
+      colorInput.value = folder.color;
+      customBtn.classList.add('selected');
+      customBtn.style.background = folder.color;
+    } else {
+      // Rainbow gradient to indicate color picker
+      customBtn.style.background =
+        'conic-gradient(from 180deg at 50% 50%, #D9231E 0deg, #F06800 66.47deg, #E6A300 125.68deg, #2D9CDB 195.91deg, #9B51E0 262.24deg, #D9231E 360deg)';
+    }
+
+    // Handle color change
+    colorInput.addEventListener('change', (e) => {
+      const hex = (e.target as HTMLInputElement).value;
+      this.changeFolderColor(folderId, hex);
+      dialog.remove(); // Close picker dialog
+      if (this.activeColorPickerCloseHandler) {
+        document.removeEventListener('click', this.activeColorPickerCloseHandler);
+        this.activeColorPickerCloseHandler = null;
+      }
+      this.activeColorPicker = null;
+      this.activeColorPickerFolderId = null;
+    });
+
+    // Prevent button click from closing the dialog immediately (if bubbling)
+    customBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Trigger the input (if not clicked directly via the overlay input)
+      // Since input covers the button, this might not be strictly needed, but good for safety
+      if (e.target === customBtn) {
+        colorInput.click();
+      }
+    });
+
+    customBtn.appendChild(colorInput);
+    dialog.appendChild(customBtn);
+
+    document.body.appendChild(dialog);
+    this.activeColorPicker = dialog;
+    this.activeColorPickerFolderId = folderId;
+
+    // Close dialog on click outside
+    const closeDialog = (e: MouseEvent) => {
+      if (!dialog.contains(e.target as Node)) {
+        dialog.remove();
+        this.activeColorPicker = null;
+        this.activeColorPickerFolderId = null;
+        if (this.activeColorPickerCloseHandler) {
+          document.removeEventListener('click', this.activeColorPickerCloseHandler);
+          this.activeColorPickerCloseHandler = null;
+        }
+      }
+    };
+    this.activeColorPickerCloseHandler = closeDialog;
+    setTimeout(() => document.addEventListener('click', closeDialog), 0);
+  }
+
+  /**
+   * Change folder color
+   * @param folderId The folder ID to change
+   * @param colorId The new color ID
+   */
+  private changeFolderColor(folderId: string, colorId: string): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    folder.color = colorId;
+    folder.updatedAt = Date.now();
+
+    this.saveData();
+    this.refresh();
   }
 
   private showMoveToFolderDialog(
@@ -3316,7 +3664,7 @@ export class FolderManager {
       sortedFolders.forEach((folder) => {
         const folderItem = document.createElement('button');
         folderItem.className = 'gv-folder-dialog-item';
-        folderItem.style.paddingLeft = `${level * 16 + 12}px`;
+        folderItem.style.paddingLeft = `${calculateFolderDialogPaddingLeft(level, this.folderTreeIndent)}px`;
 
         // Folder icon
         const icon = document.createElement('mat-icon');
@@ -3606,38 +3954,8 @@ export class FolderManager {
       return;
     }
 
-    // Create the menu item
-    const menuItem = document.createElement('button');
-    menuItem.className = 'mat-mdc-menu-item mat-focus-indicator gv-move-to-folder-btn';
-    menuItem.setAttribute('role', 'menuitem');
-    menuItem.setAttribute('tabindex', '0');
-    menuItem.setAttribute('aria-disabled', 'false');
-
-    // Icon
-    const icon = document.createElement('mat-icon');
-    icon.className =
-      'mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color';
-    icon.setAttribute('role', 'img');
-    icon.setAttribute('fonticon', 'folder_open');
-    icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = 'folder_open';
-
-    // Text
-    const textSpan = document.createElement('span');
-    textSpan.className = 'mat-mdc-menu-item-text';
-    const innerSpan = document.createElement('span');
-    innerSpan.className = 'gds-body-m';
-    innerSpan.textContent = this.t('conversation_move_to_folder');
-    textSpan.appendChild(innerSpan);
-
-    // Ripple effect
-    const ripple = document.createElement('div');
-    ripple.className = 'mat-ripple mat-mdc-menu-ripple';
-    ripple.setAttribute('matripple', '');
-
-    menuItem.appendChild(icon);
-    menuItem.appendChild(textSpan);
-    menuItem.appendChild(ripple);
+    const moveToFolderLabel = this.t('conversation_move_to_folder');
+    const menuItem = createMoveToFolderMenuItem(menuContent, moveToFolderLabel, moveToFolderLabel);
 
     // Add click handler
     menuItem.addEventListener('click', (e) => {
@@ -4644,6 +4962,44 @@ export class FolderManager {
     }
   }
 
+  private async loadFilterUserSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.GV_FOLDER_FILTER_USER_ONLY]: false,
+      });
+      this.filterCurrentUserOnly = !!result[StorageKeys.GV_FOLDER_FILTER_USER_ONLY];
+      this.debug('Loaded filter user setting:', this.filterCurrentUserOnly);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load filter user setting:', error);
+      this.filterCurrentUserOnly = false;
+    }
+  }
+
+  private async loadFolderTreeIndentSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.GV_FOLDER_TREE_INDENT]: FOLDER_TREE_INDENT_DEFAULT,
+      });
+      this.folderTreeIndent = clampFolderTreeIndent(result[StorageKeys.GV_FOLDER_TREE_INDENT]);
+      this.debug('Loaded folder tree indent setting:', this.folderTreeIndent);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load folder tree indent setting:', error);
+      this.folderTreeIndent = FOLDER_TREE_INDENT_DEFAULT;
+    }
+  }
+
+  private applyFolderTreeIndentSetting(value: unknown): void {
+    const nextIndent = clampFolderTreeIndent(value);
+    if (nextIndent === this.folderTreeIndent) return;
+
+    this.folderTreeIndent = nextIndent;
+    this.debug('Folder tree indent changed:', this.folderTreeIndent);
+
+    if (this.folderEnabled && this.containerElement) {
+      this.renderAllFolders();
+    }
+  }
+
   private setupStorageListener(): void {
     // Listen for sync settings changes
     browser.storage.onChanged.addListener((changes, areaName) => {
@@ -4660,6 +5016,19 @@ export class FolderManager {
           // Apply the change to all conversations
           this.applyHideArchivedSetting();
         }
+        if (changes[StorageKeys.GV_FOLDER_TREE_INDENT]) {
+          this.applyFolderTreeIndentSetting(changes[StorageKeys.GV_FOLDER_TREE_INDENT].newValue);
+        }
+        // Listen for language changes and update UI text
+        if (changes[StorageKeys.LANGUAGE]) {
+          this.debug('Language changed, updating UI text...');
+          this.updateHeaderLanguageText();
+        }
+      }
+      // Also listen for language changes from local storage (fallback)
+      if (areaName === 'local' && changes[StorageKeys.LANGUAGE]) {
+        this.debug('Language changed (local), updating UI text...');
+        this.updateHeaderLanguageText();
       }
       // Listen for folder data changes from cloud sync
       if (areaName === 'local' && changes.gvFolderData) {
@@ -4870,7 +5239,48 @@ export class FolderManager {
       gemId: conv.gemId,
     });
 
+    this.markConversationAsRecentlyOpened(conversationId);
     this.navigateToConversation(conv.url, conv);
+  }
+
+  private isSameConversation(targetId: string, conversation: ConversationReference): boolean {
+    if (conversation.conversationId === targetId) return true;
+
+    const cleanId = targetId.replace(/^c_/, '');
+    const cleanStoredId = conversation.conversationId.replace(/^c_/, '');
+
+    if (cleanId && cleanId === cleanStoredId) return true;
+
+    if (cleanId && cleanId.length > 8 && conversation.url.includes(cleanId)) return true;
+
+    return false;
+  }
+
+  private markConversationAsRecentlyOpened(conversationId: string): void {
+    const now = Date.now();
+    let changed = false;
+
+    for (const folderId in this.data.folderContents) {
+      const conversations = this.data.folderContents[folderId];
+      conversations.forEach((conversation) => {
+        if (!this.isSameConversation(conversationId, conversation)) return;
+
+        // De-duplicate near-simultaneous route/listener updates.
+        if (conversation.lastOpenedAt && now - conversation.lastOpenedAt < 1000) return;
+
+        conversation.lastOpenedAt = now;
+        conversation.updatedAt = now;
+        changed = true;
+      });
+    }
+
+    if (!changed) return;
+
+    void this.saveData();
+
+    if (this.folderEnabled && this.containerElement) {
+      this.renderAllFolders();
+    }
   }
 
   private navigateToConversation(url: string, conversation?: ConversationReference): void {
@@ -5004,7 +5414,13 @@ export class FolderManager {
   private installRouteChangeListener(): void {
     const update = () => {
       if (this.isDestroyed) return;
-      setTimeout(() => this.highlightActiveConversationInFolders(), 0);
+      setTimeout(() => {
+        this.highlightActiveConversationInFolders();
+        const currentConversationId = this.getCurrentConversationId();
+        if (currentConversationId) {
+          this.markConversationAsRecentlyOpened(currentConversationId);
+        }
+      }, 0);
     };
 
     const cleanupFns: (() => void)[] = [];
@@ -5095,6 +5511,58 @@ export class FolderManager {
   private t(key: string): string {
     // Use the centralized i18n system that respects user's language preference
     return getTranslationSyncUnsafe(key);
+  }
+
+  /**
+   * Update all translatable text in the folder header when language changes
+   */
+  private updateHeaderLanguageText(): void {
+    if (!this.containerElement) return;
+
+    // Update folder title
+    const title = this.containerElement.querySelector('.gv-folder-header .title');
+    if (title) {
+      title.textContent = this.t('folder_title');
+    }
+
+    // Update button tooltips in header actions
+    const actionsContainer = this.containerElement.querySelector('.gv-folder-header-actions');
+    if (actionsContainer) {
+      const buttons = actionsContainer.querySelectorAll('button');
+      buttons.forEach((btn) => {
+        // Identify buttons by their class or icon content
+        if (btn.classList.contains('gv-folder-add-btn')) {
+          btn.title = this.t('folder_create');
+        } else if (btn.classList.contains('gv-folder-action-btn')) {
+          // Check icon to identify button type
+          const icon = btn.querySelector('mat-icon');
+          if (icon?.textContent === 'person') {
+            btn.title = this.t('folder_filter_current_user');
+          } else if (icon?.textContent === 'folder_managed') {
+            btn.title = this.t('folder_import_export');
+          }
+          // Cloud buttons use SVG, check for SVG content
+          const svg = btn.querySelector('svg');
+          if (svg) {
+            const path = svg.querySelector('path')?.getAttribute('d') || '';
+            // Cloud upload icon contains specific path pattern
+            if (path.includes('520q-33 0-56.5-23.5')) {
+              btn.title = this.t('folder_cloud_upload');
+            } else if (path.includes('520-716v242')) {
+              btn.title = this.t('folder_cloud_sync');
+            }
+          }
+        }
+      });
+    }
+
+    // Update empty state text if present
+    const emptyState = this.containerElement.querySelector('.gv-folder-empty');
+    if (emptyState) {
+      emptyState.textContent = this.t('folder_empty');
+    }
+
+    this.debug('Header language text updated');
   }
 
   private setupMessageListener(): void {
@@ -5445,6 +5913,115 @@ export class FolderManager {
     }
   }
 
+  /**
+   * Check if a folder has any visible content for the current user.
+   * - If filter is disabled, always returns true (show everything).
+   * - If filter is enabled:
+   *   - Returns true if folder has any conversations matching current user.
+   *   - Returns true if any subfolder has visible content.
+   *   - Returns false otherwise.
+   */
+  private hasVisibleContent(folderId: string): boolean {
+    if (!this.filterCurrentUserOnly) return true;
+
+    // Check direct conversations
+    const conversations = this.data.folderContents[folderId] || [];
+    const userConversations = this.filterConversationsByCurrentUser(conversations);
+    if (userConversations.length > 0) return true;
+
+    // Check subfolders recursively
+    const subfolders = this.data.folders.filter((f) => f.parentId === folderId);
+    for (const subfolder of subfolders) {
+      if (this.hasVisibleContent(subfolder.id)) return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Filter conversations to show only those belonging to the current user.
+   * If filterCurrentUserOnly is false, returns all conversations.
+   */
+  private filterConversationsByCurrentUser(
+    conversations: ConversationReference[],
+  ): ConversationReference[] {
+    if (!this.filterCurrentUserOnly) {
+      return conversations;
+    }
+    const currentUserId = this.getCurrentUserId();
+    return conversations.filter((conv) => {
+      const convUserId = this.getUserIdFromUrl(conv.url);
+      // Always show conversations with unspecified user (e.g. /app/...) as they might redirect to current user
+      if (convUserId === null) return true;
+      return convUserId === currentUserId;
+    });
+  }
+
+  /**
+   * Get the current user ID from the URL.
+   * URL patterns:
+   * - /u/0/app/xxx → user "0"
+   * - /u/1/app/xxx → user "1"
+   * - /app?hl=zh&pageId=none → user "0" (default)
+   */
+  private getCurrentUserId(): string {
+    try {
+      const path = window.location.pathname;
+      const match = path.match(/^\/u\/(\d+)\//);
+      return match ? match[1] : '0';
+    } catch {
+      return '0';
+    }
+  }
+
+  /**
+   * Extract user ID from a conversation URL.
+   * @param url The conversation URL
+   * @returns User ID string, or null if unspecified (e.g. /app/...)
+   */
+  private getUserIdFromUrl(url: string): string | null {
+    try {
+      const urlObj = new URL(url);
+      const match = urlObj.pathname.match(/^\/u\/(\d+)\//);
+      return match ? match[1] : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Toggle the "show only current user" filter and refresh the UI.
+   */
+  private toggleFilterCurrentUser(): void {
+    this.filterCurrentUserOnly = !this.filterCurrentUserOnly;
+    this.debug('Filter current user only:', this.filterCurrentUserOnly);
+
+    // Save setting to storage
+    browser.storage.sync
+      .set({
+        [StorageKeys.GV_FOLDER_FILTER_USER_ONLY]: this.filterCurrentUserOnly,
+      })
+      .catch((e) => console.error('Failed to save filter user setting:', e));
+
+    // Refresh the entire folder container to update button state and list
+    if (this.containerElement) {
+      // Update the filter button state
+      const filterBtn = this.containerElement.querySelector(
+        '.gv-folder-header-actions button:first-child',
+      );
+      if (filterBtn) {
+        if (this.filterCurrentUserOnly) {
+          filterBtn.classList.add('gv-filter-active');
+        } else {
+          filterBtn.classList.remove('gv-filter-active');
+        }
+      }
+    }
+
+    // Refresh the folders list to apply the filter
+    this.refresh();
+  }
+
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     // Create notification element
     const notification = document.createElement('div');
@@ -5462,5 +6039,394 @@ export class FolderManager {
       notification.classList.remove('show');
       setTimeout(() => notification.remove(), 300);
     }, 3000);
+  }
+
+  /**
+   * Show import/export dropdown menu
+   */
+  private showImportExportMenu(event: MouseEvent): void {
+    event.stopPropagation();
+
+    // Create context menu
+    const menu = document.createElement('div');
+    menu.className = 'gv-folder-menu';
+    menu.style.position = 'fixed';
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
+
+    const menuItems = [
+      {
+        label: this.t('folder_import'),
+        icon: 'upload',
+        action: () => this.showImportDialog(),
+      },
+      {
+        label: this.t('folder_export'),
+        icon: 'download',
+        action: () => this.exportFolders(),
+      },
+    ];
+
+    menuItems.forEach((item) => {
+      const menuItem = document.createElement('button');
+      menuItem.className = 'gv-folder-menu-item';
+
+      // Fix vertical alignment
+      menuItem.style.display = 'flex';
+      menuItem.style.alignItems = 'center';
+
+      menuItem.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true" style="font-size: 18px; margin-right: 8px;">${item.icon}</mat-icon>${item.label}`;
+      menuItem.addEventListener('click', () => {
+        item.action();
+        menu.remove();
+      });
+      menu.appendChild(menuItem);
+    });
+
+    document.body.appendChild(menu);
+
+    // Close menu on click outside
+    const closeMenu = (e: MouseEvent) => {
+      if (!menu.contains(e.target as Node)) {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
+
+  /**
+   * Handle cloud upload - upload folder data, prompts, and starred messages to Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleSyncNow()
+   */
+  private async handleCloudUpload(): Promise<void> {
+    try {
+      this.showNotification(this.t('uploadInProgress'), 'info');
+
+      // Get current folder data
+      const folders = this.data;
+
+      // Get prompts from storage
+      let prompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          prompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[FolderManager] Could not get prompts for upload:', err);
+      }
+
+      this.debug(
+        `Uploading - folders: ${folders.folders?.length || 0}, prompts: ${prompts.length}`,
+      );
+
+      // Send upload request to background script
+      // Background script will also fetch starred messages for Gemini platform
+      const response = (await browser.runtime.sendMessage({
+        type: 'gv.sync.upload',
+        payload: { folders, prompts, platform: 'gemini' },
+      })) as { ok?: boolean; error?: string } | undefined;
+
+      if (response?.ok) {
+        this.showNotification(this.t('uploadSuccess'), 'success');
+      } else {
+        const errorMsg = response?.error || 'Unknown error';
+        this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[FolderManager] Cloud upload failed:', error);
+      this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+    }
+  }
+
+  /**
+   * Handle cloud sync - download and merge folder data, prompts, and starred messages from Google Drive
+   * This mirrors the logic in CloudSyncSettings.tsx handleDownloadFromDrive()
+   */
+  private async handleCloudSync(): Promise<void> {
+    try {
+      this.showNotification(this.t('downloadInProgress'), 'info');
+
+      // Send download request to background script
+      const response = (await browser.runtime.sendMessage({
+        type: 'gv.sync.download',
+        payload: { platform: 'gemini' },
+      })) as
+        | {
+            ok?: boolean;
+            error?: string;
+            data?: {
+              folders?: { data?: FolderData };
+              prompts?: { items?: any[] };
+              starred?: { data?: { messages: Record<string, any[]> } };
+            };
+          }
+        | undefined;
+
+      if (!response?.ok) {
+        const errorMsg = response?.error || 'Download failed';
+        this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+        return;
+      }
+
+      if (!response.data) {
+        this.showNotification(this.t('syncNoData') || 'No data in cloud', 'info');
+        return;
+      }
+
+      // Extract cloud data
+      const cloudFoldersPayload = response.data?.folders;
+      const cloudPromptsPayload = response.data?.prompts;
+      const cloudStarredPayload = response.data?.starred;
+      const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
+      const cloudPromptItems = cloudPromptsPayload?.items || [];
+      const cloudStarredData = cloudStarredPayload?.data || { messages: {} };
+
+      this.debug(
+        `Downloaded - folders: ${cloudFolderData.folders?.length || 0}, prompts: ${cloudPromptItems.length}, starred conversations: ${Object.keys(cloudStarredData.messages || {}).length}`,
+      );
+
+      // Get local prompts for merge
+      let localPrompts: any[] = [];
+      try {
+        const storageResult = await chrome.storage.local.get(['gvPromptItems']);
+        if (storageResult.gvPromptItems) {
+          localPrompts = storageResult.gvPromptItems;
+        }
+      } catch (err) {
+        console.warn('[FolderManager] Could not get local prompts for merge:', err);
+      }
+
+      // Get local starred messages for merge
+      let localStarred = { messages: {} as Record<string, any[]> };
+      try {
+        const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
+        if (starredResult.geminiTimelineStarredMessages) {
+          localStarred = starredResult.geminiTimelineStarredMessages;
+        }
+      } catch (err) {
+        console.warn('[FolderManager] Could not get local starred messages for merge:', err);
+      }
+
+      // Merge folder data
+      const localFolders = this.data;
+      const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
+
+      // Merge prompts (simple ID-based merge)
+      const mergedPrompts = this.mergePrompts(localPrompts, cloudPromptItems);
+
+      // Merge starred messages
+      const mergedStarred = this.mergeStarredMessages(localStarred, cloudStarredData);
+
+      this.debug(
+        `Merged - folders: ${mergedFolders.folders?.length || 0}, prompts: ${mergedPrompts.length}, starred conversations: ${Object.keys(mergedStarred.messages || {}).length}`,
+      );
+
+      // Apply merged folder data
+      this.data = mergedFolders;
+      await this.saveData();
+
+      // Save merged prompts and starred to storage
+      try {
+        await chrome.storage.local.set({
+          gvPromptItems: mergedPrompts,
+          geminiTimelineStarredMessages: mergedStarred,
+        });
+      } catch (err) {
+        console.error('[FolderManager] Failed to save merged prompts/starred:', err);
+      }
+
+      this.refresh();
+      this.showNotification(this.t('downloadMergeSuccess'), 'success');
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[FolderManager] Cloud sync failed:', error);
+      this.showNotification(this.t('syncError').replace('{error}', errorMsg), 'error');
+    }
+  }
+
+  /**
+   * Merge prompts by ID (simple deduplication)
+   */
+  private mergePrompts(local: any[], cloud: any[]): any[] {
+    const promptMap = new Map<string, any>();
+
+    // Add local prompts first
+    local.forEach((p) => {
+      if (p?.id) promptMap.set(p.id, p);
+    });
+
+    // Add cloud prompts (cloud takes priority for newer items)
+    cloud.forEach((p) => {
+      if (!p?.id) return;
+      const existing = promptMap.get(p.id);
+      if (!existing) {
+        promptMap.set(p.id, p);
+      } else {
+        // Compare timestamps, prefer newer
+        const cloudTime = p.updatedAt || p.createdAt || 0;
+        const localTime = existing.updatedAt || existing.createdAt || 0;
+        if (cloudTime > localTime) {
+          promptMap.set(p.id, p);
+        }
+      }
+    });
+
+    return Array.from(promptMap.values());
+  }
+
+  /**
+   * Merge starred messages by conversationId and turnId
+   */
+  private mergeStarredMessages(
+    local: { messages: Record<string, any[]> },
+    cloud: { messages: Record<string, any[]> },
+  ): { messages: Record<string, any[]> } {
+    const localMessages = local?.messages || {};
+    const cloudMessages = cloud?.messages || {};
+
+    const allConversationIds = new Set([
+      ...Object.keys(localMessages),
+      ...Object.keys(cloudMessages),
+    ]);
+
+    const mergedMessages: Record<string, any[]> = {};
+
+    allConversationIds.forEach((conversationId) => {
+      const localConvoMessages = localMessages[conversationId] || [];
+      const cloudConvoMessages = cloudMessages[conversationId] || [];
+
+      const messageMap = new Map<string, any>();
+
+      // Add cloud messages first
+      cloudConvoMessages.forEach((msg) => {
+        if (msg?.turnId) messageMap.set(msg.turnId, msg);
+      });
+
+      // Merge local messages - prefer newer starredAt
+      localConvoMessages.forEach((localMsg) => {
+        if (!localMsg?.turnId) return;
+        const existingMsg = messageMap.get(localMsg.turnId);
+        if (!existingMsg) {
+          messageMap.set(localMsg.turnId, localMsg);
+        } else if ((localMsg.starredAt || 0) >= (existingMsg.starredAt || 0)) {
+          messageMap.set(localMsg.turnId, localMsg);
+        }
+      });
+
+      const mergedArray = Array.from(messageMap.values());
+      if (mergedArray.length > 0) {
+        mergedMessages[conversationId] = mergedArray;
+      }
+    });
+
+    return { messages: mergedMessages };
+  }
+
+  /**
+   * Merge two FolderData objects (local + cloud)
+   * Uses folder/conversation IDs to deduplicate
+   */
+  private mergeFolderData(local: FolderData, cloud: FolderData): FolderData {
+    // Merge folders by ID
+    const folderMap = new Map<string, Folder>();
+    local.folders.forEach((f) => folderMap.set(f.id, f));
+    cloud.folders.forEach((f) => {
+      if (!folderMap.has(f.id)) {
+        folderMap.set(f.id, f);
+      }
+      // If exists, keep local version (local takes priority)
+    });
+
+    // Merge folderContents
+    const mergedContents: FolderData['folderContents'] = { ...local.folderContents };
+    Object.entries(cloud.folderContents).forEach(([folderId, conversations]) => {
+      if (!mergedContents[folderId]) {
+        mergedContents[folderId] = conversations;
+      } else {
+        // Merge conversations in folder by conversationId
+        const existingIds = new Set(mergedContents[folderId].map((c) => c.conversationId));
+        conversations.forEach((conv) => {
+          if (!existingIds.has(conv.conversationId)) {
+            mergedContents[folderId].push(conv);
+          }
+        });
+      }
+    });
+
+    return {
+      folders: Array.from(folderMap.values()),
+      folderContents: mergedContents,
+    };
+  }
+
+  /**
+   * Get dynamic tooltip for cloud upload button showing last upload time
+   */
+  private async getCloudUploadTooltip(): Promise<string> {
+    try {
+      const response = (await browser.runtime.sendMessage({ type: 'gv.sync.getState' })) as
+        | { ok?: boolean; state?: { lastUploadTime?: number | null } }
+        | undefined;
+      if (response?.ok && response.state) {
+        const lastUploadTime = response.state.lastUploadTime;
+        const timeStr = this.formatRelativeTime(lastUploadTime ?? null);
+        const baseTooltip = this.t('folder_cloud_upload');
+        return lastUploadTime
+          ? `${baseTooltip}\n${this.t('lastUploaded').replace('{time}', timeStr)}`
+          : `${baseTooltip}\n${this.t('neverUploaded')}`;
+      }
+    } catch (e) {
+      console.warn('[FolderManager] Failed to get sync state for tooltip:', e);
+    }
+    return this.t('folder_cloud_upload');
+  }
+
+  /**
+   * Get dynamic tooltip for cloud sync button showing last sync time
+   */
+  private async getCloudSyncTooltip(): Promise<string> {
+    try {
+      const response = (await browser.runtime.sendMessage({ type: 'gv.sync.getState' })) as
+        | { ok?: boolean; state?: { lastSyncTime?: number | null } }
+        | undefined;
+      if (response?.ok && response.state) {
+        const lastSyncTime = response.state.lastSyncTime;
+        const timeStr = this.formatRelativeTime(lastSyncTime ?? null);
+        const baseTooltip = this.t('folder_cloud_sync');
+        return lastSyncTime
+          ? `${baseTooltip}\n${this.t('lastSynced').replace('{time}', timeStr)}`
+          : `${baseTooltip}\n${this.t('neverSynced')}`;
+      }
+    } catch (e) {
+      console.warn('[FolderManager] Failed to get sync state for tooltip:', e);
+    }
+    return this.t('folder_cloud_sync');
+  }
+
+  /**
+   * Format a timestamp as relative time (e.g. "5 minutes ago")
+   */
+  private formatRelativeTime(timestamp: number | null): string {
+    if (!timestamp) return '';
+    const now = Date.now();
+    const diffMs = now - timestamp;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) {
+      return this.t('justNow');
+    } else if (diffMins < 60) {
+      return `${diffMins} ${this.t('minutesAgo')}`;
+    } else if (diffHours < 24) {
+      return `${diffHours} ${this.t('hoursAgo')}`;
+    } else if (diffDays === 1) {
+      return this.t('yesterday');
+    } else {
+      return new Date(timestamp).toLocaleDateString();
+    }
   }
 }

@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
-import { isSafari } from '@/core/utils/browser';
+import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
+import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import {
   extractLatestReleaseVersion,
@@ -19,6 +20,7 @@ import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 import { CloudSyncSettings } from './components/CloudSyncSettings';
+import { ContextSyncSettings } from './components/ContextSyncSettings';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { StarredHistory } from './components/StarredHistory';
 import {
@@ -59,6 +61,8 @@ const normalizePercent = (
   return clampPercent(value, min, max);
 };
 
+const FOLDER_SPACING = { min: 0, max: 16, defaultValue: 2 };
+const FOLDER_TREE_INDENT = { min: -8, max: 32, defaultValue: -8 };
 const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LEGACY_BASELINE_PX };
 const EDIT_PERCENT = { min: 30, max: 100, defaultValue: 60, legacyBaselinePx: LEGACY_BASELINE_PX };
 const SIDEBAR_PERCENT = {
@@ -71,6 +75,11 @@ const SIDEBAR_PX = {
   min: Math.round(pxFromPercent(SIDEBAR_PERCENT.min)),
   max: Math.round(pxFromPercent(SIDEBAR_PERCENT.max)),
   defaultValue: Math.round(pxFromPercent(SIDEBAR_PERCENT.defaultValue)),
+};
+const AI_STUDIO_SIDEBAR_PX = {
+  min: 240,
+  max: 600,
+  defaultValue: 280,
 };
 
 const clampSidebarPx = (value: number) => clampNumber(value, SIDEBAR_PX.min, SIDEBAR_PX.max);
@@ -115,6 +124,9 @@ interface SettingsUpdate {
   tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
+  ctrlEnterSendEnabled?: boolean;
+  sidebarAutoHideEnabled?: boolean;
+  snowEffectEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -140,6 +152,22 @@ export default function Popup() {
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
+  const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
+  const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
+  const [snowEffectEnabled, setSnowEffectEnabled] = useState<boolean>(false);
+  const [isAIStudio, setIsAIStudio] = useState<boolean>(false);
+
+  useEffect(() => {
+    browser.tabs
+      .query({ active: true, currentWindow: true })
+      .then((tabs) => {
+        const url = tabs[0]?.url || '';
+        if (url.includes('aistudio.google.com') || url.includes('aistudio.google.cn')) {
+          setIsAIStudio(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleFormulaCopyFormatChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const format = e.target.value as 'latex' | 'unicodemath' | 'no-dollar';
@@ -197,6 +225,12 @@ export default function Popup() {
         payload.gvMermaidEnabled = settings.mermaidEnabled;
       if (typeof settings.quoteReplyEnabled === 'boolean')
         payload.gvQuoteReplyEnabled = settings.quoteReplyEnabled;
+      if (typeof settings.ctrlEnterSendEnabled === 'boolean')
+        payload.gvCtrlEnterSend = settings.ctrlEnterSendEnabled;
+      if (typeof settings.sidebarAutoHideEnabled === 'boolean')
+        payload.gvSidebarAutoHide = settings.sidebarAutoHideEnabled;
+      if (typeof settings.snowEffectEnabled === 'boolean')
+        payload.gvSnowEffect = settings.snowEffectEnabled;
       void setSyncStorage(payload);
     },
     [setSyncStorage],
@@ -254,15 +288,68 @@ export default function Popup() {
     }, []),
   });
 
-  // Width adjuster for sidebar width (px-based UI, stored as px; content will migrate >max to %)
+  // Width adjuster for sidebar width (Context-aware: Gemini vs AI Studio)
+  const sidebarConfig = useMemo(
+    () =>
+      isAIStudio
+        ? {
+            key: 'gvAIStudioSidebarWidth',
+            min: AI_STUDIO_SIDEBAR_PX.min,
+            max: AI_STUDIO_SIDEBAR_PX.max,
+            def: AI_STUDIO_SIDEBAR_PX.defaultValue,
+            norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
+          }
+        : {
+            key: 'geminiSidebarWidth',
+            min: SIDEBAR_PX.min,
+            max: SIDEBAR_PX.max,
+            def: SIDEBAR_PX.defaultValue,
+            norm: normalizeSidebarPx,
+          },
+    [isAIStudio],
+  );
+
   const sidebarWidthAdjuster = useWidthAdjuster({
-    storageKey: 'geminiSidebarWidth',
-    defaultValue: SIDEBAR_PX.defaultValue,
-    normalize: normalizeSidebarPx,
-    onApply: useCallback((widthPx: number) => {
-      const clamped = normalizeSidebarPx(widthPx);
+    storageKey: sidebarConfig.key,
+    defaultValue: sidebarConfig.def,
+    normalize: sidebarConfig.norm,
+    onApply: useCallback(
+      (widthPx: number) => {
+        const clamped = sidebarConfig.norm(widthPx);
+        try {
+          chrome.storage?.sync?.set({ [sidebarConfig.key]: clamped });
+        } catch {}
+      },
+      [sidebarConfig],
+    ),
+  });
+
+  // Folder spacing adjuster (Context-aware: Gemini vs AI Studio)
+  const folderSpacingKey = isAIStudio ? 'gvAIStudioFolderSpacing' : 'gvFolderSpacing';
+
+  const folderSpacingAdjuster = useWidthAdjuster({
+    storageKey: folderSpacingKey,
+    defaultValue: FOLDER_SPACING.defaultValue,
+    normalize: (v) => clampNumber(v, FOLDER_SPACING.min, FOLDER_SPACING.max),
+    onApply: useCallback(
+      (spacing: number) => {
+        const clamped = clampNumber(spacing, FOLDER_SPACING.min, FOLDER_SPACING.max);
+        try {
+          chrome.storage?.sync?.set({ [folderSpacingKey]: clamped });
+        } catch {}
+      },
+      [folderSpacingKey],
+    ),
+  });
+
+  const folderTreeIndentAdjuster = useWidthAdjuster({
+    storageKey: 'gvFolderTreeIndent',
+    defaultValue: FOLDER_TREE_INDENT.defaultValue,
+    normalize: (v) => clampNumber(v, FOLDER_TREE_INDENT.min, FOLDER_TREE_INDENT.max),
+    onApply: useCallback((indent: number) => {
+      const clamped = clampNumber(indent, FOLDER_TREE_INDENT.min, FOLDER_TREE_INDENT.max);
       try {
-        chrome.storage?.sync?.set({ geminiSidebarWidth: clamped });
+        chrome.storage?.sync?.set({ gvFolderTreeIndent: clamped });
       } catch {}
     }, []),
   });
@@ -289,7 +376,15 @@ export default function Popup() {
       // We skip manual version checks for these users to rely on store auto-updates
       // and prevent confusing "new version" prompts when GitHub is ahead of the store.
       const manifest = chrome?.runtime?.getManifest?.();
-      if (getManifestUpdateUrl(manifest)) {
+
+      // For Safari: only skip update check if the feature is disabled (default)
+      // If shouldShowSafariUpdateReminder() returns true, allow update checks
+      if (isSafari() && !shouldShowSafariUpdateReminder()) {
+        return;
+      }
+
+      // For other browsers: skip if they have update_url (store installation)
+      if (!isSafari() && getManifestUpdateUrl(manifest)) {
         return;
       }
 
@@ -361,6 +456,9 @@ export default function Popup() {
           gvTabTitleUpdateEnabled: true,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
+          gvCtrlEnterSend: false,
+          gvSidebarAutoHide: false,
+          gvSnowEffect: false,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -383,6 +481,9 @@ export default function Popup() {
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
+          setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
+          setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
+          setSnowEffectEnabled(res?.gvSnowEffect === true);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -596,8 +697,15 @@ export default function Popup() {
 
   const normalizedCurrentVersion = normalizeVersionString(extVersion);
   const normalizedLatestVersion = normalizeVersionString(latestVersion);
+  const isSafariBrowser = isSafari();
+  const safariUpdateReminderEnabled = isSafariBrowser && shouldShowSafariUpdateReminder();
+  const shouldShowUpdateNotification = shouldShowUpdateReminderForCurrentVersion({
+    currentVersion: normalizedCurrentVersion,
+    isSafariBrowser,
+    safariReminderEnabled: safariUpdateReminderEnabled,
+  });
   const hasUpdate =
-    normalizedCurrentVersion && normalizedLatestVersion
+    shouldShowUpdateNotification && normalizedCurrentVersion && normalizedLatestVersion
       ? compareVersions(normalizedLatestVersion, normalizedCurrentVersion) > 0
       : false;
   const latestReleaseTag = toReleaseTag(latestVersion ?? normalizedLatestVersion ?? undefined);
@@ -664,7 +772,9 @@ export default function Popup() {
           </Card>
         )}
         {/* Cloud Sync - First priority - Hidden on Safari due to API limitations */}
-        {!isSafari() && <CloudSyncSettings />}
+        {!isSafariBrowser && <CloudSyncSettings />}
+        {/* Context Sync */}
+        <ContextSyncSettings />
         {/* Timeline Options */}
         <Card className="p-4 transition-shadow hover:shadow-lg">
           <CardTitle className="mb-4 text-xs uppercase">{t('timelineOptions')}</CardTitle>
@@ -840,6 +950,33 @@ export default function Popup() {
             </div>
           </CardContent>
         </Card>
+        {/* Folder Spacing */}
+        <WidthSlider
+          label={t('folderSpacing')}
+          value={folderSpacingAdjuster.width}
+          min={FOLDER_SPACING.min}
+          max={FOLDER_SPACING.max}
+          step={1}
+          narrowLabel={t('folderSpacingCompact')}
+          wideLabel={t('folderSpacingSpacious')}
+          valueFormatter={(v) => `${v}px`}
+          onChange={folderSpacingAdjuster.handleChange}
+          onChangeComplete={folderSpacingAdjuster.handleChangeComplete}
+        />
+        {!isAIStudio && (
+          <WidthSlider
+            label={t('folderTreeIndent')}
+            value={folderTreeIndentAdjuster.width}
+            min={FOLDER_TREE_INDENT.min}
+            max={FOLDER_TREE_INDENT.max}
+            step={1}
+            narrowLabel={t('folderTreeIndentCompact')}
+            wideLabel={t('folderTreeIndentSpacious')}
+            valueFormatter={(v) => `${v}px`}
+            onChange={folderTreeIndentAdjuster.handleChange}
+            onChangeComplete={folderTreeIndentAdjuster.handleChangeComplete}
+          />
+        )}
         {/* Chat Width */}
         <WidthSlider
           label={t('chatWidth')}
@@ -867,10 +1004,10 @@ export default function Popup() {
 
         {/* Sidebar Width */}
         <WidthSlider
-          label={t('sidebarWidth')}
+          label={isAIStudio ? 'AI Studio Sidebar' : t('sidebarWidth')}
           value={sidebarWidthAdjuster.width}
-          min={SIDEBAR_PX.min}
-          max={SIDEBAR_PX.max}
+          min={sidebarConfig.min}
+          max={sidebarConfig.max}
           step={8}
           narrowLabel={t('sidebarWidthNarrow')}
           wideLabel={t('sidebarWidthWide')}
@@ -878,6 +1015,60 @@ export default function Popup() {
           onChange={sidebarWidthAdjuster.handleChange}
           onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
         />
+
+        {/* Sidebar Auto-Hide - Gemini only */}
+        {!isAIStudio && (
+          <Card className="p-4 transition-shadow hover:shadow-lg">
+            <CardContent className="p-0">
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="sidebar-auto-hide"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('sidebarAutoHide')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('sidebarAutoHideHint')}</p>
+                </div>
+                <Switch
+                  id="sidebar-auto-hide"
+                  checked={sidebarAutoHideEnabled}
+                  onChange={(e) => {
+                    setSidebarAutoHideEnabled(e.target.checked);
+                    apply({ sidebarAutoHideEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Snow Effect - Gemini only */}
+        {!isAIStudio && (
+          <Card className="p-4 transition-shadow hover:shadow-lg">
+            <CardContent className="p-0">
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="snow-effect"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('snowEffect')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('snowEffectHint')}</p>
+                </div>
+                <Switch
+                  id="snow-effect"
+                  checked={snowEffectEnabled}
+                  onChange={(e) => {
+                    setSnowEffectEnabled(e.target.checked);
+                    apply({ snowEffectEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Formula Copy Options */}
         <Card className="p-4 transition-shadow hover:shadow-lg">
@@ -945,6 +1136,25 @@ export default function Popup() {
                 onChange={(e) => {
                   setInputCollapseEnabled(e.target.checked);
                   apply({ inputCollapseEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
+                  htmlFor="ctrl-enter-send"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                >
+                  {t('ctrlEnterSend')}
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">{t('ctrlEnterSendHint')}</p>
+              </div>
+              <Switch
+                id="ctrl-enter-send"
+                checked={ctrlEnterSendEnabled}
+                onChange={(e) => {
+                  setCtrlEnterSendEnabled(e.target.checked);
+                  apply({ ctrlEnterSendEnabled: e.target.checked });
                 }}
               />
             </div>
@@ -1164,33 +1374,35 @@ export default function Popup() {
           </CardContent>
         </Card>
 
-        {/* NanoBanana Options */}
-        <Card className="p-4 transition-shadow hover:shadow-lg">
-          <CardTitle className="mb-4 text-xs uppercase">{t('nanobananaOptions')}</CardTitle>
-          <CardContent className="space-y-4 p-0">
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="watermark-remover"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                >
-                  {t('enableNanobananaWatermarkRemover')}
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('nanobananaWatermarkRemoverHint')}
-                </p>
+        {/* NanoBanana Options - Hidden on Safari due to fetch interceptor limitations */}
+        {!isSafariBrowser && (
+          <Card className="p-4 transition-shadow hover:shadow-lg">
+            <CardTitle className="mb-4 text-xs uppercase">{t('nanobananaOptions')}</CardTitle>
+            <CardContent className="space-y-4 p-0">
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="watermark-remover"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('enableNanobananaWatermarkRemover')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('nanobananaWatermarkRemoverHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="watermark-remover"
+                  checked={watermarkRemoverEnabled}
+                  onChange={(e) => {
+                    setWatermarkRemoverEnabled(e.target.checked);
+                    apply({ watermarkRemoverEnabled: e.target.checked });
+                  }}
+                />
               </div>
-              <Switch
-                id="watermark-remover"
-                checked={watermarkRemoverEnabled}
-                onChange={(e) => {
-                  setWatermarkRemoverEnabled(e.target.checked);
-                  apply({ watermarkRemoverEnabled: e.target.checked });
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Footer */}

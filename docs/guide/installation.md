@@ -1,5 +1,9 @@
 # 安装
 
+::: info 新闻
+🍎 **Safari 浏览器原生插件已推出！** 现在支持一键安装并完全免费。
+:::
+
 选一条路。
 
 > ⚠️ 提示词管理器是唯一支持 Gemini 企业版的功能。
@@ -10,7 +14,7 @@
 
 **Chrome / Brave / Opera / Vivaldi：**
 
-[<img src="https://img.shields.io/badge/Chrome_应用店-前往下载-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 网上应用店安装" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol)
+[<img src="https://img.shields.io/badge/Chrome_应用店-前往下载-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 网上应用店安装" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=zh)
 
 **Microsoft Edge：**
 
@@ -42,14 +46,16 @@
 
 ## 3. Safari (macOS)
 
-1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下 `gemini-voyager-safari-vX.Y.Z.zip`。
-2. 解压。
-3. 终端跑这行命令 (得有 Xcode)：
-   ```bash
-   xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
-   ```
-4. Xcode 里运行。
-5. Safari 设置 > 扩展里打开。
+Safari 现在支持直接分发！下载预签名的应用：
+
+1. 下载 <SafariDownloadLink>最新 Safari 版本 (.dmg)</SafariDownloadLink>。
+2. 双击打开后按提示安装应用。
+3. 双击启动应用。
+4. 在 **Safari 设置 > 扩展** 中启用。
+
+> 💡 Safari 版本现已直接签名分发——不再需要 Xcode 转换！
+>
+> ⚠️ **已知限制**：由于 Safari 特性，(a) 水印去除 (b) 图片导出（推荐用 PDF）暂不支持。
 
 ---
 

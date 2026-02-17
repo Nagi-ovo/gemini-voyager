@@ -2,6 +2,8 @@
  * Sync-related type definitions for Google Drive sync feature
  * Provides type safety for sync state management and data transfer
  */
+import type { StarredMessagesData } from '@/pages/content/timeline/starredTypes';
+
 import type { FolderData } from './folder';
 
 /**
@@ -13,15 +15,26 @@ import type { FolderData } from './folder';
 export type SyncMode = 'disabled' | 'manual' | 'auto';
 
 /**
+ * Platform identifier for sync operations
+ * - gemini: Main Gemini website (gemini.google.com)
+ * - aistudio: AI Studio website (aistudio.google.com, aistudio.google.cn)
+ */
+export type SyncPlatform = 'gemini' | 'aistudio';
+
+/**
  * Current sync state for UI display
  */
 export interface SyncState {
   /** Current sync mode setting */
   mode: SyncMode;
-  /** Timestamp of last successful sync/download (null if never synced) */
+  /** Timestamp of last successful sync/download (null if never synced) - Gemini */
   lastSyncTime: number | null;
-  /** Timestamp of last successful upload (null if never uploaded) */
+  /** Timestamp of last successful upload (null if never uploaded) - Gemini */
   lastUploadTime: number | null;
+  /** Timestamp of last successful sync/download for AI Studio */
+  lastSyncTimeAIStudio: number | null;
+  /** Timestamp of last successful upload for AI Studio */
+  lastUploadTimeAIStudio: number | null;
   /** Whether a sync operation is currently in progress */
   isSyncing: boolean;
   /** Last error message (null if no error) */
@@ -60,6 +73,24 @@ export interface PromptExportPayload {
   version?: string;
   items: PromptItem[];
 }
+/**
+ * Re-export starred message types from their canonical source
+ * These are used for Google Drive sync
+ */
+export type {
+  StarredMessage as StarredMessageSync,
+  StarredMessagesData as StarredMessagesDataSync,
+} from '@/pages/content/timeline/starredTypes';
+
+/**
+ * Starred messages export payload format
+ */
+export interface StarredExportPayload {
+  format: 'gemini-voyager.starred.v1';
+  exportedAt: string;
+  version?: string;
+  data: StarredMessagesData;
+}
 
 /**
  * Data payload synced to Google Drive
@@ -94,6 +125,8 @@ export const DEFAULT_SYNC_STATE: SyncState = {
   mode: 'disabled',
   lastSyncTime: null,
   lastUploadTime: null,
+  lastSyncTimeAIStudio: null,
+  lastUploadTimeAIStudio: null,
   isSyncing: false,
   error: null,
   isAuthenticated: false,

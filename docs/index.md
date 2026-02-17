@@ -16,6 +16,18 @@ hero:
       text: 开始旅程
       link: ./guide/getting-started
 
+teaser:
+  title: '重新定义交互。'
+  description: '我们不造扩展，我们重塑思考。<br>用 Gemini Voyager，不再是人适应界面，而是界面顺应心流。'
+  image: '/assets/teaser.png'
+  features:
+    - title: '时间轴'
+      details: '看见对话的脉搏。<br>让线性的时间，变成可触摸的空间。'
+    - title: '文件夹'
+      details: '给思想安个家。<br>哪怕是一闪而过的念头，也值得被郑重对待。'
+    - title: '掌控权'
+      details: '数据归你。<br>打破云端的围墙，让知识真正属于你。'
+
 features:
   - icon: 🧭
     title: 时间轴
@@ -29,48 +41,31 @@ features:
   - icon: 💬
     title: 引用回复
     details: 选中即引。上下文精确回复，沟通更高效。
-  - icon: 🧜‍♀️
-    title: Mermaid 图表
-    details: 代码变图表。流程图、时序图、甘特图一键可视化。
-  - icon: 🍌
-    title: NanoBanana 水印去除
-    details: 无损去水印。让 AI 生成的瞬间回归纯净。
-  - icon: 🏷️
-    title: 标签页标题同步
-    details: 一眼即知。自动将标签页标题同步为对话标题。
+  - icon: ↔️
+    title: 对话宽度
+    details: 视野全开。自由调节对话框宽度，代码表格完整呈现。
   - icon: 💾
     title: 对话导出
     details: 数据归你。多种格式一键存档，知识不再流失。
+  - icon: 🍌
+    title: NanoBanana 水印去除
+    details: 无损去水印。让 AI 生成的瞬间回归纯净。
+  - icon: 📐
+    title: 公式复制
+    details: 一键复制 LaTeX 和 MathML (Word) 源码。
+  - icon: 🧜‍♀️
+    title: Mermaid 图表
+    details: 代码变图表。流程图、时序图、甘特图一键可视化。
+  - icon: 🏷️
+    title: 标签页标题同步
+    details: 一眼即知。自动将标签页标题同步为对话标题。
   - icon: 🗑️
     title: 批量删除对话
     details: 一键清理。选中多个对话，批量删除，告别繁琐。
+  - icon: ⚡️
+    title: 默认模型
+    details: 拒绝重复劳动。新建对话自动切换至你最爱的模型。
 ---
-
-<div class="vp-doc" style="margin-top: 4rem; text-align: center;">
-
-## 重新定义交互。
-
-我们不造扩展，我们重塑思考。
-用 Gemini Voyager，不再是人适应界面，而是界面顺应心流。
-
-<img src="/assets/teaser.png" alt="Gemini Voyager Interface" style="margin: 40px auto; border-radius: 12px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.3);" />
-
-<div style="display: flex; gap: 20px; justify-content: center; margin: 60px 0;">
-  <div style="flex: 1; max-width: 300px;">
-    <h3>时间轴</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">看见对话的脉搏。<br>让线性的时间，变成可触摸的空间。</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>文件夹</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">给思想安个家。<br>哪怕是一闪而过的念头，也值得被郑重对待。</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>掌控权</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">数据归你。<br>打破云端的围墙，让知识真正属于你。</p>
-  </div>
-</div>
-
-</div>
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">每一次下载，都是信任的刻度</h3>

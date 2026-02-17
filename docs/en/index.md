@@ -16,6 +16,18 @@ hero:
       text: Start the Journey
       link: ./guide/getting-started
 
+teaser:
+  title: 'It just works.'
+  description: 'We didn’t want to build another extension. We wanted to build a better way to think.<br>When you use Gemini Voyager, you stop fighting the interface and start flowing with it.'
+  image: '/assets/teaser.png'
+  features:
+    - title: 'Timeline'
+      details: 'Don’t scroll. Fly. Jump to any point in your conversation instantly.'
+    - title: 'Folders'
+      details: 'Finally, a file system for your AI. Native, intuitive, powerful.'
+    - title: 'Freedom'
+      details: 'Your data is yours. Export to JSON, Markdown, or PDF with one click.'
+
 features:
   - icon: 🧭
     title: Timeline
@@ -29,48 +41,31 @@ features:
   - icon: 💬
     title: Quote Reply
     details: Select to quote. Context-aware replies for efficient communication.
-  - icon: 🧜‍♀️
-    title: Mermaid Diagrams
-    details: Code to visuals. Flowcharts, sequence diagrams, Gantt charts rendered instantly.
-  - icon: 🍌
-    title: NanoBanana Watermark Removal
-    details: Lossless watermark removal. Keeping AI moments pure.
-  - icon: 🏷️
-    title: Tab Title Sync
-    details: Know at a glance. Auto-sync browser tab title with your chat.
+  - icon: ↔️
+    title: Chat Width
+    details: Go wide. Freely adjust the chat width for a better viewing experience.
   - icon: 💾
     title: Chat Export
     details: Data sovereignty. Archive in multiple formats so knowledge is never lost.
+  - icon: 🍌
+    title: NanoBanana Watermark Removal
+    details: Lossless watermark removal. Keeping AI moments pure.
+  - icon: 📐
+    title: Formula Copy
+    details: One-click copy for LaTeX and MathML (Word) source codes.
+  - icon: 🧜‍♀️
+    title: Mermaid Diagrams
+    details: Code to visuals. Flowcharts, sequence diagrams, Gantt charts rendered instantly.
+  - icon: 🏷️
+    title: Tab Title Sync
+    details: Know at a glance. Auto-sync browser tab title with your chat.
   - icon: 🗑️
     title: Batch Delete
     details: Clean up in bulk. Select multiple conversations and delete them all at once.
+  - icon: ⚡️
+    title: Default Model
+    details: Stop repeating yourself. Auto-switch to your preferred model on new chats.
 ---
-
-<div class="vp-doc" style="margin-top: 4rem; text-align: center;">
-
-## It just works.
-
-We didn't want to build another extension. We wanted to build a better way to think.
-When you use Gemini Voyager, you stop fighting the interface and start flowing with it.
-
-<img src="/assets/teaser.png" alt="Gemini Voyager Interface" style="margin: 40px auto; border-radius: 12px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.3);" />
-
-<div style="display: flex; gap: 20px; justify-content: center; margin: 60px 0;">
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Timeline</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Don't scroll. Fly. Jump to any point in your conversation instantly.</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Folders</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Finally, a file system for your AI. Native, intuitive, powerful.</p>
-  </div>
-  <div style="flex: 1; max-width: 300px;">
-    <h3>Freedom</h3>
-    <p style="font-size: 0.9em; opacity: 0.8;">Your data is yours. Export to JSON, Markdown, or PDF with one click.</p>
-  </div>
-</div>
-
-</div>
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Every install is a vote of trust</h3>

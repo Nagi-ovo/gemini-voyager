@@ -4,6 +4,7 @@ export interface Folder {
   parentId: string | null; // null for root-level folders
   isExpanded: boolean;
   pinned?: boolean; // Whether folder is pinned to the top
+  color?: string; // Optional folder color identifier
   createdAt: number;
   updatedAt: number;
 }
@@ -13,6 +14,8 @@ export interface ConversationReference {
   title: string; // The conversation title
   url: string; // The conversation URL
   addedAt: number; // When it was added to the folder
+  lastOpenedAt?: number; // Timestamp when the conversation was last opened
+  updatedAt?: number; // Timestamp when the reference was last updated (e.g., renamed)
   isGem?: boolean; // Whether this is a Gem conversation
   gemId?: string; // Gem identifier if applicable
   starred?: boolean; // Whether this conversation is starred in the folder

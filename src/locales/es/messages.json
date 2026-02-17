@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Mejora tu experiencia en Gemini con navegación por línea de tiempo, organización de carpetas, bóveda de prompts y exportación de chats.",
+    "message": "Mejora tu experiencia Gemini: línea de tiempo, carpetas, prompts y exportación.",
     "description": "Extension description"
   },
   "scrollMode": {
@@ -228,7 +228,7 @@
     "description": "Official docs link"
   },
   "exportChatJson": {
-    "message": "Exportar historial de chat",
+    "message": "Exportar historial de conversación",
     "description": "Tooltip for export button"
   },
   "folder_title": {
@@ -259,9 +259,49 @@
     "message": "Renombrar",
     "description": "Rename folder menu item"
   },
+  "folder_change_color": {
+    "message": "Cambiar color",
+    "description": "Change folder color menu item"
+  },
   "folder_delete": {
     "message": "Eliminar",
     "description": "Delete folder menu item"
+  },
+  "folder_color_default": {
+    "message": "Predeterminado",
+    "description": "Default folder color name"
+  },
+  "folder_color_red": {
+    "message": "Rojo",
+    "description": "Red folder color name"
+  },
+  "folder_color_orange": {
+    "message": "Naranja",
+    "description": "Orange folder color name"
+  },
+  "folder_color_yellow": {
+    "message": "Amarillo",
+    "description": "Yellow folder color name"
+  },
+  "folder_color_green": {
+    "message": "Verde",
+    "description": "Green folder color name"
+  },
+  "folder_color_blue": {
+    "message": "Azul",
+    "description": "Blue folder color name"
+  },
+  "folder_color_purple": {
+    "message": "Morado",
+    "description": "Purple folder color name"
+  },
+  "folder_color_pink": {
+    "message": "Rosa",
+    "description": "Pink folder color name"
+  },
+  "folder_color_custom": {
+    "message": "Personalizado",
+    "description": "Custom folder color name"
   },
   "folder_empty": {
     "message": "No hay carpetas",
@@ -336,8 +376,8 @@
     "description": "LaTeX format option"
   },
   "formulaCopyFormatUnicodeMath": {
-    "message": "UnicodeMath (Word)",
-    "description": "UnicodeMath format option for Word"
+    "message": "MathML (Word)",
+    "description": "Label for UnicodeMath formula copy format option"
   },
   "formulaCopyFormatHint": {
     "message": "Elige el formato al copiar fórmulas haciendo clic",
@@ -347,9 +387,25 @@
     "message": "LaTeX (Sin signo de dólar)",
     "description": "LaTeX format option without dollar signs"
   },
+  "folder_filter_current_user": {
+    "message": "Aislamiento de cuenta",
+    "description": "Show only conversations from the current Google account"
+  },
   "folder_export": {
     "message": "Exportar carpetas",
     "description": "Export folders button tooltip"
+  },
+  "folder_import_export": {
+    "message": "Importar/Exportar carpetas",
+    "description": "Combined import/export button tooltip"
+  },
+  "folder_cloud_upload": {
+    "message": "Subir a la nube",
+    "description": "Cloud upload button tooltip"
+  },
+  "folder_cloud_sync": {
+    "message": "Sincronizar desde la nube",
+    "description": "Cloud sync button tooltip"
   },
   "folder_import": {
     "message": "Importar carpetas",
@@ -408,8 +464,32 @@
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ Debido a la carga diferida de mensajes antiguos en Gemini, por favor usa la línea de tiempo para ir al primer mensaje de la conversación antes de exportar. De lo contrario, la exportación puede estar incompleta.",
-    "description": "Warning about lazy loading affecting export completeness"
+    "message": "⚠️ Tras hacer clic en exportar, el sistema saltará automáticamente al primer mensaje para cargar todo el contenido. Por favor, no realice ninguna acción; la exportación continuará automáticamente tras el salto.",
+    "description": "Warning about auto-jump and loading completeness"
+  },
+  "export_dialog_safari_cmdp_hint": {
+    "message": "Consejo para Safari: haz clic en 'Exportar' abajo, espera un momento, luego presiona ⌘P y elige 'Guardar como PDF'.",
+    "description": "Safari-specific hint for PDF export"
+  },
+  "export_toast_safari_pdf_ready": {
+    "message": "Ahora puedes pulsar Command + P para exportar el PDF.",
+    "description": "Safari-specific toast shown after PDF export is prepared"
+  },
+  "export_dialog_safari_markdown_hint": {
+    "message": "Aviso: debido a limitaciones de Safari, no se pueden extraer las imágenes del historial del chat. Para una exportación completa, usa la exportación en PDF.",
+    "description": "Warning about image references in Safari markdown export"
+  },
+  "export_format_json_description": {
+    "message": "Formato legible por máquina para desarrolladores",
+    "description": "Description for JSON export format"
+  },
+  "export_format_markdown_description": {
+    "message": "Formato de texto limpio y portátil (recomendado)",
+    "description": "Description for Markdown export format"
+  },
+  "export_format_pdf_description": {
+    "message": "Formato apto para impresión mediante Guardar como PDF",
+    "description": "Description for PDF export format"
   },
   "editInputWidth": {
     "message": "Ancho del campo de edición",
@@ -727,6 +807,10 @@
     "message": "Manual",
     "description": "Sync mode manual option"
   },
+  "syncServerPort": {
+    "message": "Puerto del servidor",
+    "description": "Port number for the sync server"
+  },
   "syncNow": {
     "message": "Sincronizar",
     "description": "Sync now button"
@@ -758,6 +842,22 @@
   "syncInProgress": {
     "message": "Sincronizando...",
     "description": "Sync in progress message"
+  },
+  "uploadInProgress": {
+    "message": "Uploading...",
+    "description": "Upload in progress message"
+  },
+  "uploadSuccess": {
+    "message": "✓ Uploaded successfully",
+    "description": "Upload success message"
+  },
+  "downloadInProgress": {
+    "message": "Downloading...",
+    "description": "Download in progress message"
+  },
+  "downloadMergeSuccess": {
+    "message": "✓ Downloaded and merged",
+    "description": "Download and merge success message"
   },
   "syncUpload": {
     "message": "Subir",
@@ -851,13 +951,25 @@
     "message": "Expandir",
     "description": "Expand children"
   },
+  "timelinePreviewSearch": {
+    "message": "Buscar...",
+    "description": "Timeline preview panel search placeholder"
+  },
+  "timelinePreviewNoResults": {
+    "message": "Sin resultados",
+    "description": "Timeline preview panel no search results"
+  },
+  "timelinePreviewNoMessages": {
+    "message": "Sin mensajes",
+    "description": "Timeline preview panel no messages"
+  },
   "quoteReply": {
     "message": "Responder cita",
     "description": "Quote reply button text"
   },
   "inputCollapseOptions": {
-    "message": "Contraer entrada",
-    "description": "Input collapse options section label"
+    "message": "Opciones de entrada",
+    "description": "Input options section label"
   },
   "enableInputCollapse": {
     "message": "Habilitar contracción de entrada",
@@ -870,6 +982,14 @@
   "inputCollapsePlaceholder": {
     "message": "Mensaje a Gemini",
     "description": "Placeholder text shown in collapsed input"
+  },
+  "ctrlEnterSend": {
+    "message": "Ctrl+Enter para enviar",
+    "description": "Ctrl+Enter to send toggle label"
+  },
+  "ctrlEnterSendHint": {
+    "message": "Presiona Ctrl+Enter para enviar mensajes, Enter para agregar una nueva línea",
+    "description": "Ctrl+Enter to send feature hint"
   },
   "batch_delete_confirm": {
     "message": "¿Estás seguro de que quieres eliminar {count} conversación(es)? Esta acción no se puede deshacer.",
@@ -926,5 +1046,209 @@
   "enableQuoteReplyHint": {
     "message": "Muestra un botón flotante para citar el texto seleccionado en las conversaciones",
     "description": "Quote reply feature hint"
+  },
+  "contextSync": {
+    "message": "Sincronización de contexto",
+    "description": "Context Sync title"
+  },
+  "contextSyncDescription": {
+    "message": "Sincroniza el contexto del chat con tu IDE local",
+    "description": "Context Sync description"
+  },
+  "syncToIDE": {
+    "message": "Sincronizar con IDE",
+    "description": "Sync to IDE button"
+  },
+  "ideOnline": {
+    "message": "IDE en línea",
+    "description": "IDE Online status"
+  },
+  "ideOffline": {
+    "message": "IDE fuera de línea",
+    "description": "IDE Offline status"
+  },
+  "syncing": {
+    "message": "Sincronizando...",
+    "description": "Syncing status"
+  },
+  "checkServer": {
+    "message": "Por favor, inicia el servidor AI Sync en VS Code",
+    "description": "Check server hint"
+  },
+  "capturing": {
+    "message": "Capturando diálogo...",
+    "description": "Capturing status"
+  },
+  "syncedSuccess": {
+    "message": "¡Sincronizado con éxito!",
+    "description": "Synced success message"
+  },
+  "downloadingOriginal": {
+    "message": "Descargando imagen original",
+    "description": "Status when downloading original image"
+  },
+  "downloadingOriginalLarge": {
+    "message": "Descargando imagen original (archivo grande)",
+    "description": "Status when downloading large original image"
+  },
+  "downloadLargeWarning": {
+    "message": "Advertencia de archivo grande",
+    "description": "Warning shown for large downloads"
+  },
+  "downloadProcessing": {
+    "message": "Procesando marca de agua",
+    "description": "Status when processing watermark removal"
+  },
+  "downloadSuccess": {
+    "message": "Descargando...",
+    "description": "Status when download starts"
+  },
+  "downloadError": {
+    "message": "Error",
+    "description": "Status prefix when download fails"
+  },
+  "recentsHide": {
+    "message": "Ocultar elementos recientes",
+    "description": "Tooltip para ocultar la sección de elementos recientes"
+  },
+  "recentsShow": {
+    "message": "Mostrar elementos recientes",
+    "description": "Tooltip para mostrar la sección de elementos recientes"
+  },
+  "gemsHide": {
+    "message": "Ocultar Gems",
+    "description": "Tooltip para ocultar la sección de la lista de Gems"
+  },
+  "gemsShow": {
+    "message": "Mostrar Gems",
+    "description": "Tooltip para mostrar la sección de la lista de Gems"
+  },
+  "setAsDefaultModel": {
+    "message": "Set as default model",
+    "description": "Tooltip for setting default model"
+  },
+  "cancelDefaultModel": {
+    "message": "Cancel default model",
+    "description": "Tooltip for cancelling default model"
+  },
+  "defaultModelSet": {
+    "message": "Default model set: $1",
+    "description": "Toast message when default model is set"
+  },
+  "defaultModelCleared": {
+    "message": "Default model cleared",
+    "description": "Toast message when default model is cleared"
+  },
+  "sidebarAutoHide": {
+    "message": "Ocultar barra lateral auto",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "sidebarAutoHideHint": {
+    "message": "Contrae automáticamente la barra lateral cuando el ratón sale, la expande cuando entra",
+    "description": "Auto-hide sidebar feature hint"
+  },
+  "folderSpacing": {
+    "message": "Espaciado de carpetas",
+    "description": "Folder spacing adjustment label"
+  },
+  "folderSpacingCompact": {
+    "message": "Compacto",
+    "description": "Compact folder spacing label"
+  },
+  "folderSpacingSpacious": {
+    "message": "Espacioso",
+    "description": "Spacious folder spacing label"
+  },
+  "folderTreeIndent": {
+    "message": "Sangría de subcarpetas",
+    "description": "Subfolder tree indentation adjustment label"
+  },
+  "folderTreeIndentCompact": {
+    "message": "Estrecha",
+    "description": "Narrow subfolder indentation label"
+  },
+  "folderTreeIndentSpacious": {
+    "message": "Ancha",
+    "description": "Wide subfolder indentation label"
+  },
+  "export_select_mode_select_all": {
+    "message": "Select all",
+    "description": "Selection mode select all toggle"
+  },
+  "export_select_mode_count": {
+    "message": "Selected {count}",
+    "description": "Selection mode selected message count"
+  },
+  "export_select_mode_toggle": {
+    "message": "Select message",
+    "description": "Selection mode per-message toggle tooltip"
+  },
+  "export_select_mode_select_below": {
+    "message": "Select messages below",
+    "description": "Selection mode top-left button to select messages below current line"
+  },
+  "export_select_mode_empty": {
+    "message": "Please select at least one message to export.",
+    "description": "Selection mode validation when nothing is selected"
+  },
+  "export_format_image_description": {
+    "message": "Imagen PNG única, ideal para compartir en móvil.",
+    "description": "Description for Image export format"
+  },
+  "export_image_progress": {
+    "message": "Generating image...",
+    "description": "Progress message while generating image export"
+  },
+  "deepResearchSaveReport": {
+    "message": "Save Report",
+    "description": "Deep Research save report button"
+  },
+  "deepResearchSaveReportTooltip": {
+    "message": "Export this research report",
+    "description": "Deep Research save report tooltip"
+  },
+  "export_fontsize_label": {
+    "message": "Tamaño de fuente",
+    "description": "Label for font size slider in export dialog"
+  },
+  "export_fontsize_preview": {
+    "message": "El veloz murciélago hindú comía feliz cardillo y kiwi.",
+    "description": "Preview text for font size slider in export dialog"
+  },
+  "export_error_generic": {
+    "message": "Error al exportar: {error}",
+    "description": "Mensaje genérico de error de exportación con detalle"
+  },
+  "export_error_refresh_retry": {
+    "message": "La exportación de imagen falló por problemas de red. Actualiza la página y vuelve a intentarlo.",
+    "description": "Sugerencia para reintentar cuando falla temporalmente la carga en exportación de imagen"
+  },
+  "export_md_include_source_confirm": {
+    "message": "El contenido exportado contiene imágenes de búsqueda web. ¿Incluir enlaces de origen de las imágenes en el Markdown?",
+    "description": "Confirm dialog when exporting markdown with web search images"
+  },
+  "deepResearch_exportedAt": {
+    "message": "Exportado el",
+    "description": "Etiqueta de marca de tiempo de exportación de Deep Research"
+  },
+  "deepResearch_totalPhases": {
+    "message": "Fases totales",
+    "description": "Etiqueta del total de fases de pensamiento de Deep Research"
+  },
+  "deepResearch_thinkingPhase": {
+    "message": "Fase de pensamiento",
+    "description": "Encabezado de fase de pensamiento de Deep Research"
+  },
+  "deepResearch_researchedWebsites": {
+    "message": "Sitios web investigados",
+    "description": "Encabezado de sección de sitios web investigados de Deep Research"
+  },
+  "snowEffect": {
+    "message": "Efecto de nieve",
+    "description": "Snow effect toggle label"
+  },
+  "snowEffectHint": {
+    "message": "Deja que nieve en la página para un ambiente invernal",
+    "description": "Snow effect feature hint"
   }
 }

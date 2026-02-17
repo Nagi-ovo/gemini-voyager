@@ -37,21 +37,23 @@
 
 <p align="center">
   <a href="https://voyager.nagi.fun/en">📖 Documentation</a> • 
-  <a href="./.github/README_ZH.md">中文说明</a> •
+  <a href="./.github/README_ZH.md">简体中文</a> •
+  <a href="./.github/README_ZH_TW.md">繁體中文</a> •
   <a href="./.github/README_JA.md">日本語</a> •
   <a href="./.github/README_FR.md">Français</a> •
-  <a href="./.github/README_ES.md">Español</a>
+  <a href="./.github/README_ES.md">Español</a> •
+  <a href="./.github/README_PT.md">Português</a> •
+  <a href="./.github/README_RU.md">Русский</a> •
+  <a href="./.github/README_AR.md">العربية</a> •
+  <a href="./.github/README_KO.md">한국어</a>
 </p>
 
 <p align="center">
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
-> [!IMPORTANT]
-> **Project Status: Low Maintenance.** Expect delays in response. PRs with tests are prioritized.
-
-> [!CAUTION]
-> **Author's Statement**: This project **DOES NOT accept** any form of sponsorship or advertising from LLM mirror sites, illegal products, or products involving user privacy leaks. Please do not contact for such inquiries.
+> [!NOTE]
+> If Gemini Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
 
 ---
 
@@ -63,266 +65,31 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
 
 ---
 
-## 📚 Table of Contents
-
-- [👋 Why Gemini Voyager?](#-why-gemini-voyager)
-- [📚 Table of Contents](#-table-of-contents)
-- [✨ Features](#-features)
-  - [📍 Timeline Navigation](#-timeline-navigation)
-  - [📂 Folder Organization](#-folder-organization)
-  - [💡 Prompt Vault](#-prompt-vault)
-  - [💬 Quote Reply](#-quote-reply)
-  - [📐 Formula Copy](#-formula-copy)
-  - [🧜‍♀️ Mermaid Diagram Rendering](#️-mermaid-diagram-rendering)
-  - [🍌 NanoBanana Option](#-nanobanana-option)
-  - [🔬 Deep Research Export](#-deep-research-export)
-  - [💾 Chat Export](#-chat-export)
-  - [📏 Adjustable Chat Width](#-adjustable-chat-width)
-  - [🫥 Input Collapse](#-input-collapse)
-  - [🏷️ Tab Title Sync](#️-tab-title-sync)
-  - [🗑️ Batch Delete](#️-batch-delete)
-- [📥 Installation](#-installation)
-- [☕ Support This Project](#-support-this-project)
-- [💬 Community](#-community)
-- [🤝 Contributing & Development](#-contributing--development)
-- [🌟 Credits](#-credits)
-
----
-
 ## ✨ Features
 
-<div align="center">
-  <img src="docs/public/assets/teaser.png" alt="teaser"/>
-</div>
-
-### 📍 Timeline Navigation
-
-**Never get lost in a long conversation again.**
-Visual nodes let you see the structure of your chat at a glance.
-
-- **Jump instantly**: Click a node to scroll right to that message.
-- **Peek content**: Hover to see what was said without scrolling.
-- **Mark what matters**: Long-press to star important messages (synced across tabs!).
-- **Node Levels (Experimental)**: Right-click a node to set its level (1-3) or collapse sub-nodes. Perfect for organizing branched or hierarchical conversations.
-
-### 📂 Folder Organization
-
-**Keep your ideas sorted.**
-Stop digging through a messy history list. Drag and drop your chats into folders that make sense to you.
-
-- **Two-level hierarchy**: Folders and subfolders for deep organization.
-- **Easy management**: Double-click to rename, long-press to multi-select.
-- **Syncs everywhere**: Import/export your structure to keep your devices in sync.
-
-<details>
-<summary>👀 See it in action</summary>
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <p><b>Gemini</b></p>
-      <img src="docs/public/assets/gemini-folders.png" alt="Gemini folders" style="max-width: 100%;"/>
-    </td>
-    <td align="center" width="50%">
-      <p><b>AI Studio</b></p>
-      <img src="docs/public/assets/aistudio-folders.png" alt="AI Studio folders" style="max-width: 100%;"/>
-    </td>
-  </tr>
-</table>
-
-</details>
-
-### 💡 Prompt Vault
-
-**Your personal prompt vault.**
-Don't rewrite the same instructions. Save your best prompts and use them anywhere.
-
-- **Tag & Search**: Find the right prompt in seconds.
-- **Universal Access**: Works on Gemini, AI Studio, and now **any website** you choose.
-
-<details>
-<summary>👀 View screenshot</summary>
-
-<div align="center">
-  <img src="docs/public/assets/gemini-prompt-manager.png" alt="Prompt manager" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-</details>
-
-### 💬 Quote Reply
-
-**Reply with context.**
-Select text in any message to see a floating quote button. Click it to insert the selected text as a quote into your reply box instantly.
-
-- **Context-aware**: Works for both user and model messages.
-- **Standard format**: Uses standard Markdown blockquote syntax (`> ...`).
-
-<details>
-<summary>👀 View screenshot</summary>
-
-<div align="center">
-  <img src="docs/public/assets/quote-reply.png" alt="Quote Reply" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 📐 Formula Copy
-
-**For the math wizards.**
-See a beautiful LaTeX formula? One click copies the source code. No more manual re-typing.
-
-<details>
-<summary>👀 View screenshot</summary>
-
-<div align="center">
-  <img src="docs/public/assets/gemini-math-copy.png" alt="Formula copy" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 🧜‍♀️ Mermaid Diagram Rendering
-
-**Visualize diagrams instantly.**
-When Gemini outputs Mermaid code (flowcharts, sequence diagrams, Gantt charts, etc.), Voyager automatically renders it as an interactive diagram.
-
-- **Toggle view**: Switch between rendered diagram and source code with one click.
-- **Fullscreen mode**: Click the diagram to open a fullscreen viewer with zoom and pan support.
-- **Auto-detection**: Supports all major Mermaid diagram types.
-
-<details>
-<summary>👀 View screenshot</summary>
-
-<div align="center">
-  <img src="docs/public/assets/mermaid-preview.png" alt="Mermaid diagram rendering" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 🍌 NanoBanana Option
-
-**Lossless watermark removal for Gemini images.**
-Automatically removes the visible "Gemini" watermark from AI-generated images (NanoBanana) using a reverse alpha blending algorithm.
-
-- **Zero quality loss**: Reconstructs original pixels for a perfectly clean image.
-- **Set and forget**: Just enable it once in settings and it works automatically.
-- **Direct Download**: Replaces the native download button with a 🍌 button that saves the clean, processed image directly.
-- **Privacy focus**: All processing happens 100% locally in your browser.
-
-> [!NOTE]
-> This feature is powered by the [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) algorithm by [journey-ad](https://github.com/journey-ad), which is based on the [original C++ implementation](https://github.com/allenk/GeminiWatermarkTool) by [allenk](https://github.com/allenk). 🧡
-
-<details>
-<summary>👀 View screenshot</summary>
-
-<div align="center">
-  <img src="docs/public/assets/nanobanana.png" alt="NanoBanana" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 🔬 Deep Research Export
-
-**Extract thinking content from Deep Research conversations.**
-One-click export to Markdown format preserving all thinking phases and research links. Click the share & export button in Deep Research conversations to download.
-
-### 💾 Chat Export
-
-**Your data, your format.**
-Take your conversations with you.
-
-- **Formats**: Structured JSON or print-friendly Markdown/PDF.
-- **Clean**: We strip out the UI noise so you get just the content.
-- **Complete**: Images are automatically packaged into an `assets/` folder.
-
-<details>
-<summary>👀 View export guide</summary>
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <p><b>Step 1: Click the export icon</b></p>
-      <img src="docs/public/assets/gemini-export-guide-1.png" alt="Export guide step 1" style="max-width: 100%;"/>
-    </td>
-    <td align="center" width="50%">
-      <p><b>Step 2: Choose export format</b></p>
-      <img src="docs/public/assets/gemini-export-guide-2.png" alt="Export guide step 2" style="max-width: 100%;"/>
-    </td>
-  </tr>
-</table>
-
-</details>
-
-### 📏 Adjustable Chat Width
-
-**Read comfortably.**
-Wide screen? Make use of it. Customize the chat container width (400px - 1400px) to suit your reading preference.
-
-> **Settings**: Click the extension icon for scroll mode, chat width, and timeline options.
-
-<details>
-<summary>View tutorial</summary>
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <p><b>How to open settings</b></p>
-      <img src="docs/public/assets/gemini-open-settings-guide.png" alt="Open settings guide" style="max-width: 100%;"/>
-    </td>
-    <td align="center" width="50%">
-      <p><b>Chat width adjustment</b></p>
-      <img src="docs/public/assets/gemini-chatwidth.png" alt="Chat width adjustment" style="max-width: 100%;"/>
-    </td>
-  </tr>
-</table>
-
-</details>
-
-### 🫥 Input Collapse
-
-**More room to read.**
-The input area auto-collapses when empty. Click to expand and start typing.
-
-<details>
-<summary>👀 View screenshot</summary>
-
-<div align="center">
-  <img src="docs/public/assets/hide-input-area.png" alt="Input collapse" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 🏷️ Tab Title Sync
-
-**Know at a glance.**
-Automatically syncs the browser tab title with the current Gemini chat title. No more "Gemini" on every tab.
-
-<details>
-<summary>👀 View screenshot</summary>
-
-<div align="center">
-  <img src="docs/public/assets/tab-title.png" alt="Tab Title Sync" style="max-width: 100%;"/>
-</div>
-
-</details>
-
-### 🗑️ Batch Delete
-
-**Clean up in bulk.**
-Select multiple conversations and delete them all at once. No more deleting one by one.
-
-- **Multi-select**: Long-press to enter multi-select mode, then check the conversations you want to delete.
-- **One-click delete**: Delete all selected conversations with a single click.
-
-<details>
-<summary>👀 View screenshot</summary>
-
-<div align="center">
-  <img src="docs/public/assets/batch-delete.png" alt="Batch Delete" style="max-width: 100%;"/>
-</div>
-
-</details>
+### 🌌 Core (Gemini & AI Studio)
+
+- **📂 [Folder Organization](https://voyager.nagi.fun/en/guide/folders)**: Organize chats into a two-level folder hierarchy with drag-and-drop support.
+  - **Gemini**: Supports **Account Isolation Mode** and **Custom Folder Colors**.
+- **💡 [Prompt Vault](https://voyager.nagi.fun/en/guide/prompts)**: Save and reuse prompts across Gemini, AI Studio, and [custom websites](https://voyager.nagi.fun/en/guide/custom-websites).
+- **☁️ [Cloud Sync](https://voyager.nagi.fun/en/guide/cloud-sync)**: Sync folders and prompts to Google Drive.
+- **📐 Formula Copy**: One-click copy for LaTeX and MathML (Word) source codes.
+
+### ✨ Gemini Exclusive
+
+- **📍 [Timeline Navigation](https://voyager.nagi.fun/en/guide/timeline)**: Visual nodes to jump between messages, star key moments, and manage conversation branches.
+- **💾 [Chat Export](https://voyager.nagi.fun/en/guide/export)**: Export conversations to JSON, Markdown, or PDF with images included.
+- **🧜‍♀️ [Mermaid Rendering](https://voyager.nagi.fun/en/guide/mermaid)**: Auto-render flowcharts, sequence diagrams, and other Mermaid charts.
+- **📝 [Markdown Rendering Fix](https://voyager.nagi.fun/en/guide/markdown-fix)**: Automatically fix broken bold syntax caused by Gemini's injected HTML elements.
+- **🍌 [NanoBanana](https://voyager.nagi.fun/en/guide/nanobanana)**: Lossless watermark removal for Gemini-generated images.
+- **🔬 [Deep Research](https://voyager.nagi.fun/en/guide/deep-research)**: Extract thinking processes and research links from Deep Research sessions.
+- **🛠️ Power Tools**:
+  - **[Batch Delete](https://voyager.nagi.fun/en/guide/batch-delete)**: Bulk delete conversations.
+  - **[Quote Reply](https://voyager.nagi.fun/en/guide/quote-reply)**: Reply with context by selecting text.
+  - **[Tab Title Sync](https://voyager.nagi.fun/en/guide/tab-title)**: Auto-sync browser tab titles.
+  - **[Input Collapse](https://voyager.nagi.fun/en/guide/input-collapse)**: Auto-expandable input area for more reading space.
+  - **[Default Model](https://voyager.nagi.fun/en/guide/default-model)**: Set your favorite model as default.
+  - **[Hide Recent Items](https://voyager.nagi.fun/en/guide/recents-hider)**: Hide "Recent" list in the sidebar to reduce distraction.
 
 ---
 
@@ -330,10 +97,8 @@ Select multiple conversations and delete them all at once. No more deleting one 
 
 > ⚠️ Note: Prompt Manager is the only feature that supports Gemini for Enterprise.
 
-### 🌐 From Extension Stores (Recommended)
-
 <div align="center">
-  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol" target="_blank">
+  <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=en" target="_blank">
     <img src="https://img.shields.io/badge/Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store" height="36">
   </a>
   &nbsp;&nbsp;
@@ -344,31 +109,19 @@ Select multiple conversations and delete them all at once. No more deleting one 
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Nagi-ovo/gemini-voyager/releases/latest/" target="_blank">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari Download" height="36">
+  </a>
 </div>
 
 <p align="center">
   <sub><b>Chrome Web Store</b> also works on Edge, Opera, Brave, Vivaldi, Arc, and other Chromium browsers.</sub>
 </p>
 
-> **Store Status:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari (coming soon)
+> **Store Status:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
-<details>
-<summary>📦 Manual Installation</summary>
-
-**Chromium browsers (Chrome, Edge, Brave, etc.):**
-
-1. Download `gemini-voyager-chrome-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
-2. Unzip and go to `chrome://extensions` → Enable Developer mode → Load unpacked
-
-**Firefox:**
-Download `gemini-voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) and drag into `about:addons`.
-
-> 💡 XPI is Mozilla-signed for permanent installation.
-
-**Safari:**
-Download `gemini-voyager-safari-vX.Y.Z.zip` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases). See [Safari installation guide](.github/docs/safari/INSTALLATION.md) for build steps.
-
-</details>
+For **manual installation** or **development builds**, please refer to the [Installation Guide](https://voyager.nagi.fun/en/guide/installation).
 
 ---
 
@@ -501,5 +254,5 @@ Thank you for helping make Gemini Voyager better! ❤️
    </picture>
   </a>
   <p>Made with ❤️ by Jesse Zhang</p>
-  <sub>MIT License © 2025</sub>
+  <sub>GPLv3 License © 2026</sub>
 </div>

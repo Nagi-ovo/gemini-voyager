@@ -1,6 +1,10 @@
 # インストール
 
-道はいくつかあります。お好きな方法を選んでください。
+::: info ニュース
+🍎 **Safari ネイティブ拡張機能が登場！** 完全無料でワンクリックインストールが可能です。
+:::
+
+方法を選択してください。
 
 > ⚠️ プロンプトマネージャーは Gemini Enterprise 版で唯一対応している機能です。
 
@@ -10,7 +14,7 @@
 
 **Chrome / Brave / Opera / Vivaldi：**
 
-[<img src="https://img.shields.io/badge/Chrome_ウェブストア-ダウンロード-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome ウェブストアからインストール" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol)
+[<img src="https://img.shields.io/badge/Chrome_ウェブストア-ダウンロード-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome ウェブストアからインストール" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ja)
 
 **Microsoft Edge：**
 
@@ -42,14 +46,16 @@
 
 ## 3. Safari (macOS)
 
-1. [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) から `gemini-voyager-safari-vX.Y.Z.zip` をダウンロードします。
-2. 解凍します。
-3. ターミナルで以下のコマンドを実行します（Xcode が必要です）：
-   ```bash
-   xcrun safari-web-extension-converter dist_safari --macos-only --app-name "Gemini Voyager"
-   ```
-4. Xcode で実行します。
-5. Safari の設定 > 拡張機能で有効にします。
+Safari が直接配布に対応しました！署名済みアプリをダウンロードできます：
+
+1. <SafariDownloadLink>最新の Safari バージョン (.dmg)</SafariDownloadLink>をダウンロードします。
+2. ダブルクリックして開き、指示に従ってインストールします。
+3. ダブルクリックしてアプリを起動します。
+4. **Safari の設定 > 拡張機能**で有効にします。
+
+> 💡 Safari ビルドが直接署名配布に対応しました。Xcode 変換は不要です！
+>
+> ⚠️ **制限事項**: Safari の特性上、(a) 透かしの削除 (b) 画像のエクスポート（PDF を推奨）はサポートされていません。
 
 ---
 

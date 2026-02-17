@@ -31,6 +31,24 @@ export function isSafari(): boolean {
 }
 
 /**
+ * Check if update reminders should be shown on Safari
+ * This is controlled by the ENABLE_SAFARI_UPDATE_CHECK environment variable at build time
+ *
+ * @returns true if Safari update reminders are enabled
+ */
+export function shouldShowSafariUpdateReminder(): boolean {
+  if (!isSafari()) return false;
+
+  // Check build-time flag (injected via vite config)
+  // Default: false (disabled)
+  try {
+    return import.meta.env.ENABLE_SAFARI_UPDATE_CHECK === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Get browser name for debugging
  * Uses user agent detection for reliability
  */

@@ -260,7 +260,17 @@ class StarredMessagesManager {
       const exists = data.messages[message.conversationId].some((m) => m.turnId === message.turnId);
 
       if (!exists) {
-        data.messages[message.conversationId].push(message);
+        // Truncate content to save storage space
+        // Popup is ~360px wide with line-clamp-2, showing ~50-60 chars max
+        const MAX_CONTENT_LENGTH = 60;
+        const truncatedMessage: StarredMessage = {
+          ...message,
+          content:
+            message.content.length > MAX_CONTENT_LENGTH
+              ? message.content.slice(0, MAX_CONTENT_LENGTH) + '...'
+              : message.content,
+        };
+        data.messages[message.conversationId].push(truncatedMessage);
         await this.saveToStorage(data);
         return true;
       }
@@ -309,7 +319,7 @@ class StarredMessagesManager {
 
 const starredMessagesManager = new StarredMessagesManager();
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
       // Handle starred messages operations
@@ -366,26 +376,35 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             return;
           }
           case 'gv.sync.upload': {
-            const { folders, prompts, interactive } = message.payload as {
+            const { folders, prompts, interactive, platform } = message.payload as {
               folders: FolderData;
               prompts: PromptItem[];
               interactive?: boolean;
+              platform?: 'gemini' | 'aistudio';
             };
+            // Also get starred messages from local storage (only for Gemini platform)
+            const starredData =
+              platform !== 'aistudio' ? await starredMessagesManager.getAllStarredMessages() : null;
             const success = await googleDriveSyncService.upload(
               folders,
               prompts,
+              starredData,
               interactive !== false,
+              platform || 'gemini',
             );
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;
           }
           case 'gv.sync.download': {
             const interactive = message.payload?.interactive !== false;
-            const data = await googleDriveSyncService.download(interactive);
+            const platform = (message.payload?.platform as 'gemini' | 'aistudio') || 'gemini';
+            const data = await googleDriveSyncService.download(interactive, platform);
             // NOTE: We intentionally do NOT save to storage here.
             // The caller (Popup) is responsible for merging with local data and saving.
             // This prevents data loss from overwriting local changes.
-            console.log('[Background] Downloaded data, returning to caller for merge');
+            console.log(
+              `[Background] Downloaded data for ${platform}, returning to caller for merge`,
+            );
             sendResponse({
               ok: true,
               data,
@@ -421,6 +440,85 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return;
       }
 
+      // Handle image fetch via page context (for Firefox/Safari cookie partitioning)
+      // Uses chrome.scripting.executeScript in MAIN world so the page's own fetch is used,
+      // which has access to the correct Google authentication cookies.
+      if (message?.type === 'gv.fetchImageViaPage') {
+        const url = String(message.url || '');
+        const tabId = sender?.tab?.id;
+        if (!tabId || !/^https?:\/\//i.test(url)) {
+          sendResponse({ ok: false, error: 'invalid' });
+          return;
+        }
+        if (!chrome.scripting?.executeScript) {
+          sendResponse({ ok: false, error: 'scripting_api_unavailable' });
+          return;
+        }
+        try {
+          const results = await chrome.scripting.executeScript({
+            target: { tabId },
+            world: 'MAIN' as chrome.scripting.ExecutionWorld,
+            func: (imageUrl: string) => {
+              return fetch(imageUrl, { credentials: 'include' })
+                .then((resp) => {
+                  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                  return resp.blob();
+                })
+                .catch(() => {
+                  // Retry without credentials for wildcard CORS
+                  return fetch(imageUrl, { credentials: 'omit' }).then((resp) => {
+                    if (!resp.ok) return null;
+                    return resp.blob();
+                  });
+                })
+                .then((blob) => {
+                  if (!blob) return null;
+                  return new Promise<{
+                    contentType: string;
+                    base64: string;
+                  } | null>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const dataUrl = String(reader.result || '');
+                      const commaIdx = dataUrl.indexOf(',');
+                      if (commaIdx < 0) {
+                        resolve(null);
+                        return;
+                      }
+                      resolve({
+                        contentType: blob.type || 'application/octet-stream',
+                        base64: dataUrl.substring(commaIdx + 1),
+                      });
+                    };
+                    reader.onerror = () => resolve(null);
+                    reader.readAsDataURL(blob);
+                  });
+                })
+                .catch(() => null);
+            },
+            args: [url],
+          });
+          const result = results?.[0]?.result as {
+            contentType: string;
+            base64: string;
+          } | null;
+          if (result?.base64) {
+            sendResponse({
+              ok: true,
+              contentType: result.contentType,
+              base64: result.base64,
+              data: `data:${result.contentType};base64,${result.base64}`,
+            });
+          } else {
+            sendResponse({ ok: false, error: 'page_fetch_failed' });
+          }
+        } catch (e: unknown) {
+          const errMsg = e instanceof Error ? e.message : String(e);
+          sendResponse({ ok: false, error: errMsg });
+        }
+        return;
+      }
+
       // Handle image fetch
       if (!message || message.type !== 'gv.fetchImage') return;
       const url = String(message.url || '');
@@ -428,16 +526,64 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ ok: false, error: 'invalid_url' });
         return;
       }
-      const resp = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
-      if (!resp.ok) {
-        sendResponse({ ok: false, status: resp.status });
-        return;
-      }
-      const contentType = resp.headers.get('Content-Type') || '';
-      const ab = await resp.arrayBuffer();
-      // Convert to base64
-      const b64 = arrayBufferToBase64(ab);
-      sendResponse({ ok: true, contentType, base64: b64 });
+
+      fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        redirect: 'follow',
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.blob();
+        })
+        .then((blob) => {
+          // In Service Worker, FileReader is not available.
+          // We use Response.arrayBuffer() and then convert to base64,
+          // or use a helper to create a Data URL.
+          return blob.arrayBuffer().then((ab) => {
+            const b64 = arrayBufferToBase64(ab);
+            const contentType = blob.type || 'image/png';
+            const dataUrl = `data:${contentType};base64,${b64}`;
+            sendResponse({
+              ok: true,
+              data: dataUrl,
+              contentType,
+              base64: b64,
+            });
+          });
+        })
+        .catch((err) => {
+          // Retry without credentials for external domains (e.g., gstatic.com)
+          // Some servers return Access-Control-Allow-Origin: * which is
+          // incompatible with credentials: 'include'
+          return fetch(url, {
+            method: 'GET',
+            credentials: 'omit',
+            redirect: 'follow',
+          })
+            .then((response) => {
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              return response.blob();
+            })
+            .then((blob) => {
+              return blob.arrayBuffer().then((ab) => {
+                const b64 = arrayBufferToBase64(ab);
+                const contentType = blob.type || 'image/png';
+                const dataUrl = `data:${contentType};base64,${b64}`;
+                sendResponse({
+                  ok: true,
+                  data: dataUrl,
+                  contentType,
+                  base64: b64,
+                });
+              });
+            })
+            .catch((retryErr) => {
+              console.error('[Background] Fetch image failed (both modes):', retryErr);
+              sendResponse({ ok: false, error: retryErr.message });
+            });
+        });
+      return;
     } catch (e: any) {
       try {
         sendResponse({ ok: false, error: String(e?.message || e) });

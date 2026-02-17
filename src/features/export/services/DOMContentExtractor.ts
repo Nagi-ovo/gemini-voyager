@@ -22,6 +22,25 @@ export interface ExtractedTurn {
  * Extracts structured content from Gemini's DOM
  * Preserves formatting including LaTeX formulas, code blocks, tables, etc.
  */
+
+/**
+ * querySelector variant that skips elements nested inside model-thoughts / thoughts-container.
+ * When the user expands Gemini's "thinking" section, a second `message-content` element
+ * appears *before* the real response in DOM order.  A plain `querySelector` would match
+ * the thinking panel first, causing exports to grab the wrong content.
+ */
+function queryOutsideThoughts<T extends Element = Element>(
+  root: Element,
+  selector: string,
+): T | null {
+  const candidates = root.querySelectorAll<T>(selector);
+  for (const el of Array.from(candidates)) {
+    if (!el.closest('model-thoughts, .thoughts-container, .thoughts-content')) {
+      return el;
+    }
+  }
+  return null;
+}
 export class DOMContentExtractor {
   private static DEBUG = false;
   /**
@@ -99,11 +118,14 @@ export class DOMContentExtractor {
     };
 
     // Find message-content first (contains main text and formulas)
-    let messageContent = element.querySelector('message-content');
+    // Use queryOutsideThoughts to avoid matching the message-content inside
+    // the expanded thinking/reasoning panel.
+    let messageContent = queryOutsideThoughts(element, 'message-content');
 
     if (!messageContent) {
       // Try markdown container
-      messageContent = element.querySelector(
+      messageContent = queryOutsideThoughts(
+        element,
         '.markdown-main-panel, ' + '.markdown, ' + '.model-response-text',
       );
     }
@@ -241,7 +263,7 @@ export class DOMContentExtractor {
     if (!combinedText) {
       const fallbackContainer =
         (messageContent as HTMLElement) ||
-        (element.querySelector('message-content') as HTMLElement | null) ||
+        queryOutsideThoughts<HTMLElement>(element, 'message-content') ||
         (element as HTMLElement);
       try {
         const plain =
@@ -289,6 +311,23 @@ export class DOMContentExtractor {
       // Skip certain elements
       if (this.shouldSkipElement(child)) {
         if (this.DEBUG) console.log('[DOMContentExtractor] Skipping element:', tagName);
+        continue;
+      }
+
+      // Images
+      if (tagName === 'img') {
+        const img = child as HTMLImageElement;
+        const src = img.getAttribute('src') || img.src || '';
+        if (src && src !== 'about:blank') {
+          flags.hasImages = true;
+          const altRaw = img.getAttribute('alt') || '';
+          const alt = altRaw.trim() || 'Image';
+          htmlParts.push(
+            `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
+          );
+          const mdAlt = alt.replace(/\]/g, '\\]');
+          textParts.push(`\n![${mdAlt}](${src})\n`);
+        }
         continue;
       }
 
@@ -343,6 +382,86 @@ export class DOMContentExtractor {
         continue;
       }
 
+      // Search result images (web images found by Gemini)
+      // Structure: <div.attachment-container.search-images> > <response-element> >
+      //   <single-image> > <div.image-container[data-full-size-image-uri]> > ... > <img>
+      {
+        const searchImageContainers = child.querySelectorAll(
+          '.attachment-container.search-images .image-container[data-full-size-image-uri]',
+        );
+        if (searchImageContainers.length > 0) {
+          for (const container of Array.from(searchImageContainers)) {
+            const fullSizeUri = container.getAttribute('data-full-size-image-uri') || '';
+            const imgEl = container.querySelector('img.image') as HTMLImageElement | null;
+            if (!imgEl) continue;
+            // Use the Google-cached thumbnail (gstatic.com) as the downloadable src.
+            // The full-size URI points to arbitrary third-party domains that are blocked
+            // by both CORS and Gemini's CSP, so it's only usable as an attribution link.
+            const src = imgEl.src || '';
+            if (!src || src === 'about:blank') continue;
+            const alt = imgEl.alt || 'Search result image';
+            const sourceLink = container.querySelector('a.source') as HTMLAnchorElement | null;
+            const sourceUrl = sourceLink?.href || '';
+            const sourceLabel =
+              container.querySelector('.source .label')?.textContent?.trim() || '';
+
+            flags.hasImages = true;
+            htmlParts.push(
+              `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
+            );
+            const mdAlt = alt.replace(/\]/g, '\\]');
+            // Link to the full-size image or source when available
+            const linkUrl = fullSizeUri || sourceUrl;
+            const linkLabel = sourceLabel || (sourceUrl ? sourceUrl : '');
+            if (linkUrl) {
+              textParts.push(
+                `\n![${mdAlt}](${src})\n*Source: [${linkLabel || linkUrl}](${linkUrl})*\n`,
+              );
+            } else {
+              textParts.push(`\n![${mdAlt}](${src})\n`);
+            }
+          }
+          if (this.DEBUG)
+            console.log(
+              '[DOMContentExtractor] Extracted',
+              searchImageContainers.length,
+              'search result images',
+            );
+          continue;
+        }
+      }
+
+      // Generated images (model-generated images in assistant responses)
+      // These are typically wrapped in: <p> > <div.attachment-container.generated-images> >
+      //   <response-element> > <generated-image> > <single-image> > ... > <img>
+      // Also handle standalone generated-image / single-image custom elements
+      {
+        const generatedImgs = child.querySelectorAll(
+          'generated-image img, single-image img, .attachment-container.generated-images img',
+        );
+        if (generatedImgs.length > 0) {
+          for (const img of Array.from(generatedImgs)) {
+            const imgEl = img as HTMLImageElement;
+            const src = imgEl.src || imgEl.getAttribute('src') || '';
+            if (!src || src === 'about:blank') continue;
+            const alt = imgEl.alt || 'Generated image';
+            flags.hasImages = true;
+            htmlParts.push(
+              `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
+            );
+            const mdAlt = alt.replace(/\]/g, '\\]');
+            textParts.push(`\n![${mdAlt}](${src})\n`);
+          }
+          if (this.DEBUG)
+            console.log(
+              '[DOMContentExtractor] Extracted',
+              generatedImgs.length,
+              'generated images',
+            );
+          continue;
+        }
+      }
+
       // Horizontal rule
       if (tagName === 'hr') {
         htmlParts.push('<hr>');
@@ -382,6 +501,8 @@ export class DOMContentExtractor {
         tagName === 'div' ||
         tagName === 'section' ||
         tagName === 'article' ||
+        tagName === 'generated-image' ||
+        tagName === 'single-image' ||
         child.classList.contains('horizontal-scroll-wrapper') ||
         child.classList.contains('table-block-component')
       ) {
@@ -407,7 +528,18 @@ export class DOMContentExtractor {
    */
   private static shouldSkipElement(element: Element): boolean {
     // Skip buttons, tooltips, and action elements
-    if (element.tagName === 'BUTTON' || element.tagName === 'MAT-ICON') {
+    if (
+      element.tagName === 'BUTTON' ||
+      element.tagName === 'MAT-ICON' ||
+      // Gemini inline sources/citation chips (appear as link icons in export/print)
+      element.tagName === 'SOURCES-CAROUSEL-INLINE' ||
+      element.tagName === 'SOURCE-INLINE-CHIPS' ||
+      element.tagName === 'SOURCE-INLINE-CHIP' ||
+      // Generated image overlay controls (share, copy, download buttons)
+      element.tagName === 'SHARE-BUTTON' ||
+      element.tagName === 'COPY-BUTTON' ||
+      element.tagName === 'DOWNLOAD-GENERATED-IMAGE-BUTTON'
+    ) {
       return true;
     }
 
@@ -422,7 +554,14 @@ export class DOMContentExtractor {
       element.classList.contains('action-button') ||
       element.classList.contains('table-footer') ||
       element.classList.contains('export-sheets-button') ||
-      element.classList.contains('thoughts-header')
+      element.classList.contains('thoughts-header') ||
+      // Gemini inline source/citation container
+      element.classList.contains('source-inline-chip-container') ||
+      // NanoBanana watermark remover indicator (🍌 emoji)
+      element.classList.contains('nanobanana-indicator') ||
+      // Generated image overlay controls (share/copy/download buttons)
+      element.classList.contains('generated-image-controls') ||
+      element.classList.contains('hide-from-message-actions')
     ) {
       return true;
     }
@@ -452,6 +591,10 @@ export class DOMContentExtractor {
         }
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         const el = node as Element;
+
+        if (this.shouldSkipElement(el)) {
+          return;
+        }
 
         // Inline formula - check both class and data-math attribute
         if (el.classList.contains('math-inline') || el.hasAttribute('data-math')) {
@@ -492,6 +635,21 @@ export class DOMContentExtractor {
           const text = this.normalizeText(el.textContent || '');
           htmlParts.push(`<code>${this.escapeHtml(text)}</code>`);
           textParts.push(`\`${text}\``);
+          return;
+        }
+
+        // Inline images
+        if (el.tagName === 'IMG') {
+          const imgEl = el as HTMLImageElement;
+          const src = imgEl.src || imgEl.getAttribute('src') || '';
+          if (src && src !== 'about:blank') {
+            const alt = imgEl.alt || 'Image';
+            htmlParts.push(
+              `<img src="${this.escapeHtmlAttribute(src)}" alt="${this.escapeHtmlAttribute(alt)}" />`,
+            );
+            const mdAlt = alt.replace(/\]/g, '\\]');
+            textParts.push(`![${mdAlt}](${src})`);
+          }
           return;
         }
 
@@ -584,8 +742,7 @@ export class DOMContentExtractor {
 
     // Extract HTML (clean version)
     const cleanTable = table.cloneNode(true) as HTMLElement;
-    // Remove any action buttons
-    cleanTable.querySelectorAll('button, mat-icon').forEach((el) => el.remove());
+    this.stripExportArtifacts(cleanTable);
 
     // Convert to Markdown
     const rows: string[][] = [];
@@ -683,10 +840,43 @@ export class DOMContentExtractor {
       });
     });
 
+    const cleanList = element.cloneNode(true) as HTMLElement;
+    this.stripExportArtifacts(cleanList);
+
     return {
-      html: element.outerHTML,
+      html: cleanList.outerHTML,
       text: textLines.join('\n'),
     };
+  }
+
+  /**
+   * Strip non-content UI artifacts from exported HTML fragments.
+   * Best-effort: safe to call multiple times.
+   */
+  private static stripExportArtifacts(root: HTMLElement): void {
+    const selector = [
+      'button',
+      'mat-icon',
+      'model-thoughts',
+      'sources-carousel-inline',
+      'source-inline-chips',
+      'source-inline-chip',
+      'share-button',
+      'copy-button',
+      'download-generated-image-button',
+      '.model-thoughts',
+      '.copy-button',
+      '.action-button',
+      '.table-footer',
+      '.export-sheets-button',
+      '.thoughts-header',
+      '.source-inline-chip-container',
+      '.nanobanana-indicator',
+      '.generated-image-controls',
+      '.hide-from-message-actions',
+    ].join(',');
+
+    root.querySelectorAll(selector).forEach((el) => el.remove());
   }
 
   /**
@@ -703,5 +893,17 @@ export class DOMContentExtractor {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Escape HTML for attribute context.
+   */
+  private static escapeHtmlAttribute(text: string): string {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/'/g, '&#39;');
   }
 }
