@@ -71,9 +71,6 @@ export class MarkdownFormatter {
   }
 
   /**
-   * Async formatter that tries to inline images as data URLs.
-
-  /**
    * Format conversation as Markdown
    */
   static format(turns: ChatTurn[], metadata: ConversationMetadata): string {
