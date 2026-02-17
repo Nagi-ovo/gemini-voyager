@@ -28,18 +28,24 @@
   /**
    * Pattern to match Gemini download URLs
    * Only matches rd-gg-dl paths (dl = download) to avoid intercepting normal image display
-   * User-uploaded image previews use rd-gg/ path without -dl suffix
+   * Matches both googleusercontent.com and ggpht.com domains
    */
-  const GEMINI_DOWNLOAD_PATTERN = /^https:\/\/lh3\.googleusercontent\.com\/rd-gg-dl\//;
+  const GEMINI_DOWNLOAD_PATTERN =
+    /https:\/\/[^/]+(\.googleusercontent\.com|\.ggpht\.com)\/rd-gg-dl\//;
   const CSP_BLOCKED_TELEMETRY_PATTERNS = [/^https:\/\/www\.googletagmanager\.com\/td\?/i];
+  const GOOGLE_SIZE_PATTERN = /=[swh]\d+[^?#]*/;
 
   /**
    * Replace size parameter with =s0 for original size
    * Gemini uses =sNNN format for resized images, =s0 means original
    */
   const replaceWithOriginalSize = (src) => {
-    // Match =sNNN and replace with =s0 (but keep the rest of the URL)
-    return src.replace(/=s\d+(?=[-?#]|$)/, '=s0');
+    // Match common Google size patterns and replace with =s0 (but keep the rest of the URL)
+    if (GOOGLE_SIZE_PATTERN.test(src)) {
+      return src.replace(GOOGLE_SIZE_PATTERN, '=s0');
+    }
+    // Fallback: if no size param but it's a google image, append =s0
+    return src.includes('=') ? src + '-s0' : src + '=s0';
   };
 
   const isKnownCspBlockedTelemetryRequest = (requestUrl) =>
