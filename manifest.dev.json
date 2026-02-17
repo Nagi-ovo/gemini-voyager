@@ -42,8 +42,7 @@
     "https://accounts.google.com/*",
     "https://*.googleusercontent.com/*",
     "https://lh3.google.com/*",
-    "https://*.ggpht.com/*",
-    "http://127.0.0.1/*"
+    "https://*.ggpht.com/*"
   ],
   "optional_host_permissions": ["https://*/*", "http://*/*"],
   "background": {
