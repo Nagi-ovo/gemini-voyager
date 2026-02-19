@@ -17,6 +17,7 @@ export default [
       'gemini-voyager-formal/**',
       '.github/sponsors/**',
       'public/**',
+      'safari/Models/**',
     ],
   },
 
