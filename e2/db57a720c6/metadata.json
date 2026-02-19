@@ -3,7 +3,7 @@
   "checkpoint_id": "e2db57a720c6",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "eslint.config.js"
   ],
@@ -14,13 +14,20 @@
       "context": "/e2/db57a720c6/0/context.md",
       "content_hash": "/e2/db57a720c6/0/content_hash.txt",
       "prompt": "/e2/db57a720c6/0/prompt.txt"
+    },
+    {
+      "metadata": "/e2/db57a720c6/1/metadata.json",
+      "transcript": "/e2/db57a720c6/1/full.jsonl",
+      "context": "/e2/db57a720c6/1/context.md",
+      "content_hash": "/e2/db57a720c6/1/content_hash.txt",
+      "prompt": "/e2/db57a720c6/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 10,
-    "cache_creation_tokens": 16699,
-    "cache_read_tokens": 171233,
-    "output_tokens": 3257,
-    "api_call_count": 6
+    "input_tokens": 3758,
+    "cache_creation_tokens": 41829,
+    "cache_read_tokens": 463245,
+    "output_tokens": 3876,
+    "api_call_count": 15
   }
 }
