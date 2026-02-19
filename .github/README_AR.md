@@ -54,7 +54,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
-    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" height="320">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
   </a>
   <br>
   <b>🎉 نوصي به بشدة من قبل كبار المؤثرين في مجال التكنولوجيا والمجتمع!</b>
@@ -73,7 +73,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
-    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" height="320">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
   </a>
   <br>
   <i>خلال المشكلة التي حدثت في 18 فبراير حيث تسبب تطبيق Google Gemini في جعل المحادثات التاريخية لبعض المستخدمين غير قابلة للوصول، تمكن مستخدمو Voyager من الاستمرار في رؤية محادثاتهم المحفوظة في مجلداتهم.</i>

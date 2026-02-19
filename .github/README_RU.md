@@ -54,7 +54,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
-    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" height="320">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
   </a>
   <br>
   <b>🎉 Настоятельно рекомендуется ведущими технологическими лидерами мнений!</b>
@@ -73,7 +73,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
-    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" height="320">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
   </a>
   <br>
   <i>Во время сбоя 18 февраля, когда приложение Google Gemini сделало исторические разговоры некоторых пользователей недоступными, пользователи Voyager по-прежнему могли видеть свои сохраненные разговоры в своих папках.</i>

@@ -54,7 +54,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
-    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" height="320">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
   </a>
   <br>
   <b>🎉 トップテックKOLやコミュニティから強く推奨されています！</b>
@@ -73,7 +73,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
-    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" height="320">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
   </a>
   <br>
   <i>2月18日にGoogle Gemini Appが一部のユーザーの履歴会話にアクセスできなくなる問題を引き起こした際、Voyagerのユーザーは引き続きフォルダ内に保存された会話を見ることができました。</i>

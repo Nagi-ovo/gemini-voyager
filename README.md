@@ -54,7 +54,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
-    <img src="docs/public/assets/x-recommendation.png" alt="KOL Recommendation" height="320">
+    <img src="docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
   </a>
   <br>
   <b>🎉 Highly recommended by top tech KOLs and the community!</b>
@@ -73,7 +73,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
-    <img src="docs/public/assets/try-voyager.png" alt="Try Voyager" height="320">
+    <img src="docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
   </a>
   <br>
   <i>During the issue on February 18th where the Google Gemini App caused some users' historical conversations to become inaccessible, Voyager users were still able to see their saved conversations in their folders.</i>

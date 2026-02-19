@@ -54,7 +54,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
-    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" height="320">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
   </a>
   <br>
   <b>🎉 感謝知名科技圈大 V 與社區的強烈推薦！</b>
@@ -73,7 +73,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
-    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" height="320">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
   </a>
   <br>
   <i>在 2 月 18 號 Google Gemini App 導致部分用戶歷史對話無法訪問的問題中，Voyager 的用戶仍然能夠在其資料夾中看到被保存下來的對話。</i>

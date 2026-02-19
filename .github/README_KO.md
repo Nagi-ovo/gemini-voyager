@@ -54,7 +54,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
-    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" height="320">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
   </a>
   <br>
   <b>🎉 주요 기술 KOL 및 커뮤니티에서 적극 권장합니다!</b>
@@ -73,7 +73,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
-    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" height="320">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
   </a>
   <br>
   <i>2월 18일 Google Gemini 앱으로 인해 일부 사용자의 과거 대화에 접근할 수 없는 문제가 발생했을 때, Voyager 사용자는 여전히 폴더에 저장된 대화를 볼 수 있었습니다.</i>
