@@ -52,6 +52,14 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
+<p align="center">
+  <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" height="320">
+  </a>
+  <br>
+  <b>🎉 ¡Altamente recomendado por los principales influencers tecnológicos!</b>
+</p>
+
 > [!NOTE]
 > Si Gemini Voyager te resulta útil, compártelo en X, Reddit, YouTube, etc. Cada difusión ayuda a que más personas descubran el proyecto y mejoren la experiencia con Gemini. Gracias.
 
@@ -62,6 +70,14 @@
 Nos encanta Gemini, pero a veces desearíamos que tuviera un poco más de estructura.
 
 Por eso creamos **Gemini Voyager**. No es solo una herramienta; es un compañero que te ayuda a mantener tus conversaciones con IA organizadas, accesibles y productivas. Ya seas un investigador que maneja docenas de hilos, un desarrollador que guarda fragmentos de código, o simplemente alguien que ama el orden, Voyager está diseñado para ti.
+
+<p align="center">
+  <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" height="320">
+  </a>
+  <br>
+  <i>Durante el problema del 18 de febrero en el que la aplicación Google Gemini hizo inaccesibles las conversaciones históricas de algunos usuarios, los usuarios de Voyager aún pudieron ver sus conversaciones guardadas en sus carpetas.</i>
+</p>
 
 ---
 

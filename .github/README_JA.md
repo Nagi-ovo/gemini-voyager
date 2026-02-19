@@ -52,6 +52,14 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
+<p align="center">
+  <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" height="320">
+  </a>
+  <br>
+  <b>🎉 トップテックKOLやコミュニティから強く推奨されています！</b>
+</p>
+
 > [!NOTE]
 > もし Gemini Voyager が役に立っているなら、X、YouTube、Reddit などで共有してもらえると嬉しいです。シェアが増えるほど、このプロジェクトをより多くの人に届けられ、Gemini の体験改善にもつながります。ありがとう。
 
@@ -62,6 +70,14 @@
 私たちは Gemini が大好きですが、時にはもう少し「秩序」が欲しいと感じることがあります。
 
 それが **Gemini Voyager** を開発した理由です。これは単なるツールではなく、AI との会話を整理し、アクセスしやすく、生産的にするためのパートナーです。多くのスレッドを扱う研究者、コードを保存したい開発者、あるいは単に整理整頓が好きな方、Voyager はあなたのための拡張機能です。
+
+<p align="center">
+  <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" height="320">
+  </a>
+  <br>
+  <i>2月18日にGoogle Gemini Appが一部のユーザーの履歴会話にアクセスできなくなる問題を引き起こした際、Voyagerのユーザーは引き続きフォルダ内に保存された会話を見ることができました。</i>
+</p>
 
 ---
 
