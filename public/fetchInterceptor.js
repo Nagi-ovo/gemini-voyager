@@ -169,8 +169,7 @@
 
             // Send blob to content script for watermark removal via DOM bridge
             const processedBlob = await new Promise((resolve, reject) => {
-              const requestId =
-                'gv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+              const requestId = 'gv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
               const bridge = getBridgeElement();
 
               // Watch for response via MutationObserver (works across worlds in Firefox)
