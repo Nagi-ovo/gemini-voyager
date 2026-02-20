@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "6370e0a4e0e3",
+  "session_id": "33ce5013-89e6-49ac-8933-e7d80868628b",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T00:52:14.187836Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/core/utils/__tests__/version.test.ts",
+    "src/pages/background/index.ts",
+    "src/pages/popup/components/CloudSyncSettings.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "3963b3100b42",
+  "transcript_identifier_at_start": "a47d33a6-a81a-4fe8-9259-62213dbb4942",
+  "checkpoint_transcript_start": 901,
+  "transcript_lines_at_start": 901,
+  "token_usage": {
+    "input_tokens": 57,
+    "cache_creation_tokens": 29330,
+    "cache_read_tokens": 6230035,
+    "output_tokens": 11521,
+    "api_call_count": 57
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T00:52:11.871927Z",
+    "agent_lines": 0,
+    "human_added": 8,
+    "human_modified": 21,
+    "human_removed": 0,
+    "total_committed": 8,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/33ce5013-89e6-49ac-8933-e7d80868628b.jsonl"
+}
