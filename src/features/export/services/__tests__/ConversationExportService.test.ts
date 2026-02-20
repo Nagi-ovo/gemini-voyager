@@ -6,7 +6,8 @@ import { JSDOM } from 'jsdom';
 import JSZip from 'jszip';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ChatTurn, ConversationMetadata } from '../../types/export';
+import type { ChatTurn, ConversationMetadata, ExportLayout } from '../../types/export';
+import { ExportFormat } from '../../types/export';
 import { ConversationExportService } from '../ConversationExportService';
 import { DeepResearchPDFPrintService } from '../DeepResearchPDFPrintService';
 import { ImageExportService } from '../ImageExportService';
@@ -22,8 +23,8 @@ vi.mock('html-to-image', () => {
 // Setup DOM environment
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
-global.document = dom.window.document as any;
-global.window = dom.window as any;
+global.document = dom.window.document as unknown as Document;
+global.window = dom.window as unknown as Window & typeof globalThis;
 
 function setUserAgentVendor(userAgent: string, vendor: string): void {
   Object.defineProperty(global.navigator, 'userAgent', {
@@ -65,7 +66,7 @@ describe('ConversationExportService', () => {
     global.URL.revokeObjectURL = vi.fn();
 
     // Mock window.print
-    (global.window as any).print = vi.fn();
+    (global.window as Window & { print: () => void }).print = vi.fn();
 
     // Mock document.createElement to prevent actual downloads
     const originalCreateElement = document.createElement.bind(document);
@@ -86,7 +87,7 @@ describe('ConversationExportService', () => {
   describe('export', () => {
     it('should export as JSON', async () => {
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
-        format: 'json' as any,
+        format: ExportFormat.JSON,
       });
 
       expect(result.success).toBe(true);
@@ -96,7 +97,7 @@ describe('ConversationExportService', () => {
 
     it('should export as Markdown', async () => {
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
-        format: 'markdown' as any,
+        format: ExportFormat.MARKDOWN,
       });
 
       expect(result.success).toBe(true);
@@ -106,23 +107,23 @@ describe('ConversationExportService', () => {
 
     it('should export as PDF', async () => {
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
-        format: 'pdf' as any,
+        format: ExportFormat.PDF,
       });
 
       expect(result.success).toBe(true);
       expect(result.format).toBe('pdf');
-      expect((global.window as any).print).toHaveBeenCalled();
+      expect((global.window as Window & { print: () => void }).print).toHaveBeenCalled();
       expect(result.filename).toBe('Premier-League-Fantasy.pdf');
     });
 
     it('triggers print for PDF export', async () => {
-      (global.window as any).print = vi.fn();
+      (global.window as Window & { print: () => void }).print = vi.fn();
 
       await ConversationExportService.export(mockTurns, mockMetadata, {
-        format: 'pdf' as any,
+        format: ExportFormat.PDF,
       });
 
-      expect((global.window as any).print).toHaveBeenCalled();
+      expect((global.window as Window & { print: () => void }).print).toHaveBeenCalled();
     });
 
     it('should export as Image', async () => {
@@ -131,7 +132,7 @@ describe('ConversationExportService', () => {
       );
 
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
-        format: 'image' as any,
+        format: ExportFormat.IMAGE,
       });
 
       expect(result.success).toBe(true);
@@ -153,8 +154,8 @@ describe('ConversationExportService', () => {
         ],
         mockMetadata,
         {
-          format: 'markdown' as any,
-          layout: 'document' as any,
+          format: ExportFormat.MARKDOWN,
+          layout: 'document' as ExportLayout,
           filename: 'report.md',
         },
       );
@@ -185,8 +186,8 @@ describe('ConversationExportService', () => {
           title: 'Revenue Deep Research Report',
         },
         {
-          format: 'markdown' as any,
-          layout: 'document' as any,
+          format: ExportFormat.MARKDOWN,
+          layout: 'document' as ExportLayout,
           filename: 'report.md',
         },
       );
@@ -197,7 +198,7 @@ describe('ConversationExportService', () => {
     });
 
     it('should export report JSON payload in document layout', async () => {
-      const downloadSpy = vi.spyOn(ConversationExportService as any, 'downloadJSON');
+      const downloadSpy = vi.spyOn(ConversationExportService as unknown as { downloadJSON: (...args: unknown[]) => unknown }, 'downloadJSON');
 
       const result = await ConversationExportService.export(
         [
@@ -210,8 +211,8 @@ describe('ConversationExportService', () => {
         ],
         mockMetadata,
         {
-          format: 'json' as any,
-          layout: 'document' as any,
+          format: ExportFormat.JSON,
+          layout: 'document' as ExportLayout,
           filename: 'report.json',
         },
       );
@@ -227,15 +228,15 @@ describe('ConversationExportService', () => {
 
     it('should use document PDF export path when layout is document', async () => {
       const deepResearchPdfSpy = vi
-        .spyOn(DeepResearchPDFPrintService as any, 'export')
+        .spyOn(DeepResearchPDFPrintService as unknown as { export: () => Promise<void> }, 'export')
         .mockResolvedValue(undefined);
       const pdfDocumentSpy = vi
-        .spyOn(PDFPrintService as any, 'exportDocument')
+        .spyOn(PDFPrintService as unknown as { exportDocument: () => Promise<void> }, 'exportDocument')
         .mockResolvedValue(undefined);
 
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
-        format: 'pdf' as any,
-        layout: 'document' as any,
+        format: ExportFormat.PDF,
+        layout: 'document' as ExportLayout,
       });
 
       expect(result.success).toBe(true);
@@ -245,12 +246,12 @@ describe('ConversationExportService', () => {
 
     it('should use document image export path when layout is document', async () => {
       const imageDocumentSpy = vi
-        .spyOn(ImageExportService as any, 'exportDocument')
+        .spyOn(ImageExportService as unknown as { exportDocument: () => Promise<void> }, 'exportDocument')
         .mockResolvedValue(undefined);
 
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
-        format: 'image' as any,
-        layout: 'document' as any,
+        format: ExportFormat.IMAGE,
+        layout: 'document' as ExportLayout,
       });
 
       expect(result.success).toBe(true);
@@ -259,7 +260,7 @@ describe('ConversationExportService', () => {
 
     it('should handle unsupported format', async () => {
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
-        format: 'invalid' as any,
+        format: 'invalid' as ExportFormat,
       });
 
       expect(result.success).toBe(false);
@@ -269,7 +270,7 @@ describe('ConversationExportService', () => {
     it('should use custom filename if provided', async () => {
       const customFilename = 'my-export.json';
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
-        format: 'json' as any,
+        format: ExportFormat.JSON,
         filename: customFilename,
       });
 
@@ -294,7 +295,7 @@ describe('ConversationExportService', () => {
       });
 
       const result = await ConversationExportService.export(invalidTurns, mockMetadata, {
-        format: 'json' as any,
+        format: ExportFormat.JSON,
       });
 
       expect(result.success).toBe(false);
@@ -306,11 +307,11 @@ describe('ConversationExportService', () => {
 
     it('normalizes image export Event errors for UI handling', async () => {
       const imageExportSpy = vi
-        .spyOn(ImageExportService as any, 'export')
+        .spyOn(ImageExportService as unknown as { export: () => Promise<void> }, 'export')
         .mockRejectedValue(new Event('error'));
 
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
-        format: 'image' as any,
+        format: ExportFormat.IMAGE,
       });
 
       expect(imageExportSpy).toHaveBeenCalledOnce();
@@ -354,22 +355,23 @@ describe('ConversationExportService', () => {
         },
       ];
 
-      const downloadSpy = vi.spyOn(ConversationExportService as any, 'downloadJSON');
+      const downloadSpy = vi.spyOn(ConversationExportService as unknown as { downloadJSON: (...args: unknown[]) => unknown }, 'downloadJSON');
       const result = await ConversationExportService.export(turnsWithoutDom, mockMetadata, {
-        format: 'json' as any,
+        format: ExportFormat.JSON,
       });
 
       expect(result.success).toBe(true);
       expect(result.format).toBe('json');
 
       expect(downloadSpy).toHaveBeenCalledOnce();
-      const payload = downloadSpy.mock.calls[0][0] as any;
+      const payload = downloadSpy.mock.calls[0][0] as Record<string, unknown>;
+      const items = payload.items as Array<Record<string, unknown>>;
 
-      expect(payload.items).toHaveLength(1);
-      expect(payload.items[0].user).toBe('Plain text user');
-      expect(payload.items[0].assistant).toBe('Plain text assistant');
+      expect(items).toHaveLength(1);
+      expect(items[0].user).toBe('Plain text user');
+      expect(items[0].assistant).toBe('Plain text assistant');
 
-      expect(payload.items[0].userElement).toBeUndefined();
+      expect(items[0].userElement).toBeUndefined();
     });
 
     // Note: Testing DOMContentExtractor integration is skipped per ROI testing strategy.
@@ -385,7 +387,7 @@ describe('ConversationExportService', () => {
       );
 
       const downloadSpy = vi.spyOn(MarkdownFormatter, 'download').mockImplementation(() => {});
-      const fetchSpy = vi.spyOn(ConversationExportService as any, 'fetchImageForMarkdownPackaging');
+      const fetchSpy = vi.spyOn(ConversationExportService as unknown as { fetchImageForMarkdownPackaging: () => Promise<unknown> }, 'fetchImageForMarkdownPackaging');
       fetchSpy.mockResolvedValue(null);
 
       const turnsWithImage: ChatTurn[] = [
@@ -398,7 +400,7 @@ describe('ConversationExportService', () => {
       ];
 
       const result = await ConversationExportService.export(turnsWithImage, mockMetadata, {
-        format: 'markdown' as any,
+        format: ExportFormat.MARKDOWN,
       });
 
       expect(result.success).toBe(true);
@@ -420,7 +422,7 @@ describe('ConversationExportService', () => {
         .mockImplementation((markdown) => markdown);
 
       vi.spyOn(
-        ConversationExportService as any,
+        ConversationExportService as unknown as { fetchImageForMarkdownPackaging: (url: unknown) => Promise<unknown> },
         'fetchImageForMarkdownPackaging',
       ).mockImplementation(async (rawUrl: unknown) => {
         const url = String(rawUrl);
@@ -433,7 +435,7 @@ describe('ConversationExportService', () => {
         };
       });
 
-      await (ConversationExportService as any).downloadMarkdownOrZip(
+      await (ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>).downloadMarkdownOrZip(
         '![a](https://example.com/slow.png)\n![b](https://example.com/fast.png)',
         'chat.md',
         'chat.md',
@@ -451,7 +453,7 @@ describe('ConversationExportService', () => {
       vi.spyOn(MarkdownFormatter, 'rewriteImageUrls').mockImplementation((markdown) => markdown);
 
       vi.spyOn(
-        ConversationExportService as any,
+        ConversationExportService as unknown as { fetchImageForMarkdownPackaging: () => Promise<unknown> },
         'fetchImageForMarkdownPackaging',
       ).mockResolvedValue({
         blob: new Blob(['jpeg-bytes'], { type: 'image/jpeg' }),
@@ -460,12 +462,13 @@ describe('ConversationExportService', () => {
 
       let capturedAssetPayload: unknown;
       let capturedAssetOptions: unknown;
-      const originalFile = (JSZip.prototype as any).file;
-      vi.spyOn(JSZip.prototype as any, 'file').mockImplementation(function (
-        this: any,
-        name: any,
-        data?: any,
-        options?: any,
+      type JSZipFileFn = (name: unknown, data?: unknown, options?: unknown) => unknown;
+      const originalFile = (JSZip.prototype as unknown as { file: JSZipFileFn }).file;
+      vi.spyOn(JSZip.prototype as unknown as { file: JSZipFileFn }, 'file').mockImplementation(function (
+        this: unknown,
+        name: unknown,
+        data?: unknown,
+        options?: unknown,
       ) {
         if (typeof name === 'string' && name.startsWith('img-')) {
           capturedAssetPayload = data;
@@ -474,7 +477,7 @@ describe('ConversationExportService', () => {
         return originalFile.call(this, name, data, options);
       });
 
-      const finalFilename = await (ConversationExportService as any).downloadMarkdownOrZip(
+      const finalFilename = await (ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>).downloadMarkdownOrZip(
         `![photo](${imageUrl})`,
         'chat.md',
         'chat.md',
@@ -513,9 +516,9 @@ describe('ConversationExportService', () => {
 
       chrome.runtime.sendMessage = sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
 
-      const fetched = await (ConversationExportService as any).fetchImageForMarkdownPackaging(
+      const fetched = await (ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>).fetchImageForMarkdownPackaging(
         imageUrl,
-      );
+      ) as { contentType: string } | null;
 
       expect(fetched).not.toBeNull();
       expect(fetched?.contentType).toBe('image/png');
@@ -547,7 +550,7 @@ describe('ConversationExportService', () => {
       );
       chrome.runtime.sendMessage = sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
 
-      const fetched = await (ConversationExportService as any).fetchImageForMarkdownPackaging(
+      const fetched = await (ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>).fetchImageForMarkdownPackaging(
         blobUrl,
       );
 
