@@ -121,7 +121,7 @@ export class DataBackupService<T = unknown> {
    * Priority: primary > emergency > beforeUnload
    */
   recoverFromBackup(): T | null {
-    console.log(`[BackupService:${this.namespace}] Attempting data recovery...`);
+    console.warn(`[BackupService:${this.namespace}] Attempting data recovery...`);
 
     // Try primary backup first
     const primary = this.loadBackup(this.primaryKey, 'primary');
