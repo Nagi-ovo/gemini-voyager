@@ -84,8 +84,8 @@ class DefaultModelManager {
     // Listen for sidebar "New Chat" link clicks (SPA internal navigation)
     this.sidebarClickHandler = (e: Event) => {
       const target = e.target as HTMLElement;
-      // Check if clicked on a link that leads to /app (new conversation)
-      const link = target.closest('a[href*="/app"]');
+      // Check if clicked on a link that leads to /app (new conversation) or /gem/ (new gem conversation)
+      const link = target.closest('a[href*="/app"]') || target.closest('a[href*="/gem/"]');
       if (link) {
         // Delay to allow SPA navigation to complete
         void this.checkAndLockModelWithDelay();
@@ -492,7 +492,8 @@ class DefaultModelManager {
   private isNewConversation() {
     const path = window.location.pathname;
     // Supports multi-profile paths like /u/0/app as well as /app.
-    return /^\/(u\/\d+\/)?app\/?$/.test(path);
+    // Also supports Gem paths like /gem/xyz or /u/0/gem/xyz
+    return /^\/(u\/\d+\/)?(app\/?|gem\/.*)$/.test(path);
   }
 
   /**
