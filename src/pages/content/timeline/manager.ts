@@ -1200,29 +1200,43 @@ export class TimelineManager {
         return;
       }
 
-      // Use index lookup if available for robust handling of duplicate content
-      const indexStr = dot.dataset.markerIndex;
-      let targetElement: HTMLElement | null = null;
-      let toIdx = -1;
+      const resolveTargetFromDot = (): { targetElement: HTMLElement | null; toIdx: number } => {
+        // Use index lookup if available for robust handling of duplicate content
+        const indexStr = dot.dataset.markerIndex;
+        let targetElement: HTMLElement | null = null;
+        let toIdx = -1;
 
-      if (indexStr) {
-        toIdx = parseInt(indexStr, 10);
-        const marker = this.markers[toIdx];
-        if (marker) {
-          targetElement = marker.element;
+        if (indexStr) {
+          toIdx = parseInt(indexStr, 10);
+          const marker = this.markers[toIdx];
+          if (marker) {
+            targetElement = marker.element;
+          }
         }
-      }
 
-      // Fallback to ID-based lookup if index fails (shouldn't happen)
-      if (!targetElement) {
-        const targetId = dot.dataset.targetTurnId!;
-        targetElement =
-          (this.conversationContainer!.querySelector(
-            `[data-turn-id="${targetId}"]`,
-          ) as HTMLElement | null) ||
-          this.markers.find((m) => m.id === targetId)?.element ||
-          null;
-        toIdx = this.markers.findIndex((m) => m.id === targetId);
+        // Fallback to ID-based lookup if index fails
+        if (!targetElement) {
+          const targetId = dot.dataset.targetTurnId || '';
+          if (!targetId) return { targetElement: null, toIdx: -1 };
+
+          targetElement =
+            (this.conversationContainer?.querySelector(
+              `[data-turn-id="${targetId}"]`,
+            ) as HTMLElement | null) ||
+            this.markers.find((m) => m.id === targetId)?.element ||
+            null;
+          toIdx = this.markers.findIndex((m) => m.id === targetId);
+        }
+
+        return { targetElement, toIdx };
+      };
+
+      let { targetElement, toIdx } = resolveTargetFromDot();
+
+      // On Gemini reload/rehydration, marker nodes or scroll container may become stale.
+      // Refresh once and resolve target again to keep click navigation reliable.
+      if (this.maybeRefreshMarkersForInteraction(targetElement)) {
+        ({ targetElement, toIdx } = resolveTargetFromDot());
       }
 
       if (targetElement) {
@@ -2795,6 +2809,49 @@ export class TimelineManager {
     return containersDisconnected || documentCount > this.markers.length;
   }
 
+  private getScrollContainerForElement(element: HTMLElement): HTMLElement {
+    let p: HTMLElement | null = element;
+    while (p && p !== document.body) {
+      const st = getComputedStyle(p);
+      if (st.overflowY === 'auto' || st.overflowY === 'scroll') {
+        return p;
+      }
+      p = p.parentElement;
+    }
+
+    return (
+      (document.scrollingElement as HTMLElement | null) ||
+      (document.documentElement as HTMLElement | null) ||
+      (document.body as unknown as HTMLElement)
+    );
+  }
+
+  private shouldRefreshForInteraction(targetElement: HTMLElement | null): boolean {
+    if (this.shouldAttemptRefreshForNavigation()) return true;
+
+    if (targetElement && !targetElement.isConnected) return true;
+
+    if (targetElement && this.conversationContainer && !this.conversationContainer.contains(targetElement)) {
+      return true;
+    }
+
+    if (!targetElement || !this.scrollContainer) return false;
+
+    const expectedScrollContainer = this.getScrollContainerForElement(targetElement);
+    return expectedScrollContainer !== this.scrollContainer;
+  }
+
+  private maybeRefreshMarkersForInteraction(targetElement: HTMLElement | null): boolean {
+    if (!this.userTurnSelector) return false;
+    if (!this.shouldRefreshForInteraction(targetElement)) return false;
+
+    const refreshed = this.refreshCriticalElementsFromDocument();
+    if (!refreshed) return false;
+
+    this.recalculateAndRenderMarkers();
+    return true;
+  }
+
   /**
    * Process navigation queue (one at a time)
    */
@@ -2823,6 +2880,9 @@ export class TimelineManager {
    * Shared logic for previous/next navigation
    */
   private async performNodeNavigation(targetIndex: number, currentIndex: number): Promise<void> {
+    const markerBeforeRefresh = this.markers[targetIndex];
+    this.maybeRefreshMarkersForInteraction(markerBeforeRefresh?.element || null);
+
     if (targetIndex < 0 || targetIndex >= this.markers.length) return;
 
     // Clear any pending scroll updates to prevent interference
@@ -2905,22 +2965,7 @@ export class TimelineManager {
       (document.querySelector('main') as HTMLElement | null) || (document.body as HTMLElement);
     this.conversationContainer = nextConversationContainer;
 
-    let nextScrollContainer: HTMLElement | null = null;
-    let p: HTMLElement | null = firstTurn;
-    while (p && p !== document.body) {
-      const st = getComputedStyle(p);
-      if (st.overflowY === 'auto' || st.overflowY === 'scroll') {
-        nextScrollContainer = p;
-        break;
-      }
-      p = p.parentElement;
-    }
-    if (!nextScrollContainer) {
-      nextScrollContainer =
-        (document.scrollingElement as HTMLElement | null) ||
-        (document.documentElement as HTMLElement | null) ||
-        (document.body as unknown as HTMLElement);
-    }
+    const nextScrollContainer = this.getScrollContainerForElement(firstTurn);
 
     const scrollContainerChanged = this.scrollContainer !== nextScrollContainer;
     if (scrollContainerChanged) {

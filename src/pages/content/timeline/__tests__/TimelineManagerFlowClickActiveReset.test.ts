@@ -70,6 +70,7 @@ describe('TimelineManager flow click highlight behavior', () => {
       ui: {
         timelineBar: HTMLElement | null;
         tooltip: HTMLElement | null;
+        trackContent?: HTMLElement | null;
         slider: HTMLElement | null;
         sliderHandle: HTMLElement | null;
       };
@@ -83,6 +84,8 @@ describe('TimelineManager flow click highlight behavior', () => {
       startRunner: (fromIdx: number, toIdx: number, duration: number) => void;
       smoothScrollTo: (targetElement: HTMLElement, duration: number) => void;
       computeFlowDuration: (fromIdx: number, toIdx: number) => number;
+      userTurnSelector: string;
+      recalculateAndRenderMarkers: () => void;
     };
 
     internal.ui.timelineBar = timelineBar;
@@ -112,6 +115,111 @@ describe('TimelineManager flow click highlight behavior', () => {
     expect(firstDot.classList.contains('active')).toBe(false);
     expect(startRunnerSpy).toHaveBeenCalledWith(0, 1, 520);
     expect(smoothScrollSpy).toHaveBeenCalledWith(secondTarget, 520);
+
+    manager.destroy();
+  });
+
+  it('refreshes stale markers before click navigation when target element is detached', () => {
+    const manager = new TimelineManager();
+
+    const timelineBar = document.createElement('div');
+    const trackContent = document.createElement('div');
+    timelineBar.appendChild(trackContent);
+    document.body.appendChild(timelineBar);
+
+    const staleScrollContainer = document.createElement('div');
+    const staleConversationContainer = document.createElement('div');
+
+    const main = document.createElement('main');
+    const freshScrollContainer = document.createElement('div');
+    freshScrollContainer.style.overflowY = 'auto';
+    main.appendChild(freshScrollContainer);
+
+    const freshTarget = document.createElement('div');
+    freshTarget.className = 'user';
+    freshTarget.dataset.turnId = 'm1';
+    freshTarget.textContent = 'fresh target';
+    freshScrollContainer.appendChild(freshTarget);
+    document.body.appendChild(main);
+
+    const staleTarget = document.createElement('div');
+    staleTarget.dataset.turnId = 'm1';
+
+    const dot = document.createElement('button') as DotElement;
+    dot.className = 'timeline-dot';
+    dot.dataset.targetTurnId = 'm1';
+    dot.dataset.markerIndex = '0';
+    timelineBar.appendChild(dot);
+
+    const internal = manager as unknown as {
+      ui: {
+        timelineBar: HTMLElement | null;
+        tooltip: HTMLElement | null;
+        trackContent?: HTMLElement | null;
+        slider: HTMLElement | null;
+        sliderHandle: HTMLElement | null;
+      };
+      scrollContainer: HTMLElement | null;
+      conversationContainer: HTMLElement | null;
+      scrollMode: 'flow' | 'jump';
+      markers: TimelineMarker[];
+      activeTurnId: string | null;
+      setupEventListeners: () => void;
+      updateActiveDotUI: () => void;
+      smoothScrollTo: (targetElement: HTMLElement, duration: number) => void;
+      computeFlowDuration: (fromIdx: number, toIdx: number) => number;
+      userTurnSelector: string;
+      recalculateAndRenderMarkers: () => void;
+    };
+
+    internal.ui.timelineBar = timelineBar;
+    internal.ui.tooltip = null;
+    internal.ui.trackContent = trackContent;
+    internal.ui.slider = null;
+    internal.ui.sliderHandle = null;
+    internal.scrollContainer = staleScrollContainer;
+    internal.conversationContainer = staleConversationContainer;
+    internal.scrollMode = 'jump';
+    internal.userTurnSelector = '.user';
+    internal.markers = [
+      {
+        id: 'm1',
+        element: staleTarget,
+        summary: 'stale',
+        n: 0,
+        baseN: 0,
+        dotElement: dot,
+        starred: false,
+      },
+    ];
+    internal.activeTurnId = 'm1';
+    internal.updateActiveDotUI();
+
+    const smoothScrollSpy = vi.fn();
+    const flowDurationSpy = vi.fn(() => 0);
+    internal.smoothScrollTo = smoothScrollSpy;
+    internal.computeFlowDuration = flowDurationSpy;
+
+    const recalcSpy = vi.fn(() => {
+      internal.markers = [
+        {
+          id: 'm1',
+          element: freshTarget,
+          summary: 'fresh',
+          n: 0,
+          baseN: 0,
+          dotElement: dot,
+          starred: false,
+        },
+      ];
+    });
+    internal.recalculateAndRenderMarkers = recalcSpy;
+
+    internal.setupEventListeners();
+    dot.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(recalcSpy).toHaveBeenCalledTimes(1);
+    expect(smoothScrollSpy).toHaveBeenCalledWith(freshTarget, 0);
 
     manager.destroy();
   });
