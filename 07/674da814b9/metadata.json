@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "07674da814b9",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "custom-vite-plugins.ts",
+    "src/core/services/DataBackupService.ts",
+    "src/core/services/GoogleDriveSyncService.ts",
+    "src/core/services/KeyboardShortcutService.ts",
+    "src/core/utils/concurrency.ts",
+    "src/core/utils/storageMigration.ts",
+    "src/core/utils/version.ts",
+    "src/features/backup/services/BackupService.ts",
+    "src/features/folder/services/FolderImportExportService.ts",
+    "src/pages/content/chatWidth/index.ts",
+    "src/pages/content/contextSync/index.ts",
+    "src/pages/content/deepResearch/menuButton.ts",
+    "src/pages/content/timeline/EventBus.ts",
+    "src/pages/content/timeline/StarredMessagesService.ts",
+    "src/pages/popup/components/ContextSyncSettings.tsx",
+    "src/tests/setup.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/07/674da814b9/0/metadata.json",
+      "transcript": "/07/674da814b9/0/full.jsonl",
+      "context": "/07/674da814b9/0/context.md",
+      "content_hash": "/07/674da814b9/0/content_hash.txt",
+      "prompt": "/07/674da814b9/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 16699,
+    "cache_read_tokens": 171233,
+    "output_tokens": 3257,
+    "api_call_count": 6
+  }
+}

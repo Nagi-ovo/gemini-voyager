@@ -1,0 +1,45 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "07674da814b9",
+  "session_id": "28c910b6-9e05-4369-9def-fd0032a810ab",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T00:20:10.519108Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/core/services/KeyboardShortcutService.ts",
+    "src/core/utils/concurrency.ts",
+    "src/core/utils/storageMigration.ts",
+    "src/features/folder/services/FolderImportExportService.ts",
+    "src/pages/popup/components/ContextSyncSettings.tsx",
+    "src/pages/content/timeline/StarredMessagesService.ts",
+    "custom-vite-plugins.ts",
+    "src/core/services/GoogleDriveSyncService.ts",
+    "src/core/utils/version.ts",
+    "src/pages/content/deepResearch/menuButton.ts",
+    "src/pages/content/timeline/EventBus.ts",
+    "src/pages/content/contextSync/index.ts",
+    "src/tests/setup.ts",
+    "src/core/services/DataBackupService.ts",
+    "src/features/backup/services/BackupService.ts",
+    "src/pages/content/chatWidth/index.ts"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 16699,
+    "cache_read_tokens": 171233,
+    "output_tokens": 3257,
+    "api_call_count": 6
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T00:20:10.469807Z",
+    "agent_lines": 0,
+    "human_added": 4,
+    "human_modified": 32,
+    "human_removed": 0,
+    "total_committed": 4,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/28c910b6-9e05-4369-9def-fd0032a810ab.jsonl"
+}
