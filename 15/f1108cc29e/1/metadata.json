@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "15f1108cc29e",
+  "session_id": "33ce5013-89e6-49ac-8933-e7d80868628b",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T00:45:13.947568Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/features/export/services/__tests__/ConversationExportService.test.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "3963b3100b42",
+  "transcript_identifier_at_start": "a47d33a6-a81a-4fe8-9259-62213dbb4942",
+  "checkpoint_transcript_start": 669,
+  "transcript_lines_at_start": 669,
+  "token_usage": {
+    "input_tokens": 59,
+    "cache_creation_tokens": 101409,
+    "cache_read_tokens": 5421963,
+    "output_tokens": 15776,
+    "api_call_count": 57
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T00:45:11.953842Z",
+    "agent_lines": 0,
+    "human_added": 3,
+    "human_modified": 53,
+    "human_removed": 0,
+    "total_committed": 3,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/33ce5013-89e6-49ac-8933-e7d80868628b.jsonl"
+}
