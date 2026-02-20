@@ -1,0 +1,67 @@
+Implement the following plan:
+
+# Fix: link-block `href=""` caused by fetchInterceptor async wrapping
+
+## Context
+
+When the extension is enabled, Gemini's `link-block` elements render with `href=""` instead of the actual URL, causing clicks to navigate to `https://gemini.google.com/` (the base URL). With the extension disabled, links work correctly.
+
+**Root cause**: `fetchInterceptor.js` wraps `window.fetch` with an `async function`. This creates an extra Promise layer for ALL fetch calls — even passthrough ones. This interferes with Angular's zone.js change detection mechanism, preventing Gemini from updating `href` after resolving link data from streaming responses.
+
+Key insight: `async function` ALWAYS returns a **new** Promise, even when just returning another Promise. A non-async function returns the original Promise directly, preserving the zone.js Promise chain.
+
+## Plan
+
+### File: `public/fetchInterceptor.js`
+
+Change the fetch wrapper from `async function` to a regular `function` that only uses async for intercepted requests:
+
+**Before** (line 91):
+```js
+window.fetch = async function (...args) {
+  // ALL requests go through async wrapping (creates extra Promise)
+  ...
+  return originalFetch.apply(this, args);
+};
+```
+
+**After**:
+```js
+window.fetch = function (...args) {
+  const url = typeof args[0] === 'string' ? args[0] : args[0]?.url;
+
+  // CSP-blocked telemetry: return synchronous Response (no async needed)
+  if (url && typeof url === 'string' && isKnownCspBlockedTelemetryRequest(url)) {
+    return Promise.resolve(new Response(null, { status: 204, statusText: 'No Content' }));
+  }
+
+  // Download interception: only use async for this path
+  if (url && typeof url === 'string' && GEMINI_DOWNLOAD_PATTERN.test(url)) {
+    return (async () => {
+      // ... existing download/watermark logic (unchanged) ...
+    })();
+  }
+
+  // Passthrough: return the ORIGINAL Promise directly (no extra wrapping)
+  return originalFetch.apply(this, args);
+};
+```
+
+This ensures:
+1. Passthrough requests return the **exact** Promise from native fetch (no extra layer)
+2. CSP-blocked requests return a `Promise.resolve()` (matches fetch's return type)
+3. Download interception still uses async only when needed
+
+## Verification
+
+1. `bun run typecheck` — no TS errors (fetchInterceptor.js is plain JS, but check the build)
+2. `bun run lint` — passes
+3. `bun run test` — existing fetchInterceptor tests pass
+4. Manual test: enable extension, have Gemini output a response with links → links should have proper `href` values and navigate correctly
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/jessezhang/.REDACTED.jsonl
+
+---
+
+用中文说一下原因和修改后会影响任何其他功能吗

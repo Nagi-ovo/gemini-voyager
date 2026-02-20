@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "f55bb3853ef0",
+  "session_id": "28c910b6-9e05-4369-9def-fd0032a810ab",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T11:17:56.281979Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".prettierignore"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 16699,
+    "cache_read_tokens": 171233,
+    "output_tokens": 3257,
+    "api_call_count": 6
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T11:17:56.231155Z",
+    "agent_lines": 13,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 13,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/28c910b6-9e05-4369-9def-fd0032a810ab.jsonl"
+}
