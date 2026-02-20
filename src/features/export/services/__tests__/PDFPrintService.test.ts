@@ -260,7 +260,7 @@ describe('PDFPrintService', () => {
 
     let title: string | null = null;
     expect(() => {
-      title = (PDFPrintService as any).extractTitleFromNativeSidebarByConversationId(
+      title = (PDFPrintService as unknown as { extractTitleFromNativeSidebarByConversationId: (id: unknown) => string | null }).extractTitleFromNativeSidebarByConversationId(
         conversationId,
       );
     }).not.toThrow();

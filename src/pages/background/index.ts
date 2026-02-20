@@ -223,7 +223,7 @@ chrome.permissions.onRemoved.addListener(() => {
  * All read-modify-write operations are serialized through this background script.
  */
 class StarredMessagesManager {
-  private operationQueue: Promise<any> = Promise.resolve();
+  private operationQueue: Promise<unknown> = Promise.resolve();
 
   /**
    * Serialize all operations to prevent race conditions
@@ -432,10 +432,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         try {
           await chrome.action.openPopup();
           sendResponse({ ok: true });
-        } catch (e: any) {
+        } catch (e) {
           // Fallback: If openPopup fails, user can click the extension icon
           console.warn('[GV] Failed to open popup programmatically:', e);
-          sendResponse({ ok: false, error: String(e?.message || e) });
+          sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
         }
         return;
       }
@@ -458,8 +458,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const result = await response.json();
             sendResponse({ ok: true, data: result });
           }
-        } catch (e: any) {
-          sendResponse({ ok: false, error: e.message || String(e) });
+        } catch (e) {
+          sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
         }
         return;
       }
@@ -618,9 +618,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ ok: false, error: err.message });
         });
       return;
-    } catch (e: any) {
+    } catch (e) {
       try {
-        sendResponse({ ok: false, error: String(e?.message || e) });
+        sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
       } catch {}
     }
   })();
