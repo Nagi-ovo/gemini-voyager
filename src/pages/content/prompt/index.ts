@@ -7,6 +7,7 @@
 import DOMPurify from 'dompurify';
 import JSZip from 'jszip';
 import 'katex/dist/katex.min.css';
+import type { marked as MarkedFn } from 'marked';
 import browser from 'webextension-polyfill';
 
 import { logger } from '@/core/services/LoggerService';
@@ -61,7 +62,8 @@ function getRuntimeUrl(path: string): string {
   try {
     return browser.runtime.getURL(path);
   } catch {
-    return (window as any).chrome?.runtime?.getURL?.(path) || path;
+    const win = window as Window & { chrome?: { runtime?: { getURL?: (path: string) => string } } };
+    return win.chrome?.runtime?.getURL?.(path) || path;
   }
 }
 
@@ -283,7 +285,7 @@ function computeAnchoredPosition(
 }
 
 export async function startPromptManager(): Promise<{ destroy: () => void }> {
-  let marked: any;
+  let marked!: typeof MarkedFn;
   try {
     // Check if the prompt manager should be hidden
     try {
@@ -356,7 +358,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           output: 'html',
           trust: true, // Trust the rendering environment (content script context)
           strict: false, // Disable strict mode checks including quirks mode detection
-        } as any),
+        }),
       );
       marked.setOptions({ breaks: true });
     } catch {}
@@ -401,7 +403,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           .filter((x) => x.r.width > 0 && x.r.height > 0)
           // choose the element closest to bottom-right corner
           .sort((a, b) => a.r.bottom + a.r.right - (b.r.bottom + b.r.right))
-          .reduce((_, x) => x, undefined as any) as { el: HTMLElement; r: DOMRect } | undefined;
+          .reduce((_, x) => x, undefined as { el: HTMLElement; r: DOMRect } | undefined);
         if (!pick) return;
         const r = pick.r;
         const th = trigger.getBoundingClientRect().height || 36;
@@ -878,7 +880,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
             if (ev.key === 'Escape') cleanup();
           };
           window.addEventListener('click', onOutside, true);
-          window.addEventListener('keydown', onKey, { passive: true } as any);
+          window.addEventListener('keydown', onKey, { passive: true });
           no.addEventListener('click', (ev) => {
             ev.stopPropagation();
             cleanup();
@@ -1054,7 +1056,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (!open) return;
       if (ev.key === 'Escape') closePanel();
     };
-    window.addEventListener('keydown', onWindowKeyDown, { passive: true } as any);
+    window.addEventListener('keydown', onWindowKeyDown, { passive: true });
 
     lockBtn.addEventListener('click', async (ev) => {
       ev.preventDefault();
@@ -1318,7 +1320,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
         // Count conversations
         const conversationCount = Object.values(folderData.folderContents || {}).reduce(
-          (sum: number, convs: any) => sum + (Array.isArray(convs) ? convs.length : 0),
+          (sum: number, convs: unknown) => sum + (Array.isArray(convs) ? convs.length : 0),
           0,
         );
 
@@ -1342,7 +1344,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         // Check File System Access API support
         if ('showDirectoryPicker' in window) {
           // Modern browsers (Chrome, Edge) - use File System Access API
-          const dirHandle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+          const dirHandle = await (window as Window & { showDirectoryPicker: (opts?: { mode?: string }) => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker({ mode: 'readwrite' });
           if (!dirHandle) {
             setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');
             return;
@@ -1426,10 +1428,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const valid: PromptItem[] = [];
         const seen = new Set<string>();
         for (const it of arr) {
-          const text = String((it && (it as any).text) || '').trim();
+          const itObj = it as Record<string, unknown>;
+          const text = String((itObj && itObj.text) || '').trim();
           if (!text) continue;
-          const tags = Array.isArray((it as any).tags)
-            ? (it as any).tags.map((t: any) => String(t))
+          const tags = Array.isArray(itObj.tags)
+            ? itObj.tags.map((t: unknown) => String(t))
             : [];
           const key = `${text.toLowerCase()}|${tags.sort().join(',')}`;
           if (seen.has(key)) continue;
@@ -1500,7 +1503,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (isExtensionContextInvalidatedError(err)) {
         return { destroy: () => {} };
       }
-      (window as any).console?.error?.('Prompt Manager init failed', err);
+      console.error('Prompt Manager init failed', err);
     } catch {}
     return { destroy: () => {} };
   }

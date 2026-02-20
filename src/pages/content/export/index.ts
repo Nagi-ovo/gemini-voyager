@@ -252,12 +252,12 @@ function dedupeByTextAndOffset(elements: HTMLElement[], firstTurnOffset: number)
 
 function ensureTurnId(el: Element, index: number): string {
   const asEl = el as HTMLElement & { dataset?: DOMStringMap & { turnId?: string } };
-  let id = (asEl.dataset && (asEl.dataset as any).turnId) || '';
+  let id = asEl.dataset?.turnId || '';
   if (!id) {
     const basis = normalizeText(asEl.textContent || '') || `user-${index}`;
     id = `u-${index}-${hashString(basis)}`;
     try {
-      (asEl.dataset as any).turnId = id;
+      if (asEl.dataset) asEl.dataset.turnId = id;
     } catch {}
   }
   return id;
@@ -270,7 +270,7 @@ function readStarredSet(): Set<string> {
     if (!raw) return new Set();
     const arr = JSON.parse(raw);
     if (!Array.isArray(arr)) return new Set();
-    return new Set(arr.map((x: any) => String(x)));
+    return new Set(arr.map((x: unknown) => String(x)));
   } catch {
     return new Set();
   }
@@ -930,10 +930,14 @@ async function getLanguage(): Promise<AppLanguage> {
     const stored = await Promise.race([
       new Promise<unknown>((resolve) => {
         try {
-          if ((window as any).chrome?.storage?.sync?.get) {
-            (window as any).chrome.storage.sync.get(StorageKeys.LANGUAGE, resolve);
-          } else if ((window as any).browser?.storage?.sync?.get) {
-            (window as any).browser.storage.sync
+          const win = window as Window & {
+            chrome?: { storage?: { sync?: { get: (key: string, cb: (r: unknown) => void) => void } } };
+            browser?: { storage?: { sync?: { get: (key: string) => Promise<unknown> } } };
+          };
+          if (win.chrome?.storage?.sync?.get) {
+            win.chrome.storage.sync.get(StorageKeys.LANGUAGE, resolve);
+          } else if (win.browser?.storage?.sync?.get) {
+            win.browser.storage.sync
               .get(StorageKeys.LANGUAGE)
               .then(resolve)
               .catch(() => resolve({}));
@@ -2035,8 +2039,8 @@ export async function startExportButton(): Promise<void> {
   if (!logo) return;
   const btn = ensureDropdownInjected(logo);
   if (!btn) return;
-  if ((btn as any)._gvBound) return;
-  (btn as any)._gvBound = true;
+  if ((btn as Element & { _gvBound?: boolean })._gvBound) return;
+  (btn as Element & { _gvBound?: boolean })._gvBound = true;
 
   // Swallow events on the button to avoid parent navigation (logo click -> /app)
   const swallow = (e: Event) => {
@@ -2147,8 +2151,8 @@ export async function startExportButton(): Promise<void> {
 
         const newBtn = ensureDropdownInjected(newLogo);
         if (!newBtn) return;
-        if ((newBtn as any)._gvBound) return;
-        (newBtn as any)._gvBound = true;
+        if ((newBtn as Element & { _gvBound?: boolean })._gvBound) return;
+        (newBtn as Element & { _gvBound?: boolean })._gvBound = true;
 
         // Re-bind all event listeners on the fresh button.
         ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((type) => {
