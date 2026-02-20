@@ -1,5 +1,6 @@
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { StorageKeys } from '@/core/types/common';
+
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
@@ -22,11 +23,31 @@ const TURN_LABEL_PREFIXES =
 
 type ExtGlobal = typeof globalThis & {
   chrome?: {
-    storage?: { sync?: { get(k: Record<string, unknown>, cb: (items: Record<string, unknown>) => void): void; set?(items: Record<string, unknown>): void }; onChanged?: { addListener(cb: (changes: Record<string, { newValue: unknown }>, area: string) => void): void } };
+    storage?: {
+      sync?: {
+        get(k: Record<string, unknown>, cb: (items: Record<string, unknown>) => void): void;
+        set?(items: Record<string, unknown>): void;
+      };
+      onChanged?: {
+        addListener(
+          cb: (changes: Record<string, { newValue: unknown }>, area: string) => void,
+        ): void;
+      };
+    };
     runtime?: { lastError?: { message: string } };
   };
   browser?: {
-    storage?: { sync?: { get(k: Record<string, unknown>): Promise<Record<string, unknown>>; set?(items: Record<string, unknown>): void }; onChanged?: { addListener(cb: (changes: Record<string, { newValue: unknown }>, area: string) => void): void } };
+    storage?: {
+      sync?: {
+        get(k: Record<string, unknown>): Promise<Record<string, unknown>>;
+        set?(items: Record<string, unknown>): void;
+      };
+      onChanged?: {
+        addListener(
+          cb: (changes: Record<string, { newValue: unknown }>, area: string) => void,
+        ): void;
+      };
+    };
   };
 };
 
@@ -189,16 +210,19 @@ export class TimelineManager {
       if (g.chrome?.storage?.sync || g.browser?.storage?.sync) {
         res = await new Promise((resolve) => {
           if (g.chrome?.storage?.sync?.get) {
-            g.chrome.storage.sync.get(defaults as Record<string, unknown>, (items: Record<string, unknown>) => {
-              if (g.chrome.runtime.lastError) {
-                console.error(
-                  `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`,
-                );
-                resolve(null);
-              } else {
-                resolve(items);
-              }
-            });
+            g.chrome.storage.sync.get(
+              defaults as Record<string, unknown>,
+              (items: Record<string, unknown>) => {
+                if (g.chrome.runtime.lastError) {
+                  console.error(
+                    `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`,
+                  );
+                  resolve(null);
+                } else {
+                  resolve(items);
+                }
+              },
+            );
           } else {
             g.browser?.storage?.sync
               ?.get(defaults)
@@ -223,7 +247,15 @@ export class TimelineManager {
       this.toggleMarkerLevel(!!res?.geminiTimelineMarkerLevel);
 
       // Load position with auto-migration from v1 to v2
-      const position = res?.geminiTimelinePosition as { version?: number; topPercent?: number; leftPercent?: number; top?: number; left?: number } | undefined;
+      const position = res?.geminiTimelinePosition as
+        | {
+            version?: number;
+            topPercent?: number;
+            leftPercent?: number;
+            top?: number;
+            left?: number;
+          }
+        | undefined;
       if (position) {
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
@@ -2175,16 +2207,19 @@ export class TimelineManager {
     try {
       res = await new Promise((resolve) => {
         if (g.chrome?.storage?.sync?.get) {
-          g.chrome.storage.sync.get({ geminiTimelinePosition: null }, (items: Record<string, unknown>) => {
-            if (g.chrome.runtime?.lastError) {
-              console.error(
-                `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`,
-              );
-              resolve(null);
-            } else {
-              resolve(items);
-            }
-          });
+          g.chrome.storage.sync.get(
+            { geminiTimelinePosition: null },
+            (items: Record<string, unknown>) => {
+              if (g.chrome.runtime?.lastError) {
+                console.error(
+                  `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`,
+                );
+                resolve(null);
+              } else {
+                resolve(items);
+              }
+            },
+          );
         } else {
           g.browser?.storage?.sync
             ?.get({ geminiTimelinePosition: null })
@@ -2200,7 +2235,9 @@ export class TimelineManager {
       return;
     }
 
-    const position = res?.geminiTimelinePosition as { version?: number; topPercent?: number; leftPercent?: number; top?: number; left?: number } | undefined;
+    const position = res?.geminiTimelinePosition as
+      | { version?: number; topPercent?: number; leftPercent?: number; top?: number; left?: number }
+      | undefined;
     if (!position) return;
 
     const viewportWidth = window.innerWidth;
@@ -3161,7 +3198,9 @@ export class TimelineManager {
     }
     try {
       if (this.resizeIdleRICId && 'cancelIdleCallback' in window) {
-        (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(this.resizeIdleRICId);
+        (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(
+          this.resizeIdleRICId,
+        );
         this.resizeIdleRICId = null;
       }
     } catch {}

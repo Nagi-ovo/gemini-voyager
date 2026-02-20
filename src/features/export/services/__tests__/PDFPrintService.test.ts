@@ -260,9 +260,11 @@ describe('PDFPrintService', () => {
 
     let title: string | null = null;
     expect(() => {
-      title = (PDFPrintService as unknown as { extractTitleFromNativeSidebarByConversationId: (id: unknown) => string | null }).extractTitleFromNativeSidebarByConversationId(
-        conversationId,
-      );
+      title = (
+        PDFPrintService as unknown as {
+          extractTitleFromNativeSidebarByConversationId: (id: unknown) => string | null;
+        }
+      ).extractTitleFromNativeSidebarByConversationId(conversationId);
     }).not.toThrow();
     expect(title).toBe('Escaped Selector Title');
   });

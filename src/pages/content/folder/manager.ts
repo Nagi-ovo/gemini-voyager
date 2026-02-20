@@ -3,11 +3,11 @@ import browser from 'webextension-polyfill';
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
+import type { PromptItem } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
-import type { PromptItem } from '@/core/types/sync';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 
 import { sortConversationsByPriority } from './conversationSort';
@@ -1313,7 +1313,10 @@ export class FolderManager {
     };
 
     // Store references for potential cleanup
-    type DragEl = Element & { _dragStartHandler?: (e: Event) => void; _dragEndHandler?: () => void };
+    type DragEl = Element & {
+      _dragStartHandler?: (e: Event) => void;
+      _dragEndHandler?: () => void;
+    };
     (element as DragEl)._dragStartHandler = handleDragStart;
     (element as DragEl)._dragEndHandler = handleDragEnd;
 
@@ -1339,7 +1342,10 @@ export class FolderManager {
 
     // Remove drag event listeners if they exist
     if (element.dataset.dragListenersAttached === 'true') {
-      type DragEl = Element & { _dragStartHandler?: (e: Event) => void; _dragEndHandler?: () => void };
+      type DragEl = Element & {
+        _dragStartHandler?: (e: Event) => void;
+        _dragEndHandler?: () => void;
+      };
       const dragStartHandler = (element as DragEl)._dragStartHandler;
       const dragEndHandler = (element as DragEl)._dragEndHandler;
 
@@ -5436,7 +5442,10 @@ export class FolderManager {
       const originalPushState = hist.pushState;
       const originalReplaceState = hist.replaceState;
 
-      const wrap = (method: 'pushState' | 'replaceState', original: (...args: unknown[]) => unknown) => {
+      const wrap = (
+        method: 'pushState' | 'replaceState',
+        original: (...args: unknown[]) => unknown,
+      ) => {
         hist[method] = function (...args: unknown[]) {
           const ret = original.apply(this, args);
           try {
@@ -5674,7 +5683,9 @@ export class FolderManager {
 
     try {
       // Type assertion to match the service's expected type
-      const payload = FolderImportExportService.exportToPayload(this.data as unknown as Parameters<typeof FolderImportExportService.exportToPayload>[0]);
+      const payload = FolderImportExportService.exportToPayload(
+        this.data as unknown as Parameters<typeof FolderImportExportService.exportToPayload>[0],
+      );
       FolderImportExportService.downloadJSON(payload);
       this.showNotification(this.t('folder_export_success'), 'success');
       this.debug('Folders exported successfully');

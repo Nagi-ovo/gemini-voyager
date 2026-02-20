@@ -190,10 +190,7 @@ export function CloudSyncSettings() {
         const storageResult = await chrome.storage.local.get([folderStorageKey, 'gvPromptItems']);
 
         // Only use storage folders if we didn't get them from tab
-        if (
-          (!folders.folders || folders.folders.length === 0) &&
-          storageResult[folderStorageKey]
-        ) {
+        if ((!folders.folders || folders.folders.length === 0) && storageResult[folderStorageKey]) {
           folders = storageResult[folderStorageKey];
           console.log(`[CloudSyncSettings] Loaded folders from ${folderStorageKey} (fallback)`);
         }
@@ -327,10 +324,7 @@ export function CloudSyncSettings() {
       const cloudStarredData = cloudStarredPayload?.data || { messages: {} };
 
       console.log('[CloudSyncSettings] === MERGE DEBUG ===');
-      console.log(
-        '[CloudSyncSettings] Local folders count:',
-        localFolders.folders?.length || 0,
-      );
+      console.log('[CloudSyncSettings] Local folders count:', localFolders.folders?.length || 0);
       console.log(
         '[CloudSyncSettings] Local folderContents:',
         JSON.stringify(Object.keys(localFolders.folderContents || {})),

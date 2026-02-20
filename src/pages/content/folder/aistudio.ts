@@ -3,10 +3,9 @@ import browser from 'webextension-polyfill';
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
+import type { PromptItem } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
 import { createTranslator, initI18n } from '@/utils/i18n';
-
-import type { PromptItem } from '@/core/types/sync';
 
 import type { ConversationReference, DragData, Folder, FolderData } from './types';
 

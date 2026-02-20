@@ -140,7 +140,10 @@ async function getLanguage(): Promise<AppLanguage> {
   try {
     const stored = await new Promise<unknown>((resolve) => {
       try {
-        const w = window as Window & { chrome?: typeof chrome; browser?: { storage?: { sync?: { get: (key: string) => Promise<unknown> } } } };
+        const w = window as Window & {
+          chrome?: typeof chrome;
+          browser?: { storage?: { sync?: { get: (key: string) => Promise<unknown> } } };
+        };
         // Chrome uses callback-based API
         if (w.chrome?.storage?.sync?.get) {
           w.chrome.storage.sync.get(StorageKeys.LANGUAGE, resolve);

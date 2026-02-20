@@ -45,7 +45,8 @@ export class BackupService implements IBackupService {
     return (
       typeof window !== 'undefined' &&
       'showDirectoryPicker' in window &&
-      typeof (window as Window & { showDirectoryPicker?: unknown }).showDirectoryPicker === 'function'
+      typeof (window as Window & { showDirectoryPicker?: unknown }).showDirectoryPicker ===
+        'function'
     );
   }
 
@@ -68,10 +69,12 @@ export class BackupService implements IBackupService {
       type WindowWithFilePicker = Window & {
         showDirectoryPicker: (options?: { mode?: string }) => Promise<FileSystemDirectoryHandle>;
       };
-      const directoryHandle = await (window as unknown as WindowWithFilePicker).showDirectoryPicker({
-        mode: 'readwrite',
-        // Remove startIn to avoid potential issues on some systems
-      });
+      const directoryHandle = await (window as unknown as WindowWithFilePicker).showDirectoryPicker(
+        {
+          mode: 'readwrite',
+          // Remove startIn to avoid potential issues on some systems
+        },
+      );
 
       console.log('[BackupService] Directory selected:', directoryHandle?.name || 'null');
 

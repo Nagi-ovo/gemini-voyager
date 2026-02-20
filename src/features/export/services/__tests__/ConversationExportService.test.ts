@@ -198,7 +198,10 @@ describe('ConversationExportService', () => {
     });
 
     it('should export report JSON payload in document layout', async () => {
-      const downloadSpy = vi.spyOn(ConversationExportService as unknown as { downloadJSON: (...args: unknown[]) => unknown }, 'downloadJSON');
+      const downloadSpy = vi.spyOn(
+        ConversationExportService as unknown as { downloadJSON: (...args: unknown[]) => unknown },
+        'downloadJSON',
+      );
 
       const result = await ConversationExportService.export(
         [
@@ -231,7 +234,10 @@ describe('ConversationExportService', () => {
         .spyOn(DeepResearchPDFPrintService as unknown as { export: () => Promise<void> }, 'export')
         .mockResolvedValue(undefined);
       const pdfDocumentSpy = vi
-        .spyOn(PDFPrintService as unknown as { exportDocument: () => Promise<void> }, 'exportDocument')
+        .spyOn(
+          PDFPrintService as unknown as { exportDocument: () => Promise<void> },
+          'exportDocument',
+        )
         .mockResolvedValue(undefined);
 
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
@@ -246,7 +252,10 @@ describe('ConversationExportService', () => {
 
     it('should use document image export path when layout is document', async () => {
       const imageDocumentSpy = vi
-        .spyOn(ImageExportService as unknown as { exportDocument: () => Promise<void> }, 'exportDocument')
+        .spyOn(
+          ImageExportService as unknown as { exportDocument: () => Promise<void> },
+          'exportDocument',
+        )
         .mockResolvedValue(undefined);
 
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
@@ -355,7 +364,10 @@ describe('ConversationExportService', () => {
         },
       ];
 
-      const downloadSpy = vi.spyOn(ConversationExportService as unknown as { downloadJSON: (...args: unknown[]) => unknown }, 'downloadJSON');
+      const downloadSpy = vi.spyOn(
+        ConversationExportService as unknown as { downloadJSON: (...args: unknown[]) => unknown },
+        'downloadJSON',
+      );
       const result = await ConversationExportService.export(turnsWithoutDom, mockMetadata, {
         format: ExportFormat.JSON,
       });
@@ -387,7 +399,12 @@ describe('ConversationExportService', () => {
       );
 
       const downloadSpy = vi.spyOn(MarkdownFormatter, 'download').mockImplementation(() => {});
-      const fetchSpy = vi.spyOn(ConversationExportService as unknown as { fetchImageForMarkdownPackaging: () => Promise<unknown> }, 'fetchImageForMarkdownPackaging');
+      const fetchSpy = vi.spyOn(
+        ConversationExportService as unknown as {
+          fetchImageForMarkdownPackaging: () => Promise<unknown>;
+        },
+        'fetchImageForMarkdownPackaging',
+      );
       fetchSpy.mockResolvedValue(null);
 
       const turnsWithImage: ChatTurn[] = [
@@ -422,7 +439,9 @@ describe('ConversationExportService', () => {
         .mockImplementation((markdown) => markdown);
 
       vi.spyOn(
-        ConversationExportService as unknown as { fetchImageForMarkdownPackaging: (url: unknown) => Promise<unknown> },
+        ConversationExportService as unknown as {
+          fetchImageForMarkdownPackaging: (url: unknown) => Promise<unknown>;
+        },
         'fetchImageForMarkdownPackaging',
       ).mockImplementation(async (rawUrl: unknown) => {
         const url = String(rawUrl);
@@ -435,7 +454,9 @@ describe('ConversationExportService', () => {
         };
       });
 
-      await (ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>).downloadMarkdownOrZip(
+      await (
+        ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>
+      ).downloadMarkdownOrZip(
         '![a](https://example.com/slow.png)\n![b](https://example.com/fast.png)',
         'chat.md',
         'chat.md',
@@ -453,7 +474,9 @@ describe('ConversationExportService', () => {
       vi.spyOn(MarkdownFormatter, 'rewriteImageUrls').mockImplementation((markdown) => markdown);
 
       vi.spyOn(
-        ConversationExportService as unknown as { fetchImageForMarkdownPackaging: () => Promise<unknown> },
+        ConversationExportService as unknown as {
+          fetchImageForMarkdownPackaging: () => Promise<unknown>;
+        },
         'fetchImageForMarkdownPackaging',
       ).mockResolvedValue({
         blob: new Blob(['jpeg-bytes'], { type: 'image/jpeg' }),
@@ -464,24 +487,19 @@ describe('ConversationExportService', () => {
       let capturedAssetOptions: unknown;
       type JSZipFileFn = (name: unknown, data?: unknown, options?: unknown) => unknown;
       const originalFile = (JSZip.prototype as unknown as { file: JSZipFileFn }).file;
-      vi.spyOn(JSZip.prototype as unknown as { file: JSZipFileFn }, 'file').mockImplementation(function (
-        this: unknown,
-        name: unknown,
-        data?: unknown,
-        options?: unknown,
-      ) {
-        if (typeof name === 'string' && name.startsWith('img-')) {
-          capturedAssetPayload = data;
-          capturedAssetOptions = options;
-        }
-        return originalFile.call(this, name, data, options);
-      });
-
-      const finalFilename = await (ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>).downloadMarkdownOrZip(
-        `![photo](${imageUrl})`,
-        'chat.md',
-        'chat.md',
+      vi.spyOn(JSZip.prototype as unknown as { file: JSZipFileFn }, 'file').mockImplementation(
+        function (this: unknown, name: unknown, data?: unknown, options?: unknown) {
+          if (typeof name === 'string' && name.startsWith('img-')) {
+            capturedAssetPayload = data;
+            capturedAssetOptions = options;
+          }
+          return originalFile.call(this, name, data, options);
+        },
       );
+
+      const finalFilename = await (
+        ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>
+      ).downloadMarkdownOrZip(`![photo](${imageUrl})`, 'chat.md', 'chat.md');
 
       expect(finalFilename).toBe('chat.zip');
       expect(typeof capturedAssetPayload).toBe('string');
@@ -516,9 +534,9 @@ describe('ConversationExportService', () => {
 
       chrome.runtime.sendMessage = sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
 
-      const fetched = await (ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>).fetchImageForMarkdownPackaging(
-        imageUrl,
-      ) as { contentType: string } | null;
+      const fetched = (await (
+        ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>
+      ).fetchImageForMarkdownPackaging(imageUrl)) as { contentType: string } | null;
 
       expect(fetched).not.toBeNull();
       expect(fetched?.contentType).toBe('image/png');
@@ -550,9 +568,9 @@ describe('ConversationExportService', () => {
       );
       chrome.runtime.sendMessage = sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
 
-      const fetched = await (ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>).fetchImageForMarkdownPackaging(
-        blobUrl,
-      );
+      const fetched = await (
+        ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>
+      ).fetchImageForMarkdownPackaging(blobUrl);
 
       expect(fetched).toBeNull();
       expect(sendMessageMock).toHaveBeenCalledWith(

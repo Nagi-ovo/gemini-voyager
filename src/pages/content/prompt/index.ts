@@ -1344,7 +1344,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         // Check File System Access API support
         if ('showDirectoryPicker' in window) {
           // Modern browsers (Chrome, Edge) - use File System Access API
-          const dirHandle = await (window as Window & { showDirectoryPicker: (opts?: { mode?: string }) => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker({ mode: 'readwrite' });
+          const dirHandle = await (
+            window as Window & {
+              showDirectoryPicker: (opts?: { mode?: string }) => Promise<FileSystemDirectoryHandle>;
+            }
+          ).showDirectoryPicker({ mode: 'readwrite' });
           if (!dirHandle) {
             setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');
             return;
@@ -1431,9 +1435,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           const itObj = it as Record<string, unknown>;
           const text = String((itObj && itObj.text) || '').trim();
           if (!text) continue;
-          const tags = Array.isArray(itObj.tags)
-            ? itObj.tags.map((t: unknown) => String(t))
-            : [];
+          const tags = Array.isArray(itObj.tags) ? itObj.tags.map((t: unknown) => String(t)) : [];
           const key = `${text.toLowerCase()}|${tags.sort().join(',')}`;
           if (seen.has(key)) continue;
           seen.add(key);

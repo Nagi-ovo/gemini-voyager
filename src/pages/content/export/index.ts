@@ -931,7 +931,9 @@ async function getLanguage(): Promise<AppLanguage> {
       new Promise<unknown>((resolve) => {
         try {
           const win = window as Window & {
-            chrome?: { storage?: { sync?: { get: (key: string, cb: (r: unknown) => void) => void } } };
+            chrome?: {
+              storage?: { sync?: { get: (key: string, cb: (r: unknown) => void) => void } };
+            };
             browser?: { storage?: { sync?: { get: (key: string) => Promise<unknown> } } };
           };
           if (win.chrome?.storage?.sync?.get) {
