@@ -1,0 +1,47 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "1036166b4fe8",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "custom-vite-plugins.ts",
+    "eslint.config.js",
+    "src/core/services/KeyboardShortcutService.ts",
+    "src/core/services/StorageMonitor.ts",
+    "src/core/services/StorageService.ts",
+    "src/core/types/timeline.ts",
+    "src/core/utils/__tests__/version.test.ts",
+    "src/core/utils/version.ts",
+    "src/features/contextSync/services/SyncService.ts",
+    "src/pages/background/index.ts",
+    "src/pages/content/contextSync/capture.ts",
+    "src/pages/content/deepResearch/extractor.ts",
+    "src/pages/content/folder/aistudio.ts",
+    "src/pages/content/folder/manager.ts",
+    "src/pages/content/gemsHider/index.ts",
+    "src/pages/content/inputCollapse/index.ts",
+    "src/pages/content/mermaid/index.ts",
+    "src/pages/content/prompt/index.ts",
+    "src/pages/content/timeline/manager.ts",
+    "src/pages/popup/components/CloudSyncSettings.tsx",
+    "src/pages/popup/components/ContextSyncSettings.tsx",
+    "src/pages/popup/components/KeyboardShortcutSettings.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/10/36166b4fe8/0/metadata.json",
+      "transcript": "/10/36166b4fe8/0/full.jsonl",
+      "context": "/10/36166b4fe8/0/context.md",
+      "content_hash": "/10/36166b4fe8/0/content_hash.txt",
+      "prompt": "/10/36166b4fe8/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 16699,
+    "cache_read_tokens": 171233,
+    "output_tokens": 3257,
+    "api_call_count": 6
+  }
+}
