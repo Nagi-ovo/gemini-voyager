@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "b99080941c1d",
+  "session_id": "33ce5013-89e6-49ac-8933-e7d80868628b",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T11:11:49.582702Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/core/services/GoogleDriveSyncService.ts",
+    "src/core/services/KeyboardShortcutService.ts",
+    "src/features/backup/services/BackupService.ts",
+    "src/features/export/services/__tests__/ConversationExportService.test.ts",
+    "src/pages/content/chatWidth/index.ts",
+    "src/pages/content/deepResearch/extractor.ts",
+    "src/pages/content/deepResearch/menuButton.ts",
+    "src/pages/content/folder/aistudio.ts",
+    "src/pages/content/folder/manager.ts",
+    "src/pages/content/prompt/index.ts",
+    "src/pages/popup/components/CloudSyncSettings.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "064628bda7ec",
+  "transcript_identifier_at_start": "3f5ff589-dbf8-49e9-a3e3-491c03bd0bac",
+  "token_usage": {
+    "input_tokens": 4176,
+    "cache_creation_tokens": 507775,
+    "cache_read_tokens": 39728707,
+    "output_tokens": 86103,
+    "api_call_count": 430
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T11:11:40.634644Z",
+    "agent_lines": 98,
+    "human_added": 72,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 170,
+    "agent_percentage": 57.647058823529406
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/33ce5013-89e6-49ac-8933-e7d80868628b.jsonl"
+}
