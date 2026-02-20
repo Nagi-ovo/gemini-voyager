@@ -14,7 +14,7 @@ export function startContextSync() {
   });
 }
 
-async function handleSyncRequest(sendResponse: (response: any) => void) {
+async function handleSyncRequest(sendResponse: (response: unknown) => void) {
   try {
     const captureService = ContextCaptureService.getInstance();
     const syncService = SyncService.getInstance();

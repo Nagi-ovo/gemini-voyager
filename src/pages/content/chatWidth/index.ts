@@ -194,7 +194,7 @@ export function startChatWidthAdjuster() {
   });
 
   // Listen for changes from storage
-  const storageChangeHandler = (changes: any, area: string) => {
+  const storageChangeHandler = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
     if (area === 'sync' && changes.geminiChatWidth) {
       const newWidth = changes.geminiChatWidth.newValue;
       if (typeof newWidth === 'number') {

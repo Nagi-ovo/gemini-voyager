@@ -571,7 +571,7 @@ export class GoogleDriveSyncService {
   }
 
   private async createFile(token: string, fileName: string, parentId?: string): Promise<string> {
-    const metadata: any = { name: fileName, mimeType: 'application/json' };
+    const metadata: { name: string; mimeType: string; parents?: string[] } = { name: fileName, mimeType: 'application/json' };
     if (parentId) {
       metadata.parents = [parentId];
     }

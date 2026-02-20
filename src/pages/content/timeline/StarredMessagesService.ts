@@ -9,7 +9,7 @@ export class StarredMessagesService {
   /**
    * Send message to background script and wait for response
    */
-  private static async sendMessage<T>(type: string, payload?: any): Promise<T> {
+  private static async sendMessage<T>(type: string, payload?: unknown): Promise<T> {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ type, payload }, (response) => {
         if (chrome.runtime.lastError) {

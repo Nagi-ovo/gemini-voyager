@@ -69,7 +69,7 @@ export async function migrateFromLocalStorage(
       }
 
       // Parse the value
-      let parsedValue: any;
+      let parsedValue: unknown;
       try {
         parsedValue = JSON.parse(localValue);
       } catch (parseError) {

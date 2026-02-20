@@ -3,7 +3,7 @@
  * Provides type-safe event communication between components
  */
 
-export type EventCallback<T = any> = (data: T) => void;
+export type EventCallback<T = unknown> = (data: T) => void;
 
 interface EventMap {
   'starred:added': { conversationId: string; turnId: string };
@@ -13,7 +13,7 @@ interface EventMap {
 
 export class EventBus {
   private static instance: EventBus;
-  private listeners: Map<string, Set<EventCallback>> = new Map();
+  private listeners: Map<string, Set<EventCallback<unknown>>> = new Map();
 
   private constructor() {}
 
@@ -35,7 +35,7 @@ export class EventBus {
       this.listeners.set(event, new Set());
     }
 
-    this.listeners.get(event)!.add(callback);
+    this.listeners.get(event)!.add(callback as EventCallback<unknown>);
 
     // Return unsubscribe function
     return () => this.off(event, callback);
@@ -47,7 +47,7 @@ export class EventBus {
   off<K extends keyof EventMap>(event: K, callback: EventCallback<EventMap[K]>): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
-      callbacks.delete(callback);
+      callbacks.delete(callback as EventCallback<unknown>);
       if (callbacks.size === 0) {
         this.listeners.delete(event);
       }

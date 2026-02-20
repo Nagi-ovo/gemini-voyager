@@ -183,7 +183,7 @@ export function getCompatibilityInfo(
 export interface VersionMigration {
   fromVersion: string;
   toVersion: string;
-  migrate: (data: any) => any;
+  migrate: (data: unknown) => unknown;
   description: string;
 }
 
@@ -208,9 +208,9 @@ export const VERSION_MIGRATIONS: VersionMigration[] = [
  * Apply necessary migrations to bring data up to current version
  */
 export function applyMigrations(
-  data: any,
+  data: unknown,
   fromVersion: string,
-): { data: any; migrationsApplied: string[] } {
+): { data: unknown; migrationsApplied: string[] } {
   let currentData = data;
   const migrationsApplied: string[] = [];
 
