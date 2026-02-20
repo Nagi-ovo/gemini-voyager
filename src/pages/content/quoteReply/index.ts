@@ -144,7 +144,6 @@ export function startQuoteReply() {
     if (!quoteBtn || !currentSelectionRange) return;
 
     const rangeRect = currentSelectionRange.getBoundingClientRect();
-    const btnRect = quoteBtn.getBoundingClientRect();
 
     // Hide when selection is scrolled out of viewport
     const isOffScreen = rangeRect.bottom < 0 || rangeRect.top > window.innerHeight;
@@ -160,12 +159,25 @@ export function startQuoteReply() {
       quoteBtn.classList.remove(CSS_CLASSES.HIDDEN);
     }
 
+    // Ensure the button is visible before measuring to get actual dimensions
+    const btnRect = quoteBtn.getBoundingClientRect();
+
+    // Use getClientRects to get the precise position of the first line.
+    // This prevents the button from being pushed down by empty space in multi-line selections.
+    const firstLineRect =
+      typeof currentSelectionRange.getClientRects === 'function'
+        ? currentSelectionRange.getClientRects()[0] || rangeRect
+        : rangeRect;
+
     // position: fixed uses viewport coordinates, no scrollY/X needed
-    const top = rangeRect.top - btnRect.height - POSITIONING.BUTTON_SELECTION_GAP_PX;
+    const top = firstLineRect.top - btnRect.height - POSITIONING.BUTTON_SELECTION_GAP_PX;
     const left = rangeRect.left + rangeRect.width / 2 - btnRect.width / 2;
 
+    // Edge protection: prevent the button from being clipped or overflowing the viewport
+    const maxLeft = window.innerWidth - btnRect.width - POSITIONING.MIN_EDGE_OFFSET_PX;
+
     quoteBtn.style.top = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, top)}px`;
-    quoteBtn.style.left = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, left)}px`;
+    quoteBtn.style.left = `${Math.min(maxLeft, Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, left))}px`;
   }
 
   function onScrollOrResize() {
