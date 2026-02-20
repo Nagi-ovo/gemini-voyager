@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "fdd6f905ecaa",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/pages/content/folder/aistudio.ts",
+    "src/pages/content/folder/manager.ts",
+    "src/pages/content/prompt/index.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/fd/d6f905ecaa/0/metadata.json",
+      "transcript": "/fd/d6f905ecaa/0/full.jsonl",
+      "context": "/fd/d6f905ecaa/0/context.md",
+      "content_hash": "/fd/d6f905ecaa/0/content_hash.txt",
+      "prompt": "/fd/d6f905ecaa/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 16699,
+    "cache_read_tokens": 171233,
+    "output_tokens": 3257,
+    "api_call_count": 6
+  }
+}
