@@ -7,6 +7,7 @@ import { isSafari } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
+import type { PromptItem } from '@/core/types/sync';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 
 import { sortConversationsByPriority } from './conversationSort';
@@ -53,23 +54,20 @@ export function calculateFolderDialogPaddingLeft(level: number, indent: number):
 /**
  * Validate folder data structure
  */
-function validateFolderData(data: any): boolean {
-  return (
-    data &&
-    typeof data === 'object' &&
-    Array.isArray(data.folders) &&
-    typeof data.folderContents === 'object'
-  );
+function validateFolderData(data: unknown): boolean {
+  if (typeof data !== 'object' || data === null) return false;
+  const d = data as Record<string, unknown>;
+  return Array.isArray(d.folders) && typeof d.folderContents === 'object';
 }
 
 export class FolderManager {
-  private debug(...args: any[]): void {
+  private debug(...args: unknown[]): void {
     if (this.isDebugEnabled()) {
       console.log('[FolderManager]', ...args);
     }
   }
 
-  private debugWarn(...args: any[]): void {
+  private debugWarn(...args: unknown[]): void {
     if (this.isDebugEnabled()) {
       console.warn('[FolderManager]', ...args);
     }
@@ -1315,8 +1313,9 @@ export class FolderManager {
     };
 
     // Store references for potential cleanup
-    (element as any)._dragStartHandler = handleDragStart;
-    (element as any)._dragEndHandler = handleDragEnd;
+    type DragEl = Element & { _dragStartHandler?: (e: Event) => void; _dragEndHandler?: () => void };
+    (element as DragEl)._dragStartHandler = handleDragStart;
+    (element as DragEl)._dragEndHandler = handleDragEnd;
 
     // Add drag event listeners
     element.addEventListener('dragstart', handleDragStart);
@@ -1340,17 +1339,18 @@ export class FolderManager {
 
     // Remove drag event listeners if they exist
     if (element.dataset.dragListenersAttached === 'true') {
-      const dragStartHandler = (element as any)._dragStartHandler;
-      const dragEndHandler = (element as any)._dragEndHandler;
+      type DragEl = Element & { _dragStartHandler?: (e: Event) => void; _dragEndHandler?: () => void };
+      const dragStartHandler = (element as DragEl)._dragStartHandler;
+      const dragEndHandler = (element as DragEl)._dragEndHandler;
 
       if (dragStartHandler) {
         element.removeEventListener('dragstart', dragStartHandler);
-        delete (element as any)._dragStartHandler;
+        delete (element as DragEl)._dragStartHandler;
       }
 
       if (dragEndHandler) {
         element.removeEventListener('dragend', dragEndHandler);
-        delete (element as any)._dragEndHandler;
+        delete (element as DragEl)._dragEndHandler;
       }
 
       delete element.dataset.dragListenersAttached;
@@ -5432,12 +5432,12 @@ export class FolderManager {
     }
 
     try {
-      const hist = history as any;
+      const hist = history as History & Record<string, unknown>;
       const originalPushState = hist.pushState;
       const originalReplaceState = hist.replaceState;
 
-      const wrap = (method: 'pushState' | 'replaceState', original: any) => {
-        hist[method] = function (...args: any[]) {
+      const wrap = (method: 'pushState' | 'replaceState', original: (...args: unknown[]) => unknown) => {
+        hist[method] = function (...args: unknown[]) {
           const ret = original.apply(this, args);
           try {
             update();
@@ -5447,8 +5447,8 @@ export class FolderManager {
           return ret;
         };
       };
-      wrap('pushState', originalPushState);
-      wrap('replaceState', originalReplaceState);
+      wrap('pushState', originalPushState as (...args: unknown[]) => unknown);
+      wrap('replaceState', originalReplaceState as (...args: unknown[]) => unknown);
 
       cleanupFns.push(() => {
         hist.pushState = originalPushState;
@@ -5565,9 +5565,10 @@ export class FolderManager {
   }
 
   private setupMessageListener(): void {
-    browser.runtime.onMessage.addListener((message: any, sender: any, sendResponse: any) => {
+    browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      const msg = message as Record<string, unknown>;
       // Handle request for current folder data
-      if (message.type === 'gv.sync.requestData') {
+      if (msg.type === 'gv.sync.requestData') {
         this.debug('Received request for folder data from popup');
         sendResponse({
           ok: true,
@@ -5579,7 +5580,7 @@ export class FolderManager {
       }
 
       // Handle reload request (existing functionality might be handled elsewhere, but safe to add log)
-      if (message.type === 'gv.folders.reload') {
+      if (msg.type === 'gv.folders.reload') {
         this.debug('Received reload request');
         this.loadData().then(() => {
           this.refresh();
@@ -5673,7 +5674,7 @@ export class FolderManager {
 
     try {
       // Type assertion to match the service's expected type
-      const payload = FolderImportExportService.exportToPayload(this.data as any);
+      const payload = FolderImportExportService.exportToPayload(this.data as unknown as Parameters<typeof FolderImportExportService.exportToPayload>[0]);
       FolderImportExportService.downloadJSON(payload);
       this.showNotification(this.t('folder_export_success'), 'success');
       this.debug('Folders exported successfully');
@@ -5863,7 +5864,7 @@ export class FolderManager {
       // Import data (now async with concurrency protection)
       const importResult = await FolderImportExportService.importFromPayload(
         validationResult.data,
-        this.data as any,
+        this.data as unknown as Parameters<typeof FolderImportExportService.importFromPayload>[1],
         { strategy, createBackup: true },
       );
 
@@ -5876,7 +5877,7 @@ export class FolderManager {
       }
 
       // Update data and save
-      this.data = importResult.data.data as any;
+      this.data = importResult.data.data;
       this.saveData();
       this.refresh();
 
@@ -6106,11 +6107,11 @@ export class FolderManager {
       const folders = this.data;
 
       // Get prompts from storage
-      let prompts: any[] = [];
+      let prompts: PromptItem[] = [];
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          prompts = storageResult.gvPromptItems;
+          prompts = storageResult.gvPromptItems as PromptItem[];
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get prompts for upload:', err);
@@ -6158,8 +6159,8 @@ export class FolderManager {
             error?: string;
             data?: {
               folders?: { data?: FolderData };
-              prompts?: { items?: any[] };
-              starred?: { data?: { messages: Record<string, any[]> } };
+              prompts?: { items?: PromptItem[] };
+              starred?: { data?: { messages: Record<string, unknown[]> } };
             };
           }
         | undefined;
@@ -6188,18 +6189,18 @@ export class FolderManager {
       );
 
       // Get local prompts for merge
-      let localPrompts: any[] = [];
+      let localPrompts: PromptItem[] = [];
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          localPrompts = storageResult.gvPromptItems;
+          localPrompts = storageResult.gvPromptItems as PromptItem[];
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get local prompts for merge:', err);
       }
 
       // Get local starred messages for merge
-      let localStarred = { messages: {} as Record<string, any[]> };
+      let localStarred = { messages: {} as Record<string, unknown[]> };
       try {
         const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
         if (starredResult.geminiTimelineStarredMessages) {
@@ -6249,8 +6250,8 @@ export class FolderManager {
   /**
    * Merge prompts by ID (simple deduplication)
    */
-  private mergePrompts(local: any[], cloud: any[]): any[] {
-    const promptMap = new Map<string, any>();
+  private mergePrompts(local: PromptItem[], cloud: PromptItem[]): PromptItem[] {
+    const promptMap = new Map<string, PromptItem>();
 
     // Add local prompts first
     local.forEach((p) => {
@@ -6280,9 +6281,9 @@ export class FolderManager {
    * Merge starred messages by conversationId and turnId
    */
   private mergeStarredMessages(
-    local: { messages: Record<string, any[]> },
-    cloud: { messages: Record<string, any[]> },
-  ): { messages: Record<string, any[]> } {
+    local: { messages: Record<string, unknown[]> },
+    cloud: { messages: Record<string, unknown[]> },
+  ): { messages: Record<string, unknown[]> } {
     const localMessages = local?.messages || {};
     const cloudMessages = cloud?.messages || {};
 
@@ -6291,27 +6292,30 @@ export class FolderManager {
       ...Object.keys(cloudMessages),
     ]);
 
-    const mergedMessages: Record<string, any[]> = {};
+    const mergedMessages: Record<string, unknown[]> = {};
 
     allConversationIds.forEach((conversationId) => {
       const localConvoMessages = localMessages[conversationId] || [];
       const cloudConvoMessages = cloudMessages[conversationId] || [];
 
-      const messageMap = new Map<string, any>();
+      type StarredMsg = { turnId?: string; starredAt?: number };
+      const messageMap = new Map<string, unknown>();
 
       // Add cloud messages first
-      cloudConvoMessages.forEach((msg) => {
-        if (msg?.turnId) messageMap.set(msg.turnId, msg);
+      cloudConvoMessages.forEach((m) => {
+        const msg = m as StarredMsg;
+        if (msg?.turnId) messageMap.set(msg.turnId, m);
       });
 
       // Merge local messages - prefer newer starredAt
-      localConvoMessages.forEach((localMsg) => {
+      localConvoMessages.forEach((m) => {
+        const localMsg = m as StarredMsg;
         if (!localMsg?.turnId) return;
-        const existingMsg = messageMap.get(localMsg.turnId);
+        const existingMsg = messageMap.get(localMsg.turnId) as StarredMsg | undefined;
         if (!existingMsg) {
-          messageMap.set(localMsg.turnId, localMsg);
+          messageMap.set(localMsg.turnId, m);
         } else if ((localMsg.starredAt || 0) >= (existingMsg.starredAt || 0)) {
-          messageMap.set(localMsg.turnId, localMsg);
+          messageMap.set(localMsg.turnId, m);
         }
       });
 

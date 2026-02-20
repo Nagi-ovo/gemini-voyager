@@ -1415,7 +1415,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (!file) return;
       try {
         const text = await file.text();
-        const json = safeParseJSON<any>(text, null);
+        const json = safeParseJSON<Record<string, unknown> | null>(text, null);
         if (!json || (json.format !== 'gemini-voyager.prompts.v1' && !Array.isArray(json.items))) {
           setNotice(i18n.t('pm_import_invalid') || 'Invalid file format', 'err');
           return;

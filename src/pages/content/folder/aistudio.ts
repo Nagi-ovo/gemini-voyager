@@ -6,6 +6,8 @@ import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
 import { createTranslator, initI18n } from '@/utils/i18n';
 
+import type { PromptItem } from '@/core/types/sync';
+
 import type { ConversationReference, DragData, Folder, FolderData } from './types';
 
 function waitForElement<T extends Element = Element>(
@@ -48,7 +50,7 @@ function normalizeText(text: string | null | undefined): string {
   }
 }
 
-function downloadJSON(data: any, filename: string): void {
+function downloadJSON(data: unknown, filename: string): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: 'application/json;charset=utf-8',
   });
@@ -192,13 +194,10 @@ export function parseDragDataPayload(raw: string): DragData | null {
 /**
  * Validate folder data structure
  */
-function validateFolderData(data: any): boolean {
-  return (
-    data &&
-    typeof data === 'object' &&
-    Array.isArray(data.folders) &&
-    typeof data.folderContents === 'object'
-  );
+function validateFolderData(data: unknown): boolean {
+  if (typeof data !== 'object' || data === null) return false;
+  const d = data as Record<string, unknown>;
+  return Array.isArray(d.folders) && typeof d.folderContents === 'object';
 }
 
 export class AIStudioFolderManager {
@@ -358,9 +357,10 @@ export class AIStudioFolderManager {
    * Handles gv.sync.requestData and gv.folders.reload messages from popup
    */
   private setupMessageListener(): void {
-    browser.runtime.onMessage.addListener((message: any, _sender: any, sendResponse: any) => {
+    browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      const msg = message as Record<string, unknown>;
       // Handle request for folder data (for cloud sync upload)
-      if (message?.type === 'gv.sync.requestData') {
+      if (msg?.type === 'gv.sync.requestData') {
         console.log('[AIStudioFolderManager] Received request for folder data from popup');
         sendResponse({
           ok: true,
@@ -370,7 +370,7 @@ export class AIStudioFolderManager {
       }
 
       // Handle reload request (after cloud sync download)
-      if (message?.type === 'gv.folders.reload') {
+      if (msg?.type === 'gv.folders.reload') {
         console.log('[AIStudioFolderManager] Received reload request from sync');
         this.load().then(() => {
           this.render();
@@ -705,10 +705,10 @@ export class AIStudioFolderManager {
       window.addEventListener('popstate', update);
     } catch {}
     try {
-      const hist = history as any;
+      const hist = history as History & Record<string, unknown>;
       const wrap = (method: 'pushState' | 'replaceState') => {
-        const orig = hist[method];
-        hist[method] = function (...args: any[]) {
+        const orig = hist[method] as (...args: unknown[]) => unknown;
+        hist[method] = function (...args: unknown[]) {
           const ret = orig.apply(this, args);
           try {
             update();
@@ -763,7 +763,7 @@ export class AIStudioFolderManager {
 
     const icon = document.createElement('span');
     icon.className = 'gv-folder-icon google-symbols';
-    (icon as any).dataset.icon = 'folder';
+    icon.dataset.icon = 'folder';
     icon.textContent = 'folder';
     header.appendChild(icon);
 
@@ -777,7 +777,7 @@ export class AIStudioFolderManager {
     pinBtn.className = 'gv-folder-pin-btn';
     pinBtn.title = folder.pinned ? this.t('folder_unpin') : this.t('folder_pin');
     try {
-      (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned';
+      pinBtn.dataset.state = folder.pinned ? 'pinned' : 'unpinned';
     } catch {}
     pinBtn.appendChild(this.createIcon('push_pin'));
     pinBtn.addEventListener('click', () => {
@@ -836,7 +836,7 @@ export class AIStudioFolderManager {
 
     const icon = document.createElement('span');
     icon.className = 'gv-conversation-icon google-symbols';
-    (icon as any).dataset.icon = 'chat';
+    icon.dataset.icon = 'chat';
     icon.textContent = 'chat';
     row.appendChild(icon);
 
@@ -938,7 +938,7 @@ export class AIStudioFolderManager {
     st.left = `${ev.clientX}px`;
     st.zIndex = String(2147483647);
     st.display = 'flex';
-    (st as any).flexDirection = 'column';
+    st.flexDirection = 'column';
     document.body.appendChild(menu);
     const onClickAway = (e: MouseEvent) => {
       if (e.target instanceof Node && !menu.contains(e.target)) {
@@ -1381,8 +1381,8 @@ export class AIStudioFolderManager {
       const anchor = a as HTMLAnchorElement;
       const hostEl = this.resolvePromptDragHost(anchor);
       anchor.dataset.gvDragBound = '1';
-      if (!(hostEl as any)._gvDragBound) {
-        (hostEl as any)._gvDragBound = true;
+      if (!(hostEl as Element & { _gvDragBound?: boolean })._gvDragBound) {
+        (hostEl as Element & { _gvDragBound?: boolean })._gvDragBound = true;
         hostEl.draggable = true;
         if (!hostEl.style.cursor) {
           hostEl.style.cursor = 'grab';
@@ -1463,8 +1463,8 @@ export class AIStudioFolderManager {
       if (!anchor) return;
 
       // Skip if already bound
-      if ((tr as any)._gvLibraryDragBound) return;
-      (tr as any)._gvLibraryDragBound = true;
+      if ((tr as Element & { _gvLibraryDragBound?: boolean })._gvLibraryDragBound) return;
+      (tr as Element & { _gvLibraryDragBound?: boolean })._gvLibraryDragBound = true;
 
       tr.draggable = true;
       tr.style.cursor = 'grab';
@@ -2287,11 +2287,11 @@ export class AIStudioFolderManager {
       const folders = this.data;
 
       // Get prompts from storage (shared with Gemini)
-      let prompts: any[] = [];
+      let prompts: PromptItem[] = [];
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          prompts = storageResult.gvPromptItems;
+          prompts = storageResult.gvPromptItems as PromptItem[];
         }
       } catch (err) {
         console.warn('[AIStudioFolderManager] Could not get prompts for upload:', err);
@@ -2339,7 +2339,7 @@ export class AIStudioFolderManager {
             error?: string;
             data?: {
               folders?: { data?: FolderData };
-              prompts?: { items?: any[] };
+              prompts?: { items?: PromptItem[] };
             };
           }
         | undefined;
@@ -2366,11 +2366,11 @@ export class AIStudioFolderManager {
       );
 
       // Get local prompts for merge (shared with Gemini)
-      let localPrompts: any[] = [];
+      let localPrompts: PromptItem[] = [];
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          localPrompts = storageResult.gvPromptItems;
+          localPrompts = storageResult.gvPromptItems as PromptItem[];
         }
       } catch (err) {
         console.warn('[AIStudioFolderManager] Could not get local prompts for merge:', err);
@@ -2412,8 +2412,8 @@ export class AIStudioFolderManager {
   /**
    * Merge prompts by ID (simple deduplication)
    */
-  private mergePromptsData(local: any[], cloud: any[]): any[] {
-    const promptMap = new Map<string, any>();
+  private mergePromptsData(local: PromptItem[], cloud: PromptItem[]): PromptItem[] {
+    const promptMap = new Map<string, PromptItem>();
 
     // Add local prompts first
     local.forEach((p) => {
