@@ -22,6 +22,19 @@ pnpm-lock.yaml
 # Coverage
 coverage/
 
+# Safari Xcode project (Apple-generated files)
+Gemini Voyager/
+safari/
+
+# Firefox signed extension output
+web-ext-artifacts/
+
+# Auto-generated data
+sponsorkit/
+
+# Claude Code internals
+.entire/
+
 # System & Misc
 .DS_Store
 *.zip
