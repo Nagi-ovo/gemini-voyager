@@ -6,7 +6,6 @@ import type {
   ThinkingContent,
   ThinkingItem,
   ThinkingSection,
-  ThoughtItem,
 } from './types';
 
 /**

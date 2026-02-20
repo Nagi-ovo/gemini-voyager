@@ -169,7 +169,7 @@ export function getCompatibilityInfo(
     if (!compatible) {
       info.reason = `Import version ${importVersion} is below minimum required version ${minVersion}`;
     }
-  } catch (error) {
+  } catch {
     info.reason = `Invalid version format: ${importVersion}`;
   }
 

@@ -18,6 +18,7 @@ export default [
       '.github/sponsors/**',
       'public/**',
       'safari/Models/**',
+      'Gemini Voyager/**',
     ],
   },
 

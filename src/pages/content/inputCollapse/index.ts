@@ -334,7 +334,6 @@ function initInputCollapse() {
 
   injectStyles();
 
-  let isFocused = false;
   let lastPathname = window.location.pathname;
 
   // Create AbortController for managing all event listeners
@@ -403,7 +402,6 @@ function initInputCollapse() {
       container.addEventListener(
         'focusin',
         () => {
-          isFocused = true;
           expand(container);
         },
         { signal },
@@ -417,7 +415,6 @@ function initInputCollapse() {
             return; // Focus is still inside
           }
 
-          isFocused = false;
           tryCollapse(container);
         },
         { signal },

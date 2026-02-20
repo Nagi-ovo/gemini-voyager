@@ -2,7 +2,7 @@
  * Timeline-specific types
  * Extracted from the monolithic TimelineManager
  */
-import type { ConversationId, TurnId } from './common';
+import type { TurnId } from './common';
 
 export type ScrollMode = 'jump' | 'flow';
 

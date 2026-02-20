@@ -1876,7 +1876,7 @@ export class AIStudioFolderManager {
           await this.save();
           this.render();
           alert(this.t('folder_import_success') || 'Imported');
-        } catch (e) {
+        } catch {
           alert(this.t('folder_import_error') || 'Import failed');
         }
       },
@@ -1946,7 +1946,7 @@ export class AIStudioFolderManager {
    * Attempt to recover data when load() fails
    * Uses multi-layer backup system: primary > emergency > beforeUnload > in-memory
    */
-  private attemptDataRecovery(error: unknown): void {
+  private attemptDataRecovery(_error: unknown): void {
     console.warn('[AIStudioFolderManager] Attempting data recovery after load failure');
 
     // Step 1: Try to restore from localStorage backups (primary, emergency, beforeUnload)

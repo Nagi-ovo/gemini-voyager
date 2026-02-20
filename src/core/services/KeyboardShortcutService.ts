@@ -19,7 +19,6 @@ import type {
   KeyboardShortcutStorage,
   ModifierKey,
   ShortcutAction,
-  ShortcutKey,
   ShortcutMatch,
 } from '@/core/types/keyboardShortcut';
 

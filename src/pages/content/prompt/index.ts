@@ -404,7 +404,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           .reduce((_, x) => x, undefined as any) as { el: HTMLElement; r: DOMRect } | undefined;
         if (!pick) return;
         const r = pick.r;
-        const tw = trigger.getBoundingClientRect().width || 36;
         const th = trigger.getBoundingClientRect().height || 36;
         const gap = 10;
         const right = Math.max(6, Math.round(vw - r.left + gap));
@@ -668,7 +667,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     let locked = !!(await readStorage<boolean>(STORAGE_KEYS.locked, false));
     let savedPos = await readStorage<PanelPosition | null>(STORAGE_KEYS.position, null);
     let dragging = false;
-    let dragStart = { x: 0, y: 0 };
     let dragOffset = { x: 0, y: 0 };
     let draggingTrigger = false;
     let editingId: string | null = null;
@@ -987,7 +985,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       dragging = true;
       const rect = panel.getBoundingClientRect();
       dragOffset = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
-      dragStart = { x: ev.clientX, y: ev.clientY };
       try {
         panel.setPointerCapture?.(ev.pointerId);
       } catch {}

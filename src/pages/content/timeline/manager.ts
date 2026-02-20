@@ -1,7 +1,5 @@
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { StorageKeys } from '@/core/types/common';
-import type { ShortcutAction } from '@/core/types/keyboardShortcut';
-
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
@@ -2429,7 +2427,7 @@ export class TimelineManager {
     return hidden;
   }
 
-  private calculateEffectiveBaseN(markerIndex: number, hiddenIndices: Set<number>): number {
+  private calculateEffectiveBaseN(markerIndex: number, _hiddenIndices: Set<number>): number {
     const marker = this.markers[markerIndex];
     if (!marker) return 0;
 

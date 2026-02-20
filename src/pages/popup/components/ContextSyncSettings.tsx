@@ -81,7 +81,7 @@ export function ContextSyncSettings() {
 
       setIsOnline(true);
       // setStatusMessage({ text: tRef.current('ideOnline'), kind: 'ok' });
-    } catch (err) {
+    } catch {
       setIsOnline(false);
       // setStatusMessage({ text: tRef.current('ideOffline'), kind: 'err' });
     } finally {

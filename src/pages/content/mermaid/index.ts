@@ -486,7 +486,6 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
     // First, try to render to validate the code
     const uniqueId = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
     let svg: string;
-    let hasError = false;
 
     try {
       // v9.x render returns string directly, v10.x returns {svg: string}
@@ -494,7 +493,6 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
       svg = typeof result === 'string' ? result : (result as { svg: string }).svg;
     } catch (renderError) {
       // Mermaid failed - likely incomplete or invalid syntax
-      hasError = true;
 
       // Clean up any error SVGs mermaid may have created
       const errorSvg = document.getElementById(uniqueId);
@@ -607,7 +605,7 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
     codeBlock.dataset.mermaidCode = normalizedCode;
     codeBlock.dataset.mermaidProcessing = 'false';
     console.log('[Gemini Voyager] Mermaid diagram rendered:', uniqueId);
-  } catch (error) {
+  } catch {
     codeBlock.dataset.mermaidProcessing = 'false';
 
     const codeBlockHost = codeBlock.closest('code-block') as HTMLElement;

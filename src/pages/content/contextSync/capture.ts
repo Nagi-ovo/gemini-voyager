@@ -112,7 +112,7 @@ export class ContextCaptureService {
           mode: 'cors' as RequestMode,
         });
         if (resp.ok) return await resp.blob();
-      } catch (e) {
+      } catch {
         /* ignore credentials error */
       }
 

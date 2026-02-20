@@ -33,7 +33,7 @@ export class SyncService {
           },
         );
       });
-    } catch (err) {
+    } catch {
       return false;
     }
   }

@@ -83,11 +83,6 @@ export function KeyboardShortcutSettings() {
     setRecording({ action, modifiers: [], key: null });
   }, []);
 
-  // Cancel recording
-  const cancelRecording = useCallback(() => {
-    setRecording({ action: null, modifiers: [], key: null });
-  }, []);
-
   // Handle key press during recording
   const handleKeyDown = useCallback(async (e: KeyboardEvent) => {
     const currentRecording = recordingRef.current;

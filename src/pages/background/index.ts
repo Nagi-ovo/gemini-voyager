@@ -4,7 +4,7 @@ import browser from 'webextension-polyfill';
 import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
-import type { PromptItem, SyncData, SyncMode } from '@/core/types/sync';
+import type { PromptItem, SyncMode } from '@/core/types/sync';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
@@ -477,7 +477,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             signal: controller.signal,
           });
           sendResponse({ ok: response.ok });
-        } catch (e) {
+        } catch {
           sendResponse({ ok: false });
         } finally {
           clearTimeout(timeoutId);
@@ -583,7 +583,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         try {
           const r1 = await fetch(fetchUrl, { credentials: 'include', redirect: 'follow' });
           if (r1.ok) return r1;
-        } catch (e) {
+        } catch {
           /* ignore include error */
         }
 

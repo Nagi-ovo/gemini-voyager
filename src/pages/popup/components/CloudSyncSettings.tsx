@@ -133,22 +133,6 @@ export function CloudSyncSettings() {
     }
   }, []);
 
-  // Handle sign in
-  const handleSignIn = useCallback(async () => {
-    setStatusMessage(null);
-    try {
-      const response = await chrome.runtime.sendMessage({ type: 'gv.sync.authenticate' });
-      if (response?.ok && response.state) {
-        setSyncState(response.state);
-      } else {
-        setStatusMessage({ text: response?.error || 'Authentication failed', kind: 'err' });
-      }
-    } catch (error) {
-      console.error('[CloudSyncSettings] Authentication failed:', error);
-      setStatusMessage({ text: 'Authentication failed', kind: 'err' });
-    }
-  }, []);
-
   // Handle sign out
   const handleSignOut = useCallback(async () => {
     try {

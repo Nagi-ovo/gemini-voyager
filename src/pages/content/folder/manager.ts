@@ -11,7 +11,7 @@ import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/
 
 import { sortConversationsByPriority } from './conversationSort';
 import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
-import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
+import { DEFAULT_CONVERSATION_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
 import { createMoveToFolderMenuItem } from './moveToFolderMenuItem';
 import {
   type IFolderStorageAdapter,
@@ -285,7 +285,7 @@ export class FolderManager {
     if (this.sidebarClickListener && this.sidebarContainer) {
       try {
         this.sidebarContainer.removeEventListener('click', this.sidebarClickListener, true);
-      } catch (e) {
+      } catch {
         // Ignore
       }
       this.sidebarClickListener = null;
@@ -1399,7 +1399,6 @@ export class FolderManager {
     element.addEventListener('mouseleave', handleMouseLeave);
 
     // Click handler for multi-select mode
-    const originalClickHandler = element.onclick;
     element.addEventListener(
       'click',
       (e) => {
@@ -2117,7 +2116,7 @@ export class FolderManager {
     input.select();
   }
 
-  private deleteFolder(folderId: string, event?: MouseEvent): void {
+  private deleteFolder(folderId: string, _event?: MouseEvent): void {
     // Create inline confirmation using safe DOM API
     const confirmDialog = document.createElement('div');
     confirmDialog.className = 'gv-folder-confirm-dialog';
@@ -3315,7 +3314,7 @@ export class FolderManager {
     }
   }
 
-  private getSelectedConversationsData(folderId: string): ConversationReference[] {
+  private getSelectedConversationsData(_folderId: string): ConversationReference[] {
     const result: ConversationReference[] = [];
 
     // Collect from all folders since selection can span folders
@@ -5588,7 +5587,7 @@ export class FolderManager {
           // but if sendResponse is provided we can use it
           try {
             sendResponse({ ok: true });
-          } catch (e) {
+          } catch {
             /* ignore */
           }
         });

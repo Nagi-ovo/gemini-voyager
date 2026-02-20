@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest';
 import {
   EXTENSION_VERSION,
   FORMAT_VERSIONS,
-  type SemanticVersion,
   applyMigrations,
   compareVersions,
   getCompatibilityInfo,
