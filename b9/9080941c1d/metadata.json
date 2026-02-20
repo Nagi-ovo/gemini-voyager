@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "b99080941c1d",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/core/services/GoogleDriveSyncService.ts",
+    "src/core/services/KeyboardShortcutService.ts",
+    "src/features/backup/services/BackupService.ts",
+    "src/features/export/services/__tests__/ConversationExportService.test.ts",
+    "src/features/export/services/__tests__/PDFPrintService.test.ts",
+    "src/pages/content/chatWidth/index.ts",
+    "src/pages/content/deepResearch/extractor.ts",
+    "src/pages/content/deepResearch/menuButton.ts",
+    "src/pages/content/export/index.ts",
+    "src/pages/content/folder/aistudio.ts",
+    "src/pages/content/folder/manager.ts",
+    "src/pages/content/prompt/index.ts",
+    "src/pages/content/timeline/manager.ts",
+    "src/pages/popup/components/CloudSyncSettings.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b9/9080941c1d/0/metadata.json",
+      "transcript": "/b9/9080941c1d/0/full.jsonl",
+      "context": "/b9/9080941c1d/0/context.md",
+      "content_hash": "/b9/9080941c1d/0/content_hash.txt",
+      "prompt": "/b9/9080941c1d/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 16699,
+    "cache_read_tokens": 171233,
+    "output_tokens": 3257,
+    "api_call_count": 6
+  }
+}
