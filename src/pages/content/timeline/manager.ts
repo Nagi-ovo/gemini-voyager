@@ -20,6 +20,7 @@ function hashString(input: string): string {
 /** Accessibility prefixes injected by Gemini's DOM that should be stripped from previews effectively globally. */
 const TURN_LABEL_PREFIXES =
   /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
+const VISUALLY_HIDDEN_CLASS_FRAGMENT = 'visually-hidden';
 
 type ExtGlobal = typeof globalThis & {
   chrome?: {
@@ -819,6 +820,47 @@ export class TimelineManager {
     }
   }
 
+  private hasVisuallyHiddenClass(el: Element): boolean {
+    if (!(el instanceof HTMLElement) || el.classList.length === 0) return false;
+    for (const cls of el.classList) {
+      if (cls.toLowerCase().includes(VISUALLY_HIDDEN_CLASS_FRAGMENT)) return true;
+    }
+    return false;
+  }
+
+  private extractTurnText(element: HTMLElement | null): string {
+    if (!element) return '';
+    try {
+      if (!this.hasVisuallyHiddenClass(element)) {
+        const descendants = element.getElementsByTagName('*');
+        let containsVisuallyHiddenDescendant = false;
+        for (let i = 0; i < descendants.length; i++) {
+          if (this.hasVisuallyHiddenClass(descendants[i])) {
+            containsVisuallyHiddenDescendant = true;
+            break;
+          }
+        }
+        if (!containsVisuallyHiddenDescendant) {
+          return this.normalizeText(element.textContent || '');
+        }
+      } else {
+        return '';
+      }
+
+      const clone = element.cloneNode(true) as HTMLElement;
+      if (this.hasVisuallyHiddenClass(clone)) return '';
+      const descendants = clone.getElementsByTagName('*');
+      for (let i = descendants.length - 1; i >= 0; i--) {
+        if (this.hasVisuallyHiddenClass(descendants[i])) {
+          descendants[i].remove();
+        }
+      }
+      return this.normalizeText(clone.textContent || '');
+    } catch {
+      return this.normalizeText(element.textContent || '');
+    }
+  }
+
   /**
    * Performance-optimized filter to remove nested elements.
    * Sorts elements by depth first, which can prune the search space in the average case.
@@ -876,7 +918,7 @@ export class TimelineManager {
       // Get or compute normalized text
       let normalizedText = normalizedCache.get(el);
       if (normalizedText === undefined) {
-        normalizedText = this.normalizeText(el.textContent || '');
+        normalizedText = this.extractTurnText(el);
         normalizedCache.set(el, normalizedText);
       }
 
@@ -911,7 +953,7 @@ export class TimelineManager {
     const asEl = el as HTMLElement & { dataset?: DOMStringMap & { turnId?: string } };
     let id = asEl.dataset?.turnId || '';
     if (!id) {
-      const basis = this.normalizeText(asEl.textContent || '') || `user-${index}`;
+      const basis = this.extractTurnText(asEl) || `user-${index}`;
       // Use only content hash (without index) to ensure stable IDs across page refreshes
       // This prevents starred messages from losing their stars when the conversation continues
       id = `u-${hashString(basis)}`;
@@ -1144,7 +1186,7 @@ export class TimelineManager {
       const m = {
         id,
         element,
-        summary: this.normalizeText(element.textContent || ''),
+        summary: this.extractTurnText(element),
         n,
         baseN: n,
         dotElement: null,
@@ -2831,7 +2873,11 @@ export class TimelineManager {
 
     if (targetElement && !targetElement.isConnected) return true;
 
-    if (targetElement && this.conversationContainer && !this.conversationContainer.contains(targetElement)) {
+    if (
+      targetElement &&
+      this.conversationContainer &&
+      !this.conversationContainer.contains(targetElement)
+    ) {
       return true;
     }
 
