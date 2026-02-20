@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "fdd6f905ecaa",
+  "session_id": "33ce5013-89e6-49ac-8933-e7d80868628b",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T10:33:29.01436Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/pages/content/folder/aistudio.ts",
+    "src/pages/content/folder/manager.ts",
+    "src/pages/content/prompt/index.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "064628bda7ec",
+  "transcript_identifier_at_start": "3f5ff589-dbf8-49e9-a3e3-491c03bd0bac",
+  "checkpoint_transcript_start": 1482,
+  "transcript_lines_at_start": 1482,
+  "token_usage": {
+    "input_tokens": 104,
+    "cache_creation_tokens": 50065,
+    "cache_read_tokens": 8544851,
+    "output_tokens": 16809,
+    "api_call_count": 104
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T10:33:20.251145Z",
+    "agent_lines": 0,
+    "human_added": 4,
+    "human_modified": 76,
+    "human_removed": 0,
+    "total_committed": 4,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/33ce5013-89e6-49ac-8933-e7d80868628b.jsonl"
+}
