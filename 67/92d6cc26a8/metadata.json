@@ -3,7 +3,7 @@
   "checkpoint_id": "6792d6cc26a8",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "src/core/services/DataBackupService.ts",
     "vite.config.base.ts"
@@ -22,13 +22,20 @@
       "context": "/67/92d6cc26a8/1/context.md",
       "content_hash": "/67/92d6cc26a8/1/content_hash.txt",
       "prompt": "/67/92d6cc26a8/1/prompt.txt"
+    },
+    {
+      "metadata": "/67/92d6cc26a8/2/metadata.json",
+      "transcript": "/67/92d6cc26a8/2/full.jsonl",
+      "context": "/67/92d6cc26a8/2/context.md",
+      "content_hash": "/67/92d6cc26a8/2/content_hash.txt",
+      "prompt": "/67/92d6cc26a8/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 24,
-    "cache_creation_tokens": 26093,
-    "cache_read_tokens": 1760443,
-    "output_tokens": 3763,
-    "api_call_count": 20
+    "input_tokens": 51,
+    "cache_creation_tokens": 90444,
+    "cache_read_tokens": 2719784,
+    "output_tokens": 4321,
+    "api_call_count": 37
   }
 }

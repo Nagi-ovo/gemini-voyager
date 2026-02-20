@@ -1,0 +1,16 @@
+当前所有还没有 push 到 remote 的改动会影响任何功能吗？还是仅仅只是修复了 ESLint 警告呢
+
+---
+
+用 vite 移除生产环境中的 console.log，不过必要的 console.warn 和 error 要保留，如果当前都是用的 console.log，请你将必要的调试信息改为error和warn，参考：
+esbuild: {
+    pure: mode === 'production' ? ['console.log', 'console.debug'] : [],
+  },
+
+---
+
+那我平时本地调试和发布github 打包 ci 里有什么需要注意的？怎么用
+
+---
+
+bun run build:chrome

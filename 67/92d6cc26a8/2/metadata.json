@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "6792d6cc26a8",
+  "session_id": "3647b936-30df-474e-b3b6-0ed392a14d0f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T11:01:31.85472Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/core/services/DataBackupService.ts",
+    "vite.config.base.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "cfd8f179d0d8",
+  "transcript_identifier_at_start": "f9379f74-5c94-46e6-8d3c-445174c29597",
+  "token_usage": {
+    "input_tokens": 27,
+    "cache_creation_tokens": 64351,
+    "cache_read_tokens": 959341,
+    "output_tokens": 558,
+    "api_call_count": 17
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T11:01:31.641989Z",
+    "agent_lines": 4,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 4,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/3647b936-30df-474e-b3b6-0ed392a14d0f.jsonl"
+}
