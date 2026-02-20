@@ -799,6 +799,14 @@
     "message": "将文件夹和提示词同步到 Google Drive",
     "description": "云同步描述"
   },
+  "preventAutoScroll": {
+    "message": "防自动跳转",
+    "description": "功能选项：防止每次输入后生成答案时自动滚到底部"
+  },
+  "preventAutoScrollHint": {
+    "message": "避免在查看过往回答时按回车导致页面自动跳到底部",
+    "description": "防自动跳转功能的解释提示"
+  },
   "syncModeDisabled": {
     "message": "已禁用",
     "description": "同步模式禁用选项"

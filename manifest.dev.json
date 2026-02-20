@@ -15,6 +15,7 @@
         "icon-32.png",
         "icon-128.png",
         "fetchInterceptor.js",
+        "prevent-auto-scroll.js",
         "assets/*.js",
         "assets/*.png"
       ],

@@ -799,6 +799,14 @@
     "message": "Sync folders and prompts to Google Drive",
     "description": "Cloud sync description"
   },
+  "preventAutoScroll": {
+    "message": "Prevent auto-scroll to bottom",
+    "description": "Feature to prevent auto scrolling to bottom when generating answers"
+  },
+  "preventAutoScrollHint": {
+    "message": "Prevents Gemini from jumping to the bottom when you hit enter while reading previous responses.",
+    "description": "Hint for prevent auto scroll feature"
+  },
   "syncModeDisabled": {
     "message": "Disabled",
     "description": "Sync mode disabled option"

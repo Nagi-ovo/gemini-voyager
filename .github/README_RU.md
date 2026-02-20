@@ -103,6 +103,7 @@
   - **[Пакетное удаление](https://voyager.nagi.fun/ru/guide/batch-delete)**: Массовая очистка истории диалогов.
   - **[Ответ с цитированием](https://voyager.nagi.fun/ru/guide/quote-reply)**: Цитирование выделенного текста при ответе.
   - **[Синхронизация заголовка](https://voyager.nagi.fun/ru/guide/tab-title)**: Автоматическое обновление названия вкладки браузера.
+  - **[Предотвращение автопрокрутки](https://voyager.nagi.fun/ru/guide/prevent-auto-scroll)**: Блокирует прыжок страницы при отправке сообщения.
   - **[Сворачивание ввода](https://voyager.nagi.fun/ru/guide/input-collapse)**: Сворачивание пустого поля ввода для увеличения области чтения.
   - **[Модель по умолчанию](https://voyager.nagi.fun/ru/guide/default-model)**: Установите вашу любимую модель по умолчанию.
   - **[Скрытие недавних элементов и Gems](https://voyager.nagi.fun/ru/guide/recents-hider)**: Скройте список «Недавние» на боковой панели, чтобы не отвлекаться.

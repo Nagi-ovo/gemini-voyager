@@ -68,6 +68,7 @@
         "icon-32.png",
         "katex-config.js",
         "fetchInterceptor.js",
+        "prevent-auto-scroll.js",
         "assets/*.js",
         "assets/*.png"
       ],

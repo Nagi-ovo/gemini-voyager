@@ -791,6 +791,14 @@
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows modifier key"
   },
+  "preventAutoScroll": {
+    "message": "自動スクロール防止",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "preventAutoScrollHint": {
+    "message": "過去の回答を読んでいるときにEnterキーを押すと、一気に一番下までスクロールしてしまうのを防ぎます。",
+    "description": "Auto-hide sidebar feature hint"
+  },
   "cloudSync": {
     "message": "クラウド同期",
     "description": "Cloud sync section title"

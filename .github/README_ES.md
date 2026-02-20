@@ -103,6 +103,7 @@ Por eso creamos **Gemini Voyager**. No es solo una herramienta; es un compañero
   - **[Eliminación por Lote](https://voyager.nagi.fun/es/guide/batch-delete)**: Limpia tu historial de forma masiva.
   - **[Respuesta con Cita](https://voyager.nagi.fun/es/guide/quote-reply)**: Responde con contexto seleccionando texto.
   - **[Sincronización de Título de Pestaña](https://voyager.nagi.fun/es/guide/tab-title)**: Sincroniza automáticamente el título de la pestaña del navegador.
+  - **[Evitar desplazamiento automático](https://voyager.nagi.fun/es/guide/prevent-auto-scroll)**: Intercepta el comportamiento de salto no deseado al enviar un mensaje.
   - **[Colapso de Entrada](https://voyager.nagi.fun/es/guide/input-collapse)**: Área de entrada auto-colapsable para más espacio de lectura.
   - **[Modelo Predeterminado](https://voyager.nagi.fun/es/guide/default-model)**: Establece tu modelo preferido por defecto.
   - **[Ocultar elementos recientes y Gems](https://voyager.nagi.fun/es/guide/recents-hider)**: Oculta la lista "Recientes" en la barra lateral para reducir las distracciones.

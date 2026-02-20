@@ -21,6 +21,7 @@ import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';
 import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startMermaid } from './mermaid/index';
+import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
 import { startRecentsHider } from './recentsHider/index';
@@ -176,6 +177,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startInputCollapse();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startPreventAutoScroll();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startFormulaCopy();

@@ -127,6 +127,7 @@ interface SettingsUpdate {
   ctrlEnterSendEnabled?: boolean;
   sidebarAutoHideEnabled?: boolean;
   snowEffectEnabled?: boolean;
+  preventAutoScrollEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -155,6 +156,7 @@ export default function Popup() {
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
   const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
   const [snowEffectEnabled, setSnowEffectEnabled] = useState<boolean>(false);
+  const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState<boolean>(false);
   const [isAIStudio, setIsAIStudio] = useState<boolean>(false);
 
   useEffect(() => {
@@ -231,6 +233,8 @@ export default function Popup() {
         payload.gvSidebarAutoHide = settings.sidebarAutoHideEnabled;
       if (typeof settings.snowEffectEnabled === 'boolean')
         payload.gvSnowEffect = settings.snowEffectEnabled;
+      if (typeof settings.preventAutoScrollEnabled === 'boolean')
+        payload.gvPreventAutoScrollEnabled = settings.preventAutoScrollEnabled;
       void setSyncStorage(payload);
     },
     [setSyncStorage],
@@ -459,6 +463,7 @@ export default function Popup() {
           gvCtrlEnterSend: false,
           gvSidebarAutoHide: false,
           gvSnowEffect: false,
+          gvPreventAutoScrollEnabled: false,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -484,6 +489,7 @@ export default function Popup() {
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
           setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
           setSnowEffectEnabled(res?.gvSnowEffect === true);
+          setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -844,6 +850,25 @@ export default function Popup() {
                 onChange={(e) => {
                   setDraggableTimeline(e.target.checked);
                   apply({ draggableTimeline: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
+                  htmlFor="prevent-auto-scroll"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                >
+                  {t('preventAutoScroll')}
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">{t('preventAutoScrollHint')}</p>
+              </div>
+              <Switch
+                id="prevent-auto-scroll"
+                checked={preventAutoScrollEnabled}
+                onChange={(e) => {
+                  setPreventAutoScrollEnabled(e.target.checked);
+                  apply({ preventAutoScrollEnabled: e.target.checked });
                 }}
               />
             </div>

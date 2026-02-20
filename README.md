@@ -103,6 +103,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - **[Batch Delete](https://voyager.nagi.fun/en/guide/batch-delete)**: Bulk delete conversations.
   - **[Quote Reply](https://voyager.nagi.fun/en/guide/quote-reply)**: Reply with context by selecting text.
   - **[Tab Title Sync](https://voyager.nagi.fun/en/guide/tab-title)**: Auto-sync browser tab titles.
+  - **[Prevent Auto Scroll](https://voyager.nagi.fun/en/guide/prevent-auto-scroll)**: Intercepts unwanted jumping behavior when hitting enter to send a new prompt.
   - **[Input Collapse](https://voyager.nagi.fun/en/guide/input-collapse)**: Auto-expandable input area for more reading space.
   - **[Default Model](https://voyager.nagi.fun/en/guide/default-model)**: Set your favorite model as default.
   - **[Hide Recent Items](https://voyager.nagi.fun/en/guide/recents-hider)**: Hide "Recent" list in the sidebar to reduce distraction.

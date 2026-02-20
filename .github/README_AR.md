@@ -103,6 +103,7 @@
   - **[الحذف الجماعي](https://voyager.nagi.fun/ar/guide/batch-delete)**: تنظيف السجل الخاص بك دفعة واحدة.
   - **[الرد مع اقتباس](https://voyager.nagi.fun/ar/guide/quote-reply)**: الرد مع السياق عن طريق تحديد النص.
   - **[مزامنة عنوان علامة التبويب](https://voyager.nagi.fun/ar/guide/tab-title)**: مزامنة عنوان علامة تبويب المتصفح تلقائياً مع عنوان الدردشة.
+  - **[منع التمرير التلقائي](https://voyager.nagi.fun/ar/guide/prevent-auto-scroll)**: يمنع الصفحة من النزول تلقائياً إلى الأسفل.
   - **[طي الإدخال](https://voyager.nagi.fun/ar/guide/input-collapse)**: منطقة إدخال قابلة للطي تلقائياً لتوفير مساحة قراءة أكبر.
   - **[النموذج الافتراضي](https://voyager.nagi.fun/ar/guide/default-model)**: تعيين النموذج المفضل لديك كنموذج افتراضي.
   - **[إخفاء العناصر الأخيرة والـ Gems](https://voyager.nagi.fun/ar/guide/recents-hider)**: إخفاء قائمة "الأخيرة" في الشريط الجانبي لتقليل التشتت.

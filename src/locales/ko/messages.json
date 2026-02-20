@@ -791,6 +791,14 @@
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows modifier key"
   },
+  "preventAutoScroll": {
+    "message": "자동 스크롤 방지",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "preventAutoScrollHint": {
+    "message": "이전 응답을 읽는 동안 Enter 키를 누를 때 Gemini가 맨 아래로 점프하는 것을 방지합니다.",
+    "description": "Auto-hide sidebar feature hint"
+  },
   "cloudSync": {
     "message": "클라우드 동기화",
     "description": "Cloud sync section title"
