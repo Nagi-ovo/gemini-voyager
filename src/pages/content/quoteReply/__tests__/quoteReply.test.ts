@@ -7,8 +7,6 @@ vi.mock('../../inputCollapse/index', () => ({
   expandInputCollapseIfNeeded: vi.fn(),
 }));
 
-const INVISIBLE_EDITOR_CONTENT = '\u200B\u200C\u200D\u200E\u200F\u2060\uFEFF\u00A0';
-
 function selectSourceText(start = 0, end = 5) {
   const selection = window.getSelection();
   const textNode = document.getElementById('source')?.firstChild;
@@ -114,22 +112,6 @@ describe('quote reply', () => {
     triggerQuoteReply();
 
     expect(expandInputCollapseIfNeeded).toHaveBeenCalledTimes(1);
-
-    cleanup();
-  });
-
-  it('treats invisible-only editor content as empty (no leading newline)', () => {
-    const cleanup = startQuoteReply();
-    const input = document.getElementById('input');
-    if (!(input instanceof HTMLElement)) {
-      throw new Error('Expected quote input element.');
-    }
-
-    input.textContent = INVISIBLE_EDITOR_CONTENT;
-
-    triggerQuoteReply();
-
-    expect(input.textContent).toBe(`${INVISIBLE_EDITOR_CONTENT}> Hello\n`);
 
     cleanup();
   });

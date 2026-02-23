@@ -35,7 +35,6 @@ const POSITIONING = {
 
 /** SVG icon for the quote button */
 const QUOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path></svg>`;
-const INVISIBLE_CONTENT_CHARS_REGEX = /[\s\p{Cf}]/gu;
 
 const STYLE_ID = 'gemini-voyager-quote-reply-style';
 
@@ -131,10 +130,6 @@ function getChatInput(): HTMLElement | null {
   return null;
 }
 
-function normalizeInputText(raw: string): string {
-  return raw.replace(INVISIBLE_CONTENT_CHARS_REGEX, '');
-}
-
 function countLineBreaks(raw: string): number {
   return (raw.match(/\n/g) || []).length;
 }
@@ -152,23 +147,23 @@ function getPlaceholderCandidates(input: HTMLElement): string[] {
 
   return candidates
     .filter((value): value is string => Boolean(value))
-    .map((value) => normalizeInputText(value));
+    .map((value) => value.trim());
 }
 
 function isChatInputEmpty(input: HTMLElement | HTMLTextAreaElement): boolean {
   if (input instanceof HTMLTextAreaElement) {
-    return normalizeInputText(input.value).length === 0;
+    return input.value.trim().length === 0;
   }
 
   const rawContent = input.innerText ?? input.textContent ?? '';
-  const normalizedContent = normalizeInputText(rawContent);
+  const trimmedContent = rawContent.trim();
 
   // If visible text exists and it's not placeholder text, treat as non-empty even if
   // Quill's `ql-blank` class lags behind DOM updates.
-  if (normalizedContent.length > 0) {
+  if (trimmedContent.length > 0) {
     const placeholders = getPlaceholderCandidates(input);
     const isPlaceholderText = placeholders.some(
-      (placeholder) => placeholder.length > 0 && placeholder === normalizedContent,
+      (placeholder) => placeholder.length > 0 && placeholder === trimmedContent,
     );
     if (!isPlaceholderText) {
       return false;
@@ -180,7 +175,7 @@ function isChatInputEmpty(input: HTMLElement | HTMLTextAreaElement): boolean {
     return true;
   }
 
-  return normalizedContent.length === 0;
+  return trimmedContent.length === 0;
 }
 
 /**
@@ -313,13 +308,6 @@ export function startQuoteReply() {
 
         // Check input state at insertion time to avoid race conditions
         // (user might type or another quote might be inserted during the delay)
-        //
-        // Use `innerText` for contenteditable elements because it reflects the
-        // visible, layout-aware text, unlike `textContent` which may include
-        // invisible characters injected by Gemini's rich-textarea (e.g. zero-width
-        // spaces \u200B, non-breaking spaces \u00A0, BOM \uFEFF). These characters
-        // are not stripped by `.trim()`, causing isInputEmpty to be incorrectly
-        // false even when the box appears empty to the user.
         const isInputEmpty = isChatInputEmpty(input);
 
         // 1. Add a newline at the end (any quote)
