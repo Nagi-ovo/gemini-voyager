@@ -61,7 +61,7 @@ describe('quote reply', () => {
         right: 100,
         x: 0,
         y: 0,
-        toJSON: () => { },
+        toJSON: () => {},
       }) as DOMRect;
     input.focus = vi.fn();
     input.scrollIntoView = vi.fn();
@@ -78,7 +78,7 @@ describe('quote reply', () => {
             right: 10,
             x: 0,
             y: 0,
-            toJSON: () => { },
+            toJSON: () => {},
           }) as DOMRect,
       ),
       configurable: true,
@@ -194,16 +194,16 @@ describe('quote reply', () => {
     }
 
     input.textContent = 'Existing';
-    const execCommandMock = vi.spyOn(document, 'execCommand').mockImplementation(
-      (command: string, _showUI?: boolean, value?: string) => {
+    const execCommandMock = vi
+      .spyOn(document, 'execCommand')
+      .mockImplementation((command: string, _showUI?: boolean, value?: string) => {
         if (command === 'insertText' && typeof value === 'string') {
           const stripped = value.startsWith('\n') ? value.slice(1) : value;
           input.textContent = `${input.textContent ?? ''}${stripped}`;
           return true;
         }
         return false;
-      },
-    );
+      });
 
     triggerQuoteReply();
 
@@ -226,8 +226,9 @@ describe('quote reply', () => {
     }
 
     input.textContent = 'Existing';
-    const execCommandMock = vi.spyOn(document, 'execCommand').mockImplementation(
-      (command: string, _showUI?: boolean, value?: string) => {
+    const execCommandMock = vi
+      .spyOn(document, 'execCommand')
+      .mockImplementation((command: string, _showUI?: boolean, value?: string) => {
         if (command === 'insertText' && typeof value === 'string') {
           if (value === '\n\n') {
             return true; // Pretend success but do not mutate content
@@ -236,8 +237,7 @@ describe('quote reply', () => {
           return true;
         }
         return false;
-      },
-    );
+      });
 
     triggerQuoteReply();
 
@@ -280,8 +280,9 @@ describe('quote reply', () => {
       },
     });
 
-    const execCommandMock = vi.spyOn(document, 'execCommand').mockImplementation(
-      (command: string, _showUI?: boolean, value?: string) => {
+    const execCommandMock = vi
+      .spyOn(document, 'execCommand')
+      .mockImplementation((command: string, _showUI?: boolean, value?: string) => {
         if (command !== 'insertText' || typeof value !== 'string') {
           return false;
         }
@@ -295,8 +296,7 @@ describe('quote reply', () => {
         state.visible = `${state.visible}${value}`;
         state.raw = `${state.raw}${value.replace(/\n/g, '')}`;
         return true;
-      },
-    );
+      });
 
     triggerQuoteReply();
 

@@ -134,6 +134,12 @@ function countLineBreaks(raw: string): number {
   return (raw.match(/\n/g) || []).length;
 }
 
+function getContenteditableQuoteSeparator(): string {
+  // Firefox + Quill contenteditable tends to render an extra visual break
+  // for double-newline insertion, so we use a single newline separator there.
+  return navigator.userAgent.includes('Firefox') ? '\n' : '\n\n';
+}
+
 function getPlaceholderCandidates(input: HTMLElement): string[] {
   const richTextarea = input.closest('rich-textarea');
   const candidates = [
@@ -145,9 +151,7 @@ function getPlaceholderCandidates(input: HTMLElement): string[] {
     richTextarea?.getAttribute('placeholder'),
   ];
 
-  return candidates
-    .filter((value): value is string => Boolean(value))
-    .map((value) => value.trim());
+  return candidates.filter((value): value is string => Boolean(value)).map((value) => value.trim());
 }
 
 function isChatInputEmpty(input: HTMLElement | HTMLTextAreaElement): boolean {
@@ -183,14 +187,14 @@ function isChatInputEmpty(input: HTMLElement | HTMLTextAreaElement): boolean {
  * position via execCommand. Returns true if the content actually changed.
  * The caller must fall back to prepending \n\n in the text payload when false.
  */
-function tryInsertQuoteSeparator(input: HTMLElement): boolean {
+function tryInsertQuoteSeparator(input: HTMLElement, separator: string): boolean {
   const beforeVisible = input.innerText ?? '';
   const beforeRaw = input.textContent ?? '';
   const beforeVisibleLineBreakCount = countLineBreaks(beforeVisible);
   const beforeRawLineBreakCount = countLineBreaks(beforeRaw);
   let ok = false;
   try {
-    ok = document.execCommand('insertText', false, '\n\n');
+    ok = document.execCommand('insertText', false, separator);
   } catch {
     ok = false;
   }
@@ -202,7 +206,8 @@ function tryInsertQuoteSeparator(input: HTMLElement): boolean {
 
   const visibleLineBreakDelta = countLineBreaks(afterVisible) - beforeVisibleLineBreakCount;
   const rawLineBreakDelta = countLineBreaks(afterRaw) - beforeRawLineBreakCount;
-  return visibleLineBreakDelta >= 2 || rawLineBreakDelta >= 2;
+  const requiredBreaks = countLineBreaks(separator);
+  return visibleLineBreakDelta >= requiredBreaks || rawLineBreakDelta >= requiredBreaks;
 }
 
 export function startQuoteReply() {
@@ -331,22 +336,29 @@ export function startQuoteReply() {
           // Contenteditable (Gemini/Quill) logic
           const sel = window.getSelection();
 
-          // Move cursor to the end first
+          // For empty editors, insert from start.
           if (sel) {
             const range = document.createRange();
             range.selectNodeContents(input);
-            range.collapse(false); // Move cursor to very end
+            if (isInputEmpty) {
+              range.collapse(true);
+            } else {
+              range.collapse(false); // Move cursor to very end
+            }
             sel.removeAllRanges();
             sel.addRange(range);
           }
 
-          // Try to insert \n\n separator via execCommand in one shot.
+          // Try to insert a separator via execCommand in one shot.
           // If the command succeeds and mutates content, only the quote body
-          // remains to be inserted. Otherwise fall back to prepending \n\n.
+          // remains to be inserted. Otherwise fall back to prepending separator.
+          const quoteSeparator = getContenteditableQuoteSeparator();
           let contentToInsert: string;
           if (!isInputEmpty) {
-            const separatorInserted = tryInsertQuoteSeparator(input);
-            contentToInsert = separatorInserted ? quoteWithTrailingNewline : `\n\n${quoteWithTrailingNewline}`;
+            const separatorInserted = tryInsertQuoteSeparator(input, quoteSeparator);
+            contentToInsert = separatorInserted
+              ? quoteWithTrailingNewline
+              : `${quoteSeparator}${quoteWithTrailingNewline}`;
           } else {
             contentToInsert = quoteWithTrailingNewline;
           }
