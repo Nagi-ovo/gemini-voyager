@@ -168,6 +168,71 @@ describe('quote reply', () => {
     cleanup();
   });
 
+  it('uses single-line separator for Firefox contenteditable', () => {
+    const cleanup = startQuoteReply();
+    const input = document.getElementById('input');
+    if (!(input instanceof HTMLElement)) {
+      throw new Error('Expected quote input element.');
+    }
+
+    const originalUserAgent = navigator.userAgent;
+    Object.defineProperty(window.navigator, 'userAgent', {
+      configurable: true,
+      value: `${originalUserAgent} Firefox/130.0`,
+    });
+
+    const execCommandMock = vi.spyOn(document, 'execCommand');
+    input.textContent = 'Existing';
+
+    triggerQuoteReply();
+
+    expect(execCommandMock).toHaveBeenCalledWith('insertText', false, '\n');
+    expect(execCommandMock).not.toHaveBeenCalledWith('insertText', false, '\n\n');
+    expect(input.textContent).toBe('Existing\n> Hello\n');
+
+    Object.defineProperty(window.navigator, 'userAgent', {
+      configurable: true,
+      value: originalUserAgent,
+    });
+    cleanup();
+  });
+
+  it('prepends two newlines for non-empty textarea input', () => {
+    const cleanup = startQuoteReply();
+    const inputContainer = document.getElementById('input-container');
+    if (!(inputContainer instanceof HTMLElement)) {
+      throw new Error('Expected input container element.');
+    }
+
+    inputContainer.innerHTML = '<textarea id="input" placeholder="Ask Gemini"></textarea>';
+    const textarea = document.getElementById('input');
+    if (!(textarea instanceof HTMLTextAreaElement)) {
+      throw new Error('Expected textarea input element.');
+    }
+
+    textarea.getBoundingClientRect = () =>
+      ({
+        height: 20,
+        width: 100,
+        top: 0,
+        left: 0,
+        bottom: 20,
+        right: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      }) as DOMRect;
+    textarea.focus = vi.fn();
+    textarea.scrollIntoView = vi.fn();
+    textarea.value = 'Existing';
+
+    triggerQuoteReply();
+
+    expect(textarea.value).toBe('Existing\n\n> Hello\n');
+
+    cleanup();
+  });
+
   it('falls back to Range insertion when execCommand is unavailable', () => {
     const cleanup = startQuoteReply();
     const input = document.getElementById('input');
