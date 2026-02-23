@@ -186,7 +186,7 @@ describe('quote reply', () => {
     cleanup();
   });
 
-  it('inserts explicit line break for non-empty input when leading newline is swallowed', () => {
+  it('avoids full fallback separator when separator insertion partially mutates content', () => {
     const cleanup = startQuoteReply();
     const input = document.getElementById('input');
     if (!(input instanceof HTMLElement)) {
@@ -208,11 +208,9 @@ describe('quote reply', () => {
     triggerQuoteReply();
 
     expect(execCommandMock.mock.calls).toEqual(
-      expect.arrayContaining([
-        ['insertText', false, '\n\n'],
-        ['insertText', false, '\n\n> Hello\n'],
-      ]),
+      expect.arrayContaining([['insertText', false, '\n\n']]),
     );
+    expect(execCommandMock).not.toHaveBeenCalledWith('insertText', false, '\n\n> Hello\n');
     expect(input.textContent).toBe('Existing\n\n> Hello\n');
 
     cleanup();

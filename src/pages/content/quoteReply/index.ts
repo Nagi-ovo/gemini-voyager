@@ -134,6 +134,11 @@ function countLineBreaks(raw: string): number {
   return (raw.match(/\n/g) || []).length;
 }
 
+interface SeparatorInsertResult {
+  inserted: boolean;
+  insertedBreaks: number;
+}
+
 function getContenteditableQuoteSeparator(): string {
   // Firefox + Quill contenteditable tends to render an extra visual break
   // for double-newline insertion, so we use a single newline separator there.
@@ -183,11 +188,10 @@ function isChatInputEmpty(input: HTMLElement | HTMLTextAreaElement): boolean {
 }
 
 /**
- * Attempts to insert a double newline separator (\n\n) at the current cursor
- * position via execCommand. Returns true if the content actually changed.
- * The caller must fall back to prepending \n\n in the text payload when false.
+ * Attempts to insert separator text via execCommand and reports whether
+ * content changed plus how many line breaks were observed as inserted.
  */
-function tryInsertQuoteSeparator(input: HTMLElement, separator: string): boolean {
+function tryInsertQuoteSeparator(input: HTMLElement, separator: string): SeparatorInsertResult {
   const beforeVisible = input.innerText ?? '';
   const beforeRaw = input.textContent ?? '';
   const beforeVisibleLineBreakCount = countLineBreaks(beforeVisible);
@@ -198,16 +202,18 @@ function tryInsertQuoteSeparator(input: HTMLElement, separator: string): boolean
   } catch {
     ok = false;
   }
-  if (!ok) return false;
+  if (!ok) return { inserted: false, insertedBreaks: 0 };
 
   const afterVisible = input.innerText ?? '';
   const afterRaw = input.textContent ?? '';
-  if (afterVisible === beforeVisible && afterRaw === beforeRaw) return false;
+  if (afterVisible === beforeVisible && afterRaw === beforeRaw) {
+    return { inserted: false, insertedBreaks: 0 };
+  }
 
   const visibleLineBreakDelta = countLineBreaks(afterVisible) - beforeVisibleLineBreakCount;
   const rawLineBreakDelta = countLineBreaks(afterRaw) - beforeRawLineBreakCount;
-  const requiredBreaks = countLineBreaks(separator);
-  return visibleLineBreakDelta >= requiredBreaks || rawLineBreakDelta >= requiredBreaks;
+  const insertedBreaks = Math.max(0, visibleLineBreakDelta, rawLineBreakDelta);
+  return { inserted: true, insertedBreaks };
 }
 
 export function startQuoteReply() {
@@ -351,14 +357,28 @@ export function startQuoteReply() {
 
           // Try to insert a separator via execCommand in one shot.
           // If the command succeeds and mutates content, only the quote body
-          // remains to be inserted. Otherwise fall back to prepending separator.
+          // (or missing part of it) remains to be inserted.
+          // If insertion does not mutate content, fall back to prepending separator.
           const quoteSeparator = getContenteditableQuoteSeparator();
+          const requiredSeparatorBreaks = countLineBreaks(quoteSeparator);
           let contentToInsert: string;
+          let forceRangeInsertion = false;
           if (!isInputEmpty) {
-            const separatorInserted = tryInsertQuoteSeparator(input, quoteSeparator);
-            contentToInsert = separatorInserted
-              ? quoteWithTrailingNewline
-              : `${quoteSeparator}${quoteWithTrailingNewline}`;
+            const separatorResult = tryInsertQuoteSeparator(input, quoteSeparator);
+            if (separatorResult.inserted) {
+              const missingBreaks = Math.max(
+                0,
+                requiredSeparatorBreaks - separatorResult.insertedBreaks,
+              );
+              contentToInsert =
+                missingBreaks > 0
+                  ? `${'\n'.repeat(missingBreaks)}${quoteWithTrailingNewline}`
+                  : quoteWithTrailingNewline;
+              // Avoid re-running execCommand after partial mutation to prevent duplicate separators.
+              forceRangeInsertion = missingBreaks > 0;
+            } else {
+              contentToInsert = `${quoteSeparator}${quoteWithTrailingNewline}`;
+            }
           } else {
             contentToInsert = quoteWithTrailingNewline;
           }
@@ -366,14 +386,26 @@ export function startQuoteReply() {
           // Quill handles text insertion better with native insertText command.
           // Fallback to manual Range insertion when command is unavailable.
           let inserted = false;
-          try {
-            inserted = document.execCommand('insertText', false, contentToInsert);
-          } catch {
-            inserted = false;
+          if (!forceRangeInsertion) {
+            try {
+              inserted = document.execCommand('insertText', false, contentToInsert);
+            } catch {
+              inserted = false;
+            }
           }
 
           if (!inserted) {
             const textNode = document.createTextNode(contentToInsert);
+            if (sel) {
+              if (forceRangeInsertion) {
+                const endRange = document.createRange();
+                endRange.selectNodeContents(input);
+                endRange.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(endRange);
+              }
+            }
+
             if (sel && sel.rangeCount > 0) {
               const insertRange = sel.getRangeAt(0);
               insertRange.insertNode(textNode);
