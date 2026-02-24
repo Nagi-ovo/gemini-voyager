@@ -57,6 +57,9 @@ let storageListener:
 /** Track elements that already have listeners attached to prevent duplicates */
 const attachedElements = new WeakSet<HTMLElement>();
 
+/** Track IME composition state per element */
+const isComposingMap = new WeakMap<HTMLElement, boolean>();
+
 // ============================================================================
 // DOM Helpers
 // ============================================================================
@@ -232,19 +235,42 @@ function insertNewlineInTextarea(textarea: HTMLTextAreaElement): void {
 // ============================================================================
 
 /**
+ * Handle compositionstart event (IME input starts)
+ */
+function handleCompositionStart(event: Event): void {
+  const target = event.target as HTMLElement;
+  isComposingMap.set(target, true);
+}
+
+/**
+ * Handle compositionend event (IME input ends)
+ */
+function handleCompositionEnd(event: Event): void {
+  const target = event.target as HTMLElement;
+  // Use a small delay to ensure the composition is fully finalized
+  // This prevents race conditions with subsequent keydown events
+  setTimeout(() => {
+    isComposingMap.set(target, false);
+  }, 10);
+}
+
+/**
  * Handle keydown events on the input area
  */
 function handleKeyDown(event: KeyboardEvent): void {
   // Early exit if feature is disabled (should not happen, but defensive check)
   if (!isEnabled) return;
 
-  // Fix for Issue 260: Ignore events during IME composition
-  if (event.isComposing) return;
-
   // Only handle Enter key
   if (event.key !== 'Enter') return;
 
   const target = event.target as HTMLElement;
+
+  // Fix for Issue 260: Ignore events during IME composition
+  // Check both event.isComposing and our tracked state for better reliability
+  if (event.isComposing || isComposingMap.get(target) === true) {
+    return;
+  }
 
   // Check if we're in an editable area (Gemini uses contenteditable divs)
   const isContentEditable =
@@ -293,10 +319,21 @@ function attachToInput(element: HTMLElement): void {
 
   // Use capture phase to intercept before other handlers
   element.addEventListener('keydown', handleKeyDown, { capture: true });
+
+  // Track IME composition events for better Chinese input support
+  element.addEventListener('compositionstart', handleCompositionStart);
+  element.addEventListener('compositionend', handleCompositionEnd);
+
+  // Initialize composition state
+  isComposingMap.set(element, false);
+
   attachedElements.add(element);
 
   cleanupFns.push(() => {
     element.removeEventListener('keydown', handleKeyDown, { capture: true });
+    element.removeEventListener('compositionstart', handleCompositionStart);
+    element.removeEventListener('compositionend', handleCompositionEnd);
+    isComposingMap.delete(element);
     attachedElements.delete(element);
   });
 }

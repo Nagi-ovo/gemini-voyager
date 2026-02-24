@@ -221,6 +221,33 @@ export function expandInputCollapseIfNeeded(): void {
 }
 
 /**
+ * Expands the input area and moves cursor to the end (for keyboard shortcut)
+ */
+export function expandInputWithCursorAtEnd(): void {
+  const container = getInputContainer();
+  if (!container) return;
+  expand(container, true); // true = move cursor to end
+}
+
+/**
+ * Collapses the input area immediately (for keyboard shortcut)
+ * This bypasses the delay and state checks in tryCollapse
+ */
+export function collapseInput(): void {
+  const container = getInputContainer();
+  if (!container) return;
+
+  // Immediately collapse (ignore delay and state checks)
+  container.classList.add(COLLAPSED_CLASS);
+
+  // Remove focus from the input
+  const active = document.activeElement;
+  if (active && container.contains(active)) {
+    (active as HTMLElement).blur();
+  }
+}
+
+/**
  * Checks if the input is effectively empty.
  */
 function isInputEmpty(container: HTMLElement): boolean {
@@ -439,6 +466,39 @@ function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
 
   observer.observe(document.body, { childList: true, subtree: true });
 
+  // Add keyboard shortcuts for collapse/expand
+  document.addEventListener(
+    'keydown',
+    (e) => {
+      const container = getInputContainer();
+      if (!container) return;
+
+      // ESC key - collapse input
+      if (e.key === 'Escape') {
+        // Only respond when focus is within the input container
+        const active = document.activeElement;
+        if (active && container.contains(active)) {
+          e.preventDefault();
+          e.stopPropagation();
+          collapseInput();
+        }
+        return;
+      }
+
+      // u key - expand input and focus with cursor at end
+      if (e.key === 'u' || e.key === 'U') {
+        // Only respond when input is collapsed
+        if (container.classList.contains(COLLAPSED_CLASS)) {
+          e.preventDefault();
+          e.stopPropagation();
+          expandInputWithCursorAtEnd();
+        }
+        return;
+      }
+    },
+    { signal, capture: true } // capture phase to ensure we intercept before other handlers
+  );
+
   // Listen for language changes and update placeholder text
   browser.storage.onChanged.addListener((changes, areaName) => {
     if ((areaName === 'sync' || areaName === 'local') && changes[StorageKeys.LANGUAGE]) {
@@ -460,7 +520,7 @@ function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
   }
 }
 
-function expand(container: HTMLElement) {
+function expand(container: HTMLElement, moveCursorToEnd: boolean = false) {
   if (container.classList.contains(COLLAPSED_CLASS)) {
     container.classList.remove(COLLAPSED_CLASS);
 
@@ -472,8 +532,28 @@ function expand(container: HTMLElement) {
       container.querySelector('rich-textarea');
     if (editor && editor instanceof HTMLElement) {
       editor.focus();
+
+      // Move cursor to end if requested
+      if (moveCursorToEnd) {
+        moveCursorToEndOfElement(editor);
+      }
     }
   }
+}
+
+/**
+ * Moves the cursor to the end of the content in a contenteditable element
+ */
+function moveCursorToEndOfElement(element: HTMLElement): void {
+  const selection = window.getSelection();
+  if (!selection) return;
+
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  range.collapse(false); // false = collapse to end
+
+  selection.removeAllRanges();
+  selection.addRange(range);
 }
 
 function tryCollapse(container: HTMLElement) {
