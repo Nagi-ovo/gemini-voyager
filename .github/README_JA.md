@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="../public/icon-128.png" alt="logo"/>
-  <h1>Gemini Voyager</h1>
+  <img src="../docs/public/assets/promotion/Promo-Banner-jp.png" alt="promotion"/>
   <h3>Gemini 体験を自分好みに ✨</h3>
   <p>
     エレガントなタイムライン、フォルダ管理、そしてプロンプト管理。<br>
@@ -22,7 +21,6 @@
     <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub ダウンロード数">
     <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome ユーザー数">
     <img src="https://img.shields.io/chrome-web-store/rating/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 評価">
-    <img src="https://img.shields.io/badge/Edge-✓-0078D7?style=flat-square&logo=microsoft-edge" alt="Edge ストア">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox ユーザー数">
     <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 評価">
   </p>
@@ -57,7 +55,7 @@
     <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
   </a>
   <br>
-  <b>🎉 トップテックKOLやコミュニティから強く推奨されています！</b>
+  <b>🎉 トップテック KOL やコミュニティから強く推奨されています！</b>
 </p>
 
 > [!NOTE]
@@ -76,7 +74,7 @@
     <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
   </a>
   <br>
-  <i>2月18日にGoogle Gemini Appが一部のユーザーの履歴会話にアクセスできなくなる問題を引き起こした際、Voyagerのユーザーは引き続きフォルダ内に保存された会話を見ることができました。</i>
+  <i>2 月 18 日に Google Gemini App が一部のユーザーの履歴会話にアクセスできなくなる問題を引き起こした際、Voyager のユーザーは引き続きフォルダ内に保存された会話を見ることができました。</i>
 </p>
 
 ---
@@ -136,7 +134,7 @@
   <sub><b>Chrome ストア版</b>は Edge, Opera, Brave, Vivaldi, Arc などの Chromium 系ブラウザでも動作します。</sub>
 </p>
 
-> **ストア状況:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
+> **ストア状況：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
 
 **手動インストール**や**開発用ビルド**については、[インストールガイド](https://voyager.nagi.fun/ja/guide/installation)を参照してください。
 
@@ -185,11 +183,11 @@ Gemini Voyager がお役に立ちましたら、コーヒー一杯分のご支�
   </table>
 </div>
 
-### 🎙️ おすすめツール: Typeless
+### 🎙️ おすすめツール：Typeless
 
 Gemini Voyager の開発中、私は AI 音声入力ツール **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)** を愛用していました。日々のワークフローに欠かせない、生産性を劇的に向上させてくれるツールです。
 
-> 🎁 **[こちらのリンク](https://www.typeless.com/refer?code=MZRYZP1)**（招待コード: **`MZRYZP1`**）から登録すると、**5ドルの無料クレジット**がもらえます。❤️
+> 🎁 **[こちらのリンク](https://www.typeless.com/refer?code=MZRYZP1)**（招待コード：**`MZRYZP1`**）から登録すると、**5 ドルの無料クレジット**がもらえます。❤️
 
 ---
 
