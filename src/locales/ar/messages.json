@@ -991,6 +991,14 @@
     "message": "راسل Gemini",
     "description": "Placeholder text shown in collapsed input"
   },
+  "allowCollapseWhenNotEmpty": {
+    "message": "السماح بالطي مع وجود محتوى",
+    "description": "Allow input to collapse even when it has text or attachments"
+  },
+  "allowCollapseWhenNotEmptyHint": {
+    "message": "طي منطقة الإدخال حتى عند احتوائها على نص أو مرفقات",
+    "description": "Hint text explaining the collapse when not empty feature"
+  },
   "ctrlEnterSend": {
     "message": "Ctrl+Enter للإرسال",
     "description": "Ctrl+Enter to send toggle label"

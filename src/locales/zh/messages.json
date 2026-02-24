@@ -991,6 +991,14 @@
     "message": "给 Gemini 发消息",
     "description": "折叠输入框时显示的占位符文本"
   },
+  "allowCollapseWhenNotEmpty": {
+    "message": "允许折叠有内容的输入框",
+    "description": "允许输入框即使包含文字或附件也进行折叠"
+  },
+  "allowCollapseWhenNotEmptyHint": {
+    "message": "即使输入框包含文字或附件也允许折叠",
+    "description": "解释非空折叠功能的提示文本"
+  },
   "ctrlEnterSend": {
     "message": "Ctrl+Enter 发送",
     "description": "Ctrl+Enter 发送开关标签"

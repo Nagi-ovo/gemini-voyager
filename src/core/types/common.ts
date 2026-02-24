@@ -61,6 +61,8 @@ export const StorageKeys = {
 
   // Input behavior
   CTRL_ENTER_SEND: 'gvCtrlEnterSend',
+  INPUT_COLLAPSE_ENABLED: 'gvInputCollapseEnabled',
+  INPUT_COLLAPSE_WHEN_NOT_EMPTY: 'gvInputCollapseWhenNotEmpty',
 
   // Default Model
   DEFAULT_MODEL: 'gvDefaultModel',

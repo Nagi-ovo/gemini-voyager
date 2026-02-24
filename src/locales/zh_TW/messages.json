@@ -951,6 +951,14 @@
     "message": "傳送訊息給 Gemini",
     "description": "摺疊輸入框時顯示的佔位符文字"
   },
+  "allowCollapseWhenNotEmpty": {
+    "message": "允許折疊有內容的輸入框",
+    "description": "允許輸入框即使包含文字或附件也進行折疊"
+  },
+  "allowCollapseWhenNotEmptyHint": {
+    "message": "即使輸入框包含文字或附件也允許折疊",
+    "description": "解釋非空折疊功能的提示文字"
+  },
   "ctrlEnterSend": {
     "message": "Ctrl+Enter 傳送",
     "description": "Ctrl+Enter 傳送開關標籤"

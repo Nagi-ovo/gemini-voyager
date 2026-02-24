@@ -265,26 +265,34 @@ function ensurePlaceholder(container: HTMLElement) {
 
 export function startInputCollapse() {
   // Check if feature is enabled (default: false)
-  chrome.storage?.sync?.get({ gvInputCollapseEnabled: false }, (res) => {
-    if (res?.gvInputCollapseEnabled === false) {
-      // Feature is disabled, don't initialize
-      console.log('[Gemini Voyager] Input collapse is disabled');
-      return;
-    }
+  chrome.storage?.sync?.get(
+    { gvInputCollapseEnabled: false, gvInputCollapseWhenNotEmpty: false },
+    (res) => {
+      if (res?.gvInputCollapseEnabled === false) {
+        // Feature is disabled, don't initialize
+        console.log('[Gemini Voyager] Input collapse is disabled');
+        return;
+      }
 
-    // Feature is enabled, proceed with initialization
-    initInputCollapse();
-  });
+      // Feature is enabled, proceed with initialization
+      initInputCollapse(res?.gvInputCollapseWhenNotEmpty === true);
+    }
+  );
 
   // Listen for setting changes
   chrome.storage?.onChanged?.addListener((changes, area) => {
-    if (area === 'sync' && changes.gvInputCollapseEnabled) {
-      if (changes.gvInputCollapseEnabled.newValue === false) {
+    if (area === 'sync' && (changes.gvInputCollapseEnabled || changes.gvInputCollapseWhenNotEmpty)) {
+      if (changes.gvInputCollapseEnabled?.newValue === false) {
         // Disable: remove styles and classes
         cleanup();
       } else {
-        // Enable: re-initialize
-        initInputCollapse();
+        // Enable or setting changed: re-read both settings and re-initialize
+        chrome.storage?.sync?.get(
+          { gvInputCollapseWhenNotEmpty: false },
+          (res) => {
+            initInputCollapse(res?.gvInputCollapseWhenNotEmpty === true);
+          }
+        );
       }
     }
   });
@@ -293,6 +301,7 @@ export function startInputCollapse() {
 let observer: MutationObserver | null = null;
 let initialized = false;
 let eventController: AbortController | null = null;
+let allowCollapseWhenNotEmpty = false; // Track the "collapse when not empty" setting
 
 function cleanup() {
   // Abort all event listeners managed by the controller
@@ -328,9 +337,10 @@ function cleanup() {
   initialized = false;
 }
 
-function initInputCollapse() {
+function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
   if (initialized) return;
   initialized = true;
+  allowCollapseWhenNotEmpty = allowCollapseNotEmpty; // Store the setting
 
   injectStyles();
 
@@ -478,8 +488,14 @@ function tryCollapse(container: HTMLElement) {
     const active = document.activeElement;
     const isStillFocused = container.contains(active);
 
-    if (!isStillFocused && isInputEmpty(container)) {
-      container.classList.add(COLLAPSED_CLASS);
+    if (!isStillFocused) {
+      // Check if we should collapse based on setting and input state
+      // If allowCollapseWhenNotEmpty is true, we can collapse even with content
+      // Otherwise, only collapse when empty (original behavior)
+      const canCollapse = allowCollapseWhenNotEmpty || isInputEmpty(container);
+      if (canCollapse) {
+        container.classList.add(COLLAPSED_CLASS);
+      }
     }
   }, 150);
 }

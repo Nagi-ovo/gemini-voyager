@@ -991,6 +991,14 @@
     "message": "Mensaje a Gemini",
     "description": "Placeholder text shown in collapsed input"
   },
+  "allowCollapseWhenNotEmpty": {
+    "message": "Permitir colapso con contenido",
+    "description": "Allow input to collapse even when it has text or attachments"
+  },
+  "allowCollapseWhenNotEmptyHint": {
+    "message": "Colapsar el area de entrada incluso cuando contiene texto o archivos adjuntos",
+    "description": "Hint text explaining the collapse when not empty feature"
+  },
   "ctrlEnterSend": {
     "message": "Ctrl+Enter para enviar",
     "description": "Ctrl+Enter to send toggle label"
