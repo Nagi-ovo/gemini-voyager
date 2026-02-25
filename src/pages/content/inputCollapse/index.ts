@@ -485,13 +485,15 @@ function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
         return;
       }
 
-      // u key - expand input and focus with cursor at end
-      if (e.key === 'u' || e.key === 'U') {
-        // Only respond when input is collapsed
-        if (container.classList.contains(COLLAPSED_CLASS)) {
-          e.preventDefault();
-          e.stopPropagation();
-          expandInputWithCursorAtEnd();
+      // Ctrl+I - expand input and focus with cursor at end
+      if (e.key === 'i' || e.key === 'I') {
+        if (e.ctrlKey || e.metaKey) {
+          // Only respond when input is collapsed
+          if (container.classList.contains(COLLAPSED_CLASS)) {
+            e.preventDefault();
+            e.stopPropagation();
+            expandInputWithCursorAtEnd();
+          }
         }
         return;
       }
