@@ -1024,7 +1024,7 @@
     "description": "Batch delete button tooltip in multi-select mode"
   },
   "batch_delete_match_patterns": {
-    "message": "delete,confirm,yes,ok,remove,删除,确认,确定,是",
+    "message": "delete,confirm,yes,ok,remove，删除，确认，确定，是",
     "description": "Comma-separated list of keywords to match native delete/confirm buttons (case-insensitive)"
   },
   "generalOptions": {
@@ -1258,5 +1258,25 @@
   "snowEffectHint": {
     "message": "Let it snow on the page for a festive winter vibe",
     "description": "Snow effect feature hint"
+  },
+  "changelog_title": {
+    "message": "What's New",
+    "description": "Changelog modal title"
+  },
+  "changelog_close": {
+    "message": "Got it",
+    "description": "Changelog modal close button"
+  },
+  "changelog_docs_link": {
+    "message": "Docs",
+    "description": "Changelog modal documentation link text"
+  },
+  "changelog_recommendation": {
+    "message": "If Voyager has been helpful, share it with friends or on social media!",
+    "description": "Changelog modal recommendation message"
+  },
+  "changelog_docs_hint": {
+    "message": "Details in docs",
+    "description": "Changelog annotation pointing to docs icon"
   }
 }

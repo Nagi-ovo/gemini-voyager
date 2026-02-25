@@ -78,6 +78,9 @@ export const StorageKeys = {
 
   // Snow effect
   GV_SNOW_EFFECT: 'gvSnowEffect',
+
+  // Changelog
+  CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

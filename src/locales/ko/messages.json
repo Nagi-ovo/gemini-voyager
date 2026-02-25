@@ -196,7 +196,7 @@
     "description": "Backup step 3"
   },
   "pm_backup_note": {
-    "message": "백업에는 모든 프롬프트와 폴더가 포함되며, 타임스탬프 폴더 형식(backup-YYYYMMDD-HHMMSS)으로 저장됩니다",
+    "message": "백업에는 모든 프롬프트와 폴더가 포함되며, 타임스탬프 폴더 형식 (backup-YYYYMMDD-HHMMSS) 으로 저장됩니다",
     "description": "Backup feature note"
   },
   "extensionVersion": {
@@ -320,7 +320,7 @@
     "description": "Remove conversation button tooltip"
   },
   "folder_remove_conversation_confirm": {
-    "message": "이 폴더에서 \"{title}\"을(를) 제거하시겠습니까?",
+    "message": "이 폴더에서 \"{title}\"을 (를) 제거하시겠습니까?",
     "description": "Remove conversation confirmation"
   },
   "conversation_more": {
@@ -468,11 +468,11 @@
     "description": "Warning about auto-jump and loading completeness"
   },
   "export_dialog_safari_cmdp_hint": {
-    "message": "Safari 팁: 아래 '내보내기'를 클릭하고 잠시 기다린 다음, ⌘P를 누르고 'PDF로 저장'을 선택하세요.",
+    "message": "Safari 팁: 아래 '내보내기'를 클릭하고 잠시 기다린 다음, ⌘P 를 누르고 'PDF 로 저장'을 선택하세요.",
     "description": "Safari-specific hint for PDF export"
   },
   "export_toast_safari_pdf_ready": {
-    "message": "이제 Command + P를 눌러 PDF를 내보낼 수 있습니다.",
+    "message": "이제 Command + P 를 눌러 PDF 를 내보낼 수 있습니다.",
     "description": "Safari-specific toast shown after PDF export is prepared"
   },
   "export_dialog_safari_markdown_hint": {
@@ -488,7 +488,7 @@
     "description": "Description for Markdown export format"
   },
   "export_format_pdf_description": {
-    "message": "PDF로 저장을 통한 인쇄 친화적 형식",
+    "message": "PDF 로 저장을 통한 인쇄 친화적 형식",
     "description": "Description for PDF export format"
   },
   "editInputWidth": {
@@ -532,7 +532,7 @@
     "description": "Fallback title for conversations without a name"
   },
   "geminiOnlyNotice": {
-    "message": "기본적으로 Gemini (Enterprise 포함) 및 AI Studio에서 실행됩니다. 다른 사이트에서 프롬프트 관리자를 활성화하려면 아래에 추가하세요.",
+    "message": "기본적으로 Gemini (Enterprise 포함) 및 AI Studio 에서 실행됩니다. 다른 사이트에서 프롬프트 관리자를 활성화하려면 아래에 추가하세요.",
     "description": "Notice that defaults are limited to Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
@@ -580,7 +580,7 @@
     "description": "Daily backup interval"
   },
   "backupIntervalWeekly": {
-    "message": "매주 (7일)",
+    "message": "매주 (7 일)",
     "description": "Weekly backup interval"
   },
   "backupLastBackup": {
@@ -600,7 +600,7 @@
     "description": "Backup error message"
   },
   "backupNotSupported": {
-    "message": "⚠️ 자동 백업에는 File System Access API를 지원하는 최신 브라우저가 필요합니다",
+    "message": "⚠️ 자동 백업에는 File System Access API 를 지원하는 최신 브라우저가 필요합니다",
     "description": "Browser not supported message"
   },
   "backupSelectFolderFirst": {
@@ -796,7 +796,7 @@
     "description": "Auto-hide sidebar toggle label"
   },
   "preventAutoScrollHint": {
-    "message": "이전 응답을 읽는 동안 Enter 키를 누를 때 Gemini가 맨 아래로 점프하는 것을 방지합니다.",
+    "message": "이전 응답을 읽는 동안 Enter 키를 누를 때 Gemini 가 맨 아래로 점프하는 것을 방지합니다.",
     "description": "Auto-hide sidebar feature hint"
   },
   "cloudSync": {
@@ -804,7 +804,7 @@
     "description": "Cloud sync section title"
   },
   "cloudSyncDescription": {
-    "message": "폴더와 프롬프트를 Google Drive에 동기화합니다",
+    "message": "폴더와 프롬프트를 Google Drive 에 동기화합니다",
     "description": "Cloud sync description"
   },
   "syncModeDisabled": {
@@ -884,7 +884,7 @@
     "description": "Minutes ago label"
   },
   "syncNoData": {
-    "message": "Drive에서 동기화 데이터를 찾을 수 없습니다",
+    "message": "Drive 에서 동기화 데이터를 찾을 수 없습니다",
     "description": "Error message when no data is found in Drive"
   },
   "syncUploadFailed": {
@@ -928,7 +928,7 @@
     "description": "Deep Research download button text"
   },
   "deepResearchDownloadTooltip": {
-    "message": "생각 내용을 Markdown으로 다운로드",
+    "message": "생각 내용을 Markdown 으로 다운로드",
     "description": "Deep Research download button tooltip"
   },
   "folder_uncategorized": {
@@ -988,15 +988,15 @@
     "description": "Input collapse feature hint"
   },
   "inputCollapsePlaceholder": {
-    "message": "Gemini에게 메시지 보내기",
+    "message": "Gemini 에게 메시지 보내기",
     "description": "Placeholder text shown in collapsed input"
   },
   "ctrlEnterSend": {
-    "message": "Ctrl+Enter로 전송",
+    "message": "Ctrl+Enter 로 전송",
     "description": "Ctrl+Enter to send toggle label"
   },
   "ctrlEnterSendHint": {
-    "message": "Ctrl+Enter를 눌러 메시지를 전송하고, Enter로 줄바꿈을 합니다",
+    "message": "Ctrl+Enter 를 눌러 메시지를 전송하고, Enter 로 줄바꿈을 합니다",
     "description": "Ctrl+Enter to send feature hint"
   },
   "batch_delete_confirm": {
@@ -1060,11 +1060,11 @@
     "description": "Context Sync title"
   },
   "contextSyncDescription": {
-    "message": "대화 컨텍스트를 로컬 IDE와 동기화합니다",
+    "message": "대화 컨텍스트를 로컬 IDE 와 동기화합니다",
     "description": "Context Sync description"
   },
   "syncToIDE": {
-    "message": "IDE로 동기화",
+    "message": "IDE 로 동기화",
     "description": "Sync to IDE button"
   },
   "ideOnline": {
@@ -1080,7 +1080,7 @@
     "description": "Syncing status"
   },
   "checkServer": {
-    "message": "VS Code에서 AI Sync 서버를 시작해 주세요",
+    "message": "VS Code 에서 AI Sync 서버를 시작해 주세요",
     "description": "Check server hint"
   },
   "capturing": {
@@ -1232,7 +1232,7 @@
     "description": "이미지 내보내기에서 일시적 로딩 실패가 발생했을 때 표시되는 안내"
   },
   "export_md_include_source_confirm": {
-    "message": "내보내기 내용에 웹 검색 이미지가 포함되어 있습니다. Markdown에 이미지 출처 링크를 포함하시겠습니까？",
+    "message": "내보내기 내용에 웹 검색 이미지가 포함되어 있습니다. Markdown 에 이미지 출처 링크를 포함하시겠습니까？",
     "description": "Confirm dialog when exporting markdown with web search images"
   },
   "deepResearch_exportedAt": {
@@ -1258,5 +1258,25 @@
   "snowEffectHint": {
     "message": "페이지에 눈이 내리는 겨울 분위기 연출",
     "description": "Snow effect feature hint"
+  },
+  "changelog_title": {
+    "message": "새로운 기능",
+    "description": "Changelog modal title"
+  },
+  "changelog_close": {
+    "message": "확인",
+    "description": "Changelog modal close button"
+  },
+  "changelog_docs_link": {
+    "message": "문서",
+    "description": "Changelog modal documentation link text"
+  },
+  "changelog_recommendation": {
+    "message": "Voyager 가 도움이 되셨다면, 친구나 SNS 에서 공유해 주세요!",
+    "description": "Changelog modal recommendation message"
+  },
+  "changelog_docs_hint": {
+    "message": "자세한 내용은 문서 참조",
+    "description": "Changelog annotation pointing to docs icon"
   }
 }

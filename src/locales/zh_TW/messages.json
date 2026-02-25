@@ -436,7 +436,7 @@
     "description": "Safari 中完成匯出準備後的提示"
   },
   "export_dialog_safari_markdown_hint": {
-    "message": "提醒：由於Safari限制，無法提取聊天記錄中的圖片，如需完整匯出，建議使用PDF匯出",
+    "message": "提醒：由於 Safari 限制，無法提取聊天記錄中的圖片，如需完整匯出，建議使用 PDF 匯出",
     "description": "關於 Safari Markdown 匯出無法提取圖片的警告"
   },
   "export_format_json_description": {
@@ -984,7 +984,7 @@
     "description": "多選模式下的批次刪除按鈕提示"
   },
   "batch_delete_match_patterns": {
-    "message": "刪除,確認,確定,是,delete,confirm,yes,ok,remove",
+    "message": "刪除，確認，確定，是，delete,confirm,yes,ok,remove",
     "description": "符合原生刪除/確認按鈕的關鍵字清單（逗號分隔）"
   },
   "generalOptions": {
@@ -1200,7 +1200,7 @@
     "description": "Selection mode validation when nothing is selected"
   },
   "export_format_image_description": {
-    "message": "單張PNG圖片，便於行動端分享。",
+    "message": "單張 PNG 圖片，便於行動端分享。",
     "description": "Description for Image export format"
   },
   "export_image_progress": {
@@ -1258,5 +1258,25 @@
   "snowEffectHint": {
     "message": "在頁面上飄雪，營造冬日氛圍",
     "description": "Snow effect feature hint"
+  },
+  "changelog_title": {
+    "message": "更新內容",
+    "description": "Changelog modal title"
+  },
+  "changelog_close": {
+    "message": "知道了",
+    "description": "Changelog modal close button"
+  },
+  "changelog_docs_link": {
+    "message": "文檔",
+    "description": "Changelog modal documentation link text"
+  },
+  "changelog_recommendation": {
+    "message": "如果 Voyager 對你有幫助，歡迎推薦給朋友或在社交媒體上分享！",
+    "description": "Changelog modal recommendation message"
+  },
+  "changelog_docs_hint": {
+    "message": "詳細功能見文檔",
+    "description": "Changelog annotation pointing to docs icon"
   }
 }

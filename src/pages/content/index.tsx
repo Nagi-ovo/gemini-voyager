@@ -7,6 +7,7 @@ import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 
+import { startChangelog } from './changelog/index';
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
@@ -237,6 +238,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startExportButton();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startChangelog();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 

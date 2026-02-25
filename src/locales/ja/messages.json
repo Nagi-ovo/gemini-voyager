@@ -476,7 +476,7 @@
     "description": "Safari-specific toast shown after PDF export is prepared"
   },
   "export_dialog_safari_markdown_hint": {
-    "message": "注意: Safari の制限により、チャット履歴内の画像は抽出できません。完全にエクスポートするには、PDF エクスポートを使用してください。",
+    "message": "注意：Safari の制限により、チャット履歴内の画像は抽出できません。完全にエクスポートするには、PDF エクスポートを使用してください。",
     "description": "Warning about image references in Safari markdown export"
   },
   "export_format_json_description": {
@@ -796,7 +796,7 @@
     "description": "Auto-hide sidebar toggle label"
   },
   "preventAutoScrollHint": {
-    "message": "過去の回答を読んでいるときにEnterキーを押すと、一気に一番下までスクロールしてしまうのを防ぎます。",
+    "message": "過去の回答を読んでいるときに Enter キーを押すと、一気に一番下までスクロールしてしまうのを防ぎます。",
     "description": "Auto-hide sidebar feature hint"
   },
   "cloudSync": {
@@ -1196,11 +1196,11 @@
     "description": "Selection mode top-left button to select messages below current line"
   },
   "export_select_mode_empty": {
-    "message": "エクスポートするメッセージを1つ以上選択してください",
+    "message": "エクスポートするメッセージを 1 つ以上選択してください",
     "description": "Selection mode validation when nothing is selected"
   },
   "export_format_image_description": {
-    "message": "モバイル共有に便利な単一のPNG画像。",
+    "message": "モバイル共有に便利な単一の PNG 画像。",
     "description": "Description for Image export format"
   },
   "export_image_progress": {
@@ -1224,7 +1224,7 @@
     "description": "Preview text for font size slider in export dialog"
   },
   "export_error_generic": {
-    "message": "エクスポートに失敗しました: {error}",
+    "message": "エクスポートに失敗しました：{error}",
     "description": "詳細理由付きのエクスポート失敗メッセージ"
   },
   "export_error_refresh_retry": {
@@ -1232,7 +1232,7 @@
     "description": "画像エクスポートの一時的な読み込み失敗時に表示する再試行案内"
   },
   "export_md_include_source_confirm": {
-    "message": "エクスポートするコンテンツにウェブ検索画像が含まれています。Markdownに画像のソースリンクを含めますか？",
+    "message": "エクスポートするコンテンツにウェブ検索画像が含まれています。Markdown に画像のソースリンクを含めますか？",
     "description": "Confirm dialog when exporting markdown with web search images"
   },
   "deepResearch_exportedAt": {
@@ -1258,5 +1258,25 @@
   "snowEffectHint": {
     "message": "ページに雪を降らせて冬の雰囲気を演出",
     "description": "Snow effect feature hint"
+  },
+  "changelog_title": {
+    "message": "新機能",
+    "description": "Changelog modal title"
+  },
+  "changelog_close": {
+    "message": "了解",
+    "description": "Changelog modal close button"
+  },
+  "changelog_docs_link": {
+    "message": "ドキュメント",
+    "description": "Changelog modal documentation link text"
+  },
+  "changelog_recommendation": {
+    "message": "Voyager がお役に立てたら、友達や SNS でシェアしていただけると嬉しいです！",
+    "description": "Changelog modal recommendation message"
+  },
+  "changelog_docs_hint": {
+    "message": "詳細はドキュメントへ",
+    "description": "Changelog annotation pointing to docs icon"
   }
 }

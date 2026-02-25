@@ -1258,5 +1258,25 @@
   "snowEffectHint": {
     "message": "Снегопад на странице для зимней атмосферы",
     "description": "Snow effect feature hint"
+  },
+  "changelog_title": {
+    "message": "Что нового",
+    "description": "Changelog modal title"
+  },
+  "changelog_close": {
+    "message": "Понятно",
+    "description": "Changelog modal close button"
+  },
+  "changelog_docs_link": {
+    "message": "Документация",
+    "description": "Changelog modal documentation link text"
+  },
+  "changelog_recommendation": {
+    "message": "Если Voyager был полезен, поделитесь им с друзьями или в соцсетях!",
+    "description": "Changelog modal recommendation message"
+  },
+  "changelog_docs_hint": {
+    "message": "Подробности в документации",
+    "description": "Changelog annotation pointing to docs icon"
   }
 }

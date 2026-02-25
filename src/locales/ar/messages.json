@@ -1258,5 +1258,25 @@
   "snowEffectHint": {
     "message": "اجعل الثلج يتساقط على الصفحة لأجواء شتوية",
     "description": "Snow effect feature hint"
+  },
+  "changelog_title": {
+    "message": "الجديد",
+    "description": "Changelog modal title"
+  },
+  "changelog_close": {
+    "message": "فهمت",
+    "description": "Changelog modal close button"
+  },
+  "changelog_docs_link": {
+    "message": "المستندات",
+    "description": "Changelog modal documentation link text"
+  },
+  "changelog_recommendation": {
+    "message": "إذا ساعدك Voyager، شاركه مع أصدقائك أو على وسائل التواصل الاجتماعي!",
+    "description": "Changelog modal recommendation message"
+  },
+  "changelog_docs_hint": {
+    "message": "التفاصيل في المستندات",
+    "description": "Changelog annotation pointing to docs icon"
   }
 }

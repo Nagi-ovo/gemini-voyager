@@ -1258,5 +1258,25 @@
   "snowEffectHint": {
     "message": "Laissez la neige tomber sur la page pour une ambiance hivernale",
     "description": "Snow effect feature hint"
+  },
+  "changelog_title": {
+    "message": "Nouveautés",
+    "description": "Changelog modal title"
+  },
+  "changelog_close": {
+    "message": "Compris",
+    "description": "Changelog modal close button"
+  },
+  "changelog_docs_link": {
+    "message": "Docs",
+    "description": "Changelog modal documentation link text"
+  },
+  "changelog_recommendation": {
+    "message": "Si Voyager vous a été utile, partagez-le avec vos amis ou sur les réseaux sociaux !",
+    "description": "Changelog modal recommendation message"
+  },
+  "changelog_docs_hint": {
+    "message": "Détails dans les docs",
+    "description": "Changelog annotation pointing to docs icon"
   }
 }
