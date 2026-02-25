@@ -147,16 +147,14 @@ class DefaultModelManager {
   }
 
   private initObserver() {
-    // Observe only for the menu panel being added; Gemini UI triggers many mutations and
+    // Observe only for the mode switch panel/bottom-sheet being added; Gemini UI triggers many mutations and
     // querying the entire document on every mutation can cause severe jank/crashes.
     this.observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
           if (!(node instanceof HTMLElement)) continue;
 
-          const menuPanel = node.matches('.mat-mdc-menu-panel[role="menu"]')
-            ? node
-            : node.querySelector<HTMLElement>('.mat-mdc-menu-panel[role="menu"]');
+          const menuPanel = this.resolveModeSwitchContainer(node);
 
           if (menuPanel) {
             this.scheduleMenuPanelInjection(menuPanel);
@@ -168,11 +166,29 @@ class DefaultModelManager {
     this.observer.observe(document.body, { childList: true, subtree: true });
   }
 
+  private resolveModeSwitchContainer(root: HTMLElement): HTMLElement | null {
+    if (
+      root.matches('.mat-mdc-menu-panel.gds-mode-switch-menu[role="menu"]') ||
+      root.matches('mat-action-list.gds-mode-switch-menu-list') ||
+      root.matches('.mat-mdc-menu-panel[role="menu"]')
+    ) {
+      return root;
+    }
+
+    return (
+      root.querySelector<HTMLElement>('.mat-mdc-menu-panel.gds-mode-switch-menu[role="menu"]') ??
+      root.querySelector<HTMLElement>('mat-action-list.gds-mode-switch-menu-list') ??
+      root.querySelector<HTMLElement>('.mat-mdc-menu-panel[role="menu"]')
+    );
+  }
+
   private getModeSwitchMenuPanel(): HTMLElement | null {
     return (
       document.querySelector<HTMLElement>(
         '.mat-mdc-menu-panel.gds-mode-switch-menu[role="menu"]',
-      ) ?? document.querySelector<HTMLElement>('.mat-mdc-menu-panel[role="menu"]')
+      ) ??
+      document.querySelector<HTMLElement>('mat-action-list.gds-mode-switch-menu-list') ??
+      document.querySelector<HTMLElement>('.mat-mdc-menu-panel[role="menu"]')
     );
   }
 
@@ -255,10 +271,13 @@ class DefaultModelManager {
       const titleContainer = item.querySelector('.title-and-description');
 
       if (titleContainer) {
-        const titleEl = titleContainer.querySelector('.mode-title');
+        const titleEl = titleContainer.querySelector('.mode-title, .gds-title-m, .gds-label-l');
         if (titleEl) {
-          // Check if we already wrapped it
-          let wrapper = titleContainer.querySelector('.gv-title-wrapper') as HTMLElement;
+          const titleParent = titleEl.parentElement;
+          let wrapper = titleContainer.querySelector('.gv-title-wrapper') as HTMLElement | null;
+          if (!wrapper && titleParent?.classList.contains('gv-title-wrapper')) {
+            wrapper = titleParent;
+          }
 
           if (!wrapper) {
             // Create wrapper
@@ -266,8 +285,12 @@ class DefaultModelManager {
             wrapper.className = 'gv-title-wrapper';
             wrapper.style.cssText = 'display: flex; align-items: center; width: 100%;';
 
-            // Insert wrapper before title
-            titleContainer.insertBefore(wrapper, titleEl);
+            // Insert wrapper where the title currently lives.
+            if (titleParent) {
+              titleParent.insertBefore(wrapper, titleEl);
+            } else {
+              titleContainer.appendChild(wrapper);
+            }
 
             // Move title into wrapper
             wrapper.appendChild(titleEl);
@@ -290,15 +313,26 @@ class DefaultModelManager {
   }
 
   private getModelNameFromItem(item: HTMLElement): string {
-    const titleEl = item.querySelector('.mode-title');
+    const titleEl = item.querySelector('.mode-title, .gds-title-m, .gds-label-l');
     return titleEl?.textContent?.trim() || '';
   }
 
   private getModelIdFromItem(item: HTMLElement): string | null {
     const raw = item.getAttribute('data-mode-id') || item.dataset.modeId;
-    if (typeof raw !== 'string') return null;
-    const id = raw.trim();
-    return id.length ? id : null;
+    if (typeof raw === 'string') {
+      const id = raw.trim();
+      if (id.length) return id;
+    }
+
+    // Compact layout may omit data-mode-id but keeps the internal model id in jslog metadata.
+    const jslog = item.getAttribute('jslog');
+    if (typeof jslog === 'string') {
+      const matchedIds = jslog.match(/[a-f0-9]{16}/gi);
+      const id = matchedIds?.[matchedIds.length - 1]?.trim();
+      if (id) return id;
+    }
+
+    return null;
   }
 
   private isDefaultForItem(
@@ -383,7 +417,7 @@ class DefaultModelManager {
     }
 
     // Update other buttons (e.g. if switching from A to B)
-    const menuPanel = document.querySelector('.mat-mdc-menu-panel');
+    const menuPanel = this.getModeSwitchMenuPanel();
     if (menuPanel) {
       // Re-run injection to update all other buttons based on new cache
       void this.injectStarButtons(menuPanel as HTMLElement);
