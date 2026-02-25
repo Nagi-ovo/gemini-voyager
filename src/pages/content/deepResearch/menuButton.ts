@@ -480,7 +480,7 @@ export function isDeepResearchReportMenuPanel(menuPanel: HTMLElement): boolean {
   );
   const hasReportExportActions = Boolean(
     menuContent.querySelector('[data-test-id="export-to-docs-button"]') ||
-    menuContent.querySelector('[data-test-id="copy-button"]'),
+      menuContent.querySelector('[data-test-id="copy-button"]'),
   );
 
   return hasShareContainer && hasReportExportActions;
