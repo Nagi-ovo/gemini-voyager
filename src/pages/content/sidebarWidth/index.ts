@@ -168,7 +168,6 @@ function removeStyles(): void {
   if (style) style.remove();
 }
 
-
 /** Initialize and start the sidebar width adjuster */
 export function startSidebarWidthAdjuster(): void {
   let currentWidthValue = DEFAULT_PX;
