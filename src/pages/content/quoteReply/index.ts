@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
+import { getBrowserName } from '@/core/utils/browser';
 
 import { getTranslationSync } from '../../../utils/i18n';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
@@ -142,7 +143,7 @@ interface SeparatorInsertResult {
 function getContenteditableQuoteSeparator(): string {
   // Firefox + Quill contenteditable tends to render an extra visual break
   // for double-newline insertion, so we use a single newline separator there.
-  return navigator.userAgent.includes('Firefox') ? '\n' : '\n\n';
+  return getBrowserName() === 'Firefox' ? '\n' : '\n\n';
 }
 
 function getPlaceholderCandidates(input: HTMLElement): string[] {

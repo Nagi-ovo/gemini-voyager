@@ -1,10 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { getBrowserName } from '@/core/utils/browser';
+
 import { expandInputCollapseIfNeeded } from '../../inputCollapse/index';
 import { startQuoteReply } from '../index';
 
 vi.mock('../../inputCollapse/index', () => ({
   expandInputCollapseIfNeeded: vi.fn(),
+}));
+
+vi.mock('@/core/utils/browser', () => ({
+  getBrowserName: vi.fn(() => 'Chrome/Chromium'),
 }));
 
 function selectSourceText(start = 0, end = 5) {
@@ -38,6 +44,7 @@ function triggerQuoteReply() {
 describe('quote reply', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.mocked(getBrowserName).mockReturnValue('Chrome/Chromium');
 
     document.body.innerHTML = `
       <main>
@@ -175,11 +182,7 @@ describe('quote reply', () => {
       throw new Error('Expected quote input element.');
     }
 
-    const originalUserAgent = navigator.userAgent;
-    Object.defineProperty(window.navigator, 'userAgent', {
-      configurable: true,
-      value: `${originalUserAgent} Firefox/130.0`,
-    });
+    vi.mocked(getBrowserName).mockReturnValue('Firefox');
 
     const execCommandMock = vi.spyOn(document, 'execCommand');
     input.textContent = 'Existing';
@@ -190,10 +193,6 @@ describe('quote reply', () => {
     expect(execCommandMock).not.toHaveBeenCalledWith('insertText', false, '\n\n');
     expect(input.textContent).toBe('Existing\n> Hello\n');
 
-    Object.defineProperty(window.navigator, 'userAgent', {
-      configurable: true,
-      value: originalUserAgent,
-    });
     cleanup();
   });
 
