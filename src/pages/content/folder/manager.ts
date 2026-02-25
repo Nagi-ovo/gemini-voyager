@@ -5066,7 +5066,6 @@ export class FolderManager {
           this.debug('Filter current user setting changed:', this.filterCurrentUserOnly);
           this.refresh();
         }
-
         // Listen for language changes and update UI text
         if (changes[StorageKeys.LANGUAGE]) {
           this.debug('Language changed, updating UI text...');
