@@ -1278,5 +1278,13 @@
   "changelog_docs_hint": {
     "message": "詳細はドキュメントへ",
     "description": "Changelog annotation pointing to docs icon"
+  },
+  "changelog_rate_chrome": {
+    "message": "Gemini Voyager を気に入っていただけましたか？Chrome ウェブストアでの評価が大きな励みになります！",
+    "description": "Chrome Web Store rating prompt in changelog modal"
+  },
+  "changelog_rate_chrome_cta": {
+    "message": "評価する",
+    "description": "Chrome Web Store rating CTA button text"
   }
 }

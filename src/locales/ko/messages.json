@@ -1278,5 +1278,13 @@
   "changelog_docs_hint": {
     "message": "자세한 내용은 문서 참조",
     "description": "Changelog annotation pointing to docs icon"
+  },
+  "changelog_rate_chrome": {
+    "message": "Gemini Voyager가 마음에 드시나요? Chrome 웹 스토어에 평점을 남겨 더 많은 분들이 발견할 수 있게 해주세요!",
+    "description": "Chrome Web Store rating prompt in changelog modal"
+  },
+  "changelog_rate_chrome_cta": {
+    "message": "평점 주기",
+    "description": "Chrome Web Store rating CTA button text"
   }
 }

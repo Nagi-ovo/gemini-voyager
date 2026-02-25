@@ -1278,5 +1278,13 @@
   "changelog_docs_hint": {
     "message": "Подробности в документации",
     "description": "Changelog annotation pointing to docs icon"
+  },
+  "changelog_rate_chrome": {
+    "message": "Нравится Gemini Voyager? Оценка в Chrome Web Store помогает другим пользователям найти расширение!",
+    "description": "Chrome Web Store rating prompt in changelog modal"
+  },
+  "changelog_rate_chrome_cta": {
+    "message": "Оценить",
+    "description": "Chrome Web Store rating CTA button text"
   }
 }

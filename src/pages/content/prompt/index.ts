@@ -953,8 +953,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       i18n.get().then((lang) => {
         websiteBtn.href =
           lang === 'zh'
-            ? 'https://voyager.nagi.fun/guide/sponsor'
-            : `https://voyager.nagi.fun/${lang}/guide/sponsor`;
+            ? 'https://voyager.nagi.fun/guide/sponsor.html'
+            : `https://voyager.nagi.fun/${lang}/guide/sponsor.html`;
       });
 
       settingsBtn.textContent = i18n.t('pm_settings');

@@ -1278,5 +1278,13 @@
   "changelog_docs_hint": {
     "message": "詳細功能見文檔",
     "description": "Changelog annotation pointing to docs icon"
+  },
+  "changelog_rate_chrome": {
+    "message": "覺得 Gemini Voyager 好用嗎？在 Chrome 線上應用程式商店給個好評，幫助更多人發現它！",
+    "description": "Chrome Web Store rating prompt in changelog modal"
+  },
+  "changelog_rate_chrome_cta": {
+    "message": "立即評分",
+    "description": "Chrome Web Store rating CTA button text"
   }
 }

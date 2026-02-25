@@ -5257,6 +5257,12 @@ html.dark .gv-changelog-body code,
   max-width: 100%;
   border-radius: 8px;
   margin: 8px 0;
+  cursor: zoom-in;
+  transition: opacity 0.15s;
+}
+
+.gv-changelog-body img:hover {
+  opacity: 0.9;
 }
 
 .gv-changelog-body a {
@@ -5430,4 +5436,102 @@ html.dark .gv-changelog-got-it:hover,
 [data-theme='dark'] .gv-changelog-got-it:hover,
 [data-color-scheme='dark'] .gv-changelog-got-it:hover {
   background: #aecbfa;
+}
+
+.gv-changelog-chrome-rating {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+.gv-changelog-chrome-rating-text {
+  flex: 1;
+  font-size: 12.5px;
+  color: #374151;
+  line-height: 1.4;
+}
+
+.gv-changelog-chrome-rating-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background: #1a73e8;
+  color: white !important;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+
+.gv-changelog-chrome-rating-link:hover {
+  background: #1557b0;
+  text-decoration: none !important;
+}
+
+html.dark .gv-changelog-chrome-rating,
+[data-theme='dark'] .gv-changelog-chrome-rating,
+[data-color-scheme='dark'] .gv-changelog-chrome-rating {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+html.dark .gv-changelog-chrome-rating-text,
+[data-theme='dark'] .gv-changelog-chrome-rating-text,
+[data-color-scheme='dark'] .gv-changelog-chrome-rating-text {
+  color: #bdc1c6;
+}
+
+html.dark .gv-changelog-chrome-rating-link,
+[data-theme='dark'] .gv-changelog-chrome-rating-link,
+[data-color-scheme='dark'] .gv-changelog-chrome-rating-link {
+  background: #8ab4f8;
+  color: #202124 !important;
+}
+
+html.dark .gv-changelog-chrome-rating-link:hover,
+[data-theme='dark'] .gv-changelog-chrome-rating-link:hover,
+[data-color-scheme='dark'] .gv-changelog-chrome-rating-link:hover {
+  background: #aecbfa;
+}
+
+.gv-changelog-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  cursor: zoom-out;
+  animation: gv-lightbox-in 0.18s ease;
+}
+
+@keyframes gv-lightbox-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.gv-changelog-lightbox-img {
+  max-width: 90vw;
+  max-height: 88vh;
+  border-radius: 10px;
+  object-fit: contain;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
 }

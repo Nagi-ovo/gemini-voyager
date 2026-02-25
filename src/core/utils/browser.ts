@@ -49,6 +49,20 @@ export function shouldShowSafariUpdateReminder(): boolean {
 }
 
 /**
+ * Detect if the current browser is Chrome (not Edge, Firefox, or Safari).
+ * Used to conditionally show Chrome Web Store rating prompts.
+ */
+export function isChrome(): boolean {
+  if (isSafari()) return false;
+  const ua = navigator.userAgent.toLowerCase();
+  return (
+    (ua.includes('chrome') || ua.includes('chromium')) &&
+    !ua.includes('edg') &&
+    !ua.includes('firefox')
+  );
+}
+
+/**
  * Get browser name for debugging
  * Uses user agent detection for reliability
  */

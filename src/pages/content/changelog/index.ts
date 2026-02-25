@@ -2,6 +2,7 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
 import { StorageKeys } from '@/core/types/common';
+import { isChrome } from '@/core/utils/browser';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 import { getCurrentLanguage } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
@@ -69,6 +70,48 @@ function getDocsUrl(lang: AppLanguage): string {
 }
 
 /**
+ * Get the sponsor page URL for the current language.
+ * zh is the root locale (no prefix), others use /{locale}/ prefix.
+ */
+function getSponsorUrl(lang: AppLanguage): string {
+  const base = 'https://voyager.nagi.fun';
+  const path = '/guide/sponsor.html';
+  if (lang === 'zh') return `${base}${path}`;
+  return `${base}/${lang}${path}`;
+}
+
+/**
+ * Show a full-screen lightbox preview for the given image.
+ */
+function showImageLightbox(src: string, alt: string): void {
+  const lightbox = document.createElement('div');
+  lightbox.className = 'gv-changelog-lightbox';
+
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = alt;
+  img.className = 'gv-changelog-lightbox-img';
+
+  lightbox.appendChild(img);
+  document.body.appendChild(lightbox);
+
+  const close = (): void => {
+    lightbox.remove();
+    document.removeEventListener('keydown', onKeyDown);
+  };
+
+  const onKeyDown = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape') close();
+  };
+
+  lightbox.addEventListener('click', close);
+  document.addEventListener('keydown', onKeyDown);
+}
+
+const CHROME_STORE_URL =
+  'https://chromewebstore.google.com/detail/gemini-voyager/kjdpnimcnfinmilocccippmododhceol';
+
+/**
  * Render the changelog modal DOM.
  */
 function createChangelogModal(
@@ -110,6 +153,11 @@ function createChangelogModal(
   body.className = 'gv-changelog-body';
   body.innerHTML = htmlContent;
 
+  // Bind image zoom on all images in the body
+  body.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
+    img.addEventListener('click', () => showImageLightbox(img.src, img.alt));
+  });
+
   // Footer
   const footer = document.createElement('div');
   footer.className = 'gv-changelog-footer';
@@ -129,7 +177,7 @@ function createChangelogModal(
   // Sponsor (heart) link
   const sponsorLink = document.createElement('a');
   sponsorLink.className = 'gv-changelog-icon-link gv-changelog-icon-sponsor';
-  sponsorLink.href = 'https://github.com/sponsors/Nagi-ovo';
+  sponsorLink.href = getSponsorUrl(lang);
   sponsorLink.target = '_blank';
   sponsorLink.rel = 'noopener noreferrer';
   sponsorLink.setAttribute('aria-label', 'Sponsor');
@@ -179,6 +227,28 @@ function createChangelogModal(
   actionRow.appendChild(gotItBtn);
 
   footer.appendChild(recommendation);
+
+  // Chrome Web Store rating prompt (Chrome only)
+  if (isChrome()) {
+    const ratingBanner = document.createElement('div');
+    ratingBanner.className = 'gv-changelog-chrome-rating';
+
+    const ratingText = document.createElement('span');
+    ratingText.className = 'gv-changelog-chrome-rating-text';
+    ratingText.textContent = t('changelog_rate_chrome', lang);
+
+    const ratingLink = document.createElement('a');
+    ratingLink.className = 'gv-changelog-chrome-rating-link';
+    ratingLink.href = CHROME_STORE_URL;
+    ratingLink.target = '_blank';
+    ratingLink.rel = 'noopener noreferrer';
+    ratingLink.textContent = `⭐ ${t('changelog_rate_chrome_cta', lang)}`;
+
+    ratingBanner.appendChild(ratingText);
+    ratingBanner.appendChild(ratingLink);
+    footer.appendChild(ratingBanner);
+  }
+
   footer.appendChild(actionRow);
 
   dialog.appendChild(header);
