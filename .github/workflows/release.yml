@@ -212,15 +212,13 @@ jobs:
           - **Chrome**: \`gemini-voyager-chrome-${TAG}.zip\`
           - **Firefox**: \`gemini-voyager-firefox-${TAG}.xpi\`
           - **Safari**: \`gemini-voyager-${TAG}.dmg\`
-          > **Safari 插件商店版本即将到来！**
-          > **Safari Extension Store Version is coming soon!**
 
           ### 🍎 Safari 安装与限制 (Safari Installation & Limitations)
 
           - **安装 (Installation)**: 下载并打开 \`gemini-voyager-${TAG}.dmg\`，按提示安装应用。
             Download and open \`gemini-voyager-${TAG}.dmg\`, then follow the prompts to install the app.
-          - **限制 (Limitations)**: 受限于 Safari 特性，以下功能暂不支持：(a) Nano Banana 水印去除 (b) 图片导出 (建议使用 PDF 导出)。
-            Due to Safari's nature, the following features are not supported: (a) Watermark removal (b) Image export (PDF recommended).
+          - **限制 (Limitations)**: 受限于 Safari 特性，以下功能暂不支持：(a) Nano Banana 水印去除 (b) 图片导出 (建议使用 PDF 导出) (c) Google Drive 云同步。
+            Due to Safari's nature, the following features are not supported: (a) Watermark removal (b) Image export (PDF recommended) (c) Cloud sync with Google Drive.
           EOF
             echo "body<<EOF" >> $GITHUB_OUTPUT
             cat release_body.md >> $GITHUB_OUTPUT
