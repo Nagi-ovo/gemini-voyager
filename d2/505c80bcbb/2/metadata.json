@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "d2505c80bcbb",
+  "session_id": "96b73801-7be5-496d-80df-f989afd548bd",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-25T14:43:42.995207Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/public/assets/promotion/Promo-Banner-cn.png",
+    "docs/public/assets/promotion/Promo-Banner-jp.png",
+    "docs/public/assets/promotion/Promo-Banner.png"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "8718e4b7b626",
+  "transcript_identifier_at_start": "e97680ec-da91-4d56-bd8e-84b819e46000",
+  "token_usage": {
+    "input_tokens": 28,
+    "cache_creation_tokens": 74612,
+    "cache_read_tokens": 1737418,
+    "output_tokens": 4515,
+    "api_call_count": 26
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-25T14:43:42.721531Z",
+    "agent_lines": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 3,
+    "total_committed": 0,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/96b73801-7be5-496d-80df-f989afd548bd.jsonl"
+}

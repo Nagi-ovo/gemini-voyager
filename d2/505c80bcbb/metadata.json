@@ -3,7 +3,7 @@
   "checkpoint_id": "d2505c80bcbb",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "docs/public/assets/promotion/Promo-Banner-cn.png",
     "docs/public/assets/promotion/Promo-Banner-jp.png",
@@ -23,13 +23,20 @@
       "context": "/d2/505c80bcbb/1/context.md",
       "content_hash": "/d2/505c80bcbb/1/content_hash.txt",
       "prompt": "/d2/505c80bcbb/1/prompt.txt"
+    },
+    {
+      "metadata": "/d2/505c80bcbb/2/metadata.json",
+      "transcript": "/d2/505c80bcbb/2/full.jsonl",
+      "context": "/d2/505c80bcbb/2/context.md",
+      "content_hash": "/d2/505c80bcbb/2/content_hash.txt",
+      "prompt": "/d2/505c80bcbb/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 4186,
-    "cache_creation_tokens": 524474,
-    "cache_read_tokens": 39899940,
-    "output_tokens": 89360,
-    "api_call_count": 436
+    "input_tokens": 4214,
+    "cache_creation_tokens": 599086,
+    "cache_read_tokens": 41637358,
+    "output_tokens": 93875,
+    "api_call_count": 462
   }
 }
