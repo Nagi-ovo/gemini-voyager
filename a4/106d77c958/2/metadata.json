@@ -1,0 +1,44 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "a4106d77c958",
+  "session_id": "96b73801-7be5-496d-80df-f989afd548bd",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-25T15:02:51.73924Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "public/contentStyle.css",
+    "src/core/utils/browser.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/changelog/index.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "6a28bb5e852c",
+  "transcript_identifier_at_start": "e97680ec-da91-4d56-bd8e-84b819e46000",
+  "token_usage": {
+    "input_tokens": 43,
+    "cache_creation_tokens": 82225,
+    "cache_read_tokens": 2898346,
+    "output_tokens": 7883,
+    "api_call_count": 39
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-25T15:02:51.31803Z",
+    "agent_lines": 262,
+    "human_added": 4,
+    "human_modified": 3,
+    "human_removed": 0,
+    "total_committed": 269,
+    "agent_percentage": 97.39776951672863
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/96b73801-7be5-496d-80df-f989afd548bd.jsonl"
+}
