@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="../public/icon-128.png" alt="logo"/>
-  <h1>Gemini Voyager</h1>
+  <img src="../docs/public/assets/promotion/Promo-Banner.png" alt="promotion"/>
   <h3>Personnalisez votre expérience Gemini ✨</h3>
   <p>
     Navigation temporelle élégante, organisation des chats par dossiers, et coffre-fort de prompts personnel.<br>
@@ -22,7 +21,6 @@
     <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub downloads">
     <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome Web Store users">
     <img src="https://img.shields.io/chrome-web-store/rating/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome Web Store rating">
-    <img src="https://img.shields.io/badge/Edge-✓-0078D7?style=flat-square&logo=microsoft-edge" alt="Edge Add-ons">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons users">
     <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons rating">
   </p>
