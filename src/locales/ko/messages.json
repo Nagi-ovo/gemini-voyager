@@ -391,6 +391,14 @@
     "message": "계정 분리",
     "description": "Show only conversations from the current Google account"
   },
+  "folder_claim_ownership": {
+    "message": "소유권 주장",
+    "description": "Claim ownership of this folder"
+  },
+  "folder_make_public": {
+    "message": "공개로 설정",
+    "description": "Remove ownership from this folder"
+  },
   "folder_export": {
     "message": "폴더 내보내기",
     "description": "Export folders button tooltip"

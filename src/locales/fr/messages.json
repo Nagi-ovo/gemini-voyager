@@ -391,6 +391,14 @@
     "message": "Isolation de compte",
     "description": "Show only conversations from the current Google account"
   },
+  "folder_claim_ownership": {
+    "message": "Revendiquer la propriété",
+    "description": "Claim ownership of this folder"
+  },
+  "folder_make_public": {
+    "message": "Rendre public",
+    "description": "Remove ownership from this folder"
+  },
   "folder_export": {
     "message": "Exporter dossiers",
     "description": "Export folders button tooltip"

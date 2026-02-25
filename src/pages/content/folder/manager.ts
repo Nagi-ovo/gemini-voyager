@@ -704,16 +704,18 @@ export class FolderManager {
     // Render root level folders (sorted)
     const rootFolders = this.data.folders.filter((f) => f.parentId === null);
     const sortedRootFolders = this.sortFolders(rootFolders);
+    let visibleFolderCount = 0;
     sortedRootFolders.forEach((folder) => {
       // Filter out empty folders if "Show current user only" is enabled
       if (!this.hasVisibleContent(folder.id)) return;
 
+      visibleFolderCount++;
       const folderElement = this.createFolderElement(folder);
       list.appendChild(folderElement);
     });
 
     // If no folders and no root conversations, show empty state placeholder
-    if (rootFolders.length === 0 && rootConversations.length === 0) {
+    if (visibleFolderCount === 0 && filteredRootConversations.length === 0) {
       const emptyState = document.createElement('div');
       emptyState.className = 'gv-folder-empty';
       emptyState.textContent = this.t('folder_empty');
@@ -2203,12 +2205,8 @@ export class FolderManager {
     const folder = this.data.folders.find((f) => f.id === folderId);
     if (!folder) return;
 
-    // Update current folder
-    folder.ownerId = newOwnerId;
-
-    // Update all descendants
+    // Update the folder and all its descendants (getFolderAndDescendants includes folderId itself)
     const descendants = this.getFolderAndDescendants(folderId);
-    // getFolderAndDescendants includes the folder itself, so we filter valid ones
     this.data.folders.forEach((f) => {
       if (descendants.includes(f.id)) {
         f.ownerId = newOwnerId;

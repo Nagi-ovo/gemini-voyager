@@ -391,6 +391,14 @@
     "message": "Изоляция аккаунтов",
     "description": "Show only conversations from the current Google account"
   },
+  "folder_claim_ownership": {
+    "message": "Забрать права",
+    "description": "Claim ownership of this folder"
+  },
+  "folder_make_public": {
+    "message": "Сделать общим",
+    "description": "Remove ownership from this folder"
+  },
   "folder_export": {
     "message": "Экспорт папок",
     "description": "Export folders button tooltip"
