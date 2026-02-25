@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
+import { getBrowserName } from '@/core/utils/browser';
 
 import { getTranslationSync } from '../../../utils/i18n';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
@@ -130,6 +131,92 @@ function getChatInput(): HTMLElement | null {
   return null;
 }
 
+function countLineBreaks(raw: string): number {
+  return (raw.match(/\n/g) || []).length;
+}
+
+interface SeparatorInsertResult {
+  inserted: boolean;
+  insertedBreaks: number;
+}
+
+function getContenteditableQuoteSeparator(): string {
+  // Firefox + Quill contenteditable tends to render an extra visual break
+  // for double-newline insertion, so we use a single newline separator there.
+  return getBrowserName() === 'Firefox' ? '\n' : '\n\n';
+}
+
+function getPlaceholderCandidates(input: HTMLElement): string[] {
+  const richTextarea = input.closest('rich-textarea');
+  const candidates = [
+    input.getAttribute('data-placeholder'),
+    input.getAttribute('aria-placeholder'),
+    input.getAttribute('placeholder'),
+    richTextarea?.getAttribute('data-placeholder'),
+    richTextarea?.getAttribute('aria-placeholder'),
+    richTextarea?.getAttribute('placeholder'),
+  ];
+
+  return candidates.filter((value): value is string => Boolean(value)).map((value) => value.trim());
+}
+
+function isChatInputEmpty(input: HTMLElement | HTMLTextAreaElement): boolean {
+  if (input instanceof HTMLTextAreaElement) {
+    return input.value.trim().length === 0;
+  }
+
+  const rawContent = input.innerText ?? input.textContent ?? '';
+  const trimmedContent = rawContent.trim();
+
+  // If visible text exists and it's not placeholder text, treat as non-empty even if
+  // Quill's `ql-blank` class lags behind DOM updates.
+  if (trimmedContent.length > 0) {
+    const placeholders = getPlaceholderCandidates(input);
+    const isPlaceholderText = placeholders.some(
+      (placeholder) => placeholder.length > 0 && placeholder === trimmedContent,
+    );
+    if (!isPlaceholderText) {
+      return false;
+    }
+  }
+
+  // Gemini currently uses Quill internals. `ql-blank` is its canonical empty marker.
+  if (input.classList.contains('ql-blank')) {
+    return true;
+  }
+
+  return trimmedContent.length === 0;
+}
+
+/**
+ * Attempts to insert separator text via execCommand and reports whether
+ * content changed plus how many line breaks were observed as inserted.
+ */
+function tryInsertQuoteSeparator(input: HTMLElement, separator: string): SeparatorInsertResult {
+  const beforeVisible = input.innerText ?? '';
+  const beforeRaw = input.textContent ?? '';
+  const beforeVisibleLineBreakCount = countLineBreaks(beforeVisible);
+  const beforeRawLineBreakCount = countLineBreaks(beforeRaw);
+  let ok = false;
+  try {
+    ok = document.execCommand('insertText', false, separator);
+  } catch {
+    ok = false;
+  }
+  if (!ok) return { inserted: false, insertedBreaks: 0 };
+
+  const afterVisible = input.innerText ?? '';
+  const afterRaw = input.textContent ?? '';
+  if (afterVisible === beforeVisible && afterRaw === beforeRaw) {
+    return { inserted: false, insertedBreaks: 0 };
+  }
+
+  const visibleLineBreakDelta = countLineBreaks(afterVisible) - beforeVisibleLineBreakCount;
+  const rawLineBreakDelta = countLineBreaks(afterRaw) - beforeRawLineBreakCount;
+  const insertedBreaks = Math.max(0, visibleLineBreakDelta, rawLineBreakDelta);
+  return { inserted: true, insertedBreaks };
+}
+
 export function startQuoteReply() {
   injectStyles();
 
@@ -233,9 +320,7 @@ export function startQuoteReply() {
 
         // Check input state at insertion time to avoid race conditions
         // (user might type or another quote might be inserted during the delay)
-        const currentContent =
-          input instanceof HTMLTextAreaElement ? input.value : input.textContent || '';
-        const isInputEmpty = currentContent.trim().length === 0;
+        const isInputEmpty = isChatInputEmpty(input);
 
         // 1. Add a newline at the end (any quote)
         // 2. Add a newline at the start if not the first quote
@@ -246,41 +331,95 @@ export function startQuoteReply() {
         // |> Quote 2 |
         // |New text 2|
         // ------------
-        const quoted = isInputEmpty ? `${quoteBody}\n` : `\n${quoteBody}\n`;
+        const quoteWithTrailingNewline = `${quoteBody}\n`;
 
         if (input instanceof HTMLTextAreaElement) {
           // Standard Textarea logic - simplified append
-          input.value += quoted;
+          const prefix = isInputEmpty ? '' : '\n\n';
+          input.value += `${prefix}${quoteWithTrailingNewline}`;
           input.selectionStart = input.selectionEnd = input.value.length;
           input.dispatchEvent(new Event('input', { bubbles: true }));
         } else {
           // Contenteditable (Gemini/Quill) logic
-          // Use modern Range/Selection API instead of deprecated execCommand
           const sel = window.getSelection();
 
-          // Move cursor to the end first
+          // For empty editors, insert from start.
           if (sel) {
             const range = document.createRange();
             range.selectNodeContents(input);
-            range.collapse(false); // Move cursor to very end
+            if (isInputEmpty) {
+              range.collapse(true);
+            } else {
+              range.collapse(false); // Move cursor to very end
+            }
             sel.removeAllRanges();
             sel.addRange(range);
           }
 
-          // Insert text node directly (modern approach, no deprecated APIs)
-          const textNode = document.createTextNode(quoted);
-          if (sel && sel.rangeCount > 0) {
-            const insertRange = sel.getRangeAt(0);
-            insertRange.insertNode(textNode);
-
-            // Move cursor to after the inserted text
-            insertRange.setStartAfter(textNode);
-            insertRange.setEndAfter(textNode);
-            sel.removeAllRanges();
-            sel.addRange(insertRange);
+          // Try to insert a separator via execCommand in one shot.
+          // If the command succeeds and mutates content, only the quote body
+          // (or missing part of it) remains to be inserted.
+          // If insertion does not mutate content, fall back to prepending separator.
+          const quoteSeparator = getContenteditableQuoteSeparator();
+          const requiredSeparatorBreaks = countLineBreaks(quoteSeparator);
+          let contentToInsert: string;
+          let forceRangeInsertion = false;
+          if (!isInputEmpty) {
+            const separatorResult = tryInsertQuoteSeparator(input, quoteSeparator);
+            if (separatorResult.inserted) {
+              const missingBreaks = Math.max(
+                0,
+                requiredSeparatorBreaks - separatorResult.insertedBreaks,
+              );
+              contentToInsert =
+                missingBreaks > 0
+                  ? `${'\n'.repeat(missingBreaks)}${quoteWithTrailingNewline}`
+                  : quoteWithTrailingNewline;
+              // Avoid re-running execCommand after partial mutation to prevent duplicate separators.
+              forceRangeInsertion = missingBreaks > 0;
+            } else {
+              contentToInsert = `${quoteSeparator}${quoteWithTrailingNewline}`;
+            }
           } else {
-            // Fallback: just append to the input
-            input.appendChild(textNode);
+            contentToInsert = quoteWithTrailingNewline;
+          }
+
+          // Quill handles text insertion better with native insertText command.
+          // Fallback to manual Range insertion when command is unavailable.
+          let inserted = false;
+          if (!forceRangeInsertion) {
+            try {
+              inserted = document.execCommand('insertText', false, contentToInsert);
+            } catch {
+              inserted = false;
+            }
+          }
+
+          if (!inserted) {
+            const textNode = document.createTextNode(contentToInsert);
+            if (sel) {
+              if (forceRangeInsertion) {
+                const endRange = document.createRange();
+                endRange.selectNodeContents(input);
+                endRange.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(endRange);
+              }
+            }
+
+            if (sel && sel.rangeCount > 0) {
+              const insertRange = sel.getRangeAt(0);
+              insertRange.insertNode(textNode);
+
+              // Move cursor to after the inserted text
+              insertRange.setStartAfter(textNode);
+              insertRange.setEndAfter(textNode);
+              sel.removeAllRanges();
+              sel.addRange(insertRange);
+            } else {
+              // Fallback: just append to the input
+              input.appendChild(textNode);
+            }
           }
 
           // Re-force cursor to the end after insertion
