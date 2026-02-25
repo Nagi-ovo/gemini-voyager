@@ -11,6 +11,26 @@
     return bridge && bridge.dataset.enabled === 'true';
   }
 
+  // Track elements where the user has actively scrolled (wheel/touch).
+  // This prevents blocking Gemini's initial scroll-to-latest on page load,
+  // where scrollTop is 0 but the user hasn't actually scrolled up.
+  const userScrolledElements = new WeakSet();
+
+  function markUserScrolled(e) {
+    let el = e.target;
+    while (el && el !== document.documentElement) {
+      if (el instanceof Element && el.scrollHeight > el.clientHeight + 10) {
+        userScrolledElements.add(el);
+        return;
+      }
+      el = el.parentElement;
+    }
+    userScrolledElements.add(window);
+  }
+
+  window.addEventListener('wheel', markUserScrolled, { capture: true, passive: true });
+  window.addEventListener('touchmove', markUserScrolled, { capture: true, passive: true });
+
   function getScrollTop(el) {
     if (el === window) return document.documentElement.scrollTop || document.body.scrollTop;
     return el.scrollTop;
@@ -27,6 +47,10 @@
   }
 
   function isScrolledUp(el) {
+    // Only consider an element "scrolled up" if the user has actually interacted
+    // with it via wheel/touch. This prevents blocking Gemini's initial
+    // scroll-to-latest on page load when scrollTop is still 0.
+    if (!userScrolledElements.has(el)) return false;
     const st = getScrollTop(el);
     const sh = getScrollHeight(el);
     const ch = getClientHeight(el);

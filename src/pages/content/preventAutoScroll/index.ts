@@ -36,19 +36,7 @@ export async function startPreventAutoScroll(): Promise<void> {
     // Initialize bridge element first
     getBridgeElement();
 
-    // Check if feature is enabled, default to true or false?
-    // Probably default to true since it's a helpful feature, but typically
-    // we let user turn it on/off in popup.
     const result = await chrome.storage?.sync?.get({ gvPreventAutoScrollEnabled: false });
-    const isEnabled = result?.gvPreventAutoScrollEnabled !== false; // wait, if default is false, then !== false is true...
-    // Let's set default to false for new feature to not surprise users unless they turn it on.
-
-    // Ah, wait. Usually settings default to false or true.
-    // Let's make it default to false so they have to opt-in, or true if requested.
-    // The user requested: "I hope we can have a feature to prevent jump". Let's make it default false to be safe.
-
-    // Wait, let's fix the logic:
-    // const isEnabled = result?.gvPreventAutoScrollEnabled === true;
 
     notifyScript(result?.gvPreventAutoScrollEnabled === true);
     injectScript();
