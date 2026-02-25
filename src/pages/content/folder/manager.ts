@@ -5039,7 +5039,6 @@ export class FolderManager {
     }
   }
 
-
   private setupStorageListener(): void {
     // Listen for sync settings changes
     browser.storage.onChanged.addListener((changes, areaName) => {
@@ -5520,7 +5519,9 @@ export class FolderManager {
         const nowUser = this.getCurrentUserId();
 
         if (nowUser !== this.lastUserId) {
-          this.debug(`User ID changed from ${this.lastUserId} to ${nowUser}. Refreshing folder list.`);
+          this.debug(
+            `User ID changed from ${this.lastUserId} to ${nowUser}. Refreshing folder list.`,
+          );
           this.lastUserId = nowUser;
           this.lastPathname = nowPath;
           this.refresh();
@@ -6072,7 +6073,6 @@ export class FolderManager {
       return null;
     }
   }
-
 
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     // Create notification element
