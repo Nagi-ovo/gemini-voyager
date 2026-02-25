@@ -158,6 +158,18 @@ jobs:
 
           cd dist_chrome && zip -r ../gemini-voyager-chrome-${TAG}.zip . && cd ..
 
+      - name: Build Edge artifact
+        run: bun run build:edge
+
+      - name: Publish to Microsoft Edge Add-ons
+        continue-on-error: true
+        uses: wdzeng/edge-addon@v2
+        with:
+          product-id: ${{ secrets.EDGE_PRODUCT_ID }}
+          zip-path: gemini-voyager-edge-${{ steps.vars.outputs.tag_name }}.zip
+          api-key: ${{ secrets.EDGE_API_KEY }}
+          client-id: ${{ secrets.EDGE_CLIENT_ID }}
+
       - name: Sign Firefox Extension and Submit to AMO
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
