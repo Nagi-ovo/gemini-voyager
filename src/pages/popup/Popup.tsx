@@ -1068,6 +1068,33 @@ export default function Popup() {
           </Card>
         )}
 
+        {/* Quote Reply - Gemini only */}
+        {!isAIStudio && (
+          <Card className="p-4 transition-shadow hover:shadow-lg">
+            <CardContent className="p-0">
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="quote-reply-enabled"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('enableQuoteReply')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('enableQuoteReplyHint')}</p>
+                </div>
+                <Switch
+                  id="quote-reply-enabled"
+                  checked={quoteReplyEnabled}
+                  onChange={(e) => {
+                    setQuoteReplyEnabled(e.target.checked);
+                    apply({ quoteReplyEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Snow Effect - Gemini only */}
         {!isAIStudio && (
           <Card className="p-4 transition-shadow hover:shadow-lg">
@@ -1374,25 +1401,6 @@ export default function Popup() {
                 onChange={(e) => {
                   setMermaidEnabled(e.target.checked);
                   apply({ mermaidEnabled: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="quote-reply-enabled"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                >
-                  {t('enableQuoteReply')}
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('enableQuoteReplyHint')}</p>
-              </div>
-              <Switch
-                id="quote-reply-enabled"
-                checked={quoteReplyEnabled}
-                onChange={(e) => {
-                  setQuoteReplyEnabled(e.target.checked);
-                  apply({ quoteReplyEnabled: e.target.checked });
                 }}
               />
             </div>
