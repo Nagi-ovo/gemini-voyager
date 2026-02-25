@@ -105,6 +105,12 @@
     return originalWindowScrollTo.apply(this, args);
   };
 
+  const originalWindowScroll = window.scroll;
+  window.scroll = function (...args) {
+    if (shouldBlockScrollTo(window, args)) return;
+    return originalWindowScroll.apply(this, args);
+  };
+
   const originalWindowScrollBy = window.scrollBy;
   window.scrollBy = function (...args) {
     if (shouldBlockScrollBy(window, args)) return;
@@ -115,6 +121,12 @@
   Element.prototype.scrollTo = function (...args) {
     if (shouldBlockScrollTo(this, args)) return;
     return originalElementScrollTo.apply(this, args);
+  };
+
+  const originalElementScroll = Element.prototype.scroll;
+  Element.prototype.scroll = function (...args) {
+    if (shouldBlockScrollTo(this, args)) return;
+    return originalElementScroll.apply(this, args);
   };
 
   const originalElementScrollBy = Element.prototype.scrollBy;
@@ -160,6 +172,8 @@
   );
   if (originalScrollTopDescriptor) {
     Object.defineProperty(Element.prototype, 'scrollTop', {
+      configurable: true,
+      enumerable: originalScrollTopDescriptor.enumerable,
       get: originalScrollTopDescriptor.get,
       set: function (value) {
         if (isEnabled() && isScrolledUp(this)) {
