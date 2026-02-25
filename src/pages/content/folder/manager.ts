@@ -115,6 +115,7 @@ export class FolderManager {
   private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
   private activeColorPickerFolderId: string | null = null; // Folder ID of currently open color picker
   private activeColorPickerCloseHandler: ((e: MouseEvent) => void) | null = null; // Event handler for closing color picker
+  private lastUserId: string | null = null;
 
   // Cleanup references
   private routeChangeCleanup: (() => void) | null = null;
@@ -626,17 +627,6 @@ export class FolderManager {
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'gv-folder-header-actions';
 
-    // Filter current user button
-    const filterUserButton = document.createElement('button');
-    filterUserButton.className = 'gv-folder-action-btn';
-    filterUserButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">person</mat-icon>`;
-    filterUserButton.title = this.t('folder_filter_current_user');
-    // Apply active state if filter is enabled
-    if (this.filterCurrentUserOnly) {
-      filterUserButton.classList.add('gv-filter-active');
-    }
-    filterUserButton.addEventListener('click', () => this.toggleFilterCurrentUser());
-
     // Import/Export combined button (shows dropdown menu)
     const importExportButton = document.createElement('button');
     importExportButton.className = 'gv-folder-action-btn';
@@ -644,7 +634,6 @@ export class FolderManager {
     importExportButton.title = this.t('folder_import_export');
     importExportButton.addEventListener('click', (e) => this.showImportExportMenu(e));
 
-    actionsContainer.appendChild(filterUserButton);
     actionsContainer.appendChild(importExportButton);
 
     // Cloud buttons (Skip on Safari as it doesn't support cloud sync yet)
@@ -2207,6 +2196,32 @@ export class FolderManager {
     }, 0);
   }
 
+  /**
+   * Update folder ownership (recursively for subfolders)
+   */
+  private updateFolderOwnership(folderId: string, newOwnerId?: string): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    // Update current folder
+    folder.ownerId = newOwnerId;
+
+    // Update all descendants
+    const descendants = this.getFolderAndDescendants(folderId);
+    // getFolderAndDescendants includes the folder itself, so we filter valid ones
+    this.data.folders.forEach((f) => {
+      if (descendants.includes(f.id)) {
+        f.ownerId = newOwnerId;
+      }
+    });
+
+    this.saveData();
+    this.refresh();
+
+    const actionName = newOwnerId ? 'Ownership claimed' : 'Made public';
+    this.showNotification(`${actionName}: ${folder.name}`, 'success');
+  }
+
   private getFolderAndDescendants(folderId: string): string[] {
     const result = [folderId];
     const children = this.data.folders.filter((f) => f.parentId === folderId);
@@ -3452,8 +3467,28 @@ export class FolderManager {
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
       { label: this.t('folder_change_color'), action: () => this.showColorPicker(folderId, event) },
-      { label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) },
     ];
+
+    // Add ownership management options if account isolation is enabled
+    if (this.filterCurrentUserOnly) {
+      const currentUserId = this.getCurrentUserId();
+      if (folder.ownerId === currentUserId) {
+        // Option to make public (remove ownership)
+        menuItems.push({
+          label: this.t('folder_make_public') || 'Make Public',
+          action: () => this.updateFolderOwnership(folderId, undefined),
+        });
+      } else {
+        // Option to claim ownership for ANY folder that is not owned by current user
+        // This handles both unowned folders AND folders owned by others (if visible due to bug or legacy)
+        menuItems.push({
+          label: this.t('folder_claim_ownership') || 'Claim Ownership',
+          action: () => this.updateFolderOwnership(folderId, currentUserId),
+        });
+      }
+    }
+
+    menuItems.push({ label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) });
 
     menuItems.forEach((item) => {
       const menuItem = document.createElement('button');
@@ -5006,6 +5041,7 @@ export class FolderManager {
     }
   }
 
+
   private setupStorageListener(): void {
     // Listen for sync settings changes
     browser.storage.onChanged.addListener((changes, areaName) => {
@@ -5030,7 +5066,7 @@ export class FolderManager {
           this.debug('Filter current user setting changed:', this.filterCurrentUserOnly);
           this.refresh();
         }
-        }
+
         // Listen for language changes and update UI text
         if (changes[StorageKeys.LANGUAGE]) {
           this.debug('Language changed, updating UI text...');
@@ -5477,14 +5513,22 @@ export class FolderManager {
     // Fallback poller for routers/flows that don't emit events
     try {
       this.lastPathname = window.location.pathname;
+      this.lastUserId = this.getCurrentUserId();
       this.navPoller = window.setInterval(() => {
         if (this.isDestroyed) {
           if (this.navPoller) clearInterval(this.navPoller);
           return;
         }
-        const now = window.location.pathname;
-        if (now !== this.lastPathname) {
-          this.lastPathname = now;
+        const nowPath = window.location.pathname;
+        const nowUser = this.getCurrentUserId();
+
+        if (nowUser !== this.lastUserId) {
+          this.debug(`User ID changed from ${this.lastUserId} to ${nowUser}. Refreshing folder list.`);
+          this.lastUserId = nowUser;
+          this.lastPathname = nowPath;
+          this.refresh();
+        } else if (nowPath !== this.lastPathname) {
+          this.lastPathname = nowPath;
           update();
         }
       }, 400);
@@ -5944,9 +5988,30 @@ export class FolderManager {
 
     // Check ownership first (handles empty folders)
     const folder = this.data.folders.find((f) => f.id === folderId);
-    if (folder?.ownerId === this.getCurrentUserId()) return true;
 
-    // Check direct conversations
+    // If folder has an owner, check if it matches current user
+    if (folder?.ownerId) {
+      if (folder.ownerId === this.getCurrentUserId()) return true;
+      // If folder is owned by someone else, verify if it has visible subcontent (optional, but safer to hide)
+      // Actually, if it's explicitly owned by another user, we should hide it unless it contains something visible
+      // But typically ownership applies to the whole tree.
+      // Let's rely on strict ownership: if owned by other, hide it.
+      return false;
+    }
+
+    // If folder has NO owner (legacy or public):
+    // - User 0 (default) sees everything (legacy folders assumed to be theirs)
+    // - Other users (1, 2...) only see folders they explicitly own (already handled above) or created
+    // So, if no owner:
+    //   - If current user is '0', SHOW it.
+    //   - If current user is NOT '0', HIDE it (to avoid User 1 seeing User 0's legacy folders).
+    if (this.getCurrentUserId() === '0') return true;
+
+    // For non-0 users, hide unowned folders unless they contain visible content (fallback)
+    // But since we want strict isolation: hide unowned folders for non-0 users.
+    // However, we must check if there are sub-folders owned by this user (unlikely if parent is unowned, but possible in tree)
+
+    // Check direct conversations (only show if they belong to current user)
     const conversations = this.data.folderContents[folderId] || [];
     const userConversations = this.filterConversationsByCurrentUser(conversations);
     if (userConversations.length > 0) return true;
@@ -6011,38 +6076,6 @@ export class FolderManager {
     }
   }
 
-  /**
-   * Toggle the "show only current user" filter and refresh the UI.
-   */
-  private toggleFilterCurrentUser(): void {
-    this.filterCurrentUserOnly = !this.filterCurrentUserOnly;
-    this.debug('Filter current user only:', this.filterCurrentUserOnly);
-
-    // Save setting to storage
-    browser.storage.sync
-      .set({
-        [StorageKeys.GV_FOLDER_FILTER_USER_ONLY]: this.filterCurrentUserOnly,
-      })
-      .catch((e) => console.error('Failed to save filter user setting:', e));
-
-    // Refresh the entire folder container to update button state and list
-    if (this.containerElement) {
-      // Update the filter button state
-      const filterBtn = this.containerElement.querySelector(
-        '.gv-folder-header-actions button:first-child',
-      );
-      if (filterBtn) {
-        if (this.filterCurrentUserOnly) {
-          filterBtn.classList.add('gv-filter-active');
-        } else {
-          filterBtn.classList.remove('gv-filter-active');
-        }
-      }
-    }
-
-    // Refresh the folders list to apply the filter
-    this.refresh();
-  }
 
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     // Create notification element
