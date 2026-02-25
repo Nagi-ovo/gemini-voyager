@@ -237,7 +237,9 @@ class StarredMessagesManager {
   private async getFromStorage(): Promise<StarredMessagesData> {
     try {
       const result = await chrome.storage.local.get([StorageKeys.TIMELINE_STARRED_MESSAGES]);
-      return (result[StorageKeys.TIMELINE_STARRED_MESSAGES] as StarredMessagesData) || { messages: {} };
+      return (
+        (result[StorageKeys.TIMELINE_STARRED_MESSAGES] as StarredMessagesData) || { messages: {} }
+      );
     } catch (error) {
       console.error('[Background] Failed to get starred messages:', error);
       return { messages: {} };

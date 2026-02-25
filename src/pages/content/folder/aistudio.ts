@@ -306,7 +306,10 @@ export class AIStudioFolderManager {
           // await chrome.storage.sync.remove(this.STORAGE_KEY);
         } else {
           // Both have data - merge them (local takes priority for conflicts)
-          const mergedFolders = this.mergeFolderData(localData as FolderData, syncData as FolderData);
+          const mergedFolders = this.mergeFolderData(
+            localData as FolderData,
+            syncData as FolderData,
+          );
           await chrome.storage.local.set({ [this.STORAGE_KEY]: mergedFolders });
           console.log('[AIStudioFolderManager] Merged sync and local folder data');
         }
