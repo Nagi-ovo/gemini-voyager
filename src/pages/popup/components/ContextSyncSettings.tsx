@@ -29,7 +29,7 @@ export function ContextSyncSettings() {
   useEffect(() => {
     chrome.storage.sync.get([STORAGE_KEY_ENABLED, STORAGE_KEY_PORT], (result) => {
       setIsEnabled(result[STORAGE_KEY_ENABLED] === true);
-      setPort(result[STORAGE_KEY_PORT] || DEFAULT_PORT);
+      setPort((result[STORAGE_KEY_PORT] as number) || DEFAULT_PORT);
     });
   }, []);
 
