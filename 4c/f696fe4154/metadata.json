@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "4cf696fe4154",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "public/contentStyle.css",
+    "src/core/types/common.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/changelog/__tests__/changelog.test.ts",
+    "src/pages/content/changelog/index.ts",
+    "src/pages/content/changelog/notes/1.2.8.md",
+    "src/pages/content/index.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/4c/f696fe4154/0/metadata.json",
+      "transcript": "/4c/f696fe4154/0/full.jsonl",
+      "context": "/4c/f696fe4154/0/context.md",
+      "content_hash": "/4c/f696fe4154/0/content_hash.txt",
+      "prompt": "/4c/f696fe4154/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 16699,
+    "cache_read_tokens": 171233,
+    "output_tokens": 3257,
+    "api_call_count": 6
+  }
+}
