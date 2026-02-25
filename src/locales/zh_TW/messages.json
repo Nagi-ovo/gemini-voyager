@@ -351,6 +351,14 @@
     "message": "帳號隔離模式",
     "description": "Show only conversations from the current Google account"
   },
+  "folder_claim_ownership": {
+    "message": "認領歸屬權",
+    "description": "Claim ownership of this folder"
+  },
+  "folder_make_public": {
+    "message": "設為公開",
+    "description": "Remove ownership from this folder"
+  },
   "folder_export": {
     "message": "匯出資料夾",
     "description": "匯出資料夾按鈕提示"

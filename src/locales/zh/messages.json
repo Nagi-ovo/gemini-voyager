@@ -391,6 +391,14 @@
     "message": "账号隔离模式",
     "description": "Show only conversations from the current Google account"
   },
+  "folder_claim_ownership": {
+    "message": "认领归属权",
+    "description": "Claim ownership of this folder"
+  },
+  "folder_make_public": {
+    "message": "设为公有",
+    "description": "Remove ownership from this folder"
+  },
   "folder_export": {
     "message": "导出文件夹",
     "description": "导出文件夹按钮提示"
