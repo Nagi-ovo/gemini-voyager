@@ -66,6 +66,9 @@ function injectStyles(): void {
       opacity: 0.6;
       transition: opacity 0.15s, background-color 0.15s;
       position: relative;
+      vertical-align: middle;
+      height: 22px;
+      box-sizing: border-box;
     }
     .${FORK_BTN_CLASS}:hover {
       opacity: 1;
@@ -131,6 +134,7 @@ function injectStyles(): void {
       align-items: center;
       gap: 4px;
       margin-left: 8px;
+      vertical-align: middle;
     }
     .${FORK_INDICATOR_ITEM_CLASS} {
       position: relative;
