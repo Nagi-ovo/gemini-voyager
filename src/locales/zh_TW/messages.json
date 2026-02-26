@@ -351,6 +351,18 @@
     "message": "帳號隔離模式",
     "description": "Show only conversations from the current Google account"
   },
+  "folder_account_isolation": {
+    "message": "帳號硬隔離",
+    "description": "Show only folders owned by the current Google account"
+  },
+  "folder_claim_ownership": {
+    "message": "認領歸屬權",
+    "description": "將此資料夾歸屬到目前帳號"
+  },
+  "folder_make_public": {
+    "message": "設為公開",
+    "description": "移除帳號歸屬，設為所有帳號可見"
+  },
   "folder_export": {
     "message": "匯出資料夾",
     "description": "匯出資料夾按鈕提示"

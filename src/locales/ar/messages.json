@@ -391,6 +391,18 @@
     "message": "عزل الحساب",
     "description": "Show only conversations from the current Google account"
   },
+  "folder_account_isolation": {
+    "message": "عزل صارم للحساب",
+    "description": "Show only folders owned by the current Google account"
+  },
+  "folder_claim_ownership": {
+    "message": "المطالبة بالملكية",
+    "description": "Claim this folder for current account"
+  },
+  "folder_make_public": {
+    "message": "جعل عامًا",
+    "description": "Remove account ownership and make folder visible to all"
+  },
   "folder_export": {
     "message": "تصدير المجلدات",
     "description": "Export folders button tooltip"

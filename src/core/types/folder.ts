@@ -13,6 +13,7 @@ export interface Folder {
   color?: string;
   createdAt: number;
   updatedAt: number;
+  ownerId?: string; // Account ownership, undefined means public (visible to all accounts)
 }
 
 export interface ConversationReference {

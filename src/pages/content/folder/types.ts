@@ -5,6 +5,7 @@ export interface Folder {
   isExpanded: boolean;
   pinned?: boolean; // Whether folder is pinned to the top
   color?: string; // Optional folder color identifier
+  ownerId?: string; // 文件夹创建者的账号标识（可选，向后兼容旧数据）
   createdAt: number;
   updatedAt: number;
 }

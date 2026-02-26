@@ -391,6 +391,18 @@
     "message": "账号隔离模式",
     "description": "Show only conversations from the current Google account"
   },
+  "folder_account_isolation": {
+    "message": "账号硬隔离",
+    "description": "Show only folders owned by the current Google account"
+  },
+  "folder_claim_ownership": {
+    "message": "认领归属权",
+    "description": "将该文件夹归属到当前账号"
+  },
+  "folder_make_public": {
+    "message": "设为公共",
+    "description": "移除账号归属，设为所有账号可见"
+  },
   "folder_export": {
     "message": "导出文件夹",
     "description": "导出文件夹按钮提示"

@@ -9,6 +9,7 @@ const DEFAULT_PX = Math.round((DEFAULT_PERCENT / 100) * LEGACY_BASELINE_PX); // 
 const MIN_PX = Math.round((MIN_PERCENT / 100) * LEGACY_BASELINE_PX); // 180px
 const MAX_PX = Math.round((MAX_PERCENT / 100) * LEGACY_BASELINE_PX); // 540px
 const SEARCH_HIT_DEBUG_THROTTLE_MS = 1200;
+const SEARCH_HIT_DEBUG_FLAG_KEY = 'gvSidebarWidthSearchHitDebug';
 
 let searchHitDebugBound = false;
 let lastSearchHitDebugAt = 0;
@@ -180,6 +181,14 @@ function formatElementForDebug(element: Element | null): string {
   return `${tag}${id}${classNames}`;
 }
 
+function isSearchHitDebugEnabled(): boolean {
+  try {
+    return globalThis.localStorage?.getItem(SEARCH_HIT_DEBUG_FLAG_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 function setupSearchButtonHitTestDebug(): void {
   if (searchHitDebugBound) return;
   searchHitDebugBound = true;
@@ -231,7 +240,9 @@ function setupSearchButtonHitTestDebug(): void {
 /** Initialize and start the sidebar width adjuster */
 export function startSidebarWidthAdjuster(): void {
   let currentWidthValue = DEFAULT_PX;
-  setupSearchButtonHitTestDebug();
+  if (isSearchHitDebugEnabled()) {
+    setupSearchButtonHitTestDebug();
+  }
 
   // 1) Read initial width
   try {

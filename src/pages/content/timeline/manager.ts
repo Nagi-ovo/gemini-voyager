@@ -1,5 +1,6 @@
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { StorageKeys } from '@/core/types/common';
+import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
@@ -2257,9 +2258,10 @@ export class TimelineManager {
             { geminiTimelinePosition: null },
             (items: Record<string, unknown>) => {
               if (g.chrome.runtime?.lastError) {
-                console.error(
-                  `[Timeline] chrome.storage.get failed: ${g.chrome.runtime.lastError.message}`,
-                );
+                const message = g.chrome.runtime.lastError.message;
+                if (!isExtensionContextInvalidatedError(message)) {
+                  console.error(`[Timeline] chrome.storage.get failed: ${message}`);
+                }
                 resolve(null);
               } else {
                 resolve(items);
@@ -2271,13 +2273,17 @@ export class TimelineManager {
             ?.get({ geminiTimelinePosition: null })
             .then(resolve)
             .catch((error: Error) => {
-              console.error(`[Timeline] browser.storage.get failed: ${error.message}`);
+              if (!isExtensionContextInvalidatedError(error)) {
+                console.error(`[Timeline] browser.storage.get failed: ${error.message}`);
+              }
               resolve(null);
             });
         }
       });
     } catch (error) {
-      console.error('[Timeline] reapplyPosition storage access failed:', error);
+      if (!isExtensionContextInvalidatedError(error)) {
+        console.error('[Timeline] reapplyPosition storage access failed:', error);
+      }
       return;
     }
 

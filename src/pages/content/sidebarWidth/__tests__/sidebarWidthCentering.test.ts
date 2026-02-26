@@ -47,18 +47,6 @@ describe('sidebar width title centering', () => {
     expect(code).toContain("[role='button']");
   });
 
-  it('adds search-button hit-test diagnostics for blocked clicks', () => {
-    const code = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
-      'utf8',
-    );
-
-    expect(code).toContain("window.addEventListener('pointerdown'");
-    expect(code).toContain('document.elementsFromPoint');
-    expect(code).toContain('[Gemini Voyager][sidebarWidth debug] Search button hit blocked');
-    expect(code).toContain("document.querySelector<HTMLElement>('search-nav-button button')");
-  });
-
   it('keeps top-bar-actions container transparent while preserving search button clicks', () => {
     const code = readFileSync(
       resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
@@ -74,5 +62,16 @@ describe('sidebar width title centering', () => {
     expect(code).toContain('top-bar-actions search-nav-button button');
     expect(code).toContain('search-nav-button button');
     expect(code).toContain('pointer-events: auto !important;');
+  });
+
+  it('does not enable search hit-test debug logs by default', () => {
+    const code = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
+      'utf8',
+    );
+
+    expect(code).toContain("const SEARCH_HIT_DEBUG_FLAG_KEY = 'gvSidebarWidthSearchHitDebug';");
+    expect(code).toContain('if (isSearchHitDebugEnabled()) {');
+    expect(code).toContain('setupSearchButtonHitTestDebug();');
   });
 });

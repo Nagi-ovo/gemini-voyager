@@ -118,6 +118,7 @@ interface SettingsUpdate {
   resetPosition?: boolean;
   folderEnabled?: boolean;
   hideArchivedConversations?: boolean;
+  accountIsolationEnabled?: boolean;
   customWebsites?: string[];
   watermarkRemoverEnabled?: boolean;
   hidePromptManager?: boolean;
@@ -140,6 +141,7 @@ export default function Popup() {
   const [markerLevelEnabled, setMarkerLevelEnabled] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
+  const [accountIsolationEnabled, setAccountIsolationEnabled] = useState<boolean>(false);
   const [customWebsites, setCustomWebsites] = useState<string[]>([]);
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
   const [websiteError, setWebsiteError] = useState<string>('');
@@ -216,6 +218,8 @@ export default function Popup() {
         payload.geminiFolderEnabled = settings.folderEnabled;
       if (typeof settings.hideArchivedConversations === 'boolean')
         payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
+      if (typeof settings.accountIsolationEnabled === 'boolean')
+        payload.gvAccountIsolationEnabled = settings.accountIsolationEnabled;
       if (settings.resetPosition) payload.geminiTimelinePosition = null;
       if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
       if (typeof settings.watermarkRemoverEnabled === 'boolean')
@@ -457,6 +461,8 @@ export default function Popup() {
           geminiTimelineMarkerLevel: false,
           geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
+          gvFolderFilterUserOnly: false,
+          gvAccountIsolationEnabled: false,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
           geminiWatermarkRemoverEnabled: true,
@@ -482,6 +488,7 @@ export default function Popup() {
           setMarkerLevelEnabled(!!res?.geminiTimelineMarkerLevel);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
+          setAccountIsolationEnabled(!!res?.gvAccountIsolationEnabled);
           const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
             ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
             : [];
@@ -1003,6 +1010,22 @@ export default function Popup() {
                 onChange={(e) => {
                   setForkEnabled(e.target.checked);
                   apply({ forkEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <Label
+                htmlFor="account-isolation"
+                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+              >
+                {t('folder_account_isolation')}
+              </Label>
+              <Switch
+                id="account-isolation"
+                checked={accountIsolationEnabled}
+                onChange={(e) => {
+                  setAccountIsolationEnabled(e.target.checked);
+                  apply({ accountIsolationEnabled: e.target.checked });
                 }}
               />
             </div>

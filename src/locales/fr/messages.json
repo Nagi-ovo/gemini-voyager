@@ -391,6 +391,18 @@
     "message": "Isolation de compte",
     "description": "Show only conversations from the current Google account"
   },
+  "folder_account_isolation": {
+    "message": "Isolation stricte de compte",
+    "description": "Show only folders owned by the current Google account"
+  },
+  "folder_claim_ownership": {
+    "message": "Revendiquer la propriété",
+    "description": "Claim this folder for current account"
+  },
+  "folder_make_public": {
+    "message": "Rendre public",
+    "description": "Remove account ownership and make folder visible to all"
+  },
   "folder_export": {
     "message": "Exporter dossiers",
     "description": "Export folders button tooltip"

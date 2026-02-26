@@ -104,6 +104,7 @@ export class FolderManager {
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private folderTreeIndent: number = FOLDER_TREE_INDENT_DEFAULT; // Tree indentation width (px)
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
+  private accountIsolationEnabled: boolean = false; // Whether to enable hard account isolation (folder-level ownerId filter)
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
   private saveInProgress: boolean = false; // Lock to prevent concurrent saves
@@ -190,6 +191,9 @@ export class FolderManager {
 
       // Load filter user setting
       await this.loadFilterUserSetting();
+
+      // Load account isolation setting
+      await this.loadAccountIsolationSetting();
       await this.loadFolderTreeIndentSetting();
 
       // Set up storage change listener (always needed to respond to setting changes)
@@ -715,7 +719,8 @@ export class FolderManager {
     // Render root level folders (sorted)
     const rootFolders = this.data.folders.filter((f) => f.parentId === null);
     const sortedRootFolders = this.sortFolders(rootFolders);
-    sortedRootFolders.forEach((folder) => {
+    const accountFilteredRootFolders = this.filterFoldersByAccount(sortedRootFolders);
+    accountFilteredRootFolders.forEach((folder) => {
       // Filter out empty folders if "Show current user only" is enabled
       if (!this.hasVisibleContent(folder.id)) return;
 
@@ -840,7 +845,8 @@ export class FolderManager {
       // Render subfolders (sorted)
       const subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
       const sortedSubfolders = this.sortFolders(subfolders);
-      sortedSubfolders.forEach((subfolder) => {
+      const accountFilteredSubfolders = this.filterFoldersByAccount(sortedSubfolders);
+      accountFilteredSubfolders.forEach((subfolder) => {
         // Filter out empty folders if "Show current user only" is enabled
         if (!this.hasVisibleContent(subfolder.id)) return;
 
@@ -2005,6 +2011,7 @@ export class FolderManager {
         isExpanded: true,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        ownerId: this.getCurrentUserId(), // Set ownership
       };
 
       this.data.folders.push(folder);
@@ -2204,6 +2211,28 @@ export class FolderManager {
       };
       document.addEventListener('click', closeOnOutside);
     }, 0);
+  }
+
+  /**
+   * Update folder ownership (recursively for subfolders)
+   */
+  private updateFolderOwnership(folderId: string, newOwnerId?: string): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    // Update the folder and all its descendants (getFolderAndDescendants includes folderId itself)
+    const descendants = this.getFolderAndDescendants(folderId);
+    this.data.folders.forEach((f) => {
+      if (descendants.includes(f.id)) {
+        f.ownerId = newOwnerId;
+      }
+    });
+
+    this.saveData();
+    this.refresh();
+
+    const actionName = newOwnerId ? 'Ownership claimed' : 'Made public';
+    this.showNotification(`${actionName}: ${folder.name}`, 'success');
   }
 
   private getFolderAndDescendants(folderId: string): string[] {
@@ -3451,8 +3480,28 @@ export class FolderManager {
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
       { label: this.t('folder_change_color'), action: () => this.showColorPicker(folderId, event) },
-      { label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) },
     ];
+
+    // Add ownership management options if account isolation is enabled
+    if (this.accountIsolationEnabled) {
+      const currentUserId = this.getCurrentUserId();
+      if (folder.ownerId === currentUserId) {
+        // Option to make public (remove ownership)
+        menuItems.push({
+          label: this.t('folder_make_public') || 'Make Public',
+          action: () => this.updateFolderOwnership(folderId, undefined),
+        });
+      } else {
+        // Option to claim ownership for ANY folder that is not owned by current user
+        // This handles both unowned folders AND folders owned by others (if visible due to bug or legacy)
+        menuItems.push({
+          label: this.t('folder_claim_ownership') || 'Claim Ownership',
+          action: () => this.updateFolderOwnership(folderId, currentUserId),
+        });
+      }
+    }
+
+    menuItems.push({ label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) });
 
     menuItems.forEach((item) => {
       const menuItem = document.createElement('button');
@@ -4980,6 +5029,19 @@ export class FolderManager {
     }
   }
 
+  private async loadAccountIsolationSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
+      });
+      this.accountIsolationEnabled = !!result[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED];
+      this.debug('Loaded account isolation setting:', this.accountIsolationEnabled);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load account isolation setting:', error);
+      this.accountIsolationEnabled = false;
+    }
+  }
+
   private async loadFolderTreeIndentSetting(): Promise<void> {
     try {
       const result = await browser.storage.sync.get({
@@ -5023,6 +5085,17 @@ export class FolderManager {
         }
         if (changes[StorageKeys.GV_FOLDER_TREE_INDENT]) {
           this.applyFolderTreeIndentSetting(changes[StorageKeys.GV_FOLDER_TREE_INDENT].newValue);
+        }
+        if (changes[StorageKeys.GV_FOLDER_FILTER_USER_ONLY]) {
+          this.filterCurrentUserOnly = !!changes[StorageKeys.GV_FOLDER_FILTER_USER_ONLY].newValue;
+          this.debug('Filter current user setting changed:', this.filterCurrentUserOnly);
+          this.refresh();
+        }
+        if (changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]) {
+          this.accountIsolationEnabled =
+            !!changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED].newValue;
+          this.debug('Account isolation setting changed:', this.accountIsolationEnabled);
+          this.refresh();
         }
         // Listen for language changes and update UI text
         if (changes[StorageKeys.LANGUAGE]) {
@@ -5927,15 +6000,15 @@ export class FolderManager {
   /**
    * Check if a folder has any visible content for the current user.
    * - If filter is disabled, always returns true (show everything).
-   * - If filter is enabled:
-   *   - Returns true if folder has any conversations matching current user.
-   *   - Returns true if any subfolder has visible content.
-   *   - Returns false otherwise.
+   * - If filter is enabled (soft isolation):
+   *   - Returns true if folder has any conversations matching current user URL (/u/N/).
+   *   - Returns true if any subfolder has visible content (recursive).
+   *   - Returns false otherwise (folder will be hidden).
    */
   private hasVisibleContent(folderId: string): boolean {
     if (!this.filterCurrentUserOnly) return true;
 
-    // Check direct conversations
+    // Check direct conversations by URL
     const conversations = this.data.folderContents[folderId] || [];
     const userConversations = this.filterConversationsByCurrentUser(conversations);
     if (userConversations.length > 0) return true;
@@ -5966,6 +6039,19 @@ export class FolderManager {
       if (convUserId === null) return true;
       return convUserId === currentUserId;
     });
+  }
+
+  /**
+   * Filter folders to show only those belonging to the current account.
+   * Uses folder.ownerId for hard account isolation.
+   * - If accountIsolationEnabled is false, returns all folders unchanged.
+   * - If accountIsolationEnabled is true, returns only folders where
+   *   ownerId is undefined (public) or matches the current user.
+   */
+  private filterFoldersByAccount(folders: Folder[]): Folder[] {
+    if (!this.accountIsolationEnabled) return folders;
+    const currentUserId = this.getCurrentUserId();
+    return folders.filter((f) => f.ownerId === undefined || f.ownerId === currentUserId);
   }
 
   /**
@@ -6012,7 +6098,12 @@ export class FolderManager {
       .set({
         [StorageKeys.GV_FOLDER_FILTER_USER_ONLY]: this.filterCurrentUserOnly,
       })
-      .catch((e) => console.error('Failed to save filter user setting:', e));
+      .catch((e) => {
+        if (isExtensionContextInvalidatedError(e)) {
+          return;
+        }
+        console.error('Failed to save filter user setting:', e);
+      });
 
     // Refresh the entire folder container to update button state and list
     if (this.containerElement) {

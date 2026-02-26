@@ -391,6 +391,18 @@
     "message": "アカウント隔離",
     "description": "Show only conversations from the current Google account"
   },
+  "folder_account_isolation": {
+    "message": "アカウントのハード分離",
+    "description": "Show only folders owned by the current Google account"
+  },
+  "folder_claim_ownership": {
+    "message": "所有権を取得",
+    "description": "Claim this folder for current account"
+  },
+  "folder_make_public": {
+    "message": "公開にする",
+    "description": "Remove account ownership and make folder visible to all"
+  },
   "folder_export": {
     "message": "フォルダをエクスポート",
     "description": "Export folders button tooltip"
