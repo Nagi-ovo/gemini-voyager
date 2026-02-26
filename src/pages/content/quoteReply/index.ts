@@ -23,7 +23,7 @@ const TIMING = {
   /** Delay before retrying focus for editors that need extra time */
   FOCUS_RETRY_DELAY_MS: 50,
   /** Debounce delay for selection change detection */
-  SELECTION_DEBOUNCE_MS: 10,
+  SELECTION_DEBOUNCE_MS: 250,
 } as const;
 
 /** UI positioning constants (in pixels) */
@@ -31,7 +31,7 @@ const POSITIONING = {
   /** Minimum distance from viewport edge */
   MIN_EDGE_OFFSET_PX: 10,
   /** Gap between button and selection */
-  BUTTON_SELECTION_GAP_PX: 10,
+  BUTTON_SELECTION_GAP_PX: 16,
 } as const;
 
 /** SVG icon for the quote button */
