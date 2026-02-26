@@ -560,15 +560,18 @@ html.dark .timeline-left-slider::before {
   z-index: 2147483646;
   opacity: 0;
 }
+
 .gemini-timeline-bar:hover ~ .timeline-preview-toggle,
 .timeline-preview-toggle:hover,
 .timeline-preview-toggle.active {
   opacity: 1;
 }
+
 .timeline-preview-toggle:hover {
   color: var(--timeline-dot-active-color);
   background-color: var(--timeline-tooltip-bg);
 }
+
 .timeline-preview-toggle.active {
   color: var(--timeline-dot-active-color);
   background-color: var(--timeline-tooltip-bg);
@@ -592,6 +595,7 @@ html.dark .timeline-left-slider::before {
   pointer-events: none;
   overflow: hidden;
 }
+
 .timeline-preview-panel.visible {
   opacity: 1;
   transform: scale(1) translateX(0);
@@ -603,6 +607,7 @@ html.dark .timeline-left-slider::before {
   border-bottom: 1px solid var(--timeline-tooltip-border);
   flex-shrink: 0;
 }
+
 .timeline-preview-search input {
   width: 100%;
   box-sizing: border-box;
@@ -616,10 +621,12 @@ html.dark .timeline-left-slider::before {
   outline: none;
   transition: border-color 0.15s ease;
 }
+
 .timeline-preview-search input::placeholder {
   color: var(--timeline-dot-color);
   opacity: 0.7;
 }
+
 .timeline-preview-search input:focus {
   border-color: var(--timeline-dot-active-color);
 }
@@ -644,13 +651,16 @@ html.dark .timeline-left-slider::before {
   gap: 0px;
   transition: background-color 0.1s ease;
 }
+
 .timeline-preview-item:hover {
   background-color: rgba(59, 130, 246, 0.08);
 }
+
 .timeline-preview-item.active {
   border-left-color: var(--timeline-dot-active-color);
   background-color: rgba(59, 130, 246, 0.1);
 }
+
 .timeline-preview-item.starred .timeline-preview-index::after {
   content: ' \2605';
   color: var(--timeline-star-color);
@@ -702,15 +712,19 @@ mark.timeline-search-highlight {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
+
 .theme-host.dark-theme .timeline-preview-item:hover {
   background-color: rgba(96, 165, 250, 0.08);
 }
+
 .theme-host.dark-theme .timeline-preview-item.active {
   background-color: rgba(96, 165, 250, 0.12);
 }
+
 .theme-host.dark-theme .timeline-preview-highlight {
   background-color: rgba(96, 165, 250, 0.25);
 }
+
 .theme-host.dark-theme mark.timeline-search-highlight {
   background-color: oklch(0.7729 0.1535 163.2231 / 0.3);
 }
@@ -2564,6 +2578,7 @@ body.light-theme {
   padding: 8px 8px 8px 12px;
   /* Ensure alignment with Recent section */
   margin-left: 0;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
 /* Folder Header */
@@ -3362,6 +3377,7 @@ body.light-theme {
   z-index: 2147483647;
   min-width: 240px;
   max-width: 320px;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
 .gv-folder-confirm-message {
@@ -3430,6 +3446,7 @@ body.light-theme {
   max-height: 80vh;
   display: flex;
   flex-direction: column;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
 .gv-folder-dialog-title {
@@ -3520,6 +3537,7 @@ body.light-theme {
   opacity: 0;
   transition: opacity 0.15s ease-in-out;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
 .gv-tooltip.show {
@@ -3573,6 +3591,7 @@ html[data-color-scheme='light'] [data-math]:hover {
   transform: translateY(-10px) scale(0.9);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
 /* Success state */
@@ -4072,6 +4091,7 @@ body.dark-theme .gv-folder-action-btn.gv-filter-active mat-icon,
   min-width: 400px;
   max-width: 500px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
 html.dark .gv-folder-import-dialog,
@@ -4270,6 +4290,7 @@ html.dark .gv-folder-dialog-btn-secondary:hover,
   transform: translateY(20px);
   transition: all 0.3s ease;
   max-width: 400px;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
 .gv-notification.show {
@@ -4327,6 +4348,7 @@ html.dark .gv-folder-dialog-btn-secondary:hover,
   min-width: 420px;
   max-width: 500px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
   animation: gv-slide-up 0.3s ease-out;
 }
 
@@ -5118,6 +5140,7 @@ body[data-color-scheme='dark'] .gv-export-progress-desc {
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
   animation: gv-slide-up 0.3s ease-out;
 }
 
@@ -5521,6 +5544,7 @@ html.dark .gv-changelog-chrome-rating-link:hover,
     opacity: 0;
     transform: scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
