@@ -81,6 +81,10 @@ export const StorageKeys = {
 
   // Changelog
   CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion',
+
+  // Fork nodes
+  FORK_NODES: 'gvForkNodes',
+  FORK_ENABLED: 'gvForkEnabled',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

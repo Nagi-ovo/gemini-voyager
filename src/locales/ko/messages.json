@@ -1286,5 +1286,57 @@
   "changelog_rate_chrome_cta": {
     "message": "평점 주기",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "forkConversation": {
+    "message": "Fork",
+    "description": "Fork conversation button label"
+  },
+  "forkConfirm": {
+    "message": "Fork conversation from this point?",
+    "description": "Fork confirmation prompt"
+  },
+  "forkConfirmBtn": {
+    "message": "Fork",
+    "description": "Fork confirmation button"
+  },
+  "forkCancel": {
+    "message": "Cancel",
+    "description": "Fork cancel button"
+  },
+  "forkBranch": {
+    "message": "Branch",
+    "description": "Fork branch label"
+  },
+  "forkOriginal": {
+    "message": "Original",
+    "description": "Original fork branch tag"
+  },
+  "forkCurrent": {
+    "message": "Current",
+    "description": "Current fork branch tag"
+  },
+  "forkPreparing": {
+    "message": "Preparing fork...",
+    "description": "Fork preparation status"
+  },
+  "forkPasteHint": {
+    "message": "Press Enter to send and create the fork",
+    "description": "Fork paste hint text"
+  },
+  "forkDeleteData": {
+    "message": "이 분기 삭제",
+    "description": "Delete fork branch metadata button"
+  },
+  "forkDeleteDataConfirm": {
+    "message": "이 분기 연결을 삭제할까요? Voyager 분기 메타데이터만 삭제되며 대화 자체는 삭제되지 않습니다.",
+    "description": "Fork metadata delete confirmation prompt"
+  },
+  "enableForkFeature": {
+    "message": "대화 분기 활성화",
+    "description": "Enable conversation fork feature toggle label"
+  },
+  "enableForkFeatureHint": {
+    "message": "Gemini 대화에 Fork 버튼과 분기 번호를 표시합니다",
+    "description": "Enable conversation fork feature toggle hint"
   }
 }

@@ -1286,5 +1286,57 @@
   "changelog_rate_chrome_cta": {
     "message": "Avaliar",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "forkConversation": {
+    "message": "Fork",
+    "description": "Fork conversation button label"
+  },
+  "forkConfirm": {
+    "message": "Fork conversation from this point?",
+    "description": "Fork confirmation prompt"
+  },
+  "forkConfirmBtn": {
+    "message": "Fork",
+    "description": "Fork confirmation button"
+  },
+  "forkCancel": {
+    "message": "Cancel",
+    "description": "Fork cancel button"
+  },
+  "forkBranch": {
+    "message": "Branch",
+    "description": "Fork branch label"
+  },
+  "forkOriginal": {
+    "message": "Original",
+    "description": "Original fork branch tag"
+  },
+  "forkCurrent": {
+    "message": "Current",
+    "description": "Current fork branch tag"
+  },
+  "forkPreparing": {
+    "message": "Preparing fork...",
+    "description": "Fork preparation status"
+  },
+  "forkPasteHint": {
+    "message": "Press Enter to send and create the fork",
+    "description": "Fork paste hint text"
+  },
+  "forkDeleteData": {
+    "message": "Excluir esta ramificação",
+    "description": "Delete fork branch metadata button"
+  },
+  "forkDeleteDataConfirm": {
+    "message": "Excluir este vínculo de ramificação? Isso remove apenas os metadados de ramificação do Voyager e não exclui nenhuma conversa.",
+    "description": "Fork metadata delete confirmation prompt"
+  },
+  "enableForkFeature": {
+    "message": "Ativar ramificação de conversa",
+    "description": "Enable conversation fork feature toggle label"
+  },
+  "enableForkFeatureHint": {
+    "message": "Mostrar botão Fork e indicadores de ramificação nas conversas do Gemini",
+    "description": "Enable conversation fork feature toggle hint"
   }
 }

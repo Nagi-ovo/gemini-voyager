@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
+import { StorageKeys } from '@/core/types/common';
 import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
@@ -128,6 +129,7 @@ interface SettingsUpdate {
   sidebarAutoHideEnabled?: boolean;
   snowEffectEnabled?: boolean;
   preventAutoScrollEnabled?: boolean;
+  forkEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -157,6 +159,7 @@ export default function Popup() {
   const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
   const [snowEffectEnabled, setSnowEffectEnabled] = useState<boolean>(false);
   const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState<boolean>(false);
+  const [forkEnabled, setForkEnabled] = useState<boolean>(false);
   const [isAIStudio, setIsAIStudio] = useState<boolean>(false);
 
   useEffect(() => {
@@ -235,6 +238,8 @@ export default function Popup() {
         payload.gvSnowEffect = settings.snowEffectEnabled;
       if (typeof settings.preventAutoScrollEnabled === 'boolean')
         payload.gvPreventAutoScrollEnabled = settings.preventAutoScrollEnabled;
+      if (typeof settings.forkEnabled === 'boolean')
+        payload[StorageKeys.FORK_ENABLED] = settings.forkEnabled;
       void setSyncStorage(payload);
     },
     [setSyncStorage],
@@ -464,6 +469,7 @@ export default function Popup() {
           gvSidebarAutoHide: false,
           gvSnowEffect: false,
           gvPreventAutoScrollEnabled: false,
+          [StorageKeys.FORK_ENABLED]: false,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -490,6 +496,7 @@ export default function Popup() {
           setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
           setSnowEffectEnabled(res?.gvSnowEffect === true);
           setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
+          setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -970,6 +977,25 @@ export default function Popup() {
                 onChange={(e) => {
                   setHideArchivedConversations(e.target.checked);
                   apply({ hideArchivedConversations: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
+                  htmlFor="fork-enabled"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                >
+                  {t('enableForkFeature')}
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">{t('enableForkFeatureHint')}</p>
+              </div>
+              <Switch
+                id="fork-enabled"
+                checked={forkEnabled}
+                onChange={(e) => {
+                  setForkEnabled(e.target.checked);
+                  apply({ forkEnabled: e.target.checked });
                 }}
               />
             </div>

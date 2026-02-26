@@ -93,6 +93,24 @@ export interface StarredExportPayload {
 }
 
 /**
+ * Re-export fork node types from their canonical source
+ */
+export type {
+  ForkNode as ForkNodeSync,
+  ForkNodesData as ForkNodesDataSync,
+} from '@/pages/content/fork/forkTypes';
+
+/**
+ * Fork nodes export payload format
+ */
+export interface ForkExportPayload {
+  format: 'gemini-voyager.forks.v1';
+  exportedAt: string;
+  version?: string;
+  data: import('@/pages/content/fork/forkTypes').ForkNodesData;
+}
+
+/**
  * Data payload synced to Google Drive
  * Uses embedded export formats for compatibility with import/export feature
  */

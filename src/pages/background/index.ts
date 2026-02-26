@@ -5,6 +5,7 @@ import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncMode } from '@/core/types/sync';
+import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
@@ -319,6 +320,127 @@ class StarredMessagesManager {
 
 const starredMessagesManager = new StarredMessagesManager();
 
+/**
+ * Centralized fork nodes management to prevent race conditions.
+ * All read-modify-write operations are serialized through this background script.
+ */
+class ForkNodesManager {
+  private operationQueue: Promise<unknown> = Promise.resolve();
+
+  private serialize<T>(operation: () => Promise<T>): Promise<T> {
+    const promise = this.operationQueue.then(operation, operation);
+    this.operationQueue = promise.catch(() => {});
+    return promise;
+  }
+
+  private async getFromStorage(): Promise<ForkNodesData> {
+    try {
+      const result = await chrome.storage.local.get([StorageKeys.FORK_NODES]);
+      return result[StorageKeys.FORK_NODES] || { nodes: {}, groups: {} };
+    } catch (error) {
+      console.error('[Background] Failed to get fork nodes:', error);
+      return { nodes: {}, groups: {} };
+    }
+  }
+
+  private async saveToStorage(data: ForkNodesData): Promise<void> {
+    await chrome.storage.local.set({ [StorageKeys.FORK_NODES]: data });
+  }
+
+  async addForkNode(node: ForkNode): Promise<boolean> {
+    return this.serialize(async () => {
+      const data = await this.getFromStorage();
+
+      if (!data.nodes[node.conversationId]) {
+        data.nodes[node.conversationId] = [];
+      }
+
+      const exists = data.nodes[node.conversationId].some(
+        (n) => n.turnId === node.turnId && n.forkGroupId === node.forkGroupId,
+      );
+
+      if (!exists) {
+        data.nodes[node.conversationId].push(node);
+
+        // Update group index
+        if (!data.groups[node.forkGroupId]) {
+          data.groups[node.forkGroupId] = [];
+        }
+        const groupKey = `${node.conversationId}:${node.turnId}`;
+        if (!data.groups[node.forkGroupId].includes(groupKey)) {
+          data.groups[node.forkGroupId].push(groupKey);
+        }
+
+        await this.saveToStorage(data);
+        return true;
+      }
+      return false;
+    });
+  }
+
+  async removeForkNode(
+    conversationId: string,
+    turnId: string,
+    forkGroupId: string,
+  ): Promise<boolean> {
+    return this.serialize(async () => {
+      const data = await this.getFromStorage();
+
+      if (data.nodes[conversationId]) {
+        const initialLength = data.nodes[conversationId].length;
+        data.nodes[conversationId] = data.nodes[conversationId].filter(
+          (n) => !(n.turnId === turnId && n.forkGroupId === forkGroupId),
+        );
+
+        if (data.nodes[conversationId].length < initialLength) {
+          if (data.nodes[conversationId].length === 0) {
+            delete data.nodes[conversationId];
+          }
+
+          // Update group index
+          if (data.groups[forkGroupId]) {
+            const groupKey = `${conversationId}:${turnId}`;
+            data.groups[forkGroupId] = data.groups[forkGroupId].filter((k) => k !== groupKey);
+            if (data.groups[forkGroupId].length === 0) {
+              delete data.groups[forkGroupId];
+            }
+          }
+
+          await this.saveToStorage(data);
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
+  async getAllForkNodes(): Promise<ForkNodesData> {
+    return this.getFromStorage();
+  }
+
+  async getForConversation(conversationId: string): Promise<ForkNode[]> {
+    const data = await this.getFromStorage();
+    return data.nodes[conversationId] || [];
+  }
+
+  async getGroup(forkGroupId: string): Promise<ForkNode[]> {
+    const data = await this.getFromStorage();
+    const groupKeys = data.groups[forkGroupId] || [];
+    const nodes: ForkNode[] = [];
+
+    for (const key of groupKeys) {
+      const [convId, turnId] = key.split(':');
+      const convNodes = data.nodes[convId] || [];
+      const match = convNodes.find((n) => n.turnId === turnId && n.forkGroupId === forkGroupId);
+      if (match) nodes.push(match);
+    }
+
+    return nodes.sort((a, b) => a.forkIndex - b.forkIndex);
+  }
+}
+
+const forkNodesManager = new ForkNodesManager();
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
@@ -361,6 +483,41 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       }
 
+      // Handle fork nodes operations
+      if (message && message.type && message.type.startsWith('gv.fork.')) {
+        switch (message.type) {
+          case 'gv.fork.add': {
+            const added = await forkNodesManager.addForkNode(message.payload);
+            sendResponse({ ok: true, added });
+            return;
+          }
+          case 'gv.fork.remove': {
+            const removed = await forkNodesManager.removeForkNode(
+              message.payload.conversationId,
+              message.payload.turnId,
+              message.payload.forkGroupId,
+            );
+            sendResponse({ ok: true, removed });
+            return;
+          }
+          case 'gv.fork.getAll': {
+            const data = await forkNodesManager.getAllForkNodes();
+            sendResponse({ ok: true, data });
+            return;
+          }
+          case 'gv.fork.getForConversation': {
+            const nodes = await forkNodesManager.getForConversation(message.payload.conversationId);
+            sendResponse({ ok: true, nodes });
+            return;
+          }
+          case 'gv.fork.getGroup': {
+            const nodes = await forkNodesManager.getGroup(message.payload.forkGroupId);
+            sendResponse({ ok: true, nodes });
+            return;
+          }
+        }
+      }
+
       // Handle sync operations
       if (message && message.type && message.type.startsWith('gv.sync.')) {
         switch (message.type) {
@@ -382,15 +539,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               interactive?: boolean;
               platform?: 'gemini' | 'aistudio';
             };
-            // Also get starred messages from local storage (only for Gemini platform)
+            // Also get starred messages and fork nodes from local storage (only for Gemini platform)
             const starredData =
               platform !== 'aistudio' ? await starredMessagesManager.getAllStarredMessages() : null;
+            const forksData =
+              platform !== 'aistudio' ? await forkNodesManager.getAllForkNodes() : null;
             const success = await googleDriveSyncService.upload(
               folders,
               prompts,
               starredData,
               interactive !== false,
               platform || 'gemini',
+              forksData,
             );
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;

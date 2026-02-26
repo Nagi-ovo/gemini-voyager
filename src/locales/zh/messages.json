@@ -1286,5 +1286,57 @@
   "changelog_rate_chrome_cta": {
     "message": "立即评分",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "forkConversation": {
+    "message": "分叉",
+    "description": "分叉对话按钮标签"
+  },
+  "forkConfirm": {
+    "message": "从此处分叉对话？",
+    "description": "分叉确认提示"
+  },
+  "forkConfirmBtn": {
+    "message": "分叉",
+    "description": "分叉确认按钮"
+  },
+  "forkCancel": {
+    "message": "取消",
+    "description": "分叉取消按钮"
+  },
+  "forkBranch": {
+    "message": "分支",
+    "description": "分叉分支标签"
+  },
+  "forkOriginal": {
+    "message": "原始",
+    "description": "原始分叉分支标签"
+  },
+  "forkCurrent": {
+    "message": "当前",
+    "description": "当前分叉分支标签"
+  },
+  "forkPreparing": {
+    "message": "准备分叉中...",
+    "description": "分叉准备状态"
+  },
+  "forkPasteHint": {
+    "message": "按回车发送以创建分叉",
+    "description": "分叉粘贴提示文字"
+  },
+  "forkDeleteData": {
+    "message": "删除此分支",
+    "description": "Delete fork branch metadata button"
+  },
+  "forkDeleteDataConfirm": {
+    "message": "删除这个分支关联？仅删除 Voyager 的分支元数据，不会删除任何对话。",
+    "description": "Fork metadata delete confirmation prompt"
+  },
+  "enableForkFeature": {
+    "message": "启用对话分叉",
+    "description": "Enable conversation fork feature toggle label"
+  },
+  "enableForkFeatureHint": {
+    "message": "在 Gemini 对话中显示 Fork 按钮和分支序号",
+    "description": "Enable conversation fork feature toggle hint"
   }
 }
