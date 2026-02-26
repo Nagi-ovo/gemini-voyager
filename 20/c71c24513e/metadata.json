@@ -3,7 +3,7 @@
   "checkpoint_id": "20c71c24513e",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 7,
+  "checkpoints_count": 8,
   "files_touched": [
     "src/core/services/GoogleDriveSyncService.ts",
     "src/core/types/common.ts",
@@ -69,13 +69,20 @@
       "context": "/20/c71c24513e/3/context.md",
       "content_hash": "/20/c71c24513e/3/content_hash.txt",
       "prompt": "/20/c71c24513e/3/prompt.txt"
+    },
+    {
+      "metadata": "/20/c71c24513e/4/metadata.json",
+      "transcript": "/20/c71c24513e/4/full.jsonl",
+      "context": "/20/c71c24513e/4/context.md",
+      "content_hash": "/20/c71c24513e/4/content_hash.txt",
+      "prompt": "/20/c71c24513e/4/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 4388,
-    "cache_creation_tokens": 886596,
-    "cache_read_tokens": 58270299,
-    "output_tokens": 110844,
-    "api_call_count": 621
+    "input_tokens": 4595,
+    "cache_creation_tokens": 1334457,
+    "cache_read_tokens": 76366172,
+    "output_tokens": 143659,
+    "api_call_count": 797
   }
 }
