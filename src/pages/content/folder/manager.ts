@@ -729,7 +729,7 @@ export class FolderManager {
     });
 
     // If no folders and no root conversations, show empty state placeholder
-    if (rootFolders.length === 0 && rootConversations.length === 0) {
+    if (accountFilteredRootFolders.length === 0 && rootConversations.length === 0) {
       const emptyState = document.createElement('div');
       emptyState.className = 'gv-folder-empty';
       emptyState.textContent = this.t('folder_empty');
@@ -2231,7 +2231,7 @@ export class FolderManager {
     this.saveData();
     this.refresh();
 
-    const actionName = newOwnerId ? 'Ownership claimed' : 'Made public';
+    const actionName = newOwnerId ? this.t('folder_claim_ownership') : this.t('folder_make_public');
     this.showNotification(`${actionName}: ${folder.name}`, 'success');
   }
 
