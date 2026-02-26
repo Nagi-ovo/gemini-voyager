@@ -6013,8 +6013,10 @@ export class FolderManager {
     const userConversations = this.filterConversationsByCurrentUser(conversations);
     if (userConversations.length > 0) return true;
 
-    // Check subfolders recursively
-    const subfolders = this.data.folders.filter((f) => f.parentId === folderId);
+    // Check subfolders recursively (respecting account isolation)
+    const subfolders = this.filterFoldersByAccount(
+      this.data.folders.filter((f) => f.parentId === folderId),
+    );
     for (const subfolder of subfolders) {
       if (this.hasVisibleContent(subfolder.id)) return true;
     }
