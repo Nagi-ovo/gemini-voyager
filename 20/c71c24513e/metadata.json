@@ -1,0 +1,60 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "20c71c24513e",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/core/services/GoogleDriveSyncService.ts",
+    "src/core/types/common.ts",
+    "src/core/types/sync.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/background/index.ts",
+    "src/pages/content/fork/ForkNodesService.ts",
+    "src/pages/content/fork/__tests__/ForkNodesService.test.ts",
+    "src/pages/content/fork/__tests__/branching.test.ts",
+    "src/pages/content/fork/__tests__/chatPairs.test.ts",
+    "src/pages/content/fork/__tests__/featureFlag.test.ts",
+    "src/pages/content/fork/__tests__/forkContext.test.ts",
+    "src/pages/content/fork/__tests__/markdown.test.ts",
+    "src/pages/content/fork/__tests__/turnId.test.ts",
+    "src/pages/content/fork/branching.ts",
+    "src/pages/content/fork/chatPairs.ts",
+    "src/pages/content/fork/featureFlag.ts",
+    "src/pages/content/fork/forkContext.ts",
+    "src/pages/content/fork/forkTypes.ts",
+    "src/pages/content/fork/index.ts",
+    "src/pages/content/fork/markdown.ts",
+    "src/pages/content/fork/turnId.ts",
+    "src/pages/content/index.tsx",
+    "src/pages/content/timeline/EventBus.ts",
+    "src/pages/popup/Popup.tsx",
+    "src/utils/__tests__/mergeForkNodes.test.ts",
+    "src/utils/merge.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/20/c71c24513e/0/metadata.json",
+      "transcript": "/20/c71c24513e/0/full.jsonl",
+      "context": "/20/c71c24513e/0/context.md",
+      "content_hash": "/20/c71c24513e/0/content_hash.txt",
+      "prompt": "/20/c71c24513e/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 16699,
+    "cache_read_tokens": 171233,
+    "output_tokens": 3257,
+    "api_call_count": 6
+  }
+}
