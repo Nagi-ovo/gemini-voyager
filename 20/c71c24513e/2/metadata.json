@@ -1,0 +1,52 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "20c71c24513e",
+  "session_id": "77ca7a90-76ec-44ba-b502-78254bbc3f6b",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-26T22:34:17.052739Z",
+  "branch": "main",
+  "checkpoints_count": 6,
+  "files_touched": [
+    "src/core/services/GoogleDriveSyncService.ts",
+    "src/core/types/common.ts",
+    "src/core/types/sync.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/background/index.ts",
+    "src/pages/content/fork/ForkNodesService.ts",
+    "src/pages/content/fork/__tests__/ForkNodesService.test.ts",
+    "src/pages/content/fork/forkTypes.ts",
+    "src/pages/content/fork/index.ts",
+    "src/pages/content/index.tsx",
+    "src/pages/content/timeline/EventBus.ts",
+    "src/utils/__tests__/mergeForkNodes.test.ts",
+    "src/utils/merge.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "83ab20aeeb0a",
+  "token_usage": {
+    "input_tokens": 159,
+    "cache_creation_tokens": 279897,
+    "cache_read_tokens": 15472013,
+    "output_tokens": 13601,
+    "api_call_count": 146
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-26T22:34:15.816422Z",
+    "agent_lines": 1767,
+    "human_added": 963,
+    "human_modified": 328,
+    "human_removed": 0,
+    "total_committed": 3058,
+    "agent_percentage": 57.78286461739699
+  },
+  "transcript_path": ".claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/77ca7a90-76ec-44ba-b502-78254bbc3f6b.jsonl"
+}
