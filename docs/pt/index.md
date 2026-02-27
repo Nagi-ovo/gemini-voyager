@@ -59,12 +59,15 @@ features:
   - icon: 🏷️
     title: Sinc. Título da Aba
     details: Saiba num relance. Sincronize automaticamente o título da aba do navegador com o seu chat.
+  - icon: 🔀
+    title: Bifurcação de Conversa (Experimental)
+    details: Pensamento divergente. Bifurque a conversa em qualquer nó para explorar diferentes possibilidades.
   - icon: 🗑️
     title: Eliminação em Lote
     details: Limpeza em massa. Selecione várias conversas e elimine-as todas de uma vez.
-  - icon: ⚡️
-    title: Modelo padrão
-    details: Pare de se repetir. Mude automaticamente para seu modelo preferido em novos chats.
+  # - icon: ⚡️
+  #   title: Modelo padrão
+  #   details: Pare de se repetir. Mude automaticamente para seu modelo preferido em novos chats.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

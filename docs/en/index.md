@@ -59,12 +59,15 @@ features:
   - icon: 🏷️
     title: Tab Title Sync
     details: Know at a glance. Auto-sync browser tab title with your chat.
+  - icon: 🔀
+    title: Conversation Fork (Experimental)
+    details: Divergent thinking. Branch conversation at any node to explore different possibilities.
   - icon: 🗑️
     title: Batch Delete
     details: Clean up in bulk. Select multiple conversations and delete them all at once.
-  - icon: ⚡️
-    title: Default Model
-    details: Stop repeating yourself. Auto-switch to your preferred model on new chats.
+  # - icon: ⚡️
+  #   title: Default Model
+  #   details: Stop repeating yourself. Auto-switch to your preferred model on new chats.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

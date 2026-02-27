@@ -171,7 +171,7 @@ export default function Popup() {
           setIsAIStudio(true);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const handleFormulaCopyFormatChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -267,7 +267,7 @@ export default function Popup() {
       );
       try {
         chrome.storage?.sync?.set({ geminiChatWidth: normalized });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -293,7 +293,7 @@ export default function Popup() {
       );
       try {
         chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -302,19 +302,19 @@ export default function Popup() {
     () =>
       isAIStudio
         ? {
-            key: 'gvAIStudioSidebarWidth',
-            min: AI_STUDIO_SIDEBAR_PX.min,
-            max: AI_STUDIO_SIDEBAR_PX.max,
-            def: AI_STUDIO_SIDEBAR_PX.defaultValue,
-            norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
-          }
+          key: 'gvAIStudioSidebarWidth',
+          min: AI_STUDIO_SIDEBAR_PX.min,
+          max: AI_STUDIO_SIDEBAR_PX.max,
+          def: AI_STUDIO_SIDEBAR_PX.defaultValue,
+          norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
+        }
         : {
-            key: 'geminiSidebarWidth',
-            min: SIDEBAR_PX.min,
-            max: SIDEBAR_PX.max,
-            def: SIDEBAR_PX.defaultValue,
-            norm: normalizeSidebarPx,
-          },
+          key: 'geminiSidebarWidth',
+          min: SIDEBAR_PX.min,
+          max: SIDEBAR_PX.max,
+          def: SIDEBAR_PX.defaultValue,
+          norm: normalizeSidebarPx,
+        },
     [isAIStudio],
   );
 
@@ -327,7 +327,7 @@ export default function Popup() {
         const clamped = sidebarConfig.norm(widthPx);
         try {
           chrome.storage?.sync?.set({ [sidebarConfig.key]: clamped });
-        } catch {}
+        } catch { }
       },
       [sidebarConfig],
     ),
@@ -345,7 +345,7 @@ export default function Popup() {
         const clamped = clampNumber(spacing, FOLDER_SPACING.min, FOLDER_SPACING.max);
         try {
           chrome.storage?.sync?.set({ [folderSpacingKey]: clamped });
-        } catch {}
+        } catch { }
       },
       [folderSpacingKey],
     ),
@@ -359,7 +359,7 @@ export default function Popup() {
       const clamped = clampNumber(indent, FOLDER_TREE_INDENT.min, FOLDER_TREE_INDENT.max);
       try {
         chrome.storage?.sync?.set({ gvFolderTreeIndent: clamped });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -543,7 +543,7 @@ export default function Popup() {
           })();
         },
       );
-    } catch {}
+    } catch { }
   }, [setSyncStorage]);
 
   // Validate and normalize URL
@@ -801,11 +801,10 @@ export default function Popup() {
                   style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
                 />
                 <button
-                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                    mode === 'flow'
+                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${mode === 'flow'
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                    }`}
                   onClick={() => {
                     setMode('flow');
                     apply({ mode: 'flow' });
@@ -814,11 +813,10 @@ export default function Popup() {
                   {t('flow')}
                 </button>
                 <button
-                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                    mode === 'jump'
+                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${mode === 'jump'
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                    }`}
                   onClick={() => {
                     setMode('jump');
                     apply({ mode: 'jump' });
@@ -984,9 +982,16 @@ export default function Popup() {
               <div className="flex-1">
                 <Label
                   htmlFor="fork-enabled"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
                 >
                   {t('enableForkFeature')}
+                  <span
+                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                    title={t('experimentalLabel')}
+                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                  >
+                    experiment
+                  </span>
                 </Label>
                 <p className="text-muted-foreground mt-1 text-xs">{t('enableForkFeatureHint')}</p>
               </div>
@@ -1275,11 +1280,10 @@ export default function Popup() {
                       onClick={() => {
                         void toggleQuickWebsite(domain, isEnabled);
                       }}
-                      className={`inline-flex min-w-[30%] flex-grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
-                        isEnabled
+                      className={`inline-flex min-w-[30%] flex-grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${isEnabled
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
-                      }`}
+                        }`}
                       title={label}
                     >
                       <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">

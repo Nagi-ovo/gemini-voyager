@@ -59,12 +59,15 @@ features:
   - icon: 🏷️
     title: 標籤頁標題同步
     details: 一眼即知。自動將標籤頁標題同步為對話標題。
+  - icon: 🔀
+    title: 對話分支 (實驗性)
+    details: 發散思維。在任意節點分叉對話，探索不同可能。
   - icon: 🗑️
     title: 批次刪除對話
     details: 一鍵清理。選中多個對話，批次刪除，告別繁瑣。
-  - icon: ⚡️
-    title: 預設模型
-    details: 拒絕重複勞動。新建對話自動切換至你最愛的模型。
+  # - icon: ⚡️
+  #   title: 預設模型
+  #   details: 拒絕重複勞動。新建對話自動切換至你最愛的模型。
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

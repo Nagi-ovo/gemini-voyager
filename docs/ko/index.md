@@ -59,12 +59,15 @@ features:
   - icon: 🏷️
     title: 탭 제목 동기화
     details: 한눈에 파악하세요. 브라우저 탭 제목을 대화 제목과 자동으로 동기화합니다.
+  - icon: 🔀
+    title: 대화 분기 (실험적)
+    details: 발산적 사고. любой 지점에서 대화를 분기하여 다양한 가능성을 탐색하세요.
   - icon: 🗑️
     title: 일괄 삭제
     details: 한꺼번에 정리하세요. 여러 대화를 선택하여 한 번에 삭제하세요.
-  - icon: ⚡️
-    title: 기본 모델
-    details: 반복하지 마세요. 새 대화에서 선호하는 모델로 자동 전환합니다.
+  # - icon: ⚡️
+  #   title: 기본 모델
+  #   details: 반복하지 마세요. 새 대화에서 선호하는 모델로 자동 전환합니다.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

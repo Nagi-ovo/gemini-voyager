@@ -59,12 +59,15 @@ features:
   - icon: 🏷️
     title: タブタイトルの同期
     details: 一目で分かる。タブのタイトルが、会話の内容に自動で変化。
+  - icon: 🔀
+    title: 会話の分岐 (実験的)
+    details: 拡散的思考。任意のノードで会話を分岐させ、異なる可能性を探究。
   - icon: 🗑️
     title: 一括削除
     details: 整理も一瞬。複数の会話を選んで、まとめて消去。
-  - icon: ⚡️
-    title: デフォルトモデル
-    details: 繰り返し作業は不要です。新しいチャットでお気に入りのモデルに自動切り替え。
+  # - icon: ⚡️
+  #   title: デフォルトモデル
+  #   details: 繰り返し作業は不要です。新しいチャットでお気に入りのモデルに自動切り替え。
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
