@@ -1,0 +1,433 @@
+Implement the following plan:
+
+# Conversation Fork Feature Implementation Plan
+
+## Context
+
+Users want to branch/fork conversations at any user message to explore alternative directions. When forking, the conversation up to that point is exported as markdown and pasted into a new Gemini conversation. Both the original and new conversation nodes are linked via numbered fork indicators, allowing navigation between branches.
+
+## Data Model
+
+### Fork Node Type (`src/pages/content/fork/forkTypes.ts`)
+
+```ts
+export interface ForkNode {
+  turnId: string;              // The user turn where the fork happened
+  conversationId: string;      // Conversation ID (computed hash)
+  conversationUrl: string;     // Full URL of this conversation
+  conversationTitle?: string;  // Title of this conversation
+  forkGroupId: string;         // Shared ID linking all forks from the same point
+  forkIndex: number;           // 0-based index within the fork group
+  createdAt: number;           // Timestamp
+}
+
+export interface ForkNodesData {
+  nodes: Record<string, ForkNode[]>; // conversationId -> array of fork nodes
+  groups: Record<string, string[]>;  // forkGroupId -> array of conversationId:turnId keys
+}
+```
+
+### Storage Key (`src/core/types/common.ts`)
+Add: `FORK_NODES: 'gvForkNodes'`
+
+## Architecture (mirrors Starred Messages pattern)
+
+### 1. ForkNodesService (`src/pages/content/fork/ForkNodesService.ts`)
+- Static methods communicating with background script via `chrome.runtime.sendMessage`
+- Message types: `gv.fork.add`, `gv.fork.remove`, `gv.fork.getAll`, `gv.fork.getForConversation`, `gv.fork.getGroup`
+- Emits EventBus events: `fork:added`, `fork:removed`
+- Reuse existing `EventBus` from `src/pages/content/timeline/EventBus.ts` (add new event types)
+
+### 2. ForkNodesManager (in `src/pages/background/index.ts`)
+- Same serialized queue pattern as `StarredMessagesManager`
+- Persists to `chrome.storage.local` under `StorageKeys.FORK_NODES`
+- Message handler for `gv.fork.*` operations
+
+### 3. Google Drive Sync (`src/core/services/GoogleDriveSyncService.ts`)
+- New file: `gemini-voyager-forks.json`
+- New file ID: `private forksFileId: string | null = null`
+- Upload/download alongside starred messages
+- Merge logic in `src/utils/merge.ts`: `mergeForkNodes()` using `createdAt` for conflict resolution
+
+## Content Script Module (`src/pages/content/fork/index.ts`)
+
+### Fork Button Injection
+- MutationObserver watches for user message bubbles (selectors from `export/index.ts`: `.user-query-bubble-with-background`, etc.)
+- For each user message, inject a fork button that appears on hover (similar to how response action buttons work)
+- Button uses a "git-branch" SVG icon, positioned near the existing copy button area
+- CSS: `.gv-fork-btn` with hover-to-show behavior, themed for light/dark mode
+- Button click triggers confirmation dialog
+
+### Confirmation Dialog
+- Small inline confirmation popup near the button: "Fork conversation from here?" with Confirm/Cancel
+- On confirm:
+  1. Extract all turns up to and including this turn using `DOMContentExtractor` + `MarkdownFormatter.format()` from `src/features/export/services/`
+  2. Open new Gemini conversation: `window.open('https://gemini.google.com/app', '_blank')` or navigate
+  3. Store pending fork state in `sessionStorage`: `{ sourceConversationId, sourceTurnId, sourceUrl, sourceTitle, forkGroupId, markdown }`
+
+### Content Paste & URL Detection
+- On page load, check `sessionStorage` for pending fork data
+- If found, wait for the input field (`rich-textarea [contenteditable="true"]`) to be available
+- Paste the markdown content using `document.execCommand('insertText', false, markdown)` (same pattern as quoteReply)
+- After user submits (detected by URL change from `/app` to `/app/{conversationId}`), create fork links:
+  1. Create ForkNode for the **source** conversation (original fork point, forkIndex=0)
+  2. Create ForkNode for the **new** conversation (first user turn, forkIndex=1)
+  3. Both share the same `forkGroupId`
+  4. Save via `ForkNodesService.addForkNode()`
+
+### Fork Indicator UI
+- On conversation load, query `ForkNodesService.getForConversation(conversationId)` for fork nodes
+- For each forked user turn, add a subtle theme-colored indicator (small colored dot/border on the message bubble)
+- Add a clickable fork icon that opens a popover
+- Popover shows all branches in the fork group:
+  - "Branch 1 (original)" - current highlighted
+  - "Branch 2" - clickable, navigates to that conversation URL with `#gv-turn-{turnId}` hash
+  - "Branch 3" etc.
+- Popover dismisses on click outside
+
+## i18n (EN + ZH initially)
+
+### New keys in `src/locales/en/messages.json` and `src/locales/zh/messages.json`:
+- `forkConversation`: "Fork conversation" / "分叉对话"
+- `forkConfirm`: "Fork conversation from this point?" / "从此处分叉对话？"
+- `forkConfirmBtn`: "Fork" / "分叉"
+- `forkCancel`: "Cancel" / "取消"
+- `forkBranch`: "Branch" / "分支"
+- `forkOriginal`: "Original" / "原始"
+- `forkCurrent`: "Current" / "当前"
+- `forkPreparing`: "Preparing fork..." / "准备分叉中..."
+- `forkPasteHint`: "Press Enter to send and create the fork" / "按回车发送以创建分叉"
+
+Real-time language switching: listen to `browser.storage.onChanged` for `StorageKeys.LANGUAGE` and update all fork UI text via `getTranslationSync()`.
+
+## Files to Create/Modify
+
+### New Files
+1. `src/pages/content/fork/forkTypes.ts` - Type definitions
+2. `src/pages/content/fork/ForkNodesService.ts` - Service (message passing to background)
+3. `src/pages/content/fork/index.ts` - Content script module (button injection, confirmation, paste, UI)
+
+### Modified Files
+4. `src/core/types/common.ts` - Add `FORK_NODES` storage key
+5. `src/pages/content/timeline/EventBus.ts` - Add fork event types
+6. `src/pages/background/index.ts` - Add `ForkNodesManager` class + message handlers
+7. `src/core/services/GoogleDriveSyncService.ts` - Add forks file upload/download
+8. `src/utils/merge.ts` - Add `mergeForkNodes()` function
+9. `src/pages/content/index.tsx` - Register and start fork module
+10. `src/locales/en/messages.json` - Add fork translation keys
+11. `src/locales/zh/messages.json` - Add fork translation keys
+
+## Implementation Order
+
+1. **Types & Storage** - `forkTypes.ts`, `common.ts` storage key
+2. **Background Manager** - `ForkNodesManager` in background script + message handlers
+3. **Service Layer** - `ForkNodesService.ts` + EventBus events
+4. **Content Script Core** - Fork button injection, hover behavior, confirmation dialog
+5. **Export Integration** - Extract conversation markdown using existing `DOMContentExtractor` + `MarkdownFormatter`
+6. **Paste & Link** - New conversation paste, URL change detection, fork node creation
+7. **Fork Indicator UI** - Visual indicators on forked turns + popover navigation
+8. **Google Drive Sync** - Upload/download/merge for forks
+9. **i18n** - EN + ZH translation keys + real-time switching
+10. **Registration** - Add `startFork()` to content script init
+
+## Verification
+
+1. `bun run typecheck` - No TypeScript errors
+2. `bun run lint` - No lint issues
+3. `bun run test` - All existing tests pass
+4. `bun run build:chrome` - Builds successfully
+5. Manual testing:
+   - Load extension in Chrome, open a Gemini conversation
+   - Hover over a user message, verify fork button appears
+   - Click fork, confirm, verify markdown is extracted correctly
+   - Verify new tab opens with content pasted
+   - Submit in new conversation, verify fork nodes are created on both sides
+   - Navigate back to original, verify fork indicator appears
+   - Click fork indicator, verify popover shows branches
+   - Click branch link, verify navigation works
+   - Test language switching (EN/ZH) updates fork UI text
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/jessezhang/.REDACTED.jsonl
+
+---
+
+问题如下：
+1. 一个对话附近有五个分叉的按钮，这还是在我根本没有使用分叉功能时的表现。只有对话元素（有输入文本）里的那个分叉才是唯一需要的；
+2. 现在好像会复制多遍对话内容而不是一遍
+
+---
+
+1. 选择的是用户输入节点对吧，但是现在包含了这个输入对应的 assistant 输出，这个不要。
+2. 你保留的分叉按钮不是我想要的，现在剩下的这一个仍然是在对话元素外面的（鼠标放在上面时会导致元素被挤压一点），我要在里面的。
+
+---
+
+1.你仍然复制了这个用户输入后面紧跟的 assistant 输出，你要看一下“选中部分对话节点”的导出的逻辑。
+2. 取消按钮点击无效
+3. 还没有那个查看其他分支（序号）的功能
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Initial Request**: User provided a detailed implementation plan for a "Conversation Fork Feature" in the gemini-voyager Chrome extension. The plan included data models, architecture, content script modules, i18n, Google Drive sync, and verification steps.
+
+2. **Exploration Phase**: I used agents to explore the codebase patterns - StarredMessagesManager, EventBus, content script registration, export services, quoteReply, StorageKeys, GoogleDriveSyncService, merge utilities, UI injection patterns, and translation files.
+
+3. **Implementation Phase**: Created tasks and implemented:
+   - Task 1: Types & Storage Key (`forkTypes.ts`, `common.ts`)
+   - Task 2: Background Manager (`ForkNodesManager` in `background/index.ts`)
+   - Task 3: Service Layer (`ForkNodesService.ts`, EventBus events)
+   - Task 4: Content Script Module (`fork/index.ts`)
+   - Task 5: Google Drive Sync & Merge (`GoogleDriveSyncService.ts`, `merge.ts`, `sync.ts`)
+   - Task 6: i18n (all 10 locale files) & Registration (`content/index.tsx`)
+   - Task 7: Verification (typecheck, lint, test, build all passed)
+
+4. **User Feedback Round 1** (Chinese): Two issues:
+   - "一个对话附近有五个分叉的按钮" - 5 fork buttons per message because `getUserTurnSelectors()` returns multiple nested selectors
+   - "现在好像会复制多遍对话内容而不是一遍" - Content duplicated multiple times
+
+5. **Fix Round 1**: Added `filterTopLevel()` (same pattern as export module) and `queryTopLevelUserTurns()` helper. Applied to all 3 call sites: `injectForkButtons`, `extractMarkdownUpToTurn`, `injectForkIndicators`.
+
+6. **User Feedback Round 2** (Chinese): Two issues:
+   - "选择的是用户输入节点对吧，但是现在包含了这个输入对应的 assistant 输出" - filterTopLevel keeps outermost which includes assistant response
+   - "你保留的分叉按钮不是我想要的，现在剩下的这一个仍然是在对话元素外面的" - Button is on the wrong (outer) element
+
+7. **Fix Round 2**: Flipped logic from `filterTopLevel` to `filterInnermost` - keeps elements that DON'T CONTAIN other matched elements (leaf nodes = actual user text bubbles).
+
+8. **User Feedback Round 3** (Chinese): Three issues:
+   - "你仍然复制了这个用户输入后面紧跟的 assistant 输出" - Still copying assistant responses in markdown extraction
+   - "取消按钮点击无效" - Cancel button doesn't work
+   - "还没有那个查看其他分支（序号）的功能" - No numbered branch indicator UI
+
+9. **Fix Round 3** (most recent, in progress):
+   - Issue 1: Rewrote `extractMarkdownUpToTurn` → `extractUserMessagesUpToTurn` to only extract user messages, no assistant content
+   - Issue 2: Fixed cancel button by moving confirm dialog from inside fork button to `document.body` with fixed positioning, added `stopPropagation` on all buttons and the dialog itself
+   - Issue 3: Updated `injectForkIndicators` to fetch group info and show `currentIndex/totalCount` numbered badge; updated `showForkPopover` to use fixed positioning on `document.body`
+   
+   **BUT**: I haven't yet run typecheck/build after the Round 3 fixes, and haven't updated the CSS for the popover (removed absolute positioning requirement since now using fixed).
+
+Let me also check - the popover CSS still has `position: absolute` in the stylesheet which we now override inline with `position: fixed`. Same for confirm dialog. These should be fine since inline styles take precedence.
+
+Also need to check: the `updateForkButtonTexts` function still references indicators with "forkBranch" text, but indicators now show "1/2" numbers. Need to update that too.
+
+Summary:
+1. Primary Request and Intent:
+   The user requested implementation of a "Conversation Fork Feature" for the gemini-voyager Chrome extension. The feature allows users to fork/branch conversations at any user message by:
+   - Showing a fork button on hover over user messages
+   - Extracting conversation content up to that point as markdown
+   - Opening a new Gemini conversation and pasting the content
+   - Creating linked fork nodes in storage so both conversations show numbered fork indicators
+   - Allowing navigation between branches via a popover UI
+   
+   The user provided a comprehensive implementation plan covering data model, architecture (mirroring StarredMessages pattern), content script module, Google Drive sync, i18n, and verification steps.
+
+   After initial implementation, the user provided three rounds of feedback in Chinese correcting specific bugs.
+
+2. Key Technical Concepts:
+   - Chrome Extension architecture (background service worker, content scripts, message passing)
+   - Serialized operation queue pattern (preventing race conditions in `chrome.storage.local`)
+   - EventBus singleton observer pattern for cross-component communication
+   - DOM selector deduplication with `filterInnermost()` — Gemini's nested Angular elements match multiple selectors per message
+   - `DOMContentExtractor` for extracting rich content from Gemini's Angular/Shadow DOM
+   - `document.execCommand('insertText')` for pasting into Quill-based contenteditable
+   - `sessionStorage` for passing fork state between original and new conversation tabs
+   - Google Drive sync with separate JSON files per data type
+   - Timestamp-based merge conflict resolution
+   - Fixed positioning for popup/popover UI to avoid click event bubbling issues
+   - i18n with `getTranslationSync()` and `browser.storage.onChanged` for live language switching
+
+3. Files and Code Sections:
+
+   - **`src/pages/content/fork/forkTypes.ts`** (NEW)
+     - Defines `ForkNode` and `ForkNodesData` interfaces for the fork data model
+     ```ts
+     export interface ForkNode {
+       turnId: string;
+       conversationId: string;
+       conversationUrl: string;
+       conversationTitle?: string;
+       forkGroupId: string;
+       forkIndex: number;
+       createdAt: number;
+     }
+     export interface ForkNodesData {
+       nodes: Record<string, ForkNode[]>;
+       groups: Record<string, string[]>;
+     }
+     ```
+
+   - **`src/pages/content/fork/ForkNodesService.ts`** (NEW)
+     - Service layer using `chrome.runtime.sendMessage` to communicate with background script
+     - Static methods: `addForkNode`, `removeForkNode`, `getAllForkNodes`, `getForConversation`, `getGroup`
+     - Emits EventBus events on add/remove
+
+   - **`src/pages/content/fork/index.ts`** (NEW — main content script module, most heavily edited)
+     - Core module with fork button injection, confirmation dialog, markdown extraction, pending fork handling, fork indicator UI, popover navigation
+     - Key function `filterInnermost()` keeps only leaf-level matched elements (not containers):
+     ```ts
+     function filterInnermost(elements: HTMLElement[]): HTMLElement[] {
+       const out: HTMLElement[] = [];
+       for (let i = 0; i < elements.length; i++) {
+         let containsAnother = false;
+         for (let j = 0; j < elements.length; j++) {
+           if (i !== j && elements[i].contains(elements[j])) {
+             containsAnother = true;
+             break;
+           }
+         }
+         if (!containsAnother) out.push(elements[i]);
+       }
+       return out;
+     }
+     ```
+     - `extractUserMessagesUpToTurn()` — extracts ONLY user messages (no assistant), replacing the old `extractMarkdownUpToTurn`:
+     ```ts
+     function extractUserMessagesUpToTurn(userTurnIndex: number): string {
+       const allUsers = queryInnermostUserTurns();
+       if (allUsers.length === 0) return '';
+       const lines: string[] = [];
+       const title = getConversationTitle();
+       lines.push(`# ${title}`);
+       lines.push('');
+       for (let i = 0; i <= userTurnIndex && i < allUsers.length; i++) {
+         const userEl = allUsers[i];
+         const userContent = DOMContentExtractor.extractUserContent(userEl);
+         const text = userContent.text || userEl.innerText?.trim() || '';
+         if (text) {
+           lines.push(text);
+           lines.push('');
+         }
+       }
+       return lines.join('\n');
+     }
+     ```
+     - Confirmation dialog moved from inside button to `document.body` with fixed positioning and `stopPropagation`:
+     ```ts
+     cancelBtn.addEventListener('click', (e) => {
+       e.stopPropagation();
+       e.preventDefault();
+       dismissConfirm();
+     });
+     confirm.addEventListener('click', (e) => e.stopPropagation());
+     const btnRect = btn.getBoundingClientRect();
+     confirm.style.position = 'fixed';
+     confirm.style.top = `${btnRect.top - 4}px`;
+     confirm.style.left = `${btnRect.right}px`;
+     confirm.style.transform = 'translateY(-100%)';
+     document.body.appendChild(confirm);
+     ```
+     - Fork indicator now shows numbered badge `currentIndex/totalCount` by fetching group data:
+     ```ts
+     const currentNode = groupNodes.find((n) => n.conversationId === conversationId);
+     const currentIndex = currentNode ? currentNode.forkIndex + 1 : '?';
+     const totalCount = groupNodes.length;
+     indicator.innerHTML = `${FORK_ICON}<span>${currentIndex}/${totalCount}</span>`;
+     indicator.title = `${getTranslationSync('forkBranch')} ${currentIndex}/${totalCount}`;
+     ```
+     - Popover also moved to `document.body` with fixed positioning
+
+   - **`src/core/types/common.ts`** (MODIFIED)
+     - Added `FORK_NODES: 'gvForkNodes'` to `StorageKeys`
+
+   - **`src/pages/content/timeline/EventBus.ts`** (MODIFIED)
+     - Added fork event types to `EventMap`:
+     ```ts
+     'fork:added': { conversationId: string; turnId: string; forkGroupId: string };
+     'fork:removed': { conversationId: string; turnId: string; forkGroupId: string };
+     ```
+
+   - **`src/pages/background/index.ts`** (MODIFIED)
+     - Added `ForkNodesManager` class following `StarredMessagesManager` pattern with serialized queue
+     - Added `gv.fork.*` message handlers (add, remove, getAll, getForConversation, getGroup)
+     - Updated sync upload handler to include fork data alongside starred messages
+     - Imported `ForkNode`, `ForkNodesData` types
+
+   - **`src/core/types/sync.ts`** (MODIFIED)
+     - Added `ForkExportPayload`, `ForkNodeSync`, `ForkNodesDataSync` type exports
+
+   - **`src/core/services/GoogleDriveSyncService.ts`** (MODIFIED)
+     - Added `FORKS_FILE_NAME = 'gemini-voyager-forks.json'`
+     - Added `private forksFileId: string | null = null`
+     - Extended `upload()` with `forks` parameter and upload logic
+     - Extended `download()` return type and download logic to include forks
+     - Extended `ensureFileId` type union to include `'forks'`
+     - Added `setFileIdForType()` helper method
+     - Updated `signOut()` to clear `forksFileId`
+
+   - **`src/utils/merge.ts`** (MODIFIED)
+     - Added `mergeForkNodes()` function using `forkGroupId:turnId` as key, timestamp-based conflict resolution, and groups index rebuilding
+
+   - **`src/pages/content/index.tsx`** (MODIFIED)
+     - Imported `startFork` from `./fork/index`
+     - Added `forkCleanup` variable
+     - Added `forkCleanup = startFork()` after `startExportButton()`
+     - Added cleanup in beforeunload handler
+
+   - **All 10 locale files** (MODIFIED)
+     - Added 9 fork translation keys: `forkConversation`, `forkConfirm`, `forkConfirmBtn`, `forkCancel`, `forkBranch`, `forkOriginal`, `forkCurrent`, `forkPreparing`, `forkPasteHint`
+     - EN and ZH have proper translations; other 8 locales use English placeholders
+
+4. Errors and fixes:
+   - **5 fork buttons per user message**: `getUserTurnSelectors()` returns ~11 selectors matching nested DOM elements. Initially added `filterTopLevel()` keeping outermost elements.
+     - User feedback: "你保留的分叉按钮不是我想要的，现在剩下的这一个仍然是在对话元素外面的（鼠标放在上面时会导致元素被挤压一点），我要在里面的。" — The outermost element wraps both user+assistant, causing layout shifts.
+     - Fix: Replaced `filterTopLevel` with `filterInnermost` — keeps leaf elements that don't contain any other matched element, targeting the actual user text bubble.
+   
+   - **Content duplicated multiple times**: Same root cause as above — `querySelectorAll` with all selectors matched 5 nested elements per message.
+     - Fix: Applied `filterInnermost` to all query sites.
+
+   - **Assistant output included in fork markdown**: `extractMarkdownUpToTurn` explicitly found and extracted assistant responses for each turn.
+     - User feedback: "你仍然复制了这个用户输入后面紧跟的 assistant 输出，你要看一下'选中部分对话节点'的导出的逻辑。"
+     - Fix: Rewrote as `extractUserMessagesUpToTurn` which only extracts user content, completely removing assistant response lookup.
+
+   - **Cancel button click non-functional**: Confirmation dialog was appended as child of the fork button (`btn.appendChild(confirm)`). Cancel click bubbled up to the button's click handler, re-triggering `showForkConfirmation`.
+     - User feedback: "取消按钮点击无效"
+     - Fix: Moved dialog to `document.body` with fixed positioning. Added `stopPropagation` on cancel, confirm, and the dialog element itself.
+
+   - **No numbered branch indicator**: Only showed "Branch" text, no way to see which branch you're on or how many exist.
+     - User feedback: "还没有那个查看其他分支（序号）的功能"
+     - Fix: Updated `injectForkIndicators` to async-fetch group data and display `currentIndex/totalCount` (e.g., "1/2"). Updated popover to also use fixed positioning on `document.body`.
+
+5. Problem Solving:
+   - The core architectural challenge was Gemini's nested Angular DOM structure where a single user message matches multiple CSS selectors at different nesting levels. Solved by using `filterInnermost()` to select only the leaf-level (most specific) element.
+   - Click event bubbling issues with popups inside interactive elements solved by moving popups to `document.body` with fixed positioning.
+   - All initial verification checks passed (typecheck, lint 0 errors, 451 tests pass, Chrome build succeeds).
+   - Round 3 fixes have NOT yet been verified with typecheck/build.
+
+6. All user messages:
+   - **Message 1**: "Implement the following plan: [detailed Conversation Fork Feature Implementation Plan with data model, architecture, files to create/modify, implementation order, verification steps]"
+   - **Message 2** (Chinese): "问题如下：1. 一个对话附近有五个分叉的按钮，这还是在我根本没有使用分叉功能时的表现。只有对话元素（有输入文本）里的那个分叉才是唯一需要的；2. 现在好像会复制多遍对话内容而不是一遍"
+   - **Message 3** (Chinese): "1.你仍然复制了这个用户输入后面紧跟的 assistant 输出，这个不要。2. 现在好像会复制多遍对话内容而不是一遍" — Wait, actually: "1. 选择的是用户输入节点对吧，但是现在包含了这个输入对应的 assistant 输出，这个不要。2. 你保留的分叉按钮不是我想要的，现在剩下的这一个仍然是在对话元素外面的（鼠标放在上面时会导致元素被挤压一点），我要在里面的。"
+   - **Message 4** (Chinese): "1.你仍然复制了这个用户输入后面紧跟的 assistant 输出，你要看一下"选中部分对话节点"的导出的逻辑。2. 取消按钮点击无效 3. 还没有那个查看其他分支（序号）的功能"
+
+7. Pending Tasks:
+   - Run `bun run typecheck`, `bun run lint`, `bun run build:chrome` to verify Round 3 fixes compile correctly
+   - Update `updateForkButtonTexts()` — it still tries to update indicator text with `getTranslationSync('forkBranch')` but indicators now show numbered `"1/2"` format; this function needs adjustment for language changes on indicators
+   - The CSS for `.gv-fork-confirm` and `.gv-fork-popover` still has `position: absolute` in the stylesheet (now overridden by inline `position: fixed`) — could be cleaned up for clarity
+   - Manually test the fork workflow end-to-end
+
+8. Current Work:
+   I was fixing three bugs reported by the user in their most recent message:
+   1. ✅ Replaced `extractMarkdownUpToTurn` with `extractUserMessagesUpToTurn` (user-only, no assistant content)
+   2. ✅ Fixed cancel button by moving confirm dialog to `document.body` with fixed positioning + `stopPropagation`
+   3. ✅ Updated fork indicators to show numbered `currentIndex/totalCount` badge and fetch group data; updated popover to use fixed positioning on `document.body`
+   
+   All three code changes have been written to `src/pages/content/fork/index.ts` but have NOT yet been verified with typecheck/build.
+
+9. Optional Next Step:
+   Run verification: `bun run typecheck && bun run build:chrome` to confirm the Round 3 fixes compile. The user's last message was: "1.你仍然复制了这个用户输入后面紧跟的 assistant 输出，你要看一下'选中部分对话节点'的导出的逻辑。2. 取消按钮点击无效 3. 还没有那个查看其他分支（序号）的功能" — all three fixes have been coded but not yet verified.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/jessezhang/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+继续
+
+---
+
+现在又完全没有 assistant 的输出了，我只是说最后选中分叉的那个节点，不要后面的 ai 输出节点！！！
