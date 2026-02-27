@@ -183,4 +183,46 @@ describe('GoogleDriveSyncService authentication', () => {
       expect.objectContaining({ gvAccessToken: 'legacy-token' }),
     );
   });
+
+  it('falls back to launchWebAuthFlow when identity.getAuthToken fails interactively', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    const getAuthTokenMock = chromeMock.identity.getAuthToken as unknown as ReturnType<
+      typeof vi.fn
+    >;
+    getAuthTokenMock.mockImplementation(
+      (details: { interactive?: boolean }, callback: (token?: string) => void) => {
+        if (details.interactive) {
+          (chromeMock.runtime as { lastError: chrome.runtime.LastError | null }).lastError = {
+            message: 'OAuth2 service failure',
+          } as chrome.runtime.LastError;
+          callback(undefined);
+          (chromeMock.runtime as { lastError: chrome.runtime.LastError | null }).lastError = null;
+          return;
+        }
+        callback(undefined);
+      },
+    );
+
+    const launchWebAuthFlowMock = chromeMock.identity.launchWebAuthFlow as unknown as ReturnType<
+      typeof vi.fn
+    >;
+    launchWebAuthFlowMock.mockImplementation(
+      (_details: { url: string; interactive: boolean }, callback: (response?: string) => void) => {
+        callback(
+          'https://test-extension.chromiumapp.org/#access_token=legacy-fallback-token&expires_in=3600',
+        );
+      },
+    );
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+
+    const ok = await service.authenticate(true);
+
+    expect(ok).toBe(true);
+    expect(launchWebAuthFlowMock).toHaveBeenCalledTimes(1);
+  });
 });

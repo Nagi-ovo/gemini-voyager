@@ -378,6 +378,15 @@ export class GoogleDriveSyncService {
     }
   }
 
+  private isUserDeniedAuthError(message: string): boolean {
+    const normalized = message.toLowerCase();
+    return (
+      normalized.includes('did not approve access') ||
+      normalized.includes('user denied') ||
+      normalized.includes('access_denied')
+    );
+  }
+
   private extractIdentityToken(result: unknown): string | null {
     if (typeof result === 'string' && result.trim()) {
       return result;
@@ -393,10 +402,12 @@ export class GoogleDriveSyncService {
     return null;
   }
 
-  private async requestIdentityAuthToken(interactive: boolean): Promise<string | null> {
+  private async requestIdentityAuthToken(
+    interactive: boolean,
+  ): Promise<{ token: string | null; userDenied: boolean }> {
     const identity = chrome.identity;
     if (!identity?.getAuthToken) {
-      return null;
+      return { token: null, userDenied: false };
     }
 
     try {
@@ -412,34 +423,37 @@ export class GoogleDriveSyncService {
 
       const token = this.extractIdentityToken(tokenResult);
       if (!token) {
-        return null;
+        return { token: null, userDenied: false };
       }
 
       this.accessToken = token;
       // getAuthToken does not provide expiry; keep a short in-memory TTL.
       this.tokenExpiry = Date.now() + 55 * 60 * 1000;
-      return token;
+      return { token, userDenied: false };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (!message.includes('The user did not approve access')) {
+      const userDenied = this.isUserDeniedAuthError(message);
+      if (!userDenied) {
         console.warn('[GoogleDriveSyncService] identity.getAuthToken failed:', error);
       }
-      return null;
+      return { token: null, userDenied };
     }
   }
 
-  private async getTokenFromIdentity(interactive: boolean): Promise<string | null> {
+  private async getTokenFromIdentity(
+    interactive: boolean,
+  ): Promise<{ token: string | null; userDenied: boolean }> {
     if (!chrome.identity?.getAuthToken) {
-      return null;
+      return { token: null, userDenied: false };
     }
 
-    const nonInteractiveToken = await this.requestIdentityAuthToken(false);
-    if (nonInteractiveToken) {
-      return nonInteractiveToken;
+    const nonInteractiveResult = await this.requestIdentityAuthToken(false);
+    if (nonInteractiveResult.token) {
+      return nonInteractiveResult;
     }
 
     if (!interactive) {
-      return null;
+      return { token: null, userDenied: false };
     }
 
     return this.requestIdentityAuthToken(true);
@@ -456,26 +470,7 @@ export class GoogleDriveSyncService {
     });
   }
 
-  private async getAuthToken(interactive: boolean): Promise<string | null> {
-    const supportsIdentityApi = !!chrome.identity?.getAuthToken;
-    const identityToken = await this.getTokenFromIdentity(interactive);
-    if (identityToken) {
-      return identityToken;
-    }
-    if (supportsIdentityApi) {
-      return null;
-    }
-
-    if (!this.accessToken) {
-      await this.loadCachedToken();
-    }
-    if (this.accessToken && this.tokenExpiry > Date.now()) {
-      return this.accessToken;
-    }
-    if (!interactive) {
-      return null;
-    }
-
+  private async getTokenFromLegacyWebAuthFlow(): Promise<string | null> {
     const manifest = chrome.runtime.getManifest();
     const clientId = manifest.oauth2?.client_id;
     const scopes = manifest.oauth2?.scopes?.join(' ');
@@ -523,6 +518,36 @@ export class GoogleDriveSyncService {
       console.error('[GoogleDriveSyncService] Auth flow failed:', error);
       return null;
     }
+  }
+
+  private async getAuthToken(interactive: boolean): Promise<string | null> {
+    const supportsIdentityApi = !!chrome.identity?.getAuthToken;
+    if (supportsIdentityApi) {
+      const identityResult = await this.getTokenFromIdentity(interactive);
+      if (identityResult.token) {
+        return identityResult.token;
+      }
+
+      // If user explicitly denied, don't open a second auth flow.
+      if (!interactive || identityResult.userDenied) {
+        return null;
+      }
+
+      // Fallback for environments where getAuthToken exists but fails.
+      return this.getTokenFromLegacyWebAuthFlow();
+    }
+
+    if (!this.accessToken) {
+      await this.loadCachedToken();
+    }
+    if (this.accessToken && this.tokenExpiry > Date.now()) {
+      return this.accessToken;
+    }
+    if (!interactive) {
+      return null;
+    }
+
+    return this.getTokenFromLegacyWebAuthFlow();
   }
 
   private async findFile(token: string, fileName: string): Promise<string | null> {
