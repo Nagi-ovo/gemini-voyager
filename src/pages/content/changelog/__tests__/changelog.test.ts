@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractLocalizedContent } from '../index';
+import {
+  extractLocalizedContent,
+  resolveChangelogImageUrl,
+  rewriteChangelogImageUrls,
+} from '../index';
 
 describe('extractLocalizedContent', () => {
   const sampleMarkdown = `<!-- lang:en -->
@@ -89,5 +93,70 @@ images:
     const result = extractLocalizedContent(sampleMarkdown, 'en');
     expect(result).not.toMatch(/^\s/);
     expect(result).not.toMatch(/\s$/);
+  });
+});
+
+describe('resolveChangelogImageUrl', () => {
+  it('rewrites github raw promotion image URLs to runtime URLs', () => {
+    const source =
+      'https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png';
+
+    const result = resolveChangelogImageUrl(source, (path) => `moz-extension://test-id/${path}`);
+
+    expect(result).toBe('moz-extension://test-id/changelog-promo-banner.png');
+  });
+
+  it('rewrites raw.githubusercontent.com promotion image URLs to runtime URLs', () => {
+    const source =
+      'https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/docs/public/assets/promotion/Promo-Banner-jp.png';
+
+    const result = resolveChangelogImageUrl(source, (path) => `moz-extension://test-id/${path}`);
+
+    expect(result).toBe('moz-extension://test-id/changelog-promo-banner-jp.png');
+  });
+
+  it('keeps unsupported image URLs unchanged', () => {
+    const source =
+      'https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Unknown.png';
+
+    const result = resolveChangelogImageUrl(source, (path) => `moz-extension://test-id/${path}`);
+
+    expect(result).toBe(source);
+  });
+});
+
+describe('rewriteChangelogImageUrls', () => {
+  it('rewrites supported markdown image URLs and preserves others', () => {
+    const source = [
+      '![banner](https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner-cn.png)',
+      '![external](https://example.com/banner.png)',
+    ].join('\n');
+
+    const result = rewriteChangelogImageUrls(source, (path) => `moz-extension://test-id/${path}`);
+
+    expect(result).toContain('![banner](moz-extension://test-id/changelog-promo-banner-cn.png)');
+    expect(result).toContain('![external](https://example.com/banner.png)');
+  });
+
+  it('falls back to original URL when runtime URL resolution fails', () => {
+    const source =
+      '![banner](https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png)';
+
+    const result = rewriteChangelogImageUrls(source, () => null);
+
+    expect(result).toBe(source);
+  });
+
+  it('skips rewriting when rewrite flag is disabled', () => {
+    const source =
+      '![banner](https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png)';
+
+    const result = rewriteChangelogImageUrls(
+      source,
+      (path) => `moz-extension://test-id/${path}`,
+      false,
+    );
+
+    expect(result).toBe(source);
   });
 });

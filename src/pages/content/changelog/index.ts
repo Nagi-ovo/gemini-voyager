@@ -2,7 +2,7 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
 import { StorageKeys } from '@/core/types/common';
-import { isChrome } from '@/core/utils/browser';
+import { isChrome, isFirefox } from '@/core/utils/browser';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 import { getCurrentLanguage } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
@@ -17,6 +17,89 @@ const changelogModules = import.meta.glob('./notes/*.md', {
   import: 'default',
   eager: false,
 }) as Record<string, () => Promise<string>>;
+
+const MARKDOWN_IMAGE_URL_REGEX = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+
+const GITHUB_PROMOTION_PATH_PREFIX =
+  '/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/';
+const RAW_GITHUBUSERCONTENT_PROMOTION_PATH_PREFIX =
+  '/Nagi-ovo/gemini-voyager/main/docs/public/assets/promotion/';
+
+function getPromotionRuntimePath(filename: string): string | null {
+  switch (filename) {
+    case 'Promo-Banner.png':
+      return 'changelog-promo-banner.png';
+    case 'Promo-Banner-cn.png':
+      return 'changelog-promo-banner-cn.png';
+    case 'Promo-Banner-jp.png':
+      return 'changelog-promo-banner-jp.png';
+    default:
+      return null;
+  }
+}
+
+function getRuntimeUrl(path: string): string | null {
+  try {
+    const runtime = (
+      globalThis as typeof globalThis & {
+        browser?: { runtime?: { getURL?: (assetPath: string) => string } };
+        chrome?: { runtime?: { getURL?: (assetPath: string) => string } };
+      }
+    ).browser?.runtime;
+    const fallbackRuntime = (
+      globalThis as typeof globalThis & {
+        chrome?: { runtime?: { getURL?: (assetPath: string) => string } };
+      }
+    ).chrome?.runtime;
+    const getUrl = runtime?.getURL ?? fallbackRuntime?.getURL;
+    return typeof getUrl === 'function' ? getUrl(path) : null;
+  } catch {
+    return null;
+  }
+}
+
+function extractPromotionRuntimePath(url: URL): string | null {
+  const host = url.hostname.toLowerCase();
+  const pathname = url.pathname;
+  const isGithubPromotionImage =
+    (host === 'github.com' && pathname.startsWith(GITHUB_PROMOTION_PATH_PREFIX)) ||
+    (host === 'raw.githubusercontent.com' &&
+      pathname.startsWith(RAW_GITHUBUSERCONTENT_PROMOTION_PATH_PREFIX));
+  if (!isGithubPromotionImage) return null;
+
+  const filename = pathname.split('/').pop();
+  return filename ? getPromotionRuntimePath(filename) : null;
+}
+
+export function resolveChangelogImageUrl(
+  url: string,
+  runtimeUrlResolver: (path: string) => string | null = getRuntimeUrl,
+): string {
+  try {
+    const parsed = new URL(url);
+    const runtimePath = extractPromotionRuntimePath(parsed);
+    if (!runtimePath) return url;
+
+    const runtimeUrl = runtimeUrlResolver(runtimePath);
+    return runtimeUrl ?? url;
+  } catch {
+    return url;
+  }
+}
+
+export function rewriteChangelogImageUrls(
+  markdown: string,
+  runtimeUrlResolver: (path: string) => string | null = getRuntimeUrl,
+  shouldRewrite: boolean = true,
+): string {
+  if (!shouldRewrite) return markdown;
+
+  return markdown.replace(MARKDOWN_IMAGE_URL_REGEX, (full, alt, url) => {
+    const resolvedUrl = resolveChangelogImageUrl(url, runtimeUrlResolver);
+    if (resolvedUrl === url) return full;
+    return `![${alt}](${resolvedUrl})`;
+  });
+}
 
 /**
  * Strip optional front matter (--- ... ---) from markdown.
@@ -303,7 +386,11 @@ async function showChangelogModal(
 
   // 3. Get current language and extract localized content
   const lang = await getCurrentLanguage();
-  const localizedContent = extractLocalizedContent(rawMarkdown, lang);
+  const localizedContent = rewriteChangelogImageUrls(
+    extractLocalizedContent(rawMarkdown, lang),
+    getRuntimeUrl,
+    isFirefox(),
+  );
   if (!localizedContent) return null;
 
   // 4. Convert markdown to HTML
