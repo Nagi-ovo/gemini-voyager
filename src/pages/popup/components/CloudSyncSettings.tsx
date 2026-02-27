@@ -4,6 +4,7 @@ import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncMode, SyncPlatform, SyncState } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
+import type { StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
@@ -152,15 +153,6 @@ export function CloudSyncSettings() {
     setIsUploading(true);
 
     try {
-      // First authenticate if needed
-      if (!syncState.isAuthenticated) {
-        const authResponse = await chrome.runtime.sendMessage({ type: 'gv.sync.authenticate' });
-        if (!authResponse?.ok) {
-          throw new Error(authResponse?.error || 'Authentication failed');
-        }
-        setSyncState(authResponse.state);
-      }
-
       // Get current data - prioritizing active tab content script for folders
       let folders: FolderData = { folders: [], folderContents: {} };
       let prompts: PromptItem[] = [];
@@ -210,16 +202,19 @@ export function CloudSyncSettings() {
       );
 
       // Upload to Google Drive with platform info
-      const response = await chrome.runtime.sendMessage({
+      const response = (await chrome.runtime.sendMessage({
         type: 'gv.sync.upload',
         payload: { folders, prompts, platform },
-      });
+      })) as { ok?: boolean; error?: string; state?: SyncState } | undefined;
+
+      if (response?.state) {
+        setSyncState(response.state);
+      }
 
       if (response?.ok) {
-        setSyncState(response.state);
         setStatusMessage({ text: t('syncSuccess'), kind: 'ok' });
       } else {
-        throw new Error(response?.error || t('syncUploadFailed'));
+        throw new Error(response?.error || response?.state?.error || t('syncUploadFailed'));
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Sync failed';
@@ -228,7 +223,7 @@ export function CloudSyncSettings() {
     } finally {
       setIsUploading(false);
     }
-  }, [syncState.isAuthenticated, t, platform]);
+  }, [t, platform]);
 
   // Handle download from Drive (restore data) - NOW MERGES instead of overwrite
   const handleDownloadFromDrive = useCallback(async () => {
@@ -236,23 +231,29 @@ export function CloudSyncSettings() {
     setIsDownloading(true);
 
     try {
-      // First authenticate if needed
-      if (!syncState.isAuthenticated) {
-        const authResponse = await chrome.runtime.sendMessage({ type: 'gv.sync.authenticate' });
-        if (!authResponse?.ok) {
-          throw new Error(authResponse?.error || t('syncAuthFailed'));
-        }
-        setSyncState(authResponse.state);
-      }
-
       // Download from Google Drive (platform-specific)
-      const response = await chrome.runtime.sendMessage({
+      const response = (await chrome.runtime.sendMessage({
         type: 'gv.sync.download',
         payload: { platform },
-      });
+      })) as
+        | {
+            ok?: boolean;
+            error?: string;
+            state?: SyncState;
+            data?: {
+              folders?: { data?: FolderData };
+              prompts?: { items?: PromptItem[] };
+              starred?: { data?: StarredMessagesData };
+            } | null;
+          }
+        | undefined;
+
+      if (response?.state) {
+        setSyncState(response.state);
+      }
 
       if (!response?.ok) {
-        throw new Error(response?.error || t('syncDownloadFailed'));
+        throw new Error(response?.error || response?.state?.error || t('syncDownloadFailed'));
       }
 
       if (!response.data) {
@@ -321,7 +322,7 @@ export function CloudSyncSettings() {
       } = response.data;
       const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
       const cloudPromptItems = cloudPromptsPayload?.items || [];
-      const cloudStarredData = cloudStarredPayload?.data || { messages: {} };
+      const cloudStarredData: StarredMessagesData = cloudStarredPayload?.data || { messages: {} };
 
       console.log('[CloudSyncSettings] === MERGE DEBUG ===');
       console.log('[CloudSyncSettings] Local folders count:', localFolders.folders?.length || 0);
@@ -340,7 +341,7 @@ export function CloudSyncSettings() {
       );
 
       // Get local starred messages for merge
-      let localStarred = { messages: {} };
+      let localStarred: StarredMessagesData = { messages: {} };
       try {
         const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
         if (starredResult.geminiTimelineStarredMessages) {
@@ -391,7 +392,6 @@ export function CloudSyncSettings() {
         console.warn('[CloudSyncSettings] Could not notify content script:', err);
       }
 
-      setSyncState(response.state);
       setStatusMessage({ text: t('syncSuccess'), kind: 'ok' });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Download failed';
@@ -400,7 +400,7 @@ export function CloudSyncSettings() {
     } finally {
       setIsDownloading(false);
     }
-  }, [syncState.isAuthenticated, t, platform]);
+  }, [t, platform]);
 
   // Clear status message after 3 seconds
   useEffect(() => {

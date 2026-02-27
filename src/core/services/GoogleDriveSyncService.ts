@@ -104,6 +104,7 @@ export class GoogleDriveSyncService {
   async signOut(): Promise<void> {
     try {
       if (this.accessToken) {
+        await this.removeCachedAuthToken(this.accessToken);
         await fetch(`https://accounts.google.com/o/oauth2/revoke?token=${this.accessToken}`);
       }
     } catch (error) {
@@ -377,7 +378,94 @@ export class GoogleDriveSyncService {
     }
   }
 
+  private extractIdentityToken(result: unknown): string | null {
+    if (typeof result === 'string' && result.trim()) {
+      return result;
+    }
+
+    if (typeof result === 'object' && result !== null) {
+      const token = (result as { token?: unknown }).token;
+      if (typeof token === 'string' && token.trim()) {
+        return token;
+      }
+    }
+
+    return null;
+  }
+
+  private async requestIdentityAuthToken(interactive: boolean): Promise<string | null> {
+    const identity = chrome.identity;
+    if (!identity?.getAuthToken) {
+      return null;
+    }
+
+    try {
+      const tokenResult = await new Promise<unknown>((resolve, reject) => {
+        identity.getAuthToken({ interactive }, (token) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(token);
+          }
+        });
+      });
+
+      const token = this.extractIdentityToken(tokenResult);
+      if (!token) {
+        return null;
+      }
+
+      this.accessToken = token;
+      // getAuthToken does not provide expiry; keep a short in-memory TTL.
+      this.tokenExpiry = Date.now() + 55 * 60 * 1000;
+      return token;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes('The user did not approve access')) {
+        console.warn('[GoogleDriveSyncService] identity.getAuthToken failed:', error);
+      }
+      return null;
+    }
+  }
+
+  private async getTokenFromIdentity(interactive: boolean): Promise<string | null> {
+    if (!chrome.identity?.getAuthToken) {
+      return null;
+    }
+
+    const nonInteractiveToken = await this.requestIdentityAuthToken(false);
+    if (nonInteractiveToken) {
+      return nonInteractiveToken;
+    }
+
+    if (!interactive) {
+      return null;
+    }
+
+    return this.requestIdentityAuthToken(true);
+  }
+
+  private async removeCachedAuthToken(token: string): Promise<void> {
+    const identity = chrome.identity;
+    if (!identity?.removeCachedAuthToken) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      identity.removeCachedAuthToken({ token }, () => resolve());
+    });
+  }
+
   private async getAuthToken(interactive: boolean): Promise<string | null> {
+    const supportsIdentityApi = !!chrome.identity?.getAuthToken;
+    const identityToken = await this.getTokenFromIdentity(interactive);
+    if (identityToken) {
+      return identityToken;
+    }
+    if (supportsIdentityApi) {
+      return null;
+    }
+
     if (!this.accessToken) {
       await this.loadCachedToken();
     }
