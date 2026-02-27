@@ -1,0 +1,437 @@
+Implement the following plan:
+
+# ChangeLog Modal Feature Implementation Plan
+
+## Context
+
+Add a version-based changelog popup that shows update announcements when users upgrade to a new version. The popup displays markdown content, supports i18n, and only shows once per version.
+
+## Architecture Decisions
+
+### i18n Strategy for Changelog Content
+To minimize maintenance burden (user explicitly asked to avoid too many md files), we use a **single markdown file per version with i18n section headers**. Each markdown file contains all languages in one file using `<!-- lang:xx -->` markers. A parser extracts the section matching the user's language (fallback to `en`).
+
+Example: `src/pages/content/changelog/notes/1.2.8.md`:
+```md
+<!-- lang:en -->
+### What's New
+- Feature A
+- Bug fix B
+
+<!-- lang:zh -->
+### 更新内容
+- 功能 A
+- 修复 B
+```
+
+This way: **1 version = 1 file**, easy to maintain.
+
+### Version Dismissed Storage
+Use `chrome.storage.local` with key `gvChangelogDismissedVersion` storing the version string the user last dismissed. On each load, compare current extension version vs dismissed version — show modal only if they differ.
+
+## Files to Create
+
+1. **`src/pages/content/changelog/index.ts`** — Main module (init, version check, DOM injection, cleanup)
+2. **`src/pages/content/changelog/notes/1.2.8.md`** — First changelog (template/placeholder for next release)
+
+## Files to Modify
+
+1. **`src/core/types/common.ts`** — Add `CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion'` to `StorageKeys`
+2. **`src/pages/content/index.tsx`** — Import and initialize `startChangelog()` in the gemini.google.com block
+3. **`public/contentStyle.css`** — Add `.gv-changelog-*` styles (overlay, dialog, markdown content, close button)
+4. **`src/locales/*/messages.json`** (all 10) — Add i18n keys for static UI strings: title label, close button, and the "visit docs" link text
+
+## Implementation Details
+
+### 1. `src/pages/content/changelog/index.ts`
+
+```typescript
+export function startChangelog(): () => void
+```
+
+**Logic flow:**
+1. Read `gvChangelogDismissedVersion` from `chrome.storage.local`
+2. Compare with `EXTENSION_VERSION` from `src/core/utils/version.ts`
+3. If same → return (already dismissed for this version)
+4. Dynamically import the matching markdown file: `./notes/${EXTENSION_VERSION}.md`
+   - If file doesn't exist (import fails) → return silently (no changelog for this version)
+5. Parse the markdown to extract the section for the current language (using `cachedLanguage` or `getCurrentLanguage()`)
+6. Render markdown to HTML using `marked` (already a dependency)
+7. Sanitize with `DOMPurify` (already a dependency)
+8. Inject overlay + dialog into DOM
+9. On close button click → save `EXTENSION_VERSION` to `gvChangelogDismissedVersion` and remove DOM elements
+10. Return cleanup function
+
+**Markdown parsing helper:**
+```typescript
+function extractLocalizedContent(raw: string, lang: AppLanguage): string
+```
+Splits by `<!-- lang:xx -->` markers, returns matching section or falls back to `en`.
+
+**Dialog footer:** includes i18n link to docs:
+```
+https://voyager.nagi.fun/{locale}/guide/getting-started
+```
+Where `{locale}` is the current language (`zh` is root locale → no prefix, others use `/{locale}/` prefix).
+
+### 2. CSS Styles (`public/contentStyle.css`)
+
+Follow existing dialog pattern (`.gv-folder-dialog-*`, `.gv-export-dialog-*`):
+- `.gv-changelog-overlay` — fixed fullscreen semi-transparent backdrop
+- `.gv-changelog-dialog` — centered card, max-width ~520px, rounded corners, shadow
+- `.gv-changelog-header` — title + version badge + close button
+- `.gv-changelog-body` — scrollable markdown content area with typography styles (h3, ul, li, code, p, a)
+- `.gv-changelog-footer` — docs link
+- Dark mode support via `html.dark`, `[data-theme='dark']`, `[data-color-scheme='dark']`
+
+### 3. StorageKeys Addition
+
+```typescript
+// In StorageKeys object:
+CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion',
+```
+
+### 4. Content Script Registration
+
+In `src/pages/content/index.tsx`, add after the last feature in the `gemini.google.com` block (before the prompt manager section):
+```typescript
+import { startChangelog } from './changelog/index';
+// ...
+startChangelog();
+await delay(LIGHT_FEATURE_INIT_DELAY);
+```
+
+### 5. i18n Keys (all 10 locales)
+
+Static UI strings to add:
+- `changelog_title`: "What's New" / "更新内容" / etc.
+- `changelog_close`: "Got it" / "知道了" / etc.
+- `changelog_docs_link`: "For detailed documentation, visit our website" / "查看详细的文档使用说明，请访问插件官网" / etc.
+
+### 6. Markdown Note File Convention
+
+Path: `src/pages/content/changelog/notes/{version}.md`
+
+**Meta block** at the top of each file defines shared assets (images/GIFs) that are language-independent. Use a YAML-like front matter:
+
+```md
+---
+images:
+  hero: ./assets/1.2.8-hero.gif
+  feature1: ./assets/1.2.8-feature1.png
+---
+
+<!-- lang:en -->
+### What's New in v1.2.8
+
+![hero](hero)
+
+- Feature description
+
+![feature1](feature1)
+
+- Bug fix description
+
+<!-- lang:zh -->
+### v1.2.8 更新内容
+
+![hero](hero)
+
+- 功能描述
+
+![feature1](feature1)
+
+- 修复描述
+
+<!-- lang:zh_TW -->
+...
+<!-- lang:ja -->
+...
+(repeat for all 10 languages)
+```
+
+**Image resolution:** During parsing, `![alt](key)` placeholders are resolved against the `images` map from meta. The actual image files are stored in `src/pages/content/changelog/notes/assets/` and imported via Vite's `import.meta.glob('./notes/assets/*', { eager: true, import: 'default' })` to get their resolved URLs at build time.
+
+Asset directory: `src/pages/content/changelog/notes/assets/` — stores PNG/GIF files shared across all languages.
+
+Vite raw import for markdown: `import.meta.glob('./notes/*.md', { query: '?raw', import: 'default', eager: false })` to dynamically load by version.
+
+## Verification Plan
+
+1. `bun run typecheck` — no TS errors
+2. `bun run lint` — no lint errors
+3. `bun run build:chrome` — builds successfully
+4. Manual test: load extension, verify modal appears on gemini.google.com
+5. Close modal → refresh page → modal should NOT reappear
+6. Change `gvChangelogDismissedVersion` in storage to old version → refresh → modal reappears
+7. Write unit test for `extractLocalizedContent()` parser and version check logic
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/jessezhang/.REDACTED.jsonl
+
+---
+
+当前这个弹窗，是所有平台（包括 Firefox 和 Safari）也可以弹的吗？
+另外，这个弹窗里合适的位置我希望放上一个爱心（导航到 sponsor 页面），GitHub icon （导航到 Github 仓库），和一句如果 Voyager 帮助到了你，欢迎在社交媒体或身边朋友推荐！类似的话
+
+---
+
+现在那个文档的 icon 很丑，可以改一下的同时加一个标注是说具体功能见文档（箭头指向这个icon）
+
+---
+
+有没有 flag 这种我能在 f12 里重新触发这个显示的？方便我开发
+
+---
+
+当前用户如果跨了两个版本才更新怎么办呢？
+
+比如说他当时下载的是 1.2.8 版本，两周没用，结果再次登录的时候，Chrome 商店给它更新成了 1.3.0。这种中间隔了两个版本 Release Note 的情况，系统会是什么表现呢？或者说你有处理好这种情况吗？
+
+---
+
+__gvChangelog() 没有反应
+
+---
+
+__gvChangelog('1.2.8')
+VM3998:1 Uncaught ReferenceError: __gvChangelog is not defined
+    at <anonymous>:1:1
+
+---
+
+Executing inline script violates the following Content Security Policy directive 'script-src 'self' 'wasm-unsafe-eval' 'inline-speculation-rules' http://localhost:* http://127.0.0.1:* chrome-extension://91a0c2aa-eb4d-414f-a0b8-b4013dc4e022/'. Either the 'unsafe-inline' keyword, a hash ('REDACTED'), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.
+没关系我就在 popup 的 inspect 里控制也行，但目前也不行
+
+---
+
+document.dispatchEvent(new Event('gv:changelog'))
+true
+document.dispatchEvent(new CustomEvent('gv:changelog', { detail: '1.2.8' }))
+true没有显示弹窗...你在干啥
+
+---
+
+当前显示的语言并非是用户在插件里选择的语言吧
+
+---
+
+1.2.8 md 里 ### 标题改为支持 changelog 弹窗提醒类似的标题，并且示例一下插入图片，用那个 promotion banner，有中英日三语的，除了这三个语言和繁体也用中文之外，都用英语的那个素材路径
+
+---
+
+这个必须得复制到这才用上。如果是的话，就把其他 README 里面引用的路径也换成这个吧，我不想保留两份图片。
+
+---
+
+不是那样的话，就读到插件里了，这个也太笨了。
+
+能不能引用那个图片的 URL 资源？这样的话，它在 GitHub 里面不就有了吗？本身就……
+https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png
+https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner-cn.png
+https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner-jp.png
+
+---
+
+继续
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me go through the conversation chronologically:
+
+1. **Initial Plan**: User provided a detailed implementation plan for a changelog modal feature for the Gemini Voyager Chrome extension. The plan specified creating a version-based changelog popup that shows update announcements when users upgrade.
+
+2. **Task 1 - StorageKey**: Added `CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion'` to `StorageKeys` in `src/core/types/common.ts`.
+
+3. **Task 3 - Markdown file**: Created `src/pages/content/changelog/notes/1.2.8.md` with multi-language sections using `<!-- lang:xx -->` markers.
+
+4. **Task 2 - Main module**: Created `src/pages/content/changelog/index.ts` with:
+   - `import.meta.glob` for markdown files and image assets
+   - `parseFrontMatter()` for YAML-like front matter
+   - `extractLocalizedContent()` for language extraction
+   - `createChangelogModal()` for DOM rendering
+   - `startChangelog()` as the entry point
+
+5. **Task 4 - CSS**: Added `.gv-changelog-*` styles to `public/contentStyle.css` following existing dialog patterns (overlay, dialog, header, body, footer, dark mode).
+
+6. **Task 5 - Registration**: Added `startChangelog()` call in `src/pages/content/index.tsx` after `startExportButton()`.
+
+7. **Task 6 - i18n**: Added `changelog_title`, `changelog_close`, `changelog_docs_link` to all 10 locale files.
+
+8. **Task 7 - Tests**: Created `src/pages/content/changelog/__tests__/changelog.test.ts` with 9 tests for `extractLocalizedContent()`.
+
+9. **Task 8 - Verification**: typecheck, lint, test, build all passed.
+
+10. **User request - Platform compatibility + icons**: User asked if the modal works on all platforms (yes), and requested adding a heart icon (sponsor), GitHub icon, and recommendation message.
+
+11. **Footer redesign**: Restructured footer with recommendation text, icon group (sponsor heart, GitHub, docs), and "Got it" button. Added `changelog_recommendation` i18n key to all 10 locales. Changed `changelog_docs_link` to shorter text since it became an aria-label.
+
+12. **User request - Docs icon ugly + annotation**: User said docs icon was ugly, wanted it changed with an arrow annotation pointing to it saying "详细功能见文档".
+
+13. **Docs icon fix**: Replaced file icon with open-book SVG, wrapped in a `docsWrapper` with annotation span using CSS `::before` arrow (`←`). Added `changelog_docs_hint` i18n key to all 10 locales. Added CSS for `.gv-changelog-docs-wrapper` and `.gv-changelog-docs-annotation`.
+
+14. **User request - Debug flag**: User wanted a way to re-trigger the modal from F12 console.
+
+15. **First attempt - window.__gvChangelog**: Set function on window. User reported `__gvChangelog is not defined` because content scripts run in isolated JS world.
+
+16. **Second attempt - inline script injection**: Tried injecting `<script>` tag to bridge via CustomEvent. Hit CSP violation (`script-src` doesn't allow inline).
+
+17. **Third attempt - DOM events**: Used `document.dispatchEvent(new CustomEvent('gv:changelog', ...))`. User said it returned `true` but no modal showed. DOM events from page context don't reach content script listeners.
+
+18. **Final approach - window + context switching**: Put `__gvChangelog` back on window in content script, told user to switch DevTools console context dropdown from "top" to the extension's content script.
+
+19. **Also fixed**: `showChangelogModal` was refactored to accept a `version` parameter (defaults to `EXTENSION_VERSION`) so you can call `__gvChangelog('1.2.8')` for testing when manifest version differs.
+
+20. **User feedback - Language issue**: User noticed the displayed language wasn't matching their plugin language setting. Root cause: `getTranslationSync()` depends on `cachedLanguage` set by `initI18n()`, which is fire-and-forget async. Race condition means `cachedLanguage` might not be set yet.
+
+21. **Language fix**: Imported `TRANSLATIONS` and `TranslationKey` directly, created local `t(key, lang)` helper that takes explicit language parameter. Replaced all `getTranslationSync()` calls with `t(key, lang)`. Removed unused `getTranslationSync` import.
+
+22. **User request - Update 1.2.8.md**: User wanted proper changelog-style titles (not "What's New" since modal title already says that), and to demonstrate image insertion using promotion banners with localized versions.
+
+23. **First approach - copy images to assets/**: Copied banner PNGs to `src/pages/content/changelog/notes/assets/`, used front matter aliases. Updated md with different banner per language.
+
+24. **User feedback - Don't want duplicate images**: Asked to update README paths to point to the new location and delete old ones.
+
+25. **README path updates**: Updated all 10 READMEs. Deleted old `docs/public/assets/promotion/` directory.
+
+26. **User feedback - "太笨了"**: User said bundling PNGs into the extension is dumb. Suggested using GitHub raw URLs instead since they're already hosted there.
+
+27. **Fix - GitHub raw URLs**: Updated `1.2.8.md` to use `https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner*.png` URLs directly in markdown. No need for front matter or local assets.
+
+28. **Cleanup started**: Deleted `src/pages/content/changelog/notes/assets/` directory. Started restoring README paths back to original relative paths. Got through README.md, README_FR.md, README_ZH.md, README_ZH_TW.md, README_JA.md before summary was requested.
+
+**Remaining README restorations needed**:
+- `.github/README_ES.md` 
+- `.github/README_PT.md`
+- `.github/README_AR.md`
+- `.github/README_RU.md`
+- `.github/README_KO.md`
+
+Also need to restore the `docs/public/assets/promotion/` directory since it was deleted but now we need it back (READMEs reference it with relative paths, and changelog uses GitHub raw URLs).
+
+Also need to clean up the image-related code in `index.ts` - the `imageAssets` glob, `buildImageMap()`, and `parseFrontMatter()` are no longer needed since we're using direct URLs instead of Vite-resolved assets. Though they don't hurt if no assets directory exists, they're dead code.
+
+Summary:
+1. Primary Request and Intent:
+   The user requested implementation of a version-based changelog modal feature for the Gemini Voyager Chrome extension. The modal shows update announcements when users upgrade to a new version, supports i18n via `<!-- lang:xx -->` markers in a single markdown file per version, and only shows once per version (dismissed state stored in `chrome.storage.local`). Subsequent requests added: sponsor heart icon + GitHub icon + recommendation message in the footer, a docs icon with annotation arrow, a debug helper to re-trigger the modal from DevTools, fixing the language to respect user's plugin setting, and using GitHub raw URLs for images instead of bundling them into the extension.
+
+2. Key Technical Concepts:
+   - Chrome extension content scripts run in an **isolated JS world** — `window` properties and DOM events dispatched from page context are NOT accessible to/from the content script
+   - DevTools console can switch execution context to content script via the dropdown next to "top"
+   - `getTranslationSync()` depends on `cachedLanguage` set by async `initI18n()` — race condition if called before init completes
+   - `import.meta.glob` with `{ query: '?raw', import: 'default', eager: false }` for lazy-loading markdown files
+   - CSP blocks inline `<script>` injection in Chrome extension content scripts
+   - Images should use GitHub raw URLs (`https://github.com/Nagi-ovo/gemini-voyager/raw/main/...`) rather than being bundled into the extension via Vite
+   - Multi-language markdown format: `<!-- lang:xx -->` section markers parsed by splitting on regex
+
+3. Files and Code Sections:
+
+   - **`src/core/types/common.ts`**
+     - Added StorageKey for changelog dismissed version
+     - Change: Added `CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion'` to `StorageKeys`
+
+   - **`src/pages/content/changelog/index.ts`** (main module, created new)
+     - Core changelog logic: version check, markdown loading, parsing, modal rendering, cleanup
+     - Key functions: `extractLocalizedContent()` (exported, tested), `parseFrontMatter()`, `createChangelogModal()`, `showChangelogModal()`, `startChangelog()`
+     - Local `t(key, lang)` helper bypasses `cachedLanguage` race condition
+     - Debug helper on `window.__gvChangelog` accessible from content script DevTools context
+     - `showChangelogModal` accepts optional `version` parameter for testing different versions
+     - Current state of key imports:
+     ```typescript
+     import DOMPurify from 'dompurify';
+     import { marked } from 'marked';
+     import { StorageKeys } from '@/core/types/common';
+     import { EXTENSION_VERSION } from '@/core/utils/version';
+     import { getCurrentLanguage } from '@/utils/i18n';
+     import type { AppLanguage } from '@/utils/language';
+     import { TRANSLATIONS, type TranslationKey } from '@/utils/translations';
+     ```
+     - Translation helper:
+     ```typescript
+     function t(key: TranslationKey, lang: AppLanguage): string {
+       return TRANSLATIONS[lang][key] ?? TRANSLATIONS.en[key] ?? key;
+     }
+     ```
+     - Debug helper in `startChangelog()`:
+     ```typescript
+     (window as unknown as Record<string, unknown>).__gvChangelog = (version?: string) => {
+       showChangelogModal(version ?? EXTENSION_VERSION, true);
+     };
+     ```
+     - Still contains `imageAssets` glob, `buildImageMap()`, and `parseFrontMatter()` which are now dead code since images use GitHub URLs
+
+   - **`src/pages/content/changelog/notes/1.2.8.md`** (created new)
+     - Placeholder changelog with all 10 languages, using GitHub raw URLs for localized promotion banners
+     - No front matter needed anymore
+     - Titles are "Highlights" / "亮点" etc. (not "What's New" since modal title already says that)
+
+   - **`src/pages/content/changelog/__tests__/changelog.test.ts`** (created new)
+     - 9 unit tests for `extractLocalizedContent()`: language extraction, fallback to English, front matter handling, zh_TW support, whitespace trimming, etc.
+
+   - **`public/contentStyle.css`**
+     - Added ~250 lines of `.gv-changelog-*` styles with dark mode support
+     - Includes: overlay, dialog, header (title + version badge + close), body (markdown typography), footer (recommendation text, action row with icon group + got-it button), docs wrapper with annotation arrow
+     - Key annotation CSS:
+     ```css
+     .gv-changelog-docs-annotation::before {
+       content: '\2190';
+       font-size: 12px;
+     }
+     ```
+
+   - **`src/pages/content/index.tsx`**
+     - Added `import { startChangelog } from './changelog/index';`
+     - Added `startChangelog(); await delay(LIGHT_FEATURE_INIT_DELAY);` after `startExportButton()` in the `gemini.google.com` block
+
+   - **All 10 locale `messages.json` files** (en, zh, zh_TW, ja, fr, es, pt, ar, ru, ko)
+     - Added keys: `changelog_title`, `changelog_close`, `changelog_docs_link`, `changelog_recommendation`, `changelog_docs_hint`
+
+   - **README files** (10 total: root `README.md` + 9 in `.github/`)
+     - Were modified to point to `src/pages/content/changelog/notes/assets/` then being reverted back to original `docs/public/assets/promotion/` paths
+     - 5 of 10 have been restored so far (README.md, FR, ZH, ZH_TW, JA)
+
+   - **`docs/public/assets/promotion/`** — was deleted, needs to be restored via `git checkout`
+
+4. Errors and fixes:
+   - **TS2352 - window cast error**: `(window as Record<string, unknown>)` failed. Fixed with `(window as unknown as Record<string, unknown>)`.
+   - **`__gvChangelog` not defined in console**: Content scripts run in isolated JS world. First tried inline script injection (CSP blocked), then CustomEvent dispatch (events don't cross world boundary). Final fix: set on `window` in content script, user switches DevTools console context.
+   - **`__gvChangelog()` returned no modal**: `EXTENSION_VERSION` is `1.2.7` but changelog file is `1.2.8.md`. Fixed by adding optional `version` parameter to `showChangelogModal()`.
+   - **Wrong language displayed**: `getTranslationSync()` depends on `cachedLanguage` from async `initI18n()` (fire-and-forget). Race condition. Fixed by creating local `t(key, lang)` that queries `TRANSLATIONS` directly with the language from `getCurrentLanguage()`.
+   - **User: "太笨了" about bundling images**: Copying promotion PNGs into `src/` would bundle them into the extension. Fixed by using GitHub raw URLs in markdown instead.
+
+5. Problem Solving:
+   - Content script isolation: Learned that `window` properties, inline scripts, and synthetic DOM events cannot bridge page↔content script. Solution is using DevTools context switching.
+   - i18n race condition: `initI18n()` is fire-and-forget, so `cachedLanguage` may not be set when changelog renders. Solved by bypassing the cache entirely with direct `TRANSLATIONS` lookup.
+   - Image bundling: Avoided bloating the extension by using GitHub-hosted URLs.
+
+6. All user messages:
+   - "Implement the following plan: [detailed changelog modal plan]"
+   - "当前这个弹窗，是所有平台（包括 Firefox 和 Safari）也可以弹的吗？另外，这个弹窗里合适的位置我希望放上一个爱心（导航到 sponsor 页面），GitHub icon（导航到 Github 仓库），和一句如果 Voyager 帮助到了你，欢迎在社交媒体或身边朋友推荐！类似的话"
+   - "现在那个文档的 icon 很丑，可以改一下的同时加一个标注是说具体功能见文档（箭头指向这个icon）"
+   - "有没有 flag 这种我能在 f12 里重新触发这个显示的？方便我开发"
+   - "__gvChangelog('1.2.8') VM3998:1 Uncaught ReferenceError: __gvChangelog is not defined..."
+   - "Executing inline script violates the following Content Security Policy... 没关系我就在 popup 的 inspect 里控制也行，但目前也不行"
+   - "document.dispatchEvent(new Event('gv:changelog')) true document.dispatchEvent(new CustomEvent('gv:changelog', { detail: '1.2.8' })) true 没有显示弹窗...你在干啥"
+   - "当前显示的语言并非是用户在插件里选择的语言吧"
+   - "当前用户如果跨了两个版本才更新怎么办呢？比如说他当时下载的是 1.2.8 版本...这种中间隔了两个版本 Release Note 的情况" (answered: only shows current version's changelog, standard approach)
+   - "1.2.8 md 里 ### 标题改为支持 changelog 弹窗提醒类似的标题，并且示例一下插入图片，用那个 promotion banner，有中英日三语的，除了这三个语言和繁体也用中文之外，都用英语的那个素材路径"
+   - "这个必须得复制到这才用上。如果是的话，就把其他 README 里面引用的路径也换成这个吧，我不想保留两份图片。"
+   - "不是那样的话，就读到插件里了，这个也太笨了。能不能引用那个图片的 URL 资源？... https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png ..."
+   - "继续"
+
+7. Pending Tasks:
+   - Restore remaining 5 README banner paths back to original `docs/public/assets/promotion/` relative paths: `README_ES.md`, `README_PT.md`, `README_AR.md`, `README_RU.md`, `README_KO.md`
+   - Restore the deleted `docs/public/assets/promotion/` directory (was deleted, needs `git checkout`)
+   - Optionally: clean up dead code in `index.ts` (`imageAssets` glob, `buildImageMap()`, `parseFrontMatter()` are now unused since images use GitHub URLs, though `parseFrontMatter` is still used by `extractLocalizedContent` for potential future use)
+
+8. Current Work:
+   Was restoring README banner paths back to their original `docs/public/assets/promotion/` relative paths after the user said to use GitHub raw URLs in the changelog markdown instead of bundling images. Already updated `1.2.8.md` to use GitHub raw URLs, deleted the `src/pages/content/changelog/notes/assets/` directory, and restored 5 of 10 READMEs. The user said "继续" to continue the remaining work.
+
+9. Optional Next Step:
+   Restore the remaining 5 `.github/README_*.md` files (ES, PT, AR, RU, KO) back to `../docs/public/assets/promotion/Promo-Banner.png`, then restore the deleted `docs/public/assets/promotion/` directory via `git checkout -- docs/public/assets/promotion/`, and verify with build. The user's last message was "继续" in response to having started restoring README paths.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/jessezhang/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
