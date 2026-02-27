@@ -108,6 +108,52 @@ describe('TimelineManager summary extraction', () => {
     manager.destroy();
   });
 
+  it('excludes .gv-fork-btn button text from marker summary', () => {
+    const container = document.createElement('div');
+    const turn = document.createElement('span');
+    turn.className = 'user-query-bubble-with-background';
+    turn.innerHTML = `
+      <p class="query-text-line">Hello world</p>
+      <button class="gv-fork-btn"><span>Fork</span></button>
+    `;
+    setElementTop(turn, 0);
+    container.appendChild(turn);
+
+    const { manager, internal } = setupForRecalc(container);
+    internal.recalculateAndRenderMarkers();
+
+    expect(internal.markers).toHaveLength(1);
+    expect(internal.markers[0]?.summary).toBe('Hello world');
+    expect(internal.markers[0]?.summary).not.toContain('Fork');
+    manager.destroy();
+  });
+
+  it('assigns unique marker IDs to turns with identical text at different positions', () => {
+    const container = document.createElement('div');
+
+    const first = document.createElement('div');
+    first.className = 'user-query-bubble-with-background';
+    first.innerHTML = '<p>好的，继续执行下一步</p>';
+    setElementTop(first, 0);
+
+    const second = document.createElement('div');
+    second.className = 'user-query-bubble-with-background';
+    second.innerHTML = '<p>好的，继续执行下一步</p>';
+    setElementTop(second, 200);
+
+    container.appendChild(first);
+    container.appendChild(second);
+
+    const { manager, internal } = setupForRecalc(container);
+    internal.recalculateAndRenderMarkers();
+
+    expect(internal.markers).toHaveLength(2);
+    expect(internal.markers[0]?.id).not.toBe(internal.markers[1]?.id);
+    expect(internal.markers[0]?.summary).toBe('好的，继续执行下一步');
+    expect(internal.markers[1]?.summary).toBe('好的，继续执行下一步');
+    manager.destroy();
+  });
+
   it('deduplicates turns by visible text when visually-hidden labels differ', () => {
     const container = document.createElement('div');
     const first = document.createElement('div');

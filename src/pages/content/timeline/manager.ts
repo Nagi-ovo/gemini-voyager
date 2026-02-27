@@ -21,6 +21,7 @@ function hashString(input: string): string {
 const TURN_LABEL_PREFIXES =
   /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
 const VISUALLY_HIDDEN_CLASS_FRAGMENT = 'visually-hidden';
+const INJECTED_UI_SELECTOR = '.gv-fork-btn, .gv-fork-confirm, .gv-fork-indicator-group';
 
 type ExtGlobal = typeof globalThis & {
   chrome?: {
@@ -831,30 +832,20 @@ export class TimelineManager {
   private extractTurnText(element: HTMLElement | null): string {
     if (!element) return '';
     try {
-      if (!this.hasVisuallyHiddenClass(element)) {
-        const descendants = element.getElementsByTagName('*');
-        let containsVisuallyHiddenDescendant = false;
-        for (let i = 0; i < descendants.length; i++) {
-          if (this.hasVisuallyHiddenClass(descendants[i])) {
-            containsVisuallyHiddenDescendant = true;
-            break;
-          }
-        }
-        if (!containsVisuallyHiddenDescendant) {
-          return this.normalizeText(element.textContent || '');
-        }
-      } else {
-        return '';
-      }
-
       const clone = element.cloneNode(true) as HTMLElement;
       if (this.hasVisuallyHiddenClass(clone)) return '';
+
+      // Remove visually-hidden descendants
       const descendants = clone.getElementsByTagName('*');
       for (let i = descendants.length - 1; i >= 0; i--) {
         if (this.hasVisuallyHiddenClass(descendants[i])) {
           descendants[i].remove();
         }
       }
+
+      // Remove extension-injected UI elements (e.g. fork button)
+      clone.querySelectorAll(INJECTED_UI_SELECTOR).forEach((el) => el.remove());
+
       return this.normalizeText(clone.textContent || '');
     } catch {
       return this.normalizeText(element.textContent || '');
@@ -954,9 +945,8 @@ export class TimelineManager {
     let id = asEl.dataset?.turnId || '';
     if (!id) {
       const basis = this.extractTurnText(asEl) || `user-${index}`;
-      // Use only content hash (without index) to ensure stable IDs across page refreshes
-      // This prevents starred messages from losing their stars when the conversation continues
-      id = `u-${hashString(basis)}`;
+      // Append index to ensure unique IDs for identical text content
+      id = `u-${hashString(basis + '|' + index)}`;
       try {
         if (asEl.dataset) asEl.dataset.turnId = id;
       } catch {}
