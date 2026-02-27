@@ -1,0 +1,96 @@
+Implement the following plan:
+
+# Fix: Timeline duplicate selection & Fork text leaking into summaries
+
+## Context
+
+Issue #319 reports two bugs that are **still present** despite earlier fixes from Oct 2025:
+
+1. **Duplicate selection**: When multiple user turns have identical text (e.g. "好的，继续执行下一步"), clicking one timeline marker highlights ALL markers with the same text. The root cause is `ensureTurnId()` (manager.ts:952-965) generates marker IDs using only `hashString(text)` — no positional component. The `dedupeByTextAndOffset()` filters duplicates from the element array, but two turns with identical text at **different** offsets both pass dedup and get **the same ID**. Then `updateActiveDotUI()` toggles `.active` on all markers matching `this.activeTurnId`.
+
+2. **"Fork" text in summaries**: The fork button (`<button class="gv-fork-btn"><span>Fork</span></button>`) is appended inside the user query bubble. `extractTurnText()` uses `element.textContent` which includes all descendant text — picking up "Fork". The existing filter only removes `cdk-visually-hidden` elements, not our injected buttons.
+
+## Plan
+
+### Fix 1: Unique marker IDs for identical text (manager.ts)
+
+**File**: `src/pages/content/timeline/manager.ts`
+
+In `ensureTurnId()` (line 952-965), incorporate the element index into the hash to make IDs unique even for identical text:
+
+```typescript
+private ensureTurnId(el: Element, index: number): string {
+  const asEl = el as HTMLElement & { dataset?: DOMStringMap & { turnId?: string } };
+  let id = asEl.dataset?.turnId || '';
+  if (!id) {
+    const basis = this.extractTurnText(asEl) || `user-${index}`;
+    // Append index to ensure unique IDs for identical text content
+    id = `u-${hashString(basis + '|' + index)}`;
+    try {
+      if (asEl.dataset) asEl.dataset.turnId = id;
+    } catch {}
+  }
+  return id;
+}
+```
+
+**Trade-off**: The original comment says "Use only content hash (without index) to ensure stable IDs across page refreshes — this prevents starred messages from losing their stars when the conversation continues." Using index means if a new turn is added, all subsequent indices shift. However, the current behavior (all identical texts share one ID) is worse — starring one stars all of them. The index is stable within a session (turns don't reorder), and `data-turn-id` is cached on the DOM element, so recalculation only happens on full page refresh. This is an acceptable trade-off.
+
+### Fix 2: Exclude fork button text from extraction (manager.ts)
+
+**File**: `src/pages/content/timeline/manager.ts`
+
+In `extractTurnText()` (line 831-862), also remove elements with class `gv-fork-btn` (and similar extension-injected elements) before extracting text. The cleanest approach: in the clone branch, also remove elements matching a selector for our injected UI.
+
+Add a constant for selectors to exclude, then in the clone logic, remove those elements too:
+
+```typescript
+private static readonly INJECTED_UI_SELECTOR = '.gv-fork-btn, .gv-fork-confirm, .gv-fork-indicator-group';
+
+private extractTurnText(element: HTMLElement | null): string {
+  if (!element) return '';
+  try {
+    // Always clone to strip both visually-hidden and injected UI elements
+    const clone = element.cloneNode(true) as HTMLElement;
+    if (this.hasVisuallyHiddenClass(clone)) return '';
+
+    // Remove visually-hidden descendants
+    const descendants = clone.getElementsByTagName('*');
+    for (let i = descendants.length - 1; i >= 0; i--) {
+      if (this.hasVisuallyHiddenClass(descendants[i])) {
+        descendants[i].remove();
+      }
+    }
+
+    // Remove extension-injected UI elements
+    clone.querySelectorAll(TimelineManager.INJECTED_UI_SELECTOR).forEach(el => el.remove());
+
+    return this.normalizeText(clone.textContent || '');
+  } catch {
+    return this.normalizeText(element.textContent || '');
+  }
+}
+```
+
+**Note**: This removes the "fast path" optimization (lines 834-845) that skips cloning when there are no visually-hidden descendants. Since we now always need to check for injected UI, we always clone. The performance impact is negligible — this runs once per marker on recalculation, not in a hot loop.
+
+### Tests
+
+**File**: `src/pages/content/timeline/__tests__/TimelineManagerSummaryExtraction.test.ts`
+
+Add test cases:
+1. `extractTurnText` excludes `.gv-fork-btn` button text from summary
+2. Identical text turns get unique marker IDs (different indices → different IDs)
+
+## Verification
+
+1. `bun run test` — all timeline tests pass
+2. `bun run typecheck` — no type errors
+3. `bun run lint` — no lint errors
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/jessezhang/.REDACTED.jsonl
+
+---
+
+提交
