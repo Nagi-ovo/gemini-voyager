@@ -29,6 +29,7 @@ import {
 import type { TranslationKey } from '@/utils/translations';
 
 import { createFolderStorageAdapter } from '../folder/storage/FolderStorageAdapter';
+import { getScrollHintState } from './scrollHint';
 
 type PromptItem = {
   id: string;
@@ -569,7 +570,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     searchInput.placeholder = i18n.t('pm_search_placeholder');
     searchWrap.appendChild(searchInput);
 
+    const tagsWrapOuter = createEl('div', 'gv-pm-tags-wrap');
     const tagsWrap = createEl('div', 'gv-pm-tags');
+    const tagsScrollHint = createEl('div', 'gv-pm-tags-scroll-hint');
+    tagsScrollHint.setAttribute('aria-hidden', 'true');
+    tagsScrollHint.textContent = '▼';
+    tagsWrapOuter.appendChild(tagsWrap);
+    tagsWrapOuter.appendChild(tagsScrollHint);
 
     const list = createEl('div', 'gv-pm-list');
 
@@ -656,7 +663,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     panel.appendChild(header);
     panel.appendChild(searchWrap);
-    panel.appendChild(tagsWrap);
+    panel.appendChild(tagsWrapOuter);
     panel.appendChild(addForm);
     panel.appendChild(list);
     panel.appendChild(footer);
@@ -693,6 +700,16 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       hint.classList.toggle('err', kind === 'err');
     }
 
+    function syncTagScrollHint(): void {
+      const { isOverflowing, showHint } = getScrollHintState(
+        tagsWrap.scrollTop,
+        tagsWrap.clientHeight,
+        tagsWrap.scrollHeight,
+      );
+      tagsWrapOuter.classList.toggle('gv-pm-tags-scrollable', isOverflowing);
+      tagsWrapOuter.classList.toggle('gv-pm-tags-scroll-end', !showHint);
+    }
+
     function renderTags(): void {
       const all = collectAllTags(items);
       tagsWrap.innerHTML = '';
@@ -717,6 +734,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         });
         tagsWrap.appendChild(btn);
       }
+      requestAnimationFrame(syncTagScrollHint);
     }
 
     function renderList(): void {
@@ -922,6 +940,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         panel.style.left = `${pos.left}px`;
         panel.style.top = `${pos.top}px`;
       }
+      requestAnimationFrame(syncTagScrollHint);
     }
 
     function closePanel(): void {
@@ -1034,10 +1053,12 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const onWindowResize = () => {
       constrainTriggerPosition();
       onReposition();
+      syncTagScrollHint();
     };
     window.addEventListener('resize', onWindowResize, { passive: true });
 
     window.addEventListener('scroll', onReposition, { passive: true });
+    tagsWrap.addEventListener('scroll', syncTagScrollHint, { passive: true });
 
     // Close when clicking outside of the manager (panel/trigger/confirm are exceptions)
     const onWindowPointerDown = (ev: PointerEvent) => {
@@ -1489,6 +1510,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           window.removeEventListener('pointermove', onDragMove);
           window.removeEventListener('pointerup', endDrag);
           window.removeEventListener('pointerup', onTriggerDragEnd);
+          tagsWrap.removeEventListener('scroll', syncTagScrollHint);
 
           chrome.storage?.onChanged?.removeListener(storageChangeHandler);
 

@@ -950,10 +950,13 @@ body.dark-theme .gv-export-dropdown-btn:hover,
 
 .gv-pm-panel {
   position: fixed;
+  display: flex;
+  flex-direction: column;
   width: 440px;
   max-width: calc(100vw - 20px);
   max-height: min(75vh, 600px);
   overflow: hidden;
+  --gv-pm-surface: oklch(1 0 0);
   border-radius: 16px;
   background: oklch(1 0 0);
   border: 1px solid oklch(0.9276 0.0058 264.5313 / 0.5);
@@ -976,6 +979,7 @@ body.dark-theme .gv-export-dropdown-btn:hover,
 
 @media (prefers-color-scheme: dark) {
   .gv-pm-panel {
+    --gv-pm-surface: oklch(0.2795 0.0368 260.031);
     background: oklch(0.2795 0.0368 260.031);
     color: oklch(0.8717 0.0093 258.3382);
     border-color: oklch(0.4461 0.0263 256.8018 / 0.5);
@@ -987,6 +991,7 @@ body.dark-theme .gv-export-dropdown-btn:hover,
 
 .theme-host.dark-theme .gv-pm-panel,
 body.dark-theme .gv-pm-panel {
+  --gv-pm-surface: oklch(0.2795 0.0368 260.031);
   background: oklch(0.2795 0.0368 260.031);
   color: oklch(0.8717 0.0093 258.3382);
   border-color: oklch(0.4461 0.0263 256.8018 / 0.5);
@@ -994,6 +999,7 @@ body.dark-theme .gv-pm-panel {
 
 .theme-host.light-theme .gv-pm-panel,
 body.light-theme .gv-pm-panel {
+  --gv-pm-surface: oklch(1 0 0);
   background: oklch(1 0 0);
   color: oklch(0.3729 0.0306 259.7328);
   border-color: oklch(0.9276 0.0058 264.5313 / 0.5);
@@ -1459,11 +1465,63 @@ body.dark-theme .gv-pm-search input[type='search']::placeholder {
   opacity: 0.7;
 }
 
+.gv-pm-tags-wrap {
+  position: relative;
+  padding: 0 12px 8px 12px;
+}
+
+.gv-pm-tags-wrap::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 8px;
+  height: 22px;
+  background: linear-gradient(to bottom, oklch(0 0 0 / 0), var(--gv-pm-surface));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.gv-pm-tags-wrap.gv-pm-tags-scrollable:not(.gv-pm-tags-scroll-end)::before {
+  opacity: 1;
+}
+
 .gv-pm-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 0 12px 8px 12px;
+  max-height: min(24vh, 180px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.gv-pm-tags-scroll-hint {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  line-height: 1;
+  background: oklch(0.2077 0.0398 265.7549 / 0.72);
+  color: oklch(0.967 0.0029 264.5419);
+  box-shadow: 0 4px 10px oklch(0 0 0 / 0.2);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.gv-pm-tags-wrap.gv-pm-tags-scrollable:not(.gv-pm-tags-scroll-end) .gv-pm-tags-scroll-hint {
+  opacity: 0.9;
+  transform: translateY(0);
 }
 
 .gv-pm-tag {
@@ -1641,8 +1699,9 @@ body.dark-theme .gv-pm-cancel:hover {
 
 .gv-pm-list {
   padding: 8px 12px 10px 12px;
+  min-height: 120px;
+  flex: 1 1 auto;
   overflow: auto;
-  max-height: 300px;
 }
 
 .gv-pm-empty {
