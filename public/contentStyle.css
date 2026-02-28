@@ -580,6 +580,7 @@ html.dark .timeline-left-slider::before {
 .timeline-preview-panel {
   position: fixed;
   width: 320px;
+  direction: ltr;
   background-color: var(--timeline-tooltip-bg);
   border: 1px solid var(--timeline-tooltip-border);
   border-radius: var(--timeline-tooltip-radius);
@@ -618,6 +619,7 @@ html.dark .timeline-left-slider::before {
   line-height: 1.4;
   background: transparent;
   color: var(--timeline-tooltip-text);
+  text-align: start;
   outline: none;
   transition: border-color 0.15s ease;
 }
@@ -648,7 +650,7 @@ html.dark .timeline-left-slider::before {
   border-left: 3px solid transparent;
   display: flex;
   align-items: baseline;
-  gap: 0px;
+  gap: 6px;
   transition: background-color 0.1s ease;
 }
 
@@ -662,12 +664,16 @@ html.dark .timeline-left-slider::before {
 }
 
 .timeline-preview-item.starred .timeline-preview-index::after {
-  content: ' \2605';
+  content: '\2605';
+  margin-inline-start: 2px;
   color: var(--timeline-star-color);
   font-size: 11px;
 }
 
 .timeline-preview-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
   flex-shrink: 0;
   font-size: 11px;
   color: var(--timeline-dot-color);
@@ -680,6 +686,8 @@ html.dark .timeline-left-slider::before {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: start;
+  unicode-bidi: plaintext;
 }
 
 .timeline-preview-empty {
@@ -5637,6 +5645,7 @@ body.gv-rtl .gv-pm-trigger {
 /* Preview panel: reverse the slide-in direction (from right instead of left) */
 body.gv-rtl .timeline-preview-panel {
   transform: scale(0.96) translateX(-8px);
+  direction: rtl;
 }
 
 body.gv-rtl .timeline-preview-panel.visible {
@@ -5657,4 +5666,5 @@ body.gv-rtl .timeline-preview-item.active {
 /* Preview index: right-align numbers in RTL */
 body.gv-rtl .timeline-preview-index {
   text-align: right;
+  justify-content: flex-end;
 }

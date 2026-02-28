@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { GV_RTL_CLASS } from '@/core/utils/rtl';
+
 import { TimelinePreviewPanel } from '../TimelinePreviewPanel';
 import type { PreviewMarkerData } from '../types';
 
@@ -38,6 +40,7 @@ describe('TimelinePreviewPanel', () => {
 
   beforeEach(() => {
     document.body.innerHTML = '';
+    document.body.className = '';
     anchor = document.createElement('div');
     anchor.className = 'gemini-timeline-bar';
     document.body.appendChild(anchor);
@@ -50,6 +53,7 @@ describe('TimelinePreviewPanel', () => {
   afterEach(() => {
     panel.destroy();
     document.body.innerHTML = '';
+    document.body.className = '';
   });
 
   describe('DOM creation', () => {
@@ -127,6 +131,34 @@ describe('TimelinePreviewPanel', () => {
       const empty = document.querySelector('.timeline-preview-empty');
       expect(empty).not.toBeNull();
       expect(empty?.textContent).toBe('No messages');
+    });
+
+    it('sets preview text direction to auto for bidi-safe rendering', () => {
+      const markers: PreviewMarkerData[] = [
+        {
+          id: 'turn-ar',
+          summary: 'مرحبا بكم في Gemini Voyager',
+          index: 0,
+          starred: false,
+        },
+      ];
+      panel.updateMarkers(markers);
+      panel.open();
+
+      const text = document.querySelector('.timeline-preview-text') as HTMLElement | null;
+      expect(text?.getAttribute('dir')).toBe('auto');
+    });
+  });
+
+  describe('rtl adaptation', () => {
+    it('applies rtl direction when body has gv-rtl class', () => {
+      document.body.classList.add(GV_RTL_CLASS);
+      panel.reposition();
+
+      const panelEl = document.querySelector('.timeline-preview-panel');
+      const listEl = document.querySelector('.timeline-preview-list');
+      expect(panelEl?.getAttribute('dir')).toBe('rtl');
+      expect(listEl?.getAttribute('dir')).toBe('rtl');
     });
   });
 

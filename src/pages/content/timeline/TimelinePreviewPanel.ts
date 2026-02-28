@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
-import { detectRTL } from '@/core/utils/rtl';
+import { GV_RTL_CLASS, detectRTL } from '@/core/utils/rtl';
 
 import { getTranslationSync } from '../../../utils/i18n';
 import type { PreviewMarkerData } from './types';
@@ -43,6 +43,7 @@ export class TimelinePreviewPanel {
     this.onNavigate = onNavigate;
     this.onSearchChange = onSearchChange ?? null;
     this.createDOM();
+    this.applyDirection();
     this.positionToggle();
     this.setupEventListeners();
   }
@@ -63,6 +64,7 @@ export class TimelinePreviewPanel {
 
   /** Reposition toggle and panel after layout changes (e.g. RTL switch, resize). */
   reposition(): void {
+    this.applyDirection();
     this.positionToggle();
     if (this._isOpen) this.positionPanel();
   }
@@ -153,6 +155,7 @@ export class TimelinePreviewPanel {
     searchWrapper.className = 'timeline-preview-search';
     this.searchInput = document.createElement('input');
     this.searchInput.type = 'text';
+    this.searchInput.setAttribute('dir', 'auto');
     this.searchInput.placeholder = getTranslationSync('timelinePreviewSearch');
     this.searchInput.addEventListener('input', () => {
       this.handleSearchInput();
@@ -206,12 +209,24 @@ export class TimelinePreviewPanel {
   }
 
   private updateTranslatedText(): void {
+    this.applyDirection();
     if (this.searchInput) {
       this.searchInput.placeholder = getTranslationSync('timelinePreviewSearch');
     }
     if (this._isOpen) {
       this.renderList();
     }
+  }
+
+  private isRTLContext(): boolean {
+    return document.body.classList.contains(GV_RTL_CLASS) || detectRTL();
+  }
+
+  private applyDirection(): void {
+    const dir = this.isRTLContext() ? 'rtl' : 'ltr';
+    this.panelEl?.setAttribute('dir', dir);
+    this.listEl?.setAttribute('dir', dir);
+    this.toggleBtn?.setAttribute('dir', dir);
   }
 
   private setupScrollIsolation(): void {
@@ -344,6 +359,7 @@ export class TimelinePreviewPanel {
 
     const text = document.createElement('span');
     text.className = 'timeline-preview-text';
+    text.setAttribute('dir', 'auto');
     const displayText = this.truncateText(marker.summary, 80);
     if (this.searchQuery) {
       this.appendHighlighted(text, displayText, this.searchQuery);
