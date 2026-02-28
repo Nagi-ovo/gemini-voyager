@@ -1,9 +1,16 @@
 import browser from 'webextension-polyfill';
 
+import {
+  type AccountScope,
+  accountIsolationService,
+  buildScopedFolderStorageKey,
+  detectAccountContextFromDocument,
+  extractRouteUserIdFromPath,
+} from '@/core/services/AccountIsolationService';
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
-import type { PromptItem } from '@/core/types/sync';
+import type { PromptItem, SyncAccountScope } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
@@ -104,6 +111,9 @@ export class FolderManager {
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private folderTreeIndent: number = FOLDER_TREE_INDENT_DEFAULT; // Tree indentation width (px)
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
+  private accountIsolationEnabled: boolean = false; // Whether hard account isolation is enabled
+  private accountScope: AccountScope | null = null; // Resolved account scope for current page
+  private activeStorageKey: string = STORAGE_KEY; // Storage key currently used for folder data
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
   private saveInProgress: boolean = false; // Lock to prevent concurrent saves
@@ -178,6 +188,10 @@ export class FolderManager {
 
       // Start monitoring
       storageMonitor.startMonitoring();
+
+      // Load account isolation setting/scope before reading folder data.
+      await this.loadAccountIsolationSetting();
+      await this.refreshAccountScope();
 
       // Load folder data (async, works for both Safari and non-Safari)
       await this.loadData();
@@ -4738,7 +4752,11 @@ export class FolderManager {
    */
   private async loadData(): Promise<void> {
     try {
-      const loadedData = await this.storage.loadData(STORAGE_KEY);
+      let loadedData = await this.storage.loadData(this.activeStorageKey);
+
+      if (!loadedData && this.accountIsolationEnabled && this.activeStorageKey !== STORAGE_KEY) {
+        loadedData = await this.migrateLegacyFolderDataToScopedStorage();
+      }
 
       if (loadedData && validateFolderData(loadedData)) {
         this.data = loadedData;
@@ -4780,6 +4798,96 @@ export class FolderManager {
       // CRITICAL: Do NOT clear data on error - this causes data loss!
       // Instead, try to recover from backup or keep existing data
       this.attemptDataRecovery(error);
+    }
+  }
+
+  private cloneFolderData(data: FolderData): FolderData {
+    const folders = data.folders.map((folder) => ({ ...folder }));
+    const folderContents = Object.fromEntries(
+      Object.entries(data.folderContents || {}).map(([folderId, conversations]) => [
+        folderId,
+        conversations.map((conversation) => ({ ...conversation })),
+      ]),
+    );
+    return { folders, folderContents };
+  }
+
+  private filterLegacyFolderDataByCurrentAccount(data: FolderData): FolderData {
+    const routeUserId = this.accountScope?.routeUserId;
+    if (!routeUserId) {
+      return this.cloneFolderData(data);
+    }
+
+    const folderById = new Map(data.folders.map((folder) => [folder.id, folder]));
+    const visibleFolderIds = new Set<string>();
+    const nextContents: Record<string, ConversationReference[]> = {};
+
+    for (const [folderId, conversations] of Object.entries(data.folderContents || {})) {
+      const filtered = conversations.filter((conversation) => {
+        const conversationUserId = this.getUserIdFromUrl(conversation.url);
+        return conversationUserId === null || conversationUserId === routeUserId;
+      });
+      if (filtered.length === 0) continue;
+
+      nextContents[folderId] = filtered.map((conversation) => ({ ...conversation }));
+      if (folderId !== ROOT_CONVERSATIONS_ID) {
+        visibleFolderIds.add(folderId);
+      }
+    }
+
+    const stack = [...visibleFolderIds];
+    while (stack.length > 0) {
+      const currentId = stack.pop();
+      if (!currentId) continue;
+
+      const folder = folderById.get(currentId);
+      if (!folder?.parentId) continue;
+      if (visibleFolderIds.has(folder.parentId)) continue;
+      visibleFolderIds.add(folder.parentId);
+      stack.push(folder.parentId);
+    }
+
+    const folders = data.folders
+      .filter((folder) => visibleFolderIds.has(folder.id))
+      .map((folder) => ({ ...folder }));
+
+    for (const folder of folders) {
+      if (!nextContents[folder.id]) {
+        nextContents[folder.id] = [];
+      }
+    }
+
+    if (!nextContents[ROOT_CONVERSATIONS_ID]) {
+      nextContents[ROOT_CONVERSATIONS_ID] = [];
+    }
+
+    return {
+      folders,
+      folderContents: nextContents,
+    };
+  }
+
+  private async migrateLegacyFolderDataToScopedStorage(): Promise<FolderData | null> {
+    try {
+      const legacyData = await this.storage.loadData(STORAGE_KEY);
+      if (!legacyData || !validateFolderData(legacyData)) {
+        return null;
+      }
+
+      const migratedData = this.filterLegacyFolderDataByCurrentAccount(legacyData);
+      const saved = await this.storage.saveData(this.activeStorageKey, migratedData);
+      if (!saved) {
+        console.warn('[FolderManager] Failed to persist scoped migration data');
+      }
+      this.debug(
+        'Migrated legacy folder data to scoped storage:',
+        this.activeStorageKey,
+        migratedData.folders.length,
+      );
+      return migratedData;
+    } catch (error) {
+      console.error('[FolderManager] Failed to migrate legacy folder data:', error);
+      return null;
     }
   }
 
@@ -4904,7 +5012,7 @@ export class FolderManager {
       // Additional safety check: warn if saving empty data
       if (this.data.folders.length === 0 && Object.keys(this.data.folderContents).length === 0) {
         // Check if we're about to overwrite non-empty data
-        const existingData = await this.storage.loadData(STORAGE_KEY);
+        const existingData = await this.storage.loadData(this.activeStorageKey);
         if (
           existingData &&
           (existingData.folders.length > 0 || Object.keys(existingData.folderContents).length > 0)
@@ -4918,12 +5026,12 @@ export class FolderManager {
       }
 
       // Save via storage adapter (handles both Safari and non-Safari)
-      success = await this.storage.saveData(STORAGE_KEY, this.data);
+      success = await this.storage.saveData(this.activeStorageKey, this.data);
 
       // Retry once if the first attempt fails (for transient errors)
       if (!success) {
         console.warn('[FolderManager] Save failed, retrying once...');
-        success = await this.storage.saveData(STORAGE_KEY, this.data);
+        success = await this.storage.saveData(this.activeStorageKey, this.data);
       }
 
       if (success) {
@@ -4952,6 +5060,52 @@ export class FolderManager {
       console.error('[FolderManager] Failed to load folder enabled setting:', error);
       this.folderEnabled = true;
     }
+  }
+
+  private async loadAccountIsolationSetting(): Promise<void> {
+    try {
+      this.accountIsolationEnabled = await accountIsolationService.isIsolationEnabled({
+        platform: 'gemini',
+        pageUrl: window.location.href,
+      });
+      this.debug('Loaded account isolation setting:', this.accountIsolationEnabled);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load account isolation setting:', error);
+      this.accountIsolationEnabled = false;
+    }
+  }
+
+  private async refreshAccountScope(): Promise<void> {
+    if (!this.accountIsolationEnabled) {
+      this.accountScope = null;
+      this.activeStorageKey = STORAGE_KEY;
+      return;
+    }
+
+    try {
+      const context = detectAccountContextFromDocument(window.location.href, document);
+      const resolvedScope = await accountIsolationService.resolveAccountScope({
+        pageUrl: window.location.href,
+        routeUserId: context.routeUserId,
+        email: context.email,
+      });
+      this.accountScope = resolvedScope;
+      this.activeStorageKey = buildScopedFolderStorageKey(resolvedScope.accountKey);
+      await this.storage.init(this.activeStorageKey);
+    } catch (error) {
+      console.error('[FolderManager] Failed to resolve account scope:', error);
+      this.accountScope = null;
+      this.activeStorageKey = STORAGE_KEY;
+    }
+  }
+
+  private toSyncAccountScope(scope: AccountScope | null): SyncAccountScope | undefined {
+    if (!scope) return undefined;
+    return {
+      accountKey: scope.accountKey,
+      accountId: scope.accountId,
+      routeUserId: scope.routeUserId,
+    };
   }
 
   private async loadHideArchivedSetting(): Promise<void> {
@@ -5005,6 +5159,18 @@ export class FolderManager {
     }
   }
 
+  private async handleAccountIsolationToggle(enabled: boolean): Promise<void> {
+    if (enabled === this.accountIsolationEnabled) return;
+
+    this.accountIsolationEnabled = enabled;
+    await this.refreshAccountScope();
+    await this.loadData();
+
+    if (this.folderEnabled) {
+      this.refresh();
+    }
+  }
+
   private setupStorageListener(): void {
     // Listen for sync settings changes
     browser.storage.onChanged.addListener((changes, areaName) => {
@@ -5024,6 +5190,18 @@ export class FolderManager {
         if (changes[StorageKeys.GV_FOLDER_TREE_INDENT]) {
           this.applyFolderTreeIndentSetting(changes[StorageKeys.GV_FOLDER_TREE_INDENT].newValue);
         }
+        if (
+          changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] ||
+          changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]
+        ) {
+          void (async () => {
+            const nextEnabled = await accountIsolationService.isIsolationEnabled({
+              platform: 'gemini',
+              pageUrl: window.location.href,
+            });
+            await this.handleAccountIsolationToggle(nextEnabled);
+          })();
+        }
         // Listen for language changes and update UI text
         if (changes[StorageKeys.LANGUAGE]) {
           this.debug('Language changed, updating UI text...');
@@ -5036,7 +5214,7 @@ export class FolderManager {
         this.updateHeaderLanguageText();
       }
       // Listen for folder data changes from cloud sync
-      if (areaName === 'local' && changes.gvFolderData) {
+      if (areaName === 'local' && changes[this.activeStorageKey]) {
         this.debug('Folder data changed in chrome.storage.local, reloading...');
         this.reloadFoldersFromStorage();
       }
@@ -5416,10 +5594,26 @@ export class FolderManager {
     this.highlightActiveConversationInFolders();
   }
 
+  private async reloadScopedDataOnAccountRouteChange(): Promise<void> {
+    if (!this.accountIsolationEnabled) return;
+
+    const routeUserId = extractRouteUserIdFromPath(window.location.pathname);
+    if (routeUserId === this.accountScope?.routeUserId) return;
+
+    const previousStorageKey = this.activeStorageKey;
+    await this.refreshAccountScope();
+    if (this.activeStorageKey === previousStorageKey) return;
+
+    await this.loadData();
+    this.renderAllFolders();
+    this.debug('Switched account-scoped folder storage:', this.activeStorageKey);
+  }
+
   private installRouteChangeListener(): void {
     const update = () => {
       if (this.isDestroyed) return;
       setTimeout(() => {
+        void this.reloadScopedDataOnAccountRouteChange();
         this.highlightActiveConversationInFolders();
         const currentConversationId = this.getCurrentConversationId();
         if (currentConversationId) {
@@ -5582,6 +5776,7 @@ export class FolderManager {
         sendResponse({
           ok: true,
           data: this.data,
+          accountScope: this.toSyncAccountScope(this.accountScope),
         });
         // Return true to indicate we might respond asynchronously (though we responded synchronously above)
         // This is good practice in some browser implementations or if we change logic later
@@ -5601,6 +5796,12 @@ export class FolderManager {
             /* ignore */
           }
         });
+        return true;
+      }
+
+      if (msg.type === 'gv.account.getContext') {
+        const context = detectAccountContextFromDocument(window.location.href, document);
+        sendResponse({ ok: true, context });
         return true;
       }
 
@@ -6136,7 +6337,12 @@ export class FolderManager {
       // Background script will also fetch starred messages for Gemini platform
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.upload',
-        payload: { folders, prompts, platform: 'gemini' },
+        payload: {
+          folders,
+          prompts,
+          platform: 'gemini',
+          accountScope: this.toSyncAccountScope(this.accountScope),
+        },
       })) as { ok?: boolean; error?: string } | undefined;
 
       if (response?.ok) {
@@ -6163,7 +6369,10 @@ export class FolderManager {
       // Send download request to background script
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.download',
-        payload: { platform: 'gemini' },
+        payload: {
+          platform: 'gemini',
+          accountScope: this.toSyncAccountScope(this.accountScope),
+        },
       })) as
         | {
             ok?: boolean;

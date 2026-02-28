@@ -67,6 +67,10 @@ export const StorageKeys = {
 
   // Folder filtering
   GV_FOLDER_FILTER_USER_ONLY: 'gvFolderFilterUserOnly',
+  GV_ACCOUNT_ISOLATION_ENABLED: 'gvAccountIsolationEnabled',
+  GV_ACCOUNT_ISOLATION_ENABLED_GEMINI: 'gvAccountIsolationEnabledGemini',
+  GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO: 'gvAccountIsolationEnabledAIStudio',
+  GV_ACCOUNT_PROFILE_MAP: 'gvAccountProfileMap',
 
   // Sidebar behavior
   GV_SIDEBAR_AUTO_HIDE: 'gvSidebarAutoHide',

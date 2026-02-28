@@ -1,10 +1,17 @@
 /* Background service worker - handles cross-origin image fetch, popup opening, and sync */
 import browser from 'webextension-polyfill';
 
+import {
+  type AccountPlatform,
+  type AccountScope,
+  accountIsolationService,
+  detectAccountPlatformFromUrl,
+  extractRouteUserIdFromUrl,
+} from '@/core/services/AccountIsolationService';
 import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
-import type { PromptItem, SyncMode } from '@/core/types/sync';
+import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
@@ -18,6 +25,101 @@ const GEMINI_MATCHES = [
   'https://aistudio.google.com/*',
   'https://aistudio.google.cn/*',
 ];
+
+function isSyncAccountScope(value: unknown): value is SyncAccountScope {
+  if (typeof value !== 'object' || value === null) return false;
+  const scope = value as Record<string, unknown>;
+  return (
+    typeof scope.accountKey === 'string' &&
+    typeof scope.accountId === 'number' &&
+    Number.isFinite(scope.accountId) &&
+    (typeof scope.routeUserId === 'string' || scope.routeUserId === null)
+  );
+}
+
+function toSyncAccountScope(scope: AccountScope): SyncAccountScope {
+  return {
+    accountKey: scope.accountKey,
+    accountId: scope.accountId,
+    routeUserId: scope.routeUserId,
+  };
+}
+
+async function resolveAccountScopeForMessage(
+  sender: chrome.runtime.MessageSender,
+  platform: AccountPlatform,
+  explicitScope?: SyncAccountScope,
+): Promise<SyncAccountScope | null> {
+  const enabled = await accountIsolationService.isIsolationEnabled({
+    platform,
+    pageUrl: sender.tab?.url ?? null,
+  });
+  if (!enabled) return null;
+  if (explicitScope) return explicitScope;
+
+  const resolved = await accountIsolationService.resolveAccountScope({
+    pageUrl: sender.tab?.url ?? null,
+  });
+  return toSyncAccountScope(resolved);
+}
+
+function matchesRouteScope(url: string, routeUserId: string | null): boolean {
+  if (!routeUserId) return true;
+  const routeFromUrl = extractRouteUserIdFromUrl(url);
+  return routeFromUrl === null || routeFromUrl === routeUserId;
+}
+
+function filterStarredByRouteScope(
+  data: StarredMessagesData,
+  routeUserId: string | null,
+): StarredMessagesData {
+  if (!routeUserId) return data;
+
+  const filteredEntries = Object.entries(data.messages).map(([conversationId, messages]) => {
+    const filteredMessages = messages.filter((message) =>
+      matchesRouteScope(message.conversationUrl, routeUserId),
+    );
+    return [conversationId, filteredMessages] as const;
+  });
+
+  const filteredMessages = Object.fromEntries(
+    filteredEntries.filter((entry) => entry[1].length > 0),
+  );
+  return { messages: filteredMessages };
+}
+
+function filterForkNodesByRouteScope(
+  data: ForkNodesData,
+  routeUserId: string | null,
+): ForkNodesData {
+  if (!routeUserId) return data;
+
+  const filteredNodes: Record<string, ForkNode[]> = {};
+  for (const [conversationId, nodes] of Object.entries(data.nodes)) {
+    const filtered = nodes.filter((node) => matchesRouteScope(node.conversationUrl, routeUserId));
+    if (filtered.length > 0) {
+      filteredNodes[conversationId] = filtered;
+    }
+  }
+
+  const filteredGroups: Record<string, string[]> = {};
+  for (const nodes of Object.values(filteredNodes)) {
+    for (const node of nodes) {
+      if (!filteredGroups[node.forkGroupId]) {
+        filteredGroups[node.forkGroupId] = [];
+      }
+      const key = `${node.conversationId}:${node.turnId}`;
+      if (!filteredGroups[node.forkGroupId].includes(key)) {
+        filteredGroups[node.forkGroupId].push(key);
+      }
+    }
+  }
+
+  return {
+    nodes: filteredNodes,
+    groups: filteredGroups,
+  };
+}
 
 /**
  * Register the fetch interceptor script into MAIN world
@@ -444,6 +546,32 @@ const forkNodesManager = new ForkNodesManager();
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
+      if (message?.type === 'gv.account.resolve') {
+        const payload = message.payload as {
+          pageUrl?: string;
+          routeUserId?: string | null;
+          email?: string | null;
+          platform?: AccountPlatform;
+        };
+        const resolvedPlatform =
+          payload?.platform ??
+          detectAccountPlatformFromUrl(payload?.pageUrl ?? sender.tab?.url ?? null);
+        const scope = await accountIsolationService.resolveAccountScope({
+          pageUrl: payload?.pageUrl ?? sender.tab?.url ?? null,
+          routeUserId: payload?.routeUserId ?? null,
+          email: payload?.email ?? null,
+        });
+        sendResponse({
+          ok: true,
+          scope,
+          enabled: await accountIsolationService.isIsolationEnabled({
+            platform: resolvedPlatform,
+            pageUrl: payload?.pageUrl ?? sender.tab?.url ?? null,
+          }),
+        });
+        return;
+      }
+
       // Handle starred messages operations
       if (message && message.type && message.type.startsWith('gv.starred.')) {
         switch (message.type) {
@@ -533,24 +661,46 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
           }
           case 'gv.sync.upload': {
-            const { folders, prompts, interactive, platform } = message.payload as {
+            const {
+              folders,
+              prompts,
+              interactive,
+              platform: rawPlatform,
+              accountScope: rawScope,
+            } = message.payload as {
               folders: FolderData;
               prompts: PromptItem[];
               interactive?: boolean;
               platform?: 'gemini' | 'aistudio';
+              accountScope?: unknown;
             };
+            const platform = rawPlatform || 'gemini';
+            const accountScope = await resolveAccountScopeForMessage(
+              sender,
+              platform,
+              isSyncAccountScope(rawScope) ? rawScope : undefined,
+            );
             // Also get starred messages and fork nodes from local storage (only for Gemini platform)
-            const starredData =
+            const starredDataRaw =
               platform !== 'aistudio' ? await starredMessagesManager.getAllStarredMessages() : null;
-            const forksData =
+            const forksDataRaw =
               platform !== 'aistudio' ? await forkNodesManager.getAllForkNodes() : null;
+            const starredData =
+              starredDataRaw && accountScope
+                ? filterStarredByRouteScope(starredDataRaw, accountScope.routeUserId)
+                : starredDataRaw;
+            const forksData =
+              forksDataRaw && accountScope
+                ? filterForkNodesByRouteScope(forksDataRaw, accountScope.routeUserId)
+                : forksDataRaw;
             const success = await googleDriveSyncService.upload(
               folders,
               prompts,
               starredData,
               interactive !== false,
-              platform || 'gemini',
+              platform,
               forksData,
+              accountScope,
             );
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;
@@ -558,7 +708,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           case 'gv.sync.download': {
             const interactive = message.payload?.interactive !== false;
             const platform = (message.payload?.platform as 'gemini' | 'aistudio') || 'gemini';
-            const data = await googleDriveSyncService.download(interactive, platform);
+            const rawScope = message.payload?.accountScope;
+            const accountScope = await resolveAccountScopeForMessage(
+              sender,
+              platform,
+              isSyncAccountScope(rawScope) ? rawScope : undefined,
+            );
+            const data = await googleDriveSyncService.download(interactive, platform, accountScope);
             // NOTE: We intentionally do NOT save to storage here.
             // The caller (Popup) is responsible for merging with local data and saving.
             // This prevents data loss from overwriting local changes.

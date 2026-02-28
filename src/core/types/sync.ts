@@ -21,6 +21,12 @@ export type SyncMode = 'disabled' | 'manual' | 'auto';
  */
 export type SyncPlatform = 'gemini' | 'aistudio';
 
+export interface SyncAccountScope {
+  accountKey: string;
+  accountId: number;
+  routeUserId: string | null;
+}
+
 /**
  * Current sync state for UI display
  */
@@ -169,6 +175,9 @@ export interface SyncMessage {
   payload?: {
     mode?: SyncMode;
     data?: SyncData;
+    interactive?: boolean;
+    platform?: SyncPlatform;
+    accountScope?: SyncAccountScope;
   };
 }
 

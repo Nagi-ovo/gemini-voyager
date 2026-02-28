@@ -2,6 +2,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
+import {
+  type AccountPlatform,
+  detectAccountPlatformFromUrl,
+  getAccountIsolationStorageKey,
+} from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
@@ -130,6 +135,8 @@ interface SettingsUpdate {
   snowEffectEnabled?: boolean;
   preventAutoScrollEnabled?: boolean;
   forkEnabled?: boolean;
+  accountIsolationEnabled?: boolean;
+  accountIsolationPlatform?: AccountPlatform;
 }
 
 export default function Popup() {
@@ -160,16 +167,20 @@ export default function Popup() {
   const [snowEffectEnabled, setSnowEffectEnabled] = useState<boolean>(false);
   const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState<boolean>(false);
   const [forkEnabled, setForkEnabled] = useState<boolean>(false);
-  const [isAIStudio, setIsAIStudio] = useState<boolean>(false);
+  const [accountIsolationEnabledGemini, setAccountIsolationEnabledGemini] =
+    useState<boolean>(false);
+  const [accountIsolationEnabledAIStudio, setAccountIsolationEnabledAIStudio] =
+    useState<boolean>(false);
+  const [activeAccountPlatform, setActiveAccountPlatform] = useState<AccountPlatform>('gemini');
+  const isAIStudio = activeAccountPlatform === 'aistudio';
+  const currentIsolationPlatformLabel = isAIStudio ? t('platformAIStudio') : t('platformGemini');
 
   useEffect(() => {
     browser.tabs
       .query({ active: true, currentWindow: true })
       .then((tabs) => {
         const url = tabs[0]?.url || '';
-        if (url.includes('aistudio.google.com') || url.includes('aistudio.google.cn')) {
-          setIsAIStudio(true);
-        }
+        setActiveAccountPlatform(detectAccountPlatformFromUrl(url));
       })
       .catch(() => {});
   }, []);
@@ -240,9 +251,14 @@ export default function Popup() {
         payload.gvPreventAutoScrollEnabled = settings.preventAutoScrollEnabled;
       if (typeof settings.forkEnabled === 'boolean')
         payload[StorageKeys.FORK_ENABLED] = settings.forkEnabled;
+      if (typeof settings.accountIsolationEnabled === 'boolean') {
+        const isolationPlatform = settings.accountIsolationPlatform ?? activeAccountPlatform;
+        payload[getAccountIsolationStorageKey(isolationPlatform)] =
+          settings.accountIsolationEnabled;
+      }
       void setSyncStorage(payload);
     },
-    [setSyncStorage],
+    [activeAccountPlatform, setSyncStorage],
   );
 
   // Width adjuster for chat width
@@ -470,6 +486,9 @@ export default function Popup() {
           gvSnowEffect: false,
           gvPreventAutoScrollEnabled: false,
           [StorageKeys.FORK_ENABLED]: false,
+          [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
+          [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
+          [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: null,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -497,6 +516,17 @@ export default function Popup() {
           setSnowEffectEnabled(res?.gvSnowEffect === true);
           setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
           setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
+          const legacyIsolationEnabled = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] === true;
+          const geminiIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI];
+          const aiStudioIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO];
+          setAccountIsolationEnabledGemini(
+            typeof geminiIsolationRaw === 'boolean' ? geminiIsolationRaw : legacyIsolationEnabled,
+          );
+          setAccountIsolationEnabledAIStudio(
+            typeof aiStudioIsolationRaw === 'boolean'
+              ? aiStudioIsolationRaw
+              : legacyIsolationEnabled,
+          );
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -1003,6 +1033,51 @@ export default function Popup() {
                 onChange={(e) => {
                   setForkEnabled(e.target.checked);
                   apply({ forkEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
+                  htmlFor="account-isolation-enabled"
+                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                >
+                  {t('enableAccountIsolation')}
+                  <span
+                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                    title={t('experimentalLabel')}
+                    style={{
+                      fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20",
+                    }}
+                  >
+                    experiment
+                  </span>
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t('enableAccountIsolationHint')}
+                </p>
+                <div className="mt-1 flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">{t('currentPlatform')}:</span>
+                  <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
+                    {currentIsolationPlatformLabel}
+                  </span>
+                </div>
+              </div>
+              <Switch
+                id="account-isolation-enabled"
+                checked={
+                  isAIStudio ? accountIsolationEnabledAIStudio : accountIsolationEnabledGemini
+                }
+                onChange={(e) => {
+                  if (isAIStudio) {
+                    setAccountIsolationEnabledAIStudio(e.target.checked);
+                  } else {
+                    setAccountIsolationEnabledGemini(e.target.checked);
+                  }
+                  apply({
+                    accountIsolationEnabled: e.target.checked,
+                    accountIsolationPlatform: activeAccountPlatform,
+                  });
                 }}
               />
             </div>

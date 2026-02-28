@@ -1338,5 +1338,25 @@
   "enableForkFeatureHint": {
     "message": "在 Gemini 對話中顯示 Fork 按鈕與分支序號",
     "description": "Enable conversation fork feature toggle hint"
+  },
+  "enableAccountIsolation": {
+    "message": "啟用硬隔離（Hard Isolation）",
+    "description": "Enable hard isolation for account-scoped folder data and cloud sync."
+  },
+  "enableAccountIsolationHint": {
+    "message": "依 Google 帳號嚴格隔離資料夾與雲端同步資料，避免任何跨帳號混用。",
+    "description": "Hint text for account isolation option."
+  },
+  "currentPlatform": {
+    "message": "目前平台",
+    "description": "Current active platform label in popup."
+  },
+  "platformGemini": {
+    "message": "Gemini",
+    "description": "Gemini platform label."
+  },
+  "platformAIStudio": {
+    "message": "AI Studio",
+    "description": "AI Studio platform label."
   }
 }

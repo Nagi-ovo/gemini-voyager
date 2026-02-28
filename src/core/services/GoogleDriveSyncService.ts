@@ -18,11 +18,13 @@ import type {
   PromptItem,
   StarredExportPayload,
   StarredMessagesDataSync,
+  SyncAccountScope,
   SyncMode,
   SyncPlatform,
   SyncState,
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
+import { hashString } from '@/core/utils/hash';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 
 const FOLDERS_FILE_NAME = 'gemini-voyager-folders.json';
@@ -50,6 +52,7 @@ export class GoogleDriveSyncService {
   private starredFileId: string | null = null;
   private forksFileId: string | null = null;
   private backupFolderId: string | null = null;
+  private fileIdByName: Record<string, string> = {};
   private stateChangeCallback: ((state: SyncState) => void) | null = null;
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
@@ -116,6 +119,7 @@ export class GoogleDriveSyncService {
     this.starredFileId = null;
     this.forksFileId = null;
     this.backupFolderId = null;
+    this.fileIdByName = {};
     this.updateState({ isAuthenticated: false, lastSyncTime: null, error: null });
     await this.saveState();
   }
@@ -135,6 +139,7 @@ export class GoogleDriveSyncService {
     interactive: boolean = true,
     platform: SyncPlatform = 'gemini',
     forks: ForkNodesDataSync | null = null,
+    accountScope: SyncAccountScope | null = null,
   ): Promise<boolean> {
     try {
       this.updateState({ isSyncing: true, error: null });
@@ -170,19 +175,19 @@ export class GoogleDriveSyncService {
       };
 
       // Upload folders file (platform-specific)
-      const foldersFileName =
+      const foldersBaseFileName =
         platform === 'aistudio' ? AISTUDIO_FOLDERS_FILE_NAME : FOLDERS_FILE_NAME;
+      const foldersFileName = this.getFileNameForScope(foldersBaseFileName, accountScope);
       const foldersType = platform === 'aistudio' ? 'aistudio-folders' : 'folders';
-      await this.ensureFileId(token, foldersFileName, foldersType);
-      const foldersFileIdToUse =
-        platform === 'aistudio' ? this.aistudioFoldersFileId! : this.foldersFileId!;
+      const foldersFileIdToUse = await this.ensureFileId(token, foldersFileName, foldersType);
       await this.uploadFileWithRetry(token, foldersFileIdToUse, folderPayload);
       console.log(`[GoogleDriveSyncService] ${platform} folders uploaded successfully`);
 
       // Upload prompts file (shared between Gemini and AI Studio)
       if (prompts.length > 0) {
-        await this.ensureFileId(token, PROMPTS_FILE_NAME, 'prompts');
-        await this.uploadFileWithRetry(token, this.promptsFileId!, promptPayload);
+        const promptsFileName = this.getFileNameForScope(PROMPTS_FILE_NAME, accountScope);
+        const promptsFileId = await this.ensureFileId(token, promptsFileName, 'prompts');
+        await this.uploadFileWithRetry(token, promptsFileId, promptPayload);
         console.log('[GoogleDriveSyncService] Prompts uploaded successfully');
       }
 
@@ -211,8 +216,9 @@ export class GoogleDriveSyncService {
           version: EXTENSION_VERSION,
           data: truncatedStarred,
         };
-        await this.ensureFileId(token, STARRED_FILE_NAME, 'starred');
-        await this.uploadFileWithRetry(token, this.starredFileId!, starredPayload);
+        const starredFileName = this.getFileNameForScope(STARRED_FILE_NAME, accountScope);
+        const starredFileId = await this.ensureFileId(token, starredFileName, 'starred');
+        await this.uploadFileWithRetry(token, starredFileId, starredPayload);
         console.log('[GoogleDriveSyncService] Starred messages uploaded successfully');
       }
 
@@ -224,8 +230,9 @@ export class GoogleDriveSyncService {
           version: EXTENSION_VERSION,
           data: forks,
         };
-        await this.ensureFileId(token, FORKS_FILE_NAME, 'forks');
-        await this.uploadFileWithRetry(token, this.forksFileId!, forksPayload);
+        const forksFileName = this.getFileNameForScope(FORKS_FILE_NAME, accountScope);
+        const forksFileId = await this.ensureFileId(token, forksFileName, 'forks');
+        await this.uploadFileWithRetry(token, forksFileId, forksPayload);
         console.log('[GoogleDriveSyncService] Fork nodes uploaded successfully');
       }
 
@@ -238,7 +245,7 @@ export class GoogleDriveSyncService {
       }
       await this.saveState();
 
-      const fileCount = platform === 'gemini' ? (starred ? 3 : 2) : 1;
+      const fileCount = platform === 'gemini' ? (starred ? (forks ? 4 : 3) : 2) : 1;
       console.log(
         `[GoogleDriveSyncService] Upload successful - ${fileCount} file(s) for ${platform}`,
       );
@@ -260,6 +267,7 @@ export class GoogleDriveSyncService {
   async download(
     interactive: boolean = true,
     platform: SyncPlatform = 'gemini',
+    accountScope: SyncAccountScope | null = null,
   ): Promise<{
     folders: FolderExportPayload | null;
     prompts: PromptExportPayload | null;
@@ -282,9 +290,9 @@ export class GoogleDriveSyncService {
       }
 
       // Download folders file (platform-specific)
-      const foldersFileName =
+      const foldersBaseFileName =
         platform === 'aistudio' ? AISTUDIO_FOLDERS_FILE_NAME : FOLDERS_FILE_NAME;
-      const foldersFileId = await this.findFile(token, foldersFileName);
+      const foldersFileId = await this.findFileForScope(token, foldersBaseFileName, accountScope);
       let folders: FolderExportPayload | null = null;
       if (foldersFileId) {
         folders = await this.downloadFileWithRetry(token, foldersFileId);
@@ -293,7 +301,7 @@ export class GoogleDriveSyncService {
 
       // Download prompts file (shared between Gemini and AI Studio)
       let prompts: PromptExportPayload | null = null;
-      const promptsFileId = await this.findFile(token, PROMPTS_FILE_NAME);
+      const promptsFileId = await this.findFileForScope(token, PROMPTS_FILE_NAME, accountScope);
       if (promptsFileId) {
         prompts = await this.downloadFileWithRetry(token, promptsFileId);
         console.log('[GoogleDriveSyncService] Prompts downloaded');
@@ -302,7 +310,7 @@ export class GoogleDriveSyncService {
       // Download starred messages file (only for Gemini platform)
       let starred: StarredExportPayload | null = null;
       if (platform === 'gemini') {
-        const starredFileId = await this.findFile(token, STARRED_FILE_NAME);
+        const starredFileId = await this.findFileForScope(token, STARRED_FILE_NAME, accountScope);
         if (starredFileId) {
           starred = await this.downloadFileWithRetry(token, starredFileId);
           console.log('[GoogleDriveSyncService] Starred messages downloaded');
@@ -312,7 +320,7 @@ export class GoogleDriveSyncService {
       // Download fork nodes file (only for Gemini platform)
       let forks: ForkExportPayload | null = null;
       if (platform === 'gemini') {
-        const forksFileId = await this.findFile(token, FORKS_FILE_NAME);
+        const forksFileId = await this.findFileForScope(token, FORKS_FILE_NAME, accountScope);
         if (forksFileId) {
           forks = await this.downloadFileWithRetry(token, forksFileId);
           console.log('[GoogleDriveSyncService] Fork nodes downloaded');
@@ -561,23 +569,44 @@ export class GoogleDriveSyncService {
     return result.files?.[0]?.id || null;
   }
 
+  private getFileNameForScope(baseFileName: string, accountScope: SyncAccountScope | null): string {
+    if (!accountScope) return baseFileName;
+
+    const suffix = `acct-${hashString(accountScope.accountKey)}`;
+    const dotIndex = baseFileName.lastIndexOf('.');
+    if (dotIndex <= 0) {
+      return `${baseFileName}.${suffix}`;
+    }
+    return `${baseFileName.slice(0, dotIndex)}.${suffix}${baseFileName.slice(dotIndex)}`;
+  }
+
+  private async findFileForScope(
+    token: string,
+    baseFileName: string,
+    accountScope: SyncAccountScope | null,
+  ): Promise<string | null> {
+    if (!accountScope) {
+      return this.findFile(token, baseFileName);
+    }
+
+    const scopedFileName = this.getFileNameForScope(baseFileName, accountScope);
+    const scopedFileId = await this.findFile(token, scopedFileName);
+    if (scopedFileId) return scopedFileId;
+
+    // Backward compatibility: allow reading legacy shared file before user uploads scoped data.
+    return this.findFile(token, baseFileName);
+  }
+
   private async ensureFileId(
     token: string,
     fileName: string,
     type: 'folders' | 'aistudio-folders' | 'prompts' | 'starred' | 'forks',
-  ): Promise<void> {
+  ): Promise<string> {
     // 1. Ensure backup folder exists
     const folderId = await this.ensureBackupFolder(token);
 
     // 2. Check if we have a valid cached file ID
-    const fileIdMap: Record<string, string | null> = {
-      folders: this.foldersFileId,
-      'aistudio-folders': this.aistudioFoldersFileId,
-      prompts: this.promptsFileId,
-      starred: this.starredFileId,
-      forks: this.forksFileId,
-    };
-    const currentId = fileIdMap[type];
+    const currentId = this.fileIdByName[fileName] ?? null;
 
     if (currentId) {
       const parents = await this.getFileParents(token, currentId);
@@ -588,7 +617,7 @@ export class GoogleDriveSyncService {
           console.log(`[GoogleDriveSyncService] Moving ${fileName} to backup folder`);
           await this.moveFile(token, currentId, folderId, parents);
         }
-        return;
+        return currentId;
       }
       // If checkFileParents returns null, the file doesn't exist (e.g. deleted externally), proceed to find/create
     }
@@ -598,6 +627,7 @@ export class GoogleDriveSyncService {
     if (existingId) {
       // Found existing file
       this.setFileIdForType(type, existingId);
+      this.fileIdByName[fileName] = existingId;
 
       // Check if it needs moving
       const parents = await this.getFileParents(token, existingId);
@@ -605,13 +635,15 @@ export class GoogleDriveSyncService {
         console.log(`[GoogleDriveSyncService] Moving existing ${fileName} to backup folder`);
         await this.moveFile(token, existingId, folderId, parents);
       }
-      return;
+      return existingId;
     }
 
     // 4. Create new file in the backup folder
     console.log(`[GoogleDriveSyncService] Creating new file ${fileName} in backup folder`);
     const newId = await this.createFile(token, fileName, folderId);
     this.setFileIdForType(type, newId);
+    this.fileIdByName[fileName] = newId;
+    return newId;
   }
 
   private setFileIdForType(
