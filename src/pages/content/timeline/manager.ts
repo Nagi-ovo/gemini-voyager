@@ -1,5 +1,6 @@
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { StorageKeys } from '@/core/types/common';
+import { applyRTLClass, GV_RTL_CLASS } from '@/core/utils/rtl';
 
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
@@ -178,6 +179,7 @@ export class TimelineManager {
   private navigationQueue: Array<'previous' | 'next'> = [];
   private isNavigating: boolean = false;
   private previewPanel: TimelinePreviewPanel | null = null;
+  private rtl = false;
 
   async init(): Promise<void> {
     await initI18n();
@@ -205,6 +207,7 @@ export class TimelineManager {
         geminiTimelineDraggable: false,
         geminiTimelineMarkerLevel: false,
         geminiTimelinePosition: null,
+        [StorageKeys.LANGUAGE]: null,
       };
 
       let res: Record<string, unknown> | null = null;
@@ -247,6 +250,7 @@ export class TimelineManager {
       this.applyContainerVisibility();
       this.toggleDraggable(!!res?.geminiTimelineDraggable);
       this.toggleMarkerLevel(!!res?.geminiTimelineMarkerLevel);
+      this.rtl = applyRTLClass(res?.[StorageKeys.LANGUAGE] as string | null | undefined);
 
       // Load position with auto-migration from v1 to v2
       const position = res?.geminiTimelinePosition as
@@ -314,6 +318,10 @@ export class TimelineManager {
                 this.ui.timelineBar.style.top = '';
                 this.ui.timelineBar.style.left = '';
               }
+            }
+            if (changes?.[StorageKeys.LANGUAGE]) {
+              const newLang = changes[StorageKeys.LANGUAGE].newValue as string | null | undefined;
+              this.applyRTLUpdate(newLang);
             }
           });
         }
@@ -2094,7 +2102,10 @@ export class TimelineManager {
     const railTop = Math.round(barRect.top + pad + (innerH - railLen) / 2);
     const railLeftGap = 8;
     const sliderWidth = 12;
-    const left = Math.round(barRect.left - railLeftGap - sliderWidth);
+    // In RTL, bar is on the left side — position slider to its right instead
+    const left = this.rtl
+      ? Math.round(barRect.right + railLeftGap)
+      : Math.round(barRect.left - railLeftGap - sliderWidth);
     this.ui.slider.style.left = `${left}px`;
     this.ui.slider.style.top = `${railTop}px`;
     this.ui.slider.style.height = `${railLen}px`;
@@ -2223,6 +2234,20 @@ export class TimelineManager {
   /**
    * Apply position with boundary checks to keep timeline visible
    */
+  private applyRTLUpdate(language?: string | null): void {
+    const wasRTL = this.rtl;
+    this.rtl = applyRTLClass(language);
+    if (wasRTL !== this.rtl) {
+      // Reset inline position so the CSS default for the new direction takes effect
+      if (this.ui.timelineBar) {
+        this.ui.timelineBar.style.top = '';
+        this.ui.timelineBar.style.left = '';
+      }
+      this.updateSlider();
+      this.previewPanel?.reposition();
+    }
+  }
+
   private applyPosition(top: number, left: number): void {
     if (!this.ui.timelineBar) return;
 
@@ -3259,6 +3284,7 @@ export class TimelineManager {
     this.clearSearchHighlights();
     this.previewPanel?.destroy();
     this.previewPanel = null;
+    document.body.classList.remove(GV_RTL_CLASS);
     this.ui = { timelineBar: null, tooltip: null };
     this.markers = [];
     this.markerTops = [];

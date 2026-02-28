@@ -5618,3 +5618,43 @@ html.dark .gv-changelog-chrome-rating-link:hover,
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
   pointer-events: none;
 }
+
+/* ── RTL Support ── */
+/* Applied via the `gv-rtl` class on document.body when an RTL language is active. */
+
+/* Timeline bar: move from the right edge to the left edge */
+body.gv-rtl .gemini-timeline-bar {
+  right: auto;
+  left: 15px;
+}
+
+/* Prompt manager trigger: mirror to the left side */
+body.gv-rtl .gv-pm-trigger {
+  right: auto;
+  left: 18px;
+}
+
+/* Preview panel: reverse the slide-in direction (from right instead of left) */
+body.gv-rtl .timeline-preview-panel {
+  transform: scale(0.96) translateX(-8px);
+}
+
+body.gv-rtl .timeline-preview-panel.visible {
+  transform: scale(1) translateX(0);
+}
+
+/* Preview list items: active border on the right side */
+body.gv-rtl .timeline-preview-item {
+  border-left: none;
+  border-right: 3px solid transparent;
+  padding: 6px 6px 6px 10px;
+}
+
+body.gv-rtl .timeline-preview-item.active {
+  border-right-color: var(--timeline-dot-active-color);
+}
+
+/* Preview index: right-align numbers in RTL */
+body.gv-rtl .timeline-preview-index {
+  text-align: right;
+}

@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
+import { detectRTL } from '@/core/utils/rtl';
 
 import { getTranslationSync } from '../../../utils/i18n';
 import type { PreviewMarkerData } from './types';
@@ -58,6 +59,12 @@ export class TimelinePreviewPanel {
     if (!this._isOpen || !this.listEl) return;
     this.updateActiveHighlight();
     this.scrollActiveIntoView();
+  }
+
+  /** Reposition toggle and panel after layout changes (e.g. RTL switch, resize). */
+  reposition(): void {
+    this.positionToggle();
+    if (this._isOpen) this.positionPanel();
   }
 
   toggle(): void {
@@ -225,13 +232,18 @@ export class TimelinePreviewPanel {
     );
   }
 
-  /** Position the toggle button to the left of the timeline bar, vertically centered. */
+  /** Position the toggle button beside the timeline bar, vertically centered.
+   *  In LTR: to the left of the bar. In RTL: to the right of the bar. */
   private positionToggle(): void {
     if (!this.toggleBtn) return;
     const barRect = this.anchorElement.getBoundingClientRect();
     const btnSize = 24;
     const gap = 4;
-    this.toggleBtn.style.left = `${Math.round(barRect.left - btnSize - gap)}px`;
+    const isRTL = detectRTL();
+    const leftPx = isRTL
+      ? Math.round(barRect.right + gap)
+      : Math.round(barRect.left - btnSize - gap);
+    this.toggleBtn.style.left = `${leftPx}px`;
     this.toggleBtn.style.top = `${Math.round(barRect.top + barRect.height / 2 - btnSize / 2)}px`;
   }
 
@@ -242,9 +254,20 @@ export class TimelinePreviewPanel {
     const gap = 12;
     const maxHeight = Math.min(500, window.innerHeight * 0.7);
     const barCenterY = barRect.top + barRect.height / 2;
+    const isRTL = detectRTL();
 
-    let left = barRect.left - panelWidth - gap;
-    if (left < 8) left = 8;
+    let left: number;
+    if (isRTL) {
+      // In RTL, bar is on the left — place panel to its right
+      left = barRect.right + gap;
+      if (left + panelWidth > window.innerWidth - 8) {
+        left = window.innerWidth - panelWidth - 8;
+      }
+    } else {
+      // In LTR, bar is on the right — place panel to its left
+      left = barRect.left - panelWidth - gap;
+      if (left < 8) left = 8;
+    }
 
     this.panelEl.style.maxHeight = `${Math.round(maxHeight)}px`;
     this.panelEl.style.left = `${Math.round(left)}px`;
