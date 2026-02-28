@@ -254,7 +254,7 @@ export class TimelinePreviewPanel {
     const barRect = this.anchorElement.getBoundingClientRect();
     const btnSize = 24;
     const gap = 4;
-    const isRTL = detectRTL();
+    const isRTL = this.isRTLContext();
     const leftPx = isRTL
       ? Math.round(barRect.right + gap)
       : Math.round(barRect.left - btnSize - gap);
@@ -269,7 +269,7 @@ export class TimelinePreviewPanel {
     const gap = 12;
     const maxHeight = Math.min(500, window.innerHeight * 0.7);
     const barCenterY = barRect.top + barRect.height / 2;
-    const isRTL = detectRTL();
+    const isRTL = this.isRTLContext();
 
     let left: number;
     if (isRTL) {

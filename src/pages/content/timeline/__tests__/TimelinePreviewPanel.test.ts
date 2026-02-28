@@ -160,6 +160,19 @@ describe('TimelinePreviewPanel', () => {
       expect(panelEl?.getAttribute('dir')).toBe('rtl');
       expect(listEl?.getAttribute('dir')).toBe('rtl');
     });
+
+    it('positions toggle on the right side of timeline in rtl', () => {
+      const rectSpy = vi
+        .spyOn(anchor, 'getBoundingClientRect')
+        .mockReturnValue(new DOMRect(15, 60, 24, 500));
+
+      document.body.classList.add(GV_RTL_CLASS);
+      panel.reposition();
+
+      const toggle = document.querySelector('.timeline-preview-toggle') as HTMLElement | null;
+      expect(toggle?.style.left).toBe('43px');
+      rectSpy.mockRestore();
+    });
   });
 
   describe('updateActiveTurn', () => {
