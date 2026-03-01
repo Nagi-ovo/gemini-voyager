@@ -329,8 +329,15 @@ let observer: MutationObserver | null = null;
 let initialized = false;
 let eventController: AbortController | null = null;
 let allowCollapseWhenNotEmpty = false; // Track the "collapse when not empty" setting
+let collapseTimer: number | null = null; // Timer for delayed collapse
 
 function cleanup() {
+  // Clear any pending collapse timer
+  if (collapseTimer !== null) {
+    clearTimeout(collapseTimer);
+    collapseTimer = null;
+  }
+
   // Abort all event listeners managed by the controller
   if (eventController) {
     eventController.abort();
@@ -436,23 +443,57 @@ function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
       );
 
       // Capture focus events deeply
+      // focusin cancels delayed collapse when focus returns to input area
       container.addEventListener(
         'focusin',
         () => {
           expand(container);
+          // If we have a pending collapse, cancel it since focus is coming back
+          if (collapseTimer !== null) {
+            clearTimeout(collapseTimer);
+            collapseTimer = null;
+          }
         },
         { signal },
       );
 
+      // Store container reference for use in closures
+      const currentContainer = container;
+
       container.addEventListener(
         'focusout',
         (e) => {
+          // Clear any existing timer
+          if (collapseTimer !== null) {
+            clearTimeout(collapseTimer);
+            collapseTimer = null;
+          }
+
           const newFocus = e.relatedTarget as HTMLElement;
-          if (newFocus && container.contains(newFocus)) {
+
+          // Check if focus is still inside the container
+          if (newFocus && currentContainer.contains(newFocus)) {
             return; // Focus is still inside
           }
 
-          tryCollapse(container);
+          // Use a small delay before collapsing
+          // This allows focusin events to cancel the collapse if focus returns
+          collapseTimer = window.setTimeout(() => {
+            // Double-check: focus should truly be away from input-related elements
+            const active = document.activeElement;
+            if (active && currentContainer.contains(active)) {
+              return; // Focus came back, don't collapse
+            }
+
+            // Also check if the new focus is in an input-related overlay/menu
+            if (newFocus && isInputRelatedElement(newFocus, currentContainer)) {
+              return; // Focus moved to input-related UI, don't collapse
+            }
+
+            // Now safe to collapse
+            tryCollapse(currentContainer);
+            collapseTimer = null;
+          }, 50); // 50ms delay - enough for focusin to cancel if needed
         },
         { signal },
       );
@@ -520,6 +561,57 @@ function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
     // trigger logic manually just in case
     container.classList.remove('gv-processed');
   }
+}
+
+/**
+ * Check if an element is part of input-related UI (menus, overlays, etc.)
+ * This prevents collapse when clicking model selector, attachment button, etc.
+ */
+function isInputRelatedElement(element: HTMLElement, container: HTMLElement): boolean {
+  if (!element) return false;
+
+  // Check if the element is or is inside known input-related containers
+  const INPUT_RELATED_SELECTORS = [
+    // Material/CDK overlays (menus, dialogs, autocomplete dropdowns)
+    '.cdk-overlay-container',
+    '.mat-mdc-menu-panel',
+    '.mat-mdc-dialog-container',
+    '.ng-trigger',
+    // Model selector and related UI
+    '[role="listbox"]',
+    '[role="option"]',
+    '[role="combobox"]',
+    // Attachment and file-related UI
+    '[data-test-id*="attachment"]',
+    '[data-test-id*="upload"]',
+    '[data-test-id*="file"]',
+  ];
+
+  // Check if element matches any of the selectors
+  for (const selector of INPUT_RELATED_SELECTORS) {
+    if (element.matches(selector) || element.closest(selector)) {
+      return true;
+    }
+  }
+
+  // Additional heuristic: check if element is within a reasonable proximity
+  // to the input container (within 5 levels up, but not the body/main)
+  let parent = element.parentElement;
+  let levels = 0;
+  while (parent && levels < 5) {
+    // If we reach body or main, we've gone too far
+    if (parent.tagName === 'BODY' || parent.tagName === 'MAIN') {
+      break;
+    }
+    // If we find the container, the element is input-related
+    if (parent === container) {
+      return true;
+    }
+    parent = parent.parentElement;
+    levels++;
+  }
+
+  return false;
 }
 
 function expand(container: HTMLElement, moveCursorToEnd: boolean = false) {
