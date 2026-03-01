@@ -4,6 +4,15 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+// Mock webextension-polyfill BEFORE importing the module
+vi.mock('webextension-polyfill', () => ({
+  default: {
+    storage: {
+      onChanged: { addListener: vi.fn(), removeListener: vi.fn() },
+    },
+  },
+}));
+
 // Mock chrome APIs
 global.chrome = {
   storage: {
@@ -42,15 +51,20 @@ describe('inputCollapse', () => {
     );
   });
 
-  afterEach(() => {
-    const { cleanup } = require('../index');
+  afterEach(async () => {
+    // Use dynamic import to match how we import in beforeEach
+    const { cleanup } = await import('../index');
     cleanup?.();
     vi.useRealTimers();
   });
 
-  function createMockContainer(content: string = ''): HTMLElement {
+  async function createMockContainer(content: string = ''): Promise<HTMLElement> {
     const container = document.createElement('div');
-    container.className = 'element-to-collapse gv-processed';
+    // Don't pre-mark as processed - let MutationObserver handle it
+    container.className = 'element-to-collapse';
+    // Set a background color so getInputContainer will find it
+    container.style.backgroundColor = '#f0f0f0';
+    container.style.display = 'flex';
 
     const textarea = document.createElement('rich-textarea');
     textarea.textContent = content;
@@ -61,6 +75,11 @@ describe('inputCollapse', () => {
     container.appendChild(placeholder);
 
     document.body.appendChild(container);
+
+    // Wait for MutationObserver to process the new container
+    // In fake timers mode, we need to advance time to trigger microtasks
+    await vi.runAllTimersAsync();
+
     return container;
   }
 
@@ -93,7 +112,7 @@ describe('inputCollapse', () => {
     });
 
     it('collapses when input is empty and loses focus', async () => {
-      const container = createMockContainer('');
+      const container = await createMockContainer('');
 
       // Simulate focusout event
       const focusOutEvent = new Event('focusout', { bubbles: true });
@@ -106,7 +125,7 @@ describe('inputCollapse', () => {
     });
 
     it('does not collapse when input has content and loses focus', async () => {
-      const container = createMockContainer('test content');
+      const container = await createMockContainer('test content');
 
       const focusOutEvent = new Event('focusout', { bubbles: true });
       Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
@@ -118,7 +137,7 @@ describe('inputCollapse', () => {
     });
 
     it('expands on click when collapsed', async () => {
-      const container = createMockContainer('');
+      const container = await createMockContainer('');
 
       // First collapse it
       const focusOutEvent = new Event('focusout', { bubbles: true });
@@ -146,7 +165,7 @@ describe('inputCollapse', () => {
     });
 
     it('collapses when input is empty and loses focus', async () => {
-      const container = createMockContainer('');
+      const container = await createMockContainer('');
 
       const focusOutEvent = new Event('focusout', { bubbles: true });
       Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
@@ -158,7 +177,7 @@ describe('inputCollapse', () => {
     });
 
     it('collapses even when input has content and loses focus', async () => {
-      const container = createMockContainer('test content');
+      const container = await createMockContainer('test content');
 
       const focusOutEvent = new Event('focusout', { bubbles: true });
       Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
@@ -170,7 +189,7 @@ describe('inputCollapse', () => {
     });
 
     it('expands on click when collapsed with content', async () => {
-      const container = createMockContainer('test content');
+      const container = await createMockContainer('test content');
 
       // Collapse it first
       const focusOutEvent = new Event('focusout', { bubbles: true });
@@ -201,7 +220,7 @@ describe('inputCollapse', () => {
       const { startInputCollapse } = await import('../index');
       startInputCollapse();
 
-      const container = createMockContainer('');
+      const container = await createMockContainer('');
       const focusOutEvent = new Event('focusout', { bubbles: true });
       Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
       container.dispatchEvent(focusOutEvent);

@@ -171,6 +171,9 @@ function injectStyles() {
  * We need the container that holds the background color and the full width.
  */
 function getInputContainer(): HTMLElement | null {
+  // Safety check for test environments and edge cases
+  if (typeof document === 'undefined') return null;
+
   const textarea = document.querySelector('rich-textarea');
   if (!textarea) return null;
 
@@ -331,7 +334,12 @@ let eventController: AbortController | null = null;
 let allowCollapseWhenNotEmpty = false; // Track the "collapse when not empty" setting
 let collapseTimer: number | null = null; // Timer for delayed collapse
 
-function cleanup() {
+/**
+ * Cleans up the input collapse feature.
+ * Removes all event listeners, styles, and resets state.
+ * Exported for testing purposes.
+ */
+export function cleanup() {
   // Clear any pending collapse timer
   if (collapseTimer !== null) {
     clearTimeout(collapseTimer);
@@ -400,6 +408,9 @@ function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
 
   // Handle URL changes for SPA navigation
   const urlChangeHandler = () => {
+    // Safety check for test environments and edge cases
+    if (typeof window === 'undefined' || !window.location) return;
+
     const currentPathname = window.location.pathname;
     if (currentPathname === lastPathname) return;
 
