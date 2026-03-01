@@ -6,6 +6,19 @@
 /** Language codes that use RTL text direction */
 const RTL_LANGUAGES = new Set(['ar', 'he', 'fa', 'ur']);
 
+function getUrlLanguageHint(): string | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const candidates = [params.get('hl'), params.get('lang'), params.get('locale')];
+    for (const candidate of candidates) {
+      if (candidate && candidate.trim()) return candidate.trim();
+    }
+  } catch {
+    // Ignore URL parsing failures and continue with other signals.
+  }
+  return null;
+}
+
 /**
  * Returns true if the given BCP 47 language code is an RTL language.
  */
@@ -31,7 +44,11 @@ export function detectRTL(extensionLanguage?: string | null): boolean {
   const pageLang = document.documentElement.lang?.split('-')[0]?.toLowerCase();
   if (pageLang && RTL_LANGUAGES.has(pageLang)) return true;
 
-  // 3. Extension UI language stored in settings
+  // 3. Host URL hint (e.g. Gemini `?hl=ar`)
+  const urlLangHint = getUrlLanguageHint();
+  if (urlLangHint) return isRTLLanguage(urlLangHint);
+
+  // 4. Extension UI language stored in settings
   if (extensionLanguage && isRTLLanguage(extensionLanguage)) return true;
 
   return false;
