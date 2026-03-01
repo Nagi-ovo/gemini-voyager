@@ -161,7 +161,7 @@ describe('TimelinePreviewPanel', () => {
       expect(listEl?.getAttribute('dir')).toBe('rtl');
     });
 
-    it('positions toggle on the right side of timeline in rtl', () => {
+    it('keeps toggle on left side of timeline in rtl with viewport clamp', () => {
       const rectSpy = vi
         .spyOn(anchor, 'getBoundingClientRect')
         .mockReturnValue(new DOMRect(15, 60, 24, 500));
@@ -170,7 +170,7 @@ describe('TimelinePreviewPanel', () => {
       panel.reposition();
 
       const toggle = document.querySelector('.timeline-preview-toggle') as HTMLElement | null;
-      expect(toggle?.style.left).toBe('43px');
+      expect(toggle?.style.left).toBe('8px');
       rectSpy.mockRestore();
     });
   });

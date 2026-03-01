@@ -248,16 +248,15 @@ export class TimelinePreviewPanel {
   }
 
   /** Position the toggle button beside the timeline bar, vertically centered.
-   *  In LTR: to the left of the bar. In RTL: to the right of the bar. */
+   *  Keep it on the bar's left side and clamp within viewport bounds. */
   private positionToggle(): void {
     if (!this.toggleBtn) return;
     const barRect = this.anchorElement.getBoundingClientRect();
     const btnSize = 24;
     const gap = 4;
-    const isRTL = this.isRTLContext();
-    const leftPx = isRTL
-      ? Math.round(barRect.right + gap)
-      : Math.round(barRect.left - btnSize - gap);
+    const minLeft = 8;
+    const maxLeft = Math.max(minLeft, window.innerWidth - btnSize - 8);
+    const leftPx = Math.max(minLeft, Math.min(Math.round(barRect.left - btnSize - gap), maxLeft));
     this.toggleBtn.style.left = `${leftPx}px`;
     this.toggleBtn.style.top = `${Math.round(barRect.top + barRect.height / 2 - btnSize / 2)}px`;
   }
