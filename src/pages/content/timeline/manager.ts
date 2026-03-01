@@ -292,6 +292,7 @@ export class TimelineManager {
           });
         }
       }
+      this.previewPanel?.reposition();
 
       // listen for changes from popup and update mode live
       try {
@@ -318,6 +319,7 @@ export class TimelineManager {
                 this.ui.timelineBar.style.top = '';
                 this.ui.timelineBar.style.left = '';
               }
+              this.previewPanel?.reposition();
             }
             if (changes?.[StorageKeys.LANGUAGE]) {
               const newLang = changes[StorageKeys.LANGUAGE].newValue as string | null | undefined;
@@ -2263,6 +2265,7 @@ export class TimelineManager {
 
     this.ui.timelineBar.style.top = `${clampedTop}px`;
     this.ui.timelineBar.style.left = `${clampedLeft}px`;
+    this.previewPanel?.reposition();
   }
 
   /**
