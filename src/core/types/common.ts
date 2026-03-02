@@ -89,6 +89,9 @@ export const StorageKeys = {
   // Fork nodes
   FORK_NODES: 'gvForkNodes',
   FORK_ENABLED: 'gvForkEnabled',
+
+  // Upsell hider
+  UPSELL_HIDER_ENABLED: 'gvUpsellHiderEnabled',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];
