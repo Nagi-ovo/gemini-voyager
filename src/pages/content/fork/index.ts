@@ -52,7 +52,7 @@ function injectStyles(): void {
   style.id = STYLE_ID;
   style.textContent = `
     .${FORK_BTN_CLASS} {
-      display: none;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
       padding: 4px 8px;
@@ -63,10 +63,16 @@ function injectStyles(): void {
       cursor: pointer;
       font-size: 12px;
       font-family: inherit;
-      opacity: 0.6;
-      transition: opacity 0.15s, background-color 0.15s;
-      position: relative;
-      vertical-align: middle;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.15s, transform 0.15s, background-color 0.15s;
+      position: absolute;
+      top: 50%;
+      right: calc(100% + 8px);
+      z-index: 1;
+      transform: translateY(calc(-50% - 2px));
+      white-space: nowrap;
       height: 22px;
       box-sizing: border-box;
     }
@@ -80,12 +86,28 @@ function injectStyles(): void {
       flex-shrink: 0;
     }
 
-    /* Show on hover of user message */
+    /* Reveal on hover/focus without affecting message layout */
     .user-query-bubble-with-background:hover .${FORK_BTN_CLASS},
     .user-query-container:hover .${FORK_BTN_CLASS},
     user-query:hover .${FORK_BTN_CLASS},
-    user-query-content:hover .${FORK_BTN_CLASS} {
-      display: inline-flex;
+    user-query-content:hover .${FORK_BTN_CLASS},
+    .user-query-bubble-with-background:focus-within .${FORK_BTN_CLASS},
+    .user-query-container:focus-within .${FORK_BTN_CLASS},
+    user-query:focus-within .${FORK_BTN_CLASS},
+    user-query-content:focus-within .${FORK_BTN_CLASS},
+    .${FORK_BTN_CLASS}:hover,
+    .${FORK_BTN_CLASS}:focus-visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(-50%);
+    }
+
+    html[dir="rtl"] .${FORK_BTN_CLASS},
+    body[dir="rtl"] .${FORK_BTN_CLASS},
+    body.gv-rtl .${FORK_BTN_CLASS} {
+      right: auto;
+      left: calc(100% + 8px);
     }
 
     /* Confirmation dialog */
@@ -284,6 +306,23 @@ function resolveUserMessageHost(userEl: HTMLElement): HTMLElement {
   return preferred || userEl;
 }
 
+function findUserCopyButtonAnchor(userEl: HTMLElement): HTMLElement | null {
+  const copyButton =
+    userEl.querySelector<HTMLElement>('button[data-test-id="copy-button"]') ||
+    userEl
+      .querySelector<HTMLElement>(
+        'button mat-icon[fonticon="content_copy"], button mat-icon[data-mat-icon-name="content_copy"]',
+      )
+      ?.closest<HTMLElement>('button');
+
+  if (!copyButton) return null;
+  return copyButton.parentElement || copyButton;
+}
+
+function resolveForkButtonHost(userEl: HTMLElement): HTMLElement {
+  return findUserCopyButtonAnchor(userEl) || resolveUserMessageHost(userEl);
+}
+
 function extractConversationIdFromHref(href: string): string | null {
   try {
     const url = new URL(href, window.location.origin);
@@ -434,6 +473,17 @@ function clearInjectedForkIndicators(): void {
   document.querySelectorAll(`.${FORK_INDICATOR_GROUP_CLASS}`).forEach((el) => el.remove());
 }
 
+function hasOrDedupForkIndicatorGroup(hostEl: HTMLElement): boolean {
+  const groups = Array.from(hostEl.querySelectorAll<HTMLElement>(`.${FORK_INDICATOR_GROUP_CLASS}`));
+  if (groups.length === 0) return false;
+  if (groups.length > 1) {
+    for (let i = 1; i < groups.length; i++) {
+      groups[i].remove();
+    }
+  }
+  return true;
+}
+
 /**
  * Extract conversation content up to and including the given user turn index.
  *
@@ -496,10 +546,16 @@ function injectForkButtons(): void {
   pairs.forEach((pair, index) => {
     const userEl = pair.userElement;
     ensureTurnId(userEl, index);
-    const hostEl = resolveUserMessageHost(userEl);
+    const hostEl = resolveForkButtonHost(userEl);
 
-    // Skip if already has a fork button
-    if (hostEl.querySelector(`.${FORK_BTN_CLASS}`)) return;
+    const existingButton = userEl.querySelector<HTMLElement>(`.${FORK_BTN_CLASS}`);
+    if (existingButton) {
+      hostEl.style.position = hostEl.style.position || 'relative';
+      if (existingButton.parentElement !== hostEl) {
+        hostEl.appendChild(existingButton);
+      }
+      return;
+    }
 
     const btn = document.createElement('button');
     btn.className = FORK_BTN_CLASS;
@@ -850,7 +906,7 @@ async function injectForkIndicators(): Promise<void> {
     const forkGroupIds = turnForkMap.get(turnId);
     if (!forkGroupIds || forkGroupIds.size === 0) continue;
 
-    if (hostEl.querySelector(`.${FORK_INDICATOR_GROUP_CLASS}`)) continue;
+    if (hasOrDedupForkIndicatorGroup(hostEl)) continue;
 
     const groupNodesList: ForkNode[][] = [];
     for (const forkGroupId of forkGroupIds) {
@@ -870,6 +926,9 @@ async function injectForkIndicators(): Promise<void> {
 
     const displayNodes = buildBranchDisplayNodes(groupNodesList);
     if (displayNodes.length < 2) continue;
+
+    // Re-check after async group loading to avoid duplicate render in concurrent injections.
+    if (hasOrDedupForkIndicatorGroup(hostEl)) continue;
 
     const group = document.createElement('div');
     group.className = FORK_INDICATOR_GROUP_CLASS;
