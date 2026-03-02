@@ -216,8 +216,7 @@ export function startChatWidthAdjuster() {
   // Load initial width (%), migrating legacy px values when seen
   chrome.storage?.sync?.get({ geminiChatWidth: DEFAULT_PERCENT }, (res) => {
     const storedWidth = res?.geminiChatWidth;
-    const numericStoredWidth =
-      typeof storedWidth === 'number' ? storedWidth : DEFAULT_PERCENT;
+    const numericStoredWidth = typeof storedWidth === 'number' ? storedWidth : DEFAULT_PERCENT;
     const normalized = normalizePercent(numericStoredWidth, DEFAULT_PERCENT);
     currentWidthPercent = normalized;
     applyWidth(currentWidthPercent);
