@@ -30,7 +30,7 @@ function removeStyles() {
 
 export const startUpsellHider = async () => {
   const res = await chrome.storage.sync.get(StorageKeys.UPSELL_HIDER_ENABLED);
-  const enabled = res[StorageKeys.UPSELL_HIDER_ENABLED] === true;
+  const enabled = res[StorageKeys.UPSELL_HIDER_ENABLED] !== false;
 
   if (enabled) {
     injectStyles();

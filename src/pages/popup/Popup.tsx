@@ -168,7 +168,7 @@ export default function Popup() {
   const [snowEffectEnabled, setSnowEffectEnabled] = useState<boolean>(false);
   const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState<boolean>(false);
   const [forkEnabled, setForkEnabled] = useState<boolean>(false);
-  const [upsellHiderEnabled, setUpsellHiderEnabled] = useState<boolean>(false);
+  const [upsellHiderEnabled, setUpsellHiderEnabled] = useState<boolean>(true);
   const [accountIsolationEnabledGemini, setAccountIsolationEnabledGemini] =
     useState<boolean>(false);
   const [accountIsolationEnabledAIStudio, setAccountIsolationEnabledAIStudio] =
@@ -521,7 +521,7 @@ export default function Popup() {
           setSnowEffectEnabled(res?.gvSnowEffect === true);
           setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
           setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
-          setUpsellHiderEnabled(res?.[StorageKeys.UPSELL_HIDER_ENABLED] === true);
+          setUpsellHiderEnabled(res?.[StorageKeys.UPSELL_HIDER_ENABLED] !== false);
           const legacyIsolationEnabled = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] === true;
           const geminiIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI];
           const aiStudioIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO];
