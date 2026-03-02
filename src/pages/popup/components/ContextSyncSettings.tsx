@@ -12,7 +12,7 @@ const DEFAULT_PORT = 3030;
 export function ContextSyncSettings() {
   const { t } = useLanguage();
   const [isEnabled, setIsEnabled] = useState(false);
-  const [port, setPort] = useState<any>(DEFAULT_PORT);
+  const [port, setPort] = useState(DEFAULT_PORT);
   const [isOnline, setIsOnline] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{

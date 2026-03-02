@@ -6422,11 +6422,9 @@ export class FolderManager {
       // Get local starred messages for merge
       let localStarred = { messages: {} as Record<string, unknown[]> };
       try {
-        const starredMessages = (await chrome.storage.local.get(
-          StorageKeys.TIMELINE_STARRED_MESSAGES,
-        )) as any;
-        if (starredMessages[StorageKeys.TIMELINE_STARRED_MESSAGES]) {
-          localStarred = starredMessages[StorageKeys.TIMELINE_STARRED_MESSAGES];
+        const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
+        if (starredResult.geminiTimelineStarredMessages) {
+          localStarred = starredResult.geminiTimelineStarredMessages;
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get local starred messages for merge:', err);

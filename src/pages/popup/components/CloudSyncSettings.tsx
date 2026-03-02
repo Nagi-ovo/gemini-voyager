@@ -269,13 +269,13 @@ export function CloudSyncSettings() {
 
         // Only use storage folders if we didn't get them from tab
         if ((!folders.folders || folders.folders.length === 0) && storageResult[folderStorageKey]) {
-          folders = storageResult[folderStorageKey] as any;
+          folders = storageResult[folderStorageKey];
           console.log(`[CloudSyncSettings] Loaded folders from ${folderStorageKey} (fallback)`);
         }
 
         // Prompts usually sync well to storage (only for Gemini)
         if (platform === 'gemini' && storageResult[StorageKeys.PROMPT_ITEMS]) {
-          prompts = storageResult[StorageKeys.PROMPT_ITEMS] as any;
+          prompts = storageResult[StorageKeys.PROMPT_ITEMS];
         }
       } catch (err) {
         console.error('[CloudSyncSettings] Error loading data:', err);
@@ -401,13 +401,13 @@ export function CloudSyncSettings() {
           (!localFolders.folders || localFolders.folders.length === 0) &&
           storageResult[folderStorageKey]
         ) {
-          localFolders = storageResult[folderStorageKey] as any;
+          localFolders = storageResult[folderStorageKey];
           console.log(`[CloudSyncSettings] Loaded folders from ${folderStorageKey} (fallback)`);
         }
 
         // Prompts only for Gemini platform
         if (platform === 'gemini' && storageResult[StorageKeys.PROMPT_ITEMS]) {
-          localPrompts = storageResult[StorageKeys.PROMPT_ITEMS] as any;
+          localPrompts = storageResult[StorageKeys.PROMPT_ITEMS];
         }
       } catch (err) {
         console.error('[CloudSyncSettings] Error loading local data for merge:', err);
@@ -444,7 +444,7 @@ export function CloudSyncSettings() {
       try {
         const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
         if (starredResult.geminiTimelineStarredMessages) {
-          localStarred = starredResult.geminiTimelineStarredMessages as any;
+          localStarred = starredResult.geminiTimelineStarredMessages;
         }
       } catch (err) {
         console.warn('[CloudSyncSettings] Could not get local starred messages:', err);

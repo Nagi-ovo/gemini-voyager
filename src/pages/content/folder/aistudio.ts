@@ -324,8 +324,8 @@ export class AIStudioFolderManager {
           // await chrome.storage.sync.remove(this.STORAGE_KEY);
         } else {
           // Both have data - merge them (local takes priority for conflicts)
-          const mergedData = this.mergeFolderData(localData as any, syncData as any);
-          await chrome.storage.local.set({ [this.STORAGE_KEY]: mergedData });
+          const mergedFolders = this.mergeFolderData(localData, syncData);
+          await chrome.storage.local.set({ [this.STORAGE_KEY]: mergedFolders });
           console.log('[AIStudioFolderManager] Merged sync and local folder data');
         }
       }
@@ -388,7 +388,7 @@ export class AIStudioFolderManager {
         return null;
       }
 
-      const migratedData = this.cloneFolderData(legacyData as any);
+      const migratedData = this.cloneFolderData(legacyData);
       await chrome.storage.local.set({ [this.activeStorageKey]: migratedData });
       console.log(
         '[AIStudioFolderManager] Migrated legacy AI Studio folder data to scoped storage:',
@@ -606,7 +606,7 @@ export class AIStudioFolderManager {
       }
 
       if (data && validateFolderData(data)) {
-        this.data = data as any;
+        this.data = data;
         // Create primary backup on successful load
         this.backupService.createPrimaryBackup(this.data);
       } else {
