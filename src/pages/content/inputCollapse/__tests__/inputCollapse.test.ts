@@ -1,7 +1,6 @@
 /**
  * Tests for inputCollapse feature
  */
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock webextension-polyfill BEFORE importing the module
@@ -47,7 +46,7 @@ describe('inputCollapse', () => {
     (chrome.storage.sync.get as any).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
         callback({ gvInputCollapseEnabled: false, gvInputCollapseWhenNotEmpty: false });
-      }
+      },
     );
   });
 
@@ -86,9 +85,12 @@ describe('inputCollapse', () => {
   describe('Feature disabled', () => {
     it('does not initialize when feature is disabled', async () => {
       (chrome.storage.sync.get as any).mockImplementation(
-        (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
           callback({ gvInputCollapseEnabled: false });
-        }
+        },
       );
 
       const { startInputCollapse } = await import('../index');
@@ -102,9 +104,12 @@ describe('inputCollapse', () => {
   describe('Default behavior (collapse only when empty)', () => {
     beforeEach(async () => {
       (chrome.storage.sync.get as any).mockImplementation(
-        (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
           callback({ gvInputCollapseEnabled: true, gvInputCollapseWhenNotEmpty: false });
-        }
+        },
       );
 
       const { startInputCollapse } = await import('../index');
@@ -155,9 +160,12 @@ describe('inputCollapse', () => {
   describe('Allow collapse when not empty (new feature)', () => {
     beforeEach(async () => {
       (chrome.storage.sync.get as any).mockImplementation(
-        (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
           callback({ gvInputCollapseEnabled: true, gvInputCollapseWhenNotEmpty: true });
-        }
+        },
       );
 
       const { startInputCollapse } = await import('../index');
@@ -212,9 +220,12 @@ describe('inputCollapse', () => {
     it('responds to enable/disable changes dynamically', async () => {
       // Start with feature enabled
       (chrome.storage.sync.get as any).mockImplementation(
-        (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
           callback({ gvInputCollapseEnabled: true, gvInputCollapseWhenNotEmpty: false });
-        }
+        },
       );
 
       const { startInputCollapse } = await import('../index');

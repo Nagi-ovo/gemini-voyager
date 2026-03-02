@@ -306,23 +306,23 @@ export function startInputCollapse() {
 
       // Feature is enabled, proceed with initialization
       initInputCollapse(res?.gvInputCollapseWhenNotEmpty === true);
-    }
+    },
   );
 
   // Listen for setting changes
   chrome.storage?.onChanged?.addListener((changes, area) => {
-    if (area === 'sync' && (changes.gvInputCollapseEnabled || changes.gvInputCollapseWhenNotEmpty)) {
+    if (
+      area === 'sync' &&
+      (changes.gvInputCollapseEnabled || changes.gvInputCollapseWhenNotEmpty)
+    ) {
       if (changes.gvInputCollapseEnabled?.newValue === false) {
         // Disable: remove styles and classes
         cleanup();
       } else {
         // Enable or setting changed: re-read both settings and re-initialize
-        chrome.storage?.sync?.get(
-          { gvInputCollapseWhenNotEmpty: false },
-          (res) => {
-            initInputCollapse(res?.gvInputCollapseWhenNotEmpty === true);
-          }
-        );
+        chrome.storage?.sync?.get({ gvInputCollapseWhenNotEmpty: false }, (res) => {
+          initInputCollapse(res?.gvInputCollapseWhenNotEmpty === true);
+        });
       }
     }
   });
@@ -550,7 +550,7 @@ function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
         return;
       }
     },
-    { signal, capture: true } // capture phase to ensure we intercept before other handlers
+    { signal, capture: true }, // capture phase to ensure we intercept before other handlers
   );
 
   // Listen for language changes and update placeholder text
@@ -634,9 +634,8 @@ function expand(container: HTMLElement, moveCursorToEnd: boolean = false) {
       container.querySelector('.ql-editor') ||
       container.querySelector('[contenteditable]') ||
       container.querySelector('rich-textarea');
-      
-    if (editor && editor instanceof HTMLElement) {
 
+    if (editor && editor instanceof HTMLElement) {
       setTimeout(() => {
         editor.focus();
         if (moveCursorToEnd && !isInputEmpty(container)) {
@@ -655,9 +654,9 @@ function moveCursorToEndOfElement(element: HTMLElement): void {
   if (!selection) return;
 
   const range = document.createRange();
-  
+
   const targetNode = element.lastChild || element;
-  
+
   range.selectNodeContents(targetNode);
   range.collapse(false); // false = collapse to end
 

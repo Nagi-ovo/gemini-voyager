@@ -1280,7 +1280,7 @@ export default function Popup() {
             </div>
             {/* Second toggle - Allow collapse when not empty (only visible when first is enabled) */}
             {inputCollapseEnabled && (
-              <div className="group flex items-center justify-between mt-3 ml-4">
+              <div className="group mt-3 ml-4 flex items-center justify-between">
                 <div className="flex-1">
                   <Label
                     htmlFor="input-collapse-when-not-empty"

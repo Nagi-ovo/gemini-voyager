@@ -54,7 +54,10 @@ describe('TimelinePreviewPanel', () => {
           public pointerType: string;
           public isPrimary: boolean;
 
-          constructor(type: string, options: PointerEventInit & { bubbles?: boolean; cancelable?: boolean }) {
+          constructor(
+            type: string,
+            options: PointerEventInit & { bubbles?: boolean; cancelable?: boolean },
+          ) {
             super(type, options);
             this.pointerId = options.pointerId ?? 0;
             this.width = options.width ?? 0;
