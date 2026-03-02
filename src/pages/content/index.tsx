@@ -1,3 +1,4 @@
+import { startAutoCategorization } from '@/core/services/TriggerService';
 import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
 import {
@@ -28,7 +29,6 @@ import { startMermaid } from './mermaid/index';
 import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
-import { startAutoCategorization } from '@/core/services/TriggerService';
 import { startRecentsHider } from './recentsHider/index';
 import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';

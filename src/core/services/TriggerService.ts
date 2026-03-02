@@ -6,91 +6,94 @@ import { keyboardShortcutService } from './KeyboardShortcutService';
  * Monitors input prefixes and keyboard shortcuts.
  */
 export class TriggerService {
-    private static instance: TriggerService;
-    private inputObserver: MutationObserver | null = null;
-    private attachedElements = new WeakSet<HTMLElement>();
+  private static instance: TriggerService;
 
-    private constructor() { }
+  private constructor() {}
 
-    public static getInstance(): TriggerService {
-        if (!TriggerService.instance) {
-            TriggerService.instance = new TriggerService();
+  public static getInstance(): TriggerService {
+    if (!TriggerService.instance) {
+      TriggerService.instance = new TriggerService();
+    }
+    return TriggerService.instance;
+  }
+
+  public init() {
+    this.setupSendInterceptors();
+    this.setupShortcutListener();
+  }
+
+  private setupSendInterceptors() {
+    // Intercept Enter key
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+          const target = e.target as HTMLElement;
+          if (this.isEditable(target)) {
+            this.checkAndTriggerCategorization(target);
+          }
         }
-        return TriggerService.instance;
-    }
+      },
+      { capture: true },
+    );
 
-    public init() {
-        this.setupInputObserver();
-        this.setupShortcutListener();
-        this.attachToExistingInputs();
-    }
-
-    private setupInputObserver() {
-        this.inputObserver = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                for (const node of mutation.addedNodes) {
-                    if (!(node instanceof HTMLElement)) continue;
-
-                    if (this.isEditable(node)) {
-                        this.attachToInput(node);
-                    }
-
-                    const editables = node.querySelectorAll<HTMLElement>('[contenteditable="true"], textarea');
-                    editables.forEach(el => this.attachToInput(el));
-                }
-            }
-        });
-
-        this.inputObserver.observe(document.body, { childList: true, subtree: true });
-    }
-
-    private attachToExistingInputs() {
-        const editables = document.querySelectorAll<HTMLElement>('[contenteditable="true"], textarea');
-        editables.forEach(el => this.attachToInput(el));
-    }
-
-    private isEditable(el: HTMLElement): boolean {
-        return el.isContentEditable || el.tagName === 'TEXTAREA' || el.getAttribute('role') === 'textbox';
-    }
-
-    private attachToInput(el: HTMLElement) {
-        if (this.attachedElements.has(el)) return;
-        this.attachedElements.add(el);
-
-        el.addEventListener('input', (event) => {
-            const target = event.target as HTMLElement;
-            const text = this.getInputText(target);
-
-            // Trigger if text starts with . or 。
-            if (text.startsWith('.') || text.startsWith('。')) {
-                console.log('[TriggerService] Prefix trigger detected');
-                // We might want to throttle this or wait for a specific length
-                // For now, let's just log it. In a real scenario, we'd trigger a suggestion.
-                // autoCategorizationService.categorizeCurrentConversation();
-            }
-        });
-    }
-
-    private getInputText(el: HTMLElement): string {
-        if (el instanceof HTMLTextAreaElement) return el.value;
-        return el.textContent || '';
-    }
-
-    private setupShortcutListener() {
-        keyboardShortcutService.on((action) => {
-            if (action === 'folder:auto_categorize' as any) {
-                console.log('[TriggerService] Shortcut trigger detected');
-                autoCategorizationService.categorizeCurrentConversation();
-            }
-        });
-    }
-
-    public destroy() {
-        if (this.inputObserver) {
-            this.inputObserver.disconnect();
-            this.inputObserver = null;
+    // Intercept Send button clicks
+    document.addEventListener(
+      'click',
+      (e) => {
+        const target = e.target as HTMLElement;
+        const sendButton = target.closest(
+          'button[aria-label*="Send"], button[aria-label*="send"], button[data-tooltip*="Send"], button mat-icon[fonticon="send"], .send-button',
+        );
+        if (sendButton) {
+          // Find the main chat input
+          const editables = document.querySelectorAll<HTMLElement>(
+            'rich-textarea [contenteditable="true"], textarea',
+          );
+          editables.forEach((el) => this.checkAndTriggerCategorization(el));
         }
+      },
+      { capture: true },
+    );
+  }
+
+  private isEditable(el: HTMLElement): boolean {
+    return (
+      el.isContentEditable || el.tagName === 'TEXTAREA' || el.getAttribute('role') === 'textbox'
+    );
+  }
+
+  private getInputText(el: HTMLElement): string {
+    if (el instanceof HTMLTextAreaElement) return el.value;
+    return el.textContent || '';
+  }
+
+  private checkAndTriggerCategorization(el: HTMLElement) {
+    const text = this.getInputText(el).trim();
+    // Trigger if text starts with . or 。
+    if (text.startsWith('.') || text.startsWith('。')) {
+      console.log('[TriggerService] Prefix trigger detected');
+      // Wait for the conversation to be created/navigation to complete
+      setTimeout(() => {
+        autoCategorizationService.categorizeCurrentConversation();
+      }, 3000);
     }
+  }
+
+  private setupShortcutListener() {
+    keyboardShortcutService.on((action) => {
+      if (action === ('folder:auto_categorize' as any)) {
+        console.log('[TriggerService] Shortcut trigger detected');
+        autoCategorizationService.categorizeCurrentConversation();
+      }
+    });
+  }
+
+  public destroy() {
+    // Event listeners attached to document with capture: true are harder to remove cleanly
+    // without keeping references, but keeping references complicates the singleton.
+    // For extension content scripts, page unload cleans them up.
+  }
 }
 
 export const triggerService = TriggerService.getInstance();
@@ -99,6 +102,6 @@ export const triggerService = TriggerService.getInstance();
  * Initialize auto-categorization feature
  */
 export async function startAutoCategorization() {
-    triggerService.init();
-    return () => triggerService.destroy();
+  triggerService.init();
+  return () => triggerService.destroy();
 }

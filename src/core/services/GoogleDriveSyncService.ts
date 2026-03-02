@@ -356,9 +356,11 @@ export class GoogleDriveSyncService {
   private async loadCachedToken(): Promise<void> {
     try {
       const result = await chrome.storage.local.get(['gvAccessToken', 'gvTokenExpiry']);
-      if (result.gvAccessToken && result.gvTokenExpiry && result.gvTokenExpiry > Date.now()) {
-        this.accessToken = result.gvAccessToken;
-        this.tokenExpiry = result.gvTokenExpiry;
+      const token = result.gvAccessToken as string | undefined;
+      const expiry = result.gvTokenExpiry as number | undefined;
+      if (token && expiry && expiry > Date.now()) {
+        this.accessToken = token;
+        this.tokenExpiry = expiry;
         console.log('[GoogleDriveSyncService] Loaded cached token');
       }
     } catch (error) {
@@ -837,11 +839,11 @@ export class GoogleDriveSyncService {
       ]);
       this.state = {
         mode: (result.gvSyncMode as SyncMode) || 'disabled',
-        lastSyncTime: result.gvLastSyncTime || null,
-        lastUploadTime: result.gvLastUploadTime || null,
-        lastSyncTimeAIStudio: result.gvLastSyncTimeAIStudio || null,
-        lastUploadTimeAIStudio: result.gvLastUploadTimeAIStudio || null,
-        error: result.gvSyncError || null,
+        lastSyncTime: (result.gvLastSyncTime as number | undefined) || null,
+        lastUploadTime: (result.gvLastUploadTime as number | undefined) || null,
+        lastSyncTimeAIStudio: (result.gvLastSyncTimeAIStudio as number | undefined) || null,
+        lastUploadTimeAIStudio: (result.gvLastUploadTimeAIStudio as number | undefined) || null,
+        error: (result.gvSyncError as string | undefined) || null,
         isSyncing: false,
         isAuthenticated: false,
       };
