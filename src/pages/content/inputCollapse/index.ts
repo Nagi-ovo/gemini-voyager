@@ -318,12 +318,14 @@ export function startInputCollapse() {
       if (changes.gvInputCollapseEnabled?.newValue === false) {
         // Disable: remove styles and classes
         cleanup();
-      } else {
-        // Enable or setting changed: re-read both settings and re-initialize
-        chrome.storage?.sync?.get({ gvInputCollapseWhenNotEmpty: false }, (res) => {
-          initInputCollapse(res?.gvInputCollapseWhenNotEmpty === true);
-        });
       }
+    } else {
+      // Enable or setting changed: re-read both settings and re-initialize
+      chrome.storage?.sync?.get({ gvInputCollapseWhenNotEmpty: false }, (res) => {
+        allowCollapseWhenNotEmpty = res?.gvInputCollapseWhenNotEmpty === true;
+
+        initInputCollapse(allowCollapseWhenNotEmpty);
+      });
     }
   });
 }

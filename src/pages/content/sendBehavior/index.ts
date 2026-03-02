@@ -238,6 +238,9 @@ function handleKeyDown(event: KeyboardEvent): void {
   // Early exit if feature is disabled (should not happen, but defensive check)
   if (!isEnabled) return;
 
+  // Fix for Issue 260: Ignore events during IME composition
+  if (event.isComposing) return;
+
   // Only handle Enter key
   if (event.key !== 'Enter') return;
 
