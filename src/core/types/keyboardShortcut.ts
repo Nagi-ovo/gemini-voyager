@@ -22,7 +22,7 @@ export type ShortcutKey = string;
 /**
  * Shortcut action types
  */
-export type ShortcutAction = 'timeline:previous' | 'timeline:next';
+export type ShortcutAction = 'timeline:previous' | 'timeline:next' | 'folder:auto_categorize';
 
 /**
  * Individual keyboard shortcut configuration
@@ -47,6 +47,7 @@ export interface ShortcutMatch {
 export interface KeyboardShortcutConfig {
   previous: KeyboardShortcut;
   next: KeyboardShortcut;
+  auto_categorize?: KeyboardShortcut;
 }
 
 /**

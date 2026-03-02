@@ -37,6 +37,11 @@ const DEFAULT_SHORTCUTS: KeyboardShortcutConfig = {
     modifiers: [],
     key: 'j',
   },
+  auto_categorize: {
+    action: 'folder:auto_categorize',
+    modifiers: ['Ctrl', 'Shift'],
+    key: 'U',
+  },
 };
 
 /**
@@ -241,10 +246,17 @@ export class KeyboardShortcutService {
    * Match keyboard event to shortcut (Strategy Pattern)
    */
   private matchShortcut(event: KeyboardEvent): ShortcutMatch | null {
-    const shortcuts = [
-      { action: 'timeline:previous' as const, config: this.config.previous },
-      { action: 'timeline:next' as const, config: this.config.next },
+    const shortcuts: { action: ShortcutAction; config: KeyboardShortcut }[] = [
+      { action: 'timeline:previous', config: this.config.previous },
+      { action: 'timeline:next', config: this.config.next },
     ];
+
+    if (this.config.auto_categorize) {
+      shortcuts.push({
+        action: 'folder:auto_categorize' as const,
+        config: this.config.auto_categorize,
+      });
+    }
 
     // Check if any shortcut matches
     for (const { action, config } of shortcuts) {

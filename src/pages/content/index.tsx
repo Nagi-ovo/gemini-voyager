@@ -28,6 +28,7 @@ import { startMermaid } from './mermaid/index';
 import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
+import { startAutoCategorization } from '@/core/services/TriggerService';
 import { startRecentsHider } from './recentsHider/index';
 import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
@@ -71,6 +72,7 @@ let folderManagerInstance: Awaited<ReturnType<typeof startFolderManager>> | null
 
 let promptManagerInstance: Awaited<ReturnType<typeof startPromptManager>> | null = null;
 let quoteReplyCleanup: (() => void) | null = null;
+let autoCategorizationCleanup: (() => void) | null = null;
 let sendBehaviorCleanup: (() => void) | null = null;
 let forkCleanup: (() => void) | null = null;
 
@@ -237,6 +239,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Recents hider - hide/show toggle for recent items section
       startRecentsHider();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Auto-categorization
+      autoCategorizationCleanup = await startAutoCategorization();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Gems hider - hide/show toggle for Gems list section
@@ -455,6 +461,10 @@ function handleVisibilityChange(): void {
         if (quoteReplyCleanup) {
           quoteReplyCleanup();
           quoteReplyCleanup = null;
+        }
+        if (autoCategorizationCleanup) {
+          autoCategorizationCleanup();
+          autoCategorizationCleanup = null;
         }
         if (sendBehaviorCleanup) {
           sendBehaviorCleanup();
