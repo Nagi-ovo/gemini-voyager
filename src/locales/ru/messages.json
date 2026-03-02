@@ -643,14 +643,6 @@
     "message": "Из-за ограничений безопасности браузера эта страница Опций не может получить прямой доступ к промптам и папкам со страниц Gemini. Пожалуйста, используйте функции Менеджера промптов и Экспорта папок на странице Gemini для ручного резервного копирования.",
     "description": "Backup data access limitation explanation"
   },
-  "hideUpsell": {
-    "message": "Hide Upgrade Prompts",
-    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
-  },
-  "hideUpsellHint": {
-    "message": "Hide the \"Upgrade to Google AI Ultra\" button in the sidebar and model menu",
-    "description": "Explanation for the upsell hiding feature"
-  },
   "promptManagerOptions": {
     "message": "Менеджер промптов",
     "description": "Prompt Manager options section label"
@@ -1366,5 +1358,14 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  }
+,
+  "hideUpsell": {
+    "message": "Hide Upgrade Prompts",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "Hide the \"Upgrade to Google AI Ultra\" button in the sidebar and model menu",
+    "description": "Explanation for the upsell hiding feature"
   }
 }

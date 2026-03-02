@@ -643,14 +643,6 @@
     "message": "브라우저 보안 제한으로 인해, 이 옵션 페이지는 Gemini 페이지의 프롬프트 및 폴더 데이터에 직접 액세스할 수 없습니다. 수동 백업은 Gemini 페이지의 프롬프트 관리자 및 폴더 내보내기 기능을 사용하십시오.",
     "description": "Backup data access limitation explanation"
   },
-  "hideUpsell": {
-    "message": "Hide Upgrade Prompts",
-    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
-  },
-  "hideUpsellHint": {
-    "message": "Hide the \"Upgrade to Google AI Ultra\" button in the sidebar and model menu",
-    "description": "Explanation for the upsell hiding feature"
-  },
   "promptManagerOptions": {
     "message": "프롬프트 관리자",
     "description": "Prompt Manager options section label"
@@ -1366,5 +1358,14 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  }
+,
+  "hideUpsell": {
+    "message": "Hide Upgrade Prompts",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "Hide the \"Upgrade to Google AI Ultra\" button in the sidebar and model menu",
+    "description": "Explanation for the upsell hiding feature"
   }
 }

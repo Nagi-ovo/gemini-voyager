@@ -643,14 +643,6 @@
     "message": "Devido a restrições de segurança do navegador, esta página de Opções não pode acessar diretamente os prompts e dados de pasta das páginas do Gemini. Use o Gerenciador de Prompts e os recursos de Exportação de Pasta na página do Gemini para backups manuais.",
     "description": "Backup data access limitation explanation"
   },
-  "hideUpsell": {
-    "message": "Hide Upgrade Prompts",
-    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
-  },
-  "hideUpsellHint": {
-    "message": "Hide the \"Upgrade to Google AI Ultra\" button in the sidebar and model menu",
-    "description": "Explanation for the upsell hiding feature"
-  },
   "promptManagerOptions": {
     "message": "Gerenciador de Prompts",
     "description": "Prompt Manager options section label"
@@ -1366,5 +1358,14 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  }
+,
+  "hideUpsell": {
+    "message": "Hide Upgrade Prompts",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "Hide the \"Upgrade to Google AI Ultra\" button in the sidebar and model menu",
+    "description": "Explanation for the upsell hiding feature"
   }
 }

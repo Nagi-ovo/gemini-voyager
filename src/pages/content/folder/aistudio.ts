@@ -199,7 +199,7 @@ export function parseDragDataPayload(raw: string): DragData | null {
 /**
  * Validate folder data structure
  */
-function validateFolderData(data: unknown): data is FolderData {
+function validateFolderData(data: unknown): boolean {
   if (typeof data !== 'object' || data === null) return false;
   const d = data as Record<string, unknown>;
   return Array.isArray(d.folders) && typeof d.folderContents === 'object';
@@ -324,8 +324,8 @@ export class AIStudioFolderManager {
           // await chrome.storage.sync.remove(this.STORAGE_KEY);
         } else {
           // Both have data - merge them (local takes priority for conflicts)
-          const mergedFolders = this.mergeFolderData(localData, syncData);
-          await chrome.storage.local.set({ [this.STORAGE_KEY]: mergedFolders });
+          const mergedData = this.mergeFolderData(localData as any, syncData as any);
+          await chrome.storage.local.set({ [this.STORAGE_KEY]: mergedData });
           console.log('[AIStudioFolderManager] Merged sync and local folder data');
         }
       }
@@ -388,7 +388,7 @@ export class AIStudioFolderManager {
         return null;
       }
 
-      const migratedData = this.cloneFolderData(legacyData);
+      const migratedData = this.cloneFolderData(legacyData as any);
       await chrome.storage.local.set({ [this.activeStorageKey]: migratedData });
       console.log(
         '[AIStudioFolderManager] Migrated legacy AI Studio folder data to scoped storage:',
@@ -606,7 +606,7 @@ export class AIStudioFolderManager {
       }
 
       if (data && validateFolderData(data)) {
-        this.data = data;
+        this.data = data as any;
         // Create primary backup on successful load
         this.backupService.createPrimaryBackup(this.data);
       } else {
