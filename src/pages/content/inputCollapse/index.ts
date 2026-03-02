@@ -630,18 +630,19 @@ function expand(container: HTMLElement, moveCursorToEnd: boolean = false) {
     container.classList.remove(COLLAPSED_CLASS);
 
     // Auto-focus the Quill editor
-    // .ql-editor is the actual contenteditable div inside rich-textarea
     const editor =
       container.querySelector('.ql-editor') ||
       container.querySelector('[contenteditable]') ||
       container.querySelector('rich-textarea');
+      
     if (editor && editor instanceof HTMLElement) {
-      editor.focus();
 
-      // Move cursor to end if requested
-      if (moveCursorToEnd) {
-        moveCursorToEndOfElement(editor);
-      }
+      setTimeout(() => {
+        editor.focus();
+        if (moveCursorToEnd && !isInputEmpty(container)) {
+          moveCursorToEndOfElement(editor);
+        }
+      }, 0);
     }
   }
 }
@@ -654,7 +655,10 @@ function moveCursorToEndOfElement(element: HTMLElement): void {
   if (!selection) return;
 
   const range = document.createRange();
-  range.selectNodeContents(element);
+  
+  const targetNode = element.lastChild || element;
+  
+  range.selectNodeContents(targetNode);
   range.collapse(false); // false = collapse to end
 
   selection.removeAllRanges();
