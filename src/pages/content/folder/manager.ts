@@ -221,9 +221,6 @@ export class FolderManager {
       // Initialize folder UI
       await this.initializeFolderUI();
 
-      // Register auto-categorization styles
-      this.registerAutoCategorizationStyles();
-
       this.debug('Initialized successfully');
     } catch (error) {
       if (isExtensionContextInvalidatedError(error)) {
@@ -4663,10 +4660,7 @@ export class FolderManager {
     return full;
   }
 
-  /**
-   * Refresh the folder UI by re-rendering the list
-   */
-  public refresh(): void {
+  private refresh(): void {
     if (!this.containerElement) return;
 
     // Find and update the folders list
@@ -6430,9 +6424,7 @@ export class FolderManager {
       try {
         const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
         if (starredResult.geminiTimelineStarredMessages) {
-          localStarred = starredResult.geminiTimelineStarredMessages as {
-            messages: Record<string, unknown[]>;
-          };
+          localStarred = starredResult.geminiTimelineStarredMessages;
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get local starred messages for merge:', err);
@@ -6659,69 +6651,5 @@ export class FolderManager {
     } else {
       return new Date(timestamp).toLocaleDateString();
     }
-  }
-  /**
-   * Trigger automatic categorization for the current conversation
-   */
-  public async triggerAutoCategorization(): Promise<void> {
-    const { autoCategorizationService } = await import('@/core/services/AutoCategorizationService');
-    await autoCategorizationService.categorizeCurrentConversation();
-  }
-
-  /**
-   * Highlight a folder as a suggestion from AI
-   */
-  public highlightSuggestedFolder(folderId: string): void {
-    const folderEl = this.containerElement?.querySelector(`[data-folder-id="${folderId}"]`);
-    if (folderEl) {
-      // Add highlight class
-      folderEl.classList.add('gv-suggested-highlight');
-
-      // Ensure folder is visible (parent expanded)
-      let parentId = this.data.folders.find((f) => f.id === folderId)?.parentId;
-      let needsRefresh = false;
-      while (parentId) {
-        const parent = this.data.folders.find((f) => f.id === parentId);
-        if (parent && !parent.isExpanded) {
-          parent.isExpanded = true;
-          needsRefresh = true;
-        }
-        parentId = parent?.parentId || null;
-      }
-
-      if (needsRefresh) {
-        this.saveData();
-        this.refresh();
-      }
-
-      // Scroll into view
-      folderEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-      // Remove after some time
-      setTimeout(() => {
-        folderEl.classList.remove('gv-suggested-highlight');
-      }, 8000);
-    }
-  }
-
-  private registerAutoCategorizationStyles(): void {
-    if (document.getElementById('gv-auto-cat-styles')) return;
-
-    const style = document.createElement('style');
-    style.id = 'gv-auto-cat-styles';
-    style.textContent = `
-      .gv-suggested-highlight {
-        animation: gv-pulse-suggested 2s infinite;
-        border-radius: 8px;
-        background-color: var(--gem-sys-color-surface-container-highest, rgba(138, 180, 248, 0.2)) !important;
-        transition: background-color 0.3s ease;
-      }
-      @keyframes gv-pulse-suggested {
-        0% { box-shadow: 0 0 0 0 rgba(138, 180, 248, 0.4); }
-        70% { box-shadow: 0 0 0 6px rgba(138, 180, 248, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(138, 180, 248, 0); }
-      }
-    `;
-    document.head.appendChild(style);
   }
 }
