@@ -35,6 +35,18 @@ function getAssistantSelectors(): string[] {
   ];
 }
 
+function getTableSelectors(): string[] {
+  return [
+    'table-block',
+    '.table-block',
+    'table-block .table-block',
+    'table-block .table-content',
+    '.table-block.new-table-style',
+    '.table-block.has-scrollbar',
+    '.table-block .table-content',
+  ];
+}
+
 const clampPercent = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, Math.round(value)));
 
@@ -60,10 +72,12 @@ function applyWidth(widthPercent: number) {
 
   const userSelectors = getUserSelectors();
   const assistantSelectors = getAssistantSelectors();
+  const tableSelectors = getTableSelectors();
 
   // Build comprehensive CSS rules
   const userRules = userSelectors.map((sel) => `${sel}`).join(',\n    ');
   const assistantRules = assistantSelectors.map((sel) => `${sel}`).join(',\n    ');
+  const tableRules = tableSelectors.map((sel) => `${sel}`).join(',\n    ');
 
   // A small gap to account for scrollbars
   const GAP_PX = 10;
@@ -131,6 +145,28 @@ function applyWidth(widthPercent: number) {
       margin-left: auto !important;
       margin-right: auto !important;
     }
+
+    /* Gemini table containers */
+    ${tableRules} {
+      max-width: ${widthValue} !important;
+      width: min(100%, ${widthValue}) !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      box-sizing: border-box !important;
+    }
+
+    table-block .table-block,
+    .table-block.has-scrollbar,
+    .table-block.new-table-style {
+      overflow-x: hidden !important;
+    }
+
+    table-block .table-content,
+    .table-block .table-content {
+      width: 100% !important;
+      overflow-x: auto !important;
+    }
+
     model-response:has(> .deferred-response-indicator),
     .response-container:has(img[src*="sparkle"]), 
     main > div:has(img[src*="sparkle"]) {
@@ -180,7 +216,9 @@ export function startChatWidthAdjuster() {
   // Load initial width (%), migrating legacy px values when seen
   chrome.storage?.sync?.get({ geminiChatWidth: DEFAULT_PERCENT }, (res) => {
     const storedWidth = res?.geminiChatWidth;
-    const normalized = normalizePercent(storedWidth, DEFAULT_PERCENT);
+    const numericStoredWidth =
+      typeof storedWidth === 'number' ? storedWidth : DEFAULT_PERCENT;
+    const normalized = normalizePercent(numericStoredWidth, DEFAULT_PERCENT);
     currentWidthPercent = normalized;
     applyWidth(currentWidthPercent);
 
