@@ -23,7 +23,6 @@ import { getTextOffset, setCaretPosition } from './utils';
 
 /** Selectors for finding the send button */
 const SEND_BUTTON_SELECTORS = [
-  '.update-button', // Explicit class for Edit mode (User provided)
   'button[aria-label*="Send"]',
   'button[aria-label*="send"]',
   'button[data-tooltip*="Send"]',
@@ -31,10 +30,6 @@ const SEND_BUTTON_SELECTORS = [
   'button mat-icon[fonticon="send"]',
   '[data-send-button]',
   '.send-button',
-  // Fallback selectors
-  'button[aria-label*="Update"]',
-  'button[aria-label*="Save"]',
-  'button[aria-label*="更新"]',
 ] as const;
 
 /** Selector for editable elements */
