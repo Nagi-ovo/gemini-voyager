@@ -403,6 +403,8 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   -webkit-box-orient: vertical;
   overflow: hidden;
   word-break: break-word;
+  text-align: start;
+  unicode-bidi: plaintext;
   opacity: 0;
   will-change: opacity, transform;
   transition: opacity var(--timeline-tooltip-anim-in);

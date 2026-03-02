@@ -1,6 +1,6 @@
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { StorageKeys } from '@/core/types/common';
-import { applyRTLClass, GV_RTL_CLASS } from '@/core/utils/rtl';
+import { GV_RTL_CLASS, applyRTLClass } from '@/core/utils/rtl';
 
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
@@ -753,11 +753,13 @@ export class TimelineManager {
       const tip = document.createElement('div');
       tip.className = 'timeline-tooltip';
       tip.id = 'gemini-timeline-tooltip';
+      tip.setAttribute('dir', 'auto');
       document.body.appendChild(tip);
       this.ui.tooltip = tip;
       if (!this.measureEl) {
         const m = document.createElement('div');
         m.setAttribute('aria-hidden', 'true');
+        m.setAttribute('dir', 'auto');
         Object.assign(m.style, {
           position: 'fixed',
           left: '-9999px',
@@ -1807,6 +1809,7 @@ export class TimelineManager {
       this.tooltipHideTimer = null;
     }
     const tip = this.ui.tooltip;
+    tip.setAttribute('dir', 'auto');
     tip.classList.remove('visible');
     let fullText = (dot.getAttribute('aria-label') || '').trim();
     const id = dot.dataset.targetTurnId!;
@@ -1883,6 +1886,7 @@ export class TimelineManager {
   private refreshTooltipForDot(dot: DotElement): void {
     if (!this.ui.tooltip) return;
     const tip = this.ui.tooltip;
+    tip.setAttribute('dir', 'auto');
     if (!tip.classList.contains('visible')) return;
     let fullText = (dot.getAttribute('aria-label') || '').trim();
     const id = dot.dataset.targetTurnId!;
