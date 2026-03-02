@@ -12,7 +12,7 @@ const DEFAULT_PORT = 3030;
 export function ContextSyncSettings() {
   const { t } = useLanguage();
   const [isEnabled, setIsEnabled] = useState(false);
-  const [port, setPort] = useState(DEFAULT_PORT);
+  const [port, setPort] = useState<number | string>(DEFAULT_PORT);
   const [isOnline, setIsOnline] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{
@@ -27,7 +27,7 @@ export function ContextSyncSettings() {
   }, [t]);
 
   useEffect(() => {
-    chrome.storage.sync.get([STORAGE_KEY_ENABLED, STORAGE_KEY_PORT], (result) => {
+    chrome.storage.sync.get([STORAGE_KEY_ENABLED, STORAGE_KEY_PORT], (result: any) => {
       setIsEnabled(result[STORAGE_KEY_ENABLED] === true);
       setPort(result[STORAGE_KEY_PORT] || DEFAULT_PORT);
     });

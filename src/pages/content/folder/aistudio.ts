@@ -199,7 +199,7 @@ export function parseDragDataPayload(raw: string): DragData | null {
 /**
  * Validate folder data structure
  */
-function validateFolderData(data: unknown): boolean {
+function validateFolderData(data: unknown): data is FolderData {
   if (typeof data !== 'object' || data === null) return false;
   const d = data as Record<string, unknown>;
   return Array.isArray(d.folders) && typeof d.folderContents === 'object';

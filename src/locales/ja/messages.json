@@ -643,6 +643,14 @@
     "message": "ブラウザのセキュリティ制限により、このオプションページからは Gemini ページ上のプロンプトやフォルダデータに直接アクセスできません。手動バックアップには、Gemini ページ上のプロンプトマネージャーとフォルダエクスポート機能をご利用ください。",
     "description": "Backup data access limitation explanation"
   },
+  "hideUpsell": {
+    "message": "アップグレードのプロンプトを非表示",
+    "description": "「AI Ultra へのアップグレード」プロンプトを非表示にする"
+  },
+  "hideUpsellHint": {
+    "message": "サイドバーとモデルメニューの「Google AI Ultra へのアップグレード」ボタンを非表示にする",
+    "description": "アップグレード非表示機能の説明"
+  },
   "promptManagerOptions": {
     "message": "プロンプトマネージャー",
     "description": "Prompt Manager options section label"

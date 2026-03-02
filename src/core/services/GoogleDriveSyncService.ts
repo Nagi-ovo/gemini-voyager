@@ -355,7 +355,7 @@ export class GoogleDriveSyncService {
 
   private async loadCachedToken(): Promise<void> {
     try {
-      const result = await chrome.storage.local.get(['gvAccessToken', 'gvTokenExpiry']);
+      const result = (await chrome.storage.local.get(['gvAccessToken', 'gvTokenExpiry'])) as any;
       if (result.gvAccessToken && result.gvTokenExpiry && result.gvTokenExpiry > Date.now()) {
         this.accessToken = result.gvAccessToken;
         this.tokenExpiry = result.gvTokenExpiry;
@@ -827,14 +827,14 @@ export class GoogleDriveSyncService {
 
   private async loadState(): Promise<void> {
     try {
-      const result = await chrome.storage.local.get([
+      const result = (await chrome.storage.local.get([
         'gvSyncMode',
         'gvLastSyncTime',
         'gvLastUploadTime',
         'gvLastSyncTimeAIStudio',
         'gvLastUploadTimeAIStudio',
         'gvSyncError',
-      ]);
+      ])) as any;
       this.state = {
         mode: (result.gvSyncMode as SyncMode) || 'disabled',
         lastSyncTime: result.gvLastSyncTime || null,

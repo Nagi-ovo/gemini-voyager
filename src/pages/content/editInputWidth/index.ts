@@ -163,7 +163,7 @@ export function startEditInputWidthAdjuster(): void {
   let currentWidthPercent = DEFAULT_PERCENT;
 
   // Load initial width from storage
-  chrome.storage?.sync?.get({ geminiEditInputWidth: DEFAULT_PERCENT }, (res) => {
+  chrome.storage?.sync?.get({ geminiEditInputWidth: DEFAULT_PERCENT }, (res: any) => {
     const storedWidth = res?.geminiEditInputWidth;
     const normalized = normalizePercent(storedWidth, DEFAULT_PERCENT);
     currentWidthPercent = normalized;

@@ -184,7 +184,7 @@ export default function Popup() {
         const url = tabs[0]?.url || '';
         setActiveAccountPlatform(detectAccountPlatformFromUrl(url));
       })
-      .catch(() => { });
+      .catch(() => {});
   }, []);
 
   const handleFormulaCopyFormatChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,7 +287,7 @@ export default function Popup() {
       );
       try {
         chrome.storage?.sync?.set({ geminiChatWidth: normalized });
-      } catch { }
+      } catch {}
     }, []),
   });
 
@@ -313,7 +313,7 @@ export default function Popup() {
       );
       try {
         chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
-      } catch { }
+      } catch {}
     }, []),
   });
 
@@ -322,19 +322,19 @@ export default function Popup() {
     () =>
       isAIStudio
         ? {
-          key: 'gvAIStudioSidebarWidth',
-          min: AI_STUDIO_SIDEBAR_PX.min,
-          max: AI_STUDIO_SIDEBAR_PX.max,
-          def: AI_STUDIO_SIDEBAR_PX.defaultValue,
-          norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
-        }
+            key: 'gvAIStudioSidebarWidth',
+            min: AI_STUDIO_SIDEBAR_PX.min,
+            max: AI_STUDIO_SIDEBAR_PX.max,
+            def: AI_STUDIO_SIDEBAR_PX.defaultValue,
+            norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
+          }
         : {
-          key: 'geminiSidebarWidth',
-          min: SIDEBAR_PX.min,
-          max: SIDEBAR_PX.max,
-          def: SIDEBAR_PX.defaultValue,
-          norm: normalizeSidebarPx,
-        },
+            key: 'geminiSidebarWidth',
+            min: SIDEBAR_PX.min,
+            max: SIDEBAR_PX.max,
+            def: SIDEBAR_PX.defaultValue,
+            norm: normalizeSidebarPx,
+          },
     [isAIStudio],
   );
 
@@ -347,7 +347,7 @@ export default function Popup() {
         const clamped = sidebarConfig.norm(widthPx);
         try {
           chrome.storage?.sync?.set({ [sidebarConfig.key]: clamped });
-        } catch { }
+        } catch {}
       },
       [sidebarConfig],
     ),
@@ -365,7 +365,7 @@ export default function Popup() {
         const clamped = clampNumber(spacing, FOLDER_SPACING.min, FOLDER_SPACING.max);
         try {
           chrome.storage?.sync?.set({ [folderSpacingKey]: clamped });
-        } catch { }
+        } catch {}
       },
       [folderSpacingKey],
     ),
@@ -379,7 +379,7 @@ export default function Popup() {
       const clamped = clampNumber(indent, FOLDER_TREE_INDENT.min, FOLDER_TREE_INDENT.max);
       try {
         chrome.storage?.sync?.set({ gvFolderTreeIndent: clamped });
-      } catch { }
+      } catch {}
     }, []),
   });
 
@@ -579,7 +579,7 @@ export default function Popup() {
           })();
         },
       );
-    } catch { }
+    } catch {}
   }, [setSyncStorage]);
 
   // Validate and normalize URL
@@ -837,10 +837,11 @@ export default function Popup() {
                   style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
                 />
                 <button
-                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${mode === 'flow'
-                    ? 'text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                    }`}
+                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                    mode === 'flow'
+                      ? 'text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => {
                     setMode('flow');
                     apply({ mode: 'flow' });
@@ -849,10 +850,11 @@ export default function Popup() {
                   {t('flow')}
                 </button>
                 <button
-                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${mode === 'jump'
-                    ? 'text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                    }`}
+                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                    mode === 'jump'
+                      ? 'text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => {
                     setMode('jump');
                     apply({ mode: 'jump' });
@@ -1388,10 +1390,11 @@ export default function Popup() {
                       onClick={() => {
                         void toggleQuickWebsite(domain, isEnabled);
                       }}
-                      className={`inline-flex min-w-[30%] grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${isEnabled
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
-                        }`}
+                      className={`inline-flex min-w-[30%] grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
+                        isEnabled
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
+                      }`}
                       title={label}
                     >
                       <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">

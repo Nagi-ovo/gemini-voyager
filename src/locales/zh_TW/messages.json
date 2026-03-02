@@ -603,6 +603,14 @@
     "message": "由於瀏覽器安全限制，選項頁面無法直接讀取 Gemini 頁面的提示詞和資料夾資料。建議使用 Gemini 頁面上的提示詞管理器和資料夾匯出功能進行手動備份。",
     "description": "備份資料存取限制說明"
   },
+  "hideUpsell": {
+    "message": "隱藏升級提醒",
+    "description": "隱藏升級到 AI Ultra 的提示"
+  },
+  "hideUpsellHint": {
+    "message": "隱藏側邊欄和模型選單中的「升級到 Google AI Ultra」按鈕",
+    "description": "隱藏升級提示的功能說明"
+  },
   "promptManagerOptions": {
     "message": "提示詞管理器",
     "description": "提示詞管理器選項區域標籤"

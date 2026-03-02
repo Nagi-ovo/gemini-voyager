@@ -269,12 +269,14 @@ export function CloudSyncSettings() {
 
         // Only use storage folders if we didn't get them from tab
         if ((!folders.folders || folders.folders.length === 0) && storageResult[folderStorageKey]) {
+          // @ts-ignore - fix for storageResult indexing
           folders = storageResult[folderStorageKey];
           console.log(`[CloudSyncSettings] Loaded folders from ${folderStorageKey} (fallback)`);
         }
 
         // Prompts usually sync well to storage (only for Gemini)
         if (platform === 'gemini' && storageResult[StorageKeys.PROMPT_ITEMS]) {
+          // @ts-ignore - fix for storageResult indexing
           prompts = storageResult[StorageKeys.PROMPT_ITEMS];
         }
       } catch (err) {
@@ -401,12 +403,14 @@ export function CloudSyncSettings() {
           (!localFolders.folders || localFolders.folders.length === 0) &&
           storageResult[folderStorageKey]
         ) {
+          // @ts-ignore - fix for storageResult indexing
           localFolders = storageResult[folderStorageKey];
           console.log(`[CloudSyncSettings] Loaded folders from ${folderStorageKey} (fallback)`);
         }
 
         // Prompts only for Gemini platform
         if (platform === 'gemini' && storageResult[StorageKeys.PROMPT_ITEMS]) {
+          // @ts-ignore - fix for storageResult indexing
           localPrompts = storageResult[StorageKeys.PROMPT_ITEMS];
         }
       } catch (err) {
@@ -442,7 +446,9 @@ export function CloudSyncSettings() {
       // Get local starred messages for merge
       let localStarred: StarredMessagesData = { messages: {} };
       try {
-        const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
+        const starredResult = (await chrome.storage.local.get([
+          'geminiTimelineStarredMessages',
+        ])) as any;
         if (starredResult.geminiTimelineStarredMessages) {
           localStarred = starredResult.geminiTimelineStarredMessages;
         }

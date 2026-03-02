@@ -643,6 +643,14 @@
     "message": "نظرًا لقيود أمان المتصفح، لا يمكن لصفحة الخيارات هذه الوصول مباشرة إلى المطالبات وبيانات المجلد من صفحات Gemini. يرجى استخدام مدير المطالبات وميزات تصدير المجلد على صفحة Gemini للنسخ الاحتياطي اليدوي.",
     "description": "Backup data access limitation explanation"
   },
+  "hideUpsell": {
+    "message": "Hide Upgrade Prompts",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "Hide the \"Upgrade to Google AI Ultra\" button in the sidebar and model menu",
+    "description": "Explanation for the upsell hiding feature"
+  },
   "promptManagerOptions": {
     "message": "مدير المطالبات",
     "description": "Prompt Manager options section label"
