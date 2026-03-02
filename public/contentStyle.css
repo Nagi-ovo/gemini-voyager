@@ -5441,6 +5441,10 @@ html.dark .gv-changelog-recommendation,
   color: #1a73e8;
 }
 
+.gv-changelog-icon-x:hover {
+  color: #000000;
+}
+
 html.dark .gv-changelog-icon-link,
 [data-theme='dark'] .gv-changelog-icon-link,
 [data-color-scheme='dark'] .gv-changelog-icon-link {
@@ -5469,6 +5473,12 @@ html.dark .gv-changelog-icon-docs:hover,
 [data-theme='dark'] .gv-changelog-icon-docs:hover,
 [data-color-scheme='dark'] .gv-changelog-icon-docs:hover {
   color: #8ab4f8;
+}
+
+html.dark .gv-changelog-icon-x:hover,
+[data-theme='dark'] .gv-changelog-icon-x:hover,
+[data-color-scheme='dark'] .gv-changelog-icon-x:hover {
+  color: #e8eaed;
 }
 
 .gv-changelog-docs-wrapper {
