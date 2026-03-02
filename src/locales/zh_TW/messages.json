@@ -1358,8 +1358,7 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
-  }
-,
+  },
   "hideUpsell": {
     "message": "Hide Upgrade Prompts",
     "description": "Hide the \"Upgrade to AI Ultra\" prompt"
