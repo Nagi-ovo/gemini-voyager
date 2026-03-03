@@ -334,7 +334,7 @@ export class AutoCategorizationService {
     private generatePrompt(title: string, folders: Folder[], userPrompt?: string): string {
         const names = folders.map((f) => f.name).join(', ');
         const lang = document.documentElement.lang || 'en';
-        return `Categorize: "${title}". Folders: [${names}]. Use user language: ${lang}. Return ONLY the folder name. Context: ${userPrompt?.substring(0, 300)}`;
+        return `Categorize: "${title}". Folders: [${names}]. Use user language: ${lang}. Return ONLY the folder name. Context: ${userPrompt?.substring(0, 300) ?? ''}`;
     }
 }
 
