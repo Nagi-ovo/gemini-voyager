@@ -85,6 +85,23 @@
 
 - **📂 [文件夹管理](https://voyager.nagi.fun/guide/folders)**: 支持 **多级目录**、**拖拽排序** 及 **Google Drive 同步**。
   - **Gemini**: 支持 **多账号隔离模式** 及 **自定义文件夹颜色**。
+- **[自动归类](https://voyager.nagi.fun/guide/auto-categorization)**: 自动将新对话交由 AI 判断并归入合适文件夹（支持正向/反向触发），也可直接用序号路由快速秒分。支持全/半角标点自动兼容，告别反复切换输入法。
+
+  **序号路由示例**（以默认前缀 `.`、默认分隔符 `空格` 为例）：
+
+  | 输入格式        | 效果                                           |
+  | --------------- | ---------------------------------------------- |
+  | `.原神启动`     | AI 自动分类，忽略前缀                          |
+  | `.1 原神启动`   | 直接归入第 **1** 个文件夹，无需 AI             |
+  | `.1 2 原神启动` | 直接归入第 **1** 个文件夹下第 **2** 个子文件夹 |
+  | `1 2 原神启动`  | 关闭"路由使用主前缀"后，纯数字路由             |
+
+  **每一段都可以在扩展设置中调整**：
+  - **触发前缀**（`.`）：改成任意符号，如 `/`、`>`
+  - **序号分隔符**（`空格`）：改成 `.`、`-` 等，例如 `.1.2 正文` 或 `.1-2 正文`
+  - **路由使用主前缀**：关闭后可改为纯数字触发（`1 2 正文`）或设置独立路由前缀
+  - **触发模式**：正向（有前缀才触发）或反向（默认全部归类，有前缀则跳过）
+
 - **💡 [提示词库](https://voyager.nagi.fun/guide/prompts)**: 跨平台同步提示词，支持 Gemini、AI Studio 及 [自定义网站](https://voyager.nagi.fun/guide/custom-websites)。
 - **☁️ [云同步](https://voyager.nagi.fun/guide/cloud-sync)**: 支持将文件夹和提示词库同步到 Google Drive。
 - **📐 公式复制**: 一键复制 LaTeX 和 MathML (Word) 源码。
@@ -104,6 +121,7 @@
   - **[防自动跳转](https://voyager.nagi.fun/guide/prevent-auto-scroll)**: 拦截每次发送新问题后页面强制滚动到底部的内置行为，找回丝滑体验。
   - **[输入框折叠](https://voyager.nagi.fun/guide/input-collapse)**: 输入框自动收纳，释放阅读空间。
   - **[默认模型](https://voyager.nagi.fun/guide/default-model)**: 为新对话设置默认选中的模型。
+
   - **[隐藏最近项目](https://voyager.nagi.fun/guide/recents-hider)**: 隐藏侧边栏的“最近”列表，减少干扰。
 
 ---

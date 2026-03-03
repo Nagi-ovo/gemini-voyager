@@ -122,6 +122,7 @@ interface SettingsUpdate {
   markerLevelEnabled?: boolean;
   resetPosition?: boolean;
   folderEnabled?: boolean;
+  autoCategorizationEnabled?: boolean;
   hideArchivedConversations?: boolean;
   customWebsites?: string[];
   watermarkRemoverEnabled?: boolean;
@@ -137,6 +138,15 @@ interface SettingsUpdate {
   forkEnabled?: boolean;
   accountIsolationEnabled?: boolean;
   accountIsolationPlatform?: AccountPlatform;
+  autoCategorizationPrefix?: string;
+  autoCategorizationShortcut?: string;
+  gvAutoCategorizationStrictMatch?: boolean;
+  gvAutoCategorizationIndexRouting?: boolean;
+  gvAutoCategorizationShowFolderIndex?: boolean;
+  gvAutoCategorizationRoutingSeparator?: string;
+  gvAutoCategorizationTriggerMode?: 'positive' | 'negative';
+  gvAutoCategorizationUseMainPrefixForRouting?: boolean;
+  gvAutoCategorizationCustomRoutingPrefix?: string;
 }
 
 export default function Popup() {
@@ -146,6 +156,25 @@ export default function Popup() {
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
   const [markerLevelEnabled, setMarkerLevelEnabled] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
+  const [autoCategorizationEnabled, setAutoCategorizationEnabled] = useState<boolean>(false);
+  const [autoCategorizationPrefix, setAutoCategorizationPrefix] = useState<string>('.');
+  const [autoCategorizationShortcut, setAutoCategorizationShortcut] =
+    useState<string>('Ctrl+Shift+U');
+  const [autoCategorizationStrictMatch, setAutoCategorizationStrictMatch] =
+    useState<boolean>(false);
+  const [autoCategorizationIndexRouting, setAutoCategorizationIndexRouting] =
+    useState<boolean>(false);
+  const [autoCategorizationRoutingSeparator, setAutoCategorizationRoutingSeparator] =
+    useState<string>(' ');
+  const [autoCategorizationTriggerMode, setAutoCategorizationTriggerMode] = useState<
+    'positive' | 'negative'
+  >('positive');
+  const [autoCategorizationUseMainPrefixForRouting, setAutoCategorizationUseMainPrefixForRouting] =
+    useState<boolean>(true);
+  const [autoCategorizationCustomRoutingPrefix, setAutoCategorizationCustomRoutingPrefix] =
+    useState<string>('');
+  const [autoCategorizationShowFolderIndex, setAutoCategorizationShowFolderIndex] =
+    useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
   const [customWebsites, setCustomWebsites] = useState<string[]>([]);
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
@@ -225,6 +254,39 @@ export default function Popup() {
         payload.geminiTimelineMarkerLevel = settings.markerLevelEnabled;
       if (typeof settings.folderEnabled === 'boolean')
         payload.geminiFolderEnabled = settings.folderEnabled;
+      if (settings.autoCategorizationEnabled !== undefined) {
+        payload.gvAutoCategorizationEnabled = settings.autoCategorizationEnabled;
+      }
+      if (settings.autoCategorizationPrefix !== undefined) {
+        payload.gvAutoCategorizationPrefix = settings.autoCategorizationPrefix;
+      }
+      if (settings.autoCategorizationShortcut !== undefined) {
+        payload.gvAutoCategorizationShortcut = settings.autoCategorizationShortcut;
+      }
+      if (settings.gvAutoCategorizationStrictMatch !== undefined) {
+        payload.gvAutoCategorizationStrictMatch = settings.gvAutoCategorizationStrictMatch;
+      }
+      if (settings.gvAutoCategorizationIndexRouting !== undefined) {
+        payload.gvAutoCategorizationIndexRouting = settings.gvAutoCategorizationIndexRouting;
+      }
+      if (settings.gvAutoCategorizationRoutingSeparator !== undefined) {
+        payload.gvAutoCategorizationRoutingSeparator =
+          settings.gvAutoCategorizationRoutingSeparator;
+      }
+      if (settings.gvAutoCategorizationTriggerMode !== undefined) {
+        payload.gvAutoCategorizationTriggerMode = settings.gvAutoCategorizationTriggerMode;
+      }
+      if (settings.gvAutoCategorizationUseMainPrefixForRouting !== undefined) {
+        payload.gvAutoCategorizationUseMainPrefixForRouting =
+          settings.gvAutoCategorizationUseMainPrefixForRouting;
+      }
+      if (settings.gvAutoCategorizationCustomRoutingPrefix !== undefined) {
+        payload.gvAutoCategorizationCustomRoutingPrefix =
+          settings.gvAutoCategorizationCustomRoutingPrefix;
+      }
+      if (settings.gvAutoCategorizationShowFolderIndex !== undefined) {
+        payload.gvAutoCategorizationShowFolderIndex = settings.gvAutoCategorizationShowFolderIndex;
+      }
       if (typeof settings.hideArchivedConversations === 'boolean')
         payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
       if (settings.resetPosition) payload.geminiTimelinePosition = null;
@@ -472,6 +534,16 @@ export default function Popup() {
           geminiTimelineDraggable: false,
           geminiTimelineMarkerLevel: false,
           geminiFolderEnabled: true,
+          gvAutoCategorizationEnabled: false,
+          gvAutoCategorizationPrefix: '.',
+          gvAutoCategorizationShortcut: 'Ctrl+Shift+U',
+          gvAutoCategorizationStrictMatch: false,
+          gvAutoCategorizationIndexRouting: false,
+          gvAutoCategorizationRoutingSeparator: ' ',
+          gvAutoCategorizationTriggerMode: 'positive',
+          gvAutoCategorizationUseMainPrefixForRouting: true,
+          gvAutoCategorizationCustomRoutingPrefix: '',
+          gvAutoCategorizationShowFolderIndex: true,
           geminiFolderHideArchivedConversations: false,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
@@ -500,6 +572,26 @@ export default function Popup() {
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
           setMarkerLevelEnabled(!!res?.geminiTimelineMarkerLevel);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
+          setAutoCategorizationEnabled(!!res.gvAutoCategorizationEnabled);
+          setAutoCategorizationPrefix(res.gvAutoCategorizationPrefix || '.');
+          setAutoCategorizationShortcut(res.gvAutoCategorizationShortcut || 'Ctrl+Shift+U');
+          setAutoCategorizationStrictMatch(!!res.gvAutoCategorizationStrictMatch);
+          setAutoCategorizationIndexRouting(!!res.gvAutoCategorizationIndexRouting);
+          setAutoCategorizationRoutingSeparator(
+            res.gvAutoCategorizationRoutingSeparator === undefined
+              ? ' '
+              : res.gvAutoCategorizationRoutingSeparator,
+          );
+          const trigMode = res.gvAutoCategorizationTriggerMode;
+          if (trigMode === 'positive' || trigMode === 'negative')
+            setAutoCategorizationTriggerMode(trigMode);
+          setAutoCategorizationUseMainPrefixForRouting(
+            res.gvAutoCategorizationUseMainPrefixForRouting !== false,
+          );
+          setAutoCategorizationCustomRoutingPrefix(
+            res.gvAutoCategorizationCustomRoutingPrefix || '',
+          );
+          setAutoCategorizationShowFolderIndex(res.gvAutoCategorizationShowFolderIndex !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
           const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
             ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
@@ -994,6 +1086,312 @@ export default function Popup() {
                 }}
               />
             </div>
+            {folderEnabled && (
+              <div className="border-primary/20 ml-2 space-y-4 border-l-2 pl-4 transition-all">
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="auto-categorization-enabled"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('autoCategorization')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('autoCategorizationHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="auto-categorization-enabled"
+                    checked={autoCategorizationEnabled}
+                    onChange={(e) => {
+                      setAutoCategorizationEnabled(e.target.checked);
+                      apply({ autoCategorizationEnabled: e.target.checked });
+                    }}
+                  />
+                </div>
+
+                {autoCategorizationEnabled && (
+                  <div className="bg-secondary/20 space-y-6 rounded-md p-4">
+                    {/* 1. General AI Categorization Block */}
+                    <div className="space-y-3">
+                      {/* WYSIWYG Preview for General */}
+                      <div className="bg-primary/5 space-y-2 rounded-lg border p-3">
+                        <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
+                          {t('autoCategorizationExampleTitle')}
+                        </p>
+                        <div className="bg-background/80 flex flex-wrap items-center gap-x-[2px] rounded border p-2 font-mono text-sm shadow-inner transition-all">
+                          {/* Prefix */}
+                          <span className="rounded px-1 font-bold text-blue-500">
+                            {autoCategorizationPrefix || '.'}
+                          </span>
+                          {/* Text */}
+                          <span className="text-foreground/80 whitespace-pre">
+                            {t('autoCategorizationExampleText')}
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground mt-2 text-[10px] leading-relaxed">
+                          {t('autoCategorizationPreviewInputThis')}
+                          {autoCategorizationTriggerMode === 'positive' ? (
+                            <span className="font-semibold text-green-500">
+                              {t('autoCategorizationPreviewThenDo')}
+                            </span>
+                          ) : (
+                            <span className="font-semibold text-red-500">
+                              {t('autoCategorizationPreviewThenDoNot')}
+                            </span>
+                          )}
+                          {t('autoCategorizationPreviewAutoCategorize')}
+                        </p>
+                      </div>
+
+                      {/* General AI Controls */}
+                      <div className="bg-background/50 outline-border space-y-3 rounded-md p-3 outline outline-1">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex flex-1 items-center gap-1.5">
+                            <div className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+                            <Label className="text-xs font-medium">
+                              {t('autoCategorizationPrefix')}
+                            </Label>
+                          </div>
+                          <input
+                            type="text"
+                            className="bg-background border-input focus:ring-ring h-8 w-12 rounded-md border px-2 text-center text-sm focus:ring-1 focus:outline-none"
+                            value={autoCategorizationPrefix}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setAutoCategorizationPrefix(val);
+                              apply({ autoCategorizationPrefix: val });
+                            }}
+                            maxLength={5}
+                          />
+                        </div>
+
+                        <div className="ml-1 flex items-center justify-between gap-4 border-l-2 border-blue-500/20 pl-3.5">
+                          <div className="flex-1">
+                            <Label className="text-muted-foreground text-xs font-medium">
+                              {t('autoCategorizationStrictMatch')}
+                            </Label>
+                          </div>
+                          <Switch
+                            checked={!autoCategorizationStrictMatch}
+                            onChange={(e) => {
+                              setAutoCategorizationStrictMatch(!e.target.checked);
+                              apply({ gvAutoCategorizationStrictMatch: !e.target.checked });
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <Label className="text-xs font-medium">
+                              {t('autoCategorizationTriggerMode')}
+                            </Label>
+                            <p className="text-muted-foreground mt-0.5 text-[10px] opacity-80">
+                              {t('autoCategorizationTriggerModeHint')}
+                            </p>
+                          </div>
+                          <select
+                            className="bg-background border-input focus:ring-ring h-8 rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
+                            value={autoCategorizationTriggerMode}
+                            onChange={(e) => {
+                              const val = e.target.value as 'positive' | 'negative';
+                              setAutoCategorizationTriggerMode(val);
+                              apply({ gvAutoCategorizationTriggerMode: val });
+                            }}
+                          >
+                            <option value="positive">
+                              {t('autoCategorizationTriggerModePositive')}
+                            </option>
+                            <option value="negative">
+                              {t('autoCategorizationTriggerModeNegative')}
+                            </option>
+                          </select>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <Label className="text-xs font-medium">
+                              {t('autoCategorizationShortcut')}
+                            </Label>
+                          </div>
+                          <input
+                            type="text"
+                            className="bg-background border-input focus:ring-ring h-8 w-32 cursor-pointer rounded-md border px-2 text-center text-xs focus:ring-1 focus:outline-none"
+                            value={autoCategorizationShortcut}
+                            placeholder={t('autoCategorizationShortcut')}
+                            readOnly
+                            onKeyDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+                              const parts: string[] = [];
+                              if (e.ctrlKey || e.metaKey) parts.push('Ctrl');
+                              if (e.shiftKey) parts.push('Shift');
+                              if (e.altKey) parts.push('Alt');
+                              parts.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+                              const combo = parts.join('+');
+                              setAutoCategorizationShortcut(combo);
+                              apply({ autoCategorizationShortcut: combo });
+                              (e.target as HTMLElement).blur();
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-border my-6 h-px w-full" />
+
+                    {/* 2. Index Routing Block */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <Label className="text-primary text-sm font-semibold">
+                            {t('autoCategorizationIndexRouting')}
+                          </Label>
+                          <p className="text-muted-foreground mt-1 text-[10px]">
+                            {t('autoCategorizationIndexRoutingHint')}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={autoCategorizationIndexRouting}
+                          onChange={(e) => {
+                            setAutoCategorizationIndexRouting(e.target.checked);
+                            apply({ gvAutoCategorizationIndexRouting: e.target.checked });
+                          }}
+                        />
+                      </div>
+
+                      {autoCategorizationIndexRouting && (
+                        <>
+                          {/* Visual Example for Index Routing */}
+                          <div className="bg-primary/5 mt-4 space-y-2 rounded-lg border p-3">
+                            <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
+                              {t('autoCategorizationExampleTitle')}
+                            </p>
+                            <div className="bg-background/80 flex flex-wrap items-center gap-x-[2px] rounded border p-2 font-mono text-sm shadow-inner transition-all">
+                              {/* Prefix */}
+                              <span className="rounded px-1 font-bold text-purple-500">
+                                {autoCategorizationUseMainPrefixForRouting
+                                  ? autoCategorizationPrefix || '.'
+                                  : autoCategorizationCustomRoutingPrefix || '/'}
+                              </span>
+                              {/* Folder Index */}
+                              <span className="rounded px-1 font-bold text-green-600">1</span>
+                              {/* Separator */}
+                              <span className="rounded px-[2px] font-black whitespace-pre text-orange-500">
+                                {autoCategorizationRoutingSeparator || ' '}
+                              </span>
+                              {/* Subfolder Index */}
+                              <span className="rounded px-1 font-bold text-green-600">1</span>
+                              {/* Text */}
+                              <span className="text-foreground/80 whitespace-pre">
+                                {t('autoCategorizationExampleText')}
+                              </span>
+                            </div>
+                            <p className="text-muted-foreground mt-2 text-[10px] leading-relaxed">
+                              {t('autoCategorizationExampleExplanation')}
+                            </p>
+                          </div>
+
+                          {/* Index Routing Controls */}
+                          <div className="bg-background/50 outline-border space-y-3 rounded-md p-3 outline outline-1">
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex flex-1 items-center gap-1.5">
+                                <div className="h-2 w-2 shrink-0 rounded-full bg-purple-500" />
+                                <Label className="text-xs font-medium">
+                                  {t('autoCategorizationUseMainPrefixForRouting')}
+                                </Label>
+                              </div>
+                              <Switch
+                                checked={autoCategorizationUseMainPrefixForRouting}
+                                onChange={(e) => {
+                                  setAutoCategorizationUseMainPrefixForRouting(e.target.checked);
+                                  apply({
+                                    gvAutoCategorizationUseMainPrefixForRouting: e.target.checked,
+                                  });
+                                }}
+                              />
+                            </div>
+
+                            {!autoCategorizationUseMainPrefixForRouting && (
+                              <div className="ml-1 flex items-center justify-between gap-4 border-l-2 border-purple-500/20 pl-3.5">
+                                <div className="flex-1">
+                                  <Label className="text-muted-foreground text-xs font-medium">
+                                    {t('autoCategorizationCustomRoutingPrefix')}
+                                  </Label>
+                                </div>
+                                <input
+                                  type="text"
+                                  className="bg-background border-input focus:ring-ring h-8 w-16 rounded-md border px-2 text-center text-sm focus:ring-1 focus:outline-none"
+                                  value={autoCategorizationCustomRoutingPrefix}
+                                  placeholder=""
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setAutoCategorizationCustomRoutingPrefix(val);
+                                    apply({ gvAutoCategorizationCustomRoutingPrefix: val });
+                                  }}
+                                  maxLength={5}
+                                />
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex flex-1 items-center gap-1.5">
+                                <div className="h-2 w-2 shrink-0 rounded-full bg-orange-500" />
+                                <Label className="text-xs font-medium">
+                                  {t('autoCategorizationRoutingSeparator')}
+                                </Label>
+                              </div>
+                              <input
+                                type="text"
+                                className="bg-background border-input focus:ring-ring h-8 w-12 rounded-md border px-2 text-center text-sm focus:ring-1 focus:outline-none"
+                                name="routingSeparator"
+                                value={autoCategorizationRoutingSeparator}
+                                placeholder=" "
+                                onFocus={(e) => e.target.select()}
+                                onBlur={(e) => {
+                                  if (!e.target.value) {
+                                    setAutoCategorizationRoutingSeparator(' ');
+                                    apply({ gvAutoCategorizationRoutingSeparator: ' ' });
+                                  }
+                                }}
+                                onChange={(e) => {
+                                  const val = e.target.value.slice(-1);
+                                  setAutoCategorizationRoutingSeparator(val);
+                                  apply({ gvAutoCategorizationRoutingSeparator: val || ' ' });
+                                }}
+                                maxLength={2}
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex flex-1 items-center gap-1.5">
+                                <div className="h-2 w-2 shrink-0 rounded-full bg-green-600" />
+                                <div>
+                                  <Label className="block text-xs font-medium">
+                                    {t('autoCategorizationShowFolderIndex')}
+                                  </Label>
+                                  <span className="text-muted-foreground block text-[10px] opacity-80">
+                                    {t('autoCategorizationShowFolderIndexHint')}
+                                  </span>
+                                </div>
+                              </div>
+                              <Switch
+                                checked={autoCategorizationShowFolderIndex}
+                                onChange={(e) => {
+                                  setAutoCategorizationShowFolderIndex(e.target.checked);
+                                  apply({ gvAutoCategorizationShowFolderIndex: e.target.checked });
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="group flex items-center justify-between">
               <Label
                 htmlFor="hide-archived"
@@ -1371,7 +1769,7 @@ export default function Popup() {
                       <span
                         className={`w-2.5 shrink-0 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}
                       >
-                        ✓
+                        �?{' '}
                       </span>
                     </button>
                   );
