@@ -96,7 +96,6 @@ export class AutoCategorizationService {
             matchedFolder = { id: newFolderId, name: suggestedName } as Folder;
             await this.delay(800);
           }
-          }
           const convRef: ConversationReference = {
             conversationId,
             title: currentTitle,

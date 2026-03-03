@@ -144,8 +144,6 @@ export class TriggerService {
 
       // Handle Index Routing if enabled
       if (this.indexRouting && userPromptContext.length > 0) {
-        // Build regex to match: exactly prefix boundary, followed by digits and separators
-        // E.g., separator " " -> match " 1 2 " or "1"
         const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const sepReg = escapeRegExp(this.routingSeparator || ' ');
         const pattern = new RegExp(`^((?:\\d+(?:${sepReg}\\d+)*))(.*)$`, 's');
@@ -154,26 +152,20 @@ export class TriggerService {
         if (match) {
           const pathString = match[1];
           const pathParts = pathString.split(this.routingSeparator).map(Number);
-          userPromptContext = match[2].trimStart();
+          const remainingPrompt = match[2].trimStart();
 
           autoCategorizationService
-            .categorizeToSpecificFolder(pathParts, userPromptContext)
-            .catch(() => {
-              // Silently fail, fall back to default or ignore
-  private checkAndTriggerCategorization(el: HTMLElement) {
-    const text = this.getInputText(el).trim();
-    if (!this.prefix || !text) return;
-    // Trigger if text starts with configured prefix or its full-width equivalent (。)
-    const isDotPrefix = this.prefix === '.';
-    if (text.startsWith(this.prefix) || (isDotPrefix && text.startsWith('。'))) {
-      const matchedPrefix = text.startsWith(this.prefix) ? this.prefix : '。';
-      const userPromptContext = text.substring(matchedPrefix.length).trim();
-      // Do not wait 3 seconds here. AutoCategorizationService will wait for the response to finish.
-      autoCategorizationService.categorizeCurrentConversation(userPromptContext).catch(() => {
-        // Silently fail
-      });
+            .categorizeToSpecificFolder(pathParts, remainingPrompt)
+            .catch(() => {});
+          return;
+        }
+      }
+
+      // Default AI-based categorization
+      autoCategorizationService
+        .categorizeCurrentConversation(userPromptContext.trim())
+        .catch(() => {});
     }
-  }
   }
 
   private isTemporaryChat(): boolean {
@@ -248,15 +240,15 @@ export const triggerService = TriggerService.getInstance();
 
 export async function startAutoCategorization() {
   const result = await new Promise<Record<string, unknown>>((resolve) => {
-    chrome.storage?.sync?.get(
-      {
-        gvAutoCategorizationEnabled: false,
-        gvAutoCategorizationPrefix: '.',
-        gvAutoCategorizationShortcut: 'Ctrl+Shift+U',
-      },
-  const result = await new Promise<Record<string, unknown>>((resolve) => {
     try {
-      chrome.storage?.sync?.get({ gvAutoCategorizationEnabled: false }, (res) => resolve(res));
+      chrome.storage?.sync?.get(
+        {
+          gvAutoCategorizationEnabled: false,
+          gvAutoCategorizationPrefix: '.',
+          gvAutoCategorizationShortcut: 'Ctrl+Shift+U',
+        },
+        (res) => resolve(res),
+      );
     } catch {
       resolve({ gvAutoCategorizationEnabled: false });
     }
