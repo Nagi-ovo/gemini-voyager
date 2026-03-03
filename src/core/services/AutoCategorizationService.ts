@@ -87,7 +87,7 @@ export class AutoCategorizationService {
       let matchedFolder = this.findMatchingFolder(responseText, folders);
       const suggestedName = responseText.trim().replace(/['"[\]]/g, '');
 
-      if (suggestedName.toLowerCase() !== 'none') {
+      if (suggestedName.toLowerCase() !== 'none' && suggestedName.length > 0) {
         const m = currentUrl.match(/\/app\/([a-fA-F0-9]+)/);
         if (m && m[1]) {
           const conversationId = m[1];
@@ -95,6 +95,7 @@ export class AutoCategorizationService {
             const newFolderId = folderManager.createFolderByName(suggestedName);
             matchedFolder = { id: newFolderId, name: suggestedName } as Folder;
             await this.delay(800);
+          }
           }
           const convRef: ConversationReference = {
             conversationId,
