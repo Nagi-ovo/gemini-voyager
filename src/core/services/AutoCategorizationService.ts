@@ -68,7 +68,7 @@ export class AutoCategorizationService {
             const input = document.querySelector('rich-textarea [contenteditable="true"]') as HTMLElement;
             if (!input) throw new Error('Input not found');
 
-            input.innerHTML = `<p>${prompt}</p>`;
+            input.textContent = prompt;
             input.dispatchEvent(new Event('input', { bubbles: true }));
             await this.delay(500);
 
