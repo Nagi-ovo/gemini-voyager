@@ -4,13 +4,14 @@
  * Extracted from prompt manager to follow DRY principle
  */
 import { AppError, ErrorCode } from '@/core/errors/AppError';
+import { promptStorageService } from '@/core/services/StorageService';
 import type { Result } from '@/core/types/common';
+import { StorageKeys } from '@/core/types/common';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 
 import type { PromptExportPayload, PromptItem } from '../types/backup';
 
 const EXPORT_FORMAT = 'gemini-voyager.prompts.v1' as const;
-const STORAGE_KEY = 'gvPromptItems';
 
 /**
  * Service for handling prompt import/export operations
@@ -109,58 +110,28 @@ export class PromptImportExportService {
   }
 
   /**
-   * Load prompts from localStorage
+   * Load prompts from storage
    */
   static async loadPrompts(): Promise<Result<PromptItem[]>> {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw === null) {
-        return {
-          success: true,
-          data: [],
-        };
-      }
+    const result = await promptStorageService.get<PromptItem[]>(StorageKeys.PROMPT_ITEMS);
 
-      const items = JSON.parse(raw) as PromptItem[];
-      return {
-        success: true,
-        data: Array.isArray(items) ? items : [],
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: new AppError(
-          ErrorCode.STORAGE_READ_FAILED,
-          'Failed to load prompts from localStorage',
-          { key: STORAGE_KEY },
-          error instanceof Error ? error : undefined,
-        ),
-      };
+    if (!result.success) {
+      // Key absent (first-time user) → return empty list to match prior behaviour
+      if (result.error instanceof AppError && result.error.code === ErrorCode.STORAGE_READ_FAILED) {
+        return { success: true, data: [] };
+      }
+      // Parse errors or other failures are propagated to the caller
+      return result;
     }
+
+    return { success: true, data: Array.isArray(result.data) ? result.data : [] };
   }
 
   /**
-   * Save prompts to localStorage
+   * Save prompts to storage
    */
   static async savePrompts(items: PromptItem[]): Promise<Result<void>> {
-    try {
-      const raw = JSON.stringify(items);
-      localStorage.setItem(STORAGE_KEY, raw);
-      return {
-        success: true,
-        data: undefined,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: new AppError(
-          ErrorCode.STORAGE_WRITE_FAILED,
-          'Failed to save prompts to localStorage',
-          { key: STORAGE_KEY, itemCount: items.length },
-          error instanceof Error ? error : undefined,
-        ),
-      };
-    }
+    return promptStorageService.set(StorageKeys.PROMPT_ITEMS, items);
   }
 
   /**

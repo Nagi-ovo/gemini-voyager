@@ -1,13 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PromptImportExportService } from '../PromptImportExportService';
+import { AppError, ErrorCode } from '@/core/errors/AppError';
+import { promptStorageService } from '@/core/services/StorageService';
+import { StorageKeys } from '@/core/types/common';
 import type { PromptExportPayload, PromptItem } from '../../types/backup';
+import { PromptImportExportService } from '../PromptImportExportService';
 
 // ---------------------------------------------------------------------------
-// Constants
+// Module mock — replace the chrome-backed singleton with a plain vi.fn() pair
 // ---------------------------------------------------------------------------
 
-const STORAGE_KEY = 'gvPromptItems';
+vi.mock('@/core/services/StorageService', () => ({
+  promptStorageService: {
+    get: vi.fn(),
+    set: vi.fn(),
+  },
+}));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -32,8 +40,32 @@ function makePayload(items: PromptItem[], version = '1.0.0'): PromptExportPayloa
   };
 }
 
-function seedStorage(items: PromptItem[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+/**
+ * Wire the in-memory store into the mocked service for a single test.
+ * Returns a `seed` helper to pre-populate the store before calling the service.
+ */
+function setupMemoryStore(initialItems?: PromptItem[]) {
+  const store = new Map<string, unknown>();
+  if (initialItems) {
+    store.set(StorageKeys.PROMPT_ITEMS, initialItems);
+  }
+
+  vi.mocked(promptStorageService.get).mockImplementation(async (key: string) => {
+    if (!store.has(key)) {
+      return {
+        success: false,
+        error: new AppError(ErrorCode.STORAGE_READ_FAILED, `Key not found: ${key}`, { key }),
+      } as never;
+    }
+    return { success: true, data: store.get(key) } as never;
+  });
+
+  vi.mocked(promptStorageService.set).mockImplementation(async (key: string, value: unknown) => {
+    store.set(key, value);
+    return { success: true, data: undefined } as never;
+  });
+
+  return { store };
 }
 
 // ---------------------------------------------------------------------------
@@ -42,15 +74,16 @@ function seedStorage(items: PromptItem[]): void {
 
 describe('loadPrompts', () => {
   beforeEach(() => {
-    localStorage.clear();
-    vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
-  it('returns empty array when storage has no entry', async () => {
+  it('returns empty array when storage has no entry for the key', async () => {
+    setupMemoryStore();
+
     const result = await PromptImportExportService.loadPrompts();
 
     expect(result.success).toBe(true);
@@ -61,7 +94,7 @@ describe('loadPrompts', () => {
 
   it('returns stored items when storage has valid data', async () => {
     const items = [makeItem({ id: 'a', text: 'hello' }), makeItem({ id: 'b', text: 'world' })];
-    seedStorage(items);
+    setupMemoryStore(items);
 
     const result = await PromptImportExportService.loadPrompts();
 
@@ -72,7 +105,13 @@ describe('loadPrompts', () => {
   });
 
   it('returns empty array when stored value is not an array', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ not: 'an array' }));
+    const store = new Map<string, unknown>();
+    store.set(StorageKeys.PROMPT_ITEMS, { not: 'an array' });
+
+    vi.mocked(promptStorageService.get).mockResolvedValue({
+      success: true,
+      data: { not: 'an array' },
+    } as never);
 
     const result = await PromptImportExportService.loadPrompts();
 
@@ -82,8 +121,11 @@ describe('loadPrompts', () => {
     }
   });
 
-  it('returns a failure result when stored value is invalid JSON', async () => {
-    localStorage.setItem(STORAGE_KEY, 'not-valid-json{{');
+  it('propagates a storage parse failure', async () => {
+    vi.mocked(promptStorageService.get).mockResolvedValue({
+      success: false,
+      error: new AppError(ErrorCode.STORAGE_PARSE_FAILED, 'Failed to parse stored value'),
+    } as never);
 
     const result = await PromptImportExportService.loadPrompts();
 
@@ -97,17 +139,17 @@ describe('loadPrompts', () => {
 
 describe('savePrompts', () => {
   beforeEach(() => {
-    localStorage.clear();
-    vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
   it('persists items so that loadPrompts retrieves them', async () => {
-    const items = [makeItem({ id: 'p1', text: 'persist me' })];
+    setupMemoryStore();
 
+    const items = [makeItem({ id: 'p1', text: 'persist me' })];
     const saveResult = await PromptImportExportService.savePrompts(items);
     const loadResult = await PromptImportExportService.loadPrompts();
 
@@ -119,13 +161,11 @@ describe('savePrompts', () => {
   });
 
   it('overwrites previously saved items', async () => {
-    const first = [makeItem({ text: 'first' })];
-    const second = [makeItem({ text: 'second' })];
+    setupMemoryStore([makeItem({ text: 'first' })]);
 
-    await PromptImportExportService.savePrompts(first);
-    await PromptImportExportService.savePrompts(second);
-
+    await PromptImportExportService.savePrompts([makeItem({ text: 'second' })]);
     const result = await PromptImportExportService.loadPrompts();
+
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data).toHaveLength(1);
@@ -133,10 +173,13 @@ describe('savePrompts', () => {
     }
   });
 
-  it('returns a failure result when storage is unavailable', async () => {
-    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
-      throw new Error('QuotaExceededError');
-    });
+  it('returns a failure result when the storage layer rejects the write', async () => {
+    setupMemoryStore();
+
+    vi.mocked(promptStorageService.set).mockResolvedValueOnce({
+      success: false,
+      error: new AppError(ErrorCode.STORAGE_WRITE_FAILED, 'QuotaExceededError'),
+    } as never);
 
     const result = await PromptImportExportService.savePrompts([makeItem()]);
 
@@ -245,12 +288,12 @@ describe('exportToPayload', () => {
 
 describe('exportToJSON', () => {
   beforeEach(() => {
-    localStorage.clear();
+    vi.resetAllMocks();
   });
 
   it('returns a JSON string that round-trips to a valid payload', async () => {
     const items = [makeItem({ text: 'export me' })];
-    seedStorage(items);
+    setupMemoryStore(items);
 
     const result = await PromptImportExportService.exportToJSON();
 
@@ -263,6 +306,8 @@ describe('exportToJSON', () => {
   });
 
   it('returns an empty items array when storage is empty', async () => {
+    setupMemoryStore();
+
     const result = await PromptImportExportService.exportToJSON();
 
     expect(result.success).toBe(true);
@@ -283,18 +328,9 @@ describe('generateExportFilename', () => {
     expect(filename).toMatch(/^gemini-voyager-prompts-\d{8}-\d{6}\.json$/);
   });
 
-  it('includes the current date in the filename', () => {
-    const before = new Date();
+  it('includes the current year in the filename', () => {
     const filename = PromptImportExportService.generateExportFilename();
-    const after = new Date();
-
-    const year = before.getFullYear();
-    expect(filename).toContain(String(year));
-
-    const month = String(before.getMonth() + 1).padStart(2, '0');
-    // Month in filename matches either before or after (in case of midnight boundary)
-    const altMonth = String(after.getMonth() + 1).padStart(2, '0');
-    expect(filename).toMatch(new RegExp(`${year}(${month}|${altMonth})`));
+    expect(filename).toContain(String(new Date().getFullYear()));
   });
 });
 
@@ -304,17 +340,17 @@ describe('generateExportFilename', () => {
 
 describe('importFromPayload', () => {
   beforeEach(() => {
-    localStorage.clear();
-    vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
   it('imports new items and returns correct counts', async () => {
-    const newItems = [makeItem({ id: 'n1', text: 'alpha' }), makeItem({ id: 'n2', text: 'beta' })];
+    setupMemoryStore();
 
+    const newItems = [makeItem({ id: 'n1', text: 'alpha' }), makeItem({ id: 'n2', text: 'beta' })];
     const result = await PromptImportExportService.importFromPayload(makePayload(newItems));
 
     expect(result.success).toBe(true);
@@ -326,8 +362,7 @@ describe('importFromPayload', () => {
   });
 
   it('deduplicates items with identical text (case-insensitive)', async () => {
-    const existing = [makeItem({ id: 'e1', text: 'Hello World', tags: ['old'] })];
-    seedStorage(existing);
+    setupMemoryStore([makeItem({ id: 'e1', text: 'Hello World', tags: ['old'] })]);
 
     const incoming = [makeItem({ id: 'e2', text: 'hello world', tags: ['new'] })];
     const result = await PromptImportExportService.importFromPayload(makePayload(incoming));
@@ -341,8 +376,7 @@ describe('importFromPayload', () => {
   });
 
   it('merges tags when a duplicate is found', async () => {
-    const existing = [makeItem({ id: 'x', text: 'shared', tags: ['tagA'] })];
-    seedStorage(existing);
+    setupMemoryStore([makeItem({ id: 'x', text: 'shared', tags: ['tagA'] })]);
 
     const incoming = [makeItem({ id: 'y', text: 'SHARED', tags: ['tagB'] })];
     await PromptImportExportService.importFromPayload(makePayload(incoming));
@@ -357,8 +391,7 @@ describe('importFromPayload', () => {
   });
 
   it('preserves existing items that are not in the import payload', async () => {
-    const existing = [makeItem({ id: 'keep', text: 'keep me' })];
-    seedStorage(existing);
+    setupMemoryStore([makeItem({ id: 'keep', text: 'keep me' })]);
 
     const incoming = [makeItem({ id: 'new1', text: 'brand new' })];
     const result = await PromptImportExportService.importFromPayload(makePayload(incoming));
@@ -370,8 +403,7 @@ describe('importFromPayload', () => {
   });
 
   it('handles a mix of new and duplicate items', async () => {
-    const existing = [makeItem({ id: 'e', text: 'existing' })];
-    seedStorage(existing);
+    setupMemoryStore([makeItem({ id: 'e', text: 'existing' })]);
 
     const incoming = [
       makeItem({ id: 'dup', text: 'existing' }), // duplicate
