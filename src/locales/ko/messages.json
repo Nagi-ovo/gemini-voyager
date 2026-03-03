@@ -527,6 +527,18 @@
     "message": "AI가 새 대화를 자동으로 분류하여 적절한 폴더로 이동합니다",
     "description": "Auto Categorization Hint"
   },
+  "autoCategorizationPrefix": {
+    "message": "트리거 접두사",
+    "description": "Auto categorization trigger prefix label"
+  },
+  "autoCategorizationShortcut": {
+    "message": "단축키",
+    "description": "Auto categorization shortcut label"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "이 문자와 공백을 입력하면 실행됩니다",
+    "description": "Trigger prefix hint"
+  },
   "conversation_star": {
     "message": "대화 별표 표시",
     "description": "Star conversation button tooltip"

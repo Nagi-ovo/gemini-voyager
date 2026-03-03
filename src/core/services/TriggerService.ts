@@ -21,26 +21,18 @@ export class TriggerService {
     }
 
     public async init() {
-        console.log('[TriggerService-DEBUG] init() started.');
         const prefixRes = await storageService.get<string>(StorageKeys.AUTO_CATEGORIZATION_PREFIX);
         if (prefixRes.success) {
             this.prefix = prefixRes.data;
-            console.log('[TriggerService-DEBUG] Loaded custom prefix from storage:', this.prefix);
-        } else {
-            console.log('[TriggerService-DEBUG] Using default prefix:', this.prefix);
         }
 
         const shortcutRes = await storageService.get<string>(StorageKeys.AUTO_CATEGORIZATION_SHORTCUT);
         if (shortcutRes.success) {
             this.shortcut = shortcutRes.data;
-            console.log('[TriggerService-DEBUG] Loaded custom shortcut from storage:', this.shortcut);
-        } else {
-            console.log('[TriggerService-DEBUG] Using default shortcut:', this.shortcut);
         }
 
         this.setupSendInterceptors();
         this.setupShortcutListener();
-        console.log('[TriggerService-DEBUG] init() finished.');
     }
 
     private setupSendInterceptors() {
@@ -50,12 +42,8 @@ export class TriggerService {
             (e) => {
                 if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
                     const target = e.target as HTMLElement;
-                    console.log('[TriggerService-DEBUG] Enter key pressed on:', target);
                     if (this.isEditable(target)) {
-                        console.log('[TriggerService-DEBUG] Editable element confirmed, checking text...');
                         this.checkAndTriggerCategorization(target);
-                    } else {
-                        console.log('[TriggerService-DEBUG] Element is NOT editable.');
                     }
                 }
             },
@@ -71,11 +59,9 @@ export class TriggerService {
                     'button[aria-label*="Send"], button[aria-label*="send"], button[data-tooltip*="Send"], button mat-icon[fonticon="send"], .send-button',
                 );
                 if (sendButton) {
-                    console.log('[TriggerService-DEBUG] Send button clicked');
                     const editables = document.querySelectorAll<HTMLElement>(
                         'rich-textarea [contenteditable="true"], textarea',
                     );
-                    console.log('[TriggerService-DEBUG] Found editable elements:', editables.length);
                     editables.forEach((el) => this.checkAndTriggerCategorization(el));
                 }
             },
@@ -84,9 +70,7 @@ export class TriggerService {
     }
 
     private isEditable(el: HTMLElement): boolean {
-        const isEdit = el.isContentEditable || el.tagName === 'TEXTAREA' || el.getAttribute('role') === 'textbox';
-        console.log('[TriggerService-DEBUG] isEditable evaluation for', el.tagName, 'is', isEdit);
-        return isEdit;
+        return el.isContentEditable || el.tagName === 'TEXTAREA' || el.getAttribute('role') === 'textbox';
     }
 
     private getInputText(el: HTMLElement): string {
@@ -96,18 +80,14 @@ export class TriggerService {
 
     private checkAndTriggerCategorization(el: HTMLElement) {
         const text = this.getInputText(el).trim();
-        console.log('[TriggerService-DEBUG] Parsed text:', text, '| Target prefix:', this.prefix);
         // Trigger if text starts with configured prefix or its full-width equivalent (。)
         const isDotPrefix = this.prefix === '.';
         if (text.startsWith(this.prefix) || (isDotPrefix && text.startsWith('。'))) {
             const userPromptContext = text.substring(1).trim(); // Remove the prefix character
-            console.log(`[TriggerService-DEBUG] PREFIX TRIGGER MATCHED: ${this.prefix}`);
             // Do not wait 3 seconds here. AutoCategorizationService will wait for the response to finish.
-            autoCategorizationService.categorizeCurrentConversation(userPromptContext).catch(err => {
-                console.error('[TriggerService-DEBUG] Error during categorization:', err);
+            autoCategorizationService.categorizeCurrentConversation(userPromptContext).catch(() => {
+                // Silently fail
             });
-        } else {
-            console.log('[TriggerService-DEBUG] No prefix match.');
         }
     }
 
@@ -124,13 +104,9 @@ export class TriggerService {
             }
 
             const pressed = keys.join('+');
-            if (e.ctrlKey || e.altKey || e.metaKey) {
-                // Minimal logging for shortcut checks to avoid noise
-            }
 
             if (pressed === this.shortcut) {
                 e.preventDefault();
-                console.log(`[TriggerService-DEBUG] SHORTCUT TRIGGER MATCHED: ${this.shortcut}`);
 
                 // Find if there's any typed text in the input box
                 let userPromptContext = '';
@@ -141,15 +117,14 @@ export class TriggerService {
                     userPromptContext = this.getInputText(editables[0]).trim();
                 }
 
-                autoCategorizationService.categorizeCurrentConversation(userPromptContext).catch(err => {
-                    console.error('[TriggerService-DEBUG] Error during categorization from shortcut:', err);
+                autoCategorizationService.categorizeCurrentConversation(userPromptContext).catch(() => {
+                    // Silently fail
                 });
             }
         });
     }
 
     public destroy() {
-        console.log('[TriggerService-DEBUG] Destroy called.');
         // Page unload cleans up content script listeners
     }
 }
@@ -157,18 +132,14 @@ export class TriggerService {
 export const triggerService = TriggerService.getInstance();
 
 export async function startAutoCategorization() {
-    console.log('[TriggerService-DEBUG] startAutoCategorization called.');
     const result = await new Promise<Record<string, unknown>>((resolve) => {
         chrome.storage?.sync?.get({ gvAutoCategorizationEnabled: false }, (res) => resolve(res));
     });
 
-    console.log('[TriggerService-DEBUG] gvAutoCategorizationEnabled is:', result.gvAutoCategorizationEnabled);
     if (!result.gvAutoCategorizationEnabled) {
-        console.log('[TriggerService-DEBUG] AutoCategorization is disabled. Exiting setup.');
         return () => { };
     }
 
-    console.log('[TriggerService-DEBUG] Calling triggerService.init()');
     triggerService.init();
     return () => triggerService.destroy();
 }

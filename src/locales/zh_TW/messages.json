@@ -487,6 +487,18 @@
     "message": "自動讓 AI 判斷並將新對話移動到合適的資料夾",
     "description": "自動歸類功能提示"
   },
+  "autoCategorizationPrefix": {
+    "message": "觸發前綴",
+    "description": "自動歸類觸發前綴標籤"
+  },
+  "autoCategorizationShortcut": {
+    "message": "快捷鍵",
+    "description": "自動歸類快捷鍵標籤"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "輸入此字元後加空格即可觸發",
+    "description": "觸發前綴提示"
+  },
   "conversation_star": {
     "message": "星號標記對話",
     "description": "星號標記對話按鈕提示"

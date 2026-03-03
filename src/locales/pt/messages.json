@@ -527,6 +527,18 @@
     "message": "Pedir automaticamente à IA para classificar e mover novas conversas para as pastas apropriadas",
     "description": "Auto Categorization Hint"
   },
+  "autoCategorizationPrefix": {
+    "message": "Prefixo acionador",
+    "description": "Auto categorization trigger prefix label"
+  },
+  "autoCategorizationShortcut": {
+    "message": "Atalho",
+    "description": "Auto categorization shortcut label"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "Digite este caractere e um espaço para acionar",
+    "description": "Trigger prefix hint"
+  },
   "conversation_star": {
     "message": "Favoritar conversa",
     "description": "Star conversation button tooltip"

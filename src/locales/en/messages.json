@@ -527,6 +527,18 @@
     "message": "Automatically ask AI to classify and move new conversations to appropriate folders",
     "description": "Auto Categorization Hint"
   },
+  "autoCategorizationPrefix": {
+    "message": "Trigger Prefix",
+    "description": "Auto categorization trigger prefix label"
+  },
+  "autoCategorizationShortcut": {
+    "message": "Shortcut",
+    "description": "Auto categorization shortcut label"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "Enter this character followed by a space to trigger",
+    "description": "Trigger prefix hint"
+  },
   "conversation_star": {
     "message": "Star conversation",
     "description": "Star conversation button tooltip"

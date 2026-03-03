@@ -527,6 +527,18 @@
     "message": "Автоматически просить ИИ классифицировать и переместить новые разговоры в подходящие папки",
     "description": "Auto Categorization Hint"
   },
+  "autoCategorizationPrefix": {
+    "message": "Префикс триггера",
+    "description": "Auto categorization trigger prefix label"
+  },
+  "autoCategorizationShortcut": {
+    "message": "Горячие клавиши",
+    "description": "Auto categorization shortcut label"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "Введите этот символ и пробел для запуска",
+    "description": "Trigger prefix hint"
+  },
   "conversation_star": {
     "message": "Пометить разговор",
     "description": "Star conversation button tooltip"

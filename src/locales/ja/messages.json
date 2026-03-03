@@ -527,6 +527,18 @@
     "message": "AIに新しい会話を自動的に分類し、適切なフォルダに移動させます",
     "description": "Auto Categorization Hint"
   },
+  "autoCategorizationPrefix": {
+    "message": "トリガー接頭辞",
+    "description": "Auto categorization trigger prefix label"
+  },
+  "autoCategorizationShortcut": {
+    "message": "ショートカット",
+    "description": "Auto categorization shortcut label"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "この文字の後にスペースを入力すると実行されます",
+    "description": "Trigger prefix hint"
+  },
   "conversation_star": {
     "message": "会話にスターを付ける",
     "description": "Star conversation button tooltip"

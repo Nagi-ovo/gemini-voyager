@@ -36,20 +36,17 @@ export class AutoCategorizationService {
      * Triggers the categorization process for the current conversation.
      */
     public async categorizeCurrentConversation(userPrompt?: string): Promise<void> {
-        console.log('[AutoCat] Starting categorization flow. isProcessing=', this.isProcessing);
         if (this.isProcessing) return;
         this.isProcessing = true;
 
         try {
             // 0. Wait for the CURRENT response to complete (Crucial for stability)
-            console.log('[AutoCat] Step 0: Waiting for active response to finish...');
             await this.waitForResponseComplete(20000);
 
             const currentTitle = this.getCurrentConversationTitle();
             const currentUrl = window.location.href;
 
             if (!currentTitle || currentUrl.endsWith('/app')) {
-                console.warn('[AutoCat] No valid conversation context found.');
                 return;
             }
 
@@ -60,16 +57,13 @@ export class AutoCategorizationService {
             const folders = folderManager.data?.folders || [];
 
             const prompt = this.generatePrompt(currentTitle, folders, lastUserMessage);
-            console.log('[AutoCat] Step 1: Prompt generated.');
 
             // 2. Setup classifier session (SPA style)
             DefaultModelManager.getInstance().setBypassed(true);
-            console.log('[AutoCat] Step 2: Creating classifier session...');
             const classifierUrl = await this.createDisposableSession();
             if (!classifierUrl) throw new Error('Failed to create session');
 
             // 3. Send categorization prompt
-            console.log('[AutoCat] Step 3: Sending prompt to Gemini...');
             await this.waitForElement('rich-textarea [contenteditable="true"]', 8000);
             const input = document.querySelector('rich-textarea [contenteditable="true"]') as HTMLElement;
             if (!input) throw new Error('Input not found');
@@ -82,12 +76,10 @@ export class AutoCategorizationService {
             if (sendBtn) sendBtn.click();
 
             // 4. Wait for AI response
-            console.log('[AutoCat] Step 4: Waiting for classifier output...');
             await this.waitForResponseComplete(15000);
 
             const responseText = this.getLatestResponse();
             const classifierConvUrl = window.location.href;
-            console.log('[AutoCat] AI Result:', responseText);
 
             // 5. Apply categorization
             let matchedFolder = this.findMatchingFolder(responseText, folders);
@@ -98,7 +90,6 @@ export class AutoCategorizationService {
                 if (m && m[1]) {
                     const conversationId = m[1];
                     if (!matchedFolder) {
-                        console.log(`[AutoCat] Creating auto-suggested folder: ${suggestedName}`);
                         const newFolderId = folderManager.createFolderByName(suggestedName);
                         matchedFolder = { id: newFolderId, name: suggestedName } as Folder;
                         await this.delay(800);
@@ -111,24 +102,19 @@ export class AutoCategorizationService {
                         isGem: false,
                     };
                     folderManager.addConversationsToFolder(matchedFolder.id, [convRef]);
-                    console.log('[AutoCat] Conversation filed successfully.');
                 }
             }
 
             // 6. Navigation Back (SPA to avoid refresh)
-            console.log(`[AutoCat] Step 6: Navigating back to: ${currentUrl}`);
             this.navigateTo(currentUrl);
 
             // 7. Silent Deletion from Sidebar (Happens after we navigate back)
-            console.log('[AutoCat] Step 7: Cleaning up classifier session...');
             // Wait for navigation and sidebar to settle (increased to 3.5s)
             await this.delay(3500);
             await this.deleteConversationByUrl(classifierConvUrl);
 
-            console.log('[AutoCat] All steps completed successfully.');
-
         } catch (error) {
-            console.error('[AutoCat] Flow error:', error);
+            // Silently fail to not interrupt user flow
         } finally {
             DefaultModelManager.getInstance().setBypassed(false);
             this.isProcessing = false;
@@ -149,7 +135,6 @@ export class AutoCategorizationService {
             const links = document.querySelectorAll<HTMLAnchorElement>('a[href*="/app/"]');
             for (const link of Array.from(links)) {
                 if (link.href.includes(hexId)) {
-                    console.log(`[AutoCat] Found sidebar link for ${hexId}. Scrolling and clicking for SPA navigation.`);
                     link.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     link.focus();
                     link.click();
@@ -162,14 +147,12 @@ export class AutoCategorizationService {
         if (url.endsWith('/app') || url.endsWith('/app/')) {
             const btn = document.querySelector('[data-test-id="new-chat-button"], a[href="/app"]') as HTMLElement;
             if (btn) {
-                console.log('[AutoCat] Clicking New Chat button for navigation.');
                 btn.click();
                 return;
             }
         }
 
         // 3. Final fallback: full page reload
-        console.log('[AutoCat] No SPA link found. Falling back to full page reload.');
         window.location.assign(url);
     }
 
@@ -189,7 +172,6 @@ export class AutoCategorizationService {
 
         let conversationEl = this.findNativeConversationElementByHexId(hexId);
         if (!conversationEl) {
-            console.warn(`[AutoCat] Could not find conversation ${hexId} in sidebar for deletion.`);
             return;
         }
 
@@ -231,18 +213,15 @@ export class AutoCategorizationService {
             || conversationEl.querySelector('[data-test-id="actions-menu-button"]') as HTMLElement;
 
         if (btn) {
-            console.log('[AutoCat] Clicking actions-menu-button.');
             btn.click();
             return btn;
         }
-        console.error('[AutoCat] Could not find actions-menu-button for conversation item.');
         return null;
     }
 
     private async waitForDeleteButtonAndClick(): Promise<boolean> {
         const keywords = this.getDeleteKeywords();
         const start = Date.now();
-        console.log('[AutoCat] Searching for Delete menu item...');
 
         while (Date.now() - start < this.DELETE_CONFIG.MAX_BUTTON_WAIT_TIME) {
             const items = document.querySelectorAll('.cdk-overlay-container button, .cdk-overlay-container [role="menuitem"]');
@@ -250,7 +229,6 @@ export class AutoCategorizationService {
                 const el = item as HTMLElement;
                 // Priority 1: data-test-id
                 if (el.getAttribute('data-test-id') === 'delete-button') {
-                    console.log('[AutoCat] Found delete-button by data-test-id. Clicking.');
                     el.click();
                     return true;
                 }
@@ -258,14 +236,12 @@ export class AutoCategorizationService {
                 // Priority 2: Keywords
                 const text = el.textContent?.toLowerCase().trim() || '';
                 if (text && keywords.some(k => text.includes(k))) {
-                    console.log(`[AutoCat] Found delete item by text: "${text}". Clicking.`);
                     el.click();
                     return true;
                 }
             }
             await this.delay(200);
         }
-        console.error('[AutoCat] Timed out waiting for Delete menu item.');
         return false;
     }
 
@@ -281,7 +257,6 @@ export class AutoCategorizationService {
                     || dialog.querySelector('[data-test-id="delete-button"]') as HTMLElement;
 
                 if (btn) {
-                    console.log('[AutoCat] Found confirm button by test-id. Clicking.');
                     btn.click();
                     return;
                 }
@@ -294,14 +269,12 @@ export class AutoCategorizationService {
                 });
 
                 if (textBtn) {
-                    console.log('[AutoCat] Found confirm button by text. Clicking.');
                     textBtn.click();
                     return;
                 }
             }
             await this.delay(250);
         }
-        console.error('[AutoCat] Failed to find confirm button in dialog after 5s.');
     }
 
     private getDeleteKeywords(): string[] {
