@@ -516,7 +516,7 @@ export default function Popup() {
           setAutoCategorizationEnabled(!!res.gvAutoCategorizationEnabled);
           setAutoCategorizationPrefix(res.gvAutoCategorizationPrefix || '.');
           setAutoCategorizationShortcut(res.gvAutoCategorizationShortcut || 'Ctrl+Shift+U');
-          setHideArchivedConversations(!!res.gvHideArchivedConversations);
+          setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
           const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
             ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
             : [];
