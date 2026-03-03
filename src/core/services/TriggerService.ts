@@ -254,8 +254,12 @@ export async function startAutoCategorization() {
         gvAutoCategorizationPrefix: '.',
         gvAutoCategorizationShortcut: 'Ctrl+Shift+U',
       },
-      (res) => resolve(res),
-    );
+  const result = await new Promise<Record<string, unknown>>((resolve) => {
+    try {
+      chrome.storage?.sync?.get({ gvAutoCategorizationEnabled: false }, (res) => resolve(res));
+    } catch {
+      resolve({ gvAutoCategorizationEnabled: false });
+    }
   });
 
   if (!result.gvAutoCategorizationEnabled) {
