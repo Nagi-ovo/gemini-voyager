@@ -485,6 +485,8 @@ export default function Popup() {
           geminiTimelineMarkerLevel: false,
           geminiFolderEnabled: true,
           gvAutoCategorizationEnabled: false,
+          gvAutoCategorizationPrefix: '.',
+          gvAutoCategorizationShortcut: 'Ctrl+Shift+U',
           geminiFolderHideArchivedConversations: false,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
