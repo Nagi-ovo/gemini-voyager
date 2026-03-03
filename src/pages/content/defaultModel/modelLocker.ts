@@ -41,7 +41,7 @@ class DefaultModelManager {
   // Used by AutoCategorizationService to prevent default model being applied to the classifier session.
   private bypassed = false;
 
-  private constructor() { }
+  private constructor() {}
 
   /**
    * Temporarily bypass auto model locking.

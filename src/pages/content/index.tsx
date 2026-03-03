@@ -1,3 +1,4 @@
+import { startAutoCategorization } from '@/core/services/TriggerService';
 import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
 import {
@@ -6,7 +7,6 @@ import {
 } from '@/core/utils/extensionContext';
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
-import { startAutoCategorization } from '@/core/services/TriggerService';
 import { initI18n } from '@/utils/i18n';
 
 import { startChangelog } from './changelog/index';
