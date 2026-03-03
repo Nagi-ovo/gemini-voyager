@@ -230,8 +230,9 @@ export function CloudSyncSettings() {
     }
   }, [syncState.isAuthenticated, t, platform]);
 
-  // Handle download from Drive (restore data) - NOW MERGES instead of overwrite
-  const handleDownloadFromDrive = useCallback(async () => {
+  // Handle download from Drive (restore data)
+  const handleDownloadFromDrive = useCallback(async (overwrite: boolean | React.MouseEvent = false) => {
+    const isOverwrite = typeof overwrite === 'boolean' ? overwrite : false;
     setStatusMessage(null);
     setIsDownloading(true);
 
@@ -351,9 +352,9 @@ export function CloudSyncSettings() {
       }
 
       // Perform Merge
-      const mergedFolders = mergeFolderData(localFolders, cloudFolderData);
-      const mergedPrompts = mergePrompts(localPrompts, cloudPromptItems);
-      const mergedStarred = mergeStarredMessages(localStarred, cloudStarredData);
+      const mergedFolders = isOverwrite ? cloudFolderData : mergeFolderData(localFolders, cloudFolderData);
+      const mergedPrompts = isOverwrite ? cloudPromptItems : mergePrompts(localPrompts, cloudPromptItems);
+      const mergedStarred = isOverwrite ? cloudStarredData : mergeStarredMessages(localStarred, cloudStarredData);
 
       console.log('[CloudSyncSettings] Merged folders count:', mergedFolders.folders?.length || 0);
       console.log(
@@ -431,21 +432,19 @@ export function CloudSyncSettings() {
               }}
             />
             <button
-              className={`relative z-10 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200 ${
-                syncState.mode === 'disabled'
-                  ? 'text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={`relative z-10 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200 ${syncState.mode === 'disabled'
+                ? 'text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+                }`}
               onClick={() => handleModeChange('disabled')}
             >
               {t('syncModeDisabled')}
             </button>
             <button
-              className={`relative z-10 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200 ${
-                syncState.mode === 'manual'
-                  ? 'text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={`relative z-10 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200 ${syncState.mode === 'manual'
+                ? 'text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+                }`}
               onClick={() => handleModeChange('manual')}
             >
               {t('syncModeManual')}
@@ -504,7 +503,7 @@ export function CloudSyncSettings() {
                 variant="outline"
                 size="sm"
                 className="group hover:border-primary/50 flex-1"
-                onClick={handleDownloadFromDrive}
+                onClick={() => handleDownloadFromDrive(false)}
                 disabled={isUploading || isDownloading}
               >
                 <span className="flex items-center gap-1 text-xs transition-transform group-hover:scale-105">
@@ -538,6 +537,47 @@ export function CloudSyncSettings() {
                     </svg>
                   )}
                   {t('syncMerge')}
+                </span>
+              </Button>
+
+              {/* Overwrite Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="group hover:border-destructive hover:text-destructive flex-1"
+                onClick={() => handleDownloadFromDrive(true)}
+                disabled={isUploading || isDownloading}
+              >
+                <span className="flex items-center gap-1 text-xs transition-transform group-hover:scale-105">
+                  {isDownloading ? (
+                    <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  )}
+                  {t('syncOverwrite') || 'Overwrite'}
                 </span>
               </Button>
             </div>
@@ -580,9 +620,8 @@ export function CloudSyncSettings() {
         {/* Status Message */}
         {statusMessage && (
           <p
-            className={`text-center text-xs ${
-              statusMessage.kind === 'ok' ? 'text-green-600' : 'text-destructive'
-            }`}
+            className={`text-center text-xs ${statusMessage.kind === 'ok' ? 'text-green-600' : 'text-destructive'
+              }`}
           >
             {statusMessage.text}
           </p>

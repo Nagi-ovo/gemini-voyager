@@ -1286,5 +1286,9 @@
   "changelog_rate_chrome_cta": {
     "message": "평점 주기",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "syncOverwrite": {
+    "message": "Overwrite",
+    "description": "Overwrite action label"
   }
 }

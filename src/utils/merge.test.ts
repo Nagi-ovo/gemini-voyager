@@ -63,6 +63,59 @@ describe('mergeFolderData', () => {
     expect(result.folders[0].updatedAt).toBe(2000);
   });
 
+  describe('folder structural deduplication', () => {
+    it('should deduplicate folders based on path hierarchy', () => {
+      // Local: Parent -> Target (IDs: l-parent -> l-target)
+      const local = createFolderData([
+        createFolder('l-parent', 'Parent', 1000),
+        { ...createFolder('l-target', 'Target', 1000), parentId: 'l-parent' as FolderId }
+      ], { 'l-target': [createConvo('c1', 'Local Conv', 1000)] });
+
+      // Cloud: Parent -> Target (IDs: c-parent -> c-target)
+      const cloud = createFolderData([
+        createFolder('c-parent', 'Parent', 2000),
+        { ...createFolder('c-target', 'Target', 2000), parentId: 'c-parent' as FolderId }
+      ], { 'c-target': [createConvo('c2', 'Cloud Conv', 2000)] });
+
+      const result = mergeFolderData(local, cloud);
+
+      // Should only have 2 folders: Parent and Target
+      expect(result.folders).toHaveLength(2);
+
+      const mergedTargetFolder = result.folders.find(f => f.name === 'Target');
+      expect(mergedTargetFolder).toBeDefined();
+      expect(mergedTargetFolder!.id).toBe('c-target'); // Prefers cloud ID
+      expect(mergedTargetFolder!.parentId).toBe('c-parent'); // Uses cloud parent ID
+
+      const contents = result.folderContents['c-target'];
+      expect(contents).toBeDefined();
+      expect(contents).toHaveLength(2);
+      expect(contents.map(c => c.conversationId).sort()).toEqual(['c1', 'c2']);
+
+      // The local ID should not be in the results anymore
+      expect(result.folders.find(f => f.id === 'l-target')).toBeUndefined();
+      expect(result.folderContents['l-target']).toBeUndefined();
+    });
+
+    it('should not deduplicate folders with the same name but different parents', () => {
+      const local = createFolderData([
+        createFolder('l-parent1', 'Parent 1', 1000),
+        { ...createFolder('l-target', 'Target', 1000), parentId: 'l-parent1' as FolderId }
+      ], {});
+
+      const cloud = createFolderData([
+        createFolder('c-parent2', 'Parent 2', 2000),
+        { ...createFolder('c-target', 'Target', 2000), parentId: 'c-parent2' as FolderId }
+      ], {});
+
+      const result = mergeFolderData(local, cloud);
+
+      // Should have 4 folders (Parent 1, Parent 2, Target x 2)
+      expect(result.folders).toHaveLength(4);
+      expect(result.folders.filter(f => f.name === 'Target')).toHaveLength(2);
+    });
+  });
+
   describe('conversation reference merging - cloud-first strategy', () => {
     it('should use cloud title to override local (renamed sync scenario)', () => {
       const localConvo = createConvo('c1', 'Old Title', 1000);

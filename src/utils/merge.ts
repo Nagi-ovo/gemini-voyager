@@ -1,4 +1,4 @@
-import type { ConversationReference, FolderData } from '@/core/types/folder';
+import type { ConversationReference, Folder, FolderData } from '@/core/types/folder';
 import type { PromptItem } from '@/core/types/sync';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
@@ -39,50 +39,110 @@ function mergeItems<T extends { id: string; updatedAt?: number; createdAt?: numb
   return Array.from(itemMap.values());
 }
 
+function getFolderPath(folderId: string, folderMap: Map<string, Folder>): string | null {
+  const folder = folderMap.get(folderId);
+  if (!folder) return null;
+
+  let path = folder.name;
+  let current = folder;
+  let depth = 0;
+
+  while (current.parentId) {
+    if (depth++ > 50) return null; // Prevent infinite loop protection
+    const parent = folderMap.get(current.parentId);
+    if (!parent) return null;
+    path = `${parent.name}/${path}`;
+    current = parent;
+  }
+  return path;
+}
+
 /**
  * Merges local and cloud folder data.
  */
 export function mergeFolderData(local: FolderData, cloud: FolderData): FolderData {
+  const localFolderMap = new Map(local.folders.map((f) => [f.id, f]));
+  const cloudFolderMap = new Map(cloud.folders.map((f) => [f.id, f]));
+
+  const localPathMap = new Map<string, string>();
+  const cloudPathMap = new Map<string, string>();
+
+  local.folders.forEach((f) => {
+    const p = getFolderPath(f.id, localFolderMap);
+    if (p) localPathMap.set(p, f.id);
+  });
+
+  cloud.folders.forEach((f) => {
+    const p = getFolderPath(f.id, cloudFolderMap);
+    if (p) cloudPathMap.set(p, f.id);
+  });
+
+  const idRemap = new Map<string, string>();
+
+  // Find overlapping paths
+  for (const [path, localId] of localPathMap.entries()) {
+    const cloudId = cloudPathMap.get(path);
+    if (cloudId && localId !== cloudId) {
+      idRemap.set(localId, cloudId);
+    }
+  }
+
+  // Rewrite local folders using remapped IDs
+  const rewrittenLocalFolders = local.folders.map((f) => {
+    const newId = idRemap.get(f.id) || f.id;
+    const newParentId = f.parentId ? (idRemap.get(f.parentId) || f.parentId) : null;
+    return { ...f, id: newId, parentId: newParentId } as typeof f;
+  });
+
+  // Rewrite local folderContents keys
+  const rewrittenLocalContents: Record<string, ConversationReference[]> = {};
+  for (const [folderId, convos] of Object.entries(local.folderContents)) {
+    const newId = idRemap.get(folderId) || folderId;
+    if (!rewrittenLocalContents[newId]) {
+      rewrittenLocalContents[newId] = [];
+    }
+    rewrittenLocalContents[newId].push(...convos);
+  }
+
   // 1. Merge Folders list
-  const mergedFolders = mergeItems(local.folders, cloud.folders);
+  const mergedFolders = mergeItems(rewrittenLocalFolders, cloud.folders);
+
+  // Deduplicate merged folders array by ID to handle local duplicate paths safely
+  const uniqueFoldersMap = new Map<string, typeof mergedFolders[0]>();
+  mergedFolders.forEach((f) => {
+    const existing = uniqueFoldersMap.get(f.id);
+    if (!existing || (f.updatedAt && existing.updatedAt && f.updatedAt > existing.updatedAt)) {
+      uniqueFoldersMap.set(f.id, f);
+    }
+  });
 
   // 2. Merge Folder Contents
-  const mergedContents: Record<string, ConversationReference[]> = { ...local.folderContents };
+  const mergedContents: Record<string, ConversationReference[]> = { ...rewrittenLocalContents };
 
   // Iterate over cloud folders to ensure we capture all content
-  // (Even for folders we might have just added)
   const allFolderIds = new Set([
-    ...Object.keys(local.folderContents),
+    ...Object.keys(rewrittenLocalContents),
     ...Object.keys(cloud.folderContents),
   ]);
 
   allFolderIds.forEach((folderId) => {
-    const localConvos = local.folderContents[folderId] || [];
+    const localConvos = rewrittenLocalContents[folderId] || [];
     const cloudConvos = cloud.folderContents[folderId] || [];
-
-    // Merge conversation references: Cloud-first strategy
-    // This ensures renamed titles from cloud sync are applied to local
-    // - If user renamed title locally and uploaded, cloud has the new title
-    // - If user downloads on another device, cloud title should override local
-    // - If conversation only exists locally, keep it (new local addition)
 
     const convoMap = new Map<string, ConversationReference>();
 
     // Add local conversations first
     localConvos.forEach((c) => convoMap.set(c.conversationId, c));
 
-    // Cloud conversations override local (this is the key change)
+    // Cloud conversations override local
     cloudConvos.forEach((c) => {
       const existing = convoMap.get(c.conversationId);
       if (!existing) {
-        // New from cloud
         convoMap.set(c.conversationId, c);
       } else {
-        // Merge: cloud properties override, but keep local-only properties
         convoMap.set(c.conversationId, {
-          ...existing, // Keep any local-only properties
-          ...c, // Cloud overrides (title, customTitle, etc.)
-          // Preserve starred if set locally but not in cloud
+          ...existing,
+          ...c,
           starred: c.starred ?? existing.starred,
         });
       }
@@ -92,7 +152,7 @@ export function mergeFolderData(local: FolderData, cloud: FolderData): FolderDat
   });
 
   return {
-    folders: mergedFolders,
+    folders: Array.from(uniqueFoldersMap.values()),
     folderContents: mergedContents,
   };
 }

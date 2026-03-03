@@ -1286,5 +1286,9 @@
   "changelog_rate_chrome_cta": {
     "message": "Valorar",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "syncOverwrite": {
+    "message": "Overwrite",
+    "description": "Overwrite action label"
   }
 }
