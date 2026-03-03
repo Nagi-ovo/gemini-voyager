@@ -31,23 +31,26 @@ function removeStyles() {
 export const startUpsellHider = async () => {
   try {
     const res = await chrome.storage?.sync?.get({ [StorageKeys.UPSELL_HIDER_ENABLED]: true });
-    // Default to true if not explicitly set to false
-    const enabled = res?.[StorageKeys.UPSELL_HIDER_ENABLED] !== false;
+    const enabled = res?.[StorageKeys.UPSELL_HIDER_ENABLED] === true;
 
     if (enabled) {
       injectStyles();
     }
+  } catch {
+    // Extension context may have been invalidated
+  }
 
+  try {
     chrome.storage?.onChanged?.addListener((changes) => {
       if (changes[StorageKeys.UPSELL_HIDER_ENABLED]) {
-        if (changes[StorageKeys.UPSELL_HIDER_ENABLED].newValue !== false) {
+        if (changes[StorageKeys.UPSELL_HIDER_ENABLED].newValue === true) {
           injectStyles();
         } else {
           removeStyles();
         }
       }
     });
-  } catch (error) {
-    console.warn('[Gemini Voyager] Failed to initialize upsell hider:', error);
+  } catch {
+    // Extension context may have been invalidated
   }
 };

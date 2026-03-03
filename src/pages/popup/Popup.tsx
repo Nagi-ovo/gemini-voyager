@@ -490,7 +490,7 @@ export default function Popup() {
           gvSnowEffect: false,
           gvPreventAutoScrollEnabled: false,
           [StorageKeys.FORK_ENABLED]: false,
-          [StorageKeys.UPSELL_HIDER_ENABLED]: false,
+          [StorageKeys.UPSELL_HIDER_ENABLED]: true,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: null,
@@ -521,7 +521,7 @@ export default function Popup() {
           setSnowEffectEnabled(res?.gvSnowEffect === true);
           setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
           setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
-          setUpsellHiderEnabled(res?.[StorageKeys.UPSELL_HIDER_ENABLED] !== false);
+          setUpsellHiderEnabled(res?.[StorageKeys.UPSELL_HIDER_ENABLED] === true);
           const legacyIsolationEnabled = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] === true;
           const geminiIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI];
           const aiStudioIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO];
