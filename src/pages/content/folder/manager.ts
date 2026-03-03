@@ -90,7 +90,7 @@ export class FolderManager {
   }
   private storage: IFolderStorageAdapter; // Storage adapter (Strategy Pattern)
   private backupService: DataBackupService<FolderData>; // Multi-layer backup system
-  private data: FolderData = { folders: [], folderContents: {} };
+  public data: FolderData = { folders: [], folderContents: {} };
   private containerElement: HTMLElement | null = null;
   private sidebarContainer: HTMLElement | null = null;
   private recentSection: HTMLElement | null = null;
@@ -2320,7 +2320,42 @@ export class FolderManager {
   }
 
   // Batch add conversations to folder (for multi-select support)
-  private addConversationsToFolder(
+  /**
+   * Programmatically create a folder by name
+   * @returns The ID of the created folder
+   */
+  public createFolderByName(name: string, parentId: string | null = null): string {
+    const folder: Folder = {
+      id: this.generateId(),
+      name,
+      parentId,
+      isExpanded: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    if (!this.data.folders) this.data.folders = [];
+    this.data.folders.push(folder);
+    this.data.folderContents[folder.id] = [];
+    this.saveData();
+    this.refresh();
+    return folder.id;
+  }
+
+  /**
+   * Highlights a folder to suggest it to the user
+   */
+  public highlightSuggestedFolder(folderId: string): void {
+    const el = this.containerElement?.querySelector(`[data-folder-id="${folderId}"]`);
+    if (el) {
+      el.classList.add('gv-folder-suggested-highlight');
+      setTimeout(() => {
+        el.classList.remove('gv-folder-suggested-highlight');
+      }, 5000);
+    }
+  }
+
+  public addConversationsToFolder(
     folderId: string,
     conversations: ConversationReference[],
     sourceFolderId?: string,
@@ -2795,9 +2830,9 @@ export class FolderManager {
       // Strategy 2: Look for menu items containing delete text (supports translations)
       const menuItems = document.querySelectorAll(
         '.cdk-overlay-container button, ' +
-          '.cdk-overlay-container [role="menuitem"], ' +
-          '.mat-mdc-menu-content button, ' +
-          '.mat-menu-content button',
+        '.cdk-overlay-container [role="menuitem"], ' +
+        '.mat-mdc-menu-content button, ' +
+        '.mat-menu-content button',
       );
 
       for (const item of menuItems) {
@@ -4933,7 +4968,7 @@ export class FolderManager {
   private showDataLossNotification(): void {
     this.showNotificationByLevel(
       getTranslationSync('folderManager_dataLossWarning') ||
-        'Warning: Failed to load folder data. Please check your browser console for details.',
+      'Warning: Failed to load folder data. Please check your browser console for details.',
       'error',
     );
   }
@@ -6375,14 +6410,14 @@ export class FolderManager {
         },
       })) as
         | {
-            ok?: boolean;
-            error?: string;
-            data?: {
-              folders?: { data?: FolderData };
-              prompts?: { items?: PromptItem[] };
-              starred?: { data?: { messages: Record<string, unknown[]> } };
-            };
-          }
+          ok?: boolean;
+          error?: string;
+          data?: {
+            folders?: { data?: FolderData };
+            prompts?: { items?: PromptItem[] };
+            starred?: { data?: { messages: Record<string, unknown[]> } };
+          };
+        }
         | undefined;
 
       if (!response?.ok) {

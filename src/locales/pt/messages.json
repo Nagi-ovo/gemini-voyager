@@ -519,6 +519,14 @@
     "message": "Ocultar conversas arquivadas",
     "description": "Hide conversations that are in folders from the main list"
   },
+  "autoCategorization": {
+    "message": "Classificação automática",
+    "description": "Auto Categorize Label"
+  },
+  "autoCategorizationHint": {
+    "message": "Pedir automaticamente à IA para classificar e mover novas conversas para as pastas apropriadas",
+    "description": "Auto Categorization Hint"
+  },
   "conversation_star": {
     "message": "Favoritar conversa",
     "description": "Star conversation button tooltip"

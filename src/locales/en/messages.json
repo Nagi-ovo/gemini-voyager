@@ -517,7 +517,15 @@
   },
   "hideArchivedConversations": {
     "message": "Hide archived conversations",
-    "description": "Hide conversations that are in folders from the main list"
+    "description": "Hide conversations added to folders from main list"
+  },
+  "autoCategorization": {
+    "message": "Auto Categorize",
+    "description": "Auto Categorize Label"
+  },
+  "autoCategorizationHint": {
+    "message": "Automatically ask AI to classify and move new conversations to appropriate folders",
+    "description": "Auto Categorization Hint"
   },
   "conversation_star": {
     "message": "Star conversation",

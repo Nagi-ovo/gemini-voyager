@@ -519,6 +519,14 @@
     "message": "إخفاء المحادثات المؤرشفة",
     "description": "Hide conversations that are in folders from the main list"
   },
+  "autoCategorization": {
+    "message": "التصنيف التلقائي",
+    "description": "Auto Categorize Label"
+  },
+  "autoCategorizationHint": {
+    "message": "اطلب من الذكاء الاصطناعي تلقائياً تصنيف المحادثات الجديدة ونقلها إلى المجلدات المناسبة",
+    "description": "Auto Categorization Hint"
+  },
   "conversation_star": {
     "message": "تمييز المحادثة بنجمة",
     "description": "Star conversation button tooltip"

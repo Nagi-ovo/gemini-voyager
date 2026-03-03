@@ -89,6 +89,12 @@ export const StorageKeys = {
   // Fork nodes
   FORK_NODES: 'gvForkNodes',
   FORK_ENABLED: 'gvForkEnabled',
+
+  // Auto Categorization
+  AUTO_CATEGORIZATION_ENABLED: 'gvAutoCategorizationEnabled',
+  AUTO_CATEGORIZATION_PREFIX: 'gvAutoCategorizationPrefix',
+  AUTO_CATEGORIZATION_SHORTCUT: 'gvAutoCategorizationShortcut',
+  AUTO_CATEGORIZATION_CLASSIFIER_ID: 'gvAutoCategorizationClassifierId',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

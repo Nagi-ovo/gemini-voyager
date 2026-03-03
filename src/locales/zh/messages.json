@@ -519,6 +519,26 @@
     "message": "隐藏已归档对话",
     "description": "从主列表隐藏已添加到文件夹的对话"
   },
+  "autoCategorization": {
+    "message": "自动归类",
+    "description": "自动归类标签"
+  },
+  "autoCategorizationHint": {
+    "message": "自动将新对话交由AI判断并移动到合适的文件夹",
+    "description": "自动归类功能提示"
+  },
+  "autoCategorizationPrefix": {
+    "message": "触发前缀",
+    "description": "自动归类触发前缀标签"
+  },
+  "autoCategorizationShortcut": {
+    "message": "快捷键",
+    "description": "自动归类快捷键标签"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "输入此字符后加空格即可触发",
+    "description": "触发前缀提示"
+  },
   "conversation_star": {
     "message": "星标对话",
     "description": "星标对话按钮提示"

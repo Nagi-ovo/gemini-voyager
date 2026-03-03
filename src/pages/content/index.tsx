@@ -6,6 +6,7 @@ import {
 } from '@/core/utils/extensionContext';
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
+import { startAutoCategorization } from '@/core/services/TriggerService';
 import { initI18n } from '@/utils/i18n';
 
 import { startChangelog } from './changelog/index';
@@ -173,6 +174,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
       startFolderSpacingAdjuster('gemini');
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startAutoCategorization();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startChatWidthAdjuster();

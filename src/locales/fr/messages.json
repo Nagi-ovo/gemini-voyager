@@ -519,6 +519,14 @@
     "message": "Masquer les discussions archivées",
     "description": "Hide conversations that are in folders from the main list"
   },
+  "autoCategorization": {
+    "message": "Classement automatique",
+    "description": "Auto Categorize Label"
+  },
+  "autoCategorizationHint": {
+    "message": "Demander automatiquement à l'IA de classer et déplacer les nouvelles discussions dans les dossiers appropriés",
+    "description": "Auto Categorization Hint"
+  },
   "conversation_star": {
     "message": "Ajouter aux favoris",
     "description": "Star conversation button tooltip"
