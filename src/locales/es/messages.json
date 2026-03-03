@@ -536,7 +536,7 @@
     "description": "Auto categorization shortcut label"
   },
   "autoCategorizationPrefixHint": {
-    "message": "Introduce este carácter y un espacio para activar",
+    "message": "Introduce este prefijo para activar la categorización automática",
     "description": "Trigger prefix hint"
   },
   "conversation_star": {

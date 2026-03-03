@@ -496,7 +496,7 @@
     "description": "自動歸類快捷鍵標籤"
   },
   "autoCategorizationPrefixHint": {
-    "message": "輸入此字元後加空格即可觸發",
+    "message": "輸入此前綴即可觸發自動歸類",
     "description": "觸發前綴提示"
   },
   "conversation_star": {

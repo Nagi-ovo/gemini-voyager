@@ -536,7 +536,7 @@
     "description": "Auto categorization shortcut label"
   },
   "autoCategorizationPrefixHint": {
-    "message": "この文字の後にスペースを入力すると実行されます",
+    "message": "このプレフィックスを入力すると自動分類が実行されます",
     "description": "Trigger prefix hint"
   },
   "conversation_star": {

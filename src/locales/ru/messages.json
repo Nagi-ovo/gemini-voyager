@@ -536,7 +536,7 @@
     "description": "Auto categorization shortcut label"
   },
   "autoCategorizationPrefixHint": {
-    "message": "Введите этот символ и пробел для запуска",
+    "message": "Введите этот префикс для запуска автоматической категоризации",
     "description": "Trigger prefix hint"
   },
   "conversation_star": {

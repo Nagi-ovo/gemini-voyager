@@ -536,7 +536,7 @@
     "description": "Auto categorization shortcut label"
   },
   "autoCategorizationPrefixHint": {
-    "message": "اكتب هذا الرمز متبوعًا بمسافة للتشغيل",
+    "message": "أدخل هذه البادئة لتفعيل التصنيف التلقائي",
     "description": "Trigger prefix hint"
   },
   "conversation_star": {

@@ -536,7 +536,7 @@
     "description": "自动归类快捷键标签"
   },
   "autoCategorizationPrefixHint": {
-    "message": "输入此字符后加空格即可触发",
+    "message": "输入此前缀即可触发自动归类",
     "description": "触发前缀提示"
   },
   "conversation_star": {

@@ -536,7 +536,7 @@
     "description": "Auto categorization shortcut label"
   },
   "autoCategorizationPrefixHint": {
-    "message": "이 문자와 공백을 입력하면 실행됩니다",
+    "message": "이 접두사를 입력하면 자동 분류가 실행됩니다",
     "description": "Trigger prefix hint"
   },
   "conversation_star": {

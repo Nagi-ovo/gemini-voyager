@@ -12,7 +12,7 @@ export class TriggerService {
   private prefix = '.';
   private shortcut = 'Ctrl+Shift+U';
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): TriggerService {
     if (!TriggerService.instance) {
@@ -137,11 +137,18 @@ export const triggerService = TriggerService.getInstance();
 
 export async function startAutoCategorization() {
   const result = await new Promise<Record<string, unknown>>((resolve) => {
-    chrome.storage?.sync?.get({ gvAutoCategorizationEnabled: false }, (res) => resolve(res));
+    chrome.storage?.sync?.get(
+      {
+        gvAutoCategorizationEnabled: false,
+        gvAutoCategorizationPrefix: '.',
+        gvAutoCategorizationShortcut: 'Ctrl+Shift+U',
+      },
+      (res) => resolve(res),
+    );
   });
 
   if (!result.gvAutoCategorizationEnabled) {
-    return () => {};
+    return () => { };
   }
 
   triggerService.init();
