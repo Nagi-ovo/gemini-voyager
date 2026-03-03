@@ -43,7 +43,6 @@ function mergeItems<T extends { id: string; updatedAt?: number; createdAt?: numb
 function getFolderPath(folderId: string, folderMap: Map<string, Folder>): string | null {
   const folder = folderMap.get(folderId);
   if (!folder) return null;
-
   let path = folder.name;
   let current = folder;
   let depth = 0;
@@ -52,9 +51,10 @@ function getFolderPath(folderId: string, folderMap: Map<string, Folder>): string
     if (depth++ > 50) return null; // Prevent infinite loop protection
     const parent = folderMap.get(current.parentId);
     if (!parent) return null;
-    path = `${parent.name}/${path}`;
+    path = `${parent.name}\0${path}`;
     current = parent;
   }
+  return path;
   return path;
 }
 
