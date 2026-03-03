@@ -479,6 +479,110 @@
     "message": "隱藏已歸檔對話",
     "description": "從主清單隱藏已新增到資料夾的對話"
   },
+  "autoCategorization": {
+    "message": "自動歸類",
+    "description": "自動歸類標籤"
+  },
+  "autoCategorizationHint": {
+    "message": "自動讓 AI 判斷並將新對話移動到合適的資料夾",
+    "description": "自動歸類功能提示"
+  },
+  "autoCategorizationPrefix": {
+    "message": "觸發前綴",
+    "description": "自動歸類觸發前綴標籤"
+  },
+  "autoCategorizationShortcut": {
+    "message": "快捷鍵",
+    "description": "自動歸類快捷鍵標籤"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "輸入此前綴即可觸發自動歸類",
+    "description": "觸發前綴提示"
+  },
+  "autoCategorizationStrictMatch": {
+    "message": "兼容全半角及中英文標點"
+  },
+  "autoCategorizationStrictMatchHint": {
+    "message": "Only the exact prefix triggers, not Unicode equivalents (e.g. . vs .)",
+    "description": "Strict match hint"
+  },
+  "autoCategorizationIndexRouting": {
+    "message": "Index Routing",
+    "description": "Index routing feature toggle label"
+  },
+  "autoCategorizationIndexRoutingHint": {
+    "message": "跳過 AI，使用資料夾序號直接歸入。"
+  },
+  "autoCategorizationShowFolderIndex": {
+    "message": "顯示資料夾序號",
+    "description": "在側欄顯示資料夾序號的開關"
+  },
+  "autoCategorizationShowFolderIndexHint": {
+    "message": "在側欄資料夾名稱旁顯示序號，方便使用序號歸類時快速參考。",
+    "description": "顯示資料夾序號提示"
+  },
+  "autoCategorizationExampleTitle": {
+    "message": "即時預覽"
+  },
+  "autoCategorizationExamplePrefixHint": {
+    "message": "觸發前綴",
+    "description": "Hint for trigger prefix in example"
+  },
+  "autoCategorizationExampleFolderHint": {
+    "message": "資料夾序號",
+    "description": "Hint for folder index in example"
+  },
+  "autoCategorizationExampleSeparatorHint": {
+    "message": "分隔符",
+    "description": "Hint for separator in example"
+  },
+  "autoCategorizationExampleTextHint": {
+    "message": "你的提問內容",
+    "description": "Hint for prompt text in example"
+  },
+  "autoCategorizationExampleText": {
+    "message": "幫我寫一段關於...",
+    "description": "Dummy text in the routing example"
+  },
+  "autoCategorizationExampleExplanation": {
+    "message": "輸入此格式，則直接移入該序號資料夾"
+  },
+  "autoCategorizationRoutingSeparator": {
+    "message": "Index Separator",
+    "description": "Routing separator label"
+  },
+  "autoCategorizationTriggerMode": {
+    "message": "Trigger Mode",
+    "description": "Trigger mode setting label"
+  },
+  "autoCategorizationTriggerModeHint": {
+    "message": "Positive: prefix triggers categorization. Negative: categorizes by default, prefix blocks it.",
+    "description": "Trigger mode hint"
+  },
+  "autoCategorizationTriggerModePositive": {
+    "message": "正向",
+    "description": "正向觸發模式選項"
+  },
+  "autoCategorizationTriggerModeNegative": {
+    "message": "反向",
+    "description": "反向觸發模式選項"
+  },
+  "autoCategorizationUseMainPrefixForRouting": {
+    "message": "Use main prefix for routing",
+    "description": "Use main prefix for index routing toggle"
+  },
+  "autoCategorizationUseMainPrefixForRoutingHint": {
+    "message": "When on, index routing requires the main prefix (e.g. .1 2). When off, use a custom or no prefix.",
+    "description": "Use main prefix for routing hint"
+  },
+  "autoCategorizationCustomRoutingPrefix": {
+    "message": "Routing Prefix",
+    "description": "Custom routing prefix label"
+  },
+  "autoCategorizationCustomRoutingPrefixHint": {
+    "message": "Leave empty for bare numbers (e.g. 1 2) to trigger routing. Or set a custom prefix (e.g. /).",
+    "description": "Custom routing prefix hint"
+  },
   "conversation_star": {
     "message": "星號標記對話",
     "description": "星號標記對話按鈕提示"
@@ -1358,5 +1462,27 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  },
+  "generalAIExampleExplanation": {
+    "message": "輸入此格式，則自動歸類"
+  },
+  "generalAICategorizationTitle": {
+    "message": "通用 AI 歸類"
+  },
+  "autoCategorizationPreviewInputThis": {
+    "message": "Input this format, ",
+    "description": "Preview explanation prefix"
+  },
+  "autoCategorizationPreviewThenDo": {
+    "message": "will",
+    "description": "Preview explanation action (do)"
+  },
+  "autoCategorizationPreviewThenDoNot": {
+    "message": "won't",
+    "description": "Preview explanation action (do not)"
+  },
+  "autoCategorizationPreviewAutoCategorize": {
+    "message": " auto categorize",
+    "description": "Preview explanation suffix"
   }
 }

@@ -519,6 +519,110 @@
     "message": "Ocultar conversas arquivadas",
     "description": "Hide conversations that are in folders from the main list"
   },
+  "autoCategorization": {
+    "message": "Classificação automática",
+    "description": "Auto Categorize Label"
+  },
+  "autoCategorizationHint": {
+    "message": "Pedir automaticamente à IA para classificar e mover novas conversas para as pastas apropriadas",
+    "description": "Auto Categorization Hint"
+  },
+  "autoCategorizationPrefix": {
+    "message": "Prefixo acionador",
+    "description": "Auto categorization trigger prefix label"
+  },
+  "autoCategorizationShortcut": {
+    "message": "Atalho",
+    "description": "Auto categorization shortcut label"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "Digite este prefixo para acionar a categorização automática",
+    "description": "Trigger prefix hint"
+  },
+  "autoCategorizationStrictMatch": {
+    "message": "Support full/half-width & Chinese/English punctuation"
+  },
+  "autoCategorizationStrictMatchHint": {
+    "message": "Only the exact prefix triggers, not Unicode equivalents (e.g. . vs .)",
+    "description": "Strict match hint"
+  },
+  "autoCategorizationIndexRouting": {
+    "message": "Index Routing",
+    "description": "Index routing feature toggle label"
+  },
+  "autoCategorizationIndexRoutingHint": {
+    "message": "Skip AI and route directly using folder index numbers."
+  },
+  "autoCategorizationShowFolderIndex": {
+    "message": "Show Folder Index",
+    "description": "Toggle to show folder index numbers in sidebar"
+  },
+  "autoCategorizationShowFolderIndexHint": {
+    "message": "Display index numbers next to folder names in the sidebar for quick reference when using index routing.",
+    "description": "Hint for show folder index toggle"
+  },
+  "autoCategorizationExampleTitle": {
+    "message": "Live Preview"
+  },
+  "autoCategorizationExamplePrefixHint": {
+    "message": "Trigger Prefix",
+    "description": "Hint for trigger prefix in example"
+  },
+  "autoCategorizationExampleFolderHint": {
+    "message": "Folder Index",
+    "description": "Hint for folder index in example"
+  },
+  "autoCategorizationExampleSeparatorHint": {
+    "message": "Separator",
+    "description": "Hint for separator in example"
+  },
+  "autoCategorizationExampleTextHint": {
+    "message": "Your prompt to the AI",
+    "description": "Hint for prompt text in example"
+  },
+  "autoCategorizationExampleText": {
+    "message": "Help me write...",
+    "description": "Dummy text in the routing example"
+  },
+  "autoCategorizationExampleExplanation": {
+    "message": "Input this format to skip AI and directly route into this folder"
+  },
+  "autoCategorizationRoutingSeparator": {
+    "message": "Index Separator",
+    "description": "Routing separator label"
+  },
+  "autoCategorizationTriggerMode": {
+    "message": "Trigger Mode",
+    "description": "Trigger mode setting label"
+  },
+  "autoCategorizationTriggerModeHint": {
+    "message": "Positive: prefix triggers categorization. Negative: categorizes by default, prefix blocks it.",
+    "description": "Trigger mode hint"
+  },
+  "autoCategorizationTriggerModePositive": {
+    "message": "Positive",
+    "description": "Positive trigger mode option"
+  },
+  "autoCategorizationTriggerModeNegative": {
+    "message": "Negative",
+    "description": "Negative trigger mode option"
+  },
+  "autoCategorizationUseMainPrefixForRouting": {
+    "message": "Use main prefix for routing",
+    "description": "Use main prefix for index routing toggle"
+  },
+  "autoCategorizationUseMainPrefixForRoutingHint": {
+    "message": "When on, index routing requires the main prefix (e.g. .1 2). When off, use a custom or no prefix.",
+    "description": "Use main prefix for routing hint"
+  },
+  "autoCategorizationCustomRoutingPrefix": {
+    "message": "Routing Prefix",
+    "description": "Custom routing prefix label"
+  },
+  "autoCategorizationCustomRoutingPrefixHint": {
+    "message": "Leave empty for bare numbers (e.g. 1 2) to trigger routing. Or set a custom prefix (e.g. /).",
+    "description": "Custom routing prefix hint"
+  },
   "conversation_star": {
     "message": "Favoritar conversa",
     "description": "Star conversation button tooltip"
@@ -1358,5 +1462,27 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  },
+  "generalAIExampleExplanation": {
+    "message": "Input this format to auto-categorize"
+  },
+  "generalAICategorizationTitle": {
+    "message": "General AI Categorization"
+  },
+  "autoCategorizationPreviewInputThis": {
+    "message": "Input this format, ",
+    "description": "Preview explanation prefix"
+  },
+  "autoCategorizationPreviewThenDo": {
+    "message": "will",
+    "description": "Preview explanation action (do)"
+  },
+  "autoCategorizationPreviewThenDoNot": {
+    "message": "won't",
+    "description": "Preview explanation action (do not)"
+  },
+  "autoCategorizationPreviewAutoCategorize": {
+    "message": " auto categorize",
+    "description": "Preview explanation suffix"
   }
 }

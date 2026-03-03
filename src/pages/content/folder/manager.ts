@@ -90,7 +90,7 @@ export class FolderManager {
   }
   private storage: IFolderStorageAdapter; // Storage adapter (Strategy Pattern)
   private backupService: DataBackupService<FolderData>; // Multi-layer backup system
-  private data: FolderData = { folders: [], folderContents: {} };
+  public data: FolderData = { folders: [], folderContents: {} };
   private containerElement: HTMLElement | null = null;
   private sidebarContainer: HTMLElement | null = null;
   private recentSection: HTMLElement | null = null;
@@ -111,6 +111,7 @@ export class FolderManager {
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private folderTreeIndent: number = FOLDER_TREE_INDENT_DEFAULT; // Tree indentation width (px)
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
+  private showFolderIndex: boolean = false; // Whether to show folder index numbers (tied to index routing)
   private accountIsolationEnabled: boolean = false; // Whether hard account isolation is enabled
   private accountScope: AccountScope | null = null; // Resolved account scope for current page
   private activeStorageKey: string = STORAGE_KEY; // Storage key currently used for folder data
@@ -207,6 +208,19 @@ export class FolderManager {
       await this.loadFolderTreeIndentSetting();
 
       // Set up storage change listener (always needed to respond to setting changes)
+      // Load showFolderIndex setting
+      try {
+        const indexRoutingRes = await browser.storage.sync.get({
+          gvAutoCategorizationIndexRouting: false,
+          gvAutoCategorizationShowFolderIndex: false,
+        });
+        this.showFolderIndex =
+          !!indexRoutingRes.gvAutoCategorizationIndexRouting &&
+          !!indexRoutingRes.gvAutoCategorizationShowFolderIndex;
+      } catch {
+        this.showFolderIndex = false;
+      }
+
       this.setupStorageListener();
 
       // Set up message listener (for popup communication)
@@ -729,11 +743,13 @@ export class FolderManager {
     // Render root level folders (sorted)
     const rootFolders = this.data.folders.filter((f) => f.parentId === null);
     const sortedRootFolders = this.sortFolders(rootFolders);
+    let visibleRootIndex = 0;
     sortedRootFolders.forEach((folder) => {
       // Filter out empty folders if "Show current user only" is enabled
       if (!this.hasVisibleContent(folder.id)) return;
 
-      const folderElement = this.createFolderElement(folder);
+      visibleRootIndex++;
+      const folderElement = this.createFolderElement(folder, 0, visibleRootIndex);
       list.appendChild(folderElement);
     });
 
@@ -748,7 +764,7 @@ export class FolderManager {
     return list;
   }
 
-  private createFolderElement(folder: Folder, level = 0): HTMLElement {
+  private createFolderElement(folder: Folder, level = 0, relativeIndex = 0): HTMLElement {
     const folderEl = document.createElement('div');
     folderEl.className = 'gv-folder-item';
     folderEl.dataset.folderId = folder.id;
@@ -822,6 +838,18 @@ export class FolderManager {
 
     folderHeader.appendChild(expandBtn);
     folderHeader.appendChild(folderIcon);
+
+    if (relativeIndex > 0 && this.showFolderIndex) {
+      const indexSpan = document.createElement('span');
+      indexSpan.className = 'gv-folder-index';
+      indexSpan.textContent = `${relativeIndex} `;
+      indexSpan.style.opacity = '0.5';
+      indexSpan.style.marginRight = '4px';
+      indexSpan.style.fontSize = '0.9em';
+      indexSpan.style.userSelect = 'none';
+      folderHeader.appendChild(indexSpan);
+    }
+
     folderHeader.appendChild(folderName);
     folderHeader.appendChild(pinBtn);
     folderHeader.appendChild(actionsBtn);
@@ -854,11 +882,13 @@ export class FolderManager {
       // Render subfolders (sorted)
       const subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
       const sortedSubfolders = this.sortFolders(subfolders);
+      let visibleSubIndex = 0;
       sortedSubfolders.forEach((subfolder) => {
         // Filter out empty folders if "Show current user only" is enabled
         if (!this.hasVisibleContent(subfolder.id)) return;
 
-        const subfolderEl = this.createFolderElement(subfolder, level + 1);
+        visibleSubIndex++;
+        const subfolderEl = this.createFolderElement(subfolder, level + 1, visibleSubIndex);
         content.appendChild(subfolderEl);
       });
 
@@ -2320,7 +2350,42 @@ export class FolderManager {
   }
 
   // Batch add conversations to folder (for multi-select support)
-  private addConversationsToFolder(
+  /**
+   * Programmatically create a folder by name
+   * @returns The ID of the created folder
+   */
+  public createFolderByName(name: string, parentId: string | null = null): string {
+    const folder: Folder = {
+      id: this.generateId(),
+      name,
+      parentId,
+      isExpanded: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    if (!this.data.folders) this.data.folders = [];
+    this.data.folders.push(folder);
+    this.data.folderContents[folder.id] = [];
+    this.saveData();
+    this.refresh();
+    return folder.id;
+  }
+
+  /**
+   * Highlights a folder to suggest it to the user
+   */
+  public highlightSuggestedFolder(folderId: string): void {
+    const el = this.containerElement?.querySelector(`[data-folder-id="${folderId}"]`);
+    if (el) {
+      el.classList.add('gv-folder-suggested-highlight');
+      setTimeout(() => {
+        el.classList.remove('gv-folder-suggested-highlight');
+      }, 5000);
+    }
+  }
+
+  public addConversationsToFolder(
     folderId: string,
     conversations: ConversationReference[],
     sourceFolderId?: string,
@@ -5207,6 +5272,22 @@ export class FolderManager {
           this.debug('Language changed, updating UI text...');
           this.updateHeaderLanguageText();
         }
+        if (
+          changes.gvAutoCategorizationIndexRouting ||
+          changes.gvAutoCategorizationShowFolderIndex
+        ) {
+          browser.storage.sync
+            .get({
+              gvAutoCategorizationIndexRouting: false,
+              gvAutoCategorizationShowFolderIndex: false,
+            })
+            .then((res) => {
+              this.showFolderIndex =
+                !!res.gvAutoCategorizationIndexRouting && !!res.gvAutoCategorizationShowFolderIndex;
+              this.debug('Show folder index changed:', this.showFolderIndex);
+              this.renderAllFolders();
+            });
+        }
       }
       // Also listen for language changes from local storage (fallback)
       if (areaName === 'local' && changes[StorageKeys.LANGUAGE]) {
@@ -6133,7 +6214,7 @@ export class FolderManager {
    *   - Returns true if any subfolder has visible content.
    *   - Returns false otherwise.
    */
-  private hasVisibleContent(folderId: string): boolean {
+  public hasVisibleContent(folderId: string): boolean {
     if (!this.filterCurrentUserOnly) return true;
 
     // Check direct conversations
