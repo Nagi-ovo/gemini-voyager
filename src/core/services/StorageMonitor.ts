@@ -12,6 +12,10 @@
  * - Automatic monitoring with cleanup
  */
 
+import { LoggerService } from './LoggerService';
+
+const logger = LoggerService.getInstance().createChild('StorageMonitor');
+
 export interface StorageQuotaInfo {
   usage: number; // Bytes used
   quota: number; // Total bytes available
@@ -84,7 +88,7 @@ export class StorageMonitor {
    */
   async checkQuota(): Promise<StorageQuotaInfo | null> {
     if (!StorageMonitor.isStorageApiAvailable()) {
-      console.warn('[StorageMonitor] Storage API not available');
+      logger.warn('Storage API not available');
       return null;
     }
 
@@ -94,7 +98,7 @@ export class StorageMonitor {
       const quota = estimate.quota || 0;
 
       if (quota === 0) {
-        console.warn('[StorageMonitor] Storage quota is 0, API may not be fully supported');
+        logger.warn('Storage quota is 0, API may not be fully supported');
         return null;
       }
 
@@ -110,7 +114,7 @@ export class StorageMonitor {
         quotaMB,
       };
     } catch (error) {
-      console.error('[StorageMonitor] Failed to check quota:', error);
+      logger.error('Failed to check quota', { error });
       return null;
     }
   }
@@ -142,7 +146,7 @@ export class StorageMonitor {
       const message = this.formatWarningMessage(info);
       const level = this.getWarningLevel(info.usagePercent);
 
-      console.warn(`[StorageMonitor] ${message}`);
+      logger.warn(message);
 
       if (this.config.showNotifications) {
         this.showNotification(message, level);
@@ -231,7 +235,7 @@ export class StorageMonitor {
         }
       }, timeout);
     } catch (error) {
-      console.error('[StorageMonitor] Failed to show notification:', error);
+      logger.error('Failed to show notification', { error });
     }
   }
 
@@ -240,33 +244,33 @@ export class StorageMonitor {
    */
   startMonitoring(): void {
     if (!this.config.enabled) {
-      console.log('[StorageMonitor] Monitoring is disabled');
+      logger.info('Monitoring is disabled');
       return;
     }
 
     if (!StorageMonitor.isStorageApiAvailable()) {
-      console.warn('[StorageMonitor] Storage API not available, cannot start monitoring');
+      logger.warn('Storage API not available, cannot start monitoring');
       return;
     }
 
     if (this.monitorIntervalId !== null) {
-      console.log('[StorageMonitor] Monitoring already started');
+      logger.info('Monitoring already started');
       return;
     }
 
-    console.log(
-      `[StorageMonitor] Starting automatic monitoring (interval: ${this.config.checkIntervalMs}ms)`,
+    logger.info(
+      `Starting automatic monitoring (interval: ${this.config.checkIntervalMs}ms)`,
     );
 
     // Check immediately
     this.checkAndWarn().catch((error) => {
-      console.error('[StorageMonitor] Initial check failed:', error);
+      logger.error('Initial check failed', { error });
     });
 
     // Then check periodically
     this.monitorIntervalId = window.setInterval(() => {
       this.checkAndWarn().catch((error) => {
-        console.error('[StorageMonitor] Periodic check failed:', error);
+        logger.error('Periodic check failed', { error });
       });
     }, this.config.checkIntervalMs);
   }
@@ -276,7 +280,7 @@ export class StorageMonitor {
    */
   stopMonitoring(): void {
     if (this.monitorIntervalId !== null) {
-      console.log('[StorageMonitor] Stopping automatic monitoring');
+      logger.info('Stopping automatic monitoring');
       window.clearInterval(this.monitorIntervalId);
       this.monitorIntervalId = null;
       this.lastWarningLevel = 0; // Reset warning level
