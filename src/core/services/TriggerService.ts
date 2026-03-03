@@ -160,18 +160,20 @@ export class TriggerService {
             .categorizeToSpecificFolder(pathParts, userPromptContext)
             .catch(() => {
               // Silently fail, fall back to default or ignore
-            });
-          return;
-        }
-      }
-
-      // Default AI Categorization Flow
-      autoCategorizationService
-        .categorizeCurrentConversation(userPromptContext.trim())
-        .catch(() => {
-          // Silently fail
-        });
+  private checkAndTriggerCategorization(el: HTMLElement) {
+    const text = this.getInputText(el).trim();
+    if (!this.prefix || !text) return;
+    // Trigger if text starts with configured prefix or its full-width equivalent (。)
+    const isDotPrefix = this.prefix === '.';
+    if (text.startsWith(this.prefix) || (isDotPrefix && text.startsWith('。'))) {
+      const matchedPrefix = text.startsWith(this.prefix) ? this.prefix : '。';
+      const userPromptContext = text.substring(matchedPrefix.length).trim();
+      // Do not wait 3 seconds here. AutoCategorizationService will wait for the response to finish.
+      autoCategorizationService.categorizeCurrentConversation(userPromptContext).catch(() => {
+        // Silently fail
+      });
     }
+  }
   }
 
   private isTemporaryChat(): boolean {
