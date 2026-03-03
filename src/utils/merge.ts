@@ -55,7 +55,6 @@ function getFolderPath(folderId: string, folderMap: Map<string, Folder>): string
     current = parent;
   }
   return path;
-  return path;
 }
 
 /**
