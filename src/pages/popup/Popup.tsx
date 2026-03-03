@@ -1270,11 +1270,14 @@ export default function Popup() {
                             </p>
                             <div className="bg-background/80 flex flex-wrap items-center gap-x-[2px] rounded border p-2 font-mono text-sm shadow-inner transition-all">
                               {/* Prefix */}
-                              <span className="rounded px-1 font-bold text-purple-500">
-                                {autoCategorizationUseMainPrefixForRouting
-                                  ? autoCategorizationPrefix || '.'
-                                  : autoCategorizationCustomRoutingPrefix}
-                              </span>
+                              {(autoCategorizationUseMainPrefixForRouting ||
+                                autoCategorizationCustomRoutingPrefix) && (
+                                <span className="rounded px-1 font-bold text-purple-500">
+                                  {autoCategorizationUseMainPrefixForRouting
+                                    ? autoCategorizationPrefix || '.'
+                                    : autoCategorizationCustomRoutingPrefix}
+                                </span>
+                              )}
                               {/* Folder Index */}
                               <span className="rounded px-1 font-bold text-green-600">1</span>
                               {/* Separator */}
