@@ -539,6 +539,26 @@
     "message": "Enter this prefix to trigger auto-categorization",
     "description": "Trigger prefix hint"
   },
+  "autoCategorizationStrictMatch": {
+    "message": "Strict Prefix Match",
+    "description": "Strict prefix match toggle label"
+  },
+  "autoCategorizationStrictMatchHint": {
+    "message": "Only the exact prefix triggers, not Unicode equivalents (e.g. . vs 。)",
+    "description": "Strict match hint"
+  },
+  "autoCategorizationIndexRouting": {
+    "message": "Index Routing",
+    "description": "Index routing feature toggle label"
+  },
+  "autoCategorizationIndexRoutingHint": {
+    "message": "Type prefix + folder index (e.g. .1 2) to skip AI and assign to a specific folder instantly",
+    "description": "Index routing hint"
+  },
+  "autoCategorizationRoutingSeparator": {
+    "message": "Index Separator",
+    "description": "Routing separator label"
+  },
   "conversation_star": {
     "message": "Star conversation",
     "description": "Star conversation button tooltip"

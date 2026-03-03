@@ -11,8 +11,11 @@ export class TriggerService {
   private static instance: TriggerService;
   private prefix = '.';
   private shortcut = 'Ctrl+Shift+U';
+  private strictMatch = false;
+  private indexRouting = false;
+  private routingSeparator = ' ';
 
-  private constructor() { }
+  private constructor() {}
 
   public static getInstance(): TriggerService {
     if (!TriggerService.instance) {
@@ -32,6 +35,27 @@ export class TriggerService {
       this.shortcut = shortcutRes.data;
     }
 
+    const strictMatchRes = await storageService.get<boolean>(
+      StorageKeys.AUTO_CATEGORIZATION_STRICT_MATCH,
+    );
+    if (strictMatchRes.success) {
+      this.strictMatch = strictMatchRes.data;
+    }
+
+    const indexRoutingRes = await storageService.get<boolean>(
+      StorageKeys.AUTO_CATEGORIZATION_INDEX_ROUTING,
+    );
+    if (indexRoutingRes.success) {
+      this.indexRouting = indexRoutingRes.data;
+    }
+
+    const routingSepRes = await storageService.get<string>(
+      StorageKeys.AUTO_CATEGORIZATION_ROUTING_SEPARATOR,
+    );
+    if (routingSepRes.success) {
+      this.routingSeparator = routingSepRes.data;
+    }
+
     this.setupSendInterceptors();
     this.setupShortcutListener();
     this.setupStorageListener();
@@ -45,6 +69,16 @@ export class TriggerService {
         }
         if (changes[StorageKeys.AUTO_CATEGORIZATION_SHORTCUT]) {
           this.shortcut = changes[StorageKeys.AUTO_CATEGORIZATION_SHORTCUT].newValue;
+        }
+        if (changes[StorageKeys.AUTO_CATEGORIZATION_STRICT_MATCH]) {
+          this.strictMatch = changes[StorageKeys.AUTO_CATEGORIZATION_STRICT_MATCH].newValue;
+        }
+        if (changes[StorageKeys.AUTO_CATEGORIZATION_INDEX_ROUTING]) {
+          this.indexRouting = changes[StorageKeys.AUTO_CATEGORIZATION_INDEX_ROUTING].newValue;
+        }
+        if (changes[StorageKeys.AUTO_CATEGORIZATION_ROUTING_SEPARATOR]) {
+          this.routingSeparator =
+            changes[StorageKeys.AUTO_CATEGORIZATION_ROUTING_SEPARATOR].newValue;
         }
       }
     });
@@ -98,15 +132,45 @@ export class TriggerService {
   private checkAndTriggerCategorization(el: HTMLElement) {
     if (this.isTemporaryChat()) return;
 
-    const text = this.getInputText(el).trim();
+    // Use raw text to preserve specific routing structures
+    const rawText = this.getInputText(el);
     const prefixes = this.getEquivalentPrefixes(this.prefix);
 
-    const matchedPrefix = prefixes.find((p) => text.startsWith(p));
+    const matchedPrefix = prefixes.find((p) => rawText.trimStart().startsWith(p));
     if (matchedPrefix) {
-      const userPromptContext = text.substring(matchedPrefix.length).trim();
-      autoCategorizationService.categorizeCurrentConversation(userPromptContext).catch(() => {
-        // Silently fail
-      });
+      // Find the actual exact starting index to slice from
+      const startIdx = rawText.indexOf(matchedPrefix);
+      let userPromptContext = rawText.substring(startIdx + matchedPrefix.length);
+
+      // Handle Index Routing if enabled
+      if (this.indexRouting && userPromptContext.length > 0) {
+        // Build regex to match: exactly prefix boundary, followed by digits and separators
+        // E.g., separator " " -> match " 1 2 " or "1"
+        const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const sepReg = escapeRegExp(this.routingSeparator || ' ');
+        const pattern = new RegExp(`^((?:\\d+(?:${sepReg}\\d+)*))(.*)$`, 's');
+
+        const match = userPromptContext.match(pattern);
+        if (match) {
+          const pathString = match[1];
+          const pathParts = pathString.split(this.routingSeparator).map(Number);
+          userPromptContext = match[2].trimStart();
+
+          autoCategorizationService
+            .categorizeToSpecificFolder(pathParts, userPromptContext)
+            .catch(() => {
+              // Silently fail, fall back to default or ignore
+            });
+          return;
+        }
+      }
+
+      // Default AI Categorization Flow
+      autoCategorizationService
+        .categorizeCurrentConversation(userPromptContext.trim())
+        .catch(() => {
+          // Silently fail
+        });
     }
   }
 
@@ -123,6 +187,9 @@ export class TriggerService {
   }
 
   private getEquivalentPrefixes(prefix: string): string[] {
+    if (this.strictMatch) {
+      return [prefix];
+    }
     const groups = [
       ['.', '。'],
       ['/', '\\', '、'],
@@ -190,7 +257,7 @@ export async function startAutoCategorization() {
   });
 
   if (!result.gvAutoCategorizationEnabled) {
-    return () => { };
+    return () => {};
   }
 
   triggerService.init();

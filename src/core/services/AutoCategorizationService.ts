@@ -159,6 +159,102 @@ export class AutoCategorizationService {
     window.location.assign(url);
   }
 
+  /**
+   * Directly assigns the current conversation to a target folder specified by an index path.
+   * Format: pathParts = [1, 2] matches rootFolder index 1, subfolder index 2.
+   */
+  public async categorizeToSpecificFolder(
+    pathParts: number[],
+    userPromptContext?: string,
+  ): Promise<void> {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+
+    try {
+      const currentTitle = this.getCurrentConversationTitle();
+      const currentUrl = window.location.href;
+
+      if (!currentTitle || currentUrl.endsWith('/app')) {
+        return;
+      }
+
+      const m = currentUrl.match(/\/app\/([a-fA-F0-9]+)/);
+      if (!m || !m[1]) return;
+      const conversationId = m[1];
+
+      const folderManager = getFolderManager();
+      if (!folderManager) return;
+      const folders = folderManager.data?.folders || [];
+
+      // Navigate the folder tree according to pathParts
+      let targetFolderId: string | null = null;
+      let currentParentId: string | null = null;
+
+      for (const index of pathParts) {
+        if (index <= 0) break; // Invalid index
+        const siblings = folders
+          .filter((f) => f.parentId === currentParentId)
+          .sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+          });
+
+        if (index > siblings.length) {
+          // Path part is out of bounds
+          targetFolderId = null;
+          break;
+        }
+
+        const selectedSibling = siblings[index - 1]; // 1-based to 0-based
+        targetFolderId = selectedSibling.id;
+        currentParentId = selectedSibling.id;
+      }
+
+      // If a valid folder was targeted, immediately assign the conversation
+      if (targetFolderId) {
+        // Option to optionally restore chat input if userPromptContext provided
+        if (userPromptContext) {
+          const input = document.querySelector(
+            'rich-textarea [contenteditable="true"]',
+          ) as HTMLElement;
+          if (input) {
+            input.textContent = userPromptContext;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        }
+
+        const convRef = {
+          conversationId,
+          title: currentTitle,
+          url: currentUrl,
+          addedAt: Date.now(),
+          isGem: false,
+        };
+        folderManager.addConversationsToFolder(targetFolderId, [convRef]);
+
+        // Trigger native deletion animation smoothly
+        await this.delay(500);
+        await this.deleteConversationByUrl(currentUrl);
+
+        // Notify user context locally? Could just implicitly clear the box like Gemini does
+      } else if (userPromptContext) {
+        // Fallback or warning if folder doesn't exist
+        const input = document.querySelector(
+          'rich-textarea [contenteditable="true"]',
+        ) as HTMLElement;
+        if (input) {
+          input.textContent = userPromptContext;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    } catch (error) {
+      // Silently fail
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
   private async createDisposableSession(): Promise<string | null> {
     this.navigateTo(window.location.origin + '/app');
     await this.delay(1500);

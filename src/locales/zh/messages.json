@@ -539,6 +539,26 @@
     "message": "输入此前缀即可触发自动归类",
     "description": "触发前缀提示"
   },
+  "autoCategorizationStrictMatch": {
+    "message": "严格匹配前缀",
+    "description": "严格前缀匹配开关"
+  },
+  "autoCategorizationStrictMatchHint": {
+    "message": "仅使用精确设置的字符触发，不识别等效全角符号（如 . 与 。）",
+    "description": "严格匹配提示"
+  },
+  "autoCategorizationIndexRouting": {
+    "message": "序号直接归类",
+    "description": "基于序号的直接归类功能开关"
+  },
+  "autoCategorizationIndexRoutingHint": {
+    "message": "输入前缀+序号（如 .1 2）可跳过 AI，瞬间归入指定文件夹",
+    "description": "序号归类功能提示"
+  },
+  "autoCategorizationRoutingSeparator": {
+    "message": "序号分隔符",
+    "description": "路由序号之间的分隔符"
+  },
   "conversation_star": {
     "message": "星标对话",
     "description": "星标对话按钮提示"
