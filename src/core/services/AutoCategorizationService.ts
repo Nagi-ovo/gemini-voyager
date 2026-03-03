@@ -80,6 +80,8 @@ export class AutoCategorizationService {
     if (this.isProcessing) return;
     this.isProcessing = true;
 
+    const currentUrl = window.location.href;
+
     try {
       // ── Check for pending index target from new-chat race condition ──
       if (this.pendingIndexTarget) {
@@ -94,7 +96,6 @@ export class AutoCategorizationService {
       await this.waitForResponseComplete(20000);
 
       const currentTitle = this.getCurrentConversationTitle();
-      const currentUrl = window.location.href;
 
       if (!currentTitle || window.location.pathname.endsWith('/app')) {
         return;
@@ -165,7 +166,8 @@ export class AutoCategorizationService {
       await this.delay(3500);
       await this.deleteConversationByUrl(classifierConvUrl);
     } catch (error) {
-      // Silently fail to not interrupt user flow
+      // Silently fail but ensure we return to the user's original chat
+      this.navigateTo(currentUrl);
     } finally {
       DefaultModelManager.getInstance().setBypassed(false);
       this.isProcessing = false;
@@ -220,9 +222,10 @@ export class AutoCategorizationService {
     if (this.isProcessing) return;
     this.isProcessing = true;
 
+    const currentUrl = window.location.href;
+
     try {
       const currentTitle = this.getCurrentConversationTitle();
-      const currentUrl = window.location.href;
       const isNewChat = window.location.pathname.endsWith('/app');
 
       if (isNewChat) {

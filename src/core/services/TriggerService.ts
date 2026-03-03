@@ -306,7 +306,7 @@ export class TriggerService {
     const isAppPath = window.location.pathname.endsWith('/app');
     // 2. DOM marker: Gemini adds a specific class or attributes for temp mode
     const hasTempMarker = !!document.querySelector(
-      '.temp-chat-on, [aria-label*="Temporary"], [aria-label*="临时"] .temp-chat-on',
+      '.temp-chat-on, [aria-label*="Temporary"], [aria-label*="临时"]',
     );
 
     return isAppPath && hasTempMarker;
