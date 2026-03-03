@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for Gemini Voyager
 
-> **Last Updated**: 2026-02-15
-> **Version**: 1.2.5
+> **Last Updated**: 2026-02-28
+> **Version**: 1.2.9
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
 
 ---
@@ -99,7 +99,8 @@ Strictly adhere to these protocols to prevent errors and ensure data integrity.
 | `features/folder`                      | Drag-and-drop folder logic + cloud sync UI.       | 🌶️ High    | DOM manipulation + State sync is tricky. Watch out for infinite loops.         |
 | `features/export`                      | Chat export (JSON/MD/PDF/Image) + Deep Research.  | 🌶️ High    | Image export, message selection, multi-browser compat. Fragile to Gemini UI.   |
 | `features/backup`                      | File System Access API.                           | 🟡 Medium  | Browser compatibility issues (Safari fallback).                                |
-| `pages/content`                        | **DOM Injection** (24 content script modules).    | 🟡 Medium  | Bridge between Gemini UI and Extension. Each sub-module is self-contained.     |
+| `pages/content`                        | **DOM Injection** (30 content script modules).    | 🟡 Medium  | Bridge between Gemini UI and Extension. Each sub-module is self-contained.     |
+| `pages/content/fork`                   | Conversation fork (branch) management.            | 🟡 Medium  | Creates/manages forked conversation copies. New in v1.2.8+.                    |
 | `pages/content/mermaid`                | Mermaid diagram rendering.                        | 🟡 Medium  | Dynamic library loading with legacy fallback.                                  |
 | `pages/content/watermarkRemover`       | NanoBanana watermark removal via fetch intercept. | 🟡 Medium  | Disabled on Safari. Uses `fetchInterceptor.js` injected into page context.     |
 
@@ -276,6 +277,12 @@ gemini-voyager/
 │   │   │   ├── folder/                #       * Folder sidebar management
 │   │   │   ├── export/                #       * Export button & selection mode
 │   │   │   ├── announcement/          #       * Announcement display
+│   │   │   ├── fork/                  #       * Conversation fork/branch management
+│   │   │   ├── changelog/             #       * Changelog modal display
+│   │   │   ├── preventAutoScroll/     #       * Prevent auto-scroll behavior
+│   │   │   ├── snowEffect/            #       * Toggleable snow effect
+│   │   │   ├── claudeMarkdownPatcher/ #       * Claude markdown patches
+│   │   │   ├── claudeMarkdownRenderer/#      * Claude markdown rendering
 │   │   │   ├── shared/                #       * Shared content script utilities
 │   │   │   └── ...                    #       * (chatWidth, defaultModel, folderSpacing,
 │   │   │                              #          gemsHider, inputCollapse, katexConfig,

@@ -63,16 +63,23 @@ export function isChrome(): boolean {
 }
 
 /**
+ * Detect if the current browser is Firefox.
+ */
+export function isFirefox(): boolean {
+  const ua = navigator.userAgent.toLowerCase();
+  return ua.includes('firefox');
+}
+
+/**
  * Get browser name for debugging
  * Uses user agent detection for reliability
  */
 export function getBrowserName(): string {
   if (isSafari()) return 'Safari';
 
-  const ua = navigator.userAgent.toLowerCase();
+  if (isFirefox()) return 'Firefox';
 
-  // Firefox has 'firefox' in UA
-  if (ua.includes('firefox')) return 'Firefox';
+  const ua = navigator.userAgent.toLowerCase();
 
   // Chrome/Edge/Brave have 'chrome' or 'chromium' in UA
   if (ua.includes('chrome') || ua.includes('chromium')) {

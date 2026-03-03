@@ -1,5 +1,6 @@
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { StorageKeys } from '@/core/types/common';
+import { GV_RTL_CLASS, applyRTLClass } from '@/core/utils/rtl';
 
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { eventBus } from './EventBus';
@@ -21,6 +22,7 @@ function hashString(input: string): string {
 const TURN_LABEL_PREFIXES =
   /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
 const VISUALLY_HIDDEN_CLASS_FRAGMENT = 'visually-hidden';
+const INJECTED_UI_SELECTOR = '.gv-fork-btn, .gv-fork-confirm, .gv-fork-indicator-group';
 
 type ExtGlobal = typeof globalThis & {
   chrome?: {
@@ -177,6 +179,7 @@ export class TimelineManager {
   private navigationQueue: Array<'previous' | 'next'> = [];
   private isNavigating: boolean = false;
   private previewPanel: TimelinePreviewPanel | null = null;
+  private rtl = false;
 
   async init(): Promise<void> {
     await initI18n();
@@ -204,6 +207,7 @@ export class TimelineManager {
         geminiTimelineDraggable: false,
         geminiTimelineMarkerLevel: false,
         geminiTimelinePosition: null,
+        [StorageKeys.LANGUAGE]: null,
       };
 
       let res: Record<string, unknown> | null = null;
@@ -246,6 +250,7 @@ export class TimelineManager {
       this.applyContainerVisibility();
       this.toggleDraggable(!!res?.geminiTimelineDraggable);
       this.toggleMarkerLevel(!!res?.geminiTimelineMarkerLevel);
+      this.rtl = applyRTLClass(res?.[StorageKeys.LANGUAGE] as string | null | undefined);
 
       // Load position with auto-migration from v1 to v2
       const position = res?.geminiTimelinePosition as
@@ -287,6 +292,7 @@ export class TimelineManager {
           });
         }
       }
+      this.previewPanel?.reposition();
 
       // listen for changes from popup and update mode live
       try {
@@ -313,6 +319,11 @@ export class TimelineManager {
                 this.ui.timelineBar.style.top = '';
                 this.ui.timelineBar.style.left = '';
               }
+              this.previewPanel?.reposition();
+            }
+            if (changes?.[StorageKeys.LANGUAGE]) {
+              const newLang = changes[StorageKeys.LANGUAGE].newValue as string | null | undefined;
+              this.applyRTLUpdate(newLang);
             }
           });
         }
@@ -742,11 +753,13 @@ export class TimelineManager {
       const tip = document.createElement('div');
       tip.className = 'timeline-tooltip';
       tip.id = 'gemini-timeline-tooltip';
+      tip.setAttribute('dir', 'auto');
       document.body.appendChild(tip);
       this.ui.tooltip = tip;
       if (!this.measureEl) {
         const m = document.createElement('div');
         m.setAttribute('aria-hidden', 'true');
+        m.setAttribute('dir', 'auto');
         Object.assign(m.style, {
           position: 'fixed',
           left: '-9999px',
@@ -831,30 +844,20 @@ export class TimelineManager {
   private extractTurnText(element: HTMLElement | null): string {
     if (!element) return '';
     try {
-      if (!this.hasVisuallyHiddenClass(element)) {
-        const descendants = element.getElementsByTagName('*');
-        let containsVisuallyHiddenDescendant = false;
-        for (let i = 0; i < descendants.length; i++) {
-          if (this.hasVisuallyHiddenClass(descendants[i])) {
-            containsVisuallyHiddenDescendant = true;
-            break;
-          }
-        }
-        if (!containsVisuallyHiddenDescendant) {
-          return this.normalizeText(element.textContent || '');
-        }
-      } else {
-        return '';
-      }
-
       const clone = element.cloneNode(true) as HTMLElement;
       if (this.hasVisuallyHiddenClass(clone)) return '';
+
+      // Remove visually-hidden descendants
       const descendants = clone.getElementsByTagName('*');
       for (let i = descendants.length - 1; i >= 0; i--) {
         if (this.hasVisuallyHiddenClass(descendants[i])) {
           descendants[i].remove();
         }
       }
+
+      // Remove extension-injected UI elements (e.g. fork button)
+      clone.querySelectorAll(INJECTED_UI_SELECTOR).forEach((el) => el.remove());
+
       return this.normalizeText(clone.textContent || '');
     } catch {
       return this.normalizeText(element.textContent || '');
@@ -954,9 +957,8 @@ export class TimelineManager {
     let id = asEl.dataset?.turnId || '';
     if (!id) {
       const basis = this.extractTurnText(asEl) || `user-${index}`;
-      // Use only content hash (without index) to ensure stable IDs across page refreshes
-      // This prevents starred messages from losing their stars when the conversation continues
-      id = `u-${hashString(basis)}`;
+      // Append index to ensure unique IDs for identical text content
+      id = `u-${hashString(basis + '|' + index)}`;
       try {
         if (asEl.dataset) asEl.dataset.turnId = id;
       } catch {}
@@ -1807,6 +1809,7 @@ export class TimelineManager {
       this.tooltipHideTimer = null;
     }
     const tip = this.ui.tooltip;
+    tip.setAttribute('dir', 'auto');
     tip.classList.remove('visible');
     let fullText = (dot.getAttribute('aria-label') || '').trim();
     const id = dot.dataset.targetTurnId!;
@@ -1883,6 +1886,7 @@ export class TimelineManager {
   private refreshTooltipForDot(dot: DotElement): void {
     if (!this.ui.tooltip) return;
     const tip = this.ui.tooltip;
+    tip.setAttribute('dir', 'auto');
     if (!tip.classList.contains('visible')) return;
     let fullText = (dot.getAttribute('aria-label') || '').trim();
     const id = dot.dataset.targetTurnId!;
@@ -2104,7 +2108,10 @@ export class TimelineManager {
     const railTop = Math.round(barRect.top + pad + (innerH - railLen) / 2);
     const railLeftGap = 8;
     const sliderWidth = 12;
-    const left = Math.round(barRect.left - railLeftGap - sliderWidth);
+    // In RTL, bar is on the left side — position slider to its right instead
+    const left = this.rtl
+      ? Math.round(barRect.right + railLeftGap)
+      : Math.round(barRect.left - railLeftGap - sliderWidth);
     this.ui.slider.style.left = `${left}px`;
     this.ui.slider.style.top = `${railTop}px`;
     this.ui.slider.style.height = `${railLen}px`;
@@ -2233,6 +2240,20 @@ export class TimelineManager {
   /**
    * Apply position with boundary checks to keep timeline visible
    */
+  private applyRTLUpdate(language?: string | null): void {
+    const wasRTL = this.rtl;
+    this.rtl = applyRTLClass(language);
+    if (wasRTL !== this.rtl) {
+      // Reset inline position so the CSS default for the new direction takes effect
+      if (this.ui.timelineBar) {
+        this.ui.timelineBar.style.top = '';
+        this.ui.timelineBar.style.left = '';
+      }
+      this.updateSlider();
+      this.previewPanel?.reposition();
+    }
+  }
+
   private applyPosition(top: number, left: number): void {
     if (!this.ui.timelineBar) return;
 
@@ -2248,6 +2269,7 @@ export class TimelineManager {
 
     this.ui.timelineBar.style.top = `${clampedTop}px`;
     this.ui.timelineBar.style.left = `${clampedLeft}px`;
+    this.previewPanel?.reposition();
   }
 
   /**
@@ -3269,6 +3291,7 @@ export class TimelineManager {
     this.clearSearchHighlights();
     this.previewPanel?.destroy();
     this.previewPanel = null;
+    document.body.classList.remove(GV_RTL_CLASS);
     this.ui = { timelineBar: null, tooltip: null };
     this.markers = [];
     this.markerTops = [];

@@ -1290,5 +1290,76 @@
   "syncOverwrite": {
     "message": "Overwrite",
     "description": "Overwrite action label"
+  "forkConversation": {
+    "message": "Fork",
+    "description": "Fork conversation button label"
+  },
+  "forkConfirm": {
+    "message": "Fork conversation from this point?",
+    "description": "Fork confirmation prompt"
+  },
+  "forkConfirmBtn": {
+    "message": "Fork",
+    "description": "Fork confirmation button"
+  },
+  "forkCancel": {
+    "message": "Cancel",
+    "description": "Fork cancel button"
+  },
+  "forkBranch": {
+    "message": "Branch",
+    "description": "Fork branch label"
+  },
+  "forkOriginal": {
+    "message": "Original",
+    "description": "Original fork branch tag"
+  },
+  "forkCurrent": {
+    "message": "Current",
+    "description": "Current fork branch tag"
+  },
+  "forkPreparing": {
+    "message": "Preparing fork...",
+    "description": "Fork preparation status"
+  },
+  "forkPasteHint": {
+    "message": "Press Enter to send and create the fork",
+    "description": "Fork paste hint text"
+  },
+  "forkDeleteData": {
+    "message": "Delete this branch",
+    "description": "Delete fork branch metadata button"
+  },
+  "forkDeleteDataConfirm": {
+    "message": "Delete this branch link? This only removes Voyager fork metadata and will not delete any conversation.",
+    "description": "Fork metadata delete confirmation prompt"
+  },
+  "enableForkFeature": {
+    "message": "Enable conversation fork",
+    "description": "Enable conversation fork feature toggle label"
+  },
+  "enableForkFeatureHint": {
+    "message": "Show Fork button and branch indicators in Gemini conversations",
+    "description": "Enable conversation fork feature toggle hint"
+  },
+  "enableAccountIsolation": {
+    "message": "Enable Hard Isolation",
+    "description": "Enable hard isolation for account-scoped folder data and cloud sync."
+  },
+  "enableAccountIsolationHint": {
+    "message": "Strictly isolate folder and cloud sync data by Google account to prevent cross-account mixing.",
+    "description": "Hint text for account isolation option."
+  },
+  "currentPlatform": {
+    "message": "Current platform",
+    "description": "Current active platform label in popup."
+  },
+  "platformGemini": {
+    "message": "Gemini",
+    "description": "Gemini platform label."
+  },
+  "platformAIStudio": {
+    "message": "AI Studio",
+    "description": "AI Studio platform label."
   }
 }

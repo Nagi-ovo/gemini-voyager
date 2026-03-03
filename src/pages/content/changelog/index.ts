@@ -2,7 +2,7 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
 import { StorageKeys } from '@/core/types/common';
-import { isChrome } from '@/core/utils/browser';
+import { isChrome, isFirefox } from '@/core/utils/browser';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 import { getCurrentLanguage } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
@@ -17,6 +17,89 @@ const changelogModules = import.meta.glob('./notes/*.md', {
   import: 'default',
   eager: false,
 }) as Record<string, () => Promise<string>>;
+
+const MARKDOWN_IMAGE_URL_REGEX = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+
+const GITHUB_PROMOTION_PATH_PREFIX =
+  '/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/';
+const RAW_GITHUBUSERCONTENT_PROMOTION_PATH_PREFIX =
+  '/Nagi-ovo/gemini-voyager/main/docs/public/assets/promotion/';
+
+function getPromotionRuntimePath(filename: string): string | null {
+  switch (filename) {
+    case 'Promo-Banner.png':
+      return 'changelog-promo-banner.png';
+    case 'Promo-Banner-cn.png':
+      return 'changelog-promo-banner-cn.png';
+    case 'Promo-Banner-jp.png':
+      return 'changelog-promo-banner-jp.png';
+    default:
+      return null;
+  }
+}
+
+function getRuntimeUrl(path: string): string | null {
+  try {
+    const runtime = (
+      globalThis as typeof globalThis & {
+        browser?: { runtime?: { getURL?: (assetPath: string) => string } };
+        chrome?: { runtime?: { getURL?: (assetPath: string) => string } };
+      }
+    ).browser?.runtime;
+    const fallbackRuntime = (
+      globalThis as typeof globalThis & {
+        chrome?: { runtime?: { getURL?: (assetPath: string) => string } };
+      }
+    ).chrome?.runtime;
+    const getUrl = runtime?.getURL ?? fallbackRuntime?.getURL;
+    return typeof getUrl === 'function' ? getUrl(path) : null;
+  } catch {
+    return null;
+  }
+}
+
+function extractPromotionRuntimePath(url: URL): string | null {
+  const host = url.hostname.toLowerCase();
+  const pathname = url.pathname;
+  const isGithubPromotionImage =
+    (host === 'github.com' && pathname.startsWith(GITHUB_PROMOTION_PATH_PREFIX)) ||
+    (host === 'raw.githubusercontent.com' &&
+      pathname.startsWith(RAW_GITHUBUSERCONTENT_PROMOTION_PATH_PREFIX));
+  if (!isGithubPromotionImage) return null;
+
+  const filename = pathname.split('/').pop();
+  return filename ? getPromotionRuntimePath(filename) : null;
+}
+
+export function resolveChangelogImageUrl(
+  url: string,
+  runtimeUrlResolver: (path: string) => string | null = getRuntimeUrl,
+): string {
+  try {
+    const parsed = new URL(url);
+    const runtimePath = extractPromotionRuntimePath(parsed);
+    if (!runtimePath) return url;
+
+    const runtimeUrl = runtimeUrlResolver(runtimePath);
+    return runtimeUrl ?? url;
+  } catch {
+    return url;
+  }
+}
+
+export function rewriteChangelogImageUrls(
+  markdown: string,
+  runtimeUrlResolver: (path: string) => string | null = getRuntimeUrl,
+  shouldRewrite: boolean = true,
+): string {
+  if (!shouldRewrite) return markdown;
+
+  return markdown.replace(MARKDOWN_IMAGE_URL_REGEX, (full, alt, url) => {
+    const resolvedUrl = resolveChangelogImageUrl(url, runtimeUrlResolver);
+    if (resolvedUrl === url) return full;
+    return `![${alt}](${resolvedUrl})`;
+  });
+}
 
 /**
  * Strip optional front matter (--- ... ---) from markdown.
@@ -194,6 +277,16 @@ function createChangelogModal(
   githubLink.innerHTML =
     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>';
 
+  // X (Twitter) link
+  const xLink = document.createElement('a');
+  xLink.className = 'gv-changelog-icon-link gv-changelog-icon-x';
+  xLink.href = 'https://x.com/Nag1ovo';
+  xLink.target = '_blank';
+  xLink.rel = 'noopener noreferrer';
+  xLink.setAttribute('aria-label', 'X (Twitter)');
+  xLink.innerHTML =
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.26 5.632 5.904-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+
   // Docs link with annotation
   const docsWrapper = document.createElement('div');
   docsWrapper.className = 'gv-changelog-docs-wrapper';
@@ -217,6 +310,7 @@ function createChangelogModal(
 
   iconGroup.appendChild(sponsorLink);
   iconGroup.appendChild(githubLink);
+  iconGroup.appendChild(xLink);
   iconGroup.appendChild(docsWrapper);
 
   const gotItBtn = document.createElement('button');
@@ -303,7 +397,11 @@ async function showChangelogModal(
 
   // 3. Get current language and extract localized content
   const lang = await getCurrentLanguage();
-  const localizedContent = extractLocalizedContent(rawMarkdown, lang);
+  const localizedContent = rewriteChangelogImageUrls(
+    extractLocalizedContent(rawMarkdown, lang),
+    getRuntimeUrl,
+    isFirefox(),
+  );
   if (!localizedContent) return null;
 
   // 4. Convert markdown to HTML

@@ -59,12 +59,15 @@ features:
   - icon: 🏷️
     title: 标签页标题同步
     details: 一眼即知。自动将标签页标题同步为对话标题。
+  - icon: 🔀
+    title: 对话分支 (实验性)
+    details: 发散思维。在任意节点分叉对话，探索不同可能。
   - icon: 🗑️
     title: 批量删除对话
     details: 一键清理。选中多个对话，批量删除，告别繁琐。
-  - icon: ⚡️
-    title: 默认模型
-    details: 拒绝重复劳动。新建对话自动切换至你最爱的模型。
+  # - icon: ⚡️
+  #   title: 默认模型
+  #   details: 拒绝重复劳动。新建对话自动切换至你最爱的模型。
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

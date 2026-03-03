@@ -67,6 +67,10 @@ export const StorageKeys = {
 
   // Folder filtering
   GV_FOLDER_FILTER_USER_ONLY: 'gvFolderFilterUserOnly',
+  GV_ACCOUNT_ISOLATION_ENABLED: 'gvAccountIsolationEnabled',
+  GV_ACCOUNT_ISOLATION_ENABLED_GEMINI: 'gvAccountIsolationEnabledGemini',
+  GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO: 'gvAccountIsolationEnabledAIStudio',
+  GV_ACCOUNT_PROFILE_MAP: 'gvAccountProfileMap',
 
   // Sidebar behavior
   GV_SIDEBAR_AUTO_HIDE: 'gvSidebarAutoHide',
@@ -81,6 +85,10 @@ export const StorageKeys = {
 
   // Changelog
   CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion',
+
+  // Fork nodes
+  FORK_NODES: 'gvForkNodes',
+  FORK_ENABLED: 'gvForkEnabled',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

@@ -403,6 +403,8 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   -webkit-box-orient: vertical;
   overflow: hidden;
   word-break: break-word;
+  text-align: start;
+  unicode-bidi: plaintext;
   opacity: 0;
   will-change: opacity, transform;
   transition: opacity var(--timeline-tooltip-anim-in);
@@ -580,6 +582,7 @@ html.dark .timeline-left-slider::before {
 .timeline-preview-panel {
   position: fixed;
   width: 320px;
+  direction: ltr;
   background-color: var(--timeline-tooltip-bg);
   border: 1px solid var(--timeline-tooltip-border);
   border-radius: var(--timeline-tooltip-radius);
@@ -618,6 +621,7 @@ html.dark .timeline-left-slider::before {
   line-height: 1.4;
   background: transparent;
   color: var(--timeline-tooltip-text);
+  text-align: start;
   outline: none;
   transition: border-color 0.15s ease;
 }
@@ -648,7 +652,7 @@ html.dark .timeline-left-slider::before {
   border-left: 3px solid transparent;
   display: flex;
   align-items: baseline;
-  gap: 0px;
+  gap: 6px;
   transition: background-color 0.1s ease;
 }
 
@@ -662,12 +666,16 @@ html.dark .timeline-left-slider::before {
 }
 
 .timeline-preview-item.starred .timeline-preview-index::after {
-  content: ' \2605';
+  content: '\2605';
+  margin-inline-start: 2px;
   color: var(--timeline-star-color);
   font-size: 11px;
 }
 
 .timeline-preview-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
   flex-shrink: 0;
   font-size: 11px;
   color: var(--timeline-dot-color);
@@ -680,6 +688,8 @@ html.dark .timeline-left-slider::before {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: start;
+  unicode-bidi: plaintext;
 }
 
 .timeline-preview-empty {
@@ -950,10 +960,13 @@ body.dark-theme .gv-export-dropdown-btn:hover,
 
 .gv-pm-panel {
   position: fixed;
+  display: flex;
+  flex-direction: column;
   width: 440px;
   max-width: calc(100vw - 20px);
   max-height: min(75vh, 600px);
   overflow: hidden;
+  --gv-pm-surface: oklch(1 0 0);
   border-radius: 16px;
   background: oklch(1 0 0);
   border: 1px solid oklch(0.9276 0.0058 264.5313 / 0.5);
@@ -976,6 +989,7 @@ body.dark-theme .gv-export-dropdown-btn:hover,
 
 @media (prefers-color-scheme: dark) {
   .gv-pm-panel {
+    --gv-pm-surface: oklch(0.2795 0.0368 260.031);
     background: oklch(0.2795 0.0368 260.031);
     color: oklch(0.8717 0.0093 258.3382);
     border-color: oklch(0.4461 0.0263 256.8018 / 0.5);
@@ -987,6 +1001,7 @@ body.dark-theme .gv-export-dropdown-btn:hover,
 
 .theme-host.dark-theme .gv-pm-panel,
 body.dark-theme .gv-pm-panel {
+  --gv-pm-surface: oklch(0.2795 0.0368 260.031);
   background: oklch(0.2795 0.0368 260.031);
   color: oklch(0.8717 0.0093 258.3382);
   border-color: oklch(0.4461 0.0263 256.8018 / 0.5);
@@ -994,6 +1009,7 @@ body.dark-theme .gv-pm-panel {
 
 .theme-host.light-theme .gv-pm-panel,
 body.light-theme .gv-pm-panel {
+  --gv-pm-surface: oklch(1 0 0);
   background: oklch(1 0 0);
   color: oklch(0.3729 0.0306 259.7328);
   border-color: oklch(0.9276 0.0058 264.5313 / 0.5);
@@ -1459,11 +1475,63 @@ body.dark-theme .gv-pm-search input[type='search']::placeholder {
   opacity: 0.7;
 }
 
+.gv-pm-tags-wrap {
+  position: relative;
+  padding: 0 12px 8px 12px;
+}
+
+.gv-pm-tags-wrap::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 8px;
+  height: 22px;
+  background: linear-gradient(to bottom, oklch(0 0 0 / 0), var(--gv-pm-surface));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.gv-pm-tags-wrap.gv-pm-tags-scrollable:not(.gv-pm-tags-scroll-end)::before {
+  opacity: 1;
+}
+
 .gv-pm-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 0 12px 8px 12px;
+  max-height: min(24vh, 180px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.gv-pm-tags-scroll-hint {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  line-height: 1;
+  background: oklch(0.2077 0.0398 265.7549 / 0.72);
+  color: oklch(0.967 0.0029 264.5419);
+  box-shadow: 0 4px 10px oklch(0 0 0 / 0.2);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.gv-pm-tags-wrap.gv-pm-tags-scrollable:not(.gv-pm-tags-scroll-end) .gv-pm-tags-scroll-hint {
+  opacity: 0.9;
+  transform: translateY(0);
 }
 
 .gv-pm-tag {
@@ -1641,8 +1709,9 @@ body.dark-theme .gv-pm-cancel:hover {
 
 .gv-pm-list {
   padding: 8px 12px 10px 12px;
+  min-height: 120px;
+  flex: 1 1 auto;
   overflow: auto;
-  max-height: 300px;
 }
 
 .gv-pm-empty {
@@ -5372,6 +5441,10 @@ html.dark .gv-changelog-recommendation,
   color: #1a73e8;
 }
 
+.gv-changelog-icon-x:hover {
+  color: #000000;
+}
+
 html.dark .gv-changelog-icon-link,
 [data-theme='dark'] .gv-changelog-icon-link,
 [data-color-scheme='dark'] .gv-changelog-icon-link {
@@ -5400,6 +5473,12 @@ html.dark .gv-changelog-icon-docs:hover,
 [data-theme='dark'] .gv-changelog-icon-docs:hover,
 [data-color-scheme='dark'] .gv-changelog-icon-docs:hover {
   color: #8ab4f8;
+}
+
+html.dark .gv-changelog-icon-x:hover,
+[data-theme='dark'] .gv-changelog-icon-x:hover,
+[data-color-scheme='dark'] .gv-changelog-icon-x:hover {
+  color: #e8eaed;
 }
 
 .gv-changelog-docs-wrapper {
@@ -5558,4 +5637,46 @@ html.dark .gv-changelog-chrome-rating-link:hover,
   object-fit: contain;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
   pointer-events: none;
+}
+
+/* ── RTL Support ── */
+/* Applied via the `gv-rtl` class on document.body when an RTL language is active. */
+
+/* Timeline bar: move from the right edge to the left edge */
+body.gv-rtl .gemini-timeline-bar {
+  right: auto;
+  left: 15px;
+}
+
+/* Prompt manager trigger: mirror to the left side */
+body.gv-rtl .gv-pm-trigger {
+  right: auto;
+  left: 18px;
+}
+
+/* Preview panel: reverse the slide-in direction (from right instead of left) */
+body.gv-rtl .timeline-preview-panel {
+  transform: scale(0.96) translateX(-8px);
+  direction: rtl;
+}
+
+body.gv-rtl .timeline-preview-panel.visible {
+  transform: scale(1) translateX(0);
+}
+
+/* Preview list items: active border on the right side */
+body.gv-rtl .timeline-preview-item {
+  border-left: none;
+  border-right: 3px solid transparent;
+  padding: 6px 6px 6px 10px;
+}
+
+body.gv-rtl .timeline-preview-item.active {
+  border-right-color: var(--timeline-dot-active-color);
+}
+
+/* Preview index: right-align numbers in RTL */
+body.gv-rtl .timeline-preview-index {
+  text-align: right;
+  justify-content: flex-end;
 }

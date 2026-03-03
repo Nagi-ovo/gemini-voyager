@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
+import { GV_RTL_CLASS, detectRTL } from '@/core/utils/rtl';
 
 import { getTranslationSync } from '../../../utils/i18n';
 import type { PreviewMarkerData } from './types';
@@ -42,6 +43,7 @@ export class TimelinePreviewPanel {
     this.onNavigate = onNavigate;
     this.onSearchChange = onSearchChange ?? null;
     this.createDOM();
+    this.applyDirection();
     this.positionToggle();
     this.setupEventListeners();
   }
@@ -58,6 +60,13 @@ export class TimelinePreviewPanel {
     if (!this._isOpen || !this.listEl) return;
     this.updateActiveHighlight();
     this.scrollActiveIntoView();
+  }
+
+  /** Reposition toggle and panel after layout changes (e.g. RTL switch, resize). */
+  reposition(): void {
+    this.applyDirection();
+    this.positionToggle();
+    if (this._isOpen) this.positionPanel();
   }
 
   toggle(): void {
@@ -146,6 +155,7 @@ export class TimelinePreviewPanel {
     searchWrapper.className = 'timeline-preview-search';
     this.searchInput = document.createElement('input');
     this.searchInput.type = 'text';
+    this.searchInput.setAttribute('dir', 'auto');
     this.searchInput.placeholder = getTranslationSync('timelinePreviewSearch');
     this.searchInput.addEventListener('input', () => {
       this.handleSearchInput();
@@ -199,12 +209,24 @@ export class TimelinePreviewPanel {
   }
 
   private updateTranslatedText(): void {
+    this.applyDirection();
     if (this.searchInput) {
       this.searchInput.placeholder = getTranslationSync('timelinePreviewSearch');
     }
     if (this._isOpen) {
       this.renderList();
     }
+  }
+
+  private isRTLContext(): boolean {
+    return document.body.classList.contains(GV_RTL_CLASS) || detectRTL();
+  }
+
+  private applyDirection(): void {
+    const dir = this.isRTLContext() ? 'rtl' : 'ltr';
+    this.panelEl?.setAttribute('dir', dir);
+    this.listEl?.setAttribute('dir', dir);
+    this.toggleBtn?.setAttribute('dir', dir);
   }
 
   private setupScrollIsolation(): void {
@@ -225,13 +247,17 @@ export class TimelinePreviewPanel {
     );
   }
 
-  /** Position the toggle button to the left of the timeline bar, vertically centered. */
+  /** Position the toggle button beside the timeline bar, vertically centered.
+   *  Keep it on the bar's left side and clamp within viewport bounds. */
   private positionToggle(): void {
     if (!this.toggleBtn) return;
     const barRect = this.anchorElement.getBoundingClientRect();
     const btnSize = 24;
     const gap = 4;
-    this.toggleBtn.style.left = `${Math.round(barRect.left - btnSize - gap)}px`;
+    const minLeft = 8;
+    const maxLeft = Math.max(minLeft, window.innerWidth - btnSize - 8);
+    const leftPx = Math.max(minLeft, Math.min(Math.round(barRect.left - btnSize - gap), maxLeft));
+    this.toggleBtn.style.left = `${leftPx}px`;
     this.toggleBtn.style.top = `${Math.round(barRect.top + barRect.height / 2 - btnSize / 2)}px`;
   }
 
@@ -242,9 +268,20 @@ export class TimelinePreviewPanel {
     const gap = 12;
     const maxHeight = Math.min(500, window.innerHeight * 0.7);
     const barCenterY = barRect.top + barRect.height / 2;
+    const isRTL = this.isRTLContext();
 
-    let left = barRect.left - panelWidth - gap;
-    if (left < 8) left = 8;
+    let left: number;
+    if (isRTL) {
+      // In RTL, bar is on the left — place panel to its right
+      left = barRect.right + gap;
+      if (left + panelWidth > window.innerWidth - 8) {
+        left = window.innerWidth - panelWidth - 8;
+      }
+    } else {
+      // In LTR, bar is on the right — place panel to its left
+      left = barRect.left - panelWidth - gap;
+      if (left < 8) left = 8;
+    }
 
     this.panelEl.style.maxHeight = `${Math.round(maxHeight)}px`;
     this.panelEl.style.left = `${Math.round(left)}px`;
@@ -321,6 +358,7 @@ export class TimelinePreviewPanel {
 
     const text = document.createElement('span');
     text.className = 'timeline-preview-text';
+    text.setAttribute('dir', 'auto');
     const displayText = this.truncateText(marker.summary, 80);
     if (this.searchQuery) {
       this.appendHighlighted(text, displayText, this.searchQuery);

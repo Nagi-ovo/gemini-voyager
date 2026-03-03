@@ -1290,5 +1290,76 @@
   "syncOverwrite": {
     "message": "Overwrite",
     "description": "Overwrite action label"
+  "forkConversation": {
+    "message": "Fork",
+    "description": "Fork conversation button label"
+  },
+  "forkConfirm": {
+    "message": "Fork conversation from this point?",
+    "description": "Fork confirmation prompt"
+  },
+  "forkConfirmBtn": {
+    "message": "Fork",
+    "description": "Fork confirmation button"
+  },
+  "forkCancel": {
+    "message": "Cancel",
+    "description": "Fork cancel button"
+  },
+  "forkBranch": {
+    "message": "Branch",
+    "description": "Fork branch label"
+  },
+  "forkOriginal": {
+    "message": "Original",
+    "description": "Original fork branch tag"
+  },
+  "forkCurrent": {
+    "message": "Current",
+    "description": "Current fork branch tag"
+  },
+  "forkPreparing": {
+    "message": "Preparing fork...",
+    "description": "Fork preparation status"
+  },
+  "forkPasteHint": {
+    "message": "Press Enter to send and create the fork",
+    "description": "Fork paste hint text"
+  },
+  "forkDeleteData": {
+    "message": "刪除此分支",
+    "description": "Delete fork branch metadata button"
+  },
+  "forkDeleteDataConfirm": {
+    "message": "刪除此分支關聯？只會移除 Voyager 的分支中繼資料，不會刪除任何對話。",
+    "description": "Fork metadata delete confirmation prompt"
+  },
+  "enableForkFeature": {
+    "message": "啟用對話分叉",
+    "description": "Enable conversation fork feature toggle label"
+  },
+  "enableForkFeatureHint": {
+    "message": "在 Gemini 對話中顯示 Fork 按鈕與分支序號",
+    "description": "Enable conversation fork feature toggle hint"
+  },
+  "enableAccountIsolation": {
+    "message": "啟用硬隔離（Hard Isolation）",
+    "description": "Enable hard isolation for account-scoped folder data and cloud sync."
+  },
+  "enableAccountIsolationHint": {
+    "message": "依 Google 帳號嚴格隔離資料夾與雲端同步資料，避免任何跨帳號混用。",
+    "description": "Hint text for account isolation option."
+  },
+  "currentPlatform": {
+    "message": "目前平台",
+    "description": "Current active platform label in popup."
+  },
+  "platformGemini": {
+    "message": "Gemini",
+    "description": "Gemini platform label."
+  },
+  "platformAIStudio": {
+    "message": "AI Studio",
+    "description": "AI Studio platform label."
   }
 }

@@ -9,6 +9,8 @@ interface EventMap {
   'starred:added': { conversationId: string; turnId: string };
   'starred:removed': { conversationId: string; turnId: string };
   'starred:updated': { conversationId: string };
+  'fork:added': { conversationId: string; turnId: string; forkGroupId: string };
+  'fork:removed': { conversationId: string; turnId: string; forkGroupId: string };
 }
 
 export class EventBus {

@@ -21,6 +21,12 @@ export type SyncMode = 'disabled' | 'manual' | 'auto';
  */
 export type SyncPlatform = 'gemini' | 'aistudio';
 
+export interface SyncAccountScope {
+  accountKey: string;
+  accountId: number;
+  routeUserId: string | null;
+}
+
 /**
  * Current sync state for UI display
  */
@@ -93,6 +99,24 @@ export interface StarredExportPayload {
 }
 
 /**
+ * Re-export fork node types from their canonical source
+ */
+export type {
+  ForkNode as ForkNodeSync,
+  ForkNodesData as ForkNodesDataSync,
+} from '@/pages/content/fork/forkTypes';
+
+/**
+ * Fork nodes export payload format
+ */
+export interface ForkExportPayload {
+  format: 'gemini-voyager.forks.v1';
+  exportedAt: string;
+  version?: string;
+  data: import('@/pages/content/fork/forkTypes').ForkNodesData;
+}
+
+/**
  * Data payload synced to Google Drive
  * Uses embedded export formats for compatibility with import/export feature
  */
@@ -151,6 +175,9 @@ export interface SyncMessage {
   payload?: {
     mode?: SyncMode;
     data?: SyncData;
+    interactive?: boolean;
+    platform?: SyncPlatform;
+    accountScope?: SyncAccountScope;
   };
 }
 
