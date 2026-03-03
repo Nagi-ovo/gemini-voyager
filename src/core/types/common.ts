@@ -95,6 +95,9 @@ export const StorageKeys = {
   AUTO_CATEGORIZATION_PREFIX: 'gvAutoCategorizationPrefix',
   AUTO_CATEGORIZATION_SHORTCUT: 'gvAutoCategorizationShortcut',
   AUTO_CATEGORIZATION_CLASSIFIER_ID: 'gvAutoCategorizationClassifierId',
+  AUTO_CATEGORIZATION_STRICT_MATCH: 'gvAutoCategorizationStrictMatch',
+  AUTO_CATEGORIZATION_INDEX_ROUTING: 'gvAutoCategorizationIndexRouting',
+  AUTO_CATEGORIZATION_ROUTING_SEPARATOR: 'gvAutoCategorizationRoutingSeparator',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

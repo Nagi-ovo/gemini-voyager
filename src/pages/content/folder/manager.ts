@@ -729,11 +729,13 @@ export class FolderManager {
     // Render root level folders (sorted)
     const rootFolders = this.data.folders.filter((f) => f.parentId === null);
     const sortedRootFolders = this.sortFolders(rootFolders);
+    let visibleRootIndex = 0;
     sortedRootFolders.forEach((folder) => {
       // Filter out empty folders if "Show current user only" is enabled
       if (!this.hasVisibleContent(folder.id)) return;
 
-      const folderElement = this.createFolderElement(folder);
+      visibleRootIndex++;
+      const folderElement = this.createFolderElement(folder, 0, visibleRootIndex);
       list.appendChild(folderElement);
     });
 
@@ -748,7 +750,7 @@ export class FolderManager {
     return list;
   }
 
-  private createFolderElement(folder: Folder, level = 0): HTMLElement {
+  private createFolderElement(folder: Folder, level = 0, relativeIndex = 0): HTMLElement {
     const folderEl = document.createElement('div');
     folderEl.className = 'gv-folder-item';
     folderEl.dataset.folderId = folder.id;
@@ -822,6 +824,18 @@ export class FolderManager {
 
     folderHeader.appendChild(expandBtn);
     folderHeader.appendChild(folderIcon);
+
+    if (relativeIndex > 0) {
+      const indexSpan = document.createElement('span');
+      indexSpan.className = 'gv-folder-index';
+      indexSpan.textContent = `${relativeIndex} `;
+      indexSpan.style.opacity = '0.5';
+      indexSpan.style.marginRight = '4px';
+      indexSpan.style.fontSize = '0.9em';
+      indexSpan.style.userSelect = 'none';
+      folderHeader.appendChild(indexSpan);
+    }
+
     folderHeader.appendChild(folderName);
     folderHeader.appendChild(pinBtn);
     folderHeader.appendChild(actionsBtn);
@@ -854,11 +868,13 @@ export class FolderManager {
       // Render subfolders (sorted)
       const subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
       const sortedSubfolders = this.sortFolders(subfolders);
+      let visibleSubIndex = 0;
       sortedSubfolders.forEach((subfolder) => {
         // Filter out empty folders if "Show current user only" is enabled
         if (!this.hasVisibleContent(subfolder.id)) return;
 
-        const subfolderEl = this.createFolderElement(subfolder, level + 1);
+        visibleSubIndex++;
+        const subfolderEl = this.createFolderElement(subfolder, level + 1, visibleSubIndex);
         content.appendChild(subfolderEl);
       });
 
@@ -2830,9 +2846,9 @@ export class FolderManager {
       // Strategy 2: Look for menu items containing delete text (supports translations)
       const menuItems = document.querySelectorAll(
         '.cdk-overlay-container button, ' +
-          '.cdk-overlay-container [role="menuitem"], ' +
-          '.mat-mdc-menu-content button, ' +
-          '.mat-menu-content button',
+        '.cdk-overlay-container [role="menuitem"], ' +
+        '.mat-mdc-menu-content button, ' +
+        '.mat-menu-content button',
       );
 
       for (const item of menuItems) {
@@ -4968,7 +4984,7 @@ export class FolderManager {
   private showDataLossNotification(): void {
     this.showNotificationByLevel(
       getTranslationSync('folderManager_dataLossWarning') ||
-        'Warning: Failed to load folder data. Please check your browser console for details.',
+      'Warning: Failed to load folder data. Please check your browser console for details.',
       'error',
     );
   }
@@ -6410,14 +6426,14 @@ export class FolderManager {
         },
       })) as
         | {
-            ok?: boolean;
-            error?: string;
-            data?: {
-              folders?: { data?: FolderData };
-              prompts?: { items?: PromptItem[] };
-              starred?: { data?: { messages: Record<string, unknown[]> } };
-            };
-          }
+          ok?: boolean;
+          error?: string;
+          data?: {
+            folders?: { data?: FolderData };
+            prompts?: { items?: PromptItem[] };
+            starred?: { data?: { messages: Record<string, unknown[]> } };
+          };
+        }
         | undefined;
 
       if (!response?.ok) {
