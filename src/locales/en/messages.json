@@ -1290,6 +1290,7 @@
   "syncOverwrite": {
     "message": "Overwrite",
     "description": "Overwrite action label"
+  },
   "forkConversation": {
     "message": "Fork",
     "description": "Fork conversation button label"
