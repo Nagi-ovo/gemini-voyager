@@ -96,17 +96,45 @@ export class TriggerService {
   }
 
   private checkAndTriggerCategorization(el: HTMLElement) {
+    if (this.isTemporaryChat()) return;
+
     const text = this.getInputText(el).trim();
-    // Trigger if text starts with configured prefix or its full-width equivalent (。)
-    const isDotPrefix = this.prefix === '.';
-    if (text.startsWith(this.prefix) || (isDotPrefix && text.startsWith('。'))) {
-      const matchedPrefix = text.startsWith(this.prefix) ? this.prefix : '。';
+    const prefixes = this.getEquivalentPrefixes(this.prefix);
+
+    const matchedPrefix = prefixes.find((p) => text.startsWith(p));
+    if (matchedPrefix) {
       const userPromptContext = text.substring(matchedPrefix.length).trim();
-      // Do not wait 3 seconds here. AutoCategorizationService will wait for the response to finish.
       autoCategorizationService.categorizeCurrentConversation(userPromptContext).catch(() => {
         // Silently fail
       });
     }
+  }
+
+  private isTemporaryChat(): boolean {
+    // 1. URL check: Temporary chat stays at /app even after sending messages
+    // (Note: Regular new chat also starts at /app, but categorization requires existing history)
+    const isAppPath = window.location.pathname.endsWith('/app');
+    // 2. DOM marker: Gemini adds a specific class or attributes for temp mode
+    const hasTempMarker = !!document.querySelector(
+      '.temp-chat-on, [aria-label*="Temporary"], [aria-label*="临时"] .temp-chat-on',
+    );
+
+    return isAppPath && hasTempMarker;
+  }
+
+  private getEquivalentPrefixes(prefix: string): string[] {
+    const groups = [
+      ['.', '。'],
+      ['/', '\\', '、'],
+      [',', '，'],
+      [':', '：'],
+      [';', '；'],
+      ['!', '！'],
+      ['?', '？'],
+    ];
+
+    const group = groups.find((g) => g.includes(prefix));
+    return group || [prefix];
   }
 
   private setupShortcutListener() {
