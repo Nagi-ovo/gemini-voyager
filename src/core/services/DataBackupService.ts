@@ -198,6 +198,12 @@ export class DataBackupService<T = unknown> {
   private isBackupValid(backup: BackupData<T>): boolean {
     try {
       const backupTime = new Date(backup.metadata.timestamp).getTime();
+
+      if (isNaN(backupTime)) {
+        console.warn(`[BackupService:${this.namespace}] Backup has invalid timestamp`);
+        return false;
+      }
+
       const age = Date.now() - backupTime;
 
       if (age < 0) {
