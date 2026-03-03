@@ -34,6 +34,20 @@ export class TriggerService {
 
     this.setupSendInterceptors();
     this.setupShortcutListener();
+    this.setupStorageListener();
+  }
+
+  private setupStorageListener() {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'sync') {
+        if (changes[StorageKeys.AUTO_CATEGORIZATION_PREFIX]) {
+          this.prefix = changes[StorageKeys.AUTO_CATEGORIZATION_PREFIX].newValue;
+        }
+        if (changes[StorageKeys.AUTO_CATEGORIZATION_SHORTCUT]) {
+          this.shortcut = changes[StorageKeys.AUTO_CATEGORIZATION_SHORTCUT].newValue;
+        }
+      }
+    });
   }
 
   private setupSendInterceptors() {
