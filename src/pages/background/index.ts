@@ -340,8 +340,7 @@ class StarredMessagesManager {
   private async getFromStorage(): Promise<StarredMessagesData> {
     try {
       const result = await chrome.storage.local.get([StorageKeys.TIMELINE_STARRED_MESSAGES]);
-      const data = result[StorageKeys.TIMELINE_STARRED_MESSAGES] as StarredMessagesData | undefined;
-      return data || ({ messages: {} } as StarredMessagesData);
+      return result[StorageKeys.TIMELINE_STARRED_MESSAGES] || { messages: {} };
     } catch (error) {
       console.error('[Background] Failed to get starred messages:', error);
       return { messages: {} };
@@ -439,8 +438,7 @@ class ForkNodesManager {
   private async getFromStorage(): Promise<ForkNodesData> {
     try {
       const result = await chrome.storage.local.get([StorageKeys.FORK_NODES]);
-      const data = result[StorageKeys.FORK_NODES] as ForkNodesData | undefined;
-      return data || ({ nodes: {}, groups: {} } as ForkNodesData);
+      return result[StorageKeys.FORK_NODES] || { nodes: {}, groups: {} };
     } catch (error) {
       console.error('[Background] Failed to get fork nodes:', error);
       return { nodes: {}, groups: {} };
