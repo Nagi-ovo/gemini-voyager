@@ -104,7 +104,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - **[Prevent Auto Scroll](https://voyager.nagi.fun/en/guide/prevent-auto-scroll)**: Intercepts unwanted jumping behavior when hitting enter to send a new prompt.
   - **[Input Collapse](https://voyager.nagi.fun/en/guide/input-collapse)**: Auto-expandable input area for more reading space.
   - **[Default Model](https://voyager.nagi.fun/en/guide/default-model)**: Set your favorite model as default.
-  - **[Auto Categorization](https://voyager.nagi.fun/en/guide/auto-categorization)**: Automatically sort new conversations into folders using AI, triggered by an input prefix or keyboard shortcut.
+  - **[Auto Categorization](https://voyager.nagi.fun/en/guide/auto-categorization)**: Automatically sort new conversations into folders using AI, triggered by an input prefix or keyboard shortcut. Supports **Strict Prefix Match**, **Index Routing** (type `prefix + folder index` like `.1 2` to skip AI and assign instantly), and configurable **Index Separator**.
   - **[Hide Recent Items](https://voyager.nagi.fun/en/guide/recents-hider)**: Hide "Recent" list in the sidebar to reduce distraction.
 
 ---
