@@ -83,7 +83,8 @@ export class TriggerService {
         // Trigger if text starts with configured prefix or its full-width equivalent (。)
         const isDotPrefix = this.prefix === '.';
         if (text.startsWith(this.prefix) || (isDotPrefix && text.startsWith('。'))) {
-            const userPromptContext = text.substring(1).trim(); // Remove the prefix character
+            const matchedPrefix = text.startsWith(this.prefix) ? this.prefix : '。';
+            const userPromptContext = text.substring(matchedPrefix.length).trim();
             // Do not wait 3 seconds here. AutoCategorizationService will wait for the response to finish.
             autoCategorizationService.categorizeCurrentConversation(userPromptContext).catch(() => {
                 // Silently fail
