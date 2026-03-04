@@ -1,0 +1,45 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "a02cc0564cf5",
+  "session_id": "44688d80-8b7f-4fcd-8bb8-85951d4fd9cb",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-04T16:20:31.664812Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/core/types/common.ts",
+    "src/locales/fr/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/pages/content/index.tsx",
+    "src/pages/content/upsellHider/index.ts",
+    ".github/README_ZH.md",
+    "src/locales/es/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/popup/Popup.tsx",
+    "README.md",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/ja/messages.json"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "242fd4bc4fc8",
+  "token_usage": {
+    "input_tokens": 6,
+    "cache_creation_tokens": 15196,
+    "cache_read_tokens": 143089,
+    "output_tokens": 777,
+    "api_call_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-04T16:20:31.644575Z",
+    "agent_lines": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 0,
+    "agent_percentage": 0
+  }
+}

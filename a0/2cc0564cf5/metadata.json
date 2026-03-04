@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "a02cc0564cf5",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".github/README_ZH.md",
+    "README.md",
+    "src/core/types/common.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/index.tsx",
+    "src/pages/content/upsellHider/index.ts",
+    "src/pages/popup/Popup.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/a0/2cc0564cf5/0/metadata.json",
+      "transcript": "/a0/2cc0564cf5/0/full.jsonl",
+      "context": "/a0/2cc0564cf5/0/context.md",
+      "content_hash": "/a0/2cc0564cf5/0/content_hash.txt",
+      "prompt": "/a0/2cc0564cf5/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 6,
+    "cache_creation_tokens": 15196,
+    "cache_read_tokens": 143089,
+    "output_tokens": 777,
+    "api_call_count": 4
+  }
+}
