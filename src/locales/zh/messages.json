@@ -1374,5 +1374,13 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  },
+  "export_select_mode_only_user": {
+    "message": "仅选用户",
+    "description": "Export selection mode: select only user messages"
+  },
+  "export_select_mode_only_ai": {
+    "message": "仅选模型",
+    "description": "Export selection mode: select only AI messages"
   }
 }

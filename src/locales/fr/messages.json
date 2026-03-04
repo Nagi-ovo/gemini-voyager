@@ -1188,11 +1188,11 @@
     "description": "Wide subfolder indentation label"
   },
   "export_select_mode_select_all": {
-    "message": "Select all",
+    "message": "Tout sélectionner",
     "description": "Selection mode select all toggle"
   },
   "export_select_mode_count": {
-    "message": "Selected {count}",
+    "message": "{count} sélectionné(s)",
     "description": "Selection mode selected message count"
   },
   "export_select_mode_toggle": {
@@ -1366,6 +1366,14 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  },
+  "export_select_mode_only_user": {
+    "message": "Sélectionner uniquement l'utilisateur",
+    "description": "Export selection mode: select only user messages"
+  },
+  "export_select_mode_only_ai": {
+    "message": "Sélectionner uniquement l'IA",
+    "description": "Export selection mode: select only AI messages"
   },
   "hideUpsell": {
     "message": "Masquer les invites de mise à niveau",

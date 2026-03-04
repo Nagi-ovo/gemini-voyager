@@ -1,7 +1,9 @@
 /**
  * Tests for inputCollapse feature
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { StorageKeys } from '@/core/types/common';
 
 // Mock webextension-polyfill BEFORE importing the module
 vi.mock('webextension-polyfill', () => ({
@@ -23,7 +25,7 @@ global.chrome = {
       addListener: vi.fn(),
     },
   },
-} as any;
+} as unknown as typeof chrome;
 
 // Mock i18n
 vi.mock('@/utils/i18n', () => ({
@@ -43,9 +45,12 @@ describe('inputCollapse', () => {
     document.body.innerHTML = '';
 
     // Default mock for storage.get
-    (chrome.storage.sync.get as any).mockImplementation(
+    (chrome.storage.sync.get as unknown as Mock).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvInputCollapseEnabled: false, gvInputCollapseWhenNotEmpty: false });
+        callback({
+          [StorageKeys.INPUT_COLLAPSE_ENABLED]: false,
+          [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: false,
+        });
       },
     );
   });
@@ -84,12 +89,12 @@ describe('inputCollapse', () => {
 
   describe('Feature disabled', () => {
     it('does not initialize when feature is disabled', async () => {
-      (chrome.storage.sync.get as any).mockImplementation(
+      (chrome.storage.sync.get as unknown as Mock).mockImplementation(
         (
           _defaults: Record<string, unknown>,
           callback: (result: Record<string, unknown>) => void,
         ) => {
-          callback({ gvInputCollapseEnabled: false });
+          callback({ [StorageKeys.INPUT_COLLAPSE_ENABLED]: false });
         },
       );
 
@@ -103,12 +108,15 @@ describe('inputCollapse', () => {
 
   describe('Default behavior (collapse only when empty)', () => {
     beforeEach(async () => {
-      (chrome.storage.sync.get as any).mockImplementation(
+      (chrome.storage.sync.get as unknown as Mock).mockImplementation(
         (
           _defaults: Record<string, unknown>,
           callback: (result: Record<string, unknown>) => void,
         ) => {
-          callback({ gvInputCollapseEnabled: true, gvInputCollapseWhenNotEmpty: false });
+          callback({
+            [StorageKeys.INPUT_COLLAPSE_ENABLED]: true,
+            [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: false,
+          });
         },
       );
 
@@ -159,12 +167,15 @@ describe('inputCollapse', () => {
 
   describe('Allow collapse when not empty (new feature)', () => {
     beforeEach(async () => {
-      (chrome.storage.sync.get as any).mockImplementation(
+      (chrome.storage.sync.get as unknown as Mock).mockImplementation(
         (
           _defaults: Record<string, unknown>,
           callback: (result: Record<string, unknown>) => void,
         ) => {
-          callback({ gvInputCollapseEnabled: true, gvInputCollapseWhenNotEmpty: true });
+          callback({
+            [StorageKeys.INPUT_COLLAPSE_ENABLED]: true,
+            [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: true,
+          });
         },
       );
 
@@ -219,12 +230,15 @@ describe('inputCollapse', () => {
   describe('Setting changes', () => {
     it('responds to enable/disable changes dynamically', async () => {
       // Start with feature enabled
-      (chrome.storage.sync.get as any).mockImplementation(
+      (chrome.storage.sync.get as unknown as Mock).mockImplementation(
         (
           _defaults: Record<string, unknown>,
           callback: (result: Record<string, unknown>) => void,
         ) => {
-          callback({ gvInputCollapseEnabled: true, gvInputCollapseWhenNotEmpty: false });
+          callback({
+            [StorageKeys.INPUT_COLLAPSE_ENABLED]: true,
+            [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: false,
+          });
         },
       );
 
@@ -239,10 +253,10 @@ describe('inputCollapse', () => {
       expect(container.classList.contains('gv-input-collapsed')).toBe(true);
 
       // Simulate setting change to disabled
-      const mockCallbacks = (chrome.storage.onChanged.addListener as any).mock.calls;
+      const mockCallbacks = (chrome.storage.onChanged.addListener as unknown as Mock).mock.calls;
       if (mockCallbacks && mockCallbacks.length > 0) {
         const onChangeCallback = mockCallbacks[0][0];
-        onChangeCallback({ gvInputCollapseEnabled: { newValue: false } }, 'sync');
+        onChangeCallback({ [StorageKeys.INPUT_COLLAPSE_ENABLED]: { newValue: false } }, 'sync');
 
         container.classList.remove('gv-input-collapsed');
         container.dispatchEvent(focusOutEvent);

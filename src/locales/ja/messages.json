@@ -1367,6 +1367,14 @@
     "message": "AI Studio",
     "description": "AI Studio platform label."
   },
+  "export_select_mode_only_user": {
+    "message": "ユーザーのみ選択",
+    "description": "Export selection mode: select only user messages"
+  },
+  "export_select_mode_only_ai": {
+    "message": "AIのみ選択",
+    "description": "Export selection mode: select only AI messages"
+  },
   "hideUpsell": {
     "message": "アップグレード案内を非表示",
     "description": "Hide the \"Upgrade to AI Ultra\" prompt"

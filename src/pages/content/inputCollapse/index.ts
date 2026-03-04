@@ -305,6 +305,7 @@ export function startInputCollapse() {
     },
     (res) => {
       if (res?.[StorageKeys.INPUT_COLLAPSE_ENABLED] === false) {
+        // Feature is disabled, don't initialize
         return;
       }
 

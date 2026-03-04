@@ -4949,6 +4949,8 @@ html.dark-theme .gv-export-msg-checkbox:hover,
   position: fixed;
   left: 50%;
   top: 12px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
   transform: translateX(-50%);
   z-index: 2147483600;
   display: flex;
@@ -4963,9 +4965,18 @@ html.dark-theme .gv-export-msg-checkbox:hover,
   box-shadow:
     0 12px 30px rgba(0, 0, 0, 0.38),
     0 2px 8px rgba(0, 0, 0, 0.22);
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.gv-export-select-bar::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 .gv-export-select-all-toggle,
+.gv-export-select-role-btn,
 .gv-export-select-export-btn,
 .gv-export-select-cancel-btn {
   border: 0;
@@ -4973,8 +4984,10 @@ html.dark-theme .gv-export-msg-checkbox:hover,
   transition: all 0.12s ease;
 }
 
-.gv-export-select-all-toggle {
+.gv-export-select-all-toggle,
+.gv-export-select-role-btn {
   min-width: 68px;
+  flex-shrink: 0;
   height: 34px;
   padding: 0 12px;
   border-radius: 10px;
@@ -4982,27 +4995,34 @@ html.dark-theme .gv-export-msg-checkbox:hover,
   color: #e5ecf5;
   font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
-.gv-export-select-all-toggle[data-checked='true'] {
+.gv-export-select-all-toggle[data-checked='true'],
+.gv-export-select-role-btn[data-checked='true'],
+.gv-export-select-role-btn:active {
   background: rgba(22, 163, 74, 0.24);
   color: #bbf7d0;
 }
 
-.gv-export-select-all-toggle:hover {
+.gv-export-select-all-toggle:hover:not(:active),
+.gv-export-select-role-btn:hover:not(:active) {
   background: rgba(255, 255, 255, 0.14);
 }
 
 .gv-export-select-count {
   min-width: 92px;
+  flex-shrink: 0;
   text-align: center;
   color: #cfd8e3;
   font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .gv-export-select-export-btn {
   min-width: 74px;
+  flex-shrink: 0;
   height: 34px;
   padding: 0 14px;
   border-radius: 10px;
@@ -5010,6 +5030,7 @@ html.dark-theme .gv-export-msg-checkbox:hover,
   color: #fff;
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .gv-export-select-export-btn:hover:not(:disabled) {
@@ -5023,6 +5044,7 @@ html.dark-theme .gv-export-msg-checkbox:hover,
 
 .gv-export-select-cancel-btn {
   width: 34px;
+  flex-shrink: 0;
   height: 34px;
   border-radius: 10px;
   background: transparent;
