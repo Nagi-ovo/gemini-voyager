@@ -240,7 +240,10 @@ export function collapseInput(): void {
   const container = getInputContainer();
   if (!container) return;
 
-  // Immediately collapse (ignore delay and state checks)
+  // Respect the "collapse when not empty" setting
+  if (!allowCollapseWhenNotEmpty && !isInputEmpty(container)) return;
+
+  // Immediately collapse
   container.classList.add(COLLAPSED_CLASS);
 
   // Remove focus from the input
@@ -296,35 +299,45 @@ function ensurePlaceholder(container: HTMLElement) {
 export function startInputCollapse() {
   // Check if feature is enabled (default: false)
   chrome.storage?.sync?.get(
-    { gvInputCollapseEnabled: false, gvInputCollapseWhenNotEmpty: false },
+    {
+      [StorageKeys.INPUT_COLLAPSE_ENABLED]: false,
+      [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: false,
+    },
     (res) => {
-      if (res?.gvInputCollapseEnabled === false) {
-        // Feature is disabled, don't initialize
-        console.log('[Gemini Voyager] Input collapse is disabled');
+      if (res?.[StorageKeys.INPUT_COLLAPSE_ENABLED] === false) {
         return;
       }
 
       // Feature is enabled, proceed with initialization
-      initInputCollapse(res?.gvInputCollapseWhenNotEmpty === true);
+      initInputCollapse(res?.[StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY] === true);
     },
   );
 
   // Listen for setting changes
   chrome.storage?.onChanged?.addListener((changes, area) => {
+    if (area !== 'sync') return;
     if (
-      area === 'sync' &&
-      (changes.gvInputCollapseEnabled || changes.gvInputCollapseWhenNotEmpty)
-    ) {
-      if (changes.gvInputCollapseEnabled?.newValue === false) {
-        // Disable: remove styles and classes
-        cleanup();
-      }
-    } else {
-      // Enable or setting changed: re-read both settings and re-initialize
-      chrome.storage?.sync?.get({ gvInputCollapseWhenNotEmpty: false }, (res) => {
-        allowCollapseWhenNotEmpty = res?.gvInputCollapseWhenNotEmpty === true;
+      !changes[StorageKeys.INPUT_COLLAPSE_ENABLED] &&
+      !changes[StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]
+    )
+      return;
 
-        initInputCollapse(allowCollapseWhenNotEmpty);
+    if (changes[StorageKeys.INPUT_COLLAPSE_ENABLED]?.newValue === false) {
+      // Disable: remove styles and classes
+      cleanup();
+      return;
+    }
+
+    if (changes[StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]) {
+      // Update the setting in-place (no need to re-initialize)
+      allowCollapseWhenNotEmpty =
+        changes[StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY].newValue === true;
+    }
+
+    if (changes[StorageKeys.INPUT_COLLAPSE_ENABLED]?.newValue === true) {
+      // Enable: initialize with current sub-setting
+      chrome.storage?.sync?.get({ [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: false }, (res) => {
+        initInputCollapse(res?.[StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY] === true);
       });
     }
   });

@@ -39,39 +39,6 @@ describe('TimelinePreviewPanel', () => {
   let onNavigate: (turnId: string, index: number) => void;
 
   beforeEach(() => {
-    // Ensure PointerEvent is available in jsdom environment
-    if (typeof (globalThis as { PointerEvent?: unknown }).PointerEvent === 'undefined') {
-      (globalThis as { PointerEvent?: typeof PointerEvent }).PointerEvent =
-        class PointerEvent extends MouseEvent {
-          public pointerId: number;
-          public width: number;
-          public height: number;
-          public pressure: number;
-          public tangentialPressure: number;
-          public tiltX: number;
-          public tiltY: number;
-          public twist: number;
-          public pointerType: string;
-          public isPrimary: boolean;
-
-          constructor(
-            type: string,
-            options: PointerEventInit & { bubbles?: boolean; cancelable?: boolean },
-          ) {
-            super(type, options);
-            this.pointerId = options.pointerId ?? 0;
-            this.width = options.width ?? 0;
-            this.height = options.height ?? 0;
-            this.pressure = options.pressure ?? 0;
-            this.tangentialPressure = options.tangentialPressure ?? 0;
-            this.tiltX = options.tiltX ?? 0;
-            this.tiltY = options.tiltY ?? 0;
-            this.twist = options.twist ?? 0;
-            this.pointerType = options.pointerType ?? '';
-            this.isPrimary = options.isPrimary ?? false;
-          }
-        } as unknown as typeof PointerEvent;
-    }
     document.body.innerHTML = '';
     document.body.className = '';
     anchor = document.createElement('div');
