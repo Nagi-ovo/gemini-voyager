@@ -10,4 +10,5 @@ Recolha a área de entrada quando estiver vazia para ganhar mais espaço de leit
 
 1. Quando a área de entrada está vazia e perde o foco, recolhe-se automaticamente num botão compacto.
 2. Clique no botão para expandir a área de entrada e começar a escrever.
-3. Pode ativar ou desativar esta funcionalidade no painel de definições (desativado por defeito).
+3. Também pode pressionar <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>I</kbd> para expandir rapidamente a área de entrada.
+4. Pode ativar ou desativar esta funcionalidade no painel de definições (desativado por defeito).

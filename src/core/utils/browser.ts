@@ -71,6 +71,33 @@ export function isFirefox(): boolean {
 }
 
 /**
+ * Detect if the current platform is macOS
+ *
+ * @returns true if running on macOS
+ */
+export function isMac(): boolean {
+  // navigator.platform is deprecated but still widely supported and reliable
+  // Use it first, then fall back to userAgent
+  if (typeof navigator !== 'undefined') {
+    if (navigator.platform) {
+      return navigator.platform.toUpperCase().includes('MAC');
+    }
+    return /macintosh|mac os x/i.test(navigator.userAgent);
+  }
+  return false;
+}
+
+/**
+ * Get the platform-appropriate modifier key label
+ * macOS: ⌘ (Cmd), others: Ctrl
+ *
+ * @returns '⌘' on macOS, 'Ctrl' on other platforms
+ */
+export function getModifierKey(): string {
+  return isMac() ? '⌘' : 'Ctrl';
+}
+
+/**
  * Get browser name for debugging
  * Uses user agent detection for reliability
  */

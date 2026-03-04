@@ -995,6 +995,10 @@
     "message": "输入框为空时自动折叠，获得更多阅读空间",
     "description": "输入框折叠功能提示"
   },
+  "inputCollapseShortcutHint": {
+    "message": "{modifier}+I 展开",
+    "description": "展开折叠输入框的快捷键提示。{modifier} 在 macOS 上替换为 ⌘，其他平台替换为 Ctrl"
+  },
   "inputCollapsePlaceholder": {
     "message": "给 Gemini 发消息",
     "description": "折叠输入框时显示的占位符文本"
@@ -1008,12 +1012,12 @@
     "description": "解释非空折叠功能的提示文本"
   },
   "ctrlEnterSend": {
-    "message": "Ctrl+Enter 发送",
-    "description": "Ctrl+Enter 发送开关标签"
+    "message": "{modifier}+Enter 发送",
+    "description": "Modifier+Enter 发送开关标签。{modifier} 在 macOS 上替换为 ⌘，其他平台替换为 Ctrl"
   },
   "ctrlEnterSendHint": {
-    "message": "按 Ctrl+Enter 发送消息，Enter 键仅换行",
-    "description": "Ctrl+Enter 发送功能提示"
+    "message": "按 {modifier}+Enter 发送消息，Enter 键仅换行",
+    "description": "Modifier+Enter 发送功能提示。{modifier} 在 macOS 上替换为 ⌘，其他平台替换为 Ctrl"
   },
   "batch_delete_confirm": {
     "message": "确定要删除 {count} 个会话吗？此操作无法撤销。",

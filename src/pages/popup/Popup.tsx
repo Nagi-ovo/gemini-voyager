@@ -8,7 +8,7 @@ import {
   getAccountIsolationStorageKey,
 } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
-import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
+import { getModifierKey, isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import {
@@ -1300,7 +1300,12 @@ export default function Popup() {
                 >
                   {t('enableInputCollapse')}
                 </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('enableInputCollapseHint')}</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t('enableInputCollapseHint')}{' '}
+                  <span className="text-muted-foreground/70">
+                    ({t('inputCollapseShortcutHint').replace('{modifier}', getModifierKey())})
+                  </span>
+                </p>
               </div>
               <Switch
                 id="input-collapse-enabled"
@@ -1341,9 +1346,11 @@ export default function Popup() {
                   htmlFor="ctrl-enter-send"
                   className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                 >
-                  {t('ctrlEnterSend')}
+                  {t('ctrlEnterSend').replace('{modifier}', getModifierKey())}
                 </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('ctrlEnterSendHint')}</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t('ctrlEnterSendHint').replace('{modifier}', getModifierKey())}
+                </p>
               </div>
               <Switch
                 id="ctrl-enter-send"

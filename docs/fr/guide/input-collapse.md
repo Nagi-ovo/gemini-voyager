@@ -10,4 +10,5 @@ Réduisez la zone de saisie lorsqu'elle est vide pour gagner plus d'espace de le
 
 1. Lorsque la zone de saisie est vide et perd le focus, elle se réduit automatiquement en un bouton compact.
 2. Cliquez sur le bouton pour étendre la zone de saisie et commencer à taper.
-3. Vous pouvez activer ou désactiver cette fonctionnalité dans le panneau de paramètres (désactivé par défaut).
+3. Vous pouvez aussi appuyer sur <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>I</kbd> pour agrandir rapidement la zone de saisie.
+4. Vous pouvez activer ou désactiver cette fonctionnalité dans le panneau de paramètres (désactivé par défaut).
