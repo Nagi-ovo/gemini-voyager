@@ -171,8 +171,8 @@ export class AutoCategorizationService {
       this.navigateTo(currentUrl);
 
       // 7. Silent Deletion from Sidebar (Happens after we navigate back)
-      // Wait for navigation and sidebar to settle (increased to 3.5s)
-      await this.delay(3500);
+      // Wait for navigation and sidebar to settle
+      await this.delay(1500);
       await this.deleteConversationByUrl(classifierConvUrl);
     } catch (error) {
       // Silently fail but ensure we return to the user's original chat
