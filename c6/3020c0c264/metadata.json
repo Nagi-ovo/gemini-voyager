@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "c63020c0c264",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/pages/content/chatWidth/__tests__/chatWidth.test.ts",
+    "src/pages/content/chatWidth/index.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/c6/3020c0c264/0/metadata.json",
+      "transcript": "/c6/3020c0c264/0/full.jsonl",
+      "context": "/c6/3020c0c264/0/context.md",
+      "content_hash": "/c6/3020c0c264/0/content_hash.txt",
+      "prompt": "/c6/3020c0c264/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 17,
+    "cache_creation_tokens": 37068,
+    "cache_read_tokens": 653059,
+    "output_tokens": 11820,
+    "api_call_count": 13
+  }
+}
