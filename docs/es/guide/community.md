@@ -24,7 +24,7 @@ Sigue nuestra cuenta de X (Twitter) para obtener los últimos avances en desarro
 - **Progreso del desarrollo**: Obtén las últimas noticias sobre nuevas funciones.
 
 <div style="margin: 2rem 0;">
-  <a href="https://discord.gg/TEUFxdMbGb" target="_blank" style="text-decoration: none;">
+  <a href="https://discord.gg/ghrQtZgWnv" target="_blank" style="text-decoration: none;">
     <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Unirse%20a%20Discord" alt="Discord">
   </a>
 </div>

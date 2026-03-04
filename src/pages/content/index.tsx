@@ -1,3 +1,4 @@
+import { startAutoCategorization } from '@/core/services/TriggerService';
 import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
 import {
@@ -173,6 +174,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
       startFolderSpacingAdjuster('gemini');
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startAutoCategorization();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startChatWidthAdjuster();

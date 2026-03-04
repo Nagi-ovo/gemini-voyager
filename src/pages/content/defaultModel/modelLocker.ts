@@ -37,8 +37,19 @@ class DefaultModelManager {
   // Track consecutive failures to stop retrying when model is unavailable
   private consecutiveFailures = 0;
   private readonly maxConsecutiveFailures = 3;
+  // Bypass flag: when true, checkAndLockModel() will skip auto-selection.
+  // Used by AutoCategorizationService to prevent default model being applied to the classifier session.
+  private bypassed = false;
 
   private constructor() {}
+
+  /**
+   * Temporarily bypass auto model locking.
+   * Call with `true` before navigating to classifier, `false` after.
+   */
+  public setBypassed(value: boolean): void {
+    this.bypassed = value;
+  }
 
   public static getInstance(): DefaultModelManager {
     if (!DefaultModelManager.instance) {
@@ -476,6 +487,9 @@ class DefaultModelManager {
   }
 
   private async checkAndLockModel() {
+    // Skip if bypassed (e.g., during auto-categorization)
+    if (this.bypassed) return;
+
     // Only lock on new conversation pages
     if (!this.isNewConversation()) return;
 

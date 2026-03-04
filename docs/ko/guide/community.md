@@ -24,7 +24,7 @@ Discord 서버에 가입하여 다른 Voyager들과 대화해 보세요!
 - **개발 업데이트**: 예정된 기능과 릴리스에 대한 최신 소식을 받으세요.
 
 <div style="margin: 2rem 0;">
-  <a href="https://discord.gg/TEUFxdMbGb" target="_blank" style="text-decoration: none;">
+  <a href="https://discord.gg/ghrQtZgWnv" target="_blank" style="text-decoration: none;">
     <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Discord 가입하기" alt="Discord">
   </a>
 </div>

@@ -85,6 +85,23 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
 
 - **📂 [Folder Organization](https://voyager.nagi.fun/en/guide/folders)**: Organize chats into a two-level folder hierarchy with drag-and-drop support.
   - **Gemini**: Supports **Account Isolation Mode** and **Custom Folder Colors**.
+- **[Auto Categorization](https://voyager.nagi.fun/en/guide/auto-categorization)**: Automatically sort new conversations into folders using AI (with Positive/Negative trigger modes), or route them instantly using folder indices — no AI needed. Supports flexible punctuation matching for non-Latin input methods.
+
+  **Index Routing Examples** (default prefix `.`, default separator `space`):
+
+  | Input               | Result                                                   |
+  | ------------------- | -------------------------------------------------------- |
+  | `.your message`     | AI picks the best folder                                 |
+  | `.1 your message`   | Instantly routes to folder **1**                         |
+  | `.1 2 your message` | Routes to subfolder **2** of folder **1**                |
+  | `1 2 your message`  | Same, but with "Use main prefix" disabled (bare numbers) |
+
+  **Every part is configurable in the extension settings**:
+  - **Trigger Prefix** (`.`): Change to any symbol, e.g. `/` or `>`
+  - **Index Separator** (`space`): Change to `.`, `-`, etc., e.g. `.1.2 message` or `.1-2 message`
+  - **Use Main Prefix for Routing**: Disable to allow bare-number routing (`1 2 message`) or set a custom routing prefix
+  - **Trigger Mode**: Positive (prefix triggers) or Negative (always categorizes, prefix skips it)
+
 - **💡 [Prompt Vault](https://voyager.nagi.fun/en/guide/prompts)**: Save and reuse prompts across Gemini, AI Studio, and [custom websites](https://voyager.nagi.fun/en/guide/custom-websites).
 - **☁️ [Cloud Sync](https://voyager.nagi.fun/en/guide/cloud-sync)**: Sync folders and prompts to Google Drive.
 - **📐 Formula Copy**: One-click copy for LaTeX and MathML (Word) source codes.
@@ -104,6 +121,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - **[Prevent Auto Scroll](https://voyager.nagi.fun/en/guide/prevent-auto-scroll)**: Intercepts unwanted jumping behavior when hitting enter to send a new prompt.
   - **[Input Collapse](https://voyager.nagi.fun/en/guide/input-collapse)**: Auto-expandable input area for more reading space.
   - **[Default Model](https://voyager.nagi.fun/en/guide/default-model)**: Set your favorite model as default.
+
   - **[Hide Recent Items](https://voyager.nagi.fun/en/guide/recents-hider)**: Hide "Recent" list in the sidebar to reduce distraction.
 
 ---
@@ -204,7 +222,7 @@ I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?co
       <sub>Get the latest updates.</sub>
     </td>
     <td align="center" width="50%" valign="top">
-      <a href="https://discord.gg/TEUFxdMbGb" target="_blank">
+      <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
         <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord" height="36">
       </a>
       <br><br>
