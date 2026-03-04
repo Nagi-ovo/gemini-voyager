@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "1a48474a76f8",
+  "strategy": "manual-commit",
+  "branch": "fix/ctrl-enter-scope-logic",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "bun.lock",
+    "src/pages/content/sendBehavior/__tests__/sendBehavior.test.ts",
+    "src/pages/content/sendBehavior/index.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/1a/48474a76f8/0/metadata.json",
+      "transcript": "/1a/48474a76f8/0/full.jsonl",
+      "context": "/1a/48474a76f8/0/context.md",
+      "content_hash": "/1a/48474a76f8/0/content_hash.txt",
+      "prompt": "/1a/48474a76f8/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 2399,
+    "cache_read_tokens": 452833,
+    "output_tokens": 1522,
+    "api_call_count": 6
+  }
+}

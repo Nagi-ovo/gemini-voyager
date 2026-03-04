@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "1a48474a76f8",
+  "session_id": "e3b926ff-dbbc-4b9b-9659-ffc3c6cfb9d6",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-04T22:21:20.658217Z",
+  "branch": "fix/ctrl-enter-scope-logic",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "bun.lock",
+    "src/pages/content/sendBehavior/__tests__/sendBehavior.test.ts",
+    "src/pages/content/sendBehavior/index.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "f2f83261dcd5",
+  "checkpoint_transcript_start": 116,
+  "transcript_lines_at_start": 116,
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 2399,
+    "cache_read_tokens": 452833,
+    "output_tokens": 1522,
+    "api_call_count": 6
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-04T22:21:20.558177Z",
+    "agent_lines": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 0,
+    "agent_percentage": 0
+  }
+}
