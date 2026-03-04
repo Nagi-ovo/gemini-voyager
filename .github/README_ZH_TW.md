@@ -210,7 +210,7 @@
       <sub>獲取最新動態。</sub>
     </td>
     <td align="center" width="50%" valign="top">
-      <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
+      <a href="https://discord.gg/TEUFxdMbGb" target="_blank">
         <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=加入%20Discord" alt="Discord" height="36">
       </a>
       <br><br>

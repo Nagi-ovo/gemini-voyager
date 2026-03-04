@@ -204,7 +204,7 @@ I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?co
       <sub>Get the latest updates.</sub>
     </td>
     <td align="center" width="50%" valign="top">
-      <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
+      <a href="https://discord.gg/TEUFxdMbGb" target="_blank">
         <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord" height="36">
       </a>
       <br><br>

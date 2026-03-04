@@ -24,7 +24,7 @@ Rejoignez notre serveur Discord pour discuter avec d'autres Voyageurs !
 - **Mises à Jour de Développement** : Recevez les dernières nouvelles sur les fonctionnalités et versions à venir.
 
 <div style="margin: 2rem 0;">
-  <a href="https://discord.gg/ghrQtZgWnv" target="_blank" style="text-decoration: none;">
+  <a href="https://discord.gg/TEUFxdMbGb" target="_blank" style="text-decoration: none;">
     <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Rejoindre%20notre%20Discord" alt="Discord">
   </a>
 </div>

@@ -204,7 +204,7 @@ Gemini Voyager 개발 중에 광범위하게 사용한 AI 음성 - 텍스트 변
       <sub>최신 소식을 받아보세요.</sub>
     </td>
     <td align="center" width="50%" valign="top">
-      <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
+      <a href="https://discord.gg/TEUFxdMbGb" target="_blank">
         <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord" height="36">
       </a>
       <br><br>

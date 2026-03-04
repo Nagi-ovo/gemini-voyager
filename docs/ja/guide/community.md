@@ -24,7 +24,7 @@ Discord サーバーに参加して、他の Voyager ユーザーと交流しま
 - **開発状況**：新機能の開発状況をいち早くキャッチできます。
 
 <div style="margin: 2rem 0;">
-  <a href="https://discord.gg/ghrQtZgWnv" target="_blank" style="text-decoration: none;">
+  <a href="https://discord.gg/TEUFxdMbGb" target="_blank" style="text-decoration: none;">
     <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Discord%20コミュニティに参加" alt="Discord">
   </a>
 </div>

@@ -24,7 +24,7 @@ Join our Discord server to chat with other Voyagers!
 - **Development Updates**: Get the latest news on upcoming features and releases.
 
 <div style="margin: 2rem 0;">
-  <a href="https://discord.gg/ghrQtZgWnv" target="_blank" style="text-decoration: none;">
+  <a href="https://discord.gg/TEUFxdMbGb" target="_blank" style="text-decoration: none;">
     <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20our%20Discord" alt="Discord">
   </a>
 </div>
