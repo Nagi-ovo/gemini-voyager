@@ -49,7 +49,16 @@ export class AutoCategorizationService {
         if (!currentPath.endsWith('/app') && this.pendingIndexTarget) {
           const pending = this.pendingIndexTarget;
           this.pendingIndexTarget = null;
-          setTimeout(() => {
+          setTimeout(async () => {
+            // Wait for any ongoing categorization to finish (up to 10s) before
+            // executing, so we don't silently drop the routing target.
+            const MAX_WAIT_MS = 10000;
+            const POLL_INTERVAL_MS = 200;
+            let waited = 0;
+            while (this.isProcessing && waited < MAX_WAIT_MS) {
+              await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+              waited += POLL_INTERVAL_MS;
+            }
             this.categorizeToSpecificFolder(pending.pathParts, pending.remainingPrompt).catch(
               () => {},
             );
