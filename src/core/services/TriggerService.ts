@@ -217,7 +217,8 @@ export class TriggerService {
       return;
     }
 
-    const mainPrefixes = this.getEquivalentPrefixes(this.prefix);
+    const effectivePrefix = this.prefix || '.';
+    const mainPrefixes = this.getEquivalentPrefixes(effectivePrefix);
     const matchedMainPrefix = mainPrefixes.find((p) => trimmed.startsWith(p));
 
     // ── Step 1: Index Routing (independent prefix check) ──
