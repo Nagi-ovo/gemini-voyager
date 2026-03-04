@@ -1360,11 +1360,11 @@
     "description": "AI Studio platform label."
   },
   "hideUpsell": {
-    "message": "Hide Upgrade Prompts",
+    "message": "إخفاء رسائل الترقية",
     "description": "Hide the \"Upgrade to AI Ultra\" prompt"
   },
   "hideUpsellHint": {
-    "message": "Hide the \"Upgrade to Google AI Ultra\" button in the sidebar and model menu",
+    "message": "إخفاء زر \"الترقية إلى Google AI Ultra\" في الشريط الجانبي وقائمة النماذج",
     "description": "Explanation for the upsell hiding feature"
   }
 }
