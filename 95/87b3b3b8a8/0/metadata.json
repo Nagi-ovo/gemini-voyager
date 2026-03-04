@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "9587b3b3b8a8",
+  "session_id": "38f6cea6-6916-47c9-bf4c-02ddc3894ef6",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-04T18:01:52.308387Z",
+  "branch": "feature/inputbox",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "src/pages/content/inputCollapse/index.ts",
+    "src/pages/content/timeline/__tests__/TimelinePreviewPanel.test.ts",
+    "tsconfig.json"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "af0057b05538",
+  "token_usage": {
+    "input_tokens": 37,
+    "cache_creation_tokens": 51032,
+    "cache_read_tokens": 1662135,
+    "output_tokens": 7157,
+    "api_call_count": 25
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-04T18:01:52.12031Z",
+    "agent_lines": 234,
+    "human_added": 422,
+    "human_modified": 3,
+    "human_removed": 0,
+    "total_committed": 659,
+    "agent_percentage": 35.50834597875569
+  }
+}
