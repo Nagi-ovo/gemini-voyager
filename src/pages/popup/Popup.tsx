@@ -127,6 +127,7 @@ interface SettingsUpdate {
   watermarkRemoverEnabled?: boolean;
   hidePromptManager?: boolean;
   inputCollapseEnabled?: boolean;
+  inputCollapseWhenNotEmpty?: boolean;
   tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
@@ -160,6 +161,7 @@ export default function Popup() {
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
+  const [inputCollapseWhenNotEmpty, setInputCollapseWhenNotEmpty] = useState<boolean>(false);
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
@@ -237,6 +239,8 @@ export default function Popup() {
         payload.gvHidePromptManager = settings.hidePromptManager;
       if (typeof settings.inputCollapseEnabled === 'boolean')
         payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
+      if (typeof settings.inputCollapseWhenNotEmpty === 'boolean')
+        payload.gvInputCollapseWhenNotEmpty = settings.inputCollapseWhenNotEmpty;
       if (typeof settings.tabTitleUpdateEnabled === 'boolean')
         payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
       if (typeof settings.mermaidEnabled === 'boolean')
@@ -482,6 +486,7 @@ export default function Popup() {
           geminiWatermarkRemoverEnabled: true,
           gvHidePromptManager: false,
           gvInputCollapseEnabled: false,
+          gvInputCollapseWhenNotEmpty: false,
           gvTabTitleUpdateEnabled: true,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
@@ -513,6 +518,7 @@ export default function Popup() {
           setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
           setHidePromptManager(!!res?.gvHidePromptManager);
           setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
+          setInputCollapseWhenNotEmpty(res?.gvInputCollapseWhenNotEmpty === true);
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
@@ -1305,6 +1311,30 @@ export default function Popup() {
                 }}
               />
             </div>
+            {/* Second toggle - Allow collapse when not empty (only visible when first is enabled) */}
+            {inputCollapseEnabled && (
+              <div className="group mt-3 ml-4 flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="input-collapse-when-not-empty"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('allowCollapseWhenNotEmpty')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('allowCollapseWhenNotEmptyHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="input-collapse-when-not-empty"
+                  checked={inputCollapseWhenNotEmpty}
+                  onChange={(e) => {
+                    setInputCollapseWhenNotEmpty(e.target.checked);
+                    apply({ inputCollapseWhenNotEmpty: e.target.checked });
+                  }}
+                />
+              </div>
+            )}
             <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label

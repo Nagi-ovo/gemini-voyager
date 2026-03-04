@@ -293,6 +293,7 @@ function attachToInput(element: HTMLElement): void {
 
   // Use capture phase to intercept before other handlers
   element.addEventListener('keydown', handleKeyDown, { capture: true });
+
   attachedElements.add(element);
 
   cleanupFns.push(() => {
