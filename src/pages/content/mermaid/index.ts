@@ -339,6 +339,9 @@ const openFullscreen = (svgHtml: string) => {
   document.body.appendChild(modal);
   currentModal = modal;
 
+  // Initial fit scale (updated after auto-fit calculation)
+  let initialScale = 1;
+
   // Apply transform
   const applyTransform = () => {
     content.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
@@ -356,7 +359,7 @@ const openFullscreen = (svgHtml: string) => {
   };
 
   const resetView = () => {
-    scale = 1;
+    scale = initialScale;
     translateX = 0;
     translateY = 0;
     applyTransform();
@@ -424,6 +427,24 @@ const openFullscreen = (svgHtml: string) => {
     isDragging = false;
     content.classList.remove('dragging');
   });
+
+  // Auto-fit SVG to viewport
+  const svgElement = content.querySelector('svg');
+  if (svgElement) {
+    const padding = 80; // px padding from viewport edges
+    const viewportWidth = window.innerWidth - padding * 2;
+    const viewportHeight = window.innerHeight - padding * 2;
+    const svgWidth = svgElement.scrollWidth || svgElement.clientWidth;
+    const svgHeight = svgElement.scrollHeight || svgElement.clientHeight;
+
+    if (svgWidth > 0 && svgHeight > 0) {
+      const fitScale = Math.min(viewportWidth / svgWidth, viewportHeight / svgHeight);
+      // Scale to fit viewport: scale down if too large, scale up if too small
+      scale = Math.min(Math.max(fitScale, 0.1), 10);
+      initialScale = scale;
+      applyTransform();
+    }
+  }
 
   // Show modal with animation
   requestAnimationFrame(() => {
