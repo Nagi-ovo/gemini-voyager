@@ -39,6 +39,7 @@ const DRIVE_UPLOAD_BASE = 'https://www.googleapis.com/upload/drive/v3';
 // Retry configuration
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 1000;
+const IDENTITY_TOKEN_TTL_SECONDS = 55 * 60;
 
 /**
  * Google Drive Sync Service
@@ -434,9 +435,8 @@ export class GoogleDriveSyncService {
         return { token: null, userDenied: false };
       }
 
-      this.accessToken = token;
-      // getAuthToken does not provide expiry; keep a short in-memory TTL.
-      this.tokenExpiry = Date.now() + 55 * 60 * 1000;
+      // getAuthToken does not provide expiry; keep a short TTL and persist for worker restarts.
+      await this.saveToken(token, IDENTITY_TOKEN_TTL_SECONDS);
       return { token, userDenied: false };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -529,6 +529,20 @@ export class GoogleDriveSyncService {
   }
 
   private async getAuthToken(interactive: boolean): Promise<string | null> {
+    if (this.accessToken && this.tokenExpiry > Date.now()) {
+      return this.accessToken;
+    }
+
+    if (this.accessToken && this.tokenExpiry <= Date.now()) {
+      this.accessToken = null;
+      this.tokenExpiry = 0;
+    }
+
+    await this.loadCachedToken();
+    if (this.accessToken && this.tokenExpiry > Date.now()) {
+      return this.accessToken;
+    }
+
     const supportsIdentityApi = !!chrome.identity?.getAuthToken;
     if (supportsIdentityApi) {
       const identityResult = await this.getTokenFromIdentity(interactive);
@@ -545,12 +559,6 @@ export class GoogleDriveSyncService {
       return this.getTokenFromLegacyWebAuthFlow();
     }
 
-    if (!this.accessToken) {
-      await this.loadCachedToken();
-    }
-    if (this.accessToken && this.tokenExpiry > Date.now()) {
-      return this.accessToken;
-    }
     if (!interactive) {
       return null;
     }
