@@ -65,8 +65,8 @@ const attachedElements = new WeakSet<HTMLElement>();
  * Find the send button associated with the current input element.
  *
  * Strategy:
- * 1. Contextual Search: Look for `.update-button` or similar in the container.
- * 2. Global Search: Fallback to the main send button (Main chat).
+ * 1. Container Search: Use `closest()` to find a known container (e.g. `.text-input-field`, `chat-message`).
+ * 2. Scoped Button Search: Only search for buttons within the found container to avoid stale matches.
  */
 function findSendButton(inputElement: HTMLElement): HTMLElement | null {
   // 1. First, find a cohesive container wrapper that holds BOTH the input and its corresponding button
