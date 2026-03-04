@@ -1666,30 +1666,37 @@ export class FolderManager {
       return { url: window.location.href, isGem: false };
     }
 
-    const currentPath = window.location.pathname;
-
-    // Preserve user account number (e.g., /u/1/)
-    const userMatch = currentPath.match(/\/u\/(\d+)\//);
-
-    // Build URL with user context preserved
-    let url = window.location.origin;
-    if (userMatch) {
-      url += `/u/${userMatch[1]}`;
-    }
-
-    // Always use /app/{id} URL
-    // Gemini will auto-redirect to /gem/{gem-id}/{id} if it's a Gem conversation
-    // We'll detect and update the gemId after navigation completes
-    url += `/app/${hexId}`;
-
-    // Also preserve URL parameters
+    const origin = window.location.origin;
     const currentUrl = new URL(window.location.href);
     const searchParams = currentUrl.searchParams.toString();
+
+    let url: string;
+
+    if (this.accountIsolationEnabled) {
+      // In hard isolation mode, intentionally do not persist the /u/{num} account index;
+      // only store the path that is intrinsic to the conversation itself.
+      // At navigation time we rebuild the correct /u/{num} segment based on the
+      // current window/account context, so that URLs stay valid even if the
+      // account index changes (e.g. saved with /u/1, later browsing under /u/2).
+      url = `${origin}/app/${hexId}`;
+    } else {
+      // Backward-compatible behavior: preserve the current /u/{num} segment
+      // when hard isolation is disabled, matching legacy URL structure.
+      const currentPath = window.location.pathname;
+      const userMatch = currentPath.match(/\/u\/(\d+)\//);
+
+      if (userMatch) {
+        url = `${origin}/u/${userMatch[1]}/app/${hexId}`;
+      } else {
+        url = `${origin}/app/${hexId}`;
+      }
+    }
+
     if (searchParams) {
       url += `?${searchParams}`;
     }
 
-    this.debug('Built URL:', url);
+    this.debug('Built conversation URL:', url);
     return { url, isGem: false, gemId: undefined };
   }
 
@@ -5476,6 +5483,26 @@ export class FolderManager {
       const pathParts = targetUrl.pathname.split('/');
       const hexId = pathParts[pathParts.length - 1]; // Get the hex ID part
 
+      let effectivePath: string | null = null;
+      let effectiveUrl: string | null = null;
+
+      if (this.accountIsolationEnabled) {
+        // In hard isolation mode, build a navigation URL that matches the
+        // current account context:
+        // - If the current path contains /u/{num}/, reuse that {num}
+        // - Otherwise navigate to /app/{hexId} directly
+        // This prevents us from reusing stale /u/{num} segments from previously
+        // saved URLs when the active account index has changed.
+        const currentPath = window.location.pathname;
+        const currentUserMatch = currentPath.match(/\/u\/(\d+)\//);
+        if (currentUserMatch) {
+          effectivePath = `/u/${currentUserMatch[1]}/app/${hexId}`;
+        } else {
+          effectivePath = `/app/${hexId}`;
+        }
+        effectiveUrl = `${window.location.origin}${effectivePath}${targetUrl.search}`;
+      }
+
       const conversations = document.querySelectorAll('[data-test-id="conversation"]');
       for (const conv of Array.from(conversations)) {
         const jslog = conv.getAttribute('jslog');
@@ -5510,17 +5537,21 @@ export class FolderManager {
       }
 
       // If we can't find the sidebar element, try pushState + popstate
+      const navigationUrl = this.accountIsolationEnabled && effectiveUrl ? effectiveUrl : url;
+      const navigationPath =
+        this.accountIsolationEnabled && effectivePath ? effectivePath : targetUrl.pathname;
+
       this.debug('Sidebar element not found, trying pushState');
-      window.history.pushState({}, '', url);
+      window.history.pushState({}, '', navigationUrl);
       const popStateEvent = new PopStateEvent('popstate', { state: {} });
       window.dispatchEvent(popStateEvent);
       setTimeout(() => this.highlightActiveConversationInFolders(), 0);
 
       // If that doesn't work, fall back to page reload
       setTimeout(() => {
-        if (window.location.pathname !== targetUrl.pathname) {
+        if (window.location.pathname !== navigationPath) {
           this.debug('Falling back to page reload');
-          window.location.href = url;
+          window.location.href = navigationUrl;
         }
       }, 200);
     } catch (error) {
