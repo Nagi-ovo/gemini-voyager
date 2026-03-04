@@ -343,6 +343,119 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(proItem.click).toHaveBeenCalledTimes(0);
   });
 
+  it('focuses chat input after auto-switching model', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: 'Pro' });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app?hl=en');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const menuPanel = document.createElement('div');
+    menuPanel.className = 'mat-mdc-menu-panel';
+    menuPanel.setAttribute('role', 'menu');
+
+    const flashItem = document.createElement('button');
+    flashItem.setAttribute('role', 'menuitemradio');
+    flashItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Flash</div>
+      </div>
+    `;
+    flashItem.click = vi.fn();
+
+    const proItem = document.createElement('button');
+    proItem.setAttribute('role', 'menuitemradio');
+    proItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Pro</div>
+      </div>
+    `;
+    proItem.click = vi.fn();
+
+    menuPanel.appendChild(flashItem);
+    menuPanel.appendChild(proItem);
+    document.body.appendChild(menuPanel);
+
+    const main = document.createElement('main');
+    const richTextarea = document.createElement('rich-textarea');
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+    input.setAttribute('role', 'textbox');
+    const focusSpy = vi.spyOn(input, 'focus').mockImplementation(() => {});
+    richTextarea.appendChild(input);
+    main.appendChild(richTextarea);
+    document.body.appendChild(main);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(proItem.click).toHaveBeenCalledTimes(1);
+    expect(focusSpy).toHaveBeenCalled();
+  });
+
+  it('does not focus chat input when target model is already selected', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: 'Pro' });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app?hl=en');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const menuPanel = document.createElement('div');
+    menuPanel.className = 'mat-mdc-menu-panel';
+    menuPanel.setAttribute('role', 'menu');
+
+    const proItem = document.createElement('button');
+    proItem.setAttribute('role', 'menuitemradio');
+    proItem.setAttribute('aria-checked', 'true');
+    proItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Pro</div>
+      </div>
+    `;
+    proItem.click = vi.fn();
+
+    menuPanel.appendChild(proItem);
+    document.body.appendChild(menuPanel);
+
+    const main = document.createElement('main');
+    const richTextarea = document.createElement('rich-textarea');
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+    input.setAttribute('role', 'textbox');
+    const focusSpy = vi.spyOn(input, 'focus').mockImplementation(() => {});
+    richTextarea.appendChild(input);
+    main.appendChild(richTextarea);
+    document.body.appendChild(main);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(proItem.click).toHaveBeenCalledTimes(0);
+    expect(focusSpy).not.toHaveBeenCalled();
+  });
+
   it('skips auto-selection when default model is Flash (Gemini default)', async () => {
     // Set default model to Flash (by ID)
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
