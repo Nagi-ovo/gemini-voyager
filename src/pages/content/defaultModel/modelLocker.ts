@@ -16,6 +16,17 @@ const FAST_MODEL_IDS = new Set([
 // Known Flash/Fast model name patterns (case-insensitive)
 const FAST_MODEL_NAMES = ['flash', '2.0 flash', 'gemini 2.0 flash', 'fast', '高速', '高速モード'];
 
+const CHAT_INPUT_SELECTORS = [
+  'main rich-textarea [contenteditable="true"]',
+  'rich-textarea [contenteditable="true"]',
+  'main div[contenteditable="true"][role="textbox"]',
+  'div[contenteditable="true"][role="textbox"]',
+  'main .input-area textarea',
+  '.input-area textarea',
+  'main [contenteditable="true"]',
+  'main textarea',
+] as const;
+
 class DefaultModelManager {
   private static instance: DefaultModelManager;
   private observer: MutationObserver | null = null;
@@ -584,6 +595,7 @@ class DefaultModelManager {
 
       const items = menuPanel.querySelectorAll('[role="menuitemradio"]');
       let found = false;
+      let switchedModel = false;
 
       if (targetModel.kind === 'id') {
         const targetItem = Array.from(items).find((item) => {
@@ -598,6 +610,7 @@ class DefaultModelManager {
 
           if (!alreadySelected) {
             targetItem.click();
+            switchedModel = true;
           } else {
             // Already selected, close menu to avoid stuck UI
             document.body.click();
@@ -615,6 +628,7 @@ class DefaultModelManager {
 
             if (!alreadySelected) {
               (item as HTMLElement).click();
+              switchedModel = true;
             } else {
               // Already selected, close menu to avoid stuck UI
               document.body.click();
@@ -636,6 +650,7 @@ class DefaultModelManager {
 
             if (!alreadySelected) {
               (item as HTMLElement).click();
+              switchedModel = true;
             } else {
               // Already selected, close menu to avoid stuck UI
               document.body.click();
@@ -649,6 +664,9 @@ class DefaultModelManager {
       if (found && this.checkTimer) {
         clearInterval(this.checkTimer);
         this.consecutiveFailures = 0;
+      }
+      if (switchedModel) {
+        this.focusChatInputAfterAutoSwitch();
       }
 
       if (!found) {
@@ -669,6 +687,32 @@ class DefaultModelManager {
     } finally {
       this.isLocked = false;
     }
+  }
+
+  private focusChatInputAfterAutoSwitch(): void {
+    const focusDelayMs = 120;
+    window.setTimeout(() => {
+      const input = this.findChatInputElement();
+      if (!input) return;
+
+      try {
+        input.focus({ preventScroll: true });
+      } catch {
+        input.focus();
+      }
+    }, focusDelayMs);
+  }
+
+  private findChatInputElement(): HTMLElement | null {
+    for (const selector of CHAT_INPUT_SELECTORS) {
+      const candidates = document.querySelectorAll<HTMLElement>(selector);
+      for (const candidate of Array.from(candidates)) {
+        if (!candidate.isConnected) continue;
+        if (candidate instanceof HTMLTextAreaElement && candidate.disabled) continue;
+        return candidate;
+      }
+    }
+    return null;
   }
 
   private parseStoredDefaultModel(value: unknown): DefaultModelSetting | null {
