@@ -158,7 +158,9 @@ export class TriggerService {
         if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
         // When Ctrl+Enter send mode is on, plain Enter = newline (not a send action).
         // Only fire categorization on the actual send combination.
-        const isSendKey = this.ctrlEnterSend ? e.ctrlKey || e.metaKey : !e.ctrlKey && !e.altKey && !e.metaKey;
+        const isSendKey = this.ctrlEnterSend
+          ? e.ctrlKey || e.metaKey
+          : !e.ctrlKey && !e.altKey && !e.metaKey;
         if (!isSendKey) return;
         const target = e.target as HTMLElement;
         if (this.isEditable(target)) {
