@@ -61,7 +61,12 @@ const normalizePercent = (value: number, fallback: number) => {
 
 function applyWidth(widthPercent: number) {
   const normalizedPercent = normalizePercent(widthPercent, DEFAULT_PERCENT);
-  const widthValue = `${normalizedPercent}vw`;
+  // Use screen width as reference to compute pixel-based max-width.
+  // This provides adaptive behavior for split-screen / narrow windows:
+  // - Fullscreen: width ≈ percent% of screen (as intended by the slider)
+  // - Split-screen: content fills available space since pixel max-width > viewport
+  const screenWidth = screen.availWidth || screen.width || 1920;
+  const widthValue = `${Math.round((normalizedPercent / 100) * screenWidth)}px`;
 
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement;
   if (!style) {

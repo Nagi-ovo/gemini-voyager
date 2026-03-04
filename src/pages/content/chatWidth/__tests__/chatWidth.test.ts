@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const STYLE_ID = 'gemini-voyager-chat-width';
 const STORAGE_KEY = 'geminiChatWidth';
+const MOCK_SCREEN_WIDTH = 1920;
 
 type StorageChangeListener = (
   changes: Record<string, chrome.storage.StorageChange>,
@@ -14,10 +15,15 @@ function getInjectedStyle(): HTMLStyleElement {
   return style as HTMLStyleElement;
 }
 
-function expectTableRuleWidth(styleText: string, widthVw: number): void {
-  const escapedWidth = widthVw.toString().replace('.', '\\.');
+function percentToPixels(percent: number): number {
+  return Math.round((percent / 100) * MOCK_SCREEN_WIDTH);
+}
+
+function expectTableRuleWidth(styleText: string, percent: number): void {
+  const px = percentToPixels(percent);
+  const escapedWidth = px.toString();
   const tableRulePattern = new RegExp(
-    String.raw`\/\* Gemini table containers \*\/[\s\S]*table-block,[\s\S]*\.table-block,[\s\S]*\.table-block \.table-content[\s\S]*\{[\s\S]*max-width: ${escapedWidth}vw !important;[\s\S]*width: min\(100%, ${escapedWidth}vw\) !important;`,
+    String.raw`\/\* Gemini table containers \*\/[\s\S]*table-block,[\s\S]*\.table-block,[\s\S]*\.table-block \.table-content[\s\S]*\{[\s\S]*max-width: ${escapedWidth}px !important;[\s\S]*width: min\(100%, ${escapedWidth}px\) !important;`,
   );
   expect(styleText).toMatch(tableRulePattern);
 }
@@ -39,6 +45,13 @@ describe('chatWidth', () => {
 
     document.head.innerHTML = '';
     document.body.innerHTML = '<main></main>';
+
+    // Mock screen dimensions for deterministic tests
+    Object.defineProperty(window, 'screen', {
+      value: { availWidth: MOCK_SCREEN_WIDTH, width: MOCK_SCREEN_WIDTH },
+      writable: true,
+      configurable: true,
+    });
 
     storageChangeListeners = [];
 
@@ -85,5 +98,23 @@ describe('chatWidth', () => {
     expectTableRuleWidth(styleText, 92);
     expect(styleText).toContain('table-block .table-content');
     expectSingleTableScrollbarRules(styleText);
+  });
+
+  it('adapts width for narrow viewports (split-screen behavior)', async () => {
+    // Simulate: user sets 70% on a 1920px screen → 1344px max-width
+    // In split-screen (960px viewport), min(100%, 1344px) fills the viewport
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (value: Record<string, unknown>) => void) => {
+        callback({ [STORAGE_KEY]: 70 });
+      },
+    );
+
+    const { startChatWidthAdjuster } = await import('../index');
+    startChatWidthAdjuster();
+
+    const styleText = getInjectedStyle().textContent ?? '';
+    const expectedPx = percentToPixels(70); // 1344
+    expect(styleText).toContain(`max-width: ${expectedPx}px !important`);
+    expect(styleText).toContain(`width: min(100%, ${expectedPx}px) !important`);
   });
 });
