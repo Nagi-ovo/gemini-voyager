@@ -334,8 +334,8 @@ describe('Concurrency Control', () => {
       // All reads should return same value
       expect(results).toEqual([100, 100, 100, 100, 100]);
 
-      // Should take at least 50ms (5 * 10ms) since they're sequential
-      expect(duration).toBeGreaterThanOrEqual(50);
+      // Should take at least ~50ms (5 * 10ms) since they're sequential, but allow slight timer inaccuracies (e.g. 49ms)
+      expect(duration).toBeGreaterThanOrEqual(45);
     });
   });
 });

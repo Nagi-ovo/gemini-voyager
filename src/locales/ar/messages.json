@@ -1188,11 +1188,11 @@
     "description": "Wide subfolder indentation label"
   },
   "export_select_mode_select_all": {
-    "message": "Select all",
+    "message": "تحديد الكل",
     "description": "Selection mode select all toggle"
   },
   "export_select_mode_count": {
-    "message": "Selected {count}",
+    "message": "تم تحديد {count}",
     "description": "Selection mode selected message count"
   },
   "export_select_mode_toggle": {
@@ -1366,6 +1366,14 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  },
+  "export_select_mode_only_user": {
+    "message": "تحديد المستخدم فقط",
+    "description": "Export selection mode: select only user messages"
+  },
+  "export_select_mode_only_ai": {
+    "message": "تحديد الذكاء الاصطناعي فقط",
+    "description": "Export selection mode: select only AI messages"
   },
   "hideUpsell": {
     "message": "إخفاء رسائل الترقية",

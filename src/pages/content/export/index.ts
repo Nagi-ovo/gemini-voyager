@@ -1339,6 +1339,30 @@ async function performFinalExport(
       const isAllSelected = allMessageIds.length > 0 && selectedIds.size === allMessageIds.length;
       selectAllBtn.dataset.checked = isAllSelected ? 'true' : 'false';
     }
+
+    const selectUserBtn = bar.querySelector(
+      '[data-gv-export-action="selectUser"]',
+    ) as HTMLButtonElement | null;
+    if (selectUserBtn) {
+      const userMessageIds = allMessageIds.filter((id) => id.endsWith(':u'));
+      const isOnlyUserSelected =
+        userMessageIds.length > 0 &&
+        selectedIds.size === userMessageIds.length &&
+        userMessageIds.every((id) => selectedIds.has(id));
+      selectUserBtn.dataset.checked = isOnlyUserSelected ? 'true' : 'false';
+    }
+
+    const selectAIBtn = bar.querySelector(
+      '[data-gv-export-action="selectAI"]',
+    ) as HTMLButtonElement | null;
+    if (selectAIBtn) {
+      const aiMessageIds = allMessageIds.filter((id) => id.endsWith(':a'));
+      const isOnlyAISelected =
+        aiMessageIds.length > 0 &&
+        selectedIds.size === aiMessageIds.length &&
+        aiMessageIds.every((id) => selectedIds.has(id));
+      selectAIBtn.dataset.checked = isOnlyAISelected ? 'true' : 'false';
+    }
   };
 
   const attachSelectorIfNeeded = (msg: ExportMessage) => {
@@ -1434,6 +1458,18 @@ async function performFinalExport(
   selectAllBtn.dataset.gvExportAction = 'selectAll';
   selectAllBtn.textContent = t('export_select_mode_select_all');
 
+  const selectUserBtn = document.createElement('button');
+  selectUserBtn.type = 'button';
+  selectUserBtn.className = 'gv-export-select-role-btn';
+  selectUserBtn.dataset.gvExportAction = 'selectUser';
+  selectUserBtn.textContent = t('export_select_mode_only_user');
+
+  const selectAIBtn = document.createElement('button');
+  selectAIBtn.type = 'button';
+  selectAIBtn.className = 'gv-export-select-role-btn';
+  selectAIBtn.dataset.gvExportAction = 'selectAI';
+  selectAIBtn.textContent = t('export_select_mode_only_ai');
+
   const count = document.createElement('div');
   count.className = 'gv-export-select-count';
   count.dataset.gvExportSelectionCount = 'true';
@@ -1453,13 +1489,13 @@ async function performFinalExport(
   cancelBtn.textContent = '×';
 
   bar.appendChild(selectAllBtn);
+  bar.appendChild(selectUserBtn);
+  bar.appendChild(selectAIBtn);
   bar.appendChild(count);
   bar.appendChild(exportBtn);
   bar.appendChild(cancelBtn);
 
   document.body.appendChild(bar);
-  cleanupTasks.push(() => bar.remove());
-  cleanupTasks.push(alignElementToConversationTitleCenter(bar));
 
   const swallow = (ev: Event) => {
     try {
@@ -1469,6 +1505,52 @@ async function performFinalExport(
       ev.stopPropagation();
     } catch {}
   };
+
+  selectUserBtn.addEventListener('click', (ev) => {
+    swallow(ev);
+    autoSelectAll = false;
+
+    const userMessageIds = allMessageIds.filter((id) => id.endsWith(':u'));
+    const isOnlyUserSelected =
+      userMessageIds.length > 0 &&
+      selectedIds.size === userMessageIds.length &&
+      userMessageIds.every((id) => selectedIds.has(id));
+
+    if (isOnlyUserSelected) {
+      for (const id of allMessageIds) {
+        setSelected(id, false);
+      }
+    } else {
+      for (const id of allMessageIds) {
+        setSelected(id, id.endsWith(':u'));
+      }
+    }
+    updateBottomBar(bar);
+  });
+
+  selectAIBtn.addEventListener('click', (ev) => {
+    swallow(ev);
+    autoSelectAll = false;
+
+    const aiMessageIds = allMessageIds.filter((id) => id.endsWith(':a'));
+    const isOnlyAISelected =
+      aiMessageIds.length > 0 &&
+      selectedIds.size === aiMessageIds.length &&
+      aiMessageIds.every((id) => selectedIds.has(id));
+
+    if (isOnlyAISelected) {
+      for (const id of allMessageIds) {
+        setSelected(id, false);
+      }
+    } else {
+      for (const id of allMessageIds) {
+        setSelected(id, id.endsWith(':a'));
+      }
+    }
+    updateBottomBar(bar);
+  });
+  cleanupTasks.push(() => bar.remove());
+  cleanupTasks.push(alignElementToConversationTitleCenter(bar));
 
   selectAllBtn.addEventListener('click', (ev) => {
     swallow(ev);

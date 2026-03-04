@@ -1374,5 +1374,13 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  },
+  "export_select_mode_only_user": {
+    "message": "Select User Only",
+    "description": "Export selection mode: select only user messages"
+  },
+  "export_select_mode_only_ai": {
+    "message": "Select AI Only",
+    "description": "Export selection mode: select only AI messages"
   }
 }
