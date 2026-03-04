@@ -643,6 +643,14 @@
     "message": "Due to browser security restrictions, this Options page cannot directly access prompts and folder data from Gemini pages. Please use the Prompt Manager and Folder Export features on the Gemini page for manual backups.",
     "description": "Backup data access limitation explanation"
   },
+  "hideUpsell": {
+    "message": "Hide Upgrade Prompts",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "Hide the \"Upgrade to Google AI Ultra\" button in the sidebar and model menu",
+    "description": "Explanation for the upsell hiding feature"
+  },
   "promptManagerOptions": {
     "message": "Prompt Manager",
     "description": "Prompt Manager options section label"

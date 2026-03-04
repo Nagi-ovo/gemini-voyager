@@ -1358,5 +1358,13 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  },
+  "hideUpsell": {
+    "message": "隱藏升級提醒",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "隱藏側邊欄和模型選單中的「升級至 Google AI Ultra」按鈕",
+    "description": "Explanation for the upsell hiding feature"
   }
 }

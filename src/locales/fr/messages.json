@@ -1358,5 +1358,13 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  },
+  "hideUpsell": {
+    "message": "Masquer les invites de mise à niveau",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "Masquer le bouton « Passer à Google AI Ultra » dans la barre latérale et le menu des modèles",
+    "description": "Explanation for the upsell hiding feature"
   }
 }

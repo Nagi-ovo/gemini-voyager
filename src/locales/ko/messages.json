@@ -1358,5 +1358,13 @@
   "platformAIStudio": {
     "message": "AI Studio",
     "description": "AI Studio platform label."
+  },
+  "hideUpsell": {
+    "message": "업그레이드 안내 숨기기",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "사이드바와 모델 메뉴에서 \"Google AI Ultra로 업그레이드\" 버튼을 숨깁니다",
+    "description": "Explanation for the upsell hiding feature"
   }
 }
