@@ -1,0 +1,49 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "cec7c36b3395",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "docs/ar/guide/input-collapse.md",
+    "docs/en/guide/input-collapse.md",
+    "docs/es/guide/input-collapse.md",
+    "docs/fr/guide/input-collapse.md",
+    "docs/guide/input-collapse.md",
+    "docs/ja/guide/input-collapse.md",
+    "docs/ko/guide/input-collapse.md",
+    "docs/pt/guide/input-collapse.md",
+    "docs/ru/guide/input-collapse.md",
+    "docs/zh_TW/guide/input-collapse.md",
+    "src/core/services/KeyboardShortcutService.ts",
+    "src/core/utils/__tests__/browser.test.ts",
+    "src/core/utils/browser.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/popup/Popup.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/ce/c7c36b3395/0/metadata.json",
+      "transcript": "/ce/c7c36b3395/0/full.jsonl",
+      "context": "/ce/c7c36b3395/0/context.md",
+      "content_hash": "/ce/c7c36b3395/0/content_hash.txt",
+      "prompt": "/ce/c7c36b3395/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 52,
+    "cache_creation_tokens": 85892,
+    "cache_read_tokens": 3454747,
+    "output_tokens": 25931,
+    "api_call_count": 44
+  }
+}

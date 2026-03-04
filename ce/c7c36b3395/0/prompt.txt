@@ -1,0 +1,58 @@
+Implement the following plan:
+
+# Plan: macOS 修饰键显示适配
+
+## Context
+扩展中涉及 Ctrl 键的功能（Ctrl+Enter 发送、Ctrl+I 展开输入框）在 macOS 上功能正常（代码已同时接受 `ctrlKey || metaKey`），但 UI 文案始终显示 "Ctrl"，macOS 用户应看到 "⌘"。此外 Ctrl+I 快捷键未在 UI 中提及，缺少可发现性。`formatShortcut()` 也需要在 macOS 上用符号（⌘/⌥/⌃/⇧）代替文字。
+
+## Changes
+
+### 1. 添加平台检测和修饰键工具函数
+**File**: `src/core/utils/browser.ts`
+- 新增 `isMac(): boolean` — 通过 `navigator.userAgent` / `navigator.platform` 检测 macOS
+- 新增 `getModifierKey(): string` — macOS 返回 `'⌘'`，其他返回 `'Ctrl'`
+
+### 2. 更新 `formatShortcut()` 修饰键显示
+**File**: `src/core/services/KeyboardShortcutService.ts`
+- 在 `formatShortcut()` 中，macOS 上将修饰键映射为符号：
+  - `Meta` → `⌘`，`Alt` → `⌥`，`Ctrl` → `⌃`，`Shift` → `⇧`
+- 非 macOS 保持文字显示（`Ctrl`、`Alt`、`Shift`，`Meta` → `Win`）
+
+### 3. 更新 10 个语言的翻译文案
+**Files**: `src/locales/{en,ar,es,fr,ja,ko,pt,ru,zh,zh_TW}/messages.json`
+
+每个文件修改：
+- `ctrlEnterSend`: 硬编码 `"Ctrl"` → `"{modifier}"`
+- `ctrlEnterSendHint`: 硬编码 `"Ctrl"` → `"{modifier}"`
+- 新增 `inputCollapseShortcutHint`: 给 inputCollapse 增加快捷键提示文案 `"{modifier}+I to expand"`
+
+### 4. 更新 Popup.tsx
+**File**: `src/pages/popup/Popup.tsx`
+- 导入 `getModifierKey` from `@/core/utils/browser`
+- `t('ctrlEnterSend').replace('{modifier}', getModifierKey())`
+- `t('ctrlEnterSendHint').replace('{modifier}', getModifierKey())`
+- 在 inputCollapse 区域添加快捷键提示，同样做 `{modifier}` 替换
+
+### 5. 添加测试
+- 为 `isMac()` 和 `getModifierKey()` 在 `src/core/utils/__tests__/` 添加单元测试
+
+## Verification
+1. `bun run typecheck`
+2. `bun run lint`
+3. `bun run test`
+4. `bun run build:chrome`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/jessezhang/.claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/44875e8c-3e7d-4b79-8889-4b66b67819b5.jsonl
+
+---
+
+ctrl i 是否应该加在 popup 里指示?
+
+---
+
+好，vitepress 文档里没有的话也加上
+
+---
+
+bun run format 然后提交

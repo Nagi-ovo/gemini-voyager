@@ -1,0 +1,53 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "cec7c36b3395",
+  "session_id": "72a86ca0-ec56-45a9-9f97-c841875b5e96",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-04T23:19:46.826213Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "docs/ar/guide/input-collapse.md",
+    "docs/en/guide/input-collapse.md",
+    "docs/es/guide/input-collapse.md",
+    "docs/fr/guide/input-collapse.md",
+    "docs/guide/input-collapse.md",
+    "docs/ja/guide/input-collapse.md",
+    "docs/ko/guide/input-collapse.md",
+    "docs/pt/guide/input-collapse.md",
+    "docs/ru/guide/input-collapse.md",
+    "docs/zh_TW/guide/input-collapse.md",
+    "src/core/services/KeyboardShortcutService.ts",
+    "src/core/utils/__tests__/browser.test.ts",
+    "src/core/utils/browser.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/popup/Popup.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "c813132dc2ed",
+  "token_usage": {
+    "input_tokens": 52,
+    "cache_creation_tokens": 85892,
+    "cache_read_tokens": 3454747,
+    "output_tokens": 25931,
+    "api_call_count": 44
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-04T23:19:46.153339Z",
+    "agent_lines": 206,
+    "human_added": 0,
+    "human_modified": 2,
+    "human_removed": 1,
+    "total_committed": 208,
+    "agent_percentage": 99.03846153846155
+  }
+}
