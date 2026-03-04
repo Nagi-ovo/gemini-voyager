@@ -77,6 +77,30 @@ describe('PDFPrintService', () => {
     );
   });
 
+  it('restores KaTeX layout primitives after immersive-mode display override', async () => {
+    window.print = vi.fn();
+
+    await PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/x',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: 'KaTeX Print Layout',
+    });
+
+    const style = document.getElementById('gv-pdf-print-styles');
+    const styleText = style?.textContent || '';
+
+    expect(styleText).toContain('.katex .vlist-t');
+    expect(styleText).toContain('display: inline-table !important;');
+    expect(styleText).toContain('.katex .vlist-r');
+    expect(styleText).toContain('display: table-row !important;');
+    expect(styleText).toContain('.katex .vlist,');
+    expect(styleText).toContain('.katex .vlist-s');
+    expect(styleText).toContain('display: table-cell !important;');
+    expect(styleText).toContain('.gv-print-turn-text .katex');
+    expect(styleText).toContain('line-height: 1.2 !important;');
+  });
+
   it('keeps cover page centered under immersive-mode display override', async () => {
     window.print = vi.fn();
 
