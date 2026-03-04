@@ -65,82 +65,63 @@ const attachedElements = new WeakSet<HTMLElement>();
  * Find the send button associated with the current input element.
  *
  * Strategy:
- * 1. Contextual Search: Look for `.update-button` or similar in the container.
- * 2. Global Search: Fallback to the main send button (Main chat).
+ * 1. Container Search: Use `closest()` to find a known container (e.g. `.text-input-field`, `chat-message`).
+ * 2. Scoped Button Search: Only search for buttons within the found container to avoid stale matches.
  */
 function findSendButton(inputElement: HTMLElement): HTMLElement | null {
-  // --- 1. Contextual Search ---
+  // 1. First, find a cohesive container wrapper that holds BOTH the input and its corresponding button
+  //    Gemini provides distinct containers for the main input and edit inputs
+  const containerSelectors = [
+    // Global/main chat input wrapper
+    '.text-input-field',
+    // Active conversation edit container
+    'chat-message',
+    'form',
+    // Modals/Dialogs
+    '[role="dialog"]',
+    '.mat-mdc-dialog-container',
+  ];
 
-  // Traverse up to find a container
-  let parent = inputElement.parentElement;
-  let attempts = 0;
-  // Gemini structure: input -> div -> div.edit-container (so ~3 levels up)
-  const MAX_LEVELS = 5;
-
-  while (parent && attempts < MAX_LEVELS) {
-    // 1. Explicitly check for the ".update-button" class (User provided)
-    const updateButton = parent.querySelector('.update-button');
-    if (updateButton instanceof HTMLElement && updateButton.offsetParent !== null) {
-      // Double check: if it's disabled, we might want to return it anyway (to block default enter)
-      // or ignore it? Logic: If disabled, clicking does nothing, but we should consume the event
-      // to prevent newline insertion if it was a submit attempt.
-      // However, standard behavior is usually: click logic handles validity.
-      // We'll return it so we can click() it (which does nothing if disabled).
-      return updateButton.closest('button') ?? updateButton;
+  let container: HTMLElement | null = null;
+  for (const selector of containerSelectors) {
+    const closest = inputElement.closest(selector);
+    if (closest instanceof HTMLElement) {
+      container = closest;
+      break;
     }
-
-    // 2. Fallback Contextual: Regex on aria-labels
-    const UPDATE_REGEX = /update|save|confirm|submit|更新|保存|提交|修改/i;
-    const buttons = Array.from(parent.querySelectorAll('button'));
-
-    const matchedBtn = buttons.find((btn) => {
-      const label =
-        btn.getAttribute('aria-label') || btn.getAttribute('data-tooltip') || btn.textContent || '';
-      return UPDATE_REGEX.test(label) && btn.offsetParent !== null;
-    });
-
-    if (matchedBtn) {
-      return matchedBtn;
-    }
-
-    // 3. Proximity Check for generic Send buttons (very close only)
-    if (attempts <= 2) {
-      const localSend = buttons.find((btn) => {
-        const hasSendIcon =
-          btn.querySelector('mat-icon[fonticon="send"]') ||
-          btn.querySelector('.material-symbols-outlined')?.textContent === 'send';
-        return hasSendIcon && btn.offsetParent !== null;
-      });
-      if (localSend) return localSend;
-    }
-
-    parent = parent.parentElement;
-    attempts++;
   }
 
-  // --- 2. Global Search (Fallback for Main Chat) ---
+  // 2. Search for the button strictly WITHIN the container or via bounded upward traversal
+  // If we found a known cohesive container, just search in it
+  if (container) {
+    for (const selector of SEND_BUTTON_SELECTORS) {
+      try {
+        const element = container.querySelector(selector);
+        if (element instanceof HTMLElement) {
+          const closestButton = element.closest('button');
+          // Ensure the found button is still within our safe container boundary
+          const button =
+            closestButton && container.contains(closestButton) ? closestButton : element;
 
-  // Try predefined selectors
-  for (const selector of SEND_BUTTON_SELECTORS) {
-    try {
-      const element = document.querySelector(selector);
-      if (element) {
-        const button = element.closest('button') ?? element;
-        if (button instanceof HTMLElement && button.offsetParent !== null) {
-          return button;
+          if (button instanceof HTMLElement && button.offsetParent !== null) {
+            return button;
+          }
         }
+      } catch {
+        // Invalid selector, continue
       }
-    } catch {
-      // Invalid selector, continue to next
     }
-  }
 
-  // Fallback: Find button with send icon by icon text
-  const allButtons = document.querySelectorAll('button');
-  for (const button of allButtons) {
-    const iconElement = button.querySelector('.material-symbols-outlined, mat-icon');
-    if (iconElement?.textContent?.trim().toLowerCase() === 'send') {
-      return button;
+    // Fallback search within container by icon text
+    const allButtons = container.querySelectorAll('button');
+    for (const button of allButtons) {
+      const iconElement = button.querySelector('.material-symbols-outlined, mat-icon');
+      if (
+        iconElement?.textContent?.trim().toLowerCase() === 'send' &&
+        button.offsetParent !== null
+      ) {
+        return button;
+      }
     }
   }
 
@@ -257,6 +238,7 @@ function handleKeyDown(event: KeyboardEvent): void {
 
   // Ctrl+Enter or Cmd+Enter: Send the message
   if (event.ctrlKey || event.metaKey) {
+    // Pass the current input target context so we only find its corresponding send button
     const sendButton = findSendButton(target);
     if (sendButton) {
       event.preventDefault();
