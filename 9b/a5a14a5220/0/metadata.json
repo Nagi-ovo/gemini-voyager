@@ -1,0 +1,46 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "9ba5a14a5220",
+  "session_id": "45d1d240-4a4c-4891-9e2e-34b4ec2d8396",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-05T15:43:53.315386Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "src/core/types/common.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/index.tsx",
+    "src/pages/content/sakuraEffect/__tests__/sakuraEffect.test.ts",
+    "src/pages/content/sakuraEffect/index.ts",
+    "src/pages/content/snowEffect/__tests__/snowEffect.test.ts",
+    "src/pages/content/snowEffect/index.ts",
+    "src/pages/popup/Popup.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "ebe9fffa630e",
+  "token_usage": {
+    "input_tokens": 50,
+    "cache_creation_tokens": 111199,
+    "cache_read_tokens": 2967948,
+    "output_tokens": 43085,
+    "api_call_count": 42
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-05T15:43:52.291817Z",
+    "agent_lines": 838,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 838,
+    "agent_percentage": 100
+  }
+}

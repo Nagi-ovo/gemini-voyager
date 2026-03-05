@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "9ba5a14a5220",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "src/core/types/common.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/index.tsx",
+    "src/pages/content/sakuraEffect/__tests__/sakuraEffect.test.ts",
+    "src/pages/content/sakuraEffect/index.ts",
+    "src/pages/content/snowEffect/__tests__/snowEffect.test.ts",
+    "src/pages/content/snowEffect/index.ts",
+    "src/pages/popup/Popup.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/9b/a5a14a5220/0/metadata.json",
+      "transcript": "/9b/a5a14a5220/0/full.jsonl",
+      "context": "/9b/a5a14a5220/0/context.md",
+      "content_hash": "/9b/a5a14a5220/0/content_hash.txt",
+      "prompt": "/9b/a5a14a5220/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 50,
+    "cache_creation_tokens": 111199,
+    "cache_read_tokens": 2967948,
+    "output_tokens": 43085,
+    "api_call_count": 42
+  }
+}
