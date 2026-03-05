@@ -1263,13 +1263,25 @@
     "message": "Исследованные сайты",
     "description": "Заголовок раздела исследованных сайтов Deep Research"
   },
-  "snowEffect": {
-    "message": "Эффект снега",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "Визуальные эффекты",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "Снегопад на странице для зимней атмосферы",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "Добавьте сезонную атмосферу на страницу",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "Выкл",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "Снег",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "Сакура",
+    "description": "Visual effect sakura option"
   },
   "changelog_title": {
     "message": "Что нового",

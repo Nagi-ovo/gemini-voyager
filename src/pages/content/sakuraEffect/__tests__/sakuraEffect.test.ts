@@ -1,18 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('snowEffect', () => {
+describe('sakuraEffect', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.useFakeTimers();
     vi.clearAllMocks();
     document.body.innerHTML = '';
 
-    // Mock canvas context
     const mockCtx = {
       clearRect: vi.fn(),
       beginPath: vi.fn(),
-      arc: vi.fn(),
+      moveTo: vi.fn(),
+      bezierCurveTo: vi.fn(),
+      quadraticCurveTo: vi.fn(),
+      closePath: vi.fn(),
       fill: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      translate: vi.fn(),
+      rotate: vi.fn(),
+      scale: vi.fn(),
       fillStyle: '',
     };
 
@@ -29,46 +36,44 @@ describe('snowEffect', () => {
   it('creates canvas when enabled via gvVisualEffect storage', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'snow' });
+        callback({ gvVisualEffect: 'sakura' });
       },
     );
 
-    const { startSnowEffect } = await import('../index');
-    startSnowEffect();
+    const { startSakuraEffect } = await import('../index');
+    startSakuraEffect();
 
-    const canvas = document.getElementById('gv-snow-effect-canvas');
+    const canvas = document.getElementById('gv-sakura-effect-canvas');
     expect(canvas).not.toBeNull();
     expect(canvas?.tagName).toBe('CANVAS');
     expect(canvas?.style.pointerEvents).toBe('none');
     expect(canvas?.style.position).toBe('fixed');
   });
 
-  it('creates canvas via legacy gvSnowEffect boolean (backward compat)', async () => {
+  it('does not create canvas when visual effect is snow', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSnowEffect: true });
+        callback({ gvVisualEffect: 'snow' });
       },
     );
 
-    const { startSnowEffect } = await import('../index');
-    startSnowEffect();
+    const { startSakuraEffect } = await import('../index');
+    startSakuraEffect();
 
-    const canvas = document.getElementById('gv-snow-effect-canvas');
-    expect(canvas).not.toBeNull();
+    expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
   });
 
-  it('does not create canvas when disabled', async () => {
+  it('does not create canvas when visual effect is off', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
         callback({ gvVisualEffect: 'off' });
       },
     );
 
-    const { startSnowEffect } = await import('../index');
-    startSnowEffect();
+    const { startSakuraEffect } = await import('../index');
+    startSakuraEffect();
 
-    const canvas = document.getElementById('gv-snow-effect-canvas');
-    expect(canvas).toBeNull();
+    expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
   });
 
   it('removes canvas when disabled via storage change', async () => {
@@ -82,19 +87,18 @@ describe('snowEffect', () => {
 
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'snow' });
+        callback({ gvVisualEffect: 'sakura' });
       },
     );
 
-    const { startSnowEffect } = await import('../index');
-    startSnowEffect();
+    const { startSakuraEffect } = await import('../index');
+    startSakuraEffect();
 
-    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
+    expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
 
-    // Simulate storage change to disable
-    storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'snow' } }, 'sync');
+    storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'sakura' } }, 'sync');
 
-    expect(document.getElementById('gv-snow-effect-canvas')).toBeNull();
+    expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
   });
 
   it('creates canvas when enabled via storage change', async () => {
@@ -112,31 +116,53 @@ describe('snowEffect', () => {
       },
     );
 
-    const { startSnowEffect } = await import('../index');
-    startSnowEffect();
+    const { startSakuraEffect } = await import('../index');
+    startSakuraEffect();
 
-    expect(document.getElementById('gv-snow-effect-canvas')).toBeNull();
+    expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
 
-    // Simulate storage change to enable
-    storageListener!({ gvVisualEffect: { newValue: 'snow', oldValue: 'off' } }, 'sync');
+    storageListener!({ gvVisualEffect: { newValue: 'sakura', oldValue: 'off' } }, 'sync');
 
-    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
+    expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
+  });
+
+  it('switches from snow to sakura via storage change', async () => {
+    let storageListener: ((changes: Record<string, unknown>, area: string) => void) | null = null;
+
+    (
+      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
+    ).mockImplementation((listener: (changes: Record<string, unknown>, area: string) => void) => {
+      storageListener = listener;
+    });
+
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvVisualEffect: 'off' });
+      },
+    );
+
+    const { startSakuraEffect } = await import('../index');
+    startSakuraEffect();
+
+    // Switch to sakura
+    storageListener!({ gvVisualEffect: { newValue: 'sakura', oldValue: 'snow' } }, 'sync');
+    expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
   });
 
   it('cleans up on beforeunload', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'snow' });
+        callback({ gvVisualEffect: 'sakura' });
       },
     );
 
-    const { startSnowEffect } = await import('../index');
-    startSnowEffect();
+    const { startSakuraEffect } = await import('../index');
+    startSakuraEffect();
 
-    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
+    expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
 
     window.dispatchEvent(new Event('beforeunload'));
 
-    expect(document.getElementById('gv-snow-effect-canvas')).toBeNull();
+    expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
   });
 });

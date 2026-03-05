@@ -1263,13 +1263,25 @@
     "message": "Sites pesquisados",
     "description": "Cabeçalho de secção de sites pesquisados de Deep Research"
   },
-  "snowEffect": {
-    "message": "Efeito de neve",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "Efeitos visuais",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "Deixe nevar na página para um clima de inverno",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "Adicione um clima sazonal a pagina",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "Desligado",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "Neve",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "Sakura",
+    "description": "Visual effect sakura option"
   },
   "changelog_title": {
     "message": "Novidades",

@@ -1263,13 +1263,25 @@
     "message": "研究網站",
     "description": "深度研究已研究網站章節標題"
   },
-  "snowEffect": {
-    "message": "飄雪效果",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "視覺特效",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "在頁面上飄雪，營造冬日氛圍",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "為頁面增添季節氛圍",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "關閉",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "飄雪",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "櫻花",
+    "description": "Visual effect sakura option"
   },
   "changelog_title": {
     "message": "更新內容",

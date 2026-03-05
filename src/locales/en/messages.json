@@ -1271,13 +1271,25 @@
     "message": "Researched Websites",
     "description": "Deep Research researched websites section header"
   },
-  "snowEffect": {
-    "message": "Snow effect",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "Visual effects",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "Let it snow on the page for a festive winter vibe",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "Add seasonal atmosphere to the page",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "Off",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "Snow",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "Sakura",
+    "description": "Visual effect sakura option"
   },
   "changelog_title": {
     "message": "What's New",

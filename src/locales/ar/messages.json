@@ -1263,13 +1263,25 @@
     "message": "المواقع المبحوثة",
     "description": "عنوان قسم المواقع المبحوثة في Deep Research"
   },
-  "snowEffect": {
-    "message": "تأثير الثلج",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "المؤثرات البصرية",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "اجعل الثلج يتساقط على الصفحة لأجواء شتوية",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "أضف أجواء موسمية للصفحة",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "إيقاف",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "ثلج",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "ساكورا",
+    "description": "Visual effect sakura option"
   },
   "changelog_title": {
     "message": "الجديد",

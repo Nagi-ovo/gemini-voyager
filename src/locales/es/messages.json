@@ -1263,13 +1263,25 @@
     "message": "Sitios web investigados",
     "description": "Encabezado de sección de sitios web investigados de Deep Research"
   },
-  "snowEffect": {
-    "message": "Efecto de nieve",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "Efectos visuales",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "Deja que nieve en la página para un ambiente invernal",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "Agrega ambiente estacional a la pagina",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "Desactivado",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "Nieve",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "Sakura",
+    "description": "Visual effect sakura option"
   },
   "changelog_title": {
     "message": "Novedades",

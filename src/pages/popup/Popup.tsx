@@ -133,7 +133,7 @@ interface SettingsUpdate {
   quoteReplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
   sidebarAutoHideEnabled?: boolean;
-  snowEffectEnabled?: boolean;
+  visualEffect?: 'off' | 'snow' | 'sakura';
   preventAutoScrollEnabled?: boolean;
   forkEnabled?: boolean;
   upsellHiderEnabled?: boolean;
@@ -167,7 +167,7 @@ export default function Popup() {
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
   const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
-  const [snowEffectEnabled, setSnowEffectEnabled] = useState<boolean>(false);
+  const [visualEffect, setVisualEffect] = useState<'off' | 'snow' | 'sakura'>('off');
   const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState<boolean>(false);
   const [forkEnabled, setForkEnabled] = useState<boolean>(false);
   const [upsellHiderEnabled, setUpsellHiderEnabled] = useState<boolean>(true);
@@ -251,8 +251,11 @@ export default function Popup() {
         payload.gvCtrlEnterSend = settings.ctrlEnterSendEnabled;
       if (typeof settings.sidebarAutoHideEnabled === 'boolean')
         payload.gvSidebarAutoHide = settings.sidebarAutoHideEnabled;
-      if (typeof settings.snowEffectEnabled === 'boolean')
-        payload.gvSnowEffect = settings.snowEffectEnabled;
+      if (settings.visualEffect) {
+        payload.gvVisualEffect = settings.visualEffect;
+        // Clear legacy key
+        payload.gvSnowEffect = false;
+      }
       if (typeof settings.preventAutoScrollEnabled === 'boolean')
         payload.gvPreventAutoScrollEnabled = settings.preventAutoScrollEnabled;
       if (typeof settings.forkEnabled === 'boolean')
@@ -524,7 +527,15 @@ export default function Popup() {
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
           setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
-          setSnowEffectEnabled(res?.gvSnowEffect === true);
+          // Resolve visual effect: new key takes precedence over legacy boolean
+          const storedVisualEffect = res?.gvVisualEffect;
+          if (storedVisualEffect === 'snow' || storedVisualEffect === 'sakura') {
+            setVisualEffect(storedVisualEffect);
+          } else if (res?.gvSnowEffect === true) {
+            setVisualEffect('snow');
+          } else {
+            setVisualEffect('off');
+          }
           setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
           setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
           setUpsellHiderEnabled(res?.[StorageKeys.UPSELL_HIDER_ENABLED] === true);
@@ -1188,28 +1199,106 @@ export default function Popup() {
           </Card>
         )}
 
-        {/* Snow Effect - Gemini only */}
+        {/* Visual Effect - Gemini only */}
         {!isAIStudio && (
           <Card className="p-4 transition-shadow hover:shadow-lg">
             <CardContent className="p-0">
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="snow-effect"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+              <div className="flex-1">
+                <Label className="text-sm font-medium">{t('visualEffect')}</Label>
+                <p className="text-muted-foreground mt-1 text-xs">{t('visualEffectHint')}</p>
+              </div>
+              <div className="bg-muted/60 mt-3 flex items-center gap-0.5 rounded-full p-1">
+                {(
+                  [
+                    {
+                      value: 'off' as const,
+                      label: t('visualEffectOff'),
+                      icon: (
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      value: 'snow' as const,
+                      label: t('visualEffectSnow'),
+                      icon: (
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="12" y1="2" x2="12" y2="22" />
+                          <line x1="2" y1="12" x2="22" y2="12" />
+                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                          <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
+                          <line x1="12" y1="2" x2="14.5" y2="4.5" />
+                          <line x1="12" y1="2" x2="9.5" y2="4.5" />
+                          <line x1="12" y1="22" x2="14.5" y2="19.5" />
+                          <line x1="12" y1="22" x2="9.5" y2="19.5" />
+                          <line x1="2" y1="12" x2="4.5" y2="9.5" />
+                          <line x1="2" y1="12" x2="4.5" y2="14.5" />
+                          <line x1="22" y1="12" x2="19.5" y2="9.5" />
+                          <line x1="22" y1="12" x2="19.5" y2="14.5" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      value: 'sakura' as const,
+                      label: t('visualEffectSakura'),
+                      icon: (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <g transform="translate(12,12)">
+                            {[0, 72, 144, 216, 288].map((deg) => (
+                              <ellipse
+                                key={deg}
+                                cx="0"
+                                cy="-6"
+                                rx="2.8"
+                                ry="5.5"
+                                transform={`rotate(${deg})`}
+                                opacity="0.85"
+                              />
+                            ))}
+                            <circle cx="0" cy="0" r="2" opacity="0.6" />
+                          </g>
+                        </svg>
+                      ),
+                    },
+                  ] as const
+                ).map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setVisualEffect(option.value);
+                      apply({ visualEffect: option.value });
+                    }}
+                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-medium transition-all duration-200 ${
+                      visualEffect === option.value
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
                   >
-                    {t('snowEffect')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('snowEffectHint')}</p>
-                </div>
-                <Switch
-                  id="snow-effect"
-                  checked={snowEffectEnabled}
-                  onChange={(e) => {
-                    setSnowEffectEnabled(e.target.checked);
-                    apply({ snowEffectEnabled: e.target.checked });
-                  }}
-                />
+                    {option.icon}
+                    <span>{option.label}</span>
+                  </button>
+                ))}
               </div>
             </CardContent>
           </Card>

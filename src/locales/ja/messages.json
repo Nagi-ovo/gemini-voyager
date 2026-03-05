@@ -1263,13 +1263,25 @@
     "message": "調査済みサイト",
     "description": "深層研究の調査済みウェブサイトセクションヘッダー"
   },
-  "snowEffect": {
-    "message": "雪エフェクト",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "ビジュアルエフェクト",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "ページに雪を降らせて冬の雰囲気を演出",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "ページに季節の雰囲気を演出",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "オフ",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "雪",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "桜",
+    "description": "Visual effect sakura option"
   },
   "changelog_title": {
     "message": "新機能",

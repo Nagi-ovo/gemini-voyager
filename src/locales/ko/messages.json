@@ -1263,13 +1263,25 @@
     "message": "조사한 웹사이트",
     "description": "Deep Research 조사한 웹사이트 섹션 헤더"
   },
-  "snowEffect": {
-    "message": "눈 효과",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "시각 효과",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "페이지에 눈이 내리는 겨울 분위기 연출",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "페이지에 계절 분위기 연출",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "끄기",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "눈",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "벚꽃",
+    "description": "Visual effect sakura option"
   },
   "changelog_title": {
     "message": "새로운 기능",

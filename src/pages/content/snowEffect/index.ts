@@ -13,7 +13,9 @@
  */
 
 const CANVAS_ID = 'gv-snow-effect-canvas';
-const STORAGE_KEY = 'gvSnowEffect';
+const STORAGE_KEY = 'gvVisualEffect';
+const LEGACY_KEY = 'gvSnowEffect';
+const EFFECT_VALUE = 'snow';
 
 /**
  * Three layers simulate depth-of-field:
@@ -209,14 +211,21 @@ function disable(): void {
   snowflakes = [];
 }
 
+function resolveEffect(res: Record<string, unknown>): string {
+  if (typeof res[STORAGE_KEY] === 'string') return res[STORAGE_KEY] as string;
+  // Backward compat: old boolean snow key -> 'snow'
+  if (res[LEGACY_KEY] === true) return 'snow';
+  return 'off';
+}
+
 /**
  * Initialize and start the snow effect feature
  */
 export function startSnowEffect(): void {
   // 1) Read initial setting
   try {
-    chrome.storage?.sync?.get({ [STORAGE_KEY]: false }, (res) => {
-      if (res?.[STORAGE_KEY] === true) {
+    chrome.storage?.sync?.get({ [STORAGE_KEY]: null, [LEGACY_KEY]: false }, (res) => {
+      if (resolveEffect(res) === EFFECT_VALUE) {
         enable();
       }
     });
@@ -228,7 +237,7 @@ export function startSnowEffect(): void {
   try {
     chrome.storage?.onChanged?.addListener((changes, area) => {
       if (area === 'sync' && changes[STORAGE_KEY]) {
-        if (changes[STORAGE_KEY].newValue === true) {
+        if (changes[STORAGE_KEY].newValue === EFFECT_VALUE) {
           enable();
         } else {
           disable();
