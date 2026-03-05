@@ -90,7 +90,7 @@ export class FolderManager {
   }
   private storage: IFolderStorageAdapter; // Storage adapter (Strategy Pattern)
   private backupService: DataBackupService<FolderData>; // Multi-layer backup system
-  private data: FolderData = { folders: [], folderContents: {} };
+  public data: FolderData = { folders: [], folderContents: {} };
   private containerElement: HTMLElement | null = null;
   private sidebarContainer: HTMLElement | null = null;
   private recentSection: HTMLElement | null = null;
@@ -2326,8 +2326,26 @@ export class FolderManager {
     this.refresh();
   }
 
+  public createFolderByName(name: string, parentId: string | null = null): string {
+    const folder: Folder = {
+      id: this.generateId(),
+      name,
+      parentId,
+      isExpanded: true,
+      color: 'default',
+      pinned: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    this.data.folders.unshift(folder);
+    this.data.folderContents[folder.id] = [];
+    this.saveData();
+    this.refresh();
+    return folder.id;
+  }
+
   // Batch add conversations to folder (for multi-select support)
-  private addConversationsToFolder(
+  public addConversationsToFolder(
     folderId: string,
     conversations: ConversationReference[],
     sourceFolderId?: string,
@@ -6164,7 +6182,7 @@ export class FolderManager {
    *   - Returns true if any subfolder has visible content.
    *   - Returns false otherwise.
    */
-  private hasVisibleContent(folderId: string): boolean {
+  public hasVisibleContent(folderId: string): boolean {
     if (!this.filterCurrentUserOnly) return true;
 
     // Check direct conversations

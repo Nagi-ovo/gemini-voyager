@@ -48,6 +48,7 @@ class DefaultModelManager {
   // Track consecutive failures to stop retrying when model is unavailable
   private consecutiveFailures = 0;
   private readonly maxConsecutiveFailures = 3;
+  private bypassed = false;
 
   private constructor() {}
 
@@ -56,6 +57,10 @@ class DefaultModelManager {
       DefaultModelManager.instance = new DefaultModelManager();
     }
     return DefaultModelManager.instance;
+  }
+
+  public setBypassed(value: boolean) {
+    this.bypassed = value;
   }
 
   public async init() {
@@ -487,6 +492,7 @@ class DefaultModelManager {
   }
 
   private async checkAndLockModel() {
+    if (this.bypassed) return;
     // Only lock on new conversation pages
     if (!this.isNewConversation()) return;
 
