@@ -28,6 +28,7 @@ import { startMermaid } from './mermaid/index';
 import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
+import { startRainEffect } from './rainEffect/index';
 import { startRecentsHider } from './recentsHider/index';
 import { startSakuraEffect } from './sakuraEffect/index';
 import { startSendBehavior } from './sendBehavior/index';
@@ -191,6 +192,7 @@ async function initializeFeatures(): Promise<void> {
 
       startSnowEffect();
       startSakuraEffect();
+      startRainEffect();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startInputCollapse();

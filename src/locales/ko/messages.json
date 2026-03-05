@@ -1283,6 +1283,10 @@
     "message": "벚꽃",
     "description": "Visual effect sakura option"
   },
+  "visualEffectRain": {
+    "message": "비",
+    "description": "Visual effect rain option"
+  },
   "changelog_title": {
     "message": "새로운 기능",
     "description": "Changelog modal title"

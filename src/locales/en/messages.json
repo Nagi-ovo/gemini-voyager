@@ -1291,6 +1291,10 @@
     "message": "Sakura",
     "description": "Visual effect sakura option"
   },
+  "visualEffectRain": {
+    "message": "Rain",
+    "description": "Visual effect rain option"
+  },
   "changelog_title": {
     "message": "What's New",
     "description": "Changelog modal title"

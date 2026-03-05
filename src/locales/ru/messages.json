@@ -1283,6 +1283,10 @@
     "message": "Сакура",
     "description": "Visual effect sakura option"
   },
+  "visualEffectRain": {
+    "message": "Дождь",
+    "description": "Visual effect rain option"
+  },
   "changelog_title": {
     "message": "Что нового",
     "description": "Changelog modal title"
