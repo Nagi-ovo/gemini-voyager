@@ -1,0 +1,5 @@
+更新 CLAUDE.md 和 AGENTS.md
+
+---
+
+format 然后 push
