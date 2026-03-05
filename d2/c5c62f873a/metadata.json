@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "d2c5c62f873a",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/index.tsx",
+    "src/pages/content/rainEffect/__tests__/rainEffect.test.ts",
+    "src/pages/content/rainEffect/index.ts",
+    "src/pages/popup/Popup.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d2/c5c62f873a/0/metadata.json",
+      "transcript": "/d2/c5c62f873a/0/full.jsonl",
+      "context": "/d2/c5c62f873a/0/context.md",
+      "content_hash": "/d2/c5c62f873a/0/content_hash.txt",
+      "prompt": "/d2/c5c62f873a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 12,
+    "cache_creation_tokens": 17098,
+    "cache_read_tokens": 1440367,
+    "output_tokens": 10408,
+    "api_call_count": 12
+  }
+}

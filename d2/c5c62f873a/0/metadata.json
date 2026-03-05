@@ -1,0 +1,45 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "d2c5c62f873a",
+  "session_id": "45d1d240-4a4c-4891-9e2e-34b4ec2d8396",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-05T15:46:46.060853Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/pages/content/rainEffect/index.ts",
+    "src/pages/content/rainEffect/__tests__/rainEffect.test.ts",
+    "src/pages/content/index.tsx",
+    "src/pages/popup/Popup.tsx",
+    "src/locales/en/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ar/messages.json",
+    "src/locales/ru/messages.json"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "ebe9fffa630e",
+  "checkpoint_transcript_start": 380,
+  "transcript_lines_at_start": 380,
+  "token_usage": {
+    "input_tokens": 12,
+    "cache_creation_tokens": 17098,
+    "cache_read_tokens": 1440367,
+    "output_tokens": 10408,
+    "api_call_count": 12
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-05T15:46:44.247648Z",
+    "agent_lines": 518,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 518,
+    "agent_percentage": 100
+  }
+}
