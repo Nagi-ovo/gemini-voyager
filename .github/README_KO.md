@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="../docs/public/assets/promotion/Promo-Banner.png" alt="promotion"/>
+  <img src="../docs/public/assets/promotion/Promo-Banner-KO.png" alt="promotion"/>
   <h3>Gemini 경험을 진정으로 당신의 것으로 만드세요 ✨</h3>
   <p>
     우아한 타임라인으로 대화를 탐색하고, 폴더로 채팅을 정리하며, 자신만의 프롬프트 저장소를 구축하세요.<br>

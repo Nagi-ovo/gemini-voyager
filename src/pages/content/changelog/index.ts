@@ -33,6 +33,8 @@ function getPromotionRuntimePath(filename: string): string | null {
       return 'changelog-promo-banner-cn.png';
     case 'Promo-Banner-jp.png':
       return 'changelog-promo-banner-jp.png';
+    case 'Promo-Banner-KO.png':
+      return 'changelog-promo-banner-ko.png';
     default:
       return null;
   }
