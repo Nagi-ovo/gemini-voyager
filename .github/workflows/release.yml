@@ -183,6 +183,8 @@ jobs:
 
       - name: Prepare Release Notes
         id: release_body
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
           NOTES="${{ inputs.notes }}"
@@ -192,7 +194,20 @@ jobs:
             echo "$NOTES" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
-            cat > release_body.md << EOF
+            # Get the previous tag for auto-generated notes
+            PREV_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || echo "")
+
+            # Generate release notes via GitHub API
+            AUTO_NOTES=""
+            if [ -n "$PREV_TAG" ]; then
+              AUTO_NOTES=$(gh api repos/${{ github.repository }}/releases/generate-notes \
+                -f tag_name="${TAG}" \
+                -f target_commitish="main" \
+                -f previous_tag_name="${PREV_TAG}" \
+                --jq '.body' 2>/dev/null || echo "")
+            fi
+
+            cat > release_body.md << 'INSTALL_EOF'
           ## 📥 Installation
 
           <div align="center">
@@ -208,6 +223,10 @@ jobs:
               <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
             </a>
           </div>
+          INSTALL_EOF
+
+            # Append version-specific file names
+            cat >> release_body.md << EOF
 
           - **Chrome**: \`gemini-voyager-chrome-${TAG}.zip\`
           - **Firefox**: \`gemini-voyager-firefox-${TAG}.xpi\`
@@ -220,9 +239,15 @@ jobs:
           - **限制 (Limitations)**: 受限于 Safari 特性，以下功能暂不支持：(a) Nano Banana 水印去除 (b) 图片导出 (建议使用 PDF 导出) (c) Google Drive 云同步。
             Due to Safari's nature, the following features are not supported: (a) Watermark removal (b) Image export (PDF recommended) (c) Cloud sync with Google Drive.
           EOF
-            echo "body<<EOF" >> $GITHUB_OUTPUT
+
+            # Combine: auto-generated notes first, then installation
+            echo "body<<BODY_EOF" >> $GITHUB_OUTPUT
+            if [ -n "$AUTO_NOTES" ]; then
+              echo "$AUTO_NOTES" >> $GITHUB_OUTPUT
+              echo "" >> $GITHUB_OUTPUT
+            fi
             cat release_body.md >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            echo "BODY_EOF" >> $GITHUB_OUTPUT
           fi
 
       - name: Create GitHub Release
@@ -235,5 +260,3 @@ jobs:
             gemini-voyager-firefox-*.xpi
             gemini-voyager-*.dmg
           body: ${{ steps.release_body.outputs.body }}
-          generate_release_notes: true
-          append_body: ${{ inputs.notes == '' }}
