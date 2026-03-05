@@ -91,19 +91,19 @@ Strictly adhere to these protocols to prevent errors and ensure data integrity.
 
 ## 4. Module Glossary & Complexity Hotspots
 
-| Module (Path)                          | Responsibility                                    | Complexity | Notes                                                                          |
-| -------------------------------------- | ------------------------------------------------- | ---------- | ------------------------------------------------------------------------------ |
-| `core/services/StorageService`         | **Single Source of Truth** for persistence.       | 🌶️ High    | Handles sync/local/session logic + migration. **Do not modify lightly.**       |
-| `core/services/DataBackupService`      | Multi-layer backup protection.                    | 🌶️ High    | Critical for data safety. Race conditions possible during unload.              |
-| `core/services/GoogleDriveSyncService` | Google Drive cloud sync (OAuth2).                 | 🌶️ High    | Handles folders, prompts, and starred messages sync. Requires OAuth2 identity. |
-| `core/services/AccountIsolationService`| Hard account isolation for multi-account users.   | 🌶️ High    | Integrates with Google Drive sync. Isolates data per Google account.           |
-| `features/folder`                      | Drag-and-drop folder logic + cloud sync UI.       | 🌶️ High    | DOM manipulation + State sync is tricky. Watch out for infinite loops.         |
-| `features/export`                      | Chat export (JSON/MD/PDF/Image) + Deep Research.  | 🌶️ High    | Image export, message selection, multi-browser compat. Fragile to Gemini UI.   |
-| `features/backup`                      | File System Access API.                           | 🟡 Medium  | Browser compatibility issues (Safari fallback).                                |
-| `pages/content`                        | **DOM Injection** (30 content script modules).    | 🟡 Medium  | Bridge between Gemini UI and Extension. Each sub-module is self-contained.     |
-| `pages/content/fork`                   | Conversation fork (branch) management.            | 🟡 Medium  | Creates/manages forked conversation copies. New in v1.2.8+.                    |
-| `pages/content/mermaid`                | Mermaid diagram rendering.                        | 🟡 Medium  | Dynamic library loading with legacy fallback.                                  |
-| `pages/content/watermarkRemover`       | NanoBanana watermark removal via fetch intercept. | 🟡 Medium  | Disabled on Safari. Uses `fetchInterceptor.js` injected into page context.     |
+| Module (Path)                           | Responsibility                                    | Complexity | Notes                                                                          |
+| --------------------------------------- | ------------------------------------------------- | ---------- | ------------------------------------------------------------------------------ |
+| `core/services/StorageService`          | **Single Source of Truth** for persistence.       | 🌶️ High    | Handles sync/local/session logic + migration. **Do not modify lightly.**       |
+| `core/services/DataBackupService`       | Multi-layer backup protection.                    | 🌶️ High    | Critical for data safety. Race conditions possible during unload.              |
+| `core/services/GoogleDriveSyncService`  | Google Drive cloud sync (OAuth2).                 | 🌶️ High    | Handles folders, prompts, and starred messages sync. Requires OAuth2 identity. |
+| `core/services/AccountIsolationService` | Hard account isolation for multi-account users.   | 🌶️ High    | Integrates with Google Drive sync. Isolates data per Google account.           |
+| `features/folder`                       | Drag-and-drop folder logic + cloud sync UI.       | 🌶️ High    | DOM manipulation + State sync is tricky. Watch out for infinite loops.         |
+| `features/export`                       | Chat export (JSON/MD/PDF/Image) + Deep Research.  | 🌶️ High    | Image export, message selection, multi-browser compat. Fragile to Gemini UI.   |
+| `features/backup`                       | File System Access API.                           | 🟡 Medium  | Browser compatibility issues (Safari fallback).                                |
+| `pages/content`                         | **DOM Injection** (30 content script modules).    | 🟡 Medium  | Bridge between Gemini UI and Extension. Each sub-module is self-contained.     |
+| `pages/content/fork`                    | Conversation fork (branch) management.            | 🟡 Medium  | Creates/manages forked conversation copies. New in v1.2.8+.                    |
+| `pages/content/mermaid`                 | Mermaid diagram rendering.                        | 🟡 Medium  | Dynamic library loading with legacy fallback.                                  |
+| `pages/content/watermarkRemover`        | NanoBanana watermark removal via fetch intercept. | 🟡 Medium  | Disabled on Safari. Uses `fetchInterceptor.js` injected into page context.     |
 
 ---
 
