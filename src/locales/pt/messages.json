@@ -1315,6 +1315,10 @@
     "message": "Avaliar",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_badge_mode": {
+    "message": "Notificar com um selo NEW no botão flutuante em vez desta janela",
+    "description": "Changelog notification mode toggle label"
+  },
   "forkConversation": {
     "message": "Fork",
     "description": "Fork conversation button label"

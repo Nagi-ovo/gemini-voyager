@@ -1315,6 +1315,10 @@
     "message": "평점 주기",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_badge_mode": {
+    "message": "이 팝업 대신 플로팅 버튼의 NEW 배지로 알림",
+    "description": "Changelog notification mode toggle label"
+  },
   "forkConversation": {
     "message": "Fork",
     "description": "Fork conversation button label"

@@ -1315,6 +1315,10 @@
     "message": "تقييم الآن",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_badge_mode": {
+    "message": "الإشعار عبر شارة NEW على الزر العائم بدلاً من هذه النافذة",
+    "description": "Changelog notification mode toggle label"
+  },
   "forkConversation": {
     "message": "Fork",
     "description": "Fork conversation button label"

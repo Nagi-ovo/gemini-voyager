@@ -1315,6 +1315,10 @@
     "message": "評価する",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_badge_mode": {
+    "message": "このポップアップの代わりに、フローティングボタンの NEW バッジで通知する",
+    "description": "Changelog notification mode toggle label"
+  },
   "forkConversation": {
     "message": "Fork",
     "description": "Fork conversation button label"

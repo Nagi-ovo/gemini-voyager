@@ -1323,6 +1323,10 @@
     "message": "立即评分",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_badge_mode": {
+    "message": "通过悬浮球上的 NEW 标记提醒，而非弹出此窗口",
+    "description": "Changelog notification mode toggle label"
+  },
   "forkConversation": {
     "message": "分叉",
     "description": "分叉对话按钮标签"

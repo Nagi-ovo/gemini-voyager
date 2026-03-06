@@ -1315,6 +1315,10 @@
     "message": "Оценить",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_badge_mode": {
+    "message": "Уведомлять значком NEW на плавающей кнопке вместо этого окна",
+    "description": "Changelog notification mode toggle label"
+  },
   "forkConversation": {
     "message": "Fork",
     "description": "Fork conversation button label"

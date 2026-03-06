@@ -1315,6 +1315,10 @@
     "message": "立即評分",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_badge_mode": {
+    "message": "透過懸浮球上的 NEW 標記提醒，而非彈出此視窗",
+    "description": "Changelog notification mode toggle label"
+  },
   "forkConversation": {
     "message": "Fork",
     "description": "Fork conversation button label"
