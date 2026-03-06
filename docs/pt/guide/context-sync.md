@@ -31,7 +31,7 @@ A maior dor para os desenvolvedores: depois de discutir uma solução minuciosam
 
 ## Criando Raízes
 
-Assim que a sincronização for concluída, um arquivo `.cobridge/AI_CONTEXT.md` aparecerá no diretório raiz do seu IDE. Seja Trae, Cursor ou Copilot, eles lerão automaticamente essa 'memória' por meio de seus respectivos arquivos Rule.
+Assim que a sincronização for concluída, um arquivo `.cobridge/AI_CONTEXT.md` aparecerá no diretório de trabalho do seu IDE. Seja Trae, Cursor ou Copilot, eles lerão automaticamente essa 'memória' por meio de seus respectivos arquivos Rule.
 
 ```
 your-project/

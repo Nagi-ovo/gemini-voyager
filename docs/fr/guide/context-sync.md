@@ -31,7 +31,7 @@ Le plus grand calvaire des développeurs : après avoir discuté longuement d'un
 
 ## Enracinement dans l'IDE
 
-Une fois la synchronisation terminée, un fichier `.cobridge/AI_CONTEXT.md` apparaîtra dans le répertoire racine de votre IDE. Que ce soit Trae, Cursor ou Copilot, ils liront automatiquement cette « mémoire » via leurs fichiers Rule respectifs.
+Une fois la synchronisation terminée, un fichier `.cobridge/AI_CONTEXT.md` apparaîtra dans le répertoire de travail de votre IDE. Que ce soit Trae, Cursor ou Copilot, ils liront automatiquement cette « mémoire » via leurs fichiers Rule respectifs.
 
 ```
 your-project/

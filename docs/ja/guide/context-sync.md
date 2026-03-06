@@ -31,7 +31,7 @@
 
 ## IDEへの定着
 
-同期が完了すると、IDEのルートディレクトリに `.cobridge/AI_CONTEXT.md` が追加されます。 Trae、Cursor、Copilotのいずれであっても、それぞれのRuleファイルを介してこの「記憶」を自動的に読み取ります。
+同期が完了すると、IDEの作業ディレクトリに `.cobridge/AI_CONTEXT.md` が追加されます。 Trae、Cursor、Copilotのいずれであっても、それぞれのRuleファイルを介してこの「記憶」を自動的に読み取ります。
 
 ```
 your-project/

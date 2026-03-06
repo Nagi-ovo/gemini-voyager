@@ -31,7 +31,7 @@
 
 ## 落地生根
 
-同步完成后，你的 IDE 根目录会多出一个 `.cobridge/AI_CONTEXT.md`。 无论是 Trae、Cursor 还是 Copilot，它们会通过各自的 Rule 文件自动读取这份“记忆”。
+同步完成后，你的 IDE 工作目录会多出一个 `.cobridge/AI_CONTEXT.md`。 无论是 Trae、Cursor 还是 Copilot，它们会通过各自的 Rule 文件自动读取这份“记忆”。
 
 ```
 your-project/

@@ -31,7 +31,7 @@ The biggest pain for developers: after discussing a solution thoroughly on the w
 
 ## Rooting in the IDE
 
-After synchronization, a `.cobridge/AI_CONTEXT.md` file will appear in your IDE root directory. Whether it's Trae, Cursor, or Copilot, they will automatically read this "memory" through their respective Rule files.
+After synchronization, a `.cobridge/AI_CONTEXT.md` file will appear in your IDE working directory. Whether it's Trae, Cursor, or Copilot, they will automatically read this "memory" through their respective Rule files.
 
 ```
 your-project/

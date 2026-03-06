@@ -31,7 +31,7 @@
 
 ## IDE에 뿌리 내리기
 
-동기화가 완료되면 IDE 루트 디렉토리에 `.cobridge/AI_CONTEXT.md` 파일이 생성됩니다. Trae, Cursor, Copilot 중 무엇을 사용하든 각각의 Rule 파일을 통해 이 "기억"을 자동으로 읽어옵니다.
+동기화가 완료되면 IDE 작업 디렉토리에 `.cobridge/AI_CONTEXT.md` 파일이 생성됩니다. Trae, Cursor, Copilot 중 무엇을 사용하든 각각의 Rule 파일을 통해 이 "기억"을 자동으로 읽어옵니다.
 
 ```
 your-project/
