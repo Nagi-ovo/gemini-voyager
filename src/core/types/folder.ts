@@ -11,6 +11,7 @@ export interface Folder {
   isExpanded: boolean;
   pinned?: boolean;
   color?: string;
+  sortIndex?: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -26,6 +27,7 @@ export interface ConversationReference {
   gemId?: string;
   starred?: boolean; // Whether this conversation is starred in the folder
   customTitle?: boolean; // Whether title was manually renamed in folder (don't auto-sync from native)
+  sortIndex?: number;
 }
 
 export interface FolderData {

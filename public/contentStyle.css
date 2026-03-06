@@ -2764,6 +2764,28 @@ body.light-theme {
   cursor: grabbing;
 }
 
+/* Reorder indicator on conversation elements (top/bottom half detection) */
+.gv-reorder-above {
+  box-shadow: 0 -2px 0 0 #4285f4;
+}
+
+.gv-reorder-below {
+  box-shadow: 0 2px 0 0 #4285f4;
+}
+
+/* Reorder gap between folder items for drag-and-drop sorting */
+.gv-reorder-gap {
+  height: 0;
+  margin: 0 8px;
+  border-radius: 1px;
+  padding: 3px 0;
+  transition: background-color 0.15s ease;
+}
+
+.gv-reorder-gap-active {
+  background-color: #4285f4;
+}
+
 .gv-folder-expand-btn {
   width: 20px;
   height: 20px;
