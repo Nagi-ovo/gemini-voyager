@@ -958,6 +958,7 @@ export class FolderManager {
         conversations: selectedConvs,
         sourceFolderId: folderId, // Track where they're being dragged from
       };
+      e.dataTransfer!.effectAllowed = 'move';
       e.dataTransfer!.setData('application/json', JSON.stringify(dragData));
 
       // Apply opacity to all selected conversations
@@ -1116,6 +1117,7 @@ export class FolderManager {
     element.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.stopPropagation(); // Prevent root drop zone from also highlighting
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
       element.classList.add('gv-folder-dragover');
     });
 
@@ -1178,6 +1180,7 @@ export class FolderManager {
 
       e.preventDefault();
       e.stopPropagation(); // Prevent parent handlers from firing
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
       element.classList.add('gv-folder-list-dragover');
     });
 
@@ -1323,7 +1326,9 @@ export class FolderManager {
         title: folder.name,
       };
 
-      (e as DragEvent).dataTransfer?.setData('application/json', JSON.stringify(dragData));
+      const dt = (e as DragEvent).dataTransfer;
+      if (dt) dt.effectAllowed = 'move';
+      dt?.setData('application/json', JSON.stringify(dragData));
       element.style.opacity = '0.5';
 
       this.debug(
@@ -1469,6 +1474,9 @@ export class FolderManager {
 
       // Extract URL and conversation metadata together
       const conversationData = this.extractConversationData(element);
+
+      // Restrict to move-only to prevent Chrome from triggering split-screen/tab tiling
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
 
       // If this conversation is not selected, select it exclusively
       if (!this.selectedConversations.has(conversationId)) {
@@ -2313,6 +2321,7 @@ export class FolderManager {
 
       e.preventDefault();
       e.stopPropagation();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
 
       const rect = convEl.getBoundingClientRect();
       const midY = rect.top + rect.height / 2;
@@ -2400,6 +2409,7 @@ export class FolderManager {
 
       e.preventDefault();
       e.stopPropagation();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
       gap.classList.add('gv-reorder-gap-active');
     });
 

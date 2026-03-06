@@ -1052,6 +1052,7 @@ export class AIStudioFolderManager {
         sourceFolderId: folderId,
       };
       try {
+        if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer?.setData('application/json', JSON.stringify(data));
       } catch {}
       try {
@@ -1511,7 +1512,7 @@ export class AIStudioFolderManager {
       const transfer = e.dataTransfer;
       if (!transfer) return;
       const json = JSON.stringify(data);
-      transfer.effectAllowed = 'copyMove';
+      transfer.effectAllowed = 'move';
       transfer.setData('application/json', json);
       transfer.setData('text/plain', json);
       if (data.url) {
@@ -1786,7 +1787,7 @@ export class AIStudioFolderManager {
         e.preventDefault();
         e.stopPropagation();
         try {
-          if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+          if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
         } catch {}
       });
       rootItem.addEventListener('dragleave', (e) => {
