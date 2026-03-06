@@ -44,6 +44,15 @@ function expectCodeBlockOverflowRules(styleText: string): void {
   expect(styleText).toContain('position: relative !important;');
 }
 
+function expectCodeBlockRuleWidth(styleText: string, percent: number): void {
+  const px = percentToPixels(percent);
+  const escapedWidth = px.toString();
+  const codeBlockRulePattern = new RegExp(
+    String.raw`\/\* Keep native code blocks and scroll shadows inside chat messages \*\/[\s\S]*code-block,[\s\S]*\.code-block pre[\s\S]*\{[\s\S]*max-width: ${escapedWidth}px !important;[\s\S]*width: min\(100%, ${escapedWidth}px\) !important;`,
+  );
+  expect(styleText).toMatch(codeBlockRulePattern);
+}
+
 describe('chatWidth', () => {
   let storageChangeListeners: StorageChangeListener[];
 
@@ -114,6 +123,7 @@ describe('chatWidth', () => {
 
     const styleText = getInjectedStyle().textContent ?? '';
     expectCodeBlockOverflowRules(styleText);
+    expectCodeBlockRuleWidth(styleText, 85);
   });
 
   it('adapts width for narrow viewports (split-screen behavior)', async () => {
