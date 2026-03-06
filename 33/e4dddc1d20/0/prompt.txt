@@ -1,0 +1,21 @@
+还有人反应拖拽对话时候很容触发 chrome 的 split 页面的问题，这个有办法优雅解决吗？
+
+---
+
+Tool loaded.
+
+---
+
+Tool loaded.
+
+---
+
+Tool loaded.
+
+---
+
+你做了啥
+
+---
+
+提交
