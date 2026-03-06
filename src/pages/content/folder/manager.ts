@@ -2528,6 +2528,26 @@ export class FolderManager {
 
     if (movingConvs.length === 0) return;
 
+    // When reordering within the same folder, insertIndex is based on the original
+    // sorted list (which includes the dragged items). After removal, indices shift.
+    // Adjust by subtracting the count of dragged items that were before insertIndex.
+    if (sourceParentId === targetParentId) {
+      const isStarredGroup = movingConvs[0].starred ?? false;
+      const originalSorted = this.sortConversations(
+        (this.data.folderContents[targetParentId] ?? []).filter(
+          (c) => !!c.starred === isStarredGroup,
+        ),
+      );
+      let adjustment = 0;
+      for (const convId of conversationIds) {
+        const origIdx = originalSorted.findIndex((c) => c.conversationId === convId);
+        if (origIdx >= 0 && origIdx < insertIndex) {
+          adjustment++;
+        }
+      }
+      insertIndex -= adjustment;
+    }
+
     // Remove from source
     if (this.data.folderContents[sourceParentId]) {
       const removeSet = new Set(conversationIds);
