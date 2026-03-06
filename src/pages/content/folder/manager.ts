@@ -2518,8 +2518,11 @@ export class FolderManager {
 
     const movingConvs: ConversationReference[] = [];
 
+    // Deduplicate conversation IDs to prevent duplicates from cross-folder selection
+    const uniqueIds = [...new Set(conversationIds)];
+
     // Collect conversation references
-    for (const convId of conversationIds) {
+    for (const convId of uniqueIds) {
       const sourceList = this.data.folderContents[sourceParentId];
       if (!sourceList) continue;
       const conv = sourceList.find((c) => c.conversationId === convId);
@@ -3674,12 +3677,14 @@ export class FolderManager {
 
   private getSelectedConversationsData(_folderId: string): ConversationReference[] {
     const result: ConversationReference[] = [];
+    const seen = new Set<string>();
 
     // Collect from all folders since selection can span folders
     for (const fId in this.data.folderContents) {
       const conversations = this.data.folderContents[fId];
       conversations.forEach((conv) => {
-        if (this.selectedConversations.has(conv.conversationId)) {
+        if (this.selectedConversations.has(conv.conversationId) && !seen.has(conv.conversationId)) {
+          seen.add(conv.conversationId);
           result.push(conv);
         }
       });
@@ -5082,6 +5087,23 @@ export class FolderManager {
         this.debugWarn(`Initialized missing folderContents for folder: ${folder.name}`);
       }
     });
+
+    // Deduplicate conversations within each folder
+    for (const folderId of Object.keys(this.data.folderContents)) {
+      const convs = this.data.folderContents[folderId];
+      const seen = new Set<string>();
+      const deduped = convs.filter((c) => {
+        if (seen.has(c.conversationId)) return false;
+        seen.add(c.conversationId);
+        return true;
+      });
+      if (deduped.length < convs.length) {
+        this.debugWarn(
+          `Removed ${convs.length - deduped.length} duplicate conversations in folder: ${folderId}`,
+        );
+        this.data.folderContents[folderId] = deduped;
+      }
+    }
 
     // Ensure all items have sortIndex for manual ordering
     this.ensureSortIndices();
