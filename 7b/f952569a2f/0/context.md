@@ -1,0 +1,37 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+当前插件是不是文件夹和文件夹内的对话排序都是先根据 unicode 顺序，再根据点击顺序呢？我觉得点击顺序不太好，能否实现让用户自己调整顺序（顺序也计入存储，我不记得当前有没有计入了）？要考虑到当前UI的剩余空间问题
+
+### Prompt 2
+
+Tool loaded.
+
+### Prompt 3
+
+Tool loaded.
+
+### Prompt 4
+
+Tool loaded.
+
+### Prompt 5
+
+你都做了什么
+
+### Prompt 6
+
+[Timeline] reapplyPosition storage access failed: Error: Extension context invalidated.
+另外文件夹现在可以拖拽了，但是对话拖拽到对话上没有反应
+
+### Prompt 7
+
+你是否取消了那个根据上次访问来调整顺序的功能？
+
+### Prompt 8
+
+好事，提交吧，Closes #311
+

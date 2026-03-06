@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "7bf952569a2f",
+  "session_id": "27c4f0a3-a92c-42db-9d92-c81d0ed03ce4",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-06T17:26:03.30933Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "public/contentStyle.css",
+    "src/core/types/folder.ts",
+    "src/pages/content/folder/__tests__/conversationSort.test.ts",
+    "src/pages/content/folder/conversationSort.ts",
+    "src/pages/content/folder/manager.ts",
+    "src/pages/content/folder/types.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "91508a15b62d",
+  "token_usage": {
+    "input_tokens": 108,
+    "cache_creation_tokens": 101285,
+    "cache_read_tokens": 5935847,
+    "output_tokens": 34101,
+    "api_call_count": 92
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-06T17:26:00.801842Z",
+    "agent_lines": 425,
+    "human_added": 36,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 461,
+    "agent_percentage": 92.19088937093277
+  }
+}
