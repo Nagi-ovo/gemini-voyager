@@ -36,6 +36,14 @@ function expectSingleTableScrollbarRules(styleText: string): void {
   expect(styleText).toContain('overflow-x: auto !important;');
 }
 
+function expectCodeBlockOverflowRules(styleText: string): void {
+  expect(styleText).toContain('/* Keep native code blocks and scroll shadows inside chat messages */');
+  expect(styleText).toContain('code-block,');
+  expect(styleText).toContain('overflow: clip !important;');
+  expect(styleText).toContain('overflow-x: auto !important;');
+  expect(styleText).toContain('position: relative !important;');
+}
+
 describe('chatWidth', () => {
   let storageChangeListeners: StorageChangeListener[];
 
@@ -98,6 +106,14 @@ describe('chatWidth', () => {
     expectTableRuleWidth(styleText, 92);
     expect(styleText).toContain('table-block .table-content');
     expectSingleTableScrollbarRules(styleText);
+  });
+
+  it('contains code block overflow and width fix rules', async () => {
+    const { startChatWidthAdjuster } = await import('../index');
+    startChatWidthAdjuster();
+
+    const styleText = getInjectedStyle().textContent ?? '';
+    expectCodeBlockOverflowRules(styleText);
   });
 
   it('adapts width for narrow viewports (split-screen behavior)', async () => {
