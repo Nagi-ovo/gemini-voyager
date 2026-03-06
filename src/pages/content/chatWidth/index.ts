@@ -215,16 +215,23 @@ function removeStyles() {
   }
 }
 
+const ENABLED_KEY = 'gvChatWidthEnabled';
+
 export function startChatWidthAdjuster() {
   let currentWidthPercent = DEFAULT_PERCENT;
+  let enabled = false;
 
-  // Load initial width (%), migrating legacy px values when seen
-  chrome.storage?.sync?.get({ geminiChatWidth: DEFAULT_PERCENT }, (res) => {
+  // Load initial state
+  chrome.storage?.sync?.get({ geminiChatWidth: DEFAULT_PERCENT, [ENABLED_KEY]: false }, (res) => {
     const storedWidth = res?.geminiChatWidth;
     const numericStoredWidth = typeof storedWidth === 'number' ? storedWidth : DEFAULT_PERCENT;
     const normalized = normalizePercent(numericStoredWidth, DEFAULT_PERCENT);
     currentWidthPercent = normalized;
-    applyWidth(currentWidthPercent);
+    enabled = res?.[ENABLED_KEY] === true;
+
+    if (enabled) {
+      applyWidth(currentWidthPercent);
+    }
 
     if (typeof storedWidth === 'number' && storedWidth !== normalized) {
       try {
@@ -240,12 +247,25 @@ export function startChatWidthAdjuster() {
     changes: Record<string, chrome.storage.StorageChange>,
     area: string,
   ) => {
-    if (area === 'sync' && changes.geminiChatWidth) {
+    if (area !== 'sync') return;
+
+    if (changes[ENABLED_KEY]) {
+      enabled = changes[ENABLED_KEY].newValue === true;
+      if (enabled) {
+        applyWidth(currentWidthPercent);
+      } else {
+        removeStyles();
+      }
+    }
+
+    if (changes.geminiChatWidth) {
       const newWidth = changes.geminiChatWidth.newValue;
       if (typeof newWidth === 'number') {
         const normalized = normalizePercent(newWidth, DEFAULT_PERCENT);
         currentWidthPercent = normalized;
-        applyWidth(currentWidthPercent);
+        if (enabled) {
+          applyWidth(currentWidthPercent);
+        }
 
         if (normalized !== newWidth) {
           try {
@@ -268,8 +288,9 @@ export function startChatWidthAdjuster() {
       clearTimeout(debounceTimer);
     }
     debounceTimer = window.setTimeout(() => {
-      // Use cached width instead of reading from storage
-      applyWidth(currentWidthPercent);
+      if (enabled) {
+        applyWidth(currentWidthPercent);
+      }
       debounceTimer = null;
     }, 200);
   });

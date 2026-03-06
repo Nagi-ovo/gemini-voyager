@@ -171,6 +171,9 @@ export default function Popup() {
   const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState<boolean>(false);
   const [forkEnabled, setForkEnabled] = useState<boolean>(false);
   const [upsellHiderEnabled, setUpsellHiderEnabled] = useState<boolean>(true);
+  const [chatWidthEnabled, setChatWidthEnabled] = useState<boolean>(false);
+  const [editInputWidthEnabled, setEditInputWidthEnabled] = useState<boolean>(false);
+  const [sidebarWidthEnabled, setSidebarWidthEnabled] = useState<boolean>(false);
   const [accountIsolationEnabledGemini, setAccountIsolationEnabledGemini] =
     useState<boolean>(false);
   const [accountIsolationEnabledAIStudio, setAccountIsolationEnabledAIStudio] =
@@ -502,6 +505,11 @@ export default function Popup() {
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: null,
+          gvChatWidthEnabled: false,
+          gvEditInputWidthEnabled: false,
+          gvSidebarWidthEnabled: false,
+          geminiChatWidth: CHAT_PERCENT.defaultValue,
+          geminiEditInputWidth: EDIT_PERCENT.defaultValue,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -543,6 +551,22 @@ export default function Popup() {
           setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
           setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
           setUpsellHiderEnabled(res?.[StorageKeys.UPSELL_HIDER_ENABLED] === true);
+
+          // Width enabled flags — auto-enable if user previously customized the width
+          setChatWidthEnabled(
+            res?.gvChatWidthEnabled === true ||
+              (res?.gvChatWidthEnabled === false &&
+                typeof res?.geminiChatWidth === 'number' &&
+                res.geminiChatWidth !== CHAT_PERCENT.defaultValue),
+          );
+          setEditInputWidthEnabled(
+            res?.gvEditInputWidthEnabled === true ||
+              (res?.gvEditInputWidthEnabled === false &&
+                typeof res?.geminiEditInputWidth === 'number' &&
+                res.geminiEditInputWidth !== EDIT_PERCENT.defaultValue),
+          );
+          setSidebarWidthEnabled(res?.gvSidebarWidthEnabled === true);
+
           const legacyIsolationEnabled = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] === true;
           const geminiIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI];
           const aiStudioIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO];
@@ -1148,6 +1172,13 @@ export default function Popup() {
           wideLabel={t('chatWidthWide')}
           onChange={chatWidthAdjuster.handleChange}
           onChangeComplete={chatWidthAdjuster.handleChangeComplete}
+          enabled={chatWidthEnabled}
+          onToggle={(v) => {
+            setChatWidthEnabled(v);
+            try {
+              chrome.storage?.sync?.set({ gvChatWidthEnabled: v });
+            } catch {}
+          }}
         />
         {/* Edit Input Width */}
         <WidthSlider
@@ -1160,6 +1191,13 @@ export default function Popup() {
           wideLabel={t('editInputWidthWide')}
           onChange={editInputWidthAdjuster.handleChange}
           onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
+          enabled={editInputWidthEnabled}
+          onToggle={(v) => {
+            setEditInputWidthEnabled(v);
+            try {
+              chrome.storage?.sync?.set({ gvEditInputWidthEnabled: v });
+            } catch {}
+          }}
         />
 
         {/* Sidebar Width */}
@@ -1174,6 +1212,13 @@ export default function Popup() {
           valueFormatter={(v) => `${v}px`}
           onChange={sidebarWidthAdjuster.handleChange}
           onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
+          enabled={sidebarWidthEnabled}
+          onToggle={(v) => {
+            setSidebarWidthEnabled(v);
+            try {
+              chrome.storage?.sync?.set({ gvSidebarWidthEnabled: v });
+            } catch {}
+          }}
         />
 
         {/* Sidebar Auto-Hide - Gemini only */}

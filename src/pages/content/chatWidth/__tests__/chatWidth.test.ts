@@ -57,7 +57,7 @@ describe('chatWidth', () => {
 
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (value: Record<string, unknown>) => void) => {
-        callback({ [STORAGE_KEY]: 85 });
+        callback({ [STORAGE_KEY]: 85, gvChatWidthEnabled: true });
       },
     );
 
@@ -105,7 +105,7 @@ describe('chatWidth', () => {
     // In split-screen (960px viewport), min(100%, 1344px) fills the viewport
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (value: Record<string, unknown>) => void) => {
-        callback({ [STORAGE_KEY]: 70 });
+        callback({ [STORAGE_KEY]: 70, gvChatWidthEnabled: true });
       },
     );
 
