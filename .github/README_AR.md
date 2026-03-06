@@ -185,9 +185,9 @@
 
 ### 🎙️ أداة موصى بها: Typeless
 
-أوصي بشدة بـ **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**، وهي أداة تحويل الصوت إلى نص بالذكاء الاصطناعي استخدمتها على نطاق واسع أثناء تطوير Gemini Voyager. لقد وفرت لي الكثير من الوقت وزادت من إنتاجيتي بشكل كبير.
+أوصي بشدة بـ **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**، وهي أداة تحويل الصوت إلى نص بالذكاء الاصطناعي استخدمتها على نطاق واسع أثناء تطوير Gemini Voyager. لقد وفرت لي الكثير من الوقت وزادت من إنتاجيتي بشكل كبير.
 
-> 🎁 **[انضم عبر رابط الإحالة الخاص بي](https://www.typeless.com/refer?code=MZRYZP1)** (الكود: **`MZRYZP1`**) للحصول على **5 دولارات رصيد مجاني**. ❤️
+> 🎁 **[انضم عبر رابط الإحالة الخاص بي](https://www.typeless.com/?via=gemini-voyager)** (الكود: _`gemini-voyager`_) للحصول على **5 دولارات رصيد مجاني**. ❤️
 
 ---
 
