@@ -16,7 +16,7 @@ El mayor dolor de cabeza de los desarrolladores: después de discutir a fondo un
 
    ![Extensión CoBridge](/assets/CoBridge-extension.png)
 
-   Después de la instalación, haz clic en el icono de la derecha y activa el servidor.
+   Después de la instalación, abre cualquier directorio de trabajo, haz clic en el icono de la derecha y activa el servidor.
    ![Servidor CoBridge activado](/assets/CoBridge-on.png)
 
 2. **Conexión y saludo**:

@@ -16,7 +16,7 @@ The biggest pain for developers: after discussing a solution thoroughly on the w
 
    ![CoBridge Extension](/assets/CoBridge-extension.png)
 
-   After installation, click the icon on the right and start the server.
+   After installation, open any working directory, click the icon on the right and start the server.
    ![CoBridge Server On](/assets/CoBridge-on.png)
 
 2. **Handshake Connection**:

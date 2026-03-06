@@ -16,7 +16,7 @@
 
    ![CoBridge 확장 프로그램](/assets/CoBridge-extension.png)
 
-   설치 후 오른쪽 아이콘을 클릭하고 서버를 시작합니다.
+   설치 후 임의의 작업 디렉토리를 열고, 오른쪽 아이콘을 클릭하여 서버를 시작합니다.
    ![CoBridge 서버 시작](/assets/CoBridge-on.png)
 
 2. **연결 확인 (Handshake)**:
