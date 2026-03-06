@@ -1,0 +1,59 @@
+Hello,
+
+Google has received a trademark complaint regarding your item, “Gemini Voyager"
+
+"https://chromewebstore.google.com/detail/gemini-voyager/kjdpnimcnfinmilocccippmododhceol.  
+
+We have included the relevant details from the original notice we received for your reference below:
+
+Company name: Tracer
+
+Contact email: enf.google.3156087@enftracer.ai
+
+Trademark: GEMINI
+
+Item URL: https://chromewebstore.google.com/detail/gemini-voyager/kjdpnimcnfinmilocccippmododhceol
+
+Complaint details: The app uses Google's 1772296 trademark and others without authorization. In this instance, the app uses the trademarks in the app's Title.
+
+We encourage you to resolve this matter with the complainant directly by responding to this email. If you are unable to resolve this issue with the complainant within 7 days, we may need to suspend your item. If you have any further questions or concerns about this issue, such as how to address the alleged infringement and bring your item into compliance, please let us know by responding to this email directly.   
+
+If you update your item, please respond to this email directly and include a screenshot with your message that shows the changes you implemented.
+
+Regards,
+Google Legal Support Team
+
+Ohno，帮我改名吧，话说改名后是不是没有什么需要去额外操作的，id 也不会变？
+另外 GitHub 里不用改还，就是插件里出现 Gemini Voyager 的地方改成 Voyager（或者你觉得有没有更好的，比如 Gem Voyager，虽然我本身觉得 Gemini 并不是侵权，只是个星座而已，又不是 Anthropic 这种明显是公司名字的），还有就是 manifest 之类的，这个邮件里的意思是不是就是说，我要改这个 manifest？这样的话，会把那个 Chrome Web Store 里的插件名字也修改了，它是不是只看这个插件名？
+
+---
+
+Tool loaded.
+
+---
+
+Tool loaded.
+
+---
+
+Tool loaded.
+
+---
+
+google drive 这个不用改吧
+
+---
+
+你再检查一下会不会有什么问题
+
+---
+
+我觉得 generate sponsor 那些也没必要改，这次只做最必要的
+
+---
+
+所以 manifest 里也改了e
+
+---
+
+bun run format 然后提交吧

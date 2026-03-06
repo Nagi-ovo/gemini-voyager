@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "38f323846226",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 5,
+  "files_touched": [
+    "src/features/export/services/DeepResearchPDFPrintService.ts",
+    "src/features/export/services/ImageExportService.ts",
+    "src/features/export/services/MarkdownFormatter.ts",
+    "src/features/export/services/PDFPrintService.ts",
+    "src/features/export/services/__tests__/MarkdownFormatter.test.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/deepResearch/formatter.ts",
+    "src/pages/content/prompt/index.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/38/f323846226/0/metadata.json",
+      "transcript": "/38/f323846226/0/full.jsonl",
+      "context": "/38/f323846226/0/context.md",
+      "content_hash": "/38/f323846226/0/content_hash.txt",
+      "prompt": "/38/f323846226/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 67,
+    "cache_creation_tokens": 66259,
+    "cache_read_tokens": 2445453,
+    "output_tokens": 17696,
+    "api_call_count": 49
+  }
+}

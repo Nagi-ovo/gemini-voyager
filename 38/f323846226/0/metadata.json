@@ -1,0 +1,46 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "38f323846226",
+  "session_id": "16a5c736-9609-48fb-8a10-a4595c039b21",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-06T15:35:58.630892Z",
+  "branch": "main",
+  "checkpoints_count": 5,
+  "files_touched": [
+    "src/features/export/services/DeepResearchPDFPrintService.ts",
+    "src/features/export/services/ImageExportService.ts",
+    "src/features/export/services/MarkdownFormatter.ts",
+    "src/features/export/services/PDFPrintService.ts",
+    "src/features/export/services/__tests__/MarkdownFormatter.test.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/deepResearch/formatter.ts",
+    "src/pages/content/prompt/index.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "47e31366bc21",
+  "token_usage": {
+    "input_tokens": 67,
+    "cache_creation_tokens": 66259,
+    "cache_read_tokens": 2445453,
+    "output_tokens": 17696,
+    "api_call_count": 49
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-06T15:35:58.311487Z",
+    "agent_lines": 39,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 39,
+    "agent_percentage": 100
+  }
+}
