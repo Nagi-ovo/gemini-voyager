@@ -154,7 +154,7 @@ export class ImageExportService {
 
     const footerHtml = `
       <footer class="gv-image-export-footer">
-        <div>Exported from Gemini Voyager</div>
+        <div>Exported from Voyager</div>
         <div>Generated on ${this.escapeHTML(date)}</div>
       </footer>
     `;
@@ -293,7 +293,7 @@ export class ImageExportService {
 
     const footerHtml = `
       <footer class="gv-image-export-footer">
-        <div>Exported from Gemini Voyager</div>
+        <div>Exported from Voyager</div>
         <div>Generated on ${this.escapeHTML(date)}</div>
       </footer>
     `;

@@ -475,7 +475,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const titleRow = createEl('div', 'gv-pm-title-row');
     const title = createEl('div', 'gv-pm-title');
     const titleText = document.createElement('span');
-    titleText.textContent = 'Gemini Voyager';
+    titleText.textContent = 'Voyager';
     title.appendChild(titleText);
 
     const manifestVersion = chrome?.runtime?.getManifest?.()?.version;
@@ -959,7 +959,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     function refreshUITexts(): void {
       // Keep custom icon + label
-      titleText.textContent = 'Gemini Voyager';
+      titleText.textContent = 'Voyager';
       addBtn.textContent = i18n.t('pm_add');
       searchInput.placeholder = i18n.t('pm_search_placeholder');
       importBtn.textContent = i18n.t('pm_import');
