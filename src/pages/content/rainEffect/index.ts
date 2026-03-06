@@ -4,6 +4,11 @@
  * A cinematic rain with depth layers, wind-angled streaks, and
  * tiny splash ripples where drops hit the viewport floor.
  *
+ * Graceful transitions: when switching effects or disabling, existing
+ * raindrops continue falling naturally with final splash ripples.
+ * New drops stop spawning, and the canvas is cleaned up once all
+ * particles and splashes have left the viewport.
+ *
  * Visual approach:
  * - Raindrops are thin, semi-transparent lines (not dots), drawn
  *   at a slight wind angle (~8°) for realism.
@@ -76,7 +81,8 @@ interface Splash {
   expandSpeed: number;
 }
 
-let enabled = false;
+/** Effect lifecycle: off → active ⇄ draining → off */
+let state: 'off' | 'active' | 'draining' = 'off';
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
 let animationFrameId: number | null = null;
@@ -144,24 +150,41 @@ function updateAndDraw(_time: number): void {
 
   let currentOpacity = -1;
   let currentWidth = -1;
+  let visibleDropCount = 0;
 
   for (const d of drops) {
+    const prevY = d.y;
+
     // Move
     d.x += d.speed * WIND_DX;
     d.y += d.speed * WIND_DY;
 
-    // Recycle off-screen
+    // Off-screen bottom
     if (d.y > height + d.length) {
-      // Splash on landing
+      if (state === 'draining') {
+        // Spawn one final splash as the drop exits (only on first crossing)
+        if (prevY <= height + d.length && d.canSplash && Math.random() < 0.35) {
+          spawnSplash(d.x, height - 1);
+        }
+        continue;
+      }
+      // Normal: recycle + splash
       if (d.canSplash && Math.random() < 0.35) {
         spawnSplash(d.x, height - 1);
       }
       d.y = -(d.length + Math.random() * height * 0.2);
       d.x = Math.random() * (width + 100) - 50;
     }
+
+    // Off-screen right (wind pushes drops rightward)
     if (d.x > width + 50) {
+      if (state === 'draining') {
+        continue;
+      }
       d.x = -50;
     }
+
+    visibleDropCount++;
 
     // Batch strokeStyle
     const qo = Math.round(d.opacity * 30) / 30;
@@ -199,6 +222,12 @@ function updateAndDraw(_time: number): void {
     ctx.stroke();
   }
 
+  // All drops off-screen and all splashes faded — finish draining
+  if (state === 'draining' && visibleDropCount === 0 && splashes.length === 0) {
+    finalizeDrain();
+    return;
+  }
+
   animationFrameId = requestAnimationFrame(updateAndDraw);
 }
 
@@ -229,8 +258,13 @@ function handleVisibilityChange(): void {
 }
 
 function enable(): void {
-  if (enabled) return;
-  enabled = true;
+  if (state === 'active') return;
+  if (state === 'draining') {
+    // Cancel drain — resume normal drop recycling
+    state = 'active';
+    return;
+  }
+  state = 'active';
 
   canvas = document.createElement('canvas');
   canvas.id = CANVAS_ID;
@@ -240,7 +274,7 @@ function enable(): void {
 
   ctx = canvas.getContext('2d');
   if (!ctx) {
-    disable();
+    forceDisable();
     return;
   }
 
@@ -255,10 +289,18 @@ function enable(): void {
   document.addEventListener('visibilitychange', visibilityHandler);
 }
 
+/**
+ * Graceful disable: stop spawning new drops and let existing ones
+ * fall off with final splash ripples.
+ */
 function disable(): void {
-  if (!enabled) return;
-  enabled = false;
+  if (state !== 'active') return;
+  state = 'draining';
+}
 
+/** Complete the drain: remove canvas and clean up all resources. */
+function finalizeDrain(): void {
+  state = 'off';
   stopAnimation();
 
   if (resizeHandler) {
@@ -279,6 +321,12 @@ function disable(): void {
   ctx = null;
   drops = [];
   splashes = [];
+}
+
+/** Immediate disable: remove everything without draining (e.g. page unload). */
+function forceDisable(): void {
+  if (state === 'off') return;
+  finalizeDrain();
 }
 
 function resolveEffect(res: Record<string, unknown>): string {
@@ -313,6 +361,6 @@ export function startRainEffect(): void {
   }
 
   window.addEventListener('beforeunload', () => {
-    disable();
+    forceDisable();
   });
 }

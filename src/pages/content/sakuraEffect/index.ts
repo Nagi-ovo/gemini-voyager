@@ -5,6 +5,11 @@
  * Uses `pointer-events: none` so it never blocks page interactions.
  * Pauses when the tab is hidden to save CPU.
  *
+ * Graceful transitions: when switching effects or disabling, existing
+ * petals continue falling naturally instead of vanishing instantly.
+ * New petals stop spawning, and the canvas is cleaned up once all
+ * particles have left the viewport.
+ *
  * Visual approach:
  * - Petal shape: wide, rounded heart-like silhouette with a small
  *   V-notch — drawn via quadratic bezier curves. Width ≈ height
@@ -78,7 +83,8 @@ interface Petal {
   colorIdx: number;
 }
 
-let enabled = false;
+/** Effect lifecycle: off → active ⇄ draining → off */
+let state: 'off' | 'active' | 'draining' = 'off';
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
 let animationFrameId: number | null = null;
@@ -177,6 +183,7 @@ function updateAndDraw(time: number): void {
   ctx.clearRect(0, 0, width, height);
 
   let currentFill = '';
+  let visibleCount = 0;
 
   for (const p of petals) {
     // Gentle fall + dual-frequency sway
@@ -186,11 +193,17 @@ function updateAndDraw(time: number): void {
       Math.sin(p.phase * 2.7 + time * p.flutterFreq) * p.flutter;
     p.rotation += p.rotationSpeed;
 
-    // Recycle off-screen
+    // Recycle off-screen (or skip during drain)
     if (p.y > height + p.size * 2) {
+      if (state === 'draining') {
+        continue;
+      }
       p.y = -p.size * 2;
       p.x = Math.random() * width;
     }
+
+    visibleCount++;
+
     if (p.x > width + p.size * 2) {
       p.x = -p.size * 2;
     } else if (p.x < -p.size * 2) {
@@ -217,6 +230,12 @@ function updateAndDraw(time: number): void {
     ctx.fill();
 
     ctx.restore();
+  }
+
+  // All petals have left the viewport — finish draining
+  if (state === 'draining' && visibleCount === 0) {
+    finalizeDrain();
+    return;
   }
 
   animationFrameId = requestAnimationFrame(updateAndDraw);
@@ -249,8 +268,13 @@ function handleVisibilityChange(): void {
 }
 
 function enable(): void {
-  if (enabled) return;
-  enabled = true;
+  if (state === 'active') return;
+  if (state === 'draining') {
+    // Cancel drain — resume normal particle recycling
+    state = 'active';
+    return;
+  }
+  state = 'active';
 
   canvas = document.createElement('canvas');
   canvas.id = CANVAS_ID;
@@ -260,7 +284,7 @@ function enable(): void {
 
   ctx = canvas.getContext('2d');
   if (!ctx) {
-    disable();
+    forceDisable();
     return;
   }
 
@@ -275,10 +299,18 @@ function enable(): void {
   document.addEventListener('visibilitychange', visibilityHandler);
 }
 
+/**
+ * Graceful disable: stop spawning new petals and let existing ones
+ * fall off the bottom of the viewport naturally.
+ */
 function disable(): void {
-  if (!enabled) return;
-  enabled = false;
+  if (state !== 'active') return;
+  state = 'draining';
+}
 
+/** Complete the drain: remove canvas and clean up all resources. */
+function finalizeDrain(): void {
+  state = 'off';
   stopAnimation();
 
   if (resizeHandler) {
@@ -298,6 +330,12 @@ function disable(): void {
 
   ctx = null;
   petals = [];
+}
+
+/** Immediate disable: remove everything without draining (e.g. page unload). */
+function forceDisable(): void {
+  if (state === 'off') return;
+  finalizeDrain();
 }
 
 function resolveEffect(res: Record<string, unknown>): string {
@@ -332,6 +370,6 @@ export function startSakuraEffect(): void {
   }
 
   window.addEventListener('beforeunload', () => {
-    disable();
+    forceDisable();
   });
 }

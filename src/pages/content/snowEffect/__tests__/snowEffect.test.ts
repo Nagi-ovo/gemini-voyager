@@ -71,7 +71,7 @@ describe('snowEffect', () => {
     expect(canvas).toBeNull();
   });
 
-  it('removes canvas when disabled via storage change', async () => {
+  it('begins graceful drain when disabled via storage change (canvas persists)', async () => {
     let storageListener: ((changes: Record<string, unknown>, area: string) => void) | null = null;
 
     (
@@ -91,10 +91,10 @@ describe('snowEffect', () => {
 
     expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
 
-    // Simulate storage change to disable
+    // Simulate storage change to disable — canvas persists during drain
     storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'snow' } }, 'sync');
 
-    expect(document.getElementById('gv-snow-effect-canvas')).toBeNull();
+    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
   });
 
   it('creates canvas when enabled via storage change', async () => {
@@ -138,5 +138,59 @@ describe('snowEffect', () => {
     window.dispatchEvent(new Event('beforeunload'));
 
     expect(document.getElementById('gv-snow-effect-canvas')).toBeNull();
+  });
+
+  it('cleans up on beforeunload even during drain', async () => {
+    let storageListener: ((changes: Record<string, unknown>, area: string) => void) | null = null;
+
+    (
+      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
+    ).mockImplementation((listener: (changes: Record<string, unknown>, area: string) => void) => {
+      storageListener = listener;
+    });
+
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvVisualEffect: 'snow' });
+      },
+    );
+
+    const { startSnowEffect } = await import('../index');
+    startSnowEffect();
+
+    // Enter drain mode
+    storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'snow' } }, 'sync');
+    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
+
+    // Force cleanup via beforeunload
+    window.dispatchEvent(new Event('beforeunload'));
+    expect(document.getElementById('gv-snow-effect-canvas')).toBeNull();
+  });
+
+  it('cancels drain when re-enabled via storage change', async () => {
+    let storageListener: ((changes: Record<string, unknown>, area: string) => void) | null = null;
+
+    (
+      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
+    ).mockImplementation((listener: (changes: Record<string, unknown>, area: string) => void) => {
+      storageListener = listener;
+    });
+
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvVisualEffect: 'snow' });
+      },
+    );
+
+    const { startSnowEffect } = await import('../index');
+    startSnowEffect();
+
+    // Enter drain mode
+    storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'snow' } }, 'sync');
+    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
+
+    // Re-enable — cancels drain, canvas stays
+    storageListener!({ gvVisualEffect: { newValue: 'snow', oldValue: 'off' } }, 'sync');
+    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
   });
 });
