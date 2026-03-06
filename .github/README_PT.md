@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="../public/icon-128.png" alt="logo"/>
-  <h1>Gemini Voyager</h1>
+  <img src="../docs/public/assets/promotion/Promo-Banner.png" alt="promotion"/>
   <h3>Torne a sua experiência Gemini verdadeiramente sua ✨</h3>
   <p>
     Navegação elegante na linha do tempo, organização de chats com pastas e o seu próprio cofre de prompts.<br>
@@ -22,7 +21,6 @@
     <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub downloads">
     <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome Web Store users">
     <img src="https://img.shields.io/chrome-web-store/rating/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome Web Store rating">
-    <img src="https://img.shields.io/badge/Edge-✓-0078D7?style=flat-square&logo=microsoft-edge" alt="Edge Add-ons">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons users">
     <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons rating">
   </p>
@@ -52,6 +50,14 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
+<p align="center">
+  <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
+  </a>
+  <br>
+  <b>🎉 Altamente recomendado pelos principais influenciadores de tecnologia!</b>
+</p>
+
 > [!NOTE]
 > Se o Gemini Voyager for útil para você, compartilhe no X, Reddit, YouTube, etc. Cada partilha ajuda mais pessoas a descobrir o projeto e a melhorar a experiência com Gemini. Obrigado.
 
@@ -62,6 +68,14 @@
 Nós adoramos o Gemini, mas às vezes desejaríamos que ele tivesse apenas um pouco mais de "estrutura".
 
 Foi por isso que criámos o **Gemini Voyager**. Não é apenas uma ferramenta; é um companheiro que o ajuda a manter as suas conversas com IA organizadas, acessíveis e produtivas. Quer seja um investigador que lida com dezenas de threads, um programador que guarda snippets de código, ou apenas alguém que adora ordem, o Voyager foi desenhado para si.
+
+<p align="center">
+  <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
+  </a>
+  <br>
+  <i>Durante o problema de 18 de fevereiro, em que o Google Gemini App tornou as conversas históricas de alguns usuários inacessíveis, os usuários do Voyager ainda conseguiram ver suas conversas salvas em suas pastas.</i>
+</p>
 
 ---
 
@@ -93,6 +107,7 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
   - **[Exclusão em Lote](https://voyager.nagi.fun/pt/guide/batch-delete)**: Limpe o seu histórico em massa.
   - **[Resposta com Citação](https://voyager.nagi.fun/pt/guide/quote-reply)**: Responda com contexto selecionando o texto.
   - **[Sincronização do Título da Aba](https://voyager.nagi.fun/pt/guide/tab-title)**: Sincroniza automaticamente o título da aba do navegador.
+  - **[Prevenir rolamento automático](https://voyager.nagi.fun/pt/guide/prevent-auto-scroll)**: Intercepta o comportamento de salto indesejado ao enviar uma mensagem.
   - **[Colapso de Entrada](https://voyager.nagi.fun/pt/guide/input-collapse)**: Área de entrada auto-colapsável para mais espaço de leitura.
   - **[Modelo Padrão](https://voyager.nagi.fun/pt/guide/default-model)**: Defina o seu modelo favorito como padrão.
   - **[Ocultar itens recentes e Gems](https://voyager.nagi.fun/pt/guide/recents-hider)**: Oculta a lista "Recentes" na barra lateral para reduzir distrações.

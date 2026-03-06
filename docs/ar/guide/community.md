@@ -24,7 +24,7 @@
 - **تقدم التطوير**: احصل على أخبار حول تطوير الميزات الجديدة.
 
 <div style="margin: 2rem 0;">
-  <a href="https://discord.gg/ghrQtZgWnv" target="_blank" style="text-decoration: none;">
+  <a href="https://discord.gg/TEUFxdMbGb" target="_blank" style="text-decoration: none;">
     <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=انضم%20إلى%20Discord" alt="Discord">
   </a>
 </div>

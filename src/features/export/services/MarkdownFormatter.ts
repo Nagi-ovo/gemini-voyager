@@ -71,28 +71,6 @@ export class MarkdownFormatter {
   }
 
   /**
-   * Async formatter that tries to inline images as data URLs
-   */
-  static async formatWithAssets(
-    turns: ChatTurn[],
-    metadata: ConversationMetadata,
-  ): Promise<string> {
-    const md = this.format(turns, metadata);
-    const urls = this.extractImageUrls(md);
-    if (urls.length === 0) return md;
-
-    const urlToData = new Map<string, string>();
-    await Promise.all(
-      urls.map(async (u) => {
-        const data = await this.fetchAsDataURL(u);
-        if (data) urlToData.set(u, data);
-      }),
-    );
-    if (urlToData.size === 0) return md;
-
-    return this.rewriteImageUrls(md, urlToData);
-  }
-  /**
    * Format conversation as Markdown
    */
   static format(turns: ChatTurn[], metadata: ConversationMetadata): string {

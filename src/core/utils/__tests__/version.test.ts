@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   EXTENSION_VERSION,
   FORMAT_VERSIONS,
-  type SemanticVersion,
+  type FormatVersion,
   applyMigrations,
   compareVersions,
   getCompatibilityInfo,
@@ -103,7 +103,7 @@ describe('Version Management', () => {
     });
 
     it('should reject unknown format versions', () => {
-      expect(isVersionCompatible('1.0.0', 'unknown.format.v99' as any)).toBe(false);
+      expect(isVersionCompatible('1.0.0', 'unknown.format.v99' as FormatVersion)).toBe(false);
     });
 
     it('should handle invalid version strings gracefully', () => {

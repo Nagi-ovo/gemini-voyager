@@ -10,4 +10,5 @@ Collapse the input area when empty to gain more reading space. Click the collaps
 
 1. When the input area is empty and loses focus, it automatically collapses into a compact pill button
 2. Click the pill button to expand the input area and start typing
-3. You can enable or disable this feature in the settings panel (disabled by default)
+3. You can also press <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>I</kbd> to quickly expand the input area
+4. You can enable or disable this feature in the settings panel (disabled by default)

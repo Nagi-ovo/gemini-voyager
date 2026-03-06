@@ -791,6 +791,14 @@
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows modifier key"
   },
+  "preventAutoScroll": {
+    "message": "Предотвращение автопрокрутки",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "preventAutoScrollHint": {
+    "message": "Предотвращает прыжок Gemini вниз при нажатии Enter во время чтения предыдущих ответов.",
+    "description": "Auto-hide sidebar feature hint"
+  },
   "cloudSync": {
     "message": "Облачная синхронизация",
     "description": "Cloud sync section title"
@@ -979,17 +987,29 @@
     "message": "Сворачивать поле ввода, когда оно пустое, для увеличения пространства для чтения",
     "description": "Input collapse feature hint"
   },
+  "inputCollapseShortcutHint": {
+    "message": "{modifier}+I для раскрытия",
+    "description": "Shortcut hint for expanding collapsed input. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
+  },
   "inputCollapsePlaceholder": {
     "message": "Сообщение Gemini",
     "description": "Placeholder text shown in collapsed input"
   },
+  "allowCollapseWhenNotEmpty": {
+    "message": "Позволить сворачивать с содержимым",
+    "description": "Allow input to collapse even when it has text or attachments"
+  },
+  "allowCollapseWhenNotEmptyHint": {
+    "message": "Сворачивать область ввода, даже если она содержит текст или вложения",
+    "description": "Hint text explaining the collapse when not empty feature"
+  },
   "ctrlEnterSend": {
-    "message": "Ctrl+Enter для отправки",
-    "description": "Ctrl+Enter to send toggle label"
+    "message": "{modifier}+Enter для отправки",
+    "description": "Modifier+Enter to send toggle label. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
   "ctrlEnterSendHint": {
-    "message": "Нажмите Ctrl+Enter для отправки сообщений, Enter для новой строки",
-    "description": "Ctrl+Enter to send feature hint"
+    "message": "Нажмите {modifier}+Enter для отправки сообщений, Enter для новой строки",
+    "description": "Modifier+Enter to send feature hint. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
   "batch_delete_confirm": {
     "message": "Вы уверены, что хотите удалить {count} разговор(ов)? Это действие нельзя отменить.",
@@ -1172,11 +1192,11 @@
     "description": "Wide subfolder indentation label"
   },
   "export_select_mode_select_all": {
-    "message": "Select all",
+    "message": "Выбрать все",
     "description": "Selection mode select all toggle"
   },
   "export_select_mode_count": {
-    "message": "Selected {count}",
+    "message": "Выбрано {count}",
     "description": "Selection mode selected message count"
   },
   "export_select_mode_toggle": {
@@ -1243,12 +1263,144 @@
     "message": "Исследованные сайты",
     "description": "Заголовок раздела исследованных сайтов Deep Research"
   },
-  "snowEffect": {
-    "message": "Эффект снега",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "Визуальные эффекты",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "Снегопад на странице для зимней атмосферы",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "Добавьте сезонную атмосферу на страницу",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "Выкл",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "Снег",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "Сакура",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "Дождь",
+    "description": "Visual effect rain option"
+  },
+  "changelog_title": {
+    "message": "Что нового",
+    "description": "Changelog modal title"
+  },
+  "changelog_close": {
+    "message": "Понятно",
+    "description": "Changelog modal close button"
+  },
+  "changelog_docs_link": {
+    "message": "Документация",
+    "description": "Changelog modal documentation link text"
+  },
+  "changelog_recommendation": {
+    "message": "Если Voyager был полезен, поделитесь им с друзьями или в соцсетях!",
+    "description": "Changelog modal recommendation message"
+  },
+  "changelog_docs_hint": {
+    "message": "Подробности в документации",
+    "description": "Changelog annotation pointing to docs icon"
+  },
+  "changelog_rate_chrome": {
+    "message": "Нравится Gemini Voyager? Оценка в Chrome Web Store помогает другим пользователям найти расширение!",
+    "description": "Chrome Web Store rating prompt in changelog modal"
+  },
+  "changelog_rate_chrome_cta": {
+    "message": "Оценить",
+    "description": "Chrome Web Store rating CTA button text"
+  },
+  "forkConversation": {
+    "message": "Fork",
+    "description": "Fork conversation button label"
+  },
+  "forkConfirm": {
+    "message": "Fork conversation from this point?",
+    "description": "Fork confirmation prompt"
+  },
+  "forkConfirmBtn": {
+    "message": "Fork",
+    "description": "Fork confirmation button"
+  },
+  "forkCancel": {
+    "message": "Cancel",
+    "description": "Fork cancel button"
+  },
+  "forkBranch": {
+    "message": "Branch",
+    "description": "Fork branch label"
+  },
+  "forkOriginal": {
+    "message": "Original",
+    "description": "Original fork branch tag"
+  },
+  "forkCurrent": {
+    "message": "Current",
+    "description": "Current fork branch tag"
+  },
+  "forkPreparing": {
+    "message": "Preparing fork...",
+    "description": "Fork preparation status"
+  },
+  "forkPasteHint": {
+    "message": "Press Enter to send and create the fork",
+    "description": "Fork paste hint text"
+  },
+  "forkDeleteData": {
+    "message": "Удалить эту ветку",
+    "description": "Delete fork branch metadata button"
+  },
+  "forkDeleteDataConfirm": {
+    "message": "Удалить эту связь ветвления? Будут удалены только метаданные ветвления Voyager, сами диалоги не удаляются.",
+    "description": "Fork metadata delete confirmation prompt"
+  },
+  "enableForkFeature": {
+    "message": "Включить ветвление диалога",
+    "description": "Enable conversation fork feature toggle label"
+  },
+  "enableForkFeatureHint": {
+    "message": "Показывать кнопку Fork и индикаторы веток в диалогах Gemini",
+    "description": "Enable conversation fork feature toggle hint"
+  },
+  "enableAccountIsolation": {
+    "message": "Enable Hard Isolation",
+    "description": "Enable hard isolation for account-scoped folder data and cloud sync."
+  },
+  "enableAccountIsolationHint": {
+    "message": "Strictly isolate folder and cloud sync data by Google account to prevent cross-account mixing.",
+    "description": "Hint text for account isolation option."
+  },
+  "currentPlatform": {
+    "message": "Current platform",
+    "description": "Current active platform label in popup."
+  },
+  "platformGemini": {
+    "message": "Gemini",
+    "description": "Gemini platform label."
+  },
+  "platformAIStudio": {
+    "message": "AI Studio",
+    "description": "AI Studio platform label."
+  },
+  "export_select_mode_only_user": {
+    "message": "Выбрать только пользователя",
+    "description": "Export selection mode: select only user messages"
+  },
+  "export_select_mode_only_ai": {
+    "message": "Выбрать только ИИ",
+    "description": "Export selection mode: select only AI messages"
+  },
+  "hideUpsell": {
+    "message": "Скрыть предложения обновления",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "Скрыть кнопку «Перейти на Google AI Ultra» на боковой панели и в меню моделей",
+    "description": "Explanation for the upsell hiding feature"
   }
 }

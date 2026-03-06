@@ -23,41 +23,34 @@ export class SyncService {
   }
 
   async checkServerStatus(): Promise<boolean> {
-    let timeoutId: any;
     try {
       const url = await this.getServerUrl();
-      const controller = new AbortController();
-      timeoutId = setTimeout(() => controller.abort(), 200);
-
-      await fetch(url, {
-        method: 'GET',
-        signal: controller.signal,
+      return new Promise((resolve) => {
+        chrome.runtime.sendMessage(
+          { type: 'gv.checkSyncStatus', url, timeout: 500 },
+          (response) => {
+            resolve(!!response?.ok);
+          },
+        );
       });
-
-      return true;
-    } catch (err) {
+    } catch {
       return false;
-    } finally {
-      if (timeoutId) clearTimeout(timeoutId);
     }
   }
 
   async syncToIDE(data: DialogNode[]): Promise<SyncResponse> {
-    console.log('📡 Syncing to Code Editor server...', data);
+    console.log('📡 Syncing to Code Editor server via background...', data);
     try {
       const url = await this.getServerUrl();
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        mode: 'cors',
-        body: JSON.stringify(data),
+      return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ type: 'gv.syncToIDE', url, data }, (response) => {
+          if (response && response.ok) {
+            resolve(response.data);
+          } else {
+            reject(new Error(response?.error || 'Code Editor Server not responding.'));
+          }
+        });
       });
-
-      if (!response.ok) {
-        throw new Error('Code Editor Server not responding.');
-      }
-
-      return await response.json();
     } catch (err) {
       throw new Error((err as Error).message);
     }

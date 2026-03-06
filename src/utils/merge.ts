@@ -1,5 +1,6 @@
 import type { ConversationReference, FolderData } from '@/core/types/folder';
 import type { PromptItem } from '@/core/types/sync';
+import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 /**
@@ -160,4 +161,64 @@ export function mergeStarredMessages(
   });
 
   return { messages: mergedMessages };
+}
+
+/**
+ * Merges local and cloud fork nodes.
+ * Uses forkGroupId + turnId as the unique key within each conversation.
+ * Prefers the node with the newer createdAt timestamp when duplicates exist.
+ */
+export function mergeForkNodes(local: ForkNodesData, cloud: ForkNodesData): ForkNodesData {
+  const localNodes = local?.nodes || {};
+  const cloudNodes = cloud?.nodes || {};
+
+  const allConversationIds = new Set([...Object.keys(localNodes), ...Object.keys(cloudNodes)]);
+
+  const mergedNodes: Record<string, ForkNode[]> = {};
+
+  allConversationIds.forEach((conversationId) => {
+    const localConvoNodes = localNodes[conversationId] || [];
+    const cloudConvoNodes = cloudNodes[conversationId] || [];
+
+    // Use "forkGroupId:turnId" as unique key
+    const nodeMap = new Map<string, ForkNode>();
+
+    // Add cloud nodes first
+    cloudConvoNodes.forEach((node) => {
+      const key = `${node.forkGroupId}:${node.turnId}`;
+      nodeMap.set(key, node);
+    });
+
+    // Merge local nodes - prefer newer createdAt
+    localConvoNodes.forEach((localNode) => {
+      const key = `${localNode.forkGroupId}:${localNode.turnId}`;
+      const existing = nodeMap.get(key);
+      if (!existing) {
+        nodeMap.set(key, localNode);
+      } else if (localNode.createdAt >= existing.createdAt) {
+        nodeMap.set(key, localNode);
+      }
+    });
+
+    const mergedArray = Array.from(nodeMap.values());
+    if (mergedArray.length > 0) {
+      mergedNodes[conversationId] = mergedArray;
+    }
+  });
+
+  // Rebuild groups index from merged nodes
+  const mergedGroups: Record<string, string[]> = {};
+  for (const [conversationId, nodes] of Object.entries(mergedNodes)) {
+    for (const node of nodes) {
+      if (!mergedGroups[node.forkGroupId]) {
+        mergedGroups[node.forkGroupId] = [];
+      }
+      const groupKey = `${conversationId}:${node.turnId}`;
+      if (!mergedGroups[node.forkGroupId].includes(groupKey)) {
+        mergedGroups[node.forkGroupId].push(groupKey);
+      }
+    }
+  }
+
+  return { nodes: mergedNodes, groups: mergedGroups };
 }

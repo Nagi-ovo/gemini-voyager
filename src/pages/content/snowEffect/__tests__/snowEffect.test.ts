@@ -26,10 +26,10 @@ describe('snowEffect', () => {
     vi.useRealTimers();
   });
 
-  it('creates canvas when enabled via storage', async () => {
+  it('creates canvas when enabled via gvVisualEffect storage', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSnowEffect: true });
+        callback({ gvVisualEffect: 'snow' });
       },
     );
 
@@ -43,10 +43,24 @@ describe('snowEffect', () => {
     expect(canvas?.style.position).toBe('fixed');
   });
 
+  it('creates canvas via legacy gvSnowEffect boolean (backward compat)', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvSnowEffect: true });
+      },
+    );
+
+    const { startSnowEffect } = await import('../index');
+    startSnowEffect();
+
+    const canvas = document.getElementById('gv-snow-effect-canvas');
+    expect(canvas).not.toBeNull();
+  });
+
   it('does not create canvas when disabled', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSnowEffect: false });
+        callback({ gvVisualEffect: 'off' });
       },
     );
 
@@ -68,7 +82,7 @@ describe('snowEffect', () => {
 
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSnowEffect: true });
+        callback({ gvVisualEffect: 'snow' });
       },
     );
 
@@ -78,7 +92,7 @@ describe('snowEffect', () => {
     expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
 
     // Simulate storage change to disable
-    storageListener!({ gvSnowEffect: { newValue: false, oldValue: true } }, 'sync');
+    storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'snow' } }, 'sync');
 
     expect(document.getElementById('gv-snow-effect-canvas')).toBeNull();
   });
@@ -94,7 +108,7 @@ describe('snowEffect', () => {
 
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSnowEffect: false });
+        callback({ gvVisualEffect: 'off' });
       },
     );
 
@@ -104,7 +118,7 @@ describe('snowEffect', () => {
     expect(document.getElementById('gv-snow-effect-canvas')).toBeNull();
 
     // Simulate storage change to enable
-    storageListener!({ gvSnowEffect: { newValue: true, oldValue: false } }, 'sync');
+    storageListener!({ gvVisualEffect: { newValue: 'snow', oldValue: 'off' } }, 'sync');
 
     expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
   });
@@ -112,7 +126,7 @@ describe('snowEffect', () => {
   it('cleans up on beforeunload', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSnowEffect: true });
+        callback({ gvVisualEffect: 'snow' });
       },
     );
 

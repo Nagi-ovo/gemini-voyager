@@ -89,4 +89,34 @@ describe('selection mode interaction', () => {
     expect(code).not.toContain('function resolveConversationTitleElement(');
     expect(code).not.toContain('candidate.closest(\'[data-test-id="conversation"]\')');
   });
+
+  it('renders role-based selection buttons with correct data actions and localization keys', () => {
+    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
+
+    // Confirm building of buttons
+    expect(code).toContain("dataset.gvExportAction = 'selectUser'");
+    expect(code).toContain("dataset.gvExportAction = 'selectAI'");
+    expect(code).toContain("className = 'gv-export-select-role-btn'");
+
+    // Confirm translation keys are used
+    expect(code).toContain("t('export_select_mode_only_user')");
+    expect(code).toContain("t('export_select_mode_only_ai')");
+  });
+
+  it('applies horizontal scrolling to the export selection bar and prevents text wrapping', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+
+    // Check for container scroll behaviors
+    const barBlock = css.match(/\.gv-export-select-bar\s*{([\s\S]*?)}/)?.[1] ?? '';
+    expect(barBlock).toContain('overflow-x: auto;');
+    expect(barBlock).toContain('scrollbar-width: none;');
+
+    // Check for nowrapping and no shrinking on buttons
+    const btnBlock =
+      css.match(
+        /\.gv-export-select-all-toggle,\s*\.gv-export-select-role-btn\s*{([\s\S]*?)}/,
+      )?.[1] ?? '';
+    expect(btnBlock).toContain('white-space: nowrap;');
+    expect(btnBlock).toContain('flex-shrink: 0;');
+  });
 });

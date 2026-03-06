@@ -791,6 +791,14 @@
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows modifier key"
   },
+  "preventAutoScroll": {
+    "message": "منع التمرير التلقائي",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "preventAutoScrollHint": {
+    "message": "يمنع المتصفح من القفز إلى الأسفل عند الضغط على مفتاح الإدخال أثناء قراءة المحادثات السابقة.",
+    "description": "Auto-hide sidebar feature hint"
+  },
   "cloudSync": {
     "message": "مزامنة سحابية",
     "description": "Cloud sync section title"
@@ -979,17 +987,29 @@
     "message": "طي منطقة الإدخال عندما تكون فارغة للحصول على مساحة قراءة أكبر",
     "description": "Input collapse feature hint"
   },
+  "inputCollapseShortcutHint": {
+    "message": "{modifier}+I للتوسيع",
+    "description": "Shortcut hint for expanding collapsed input. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
+  },
   "inputCollapsePlaceholder": {
     "message": "راسل Gemini",
     "description": "Placeholder text shown in collapsed input"
   },
+  "allowCollapseWhenNotEmpty": {
+    "message": "السماح بالطي مع وجود محتوى",
+    "description": "Allow input to collapse even when it has text or attachments"
+  },
+  "allowCollapseWhenNotEmptyHint": {
+    "message": "طي منطقة الإدخال حتى عند احتوائها على نص أو مرفقات",
+    "description": "Hint text explaining the collapse when not empty feature"
+  },
   "ctrlEnterSend": {
-    "message": "Ctrl+Enter للإرسال",
-    "description": "Ctrl+Enter to send toggle label"
+    "message": "{modifier}+Enter للإرسال",
+    "description": "Modifier+Enter to send toggle label. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
   "ctrlEnterSendHint": {
-    "message": "اضغط Ctrl+Enter لإرسال الرسائل، Enter لإضافة سطر جديد",
-    "description": "Ctrl+Enter to send feature hint"
+    "message": "اضغط {modifier}+Enter لإرسال الرسائل، Enter لإضافة سطر جديد",
+    "description": "Modifier+Enter to send feature hint. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
   "batch_delete_confirm": {
     "message": "هل أنت متأكد من أنك تريد حذف {count} محادثة؟ لا يمكن التراجع عن هذا الإجراء.",
@@ -1172,11 +1192,11 @@
     "description": "Wide subfolder indentation label"
   },
   "export_select_mode_select_all": {
-    "message": "Select all",
+    "message": "تحديد الكل",
     "description": "Selection mode select all toggle"
   },
   "export_select_mode_count": {
-    "message": "Selected {count}",
+    "message": "تم تحديد {count}",
     "description": "Selection mode selected message count"
   },
   "export_select_mode_toggle": {
@@ -1243,12 +1263,144 @@
     "message": "المواقع المبحوثة",
     "description": "عنوان قسم المواقع المبحوثة في Deep Research"
   },
-  "snowEffect": {
-    "message": "تأثير الثلج",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "المؤثرات البصرية",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "اجعل الثلج يتساقط على الصفحة لأجواء شتوية",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "أضف أجواء موسمية للصفحة",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "إيقاف",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "ثلج",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "ساكورا",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "مطر",
+    "description": "Visual effect rain option"
+  },
+  "changelog_title": {
+    "message": "الجديد",
+    "description": "Changelog modal title"
+  },
+  "changelog_close": {
+    "message": "فهمت",
+    "description": "Changelog modal close button"
+  },
+  "changelog_docs_link": {
+    "message": "المستندات",
+    "description": "Changelog modal documentation link text"
+  },
+  "changelog_recommendation": {
+    "message": "إذا ساعدك Voyager، شاركه مع أصدقائك أو على وسائل التواصل الاجتماعي!",
+    "description": "Changelog modal recommendation message"
+  },
+  "changelog_docs_hint": {
+    "message": "التفاصيل في المستندات",
+    "description": "Changelog annotation pointing to docs icon"
+  },
+  "changelog_rate_chrome": {
+    "message": "هل أعجبك Gemini Voyager؟ تقييمك على متجر Chrome الإلكتروني يساعد الآخرين على اكتشافه!",
+    "description": "Chrome Web Store rating prompt in changelog modal"
+  },
+  "changelog_rate_chrome_cta": {
+    "message": "تقييم الآن",
+    "description": "Chrome Web Store rating CTA button text"
+  },
+  "forkConversation": {
+    "message": "Fork",
+    "description": "Fork conversation button label"
+  },
+  "forkConfirm": {
+    "message": "Fork conversation from this point?",
+    "description": "Fork confirmation prompt"
+  },
+  "forkConfirmBtn": {
+    "message": "Fork",
+    "description": "Fork confirmation button"
+  },
+  "forkCancel": {
+    "message": "Cancel",
+    "description": "Fork cancel button"
+  },
+  "forkBranch": {
+    "message": "Branch",
+    "description": "Fork branch label"
+  },
+  "forkOriginal": {
+    "message": "Original",
+    "description": "Original fork branch tag"
+  },
+  "forkCurrent": {
+    "message": "Current",
+    "description": "Current fork branch tag"
+  },
+  "forkPreparing": {
+    "message": "Preparing fork...",
+    "description": "Fork preparation status"
+  },
+  "forkPasteHint": {
+    "message": "Press Enter to send and create the fork",
+    "description": "Fork paste hint text"
+  },
+  "forkDeleteData": {
+    "message": "حذف هذا التفرع",
+    "description": "Delete fork branch metadata button"
+  },
+  "forkDeleteDataConfirm": {
+    "message": "هل تريد حذف رابط هذا التفرع؟ سيتم حذف بيانات Voyager الوصفية للتفرع فقط ولن يتم حذف أي محادثة.",
+    "description": "Fork metadata delete confirmation prompt"
+  },
+  "enableForkFeature": {
+    "message": "تفعيل تفريع المحادثة",
+    "description": "Enable conversation fork feature toggle label"
+  },
+  "enableForkFeatureHint": {
+    "message": "إظهار زر Fork ومؤشرات الفروع داخل محادثات Gemini",
+    "description": "Enable conversation fork feature toggle hint"
+  },
+  "enableAccountIsolation": {
+    "message": "Enable Hard Isolation",
+    "description": "Enable hard isolation for account-scoped folder data and cloud sync."
+  },
+  "enableAccountIsolationHint": {
+    "message": "Strictly isolate folder and cloud sync data by Google account to prevent cross-account mixing.",
+    "description": "Hint text for account isolation option."
+  },
+  "currentPlatform": {
+    "message": "Current platform",
+    "description": "Current active platform label in popup."
+  },
+  "platformGemini": {
+    "message": "Gemini",
+    "description": "Gemini platform label."
+  },
+  "platformAIStudio": {
+    "message": "AI Studio",
+    "description": "AI Studio platform label."
+  },
+  "export_select_mode_only_user": {
+    "message": "تحديد المستخدم فقط",
+    "description": "Export selection mode: select only user messages"
+  },
+  "export_select_mode_only_ai": {
+    "message": "تحديد الذكاء الاصطناعي فقط",
+    "description": "Export selection mode: select only AI messages"
+  },
+  "hideUpsell": {
+    "message": "إخفاء رسائل الترقية",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "إخفاء زر \"الترقية إلى Google AI Ultra\" في الشريط الجانبي وقائمة النماذج",
+    "description": "Explanation for the upsell hiding feature"
   }
 }

@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="../public/icon-128.png" alt="logo"/>
-  <h1>Gemini Voyager</h1>
+  <img src="../docs/public/assets/promotion/Promo-Banner-cn.png" alt="promotion"/>
   <h3>打造属于你的 Gemini 体验 ✨</h3>
   <p>
     优雅的时间轴导航、文件夹管理对话、构建专属提示词库。<br>
@@ -22,7 +21,6 @@
     <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub 下载量">
     <img src="https://img.shields.io/chrome-web-store/users/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店用户数">
     <img src="https://img.shields.io/chrome-web-store/rating/kjdpnimcnfinmilocccippmododhceol?style=flat-square&logo=google-chrome" alt="Chrome 商店评分">
-    <img src="https://img.shields.io/badge/Edge-✓-0078D7?style=flat-square&logo=microsoft-edge" alt="Edge 商店">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店用户数">
     <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店评分">
   </p>
@@ -52,6 +50,14 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
+<p align="center">
+  <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
+  </a>
+  <br>
+  <b>🎉 感谢知名科技圈大 V 与社区的强烈推荐！</b>
+</p>
+
 > [!NOTE]
 > 如果 Gemini Voyager 帮到了你，欢迎分享到 X、即刻、小红书、Linux.do、V2EX 等等，也欢迎推荐给海外 KOL。每一次分享都能让更多人看到这个项目，从而改善 Gemini 的使用体验。谢谢。
 
@@ -62,6 +68,14 @@
 我们都很喜欢 Gemini，但有时候总觉得它少了一点"秩序感"。
 
 这就是我们开发 **Gemini Voyager** 的初衷。它不仅仅是一个工具，更是一个能帮你把 AI 对话变得井井有条、触手可及的得力助手。无论你是需要处理大量对话的研究人员，还是喜欢收藏代码片段的开发者，亦或是单纯的整理控，Voyager 都是为你准备的。
+
+<p align="center">
+  <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
+  </a>
+  <br>
+  <i>在 2 月 18 号 Google Gemini App 导致部分用户历史对话无法访问的问题中，Voyager 的用户仍然能够在其文件夹中看到被保存下来的对话。</i>
+</p>
 
 ---
 
@@ -87,9 +101,11 @@
   - **[批量删除](https://voyager.nagi.fun/guide/batch-delete)**: 批量清理对话记录。
   - **[引用回复](https://voyager.nagi.fun/guide/quote-reply)**: 选中对话文本即可一键引用回复。
   - **[标签页标题同步](https://voyager.nagi.fun/guide/tab-title)**: 自动将标签页标题设为对话标题。
+  - **[防自动跳转](https://voyager.nagi.fun/guide/prevent-auto-scroll)**: 拦截每次发送新问题后页面强制滚动到底部的内置行为，找回丝滑体验。
   - **[输入框折叠](https://voyager.nagi.fun/guide/input-collapse)**: 输入框自动收纳，释放阅读空间。
   - **[默认模型](https://voyager.nagi.fun/guide/default-model)**: 为新对话设置默认选中的模型。
   - **[隐藏最近项目](https://voyager.nagi.fun/guide/recents-hider)**: 隐藏侧边栏的“最近”列表，减少干扰。
+  - **隐藏升级提醒**: 自动隐藏 Gemini 侧边栏和模型切换菜单中的“升级到 Google AI Ultra”按钮（默认开启）。
 
 ---
 
@@ -189,7 +205,7 @@
       <sub>获取最新动态。</sub>
     </td>
     <td align="center" width="50%" valign="top">
-      <a href="https://discord.gg/ghrQtZgWnv" target="_blank">
+      <a href="https://discord.gg/TEUFxdMbGb" target="_blank">
         <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=加入%20Discord" alt="Discord" height="36">
       </a>
       <br><br>

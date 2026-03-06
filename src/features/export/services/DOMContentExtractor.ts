@@ -212,7 +212,7 @@ export class DOMContentExtractor {
 
       // Search in shadow DOM recursively
       const searchShadow = (el: Element) => {
-        const shadowRoot = (el as any).shadowRoot as ShadowRoot | null;
+        const shadowRoot = el.shadowRoot;
         if (shadowRoot) {
           console.log(`[DOMContentExtractor] Searching in Shadow DOM of`, el.tagName);
           results.push(...Array.from(shadowRoot.querySelectorAll(selector)));
@@ -236,7 +236,7 @@ export class DOMContentExtractor {
       );
     altCodeBlocks.forEach((codeEl, idx) => {
       // Avoid duplicates if already processed
-      if ((codeEl as any).processedByGV) return;
+      if ((codeEl as Element & { processedByGV?: boolean }).processedByGV) return;
       // Skip if inside a code-block (already handled by processNodes)
       if (codeEl.closest && codeEl.closest('code-block')) return;
       if (this.DEBUG)
@@ -245,7 +245,7 @@ export class DOMContentExtractor {
         );
       const extracted = this.extractCodeFromCodeElement(codeEl as HTMLElement);
       if (extracted.text) {
-        (codeEl as any).processedByGV = true;
+        (codeEl as Element & { processedByGV?: boolean }).processedByGV = true;
         result.hasCode = true;
         htmlParts.push(extracted.html);
         textParts.push(`\n${extracted.text}\n`);
@@ -296,11 +296,11 @@ export class DOMContentExtractor {
       );
 
     // Check for Shadow DOM
-    const shadowRoot = (container as any).shadowRoot;
+    const shadowRoot = container.shadowRoot;
     if (shadowRoot) {
       if (this.DEBUG)
         console.log('[DOMContentExtractor] Found Shadow DOM! Processing shadow children');
-      this.processNodes(shadowRoot, htmlParts, textParts, flags);
+      this.processNodes(shadowRoot as unknown as Element, htmlParts, textParts, flags);
     }
 
     for (const child of children) {

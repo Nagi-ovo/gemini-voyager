@@ -77,6 +77,15 @@ describe('DeepResearchPDFPrintService', () => {
       'body.gv-deep-research-pdf-printing #gv-deep-research-pdf-print-container *',
     );
     expect(styleText).toContain('display: revert !important;');
+    expect(styleText).toContain('.katex .vlist-t');
+    expect(styleText).toContain('display: inline-table !important;');
+    expect(styleText).toContain('.katex .vlist-r');
+    expect(styleText).toContain('display: table-row !important;');
+    expect(styleText).toContain('.katex .vlist,');
+    expect(styleText).toContain('.katex .vlist-s');
+    expect(styleText).toContain('display: table-cell !important;');
+    expect(styleText).toContain('.gv-dr-print-report .katex');
+    expect(styleText).toContain('line-height: 1.2 !important;');
     expect(styleText).toContain('body.gv-deep-research-pdf-printing .gv-dr-print-cover-page');
     expect(styleText).toContain('display: flex !important;');
     expect(styleText).toContain('align-items: center !important;');

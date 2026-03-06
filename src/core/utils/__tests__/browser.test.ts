@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { isSafari, shouldShowSafariUpdateReminder } from '../browser';
+import { getModifierKey, isMac, isSafari, shouldShowSafariUpdateReminder } from '../browser';
 
 describe('Safari Update Reminder Control', () => {
   describe('shouldShowSafariUpdateReminder', () => {
@@ -54,5 +54,64 @@ describe('Safari Update Reminder Control', () => {
 
       expect(isSafari()).toBe(false);
     });
+  });
+});
+
+describe('isMac', () => {
+  it('returns true for macOS platform', () => {
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel');
+    expect(isMac()).toBe(true);
+  });
+
+  it('returns true for Mac ARM platform', () => {
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacARM');
+    expect(isMac()).toBe(true);
+  });
+
+  it('returns false for Windows platform', () => {
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue('Win32');
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+    );
+    expect(isMac()).toBe(false);
+  });
+
+  it('returns false for Linux platform', () => {
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue('Linux x86_64');
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0.0.0',
+    );
+    expect(isMac()).toBe(false);
+  });
+
+  it('falls back to userAgent when platform is empty', () => {
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue('');
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0',
+    );
+    expect(isMac()).toBe(true);
+  });
+});
+
+describe('getModifierKey', () => {
+  it('returns ⌘ on macOS', () => {
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel');
+    expect(getModifierKey()).toBe('⌘');
+  });
+
+  it('returns Ctrl on Windows', () => {
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue('Win32');
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+    );
+    expect(getModifierKey()).toBe('Ctrl');
+  });
+
+  it('returns Ctrl on Linux', () => {
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue('Linux x86_64');
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0.0.0',
+    );
+    expect(getModifierKey()).toBe('Ctrl');
   });
 });

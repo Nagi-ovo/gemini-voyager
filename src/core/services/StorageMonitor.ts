@@ -134,7 +134,6 @@ export class StorageMonitor {
     }
 
     const highestThreshold = Math.max(...exceededThresholds);
-    const thresholdPercent = Math.round(highestThreshold * 100);
 
     // Only show notification if this is a new or higher warning level
     if (highestThreshold > this.lastWarningLevel) {

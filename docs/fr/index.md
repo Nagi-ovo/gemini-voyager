@@ -59,12 +59,15 @@ features:
   - icon: 🏷️
     title: Synchro Titre Onglet
     details: Sachez en un coup d'œil. Synchro auto du titre de l'onglet avec votre chat.
+  - icon: 🔀
+    title: Bifurcation de Conversation (Expérimental)
+    details: Pensée divergente. Séparez la conversation à n'importe quel point pour explorer d'autres possibilités.
   - icon: 🗑️
     title: Suppression par Lot
     details: Nettoyage en masse. Sélectionnez plusieurs conversations et supprimez-les en une fois.
-  - icon: ⚡️
-    title: Modèle par défaut
-    details: Arrêtez de vous répéter. Basculez automatiquement vers votre modèle préféré pour les nouveaux chats.
+  # - icon: ⚡️
+  #   title: Modèle par défaut
+  #   details: Arrêtez de vous répéter. Basculez automatiquement vers votre modèle préféré pour les nouveaux chats.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

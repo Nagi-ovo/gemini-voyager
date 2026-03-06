@@ -1,8 +1,15 @@
 import browser from 'webextension-polyfill';
 
+import {
+  type AccountScope,
+  accountIsolationService,
+  buildScopedStorageKey,
+  detectAccountContextFromDocument,
+} from '@/core/services/AccountIsolationService';
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
+import type { PromptItem, SyncAccountScope } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
 import { createTranslator, initI18n } from '@/utils/i18n';
 
@@ -48,7 +55,7 @@ function normalizeText(text: string | null | undefined): string {
   }
 }
 
-function downloadJSON(data: any, filename: string): void {
+function downloadJSON(data: unknown, filename: string): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: 'application/json;charset=utf-8',
   });
@@ -192,13 +199,10 @@ export function parseDragDataPayload(raw: string): DragData | null {
 /**
  * Validate folder data structure
  */
-function validateFolderData(data: any): boolean {
-  return (
-    data &&
-    typeof data === 'object' &&
-    Array.isArray(data.folders) &&
-    typeof data.folderContents === 'object'
-  );
+function validateFolderData(data: unknown): boolean {
+  if (typeof data !== 'object' || data === null) return false;
+  const d = data as Record<string, unknown>;
+  return Array.isArray(d.folders) && typeof d.folderContents === 'object';
 }
 
 export class AIStudioFolderManager {
@@ -212,6 +216,11 @@ export class AIStudioFolderManager {
   private promptTitleSyncInProgress: boolean = false;
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
+  private accountIsolationEnabled: boolean = false; // Whether hard account isolation is enabled
+  private accountScope: AccountScope | null = null; // Resolved account scope for current account
+  private activeStorageKey: string = StorageKeys.FOLDER_DATA_AISTUDIO; // Active folder data key
+  private accountContextPoller: number | null = null; // Detect account switches
+  private lastAccountContextFingerprint: string | null = null; // Debounce account scope refresh
   private backupService!: DataBackupService<FolderData>; // Initialized in init()
   private sidebarWidth: number = 360; // Default sidebar width (increased to reduce text truncation)
   private readonly SIDEBAR_WIDTH_KEY = 'gvAIStudioSidebarWidth';
@@ -265,11 +274,18 @@ export class AIStudioFolderManager {
     // Load folder enabled setting
     await this.loadFolderEnabledSetting();
 
+    // Load account isolation setting/scope before reading folder data.
+    await this.loadAccountIsolationSetting();
+    await this.refreshAccountScope(true);
+
     // Load sidebar width setting
     await this.loadSidebarWidth();
 
     // Set up storage change listener (always needed to respond to setting changes)
     this.setupStorageListener();
+
+    // Keep account-scoped data aligned with current AI Studio account.
+    this.setupAccountContextPoller();
 
     // Setup message listener for sync operations (always needed)
     this.setupMessageListener();
@@ -353,24 +369,176 @@ export class AIStudioFolderManager {
     return { folders: mergedFolders, folderContents: mergedContents };
   }
 
+  private cloneFolderData(data: FolderData): FolderData {
+    const folders = data.folders.map((folder) => ({ ...folder }));
+    const folderContents = Object.fromEntries(
+      Object.entries(data.folderContents || {}).map(([folderId, conversations]) => [
+        folderId,
+        conversations.map((conversation) => ({ ...conversation })),
+      ]),
+    );
+    return { folders, folderContents };
+  }
+
+  private async migrateLegacyFolderDataToScopedStorage(): Promise<FolderData | null> {
+    try {
+      const legacyResult = await chrome.storage.local.get(this.STORAGE_KEY);
+      const legacyData = legacyResult[this.STORAGE_KEY];
+      if (!legacyData || !validateFolderData(legacyData)) {
+        return null;
+      }
+
+      const migratedData = this.cloneFolderData(legacyData);
+      await chrome.storage.local.set({ [this.activeStorageKey]: migratedData });
+      console.log(
+        '[AIStudioFolderManager] Migrated legacy AI Studio folder data to scoped storage:',
+        this.activeStorageKey,
+      );
+      return migratedData;
+    } catch (error) {
+      console.warn(
+        '[AIStudioFolderManager] Failed to migrate scoped AI Studio folder data:',
+        error,
+      );
+      return null;
+    }
+  }
+
+  private toSyncAccountScope(scope: AccountScope | null): SyncAccountScope | undefined {
+    if (!scope) return undefined;
+    return {
+      accountKey: scope.accountKey,
+      accountId: scope.accountId,
+      routeUserId: scope.routeUserId,
+    };
+  }
+
+  private buildAccountContextFingerprint(routeUserId: string | null, email: string | null): string {
+    return `${routeUserId || ''}::${email || ''}`;
+  }
+
+  private async loadAccountIsolationSetting(): Promise<void> {
+    try {
+      this.accountIsolationEnabled = await accountIsolationService.isIsolationEnabled({
+        platform: 'aistudio',
+        pageUrl: window.location.href,
+      });
+      console.log(
+        '[AIStudioFolderManager] Loaded account isolation setting:',
+        this.accountIsolationEnabled,
+      );
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to load account isolation setting:', error);
+      this.accountIsolationEnabled = false;
+    }
+  }
+
+  private async refreshAccountScope(force: boolean = false): Promise<boolean> {
+    if (!this.accountIsolationEnabled) {
+      const changed = this.activeStorageKey !== this.STORAGE_KEY;
+      this.accountScope = null;
+      this.activeStorageKey = this.STORAGE_KEY;
+      this.lastAccountContextFingerprint = null;
+      return changed;
+    }
+
+    try {
+      const context = detectAccountContextFromDocument(window.location.href, document);
+      const fingerprint = this.buildAccountContextFingerprint(context.routeUserId, context.email);
+      if (!force && fingerprint === this.lastAccountContextFingerprint) {
+        return false;
+      }
+      this.lastAccountContextFingerprint = fingerprint;
+
+      const resolvedScope = await accountIsolationService.resolveAccountScope({
+        pageUrl: window.location.href,
+        routeUserId: context.routeUserId,
+        email: context.email,
+      });
+      this.accountScope = resolvedScope;
+
+      const nextStorageKey = buildScopedStorageKey(this.STORAGE_KEY, resolvedScope.accountKey);
+      const changed = nextStorageKey !== this.activeStorageKey;
+      this.activeStorageKey = nextStorageKey;
+      return changed;
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to resolve account scope:', error);
+      const changed = this.activeStorageKey !== this.STORAGE_KEY;
+      this.accountScope = null;
+      this.activeStorageKey = this.STORAGE_KEY;
+      return changed;
+    }
+  }
+
+  private async handleAccountIsolationToggle(enabled: boolean): Promise<void> {
+    if (enabled === this.accountIsolationEnabled) return;
+
+    this.accountIsolationEnabled = enabled;
+    await this.refreshAccountScope(true);
+    await this.load();
+    if (this.folderEnabled && this.container) {
+      this.render();
+    }
+  }
+
+  private setupAccountContextPoller(): void {
+    if (this.accountContextPoller) {
+      clearInterval(this.accountContextPoller);
+      this.accountContextPoller = null;
+    }
+
+    this.accountContextPoller = window.setInterval(() => {
+      void this.refreshScopedDataOnAccountContextChange();
+    }, 1200);
+
+    this.cleanupFns.push(() => {
+      if (!this.accountContextPoller) return;
+      clearInterval(this.accountContextPoller);
+      this.accountContextPoller = null;
+    });
+  }
+
+  private async refreshScopedDataOnAccountContextChange(): Promise<void> {
+    if (!this.accountIsolationEnabled) return;
+    const changed = await this.refreshAccountScope(false);
+    if (!changed) return;
+
+    await this.load();
+    if (this.folderEnabled && this.container) {
+      this.render();
+    }
+    console.log(
+      '[AIStudioFolderManager] Switched account-scoped folder storage:',
+      this.activeStorageKey,
+    );
+  }
+
   /**
    * Setup message listener for sync operations
    * Handles gv.sync.requestData and gv.folders.reload messages from popup
    */
   private setupMessageListener(): void {
-    browser.runtime.onMessage.addListener((message: any, _sender: any, sendResponse: any) => {
+    browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      const msg = message as Record<string, unknown>;
       // Handle request for folder data (for cloud sync upload)
-      if (message?.type === 'gv.sync.requestData') {
+      if (msg?.type === 'gv.sync.requestData') {
         console.log('[AIStudioFolderManager] Received request for folder data from popup');
         sendResponse({
           ok: true,
           data: this.data,
+          accountScope: this.toSyncAccountScope(this.accountScope),
         });
         return true;
       }
 
+      if (msg?.type === 'gv.account.getContext') {
+        const context = detectAccountContextFromDocument(window.location.href, document);
+        sendResponse({ ok: true, context });
+        return true;
+      }
+
       // Handle reload request (after cloud sync download)
-      if (message?.type === 'gv.folders.reload') {
+      if (msg?.type === 'gv.folders.reload') {
         console.log('[AIStudioFolderManager] Received reload request from sync');
         this.load().then(() => {
           this.render();
@@ -429,9 +597,13 @@ export class AIStudioFolderManager {
 
   private async load(): Promise<void> {
     try {
-      // Use chrome.storage.local (migrated from sync)
-      const result = await chrome.storage.local.get(this.STORAGE_KEY);
-      const data = result[this.STORAGE_KEY];
+      // Use chrome.storage.local with account-scoped key when isolation is enabled.
+      const result = await chrome.storage.local.get(this.activeStorageKey);
+      let data = result[this.activeStorageKey];
+
+      if (!data && this.accountIsolationEnabled && this.activeStorageKey !== this.STORAGE_KEY) {
+        data = await this.migrateLegacyFolderDataToScopedStorage();
+      }
 
       if (data && validateFolderData(data)) {
         this.data = data;
@@ -456,8 +628,8 @@ export class AIStudioFolderManager {
       // Create emergency backup BEFORE saving (snapshot of previous state)
       this.backupService.createEmergencyBackup(this.data);
 
-      // Save to chrome.storage.local (migrated from sync)
-      await chrome.storage.local.set({ [this.STORAGE_KEY]: this.data });
+      // Save to chrome.storage.local using active scoped key.
+      await chrome.storage.local.set({ [this.activeStorageKey]: this.data });
 
       // Create primary backup AFTER successful save
       this.backupService.createPrimaryBackup(this.data);
@@ -705,10 +877,10 @@ export class AIStudioFolderManager {
       window.addEventListener('popstate', update);
     } catch {}
     try {
-      const hist = history as any;
+      const hist = history as History & Record<string, unknown>;
       const wrap = (method: 'pushState' | 'replaceState') => {
-        const orig = hist[method];
-        hist[method] = function (...args: any[]) {
+        const orig = hist[method] as (...args: unknown[]) => unknown;
+        hist[method] = function (...args: unknown[]) {
           const ret = orig.apply(this, args);
           try {
             update();
@@ -763,7 +935,7 @@ export class AIStudioFolderManager {
 
     const icon = document.createElement('span');
     icon.className = 'gv-folder-icon google-symbols';
-    (icon as any).dataset.icon = 'folder';
+    icon.dataset.icon = 'folder';
     icon.textContent = 'folder';
     header.appendChild(icon);
 
@@ -777,7 +949,7 @@ export class AIStudioFolderManager {
     pinBtn.className = 'gv-folder-pin-btn';
     pinBtn.title = folder.pinned ? this.t('folder_unpin') : this.t('folder_pin');
     try {
-      (pinBtn as any).dataset.state = folder.pinned ? 'pinned' : 'unpinned';
+      pinBtn.dataset.state = folder.pinned ? 'pinned' : 'unpinned';
     } catch {}
     pinBtn.appendChild(this.createIcon('push_pin'));
     pinBtn.addEventListener('click', () => {
@@ -836,7 +1008,7 @@ export class AIStudioFolderManager {
 
     const icon = document.createElement('span');
     icon.className = 'gv-conversation-icon google-symbols';
-    (icon as any).dataset.icon = 'chat';
+    icon.dataset.icon = 'chat';
     icon.textContent = 'chat';
     row.appendChild(icon);
 
@@ -938,7 +1110,7 @@ export class AIStudioFolderManager {
     st.left = `${ev.clientX}px`;
     st.zIndex = String(2147483647);
     st.display = 'flex';
-    (st as any).flexDirection = 'column';
+    st.flexDirection = 'column';
     document.body.appendChild(menu);
     const onClickAway = (e: MouseEvent) => {
       if (e.target instanceof Node && !menu.contains(e.target)) {
@@ -1381,8 +1553,8 @@ export class AIStudioFolderManager {
       const anchor = a as HTMLAnchorElement;
       const hostEl = this.resolvePromptDragHost(anchor);
       anchor.dataset.gvDragBound = '1';
-      if (!(hostEl as any)._gvDragBound) {
-        (hostEl as any)._gvDragBound = true;
+      if (!(hostEl as Element & { _gvDragBound?: boolean })._gvDragBound) {
+        (hostEl as Element & { _gvDragBound?: boolean })._gvDragBound = true;
         hostEl.draggable = true;
         if (!hostEl.style.cursor) {
           hostEl.style.cursor = 'grab';
@@ -1463,8 +1635,8 @@ export class AIStudioFolderManager {
       if (!anchor) return;
 
       // Skip if already bound
-      if ((tr as any)._gvLibraryDragBound) return;
-      (tr as any)._gvLibraryDragBound = true;
+      if ((tr as Element & { _gvLibraryDragBound?: boolean })._gvLibraryDragBound) return;
+      (tr as Element & { _gvLibraryDragBound?: boolean })._gvLibraryDragBound = true;
 
       tr.draggable = true;
       tr.style.cursor = 'grab';
@@ -1876,7 +2048,7 @@ export class AIStudioFolderManager {
           await this.save();
           this.render();
           alert(this.t('folder_import_success') || 'Imported');
-        } catch (e) {
+        } catch {
           alert(this.t('folder_import_error') || 'Import failed');
         }
       },
@@ -1907,6 +2079,18 @@ export class AIStudioFolderManager {
         if (changes.geminiFolderEnabled) {
           this.folderEnabled = changes.geminiFolderEnabled.newValue !== false;
           this.applyFolderEnabledSetting();
+        }
+        if (
+          changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] ||
+          changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]
+        ) {
+          void (async () => {
+            const nextEnabled = await accountIsolationService.isIsolationEnabled({
+              platform: 'aistudio',
+              pageUrl: window.location.href,
+            });
+            await this.handleAccountIsolationToggle(nextEnabled);
+          })();
         }
         if (changes[this.SIDEBAR_WIDTH_KEY]) {
           const w = changes[this.SIDEBAR_WIDTH_KEY].newValue;
@@ -1946,7 +2130,7 @@ export class AIStudioFolderManager {
    * Attempt to recover data when load() fails
    * Uses multi-layer backup system: primary > emergency > beforeUnload > in-memory
    */
-  private attemptDataRecovery(error: unknown): void {
+  private attemptDataRecovery(_error: unknown): void {
     console.warn('[AIStudioFolderManager] Attempting data recovery after load failure');
 
     // Step 1: Try to restore from localStorage backups (primary, emergency, beforeUnload)
@@ -2287,11 +2471,11 @@ export class AIStudioFolderManager {
       const folders = this.data;
 
       // Get prompts from storage (shared with Gemini)
-      let prompts: any[] = [];
+      let prompts: PromptItem[] = [];
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          prompts = storageResult.gvPromptItems;
+          prompts = storageResult.gvPromptItems as PromptItem[];
         }
       } catch (err) {
         console.warn('[AIStudioFolderManager] Could not get prompts for upload:', err);
@@ -2304,7 +2488,12 @@ export class AIStudioFolderManager {
       // Send upload request to background script
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.upload',
-        payload: { folders, prompts, platform: 'aistudio' },
+        payload: {
+          folders,
+          prompts,
+          platform: 'aistudio',
+          accountScope: this.toSyncAccountScope(this.accountScope),
+        },
       })) as { ok?: boolean; error?: string } | undefined;
 
       if (response?.ok) {
@@ -2332,14 +2521,17 @@ export class AIStudioFolderManager {
       // Send download request to background script
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.download',
-        payload: { platform: 'aistudio' },
+        payload: {
+          platform: 'aistudio',
+          accountScope: this.toSyncAccountScope(this.accountScope),
+        },
       })) as
         | {
             ok?: boolean;
             error?: string;
             data?: {
               folders?: { data?: FolderData };
-              prompts?: { items?: any[] };
+              prompts?: { items?: PromptItem[] };
             };
           }
         | undefined;
@@ -2366,11 +2558,11 @@ export class AIStudioFolderManager {
       );
 
       // Get local prompts for merge (shared with Gemini)
-      let localPrompts: any[] = [];
+      let localPrompts: PromptItem[] = [];
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          localPrompts = storageResult.gvPromptItems;
+          localPrompts = storageResult.gvPromptItems as PromptItem[];
         }
       } catch (err) {
         console.warn('[AIStudioFolderManager] Could not get local prompts for merge:', err);
@@ -2412,8 +2604,8 @@ export class AIStudioFolderManager {
   /**
    * Merge prompts by ID (simple deduplication)
    */
-  private mergePromptsData(local: any[], cloud: any[]): any[] {
-    const promptMap = new Map<string, any>();
+  private mergePromptsData(local: PromptItem[], cloud: PromptItem[]): PromptItem[] {
+    const promptMap = new Map<string, PromptItem>();
 
     // Add local prompts first
     local.forEach((p) => {

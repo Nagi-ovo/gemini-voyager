@@ -21,7 +21,6 @@ const STORAGE_KEY = 'gvGemsHidden';
 
 // Selectors - targeting the gems list container
 const GEMS_CONTAINER_SELECTOR = '.gems-list-container';
-const GEMS_LIST_SELECTOR = '.gems-list-container bot-list';
 const ARROW_ICON_SELECTOR = '[data-test-id="arrow-icon"]';
 
 let initialized = false;

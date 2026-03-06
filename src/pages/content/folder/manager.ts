@@ -1,8 +1,16 @@
 import browser from 'webextension-polyfill';
 
+import {
+  type AccountScope,
+  accountIsolationService,
+  buildScopedFolderStorageKey,
+  detectAccountContextFromDocument,
+  extractRouteUserIdFromPath,
+} from '@/core/services/AccountIsolationService';
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
+import type { PromptItem, SyncAccountScope } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
@@ -11,7 +19,7 @@ import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/
 
 import { sortConversationsByPriority } from './conversationSort';
 import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
-import { DEFAULT_CONVERSATION_ICON, DEFAULT_GEM_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
+import { DEFAULT_CONVERSATION_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
 import { createMoveToFolderMenuItem } from './moveToFolderMenuItem';
 import {
   type IFolderStorageAdapter,
@@ -53,23 +61,20 @@ export function calculateFolderDialogPaddingLeft(level: number, indent: number):
 /**
  * Validate folder data structure
  */
-function validateFolderData(data: any): boolean {
-  return (
-    data &&
-    typeof data === 'object' &&
-    Array.isArray(data.folders) &&
-    typeof data.folderContents === 'object'
-  );
+function validateFolderData(data: unknown): boolean {
+  if (typeof data !== 'object' || data === null) return false;
+  const d = data as Record<string, unknown>;
+  return Array.isArray(d.folders) && typeof d.folderContents === 'object';
 }
 
 export class FolderManager {
-  private debug(...args: any[]): void {
+  private debug(...args: unknown[]): void {
     if (this.isDebugEnabled()) {
       console.log('[FolderManager]', ...args);
     }
   }
 
-  private debugWarn(...args: any[]): void {
+  private debugWarn(...args: unknown[]): void {
     if (this.isDebugEnabled()) {
       console.warn('[FolderManager]', ...args);
     }
@@ -106,6 +111,9 @@ export class FolderManager {
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private folderTreeIndent: number = FOLDER_TREE_INDENT_DEFAULT; // Tree indentation width (px)
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
+  private accountIsolationEnabled: boolean = false; // Whether hard account isolation is enabled
+  private accountScope: AccountScope | null = null; // Resolved account scope for current page
+  private activeStorageKey: string = STORAGE_KEY; // Storage key currently used for folder data
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
   private saveInProgress: boolean = false; // Lock to prevent concurrent saves
@@ -180,6 +188,10 @@ export class FolderManager {
 
       // Start monitoring
       storageMonitor.startMonitoring();
+
+      // Load account isolation setting/scope before reading folder data.
+      await this.loadAccountIsolationSetting();
+      await this.refreshAccountScope();
 
       // Load folder data (async, works for both Safari and non-Safari)
       await this.loadData();
@@ -285,7 +297,7 @@ export class FolderManager {
     if (this.sidebarClickListener && this.sidebarContainer) {
       try {
         this.sidebarContainer.removeEventListener('click', this.sidebarClickListener, true);
-      } catch (e) {
+      } catch {
         // Ignore
       }
       this.sidebarClickListener = null;
@@ -1315,8 +1327,12 @@ export class FolderManager {
     };
 
     // Store references for potential cleanup
-    (element as any)._dragStartHandler = handleDragStart;
-    (element as any)._dragEndHandler = handleDragEnd;
+    type DragEl = Element & {
+      _dragStartHandler?: (e: Event) => void;
+      _dragEndHandler?: () => void;
+    };
+    (element as DragEl)._dragStartHandler = handleDragStart;
+    (element as DragEl)._dragEndHandler = handleDragEnd;
 
     // Add drag event listeners
     element.addEventListener('dragstart', handleDragStart);
@@ -1340,17 +1356,21 @@ export class FolderManager {
 
     // Remove drag event listeners if they exist
     if (element.dataset.dragListenersAttached === 'true') {
-      const dragStartHandler = (element as any)._dragStartHandler;
-      const dragEndHandler = (element as any)._dragEndHandler;
+      type DragEl = Element & {
+        _dragStartHandler?: (e: Event) => void;
+        _dragEndHandler?: () => void;
+      };
+      const dragStartHandler = (element as DragEl)._dragStartHandler;
+      const dragEndHandler = (element as DragEl)._dragEndHandler;
 
       if (dragStartHandler) {
         element.removeEventListener('dragstart', dragStartHandler);
-        delete (element as any)._dragStartHandler;
+        delete (element as DragEl)._dragStartHandler;
       }
 
       if (dragEndHandler) {
         element.removeEventListener('dragend', dragEndHandler);
-        delete (element as any)._dragEndHandler;
+        delete (element as DragEl)._dragEndHandler;
       }
 
       delete element.dataset.dragListenersAttached;
@@ -1399,7 +1419,6 @@ export class FolderManager {
     element.addEventListener('mouseleave', handleMouseLeave);
 
     // Click handler for multi-select mode
-    const originalClickHandler = element.onclick;
     element.addEventListener(
       'click',
       (e) => {
@@ -1647,30 +1666,37 @@ export class FolderManager {
       return { url: window.location.href, isGem: false };
     }
 
-    const currentPath = window.location.pathname;
-
-    // Preserve user account number (e.g., /u/1/)
-    const userMatch = currentPath.match(/\/u\/(\d+)\//);
-
-    // Build URL with user context preserved
-    let url = window.location.origin;
-    if (userMatch) {
-      url += `/u/${userMatch[1]}`;
-    }
-
-    // Always use /app/{id} URL
-    // Gemini will auto-redirect to /gem/{gem-id}/{id} if it's a Gem conversation
-    // We'll detect and update the gemId after navigation completes
-    url += `/app/${hexId}`;
-
-    // Also preserve URL parameters
+    const origin = window.location.origin;
     const currentUrl = new URL(window.location.href);
     const searchParams = currentUrl.searchParams.toString();
+
+    let url: string;
+
+    if (this.accountIsolationEnabled) {
+      // In hard isolation mode, intentionally do not persist the /u/{num} account index;
+      // only store the path that is intrinsic to the conversation itself.
+      // At navigation time we rebuild the correct /u/{num} segment based on the
+      // current window/account context, so that URLs stay valid even if the
+      // account index changes (e.g. saved with /u/1, later browsing under /u/2).
+      url = `${origin}/app/${hexId}`;
+    } else {
+      // Backward-compatible behavior: preserve the current /u/{num} segment
+      // when hard isolation is disabled, matching legacy URL structure.
+      const currentPath = window.location.pathname;
+      const userMatch = currentPath.match(/\/u\/(\d+)\//);
+
+      if (userMatch) {
+        url = `${origin}/u/${userMatch[1]}/app/${hexId}`;
+      } else {
+        url = `${origin}/app/${hexId}`;
+      }
+    }
+
     if (searchParams) {
       url += `?${searchParams}`;
     }
 
-    this.debug('Built URL:', url);
+    this.debug('Built conversation URL:', url);
     return { url, isGem: false, gemId: undefined };
   }
 
@@ -2117,7 +2143,7 @@ export class FolderManager {
     input.select();
   }
 
-  private deleteFolder(folderId: string, event?: MouseEvent): void {
+  private deleteFolder(folderId: string, _event?: MouseEvent): void {
     // Create inline confirmation using safe DOM API
     const confirmDialog = document.createElement('div');
     confirmDialog.className = 'gv-folder-confirm-dialog';
@@ -3315,7 +3341,7 @@ export class FolderManager {
     }
   }
 
-  private getSelectedConversationsData(folderId: string): ConversationReference[] {
+  private getSelectedConversationsData(_folderId: string): ConversationReference[] {
     const result: ConversationReference[] = [];
 
     // Collect from all folders since selection can span folders
@@ -4733,7 +4759,11 @@ export class FolderManager {
    */
   private async loadData(): Promise<void> {
     try {
-      const loadedData = await this.storage.loadData(STORAGE_KEY);
+      let loadedData = await this.storage.loadData(this.activeStorageKey);
+
+      if (!loadedData && this.accountIsolationEnabled && this.activeStorageKey !== STORAGE_KEY) {
+        loadedData = await this.migrateLegacyFolderDataToScopedStorage();
+      }
 
       if (loadedData && validateFolderData(loadedData)) {
         this.data = loadedData;
@@ -4775,6 +4805,96 @@ export class FolderManager {
       // CRITICAL: Do NOT clear data on error - this causes data loss!
       // Instead, try to recover from backup or keep existing data
       this.attemptDataRecovery(error);
+    }
+  }
+
+  private cloneFolderData(data: FolderData): FolderData {
+    const folders = data.folders.map((folder) => ({ ...folder }));
+    const folderContents = Object.fromEntries(
+      Object.entries(data.folderContents || {}).map(([folderId, conversations]) => [
+        folderId,
+        conversations.map((conversation) => ({ ...conversation })),
+      ]),
+    );
+    return { folders, folderContents };
+  }
+
+  private filterLegacyFolderDataByCurrentAccount(data: FolderData): FolderData {
+    const routeUserId = this.accountScope?.routeUserId;
+    if (!routeUserId) {
+      return this.cloneFolderData(data);
+    }
+
+    const folderById = new Map(data.folders.map((folder) => [folder.id, folder]));
+    const visibleFolderIds = new Set<string>();
+    const nextContents: Record<string, ConversationReference[]> = {};
+
+    for (const [folderId, conversations] of Object.entries(data.folderContents || {})) {
+      const filtered = conversations.filter((conversation) => {
+        const conversationUserId = this.getUserIdFromUrl(conversation.url);
+        return conversationUserId === null || conversationUserId === routeUserId;
+      });
+      if (filtered.length === 0) continue;
+
+      nextContents[folderId] = filtered.map((conversation) => ({ ...conversation }));
+      if (folderId !== ROOT_CONVERSATIONS_ID) {
+        visibleFolderIds.add(folderId);
+      }
+    }
+
+    const stack = [...visibleFolderIds];
+    while (stack.length > 0) {
+      const currentId = stack.pop();
+      if (!currentId) continue;
+
+      const folder = folderById.get(currentId);
+      if (!folder?.parentId) continue;
+      if (visibleFolderIds.has(folder.parentId)) continue;
+      visibleFolderIds.add(folder.parentId);
+      stack.push(folder.parentId);
+    }
+
+    const folders = data.folders
+      .filter((folder) => visibleFolderIds.has(folder.id))
+      .map((folder) => ({ ...folder }));
+
+    for (const folder of folders) {
+      if (!nextContents[folder.id]) {
+        nextContents[folder.id] = [];
+      }
+    }
+
+    if (!nextContents[ROOT_CONVERSATIONS_ID]) {
+      nextContents[ROOT_CONVERSATIONS_ID] = [];
+    }
+
+    return {
+      folders,
+      folderContents: nextContents,
+    };
+  }
+
+  private async migrateLegacyFolderDataToScopedStorage(): Promise<FolderData | null> {
+    try {
+      const legacyData = await this.storage.loadData(STORAGE_KEY);
+      if (!legacyData || !validateFolderData(legacyData)) {
+        return null;
+      }
+
+      const migratedData = this.filterLegacyFolderDataByCurrentAccount(legacyData);
+      const saved = await this.storage.saveData(this.activeStorageKey, migratedData);
+      if (!saved) {
+        console.warn('[FolderManager] Failed to persist scoped migration data');
+      }
+      this.debug(
+        'Migrated legacy folder data to scoped storage:',
+        this.activeStorageKey,
+        migratedData.folders.length,
+      );
+      return migratedData;
+    } catch (error) {
+      console.error('[FolderManager] Failed to migrate legacy folder data:', error);
+      return null;
     }
   }
 
@@ -4899,7 +5019,7 @@ export class FolderManager {
       // Additional safety check: warn if saving empty data
       if (this.data.folders.length === 0 && Object.keys(this.data.folderContents).length === 0) {
         // Check if we're about to overwrite non-empty data
-        const existingData = await this.storage.loadData(STORAGE_KEY);
+        const existingData = await this.storage.loadData(this.activeStorageKey);
         if (
           existingData &&
           (existingData.folders.length > 0 || Object.keys(existingData.folderContents).length > 0)
@@ -4913,12 +5033,12 @@ export class FolderManager {
       }
 
       // Save via storage adapter (handles both Safari and non-Safari)
-      success = await this.storage.saveData(STORAGE_KEY, this.data);
+      success = await this.storage.saveData(this.activeStorageKey, this.data);
 
       // Retry once if the first attempt fails (for transient errors)
       if (!success) {
         console.warn('[FolderManager] Save failed, retrying once...');
-        success = await this.storage.saveData(STORAGE_KEY, this.data);
+        success = await this.storage.saveData(this.activeStorageKey, this.data);
       }
 
       if (success) {
@@ -4947,6 +5067,52 @@ export class FolderManager {
       console.error('[FolderManager] Failed to load folder enabled setting:', error);
       this.folderEnabled = true;
     }
+  }
+
+  private async loadAccountIsolationSetting(): Promise<void> {
+    try {
+      this.accountIsolationEnabled = await accountIsolationService.isIsolationEnabled({
+        platform: 'gemini',
+        pageUrl: window.location.href,
+      });
+      this.debug('Loaded account isolation setting:', this.accountIsolationEnabled);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load account isolation setting:', error);
+      this.accountIsolationEnabled = false;
+    }
+  }
+
+  private async refreshAccountScope(): Promise<void> {
+    if (!this.accountIsolationEnabled) {
+      this.accountScope = null;
+      this.activeStorageKey = STORAGE_KEY;
+      return;
+    }
+
+    try {
+      const context = detectAccountContextFromDocument(window.location.href, document);
+      const resolvedScope = await accountIsolationService.resolveAccountScope({
+        pageUrl: window.location.href,
+        routeUserId: context.routeUserId,
+        email: context.email,
+      });
+      this.accountScope = resolvedScope;
+      this.activeStorageKey = buildScopedFolderStorageKey(resolvedScope.accountKey);
+      await this.storage.init(this.activeStorageKey);
+    } catch (error) {
+      console.error('[FolderManager] Failed to resolve account scope:', error);
+      this.accountScope = null;
+      this.activeStorageKey = STORAGE_KEY;
+    }
+  }
+
+  private toSyncAccountScope(scope: AccountScope | null): SyncAccountScope | undefined {
+    if (!scope) return undefined;
+    return {
+      accountKey: scope.accountKey,
+      accountId: scope.accountId,
+      routeUserId: scope.routeUserId,
+    };
   }
 
   private async loadHideArchivedSetting(): Promise<void> {
@@ -5000,6 +5166,18 @@ export class FolderManager {
     }
   }
 
+  private async handleAccountIsolationToggle(enabled: boolean): Promise<void> {
+    if (enabled === this.accountIsolationEnabled) return;
+
+    this.accountIsolationEnabled = enabled;
+    await this.refreshAccountScope();
+    await this.loadData();
+
+    if (this.folderEnabled) {
+      this.refresh();
+    }
+  }
+
   private setupStorageListener(): void {
     // Listen for sync settings changes
     browser.storage.onChanged.addListener((changes, areaName) => {
@@ -5019,6 +5197,18 @@ export class FolderManager {
         if (changes[StorageKeys.GV_FOLDER_TREE_INDENT]) {
           this.applyFolderTreeIndentSetting(changes[StorageKeys.GV_FOLDER_TREE_INDENT].newValue);
         }
+        if (
+          changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] ||
+          changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]
+        ) {
+          void (async () => {
+            const nextEnabled = await accountIsolationService.isIsolationEnabled({
+              platform: 'gemini',
+              pageUrl: window.location.href,
+            });
+            await this.handleAccountIsolationToggle(nextEnabled);
+          })();
+        }
         // Listen for language changes and update UI text
         if (changes[StorageKeys.LANGUAGE]) {
           this.debug('Language changed, updating UI text...');
@@ -5031,7 +5221,7 @@ export class FolderManager {
         this.updateHeaderLanguageText();
       }
       // Listen for folder data changes from cloud sync
-      if (areaName === 'local' && changes.gvFolderData) {
+      if (areaName === 'local' && changes[this.activeStorageKey]) {
         this.debug('Folder data changed in chrome.storage.local, reloading...');
         this.reloadFoldersFromStorage();
       }
@@ -5293,6 +5483,26 @@ export class FolderManager {
       const pathParts = targetUrl.pathname.split('/');
       const hexId = pathParts[pathParts.length - 1]; // Get the hex ID part
 
+      let effectivePath: string | null = null;
+      let effectiveUrl: string | null = null;
+
+      if (this.accountIsolationEnabled) {
+        // In hard isolation mode, build a navigation URL that matches the
+        // current account context:
+        // - If the current path contains /u/{num}/, reuse that {num}
+        // - Otherwise navigate to /app/{hexId} directly
+        // This prevents us from reusing stale /u/{num} segments from previously
+        // saved URLs when the active account index has changed.
+        const currentPath = window.location.pathname;
+        const currentUserMatch = currentPath.match(/\/u\/(\d+)\//);
+        if (currentUserMatch) {
+          effectivePath = `/u/${currentUserMatch[1]}/app/${hexId}`;
+        } else {
+          effectivePath = `/app/${hexId}`;
+        }
+        effectiveUrl = `${window.location.origin}${effectivePath}${targetUrl.search}`;
+      }
+
       const conversations = document.querySelectorAll('[data-test-id="conversation"]');
       for (const conv of Array.from(conversations)) {
         const jslog = conv.getAttribute('jslog');
@@ -5327,17 +5537,21 @@ export class FolderManager {
       }
 
       // If we can't find the sidebar element, try pushState + popstate
+      const navigationUrl = this.accountIsolationEnabled && effectiveUrl ? effectiveUrl : url;
+      const navigationPath =
+        this.accountIsolationEnabled && effectivePath ? effectivePath : targetUrl.pathname;
+
       this.debug('Sidebar element not found, trying pushState');
-      window.history.pushState({}, '', url);
+      window.history.pushState({}, '', navigationUrl);
       const popStateEvent = new PopStateEvent('popstate', { state: {} });
       window.dispatchEvent(popStateEvent);
       setTimeout(() => this.highlightActiveConversationInFolders(), 0);
 
       // If that doesn't work, fall back to page reload
       setTimeout(() => {
-        if (window.location.pathname !== targetUrl.pathname) {
+        if (window.location.pathname !== navigationPath) {
           this.debug('Falling back to page reload');
-          window.location.href = url;
+          window.location.href = navigationUrl;
         }
       }, 200);
     } catch (error) {
@@ -5411,10 +5625,26 @@ export class FolderManager {
     this.highlightActiveConversationInFolders();
   }
 
+  private async reloadScopedDataOnAccountRouteChange(): Promise<void> {
+    if (!this.accountIsolationEnabled) return;
+
+    const routeUserId = extractRouteUserIdFromPath(window.location.pathname);
+    if (routeUserId === this.accountScope?.routeUserId) return;
+
+    const previousStorageKey = this.activeStorageKey;
+    await this.refreshAccountScope();
+    if (this.activeStorageKey === previousStorageKey) return;
+
+    await this.loadData();
+    this.renderAllFolders();
+    this.debug('Switched account-scoped folder storage:', this.activeStorageKey);
+  }
+
   private installRouteChangeListener(): void {
     const update = () => {
       if (this.isDestroyed) return;
       setTimeout(() => {
+        void this.reloadScopedDataOnAccountRouteChange();
         this.highlightActiveConversationInFolders();
         const currentConversationId = this.getCurrentConversationId();
         if (currentConversationId) {
@@ -5433,12 +5663,15 @@ export class FolderManager {
     }
 
     try {
-      const hist = history as any;
+      const hist = history as History & Record<string, unknown>;
       const originalPushState = hist.pushState;
       const originalReplaceState = hist.replaceState;
 
-      const wrap = (method: 'pushState' | 'replaceState', original: any) => {
-        hist[method] = function (...args: any[]) {
+      const wrap = (
+        method: 'pushState' | 'replaceState',
+        original: (...args: unknown[]) => unknown,
+      ) => {
+        hist[method] = function (...args: unknown[]) {
           const ret = original.apply(this, args);
           try {
             update();
@@ -5448,8 +5681,8 @@ export class FolderManager {
           return ret;
         };
       };
-      wrap('pushState', originalPushState);
-      wrap('replaceState', originalReplaceState);
+      wrap('pushState', originalPushState as (...args: unknown[]) => unknown);
+      wrap('replaceState', originalReplaceState as (...args: unknown[]) => unknown);
 
       cleanupFns.push(() => {
         hist.pushState = originalPushState;
@@ -5566,13 +5799,15 @@ export class FolderManager {
   }
 
   private setupMessageListener(): void {
-    browser.runtime.onMessage.addListener((message: any, sender: any, sendResponse: any) => {
+    browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      const msg = message as Record<string, unknown>;
       // Handle request for current folder data
-      if (message.type === 'gv.sync.requestData') {
+      if (msg.type === 'gv.sync.requestData') {
         this.debug('Received request for folder data from popup');
         sendResponse({
           ok: true,
           data: this.data,
+          accountScope: this.toSyncAccountScope(this.accountScope),
         });
         // Return true to indicate we might respond asynchronously (though we responded synchronously above)
         // This is good practice in some browser implementations or if we change logic later
@@ -5580,7 +5815,7 @@ export class FolderManager {
       }
 
       // Handle reload request (existing functionality might be handled elsewhere, but safe to add log)
-      if (message.type === 'gv.folders.reload') {
+      if (msg.type === 'gv.folders.reload') {
         this.debug('Received reload request');
         this.loadData().then(() => {
           this.refresh();
@@ -5588,10 +5823,16 @@ export class FolderManager {
           // but if sendResponse is provided we can use it
           try {
             sendResponse({ ok: true });
-          } catch (e) {
+          } catch {
             /* ignore */
           }
         });
+        return true;
+      }
+
+      if (msg.type === 'gv.account.getContext') {
+        const context = detectAccountContextFromDocument(window.location.href, document);
+        sendResponse({ ok: true, context });
         return true;
       }
 
@@ -5674,7 +5915,9 @@ export class FolderManager {
 
     try {
       // Type assertion to match the service's expected type
-      const payload = FolderImportExportService.exportToPayload(this.data as any);
+      const payload = FolderImportExportService.exportToPayload(
+        this.data as unknown as Parameters<typeof FolderImportExportService.exportToPayload>[0],
+      );
       FolderImportExportService.downloadJSON(payload);
       this.showNotification(this.t('folder_export_success'), 'success');
       this.debug('Folders exported successfully');
@@ -5864,7 +6107,7 @@ export class FolderManager {
       // Import data (now async with concurrency protection)
       const importResult = await FolderImportExportService.importFromPayload(
         validationResult.data,
-        this.data as any,
+        this.data as unknown as Parameters<typeof FolderImportExportService.importFromPayload>[1],
         { strategy, createBackup: true },
       );
 
@@ -5877,7 +6120,7 @@ export class FolderManager {
       }
 
       // Update data and save
-      this.data = importResult.data.data as any;
+      this.data = importResult.data.data;
       this.saveData();
       this.refresh();
 
@@ -6107,11 +6350,11 @@ export class FolderManager {
       const folders = this.data;
 
       // Get prompts from storage
-      let prompts: any[] = [];
+      let prompts: PromptItem[] = [];
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          prompts = storageResult.gvPromptItems;
+          prompts = storageResult.gvPromptItems as PromptItem[];
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get prompts for upload:', err);
@@ -6125,7 +6368,12 @@ export class FolderManager {
       // Background script will also fetch starred messages for Gemini platform
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.upload',
-        payload: { folders, prompts, platform: 'gemini' },
+        payload: {
+          folders,
+          prompts,
+          platform: 'gemini',
+          accountScope: this.toSyncAccountScope(this.accountScope),
+        },
       })) as { ok?: boolean; error?: string } | undefined;
 
       if (response?.ok) {
@@ -6152,15 +6400,18 @@ export class FolderManager {
       // Send download request to background script
       const response = (await browser.runtime.sendMessage({
         type: 'gv.sync.download',
-        payload: { platform: 'gemini' },
+        payload: {
+          platform: 'gemini',
+          accountScope: this.toSyncAccountScope(this.accountScope),
+        },
       })) as
         | {
             ok?: boolean;
             error?: string;
             data?: {
               folders?: { data?: FolderData };
-              prompts?: { items?: any[] };
-              starred?: { data?: { messages: Record<string, any[]> } };
+              prompts?: { items?: PromptItem[] };
+              starred?: { data?: { messages: Record<string, unknown[]> } };
             };
           }
         | undefined;
@@ -6189,18 +6440,18 @@ export class FolderManager {
       );
 
       // Get local prompts for merge
-      let localPrompts: any[] = [];
+      let localPrompts: PromptItem[] = [];
       try {
         const storageResult = await chrome.storage.local.get(['gvPromptItems']);
         if (storageResult.gvPromptItems) {
-          localPrompts = storageResult.gvPromptItems;
+          localPrompts = storageResult.gvPromptItems as PromptItem[];
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get local prompts for merge:', err);
       }
 
       // Get local starred messages for merge
-      let localStarred = { messages: {} as Record<string, any[]> };
+      let localStarred = { messages: {} as Record<string, unknown[]> };
       try {
         const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
         if (starredResult.geminiTimelineStarredMessages) {
@@ -6250,8 +6501,8 @@ export class FolderManager {
   /**
    * Merge prompts by ID (simple deduplication)
    */
-  private mergePrompts(local: any[], cloud: any[]): any[] {
-    const promptMap = new Map<string, any>();
+  private mergePrompts(local: PromptItem[], cloud: PromptItem[]): PromptItem[] {
+    const promptMap = new Map<string, PromptItem>();
 
     // Add local prompts first
     local.forEach((p) => {
@@ -6281,9 +6532,9 @@ export class FolderManager {
    * Merge starred messages by conversationId and turnId
    */
   private mergeStarredMessages(
-    local: { messages: Record<string, any[]> },
-    cloud: { messages: Record<string, any[]> },
-  ): { messages: Record<string, any[]> } {
+    local: { messages: Record<string, unknown[]> },
+    cloud: { messages: Record<string, unknown[]> },
+  ): { messages: Record<string, unknown[]> } {
     const localMessages = local?.messages || {};
     const cloudMessages = cloud?.messages || {};
 
@@ -6292,27 +6543,30 @@ export class FolderManager {
       ...Object.keys(cloudMessages),
     ]);
 
-    const mergedMessages: Record<string, any[]> = {};
+    const mergedMessages: Record<string, unknown[]> = {};
 
     allConversationIds.forEach((conversationId) => {
       const localConvoMessages = localMessages[conversationId] || [];
       const cloudConvoMessages = cloudMessages[conversationId] || [];
 
-      const messageMap = new Map<string, any>();
+      type StarredMsg = { turnId?: string; starredAt?: number };
+      const messageMap = new Map<string, unknown>();
 
       // Add cloud messages first
-      cloudConvoMessages.forEach((msg) => {
-        if (msg?.turnId) messageMap.set(msg.turnId, msg);
+      cloudConvoMessages.forEach((m) => {
+        const msg = m as StarredMsg;
+        if (msg?.turnId) messageMap.set(msg.turnId, m);
       });
 
       // Merge local messages - prefer newer starredAt
-      localConvoMessages.forEach((localMsg) => {
+      localConvoMessages.forEach((m) => {
+        const localMsg = m as StarredMsg;
         if (!localMsg?.turnId) return;
-        const existingMsg = messageMap.get(localMsg.turnId);
+        const existingMsg = messageMap.get(localMsg.turnId) as StarredMsg | undefined;
         if (!existingMsg) {
-          messageMap.set(localMsg.turnId, localMsg);
+          messageMap.set(localMsg.turnId, m);
         } else if ((localMsg.starredAt || 0) >= (existingMsg.starredAt || 0)) {
-          messageMap.set(localMsg.turnId, localMsg);
+          messageMap.set(localMsg.turnId, m);
         }
       });
 

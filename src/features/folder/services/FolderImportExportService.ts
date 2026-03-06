@@ -254,7 +254,7 @@ export class FolderImportExportService {
       if (payload.version) {
         try {
           const migrationResult = applyMigrations(payload.data, payload.version);
-          importData = migrationResult.data;
+          importData = migrationResult.data as FolderData;
           migrationsApplied.push(...migrationResult.migrationsApplied);
 
           if (migrationsApplied.length > 0) {

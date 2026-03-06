@@ -2,7 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
-import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
+import {
+  type AccountPlatform,
+  detectAccountPlatformFromUrl,
+  getAccountIsolationStorageKey,
+} from '@/core/services/AccountIsolationService';
+import { StorageKeys } from '@/core/types/common';
+import { getModifierKey, isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import {
@@ -121,12 +127,18 @@ interface SettingsUpdate {
   watermarkRemoverEnabled?: boolean;
   hidePromptManager?: boolean;
   inputCollapseEnabled?: boolean;
+  inputCollapseWhenNotEmpty?: boolean;
   tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
   sidebarAutoHideEnabled?: boolean;
-  snowEffectEnabled?: boolean;
+  visualEffect?: 'off' | 'snow' | 'sakura' | 'rain';
+  preventAutoScrollEnabled?: boolean;
+  forkEnabled?: boolean;
+  upsellHiderEnabled?: boolean;
+  accountIsolationEnabled?: boolean;
+  accountIsolationPlatform?: AccountPlatform;
 }
 
 export default function Popup() {
@@ -149,22 +161,30 @@ export default function Popup() {
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
+  const [inputCollapseWhenNotEmpty, setInputCollapseWhenNotEmpty] = useState<boolean>(false);
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
   const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
-  const [snowEffectEnabled, setSnowEffectEnabled] = useState<boolean>(false);
-  const [isAIStudio, setIsAIStudio] = useState<boolean>(false);
+  const [visualEffect, setVisualEffect] = useState<'off' | 'snow' | 'sakura' | 'rain'>('off');
+  const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState<boolean>(false);
+  const [forkEnabled, setForkEnabled] = useState<boolean>(false);
+  const [upsellHiderEnabled, setUpsellHiderEnabled] = useState<boolean>(true);
+  const [accountIsolationEnabledGemini, setAccountIsolationEnabledGemini] =
+    useState<boolean>(false);
+  const [accountIsolationEnabledAIStudio, setAccountIsolationEnabledAIStudio] =
+    useState<boolean>(false);
+  const [activeAccountPlatform, setActiveAccountPlatform] = useState<AccountPlatform>('gemini');
+  const isAIStudio = activeAccountPlatform === 'aistudio';
+  const currentIsolationPlatformLabel = isAIStudio ? t('platformAIStudio') : t('platformGemini');
 
   useEffect(() => {
     browser.tabs
       .query({ active: true, currentWindow: true })
       .then((tabs) => {
         const url = tabs[0]?.url || '';
-        if (url.includes('aistudio.google.com') || url.includes('aistudio.google.cn')) {
-          setIsAIStudio(true);
-        }
+        setActiveAccountPlatform(detectAccountPlatformFromUrl(url));
       })
       .catch(() => {});
   }, []);
@@ -219,6 +239,8 @@ export default function Popup() {
         payload.gvHidePromptManager = settings.hidePromptManager;
       if (typeof settings.inputCollapseEnabled === 'boolean')
         payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
+      if (typeof settings.inputCollapseWhenNotEmpty === 'boolean')
+        payload.gvInputCollapseWhenNotEmpty = settings.inputCollapseWhenNotEmpty;
       if (typeof settings.tabTitleUpdateEnabled === 'boolean')
         payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
       if (typeof settings.mermaidEnabled === 'boolean')
@@ -229,11 +251,25 @@ export default function Popup() {
         payload.gvCtrlEnterSend = settings.ctrlEnterSendEnabled;
       if (typeof settings.sidebarAutoHideEnabled === 'boolean')
         payload.gvSidebarAutoHide = settings.sidebarAutoHideEnabled;
-      if (typeof settings.snowEffectEnabled === 'boolean')
-        payload.gvSnowEffect = settings.snowEffectEnabled;
+      if (settings.visualEffect) {
+        payload.gvVisualEffect = settings.visualEffect;
+        // Clear legacy key
+        payload.gvSnowEffect = false;
+      }
+      if (typeof settings.preventAutoScrollEnabled === 'boolean')
+        payload.gvPreventAutoScrollEnabled = settings.preventAutoScrollEnabled;
+      if (typeof settings.forkEnabled === 'boolean')
+        payload[StorageKeys.FORK_ENABLED] = settings.forkEnabled;
+      if (typeof settings.upsellHiderEnabled === 'boolean')
+        payload[StorageKeys.UPSELL_HIDER_ENABLED] = settings.upsellHiderEnabled;
+      if (typeof settings.accountIsolationEnabled === 'boolean') {
+        const isolationPlatform = settings.accountIsolationPlatform ?? activeAccountPlatform;
+        payload[getAccountIsolationStorageKey(isolationPlatform)] =
+          settings.accountIsolationEnabled;
+      }
       void setSyncStorage(payload);
     },
-    [setSyncStorage],
+    [activeAccountPlatform, setSyncStorage],
   );
 
   // Width adjuster for chat width
@@ -453,12 +489,19 @@ export default function Popup() {
           geminiWatermarkRemoverEnabled: true,
           gvHidePromptManager: false,
           gvInputCollapseEnabled: false,
+          gvInputCollapseWhenNotEmpty: false,
           gvTabTitleUpdateEnabled: true,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
           gvCtrlEnterSend: false,
           gvSidebarAutoHide: false,
           gvSnowEffect: false,
+          gvPreventAutoScrollEnabled: false,
+          [StorageKeys.FORK_ENABLED]: false,
+          [StorageKeys.UPSELL_HIDER_ENABLED]: true,
+          [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
+          [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
+          [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: null,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -478,12 +521,39 @@ export default function Popup() {
           setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
           setHidePromptManager(!!res?.gvHidePromptManager);
           setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
+          setInputCollapseWhenNotEmpty(res?.gvInputCollapseWhenNotEmpty === true);
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
           setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
-          setSnowEffectEnabled(res?.gvSnowEffect === true);
+          // Resolve visual effect: new key takes precedence over legacy boolean
+          const storedVisualEffect = res?.gvVisualEffect;
+          if (
+            storedVisualEffect === 'snow' ||
+            storedVisualEffect === 'sakura' ||
+            storedVisualEffect === 'rain'
+          ) {
+            setVisualEffect(storedVisualEffect);
+          } else if (res?.gvSnowEffect === true) {
+            setVisualEffect('snow');
+          } else {
+            setVisualEffect('off');
+          }
+          setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
+          setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
+          setUpsellHiderEnabled(res?.[StorageKeys.UPSELL_HIDER_ENABLED] === true);
+          const legacyIsolationEnabled = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] === true;
+          const geminiIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI];
+          const aiStudioIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO];
+          setAccountIsolationEnabledGemini(
+            typeof geminiIsolationRaw === 'boolean' ? geminiIsolationRaw : legacyIsolationEnabled,
+          );
+          setAccountIsolationEnabledAIStudio(
+            typeof aiStudioIsolationRaw === 'boolean'
+              ? aiStudioIsolationRaw
+              : legacyIsolationEnabled,
+          );
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -850,6 +920,25 @@ export default function Popup() {
             <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label
+                  htmlFor="prevent-auto-scroll"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                >
+                  {t('preventAutoScroll')}
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">{t('preventAutoScrollHint')}</p>
+              </div>
+              <Switch
+                id="prevent-auto-scroll"
+                checked={preventAutoScrollEnabled}
+                onChange={(e) => {
+                  setPreventAutoScrollEnabled(e.target.checked);
+                  apply({ preventAutoScrollEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
                   htmlFor="marker-level-enabled"
                   className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
                 >
@@ -948,6 +1037,77 @@ export default function Popup() {
                 }}
               />
             </div>
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
+                  htmlFor="fork-enabled"
+                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                >
+                  {t('enableForkFeature')}
+                  <span
+                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                    title={t('experimentalLabel')}
+                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                  >
+                    experiment
+                  </span>
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">{t('enableForkFeatureHint')}</p>
+              </div>
+              <Switch
+                id="fork-enabled"
+                checked={forkEnabled}
+                onChange={(e) => {
+                  setForkEnabled(e.target.checked);
+                  apply({ forkEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
+                  htmlFor="account-isolation-enabled"
+                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                >
+                  {t('enableAccountIsolation')}
+                  <span
+                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                    title={t('experimentalLabel')}
+                    style={{
+                      fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20",
+                    }}
+                  >
+                    experiment
+                  </span>
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t('enableAccountIsolationHint')}
+                </p>
+                <div className="mt-1 flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">{t('currentPlatform')}:</span>
+                  <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
+                    {currentIsolationPlatformLabel}
+                  </span>
+                </div>
+              </div>
+              <Switch
+                id="account-isolation-enabled"
+                checked={
+                  isAIStudio ? accountIsolationEnabledAIStudio : accountIsolationEnabledGemini
+                }
+                onChange={(e) => {
+                  if (isAIStudio) {
+                    setAccountIsolationEnabledAIStudio(e.target.checked);
+                  } else {
+                    setAccountIsolationEnabledGemini(e.target.checked);
+                  }
+                  apply({
+                    accountIsolationEnabled: e.target.checked,
+                    accountIsolationPlatform: activeAccountPlatform,
+                  });
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
         {/* Folder Spacing */}
@@ -1043,26 +1203,153 @@ export default function Popup() {
           </Card>
         )}
 
-        {/* Snow Effect - Gemini only */}
+        {/* Visual Effect - Gemini only */}
+        {!isAIStudio && (
+          <Card className="p-4 transition-shadow hover:shadow-lg">
+            <CardContent className="p-0">
+              <div className="flex-1">
+                <Label className="text-sm font-medium">{t('visualEffect')}</Label>
+                <p className="text-muted-foreground mt-1 text-xs">{t('visualEffectHint')}</p>
+              </div>
+              <div className="bg-muted/60 mt-3 flex items-center gap-0.5 rounded-full p-1">
+                {(
+                  [
+                    {
+                      value: 'off' as const,
+                      label: t('visualEffectOff'),
+                      icon: (
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      value: 'snow' as const,
+                      label: t('visualEffectSnow'),
+                      icon: (
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="12" y1="2" x2="12" y2="22" />
+                          <line x1="2" y1="12" x2="22" y2="12" />
+                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                          <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
+                          <line x1="12" y1="2" x2="14.5" y2="4.5" />
+                          <line x1="12" y1="2" x2="9.5" y2="4.5" />
+                          <line x1="12" y1="22" x2="14.5" y2="19.5" />
+                          <line x1="12" y1="22" x2="9.5" y2="19.5" />
+                          <line x1="2" y1="12" x2="4.5" y2="9.5" />
+                          <line x1="2" y1="12" x2="4.5" y2="14.5" />
+                          <line x1="22" y1="12" x2="19.5" y2="9.5" />
+                          <line x1="22" y1="12" x2="19.5" y2="14.5" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      value: 'sakura' as const,
+                      label: t('visualEffectSakura'),
+                      icon: (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <g transform="translate(12,12)">
+                            {[0, 72, 144, 216, 288].map((deg) => (
+                              <ellipse
+                                key={deg}
+                                cx="0"
+                                cy="-6"
+                                rx="2.8"
+                                ry="5.5"
+                                transform={`rotate(${deg})`}
+                                opacity="0.85"
+                              />
+                            ))}
+                            <circle cx="0" cy="0" r="2" opacity="0.6" />
+                          </g>
+                        </svg>
+                      ),
+                    },
+                    {
+                      value: 'rain' as const,
+                      label: t('visualEffectRain'),
+                      icon: (
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        >
+                          <line x1="8" y1="3" x2="6.5" y2="10" />
+                          <line x1="14" y1="2" x2="12.5" y2="9" />
+                          <line x1="20" y1="4" x2="18.5" y2="11" />
+                          <line x1="5" y1="12" x2="3.5" y2="19" />
+                          <line x1="11" y1="11" x2="9.5" y2="18" />
+                          <line x1="17" y1="13" x2="15.5" y2="20" />
+                        </svg>
+                      ),
+                    },
+                  ] as const
+                ).map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setVisualEffect(option.value);
+                      apply({ visualEffect: option.value });
+                    }}
+                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-medium transition-all duration-200 ${
+                      visualEffect === option.value
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {option.icon}
+                    <span>{option.label}</span>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Upsell Hider - Gemini only */}
         {!isAIStudio && (
           <Card className="p-4 transition-shadow hover:shadow-lg">
             <CardContent className="p-0">
               <div className="group flex items-center justify-between">
                 <div className="flex-1">
                   <Label
-                    htmlFor="snow-effect"
+                    htmlFor="upsell-hider"
                     className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                   >
-                    {t('snowEffect')}
+                    {t('hideUpsell')}
                   </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('snowEffectHint')}</p>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('hideUpsellHint')}</p>
                 </div>
                 <Switch
-                  id="snow-effect"
-                  checked={snowEffectEnabled}
+                  id="upsell-hider"
+                  checked={upsellHiderEnabled}
                   onChange={(e) => {
-                    setSnowEffectEnabled(e.target.checked);
-                    apply({ snowEffectEnabled: e.target.checked });
+                    setUpsellHiderEnabled(e.target.checked);
+                    apply({ upsellHiderEnabled: e.target.checked });
                   }}
                 />
               </div>
@@ -1128,7 +1415,12 @@ export default function Popup() {
                 >
                   {t('enableInputCollapse')}
                 </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('enableInputCollapseHint')}</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t('enableInputCollapseHint')}{' '}
+                  <span className="text-muted-foreground/70">
+                    ({t('inputCollapseShortcutHint').replace('{modifier}', getModifierKey())})
+                  </span>
+                </p>
               </div>
               <Switch
                 id="input-collapse-enabled"
@@ -1139,15 +1431,41 @@ export default function Popup() {
                 }}
               />
             </div>
+            {/* Second toggle - Allow collapse when not empty (only visible when first is enabled) */}
+            {inputCollapseEnabled && (
+              <div className="group mt-3 ml-4 flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="input-collapse-when-not-empty"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('allowCollapseWhenNotEmpty')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('allowCollapseWhenNotEmptyHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="input-collapse-when-not-empty"
+                  checked={inputCollapseWhenNotEmpty}
+                  onChange={(e) => {
+                    setInputCollapseWhenNotEmpty(e.target.checked);
+                    apply({ inputCollapseWhenNotEmpty: e.target.checked });
+                  }}
+                />
+              </div>
+            )}
             <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label
                   htmlFor="ctrl-enter-send"
                   className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                 >
-                  {t('ctrlEnterSend')}
+                  {t('ctrlEnterSend').replace('{modifier}', getModifierKey())}
                 </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('ctrlEnterSendHint')}</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t('ctrlEnterSendHint').replace('{modifier}', getModifierKey())}
+                </p>
               </div>
               <Switch
                 id="ctrl-enter-send"
@@ -1224,7 +1542,7 @@ export default function Popup() {
                       onClick={() => {
                         void toggleQuickWebsite(domain, isEnabled);
                       }}
-                      className={`inline-flex min-w-[30%] flex-grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
+                      className={`inline-flex min-w-[30%] grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
                         isEnabled
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'

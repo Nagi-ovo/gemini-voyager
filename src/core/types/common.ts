@@ -61,12 +61,18 @@ export const StorageKeys = {
 
   // Input behavior
   CTRL_ENTER_SEND: 'gvCtrlEnterSend',
+  INPUT_COLLAPSE_ENABLED: 'gvInputCollapseEnabled',
+  INPUT_COLLAPSE_WHEN_NOT_EMPTY: 'gvInputCollapseWhenNotEmpty',
 
   // Default Model
   DEFAULT_MODEL: 'gvDefaultModel',
 
   // Folder filtering
   GV_FOLDER_FILTER_USER_ONLY: 'gvFolderFilterUserOnly',
+  GV_ACCOUNT_ISOLATION_ENABLED: 'gvAccountIsolationEnabled',
+  GV_ACCOUNT_ISOLATION_ENABLED_GEMINI: 'gvAccountIsolationEnabledGemini',
+  GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO: 'gvAccountIsolationEnabledAIStudio',
+  GV_ACCOUNT_PROFILE_MAP: 'gvAccountProfileMap',
 
   // Sidebar behavior
   GV_SIDEBAR_AUTO_HIDE: 'gvSidebarAutoHide',
@@ -76,8 +82,21 @@ export const StorageKeys = {
   GV_AISTUDIO_FOLDER_SPACING: 'gvAIStudioFolderSpacing',
   GV_FOLDER_TREE_INDENT: 'gvFolderTreeIndent',
 
-  // Snow effect
+  // Snow effect (legacy, kept for backward compat migration)
   GV_SNOW_EFFECT: 'gvSnowEffect',
+
+  // Visual effect (replaces GV_SNOW_EFFECT): 'off' | 'snow' | 'sakura'
+  GV_VISUAL_EFFECT: 'gvVisualEffect',
+
+  // Changelog
+  CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion',
+
+  // Fork nodes
+  FORK_NODES: 'gvForkNodes',
+  FORK_ENABLED: 'gvForkEnabled',
+
+  // Upsell hider
+  UPSELL_HIDER_ENABLED: 'gvUpsellHiderEnabled',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

@@ -99,6 +99,34 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
   });
 
+  it('injects star buttons into compact bottom-sheet mode switch list', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const mobileList = document.createElement('mat-action-list');
+    mobileList.className = 'gds-mode-switch-menu-list';
+    mobileList.setAttribute('role', 'group');
+
+    const item = document.createElement('button');
+    item.setAttribute('role', 'menuitemradio');
+    item.innerHTML = `
+      <div class="title-and-description">
+        <div>
+          <span class="gds-title-m">Pro</span>
+          <span class="gds-body-m">Advanced math and code</span>
+        </div>
+      </div>
+    `;
+    mobileList.appendChild(item);
+    document.body.appendChild(mobileList);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(200);
+
+    expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
+  });
+
   it('locks to Pro without matching "pro" inside "problems" (Thinking description)', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
@@ -224,6 +252,208 @@ describe('DefaultModelManager (default model locker)', () => {
 
     expect(thinkingItem.click).toHaveBeenCalledTimes(1);
     expect(proItem.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('locks by id in compact bottom-sheet layout using jslog metadata fallback', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultModel: {
+            id: 'e051ce1aa80aa576',
+            name: 'Thinking',
+          },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app?hl=zh');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = '快速';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const mobileList = document.createElement('mat-action-list');
+    mobileList.className = 'gds-mode-switch-menu-list';
+    mobileList.setAttribute('role', 'group');
+
+    const fastItem = document.createElement('button');
+    fastItem.setAttribute('role', 'menuitemradio');
+    fastItem.setAttribute(
+      'jslog',
+      '242569;track:generic_click;BardVeMetadataKey:[null,null,null,null,["56fdd199312815e2"]]',
+    );
+    fastItem.innerHTML = `
+      <div class="title-and-description">
+        <div>
+          <span class="gds-title-m">快速</span>
+          <span class="gds-body-m">快速回答</span>
+        </div>
+      </div>
+    `;
+    fastItem.click = vi.fn();
+
+    const thinkingItem = document.createElement('button');
+    thinkingItem.setAttribute('role', 'menuitemradio');
+    thinkingItem.setAttribute('aria-checked', 'false');
+    thinkingItem.setAttribute(
+      'jslog',
+      '242569;track:generic_click;BardVeMetadataKey:[null,null,null,null,["e051ce1aa80aa576"]]',
+    );
+    thinkingItem.innerHTML = `
+      <div class="title-and-description">
+        <div>
+          <span class="gds-title-m">思考</span>
+          <span class="gds-body-m">解决复杂问题</span>
+        </div>
+      </div>
+    `;
+    thinkingItem.click = vi.fn();
+
+    const proItem = document.createElement('button');
+    proItem.setAttribute('role', 'menuitemradio');
+    proItem.setAttribute(
+      'jslog',
+      '242569;track:generic_click;BardVeMetadataKey:[null,null,null,null,["e6fa609c3fa255c0"]]',
+    );
+    proItem.innerHTML = `
+      <div class="title-and-description">
+        <div>
+          <span class="gds-title-m">Pro</span>
+          <span class="gds-body-m">使用 3.1 Pro 处理高阶数学和代码任务</span>
+        </div>
+      </div>
+    `;
+    proItem.click = vi.fn();
+
+    mobileList.appendChild(fastItem);
+    mobileList.appendChild(thinkingItem);
+    mobileList.appendChild(proItem);
+    document.body.appendChild(mobileList);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(thinkingItem.click).toHaveBeenCalledTimes(1);
+    expect(proItem.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('focuses chat input after auto-switching model', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: 'Pro' });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app?hl=en');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const menuPanel = document.createElement('div');
+    menuPanel.className = 'mat-mdc-menu-panel';
+    menuPanel.setAttribute('role', 'menu');
+
+    const flashItem = document.createElement('button');
+    flashItem.setAttribute('role', 'menuitemradio');
+    flashItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Flash</div>
+      </div>
+    `;
+    flashItem.click = vi.fn();
+
+    const proItem = document.createElement('button');
+    proItem.setAttribute('role', 'menuitemradio');
+    proItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Pro</div>
+      </div>
+    `;
+    proItem.click = vi.fn();
+
+    menuPanel.appendChild(flashItem);
+    menuPanel.appendChild(proItem);
+    document.body.appendChild(menuPanel);
+
+    const main = document.createElement('main');
+    const richTextarea = document.createElement('rich-textarea');
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+    input.setAttribute('role', 'textbox');
+    const focusSpy = vi.spyOn(input, 'focus').mockImplementation(() => {});
+    richTextarea.appendChild(input);
+    main.appendChild(richTextarea);
+    document.body.appendChild(main);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(proItem.click).toHaveBeenCalledTimes(1);
+    expect(focusSpy).toHaveBeenCalled();
+  });
+
+  it('does not focus chat input when target model is already selected', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: 'Pro' });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app?hl=en');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const menuPanel = document.createElement('div');
+    menuPanel.className = 'mat-mdc-menu-panel';
+    menuPanel.setAttribute('role', 'menu');
+
+    const proItem = document.createElement('button');
+    proItem.setAttribute('role', 'menuitemradio');
+    proItem.setAttribute('aria-checked', 'true');
+    proItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Pro</div>
+      </div>
+    `;
+    proItem.click = vi.fn();
+
+    menuPanel.appendChild(proItem);
+    document.body.appendChild(menuPanel);
+
+    const main = document.createElement('main');
+    const richTextarea = document.createElement('rich-textarea');
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+    input.setAttribute('role', 'textbox');
+    const focusSpy = vi.spyOn(input, 'focus').mockImplementation(() => {});
+    richTextarea.appendChild(input);
+    main.appendChild(richTextarea);
+    document.body.appendChild(main);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(proItem.click).toHaveBeenCalledTimes(0);
+    expect(focusSpy).not.toHaveBeenCalled();
   });
 
   it('skips auto-selection when default model is Flash (Gemini default)', async () => {

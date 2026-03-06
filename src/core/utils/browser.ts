@@ -49,16 +49,64 @@ export function shouldShowSafariUpdateReminder(): boolean {
 }
 
 /**
+ * Detect if the current browser is Chrome (not Edge, Firefox, or Safari).
+ * Used to conditionally show Chrome Web Store rating prompts.
+ */
+export function isChrome(): boolean {
+  if (isSafari()) return false;
+  const ua = navigator.userAgent.toLowerCase();
+  return (
+    (ua.includes('chrome') || ua.includes('chromium')) &&
+    !ua.includes('edg') &&
+    !ua.includes('firefox')
+  );
+}
+
+/**
+ * Detect if the current browser is Firefox.
+ */
+export function isFirefox(): boolean {
+  const ua = navigator.userAgent.toLowerCase();
+  return ua.includes('firefox');
+}
+
+/**
+ * Detect if the current platform is macOS
+ *
+ * @returns true if running on macOS
+ */
+export function isMac(): boolean {
+  // navigator.platform is deprecated but still widely supported and reliable
+  // Use it first, then fall back to userAgent
+  if (typeof navigator !== 'undefined') {
+    if (navigator.platform) {
+      return navigator.platform.toUpperCase().includes('MAC');
+    }
+    return /macintosh|mac os x/i.test(navigator.userAgent);
+  }
+  return false;
+}
+
+/**
+ * Get the platform-appropriate modifier key label
+ * macOS: ⌘ (Cmd), others: Ctrl
+ *
+ * @returns '⌘' on macOS, 'Ctrl' on other platforms
+ */
+export function getModifierKey(): string {
+  return isMac() ? '⌘' : 'Ctrl';
+}
+
+/**
  * Get browser name for debugging
  * Uses user agent detection for reliability
  */
 export function getBrowserName(): string {
   if (isSafari()) return 'Safari';
 
-  const ua = navigator.userAgent.toLowerCase();
+  if (isFirefox()) return 'Firefox';
 
-  // Firefox has 'firefox' in UA
-  if (ua.includes('firefox')) return 'Firefox';
+  const ua = navigator.userAgent.toLowerCase();
 
   // Chrome/Edge/Brave have 'chrome' or 'chromium' in UA
   if (ua.includes('chrome') || ua.includes('chromium')) {

@@ -97,7 +97,7 @@ const findGeminiImages = (): HTMLImageElement[] =>
  */
 const replaceWithNormalSize = (src: string): string => {
   // Use normal size image to fit watermark
-  return src.replace(/=s\d+(?=[-?#]|$)/, '=s0');
+  return src.replace(/=s\d+[^?#]*/, '=s0');
 };
 
 /**

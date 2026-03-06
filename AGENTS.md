@@ -4,8 +4,8 @@ trigger: always_on
 
 # AGENTS.md - AI Assistant Guide for Gemini Voyager
 
-> **Last Updated**: 2026-02-15
-> **Version**: 1.2.5
+> **Last Updated**: 2026-03-05
+> **Version**: 1.3.1
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
 
 ---
@@ -95,17 +95,19 @@ Strictly adhere to these protocols to prevent errors and ensure data integrity.
 
 ## 4. Module Glossary & Complexity Hotspots
 
-| Module (Path)                          | Responsibility                                    | Complexity | Notes                                                                          |
-| -------------------------------------- | ------------------------------------------------- | ---------- | ------------------------------------------------------------------------------ |
-| `core/services/StorageService`         | **Single Source of Truth** for persistence.       | 🌶️ High    | Handles sync/local/session logic + migration. **Do not modify lightly.**       |
-| `core/services/DataBackupService`      | Multi-layer backup protection.                    | 🌶️ High    | Critical for data safety. Race conditions possible during unload.              |
-| `core/services/GoogleDriveSyncService` | Google Drive cloud sync (OAuth2).                 | 🌶️ High    | Handles folders, prompts, and starred messages sync. Requires OAuth2 identity. |
-| `features/folder`                      | Drag-and-drop folder logic + cloud sync UI.       | 🌶️ High    | DOM manipulation + State sync is tricky. Watch out for infinite loops.         |
-| `features/export`                      | Chat export (JSON/MD/PDF/Image) + Deep Research.  | 🌶️ High    | Image export, message selection, multi-browser compat. Fragile to Gemini UI.   |
-| `features/backup`                      | File System Access API.                           | 🟡 Medium  | Browser compatibility issues (Safari fallback).                                |
-| `pages/content`                        | **DOM Injection** (24 content script modules).    | 🟡 Medium  | Bridge between Gemini UI and Extension. Each sub-module is self-contained.     |
-| `pages/content/mermaid`                | Mermaid diagram rendering.                        | 🟡 Medium  | Dynamic library loading with legacy fallback.                                  |
-| `pages/content/watermarkRemover`       | NanoBanana watermark removal via fetch intercept. | 🟡 Medium  | Disabled on Safari. Uses `fetchInterceptor.js` injected into page context.     |
+| Module (Path)                           | Responsibility                                    | Complexity | Notes                                                                          |
+| --------------------------------------- | ------------------------------------------------- | ---------- | ------------------------------------------------------------------------------ |
+| `core/services/StorageService`          | **Single Source of Truth** for persistence.       | 🌶️ High    | Handles sync/local/session logic + migration. **Do not modify lightly.**       |
+| `core/services/DataBackupService`       | Multi-layer backup protection.                    | 🌶️ High    | Critical for data safety. Race conditions possible during unload.              |
+| `core/services/GoogleDriveSyncService`  | Google Drive cloud sync (OAuth2).                 | 🌶️ High    | Handles folders, prompts, and starred messages sync. Requires OAuth2 identity. |
+| `core/services/AccountIsolationService` | Hard account isolation for multi-account users.   | 🌶️ High    | Integrates with Google Drive sync. Isolates data per Google account.           |
+| `features/folder`                       | Drag-and-drop folder logic + cloud sync UI.       | 🌶️ High    | DOM manipulation + State sync is tricky. Watch out for infinite loops.         |
+| `features/export`                       | Chat export (JSON/MD/PDF/Image) + Deep Research.  | 🌶️ High    | Image export, message selection, multi-browser compat. Fragile to Gemini UI.   |
+| `features/backup`                       | File System Access API.                           | 🟡 Medium  | Browser compatibility issues (Safari fallback).                                |
+| `pages/content`                         | **DOM Injection** (30 content script modules).    | 🟡 Medium  | Bridge between Gemini UI and Extension. Each sub-module is self-contained.     |
+| `pages/content/fork`                    | Conversation fork (branch) management.            | 🟡 Medium  | Creates/manages forked conversation copies. New in v1.2.8+.                    |
+| `pages/content/mermaid`                 | Mermaid diagram rendering.                        | 🟡 Medium  | Dynamic library loading with legacy fallback.                                  |
+| `pages/content/watermarkRemover`        | NanoBanana watermark removal via fetch intercept. | 🟡 Medium  | Disabled on Safari. Uses `fetchInterceptor.js` injected into page context.     |
 
 ---
 
@@ -238,6 +240,7 @@ gemini-voyager/
 │   │   │   ├── StorageService.ts       #   - Central persistence layer
 │   │   │   ├── DataBackupService.ts    #   - Multi-layer backup protection
 │   │   │   ├── GoogleDriveSyncService  #   - Google Drive cloud sync (OAuth2)
+│   │   │   ├── AccountIsolationService #   - Hard account isolation
 │   │   │   ├── KeyboardShortcutService #   - Global keyboard shortcuts
 │   │   │   ├── StorageMonitor.ts       #   - Storage usage monitoring
 │   │   │   ├── DOMService.ts           #   - Safe DOM manipulation
@@ -248,6 +251,7 @@ gemini-voyager/
 │   │   │   ├── concurrency.ts         #   - Concurrency primitives
 │   │   │   ├── hash.ts                #   - Hashing utilities
 │   │   │   ├── storageMigration.ts    #   - Storage migration helpers
+│   │   │   ├── rtl.ts                #   - RTL layout detection & support
 │   │   │   ├── safariStorage.ts      #   - Safari storage helpers
 │   │   │   ├── updateReminder.ts     #   - Update reminder utility
 │   │   │   └── ...                    #   - (array, async, gemini, selectors, text, version)
@@ -280,6 +284,13 @@ gemini-voyager/
 │   │   │   ├── folder/                #       * Folder sidebar management
 │   │   │   ├── export/                #       * Export button & selection mode
 │   │   │   ├── announcement/          #       * Announcement display
+│   │   │   ├── fork/                  #       * Conversation fork/branch management
+│   │   │   ├── changelog/             #       * Changelog modal display
+│   │   │   ├── preventAutoScroll/     #       * Prevent auto-scroll behavior
+│   │   │   ├── snowEffect/            #       * Toggleable snow effect
+│   │   │   ├── claudeMarkdownPatcher/ #       * Claude markdown patches
+│   │   │   ├── claudeMarkdownRenderer/#      * Claude markdown rendering
+│   │   │   ├── upsellHider/            #       * Hide 'Upgrade to AI Ultra' prompt
 │   │   │   ├── shared/                #       * Shared content script utilities
 │   │   │   └── ...                    #       * (chatWidth, defaultModel, folderSpacing,
 │   │   │                              #          gemsHider, inputCollapse, katexConfig,
@@ -336,6 +347,8 @@ gemini-voyager/
 | **Change DOM injection**  | `src/pages/content/`                                               |
 | **Add keyboard shortcut** | `src/core/services/KeyboardShortcutService.ts` + types             |
 | **Modify popup settings** | `src/pages/popup/components/`                                      |
+| **Account isolation**     | `src/core/services/AccountIsolationService.ts`                     |
+| **RTL layout issues**     | `src/core/utils/rtl.ts` + `public/contentStyle.css` (body.gv-rtl)  |
 | **Browser compatibility** | `src/core/utils/browser.ts` (detection) + feature-level guards     |
 
 ---
@@ -348,7 +361,9 @@ gemini-voyager/
 - `src/core/types/common.ts`: Centralized types, StorageKeys, and constants.
 - `src/core/services/StorageService.ts`: Data persistence layer.
 - `src/core/services/GoogleDriveSyncService.ts`: Cloud sync with Google Drive.
+- `src/core/services/AccountIsolationService.ts`: Hard account isolation for multi-account users.
 - `src/core/utils/browser.ts`: Browser detection helpers (`isSafari()`, etc.).
+- `src/core/utils/rtl.ts`: RTL layout detection and class application.
 - `src/core/utils/extensionContext.ts`: Extension context invalidation handling.
 - `src/locales/*`: Translation files (10 languages).
 - `public/contentStyle.css`: Injected CSS styles for content scripts.

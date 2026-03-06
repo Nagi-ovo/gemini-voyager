@@ -252,12 +252,12 @@ function dedupeByTextAndOffset(elements: HTMLElement[], firstTurnOffset: number)
 
 function ensureTurnId(el: Element, index: number): string {
   const asEl = el as HTMLElement & { dataset?: DOMStringMap & { turnId?: string } };
-  let id = (asEl.dataset && (asEl.dataset as any).turnId) || '';
+  let id = asEl.dataset?.turnId || '';
   if (!id) {
     const basis = normalizeText(asEl.textContent || '') || `user-${index}`;
     id = `u-${index}-${hashString(basis)}`;
     try {
-      (asEl.dataset as any).turnId = id;
+      if (asEl.dataset) asEl.dataset.turnId = id;
     } catch {}
   }
   return id;
@@ -270,7 +270,7 @@ function readStarredSet(): Set<string> {
     if (!raw) return new Set();
     const arr = JSON.parse(raw);
     if (!Array.isArray(arr)) return new Set();
-    return new Set(arr.map((x: any) => String(x)));
+    return new Set(arr.map((x: unknown) => String(x)));
   } catch {
     return new Set();
   }
@@ -930,10 +930,16 @@ async function getLanguage(): Promise<AppLanguage> {
     const stored = await Promise.race([
       new Promise<unknown>((resolve) => {
         try {
-          if ((window as any).chrome?.storage?.sync?.get) {
-            (window as any).chrome.storage.sync.get(StorageKeys.LANGUAGE, resolve);
-          } else if ((window as any).browser?.storage?.sync?.get) {
-            (window as any).browser.storage.sync
+          const win = window as Window & {
+            chrome?: {
+              storage?: { sync?: { get: (key: string, cb: (r: unknown) => void) => void } };
+            };
+            browser?: { storage?: { sync?: { get: (key: string) => Promise<unknown> } } };
+          };
+          if (win.chrome?.storage?.sync?.get) {
+            win.chrome.storage.sync.get(StorageKeys.LANGUAGE, resolve);
+          } else if (win.browser?.storage?.sync?.get) {
+            win.browser.storage.sync
               .get(StorageKeys.LANGUAGE)
               .then(resolve)
               .catch(() => resolve({}));
@@ -1333,6 +1339,30 @@ async function performFinalExport(
       const isAllSelected = allMessageIds.length > 0 && selectedIds.size === allMessageIds.length;
       selectAllBtn.dataset.checked = isAllSelected ? 'true' : 'false';
     }
+
+    const selectUserBtn = bar.querySelector(
+      '[data-gv-export-action="selectUser"]',
+    ) as HTMLButtonElement | null;
+    if (selectUserBtn) {
+      const userMessageIds = allMessageIds.filter((id) => id.endsWith(':u'));
+      const isOnlyUserSelected =
+        userMessageIds.length > 0 &&
+        selectedIds.size === userMessageIds.length &&
+        userMessageIds.every((id) => selectedIds.has(id));
+      selectUserBtn.dataset.checked = isOnlyUserSelected ? 'true' : 'false';
+    }
+
+    const selectAIBtn = bar.querySelector(
+      '[data-gv-export-action="selectAI"]',
+    ) as HTMLButtonElement | null;
+    if (selectAIBtn) {
+      const aiMessageIds = allMessageIds.filter((id) => id.endsWith(':a'));
+      const isOnlyAISelected =
+        aiMessageIds.length > 0 &&
+        selectedIds.size === aiMessageIds.length &&
+        aiMessageIds.every((id) => selectedIds.has(id));
+      selectAIBtn.dataset.checked = isOnlyAISelected ? 'true' : 'false';
+    }
   };
 
   const attachSelectorIfNeeded = (msg: ExportMessage) => {
@@ -1428,6 +1458,18 @@ async function performFinalExport(
   selectAllBtn.dataset.gvExportAction = 'selectAll';
   selectAllBtn.textContent = t('export_select_mode_select_all');
 
+  const selectUserBtn = document.createElement('button');
+  selectUserBtn.type = 'button';
+  selectUserBtn.className = 'gv-export-select-role-btn';
+  selectUserBtn.dataset.gvExportAction = 'selectUser';
+  selectUserBtn.textContent = t('export_select_mode_only_user');
+
+  const selectAIBtn = document.createElement('button');
+  selectAIBtn.type = 'button';
+  selectAIBtn.className = 'gv-export-select-role-btn';
+  selectAIBtn.dataset.gvExportAction = 'selectAI';
+  selectAIBtn.textContent = t('export_select_mode_only_ai');
+
   const count = document.createElement('div');
   count.className = 'gv-export-select-count';
   count.dataset.gvExportSelectionCount = 'true';
@@ -1447,13 +1489,13 @@ async function performFinalExport(
   cancelBtn.textContent = '×';
 
   bar.appendChild(selectAllBtn);
+  bar.appendChild(selectUserBtn);
+  bar.appendChild(selectAIBtn);
   bar.appendChild(count);
   bar.appendChild(exportBtn);
   bar.appendChild(cancelBtn);
 
   document.body.appendChild(bar);
-  cleanupTasks.push(() => bar.remove());
-  cleanupTasks.push(alignElementToConversationTitleCenter(bar));
 
   const swallow = (ev: Event) => {
     try {
@@ -1463,6 +1505,52 @@ async function performFinalExport(
       ev.stopPropagation();
     } catch {}
   };
+
+  selectUserBtn.addEventListener('click', (ev) => {
+    swallow(ev);
+    autoSelectAll = false;
+
+    const userMessageIds = allMessageIds.filter((id) => id.endsWith(':u'));
+    const isOnlyUserSelected =
+      userMessageIds.length > 0 &&
+      selectedIds.size === userMessageIds.length &&
+      userMessageIds.every((id) => selectedIds.has(id));
+
+    if (isOnlyUserSelected) {
+      for (const id of allMessageIds) {
+        setSelected(id, false);
+      }
+    } else {
+      for (const id of allMessageIds) {
+        setSelected(id, id.endsWith(':u'));
+      }
+    }
+    updateBottomBar(bar);
+  });
+
+  selectAIBtn.addEventListener('click', (ev) => {
+    swallow(ev);
+    autoSelectAll = false;
+
+    const aiMessageIds = allMessageIds.filter((id) => id.endsWith(':a'));
+    const isOnlyAISelected =
+      aiMessageIds.length > 0 &&
+      selectedIds.size === aiMessageIds.length &&
+      aiMessageIds.every((id) => selectedIds.has(id));
+
+    if (isOnlyAISelected) {
+      for (const id of allMessageIds) {
+        setSelected(id, false);
+      }
+    } else {
+      for (const id of allMessageIds) {
+        setSelected(id, id.endsWith(':a'));
+      }
+    }
+    updateBottomBar(bar);
+  });
+  cleanupTasks.push(() => bar.remove());
+  cleanupTasks.push(alignElementToConversationTitleCenter(bar));
 
   selectAllBtn.addEventListener('click', (ev) => {
     swallow(ev);
@@ -2035,8 +2123,8 @@ export async function startExportButton(): Promise<void> {
   if (!logo) return;
   const btn = ensureDropdownInjected(logo);
   if (!btn) return;
-  if ((btn as any)._gvBound) return;
-  (btn as any)._gvBound = true;
+  if ((btn as Element & { _gvBound?: boolean })._gvBound) return;
+  (btn as Element & { _gvBound?: boolean })._gvBound = true;
 
   // Swallow events on the button to avoid parent navigation (logo click -> /app)
   const swallow = (e: Event) => {
@@ -2147,8 +2235,8 @@ export async function startExportButton(): Promise<void> {
 
         const newBtn = ensureDropdownInjected(newLogo);
         if (!newBtn) return;
-        if ((newBtn as any)._gvBound) return;
-        (newBtn as any)._gvBound = true;
+        if ((newBtn as Element & { _gvBound?: boolean })._gvBound) return;
+        (newBtn as Element & { _gvBound?: boolean })._gvBound = true;
 
         // Re-bind all event listeners on the fresh button.
         ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((type) => {

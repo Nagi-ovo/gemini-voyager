@@ -1,10 +1,18 @@
 /* Background service worker - handles cross-origin image fetch, popup opening, and sync */
 import browser from 'webextension-polyfill';
 
+import {
+  type AccountPlatform,
+  type AccountScope,
+  accountIsolationService,
+  detectAccountPlatformFromUrl,
+  extractRouteUserIdFromUrl,
+} from '@/core/services/AccountIsolationService';
 import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
-import type { PromptItem, SyncData, SyncMode } from '@/core/types/sync';
+import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
+import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
@@ -17,6 +25,101 @@ const GEMINI_MATCHES = [
   'https://aistudio.google.com/*',
   'https://aistudio.google.cn/*',
 ];
+
+function isSyncAccountScope(value: unknown): value is SyncAccountScope {
+  if (typeof value !== 'object' || value === null) return false;
+  const scope = value as Record<string, unknown>;
+  return (
+    typeof scope.accountKey === 'string' &&
+    typeof scope.accountId === 'number' &&
+    Number.isFinite(scope.accountId) &&
+    (typeof scope.routeUserId === 'string' || scope.routeUserId === null)
+  );
+}
+
+function toSyncAccountScope(scope: AccountScope): SyncAccountScope {
+  return {
+    accountKey: scope.accountKey,
+    accountId: scope.accountId,
+    routeUserId: scope.routeUserId,
+  };
+}
+
+async function resolveAccountScopeForMessage(
+  sender: chrome.runtime.MessageSender,
+  platform: AccountPlatform,
+  explicitScope?: SyncAccountScope,
+): Promise<SyncAccountScope | null> {
+  const enabled = await accountIsolationService.isIsolationEnabled({
+    platform,
+    pageUrl: sender.tab?.url ?? null,
+  });
+  if (!enabled) return null;
+  if (explicitScope) return explicitScope;
+
+  const resolved = await accountIsolationService.resolveAccountScope({
+    pageUrl: sender.tab?.url ?? null,
+  });
+  return toSyncAccountScope(resolved);
+}
+
+function matchesRouteScope(url: string, routeUserId: string | null): boolean {
+  if (!routeUserId) return true;
+  const routeFromUrl = extractRouteUserIdFromUrl(url);
+  return routeFromUrl === null || routeFromUrl === routeUserId;
+}
+
+function filterStarredByRouteScope(
+  data: StarredMessagesData,
+  routeUserId: string | null,
+): StarredMessagesData {
+  if (!routeUserId) return data;
+
+  const filteredEntries = Object.entries(data.messages).map(([conversationId, messages]) => {
+    const filteredMessages = messages.filter((message) =>
+      matchesRouteScope(message.conversationUrl, routeUserId),
+    );
+    return [conversationId, filteredMessages] as const;
+  });
+
+  const filteredMessages = Object.fromEntries(
+    filteredEntries.filter((entry) => entry[1].length > 0),
+  );
+  return { messages: filteredMessages };
+}
+
+function filterForkNodesByRouteScope(
+  data: ForkNodesData,
+  routeUserId: string | null,
+): ForkNodesData {
+  if (!routeUserId) return data;
+
+  const filteredNodes: Record<string, ForkNode[]> = {};
+  for (const [conversationId, nodes] of Object.entries(data.nodes)) {
+    const filtered = nodes.filter((node) => matchesRouteScope(node.conversationUrl, routeUserId));
+    if (filtered.length > 0) {
+      filteredNodes[conversationId] = filtered;
+    }
+  }
+
+  const filteredGroups: Record<string, string[]> = {};
+  for (const nodes of Object.values(filteredNodes)) {
+    for (const node of nodes) {
+      if (!filteredGroups[node.forkGroupId]) {
+        filteredGroups[node.forkGroupId] = [];
+      }
+      const key = `${node.conversationId}:${node.turnId}`;
+      if (!filteredGroups[node.forkGroupId].includes(key)) {
+        filteredGroups[node.forkGroupId].push(key);
+      }
+    }
+  }
+
+  return {
+    nodes: filteredNodes,
+    groups: filteredGroups,
+  };
+}
 
 /**
  * Register the fetch interceptor script into MAIN world
@@ -223,7 +326,7 @@ chrome.permissions.onRemoved.addListener(() => {
  * All read-modify-write operations are serialized through this background script.
  */
 class StarredMessagesManager {
-  private operationQueue: Promise<any> = Promise.resolve();
+  private operationQueue: Promise<unknown> = Promise.resolve();
 
   /**
    * Serialize all operations to prevent race conditions
@@ -319,9 +422,156 @@ class StarredMessagesManager {
 
 const starredMessagesManager = new StarredMessagesManager();
 
+/**
+ * Centralized fork nodes management to prevent race conditions.
+ * All read-modify-write operations are serialized through this background script.
+ */
+class ForkNodesManager {
+  private operationQueue: Promise<unknown> = Promise.resolve();
+
+  private serialize<T>(operation: () => Promise<T>): Promise<T> {
+    const promise = this.operationQueue.then(operation, operation);
+    this.operationQueue = promise.catch(() => {});
+    return promise;
+  }
+
+  private async getFromStorage(): Promise<ForkNodesData> {
+    try {
+      const result = await chrome.storage.local.get([StorageKeys.FORK_NODES]);
+      return result[StorageKeys.FORK_NODES] || { nodes: {}, groups: {} };
+    } catch (error) {
+      console.error('[Background] Failed to get fork nodes:', error);
+      return { nodes: {}, groups: {} };
+    }
+  }
+
+  private async saveToStorage(data: ForkNodesData): Promise<void> {
+    await chrome.storage.local.set({ [StorageKeys.FORK_NODES]: data });
+  }
+
+  async addForkNode(node: ForkNode): Promise<boolean> {
+    return this.serialize(async () => {
+      const data = await this.getFromStorage();
+
+      if (!data.nodes[node.conversationId]) {
+        data.nodes[node.conversationId] = [];
+      }
+
+      const exists = data.nodes[node.conversationId].some(
+        (n) => n.turnId === node.turnId && n.forkGroupId === node.forkGroupId,
+      );
+
+      if (!exists) {
+        data.nodes[node.conversationId].push(node);
+
+        // Update group index
+        if (!data.groups[node.forkGroupId]) {
+          data.groups[node.forkGroupId] = [];
+        }
+        const groupKey = `${node.conversationId}:${node.turnId}`;
+        if (!data.groups[node.forkGroupId].includes(groupKey)) {
+          data.groups[node.forkGroupId].push(groupKey);
+        }
+
+        await this.saveToStorage(data);
+        return true;
+      }
+      return false;
+    });
+  }
+
+  async removeForkNode(
+    conversationId: string,
+    turnId: string,
+    forkGroupId: string,
+  ): Promise<boolean> {
+    return this.serialize(async () => {
+      const data = await this.getFromStorage();
+
+      if (data.nodes[conversationId]) {
+        const initialLength = data.nodes[conversationId].length;
+        data.nodes[conversationId] = data.nodes[conversationId].filter(
+          (n) => !(n.turnId === turnId && n.forkGroupId === forkGroupId),
+        );
+
+        if (data.nodes[conversationId].length < initialLength) {
+          if (data.nodes[conversationId].length === 0) {
+            delete data.nodes[conversationId];
+          }
+
+          // Update group index
+          if (data.groups[forkGroupId]) {
+            const groupKey = `${conversationId}:${turnId}`;
+            data.groups[forkGroupId] = data.groups[forkGroupId].filter((k) => k !== groupKey);
+            if (data.groups[forkGroupId].length === 0) {
+              delete data.groups[forkGroupId];
+            }
+          }
+
+          await this.saveToStorage(data);
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
+  async getAllForkNodes(): Promise<ForkNodesData> {
+    return this.getFromStorage();
+  }
+
+  async getForConversation(conversationId: string): Promise<ForkNode[]> {
+    const data = await this.getFromStorage();
+    return data.nodes[conversationId] || [];
+  }
+
+  async getGroup(forkGroupId: string): Promise<ForkNode[]> {
+    const data = await this.getFromStorage();
+    const groupKeys = data.groups[forkGroupId] || [];
+    const nodes: ForkNode[] = [];
+
+    for (const key of groupKeys) {
+      const [convId, turnId] = key.split(':');
+      const convNodes = data.nodes[convId] || [];
+      const match = convNodes.find((n) => n.turnId === turnId && n.forkGroupId === forkGroupId);
+      if (match) nodes.push(match);
+    }
+
+    return nodes.sort((a, b) => a.forkIndex - b.forkIndex);
+  }
+}
+
+const forkNodesManager = new ForkNodesManager();
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
+      if (message?.type === 'gv.account.resolve') {
+        const payload = message.payload as {
+          pageUrl?: string;
+          routeUserId?: string | null;
+          email?: string | null;
+          platform?: AccountPlatform;
+        };
+        const resolvedPlatform =
+          payload?.platform ??
+          detectAccountPlatformFromUrl(payload?.pageUrl ?? sender.tab?.url ?? null);
+        const scope = await accountIsolationService.resolveAccountScope({
+          pageUrl: payload?.pageUrl ?? sender.tab?.url ?? null,
+          routeUserId: payload?.routeUserId ?? null,
+          email: payload?.email ?? null,
+        });
+        sendResponse({
+          ok: true,
+          scope,
+          enabled: await accountIsolationService.isIsolationEnabled({
+            platform: resolvedPlatform,
+            pageUrl: payload?.pageUrl ?? sender.tab?.url ?? null,
+          }),
+        });
+        return;
+      }
+
       // Handle starred messages operations
       if (message && message.type && message.type.startsWith('gv.starred.')) {
         switch (message.type) {
@@ -361,6 +611,41 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       }
 
+      // Handle fork nodes operations
+      if (message && message.type && message.type.startsWith('gv.fork.')) {
+        switch (message.type) {
+          case 'gv.fork.add': {
+            const added = await forkNodesManager.addForkNode(message.payload);
+            sendResponse({ ok: true, added });
+            return;
+          }
+          case 'gv.fork.remove': {
+            const removed = await forkNodesManager.removeForkNode(
+              message.payload.conversationId,
+              message.payload.turnId,
+              message.payload.forkGroupId,
+            );
+            sendResponse({ ok: true, removed });
+            return;
+          }
+          case 'gv.fork.getAll': {
+            const data = await forkNodesManager.getAllForkNodes();
+            sendResponse({ ok: true, data });
+            return;
+          }
+          case 'gv.fork.getForConversation': {
+            const nodes = await forkNodesManager.getForConversation(message.payload.conversationId);
+            sendResponse({ ok: true, nodes });
+            return;
+          }
+          case 'gv.fork.getGroup': {
+            const nodes = await forkNodesManager.getGroup(message.payload.forkGroupId);
+            sendResponse({ ok: true, nodes });
+            return;
+          }
+        }
+      }
+
       // Handle sync operations
       if (message && message.type && message.type.startsWith('gv.sync.')) {
         switch (message.type) {
@@ -376,21 +661,46 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
           }
           case 'gv.sync.upload': {
-            const { folders, prompts, interactive, platform } = message.payload as {
+            const {
+              folders,
+              prompts,
+              interactive,
+              platform: rawPlatform,
+              accountScope: rawScope,
+            } = message.payload as {
               folders: FolderData;
               prompts: PromptItem[];
               interactive?: boolean;
               platform?: 'gemini' | 'aistudio';
+              accountScope?: unknown;
             };
-            // Also get starred messages from local storage (only for Gemini platform)
-            const starredData =
+            const platform = rawPlatform || 'gemini';
+            const accountScope = await resolveAccountScopeForMessage(
+              sender,
+              platform,
+              isSyncAccountScope(rawScope) ? rawScope : undefined,
+            );
+            // Also get starred messages and fork nodes from local storage (only for Gemini platform)
+            const starredDataRaw =
               platform !== 'aistudio' ? await starredMessagesManager.getAllStarredMessages() : null;
+            const forksDataRaw =
+              platform !== 'aistudio' ? await forkNodesManager.getAllForkNodes() : null;
+            const starredData =
+              starredDataRaw && accountScope
+                ? filterStarredByRouteScope(starredDataRaw, accountScope.routeUserId)
+                : starredDataRaw;
+            const forksData =
+              forksDataRaw && accountScope
+                ? filterForkNodesByRouteScope(forksDataRaw, accountScope.routeUserId)
+                : forksDataRaw;
             const success = await googleDriveSyncService.upload(
               folders,
               prompts,
               starredData,
               interactive !== false,
-              platform || 'gemini',
+              platform,
+              forksData,
+              accountScope,
             );
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;
@@ -398,7 +708,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           case 'gv.sync.download': {
             const interactive = message.payload?.interactive !== false;
             const platform = (message.payload?.platform as 'gemini' | 'aistudio') || 'gemini';
-            const data = await googleDriveSyncService.download(interactive, platform);
+            const rawScope = message.payload?.accountScope;
+            const accountScope = await resolveAccountScopeForMessage(
+              sender,
+              platform,
+              isSyncAccountScope(rawScope) ? rawScope : undefined,
+            );
+            const data = await googleDriveSyncService.download(interactive, platform, accountScope);
             // NOTE: We intentionally do NOT save to storage here.
             // The caller (Popup) is responsible for merging with local data and saving.
             // This prevents data loss from overwriting local changes.
@@ -432,10 +748,55 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         try {
           await chrome.action.openPopup();
           sendResponse({ ok: true });
-        } catch (e: any) {
+        } catch (e) {
           // Fallback: If openPopup fails, user can click the extension icon
           console.warn('[GV] Failed to open popup programmatically:', e);
-          sendResponse({ ok: false, error: String(e?.message || e) });
+          sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
+        }
+        return;
+      }
+
+      // Handle sync to IDE (bypasses page CSP)
+      if (message?.type === 'gv.syncToIDE') {
+        const url = String(message.url || '');
+        const data = message.data || [];
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            body: JSON.stringify(data),
+          });
+
+          if (!response.ok) {
+            sendResponse({ ok: false, error: `HTTP ${response.status}` });
+          } else {
+            const result = await response.json();
+            sendResponse({ ok: true, data: result });
+          }
+        } catch (e) {
+          sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
+        }
+        return;
+      }
+
+      // Handle check sync server status (bypasses page CSP)
+      if (message?.type === 'gv.checkSyncStatus') {
+        const url = String(message.url || '');
+        const timeout = Number(message.timeout || 200);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+        try {
+          const response = await fetch(url, {
+            method: 'GET',
+            signal: controller.signal,
+          });
+          sendResponse({ ok: response.ok });
+        } catch {
+          sendResponse({ ok: false });
+        } finally {
+          clearTimeout(timeoutId);
         }
         return;
       }
@@ -458,43 +819,50 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           const results = await chrome.scripting.executeScript({
             target: { tabId },
             world: 'MAIN' as chrome.scripting.ExecutionWorld,
-            func: (imageUrl: string) => {
-              return fetch(imageUrl, { credentials: 'include' })
-                .then((resp) => {
-                  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                  return resp.blob();
-                })
-                .catch(() => {
-                  // Retry without credentials for wildcard CORS
-                  return fetch(imageUrl, { credentials: 'omit' }).then((resp) => {
-                    if (!resp.ok) return null;
-                    return resp.blob();
-                  });
-                })
-                .then((blob) => {
-                  if (!blob) return null;
-                  return new Promise<{
-                    contentType: string;
-                    base64: string;
-                  } | null>((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      const dataUrl = String(reader.result || '');
-                      const commaIdx = dataUrl.indexOf(',');
-                      if (commaIdx < 0) {
-                        resolve(null);
-                        return;
-                      }
-                      resolve({
-                        contentType: blob.type || 'application/octet-stream',
-                        base64: dataUrl.substring(commaIdx + 1),
-                      });
-                    };
-                    reader.onerror = () => resolve(null);
-                    reader.readAsDataURL(blob);
-                  });
-                })
-                .catch(() => null);
+            func: async (imageUrl: string) => {
+              const safeFetch = async (credentials: RequestCredentials) => {
+                try {
+                  console.log(`[PageContext] Fetching with ${credentials}:`, imageUrl);
+                  const resp = await fetch(imageUrl, { credentials });
+                  if (resp.ok) return await resp.blob();
+                  console.warn(`[PageContext] Fetch (${credentials}) HTTP error:`, resp.status);
+                } catch (e) {
+                  console.warn(`[PageContext] Fetch (${credentials}) error:`, e);
+                }
+                return null;
+              };
+
+              try {
+                // Try with credentials first, then without (fix for Firefox CSP/CORS)
+                const blob = (await safeFetch('include')) || (await safeFetch('omit'));
+                if (!blob) {
+                  console.error('[PageContext] All fetch attempts failed');
+                  return null;
+                }
+
+                return new Promise<{
+                  contentType: string;
+                  base64: string;
+                } | null>((resolve) => {
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const dataUrl = String(reader.result || '');
+                    const commaIdx = dataUrl.indexOf(',');
+                    if (commaIdx < 0) {
+                      resolve(null);
+                      return;
+                    }
+                    resolve({
+                      contentType: blob.type || 'application/octet-stream',
+                      base64: dataUrl.substring(commaIdx + 1),
+                    });
+                  };
+                  reader.onerror = () => resolve(null);
+                  reader.readAsDataURL(blob);
+                });
+              } catch {
+                return null;
+              }
             },
             args: [url],
           });
@@ -527,19 +895,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
-      fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-        redirect: 'follow',
-      })
+      const fetchWithFallback = async (fetchUrl: string) => {
+        try {
+          const r1 = await fetch(fetchUrl, { credentials: 'include', redirect: 'follow' });
+          if (r1.ok) return r1;
+        } catch {
+          /* ignore include error */
+        }
+
+        try {
+          const r2 = await fetch(fetchUrl, { credentials: 'omit', redirect: 'follow' });
+          return r2;
+        } catch (e) {
+          throw e;
+        }
+      };
+
+      fetchWithFallback(url)
         .then((response) => {
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           return response.blob();
         })
         .then((blob) => {
-          // In Service Worker, FileReader is not available.
-          // We use Response.arrayBuffer() and then convert to base64,
-          // or use a helper to create a Data URL.
           return blob.arrayBuffer().then((ab) => {
             const b64 = arrayBufferToBase64(ab);
             const contentType = blob.type || 'image/png';
@@ -553,40 +930,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           });
         })
         .catch((err) => {
-          // Retry without credentials for external domains (e.g., gstatic.com)
-          // Some servers return Access-Control-Allow-Origin: * which is
-          // incompatible with credentials: 'include'
-          return fetch(url, {
-            method: 'GET',
-            credentials: 'omit',
-            redirect: 'follow',
-          })
-            .then((response) => {
-              if (!response.ok) throw new Error(`HTTP ${response.status}`);
-              return response.blob();
-            })
-            .then((blob) => {
-              return blob.arrayBuffer().then((ab) => {
-                const b64 = arrayBufferToBase64(ab);
-                const contentType = blob.type || 'image/png';
-                const dataUrl = `data:${contentType};base64,${b64}`;
-                sendResponse({
-                  ok: true,
-                  data: dataUrl,
-                  contentType,
-                  base64: b64,
-                });
-              });
-            })
-            .catch((retryErr) => {
-              console.error('[Background] Fetch image failed (both modes):', retryErr);
-              sendResponse({ ok: false, error: retryErr.message });
-            });
+          console.error('[Background] gv.fetchImage Final failure:', err);
+          sendResponse({ ok: false, error: err.message });
         });
       return;
-    } catch (e: any) {
+    } catch (e) {
       try {
-        sendResponse({ ok: false, error: String(e?.message || e) });
+        sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
       } catch {}
     }
   })();

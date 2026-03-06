@@ -339,6 +339,9 @@ const openFullscreen = (svgHtml: string) => {
   document.body.appendChild(modal);
   currentModal = modal;
 
+  // Initial fit scale (updated after auto-fit calculation)
+  let initialScale = 1;
+
   // Apply transform
   const applyTransform = () => {
     content.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
@@ -356,7 +359,7 @@ const openFullscreen = (svgHtml: string) => {
   };
 
   const resetView = () => {
-    scale = 1;
+    scale = initialScale;
     translateX = 0;
     translateY = 0;
     applyTransform();
@@ -425,6 +428,24 @@ const openFullscreen = (svgHtml: string) => {
     content.classList.remove('dragging');
   });
 
+  // Auto-fit SVG to viewport
+  const svgElement = content.querySelector('svg');
+  if (svgElement) {
+    const padding = 80; // px padding from viewport edges
+    const viewportWidth = window.innerWidth - padding * 2;
+    const viewportHeight = window.innerHeight - padding * 2;
+    const svgWidth = svgElement.scrollWidth || svgElement.clientWidth;
+    const svgHeight = svgElement.scrollHeight || svgElement.clientHeight;
+
+    if (svgWidth > 0 && svgHeight > 0) {
+      const fitScale = Math.min(viewportWidth / svgWidth, viewportHeight / svgHeight);
+      // Scale to fit viewport: scale down if too large, scale up if too small
+      scale = Math.min(Math.max(fitScale, 0.1), 10);
+      initialScale = scale;
+      applyTransform();
+    }
+  }
+
   // Show modal with animation
   requestAnimationFrame(() => {
     modal.classList.add('visible');
@@ -486,7 +507,6 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
     // First, try to render to validate the code
     const uniqueId = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
     let svg: string;
-    let hasError = false;
 
     try {
       // v9.x render returns string directly, v10.x returns {svg: string}
@@ -494,7 +514,6 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
       svg = typeof result === 'string' ? result : (result as { svg: string }).svg;
     } catch (renderError) {
       // Mermaid failed - likely incomplete or invalid syntax
-      hasError = true;
 
       // Clean up any error SVGs mermaid may have created
       const errorSvg = document.getElementById(uniqueId);
@@ -607,7 +626,7 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
     codeBlock.dataset.mermaidCode = normalizedCode;
     codeBlock.dataset.mermaidProcessing = 'false';
     console.log('[Gemini Voyager] Mermaid diagram rendered:', uniqueId);
-  } catch (error) {
+  } catch {
     codeBlock.dataset.mermaidProcessing = 'false';
 
     const codeBlockHost = codeBlock.closest('code-block') as HTMLElement;

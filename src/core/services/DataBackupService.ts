@@ -29,7 +29,7 @@ export interface BackupData<T> {
   metadata: BackupMetadata;
 }
 
-export class DataBackupService<T = any> {
+export class DataBackupService<T = unknown> {
   private readonly primaryKey: string;
   private readonly emergencyKey: string;
   private readonly beforeUnloadKey: string;
@@ -39,7 +39,7 @@ export class DataBackupService<T = any> {
 
   constructor(
     private readonly namespace: string,
-    private readonly validateData: (data: any) => boolean = () => true,
+    private readonly validateData: (data: T) => boolean = () => true,
   ) {
     this.primaryKey = `gvBackup_${namespace}_primary`;
     this.emergencyKey = `gvBackup_${namespace}_emergency`;
@@ -121,7 +121,7 @@ export class DataBackupService<T = any> {
    * Priority: primary > emergency > beforeUnload
    */
   recoverFromBackup(): T | null {
-    console.log(`[BackupService:${this.namespace}] Attempting data recovery...`);
+    console.warn(`[BackupService:${this.namespace}] Attempting data recovery...`);
 
     // Try primary backup first
     const primary = this.loadBackup(this.primaryKey, 'primary');
@@ -224,8 +224,8 @@ export class DataBackupService<T = any> {
   private getItemCount(data: T): number {
     try {
       if (typeof data === 'object' && data !== null) {
-        if ('folders' in data && Array.isArray((data as any).folders)) {
-          return (data as any).folders.length;
+        if ('folders' in data && Array.isArray((data as Record<string, unknown>).folders)) {
+          return ((data as Record<string, unknown>).folders as unknown[]).length;
         }
         if (Array.isArray(data)) {
           return data.length;

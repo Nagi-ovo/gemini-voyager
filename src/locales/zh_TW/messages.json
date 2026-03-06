@@ -436,7 +436,7 @@
     "description": "Safari 中完成匯出準備後的提示"
   },
   "export_dialog_safari_markdown_hint": {
-    "message": "提醒：由於Safari限制，無法提取聊天記錄中的圖片，如需完整匯出，建議使用PDF匯出",
+    "message": "提醒：由於 Safari 限制，無法提取聊天記錄中的圖片，如需完整匯出，建議使用 PDF 匯出",
     "description": "關於 Safari Markdown 匯出無法提取圖片的警告"
   },
   "export_format_json_description": {
@@ -751,6 +751,14 @@
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows 修飾鍵"
   },
+  "preventAutoScroll": {
+    "message": "防自動跳轉",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "preventAutoScrollHint": {
+    "message": "避免在查看過往紀錄時按 Enter 導致頁面強制滾動到底部",
+    "description": "Auto-hide sidebar feature hint"
+  },
   "cloudSync": {
     "message": "雲端同步",
     "description": "雲端同步區域標題"
@@ -939,17 +947,29 @@
     "message": "輸入框為空時自動摺疊，獲得更多閱讀空間",
     "description": "輸入框摺疊功能提示"
   },
+  "inputCollapseShortcutHint": {
+    "message": "{modifier}+I 展開",
+    "description": "展開折疊輸入框的快捷鍵提示。{modifier} 在 macOS 上替換為 ⌘，其他平台替換為 Ctrl"
+  },
   "inputCollapsePlaceholder": {
     "message": "傳送訊息給 Gemini",
     "description": "摺疊輸入框時顯示的佔位符文字"
   },
+  "allowCollapseWhenNotEmpty": {
+    "message": "允許折疊有內容的輸入框",
+    "description": "允許輸入框即使包含文字或附件也進行折疊"
+  },
+  "allowCollapseWhenNotEmptyHint": {
+    "message": "即使輸入框包含文字或附件也允許折疊",
+    "description": "解釋非空折疊功能的提示文字"
+  },
   "ctrlEnterSend": {
-    "message": "Ctrl+Enter 傳送",
-    "description": "Ctrl+Enter 傳送開關標籤"
+    "message": "{modifier}+Enter 傳送",
+    "description": "Modifier+Enter 傳送開關標籤。{modifier} 在 macOS 上替換為 ⌘，其他平台替換為 Ctrl"
   },
   "ctrlEnterSendHint": {
-    "message": "按 Ctrl+Enter 傳送訊息，Enter 鍵僅換行",
-    "description": "Ctrl+Enter 傳送功能提示"
+    "message": "按 {modifier}+Enter 傳送訊息，Enter 鍵僅換行",
+    "description": "Modifier+Enter 傳送功能提示。{modifier} 在 macOS 上替換為 ⌘，其他平台替換為 Ctrl"
   },
   "batch_delete_confirm": {
     "message": "確定要刪除 {count} 個對話嗎？此操作無法復原。",
@@ -976,7 +996,7 @@
     "description": "多選模式下的批次刪除按鈕提示"
   },
   "batch_delete_match_patterns": {
-    "message": "刪除,確認,確定,是,delete,confirm,yes,ok,remove",
+    "message": "刪除，確認，確定，是，delete,confirm,yes,ok,remove",
     "description": "符合原生刪除/確認按鈕的關鍵字清單（逗號分隔）"
   },
   "generalOptions": {
@@ -1192,7 +1212,7 @@
     "description": "Selection mode validation when nothing is selected"
   },
   "export_format_image_description": {
-    "message": "單張PNG圖片，便於行動端分享。",
+    "message": "單張 PNG 圖片，便於行動端分享。",
     "description": "Description for Image export format"
   },
   "export_image_progress": {
@@ -1243,12 +1263,144 @@
     "message": "研究網站",
     "description": "深度研究已研究網站章節標題"
   },
-  "snowEffect": {
-    "message": "飄雪效果",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "視覺特效",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "在頁面上飄雪，營造冬日氛圍",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "為頁面增添季節氛圍",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "關閉",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "飄雪",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "櫻花",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "雨",
+    "description": "Visual effect rain option"
+  },
+  "changelog_title": {
+    "message": "更新內容",
+    "description": "Changelog modal title"
+  },
+  "changelog_close": {
+    "message": "知道了",
+    "description": "Changelog modal close button"
+  },
+  "changelog_docs_link": {
+    "message": "文檔",
+    "description": "Changelog modal documentation link text"
+  },
+  "changelog_recommendation": {
+    "message": "如果 Voyager 對你有幫助，歡迎推薦給朋友或在社交媒體上分享！",
+    "description": "Changelog modal recommendation message"
+  },
+  "changelog_docs_hint": {
+    "message": "詳細功能見文檔",
+    "description": "Changelog annotation pointing to docs icon"
+  },
+  "changelog_rate_chrome": {
+    "message": "覺得 Gemini Voyager 好用嗎？在 Chrome 線上應用程式商店給個好評，幫助更多人發現它！",
+    "description": "Chrome Web Store rating prompt in changelog modal"
+  },
+  "changelog_rate_chrome_cta": {
+    "message": "立即評分",
+    "description": "Chrome Web Store rating CTA button text"
+  },
+  "forkConversation": {
+    "message": "Fork",
+    "description": "Fork conversation button label"
+  },
+  "forkConfirm": {
+    "message": "Fork conversation from this point?",
+    "description": "Fork confirmation prompt"
+  },
+  "forkConfirmBtn": {
+    "message": "Fork",
+    "description": "Fork confirmation button"
+  },
+  "forkCancel": {
+    "message": "Cancel",
+    "description": "Fork cancel button"
+  },
+  "forkBranch": {
+    "message": "Branch",
+    "description": "Fork branch label"
+  },
+  "forkOriginal": {
+    "message": "Original",
+    "description": "Original fork branch tag"
+  },
+  "forkCurrent": {
+    "message": "Current",
+    "description": "Current fork branch tag"
+  },
+  "forkPreparing": {
+    "message": "Preparing fork...",
+    "description": "Fork preparation status"
+  },
+  "forkPasteHint": {
+    "message": "Press Enter to send and create the fork",
+    "description": "Fork paste hint text"
+  },
+  "forkDeleteData": {
+    "message": "刪除此分支",
+    "description": "Delete fork branch metadata button"
+  },
+  "forkDeleteDataConfirm": {
+    "message": "刪除此分支關聯？只會移除 Voyager 的分支中繼資料，不會刪除任何對話。",
+    "description": "Fork metadata delete confirmation prompt"
+  },
+  "enableForkFeature": {
+    "message": "啟用對話分叉",
+    "description": "Enable conversation fork feature toggle label"
+  },
+  "enableForkFeatureHint": {
+    "message": "在 Gemini 對話中顯示 Fork 按鈕與分支序號",
+    "description": "Enable conversation fork feature toggle hint"
+  },
+  "enableAccountIsolation": {
+    "message": "啟用硬隔離（Hard Isolation）",
+    "description": "Enable hard isolation for account-scoped folder data and cloud sync."
+  },
+  "enableAccountIsolationHint": {
+    "message": "依 Google 帳號嚴格隔離資料夾與雲端同步資料，避免任何跨帳號混用。",
+    "description": "Hint text for account isolation option."
+  },
+  "currentPlatform": {
+    "message": "目前平台",
+    "description": "Current active platform label in popup."
+  },
+  "platformGemini": {
+    "message": "Gemini",
+    "description": "Gemini platform label."
+  },
+  "platformAIStudio": {
+    "message": "AI Studio",
+    "description": "AI Studio platform label."
+  },
+  "export_select_mode_only_user": {
+    "message": "僅選用戶",
+    "description": "Export selection mode: select only user messages"
+  },
+  "export_select_mode_only_ai": {
+    "message": "僅選模型",
+    "description": "Export selection mode: select only AI messages"
+  },
+  "hideUpsell": {
+    "message": "隱藏升級提醒",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "隱藏側邊欄和模型選單中的「升級至 Google AI Ultra」按鈕",
+    "description": "Explanation for the upsell hiding feature"
   }
 }

@@ -1,6 +1,14 @@
 import fs from 'fs';
 import { resolve } from 'path';
+import type { NormalizedInputOptions, NormalizedOutputOptions } from 'rollup';
 import type { PluginOption } from 'vite';
+
+const FIREFOX_OUT_DIR_MARKER = 'dist_firefox';
+const CHANGELOG_PROMO_BANNERS = [
+  'changelog-promo-banner.png',
+  'changelog-promo-banner-cn.png',
+  'changelog-promo-banner-jp.png',
+];
 
 // plugin to remove dev icons from prod build
 export function stripDevIcons(isDev: boolean) {
@@ -11,22 +19,33 @@ export function stripDevIcons(isDev: boolean) {
     resolveId(source: string) {
       return source === 'virtual-module' ? source : null;
     },
-    renderStart(outputOptions: any, inputOptions: any) {
-      const outDir = outputOptions.dir;
+    renderStart(outputOptions: NormalizedOutputOptions, _inputOptions: NormalizedInputOptions) {
+      const outDir = outputOptions.dir ?? '';
+      const isFirefoxBuild = outDir.includes(FIREFOX_OUT_DIR_MARKER);
+
       fs.rm(resolve(outDir, 'dev-icon-32.png'), () =>
         console.log(`Deleted dev-icon-32.png from prod build`),
       );
       fs.rm(resolve(outDir, 'dev-icon-128.png'), () =>
         console.log(`Deleted dev-icon-128.png from prod build`),
       );
+
+      if (!isFirefoxBuild) {
+        CHANGELOG_PROMO_BANNERS.forEach((fileName) => {
+          fs.rm(resolve(outDir, fileName), () =>
+            console.log(`Deleted ${fileName} from non-Firefox build`),
+          );
+        });
+      }
+
       // Remove assets directory if it exists
       const assetsDir = resolve(outDir, 'assets');
       fs.rm(assetsDir, { recursive: true, force: true }, () =>
         console.log(`Deleted assets/ directory from prod build`),
       );
     },
-    writeBundle(outputOptions: any) {
-      const outDir = outputOptions.dir;
+    writeBundle(outputOptions: NormalizedOutputOptions) {
+      const outDir = outputOptions.dir ?? '';
       // Remove .vite directory (Vite's internal manifest, not needed for extension)
       const viteDir = resolve(outDir, '.vite');
       fs.rm(viteDir, { recursive: true, force: true }, () =>

@@ -69,7 +69,7 @@ export function ContextSyncSettings() {
 
     const url = `http://127.0.0.1:${port}/sync`;
 
-    let timeoutId: any;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
       const controller = new AbortController();
       timeoutId = setTimeout(() => controller.abort(), 200);
@@ -81,7 +81,7 @@ export function ContextSyncSettings() {
 
       setIsOnline(true);
       // setStatusMessage({ text: tRef.current('ideOnline'), kind: 'ok' });
-    } catch (err) {
+    } catch {
       setIsOnline(false);
       // setStatusMessage({ text: tRef.current('ideOffline'), kind: 'err' });
     } finally {

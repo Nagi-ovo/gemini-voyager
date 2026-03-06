@@ -1,3 +1,4 @@
+import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
 import {
   hasValidExtensionContext,
@@ -7,6 +8,7 @@ import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 
+import { startChangelog } from './changelog/index';
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
@@ -16,20 +18,26 @@ import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderManager } from './folder/index';
 import { startFolderSpacingAdjuster } from './folderSpacing/index';
+import { isForkFeatureEnabledValue } from './fork/featureFlag';
+import { startFork } from './fork/index';
 import { startGemsHider } from './gemsHider/index';
 import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';
 import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startMermaid } from './mermaid/index';
+import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
+import { startRainEffect } from './rainEffect/index';
 import { startRecentsHider } from './recentsHider/index';
+import { startSakuraEffect } from './sakuraEffect/index';
 import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startSnowEffect } from './snowEffect/index';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
+import { startUpsellHider } from './upsellHider/index';
 import { startWatermarkRemover } from './watermarkRemover/index';
 
 // Suppress Vite's CSS preload errors in the Chrome extension content script context.
@@ -66,6 +74,16 @@ let folderManagerInstance: Awaited<ReturnType<typeof startFolderManager>> | null
 let promptManagerInstance: Awaited<ReturnType<typeof startPromptManager>> | null = null;
 let quoteReplyCleanup: (() => void) | null = null;
 let sendBehaviorCleanup: (() => void) | null = null;
+let forkCleanup: (() => void) | null = null;
+
+async function isForkFeatureEnabled(): Promise<boolean> {
+  try {
+    const result = await chrome.storage?.sync?.get({ [StorageKeys.FORK_ENABLED]: false });
+    return isForkFeatureEnabledValue(result?.[StorageKeys.FORK_ENABLED]);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Check if current hostname matches any custom websites
@@ -173,9 +191,14 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startSnowEffect();
+      startSakuraEffect();
+      startRainEffect();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startInputCollapse();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startPreventAutoScroll();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startFormulaCopy();
@@ -224,6 +247,10 @@ async function initializeFeatures(): Promise<void> {
       startGemsHider();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
+      // Upsell hider - hide "Upgrade to Google AI Ultra" buttons
+      void startUpsellHider();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
       // Markdown Patcher - fixes broken bold tags due to HTML injection
       startMarkdownPatcher();
       await delay(LIGHT_FEATURE_INIT_DELAY);
@@ -233,6 +260,14 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startExportButton();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      if (await isForkFeatureEnabled()) {
+        forkCleanup = startFork();
+        await delay(LIGHT_FEATURE_INIT_DELAY);
+      }
+
+      startChangelog();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
@@ -325,6 +360,30 @@ function handleVisibilityChange(): void {
     };
     window.addEventListener('unhandledrejection', onUnhandledRejection);
     window.addEventListener('error', onWindowError);
+    const onStorageChanged = (
+      changes: Record<string, chrome.storage.StorageChange>,
+      areaName: string,
+    ) => {
+      if (
+        (areaName !== 'sync' && areaName !== 'local') ||
+        location.hostname !== 'gemini.google.com'
+      ) {
+        return;
+      }
+
+      const forkSetting = changes[StorageKeys.FORK_ENABLED];
+      if (!forkSetting) return;
+
+      const enabled = isForkFeatureEnabledValue(forkSetting.newValue);
+      if (enabled) {
+        if (!forkCleanup) {
+          forkCleanup = startFork();
+        }
+      } else if (forkCleanup) {
+        forkCleanup();
+        forkCleanup = null;
+      }
+    };
 
     // Quick check: only run on supported websites
     const hostname = location.hostname.toLowerCase();
@@ -366,6 +425,7 @@ function handleVisibilityChange(): void {
       });
       return;
     }
+    chrome.storage?.onChanged?.addListener(onStorageChanged);
 
     const delay = getInitializationDelay();
 
@@ -404,6 +464,11 @@ function handleVisibilityChange(): void {
           sendBehaviorCleanup();
           sendBehaviorCleanup = null;
         }
+        if (forkCleanup) {
+          forkCleanup();
+          forkCleanup = null;
+        }
+        chrome.storage?.onChanged?.removeListener(onStorageChanged);
       } catch (e) {
         if (isExtensionContextInvalidatedError(e)) {
           return;

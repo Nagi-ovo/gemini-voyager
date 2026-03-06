@@ -3,7 +3,7 @@
  * Replaces direct localStorage and chrome.storage calls
  * Implements Repository pattern with type safety
  */
-import { ErrorCode, ErrorHandler, StorageError } from '../errors/AppError';
+import { ErrorCode, StorageError } from '../errors/AppError';
 import type { Result, StorageKey } from '../types/common';
 import {
   hasValidExtensionContext,

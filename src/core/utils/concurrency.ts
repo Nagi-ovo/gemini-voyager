@@ -151,10 +151,10 @@ export const LOCK_KEYS = {
  * Usage: @withLock(LOCK_KEYS.FOLDER_IMPORT)
  */
 export function withLock(lockKey: string, timeout?: number) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value;
+  return function (target: object, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value as (...args: unknown[]) => Promise<unknown>;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       return await importExportLock.withLock(
         lockKey,
         () => originalMethod.apply(this, args),
@@ -171,7 +171,7 @@ export function withLock(lockKey: string, timeout?: number) {
  * Ensures operations are executed in order
  */
 export class OperationQueue {
-  private queue: Array<() => Promise<any>> = [];
+  private queue: Array<() => Promise<unknown>> = [];
   private processing = false;
 
   /**

@@ -19,9 +19,9 @@ import type {
   KeyboardShortcutStorage,
   ModifierKey,
   ShortcutAction,
-  ShortcutKey,
   ShortcutMatch,
 } from '@/core/types/keyboardShortcut';
+import { isMac } from '@/core/utils/browser';
 
 /**
  * Default keyboard shortcuts configuration
@@ -56,7 +56,9 @@ export class KeyboardShortcutService {
   private enabled: boolean = true;
   private listeners: Set<ShortcutCallback> = new Set();
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
-  private storageChangeHandler: ((changes: any, areaName: string) => void) | null = null;
+  private storageChangeHandler:
+    | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
+    | null = null;
 
   private constructor() {
     this.config = DEFAULT_SHORTCUTS;
@@ -354,8 +356,15 @@ export class KeyboardShortcutService {
       return key;
     }
 
-    const parts = [...shortcut.modifiers, key];
-    return parts.join(' + ');
+    // Map modifier keys based on platform
+    const mac = isMac();
+    const modifierSymbols: Record<string, string> = mac
+      ? { Meta: '⌘', Alt: '⌥', Ctrl: '⌃', Shift: '⇧' }
+      : { Meta: 'Win', Alt: 'Alt', Ctrl: 'Ctrl', Shift: 'Shift' };
+
+    const modifiers = shortcut.modifiers.map((m) => modifierSymbols[m] || m);
+    const parts = [...modifiers, key];
+    return parts.join(mac ? '' : ' + ');
   }
 
   /**

@@ -435,7 +435,15 @@ export class ImageExportService {
 
     await Promise.all(
       imgs.map(async (img) => {
-        const src = img.getAttribute('src') || '';
+        let src = img.getAttribute('src') || '';
+        // For Google images, request original size (=s0) instead of thumbnail
+        if (
+          /^https?:\/\//i.test(src) &&
+          (src.includes('googleusercontent.com') || src.includes('ggpht.com'))
+        ) {
+          const sizePattern = /=[swh]\d+[^?#]*/;
+          src = sizePattern.test(src) ? src.replace(sizePattern, '=s0') : src + '=s0';
+        }
         const data = await toDataUrl(src);
         if (data) {
           try {

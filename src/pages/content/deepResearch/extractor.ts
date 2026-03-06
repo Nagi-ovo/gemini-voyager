@@ -1,13 +1,7 @@
 /**
  * DOM extraction module for Deep Research thinking content
  */
-import type {
-  BrowseChip,
-  ThinkingContent,
-  ThinkingItem,
-  ThinkingSection,
-  ThoughtItem,
-} from './types';
+import type { BrowseChip, ThinkingContent, ThinkingItem, ThinkingSection } from './types';
 
 /**
  * Extract a single thought item (header + content)
