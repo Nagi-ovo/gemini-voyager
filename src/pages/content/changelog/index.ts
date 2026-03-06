@@ -204,7 +204,7 @@ function createChangelogModal(
   lang: AppLanguage,
 ): {
   overlay: HTMLDivElement;
-  onClose: () => Promise<void>;
+  onClose: () => void;
 } {
   const overlay = document.createElement('div');
   overlay.className = 'gv-changelog-overlay';
@@ -352,14 +352,7 @@ function createChangelogModal(
   dialog.appendChild(footer);
   overlay.appendChild(dialog);
 
-  const onClose = async (): Promise<void> => {
-    try {
-      await chrome.storage.local.set({
-        [StorageKeys.CHANGELOG_DISMISSED_VERSION]: EXTENSION_VERSION,
-      });
-    } catch {
-      // Extension context may be invalidated
-    }
+  const onClose = (): void => {
     overlay.remove();
   };
 
@@ -433,7 +426,19 @@ async function showChangelogModal(
     ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class'],
   });
 
-  // 5. Inject modal
+  // 5. Mark as dismissed BEFORE showing — ensures the modal never re-appears
+  //    even if the user navigates away without clicking "Got it".
+  //    If this write fails (e.g. extension context invalidated), skip showing
+  //    the modal entirely; it will be shown on the next load with a valid context.
+  try {
+    await chrome.storage.local.set({
+      [StorageKeys.CHANGELOG_DISMISSED_VERSION]: EXTENSION_VERSION,
+    });
+  } catch {
+    return null;
+  }
+
+  // 6. Inject modal
   const { overlay } = createChangelogModal(sanitizedHtml, lang);
   document.body.appendChild(overlay);
   return overlay;
