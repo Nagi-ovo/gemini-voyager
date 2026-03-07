@@ -1424,7 +1424,7 @@
     "description": "Web mode option"
   },
   "autoCategorizationEngineApi": {
-    "message": "Gemini API (Silent)",
+    "message": "Gemini API",
     "description": "API mode option"
   },
   "autoCategorizationPrefix": {

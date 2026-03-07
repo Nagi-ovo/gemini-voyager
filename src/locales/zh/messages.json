@@ -1424,7 +1424,7 @@
     "description": "Web mode option"
   },
   "autoCategorizationEngineApi": {
-    "message": "API 后台 (推荐)",
+    "message": "API 后台",
     "description": "API mode option"
   },
   "autoCategorizationPrefix": {
