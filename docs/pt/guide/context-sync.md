@@ -16,7 +16,7 @@ A maior dor para os desenvolvedores: depois de discutir uma solução minuciosam
 
    ![Extensão CoBridge](/assets/CoBridge-extension.png)
 
-   Após a instalação, abra qualquer diretório de trabalho, clique no ícone à direita e inicie o servidor.
+   Após a instalação, **abra qualquer diretório de trabalho**, clique no ícone à direita e inicie o servidor.
    ![Servidor CoBridge Ligado](/assets/CoBridge-on.png)
 
 2. **Aperto de mão**:

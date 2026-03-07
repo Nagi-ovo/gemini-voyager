@@ -16,7 +16,7 @@
 
    ![CoBridge扩展](/assets/CoBridge-extension.png)
 
-   安装完成后，打开任意工作目录，点击右侧图标并启动服务器。
+   安装完成后，**打开任意工作目录**，点击右侧图标并启动服务器。
    ![CoBridge服务器开启](/assets/CoBridge-on.png)
 
 2. **握手对接**：

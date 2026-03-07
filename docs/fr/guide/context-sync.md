@@ -16,7 +16,7 @@ Le plus grand calvaire des développeurs : après avoir discuté longuement d'un
 
    ![Extension CoBridge](/assets/CoBridge-extension.png)
 
-   Après l'installation, ouvrez n'importe quel répertoire de travail, cliquez sur l'icône à droite et lancez le serveur.
+   Après l'installation, **ouvrez n'importe quel répertoire de travail**, cliquez sur l'icône à droite et lancez le serveur.
    ![Serveur CoBridge activé](/assets/CoBridge-on.png)
 
 2. **Connexion et poignée de main** :
