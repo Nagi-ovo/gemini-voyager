@@ -20,7 +20,7 @@ export class TriggerService {
   private isEnabled = false;
   private ctrlEnterSend = false;
 
-  private constructor() { }
+  private constructor() {}
 
   public static getInstance(): TriggerService {
     if (!TriggerService.instance) {
@@ -240,7 +240,7 @@ export class TriggerService {
         return;
       }
       // No prefix found → auto-categorize with AI
-      autoCategorizationService.categorizeCurrentConversation(trimmed).catch(() => { });
+      autoCategorizationService.categorizeCurrentConversation(trimmed).catch(() => {});
     } else {
       // Positive mode (default): prefix TRIGGERS categorization
       if (!matchedMainPrefix) return;
@@ -250,7 +250,7 @@ export class TriggerService {
 
       autoCategorizationService
         .categorizeCurrentConversation(userPromptContext.trim())
-        .catch(() => { });
+        .catch(() => {});
     }
   }
 
@@ -301,7 +301,7 @@ export class TriggerService {
 
     autoCategorizationService
       .categorizeToSpecificFolder(pathParts, remainingPrompt)
-      .catch(() => { });
+      .catch(() => {});
     return true;
   }
 
@@ -381,7 +381,7 @@ export async function startAutoCategorization() {
   const enabledResult = await storageService.get<boolean>(StorageKeys.AUTO_CATEGORIZATION_ENABLED);
 
   if (!enabledResult.success || !enabledResult.data) {
-    return () => { };
+    return () => {};
   }
 
   await triggerService.init();

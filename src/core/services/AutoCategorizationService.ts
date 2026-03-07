@@ -60,7 +60,7 @@ export class AutoCategorizationService {
               waited += POLL_INTERVAL_MS;
             }
             this.categorizeToSpecificFolder(pending.pathParts, pending.remainingPrompt).catch(
-              () => { },
+              () => {},
             );
           }, 1500);
         }
@@ -131,13 +131,17 @@ export class AutoCategorizationService {
       const prompt = this.generatePrompt(currentTitle, folders, lastUserMessage);
 
       // 2. Background API Mode vs UI Session Mode
-      const apiModeRes = await storageService.get<boolean>(StorageKeys.AUTO_CATEGORIZATION_API_MODE);
+      const apiModeRes = await storageService.get<boolean>(
+        StorageKeys.AUTO_CATEGORIZATION_API_MODE,
+      );
       const apiMode = apiModeRes.success ? apiModeRes.data : false;
 
       const apiKeyRes = await storageService.get<string>(StorageKeys.AUTO_CATEGORIZATION_API_KEY);
       const apiKey = apiKeyRes.success ? apiKeyRes.data : '';
 
-      const apiModelRes = await storageService.get<string>(StorageKeys.AUTO_CATEGORIZATION_API_MODEL);
+      const apiModelRes = await storageService.get<string>(
+        StorageKeys.AUTO_CATEGORIZATION_API_MODEL,
+      );
       const apiModel =
         (apiModelRes.success ? apiModelRes.data : null) || 'gemini-3.1-flash-lite-preview';
 

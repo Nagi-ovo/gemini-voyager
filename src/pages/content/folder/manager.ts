@@ -3170,9 +3170,9 @@ export class FolderManager {
       // Strategy 2: Look for menu items containing delete text (supports translations)
       const menuItems = document.querySelectorAll(
         '.cdk-overlay-container button, ' +
-        '.cdk-overlay-container [role="menuitem"], ' +
-        '.mat-mdc-menu-content button, ' +
-        '.mat-menu-content button',
+          '.cdk-overlay-container [role="menuitem"], ' +
+          '.mat-mdc-menu-content button, ' +
+          '.mat-menu-content button',
       );
 
       for (const item of menuItems) {
@@ -5374,7 +5374,7 @@ export class FolderManager {
   private showDataLossNotification(): void {
     this.showNotificationByLevel(
       getTranslationSync('folderManager_dataLossWarning') ||
-      'Warning: Failed to load folder data. Please check your browser console for details.',
+        'Warning: Failed to load folder data. Please check your browser console for details.',
       'error',
     );
   }
@@ -6840,14 +6840,14 @@ export class FolderManager {
         },
       })) as
         | {
-          ok?: boolean;
-          error?: string;
-          data?: {
-            folders?: { data?: FolderData };
-            prompts?: { items?: PromptItem[] };
-            starred?: { data?: { messages: Record<string, unknown[]> } };
-          };
-        }
+            ok?: boolean;
+            error?: string;
+            data?: {
+              folders?: { data?: FolderData };
+              prompts?: { items?: PromptItem[] };
+              starred?: { data?: { messages: Record<string, unknown[]> } };
+            };
+          }
         | undefined;
 
       if (!response?.ok) {
