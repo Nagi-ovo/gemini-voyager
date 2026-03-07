@@ -5,6 +5,7 @@ export interface Folder {
   isExpanded: boolean;
   pinned?: boolean; // Whether folder is pinned to the top
   color?: string; // Optional folder color identifier
+  sortIndex?: number; // Manual sort order within the same parent group
   createdAt: number;
   updatedAt: number;
 }
@@ -20,6 +21,7 @@ export interface ConversationReference {
   gemId?: string; // Gem identifier if applicable
   starred?: boolean; // Whether this conversation is starred in the folder
   customTitle?: boolean; // Whether title was manually renamed in folder (don't auto-sync from native)
+  sortIndex?: number; // Manual sort order within the same folder group
 }
 
 export interface FolderData {

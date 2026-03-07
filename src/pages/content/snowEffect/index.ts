@@ -5,6 +5,11 @@
  * Uses `pointer-events: none` so it never blocks page interactions.
  * Pauses when the tab is hidden to save CPU.
  *
+ * Graceful transitions: when switching effects or disabling, existing
+ * snowflakes continue falling naturally instead of vanishing instantly.
+ * New snowflakes stop spawning, and the canvas is cleaned up once all
+ * particles have left the viewport.
+ *
  * Performance notes:
  * - Single canvas with simple arc draws (no images, no shadows)
  * - Snowflakes sorted by opacity at init; drawn in batches to minimize fillStyle switches
@@ -50,7 +55,8 @@ interface Snowflake {
   phase: number;
 }
 
-let enabled = false;
+/** Effect lifecycle: off → active ⇄ draining → off */
+let state: 'off' | 'active' | 'draining' = 'off';
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
 let animationFrameId: number | null = null;
@@ -100,16 +106,22 @@ function updateAndDraw(time: number): void {
   ctx.clearRect(0, 0, width, height);
 
   let currentOpacity = -1;
+  let visibleCount = 0;
 
   for (const flake of snowflakes) {
     flake.y += flake.speedY;
     flake.x += Math.sin(flake.phase + time * flake.driftFreq) * flake.drift;
 
-    // Recycle when off-screen bottom
+    // Recycle when off-screen bottom (or skip during drain)
     if (flake.y > height + flake.radius) {
+      if (state === 'draining') {
+        continue;
+      }
       flake.y = -flake.radius;
       flake.x = Math.random() * width;
     }
+
+    visibleCount++;
 
     // Wrap horizontal
     if (flake.x > width + flake.radius) {
@@ -128,6 +140,12 @@ function updateAndDraw(time: number): void {
     ctx.beginPath();
     ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // All particles have left the viewport — finish draining
+  if (state === 'draining' && visibleCount === 0) {
+    finalizeDrain();
+    return;
   }
 
   animationFrameId = requestAnimationFrame(updateAndDraw);
@@ -160,8 +178,13 @@ function handleVisibilityChange(): void {
 }
 
 function enable(): void {
-  if (enabled) return;
-  enabled = true;
+  if (state === 'active') return;
+  if (state === 'draining') {
+    // Cancel drain — resume normal particle recycling
+    state = 'active';
+    return;
+  }
+  state = 'active';
 
   canvas = document.createElement('canvas');
   canvas.id = CANVAS_ID;
@@ -171,7 +194,7 @@ function enable(): void {
 
   ctx = canvas.getContext('2d');
   if (!ctx) {
-    disable();
+    forceDisable();
     return;
   }
 
@@ -186,10 +209,18 @@ function enable(): void {
   document.addEventListener('visibilitychange', visibilityHandler);
 }
 
+/**
+ * Graceful disable: stop spawning new snowflakes and let existing ones
+ * fall off the bottom of the viewport naturally.
+ */
 function disable(): void {
-  if (!enabled) return;
-  enabled = false;
+  if (state !== 'active') return;
+  state = 'draining';
+}
 
+/** Complete the drain: remove canvas and clean up all resources. */
+function finalizeDrain(): void {
+  state = 'off';
   stopAnimation();
 
   if (resizeHandler) {
@@ -209,6 +240,12 @@ function disable(): void {
 
   ctx = null;
   snowflakes = [];
+}
+
+/** Immediate disable: remove everything without draining (e.g. page unload). */
+function forceDisable(): void {
+  if (state === 'off') return;
+  finalizeDrain();
 }
 
 function resolveEffect(res: Record<string, unknown>): string {
@@ -248,8 +285,8 @@ export function startSnowEffect(): void {
     console.error('[Gemini Voyager] Failed to add storage listener for snow effect:', e);
   }
 
-  // 3) Cleanup on page unload
+  // 3) Immediate cleanup on page unload (no need to drain)
   window.addEventListener('beforeunload', () => {
-    disable();
+    forceDisable();
   });
 }

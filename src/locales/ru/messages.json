@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Extension name"
   },
   "extDescription": {
@@ -52,7 +52,7 @@
     "description": "Language label"
   },
   "pm_title": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Prompt Manager title"
   },
   "pm_add": {
@@ -1308,12 +1308,16 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "Нравится Gemini Voyager? Оценка в Chrome Web Store помогает другим пользователям найти расширение!",
+    "message": "Нравится Voyager? Оценка в Chrome Web Store помогает другим пользователям найти расширение!",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
     "message": "Оценить",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "changelog_badge_mode": {
+    "message": "Уведомлять значком NEW на плавающей кнопке вместо этого окна",
+    "description": "Changelog notification mode toggle label"
   },
   "forkConversation": {
     "message": "Fork",

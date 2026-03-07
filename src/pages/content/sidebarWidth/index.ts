@@ -228,18 +228,25 @@ function setupSearchButtonHitTestDebug(): void {
   );
 }
 
+const ENABLED_KEY = 'gvSidebarWidthEnabled';
+
 /** Initialize and start the sidebar width adjuster */
 export function startSidebarWidthAdjuster(): void {
   let currentWidthValue = DEFAULT_PX;
+  let enabled = false;
   setupSearchButtonHitTestDebug();
 
-  // 1) Read initial width
+  // 1) Read initial state
   try {
-    chrome.storage?.sync?.get({ geminiSidebarWidth: DEFAULT_PX }, (res) => {
+    chrome.storage?.sync?.get({ geminiSidebarWidth: DEFAULT_PX, [ENABLED_KEY]: false }, (res) => {
       const w = Number(res?.geminiSidebarWidth);
       const { normalized } = normalizeWidth(w);
       currentWidthValue = normalized;
-      applyWidth(currentWidthValue);
+      enabled = res?.[ENABLED_KEY] === true;
+
+      if (enabled) {
+        applyWidth(currentWidthValue);
+      }
 
       if (Number.isFinite(w) && w !== normalized) {
         try {
@@ -250,20 +257,31 @@ export function startSidebarWidthAdjuster(): void {
       }
     });
   } catch (e) {
-    // Fallback: inject default value if no storage permission
     console.error('[Gemini Voyager] Failed to get sidebar width from storage:', e);
-    applyWidth(currentWidthValue);
   }
 
   // 2) Respond to storage changes (from Popup slider adjustment)
   try {
     chrome.storage?.onChanged?.addListener((changes, area) => {
-      if (area === 'sync' && changes.geminiSidebarWidth) {
+      if (area !== 'sync') return;
+
+      if (changes[ENABLED_KEY]) {
+        enabled = changes[ENABLED_KEY].newValue === true;
+        if (enabled) {
+          applyWidth(currentWidthValue);
+        } else {
+          removeStyles();
+        }
+      }
+
+      if (changes.geminiSidebarWidth) {
         const w = Number(changes.geminiSidebarWidth.newValue);
         if (Number.isFinite(w)) {
           const { normalized } = normalizeWidth(w);
           currentWidthValue = normalized;
-          applyWidth(currentWidthValue);
+          if (enabled) {
+            applyWidth(currentWidthValue);
+          }
 
           if (normalized !== w) {
             try {

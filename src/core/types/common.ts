@@ -90,6 +90,7 @@ export const StorageKeys = {
 
   // Changelog
   CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion',
+  CHANGELOG_NOTIFY_MODE: 'gvChangelogNotifyMode',
 
   // Fork nodes
   FORK_NODES: 'gvForkNodes',
