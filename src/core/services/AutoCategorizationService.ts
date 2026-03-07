@@ -60,7 +60,7 @@ export class AutoCategorizationService {
               waited += POLL_INTERVAL_MS;
             }
             this.categorizeToSpecificFolder(pending.pathParts, pending.remainingPrompt).catch(
-              () => {},
+              () => { },
             );
           }, 1500);
         }
@@ -130,30 +130,62 @@ export class AutoCategorizationService {
 
       const prompt = this.generatePrompt(currentTitle, folders, lastUserMessage);
 
-      // 2. Setup classifier session (SPA style)
-      DefaultModelManager.getInstance().setBypassed(true);
-      const classifierUrl = await this.createDisposableSession();
-      if (!classifierUrl) throw new Error('Failed to create session');
+      // 2. Background API Mode vs UI Session Mode
+      const apiModeRes = await storageService.get<boolean>(StorageKeys.AUTO_CATEGORIZATION_API_MODE);
+      const apiMode = apiModeRes.success ? apiModeRes.data : false;
 
-      // 3. Send categorization prompt
-      await this.waitForElement('rich-textarea [contenteditable="true"]', 8000);
-      const input = document.querySelector('rich-textarea [contenteditable="true"]') as HTMLElement;
-      if (!input) throw new Error('Input not found');
+      const apiKeyRes = await storageService.get<string>(StorageKeys.AUTO_CATEGORIZATION_API_KEY);
+      const apiKey = apiKeyRes.success ? apiKeyRes.data : '';
 
-      input.textContent = prompt;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      await this.delay(500);
+      const apiModelRes = await storageService.get<string>(StorageKeys.AUTO_CATEGORIZATION_API_MODEL);
+      const apiModel =
+        (apiModelRes.success ? apiModelRes.data : null) || 'gemini-3.1-flash-lite-preview';
 
-      const sendBtn = document.querySelector(
-        'button[aria-label*="Send"], .send-button',
-      ) as HTMLElement;
-      if (sendBtn) sendBtn.click();
+      let responseText = '';
+      let isBackgroundMode = false;
 
-      // 4. Wait for AI response
-      await this.waitForResponseComplete(15000);
+      if (apiMode && apiKey) {
+        try {
+          responseText = await this.callGeminiApi(apiKey, apiModel, prompt);
+          isBackgroundMode = true;
+        } catch (apiError) {
+          // Fallback to UI session if API fails
+        }
+      }
 
-      const responseText = this.getLatestResponse();
-      const classifierConvUrl = window.location.href;
+      if (!isBackgroundMode) {
+        // Fallback or Default: Setup classifier session (SPA style)
+        DefaultModelManager.getInstance().setBypassed(true);
+        const classifierUrl = await this.createDisposableSession();
+        if (!classifierUrl) throw new Error('Failed to create session');
+
+        // 3. Send categorization prompt
+        await this.waitForElement('rich-textarea [contenteditable="true"]', 8000);
+        const input = document.querySelector(
+          'rich-textarea [contenteditable="true"]',
+        ) as HTMLElement;
+        if (!input) throw new Error('Input not found');
+
+        input.textContent = prompt;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        await this.delay(500);
+
+        const sendBtn = document.querySelector(
+          'button[aria-label*="Send"], .send-button',
+        ) as HTMLElement;
+        if (sendBtn) sendBtn.click();
+
+        // 4. Wait for AI response
+        await this.waitForResponseComplete(15000);
+
+        responseText = this.getLatestResponse();
+        const classifierConvUrl = window.location.href;
+
+        // Cleanup: Navigation Back (SPA to avoid refresh)
+        this.navigateTo(currentUrl);
+        await this.delay(1500);
+        await this.deleteConversationByUrl(classifierConvUrl);
+      }
 
       // 5. Apply categorization
       let matchedFolder = this.findMatchingFolder(responseText, folders);
@@ -175,17 +207,10 @@ export class AutoCategorizationService {
             addedAt: Date.now(),
             isGem: false,
           };
+          folderManager.ensureFolderExpanded(matchedFolder.id);
           folderManager.addConversationsToFolder(matchedFolder.id, [convRef]);
         }
       }
-
-      // 6. Navigation Back (SPA to avoid refresh)
-      this.navigateTo(currentUrl);
-
-      // 7. Silent Deletion from Sidebar (Happens after we navigate back)
-      // Wait for navigation and sidebar to settle
-      await this.delay(1500);
-      await this.deleteConversationByUrl(classifierConvUrl);
     } catch (error) {
       // Silently fail but ensure we return to the user's original chat
       this.navigateTo(currentUrl);
@@ -193,6 +218,51 @@ export class AutoCategorizationService {
       DefaultModelManager.getInstance().setBypassed(false);
       this.isProcessing = false;
     }
+  }
+
+  /**
+   * Calls the Gemini API directly to get a categorization folder name.
+   */
+  private async callGeminiApi(apiKey: string, model: string, prompt: string): Promise<string> {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          topP: 0.95,
+          topK: 40,
+          maxOutputTokens: 100,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(`Gemini API Error: ${response.status} ${JSON.stringify(errData)}`);
+    }
+
+    const data = await response.json();
+    const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!candidateText) {
+      throw new Error('Empty response from Gemini API');
+    }
+
+    return candidateText;
   }
 
   /**
@@ -315,6 +385,7 @@ export class AutoCategorizationService {
           addedAt: Date.now(),
           isGem: false,
         };
+        folderManager.ensureFolderExpanded(targetFolderId);
         folderManager.addConversationsToFolder(targetFolderId, [convRef]);
 
         // Trigger native deletion animation smoothly

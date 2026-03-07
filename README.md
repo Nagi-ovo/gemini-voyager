@@ -105,7 +105,8 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   - **[Input Collapse](https://voyager.nagi.fun/en/guide/input-collapse)**: Auto-expandable input area for more reading space.
   - **[Default Model](https://voyager.nagi.fun/en/guide/default-model)**: Set your favorite model as default.
   - **[Hide Recent Items](https://voyager.nagi.fun/en/guide/recents-hider)**: Hide "Recent" list in the sidebar to reduce distraction.
-  - **Hide Upgrade Prompts**: Hide "Upgrade to Google AI Ultra" elements in the sidebar and model menu to reduce distraction (Enabled by default).
+  - **[Auto-Categorization (Gemini API)](https://voyager.nagi.fun/en/guide/auto-categorization)**: Automatically categorize and move new conversations into folders in the background using the Gemini API (supports **Auto-Expand Folder** for immediate feedback).
+- **Hide Upgrade Prompts**: Hide "Upgrade to Google AI Ultra" elements in the sidebar and model menu to reduce distraction (Enabled by default).
 
 ---
 

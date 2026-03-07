@@ -103,6 +103,9 @@ export const StorageKeys = {
   AUTO_CATEGORIZATION_TRIGGER_MODE: 'gvAutoCategorizationTriggerMode',
   AUTO_CATEGORIZATION_USE_MAIN_PREFIX_FOR_ROUTING: 'gvAutoCategorizationUseMainPrefixForRouting',
   AUTO_CATEGORIZATION_CUSTOM_ROUTING_PREFIX: 'gvAutoCategorizationCustomRoutingPrefix',
+  AUTO_CATEGORIZATION_API_MODE: 'gvAutoCategorizationApiMode',
+  AUTO_CATEGORIZATION_API_KEY: 'gvAutoCategorizationApiKey',
+  AUTO_CATEGORIZATION_API_MODEL: 'gvAutoCategorizationApiModel',
 
   // Upsell hider
   UPSELL_HIDER_ENABLED: 'gvUpsellHiderEnabled',

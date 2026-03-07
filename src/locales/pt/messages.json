@@ -643,6 +643,14 @@
     "message": "Devido a restrições de segurança do navegador, esta página de Opções não pode acessar diretamente os prompts e dados de pasta das páginas do Gemini. Use o Gerenciador de Prompts e os recursos de Exportação de Pasta na página do Gemini para backups manuais.",
     "description": "Backup data access limitation explanation"
   },
+  "hideUpsell": {
+    "message": "Ocultar avisos de upgrade",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "Ocultar o botão \"Fazer upgrade para o Google AI Ultra\" na barra lateral e no menu de modelos",
+    "description": "Explanation for the upsell hiding feature"
+  },
   "promptManagerOptions": {
     "message": "Gerenciador de Prompts",
     "description": "Prompt Manager options section label"
@@ -791,14 +799,6 @@
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows modifier key"
   },
-  "preventAutoScroll": {
-    "message": "Prevenir rolamento automático",
-    "description": "Auto-hide sidebar toggle label"
-  },
-  "preventAutoScrollHint": {
-    "message": "Impede o Gemini de pular para o final quando você aperta Enter enquanto lê respostas anteriores.",
-    "description": "Auto-hide sidebar feature hint"
-  },
   "cloudSync": {
     "message": "Sincronização na Nuvem",
     "description": "Cloud sync section title"
@@ -806,6 +806,14 @@
   "cloudSyncDescription": {
     "message": "Sincronizar pastas e prompts com o Google Drive",
     "description": "Cloud sync description"
+  },
+  "preventAutoScroll": {
+    "message": "Prevenir rolamento automático",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "preventAutoScrollHint": {
+    "message": "Impede o Gemini de pular para o final quando você aperta Enter enquanto lê respostas anteriores.",
+    "description": "Auto-hide sidebar feature hint"
   },
   "syncModeDisabled": {
     "message": "Desativado",
@@ -1379,14 +1387,6 @@
     "message": "Selecionar apenas IA",
     "description": "Export selection mode: select only AI messages"
   },
-  "hideUpsell": {
-    "message": "Ocultar avisos de upgrade",
-    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
-  },
-  "hideUpsellHint": {
-    "message": "Ocultar o botão \"Fazer upgrade para o Google AI Ultra\" na barra lateral e no menu de modelos",
-    "description": "Explanation for the upsell hiding feature"
-  },
   "autoCategorization": {
     "message": "Classificação automática",
     "description": "Auto Categorize Label"
@@ -1394,6 +1394,18 @@
   "autoCategorizationHint": {
     "message": "Pedir automaticamente à IA para classificar e mover novas conversas para as pastas apropriadas",
     "description": "Auto Categorization Hint"
+  },
+  "autoCategorizationEngine": {
+    "message": "Categorization Engine",
+    "description": "Label for categorization engine selection"
+  },
+  "autoCategorizationEngineWeb": {
+    "message": "Native Web (Gemini)",
+    "description": "Web mode option"
+  },
+  "autoCategorizationEngineApi": {
+    "message": "Gemini API (Silent)",
+    "description": "API mode option"
   },
   "autoCategorizationPrefix": {
     "message": "Prefixo acionador",
@@ -1475,6 +1487,22 @@
     "message": "Negative",
     "description": "Negative trigger mode option"
   },
+  "autoCategorizationPreviewInputThis": {
+    "message": "Input this format, ",
+    "description": "Preview explanation prefix"
+  },
+  "autoCategorizationPreviewThenDo": {
+    "message": "will",
+    "description": "Preview explanation action (do)"
+  },
+  "autoCategorizationPreviewThenDoNot": {
+    "message": "won't",
+    "description": "Preview explanation action (do not)"
+  },
+  "autoCategorizationPreviewAutoCategorize": {
+    "message": " auto categorize",
+    "description": "Preview explanation suffix"
+  },
   "autoCategorizationUseMainPrefixForRouting": {
     "message": "Use main prefix for routing",
     "description": "Use main prefix for index routing toggle"
@@ -1491,20 +1519,20 @@
     "message": "Leave empty for bare numbers (e.g. 1 2) to trigger routing. Or set a custom prefix (e.g. /).",
     "description": "Custom routing prefix hint"
   },
-  "autoCategorizationPreviewInputThis": {
-    "message": "Input this format, ",
-    "description": "Preview explanation prefix"
+  "geminiApiMode": {
+    "message": "Use Gemini API (Background)",
+    "description": "API mode toggle label"
   },
-  "autoCategorizationPreviewThenDo": {
-    "message": "will",
-    "description": "Preview explanation action (do)"
+  "geminiApiModeHint": {
+    "message": "Use your own API Key to categorize silently in the background without UI jumps.",
+    "description": "API mode hint"
   },
-  "autoCategorizationPreviewThenDoNot": {
-    "message": "won't",
-    "description": "Preview explanation action (do not)"
+  "geminiApiKey": {
+    "message": "Gemini API Key",
+    "description": "API Key input label"
   },
-  "autoCategorizationPreviewAutoCategorize": {
-    "message": " auto categorize",
-    "description": "Preview explanation suffix"
+  "geminiApiModel": {
+    "message": "Model",
+    "description": "API Model select label"
   }
 }

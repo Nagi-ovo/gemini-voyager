@@ -146,7 +146,10 @@ interface SettingsUpdate {
   gvAutoCategorizationRoutingSeparator?: string;
   gvAutoCategorizationTriggerMode?: 'positive' | 'negative';
   gvAutoCategorizationUseMainPrefixForRouting?: boolean;
-  gvAutoCategorizationCustomRoutingPrefix?: string;
+  autoCategorizationCustomRoutingPrefix?: string;
+  autoCategorizationApiMode?: boolean;
+  autoCategorizationApiKey?: string;
+  autoCategorizationApiModel?: string;
 }
 
 export default function Popup() {
@@ -168,13 +171,18 @@ export default function Popup() {
     useState<string>(' ');
   const [autoCategorizationTriggerMode, setAutoCategorizationTriggerMode] = useState<
     'positive' | 'negative'
-  >('positive');
+  >('negative');
   const [autoCategorizationUseMainPrefixForRouting, setAutoCategorizationUseMainPrefixForRouting] =
     useState<boolean>(true);
   const [autoCategorizationCustomRoutingPrefix, setAutoCategorizationCustomRoutingPrefix] =
     useState<string>('');
   const [autoCategorizationShowFolderIndex, setAutoCategorizationShowFolderIndex] =
     useState<boolean>(true);
+  const [autoCategorizationApiMode, setAutoCategorizationApiMode] = useState<boolean>(false);
+  const [autoCategorizationApiKey, setAutoCategorizationApiKey] = useState<string>('');
+  const [autoCategorizationApiModel, setAutoCategorizationApiModel] = useState<string>(
+    'gemini-3.1-flash-lite-preview',
+  );
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
   const [customWebsites, setCustomWebsites] = useState<string[]>([]);
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
@@ -211,7 +219,7 @@ export default function Popup() {
         const url = tabs[0]?.url || '';
         setActiveAccountPlatform(detectAccountPlatformFromUrl(url));
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const handleFormulaCopyFormatChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -280,12 +288,21 @@ export default function Popup() {
         payload.gvAutoCategorizationUseMainPrefixForRouting =
           settings.gvAutoCategorizationUseMainPrefixForRouting;
       }
-      if (settings.gvAutoCategorizationCustomRoutingPrefix !== undefined) {
+      if (settings.autoCategorizationCustomRoutingPrefix !== undefined) {
         payload.gvAutoCategorizationCustomRoutingPrefix =
-          settings.gvAutoCategorizationCustomRoutingPrefix;
+          settings.autoCategorizationCustomRoutingPrefix;
       }
       if (settings.gvAutoCategorizationShowFolderIndex !== undefined) {
         payload.gvAutoCategorizationShowFolderIndex = settings.gvAutoCategorizationShowFolderIndex;
+      }
+      if (settings.autoCategorizationApiMode !== undefined) {
+        payload.gvAutoCategorizationApiMode = settings.autoCategorizationApiMode;
+      }
+      if (settings.autoCategorizationApiKey !== undefined) {
+        payload.gvAutoCategorizationApiKey = settings.autoCategorizationApiKey;
+      }
+      if (settings.autoCategorizationApiModel !== undefined) {
+        payload.gvAutoCategorizationApiModel = settings.autoCategorizationApiModel;
       }
       if (typeof settings.hideArchivedConversations === 'boolean')
         payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
@@ -345,7 +362,7 @@ export default function Popup() {
       );
       try {
         chrome.storage?.sync?.set({ geminiChatWidth: normalized });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -371,7 +388,7 @@ export default function Popup() {
       );
       try {
         chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -380,19 +397,19 @@ export default function Popup() {
     () =>
       isAIStudio
         ? {
-            key: 'gvAIStudioSidebarWidth',
-            min: AI_STUDIO_SIDEBAR_PX.min,
-            max: AI_STUDIO_SIDEBAR_PX.max,
-            def: AI_STUDIO_SIDEBAR_PX.defaultValue,
-            norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
-          }
+          key: 'gvAIStudioSidebarWidth',
+          min: AI_STUDIO_SIDEBAR_PX.min,
+          max: AI_STUDIO_SIDEBAR_PX.max,
+          def: AI_STUDIO_SIDEBAR_PX.defaultValue,
+          norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
+        }
         : {
-            key: 'geminiSidebarWidth',
-            min: SIDEBAR_PX.min,
-            max: SIDEBAR_PX.max,
-            def: SIDEBAR_PX.defaultValue,
-            norm: normalizeSidebarPx,
-          },
+          key: 'geminiSidebarWidth',
+          min: SIDEBAR_PX.min,
+          max: SIDEBAR_PX.max,
+          def: SIDEBAR_PX.defaultValue,
+          norm: normalizeSidebarPx,
+        },
     [isAIStudio],
   );
 
@@ -405,7 +422,7 @@ export default function Popup() {
         const clamped = sidebarConfig.norm(widthPx);
         try {
           chrome.storage?.sync?.set({ [sidebarConfig.key]: clamped });
-        } catch {}
+        } catch { }
       },
       [sidebarConfig],
     ),
@@ -423,7 +440,7 @@ export default function Popup() {
         const clamped = clampNumber(spacing, FOLDER_SPACING.min, FOLDER_SPACING.max);
         try {
           chrome.storage?.sync?.set({ [folderSpacingKey]: clamped });
-        } catch {}
+        } catch { }
       },
       [folderSpacingKey],
     ),
@@ -437,7 +454,7 @@ export default function Popup() {
       const clamped = clampNumber(indent, FOLDER_TREE_INDENT.min, FOLDER_TREE_INDENT.max);
       try {
         chrome.storage?.sync?.set({ gvFolderTreeIndent: clamped });
-      } catch {}
+      } catch { }
     }, []),
   });
 
@@ -540,10 +557,13 @@ export default function Popup() {
           gvAutoCategorizationStrictMatch: false,
           gvAutoCategorizationIndexRouting: false,
           gvAutoCategorizationRoutingSeparator: ' ',
-          gvAutoCategorizationTriggerMode: 'positive',
+          gvAutoCategorizationTriggerMode: 'negative',
           gvAutoCategorizationUseMainPrefixForRouting: true,
           gvAutoCategorizationCustomRoutingPrefix: '',
           gvAutoCategorizationShowFolderIndex: true,
+          gvAutoCategorizationApiMode: false,
+          gvAutoCategorizationApiKey: '',
+          gvAutoCategorizationApiModel: 'gemini-3.1-flash-lite-preview',
           geminiFolderHideArchivedConversations: false,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
@@ -592,6 +612,11 @@ export default function Popup() {
             res.gvAutoCategorizationCustomRoutingPrefix || '',
           );
           setAutoCategorizationShowFolderIndex(res.gvAutoCategorizationShowFolderIndex !== false);
+          setAutoCategorizationApiMode(!!res.gvAutoCategorizationApiMode);
+          setAutoCategorizationApiKey(res.gvAutoCategorizationApiKey || '');
+          setAutoCategorizationApiModel(
+            res.gvAutoCategorizationApiModel || 'gemini-3.1-flash-lite-preview',
+          );
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
           const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
             ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
@@ -665,7 +690,7 @@ export default function Popup() {
           })();
         },
       );
-    } catch {}
+    } catch { }
   }, [setSyncStorage]);
 
   // Validate and normalize URL
@@ -923,11 +948,10 @@ export default function Popup() {
                   style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
                 />
                 <button
-                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                    mode === 'flow'
-                      ? 'text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${mode === 'flow'
+                    ? 'text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
                   onClick={() => {
                     setMode('flow');
                     apply({ mode: 'flow' });
@@ -936,11 +960,10 @@ export default function Popup() {
                   {t('flow')}
                 </button>
                 <button
-                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                    mode === 'jump'
-                      ? 'text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${mode === 'jump'
+                    ? 'text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
                   onClick={() => {
                     setMode('jump');
                     apply({ mode: 'jump' });
@@ -1111,8 +1134,92 @@ export default function Popup() {
                 </div>
 
                 {autoCategorizationEnabled && (
-                  <div className="bg-secondary/20 space-y-6 rounded-md p-4">
-                    {/* 1. General AI Categorization Block */}
+                  <div className="bg-secondary/20 animate-in fade-in slide-in-from-top-4 space-y-6 rounded-md p-4 duration-300">
+                    {/* 1. Categorization Engine Selection */}
+                    <div className="bg-primary/5 space-y-4 rounded-md border p-4 transition-all">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-semibold">{t('autoCategorizationEngine')}</Label>
+                        </div>
+
+                        <div className="bg-background/40 flex overflow-hidden rounded-lg border p-1">
+                          <button
+                            className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${!autoCategorizationApiMode
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'text-muted-foreground hover:bg-black/5'
+                              }`}
+                            onClick={() => {
+                              setAutoCategorizationApiMode(false);
+                              apply({ autoCategorizationApiMode: false });
+                            }}
+                          >
+                            {t('autoCategorizationEngineWeb')}
+                          </button>
+                          <button
+                            className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${autoCategorizationApiMode
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'text-muted-foreground hover:bg-black/5'
+                              }`}
+                            onClick={() => {
+                              setAutoCategorizationApiMode(true);
+                              apply({ autoCategorizationApiMode: true });
+                            }}
+                          >
+                            {t('autoCategorizationEngineApi')}
+                          </button>
+                        </div>
+                        <p className="text-muted-foreground px-1 text-[10px] italic leading-tight opacity-70">
+                          {autoCategorizationApiMode
+                            ? t('geminiApiModeHint')
+                            : t('autoCategorizationHint')}
+                        </p>
+                      </div>
+
+                      {autoCategorizationApiMode && (
+                        <div className="bg-background/50 animate-in fade-in slide-in-from-top-2 space-y-3 rounded border p-3 duration-200">
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] font-medium opacity-70">
+                              {t('geminiApiKey')}
+                            </Label>
+                            <input
+                              type="password"
+                              className="bg-background border-input focus:ring-ring h-8 w-full rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
+                              value={autoCategorizationApiKey}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setAutoCategorizationApiKey(val);
+                                apply({ autoCategorizationApiKey: val });
+                              }}
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] font-medium opacity-70">
+                              {t('geminiApiModel')}
+                            </Label>
+                            <select
+                              className="bg-background border-input focus:ring-ring h-8 w-full rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
+                              value={autoCategorizationApiModel}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setAutoCategorizationApiModel(val);
+                                apply({ autoCategorizationApiModel: val });
+                              }}
+                            >
+                              <option value="gemini-3.1-flash-lite-preview">
+                                Gemini 3.1 Flash Lite
+                              </option>
+                              <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                              <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-border my-2 h-px w-full opacity-50" />
+
+                    {/* 2. General AI Categorization Block */}
                     <div className="space-y-3">
                       {/* WYSIWYG Preview for General */}
                       <div className="bg-primary/5 space-y-2 rounded-lg border p-3">
@@ -1272,12 +1379,12 @@ export default function Popup() {
                               {/* Prefix */}
                               {(autoCategorizationUseMainPrefixForRouting ||
                                 autoCategorizationCustomRoutingPrefix) && (
-                                <span className="rounded px-1 font-bold text-purple-500">
-                                  {autoCategorizationUseMainPrefixForRouting
-                                    ? autoCategorizationPrefix || '.'
-                                    : autoCategorizationCustomRoutingPrefix}
-                                </span>
-                              )}
+                                  <span className="rounded px-1 font-bold text-purple-500">
+                                    {autoCategorizationUseMainPrefixForRouting
+                                      ? autoCategorizationPrefix || '.'
+                                      : autoCategorizationCustomRoutingPrefix}
+                                  </span>
+                                )}
                               {/* Folder Index */}
                               <span className="rounded px-1 font-bold text-green-600">1</span>
                               {/* Separator */}
@@ -1331,7 +1438,7 @@ export default function Popup() {
                                   onChange={(e) => {
                                     const val = e.target.value;
                                     setAutoCategorizationCustomRoutingPrefix(val);
-                                    apply({ gvAutoCategorizationCustomRoutingPrefix: val });
+                                    apply({ autoCategorizationCustomRoutingPrefix: val });
                                   }}
                                   maxLength={5}
                                 />
@@ -1393,95 +1500,101 @@ export default function Popup() {
                     </div>
                   </div>
                 )}
-              </div>
-            )}
-            <div className="group flex items-center justify-between">
-              <Label
-                htmlFor="hide-archived"
-                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-              >
-                {t('hideArchivedConversations')}
-              </Label>
-              <Switch
-                id="hide-archived"
-                checked={hideArchivedConversations}
-                onChange={(e) => {
-                  setHideArchivedConversations(e.target.checked);
-                  apply({ hideArchivedConversations: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="fork-enabled"
-                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
-                >
-                  {t('enableForkFeature')}
-                  <span
-                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
-                    title={t('experimentalLabel')}
-                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
-                  >
-                    experiment
-                  </span>
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('enableForkFeatureHint')}</p>
-              </div>
-              <Switch
-                id="fork-enabled"
-                checked={forkEnabled}
-                onChange={(e) => {
-                  setForkEnabled(e.target.checked);
-                  apply({ forkEnabled: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="account-isolation-enabled"
-                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
-                >
-                  {t('enableAccountIsolation')}
-                  <span
-                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
-                    title={t('experimentalLabel')}
-                    style={{
-                      fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20",
-                    }}
-                  >
-                    experiment
-                  </span>
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('enableAccountIsolationHint')}
-                </p>
-                <div className="mt-1 flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">{t('currentPlatform')}:</span>
-                  <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
-                    {currentIsolationPlatformLabel}
-                  </span>
+
+
+
+                {/* 3. Trigger Configuration */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="group flex items-center justify-between">
+                    <Label
+                      htmlFor="hide-archived"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('hideArchivedConversations')}
+                    </Label>
+                    <Switch
+                      id="hide-archived"
+                      checked={hideArchivedConversations}
+                      onChange={(e) => {
+                        setHideArchivedConversations(e.target.checked);
+                        apply({ hideArchivedConversations: e.target.checked });
+                      }}
+                    />
+                  </div>
+                  <div className="group flex items-center justify-between">
+                    <div className="flex-1">
+                      <Label
+                        htmlFor="fork-enabled"
+                        className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                      >
+                        {t('enableForkFeature')}
+                        <span
+                          className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                          title={t('experimentalLabel')}
+                          style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                        >
+                          experiment
+                        </span>
+                      </Label>
+                      <p className="text-muted-foreground mt-1 text-xs">{t('enableForkFeatureHint')}</p>
+                    </div>
+                    <Switch
+                      id="fork-enabled"
+                      checked={forkEnabled}
+                      onChange={(e) => {
+                        setForkEnabled(e.target.checked);
+                        apply({ forkEnabled: e.target.checked });
+                      }}
+                    />
+                  </div>
+                  <div className="group flex items-center justify-between">
+                    <div className="flex-1">
+                      <Label
+                        htmlFor="account-isolation-enabled"
+                        className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                      >
+                        {t('enableAccountIsolation')}
+                        <span
+                          className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                          title={t('experimentalLabel')}
+                          style={{
+                            fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20",
+                          }}
+                        >
+                          experiment
+                        </span>
+                      </Label>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {t('enableAccountIsolationHint')}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2 text-xs">
+                        <span className="text-muted-foreground">{t('currentPlatform')}:</span>
+                        <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
+                          {currentIsolationPlatformLabel}
+                        </span>
+                      </div>
+                    </div>
+                    <Switch
+                      id="account-isolation-enabled"
+                      checked={
+                        isAIStudio ? accountIsolationEnabledAIStudio : accountIsolationEnabledGemini
+                      }
+                      onChange={(e) => {
+                        if (isAIStudio) {
+                          setAccountIsolationEnabledAIStudio(e.target.checked);
+                        } else {
+                          setAccountIsolationEnabledGemini(e.target.checked);
+                        }
+                        apply({
+                          accountIsolationEnabled: e.target.checked,
+                          accountIsolationPlatform: activeAccountPlatform,
+                        });
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-              <Switch
-                id="account-isolation-enabled"
-                checked={
-                  isAIStudio ? accountIsolationEnabledAIStudio : accountIsolationEnabledGemini
-                }
-                onChange={(e) => {
-                  if (isAIStudio) {
-                    setAccountIsolationEnabledAIStudio(e.target.checked);
-                  } else {
-                    setAccountIsolationEnabledGemini(e.target.checked);
-                  }
-                  apply({
-                    accountIsolationEnabled: e.target.checked,
-                    accountIsolationPlatform: activeAccountPlatform,
-                  });
-                }}
-              />
-            </div>
+            )}
           </CardContent>
         </Card>
         {/* Folder Spacing */}
@@ -1760,11 +1873,10 @@ export default function Popup() {
                       onClick={() => {
                         void toggleQuickWebsite(domain, isEnabled);
                       }}
-                      className={`inline-flex min-w-[30%] grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
-                        isEnabled
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
-                      }`}
+                      className={`inline-flex min-w-[30%] grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${isEnabled
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
+                        }`}
                       title={label}
                     >
                       <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">

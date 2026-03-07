@@ -1395,6 +1395,18 @@
     "message": "Automatically ask AI to classify and move new conversations to appropriate folders",
     "description": "Auto Categorization Hint"
   },
+  "autoCategorizationEngine": {
+    "message": "Categorization Engine",
+    "description": "Label for categorization engine selection"
+  },
+  "autoCategorizationEngineWeb": {
+    "message": "Native Web (Gemini)",
+    "description": "Web mode option"
+  },
+  "autoCategorizationEngineApi": {
+    "message": "Gemini API (Silent)",
+    "description": "API mode option"
+  },
   "autoCategorizationPrefix": {
     "message": "Trigger Prefix",
     "description": "Auto categorization trigger prefix label"
@@ -1506,5 +1518,21 @@
   "autoCategorizationCustomRoutingPrefixHint": {
     "message": "Empty: bare numbers trigger routing (e.g. '1 2 message'). Set a prefix (e.g. /): routing requires that prefix (e.g. '/1 2 message').",
     "description": "Custom routing prefix hint"
+  },
+  "geminiApiMode": {
+    "message": "Use Gemini API (Background)",
+    "description": "API mode toggle label"
+  },
+  "geminiApiModeHint": {
+    "message": "Use your own API Key to categorize silently in the background without UI jumps.",
+    "description": "API mode hint"
+  },
+  "geminiApiKey": {
+    "message": "Gemini API Key",
+    "description": "API Key input label"
+  },
+  "geminiApiModel": {
+    "message": "Model",
+    "description": "API Model select label"
   }
 }

@@ -643,6 +643,14 @@
     "message": "브라우저 보안 제한으로 인해, 이 옵션 페이지는 Gemini 페이지의 프롬프트 및 폴더 데이터에 직접 액세스할 수 없습니다. 수동 백업은 Gemini 페이지의 프롬프트 관리자 및 폴더 내보내기 기능을 사용하십시오.",
     "description": "Backup data access limitation explanation"
   },
+  "hideUpsell": {
+    "message": "업그레이드 안내 숨기기",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "사이드바와 모델 메뉴에서 \"Google AI Ultra로 업그레이드\" 버튼을 숨깁니다",
+    "description": "Explanation for the upsell hiding feature"
+  },
   "promptManagerOptions": {
     "message": "프롬프트 관리자",
     "description": "Prompt Manager options section label"
@@ -791,14 +799,6 @@
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows modifier key"
   },
-  "preventAutoScroll": {
-    "message": "자동 스크롤 방지",
-    "description": "Auto-hide sidebar toggle label"
-  },
-  "preventAutoScrollHint": {
-    "message": "이전 응답을 읽는 동안 Enter 키를 누를 때 Gemini 가 맨 아래로 점프하는 것을 방지합니다.",
-    "description": "Auto-hide sidebar feature hint"
-  },
   "cloudSync": {
     "message": "클라우드 동기화",
     "description": "Cloud sync section title"
@@ -806,6 +806,14 @@
   "cloudSyncDescription": {
     "message": "폴더와 프롬프트를 Google Drive 에 동기화합니다",
     "description": "Cloud sync description"
+  },
+  "preventAutoScroll": {
+    "message": "자동 스크롤 방지",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "preventAutoScrollHint": {
+    "message": "이전 응답을 읽는 동안 Enter 키를 누를 때 Gemini 가 맨 아래로 점프하는 것을 방지합니다.",
+    "description": "Auto-hide sidebar feature hint"
   },
   "syncModeDisabled": {
     "message": "비활성화",
@@ -1379,14 +1387,6 @@
     "message": "AI만 선택",
     "description": "Export selection mode: select only AI messages"
   },
-  "hideUpsell": {
-    "message": "업그레이드 안내 숨기기",
-    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
-  },
-  "hideUpsellHint": {
-    "message": "사이드바와 모델 메뉴에서 \"Google AI Ultra로 업그레이드\" 버튼을 숨깁니다",
-    "description": "Explanation for the upsell hiding feature"
-  },
   "autoCategorization": {
     "message": "자동 분류",
     "description": "Auto Categorize Label"
@@ -1394,6 +1394,18 @@
   "autoCategorizationHint": {
     "message": "AI가 새 대화를 자동으로 분류하여 적절한 폴더로 이동합니다",
     "description": "Auto Categorization Hint"
+  },
+  "autoCategorizationEngine": {
+    "message": "Categorization Engine",
+    "description": "Label for categorization engine selection"
+  },
+  "autoCategorizationEngineWeb": {
+    "message": "Native Web (Gemini)",
+    "description": "Web mode option"
+  },
+  "autoCategorizationEngineApi": {
+    "message": "Gemini API (Silent)",
+    "description": "API mode option"
   },
   "autoCategorizationPrefix": {
     "message": "트리거 접두사",
@@ -1475,6 +1487,22 @@
     "message": "Negative",
     "description": "Negative trigger mode option"
   },
+  "autoCategorizationPreviewInputThis": {
+    "message": "Input this format, ",
+    "description": "Preview explanation prefix"
+  },
+  "autoCategorizationPreviewThenDo": {
+    "message": "will",
+    "description": "Preview explanation action (do)"
+  },
+  "autoCategorizationPreviewThenDoNot": {
+    "message": "won't",
+    "description": "Preview explanation action (do not)"
+  },
+  "autoCategorizationPreviewAutoCategorize": {
+    "message": " auto categorize",
+    "description": "Preview explanation suffix"
+  },
   "autoCategorizationUseMainPrefixForRouting": {
     "message": "Use main prefix for routing",
     "description": "Use main prefix for index routing toggle"
@@ -1491,20 +1519,20 @@
     "message": "Leave empty for bare numbers (e.g. 1 2) to trigger routing. Or set a custom prefix (e.g. /).",
     "description": "Custom routing prefix hint"
   },
-  "autoCategorizationPreviewInputThis": {
-    "message": "Input this format, ",
-    "description": "Preview explanation prefix"
+  "geminiApiMode": {
+    "message": "Use Gemini API (Background)",
+    "description": "API mode toggle label"
   },
-  "autoCategorizationPreviewThenDo": {
-    "message": "will",
-    "description": "Preview explanation action (do)"
+  "geminiApiModeHint": {
+    "message": "Use your own API Key to categorize silently in the background without UI jumps.",
+    "description": "API mode hint"
   },
-  "autoCategorizationPreviewThenDoNot": {
-    "message": "won't",
-    "description": "Preview explanation action (do not)"
+  "geminiApiKey": {
+    "message": "Gemini API Key",
+    "description": "API Key input label"
   },
-  "autoCategorizationPreviewAutoCategorize": {
-    "message": " auto categorize",
-    "description": "Preview explanation suffix"
+  "geminiApiModel": {
+    "message": "Model",
+    "description": "API Model select label"
   }
 }

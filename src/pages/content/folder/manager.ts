@@ -2236,7 +2236,7 @@ export class FolderManager {
     return result;
   }
 
-  private toggleFolder(folderId: string): void {
+  public toggleFolder(folderId: string): void {
     const folder = this.data.folders.find((f) => f.id === folderId);
     if (!folder) return;
 
@@ -2244,6 +2244,22 @@ export class FolderManager {
     folder.updatedAt = Date.now();
     this.saveData();
     this.refresh();
+  }
+
+  /**
+   * Mark a folder as expanded in-memory WITHOUT triggering saveData/refresh.
+   * The caller is responsible for persisting + refreshing (e.g. addConversationsToFolder does both).
+   * This avoids a race condition where two rapid async saveData() calls overwrite each other.
+   */
+  public ensureFolderExpanded(folderId: string): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    if (!folder.isExpanded) {
+      folder.isExpanded = true;
+      folder.updatedAt = Date.now();
+      this.debug(`Marked folder as expanded (pending save): ${folderId}`);
+    }
   }
 
   private togglePinFolder(folderId: string): void {
@@ -2820,9 +2836,9 @@ export class FolderManager {
       // Strategy 2: Look for menu items containing delete text (supports translations)
       const menuItems = document.querySelectorAll(
         '.cdk-overlay-container button, ' +
-          '.cdk-overlay-container [role="menuitem"], ' +
-          '.mat-mdc-menu-content button, ' +
-          '.mat-menu-content button',
+        '.cdk-overlay-container [role="menuitem"], ' +
+        '.mat-mdc-menu-content button, ' +
+        '.mat-menu-content button',
       );
 
       for (const item of menuItems) {
@@ -4958,7 +4974,7 @@ export class FolderManager {
   private showDataLossNotification(): void {
     this.showNotificationByLevel(
       getTranslationSync('folderManager_dataLossWarning') ||
-        'Warning: Failed to load folder data. Please check your browser console for details.',
+      'Warning: Failed to load folder data. Please check your browser console for details.',
       'error',
     );
   }
@@ -6424,14 +6440,14 @@ export class FolderManager {
         },
       })) as
         | {
-            ok?: boolean;
-            error?: string;
-            data?: {
-              folders?: { data?: FolderData };
-              prompts?: { items?: PromptItem[] };
-              starred?: { data?: { messages: Record<string, unknown[]> } };
-            };
-          }
+          ok?: boolean;
+          error?: string;
+          data?: {
+            folders?: { data?: FolderData };
+            prompts?: { items?: PromptItem[] };
+            starred?: { data?: { messages: Record<string, unknown[]> } };
+          };
+        }
         | undefined;
 
       if (!response?.ok) {

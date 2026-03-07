@@ -1395,6 +1395,18 @@
     "message": "自动将新对话交由AI判断并移动到合适的文件夹",
     "description": "自动归类功能提示"
   },
+  "autoCategorizationEngine": {
+    "message": "归类引擎",
+    "description": "Label for categorization engine selection"
+  },
+  "autoCategorizationEngineWeb": {
+    "message": "原生网页 (Gemini)",
+    "description": "Web mode option"
+  },
+  "autoCategorizationEngineApi": {
+    "message": "API 后台 (推荐)",
+    "description": "API mode option"
+  },
   "autoCategorizationPrefix": {
     "message": "触发前缀",
     "description": "自动归类触发前缀标签"
@@ -1506,5 +1518,21 @@
   "autoCategorizationCustomRoutingPrefixHint": {
     "message": "留空：直接输入数字触发路由（如 1 2 正文）。填写前缀（如 /）：需以该前缀开头（如 /1 2 正文）。",
     "description": "自定义路由前缀提示"
+  },
+  "geminiApiMode": {
+    "message": "使用 Gemini API (后台模式)",
+    "description": "API mode toggle label"
+  },
+  "geminiApiModeHint": {
+    "message": "使用自己的 API Key 在后台静默分类，无需跳转打开新对话窗口。",
+    "description": "API mode hint"
+  },
+  "geminiApiKey": {
+    "message": "Gemini API Key",
+    "description": "API Key input label"
+  },
+  "geminiApiModel": {
+    "message": "模型",
+    "description": "API Model select label"
   }
 }
