@@ -16,7 +16,7 @@
 
    ![CoBridge拡張機能](/assets/CoBridge-extension.png)
 
-   インストール後、右側のアイコンをクリックしてサーバーを起動します。
+   インストール後、**任意の作業ディレクトリを開き**、右側のアイコンをクリックしてサーバーを起動します。
    ![CoBridgeサーバー起動](/assets/CoBridge-on.png)
 
 2. **接続の確立**：
@@ -31,7 +31,7 @@
 
 ## IDEへの定着
 
-同期が完了すると、IDEのルートディレクトリに `.cobridge/AI_CONTEXT.md` が追加されます。 Trae、Cursor、Copilotのいずれであっても、それぞれのRuleファイルを介してこの「記憶」を自動的に読み取ります。
+同期が完了すると、IDEの作業ディレクトリに `.cobridge/AI_CONTEXT.md` が追加されます。 Trae、Cursor、Copilotのいずれであっても、それぞれのRuleファイルを介してこの「記憶」を自動的に読み取ります。
 
 ```
 your-project/

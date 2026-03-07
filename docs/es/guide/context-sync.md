@@ -16,7 +16,7 @@ El mayor dolor de cabeza de los desarrolladores: después de discutir a fondo un
 
    ![Extensión CoBridge](/assets/CoBridge-extension.png)
 
-   Después de la instalación, haz clic en el icono de la derecha y activa el servidor.
+   Después de la instalación, **abre cualquier directorio de trabajo**, haz clic en el icono de la derecha y activa el servidor.
    ![Servidor CoBridge activado](/assets/CoBridge-on.png)
 
 2. **Conexión y saludo**:
@@ -31,7 +31,7 @@ El mayor dolor de cabeza de los desarrolladores: después de discutir a fondo un
 
 ## Arraigando en el IDE
 
-Una vez finalizada la sincronización, aparecerá un archivo `.cobridge/AI_CONTEXT.md` en el directorio raíz de tu IDE. Ya sea Trae, Cursor o Copilot, leerán automáticamente esta «memoria» a través de sus respectivos archivos Rule.
+Una vez finalizada la sincronización, aparecerá un archivo `.cobridge/AI_CONTEXT.md` en el directorio de trabajo de tu IDE. Ya sea Trae, Cursor o Copilot, leerán automáticamente esta «memoria» a través de sus respectivos archivos Rule.
 
 ```
 your-project/

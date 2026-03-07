@@ -16,7 +16,7 @@ A maior dor para os desenvolvedores: depois de discutir uma solução minuciosam
 
    ![Extensão CoBridge](/assets/CoBridge-extension.png)
 
-   Após a instalação, clique no ícone à direita e inicie o servidor.
+   Após a instalação, **abra qualquer diretório de trabalho**, clique no ícone à direita e inicie o servidor.
    ![Servidor CoBridge Ligado](/assets/CoBridge-on.png)
 
 2. **Aperto de mão**:
@@ -31,7 +31,7 @@ A maior dor para os desenvolvedores: depois de discutir uma solução minuciosam
 
 ## Criando Raízes
 
-Assim que a sincronização for concluída, um arquivo `.cobridge/AI_CONTEXT.md` aparecerá no diretório raiz do seu IDE. Seja Trae, Cursor ou Copilot, eles lerão automaticamente essa 'memória' por meio de seus respectivos arquivos Rule.
+Assim que a sincronização for concluída, um arquivo `.cobridge/AI_CONTEXT.md` aparecerá no diretório de trabalho do seu IDE. Seja Trae, Cursor ou Copilot, eles lerão automaticamente essa 'memória' por meio de seus respectivos arquivos Rule.
 
 ```
 your-project/

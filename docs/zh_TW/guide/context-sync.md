@@ -16,7 +16,7 @@
 
    ![CoBridge 擴充功能](/assets/CoBridge-extension.png)
 
-   安裝完成後，點擊右側圖示並啟動伺服器。
+   安裝完成後，**打開任意工作目錄**，點擊右側圖示並啟動伺服器。
    ![CoBridge 伺服器開啟](/assets/CoBridge-on.png)
 
 2. **握手對接**：
@@ -31,7 +31,7 @@
 
 ## 落地生根
 
-同步完成後，您的 IDE 根目錄會多出一個 `.cobridge/AI_CONTEXT.md`。 無論是 Trae、Cursor 還是 Copilot，它們會透過各自的 Rule 文件自動讀取這份「記憶」。
+同步完成後，您的 IDE 工作目錄會多出一個 `.cobridge/AI_CONTEXT.md`。 無論是 Trae、Cursor 還是 Copilot，它們會透過各自的 Rule 文件自動讀取這份「記憶」。
 
 ```
 your-project/

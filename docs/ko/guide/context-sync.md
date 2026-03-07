@@ -16,7 +16,7 @@
 
    ![CoBridge 확장 프로그램](/assets/CoBridge-extension.png)
 
-   설치 후 오른쪽 아이콘을 클릭하고 서버를 시작합니다.
+   설치 후 **임의의 작업 디렉토리를 열고**, 오른쪽 아이콘을 클릭하여 서버를 시작합니다.
    ![CoBridge 서버 시작](/assets/CoBridge-on.png)
 
 2. **연결 확인 (Handshake)**:
@@ -31,7 +31,7 @@
 
 ## IDE에 뿌리 내리기
 
-동기화가 완료되면 IDE 루트 디렉토리에 `.cobridge/AI_CONTEXT.md` 파일이 생성됩니다. Trae, Cursor, Copilot 중 무엇을 사용하든 각각의 Rule 파일을 통해 이 "기억"을 자동으로 읽어옵니다.
+동기화가 완료되면 IDE 작업 디렉토리에 `.cobridge/AI_CONTEXT.md` 파일이 생성됩니다. Trae, Cursor, Copilot 중 무엇을 사용하든 각각의 Rule 파일을 통해 이 "기억"을 자동으로 읽어옵니다.
 
 ```
 your-project/
