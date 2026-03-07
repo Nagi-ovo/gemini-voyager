@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Extension name"
   },
   "extDescription": {
@@ -52,7 +52,7 @@
     "description": "Language label"
   },
   "pm_title": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Prompt Manager title"
   },
   "pm_add": {
@@ -1271,13 +1271,29 @@
     "message": "Исследованные сайты",
     "description": "Заголовок раздела исследованных сайтов Deep Research"
   },
-  "snowEffect": {
-    "message": "Эффект снега",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "Визуальные эффекты",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "Снегопад на странице для зимней атмосферы",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "Добавьте сезонную атмосферу на страницу",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "Выкл",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "Снег",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "Сакура",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "Дождь",
+    "description": "Visual effect rain option"
   },
   "changelog_title": {
     "message": "Что нового",
@@ -1300,12 +1316,16 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "Нравится Gemini Voyager? Оценка в Chrome Web Store помогает другим пользователям найти расширение!",
+    "message": "Нравится Voyager? Оценка в Chrome Web Store помогает другим пользователям найти расширение!",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
     "message": "Оценить",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "changelog_badge_mode": {
+    "message": "Уведомлять значком NEW на плавающей кнопке вместо этого окна",
+    "description": "Changelog notification mode toggle label"
   },
   "forkConversation": {
     "message": "Fork",

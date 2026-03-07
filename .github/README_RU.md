@@ -185,9 +185,9 @@
 
 ### 🎙️ Рекомендуемый инструмент: Typeless
 
-Я настоятельно рекомендую **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)** — инструмент для перевода голоса в текст с ИИ, который я активно использовал во время разработки Gemini Voyager.
+Я настоятельно рекомендую **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)** — инструмент для перевода голоса в текст с ИИ, который я активно использовал во время разработки Gemini Voyager.
 
-> 🎁 **[Присоединяйтесь по моей ссылке](https://www.typeless.com/refer?code=MZRYZP1)** (Код: **`MZRYZP1`**), чтобы получить **$5 бесплатных бонусов**. ❤️
+> 🎁 **[Присоединяйтесь по моей ссылке](https://www.typeless.com/?via=gemini-voyager)** (Код: _`gemini-voyager`_), чтобы получить **$5 бесплатных бонусов**. ❤️
 
 ---
 

@@ -550,12 +550,14 @@ export class GoogleDriveSyncService {
         return identityResult.token;
       }
 
-      // If user explicitly denied, don't open a second auth flow.
-      if (!interactive || identityResult.userDenied) {
+      if (!interactive) {
         return null;
       }
 
-      // Fallback for environments where getAuthToken exists but fails.
+      // Fallback: always try launchWebAuthFlow when getAuthToken fails.
+      // Some browsers (Arc) or Chrome versions may show an OAuth error page
+      // during getAuthToken, which looks like "user denied" when dismissed,
+      // but launchWebAuthFlow with a registered redirect URI can still succeed.
       return this.getTokenFromLegacyWebAuthFlow();
     }
 

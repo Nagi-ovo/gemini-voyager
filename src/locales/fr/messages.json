@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Extension name"
   },
   "extDescription": {
@@ -52,7 +52,7 @@
     "description": "Language label"
   },
   "pm_title": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Prompt Manager title"
   },
   "pm_add": {
@@ -1271,13 +1271,29 @@
     "message": "Sites web consultés",
     "description": "En-tête de section des sites web recherchés de Deep Research"
   },
-  "snowEffect": {
-    "message": "Effet de neige",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "Effets visuels",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "Laissez la neige tomber sur la page pour une ambiance hivernale",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "Ajoutez une ambiance saisonniere a la page",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "Desactive",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "Neige",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "Sakura",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "Pluie",
+    "description": "Visual effect rain option"
   },
   "changelog_title": {
     "message": "Nouveautés",
@@ -1300,12 +1316,16 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "Vous aimez Gemini Voyager ? Une note sur le Chrome Web Store aide d'autres utilisateurs à le découvrir !",
+    "message": "Vous aimez Voyager ? Une note sur le Chrome Web Store aide d'autres utilisateurs à le découvrir !",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
     "message": "Évaluer",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "changelog_badge_mode": {
+    "message": "Notifier via un badge NEW sur le bouton flottant au lieu de cette fenêtre",
+    "description": "Changelog notification mode toggle label"
   },
   "forkConversation": {
     "message": "Fork",

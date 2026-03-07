@@ -33,6 +33,8 @@ function getPromotionRuntimePath(filename: string): string | null {
       return 'changelog-promo-banner-cn.png';
     case 'Promo-Banner-jp.png':
       return 'changelog-promo-banner-jp.png';
+    case 'Promo-Banner-KO.png':
+      return 'changelog-promo-banner-ko.png';
     default:
       return null;
   }
@@ -195,14 +197,28 @@ const CHROME_STORE_URL =
   'https://chromewebstore.google.com/detail/gemini-voyager/kjdpnimcnfinmilocccippmododhceol';
 
 /**
+ * Read the current changelog notification mode.
+ */
+async function readNotifyMode(): Promise<'popup' | 'badge'> {
+  try {
+    const result = await chrome.storage.local.get(StorageKeys.CHANGELOG_NOTIFY_MODE);
+    const mode = result[StorageKeys.CHANGELOG_NOTIFY_MODE];
+    return mode === 'badge' ? 'badge' : 'popup';
+  } catch {
+    return 'popup';
+  }
+}
+
+/**
  * Render the changelog modal DOM.
  */
 function createChangelogModal(
   htmlContent: string,
   lang: AppLanguage,
+  initialNotifyMode: 'popup' | 'badge' = 'popup',
 ): {
   overlay: HTMLDivElement;
-  onClose: () => Promise<void>;
+  onClose: () => void;
 } {
   const overlay = document.createElement('div');
   overlay.className = 'gv-changelog-overlay';
@@ -320,7 +336,43 @@ function createChangelogModal(
   actionRow.appendChild(iconGroup);
   actionRow.appendChild(gotItBtn);
 
+  // Notification mode toggle
+  const notifyToggle = document.createElement('div');
+  notifyToggle.className = 'gv-changelog-notify-toggle';
+
+  const notifyLabel = document.createElement('label');
+  notifyLabel.className = 'gv-changelog-notify-label';
+
+  const notifyCheckbox = document.createElement('input');
+  notifyCheckbox.type = 'checkbox';
+  notifyCheckbox.className = 'gv-changelog-notify-checkbox';
+  notifyCheckbox.checked = initialNotifyMode === 'badge';
+
+  const notifyText = document.createElement('span');
+  notifyText.textContent = t('changelog_badge_mode', lang);
+
+  notifyLabel.appendChild(notifyCheckbox);
+  notifyLabel.appendChild(notifyText);
+  notifyToggle.appendChild(notifyLabel);
+
+  notifyCheckbox.addEventListener('change', () => {
+    const mode = notifyCheckbox.checked ? 'badge' : 'popup';
+    try {
+      const updates: Record<string, string> = {
+        [StorageKeys.CHANGELOG_NOTIFY_MODE]: mode,
+      };
+      // When switching to badge mode, clear dismissed version so badge appears
+      if (mode === 'badge') {
+        updates[StorageKeys.CHANGELOG_DISMISSED_VERSION] = '';
+      }
+      chrome.storage.local.set(updates);
+    } catch {
+      // Ignore errors
+    }
+  });
+
   footer.appendChild(recommendation);
+  footer.appendChild(notifyToggle);
 
   // Chrome Web Store rating prompt (Chrome only)
   if (isChrome()) {
@@ -350,14 +402,7 @@ function createChangelogModal(
   dialog.appendChild(footer);
   overlay.appendChild(dialog);
 
-  const onClose = async (): Promise<void> => {
-    try {
-      await chrome.storage.local.set({
-        [StorageKeys.CHANGELOG_DISMISSED_VERSION]: EXTENSION_VERSION,
-      });
-    } catch {
-      // Extension context may be invalidated
-    }
+  const onClose = (): void => {
     overlay.remove();
   };
 
@@ -431,10 +476,73 @@ async function showChangelogModal(
     ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class'],
   });
 
-  // 5. Inject modal
-  const { overlay } = createChangelogModal(sanitizedHtml, lang);
+  // 5. Mark as dismissed BEFORE showing — ensures the modal never re-appears
+  //    even if the user navigates away without clicking "Got it".
+  //    If this write fails (e.g. extension context invalidated), skip showing
+  //    the modal entirely; it will be shown on the next load with a valid context.
+  try {
+    await chrome.storage.local.set({
+      [StorageKeys.CHANGELOG_DISMISSED_VERSION]: EXTENSION_VERSION,
+    });
+  } catch {
+    return null;
+  }
+
+  // 6. Inject modal
+  const notifyMode = await readNotifyMode();
+  const { overlay } = createChangelogModal(sanitizedHtml, lang, notifyMode);
   document.body.appendChild(overlay);
   return overlay;
+}
+
+/**
+ * Open the changelog modal for the current version (always shows, no dismiss check).
+ */
+export async function openChangelog(): Promise<void> {
+  await showChangelogModal(EXTENSION_VERSION, true);
+}
+
+/**
+ * Check if the current version has an unread changelog.
+ */
+export async function hasUnreadChangelog(): Promise<boolean> {
+  try {
+    const result = await chrome.storage.local.get(StorageKeys.CHANGELOG_DISMISSED_VERSION);
+    const dismissed = result[StorageKeys.CHANGELOG_DISMISSED_VERSION] as string | undefined;
+    return dismissed !== EXTENSION_VERSION;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Show the changelog modal directly (used by badge mode in prompt manager).
+ * Returns a Promise that resolves when the modal is closed.
+ */
+export async function showChangelogModalDirect(): Promise<void> {
+  const overlay = await showChangelogModal(EXTENSION_VERSION, true);
+  if (!overlay) {
+    // No notes found for this version — dismiss anyway so badge doesn't persist
+    try {
+      await chrome.storage.local.set({
+        [StorageKeys.CHANGELOG_DISMISSED_VERSION]: EXTENSION_VERSION,
+      });
+    } catch {
+      // Ignore
+    }
+    return;
+  }
+
+  // Return promise that resolves when overlay is removed
+  return new Promise<void>((resolve) => {
+    const observer = new MutationObserver(() => {
+      if (!overlay.isConnected) {
+        observer.disconnect();
+        resolve();
+      }
+    });
+    observer.observe(document.body, { childList: true });
+  });
 }
 
 /**
@@ -454,6 +562,12 @@ export async function startChangelog(): Promise<() => void> {
   };
 
   try {
+    // In badge mode, skip auto-showing the modal (prompt manager handles it)
+    const notifyMode = await readNotifyMode();
+    if (notifyMode === 'badge') {
+      return () => {};
+    }
+
     overlayRef = await showChangelogModal();
   } catch {
     // Silently fail — changelog is non-critical

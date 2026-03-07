@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "扩展程序名称"
   },
   "extDescription": {
@@ -52,7 +52,7 @@
     "description": "语言标签"
   },
   "pm_title": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "面板标题"
   },
   "pm_add": {
@@ -1271,13 +1271,29 @@
     "message": "研究网站",
     "description": "深度研究已研究网站章节标题"
   },
-  "snowEffect": {
-    "message": "飘雪效果",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "视觉特效",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "在页面上飘雪，营造冬日氛围",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "为页面增添季节氛围",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "关闭",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "飘雪",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "樱花",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "雨",
+    "description": "Visual effect rain option"
   },
   "changelog_title": {
     "message": "更新内容",
@@ -1300,12 +1316,16 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "觉得 Gemini Voyager 好用吗？在 Chrome 应用商店给个好评，能帮助更多人发现它！",
+    "message": "觉得 Voyager 好用吗？在 Chrome 应用商店给个好评，能帮助更多人发现它！",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
     "message": "立即评分",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "changelog_badge_mode": {
+    "message": "通过悬浮球上的 NEW 标记提醒，而非弹出此窗口",
+    "description": "Changelog notification mode toggle label"
   },
   "forkConversation": {
     "message": "分叉",
@@ -1520,7 +1540,7 @@
     "description": "自定义路由前缀提示"
   },
   "geminiApiMode": {
-    "message": "使用 Gemini API (后台模式)",
+    "message": "使用 Gemini API",
     "description": "API mode toggle label"
   },
   "geminiApiModeHint": {

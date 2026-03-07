@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Extension name"
   },
   "extDescription": {
@@ -52,7 +52,7 @@
     "description": "Language label"
   },
   "pm_title": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Prompt Manager title"
   },
   "pm_add": {
@@ -1271,13 +1271,29 @@
     "message": "조사한 웹사이트",
     "description": "Deep Research 조사한 웹사이트 섹션 헤더"
   },
-  "snowEffect": {
-    "message": "눈 효과",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "시각 효과",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "페이지에 눈이 내리는 겨울 분위기 연출",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "페이지에 계절 분위기 연출",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "끄기",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "눈",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "벚꽃",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "비",
+    "description": "Visual effect rain option"
   },
   "changelog_title": {
     "message": "새로운 기능",
@@ -1300,12 +1316,16 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "Gemini Voyager가 마음에 드시나요? Chrome 웹 스토어에 평점을 남겨 더 많은 분들이 발견할 수 있게 해주세요!",
+    "message": "Voyager가 마음에 드시나요? Chrome 웹 스토어에 평점을 남겨 더 많은 분들이 발견할 수 있게 해주세요!",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
     "message": "평점 주기",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "changelog_badge_mode": {
+    "message": "이 팝업 대신 플로팅 버튼의 NEW 배지로 알림",
+    "description": "Changelog notification mode toggle label"
   },
   "forkConversation": {
     "message": "Fork",

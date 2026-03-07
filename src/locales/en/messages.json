@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Extension name"
   },
   "extDescription": {
@@ -52,7 +52,7 @@
     "description": "Language label"
   },
   "pm_title": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Prompt Manager title"
   },
   "pm_add": {
@@ -1271,13 +1271,29 @@
     "message": "Researched Websites",
     "description": "Deep Research researched websites section header"
   },
-  "snowEffect": {
-    "message": "Snow effect",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "Visual effects",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "Let it snow on the page for a festive winter vibe",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "Add seasonal atmosphere to the page",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "Off",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "Snow",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "Sakura",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "Rain",
+    "description": "Visual effect rain option"
   },
   "changelog_title": {
     "message": "What's New",
@@ -1300,12 +1316,16 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "Love Gemini Voyager? A quick rating on the Chrome Web Store makes a huge difference!",
+    "message": "Love Voyager? A quick rating on the Chrome Web Store makes a huge difference!",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
     "message": "Rate Now",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "changelog_badge_mode": {
+    "message": "Notify via badge on the floating button instead of this popup",
+    "description": "Changelog notification mode toggle label"
   },
   "forkConversation": {
     "message": "Fork",
@@ -1520,7 +1540,7 @@
     "description": "Custom routing prefix hint"
   },
   "geminiApiMode": {
-    "message": "Use Gemini API (Background)",
+    "message": "Use Gemini API",
     "description": "API mode toggle label"
   },
   "geminiApiModeHint": {

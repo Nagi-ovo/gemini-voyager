@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Extension name"
   },
   "extDescription": {
@@ -52,7 +52,7 @@
     "description": "Language label"
   },
   "pm_title": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Prompt Manager title"
   },
   "pm_add": {
@@ -1271,13 +1271,29 @@
     "message": "調査済みサイト",
     "description": "深層研究の調査済みウェブサイトセクションヘッダー"
   },
-  "snowEffect": {
-    "message": "雪エフェクト",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "ビジュアルエフェクト",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "ページに雪を降らせて冬の雰囲気を演出",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "ページに季節の雰囲気を演出",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "オフ",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "雪",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "桜",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "雨",
+    "description": "Visual effect rain option"
   },
   "changelog_title": {
     "message": "新機能",
@@ -1300,12 +1316,16 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "Gemini Voyager を気に入っていただけましたか？Chrome ウェブストアでの評価が大きな励みになります！",
+    "message": "Voyager を気に入っていただけましたか？Chrome ウェブストアでの評価が大きな励みになります！",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
     "message": "評価する",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "changelog_badge_mode": {
+    "message": "このポップアップの代わりに、フローティングボタンの NEW バッジで通知する",
+    "description": "Changelog notification mode toggle label"
   },
   "forkConversation": {
     "message": "Fork",

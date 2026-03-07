@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "擴充功能名稱"
   },
   "extDescription": {
@@ -52,7 +52,7 @@
     "description": "語言標籤"
   },
   "pm_title": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "面板標題"
   },
   "pm_add": {
@@ -1271,13 +1271,29 @@
     "message": "研究網站",
     "description": "深度研究已研究網站章節標題"
   },
-  "snowEffect": {
-    "message": "飄雪效果",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "視覺特效",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "在頁面上飄雪，營造冬日氛圍",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "為頁面增添季節氛圍",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "關閉",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "飄雪",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "櫻花",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "雨",
+    "description": "Visual effect rain option"
   },
   "changelog_title": {
     "message": "更新內容",
@@ -1300,12 +1316,16 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "覺得 Gemini Voyager 好用嗎？在 Chrome 線上應用程式商店給個好評，幫助更多人發現它！",
+    "message": "覺得 Voyager 好用嗎？在 Chrome 線上應用程式商店給個好評，幫助更多人發現它！",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
     "message": "立即評分",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "changelog_badge_mode": {
+    "message": "透過懸浮球上的 NEW 標記提醒，而非彈出此視窗",
+    "description": "Changelog notification mode toggle label"
   },
   "forkConversation": {
     "message": "Fork",

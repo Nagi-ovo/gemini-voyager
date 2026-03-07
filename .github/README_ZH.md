@@ -187,9 +187,9 @@
 
 ### 🎙️ 特别推荐: Typeless
 
-我非常推荐 **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**，一款 AI 语音转文字工具。我在开发过程中一直在使用它，极大地提升了我的工作效率。
+我非常推荐 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**，一款 AI 语音转文字工具。我在开发过程中一直在使用它，极大地提升了我的工作效率。
 
-> 🎁 **[点击我的邀请链接](https://www.typeless.com/refer?code=MZRYZP1)**（邀请码 **`MZRYZP1`**）可获得 **5 美元免费额度**。这也是支持本项目的一种免费方式！❤️
+> 🎁 **[点击我的邀请链接](https://www.typeless.com/?via=gemini-voyager)**（邀请码 _`gemini-voyager`_）可获得 **5 美元免费额度**。这也是支持本项目的一种免费方式！❤️
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Extension name"
   },
   "extDescription": {
@@ -52,7 +52,7 @@
     "description": "Language label"
   },
   "pm_title": {
-    "message": "Gemini Voyager",
+    "message": "Voyager",
     "description": "Prompt Manager title"
   },
   "pm_add": {
@@ -1271,13 +1271,29 @@
     "message": "المواقع المبحوثة",
     "description": "عنوان قسم المواقع المبحوثة في Deep Research"
   },
-  "snowEffect": {
-    "message": "تأثير الثلج",
-    "description": "Snow effect toggle label"
+  "visualEffect": {
+    "message": "المؤثرات البصرية",
+    "description": "Visual effect selector label"
   },
-  "snowEffectHint": {
-    "message": "اجعل الثلج يتساقط على الصفحة لأجواء شتوية",
-    "description": "Snow effect feature hint"
+  "visualEffectHint": {
+    "message": "أضف أجواء موسمية للصفحة",
+    "description": "Visual effect feature hint"
+  },
+  "visualEffectOff": {
+    "message": "إيقاف",
+    "description": "Visual effect off option"
+  },
+  "visualEffectSnow": {
+    "message": "ثلج",
+    "description": "Visual effect snow option"
+  },
+  "visualEffectSakura": {
+    "message": "ساكورا",
+    "description": "Visual effect sakura option"
+  },
+  "visualEffectRain": {
+    "message": "مطر",
+    "description": "Visual effect rain option"
   },
   "changelog_title": {
     "message": "الجديد",
@@ -1300,12 +1316,16 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "هل أعجبك Gemini Voyager؟ تقييمك على متجر Chrome الإلكتروني يساعد الآخرين على اكتشافه!",
+    "message": "هل أعجبك Voyager؟ تقييمك على متجر Chrome الإلكتروني يساعد الآخرين على اكتشافه!",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
     "message": "تقييم الآن",
     "description": "Chrome Web Store rating CTA button text"
+  },
+  "changelog_badge_mode": {
+    "message": "الإشعار عبر شارة NEW على الزر العائم بدلاً من هذه النافذة",
+    "description": "Changelog notification mode toggle label"
   },
   "forkConversation": {
     "message": "Fork",

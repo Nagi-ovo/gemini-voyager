@@ -624,7 +624,7 @@ export class PDFPrintService {
   private static renderFooter(metadata: ConversationMetadata): string {
     return `
       <div class="gv-print-footer">
-        <p>Exported from <a href="https://github.com/Nagi-ovo/gemini-voyager">Gemini Voyager</a> • ${metadata.count} conversation turns</p>
+        <p>Exported from <a href="https://github.com/Nagi-ovo/gemini-voyager">Voyager</a> • ${metadata.count} conversation turns</p>
         <p>Generated on ${this.formatDate(metadata.exportedAt)}</p>
       </div>
     `;

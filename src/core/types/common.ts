@@ -82,11 +82,15 @@ export const StorageKeys = {
   GV_AISTUDIO_FOLDER_SPACING: 'gvAIStudioFolderSpacing',
   GV_FOLDER_TREE_INDENT: 'gvFolderTreeIndent',
 
-  // Snow effect
+  // Snow effect (legacy, kept for backward compat migration)
   GV_SNOW_EFFECT: 'gvSnowEffect',
+
+  // Visual effect (replaces GV_SNOW_EFFECT): 'off' | 'snow' | 'sakura'
+  GV_VISUAL_EFFECT: 'gvVisualEffect',
 
   // Changelog
   CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion',
+  CHANGELOG_NOTIFY_MODE: 'gvChangelogNotifyMode',
 
   // Fork nodes
   FORK_NODES: 'gvForkNodes',

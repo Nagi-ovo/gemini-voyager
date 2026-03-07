@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="../docs/public/assets/promotion/Promo-Banner.png" alt="promotion"/>
+  <img src="../docs/public/assets/promotion/Promo-Banner-KO.png" alt="promotion"/>
   <h3>Gemini 경험을 진정으로 당신의 것으로 만드세요 ✨</h3>
   <p>
     우아한 타임라인으로 대화를 탐색하고, 폴더로 채팅을 정리하며, 자신만의 프롬프트 저장소를 구축하세요.<br>
@@ -185,9 +185,9 @@ Gemini Voyager 가 도움이 되었다면 커피 한 잔을 후원해 주세요.
 
 ### 🎙️ 추천 도구: Typeless
 
-Gemini Voyager 개발 중에 광범위하게 사용한 AI 음성 - 텍스트 변환 도구인 **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**를 강력히 추천합니다. 이를 매일의 워크플로우에 통합함으로써 엄청난 시간을 절약하고 생산성을 크게 높일 수 있었습니다.
+Gemini Voyager 개발 중에 광범위하게 사용한 AI 음성 - 텍스트 변환 도구인 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**를 강력히 추천합니다. 이를 매일의 워크플로우에 통합함으로써 엄청난 시간을 절약하고 생산성을 크게 높일 수 있었습니다.
 
-> 🎁 **[제 추천 링크를 통해 가입](https://www.typeless.com/refer?code=MZRYZP1)**(코드: **`MZRYZP1`**) 하시면 **$5 무료 크레딧**을 받으실 수 있습니다. 이는 제가 이 프로젝트를 계속 유지 관리할 수 있는 크레딧을 제공하며, 저의 작업을 지원하는 무료 방법입니다! ❤️
+> 🎁 **[제 추천 링크를 통해 가입](https://www.typeless.com/?via=gemini-voyager)** (코드: _`gemini-voyager`_) 하시면 **$5 무료 크레딧**을 받으실 수 있습니다. 이는 제가 이 프로젝트를 계속 유지 관리할 수 있는 크레딧을 제공하며, 저의 작업을 지원하는 무료 방법입니다! ❤️
 
 ---
 
