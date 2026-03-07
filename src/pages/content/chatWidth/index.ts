@@ -200,6 +200,20 @@ function applyWidth(widthPercent: number) {
       max-width: ${widthValue} !important;
     }
 
+    /* Extend input-container gradient to match chat width */
+    input-container {
+      max-width: none !important;
+      width: 100% !important;
+    }
+
+    input-container .input-area-container,
+    input-container input-area-v2 {
+      max-width: ${widthValue} !important;
+      width: min(100%, ${widthValue}) !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+
     /* Specific fix for user bubble background to fit content but respect max-width */
     .user-query-bubble-with-background {
       max-width: ${widthValue} !important;
