@@ -19,9 +19,7 @@
         "assets/*.js",
         "assets/*.png"
       ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "matches": ["<all_urls>"]
     }
   ],
   "content_scripts": [
@@ -32,12 +30,8 @@
         "https://aistudio.google.com/*",
         "https://aistudio.google.cn/*"
       ],
-      "js": [
-        "src/pages/content/index.tsx"
-      ],
-      "css": [
-        "contentStyle.css"
-      ]
+      "js": ["src/pages/content/index.tsx"],
+      "css": ["contentStyle.css"]
     }
   ],
   "host_permissions": [
@@ -51,10 +45,7 @@
     "https://lh3.google.com/*",
     "https://*.ggpht.com/*"
   ],
-  "optional_host_permissions": [
-    "https://*/*",
-    "http://*/*"
-  ],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
   "background": {
     "service_worker": "src/pages/background/index.ts",
     "type": "module"
