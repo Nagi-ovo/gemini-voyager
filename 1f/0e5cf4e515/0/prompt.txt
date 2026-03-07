@@ -1,0 +1,21 @@
+Bump、Run、Bump 一下。
+
+跑一下测试、跑一下 Lint、跑一下 Format，然后更新一下 1.3.2 的 release。你可以参考一下现在里边已有的 1.3.1 之类的写一下吧。
+
+现在还有什么？没了。
+
+---
+
+Tool loaded.
+
+---
+
+Tool loaded.
+
+---
+
+撤回你手动改的那个 package。我的意思是，它有一个 bump run bump 的这么一个指令啊，你怎么撤回了呢？哦，不对，好像上一个 commit 里边不小心也把这个 bump 了
+
+---
+
+把上一个 commit 里面的功能和 bump 的区分开，重新做 commit。
