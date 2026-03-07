@@ -643,6 +643,14 @@
     "message": "نظرًا لقيود أمان المتصفح، لا يمكن لصفحة الخيارات هذه الوصول مباشرة إلى المطالبات وبيانات المجلد من صفحات Gemini. يرجى استخدام مدير المطالبات وميزات تصدير المجلد على صفحة Gemini للنسخ الاحتياطي اليدوي.",
     "description": "Backup data access limitation explanation"
   },
+  "hideUpsell": {
+    "message": "إخفاء رسائل الترقية",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "إخفاء زر \"الترقية إلى Google AI Ultra\" في الشريط الجانبي وقائمة النماذج",
+    "description": "Explanation for the upsell hiding feature"
+  },
   "promptManagerOptions": {
     "message": "مدير المطالبات",
     "description": "Prompt Manager options section label"
@@ -791,14 +799,6 @@
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows modifier key"
   },
-  "preventAutoScroll": {
-    "message": "منع التمرير التلقائي",
-    "description": "Auto-hide sidebar toggle label"
-  },
-  "preventAutoScrollHint": {
-    "message": "يمنع المتصفح من القفز إلى الأسفل عند الضغط على مفتاح الإدخال أثناء قراءة المحادثات السابقة.",
-    "description": "Auto-hide sidebar feature hint"
-  },
   "cloudSync": {
     "message": "مزامنة سحابية",
     "description": "Cloud sync section title"
@@ -806,6 +806,14 @@
   "cloudSyncDescription": {
     "message": "مزامنة المجلدات والمطالبات مع Google Drive",
     "description": "Cloud sync description"
+  },
+  "preventAutoScroll": {
+    "message": "منع التمرير التلقائي",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "preventAutoScrollHint": {
+    "message": "يمنع المتصفح من القفز إلى الأسفل عند الضغط على مفتاح الإدخال أثناء قراءة المحادثات السابقة.",
+    "description": "Auto-hide sidebar feature hint"
   },
   "syncModeDisabled": {
     "message": "معطل",
@@ -1399,12 +1407,152 @@
     "message": "تحديد الذكاء الاصطناعي فقط",
     "description": "Export selection mode: select only AI messages"
   },
-  "hideUpsell": {
-    "message": "إخفاء رسائل الترقية",
-    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  "autoCategorization": {
+    "message": "التصنيف التلقائي",
+    "description": "Auto Categorize Label"
   },
-  "hideUpsellHint": {
-    "message": "إخفاء زر \"الترقية إلى Google AI Ultra\" في الشريط الجانبي وقائمة النماذج",
-    "description": "Explanation for the upsell hiding feature"
+  "autoCategorizationHint": {
+    "message": "اطلب من الذكاء الاصطناعي تلقائياً تصنيف المحادثات الجديدة ونقلها إلى المجلدات المناسبة",
+    "description": "Auto Categorization Hint"
+  },
+  "autoCategorizationEngine": {
+    "message": "Categorization Engine",
+    "description": "Label for categorization engine selection"
+  },
+  "autoCategorizationEngineWeb": {
+    "message": "Native Web (Gemini)",
+    "description": "Web mode option"
+  },
+  "autoCategorizationEngineApi": {
+    "message": "Gemini API (Silent)",
+    "description": "API mode option"
+  },
+  "autoCategorizationPrefix": {
+    "message": "بادئة التشغيل",
+    "description": "Auto categorization trigger prefix label"
+  },
+  "autoCategorizationShortcut": {
+    "message": "اختصار",
+    "description": "Auto categorization shortcut label"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "أدخل هذه البادئة لتفعيل التصنيف التلقائي",
+    "description": "Trigger prefix hint"
+  },
+  "autoCategorizationStrictMatch": {
+    "message": "Support full/half-width & Chinese/English punctuation"
+  },
+  "autoCategorizationStrictMatchHint": {
+    "message": "Only the exact prefix triggers, not Unicode equivalents (e.g. . vs 。)",
+    "description": "Strict match hint"
+  },
+  "autoCategorizationIndexRouting": {
+    "message": "Index Routing",
+    "description": "Index routing feature toggle label"
+  },
+  "autoCategorizationIndexRoutingHint": {
+    "message": "Skip AI and route directly using folder index numbers."
+  },
+  "autoCategorizationShowFolderIndex": {
+    "message": "Show Folder Index",
+    "description": "Toggle to show folder index numbers in sidebar"
+  },
+  "autoCategorizationShowFolderIndexHint": {
+    "message": "Display index numbers next to folder names in the sidebar for quick reference when using index routing.",
+    "description": "Hint for show folder index toggle"
+  },
+  "autoCategorizationExampleTitle": {
+    "message": "Live Preview"
+  },
+  "autoCategorizationExamplePrefixHint": {
+    "message": "Trigger Prefix",
+    "description": "Hint for trigger prefix in example"
+  },
+  "autoCategorizationExampleFolderHint": {
+    "message": "Folder Index",
+    "description": "Hint for folder index in example"
+  },
+  "autoCategorizationExampleSeparatorHint": {
+    "message": "Separator",
+    "description": "Hint for separator in example"
+  },
+  "autoCategorizationExampleTextHint": {
+    "message": "Your prompt to the AI",
+    "description": "Hint for prompt text in example"
+  },
+  "autoCategorizationExampleText": {
+    "message": "Help me write...",
+    "description": "Dummy text in the routing example"
+  },
+  "autoCategorizationExampleExplanation": {
+    "message": "Input this format to skip AI and directly route into this folder"
+  },
+  "autoCategorizationRoutingSeparator": {
+    "message": "Index Separator",
+    "description": "Routing separator label"
+  },
+  "autoCategorizationTriggerMode": {
+    "message": "Trigger Mode",
+    "description": "Trigger mode setting label"
+  },
+  "autoCategorizationTriggerModeHint": {
+    "message": "Positive: prefix triggers categorization. Negative: categorizes by default, prefix blocks it.",
+    "description": "Trigger mode hint"
+  },
+  "autoCategorizationTriggerModePositive": {
+    "message": "Positive",
+    "description": "Positive trigger mode option"
+  },
+  "autoCategorizationTriggerModeNegative": {
+    "message": "Negative",
+    "description": "Negative trigger mode option"
+  },
+  "autoCategorizationPreviewInputThis": {
+    "message": "Input this format, ",
+    "description": "Preview explanation prefix"
+  },
+  "autoCategorizationPreviewThenDo": {
+    "message": "will",
+    "description": "Preview explanation action (do)"
+  },
+  "autoCategorizationPreviewThenDoNot": {
+    "message": "won't",
+    "description": "Preview explanation action (do not)"
+  },
+  "autoCategorizationPreviewAutoCategorize": {
+    "message": " auto categorize",
+    "description": "Preview explanation suffix"
+  },
+  "autoCategorizationUseMainPrefixForRouting": {
+    "message": "Use main prefix for routing",
+    "description": "Use main prefix for index routing toggle"
+  },
+  "autoCategorizationUseMainPrefixForRoutingHint": {
+    "message": "When on, index routing requires the main prefix (e.g. .1 2). When off, use a custom or no prefix.",
+    "description": "Use main prefix for routing hint"
+  },
+  "autoCategorizationCustomRoutingPrefix": {
+    "message": "Routing Prefix",
+    "description": "Custom routing prefix label"
+  },
+  "autoCategorizationCustomRoutingPrefixHint": {
+    "message": "Leave empty for bare numbers (e.g. 1 2) to trigger routing. Or set a custom prefix (e.g. /).",
+    "description": "Custom routing prefix hint"
+  },
+  "geminiApiMode": {
+    "message": "Use Gemini API (Background)",
+    "description": "API mode toggle label"
+  },
+  "geminiApiModeHint": {
+    "message": "Use your own API Key to categorize silently in the background without UI jumps.",
+    "description": "API mode hint"
+  },
+  "geminiApiKey": {
+    "message": "Gemini API Key",
+    "description": "API Key input label"
+  },
+  "geminiApiModel": {
+    "message": "Model",
+    "description": "API Model select label"
   }
 }

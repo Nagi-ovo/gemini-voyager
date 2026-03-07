@@ -259,9 +259,49 @@
     "message": "重新命名",
     "description": "重新命名資料夾選單項目"
   },
+  "folder_change_color": {
+    "message": "更改顏色",
+    "description": "Change folder color tooltip"
+  },
   "folder_delete": {
     "message": "刪除",
     "description": "刪除資料夾選單項目"
+  },
+  "folder_color_default": {
+    "message": "預設",
+    "description": "Default folder color"
+  },
+  "folder_color_red": {
+    "message": "紅色",
+    "description": "Red folder color"
+  },
+  "folder_color_orange": {
+    "message": "橙色",
+    "description": "Orange folder color"
+  },
+  "folder_color_yellow": {
+    "message": "黃色",
+    "description": "Yellow folder color"
+  },
+  "folder_color_green": {
+    "message": "綠色",
+    "description": "Green folder color"
+  },
+  "folder_color_blue": {
+    "message": "藍色",
+    "description": "Blue folder color"
+  },
+  "folder_color_purple": {
+    "message": "紫色",
+    "description": "Purple folder color"
+  },
+  "folder_color_pink": {
+    "message": "粉紅色",
+    "description": "粉紅色資料夾顏色名稱"
+  },
+  "folder_color_custom": {
+    "message": "自定義",
+    "description": "自定義資料夾顏色名稱"
   },
   "folder_empty": {
     "message": "暫無資料夾",
@@ -603,6 +643,14 @@
     "message": "由於瀏覽器安全限制，選項頁面無法直接讀取 Gemini 頁面的提示詞和資料夾資料。建議使用 Gemini 頁面上的提示詞管理器和資料夾匯出功能進行手動備份。",
     "description": "備份資料存取限制說明"
   },
+  "hideUpsell": {
+    "message": "隱藏升級提醒",
+    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  },
+  "hideUpsellHint": {
+    "message": "隱藏側邊欄和模型選單中的「升級至 Google AI Ultra」按鈕",
+    "description": "Explanation for the upsell hiding feature"
+  },
   "promptManagerOptions": {
     "message": "提示詞管理器",
     "description": "提示詞管理器選項區域標籤"
@@ -751,14 +799,6 @@
     "message": "Cmd/Win",
     "description": "Meta/Command/Windows 修飾鍵"
   },
-  "preventAutoScroll": {
-    "message": "防自動跳轉",
-    "description": "Auto-hide sidebar toggle label"
-  },
-  "preventAutoScrollHint": {
-    "message": "避免在查看過往紀錄時按 Enter 導致頁面強制滾動到底部",
-    "description": "Auto-hide sidebar feature hint"
-  },
   "cloudSync": {
     "message": "雲端同步",
     "description": "雲端同步區域標題"
@@ -766,6 +806,14 @@
   "cloudSyncDescription": {
     "message": "將資料夾和提示詞同步到 Google Drive",
     "description": "雲端同步描述"
+  },
+  "preventAutoScroll": {
+    "message": "防自動跳轉",
+    "description": "Auto-hide sidebar toggle label"
+  },
+  "preventAutoScrollHint": {
+    "message": "避免在查看過往紀錄時按 Enter 導致頁面強制滾動到底部",
+    "description": "Auto-hide sidebar feature hint"
   },
   "syncModeDisabled": {
     "message": "已停用",
@@ -1063,46 +1111,6 @@
     "message": "同步成功！",
     "description": "同步成功訊息"
   },
-  "folder_change_color": {
-    "message": "更改顏色",
-    "description": "Change folder color tooltip"
-  },
-  "folder_color_default": {
-    "message": "預設",
-    "description": "Default folder color"
-  },
-  "folder_color_red": {
-    "message": "紅色",
-    "description": "Red folder color"
-  },
-  "folder_color_orange": {
-    "message": "橙色",
-    "description": "Orange folder color"
-  },
-  "folder_color_yellow": {
-    "message": "黃色",
-    "description": "Yellow folder color"
-  },
-  "folder_color_green": {
-    "message": "綠色",
-    "description": "Green folder color"
-  },
-  "folder_color_blue": {
-    "message": "藍色",
-    "description": "Blue folder color"
-  },
-  "folder_color_purple": {
-    "message": "紫色",
-    "description": "Purple folder color"
-  },
-  "folder_color_pink": {
-    "message": "粉紅色",
-    "description": "粉紅色資料夾顏色名稱"
-  },
-  "folder_color_custom": {
-    "message": "自定義",
-    "description": "自定義資料夾顏色名稱"
-  },
   "downloadingOriginal": {
     "message": "正在下載原始圖片",
     "description": "下載原始圖片時的狀態"
@@ -1399,12 +1407,152 @@
     "message": "僅選模型",
     "description": "Export selection mode: select only AI messages"
   },
-  "hideUpsell": {
-    "message": "隱藏升級提醒",
-    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
+  "autoCategorization": {
+    "message": "自動歸類",
+    "description": "自動歸類標籤"
   },
-  "hideUpsellHint": {
-    "message": "隱藏側邊欄和模型選單中的「升級至 Google AI Ultra」按鈕",
-    "description": "Explanation for the upsell hiding feature"
+  "autoCategorizationHint": {
+    "message": "自動讓 AI 判斷並將新對話移動到合適的資料夾",
+    "description": "自動歸類功能提示"
+  },
+  "autoCategorizationEngine": {
+    "message": "Categorization Engine",
+    "description": "Label for categorization engine selection"
+  },
+  "autoCategorizationEngineWeb": {
+    "message": "Native Web (Gemini)",
+    "description": "Web mode option"
+  },
+  "autoCategorizationEngineApi": {
+    "message": "Gemini API (Silent)",
+    "description": "API mode option"
+  },
+  "autoCategorizationPrefix": {
+    "message": "觸發前綴",
+    "description": "自動歸類觸發前綴標籤"
+  },
+  "autoCategorizationShortcut": {
+    "message": "快捷鍵",
+    "description": "自動歸類快捷鍵標籤"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "輸入此前綴即可觸發自動歸類",
+    "description": "觸發前綴提示"
+  },
+  "autoCategorizationStrictMatch": {
+    "message": "兼容全半角及中英文標點"
+  },
+  "autoCategorizationStrictMatchHint": {
+    "message": "Only the exact prefix triggers, not Unicode equivalents (e.g. . vs .)",
+    "description": "Strict match hint"
+  },
+  "autoCategorizationIndexRouting": {
+    "message": "Index Routing",
+    "description": "Index routing feature toggle label"
+  },
+  "autoCategorizationIndexRoutingHint": {
+    "message": "跳過 AI，使用資料夾序號直接歸入。"
+  },
+  "autoCategorizationShowFolderIndex": {
+    "message": "顯示資料夾序號",
+    "description": "在側欄顯示資料夾序號的開關"
+  },
+  "autoCategorizationShowFolderIndexHint": {
+    "message": "在側欄資料夾名稱旁顯示序號，方便使用序號歸類時快速參考。",
+    "description": "顯示資料夾序號提示"
+  },
+  "autoCategorizationExampleTitle": {
+    "message": "即時預覽"
+  },
+  "autoCategorizationExamplePrefixHint": {
+    "message": "觸發前綴",
+    "description": "Hint for trigger prefix in example"
+  },
+  "autoCategorizationExampleFolderHint": {
+    "message": "資料夾序號",
+    "description": "Hint for folder index in example"
+  },
+  "autoCategorizationExampleSeparatorHint": {
+    "message": "分隔符",
+    "description": "Hint for separator in example"
+  },
+  "autoCategorizationExampleTextHint": {
+    "message": "你的提問內容",
+    "description": "Hint for prompt text in example"
+  },
+  "autoCategorizationExampleText": {
+    "message": "幫我寫一段關於...",
+    "description": "Dummy text in the routing example"
+  },
+  "autoCategorizationExampleExplanation": {
+    "message": "輸入此格式，則直接移入該序號資料夾"
+  },
+  "autoCategorizationRoutingSeparator": {
+    "message": "Index Separator",
+    "description": "Routing separator label"
+  },
+  "autoCategorizationTriggerMode": {
+    "message": "Trigger Mode",
+    "description": "Trigger mode setting label"
+  },
+  "autoCategorizationTriggerModeHint": {
+    "message": "Positive: prefix triggers categorization. Negative: categorizes by default, prefix blocks it.",
+    "description": "Trigger mode hint"
+  },
+  "autoCategorizationTriggerModePositive": {
+    "message": "正向",
+    "description": "正向觸發模式選項"
+  },
+  "autoCategorizationTriggerModeNegative": {
+    "message": "反向",
+    "description": "反向觸發模式選項"
+  },
+  "autoCategorizationPreviewInputThis": {
+    "message": "Input this format, ",
+    "description": "Preview explanation prefix"
+  },
+  "autoCategorizationPreviewThenDo": {
+    "message": "will",
+    "description": "Preview explanation action (do)"
+  },
+  "autoCategorizationPreviewThenDoNot": {
+    "message": "won't",
+    "description": "Preview explanation action (do not)"
+  },
+  "autoCategorizationPreviewAutoCategorize": {
+    "message": " auto categorize",
+    "description": "Preview explanation suffix"
+  },
+  "autoCategorizationUseMainPrefixForRouting": {
+    "message": "Use main prefix for routing",
+    "description": "Use main prefix for index routing toggle"
+  },
+  "autoCategorizationUseMainPrefixForRoutingHint": {
+    "message": "When on, index routing requires the main prefix (e.g. .1 2). When off, use a custom or no prefix.",
+    "description": "Use main prefix for routing hint"
+  },
+  "autoCategorizationCustomRoutingPrefix": {
+    "message": "Routing Prefix",
+    "description": "Custom routing prefix label"
+  },
+  "autoCategorizationCustomRoutingPrefixHint": {
+    "message": "Leave empty for bare numbers (e.g. 1 2) to trigger routing. Or set a custom prefix (e.g. /).",
+    "description": "Custom routing prefix hint"
+  },
+  "geminiApiMode": {
+    "message": "Use Gemini API (Background)",
+    "description": "API mode toggle label"
+  },
+  "geminiApiModeHint": {
+    "message": "Use your own API Key to categorize silently in the background without UI jumps.",
+    "description": "API mode hint"
+  },
+  "geminiApiKey": {
+    "message": "Gemini API Key",
+    "description": "API Key input label"
+  },
+  "geminiApiModel": {
+    "message": "Model",
+    "description": "API Model select label"
   }
 }

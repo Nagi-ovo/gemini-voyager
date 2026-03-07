@@ -1,3 +1,4 @@
+import { TriggerService } from '@/core/services/TriggerService';
 import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
 import {
@@ -257,6 +258,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Default Model Manager
       DefaultModelManager.getInstance().init();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Auto Categorization Trigger Service
+      void TriggerService.getInstance().init();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startExportButton();

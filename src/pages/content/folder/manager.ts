@@ -90,7 +90,7 @@ export class FolderManager {
   }
   private storage: IFolderStorageAdapter; // Storage adapter (Strategy Pattern)
   private backupService: DataBackupService<FolderData>; // Multi-layer backup system
-  private data: FolderData = { folders: [], folderContents: {} };
+  public data: FolderData = { folders: [], folderContents: {} };
   private containerElement: HTMLElement | null = null;
   private sidebarContainer: HTMLElement | null = null;
   private recentSection: HTMLElement | null = null;
@@ -2260,7 +2260,7 @@ export class FolderManager {
     return result;
   }
 
-  private toggleFolder(folderId: string): void {
+  public toggleFolder(folderId: string): void {
     const folder = this.data.folders.find((f) => f.id === folderId);
     if (!folder) return;
 
@@ -2268,6 +2268,22 @@ export class FolderManager {
     folder.updatedAt = Date.now();
     this.saveData();
     this.refresh();
+  }
+
+  /**
+   * Mark a folder as expanded in-memory WITHOUT triggering saveData/refresh.
+   * The caller is responsible for persisting + refreshing (e.g. addConversationsToFolder does both).
+   * This avoids a race condition where two rapid async saveData() calls overwrite each other.
+   */
+  public ensureFolderExpanded(folderId: string): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    if (!folder.isExpanded) {
+      folder.isExpanded = true;
+      folder.updatedAt = Date.now();
+      this.debug(`Marked folder as expanded (pending save): ${folderId}`);
+    }
   }
 
   private togglePinFolder(folderId: string): void {
@@ -2654,8 +2670,26 @@ export class FolderManager {
     this.refresh();
   }
 
+  public createFolderByName(name: string, parentId: string | null = null): string {
+    const folder: Folder = {
+      id: this.generateId(),
+      name,
+      parentId,
+      isExpanded: true,
+      color: 'default',
+      pinned: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    this.data.folders.unshift(folder);
+    this.data.folderContents[folder.id] = [];
+    this.saveData();
+    this.refresh();
+    return folder.id;
+  }
+
   // Batch add conversations to folder (for multi-select support)
-  private addConversationsToFolder(
+  public addConversationsToFolder(
     folderId: string,
     conversations: ConversationReference[],
     sourceFolderId?: string,
@@ -6564,7 +6598,7 @@ export class FolderManager {
    *   - Returns true if any subfolder has visible content.
    *   - Returns false otherwise.
    */
-  private hasVisibleContent(folderId: string): boolean {
+  public hasVisibleContent(folderId: string): boolean {
     if (!this.filterCurrentUserOnly) return true;
 
     // Check direct conversations

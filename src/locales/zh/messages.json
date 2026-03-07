@@ -1406,5 +1406,153 @@
   "export_select_mode_only_ai": {
     "message": "仅选模型",
     "description": "Export selection mode: select only AI messages"
+  },
+  "autoCategorization": {
+    "message": "自动归类",
+    "description": "自动归类标签"
+  },
+  "autoCategorizationHint": {
+    "message": "自动将新对话交由AI判断并移动到合适的文件夹",
+    "description": "自动归类功能提示"
+  },
+  "autoCategorizationEngine": {
+    "message": "归类引擎",
+    "description": "Label for categorization engine selection"
+  },
+  "autoCategorizationEngineWeb": {
+    "message": "原生网页 (Gemini)",
+    "description": "Web mode option"
+  },
+  "autoCategorizationEngineApi": {
+    "message": "API 后台",
+    "description": "API mode option"
+  },
+  "autoCategorizationPrefix": {
+    "message": "触发前缀",
+    "description": "自动归类触发前缀标签"
+  },
+  "autoCategorizationShortcut": {
+    "message": "快捷键",
+    "description": "自动归类快捷键标签"
+  },
+  "autoCategorizationPrefixHint": {
+    "message": "输入此前缀可触发 AI 归类或序号路由（如 .1 2 正文）。",
+    "description": "触发前缀提示"
+  },
+  "autoCategorizationStrictMatch": {
+    "message": "兼容全半角及中英文标点"
+  },
+  "autoCategorizationStrictMatchHint": {
+    "message": "仅使用精确设置的字符触发，不识别等效全角符号（如 . 与 。）",
+    "description": "严格匹配提示"
+  },
+  "autoCategorizationIndexRouting": {
+    "message": "序号直接归类",
+    "description": "基于序号的直接归类功能开关"
+  },
+  "autoCategorizationIndexRoutingHint": {
+    "message": "跳过 AI，使用文件夹序号直接归入。"
+  },
+  "autoCategorizationShowFolderIndex": {
+    "message": "显示文件夹序号",
+    "description": "在侧栏显示文件夹序号的开关"
+  },
+  "autoCategorizationShowFolderIndexHint": {
+    "message": "在侧栏文件夹名称旁显示序号，方便使用序号归类时快速参考。",
+    "description": "显示文件夹序号提示"
+  },
+  "autoCategorizationExampleTitle": {
+    "message": "实时预览"
+  },
+  "autoCategorizationExamplePrefixHint": {
+    "message": "触发前缀",
+    "description": "Hint for trigger prefix in example"
+  },
+  "autoCategorizationExampleFolderHint": {
+    "message": "文件夹序号",
+    "description": "Hint for folder index in example"
+  },
+  "autoCategorizationExampleSeparatorHint": {
+    "message": "分隔符",
+    "description": "Hint for separator in example"
+  },
+  "autoCategorizationExampleTextHint": {
+    "message": "你的提问内容",
+    "description": "Hint for prompt text in example"
+  },
+  "autoCategorizationExampleText": {
+    "message": "帮我写一段关于...",
+    "description": "Dummy text in the routing example"
+  },
+  "autoCategorizationExampleExplanation": {
+    "message": "输入此格式，则直接移入该序号文件夹"
+  },
+  "autoCategorizationRoutingSeparator": {
+    "message": "序号分隔符",
+    "description": "路由序号之间的分隔符"
+  },
+  "autoCategorizationTriggerMode": {
+    "message": "触发模式",
+    "description": "触发模式设置标签"
+  },
+  "autoCategorizationTriggerModeHint": {
+    "message": "正向：有前缀才触发归类。反向：全自动，有前缀则跳过。",
+    "description": "触发模式提示"
+  },
+  "autoCategorizationTriggerModePositive": {
+    "message": "正向",
+    "description": "正向触发模式选项"
+  },
+  "autoCategorizationTriggerModeNegative": {
+    "message": "反向",
+    "description": "反向触发模式选项"
+  },
+  "autoCategorizationPreviewInputThis": {
+    "message": "输入此格式，",
+    "description": "预览说明前缀"
+  },
+  "autoCategorizationPreviewThenDo": {
+    "message": "则",
+    "description": "预览说明动作（做）"
+  },
+  "autoCategorizationPreviewThenDoNot": {
+    "message": "则不",
+    "description": "预览说明动作（不做）"
+  },
+  "autoCategorizationPreviewAutoCategorize": {
+    "message": "自动归类",
+    "description": "预览说明后缀"
+  },
+  "autoCategorizationUseMainPrefixForRouting": {
+    "message": "路由使用主前缀",
+    "description": "序号路由是否使用主前缀"
+  },
+  "autoCategorizationUseMainPrefixForRoutingHint": {
+    "message": "开启：序号路由需以触发前缀开头（如 .1 2 正文）。关闭：可单独设置路由前缀，或留空改为纯数字触发（如 1 2 正文）。",
+    "description": "路由使用主前缀提示"
+  },
+  "autoCategorizationCustomRoutingPrefix": {
+    "message": "路由前缀",
+    "description": "自定义路由前缀标签"
+  },
+  "autoCategorizationCustomRoutingPrefixHint": {
+    "message": "留空：直接输入数字触发路由（如 1 2 正文）。填写前缀（如 /）：需以该前缀开头（如 /1 2 正文）。",
+    "description": "自定义路由前缀提示"
+  },
+  "geminiApiMode": {
+    "message": "使用 Gemini API",
+    "description": "API mode toggle label"
+  },
+  "geminiApiModeHint": {
+    "message": "使用自己的 API Key 在后台静默分类，无需跳转打开新对话窗口。",
+    "description": "API mode hint"
+  },
+  "geminiApiKey": {
+    "message": "Gemini API Key",
+    "description": "API Key input label"
+  },
+  "geminiApiModel": {
+    "message": "模型",
+    "description": "API Model select label"
   }
 }

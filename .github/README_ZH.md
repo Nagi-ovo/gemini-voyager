@@ -105,7 +105,8 @@
   - **[输入框折叠](https://voyager.nagi.fun/guide/input-collapse)**: 输入框自动收纳，释放阅读空间。
   - **[默认模型](https://voyager.nagi.fun/guide/default-model)**: 为新对话设置默认选中的模型。
   - **[隐藏最近项目](https://voyager.nagi.fun/guide/recents-hider)**: 隐藏侧边栏的“最近”列表，减少干扰。
-  - **隐藏升级提醒**: 自动隐藏 Gemini 侧边栏和模型切换菜单中的“升级到 Google AI Ultra”按钮（默认开启）。
+  - **[自动分类 (Gemini API)](https://voyager.nagi.fun/guide/auto-categorization)**: 利用 Gemini API 在后台自动识别对话意图并将其归类到对应文件夹（支持 **自动展开文件夹** 提供即时反馈）。
+- **隐藏升级提醒**: 自动隐藏 Gemini 侧边栏和模型切换菜单中的“升级到 Google AI Ultra”按钮（默认开启）。
 
 ---
 

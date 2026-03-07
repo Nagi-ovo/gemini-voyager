@@ -96,6 +96,21 @@ export const StorageKeys = {
   FORK_NODES: 'gvForkNodes',
   FORK_ENABLED: 'gvForkEnabled',
 
+  // Auto Categorization
+  AUTO_CATEGORIZATION_ENABLED: 'gvAutoCategorizationEnabled',
+  AUTO_CATEGORIZATION_PREFIX: 'gvAutoCategorizationPrefix',
+  AUTO_CATEGORIZATION_SHORTCUT: 'gvAutoCategorizationShortcut',
+  AUTO_CATEGORIZATION_STRICT_MATCH: 'gvAutoCategorizationStrictMatch',
+  AUTO_CATEGORIZATION_INDEX_ROUTING: 'gvAutoCategorizationIndexRouting',
+  AUTO_CATEGORIZATION_SHOW_FOLDER_INDEX: 'gvAutoCategorizationShowFolderIndex',
+  AUTO_CATEGORIZATION_ROUTING_SEPARATOR: 'gvAutoCategorizationRoutingSeparator',
+  AUTO_CATEGORIZATION_TRIGGER_MODE: 'gvAutoCategorizationTriggerMode',
+  AUTO_CATEGORIZATION_USE_MAIN_PREFIX_FOR_ROUTING: 'gvAutoCategorizationUseMainPrefixForRouting',
+  AUTO_CATEGORIZATION_CUSTOM_ROUTING_PREFIX: 'gvAutoCategorizationCustomRoutingPrefix',
+  AUTO_CATEGORIZATION_API_MODE: 'gvAutoCategorizationApiMode',
+  AUTO_CATEGORIZATION_API_KEY: 'gvAutoCategorizationApiKey',
+  AUTO_CATEGORIZATION_API_MODEL: 'gvAutoCategorizationApiModel',
+
   // Upsell hider
   UPSELL_HIDER_ENABLED: 'gvUpsellHiderEnabled',
 } as const;

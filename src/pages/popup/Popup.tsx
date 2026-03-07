@@ -122,12 +122,12 @@ interface SettingsUpdate {
   markerLevelEnabled?: boolean;
   resetPosition?: boolean;
   folderEnabled?: boolean;
+  autoCategorizationEnabled?: boolean;
   hideArchivedConversations?: boolean;
   customWebsites?: string[];
   watermarkRemoverEnabled?: boolean;
   hidePromptManager?: boolean;
   inputCollapseEnabled?: boolean;
-  inputCollapseWhenNotEmpty?: boolean;
   tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
@@ -136,9 +136,20 @@ interface SettingsUpdate {
   visualEffect?: 'off' | 'snow' | 'sakura' | 'rain';
   preventAutoScrollEnabled?: boolean;
   forkEnabled?: boolean;
-  upsellHiderEnabled?: boolean;
   accountIsolationEnabled?: boolean;
   accountIsolationPlatform?: AccountPlatform;
+  autoCategorizationPrefix?: string;
+  autoCategorizationShortcut?: string;
+  gvAutoCategorizationStrictMatch?: boolean;
+  gvAutoCategorizationIndexRouting?: boolean;
+  gvAutoCategorizationShowFolderIndex?: boolean;
+  gvAutoCategorizationRoutingSeparator?: string;
+  gvAutoCategorizationTriggerMode?: 'positive' | 'negative';
+  gvAutoCategorizationUseMainPrefixForRouting?: boolean;
+  autoCategorizationCustomRoutingPrefix?: string;
+  autoCategorizationApiMode?: boolean;
+  autoCategorizationApiKey?: string;
+  autoCategorizationApiModel?: string;
 }
 
 export default function Popup() {
@@ -148,6 +159,30 @@ export default function Popup() {
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
   const [markerLevelEnabled, setMarkerLevelEnabled] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
+  const [autoCategorizationEnabled, setAutoCategorizationEnabled] = useState<boolean>(false);
+  const [autoCategorizationPrefix, setAutoCategorizationPrefix] = useState<string>('.');
+  const [autoCategorizationShortcut, setAutoCategorizationShortcut] =
+    useState<string>('Ctrl+Shift+U');
+  const [autoCategorizationStrictMatch, setAutoCategorizationStrictMatch] =
+    useState<boolean>(false);
+  const [autoCategorizationIndexRouting, setAutoCategorizationIndexRouting] =
+    useState<boolean>(false);
+  const [autoCategorizationRoutingSeparator, setAutoCategorizationRoutingSeparator] =
+    useState<string>(' ');
+  const [autoCategorizationTriggerMode, setAutoCategorizationTriggerMode] = useState<
+    'positive' | 'negative'
+  >('negative');
+  const [autoCategorizationUseMainPrefixForRouting, setAutoCategorizationUseMainPrefixForRouting] =
+    useState<boolean>(true);
+  const [autoCategorizationCustomRoutingPrefix, setAutoCategorizationCustomRoutingPrefix] =
+    useState<string>('');
+  const [autoCategorizationShowFolderIndex, setAutoCategorizationShowFolderIndex] =
+    useState<boolean>(true);
+  const [autoCategorizationApiMode, setAutoCategorizationApiMode] = useState<boolean>(false);
+  const [autoCategorizationApiKey, setAutoCategorizationApiKey] = useState<string>('');
+  const [autoCategorizationApiModel, setAutoCategorizationApiModel] = useState<string>(
+    'gemini-3.1-flash-lite-preview',
+  );
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
   const [customWebsites, setCustomWebsites] = useState<string[]>([]);
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
@@ -161,7 +196,6 @@ export default function Popup() {
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
-  const [inputCollapseWhenNotEmpty, setInputCollapseWhenNotEmpty] = useState<boolean>(false);
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
@@ -232,6 +266,48 @@ export default function Popup() {
         payload.geminiTimelineMarkerLevel = settings.markerLevelEnabled;
       if (typeof settings.folderEnabled === 'boolean')
         payload.geminiFolderEnabled = settings.folderEnabled;
+      if (settings.autoCategorizationEnabled !== undefined) {
+        payload.gvAutoCategorizationEnabled = settings.autoCategorizationEnabled;
+      }
+      if (settings.autoCategorizationPrefix !== undefined) {
+        payload.gvAutoCategorizationPrefix = settings.autoCategorizationPrefix;
+      }
+      if (settings.autoCategorizationShortcut !== undefined) {
+        payload.gvAutoCategorizationShortcut = settings.autoCategorizationShortcut;
+      }
+      if (settings.gvAutoCategorizationStrictMatch !== undefined) {
+        payload.gvAutoCategorizationStrictMatch = settings.gvAutoCategorizationStrictMatch;
+      }
+      if (settings.gvAutoCategorizationIndexRouting !== undefined) {
+        payload.gvAutoCategorizationIndexRouting = settings.gvAutoCategorizationIndexRouting;
+      }
+      if (settings.gvAutoCategorizationRoutingSeparator !== undefined) {
+        payload.gvAutoCategorizationRoutingSeparator =
+          settings.gvAutoCategorizationRoutingSeparator;
+      }
+      if (settings.gvAutoCategorizationTriggerMode !== undefined) {
+        payload.gvAutoCategorizationTriggerMode = settings.gvAutoCategorizationTriggerMode;
+      }
+      if (settings.gvAutoCategorizationUseMainPrefixForRouting !== undefined) {
+        payload.gvAutoCategorizationUseMainPrefixForRouting =
+          settings.gvAutoCategorizationUseMainPrefixForRouting;
+      }
+      if (settings.autoCategorizationCustomRoutingPrefix !== undefined) {
+        payload.gvAutoCategorizationCustomRoutingPrefix =
+          settings.autoCategorizationCustomRoutingPrefix;
+      }
+      if (settings.gvAutoCategorizationShowFolderIndex !== undefined) {
+        payload.gvAutoCategorizationShowFolderIndex = settings.gvAutoCategorizationShowFolderIndex;
+      }
+      if (settings.autoCategorizationApiMode !== undefined) {
+        payload.gvAutoCategorizationApiMode = settings.autoCategorizationApiMode;
+      }
+      if (settings.autoCategorizationApiKey !== undefined) {
+        payload.gvAutoCategorizationApiKey = settings.autoCategorizationApiKey;
+      }
+      if (settings.autoCategorizationApiModel !== undefined) {
+        payload.gvAutoCategorizationApiModel = settings.autoCategorizationApiModel;
+      }
       if (typeof settings.hideArchivedConversations === 'boolean')
         payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
       if (settings.resetPosition) payload.geminiTimelinePosition = null;
@@ -242,8 +318,6 @@ export default function Popup() {
         payload.gvHidePromptManager = settings.hidePromptManager;
       if (typeof settings.inputCollapseEnabled === 'boolean')
         payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
-      if (typeof settings.inputCollapseWhenNotEmpty === 'boolean')
-        payload.gvInputCollapseWhenNotEmpty = settings.inputCollapseWhenNotEmpty;
       if (typeof settings.tabTitleUpdateEnabled === 'boolean')
         payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
       if (typeof settings.mermaidEnabled === 'boolean')
@@ -263,8 +337,6 @@ export default function Popup() {
         payload.gvPreventAutoScrollEnabled = settings.preventAutoScrollEnabled;
       if (typeof settings.forkEnabled === 'boolean')
         payload[StorageKeys.FORK_ENABLED] = settings.forkEnabled;
-      if (typeof settings.upsellHiderEnabled === 'boolean')
-        payload[StorageKeys.UPSELL_HIDER_ENABLED] = settings.upsellHiderEnabled;
       if (typeof settings.accountIsolationEnabled === 'boolean') {
         const isolationPlatform = settings.accountIsolationPlatform ?? activeAccountPlatform;
         payload[getAccountIsolationStorageKey(isolationPlatform)] =
@@ -486,13 +558,25 @@ export default function Popup() {
           geminiTimelineDraggable: false,
           geminiTimelineMarkerLevel: false,
           geminiFolderEnabled: true,
+          gvAutoCategorizationEnabled: false,
+          gvAutoCategorizationPrefix: '.',
+          gvAutoCategorizationShortcut: 'Ctrl+Shift+U',
+          gvAutoCategorizationStrictMatch: false,
+          gvAutoCategorizationIndexRouting: false,
+          gvAutoCategorizationRoutingSeparator: ' ',
+          gvAutoCategorizationTriggerMode: 'negative',
+          gvAutoCategorizationUseMainPrefixForRouting: true,
+          gvAutoCategorizationCustomRoutingPrefix: '',
+          gvAutoCategorizationShowFolderIndex: true,
+          gvAutoCategorizationApiMode: false,
+          gvAutoCategorizationApiKey: '',
+          gvAutoCategorizationApiModel: 'gemini-3.1-flash-lite-preview',
           geminiFolderHideArchivedConversations: false,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
           geminiWatermarkRemoverEnabled: true,
           gvHidePromptManager: false,
           gvInputCollapseEnabled: false,
-          gvInputCollapseWhenNotEmpty: false,
           gvTabTitleUpdateEnabled: true,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
@@ -501,7 +585,6 @@ export default function Popup() {
           gvSnowEffect: false,
           gvPreventAutoScrollEnabled: false,
           [StorageKeys.FORK_ENABLED]: false,
-          [StorageKeys.UPSELL_HIDER_ENABLED]: true,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: null,
@@ -521,6 +604,31 @@ export default function Popup() {
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
           setMarkerLevelEnabled(!!res?.geminiTimelineMarkerLevel);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
+          setAutoCategorizationEnabled(!!res.gvAutoCategorizationEnabled);
+          setAutoCategorizationPrefix(res.gvAutoCategorizationPrefix || '.');
+          setAutoCategorizationShortcut(res.gvAutoCategorizationShortcut || 'Ctrl+Shift+U');
+          setAutoCategorizationStrictMatch(!!res.gvAutoCategorizationStrictMatch);
+          setAutoCategorizationIndexRouting(!!res.gvAutoCategorizationIndexRouting);
+          setAutoCategorizationRoutingSeparator(
+            res.gvAutoCategorizationRoutingSeparator === undefined
+              ? ' '
+              : res.gvAutoCategorizationRoutingSeparator,
+          );
+          const trigMode = res.gvAutoCategorizationTriggerMode;
+          if (trigMode === 'positive' || trigMode === 'negative')
+            setAutoCategorizationTriggerMode(trigMode);
+          setAutoCategorizationUseMainPrefixForRouting(
+            res.gvAutoCategorizationUseMainPrefixForRouting !== false,
+          );
+          setAutoCategorizationCustomRoutingPrefix(
+            res.gvAutoCategorizationCustomRoutingPrefix || '',
+          );
+          setAutoCategorizationShowFolderIndex(res.gvAutoCategorizationShowFolderIndex !== false);
+          setAutoCategorizationApiMode(!!res.gvAutoCategorizationApiMode);
+          setAutoCategorizationApiKey(res.gvAutoCategorizationApiKey || '');
+          setAutoCategorizationApiModel(
+            res.gvAutoCategorizationApiModel || 'gemini-3.1-flash-lite-preview',
+          );
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
           const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
             ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
@@ -529,7 +637,6 @@ export default function Popup() {
           setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
           setHidePromptManager(!!res?.gvHidePromptManager);
           setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
-          setInputCollapseWhenNotEmpty(res?.gvInputCollapseWhenNotEmpty === true);
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
@@ -566,7 +673,6 @@ export default function Popup() {
                 res.geminiEditInputWidth !== EDIT_PERCENT.defaultValue),
           );
           setSidebarWidthEnabled(res?.gvSidebarWidthEnabled === true);
-
           const legacyIsolationEnabled = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] === true;
           const geminiIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI];
           const aiStudioIsolationRaw = res?.[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO];
@@ -1045,93 +1151,498 @@ export default function Popup() {
                 }}
               />
             </div>
-            <div className="group flex items-center justify-between">
-              <Label
-                htmlFor="hide-archived"
-                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-              >
-                {t('hideArchivedConversations')}
-              </Label>
-              <Switch
-                id="hide-archived"
-                checked={hideArchivedConversations}
-                onChange={(e) => {
-                  setHideArchivedConversations(e.target.checked);
-                  apply({ hideArchivedConversations: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="fork-enabled"
-                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
-                >
-                  {t('enableForkFeature')}
-                  <span
-                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
-                    title={t('experimentalLabel')}
-                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
-                  >
-                    experiment
-                  </span>
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('enableForkFeatureHint')}</p>
-              </div>
-              <Switch
-                id="fork-enabled"
-                checked={forkEnabled}
-                onChange={(e) => {
-                  setForkEnabled(e.target.checked);
-                  apply({ forkEnabled: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="account-isolation-enabled"
-                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
-                >
-                  {t('enableAccountIsolation')}
-                  <span
-                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
-                    title={t('experimentalLabel')}
-                    style={{
-                      fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20",
+            {folderEnabled && (
+              <div className="border-primary/20 ml-2 space-y-4 border-l-2 pl-4 transition-all">
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="auto-categorization-enabled"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('autoCategorization')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('autoCategorizationHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="auto-categorization-enabled"
+                    checked={autoCategorizationEnabled}
+                    onChange={(e) => {
+                      setAutoCategorizationEnabled(e.target.checked);
+                      apply({ autoCategorizationEnabled: e.target.checked });
                     }}
-                  >
-                    experiment
-                  </span>
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('enableAccountIsolationHint')}
-                </p>
-                <div className="mt-1 flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">{t('currentPlatform')}:</span>
-                  <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
-                    {currentIsolationPlatformLabel}
-                  </span>
+                  />
+                </div>
+
+                {autoCategorizationEnabled && (
+                  <div className="bg-secondary/20 animate-in fade-in slide-in-from-top-4 space-y-6 rounded-md p-4 duration-300">
+                    {/* 1. Categorization Engine Selection */}
+                    <div className="bg-primary/5 space-y-4 rounded-md border p-4 transition-all">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-semibold">
+                            {t('autoCategorizationEngine')}
+                          </Label>
+                        </div>
+
+                        <div className="bg-background/40 flex overflow-hidden rounded-lg border p-1">
+                          <button
+                            className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                              !autoCategorizationApiMode
+                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                : 'text-muted-foreground hover:bg-black/5'
+                            }`}
+                            onClick={() => {
+                              setAutoCategorizationApiMode(false);
+                              apply({ autoCategorizationApiMode: false });
+                            }}
+                          >
+                            {t('autoCategorizationEngineWeb')}
+                          </button>
+                          <button
+                            className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                              autoCategorizationApiMode
+                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                : 'text-muted-foreground hover:bg-black/5'
+                            }`}
+                            onClick={() => {
+                              setAutoCategorizationApiMode(true);
+                              apply({ autoCategorizationApiMode: true });
+                            }}
+                          >
+                            {t('autoCategorizationEngineApi')}
+                          </button>
+                        </div>
+                        <p className="text-muted-foreground px-1 text-[10px] leading-tight italic opacity-70">
+                          {autoCategorizationApiMode
+                            ? t('geminiApiModeHint')
+                            : t('autoCategorizationHint')}
+                        </p>
+                      </div>
+
+                      {autoCategorizationApiMode && (
+                        <div className="bg-background/50 animate-in fade-in slide-in-from-top-2 space-y-3 rounded border p-3 duration-200">
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] font-medium opacity-70">
+                              {t('geminiApiKey')}
+                            </Label>
+                            <input
+                              type="password"
+                              className="bg-background border-input focus:ring-ring h-8 w-full rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
+                              value={autoCategorizationApiKey}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setAutoCategorizationApiKey(val);
+                                apply({ autoCategorizationApiKey: val });
+                              }}
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] font-medium opacity-70">
+                              {t('geminiApiModel')}
+                            </Label>
+                            <select
+                              className="bg-background border-input focus:ring-ring h-8 w-full rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
+                              value={autoCategorizationApiModel}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setAutoCategorizationApiModel(val);
+                                apply({ autoCategorizationApiModel: val });
+                              }}
+                            >
+                              <option value="gemini-3.1-flash-lite-preview">
+                                Gemini 3.1 Flash Lite
+                              </option>
+                              <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                              <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-border my-2 h-px w-full opacity-50" />
+
+                    {/* 2. General AI Categorization Block */}
+                    <div className="space-y-3">
+                      {/* WYSIWYG Preview for General */}
+                      <div className="bg-primary/5 space-y-2 rounded-lg border p-3">
+                        <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
+                          {t('autoCategorizationExampleTitle')}
+                        </p>
+                        <div className="bg-background/80 flex flex-wrap items-center gap-x-[2px] rounded border p-2 font-mono text-sm shadow-inner transition-all">
+                          {/* Prefix */}
+                          <span className="rounded px-1 font-bold text-blue-500">
+                            {autoCategorizationPrefix || '.'}
+                          </span>
+                          {/* Text */}
+                          <span className="text-foreground/80 whitespace-pre">
+                            {t('autoCategorizationExampleText')}
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground mt-2 text-[10px] leading-relaxed">
+                          {t('autoCategorizationPreviewInputThis')}
+                          {autoCategorizationTriggerMode === 'positive' ? (
+                            <span className="font-semibold text-green-500">
+                              {t('autoCategorizationPreviewThenDo')}
+                            </span>
+                          ) : (
+                            <span className="font-semibold text-red-500">
+                              {t('autoCategorizationPreviewThenDoNot')}
+                            </span>
+                          )}
+                          {t('autoCategorizationPreviewAutoCategorize')}
+                        </p>
+                      </div>
+
+                      {/* General AI Controls */}
+                      <div className="bg-background/50 outline-border space-y-3 rounded-md p-3 outline outline-1">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex flex-1 items-center gap-1.5">
+                            <div className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+                            <Label className="text-xs font-medium">
+                              {t('autoCategorizationPrefix')}
+                            </Label>
+                          </div>
+                          <input
+                            type="text"
+                            className="bg-background border-input focus:ring-ring h-8 w-12 rounded-md border px-2 text-center text-sm focus:ring-1 focus:outline-none"
+                            value={autoCategorizationPrefix}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setAutoCategorizationPrefix(val);
+                              apply({ autoCategorizationPrefix: val });
+                            }}
+                            maxLength={5}
+                          />
+                        </div>
+
+                        <div className="ml-1 flex items-center justify-between gap-4 border-l-2 border-blue-500/20 pl-3.5">
+                          <div className="flex-1">
+                            <Label className="text-muted-foreground text-xs font-medium">
+                              {t('autoCategorizationStrictMatch')}
+                            </Label>
+                          </div>
+                          <Switch
+                            checked={!autoCategorizationStrictMatch}
+                            onChange={(e) => {
+                              setAutoCategorizationStrictMatch(!e.target.checked);
+                              apply({ gvAutoCategorizationStrictMatch: !e.target.checked });
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <Label className="text-xs font-medium">
+                              {t('autoCategorizationTriggerMode')}
+                            </Label>
+                            <p className="text-muted-foreground mt-0.5 text-[10px] opacity-80">
+                              {t('autoCategorizationTriggerModeHint')}
+                            </p>
+                          </div>
+                          <select
+                            className="bg-background border-input focus:ring-ring h-8 rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
+                            value={autoCategorizationTriggerMode}
+                            onChange={(e) => {
+                              const val = e.target.value as 'positive' | 'negative';
+                              setAutoCategorizationTriggerMode(val);
+                              apply({ gvAutoCategorizationTriggerMode: val });
+                            }}
+                          >
+                            <option value="positive">
+                              {t('autoCategorizationTriggerModePositive')}
+                            </option>
+                            <option value="negative">
+                              {t('autoCategorizationTriggerModeNegative')}
+                            </option>
+                          </select>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <Label className="text-xs font-medium">
+                              {t('autoCategorizationShortcut')}
+                            </Label>
+                          </div>
+                          <input
+                            type="text"
+                            className="bg-background border-input focus:ring-ring h-8 w-32 cursor-pointer rounded-md border px-2 text-center text-xs focus:ring-1 focus:outline-none"
+                            value={autoCategorizationShortcut}
+                            placeholder={t('autoCategorizationShortcut')}
+                            readOnly
+                            onKeyDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+                              const parts: string[] = [];
+                              if (e.ctrlKey || e.metaKey) parts.push('Ctrl');
+                              if (e.shiftKey) parts.push('Shift');
+                              if (e.altKey) parts.push('Alt');
+                              parts.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+                              const combo = parts.join('+');
+                              setAutoCategorizationShortcut(combo);
+                              apply({ autoCategorizationShortcut: combo });
+                              (e.target as HTMLElement).blur();
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-border my-6 h-px w-full" />
+
+                    {/* 2. Index Routing Block */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <Label className="text-primary text-sm font-semibold">
+                            {t('autoCategorizationIndexRouting')}
+                          </Label>
+                          <p className="text-muted-foreground mt-1 text-[10px]">
+                            {t('autoCategorizationIndexRoutingHint')}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={autoCategorizationIndexRouting}
+                          onChange={(e) => {
+                            setAutoCategorizationIndexRouting(e.target.checked);
+                            apply({ gvAutoCategorizationIndexRouting: e.target.checked });
+                          }}
+                        />
+                      </div>
+
+                      {autoCategorizationIndexRouting && (
+                        <>
+                          {/* Visual Example for Index Routing */}
+                          <div className="bg-primary/5 mt-4 space-y-2 rounded-lg border p-3">
+                            <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
+                              {t('autoCategorizationExampleTitle')}
+                            </p>
+                            <div className="bg-background/80 flex flex-wrap items-center gap-x-[2px] rounded border p-2 font-mono text-sm shadow-inner transition-all">
+                              {/* Prefix */}
+                              {(autoCategorizationUseMainPrefixForRouting ||
+                                autoCategorizationCustomRoutingPrefix) && (
+                                <span className="rounded px-1 font-bold text-purple-500">
+                                  {autoCategorizationUseMainPrefixForRouting
+                                    ? autoCategorizationPrefix || '.'
+                                    : autoCategorizationCustomRoutingPrefix}
+                                </span>
+                              )}
+                              {/* Folder Index */}
+                              <span className="rounded px-1 font-bold text-green-600">1</span>
+                              {/* Separator */}
+                              <span className="rounded px-[2px] font-black whitespace-pre text-orange-500">
+                                {autoCategorizationRoutingSeparator || ' '}
+                              </span>
+                              {/* Subfolder Index */}
+                              <span className="rounded px-1 font-bold text-green-600">1</span>
+                              {/* Text */}
+                              <span className="text-foreground/80 whitespace-pre">
+                                {t('autoCategorizationExampleText')}
+                              </span>
+                            </div>
+                            <p className="text-muted-foreground mt-2 text-[10px] leading-relaxed">
+                              {t('autoCategorizationExampleExplanation')}
+                            </p>
+                          </div>
+
+                          {/* Index Routing Controls */}
+                          <div className="bg-background/50 outline-border space-y-3 rounded-md p-3 outline outline-1">
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex flex-1 items-center gap-1.5">
+                                <div className="h-2 w-2 shrink-0 rounded-full bg-purple-500" />
+                                <Label className="text-xs font-medium">
+                                  {t('autoCategorizationUseMainPrefixForRouting')}
+                                </Label>
+                              </div>
+                              <Switch
+                                checked={autoCategorizationUseMainPrefixForRouting}
+                                onChange={(e) => {
+                                  setAutoCategorizationUseMainPrefixForRouting(e.target.checked);
+                                  apply({
+                                    gvAutoCategorizationUseMainPrefixForRouting: e.target.checked,
+                                  });
+                                }}
+                              />
+                            </div>
+
+                            {!autoCategorizationUseMainPrefixForRouting && (
+                              <div className="ml-1 flex items-center justify-between gap-4 border-l-2 border-purple-500/20 pl-3.5">
+                                <div className="flex-1">
+                                  <Label className="text-muted-foreground text-xs font-medium">
+                                    {t('autoCategorizationCustomRoutingPrefix')}
+                                  </Label>
+                                </div>
+                                <input
+                                  type="text"
+                                  className="bg-background border-input focus:ring-ring h-8 w-16 rounded-md border px-2 text-center text-sm focus:ring-1 focus:outline-none"
+                                  value={autoCategorizationCustomRoutingPrefix}
+                                  placeholder=""
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setAutoCategorizationCustomRoutingPrefix(val);
+                                    apply({ autoCategorizationCustomRoutingPrefix: val });
+                                  }}
+                                  maxLength={5}
+                                />
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex flex-1 items-center gap-1.5">
+                                <div className="h-2 w-2 shrink-0 rounded-full bg-orange-500" />
+                                <Label className="text-xs font-medium">
+                                  {t('autoCategorizationRoutingSeparator')}
+                                </Label>
+                              </div>
+                              <input
+                                type="text"
+                                className="bg-background border-input focus:ring-ring h-8 w-12 rounded-md border px-2 text-center text-sm focus:ring-1 focus:outline-none"
+                                name="routingSeparator"
+                                value={autoCategorizationRoutingSeparator}
+                                placeholder=" "
+                                onFocus={(e) => e.target.select()}
+                                onBlur={(e) => {
+                                  if (!e.target.value) {
+                                    setAutoCategorizationRoutingSeparator(' ');
+                                    apply({ gvAutoCategorizationRoutingSeparator: ' ' });
+                                  }
+                                }}
+                                onChange={(e) => {
+                                  const val = e.target.value.slice(-1);
+                                  setAutoCategorizationRoutingSeparator(val);
+                                  apply({ gvAutoCategorizationRoutingSeparator: val || ' ' });
+                                }}
+                                maxLength={2}
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex flex-1 items-center gap-1.5">
+                                <div className="h-2 w-2 shrink-0 rounded-full bg-green-600" />
+                                <div>
+                                  <Label className="block text-xs font-medium">
+                                    {t('autoCategorizationShowFolderIndex')}
+                                  </Label>
+                                  <span className="text-muted-foreground block text-[10px] opacity-80">
+                                    {t('autoCategorizationShowFolderIndexHint')}
+                                  </span>
+                                </div>
+                              </div>
+                              <Switch
+                                checked={autoCategorizationShowFolderIndex}
+                                onChange={(e) => {
+                                  setAutoCategorizationShowFolderIndex(e.target.checked);
+                                  apply({ gvAutoCategorizationShowFolderIndex: e.target.checked });
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Trigger Configuration */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="group flex items-center justify-between">
+                    <Label
+                      htmlFor="hide-archived"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('hideArchivedConversations')}
+                    </Label>
+                    <Switch
+                      id="hide-archived"
+                      checked={hideArchivedConversations}
+                      onChange={(e) => {
+                        setHideArchivedConversations(e.target.checked);
+                        apply({ hideArchivedConversations: e.target.checked });
+                      }}
+                    />
+                  </div>
+                  <div className="group flex items-center justify-between">
+                    <div className="flex-1">
+                      <Label
+                        htmlFor="fork-enabled"
+                        className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                      >
+                        {t('enableForkFeature')}
+                        <span
+                          className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                          title={t('experimentalLabel')}
+                          style={{
+                            fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20",
+                          }}
+                        >
+                          experiment
+                        </span>
+                      </Label>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {t('enableForkFeatureHint')}
+                      </p>
+                    </div>
+                    <Switch
+                      id="fork-enabled"
+                      checked={forkEnabled}
+                      onChange={(e) => {
+                        setForkEnabled(e.target.checked);
+                        apply({ forkEnabled: e.target.checked });
+                      }}
+                    />
+                  </div>
+                  <div className="group flex items-center justify-between">
+                    <div className="flex-1">
+                      <Label
+                        htmlFor="account-isolation-enabled"
+                        className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                      >
+                        {t('enableAccountIsolation')}
+                        <span
+                          className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                          title={t('experimentalLabel')}
+                          style={{
+                            fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20",
+                          }}
+                        >
+                          experiment
+                        </span>
+                      </Label>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {t('enableAccountIsolationHint')}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2 text-xs">
+                        <span className="text-muted-foreground">{t('currentPlatform')}:</span>
+                        <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
+                          {currentIsolationPlatformLabel}
+                        </span>
+                      </div>
+                    </div>
+                    <Switch
+                      id="account-isolation-enabled"
+                      checked={
+                        isAIStudio ? accountIsolationEnabledAIStudio : accountIsolationEnabledGemini
+                      }
+                      onChange={(e) => {
+                        if (isAIStudio) {
+                          setAccountIsolationEnabledAIStudio(e.target.checked);
+                        } else {
+                          setAccountIsolationEnabledGemini(e.target.checked);
+                        }
+                        apply({
+                          accountIsolationEnabled: e.target.checked,
+                          accountIsolationPlatform: activeAccountPlatform,
+                        });
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-              <Switch
-                id="account-isolation-enabled"
-                checked={
-                  isAIStudio ? accountIsolationEnabledAIStudio : accountIsolationEnabledGemini
-                }
-                onChange={(e) => {
-                  if (isAIStudio) {
-                    setAccountIsolationEnabledAIStudio(e.target.checked);
-                  } else {
-                    setAccountIsolationEnabledGemini(e.target.checked);
-                  }
-                  apply({
-                    accountIsolationEnabled: e.target.checked,
-                    accountIsolationPlatform: activeAccountPlatform,
-                  });
-                }}
-              />
-            </div>
+            )}
           </CardContent>
         </Card>
         {/* Folder Spacing */}
@@ -1375,33 +1886,6 @@ export default function Popup() {
           </Card>
         )}
 
-        {/* Upsell Hider - Gemini only */}
-        {!isAIStudio && (
-          <Card className="p-4 transition-shadow hover:shadow-lg">
-            <CardContent className="p-0">
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="upsell-hider"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('hideUpsell')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('hideUpsellHint')}</p>
-                </div>
-                <Switch
-                  id="upsell-hider"
-                  checked={upsellHiderEnabled}
-                  onChange={(e) => {
-                    setUpsellHiderEnabled(e.target.checked);
-                    apply({ upsellHiderEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Formula Copy Options */}
         <Card className="p-4 transition-shadow hover:shadow-lg">
           <CardTitle className="mb-4 text-xs uppercase">{t('formulaCopyFormat')}</CardTitle>
@@ -1460,12 +1944,7 @@ export default function Popup() {
                 >
                   {t('enableInputCollapse')}
                 </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('enableInputCollapseHint')}{' '}
-                  <span className="text-muted-foreground/70">
-                    ({t('inputCollapseShortcutHint').replace('{modifier}', getModifierKey())})
-                  </span>
-                </p>
+                <p className="text-muted-foreground mt-1 text-xs">{t('enableInputCollapseHint')}</p>
               </div>
               <Switch
                 id="input-collapse-enabled"
@@ -1476,30 +1955,6 @@ export default function Popup() {
                 }}
               />
             </div>
-            {/* Second toggle - Allow collapse when not empty (only visible when first is enabled) */}
-            {inputCollapseEnabled && (
-              <div className="group mt-3 ml-4 flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="input-collapse-when-not-empty"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('allowCollapseWhenNotEmpty')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('allowCollapseWhenNotEmptyHint')}
-                  </p>
-                </div>
-                <Switch
-                  id="input-collapse-when-not-empty"
-                  checked={inputCollapseWhenNotEmpty}
-                  onChange={(e) => {
-                    setInputCollapseWhenNotEmpty(e.target.checked);
-                    apply({ inputCollapseWhenNotEmpty: e.target.checked });
-                  }}
-                />
-              </div>
-            )}
             <div className="group flex items-center justify-between">
               <div className="flex-1">
                 <Label
@@ -1601,7 +2056,7 @@ export default function Popup() {
                       <span
                         className={`w-2.5 shrink-0 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}
                       >
-                        ✓
+                        {'\u2713'}{' '}
                       </span>
                     </button>
                   );
