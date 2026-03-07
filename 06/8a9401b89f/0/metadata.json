@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "068a9401b89f",
+  "session_id": "6c6d863a-ab59-47be-87d3-77e1f8a4f370",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-07T01:21:00.405057Z",
+  "branch": "fix/code-block-shadow",
+  "checkpoints_count": 6,
+  "files_touched": [
+    "src/pages/content/chatWidth/index.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "497f354725c1",
+  "token_usage": {
+    "input_tokens": 53,
+    "cache_creation_tokens": 62250,
+    "cache_read_tokens": 1112035,
+    "output_tokens": 21424,
+    "api_call_count": 27
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-07T01:21:00.236181Z",
+    "agent_lines": 14,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 14,
+    "agent_percentage": 100
+  }
+}

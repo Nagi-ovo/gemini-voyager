@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "068a9401b89f",
+  "strategy": "manual-commit",
+  "branch": "fix/code-block-shadow",
+  "checkpoints_count": 6,
+  "files_touched": [
+    "src/pages/content/chatWidth/index.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/06/8a9401b89f/0/metadata.json",
+      "transcript": "/06/8a9401b89f/0/full.jsonl",
+      "context": "/06/8a9401b89f/0/context.md",
+      "content_hash": "/06/8a9401b89f/0/content_hash.txt",
+      "prompt": "/06/8a9401b89f/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 53,
+    "cache_creation_tokens": 62250,
+    "cache_read_tokens": 1112035,
+    "output_tokens": 21424,
+    "api_call_count": 27
+  }
+}
