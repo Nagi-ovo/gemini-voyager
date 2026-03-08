@@ -1121,8 +1121,15 @@ export class FolderManager {
       element.classList.add('gv-folder-dragover');
     });
 
-    element.addEventListener('dragleave', () => {
-      element.classList.remove('gv-folder-dragover');
+    element.addEventListener('dragleave', (e) => {
+      // Only remove highlight when cursor truly leaves the element (not just entering a child)
+      const rect = element.getBoundingClientRect();
+      const x = (e as DragEvent).clientX;
+      const y = (e as DragEvent).clientY;
+
+      if (x <= rect.left || x >= rect.right || y <= rect.top || y >= rect.bottom) {
+        element.classList.remove('gv-folder-dragover');
+      }
     });
 
     element.addEventListener('drop', (e) => {
@@ -2364,20 +2371,23 @@ export class FolderManager {
         const singleId = dragData.conversationId;
         const sourceFolderId = dragData.sourceFolderId;
 
+        // If conversation(s) are from outside any folder (native sidebar drag),
+        // add them to the folder data first so reorderOrMoveConversations can find them
+        if (!sourceFolderId) {
+          this.ensureConversationsInFolder(folderId, dragData);
+        }
+
+        const effectiveSource = sourceFolderId ?? folderId;
+
         if (convs.length > 0) {
           this.reorderOrMoveConversations(
             convs.map((c) => c.conversationId),
-            sourceFolderId ?? folderId,
+            effectiveSource,
             folderId,
             insertIndex,
           );
         } else if (singleId) {
-          this.reorderOrMoveConversations(
-            [singleId],
-            sourceFolderId ?? folderId,
-            folderId,
-            insertIndex,
-          );
+          this.reorderOrMoveConversations([singleId], effectiveSource, folderId, insertIndex);
         }
 
         this.exitMultiSelectMode();
@@ -2441,20 +2451,22 @@ export class FolderManager {
           const singleId = dragData.conversationId;
           const sourceFolderId = dragData.sourceFolderId;
 
+          // If from outside any folder, add to folder data first
+          if (!sourceFolderId) {
+            this.ensureConversationsInFolder(parentId, dragData);
+          }
+
+          const effectiveSource = sourceFolderId ?? parentId;
+
           if (convs.length > 0) {
             this.reorderOrMoveConversations(
               convs.map((c) => c.conversationId),
-              sourceFolderId ?? parentId,
+              effectiveSource,
               parentId,
               insertIndex,
             );
           } else if (singleId) {
-            this.reorderOrMoveConversations(
-              [singleId],
-              sourceFolderId ?? parentId,
-              parentId,
-              insertIndex,
-            );
+            this.reorderOrMoveConversations([singleId], effectiveSource, parentId, insertIndex);
           }
         }
 
@@ -2501,6 +2513,58 @@ export class FolderManager {
 
     this.saveData();
     this.refresh();
+  }
+
+  /**
+   * Silently add conversation(s) from dragData into a folder's data (no save/refresh).
+   * Used before reorderOrMoveConversations so the conversations exist in the folder.
+   */
+  private ensureConversationsInFolder(folderId: string, dragData: DragData): void {
+    if (!this.data.folderContents[folderId]) {
+      this.data.folderContents[folderId] = [];
+    }
+
+    const convs = dragData.conversations ?? [];
+    const items: { id: string; title: string; url?: string; isGem?: boolean; gemId?: string }[] =
+      convs.length > 0
+        ? convs.map((c) => ({
+            id: c.conversationId,
+            title: c.title,
+            url: c.url,
+            isGem: c.isGem,
+            gemId: c.gemId,
+          }))
+        : dragData.conversationId
+          ? [
+              {
+                id: dragData.conversationId,
+                title: dragData.title,
+                url: dragData.url,
+                isGem: dragData.isGem,
+                gemId: dragData.gemId,
+              },
+            ]
+          : [];
+
+    let maxSortIndex = this.data.folderContents[folderId].reduce(
+      (max, c) => Math.max(max, c.sortIndex ?? -1),
+      -1,
+    );
+
+    for (const item of items) {
+      const exists = this.data.folderContents[folderId].some((c) => c.conversationId === item.id);
+      if (exists) continue;
+
+      this.data.folderContents[folderId].push({
+        conversationId: item.id,
+        title: item.title,
+        url: item.url ?? '',
+        addedAt: Date.now(),
+        isGem: item.isGem,
+        gemId: item.gemId,
+        sortIndex: ++maxSortIndex,
+      });
+    }
   }
 
   /**
