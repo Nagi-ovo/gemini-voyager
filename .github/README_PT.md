@@ -52,7 +52,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
-    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="500">
   </a>
   <br>
   <b>🎉 Altamente recomendado pelos principais influenciadores de tecnologia!</b>
@@ -71,7 +71,7 @@ Foi por isso que criámos o **Gemini Voyager**. Não é apenas uma ferramenta; �
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
-    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="500">
   </a>
   <br>
   <i>Durante o problema de 18 de fevereiro, em que o Google Gemini App tornou as conversas históricas de alguns usuários inacessíveis, os usuários do Voyager ainda conseguiram ver suas conversas salvas em suas pastas.</i>
@@ -207,6 +207,14 @@ Damos as boas-vindas a contribuições!
 - **Pull Requests**: Consulte [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 Obrigado por ajudar a tornar o Gemini Voyager melhor! ❤️
+
+### ❤️ Agradecimentos Especiais
+
+Um agradecimento especial a todos os colaboradores pelas suas contribuições ao Gemini Voyager ❤️
+
+<a href="https://github.com/Nagi-ovo/gemini-voyager/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Nagi-ovo/gemini-voyager&max=200&columns=14" />
+</a>
 
 ---
 

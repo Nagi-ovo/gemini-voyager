@@ -52,7 +52,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
-    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="500">
   </a>
   <br>
   <b>🎉 주요 기술 KOL 및 커뮤니티에서 적극 권장합니다!</b>
@@ -71,7 +71,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
-    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="500">
   </a>
   <br>
   <i>2 월 18 일 Google Gemini 앱으로 인해 일부 사용자의 과거 대화에 접근할 수 없는 문제가 발생했을 때, Voyager 사용자는 여전히 폴더에 저장된 대화를 볼 수 있었습니다.</i>
@@ -249,6 +249,14 @@ bun run build:all      # 모든 브라우저
 </details>
 
 Gemini Voyager 를 더 좋게 만들 수 있도록 도와주셔서 감사합니다! ❤️
+
+### ❤️ 특별 감사
+
+Gemini Voyager에 기여해 주신 모든 기여자분들께 특별히 감사드립니다 ❤️
+
+<a href="https://github.com/Nagi-ovo/gemini-voyager/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Nagi-ovo/gemini-voyager&max=200&columns=14" />
+</a>
 
 ---
 

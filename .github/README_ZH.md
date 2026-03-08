@@ -52,7 +52,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024507762483277927?s=20" target="_blank">
-    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="800">
+    <img src="../docs/public/assets/x-recommendation.png" alt="KOL Recommendation" width="500">
   </a>
   <br>
   <b>🎉 感谢知名科技圈大 V 与社区的强烈推荐！</b>
@@ -71,7 +71,7 @@
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
-    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="800">
+    <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="500">
   </a>
   <br>
   <i>在 2 月 18 号 Google Gemini App 导致部分用户历史对话无法访问的问题中，Voyager 的用户仍然能够在其文件夹中看到被保存下来的对话。</i>
@@ -250,6 +250,14 @@ bun run build:all
 </details>
 
 感谢你让 Gemini Voyager 变得更好！❤️
+
+### ❤️ 特别感谢
+
+特别感谢所有为 Gemini Voyager 做出贡献的贡献者们 ❤️
+
+<a href="https://github.com/Nagi-ovo/gemini-voyager/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Nagi-ovo/gemini-voyager&max=200&columns=14" />
+</a>
 
 ---
 
