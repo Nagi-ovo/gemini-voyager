@@ -1565,7 +1565,7 @@ export class AIStudioFolderManager {
           if (!promptAnchor) return;
 
           const id = this.extractPromptId(promptAnchor);
-          const title = normalizeText(promptAnchor.textContent || '');
+          const title = this.extractPromptTitle(promptAnchor) || '';
           const rawHref = promptAnchor.getAttribute('href') || promptAnchor.href || '';
           const url = rawHref.startsWith('http')
             ? rawHref
@@ -1647,7 +1647,7 @@ export class AIStudioFolderManager {
         e.stopPropagation();
 
         const id = this.extractPromptId(anchor);
-        const title = normalizeText(anchor.textContent || '');
+        const title = this.extractPromptTitle(anchor) || '';
         // Ensure accurate URL construction
         const rawHref = anchor.getAttribute('href') || anchor.href || '';
         const url = rawHref.startsWith('http')
