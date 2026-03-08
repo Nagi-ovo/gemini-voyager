@@ -134,6 +134,43 @@ describe('AIStudio prompt binding performance guards', () => {
       ]),
     );
   });
+
+  it('uses aria-label/title fallback for drag payload titles when text is missing', () => {
+    const { root, row, anchor } = createPromptRow('abc124', '');
+    anchor.setAttribute('aria-label', 'Native prompt title');
+    anchor.setAttribute('title', 'Backup title');
+
+    const manager = new AIStudioFolderManager();
+    const bindDraggablesInPromptList = (
+      manager as unknown as {
+        bindDraggablesInPromptList: (scope?: ParentNode | null) => void;
+      }
+    ).bindDraggablesInPromptList.bind(manager);
+
+    bindDraggablesInPromptList(root);
+
+    const transfer: DragDataTransferMock = {
+      effectAllowed: '',
+      setData: vi.fn(),
+      setDragImage: vi.fn(),
+    };
+    const dragstart = new Event('dragstart') as DragEvent;
+    Object.defineProperty(dragstart, 'dataTransfer', {
+      value: transfer,
+      configurable: true,
+    });
+
+    row.dispatchEvent(dragstart);
+
+    const jsonPayload = (transfer.setData.mock.calls as Array<[string, string]>).find(
+      ([type]) => type === 'application/json',
+    )?.[1];
+    expect(jsonPayload).toBeTruthy();
+    expect(JSON.parse(jsonPayload || '{}')).toMatchObject({
+      conversationId: 'abc124',
+      title: 'Native prompt title',
+    });
+  });
 });
 
 describe('AIStudio theme compatibility', () => {
