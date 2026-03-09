@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for Gemini Voyager
 
-> **Last Updated**: 2026-03-05
-> **Version**: 1.3.1
+> **Last Updated**: 2026-03-09
+> **Version**: 1.3.3
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
 
 ---
@@ -212,6 +212,20 @@ Examples:
 - `fix(copy): handle clipboard fallback`
 - `refactor(copy): introduce temml to convert tex2mathml`
 - `chore: update sponsors.svg`
+
+### Version Bump & Release
+
+```bash
+bun run bump              # Bumps patch version (e.g., 1.3.2 → 1.3.3)
+```
+
+After bumping, follow this workflow:
+
+1. Commit the version bump: `chore: bump to v{VERSION}`
+2. Create a git tag: `git tag v{VERSION}`
+3. Push with tags: `git push && git push --tags`
+
+The bump script automatically updates `package.json`, `manifest.json`, and `manifest.dev.json`, then runs `bun run format`.
 
 ### Definition of Done (DoD)
 
