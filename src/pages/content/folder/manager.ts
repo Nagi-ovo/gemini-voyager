@@ -6300,9 +6300,45 @@ export class FolderManager {
         return true;
       }
 
+      // Handle request to collect all conversations and folder structure for AI organization
+      if (msg.type === 'gv.folders.getStructureForAI') {
+        this.debug('Received AI structure request');
+        const sidebarConversations = this.collectAllSidebarConversations();
+        sendResponse({
+          ok: true,
+          sidebarConversations,
+          folderData: this.data,
+        });
+        return true;
+      }
+
       // Return true for all messages to keep the channel open
       return true;
     });
+  }
+
+  /**
+   * Collect all conversation titles and URLs from the native sidebar DOM
+   */
+  private collectAllSidebarConversations(): Array<{
+    id: string;
+    title: string;
+    url: string;
+  }> {
+    const results: Array<{ id: string; title: string; url: string }> = [];
+    const conversationEls = document.querySelectorAll('[data-test-id="conversation"]');
+
+    for (const el of Array.from(conversationEls)) {
+      const htmlEl = el as HTMLElement;
+      const id = this.extractNativeConversationId(htmlEl);
+      const title = this.extractNativeConversationTitle(htmlEl);
+      const url = this.extractNativeConversationUrl(htmlEl);
+      if (id && title && url) {
+        results.push({ id, title, url });
+      }
+    }
+
+    return results;
   }
 
   // Tooltip methods
@@ -6463,6 +6499,29 @@ export class FolderManager {
     fileInputContainer.appendChild(fileButton);
     fileInputContainer.appendChild(fileName);
 
+    // Paste JSON section
+    const pasteContainer = document.createElement('div');
+    pasteContainer.className = 'gv-folder-import-paste-container';
+
+    const pasteToggleBtn = document.createElement('button');
+    pasteToggleBtn.className = 'gv-folder-import-paste-toggle';
+    pasteToggleBtn.textContent = this.t('folder_import_paste_json');
+    let pasteExpanded = false;
+
+    const pasteArea = document.createElement('textarea');
+    pasteArea.className = 'gv-folder-import-paste-area';
+    pasteArea.placeholder = this.t('folder_import_paste_placeholder');
+    pasteArea.style.display = 'none';
+
+    pasteToggleBtn.addEventListener('click', () => {
+      pasteExpanded = !pasteExpanded;
+      pasteArea.style.display = pasteExpanded ? 'block' : 'none';
+      pasteToggleBtn.classList.toggle('gv-folder-import-paste-toggle-active', pasteExpanded);
+    });
+
+    pasteContainer.appendChild(pasteToggleBtn);
+    pasteContainer.appendChild(pasteArea);
+
     // Buttons
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'gv-folder-dialog-buttons';
@@ -6474,7 +6533,12 @@ export class FolderManager {
       const strategy = (mergeOption.querySelector('input') as HTMLInputElement).checked
         ? 'merge'
         : 'overwrite';
-      await this.handleImport(fileInput, strategy);
+      const pasteText = pasteArea.value.trim();
+      if (pasteText) {
+        await this.handleImportFromText(pasteText, strategy);
+      } else {
+        await this.handleImport(fileInput, strategy);
+      }
       overlay.remove();
     });
 
@@ -6490,6 +6554,7 @@ export class FolderManager {
     dialog.appendChild(dialogTitle);
     dialog.appendChild(strategyContainer);
     dialog.appendChild(fileInputContainer);
+    dialog.appendChild(pasteContainer);
     dialog.appendChild(buttonsContainer);
     overlay.appendChild(dialog);
 
@@ -6616,6 +6681,91 @@ export class FolderManager {
       );
     } finally {
       // Always release the lock, even if an error occurred
+      this.importInProgress = false;
+    }
+  }
+
+  /**
+   * Import folder data from pasted JSON text
+   */
+  private async handleImportFromText(jsonText: string, strategy: ImportStrategy): Promise<void> {
+    if (this.importInProgress) {
+      this.showNotification(
+        this.t('folder_import_in_progress') || 'Import already in progress',
+        'info',
+      );
+      return;
+    }
+
+    this.importInProgress = true;
+
+    try {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(jsonText);
+      } catch {
+        this.showNotification(this.t('folder_import_invalid_format'), 'error');
+        return;
+      }
+
+      if (strategy === 'overwrite') {
+        const confirmed = confirm(this.t('folder_import_confirm_overwrite'));
+        if (!confirmed) return;
+      }
+
+      const validationResult = FolderImportExportService.validatePayload(parsed);
+      if (!validationResult.success) {
+        this.showNotification(
+          this.t('folder_import_invalid_format') + ': ' + validationResult.error.message,
+          'error',
+        );
+        return;
+      }
+
+      const importResult = await FolderImportExportService.importFromPayload(
+        validationResult.data,
+        this.data as unknown as Parameters<typeof FolderImportExportService.importFromPayload>[1],
+        { strategy, createBackup: true },
+      );
+
+      if (!importResult.success) {
+        this.showNotification(
+          this.t('folder_import_error').replace('{error}', String(importResult.error)),
+          'error',
+        );
+        return;
+      }
+
+      this.data = importResult.data.data;
+      this.saveData();
+      this.refresh();
+
+      const stats = importResult.data.stats;
+      let message = this.t('folder_import_success')
+        .replace('{folders}', String(stats.foldersImported))
+        .replace('{conversations}', String(stats.conversationsImported));
+
+      if (
+        strategy === 'merge' &&
+        (stats.duplicatesFoldersSkipped || stats.duplicatesConversationsSkipped)
+      ) {
+        const totalSkipped =
+          (stats.duplicatesFoldersSkipped || 0) + (stats.duplicatesConversationsSkipped || 0);
+        message = this.t('folder_import_success_skipped')
+          .replace('{folders}', String(stats.foldersImported))
+          .replace('{conversations}', String(stats.conversationsImported))
+          .replace('{skipped}', String(totalSkipped));
+      }
+
+      this.showNotification(message, 'success');
+      this.debug('Import from text successful:', stats);
+    } catch (error) {
+      console.error('[FolderManager] Import from text error:', error);
+      this.showNotification(
+        this.t('folder_import_error').replace('{error}', String(error)),
+        'error',
+      );
+    } finally {
       this.importInProgress = false;
     }
   }

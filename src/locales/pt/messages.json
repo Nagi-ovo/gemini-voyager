@@ -459,6 +459,14 @@
     "message": "Isso substituirá todas as pastas existentes. Um backup será criado. Continuar?",
     "description": "Overwrite confirmation"
   },
+  "folder_import_paste_json": {
+    "message": "Ou colar JSON diretamente",
+    "description": "Botão para mostrar a área de colagem no diálogo de importação"
+  },
+  "folder_import_paste_placeholder": {
+    "message": "Cole seu JSON aqui...",
+    "description": "Texto de espaço reservado para a área de colagem"
+  },
   "export_dialog_title": {
     "message": "Exportar Conversa",
     "description": "Export dialog title"
@@ -1410,5 +1418,41 @@
   "hideUpsellHint": {
     "message": "Ocultar o botão \"Fazer upgrade para o Google AI Ultra\" na barra lateral e no menu de modelos",
     "description": "Explanation for the upsell hiding feature"
+  },
+  "aiOrgCopyButton": {
+    "message": "Organizar com IA",
+    "description": "Botão para copiar a estrutura de pastas e conversas para organização com IA"
+  },
+  "aiOrgCopied": {
+    "message": "Copiado!",
+    "description": "Confirmação após copiar o prompt de organização com IA"
+  },
+  "aiOrgError": {
+    "message": "Falha — abra o Gemini primeiro",
+    "description": "Erro ao copiar o prompt de organização com IA"
+  },
+  "aiOrgCopyHint": {
+    "message": "Copia todas as conversas e a estrutura de pastas como um prompt. Cole no Gemini para obter um plano de pastas importável.",
+    "description": "Texto de dica abaixo do botão de cópia de organização com IA"
+  },
+  "aiOrgCurrentFolders": {
+    "message": "Estrutura de pastas atual",
+    "description": "Cabeçalho no prompt de organização com IA"
+  },
+  "aiOrgUnfiledConversations": {
+    "message": "Conversas não classificadas",
+    "description": "Cabeçalho para conversas que não estão em nenhuma pasta"
+  },
+  "aiOrgEmpty": {
+    "message": "vazia",
+    "description": "Rótulo para pastas vazias no prompt de organização com IA"
+  },
+  "aiOrgInstructions": {
+    "message": "Instruções",
+    "description": "Cabeçalho da seção de instruções para IA"
+  },
+  "aiOrgInstructionsBody": {
+    "message": "Com base nas conversas e na estrutura de pastas acima, reorganize-as em uma hierarquia lógica de pastas. Gere um arquivo JSON no formato exato abaixo que possa ser importado diretamente na extensão Gemini Voyager (use a estratégia de importação \"Mesclar\"). Mantenha as pastas bem organizadas existentes, crie novas conforme necessário e mova as conversas não classificadas para pastas apropriadas. Cada pasta precisa de um ID único (use uma string aleatória curta) e cada conversa deve manter seu conversationId e url originais.",
+    "description": "Corpo das instruções para a IA gerar uma estrutura de pastas importável"
   }
 }

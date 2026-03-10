@@ -459,6 +459,14 @@
     "message": "سيؤدي هذا إلى استبدال جميع المجلدات الموجودة. سيتم إنشاء نسخة احتياطية. متابعة؟",
     "description": "Overwrite confirmation"
   },
+  "folder_import_paste_json": {
+    "message": "أو لصق JSON مباشرة",
+    "description": "زر تبديل لإظهار منطقة لصق النص في حوار الاستيراد"
+  },
+  "folder_import_paste_placeholder": {
+    "message": "الصق JSON هنا...",
+    "description": "نص نائب لمنطقة اللصق"
+  },
   "export_dialog_title": {
     "message": "تصدير المحادثة",
     "description": "Export dialog title"
@@ -1410,5 +1418,32 @@
   "hideUpsellHint": {
     "message": "إخفاء زر \"الترقية إلى Google AI Ultra\" في الشريط الجانبي وقائمة النماذج",
     "description": "Explanation for the upsell hiding feature"
+  },
+  "aiOrgCopyButton": {
+    "message": "تنظيم AI",
+    "description": "زر لنسخ هيكل المجلدات والمحادثات لتنظيم AI"
+  },
+  "aiOrgCopied": { "message": "تم النسخ!", "description": "تأكيد بعد نسخ موجه تنظيم AI" },
+  "aiOrgError": {
+    "message": "فشل — افتح Gemini أولاً",
+    "description": "خطأ عند فشل نسخ موجه تنظيم AI"
+  },
+  "aiOrgCopyHint": {
+    "message": "ينسخ جميع المحادثات وهيكل المجلدات كموجه. الصقه في Gemini للحصول على خطة مجلدات قابلة للاستيراد.",
+    "description": "نص تلميح أسفل زر نسخ تنظيم AI"
+  },
+  "aiOrgCurrentFolders": {
+    "message": "هيكل المجلدات الحالي",
+    "description": "عنوان في موجه تنظيم AI"
+  },
+  "aiOrgUnfiledConversations": {
+    "message": "محادثات غير مصنفة",
+    "description": "عنوان للمحادثات غير الموجودة في أي مجلد"
+  },
+  "aiOrgEmpty": { "message": "فارغ", "description": "تسمية للمجلدات الفارغة في موجه تنظيم AI" },
+  "aiOrgInstructions": { "message": "التعليمات", "description": "عنوان قسم تعليمات AI" },
+  "aiOrgInstructionsBody": {
+    "message": "بناءً على المحادثات وهيكل المجلدات أعلاه، يرجى إعادة تنظيمها في تسلسل هرمي منطقي للمجلدات. أخرج ملف JSON باستخدام التنسيق أدناه يمكن استيراده مباشرة إلى إضافة Gemini Voyager (استخدم استراتيجية الاستيراد \"دمج\"). احتفظ بالمجلدات المنظمة جيداً الحالية، وأنشئ مجلدات جديدة حسب الحاجة، وانقل المحادثات غير المصنفة إلى مجلدات مناسبة. يحتاج كل مجلد إلى معرف فريد (استخدم سلسلة عشوائية قصيرة)، ويجب أن تحتفظ كل محادثة بـ conversationId و url الأصليين.",
+    "description": "نص التعليمات لـ AI لإنشاء هيكل مجلدات قابل للاستيراد"
   }
 }

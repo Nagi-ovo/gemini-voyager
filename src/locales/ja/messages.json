@@ -459,6 +459,14 @@
     "message": "既存のフォルダ構造がすべて置換されます。バックアップが作成されます。続行しますか？",
     "description": "Overwrite confirmation"
   },
+  "folder_import_paste_json": {
+    "message": "または JSON を直接貼り付け",
+    "description": "インポートダイアログで貼り付けテキストエリアを表示するトグルボタン"
+  },
+  "folder_import_paste_placeholder": {
+    "message": "ここに JSON を貼り付け...",
+    "description": "貼り付けテキストエリアのプレースホルダー"
+  },
   "export_dialog_title": {
     "message": "会話のエクスポート",
     "description": "Export dialog title"
@@ -1410,5 +1418,35 @@
   "hideUpsellHint": {
     "message": "サイドバーとモデルメニューの「Google AI Ultra にアップグレード」ボタンを非表示にします",
     "description": "Explanation for the upsell hiding feature"
+  },
+  "aiOrgCopyButton": {
+    "message": "AI 整理",
+    "description": "AI整理のためにフォルダ構造と会話をコピーするボタン"
+  },
+  "aiOrgCopied": {
+    "message": "コピーしました！",
+    "description": "AI整理プロンプトのコピー後の確認"
+  },
+  "aiOrgError": {
+    "message": "失敗 — 先に Gemini を開いてください",
+    "description": "AI整理プロンプトのコピー失敗時のエラー"
+  },
+  "aiOrgCopyHint": {
+    "message": "すべての会話とフォルダ構造をプロンプトとしてコピーします。Gemini に貼り付けて、インポート可能なフォルダプランを取得できます。",
+    "description": "AI整理コピーボタンの下のヒントテキスト"
+  },
+  "aiOrgCurrentFolders": {
+    "message": "現在のフォルダ構造",
+    "description": "AI整理プロンプトの見出し"
+  },
+  "aiOrgUnfiledConversations": {
+    "message": "未分類の会話",
+    "description": "フォルダに入っていない会話の見出し"
+  },
+  "aiOrgEmpty": { "message": "空", "description": "AI整理プロンプトの空フォルダのラベル" },
+  "aiOrgInstructions": { "message": "指示", "description": "AI指示セクションの見出し" },
+  "aiOrgInstructionsBody": {
+    "message": "上記の会話とフォルダ構造に基づいて、論理的なフォルダ階層に再整理してください。以下の形式の JSON ファイルを出力し、Gemini Voyager 拡張機能に直接インポートできるようにしてください（「マージ」インポート戦略を使用）。既存の整理済みフォルダはそのまま維持し、必要に応じて新しいフォルダを作成し、未分類の会話を適切なフォルダに移動してください。各フォルダには一意の ID（短いランダム文字列）が必要で、各会話は元の conversationId と url を保持する必要があります。",
+    "description": "AI がインポート可能なフォルダ構造を生成するための指示本文"
   }
 }

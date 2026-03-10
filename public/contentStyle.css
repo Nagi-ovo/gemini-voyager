@@ -4479,6 +4479,94 @@ html.dark .gv-folder-dialog-btn-secondary:hover,
   background: #2d2e30;
 }
 
+/* Paste JSON toggle & textarea */
+.gv-folder-import-paste-container {
+  margin-bottom: 20px;
+}
+
+.gv-folder-import-paste-toggle {
+  background: transparent;
+  color: #1a73e8;
+  border: 1px dashed #dadce0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.gv-folder-import-paste-toggle:hover {
+  background: #f0f4ff;
+  border-color: #1a73e8;
+}
+
+.gv-folder-import-paste-toggle-active {
+  background: #e8f0fe;
+  border-color: #1a73e8;
+  border-style: solid;
+}
+
+html.dark .gv-folder-import-paste-toggle,
+[data-theme='dark'] .gv-folder-import-paste-toggle,
+[data-color-scheme='dark'] .gv-folder-import-paste-toggle {
+  color: #8ab4f8;
+  border-color: #3c4043;
+}
+
+html.dark .gv-folder-import-paste-toggle:hover,
+[data-theme='dark'] .gv-folder-import-paste-toggle:hover,
+[data-color-scheme='dark'] .gv-folder-import-paste-toggle:hover {
+  background: #2d2e30;
+  border-color: #8ab4f8;
+}
+
+html.dark .gv-folder-import-paste-toggle-active,
+[data-theme='dark'] .gv-folder-import-paste-toggle-active,
+[data-color-scheme='dark'] .gv-folder-import-paste-toggle-active {
+  background: #1e3a5f;
+  border-color: #8ab4f8;
+}
+
+.gv-folder-import-paste-area {
+  width: 100%;
+  min-height: 120px;
+  max-height: 300px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+  background: #f8f9fa;
+  color: #202124;
+  box-sizing: border-box;
+}
+
+.gv-folder-import-paste-area:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+html.dark .gv-folder-import-paste-area,
+[data-theme='dark'] .gv-folder-import-paste-area,
+[data-color-scheme='dark'] .gv-folder-import-paste-area {
+  background: #2d2e30;
+  color: #e8eaed;
+  border-color: #3c4043;
+}
+
+html.dark .gv-folder-import-paste-area:focus,
+[data-theme='dark'] .gv-folder-import-paste-area:focus,
+[data-color-scheme='dark'] .gv-folder-import-paste-area:focus {
+  border-color: #8ab4f8;
+  box-shadow: 0 0 0 2px rgba(138, 180, 248, 0.2);
+}
+
 /* Notification toast */
 .gv-notification {
   position: fixed;

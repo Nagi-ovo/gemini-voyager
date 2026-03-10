@@ -419,6 +419,14 @@
     "message": "這將取代所有現有資料夾。系統將建立備份。是否繼續？",
     "description": "覆蓋確認"
   },
+  "folder_import_paste_json": {
+    "message": "或直接貼上 JSON",
+    "description": "匯入對話框中顯示貼上文字框的切換按鈕"
+  },
+  "folder_import_paste_placeholder": {
+    "message": "在此貼上 JSON...",
+    "description": "貼上文字框的佔位文字"
+  },
   "export_dialog_title": {
     "message": "匯出對話",
     "description": "匯出對話框標題"
@@ -1410,5 +1418,29 @@
   "hideUpsellHint": {
     "message": "隱藏側邊欄和模型選單中的「升級至 Google AI Ultra」按鈕",
     "description": "Explanation for the upsell hiding feature"
+  },
+  "aiOrgCopyButton": {
+    "message": "AI 整理",
+    "description": "複製資料夾結構和對話以供 AI 整理的按鈕"
+  },
+  "aiOrgCopied": { "message": "已複製！", "description": "複製 AI 整理提示後的確認" },
+  "aiOrgError": {
+    "message": "失敗 — 請先開啟 Gemini",
+    "description": "複製 AI 整理提示失敗時的錯誤"
+  },
+  "aiOrgCopyHint": {
+    "message": "複製所有對話和資料夾結構作為提示詞。貼到 Gemini 中即可獲得可匯入的資料夾方案。",
+    "description": "AI 整理複製按鈕下方的提示文字"
+  },
+  "aiOrgCurrentFolders": { "message": "目前資料夾結構", "description": "AI 整理提示中的標題" },
+  "aiOrgUnfiledConversations": {
+    "message": "未歸類的對話",
+    "description": "不在任何資料夾中的對話標題"
+  },
+  "aiOrgEmpty": { "message": "空", "description": "AI 整理提示中空資料夾的標籤" },
+  "aiOrgInstructions": { "message": "指示", "description": "AI 指示部分的標題" },
+  "aiOrgInstructionsBody": {
+    "message": "根據以上對話和資料夾結構，請將它們重新整理為合理的資料夾層級。輸出一個使用以下格式的 JSON 檔案，可以直接匯入到 Gemini Voyager 擴充功能中（使用「合併」匯入策略）。保留已有的合理資料夾，根據需要建立新資料夾，將未歸類的對話移入合適的資料夾。每個資料夾需要一個唯一 ID（使用短隨機字串），每個對話必須保留其原始的 conversationId 和 url。",
+    "description": "AI 生成可匯入資料夾結構的指示正文"
   }
 }

@@ -459,6 +459,14 @@
     "message": "This will replace all existing folders. A backup will be created. Continue?",
     "description": "Overwrite confirmation"
   },
+  "folder_import_paste_json": {
+    "message": "Or paste JSON directly",
+    "description": "Toggle button to show paste textarea in import dialog"
+  },
+  "folder_import_paste_placeholder": {
+    "message": "Paste your JSON here...",
+    "description": "Placeholder text for the paste textarea"
+  },
   "export_dialog_title": {
     "message": "Export Conversation",
     "description": "Export dialog title"
@@ -1410,5 +1418,41 @@
   "export_select_mode_only_ai": {
     "message": "Select AI Only",
     "description": "Export selection mode: select only AI messages"
+  },
+  "aiOrgCopyButton": {
+    "message": "AI Organize",
+    "description": "Button to copy folder structure and conversations for AI-based organization"
+  },
+  "aiOrgCopied": {
+    "message": "Copied!",
+    "description": "Confirmation after copying AI organization prompt"
+  },
+  "aiOrgError": {
+    "message": "Failed — open Gemini first",
+    "description": "Error when copying AI organization prompt fails"
+  },
+  "aiOrgCopyHint": {
+    "message": "Copies all conversations & folder structure as a prompt. Paste into Gemini to get an importable folder plan.",
+    "description": "Hint text below the AI organization copy button"
+  },
+  "aiOrgCurrentFolders": {
+    "message": "Current Folder Structure",
+    "description": "Heading in the AI organization prompt"
+  },
+  "aiOrgUnfiledConversations": {
+    "message": "Unfiled Conversations",
+    "description": "Heading for conversations not in any folder"
+  },
+  "aiOrgEmpty": {
+    "message": "empty",
+    "description": "Label for empty folders in the AI organization prompt"
+  },
+  "aiOrgInstructions": {
+    "message": "Instructions",
+    "description": "Heading for AI instructions section"
+  },
+  "aiOrgInstructionsBody": {
+    "message": "Based on the conversations and folder structure above, please reorganize them into a logical folder hierarchy. Output a JSON file using the exact format below that can be directly imported into the Gemini Voyager extension (use the \"Merge\" import strategy). Keep existing well-organized folders, create new ones as needed, and move unfiled conversations into appropriate folders. Each folder needs a unique ID (use a short random string), and each conversation must keep its original conversationId and url.",
+    "description": "Instructions body for AI to generate importable folder structure"
   }
 }

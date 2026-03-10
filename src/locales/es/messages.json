@@ -459,6 +459,14 @@
     "message": "Esto reemplazará todas las carpetas existentes. Se creará una copia de seguridad. ¿Continuar?",
     "description": "Overwrite confirmation"
   },
+  "folder_import_paste_json": {
+    "message": "O pegar JSON directamente",
+    "description": "Botón para mostrar el área de texto de pegado en el diálogo de importación"
+  },
+  "folder_import_paste_placeholder": {
+    "message": "Pega tu JSON aquí...",
+    "description": "Texto de marcador para el área de pegado"
+  },
   "export_dialog_title": {
     "message": "Exportar Conversación",
     "description": "Export dialog title"
@@ -1410,5 +1418,41 @@
   "hideUpsellHint": {
     "message": "Ocultar el botón \"Actualizar a Google AI Ultra\" en la barra lateral y el menú de modelos",
     "description": "Explanation for the upsell hiding feature"
+  },
+  "aiOrgCopyButton": {
+    "message": "Organizar con IA",
+    "description": "Botón para copiar la estructura de carpetas y conversaciones para organización con IA"
+  },
+  "aiOrgCopied": {
+    "message": "¡Copiado!",
+    "description": "Confirmación después de copiar el prompt de organización con IA"
+  },
+  "aiOrgError": {
+    "message": "Error — abre Gemini primero",
+    "description": "Error al copiar el prompt de organización con IA"
+  },
+  "aiOrgCopyHint": {
+    "message": "Copia todas las conversaciones y la estructura de carpetas como un prompt. Pégalo en Gemini para obtener un plan de carpetas importable.",
+    "description": "Texto de ayuda debajo del botón de copia de organización con IA"
+  },
+  "aiOrgCurrentFolders": {
+    "message": "Estructura de carpetas actual",
+    "description": "Encabezado en el prompt de organización con IA"
+  },
+  "aiOrgUnfiledConversations": {
+    "message": "Conversaciones sin clasificar",
+    "description": "Encabezado para conversaciones que no están en ninguna carpeta"
+  },
+  "aiOrgEmpty": {
+    "message": "vacía",
+    "description": "Etiqueta para carpetas vacías en el prompt de organización con IA"
+  },
+  "aiOrgInstructions": {
+    "message": "Instrucciones",
+    "description": "Encabezado de la sección de instrucciones para IA"
+  },
+  "aiOrgInstructionsBody": {
+    "message": "Basándote en las conversaciones y la estructura de carpetas anterior, reorganízalas en una jerarquía lógica de carpetas. Genera un archivo JSON con el formato exacto de abajo que pueda importarse directamente en la extensión Gemini Voyager (usa la estrategia de importación \"Fusionar\"). Mantén las carpetas bien organizadas existentes, crea nuevas según sea necesario y mueve las conversaciones sin clasificar a carpetas apropiadas. Cada carpeta necesita un ID único (usa una cadena aleatoria corta) y cada conversación debe mantener su conversationId y url originales.",
+    "description": "Cuerpo de instrucciones para que la IA genere una estructura de carpetas importable"
   }
 }
