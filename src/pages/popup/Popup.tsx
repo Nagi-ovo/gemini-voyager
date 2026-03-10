@@ -456,7 +456,8 @@ export default function Popup() {
             cachedEntry !== null &&
             'fetchedAt' in cachedEntry &&
             typeof (cachedEntry as Record<string, unknown>).fetchedAt === 'number' &&
-            now - ((cachedEntry as Record<string, unknown>).fetchedAt as number) >= SAFARI_DMG_RETRY_AGE
+            now - ((cachedEntry as Record<string, unknown>).fetchedAt as number) >=
+              SAFARI_DMG_RETRY_AGE
           ) {
             latest = null;
           }
@@ -858,10 +859,8 @@ export default function Popup() {
   return (
     <div className="bg-background text-foreground w-[360px]">
       {/* Header */}
-      <div className="from-primary/10 via-accent/5 border-border/50 flex items-center justify-between border-b bg-linear-to-br to-transparent px-5 py-4 backdrop-blur-sm">
-        <h1 className="from-primary to-primary/70 bg-linear-to-r bg-clip-text text-xl font-bold text-transparent">
-          {t('extName')}
-        </h1>
+      <div className="border-border/50 flex items-center justify-between border-b px-5 py-5">
+        <h1 className="text-primary text-2xl font-extrabold tracking-tight">{t('extName')}</h1>
         <div className="flex items-center gap-1">
           <DarkModeToggle />
           <LanguageSwitcher />
@@ -923,19 +922,19 @@ export default function Popup() {
         {/* Context Sync */}
         <ContextSyncSettings />
         {/* Timeline Options */}
-        <Card className="p-4 transition-shadow hover:shadow-lg">
-          <CardTitle className="mb-4 text-xs uppercase">{t('timelineOptions')}</CardTitle>
+        <Card className="p-4 transition-all hover:shadow-md">
+          <CardTitle className="mb-4">{t('timelineOptions')}</CardTitle>
           <CardContent className="space-y-4 p-0">
             {/* Scroll Mode */}
             <div>
               <Label className="mb-2 block text-sm font-medium">{t('scrollMode')}</Label>
-              <div className="bg-secondary/50 relative grid grid-cols-2 gap-1 rounded-lg p-1">
+              <div className="bg-secondary/60 relative grid grid-cols-2 gap-1 rounded-xl p-1">
                 <div
-                  className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-6px)] rounded-md shadow-md transition-all duration-300 ease-out"
+                  className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg shadow-sm transition-all duration-300 ease-out"
                   style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
                 />
                 <button
-                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                  className={`relative z-10 rounded-lg px-3 py-2 text-sm font-bold transition-all duration-200 ${
                     mode === 'flow'
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
@@ -948,7 +947,7 @@ export default function Popup() {
                   {t('flow')}
                 </button>
                 <button
-                  className={`relative z-10 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                  className={`relative z-10 rounded-lg px-3 py-2 text-sm font-bold transition-all duration-200 ${
                     mode === 'jump'
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
@@ -1079,8 +1078,8 @@ export default function Popup() {
           </CardContent>
         </Card>
         {/* Folder Options */}
-        <Card className="p-4 transition-shadow hover:shadow-lg">
-          <CardTitle className="mb-4 text-xs uppercase">{t('folderOptions')}</CardTitle>
+        <Card className="p-4 transition-all hover:shadow-md">
+          <CardTitle className="mb-4">{t('folderOptions')}</CardTitle>
           <CardContent className="space-y-4 p-0">
             <div className="group flex items-center justify-between">
               <Label
@@ -1276,7 +1275,7 @@ export default function Popup() {
 
         {/* Sidebar Auto-Hide - Gemini only */}
         {!isAIStudio && (
-          <Card className="p-4 transition-shadow hover:shadow-lg">
+          <Card className="p-4 transition-all hover:shadow-md">
             <CardContent className="p-0">
               <div className="group flex items-center justify-between">
                 <div className="flex-1">
@@ -1303,13 +1302,13 @@ export default function Popup() {
 
         {/* Visual Effect - Gemini only */}
         {!isAIStudio && (
-          <Card className="p-4 transition-shadow hover:shadow-lg">
+          <Card className="p-4 transition-all hover:shadow-md">
             <CardContent className="p-0">
               <div className="flex-1">
                 <Label className="text-sm font-medium">{t('visualEffect')}</Label>
                 <p className="text-muted-foreground mt-1 text-xs">{t('visualEffectHint')}</p>
               </div>
-              <div className="bg-muted/60 mt-3 flex items-center gap-0.5 rounded-full p-1">
+              <div className="bg-secondary/60 mt-3 flex items-center gap-0.5 rounded-full p-1">
                 {(
                   [
                     {
@@ -1413,9 +1412,9 @@ export default function Popup() {
                       setVisualEffect(option.value);
                       apply({ visualEffect: option.value });
                     }}
-                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-medium transition-all duration-200 ${
+                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold transition-all duration-200 ${
                       visualEffect === option.value
-                        ? 'bg-background text-foreground shadow-sm'
+                        ? 'bg-background text-foreground shadow-md'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -1430,7 +1429,7 @@ export default function Popup() {
 
         {/* Upsell Hider - Gemini only */}
         {!isAIStudio && (
-          <Card className="p-4 transition-shadow hover:shadow-lg">
+          <Card className="p-4 transition-all hover:shadow-md">
             <CardContent className="p-0">
               <div className="group flex items-center justify-between">
                 <div className="flex-1">
@@ -1456,8 +1455,8 @@ export default function Popup() {
         )}
 
         {/* Formula Copy Options */}
-        <Card className="p-4 transition-shadow hover:shadow-lg">
-          <CardTitle className="mb-4 text-xs uppercase">{t('formulaCopyFormat')}</CardTitle>
+        <Card className="p-4 transition-all hover:shadow-md">
+          <CardTitle className="mb-4">{t('formulaCopyFormat')}</CardTitle>
           <CardContent className="space-y-3 p-0">
             <p className="text-muted-foreground mb-3 text-xs">{t('formulaCopyFormatHint')}</p>
             <div className="space-y-2">
@@ -1502,8 +1501,8 @@ export default function Popup() {
         <KeyboardShortcutSettings />
 
         {/* Input Collapse Options */}
-        <Card className="p-4 transition-shadow hover:shadow-lg">
-          <CardTitle className="mb-4 text-xs uppercase">{t('inputCollapseOptions')}</CardTitle>
+        <Card className="p-4 transition-all hover:shadow-md">
+          <CardTitle className="mb-4">{t('inputCollapseOptions')}</CardTitle>
           <CardContent className="space-y-4 p-0">
             <div className="group flex items-center justify-between">
               <div className="flex-1">
@@ -1578,8 +1577,8 @@ export default function Popup() {
         </Card>
 
         {/* Prompt Manager Options */}
-        <Card className="p-4 transition-shadow hover:shadow-lg">
-          <CardTitle className="mb-4 text-xs uppercase">{t('promptManagerOptions')}</CardTitle>
+        <Card className="p-4 transition-all hover:shadow-md">
+          <CardTitle className="mb-4">{t('promptManagerOptions')}</CardTitle>
           <CardContent className="space-y-3 p-0">
             {/* Hide Prompt Manager Toggle */}
             <div className="group flex items-center justify-between">
@@ -1723,8 +1722,8 @@ export default function Popup() {
         </Card>
 
         {/* General Options */}
-        <Card className="p-4 transition-shadow hover:shadow-lg">
-          <CardTitle className="mb-4 text-xs uppercase">{t('generalOptions')}</CardTitle>
+        <Card className="p-4 transition-all hover:shadow-md">
+          <CardTitle className="mb-4">{t('generalOptions')}</CardTitle>
           <CardContent className="space-y-4 p-0">
             <div className="group flex items-center justify-between">
               <div className="flex-1">
@@ -1792,8 +1791,8 @@ export default function Popup() {
 
         {/* NanoBanana Options - Hidden on Safari due to fetch interceptor limitations */}
         {!isSafariBrowser && (
-          <Card className="p-4 transition-shadow hover:shadow-lg">
-            <CardTitle className="mb-4 text-xs uppercase">{t('nanobananaOptions')}</CardTitle>
+          <Card className="p-4 transition-all hover:shadow-md">
+            <CardTitle className="mb-4">{t('nanobananaOptions')}</CardTitle>
             <CardContent className="space-y-4 p-0">
               <div className="group flex items-center justify-between">
                 <div className="flex-1">
@@ -1822,7 +1821,7 @@ export default function Popup() {
       </div>
 
       {/* Footer */}
-      <div className="from-secondary/30 via-accent/10 border-border/50 flex flex-col gap-3 border-t bg-linear-to-br to-transparent px-5 py-4 backdrop-blur-sm">
+      <div className="border-border/50 flex flex-col gap-3 border-t px-5 py-4">
         <div className="flex w-full items-center justify-between">
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <span className="text-foreground/80 font-semibold">{t('extensionVersion')}</span>
@@ -1865,7 +1864,7 @@ export default function Popup() {
           href="https://github.com/Nagi-ovo/gemini-voyager"
           target="_blank"
           rel="noreferrer"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-primary/25 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold tracking-wide transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.97]"
           title={t('starProject')}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">

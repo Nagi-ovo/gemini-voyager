@@ -512,8 +512,8 @@ export function CloudSyncSettings() {
   if (isSafariBrowser) return null;
 
   return (
-    <Card className="p-4 transition-shadow hover:shadow-lg">
-      <CardTitle className="mb-4 text-xs uppercase">{t('cloudSync')}</CardTitle>
+    <Card className="p-4 transition-all hover:shadow-md">
+      <CardTitle className="mb-4">{t('cloudSync')}</CardTitle>
       <CardContent className="space-y-4 p-0">
         {/* Description */}
         <p className="text-muted-foreground text-xs">{t('cloudSyncDescription')}</p>
@@ -521,15 +521,15 @@ export function CloudSyncSettings() {
         {/* Sync Mode Toggle */}
         <div>
           <Label className="mb-2 block text-sm font-medium">{t('syncMode')}</Label>
-          <div className="bg-secondary/50 relative grid grid-cols-2 gap-1 rounded-lg p-1">
+          <div className="bg-secondary/60 relative grid grid-cols-2 gap-1 rounded-xl p-1">
             <div
-              className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md shadow-md transition-all duration-300 ease-out"
+              className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg shadow-sm transition-all duration-300 ease-out"
               style={{
                 left: syncState.mode === 'disabled' ? '4px' : 'calc(50% + 2px)',
               }}
             />
             <button
-              className={`relative z-10 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200 ${
+              className={`relative z-10 rounded-lg px-2 py-2 text-xs font-bold transition-all duration-200 ${
                 syncState.mode === 'disabled'
                   ? 'text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -539,7 +539,7 @@ export function CloudSyncSettings() {
               {t('syncModeDisabled')}
             </button>
             <button
-              className={`relative z-10 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200 ${
+              className={`relative z-10 rounded-lg px-2 py-2 text-xs font-bold transition-all duration-200 ${
                 syncState.mode === 'manual'
                   ? 'text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'

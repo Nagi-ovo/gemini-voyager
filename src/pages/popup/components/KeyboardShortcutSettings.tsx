@@ -171,9 +171,7 @@ export function KeyboardShortcutSettings() {
   if (loading || !config) {
     return (
       <Card className="p-4">
-        <CardTitle className="mb-4 text-xs tracking-wide uppercase">
-          {t('keyboardShortcuts')}
-        </CardTitle>
+        <CardTitle className="mb-4">{t('keyboardShortcuts')}</CardTitle>
         <CardContent className="p-0">
           <p className="text-muted-foreground text-xs">{t('loading')}</p>
         </CardContent>
@@ -182,10 +180,8 @@ export function KeyboardShortcutSettings() {
   }
 
   return (
-    <Card className="p-4 transition-shadow hover:shadow-lg">
-      <CardTitle className="mb-4 text-xs tracking-wide uppercase">
-        {t('keyboardShortcuts')}
-      </CardTitle>
+    <Card className="p-4 transition-all hover:shadow-md">
+      <CardTitle className="mb-4">{t('keyboardShortcuts')}</CardTitle>
       <CardContent className="space-y-6 p-0">
         {/* Enable/Disable Toggle */}
         <div className="flex items-center justify-between">

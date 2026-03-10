@@ -44,7 +44,7 @@ export default function WidthSlider({
   const isExpanded = !hasToggle || enabled;
 
   return (
-    <Card className="p-4 transition-shadow hover:shadow-lg">
+    <Card className="p-4 transition-all hover:shadow-md">
       <div className="mb-0 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {hasToggle && (
@@ -54,7 +54,7 @@ export default function WidthSlider({
               className="scale-75"
             />
           )}
-          <CardTitle className="text-xs uppercase">{label}</CardTitle>
+          <CardTitle>{label}</CardTitle>
         </div>
         <span
           className="text-primary bg-primary/10 rounded-md px-2.5 py-1 text-sm font-bold shadow-sm transition-opacity duration-200"

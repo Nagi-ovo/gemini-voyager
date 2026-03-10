@@ -80,10 +80,8 @@ export function ContextSyncSettings() {
       });
 
       setIsOnline(true);
-      // setStatusMessage({ text: tRef.current('ideOnline'), kind: 'ok' });
     } catch {
       setIsOnline(false);
-      // setStatusMessage({ text: tRef.current('ideOffline'), kind: 'err' });
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
     }
@@ -138,23 +136,23 @@ export function ContextSyncSettings() {
   };
 
   return (
-    <Card className="p-4 transition-shadow hover:shadow-lg">
-      <CardTitle className="mb-4 text-xs uppercase">{t('contextSync')}</CardTitle>
+    <Card className="p-4 transition-all hover:shadow-md">
+      <CardTitle className="mb-4">{t('contextSync')}</CardTitle>
       <CardContent className="space-y-4 p-0">
         <p className="text-muted-foreground text-xs">{t('contextSyncDescription')}</p>
 
         {/* Sync Mode Toggle */}
         <div>
           <Label className="mb-2 block text-sm font-medium">{t('syncMode')}</Label>
-          <div className="bg-secondary/50 relative grid grid-cols-2 gap-1 rounded-lg p-1">
+          <div className="bg-secondary/60 relative grid grid-cols-2 gap-1 rounded-xl p-1">
             <div
-              className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md shadow-md transition-all duration-300 ease-out"
+              className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg shadow-sm transition-all duration-300 ease-out"
               style={{
                 left: !isEnabled ? '4px' : 'calc(50% + 2px)',
               }}
             />
             <button
-              className={`relative z-10 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200 ${
+              className={`relative z-10 rounded-lg px-2 py-2 text-xs font-bold transition-all duration-200 ${
                 !isEnabled
                   ? 'text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -164,7 +162,7 @@ export function ContextSyncSettings() {
               {t('syncModeDisabled')}
             </button>
             <button
-              className={`relative z-10 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200 ${
+              className={`relative z-10 rounded-lg px-2 py-2 text-xs font-bold transition-all duration-200 ${
                 isEnabled
                   ? 'text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
