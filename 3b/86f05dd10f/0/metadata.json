@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "3b86f05dd10f",
+  "session_id": "08d58754-fbae-4586-9dac-5302894dfcb8",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-10T21:48:01.987572Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "public/contentStyle.css",
+    "src/assets/styles/tailwind.css",
+    "src/components/ui/card.tsx",
+    "src/components/ui/slider.tsx",
+    "src/components/ui/switch.tsx",
+    "src/pages/popup/Popup.tsx",
+    "src/pages/popup/__tests__/latestVersion.test.ts",
+    "src/pages/popup/components/CloudSyncSettings.tsx",
+    "src/pages/popup/components/ContextSyncSettings.tsx",
+    "src/pages/popup/components/KeyboardShortcutSettings.tsx",
+    "src/pages/popup/components/WidthSlider.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "28e29fc11ae6",
+  "token_usage": {
+    "input_tokens": 66,
+    "cache_creation_tokens": 320004,
+    "cache_read_tokens": 3389777,
+    "output_tokens": 25474,
+    "api_call_count": 51
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-10T21:48:00.980507Z",
+    "agent_lines": 570,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 570,
+    "agent_percentage": 100
+  }
+}

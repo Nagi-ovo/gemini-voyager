@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "3b86f05dd10f",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "public/contentStyle.css",
+    "src/assets/styles/tailwind.css",
+    "src/components/ui/card.tsx",
+    "src/components/ui/slider.tsx",
+    "src/components/ui/switch.tsx",
+    "src/pages/popup/Popup.tsx",
+    "src/pages/popup/__tests__/latestVersion.test.ts",
+    "src/pages/popup/components/CloudSyncSettings.tsx",
+    "src/pages/popup/components/ContextSyncSettings.tsx",
+    "src/pages/popup/components/KeyboardShortcutSettings.tsx",
+    "src/pages/popup/components/WidthSlider.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/3b/86f05dd10f/0/metadata.json",
+      "transcript": "/3b/86f05dd10f/0/full.jsonl",
+      "context": "/3b/86f05dd10f/0/context.md",
+      "content_hash": "/3b/86f05dd10f/0/content_hash.txt",
+      "prompt": "/3b/86f05dd10f/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 66,
+    "cache_creation_tokens": 320004,
+    "cache_read_tokens": 3389777,
+    "output_tokens": 25474,
+    "api_call_count": 51
+  }
+}
