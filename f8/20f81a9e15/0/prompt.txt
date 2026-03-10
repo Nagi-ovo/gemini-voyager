@@ -1,0 +1,34 @@
+导入策略：
+
+与现有文件夹合并
+
+覆盖现有文件夹
+导入文件夹配置这里的这些字在 light mode 中也是白的，有问题
+
+---
+
+这里中间怎么有一个空的区域是不是可以去掉
+
+---
+
+[Image: source: /var/folders/fq/d_yn5ybs289gm6d7t2mhgy_w0000gn/T/TemporaryItems/NSIRD_screencaptureui_gPKJZS/Screenshot 2026-03-10 at 23.21.19.png]
+
+---
+
+这里 icon 的 margin top 有点小
+
+---
+
+[Image: source: /var/folders/fq/d_yn5ybs289gm6d7t2mhgy_w0000gn/T/TemporaryItems/NSIRD_screencaptureui_5Wzvms/Screenshot 2026-03-10 at 23.23.19.png]
+
+---
+
+[Request interrupted by user]
+
+---
+
+继续
+
+---
+
+提交
