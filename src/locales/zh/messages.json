@@ -219,6 +219,10 @@
     "message": "立即更新",
     "description": "跳转更新 CTA"
   },
+  "safariUpdateNotSynced": {
+    "message": "更新源尚未同步，请几小时后再试",
+    "description": "Safari 上 DMG 文件尚未上传到 GitHub releases 时显示"
+  },
   "starProject": {
     "message": "为项目点亮 ⭐️",
     "description": "Github 引导"

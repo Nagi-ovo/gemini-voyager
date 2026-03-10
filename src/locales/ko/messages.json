@@ -219,6 +219,10 @@
     "message": "업데이트",
     "description": "CTA to update to latest version"
   },
+  "safariUpdateNotSynced": {
+    "message": "업데이트 소스가 아직 동기화되지 않았습니다. 몇 시간 후에 다시 시도해 주세요",
+    "description": "Shown on Safari when the DMG file is not yet available on GitHub releases"
+  },
   "starProject": {
     "message": "지원하기 ⭐",
     "description": "Github callout"

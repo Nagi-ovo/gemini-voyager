@@ -24,6 +24,22 @@ export function extractLatestReleaseVersion(data: unknown): string | null {
   return null;
 }
 
+export function extractDmgDownloadUrl(data: unknown): string | null {
+  if (!isRecord(data)) return null;
+  const assets = data.assets;
+  if (!Array.isArray(assets)) return null;
+
+  for (const asset of assets) {
+    if (!isRecord(asset)) continue;
+    const name = asset.name;
+    if (typeof name === 'string' && name.endsWith('.dmg')) {
+      const url = asset.browser_download_url;
+      if (typeof url === 'string' && url.trim()) return url;
+    }
+  }
+  return null;
+}
+
 export function getCachedLatestVersion(
   cachedValue: unknown,
   now: number,

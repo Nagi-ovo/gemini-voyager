@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  extractDmgDownloadUrl,
   extractLatestReleaseVersion,
   getCachedLatestVersion,
   getManifestUpdateUrl,
@@ -47,6 +48,64 @@ describe('Popup latest version helpers', () => {
     it('returns null when neither tag_name nor name is usable', () => {
       expect(extractLatestReleaseVersion({ tag_name: '', name: '' })).toBeNull();
       expect(extractLatestReleaseVersion({ tag_name: 123, name: false })).toBeNull();
+    });
+  });
+
+  describe('extractDmgDownloadUrl', () => {
+    it('returns null for non-objects', () => {
+      expect(extractDmgDownloadUrl(null)).toBeNull();
+      expect(extractDmgDownloadUrl('x')).toBeNull();
+      expect(extractDmgDownloadUrl(123)).toBeNull();
+    });
+
+    it('returns null when assets is missing or not an array', () => {
+      expect(extractDmgDownloadUrl({})).toBeNull();
+      expect(extractDmgDownloadUrl({ assets: 'nope' })).toBeNull();
+      expect(extractDmgDownloadUrl({ assets: null })).toBeNull();
+    });
+
+    it('returns null when no .dmg asset exists', () => {
+      expect(
+        extractDmgDownloadUrl({
+          assets: [
+            { name: 'gemini-voyager-chrome-v1.3.3.zip', browser_download_url: 'https://x/a.zip' },
+            { name: 'gemini-voyager-firefox-v1.3.3.xpi', browser_download_url: 'https://x/a.xpi' },
+          ],
+        }),
+      ).toBeNull();
+    });
+
+    it('returns null when assets array is empty', () => {
+      expect(extractDmgDownloadUrl({ assets: [] })).toBeNull();
+    });
+
+    it('returns the DMG download URL when present', () => {
+      const url = 'https://github.com/Nagi-ovo/gemini-voyager/releases/download/v1.3.3/gemini-voyager-v1.3.3.dmg';
+      expect(
+        extractDmgDownloadUrl({
+          assets: [
+            { name: 'gemini-voyager-chrome-v1.3.3.zip', browser_download_url: 'https://x/a.zip' },
+            { name: 'gemini-voyager-v1.3.3.dmg', browser_download_url: url },
+          ],
+        }),
+      ).toBe(url);
+    });
+
+    it('skips assets with missing or blank download URL', () => {
+      expect(
+        extractDmgDownloadUrl({
+          assets: [{ name: 'foo.dmg', browser_download_url: '' }],
+        }),
+      ).toBeNull();
+      expect(
+        extractDmgDownloadUrl({
+          assets: [{ name: 'foo.dmg', browser_download_url: 123 }],
+        }),
+      ).toBeNull();
+    });
+
+    it('skips non-object assets', () => {
+      expect(extractDmgDownloadUrl({ assets: ['string', null, 123] })).toBeNull();
     });
   });
 

@@ -219,6 +219,10 @@
     "message": "Обновить",
     "description": "CTA to update to latest version"
   },
+  "safariUpdateNotSynced": {
+    "message": "Источник обновления ещё не синхронизирован, попробуйте через несколько часов",
+    "description": "Shown on Safari when the DMG file is not yet available on GitHub releases"
+  },
   "starProject": {
     "message": "Поддержать меня ⭐",
     "description": "Github callout"

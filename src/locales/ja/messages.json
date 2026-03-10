@@ -219,6 +219,10 @@
     "message": "更新する",
     "description": "CTA to update to latest version"
   },
+  "safariUpdateNotSynced": {
+    "message": "更新がまだ同期されていません。数時間後にもう一度お試しください",
+    "description": "Shown on Safari when the DMG file is not yet available on GitHub releases"
+  },
   "starProject": {
     "message": "応援する ⭐",
     "description": "Github callout"

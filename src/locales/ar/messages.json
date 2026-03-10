@@ -219,6 +219,10 @@
     "message": "تحديث",
     "description": "CTA to update to latest version"
   },
+  "safariUpdateNotSynced": {
+    "message": "مصدر التحديث غير متزامن بعد، يرجى المحاولة مرة أخرى بعد بضع ساعات",
+    "description": "Shown on Safari when the DMG file is not yet available on GitHub releases"
+  },
   "starProject": {
     "message": "ادعمني ⭐",
     "description": "Github callout"

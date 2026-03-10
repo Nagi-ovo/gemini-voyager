@@ -12,6 +12,7 @@ import { getModifierKey, isSafari, shouldShowSafariUpdateReminder } from '@/core
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import {
+  extractDmgDownloadUrl,
   extractLatestReleaseVersion,
   getCachedLatestVersion,
   getManifestUpdateUrl,
@@ -101,6 +102,7 @@ const normalizeSidebarPx = (value: number) => {
 
 const LATEST_VERSION_CACHE_KEY = 'gvLatestVersionCache';
 const LATEST_VERSION_MAX_AGE = 1000 * 60 * 60 * 6; // 6 hours
+const SAFARI_DMG_RETRY_AGE = 1000 * 60 * 30; // 30 min — re-check for DMG if missing
 
 const normalizeVersionString = (version?: string | null): string | null => {
   if (!version) return null;
@@ -158,6 +160,7 @@ export default function Popup() {
   );
   const [extVersion, setExtVersion] = useState<string | null>(null);
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
+  const [safariDmgUrl, setSafariDmgUrl] = useState<string | null>(null);
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
@@ -431,11 +434,33 @@ export default function Popup() {
         const cache = await browser.storage.local.get(LATEST_VERSION_CACHE_KEY);
         const now = Date.now();
 
-        let latest = getCachedLatestVersion(
-          cache?.[LATEST_VERSION_CACHE_KEY],
-          now,
-          LATEST_VERSION_MAX_AGE,
-        );
+        const cachedEntry = cache?.[LATEST_VERSION_CACHE_KEY];
+        let latest = getCachedLatestVersion(cachedEntry, now, LATEST_VERSION_MAX_AGE);
+        let dmgUrl: string | null = null;
+
+        if (latest && isSafari()) {
+          // Try to read cached DMG URL
+          if (
+            typeof cachedEntry === 'object' &&
+            cachedEntry !== null &&
+            'dmgUrl' in cachedEntry &&
+            typeof (cachedEntry as Record<string, unknown>).dmgUrl === 'string'
+          ) {
+            dmgUrl = (cachedEntry as Record<string, unknown>).dmgUrl as string;
+          }
+          // If DMG URL was not cached, re-fetch — but respect a 30 min cooldown
+          // to avoid hitting GitHub API rate limits
+          if (
+            !dmgUrl &&
+            typeof cachedEntry === 'object' &&
+            cachedEntry !== null &&
+            'fetchedAt' in cachedEntry &&
+            typeof (cachedEntry as Record<string, unknown>).fetchedAt === 'number' &&
+            now - ((cachedEntry as Record<string, unknown>).fetchedAt as number) >= SAFARI_DMG_RETRY_AGE
+          ) {
+            latest = null;
+          }
+        }
 
         if (!latest) {
           const resp = await fetch(
@@ -454,8 +479,16 @@ export default function Popup() {
 
           if (candidate) {
             latest = candidate;
+            const isSafariFetch = isSafari();
+            if (isSafariFetch) {
+              dmgUrl = extractDmgDownloadUrl(data);
+            }
             await browser.storage.local.set({
-              [LATEST_VERSION_CACHE_KEY]: { version: candidate, fetchedAt: now },
+              [LATEST_VERSION_CACHE_KEY]: {
+                version: candidate,
+                fetchedAt: now,
+                ...(isSafariFetch ? { dmgUrl } : {}),
+              },
             });
           }
         }
@@ -463,6 +496,9 @@ export default function Popup() {
         if (cancelled || !latest) return;
 
         setLatestVersion(latest);
+        if (isSafari()) {
+          setSafariDmgUrl(dmgUrl);
+        }
       } catch (error) {
         if (!cancelled) {
           console.warn('[Gemini Voyager] Failed to check latest version:', error);
@@ -854,14 +890,31 @@ export default function Popup() {
                   {t('latestVersionLabel')}: v{normalizedLatestVersion}
                 </p>
               </div>
-              <a
-                href={latestReleaseUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-md bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-200"
-              >
-                {t('updateNow')}
-              </a>
+              {isSafariBrowser ? (
+                safariDmgUrl ? (
+                  <a
+                    href={safariDmgUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 rounded-md bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-200"
+                  >
+                    {t('updateNow')}
+                  </a>
+                ) : (
+                  <span className="shrink-0 text-xs leading-tight text-amber-700">
+                    {t('safariUpdateNotSynced')}
+                  </span>
+                )
+              ) : (
+                <a
+                  href={latestReleaseUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="shrink-0 rounded-md bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-200"
+                >
+                  {t('updateNow')}
+                </a>
+              )}
             </div>
           </Card>
         )}
