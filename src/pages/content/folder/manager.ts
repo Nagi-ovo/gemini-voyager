@@ -6928,11 +6928,7 @@ export class FolderManager {
       const menuItem = document.createElement('button');
       menuItem.className = 'gv-folder-menu-item';
 
-      // Fix vertical alignment
-      menuItem.style.display = 'flex';
-      menuItem.style.alignItems = 'center';
-
-      menuItem.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true" style="font-size: 18px; margin-right: 8px;">${item.icon}</mat-icon>${item.label}`;
+      menuItem.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true" style="font-size: 18px; line-height: 1; margin-right: 8px;">${item.icon}</mat-icon>${item.label}`;
       menuItem.addEventListener('click', () => {
         item.action();
         menu.remove();
