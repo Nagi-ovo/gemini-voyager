@@ -1,0 +1,1072 @@
+Base directory for this skill: /Users/jessezhang/.claude/skills/bolder
+
+Increase visual impact and personality in designs that are too safe, generic, or visually underwhelming, creating more engaging and memorable experiences.
+
+## MANDATORY PREPARATION
+
+### Context Gathering (Do This First)
+
+You cannot do a great job without having necessary context, such as target audience (critical), desired use-cases (critical), brand personality/tone, and everything else that a great human designer would need as well.
+
+Attempt to gather these from the current thread or codebase.
+
+1. If you don't find *exact* information and have to infer from existing design and functionality, you MUST STOP and STOP and call the AskUserQuestionTool to clarify. whether you got it right.
+2. Otherwise, if you can't fully infer or your level of confidence is medium or lower, you MUST STOP and call the AskUserQuestionTool to clarify. clarifying questions first to complete your context.
+
+Do NOT proceed until you have answers. Guessing leads to generic AI slop.
+
+### Use frontend-design skill
+
+Use the frontend-design skill for design principles and anti-patterns. Do NOT proceed until it has executed and you know all DO's and DON'Ts.
+
+---
+
+## Assess Current State
+
+Analyze what makes the design feel too safe or boring:
+
+1. **Identify weakness sources**:
+   - **Generic choices**: System fonts, basic colors, standard layouts
+   - **Timid scale**: Everything is medium-sized with no drama
+   - **Low contrast**: Everything has similar visual weight
+   - **Static**: No motion, no energy, no life
+   - **Predictable**: Standard patterns with no surprises
+   - **Flat hierarchy**: Nothing stands out or commands attention
+
+2. **Understand the context**:
+   - What's the brand personality? (How far can we push?)
+   - What's the purpose? (Marketing can be bolder than financial dashboards)
+   - Who's the audience? (What will resonate?)
+   - What are the constraints? (Brand guidelines, accessibility, performance)
+
+If any of these are unclear from the codebase, STOP and call the AskUserQuestionTool to clarify.
+
+**CRITICAL**: "Bolder" doesn't mean chaotic or garish. It means distinctive, memorable, and confident. Think intentional drama, not random chaos.
+
+**WARNING - AI SLOP TRAP**: When making things "bolder," AI defaults to the same tired tricks: cyan/purple gradients, glassmorphism, neon accents on dark backgrounds, gradient text on metrics. These are the OPPOSITE of bold—they're generic. Review ALL the DON'T guidelines in the frontend-design skill before proceeding. Bold means distinctive, not "more effects."
+
+## Plan Amplification
+
+Create a strategy to increase impact while maintaining coherence:
+
+- **Focal point**: What should be the hero moment? (Pick ONE, make it amazing)
+- **Personality direction**: Maximalist chaos? Elegant drama? Playful energy? Dark moody? Choose a lane.
+- **Risk budget**: How experimental can we be? Push boundaries within constraints.
+- **Hierarchy amplification**: Make big things BIGGER, small things smaller (increase contrast)
+
+**IMPORTANT**: Bold design must still be usable. Impact without function is just decoration.
+
+## Amplify the Design
+
+Systematically increase impact across these dimensions:
+
+### Typography Amplification
+- **Replace generic fonts**: Swap system fonts for distinctive choices (see frontend-design skill for inspiration)
+- **Extreme scale**: Create dramatic size jumps (3x-5x differences, not 1.5x)
+- **Weight contrast**: Pair 900 weights with 200 weights, not 600 with 400
+- **Unexpected choices**: Variable fonts, display fonts for headlines, condensed/extended widths, monospace as intentional accent (not as lazy "dev tool" default)
+
+### Color Intensification
+- **Increase saturation**: Shift to more vibrant, energetic colors (but not neon)
+- **Bold palette**: Introduce unexpected color combinations—avoid the purple-blue gradient AI slop
+- **Dominant color strategy**: Let one bold color own 60% of the design
+- **Sharp accents**: High-contrast accent colors that pop
+- **Tinted neutrals**: Replace pure grays with tinted grays that harmonize with your palette
+- **Rich gradients**: Intentional multi-stop gradients (not generic purple-to-blue)
+
+### Spatial Drama
+- **Extreme scale jumps**: Make important elements 3-5x larger than surroundings
+- **Break the grid**: Let hero elements escape containers and cross boundaries
+- **Asymmetric layouts**: Replace centered, balanced layouts with tension-filled asymmetry
+- **Generous space**: Use white space dramatically (100-200px gaps, not 20-40px)
+- **Overlap**: Layer elements intentionally for depth
+
+### Visual Effects
+- **Dramatic shadows**: Large, soft shadows for elevation (but not generic drop shadows on rounded rectangles)
+- **Background treatments**: Mesh patterns, noise textures, geometric patterns, intentional gradients (not purple-to-blue)
+- **Texture & depth**: Grain, halftone, duotone, layered elements—NOT glassmorphism (it's overused AI slop)
+- **Borders & frames**: Thick borders, decorative frames, custom shapes (not rounded rectangles with colored border on one side)
+- **Custom elements**: Illustrative elements, custom icons, decorative details that reinforce brand
+
+### Motion & Animation
+- **Entrance choreography**: Staggered, dramatic page load animations with 50-100ms delays
+- **Scroll effects**: Parallax, reveal animations, scroll-triggered sequences
+- **Micro-interactions**: Satisfying hover effects, click feedback, state changes
+- **Transitions**: Smooth, noticeable transitions using ease-out-quart/quint/expo (not bounce or elastic—they cheapen the effect)
+
+### Composition Boldness
+- **Hero moments**: Create clear focal points with dramatic treatment
+- **Diagonal flows**: Escape horizontal/vertical rigidity with diagonal arrangements
+- **Full-bleed elements**: Use full viewport width/height for impact
+- **Unexpected proportions**: Golden ratio? Throw it out. Try 70/30, 80/20 splits
+
+**NEVER**:
+- Add effects randomly without purpose (chaos ≠ bold)
+- Sacrifice readability for aesthetics (body text must be readable)
+- Make everything bold (then nothing is bold - need contrast)
+- Ignore accessibility (bold design must still meet WCAG standards)
+- Overwhelm with motion (animation fatigue is real)
+- Copy trendy aesthetics blindly (bold means distinctive, not derivative)
+
+## Verify Quality
+
+Ensure amplification maintains usability and coherence:
+
+- **NOT AI slop**: Does this look like every other AI-generated "bold" design? If yes, start over.
+- **Still functional**: Can users accomplish tasks without distraction?
+- **Coherent**: Does everything feel intentional and unified?
+- **Memorable**: Will users remember this experience?
+- **Performant**: Do all these effects run smoothly?
+- **Accessible**: Does it still meet accessibility standards?
+
+**The test**: If you showed this to someone and said "AI made this bolder," would they believe you immediately? If yes, you've failed. Bold means distinctive, not "more AI effects."
+
+Remember: Bold design is confident design. It takes risks, makes statements, and creates memorable experiences. But bold without strategy is just loud. Be intentional, be dramatic, be unforgettable.
+
+ARGUMENTS: 交给你了
+
+---
+
+Base directory for this skill: /Users/jessezhang/.claude/skills/frontend-design
+
+This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
+
+## Design Direction
+
+Commit to a BOLD aesthetic direction:
+- **Purpose**: What problem does this interface solve? Who uses it?
+- **Tone**: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
+- **Constraints**: Technical requirements (framework, performance, accessibility).
+- **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
+
+**CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work—the key is intentionality, not intensity.
+
+Then implement working code that is:
+- Production-grade and functional
+- Visually striking and memorable
+- Cohesive with a clear aesthetic point-of-view
+- Meticulously refined in every detail
+
+## Frontend Aesthetics Guidelines
+
+### Typography
+→ *Consult [typography reference](reference/typography.md) for scales, pairing, and loading strategies.*
+
+Choose fonts that are beautiful, unique, and interesting. Pair a distinctive display font with a refined body font.
+
+**DO**: Use a modular type scale with fluid sizing (clamp)
+**DO**: Vary font weights and sizes to create clear visual hierarchy
+**DON'T**: Use overused fonts—Inter, Roboto, Arial, Open Sans, system defaults
+**DON'T**: Use monospace typography as lazy shorthand for "technical/developer" vibes
+**DON'T**: Put large icons with rounded corners above every heading—they rarely add value and make sites look templated
+
+### Color & Theme
+→ *Consult [color reference](reference/color-and-contrast.md) for OKLCH, palettes, and dark mode.*
+
+Commit to a cohesive palette. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
+
+**DO**: Use modern CSS color functions (oklch, color-mix, light-dark) for perceptually uniform, maintainable palettes
+**DO**: Tint your neutrals toward your brand hue—even a subtle hint creates subconscious cohesion
+**DON'T**: Use gray text on colored backgrounds—it looks washed out; use a shade of the background color instead
+**DON'T**: Use pure black (#000) or pure white (#fff)—always tint; pure black/white never appears in nature
+**DON'T**: Use the AI color palette: cyan-on-dark, purple-to-blue gradients, neon accents on dark backgrounds
+**DON'T**: Use gradient text for "impact"—especially on metrics or headings; it's decorative rather than meaningful
+**DON'T**: Default to dark mode with glowing accents—it looks "cool" without requiring actual design decisions
+
+### Layout & Space
+→ *Consult [spatial reference](reference/spatial-design.md) for grids, rhythm, and container queries.*
+
+Create visual rhythm through varied spacing—not the same padding everywhere. Embrace asymmetry and unexpected compositions. Break the grid intentionally for emphasis.
+
+**DO**: Create visual rhythm through varied spacing—tight groupings, generous separations
+**DO**: Use fluid spacing with clamp() that breathes on larger screens
+**DO**: Use asymmetry and unexpected compositions; break the grid intentionally for emphasis
+**DON'T**: Wrap everything in cards—not everything needs a container
+**DON'T**: Nest cards inside cards—visual noise, flatten the hierarchy
+**DON'T**: Use identical card grids—same-sized cards with icon + heading + text, repeated endlessly
+**DON'T**: Use the hero metric layout template—big number, small label, supporting stats, gradient accent
+**DON'T**: Center everything—left-aligned text with asymmetric layouts feels more designed
+**DON'T**: Use the same spacing everywhere—without rhythm, layouts feel monotonous
+
+### Visual Details
+**DO**: Use intentional, purposeful decorative elements that reinforce brand
+**DON'T**: Use glassmorphism everywhere—blur effects, glass cards, glow borders used decoratively rather than purposefully
+**DON'T**: Use rounded elements with thick colored border on one side—a lazy accent that almost never looks intentional
+**DON'T**: Use sparklines as decoration—tiny charts that look sophisticated but convey nothing meaningful
+**DON'T**: Use rounded rectangles with generic drop shadows—safe, forgettable, could be any AI output
+**DON'T**: Use modals unless there's truly no better alternative—modals are lazy
+
+### Motion
+→ *Consult [motion reference](reference/motion-design.md) for timing, easing, and reduced motion.*
+
+Focus on high-impact moments: one well-orchestrated page load with staggered reveals creates more delight than scattered micro-interactions.
+
+**DO**: Use motion to convey state changes—entrances, exits, feedback
+**DO**: Use exponential easing (ease-out-quart/quint/expo) for natural deceleration
+**DO**: For height animations, use grid-template-rows transitions instead of animating height directly
+**DON'T**: Animate layout properties (width, height, padding, margin)—use transform and opacity only
+**DON'T**: Use bounce or elastic easing—they feel dated and tacky; real objects decelerate smoothly
+
+### Interaction
+→ *Consult [interaction reference](reference/interaction-design.md) for forms, focus, and loading patterns.*
+
+Make interactions feel fast. Use optimistic UI—update immediately, sync later.
+
+**DO**: Use progressive disclosure—start simple, reveal sophistication through interaction (basic options first, advanced behind expandable sections; hover states that reveal secondary actions)
+**DO**: Design empty states that teach the interface, not just say "nothing here"
+**DO**: Make every interactive surface feel intentional and responsive
+**DON'T**: Repeat the same information—redundant headers, intros that restate the heading
+**DON'T**: Make every button primary—use ghost buttons, text links, secondary styles; hierarchy matters
+
+### Responsive
+→ *Consult [responsive reference](reference/responsive-design.md) for mobile-first, fluid design, and container queries.*
+
+**DO**: Use container queries (@container) for component-level responsiveness
+**DO**: Adapt the interface for different contexts—don't just shrink it
+**DON'T**: Hide critical functionality on mobile—adapt the interface, don't amputate it
+
+### UX Writing
+→ *Consult [ux-writing reference](reference/ux-writing.md) for labels, errors, and empty states.*
+
+**DO**: Make every word earn its place
+**DON'T**: Repeat information users can already see
+
+---
+
+## The AI Slop Test
+
+**Critical quality check**: If you showed this interface to someone and said "AI made this," would they believe you immediately? If yes, that's the problem.
+
+A distinctive interface should make someone ask "how was this made?" not "which AI made this?"
+
+Review the DON'T guidelines above—they are the fingerprints of AI-generated work from 2024-2025.
+
+---
+
+## Implementation Principles
+
+Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details.
+
+Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices across generations.
+
+Remember: Claude is capable of extraordinary creative work. Don't hold back—show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+
+---
+
+Base directory for this skill: /Users/jessezhang/.claude/skills/polish
+
+**First**: Use the frontend-design skill for design principles and anti-patterns.
+
+Perform a meticulous final pass to catch all the small details that separate good work from great work. The difference between shipped and polished.
+
+## Pre-Polish Assessment
+
+Understand the current state and goals:
+
+1. **Review completeness**:
+   - Is it functionally complete?
+   - Are there known issues to preserve (mark with TODOs)?
+   - What's the quality bar? (MVP vs flagship feature?)
+   - When does it ship? (How much time for polish?)
+
+2. **Identify polish areas**:
+   - Visual inconsistencies
+   - Spacing and alignment issues
+   - Interaction state gaps
+   - Copy inconsistencies
+   - Edge cases and error states
+   - Loading and transition smoothness
+
+**CRITICAL**: Polish is the last step, not the first. Don't polish work that's not functionally complete.
+
+## Polish Systematically
+
+Work through these dimensions methodically:
+
+### Visual Alignment & Spacing
+
+- **Pixel-perfect alignment**: Everything lines up to grid
+- **Consistent spacing**: All gaps use spacing scale (no random 13px gaps)
+- **Optical alignment**: Adjust for visual weight (icons may need offset for optical centering)
+- **Responsive consistency**: Spacing and alignment work at all breakpoints
+- **Grid adherence**: Elements snap to baseline grid
+
+**Check**:
+- Enable grid overlay and verify alignment
+- Check spacing with browser inspector
+- Test at multiple viewport sizes
+- Look for elements that "feel" off
+
+### Typography Refinement
+
+- **Hierarchy consistency**: Same elements use same sizes/weights throughout
+- **Line length**: 45-75 characters for body text
+- **Line height**: Appropriate for font size and context
+- **Widows & orphans**: No single words on last line
+- **Hyphenation**: Appropriate for language and column width
+- **Kerning**: Adjust letter spacing where needed (especially headlines)
+- **Font loading**: No FOUT/FOIT flashes
+
+### Color & Contrast
+
+- **Contrast ratios**: All text meets WCAG standards
+- **Consistent token usage**: No hard-coded colors, all use design tokens
+- **Theme consistency**: Works in all theme variants
+- **Color meaning**: Same colors mean same things throughout
+- **Accessible focus**: Focus indicators visible with sufficient contrast
+- **Tinted neutrals**: No pure gray or pure black—add subtle color tint (0.01 chroma)
+- **Gray on color**: Never put gray text on colored backgrounds—use a shade of that color or transparency
+
+### Interaction States
+
+Every interactive element needs all states:
+
+- **Default**: Resting state
+- **Hover**: Subtle feedback (color, scale, shadow)
+- **Focus**: Keyboard focus indicator (never remove without replacement)
+- **Active**: Click/tap feedback
+- **Disabled**: Clearly non-interactive
+- **Loading**: Async action feedback
+- **Error**: Validation or error state
+- **Success**: Successful completion
+
+**Missing states create confusion and broken experiences**.
+
+### Micro-interactions & Transitions
+
+- **Smooth transitions**: All state changes animated appropriately (150-300ms)
+- **Consistent easing**: Use ease-out-quart/quint/expo for natural deceleration. Never bounce or elastic—they feel dated.
+- **No jank**: 60fps animations, only animate transform and opacity
+- **Appropriate motion**: Motion serves purpose, not decoration
+- **Reduced motion**: Respects `prefers-reduced-motion`
+
+### Content & Copy
+
+- **Consistent terminology**: Same things called same names throughout
+- **Consistent capitalization**: Title Case vs Sentence case applied consistently
+- **Grammar & spelling**: No typos
+- **Appropriate length**: Not too wordy, not too terse
+- **Punctuation consistency**: Periods on sentences, not on labels (unless all labels have them)
+
+### Icons & Images
+
+- **Consistent style**: All icons from same family or matching style
+- **Appropriate sizing**: Icons sized consistently for context
+- **Proper alignment**: Icons align with adjacent text optically
+- **Alt text**: All images have descriptive alt text
+- **Loading states**: Images don't cause layout shift, proper aspect ratios
+- **Retina support**: 2x assets for high-DPI screens
+
+### Forms & Inputs
+
+- **Label consistency**: All inputs properly labeled
+- **Required indicators**: Clear and consistent
+- **Error messages**: Helpful and consistent
+- **Tab order**: Logical keyboard navigation
+- **Auto-focus**: Appropriate (don't overuse)
+- **Validation timing**: Consistent (on blur vs on submit)
+
+### Edge Cases & Error States
+
+- **Loading states**: All async actions have loading feedback
+- **Empty states**: Helpful empty states, not just blank space
+- **Error states**: Clear error messages with recovery paths
+- **Success states**: Confirmation of successful actions
+- **Long content**: Handles very long names, descriptions, etc.
+- **No content**: Handles missing data gracefully
+- **Offline**: Appropriate offline handling (if applicable)
+
+### Responsiveness
+
+- **All breakpoints**: Test mobile, tablet, desktop
+- **Touch targets**: 44x44px minimum on touch devices
+- **Readable text**: No text smaller than 14px on mobile
+- **No horizontal scroll**: Content fits viewport
+- **Appropriate reflow**: Content adapts logically
+
+### Performance
+
+- **Fast initial load**: Optimize critical path
+- **No layout shift**: Elements don't jump after load (CLS)
+- **Smooth interactions**: No lag or jank
+- **Optimized images**: Appropriate formats and sizes
+- **Lazy loading**: Off-screen content loads lazily
+
+### Code Quality
+
+- **Remove console logs**: No debug logging in production
+- **Remove commented code**: Clean up dead code
+- **Remove unused imports**: Clean up unused dependencies
+- **Consistent naming**: Variables and functions follow conventions
+- **Type safety**: No TypeScript `any` or ignored errors
+- **Accessibility**: Proper ARIA labels and semantic HTML
+
+## Polish Checklist
+
+Go through systematically:
+
+- [ ] Visual alignment perfect at all breakpoints
+- [ ] Spacing uses design tokens consistently
+- [ ] Typography hierarchy consistent
+- [ ] All interactive states implemented
+- [ ] All transitions smooth (60fps)
+- [ ] Copy is consistent and polished
+- [ ] Icons are consistent and properly sized
+- [ ] All forms properly labeled and validated
+- [ ] Error states are helpful
+- [ ] Loading states are clear
+- [ ] Empty states are welcoming
+- [ ] Touch targets are 44x44px minimum
+- [ ] Contrast ratios meet WCAG AA
+- [ ] Keyboard navigation works
+- [ ] Focus indicators visible
+- [ ] No console errors or warnings
+- [ ] No layout shift on load
+- [ ] Works in all supported browsers
+- [ ] Respects reduced motion preference
+- [ ] Code is clean (no TODOs, console.logs, commented code)
+
+**IMPORTANT**: Polish is about details. Zoom in. Squint at it. Use it yourself. The little things add up.
+
+**NEVER**:
+- Polish before it's functionally complete
+- Spend hours on polish if it ships in 30 minutes (triage)
+- Introduce bugs while polishing (test thoroughly)
+- Ignore systematic issues (if spacing is off everywhere, fix the system)
+- Perfect one thing while leaving others rough (consistent quality level)
+
+## Final Verification
+
+Before marking as done:
+
+- **Use it yourself**: Actually interact with the feature
+- **Test on real devices**: Not just browser DevTools
+- **Ask someone else to review**: Fresh eyes catch things
+- **Compare to design**: Match intended design
+- **Check all states**: Don't just test happy path
+
+Remember: You have impeccable attention to detail and exquisite taste. Polish until it feels effortless, looks intentional, and works flawlessly. Sweat the details - they matter.
+
+ARGUMENTS: 不是，敢情你主要就改了个色儿？
+
+然后那个 Prompt Manager 里面也太丑了
+
+---
+
+Base directory for this skill: /Users/jessezhang/.claude/skills/frontend-design
+
+This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
+
+## Design Direction
+
+Commit to a BOLD aesthetic direction:
+- **Purpose**: What problem does this interface solve? Who uses it?
+- **Tone**: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
+- **Constraints**: Technical requirements (framework, performance, accessibility).
+- **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
+
+**CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work—the key is intentionality, not intensity.
+
+Then implement working code that is:
+- Production-grade and functional
+- Visually striking and memorable
+- Cohesive with a clear aesthetic point-of-view
+- Meticulously refined in every detail
+
+## Frontend Aesthetics Guidelines
+
+### Typography
+→ *Consult [typography reference](reference/typography.md) for scales, pairing, and loading strategies.*
+
+Choose fonts that are beautiful, unique, and interesting. Pair a distinctive display font with a refined body font.
+
+**DO**: Use a modular type scale with fluid sizing (clamp)
+**DO**: Vary font weights and sizes to create clear visual hierarchy
+**DON'T**: Use overused fonts—Inter, Roboto, Arial, Open Sans, system defaults
+**DON'T**: Use monospace typography as lazy shorthand for "technical/developer" vibes
+**DON'T**: Put large icons with rounded corners above every heading—they rarely add value and make sites look templated
+
+### Color & Theme
+→ *Consult [color reference](reference/color-and-contrast.md) for OKLCH, palettes, and dark mode.*
+
+Commit to a cohesive palette. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
+
+**DO**: Use modern CSS color functions (oklch, color-mix, light-dark) for perceptually uniform, maintainable palettes
+**DO**: Tint your neutrals toward your brand hue—even a subtle hint creates subconscious cohesion
+**DON'T**: Use gray text on colored backgrounds—it looks washed out; use a shade of the background color instead
+**DON'T**: Use pure black (#000) or pure white (#fff)—always tint; pure black/white never appears in nature
+**DON'T**: Use the AI color palette: cyan-on-dark, purple-to-blue gradients, neon accents on dark backgrounds
+**DON'T**: Use gradient text for "impact"—especially on metrics or headings; it's decorative rather than meaningful
+**DON'T**: Default to dark mode with glowing accents—it looks "cool" without requiring actual design decisions
+
+### Layout & Space
+→ *Consult [spatial reference](reference/spatial-design.md) for grids, rhythm, and container queries.*
+
+Create visual rhythm through varied spacing—not the same padding everywhere. Embrace asymmetry and unexpected compositions. Break the grid intentionally for emphasis.
+
+**DO**: Create visual rhythm through varied spacing—tight groupings, generous separations
+**DO**: Use fluid spacing with clamp() that breathes on larger screens
+**DO**: Use asymmetry and unexpected compositions; break the grid intentionally for emphasis
+**DON'T**: Wrap everything in cards—not everything needs a container
+**DON'T**: Nest cards inside cards—visual noise, flatten the hierarchy
+**DON'T**: Use identical card grids—same-sized cards with icon + heading + text, repeated endlessly
+**DON'T**: Use the hero metric layout template—big number, small label, supporting stats, gradient accent
+**DON'T**: Center everything—left-aligned text with asymmetric layouts feels more designed
+**DON'T**: Use the same spacing everywhere—without rhythm, layouts feel monotonous
+
+### Visual Details
+**DO**: Use intentional, purposeful decorative elements that reinforce brand
+**DON'T**: Use glassmorphism everywhere—blur effects, glass cards, glow borders used decoratively rather than purposefully
+**DON'T**: Use rounded elements with thick colored border on one side—a lazy accent that almost never looks intentional
+**DON'T**: Use sparklines as decoration—tiny charts that look sophisticated but convey nothing meaningful
+**DON'T**: Use rounded rectangles with generic drop shadows—safe, forgettable, could be any AI output
+**DON'T**: Use modals unless there's truly no better alternative—modals are lazy
+
+### Motion
+→ *Consult [motion reference](reference/motion-design.md) for timing, easing, and reduced motion.*
+
+Focus on high-impact moments: one well-orchestrated page load with staggered reveals creates more delight than scattered micro-interactions.
+
+**DO**: Use motion to convey state changes—entrances, exits, feedback
+**DO**: Use exponential easing (ease-out-quart/quint/expo) for natural deceleration
+**DO**: For height animations, use grid-template-rows transitions instead of animating height directly
+**DON'T**: Animate layout properties (width, height, padding, margin)—use transform and opacity only
+**DON'T**: Use bounce or elastic easing—they feel dated and tacky; real objects decelerate smoothly
+
+### Interaction
+→ *Consult [interaction reference](reference/interaction-design.md) for forms, focus, and loading patterns.*
+
+Make interactions feel fast. Use optimistic UI—update immediately, sync later.
+
+**DO**: Use progressive disclosure—start simple, reveal sophistication through interaction (basic options first, advanced behind expandable sections; hover states that reveal secondary actions)
+**DO**: Design empty states that teach the interface, not just say "nothing here"
+**DO**: Make every interactive surface feel intentional and responsive
+**DON'T**: Repeat the same information—redundant headers, intros that restate the heading
+**DON'T**: Make every button primary—use ghost buttons, text links, secondary styles; hierarchy matters
+
+### Responsive
+→ *Consult [responsive reference](reference/responsive-design.md) for mobile-first, fluid design, and container queries.*
+
+**DO**: Use container queries (@container) for component-level responsiveness
+**DO**: Adapt the interface for different contexts—don't just shrink it
+**DON'T**: Hide critical functionality on mobile—adapt the interface, don't amputate it
+
+### UX Writing
+→ *Consult [ux-writing reference](reference/ux-writing.md) for labels, errors, and empty states.*
+
+**DO**: Make every word earn its place
+**DON'T**: Repeat information users can already see
+
+---
+
+## The AI Slop Test
+
+**Critical quality check**: If you showed this interface to someone and said "AI made this," would they believe you immediately? If yes, that's the problem.
+
+A distinctive interface should make someone ask "how was this made?" not "which AI made this?"
+
+Review the DON'T guidelines above—they are the fingerprints of AI-generated work from 2024-2025.
+
+---
+
+## Implementation Principles
+
+Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details.
+
+Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices across generations.
+
+Remember: Claude is capable of extraordinary creative work. Don't hold back—show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Summary:
+1. Primary Request and Intent:
+   The user invoked `/bolder` to increase visual impact across all surfaces of the Gemini Voyager Chrome extension, then `/polish` to fix the inadequate first attempt. Specifically:
+   - Scope: Popup settings UI + content scripts + prompt manager (all user-facing surfaces)
+   - Direction: Keep the existing green/teal identity but amplify contrast, scale, and visual hierarchy
+   - Critical feedback: First round was criticized as "just changing colors" with the Prompt Manager still being "too ugly" — user demanded real structural design improvements, not just color value swaps
+
+2. Key Technical Concepts:
+   - OKLCH color space for perceptually uniform colors
+   - Tailwind CSS v4 with CSS custom properties (`@theme`, `@layer base`)
+   - Chrome extension architecture: popup (React+Tailwind), content scripts (vanilla CSS injected into Gemini pages)
+   - Prompt Manager is a vanilla JS/DOM panel (not React) — all styling via `public/contentStyle.css`
+   - Theme-aware CSS: Gemini uses `.theme-host.dark-theme`/`.theme-host.light-theme`, AI Studio uses `body.dark-theme`/`body.light-theme`, plus `@media (prefers-color-scheme: dark)`
+   - Progressive disclosure pattern (hide actions on hover)
+   - Frontend-design skill anti-patterns: no gradient text, no glassmorphism, no wrapping everything in cards, no borders everywhere
+
+3. Files and Code Sections:
+
+   - **`src/assets/styles/tailwind.css`** — Design system tokens. Changed all color variables to green-tinted neutrals (hue ~155 instead of ~260 blue-gray). More saturated primary (`0.65 chroma 0.22` vs old `0.7227 chroma 0.192`). Radius bumped to `0.625rem`.
+     ```css
+     :root {
+       --primary: oklch(0.65 0.22 155);
+       --background: oklch(0.975 0.014 155);
+       --foreground: oklch(0.25 0.03 160);
+       --card: oklch(0.995 0.004 155);
+       --border: oklch(0.915 0.015 155);
+       /* ... all neutrals tinted toward green */
+     }
+     .dark {
+       --primary: oklch(0.75 0.18 155);
+       --background: oklch(0.18 0.025 160);
+       /* ... */
+     }
+     ```
+
+   - **`src/components/ui/card.tsx`** — Added primary-tinted shadow. Changed CardTitle from muted to primary-colored with bolder weight.
+     ```tsx
+     // Card: added shadow-primary/[0.04]
+     'bg-card text-card-foreground border-border/60 rounded-xl border shadow-md shadow-primary/[0.04]'
+     // CardTitle: changed from muted-foreground to primary/70
+     'text-primary/70 text-xs font-bold tracking-widest uppercase'
+     ```
+
+   - **`src/components/ui/switch.tsx`** — Removed border on knob, added shadow-inner on track, green glow when checked.
+     ```tsx
+     'bg-input ... shadow-inner transition-colors duration-200 ...',
+     "after:... after:bg-white after:shadow-md after:transition-all after:duration-200 ...",
+     'peer-checked:bg-primary peer-checked:shadow-primary/25 peer-checked:shadow-md'
+     ```
+
+   - **`src/components/ui/slider.tsx`** — Thicker track (`h-2.5`), green ring on thumb.
+     ```tsx
+     'bg-secondary h-2.5 w-full cursor-pointer appearance-none rounded-full'
+     // thumb: shadow-lg shadow-primary/20, ring-2 ring-primary/20
+     ```
+
+   - **`src/pages/popup/Popup.tsx`** — Killed gradient text (AI slop), solid primary color instead. Larger title. Bolder segmented controls with rounded-xl and shadow-primary/20. Cleaned up redundant CardTitle inline classes. Updated all card hovers to `hover:shadow-primary/[0.06]`.
+     ```tsx
+     // Before (gradient text - AI slop):
+     <h1 className="from-primary to-primary/70 bg-linear-to-r bg-clip-text text-xl font-bold text-transparent">
+     // After (solid, confident):
+     <h1 className="text-primary text-2xl font-extrabold tracking-tight">
+     ```
+
+   - **`src/pages/popup/components/CloudSyncSettings.tsx`**, **`ContextSyncSettings.tsx`** — Updated segmented controls to rounded-xl, shadow-primary/20, font-bold.
+
+   - **`src/pages/popup/components/WidthSlider.tsx`**, **`KeyboardShortcutSettings.tsx`** — Cleaned up redundant CardTitle inline classes, updated card hovers.
+
+   - **`public/contentStyle.css`** — The bulk of the structural Prompt Manager redesign:
+     - **Search input**: Added focus states with primary ring (`box-shadow: 0 0 0 3px oklch(0.65 0.22 155 / 0.1)`), larger padding (9px 12px), font-size 13px, transitions
+     - **Tags**: Removed all borders, lighter backgrounds (`rgba(55, 65, 81, 0.4)` instead of 0.6), transition on hover/active
+     - **Form inputs (textarea/tags)**: Added focus ring matching search, outline:none, transition
+     - **List items**: Removed border (`border: none`), lighter bg (`rgba(17, 24, 39, 0.25)`), added transition. **Action buttons hidden by default, revealed on hover**:
+       ```css
+       .gv-pm-item .gv-pm-actions { opacity: 0; transition: opacity 0.15s ease; }
+       .gv-pm-item:hover .gv-pm-actions { opacity: 1; }
+       ```
+     - **Edit/Delete buttons**: Removed colored backgrounds and borders, made transparent ghost-style
+     - **Chips**: Removed borders, smaller (10px font, 2px 8px padding), letter-spacing 0.02em
+     - **Expand button**: Removed border, subtle opacity
+     - **Footer buttons (Backup/Website)**: Removed border, used subtle filled bg (`oklch(0.65 0.22 155 / 0.1)`)
+     - **Secondary footer buttons (Import/Export/Settings/GitHub)**: All borderless ghost-style, 11px font, `rgba(229, 231, 235, 0.6)` default color, hover reveals
+     - **Collapsed markdown gradient**: Updated to match borderless items
+     - **Trigger button**: Larger (46px), richer gradient, better hover with translateY(-1px)
+     - **Panel**: border-radius 18px, green-tinted background, stronger shadow
+     - **Header**: More padding (16px 18px), title 19px/900 weight
+     - **Timeline**: Active dot color changed to brand green, stronger glow, bar has subtle shadow
+
+4. Errors and fixes:
+   - **`replace_all` error on `.gv-pm-tag.active`**: Found 2 matches when `replace_all` was false. Fixed by setting `replace_all: true`.
+   - **File not read error on `WidthSlider.tsx`**: Tried to edit before reading. Fixed by reading the file first.
+   - **User feedback (critical)**: User said the first round was "just changing colors" and the PM was still ugly. This was the key correction — shifted approach from color-swapping to structural design improvements (removing borders, adding focus states, progressive disclosure, visual hierarchy through opacity).
+
+5. Problem Solving:
+   - Identified that OKLCH value changes alone don't constitute meaningful design improvement
+   - Recognized structural issues: monotonous bordered items, cluttered footer with 6+ equal-hierarchy buttons, missing input focus states, no hover-reveal patterns
+   - Solution: Removed visual noise (borders, colored action button backgrounds), added proper interaction states (focus rings), progressive disclosure (hide actions until hover), cleaner footer hierarchy (primary buttons get subtle fill, secondary buttons become ghost-style)
+   - All tests (584), typecheck, lint, build, and format pass cleanly
+
+6. All user messages:
+   - `/bolder 交给你了` — Initial request to make the design bolder, full autonomy given
+   - Scope answer: "both popup + content, and prompt manager as well"
+   - Direction answer: "Keep current feel" (keep green/teal, amplify contrast/scale/hierarchy)
+   - `/polish 不是，敢情你主要就改了个色儿？然后那个 Prompt Manager 里面也太丑了` — Criticism that changes were just color swaps and PM is still ugly
+
+7. Pending Tasks:
+   - The user hasn't explicitly confirmed satisfaction with the second round of changes
+   - No explicit pending task was stated — the polish pass was completed and all checks passed
+
+8. Current Work:
+   Immediately before this summary, I had just completed the second round of structural design improvements to the Prompt Manager CSS and popup, triggered by the user's `/polish` criticism. The last actions were:
+   - Running `bun run format` which completed successfully
+   - All verification checks passed (typecheck, 584 tests, lint 0 errors, build)
+   - The formatter auto-adjusted class ordering in several files (WidthSlider, CloudSyncSettings, KeyboardShortcutSettings, switch, card, slider, ContextSyncSettings)
+   
+   The structural changes focused on: removing borders from PM items/tags/chips/buttons, adding focus states to all inputs, hiding action buttons until item hover, making footer buttons ghost-style, and killing gradient text from popup header.
+
+9. Optional Next Step:
+   The work appears to be at a natural completion point. The user may want to visually verify the changes by loading the extension. No explicit next step was requested. If the user is still unsatisfied, they may request further refinements to specific areas.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/jessezhang/.claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/135da434-d393-40b1-8420-9b050e09ec1c.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+---
+
+Base directory for this skill: /Users/jessezhang/.claude/skills/polish
+
+**First**: Use the frontend-design skill for design principles and anti-patterns.
+
+Perform a meticulous final pass to catch all the small details that separate good work from great work. The difference between shipped and polished.
+
+## Pre-Polish Assessment
+
+Understand the current state and goals:
+
+1. **Review completeness**:
+   - Is it functionally complete?
+   - Are there known issues to preserve (mark with TODOs)?
+   - What's the quality bar? (MVP vs flagship feature?)
+   - When does it ship? (How much time for polish?)
+
+2. **Identify polish areas**:
+   - Visual inconsistencies
+   - Spacing and alignment issues
+   - Interaction state gaps
+   - Copy inconsistencies
+   - Edge cases and error states
+   - Loading and transition smoothness
+
+**CRITICAL**: Polish is the last step, not the first. Don't polish work that's not functionally complete.
+
+## Polish Systematically
+
+Work through these dimensions methodically:
+
+### Visual Alignment & Spacing
+
+- **Pixel-perfect alignment**: Everything lines up to grid
+- **Consistent spacing**: All gaps use spacing scale (no random 13px gaps)
+- **Optical alignment**: Adjust for visual weight (icons may need offset for optical centering)
+- **Responsive consistency**: Spacing and alignment work at all breakpoints
+- **Grid adherence**: Elements snap to baseline grid
+
+**Check**:
+- Enable grid overlay and verify alignment
+- Check spacing with browser inspector
+- Test at multiple viewport sizes
+- Look for elements that "feel" off
+
+### Typography Refinement
+
+- **Hierarchy consistency**: Same elements use same sizes/weights throughout
+- **Line length**: 45-75 characters for body text
+- **Line height**: Appropriate for font size and context
+- **Widows & orphans**: No single words on last line
+- **Hyphenation**: Appropriate for language and column width
+- **Kerning**: Adjust letter spacing where needed (especially headlines)
+- **Font loading**: No FOUT/FOIT flashes
+
+### Color & Contrast
+
+- **Contrast ratios**: All text meets WCAG standards
+- **Consistent token usage**: No hard-coded colors, all use design tokens
+- **Theme consistency**: Works in all theme variants
+- **Color meaning**: Same colors mean same things throughout
+- **Accessible focus**: Focus indicators visible with sufficient contrast
+- **Tinted neutrals**: No pure gray or pure black—add subtle color tint (0.01 chroma)
+- **Gray on color**: Never put gray text on colored backgrounds—use a shade of that color or transparency
+
+### Interaction States
+
+Every interactive element needs all states:
+
+- **Default**: Resting state
+- **Hover**: Subtle feedback (color, scale, shadow)
+- **Focus**: Keyboard focus indicator (never remove without replacement)
+- **Active**: Click/tap feedback
+- **Disabled**: Clearly non-interactive
+- **Loading**: Async action feedback
+- **Error**: Validation or error state
+- **Success**: Successful completion
+
+**Missing states create confusion and broken experiences**.
+
+### Micro-interactions & Transitions
+
+- **Smooth transitions**: All state changes animated appropriately (150-300ms)
+- **Consistent easing**: Use ease-out-quart/quint/expo for natural deceleration. Never bounce or elastic—they feel dated.
+- **No jank**: 60fps animations, only animate transform and opacity
+- **Appropriate motion**: Motion serves purpose, not decoration
+- **Reduced motion**: Respects `prefers-reduced-motion`
+
+### Content & Copy
+
+- **Consistent terminology**: Same things called same names throughout
+- **Consistent capitalization**: Title Case vs Sentence case applied consistently
+- **Grammar & spelling**: No typos
+- **Appropriate length**: Not too wordy, not too terse
+- **Punctuation consistency**: Periods on sentences, not on labels (unless all labels have them)
+
+### Icons & Images
+
+- **Consistent style**: All icons from same family or matching style
+- **Appropriate sizing**: Icons sized consistently for context
+- **Proper alignment**: Icons align with adjacent text optically
+- **Alt text**: All images have descriptive alt text
+- **Loading states**: Images don't cause layout shift, proper aspect ratios
+- **Retina support**: 2x assets for high-DPI screens
+
+### Forms & Inputs
+
+- **Label consistency**: All inputs properly labeled
+- **Required indicators**: Clear and consistent
+- **Error messages**: Helpful and consistent
+- **Tab order**: Logical keyboard navigation
+- **Auto-focus**: Appropriate (don't overuse)
+- **Validation timing**: Consistent (on blur vs on submit)
+
+### Edge Cases & Error States
+
+- **Loading states**: All async actions have loading feedback
+- **Empty states**: Helpful empty states, not just blank space
+- **Error states**: Clear error messages with recovery paths
+- **Success states**: Confirmation of successful actions
+- **Long content**: Handles very long names, descriptions, etc.
+- **No content**: Handles missing data gracefully
+- **Offline**: Appropriate offline handling (if applicable)
+
+### Responsiveness
+
+- **All breakpoints**: Test mobile, tablet, desktop
+- **Touch targets**: 44x44px minimum on touch devices
+- **Readable text**: No text smaller than 14px on mobile
+- **No horizontal scroll**: Content fits viewport
+- **Appropriate reflow**: Content adapts logically
+
+### Performance
+
+- **Fast initial load**: Optimize critical path
+- **No layout shift**: Elements don't jump after load (CLS)
+- **Smooth interactions**: No lag or jank
+- **Optimized images**: Appropriate formats and sizes
+- **Lazy loading**: Off-screen content loads lazily
+
+### Code Quality
+
+- **Remove console logs**: No debug logging in production
+- **Remove commented code**: Clean up dead code
+- **Remove unused imports**: Clean up unused dependencies
+- **Consistent naming**: Variables and functions follow conventions
+- **Type safety**: No TypeScript `any` or ignored errors
+- **Accessibility**: Proper ARIA labels and semantic HTML
+
+## Polish Checklist
+
+Go through systematically:
+
+- [ ] Visual alignment perfect at all breakpoints
+- [ ] Spacing uses design tokens consistently
+- [ ] Typography hierarchy consistent
+- [ ] All interactive states implemented
+- [ ] All transitions smooth (60fps)
+- [ ] Copy is consistent and polished
+- [ ] Icons are consistent and properly sized
+- [ ] All forms properly labeled and validated
+- [ ] Error states are helpful
+- [ ] Loading states are clear
+- [ ] Empty states are welcoming
+- [ ] Touch targets are 44x44px minimum
+- [ ] Contrast ratios meet WCAG AA
+- [ ] Keyboard navigation works
+- [ ] Focus indicators visible
+- [ ] No console errors or warnings
+- [ ] No layout shift on load
+- [ ] Works in all supported browsers
+- [ ] Respects reduced motion preference
+- [ ] Code is clean (no TODOs, console.logs, commented code)
+
+**IMPORTANT**: Polish is about details. Zoom in. Squint at it. Use it yourself. The little things add up.
+
+**NEVER**:
+- Polish before it's functionally complete
+- Spend hours on polish if it ships in 30 minutes (triage)
+- Introduce bugs while polishing (test thoroughly)
+- Ignore systematic issues (if spacing is off everywhere, fix the system)
+- Perfect one thing while leaving others rough (consistent quality level)
+
+## Final Verification
+
+Before marking as done:
+
+- **Use it yourself**: Actually interact with the feature
+- **Test on real devices**: Not just browser DevTools
+- **Ask someone else to review**: Fresh eyes catch things
+- **Compare to design**: Match intended design
+- **Check all states**: Don't just test happy path
+
+Remember: You have impeccable attention to detail and exquisite taste. Polish until it feels effortless, looks intentional, and works flawlessly. Sweat the details - they matter.
+
+---
+
+我受不了了，你这改完那个 popup 和 TLS 管理器里怎么一坨绿啊？这也太丑了，这完全不是 polish 啊，一点都不符合你 skills 的定位。
+
+---
+
+Prompt Manager 里的那个区块看着有点看不清了。
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Summary:
+1. Primary Request and Intent:
+   - The user initially invoked `/polish` to do a final quality pass on design changes made in a previous `/bolder` session
+   - After the first polish pass made everything more green (by converting blue-tinted PM controls to green-tinted ones), the user strongly criticized: "我受不了了，你这改完那个 popup 和 TLS 管理器里怎么一坨绿啊？这也太丑了，这完全不是 polish 啊，一点都不符合你 skills 的定位" (I can't stand it, the popup and PM are a blob of green, this is way too ugly, not polishing at all, doesn't match your skills)
+   - The user wanted a proper color system where green is used ONLY as an accent (buttons, active states), NOT as the base of every surface
+   - After the major color overhaul fixing the green problem, the user reported: "Prompt Manager 里的那个区块看着有点看不清了" (The blocks/items in the Prompt Manager look a bit hard to see now)
+
+2. Key Technical Concepts:
+   - OKLCH color space for perceptually uniform colors — neutral tokens need very low chroma (0.002-0.008), not 0.014-0.03
+   - Green (hue 155) should only appear in `--primary`, `--ring`, `--accent` tokens, NOT in background/foreground/card/border/muted/secondary
+   - Cool gray neutrals use hue ~250/285 with near-zero chroma
+   - Chrome extension architecture: popup (React+Tailwind), content scripts (vanilla CSS injected into Gemini pages)
+   - Prompt Manager is vanilla DOM (not React), styled via `public/contentStyle.css`
+   - Theme system: Gemini uses `.theme-host.dark-theme`/`.theme-host.light-theme`, AI Studio uses `body.dark-theme`/`body.light-theme`, plus `@media (prefers-color-scheme: dark)`
+   - Tailwind CSS v4 with CSS custom properties (`@theme`, `@layer base`)
+   - The "tint neutrals toward brand hue" principle means SUBTLE (0.002-0.004 chroma), not visible green tinting
+
+3. Files and Code Sections:
+
+   - **`src/assets/styles/tailwind.css`** — Design system color tokens. Changed from green-tinted neutrals to true cool gray neutrals.
+     ```css
+     :root {
+       --background: oklch(0.98 0.002 250);
+       --foreground: oklch(0.14 0.004 285);
+       --card: oklch(0.995 0.001 250);
+       --card-foreground: oklch(0.14 0.004 285);
+       --popover: oklch(0.995 0.001 250);
+       --popover-foreground: oklch(0.14 0.004 285);
+       --primary: oklch(0.55 0.17 155);
+       --primary-foreground: oklch(0.99 0 0);
+       --secondary: oklch(0.95 0.004 250);
+       --secondary-foreground: oklch(0.38 0.006 250);
+       --muted: oklch(0.96 0.003 250);
+       --muted-foreground: oklch(0.5 0.01 250);
+       --accent: oklch(0.94 0.015 155);
+       --accent-foreground: oklch(0.14 0.004 285);
+       --destructive: oklch(0.6 0.22 25);
+       --destructive-foreground: oklch(0.99 0 0);
+       --border: oklch(0.92 0.004 250);
+       --input: oklch(0.92 0.004 250);
+       --ring: oklch(0.55 0.17 155);
+       --radius: 0.625rem;
+     }
+     .dark {
+       --background: oklch(0.16 0.006 285);
+       --foreground: oklch(0.92 0.004 250);
+       --card: oklch(0.2 0.008 285);
+       --card-foreground: oklch(0.92 0.004 250);
+       --popover: oklch(0.2 0.008 285);
+       --popover-foreground: oklch(0.92 0.004 250);
+       --primary: oklch(0.7 0.16 155);
+       --primary-foreground: oklch(0.12 0.01 285);
+       --secondary: oklch(0.24 0.008 285);
+       --secondary-foreground: oklch(0.72 0.006 250);
+       --muted: oklch(0.2 0.006 285);
+       --muted-foreground: oklch(0.56 0.008 250);
+       --accent: oklch(0.26 0.015 155);
+       --accent-foreground: oklch(0.72 0.006 250);
+       --destructive: oklch(0.6 0.22 25);
+       --destructive-foreground: oklch(0.12 0.01 285);
+       --border: oklch(0.3 0.008 285);
+       --input: oklch(0.3 0.008 285);
+       --ring: oklch(0.7 0.16 155);
+     }
+     ```
+
+   - **`src/components/ui/card.tsx`** — Removed green shadow, made CardTitle neutral.
+     ```tsx
+     // Card: shadow-sm instead of shadow-md shadow-primary/[0.04]
+     'bg-card text-card-foreground border-border/60 rounded-xl border shadow-sm'
+     // CardTitle: neutral instead of green
+     'text-foreground/60 text-xs font-bold tracking-widest uppercase'
+     // CardDescription: fixed hardcoded slate to token
+     'text-muted-foreground text-sm'
+     ```
+
+   - **`src/components/ui/switch.tsx`** — Removed green glow when checked.
+     ```tsx
+     // Before: 'peer-checked:bg-primary peer-checked:shadow-primary/25 peer-checked:shadow-md'
+     // After:
+     'peer-checked:bg-primary'
+     ```
+
+   - **`src/components/ui/slider.tsx`** — Removed green ring/shadow, slightly smaller thumb.
+     ```tsx
+     'bg-secondary h-2 w-full cursor-pointer appearance-none rounded-full',
+     '[&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:h-4.5 [&::-webkit-slider-thumb]:w-4.5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:duration-200 hover:[&::-webkit-slider-thumb]:scale-110',
+     '[&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:h-4.5 [&::-moz-range-thumb]:w-4.5 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md',
+     ```
+
+   - **`src/pages/popup/Popup.tsx`** — Multiple changes:
+     - All card classes: `p-4 transition-all hover:shadow-md` (removed `hover:shadow-primary/[0.06]` and `hover:shadow-lg`)
+     - Segmented control: `bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg shadow-sm transition-all duration-300 ease-out` (removed `shadow-primary/20`, `shadow-lg`)
+     - Header: `border-border/50 flex items-center justify-between border-b px-5 py-5` (removed green gradient `from-primary/15 via-accent/8 bg-linear-to-br to-transparent backdrop-blur-sm`)
+     - Footer: `border-border/50 flex flex-col gap-3 border-t px-5 py-4` (removed green gradient)
+
+   - **`src/pages/popup/components/CloudSyncSettings.tsx`** — Same card/segmented control fixes as Popup.tsx
+
+   - **`src/pages/popup/components/ContextSyncSettings.tsx`** — Same card/segmented control fixes. Also removed commented-out `setStatusMessage` calls.
+
+   - **`src/pages/popup/components/KeyboardShortcutSettings.tsx`** — Card hover fix
+
+   - **`src/pages/popup/components/WidthSlider.tsx`** — Card hover fix
+
+   - **`public/contentStyle.css`** — Massive changes to Prompt Manager:
+     - Global replace: `oklch(0.65 0.22 155` → `oklch(0.55 0.17 155` (light primary)
+     - Global replace: `oklch(0.75 0.18 155` → `oklch(0.7 0.16 155` (dark primary)
+     - PM panel: Neutral backgrounds `oklch(0.995 0.002 250)` light / `oklch(0.2 0.008 285)` dark
+     - PM header: Removed green gradient, plain border-bottom only
+     - PM title: Neutral `oklch(0.14 0.004 285)` / `oklch(0.92 0.004 250)` instead of green
+     - PM version badge: Neutral `oklch(0.95 0.004 250 / 0.6)` instead of green gradient
+     - PM lang button: Neutral `oklch(0.995 0.002 250)` / `oklch(0.24 0.008 285)` instead of green/blue
+     - PM lock button: Neutral backgrounds, green only for `.active` border
+     - PM tags-scroll-hint: Neutral `oklch(0.2 0.008 285 / 0.72)`
+     - Removed duplicate `.gv-pm-trigger:hover` rule that was killing scale(1.08)
+     - Added `.gv-pm-save` dark theme variants
+     - **PM items (partially fixed):** Changed default from `rgba(17, 24, 39, 0.25)` to `rgba(255, 255, 255, 0.05)`, hover from `rgba(17, 24, 39, 0.45)` to `rgba(255, 255, 255, 0.09)` — BUT the `.theme-host.dark-theme .gv-pm-item` and `.theme-host.light-theme .gv-pm-item` variants were NOT yet updated
+
+4. Errors and fixes:
+   - **First polish pass made everything more green:** By converting PM lang/lock/scroll-hint from blue-tinted colors to green-tinted colors, I made the monochromatic green problem WORSE. User feedback: "一坨绿啊？这也太丑了" (a blob of green, too ugly). Fix: Complete overhaul of color system — neutrals became true neutrals, green reserved only for primary/accent.
+   - **PM items too low contrast after color overhaul:** The user reported items are "有点看不清了" (a bit hard to see). The dark-on-dark `rgba(17, 24, 39, 0.25)` items on a neutral dark panel had insufficient contrast. Partial fix: Changed default to `rgba(255, 255, 255, 0.05)` (lighter than background) but theme-specific variants not yet updated.
+
+5. Problem Solving:
+   - Core problem identified: The `/bolder` pass tinted ALL neutral tokens toward green (hue 155, chroma 0.014-0.03). This made every surface green-tinted, creating a monotonous, ugly appearance.
+   - Solution: Proper color system with clear separation — neutrals are near-zero chroma cool gray, green only for interactive/branded elements (primary buttons, active states, focus rings, value badges)
+   - Ongoing: PM item visibility needs completing — the themed variants still reference old values
+
+6. All user messages:
+   - `/polish` (invocation with no arguments — fresh polish pass)
+   - "我受不了了，你这改完那个 popup 和 TLS 管理器里怎么一坨绿啊？这也太丑了，这完全不是 polish 啊，一点都不符合你 skills 的定位。" (Can't stand it, popup and PM are a blob of green, way too ugly, not polish at all, doesn't match your skills)
+   - "Prompt Manager 里的那个区块看着有点看不清了。" (The blocks/items in the Prompt Manager look a bit hard to see now)
+
+7. Pending Tasks:
+   - Complete the PM item visibility fix — the `.theme-host.dark-theme .gv-pm-item` and `.theme-host.light-theme .gv-pm-item` variants at lines 1972-1996 still have old `rgba(17, 24, 39, 0.25)` / `rgba(0, 0, 0, 0.03)` values that need updating
+   - The `.gv-md-collapsed::after` gradient at line 1881 still references `rgba(17, 24, 39, 0.25)` and dark theme variant at line 1921-1923 — these need updating to match new item backgrounds
+   - Light theme items `rgba(0, 0, 0, 0.03)` may also be too subtle and should be bumped up
+
+8. Current Work:
+   I was fixing the PM item visibility issue reported by the user. I changed the default `.gv-pm-item` background from `rgba(17, 24, 39, 0.25)` (dark overlay making items darker) to `rgba(255, 255, 255, 0.05)` (light overlay making items lighter than panel), and hover from `rgba(17, 24, 39, 0.45)` to `rgba(255, 255, 255, 0.09)`. However, I only fixed the DEFAULT styles and have NOT yet updated:
+   - `.theme-host.light-theme .gv-pm-item` (line 1972): still `rgba(0, 0, 0, 0.03)`, hover `rgba(0, 0, 0, 0.06)`
+   - `.theme-host.dark-theme .gv-pm-item` (line 1988): still `rgba(17, 24, 39, 0.25)`, hover `rgba(17, 24, 39, 0.45)`
+   - `.gv-md-collapsed::after` gradient references (lines 1881, 1921-1923)
+   
+   The summary was requested immediately after one partial edit to `.gv-pm-item`.
+
+9. Optional Next Step:
+   Complete the PM item visibility fix by updating the remaining themed variants. The user said: "Prompt Manager 里的那个区块看着有点看不清了" — I need to update:
+   - `.theme-host.dark-theme .gv-pm-item` / `body.dark-theme .gv-pm-item` from `rgba(17, 24, 39, 0.25)` to `rgba(255, 255, 255, 0.05)` and hover from `rgba(17, 24, 39, 0.45)` to `rgba(255, 255, 255, 0.09)`
+   - `.theme-host.light-theme .gv-pm-item` should also be checked (bump from `rgba(0, 0, 0, 0.03)` to `rgba(0, 0, 0, 0.04)` potentially)
+   - `.gv-md-collapsed::after` and dark theme variant gradient backgrounds need updating to match
+   - Then run verification checks (typecheck, test, lint, format)
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/jessezhang/.claude/projects/-Users-jessezhang-Desktop-Coding-side-projects-gemini-voyager/135da434-d393-40b1-8420-9b050e09ec1c.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+---
+
+现在已经 staged 的和还没有 staged 的是两个功能，请你分开进行 commit
