@@ -47,6 +47,9 @@ features:
   - icon: 💾
     title: Exportar Chat
     details: Soberania dos dados. Arquive em vários formatos para que o conhecimento nunca se perca.
+  - icon: 🌦️
+    title: Efeitos Visuais
+    details: Defina o ambiente. Alterne entre neve, chuva e pétalas de sakura na janela popup.
   - icon: 🍌
     title: Remoção de Marca de Água NanoBanana
     details: Remoção de marca de água sem perdas. Mantenha os momentos de IA puros.

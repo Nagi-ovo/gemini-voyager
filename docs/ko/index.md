@@ -47,6 +47,9 @@ features:
   - icon: 💾
     title: 대화 내보내기
     details: 데이터 주권. 지식이 손실되지 않도록 다양한 형식으로 아카이브하세요.
+  - icon: 🌦️
+    title: 시각 효과
+    details: 분위기를 바꿔보세요. 팝업에서 눈, 비, 벚꽃잎 효과를 전환할 수 있습니다.
   - icon: 🍌
     title: NanoBanana 워터마크 제거
     details: 무손실 워터마크 제거. AI가 만든 순간을 순수하게 유지하세요.

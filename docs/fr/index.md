@@ -47,6 +47,9 @@ features:
   - icon: 💾
     title: Export de Chat
     details: Souveraineté des données. Archivez en plusieurs formats pour ne rien perdre.
+  - icon: 🌦️
+    title: Effets Visuels
+    details: Créez l'ambiance. Basculez entre neige, pluie et pétales de sakura depuis la fenêtre popup.
   - icon: 🍌
     title: Suppression Filigrane
     details: Suppression sans perte du filigrane. Gardez les moments IA purs.
