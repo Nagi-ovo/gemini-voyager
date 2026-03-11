@@ -42,10 +42,49 @@
 
 ### Gemini 专属增强
 
-- **自定义颜色**：点击文件夹图标自定义颜色。内置 7 种默认配色，亦支持通过调色盘选取你的专属色彩。
-  <img src="/assets/folder-color.png" alt="文件夹配色" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-- **账号隔离**：自动隔离不同 Google 账号的对话列表，防止数据混淆。
-  <img src="/assets/current-user-only.png" alt="账号隔离模式" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+#### 自定义颜色
+
+点击文件夹图标自定义颜色。内置 7 种默认配色，亦支持通过调色盘选取你的专属色彩。
+
+<img src="/assets/folder-color.png" alt="文件夹配色" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+#### 账号隔离
+
+自动隔离不同 Google 账号的对话列表，防止数据混淆。
+
+<img src="/assets/current-user-only.png" alt="账号隔离模式" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+#### AI 自动整理
+
+对话太多，懒得手动分？让 Gemini 替你想。
+
+一键复制当前对话结构，粘贴给 Gemini，它会帮你生成一份整理好的文件夹方案——直接导入，即刻生效。
+
+**第一步：复制对话结构**
+
+在扩展弹窗的文件夹区域底部，点击 **AI Organize** 按钮。它会自动收集你所有未归类的对话和现有文件夹结构，生成一段提示词并复制到剪贴板。
+
+<img src="/assets/ai-auto-folder.png" alt="AI Organize 按钮" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+
+**第二步：让 Gemini 整理**
+
+将剪贴板内容粘贴到 Gemini 对话中，它会分析你的对话标题并输出一段 JSON 格式的文件夹方案。
+
+**第三步：导入分类结果**
+
+点击文件夹面板菜单中的 **Import folders**，选择 **Or paste JSON directly**，将 Gemini 返回的 JSON 粘贴进去，点击 **Import**。
+
+<div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+  <div style="text-align: center;">
+    <img src="/assets/ai-auto-folder-2.png" alt="导入菜单" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 240px;"/>
+  </div>
+  <div style="text-align: center;">
+    <img src="/assets/ai-auto-folder-3.png" alt="粘贴 JSON 导入" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+  </div>
+</div>
+
+- **增量合并**：默认使用"Merge"策略，只添加新文件夹和新分配，不会破坏你已有的分类。
+- **多语言**：提示词会自动使用你设置的语言，文件夹名也会用对应语言生成。
 
 ### AI Studio 专属增强
 

@@ -30,14 +30,6 @@ AI 채팅을 정리하는 것이 왜 그렇게 힘들까요?
 - **이름 바꾸기**: 폴더를 더블 클릭하여 이름을 바꿉니다.
 - **아이콘**: Gem의 유형(코딩, 창의적 등)을 자동으로 감지하여 적절한 아이콘을 할당합니다. 당신은 아무것도 할 필요가 없습니다.
 
-## 고급 기능
-
-- **색상**: 폴더 아이콘을 클릭하여 색상을 맞춤 설정하세요. 7가지 기본 색상 중에서 선택하거나 색상 피커를 사용하여 원하는 색상을 선택할 수 있습니다.
-  <img src="/assets/folder-color.png" alt="폴더 색상" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-
-- **계정 분리**: 헤더의 "사람" 아이콘을 클릭하면 다른 Google 계정의 채팅을 즉시 필터링할 수 있습니다. 여러 계정을 사용할 때 작업 공간을 깨끗하게 유지하세요.
-  <img src="/assets/current-user-only.png" alt="계정 분리" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-
 ## 플랫폼별 기능 차이
 
 ### 공통 기능
@@ -50,9 +42,49 @@ AI 채팅을 정리하는 것이 왜 그렇게 힘들까요?
 
 ### Gemini 전용 기능
 
-- **색상 맞춤 설정**: 폴더를 원하는 색상으로 꾸미기.
-- **계정 분리**: 개인용과 업무용 채팅을 즉시 분리.
-- **Deep Research 내보내기**: 심층 연구의 사고 과정을 완벽하게 파일로 저장.
+#### 색상 맞춤 설정
+
+폴더 아이콘을 클릭하여 색상을 맞춤 설정하세요. 7가지 기본 색상 중에서 선택하거나 색상 피커를 사용하여 원하는 색상을 선택할 수 있습니다.
+
+<img src="/assets/folder-color.png" alt="폴더 색상" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+#### 계정 분리
+
+헤더의 "사람" 아이콘을 클릭하면 다른 Google 계정의 채팅을 즉시 필터링할 수 있습니다. 여러 계정을 사용할 때 작업 공간을 깨끗하게 유지하세요.
+
+<img src="/assets/current-user-only.png" alt="계정 분리" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+#### AI 자동 정리
+
+채팅이 너무 많고, 정리하기 귀찮다고요? Gemini한테 맡기세요.
+
+원클릭으로 현재 대화 구조를 복사하고, Gemini에 붙여넣으면 바로 가져올 수 있는 폴더 계획을 생성해 줍니다 — 순식간에 정리 완료.
+
+**1단계: 대화 구조 복사**
+
+확장 프로그램 팝업의 폴더 섹션 하단에서 **AI 정리** 버튼을 클릭하세요. 미분류 대화와 기존 폴더 구조를 자동으로 수집하고, 프롬프트를 생성하여 클립보드에 복사합니다.
+
+<img src="/assets/ai-auto-folder.png" alt="AI Organize Button" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+
+**2단계: Gemini가 분류하게 하기**
+
+클립보드 내용을 Gemini 대화에 붙여넣으세요. 채팅 제목을 분석한 뒤 JSON 폴더 계획을 출력해 줍니다.
+
+**3단계: 결과 가져오기**
+
+폴더 패널 메뉴에서 **폴더 가져오기**를 클릭하고, **또는 JSON 직접 붙여넣기**를 선택한 다음, Gemini가 반환한 JSON을 붙여넣고 **가져오기**를 클릭하세요.
+
+<div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+  <div style="text-align: center;">
+    <img src="/assets/ai-auto-folder-2.png" alt="Import Menu" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 240px;"/>
+  </div>
+  <div style="text-align: center;">
+    <img src="/assets/ai-auto-folder-3.png" alt="Paste JSON Import" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+  </div>
+</div>
+
+- **증분 병합**: 기본적으로 "병합" 전략을 사용합니다 — 새 폴더와 할당만 추가하며, 기존 정리를 절대 파괴하지 않습니다.
+- **다국어 지원**: 프롬프트는 설정된 언어를 자동으로 사용하고, 폴더 이름도 해당 언어로 생성됩니다.
 
 ### AI Studio 전용 기능
 

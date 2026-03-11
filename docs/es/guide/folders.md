@@ -30,14 +30,6 @@ Simplemente se siente bien.
 - **Renombrar**: Doble clic en la carpeta, cámbialo directamente.
 - **Reconocimiento**: Código, escritura, charla... Identificamos automáticamente el tipo de Gema y asignamos un icono. Tú solo úsalo, déjanos el resto a nosotros.
 
-## Características avanzadas
-
-- **Colores**: Haz clic en el icono de la carpeta para personalizar su color. Elige entre 7 colores predeterminados o usa el selector de colores para elegir cualquier color.
-  <img src="/assets/folder-color.png" alt="Colores de carpeta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-
-- **Aislamiento de cuenta**: Haz clic en el icono "persona" en el encabezado para filtrar instantáneamente los chats de otras cuentas de Google. Mantén tu espacio de trabajo limpio cuando uses varias cuentas.
-  <img src="/assets/current-user-only.png" alt="Aislamiento de cuenta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-
 ## Diferencias de características por plataforma
 
 ### Funciones comunes
@@ -50,9 +42,49 @@ Simplemente se siente bien.
 
 ### Exclusivo de Gemini
 
-- **Colores personalizados**: Personaliza las carpetas con cualquier color.
-- **Aislamiento de cuenta**: Separa los chats personales de los de trabajo.
-- **Exportación de Deep Research**: Exporta los procesos de pensamiento a la perfección.
+#### Colores personalizados
+
+Haz clic en el icono de la carpeta para personalizar su color. Elige entre 7 colores predeterminados o usa el selector de colores para elegir cualquier color.
+
+<img src="/assets/folder-color.png" alt="Colores de carpeta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+#### Aislamiento de cuenta
+
+Haz clic en el icono "persona" en el encabezado para filtrar instantáneamente los chats de otras cuentas de Google. Mantén tu espacio de trabajo limpio cuando uses varias cuentas.
+
+<img src="/assets/current-user-only.png" alt="Aislamiento de cuenta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+#### Organización automática con IA
+
+Demasiados chats, demasiada pereza para ordenar? Deja que Gemini piense por ti.
+
+Un clic copia tu estructura de conversaciones actual, pégalo en Gemini, y genera un plan de carpetas listo para importar — organización instantánea.
+
+**Paso 1: Copia tu estructura de conversaciones**
+
+En la parte inferior de la sección de carpetas del popup de la extensión, haz clic en el botón **AI Organize**. Recopila automáticamente todas tus conversaciones sin clasificar y la estructura de carpetas existente, genera un prompt y lo copia al portapapeles.
+
+<img src="/assets/ai-auto-folder.png" alt="AI Organize Button" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+
+**Paso 2: Deja que Gemini lo ordene**
+
+Pega el contenido del portapapeles en una conversación de Gemini. Analizará los títulos de tus chats y generará un plan de carpetas en JSON.
+
+**Paso 3: Importa los resultados**
+
+Haz clic en **Importar carpetas** desde el menú del panel de carpetas, selecciona **O pegar JSON directamente**, pega el JSON que devolvió Gemini y haz clic en **Importar**.
+
+<div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+  <div style="text-align: center;">
+    <img src="/assets/ai-auto-folder-2.png" alt="Import Menu" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 240px;"/>
+  </div>
+  <div style="text-align: center;">
+    <img src="/assets/ai-auto-folder-3.png" alt="Paste JSON Import" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+  </div>
+</div>
+
+- **Fusión incremental**: Usa la estrategia de "Fusionar" por defecto — solo agrega nuevas carpetas y asignaciones, nunca destruye tu organización existente.
+- **Multilingüe**: El prompt usa automáticamente tu idioma configurado, y los nombres de carpetas también se generan en ese idioma.
 
 ### Exclusivo de AI Studio
 

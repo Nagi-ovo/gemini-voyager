@@ -30,14 +30,6 @@
 - **改名**：雙擊資料夾，直接改。
 - **識圖**：代碼、寫作、閒聊... 我們自動識別 Gem 類型，配上圖標。你只管用，剩下的交給我們。
 
-## 進階功能
-
-- **配色**：點擊資料夾圖標自定義顏色。內置 7 種默認配色，亦支持通過調色盤選取你的專屬色彩。
-  <img src="/assets/folder-color.png" alt="資料夾配色" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-
-- **帳號隔離模式**：點擊頂欄的「人像」圖標，即可自動屏蔽其他 Google 帳號的對話。在多帳號共用瀏覽器時，讓你的工作區保持純淨。
-  <img src="/assets/current-user-only.png" alt="帳號隔離模式" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-
 ## 平台特性差異
 
 ### 通用功能
@@ -50,9 +42,49 @@
 
 ### Gemini 專屬增強
 
-- **自定義顏色**：點擊資料夾圖標自定義顏色。
-- **帳號隔離**：自動隔離不同 Google 帳號的對話列表。
-- **Deep Research 匯出**：完美匯出深度研究的思考過程。
+#### 自定義顏色
+
+點擊資料夾圖標自定義顏色。內置 7 種默認配色，亦支持通過調色盤選取你的專屬色彩。
+
+<img src="/assets/folder-color.png" alt="資料夾配色" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+#### 帳號隔離
+
+點擊頂欄的「人像」圖標，即可自動屏蔽其他 Google 帳號的對話。在多帳號共用瀏覽器時，讓你的工作區保持純淨。
+
+<img src="/assets/current-user-only.png" alt="帳號隔離模式" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+#### AI 自動整理
+
+聊天太多，懶得分類？讓 Gemini 幫你動腦。
+
+一鍵複製你現有的對話結構，貼進 Gemini，它就會生成一份可以直接匯入的資料夾方案——秒速整理。
+
+**第一步：複製你的對話結構**
+
+在擴充套件彈窗的資料夾區塊底部，點擊 **AI 整理** 按鈕。它會自動收集所有未歸類的對話和現有資料夾結構，生成提示詞並複製到剪貼簿。
+
+<img src="/assets/ai-auto-folder.png" alt="AI Organize Button" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+
+**第二步：讓 Gemini 來分類**
+
+將剪貼簿內容貼進 Gemini 對話。它會分析你的聊天標題，然後輸出一份 JSON 資料夾方案。
+
+**第三步：匯入結果**
+
+在資料夾面板選單中點擊 **匯入資料夾**，選擇 **或直接貼上 JSON**，貼上 Gemini 回傳的 JSON，然後點擊 **匯入**。
+
+<div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+  <div style="text-align: center;">
+    <img src="/assets/ai-auto-folder-2.png" alt="Import Menu" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 240px;"/>
+  </div>
+  <div style="text-align: center;">
+    <img src="/assets/ai-auto-folder-3.png" alt="Paste JSON Import" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+  </div>
+</div>
+
+- **增量合併**：預設採用「合併」策略——只新增資料夾和分配，絕不破壞你現有的組織結構。
+- **多語言支援**：提示詞會自動使用你設定的語言，資料夾名稱也會以該語言生成。
 
 ### AI Studio 專屬增強
 

@@ -30,14 +30,6 @@ Simplesmente parece certo.
 - **Renomear**: Clique duas vezes em qualquer pasta para renomeá-la.
 - **Ícones**: Detectamos automaticamente o tipo de Gem (Programação, Criativo, etc.) e atribuímos o ícone correto. Você não precisa fazer nada.
 
-## Recursos Avançados
-
-- **Cores**: Clique no ícone da pasta para personalizar sua cor. Escolha entre 7 cores padrão ou use o seletor de cores para escolher qualquer cor.
-  <img src="/assets/folder-color.png" alt="Cores das pastas" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-
-- **Isolamento de conta**: Clique no ícone "pessoa" no cabeçalho para filtrar instantaneamente os chats de outras contas do Google. Mantenha seu espaço de trabalho limpo ao usar várias contas.
-  <img src="/assets/current-user-only.png" alt="Isolamento de conta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-
 ## Diferenças de recursos por plataforma
 
 ### Recursos comuns
@@ -50,9 +42,49 @@ Simplesmente parece certo.
 
 ### Exclusivo para Gemini
 
-- **Cores personalizadas**: Personalize pastas com qualquer cor.
-- **Isolamento de conta**: Separe chats pessoais e de trabalho.
-- **Exportação de Deep Research**: Exporta processos de pensamento perfeitamente.
+#### Cores personalizadas
+
+Clique no ícone da pasta para personalizar sua cor. Escolha entre 7 cores padrão ou use o seletor de cores para escolher qualquer cor.
+
+<img src="/assets/folder-color.png" alt="Cores das pastas" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+#### Isolamento de conta
+
+Clique no ícone "pessoa" no cabeçalho para filtrar instantaneamente os chats de outras contas do Google. Mantenha seu espaço de trabalho limpo ao usar várias contas.
+
+<img src="/assets/current-user-only.png" alt="Isolamento de conta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+
+#### Organização Automática com IA
+
+Chats demais, preguiça de organizar? Deixe o Gemini pensar por você.
+
+Um clique copia sua estrutura de conversas atual, cole no Gemini, e ele gera um plano de pastas pronto para importar — organização instantânea.
+
+**Passo 1: Copie sua estrutura de conversas**
+
+Na parte inferior da seção de pastas no popup da extensão, clique no botão **AI Organize**. Ele coleta automaticamente todas as suas conversas não classificadas e a estrutura de pastas existente, gera um prompt e copia para a área de transferência.
+
+<img src="/assets/ai-auto-folder.png" alt="AI Organize Button" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+
+**Passo 2: Deixe o Gemini classificar**
+
+Cole o conteúdo da área de transferência em uma conversa do Gemini. Ele vai analisar os títulos dos seus chats e gerar um plano de pastas em JSON.
+
+**Passo 3: Importe os resultados**
+
+Clique em **Importar pastas** no menu do painel de pastas, selecione **Ou colar JSON diretamente**, cole o JSON que o Gemini retornou e clique em **Importar**.
+
+<div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+  <div style="text-align: center;">
+    <img src="/assets/ai-auto-folder-2.png" alt="Import Menu" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 240px;"/>
+  </div>
+  <div style="text-align: center;">
+    <img src="/assets/ai-auto-folder-3.png" alt="Paste JSON Import" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+  </div>
+</div>
+
+- **Mesclagem incremental**: Usa a estratégia de "Mesclar" por padrão — apenas adiciona novas pastas e atribuições, nunca destrói sua organização existente.
+- **Multilíngue**: O prompt usa automaticamente o idioma configurado, e os nomes das pastas também são gerados nesse idioma.
 
 ### Exclusivo para AI Studio
 
