@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "4b231a5f0715",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/pages/content/defaultModel/__tests__/modelLocker.test.ts",
+    "src/pages/content/defaultModel/modelLocker.ts",
+    "src/pages/content/defaultModel/styles.css"
+  ],
+  "sessions": [
+    {
+      "metadata": "/4b/231a5f0715/0/metadata.json",
+      "transcript": "/4b/231a5f0715/0/full.jsonl",
+      "context": "/4b/231a5f0715/0/context.md",
+      "content_hash": "/4b/231a5f0715/0/content_hash.txt",
+      "prompt": "/4b/231a5f0715/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 19,
+    "cache_creation_tokens": 56356,
+    "cache_read_tokens": 709653,
+    "output_tokens": 5700,
+    "api_call_count": 15
+  }
+}
