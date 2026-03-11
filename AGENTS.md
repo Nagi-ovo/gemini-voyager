@@ -7,6 +7,7 @@ trigger: always_on
 > **Last Updated**: 2026-03-11
 > **Version**: 1.3.4
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
+> **Note**: This file is mirrored in `CLAUDE.md`. Keep both files in sync.
 
 ---
 
