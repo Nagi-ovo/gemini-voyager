@@ -1,0 +1,13 @@
+查看一下 claude code 的全局配置，里面的 sonnet model 是设置的啥
+
+---
+
+就是 cc 好像有个 default sonnet model 的参数
+
+---
+
+真的吗？你 export 一下还是
+
+---
+
+我是说看看 defualt sonnet model

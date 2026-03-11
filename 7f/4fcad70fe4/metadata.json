@@ -3,7 +3,7 @@
   "checkpoint_id": "7f4fcad70fe4",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 2,
+  "checkpoints_count": 6,
   "files_touched": [
     "docs/.vitepress/config.mts",
     "docs/ar/guide/folders.md",
@@ -24,13 +24,20 @@
       "context": "/7f/4fcad70fe4/0/context.md",
       "content_hash": "/7f/4fcad70fe4/0/content_hash.txt",
       "prompt": "/7f/4fcad70fe4/0/prompt.txt"
+    },
+    {
+      "metadata": "/7f/4fcad70fe4/1/metadata.json",
+      "transcript": "/7f/4fcad70fe4/1/full.jsonl",
+      "context": "/7f/4fcad70fe4/1/context.md",
+      "content_hash": "/7f/4fcad70fe4/1/content_hash.txt",
+      "prompt": "/7f/4fcad70fe4/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 27,
-    "cache_creation_tokens": 54217,
-    "cache_read_tokens": 805086,
-    "output_tokens": 12120,
-    "api_call_count": 17
+    "input_tokens": 47,
+    "cache_creation_tokens": 72136,
+    "cache_read_tokens": 1091774,
+    "output_tokens": 13869,
+    "api_call_count": 29
   }
 }
