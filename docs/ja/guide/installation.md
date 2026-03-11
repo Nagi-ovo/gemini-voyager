@@ -16,6 +16,10 @@
 
 [<img src="https://img.shields.io/badge/Chrome_ウェブストア-ダウンロード-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome ウェブストアからインストール" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ja)
 
+::: warning ⚠️ Chrome Web Store は一時的に利用不可
+商標上の問題により、本拡張機能は **Voyager** に正式改名されました。Chrome Web Store の審査は進行中です。詳細は[こちらの投稿](https://x.com/Nag1ovo/status/2031561180213313944)をご覧ください。当面は **Edge / Firefox** または**手動インストール**をご利用ください。
+:::
+
 **Microsoft Edge：**
 
 [<img src="https://img.shields.io/badge/Microsoft_Edge-ダウンロード-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Microsoft Edge Add-ons からインストール" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
