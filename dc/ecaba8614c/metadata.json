@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "dcecaba8614c",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 6,
+  "files_touched": [
+    "public/contentStyle.css",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/changelog/index.ts",
+    "src/pages/content/changelog/notes/1.3.3.md",
+    "src/pages/content/changelog/notes/1.3.4.md",
+    "src/pages/content/fork/__tests__/index.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/dc/ecaba8614c/0/metadata.json",
+      "transcript": "/dc/ecaba8614c/0/full.jsonl",
+      "context": "/dc/ecaba8614c/0/context.md",
+      "content_hash": "/dc/ecaba8614c/0/content_hash.txt",
+      "prompt": "/dc/ecaba8614c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 3657,
+    "cache_creation_tokens": 102076,
+    "cache_read_tokens": 5689628,
+    "output_tokens": 48858,
+    "api_call_count": 79
+  }
+}
