@@ -70,6 +70,12 @@ features:
   #   details: 拒絕重複勞動。新建對話自動切換至你最愛的模型。
 ---
 
+<div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
+  <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.6); border-radius: 8px; padding: 12px 16px;">
+    <strong>⚠️ 改名公告</strong>：由於商標版權問題，本插件已正式改名為 <strong>Voyager</strong>。但由於 Chrome Web Store 審核速度極慢，七天內未能完成名稱更新審核，暫時無法在 Chrome Web Store 使用。
+  </div>
+</div>
+
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">每一次下載，都是信任的刻度</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">來自 Chrome Web Store 與 GitHub 的實時數據。致敬每一位與我們同行的 Voyager。</p>

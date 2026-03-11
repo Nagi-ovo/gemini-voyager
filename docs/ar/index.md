@@ -70,6 +70,12 @@ features:
   #   details: توقف عن تكرار نفسك. التبديل التلقائي إلى نموذجك المفضل في المحادثات الجديدة.
 ---
 
+<div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
+  <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.6); border-radius: 8px; padding: 12px 16px;" dir="rtl">
+    <strong>⚠️ إشعار تغيير الاسم</strong>: بسبب مخاوف تتعلق بالعلامات التجارية وحقوق النشر، تم تغيير اسم هذا الامتداد رسمياً إلى <strong>Voyager</strong>. ومع ذلك، بسبب البطء الشديد في عملية مراجعة Chrome Web Store، لم يتم الموافقة على تغيير الاسم خلال 7 أيام — وهو غير متاح مؤقتاً على Chrome Web Store.
+  </div>
+</div>
+
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">كل تثبيت هو تصويت بالثقة</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">أرقام حية من متجر Chrome الإلكتروني و GitHub. شكراً لركوبكم معنا، أيها المسافرون الزملاء.</p>

@@ -70,6 +70,12 @@ features:
   #   details: Хватит повторяться. Автопереключение на любимую модель в новых чатах.
 ---
 
+<div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
+  <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.6); border-radius: 8px; padding: 12px 16px;">
+    <strong>⚠️ Уведомление о переименовании</strong>: В связи с проблемами товарных знаков и авторских прав это расширение официально переименовано в <strong>Voyager</strong>. Однако из-за крайне медленного процесса проверки Chrome Web Store обновление названия не было одобрено в течение 7 дней — расширение временно недоступно в Chrome Web Store.
+  </div>
+</div>
+
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Каждая установка — это голос доверия</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Живые цифры из Chrome Web Store и GitHub. Спасибо, что путешествуете с нами, попутчики Voyagers.</p>

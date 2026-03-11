@@ -58,6 +58,9 @@
   <b>🎉 Fortement recommandé par les meilleurs influenceurs tech !</b>
 </p>
 
+> [!IMPORTANT]
+> **Avis de changement de nom** : En raison de problèmes de marque et de droits d'auteur, cette extension a été officiellement renommée **Voyager**. Cependant, en raison de la lenteur extrême du processus de révision du Chrome Web Store, le changement de nom n'a pas été approuvé dans les 7 jours — elle est temporairement indisponible sur le Chrome Web Store.
+
 > [!NOTE]
 > Si Gemini Voyager vous est utile, partagez-le sur X, Reddit, YouTube, etc. Chaque partage aide plus de personnes à découvrir le projet et à améliorer l'expérience Gemini. Merci.
 

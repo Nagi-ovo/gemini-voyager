@@ -58,6 +58,9 @@
   <b>🎉 Highly recommended by top tech KOLs and the community!</b>
 </p>
 
+> [!IMPORTANT]
+> **Name Change Notice**: Due to trademark and copyright concerns, this extension has been officially renamed to **Voyager**. However, due to the Chrome Web Store's extremely slow review process, the name change was not approved within 7 days — it is temporarily unavailable on the Chrome Web Store under the new name.
+
 > [!NOTE]
 > If Gemini Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
 
@@ -135,7 +138,7 @@ That's why we built **Gemini Voyager**. It's not just a tool; it's a companion t
   <sub><b>Chrome Web Store</b> also works on Edge, Opera, Brave, Vivaldi, Arc, and other Chromium browsers.</sub>
 </p>
 
-> **Store Status:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
+> **Store Status:** Chrome ⏳ (name update pending review) · Firefox ✅ · Edge ✅ · Safari ✅
 
 For **manual installation** or **development builds**, please refer to the [Installation Guide](https://voyager.nagi.fun/en/guide/installation).
 

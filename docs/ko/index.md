@@ -70,6 +70,12 @@ features:
   #   details: 반복하지 마세요. 새 대화에서 선호하는 모델로 자동 전환합니다.
 ---
 
+<div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
+  <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.6); border-radius: 8px; padding: 12px 16px;">
+    <strong>⚠️ 이름 변경 안내</strong>: 상표 및 저작권 문제로 인해 이 확장 프로그램이 공식적으로 <strong>Voyager</strong>로 이름이 변경되었습니다. 하지만 Chrome 웹 스토어의 심사 속도가 매우 느려 7일 이내에 이름 변경이 승인되지 않아, 현재 Chrome Web Store에서 일시적으로 이용할 수 없는 상태입니다.
+  </div>
+</div>
+
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">모든 설치는 신뢰의 투표입니다</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Chrome 웹 스토어와 GitHub의 실시간 수치입니다. 우리와 함께해주시는 동료 Voyager분들께 감사드립니다.</p>

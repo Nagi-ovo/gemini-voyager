@@ -70,6 +70,12 @@ features:
   #   details: Pare de se repetir. Mude automaticamente para seu modelo preferido em novos chats.
 ---
 
+<div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
+  <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.6); border-radius: 8px; padding: 12px 16px;">
+    <strong>⚠️ Aviso de mudança de nome</strong>: Devido a problemas de marcas registradas e direitos autorais, esta extensão foi oficialmente renomeada para <strong>Voyager</strong>. No entanto, devido ao processo extremamente lento de revisão do Chrome Web Store, a mudança de nome não foi aprovada em 7 dias — está temporariamente indisponível no Chrome Web Store.
+  </div>
+</div>
+
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Cada instalação é um voto de confiança</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Números ao vivo da Chrome Web Store e GitHub. Obrigado por viajar connosco, companheiros Exploradores.</p>
