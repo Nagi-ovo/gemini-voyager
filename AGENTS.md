@@ -164,7 +164,8 @@ beforeEach(() => {
 ```bash
 bun run test                # Run all tests
 bun run test <filename>     # Run specific test file
-bun run test:watch          # Interactive mode
+bun run test:watch          # Interactive watch mode
+bun run test:ui             # Visual UI test runner
 bun run test:coverage       # Check coverage
 ```
 
