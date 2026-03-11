@@ -47,6 +47,9 @@ features:
   - icon: 💾
     title: 對話導出
     details: 數據歸你。多種格式一鍵存檔，知識不再流失。
+  - icon: 🌦️
+    title: 視覺特效
+    details: 頁面也有情緒。可在彈窗中切換飄雪、下雨與櫻花花瓣效果。
   - icon: 🍌
     title: NanoBanana 水印去除
     details: 無損去水印。讓 AI 生成的瞬間回歸純淨。
