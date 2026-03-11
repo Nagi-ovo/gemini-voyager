@@ -47,6 +47,9 @@ features:
   - icon: 💾
     title: Chat Export
     details: Data sovereignty. Archive in multiple formats so knowledge is never lost.
+  - icon: 🌦️
+    title: Visual Effects
+    details: Set the mood. Switch between snow, rain, and sakura petals from the popup.
   - icon: 🍌
     title: NanoBanana Watermark Removal
     details: Lossless watermark removal. Keeping AI moments pure.
