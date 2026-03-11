@@ -24,6 +24,7 @@
 
 /* Show on hover or if it's the default model */
 [role='menuitemradio']:hover .gv-default-star-btn,
+[role='menuitem']:hover .gv-default-star-btn,
 .gv-default-star-btn.is-default {
   opacity: 1;
 }
@@ -45,6 +46,7 @@
 }
 
 /* Ensure parent menu item has relative positioning */
-[role='menuitemradio'] {
+[role='menuitemradio'],
+[role='menuitem'] {
   position: relative;
 }

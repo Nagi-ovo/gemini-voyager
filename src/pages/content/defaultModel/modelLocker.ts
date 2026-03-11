@@ -16,6 +16,9 @@ const FAST_MODEL_IDS = new Set([
 // Known Flash/Fast model name patterns (case-insensitive)
 const FAST_MODEL_NAMES = ['flash', '2.0 flash', 'gemini 2.0 flash', 'fast', '高速', '高速モード'];
 
+// Gemini may use either role="menuitemradio" or role="menuitem" depending on the UI variant.
+const MODE_ITEM_SELECTOR = '[role="menuitemradio"], [role="menuitem"]';
+
 const CHAT_INPUT_SELECTORS = [
   'main rich-textarea [contenteditable="true"]',
   'rich-textarea [contenteditable="true"]',
@@ -244,7 +247,7 @@ class DefaultModelManager {
   }
 
   private async injectStarButtons(menuPanel: HTMLElement): Promise<boolean> {
-    const items = menuPanel.querySelectorAll('[role="menuitemradio"]');
+    const items = menuPanel.querySelectorAll(MODE_ITEM_SELECTOR);
     if (!items.length) return false;
 
     // Use cached value efficiently
@@ -395,7 +398,7 @@ class DefaultModelManager {
   }
 
   private async handleStarClick(modelName: string, btn: HTMLElement) {
-    const closestItem = btn.closest('[role="menuitemradio"]');
+    const closestItem = btn.closest(MODE_ITEM_SELECTOR);
     const modelItem = closestItem instanceof HTMLElement ? closestItem : null;
     const modelId = modelItem ? this.getModelIdFromItem(modelItem) : null;
 
@@ -593,7 +596,7 @@ class DefaultModelManager {
       const menuPanel = await this.waitForModeSwitchMenuPanel(1500);
       if (!menuPanel) return;
 
-      const items = menuPanel.querySelectorAll('[role="menuitemradio"]');
+      const items = menuPanel.querySelectorAll(MODE_ITEM_SELECTOR);
       let found = false;
       let switchedModel = false;
 
