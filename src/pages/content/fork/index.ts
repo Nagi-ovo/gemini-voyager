@@ -629,6 +629,16 @@ async function executeFork(userEl: HTMLElement, turnIndex: number): Promise<void
     console.warn('[Fork] No content extracted');
     return;
   }
+
+  // Open new window IMMEDIATELY to preserve user gesture context.
+  // Firefox and Safari block window.open() that follows async operations.
+  const newWindow = window.open('https://gemini.google.com/app', '_blank');
+  if (!newWindow) {
+    console.warn('[Fork] Failed to open new window (popup blocked?)');
+    return;
+  }
+
+  // Async work: resolve language and fork group (safe now, window already opened)
   const preferredLanguage = await getPreferredLanguage();
   const markdownWithContext = composeForkInputWithContext(markdown, preferredLanguage);
 
@@ -664,8 +674,9 @@ async function executeFork(userEl: HTMLElement, turnIndex: number): Promise<void
     }
   }
 
-  // Store pending fork data in sessionStorage
-  const pendingFork = {
+  // Store pending fork data in extension storage (cross-tab accessible).
+  // sessionStorage is per-tab and its copy semantics with window.open() vary by browser.
+  const pendingFork: PendingForkData = {
     sourceConversationId: conversationId,
     sourceTurnId: turnId,
     sourceUrl: window.location.href,
@@ -674,17 +685,14 @@ async function executeFork(userEl: HTMLElement, turnIndex: number): Promise<void
     sourceForkIndex,
     nextForkIndex,
     markdown: markdownWithContext,
+    createdAt: Date.now(),
   };
 
   try {
-    sessionStorage.setItem(PENDING_FORK_KEY, JSON.stringify(pendingFork));
+    await browser.storage.local.set({ [PENDING_FORK_KEY]: pendingFork });
   } catch (e) {
     console.error('[Fork] Failed to save pending fork:', e);
-    return;
   }
-
-  // Open new Gemini conversation
-  window.open('https://gemini.google.com/app', '_blank');
 }
 
 // ============================================================================
@@ -700,16 +708,24 @@ interface PendingForkData {
   sourceForkIndex: number;
   nextForkIndex: number;
   markdown: string;
+  createdAt?: number;
 }
 
-function checkAndHandlePendingFork(): void {
-  const raw = sessionStorage.getItem(PENDING_FORK_KEY);
-  if (!raw) return;
+const PENDING_FORK_STALE_MS = 60000; // Discard pending fork data older than 60s
 
-  let pendingFork: PendingForkData;
+async function readPendingFork(): Promise<PendingForkData | null> {
   try {
-    const parsed = JSON.parse(raw) as Partial<PendingForkData>;
-    pendingFork = {
+    const result = await browser.storage.local.get(PENDING_FORK_KEY);
+    const parsed = result[PENDING_FORK_KEY] as Partial<PendingForkData> | undefined;
+    if (!parsed) return null;
+
+    // Discard stale data (e.g. from a previous failed fork)
+    if (parsed.createdAt && Date.now() - parsed.createdAt > PENDING_FORK_STALE_MS) {
+      await browser.storage.local.remove(PENDING_FORK_KEY);
+      return null;
+    }
+
+    const pendingFork: PendingForkData = {
       sourceConversationId: parsed.sourceConversationId || '',
       sourceTurnId: parsed.sourceTurnId || '',
       sourceUrl: parsed.sourceUrl || '',
@@ -718,54 +734,79 @@ function checkAndHandlePendingFork(): void {
       sourceForkIndex: Number.isFinite(parsed.sourceForkIndex) ? parsed.sourceForkIndex! : 0,
       nextForkIndex: Number.isFinite(parsed.nextForkIndex) ? parsed.nextForkIndex! : 1,
       markdown: parsed.markdown || '',
+      createdAt: parsed.createdAt,
     };
+
+    if (
+      !pendingFork.sourceConversationId ||
+      !pendingFork.sourceTurnId ||
+      !pendingFork.forkGroupId ||
+      !pendingFork.markdown.trim()
+    ) {
+      await browser.storage.local.remove(PENDING_FORK_KEY);
+      return null;
+    }
+
+    return pendingFork;
   } catch {
-    sessionStorage.removeItem(PENDING_FORK_KEY);
-    return;
+    return null;
   }
+}
 
-  if (
-    !pendingFork.sourceConversationId ||
-    !pendingFork.sourceTurnId ||
-    !pendingFork.forkGroupId ||
-    !pendingFork.markdown.trim()
-  ) {
-    sessionStorage.removeItem(PENDING_FORK_KEY);
-    return;
-  }
-
+function checkAndHandlePendingFork(): void {
   // Only handle on a new conversation page (no conversation ID yet)
   const currentConvId = extractConversationIdFromUrl();
-  if (currentConvId) {
-    // Already in an existing conversation - this might be the result of a previous fork
+  if (currentConvId) return;
+
+  // Clean up legacy sessionStorage data (from versions before this fix)
+  try {
     sessionStorage.removeItem(PENDING_FORK_KEY);
+  } catch {
+    // Ignore
+  }
+
+  void handlePendingForkFromStorage();
+}
+
+async function handlePendingForkFromStorage(): Promise<void> {
+  // The opener tab writes to storage.local after async work, which may take a moment.
+  // Try immediately, then retry once after a short delay.
+  let pendingFork = await readPendingFork();
+  if (!pendingFork) {
+    await new Promise((r) => setTimeout(r, 2000));
+    pendingFork = await readPendingFork();
+  }
+  if (!pendingFork) return;
+
+  // Clear immediately so other tabs don't pick it up
+  try {
+    await browser.storage.local.remove(PENDING_FORK_KEY);
+  } catch {
+    // Ignore
+  }
+
+  // Re-check: still on a new conversation page?
+  if (extractConversationIdFromUrl()) return;
+
+  // Wait for the input field to be available
+  const input = await waitForElement('rich-textarea [contenteditable="true"]', 10000);
+  if (!input) {
+    console.warn('[Fork] Input field not found');
     return;
   }
 
-  // Wait for the input field to be available
-  waitForElement('rich-textarea [contenteditable="true"]', 10000).then(async (input) => {
-    if (!input) {
-      console.warn('[Fork] Input field not found');
-      sessionStorage.removeItem(PENDING_FORK_KEY);
-      return;
-    }
+  // Paste the markdown content
+  input.focus();
+  try {
+    document.execCommand('insertText', false, pendingFork.markdown);
+  } catch {
+    // Fallback: set textContent
+    input.textContent = pendingFork.markdown;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
 
-    // Paste the markdown content
-    input.focus();
-    try {
-      document.execCommand('insertText', false, pendingFork.markdown);
-    } catch {
-      // Fallback: set textContent
-      input.textContent = pendingFork.markdown;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-
-    // Clear pending fork from sessionStorage
-    sessionStorage.removeItem(PENDING_FORK_KEY);
-
-    // Watch for URL change (conversation created after submission)
-    watchForNewConversation(pendingFork);
-  });
+  // Watch for URL change (conversation created after submission)
+  watchForNewConversation(pendingFork);
 }
 
 function waitForElement(selector: string, timeoutMs: number): Promise<HTMLElement | null> {
