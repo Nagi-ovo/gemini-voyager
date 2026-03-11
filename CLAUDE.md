@@ -1,8 +1,9 @@
 # CLAUDE.md - AI Assistant Guide for Gemini Voyager
 
-> **Last Updated**: 2026-03-09
-> **Version**: 1.3.3
+> **Last Updated**: 2026-03-11
+> **Version**: 1.3.4
 > **Purpose**: Comprehensive guide for AI assistants working with the Gemini Voyager codebase
+> **Note**: This file is mirrored in `AGENTS.md`. Keep both files in sync.
 
 ---
 
@@ -159,7 +160,8 @@ beforeEach(() => {
 ```bash
 bun run test                # Run all tests
 bun run test <filename>     # Run specific test file
-bun run test:watch          # Interactive mode
+bun run test:watch          # Interactive watch mode
+bun run test:ui             # Visual UI test runner
 bun run test:coverage       # Check coverage
 ```
 
