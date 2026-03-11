@@ -68,10 +68,9 @@ function injectStyles(): void {
       pointer-events: none;
       transition: opacity 0.15s, transform 0.15s, background-color 0.15s;
       position: absolute;
-      top: 50%;
+      top: 9px;
       right: calc(100% + 8px);
       z-index: 1;
-      transform: translateY(calc(-50% - 2px));
       white-space: nowrap;
       height: 22px;
       box-sizing: border-box;
@@ -100,7 +99,6 @@ function injectStyles(): void {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-      transform: translateY(-50%);
     }
 
     html[dir="rtl"] .${FORK_BTN_CLASS},
