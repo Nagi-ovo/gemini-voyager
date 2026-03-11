@@ -4,12 +4,20 @@
 
 # 贡献指南
 
+> [!CAUTION]
+> **本项目暂时不接受任何新功能的 PR。** 如果你有一个很想做的功能，请按以下流程操作：
+>
+> 1. **先开一个 Issue 与维护者讨论**你的想法和方案
+> 2. **等待维护者同意，并确定了一个好的实现方案后**，再开始编码并提交 PR
+>
+> 未经讨论直接提交的新功能 PR 将被直接关闭，不予审核。感谢理解。
+
 > [!IMPORTANT]
 > **项目状态：低频维护。** 回复较慢。优先处理带测试的 PR。
 
 感谢你考虑为 Gemini Voyager 做出贡献！🚀
 
-本文档提供贡献的指南和说明。我们欢迎所有形式的贡献，无论是错误修复、新功能、文档改进还是翻译。
+本文档提供贡献的指南和说明。我们欢迎错误修复、文档改进和翻译等贡献。关于新功能，请务必先通过 Issue 进行讨论。
 
 ## 🚫 AI 政策
 
@@ -268,12 +276,20 @@ Gemini Voyager 通过以下功能增强 Gemini AI 聊天体验：
 
 # Contributing to Gemini Voyager
 
+> [!CAUTION]
+> **This project is currently NOT accepting PRs for new features.** If you have a feature you'd really like to build, please follow this process:
+>
+> 1. **Open an Issue first** to discuss your idea and approach with the maintainer
+> 2. **Wait for approval and a solid implementation plan** before writing any code or submitting a PR
+>
+> New feature PRs submitted without prior discussion will be closed without review. Thank you for understanding.
+
 > [!IMPORTANT]
 > **Project Status: Low Maintenance.** Expect delays in response. PRs with tests are prioritized.
 
 Thank you for considering contributing to Gemini Voyager! 🚀
 
-This document provides guidelines and instructions for contributing. We welcome all contributions, whether it's bug fixes, new features, documentation improvements, or translations.
+This document provides guidelines and instructions for contributing. We welcome bug fixes, documentation improvements, and translations. For new features, please discuss via an Issue first.
 
 ## 🚫 AI Policy
 

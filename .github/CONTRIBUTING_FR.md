@@ -1,11 +1,19 @@
 # Guide de Contribution
 
+> [!CAUTION]
+> **Ce projet n'accepte actuellement PAS les PRs pour de nouvelles fonctionnalités.** Si vous souhaitez vraiment développer une fonctionnalité, veuillez suivre ce processus :
+>
+> 1. **Ouvrez d'abord un Issue** pour discuter de votre idée et de votre approche avec le mainteneur
+> 2. **Attendez l'approbation et un plan d'implémentation solide** avant d'écrire du code ou de soumettre une PR
+>
+> Les PRs de nouvelles fonctionnalités soumises sans discussion préalable seront fermées sans examen. Merci de votre compréhension.
+
 > [!IMPORTANT]
 > **Statut du projet : Maintenance réduite.** Attendez-vous à des délais de réponse. Les PR avec tests sont prioritaires.
 
 Merci d'envisager de contribuer à Gemini Voyager ! 🚀
 
-Ce document fournit des directives et des instructions pour contribuer. Nous accueillons toutes les contributions, qu'il s'agisse de corrections de bugs, de nouvelles fonctionnalités, d'améliorations de la documentation ou de traductions.
+Ce document fournit des directives et des instructions pour contribuer. Nous accueillons les corrections de bugs, les améliorations de la documentation et les traductions. Pour les nouvelles fonctionnalités, veuillez d'abord en discuter via un Issue.
 
 ## 🚫 Politique IA
 
