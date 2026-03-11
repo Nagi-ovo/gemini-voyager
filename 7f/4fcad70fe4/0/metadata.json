@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "7f4fcad70fe4",
+  "session_id": "a0c24e4b-5b76-4942-a797-5d1ac4d9326c",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-11T00:20:49.635826Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "docs/.vitepress/config.mts",
+    "docs/ar/guide/folders.md",
+    "docs/en/guide/folders.md",
+    "docs/es/guide/folders.md",
+    "docs/fr/guide/folders.md",
+    "docs/guide/folders.md",
+    "docs/ja/guide/folders.md",
+    "docs/ko/guide/folders.md",
+    "docs/pt/guide/folders.md",
+    "docs/ru/guide/folders.md",
+    "docs/zh_TW/guide/folders.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "6ebb345bf7aa",
+  "token_usage": {
+    "input_tokens": 27,
+    "cache_creation_tokens": 54217,
+    "cache_read_tokens": 805086,
+    "output_tokens": 12120,
+    "api_call_count": 17
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-11T00:20:49.482964Z",
+    "agent_lines": 431,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 431,
+    "agent_percentage": 100
+  }
+}

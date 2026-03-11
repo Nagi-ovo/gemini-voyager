@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "7f4fcad70fe4",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "docs/.vitepress/config.mts",
+    "docs/ar/guide/folders.md",
+    "docs/en/guide/folders.md",
+    "docs/es/guide/folders.md",
+    "docs/fr/guide/folders.md",
+    "docs/guide/folders.md",
+    "docs/ja/guide/folders.md",
+    "docs/ko/guide/folders.md",
+    "docs/pt/guide/folders.md",
+    "docs/ru/guide/folders.md",
+    "docs/zh_TW/guide/folders.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/7f/4fcad70fe4/0/metadata.json",
+      "transcript": "/7f/4fcad70fe4/0/full.jsonl",
+      "context": "/7f/4fcad70fe4/0/context.md",
+      "content_hash": "/7f/4fcad70fe4/0/content_hash.txt",
+      "prompt": "/7f/4fcad70fe4/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 27,
+    "cache_creation_tokens": 54217,
+    "cache_read_tokens": 805086,
+    "output_tokens": 12120,
+    "api_call_count": 17
+  }
+}
