@@ -1320,7 +1320,7 @@
     "description": "Changelog modal documentation link text"
   },
   "changelog_recommendation": {
-    "message": "如果 Voyager 对你有帮助，欢迎推荐给朋友或在社交媒体上分享，记得 @ 作者哦！",
+    "message": "如果 Voyager 帮到了你，欢迎推荐给朋友或发到社媒，记得 @ 作者哦！",
     "description": "Changelog modal recommendation message"
   },
   "changelog_social_xiaohongshu": {
