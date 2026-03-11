@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "81be92831437",
+  "session_id": "95f145af-d481-4d98-a2e0-a452ce516eab",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-11T00:01:47.589197Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/CONTRIBUTING.md",
+    ".github/CONTRIBUTING_ES.md",
+    ".github/CONTRIBUTING_FR.md",
+    ".github/CONTRIBUTING_JA.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "61580bd4a477",
+  "token_usage": {
+    "input_tokens": 14,
+    "cache_creation_tokens": 72551,
+    "cache_read_tokens": 342656,
+    "output_tokens": 4074,
+    "api_call_count": 10
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-11T00:01:47.516671Z",
+    "agent_lines": 45,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 45,
+    "agent_percentage": 100
+  }
+}
