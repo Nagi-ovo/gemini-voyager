@@ -1312,8 +1312,16 @@
     "description": "Changelog modal documentation link text"
   },
   "changelog_recommendation": {
-    "message": "Voyager がお役に立てたら、友達や SNS でシェアしていただけると嬉しいです！",
+    "message": "Voyager がお役に立てたら、友達や SNS でシェアしていただけると嬉しいです！作者をタグ付けしてくれると励みになります！",
     "description": "Changelog modal recommendation message"
+  },
+  "changelog_social_xiaohongshu": {
+    "message": "小紅書",
+    "description": "Xiaohongshu platform name for social links"
+  },
+  "changelog_social_zhihu": {
+    "message": "知乎",
+    "description": "Zhihu platform name for social links"
   },
   "changelog_docs_hint": {
     "message": "詳細はドキュメントへ",

@@ -1312,8 +1312,16 @@
     "description": "Changelog modal documentation link text"
   },
   "changelog_recommendation": {
-    "message": "Voyager 가 도움이 되셨다면, 친구나 SNS 에서 공유해 주세요!",
+    "message": "Voyager 가 도움이 되셨다면, 친구나 SNS 에서 공유해 주세요 — 개발자를 태그해 주시면 큰 힘이 됩니다!",
     "description": "Changelog modal recommendation message"
+  },
+  "changelog_social_xiaohongshu": {
+    "message": "Xiaohongshu",
+    "description": "Xiaohongshu platform name for social links"
+  },
+  "changelog_social_zhihu": {
+    "message": "Zhihu",
+    "description": "Zhihu platform name for social links"
   },
   "changelog_docs_hint": {
     "message": "자세한 내용은 문서 참조",

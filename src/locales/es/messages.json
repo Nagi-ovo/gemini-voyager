@@ -1312,8 +1312,16 @@
     "description": "Changelog modal documentation link text"
   },
   "changelog_recommendation": {
-    "message": "Si Voyager te ha sido útil, ¡compártelo con amigos o en redes sociales!",
+    "message": "Si Voyager te ha sido útil, ¡compártelo con amigos o en redes sociales y etiqueta al autor!",
     "description": "Changelog modal recommendation message"
+  },
+  "changelog_social_xiaohongshu": {
+    "message": "Xiaohongshu",
+    "description": "Xiaohongshu platform name for social links"
+  },
+  "changelog_social_zhihu": {
+    "message": "Zhihu",
+    "description": "Zhihu platform name for social links"
   },
   "changelog_docs_hint": {
     "message": "Detalles en docs",

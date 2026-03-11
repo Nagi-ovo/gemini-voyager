@@ -7,7 +7,11 @@ vi.mock('webextension-polyfill', () => ({
   default: {
     storage: {
       sync: { get: vi.fn().mockResolvedValue({}) },
-      local: { get: vi.fn().mockResolvedValue({}), remove: vi.fn().mockResolvedValue(undefined), set: vi.fn().mockResolvedValue(undefined) },
+      local: {
+        get: vi.fn().mockResolvedValue({}),
+        remove: vi.fn().mockResolvedValue(undefined),
+        set: vi.fn().mockResolvedValue(undefined),
+      },
       onChanged: { addListener: vi.fn(), removeListener: vi.fn() },
     },
   },

@@ -1312,8 +1312,16 @@
     "description": "Changelog modal documentation link text"
   },
   "changelog_recommendation": {
-    "message": "如果 Voyager 對你有幫助，歡迎推薦給朋友或在社交媒體上分享！",
+    "message": "如果 Voyager 對你有幫助，歡迎推薦給朋友或在社交媒體上分享，記得 @ 作者哦！",
     "description": "Changelog modal recommendation message"
+  },
+  "changelog_social_xiaohongshu": {
+    "message": "小紅書",
+    "description": "Xiaohongshu platform name for social links"
+  },
+  "changelog_social_zhihu": {
+    "message": "知乎",
+    "description": "Zhihu platform name for social links"
   },
   "changelog_docs_hint": {
     "message": "詳細功能見文檔",

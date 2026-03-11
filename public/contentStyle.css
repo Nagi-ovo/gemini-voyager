@@ -6253,6 +6253,41 @@ html.dark .gv-changelog-recommendation,
   color: #9aa0a6;
 }
 
+.gv-changelog-social-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #5f6368;
+  line-height: 1.5;
+}
+
+.gv-changelog-social-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.15s;
+}
+
+a.gv-changelog-social-item:hover {
+  opacity: 0.7;
+}
+
+.gv-changelog-social-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+html.dark .gv-changelog-social-row,
+[data-theme='dark'] .gv-changelog-social-row,
+[data-color-scheme='dark'] .gv-changelog-social-row {
+  color: #9aa0a6;
+}
+
 .gv-changelog-action-row {
   display: flex;
   align-items: center;
