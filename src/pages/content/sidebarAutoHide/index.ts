@@ -502,7 +502,7 @@ function checkAndReattach(): void {
   // Sync edge trigger visibility with actual sidebar state
   // (handles external toggles like user clicking the hamburger button)
   if (edgeTriggerElement) {
-    if (isSidebarCollapsed()) {
+    if (isSidebarVisible() && isSidebarCollapsed()) {
       showEdgeTrigger();
     } else {
       hideEdgeTrigger();
