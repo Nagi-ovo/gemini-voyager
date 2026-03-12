@@ -68,9 +68,15 @@ features:
   - icon: 🗑️
     title: Batch Delete
     details: Clean up in bulk. Select multiple conversations and delete them all at once.
-  # - icon: ⚡️
-  #   title: Default Model
-  #   details: Stop repeating yourself. Auto-switch to your preferred model on new chats.
+  - icon: ☁️
+    title: Cloud Sync
+    details: Always in sync. Back up folders and prompts to Google Drive across devices.
+  - icon: ⚡️
+    title: Default Model
+    details: Stop repeating yourself. Auto-switch to your preferred model on new chats.
+  - icon: 🔬
+    title: Deep Research
+    details: Unbox the thinking. Extract research processes and links from Deep Research sessions.
 ---
 
 <div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">

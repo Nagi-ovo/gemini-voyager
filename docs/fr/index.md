@@ -68,9 +68,15 @@ features:
   - icon: 🗑️
     title: Suppression par Lot
     details: Nettoyage en masse. Sélectionnez plusieurs conversations et supprimez-les en une fois.
-  # - icon: ⚡️
-  #   title: Modèle par défaut
-  #   details: Arrêtez de vous répéter. Basculez automatiquement vers votre modèle préféré pour les nouveaux chats.
+  - icon: ☁️
+    title: Synchronisation Cloud
+    details: Toujours synchronisé. Sauvegardez dossiers et prompts sur Google Drive entre appareils.
+  - icon: ⚡️
+    title: Modèle par défaut
+    details: Arrêtez de vous répéter. Basculez automatiquement vers votre modèle préféré pour les nouveaux chats.
+  - icon: 🔬
+    title: Deep Research
+    details: Ouvrez la boîte noire. Extrayez les processus de recherche et liens des sessions Deep Research.
 ---
 
 <div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">

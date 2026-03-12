@@ -68,9 +68,15 @@ features:
   - icon: 🗑️
     title: 일괄 삭제
     details: 한꺼번에 정리하세요. 여러 대화를 선택하여 한 번에 삭제하세요.
-  # - icon: ⚡️
-  #   title: 기본 모델
-  #   details: 반복하지 마세요. 새 대화에서 선호하는 모델로 자동 전환합니다.
+  - icon: ☁️
+    title: 클라우드 동기화
+    details: 항상 동기화. 폴더와 프롬프트를 Google Drive에 백업하세요.
+  - icon: ⚡️
+    title: 기본 모델
+    details: 반복하지 마세요. 새 대화에서 선호하는 모델로 자동 전환합니다.
+  - icon: 🔬
+    title: Deep Research
+    details: 사고를 해체하세요. Deep Research 세션에서 연구 과정과 링크를 추출합니다.
 ---
 
 <div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">

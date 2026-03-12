@@ -18,6 +18,16 @@ Cliquez sur l'icône de l'extension pour accéder au centre de contrôle.
 
 - **Mode de Défilement** : Naturel ou classique.
 - **Position de la Chronologie** : Mettez-la où cela semble juste.
+- **Effets Visuels** : Choisissez `Neige`, `Sakura` ou `Pluie` pour une atmosphère saisonnière.
+
+## Atmosphère
+
+Voyager ne se limite pas aux améliorations utilitaires. Vous pouvez aussi changer l'ambiance de la page.
+
+- **Neige** : Flocons doux dérivant pour une sensation hivernale calme.
+- **Sakura** : Pétales de fleurs de cerisier flottants pour une ambiance printanière plus légère.
+- **Pluie** : Une couche de pluie cinématique avec des traînées obliques et de subtiles éclaboussures.
+- **Transition douce** : En désactivant ou changeant d'effet, les particules s'estompent naturellement.
 
 <div style="display: flex; gap: 20px; margin-top: 20px;">
   <div style="flex: 1; text-align: center;">

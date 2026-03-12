@@ -68,9 +68,15 @@ features:
   - icon: 🗑️
     title: 批次刪除對話
     details: 一鍵清理。選中多個對話，批次刪除，告別繁瑣。
-  # - icon: ⚡️
-  #   title: 預設模型
-  #   details: 拒絕重複勞動。新建對話自動切換至你最愛的模型。
+  - icon: ☁️
+    title: 雲同步
+    details: 永遠在線。資料夾與提示詞庫同步至 Google Drive，多裝置無縫銜接。
+  - icon: ⚡️
+    title: 預設模型
+    details: 拒絕重複勞動。新建對話自動切換至你最愛的模型。
+  - icon: 🔬
+    title: Deep Research
+    details: 拆開黑箱。一鍵提取 Deep Research 的思考過程與研究連結。
 ---
 
 <div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">

@@ -91,6 +91,7 @@
 - **💡 [プロンプト管理](https://voyager.nagi.fun/ja/guide/prompts)**: プロンプトを保存して再利用。Gemini、AI Studio、[カスタムサイト](https://voyager.nagi.fun/ja/guide/custom-websites)で使用可能。
 - **☁️ [クラウド同期](https://voyager.nagi.fun/ja/guide/cloud-sync)**: フォルダとプロンプトを Google ドライブに同期します。
 - **📐 数式コピー**: LaTeX および MathML (Word) のソースコードを一クリックでコピー。
+- **🌦️ ビジュアルエフェクト**: **雪**、**映画的な雨**、**桜の花びら**で季節の雰囲気を演出。設定パネルから切り替え可能。
 
 ### ✨ Gemini 専用機能
 
@@ -108,6 +109,12 @@
   - **[入力欄の自動非表示](https://voyager.nagi.fun/ja/guide/input-collapse)**: 未入力時に折りたたんで表示スペースを確保。
   - **[デフォルトモデル](https://voyager.nagi.fun/ja/guide/default-model)**: 新しい対話に使用するデフォルトのモデルを設定します。
   - **[最近の項目と Gem を非表示](https://voyager.nagi.fun/ja/guide/recents-hider)**: サイドバーの「最近」リストを非表示にして、集中力を高めます。
+
+### 🎨 パーソナライズ
+
+- 拡張機能のポップアップを開き、**ビジュアルエフェクト** で `オフ`、`雪`、`桜`、`雨` を切り替えられます。
+- エフェクトは軽量なフルスクリーンオーバーレイとしてレンダリングされ、ページの操作を妨げません。
+- エフェクトを切り替えたりオフにしたりすると、パーティクルは突然消えるのではなく、自然にフェードアウトします。
 
 ---
 

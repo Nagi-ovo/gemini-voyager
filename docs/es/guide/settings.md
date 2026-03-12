@@ -18,6 +18,16 @@ Haz clic en el icono de la extensión, entra en la consola.
 
 - **Desplazamiento**: ¿Natural y suave, o sensación clásica?
 - **Posición**: Coloca la línea de tiempo donde te resulte más cómodo.
+- **Efectos Visuales**: Elige `Nieve`, `Sakura` o `Lluvia` para una atmósfera estacional.
+
+## Atmósfera
+
+Voyager no se limita a mejoras de utilidad. También puedes cambiar el ambiente de la página.
+
+- **Nieve**: Copos suaves a la deriva para una sensación invernal tranquila.
+- **Sakura**: Pétalos de flor de cerezo flotantes para un toque primaveral más ligero.
+- **Lluvia**: Una capa de lluvia cinematográfica con líneas inclinadas y sutiles salpicaduras.
+- **Cambio suave**: Al desactivar un efecto o cambiar a otro, las partículas se desvanecen naturalmente.
 
 <div style="display: flex; gap: 20px; margin-top: 20px;">
   <div style="flex: 1; text-align: center;">

@@ -68,9 +68,15 @@ features:
   - icon: 🗑️
     title: 一括削除
     details: 整理も一瞬。複数の会話を選んで、まとめて消去。
-  # - icon: ⚡️
-  #   title: デフォルトモデル
-  #   details: 繰り返し作業は不要です。新しいチャットでお気に入りのモデルに自動切り替え。
+  - icon: ☁️
+    title: クラウド同期
+    details: いつでも同期。フォルダとプロンプトを Google ドライブにバックアップ。
+  - icon: ⚡️
+    title: デフォルトモデル
+    details: 繰り返し作業は不要です。新しいチャットでお気に入りのモデルに自動切り替え。
+  - icon: 🔬
+    title: Deep Research
+    details: 思考を解き明かす。Deep Research の研究過程とリンクを抽出。
 ---
 
 <div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
