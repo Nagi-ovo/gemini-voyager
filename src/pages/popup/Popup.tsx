@@ -1133,9 +1133,7 @@ export default function Popup() {
                   >
                     {t('enableOnAIStudio')}
                   </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('enableOnAIStudioHint')}
-                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('enableOnAIStudioHint')}</p>
                 </div>
                 <Switch
                   id="aistudio-enabled"

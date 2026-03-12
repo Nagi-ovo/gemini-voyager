@@ -290,9 +290,8 @@ async function initializeFeatures(): Promise<void> {
       // Check if user has disabled Voyager on AI Studio
       const aiStudioEnabled = await new Promise<boolean>((resolve) => {
         try {
-          chrome.storage?.sync?.get(
-            { [StorageKeys.GV_AISTUDIO_ENABLED]: true },
-            (res) => resolve(res?.[StorageKeys.GV_AISTUDIO_ENABLED] !== false),
+          chrome.storage?.sync?.get({ [StorageKeys.GV_AISTUDIO_ENABLED]: true }, (res) =>
+            resolve(res?.[StorageKeys.GV_AISTUDIO_ENABLED] !== false),
           );
         } catch {
           resolve(true);
