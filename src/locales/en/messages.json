@@ -1419,6 +1419,14 @@
     "message": "AI Studio",
     "description": "AI Studio platform label."
   },
+  "enableOnAIStudio": {
+    "message": "Enable on AI Studio",
+    "description": "Toggle to enable/disable Voyager on AI Studio"
+  },
+  "enableOnAIStudioHint": {
+    "message": "Turn off to disable all Voyager features on AI Studio",
+    "description": "Hint for AI Studio enable toggle"
+  },
   "export_select_mode_only_user": {
     "message": "Select User Only",
     "description": "Export selection mode: select only user messages"

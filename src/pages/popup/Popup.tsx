@@ -301,6 +301,7 @@ interface SettingsUpdate {
   upsellHiderEnabled?: boolean;
   accountIsolationEnabled?: boolean;
   accountIsolationPlatform?: AccountPlatform;
+  aiStudioEnabled?: boolean;
 }
 
 export default function Popup() {
@@ -341,6 +342,7 @@ export default function Popup() {
     useState<boolean>(false);
   const [accountIsolationEnabledAIStudio, setAccountIsolationEnabledAIStudio] =
     useState<boolean>(false);
+  const [aiStudioEnabled, setAiStudioEnabled] = useState<boolean>(true);
   const [activeAccountPlatform, setActiveAccountPlatform] = useState<AccountPlatform>('gemini');
   const [aiStructureCopyStatus, setAiStructureCopyStatus] = useState<
     'idle' | 'loading' | 'copied' | 'error'
@@ -436,6 +438,8 @@ export default function Popup() {
         payload[getAccountIsolationStorageKey(isolationPlatform)] =
           settings.accountIsolationEnabled;
       }
+      if (typeof settings.aiStudioEnabled === 'boolean')
+        payload[StorageKeys.GV_AISTUDIO_ENABLED] = settings.aiStudioEnabled;
       void setSyncStorage(payload);
     },
     [activeAccountPlatform, setSyncStorage],
@@ -740,6 +744,7 @@ export default function Popup() {
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: null,
+          [StorageKeys.GV_AISTUDIO_ENABLED]: true,
           gvChatWidthEnabled: false,
           gvEditInputWidthEnabled: false,
           gvSidebarWidthEnabled: false,
@@ -786,6 +791,7 @@ export default function Popup() {
           setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
           setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
           setUpsellHiderEnabled(res?.[StorageKeys.UPSELL_HIDER_ENABLED] === true);
+          setAiStudioEnabled(res?.[StorageKeys.GV_AISTUDIO_ENABLED] !== false);
 
           // Width enabled flags — auto-enable if user previously customized the width
           setChatWidthEnabled(
@@ -1113,6 +1119,34 @@ export default function Popup() {
                 </a>
               )}
             </div>
+          </Card>
+        )}
+        {/* AI Studio master toggle - only shown when on AI Studio */}
+        {isAIStudio && (
+          <Card className="border-primary/20 p-4 transition-all hover:shadow-md">
+            <CardContent className="p-0">
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="aistudio-enabled"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('enableOnAIStudio')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('enableOnAIStudioHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="aistudio-enabled"
+                  checked={aiStudioEnabled}
+                  onChange={(e) => {
+                    setAiStudioEnabled(e.target.checked);
+                    apply({ aiStudioEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+            </CardContent>
           </Card>
         )}
         {/* Cloud Sync - First priority - Hidden on Safari due to API limitations */}

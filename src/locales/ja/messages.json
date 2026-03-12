@@ -1411,6 +1411,14 @@
     "message": "AI Studio",
     "description": "AI Studio platform label."
   },
+  "enableOnAIStudio": {
+    "message": "AI Studio で有効化",
+    "description": "Toggle to enable/disable Voyager on AI Studio"
+  },
+  "enableOnAIStudioHint": {
+    "message": "オフにすると AI Studio でのすべての Voyager 機能が無効になります",
+    "description": "Hint for AI Studio enable toggle"
+  },
   "export_select_mode_only_user": {
     "message": "ユーザーのみ選択",
     "description": "Export selection mode: select only user messages"
