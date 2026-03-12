@@ -68,9 +68,15 @@ features:
   - icon: 🗑️
     title: Eliminação em Lote
     details: Limpeza em massa. Selecione várias conversas e elimine-as todas de uma vez.
-  # - icon: ⚡️
-  #   title: Modelo padrão
-  #   details: Pare de se repetir. Mude automaticamente para seu modelo preferido em novos chats.
+  - icon: ☁️
+    title: Sincronização na Nuvem
+    details: Sempre sincronizado. Faça backup de pastas e prompts no Google Drive entre dispositivos.
+  - icon: ⚡️
+    title: Modelo padrão
+    details: Pare de se repetir. Mude automaticamente para seu modelo preferido em novos chats.
+  - icon: 🔬
+    title: Deep Research
+    details: Abra a caixa preta. Extraia processos de pesquisa e links das sessões de Deep Research.
 ---
 
 <div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">

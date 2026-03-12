@@ -97,6 +97,7 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
 - **💡 [Cofre de Prompts](https://voyager.nagi.fun/pt/guide/prompts)**: Guarde e reutilize os seus melhores prompts no Gemini, AI Studio e [sites personalizados](https://voyager.nagi.fun/pt/guide/custom-websites).
 - **☁️ [Sincronização na Nuvem](https://voyager.nagi.fun/pt/guide/cloud-sync)**: Sincronize as suas pastas e cofre de prompts com o Google Drive.
 - **📐 Cópia de Fórmulas**: Cópia com um clique de códigos-fonte LaTeX e MathML (Word).
+- **🌦️ Efeitos Visuais**: Adicione um ambiente sazonal com **neve**, **chuva cinematográfica** ou **pétalas de sakura** a partir do painel de configurações.
 
 ### ✨ Recursos Exclusivos do Gemini
 
@@ -114,6 +115,12 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
   - **[Colapso de Entrada](https://voyager.nagi.fun/pt/guide/input-collapse)**: Área de entrada auto-colapsável para mais espaço de leitura.
   - **[Modelo Padrão](https://voyager.nagi.fun/pt/guide/default-model)**: Defina o seu modelo favorito como padrão.
   - **[Ocultar itens recentes e Gems](https://voyager.nagi.fun/pt/guide/recents-hider)**: Oculta a lista "Recentes" na barra lateral para reduzir distrações.
+
+### 🎨 Personalização
+
+- Abra o popup da extensão e encontre **Efeitos Visuais** para alternar entre `Desligado`, `Neve`, `Sakura` e `Chuva`.
+- Os efeitos são renderizados como sobreposições leves em tela cheia e não bloqueiam a interação com a página.
+- Ao trocar de efeito ou desativar, as partículas desaparecem naturalmente em vez de sumir abruptamente.
 
 ---
 

@@ -91,6 +91,7 @@
 - **💡 [프롬프트 저장소](https://voyager.nagi.fun/ko/guide/prompts)**: Gemini, AI Studio 및 [사용자 지정 웹사이트](https://voyager.nagi.fun/ko/guide/custom-websites)에서 프롬프트를 저장하고 재사용하세요.
 - **☁️ [클라우드 동기화](https://voyager.nagi.fun/ko/guide/cloud-sync)**: 폴더와 프롬프트를 Google Drive 에 동기화하세요.
 - **📐 수식 복사**: LaTeX 및 MathML (Word) 소스 코드를 클릭 한 번으로 복사하세요.
+- **🌦️ 시각 효과**: 설정 패널에서 **눈**, **시네마틱 비**, **벚꽃잎** 효과를 전환하여 계절 분위기를 연출하세요.
 
 ### ✨ Gemini 전용 기능
 
@@ -108,6 +109,12 @@
   - **[입력창 접기](https://voyager.nagi.fun/ko/guide/input-collapse)**: 더 많은 읽기 공간을 위해 자동으로 확장되는 입력 영역을 제공합니다.
   - **[기본 모델](https://voyager.nagi.fun/ko/guide/default-model)**: 좋아하는 모델을 기본값으로 설정하세요.
   - **[최근 항목 숨기기](https://voyager.nagi.fun/ko/guide/recents-hider)**: 사이드바에서 "최근" 목록을 숨겨 산만함을 줄입니다.
+
+### 🎨 개인화
+
+- 확장 프로그램 팝업을 열고 **시각 효과**에서 `끄기`, `눈`, `벚꽃`, `비`를 전환할 수 있습니다.
+- 효과는 가벼운 전체 화면 오버레이로 렌더링되며, 페이지 상호작용을 차단하지 않습니다.
+- 효과를 전환하거나 끄면 파티클이 갑자기 사라지는 대신 자연스럽게 사라집니다.
 
 ---
 
