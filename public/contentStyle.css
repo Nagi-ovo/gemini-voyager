@@ -864,6 +864,10 @@ html.dark-theme .gv-pm-trigger {
   left: 0;
   right: 0;
   height: 12px;
+  pointer-events: none;
+}
+
+.gv-logo-dropdown-wrapper:hover::after {
   pointer-events: auto;
 }
 
