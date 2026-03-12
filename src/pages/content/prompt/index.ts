@@ -1072,6 +1072,12 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     // Events
     trigger.addEventListener('click', async () => {
+      // Suppress click after a drag gesture
+      if (triggerWasDragged) {
+        triggerWasDragged = false;
+        return;
+      }
+
       // When changelog badge is active, open changelog modal instead of prompt manager
       if (changelogBadgeActive) {
         changelogBadgeActive = false;
@@ -1153,9 +1159,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     // Trigger drag (always draggable)
     let triggerDragStartPos: { x: number; y: number } | null = null;
+    let triggerWasDragged = false;
     trigger.addEventListener('pointerdown', (ev: PointerEvent) => {
       if (typeof ev.button === 'number' && ev.button !== 0) return;
       draggingTrigger = true;
+      triggerWasDragged = false;
       triggerDragStartPos = { x: ev.clientX, y: ev.clientY };
       try {
         trigger.setPointerCapture?.(ev.pointerId);
@@ -1170,6 +1178,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           const dx = Math.abs(ev.clientX - triggerDragStartPos.x);
           const dy = Math.abs(ev.clientY - triggerDragStartPos.y);
           if (dx > 5 || dy > 5) {
+            triggerWasDragged = true;
             const r = parseFloat((trigger.style.right || '').replace('px', '')) || 18;
             const b = parseFloat((trigger.style.bottom || '').replace('px', '')) || 18;
             await writeStorage(STORAGE_KEYS.triggerPos, { right: r, bottom: b });
