@@ -425,8 +425,12 @@ function checkAndReattach(): void {
   }
 
   // Full-hide: sync edge trigger visibility with sidebar state
+  // Check height > 0 to exclude responsive layouts where Gemini hides the sidebar entirely
+  // (our full-hide CSS only zeroes width, not height)
   if (fullHideEnabled && edgeTriggerElement) {
-    if (isSidebarCollapsed()) {
+    const sidenav = getSidenavElement();
+    const sidenavExists = sidenav && sidenav.getBoundingClientRect().height > 0;
+    if (sidenavExists && isSidebarCollapsed()) {
       showEdgeTrigger();
     } else {
       hideEdgeTrigger();
