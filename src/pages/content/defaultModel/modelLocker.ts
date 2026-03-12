@@ -19,6 +19,10 @@ const FAST_MODEL_NAMES = ['flash', '2.0 flash', 'gemini 2.0 flash', 'fast', '高
 // Gemini may use either role="menuitemradio" or role="menuitem" depending on the UI variant.
 const MODE_ITEM_SELECTOR = '[role="menuitemradio"], [role="menuitem"]';
 
+// Fallback selector that excludes known non-model menus (e.g. the settings/profile dropdown).
+const NON_MODEL_MENU_EXCLUSION_FALLBACK =
+  '.mat-mdc-menu-panel[role="menu"]:not(.desktop-settings-menu)';
+
 const CHAT_INPUT_SELECTORS = [
   'main rich-textarea [contenteditable="true"]',
   'rich-textarea [contenteditable="true"]',
@@ -184,7 +188,7 @@ class DefaultModelManager {
     if (
       root.matches('.mat-mdc-menu-panel.gds-mode-switch-menu[role="menu"]') ||
       root.matches('mat-action-list.gds-mode-switch-menu-list') ||
-      root.matches('.mat-mdc-menu-panel[role="menu"]')
+      root.matches(NON_MODEL_MENU_EXCLUSION_FALLBACK)
     ) {
       return root;
     }
@@ -192,7 +196,7 @@ class DefaultModelManager {
     return (
       root.querySelector<HTMLElement>('.mat-mdc-menu-panel.gds-mode-switch-menu[role="menu"]') ??
       root.querySelector<HTMLElement>('mat-action-list.gds-mode-switch-menu-list') ??
-      root.querySelector<HTMLElement>('.mat-mdc-menu-panel[role="menu"]')
+      root.querySelector<HTMLElement>(NON_MODEL_MENU_EXCLUSION_FALLBACK)
     );
   }
 
@@ -202,7 +206,7 @@ class DefaultModelManager {
         '.mat-mdc-menu-panel.gds-mode-switch-menu[role="menu"]',
       ) ??
       document.querySelector<HTMLElement>('mat-action-list.gds-mode-switch-menu-list') ??
-      document.querySelector<HTMLElement>('.mat-mdc-menu-panel[role="menu"]')
+      document.querySelector<HTMLElement>(NON_MODEL_MENU_EXCLUSION_FALLBACK)
     );
   }
 
@@ -249,6 +253,15 @@ class DefaultModelManager {
   private async injectStarButtons(menuPanel: HTMLElement): Promise<boolean> {
     const items = menuPanel.querySelectorAll(MODE_ITEM_SELECTOR);
     if (!items.length) return false;
+
+    // Guard: only inject into menus that look like a model selector.
+    // Model menus always contain .title-and-description, .mode-title, or data-mode-id.
+    // Non-model menus (theme picker, help, etc.) lack these even if they use menuitemradio.
+    const isModelMenu =
+      menuPanel.querySelector('[data-mode-id]') !== null ||
+      menuPanel.querySelector('.mode-title') !== null ||
+      menuPanel.querySelector('.title-and-description') !== null;
+    if (!isModelMenu) return false;
 
     // Use cached value efficiently
     if (!this.initialized) {

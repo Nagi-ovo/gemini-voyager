@@ -614,6 +614,90 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(selectorBtn.click).toHaveBeenCalledTimes(0);
   });
 
+  it('does not inject star buttons into the settings menu (desktop-settings-menu)', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    // Simulate the Gemini settings/profile dropdown (has class desktop-settings-menu)
+    const settingsMenu = document.createElement('div');
+    settingsMenu.className = 'mat-mdc-menu-panel collapsed desktop-settings-menu ia-redesign';
+    settingsMenu.setAttribute('role', 'menu');
+
+    const settingsItem = document.createElement('a');
+    settingsItem.setAttribute('role', 'menuitem');
+    settingsItem.innerHTML = `
+      <span class="mat-mdc-menu-item-text">
+        <div class="menu-entry-with-badge">
+          <span class="gds-label-l">个人使用场景</span>
+        </div>
+      </span>
+    `;
+    settingsMenu.appendChild(settingsItem);
+
+    const themeItem = document.createElement('button');
+    themeItem.setAttribute('role', 'menuitem');
+    themeItem.innerHTML = `
+      <span class="mat-mdc-menu-item-text">
+        <span class="gds-label-l">主题</span>
+      </span>
+    `;
+    settingsMenu.appendChild(themeItem);
+
+    document.body.appendChild(settingsMenu);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    // Star buttons should NOT be injected into settings menu items
+    expect(settingsItem.querySelector('.gv-default-star-btn')).toBeNull();
+    expect(themeItem.querySelector('.gv-default-star-btn')).toBeNull();
+  });
+
+  it('does not inject star buttons into the theme submenu (menuitemradio without model markers)', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    // Simulate the Gemini theme picker submenu (has menuitemradio but no model markers)
+    const themeMenu = document.createElement('div');
+    themeMenu.className = 'mat-mdc-menu-panel';
+    themeMenu.setAttribute('role', 'menu');
+
+    const systemItem = document.createElement('button');
+    systemItem.setAttribute('role', 'menuitemradio');
+    systemItem.setAttribute('aria-checked', 'false');
+    systemItem.innerHTML = `
+      <span class="mat-mdc-menu-item-text">
+        <span class="menu-item-title-with-trailing-component">
+          <span class="gds-label-l">系统</span>
+        </span>
+      </span>
+    `;
+    themeMenu.appendChild(systemItem);
+
+    const darkItem = document.createElement('button');
+    darkItem.setAttribute('role', 'menuitemradio');
+    darkItem.setAttribute('aria-checked', 'true');
+    darkItem.innerHTML = `
+      <span class="mat-mdc-menu-item-text">
+        <span class="menu-item-title-with-trailing-component">
+          <span class="gds-label-l">深色</span>
+        </span>
+      </span>
+    `;
+    themeMenu.appendChild(darkItem);
+
+    document.body.appendChild(themeMenu);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    // Star buttons should NOT be injected into theme menu items
+    expect(systemItem.querySelector('.gv-default-star-btn')).toBeNull();
+    expect(darkItem.querySelector('.gv-default-star-btn')).toBeNull();
+  });
+
   it('stops retrying after consecutive failures when target model is not found', async () => {
     // Set default model to a model that won't be found
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
