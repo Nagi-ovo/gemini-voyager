@@ -1419,6 +1419,14 @@
     "message": "AI Studio",
     "description": "AI Studio platform label."
   },
+  "enableOnAIStudio": {
+    "message": "AI Studio에서 활성화",
+    "description": "Toggle to enable/disable Voyager on AI Studio"
+  },
+  "enableOnAIStudioHint": {
+    "message": "끄면 AI Studio의 Voyager 기능이 비활성화됩니다 (Prompt Manager 제외)",
+    "description": "Hint for AI Studio enable toggle"
+  },
   "export_select_mode_only_user": {
     "message": "사용자만 선택",
     "description": "Export selection mode: select only user messages"

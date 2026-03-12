@@ -99,6 +99,9 @@ export const StorageKeys = {
 
   // Upsell hider
   UPSELL_HIDER_ENABLED: 'gvUpsellHiderEnabled',
+
+  // AI Studio master toggle
+  GV_AISTUDIO_ENABLED: 'gvAIStudioEnabled',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];
