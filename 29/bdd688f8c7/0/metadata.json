@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "29bdd688f8c7",
+  "session_id": "18a6ae04-fe81-437d-9c64-e6f5a1839da2",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-12T22:10:11.587494Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "custom-vite-plugins.ts",
+    "vite.config.base.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "fdd14399649b",
+  "token_usage": {
+    "input_tokens": 37,
+    "cache_creation_tokens": 113664,
+    "cache_read_tokens": 1079027,
+    "output_tokens": 17665,
+    "api_call_count": 25
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-12T22:10:11.482747Z",
+    "agent_lines": 35,
+    "human_added": 61,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 96,
+    "agent_percentage": 36.45833333333333
+  }
+}

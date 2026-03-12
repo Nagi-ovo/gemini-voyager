@@ -1,0 +1,32 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+我觉得这个项目当前的 i18n message JSON 有点太长了，每个语言都维护一份，而且里面很多内容都是冗余的。
+
+这是否是最佳实践呢？还是说有没有什么办法，能够更高效地完成同样的效果？还是说得引入来解决呢？
+
+### Prompt 2
+
+好呀，就这么干吧。
+
+如果使用原生 Chrome i18n 的话，是不是会更好？然后会影响 Firefox 和 Safari 吗？
+
+### Prompt 3
+
+大概能减少多少体积呢？
+
+### Prompt 4
+
+你确定这次提交不会对任何功能和任何平台造成任何影响吧？
+
+### Prompt 5
+
+bun run build你看看
+
+### Prompt 6
+
+Commit
+
