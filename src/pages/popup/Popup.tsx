@@ -741,6 +741,7 @@ export default function Popup() {
           gvQuoteReplyEnabled: true,
           gvCtrlEnterSend: false,
           gvSidebarAutoHide: false,
+          gvSidebarFullHide: false,
           gvSnowEffect: false,
           gvPreventAutoScrollEnabled: false,
           [StorageKeys.FORK_ENABLED]: false,
