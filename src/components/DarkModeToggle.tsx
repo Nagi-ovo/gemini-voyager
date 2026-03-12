@@ -12,7 +12,7 @@ export const DarkModeToggle: React.FC = () => {
     <Button
       variant="ghost"
       size="icon"
-      onClick={toggleDarkMode}
+      onClick={(e) => toggleDarkMode(e)}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       className="h-9 w-9"
     >

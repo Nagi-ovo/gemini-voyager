@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 export function useDarkMode() {
   const [isDark, setIsDark] = useState(() => {
@@ -13,11 +13,7 @@ export function useDarkMode() {
 
   useEffect(() => {
     // Apply dark class to document
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', isDark);
 
     // Save preference
     localStorage.setItem('darkMode', String(isDark));
@@ -38,7 +34,54 @@ export function useDarkMode() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  const toggleDarkMode = () => setIsDark(!isDark);
+  const toggleDarkMode = useCallback(
+    (event?: React.MouseEvent) => {
+      const newIsDark = !isDark;
+
+      const applyTheme = () => {
+        document.documentElement.classList.toggle('dark', newIsDark);
+        localStorage.setItem('darkMode', String(newIsDark));
+        setIsDark(newIsDark);
+      };
+
+      // Skip animation if no event, no View Transition API, or user prefers reduced motion
+      const startViewTransition = (document as { startViewTransition?: (cb: () => void) => { ready: Promise<void> } }).startViewTransition;
+      if (
+        !event ||
+        !startViewTransition ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ) {
+        applyTheme();
+        return;
+      }
+
+      const x = event.clientX;
+      const y = event.clientY;
+      const endRadius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y),
+      );
+
+      const transition = startViewTransition.call(document, applyTheme);
+
+      transition.ready.then(() => {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${endRadius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 500,
+            easing: 'ease-in-out',
+            pseudoElement: '::view-transition-new(root)',
+          },
+        );
+      });
+    },
+    [isDark],
+  );
 
   return { isDark, toggleDarkMode };
 }

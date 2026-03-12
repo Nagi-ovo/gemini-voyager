@@ -50,6 +50,16 @@
     border-color: var(--border);
   }
 
+  /* Disable default View Transition crossfade — we use a custom clip-path circle expand */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+  ::view-transition-new(root) {
+    z-index: 1;
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
