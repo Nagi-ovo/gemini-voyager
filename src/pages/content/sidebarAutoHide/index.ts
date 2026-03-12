@@ -9,6 +9,7 @@
 
 const STYLE_ID = 'gv-sidebar-auto-hide-style';
 const STORAGE_KEY = 'gvSidebarAutoHide';
+const EDGE_TRIGGER_ID = 'gv-sidebar-edge-trigger';
 
 // Debounce delay to avoid rapid toggling
 const LEAVE_DELAY_MS = 500;
@@ -19,6 +20,8 @@ const SIDENAV_CHECK_INTERVAL_MS = 1000;
 const RESIZE_DEBOUNCE_MS = 200;
 // Pause duration after menu item click (wait for dialog to appear)
 const MENU_CLICK_PAUSE_MS = 1500;
+// Width of the invisible edge trigger zone (px)
+const EDGE_TRIGGER_WIDTH = 6;
 const CUSTOM_POPUP_SELECTORS = [
   '.gv-folder-dialog',
   '.gv-folder-dialog-overlay',
@@ -32,6 +35,7 @@ let enabled = false;
 let leaveTimeoutId: number | null = null;
 let enterTimeoutId: number | null = null;
 let sidenavElement: HTMLElement | null = null;
+let edgeTriggerElement: HTMLElement | null = null;
 let observer: MutationObserver | null = null;
 let resizeHandler: (() => void) | null = null;
 let resizeDebounceTimer: number | null = null;
@@ -84,6 +88,83 @@ function insertTransitionStyle(): void {
 function removeTransitionStyle(): void {
   const style = document.getElementById(STYLE_ID);
   if (style) style.remove();
+}
+
+/**
+ * Handle mouse leaving the edge trigger zone.
+ * Cancel expand if the mouse didn't move into the sidebar.
+ */
+function handleEdgeTriggerLeave(e: MouseEvent): void {
+  if (!enabled) return;
+
+  const related = e.relatedTarget as HTMLElement | null;
+  if (related) {
+    const sidenav = getSidenavElement();
+    if (sidenav && (sidenav === related || sidenav.contains(related))) {
+      return; // Mouse entered the sidebar - let it handle expansion
+    }
+  }
+
+  // Mouse left the edge without entering sidebar - cancel pending expand
+  if (enterTimeoutId !== null) {
+    window.clearTimeout(enterTimeoutId);
+    enterTimeoutId = null;
+  }
+}
+
+/**
+ * Create the invisible edge trigger zone at the left side of the viewport.
+ * When the sidebar is collapsed, hovering this zone expands the sidebar.
+ */
+function createEdgeTrigger(): void {
+  if (edgeTriggerElement) return;
+
+  const el = document.createElement('div');
+  el.id = EDGE_TRIGGER_ID;
+  el.style.cssText = `
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: ${EDGE_TRIGGER_WIDTH}px;
+    height: 100vh;
+    z-index: 99999;
+    background: transparent;
+    display: none;
+  `;
+  el.addEventListener('mouseenter', handleMouseEnter);
+  el.addEventListener('mouseleave', handleEdgeTriggerLeave);
+  document.documentElement.appendChild(el);
+  edgeTriggerElement = el;
+}
+
+/**
+ * Remove the edge trigger zone from the DOM
+ */
+function removeEdgeTrigger(): void {
+  if (edgeTriggerElement) {
+    edgeTriggerElement.removeEventListener('mouseenter', handleMouseEnter);
+    edgeTriggerElement.removeEventListener('mouseleave', handleEdgeTriggerLeave);
+    edgeTriggerElement.remove();
+    edgeTriggerElement = null;
+  }
+}
+
+/**
+ * Show the edge trigger zone (when sidebar is collapsed)
+ */
+function showEdgeTrigger(): void {
+  if (edgeTriggerElement) {
+    edgeTriggerElement.style.display = 'block';
+  }
+}
+
+/**
+ * Hide the edge trigger zone (when sidebar is expanded)
+ */
+function hideEdgeTrigger(): void {
+  if (edgeTriggerElement) {
+    edgeTriggerElement.style.display = 'none';
+  }
 }
 
 /**
@@ -190,6 +271,9 @@ function isPopupOrDialogOpen(): boolean {
  * Check if mouse is currently over the sidebar or any related popup element
  */
 function isMouseOverSidebarArea(): boolean {
+  // Check if mouse is over the edge trigger
+  if (edgeTriggerElement?.matches(':hover')) return true;
+
   // Check if mouse is over the sidenav
   if (sidenavElement?.matches(':hover')) return true;
 
@@ -275,6 +359,7 @@ function collapseSidebar(): void {
   if (!isSidebarCollapsed()) {
     if (clickToggleButton()) {
       autoCollapsed = true;
+      showEdgeTrigger();
     }
   }
 }
@@ -284,6 +369,7 @@ function collapseSidebar(): void {
  */
 function expandSidebar(): void {
   if (isSidebarCollapsed()) {
+    hideEdgeTrigger();
     clickToggleButton();
     autoCollapsed = false;
   }
@@ -467,6 +553,7 @@ function enable(): void {
   pausedUntil = 0;
 
   insertTransitionStyle();
+  createEdgeTrigger();
   attachEventListeners();
 
   // Start observing for DOM changes (in case sidenav is lazily loaded)
@@ -498,7 +585,7 @@ function enable(): void {
   // Initial collapse if mouse is not on sidebar and no popup is open
   setTimeout(() => {
     if (enabled && sidenavElement && !sidenavElement.matches(':hover') && !isPopupOrDialogOpen()) {
-      collapseSidebar();
+      collapseSidebar(); // collapseSidebar() calls showEdgeTrigger() on success
     }
   }, 500);
 }
@@ -539,6 +626,7 @@ function disable(): void {
   pausedUntil = 0;
 
   detachEventListeners();
+  removeEdgeTrigger();
   removeTransitionStyle();
 
   if (observer) {
