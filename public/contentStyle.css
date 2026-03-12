@@ -856,6 +856,17 @@ html.dark-theme .gv-pm-trigger {
   pointer-events: auto;
 }
 
+/* Invisible bridge between logo and dropdown so hover doesn't break in the gap */
+.gv-logo-dropdown-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 12px;
+  pointer-events: auto;
+}
+
 .gv-logo-dropdown {
   position: absolute;
   top: 100%;
@@ -879,6 +890,7 @@ html.dark-theme .gv-pm-trigger {
     opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
     visibility 0.2s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: 0.12s;
   z-index: 9999;
   pointer-events: none;
 }
@@ -889,10 +901,6 @@ html.dark-theme .gv-pm-trigger {
   visibility: visible;
   transform: translateY(0) scale(1);
   pointer-events: auto;
-}
-
-/* Keep dropdown visible when hovering on it */
-.gv-logo-dropdown-wrapper:hover .gv-logo-dropdown {
   transition-delay: 0.05s;
 }
 
