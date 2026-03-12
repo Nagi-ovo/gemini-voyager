@@ -16,6 +16,11 @@ const FULL_HIDE_STYLE_ID = 'gv-sidebar-full-hide-style';
 const STORAGE_KEY = 'gvSidebarAutoHide';
 const FULL_HIDE_STORAGE_KEY = 'gvSidebarFullHide';
 const EDGE_TRIGGER_ID = 'gv-sidebar-edge-trigger';
+const FULL_HIDE_COLLAPSED_CLASS = 'gv-sidebar-full-hide-collapsed';
+const SIDEBAR_TOGGLE_BUTTON_SELECTOR =
+  'button[data-test-id="side-nav-menu-button"], side-nav-menu-button button';
+const SIDEBAR_TOGGLE_BUTTON_MATCH_SELECTOR = `${SIDEBAR_TOGGLE_BUTTON_SELECTOR}, side-nav-menu-button`;
+const SIDEBAR_STATE_SYNC_DELAYS_MS = [0, 120, 360] as const;
 
 // Debounce delay to avoid rapid toggling
 const LEAVE_DELAY_MS = 500;
@@ -55,6 +60,8 @@ let resizeHandler: (() => void) | null = null;
 let resizeDebounceTimer: number | null = null;
 let sidenavCheckTimer: number | null = null;
 let menuClickHandler: ((e: Event) => void) | null = null;
+let sidebarStateSyncTimeoutIds: number[] = [];
+let internalToggleClickDepth = 0;
 
 function isElementVisible(element: HTMLElement): boolean {
   const style = window.getComputedStyle(element);
@@ -96,9 +103,9 @@ function removeTransitionStyle(): void {
 function getFullHideStyle(): string {
   return `
     /* Fully hide collapsed sidebar */
-    body:not(.mat-sidenav-opened) bard-sidenav,
-    body:not(.mat-sidenav-opened) bard-sidenav side-navigation-content,
-    body:not(.mat-sidenav-opened) bard-sidenav side-navigation-content > div {
+    html.${FULL_HIDE_COLLAPSED_CLASS} bard-sidenav,
+    html.${FULL_HIDE_COLLAPSED_CLASS} bard-sidenav side-navigation-content,
+    html.${FULL_HIDE_COLLAPSED_CLASS} bard-sidenav side-navigation-content > div {
       width: 0 !important;
       min-width: 0 !important;
       overflow: hidden !important;
@@ -183,9 +190,7 @@ function hideEdgeTrigger(): void {
 // ─── Sidebar State Detection ───────────────────────────────────────────
 
 function findToggleButton(): HTMLButtonElement | null {
-  const btn = document.querySelector<HTMLButtonElement>(
-    'button[data-test-id="side-nav-menu-button"]',
-  );
+  const btn = document.querySelector<HTMLButtonElement>(SIDEBAR_TOGGLE_BUTTON_SELECTOR);
   if (btn) return btn;
 
   const sideNavMenuButton = document.querySelector('side-nav-menu-button');
@@ -196,15 +201,27 @@ function findToggleButton(): HTMLButtonElement | null {
   return null;
 }
 
-function isSidebarCollapsed(): boolean {
-  // Check body class first (not affected by our full-hide CSS)
+function getSidebarContentContainer(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('bard-sidenav side-navigation-content > div');
+}
+
+function getStructuredSidebarCollapsedState(): boolean | null {
   if (document.body.classList.contains('mat-sidenav-opened')) {
     return false;
   }
 
-  const sideContent = document.querySelector('bard-sidenav side-navigation-content > div');
-  if (sideContent?.classList.contains('collapsed')) {
-    return true;
+  const sideContent = getSidebarContentContainer();
+  if (sideContent) {
+    return sideContent.classList.contains('collapsed');
+  }
+
+  return null;
+}
+
+function isSidebarCollapsed(): boolean {
+  const structuredState = getStructuredSidebarCollapsedState();
+  if (structuredState !== null) {
+    return structuredState;
   }
 
   const sidenav = document.querySelector<HTMLElement>('bard-sidenav');
@@ -225,6 +242,26 @@ function isSidebarVisible(): boolean {
 
 function isPaused(): boolean {
   return Date.now() < pausedUntil;
+}
+
+function clearScheduledSidebarStateSync(): void {
+  for (const timeoutId of sidebarStateSyncTimeoutIds) {
+    window.clearTimeout(timeoutId);
+  }
+  sidebarStateSyncTimeoutIds = [];
+}
+
+function scheduleSidebarStateSync(): void {
+  if (!fullHideEnabled) return;
+
+  clearScheduledSidebarStateSync();
+  for (const delay of SIDEBAR_STATE_SYNC_DELAYS_MS) {
+    const timeoutId = window.setTimeout(() => {
+      checkAndReattach();
+      sidebarStateSyncTimeoutIds = sidebarStateSyncTimeoutIds.filter((id) => id !== timeoutId);
+    }, delay);
+    sidebarStateSyncTimeoutIds.push(timeoutId);
+  }
 }
 
 function pauseAutoCollapse(durationMs: number): void {
@@ -279,9 +316,25 @@ function isMouseOverSidebarArea(): boolean {
 // ─── Menu Click Handling ───────────────────────────────────────────────
 
 function handleMenuClick(e: Event): void {
-  if (!enabled) return;
+  const target = e.target;
+  if (!(target instanceof HTMLElement)) return;
 
-  const target = e.target as HTMLElement;
+  if (target.closest(SIDEBAR_TOGGLE_BUTTON_MATCH_SELECTOR)) {
+    if (internalToggleClickDepth > 0) {
+      return;
+    }
+
+    if (fullHideEnabled) {
+      scheduleSidebarStateSync();
+    }
+
+    if (enabled) {
+      pauseAutoCollapse(MENU_CLICK_PAUSE_MS);
+    }
+    return;
+  }
+
+  if (!enabled) return;
 
   const menuItem = target.closest('[role="menuitem"], [role="menuitemradio"], .mat-mdc-menu-item');
   if (menuItem) {
@@ -309,7 +362,18 @@ function handleMenuClick(e: Event): void {
 function clickToggleButton(): boolean {
   const btn = findToggleButton();
   if (!btn) return false;
-  btn.click();
+
+  internalToggleClickDepth += 1;
+  try {
+    btn.click();
+  } finally {
+    internalToggleClickDepth -= 1;
+  }
+
+  if (fullHideEnabled) {
+    scheduleSidebarStateSync();
+  }
+
   return true;
 }
 
@@ -427,14 +491,8 @@ function checkAndReattach(): void {
   // Full-hide: sync edge trigger visibility with sidebar state
   // Check height > 0 to exclude responsive layouts where Gemini hides the sidebar entirely
   // (our full-hide CSS only zeroes width, not height)
-  if (fullHideEnabled && edgeTriggerElement) {
-    const sidenav = getSidenavElement();
-    const sidenavExists = sidenav && sidenav.getBoundingClientRect().height > 0;
-    if (sidenavExists && isSidebarCollapsed()) {
-      showEdgeTrigger();
-    } else {
-      hideEdgeTrigger();
-    }
+  if (fullHideEnabled) {
+    syncFullHideState();
   }
 }
 
@@ -491,6 +549,7 @@ function teardownInfrastructure(): void {
   if (enabled || fullHideEnabled) return;
 
   stopSidenavCheck();
+  clearScheduledSidebarStateSync();
 
   if (resizeDebounceTimer !== null) {
     window.clearTimeout(resizeDebounceTimer);
@@ -508,6 +567,18 @@ function teardownInfrastructure(): void {
   }
 }
 
+function ensureMenuClickHandler(): void {
+  if (menuClickHandler) return;
+  menuClickHandler = handleMenuClick;
+  document.addEventListener('click', menuClickHandler, true);
+}
+
+function maybeRemoveMenuClickHandler(): void {
+  if (enabled || fullHideEnabled || !menuClickHandler) return;
+  document.removeEventListener('click', menuClickHandler, true);
+  menuClickHandler = null;
+}
+
 // ─── Auto-Hide Feature ────────────────────────────────────────────────
 
 function enable(): void {
@@ -518,11 +589,7 @@ function enable(): void {
 
   insertTransitionStyle();
   attachEventListeners();
-
-  if (!menuClickHandler) {
-    menuClickHandler = handleMenuClick;
-    document.addEventListener('click', menuClickHandler, true);
-  }
+  ensureMenuClickHandler();
 
   setupInfrastructure();
 
@@ -561,15 +628,30 @@ function disable(): void {
     removeTransitionStyle();
   }
 
-  if (menuClickHandler) {
-    document.removeEventListener('click', menuClickHandler, true);
-    menuClickHandler = null;
-  }
+  maybeRemoveMenuClickHandler();
 
   teardownInfrastructure();
 }
 
 // ─── Full-Hide Feature ─────────────────────────────────────────────────
+
+function setFullHideCollapsedState(collapsed: boolean): void {
+  document.documentElement.classList.toggle(FULL_HIDE_COLLAPSED_CLASS, collapsed);
+}
+
+function syncFullHideState(): void {
+  const sidenav = getSidenavElement();
+  const sidenavExists = Boolean(sidenav && sidenav.getBoundingClientRect().height > 0);
+  const collapsed = sidenavExists && isSidebarCollapsed();
+
+  setFullHideCollapsedState(collapsed);
+
+  if (collapsed) {
+    showEdgeTrigger();
+  } else {
+    hideEdgeTrigger();
+  }
+}
 
 function enableFullHide(): void {
   if (fullHideEnabled) return;
@@ -578,15 +660,15 @@ function enableFullHide(): void {
   insertTransitionStyle();
   insertFullHideStyle();
   createEdgeTrigger();
+  ensureMenuClickHandler();
 
   setupInfrastructure();
+  syncFullHideState();
 
   // Show edge trigger if sidebar is already collapsed
   setTimeout(() => {
     if (!fullHideEnabled) return;
-    if (isSidebarCollapsed()) {
-      showEdgeTrigger();
-    }
+    syncFullHideState();
   }, 300);
 }
 
@@ -594,12 +676,16 @@ function disableFullHide(): void {
   if (!fullHideEnabled) return;
   fullHideEnabled = false;
 
+  clearScheduledSidebarStateSync();
+  setFullHideCollapsedState(false);
   removeEdgeTrigger();
   removeFullHideStyle();
 
   if (!enabled) {
     removeTransitionStyle();
   }
+
+  maybeRemoveMenuClickHandler();
 
   teardownInfrastructure();
 }
