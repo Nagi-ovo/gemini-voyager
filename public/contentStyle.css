@@ -584,6 +584,7 @@ html.dark .timeline-left-slider::before {
   position: fixed;
   width: 320px;
   direction: ltr;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--timeline-tooltip-bg);
   border: 1px solid var(--timeline-tooltip-border);
   border-radius: var(--timeline-tooltip-radius);
@@ -618,6 +619,7 @@ html.dark .timeline-left-slider::before {
   border: 1px solid var(--timeline-tooltip-border);
   border-radius: 6px;
   padding: 5px 8px;
+  font-family: inherit;
   font-size: 13px;
   line-height: 1.4;
   background: transparent;

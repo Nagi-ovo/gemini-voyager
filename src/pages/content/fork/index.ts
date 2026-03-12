@@ -62,7 +62,7 @@ function injectStyles(): void {
       border-radius: 4px;
       cursor: pointer;
       font-size: 12px;
-      font-family: inherit;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
@@ -119,7 +119,7 @@ function injectStyles(): void {
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
       white-space: nowrap;
       font-size: 13px;
-      font-family: inherit;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
     .${FORK_CONFIRM_CLASS} p {
       margin: 0 0 8px 0;
@@ -135,7 +135,7 @@ function injectStyles(): void {
       border: 1px solid var(--gv-fork-confirm-border, rgba(0, 0, 0, 0.12));
       cursor: pointer;
       font-size: 12px;
-      font-family: inherit;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       background: transparent;
       color: inherit;
     }
@@ -176,7 +176,7 @@ function injectStyles(): void {
       cursor: pointer;
       font-size: 12px;
       font-weight: 600;
-      font-family: inherit;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       border: 1px solid var(--gv-fork-indicator-border, rgba(26, 115, 232, 0.28));
       transition: background-color 0.15s, color 0.15s, border-color 0.15s;
     }
@@ -207,7 +207,7 @@ function injectStyles(): void {
       font-size: 10px;
       font-weight: 700;
       line-height: 1;
-      font-family: inherit;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       opacity: 0;
       pointer-events: none;
       transform: scale(0.8);
