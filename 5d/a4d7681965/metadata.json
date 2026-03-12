@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "5da4d7681965",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/pages/content/sidebarAutoHide/__tests__/SidebarAutoHide.test.ts",
+    "src/pages/content/sidebarAutoHide/index.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/5d/a4d7681965/0/metadata.json",
+      "transcript": "/5d/a4d7681965/0/full.jsonl",
+      "context": "/5d/a4d7681965/0/context.md",
+      "content_hash": "/5d/a4d7681965/0/content_hash.txt",
+      "prompt": "/5d/a4d7681965/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1,
+    "cache_creation_tokens": 197,
+    "cache_read_tokens": 54120,
+    "output_tokens": 12,
+    "api_call_count": 1
+  }
+}
