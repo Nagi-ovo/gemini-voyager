@@ -1416,7 +1416,7 @@
     "description": "Toggle to enable/disable Voyager on AI Studio"
   },
   "enableOnAIStudioHint": {
-    "message": "オフにすると AI Studio でのすべての Voyager 機能が無効になります",
+    "message": "オフにすると AI Studio での Voyager 機能が無効になります（Prompt Manager は除く）",
     "description": "Hint for AI Studio enable toggle"
   },
   "export_select_mode_only_user": {

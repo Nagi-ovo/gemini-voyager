@@ -1416,7 +1416,7 @@
     "description": "Toggle to enable/disable Voyager on AI Studio"
   },
   "enableOnAIStudioHint": {
-    "message": "Desactiva para deshabilitar todas las funciones de Voyager en AI Studio",
+    "message": "Desactiva para deshabilitar las funciones de Voyager en AI Studio (Prompt Manager sigue activo)",
     "description": "Hint for AI Studio enable toggle"
   },
   "export_select_mode_only_user": {

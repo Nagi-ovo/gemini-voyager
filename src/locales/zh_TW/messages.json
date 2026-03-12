@@ -1416,7 +1416,7 @@
     "description": "Toggle to enable/disable Voyager on AI Studio"
   },
   "enableOnAIStudioHint": {
-    "message": "關閉後將停用 AI Studio 上的所有 Voyager 功能",
+    "message": "關閉後將停用 AI Studio 上的 Voyager 功能（Prompt Manager 不受影響）",
     "description": "Hint for AI Studio enable toggle"
   },
   "export_select_mode_only_user": {
