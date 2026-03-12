@@ -389,7 +389,7 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   border-radius: var(--timeline-tooltip-radius);
   border: var(--timeline-tooltip-border-w) solid var(--timeline-tooltip-border);
   font-size: 13px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
   line-height: var(--timeline-tooltip-lh);
   max-height: calc(
     3 * var(--timeline-tooltip-lh) + 2 * var(--timeline-tooltip-pad-y) + 2 *
@@ -584,6 +584,7 @@ html.dark .timeline-left-slider::before {
   position: fixed;
   width: 320px;
   direction: ltr;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
   background-color: var(--timeline-tooltip-bg);
   border: 1px solid var(--timeline-tooltip-border);
   border-radius: var(--timeline-tooltip-radius);
@@ -618,6 +619,7 @@ html.dark .timeline-left-slider::before {
   border: 1px solid var(--timeline-tooltip-border);
   border-radius: 6px;
   padding: 5px 8px;
+  font-family: inherit;
   font-size: 13px;
   line-height: 1.4;
   background: transparent;
