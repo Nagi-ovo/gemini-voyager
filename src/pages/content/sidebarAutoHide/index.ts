@@ -369,9 +369,10 @@ function collapseSidebar(): void {
  */
 function expandSidebar(): void {
   if (isSidebarCollapsed()) {
-    hideEdgeTrigger();
-    clickToggleButton();
-    autoCollapsed = false;
+    if (clickToggleButton()) {
+      hideEdgeTrigger();
+      autoCollapsed = false;
+    }
   }
 }
 
@@ -587,7 +588,7 @@ function enable(): void {
     if (!enabled) return;
     if (isSidebarCollapsed()) {
       // Sidebar already collapsed (e.g. persisted Gemini UI state) — show edge trigger
-      autoCollapsed = true;
+      // Don't set autoCollapsed: we didn't collapse it, so disable() shouldn't expand it
       showEdgeTrigger();
     } else if (sidenavElement && !sidenavElement.matches(':hover') && !isPopupOrDialogOpen()) {
       collapseSidebar(); // collapseSidebar() calls showEdgeTrigger() on success
