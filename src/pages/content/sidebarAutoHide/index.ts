@@ -582,9 +582,14 @@ function enable(): void {
   // Start periodic check for sidenav element reappearing
   startSidenavCheck();
 
-  // Initial collapse if mouse is not on sidebar and no popup is open
+  // Initial: collapse if expanded, or show edge trigger if already collapsed
   setTimeout(() => {
-    if (enabled && sidenavElement && !sidenavElement.matches(':hover') && !isPopupOrDialogOpen()) {
+    if (!enabled) return;
+    if (isSidebarCollapsed()) {
+      // Sidebar already collapsed (e.g. persisted Gemini UI state) — show edge trigger
+      autoCollapsed = true;
+      showEdgeTrigger();
+    } else if (sidenavElement && !sidenavElement.matches(':hover') && !isPopupOrDialogOpen()) {
       collapseSidebar(); // collapseSidebar() calls showEdgeTrigger() on success
     }
   }, 500);
