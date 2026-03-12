@@ -295,6 +295,7 @@ interface SettingsUpdate {
   quoteReplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
   sidebarAutoHideEnabled?: boolean;
+  sidebarFullHideEnabled?: boolean;
   visualEffect?: 'off' | 'snow' | 'sakura' | 'rain';
   preventAutoScrollEnabled?: boolean;
   forkEnabled?: boolean;
@@ -330,6 +331,7 @@ export default function Popup() {
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
   const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
+  const [sidebarFullHideEnabled, setSidebarFullHideEnabled] = useState<boolean>(false);
   const [visualEffect, setVisualEffect] = useState<'off' | 'snow' | 'sakura' | 'rain'>('off');
   const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState<boolean>(false);
   const [forkEnabled, setForkEnabled] = useState<boolean>(false);
@@ -420,6 +422,8 @@ export default function Popup() {
         payload.gvCtrlEnterSend = settings.ctrlEnterSendEnabled;
       if (typeof settings.sidebarAutoHideEnabled === 'boolean')
         payload.gvSidebarAutoHide = settings.sidebarAutoHideEnabled;
+      if (typeof settings.sidebarFullHideEnabled === 'boolean')
+        payload.gvSidebarFullHide = settings.sidebarFullHideEnabled;
       if (settings.visualEffect) {
         payload.gvVisualEffect = settings.visualEffect;
         // Clear legacy key
@@ -770,6 +774,7 @@ export default function Popup() {
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
           setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
+          setSidebarFullHideEnabled(res?.gvSidebarFullHide === true);
           // Resolve visual effect: new key takes precedence over legacy boolean
           const storedVisualEffect = res?.gvVisualEffect;
           if (
@@ -1499,10 +1504,10 @@ export default function Popup() {
           }}
         />
 
-        {/* Sidebar Auto-Hide - Gemini only */}
+        {/* Sidebar Auto-Hide & Full-Hide - Gemini only */}
         {!isAIStudio && (
           <Card className="p-4 transition-all hover:shadow-md">
-            <CardContent className="p-0">
+            <CardContent className="space-y-3 p-0">
               <div className="group flex items-center justify-between">
                 <div className="flex-1">
                   <Label
@@ -1519,6 +1524,25 @@ export default function Popup() {
                   onChange={(e) => {
                     setSidebarAutoHideEnabled(e.target.checked);
                     apply({ sidebarAutoHideEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="sidebar-full-hide"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('sidebarFullHide')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('sidebarFullHideHint')}</p>
+                </div>
+                <Switch
+                  id="sidebar-full-hide"
+                  checked={sidebarFullHideEnabled}
+                  onChange={(e) => {
+                    setSidebarFullHideEnabled(e.target.checked);
+                    apply({ sidebarFullHideEnabled: e.target.checked });
                   }}
                 />
               </div>

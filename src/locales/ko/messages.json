@@ -1179,6 +1179,14 @@
     "message": "마우스가 벗어나면 사이드바를 자동으로 접고, 마우스가 들어오면 펼칩니다",
     "description": "Auto-hide sidebar feature hint"
   },
+  "sidebarFullHide": {
+    "message": "사이드바 완전 숨김",
+    "description": "Fully hide sidebar toggle label"
+  },
+  "sidebarFullHideHint": {
+    "message": "접힌 사이드바를 완전히 숨기고, 왼쪽 가장자리에 마우스를 올려 표시",
+    "description": "Fully hide sidebar feature hint"
+  },
   "folderSpacing": {
     "message": "폴더 간격",
     "description": "Folder spacing adjustment label"

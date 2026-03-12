@@ -1179,6 +1179,14 @@
     "message": "マウスが離れると自動でサイドバーを折りたたみ、マウスが入ると展開します",
     "description": "サイドバー自動非表示機能のヒント"
   },
+  "sidebarFullHide": {
+    "message": "サイドバー完全非表示",
+    "description": "サイドバー完全非表示の切り替えラベル"
+  },
+  "sidebarFullHideHint": {
+    "message": "折りたたみ時にサイドバーを完全に非表示にし、左端にマウスを移動して表示",
+    "description": "サイドバー完全非表示機能のヒント"
+  },
   "folderSpacing": {
     "message": "フォルダ間隔",
     "description": "フォルダ間隔調整ラベル"

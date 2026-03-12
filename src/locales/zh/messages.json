@@ -1187,6 +1187,14 @@
     "message": "鼠标离开时自动收起侧边栏，鼠标进入时展开",
     "description": "侧边栏自动收起功能提示"
   },
+  "sidebarFullHide": {
+    "message": "完全隐藏侧边栏",
+    "description": "完全隐藏侧边栏开关标签"
+  },
+  "sidebarFullHideHint": {
+    "message": "收起时完全隐藏侧边栏，鼠标移到左边缘唤出",
+    "description": "完全隐藏侧边栏功能提示"
+  },
   "folderSpacing": {
     "message": "文件夹间距",
     "description": "文件夹间距调节标签"

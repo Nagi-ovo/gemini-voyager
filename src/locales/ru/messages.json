@@ -1179,6 +1179,14 @@
     "message": "Автоматически сворачивать боковую панель при уходе мыши, разворачивать при наведении",
     "description": "Auto-hide sidebar feature hint"
   },
+  "sidebarFullHide": {
+    "message": "Полностью скрыть боковую панель",
+    "description": "Fully hide sidebar toggle label"
+  },
+  "sidebarFullHideHint": {
+    "message": "Полностью скрыть свёрнутую боковую панель, наведите на левый край для показа",
+    "description": "Fully hide sidebar feature hint"
+  },
   "folderSpacing": {
     "message": "Расстояние между папками",
     "description": "Folder spacing adjustment label"
