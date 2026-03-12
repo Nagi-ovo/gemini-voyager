@@ -498,6 +498,16 @@ function checkAndReattach(): void {
       attachEventListeners();
     }
   }
+
+  // Sync edge trigger visibility with actual sidebar state
+  // (handles external toggles like user clicking the hamburger button)
+  if (edgeTriggerElement) {
+    if (isSidebarCollapsed()) {
+      showEdgeTrigger();
+    } else {
+      hideEdgeTrigger();
+    }
+  }
 }
 
 /**
