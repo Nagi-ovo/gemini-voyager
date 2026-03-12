@@ -1179,6 +1179,14 @@
     "message": "Contrae automáticamente la barra lateral cuando el ratón sale, la expande cuando entra",
     "description": "Auto-hide sidebar feature hint"
   },
+  "sidebarFullHide": {
+    "message": "Ocultar barra lateral completa",
+    "description": "Fully hide sidebar toggle label"
+  },
+  "sidebarFullHideHint": {
+    "message": "Ocultar completamente la barra lateral contraída, pasar el ratón por el borde izquierdo para mostrar",
+    "description": "Fully hide sidebar feature hint"
+  },
   "folderSpacing": {
     "message": "Espaciado de carpetas",
     "description": "Folder spacing adjustment label"

@@ -1,14 +1,20 @@
 /**
- * Sidebar Auto-Hide Feature for Gemini
+ * Sidebar Auto-Hide & Full-Hide Feature for Gemini
  *
- * When enabled, the sidebar automatically collapses when the mouse leaves,
+ * Auto-hide: sidebar automatically collapses when the mouse leaves,
  * and expands when the mouse enters.
+ *
+ * Full-hide: when collapsed (by auto-hide or manually), the sidebar
+ * is fully hidden (zero width). A left-edge hover trigger allows
+ * revealing it.
  *
  * Uses the `side-nav-menu-button` to toggle sidebar state.
  */
 
 const STYLE_ID = 'gv-sidebar-auto-hide-style';
+const FULL_HIDE_STYLE_ID = 'gv-sidebar-full-hide-style';
 const STORAGE_KEY = 'gvSidebarAutoHide';
+const FULL_HIDE_STORAGE_KEY = 'gvSidebarFullHide';
 const EDGE_TRIGGER_ID = 'gv-sidebar-edge-trigger';
 
 // Debounce delay to avoid rapid toggling
@@ -31,37 +37,39 @@ const CUSTOM_POPUP_SELECTORS = [
   '.gv-color-picker-dialog',
 ];
 
+// Auto-hide state
 let enabled = false;
 let leaveTimeoutId: number | null = null;
 let enterTimeoutId: number | null = null;
 let sidenavElement: HTMLElement | null = null;
+let autoCollapsed = false;
+let pausedUntil = 0;
+
+// Full-hide state
+let fullHideEnabled = false;
 let edgeTriggerElement: HTMLElement | null = null;
+
+// Shared infrastructure
 let observer: MutationObserver | null = null;
 let resizeHandler: (() => void) | null = null;
 let resizeDebounceTimer: number | null = null;
 let sidenavCheckTimer: number | null = null;
 let menuClickHandler: ((e: Event) => void) | null = null;
-// Track whether sidebar was collapsed by our feature (to avoid fighting with user)
-let autoCollapsed = false;
-// Temporarily pause auto-collapse after menu actions
-let pausedUntil = 0;
 
 function isElementVisible(element: HTMLElement): boolean {
   const style = window.getComputedStyle(element);
   if (style.display === 'none' || style.visibility === 'hidden') {
     return false;
   }
-
   const rect = element.getBoundingClientRect();
   return rect.width > 0 || rect.height > 0;
 }
 
-/**
- * CSS to enable smooth transitions for the sidebar collapse/expand
- */
+// ─── Transition CSS (shared) ───────────────────────────────────────────
+
 function getTransitionStyle(): string {
   return `
-    /* Smooth transition for sidebar auto-hide */
+    /* Smooth transition for sidebar auto-hide / full-hide */
     bard-sidenav,
     bard-sidenav side-navigation-content,
     bard-sidenav side-navigation-content > div {
@@ -70,55 +78,69 @@ function getTransitionStyle(): string {
   `;
 }
 
-/**
- * Insert transition CSS
- */
 function insertTransitionStyle(): void {
   if (document.getElementById(STYLE_ID)) return;
-
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = getTransitionStyle();
   document.documentElement.appendChild(style);
 }
 
-/**
- * Remove transition CSS
- */
 function removeTransitionStyle(): void {
   const style = document.getElementById(STYLE_ID);
   if (style) style.remove();
 }
 
-/**
- * Handle mouse leaving the edge trigger zone.
- * Cancel expand if the mouse didn't move into the sidebar.
- */
+// ─── Full-Hide CSS ─────────────────────────────────────────────────────
+
+function getFullHideStyle(): string {
+  return `
+    /* Fully hide collapsed sidebar */
+    body:not(.mat-sidenav-opened) bard-sidenav,
+    body:not(.mat-sidenav-opened) bard-sidenav side-navigation-content,
+    body:not(.mat-sidenav-opened) bard-sidenav side-navigation-content > div {
+      width: 0 !important;
+      min-width: 0 !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+    }
+  `;
+}
+
+function insertFullHideStyle(): void {
+  if (document.getElementById(FULL_HIDE_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = FULL_HIDE_STYLE_ID;
+  style.textContent = getFullHideStyle();
+  document.documentElement.appendChild(style);
+}
+
+function removeFullHideStyle(): void {
+  const style = document.getElementById(FULL_HIDE_STYLE_ID);
+  if (style) style.remove();
+}
+
+// ─── Edge Trigger (full-hide) ──────────────────────────────────────────
+
 function handleEdgeTriggerLeave(e: MouseEvent): void {
-  if (!enabled) return;
+  if (!fullHideEnabled) return;
 
   const related = e.relatedTarget as HTMLElement | null;
   if (related) {
     const sidenav = getSidenavElement();
     if (sidenav && (sidenav === related || sidenav.contains(related))) {
-      return; // Mouse entered the sidebar - let it handle expansion
+      return;
     }
   }
 
-  // Mouse left the edge without entering sidebar - cancel pending expand
   if (enterTimeoutId !== null) {
     window.clearTimeout(enterTimeoutId);
     enterTimeoutId = null;
   }
 }
 
-/**
- * Create the invisible edge trigger zone at the left side of the viewport.
- * When the sidebar is collapsed, hovering this zone expands the sidebar.
- */
 function createEdgeTrigger(): void {
   if (edgeTriggerElement) return;
-
   const el = document.createElement('div');
   el.id = EDGE_TRIGGER_ID;
   el.style.cssText = `
@@ -137,9 +159,6 @@ function createEdgeTrigger(): void {
   edgeTriggerElement = el;
 }
 
-/**
- * Remove the edge trigger zone from the DOM
- */
 function removeEdgeTrigger(): void {
   if (edgeTriggerElement) {
     edgeTriggerElement.removeEventListener('mouseenter', handleMouseEnter);
@@ -149,36 +168,26 @@ function removeEdgeTrigger(): void {
   }
 }
 
-/**
- * Show the edge trigger zone (when sidebar is collapsed)
- */
 function showEdgeTrigger(): void {
   if (edgeTriggerElement) {
     edgeTriggerElement.style.display = 'block';
   }
 }
 
-/**
- * Hide the edge trigger zone (when sidebar is expanded)
- */
 function hideEdgeTrigger(): void {
   if (edgeTriggerElement) {
     edgeTriggerElement.style.display = 'none';
   }
 }
 
-/**
- * Find the sidebar toggle button
- * Uses the selector provided by user: side-nav-menu-button button
- */
+// ─── Sidebar State Detection ───────────────────────────────────────────
+
 function findToggleButton(): HTMLButtonElement | null {
-  // Primary: Use data-test-id attribute
   const btn = document.querySelector<HTMLButtonElement>(
     'button[data-test-id="side-nav-menu-button"]',
   );
   if (btn) return btn;
 
-  // Fallback: Find button inside side-nav-menu-button component
   const sideNavMenuButton = document.querySelector('side-nav-menu-button');
   if (sideNavMenuButton) {
     return sideNavMenuButton.querySelector<HTMLButtonElement>('button');
@@ -187,76 +196,52 @@ function findToggleButton(): HTMLButtonElement | null {
   return null;
 }
 
-/**
- * Check if sidebar is currently collapsed
- */
 function isSidebarCollapsed(): boolean {
-  // Method 1: Check mat-sidenav-opened class on body
+  // Check body class first (not affected by our full-hide CSS)
   if (document.body.classList.contains('mat-sidenav-opened')) {
-    return false; // opened = not collapsed
+    return false;
   }
 
-  // Method 2: Check side-navigation-content collapsed class
   const sideContent = document.querySelector('bard-sidenav side-navigation-content > div');
   if (sideContent?.classList.contains('collapsed')) {
     return true;
   }
 
-  // Method 3: Check the actual width of sidenav
   const sidenav = document.querySelector<HTMLElement>('bard-sidenav');
   if (sidenav) {
     const width = sidenav.getBoundingClientRect().width;
-    // Collapsed sidebar is typically < 80px
     if (width < 80) return true;
   }
 
   return false;
 }
 
-/**
- * Check if sidebar is visible (exists and has dimensions)
- */
 function isSidebarVisible(): boolean {
   const sidenav = document.querySelector<HTMLElement>('bard-sidenav');
   if (!sidenav) return false;
-
   const rect = sidenav.getBoundingClientRect();
-  // Sidebar is visible if it has width and height
   return rect.width > 0 && rect.height > 0;
 }
 
-/**
- * Check if auto-collapse is currently paused
- */
 function isPaused(): boolean {
   return Date.now() < pausedUntil;
 }
 
-/**
- * Pause auto-collapse for a duration
- */
 function pauseAutoCollapse(durationMs: number): void {
   pausedUntil = Date.now() + durationMs;
 }
 
-/**
- * Check if there's a visible popup/dialog/menu open that should prevent sidebar collapse
- * This includes delete confirmation dialogs, context menus, etc.
- */
 function isPopupOrDialogOpen(): boolean {
-  // Check for Angular Material dialogs - must be visible
   const matDialogs = document.querySelectorAll<HTMLElement>('.mat-mdc-dialog-container');
   for (const dialog of matDialogs) {
     if (isElementVisible(dialog)) return true;
   }
 
-  // Check for Angular Material menus - must be visible
   const matMenus = document.querySelectorAll<HTMLElement>('.mat-mdc-menu-panel');
   for (const menu of matMenus) {
     if (isElementVisible(menu)) return true;
   }
 
-  // Check for Gemini Voyager popup elements
   for (const selector of CUSTOM_POPUP_SELECTORS) {
     const customPopups = document.querySelectorAll<HTMLElement>(selector);
     for (const popup of customPopups) {
@@ -267,17 +252,10 @@ function isPopupOrDialogOpen(): boolean {
   return false;
 }
 
-/**
- * Check if mouse is currently over the sidebar or any related popup element
- */
 function isMouseOverSidebarArea(): boolean {
-  // Check if mouse is over the edge trigger
   if (edgeTriggerElement?.matches(':hover')) return true;
-
-  // Check if mouse is over the sidenav
   if (sidenavElement?.matches(':hover')) return true;
 
-  // Check if mouse is over visible dialogs/menus
   const matDialogs = document.querySelectorAll<HTMLElement>('.mat-mdc-dialog-container');
   for (const dialog of matDialogs) {
     if (dialog.matches(':hover')) return true;
@@ -298,31 +276,25 @@ function isMouseOverSidebarArea(): boolean {
   return false;
 }
 
-/**
- * Handle click on menu items - pause auto-collapse to wait for potential dialogs
- */
+// ─── Menu Click Handling ───────────────────────────────────────────────
+
 function handleMenuClick(e: Event): void {
   if (!enabled) return;
 
   const target = e.target as HTMLElement;
 
-  // Check if clicked on a menu item (especially delete actions)
   const menuItem = target.closest('[role="menuitem"], [role="menuitemradio"], .mat-mdc-menu-item');
   if (menuItem) {
-    // Pause auto-collapse to allow dialog to appear
     pauseAutoCollapse(MENU_CLICK_PAUSE_MS);
     return;
   }
 
-  // Check if clicked on any button inside the sidebar that might trigger a dialog
   const sidebarButton = target.closest('bard-sidenav button, bard-sidenav [role="button"]');
   if (sidebarButton) {
-    // Pause auto-collapse briefly
     pauseAutoCollapse(MENU_CLICK_PAUSE_MS);
     return;
   }
 
-  // Check for three-dot menu buttons (options buttons)
   const optionsButton = target.closest(
     '[data-test-id*="options"], [aria-label*="选项"], [aria-label*="Options"], [aria-label*="More"]',
   );
@@ -332,122 +304,88 @@ function handleMenuClick(e: Event): void {
   }
 }
 
-/**
- * Click the toggle button to switch sidebar state
- */
+// ─── Sidebar Toggle ────────────────────────────────────────────────────
+
 function clickToggleButton(): boolean {
   const btn = findToggleButton();
   if (!btn) return false;
-
   btn.click();
   return true;
 }
 
-/**
- * Collapse the sidebar (if currently expanded and no popup is open)
- */
 function collapseSidebar(): void {
-  // Don't collapse if paused
   if (isPaused()) return;
-
-  // Don't collapse if a popup/dialog is open
   if (isPopupOrDialogOpen()) return;
-
-  // Don't collapse if mouse is still over sidebar area
   if (isMouseOverSidebarArea()) return;
 
   if (!isSidebarCollapsed()) {
     if (clickToggleButton()) {
       autoCollapsed = true;
-      showEdgeTrigger();
     }
   }
 }
 
-/**
- * Expand the sidebar (if currently collapsed)
- */
 function expandSidebar(): void {
   if (isSidebarCollapsed()) {
-    if (clickToggleButton()) {
-      hideEdgeTrigger();
-      autoCollapsed = false;
-    }
+    clickToggleButton();
+    autoCollapsed = false;
+    // Schedule a reattach so auto-hide listeners are re-added after expansion
+    setTimeout(() => checkAndReattach(), 350);
   }
 }
 
-/**
- * Handle mouse enter on sidebar
- */
-function handleMouseEnter(): void {
-  if (!enabled) return;
+// ─── Mouse Event Handlers ──────────────────────────────────────────────
 
-  // Cancel any pending collapse
+function handleMouseEnter(): void {
+  if (!enabled && !fullHideEnabled) return;
+
   if (leaveTimeoutId !== null) {
     window.clearTimeout(leaveTimeoutId);
     leaveTimeoutId = null;
   }
 
-  // Debounce the expand to avoid accidental triggers while crossing screens
   if (enterTimeoutId !== null) {
     window.clearTimeout(enterTimeoutId);
   }
 
   enterTimeoutId = window.setTimeout(() => {
     enterTimeoutId = null;
-    if (!enabled) return;
+    if (!enabled && !fullHideEnabled) return;
     expandSidebar();
   }, ENTER_DELAY_MS);
 }
 
-/**
- * Handle mouse leave from sidebar
- */
 function handleMouseLeave(): void {
   if (!enabled) return;
 
-  // Cancel any pending expand
   if (enterTimeoutId !== null) {
     window.clearTimeout(enterTimeoutId);
     enterTimeoutId = null;
   }
 
-  // Debounce the collapse to avoid accidental triggers
   if (leaveTimeoutId !== null) {
     window.clearTimeout(leaveTimeoutId);
   }
 
   leaveTimeoutId = window.setTimeout(() => {
     leaveTimeoutId = null;
-
-    // Double-check conditions before collapsing
     if (!enabled) return;
-
     collapseSidebar();
   }, LEAVE_DELAY_MS);
 }
 
-/**
- * Get the sidenav container element
- */
+// ─── DOM Management ────────────────────────────────────────────────────
+
 function getSidenavElement(): HTMLElement | null {
   return document.querySelector<HTMLElement>('bard-sidenav');
 }
 
-/**
- * Attach event listeners to the sidenav element
- */
 function attachEventListeners(): boolean {
   const sidenav = getSidenavElement();
   if (!sidenav) return false;
-
-  // Check if sidebar is actually visible (not hidden due to responsive design)
   if (!isSidebarVisible()) return false;
-
-  // Already attached to this element
   if (sidenav === sidenavElement) return true;
 
-  // Remove old listeners if element changed
   if (sidenavElement) {
     sidenavElement.removeEventListener('mouseenter', handleMouseEnter);
     sidenavElement.removeEventListener('mouseleave', handleMouseLeave);
@@ -459,9 +397,6 @@ function attachEventListeners(): boolean {
   return true;
 }
 
-/**
- * Remove event listeners from the sidenav element
- */
 function detachEventListeners(): void {
   if (sidenavElement) {
     sidenavElement.removeEventListener('mouseenter', handleMouseEnter);
@@ -470,39 +405,28 @@ function detachEventListeners(): void {
   }
 }
 
-/**
- * Check and reattach event listeners if sidenav element changed or reappeared
- */
 function checkAndReattach(): void {
-  if (!enabled) return;
+  if (!enabled && !fullHideEnabled) return;
 
   const currentSidenav = getSidenavElement();
 
-  // If we have a reference but it's no longer in DOM, clear it
-  if (sidenavElement && !sidenavElement.isConnected) {
-    detachEventListeners(); // properly remove listeners and null the reference
-    autoCollapsed = false;
-  }
+  // Auto-hide: manage event listeners on sidenav
+  if (enabled) {
+    if (sidenavElement && !sidenavElement.isConnected) {
+      detachEventListeners();
+      autoCollapsed = false;
+    }
 
-  // If sidenav exists but is NOT visible (narrow window), clear the reference
-  // so that when it becomes visible again we treat it as a fresh element.
-  if (sidenavElement && !isSidebarVisible()) {
-    detachEventListeners();
-    return;
-  }
-
-  // If sidenav exists and is visible, try to attach
-  if (currentSidenav && isSidebarVisible()) {
-    // Reattach if element changed OR if we lost our reference (e.g. after resize)
-    if (currentSidenav !== sidenavElement) {
+    if (sidenavElement && !isSidebarVisible()) {
+      detachEventListeners();
+    } else if (currentSidenav && isSidebarVisible() && currentSidenav !== sidenavElement) {
       attachEventListeners();
     }
   }
 
-  // Sync edge trigger visibility with actual sidebar state
-  // (handles external toggles like user clicking the hamburger button)
-  if (edgeTriggerElement) {
-    if (isSidebarVisible() && isSidebarCollapsed()) {
+  // Full-hide: sync edge trigger visibility with sidebar state
+  if (fullHideEnabled && edgeTriggerElement) {
+    if (isSidebarCollapsed()) {
       showEdgeTrigger();
     } else {
       hideEdgeTrigger();
@@ -510,13 +434,9 @@ function checkAndReattach(): void {
   }
 }
 
-/**
- * Handle window resize - reattach listeners if sidebar reappears (with debounce)
- */
 function handleResize(): void {
-  if (!enabled) return;
+  if (!enabled && !fullHideEnabled) return;
 
-  // Debounce resize handling
   if (resizeDebounceTimer !== null) {
     window.clearTimeout(resizeDebounceTimer);
   }
@@ -525,28 +445,19 @@ function handleResize(): void {
     resizeDebounceTimer = null;
     checkAndReattach();
 
-    // Gemini's layout transitions may take longer than our debounce.
-    // Schedule a secondary check to catch late DOM changes.
     setTimeout(() => {
-      if (enabled) checkAndReattach();
+      if (enabled || fullHideEnabled) checkAndReattach();
     }, 600);
   }, RESIZE_DEBOUNCE_MS);
 }
 
-/**
- * Start periodic check for sidenav element
- */
 function startSidenavCheck(): void {
   if (sidenavCheckTimer !== null) return;
-
   sidenavCheckTimer = window.setInterval(() => {
     checkAndReattach();
   }, SIDENAV_CHECK_INTERVAL_MS);
 }
 
-/**
- * Stop periodic check for sidenav element
- */
 function stopSidenavCheck(): void {
   if (sidenavCheckTimer !== null) {
     window.clearInterval(sidenavCheckTimer);
@@ -554,96 +465,33 @@ function stopSidenavCheck(): void {
   }
 }
 
-/**
- * Enable the auto-hide feature
- */
-function enable(): void {
-  if (enabled) return;
-  enabled = true;
-  autoCollapsed = false;
-  pausedUntil = 0;
+// ─── Shared Infrastructure ─────────────────────────────────────────────
 
-  insertTransitionStyle();
-  createEdgeTrigger();
-  attachEventListeners();
-
-  // Start observing for DOM changes (in case sidenav is lazily loaded)
+function setupInfrastructure(): void {
   if (!observer) {
     observer = new MutationObserver(() => {
-      if (enabled) {
-        checkAndReattach();
-      }
+      if (enabled || fullHideEnabled) checkAndReattach();
     });
-
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  // Listen for resize events to handle responsive changes
   if (!resizeHandler) {
     resizeHandler = handleResize;
     window.addEventListener('resize', resizeHandler);
   }
 
-  // Listen for clicks on menu items to pause auto-collapse
-  if (!menuClickHandler) {
-    menuClickHandler = handleMenuClick;
-    document.addEventListener('click', menuClickHandler, true);
-  }
-
-  // Start periodic check for sidenav element reappearing
   startSidenavCheck();
-
-  // Initial: collapse if expanded, or show edge trigger if already collapsed
-  setTimeout(() => {
-    if (!enabled) return;
-    if (isSidebarCollapsed()) {
-      // Sidebar already collapsed (e.g. persisted Gemini UI state) — show edge trigger
-      // Don't set autoCollapsed: we didn't collapse it, so disable() shouldn't expand it
-      showEdgeTrigger();
-    } else if (sidenavElement && !sidenavElement.matches(':hover') && !isPopupOrDialogOpen()) {
-      collapseSidebar(); // collapseSidebar() calls showEdgeTrigger() on success
-    }
-  }, 500);
 }
 
-/**
- * Disable the auto-hide feature
- */
-function disable(): void {
-  if (!enabled) return;
-  enabled = false;
+function teardownInfrastructure(): void {
+  if (enabled || fullHideEnabled) return;
 
-  // Cancel any pending expand
-  if (enterTimeoutId !== null) {
-    window.clearTimeout(enterTimeoutId);
-    enterTimeoutId = null;
-  }
+  stopSidenavCheck();
 
-  // Cancel any pending collapse
-  if (leaveTimeoutId !== null) {
-    window.clearTimeout(leaveTimeoutId);
-    leaveTimeoutId = null;
-  }
-
-  // Cancel any pending resize debounce
   if (resizeDebounceTimer !== null) {
     window.clearTimeout(resizeDebounceTimer);
     resizeDebounceTimer = null;
   }
-
-  // Stop periodic check
-  stopSidenavCheck();
-
-  // If we auto-collapsed the sidebar, expand it back when disabled
-  if (autoCollapsed && isSidebarCollapsed()) {
-    clickToggleButton();
-  }
-  autoCollapsed = false;
-  pausedUntil = 0;
-
-  detachEventListeners();
-  removeEdgeTrigger();
-  removeTransitionStyle();
 
   if (observer) {
     observer.disconnect();
@@ -654,47 +502,145 @@ function disable(): void {
     window.removeEventListener('resize', resizeHandler);
     resizeHandler = null;
   }
+}
+
+// ─── Auto-Hide Feature ────────────────────────────────────────────────
+
+function enable(): void {
+  if (enabled) return;
+  enabled = true;
+  autoCollapsed = false;
+  pausedUntil = 0;
+
+  insertTransitionStyle();
+  attachEventListeners();
+
+  if (!menuClickHandler) {
+    menuClickHandler = handleMenuClick;
+    document.addEventListener('click', menuClickHandler, true);
+  }
+
+  setupInfrastructure();
+
+  // Initial collapse if mouse is not on sidebar and no popup is open
+  setTimeout(() => {
+    if (!enabled) return;
+    if (sidenavElement && !sidenavElement.matches(':hover') && !isPopupOrDialogOpen()) {
+      collapseSidebar();
+    }
+  }, 500);
+}
+
+function disable(): void {
+  if (!enabled) return;
+  enabled = false;
+
+  if (enterTimeoutId !== null) {
+    window.clearTimeout(enterTimeoutId);
+    enterTimeoutId = null;
+  }
+
+  if (leaveTimeoutId !== null) {
+    window.clearTimeout(leaveTimeoutId);
+    leaveTimeoutId = null;
+  }
+
+  if (autoCollapsed && isSidebarCollapsed()) {
+    clickToggleButton();
+  }
+  autoCollapsed = false;
+  pausedUntil = 0;
+
+  detachEventListeners();
+
+  if (!fullHideEnabled) {
+    removeTransitionStyle();
+  }
 
   if (menuClickHandler) {
     document.removeEventListener('click', menuClickHandler, true);
     menuClickHandler = null;
   }
+
+  teardownInfrastructure();
 }
 
-/**
- * Initialize and start the sidebar auto-hide feature
- */
+// ─── Full-Hide Feature ─────────────────────────────────────────────────
+
+function enableFullHide(): void {
+  if (fullHideEnabled) return;
+  fullHideEnabled = true;
+
+  insertTransitionStyle();
+  insertFullHideStyle();
+  createEdgeTrigger();
+
+  setupInfrastructure();
+
+  // Show edge trigger if sidebar is already collapsed
+  setTimeout(() => {
+    if (!fullHideEnabled) return;
+    if (isSidebarCollapsed()) {
+      showEdgeTrigger();
+    }
+  }, 300);
+}
+
+function disableFullHide(): void {
+  if (!fullHideEnabled) return;
+  fullHideEnabled = false;
+
+  removeEdgeTrigger();
+  removeFullHideStyle();
+
+  if (!enabled) {
+    removeTransitionStyle();
+  }
+
+  teardownInfrastructure();
+}
+
+// ─── Entry Point ───────────────────────────────────────────────────────
+
 export function startSidebarAutoHide(): void {
-  // 1) Read initial setting
+  // 1) Read initial settings
   try {
-    chrome.storage?.sync?.get({ [STORAGE_KEY]: false }, (res) => {
-      const isEnabled = res?.[STORAGE_KEY] === true;
-      if (isEnabled) {
-        enable();
-      }
+    chrome.storage?.sync?.get({ [STORAGE_KEY]: false, [FULL_HIDE_STORAGE_KEY]: false }, (res) => {
+      if (res?.[STORAGE_KEY] === true) enable();
+      if (res?.[FULL_HIDE_STORAGE_KEY] === true) enableFullHide();
     });
   } catch (e) {
-    console.error('[Gemini Voyager] Failed to get sidebar auto-hide setting:', e);
+    console.error('[Gemini Voyager] Failed to get sidebar settings:', e);
   }
 
   // 2) Respond to storage changes
   try {
     chrome.storage?.onChanged?.addListener((changes, area) => {
-      if (area === 'sync' && changes[STORAGE_KEY]) {
-        const isEnabled = changes[STORAGE_KEY].newValue === true;
-        if (isEnabled) {
+      if (area !== 'sync') return;
+
+      if (changes[STORAGE_KEY]) {
+        if (changes[STORAGE_KEY].newValue === true) {
           enable();
         } else {
           disable();
         }
       }
+
+      if (changes[FULL_HIDE_STORAGE_KEY]) {
+        if (changes[FULL_HIDE_STORAGE_KEY].newValue === true) {
+          enableFullHide();
+        } else {
+          disableFullHide();
+        }
+      }
     });
   } catch (e) {
-    console.error('[Gemini Voyager] Failed to add storage listener for sidebar auto-hide:', e);
+    console.error('[Gemini Voyager] Failed to add storage listeners for sidebar features:', e);
   }
 
   // 3) Cleanup on page unload
   window.addEventListener('beforeunload', () => {
     disable();
+    disableFullHide();
   });
 }

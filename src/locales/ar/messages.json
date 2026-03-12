@@ -1179,6 +1179,14 @@
     "message": "طي الشريط الجانبي تلقائياً عند مغادرة الماوس، وتوسيعه عند الدخول",
     "description": "Auto-hide sidebar feature hint"
   },
+  "sidebarFullHide": {
+    "message": "إخفاء الشريط الجانبي بالكامل",
+    "description": "Fully hide sidebar toggle label"
+  },
+  "sidebarFullHideHint": {
+    "message": "إخفاء الشريط الجانبي المطوي بالكامل، مرر الماوس على الحافة اليسرى لإظهاره",
+    "description": "Fully hide sidebar feature hint"
+  },
   "folderSpacing": {
     "message": "تباعد المجلدات",
     "description": "Folder spacing adjustment label"

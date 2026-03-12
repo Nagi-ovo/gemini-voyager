@@ -1187,6 +1187,14 @@
     "message": "Automatically collapse sidebar when mouse leaves, expand when mouse enters",
     "description": "Auto-hide sidebar feature hint"
   },
+  "sidebarFullHide": {
+    "message": "Fully hide sidebar",
+    "description": "Fully hide sidebar toggle label"
+  },
+  "sidebarFullHideHint": {
+    "message": "Completely hide the collapsed sidebar, hover left edge to reveal",
+    "description": "Fully hide sidebar feature hint"
+  },
   "folderSpacing": {
     "message": "Folder spacing",
     "description": "Folder spacing adjustment label"

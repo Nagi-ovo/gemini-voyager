@@ -1179,6 +1179,14 @@
     "message": "Réduit automatiquement la barre latérale quand la souris la quitte, l'étend quand elle y entre",
     "description": "Auto-hide sidebar feature hint"
   },
+  "sidebarFullHide": {
+    "message": "Masquer complètement la barre latérale",
+    "description": "Fully hide sidebar toggle label"
+  },
+  "sidebarFullHideHint": {
+    "message": "Masquer complètement la barre latérale réduite, survoler le bord gauche pour afficher",
+    "description": "Fully hide sidebar feature hint"
+  },
   "folderSpacing": {
     "message": "Espacement des dossiers",
     "description": "Folder spacing adjustment label"

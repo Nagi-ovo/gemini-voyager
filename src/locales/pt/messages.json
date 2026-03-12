@@ -1179,6 +1179,14 @@
     "message": "Contrai automaticamente a barra lateral quando o mouse sai, expande quando entra",
     "description": "Auto-hide sidebar feature hint"
   },
+  "sidebarFullHide": {
+    "message": "Ocultar barra lateral completa",
+    "description": "Fully hide sidebar toggle label"
+  },
+  "sidebarFullHideHint": {
+    "message": "Ocultar completamente a barra lateral recolhida, passar o mouse na borda esquerda para mostrar",
+    "description": "Fully hide sidebar feature hint"
+  },
   "folderSpacing": {
     "message": "Espaçamento de pastas",
     "description": "Folder spacing adjustment label"
