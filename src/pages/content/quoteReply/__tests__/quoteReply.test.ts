@@ -373,4 +373,93 @@ describe('quote reply', () => {
 
     cleanup();
   });
+
+  it('preserves inline math LaTeX syntax in quoted text', () => {
+    const cleanup = startQuoteReply();
+    const source = document.getElementById('source');
+    if (!source) throw new Error('Expected source element.');
+
+    source.innerHTML =
+      'Variable <span class="math-inline"><span data-math="U \\in [0, 1)">U∈[0,1)</span></span> is uniform';
+
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(source);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.runAllTimers();
+
+    const quoteButton = document.querySelector<HTMLElement>('.gv-quote-btn');
+    if (!quoteButton) throw new Error('Expected quote button.');
+    quoteButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    vi.runAllTimers();
+
+    const input = document.getElementById('input');
+    if (!input) throw new Error('Expected input element.');
+
+    expect(input.textContent).toContain('$U \\in [0, 1)$');
+
+    cleanup();
+  });
+
+  it('preserves block math LaTeX syntax in quoted text', () => {
+    const cleanup = startQuoteReply();
+    const source = document.getElementById('source');
+    if (!source) throw new Error('Expected source element.');
+
+    source.innerHTML =
+      'Equation: <span class="math-block"><span data-math="E = mc^2">E=mc²</span></span>';
+
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(source);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.runAllTimers();
+
+    const quoteButton = document.querySelector<HTMLElement>('.gv-quote-btn');
+    if (!quoteButton) throw new Error('Expected quote button.');
+    quoteButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    vi.runAllTimers();
+
+    const input = document.getElementById('input');
+    if (!input) throw new Error('Expected input element.');
+
+    expect(input.textContent).toContain('$$E = mc^2$$');
+
+    cleanup();
+  });
+
+  it('preserves standalone data-math elements without container', () => {
+    const cleanup = startQuoteReply();
+    const source = document.getElementById('source');
+    if (!source) throw new Error('Expected source element.');
+
+    source.innerHTML = 'Value <span data-math="x^2">x²</span> here';
+
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(source);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.runAllTimers();
+
+    const quoteButton = document.querySelector<HTMLElement>('.gv-quote-btn');
+    if (!quoteButton) throw new Error('Expected quote button.');
+    quoteButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    vi.runAllTimers();
+
+    const input = document.getElementById('input');
+    if (!input) throw new Error('Expected input element.');
+
+    expect(input.textContent).toContain('$x^2$');
+
+    cleanup();
+  });
 });
