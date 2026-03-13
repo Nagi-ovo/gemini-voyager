@@ -279,6 +279,8 @@ Special thanks to all contributors for their contributions to Gemini Voyager ❤
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Gemini Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt vault, and chat export.
 
+- **[Ophel Atlas](https://github.com/urzeye/ophel)** - A browser extension that transforms AI conversations into organized, searchable documents with auto-generated outlines, conversation management, and prompt libraries across multiple AI platforms.
+
 ---
 
 <div align="center">

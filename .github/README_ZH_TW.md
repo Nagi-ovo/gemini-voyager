@@ -284,6 +284,8 @@ bun run build:all
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 本項目的靈感來源。
 
+- **[Ophel Atlas](https://github.com/urzeye/ophel)** - 將 AI 對話轉化為有組織、可搜尋文件的瀏覽器擴充功能，支援自動生成大綱、對話管理和提示詞庫，相容多個 AI 平台。
+
 ---
 
 <div align="center">

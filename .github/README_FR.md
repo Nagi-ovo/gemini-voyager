@@ -230,6 +230,8 @@ Un grand merci à tous les contributeurs pour leurs contributions à Gemini Voya
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - La source d'inspiration originale pour la navigation temporelle.
 
+- **[Ophel Atlas](https://github.com/urzeye/ophel)** - Une extension de navigateur qui transforme les conversations IA en documents organisés et consultables, avec génération automatique de plans, gestion des conversations et bibliothèque de prompts, compatible avec plusieurs plateformes d'IA.
+
 ---
 
 <div align="center">

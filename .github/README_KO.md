@@ -278,6 +278,8 @@ Gemini Voyager에 기여해 주신 모든 기여자분들께 특별히 감사드
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 이 프로젝트에 영감을 준 ChatGPT 용 오리지널 타임라인 탐색 확장 프로그램입니다. Gemini Voyager 는 타임라인 개념을 Gemini 에 맞게 조정하고 폴더 관리, 프롬프트 저장소, 채팅 내보내기 등 광범위한 새로운 기능을 추가했습니다.
 
+- **[Ophel Atlas](https://github.com/urzeye/ophel)** - AI 대화를 체계적이고 검색 가능한 문서로 변환하는 브라우저 확장 프로그램입니다. 자동 개요 생성, 대화 관리, 프롬프트 라이브러리를 제공하며 여러 AI 플랫폼을 지원합니다.
+
 ---
 
 <div align="center">

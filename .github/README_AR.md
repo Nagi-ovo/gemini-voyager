@@ -230,6 +230,8 @@
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - مصدر الإلهام الأصلي للتنقل في الجدول الزمني للمحادثة.
 
+- **[Ophel Atlas](https://github.com/urzeye/ophel)** - إضافة متصفح تحوّل محادثات الذكاء الاصطناعي إلى مستندات منظمة وقابلة للبحث، مع إنشاء تلقائي للمخططات وإدارة المحادثات ومكتبة للأوامر، وتدعم منصات ذكاء اصطناعي متعددة.
+
 ---
 
 <div align="center">

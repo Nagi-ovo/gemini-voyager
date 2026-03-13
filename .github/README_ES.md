@@ -230,6 +230,8 @@ Un agradecimiento especial a todos los colaboradores por sus contribuciones a Ge
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - La fuente original de inspiración para la navegación por línea de tiempo.
 
+- **[Ophel Atlas](https://github.com/urzeye/ophel)** - Una extensión de navegador que transforma las conversaciones de IA en documentos organizados y buscables, con esquemas autogenerados, gestión de conversaciones y biblioteca de prompts, compatible con múltiples plataformas de IA.
+
 ---
 
 <div align="center">
