@@ -274,6 +274,8 @@ Gemini Voyager에 기여해 주신 모든 기여자분들께 특별히 감사드
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Gemini Voyager 를 DeepSeek 에 맞게 조정한 포크 프로젝트로, DeepSeek 사용자에게 타임라인 탐색 및 채팅 관리 기능을 제공합니다!
 
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Gemini Voyager에서 영감을 받은 Claude.ai 향상 확장 프로그램으로, 타임라인 탐색, 폴더 관리, 프롬프트 라이브러리 등 다양한 기능을 제공하며 Gemini Voyager 프롬프트 가져오기/내보내기와 완전 호환됩니다!
+
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 이 프로젝트에 영감을 준 ChatGPT 용 오리지널 타임라인 탐색 확장 프로그램입니다. Gemini Voyager 는 타임라인 개념을 Gemini 에 맞게 조정하고 폴더 관리, 프롬프트 저장소, 채팅 내보내기 등 광범위한 새로운 기능을 추가했습니다.
 
 ---

@@ -275,6 +275,8 @@ Special thanks to all contributors for their contributions to Gemini Voyager ❤
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Gemini Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
 
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - A Claude.ai enhancement extension inspired by Gemini Voyager, featuring timeline navigation, folder management, prompt library and more, with full prompt import/export compatibility with Gemini Voyager!
+
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Gemini Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt vault, and chat export.
 
 ---

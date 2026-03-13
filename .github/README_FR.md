@@ -226,6 +226,8 @@ Un grand merci à tous les contributeurs pour leurs contributions à Gemini Voya
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Un fork de Gemini Voyager adapté pour DeepSeek.
 
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Une extension d’amélioration pour Claude.ai inspirée de Gemini Voyager, avec navigation par timeline, gestion de dossiers, bibliothèque de prompts, et une compatibilité totale d’import/export des prompts avec Gemini Voyager !
+
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - La source d'inspiration originale pour la navigation temporelle.
 
 ---

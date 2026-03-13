@@ -226,6 +226,8 @@
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Форк Gemini Voyager, адаптированный для DeepSeek.
 
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Расширение для улучшения Claude.ai, вдохновлённое Gemini Voyager: навигация по таймлайну, управление папками, библиотека промптов и многое другое, с полной совместимостью импорта/экспорта промптов с Gemini Voyager!
+
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - Оригинальное расширение с таймлайном для ChatGPT, вдохновившее этот проект.
 
 ---
