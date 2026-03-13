@@ -1,0 +1,9 @@
+修复： https://github.com/Nagi-ovo/gemini-voyager/issues/421
+
+---
+
+你修改了啥？
+
+---
+
+push Fixes 那个 issue
