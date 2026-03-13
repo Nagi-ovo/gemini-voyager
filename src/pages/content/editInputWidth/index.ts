@@ -165,28 +165,42 @@ export function startEditInputWidthAdjuster(): void {
   let currentWidthPercent = DEFAULT_PERCENT;
   let enabled = false;
 
-  // Load initial state
-  chrome.storage?.sync?.get(
-    { geminiEditInputWidth: DEFAULT_PERCENT, [ENABLED_KEY]: false },
-    (res) => {
-      const storedWidth = res?.geminiEditInputWidth;
-      const normalized = normalizePercent(storedWidth, DEFAULT_PERCENT);
-      currentWidthPercent = normalized;
-      enabled = res?.[ENABLED_KEY] === true;
+  // Load initial state — request keys without defaults so we can distinguish
+  // "key never existed" (upgrade) from "explicitly set to false"
+  chrome.storage?.sync?.get(['geminiEditInputWidth', ENABLED_KEY], (res) => {
+    const storedWidth = res?.geminiEditInputWidth;
+    const normalized = normalizePercent(
+      typeof storedWidth === 'number' ? storedWidth : DEFAULT_PERCENT,
+      DEFAULT_PERCENT,
+    );
+    currentWidthPercent = normalized;
 
+    const enabledRaw = res?.[ENABLED_KEY];
+    if (enabledRaw === undefined) {
+      enabled =
+        typeof storedWidth === 'number' &&
+        normalizePercent(storedWidth, DEFAULT_PERCENT) !== DEFAULT_PERCENT;
       if (enabled) {
-        applyWidth(currentWidthPercent);
-      }
-
-      if (typeof storedWidth === 'number' && storedWidth !== normalized) {
         try {
-          chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
-        } catch (e) {
-          console.warn('[Gemini Voyager] Failed to migrate edit input width to %:', e);
-        }
+          chrome.storage?.sync?.set({ [ENABLED_KEY]: true });
+        } catch {}
       }
-    },
-  );
+    } else {
+      enabled = enabledRaw === true;
+    }
+
+    if (enabled) {
+      applyWidth(currentWidthPercent);
+    }
+
+    if (typeof storedWidth === 'number' && storedWidth !== normalized) {
+      try {
+        chrome.storage?.sync?.set({ geminiEditInputWidth: normalized });
+      } catch (e) {
+        console.warn('[Gemini Voyager] Failed to migrate edit input width to %:', e);
+      }
+    }
+  });
 
   // Listen for changes from storage (when user adjusts in popup)
   chrome.storage?.onChanged?.addListener((changes, area) => {

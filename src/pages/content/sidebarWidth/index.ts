@@ -236,13 +236,29 @@ export function startSidebarWidthAdjuster(): void {
   let enabled = false;
   setupSearchButtonHitTestDebug();
 
-  // 1) Read initial state
+  // 1) Read initial state — request keys without defaults so we can distinguish
+  // "key never existed" (upgrade) from "explicitly set to false"
   try {
-    chrome.storage?.sync?.get({ geminiSidebarWidth: DEFAULT_PX, [ENABLED_KEY]: false }, (res) => {
-      const w = Number(res?.geminiSidebarWidth);
+    chrome.storage?.sync?.get(['geminiSidebarWidth', ENABLED_KEY], (res) => {
+      const rawW = res?.geminiSidebarWidth;
+      const w = Number.isFinite(Number(rawW)) ? Number(rawW) : DEFAULT_PX;
       const { normalized } = normalizeWidth(w);
       currentWidthValue = normalized;
-      enabled = res?.[ENABLED_KEY] === true;
+
+      const enabledRaw = res?.[ENABLED_KEY];
+      if (enabledRaw === undefined) {
+        // Upgrade path: auto-enable if user had previously customized
+        const isCustomized =
+          rawW !== undefined && normalizeWidth(Number(rawW)).normalized !== DEFAULT_PX;
+        enabled = isCustomized;
+        if (enabled) {
+          try {
+            chrome.storage?.sync?.set({ [ENABLED_KEY]: true });
+          } catch {}
+        }
+      } else {
+        enabled = enabledRaw === true;
+      }
 
       if (enabled) {
         applyWidth(currentWidthValue);

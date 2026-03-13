@@ -235,13 +235,29 @@ export function startChatWidthAdjuster() {
   let currentWidthPercent = DEFAULT_PERCENT;
   let enabled = false;
 
-  // Load initial state
-  chrome.storage?.sync?.get({ geminiChatWidth: DEFAULT_PERCENT, [ENABLED_KEY]: false }, (res) => {
+  // Load initial state — request keys without defaults so we can distinguish
+  // "key never existed" (upgrade) from "explicitly set to false"
+  chrome.storage?.sync?.get(['geminiChatWidth', ENABLED_KEY], (res) => {
     const storedWidth = res?.geminiChatWidth;
     const numericStoredWidth = typeof storedWidth === 'number' ? storedWidth : DEFAULT_PERCENT;
     const normalized = normalizePercent(numericStoredWidth, DEFAULT_PERCENT);
     currentWidthPercent = normalized;
-    enabled = res?.[ENABLED_KEY] === true;
+
+    const enabledRaw = res?.[ENABLED_KEY];
+    if (enabledRaw === undefined) {
+      // Upgrade path: enabled key was never set.
+      // Auto-enable if user had previously customized the width.
+      enabled =
+        typeof storedWidth === 'number' &&
+        normalizePercent(storedWidth, DEFAULT_PERCENT) !== DEFAULT_PERCENT;
+      if (enabled) {
+        try {
+          chrome.storage?.sync?.set({ [ENABLED_KEY]: true });
+        } catch {}
+      }
+    } else {
+      enabled = enabledRaw === true;
+    }
 
     if (enabled) {
       applyWidth(currentWidthPercent);
