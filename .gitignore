@@ -25,7 +25,8 @@ yarn-error.log*
 
 .vscode/
 .idea/
-.claude/
+.claude/settings.local.json
+.claude/worktrees/
 .DS_Store
 
 *.local
