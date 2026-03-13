@@ -12,7 +12,9 @@
     ".github/README_KO.md",
     ".github/README_PT.md",
     ".github/README_RU.md",
-    ".github/README_ZH_TW.md"
+    ".github/README_ZH.md",
+    ".github/README_ZH_TW.md",
+    "README.md"
   ],
   "sessions": [
     {
@@ -21,6 +23,13 @@
       "context": "/85/35405a3cfa/0/context.md",
       "content_hash": "/85/35405a3cfa/0/content_hash.txt",
       "prompt": "/85/35405a3cfa/0/prompt.txt"
+    },
+    {
+      "metadata": "/85/35405a3cfa/1/metadata.json",
+      "transcript": "/85/35405a3cfa/1/full.jsonl",
+      "context": "/85/35405a3cfa/1/context.md",
+      "content_hash": "/85/35405a3cfa/1/content_hash.txt",
+      "prompt": "/85/35405a3cfa/1/prompt.txt"
     }
   ],
   "token_usage": {
