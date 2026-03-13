@@ -89,14 +89,14 @@
   --timeline-bar-bg: rgba(248, 250, 252, 0.88);
 }
 
-/* Gemini theme hosts */
-.theme-host.dark-theme .gemini-timeline-bar:not(.timeline-no-container) {
+/* Gemini theme hosts — background moved to ::before pseudo-element */
+.theme-host.dark-theme .gemini-timeline-bar:not(.timeline-no-container)::before {
   background-color: rgba(2, 6, 23, 0.72);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
 
-.theme-host.light-theme .gemini-timeline-bar:not(.timeline-no-container) {
+.theme-host.light-theme .gemini-timeline-bar:not(.timeline-no-container)::before {
   background-color: rgba(248, 250, 252, 0.85);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -113,13 +113,40 @@
   flex-direction: column;
   align-items: center;
   border-radius: 12px;
+  overflow: visible;
+  contain: layout;
+}
+
+/* Visual background layer — width adjustable via edge drag, dots unaffected */
+.gemini-timeline-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--timeline-bar-width, 24px);
+  border-radius: calc(var(--timeline-bar-width, 24px) / 2);
   background-color: var(--timeline-bar-bg);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  transition: background-color 0.3s ease;
-  overflow: visible;
-  contain: layout;
   box-shadow: 0 2px 12px oklch(0 0 0 / 0.06);
+  transition:
+    background-color 0.3s ease,
+    width 0.2s ease,
+    border-radius 0.2s ease;
+  pointer-events: none;
+}
+
+/* Disable transitions during active resize for immediate feedback */
+.gemini-timeline-bar.timeline-resizing::before {
+  transition: none !important;
+}
+
+/* Prevent text selection during resize drag */
+.gemini-timeline-bar.timeline-resizing {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .timeline-track {
@@ -534,11 +561,14 @@ html.dark .timeline-left-slider::before {
 }
 
 .gemini-timeline-bar.timeline-no-container {
-  background-color: transparent !important;
+  contain: none;
+}
+
+.gemini-timeline-bar.timeline-no-container::before {
+  opacity: 0 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  box-shadow: none;
-  contain: none;
+  box-shadow: none !important;
 }
 
 /* ── Timeline Preview Panel ── */

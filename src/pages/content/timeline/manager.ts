@@ -95,6 +95,13 @@ export class TimelineManager {
   private tooltipHideDelay = 100;
   private scrollMode: 'jump' | 'flow' = 'flow';
   private hideContainer: boolean = false;
+  private barWidth: number = 24;
+  private readonly barWidthMin = 4;
+  private readonly barWidthMax = 24;
+  private resizing = false;
+  private onResizeMove: ((ev: PointerEvent) => void) | null = null;
+  private onResizeUp: ((ev: PointerEvent) => void) | null = null;
+  private onBarCursorMove: ((ev: PointerEvent) => void) | null = null;
   private runnerRing: HTMLElement | null = null;
   private flowAnimating = false;
   private tooltipHideTimer: number | null = null;
@@ -204,6 +211,7 @@ export class TimelineManager {
       const defaults = {
         geminiTimelineScrollMode: 'flow',
         geminiTimelineHideContainer: false,
+        geminiTimelineBarWidth: null,
         geminiTimelineDraggable: false,
         geminiTimelineMarkerLevel: false,
         geminiTimelinePosition: null,
@@ -247,6 +255,10 @@ export class TimelineManager {
       const m = res?.geminiTimelineScrollMode;
       if (m === 'flow' || m === 'jump') this.scrollMode = m;
       this.hideContainer = !!res?.geminiTimelineHideContainer;
+      const storedWidth = res?.geminiTimelineBarWidth;
+      if (typeof storedWidth === 'number' && storedWidth >= this.barWidthMin && storedWidth <= this.barWidthMax) {
+        this.barWidth = storedWidth;
+      }
       this.applyContainerVisibility();
       this.toggleDraggable(!!res?.geminiTimelineDraggable);
       this.toggleMarkerLevel(!!res?.geminiTimelineMarkerLevel);
@@ -307,6 +319,13 @@ export class TimelineManager {
             if (changes?.geminiTimelineHideContainer) {
               this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
               this.applyContainerVisibility();
+            }
+            if (changes?.geminiTimelineBarWidth) {
+              const w = changes.geminiTimelineBarWidth.newValue;
+              if (typeof w === 'number' && w >= this.barWidthMin && w <= this.barWidthMax) {
+                this.barWidth = w;
+                this.applyContainerVisibility();
+              }
             }
             if (changes?.geminiTimelineDraggable) {
               this.toggleDraggable(!!changes.geminiTimelineDraggable.newValue);
@@ -369,7 +388,66 @@ export class TimelineManager {
 
   private applyContainerVisibility(): void {
     if (!this.ui.timelineBar) return;
-    this.ui.timelineBar.classList.toggle('timeline-no-container', !!this.hideContainer);
+    const bar = this.ui.timelineBar;
+    // Visual background width (::before is centered, bar stays 24px for dots)
+    bar.style.setProperty('--timeline-bar-width', `${this.barWidth}px`);
+    // hideContainer is an independent binary toggle
+    bar.classList.toggle('timeline-no-container', !!this.hideContainer);
+  }
+
+  /** Check if pointer is near either edge of the visual background (::before, centered in the 24px bar). */
+  private isInResizeEdge(ev: PointerEvent): boolean {
+    if (!this.ui.timelineBar) return false;
+    const rect = this.ui.timelineBar.getBoundingClientRect();
+    const barCenter = rect.left + rect.width / 2;
+    const halfWidth = this.barWidth / 2;
+    const ZONE = 6;
+
+    const leftEdge = barCenter - halfWidth;
+    const rightEdge = barCenter + halfWidth;
+    const nearLeft = ev.clientX >= leftEdge - 2 && ev.clientX <= leftEdge + ZONE;
+    const nearRight = ev.clientX >= rightEdge - ZONE && ev.clientX <= rightEdge + 2;
+    return nearLeft || nearRight;
+  }
+
+  private startResize(ev: PointerEvent): void {
+    this.resizing = true;
+    this.ui.timelineBar!.classList.add('timeline-resizing');
+    this.ui.timelineBar!.setPointerCapture(ev.pointerId);
+    const barRect = this.ui.timelineBar!.getBoundingClientRect();
+    const barCenterX = barRect.left + barRect.width / 2;
+
+    this.onResizeMove = (e: PointerEvent) => {
+      // Width = 2 × distance from pointer to bar center (symmetric expansion)
+      const dist = Math.abs(e.clientX - barCenterX);
+      this.barWidth = Math.max(this.barWidthMin, Math.min(this.barWidthMax, dist * 2));
+      this.applyContainerVisibility();
+    };
+
+    this.onResizeUp = (_e: PointerEvent) => {
+      this.resizing = false;
+      this.ui.timelineBar?.classList.remove('timeline-resizing');
+      window.removeEventListener('pointermove', this.onResizeMove!);
+      window.removeEventListener('pointerup', this.onResizeUp!);
+      this.onResizeMove = null;
+      this.onResizeUp = null;
+      this.saveBarWidth();
+    };
+
+    window.addEventListener('pointermove', this.onResizeMove);
+    window.addEventListener('pointerup', this.onResizeUp, { once: true });
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+
+  private saveBarWidth(): void {
+    const g = globalThis as ExtGlobal;
+    const value = Math.round(this.barWidth);
+    if (g.chrome?.storage?.sync?.set) {
+      g.chrome.storage.sync.set({ geminiTimelineBarWidth: value });
+    } else if (g.browser?.storage?.sync?.set) {
+      g.browser.storage.sync.set({ geminiTimelineBarWidth: value });
+    }
   }
 
   private computeConversationId(): string {
@@ -1435,6 +1513,13 @@ export class TimelineManager {
       if ((ev.target as HTMLElement).closest('.timeline-dot, .timeline-thumb')) {
         return;
       }
+      // Resize takes priority over position drag
+      if (this.isInResizeEdge(ev)) {
+        this.startResize(ev);
+        return;
+      }
+      // Position drag only when enabled
+      if (!this.draggable) return;
       this.barDragging = true;
       this.barStartPos = { x: ev.clientX, y: ev.clientY };
       const rect = this.ui.timelineBar!.getBoundingClientRect();
@@ -1445,6 +1530,21 @@ export class TimelineManager {
       window.addEventListener('pointermove', this.onBarPointerMove);
       window.addEventListener('pointerup', this.onBarPointerUp, { once: true });
     };
+    // Always attach pointerdown for resize (drag is gated by this.draggable inside)
+    this.ui.timelineBar!.addEventListener('pointerdown', this.onBarPointerDown);
+
+    // Cursor management: show resize cursor near inner edge
+    this.onBarCursorMove = (ev: PointerEvent) => {
+      if (this.resizing || this.barDragging) return;
+      if (this.isInResizeEdge(ev)) {
+        this.ui.timelineBar!.style.cursor = 'ew-resize';
+      } else if (this.draggable) {
+        this.ui.timelineBar!.style.cursor = 'move';
+      } else {
+        this.ui.timelineBar!.style.cursor = '';
+      }
+    };
+    this.ui.timelineBar!.addEventListener('pointermove', this.onBarCursorMove);
 
     this.onStorage = (e: StorageEvent) => {
       if (!e || e.storageArea !== localStorage) return;
@@ -2180,14 +2280,10 @@ export class TimelineManager {
 
   private toggleDraggable(enabled: boolean): void {
     this.draggable = enabled;
-    // Guard against null timelineBar or onBarPointerDown (can happen if storage listener fires before UI init or after cleanup)
-    if (!this.ui.timelineBar || !this.onBarPointerDown) return;
-    if (this.draggable) {
-      this.ui.timelineBar.addEventListener('pointerdown', this.onBarPointerDown);
-      this.ui.timelineBar.style.cursor = 'move';
-    } else {
-      this.ui.timelineBar.removeEventListener('pointerdown', this.onBarPointerDown);
-      this.ui.timelineBar.style.cursor = 'default';
+    // Cursor is managed dynamically by onBarCursorMove; just update the flag
+    if (!this.ui.timelineBar) return;
+    if (!this.draggable) {
+      this.ui.timelineBar.style.cursor = '';
     }
   }
 
@@ -3171,6 +3267,20 @@ export class TimelineManager {
     // Ensure draggable listeners are removed
     try {
       this.toggleDraggable(false);
+    } catch {}
+    // Remove bar pointerdown and cursor listeners (always attached)
+    try {
+      if (this.onBarPointerDown) this.ui.timelineBar?.removeEventListener('pointerdown', this.onBarPointerDown);
+    } catch {}
+    try {
+      if (this.onBarCursorMove) this.ui.timelineBar?.removeEventListener('pointermove', this.onBarCursorMove);
+    } catch {}
+    // Remove any in-flight resize listeners
+    try {
+      if (this.onResizeMove) window.removeEventListener('pointermove', this.onResizeMove);
+    } catch {}
+    try {
+      if (this.onResizeUp) window.removeEventListener('pointerup', this.onResizeUp);
     } catch {}
     // Also remove any in-flight drag listeners
     try {
