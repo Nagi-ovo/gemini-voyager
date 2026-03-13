@@ -280,6 +280,8 @@ bun run build:all
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - 為 DeepSeek 適配的 Fork 版本。
 
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - 受 Gemini Voyager 啟發的 Claude.ai 增強擴充套件，提供時間軸導覽、資料夾管理、提示詞庫等功能，並與 Gemini Voyager 的提示詞匯入/匯出完全相容！
+
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 本項目的靈感來源。
 
 ---

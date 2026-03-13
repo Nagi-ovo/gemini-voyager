@@ -232,6 +232,8 @@ Um agradecimento especial a todos os colaboradores pelas suas contribuições ao
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Um fork do Gemini Voyager adaptado para o DeepSeek.
 
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Uma extensão de aprimoramento para Claude.ai inspirada no Gemini Voyager, com navegação por linha do tempo, gerenciamento de pastas, biblioteca de prompts e muito mais, com compatibilidade total de importação/exportação de prompts com o Gemini Voyager!
+
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - A fonte original de inspiração para a navegação na linha do tempo.
 
 ---
