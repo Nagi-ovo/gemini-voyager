@@ -35,6 +35,10 @@ sponsorkit/
 # Claude Code internals
 .entire/
 .claude/
+CLAUDE.md
+
+# Changelog notes (hand-written, not auto-formatted)
+src/pages/content/changelog/notes/
 
 # System & Misc
 .DS_Store

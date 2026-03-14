@@ -256,7 +256,11 @@ export class TimelineManager {
       if (m === 'flow' || m === 'jump') this.scrollMode = m;
       this.hideContainer = !!res?.geminiTimelineHideContainer;
       const storedWidth = res?.geminiTimelineBarWidth;
-      if (typeof storedWidth === 'number' && storedWidth >= this.barWidthMin && storedWidth <= this.barWidthMax) {
+      if (
+        typeof storedWidth === 'number' &&
+        storedWidth >= this.barWidthMin &&
+        storedWidth <= this.barWidthMax
+      ) {
         this.barWidth = storedWidth;
       }
       this.applyContainerVisibility();
@@ -3270,10 +3274,12 @@ export class TimelineManager {
     } catch {}
     // Remove bar pointerdown and cursor listeners (always attached)
     try {
-      if (this.onBarPointerDown) this.ui.timelineBar?.removeEventListener('pointerdown', this.onBarPointerDown);
+      if (this.onBarPointerDown)
+        this.ui.timelineBar?.removeEventListener('pointerdown', this.onBarPointerDown);
     } catch {}
     try {
-      if (this.onBarCursorMove) this.ui.timelineBar?.removeEventListener('pointermove', this.onBarCursorMove);
+      if (this.onBarCursorMove)
+        this.ui.timelineBar?.removeEventListener('pointermove', this.onBarCursorMove);
     } catch {}
     // Remove any in-flight resize listeners
     try {

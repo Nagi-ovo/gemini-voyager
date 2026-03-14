@@ -49,6 +49,8 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 bun run bump    # auto-updates package.json, manifest.json, manifest.dev.json
 ```
 
+**Changelog required:** after bumping, ensure `src/pages/content/changelog/notes/` has a `.md` file for the new version before pushing. Do not skip this step.
+
 Then: commit `chore: bump to v{VERSION}` → `git tag v{VERSION}` → `git push && git push --tags`
 
 ## Design Principles
