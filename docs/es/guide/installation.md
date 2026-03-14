@@ -6,7 +6,7 @@
 
 Elige tu camino.
 
-> ⚠️ El Gestor de Prompts es la única función compatible con Gemini para Empresas.
+> ⚠️ El Gestor de Prompts es la única función compatible con Gemini™ para Empresas.
 
 ## 1. Tiendas Oficiales (Recomendado)
 

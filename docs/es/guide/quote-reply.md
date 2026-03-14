@@ -1,6 +1,6 @@
 # Respuesta con Cita
 
-Gemini Voyager ofrece una conveniente función de "Respuesta con Cita", haciendo que responder a contenido específico sea más preciso y eficiente.
+Voyager ofrece una conveniente función de "Respuesta con Cita", haciendo que responder a contenido específico sea más preciso y eficiente.
 
 ## Introducción
 

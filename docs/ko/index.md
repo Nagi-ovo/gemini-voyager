@@ -2,12 +2,12 @@
 layout: home
 
 hero:
-  name: 'Gemini Voyager'
+  name: 'Voyager'
   text: 'Gemini를 위한 완벽한 운영체제.'
   tagline: '우리는 Gemini를 사랑합니다. 단지 그것이 완벽해지기를 원했습니다.'
   image:
     src: /logo.png
-    alt: Gemini Voyager 로고
+    alt: Voyager 로고
   actions:
     - theme: brand
       text: 다운로드
@@ -18,7 +18,7 @@ hero:
 
 teaser:
   title: '그냥 작동합니다.'
-  description: '우리는 단순히 또 다른 확장 프로그램을 만들고 싶지 않았습니다. 더 나은 사고 방식을 구축하고 싶었습니다.<br>Gemini Voyager를 사용하면 인터페이스와 싸우는 대신 대화의 흐름에 집중할 수 있습니다.'
+  description: '우리는 단순히 또 다른 확장 프로그램을 만들고 싶지 않았습니다. 더 나은 사고 방식을 구축하고 싶었습니다.<br>Voyager를 사용하면 인터페이스와 싸우는 대신 대화의 흐름에 집중할 수 있습니다.'
   image: '/assets/teaser.png'
   features:
     - title: '타임라인'
@@ -111,7 +111,7 @@ features:
   </a>
   <p style="margin-top: 24px; font-size: 1.05em; opacity: 0.86;">✨ Product Hunt에 출시되었습니다! 여러분의 의견과 피드백을 환영합니다. ❤️</p>
   <div style="margin-top: 12px; display: flex; justify-content: center;">
-    <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager on Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
+    <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager on Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
   </div>
 </div>
 

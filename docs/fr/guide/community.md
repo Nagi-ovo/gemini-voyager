@@ -20,7 +20,7 @@ Suivez-nous sur X (Twitter) pour obtenir les dernières mises à jour de dévelo
 Rejoignez notre serveur Discord pour discuter avec d'autres Voyageurs !
 
 - **Chat en Temps Réel** : Discutez directement avec d'autres utilisateurs et les développeurs.
-- **Partage de Prompts** : Voyez comment les autres utilisent Gemini et partagez vos meilleurs prompts.
+- **Partage de Prompts** : Voyez comment les autres utilisent Gemini™ et partagez vos meilleurs prompts.
 - **Mises à Jour de Développement** : Recevez les dernières nouvelles sur les fonctionnalités et versions à venir.
 
 <div style="margin: 2rem 0;">
@@ -36,4 +36,4 @@ Si vous avez trouvé un bug ou avez une demande de fonctionnalité spécifique, 
 - [Signaler un Bug](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
 - [Suggérer une Fonctionnalité](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
 
-Merci de soutenir Gemini Voyager ! ❤️
+Merci de soutenir Voyager ! ❤️

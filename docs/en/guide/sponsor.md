@@ -1,11 +1,11 @@
 # Sponsor
 
 > [!NOTE]
-> If Gemini Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
+> If Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
 
 Maintaining open-source projects is mainly driven by passion (and coffee) ☕
 
-**[Gemini Voyager](https://github.com/Nagi-ovo/gemini-voyager)** is a completely free and open-source browser extension designed to enhance your Gemini experience. If this extension helps you use Gemini more efficiently, please consider supporting the continued development and maintenance of this project.
+**[Voyager](https://github.com/Nagi-ovo/gemini-voyager)** is a completely free and open-source browser extension designed to enhance your Gemini experience. If this extension helps you use Gemini more efficiently, please consider supporting the continued development and maintenance of this project.
 
 ---
 
@@ -30,7 +30,7 @@ Maintaining open-source projects is mainly driven by passion (and coffee) ☕
 
 ### 🎙️ Recommended Tool: Typeless
 
-I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, an AI voice-to-text tool that I used extensively during the development of Gemini Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
+I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, an AI voice-to-text tool that I used extensively during the development of Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
 
 > 🎁 **[Join via my referral link](https://www.typeless.com/?via=gemini-voyager)** (Code: _`gemini-voyager`_) to get **$5 free credits**. This also gives me credits to keep maintaining this project—a free way to support my work! ❤️
 

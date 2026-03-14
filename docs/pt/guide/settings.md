@@ -2,7 +2,7 @@
 
 Utilize totalmente o seu monitor ultrawide.
 
-O Gemini restringe o conteúdo principal a uma largura fixa. O Voyager liberta isso.
+O Gemini™ restringe o conteúdo principal a uma largura fixa. O Voyager liberta isso.
 Aceda ao painel de definições e arraste o slider **"Largura do Chat"**.
 
 - **Alargar**: Perfeito para tabelas de código, análise de dados e janelas de ecrã dividido.

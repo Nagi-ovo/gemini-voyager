@@ -12,7 +12,7 @@ Nous proposons une fonctionnalité de **Masquage automatique de la barre latéra
 
 ### Comment activer
 
-1. Ouvrez le panneau de configuration de Gemini Voyager.
+1. Ouvrez le panneau de configuration de Voyager.
 2. Trouvez l'option **Masquer auto barre latérale** dans les **Paramètres généraux**.
 3. activez l'interrupteur.
 

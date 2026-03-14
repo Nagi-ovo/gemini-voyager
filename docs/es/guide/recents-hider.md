@@ -4,7 +4,7 @@
 **Nota**: Esta función es compatible con la versión 1.1.9 y posteriores.
 :::
 
-Agrega un elegante interruptor para ocultar la sección "Guardado recientemente" en la página de inicio de Gemini para una interfaz más limpia. ¡Ahora también permite ocultar la lista de **Gems** en la barra lateral!
+Agrega un elegante interruptor para ocultar la sección "Guardado recientemente" en la página de inicio de Gemini™ para una interfaz más limpia. ¡Ahora también permite ocultar la lista de **Gems** en la barra lateral!
 
 <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 300px; text-align: center;">

@@ -1,7 +1,7 @@
 # Time Travel
 
 Long conversations are messy. You scroll up, you scroll down, you lose your place.
-Gemini Voyager turns your conversation into a timeline.
+Voyager turns your conversation into a timeline.
 
 ## See the Shape of Your Chat
 

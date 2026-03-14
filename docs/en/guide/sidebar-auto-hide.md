@@ -12,7 +12,7 @@ We provide a **Sidebar Auto-hide** feature. When enabled, the sidebar automatica
 
 ### How to Enable
 
-1. Open the Gemini Voyager settings panel.
+1. Open the Voyager settings panel.
 2. Find the **Auto-hide sidebar** toggle in **General Settings**.
 3. Toggle it on to activate.
 

@@ -1,6 +1,6 @@
 # Folder Manager
 
-This folder contains the implementation of the conversation folder management feature for Gemini Voyager.
+This folder contains the implementation of the conversation folder management feature for Voyager.
 
 ## Overview
 

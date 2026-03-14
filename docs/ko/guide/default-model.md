@@ -4,7 +4,7 @@
 **참고**: 이 기능은 버전 1.1.9 이상에서 지원됩니다.
 :::
 
-새 대화를 시작할 때마다 모델을 수동으로 변경할 필요 없도록, 선호하는 Gemini 모델을 기본값으로 설정하세요.
+새 대화를 시작할 때마다 모델을 수동으로 변경할 필요 없도록, 선호하는 Gemini™ 모델을 기본값으로 설정하세요.
 
 <div style="text-align: center; margin-top: 20px;">
   <video src="/assets/default-model.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>

@@ -1,6 +1,6 @@
 <div align="center">
   <img src="../docs/public/assets/promotion/Promo-Banner-cn.png" alt="promotion"/>
-  <h3>打造屬於你的 Gemini 體驗 ✨</h3>
+  <h3>打造屬於你的 Gemini™ 體驗 ✨</h3>
   <p>
     優雅的時間軸導航、資料夾管理對話、構建專屬提示詞庫。<br>
     <b>這是 Google Gemini 缺失的那塊拼圖。</b>
@@ -62,15 +62,15 @@
 > **改名公告**：由於商標版權問題，本插件已正式改名為 **Voyager**。但由於 Chrome Web Store 審核速度極慢，七天內未能完成名稱更新審核，暫時無法在 Chrome Web Store 使用。
 
 > [!NOTE]
-> 如果 Gemini Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案，從而改善 Gemini 的使用體驗。謝謝。
+> 如果 Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案，從而改善 Gemini 的使用體驗。謝謝。
 
 ---
 
-## 👋 為什麼開發 Gemini Voyager？
+## 👋 為什麼開發 Voyager？
 
 我們都很喜歡 Gemini，但有時候總覺得它少了一點"秩序感"。
 
-這就是我們開發 **Gemini Voyager** 的初衷。它不僅僅是一個工具，更是一個能幫你把 AI 對話變得井井有條、觸手可及的得力助手。無論你是需要處理大量對話的研究人員，還是喜歡收藏代碼片段的開發者，亦或是單純的整理控，Voyager 都是為你準備的。
+這就是我們開發 **Voyager** 的初衷。它不僅僅是一個工具，更是一個能幫你把 AI 對話變得井井有條、觸手可及的得力助手。無論你是需要處理大量對話的研究人員，還是喜歡收藏代碼片段的開發者，亦或是單純的整理控，Voyager 都是為你準備的。
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
@@ -164,7 +164,7 @@
   </a>
 </div>
 
-如果 Gemini Voyager 提升了你的體驗，歡迎請我喝杯咖啡。贊助者將被列入致謝名單。❤️
+如果 Voyager 提升了你的體驗，歡迎請我喝杯咖啡。贊助者將被列入致謝名單。❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -264,11 +264,11 @@ bun run build:all
 
 </details>
 
-感謝你讓 Gemini Voyager 變得更好！❤️
+感謝你讓 Voyager 變得更好！❤️
 
 ### ❤️ 特別感謝
 
-特別感謝所有為 Gemini Voyager 做出貢獻的貢獻者們 ❤️
+特別感謝所有為 Voyager 做出貢獻的貢獻者們 ❤️
 
 <a href="https://github.com/Nagi-ovo/gemini-voyager/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Nagi-ovo/gemini-voyager&max=200&columns=14" />
@@ -280,7 +280,7 @@ bun run build:all
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - 為 DeepSeek 適配的 Fork 版本。
 
-- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - 受 Gemini Voyager 啟發的 Claude.ai 增強擴充套件，提供時間軸導覽、資料夾管理、提示詞庫等功能，並與 Gemini Voyager 的提示詞匯入/匯出完全相容！
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - 受 Voyager 啟發的 Claude.ai 增強擴充套件，提供時間軸導覽、資料夾管理、提示詞庫等功能，並與 Voyager 的提示詞匯入/匯出完全相容！
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 本項目的靈感來源。
 

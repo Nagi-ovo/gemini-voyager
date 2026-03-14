@@ -1,7 +1,7 @@
 # Bienvenido a Bordo
 
 Felicidades. Tu flujo de trabajo acaba de subir de categoría.
-Gemini Voyager no es solo una herramienta, es un hábito. Dame 5 minutos para enseñarte.
+Voyager no es solo una herramienta, es un hábito. Dame 5 minutos para enseñarte.
 
 ## 1. Preparación
 

@@ -28,7 +28,7 @@ Chamada num clique, duplique a eficiência.
 
 ## Funciona em Qualquer Site
 
-O Gestor de Prompts agora pode ser usado em qualquer site à sua escolha, não limitado ao Gemini e AI Studio.
+O Gestor de Prompts agora pode ser usado em qualquer site à sua escolha, não limitado ao Gemini™ e AI Studio.
 
 ### Como Ativar
 

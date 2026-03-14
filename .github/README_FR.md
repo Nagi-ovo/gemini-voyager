@@ -1,6 +1,6 @@
 <div align="center">
   <img src="../docs/public/assets/promotion/Promo-Banner.png" alt="promotion"/>
-  <h3>Personnalisez votre expérience Gemini ✨</h3>
+  <h3>Personnalisez votre expérience Gemini™ ✨</h3>
   <p>
     Navigation temporelle élégante, organisation des chats par dossiers, et coffre-fort de prompts personnel.<br>
     <b>C'est l'extension indispensable pour Google Gemini.</b>
@@ -62,15 +62,15 @@
 > **Avis de changement de nom** : En raison de problèmes de marque et de droits d'auteur, cette extension a été officiellement renommée **Voyager**. Cependant, en raison de la lenteur extrême du processus de révision du Chrome Web Store, le changement de nom n'a pas été approuvé dans les 7 jours — elle est temporairement indisponible sur le Chrome Web Store.
 
 > [!NOTE]
-> Si Gemini Voyager vous est utile, partagez-le sur X, Reddit, YouTube, etc. Chaque partage aide plus de personnes à découvrir le projet et à améliorer l'expérience Gemini. Merci.
+> Si Voyager vous est utile, partagez-le sur X, Reddit, YouTube, etc. Chaque partage aide plus de personnes à découvrir le projet et à améliorer l'expérience Gemini. Merci.
 
 ---
 
-## 👋 Pourquoi Gemini Voyager ?
+## 👋 Pourquoi Voyager ?
 
 Nous adorons Gemini, mais nous aimerions parfois qu'il soit un peu plus "ordonné".
 
-C'est pourquoi nous avons créé **Gemini Voyager**. Plus qu'un simple outil, c'est un compagnon qui vous aide à garder vos conversations IA organisées, accessibles et productives. Que vous soyez un chercheur gérant des dizaines de fils, un développeur sauvegardant des extraits de code, ou simplement quelqu'un qui aime l'ordre, Voyager est fait pour vous.
+C'est pourquoi nous avons créé **Voyager**. Plus qu'un simple outil, c'est un compagnon qui vous aide à garder vos conversations IA organisées, accessibles et productives. Que vous soyez un chercheur gérant des dizaines de fils, un développeur sauvegardant des extraits de code, ou simplement quelqu'un qui aime l'ordre, Voyager est fait pour vous.
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
@@ -158,7 +158,7 @@ Pour une **installation manuelle** ou des **builds de développement**, veuillez
   </a>
 </div>
 
-Si Gemini Voyager facilite votre vie, considérez m'offrir un café. Cela aide à maintenir les mises à jour ! Les donateurs seront cités dans notre section remerciements. ❤️
+Si Voyager facilite votre vie, considérez m'offrir un café. Cela aide à maintenir les mises à jour ! Les donateurs seront cités dans notre section remerciements. ❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -210,11 +210,11 @@ Toute contribution est la bienvenue !
 - **Issues** : Utilisez nos templates de [bug report](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) ou [feature request](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml).
 - **Pull Requests** : Consultez [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-Merci d'aider à rendre Gemini Voyager meilleur ! ❤️
+Merci d'aider à rendre Voyager meilleur ! ❤️
 
 ### ❤️ Remerciements Spéciaux
 
-Un grand merci à tous les contributeurs pour leurs contributions à Gemini Voyager ❤️
+Un grand merci à tous les contributeurs pour leurs contributions à Voyager ❤️
 
 <a href="https://github.com/Nagi-ovo/gemini-voyager/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Nagi-ovo/gemini-voyager&max=200&columns=14" />
@@ -224,9 +224,9 @@ Un grand merci à tous les contributeurs pour leurs contributions à Gemini Voya
 
 ## 🌟 Crédits
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Un fork de Gemini Voyager adapté pour DeepSeek.
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Un fork de Voyager adapté pour DeepSeek.
 
-- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Une extension d’amélioration pour Claude.ai inspirée de Gemini Voyager, avec navigation par timeline, gestion de dossiers, bibliothèque de prompts, et une compatibilité totale d’import/export des prompts avec Gemini Voyager !
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Une extension d’amélioration pour Claude.ai inspirée de Voyager, avec navigation par timeline, gestion de dossiers, bibliothèque de prompts, et une compatibilité totale d’import/export des prompts avec Voyager !
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - La source d'inspiration originale pour la navigation temporelle.
 

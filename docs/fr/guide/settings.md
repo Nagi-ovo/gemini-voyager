@@ -6,7 +6,7 @@ Personnalisez chaque pixel.
 ## Mode Cinéma
 
 Pourquoi voir le futur à travers un petit trou de serrure ?
-Gemini Voyager vous permet d'étendre la largeur du chat.
+Voyager vous permet d'étendre la largeur du chat.
 
 - **Large** : 1400px pour le codage et les tableaux complexes.
 - **Concentré** : 800px pour la lecture.

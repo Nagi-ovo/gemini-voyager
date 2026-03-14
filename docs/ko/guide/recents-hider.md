@@ -4,7 +4,7 @@
 **참고**: 이 기능은 버전 1.1.9 이상에서 지원됩니다.
 :::
 
-Gemini 홈 페이지의 "최근에 저장됨" 섹션을 숨겨 더 깔끔한 인터페이스를 유지할 수 있는 세련된 토글 기능을 추가하세요. 이제 사이드바의 **Gem** 목록을 숨기는 기능도 지원합니다!
+Gemini™ 홈 페이지의 "최근에 저장됨" 섹션을 숨겨 더 깔끔한 인터페이스를 유지할 수 있는 세련된 토글 기능을 추가하세요. 이제 사이드바의 **Gem** 목록을 숨기는 기능도 지원합니다!
 
 <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 300px; text-align: center;">

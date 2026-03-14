@@ -4,7 +4,7 @@ Rendez automatiquement le code Mermaid sous forme de diagrammes visuels.
 
 ## Aperçu
 
-Lorsque Gemini produit des blocs de code Mermaid (organigrammes, diagrammes de séquence, diagrammes de Gantt, etc.), Voyager les détecte et les rend automatiquement sous forme de diagrammes interactifs.
+Lorsque Gemini™ produit des blocs de code Mermaid (organigrammes, diagrammes de séquence, diagrammes de Gantt, etc.), Voyager les détecte et les rend automatiquement sous forme de diagrammes interactifs.
 
 ### Fonctionnalités Clés
 

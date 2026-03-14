@@ -1,6 +1,6 @@
 # 公式复制
 
-Gemini Voyager 让数学公式和科学符号的复用变得异常简单。支持一键复制 LaTeX 源码以及兼容 Microsoft Word 的 MathML 格式。
+Voyager 让数学公式和科学符号的复用变得异常简单。支持一键复制 LaTeX 源码以及兼容 Microsoft Word 的 MathML 格式。
 
 ## 功能介绍
 

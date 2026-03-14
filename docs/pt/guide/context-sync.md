@@ -2,7 +2,7 @@
 
 **Diferentes Dimensões, Compartilhamento Contínuo**
 
-Itere a lógica na web e implemente o código no IDE. O Gemini Voyager quebra as barreiras dimensionales, dando ao seu IDE o "processo de pensamento" da web instantaneamente.
+Itere a lógica na web e implemente o código no IDE. O Voyager quebra as barreiras dimensionales, dando ao seu IDE o "processo de pensamento" da web instantaneamente.
 
 ## Chega de pular entre abas
 

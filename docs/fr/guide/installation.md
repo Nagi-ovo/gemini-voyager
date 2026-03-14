@@ -6,7 +6,7 @@
 
 Choisissez votre méthode.
 
-> ⚠️ Note : Le Gestionnaire de Prompts est la seule fonctionnalité compatible avec Gemini pour Entreprise.
+> ⚠️ Note : Le Gestionnaire de Prompts est la seule fonctionnalité compatible avec Gemini™ pour Entreprise.
 
 ## 1. Stores d'Extensions (Recommandé)
 

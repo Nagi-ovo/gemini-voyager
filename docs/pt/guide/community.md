@@ -36,4 +36,4 @@ Se encontrou um erro no programa (Bug) ou tem um pedido de funcionalidade claro 
 - [Submeter Relatório de Bug](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
 - [Submeter Pedido de Funcionalidade](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
 
-Obrigado pelo seu apoio ao Gemini Voyager! ❤️
+Obrigado pelo seu apoio ao Voyager! ❤️

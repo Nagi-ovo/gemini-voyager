@@ -2,7 +2,7 @@
 
 Thinking shouldn't be a one-way street. In complex explorations, we often need to return to a crucial node and try different possibilities.
 
-With the **Conversation Fork** feature, Gemini Voyager allows you to branch out your thoughts and explore parallel universes of your chat.
+With the **Conversation Fork** feature, Voyager allows you to branch out your thoughts and explore parallel universes of your chat.
 
 ## How it Works
 

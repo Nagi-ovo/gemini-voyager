@@ -4,7 +4,7 @@
 **注意**：该功能仅在 1.1.9 及后续版本中支持。
 :::
 
-为 Gemini 首页的“最近保存”部分添加一个优雅的切换开关，让界面更加简洁。现在也支持隐藏侧边栏的 **Gems** 列表！
+为 Gemini™ 首页的“最近保存”部分添加一个优雅的切换开关，让界面更加简洁。现在也支持隐藏侧边栏的 **Gems** 列表！
 
 <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 300px; text-align: center;">

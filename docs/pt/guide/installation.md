@@ -6,7 +6,7 @@
 
 Escolha o seu caminho.
 
-> ⚠️ Nota: O Gestor de Prompts é a única funcionalidade que suporta Gemini para Enterprise.
+> ⚠️ Nota: O Gestor de Prompts é a única funcionalidade que suporta Gemini™ para Enterprise.
 
 ## 1. Lojas de Extensões (Recomendado)
 

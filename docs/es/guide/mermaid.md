@@ -4,7 +4,7 @@ Renderiza automáticamente código Mermaid en gráficos visuales.
 
 ## Introducción
 
-Cuando Gemini genera un bloque de código Mermaid (como diagramas de flujo, diagramas de secuencia, diagramas de Gantt, etc.), Voyager lo detectará y renderizará automáticamente como un gráfico interactivo.
+Cuando Gemini™ genera un bloque de código Mermaid (como diagramas de flujo, diagramas de secuencia, diagramas de Gantt, etc.), Voyager lo detectará y renderizará automáticamente como un gráfico interactivo.
 
 ### Características Principales
 

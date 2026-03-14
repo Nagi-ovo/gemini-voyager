@@ -6,7 +6,7 @@ Customize every pixel.
 ## Cinema Mode
 
 Why view the future through a tiny keyhole?
-Gemini Voyager lets you expand the chat width.
+Voyager lets you expand the chat width.
 
 - **Wide**: 1400px for coding and complex tables.
 - **Focused**: 800px for reading.

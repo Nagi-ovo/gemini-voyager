@@ -4,7 +4,7 @@
 **Note**: This feature is supported in version 1.1.9 and later.
 :::
 
-Add an elegant toggle to hide the "Recently saved" section on the Gemini homepage for a cleaner interface. Now also supports hiding the **Gems** list in the sidebar!
+Add an elegant toggle to hide the "Recently saved" section on the Gemini™ homepage for a cleaner interface. Now also supports hiding the **Gems** list in the sidebar!
 
 <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 300px; text-align: center;">

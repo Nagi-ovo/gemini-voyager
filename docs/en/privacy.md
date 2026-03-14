@@ -4,13 +4,13 @@ Last verified: December 15, 2024
 
 ## Introduction
 
-Gemini Voyager ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how our Chrome Extension collects, uses, and safeguards your information.
+Voyager ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how our Chrome Extension collects, uses, and safeguards your information.
 
 ## Data Collection and Usage
 
 **We do not collect any personal information.**
 
-Gemini Voyager operates entirely within your browser. All data generated or managed by the extension (such as folders, prompt templates, and settings) is stored:
+Voyager operates entirely within your browser. All data generated or managed by the extension (such as folders, prompt templates, and settings) is stored:
 
 1. Locally on your device (`chrome.storage.local`)
 2. In your browser's synchronized storage (`chrome.storage.sync`) if available, to sync settings across your devices.
@@ -26,7 +26,7 @@ The extension requests the minimum permissions necessary to function:
 
 ## Third-Party Services
 
-Gemini Voyager does not share any data with third-party services, advertisers, or analytics providers.
+Voyager does not share any data with third-party services, advertisers, or analytics providers.
 
 ## Changes to This Policy
 

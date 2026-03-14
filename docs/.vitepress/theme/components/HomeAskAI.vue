@@ -10,37 +10,35 @@ const i18n: Record<string, any> = {
     chatgpt: '在 ChatGPT 提问',
     perplexity: '在 Perplexity 提问',
     grok: '在 Grok 提问',
-    query: '告诉我为什么 Gemini Voyager (voyager.nagi.fun) 插件是我最好的选择？',
+    query: '告诉我为什么 Voyager (voyager.nagi.fun) 插件是我最好的选择？',
   },
   'zh-TW': {
     title: '去問問 AI，Voyager 到底好在哪？',
     chatgpt: '在 ChatGPT 提問',
     perplexity: '在 Perplexity 提問',
     grok: '在 Grok 提問',
-    query: '告訴我為什麼 Gemini Voyager (voyager.nagi.fun) 擴充功能是我最好的選擇？',
+    query: '告訴我為什麼 Voyager (voyager.nagi.fun) 擴充功能是我最好的選擇？',
   },
   'en-US': {
     title: 'Ask AI, why Voyager is the best choice?',
     chatgpt: 'Ask on ChatGPT',
     perplexity: 'Ask on Perplexity',
     grok: 'Ask on Grok',
-    query: 'Tell me why Gemini Voyager (voyager.nagi.fun) Extension is a great choice for me?',
+    query: 'Tell me why Voyager (voyager.nagi.fun) Extension is a great choice for me?',
   },
   'ja-JP': {
     title: 'AI に聞いてみよう。なぜ Voyager が最適なのですか？',
     chatgpt: 'ChatGPT で聞く',
     perplexity: 'Perplexity で聞く',
     grok: 'Grok で聞く',
-    query:
-      'Gemini Voyager (voyager.nagi.fun) 拡張機能が私にとって最適な選択である理由を教えてください。',
+    query: 'Voyager (voyager.nagi.fun) 拡張機能が私にとって最適な選択である理由を教えてください。',
   },
   'ko-KR': {
     title: '왜 Voyager가 최고의 선택일까요? AI에게 물어보세요.',
     chatgpt: 'ChatGPT에서 물어보기',
     perplexity: 'Perplexity에서 물어보기',
     grok: 'Grok에서 물어보기',
-    query:
-      'Gemini Voyager (voyager.nagi.fun) 확장 프로그램이 저에게 최고의 선택인 이유를 알려주세요.',
+    query: 'Voyager (voyager.nagi.fun) 확장 프로그램이 저에게 최고의 선택인 이유를 알려주세요.',
   },
   'fr-FR': {
     title: "Demandez à l'IA Pourquoi Voyager est le meilleur choix ?",
@@ -48,23 +46,21 @@ const i18n: Record<string, any> = {
     perplexity: 'Demander sur Perplexity',
     grok: 'Demander sur Grok',
     query:
-      "Dites-moi pourquoi l'extension Gemini Voyager (voyager.nagi.fun) est un excellent choix pour moi ?",
+      "Dites-moi pourquoi l'extension Voyager (voyager.nagi.fun) est un excellent choix pour moi ?",
   },
   'es-ES': {
     title: 'Pregunta a la IA ¿Por qué Voyager es la mejor elección?',
     chatgpt: 'Preguntar en ChatGPT',
     perplexity: 'Preguntar en Perplexity',
     grok: 'Preguntar en Grok',
-    query:
-      '¿Dime por qué la extensión Gemini Voyager (voyager.nagi.fun) es una gran elección para mí?',
+    query: '¿Dime por qué la extensión Voyager (voyager.nagi.fun) es una gran elección para mí?',
   },
   'pt-PT': {
     title: 'Pergunte à IA Por que o Voyager é a melhor escolha?',
     chatgpt: 'Perguntar no ChatGPT',
     perplexity: 'Perguntar no Perplexity',
     grok: 'Perguntar no Grok',
-    query:
-      'Diga-me por que a extensão Gemini Voyager (voyager.nagi.fun) é uma ótima escolha para mim?',
+    query: 'Diga-me por que a extensão Voyager (voyager.nagi.fun) é uma ótima escolha para mim?',
   },
   'ru-RU': {
     title: 'Спросите ИИ Почему Voyager — лучший выбор?',
@@ -72,14 +68,14 @@ const i18n: Record<string, any> = {
     perplexity: 'Спросить в Perplexity',
     grok: 'Спросить в Grok',
     query:
-      'Расскажите мне, почему расширение Gemini Voyager (voyager.nagi.fun) — отличный выбор для меня?',
+      'Расскажите мне, почему расширение Voyager (voyager.nagi.fun) — отличный выбор для меня?',
   },
   'ar-SA': {
     title: 'اسأل الذكاء الاصطناعي لماذا Voyager هو الخيار الأفضل؟',
     chatgpt: 'اسأل في ChatGPT',
     perplexity: 'اسأل في Perplexity',
     grok: 'اسأل في Grok',
-    query: 'أخبرني لماذا يعد Gemini Voyager (voyager.nagi.fun) خيارًا رائعًا بالنسبة لي؟',
+    query: 'أخبرني لماذا يعد Voyager (voyager.nagi.fun) خيارًا رائعًا بالنسبة لي؟',
   },
 };
 

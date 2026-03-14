@@ -4,7 +4,7 @@
 **Note**: Cette fonctionnalité est supportée dans la version 1.1.9 et ultérieure.
 :::
 
-Ajoutez une bascule élégante pour masquer la section « Enregistrements récents » sur la page d'accueil de Gemini pour une interface plus propre. Prend désormais également en charge le masquage de la liste **Gems** dans la barre latérale !
+Ajoutez une bascule élégante pour masquer la section « Enregistrements récents » sur la page d'accueil de Gemini™ pour une interface plus propre. Prend désormais également en charge le masquage de la liste **Gems** dans la barre latérale !
 
 <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 300px; text-align: center;">

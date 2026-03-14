@@ -1,6 +1,6 @@
 # Réponse avec Citation
 
-Gemini Voyager offre une fonctionnalité pratique de "Réponse avec Citation", rendant les réponses à un contenu spécifique plus précises et efficaces.
+Voyager offre une fonctionnalité pratique de "Réponse avec Citation", rendant les réponses à un contenu spécifique plus précises et efficaces.
 
 ## Introduction
 

@@ -14,7 +14,7 @@ Synchronisez vos dossiers, votre bibliothèque de prompts et d'autres données s
 
 ## Comment utiliser
 
-1. Cliquez sur l'icône de l'extension dans le coin inférieur droit de la page Gemini pour ouvrir le panneau des paramètres.
+1. Cliquez sur l'icône de l'extension dans le coin inférieur droit de la page Gemini™ pour ouvrir le panneau des paramètres.
 2. Localisez la section **Synchronisation Cloud**.
 3. Cliquez sur **Se connecter avec Google** et complétez l'autorisation.
 4. Une fois autorisé, cliquez sur **Télécharger vers le Cloud** pour synchroniser vos données locales vers le cloud, ou sur **Télécharger et fusionner** pour ramener les données du cloud vers votre machine locale.

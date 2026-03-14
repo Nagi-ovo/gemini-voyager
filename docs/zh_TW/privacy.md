@@ -4,13 +4,13 @@ Last verified: December 15, 2024
 
 ## Introduction
 
-Gemini Voyager ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how our Chrome Extension collects, uses, and safeguards your information.
+Voyager ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how our Chrome Extension collects, uses, and safeguards your information.
 
 ## Data Collection and Usage
 
 **We do not collect any personal information.**
 
-Gemini Voyager operates entirely within your browser. All data generated or managed by the extension (such as folders, prompt templates, and settings) is stored:
+Voyager operates entirely within your browser. All data generated or managed by the extension (such as folders, prompt templates, and settings) is stored:
 
 1. Locally on your device (`chrome.storage.local`)
 2. In your browser's synchronized storage (`chrome.storage.sync`) if available, to sync settings across your devices.
@@ -26,7 +26,7 @@ The extension requests the minimum permissions necessary to function:
 
 ## Third-Party Services
 
-Gemini Voyager does not share any data with third-party services, advertisers, or analytics providers.
+Voyager does not share any data with third-party services, advertisers, or analytics providers.
 
 ## Changes to This Policy
 
@@ -38,11 +38,11 @@ We may update our Privacy Policy from time to time. We will notify you of any ch
 
 **最後更新日期：** 2024年5月20日
 
-**Gemini Voyager**（"我們"、"我們的"）致力於保護您的隱私。本隱私政策解釋了我們如何處理您的信息。
+**Voyager**（"我們"、"我們的"）致力於保護您的隱私。本隱私政策解釋了我們如何處理您的信息。
 
 ## 1. 數據收集與存儲
 
-Gemini Voyager 設計為**本地優先**。
+Voyager 設計為**本地優先**。
 
 - **所有數據存儲在本地：** 您的對話、文件夾、提示詞和設置都存儲在您設備上的瀏覽器存儲（Chrome Storage API）中。
 - **無遠程服務器：** 我們不運營任何服務器來存儲您的個人數據。我們無法訪問您的數據。

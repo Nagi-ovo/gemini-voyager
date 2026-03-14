@@ -2,7 +2,7 @@
 
 English | [简体中文](README_ZH.md)
 
-Developer guide for building and extending Gemini Voyager for Safari.
+Developer guide for building and extending Voyager for Safari.
 
 > [!TIP]
 > **Looking to install?** You can now download the pre-signed app directly from the [latest release](https://github.com/Nagi-ovo/gemini-voyager/releases/latest). Simply download the `.dmg` and follow the prompts to install.
@@ -203,7 +203,7 @@ ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
 
 Due to Safari's technical architecture and security restrictions, the following features are currently unavailable in the Safari version:
 
-- **(a) Nano Banana Watermark Removal**: Watermark detection and removal for Gemini-generated images is not supported.
+- **(a) Nano Banana Watermark Removal**: Watermark detection and removal for Gemini™-generated images is not supported.
 - **(b) Image Export**: Direct export to image format is not supported (including in Chat Export). **Recommendation**: Use **PDF Export** instead.
 
 ## Resources

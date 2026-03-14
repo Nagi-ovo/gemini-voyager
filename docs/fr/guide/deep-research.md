@@ -21,7 +21,7 @@ En plus du rapport final, vous pouvez également exporter le contenu complet de 
 
 ### Comment Utiliser
 
-1. Ouvrez une conversation Deep Research sur Gemini.
+1. Ouvrez une conversation Deep Research sur Gemini™.
 2. Cliquez sur le bouton **Partager et exporter** dans la conversation.
 3. Sélectionnez "Télécharger le contenu de réflexion" (Download thinking content).
 4. Le fichier Markdown sera automatiquement téléchargé.

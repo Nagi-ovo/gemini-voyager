@@ -1,6 +1,6 @@
 # Synchro du Titre d'Onglet
 
-Synchronise automatiquement le titre de l'onglet du navigateur avec le titre du chat Gemini actuel.
+Synchronise automatiquement le titre de l'onglet du navigateur avec le titre du chat Gemini™ actuel.
 
 ## Fonctionnalités
 

@@ -28,7 +28,7 @@ One click. Infinite leverage.
 
 ## Available Anywhere
 
-The Prompt Manager can now be used on any website you choose, not just Gemini and AI Studio.
+The Prompt Manager can now be used on any website you choose, not just Gemini™ and AI Studio.
 
 ### How to Enable
 

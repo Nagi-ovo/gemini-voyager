@@ -21,7 +21,7 @@ Deep Research で生成されたレポートは、美しいフォーマットの
 
 ### 使い方
 
-1. Gemini で Deep Research の会話を開きます。
+1. Gemini™ で Deep Research の会話を開きます。
 2. 会話の **共有とエクスポート** ボタンをクリックします。
 3. 「Download Thinking Content（思考内容をダウンロード）」を選択します。
 4. Markdown ファイルが自動的にダウンロードされます。

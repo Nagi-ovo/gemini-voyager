@@ -1,11 +1,11 @@
 # 후원하기
 
 > [!NOTE]
-> Gemini Voyager가 도움이 되었다면 X, YouTube, Reddit 등에서 공유해 주세요. 공유가 늘수록 더 많은 사용자가 프로젝트를 발견하고 Gemini 사용 경험도 함께 좋아집니다. 감사합니다.
+> Voyager가 도움이 되었다면 X, YouTube, Reddit 등에서 공유해 주세요. 공유가 늘수록 더 많은 사용자가 프로젝트를 발견하고 Gemini 사용 경험도 함께 좋아집니다. 감사합니다.
 
 오픈 소스 프로젝트를 유지하는 것은 주로 열정(그리고 커피)에 의해 이루어집니다 ☕
 
-**[Gemini Voyager](https://github.com/Nagi-ovo/gemini-voyager)**는 Gemini 경험을 향상시키기 위해 설계된 완전 무료 오픈 소스 브라우저 확장 프로그램입니다. 이 확장 프로그램이 Gemini를 더 효율적으로 사용하는 데 도움이 되었다면, 프로젝트의 지속적인 개발과 유지 관리를 위해 후원을 고려해 주세요.
+**[Voyager](https://github.com/Nagi-ovo/gemini-voyager)**는 Gemini 경험을 향상시키기 위해 설계된 완전 무료 오픈 소스 브라우저 확장 프로그램입니다. 이 확장 프로그램이 Gemini를 더 효율적으로 사용하는 데 도움이 되었다면, 프로젝트의 지속적인 개발과 유지 관리를 위해 후원을 고려해 주세요.
 
 ---
 
@@ -30,7 +30,7 @@
 
 ### 🎙️ 추천 도구: Typeless
 
-Gemini Voyager 개발 중에 광범위하게 사용한 AI 음성-텍스트 변환 도구인 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**를 강력히 추천합니다. 이를 매일의 워크플로우에 통합함으로써 엄청난 시간을 절약하고 생산성을 크게 높일 수 있었습니다.
+Voyager 개발 중에 광범위하게 사용한 AI 음성-텍스트 변환 도구인 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**를 강력히 추천합니다. 이를 매일의 워크플로우에 통합함으로써 엄청난 시간을 절약하고 생산성을 크게 높일 수 있었습니다.
 
 > 🎁 **[제 추천 링크를 통해 가입](https://www.typeless.com/?via=gemini-voyager)**(코드: _`gemini-voyager`_)하시면 **$5 무료 크레딧**을 받으실 수 있습니다. 이는 제가 이 프로젝트를 계속 유지 관리할 수 있는 크레딧을 제공하며, 저의 작업을 지원하는 무료 방법입니다! ❤️
 

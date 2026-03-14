@@ -21,7 +21,7 @@ In addition to the final report, you can also export the complete "thinking" con
 
 ### How to Use
 
-1. Open a Deep Research conversation on Gemini
+1. Open a Deep Research conversation on Gemini™
 2. Click the **Share & Export** button in the conversation
 3. Select "Download thinking content" (下载 Thinking 内容)
 4. The Markdown file will be automatically downloaded

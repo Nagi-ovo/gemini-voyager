@@ -14,7 +14,7 @@ Sync your folders, prompt library, and other data to Google Drive to keep your e
 
 ## How to Use
 
-1. Click the extension icon in the bottom-right corner of the Gemini page to open the settings panel.
+1. Click the extension icon in the bottom-right corner of the Gemini™ page to open the settings panel.
 2. Locate the **Cloud Sync** section.
 3. Click **Sign in with Google** and complete the authorization.
 4. Once authorized, click **Upload to Cloud** to sync your local data to the cloud, or **Download & Merge** to bring cloud data to your local machine.

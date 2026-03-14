@@ -11,7 +11,7 @@
 > [!IMPORTANT]
 > **Statut du projet : Maintenance réduite.** Attendez-vous à des délais de réponse. Les PR avec tests sont prioritaires.
 
-Merci d'envisager de contribuer à Gemini Voyager ! 🚀
+Merci d'envisager de contribuer à Voyager ! 🚀
 
 Ce document fournit des directives et des instructions pour contribuer. Nous accueillons les corrections de bugs, les améliorations de la documentation et les traductions. Pour les nouvelles fonctionnalités, veuillez d'abord en discuter via un Issue.
 
@@ -255,7 +255,7 @@ Utilisez des noms d'icônes valides de [Google Material Symbols](https://fonts.g
 
 ## Portée du Projet
 
-Gemini Voyager améliore l'expérience de chat Gemini AI avec :
+Voyager améliore l'expérience de chat Gemini AI avec :
 
 - Navigation par chronologie
 - Organisation par dossiers

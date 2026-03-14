@@ -28,7 +28,7 @@ Un clic. Effet de levier infini.
 
 ## Disponible Partout
 
-Le Gestionnaire de Prompts peut désormais être utilisé sur n'importe quel site web de votre choix, pas seulement Gemini et AI Studio.
+Le Gestionnaire de Prompts peut désormais être utilisé sur n'importe quel site web de votre choix, pas seulement Gemini™ et AI Studio.
 
 ### Comment l'Activer
 

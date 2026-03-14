@@ -8,7 +8,7 @@ Les utilisateurs de Safari peuvent télécharger manuellement leurs images sur d
 
 **Images IA, gardées pures.**
 
-Les images générées par Gemini comportent un filigrane visible par défaut. Bien que ce soit pour des raisons de sécurité, il existe des scénarios créatifs où vous avez besoin d'une image parfaitement vierge.
+Les images générées par Gemini™ comportent un filigrane visible par défaut. Bien que ce soit pour des raisons de sécurité, il existe des scénarios créatifs où vous avez besoin d'une image parfaitement vierge.
 
 ## Reconstruction Sans Perte
 
@@ -20,7 +20,7 @@ NanoBanana utilise un algorithme de **Mélange Alpha Inversé**.
 
 ## Comment Utiliser
 
-1. **Activez-le** : Trouvez "Option NanoBanana" à la fin du panneau de paramètres de Gemini Voyager et activez-le.
+1. **Activez-le** : Trouvez "Option NanoBanana" à la fin du panneau de paramètres de Voyager et activez-le.
 2. **Auto-traitement** : Chaque image que vous générez sera maintenant traitée automatiquement en arrière-plan.
 3. **Télécharger directement** :
    - Survolez une image traitée et vous verrez un bouton 🍌.

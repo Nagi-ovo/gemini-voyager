@@ -1,6 +1,6 @@
 # Prevenir rolamento automático
 
-Ao ler o histórico de uma conversa, enviar uma nova mensagem fará com que o Gemini role forçosamente a página até o fim para mostrar a nova resposta. Isso pode interromper a sua leitura.
+Ao ler o histórico de uma conversa, enviar uma nova mensagem fará com que o Gemini™ role forçosamente a página até o fim para mostrar a nova resposta. Isso pode interromper a sua leitura.
 
 O recurso **Prevenir rolamento automático** intercepta esse salto indesejado:
 
@@ -9,6 +9,6 @@ O recurso **Prevenir rolamento automático** intercepta esse salto indesejado:
 
 ## Como habilitar
 
-1. Clique no ícone de extensão do Gemini Voyager no seu navegador para abrir o popup.
+1. Clique no ícone de extensão do Voyager no seu navegador para abrir o popup.
 2. Procure a seção "Timeline Options" (Opções de Linha do Tempo).
 3. Ative a chave "Prevent auto-scroll to bottom" (Prevenir rolamento automático ao fim da página).

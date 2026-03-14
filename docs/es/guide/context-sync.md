@@ -2,7 +2,7 @@
 
 **Diferentes dimensiones, intercambio fluido**
 
-Desarrolla la lógica en la web e implementa el código en el IDE. Gemini Voyager rompe las barreras dimensionales, dotando instantáneamente a tu IDE del "proceso de pensamiento" de la web.
+Desarrolla la lógica en la web e implementa el código en el IDE. Voyager rompe las barreras dimensionales, dotando instantáneamente a tu IDE del "proceso de pensamiento" de la web.
 
 ## Adiós al salto constante entre pestañas
 

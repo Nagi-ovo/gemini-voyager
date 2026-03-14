@@ -2,12 +2,12 @@
 layout: home
 
 hero:
-  name: 'Gemini Voyager'
+  name: 'Voyager'
   text: 'Недостающая ОС для Gemini.'
   tagline: 'Мы любим Gemini. Мы просто хотели, чтобы он был идеальным.'
   image:
     src: /logo.png
-    alt: Логотип Gemini Voyager
+    alt: Логотип Voyager
   actions:
     - theme: brand
       text: Скачать
@@ -18,7 +18,7 @@ hero:
 
 teaser:
   title: 'Это просто работает.'
-  description: 'Мы не хотели создавать очередное расширение. Мы хотели создать лучший способ мышления.<br>Когда вы используете Gemini Voyager, вы перестаете бороться с интерфейсом и начинаете плыть вместе с ним.'
+  description: 'Мы не хотели создавать очередное расширение. Мы хотели создать лучший способ мышления.<br>Когда вы используете Voyager, вы перестаете бороться с интерфейсом и начинаете плыть вместе с ним.'
   image: '/assets/teaser.png'
   features:
     - title: 'Таймлайн'
@@ -111,7 +111,7 @@ features:
   </a>
   <p style="margin-top: 24px; font-size: 1.05em; opacity: 0.86;">✨ Мы на Product Hunt! Будем рады услышать ваши мысли и отзывы. ❤️</p>
   <div style="margin-top: 12px; display: flex; justify-content: center;">
-    <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager on Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
+    <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager on Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
   </div>
 </div>
 

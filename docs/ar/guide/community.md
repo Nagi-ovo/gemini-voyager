@@ -36,4 +36,4 @@
 - [تقديم تقرير خطأ](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
 - [تقديم طلب ميزة](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
 
-شكراً لدعمك لـ Gemini Voyager! ❤️
+شكراً لدعمك لـ Voyager! ❤️

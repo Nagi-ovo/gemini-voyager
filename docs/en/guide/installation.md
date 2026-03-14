@@ -6,7 +6,7 @@
 
 Choose your path.
 
-> ⚠️ Note: Prompt Manager is the only feature that supports Gemini for Enterprise.
+> ⚠️ Note: Prompt Manager is the only feature that supports Gemini™ for Enterprise.
 
 ## 1. Extension Stores (Recommended)
 

@@ -1,6 +1,6 @@
 # Tab Title Sync
 
-Automatically syncs the browser tab title with the current Gemini chat title.
+Automatically syncs the browser tab title with the current Gemini™ chat title.
 
 ## Features
 

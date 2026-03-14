@@ -1,7 +1,7 @@
 # Viaje en el Tiempo
 
 Las conversaciones largas son un desastre. Arriba y abajo, perdido.
-Gemini Voyager convierte la conversación en una línea.
+Voyager convierte la conversación en una línea.
 
 ## Ver el Ritmo
 

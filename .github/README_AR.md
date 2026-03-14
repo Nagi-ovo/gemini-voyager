@@ -1,6 +1,6 @@
 <div align="center" dir="rtl">
   <img src="../docs/public/assets/promotion/Promo-Banner.png" alt="promotion"/>
-  <h3>اجعل تجربتك مع Gemini ملكك حقاً ✨</h3>
+  <h3>اجعل تجربتك مع Gemini™ ملكك حقاً ✨</h3>
   <p>
     تصفح المحادثات بجدول زمني أنيق، ونظم الدردشات في مجلدات، وقم ببناء مستودع المطالبات الخاص بك.<br>
     <b>إنه الترقية المفقودة لـ Google Gemini.</b>
@@ -62,15 +62,15 @@
 > **إشعار تغيير الاسم**: بسبب مخاوف تتعلق بالعلامات التجارية وحقوق النشر، تم تغيير اسم هذا الامتداد رسمياً إلى **Voyager**. ومع ذلك، بسبب بطء شديد في عملية مراجعة Chrome Web Store، لم يتم الموافقة على تغيير الاسم خلال 7 أيام — وهو غير متاح مؤقتاً على Chrome Web Store.
 
 > [!NOTE]
-> إذا كان Gemini Voyager مفيداً لك، فشاركْه على X أو Reddit أو YouTube إلخ. كل مشاركة تساعد المزيد من الناس على اكتشاف المشروع وتحسين تجربة Gemini. شكراً.
+> إذا كان Voyager مفيداً لك، فشاركْه على X أو Reddit أو YouTube إلخ. كل مشاركة تساعد المزيد من الناس على اكتشاف المشروع وتحسين تجربة Gemini. شكراً.
 
 ---
 
-## 👋 لماذا Gemini Voyager؟
+## 👋 لماذا Voyager؟
 
 نحن نحب Gemini، لكننا تمنينا أحياناً لو كان لديه المزيد من "التنظيم".
 
-لهذا السبب قمنا ببناء **Gemini Voyager**. إنه ليس مجرد أداة؛ إنه رفيق يساعدك في الحفاظ على تنظيم محادثاتك مع الذكاء الاصطناعي وجعلها سهلة الوصول ومنتجة. سواء كنت باحثاً تدير عشرات الخيوط، أو مطوراً يحفظ مقتطفات برمجية، أو مجرد شخص يحب النظام، فإن Voyager مصمم لك.
+لهذا السبب قمنا ببناء **Voyager**. إنه ليس مجرد أداة؛ إنه رفيق يساعدك في الحفاظ على تنظيم محادثاتك مع الذكاء الاصطناعي وجعلها سهلة الوصول ومنتجة. سواء كنت باحثاً تدير عشرات الخيوط، أو مطوراً يحفظ مقتطفات برمجية، أو مجرد شخص يحب النظام، فإن Voyager مصمم لك.
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
@@ -158,7 +158,7 @@
   </a>
 </div>
 
-إذا كان Gemini Voyager يسهل حياتك، فكر في دعوتي لتناول القهوة. يساعد ذلك في استمرار التحديثات! سيتم إدراج الداعمين في قسم الشكر الخاص بنا. ❤️
+إذا كان Voyager يسهل حياتك، فكر في دعوتي لتناول القهوة. يساعد ذلك في استمرار التحديثات! سيتم إدراج الداعمين في قسم الشكر الخاص بنا. ❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -195,7 +195,7 @@
 
 ### 🎙️ أداة موصى بها: Typeless
 
-أوصي بشدة بـ **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**، وهي أداة تحويل الصوت إلى نص بالذكاء الاصطناعي استخدمتها على نطاق واسع أثناء تطوير Gemini Voyager. لقد وفرت لي الكثير من الوقت وزادت من إنتاجيتي بشكل كبير.
+أوصي بشدة بـ **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**، وهي أداة تحويل الصوت إلى نص بالذكاء الاصطناعي استخدمتها على نطاق واسع أثناء تطوير Voyager. لقد وفرت لي الكثير من الوقت وزادت من إنتاجيتي بشكل كبير.
 
 > 🎁 **[انضم عبر رابط الإحالة الخاص بي](https://www.typeless.com/?via=gemini-voyager)** (الكود: _`gemini-voyager`_) للحصول على **5 دولارات رصيد مجاني**. ❤️
 
@@ -210,11 +210,11 @@
 - **Issues**: استخدم نماذجنا لـ [تقرير الأخطاء](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) أو [طلب الميزات](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml).
 - **Pull Requests**: تحقق من [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-شكراً لمساعدتك في جعل Gemini Voyager أفضل! ❤️
+شكراً لمساعدتك في جعل Voyager أفضل! ❤️
 
 ### ❤️ شكر خاص
 
-شكر خاص لجميع المساهمين على مساهماتهم في Gemini Voyager ❤️
+شكر خاص لجميع المساهمين على مساهماتهم في Voyager ❤️
 
 <a href="https://github.com/Nagi-ovo/gemini-voyager/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Nagi-ovo/gemini-voyager&max=200&columns=14" />
@@ -224,9 +224,9 @@
 
 ## 🌟 الاعتمادات
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - نسخة مشتقة من Gemini Voyager مخصصة لـ DeepSeek.
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - نسخة مشتقة من Voyager مخصصة لـ DeepSeek.
 
-- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - إضافة لتحسين Claude.ai مستوحاة من Gemini Voyager، تتضمن التنقّل عبر الخط الزمني، وإدارة المجلدات، ومكتبة المطالبات والمزيد، مع توافق كامل لاستيراد/تصدير المطالبات مع Gemini Voyager!
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - إضافة لتحسين Claude.ai مستوحاة من Voyager، تتضمن التنقّل عبر الخط الزمني، وإدارة المجلدات، ومكتبة المطالبات والمزيد، مع توافق كامل لاستيراد/تصدير المطالبات مع Voyager!
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - مصدر الإلهام الأصلي للتنقل في الجدول الزمني للمحادثة.
 

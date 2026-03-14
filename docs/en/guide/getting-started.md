@@ -1,7 +1,7 @@
 # Welcome Aboard
 
 Congratulations. You’ve just upgraded your intellect.
-Gemini Voyager isn’t just a utility; it’s a workflow. Here is how to make the most of it in your first 5 minutes.
+Voyager isn’t just a utility; it’s a workflow. Here is how to make the most of it in your first 5 minutes.
 
 ## 1. The Setup
 

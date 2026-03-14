@@ -2,7 +2,7 @@
 
 [English](INSTALLATION.md) | 简体中文
 
-在 Safari 上安装 Gemini Voyager 的简单指南。
+在 Safari 上安装 Voyager 的简单指南。
 
 ## 系统要求
 
@@ -23,7 +23,7 @@
 
 1. 打开 **Safari → 设置**（或偏好设置）
 2. 前往 **扩展** 标签页
-3. 勾选 **Gemini Voyager** 启用
+3. 勾选 **Voyager** 启用
 4. 访问 [Gemini](https://gemini.google.com) 测试
 
 完成！🎉
@@ -47,7 +47,7 @@
 
 ## 卸载
 
-1. Safari → 设置 → 扩展 → 取消勾选 Gemini Voyager
+1. Safari → 设置 → 扩展 → 取消勾选 Voyager
 2. 从应用程序文件夹删除该应用
 
 ---

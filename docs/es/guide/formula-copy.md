@@ -1,6 +1,6 @@
 # Copia de Fórmulas
 
-Gemini Voyager facilita enormemente la reutilización de fórmulas matemáticas y símbolos científicos. Admite la copia en un clic del código fuente LaTeX y del formato MathML compatible con Microsoft Word.
+Voyager facilita enormemente la reutilización de fórmulas matemáticas y símbolos científicos. Admite la copia en un clic del código fuente LaTeX y del formato MathML compatible con Microsoft Word.
 
 ## Introducción
 

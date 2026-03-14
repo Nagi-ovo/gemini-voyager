@@ -2,7 +2,7 @@
 
 English | [简体中文](INSTALLATION_ZH.md)
 
-A simple guide for installing Gemini Voyager on Safari.
+A simple guide for installing Voyager on Safari.
 
 ## Requirements
 
@@ -23,7 +23,7 @@ Double-click the `.dmg` file and follow the prompts to install the application.
 
 1. Open **Safari → Settings** (or Preferences)
 2. Go to **Extensions** tab
-3. Check **Gemini Voyager** to enable
+3. Check **Voyager** to enable
 4. Visit [Gemini](https://gemini.google.com) to test
 
 Done! 🎉
@@ -47,7 +47,7 @@ Want to build from source or contribute? See the [Safari Development Guide](../.
 
 ## Uninstall
 
-1. Safari → Settings → Extensions → Uncheck Gemini Voyager
+1. Safari → Settings → Extensions → Uncheck Voyager
 2. Delete the app from Applications folder
 
 ---

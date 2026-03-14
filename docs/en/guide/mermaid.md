@@ -4,7 +4,7 @@ Automatically render Mermaid code as visual diagrams.
 
 ## Overview
 
-When Gemini outputs Mermaid code blocks (flowcharts, sequence diagrams, Gantt charts, etc.), Voyager automatically detects and renders them as interactive diagrams.
+When Gemini™ outputs Mermaid code blocks (flowcharts, sequence diagrams, Gantt charts, etc.), Voyager automatically detects and renders them as interactive diagrams.
 
 ### Key Features
 

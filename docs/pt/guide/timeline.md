@@ -10,7 +10,7 @@ O scroll é lento. "Cmd+F" é desajeitado. Perde o contexto.
 ## A Solução
 
 Olhe para a direita do ecrã. Essa é a Linha do Tempo.
-Cada ponto representa uma troca (a sua pergunta + a resposta do Gemini).
+Cada ponto representa uma troca (a sua pergunta + a resposta do Gemini™).
 
 ### Interações
 

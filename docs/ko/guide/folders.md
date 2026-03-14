@@ -5,7 +5,7 @@ AI 채팅을 정리하는 것이 왜 그렇게 힘들까요?
 
 <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; margin-bottom: 40px;">
   <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>Gemini</b></p>
+    <p><b>Gemini™</b></p>
     <img src="/assets/gemini-folders.png" alt="Gemini 폴더" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
   <div style="flex: 1; min-width: 300px; text-align: center;">

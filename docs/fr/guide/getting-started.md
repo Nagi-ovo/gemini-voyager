@@ -1,7 +1,7 @@
 # Bienvenue à Bord
 
 Félicitations. Vous venez de mettre à niveau votre intellect.
-Gemini Voyager n'est pas juste un utilitaire ; c'est un flux de travail. Voici comment en tirer le meilleur parti en 5 minutes.
+Voyager n'est pas juste un utilitaire ; c'est un flux de travail. Voici comment en tirer le meilleur parti en 5 minutes.
 
 ## 1. La Configuration
 

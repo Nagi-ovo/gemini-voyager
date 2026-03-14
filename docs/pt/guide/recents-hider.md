@@ -4,7 +4,7 @@
 **Nota**: Este recurso é suportado na versão 1.1.9 e posteriores.
 :::
 
-Adicione um botão elegante para ocultar a seção "Salvos recentemente" na página inicial do Gemini para uma interface mais limpa. Agora também suporta a ocultação da lista de **Gems** na barra lateral!
+Adicione um botão elegante para ocultar a seção "Salvos recentemente" na página inicial do Gemini™ para uma interface mais limpa. Agora também suporta a ocultação da lista de **Gems** na barra lateral!
 
 <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 300px; text-align: center;">

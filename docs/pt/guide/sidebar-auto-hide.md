@@ -12,7 +12,7 @@ Oferecemos a funcionalidade de **Ocultar barra lateral automaticamente**. Quando
 
 ### Como ativar
 
-1. Abra o painel de definições do Gemini Voyager.
+1. Abra o painel de definições do Voyager.
 2. Encontre a opção **Ocultar barra lateral auto** nas **Definições Gerais**.
 3. Ative o interruptor.
 

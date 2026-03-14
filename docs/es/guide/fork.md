@@ -2,7 +2,7 @@
 
 El pensamiento no debe ser un camino de un solo sentido. En exploraciones complejas, a menudo necesitamos volver a un nodo crucial y probar diferentes posibilidades.
 
-Con la función de **Bifurcación de Conversación**, Gemini Voyager te permite expandir tus ideas y explorar universos paralelos de tu chat.
+Con la función de **Bifurcación de Conversación**, Voyager te permite expandir tus ideas y explorar universos paralelos de tu chat.
 
 ## Cómo funciona
 

@@ -2,7 +2,7 @@
 
 **Different Dimensions, Seamless Sharing**
 
-Iterate logic on the web, and implement code in the IDE. Gemini Voyager breaks down the dimensional barriers, giving your IDE the "thinking process" of the web instantly.
+Iterate logic on the web, and implement code in the IDE. Voyager breaks down the dimensional barriers, giving your IDE the "thinking process" of the web instantly.
 
 ## No More Tab Hopping
 

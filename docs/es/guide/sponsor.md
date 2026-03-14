@@ -1,11 +1,11 @@
 # Patrocinar
 
 > [!NOTE]
-> Si Gemini Voyager te resulta útil, compártelo en X, Reddit, YouTube, etc. Cada difusión ayuda a que más personas descubran el proyecto y mejoren la experiencia con Gemini. Gracias.
+> Si Voyager te resulta útil, compártelo en X, Reddit, YouTube, etc. Cada difusión ayuda a que más personas descubran el proyecto y mejoren la experiencia con Gemini. Gracias.
 
 El mantenimiento de proyectos de código abierto se alimenta principalmente de pasión (y café) ☕
 
-**[Gemini Voyager](https://github.com/Nagi-ovo/gemini-voyager)** es una extensión de navegador completamente gratuita y de código abierto diseñada para mejorar tu experiencia con Gemini. Si esta extensión te ayuda a usar Gemini de manera más eficiente, te agradezco tu apoyo para seguir desarrollando y manteniendo este proyecto a través de los siguientes métodos.
+**[Voyager](https://github.com/Nagi-ovo/gemini-voyager)** es una extensión de navegador completamente gratuita y de código abierto diseñada para mejorar tu experiencia con Gemini. Si esta extensión te ayuda a usar Gemini de manera más eficiente, te agradezco tu apoyo para seguir desarrollando y manteniendo este proyecto a través de los siguientes métodos.
 
 ---
 
@@ -30,7 +30,7 @@ El mantenimiento de proyectos de código abierto se alimenta principalmente de p
 
 ### 🎙️ Herramienta Recomendada: Typeless
 
-Recomiendo encarecidamente **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, una herramienta de voz a texto con IA. La integré en mi flujo de trabajo diario durante el desarrollo de Gemini Voyager, lo que me ahorró una enorme cantidad de tiempo y aumentó significativamente mi productividad.
+Recomiendo encarecidamente **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, una herramienta de voz a texto con IA. La integré en mi flujo de trabajo diario durante el desarrollo de Voyager, lo que me ahorró una enorme cantidad de tiempo y aumentó significativamente mi productividad.
 
 > 🎁 **[Únete a través de mi enlace de referencia](https://www.typeless.com/?via=gemini-voyager)** (Código: _`gemini-voyager`_) para obtener **$5 en créditos gratis**. ¡Esto también me da créditos para seguir manteniendo este proyecto, una forma gratuita de apoyar mi trabajo! ❤️
 

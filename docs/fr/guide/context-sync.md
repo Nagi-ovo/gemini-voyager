@@ -2,7 +2,7 @@
 
 **Différentes dimensions, partage fluide**
 
-Élaborez la logique sur le web et implémentez le code dans l'IDE. Gemini Voyager brise les barrières dimensionnelles, dotant instantanément votre IDE du « processus de réflexion » du web.
+Élaborez la logique sur le web et implémentez le code dans l'IDE. Voyager brise les barrières dimensionnelles, dotant instantanément votre IDE du « processus de réflexion » du web.
 
 ## Fini les sauts d'onglets incessants
 

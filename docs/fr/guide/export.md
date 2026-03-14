@@ -5,7 +5,7 @@ Nous croyons que si vous le créez, vous le possédez.
 
 ## Tout Exporter
 
-Gemini Voyager vous permet de retirer vos données du cloud pour les mettre entre vos mains.
+Voyager vous permet de retirer vos données du cloud pour les mettre entre vos mains.
 
 ### Les Formats
 

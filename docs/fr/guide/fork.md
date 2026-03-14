@@ -2,7 +2,7 @@
 
 La pensée ne devrait pas être à sens unique. Dans les explorations complexes, nous avons souvent besoin de revenir à un nœud crucial et d'essayer d'autres possibilités.
 
-Avec la fonctionnalité de **Bifurcation**, Gemini Voyager vous permet de développer vos idées et d'explorer des univers parallèles de votre discussion.
+Avec la fonctionnalité de **Bifurcation**, Voyager vous permet de développer vos idées et d'explorer des univers parallèles de votre discussion.
 
 ## Comment ça marche
 

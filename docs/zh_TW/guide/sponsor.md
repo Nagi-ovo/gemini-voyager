@@ -1,11 +1,11 @@
 # 贊助
 
 > [!NOTE]
-> 如果 Gemini Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案，從而改善 Gemini 的使用體驗。謝謝。
+> 如果 Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案，從而改善 Gemini 的使用體驗。謝謝。
 
 維護開源項目主要靠熱情（和咖啡）驅動 ☕
 
-**[Gemini Voyager](https://github.com/Nagi-ovo/gemini-voyager)** 是一個完全免費且開源的瀏覽器擴充功能，旨在提升你的 Gemini 使用體驗。如果這個擴充功能幫助你更高效地使用 Gemini，歡迎通過以下方式支持我繼續開發和維護這個項目。
+**[Voyager](https://github.com/Nagi-ovo/gemini-voyager)** 是一個完全免費且開源的瀏覽器擴充功能，旨在提升你的 Gemini 使用體驗。如果這個擴充功能幫助你更高效地使用 Gemini，歡迎通過以下方式支持我繼續開發和維護這個項目。
 
 ---
 
@@ -30,7 +30,7 @@
 
 ### 🎙️ 特別推薦: Typeless
 
-我非常推薦 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)** 這款 AI 語音輸入工具。在開發 Gemini Voyager 的過程中，我將其整合進了日常工作流，極大地節省了我的時間並顯著提升了整體開發效率。
+我非常推薦 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)** 這款 AI 語音輸入工具。在開發 Voyager 的過程中，我將其整合進了日常工作流，極大地節省了我的時間並顯著提升了整體開發效率。
 
 > 🎁 **[點擊我的邀請連結註冊](https://www.typeless.com/?via=gemini-voyager)**（邀請碼 _`gemini-voyager`_）即可獲得 **5 美元免費額度**，同時也能支持本項目的開發。❤️
 

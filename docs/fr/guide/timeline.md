@@ -1,7 +1,7 @@
 # Voyage dans le Temps
 
 Les longues conversations sont désordonnées. Vous faites défiler vers le haut, vers le bas, vous perdez le fil.
-Gemini Voyager transforme votre conversation en une chronologie.
+Voyager transforme votre conversation en une chronologie.
 
 ## Visualisez la Forme de Votre Chat
 

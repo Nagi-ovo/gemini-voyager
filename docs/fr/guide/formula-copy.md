@@ -1,6 +1,6 @@
 # Copie de Formules
 
-Gemini Voyager facilite grandement la réutilisation de formules mathématiques et de symboles scientifiques. Il prend en charge la copie en un clic du code source LaTeX et du format MathML compatible avec Microsoft Word.
+Voyager facilite grandement la réutilisation de formules mathématiques et de symboles scientifiques. Il prend en charge la copie en un clic du code source LaTeX et du format MathML compatible avec Microsoft Word.
 
 ## Présentation
 

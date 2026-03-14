@@ -8,7 +8,7 @@ Los usuarios de Safari pueden cargar manualmente sus imágenes descargadas en si
 
 **Imágenes de IA, como deben ser: puras.**
 
-Las imágenes generadas por Gemini vienen con una marca de agua visible por defecto. Aunque esto es por razones de seguridad, en ciertos escenarios creativos, puedes necesitar un borrador completamente limpio.
+Las imágenes generadas por Gemini™ vienen con una marca de agua visible por defecto. Aunque esto es por razones de seguridad, en ciertos escenarios creativos, puedes necesitar un borrador completamente limpio.
 
 ## Restauración Sin Pérdidas
 
@@ -20,7 +20,7 @@ NanoBanana utiliza un **Algoritmo de Mezcla Alfa Inversa (Reverse Alpha Blending
 
 ## Cómo Usar
 
-1. **Habilitar Función**: Encuentra la "Opción NanoBanana" al final del panel de configuración de Gemini Voyager y activa "Eliminar marca de agua NanoBanana".
+1. **Habilitar Función**: Encuentra la "Opción NanoBanana" al final del panel de configuración de Voyager y activa "Eliminar marca de agua NanoBanana".
 2. **Disparo Automático**: A partir de entonces, para cada imagen que generes, completaremos automáticamente el procesamiento de eliminación de marca de agua en segundo plano.
 3. **Descarga Directa**:
    - Pasa el ratón sobre la imagen procesada y verás un botón 🍌.

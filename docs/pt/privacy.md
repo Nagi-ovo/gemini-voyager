@@ -4,13 +4,13 @@
 
 ## Introdução
 
-O Gemini Voyager ("nós", "nosso" ou "nos") está comprometido em proteger a sua privacidade. Esta Política de Privacidade explica como a nossa Extensão Chrome recolhe, utiliza e protege as suas informações.
+O Voyager ("nós", "nosso" ou "nos") está comprometido em proteger a sua privacidade. Esta Política de Privacidade explica como a nossa Extensão Chrome recolhe, utiliza e protege as suas informações.
 
 ## Recolha e Utilização de Dados
 
 **Não recolhemos nenhuma informação pessoal.**
 
-O Gemini Voyager opera inteiramente dentro do seu navegador. Todos os dados gerados ou geridos pela extensão (como pastas, modelos de prompts e configurações) são armazenados:
+O Voyager opera inteiramente dentro do seu navegador. Todos os dados gerados ou geridos pela extensão (como pastas, modelos de prompts e configurações) são armazenados:
 
 1. Localmente no seu dispositivo (`chrome.storage.local`)
 2. No armazenamento sincronizado do seu navegador (`chrome.storage.sync`) se disponível, para sincronizar configurações entre os seus dispositivos.
@@ -26,7 +26,7 @@ A extensão solicita as permissões mínimas necessárias para funcionar:
 
 ## Serviços de Terceiros
 
-O Gemini Voyager não partilha nenhuns dados com serviços de terceiros, anunciantes ou fornecedores de análises.
+O Voyager não partilha nenhuns dados com serviços de terceiros, anunciantes ou fornecedores de análises.
 
 ## Alterações a Esta Política
 

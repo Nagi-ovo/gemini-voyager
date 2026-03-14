@@ -2,12 +2,12 @@
 layout: home
 
 hero:
-  name: 'Gemini Voyager'
+  name: 'Voyager'
   text: 'نظام التشغيل المفقود لـ Gemini.'
   tagline: 'نحن نحب Gemini. أردنا فقط أن يكون مثالياً.'
   image:
     src: /logo.png
-    alt: شعار Gemini Voyager
+    alt: شعار Voyager
   actions:
     - theme: brand
       text: تحميل
@@ -18,7 +18,7 @@ hero:
 
 teaser:
   title: 'إنه يعمل ببساطة.'
-  description: 'لم نرد بناء مجرد إضافة أخرى. أردنا بناء طريقة أفضل للتفكير.<br>عندما تستخدم Gemini Voyager، تتوقف عن مصارعة الواجهة وتبدأ في الانسياب معها.'
+  description: 'لم نرد بناء مجرد إضافة أخرى. أردنا بناء طريقة أفضل للتفكير.<br>عندما تستخدم Voyager، تتوقف عن مصارعة الواجهة وتبدأ في الانسياب معها.'
   image: '/assets/teaser.png'
   features:
     - title: 'الجدول الزمني'
@@ -111,7 +111,7 @@ features:
   </a>
   <p style="margin-top: 24px; font-size: 1.05em; opacity: 0.86;">✨ نحن مباشرون على Product Hunt! نود سماع أفكاركم وملاحظاتكم. ❤️</p>
   <div style="margin-top: 12px; display: flex; justify-content: center;">
-    <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager على Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
+    <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager على Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
   </div>
 </div>
 

@@ -1,6 +1,6 @@
 # 수식 복사
 
-Gemini Voyager를 사용하면 수학 공식과 과학 기호를 손쉽게 재사용할 수 있습니다. LaTeX 소스 코드와 Microsoft Word 호환 MathML 형식을 클릭 한 번으로 복사할 수 있도록 지원합니다.
+Voyager를 사용하면 수학 공식과 과학 기호를 손쉽게 재사용할 수 있습니다. LaTeX 소스 코드와 Microsoft Word 호환 MathML 형식을 클릭 한 번으로 복사할 수 있도록 지원합니다.
 
 ## 소개
 

@@ -5,7 +5,7 @@ We believe that if you create it, you own it.
 
 ## Export Everything
 
-Gemini Voyager lets you pull your data out of the cloud and into your hands.
+Voyager lets you pull your data out of the cloud and into your hands.
 
 ### The Formats
 

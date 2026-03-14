@@ -20,7 +20,7 @@ Follow us on X (Twitter) to get the latest development updates.
 Join our Discord server to chat with other Voyagers!
 
 - **Real-time Chat**: Talk directly with other users and the developers.
-- **Prompt Sharing**: See how others are using Gemini and share your best prompts.
+- **Prompt Sharing**: See how others are using Gemini™ and share your best prompts.
 - **Development Updates**: Get the latest news on upcoming features and releases.
 
 <div style="margin: 2rem 0;">
@@ -36,4 +36,4 @@ If you've found a bug or have a specific feature request, please open an issue o
 - [Report a Bug](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
 - [Suggest a Feature](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
 
-Thank you for supporting Gemini Voyager! ❤️
+Thank you for supporting Voyager! ❤️

@@ -1,6 +1,6 @@
 # Quote Reply
 
-Gemini Voyager offers a convenient "Quote Reply" feature, making replies to specific content more precise and efficient.
+Voyager offers a convenient "Quote Reply" feature, making replies to specific content more precise and efficient.
 
 ## Introduction
 

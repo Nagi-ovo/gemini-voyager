@@ -12,7 +12,7 @@
 
 ### 활성화 방법
 
-1. Gemini Voyager 설정 패널을 엽니다.
+1. Voyager 설정 패널을 엽니다.
 2. **일반 설정 (General Settings)**에서 **사이드바 자동 숨김 (Auto-hide sidebar)** 토글을 찾습니다.
 3. 토글을 켜서 활성화합니다.
 

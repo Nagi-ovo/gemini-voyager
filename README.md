@@ -1,6 +1,6 @@
 <div align="center">
   <img src="docs/public/assets/promotion/Promo-Banner.png" alt="promotion"/>
-  <h3>Make Your Gemini Experience Truly Yours ✨</h3>
+  <h3>Make Your Gemini™ Experience Truly Yours ✨</h3>
   <p>
     Navigate conversations with an elegant timeline, organize chats with folders, and build your own prompt vault.<br>
     <b>It's the missing power-up for Google Gemini.</b>
@@ -62,15 +62,15 @@
 > **Name Change Notice**: Due to trademark and copyright concerns, this extension has been officially renamed to **Voyager**. However, due to the Chrome Web Store's extremely slow review process, the name change was not approved within 7 days — it is temporarily unavailable on the Chrome Web Store under the new name.
 
 > [!NOTE]
-> If Gemini Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
+> If Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
 
 ---
 
-## 👋 Why Gemini Voyager?
+## 👋 Why Voyager?
 
 We love Gemini, but sometimes we wish it had just a _bit_ more structure.
 
-That's why we built **Gemini Voyager**. It's not just a tool; it's a companion that helps you keep your AI conversations organized, accessible, and productive. Whether you're a researcher juggling dozens of threads, a developer saving code snippets, or just someone who loves order, Voyager is designed for you.
+That's why we built **Voyager**. It's not just a tool; it's a companion that helps you keep your AI conversations organized, accessible, and productive. Whether you're a researcher juggling dozens of threads, a developer saving code snippets, or just someone who loves order, Voyager is designed for you.
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
@@ -159,7 +159,7 @@ For **manual installation** or **development builds**, please refer to the [Inst
   </a>
 </div>
 
-If Gemini Voyager makes your life easier, consider buying me a coffee. It helps keep the updates coming! Sponsors will be featured in our Special Thanks section. ❤️
+If Voyager makes your life easier, consider buying me a coffee. It helps keep the updates coming! Sponsors will be featured in our Special Thanks section. ❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -196,7 +196,7 @@ If Gemini Voyager makes your life easier, consider buying me a coffee. It helps 
 
 ### 🎙️ Recommended Tool: Typeless
 
-I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, an AI voice-to-text tool that I used extensively during the development of Gemini Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
+I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, an AI voice-to-text tool that I used extensively during the development of Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
 
 > 🎁 **[Join via my referral link](https://www.typeless.com/?via=gemini-voyager)** (Code: _`gemini-voyager`_) to get **$5 free credits**. This also gives me credits to keep maintaining this project—a free way to support my work! ❤️
 
@@ -259,11 +259,11 @@ bun run build:all      # All browsers
 
 </details>
 
-Thank you for helping make Gemini Voyager better! ❤️
+Thank you for helping make Voyager better! ❤️
 
 ### ❤️ Special Thanks
 
-Special thanks to all contributors for their contributions to Gemini Voyager ❤️
+Special thanks to all contributors for their contributions to Voyager ❤️
 
 <a href="https://github.com/Nagi-ovo/gemini-voyager/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Nagi-ovo/gemini-voyager&max=200&columns=14" />
@@ -273,11 +273,11 @@ Special thanks to all contributors for their contributions to Gemini Voyager ❤
 
 ## 🌟 Credits
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Gemini Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
 
-- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - A Claude.ai enhancement extension inspired by Gemini Voyager, featuring timeline navigation, folder management, prompt library and more, with full prompt import/export compatibility with Gemini Voyager!
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - A Claude.ai enhancement extension inspired by Voyager, featuring timeline navigation, folder management, prompt library and more, with full prompt import/export compatibility with Voyager!
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Gemini Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt vault, and chat export.
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project: Voyager adapted the timeline concept for Gemini and added extensive new features including folder management, prompt vault, and chat export.
 
 - **[Ophel Atlas](https://github.com/urzeye/ophel)** - A browser extension that transforms AI conversations into organized, searchable documents with auto-generated outlines, conversation management, and prompt libraries across multiple AI platforms.
 

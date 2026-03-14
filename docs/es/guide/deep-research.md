@@ -21,7 +21,7 @@ Además del informe final, también puedes exportar el contenido completo de "pe
 
 ### Cómo Usar
 
-1. Abre una conversación de Deep Research en Gemini.
+1. Abre una conversación de Deep Research en Gemini™.
 2. Haz clic en el botón **Compartir y exportar** de la conversación.
 3. Selecciona "Descargar contenido de pensamiento" (Download thinking content).
 4. El archivo Markdown se descargará automáticamente.

@@ -14,7 +14,7 @@ Sincronize suas pastas, biblioteca de prompts e outros dados no Google Drive par
 
 ## Como usar
 
-1. Clique no ícone da extensão no canto inferior direito da página do Gemini para abrir o painel de configurações.
+1. Clique no ícone da extensão no canto inferior direito da página do Gemini™ para abrir o painel de configurações.
 2. Localize a seção **Sincronização na Nuvem**.
 3. Clique em **Fazer login com o Google** e conclua a autorização.
 4. Uma vez autorizado, clique em **Fazer upload para a nuvem** para sincronizar seus dados locais com a nuvem, ou em **Baixar e mesclar** para trazer os dados da nuvem para sua máquina local.

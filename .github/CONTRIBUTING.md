@@ -15,7 +15,7 @@
 > [!IMPORTANT]
 > **项目状态：低频维护。** 回复较慢。优先处理带测试的 PR。
 
-感谢你考虑为 Gemini Voyager 做出贡献！🚀
+感谢你考虑为 Voyager 做出贡献！🚀
 
 本文档提供贡献的指南和说明。我们欢迎错误修复、文档改进和翻译等贡献。关于新功能，请务必先通过 Issue 进行讨论。
 
@@ -248,7 +248,7 @@ bun run test       # 运行测试
 
 ## 项目范围
 
-Gemini Voyager 通过以下功能增强 Gemini AI 聊天体验：
+Voyager 通过以下功能增强 Gemini AI 聊天体验：
 
 - 时间线导航
 - 文件夹组织
@@ -274,7 +274,7 @@ Gemini Voyager 通过以下功能增强 Gemini AI 聊天体验：
 
 ---
 
-# Contributing to Gemini Voyager
+# Contributing to Voyager
 
 > [!CAUTION]
 > **This project is currently NOT accepting PRs for new features.** If you have a feature you'd really like to build, please follow this process:
@@ -287,7 +287,7 @@ Gemini Voyager 通过以下功能增强 Gemini AI 聊天体验：
 > [!IMPORTANT]
 > **Project Status: Low Maintenance.** Expect delays in response. PRs with tests are prioritized.
 
-Thank you for considering contributing to Gemini Voyager! 🚀
+Thank you for considering contributing to Voyager! 🚀
 
 This document provides guidelines and instructions for contributing. We welcome bug fixes, documentation improvements, and translations. For new features, please discuss via an Issue first.
 
@@ -533,7 +533,7 @@ Use valid [Google Material Symbols](https://fonts.google.com/icons) icon names:
 
 ## Project Scope
 
-Gemini Voyager enhances the Gemini AI chat experience with:
+Voyager enhances the Gemini AI chat experience with:
 
 - Timeline navigation
 - Folder organization

@@ -1,6 +1,6 @@
 # Evitar desplazamiento automático
 
-Cuando estás leyendo conversaciones anteriores, si envías un nuevo mensaje, Gemini forzará el desplazamiento de la página hasta el fondo para mostrar la nueva respuesta. Esto puede interrumpir tu lectura.
+Cuando estás leyendo conversaciones anteriores, si envías un nuevo mensaje, Gemini™ forzará el desplazamiento de la página hasta el fondo para mostrar la nueva respuesta. Esto puede interrumpir tu lectura.
 
 La función **Evitar desplazamiento automático** intercepta este comportamiento de salto no deseado:
 
@@ -9,6 +9,6 @@ La función **Evitar desplazamiento automático** intercepta este comportamiento
 
 ## Cómo habilitarlo
 
-1. Haz clic en el icono de la extensión Gemini Voyager en tu navegador para abrir las opciones.
+1. Haz clic en el icono de la extensión Voyager en tu navegador para abrir las opciones.
 2. Ubica la sección "Timeline Options" (Opciones de la Línea de Tiempo).
 3. Activa el interruptor "Prevent auto-scroll to bottom" (Evitar desplazamiento automático).

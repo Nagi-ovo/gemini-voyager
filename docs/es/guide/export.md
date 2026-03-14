@@ -5,7 +5,7 @@ Nuestro credo es simple: lo que creas, es tuyo.
 
 ## Llévatelo Todo
 
-Gemini Voyager te ayuda a bajar tus datos de la nube a tu palma.
+Voyager te ayuda a bajar tus datos de la nube a tu palma.
 
 ### Elige tu Formato
 

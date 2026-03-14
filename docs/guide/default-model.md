@@ -4,7 +4,7 @@
 **注意**：该功能仅在 1.1.9 及后续版本中支持。
 :::
 
-为 Gemini 添加设置默认模型的功能，避免每次开启新对话时都需要手动切换。
+为 Gemini™ 添加设置默认模型的功能，避免每次开启新对话时都需要手动切换。
 
 <div style="text-align: center; margin-top: 20px;">
   <video src="/assets/default-model.mp4" autoplay loop muted playsinline style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></video>

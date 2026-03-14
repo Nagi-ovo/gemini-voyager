@@ -1,7 +1,7 @@
 # Bem-vindo a Bordo
 
 Parabéns. Acabou de melhorar o seu intelecto.
-O Gemini Voyager não é apenas um utilitário; é um fluxo de trabalho. Veja como tirar o máximo partido dele nos seus primeiros 5 minutos.
+O Voyager não é apenas um utilitário; é um fluxo de trabalho. Veja como tirar o máximo partido dele nos seus primeiros 5 minutos.
 
 ## 1. A Configuração
 

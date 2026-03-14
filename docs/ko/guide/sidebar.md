@@ -7,7 +7,7 @@
 
 ## 조절 방법
 
-1. Gemini Voyager 설정 패널을 엽니다 (브라우저 우측 상단의 확장 프로그램 아이콘 클릭).
+1. Voyager 설정 패널을 엽니다 (브라우저 우측 상단의 확장 프로그램 아이콘 클릭).
    <img src="/assets/extension-instruction.png" alt="설정 패널 여는 방법" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 2. **일반 설정 (General Settings)**에서 **사이드바 너비 (Sidebar width)** 옵션을 찾습니다.
 3. 슬라이더를 드래그하여 자신에게 적합한 너비를 선택합니다.

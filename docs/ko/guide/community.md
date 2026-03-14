@@ -20,7 +20,7 @@ X (Twitter)에서 우리를 팔로우하고 최신 개발 소식을 받아보세
 Discord 서버에 가입하여 다른 Voyager들과 대화해 보세요!
 
 - **실시간 채팅**: 다른 사용자 및 개발자와 직접 소통하세요.
-- **프롬프트 공유**: 다른 사람들이 Gemini를 어떻게 사용하는지 확인하고 자신의 최고의 프롬프트를 공유하세요.
+- **프롬프트 공유**: 다른 사람들이 Gemini™를 어떻게 사용하는지 확인하고 자신의 최고의 프롬프트를 공유하세요.
 - **개발 업데이트**: 예정된 기능과 릴리스에 대한 최신 소식을 받으세요.
 
 <div style="margin: 2rem 0;">
@@ -36,4 +36,4 @@ Discord 서버에 가입하여 다른 Voyager들과 대화해 보세요!
 - [버그 보고하기](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
 - [기능 제안하기](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
 
-Gemini Voyager를 응원해 주셔서 감사합니다! ❤️
+Voyager를 응원해 주셔서 감사합니다! ❤️

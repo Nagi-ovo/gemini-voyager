@@ -11,7 +11,7 @@
 > [!IMPORTANT]
 > **Estado del proyecto: Mantenimiento bajo.** Espere retrasos en las respuestas. Se priorizan los PR con pruebas.
 
-¡Gracias por considerar contribuir a Gemini Voyager! 🚀
+¡Gracias por considerar contribuir a Voyager! 🚀
 
 Este documento proporciona pautas e instrucciones para contribuir. Damos la bienvenida a correcciones de errores, mejoras en la documentación y traducciones. Para nuevas funcionalidades, por favor discútelo primero mediante un Issue.
 
@@ -254,7 +254,7 @@ Usa nombres de iconos válidos de [Google Material Symbols](https://fonts.google
 
 ## Alcance del Proyecto
 
-Gemini Voyager mejora la experiencia de chat de Gemini AI con:
+Voyager mejora la experiencia de chat de Gemini AI con:
 
 - Navegación por línea de tiempo
 - Organización de carpetas

@@ -4,7 +4,7 @@
 **注意**：該功能僅在 1.1.9 及後續版本中支援。
 :::
 
-為 Gemini 首頁的「最近保存」部分添加一個優雅的切換開關，讓界面更加簡潔。現在也支持隱藏側邊欄的 Gems 列表！
+為 Gemini™ 首頁的「最近保存」部分添加一個優雅的切換開關，讓界面更加簡潔。現在也支持隱藏側邊欄的 Gems 列表！
 
 <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 300px; text-align: center;">

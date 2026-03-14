@@ -1,6 +1,6 @@
 # Sincronización de Título de Pestaña
 
-Sincroniza automáticamente el título de la pestaña del navegador con el título de la conversación actual de Gemini.
+Sincroniza automáticamente el título de la pestaña del navegador con el título de la conversación actual de Gemini™.
 
 ## Introducción
 

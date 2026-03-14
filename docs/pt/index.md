@@ -2,12 +2,12 @@
 layout: home
 
 hero:
-  name: 'Gemini Voyager'
+  name: 'Voyager'
   text: 'O sistema operativo que faltava ao Gemini.'
   tagline: 'Adoramos o Gemini. Só queríamos que fosse perfeito.'
   image:
     src: /logo.png
-    alt: Logótipo do Gemini Voyager
+    alt: Logótipo do Voyager
   actions:
     - theme: brand
       text: Descarregar
@@ -18,7 +18,7 @@ hero:
 
 teaser:
   title: 'Simplesmente funciona.'
-  description: 'Não queríamos criar apenas mais uma extensão. Queríamos criar uma melhor forma de pensar.<br>Quando usa o Gemini Voyager, deixa de lutar contra a interface e passa a fluir com ela.'
+  description: 'Não queríamos criar apenas mais uma extensão. Queríamos criar uma melhor forma de pensar.<br>Quando usa o Voyager, deixa de lutar contra a interface e passa a fluir com ela.'
   image: '/assets/teaser.png'
   features:
     - title: 'Linha do Tempo'
@@ -111,7 +111,7 @@ features:
   </a>
   <p style="margin-top: 24px; font-size: 1.05em; opacity: 0.86;">✨ Estamos ao vivo no Product Hunt! Adoraríamos ouvir as suas opiniões e feedback. ❤️</p>
   <div style="margin-top: 12px; display: flex; justify-content: center;">
-    <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Gemini Voyager no Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
+    <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager no Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
   </div>
 </div>
 

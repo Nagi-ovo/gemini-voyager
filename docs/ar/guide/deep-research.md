@@ -21,7 +21,7 @@
 
 ### كيفية الاستخدام
 
-1. افتح محادثة Deep Research في Gemini
+1. افتح محادثة Deep Research في Gemini™
 2. انقر فوق زر **مشاركة وتصدير** في المحادثة
 3. حدد "تنزيل محتوى التفكير" (Download thinking content)
 4. سيتم تنزيل ملف Markdown تلقائياً

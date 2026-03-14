@@ -1,6 +1,6 @@
 # Formula Copy
 
-Gemini Voyager makes it effortless to reuse mathematical formulas and scientific symbols. It supports one-click copying of LaTeX source code and Microsoft Word-compatible MathML format.
+Voyager makes it effortless to reuse mathematical formulas and scientific symbols. It supports one-click copying of LaTeX source code and Microsoft Word-compatible MathML format.
 
 ## Introduction
 
