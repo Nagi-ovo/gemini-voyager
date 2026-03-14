@@ -31,7 +31,11 @@ export function fixBrokenBoldTags(root: HTMLElement) {
         parent.closest('pre') ||
         parent.closest('code-block') ||
         parent.closest('.math-block') ||
-        parent.closest('.math-inline'))
+        parent.closest('.math-inline') ||
+        // Skip editable areas to avoid modifying user input
+        parent.closest('rich-textarea') ||
+        parent.closest('[contenteditable="true"]') ||
+        parent.closest('[role="textbox"]'))
     ) {
       continue;
     }
@@ -186,9 +190,17 @@ export function startMarkdownPatcher() {
     }
 
     if (nodesToScan.length > 0) {
-      // Debounce or just run?
-      // Since specific nodes are added, running on them is usually fast.
-      nodesToScan.forEach((node) => fixBrokenBoldTags(node));
+      nodesToScan.forEach((node) => {
+        // Skip editable areas to avoid modifying user input
+        if (
+          node.closest('rich-textarea') ||
+          node.closest('[contenteditable="true"]') ||
+          node.closest('[role="textbox"]')
+        ) {
+          return;
+        }
+        fixBrokenBoldTags(node);
+      });
     }
   });
 
