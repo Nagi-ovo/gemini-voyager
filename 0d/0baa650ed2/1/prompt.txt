@@ -1,0 +1,17 @@
+打包一个 chrome 的 zip
+
+---
+
+现在 CI 里打包的是 voyager 还是 geimni xxx
+
+---
+
+你在我逗我吗
+
+---
+
+打包的文件名也改为 voyager
+
+---
+
+提交 push
