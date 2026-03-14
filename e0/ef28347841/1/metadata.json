@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "e0ef28347841",
+  "session_id": "7cd6d473-008b-4bbf-a349-d647b8109402",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-14T11:34:03.03498Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".claude/skills/safari-release.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "6942c00bbfa1",
+  "token_usage": {
+    "input_tokens": 5213,
+    "cache_creation_tokens": 89827,
+    "cache_read_tokens": 528591,
+    "output_tokens": 4689,
+    "api_call_count": 19
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-14T11:34:02.982148Z",
+    "agent_lines": 69,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 69,
+    "agent_percentage": 100
+  }
+}
