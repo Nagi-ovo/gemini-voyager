@@ -34,6 +34,7 @@ sponsorkit/
 
 # Claude Code internals
 .entire/
+.claude/
 
 # System & Misc
 .DS_Store
