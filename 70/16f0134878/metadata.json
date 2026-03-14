@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "7016f0134878",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".prettierignore",
+    "CLAUDE.md",
+    "manifest.dev.json",
+    "manifest.json",
+    "package.json",
+    "src/hooks/useDarkMode.ts",
+    "src/pages/content/changelog/notes/1.3.5.md",
+    "src/pages/content/timeline/manager.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/70/16f0134878/0/metadata.json",
+      "transcript": "/70/16f0134878/0/full.jsonl",
+      "context": "/70/16f0134878/0/context.md",
+      "content_hash": "/70/16f0134878/0/content_hash.txt",
+      "prompt": "/70/16f0134878/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
