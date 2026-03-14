@@ -60,10 +60,10 @@ cd safari/Models && create-dmg \
   --icon-size 100 \
   --icon "Gemini Voyager.app" 175 190 \
   --app-drop-link 425 190 \
-  "gemini-voyager-v${VERSION}.dmg" \
+  "voyager-v${VERSION}.dmg" \
   dmg_source
 ```
 
 ### 6. Verify and report
 
-Confirm the DMG was created at `safari/Models/gemini-voyager-v${VERSION}.dmg` and report success to the user.
+Confirm the DMG was created at `safari/Models/voyager-v${VERSION}.dmg` and report success to the user.

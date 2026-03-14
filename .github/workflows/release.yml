@@ -156,7 +156,7 @@ jobs:
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
 
-          cd dist_chrome && zip -r ../gemini-voyager-chrome-${TAG}.zip . && cd ..
+          cd dist_chrome && zip -r ../voyager-chrome-${TAG}.zip . && cd ..
 
       - name: Build Edge artifact
         run: bun run build:edge
@@ -166,7 +166,7 @@ jobs:
         uses: wdzeng/edge-addon@v2
         with:
           product-id: ${{ secrets.EDGE_PRODUCT_ID }}
-          zip-path: gemini-voyager-edge-${{ steps.vars.outputs.tag_name }}.zip
+          zip-path: voyager-edge-${{ steps.vars.outputs.tag_name }}.zip
           api-key: ${{ secrets.EDGE_API_KEY }}
           client-id: ${{ secrets.EDGE_CLIENT_ID }}
 
@@ -179,7 +179,7 @@ jobs:
             --api-secret=${{ secrets.AMO_JWT_SECRET }} \
             --channel=listed
           # Move signed XPI to root with proper naming
-          mv web-ext-artifacts/*.xpi gemini-voyager-firefox-${TAG}.xpi
+          mv web-ext-artifacts/*.xpi voyager-firefox-${TAG}.xpi
 
       - name: Prepare Release Notes
         id: release_body
@@ -228,14 +228,14 @@ jobs:
             # Append version-specific file names
             cat >> release_body.md << EOF
 
-          - **Chrome**: \`gemini-voyager-chrome-${TAG}.zip\`
-          - **Firefox**: \`gemini-voyager-firefox-${TAG}.xpi\`
-          - **Safari**: \`gemini-voyager-${TAG}.dmg\`
+          - **Chrome**: \`voyager-chrome-${TAG}.zip\`
+          - **Firefox**: \`voyager-firefox-${TAG}.xpi\`
+          - **Safari**: \`voyager-${TAG}.dmg\`
 
           ### 🍎 Safari 安装与限制 (Safari Installation & Limitations)
 
-          - **安装 (Installation)**: 下载并打开 \`gemini-voyager-${TAG}.dmg\`，按提示安装应用。
-            Download and open \`gemini-voyager-${TAG}.dmg\`, then follow the prompts to install the app.
+          - **安装 (Installation)**: 下载并打开 \`voyager-${TAG}.dmg\`，按提示安装应用。
+            Download and open \`voyager-${TAG}.dmg\`, then follow the prompts to install the app.
           - **限制 (Limitations)**: 受限于 Safari 特性，以下功能暂不支持：(a) Nano Banana 水印去除 (b) 图片导出 (建议使用 PDF 导出) (c) Google Drive 云同步。
             Due to Safari's nature, the following features are not supported: (a) Watermark removal (b) Image export (PDF recommended) (c) Cloud sync with Google Drive.
           EOF
@@ -253,10 +253,10 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Gemini Voyager ${{ steps.vars.outputs.tag_name }}
+          name: Voyager ${{ steps.vars.outputs.tag_name }}
           tag_name: ${{ steps.vars.outputs.tag_name }}
           files: |
-            gemini-voyager-chrome-*.zip
-            gemini-voyager-firefox-*.xpi
-            gemini-voyager-*.dmg
+            voyager-chrome-*.zip
+            voyager-firefox-*.xpi
+            voyager-*.dmg
           body: ${{ steps.release_body.outputs.body }}
