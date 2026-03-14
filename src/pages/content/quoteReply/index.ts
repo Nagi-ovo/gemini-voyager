@@ -489,10 +489,18 @@ export function startQuoteReply() {
           input.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
-        // Final focus force
-        input.focus();
-        // Some editors need an extra click or focus to show the cursor
-        setTimeout(() => input.focus(), TIMING.FOCUS_RETRY_DELAY_MS);
+        // Final focus — only if the editor doesn't already have focus,
+        // to avoid interrupting an in-progress IME composition (#497).
+        if (document.activeElement !== input) {
+          input.focus();
+        }
+        // Retry for editors that need extra time to show the cursor,
+        // but skip if the element is already focused (IME-safe).
+        setTimeout(() => {
+          if (document.activeElement !== input) {
+            input.focus();
+          }
+        }, TIMING.FOCUS_RETRY_DELAY_MS);
       };
 
       // Use a slightly longer delay to wait for any expansion transitions
