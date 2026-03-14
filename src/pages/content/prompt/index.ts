@@ -1337,13 +1337,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     );
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const text = (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value.trim();
+      const text = (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value;
       const tagsRaw = (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).value;
       const tags = dedupeTags((tagsRaw || '').split(',').map((s) => s.trim()));
-      if (!text) return;
+      if (!text.trim()) return;
       if (editingId) {
         const dup = items.some(
-          (x) => x.id !== editingId && x.text.trim().toLowerCase() === text.toLowerCase(),
+          (x) => x.id !== editingId && x.text.trim().toLowerCase() === text.trim().toLowerCase(),
         );
         if (dup) {
           setInlineHint(i18n.t('pm_duplicate') || 'Duplicate prompt', 'err');
@@ -1360,7 +1360,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         editingId = null;
       } else {
         // prevent duplicates (case-insensitive, same text)
-        const exists = items.some((x) => x.text.trim().toLowerCase() === text.toLowerCase());
+        const exists = items.some((x) => x.text.trim().toLowerCase() === text.trim().toLowerCase());
         if (exists) {
           setInlineHint(i18n.t('pm_duplicate') || 'Duplicate prompt', 'err');
           return;
