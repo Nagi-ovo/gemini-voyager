@@ -707,6 +707,15 @@ html.dark .timeline-left-slider::before {
   font-size: 11px;
 }
 
+.timeline-preview-starred-time {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--timeline-star-color);
+  margin-inline-start: 6px;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
 .timeline-preview-index {
   display: inline-flex;
   align-items: center;

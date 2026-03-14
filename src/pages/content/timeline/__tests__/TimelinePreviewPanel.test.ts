@@ -30,6 +30,7 @@ function makeMarkers(count: number): PreviewMarkerData[] {
     summary: `User message number ${i + 1}`,
     index: i,
     starred: i === 2,
+    starredAt: i === 2 ? 1710000000000 : undefined,
   }));
 }
 
@@ -122,6 +123,17 @@ describe('TimelinePreviewPanel', () => {
       const items = document.querySelectorAll('.timeline-preview-item');
       expect(items[2]?.classList.contains('starred')).toBe(true);
       expect(items[0]?.classList.contains('starred')).toBe(false);
+    });
+
+    it('shows starredAt time label for starred items', () => {
+      panel.updateMarkers(makeMarkers(5));
+      panel.open();
+
+      const timeLabels = document.querySelectorAll('.timeline-preview-starred-time');
+      // Only the starred item (index 2) should have a time label
+      expect(timeLabels.length).toBe(1);
+      // Timestamp 1710000000000 → check it renders a date string
+      expect(timeLabels[0]?.textContent).toMatch(/\d{2}\/\d{2} \d{2}:\d{2}/);
     });
 
     it('shows empty message when no markers', () => {

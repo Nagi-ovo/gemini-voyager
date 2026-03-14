@@ -64,25 +64,14 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
   };
 
   const formatDate = (timestamp: number): string => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    // Within 24 hours: show hours
-    if (diffHours < 24) {
-      if (diffHours === 0) {
-        return t('justNow');
-      }
-      return `${diffHours} ${t('hoursAgo')}`;
-    } else if (diffDays === 1) {
-      return t('yesterday');
-    } else if (diffDays < 7) {
-      return `${diffDays} ${t('daysAgo')}`;
-    } else {
-      return date.toLocaleDateString();
-    }
+    const d = new Date(timestamp);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
   };
 
   const truncateText = (text: string, maxLength: number): string => {

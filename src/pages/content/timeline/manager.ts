@@ -138,6 +138,8 @@ export class TimelineManager {
     | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
     | null = null;
   private starred: Set<string> = new Set();
+  /** Map of turnId → starredAt timestamp (ms). Populated from service/storage; used for preview labels. */
+  private starredAtMap: Map<string, number> = new Map();
   private markerMap: Map<
     string,
     {
@@ -502,6 +504,11 @@ export class TimelineManager {
   private applyStarredIdSet(nextSet: Set<string>, persistLocal = true): void {
     if (this.areStarredSetsEqual(this.starred, nextSet)) return;
 
+    // Clean up starredAtMap for removed entries
+    for (const id of this.starred) {
+      if (!nextSet.has(id)) this.starredAtMap.delete(id);
+    }
+
     this.starred = new Set(nextSet);
 
     if (persistLocal) this.saveStars();
@@ -532,6 +539,11 @@ export class TimelineManager {
     const conversationMessages = Array.isArray(rawMessages) ? rawMessages : [];
     const nextSet = new Set(conversationMessages.map((message) => String(message.turnId)));
 
+    // Update starredAt map from shared data
+    for (const msg of conversationMessages) {
+      if (msg.starredAt) this.starredAtMap.set(String(msg.turnId), msg.starredAt);
+    }
+
     this.applyStarredIdSet(nextSet);
   }
 
@@ -542,6 +554,12 @@ export class TimelineManager {
         this.conversationId,
       );
       const nextSet = new Set(messages.map((message) => String(message.turnId)));
+
+      // Update starredAt map from service data
+      for (const msg of messages) {
+        if (msg.starredAt) this.starredAtMap.set(String(msg.turnId), msg.starredAt);
+      }
+
       this.applyStarredIdSet(nextSet);
     } catch (error) {
       console.warn('[Timeline] Failed to sync starred messages from shared storage:', error);
@@ -1289,7 +1307,13 @@ export class TimelineManager {
     this.updateActiveDotUI();
     this.scheduleScrollSync();
     this.previewPanel?.updateMarkers(
-      this.markers.map((m, i) => ({ id: m.id, summary: m.summary, index: i, starred: m.starred })),
+      this.markers.map((m, i) => ({
+        id: m.id,
+        summary: m.summary,
+        index: i,
+        starred: m.starred,
+        starredAt: m.starred ? this.starredAtMap.get(m.id) : undefined,
+      })),
     );
   };
 
@@ -1584,6 +1608,7 @@ export class TimelineManager {
         // Update local starred set
         if (this.starred.has(turnId)) {
           this.starred.delete(turnId);
+          this.starredAtMap.delete(turnId);
           this.saveStars();
 
           // Update marker UI
@@ -1607,6 +1632,7 @@ export class TimelineManager {
         // Update local starred set
         if (!this.starred.has(turnId)) {
           this.starred.add(turnId);
+          this.starredAtMap.set(turnId, Date.now());
           this.saveStars();
 
           // Update marker UI
@@ -2457,6 +2483,7 @@ export class TimelineManager {
 
     if (wasStarred) {
       this.starred.delete(id);
+      this.starredAtMap.delete(id);
     } else {
       this.starred.add(id);
     }
@@ -2472,14 +2499,16 @@ export class TimelineManager {
       const m = this.markerMap.get(id);
       if (m) {
         const conversationTitle = this.getConversationTitle();
+        const now = Date.now();
         const message: StarredMessage = {
           turnId: id,
           content: m.summary,
           conversationId: this.conversationId!,
           conversationUrl: window.location.href,
           conversationTitle,
-          starredAt: Date.now(),
+          starredAt: now,
         };
+        this.starredAtMap.set(id, now);
         await StarredMessagesService.addStarredMessage(message);
       }
     }
