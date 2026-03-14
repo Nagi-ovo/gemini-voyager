@@ -115,6 +115,7 @@
   border-radius: 12px;
   overflow: visible;
   contain: layout;
+  pointer-events: none;
 }
 
 /* Visual background layer — width adjustable via edge drag, dots unaffected */
@@ -135,7 +136,7 @@
     background-color 0.3s ease,
     width 0.2s ease,
     border-radius 0.2s ease;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 /* Disable transitions during active resize for immediate feedback */
@@ -179,6 +180,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  pointer-events: auto;
 }
 
 .timeline-dot::after {
