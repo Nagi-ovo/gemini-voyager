@@ -1,7 +1,7 @@
 ---
 name: safari-release
 description: Build Safari extension with update check enabled, guide user through Xcode export, and create DMG for distribution. Use when user wants to release a new Safari version or create a Safari DMG.
-user_invocable: true
+user-invocable: true
 ---
 
 # Safari Release Workflow
