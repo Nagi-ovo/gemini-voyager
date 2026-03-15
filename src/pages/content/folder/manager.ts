@@ -1267,6 +1267,9 @@ export class FolderManager {
       } else {
         (conv as HTMLElement).classList.remove('gv-conversation-archived');
       }
+
+      // Apply folder color indicator
+      this.applyFolderIndicatorToConversation(conv as HTMLElement);
     });
   }
 
@@ -1781,6 +1784,7 @@ export class FolderManager {
             if (node.matches('[data-test-id="conversation"]')) {
               this.makeConversationDraggable(node);
               this.applyHideArchivedToConversation(node);
+              this.applyFolderIndicatorToConversation(node);
               // Cancel pending removal for this conversation (it's back!)
               this.cancelPendingRemovalForElement(node);
             }
@@ -1791,6 +1795,8 @@ export class FolderManager {
               this.makeConversationDraggable(convElement);
               // Apply hide archived setting to newly added conversations
               this.applyHideArchivedToConversation(convElement);
+              // Apply folder indicator to newly added conversations
+              this.applyFolderIndicatorToConversation(convElement);
               // Cancel pending removal for this conversation (it's back!)
               this.cancelPendingRemovalForElement(convElement);
             });
@@ -5083,6 +5089,9 @@ export class FolderManager {
     // Update active highlight after re-render
     this.highlightActiveConversationInFolders();
 
+    // Update folder color indicators in native conversation list
+    this.updateAllFolderIndicators();
+
     // Flush any pending title updates collected during rendering
     if (this.pendingTitleUpdates.size > 0) {
       this.debug(`Flushing ${this.pendingTitleUpdates.size} pending title updates`);
@@ -5860,6 +5869,99 @@ export class FolderManager {
       }
     }
     return false;
+  }
+
+  /**
+   * Get all folders that contain a specific conversation
+   * @returns Array of folder objects with id, name, and color
+   */
+  private getFoldersForConversation(conversationId: string): Array<{ id: string; name: string; color: string }> {
+    const result: Array<{ id: string; name: string; color: string }> = [];
+    const dark = isDarkMode();
+
+    for (const folderId in this.data.folderContents) {
+      if (folderId === ROOT_CONVERSATIONS_ID) continue;
+
+      const conversations = this.data.folderContents[folderId];
+      const hasConversation = conversations.some((c) => {
+        if (c.conversationId === conversationId) return true;
+        const cleanId = conversationId.replace(/^c_/, '');
+        const cleanStoredId = c.conversationId.replace(/^c_/, '');
+        if (cleanId && cleanId === cleanStoredId) return true;
+        if (cleanId && cleanId.length > 8 && c.url.includes(cleanId)) return true;
+        return false;
+      });
+
+      if (hasConversation) {
+        const folder = this.data.folders.find((f) => f.id === folderId);
+        if (folder) {
+          result.push({
+            id: folder.id,
+            name: folder.name,
+            color: getFolderColor(folder.color, dark),
+          });
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Apply folder color indicator to a native conversation element
+   */
+  private applyFolderIndicatorToConversation(conv: HTMLElement): void {
+    const convId = this.extractConversationId(conv);
+    const folders = this.getFoldersForConversation(convId);
+
+    // Find or create indicator element
+    let indicator = conv.querySelector('.gv-folder-indicator') as HTMLElement | null;
+
+    if (folders.length === 0) {
+      // No folders - remove indicator if exists
+      if (indicator) {
+        indicator.remove();
+      }
+      return;
+    }
+
+    // Create indicator if doesn't exist
+    if (!indicator) {
+      indicator = document.createElement('span');
+      indicator.className = 'gv-folder-indicator';
+
+      // Insert before the title/link
+      const titleElement = conv.querySelector('.conversation-title, a') as HTMLElement | null;
+      if (titleElement && titleElement.parentElement) {
+        titleElement.parentElement.insertBefore(indicator, titleElement);
+      } else {
+        conv.insertBefore(indicator, conv.firstChild);
+      }
+    }
+
+    // Update indicator based on number of folders
+    if (folders.length === 1) {
+      indicator.classList.remove('gv-folder-indicator-multi');
+      indicator.style.backgroundColor = folders[0].color;
+      indicator.title = folders[0].name;
+    } else {
+      // Multiple folders - use gradient
+      indicator.classList.add('gv-folder-indicator-multi');
+      indicator.style.backgroundColor = '';
+      indicator.title = folders.map((f) => f.name).join(', ');
+    }
+  }
+
+  /**
+   * Update all folder indicators in the native conversation list
+   */
+  private updateAllFolderIndicators(): void {
+    if (!this.recentSection) return;
+
+    const conversations = this.recentSection.querySelectorAll('[data-test-id="conversation"]');
+    conversations.forEach((conv) => {
+      this.applyFolderIndicatorToConversation(conv as HTMLElement);
+    });
   }
 
   private generateId(): string {
