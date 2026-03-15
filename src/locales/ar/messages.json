@@ -1435,14 +1435,6 @@
     "message": "تحديد الذكاء الاصطناعي فقط",
     "description": "Export selection mode: select only AI messages"
   },
-  "hideUpsell": {
-    "message": "إخفاء رسائل الترقية",
-    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
-  },
-  "hideUpsellHint": {
-    "message": "إخفاء زر \"الترقية إلى Google AI Ultra\" في الشريط الجانبي وقائمة النماذج",
-    "description": "Explanation for the upsell hiding feature"
-  },
   "aiOrgCopyButton": {
     "message": "تنظيم AI",
     "description": "زر لنسخ هيكل المجلدات والمحادثات لتنظيم AI"

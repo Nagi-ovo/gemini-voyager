@@ -655,14 +655,6 @@
     "message": "由于浏览器安全限制，选项页面无法直接读取 Gemini 页面的提示词和文件夹数据。建议使用 Gemini 页面上的提示词管理器和文件夹导出功能进行手动备份。",
     "description": "备份数据访问限制说明"
   },
-  "hideUpsell": {
-    "message": "隐藏升级提醒",
-    "description": "隐藏升级到 AI Ultra 的提示"
-  },
-  "hideUpsellHint": {
-    "message": "隐藏侧边栏和模型菜单中的“升级到 Google AI Ultra”按钮",
-    "description": "隐藏升级提示的功能说明"
-  },
   "promptManagerOptions": {
     "message": "提示词管理器",
     "description": "提示词管理器选项区域标签"

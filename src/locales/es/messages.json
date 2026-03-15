@@ -1435,14 +1435,6 @@
     "message": "Seleccionar solo IA",
     "description": "Export selection mode: select only AI messages"
   },
-  "hideUpsell": {
-    "message": "Ocultar avisos de actualización",
-    "description": "Hide the \"Upgrade to AI Ultra\" prompt"
-  },
-  "hideUpsellHint": {
-    "message": "Ocultar el botón \"Actualizar a Google AI Ultra\" en la barra lateral y el menú de modelos",
-    "description": "Explanation for the upsell hiding feature"
-  },
   "aiOrgCopyButton": {
     "message": "Organizar con IA",
     "description": "Botón para copiar la estructura de carpetas y conversaciones para organización con IA"

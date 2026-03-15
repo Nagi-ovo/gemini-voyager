@@ -37,7 +37,6 @@ import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startSnowEffect } from './snowEffect/index';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
-import { startUpsellHider } from './upsellHider/index';
 import { startWatermarkRemover } from './watermarkRemover/index';
 
 // Suppress Vite's CSS preload errors in the Chrome extension content script context.
@@ -245,10 +244,6 @@ async function initializeFeatures(): Promise<void> {
 
       // Gems hider - hide/show toggle for Gems list section
       startGemsHider();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // Upsell hider - hide "Upgrade to Google AI Ultra" buttons
-      void startUpsellHider();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Markdown Patcher - fixes broken bold tags due to HTML injection

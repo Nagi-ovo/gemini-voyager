@@ -98,9 +98,6 @@ export const StorageKeys = {
   FORK_NODES: 'gvForkNodes',
   FORK_ENABLED: 'gvForkEnabled',
 
-  // Upsell hider
-  UPSELL_HIDER_ENABLED: 'gvUpsellHiderEnabled',
-
   // AI Studio master toggle
   GV_AISTUDIO_ENABLED: 'gvAIStudioEnabled',
 } as const;

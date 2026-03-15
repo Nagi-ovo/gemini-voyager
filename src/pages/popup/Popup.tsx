@@ -299,7 +299,6 @@ interface SettingsUpdate {
   visualEffect?: 'off' | 'snow' | 'sakura' | 'rain';
   preventAutoScrollEnabled?: boolean;
   forkEnabled?: boolean;
-  upsellHiderEnabled?: boolean;
   accountIsolationEnabled?: boolean;
   accountIsolationPlatform?: AccountPlatform;
   aiStudioEnabled?: boolean;
@@ -336,7 +335,6 @@ export default function Popup() {
   const [visualEffect, setVisualEffect] = useState<'off' | 'snow' | 'sakura' | 'rain'>('off');
   const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState<boolean>(false);
   const [forkEnabled, setForkEnabled] = useState<boolean>(false);
-  const [upsellHiderEnabled, setUpsellHiderEnabled] = useState<boolean>(true);
   const [chatWidthEnabled, setChatWidthEnabled] = useState<boolean>(false);
   const [editInputWidthEnabled, setEditInputWidthEnabled] = useState<boolean>(false);
   const [sidebarWidthEnabled, setSidebarWidthEnabled] = useState<boolean>(false);
@@ -435,8 +433,6 @@ export default function Popup() {
         payload.gvPreventAutoScrollEnabled = settings.preventAutoScrollEnabled;
       if (typeof settings.forkEnabled === 'boolean')
         payload[StorageKeys.FORK_ENABLED] = settings.forkEnabled;
-      if (typeof settings.upsellHiderEnabled === 'boolean')
-        payload[StorageKeys.UPSELL_HIDER_ENABLED] = settings.upsellHiderEnabled;
       if (typeof settings.accountIsolationEnabled === 'boolean') {
         const isolationPlatform = settings.accountIsolationPlatform ?? activeAccountPlatform;
         payload[getAccountIsolationStorageKey(isolationPlatform)] =
@@ -745,7 +741,6 @@ export default function Popup() {
           gvSnowEffect: false,
           gvPreventAutoScrollEnabled: false,
           [StorageKeys.FORK_ENABLED]: false,
-          [StorageKeys.UPSELL_HIDER_ENABLED]: true,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: null,
@@ -796,7 +791,6 @@ export default function Popup() {
           }
           setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
           setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
-          setUpsellHiderEnabled(res?.[StorageKeys.UPSELL_HIDER_ENABLED] === true);
           setAiStudioEnabled(res?.[StorageKeys.GV_AISTUDIO_ENABLED] !== false);
 
           // Width enabled flags — auto-enable if user previously customized the width
@@ -1705,33 +1699,6 @@ export default function Popup() {
                     <span>{option.label}</span>
                   </button>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Upsell Hider - Gemini only */}
-        {!isAIStudio && (
-          <Card className="p-4 transition-all hover:shadow-md">
-            <CardContent className="p-0">
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="upsell-hider"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('hideUpsell')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('hideUpsellHint')}</p>
-                </div>
-                <Switch
-                  id="upsell-hider"
-                  checked={upsellHiderEnabled}
-                  onChange={(e) => {
-                    setUpsellHiderEnabled(e.target.checked);
-                    apply({ upsellHiderEnabled: e.target.checked });
-                  }}
-                />
               </div>
             </CardContent>
           </Card>
