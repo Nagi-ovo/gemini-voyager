@@ -42,6 +42,7 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 - Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `build`, `ci`, `perf`, `style`
 - Scope: short, feature-focused (e.g., `copy`, `export`, `popup`)
 - Summary: lowercase, imperative, no trailing period
+- If the commit relates to a GitHub issue or discussion, include `Closes #xxx` or `Fixes #xxx` in the commit **body**
 
 ## Version Bump & Release
 
