@@ -1,0 +1,24 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Fix https://github.com/Nagi-ovo/gemini-voyager/issues/498
+
+### Prompt 2
+
+[Request interrupted by user]
+
+### Prompt 3
+
+你是觉得撤回对应 PR 的那个 commit 的 history 比较好，还是直接加一个 patch 去把这个相关的功能给去掉呢？
+
+### Prompt 4
+
+ok
+
+### Prompt 5
+
+sure
+
