@@ -105,65 +105,82 @@ export function fixBrokenBoldTags(root: HTMLElement) {
       }
     }
 
-    // Phase 2: Fix split-node bolds (e.g., "text**" -> element -> "text**")
-    // This logic handles cases where the bold marker is interrupted by an injected element
+    // Phase 2: Fix split-node bolds (e.g., "text**" -> element(s) -> "text**")
+    // Walk forward through siblings to find the closing ** marker,
+    // collecting all intermediate nodes (elements and text nodes without **).
     const startText = currentNode.textContent || '';
     const startIdx = startText.lastIndexOf('**');
 
     if (startIdx === -1) continue;
 
-    const nextNode = currentNode.nextSibling;
+    // Collect intermediate siblings until we find a text node containing **
+    const middleNodes: Node[] = [];
+    let walker2: Node | null = currentNode.nextSibling;
+    let endNode: Text | null = null;
+    const MAX_WALK = 10; // safety limit to avoid walking too far
 
-    // Check if the next sibling is the interfering element
-    if (
-      nextNode &&
-      nextNode.nodeType === Node.ELEMENT_NODE &&
-      (nextNode as HTMLElement).hasAttribute('data-path-to-node')
-    ) {
-      const middleElement = nextNode as HTMLElement;
-      const endNode = nextNode.nextSibling;
-
-      // Check if the node after the element is text and has the closing delimiter
-      if (endNode && endNode.nodeType === Node.TEXT_NODE && endNode.textContent?.includes('**')) {
-        const endText = endNode.textContent || '';
-        const endIdx = endText.indexOf('**'); // Find first occurrence
-
-        if (endIdx !== -1) {
-          try {
-            logger.info('Found broken markdown pattern due to injected node, applying fix...');
-
-            // 1. Create wrapper
-            const strong = document.createElement('strong');
-
-            // 2. Insert the strong tag into the DOM first
-            if (currentNode.parentNode) {
-              currentNode.parentNode.insertBefore(strong, nextNode);
-            }
-
-            // 3. Extract and move content INTO the strong tag
-            // Content from start node (after the **)
-            const afterStart = startText.substring(startIdx + 2);
-            if (afterStart) {
-              strong.appendChild(document.createTextNode(afterStart));
-            }
-
-            // The middle element
-            strong.appendChild(middleElement);
-
-            // Content from end node (before the **)
-            const beforeEnd = endText.substring(0, endIdx);
-            if (beforeEnd) {
-              strong.appendChild(document.createTextNode(beforeEnd));
-            }
-
-            // 4. Cleanup original text nodes
-            currentNode.textContent = startText.substring(0, startIdx);
-            endNode.textContent = endText.substring(endIdx + 2);
-          } catch (e) {
-            logger.error('Failed to apply markdown fix', { error: e });
-          }
+    for (let steps = 0; walker2 && steps < MAX_WALK; steps++) {
+      if (walker2.nodeType === Node.TEXT_NODE) {
+        const text = walker2.textContent || '';
+        if (text.includes('**')) {
+          endNode = walker2 as Text;
+          break;
         }
+        // Text node without ** — part of the bold content
+        middleNodes.push(walker2);
+      } else if (
+        walker2.nodeType === Node.ELEMENT_NODE &&
+        (walker2 as HTMLElement).hasAttribute('data-path-to-node')
+      ) {
+        middleNodes.push(walker2);
+      } else {
+        // Unknown node type — stop to avoid unexpected behavior
+        break;
       }
+      walker2 = walker2.nextSibling;
+    }
+
+    if (!endNode || middleNodes.length === 0) continue;
+
+    const endText = endNode.textContent || '';
+    const endIdx = endText.indexOf('**');
+
+    if (endIdx === -1) continue;
+
+    try {
+      logger.info('Found broken markdown pattern due to injected node, applying fix...');
+
+      // 1. Create wrapper
+      const strong = document.createElement('strong');
+
+      // 2. Insert the strong tag before the first middle node
+      if (currentNode.parentNode) {
+        currentNode.parentNode.insertBefore(strong, middleNodes[0]);
+      }
+
+      // 3. Extract and move content INTO the strong tag
+      // Content from start node (after the **)
+      const afterStart = startText.substring(startIdx + 2);
+      if (afterStart) {
+        strong.appendChild(document.createTextNode(afterStart));
+      }
+
+      // All intermediate nodes
+      for (const mid of middleNodes) {
+        strong.appendChild(mid);
+      }
+
+      // Content from end node (before the **)
+      const beforeEnd = endText.substring(0, endIdx);
+      if (beforeEnd) {
+        strong.appendChild(document.createTextNode(beforeEnd));
+      }
+
+      // 4. Cleanup original text nodes
+      currentNode.textContent = startText.substring(0, startIdx);
+      endNode.textContent = endText.substring(endIdx + 2);
+    } catch (e) {
+      logger.error('Failed to apply markdown fix', { error: e });
     }
   }
 }
