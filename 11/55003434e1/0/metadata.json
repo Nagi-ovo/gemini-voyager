@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "1155003434e1",
+  "session_id": "192ac09f-b413-42fa-a33c-f7252915f9e7",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-16T19:04:07.415074Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "docs/ru/privacy.md",
+    "docs/zh_TW/privacy.md",
+    "docs/ar/privacy.md",
+    "docs/en/privacy.md",
+    "docs/es/privacy.md",
+    "docs/ja/privacy.md",
+    "docs/pt/privacy.md",
+    "docs/fr/privacy.md",
+    "docs/ko/privacy.md",
+    "docs/privacy.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "15bdd17877ad",
+  "checkpoint_transcript_start": 80,
+  "transcript_lines_at_start": 80,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-16T19:04:07.301813Z",
+    "agent_lines": 0,
+    "human_added": 39,
+    "human_modified": 102,
+    "human_removed": 0,
+    "total_committed": 39,
+    "agent_percentage": 0
+  }
+}
