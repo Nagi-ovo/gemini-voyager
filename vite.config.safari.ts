@@ -2,6 +2,7 @@ import { ManifestV3Export, crx } from '@crxjs/vite-plugin';
 import { resolve } from 'path';
 import { defineConfig, mergeConfig } from 'vite';
 
+import manifest from './manifest.json';
 import baseConfig, { baseBuildOptions, baseManifest } from './vite.config.base';
 
 const outDir = resolve(__dirname, 'dist_safari');
@@ -22,6 +23,14 @@ export default mergeConfig(
       crx({
         manifest: {
           ...baseManifest,
+          // Safari renders toolbar icons as template images (monochrome).
+          // Use a transparent-background version so it doesn't appear as a solid square.
+          action: {
+            ...manifest.action,
+            default_icon: {
+              '32': 'icon-32-template.png',
+            },
+          },
           // Safari-specific adjustments
           background: {
             // Safari supports both service_worker and scripts
