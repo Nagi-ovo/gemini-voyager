@@ -3,7 +3,7 @@
   "checkpoint_id": "0280fa82c7de",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 1,
   "files_touched": [
     "src/pages/content/markdownPatcher/__tests__/fixBrokenBoldTags.test.ts",
     "src/pages/content/markdownPatcher/index.ts"
@@ -15,13 +15,20 @@
       "context": "/02/80fa82c7de/0/context.md",
       "content_hash": "/02/80fa82c7de/0/content_hash.txt",
       "prompt": "/02/80fa82c7de/0/prompt.txt"
+    },
+    {
+      "metadata": "/02/80fa82c7de/1/metadata.json",
+      "transcript": "/02/80fa82c7de/1/full.jsonl",
+      "context": "/02/80fa82c7de/1/context.md",
+      "content_hash": "/02/80fa82c7de/1/content_hash.txt",
+      "prompt": "/02/80fa82c7de/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 0,
-    "cache_creation_tokens": 0,
-    "cache_read_tokens": 0,
-    "output_tokens": 0,
-    "api_call_count": 0
+    "input_tokens": 36,
+    "cache_creation_tokens": 159324,
+    "cache_read_tokens": 1115988,
+    "output_tokens": 29440,
+    "api_call_count": 24
   }
 }
