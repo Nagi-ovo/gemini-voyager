@@ -28,15 +28,13 @@ import { startMermaid } from './mermaid/index';
 import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
-import { startRainEffect } from './rainEffect/index';
 import { startRecentsHider } from './recentsHider/index';
-import { startSakuraEffect } from './sakuraEffect/index';
 import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
-import { startSnowEffect } from './snowEffect/index';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
+import { startRainEffect, startSakuraEffect, startSnowEffect } from './visualEffects';
 import { startWatermarkRemover } from './watermarkRemover/index';
 
 // Suppress Vite's CSS preload errors in the Chrome extension content script context.
