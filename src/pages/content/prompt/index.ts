@@ -49,6 +49,7 @@ const STORAGE_KEYS = {
   position: StorageKeys.PROMPT_PANEL_POSITION,
   triggerPos: StorageKeys.PROMPT_TRIGGER_POSITION,
   language: StorageKeys.LANGUAGE, // reuse global language key
+  theme: StorageKeys.PROMPT_THEME,
 } as const;
 
 const ID = {
@@ -58,6 +59,28 @@ const ID = {
 
 const LATEST_VERSION_CACHE_KEY = 'gvLatestVersionCache';
 const LATEST_VERSION_MAX_AGE = 1000 * 60 * 60 * 6; // 6 hours
+
+type PMTheme = 'light' | 'dark';
+
+function detectPageTheme(): PMTheme {
+  if (
+    document.querySelector('.theme-host.dark-theme') ||
+    document.body.classList.contains('dark-theme') ||
+    document.documentElement.classList.contains('dark') ||
+    document.body.getAttribute('data-theme') === 'dark'
+  ) {
+    return 'dark';
+  }
+  if (
+    document.querySelector('.theme-host.light-theme') ||
+    document.body.classList.contains('light-theme') ||
+    document.documentElement.classList.contains('light') ||
+    document.body.getAttribute('data-theme') === 'light'
+  ) {
+    return 'light';
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
 
 function getRuntimeUrl(path: string): string {
   // Try the standard Web Extensions API first (mainly for Firefox)
@@ -532,7 +555,53 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       versionBadge.classList.add('gv-pm-version-outdated');
     }
 
+    // Theme toggle
+    const themeToggle = createEl('button', 'gv-pm-theme-toggle');
+    themeToggle.setAttribute('type', 'button');
+    let currentPMTheme: PMTheme = detectPageTheme();
+
+    function applyPMTheme(theme: PMTheme) {
+      currentPMTheme = theme;
+      panel.setAttribute('data-gv-theme', theme);
+      themeToggle.classList.toggle('gv-pm-theme-dark', theme === 'dark');
+      themeToggle.title = theme === 'dark' ? i18n.t('pm_theme_light') : i18n.t('pm_theme_dark');
+      themeToggle.setAttribute('aria-label', themeToggle.title);
+    }
+
+    applyPMTheme(currentPMTheme);
+
+    // Load saved theme preference
+    (async () => {
+      try {
+        const result = await browser.storage.sync.get(STORAGE_KEYS.theme);
+        const saved = result[STORAGE_KEYS.theme];
+        if (saved === 'light' || saved === 'dark') {
+          applyPMTheme(saved);
+        }
+      } catch {
+        // Ignore — keep detected theme
+      }
+    })();
+
+    themeToggle.addEventListener('click', async () => {
+      const newTheme: PMTheme = currentPMTheme === 'dark' ? 'light' : 'dark';
+      // Enable smooth color transition on all panel children
+      panel.classList.add('gv-pm-transitioning');
+      applyPMTheme(newTheme);
+      setTimeout(() => panel.classList.remove('gv-pm-transitioning'), 450);
+      try {
+        await browser.storage.sync.set({ [STORAGE_KEYS.theme]: newTheme });
+      } catch {
+        try {
+          await browser.storage.local.set({ [STORAGE_KEYS.theme]: newTheme });
+        } catch {
+          // Ignore
+        }
+      }
+    });
+
     titleRow.appendChild(title);
+    titleRow.appendChild(themeToggle);
     titleRow.appendChild(versionBadge);
 
     // Check for newer version on GitHub (visual indicator only, no link)

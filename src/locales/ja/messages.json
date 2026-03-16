@@ -199,6 +199,14 @@
     "message": "すべてのプロンプトとフォルダが含まれ、タイムスタンプ付きのフォルダに保存されます (形式：backup-YYYYMMDD-HHMMSS)",
     "description": "Backup feature note"
   },
+  "pm_theme_light": {
+    "message": "ライトモードに切替",
+    "description": "Theme toggle tooltip - switch to light"
+  },
+  "pm_theme_dark": {
+    "message": "ダークモードに切替",
+    "description": "Theme toggle tooltip - switch to dark"
+  },
   "extensionVersion": {
     "message": "バージョン",
     "description": "Extension version label"

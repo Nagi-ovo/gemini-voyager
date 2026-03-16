@@ -199,6 +199,14 @@
     "message": "Резервные копии включают все промпты и папки, сохраненные в папке с отметкой времени (формат: backup-YYYYMMDD-HHMMSS)",
     "description": "Backup feature note"
   },
+  "pm_theme_light": {
+    "message": "Переключить на светлую тему",
+    "description": "Theme toggle tooltip - switch to light"
+  },
+  "pm_theme_dark": {
+    "message": "Переключить на тёмную тему",
+    "description": "Theme toggle tooltip - switch to dark"
+  },
   "extensionVersion": {
     "message": "Версия",
     "description": "Extension version label"

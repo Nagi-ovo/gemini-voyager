@@ -199,6 +199,14 @@
     "message": "Les sauvegardes incluent tous les prompts et dossiers (format : backup-YYYYMMDD-HHMMSS)",
     "description": "Backup feature note"
   },
+  "pm_theme_light": {
+    "message": "Passer en mode clair",
+    "description": "Theme toggle tooltip - switch to light"
+  },
+  "pm_theme_dark": {
+    "message": "Passer en mode sombre",
+    "description": "Theme toggle tooltip - switch to dark"
+  },
   "extensionVersion": {
     "message": "Version",
     "description": "Extension version label"

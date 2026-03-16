@@ -199,6 +199,14 @@
     "message": "Los respaldos incluyen todos los prompts y carpetas, guardados en una carpeta con marca de tiempo (formato: backup-YYYYMMDD-HHMMSS)",
     "description": "Backup feature note"
   },
+  "pm_theme_light": {
+    "message": "Cambiar a modo claro",
+    "description": "Theme toggle tooltip - switch to light"
+  },
+  "pm_theme_dark": {
+    "message": "Cambiar a modo oscuro",
+    "description": "Theme toggle tooltip - switch to dark"
+  },
   "extensionVersion": {
     "message": "Versión",
     "description": "Extension version label"

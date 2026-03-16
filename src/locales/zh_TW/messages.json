@@ -199,6 +199,14 @@
     "message": "備份將包含所有提示詞和資料夾，並儲存在帶時間戳記的資料夾中（格式：backup-YYYYMMDD-HHMMSS）",
     "description": "備份功能說明"
   },
+  "pm_theme_light": {
+    "message": "切換至淺色模式",
+    "description": "Theme toggle tooltip - switch to light"
+  },
+  "pm_theme_dark": {
+    "message": "切換至深色模式",
+    "description": "Theme toggle tooltip - switch to dark"
+  },
   "extensionVersion": {
     "message": "版本",
     "description": "擴充功能版本標籤"

@@ -199,6 +199,14 @@
     "message": "Os backups incluem todos os prompts e pastas, salvos em uma pasta com carimbo de data/hora (formato: backup-YYYYMMDD-HHMMSS)",
     "description": "Backup feature note"
   },
+  "pm_theme_light": {
+    "message": "Mudar para modo claro",
+    "description": "Theme toggle tooltip - switch to light"
+  },
+  "pm_theme_dark": {
+    "message": "Mudar para modo escuro",
+    "description": "Theme toggle tooltip - switch to dark"
+  },
   "extensionVersion": {
     "message": "Versão",
     "description": "Extension version label"

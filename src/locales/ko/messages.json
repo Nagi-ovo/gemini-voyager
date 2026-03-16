@@ -199,6 +199,14 @@
     "message": "백업에는 모든 프롬프트와 폴더가 포함되며, 타임스탬프 폴더 형식 (backup-YYYYMMDD-HHMMSS) 으로 저장됩니다",
     "description": "Backup feature note"
   },
+  "pm_theme_light": {
+    "message": "라이트 모드로 전환",
+    "description": "Theme toggle tooltip - switch to light"
+  },
+  "pm_theme_dark": {
+    "message": "다크 모드로 전환",
+    "description": "Theme toggle tooltip - switch to dark"
+  },
   "extensionVersion": {
     "message": "버전",
     "description": "Extension version label"

@@ -199,6 +199,14 @@
     "message": "تشمل النسخ الاحتياطية جميع المطالبات والمجلدات، ويتم حفظها في مجلد بختم زمني (التنسيق: backup-YYYYMMDD-HHMMSS)",
     "description": "Backup feature note"
   },
+  "pm_theme_light": {
+    "message": "التبديل إلى الوضع الفاتح",
+    "description": "Theme toggle tooltip - switch to light"
+  },
+  "pm_theme_dark": {
+    "message": "التبديل إلى الوضع الداكن",
+    "description": "Theme toggle tooltip - switch to dark"
+  },
   "extensionVersion": {
     "message": "الإصدار",
     "description": "Extension version label"
