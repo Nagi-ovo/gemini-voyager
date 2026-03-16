@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "05434b01d179",
+  "session_id": "192ac09f-b413-42fa-a33c-f7252915f9e7",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-16T19:31:08.68718Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/pages/content/index.tsx",
+    "src/pages/content/visualEffects/rain.ts",
+    "src/pages/content/visualEffects/__tests__/sakura.test.ts",
+    "src/pages/content/visualEffects/sakura.ts",
+    "src/pages/content/visualEffects/__tests__/snow.test.ts",
+    "src/pages/content/visualEffects/snow.ts",
+    "safari/Models/voyager-v1.3.6.dmg",
+    "src/pages/content/visualEffects/__tests__/rain.test.ts",
+    "src/pages/content/visualEffects/index.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "15bdd17877ad",
+  "checkpoint_transcript_start": 80,
+  "transcript_lines_at_start": 80,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-16T19:31:08.579246Z",
+    "agent_lines": 0,
+    "human_added": 1637,
+    "human_modified": 3,
+    "human_removed": 0,
+    "total_committed": 1637,
+    "agent_percentage": 0
+  }
+}

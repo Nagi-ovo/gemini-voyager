@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "05434b01d179",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "safari/Models/voyager-v1.3.6.dmg",
+    "src/pages/content/index.tsx",
+    "src/pages/content/visualEffects/__tests__/rain.test.ts",
+    "src/pages/content/visualEffects/__tests__/sakura.test.ts",
+    "src/pages/content/visualEffects/__tests__/snow.test.ts",
+    "src/pages/content/visualEffects/index.ts",
+    "src/pages/content/visualEffects/rain.ts",
+    "src/pages/content/visualEffects/sakura.ts",
+    "src/pages/content/visualEffects/snow.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/05/434b01d179/0/metadata.json",
+      "transcript": "/05/434b01d179/0/full.jsonl",
+      "context": "/05/434b01d179/0/context.md",
+      "content_hash": "/05/434b01d179/0/content_hash.txt",
+      "prompt": "/05/434b01d179/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
