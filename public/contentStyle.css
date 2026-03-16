@@ -7302,3 +7302,18 @@ body.gv-rtl .timeline-preview-index {
   text-align: right;
   justify-content: flex-end;
 }
+
+/* Folder color indicator for native conversation list */
+.gv-folder-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.gv-folder-indicator.gv-folder-indicator-multi {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+}
+
