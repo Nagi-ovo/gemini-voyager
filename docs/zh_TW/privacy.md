@@ -1,68 +1,44 @@
-# Privacy Policy
-
-Last verified: December 15, 2024
-
-## Introduction
-
-Voyager ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how our Chrome Extension collects, uses, and safeguards your information.
-
-## Data Collection and Usage
-
-**We do not collect any personal information.**
-
-Voyager operates entirely within your browser. All data generated or managed by the extension (such as folders, prompt templates, and settings) is stored:
-
-1. Locally on your device (`chrome.storage.local`)
-2. In your browser's synchronized storage (`chrome.storage.sync`) if available, to sync settings across your devices.
-
-We do not have access to your personal data, chat history, or any other private information. We do not track your browsing history.
-
-## Permissions
-
-The extension requests the minimum permissions necessary to function:
-
-- **Storage**: To save your preferences, folders, and prompts.
-- **ActiveTab**: To interact with the Gemini interface when you use the extension.
-
-## Third-Party Services
-
-Voyager does not share any data with third-party services, advertisers, or analytics providers.
-
-## Changes to This Policy
-
-We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.
-
-## Contact Us
-
 # 隱私政策
 
-**最後更新日期：** 2024年5月20日
+最後更新：2026年3月16日
 
-**Voyager**（"我們"、"我們的"）致力於保護您的隱私。本隱私政策解釋了我們如何處理您的信息。
+## 簡介
 
-## 1. 數據收集與存儲
+Voyager（以下簡稱「我們」）致力於保護您的隱私。本隱私政策說明了我們的瀏覽器擴充功能如何收集、使用和保護您的資訊。
 
-Voyager 設計為**本地優先**。
+## 資料收集與使用
 
-- **所有數據存儲在本地：** 您的對話、文件夾、提示詞和設置都存儲在您設備上的瀏覽器存儲（Chrome Storage API）中。
-- **無遠程服務器：** 我們不運營任何服務器來存儲您的個人數據。我們無法訪問您的數據。
-- **無分析：** 我們不收集任何使用情況統計或分析數據。
+**我們不收集任何個人資訊。**
 
-## 2. 數據傳輸
+Voyager 完全在您的瀏覽器本地運作。擴充功能產生或管理的所有資料（如資料夾、提示詞範本、星標訊息和設定）均儲存在：
 
-- **Google Drive 同步（可選）：** 如果您選擇啟用 "Google Drive 同步"，您的數據（文件夾配置和提示詞）將直接從您的瀏覽器傳輸到您個人的 Google Drive。此傳輸直接發生在您的設備和 Google 服務器之間。我們無法訪問此數據。
+1. 您的本地裝置上（`chrome.storage.local`）
+2. 您的瀏覽器同步儲存空間中（`chrome.storage.sync`，如可用），以便在您的裝置間同步設定。
 
-## 3. 權限
+我們無法存取您的個人資料、聊天記錄或其他任何隱私資訊。我們也不會追蹤您的瀏覽歷史。
 
-為了運作，擴展程序需要某些權限：
+## Google Drive 同步（選用）
 
-- **storage:** 用於在本地保存您的設置和數據。
-- **host_permissions (gemini.google.com):** 用於將功能（時間軸、文件夾等）注入 Gemini 界面。
+如果您主動啟用 Google Drive 同步功能，擴充功能會使用 Chrome Identity API 取得 OAuth2 權杖（僅限 `drive.file` 範圍），將您的資料夾和提示詞備份到**您自己的 Google Drive**。此傳輸直接發生在您的瀏覽器和 Google 伺服器之間。我們無法存取此資料，且絕不會傳送到我們營運的任何伺服器。
 
-## 4. 變更
+## 權限說明
 
-我們可能會不時更新本隱私政策。任何變更都將發布在此頁面上。
+本擴充功能僅申請維持功能所需的最小權限：
 
-## 5. 聯繫我們
+- **Storage（儲存）**：用於在本地和跨裝置儲存您的偏好設定、資料夾、提示詞、星標訊息和介面自訂選項。
+- **Identity（身分驗證）**：用於 Google Drive 同步功能的 Google 驗證。僅在您主動啟用雲端同步時使用。
+- **Scripting（腳本注入）**：用於在 Gemini 頁面及使用者指定的自訂網站上動態注入內容腳本（提示詞管理器功能）。僅注入擴充功能自身打包的腳本，不會載入或執行任何遠端程式碼。
+- **Host Permissions（主機權限）**（gemini.google.com、aistudio.google.com 等）：用於注入增強 Gemini 介面的內容腳本，提供資料夾、匯出、時間線、引用回覆等功能。Google 相關網域（googleapis.com、accounts.google.com）用於 Google Drive 同步驗證。
+- **Optional Host Permissions（選用主機權限）**（所有 URL）：僅在您主動新增提示詞管理器的自訂網站時按需請求，不會在未經您操作的情況下啟用。
 
-如果您對本隱私政策有任何疑問，請通過我們的 [GitHub 倉庫](https://github.com/Nagi-ovo/gemini-voyager) 聯繫我們。
+## 第三方服務
+
+Voyager 不會與任何第三方服務、廣告商或分析提供商共享資料。
+
+## 政策變更
+
+我們可能會不時更新隱私政策。我們將透過在此頁面發佈新的隱私政策來通知您任何變更。
+
+## 聯絡我們
+
+如果您對本隱私政策有任何疑問，請透過我們的 [GitHub 儲存庫](https://github.com/Nagi-ovo/gemini-voyager) 聯絡我們。
