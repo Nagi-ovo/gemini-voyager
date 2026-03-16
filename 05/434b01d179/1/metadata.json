@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "05434b01d179",
+  "session_id": "a00b30c2-c57e-463a-87a3-1322a233e791",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-16T19:31:15.302114Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "safari/Models/voyager-v1.3.6.dmg"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "584faa5d8f95",
+  "checkpoint_transcript_start": 527,
+  "transcript_lines_at_start": 527,
+  "token_usage": {
+    "input_tokens": 127,
+    "cache_creation_tokens": 94915,
+    "cache_read_tokens": 18543747,
+    "output_tokens": 32803,
+    "api_call_count": 101
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-16T19:31:14.266263Z",
+    "agent_lines": 0,
+    "human_added": 1790,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1790,
+    "agent_percentage": 0
+  }
+}
