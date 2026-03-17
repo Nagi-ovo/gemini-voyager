@@ -1478,5 +1478,13 @@
   "aiOrgInstructionsBody": {
     "message": "Basándote en las conversaciones y la estructura de carpetas anterior, reorganízalas en una jerarquía lógica de carpetas. Genera un archivo JSON con el formato exacto de abajo que pueda importarse directamente en la extensión Gemini Voyager (usa la estrategia de importación \"Fusionar\"). Mantén las carpetas bien organizadas existentes, crea nuevas según sea necesario y mueve las conversaciones sin clasificar a carpetas apropiadas. Cada carpeta necesita un ID único (usa una cadena aleatoria corta) y cada conversación debe mantener su conversationId y url originales.",
     "description": "Cuerpo de instrucciones para que la IA genere una estructura de carpetas importable"
+  },
+  "showMessageTimestamps": {
+    "message": "Mostrar marcas de tiempo de mensajes",
+    "description": "Mostrar marca de tiempo para cada mensaje"
+  },
+  "showMessageTimestampsHint": {
+    "message": "Mostrar cuándo se envió cada mensaje",
+    "description": "Sugerencia para la función de marcas de tiempo"
   }
 }

@@ -101,6 +101,10 @@ export const StorageKeys = {
 
   // AI Studio master toggle
   GV_AISTUDIO_ENABLED: 'gvAIStudioEnabled',
+
+  // Message timestamps
+  GV_SHOW_MESSAGE_TIMESTAMPS: 'gvShowMessageTimestamps',
+  GV_MESSAGE_TIMESTAMPS: 'gvMessageTimestamps',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

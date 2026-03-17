@@ -1466,5 +1466,13 @@
   "aiOrgInstructionsBody": {
     "message": "根據以上對話和資料夾結構，請將它們重新整理為合理的資料夾層級。輸出一個使用以下格式的 JSON 檔案，可以直接匯入到 Gemini Voyager 擴充功能中（使用「合併」匯入策略）。保留已有的合理資料夾，根據需要建立新資料夾，將未歸類的對話移入合適的資料夾。每個資料夾需要一個唯一 ID（使用短隨機字串），每個對話必須保留其原始的 conversationId 和 url。",
     "description": "AI 生成可匯入資料夾結構的指示正文"
+  },
+  "showMessageTimestamps": {
+    "message": "顯示訊息時間",
+    "description": "顯示每則訊息的時間戳"
+  },
+  "showMessageTimestampsHint": {
+    "message": "顯示每則訊息的發送時間",
+    "description": "訊息時間戳功能提示"
   }
 }

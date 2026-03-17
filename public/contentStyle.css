@@ -433,6 +433,7 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   -webkit-box-orient: vertical;
   overflow: hidden;
   word-break: break-word;
+  white-space: pre-line;
   text-align: start;
   unicode-bidi: plaintext;
   opacity: 0;
@@ -7301,4 +7302,40 @@ body.gv-rtl .timeline-preview-item.active {
 body.gv-rtl .timeline-preview-index {
   text-align: right;
   justify-content: flex-end;
+}
+
+/* ── Message Timestamps ── */
+.gv-timestamp {
+  display: flex;
+  font-size: 0.9em;
+  color: var(--gm-neutral-variant-50, #999);
+  opacity: 0.7;
+  margin: 12px 0 6px 0;
+  font-weight: 400;
+  user-select: none;
+  line-height: 1.2;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.gv-timestamp-user {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.gv-timestamp-assistant {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+/* Dark mode timestamp color */
+html.dark .gv-timestamp,
+[data-theme='dark'] .gv-timestamp,
+[data-color-scheme='dark'] .gv-timestamp {
+  color: var(--gm-neutral-variant-70, #aaa);
+}
+
+/* RTL support for timestamps */
+body.gv-rtl .gv-timestamp {
+  text-align: right;
 }

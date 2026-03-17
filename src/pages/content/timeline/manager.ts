@@ -1,8 +1,10 @@
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
-import { StorageKeys } from '@/core/types/common';
+import { storageService } from '@/core/services/StorageService';
+import { StorageKeys, type TurnId } from '@/core/types/common';
 import { GV_RTL_CLASS, applyRTLClass } from '@/core/utils/rtl';
 
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
+import { TimestampService } from '../timestamp/TimestampService';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
 import { TimelinePreviewPanel } from './TimelinePreviewPanel';
@@ -105,6 +107,7 @@ export class TimelineManager {
   private runnerRing: HTMLElement | null = null;
   private flowAnimating = false;
   private tooltipHideTimer: number | null = null;
+  private tooltipDotId: string | null = null;
   private measureEl: HTMLElement | null = null;
   private measureCanvas: HTMLCanvasElement | null = null;
   private measureCtx: CanvasRenderingContext2D | null = null;
@@ -189,6 +192,9 @@ export class TimelineManager {
   private isNavigating: boolean = false;
   private previewPanel: TimelinePreviewPanel | null = null;
   private rtl = false;
+  private timestampService: TimestampService | null = null;
+  private showMessageTimestampsEnabled = false;
+  private timestampInjectionGeneration = 0;
 
   async init(): Promise<void> {
     await initI18n();
@@ -202,6 +208,10 @@ export class TimelineManager {
     await this.syncStarredFromService();
     this.loadMarkerLevels();
     this.loadCollapsedMarkers();
+    // Initialize timestamp service
+    this.timestampService = new TimestampService();
+    await this.timestampService.initialize();
+    await this.loadMessageTimestampsEnabledSetting();
     // Ensure initial render even when Gemini DOM is already stable (no mutations after observer attaches)
     this.recalculateAndRenderMarkers();
     // Handle URL hash for starred message navigation
@@ -877,7 +887,7 @@ export class TimelineManager {
           padding: cs.padding,
           border: cs.border,
           borderRadius: cs.borderRadius,
-          whiteSpace: 'normal',
+          whiteSpace: 'pre-line',
           wordBreak: 'break-word',
           maxWidth: 'none',
           display: 'block',
@@ -1285,6 +1295,10 @@ export class TimelineManager {
       let n = offsetFromStart / contentSpan;
       n = Math.max(0, Math.min(1, n));
       const id = this.ensureTurnId(element, idx);
+      // Record timestamp for new messages
+      if (this.timestampService && this.timestampService.getTimestamp(id as TurnId) === null) {
+        this.timestampService.recordTimestamp(id as TurnId).catch(() => {});
+      }
       const m = {
         id,
         element,
@@ -1315,7 +1329,79 @@ export class TimelineManager {
         starredAt: m.starred ? this.starredAtMap.get(m.id) : undefined,
       })),
     );
+    // Inject timestamps after markers are ready
+    this.injectMessageTimestamps().catch(() => {});
   };
+
+  private async injectMessageTimestamps(): Promise<void> {
+    if (!this.timestampService) return;
+    const injectionGeneration = ++this.timestampInjectionGeneration;
+    if (!this.showMessageTimestampsEnabled) {
+      // Remove any existing timestamps if feature is disabled
+      document.querySelectorAll('.gv-timestamp').forEach((el) => el.remove());
+      return;
+    }
+
+    document.querySelectorAll('.gv-timestamp').forEach((el) => el.remove());
+
+    // Use markers instead of querying DOM - markers already have the correct elements
+    this.markers.forEach((marker) => {
+      const msgEl = marker.element;
+      const parent = msgEl.parentElement;
+      if (!parent) return;
+
+      let insertionParent: HTMLElement | null = parent;
+      let insertionAnchor: HTMLElement = msgEl;
+      let alignClass = 'gv-timestamp-assistant';
+      try {
+        // Walk up to find the nearest horizontal row wrapper (avatar + bubble).
+        // Then insert timestamp before that row so it is always above the whole message row.
+        let rowWrapper: HTMLElement | null = null;
+        let cursor: HTMLElement | null = parent;
+        for (let i = 0; i < 4 && cursor; i++) {
+          const style = getComputedStyle(cursor);
+          if (style.display.includes('flex') && style.flexDirection.startsWith('row')) {
+            rowWrapper = cursor;
+            break;
+          }
+          cursor = cursor.parentElement;
+        }
+        if (rowWrapper && rowWrapper.parentElement) {
+          insertionParent = rowWrapper.parentElement as HTMLElement;
+          insertionAnchor = rowWrapper;
+          const rowStyle = getComputedStyle(rowWrapper);
+          if (rowStyle.justifyContent.includes('flex-end')) {
+            alignClass = 'gv-timestamp-user';
+          }
+        }
+      } catch {}
+      if (!insertionParent) return;
+
+      // Format and inject timestamp
+      this.timestampService!.formatTimestamp(marker.id as TurnId)
+        .then((formattedTime) => {
+          if (!formattedTime) return;
+          if (injectionGeneration !== this.timestampInjectionGeneration) return;
+          if (!this.showMessageTimestampsEnabled) return;
+          if (!insertionParent || !insertionAnchor) return;
+          if (!insertionParent.isConnected || !insertionAnchor.isConnected) return;
+
+          const timestampEl = document.createElement('div');
+          timestampEl.className = `gv-timestamp ${alignClass}`;
+          timestampEl.textContent = formattedTime;
+          timestampEl.setAttribute('data-gv-turn-id', marker.id);
+
+          // Render timestamp above the message container (outside the bubble)
+          insertionParent.insertBefore(timestampEl, insertionAnchor);
+        })
+        .catch(() => {});
+    });
+  }
+
+  private async loadMessageTimestampsEnabledSetting(): Promise<void> {
+    const enabledResult = await storageService.get<boolean>(StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS);
+    this.showMessageTimestampsEnabled = enabledResult.success && enabledResult.data === true;
+  }
 
   private setupObservers(): void {
     this.mutationObserver = new MutationObserver(() => {
@@ -1423,7 +1509,10 @@ export class TimelineManager {
     this.onTimelineBarOut = (e: MouseEvent) => {
       const fromDot = (e.target as HTMLElement).closest('.timeline-dot');
       const toDot = (e.relatedTarget as HTMLElement | null)?.closest?.('.timeline-dot');
-      if (fromDot && !toDot) this.hideTooltip();
+      if (fromDot && !toDot) {
+        const stillHoveringDot = this.ui.timelineBar?.querySelector('.timeline-dot:hover');
+        if (!stillHoveringDot) this.hideTooltip();
+      }
     };
     this.ui.timelineBar!.addEventListener('mouseover', this.onTimelineBarOver);
     this.ui.timelineBar!.addEventListener('mouseout', this.onTimelineBarOut);
@@ -1591,10 +1680,19 @@ export class TimelineManager {
 
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       this.onChromeStorageChanged = (changes, areaName) => {
-        if (areaName !== 'local') return;
-        const starredChange = changes[StorageKeys.TIMELINE_STARRED_MESSAGES];
-        if (!starredChange) return;
-        this.applySharedStarredData(starredChange.newValue as StarredMessagesData | null);
+        if (areaName === 'local') {
+          const starredChange = changes[StorageKeys.TIMELINE_STARRED_MESSAGES];
+          if (starredChange) {
+            this.applySharedStarredData(starredChange.newValue as StarredMessagesData | null);
+          }
+        }
+        if (areaName === 'sync' || areaName === 'local') {
+          const tsEnabledChange = changes[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS];
+          if (tsEnabledChange) {
+            this.showMessageTimestampsEnabled = tsEnabledChange.newValue === true;
+            this.injectMessageTimestamps().catch(() => {});
+          }
+        }
       };
       chrome.storage.onChanged.addListener(this.onChromeStorageChanged);
     }
@@ -1872,9 +1970,12 @@ export class TimelineManager {
     const ell = '…';
     const el = this.measureEl;
     el.style.width = `${Math.max(0, Math.floor(targetWidth))}px`;
-    el.textContent = String(text || '')
-      .replace(/\s+/g, ' ')
+    const normalized = String(text || '')
+      .split('\n')
+      .map((line) => line.replace(/[ \t]+/g, ' ').trim())
+      .join('\n')
       .trim();
+    el.textContent = normalized;
     let h = el.offsetHeight;
     if (h <= maxH) return { text: el.textContent, height: h };
     const raw = el.textContent;
@@ -1940,10 +2041,14 @@ export class TimelineManager {
     }
     const tip = this.ui.tooltip;
     tip.setAttribute('dir', 'auto');
+    const dotId = dot.dataset.targetTurnId || '';
+    if (tip.classList.contains('visible') && this.tooltipDotId === dotId) {
+      this.refreshTooltipForDot(dot);
+      return;
+    }
+    this.tooltipDotId = dotId;
     tip.classList.remove('visible');
-    let fullText = (dot.getAttribute('aria-label') || '').trim();
-    const id = dot.dataset.targetTurnId!;
-    if (id && this.starred.has(id)) fullText = `★ ${fullText}`;
+    const fullText = this.buildTooltipText(dot);
     const p = this.computePlacementInfo(dot);
     const layout = this.truncateToThreeLines(fullText, p.width);
     tip.textContent = layout.text;
@@ -2018,13 +2123,25 @@ export class TimelineManager {
     const tip = this.ui.tooltip;
     tip.setAttribute('dir', 'auto');
     if (!tip.classList.contains('visible')) return;
-    let fullText = (dot.getAttribute('aria-label') || '').trim();
-    const id = dot.dataset.targetTurnId!;
-    if (id && this.starred.has(id)) fullText = `★ ${fullText}`;
+    const fullText = this.buildTooltipText(dot);
     const p = this.computePlacementInfo(dot);
     const layout = this.truncateToThreeLines(fullText, p.width);
     tip.textContent = layout.text;
     this.placeTooltipAt(dot, p.placement, p.width, layout.height);
+  }
+
+  private buildTooltipText(dot: DotElement): string {
+    let fullText = (dot.getAttribute('aria-label') || '').trim();
+    const id = dot.dataset.targetTurnId || '';
+    if (id && this.starred.has(id)) fullText = `★ ${fullText}`;
+
+    if (this.showMessageTimestampsEnabled && id && this.timestampService) {
+      const ts = this.timestampService.getTimestamp(id as TurnId);
+      if (typeof ts === 'number') {
+        fullText = `${this.timestampService.formatAbsoluteTime(ts)}\n${fullText}`;
+      }
+    }
+    return fullText;
   }
 
   private scheduleScrollSync(): void {
@@ -2468,6 +2585,7 @@ export class TimelineManager {
     const doHide = () => {
       this.ui.tooltip!.classList.remove('visible');
       this.ui.tooltip!.setAttribute('aria-hidden', 'true');
+      this.tooltipDotId = null;
       this.tooltipHideTimer = null;
     };
     if (immediate) return doHide();
