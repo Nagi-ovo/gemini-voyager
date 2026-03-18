@@ -194,7 +194,7 @@ function showImageLightbox(src: string, alt: string): void {
 }
 
 const CHROME_STORE_URL =
-  'https://chromewebstore.google.com/detail/gemini-voyager/kjdpnimcnfinmilocccippmododhceol';
+  'https://chromewebstore.google.com/detail/gemini-voyager/iifacdnjakkhjjiengaffnegbndgingi';
 
 /**
  * Read the current changelog notification mode.
