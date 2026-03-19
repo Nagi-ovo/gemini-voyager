@@ -56,6 +56,7 @@
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "2.2.1",
+    "@nolebase/vitepress-plugin-git-changelog": "^2.18.2",
     "@tailwindcss/vite": "^4.1.15",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/chrome": "^0.1.24",

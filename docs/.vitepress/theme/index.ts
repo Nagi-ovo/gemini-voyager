@@ -1,3 +1,5 @@
+import { NolebaseGitChangelogPlugin } from '@nolebase/vitepress-plugin-git-changelog/client';
+import '@nolebase/vitepress-plugin-git-changelog/client/style.css';
 import { type Theme } from 'vitepress';
 import DefaultTheme from 'vitepress/theme';
 import { h } from 'vue';
@@ -17,6 +19,7 @@ export default {
     });
   },
   enhanceApp({ app }) {
+    app.use(NolebaseGitChangelogPlugin);
     app.component('HomeReviews', HomeReviews);
     app.component('HomeTeaser', HomeTeaser);
     app.component('HomeAskAI', HomeAskAI);

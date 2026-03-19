@@ -1,3 +1,7 @@
+import {
+  GitChangelog,
+  GitChangelogMarkdownSection,
+} from '@nolebase/vitepress-plugin-git-changelog/vite';
 import { defineConfig } from 'vitepress';
 
 // https://vitepress.dev/reference/site-config
@@ -633,10 +637,23 @@ export default defineConfig({
     logo: '/logo.png',
     outline: [2, 4],
     socialLinks: [{ icon: 'github', link: 'https://github.com/Nagi-ovo/gemini-voyager' }],
+    search: {
+      provider: 'local',
+    },
   },
   vite: {
+    plugins: [
+      GitChangelog({
+        repoURL: () => 'https://github.com/Nagi-ovo/gemini-voyager',
+        // Only track the Chinese source docs to avoid 281-file EAGAIN;
+        // translated copies share the same git history via the source.
+        include: ['docs/guide/**/*.md'],
+        maxGitLogCount: 200,
+      }),
+      GitChangelogMarkdownSection(),
+    ],
     ssr: {
-      noExternal: ['vue3-marquee'],
+      noExternal: ['vue3-marquee', '@nolebase/vitepress-plugin-git-changelog'],
     },
   },
 });
