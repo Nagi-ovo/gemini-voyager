@@ -1,0 +1,53 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "24fc61c425ae",
+  "session_id": "192ac09f-b413-42fa-a33c-f7252915f9e7",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-19T17:33:07.197892Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/locales/fr/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "docs/ja/guide/settings.md",
+    "src/locales/ar/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/pages/popup/Popup.tsx",
+    "src/locales/en/messages.json",
+    "docs/en/guide/settings.md",
+    "docs/es/guide/settings.md",
+    "docs/pt/guide/settings.md",
+    "docs/ru/guide/settings.md",
+    "src/core/types/common.ts",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "docs/fr/guide/settings.md",
+    "docs/zh_TW/guide/settings.md",
+    "src/locales/es/messages.json",
+    "src/locales/zh/messages.json",
+    "docs/ar/guide/settings.md",
+    "docs/guide/settings.md",
+    "docs/ko/guide/settings.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "15bdd17877ad",
+  "checkpoint_transcript_start": 80,
+  "transcript_lines_at_start": 80,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-19T17:33:07.085608Z",
+    "agent_lines": 0,
+    "human_added": 865,
+    "human_modified": 814,
+    "human_removed": 0,
+    "total_committed": 865,
+    "agent_percentage": 0
+  }
+}
