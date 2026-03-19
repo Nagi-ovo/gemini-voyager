@@ -302,6 +302,7 @@ interface SettingsUpdate {
   accountIsolationEnabled?: boolean;
   accountIsolationPlatform?: AccountPlatform;
   aiStudioEnabled?: boolean;
+  showMessageTimestamps?: boolean;
 }
 
 export default function Popup() {
@@ -328,6 +329,7 @@ export default function Popup() {
   const [inputCollapseWhenNotEmpty, setInputCollapseWhenNotEmpty] = useState<boolean>(false);
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
+  const [showMessageTimestamps, setShowMessageTimestamps] = useState<boolean>(false);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
   const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
@@ -440,6 +442,8 @@ export default function Popup() {
       }
       if (typeof settings.aiStudioEnabled === 'boolean')
         payload[StorageKeys.GV_AISTUDIO_ENABLED] = settings.aiStudioEnabled;
+      if (typeof settings.showMessageTimestamps === 'boolean')
+        payload[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS] = settings.showMessageTimestamps;
       void setSyncStorage(payload);
     },
     [activeAccountPlatform, setSyncStorage],
@@ -750,6 +754,7 @@ export default function Popup() {
           gvSidebarWidthEnabled: false,
           geminiChatWidth: CHAT_PERCENT.defaultValue,
           geminiEditInputWidth: EDIT_PERCENT.defaultValue,
+          [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -819,6 +824,9 @@ export default function Popup() {
               ? aiStudioIsolationRaw
               : legacyIsolationEnabled,
           );
+
+          // Timestamp settings
+          setShowMessageTimestamps(res?.[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS] === true);
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -1265,6 +1273,35 @@ export default function Popup() {
                 onChange={(e) => {
                   setMarkerLevelEnabled(e.target.checked);
                   apply({ markerLevelEnabled: e.target.checked });
+                }}
+              />
+            </div>
+            {/* Message Timestamps */}
+            <div className="group flex items-center justify-between">
+              <div className="flex-1">
+                <Label
+                  htmlFor="show-message-timestamps"
+                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                >
+                  {t('showMessageTimestamps')}
+                  <span
+                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                    title={t('experimentalLabel')}
+                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                  >
+                    experiment
+                  </span>
+                </Label>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t('showMessageTimestampsHint')}
+                </p>
+              </div>
+              <Switch
+                id="show-message-timestamps"
+                checked={showMessageTimestamps}
+                onChange={(e) => {
+                  setShowMessageTimestamps(e.target.checked);
+                  apply({ showMessageTimestamps: e.target.checked });
                 }}
               />
             </div>

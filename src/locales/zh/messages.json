@@ -1466,5 +1466,13 @@
   "aiOrgInstructionsBody": {
     "message": "根据以上对话和文件夹结构，请将它们重新整理为合理的文件夹层级。输出一个使用以下格式的 JSON 文件，可以直接导入到 Gemini Voyager 扩展中（使用「合并」导入策略）。保留已有的合理文件夹，根据需要创建新文件夹，将未归类的对话移入合适的文件夹。每个文件夹需要一个唯一 ID（使用短随机字符串），每个对话必须保留其原始的 conversationId 和 url。",
     "description": "AI 生成可导入文件夹结构的指示正文"
+  },
+  "showMessageTimestamps": {
+    "message": "显示消息时间",
+    "description": "显示每条消息的时间戳"
+  },
+  "showMessageTimestampsHint": {
+    "message": "显示每条消息的发送时间",
+    "description": "消息时间戳功能提示"
   }
 }

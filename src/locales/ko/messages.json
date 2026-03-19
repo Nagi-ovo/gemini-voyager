@@ -1466,5 +1466,13 @@
   "aiOrgInstructionsBody": {
     "message": "위의 대화와 폴더 구조를 기반으로 논리적인 폴더 계층으로 재정리해주세요. 아래 형식의 JSON 파일을 출력하여 Gemini Voyager 확장 프로그램에 직접 가져올 수 있도록 하세요(\"병합\" 가져오기 전략 사용). 기존의 잘 정리된 폴더는 유지하고, 필요에 따라 새 폴더를 만들고, 분류되지 않은 대화를 적절한 폴더로 이동하세요. 각 폴더에는 고유한 ID(짧은 랜덤 문자열)가 필요하며, 각 대화는 원래의 conversationId와 url을 유지해야 합니다.",
     "description": "AI가 가져올 수 있는 폴더 구조를 생성하기 위한 지시사항 본문"
+  },
+  "showMessageTimestamps": {
+    "message": "메시지 타임스탬프 표시",
+    "description": "각 메시지의 타임스탬프 표시"
+  },
+  "showMessageTimestampsHint": {
+    "message": "각 메시지가 전송된 시간을 표시합니다",
+    "description": "메시지 타임스탬프 기능 힌트"
   }
 }

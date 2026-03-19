@@ -1478,5 +1478,13 @@
   "aiOrgInstructionsBody": {
     "message": "Sur la base des conversations et de la structure des dossiers ci-dessus, réorganisez-les en une hiérarchie logique de dossiers. Générez un fichier JSON au format exact ci-dessous qui peut être directement importé dans l'extension Gemini Voyager (utilisez la stratégie d'importation \"Fusionner\"). Conservez les dossiers bien organisés existants, créez-en de nouveaux si nécessaire et déplacez les conversations non classées dans des dossiers appropriés. Chaque dossier a besoin d'un ID unique (utilisez une chaîne aléatoire courte) et chaque conversation doit conserver son conversationId et son url d'origine.",
     "description": "Corps des instructions pour que l'IA génère une structure de dossiers importable"
+  },
+  "showMessageTimestamps": {
+    "message": "Afficher les horodatages des messages",
+    "description": "Afficher l'horodatage de chaque message"
+  },
+  "showMessageTimestampsHint": {
+    "message": "Afficher quand chaque message a été envoyé",
+    "description": "Indice pour la fonctionnalité d'horodatage"
   }
 }
