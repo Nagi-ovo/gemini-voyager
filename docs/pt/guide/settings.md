@@ -12,6 +12,12 @@ Aceda ao painel de definições e arraste o slider **"Largura do Chat"**.
   <img src="/assets/gemini-chatwidth.png" alt="Ajuste de Largura do Chat" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
+## Ordem personalizada
+
+Muitas seções no popup e as que você mais usa estão lá embaixo?
+
+Passe o mouse sobre qualquer cartão de configuração e os botões ▲/▼ aparecerão no canto superior direito. Clique para mover um cartão para cima ou para baixo. Sua disposição é salva automaticamente.
+
 ## Efeitos Visuais
 
 Escolha `Neve`, `Sakura` ou `Chuva` para uma atmosfera sazonal.

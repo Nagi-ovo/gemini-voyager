@@ -20,6 +20,12 @@ Click the extension icon to access the control center.
 - **Timeline Position**: Put it where it feels right.
 - **Visual Effects**: Pick `Snow`, `Sakura`, or `Rain` for a seasonal atmosphere.
 
+## Custom Order
+
+Too many sections in the popup, and the ones you use most are buried at the bottom?
+
+Hover over any settings card and ▲/▼ arrows appear in the top-right corner. Click to move a card up or down. Your layout is saved automatically and persists across sessions.
+
 ## Atmosphere
 
 Voyager is not limited to utility tweaks. You can also change the mood of the page.

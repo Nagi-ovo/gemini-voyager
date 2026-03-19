@@ -45,6 +45,33 @@ import WidthSlider from './components/WidthSlider';
 
 type ScrollMode = 'jump' | 'flow';
 
+/**
+ * Reorderable popup section IDs — order here is the default display order.
+ */
+const POPUP_SECTION_IDS = [
+  'cloudSync',
+  'contextSync',
+  'timeline',
+  'folder',
+  'folderSpacing',
+  'folderTreeIndent',
+  'chatWidth',
+  'editInputWidth',
+  'sidebarWidth',
+  'sidebarBehavior',
+  'visualEffect',
+  'formulaCopy',
+  'keyboardShortcuts',
+  'inputCollapse',
+  'promptManager',
+  'general',
+  'nanobanana',
+] as const;
+
+type PopupSectionId = (typeof POPUP_SECTION_IDS)[number];
+
+const DEFAULT_SECTION_ORDER: readonly PopupSectionId[] = POPUP_SECTION_IDS;
+
 const ROOT_CONVERSATIONS_ID = '__root_conversations__';
 
 /**
@@ -305,6 +332,75 @@ interface SettingsUpdate {
   showMessageTimestamps?: boolean;
 }
 
+function SectionReorderControls({
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+  moveUpLabel,
+  moveDownLabel,
+}: {
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  moveUpLabel: string;
+  moveDownLabel: string;
+}) {
+  return (
+    <div className="absolute -top-1 right-1 z-10 flex gap-px rounded-md opacity-0 transition-opacity group-hover/reorder:opacity-100">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onMoveUp();
+        }}
+        disabled={isFirst}
+        className="text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-sm p-0.5 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+        aria-label={moveUpLabel}
+        title={moveUpLabel}
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="18 15 12 9 6 15" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onMoveDown();
+        }}
+        disabled={isLast}
+        className="text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-sm p-0.5 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+        aria-label={moveDownLabel}
+        title={moveDownLabel}
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 export default function Popup() {
   const { t, language } = useLanguage();
   const [mode, setMode] = useState<ScrollMode>('flow');
@@ -349,6 +445,8 @@ export default function Popup() {
   const [aiStructureCopyStatus, setAiStructureCopyStatus] = useState<
     'idle' | 'loading' | 'copied' | 'error'
   >('idle');
+  const [sectionOrder, setSectionOrder] = useState<PopupSectionId[]>([...DEFAULT_SECTION_ORDER]);
+
   const isAIStudio = activeAccountPlatform === 'aistudio';
   const currentIsolationPlatformLabel = isAIStudio ? t('platformAIStudio') : t('platformGemini');
 
@@ -755,6 +853,7 @@ export default function Popup() {
           geminiChatWidth: CHAT_PERCENT.defaultValue,
           geminiEditInputWidth: EDIT_PERCENT.defaultValue,
           [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false,
+          [StorageKeys.GV_POPUP_SECTION_ORDER]: null,
         },
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
@@ -827,6 +926,18 @@ export default function Popup() {
 
           // Timestamp settings
           setShowMessageTimestamps(res?.[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS] === true);
+
+          // Section order
+          const storedOrder = res?.[StorageKeys.GV_POPUP_SECTION_ORDER];
+          if (Array.isArray(storedOrder)) {
+            const validIds = new Set<string>(POPUP_SECTION_IDS);
+            const filtered = storedOrder.filter(
+              (id: unknown): id is PopupSectionId => typeof id === 'string' && validIds.has(id),
+            );
+            const seen = new Set(filtered);
+            const missing = POPUP_SECTION_IDS.filter((id) => !seen.has(id));
+            setSectionOrder([...filtered, ...missing]);
+          }
 
           // Reconcile stored custom websites with actual granted permissions.
           // If the user denied a permission request, the popup may have closed before we could revert storage.
@@ -1063,6 +1174,57 @@ export default function Popup() {
   const websiteUrl =
     language === 'zh' ? 'https://voyager.nagi.fun' : `https://voyager.nagi.fun/${language}`;
 
+  // ── Section reorder helpers ──────────────────────────────────
+  const isSectionVisible = (id: PopupSectionId): boolean => {
+    switch (id) {
+      case 'cloudSync':
+      case 'nanobanana':
+        return !isSafariBrowser;
+      case 'folderTreeIndent':
+      case 'sidebarBehavior':
+      case 'visualEffect':
+        return !isAIStudio;
+      default:
+        return true;
+    }
+  };
+
+  const visibleSections = sectionOrder.filter(isSectionVisible);
+
+  const moveSectionInOrder = (sectionId: PopupSectionId, direction: 'up' | 'down') => {
+    setSectionOrder((prev) => {
+      const idx = prev.indexOf(sectionId);
+      if (idx === -1) return prev;
+
+      const step = direction === 'up' ? -1 : 1;
+      let swapIdx = idx + step;
+      // Skip hidden sections so the swap targets the next visible one
+      while (swapIdx >= 0 && swapIdx < prev.length && !isSectionVisible(prev[swapIdx])) {
+        swapIdx += step;
+      }
+      if (swapIdx < 0 || swapIdx >= prev.length) return prev;
+
+      const next = [...prev];
+      [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+      void setSyncStorage({ [StorageKeys.GV_POPUP_SECTION_ORDER]: next });
+      return next;
+    });
+  };
+
+  const wrapSection = (id: PopupSectionId, content: React.ReactNode) => (
+    <div key={id} style={{ order: sectionOrder.indexOf(id) }} className="group/reorder relative">
+      <SectionReorderControls
+        isFirst={visibleSections[0] === id}
+        isLast={visibleSections[visibleSections.length - 1] === id}
+        onMoveUp={() => moveSectionInOrder(id, 'up')}
+        onMoveDown={() => moveSectionInOrder(id, 'down')}
+        moveUpLabel={t('moveSectionUp')}
+        moveDownLabel={t('moveSectionDown')}
+      />
+      {content}
+    </div>
+  );
+
   // Show starred history if requested
   if (showStarredHistory) {
     return <StarredHistory onClose={() => setShowStarredHistory(false)} />;
@@ -1079,9 +1241,12 @@ export default function Popup() {
         </div>
       </div>
 
-      <div className="space-y-4 p-5">
+      <div className="flex flex-col gap-4 p-5">
         {hasUpdate && normalizedLatestVersion && normalizedCurrentVersion && (
-          <Card className="border-amber-200 bg-amber-50 p-3 text-amber-900 shadow-sm">
+          <Card
+            style={{ order: -2 }}
+            className="border-amber-200 bg-amber-50 p-3 text-amber-900 shadow-sm"
+          >
             <div className="flex items-start gap-3">
               <div className="mt-1 text-amber-600">
                 <svg
@@ -1131,7 +1296,10 @@ export default function Popup() {
         )}
         {/* AI Studio master toggle - only shown when on AI Studio */}
         {isAIStudio && (
-          <Card className="border-primary/20 p-4 transition-all hover:shadow-md">
+          <Card
+            style={{ order: -1 }}
+            className="border-primary/20 p-4 transition-all hover:shadow-md"
+          >
             <CardContent className="p-0">
               <div className="group flex items-center justify-between">
                 <div className="flex-1">
@@ -1155,956 +1323,994 @@ export default function Popup() {
             </CardContent>
           </Card>
         )}
-        {/* Cloud Sync - First priority - Hidden on Safari due to API limitations */}
-        {!isSafariBrowser && <CloudSyncSettings />}
+        {/* Cloud Sync */}
+        {!isSafariBrowser && wrapSection('cloudSync', <CloudSyncSettings />)}
         {/* Context Sync */}
-        <ContextSyncSettings />
+        {wrapSection('contextSync', <ContextSyncSettings />)}
         {/* Timeline Options */}
-        <Card className="p-4 transition-all hover:shadow-md">
-          <CardTitle className="mb-4">{t('timelineOptions')}</CardTitle>
-          <CardContent className="space-y-4 p-0">
-            {/* Scroll Mode */}
-            <div>
-              <Label className="mb-2 block text-sm font-medium">{t('scrollMode')}</Label>
-              <div className="bg-secondary/60 relative grid grid-cols-2 gap-1 rounded-xl p-1">
-                <div
-                  className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg shadow-sm transition-all duration-300 ease-out"
-                  style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
-                />
-                <button
-                  className={`relative z-10 rounded-lg px-3 py-2 text-sm font-bold transition-all duration-200 ${
-                    mode === 'flow'
-                      ? 'text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  onClick={() => {
-                    setMode('flow');
-                    apply({ mode: 'flow' });
-                  }}
-                >
-                  {t('flow')}
-                </button>
-                <button
-                  className={`relative z-10 rounded-lg px-3 py-2 text-sm font-bold transition-all duration-200 ${
-                    mode === 'jump'
-                      ? 'text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  onClick={() => {
-                    setMode('jump');
-                    apply({ mode: 'jump' });
-                  }}
-                >
-                  {t('jump')}
-                </button>
-              </div>
-            </div>
-            <div className="group flex items-center justify-between">
-              <Label
-                htmlFor="hide-container"
-                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-              >
-                {t('hideOuterContainer')}
-              </Label>
-              <Switch
-                id="hide-container"
-                checked={hideContainer}
-                onChange={(e) => {
-                  setHideContainer(e.target.checked);
-                  apply({ hideContainer: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <Label
-                htmlFor="draggable-timeline"
-                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-              >
-                {t('draggableTimeline')}
-              </Label>
-              <Switch
-                id="draggable-timeline"
-                checked={draggableTimeline}
-                onChange={(e) => {
-                  setDraggableTimeline(e.target.checked);
-                  apply({ draggableTimeline: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="prevent-auto-scroll"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                >
-                  {t('preventAutoScroll')}
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('preventAutoScrollHint')}</p>
-              </div>
-              <Switch
-                id="prevent-auto-scroll"
-                checked={preventAutoScrollEnabled}
-                onChange={(e) => {
-                  setPreventAutoScrollEnabled(e.target.checked);
-                  apply({ preventAutoScrollEnabled: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="marker-level-enabled"
-                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
-                >
-                  {t('enableMarkerLevel')}
-                  <span
-                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
-                    title={t('experimentalLabel')}
-                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
-                  >
-                    experiment
-                  </span>
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('enableMarkerLevelHint')}</p>
-              </div>
-              <Switch
-                id="marker-level-enabled"
-                checked={markerLevelEnabled}
-                onChange={(e) => {
-                  setMarkerLevelEnabled(e.target.checked);
-                  apply({ markerLevelEnabled: e.target.checked });
-                }}
-              />
-            </div>
-            {/* Message Timestamps */}
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="show-message-timestamps"
-                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
-                >
-                  {t('showMessageTimestamps')}
-                  <span
-                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
-                    title={t('experimentalLabel')}
-                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
-                  >
-                    experiment
-                  </span>
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('showMessageTimestampsHint')}
-                </p>
-              </div>
-              <Switch
-                id="show-message-timestamps"
-                checked={showMessageTimestamps}
-                onChange={(e) => {
-                  setShowMessageTimestamps(e.target.checked);
-                  apply({ showMessageTimestamps: e.target.checked });
-                }}
-              />
-            </div>
-            {/* Reset Timeline Position Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="group hover:border-primary/50 mt-2 w-full"
-              onClick={() => {
-                apply({ resetPosition: true });
-              }}
-            >
-              <span className="text-xs transition-transform group-hover:scale-105">
-                {t('resetTimelinePosition')}
-              </span>
-            </Button>
-            {/* View Starred History Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="group hover:border-primary/50 mt-2 w-full"
-              onClick={() => setShowStarredHistory(true)}
-            >
-              <span className="flex items-center gap-1.5 text-xs transition-transform group-hover:scale-105">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-primary"
-                >
-                  <path
-                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
-                    fill="currentColor"
+        {wrapSection(
+          'timeline',
+          <Card className="p-4 transition-all hover:shadow-md">
+            <CardTitle className="mb-4">{t('timelineOptions')}</CardTitle>
+            <CardContent className="space-y-4 p-0">
+              {/* Scroll Mode */}
+              <div>
+                <Label className="mb-2 block text-sm font-medium">{t('scrollMode')}</Label>
+                <div className="bg-secondary/60 relative grid grid-cols-2 gap-1 rounded-xl p-1">
+                  <div
+                    className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg shadow-sm transition-all duration-300 ease-out"
+                    style={{ left: mode === 'flow' ? '4px' : 'calc(50% + 2px)' }}
                   />
-                </svg>
-                {t('viewStarredHistory')}
-              </span>
-            </Button>
-          </CardContent>
-        </Card>
-        {/* Folder Options */}
-        <Card className="p-4 transition-all hover:shadow-md">
-          <CardTitle className="mb-4">{t('folderOptions')}</CardTitle>
-          <CardContent className="space-y-4 p-0">
-            <div className="group flex items-center justify-between">
-              <Label
-                htmlFor="folder-enabled"
-                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-              >
-                {t('enableFolderFeature')}
-              </Label>
-              <Switch
-                id="folder-enabled"
-                checked={folderEnabled}
-                onChange={(e) => {
-                  setFolderEnabled(e.target.checked);
-                  apply({ folderEnabled: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <Label
-                htmlFor="hide-archived"
-                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-              >
-                {t('hideArchivedConversations')}
-              </Label>
-              <Switch
-                id="hide-archived"
-                checked={hideArchivedConversations}
-                onChange={(e) => {
-                  setHideArchivedConversations(e.target.checked);
-                  apply({ hideArchivedConversations: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="fork-enabled"
-                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
-                >
-                  {t('enableForkFeature')}
-                  <span
-                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
-                    title={t('experimentalLabel')}
-                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
-                  >
-                    experiment
-                  </span>
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('enableForkFeatureHint')}</p>
-              </div>
-              <Switch
-                id="fork-enabled"
-                checked={forkEnabled}
-                onChange={(e) => {
-                  setForkEnabled(e.target.checked);
-                  apply({ forkEnabled: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="account-isolation-enabled"
-                  className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
-                >
-                  {t('enableAccountIsolation')}
-                  <span
-                    className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
-                    title={t('experimentalLabel')}
-                    style={{
-                      fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20",
-                    }}
-                  >
-                    experiment
-                  </span>
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('enableAccountIsolationHint')}
-                </p>
-                <div className="mt-1 flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">{t('currentPlatform')}:</span>
-                  <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
-                    {currentIsolationPlatformLabel}
-                  </span>
-                </div>
-              </div>
-              <Switch
-                id="account-isolation-enabled"
-                checked={
-                  isAIStudio ? accountIsolationEnabledAIStudio : accountIsolationEnabledGemini
-                }
-                onChange={(e) => {
-                  if (isAIStudio) {
-                    setAccountIsolationEnabledAIStudio(e.target.checked);
-                  } else {
-                    setAccountIsolationEnabledGemini(e.target.checked);
-                  }
-                  apply({
-                    accountIsolationEnabled: e.target.checked,
-                    accountIsolationPlatform: activeAccountPlatform,
-                  });
-                }}
-              />
-            </div>
-            {/* Copy folder structure for AI organization */}
-            <div className="border-border/50 border-t pt-3">
-              <Button
-                variant="outline"
-                className="w-full text-sm"
-                onClick={handleCopyFolderStructureForAI}
-                disabled={aiStructureCopyStatus === 'loading'}
-              >
-                <span className="inline-flex items-center justify-center gap-1.5">
-                  <span
-                    className="material-symbols-outlined translate-y-px text-[16px] leading-none"
-                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
-                  >
-                    {aiStructureCopyStatus === 'copied' ? 'check' : 'content_copy'}
-                  </span>
-                  <span className="leading-5">
-                    {aiStructureCopyStatus === 'copied'
-                      ? t('aiOrgCopied')
-                      : aiStructureCopyStatus === 'error'
-                        ? t('aiOrgError')
-                        : t('aiOrgCopyButton')}
-                  </span>
-                </span>
-              </Button>
-              <p className="text-muted-foreground mt-1.5 text-center text-[11px] leading-tight">
-                {t('aiOrgCopyHint')}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Folder Spacing */}
-        <WidthSlider
-          label={t('folderSpacing')}
-          value={folderSpacingAdjuster.width}
-          min={FOLDER_SPACING.min}
-          max={FOLDER_SPACING.max}
-          step={1}
-          narrowLabel={t('folderSpacingCompact')}
-          wideLabel={t('folderSpacingSpacious')}
-          valueFormatter={(v) => `${v}px`}
-          onChange={folderSpacingAdjuster.handleChange}
-          onChangeComplete={folderSpacingAdjuster.handleChangeComplete}
-        />
-        {!isAIStudio && (
-          <WidthSlider
-            label={t('folderTreeIndent')}
-            value={folderTreeIndentAdjuster.width}
-            min={FOLDER_TREE_INDENT.min}
-            max={FOLDER_TREE_INDENT.max}
-            step={1}
-            narrowLabel={t('folderTreeIndentCompact')}
-            wideLabel={t('folderTreeIndentSpacious')}
-            valueFormatter={(v) => `${v}px`}
-            onChange={folderTreeIndentAdjuster.handleChange}
-            onChangeComplete={folderTreeIndentAdjuster.handleChangeComplete}
-          />
-        )}
-        {/* Chat Width */}
-        <WidthSlider
-          label={t('chatWidth')}
-          value={chatWidthAdjuster.width}
-          min={CHAT_PERCENT.min}
-          max={CHAT_PERCENT.max}
-          step={1}
-          narrowLabel={t('chatWidthNarrow')}
-          wideLabel={t('chatWidthWide')}
-          onChange={chatWidthAdjuster.handleChange}
-          onChangeComplete={chatWidthAdjuster.handleChangeComplete}
-          enabled={chatWidthEnabled}
-          onToggle={(v) => {
-            setChatWidthEnabled(v);
-            try {
-              chrome.storage?.sync?.set({ gvChatWidthEnabled: v });
-            } catch {}
-          }}
-        />
-        {/* Edit Input Width */}
-        <WidthSlider
-          label={t('editInputWidth')}
-          value={editInputWidthAdjuster.width}
-          min={EDIT_PERCENT.min}
-          max={EDIT_PERCENT.max}
-          step={1}
-          narrowLabel={t('editInputWidthNarrow')}
-          wideLabel={t('editInputWidthWide')}
-          onChange={editInputWidthAdjuster.handleChange}
-          onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
-          enabled={editInputWidthEnabled}
-          onToggle={(v) => {
-            setEditInputWidthEnabled(v);
-            try {
-              chrome.storage?.sync?.set({ gvEditInputWidthEnabled: v });
-            } catch {}
-          }}
-        />
-
-        {/* Sidebar Width */}
-        <WidthSlider
-          label={isAIStudio ? 'AI Studio Sidebar' : t('sidebarWidth')}
-          value={sidebarWidthAdjuster.width}
-          min={sidebarConfig.min}
-          max={sidebarConfig.max}
-          step={8}
-          narrowLabel={t('sidebarWidthNarrow')}
-          wideLabel={t('sidebarWidthWide')}
-          valueFormatter={(v) => `${v}px`}
-          onChange={sidebarWidthAdjuster.handleChange}
-          onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
-          enabled={sidebarWidthEnabled}
-          onToggle={(v) => {
-            setSidebarWidthEnabled(v);
-            try {
-              chrome.storage?.sync?.set({ gvSidebarWidthEnabled: v });
-            } catch {}
-          }}
-        />
-
-        {/* Sidebar Auto-Hide & Full-Hide - Gemini only */}
-        {!isAIStudio && (
-          <Card className="p-4 transition-all hover:shadow-md">
-            <CardContent className="space-y-3 p-0">
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="sidebar-auto-hide"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('sidebarAutoHide')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('sidebarAutoHideHint')}</p>
-                </div>
-                <Switch
-                  id="sidebar-auto-hide"
-                  checked={sidebarAutoHideEnabled}
-                  onChange={(e) => {
-                    setSidebarAutoHideEnabled(e.target.checked);
-                    apply({ sidebarAutoHideEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="sidebar-full-hide"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('sidebarFullHide')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('sidebarFullHideHint')}</p>
-                </div>
-                <Switch
-                  id="sidebar-full-hide"
-                  checked={sidebarFullHideEnabled}
-                  onChange={(e) => {
-                    setSidebarFullHideEnabled(e.target.checked);
-                    apply({ sidebarFullHideEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Visual Effect - Gemini only */}
-        {!isAIStudio && (
-          <Card className="p-4 transition-all hover:shadow-md">
-            <CardContent className="p-0">
-              <div className="flex-1">
-                <Label className="text-sm font-medium">{t('visualEffect')}</Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('visualEffectHint')}</p>
-              </div>
-              <div className="bg-secondary/60 mt-3 flex items-center gap-0.5 rounded-full p-1">
-                {(
-                  [
-                    {
-                      value: 'off' as const,
-                      label: t('visualEffectOff'),
-                      icon: (
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <circle cx="12" cy="12" r="10" />
-                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                        </svg>
-                      ),
-                    },
-                    {
-                      value: 'snow' as const,
-                      label: t('visualEffectSnow'),
-                      icon: (
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <line x1="12" y1="2" x2="12" y2="22" />
-                          <line x1="2" y1="12" x2="22" y2="12" />
-                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                          <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
-                          <line x1="12" y1="2" x2="14.5" y2="4.5" />
-                          <line x1="12" y1="2" x2="9.5" y2="4.5" />
-                          <line x1="12" y1="22" x2="14.5" y2="19.5" />
-                          <line x1="12" y1="22" x2="9.5" y2="19.5" />
-                          <line x1="2" y1="12" x2="4.5" y2="9.5" />
-                          <line x1="2" y1="12" x2="4.5" y2="14.5" />
-                          <line x1="22" y1="12" x2="19.5" y2="9.5" />
-                          <line x1="22" y1="12" x2="19.5" y2="14.5" />
-                        </svg>
-                      ),
-                    },
-                    {
-                      value: 'sakura' as const,
-                      label: t('visualEffectSakura'),
-                      icon: (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                          <g transform="translate(12,12)">
-                            {[0, 72, 144, 216, 288].map((deg) => (
-                              <ellipse
-                                key={deg}
-                                cx="0"
-                                cy="-6"
-                                rx="2.8"
-                                ry="5.5"
-                                transform={`rotate(${deg})`}
-                                opacity="0.85"
-                              />
-                            ))}
-                            <circle cx="0" cy="0" r="2" opacity="0.6" />
-                          </g>
-                        </svg>
-                      ),
-                    },
-                    {
-                      value: 'rain' as const,
-                      label: t('visualEffectRain'),
-                      icon: (
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        >
-                          <line x1="8" y1="3" x2="6.5" y2="10" />
-                          <line x1="14" y1="2" x2="12.5" y2="9" />
-                          <line x1="20" y1="4" x2="18.5" y2="11" />
-                          <line x1="5" y1="12" x2="3.5" y2="19" />
-                          <line x1="11" y1="11" x2="9.5" y2="18" />
-                          <line x1="17" y1="13" x2="15.5" y2="20" />
-                        </svg>
-                      ),
-                    },
-                  ] as const
-                ).map((option) => (
                   <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      setVisualEffect(option.value);
-                      apply({ visualEffect: option.value });
-                    }}
-                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold transition-all duration-200 ${
-                      visualEffect === option.value
-                        ? 'bg-background text-foreground shadow-md'
+                    className={`relative z-10 rounded-lg px-3 py-2 text-sm font-bold transition-all duration-200 ${
+                      mode === 'flow'
+                        ? 'text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
+                    onClick={() => {
+                      setMode('flow');
+                      apply({ mode: 'flow' });
+                    }}
                   >
-                    {option.icon}
-                    <span>{option.label}</span>
+                    {t('flow')}
                   </button>
-                ))}
+                  <button
+                    className={`relative z-10 rounded-lg px-3 py-2 text-sm font-bold transition-all duration-200 ${
+                      mode === 'jump'
+                        ? 'text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    onClick={() => {
+                      setMode('jump');
+                      apply({ mode: 'jump' });
+                    }}
+                  >
+                    {t('jump')}
+                  </button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Formula Copy Options */}
-        <Card className="p-4 transition-all hover:shadow-md">
-          <CardTitle className="mb-4">{t('formulaCopyFormat')}</CardTitle>
-          <CardContent className="space-y-3 p-0">
-            <p className="text-muted-foreground mb-3 text-xs">{t('formulaCopyFormatHint')}</p>
-            <div className="space-y-2">
-              <label className="flex cursor-pointer items-center space-x-3">
-                <input
-                  type="radio"
-                  name="formulaCopyFormat"
-                  value="latex"
-                  checked={formulaCopyFormat === 'latex'}
-                  onChange={handleFormulaCopyFormatChange}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">{t('formulaCopyFormatLatex')}</span>
-              </label>
-              <label className="flex cursor-pointer items-center space-x-3">
-                <input
-                  type="radio"
-                  name="formulaCopyFormat"
-                  value="unicodemath"
-                  checked={formulaCopyFormat === 'unicodemath'}
-                  onChange={handleFormulaCopyFormatChange}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">{t('formulaCopyFormatUnicodeMath')}</span>
-              </label>
-              <label className="flex cursor-pointer items-center space-x-3">
-                <input
-                  type="radio"
-                  name="formulaCopyFormat"
-                  value="no-dollar"
-                  checked={formulaCopyFormat === 'no-dollar'}
-                  onChange={handleFormulaCopyFormatChange}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">{t('formulaCopyFormatNoDollar')}</span>
-              </label>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Keyboard Shortcuts */}
-        <KeyboardShortcutSettings />
-
-        {/* Input Collapse Options */}
-        <Card className="p-4 transition-all hover:shadow-md">
-          <CardTitle className="mb-4">{t('inputCollapseOptions')}</CardTitle>
-          <CardContent className="space-y-4 p-0">
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
+              <div className="group flex items-center justify-between">
                 <Label
-                  htmlFor="input-collapse-enabled"
+                  htmlFor="hide-container"
                   className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                 >
-                  {t('enableInputCollapse')}
+                  {t('hideOuterContainer')}
                 </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('enableInputCollapseHint')}{' '}
-                  <span className="text-muted-foreground/70">
-                    ({t('inputCollapseShortcutHint').replace('{modifier}', getModifierKey())})
-                  </span>
-                </p>
+                <Switch
+                  id="hide-container"
+                  checked={hideContainer}
+                  onChange={(e) => {
+                    setHideContainer(e.target.checked);
+                    apply({ hideContainer: e.target.checked });
+                  }}
+                />
               </div>
-              <Switch
-                id="input-collapse-enabled"
-                checked={inputCollapseEnabled}
-                onChange={(e) => {
-                  setInputCollapseEnabled(e.target.checked);
-                  apply({ inputCollapseEnabled: e.target.checked });
-                }}
-              />
-            </div>
-            {/* Second toggle - Allow collapse when not empty (only visible when first is enabled) */}
-            {inputCollapseEnabled && (
-              <div className="group mt-3 ml-4 flex items-center justify-between">
+              <div className="group flex items-center justify-between">
+                <Label
+                  htmlFor="draggable-timeline"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                >
+                  {t('draggableTimeline')}
+                </Label>
+                <Switch
+                  id="draggable-timeline"
+                  checked={draggableTimeline}
+                  onChange={(e) => {
+                    setDraggableTimeline(e.target.checked);
+                    apply({ draggableTimeline: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
                 <div className="flex-1">
                   <Label
-                    htmlFor="input-collapse-when-not-empty"
+                    htmlFor="prevent-auto-scroll"
                     className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                   >
-                    {t('allowCollapseWhenNotEmpty')}
+                    {t('preventAutoScroll')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('preventAutoScrollHint')}</p>
+                </div>
+                <Switch
+                  id="prevent-auto-scroll"
+                  checked={preventAutoScrollEnabled}
+                  onChange={(e) => {
+                    setPreventAutoScrollEnabled(e.target.checked);
+                    apply({ preventAutoScrollEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="marker-level-enabled"
+                    className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                  >
+                    {t('enableMarkerLevel')}
+                    <span
+                      className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                      title={t('experimentalLabel')}
+                      style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                    >
+                      experiment
+                    </span>
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('enableMarkerLevelHint')}</p>
+                </div>
+                <Switch
+                  id="marker-level-enabled"
+                  checked={markerLevelEnabled}
+                  onChange={(e) => {
+                    setMarkerLevelEnabled(e.target.checked);
+                    apply({ markerLevelEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              {/* Message Timestamps */}
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="show-message-timestamps"
+                    className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                  >
+                    {t('showMessageTimestamps')}
+                    <span
+                      className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                      title={t('experimentalLabel')}
+                      style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                    >
+                      experiment
+                    </span>
                   </Label>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {t('allowCollapseWhenNotEmptyHint')}
+                    {t('showMessageTimestampsHint')}
                   </p>
                 </div>
                 <Switch
-                  id="input-collapse-when-not-empty"
-                  checked={inputCollapseWhenNotEmpty}
+                  id="show-message-timestamps"
+                  checked={showMessageTimestamps}
                   onChange={(e) => {
-                    setInputCollapseWhenNotEmpty(e.target.checked);
-                    apply({ inputCollapseWhenNotEmpty: e.target.checked });
+                    setShowMessageTimestamps(e.target.checked);
+                    apply({ showMessageTimestamps: e.target.checked });
                   }}
                 />
               </div>
-            )}
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
+              {/* Reset Timeline Position Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="group hover:border-primary/50 mt-2 w-full"
+                onClick={() => {
+                  apply({ resetPosition: true });
+                }}
+              >
+                <span className="text-xs transition-transform group-hover:scale-105">
+                  {t('resetTimelinePosition')}
+                </span>
+              </Button>
+              {/* View Starred History Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="group hover:border-primary/50 mt-2 w-full"
+                onClick={() => setShowStarredHistory(true)}
+              >
+                <span className="flex items-center gap-1.5 text-xs transition-transform group-hover:scale-105">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-primary"
+                  >
+                    <path
+                      d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  {t('viewStarredHistory')}
+                </span>
+              </Button>
+            </CardContent>
+          </Card>,
+        )}
+        {/* Folder Options */}
+        {wrapSection(
+          'folder',
+          <Card className="p-4 transition-all hover:shadow-md">
+            <CardTitle className="mb-4">{t('folderOptions')}</CardTitle>
+            <CardContent className="space-y-4 p-0">
+              <div className="group flex items-center justify-between">
                 <Label
-                  htmlFor="ctrl-enter-send"
+                  htmlFor="folder-enabled"
                   className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                 >
-                  {t('ctrlEnterSend').replace('{modifier}', getModifierKey())}
+                  {t('enableFolderFeature')}
                 </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('ctrlEnterSendHint').replace('{modifier}', getModifierKey())}
+                <Switch
+                  id="folder-enabled"
+                  checked={folderEnabled}
+                  onChange={(e) => {
+                    setFolderEnabled(e.target.checked);
+                    apply({ folderEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <Label
+                  htmlFor="hide-archived"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                >
+                  {t('hideArchivedConversations')}
+                </Label>
+                <Switch
+                  id="hide-archived"
+                  checked={hideArchivedConversations}
+                  onChange={(e) => {
+                    setHideArchivedConversations(e.target.checked);
+                    apply({ hideArchivedConversations: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="fork-enabled"
+                    className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                  >
+                    {t('enableForkFeature')}
+                    <span
+                      className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                      title={t('experimentalLabel')}
+                      style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                    >
+                      experiment
+                    </span>
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('enableForkFeatureHint')}</p>
+                </div>
+                <Switch
+                  id="fork-enabled"
+                  checked={forkEnabled}
+                  onChange={(e) => {
+                    setForkEnabled(e.target.checked);
+                    apply({ forkEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="account-isolation-enabled"
+                    className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                  >
+                    {t('enableAccountIsolation')}
+                    <span
+                      className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                      title={t('experimentalLabel')}
+                      style={{
+                        fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20",
+                      }}
+                    >
+                      experiment
+                    </span>
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('enableAccountIsolationHint')}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground">{t('currentPlatform')}:</span>
+                    <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
+                      {currentIsolationPlatformLabel}
+                    </span>
+                  </div>
+                </div>
+                <Switch
+                  id="account-isolation-enabled"
+                  checked={
+                    isAIStudio ? accountIsolationEnabledAIStudio : accountIsolationEnabledGemini
+                  }
+                  onChange={(e) => {
+                    if (isAIStudio) {
+                      setAccountIsolationEnabledAIStudio(e.target.checked);
+                    } else {
+                      setAccountIsolationEnabledGemini(e.target.checked);
+                    }
+                    apply({
+                      accountIsolationEnabled: e.target.checked,
+                      accountIsolationPlatform: activeAccountPlatform,
+                    });
+                  }}
+                />
+              </div>
+              {/* Copy folder structure for AI organization */}
+              <div className="border-border/50 border-t pt-3">
+                <Button
+                  variant="outline"
+                  className="w-full text-sm"
+                  onClick={handleCopyFolderStructureForAI}
+                  disabled={aiStructureCopyStatus === 'loading'}
+                >
+                  <span className="inline-flex items-center justify-center gap-1.5">
+                    <span
+                      className="material-symbols-outlined translate-y-px text-[16px] leading-none"
+                      style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                    >
+                      {aiStructureCopyStatus === 'copied' ? 'check' : 'content_copy'}
+                    </span>
+                    <span className="leading-5">
+                      {aiStructureCopyStatus === 'copied'
+                        ? t('aiOrgCopied')
+                        : aiStructureCopyStatus === 'error'
+                          ? t('aiOrgError')
+                          : t('aiOrgCopyButton')}
+                    </span>
+                  </span>
+                </Button>
+                <p className="text-muted-foreground mt-1.5 text-center text-[11px] leading-tight">
+                  {t('aiOrgCopyHint')}
                 </p>
               </div>
-              <Switch
-                id="ctrl-enter-send"
-                checked={ctrlEnterSendEnabled}
-                onChange={(e) => {
-                  setCtrlEnterSendEnabled(e.target.checked);
-                  apply({ ctrlEnterSendEnabled: e.target.checked });
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>,
+        )}
+        {/* Folder Spacing */}
+        {wrapSection(
+          'folderSpacing',
+          <WidthSlider
+            label={t('folderSpacing')}
+            value={folderSpacingAdjuster.width}
+            min={FOLDER_SPACING.min}
+            max={FOLDER_SPACING.max}
+            step={1}
+            narrowLabel={t('folderSpacingCompact')}
+            wideLabel={t('folderSpacingSpacious')}
+            valueFormatter={(v) => `${v}px`}
+            onChange={folderSpacingAdjuster.handleChange}
+            onChangeComplete={folderSpacingAdjuster.handleChangeComplete}
+          />,
+        )}
+        {!isAIStudio &&
+          wrapSection(
+            'folderTreeIndent',
+            <WidthSlider
+              label={t('folderTreeIndent')}
+              value={folderTreeIndentAdjuster.width}
+              min={FOLDER_TREE_INDENT.min}
+              max={FOLDER_TREE_INDENT.max}
+              step={1}
+              narrowLabel={t('folderTreeIndentCompact')}
+              wideLabel={t('folderTreeIndentSpacious')}
+              valueFormatter={(v) => `${v}px`}
+              onChange={folderTreeIndentAdjuster.handleChange}
+              onChangeComplete={folderTreeIndentAdjuster.handleChangeComplete}
+            />,
+          )}
+        {/* Chat Width */}
+        {wrapSection(
+          'chatWidth',
+          <WidthSlider
+            label={t('chatWidth')}
+            value={chatWidthAdjuster.width}
+            min={CHAT_PERCENT.min}
+            max={CHAT_PERCENT.max}
+            step={1}
+            narrowLabel={t('chatWidthNarrow')}
+            wideLabel={t('chatWidthWide')}
+            onChange={chatWidthAdjuster.handleChange}
+            onChangeComplete={chatWidthAdjuster.handleChangeComplete}
+            enabled={chatWidthEnabled}
+            onToggle={(v) => {
+              setChatWidthEnabled(v);
+              try {
+                chrome.storage?.sync?.set({ gvChatWidthEnabled: v });
+              } catch {}
+            }}
+          />,
+        )}
+        {/* Edit Input Width */}
+        {wrapSection(
+          'editInputWidth',
+          <WidthSlider
+            label={t('editInputWidth')}
+            value={editInputWidthAdjuster.width}
+            min={EDIT_PERCENT.min}
+            max={EDIT_PERCENT.max}
+            step={1}
+            narrowLabel={t('editInputWidthNarrow')}
+            wideLabel={t('editInputWidthWide')}
+            onChange={editInputWidthAdjuster.handleChange}
+            onChangeComplete={editInputWidthAdjuster.handleChangeComplete}
+            enabled={editInputWidthEnabled}
+            onToggle={(v) => {
+              setEditInputWidthEnabled(v);
+              try {
+                chrome.storage?.sync?.set({ gvEditInputWidthEnabled: v });
+              } catch {}
+            }}
+          />,
+        )}
 
-        {/* Prompt Manager Options */}
-        <Card className="p-4 transition-all hover:shadow-md">
-          <CardTitle className="mb-4">{t('promptManagerOptions')}</CardTitle>
-          <CardContent className="space-y-3 p-0">
-            {/* Hide Prompt Manager Toggle */}
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="hide-prompt-manager"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                >
-                  {t('hidePromptManager')}
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('hidePromptManagerHint')}</p>
-              </div>
-              <Switch
-                id="hide-prompt-manager"
-                checked={hidePromptManager}
-                onChange={(e) => {
-                  setHidePromptManager(e.target.checked);
-                  apply({ hidePromptManager: e.target.checked });
-                }}
-              />
-            </div>
-            <div>
-              <Label className="mb-2 block text-sm font-medium">{t('customWebsites')}</Label>
-              {/* Gemini Only Notice - moved here since it's about Prompt Manager */}
-              <div className="bg-primary/10 border-primary/20 mb-2 flex items-center gap-2 rounded-md border p-2">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-primary shrink-0"
-                >
-                  <path
-                    d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 11c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm1-4H7V5h2v3z"
-                    fill="currentColor"
+        {/* Sidebar Width */}
+        {wrapSection(
+          'sidebarWidth',
+          <WidthSlider
+            label={isAIStudio ? 'AI Studio Sidebar' : t('sidebarWidth')}
+            value={sidebarWidthAdjuster.width}
+            min={sidebarConfig.min}
+            max={sidebarConfig.max}
+            step={8}
+            narrowLabel={t('sidebarWidthNarrow')}
+            wideLabel={t('sidebarWidthWide')}
+            valueFormatter={(v) => `${v}px`}
+            onChange={sidebarWidthAdjuster.handleChange}
+            onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
+            enabled={sidebarWidthEnabled}
+            onToggle={(v) => {
+              setSidebarWidthEnabled(v);
+              try {
+                chrome.storage?.sync?.set({ gvSidebarWidthEnabled: v });
+              } catch {}
+            }}
+          />,
+        )}
+
+        {/* Sidebar Auto-Hide & Full-Hide - Gemini only */}
+        {!isAIStudio &&
+          wrapSection(
+            'sidebarBehavior',
+            <Card className="p-4 transition-all hover:shadow-md">
+              <CardContent className="space-y-3 p-0">
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="sidebar-auto-hide"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('sidebarAutoHide')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">{t('sidebarAutoHideHint')}</p>
+                  </div>
+                  <Switch
+                    id="sidebar-auto-hide"
+                    checked={sidebarAutoHideEnabled}
+                    onChange={(e) => {
+                      setSidebarAutoHideEnabled(e.target.checked);
+                      apply({ sidebarAutoHideEnabled: e.target.checked });
+                    }}
                   />
-                </svg>
-                <p className="text-primary text-xs font-medium">{t('geminiOnlyNotice')}</p>
-              </div>
+                </div>
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="sidebar-full-hide"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('sidebarFullHide')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">{t('sidebarFullHideHint')}</p>
+                  </div>
+                  <Switch
+                    id="sidebar-full-hide"
+                    checked={sidebarFullHideEnabled}
+                    onChange={(e) => {
+                      setSidebarFullHideEnabled(e.target.checked);
+                      apply({ sidebarFullHideEnabled: e.target.checked });
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>,
+          )}
 
-              {/* Quick-select buttons for popular websites */}
-              <div className="mb-3 flex flex-wrap gap-1.5">
-                {[
-                  { domain: 'chatgpt.com', label: 'ChatGPT', Icon: IconChatGPT },
-                  { domain: 'claude.ai', label: 'Claude', Icon: IconClaude },
-                  { domain: 'grok.com', label: 'Grok', Icon: IconGrok },
-                  { domain: 'deepseek.com', label: 'DeepSeek', Icon: IconDeepSeek },
-                  { domain: 'qwen.ai', label: 'Qwen', Icon: IconQwen },
-                  { domain: 'kimi.com', label: 'Kimi', Icon: IconKimi },
-                  { domain: 'notebooklm.google.com', label: 'NotebookLM', Icon: IconNotebookLM },
-                  { domain: 'midjourney.com', label: 'Midjourney', Icon: IconMidjourney },
-                ].map(({ domain, label, Icon }) => {
-                  const isEnabled = customWebsites.includes(domain);
-                  return (
+        {/* Visual Effect - Gemini only */}
+        {!isAIStudio &&
+          wrapSection(
+            'visualEffect',
+            <Card className="p-4 transition-all hover:shadow-md">
+              <CardContent className="p-0">
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">{t('visualEffect')}</Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('visualEffectHint')}</p>
+                </div>
+                <div className="bg-secondary/60 mt-3 flex items-center gap-0.5 rounded-full p-1">
+                  {(
+                    [
+                      {
+                        value: 'off' as const,
+                        label: t('visualEffectOff'),
+                        icon: (
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                          </svg>
+                        ),
+                      },
+                      {
+                        value: 'snow' as const,
+                        label: t('visualEffectSnow'),
+                        icon: (
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <line x1="12" y1="2" x2="12" y2="22" />
+                            <line x1="2" y1="12" x2="22" y2="12" />
+                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                            <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
+                            <line x1="12" y1="2" x2="14.5" y2="4.5" />
+                            <line x1="12" y1="2" x2="9.5" y2="4.5" />
+                            <line x1="12" y1="22" x2="14.5" y2="19.5" />
+                            <line x1="12" y1="22" x2="9.5" y2="19.5" />
+                            <line x1="2" y1="12" x2="4.5" y2="9.5" />
+                            <line x1="2" y1="12" x2="4.5" y2="14.5" />
+                            <line x1="22" y1="12" x2="19.5" y2="9.5" />
+                            <line x1="22" y1="12" x2="19.5" y2="14.5" />
+                          </svg>
+                        ),
+                      },
+                      {
+                        value: 'sakura' as const,
+                        label: t('visualEffectSakura'),
+                        icon: (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <g transform="translate(12,12)">
+                              {[0, 72, 144, 216, 288].map((deg) => (
+                                <ellipse
+                                  key={deg}
+                                  cx="0"
+                                  cy="-6"
+                                  rx="2.8"
+                                  ry="5.5"
+                                  transform={`rotate(${deg})`}
+                                  opacity="0.85"
+                                />
+                              ))}
+                              <circle cx="0" cy="0" r="2" opacity="0.6" />
+                            </g>
+                          </svg>
+                        ),
+                      },
+                      {
+                        value: 'rain' as const,
+                        label: t('visualEffectRain'),
+                        icon: (
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          >
+                            <line x1="8" y1="3" x2="6.5" y2="10" />
+                            <line x1="14" y1="2" x2="12.5" y2="9" />
+                            <line x1="20" y1="4" x2="18.5" y2="11" />
+                            <line x1="5" y1="12" x2="3.5" y2="19" />
+                            <line x1="11" y1="11" x2="9.5" y2="18" />
+                            <line x1="17" y1="13" x2="15.5" y2="20" />
+                          </svg>
+                        ),
+                      },
+                    ] as const
+                  ).map((option) => (
                     <button
-                      key={domain}
+                      key={option.value}
+                      type="button"
                       onClick={() => {
-                        void toggleQuickWebsite(domain, isEnabled);
+                        setVisualEffect(option.value);
+                        apply({ visualEffect: option.value });
                       }}
-                      className={`inline-flex min-w-[30%] grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
-                        isEnabled
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
+                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold transition-all duration-200 ${
+                        visualEffect === option.value
+                          ? 'bg-background text-foreground shadow-md'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
-                      title={label}
                     >
-                      <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
-                        <Icon />
-                      </span>
-                      <span className="truncate">{label}</span>
-                      <span
-                        className={`w-2.5 shrink-0 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}
-                      >
-                        ✓
-                      </span>
+                      {option.icon}
+                      <span>{option.label}</span>
                     </button>
-                  );
-                })}
-              </div>
-
-              {/* Website List */}
-              {customWebsites.length > 0 && (
-                <div className="mb-3 space-y-2">
-                  {customWebsites.map((website) => (
-                    <div
-                      key={website}
-                      className="bg-secondary/30 group hover:bg-secondary/50 flex items-center justify-between rounded-md px-3 py-2 transition-colors"
-                    >
-                      <span className="text-foreground/90 font-mono text-sm">{website}</span>
-                      <button
-                        onClick={() => {
-                          void handleRemoveWebsite(website);
-                        }}
-                        className="text-destructive hover:text-destructive/80 text-xs font-medium opacity-70 transition-opacity group-hover:opacity-100"
-                      >
-                        {t('removeWebsite')}
-                      </button>
-                    </div>
                   ))}
                 </div>
-              )}
+              </CardContent>
+            </Card>,
+          )}
 
-              {/* Add Website Input */}
-              <div className="space-y-2">
-                <div className="flex flex-wrap gap-2">
-                  <input
-                    type="text"
-                    value={newWebsiteInput}
-                    onChange={(e) => {
-                      setNewWebsiteInput(e.target.value);
-                      setWebsiteError('');
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        void handleAddWebsite();
-                      }
-                    }}
-                    placeholder={t('customWebsitesPlaceholder')}
-                    className="bg-background border-border focus:ring-primary/50 min-w-0 flex-1 rounded-md border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
-                  />
-                  <Button
-                    onClick={() => {
-                      void handleAddWebsite();
-                    }}
-                    size="sm"
-                    className="shrink-0 whitespace-nowrap"
-                  >
-                    {t('addWebsite')}
-                  </Button>
-                </div>
-                {websiteError && <p className="text-destructive text-xs">{websiteError}</p>}
-              </div>
-
-              {/* Note about reloading */}
-              <div className="bg-primary/5 border-primary/20 mt-3 rounded-md border p-2">
-                <p className="text-muted-foreground text-xs">{t('customWebsitesNote')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* General Options */}
-        <Card className="p-4 transition-all hover:shadow-md">
-          <CardTitle className="mb-4">{t('generalOptions')}</CardTitle>
-          <CardContent className="space-y-4 p-0">
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="tab-title-update"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                >
-                  {t('enableTabTitleUpdate')}
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('enableTabTitleUpdateHint')}
-                </p>
-              </div>
-              <Switch
-                id="tab-title-update"
-                checked={tabTitleUpdateEnabled}
-                onChange={(e) => {
-                  setTabTitleUpdateEnabled(e.target.checked);
-                  apply({ tabTitleUpdateEnabled: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="mermaid-enabled"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                >
-                  {t('enableMermaidRendering')}
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('enableMermaidRenderingHint')}
-                </p>
-              </div>
-              <Switch
-                id="mermaid-enabled"
-                checked={mermaidEnabled}
-                onChange={(e) => {
-                  setMermaidEnabled(e.target.checked);
-                  apply({ mermaidEnabled: e.target.checked });
-                }}
-              />
-            </div>
-            <div className="group flex items-center justify-between">
-              <div className="flex-1">
-                <Label
-                  htmlFor="quote-reply-enabled"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                >
-                  {t('enableQuoteReply')}
-                </Label>
-                <p className="text-muted-foreground mt-1 text-xs">{t('enableQuoteReplyHint')}</p>
-              </div>
-              <Switch
-                id="quote-reply-enabled"
-                checked={quoteReplyEnabled}
-                onChange={(e) => {
-                  setQuoteReplyEnabled(e.target.checked);
-                  apply({ quoteReplyEnabled: e.target.checked });
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* NanoBanana Options - Hidden on Safari due to fetch interceptor limitations */}
-        {!isSafariBrowser && (
+        {/* Formula Copy Options */}
+        {wrapSection(
+          'formulaCopy',
           <Card className="p-4 transition-all hover:shadow-md">
-            <CardTitle className="mb-4">{t('nanobananaOptions')}</CardTitle>
+            <CardTitle className="mb-4">{t('formulaCopyFormat')}</CardTitle>
+            <CardContent className="space-y-3 p-0">
+              <p className="text-muted-foreground mb-3 text-xs">{t('formulaCopyFormatHint')}</p>
+              <div className="space-y-2">
+                <label className="flex cursor-pointer items-center space-x-3">
+                  <input
+                    type="radio"
+                    name="formulaCopyFormat"
+                    value="latex"
+                    checked={formulaCopyFormat === 'latex'}
+                    onChange={handleFormulaCopyFormatChange}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">{t('formulaCopyFormatLatex')}</span>
+                </label>
+                <label className="flex cursor-pointer items-center space-x-3">
+                  <input
+                    type="radio"
+                    name="formulaCopyFormat"
+                    value="unicodemath"
+                    checked={formulaCopyFormat === 'unicodemath'}
+                    onChange={handleFormulaCopyFormatChange}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">{t('formulaCopyFormatUnicodeMath')}</span>
+                </label>
+                <label className="flex cursor-pointer items-center space-x-3">
+                  <input
+                    type="radio"
+                    name="formulaCopyFormat"
+                    value="no-dollar"
+                    checked={formulaCopyFormat === 'no-dollar'}
+                    onChange={handleFormulaCopyFormatChange}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">{t('formulaCopyFormatNoDollar')}</span>
+                </label>
+              </div>
+            </CardContent>
+          </Card>,
+        )}
+
+        {/* Keyboard Shortcuts */}
+        {wrapSection('keyboardShortcuts', <KeyboardShortcutSettings />)}
+
+        {/* Input Collapse Options */}
+        {wrapSection(
+          'inputCollapse',
+          <Card className="p-4 transition-all hover:shadow-md">
+            <CardTitle className="mb-4">{t('inputCollapseOptions')}</CardTitle>
             <CardContent className="space-y-4 p-0">
               <div className="group flex items-center justify-between">
                 <div className="flex-1">
                   <Label
-                    htmlFor="watermark-remover"
+                    htmlFor="input-collapse-enabled"
                     className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                   >
-                    {t('enableNanobananaWatermarkRemover')}
+                    {t('enableInputCollapse')}
                   </Label>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {t('nanobananaWatermarkRemoverHint')}
+                    {t('enableInputCollapseHint')}{' '}
+                    <span className="text-muted-foreground/70">
+                      ({t('inputCollapseShortcutHint').replace('{modifier}', getModifierKey())})
+                    </span>
                   </p>
                 </div>
                 <Switch
-                  id="watermark-remover"
-                  checked={watermarkRemoverEnabled}
+                  id="input-collapse-enabled"
+                  checked={inputCollapseEnabled}
                   onChange={(e) => {
-                    setWatermarkRemoverEnabled(e.target.checked);
-                    apply({ watermarkRemoverEnabled: e.target.checked });
+                    setInputCollapseEnabled(e.target.checked);
+                    apply({ inputCollapseEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              {/* Second toggle - Allow collapse when not empty (only visible when first is enabled) */}
+              {inputCollapseEnabled && (
+                <div className="group mt-3 ml-4 flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="input-collapse-when-not-empty"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('allowCollapseWhenNotEmpty')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('allowCollapseWhenNotEmptyHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="input-collapse-when-not-empty"
+                    checked={inputCollapseWhenNotEmpty}
+                    onChange={(e) => {
+                      setInputCollapseWhenNotEmpty(e.target.checked);
+                      apply({ inputCollapseWhenNotEmpty: e.target.checked });
+                    }}
+                  />
+                </div>
+              )}
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="ctrl-enter-send"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('ctrlEnterSend').replace('{modifier}', getModifierKey())}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('ctrlEnterSendHint').replace('{modifier}', getModifierKey())}
+                  </p>
+                </div>
+                <Switch
+                  id="ctrl-enter-send"
+                  checked={ctrlEnterSendEnabled}
+                  onChange={(e) => {
+                    setCtrlEnterSendEnabled(e.target.checked);
+                    apply({ ctrlEnterSendEnabled: e.target.checked });
                   }}
                 />
               </div>
             </CardContent>
-          </Card>
+          </Card>,
         )}
+
+        {/* Prompt Manager Options */}
+        {wrapSection(
+          'promptManager',
+          <Card className="p-4 transition-all hover:shadow-md">
+            <CardTitle className="mb-4">{t('promptManagerOptions')}</CardTitle>
+            <CardContent className="space-y-3 p-0">
+              {/* Hide Prompt Manager Toggle */}
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="hide-prompt-manager"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('hidePromptManager')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('hidePromptManagerHint')}</p>
+                </div>
+                <Switch
+                  id="hide-prompt-manager"
+                  checked={hidePromptManager}
+                  onChange={(e) => {
+                    setHidePromptManager(e.target.checked);
+                    apply({ hidePromptManager: e.target.checked });
+                  }}
+                />
+              </div>
+              <div>
+                <Label className="mb-2 block text-sm font-medium">{t('customWebsites')}</Label>
+                {/* Gemini Only Notice - moved here since it's about Prompt Manager */}
+                <div className="bg-primary/10 border-primary/20 mb-2 flex items-center gap-2 rounded-md border p-2">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-primary shrink-0"
+                  >
+                    <path
+                      d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 11c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm1-4H7V5h2v3z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <p className="text-primary text-xs font-medium">{t('geminiOnlyNotice')}</p>
+                </div>
+
+                {/* Quick-select buttons for popular websites */}
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {[
+                    { domain: 'chatgpt.com', label: 'ChatGPT', Icon: IconChatGPT },
+                    { domain: 'claude.ai', label: 'Claude', Icon: IconClaude },
+                    { domain: 'grok.com', label: 'Grok', Icon: IconGrok },
+                    { domain: 'deepseek.com', label: 'DeepSeek', Icon: IconDeepSeek },
+                    { domain: 'qwen.ai', label: 'Qwen', Icon: IconQwen },
+                    { domain: 'kimi.com', label: 'Kimi', Icon: IconKimi },
+                    { domain: 'notebooklm.google.com', label: 'NotebookLM', Icon: IconNotebookLM },
+                    { domain: 'midjourney.com', label: 'Midjourney', Icon: IconMidjourney },
+                  ].map(({ domain, label, Icon }) => {
+                    const isEnabled = customWebsites.includes(domain);
+                    return (
+                      <button
+                        key={domain}
+                        onClick={() => {
+                          void toggleQuickWebsite(domain, isEnabled);
+                        }}
+                        className={`inline-flex min-w-[30%] grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
+                          isEnabled
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
+                        }`}
+                        title={label}
+                      >
+                        <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+                          <Icon />
+                        </span>
+                        <span className="truncate">{label}</span>
+                        <span
+                          className={`w-2.5 shrink-0 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}
+                        >
+                          ✓
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Website List */}
+                {customWebsites.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    {customWebsites.map((website) => (
+                      <div
+                        key={website}
+                        className="bg-secondary/30 group hover:bg-secondary/50 flex items-center justify-between rounded-md px-3 py-2 transition-colors"
+                      >
+                        <span className="text-foreground/90 font-mono text-sm">{website}</span>
+                        <button
+                          onClick={() => {
+                            void handleRemoveWebsite(website);
+                          }}
+                          className="text-destructive hover:text-destructive/80 text-xs font-medium opacity-70 transition-opacity group-hover:opacity-100"
+                        >
+                          {t('removeWebsite')}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add Website Input */}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    <input
+                      type="text"
+                      value={newWebsiteInput}
+                      onChange={(e) => {
+                        setNewWebsiteInput(e.target.value);
+                        setWebsiteError('');
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          void handleAddWebsite();
+                        }
+                      }}
+                      placeholder={t('customWebsitesPlaceholder')}
+                      className="bg-background border-border focus:ring-primary/50 min-w-0 flex-1 rounded-md border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
+                    />
+                    <Button
+                      onClick={() => {
+                        void handleAddWebsite();
+                      }}
+                      size="sm"
+                      className="shrink-0 whitespace-nowrap"
+                    >
+                      {t('addWebsite')}
+                    </Button>
+                  </div>
+                  {websiteError && <p className="text-destructive text-xs">{websiteError}</p>}
+                </div>
+
+                {/* Note about reloading */}
+                <div className="bg-primary/5 border-primary/20 mt-3 rounded-md border p-2">
+                  <p className="text-muted-foreground text-xs">{t('customWebsitesNote')}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>,
+        )}
+
+        {/* General Options */}
+        {wrapSection(
+          'general',
+          <Card className="p-4 transition-all hover:shadow-md">
+            <CardTitle className="mb-4">{t('generalOptions')}</CardTitle>
+            <CardContent className="space-y-4 p-0">
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="tab-title-update"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('enableTabTitleUpdate')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('enableTabTitleUpdateHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="tab-title-update"
+                  checked={tabTitleUpdateEnabled}
+                  onChange={(e) => {
+                    setTabTitleUpdateEnabled(e.target.checked);
+                    apply({ tabTitleUpdateEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="mermaid-enabled"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('enableMermaidRendering')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('enableMermaidRenderingHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="mermaid-enabled"
+                  checked={mermaidEnabled}
+                  onChange={(e) => {
+                    setMermaidEnabled(e.target.checked);
+                    apply({ mermaidEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="quote-reply-enabled"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('enableQuoteReply')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('enableQuoteReplyHint')}</p>
+                </div>
+                <Switch
+                  id="quote-reply-enabled"
+                  checked={quoteReplyEnabled}
+                  onChange={(e) => {
+                    setQuoteReplyEnabled(e.target.checked);
+                    apply({ quoteReplyEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>,
+        )}
+
+        {/* NanoBanana Options - Hidden on Safari due to fetch interceptor limitations */}
+        {!isSafariBrowser &&
+          wrapSection(
+            'nanobanana',
+            <Card className="p-4 transition-all hover:shadow-md">
+              <CardTitle className="mb-4">{t('nanobananaOptions')}</CardTitle>
+              <CardContent className="space-y-4 p-0">
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="watermark-remover"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('enableNanobananaWatermarkRemover')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('nanobananaWatermarkRemoverHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="watermark-remover"
+                    checked={watermarkRemoverEnabled}
+                    onChange={(e) => {
+                      setWatermarkRemoverEnabled(e.target.checked);
+                      apply({ watermarkRemoverEnabled: e.target.checked });
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>,
+          )}
       </div>
 
       {/* Footer */}

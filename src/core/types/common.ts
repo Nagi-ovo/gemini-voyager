@@ -105,6 +105,9 @@ export const StorageKeys = {
   // Message timestamps
   GV_SHOW_MESSAGE_TIMESTAMPS: 'gvShowMessageTimestamps',
   GV_MESSAGE_TIMESTAMPS: 'gvMessageTimestamps',
+
+  // Popup section order
+  GV_POPUP_SECTION_ORDER: 'gvPopupSectionOrder',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

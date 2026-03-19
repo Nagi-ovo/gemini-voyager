@@ -1486,5 +1486,13 @@
   "showMessageTimestampsHint": {
     "message": "Afficher quand chaque message a été envoyé",
     "description": "Indice pour la fonctionnalité d'horodatage"
+  },
+  "moveSectionUp": {
+    "message": "Déplacer vers le haut",
+    "description": "Tooltip for moving a settings section up in popup"
+  },
+  "moveSectionDown": {
+    "message": "Déplacer vers le bas",
+    "description": "Tooltip for moving a settings section down in popup"
   }
 }

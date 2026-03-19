@@ -1486,5 +1486,13 @@
   "showMessageTimestampsHint": {
     "message": "Mostrar cuándo se envió cada mensaje",
     "description": "Sugerencia para la función de marcas de tiempo"
+  },
+  "moveSectionUp": {
+    "message": "Subir",
+    "description": "Tooltip for moving a settings section up in popup"
+  },
+  "moveSectionDown": {
+    "message": "Bajar",
+    "description": "Tooltip for moving a settings section down in popup"
   }
 }

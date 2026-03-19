@@ -1474,5 +1474,13 @@
   "showMessageTimestampsHint": {
     "message": "显示每条消息的发送时间",
     "description": "消息时间戳功能提示"
+  },
+  "moveSectionUp": {
+    "message": "上移",
+    "description": "Tooltip for moving a settings section up in popup"
+  },
+  "moveSectionDown": {
+    "message": "下移",
+    "description": "Tooltip for moving a settings section down in popup"
   }
 }

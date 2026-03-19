@@ -20,6 +20,12 @@ Haz clic en el icono de la extensión, entra en la consola.
 - **Posición**: Coloca la línea de tiempo donde te resulte más cómodo.
 - **Efectos Visuales**: Elige `Nieve`, `Sakura` o `Lluvia` para una atmósfera estacional.
 
+## Orden personalizado
+
+¿Demasiadas secciones en el popup y las que más usas están enterradas al fondo?
+
+Pasa el ratón sobre cualquier tarjeta de configuración y aparecerán los botones ▲/▼ en la esquina superior derecha. Haz clic para mover una tarjeta arriba o abajo. Tu disposición se guarda automáticamente.
+
 ## Atmósfera
 
 Voyager no se limita a mejoras de utilidad. También puedes cambiar el ambiente de la página.

@@ -1486,5 +1486,13 @@
   "showMessageTimestampsHint": {
     "message": "Show when each message was sent",
     "description": "Hint for message timestamps feature"
+  },
+  "moveSectionUp": {
+    "message": "Move up",
+    "description": "Tooltip for moving a settings section up in popup"
+  },
+  "moveSectionDown": {
+    "message": "Move down",
+    "description": "Tooltip for moving a settings section down in popup"
   }
 }

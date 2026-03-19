@@ -1480,5 +1480,13 @@
   "showMessageTimestampsHint": {
     "message": "各メッセージの送信時刻を表示します",
     "description": "メッセージタイムスタンプ機能のヒント"
+  },
+  "moveSectionUp": {
+    "message": "上に移動",
+    "description": "Tooltip for moving a settings section up in popup"
+  },
+  "moveSectionDown": {
+    "message": "下に移動",
+    "description": "Tooltip for moving a settings section down in popup"
   }
 }

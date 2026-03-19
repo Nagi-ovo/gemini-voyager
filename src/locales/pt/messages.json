@@ -1486,5 +1486,13 @@
   "showMessageTimestampsHint": {
     "message": "Mostrar quando cada mensagem foi enviada",
     "description": "Dica para o recurso de carimbos de data/hora"
+  },
+  "moveSectionUp": {
+    "message": "Mover para cima",
+    "description": "Tooltip for moving a settings section up in popup"
+  },
+  "moveSectionDown": {
+    "message": "Mover para baixo",
+    "description": "Tooltip for moving a settings section down in popup"
   }
 }

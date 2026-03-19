@@ -1486,5 +1486,13 @@
   "showMessageTimestampsHint": {
     "message": "Показывать, когда было отправлено каждое сообщение",
     "description": "Подсказка для функции временных меток"
+  },
+  "moveSectionUp": {
+    "message": "Переместить вверх",
+    "description": "Tooltip for moving a settings section up in popup"
+  },
+  "moveSectionDown": {
+    "message": "Переместить вниз",
+    "description": "Tooltip for moving a settings section down in popup"
   }
 }

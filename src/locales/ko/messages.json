@@ -1474,5 +1474,13 @@
   "showMessageTimestampsHint": {
     "message": "각 메시지가 전송된 시간을 표시합니다",
     "description": "메시지 타임스탬프 기능 힌트"
+  },
+  "moveSectionUp": {
+    "message": "위로 이동",
+    "description": "Tooltip for moving a settings section up in popup"
+  },
+  "moveSectionDown": {
+    "message": "아래로 이동",
+    "description": "Tooltip for moving a settings section down in popup"
   }
 }

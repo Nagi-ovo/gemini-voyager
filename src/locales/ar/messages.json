@@ -1477,5 +1477,13 @@
   "showMessageTimestampsHint": {
     "message": "إظهار وقت إرسال كل رسالة",
     "description": "تلميح لميزة طوابع الوقت"
+  },
+  "moveSectionUp": {
+    "message": "تحريك لأعلى",
+    "description": "Tooltip for moving a settings section up in popup"
+  },
+  "moveSectionDown": {
+    "message": "تحريك لأسفل",
+    "description": "Tooltip for moving a settings section down in popup"
   }
 }
