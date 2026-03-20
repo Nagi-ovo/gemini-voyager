@@ -1,0 +1,9 @@
+vitepress 文档里所有 Gemini Voyager 改成 Voyager
+
+---
+
+所有语言都好了吗
+
+---
+
+push

@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "2fa44ac15187",
+  "session_id": "88e0a047-e140-44c7-a9b3-53a6bf75c7d9",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-20T02:15:28.504554Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "docs/.vitepress/config.mts",
+    "docs/public/assets/sponsors.svg"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "07613927d13a",
+  "token_usage": {
+    "input_tokens": 144,
+    "cache_creation_tokens": 43114,
+    "cache_read_tokens": 576001,
+    "output_tokens": 3062,
+    "api_call_count": 14
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-20T02:15:19.219657Z",
+    "agent_lines": 2,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 2,
+    "agent_percentage": 100
+  }
+}
