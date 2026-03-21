@@ -249,7 +249,7 @@ describe('inputCollapse', () => {
       const focusOutEvent = new Event('focusout', { bubbles: true });
       Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
       container.dispatchEvent(focusOutEvent);
-      vi.advanceTimersByTime(200);
+      vi.advanceTimersByTime(250);
       expect(container.classList.contains('gv-input-collapsed')).toBe(true);
 
       // Simulate setting change to disabled
@@ -260,7 +260,7 @@ describe('inputCollapse', () => {
 
         container.classList.remove('gv-input-collapsed');
         container.dispatchEvent(focusOutEvent);
-        vi.advanceTimersByTime(200);
+        vi.advanceTimersByTime(250);
         // Should not collapse when disabled
         expect(container.classList.contains('gv-input-collapsed')).toBe(false);
       }
