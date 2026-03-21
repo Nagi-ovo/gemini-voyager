@@ -1,0 +1,14 @@
+https://github.com/Nagi-ovo/gemini-voyager/pull/512
+补充 README 缺漏
+
+---
+
+中文 README 没加啊
+
+---
+
+你逗我呢？在.github里
+
+---
+
+直接push到他的pr上
