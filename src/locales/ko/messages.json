@@ -399,6 +399,10 @@
     "message": "LaTeX (달러 기호 없음)",
     "description": "LaTeX format option without dollar signs"
   },
+  "formulaCopyFormatNotion": {
+    "message": "Notion ($$ 포맷)",
+    "description": "Notion-compatible format with $$ delimiters"
+  },
   "folder_filter_current_user": {
     "message": "계정 분리",
     "description": "Show only conversations from the current Google account"

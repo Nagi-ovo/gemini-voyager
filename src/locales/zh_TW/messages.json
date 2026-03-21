@@ -359,6 +359,10 @@
     "message": "LaTeX (純文字，無 $ 符號)",
     "description": "LaTeX 格式選項，無美元符號"
   },
+  "formulaCopyFormatNotion": {
+    "message": "Notion (雙$格式)",
+    "description": "Notion 相容格式，使用 $$ 分隔符"
+  },
   "folder_filter_current_user": {
     "message": "帳號隔離模式",
     "description": "Show only conversations from the current Google account"

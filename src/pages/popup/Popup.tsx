@@ -413,9 +413,9 @@ export default function Popup() {
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
   const [websiteError, setWebsiteError] = useState<string>('');
   const [showStarredHistory, setShowStarredHistory] = useState<boolean>(false);
-  const [formulaCopyFormat, setFormulaCopyFormat] = useState<'latex' | 'unicodemath' | 'no-dollar'>(
-    'latex',
-  );
+  const [formulaCopyFormat, setFormulaCopyFormat] = useState<
+    'latex' | 'unicodemath' | 'no-dollar' | 'notion'
+  >('latex');
   const [extVersion, setExtVersion] = useState<string | null>(null);
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
   const [safariDmgUrl, setSafariDmgUrl] = useState<string | null>(null);
@@ -461,7 +461,7 @@ export default function Popup() {
   }, []);
 
   const handleFormulaCopyFormatChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const format = e.target.value as 'latex' | 'unicodemath' | 'no-dollar';
+    const format = e.target.value as 'latex' | 'unicodemath' | 'no-dollar' | 'notion';
     setFormulaCopyFormat(format);
     try {
       chrome.storage?.sync?.set({ gvFormulaCopyFormat: format });
@@ -858,8 +858,17 @@ export default function Popup() {
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
           if (m === 'jump' || m === 'flow') setMode(m);
-          const format = res?.gvFormulaCopyFormat as 'latex' | 'unicodemath' | 'no-dollar';
-          if (format === 'latex' || format === 'unicodemath' || format === 'no-dollar')
+          const format = res?.gvFormulaCopyFormat as
+            | 'latex'
+            | 'unicodemath'
+            | 'no-dollar'
+            | 'notion';
+          if (
+            format === 'latex' ||
+            format === 'unicodemath' ||
+            format === 'no-dollar' ||
+            format === 'notion'
+          )
             setFormulaCopyFormat(format);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
@@ -1973,6 +1982,17 @@ export default function Popup() {
                     className="h-4 w-4"
                   />
                   <span className="text-sm">{t('formulaCopyFormatNoDollar')}</span>
+                </label>
+                <label className="flex cursor-pointer items-center space-x-3">
+                  <input
+                    type="radio"
+                    name="formulaCopyFormat"
+                    value="notion"
+                    checked={formulaCopyFormat === 'notion'}
+                    onChange={handleFormulaCopyFormatChange}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">{t('formulaCopyFormatNotion')}</span>
                 </label>
               </div>
             </CardContent>
