@@ -415,4 +415,37 @@ describe('FormulaCopyService', () => {
 
     document.body.removeChild(msKatex);
   });
+
+  it('should wrap both inline and display formulas with double dollar signs in notion format', async () => {
+    const clipboard = navigator.clipboard as unknown as { write?: unknown };
+    clipboard.write = undefined;
+
+    resetSingleton();
+    service = FormulaCopyService.getInstance({ format: 'notion' });
+
+    const inlineMath = document.createElement('span');
+    inlineMath.setAttribute('data-math', 'x^2');
+    inlineMath.classList.add('math-inline');
+
+    const displayMath = document.createElement('span');
+    displayMath.setAttribute('data-math', 'E = mc^2');
+    displayMath.classList.add('math-block');
+
+    document.body.appendChild(inlineMath);
+    document.body.appendChild(displayMath);
+
+    service.initialize();
+
+    inlineMath.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    displayMath.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    expect(writeTextMock).toHaveBeenNthCalledWith(1, '$$x^2$$');
+    expect(writeTextMock).toHaveBeenNthCalledWith(2, '$$E = mc^2$$');
+
+    document.body.removeChild(inlineMath);
+    document.body.removeChild(displayMath);
+  });
 });

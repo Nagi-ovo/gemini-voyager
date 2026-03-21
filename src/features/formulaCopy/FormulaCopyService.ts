@@ -13,7 +13,7 @@ import type { ILogger } from '@/core/types/common';
 /**
  * Formula copy format options
  */
-export type FormulaCopyFormat = 'latex' | 'unicodemath' | 'no-dollar';
+export type FormulaCopyFormat = 'latex' | 'unicodemath' | 'no-dollar' | 'notion';
 
 /**
  * Configuration for the formula copy service
@@ -42,7 +42,12 @@ export class FormulaCopyService {
   >[0] = (changes, areaName) => {
     if (areaName === 'sync' && changes[StorageKeys.FORMULA_COPY_FORMAT]) {
       const newFormat = changes[StorageKeys.FORMULA_COPY_FORMAT].newValue as FormulaCopyFormat;
-      if (newFormat === 'latex' || newFormat === 'unicodemath' || newFormat === 'no-dollar') {
+      if (
+        newFormat === 'latex' ||
+        newFormat === 'unicodemath' ||
+        newFormat === 'no-dollar' ||
+        newFormat === 'notion'
+      ) {
         this.currentFormat = newFormat;
         this.logger.debug('Formula format changed', { format: newFormat });
       }
@@ -100,7 +105,12 @@ export class FormulaCopyService {
     try {
       const result = await browser.storage.sync.get(StorageKeys.FORMULA_COPY_FORMAT);
       const format = result[StorageKeys.FORMULA_COPY_FORMAT] as FormulaCopyFormat | undefined;
-      if (format === 'latex' || format === 'unicodemath' || format === 'no-dollar') {
+      if (
+        format === 'latex' ||
+        format === 'unicodemath' ||
+        format === 'no-dollar' ||
+        format === 'notion'
+      ) {
         this.currentFormat = format;
         this.logger.debug('Loaded formula format preference', { format });
       }
@@ -434,6 +444,12 @@ export class FormulaCopyService {
 
     if (this.currentFormat === 'no-dollar') {
       return { text: formula };
+    }
+
+    if (this.currentFormat === 'notion') {
+      // Notion format: always use $$ for both inline and display formulas
+      const wrapped = `$$${formula}$$`;
+      return { text: wrapped };
     }
 
     // Default: LaTeX format with delimiters
