@@ -507,20 +507,23 @@ function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
           // This allows focusin events to cancel the collapse if focus returns
           collapseTimer = window.setTimeout(() => {
             // Double-check: focus should truly be away from input-related elements
-            const active = document.activeElement;
+            const active = document.activeElement as HTMLElement;
             if (active && currentContainer.contains(active)) {
               return; // Focus came back, don't collapse
             }
 
             // Also check if the new focus is in an input-related overlay/menu
-            if (newFocus && isInputRelatedElement(newFocus, currentContainer)) {
+            if (
+              (newFocus && isInputRelatedElement(newFocus, currentContainer)) ||
+              (active && isInputRelatedElement(active, currentContainer))
+            ) {
               return; // Focus moved to input-related UI, don't collapse
             }
 
             // Now safe to collapse
             tryCollapse(currentContainer);
             collapseTimer = null;
-          }, 50); // 50ms delay - enough for focusin to cancel if needed
+          }, 100); // 100ms delay - enough for focusin to cancel if needed
         },
         { signal },
       );
@@ -614,11 +617,10 @@ function isInputRelatedElement(element: HTMLElement, container: HTMLElement): bo
     '[data-test-id*="file"]',
   ];
 
-  // Check if element matches any of the selectors
-  for (const selector of INPUT_RELATED_SELECTORS) {
-    if (element.matches(selector) || element.closest(selector)) {
-      return true;
-    }
+  // Combine selectors into a single string for better performance
+  const combinedSelector = INPUT_RELATED_SELECTORS.join(', ');
+  if (element.matches(combinedSelector) || element.closest(combinedSelector)) {
+    return true;
   }
 
   // Additional heuristic: check if element is within a reasonable proximity
