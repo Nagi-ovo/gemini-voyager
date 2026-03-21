@@ -281,6 +281,8 @@ Special thanks to all contributors for their contributions to Voyager ❤️
 
 - **[Ophel Atlas](https://github.com/urzeye/ophel)** - A browser extension that transforms AI conversations into organized, searchable documents with auto-generated outlines, conversation management, and prompt libraries across multiple AI platforms.
 
+- **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - An advanced browser extension supercharging Doubao with enhanced navigation, organization, and productivity features.
+
 ---
 
 <div align="center">

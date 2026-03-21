@@ -286,6 +286,8 @@ bun run build:all
 
 - **[Ophel Atlas](https://github.com/urzeye/ophel)** - 將 AI 對話轉化為有組織、可搜尋文件的瀏覽器擴充功能，支援自動生成大綱、對話管理和提示詞庫，相容多個 AI 平台。
 
+- **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - 為豆包提供增強導航、組織管理和生產力功能的瀏覽器擴充功能。
+
 ---
 
 <div align="center">

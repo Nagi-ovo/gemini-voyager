@@ -252,6 +252,8 @@ Voyager に貢献してくださったすべてのコントリビューターに
 
 - **[Ophel Atlas](https://github.com/urzeye/ophel)** - AI チャットを整理された検索可能なドキュメントに変換するブラウザ拡張機能。アウトラインの自動生成、会話管理、プロンプトライブラリを備え、複数の AI プラットフォームに対応しています。
 
+- **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - Doubao を強化するブラウザ拡張機能。ナビゲーション、整理、生産性機能を向上させます。
+
 ---
 
 <div align="center">

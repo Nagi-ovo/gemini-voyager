@@ -232,6 +232,8 @@ Un agradecimiento especial a todos los colaboradores por sus contribuciones a Vo
 
 - **[Ophel Atlas](https://github.com/urzeye/ophel)** - Una extensión de navegador que transforma las conversaciones de IA en documentos organizados y buscables, con esquemas autogenerados, gestión de conversaciones y biblioteca de prompts, compatible con múltiples plataformas de IA.
 
+- **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - Una extensión de navegador avanzada que potencia Doubao con navegación mejorada, organización y funciones de productividad.
+
 ---
 
 <div align="center">
