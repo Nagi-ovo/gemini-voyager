@@ -1,0 +1,55 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "346d68d8228d",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".github/README_AR.md",
+    ".github/README_ES.md",
+    ".github/README_FR.md",
+    ".github/README_JA.md",
+    ".github/README_KO.md",
+    ".github/README_PT.md",
+    ".github/README_RU.md",
+    ".github/README_ZH.md",
+    ".github/README_ZH_TW.md",
+    "README.md",
+    "docs/ar/guide/installation.md",
+    "docs/ar/index.md",
+    "docs/en/guide/installation.md",
+    "docs/en/index.md",
+    "docs/es/guide/installation.md",
+    "docs/es/index.md",
+    "docs/fr/guide/installation.md",
+    "docs/fr/index.md",
+    "docs/guide/installation.md",
+    "docs/index.md",
+    "docs/ja/guide/installation.md",
+    "docs/ja/index.md",
+    "docs/ko/guide/installation.md",
+    "docs/ko/index.md",
+    "docs/pt/guide/installation.md",
+    "docs/pt/index.md",
+    "docs/ru/guide/installation.md",
+    "docs/ru/index.md",
+    "docs/zh_TW/guide/installation.md",
+    "docs/zh_TW/index.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/34/6d68d8228d/0/metadata.json",
+      "transcript": "/34/6d68d8228d/0/full.jsonl",
+      "context": "/34/6d68d8228d/0/context.md",
+      "content_hash": "/34/6d68d8228d/0/content_hash.txt",
+      "prompt": "/34/6d68d8228d/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
