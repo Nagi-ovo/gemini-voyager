@@ -14,7 +14,7 @@
 
 **Chrome / Brave / Opera / Vivaldi:**
 
-[<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="التثبيت من سوق Chrome الإلكتروني" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ar)
+[<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="التثبيت من سوق Chrome الإلكتروني" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ar)
 
 ::: warning ⚠️ متجر Chrome الإلكتروني غير متاح مؤقتاً
 تمت إعادة تسمية الامتداد رسمياً إلى **Voyager** بسبب مخاوف العلامات التجارية. تحديث الاسم في Chrome Web Store لا يزال قيد المراجعة. اطلع على [هذا المنشور](https://x.com/Nag1ovo/status/2031561180213313944) للتفاصيل. استخدم **Edge / Firefox** أو **التثبيت اليدوي** في الوقت الحالي.

@@ -14,7 +14,7 @@
 
 **Chrome / Brave / Opera / Vivaldi：**
 
-[<img src="https://img.shields.io/badge/Chrome_应用店-前往下载-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 网上应用店安装" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=zh)
+[<img src="https://img.shields.io/badge/Chrome_应用店-前往下载-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 网上应用店安装" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=zh)
 
 ::: warning ⚠️ Chrome Web Store 暂时不可用
 由于商标版权问题插件正式改名为 **Voyager**，Chrome Web Store 审核仍在进行中，暂时无法使用。详情见[此帖](https://x.com/Nag1ovo/status/2031561180213313944)。请使用下方 **Edge / Firefox** 或**手动安装**。

@@ -14,7 +14,7 @@ La façon la plus simple de commencer. Les mises à jour sont automatiques.
 
 **Chrome / Brave / Opera / Vivaldi :**
 
-[<img src="https://img.shields.io/badge/Chrome_Web_Store-Télécharger-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Installer depuis le Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=fr)
+[<img src="https://img.shields.io/badge/Chrome_Web_Store-Télécharger-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Installer depuis le Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=fr)
 
 ::: warning ⚠️ Chrome Web Store temporairement indisponible
 L'extension a été officiellement renommée **Voyager** en raison de problèmes de marque. La mise à jour du nom sur le Chrome Web Store est en attente de validation. Voir [ce post](https://x.com/Nag1ovo/status/2031561180213313944) pour les détails. Utilisez **Edge / Firefox** ou l'**installation manuelle** en attendant.
