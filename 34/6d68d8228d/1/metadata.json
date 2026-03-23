@@ -1,7 +1,9 @@
 {
   "cli_version": "0.4.8",
   "checkpoint_id": "346d68d8228d",
+  "session_id": "26c5f8f0-aab7-4efa-a9cb-eb17c30e5382",
   "strategy": "manual-commit",
+  "created_at": "2026-03-23T08:45:56.691805Z",
   "branch": "main",
   "checkpoints_count": 0,
   "files_touched": [
@@ -36,27 +38,24 @@
     "docs/zh_TW/guide/installation.md",
     "docs/zh_TW/index.md"
   ],
-  "sessions": [
-    {
-      "metadata": "/34/6d68d8228d/0/metadata.json",
-      "transcript": "/34/6d68d8228d/0/full.jsonl",
-      "context": "/34/6d68d8228d/0/context.md",
-      "content_hash": "/34/6d68d8228d/0/content_hash.txt",
-      "prompt": "/34/6d68d8228d/0/prompt.txt"
-    },
-    {
-      "metadata": "/34/6d68d8228d/1/metadata.json",
-      "transcript": "/34/6d68d8228d/1/full.jsonl",
-      "context": "/34/6d68d8228d/1/context.md",
-      "content_hash": "/34/6d68d8228d/1/content_hash.txt",
-      "prompt": "/34/6d68d8228d/1/prompt.txt"
-    }
-  ],
+  "agent": "Claude Code",
+  "turn_id": "fe09d375f75c",
+  "checkpoint_transcript_start": 45,
+  "transcript_lines_at_start": 45,
   "token_usage": {
     "input_tokens": 16,
     "cache_creation_tokens": 15211,
     "cache_read_tokens": 495091,
     "output_tokens": 3387,
     "api_call_count": 14
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-23T08:45:56.596538Z",
+    "agent_lines": 21,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 21,
+    "agent_percentage": 100
   }
 }

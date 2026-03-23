@@ -1,0 +1,20 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi\
+更新所有有需要的地方然后直接 push,这是我这个插件的新 ID，不是 Direct URL。之前那个老的插件 ID 被下架了，这是新的。
+
+### Prompt 2
+
+Chrome Web Store 暂时不可用
+
+由于商标版权问题插件正式改名为 Voyager，Chrome Web Store 审核仍在进行中，暂时无法使用。详情见此帖。请使用下方 Edge / Firefox 或手动安装。\
+这个所有语言的是不是也可以去掉了？
+然后你把这些也都 push 上去。
+
+你就不用管我了，我要去睡觉了。
+然后你可以去 GitHub issue 里面看一下，我是不是发过一个 issue 说明这个东西下架了。你可以在里面更新一下，就是在后面回复一条，说这个已经回归了。
+
