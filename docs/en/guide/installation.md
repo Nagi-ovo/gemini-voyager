@@ -16,10 +16,6 @@ The simplest way to get started. Updates are automatic.
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=en)
 
-::: warning ⚠️ Chrome Web Store temporarily unavailable
-The extension has been officially renamed to **Voyager** due to trademark concerns. The Chrome Web Store name update is pending review. See [this post](https://x.com/Nag1ovo/status/2031561180213313944) for details. Please use **Edge / Firefox** or **manual installation** in the meantime.
-:::
-
 **Microsoft Edge:**
 
 [<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Install from Microsoft Edge Add-ons" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)

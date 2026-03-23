@@ -58,9 +58,6 @@
   <b>🎉 ¡Altamente recomendado por los principales influencers tecnológicos!</b>
 </p>
 
-> [!IMPORTANT]
-> **Aviso de cambio de nombre**: Debido a problemas de marcas y derechos de autor, esta extensión ha sido renombrada oficialmente a **Voyager**. Sin embargo, debido a la lentitud del proceso de revisión de Chrome Web Store, el cambio de nombre no fue aprobado en 7 días — está temporalmente no disponible en Chrome Web Store.
-
 > [!NOTE]
 > Si Voyager te resulta útil, compártelo en X, Reddit, YouTube, etc. Cada difusión ayuda a que más personas descubran el proyecto y mejoren la experiencia con Gemini. Gracias.
 

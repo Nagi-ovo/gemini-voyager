@@ -79,12 +79,6 @@ features:
     details: 思考を解き明かす。Deep Research の研究過程とリンクを抽出。
 ---
 
-<div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
-  <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.6); border-radius: 8px; padding: 12px 16px;">
-    <strong>⚠️ 名称変更のお知らせ</strong>：商標・著作権上の問題により、本拡張機能は正式に <strong>Voyager</strong> へ改名されました。ただし、Chrome ウェブストアの審査が非常に遅いため、7 日以内に名称変更が承認されず、現在 Chrome Web Store では一時的にご利用いただけない状態です。
-  </div>
-</div>
-
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">すべてのダウンロードは、信頼の証</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Chrome ウェブストアと GitHub からのリアルタイムデータ。共に歩んでくれるすべての Voyager に敬意を表します。</p>

@@ -79,12 +79,6 @@ features:
     details: 拆开黑箱。一键提取 Deep Research 的思考过程与研究链接。
 ---
 
-<div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
-  <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.6); border-radius: 8px; padding: 12px 16px;">
-    <strong>⚠️ 改名公告</strong>：由于商标版权问题，本插件已正式改名为 <strong>Voyager</strong>。但由于谷歌插件商店审核速度奇慢，七天内未能完成名称更新审核，暂时无法在 Chrome Web Store 使用。
-  </div>
-</div>
-
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">每一次下载，都是信任的刻度</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">来自 Chrome Web Store 与 GitHub 的实时数据。致敬每一位与我们同行的 Voyager。</p>

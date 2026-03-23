@@ -79,12 +79,6 @@ features:
     details: Ouvrez la boîte noire. Extrayez les processus de recherche et liens des sessions Deep Research.
 ---
 
-<div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
-  <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.6); border-radius: 8px; padding: 12px 16px;">
-    <strong>⚠️ Avis de changement de nom</strong> : En raison de problèmes de marque et de droits d'auteur, cette extension a été officiellement renommée <strong>Voyager</strong>. Cependant, en raison de la lenteur extrême du processus de révision du Chrome Web Store, le changement de nom n'a pas été approuvé dans les 7 jours — elle est temporairement indisponible sur le Chrome Web Store.
-  </div>
-</div>
-
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Chaque installation est un vote de confiance</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Données en direct du Chrome Web Store et GitHub. Merci de voyager avec nous.</p>

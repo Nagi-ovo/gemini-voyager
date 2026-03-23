@@ -58,9 +58,6 @@
   <b>🎉 感謝知名科技圈大 V 與社區的強烈推薦！</b>
 </p>
 
-> [!IMPORTANT]
-> **改名公告**：由於商標版權問題，本插件已正式改名為 **Voyager**。但由於 Chrome Web Store 審核速度極慢，七天內未能完成名稱更新審核，暫時無法在 Chrome Web Store 使用。
-
 > [!NOTE]
 > 如果 Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案，從而改善 Gemini 的使用體驗。謝謝。
 

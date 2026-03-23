@@ -79,12 +79,6 @@ features:
     details: Unbox the thinking. Extract research processes and links from Deep Research sessions.
 ---
 
-<div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
-  <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.6); border-radius: 8px; padding: 12px 16px;">
-    <strong>⚠️ Name Change Notice</strong>: Due to trademark and copyright concerns, this extension has been officially renamed to <strong>Voyager</strong>. However, due to the Chrome Web Store's extremely slow review process, the name change was not approved within 7 days — it is temporarily unavailable on the Chrome Web Store.
-  </div>
-</div>
-
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Every install is a vote of trust</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Live numbers from Chrome Web Store and GitHub. Thanks for riding with us, fellow Voyagers.</p>

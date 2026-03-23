@@ -79,12 +79,6 @@ features:
     details: Abre la caja negra. Extrae procesos de pensamiento y enlaces de las sesiones de Deep Research.
 ---
 
-<div class="vp-doc" style="margin: 2rem auto 0; max-width: 780px; padding: 0 16px;">
-  <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.6); border-radius: 8px; padding: 12px 16px;">
-    <strong>⚠️ Aviso de cambio de nombre</strong>: Debido a problemas de marcas y derechos de autor, esta extensión ha sido renombrada oficialmente a <strong>Voyager</strong>. Sin embargo, debido a la lentitud del proceso de revisión de Chrome Web Store, el cambio de nombre no fue aprobado en 7 días — está temporalmente no disponible en Chrome Web Store.
-  </div>
-</div>
-
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Cada descarga es una medida de confianza</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Datos en tiempo real de Chrome Web Store y GitHub. Un tributo a cada Voyager que viaja con nosotros.</p>
