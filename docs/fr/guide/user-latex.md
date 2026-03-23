@@ -38,5 +38,5 @@ Lorsque vous utilisez la syntaxe LaTeX dans le chat Gemini™ (par ex. `$E=mc^2$
   :::
 
 <div align="center">
-  <img src="/assets/user-latex-preview.png" alt="Rendu LaTeX des messages utilisateur" style="max-width: 100%; border-radius: 8px;"/>
+  <img src="/assets/input-latex.png" alt="Rendu LaTeX des messages utilisateur" style="max-width: 100%; border-radius: 8px;"/>
 </div>

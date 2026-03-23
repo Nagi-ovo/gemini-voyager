@@ -38,5 +38,5 @@
   :::
 
 <div align="center">
-  <img src="/assets/user-latex-preview.png" alt="使用者訊息 LaTeX 渲染" style="max-width: 100%; border-radius: 8px;"/>
+  <img src="/assets/input-latex.png" alt="使用者訊息 LaTeX 渲染" style="max-width: 100%; border-radius: 8px;"/>
 </div>

@@ -38,5 +38,5 @@
   :::
 
 <div align="center">
-  <img src="/assets/user-latex-preview.png" alt="عرض LaTeX في رسائل المستخدم" style="max-width: 100%; border-radius: 8px;"/>
+  <img src="/assets/input-latex.png" alt="عرض LaTeX في رسائل المستخدم" style="max-width: 100%; border-radius: 8px;"/>
 </div>

@@ -38,5 +38,5 @@ Gemini™ のチャット入力で LaTeX 構文（例：`$E=mc^2$` や `$$\int_0
   :::
 
 <div align="center">
-  <img src="/assets/user-latex-preview.png" alt="ユーザーメッセージの LaTeX レンダリング" style="max-width: 100%; border-radius: 8px;"/>
+  <img src="/assets/input-latex.png" alt="ユーザーメッセージの LaTeX レンダリング" style="max-width: 100%; border-radius: 8px;"/>
 </div>

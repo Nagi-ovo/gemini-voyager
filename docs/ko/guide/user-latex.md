@@ -38,5 +38,5 @@ Gemini™ 채팅에서 LaTeX 구문(예: `$E=mc^2$` 또는 `$$\int_0^1 x^2 dx$$`
   :::
 
 <div align="center">
-  <img src="/assets/user-latex-preview.png" alt="사용자 메시지 LaTeX 렌더링" style="max-width: 100%; border-radius: 8px;"/>
+  <img src="/assets/input-latex.png" alt="사용자 메시지 LaTeX 렌더링" style="max-width: 100%; border-radius: 8px;"/>
 </div>
