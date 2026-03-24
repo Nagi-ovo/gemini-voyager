@@ -11,16 +11,29 @@
  */
 import katex from 'katex';
 
-const LOG_TAG = '[userLatex]';
-
 /** Selector for user message text paragraph elements. */
 const USER_MSG_SELECTOR = 'p.query-text-line';
 
 type Segment = { kind: 'text'; value: string } | { kind: 'math'; value: string; display: boolean };
 
 /**
+ * Check if a character is a word character (alphanumeric) that would
+ * indicate a non-LaTeX context (e.g. currency like $5).
+ */
+function isWordChar(ch: string | undefined): boolean {
+  if (!ch) return false;
+  return /\w/.test(ch);
+}
+
+/**
  * Split text into plain-text and LaTeX ($$...$$, $...$) segments.
  * Display math ($$) takes priority over inline ($).
+ *
+ * For inline math ($...$), we require:
+ * - The opening $ must NOT be followed by a digit (to avoid matching $5, $3 etc.)
+ * - The closing $ must NOT be preceded by a digit that follows a non-math pattern
+ * - The content between delimiters must contain at least one non-digit character
+ *   (pure numbers like $5$ are likely currency, not math)
  */
 export function parseSegments(text: string): Segment[] {
   const out: Segment[] = [];
@@ -35,11 +48,43 @@ export function parseSegments(text: string): Segment[] {
 
     const display = text[i + 1] === '$';
     const openLen = display ? 2 : 1;
-    const closeStr = display ? '$$' : '$';
-    const closeIdx = text.indexOf(closeStr, i + openLen);
+
+    // For inline math: skip if $ is immediately followed by a digit (likely currency)
+    if (!display && isWordChar(text[i + 1])) {
+      i++;
+      continue;
+    }
+
+    // For inline math, find a standalone $ (not part of $$)
+    let closeIdx: number;
+    if (display) {
+      closeIdx = text.indexOf('$$', i + openLen);
+    } else {
+      closeIdx = -1;
+      let search = i + openLen;
+      while (search < text.length) {
+        const idx = text.indexOf('$', search);
+        if (idx === -1) break;
+        // Skip if this $ is part of a $$ sequence
+        if (text[idx + 1] === '$' || (idx > 0 && text[idx - 1] === '$')) {
+          search = idx + 1;
+          continue;
+        }
+        closeIdx = idx;
+        break;
+      }
+    }
 
     if (closeIdx === -1) {
       // No closing delimiter — treat this $ as plain text and move on
+      i++;
+      continue;
+    }
+
+    const mathValue = text.slice(i + openLen, closeIdx);
+
+    // For inline math: skip if content is empty or purely numeric (likely currency)
+    if (!display && (!mathValue.trim() || /^\d+([.,]\d+)?$/.test(mathValue.trim()))) {
       i++;
       continue;
     }
@@ -49,10 +94,9 @@ export function parseSegments(text: string): Segment[] {
       out.push({ kind: 'text', value: text.slice(textStart, i) });
     }
 
-    const mathValue = text.slice(i + openLen, closeIdx);
     out.push({ kind: 'math', value: mathValue, display });
 
-    i = closeIdx + closeStr.length;
+    i = closeIdx + openLen;
     textStart = i;
   }
 
@@ -86,8 +130,6 @@ function processElement(el: HTMLElement): void {
     return;
   }
 
-  console.log(`${LOG_TAG} found element with LaTeX:`, raw.slice(0, 100));
-
   const frag = document.createDocumentFragment();
 
   for (const seg of segments) {
@@ -102,14 +144,9 @@ function processElement(el: HTMLElement): void {
           throwOnError: false,
           output: 'html',
         });
-        console.log(
-          `${LOG_TAG} rendered ${seg.display ? 'display' : 'inline'} math:`,
-          seg.value.slice(0, 60),
-        );
       } catch {
         // Fallback: show original delimiters
         span.textContent = seg.display ? `$$${seg.value}$$` : `$${seg.value}$`;
-        console.warn(`${LOG_TAG} KaTeX render failed for:`, seg.value.slice(0, 60));
       }
       frag.appendChild(span);
     }
@@ -133,8 +170,6 @@ let observer: MutationObserver | null = null;
  * Processes existing messages immediately and watches for new ones.
  */
 export function startUserLatex(): void {
-  console.log(`${LOG_TAG} observer started`);
-
   // Process messages already on the page
   processAll();
 
