@@ -1,0 +1,23 @@
+检查一下，在 issue、相关的 contributing 以及 issue 模板里提一下：
+
+我个人觉得 Voyager 的功能已经足够充分且全面。引入过多过于个性化、小众的功能，并不会让软件更好用，反而会增加更大的维护负担。因此，除非你觉得这个功能真的是急需，且确实是大家都会用到的，否则不建议再发这个 feature request。
+
+此外，请把 GitHub Action 里的自动 stale 并且关闭的那个 action 改一下。不要改它是不是两周，而是把 close as completed 改成 close as not planned。
+
+---
+
+当前检测 bad issue 的逻辑好像有点错误。
+
+现在除了版本检测之外，如果是默认配置，其他的检测基本相当于没有。
+
+---
+
+算了，你这个太严格了，去掉吧,能不能加一个功能？就是说如果那个人的 issue（或者是 issue 里的 bug report 或 issue request）没有写标题，只留了一个方括号和那个预设的内容，你就给他贴一个标签，或者是帮他起个标题之类的。
+
+---
+
+push,然后请在最新的 release 里的 installation 部分加上已经有的 Chrome 图标。
+
+你可以从 1.3.5 或之前的版本里找到，但这个 URL（即插件的 item ID）全都改了。请同步一下最新的 ID，你可以直接在 package 里找到并全部修改一下。
+
+麻烦了。
