@@ -17,12 +17,11 @@ const USER_MSG_SELECTOR = 'p.query-text-line';
 type Segment = { kind: 'text'; value: string } | { kind: 'math'; value: string; display: boolean };
 
 /**
- * Check if a character is a word character (alphanumeric) that would
- * indicate a non-LaTeX context (e.g. currency like $5).
+ * Check if a character is a digit, indicating a currency context (e.g. $5).
  */
-function isWordChar(ch: string | undefined): boolean {
+function isDigit(ch: string | undefined): boolean {
   if (!ch) return false;
-  return /\w/.test(ch);
+  return /\d/.test(ch);
 }
 
 /**
@@ -50,7 +49,7 @@ export function parseSegments(text: string): Segment[] {
     const openLen = display ? 2 : 1;
 
     // For inline math: skip if $ is immediately followed by a digit (likely currency)
-    if (!display && isWordChar(text[i + 1])) {
+    if (!display && isDigit(text[i + 1])) {
       i++;
       continue;
     }
