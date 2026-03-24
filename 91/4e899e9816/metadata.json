@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "914e899e9816",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".github/CONTRIBUTING.md",
+    ".github/CONTRIBUTING_ES.md",
+    ".github/CONTRIBUTING_FR.md",
+    ".github/CONTRIBUTING_JA.md",
+    ".github/ISSUE_TEMPLATE/feature_request.yml",
+    ".github/workflows/issue-validator.yml",
+    ".github/workflows/stale.yml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/91/4e899e9816/0/metadata.json",
+      "transcript": "/91/4e899e9816/0/full.jsonl",
+      "context": "/91/4e899e9816/0/context.md",
+      "content_hash": "/91/4e899e9816/0/content_hash.txt",
+      "prompt": "/91/4e899e9816/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
