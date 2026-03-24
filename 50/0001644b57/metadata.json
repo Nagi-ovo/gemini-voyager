@@ -3,7 +3,7 @@
   "checkpoint_id": "500001644b57",
   "strategy": "manual-commit",
   "branch": "feat/user-latex-rendering",
-  "checkpoints_count": 0,
+  "checkpoints_count": 1,
   "files_touched": [
     "src/features/export/services/DOMContentExtractor.ts",
     "src/pages/content/timeline/manager.ts",
@@ -17,13 +17,20 @@
       "context": "/50/0001644b57/0/context.md",
       "content_hash": "/50/0001644b57/0/content_hash.txt",
       "prompt": "/50/0001644b57/0/prompt.txt"
+    },
+    {
+      "metadata": "/50/0001644b57/1/metadata.json",
+      "transcript": "/50/0001644b57/1/full.jsonl",
+      "context": "/50/0001644b57/1/context.md",
+      "content_hash": "/50/0001644b57/1/content_hash.txt",
+      "prompt": "/50/0001644b57/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 0,
-    "cache_creation_tokens": 0,
-    "cache_read_tokens": 0,
-    "output_tokens": 0,
-    "api_call_count": 0
+    "input_tokens": 222,
+    "cache_creation_tokens": 472302,
+    "cache_read_tokens": 10349245,
+    "output_tokens": 45020,
+    "api_call_count": 126
   }
 }

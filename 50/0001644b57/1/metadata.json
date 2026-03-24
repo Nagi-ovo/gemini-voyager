@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "500001644b57",
+  "session_id": "7ebc7e67-2150-4cb9-90fc-8516220f3440",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-24T11:52:22.683001Z",
+  "branch": "feat/user-latex-rendering",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/pages/content/userLatex/__tests__/parseSegments.test.ts",
+    "src/pages/content/userLatex/index.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "72618afce771",
+  "token_usage": {
+    "input_tokens": 222,
+    "cache_creation_tokens": 472302,
+    "cache_read_tokens": 10349245,
+    "output_tokens": 45020,
+    "api_call_count": 126
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-24T11:52:22.428342Z",
+    "agent_lines": 64,
+    "human_added": 29,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 93,
+    "agent_percentage": 68.81720430107528
+  }
+}
