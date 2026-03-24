@@ -6,6 +6,14 @@ body:
   - type: markdown
     attributes:
       value: |
+        ### 📢 关于 Feature Request | About Feature Requests
+
+        **我们认为 Voyager 的功能已经足够充分且全面。** 引入过多个性化、小众的功能不会让软件更好用，反而会增加维护负担。因此，**除非你认为这个功能确实是急需的、大多数用户都会用到的，否则不建议提交 Feature Request。**
+
+        **We believe Voyager's feature set is already comprehensive and well-rounded.** Adding too many niche or overly personalized features does not make the software better — it only increases the maintenance burden. Therefore, **unless you believe this feature is truly essential and would benefit the majority of users, please reconsider submitting this request.**
+
+        ---
+
         ### ⚠️ 项目维护状态 | Maintenance Status
 
         **本项目目前处于低频维护模式。 | This project is currently in Low Maintenance mode.**

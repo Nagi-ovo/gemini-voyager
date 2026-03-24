@@ -263,6 +263,9 @@ Voyager améliore l'expérience de chat Gemini AI avec :
 - Exportation de chat
 - Personnalisation de l'interface utilisateur
 
+> [!NOTE]
+> **Nous considérons que l'ensemble des fonctionnalités de Voyager est déjà complet et suffisant.** Ajouter trop de fonctionnalités de niche ou trop personnalisées n'améliore pas le logiciel — cela ne fait qu'alourdir la charge de maintenance. À moins que vous ne considériez qu'une fonctionnalité est véritablement essentielle et bénéficierait à la majorité des utilisateurs, veuillez reconsidérer votre Feature Request.
+
 **Hors de portée** : Scraping de site, interception réseau, automatisation de compte.
 
 ---

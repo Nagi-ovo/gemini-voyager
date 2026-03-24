@@ -256,6 +256,9 @@ Voyager 通过以下功能增强 Gemini AI 聊天体验：
 - 聊天导出
 - UI 自定义
 
+> [!NOTE]
+> **我们认为 Voyager 的功能已经足够充分且全面。** 引入过多个性化、小众的功能不会让软件更好用，反而会增加维护负担。除非你认为某个功能确实是急需的、大多数用户都会用到的，否则不建议提交 Feature Request。
+
 **不在范围内**：网站爬取、网络拦截、账户自动化。
 
 ---
@@ -540,6 +543,9 @@ Voyager enhances the Gemini AI chat experience with:
 - Prompt vault
 - Chat export
 - UI customization
+
+> [!NOTE]
+> **We believe Voyager's feature set is already comprehensive and well-rounded.** Adding too many niche or overly personalized features does not make the software better — it only increases the maintenance burden. Unless you believe a feature is truly essential and would benefit the majority of users, please reconsider submitting a Feature Request.
 
 **Out of scope**: Site scraping, network interception, account automation.
 
