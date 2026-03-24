@@ -968,6 +968,11 @@ export class TimelineManager {
       // Remove extension-injected UI elements (e.g. fork button)
       clone.querySelectorAll(INJECTED_UI_SELECTOR).forEach((el) => el.remove());
 
+      // Restore original text for LaTeX-rendered elements
+      clone.querySelectorAll<HTMLElement>('[data-user-latex-original]').forEach((el) => {
+        el.textContent = el.dataset.userLatexOriginal ?? '';
+      });
+
       return this.normalizeText(clone.textContent || '');
     } catch {
       return this.normalizeText(element.textContent || '');

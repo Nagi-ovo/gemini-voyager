@@ -34,6 +34,7 @@ import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
+import { startUserLatex } from './userLatex/index';
 import { startRainEffect, startSakuraEffect, startSnowEffect } from './visualEffects';
 import { startWatermarkRemover } from './watermarkRemover/index';
 
@@ -276,6 +277,10 @@ async function initializeFeatures(): Promise<void> {
     if (location.hostname === 'gemini.google.com') {
       // Initialize Mermaid rendering (lightweight)
       startMermaid();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Initialize user message LaTeX rendering
+      startUserLatex();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
