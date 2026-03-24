@@ -84,6 +84,22 @@ describe('parseSegments', () => {
       const result = parseSegments('$3.50$');
       expect(result).toEqual([{ kind: 'text', value: '$3.50$' }]);
     });
+
+    it('does not corrupt parsing after a skipped currency span', () => {
+      const result = parseSegments('$5$ and $x$');
+      expect(result).toEqual([
+        { kind: 'text', value: '$5$ and ' },
+        { kind: 'math', value: 'x', display: false },
+      ]);
+    });
+
+    it('handles multiple currency spans followed by real math', () => {
+      const result = parseSegments('$10 and $20 then $E=mc^2$');
+      expect(result).toEqual([
+        { kind: 'text', value: '$10 and $20 then ' },
+        { kind: 'math', value: 'E=mc^2', display: false },
+      ]);
+    });
   });
 
   describe('edge cases', () => {

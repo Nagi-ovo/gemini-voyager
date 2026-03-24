@@ -48,17 +48,20 @@ export function parseSegments(text: string): Segment[] {
     const display = text[i + 1] === '$';
     const openLen = display ? 2 : 1;
 
-    // For inline math: skip if $ is immediately followed by a digit (likely currency)
-    if (!display && isDigit(text[i + 1])) {
-      i++;
-      continue;
-    }
-
-    // For inline math, find a standalone $ (not part of $$)
+    // For inline math, find the closing delimiter
     let closeIdx: number;
     if (display) {
       closeIdx = text.indexOf('$$', i + openLen);
     } else {
+      // For inline math: skip if $ is immediately followed by a digit (likely currency)
+      if (isDigit(text[i + 1])) {
+        // Find the closing $ and skip past it to avoid corrupting later parsing
+        const skipClose = text.indexOf('$', i + 1);
+        i = skipClose !== -1 ? skipClose + 1 : i + 1;
+        continue;
+      }
+
+      // Find a standalone $ (not part of $$)
       closeIdx = -1;
       let search = i + openLen;
       while (search < text.length) {
@@ -83,8 +86,9 @@ export function parseSegments(text: string): Segment[] {
     const mathValue = text.slice(i + openLen, closeIdx);
 
     // For inline math: skip if content is empty or purely numeric (likely currency)
+    // Advance past the closing $ to avoid corrupting later parsing
     if (!display && (!mathValue.trim() || /^\d+([.,]\d+)?$/.test(mathValue.trim()))) {
-      i++;
+      i = closeIdx + 1;
       continue;
     }
 
