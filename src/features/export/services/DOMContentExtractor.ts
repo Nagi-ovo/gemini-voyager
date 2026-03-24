@@ -64,7 +64,9 @@ export class DOMContentExtractor {
     const textLines = element.querySelectorAll('.query-text-line');
     const textParts: string[] = [];
     textLines.forEach((line) => {
-      const text = this.normalizeText(line.textContent || '');
+      const el = line as HTMLElement;
+      const raw = el.dataset?.userLatexOriginal ?? line.textContent ?? '';
+      const text = this.normalizeText(raw);
       if (text) textParts.push(text);
     });
     result.text = textParts.join('\n');

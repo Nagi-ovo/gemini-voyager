@@ -100,6 +100,19 @@ describe('parseSegments', () => {
       expect(result).toEqual([{ kind: 'text', value: '$3.50$' }]);
     });
 
+    it('skips $100K as currency', () => {
+      const result = parseSegments('Worth $100K today');
+      expect(result).toEqual([{ kind: 'text', value: 'Worth $100K today' }]);
+    });
+
+    it('skips $5M followed by real math', () => {
+      const result = parseSegments('Revenue $5M and $x^2$');
+      expect(result).toEqual([
+        { kind: 'text', value: 'Revenue $5M and ' },
+        { kind: 'math', value: 'x^2', display: false },
+      ]);
+    });
+
     it('does not corrupt parsing after a skipped currency span', () => {
       const result = parseSegments('$5$ and $x$');
       expect(result).toEqual([

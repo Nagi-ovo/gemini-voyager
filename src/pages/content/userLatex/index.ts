@@ -38,6 +38,14 @@ function tryCurrencySkip(text: string, i: number): number {
   // $5$ pattern — closing $ followed by non-$
   if (next === '$' && text[j + 1] !== '$') return j + 1;
 
+  // Common currency suffixes: $100K, $5M, $2B, $5m, $1k, $3T
+  // Accept if a single letter suffix is followed by a word boundary
+  if (next && /[KkMmBbTt]/.test(next)) {
+    const afterSuffix = text[j + 1] as string | undefined;
+    if (afterSuffix === undefined || /[\s,;:!?)}\]]/.test(afterSuffix)) return j + 1;
+    if (afterSuffix === '$' && text[j + 2] !== '$') return j + 2;
+  }
+
   // Followed by a letter/operator/backslash → likely math (e.g. $2x+1$, $10^2$)
   return -1;
 }
