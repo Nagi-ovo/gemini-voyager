@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "575c0ef73758",
+  "strategy": "manual-commit",
+  "branch": "feat/user-latex-rendering",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/pages/content/userLatex/__tests__/parseSegments.test.ts",
+    "src/pages/content/userLatex/index.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/57/5c0ef73758/0/metadata.json",
+      "transcript": "/57/5c0ef73758/0/full.jsonl",
+      "context": "/57/5c0ef73758/0/context.md",
+      "content_hash": "/57/5c0ef73758/0/content_hash.txt",
+      "prompt": "/57/5c0ef73758/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
