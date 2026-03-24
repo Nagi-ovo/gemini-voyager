@@ -17,22 +17,39 @@ const USER_MSG_SELECTOR = 'p.query-text-line';
 type Segment = { kind: 'text'; value: string } | { kind: 'math'; value: string; display: boolean };
 
 /**
- * Check if a character is a digit, indicating a currency context (e.g. $5).
+ * Detect a currency-like pattern starting at position i (the `$`).
+ * Matches: $5, $3.50, $1,000, $100K — i.e. $ followed by digits (with
+ * optional comma/period grouping) and then a word boundary (space, end,
+ * punctuation, or closing $).
+ *
+ * Returns the index to resume scanning from, or -1 if not currency.
  */
-function isDigit(ch: string | undefined): boolean {
-  if (!ch) return false;
-  return /\d/.test(ch);
+function tryCurrencySkip(text: string, i: number): number {
+  let j = i + 1;
+  if (j >= text.length || !/\d/.test(text[j])) return -1;
+
+  // Consume digits, commas, periods (e.g. 1,000.50)
+  while (j < text.length && /[\d,.]/.test(text[j])) j++;
+
+  // After the numeric part, check what follows:
+  const next = text[j] as string | undefined;
+  // Currency if followed by: end of string, space, punctuation, or closing $
+  if (next === undefined || /[\s,;:!?)}\]]/.test(next)) return j;
+  // $5$ pattern — closing $ followed by non-$
+  if (next === '$' && text[j + 1] !== '$') return j + 1;
+
+  // Followed by a letter/operator/backslash → likely math (e.g. $2x+1$, $10^2$)
+  return -1;
 }
 
 /**
  * Split text into plain-text and LaTeX ($$...$$, $...$) segments.
  * Display math ($$) takes priority over inline ($).
  *
- * For inline math ($...$), we require:
- * - The opening $ must NOT be followed by a digit (to avoid matching $5, $3 etc.)
- * - The closing $ must NOT be preceded by a digit that follows a non-math pattern
- * - The content between delimiters must contain at least one non-digit character
- *   (pure numbers like $5$ are likely currency, not math)
+ * Currency amounts ($5, $3.50, $1,000) are detected by lookahead after
+ * the digit sequence. Math that starts with digits ($2x+1$, $10^2$) is
+ * correctly parsed because the digit sequence is followed by a non-boundary
+ * character.
  */
 export function parseSegments(text: string): Segment[] {
   const out: Segment[] = [];
@@ -48,27 +65,20 @@ export function parseSegments(text: string): Segment[] {
     const display = text[i + 1] === '$';
     const openLen = display ? 2 : 1;
 
-    // For inline math, find the closing delimiter
+    // For inline $, try to detect currency patterns before searching for closing $
+    if (!display) {
+      const skipTo = tryCurrencySkip(text, i);
+      if (skipTo !== -1) {
+        i = skipTo;
+        continue;
+      }
+    }
+
+    // Find the closing delimiter
     let closeIdx: number;
     if (display) {
       closeIdx = text.indexOf('$$', i + openLen);
     } else {
-      // For inline math: skip if $ is immediately followed by a digit (likely currency)
-      if (isDigit(text[i + 1])) {
-        // Skip currency-like $N / $N.NN / $N,NNN patterns without consuming
-        // later math openers elsewhere in the string.
-        let j = i + 1;
-        while (j < text.length && /[\d,.]/.test(text[j])) {
-          j++;
-        }
-        // Handle paired currency token like $5$
-        if (text[j] === '$') {
-          j++;
-        }
-        i = j;
-        continue;
-      }
-
       // Find a standalone $ (not part of $$)
       closeIdx = -1;
       let search = i + openLen;
@@ -93,9 +103,8 @@ export function parseSegments(text: string): Segment[] {
 
     const mathValue = text.slice(i + openLen, closeIdx);
 
-    // For inline math: skip if content is empty or purely numeric (likely currency)
-    // Advance past the closing $ to avoid corrupting later parsing
-    if (!display && (!mathValue.trim() || /^\d+([.,]\d+)?$/.test(mathValue.trim()))) {
+    // Skip empty content
+    if (!display && !mathValue.trim()) {
       i = closeIdx + 1;
       continue;
     }
@@ -163,6 +172,8 @@ function processElement(el: HTMLElement): void {
     }
   }
 
+  // Preserve original text for downstream features (export, timeline)
+  el.dataset.userLatexOriginal = raw;
   // Replace element content with rendered output
   el.textContent = '';
   el.appendChild(frag);

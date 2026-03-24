@@ -46,6 +46,21 @@ describe('parseSegments', () => {
         { kind: 'math', value: 'b', display: false },
       ]);
     });
+
+    it('parses digit-leading math like $2x+1$', () => {
+      const result = parseSegments('$2x+1$');
+      expect(result).toEqual([{ kind: 'math', value: '2x+1', display: false }]);
+    });
+
+    it('parses $10^2$ as math (not currency)', () => {
+      const result = parseSegments('$10^2$');
+      expect(result).toEqual([{ kind: 'math', value: '10^2', display: false }]);
+    });
+
+    it('parses $3\\times 4$ as math', () => {
+      const result = parseSegments('$3\\times 4$');
+      expect(result).toEqual([{ kind: 'math', value: '3\\times 4', display: false }]);
+    });
   });
 
   describe('display math ($$...$$)', () => {
