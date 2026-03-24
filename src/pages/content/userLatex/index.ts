@@ -55,9 +55,17 @@ export function parseSegments(text: string): Segment[] {
     } else {
       // For inline math: skip if $ is immediately followed by a digit (likely currency)
       if (isDigit(text[i + 1])) {
-        // Find the closing $ and skip past it to avoid corrupting later parsing
-        const skipClose = text.indexOf('$', i + 1);
-        i = skipClose !== -1 ? skipClose + 1 : i + 1;
+        // Skip currency-like $N / $N.NN / $N,NNN patterns without consuming
+        // later math openers elsewhere in the string.
+        let j = i + 1;
+        while (j < text.length && /[\d,.]/.test(text[j])) {
+          j++;
+        }
+        // Handle paired currency token like $5$
+        if (text[j] === '$') {
+          j++;
+        }
+        i = j;
         continue;
       }
 

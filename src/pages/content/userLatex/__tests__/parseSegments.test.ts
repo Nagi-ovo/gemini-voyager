@@ -100,6 +100,15 @@ describe('parseSegments', () => {
         { kind: 'math', value: 'E=mc^2', display: false },
       ]);
     });
+
+    it('preserves later math after standalone currency token', () => {
+      const result = parseSegments('I have $5 and the equation $E=mc^2$ is cool');
+      expect(result).toEqual([
+        { kind: 'text', value: 'I have $5 and the equation ' },
+        { kind: 'math', value: 'E=mc^2', display: false },
+        { kind: 'text', value: ' is cool' },
+      ]);
+    });
   });
 
   describe('edge cases', () => {
