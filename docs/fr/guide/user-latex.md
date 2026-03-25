@@ -1,5 +1,9 @@
 # Rendu LaTeX des messages utilisateur
 
+::: info
+**Note**: Cette fonctionnalité est supportée dans la version 1.3.7 et ultérieure.
+:::
+
 Rendu automatique des formules LaTeX dans les messages utilisateur en notation mathématique.
 
 ## Présentation

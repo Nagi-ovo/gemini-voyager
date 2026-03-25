@@ -1,5 +1,9 @@
 # Renderização LaTeX de mensagens do utilizador
 
+::: info
+**Nota**: Este recurso é suportado na versão 1.3.7 e posteriores.
+:::
+
 Renderiza automaticamente fórmulas LaTeX nas mensagens do utilizador como notação matemática.
 
 ## Visão geral

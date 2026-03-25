@@ -1,5 +1,9 @@
 # User Message LaTeX Rendering
 
+::: info
+**Note**: This feature is supported in version 1.3.7 and later.
+:::
+
 Automatically render LaTeX formulas in user messages as math notation.
 
 ## Overview
