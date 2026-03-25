@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "dce812543987",
+  "session_id": "192ac09f-b413-42fa-a33c-f7252915f9e7",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-25T03:04:31.869069Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "docs/ar/guide/user-latex.md",
+    "docs/es/guide/user-latex.md",
+    "docs/guide/user-latex.md",
+    "docs/pt/guide/user-latex.md",
+    "docs/ru/guide/user-latex.md",
+    "docs/zh_TW/guide/user-latex.md",
+    "docs/en/guide/user-latex.md",
+    "docs/fr/guide/user-latex.md",
+    "docs/ja/guide/user-latex.md",
+    "docs/ko/guide/user-latex.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "15bdd17877ad",
+  "checkpoint_transcript_start": 80,
+  "transcript_lines_at_start": 80,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-25T03:04:31.758685Z",
+    "agent_lines": 0,
+    "human_added": 40,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 40,
+    "agent_percentage": 0
+  }
+}

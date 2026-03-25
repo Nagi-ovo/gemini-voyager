@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "dce812543987",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "docs/ar/guide/user-latex.md",
+    "docs/en/guide/user-latex.md",
+    "docs/es/guide/user-latex.md",
+    "docs/fr/guide/user-latex.md",
+    "docs/guide/user-latex.md",
+    "docs/ja/guide/user-latex.md",
+    "docs/ko/guide/user-latex.md",
+    "docs/pt/guide/user-latex.md",
+    "docs/ru/guide/user-latex.md",
+    "docs/zh_TW/guide/user-latex.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/dc/e812543987/0/metadata.json",
+      "transcript": "/dc/e812543987/0/full.jsonl",
+      "context": "/dc/e812543987/0/context.md",
+      "content_hash": "/dc/e812543987/0/content_hash.txt",
+      "prompt": "/dc/e812543987/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
