@@ -1054,9 +1054,7 @@ body.dark-theme .gv-export-dropdown-btn:hover,
   border-radius: 18px;
   background: oklch(0.995 0.002 250);
   border: 1px solid oklch(0.92 0.004 250 / 0.7);
-  box-shadow:
-    0 16px 48px oklch(0 0 0 / 0.12),
-    0 6px 20px oklch(0 0 0 / 0.06);
+  box-shadow: none;
   z-index: 999;
   color: oklch(0.14 0.004 285);
   font-family:
@@ -1077,9 +1075,7 @@ body.dark-theme .gv-export-dropdown-btn:hover,
     background: oklch(0.2 0.008 285);
     color: oklch(0.92 0.004 250);
     border-color: oklch(0.3 0.008 285 / 0.7);
-    box-shadow:
-      0 16px 48px oklch(0 0 0 / 0.4),
-      0 6px 20px oklch(0 0 0 / 0.25);
+    box-shadow: none;
   }
 }
 
@@ -1940,7 +1936,7 @@ body.dark-theme .gv-pm-cancel:hover {
   right: 0;
   bottom: 0;
   padding-left: 1.5em;
-  background: linear-gradient(to right, transparent, oklch(0.22 0.006 285) 50%);
+  background: none;
 }
 
 /* Ensure markdown content overflow handling */
@@ -1971,12 +1967,12 @@ body.light-theme .gv-md pre {
 
 .theme-host.light-theme .gv-md-collapsed::after,
 body.light-theme .gv-md-collapsed::after {
-  background: linear-gradient(to right, transparent, oklch(0.955 0.002 250) 50%);
+  background: none;
 }
 
 .theme-host.dark-theme .gv-md-collapsed::after,
 body.dark-theme .gv-md-collapsed::after {
-  background: linear-gradient(to right, transparent, oklch(0.22 0.006 285) 50%);
+  background: none;
 }
 
 .gv-pm-expand-btn {
@@ -2800,9 +2796,7 @@ body.dark-theme .gv-pm-notice.err {
   background: oklch(0.2 0.008 285);
   color: oklch(0.92 0.004 250);
   border-color: oklch(0.3 0.008 285 / 0.7);
-  box-shadow:
-    0 16px 48px oklch(0 0 0 / 0.4),
-    0 6px 20px oklch(0 0 0 / 0.25);
+  box-shadow: none;
 }
 
 .gv-pm-panel[data-gv-theme='dark'] .gv-pm-header {
@@ -2933,7 +2927,7 @@ body.dark-theme .gv-pm-notice.err {
 }
 
 .gv-pm-panel[data-gv-theme='dark'] .gv-md-collapsed::after {
-  background: linear-gradient(to right, transparent, oklch(0.22 0.006 285) 50%);
+  background: none;
 }
 
 .gv-pm-panel[data-gv-theme='dark'] .gv-pm-expand-btn {
@@ -3066,9 +3060,7 @@ body.dark-theme .gv-pm-notice.err {
   background: oklch(0.995 0.002 250);
   color: oklch(0.14 0.004 285);
   border-color: oklch(0.92 0.004 250 / 0.7);
-  box-shadow:
-    0 16px 48px oklch(0 0 0 / 0.12),
-    0 6px 20px oklch(0 0 0 / 0.06);
+  box-shadow: none;
 }
 
 .gv-pm-panel[data-gv-theme='light'] .gv-pm-header {
@@ -3200,7 +3192,7 @@ body.dark-theme .gv-pm-notice.err {
 }
 
 .gv-pm-panel[data-gv-theme='light'] .gv-md-collapsed::after {
-  background: linear-gradient(to right, transparent, oklch(0.955 0.002 250) 50%);
+  background: none;
 }
 
 .gv-pm-panel[data-gv-theme='light'] .gv-md pre {
