@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "4dedb1aaae43",
+  "session_id": "856d828b-dacb-41c5-9d73-5d8b2c059010",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-26T15:57:17.833403Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/core/services/KeyboardShortcutService.ts",
+    "src/core/types/keyboardShortcut.ts",
+    "src/pages/content/timeline/manager.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "d9b6e447ed82",
+  "token_usage": {
+    "input_tokens": 58,
+    "cache_creation_tokens": 56763,
+    "cache_read_tokens": 894093,
+    "output_tokens": 11661,
+    "api_call_count": 19
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-26T15:57:17.465897Z",
+    "agent_lines": 84,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 84,
+    "agent_percentage": 100
+  }
+}

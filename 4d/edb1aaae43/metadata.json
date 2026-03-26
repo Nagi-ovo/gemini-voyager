@@ -3,7 +3,7 @@
   "checkpoint_id": "4dedb1aaae43",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 1,
   "files_touched": [
     "src/core/services/KeyboardShortcutService.ts",
     "src/core/types/keyboardShortcut.ts",
@@ -16,13 +16,20 @@
       "context": "/4d/edb1aaae43/0/context.md",
       "content_hash": "/4d/edb1aaae43/0/content_hash.txt",
       "prompt": "/4d/edb1aaae43/0/prompt.txt"
+    },
+    {
+      "metadata": "/4d/edb1aaae43/1/metadata.json",
+      "transcript": "/4d/edb1aaae43/1/full.jsonl",
+      "context": "/4d/edb1aaae43/1/context.md",
+      "content_hash": "/4d/edb1aaae43/1/content_hash.txt",
+      "prompt": "/4d/edb1aaae43/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 0,
-    "cache_creation_tokens": 0,
-    "cache_read_tokens": 0,
-    "output_tokens": 0,
-    "api_call_count": 0
+    "input_tokens": 58,
+    "cache_creation_tokens": 56763,
+    "cache_read_tokens": 894093,
+    "output_tokens": 11661,
+    "api_call_count": 19
   }
 }

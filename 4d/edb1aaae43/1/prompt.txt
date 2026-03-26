@@ -1,0 +1,14 @@
+键盘快捷键支持 gg 和 GG,你懂的
+
+---
+
+push
+
+---
+
+[Request interrupted by user]
+
+---
+
+https://github.com/Nagi-ovo/gemini-voyager/issues/536
+closes 这个
