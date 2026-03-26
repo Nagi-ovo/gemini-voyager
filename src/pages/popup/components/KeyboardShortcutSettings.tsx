@@ -236,6 +236,24 @@ export function KeyboardShortcutSettings() {
                     : keyboardShortcutService.formatShortcut(config.next)}
                 </button>
               </div>
+
+              {/* First Turn (gg) */}
+              <div className="space-y-2">
+                <Label className="text-muted-foreground text-xs font-medium">
+                  {t('firstNode')}
+                </Label>
+                <div className="border-border flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold opacity-70">
+                  gg
+                </div>
+              </div>
+
+              {/* Last Turn (GG) */}
+              <div className="space-y-2">
+                <Label className="text-muted-foreground text-xs font-medium">{t('lastNode')}</Label>
+                <div className="border-border flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold opacity-70">
+                  GG
+                </div>
+              </div>
             </div>
 
             {/* Hint text */}

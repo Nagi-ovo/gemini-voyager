@@ -787,6 +787,14 @@
     "message": "العقدة التالية",
     "description": "Next timeline node shortcut label"
   },
+  "firstNode": {
+    "message": "الدور الأول",
+    "description": "First timeline node shortcut label"
+  },
+  "lastNode": {
+    "message": "الدور الأخير",
+    "description": "Last timeline node shortcut label"
+  },
   "shortcutKey": {
     "message": "مفتاح",
     "description": "Shortcut key label"

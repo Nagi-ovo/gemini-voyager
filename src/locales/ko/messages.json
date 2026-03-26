@@ -787,6 +787,14 @@
     "message": "다음 노드",
     "description": "Next timeline node shortcut label"
   },
+  "firstNode": {
+    "message": "첫 번째 턴",
+    "description": "First timeline node shortcut label"
+  },
+  "lastNode": {
+    "message": "마지막 턴",
+    "description": "Last timeline node shortcut label"
+  },
   "shortcutKey": {
     "message": "키",
     "description": "Shortcut key label"

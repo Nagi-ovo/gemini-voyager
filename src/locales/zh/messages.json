@@ -787,6 +787,14 @@
     "message": "下一个节点",
     "description": "下一个时间线节点快捷键标签"
   },
+  "firstNode": {
+    "message": "第一轮",
+    "description": "第一个时间线节点快捷键标签"
+  },
+  "lastNode": {
+    "message": "最后一轮",
+    "description": "最后一个时间线节点快捷键标签"
+  },
   "shortcutKey": {
     "message": "按键",
     "description": "快捷键按键标签"

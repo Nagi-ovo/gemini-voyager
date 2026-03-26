@@ -747,6 +747,14 @@
     "message": "下一個節點",
     "description": "下一個時間軸節點快速鍵標籤"
   },
+  "firstNode": {
+    "message": "第一輪",
+    "description": "第一個時間軸節點快速鍵標籤"
+  },
+  "lastNode": {
+    "message": "最後一輪",
+    "description": "最後一個時間軸節點快速鍵標籤"
+  },
   "shortcutKey": {
     "message": "按鍵",
     "description": "快速鍵按鍵標籤"

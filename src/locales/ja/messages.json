@@ -787,6 +787,14 @@
     "message": "次のノードへ",
     "description": "Next timeline node shortcut label"
   },
+  "firstNode": {
+    "message": "最初のターンへ",
+    "description": "First timeline node shortcut label"
+  },
+  "lastNode": {
+    "message": "最後のターンへ",
+    "description": "Last timeline node shortcut label"
+  },
   "shortcutKey": {
     "message": "キー",
     "description": "Shortcut key label"

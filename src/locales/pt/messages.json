@@ -787,6 +787,14 @@
     "message": "Próximo nó",
     "description": "Next timeline node shortcut label"
   },
+  "firstNode": {
+    "message": "Primeiro turno",
+    "description": "First timeline node shortcut label"
+  },
+  "lastNode": {
+    "message": "Último turno",
+    "description": "Last timeline node shortcut label"
+  },
   "shortcutKey": {
     "message": "Tecla",
     "description": "Shortcut key label"

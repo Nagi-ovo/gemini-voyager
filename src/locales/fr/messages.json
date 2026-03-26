@@ -787,6 +787,14 @@
     "message": "Suivant",
     "description": "Next timeline node shortcut label"
   },
+  "firstNode": {
+    "message": "Premier tour",
+    "description": "First timeline node shortcut label"
+  },
+  "lastNode": {
+    "message": "Dernier tour",
+    "description": "Last timeline node shortcut label"
+  },
   "shortcutKey": {
     "message": "Touche",
     "description": "Shortcut key label"

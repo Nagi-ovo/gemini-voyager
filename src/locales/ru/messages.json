@@ -787,6 +787,14 @@
     "message": "Следующий узел",
     "description": "Next timeline node shortcut label"
   },
+  "firstNode": {
+    "message": "Первый ход",
+    "description": "First timeline node shortcut label"
+  },
+  "lastNode": {
+    "message": "Последний ход",
+    "description": "Last timeline node shortcut label"
+  },
   "shortcutKey": {
     "message": "Клавиша",
     "description": "Shortcut key label"
