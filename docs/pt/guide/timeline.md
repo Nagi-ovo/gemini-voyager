@@ -17,6 +17,7 @@ Cada ponto representa uma troca (a sua pergunta + a resposta do Gemini™).
 - **Hover (Passar o rato)**: Veja uma pré-visualização instantânea do que foi discutido naquele ponto. Sem clicar, sem scroll. Apenas espreite.
 - **Clique**: Salte instantaneamente para essa mensagem. Teletransporte.
 - **Destaque de Contexto**: Enquanto faz scroll, o ponto correspondente acende-se, para que saiba sempre onde está no "mapa".
+- **Redimensionar**: Arraste a borda interna da linha do tempo para ajustar sua largura.
 
 ## Favoritos (Stars)
 
