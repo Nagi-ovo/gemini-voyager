@@ -114,6 +114,10 @@ describe('GoogleDriveSyncService authentication', () => {
     const chromeMock = createChromeMock();
     (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
 
+    // loadState() only calls getAuthToken when sync mode is not 'disabled'
+    const localGetMock = chromeMock.storage.local.get as unknown as ReturnType<typeof vi.fn>;
+    localGetMock.mockResolvedValue({ gvSyncMode: 'auto' });
+
     const getAuthTokenMock = chromeMock.identity.getAuthToken as unknown as ReturnType<
       typeof vi.fn
     >;

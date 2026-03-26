@@ -855,8 +855,10 @@ export class GoogleDriveSyncService {
         isSyncing: false,
         isAuthenticated: false,
       };
-      const token = await this.getAuthToken(false);
-      this.state.isAuthenticated = !!token;
+      if (this.state.mode !== 'disabled') {
+        const token = await this.getAuthToken(false);
+        this.state.isAuthenticated = !!token;
+      }
     } catch (error) {
       console.error('[GoogleDriveSyncService] Failed to load state:', error);
     }
