@@ -24,6 +24,11 @@ import type {
 import { isMac } from '@/core/utils/browser';
 
 /**
+ * Timeout for key sequence detection (e.g., gg, GG)
+ */
+const SEQUENCE_TIMEOUT_MS = 500;
+
+/**
  * Default keyboard shortcuts configuration
  * Using vim-style j/k (convenient, no modifiers needed)
  */
@@ -59,6 +64,10 @@ export class KeyboardShortcutService {
   private storageChangeHandler:
     | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
     | null = null;
+
+  // Key sequence tracking (for gg → first, GG → last)
+  private lastSequenceKey: string | null = null;
+  private lastSequenceTime: number = 0;
 
   private constructor() {
     this.config = DEFAULT_SHORTCUTS;
@@ -188,10 +197,20 @@ export class KeyboardShortcutService {
       // Ignore shortcuts when user is typing in input fields
       if (this.isTypingInInputField(event)) return;
 
+      // Check for key sequences first (gg → first, GG → last)
+      const sequenceMatch = this.matchSequence(event);
+      if (sequenceMatch) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.notifyListeners(sequenceMatch.action, event);
+        return;
+      }
+
       const match = this.matchShortcut(event);
       if (match) {
         event.preventDefault();
         event.stopPropagation();
+        this.resetSequence();
         this.notifyListeners(match.action, event);
       }
     };
@@ -276,6 +295,36 @@ export class KeyboardShortcutService {
       event.shiftKey === hasShift &&
       event.metaKey === hasMeta
     );
+  }
+
+  /**
+   * Match key sequence (gg → timeline:first, GG → timeline:last)
+   */
+  private matchSequence(event: KeyboardEvent): ShortcutMatch | null {
+    // Don't process sequences on key repeat (held down)
+    if (event.repeat) return null;
+
+    const now = Date.now();
+    const key = event.key;
+
+    if ((key === 'g' || key === 'G') && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      if (this.lastSequenceKey === key && now - this.lastSequenceTime < SEQUENCE_TIMEOUT_MS) {
+        this.resetSequence();
+        return { action: key === 'g' ? 'timeline:first' : 'timeline:last', event };
+      }
+      this.lastSequenceKey = key;
+      this.lastSequenceTime = now;
+      return null;
+    }
+
+    // Any other key resets the sequence
+    this.resetSequence();
+    return null;
+  }
+
+  private resetSequence(): void {
+    this.lastSequenceKey = null;
+    this.lastSequenceTime = 0;
   }
 
   /**

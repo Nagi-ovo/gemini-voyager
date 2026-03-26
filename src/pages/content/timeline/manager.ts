@@ -3070,6 +3070,10 @@ export class TimelineManager {
           this.enqueueNavigation('previous', event.repeat);
         } else if (action === 'timeline:next') {
           this.enqueueNavigation('next', event.repeat);
+        } else if (action === 'timeline:first') {
+          this.navigateToFirstNode();
+        } else if (action === 'timeline:last') {
+          this.navigateToLastNode();
         }
       });
     } catch (error) {
@@ -3254,6 +3258,32 @@ export class TimelineManager {
     const targetIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, this.markers.length - 1);
 
     await this.performNodeNavigation(targetIndex, currentIndex);
+  }
+
+  /**
+   * Navigate to first timeline node (gg)
+   */
+  private async navigateToFirstNode(): Promise<void> {
+    if (this.markers.length === 0) return;
+
+    this.maybeRefreshMarkersForNavigation('previous');
+    this.navigationQueue.length = 0;
+    const currentIndex = this.getActiveIndex();
+
+    await this.performNodeNavigation(0, currentIndex);
+  }
+
+  /**
+   * Navigate to last timeline node (GG)
+   */
+  private async navigateToLastNode(): Promise<void> {
+    if (this.markers.length === 0) return;
+
+    this.maybeRefreshMarkersForNavigation('next');
+    this.navigationQueue.length = 0;
+    const currentIndex = this.getActiveIndex();
+
+    await this.performNodeNavigation(this.markers.length - 1, currentIndex);
   }
 
   private maybeRefreshMarkersForNavigation(direction: 'previous' | 'next'): void {

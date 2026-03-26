@@ -22,7 +22,11 @@ export type ShortcutKey = string;
 /**
  * Shortcut action types
  */
-export type ShortcutAction = 'timeline:previous' | 'timeline:next';
+export type ShortcutAction =
+  | 'timeline:previous'
+  | 'timeline:next'
+  | 'timeline:first'
+  | 'timeline:last';
 
 /**
  * Individual keyboard shortcut configuration
