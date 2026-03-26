@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "97a3bcd19de4",
+  "session_id": "9856f372-3691-49c5-b135-f9a7f08fff0f",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-26T15:35:02.119346Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/.vitepress/config.mts",
+    "docs/ar/index.md",
+    "docs/en/index.md",
+    "docs/es/index.md",
+    "docs/fr/index.md",
+    "docs/index.md",
+    "docs/ja/index.md",
+    "docs/ko/index.md",
+    "docs/pt/index.md",
+    "docs/ru/index.md",
+    "docs/zh_TW/index.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "36ba0f0b2ff4",
+  "token_usage": {
+    "input_tokens": 138,
+    "cache_creation_tokens": 96158,
+    "cache_read_tokens": 3814288,
+    "output_tokens": 21534,
+    "api_call_count": 58
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-26T15:35:01.108952Z",
+    "agent_lines": 132,
+    "human_added": 798,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 930,
+    "agent_percentage": 14.193548387096774
+  }
+}

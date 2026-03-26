@@ -1,0 +1,5 @@
+https://github.com/Nagi-ovo/gemini-voyager/issues/540 这个能实现吗?当前应该有一些功能是针对输入栏的,你需要更多信息请告诉我
+
+---
+
+实现
