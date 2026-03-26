@@ -323,6 +323,7 @@ interface SettingsUpdate {
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
+  draftAutoSaveEnabled?: boolean;
   sidebarAutoHideEnabled?: boolean;
   sidebarFullHideEnabled?: boolean;
   visualEffect?: 'off' | 'snow' | 'sakura' | 'rain';
@@ -430,6 +431,7 @@ export default function Popup() {
   const [showMessageTimestamps, setShowMessageTimestamps] = useState<boolean>(false);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
+  const [draftAutoSaveEnabled, setDraftAutoSaveEnabled] = useState<boolean>(false);
   const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
   const [sidebarFullHideEnabled, setSidebarFullHideEnabled] = useState<boolean>(false);
   const [visualEffect, setVisualEffect] = useState<'off' | 'snow' | 'sakura' | 'rain'>('off');
@@ -523,6 +525,8 @@ export default function Popup() {
         payload.gvQuoteReplyEnabled = settings.quoteReplyEnabled;
       if (typeof settings.ctrlEnterSendEnabled === 'boolean')
         payload.gvCtrlEnterSend = settings.ctrlEnterSendEnabled;
+      if (typeof settings.draftAutoSaveEnabled === 'boolean')
+        payload[StorageKeys.DRAFT_AUTO_SAVE] = settings.draftAutoSaveEnabled;
       if (typeof settings.sidebarAutoHideEnabled === 'boolean')
         payload.gvSidebarAutoHide = settings.sidebarAutoHideEnabled;
       if (typeof settings.sidebarFullHideEnabled === 'boolean')
@@ -854,6 +858,7 @@ export default function Popup() {
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
           gvCtrlEnterSend: false,
+          [StorageKeys.DRAFT_AUTO_SAVE]: false,
           gvSidebarAutoHide: false,
           gvSidebarFullHide: false,
           gvVisualEffect: 'off',
@@ -906,6 +911,7 @@ export default function Popup() {
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
+          setDraftAutoSaveEnabled(res?.[StorageKeys.DRAFT_AUTO_SAVE] === true);
           setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
           setSidebarFullHideEnabled(res?.gvSidebarFullHide === true);
           // Resolve visual effect: new key takes precedence over legacy boolean
@@ -2116,6 +2122,26 @@ export default function Popup() {
                   onChange={(e) => {
                     setCtrlEnterSendEnabled(e.target.checked);
                     apply({ ctrlEnterSendEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              {/* Draft Auto-Save */}
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="draft-auto-save"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('draftAutoSave')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('draftAutoSaveHint')}</p>
+                </div>
+                <Switch
+                  id="draft-auto-save"
+                  checked={draftAutoSaveEnabled}
+                  onChange={(e) => {
+                    setDraftAutoSaveEnabled(e.target.checked);
+                    apply({ draftAutoSaveEnabled: e.target.checked });
                   }}
                 />
               </div>

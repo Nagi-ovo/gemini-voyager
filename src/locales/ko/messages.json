@@ -1047,6 +1047,14 @@
     "message": "{modifier}+Enter 를 눌러 메시지를 전송하고, Enter 로 줄바꿈을 합니다",
     "description": "Modifier+Enter to send feature hint. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
+  "draftAutoSave": {
+    "message": "임시 저장 자동 저장",
+    "description": "Toggle label for input draft auto-save feature"
+  },
+  "draftAutoSaveHint": {
+    "message": "페이지를 새로고침하거나 대화를 다시 열 때 전송되지 않은 입력 내용을 자동으로 저장하고 복원합니다",
+    "description": "Hint for draft auto-save feature"
+  },
   "batch_delete_confirm": {
     "message": "{count}개의 대화를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
     "description": "Batch delete confirmation message"

@@ -1047,6 +1047,14 @@
     "message": "Presiona {modifier}+Enter para enviar mensajes, Enter para agregar una nueva línea",
     "description": "Modifier+Enter to send feature hint. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
+  "draftAutoSave": {
+    "message": "Guardado automático de borrador",
+    "description": "Toggle label for input draft auto-save feature"
+  },
+  "draftAutoSaveHint": {
+    "message": "Guardar y restaurar automáticamente el texto no enviado al actualizar o reabrir una conversación",
+    "description": "Hint for draft auto-save feature"
+  },
   "batch_delete_confirm": {
     "message": "¿Estás seguro de que quieres eliminar {count} conversación(es)? Esta acción no se puede deshacer.",
     "description": "Batch delete confirmation message"

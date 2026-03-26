@@ -1007,6 +1007,14 @@
     "message": "按 {modifier}+Enter 傳送訊息，Enter 鍵僅換行",
     "description": "Modifier+Enter 傳送功能提示。{modifier} 在 macOS 上替換為 ⌘，其他平台替換為 Ctrl"
   },
+  "draftAutoSave": {
+    "message": "草稿自動儲存",
+    "description": "Toggle label for input draft auto-save feature"
+  },
+  "draftAutoSaveHint": {
+    "message": "重新整理頁面或重新開啟對話時，自動儲存和恢復未送出的輸入內容",
+    "description": "Hint for draft auto-save feature"
+  },
   "batch_delete_confirm": {
     "message": "確定要刪除 {count} 個對話嗎？此操作無法復原。",
     "description": "批次刪除確認訊息"

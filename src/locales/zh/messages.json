@@ -1047,6 +1047,14 @@
     "message": "按 {modifier}+Enter 发送消息，Enter 键仅换行",
     "description": "Modifier+Enter 发送功能提示。{modifier} 在 macOS 上替换为 ⌘，其他平台替换为 Ctrl"
   },
+  "draftAutoSave": {
+    "message": "草稿自动保存",
+    "description": "Toggle label for input draft auto-save feature"
+  },
+  "draftAutoSaveHint": {
+    "message": "刷新页面或重新打开对话时，自动保存和恢复未发送的输入内容",
+    "description": "Hint for draft auto-save feature"
+  },
   "batch_delete_confirm": {
     "message": "确定要删除 {count} 个会话吗？此操作无法撤销。",
     "description": "批量删除确认消息"

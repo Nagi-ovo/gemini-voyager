@@ -1047,6 +1047,14 @@
     "message": "Нажмите {modifier}+Enter для отправки сообщений, Enter для новой строки",
     "description": "Modifier+Enter to send feature hint. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
+  "draftAutoSave": {
+    "message": "Автосохранение черновика",
+    "description": "Toggle label for input draft auto-save feature"
+  },
+  "draftAutoSaveHint": {
+    "message": "Автоматически сохранять и восстанавливать неотправленный текст при обновлении страницы или повторном открытии беседы",
+    "description": "Hint for draft auto-save feature"
+  },
   "batch_delete_confirm": {
     "message": "Вы уверены, что хотите удалить {count} разговор(ов)? Это действие нельзя отменить.",
     "description": "Batch delete confirmation message"

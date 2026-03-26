@@ -14,6 +14,7 @@ import { startChatWidthAdjuster } from './chatWidth/index';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import DefaultModelManager from './defaultModel/modelLocker';
+import { startDraftSave } from './draftSave/index';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
@@ -73,6 +74,7 @@ let folderManagerInstance: Awaited<ReturnType<typeof startFolderManager>> | null
 let promptManagerInstance: Awaited<ReturnType<typeof startPromptManager>> | null = null;
 let quoteReplyCleanup: (() => void) | null = null;
 let sendBehaviorCleanup: (() => void) | null = null;
+let draftSaveCleanup: (() => void) | null = null;
 let forkCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
@@ -239,6 +241,10 @@ async function initializeFeatures(): Promise<void> {
 
       // Send behavior (Ctrl+Enter to send)
       sendBehaviorCleanup = await startSendBehavior();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Draft auto-save
+      draftSaveCleanup = await startDraftSave();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Recents hider - hide/show toggle for recent items section
@@ -481,6 +487,10 @@ function handleVisibilityChange(): void {
         if (sendBehaviorCleanup) {
           sendBehaviorCleanup();
           sendBehaviorCleanup = null;
+        }
+        if (draftSaveCleanup) {
+          draftSaveCleanup();
+          draftSaveCleanup = null;
         }
         if (forkCleanup) {
           forkCleanup();
