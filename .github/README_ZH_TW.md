@@ -61,6 +61,9 @@
 > [!NOTE]
 > 如果 Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案，從而改善 Gemini 的使用體驗。謝謝。
 
+> [!IMPORTANT]
+> Voyager 曾因商標爭議被 Chrome Web Store 下架，所有累積的用戶和評價都歸零了。現在我們已重新上架，正在從頭開始重建——如果你覺得 Voyager 好用，去商店頁面留個評分或評價，對我們來說意義重大。
+
 ---
 
 ## 👋 為什麼開發 Voyager？

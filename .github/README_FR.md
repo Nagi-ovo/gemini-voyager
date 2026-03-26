@@ -61,6 +61,9 @@
 > [!NOTE]
 > Si Voyager vous est utile, partagez-le sur X, Reddit, YouTube, etc. Chaque partage aide plus de personnes à découvrir le projet et à améliorer l'expérience Gemini. Merci.
 
+> [!IMPORTANT]
+> Voyager a été précédemment retiré du Chrome Web Store en raison d'un litige de marque, ce qui a entraîné la perte de tous les utilisateurs et avis accumulés. Nous sommes de retour et reconstruisons depuis zéro — si Voyager vous est utile, laisser une note ou un avis sur la page du store serait d'une aide immense.
+
 ---
 
 ## 👋 Pourquoi Voyager ?

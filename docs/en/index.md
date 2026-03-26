@@ -99,6 +99,12 @@ features:
   </div>
 </div>
 
+<div class="vp-doc" style="text-align: center; margin: 2.5rem auto 0; max-width: 780px; padding: 0 16px;">
+  <div style="background: var(--vp-c-warning-soft); border: 1px solid var(--vp-c-warning-1); border-radius: 8px; padding: 16px 20px;">
+    <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">Voyager was previously taken down from the Chrome Web Store due to a trademark dispute, which resulted in the loss of all accumulated users and reviews. We're now back and rebuilding from scratch — if you find Voyager useful, leaving a <strong>rating or review</strong> on the store page would mean the world to us.</p>
+  </div>
+</div>
+
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 1000px; padding: 0 16px;">
   <h3 style="margin: 0 0 24px; font-weight: 600; font-size: 1.2em;">Special Thanks</h3>
   <a href="https://github.com/Nagi-ovo/gemini-voyager">

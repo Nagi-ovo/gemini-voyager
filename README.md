@@ -61,6 +61,9 @@
 > [!NOTE]
 > If Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
 
+> [!IMPORTANT]
+> Voyager was previously taken down from the Chrome Web Store due to a trademark dispute, which resulted in the loss of all accumulated users and reviews. We're now back and rebuilding from scratch — if you find Voyager useful, leaving a rating or review on the store page would mean the world to us.
+
 ---
 
 ## 👋 Why Voyager?

@@ -61,6 +61,9 @@
 > [!NOTE]
 > Si Voyager te resulta útil, compártelo en X, Reddit, YouTube, etc. Cada difusión ayuda a que más personas descubran el proyecto y mejoren la experiencia con Gemini. Gracias.
 
+> [!IMPORTANT]
+> Voyager fue retirado anteriormente de la Chrome Web Store debido a una disputa de marca comercial, lo que provocó la pérdida de todos los usuarios y reseñas acumulados. Ahora estamos de vuelta y reconstruyendo desde cero — si encuentras útil Voyager, dejar una valoración o reseña en la página de la tienda significaría mucho para nosotros.
+
 ---
 
 ## 👋 ¿Por qué Voyager?
