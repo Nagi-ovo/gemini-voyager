@@ -24,6 +24,7 @@ import type {
   SyncState,
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
+import { isBrave } from '@/core/utils/browser';
 import { hashString } from '@/core/utils/hash';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 
@@ -543,7 +544,10 @@ export class GoogleDriveSyncService {
       return this.accessToken;
     }
 
-    const supportsIdentityApi = !!chrome.identity?.getAuthToken;
+    // Brave supports the identity API but chrome.identity.getAuthToken shows
+    // an "Access blocked" error popup before failing, causing user confusion.
+    // Skip it entirely on Brave and go directly to launchWebAuthFlow.
+    const supportsIdentityApi = !!chrome.identity?.getAuthToken && !isBrave();
     if (supportsIdentityApi) {
       const identityResult = await this.getTokenFromIdentity(interactive);
       if (identityResult.token) {

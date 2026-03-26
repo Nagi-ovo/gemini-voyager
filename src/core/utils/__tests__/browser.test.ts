@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { getModifierKey, isMac, isSafari, shouldShowSafariUpdateReminder } from '../browser';
+import {
+  getModifierKey,
+  isBrave,
+  isMac,
+  isSafari,
+  shouldShowSafariUpdateReminder,
+} from '../browser';
 
 describe('Safari Update Reminder Control', () => {
   describe('shouldShowSafariUpdateReminder', () => {
@@ -54,6 +60,27 @@ describe('Safari Update Reminder Control', () => {
 
       expect(isSafari()).toBe(false);
     });
+  });
+});
+
+describe('isBrave', () => {
+  it('returns true when navigator.brave exists', () => {
+    Object.defineProperty(navigator, 'brave', {
+      value: { isBrave: () => Promise.resolve(true) },
+      configurable: true,
+    });
+    expect(isBrave()).toBe(true);
+    // Cleanup
+    Object.defineProperty(navigator, 'brave', {
+      value: undefined,
+      configurable: true,
+    });
+    // Remove the property entirely after cleanup
+    delete (navigator as unknown as Record<string, unknown>).brave;
+  });
+
+  it('returns false when navigator.brave does not exist', () => {
+    expect(isBrave()).toBe(false);
   });
 });
 

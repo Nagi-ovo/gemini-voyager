@@ -49,6 +49,15 @@ export function shouldShowSafariUpdateReminder(): boolean {
 }
 
 /**
+ * Detect if the current browser is Brave.
+ * Brave adds navigator.brave in all contexts including service workers.
+ * Used to skip chrome.identity.getAuthToken which shows an error popup on Brave.
+ */
+export function isBrave(): boolean {
+  return 'brave' in navigator;
+}
+
+/**
  * Detect if the current browser is Chrome (not Edge, Firefox, or Safari).
  * Used to conditionally show Chrome Web Store rating prompts.
  */
