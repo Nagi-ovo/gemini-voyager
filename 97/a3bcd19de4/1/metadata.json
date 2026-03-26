@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "97a3bcd19de4",
+  "session_id": "22273137-4dd4-4741-99c7-592d47a95221",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-26T15:34:58.692827Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "docs/.vitepress/config.mts",
+    "docs/ar/index.md",
+    "docs/en/index.md",
+    "docs/es/index.md",
+    "docs/fr/index.md",
+    "docs/guide/chat-font-size.md",
+    "docs/index.md",
+    "docs/ja/index.md",
+    "docs/ko/index.md",
+    "docs/pt/index.md",
+    "docs/ru/index.md",
+    "docs/zh_TW/index.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "12ea69a3a6a8",
+  "token_usage": {
+    "input_tokens": 101,
+    "cache_creation_tokens": 185452,
+    "cache_read_tokens": 6391491,
+    "output_tokens": 26738,
+    "api_call_count": 81
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-26T15:34:57.626164Z",
+    "agent_lines": 174,
+    "human_added": 756,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 930,
+    "agent_percentage": 18.70967741935484
+  }
+}

@@ -3,7 +3,7 @@
   "checkpoint_id": "97a3bcd19de4",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 2,
   "files_touched": [
     "docs/.vitepress/config.mts",
     "docs/ar/guide/chat-font-size.md",
@@ -54,13 +54,20 @@
       "context": "/97/a3bcd19de4/0/context.md",
       "content_hash": "/97/a3bcd19de4/0/content_hash.txt",
       "prompt": "/97/a3bcd19de4/0/prompt.txt"
+    },
+    {
+      "metadata": "/97/a3bcd19de4/1/metadata.json",
+      "transcript": "/97/a3bcd19de4/1/full.jsonl",
+      "context": "/97/a3bcd19de4/1/context.md",
+      "content_hash": "/97/a3bcd19de4/1/content_hash.txt",
+      "prompt": "/97/a3bcd19de4/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 0,
-    "cache_creation_tokens": 0,
-    "cache_read_tokens": 0,
-    "output_tokens": 0,
-    "api_call_count": 0
+    "input_tokens": 101,
+    "cache_creation_tokens": 185452,
+    "cache_read_tokens": 6391491,
+    "output_tokens": 26738,
+    "api_call_count": 81
   }
 }
