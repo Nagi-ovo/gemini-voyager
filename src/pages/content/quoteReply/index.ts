@@ -489,18 +489,14 @@ export function startQuoteReply() {
           input.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
-        // Final focus — only if the editor doesn't already have focus,
-        // to avoid interrupting an in-progress IME composition (#497).
-        if (document.activeElement !== input) {
+        // Reset IME composition state after programmatic selection manipulation (#497).
+        // Without this blur/focus cycle, the first keystroke after quote insertion
+        // bypasses IME composition (e.g., Chinese pinyin input loses the first character).
+        // requestAnimationFrame ensures the browser has finished layout before resetting.
+        requestAnimationFrame(() => {
+          input.blur();
           input.focus();
-        }
-        // Retry for editors that need extra time to show the cursor,
-        // but skip if the element is already focused (IME-safe).
-        setTimeout(() => {
-          if (document.activeElement !== input) {
-            input.focus();
-          }
-        }, TIMING.FOCUS_RETRY_DELAY_MS);
+        });
       };
 
       // Use a slightly longer delay to wait for any expansion transitions
