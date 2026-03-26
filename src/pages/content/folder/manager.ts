@@ -6792,6 +6792,10 @@ export class FolderManager {
       if (this.hasVisibleContent(subfolder.id)) return true;
     }
 
+    // Always show empty folders (no conversations, no subfolders) —
+    // the filter hides folders with only other users' content, not empty ones
+    if (conversations.length === 0 && subfolders.length === 0) return true;
+
     return false;
   }
 
