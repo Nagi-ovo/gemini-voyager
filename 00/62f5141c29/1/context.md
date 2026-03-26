@@ -1,0 +1,24 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+https://github.com/Nagi-ovo/gemini-voyager/issues/540 这个能实现吗?当前应该有一些功能是针对输入栏的,你需要更多信息请告诉我
+
+### Prompt 2
+
+实现
+
+### Prompt 3
+
+这个只针对刷新的情况对吧,仅限于当前 url?
+
+### Prompt 4
+
+那不会内存泄露 吧
+
+### Prompt 5
+
+push
+
