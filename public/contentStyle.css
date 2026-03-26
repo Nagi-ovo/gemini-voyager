@@ -7331,3 +7331,15 @@ html.dark .gv-timestamp,
 body.gv-rtl .gv-timestamp {
   text-align: right;
 }
+
+/* ── Table width stretch (#513) ── */
+/* Override Gemini's hardcoded max-width on table containers so tables fill
+   the available response width instead of being artificially capped. */
+.table-block.new-table-style {
+  max-width: 100% !important;
+}
+
+.table-block-component,
+.horizontal-scroll-wrapper:has(.table-block) {
+  max-width: none !important;
+}

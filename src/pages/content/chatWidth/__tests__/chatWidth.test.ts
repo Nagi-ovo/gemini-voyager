@@ -83,6 +83,8 @@ describe('chatWidth', () => {
     expect(styleText).toContain('.table-block.has-scrollbar');
     expect(styleText).toContain('.table-block.new-table-style');
     expect(styleText).toContain('.table-block .table-content');
+    expect(styleText).toContain('.table-block-component');
+    expect(styleText).toContain('.horizontal-scroll-wrapper');
     expectSingleTableScrollbarRules(styleText);
   });
 

@@ -44,6 +44,8 @@ function getTableSelectors(): string[] {
     '.table-block.new-table-style',
     '.table-block.has-scrollbar',
     '.table-block .table-content',
+    '.table-block-component',
+    '.horizontal-scroll-wrapper',
   ];
 }
 
