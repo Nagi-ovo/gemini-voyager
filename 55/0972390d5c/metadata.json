@@ -3,7 +3,7 @@
   "checkpoint_id": "550972390d5c",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 4,
   "files_touched": [
     ".claude/skills/safari-release/SKILL.md"
   ],
@@ -14,13 +14,20 @@
       "context": "/55/0972390d5c/0/context.md",
       "content_hash": "/55/0972390d5c/0/content_hash.txt",
       "prompt": "/55/0972390d5c/0/prompt.txt"
+    },
+    {
+      "metadata": "/55/0972390d5c/1/metadata.json",
+      "transcript": "/55/0972390d5c/1/full.jsonl",
+      "context": "/55/0972390d5c/1/context.md",
+      "content_hash": "/55/0972390d5c/1/content_hash.txt",
+      "prompt": "/55/0972390d5c/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 0,
-    "cache_creation_tokens": 0,
-    "cache_read_tokens": 0,
-    "output_tokens": 0,
-    "api_call_count": 0
+    "input_tokens": 106,
+    "cache_creation_tokens": 72554,
+    "cache_read_tokens": 3885822,
+    "output_tokens": 18575,
+    "api_call_count": 71
   }
 }

@@ -1,0 +1,139 @@
+查看一下最新有什么 bug 反馈吗？
+
+---
+
+看一下，这个 519 是不是也是刚才刚刚解决的一个问题？
+
+你看看刚才 closed 的一个 issue，直接看下 commit 就行。然后另外的话，你看看这个引用回复，这个 issue 是不是可以解决呢？
+
+---
+
+好，你去修复吧。修复完的话，你就 commit push，然后把另外一个也关了就好了
+
+---
+
+vitepress 时间线文档里提到现在时间线可以拖动调整宽窄
+
+---
+
+push
+
+---
+
+bump
+
+---
+
+你看 commit 写
+
+---
+
+另外加一句 Voyager 终于复活了,欢迎分享,以召回老用户们(你用一个很合适的方式说)
+
+---
+
+合并成一个 commit,然后 tag
+
+---
+
+卧槽谁让你 push 了
+
+---
+
+算了,你重新打包一下 chrome 版本替代现在 release 里的那个吧
+
+---
+
+Base directory for this skill: /Users/jessezhang/Desktop/Coding/side-projects/gemini-voyager/.claude/skills/safari-release
+
+# Safari Release Workflow
+
+Build the Safari extension for manual distribution and create a signed DMG.
+
+## Steps
+
+### 1. Read version from package.json
+
+Read `package.json` to get the current version number. Store it as `VERSION` for later steps.
+
+### 2. Build Safari with update check enabled
+
+Run the following command:
+
+```bash
+ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
+```
+
+Wait for the build to complete successfully. If it fails, report the error and stop.
+
+### 3. Prompt user for Xcode export
+
+Tell the user:
+
+> Safari build complete (`dist_safari/`). Please complete the following steps in Xcode:
+>
+> 1. Open the Xcode project (if not already open)
+> 2. **Product → Archive**
+> 3. **Window → Organizer** → select the archive → **Distribute App**
+> 4. Export the signed `Gemini Voyager.app` into `safari/Models/dmg_source/`
+>
+> Let me know when you're done exporting.
+
+**Wait for the user to confirm** before proceeding. Do NOT continue until the user says they're done.
+
+### 4. Verify the exported app exists
+
+Check that `safari/Models/dmg_source/Gemini Voyager.app` exists:
+
+```bash
+ls "safari/Models/dmg_source/Gemini Voyager.app"
+```
+
+If it doesn't exist, ask the user to check their export path.
+
+### 5. Create DMG
+
+Run `create-dmg` in the `safari/Models` directory:
+
+```bash
+cd safari/Models && create-dmg \
+  --volname "Gemini Voyager" \
+  --window-size 600 400 \
+  --icon-size 100 \
+  --icon "Gemini Voyager.app" 175 190 \
+  --app-drop-link 425 190 \
+  "voyager-v${VERSION}.dmg" \
+  dmg_source
+```
+
+### 6. Verify and report
+
+Confirm the DMG was created at `safari/Models/voyager-v${VERSION}.dmg` and report success to the user.
+
+---
+
+export 了
+
+---
+
+[Request interrupted by user]
+
+---
+
+不对,文件夹名不对,请你修改 skill 说明文件夹名和最后生成有直接发到 release 里
+
+---
+
+没事我说错了,继续吧
+
+---
+
+是否把另一个文件夹也打包到 dmg 里了
+
+---
+
+我打包前还没删
+
+---
+
+skill push

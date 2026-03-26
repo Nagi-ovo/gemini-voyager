@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "550972390d5c",
+  "session_id": "a0be9749-76fd-43a9-8bb9-11d698feaec3",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-26T01:34:57.648647Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    ".claude/skills/safari-release/SKILL.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "74d7a96c490b",
+  "token_usage": {
+    "input_tokens": 106,
+    "cache_creation_tokens": 72554,
+    "cache_read_tokens": 3885822,
+    "output_tokens": 18575,
+    "api_call_count": 71
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-26T01:34:57.473855Z",
+    "agent_lines": 10,
+    "human_added": 20,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 30,
+    "agent_percentage": 33.33333333333333
+  }
+}
