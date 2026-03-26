@@ -1268,10 +1268,11 @@ export class TimelineManager {
       this.zeroTurnsTimer = null;
     }
 
-    // Clear all existing dots before rebuilding
-    (this.ui.trackContent || this.ui.timelineBar)!
-      .querySelectorAll('.timeline-dot')
-      .forEach((n) => n.remove());
+    // Build map of existing dots by turn ID for reuse (prevents hover/click disruption)
+    const oldDots = new Map<string, DotElement>();
+    for (const m of this.markers) {
+      if (m.dotElement) oldDots.set(m.id, m.dotElement);
+    }
 
     // Filter to top-level matches first to avoid nested duplicates, then dedupe by text+offset
     let allEls = Array.from(userTurnNodeList) as HTMLElement[];
@@ -1310,12 +1311,15 @@ export class TimelineManager {
         summary: this.extractTurnText(element),
         n,
         baseN: n,
-        dotElement: null,
+        dotElement: oldDots.get(id) ?? null,
         starred: this.starred.has(id),
       };
+      oldDots.delete(id);
       this.markerMap.set(id, m);
       return m;
     });
+    // Remove orphaned dots (old dots not reused by any new marker)
+    for (const dot of oldDots.values()) dot.remove();
     this.markersVersion++;
     this.updateTimelineGeometry();
     if (!this.activeTurnId && this.markers.length > 0)
@@ -2279,12 +2283,18 @@ export class TimelineManager {
         }
       }
     } else {
-      // Clear all dots and reset references
+      // Range was reset — preserve dots owned by in-range markers, remove the rest
+      const keepDots = new Set<Element>();
+      for (let i = start; i <= end; i++) {
+        if (this.markers[i]?.dotElement) keepDots.add(this.markers[i].dotElement!);
+      }
       (this.ui.trackContent || this.ui.timelineBar)!
         .querySelectorAll('.timeline-dot')
-        .forEach((n) => n.remove());
+        .forEach((n) => {
+          if (!keepDots.has(n)) n.remove();
+        });
       this.markers.forEach((m) => {
-        m.dotElement = null;
+        if (m.dotElement && !keepDots.has(m.dotElement)) m.dotElement = null;
       });
     }
 
@@ -2325,6 +2335,7 @@ export class TimelineManager {
         frag.appendChild(dot);
       } else {
         marker.dotElement.dataset.markerIndex = String(i);
+        marker.dotElement.setAttribute('aria-label', marker.summary);
         marker.dotElement.style.setProperty('--n', String(marker.n || 0));
         if (this.usePixelTop) marker.dotElement.style.top = `${Math.round(this.yPositions[i])}px`;
         marker.dotElement.classList.toggle('starred', !!marker.starred);
