@@ -359,6 +359,18 @@
     "message": "넓게",
     "description": "Wide chat width label"
   },
+  "chatFontSize": {
+    "message": "대화 글꼴 크기",
+    "description": "Chat message font size adjustment label"
+  },
+  "chatFontSizeSmall": {
+    "message": "작게",
+    "description": "Small font size label"
+  },
+  "chatFontSizeLarge": {
+    "message": "크게",
+    "description": "Large font size label"
+  },
   "sidebarWidth": {
     "message": "사이드바 너비",
     "description": "Sidebar width adjustment label"

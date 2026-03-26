@@ -359,6 +359,18 @@
     "message": "عريض",
     "description": "Wide chat width label"
   },
+  "chatFontSize": {
+    "message": "حجم خط الدردشة",
+    "description": "Chat message font size adjustment label"
+  },
+  "chatFontSizeSmall": {
+    "message": "صغير",
+    "description": "Small font size label"
+  },
+  "chatFontSizeLarge": {
+    "message": "كبير",
+    "description": "Large font size label"
+  },
   "sidebarWidth": {
     "message": "عرض الشريط الجانبي",
     "description": "Sidebar width adjustment label"

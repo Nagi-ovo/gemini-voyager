@@ -359,6 +359,18 @@
     "message": "Larga",
     "description": "Wide chat width label"
   },
+  "chatFontSize": {
+    "message": "Tamanho da fonte do chat",
+    "description": "Chat message font size adjustment label"
+  },
+  "chatFontSizeSmall": {
+    "message": "Pequeno",
+    "description": "Small font size label"
+  },
+  "chatFontSizeLarge": {
+    "message": "Grande",
+    "description": "Large font size label"
+  },
   "sidebarWidth": {
     "message": "Largura da barra lateral",
     "description": "Sidebar width adjustment label"

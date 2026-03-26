@@ -359,6 +359,18 @@
     "message": "広い",
     "description": "Wide chat width label"
   },
+  "chatFontSize": {
+    "message": "チャットのフォントサイズ",
+    "description": "Chat message font size adjustment label"
+  },
+  "chatFontSizeSmall": {
+    "message": "小",
+    "description": "Small font size label"
+  },
+  "chatFontSizeLarge": {
+    "message": "大",
+    "description": "Large font size label"
+  },
   "sidebarWidth": {
     "message": "サイドバーの幅",
     "description": "Sidebar width adjustment label"

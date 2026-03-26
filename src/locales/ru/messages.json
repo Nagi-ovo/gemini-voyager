@@ -359,6 +359,18 @@
     "message": "Широкая",
     "description": "Wide chat width label"
   },
+  "chatFontSize": {
+    "message": "Размер шрифта чата",
+    "description": "Chat message font size adjustment label"
+  },
+  "chatFontSizeSmall": {
+    "message": "Мелкий",
+    "description": "Small font size label"
+  },
+  "chatFontSizeLarge": {
+    "message": "Крупный",
+    "description": "Large font size label"
+  },
   "sidebarWidth": {
     "message": "Ширина боковой панели",
     "description": "Sidebar width adjustment label"

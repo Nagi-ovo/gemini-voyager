@@ -9,6 +9,7 @@ import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 
 import { startChangelog } from './changelog/index';
+import { startChatFontSizeAdjuster } from './chatFontSize/index';
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
@@ -177,6 +178,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startChatWidthAdjuster();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startChatFontSizeAdjuster();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startEditInputWidthAdjuster();

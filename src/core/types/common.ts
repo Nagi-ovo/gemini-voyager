@@ -48,6 +48,7 @@ export const StorageKeys = {
 
   // UI customization
   CHAT_WIDTH: 'geminiChatWidth',
+  CHAT_FONT_SIZE: 'gvChatFontSize',
 
   // Prompt Manager
   PROMPT_ITEMS: 'gvPromptItems',

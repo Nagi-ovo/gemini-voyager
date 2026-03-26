@@ -359,6 +359,18 @@
     "message": "宽",
     "description": "宽对话区域宽度标签"
   },
+  "chatFontSize": {
+    "message": "对话字体大小",
+    "description": "对话消息字体大小调整标签"
+  },
+  "chatFontSizeSmall": {
+    "message": "小",
+    "description": "小字体大小标签"
+  },
+  "chatFontSizeLarge": {
+    "message": "大",
+    "description": "大字体大小标签"
+  },
   "sidebarWidth": {
     "message": "侧边栏宽度",
     "description": "侧边栏宽度调节标签"
