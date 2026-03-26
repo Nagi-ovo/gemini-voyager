@@ -1,0 +1,782 @@
+https://github.com/Nagi-ovo/gemini-voyager/issues/446 这个可以实现吗,根据已有信息
+
+---
+
+好
+
+---
+
+<span _ngcontent-ng-c2129668759="" class="user-query-bubble-with-background enable-2026q1-formatting-improvements ng-star-inserted" data-turn-id="u-12tjutz"><!----><span _ngcontent-ng-c2129668759="" class="horizontal-container"><div _ngcontent-ng-c2129668759="" role="heading" aria-level="2" class="query-text gds-body-l collapsed" dir="ltr"><span _ngcontent-ng-c2129668759="" class="cdk-visually-hidden">你说</span><p _ngcontent-ng-c2129668759="" class="query-text-line ng-star-inserted"> Using this character as reference, generate an image of TWO versions of this same pink-haired anime girl facing each other. LEFT: the "British study abroad" version - wearing an elegant British school uniform with a dark blazer, beret hat, holding a teacup, with a smug confident superior smile. RIGHT: the "regular Japanese school" version - wearing her normal school uniform (as shown in the reference), looking frustrated, defiant and slightly hurt at being looked down upon. The British version is taller and looking dowth an air of superiority. Anime illustration style, dramatic confrontation scene. <!----><!----></p><!----></div><button _ngcontent-ng-c2129668759="" mat-icon-button="" aria-label="展开" mattooltip="展开文字" class="mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-mdc-tooltip-trigger expand-button mat-unthemed ng-star-inserted" mat-ripple-loader-class-name="mat-mdc-button-ripple" mat-ripple-loader-centered="" jslog="224552;track:generic_click,impression;BardVeMetadataKey:[[&quot;r_f14c0a5334934209&quot;,&quot;c_a66708bacdd6aa34&quot;,null,null,null,null,null,null,1,null,null,null,1]];mutable:true" aria-describedby="cdk-describedby-message-ng-1-25" cdk-describedby-host="ng-1"><span class="mat-mdc-button-persistent-ripple mdc-icon-button__ripple"></span><mat-icon _ngcontent-ng-c2129668759="" role="img" fonticon="expand_more" class="mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true" data-mat-icon-type="font" data-mat-icon-name="expand_more"><----><span class="mat-focus-indicator"></span><span class="mat-mdc-button-touch-target"></span><span class="mat-ripple mat-mdc-button-ripple"></span></button><!----><!----><!----><!----></span></span>\
+当前文字并没有被放大,只要插件添加的时间戳放大了
+
+---
+
+你每次改完都要 build
+
+---
+
+[Image #1]你好像没有考虑大字变得很小和很大的时候的行间距
+
+---
+
+[Image: source: /var/folders/fq/d_yn5ybs289gm6d7t2mhgy_w0000gn/T/TemporaryItems/NSIRD_screencaptureui_c4bMBD/Screenshot 2026-03-26 at 14.54.31.png]
+
+---
+
+<div _ngcontent-ng-c2376924626="" class="code-block ng-tns-c2376924626-72 ng-animate-disabled ng-trigger ng-trigger-codeBlockRevealAnimation" jslog="223238;track:impression,attention;BardVeMetadataKey:[[&quot;r_b8f5768537a0ae92&quot;,&quot;c_9ce6b2f5dd7aa663&quot;,null,&quot;rc_024ea049b80cba68&quot;,null,null,&quot;zh&quot;,null,1,null,null,1,1]]" data-hveid="0" decode-data-ved="1" data-ved="0CAAQhtANahcKEwjzhOyz6r2TAxUAAAAAHQAAAAAQfA" style="display: block;"><div _ngcontent-ng-c2376924626="" class="code-block-decoration header-formatted gds-title-s ng-tns-c2376924626-72 ng-star-inserted" style=""><span _ngcontent-ng-c2376924626="" class="ng-tns-c2376924626-72">JSON</span><div _ngcontent-ng-c2376924626="" class="buttons ng-tns-c2376924626-72 ng-star-inserted"><!----><button _ngcontent-ng-c2376924626="" aria-label="复制代码" mat-icon-button="" mattooltip="复制代码" class="mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-mdc-tooltip-trigger copy-button ng-tns-c2376924626-72 mat-untherted" mat-ripple-loader-uninitialized="" mat-ripple-loader-class-name="mat-mdc-button-ripple" mat-ripple-loader-centered="" jslog="179062;track:generic_click,impression;BardVeMetadataKey:[[&quot;r_b8f5768537a0ae92&quot;,&quot;c_9ce6b2f5dd7aa663&quot;,null,&quot;rc_024ea049b80cba68&quot;,null,null,&quot;zh&quot;,null,1,null,null,1,1]];mutable:true"><span class="mat-mdc-button-persistent-ripple mdc-icon-button__ripple"></span><mat-icon _ngcontent-ng-c2376924626="" role="img" fonticon="content_copy" class="mat-icon notranslate gds-icon-s google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true" data-mat-icon-type="font" data-mat-icon-name="content_copy"></mat-icon><!----><span class="mat-focus-indicator"></span><span class="mat-mdc-button-touch-target"></span></button><!----><!----></div><!----><!----></div><!----><div _ngcontent-ng-c2376924626="" class="formatted-code-block-internal-container ng-tns-c2376924626-72"><div _ngcontent-ng-c2376924626="" class="animated-opacity ng-tns-c2376924626-72"><pre _ngcontent-ng-c2376924626="" class="ng-tns-c2376924626-72"><code _ngcontent-ng-c2376924626="" role="text" data-test-id="code-content" class="code-container formatted ng-tns-c2376924626-72">{
+  <span class="hljs-attr">"format"</span>: <span class="hljs-string">"gemini-voyager.folders.v1"</span>,
+  <span class="hljs-attr">"exportedAt"</span>: <span class="hljs-string">"2026-03-10T22:33:03.000Z"</span>,
+  <span class="hljs-attr">"version"</span>: <span class="hljs-string">"1.3.3"</span>,
+  <span class="hljs-attr">"data"</span>: {
+    <span class="hljs-attr">"folders"</span>: [
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-string">"a1b2c3d4"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"AI 绘图与提示词"</span>,
+        <span class="hljs-attr">"parentId"</span>: <span class="hljs-literal">null</span>,
+        <span class="hljs-attr">"isExpanded"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"createdAt"</span>s="hljs-number">1773181983000</span>,
+        <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-number">1773181983000</span>
+      },
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-string">"a1i2m3l4"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"AI 基础架构与前沿"</span>,
+        <span class="hljs-attr">"parentId"</span>: <span class="hljs-literal">null</span>,
+        <span class="hljs-attr">"isExpanded"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"createdAt"</span>: <span class="hljs-number">1773181983000</span>,
+        <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-number">1773181983000</span>
+      },
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-string">"p1e2r3s4"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"个人成长与规划"</span>,
+        <span class="hljs-attr">"parentId"</span>: <span class="hljs-literan class="hljs-attr">"isExpanded"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"createdAt"</span>: <span class="hljs-number">1773181983000</span>,
+        <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-number">1773181983000</span>
+      },
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-string">"p1h2i3l4"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"哲学与宏观探讨"</span>,
+        <span class="hljs-attr">"parentId"</span>: <span class="hljs-literal">null</span>,
+        <span class="hljs-attr">"isExpanded"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"createdAt"</span>: <span class="hljs-number">1773181983000</span>,
+        <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-number">1773181983000</span>
+      },
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-string">"l1i2f3e4"</span>,
+        <span class="hljs-attr">"name"</lass="hljs-string">"生活与杂项"</span>,
+        <span class="hljs-attr">"parentId"</span>: <span class="hljs-literal">null</span>,
+        <span class="hljs-attr">"isExpanded"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"createdAt"</span>: <span class="hljs-number">1773181983000</span>,
+        <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-number">1773181983000</span>
+      }
+    ],
+    <span class="hljs-attr">"folderContents"</span>: {
+      <span class="hljs-attr">"folder_1764547849425_tohea0ggu"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"db4ce6df1bf6d875"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"整理对话与文件夹结构"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/db4ce6df1bf6d875"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">177       {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"67e50aab6bdafa9d"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"VS Code RTL 布局分析"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/67e50aab6bdafa9d"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"9416ff6384e9cf46"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"VS Code 插件 Markdown 文档"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/9416ff6384e9cf46"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: s-string">"95ee92ec5fe1750f"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"提取HTML中的邮箱地址"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/95ee92ec5fe1750f"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"77262ccd69b97c39"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Python 工作流与软件推荐"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/77262ccd69b97c39"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"0a3d87090f363ba4"</span>,
+          <span class="hljass="hljs-string">"Python 模拟数据导出与绘图"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/0a3d87090f363ba4"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"601213db14cbfe03"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Gemini Voyager 更新字幕生成"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/601213db14cbfe03"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"bf4a388389ded5eb"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Safari 插件加载问题排查"</spspan>: <span class="hljs-string">"https://gemini.google.com/app/bf4a388389ded5eb"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"70f236bb0f6bc939"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"转换为 md codeblock"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/70f236bb0f6bc939"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"6c97809dc86e47e5"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Word 公式渲染：MathML 与 LaTeX"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app//span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"7295899101926114"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"极简命令行风格的单文件网站"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/7295899101926114"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"e819a53d0ba0973b"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"苹果账号区域切换指南"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/e819a53d0ba0973b"</span>,
+          <span class="hljs-attr">"addedAt"</</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"05f7cf8205727c0f"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"阿里云 DNS 子域名设置指南"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/05f7cf8205727c0f"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"a1b2c3d4"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"eb622f3cf10a7b92"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Illustration Correction: Tokens vs. Letters"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/eb622f3cf10a7b92"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-numbern>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"f398a918b529c407"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Create a miniature diorama style illustration. A sedan car clay model is shown partially disassembled on a workbench..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/f398a918b529c407"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"11d61dbaaf5b3224"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Illustration of Misleading Search Results"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/11d61dbaaf5b3224"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"c4f9064ae70a8a2e"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Hand-drawn sketch on cream paper, black ink with orange accents. A circular anxiety cycle..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/c4f9064ae70a8a2e"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"a3a7c039f3cb6eba"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Create a gothic claymation style illustration. A small clay figure sits overwhelmed at a desk..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/a3a7c039f3cb6eba"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"72de7ecb54aee583"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Generate an image in gothic claymation style... A suspicious-looking clay figure in a trench coat is selling glowing API keys..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/72de7ecb54aee583"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"30d8b4f179e37ff7"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"A clean, minimalist editorial illustration in flat design style... using a magnifying glass to examine a stream of floating news headlines..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/30d8b4f179e37ff7"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"72eedeca0aa1ced6"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"将图中人物变成一个天才程序员！（是优雅的那种，不是做题码农！构图完全可以改，动漫画风不要改变哦）"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/72eedeca0aa1ced6"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"af87ce48e1b0809d"</span>,
+          <span class="hljs-attr">"title" class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/af87ce48e1b0809d"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"25d69b3522b395e3"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"腾讯大厦前（你就画一个企鹅标志就行）员工给老年人中年人和孩子免费安装 openclaw..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/25d69b3522b395e3"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"92fb896c74348393"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Image Editing Request Denied"</spjs-string">"https://gemini.google.com/app/92fb896c74348393"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"folder_1762524324403_os29fr3og"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"70f1bb214941fc74"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Academic Information Formatting"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/70f1bb214941fc74"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"099c0914a2f94a76"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"LaTeX 文档与研究建议"</span>,
+          <span class="hljs-attr">"url"</span>"hljs-string">"https://gemini.google.com/app/099c0914a2f94a76"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"755d2464f966b318"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"W&amp;B 数据转论文图表"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/755d2464f966b318"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"ebe56badc1940956"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"论文审稿与改进建议"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/ebe56badc1940956"</sp-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"b0dd39b37e37aa1e"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"W&amp;B 学术计划申请指南"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/b0dd39b37e37aa1e"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"folder_1762863854470_2ch0fkda6"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"db767b9f6ce78088"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"AI MRes Support and Discussion"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/db767b9f6ce78088"</span>,
+      "hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"33364f4aa5de19d4"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"ICRA 2026 论文提交进度管理"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/33364f4aa5de19d4"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"28bc54bf590354a6"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"mjlab-homierl 帖子草稿"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/28bc54bf590354a6"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">177318
+      ],
+      <span class="hljs-attr">"folder_1762171291253_8yfka32dh"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"858f8ea28caa625c"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"人形机器人 RL 深度剖析"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/858f8ea28caa625c"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"b58a5d3c2abfcebb"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Humanoid Locomotion RL Challenges"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/b58a5d3c2abfcebb"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181    },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"82d985a0d6a2714d"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"CQN-AS: HRL 与机器人控制"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/82d985a0d6a2714d"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"0d1be7fa0d41983c"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"CQN-AS：模仿学习外衣下的强化学习"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/0d1be7fa0d41983c"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-atss="hljs-string">"19d8f0865c245420"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"RL 训练结果分析与建议"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/19d8f0865c245420"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"a1i2m3l4"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"da9e9fde3cd263dd"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"扩散模型：从噪声中生成"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/da9e9fde3cd263dd"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span clan>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Opus vs. Codex: AI 编程模型对比"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/3fff3e9f9e3e4477"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"d235a87ee1fdacec"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Transformer Backbone: 三大流派解析"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/d235a87ee1fdacec"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"2be207baca497292"</span>,
+          <span class="hljs-attr">"title"js-string">"Continual Learning: Dual-Stream ViT Analysis"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/2be207baca497292"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"p1e2r3s4"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"7278b2d8aaed2f30"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Nagi-ovo / Jesse Zhang 人生历程分析"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/7278b2d8aaed2f30"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"5fc1b37fad374dd1"</span>,
+          <span class="hljs-attr">"title"</ class="hljs-string">"LeetCode 学习计划：ADHD 学生入门"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/5fc1b37fad374dd1"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"72ee9f5a20ad5920"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"AI 伙伴的直接沟通模式"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/72ee9f5a20ad5920"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"f4e112865f94c8fb"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"GitHub Sponsor Bio for Robotian class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/f4e112865f94c8fb"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"910975bdfa8483ac"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"优化工作环境提升专注力"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/910975bdfa8483ac"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"l1i2f3e4"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"a71251700687be25"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"网线接口的用途与处理"</span>,
+          <splass="hljs-string">"https://gemini.google.com/app/a71251700687be25"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"cc5ea17506372b1d"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"设置一个小时后的闹钟"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/cc5ea17506372b1d"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"bab47c0ab02c3432"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"餐厅酒水菜单翻译"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/bab47c0ab02c3432"<attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"ea3e2995fc913bd7"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"创意合伙人：礼物、活动、创作"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/ea3e2995fc913bd7"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"f0d32dfac9a92244"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"拯救鼻子计划"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/f0d32dfac9a92244"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">177318198300class="hljs-attr">"p1h2i3l4"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"cf3727e23b5d1ea1"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Deconstructing Disciplines: A Meta-Model"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/cf3727e23b5d1ea1"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"aa9709a091ceba44"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"艾威尔河污染成因分析"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/aa9709a091ceba44"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ]
+    }
+!----></div></div></div>\
+但是现在 code 框里的间距还是有问题
+
+---
+
+但是现在 code 框里的文本(代码)还是行间距有问题:\
+<div _ngcontent-ng-c2376924626="" class="formatted-code-block-internal-container ng-tns-c2376924626-72"><div _ngcontent-ng-c2376924626="" class="animated-opacity ng-tns-c2376924626-72"><pre _ngcontent-ng-c2376924626="" class="ng-tns-c2376924626-72"><code _ngcontent-ng-c2376924626="" role="text" data-test-id="code-content" class="code-container formatted ng-tns-c2376924626-72">{
+  <span class="hljs-attr">"format"</span>: <span class="hljs-string">"gemini-voyager.folders.v1"</span>,
+  <span class="hljs-attr">"exportedAt"</span>: <span class="hljs-string">"2026-03-10T22:33:03.000Z"</span>,
+  <span class="hljs-attr">"version"</span>: <span class="hljs-string">"1.3.3"</span>,
+  <span class="hljs-attr">"data"</span>: {
+    <span class="hljs-attr">"folders"</span>: [
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-string">"a1b2c3d4"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"AI 绘图与提示词"</span>,
+        <span class="hljs-attr">"parentId"an class="hljs-literal">null</span>,
+        <span class="hljs-attr">"isExpanded"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"createdAt"</span>: <span class="hljs-number">1773181983000</span>,
+        <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-number">1773181983000</span>
+      },
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-string">"a1i2m3l4"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"AI 基础架构与前沿"</span>,
+        <span class="hljs-attr">"parentId"</span>: <span class="hljs-literal">null</span>,
+        <span class="hljs-attr">"isExpanded"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"createdAt"</span>: <span class="hljs-number">1773181983000</span>,
+        <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-number">1773181983000</span>
+      },
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-string">"p1e2r3      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"个人成长与规划"</span>,
+        <span class="hljs-attr">"parentId"</span>: <span class="hljs-literal">null</span>,
+        <span class="hljs-attr">"isExpanded"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"createdAt"</span>: <span class="hljs-number">1773181983000</span>,
+        <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-number">1773181983000</span>
+      },
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-string">"p1h2i3l4"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"哲学与宏观探讨"</span>,
+        <span class="hljs-attr">"parentId"</span>: <span class="hljs-literal">null</span>,
+        <span class="hljs-attr">"isExpanded"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"createdAt"</span>: <span class="hljs-number">1773181983000</span>,
+        <span class="hljs-attr">"updateds-number">1773181983000</span>
+      },
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-string">"l1i2f3e4"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"生活与杂项"</span>,
+        <span class="hljs-attr">"parentId"</span>: <span class="hljs-literal">null</span>,
+        <span class="hljs-attr">"isExpanded"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"createdAt"</span>: <span class="hljs-number">1773181983000</span>,
+        <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-number">1773181983000</span>
+      }
+    ],
+    <span class="hljs-attr">"folderContents"</span>: {
+      <span class="hljs-attr">"folder_1764547849425_tohea0ggu"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"db4ce6df1bf6d875"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"整理对话与文件夹结构"</span>,
+          <span claspan class="hljs-string">"https://gemini.google.com/app/db4ce6df1bf6d875"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"67e50aab6bdafa9d"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"VS Code RTL 布局分析"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/67e50aab6bdafa9d"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"9416ff6384e9cf46"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"VS Code 插件 Markdown 文档"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/9416ff6384e9c       <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"95ee92ec5fe1750f"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"提取HTML中的邮箱地址"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/95ee92ec5fe1750f"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"77262ccd69b97c39"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Python 工作流与软件推荐"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/77262ccd69b97c39"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="h
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"0a3d87090f363ba4"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Python 模拟数据导出与绘图"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/0a3d87090f363ba4"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"601213db14cbfe03"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Gemini Voyager 更新字幕生成"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/601213db14cbfe03"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr"n class="hljs-string">"bf4a388389ded5eb"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Safari 插件加载问题排查"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/bf4a388389ded5eb"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"70f236bb0f6bc939"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"转换为 md codeblock"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/70f236bb0f6bc939"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"6c97809dc86e47e5"</span>,
+          <span clas/span>: <span class="hljs-string">"Word 公式渲染：MathML 与 LaTeX"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/6c97809dc86e47e5"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"7295899101926114"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"极简命令行风格的单文件网站"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/7295899101926114"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"e819a53d0ba0973b"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"苹果账号tr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/e819a53d0ba0973b"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"05f7cf8205727c0f"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"阿里云 DNS 子域名设置指南"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/05f7cf8205727c0f"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"a1b2c3d4"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"eb622f3cf10a7b92"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Illustration Correction: Tokens vs. Letters"</span>,
+          <spanurl"</span>: <span class="hljs-string">"https://gemini.google.com/app/eb622f3cf10a7b92"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"f398a918b529c407"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Create a miniature diorama style illustration. A sedan car clay model is shown partially disassembled on a workbench..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/f398a918b529c407"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"11d61dbaaf5b3224"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Illustration of Misleading Search Results"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/11d61dbaaf5b3224"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"c4f9064ae70a8a2e"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Hand-drawn sketch on cream paper, black ink with orange accents. A circular anxiety cycle..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/c4f9064ae70a8a2e"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"a3a7c039f3cb6eba"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Create a gothic claymation style illustration. A small clay figure sits overwhelmed at a desk..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/a3a7c039f3cb6eba"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"72de7ecb54aee583"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Generate an image in gothic claymation style... A suspicious-looking clay figure in a trench coat is selling glowing API keys..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/72de7ecb54aee583"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"30d8b4f179e37ff7"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"A clean, minimalist editorial illustration in flat design style... using a magnifying glass to examine a stream of floating news headlines..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/30d8b4f179e37ff7"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"72eedeca0aa1ced6"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"将图中人物变成一个天才程序员！（是优雅的那种，不是做题码农！构图完全可以改，动漫画风不要改变哦）"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/72eedeca0aa1ced6"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">177: <span class="hljs-string">"af87ce48e1b0809d"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"变成一个天才程序员！（是优雅的那种，不是做题码农！动漫画风不要改变哦）"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/af87ce48e1b0809d"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"25d69b3522b395e3"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"腾讯大厦前（你就画一个企鹅标志就行）员工给老年人中年人和孩子免费安装 openclaw..."</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/25d69b3522b395e3"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">178393"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Image Editing Request Denied"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/92fb896c74348393"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"folder_1762524324403_os29fr3og"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"70f1bb214941fc74"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Academic Information Formatting"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/70f1bb214941fc74"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"099c0914a2f94a76"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"LaTeX 文档与研究建议"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/099c0914a2f94a76"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"755d2464f966b318"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"W&amp;B 数据转论文图表"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/755d2464f966b318"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"ebe56badc1940956"</span>,
+          <span class="hljs-attr">"hljs-string">"论文审稿与改进建议"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/ebe56badc1940956"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"b0dd39b37e37aa1e"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"W&amp;B 学术计划申请指南"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/b0dd39b37e37aa1e"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"folder_1762863854470_2ch0fkda6"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"db767b9f6ce78088"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"AI MRes Support and Discussion"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/db767b9f6ce78088"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"33364f4aa5de19d4"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"ICRA 2026 论文提交进度管理"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/33364f4aa5de19d4"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"28bc54bf590354a6"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"mjlab-homierl 帖子草� <span class="hljs-string">"https://gemini.google.com/app/28bc54bf590354a6"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"folder_1762171291253_8yfka32dh"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"858f8ea28caa625c"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"人形机器人 RL 深度剖析"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/858f8ea28caa625c"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"b58a5d3c2abfcebb"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Humanoid Locomotion RL Challenges"</span>,
+          <span class="hpan>: <span class="hljs-string">"https://gemini.google.com/app/b58a5d3c2abfcebb"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"82d985a0d6a2714d"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"CQN-AS: HRL 与机器人控制"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/82d985a0d6a2714d"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"0d1be7fa0d41983c"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"CQN-AS：模仿学习外衣下的强化学习"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://geminin>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"19d8f0865c245420"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"RL 训练结果分析与建议"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/19d8f0865c245420"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"a1i2m3l4"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"da9e9fde3cd263dd"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"扩散模型：从噪声中生成"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/da9e9fde3cd263dd"</spaddedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"3fff3e9f9e3e4477"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Opus vs. Codex: AI 编程模型对比"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/3fff3e9f9e3e4477"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"d235a87ee1fdacec"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Transformer Backbone: 三大流派解析"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/d235a87ee1fdacec"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">177  },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"2be207baca497292"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Continual Learning: Dual-Stream ViT Analysis"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/2be207baca497292"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"p1e2r3s4"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"7278b2d8aaed2f30"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Nagi-ovo / Jesse Zhang 人生历程分析"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/7278b2d8aaed2f30"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">17731an>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"5fc1b37fad374dd1"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"LeetCode 学习计划：ADHD 学生入门"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/5fc1b37fad374dd1"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"72ee9f5a20ad5920"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"AI 伙伴的直接沟通模式"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/72ee9f5a20ad5920"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljan class="hljs-string">"f4e112865f94c8fb"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"GitHub Sponsor Bio for Robotics Enthusiast"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/f4e112865f94c8fb"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"910975bdfa8483ac"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"优化工作环境提升专注力"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/910975bdfa8483ac"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"l1i2f3e4"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"hljs-string">"a71251700687be25"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"网线接口的用途与处理"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/a71251700687be25"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"cc5ea17506372b1d"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"设置一个小时后的闹钟"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/cc5ea17506372b1d"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"bab47c0ab02c3432"</span>,
+          <span class="hljs-string">"餐厅酒水菜单翻译"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/bab47c0ab02c3432"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"ea3e2995fc913bd7"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"创意合伙人：礼物、活动、创作"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/ea3e2995fc913bd7"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"f0d32dfac9a92244"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"拯救鼻子计划"</span>,
+          <sping">"https://gemini.google.com/app/f0d32dfac9a92244"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ],
+      <span class="hljs-attr">"p1h2i3l4"</span>: [
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"cf3727e23b5d1ea1"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Deconstructing Disciplines: A Meta-Model"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://gemini.google.com/app/cf3727e23b5d1ea1"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        },
+        {
+          <span class="hljs-attr">"conversationId"</span>: <span class="hljs-string">"aa9709a091ceba44"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"艾威尔河污染成因分析"</span>,
+          <span class="hljs-attr">"url"</span>: <span class="h/gemini.google.com/app/aa9709a091ceba44"</span>,
+          <span class="hljs-attr">"addedAt"</span>: <span class="hljs-number">1773181983000</span>
+        }
+      ]
+    }
+  }
+}
+</code></pre><!----></div></div>
+
+---
+
+push,只要你改动的文件
