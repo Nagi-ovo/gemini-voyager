@@ -1,0 +1,45 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "352d8bda6a8b",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".github/README_AR.md",
+    ".github/README_ES.md",
+    ".github/README_FR.md",
+    ".github/README_JA.md",
+    ".github/README_KO.md",
+    ".github/README_PT.md",
+    ".github/README_RU.md",
+    ".github/README_ZH.md",
+    ".github/README_ZH_TW.md",
+    "README.md",
+    "docs/ar/index.md",
+    "docs/en/index.md",
+    "docs/es/index.md",
+    "docs/fr/index.md",
+    "docs/index.md",
+    "docs/ja/index.md",
+    "docs/ko/index.md",
+    "docs/pt/index.md",
+    "docs/ru/index.md",
+    "docs/zh_TW/index.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/35/2d8bda6a8b/0/metadata.json",
+      "transcript": "/35/2d8bda6a8b/0/full.jsonl",
+      "context": "/35/2d8bda6a8b/0/context.md",
+      "content_hash": "/35/2d8bda6a8b/0/content_hash.txt",
+      "prompt": "/35/2d8bda6a8b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
