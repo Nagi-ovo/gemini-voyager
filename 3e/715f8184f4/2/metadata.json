@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "3e715f8184f4",
+  "session_id": "327f1292-9603-4e47-8b53-e1778317b947",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-26T14:11:20.305054Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "src/core/services/GoogleDriveSyncService.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "d417c3f517e2",
+  "token_usage": {
+    "input_tokens": 40,
+    "cache_creation_tokens": 276997,
+    "cache_read_tokens": 736930,
+    "output_tokens": 21555,
+    "api_call_count": 22
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-26T14:11:20.144378Z",
+    "agent_lines": 3,
+    "human_added": 14073,
+    "human_modified": 2,
+    "human_removed": 0,
+    "total_committed": 14078,
+    "agent_percentage": 0.021309845148458587
+  }
+}
