@@ -41,6 +41,9 @@ features:
   - icon: 💬
     title: 引用返信
     details: テキストを選択してワンクリックで引用。文脈に応じた返信で、効率的なコミュニケーションを。
+  - icon: 🕐
+    title: メッセージタイムスタンプ
+    details: 時の記録。各メッセージの送信時刻を自動記録、会話の流れを一目で把握。
   - icon: ↔️
     title: チャット幅
     details: 視野を広げよう。チャットの幅を自由に調整して、より良い閲覧体験を。
@@ -77,6 +80,15 @@ features:
   - icon: 🔬
     title: Deep Research
     details: 思考を解き明かす。Deep Research の研究過程とリンクを抽出。
+  - icon: 🔤
+    title: フォントサイズ
+    details: 読みやすさは自分で決める。チャットのフォントサイズを自由に調整。
+  - icon: 📌
+    title: サイドバー自動非表示
+    details: 集中モード。マウスが離れるとサイドバーが自動収納、会話に没入。
+  - icon: ⌨️
+    title: 送信動作
+    details: Enter で改行、Ctrl+Enter で送信。会話のリズムを自分の手に。
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

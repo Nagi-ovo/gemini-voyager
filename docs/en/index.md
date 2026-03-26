@@ -41,6 +41,9 @@ features:
   - icon: 💬
     title: Quote Reply
     details: Select to quote. Context-aware replies for efficient communication.
+  - icon: 🕐
+    title: Message Timestamps
+    details: Time-stamped. Auto-record when each message was sent, trace your conversation timeline at a glance.
   - icon: ↔️
     title: Chat Width
     details: Go wide. Freely adjust the chat width for a better viewing experience.
@@ -77,6 +80,15 @@ features:
   - icon: 🔬
     title: Deep Research
     details: Unbox the thinking. Extract research processes and links from Deep Research sessions.
+  - icon: 🔤
+    title: Font Size
+    details: Read your way. Adjust chat font size for the perfect reading experience.
+  - icon: 📌
+    title: Sidebar Auto-Hide
+    details: Focus mode. Sidebar auto-collapses when your mouse leaves, full immersion in conversations.
+  - icon: ⌨️
+    title: Send Behavior
+    details: Enter for newline, Ctrl+Enter to send. Take control of your conversation rhythm.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

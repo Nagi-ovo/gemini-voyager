@@ -41,6 +41,9 @@ features:
   - icon: 💬
     title: 引用回覆
     details: 選中即引。上下文精確回覆，溝通更高效。
+  - icon: 🕐
+    title: 訊息時間戳
+    details: 時光標記。自動記錄每則訊息的傳送時間，回溯對話脈絡一目了然。
   - icon: ↔️
     title: 對話寬度
     details: 視野全開。自由調節對話框寬度，程式碼表格完整呈現。
@@ -77,6 +80,15 @@ features:
   - icon: 🔬
     title: Deep Research
     details: 拆開黑箱。一鍵提取 Deep Research 的思考過程與研究連結。
+  - icon: 🔤
+    title: 字體大小
+    details: 大小隨心。自由調整聊天字號，舒適閱讀由你掌控。
+  - icon: 📌
+    title: 側邊欄自動隱藏
+    details: 專注模式。滑鼠離開自動收起側邊欄，全螢幕沉浸對話。
+  - icon: ⌨️
+    title: 傳送行為
+    details: Enter 換行，Ctrl+Enter 傳送。讓對話節奏回歸你的雙手。
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

@@ -41,6 +41,9 @@ features:
   - icon: 💬
     title: 引用回复
     details: 选中即引。上下文精确回复，沟通更高效。
+  - icon: 🕐
+    title: 消息时间戳
+    details: 时光标记。自动记录每条消息的发送时间，回溯对话脉络一目了然。
   - icon: ↔️
     title: 对话宽度
     details: 视野全开。自由调节对话框宽度，代码表格完整呈现。
@@ -77,6 +80,15 @@ features:
   - icon: 🔬
     title: Deep Research
     details: 拆开黑箱。一键提取 Deep Research 的思考过程与研究链接。
+  - icon: 🔤
+    title: 字体大小
+    details: 大小随心。自由调整聊天字号，舒适阅读由你掌控。
+  - icon: 📌
+    title: 侧边栏自动隐藏
+    details: 专注模式。鼠标离开自动收起侧边栏，全屏沉浸对话。
+  - icon: ⌨️
+    title: 发送行为
+    details: Enter 换行，Ctrl+Enter 发送。让对话节奏回归你的双手。
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

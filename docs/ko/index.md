@@ -41,6 +41,9 @@ features:
   - icon: 💬
     title: 인용 답장
     details: 텍스트를 선택하여 인용하세요. 효율적인 커뮤니케이션을 위한 문맥 인식 답장.
+  - icon: 🕐
+    title: 메시지 타임스탬프
+    details: 시간 기록. 각 메시지의 전송 시간을 자동으로 기록하여 대화 흐름을 한눈에 파악하세요.
   - icon: ↔️
     title: 대화 너비
     details: 더 넓게 보세요. 더 나은 시각적 경험을 위해 대화 너비를 자유롭게 조정하세요.
@@ -77,6 +80,15 @@ features:
   - icon: 🔬
     title: Deep Research
     details: 사고를 해체하세요. Deep Research 세션에서 연구 과정과 링크를 추출합니다.
+  - icon: 🔤
+    title: 글꼴 크기
+    details: 나만의 읽기 경험. 채팅 글꼴 크기를 자유롭게 조정하세요.
+  - icon: 📌
+    title: 사이드바 자동 숨기기
+    details: 집중 모드. 마우스가 벗어나면 사이드바가 자동으로 접혀 대화에 몰입하세요.
+  - icon: ⌨️
+    title: 전송 동작
+    details: Enter로 줄바꿈, Ctrl+Enter로 전송. 대화의 리듬을 직접 제어하세요.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

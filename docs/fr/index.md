@@ -41,6 +41,9 @@ features:
   - icon: 💬
     title: Réponse avec Citation
     details: Sélectionnez pour citer. Réponses contextualisées pour une communication efficace.
+  - icon: 🕐
+    title: Horodatage des Messages
+    details: Marqueur temporel. Enregistre automatiquement l'heure d'envoi de chaque message, retracez le fil de la conversation en un coup d'œil.
   - icon: ↔️
     title: Largeur du chat
     details: Voyez large. Ajustez librement la largeur du chat pour une meilleure expérience de visualisation.
@@ -77,6 +80,15 @@ features:
   - icon: 🔬
     title: Deep Research
     details: Ouvrez la boîte noire. Extrayez les processus de recherche et liens des sessions Deep Research.
+  - icon: 🔤
+    title: Taille de Police
+    details: Lisez à votre guise. Ajustez la taille de police du chat pour une lecture confortable.
+  - icon: 📌
+    title: Masquage Auto du Panneau
+    details: Mode concentration. Le panneau se replie automatiquement quand la souris le quitte, immersion totale dans la conversation.
+  - icon: ⌨️
+    title: Comportement d'Envoi
+    details: Entrée pour saut de ligne, Ctrl+Entrée pour envoyer. Reprenez le contrôle du rythme de conversation.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

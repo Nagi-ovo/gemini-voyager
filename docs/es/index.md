@@ -41,6 +41,9 @@ features:
   - icon: 💬
     title: Respuesta con Cita
     details: Selecciona para citar. Respuestas contextualizadas para una comunicación eficiente.
+  - icon: 🕐
+    title: Marca de Tiempo
+    details: Marcador temporal. Registra automáticamente la hora de envío de cada mensaje, rastrea el hilo de la conversación de un vistazo.
   - icon: ↔️
     title: Ancho del chat
     details: Amplía tu visión. Ajusta libremente el ancho del chat para una mejor experiencia de visualización.
@@ -77,6 +80,15 @@ features:
   - icon: 🔬
     title: Deep Research
     details: Abre la caja negra. Extrae procesos de pensamiento y enlaces de las sesiones de Deep Research.
+  - icon: 🔤
+    title: Tamaño de Fuente
+    details: Lee a tu manera. Ajusta el tamaño de fuente del chat para una experiencia de lectura perfecta.
+  - icon: 📌
+    title: Ocultación Automática del Panel
+    details: Modo enfoque. El panel se repliega automáticamente cuando el ratón sale, inmersión total en la conversación.
+  - icon: ⌨️
+    title: Comportamiento de Envío
+    details: Enter para nueva línea, Ctrl+Enter para enviar. Retoma el control del ritmo de tu conversación.
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
