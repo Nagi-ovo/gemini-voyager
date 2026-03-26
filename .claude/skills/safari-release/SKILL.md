@@ -64,6 +64,14 @@ cd safari/Models && create-dmg \
   dmg_source
 ```
 
-### 6. Verify and report
+### 6. Upload DMG to GitHub release
 
-Confirm the DMG was created at `safari/Models/voyager-v${VERSION}.dmg` and report success to the user.
+Upload the DMG to the existing GitHub release for the current version:
+
+```bash
+gh release upload v${VERSION} safari/Models/voyager-v${VERSION}.dmg --clobber
+```
+
+### 7. Verify and report
+
+Confirm the DMG was uploaded and report success to the user.
