@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "550972390d5c",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".claude/skills/safari-release/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/55/0972390d5c/0/metadata.json",
+      "transcript": "/55/0972390d5c/0/full.jsonl",
+      "context": "/55/0972390d5c/0/context.md",
+      "content_hash": "/55/0972390d5c/0/content_hash.txt",
+      "prompt": "/55/0972390d5c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
