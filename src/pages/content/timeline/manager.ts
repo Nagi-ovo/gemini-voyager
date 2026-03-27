@@ -1,6 +1,12 @@
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { storageService } from '@/core/services/StorageService';
 import { StorageKeys, type TurnId } from '@/core/types/common';
+import {
+  buildConversationIdFromUrl,
+  buildLegacyConversationIdFromUrl,
+  buildRouteConversationIdFromUrl,
+} from '@/core/utils/conversationIdentity';
+import { hashString } from '@/core/utils/hash';
 import { GV_RTL_CLASS, applyRTLClass } from '@/core/utils/rtl';
 
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
@@ -8,17 +14,9 @@ import { TimestampService } from '../timestamp/TimestampService';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
 import { TimelinePreviewPanel } from './TimelinePreviewPanel';
+import { findMatchingStarredMessages } from './starredLookup';
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
 import type { DotElement, MarkerLevel } from './types';
-
-function hashString(input: string): string {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0).toString(36);
-}
 
 /** Accessibility prefixes injected by Gemini's DOM that should be stripped from previews effectively globally. */
 const TURN_LABEL_PREFIXES =
@@ -467,8 +465,15 @@ export class TimelineManager {
   }
 
   private computeConversationId(): string {
-    const raw = `${location.host}${location.pathname}${location.search}`;
-    return `gemini:${hashString(raw)}`;
+    return buildConversationIdFromUrl(window.location.href);
+  }
+
+  private computeLegacyConversationId(): string {
+    return buildLegacyConversationIdFromUrl(window.location.href);
+  }
+
+  private computeRouteConversationId(): string {
+    return buildRouteConversationIdFromUrl(window.location.href);
   }
 
   /**
@@ -476,6 +481,16 @@ export class TimelineManager {
    */
   private getStarsStorageKey(): string | null {
     return this.conversationId ? `geminiTimelineStars:${this.conversationId}` : null;
+  }
+
+  private getLegacyStarsStorageKey(): string | null {
+    const legacyConversationId = this.computeLegacyConversationId();
+    return legacyConversationId ? `geminiTimelineStars:${legacyConversationId}` : null;
+  }
+
+  private getRouteStarsStorageKey(): string | null {
+    const routeConversationId = this.computeRouteConversationId();
+    return routeConversationId ? `geminiTimelineStars:${routeConversationId}` : null;
   }
 
   /**
@@ -560,9 +575,25 @@ export class TimelineManager {
   private async syncStarredFromService(): Promise<void> {
     if (!this.conversationId) return;
     try {
-      const messages = await StarredMessagesService.getStarredMessagesForConversation(
-        this.conversationId,
+      const data = await StarredMessagesService.getAllStarredMessages();
+      const matched = findMatchingStarredMessages(data, this.conversationId, window.location.href);
+
+      let messages = matched.messages;
+      const needsReconcile = matched.sourceConversationIds.some(
+        (sourceConversationId) => sourceConversationId !== this.conversationId,
       );
+
+      if (needsReconcile) {
+        const reconciled = await StarredMessagesService.reconcileConversationIds(
+          this.conversationId,
+          matched.sourceConversationIds,
+          window.location.href,
+        );
+        if (reconciled.length > 0) {
+          messages = reconciled;
+        }
+      }
+
       const nextSet = new Set(messages.map((message) => String(message.turnId)));
 
       // Update starredAt map from service data
@@ -2680,7 +2711,20 @@ export class TimelineManager {
     const key = this.getStarsStorageKey();
     if (!key) return;
 
-    const raw = this.safeLocalStorageGet(key);
+    const fallbackKeys = [this.getRouteStarsStorageKey(), this.getLegacyStarsStorageKey()].filter(
+      (candidate): candidate is string => Boolean(candidate && candidate !== key),
+    );
+
+    let raw = this.safeLocalStorageGet(key);
+    if (!raw) {
+      for (const fallbackKey of fallbackKeys) {
+        raw = this.safeLocalStorageGet(fallbackKey);
+        if (raw) {
+          this.safeLocalStorageSet(key, raw);
+          break;
+        }
+      }
+    }
     if (!raw) return;
 
     try {

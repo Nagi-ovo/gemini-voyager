@@ -166,4 +166,28 @@ export class StarredMessagesService {
 
     return allMessages.sort((a, b) => b.starredAt - a.starredAt);
   }
+
+  /**
+   * Merge legacy conversation IDs into the current stable conversation ID.
+   */
+  static async reconcileConversationIds(
+    targetConversationId: string,
+    sourceConversationIds: string[],
+    conversationUrl: string,
+  ): Promise<StarredMessage[]> {
+    try {
+      const response = await this.sendMessage<{ ok: boolean; messages: StarredMessage[] }>(
+        'gv.starred.reconcileConversationIds',
+        {
+          targetConversationId,
+          sourceConversationIds,
+          conversationUrl,
+        },
+      );
+      return response.messages || [];
+    } catch (error) {
+      console.error('[StarredMessagesService] Failed to reconcile starred messages:', error);
+      return [];
+    }
+  }
 }

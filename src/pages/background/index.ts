@@ -418,6 +418,51 @@ class StarredMessagesManager {
     const messages = await this.getStarredMessagesForConversation(conversationId);
     return messages.some((m) => m.turnId === turnId);
   }
+
+  async reconcileConversationIds(
+    targetConversationId: string,
+    sourceConversationIds: string[],
+    conversationUrl?: string,
+  ): Promise<StarredMessage[]> {
+    return this.serialize(async () => {
+      const data = await this.getFromStorage();
+      const uniqueConversationIds = Array.from(
+        new Set([targetConversationId, ...sourceConversationIds]),
+      ).filter(Boolean);
+
+      const mergedMessages = new Map<string, StarredMessage>();
+
+      for (const conversationId of uniqueConversationIds) {
+        const messages = data.messages[conversationId] || [];
+        for (const message of messages) {
+          const normalizedMessage: StarredMessage = {
+            ...message,
+            conversationId: targetConversationId,
+            conversationUrl: conversationUrl || message.conversationUrl,
+          };
+          const existing = mergedMessages.get(message.turnId);
+          if (!existing || normalizedMessage.starredAt >= existing.starredAt) {
+            mergedMessages.set(message.turnId, normalizedMessage);
+          }
+        }
+      }
+
+      if (mergedMessages.size > 0) {
+        data.messages[targetConversationId] = Array.from(mergedMessages.values());
+      } else {
+        delete data.messages[targetConversationId];
+      }
+
+      for (const conversationId of uniqueConversationIds) {
+        if (conversationId !== targetConversationId) {
+          delete data.messages[conversationId];
+        }
+      }
+
+      await this.saveToStorage(data);
+      return data.messages[targetConversationId] || [];
+    });
+  }
 }
 
 const starredMessagesManager = new StarredMessagesManager();
@@ -606,6 +651,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               message.payload.turnId,
             );
             sendResponse({ ok: true, isStarred });
+            return;
+          }
+          case 'gv.starred.reconcileConversationIds': {
+            const messages = await starredMessagesManager.reconcileConversationIds(
+              message.payload.targetConversationId,
+              Array.isArray(message.payload.sourceConversationIds)
+                ? message.payload.sourceConversationIds
+                : [],
+              typeof message.payload.conversationUrl === 'string'
+                ? message.payload.conversationUrl
+                : undefined,
+            );
+            sendResponse({ ok: true, messages });
             return;
           }
         }

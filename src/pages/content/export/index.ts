@@ -1,6 +1,11 @@
 // Static imports to avoid CSP issues with dynamic imports in content scripts
 import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
+import {
+  buildConversationIdFromUrl,
+  buildLegacyConversationIdFromUrl,
+  buildRouteConversationIdFromUrl,
+} from '@/core/utils/conversationIdentity';
 import { type AppLanguage, normalizeLanguage } from '@/utils/language';
 import { extractMessageDictionary } from '@/utils/localeMessages';
 import type { TranslationKey } from '@/utils/translations';
@@ -191,8 +196,7 @@ function getConversationRoot(userSelectors: string[]): HTMLElement {
 }
 
 function computeConversationId(): string {
-  const raw = `${location.host}${location.pathname}${location.search}`;
-  return `gemini:${hashString(raw)}`;
+  return buildConversationIdFromUrl(window.location.href);
 }
 
 function getUserSelectors(): string[] {
@@ -266,11 +270,21 @@ function ensureTurnId(el: Element, index: number): string {
 function readStarredSet(): Set<string> {
   const cid = computeConversationId();
   try {
-    const raw = localStorage.getItem(`geminiTimelineStars:${cid}`);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) return new Set();
-    return new Set(arr.map((x: unknown) => String(x)));
+    const candidateConversationIds = [
+      cid,
+      buildRouteConversationIdFromUrl(window.location.href),
+      buildLegacyConversationIdFromUrl(window.location.href),
+    ];
+
+    for (const candidateConversationId of candidateConversationIds) {
+      const raw = localStorage.getItem(`geminiTimelineStars:${candidateConversationId}`);
+      if (!raw) continue;
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) continue;
+      return new Set(arr.map((x: unknown) => String(x)));
+    }
+
+    return new Set();
   } catch {
     return new Set();
   }
