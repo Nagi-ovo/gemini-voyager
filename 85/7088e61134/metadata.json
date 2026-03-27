@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "857088e61134",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/core/utils/__tests__/conversationIdentity.test.ts",
+    "src/core/utils/conversationIdentity.ts",
+    "src/pages/background/index.ts",
+    "src/pages/content/export/index.ts",
+    "src/pages/content/timeline/StarredMessagesService.ts",
+    "src/pages/content/timeline/__tests__/starredLookup.test.ts",
+    "src/pages/content/timeline/manager.ts",
+    "src/pages/content/timeline/starredLookup.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/85/7088e61134/0/metadata.json",
+      "transcript": "/85/7088e61134/0/full.jsonl",
+      "context": "/85/7088e61134/0/context.md",
+      "content_hash": "/85/7088e61134/0/content_hash.txt",
+      "prompt": "/85/7088e61134/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}

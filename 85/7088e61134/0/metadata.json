@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "857088e61134",
+  "session_id": "192ac09f-b413-42fa-a33c-f7252915f9e7",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-27T23:39:39.928134Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/core/utils/conversationIdentity.ts",
+    "src/pages/background/index.ts",
+    "src/pages/content/export/index.ts",
+    "src/pages/content/timeline/StarredMessagesService.ts",
+    "src/pages/content/timeline/__tests__/starredLookup.test.ts",
+    "src/pages/content/timeline/manager.ts",
+    "src/pages/content/timeline/starredLookup.ts",
+    "src/core/utils/__tests__/conversationIdentity.test.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "15bdd17877ad",
+  "checkpoint_transcript_start": 80,
+  "transcript_lines_at_start": 80,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-27T23:39:39.808951Z",
+    "agent_lines": 427,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 427,
+    "agent_percentage": 100
+  }
+}
