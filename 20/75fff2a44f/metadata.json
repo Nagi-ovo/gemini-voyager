@@ -3,7 +3,7 @@
   "checkpoint_id": "2075fff2a44f",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "src/features/export/services/ImageRenderService.ts",
     "src/features/export/services/__tests__/ImageRenderService.test.ts"
@@ -22,13 +22,20 @@
       "context": "/20/75fff2a44f/1/context.md",
       "content_hash": "/20/75fff2a44f/1/content_hash.txt",
       "prompt": "/20/75fff2a44f/1/prompt.txt"
+    },
+    {
+      "metadata": "/20/75fff2a44f/2/metadata.json",
+      "transcript": "/20/75fff2a44f/2/full.jsonl",
+      "context": "/20/75fff2a44f/2/context.md",
+      "content_hash": "/20/75fff2a44f/2/content_hash.txt",
+      "prompt": "/20/75fff2a44f/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 13,
-    "cache_creation_tokens": 13343,
-    "cache_read_tokens": 188099,
-    "output_tokens": 2012,
-    "api_call_count": 9
+    "input_tokens": 39,
+    "cache_creation_tokens": 66181,
+    "cache_read_tokens": 991917,
+    "output_tokens": 8530,
+    "api_call_count": 29
   }
 }
