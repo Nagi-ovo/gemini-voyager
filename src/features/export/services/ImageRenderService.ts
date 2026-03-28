@@ -6,6 +6,23 @@ const DEFAULT_OFFSCREEN_LEFT = '-100000px';
 const DEFAULT_SANITIZE_SELECTOR = 'img, video, iframe, canvas, svg image';
 const DEFAULT_RENDER_WIDTH = 720;
 
+/**
+ * XML 1.0 §2.2 legal chars: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+ * html-to-image serializes DOM into SVG (XML 1.0). Control characters outside the legal set
+ * cause the serialization to fail silently (img error Event).
+ */
+const XML_ILLEGAL_CONTROL_CHAR_RE = /[\x00-\x08\x0B\x0C\x0E-\x1F]/g;
+
+function stripXmlIllegalChars(root: HTMLElement): void {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node: Text | null;
+  while ((node = walker.nextNode() as Text | null)) {
+    if (XML_ILLEGAL_CONTROL_CHAR_RE.test(node.data)) {
+      node.data = node.data.replace(XML_ILLEGAL_CONTROL_CHAR_RE, '');
+    }
+  }
+}
+
 export type RenderElementToImageBlobOptions = {
   maxAttempts?: number;
   retryDelayMs?: number;
@@ -31,6 +48,7 @@ export function isImageResourceRenderError(error: unknown): boolean {
 }
 
 async function renderTargetToBlob(target: HTMLElement): Promise<Blob> {
+  stripXmlIllegalChars(target);
   const blob = await toBlob(target, {
     cacheBust: true,
     pixelRatio: 1.2,

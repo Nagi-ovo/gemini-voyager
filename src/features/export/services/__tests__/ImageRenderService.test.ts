@@ -69,6 +69,29 @@ describe('ImageRenderService', () => {
     expect((secondTarget as HTMLElement).querySelector('img')).toBeNull();
   });
 
+  it('strips XML-illegal control characters before rendering', async () => {
+    const target = document.createElement('div');
+    target.textContent = 'hello\x01world\x08test';
+    const blob = new Blob(['ok'], { type: 'image/png' });
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(blob);
+
+    const result = await renderElementToImageBlob(target);
+
+    expect(result).toBe(blob);
+    expect(target.textContent).toBe('helloworldtest');
+  });
+
+  it('preserves valid whitespace characters (tab, LF, CR) during rendering', async () => {
+    const target = document.createElement('div');
+    target.textContent = 'line1\tindented\nline2\rline3';
+    const blob = new Blob(['ok'], { type: 'image/png' });
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(blob);
+
+    await renderElementToImageBlob(target);
+
+    expect(target.textContent).toBe('line1\tindented\nline2\rline3');
+  });
+
   it('uses fallback render root with non-zero width for zero-size targets', async () => {
     const target = document.createElement('div');
     target.textContent = 'fallback';
