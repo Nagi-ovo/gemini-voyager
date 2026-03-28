@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "2075fff2a44f",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/features/export/services/ImageRenderService.ts",
+    "src/features/export/services/__tests__/ImageRenderService.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/20/75fff2a44f/0/metadata.json",
+      "transcript": "/20/75fff2a44f/0/full.jsonl",
+      "context": "/20/75fff2a44f/0/context.md",
+      "content_hash": "/20/75fff2a44f/0/content_hash.txt",
+      "prompt": "/20/75fff2a44f/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
