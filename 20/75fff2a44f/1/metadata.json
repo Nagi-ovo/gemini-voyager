@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "2075fff2a44f",
+  "session_id": "8e25ce3c-427a-4749-b571-742f1052dce8",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-28T11:11:38.819693Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/features/export/services/ImageRenderService.ts",
+    "src/features/export/services/__tests__/ImageRenderService.test.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "f298b6eef436",
+  "token_usage": {
+    "input_tokens": 13,
+    "cache_creation_tokens": 13343,
+    "cache_read_tokens": 188099,
+    "output_tokens": 2012,
+    "api_call_count": 9
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-28T11:11:38.805892Z",
+    "agent_lines": 41,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 41,
+    "agent_percentage": 100
+  }
+}
