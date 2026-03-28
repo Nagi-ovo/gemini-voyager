@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { buildConversationIdFromUrl } from '@/core/utils/conversationIdentity';
+
 import { TimestampService } from '../../timestamp/TimestampService';
 import { TimelineManager } from '../manager';
 
@@ -186,5 +188,113 @@ describe('TimelineManager message timestamps', () => {
 
     expect(secondTimestamp).toBe(firstTimestamp);
     expect(document.querySelectorAll('.gv-timestamp')).toHaveLength(1);
+  });
+
+  it('adopts draft-route timestamps for the first turn after conversation creation', async () => {
+    history.replaceState({}, '', '/app/abc123');
+
+    const main = document.createElement('main');
+    document.body.appendChild(main);
+
+    const scrollContainer = document.createElement('div');
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 400, configurable: true });
+    scrollContainer.scrollTop = 0;
+    vi.spyOn(scrollContainer, 'getBoundingClientRect').mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: 0,
+      height: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
+    main.appendChild(scrollContainer);
+
+    const rowWrapper = document.createElement('div');
+    rowWrapper.style.display = 'flex';
+    rowWrapper.style.flexDirection = 'row';
+    rowWrapper.style.justifyContent = 'flex-end';
+    scrollContainer.appendChild(rowWrapper);
+
+    const message = document.createElement('div');
+    message.className = 'user';
+    message.textContent = 'first turn';
+    setElementTop(message, 0);
+    rowWrapper.appendChild(message);
+
+    const timelineBar = document.createElement('div');
+    const trackContent = document.createElement('div');
+    timelineBar.appendChild(trackContent);
+    document.body.appendChild(timelineBar);
+
+    const draftConversationId = buildConversationIdFromUrl('https://gemini.google.com/app');
+    const liveTimestamps = new Map<string, Map<string, number>>([
+      [draftConversationId, new Map([['u-1', Date.now()]])],
+    ]);
+
+    const timestampServiceMock = {
+      getTimestamp: vi.fn((conversationId: string, turnId: string) => {
+        return liveTimestamps.get(conversationId)?.get(turnId) ?? null;
+      }),
+      formatAbsoluteTime: vi.fn(() => '2024-01-01 00:00:01'),
+      getLatestTimestampForConversation: vi.fn((conversationId: string) => {
+        const values = Array.from(liveTimestamps.get(conversationId)?.values() ?? []);
+        return values.length > 0 ? Math.max(...values) : null;
+      }),
+      adoptTimestamps: vi.fn(async (sourceConversationId: string, targetConversationId: string) => {
+        const source = liveTimestamps.get(sourceConversationId);
+        if (!source) return;
+
+        liveTimestamps.set(targetConversationId, new Map(source));
+        liveTimestamps.delete(sourceConversationId);
+      }),
+    } as unknown as TimestampService;
+
+    const manager = new TimelineManager({ previousUrl: 'https://gemini.google.com/app' });
+    const internal = manager as unknown as {
+      conversationContainer: HTMLElement | null;
+      scrollContainer: HTMLElement | null;
+      userTurnSelector: string | null;
+      conversationId: string | null;
+      timestampService: TimestampService | null;
+      showMessageTimestampsEnabled: boolean;
+      ui: { timelineBar: HTMLElement | null; trackContent: HTMLElement | null };
+      activeTurnId: string | null;
+      recalculateAndRenderMarkers: () => void;
+      updateTimelineGeometry: () => void;
+      updateIntersectionObserverTargetsFromMarkers: () => void;
+      syncTimelineTrackToMain: () => void;
+      updateVirtualRangeAndRender: () => void;
+      updateActiveDotUI: () => void;
+      scheduleScrollSync: () => void;
+    };
+
+    message.dataset.turnId = 'u-1';
+    internal.conversationContainer = scrollContainer;
+    internal.scrollContainer = scrollContainer;
+    internal.userTurnSelector = '.user';
+    internal.conversationId = 'gemini:conv:abc123';
+    internal.timestampService = timestampServiceMock;
+    internal.showMessageTimestampsEnabled = true;
+    internal.ui.timelineBar = timelineBar;
+    internal.ui.trackContent = trackContent;
+    internal.activeTurnId = null;
+
+    internal.updateTimelineGeometry = vi.fn();
+    internal.updateIntersectionObserverTargetsFromMarkers = vi.fn();
+    internal.syncTimelineTrackToMain = vi.fn();
+    internal.updateVirtualRangeAndRender = vi.fn();
+    internal.updateActiveDotUI = vi.fn();
+    internal.scheduleScrollSync = vi.fn();
+
+    internal.recalculateAndRenderMarkers();
+
+    const timestampEl = document.querySelector('.gv-timestamp') as HTMLElement | null;
+    expect(timestampEl?.textContent).toBe('2024-01-01 00:00:01');
+    expect((timestampServiceMock.adoptTimestamps as ReturnType<typeof vi.fn>).mock.calls[0]?.[0]).toBe(
+      draftConversationId,
+    );
   });
 });

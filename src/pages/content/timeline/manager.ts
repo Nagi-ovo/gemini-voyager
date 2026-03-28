@@ -5,6 +5,7 @@ import {
   buildConversationIdFromUrl,
   buildLegacyConversationIdFromUrl,
   buildRouteConversationIdFromUrl,
+  extractConversationIdFromUrl,
 } from '@/core/utils/conversationIdentity';
 import { hashString } from '@/core/utils/hash';
 import { GV_RTL_CLASS, applyRTLClass } from '@/core/utils/rtl';
@@ -53,6 +54,10 @@ type ExtGlobal = typeof globalThis & {
     };
   };
 };
+
+interface TimelineManagerOptions {
+  previousUrl?: string | null;
+}
 
 export class TimelineManager {
   private scrollContainer: HTMLElement | null = null;
@@ -193,9 +198,17 @@ export class TimelineManager {
   private timestampService: TimestampService | null = null;
   private showMessageTimestampsEnabled = false;
   private readonly initialTimestampSnapshotDelay = 800;
+  private readonly draftTimestampAdoptionWindowMs = 5 * 60 * 1000;
   private timestampTrackingReady = false;
   private timestampStartupTimer: number | null = null;
   private seenTurnIds: Set<string> = new Set();
+  private pendingDraftTimestampSourceConversationId: string | null;
+
+  constructor(private readonly options: TimelineManagerOptions = {}) {
+    this.pendingDraftTimestampSourceConversationId = this.computeDraftTimestampSourceConversationId(
+      options.previousUrl ?? null,
+    );
+  }
 
   async init(): Promise<void> {
     await initI18n();
@@ -1349,6 +1362,7 @@ export class TimelineManager {
       this.markerMap.set(id, m);
       return m;
     });
+    this.maybeAdoptDraftRouteTimestamps(this.markers.map((marker) => marker.id));
     this.updateTimestampTracking(this.markers.map((marker) => marker.id));
     // Remove orphaned dots (old dots not reused by any new marker)
     for (const dot of oldDots.values()) dot.remove();
@@ -1409,6 +1423,7 @@ export class TimelineManager {
       let insertionParent: HTMLElement | null = parent;
       let insertionAnchor: HTMLElement = msgEl;
       let alignClass = 'gv-timestamp-assistant';
+      const existingTimestampEl = existingTimestampEls.get(marker.id) ?? null;
       try {
         // Walk up to find the nearest horizontal row wrapper (avatar + bubble).
         // Then insert timestamp before that row so it is always above the whole message row.
@@ -1432,8 +1447,6 @@ export class TimelineManager {
         }
       } catch {}
       if (!insertionParent) {
-        existingTimestampEls.get(marker.id)?.remove();
-        existingTimestampEls.delete(marker.id);
         return;
       }
 
@@ -1446,7 +1459,7 @@ export class TimelineManager {
 
       const formattedTime = timestampService.formatAbsoluteTime(timestamp);
       const desiredClassName = `gv-timestamp ${alignClass}`;
-      const timestampEl = existingTimestampEls.get(marker.id) ?? document.createElement('div');
+      const timestampEl = existingTimestampEl ?? document.createElement('div');
       timestampEl.setAttribute('data-gv-turn-id', marker.id);
       if (timestampEl.className !== desiredClassName) {
         timestampEl.className = desiredClassName;
@@ -3754,6 +3767,51 @@ export class TimelineManager {
     if (this.timestampService.getTimestamp(this.conversationId, turnId as TurnId) !== null) return;
 
     this.timestampService.recordTimestamp(this.conversationId, turnId as TurnId).catch(() => {});
+  }
+
+  private maybeAdoptDraftRouteTimestamps(markerIds: string[]): void {
+    if (
+      !this.timestampService ||
+      !this.conversationId ||
+      !this.pendingDraftTimestampSourceConversationId ||
+      markerIds.length === 0
+    ) {
+      return;
+    }
+
+    const sourceConversationId = this.pendingDraftTimestampSourceConversationId;
+    const latestDraftTimestamp =
+      this.timestampService.getLatestTimestampForConversation(sourceConversationId);
+
+    this.pendingDraftTimestampSourceConversationId = null;
+
+    if (
+      latestDraftTimestamp == null ||
+      Date.now() - latestDraftTimestamp > this.draftTimestampAdoptionWindowMs
+    ) {
+      return;
+    }
+
+    this.timestampService
+      .adoptTimestamps(
+        sourceConversationId,
+        this.conversationId,
+        markerIds.map((markerId) => markerId as TurnId),
+      )
+      .catch(() => {});
+  }
+
+  private computeDraftTimestampSourceConversationId(previousUrl: string | null): string | null {
+    if (!previousUrl) return null;
+
+    const previousNativeConversationId = extractConversationIdFromUrl(previousUrl);
+    const currentNativeConversationId = extractConversationIdFromUrl(window.location.href);
+
+    if (previousNativeConversationId || !currentNativeConversationId) {
+      return null;
+    }
+
+    return buildConversationIdFromUrl(previousUrl);
   }
 
   private shouldIgnoreTimestampMutations(records: MutationRecord[]): boolean {

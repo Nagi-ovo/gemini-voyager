@@ -135,6 +135,51 @@ export class TimestampService {
     await this.schedulePersist();
   }
 
+  getLatestTimestampForConversation(conversationId: string): number | null {
+    const conversationTimestamps = this.timestamps.get(conversationId);
+    if (!conversationTimestamps || conversationTimestamps.size === 0) return null;
+
+    let latestTimestamp = -Infinity;
+    conversationTimestamps.forEach((timestamp) => {
+      if (timestamp > latestTimestamp) {
+        latestTimestamp = timestamp;
+      }
+    });
+
+    return Number.isFinite(latestTimestamp) ? latestTimestamp : null;
+  }
+
+  async adoptTimestamps(
+    sourceConversationId: string,
+    targetConversationId: string,
+    turnIds: TurnId[],
+  ): Promise<void> {
+    if (sourceConversationId === targetConversationId || turnIds.length === 0) return;
+
+    const sourceTimestamps = this.timestamps.get(sourceConversationId);
+    if (!sourceTimestamps || sourceTimestamps.size === 0) return;
+
+    const targetTimestamps = this.getConversationTimestamps(targetConversationId, true);
+    let changed = false;
+
+    turnIds.forEach((turnId) => {
+      const timestamp = sourceTimestamps.get(turnId);
+      if (timestamp == null || targetTimestamps.has(turnId)) return;
+
+      targetTimestamps.set(turnId, timestamp);
+      sourceTimestamps.delete(turnId);
+      changed = true;
+    });
+
+    if (!changed) return;
+
+    if (sourceTimestamps.size === 0) {
+      this.timestamps.delete(sourceConversationId);
+    }
+
+    await this.schedulePersist();
+  }
+
   private parseStorageData(data: unknown): {
     conversations: Map<string, Map<TurnId, number>>;
     legacyDetected: boolean;

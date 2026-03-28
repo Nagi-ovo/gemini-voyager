@@ -19,7 +19,7 @@ let historyPatched = false;
 let originalPushState: History['pushState'] | null = null;
 let originalReplaceState: History['replaceState'] | null = null;
 
-function initializeTimeline(): void {
+function initializeTimeline(previousUrl: string | null = null): void {
   if (timelineManagerInstance) {
     try {
       timelineManagerInstance.destroy();
@@ -35,7 +35,7 @@ function initializeTimeline(): void {
   try {
     document.getElementById('gemini-timeline-tooltip')?.remove();
   } catch {}
-  timelineManagerInstance = new TimelineManager();
+  timelineManagerInstance = new TimelineManager({ previousUrl });
   timelineManagerInstance
     .init()
     .catch((err) => console.error('Timeline initialization failed:', err));
@@ -46,6 +46,7 @@ let urlChangeTimer: number | null = null;
 function handleUrlChange(): void {
   if (location.href === currentUrl) return;
 
+  const previousUrl = currentUrl;
   const newPathAndSearch = location.pathname + location.search;
   const pathChanged = newPathAndSearch !== currentPathAndSearch;
 
@@ -71,7 +72,7 @@ function handleUrlChange(): void {
     console.log('[Timeline] URL changed to conversation route, scheduling initialization');
     urlChangeTimer = window.setTimeout(() => {
       console.log('[Timeline] Initializing timeline after URL change');
-      initializeTimeline();
+      initializeTimeline(previousUrl);
       urlChangeTimer = null;
     }, 500); // Wait for DOM to settle
   } else {

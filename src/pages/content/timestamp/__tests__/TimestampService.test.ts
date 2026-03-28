@@ -159,4 +159,30 @@ describe('TimestampService', () => {
     expect(timestampService.getTimestamp(conversationId, firstId)).toBeNull();
     expect(timestampService.getTimestamp(secondConversationId, secondId)).toBe(2000);
   });
+
+  it('should adopt timestamps from a source conversation for matching turn ids', async () => {
+    await timestampService.initialize();
+    const sharedTurnId = 'turn-shared' as TurnId;
+    const untouchedTurnId = 'turn-untouched' as TurnId;
+
+    await timestampService.recordTimestamp(conversationId, sharedTurnId, 1000);
+    await timestampService.recordTimestamp(conversationId, untouchedTurnId, 2000);
+    await timestampService.adoptTimestamps(conversationId, secondConversationId, [sharedTurnId]);
+
+    expect(timestampService.getTimestamp(secondConversationId, sharedTurnId)).toBe(1000);
+    expect(timestampService.getTimestamp(conversationId, sharedTurnId)).toBeNull();
+    expect(timestampService.getTimestamp(conversationId, untouchedTurnId)).toBe(2000);
+  });
+
+  it('should return the latest timestamp for a conversation', async () => {
+    await timestampService.initialize();
+    const firstId = 'turn-1' as TurnId;
+    const secondId = 'turn-2' as TurnId;
+
+    await timestampService.recordTimestamp(conversationId, firstId, 1000);
+    await timestampService.recordTimestamp(conversationId, secondId, 3000);
+
+    expect(timestampService.getLatestTimestampForConversation(conversationId)).toBe(3000);
+    expect(timestampService.getLatestTimestampForConversation(secondConversationId)).toBeNull();
+  });
 });
