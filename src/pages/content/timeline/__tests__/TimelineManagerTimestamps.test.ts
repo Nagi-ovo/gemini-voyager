@@ -293,8 +293,8 @@ describe('TimelineManager message timestamps', () => {
 
     const timestampEl = document.querySelector('.gv-timestamp') as HTMLElement | null;
     expect(timestampEl?.textContent).toBe('2024-01-01 00:00:01');
-    expect((timestampServiceMock.adoptTimestamps as ReturnType<typeof vi.fn>).mock.calls[0]?.[0]).toBe(
-      draftConversationId,
-    );
+    expect(
+      (timestampServiceMock.adoptTimestamps as ReturnType<typeof vi.fn>).mock.calls[0]?.[0],
+    ).toBe(draftConversationId);
   });
 });
