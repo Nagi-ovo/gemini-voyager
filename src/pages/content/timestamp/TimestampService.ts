@@ -9,8 +9,26 @@ interface TimestampMap {
   [turnId: string]: number;
 }
 
+interface TimestampStorageData {
+  version: 2;
+  conversations: Record<string, TimestampMap>;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isFiniteTimestamp(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isTimestampMap(value: unknown): value is TimestampMap {
+  if (!isRecord(value)) return false;
+  return Object.values(value).every(isFiniteTimestamp);
+}
+
 export class TimestampService {
-  private timestamps: Map<TurnId, number> = new Map();
+  private timestamps: Map<string, Map<TurnId, number>> = new Map();
   private pendingPersist: {
     promise: Promise<void>;
     resolve: () => void;
@@ -20,26 +38,31 @@ export class TimestampService {
   constructor(private storageService: IStorageService = StorageFactory.create('local')) {}
 
   async initialize(): Promise<void> {
-    const result = await this.storageService.get<TimestampMap>(StorageKeys.GV_MESSAGE_TIMESTAMPS);
-    if (result.success && result.data) {
-      Object.entries(result.data).forEach(([turnId, timestamp]) => {
-        this.timestamps.set(turnId as TurnId, timestamp);
-      });
+    const result = await this.storageService.get<unknown>(StorageKeys.GV_MESSAGE_TIMESTAMPS);
+    if (!result.success || !result.data) return;
+
+    const { conversations, legacyDetected } = this.parseStorageData(result.data);
+    this.timestamps = conversations;
+
+    if (legacyDetected) {
+      // Legacy v1 stored timestamps globally by turnId only, which can leak across conversations.
+      await this.storageService.remove(StorageKeys.GV_MESSAGE_TIMESTAMPS);
     }
   }
 
-  async recordTimestamp(turnId: TurnId, timestamp?: number): Promise<void> {
+  async recordTimestamp(conversationId: string, turnId: TurnId, timestamp?: number): Promise<void> {
     const ts = timestamp ?? Date.now();
-    this.timestamps.set(turnId, ts);
+    const conversationTimestamps = this.getConversationTimestamps(conversationId, true);
+    conversationTimestamps.set(turnId, ts);
     await this.schedulePersist();
   }
 
-  getTimestamp(turnId: TurnId): number | null {
-    return this.timestamps.get(turnId) ?? null;
+  getTimestamp(conversationId: string, turnId: TurnId): number | null {
+    return this.timestamps.get(conversationId)?.get(turnId) ?? null;
   }
 
-  async formatTimestamp(turnId: TurnId): Promise<string> {
-    const timestamp = this.getTimestamp(turnId);
+  async formatTimestamp(conversationId: string, turnId: TurnId): Promise<string> {
+    const timestamp = this.getTimestamp(conversationId, turnId);
     if (timestamp == null) return '';
     return this.formatAbsoluteTime(timestamp);
   }
@@ -56,11 +79,20 @@ export class TimestampService {
   }
 
   private async persistTimestamps(): Promise<void> {
-    const obj: TimestampMap = {};
-    this.timestamps.forEach((timestamp, turnId) => {
-      obj[turnId] = timestamp;
+    const conversations: Record<string, TimestampMap> = {};
+    this.timestamps.forEach((conversationTimestamps, conversationId) => {
+      if (conversationTimestamps.size === 0) return;
+
+      const turnTimestamps: TimestampMap = {};
+      conversationTimestamps.forEach((timestamp, turnId) => {
+        turnTimestamps[turnId] = timestamp;
+      });
+      conversations[conversationId] = turnTimestamps;
     });
-    await this.storageService.set(StorageKeys.GV_MESSAGE_TIMESTAMPS, obj);
+    await this.storageService.set<TimestampStorageData>(StorageKeys.GV_MESSAGE_TIMESTAMPS, {
+      version: 2,
+      conversations,
+    });
   }
 
   private schedulePersist(): Promise<void> {
@@ -98,8 +130,60 @@ export class TimestampService {
     }
   }
 
-  async clearOldTimestamps(_conversationId: string): Promise<void> {
-    // TurnId currently does not encode conversationId. Keeping this as no-op avoids accidental data loss.
-    return;
+  async clearOldTimestamps(conversationId: string): Promise<void> {
+    if (!this.timestamps.delete(conversationId)) return;
+    await this.schedulePersist();
+  }
+
+  private parseStorageData(data: unknown): {
+    conversations: Map<string, Map<TurnId, number>>;
+    legacyDetected: boolean;
+  } {
+    const conversations = new Map<string, Map<TurnId, number>>();
+    let legacyDetected = false;
+
+    if (!isRecord(data)) {
+      return { conversations, legacyDetected };
+    }
+
+    if (isTimestampMap(data)) {
+      legacyDetected = true;
+      return { conversations, legacyDetected };
+    }
+
+    if (data.version !== 2 || !isRecord(data.conversations)) {
+      return { conversations, legacyDetected };
+    }
+
+    Object.entries(data.conversations).forEach(([conversationId, turnTimestamps]) => {
+      if (!isTimestampMap(turnTimestamps)) return;
+
+      const perConversationMap = new Map<TurnId, number>();
+      Object.entries(turnTimestamps).forEach(([turnId, timestamp]) => {
+        perConversationMap.set(turnId as TurnId, timestamp);
+      });
+
+      if (perConversationMap.size > 0) {
+        conversations.set(conversationId, perConversationMap);
+      }
+    });
+
+    return { conversations, legacyDetected };
+  }
+
+  private getConversationTimestamps(
+    conversationId: string,
+    createIfMissing: boolean,
+  ): Map<TurnId, number> {
+    const existing = this.timestamps.get(conversationId);
+    if (existing) return existing;
+
+    if (!createIfMissing) {
+      return new Map<TurnId, number>();
+    }
+
+    const created = new Map<TurnId, number>();
+    this.timestamps.set(conversationId, created);
+    return created;
   }
 }

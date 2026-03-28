@@ -5,10 +5,7 @@ import {
 
 import type { StarredMessage, StarredMessagesData } from './starredTypes';
 
-function upsertMessage(
-  messageMap: Map<string, StarredMessage>,
-  message: StarredMessage,
-): void {
+function upsertMessage(messageMap: Map<string, StarredMessage>, message: StarredMessage): void {
   const existing = messageMap.get(message.turnId);
   if (!existing || message.starredAt >= existing.starredAt) {
     messageMap.set(message.turnId, message);

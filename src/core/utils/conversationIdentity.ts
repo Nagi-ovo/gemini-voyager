@@ -46,7 +46,10 @@ export function normalizeConversationUrl(input: string): string {
   const parsed = parseUrl(input);
   if (!parsed) {
     const raw = stripAccountSlotPrefix(
-      String(input || '').split('#')[0].split('?')[0].trim(),
+      String(input || '')
+        .split('#')[0]
+        .split('?')[0]
+        .trim(),
     );
     return raw || '/';
   }

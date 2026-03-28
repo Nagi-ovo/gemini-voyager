@@ -38,6 +38,8 @@ class MockStorageService implements IStorageService {
 describe('TimestampService', () => {
   let storageService: MockStorageService;
   let timestampService: TimestampService;
+  const conversationId = 'gemini:conv:test-1';
+  const secondConversationId = 'gemini:conv:test-2';
 
   beforeEach(() => {
     storageService = new MockStorageService();
@@ -47,6 +49,7 @@ describe('TimestampService', () => {
   it('should initialize with empty timestamps', async () => {
     await timestampService.initialize();
     const timestamp = timestampService.getTimestamp(
+      conversationId,
       'test-id' as import('@/core/types/common').TurnId,
     );
     expect(timestamp).toBeNull();
@@ -57,8 +60,8 @@ describe('TimestampService', () => {
     const testId = 'test-turn-id' as import('@/core/types/common').TurnId;
     const testTime = 1672531200000;
 
-    await timestampService.recordTimestamp(testId, testTime);
-    const retrieved = timestampService.getTimestamp(testId);
+    await timestampService.recordTimestamp(conversationId, testId, testTime);
+    const retrieved = timestampService.getTimestamp(conversationId, testId);
 
     expect(retrieved).toBe(testTime);
   });
@@ -68,14 +71,16 @@ describe('TimestampService', () => {
     const testId = 'test-turn-id' as import('@/core/types/common').TurnId;
     const testTime = 1672531200000;
 
-    await timestampService.recordTimestamp(testId, testTime);
+    await timestampService.recordTimestamp(conversationId, testId, testTime);
 
-    const result = await storageService.get<Record<string, number>>(
-      StorageKeys.GV_MESSAGE_TIMESTAMPS,
-    );
+    const result = await storageService.get<{
+      version: number;
+      conversations: Record<string, Record<string, number>>;
+    }>(StorageKeys.GV_MESSAGE_TIMESTAMPS);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data[testId]).toBe(testTime);
+      expect(result.data.version).toBe(2);
+      expect(result.data.conversations[conversationId]?.[testId]).toBe(testTime);
     }
   });
 
@@ -84,11 +89,16 @@ describe('TimestampService', () => {
     const testTime = 1672531200000;
 
     await storageService.set(StorageKeys.GV_MESSAGE_TIMESTAMPS, {
-      [testId]: testTime,
+      version: 2,
+      conversations: {
+        [conversationId]: {
+          [testId]: testTime,
+        },
+      },
     });
 
     await timestampService.initialize();
-    const retrieved = timestampService.getTimestamp(testId);
+    const retrieved = timestampService.getTimestamp(conversationId, testId);
 
     expect(retrieved).toBe(testTime);
   });
@@ -97,7 +107,7 @@ describe('TimestampService', () => {
     await timestampService.initialize();
     const testId = 'non-existent' as TurnId;
 
-    const formatted = await timestampService.formatTimestamp(testId);
+    const formatted = await timestampService.formatTimestamp(conversationId, testId);
     expect(formatted).toBe('');
   });
 
@@ -105,9 +115,48 @@ describe('TimestampService', () => {
     await timestampService.initialize();
     const testId = 'epoch-turn-id' as TurnId;
 
-    await timestampService.recordTimestamp(testId, 0);
-    const formatted = await timestampService.formatTimestamp(testId);
+    await timestampService.recordTimestamp(conversationId, testId, 0);
+    const formatted = await timestampService.formatTimestamp(conversationId, testId);
 
     expect(formatted).not.toBe('');
+  });
+
+  it('should isolate timestamps by conversation', async () => {
+    await timestampService.initialize();
+    const testId = 'shared-turn-id' as TurnId;
+
+    await timestampService.recordTimestamp(conversationId, testId, 1000);
+    await timestampService.recordTimestamp(secondConversationId, testId, 2000);
+
+    expect(timestampService.getTimestamp(conversationId, testId)).toBe(1000);
+    expect(timestampService.getTimestamp(secondConversationId, testId)).toBe(2000);
+  });
+
+  it('should ignore legacy flat timestamp storage', async () => {
+    const testId = 'legacy-turn-id' as TurnId;
+
+    await storageService.set(StorageKeys.GV_MESSAGE_TIMESTAMPS, {
+      [testId]: 1672531200000,
+    });
+
+    await timestampService.initialize();
+
+    expect(timestampService.getTimestamp(conversationId, testId)).toBeNull();
+
+    const stored = await storageService.get(StorageKeys.GV_MESSAGE_TIMESTAMPS);
+    expect(stored.success).toBe(false);
+  });
+
+  it('should clear timestamps for a single conversation', async () => {
+    await timestampService.initialize();
+    const firstId = 'turn-1' as TurnId;
+    const secondId = 'turn-2' as TurnId;
+
+    await timestampService.recordTimestamp(conversationId, firstId, 1000);
+    await timestampService.recordTimestamp(secondConversationId, secondId, 2000);
+    await timestampService.clearOldTimestamps(conversationId);
+
+    expect(timestampService.getTimestamp(conversationId, firstId)).toBeNull();
+    expect(timestampService.getTimestamp(secondConversationId, secondId)).toBe(2000);
   });
 });

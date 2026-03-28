@@ -192,7 +192,10 @@ export class TimelineManager {
   private rtl = false;
   private timestampService: TimestampService | null = null;
   private showMessageTimestampsEnabled = false;
-  private timestampInjectionGeneration = 0;
+  private readonly initialTimestampSnapshotDelay = 800;
+  private timestampTrackingReady = false;
+  private timestampStartupTimer: number | null = null;
+  private seenTurnIds: Set<string> = new Set();
 
   async init(): Promise<void> {
     await initI18n();
@@ -1285,6 +1288,7 @@ export class TimelineManager {
     const userTurnNodeList = this.conversationContainer.querySelectorAll(this.userTurnSelector);
     this.visibleRange = { start: 0, end: -1 };
     if (userTurnNodeList.length === 0) {
+      this.updateTimestampTracking([]);
       if (!this.zeroTurnsTimer) {
         // Optimized retry interval: reduced from 350ms to 200ms
         this.zeroTurnsTimer = window.setTimeout(() => {
@@ -1332,10 +1336,6 @@ export class TimelineManager {
       let n = offsetFromStart / contentSpan;
       n = Math.max(0, Math.min(1, n));
       const id = this.ensureTurnId(element, idx);
-      // Record timestamp for new messages
-      if (this.timestampService && this.timestampService.getTimestamp(id as TurnId) === null) {
-        this.timestampService.recordTimestamp(id as TurnId).catch(() => {});
-      }
       const m = {
         id,
         element,
@@ -1349,6 +1349,7 @@ export class TimelineManager {
       this.markerMap.set(id, m);
       return m;
     });
+    this.updateTimestampTracking(this.markers.map((marker) => marker.id));
     // Remove orphaned dots (old dots not reused by any new marker)
     for (const dot of oldDots.values()) dot.remove();
     this.markersVersion++;
@@ -1374,21 +1375,36 @@ export class TimelineManager {
   };
 
   private async injectMessageTimestamps(): Promise<void> {
-    if (!this.timestampService) return;
-    const injectionGeneration = ++this.timestampInjectionGeneration;
+    if (!this.timestampService || !this.conversationId) return;
+    const timestampService = this.timestampService;
+    const conversationId = this.conversationId;
     if (!this.showMessageTimestampsEnabled) {
       // Remove any existing timestamps if feature is disabled
       document.querySelectorAll('.gv-timestamp').forEach((el) => el.remove());
       return;
     }
 
-    document.querySelectorAll('.gv-timestamp').forEach((el) => el.remove());
+    const activeTurnIds = new Set<string>();
+    const existingTimestampEls = new Map<string, HTMLElement>();
+    document.querySelectorAll<HTMLElement>('.gv-timestamp[data-gv-turn-id]').forEach((el) => {
+      const turnId = el.getAttribute('data-gv-turn-id') || '';
+      if (!turnId) {
+        el.remove();
+        return;
+      }
+      existingTimestampEls.set(turnId, el);
+    });
 
     // Use markers instead of querying DOM - markers already have the correct elements
     this.markers.forEach((marker) => {
+      activeTurnIds.add(marker.id);
       const msgEl = marker.element;
       const parent = msgEl.parentElement;
-      if (!parent) return;
+      if (!parent) {
+        existingTimestampEls.get(marker.id)?.remove();
+        existingTimestampEls.delete(marker.id);
+        return;
+      }
 
       let insertionParent: HTMLElement | null = parent;
       let insertionAnchor: HTMLElement = msgEl;
@@ -1415,26 +1431,45 @@ export class TimelineManager {
           }
         }
       } catch {}
-      if (!insertionParent) return;
+      if (!insertionParent) {
+        existingTimestampEls.get(marker.id)?.remove();
+        existingTimestampEls.delete(marker.id);
+        return;
+      }
 
-      // Format and inject timestamp
-      this.timestampService!.formatTimestamp(marker.id as TurnId)
-        .then((formattedTime) => {
-          if (!formattedTime) return;
-          if (injectionGeneration !== this.timestampInjectionGeneration) return;
-          if (!this.showMessageTimestampsEnabled) return;
-          if (!insertionParent || !insertionAnchor) return;
-          if (!insertionParent.isConnected || !insertionAnchor.isConnected) return;
+      const timestamp = timestampService.getTimestamp(conversationId, marker.id as TurnId);
+      if (timestamp == null) {
+        existingTimestampEls.get(marker.id)?.remove();
+        existingTimestampEls.delete(marker.id);
+        return;
+      }
 
-          const timestampEl = document.createElement('div');
-          timestampEl.className = `gv-timestamp ${alignClass}`;
-          timestampEl.textContent = formattedTime;
-          timestampEl.setAttribute('data-gv-turn-id', marker.id);
+      const formattedTime = timestampService.formatAbsoluteTime(timestamp);
+      const desiredClassName = `gv-timestamp ${alignClass}`;
+      const timestampEl = existingTimestampEls.get(marker.id) ?? document.createElement('div');
+      timestampEl.setAttribute('data-gv-turn-id', marker.id);
+      if (timestampEl.className !== desiredClassName) {
+        timestampEl.className = desiredClassName;
+      }
+      if (timestampEl.textContent !== formattedTime) {
+        timestampEl.textContent = formattedTime;
+      }
 
-          // Render timestamp above the message container (outside the bubble)
-          insertionParent.insertBefore(timestampEl, insertionAnchor);
-        })
-        .catch(() => {});
+      if (
+        timestampEl.parentElement !== insertionParent ||
+        timestampEl.nextSibling !== insertionAnchor
+      ) {
+        // Render timestamp above the message container (outside the bubble)
+        insertionParent.insertBefore(timestampEl, insertionAnchor);
+      }
+
+      existingTimestampEls.delete(marker.id);
+    });
+
+    existingTimestampEls.forEach((el, turnId) => {
+      if (!activeTurnIds.has(turnId)) {
+        el.remove();
+      }
     });
   }
 
@@ -1444,7 +1479,8 @@ export class TimelineManager {
   }
 
   private setupObservers(): void {
-    this.mutationObserver = new MutationObserver(() => {
+    this.mutationObserver = new MutationObserver((records) => {
+      if (this.shouldIgnoreTimestampMutations(records)) return;
       this.debouncedRecalc();
     });
     if (this.conversationContainer)
@@ -2175,8 +2211,8 @@ export class TimelineManager {
     const id = dot.dataset.targetTurnId || '';
     if (id && this.starred.has(id)) fullText = `★ ${fullText}`;
 
-    if (this.showMessageTimestampsEnabled && id && this.timestampService) {
-      const ts = this.timestampService.getTimestamp(id as TurnId);
+    if (this.showMessageTimestampsEnabled && id && this.timestampService && this.conversationId) {
+      const ts = this.timestampService.getTimestamp(this.conversationId, id as TurnId);
       if (typeof ts === 'number') {
         fullText = `${this.timestampService.formatAbsoluteTime(ts)}\n${fullText}`;
       }
@@ -3675,6 +3711,73 @@ export class TimelineManager {
       clearTimeout(this.sliderFadeTimer);
       this.sliderFadeTimer = null;
     }
+    if (this.timestampStartupTimer) {
+      clearTimeout(this.timestampStartupTimer);
+      this.timestampStartupTimer = null;
+    }
     this.pendingActiveId = null;
+  }
+
+  private updateTimestampTracking(markerIds: string[]): void {
+    if (!this.timestampTrackingReady) {
+      markerIds.forEach((markerId) => this.seenTurnIds.add(markerId));
+      const shouldResetDelay = markerIds.length > 0 || this.seenTurnIds.size > 0;
+      this.scheduleTimestampTrackingReady(shouldResetDelay);
+      return;
+    }
+
+    markerIds.forEach((markerId) => {
+      if (this.seenTurnIds.has(markerId)) return;
+      this.seenTurnIds.add(markerId);
+      this.recordTimestampForTurn(markerId);
+    });
+  }
+
+  private scheduleTimestampTrackingReady(resetDelay: boolean): void {
+    if (this.timestampTrackingReady) return;
+
+    if (resetDelay && this.timestampStartupTimer !== null) {
+      clearTimeout(this.timestampStartupTimer);
+      this.timestampStartupTimer = null;
+    }
+
+    if (this.timestampStartupTimer !== null) return;
+
+    this.timestampStartupTimer = window.setTimeout(() => {
+      this.timestampTrackingReady = true;
+      this.timestampStartupTimer = null;
+    }, this.initialTimestampSnapshotDelay);
+  }
+
+  private recordTimestampForTurn(turnId: string): void {
+    if (!this.timestampService || !this.conversationId) return;
+    if (this.timestampService.getTimestamp(this.conversationId, turnId as TurnId) !== null) return;
+
+    this.timestampService.recordTimestamp(this.conversationId, turnId as TurnId).catch(() => {});
+  }
+
+  private shouldIgnoreTimestampMutations(records: MutationRecord[]): boolean {
+    if (records.length === 0) return false;
+
+    return records.every((record) => {
+      if (record.type !== 'childList') return false;
+
+      const changedNodes = [...Array.from(record.addedNodes), ...Array.from(record.removedNodes)];
+      if (changedNodes.length === 0) return false;
+
+      return changedNodes.every((node) => this.isTimestampMutationNode(node));
+    });
+  }
+
+  private isTimestampMutationNode(node: Node): boolean {
+    if (node instanceof HTMLElement) {
+      return node.classList.contains('gv-timestamp') || !!node.closest('.gv-timestamp');
+    }
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      return !!node.parentElement?.closest('.gv-timestamp');
+    }
+
+    return false;
   }
 }
