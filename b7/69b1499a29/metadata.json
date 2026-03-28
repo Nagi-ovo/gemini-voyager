@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "b769b1499a29",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/core/utils/conversationIdentity.ts",
+    "src/pages/content/timeline/__tests__/TimelineManagerTimestamps.test.ts",
+    "src/pages/content/timeline/manager.ts",
+    "src/pages/content/timeline/starredLookup.ts",
+    "src/pages/content/timestamp/TimestampService.ts",
+    "src/pages/content/timestamp/__tests__/TimestampService.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b7/69b1499a29/0/metadata.json",
+      "transcript": "/b7/69b1499a29/0/full.jsonl",
+      "context": "/b7/69b1499a29/0/context.md",
+      "content_hash": "/b7/69b1499a29/0/content_hash.txt",
+      "prompt": "/b7/69b1499a29/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
