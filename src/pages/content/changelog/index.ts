@@ -19,6 +19,7 @@ const changelogModules = import.meta.glob('./notes/*.md', {
 }) as Record<string, () => Promise<string>>;
 
 const MARKDOWN_IMAGE_URL_REGEX = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+const MARKDOWN_DOC_LINK_REGEX = /\[([^\]]*)\]\((\/guide\/[^\s)]+)\)/g;
 
 const GITHUB_PROMOTION_PATH_PREFIX =
   '/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/';
@@ -100,6 +101,19 @@ export function rewriteChangelogImageUrls(
     const resolvedUrl = resolveChangelogImageUrl(url, runtimeUrlResolver);
     if (resolvedUrl === url) return full;
     return `![${alt}](${resolvedUrl})`;
+  });
+}
+
+/**
+ * Rewrite relative doc links (e.g. `/guide/timeline`) in changelog markdown
+ * to full locale-aware URLs (e.g. `https://voyager.nagi.fun/ja/guide/timeline`).
+ * zh is the root locale and gets no prefix.
+ */
+export function rewriteChangelogDocUrls(markdown: string, lang: AppLanguage): string {
+  const base = 'https://voyager.nagi.fun';
+  return markdown.replace(MARKDOWN_DOC_LINK_REGEX, (_full, text, path) => {
+    const url = lang === 'zh' ? `${base}${path}` : `${base}/${lang}${path}`;
+    return `[${text}](${url})`;
   });
 }
 
@@ -495,12 +509,12 @@ async function showChangelogModal(
 
   // 3. Get current language and extract localized content
   const lang = await getCurrentLanguage();
-  const localizedContent = rewriteChangelogImageUrls(
-    extractLocalizedContent(rawMarkdown, lang),
-    getRuntimeUrl,
-    isFirefox(),
+  const extracted = extractLocalizedContent(rawMarkdown, lang);
+  if (!extracted) return null;
+  const localizedContent = rewriteChangelogDocUrls(
+    rewriteChangelogImageUrls(extracted, getRuntimeUrl, isFirefox()),
+    lang,
   );
-  if (!localizedContent) return null;
 
   // 4. Convert markdown to HTML
   const rawHtml = await marked.parse(localizedContent);
