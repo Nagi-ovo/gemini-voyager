@@ -54,7 +54,9 @@ function isPromptItemArray(value: unknown): value is PromptItem[] {
 
 function isStarredMessagesData(value: unknown): value is StarredMessagesData {
   if (typeof value !== 'object' || value === null) return false;
-  return 'messages' in value;
+  if (!('messages' in value)) return false;
+  const messages = (value as any).messages;
+  return typeof messages === 'object' && messages !== null;
 }
 
 /**
