@@ -36,7 +36,13 @@ function isStarredMessagesData(value: unknown): value is StarredMessagesData {
 
 function isForkNodesData(value: unknown): value is ForkNodesData {
   if (typeof value !== 'object' || value === null) return false;
-  return 'nodes' in value && 'groups' in value;
+  const data = value as { nodes?: unknown; groups?: unknown };
+  return (
+    typeof data.nodes === 'object' &&
+    data.nodes !== null &&
+    typeof data.groups === 'object' &&
+    data.groups !== null
+  );
 }
 
 function isSyncAccountScope(value: unknown): value is SyncAccountScope {
