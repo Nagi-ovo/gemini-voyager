@@ -297,7 +297,10 @@ export function CloudSyncSettings() {
         const storedPromptsValue = storageResult[StorageKeys.PROMPT_ITEMS];
 
         // Only use storage folders if we didn't get them from tab
-        if ((!folders.folders || folders.folders.length === 0) && isFolderData(storedFoldersValue)) {
+        if (
+          (!folders.folders || folders.folders.length === 0) &&
+          isFolderData(storedFoldersValue)
+        ) {
           folders = storedFoldersValue;
           console.log(`[CloudSyncSettings] Loaded folders from ${folderStorageKey} (fallback)`);
         }

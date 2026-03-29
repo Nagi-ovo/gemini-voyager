@@ -2311,7 +2311,11 @@ export class FolderManager {
    * Move a folder to a parent/position while preserving descendant structure.
    * Only the moved folder's parent/sibling order changes; the subtree beneath it stays intact.
    */
-  private moveFolder(folderId: string, targetParentId: string | null, insertIndex?: number): boolean {
+  private moveFolder(
+    folderId: string,
+    targetParentId: string | null,
+    insertIndex?: number,
+  ): boolean {
     const folder = this.data.folders.find((candidate) => candidate.id === folderId);
     if (!folder || folder.pinned) return false;
 

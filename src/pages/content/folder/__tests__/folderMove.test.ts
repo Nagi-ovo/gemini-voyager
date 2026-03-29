@@ -134,7 +134,10 @@ describe('folder movement', () => {
 
     expect(movingFolder?.parentId).toBe('target');
     expect(getOrderedFolderIds(typedManager, 'target')).toEqual(['existing-child', 'moving']);
-    expect(getOrderedFolderIds(typedManager, 'moving')).toEqual(['moving-child-a', 'moving-child-b']);
+    expect(getOrderedFolderIds(typedManager, 'moving')).toEqual([
+      'moving-child-a',
+      'moving-child-b',
+    ]);
     expect(saveSpy).toHaveBeenCalledTimes(1);
     expect(refreshSpy).toHaveBeenCalledTimes(1);
   });
@@ -163,9 +166,17 @@ describe('folder movement', () => {
     const movingFolder = typedManager.data.folders.find((folder) => folder.id === 'moving');
 
     expect(movingFolder?.parentId).toBeNull();
-    expect(getOrderedFolderIds(typedManager, null)).toEqual(['root-a', 'root-b', 'container', 'moving']);
+    expect(getOrderedFolderIds(typedManager, null)).toEqual([
+      'root-a',
+      'root-b',
+      'container',
+      'moving',
+    ]);
     expect(getOrderedFolderIds(typedManager, 'container')).toEqual(['existing-child']);
-    expect(getOrderedFolderIds(typedManager, 'moving')).toEqual(['moving-child-a', 'moving-child-b']);
+    expect(getOrderedFolderIds(typedManager, 'moving')).toEqual([
+      'moving-child-a',
+      'moving-child-b',
+    ]);
     expect(saveSpy).toHaveBeenCalledTimes(1);
     expect(refreshSpy).toHaveBeenCalledTimes(1);
   });
