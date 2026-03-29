@@ -28,7 +28,10 @@ const GEMINI_MATCHES = [
 
 function isStarredMessagesData(value: unknown): value is StarredMessagesData {
   if (typeof value !== 'object' || value === null) return false;
-  return 'messages' in value;
+  const data = value as { messages?: unknown };
+  if (typeof data.messages !== 'object' || data.messages === null) return false;
+  const messages = data.messages as Record<string, unknown>;
+  return Object.values(messages).every((v) => Array.isArray(v));
 }
 
 function isForkNodesData(value: unknown): value is ForkNodesData {
