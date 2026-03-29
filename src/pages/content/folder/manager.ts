@@ -1271,17 +1271,11 @@ export class FolderManager {
   }
 
   /**
-   * Strategy Pattern: Determine if a folder can be dragged
-   * Single Responsibility Principle: Separate logic for draggability check
-   *
-   * A folder can be dragged if and only if:
-   * - It has no subfolders (to prevent deep nesting complexity)
-   *
-   * @param folderId - The ID of the folder to check
-   * @returns true if the folder can be dragged, false otherwise
+   * Pinned folders are fixed in place and cannot be dragged.
+   * Non-pinned folders can be moved even when they have descendants.
    */
-  private canFolderBeDragged(folderId: string): boolean {
-    return !this.data.folders.some((f) => f.parentId === folderId);
+  private canFolderBeDragged(folder: Folder): boolean {
+    return !folder.pinned;
   }
 
   /**
@@ -1295,7 +1289,7 @@ export class FolderManager {
    * @param folder - The folder data object
    */
   private applyFolderDraggableBehavior(element: HTMLElement, folder: Folder): void {
-    if (this.canFolderBeDragged(folder.id)) {
+    if (this.canFolderBeDragged(folder)) {
       this.enableFolderDragging(element, folder);
     } else {
       this.disableFolderDragging(element);
@@ -1342,7 +1336,7 @@ export class FolderManager {
         'Folder drag start:',
         folder.name,
         'canBeDragged:',
-        this.canFolderBeDragged(folder.id),
+        this.canFolderBeDragged(folder),
       );
     };
 
@@ -2314,6 +2308,71 @@ export class FolderManager {
   }
 
   /**
+   * Move a folder to a parent/position while preserving descendant structure.
+   * Only the moved folder's parent/sibling order changes; the subtree beneath it stays intact.
+   */
+  private moveFolder(folderId: string, targetParentId: string | null, insertIndex?: number): boolean {
+    const folder = this.data.folders.find((candidate) => candidate.id === folderId);
+    if (!folder || folder.pinned) return false;
+
+    if (folderId === targetParentId) return false;
+    if (targetParentId && this.isFolderDescendant(targetParentId, folderId)) return false;
+
+    const sourceParentId = folder.parentId;
+    if (insertIndex == null && sourceParentId === targetParentId) return false;
+
+    const pinned = !!folder.pinned;
+    const originalSiblings = this.sortFolders(
+      this.data.folders.filter(
+        (candidate) =>
+          candidate.parentId === sourceParentId &&
+          candidate.id !== folderId &&
+          !!candidate.pinned === pinned,
+      ),
+    );
+    const targetSiblings = this.sortFolders(
+      this.data.folders.filter(
+        (candidate) =>
+          candidate.parentId === targetParentId &&
+          candidate.id !== folderId &&
+          !!candidate.pinned === pinned,
+      ),
+    );
+
+    let normalizedInsertIndex = insertIndex ?? targetSiblings.length;
+    if (sourceParentId === targetParentId) {
+      const originalIndex = this.sortFolders(
+        this.data.folders.filter(
+          (candidate) => candidate.parentId === sourceParentId && !!candidate.pinned === pinned,
+        ),
+      ).findIndex((candidate) => candidate.id === folderId);
+
+      if (originalIndex >= 0 && originalIndex < normalizedInsertIndex) {
+        normalizedInsertIndex -= 1;
+      }
+    }
+
+    const clampedInsertIndex = Math.max(0, Math.min(normalizedInsertIndex, targetSiblings.length));
+    const nextOrder = [...targetSiblings];
+    nextOrder.splice(clampedInsertIndex, 0, folder);
+
+    folder.parentId = targetParentId;
+    folder.updatedAt = Date.now();
+
+    nextOrder.forEach((sibling, index) => {
+      sibling.sortIndex = index;
+    });
+
+    if (sourceParentId !== targetParentId) {
+      originalSiblings.forEach((sibling, index) => {
+        sibling.sortIndex = index;
+      });
+    }
+
+    return true;
+  }
+
+  /**
    * Add reorder capability to a conversation element using top/bottom half detection.
    * When dragging over the top half, an indicator line appears above; bottom half → below.
    */
@@ -2483,34 +2542,9 @@ export class FolderManager {
    * Reorder a folder within its parent (or move to a new parent at a specific position).
    */
   private reorderFolder(folderId: string, targetParentId: string, insertIndex: number): void {
-    const folder = this.data.folders.find((f) => f.id === folderId);
-    if (!folder) return;
-
     const targetParent = targetParentId === '__root__' ? null : targetParentId;
-    const sourceParent = folder.parentId;
-
-    // Prevent dropping onto itself or descendants
-    if (folderId === targetParentId) return;
-    if (targetParent && this.isFolderDescendant(targetParentId, folderId)) return;
-
-    // Move to new parent if different
-    if (sourceParent !== targetParent) {
-      folder.parentId = targetParent;
-      folder.updatedAt = Date.now();
-    }
-
-    // Get siblings in target parent (same pinned group)
-    const siblings = this.data.folders.filter(
-      (f) => f.parentId === targetParent && f.id !== folderId && !!f.pinned === !!folder.pinned,
-    );
-    const sorted = this.sortFolders(siblings);
-
-    // Insert at position and reassign sortIndex
-    sorted.splice(insertIndex, 0, folder);
-    sorted.forEach((f, i) => {
-      f.sortIndex = i;
-    });
-
+    const moved = this.moveFolder(folderId, targetParent, insertIndex);
+    if (!moved) return;
     this.saveData();
     this.refresh();
   }
@@ -2795,26 +2829,11 @@ export class FolderManager {
       targetFolderId,
     });
 
-    // Prevent dropping a folder onto itself
-    if (draggedFolderId === targetFolderId) {
-      this.debug('Cannot drop folder onto itself');
+    const moved = this.moveFolder(draggedFolderId, targetFolderId);
+    if (!moved) {
+      this.debug('Folder move rejected');
       return;
     }
-
-    // Prevent dropping a folder onto its descendant (would create a cycle)
-    if (this.isFolderDescendant(targetFolderId, draggedFolderId)) {
-      this.debug('Cannot drop folder onto its descendant');
-      return;
-    }
-
-    // Find the dragged folder
-    const draggedFolder = this.data.folders.find((f) => f.id === draggedFolderId);
-    if (!draggedFolder) return;
-
-    // Update the parent
-    draggedFolder.parentId = targetFolderId;
-    draggedFolder.updatedAt = Date.now();
-
     this.saveData();
     this.refresh();
   }
@@ -2825,20 +2844,11 @@ export class FolderManager {
 
     this.debug('Moving folder to root level:', draggedFolderId);
 
-    // Find the dragged folder
-    const draggedFolder = this.data.folders.find((f) => f.id === draggedFolderId);
-    if (!draggedFolder) return;
-
-    // If already at root level, no need to do anything
-    if (draggedFolder.parentId === null) {
-      this.debug('Folder is already at root level');
+    const moved = this.moveFolder(draggedFolderId, null);
+    if (!moved) {
+      this.debug('Folder move to root rejected');
       return;
     }
-
-    // Update the parent to null (root level)
-    draggedFolder.parentId = null;
-    draggedFolder.updatedAt = Date.now();
-
     this.saveData();
     this.refresh();
   }
@@ -7068,8 +7078,15 @@ export class FolderManager {
       let localStarred = { messages: {} as Record<string, unknown[]> };
       try {
         const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
-        if (starredResult.geminiTimelineStarredMessages) {
-          localStarred = starredResult.geminiTimelineStarredMessages;
+        const starredData = starredResult.geminiTimelineStarredMessages;
+        if (
+          typeof starredData === 'object' &&
+          starredData !== null &&
+          'messages' in starredData &&
+          typeof starredData.messages === 'object' &&
+          starredData.messages !== null
+        ) {
+          localStarred = { messages: starredData.messages as Record<string, unknown[]> };
         }
       } catch (err) {
         console.warn('[FolderManager] Could not get local starred messages for merge:', err);

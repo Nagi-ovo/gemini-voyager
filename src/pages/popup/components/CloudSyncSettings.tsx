@@ -25,6 +25,33 @@ import { Label } from '../../../components/ui/label';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { mergeFolderData, mergePrompts, mergeStarredMessages } from '../../../utils/merge';
 
+function isFolderData(value: unknown): value is FolderData {
+  if (typeof value !== 'object' || value === null) return false;
+  return 'folders' in value && 'folderContents' in value;
+}
+
+function isPromptItemArray(value: unknown): value is PromptItem[] {
+  return (
+    Array.isArray(value) &&
+    value.every((item) => {
+      if (typeof item !== 'object' || item === null) return false;
+      const prompt = item as Record<string, unknown>;
+      return (
+        typeof prompt.id === 'string' &&
+        typeof prompt.text === 'string' &&
+        Array.isArray(prompt.tags) &&
+        prompt.tags.every((tag) => typeof tag === 'string') &&
+        typeof prompt.createdAt === 'number'
+      );
+    })
+  );
+}
+
+function isStarredMessagesData(value: unknown): value is StarredMessagesData {
+  if (typeof value !== 'object' || value === null) return false;
+  return 'messages' in value;
+}
+
 /**
  * CloudSyncSettings component for popup
  * Allows users to configure Google Drive sync settings
@@ -266,16 +293,18 @@ export function CloudSyncSettings() {
           folderStorageKey,
           StorageKeys.PROMPT_ITEMS,
         ]);
+        const storedFoldersValue = storageResult[folderStorageKey];
+        const storedPromptsValue = storageResult[StorageKeys.PROMPT_ITEMS];
 
         // Only use storage folders if we didn't get them from tab
-        if ((!folders.folders || folders.folders.length === 0) && storageResult[folderStorageKey]) {
-          folders = storageResult[folderStorageKey];
+        if ((!folders.folders || folders.folders.length === 0) && isFolderData(storedFoldersValue)) {
+          folders = storedFoldersValue;
           console.log(`[CloudSyncSettings] Loaded folders from ${folderStorageKey} (fallback)`);
         }
 
         // Prompts usually sync well to storage (only for Gemini)
-        if (platform === 'gemini' && storageResult[StorageKeys.PROMPT_ITEMS]) {
-          prompts = storageResult[StorageKeys.PROMPT_ITEMS];
+        if (platform === 'gemini' && isPromptItemArray(storedPromptsValue)) {
+          prompts = storedPromptsValue;
         }
       } catch (err) {
         console.error('[CloudSyncSettings] Error loading data:', err);
@@ -395,19 +424,21 @@ export function CloudSyncSettings() {
           folderStorageKey,
           StorageKeys.PROMPT_ITEMS,
         ]);
+        const storedFoldersValue = storageResult[folderStorageKey];
+        const storedPromptsValue = storageResult[StorageKeys.PROMPT_ITEMS];
 
         // Only use storage folders if we didn't get them from tab
         if (
           (!localFolders.folders || localFolders.folders.length === 0) &&
-          storageResult[folderStorageKey]
+          isFolderData(storedFoldersValue)
         ) {
-          localFolders = storageResult[folderStorageKey];
+          localFolders = storedFoldersValue;
           console.log(`[CloudSyncSettings] Loaded folders from ${folderStorageKey} (fallback)`);
         }
 
         // Prompts only for Gemini platform
-        if (platform === 'gemini' && storageResult[StorageKeys.PROMPT_ITEMS]) {
-          localPrompts = storageResult[StorageKeys.PROMPT_ITEMS];
+        if (platform === 'gemini' && isPromptItemArray(storedPromptsValue)) {
+          localPrompts = storedPromptsValue;
         }
       } catch (err) {
         console.error('[CloudSyncSettings] Error loading local data for merge:', err);
@@ -443,7 +474,7 @@ export function CloudSyncSettings() {
       let localStarred: StarredMessagesData = { messages: {} };
       try {
         const starredResult = await chrome.storage.local.get(['geminiTimelineStarredMessages']);
-        if (starredResult.geminiTimelineStarredMessages) {
+        if (isStarredMessagesData(starredResult.geminiTimelineStarredMessages)) {
           localStarred = starredResult.geminiTimelineStarredMessages;
         }
       } catch (err) {
