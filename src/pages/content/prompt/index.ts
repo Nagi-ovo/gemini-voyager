@@ -1151,6 +1151,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (changelogBadgeActive) {
         changelogBadgeActive = false;
         trigger.classList.remove('gv-pm-trigger-new');
+        versionBadge.classList.remove('gv-pm-version-outdated');
         try {
           await showChangelogModalDirect();
         } catch {
