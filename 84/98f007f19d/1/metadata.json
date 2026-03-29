@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "8498f007f19d",
+  "session_id": "b81dac60-0d18-4379-9948-7ad1fbf4fd9f",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-29T10:30:09.156983Z",
+  "branch": "chang-xinhai/main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/pages/content/folder/manager.ts",
+    "src/pages/popup/components/CloudSyncSettings.tsx",
+    "src/pages/popup/components/ContextSyncSettings.tsx",
+    "src/pages/content/folder/__tests__/folderMove.test.ts",
+    "src/pages/content/folder/aistudio.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "a87f029290c6",
+  "token_usage": {
+    "input_tokens": 24,
+    "cache_creation_tokens": 40314,
+    "cache_read_tokens": 658686,
+    "output_tokens": 4445,
+    "api_call_count": 16
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-29T10:30:09.017838Z",
+    "agent_lines": 377,
+    "human_added": 40,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 417,
+    "agent_percentage": 90.40767386091127
+  }
+}
