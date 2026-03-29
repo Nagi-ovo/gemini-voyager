@@ -27,7 +27,12 @@ import { mergeFolderData, mergePrompts, mergeStarredMessages } from '../../../ut
 
 function isFolderData(value: unknown): value is FolderData {
   if (typeof value !== 'object' || value === null) return false;
-  return 'folders' in value && 'folderContents' in value;
+  const data = value as { folders?: unknown; folderContents?: unknown };
+  return (
+    Array.isArray(data.folders) &&
+    typeof data.folderContents === 'object' &&
+    data.folderContents !== null
+  );
 }
 
 function isPromptItemArray(value: unknown): value is PromptItem[] {
