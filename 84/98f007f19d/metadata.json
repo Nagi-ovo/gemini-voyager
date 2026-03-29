@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "8498f007f19d",
+  "strategy": "manual-commit",
+  "branch": "chang-xinhai/main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/pages/content/folder/__tests__/folderMove.test.ts",
+    "src/pages/content/folder/aistudio.ts",
+    "src/pages/content/folder/manager.ts",
+    "src/pages/popup/components/CloudSyncSettings.tsx",
+    "src/pages/popup/components/ContextSyncSettings.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/84/98f007f19d/0/metadata.json",
+      "transcript": "/84/98f007f19d/0/full.jsonl",
+      "context": "/84/98f007f19d/0/context.md",
+      "content_hash": "/84/98f007f19d/0/content_hash.txt",
+      "prompt": "/84/98f007f19d/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
