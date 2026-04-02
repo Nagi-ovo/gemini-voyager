@@ -4,10 +4,10 @@
  * - Panel supports: i18n language switch, add prompt, tag chips, search, copy, import/export
  * - Optional lock to pin panel position; when locked, panel is draggable and persisted
  */
-import { marked as markedStatic } from 'marked';
 import DOMPurify from 'dompurify';
 import JSZip from 'jszip';
 import 'katex/dist/katex.min.css';
+import { marked as markedStatic } from 'marked';
 import type { marked as MarkedFn } from 'marked';
 import browser from 'webextension-polyfill';
 
