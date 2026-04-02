@@ -4,6 +4,7 @@
  * - Panel supports: i18n language switch, add prompt, tag chips, search, copy, import/export
  * - Optional lock to pin panel position; when locked, panel is draggable and persisted
  */
+import { marked as markedStatic } from 'marked';
 import DOMPurify from 'dompurify';
 import JSZip from 'jszip';
 import 'katex/dist/katex.min.css';
@@ -381,7 +382,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     // Dynamic imports to prevent side effects on unsupported pages
     // Dynamic imports to prevent side effects on unsupported pages
-    marked = (await import('marked')).marked;
+    // marked = (await import('marked')).marked;
+    marked = markedStatic;
     const { default: markedKatex } = await import('marked-katex-extension');
 
     // markdown config: respect single newlines as <br> and KaTeX inline/display math
