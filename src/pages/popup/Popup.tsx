@@ -9,7 +9,7 @@ import {
 } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 import type { ConversationReference, Folder } from '@/core/types/folder';
-import { getModifierKey, isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
+import { getModifierKey, isSafari, isFirefox, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import {
@@ -1077,8 +1077,12 @@ export default function Popup() {
       }
 
       try {
-        const alreadyGranted = await browser.permissions.contains({ origins: originPatterns });
-        if (alreadyGranted) return true;
+        // Firefox requires permissions.request to run directly from a user gesture.
+        // Avoid awaiting other extension APIs before this call in Firefox.
+        if (!isFirefox()) {
+          const alreadyGranted = await browser.permissions.contains({ origins: originPatterns });
+          if (alreadyGranted) return true;
+        }
 
         const granted = await browser.permissions.request({ origins: originPatterns });
         if (!granted) {
@@ -1129,7 +1133,19 @@ export default function Popup() {
       return;
     }
 
-    // Persist the user's selection first. Popup may close during the permission prompt.
+    if (isFirefox()) {
+      const granted = await requestCustomWebsitePermission(normalized);
+      if (!granted) return;
+
+      const updatedWebsites = [...customWebsites, normalized];
+      setCustomWebsites(updatedWebsites);
+      await setSyncStorage({ gvPromptCustomWebsites: updatedWebsites });
+      setNewWebsiteInput('');
+      return;
+    }
+
+    // Persist the user's selection first on non-Firefox browsers.
+    // Popup may close during the permission prompt.
     const updatedWebsites = [...customWebsites, normalized];
     setCustomWebsites(updatedWebsites);
     await setSyncStorage({ gvPromptCustomWebsites: updatedWebsites });
@@ -1170,7 +1186,18 @@ export default function Popup() {
         return;
       }
 
-      // Persist the user's selection first. Popup may close during the permission prompt.
+      if (isFirefox()) {
+        const granted = await requestCustomWebsitePermission(domain);
+        if (!granted) return;
+
+        const updated = [...customWebsites, domain];
+        setCustomWebsites(updated);
+        await setSyncStorage({ gvPromptCustomWebsites: updated });
+        return;
+      }
+
+      // Persist the user's selection first on non-Firefox browsers.
+      // Popup may close during the permission prompt.
       const updated = [...customWebsites, domain];
       setCustomWebsites(updated);
       await setSyncStorage({ gvPromptCustomWebsites: updated });
