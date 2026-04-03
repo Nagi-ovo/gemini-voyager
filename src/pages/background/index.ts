@@ -12,9 +12,9 @@ import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
+import { isFirefox } from '@/core/utils/browser';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
-import { isFirefox } from '@/core/utils/browser';
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
 const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
@@ -291,7 +291,7 @@ async function syncCustomContentScripts(domains?: string[]): Promise<void> {
 
   const jsResources = isFirefox()
     ? (manifestContentScript.js || []).map(toRelativeExtensionPath)
-    : (manifestContentScript.js || []);
+    : manifestContentScript.js || [];
   const cssResources = isFirefox()
     ? manifestContentScript.css?.map(toRelativeExtensionPath)
     : manifestContentScript.css;

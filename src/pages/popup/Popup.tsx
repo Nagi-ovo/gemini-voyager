@@ -9,7 +9,12 @@ import {
 } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 import type { ConversationReference, Folder } from '@/core/types/folder';
-import { getModifierKey, isSafari, isFirefox, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
+import {
+  getModifierKey,
+  isFirefox,
+  isSafari,
+  shouldShowSafariUpdateReminder,
+} from '@/core/utils/browser';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import {
