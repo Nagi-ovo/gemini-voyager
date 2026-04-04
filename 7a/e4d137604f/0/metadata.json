@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "7ae4d137604f",
+  "session_id": "192ac09f-b413-42fa-a33c-f7252915f9e7",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-04T10:25:35.737862Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/core/services/__tests__/KeyboardShortcutService.test.ts",
+    "src/core/types/keyboardShortcut.ts",
+    "src/pages/popup/components/KeyboardShortcutSettings.tsx",
+    "src/pages/popup/components/__tests__/KeyboardShortcutSettings.test.tsx",
+    "src/core/services/KeyboardShortcutService.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "15bdd17877ad",
+  "checkpoint_transcript_start": 80,
+  "transcript_lines_at_start": 80,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-04T10:25:35.632607Z",
+    "agent_lines": 425,
+    "human_added": 254,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 679,
+    "agent_percentage": 62.5920471281296
+  }
+}
