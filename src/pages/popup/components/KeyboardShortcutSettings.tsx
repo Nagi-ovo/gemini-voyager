@@ -12,9 +12,45 @@ import type {
 } from '@/core/types/keyboardShortcut';
 
 interface RecordingState {
-  action: 'previous' | 'next' | null;
+  action: keyof KeyboardShortcutConfig | null;
   modifiers: ModifierKey[];
   key: ShortcutKey | null;
+}
+
+function shortcutsEqual(
+  a: KeyboardShortcutConfig[keyof KeyboardShortcutConfig],
+  b: KeyboardShortcutConfig[keyof KeyboardShortcutConfig],
+): boolean {
+  return (
+    a.key === b.key &&
+    (a.sequenceLength ?? 1) === (b.sequenceLength ?? 1) &&
+    a.modifiers.length === b.modifiers.length &&
+    a.modifiers.every((modifier, index) => modifier === b.modifiers[index])
+  );
+}
+
+function buildUpdatedConfig(
+  currentConfig: KeyboardShortcutConfig,
+  action: keyof KeyboardShortcutConfig,
+  nextShortcut: KeyboardShortcutConfig[keyof KeyboardShortcutConfig],
+): KeyboardShortcutConfig {
+  const nextConfig: KeyboardShortcutConfig = {
+    ...currentConfig,
+    [action]: nextShortcut,
+  };
+  const currentShortcut = currentConfig[action];
+
+  (Object.keys(currentConfig) as Array<keyof KeyboardShortcutConfig>).forEach((candidateAction) => {
+    if (candidateAction === action) return;
+    if (!shortcutsEqual(currentConfig[candidateAction], nextShortcut)) return;
+
+    nextConfig[candidateAction] = {
+      ...currentShortcut,
+      action: `timeline:${candidateAction}` as const,
+    };
+  });
+
+  return nextConfig;
 }
 
 export function KeyboardShortcutSettings() {
@@ -79,7 +115,7 @@ export function KeyboardShortcutSettings() {
   }, []);
 
   // Start recording shortcut
-  const startRecording = useCallback((action: 'previous' | 'next') => {
+  const startRecording = useCallback((action: keyof KeyboardShortcutConfig) => {
     setRecording({ action, modifiers: [], key: null });
   }, []);
 
@@ -129,14 +165,15 @@ export function KeyboardShortcutSettings() {
     // Update config
     if (!currentConfig) return;
 
-    const updatedConfig: KeyboardShortcutConfig = {
-      ...currentConfig,
-      [currentRecording.action]: {
-        action: `timeline:${currentRecording.action}` as const,
-        modifiers,
-        key,
-      },
+    const nextShortcut: KeyboardShortcutConfig[keyof KeyboardShortcutConfig] = {
+      action: `timeline:${currentRecording.action}` as const,
+      modifiers,
+      key,
+      sequenceLength:
+        currentRecording.action === 'first' || currentRecording.action === 'last' ? 2 : 1,
     };
+
+    const updatedConfig = buildUpdatedConfig(currentConfig, currentRecording.action, nextShortcut);
 
     try {
       await keyboardShortcutService.saveConfig(updatedConfig, currentEnabled);
@@ -242,17 +279,37 @@ export function KeyboardShortcutSettings() {
                 <Label className="text-muted-foreground text-xs font-medium">
                   {t('firstNode')}
                 </Label>
-                <div className="border-border flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold opacity-70">
-                  gg
-                </div>
+                <button
+                  type="button"
+                  onClick={() => startRecording('first')}
+                  className={`flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold transition-all ${
+                    recording.action === 'first'
+                      ? 'border-primary bg-primary/5 text-primary animate-pulse'
+                      : 'border-border hover:border-primary/50 hover:bg-accent'
+                  } `}
+                >
+                  {recording.action === 'first'
+                    ? 'Press key...'
+                    : keyboardShortcutService.formatShortcut(config.first)}
+                </button>
               </div>
 
               {/* Last Turn (GG) */}
               <div className="space-y-2">
                 <Label className="text-muted-foreground text-xs font-medium">{t('lastNode')}</Label>
-                <div className="border-border flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold opacity-70">
-                  GG
-                </div>
+                <button
+                  type="button"
+                  onClick={() => startRecording('last')}
+                  className={`flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold transition-all ${
+                    recording.action === 'last'
+                      ? 'border-primary bg-primary/5 text-primary animate-pulse'
+                      : 'border-border hover:border-primary/50 hover:bg-accent'
+                  } `}
+                >
+                  {recording.action === 'last'
+                    ? 'Press key...'
+                    : keyboardShortcutService.formatShortcut(config.last)}
+                </button>
               </div>
             </div>
 

@@ -5,6 +5,7 @@
  * Supports:
  * - Single key mode (e.g., j/k for vim-style navigation)
  * - Combination key mode (e.g., Alt + Arrow keys)
+ * - Repeated key sequences (e.g., gg / GG)
  * - Fully customizable by user
  */
 
@@ -35,6 +36,7 @@ export interface KeyboardShortcut {
   action: ShortcutAction;
   modifiers: ModifierKey[];
   key: ShortcutKey;
+  sequenceLength?: number;
 }
 
 /**
@@ -51,6 +53,8 @@ export interface ShortcutMatch {
 export interface KeyboardShortcutConfig {
   previous: KeyboardShortcut;
   next: KeyboardShortcut;
+  first: KeyboardShortcut;
+  last: KeyboardShortcut;
 }
 
 /**
