@@ -12,6 +12,7 @@ import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
+import { isFirefox } from '@/core/utils/browser';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
@@ -214,6 +215,19 @@ function toMatchPatterns(domain: string): string[] {
   return [`https://*.${normalized}/*`, `http://*.${normalized}/*`];
 }
 
+function toRelativeExtensionPath(resource: string): string {
+  try {
+    const url = new URL(resource);
+    if (url.protocol === 'moz-extension:') {
+      return url.pathname.replace(/^\/+/, '');
+    }
+  } catch {
+    // Not an absolute extension URL; fall through.
+  }
+
+  return resource.replace(/^\/+/, '');
+}
+
 function extractDomainsFromOrigins(origins?: string[]): string[] {
   if (!Array.isArray(origins)) return [];
   const domains = origins
@@ -275,12 +289,19 @@ async function syncCustomContentScripts(domains?: string[]): Promise<void> {
         ? 'document_end'
         : 'document_idle';
 
+  const jsResources = isFirefox()
+    ? (manifestContentScript.js || []).map(toRelativeExtensionPath)
+    : manifestContentScript.js || [];
+  const cssResources = isFirefox()
+    ? manifestContentScript.css?.map(toRelativeExtensionPath)
+    : manifestContentScript.css;
+
   try {
     await chrome.scripting.registerContentScripts([
       {
         id: CUSTOM_CONTENT_SCRIPT_ID,
-        js: manifestContentScript.js || [],
-        css: manifestContentScript.css,
+        js: jsResources,
+        css: cssResources,
         matches: grantedMatches,
         allFrames: manifestContentScript.all_frames,
         runAt,
