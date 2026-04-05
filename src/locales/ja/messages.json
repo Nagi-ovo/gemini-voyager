@@ -27,6 +27,14 @@
     "message": "ドラッグ可能なタイムライン",
     "description": "Draggable Timeline label"
   },
+  "pinTimelinePreview": {
+    "message": "プレビューを固定表示",
+    "description": "Pin timeline preview panel toggle label"
+  },
+  "pinTimelinePreviewHint": {
+    "message": "タイムライン横のプレビューパネルを開いたままにします。",
+    "description": "Pin timeline preview panel feature hint"
+  },
   "enableMarkerLevel": {
     "message": "ノード階層を有効化",
     "description": "Enable timeline node level feature"

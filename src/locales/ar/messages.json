@@ -27,6 +27,14 @@
     "message": "جدول زمني قابل للسحب",
     "description": "Draggable Timeline label"
   },
+  "pinTimelinePreview": {
+    "message": "تثبيت لوحة المعاينة",
+    "description": "Pin timeline preview panel toggle label"
+  },
+  "pinTimelinePreviewHint": {
+    "message": "أبقِ لوحة المعاينة مفتوحة بجانب الجدول الزمني.",
+    "description": "Pin timeline preview panel feature hint"
+  },
   "enableMarkerLevel": {
     "message": "تمكين مستويات العقدة",
     "description": "Enable timeline node level feature"

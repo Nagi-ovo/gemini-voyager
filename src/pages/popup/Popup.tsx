@@ -315,6 +315,7 @@ interface SettingsUpdate {
   mode?: ScrollMode | null;
   hideContainer?: boolean;
   draggableTimeline?: boolean;
+  timelinePreviewPinned?: boolean;
   markerLevelEnabled?: boolean;
   resetPosition?: boolean;
   folderEnabled?: boolean;
@@ -414,6 +415,7 @@ export default function Popup() {
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
+  const [timelinePreviewPinned, setTimelinePreviewPinned] = useState<boolean>(false);
   const [markerLevelEnabled, setMarkerLevelEnabled] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
@@ -506,6 +508,8 @@ export default function Popup() {
         payload.geminiTimelineHideContainer = settings.hideContainer;
       if (typeof settings.draggableTimeline === 'boolean')
         payload.geminiTimelineDraggable = settings.draggableTimeline;
+      if (typeof settings.timelinePreviewPinned === 'boolean')
+        payload[StorageKeys.TIMELINE_PREVIEW_PINNED] = settings.timelinePreviewPinned;
       if (typeof settings.markerLevelEnabled === 'boolean')
         payload.geminiTimelineMarkerLevel = settings.markerLevelEnabled;
       if (typeof settings.folderEnabled === 'boolean')
@@ -850,6 +854,7 @@ export default function Popup() {
           geminiTimelineScrollMode: 'flow',
           geminiTimelineHideContainer: false,
           geminiTimelineDraggable: false,
+          [StorageKeys.TIMELINE_PREVIEW_PINNED]: false,
           geminiTimelineMarkerLevel: false,
           geminiFolderEnabled: true,
           geminiFolderHideArchivedConversations: false,
@@ -901,6 +906,7 @@ export default function Popup() {
             setFormulaCopyFormat(format);
           setHideContainer(!!res?.geminiTimelineHideContainer);
           setDraggableTimeline(!!res?.geminiTimelineDraggable);
+          setTimelinePreviewPinned(res?.[StorageKeys.TIMELINE_PREVIEW_PINNED] === true);
           setMarkerLevelEnabled(!!res?.geminiTimelineMarkerLevel);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
@@ -1465,6 +1471,25 @@ export default function Popup() {
                   onChange={(e) => {
                     setDraggableTimeline(e.target.checked);
                     apply({ draggableTimeline: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="timeline-preview-pinned"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('pinTimelinePreview')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('pinTimelinePreviewHint')}</p>
+                </div>
+                <Switch
+                  id="timeline-preview-pinned"
+                  checked={timelinePreviewPinned}
+                  onChange={(e) => {
+                    setTimelinePreviewPinned(e.target.checked);
+                    apply({ timelinePreviewPinned: e.target.checked });
                   }}
                 />
               </div>

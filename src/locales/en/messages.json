@@ -27,6 +27,14 @@
     "message": "Draggable Timeline",
     "description": "Draggable Timeline label"
   },
+  "pinTimelinePreview": {
+    "message": "Pin preview panel",
+    "description": "Pin timeline preview panel toggle label"
+  },
+  "pinTimelinePreviewHint": {
+    "message": "Keep the preview panel open beside the timeline.",
+    "description": "Pin timeline preview panel feature hint"
+  },
   "enableMarkerLevel": {
     "message": "Enable Node Levels",
     "description": "Enable timeline node level feature"

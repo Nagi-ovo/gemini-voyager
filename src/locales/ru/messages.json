@@ -27,6 +27,14 @@
     "message": "Перетаскиваемый таймлайн",
     "description": "Draggable Timeline label"
   },
+  "pinTimelinePreview": {
+    "message": "Закрепить панель предпросмотра",
+    "description": "Pin timeline preview panel toggle label"
+  },
+  "pinTimelinePreviewHint": {
+    "message": "Держать панель предпросмотра открытой рядом с таймлайном.",
+    "description": "Pin timeline preview panel feature hint"
+  },
   "enableMarkerLevel": {
     "message": "Включить уровни узлов",
     "description": "Enable timeline node level feature"

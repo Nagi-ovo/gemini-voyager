@@ -27,6 +27,14 @@
     "message": "可拖曳時間軸",
     "description": "可拖曳時間軸標籤"
   },
+  "pinTimelinePreview": {
+    "message": "固定預覽面板",
+    "description": "固定時間軸預覽面板開關標籤"
+  },
+  "pinTimelinePreviewHint": {
+    "message": "讓時間軸旁邊的預覽面板保持常駐展開。",
+    "description": "固定時間軸預覽面板功能提示"
+  },
   "enableMarkerLevel": {
     "message": "啟用節點層級",
     "description": "啟用時間軸節點層級功能"

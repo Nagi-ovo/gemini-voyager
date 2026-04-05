@@ -27,6 +27,14 @@
     "message": "可拖拽时间线",
     "description": "可拖拽时间线标签"
   },
+  "pinTimelinePreview": {
+    "message": "固定预览面板",
+    "description": "固定时间线预览面板开关标签"
+  },
+  "pinTimelinePreviewHint": {
+    "message": "让时间线旁边的预览面板保持常驻展开。",
+    "description": "固定时间线预览面板功能提示"
+  },
   "enableMarkerLevel": {
     "message": "启用节点层级",
     "description": "启用时间线节点层级功能"

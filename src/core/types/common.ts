@@ -43,6 +43,7 @@ export const StorageKeys = {
   TIMELINE_BAR_WIDTH: 'geminiTimelineBarWidth',
   TIMELINE_DRAGGABLE: 'geminiTimelineDraggable',
   TIMELINE_POSITION: 'geminiTimelinePosition',
+  TIMELINE_PREVIEW_PINNED: 'geminiTimelinePreviewPinned',
   TIMELINE_STARRED_MESSAGES: 'geminiTimelineStarredMessages',
   TIMELINE_HIERARCHY: 'geminiTimelineHierarchy',
   TIMELINE_SHORTCUTS: 'geminiTimelineShortcuts',

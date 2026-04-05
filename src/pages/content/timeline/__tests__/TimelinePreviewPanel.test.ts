@@ -95,6 +95,22 @@ describe('TimelinePreviewPanel', () => {
       toggle.click();
       expect(panel.isOpen).toBe(false);
     });
+
+    it('allows manual close and reopen while pinned', () => {
+      panel.setPinned(true);
+      expect(panel.isPinned).toBe(true);
+
+      panel.toggle();
+      expect(panel.isOpen).toBe(true);
+
+      panel.toggle();
+      expect(panel.isOpen).toBe(false);
+      expect(panel.isPinned).toBe(true);
+
+      panel.toggle();
+      expect(panel.isOpen).toBe(true);
+      expect(panel.isPinned).toBe(true);
+    });
   });
 
   describe('updateMarkers', () => {
@@ -296,6 +312,26 @@ describe('TimelinePreviewPanel', () => {
 
       const panelEl = document.querySelector('.timeline-preview-panel')!;
       panelEl.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      expect(panel.isOpen).toBe(true);
+    });
+
+    it('ignores escape and outside click while pinned', () => {
+      panel.setPinned(true);
+      panel.open();
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+
+      expect(panel.isOpen).toBe(true);
+    });
+
+    it('keeps current visibility when pinning is disabled', () => {
+      panel.setPinned(true);
+      panel.open();
+      expect(panel.isOpen).toBe(true);
+
+      panel.setPinned(false);
+      expect(panel.isPinned).toBe(false);
       expect(panel.isOpen).toBe(true);
     });
   });

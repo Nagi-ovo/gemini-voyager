@@ -27,6 +27,14 @@
     "message": "Línea de tiempo arrastrable",
     "description": "Draggable Timeline label"
   },
+  "pinTimelinePreview": {
+    "message": "Fijar panel de vista previa",
+    "description": "Pin timeline preview panel toggle label"
+  },
+  "pinTimelinePreviewHint": {
+    "message": "Mantén abierto el panel de vista previa junto a la línea de tiempo.",
+    "description": "Pin timeline preview panel feature hint"
+  },
   "enableMarkerLevel": {
     "message": "Habilitar niveles de nodo",
     "description": "Enable timeline node level feature"

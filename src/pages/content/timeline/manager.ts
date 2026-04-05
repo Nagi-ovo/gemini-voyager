@@ -262,6 +262,7 @@ export class TimelineManager {
         geminiTimelineDraggable: false,
         geminiTimelineMarkerLevel: false,
         geminiTimelinePosition: null,
+        [StorageKeys.TIMELINE_PREVIEW_PINNED]: false,
         [StorageKeys.LANGUAGE]: null,
       };
 
@@ -313,6 +314,7 @@ export class TimelineManager {
       this.applyContainerVisibility();
       this.toggleDraggable(!!res?.geminiTimelineDraggable);
       this.toggleMarkerLevel(!!res?.geminiTimelineMarkerLevel);
+      this.previewPanel?.setPinned(res?.[StorageKeys.TIMELINE_PREVIEW_PINNED] === true);
       this.rtl = applyRTLClass(res?.[StorageKeys.LANGUAGE] as string | null | undefined);
 
       // Load position with auto-migration from v1 to v2
@@ -383,6 +385,11 @@ export class TimelineManager {
             }
             if (changes?.geminiTimelineMarkerLevel) {
               this.toggleMarkerLevel(!!changes.geminiTimelineMarkerLevel.newValue);
+            }
+            if (changes?.[StorageKeys.TIMELINE_PREVIEW_PINNED]) {
+              this.previewPanel?.setPinned(
+                changes[StorageKeys.TIMELINE_PREVIEW_PINNED].newValue === true,
+              );
             }
             if (changes?.geminiTimelinePosition && !changes.geminiTimelinePosition.newValue) {
               if (this.ui.timelineBar) {

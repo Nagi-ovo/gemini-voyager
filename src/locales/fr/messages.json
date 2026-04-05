@@ -27,6 +27,14 @@
     "message": "Chronologie déplaçable",
     "description": "Draggable Timeline label"
   },
+  "pinTimelinePreview": {
+    "message": "Épingler le panneau d’aperçu",
+    "description": "Pin timeline preview panel toggle label"
+  },
+  "pinTimelinePreviewHint": {
+    "message": "Garder le panneau d’aperçu ouvert à côté de la chronologie.",
+    "description": "Pin timeline preview panel feature hint"
+  },
   "enableMarkerLevel": {
     "message": "Activer les niveaux de nœuds",
     "description": "Enable timeline node level feature"

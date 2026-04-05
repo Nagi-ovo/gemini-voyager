@@ -16,6 +16,7 @@ export class TimelinePreviewPanel {
   private searchInput: HTMLInputElement | null = null;
   private toggleBtn: HTMLElement | null = null;
   private _isOpen = false;
+  private _isPinned = false;
   private markers: ReadonlyArray<PreviewMarkerData> = [];
   private filteredMarkers: ReadonlyArray<PreviewMarkerData> = [];
   private activeTurnId: string | null = null;
@@ -34,6 +35,10 @@ export class TimelinePreviewPanel {
 
   get isOpen(): boolean {
     return this._isOpen;
+  }
+
+  get isPinned(): boolean {
+    return this._isPinned;
   }
 
   init(
@@ -69,6 +74,11 @@ export class TimelinePreviewPanel {
     if (this._isOpen) this.positionPanel();
   }
 
+  setPinned(pinned: boolean): void {
+    if (this._isPinned === pinned) return;
+    this._isPinned = pinned;
+  }
+
   toggle(): void {
     if (this._isOpen) {
       this.close();
@@ -84,6 +94,7 @@ export class TimelinePreviewPanel {
     this.positionPanel();
     this.panelEl.classList.add('visible');
     this.toggleBtn?.classList.add('active');
+    this.toggleBtn?.setAttribute('aria-pressed', 'true');
     this.scrollActiveIntoView();
   }
 
@@ -92,6 +103,7 @@ export class TimelinePreviewPanel {
     this._isOpen = false;
     this.panelEl.classList.remove('visible');
     this.toggleBtn?.classList.remove('active');
+    this.toggleBtn?.setAttribute('aria-pressed', 'false');
     if (this.searchInput) {
       this.searchInput.value = '';
       this.searchQuery = '';
@@ -139,6 +151,7 @@ export class TimelinePreviewPanel {
     this.toggleBtn = document.createElement('button');
     this.toggleBtn.className = 'timeline-preview-toggle';
     this.toggleBtn.setAttribute('aria-label', 'Toggle preview panel');
+    this.toggleBtn.setAttribute('aria-pressed', 'false');
     this.toggleBtn.innerHTML = LIST_ICON_SVG;
     this.toggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -176,6 +189,7 @@ export class TimelinePreviewPanel {
     // Click outside to close
     this.onDocumentPointerDown = (e: PointerEvent) => {
       if (!this._isOpen) return;
+      if (this._isPinned) return;
       const target = e.target as Node;
       if (this.panelEl?.contains(target) || this.toggleBtn?.contains(target)) return;
       this.close();
@@ -185,6 +199,7 @@ export class TimelinePreviewPanel {
     // Escape to close
     this.onKeyDown = (e: KeyboardEvent) => {
       if (!this._isOpen) return;
+      if (this._isPinned) return;
       if (e.key === 'Escape') {
         e.stopPropagation();
         this.close();

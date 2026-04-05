@@ -27,6 +27,14 @@
     "message": "드래그 가능한 타임라인",
     "description": "Draggable Timeline label"
   },
+  "pinTimelinePreview": {
+    "message": "미리보기 패널 고정",
+    "description": "Pin timeline preview panel toggle label"
+  },
+  "pinTimelinePreviewHint": {
+    "message": "타임라인 옆 미리보기 패널을 항상 열어 둡니다.",
+    "description": "Pin timeline preview panel feature hint"
+  },
   "enableMarkerLevel": {
     "message": "노드 레벨 활성화",
     "description": "Enable timeline node level feature"
