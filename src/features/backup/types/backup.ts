@@ -52,6 +52,7 @@ export interface BackupMetadata {
   promptCount?: number;
   folderCount?: number;
   conversationCount?: number;
+  timelineHierarchyConversationCount?: number;
 }
 
 /**
@@ -67,6 +68,8 @@ export interface BackupResult {
   folderCount: number;
   /** Number of conversations backed up */
   conversationCount: number;
+  /** Number of conversations with timeline hierarchy data */
+  timelineHierarchyConversationCount?: number;
 }
 
 /**

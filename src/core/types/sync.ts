@@ -105,6 +105,10 @@ export type {
   ForkNode as ForkNodeSync,
   ForkNodesData as ForkNodesDataSync,
 } from '@/pages/content/fork/forkTypes';
+export type {
+  TimelineHierarchyConversationData as TimelineHierarchyConversationDataSync,
+  TimelineHierarchyData as TimelineHierarchyDataSync,
+} from '@/pages/content/timeline/hierarchyTypes';
 
 /**
  * Fork nodes export payload format
@@ -114,6 +118,16 @@ export interface ForkExportPayload {
   exportedAt: string;
   version?: string;
   data: import('@/pages/content/fork/forkTypes').ForkNodesData;
+}
+
+/**
+ * Timeline hierarchy export payload format
+ */
+export interface TimelineHierarchyExportPayload {
+  format: 'gemini-voyager.timeline-hierarchy.v1';
+  exportedAt: string;
+  version?: string;
+  data: import('@/pages/content/timeline/hierarchyTypes').TimelineHierarchyData;
 }
 
 /**
@@ -129,6 +143,12 @@ export interface SyncData {
   folders: FolderExportPayload;
   /** Prompt data in export format */
   prompts: PromptExportPayload;
+  /** Starred messages in export format */
+  starred?: StarredExportPayload;
+  /** Fork metadata in export format */
+  forks?: ForkExportPayload;
+  /** Timeline hierarchy data in export format */
+  timelineHierarchy?: TimelineHierarchyExportPayload;
   /** Timestamp when this data was synced */
   syncedAt: number;
 }
@@ -178,6 +198,7 @@ export interface SyncMessage {
     interactive?: boolean;
     platform?: SyncPlatform;
     accountScope?: SyncAccountScope;
+    timelineHierarchyAccountScope?: SyncAccountScope;
   };
 }
 

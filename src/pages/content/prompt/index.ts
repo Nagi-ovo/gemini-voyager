@@ -10,6 +10,10 @@ import 'katex/dist/katex.min.css';
 import type { marked as MarkedFn } from 'marked';
 import browser from 'webextension-polyfill';
 
+import {
+  accountIsolationService,
+  detectAccountContextFromDocument,
+} from '@/core/services/AccountIsolationService';
 import { logger } from '@/core/services/LoggerService';
 import { promptStorageService } from '@/core/services/StorageService';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
@@ -18,6 +22,11 @@ import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContex
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
+import {
+  getTimelineHierarchyStorageKeysToRead,
+  resolveTimelineHierarchyDataForStorageScope,
+} from '@/pages/content/timeline/hierarchyStorage';
+import { normalizeTimelineHierarchyData } from '@/pages/content/timeline/hierarchyTypes';
 import { getCurrentLanguage, getTranslationSync, initI18n, setCachedLanguage } from '@/utils/i18n';
 import {
   APP_LANGUAGES,
@@ -1506,6 +1515,38 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           0,
         );
 
+        let timelineHierarchyData = normalizeTimelineHierarchyData(null);
+        try {
+          const context = detectAccountContextFromDocument(window.location.href, document);
+          const scope =
+            context.routeUserId || context.email
+              ? await accountIsolationService.resolveAccountScope({
+                  pageUrl: window.location.href,
+                  routeUserId: context.routeUserId,
+                  email: context.email,
+                })
+              : null;
+          const timelineHierarchyStorage = (await chrome.storage.local.get(
+            getTimelineHierarchyStorageKeysToRead(scope?.accountKey),
+          )) as Record<string, unknown>;
+          timelineHierarchyData = resolveTimelineHierarchyDataForStorageScope(
+            timelineHierarchyStorage,
+            scope?.accountKey,
+            scope?.routeUserId ?? null,
+          );
+        } catch (error) {
+          console.warn(
+            '[PromptManager] Failed to load scoped timeline hierarchy backup data:',
+            error,
+          );
+        }
+        const timelineHierarchyPayload = {
+          format: 'gemini-voyager.timeline-hierarchy.v1' as const,
+          exportedAt: new Date().toISOString(),
+          version: '0.9.3',
+          data: timelineHierarchyData,
+        };
+
         // Create metadata
         const metadata = {
           version: '0.9.3',
@@ -1515,6 +1556,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           promptCount: prompts.length,
           folderCount: folderData.folders?.length || 0,
           conversationCount,
+          timelineHierarchyConversationCount: Object.keys(timelineHierarchyData.conversations || {})
+            .length,
         };
 
         // Generate timestamp for folder/file name
@@ -1554,6 +1597,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           await metaWritable.write(JSON.stringify(metadata, null, 2));
           await metaWritable.close();
 
+          const timelineHierarchyFile = await backupDir.getFileHandle('timeline-hierarchy.json', {
+            create: true,
+          });
+          const timelineHierarchyWritable = await timelineHierarchyFile.createWritable();
+          await timelineHierarchyWritable.write(JSON.stringify(timelineHierarchyPayload, null, 2));
+          await timelineHierarchyWritable.close();
+
           setNotice(
             `✓ Backed up ${prompts.length} prompts, ${folderData.folders?.length || 0} folders`,
             'ok',
@@ -1566,6 +1616,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           zip.file('prompts.json', JSON.stringify(promptPayload, null, 2));
           zip.file('folders.json', JSON.stringify(folderPayload, null, 2));
           zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+          zip.file('timeline-hierarchy.json', JSON.stringify(timelineHierarchyPayload, null, 2));
 
           // Generate ZIP file
           const zipBlob = await zip.generateAsync({ type: 'blob' });

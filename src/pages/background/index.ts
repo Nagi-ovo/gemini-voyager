@@ -14,6 +14,11 @@ import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
 import { isFirefox } from '@/core/utils/browser';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
+import {
+  filterTimelineHierarchyByRouteScope,
+  getTimelineHierarchyStorageKeysToRead,
+  resolveTimelineHierarchyDataForStorageScope,
+} from '@/pages/content/timeline/hierarchyStorage';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
@@ -767,12 +772,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               interactive,
               platform: rawPlatform,
               accountScope: rawScope,
+              timelineHierarchyAccountScope: rawTimelineHierarchyScope,
             } = message.payload as {
               folders: FolderData;
               prompts: PromptItem[];
               interactive?: boolean;
               platform?: 'gemini' | 'aistudio';
               accountScope?: unknown;
+              timelineHierarchyAccountScope?: unknown;
             };
             const platform = rawPlatform || 'gemini';
             const accountScope = await resolveAccountScopeForMessage(
@@ -780,11 +787,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               platform,
               isSyncAccountScope(rawScope) ? rawScope : undefined,
             );
-            // Also get starred messages and fork nodes from local storage (only for Gemini platform)
+            const timelineHierarchyAccountScope =
+              platform === 'gemini' && isSyncAccountScope(rawTimelineHierarchyScope)
+                ? rawTimelineHierarchyScope
+                : null;
+            // Also get Gemini-only timeline data from local storage
             const starredDataRaw =
               platform !== 'aistudio' ? await starredMessagesManager.getAllStarredMessages() : null;
             const forksDataRaw =
               platform !== 'aistudio' ? await forkNodesManager.getAllForkNodes() : null;
+            const timelineHierarchyRaw =
+              platform !== 'aistudio'
+                ? await chrome.storage.local.get(
+                    getTimelineHierarchyStorageKeysToRead(
+                      timelineHierarchyAccountScope?.accountKey,
+                    ),
+                  )
+                : null;
             const starredData =
               starredDataRaw && accountScope
                 ? filterStarredByRouteScope(starredDataRaw, accountScope.routeUserId)
@@ -793,6 +812,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               forksDataRaw && accountScope
                 ? filterForkNodesByRouteScope(forksDataRaw, accountScope.routeUserId)
                 : forksDataRaw;
+            const timelineHierarchyDataRaw =
+              platform !== 'aistudio' && timelineHierarchyRaw
+                ? resolveTimelineHierarchyDataForStorageScope(
+                    timelineHierarchyRaw as Record<string, unknown>,
+                    timelineHierarchyAccountScope?.accountKey,
+                    timelineHierarchyAccountScope?.routeUserId ?? null,
+                  )
+                : null;
+            const timelineHierarchyData =
+              timelineHierarchyDataRaw && timelineHierarchyAccountScope
+                ? filterTimelineHierarchyByRouteScope(
+                    timelineHierarchyDataRaw,
+                    timelineHierarchyAccountScope.routeUserId,
+                  )
+                : timelineHierarchyDataRaw;
             const success = await googleDriveSyncService.upload(
               folders,
               prompts,
@@ -800,7 +834,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               interactive !== false,
               platform,
               forksData,
+              timelineHierarchyData,
               accountScope,
+              timelineHierarchyAccountScope,
             );
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;
@@ -809,12 +845,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const interactive = message.payload?.interactive !== false;
             const platform = (message.payload?.platform as 'gemini' | 'aistudio') || 'gemini';
             const rawScope = message.payload?.accountScope;
+            const rawTimelineHierarchyScope = message.payload?.timelineHierarchyAccountScope;
             const accountScope = await resolveAccountScopeForMessage(
               sender,
               platform,
               isSyncAccountScope(rawScope) ? rawScope : undefined,
             );
-            const data = await googleDriveSyncService.download(interactive, platform, accountScope);
+            const timelineHierarchyAccountScope =
+              platform === 'gemini' && isSyncAccountScope(rawTimelineHierarchyScope)
+                ? rawTimelineHierarchyScope
+                : null;
+            const data = await googleDriveSyncService.download(
+              interactive,
+              platform,
+              accountScope,
+              timelineHierarchyAccountScope,
+            );
             // NOTE: We intentionally do NOT save to storage here.
             // The caller (Popup) is responsible for merging with local data and saving.
             // This prevents data loss from overwriting local changes.

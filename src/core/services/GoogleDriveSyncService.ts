@@ -4,7 +4,7 @@
  * Enterprise-grade service for syncing extension data to Google Drive
  * Uses Chrome Identity API for OAuth2 and Drive REST API v3 for storage
  *
- * Stores folders, prompts, and starred messages as separate files:
+ * Stores folders, prompts, and other sync data as separate files:
  * - gemini-voyager-folders.json
  * - gemini-voyager-prompts.json
  * - gemini-voyager-starred.json
@@ -22,6 +22,8 @@ import type {
   SyncMode,
   SyncPlatform,
   SyncState,
+  TimelineHierarchyDataSync,
+  TimelineHierarchyExportPayload,
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 import { isBrave } from '@/core/utils/browser';
@@ -33,6 +35,7 @@ const AISTUDIO_FOLDERS_FILE_NAME = 'gemini-voyager-aistudio-folders.json';
 const PROMPTS_FILE_NAME = 'gemini-voyager-prompts.json';
 const STARRED_FILE_NAME = 'gemini-voyager-starred.json';
 const FORKS_FILE_NAME = 'gemini-voyager-forks.json';
+const TIMELINE_HIERARCHY_FILE_NAME = 'gemini-voyager-timeline-hierarchy.json';
 const BACKUP_FOLDER_NAME = 'Gemini Voyager Data';
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_BASE = 'https://www.googleapis.com/upload/drive/v3';
@@ -61,6 +64,7 @@ export class GoogleDriveSyncService {
   private promptsFileId: string | null = null;
   private starredFileId: string | null = null;
   private forksFileId: string | null = null;
+  private timelineHierarchyFileId: string | null = null;
   private backupFolderId: string | null = null;
   private fileIdByName: Record<string, string> = {};
   private stateChangeCallback: ((state: SyncState) => void) | null = null;
@@ -128,6 +132,7 @@ export class GoogleDriveSyncService {
     this.promptsFileId = null;
     this.starredFileId = null;
     this.forksFileId = null;
+    this.timelineHierarchyFileId = null;
     this.backupFolderId = null;
     this.fileIdByName = {};
     this.updateState({ isAuthenticated: false, lastSyncTime: null, error: null });
@@ -135,7 +140,7 @@ export class GoogleDriveSyncService {
   }
 
   /**
-   * Upload folders, prompts, and starred messages as separate files to Google Drive
+   * Upload folders, prompts, and timeline data as separate files to Google Drive
    * @param folders Folder data to upload
    * @param prompts Prompt items (only for Gemini platform)
    * @param starred Starred messages (only for Gemini platform)
@@ -149,7 +154,9 @@ export class GoogleDriveSyncService {
     interactive: boolean = true,
     platform: SyncPlatform = 'gemini',
     forks: ForkNodesDataSync | null = null,
+    timelineHierarchy: TimelineHierarchyDataSync | null = null,
     accountScope: SyncAccountScope | null = null,
+    timelineHierarchyAccountScope: SyncAccountScope | null = null,
   ): Promise<boolean> {
     try {
       this.updateState({ isSyncing: true, error: null });
@@ -246,6 +253,28 @@ export class GoogleDriveSyncService {
         console.log('[GoogleDriveSyncService] Fork nodes uploaded successfully');
       }
 
+      // Upload timeline hierarchy file (only for Gemini platform)
+      if (platform === 'gemini' && timelineHierarchy) {
+        const timelineHierarchyScope = timelineHierarchyAccountScope ?? accountScope;
+        const timelineHierarchyPayload: TimelineHierarchyExportPayload = {
+          format: 'gemini-voyager.timeline-hierarchy.v1',
+          exportedAt: now.toISOString(),
+          version: EXTENSION_VERSION,
+          data: timelineHierarchy,
+        };
+        const timelineHierarchyFileName = this.getFileNameForScope(
+          TIMELINE_HIERARCHY_FILE_NAME,
+          timelineHierarchyScope,
+        );
+        const timelineHierarchyFileId = await this.ensureFileId(
+          token,
+          timelineHierarchyFileName,
+          'timeline-hierarchy',
+        );
+        await this.uploadFileWithRetry(token, timelineHierarchyFileId, timelineHierarchyPayload);
+        console.log('[GoogleDriveSyncService] Timeline hierarchy uploaded successfully');
+      }
+
       const uploadTime = Date.now();
       // Update platform-specific upload time
       if (platform === 'aistudio') {
@@ -255,7 +284,12 @@ export class GoogleDriveSyncService {
       }
       await this.saveState();
 
-      const fileCount = platform === 'gemini' ? (starred ? (forks ? 4 : 3) : 2) : 1;
+      const fileCount =
+        1 +
+        (prompts.length > 0 ? 1 : 0) +
+        (platform === 'gemini' && starred ? 1 : 0) +
+        (platform === 'gemini' && forks ? 1 : 0) +
+        (platform === 'gemini' && timelineHierarchy ? 1 : 0);
       console.log(
         `[GoogleDriveSyncService] Upload successful - ${fileCount} file(s) for ${platform}`,
       );
@@ -269,8 +303,8 @@ export class GoogleDriveSyncService {
   }
 
   /**
-   * Download folders, prompts, and starred messages from separate files in Google Drive
-   * Returns { folders, prompts, starred } or null if no files exist
+   * Download folders, prompts, and timeline data from separate files in Google Drive
+   * Returns all available payloads or null if no files exist
    * @param interactive Whether to show auth prompt if needed
    * @param platform Platform to download for ('gemini' | 'aistudio')
    */
@@ -278,11 +312,13 @@ export class GoogleDriveSyncService {
     interactive: boolean = true,
     platform: SyncPlatform = 'gemini',
     accountScope: SyncAccountScope | null = null,
+    timelineHierarchyAccountScope: SyncAccountScope | null = null,
   ): Promise<{
     folders: FolderExportPayload | null;
     prompts: PromptExportPayload | null;
     starred: StarredExportPayload | null;
     forks: ForkExportPayload | null;
+    timelineHierarchy: TimelineHierarchyExportPayload | null;
   } | null> {
     try {
       this.updateState({ isSyncing: true, error: null });
@@ -337,7 +373,22 @@ export class GoogleDriveSyncService {
         }
       }
 
-      if (!folders && !prompts && !starred && !forks) {
+      // Download timeline hierarchy file (only for Gemini platform)
+      let timelineHierarchy: TimelineHierarchyExportPayload | null = null;
+      if (platform === 'gemini') {
+        const timelineHierarchyScope = timelineHierarchyAccountScope ?? accountScope;
+        const timelineHierarchyFileId = await this.findFileForScope(
+          token,
+          TIMELINE_HIERARCHY_FILE_NAME,
+          timelineHierarchyScope,
+        );
+        if (timelineHierarchyFileId) {
+          timelineHierarchy = await this.downloadFileWithRetry(token, timelineHierarchyFileId);
+          console.log('[GoogleDriveSyncService] Timeline hierarchy downloaded');
+        }
+      }
+
+      if (!folders && !prompts && !starred && !forks && !timelineHierarchy) {
         console.log(`[GoogleDriveSyncService] No sync files found for ${platform}`);
         this.updateState({ isSyncing: false });
         return null;
@@ -352,7 +403,7 @@ export class GoogleDriveSyncService {
       }
       await this.saveState();
 
-      return { folders, prompts, starred, forks };
+      return { folders, prompts, starred, forks, timelineHierarchy };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Download failed';
       console.error('[GoogleDriveSyncService] Download failed:', error);
@@ -624,7 +675,7 @@ export class GoogleDriveSyncService {
   private async ensureFileId(
     token: string,
     fileName: string,
-    type: 'folders' | 'aistudio-folders' | 'prompts' | 'starred' | 'forks',
+    type: 'folders' | 'aistudio-folders' | 'prompts' | 'starred' | 'forks' | 'timeline-hierarchy',
   ): Promise<string> {
     // 1. Ensure backup folder exists
     const folderId = await this.ensureBackupFolder(token);
@@ -671,7 +722,7 @@ export class GoogleDriveSyncService {
   }
 
   private setFileIdForType(
-    type: 'folders' | 'aistudio-folders' | 'prompts' | 'starred' | 'forks',
+    type: 'folders' | 'aistudio-folders' | 'prompts' | 'starred' | 'forks' | 'timeline-hierarchy',
     fileId: string,
   ): void {
     switch (type) {
@@ -689,6 +740,9 @@ export class GoogleDriveSyncService {
         break;
       case 'forks':
         this.forksFileId = fileId;
+        break;
+      case 'timeline-hierarchy':
+        this.timelineHierarchyFileId = fileId;
         break;
     }
   }

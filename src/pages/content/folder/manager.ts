@@ -16,7 +16,14 @@ import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContex
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
+import { mergeTimelineHierarchy } from '@/utils/merge';
 
+import {
+  getTimelineHierarchyStorageKey,
+  getTimelineHierarchyStorageKeysToRead,
+  resolveTimelineHierarchyDataForStorageScope,
+} from '../timeline/hierarchyStorage';
+import type { TimelineHierarchyData } from '../timeline/hierarchyTypes';
 import { sortConversationsByPriority } from './conversationSort';
 import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
 import { DEFAULT_CONVERSATION_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
@@ -5593,6 +5600,26 @@ export class FolderManager {
     };
   }
 
+  private async resolveTimelineHierarchySyncScope(): Promise<SyncAccountScope | undefined> {
+    try {
+      const context = detectAccountContextFromDocument(window.location.href, document);
+      if (!context.routeUserId && !context.email) {
+        return undefined;
+      }
+
+      const scope = await accountIsolationService.resolveAccountScope({
+        pageUrl: window.location.href,
+        routeUserId: context.routeUserId,
+        email: context.email,
+      });
+
+      return this.toSyncAccountScope(scope);
+    } catch (error) {
+      console.warn('[FolderManager] Failed to resolve timeline hierarchy sync scope:', error);
+      return undefined;
+    }
+  }
+
   private async loadHideArchivedSetting(): Promise<void> {
     try {
       const result = await browser.storage.sync.get({
@@ -6973,6 +7000,7 @@ export class FolderManager {
   private async handleCloudUpload(): Promise<void> {
     try {
       this.showNotification(this.t('uploadInProgress'), 'info');
+      const timelineHierarchyAccountScope = await this.resolveTimelineHierarchySyncScope();
 
       // Get current folder data
       const folders = this.data;
@@ -7001,6 +7029,7 @@ export class FolderManager {
           prompts,
           platform: 'gemini',
           accountScope: this.toSyncAccountScope(this.accountScope),
+          timelineHierarchyAccountScope,
         },
       })) as { ok?: boolean; error?: string } | undefined;
 
@@ -7024,6 +7053,10 @@ export class FolderManager {
   private async handleCloudSync(): Promise<void> {
     try {
       this.showNotification(this.t('downloadInProgress'), 'info');
+      const timelineHierarchyAccountScope = await this.resolveTimelineHierarchySyncScope();
+      const timelineHierarchyStorageKey = getTimelineHierarchyStorageKey(
+        timelineHierarchyAccountScope?.accountKey,
+      );
 
       // Send download request to background script
       const response = (await browser.runtime.sendMessage({
@@ -7031,6 +7064,7 @@ export class FolderManager {
         payload: {
           platform: 'gemini',
           accountScope: this.toSyncAccountScope(this.accountScope),
+          timelineHierarchyAccountScope,
         },
       })) as
         | {
@@ -7040,6 +7074,7 @@ export class FolderManager {
               folders?: { data?: FolderData };
               prompts?: { items?: PromptItem[] };
               starred?: { data?: { messages: Record<string, unknown[]> } };
+              timelineHierarchy?: { data?: TimelineHierarchyData };
             };
           }
         | undefined;
@@ -7059,9 +7094,13 @@ export class FolderManager {
       const cloudFoldersPayload = response.data?.folders;
       const cloudPromptsPayload = response.data?.prompts;
       const cloudStarredPayload = response.data?.starred;
+      const cloudTimelineHierarchyPayload = response.data?.timelineHierarchy;
       const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
       const cloudPromptItems = cloudPromptsPayload?.items || [];
       const cloudStarredData = cloudStarredPayload?.data || { messages: {} };
+      const cloudTimelineHierarchyData = cloudTimelineHierarchyPayload?.data || {
+        conversations: {},
+      };
 
       this.debug(
         `Downloaded - folders: ${cloudFolderData.folders?.length || 0}, prompts: ${cloudPromptItems.length}, starred conversations: ${Object.keys(cloudStarredData.messages || {}).length}`,
@@ -7096,6 +7135,20 @@ export class FolderManager {
         console.warn('[FolderManager] Could not get local starred messages for merge:', err);
       }
 
+      let localTimelineHierarchy: TimelineHierarchyData = { conversations: {} };
+      try {
+        const hierarchyResult = (await chrome.storage.local.get(
+          getTimelineHierarchyStorageKeysToRead(timelineHierarchyAccountScope?.accountKey),
+        )) as Record<string, unknown>;
+        localTimelineHierarchy = resolveTimelineHierarchyDataForStorageScope(
+          hierarchyResult,
+          timelineHierarchyAccountScope?.accountKey,
+          timelineHierarchyAccountScope?.routeUserId ?? null,
+        );
+      } catch (err) {
+        console.warn('[FolderManager] Could not get local timeline hierarchy for merge:', err);
+      }
+
       // Merge folder data
       const localFolders = this.data;
       const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
@@ -7105,9 +7158,13 @@ export class FolderManager {
 
       // Merge starred messages
       const mergedStarred = this.mergeStarredMessages(localStarred, cloudStarredData);
+      const mergedTimelineHierarchy = mergeTimelineHierarchy(
+        localTimelineHierarchy,
+        cloudTimelineHierarchyData,
+      );
 
       this.debug(
-        `Merged - folders: ${mergedFolders.folders?.length || 0}, prompts: ${mergedPrompts.length}, starred conversations: ${Object.keys(mergedStarred.messages || {}).length}`,
+        `Merged - folders: ${mergedFolders.folders?.length || 0}, prompts: ${mergedPrompts.length}, starred conversations: ${Object.keys(mergedStarred.messages || {}).length}, hierarchy conversations: ${Object.keys(mergedTimelineHierarchy.conversations || {}).length}`,
       );
 
       // Apply merged folder data
@@ -7119,9 +7176,10 @@ export class FolderManager {
         await chrome.storage.local.set({
           gvPromptItems: mergedPrompts,
           geminiTimelineStarredMessages: mergedStarred,
+          [timelineHierarchyStorageKey]: mergedTimelineHierarchy,
         });
       } catch (err) {
-        console.error('[FolderManager] Failed to save merged prompts/starred:', err);
+        console.error('[FolderManager] Failed to save merged prompts/starred/hierarchy:', err);
       }
 
       this.refresh();

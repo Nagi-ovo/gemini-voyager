@@ -1,6 +1,10 @@
 import type { ConversationReference, FolderData } from '@/core/types/folder';
 import type { PromptItem } from '@/core/types/sync';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
+import type {
+  TimelineHierarchyConversationData,
+  TimelineHierarchyData,
+} from '@/pages/content/timeline/hierarchyTypes';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 /**
@@ -221,4 +225,49 @@ export function mergeForkNodes(local: ForkNodesData, cloud: ForkNodesData): Fork
   }
 
   return { nodes: mergedNodes, groups: mergedGroups };
+}
+
+/**
+ * Merges local and cloud timeline hierarchy data.
+ * Uses conversationId as the unit of conflict resolution and keeps the newer conversation snapshot.
+ */
+export function mergeTimelineHierarchy(
+  local: TimelineHierarchyData,
+  cloud: TimelineHierarchyData,
+): TimelineHierarchyData {
+  const localConversations = local?.conversations || {};
+  const cloudConversations = cloud?.conversations || {};
+
+  const allConversationIds = new Set([
+    ...Object.keys(localConversations),
+    ...Object.keys(cloudConversations),
+  ]);
+
+  const conversations: Record<string, TimelineHierarchyConversationData> = {};
+
+  allConversationIds.forEach((conversationId) => {
+    const localConversation = localConversations[conversationId];
+    const cloudConversation = cloudConversations[conversationId];
+
+    if (!localConversation && cloudConversation) {
+      conversations[conversationId] = cloudConversation;
+      return;
+    }
+
+    if (localConversation && !cloudConversation) {
+      conversations[conversationId] = localConversation;
+      return;
+    }
+
+    if (!localConversation || !cloudConversation) {
+      return;
+    }
+
+    conversations[conversationId] =
+      (localConversation.updatedAt || 0) >= (cloudConversation.updatedAt || 0)
+        ? localConversation
+        : cloudConversation;
+  });
+
+  return { conversations };
 }
