@@ -1,0 +1,48 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "86a256426938",
+  "session_id": "192ac09f-b413-42fa-a33c-f7252915f9e7",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-05T15:19:00.740996Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/core/types/common.ts",
+    "src/core/types/sync.ts",
+    "src/pages/content/folder/manager.ts",
+    "src/utils/merge.ts",
+    "src/core/services/GoogleDriveSyncService.ts",
+    "src/features/backup/services/__tests__/BackupService.test.ts",
+    "src/pages/background/index.ts",
+    "src/pages/content/prompt/index.ts",
+    "src/pages/content/timeline/hierarchyStorage.ts",
+    "src/pages/content/timeline/manager.ts",
+    "src/features/backup/types/backup.ts",
+    "src/pages/content/timeline/__tests__/hierarchyStorage.test.ts",
+    "src/pages/content/timeline/hierarchyTypes.ts",
+    "src/utils/__tests__/mergeTimelineHierarchy.test.ts",
+    "src/features/backup/services/BackupService.ts",
+    "src/pages/popup/components/CloudSyncSettings.tsx",
+    "src/pages/popup/components/__tests__/CloudSyncSettings.test.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "15bdd17877ad",
+  "checkpoint_transcript_start": 80,
+  "transcript_lines_at_start": 80,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-05T15:19:00.638041Z",
+    "agent_lines": 1487,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1487,
+    "agent_percentage": 100
+  }
+}
