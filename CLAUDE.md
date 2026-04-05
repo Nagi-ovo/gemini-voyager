@@ -26,6 +26,7 @@ bun run docs:dev           # Docs dev server
 8. **Never modify `dist_*` folders directly.**
 9. **Never commit `.env` or secrets.**
 10. **When adding Material Symbol icons**, add the icon name to `icon_names=` in the Google Fonts URL in `src/pages/popup/index.html`.
+11. **For GitHub issue/PR/comment work, prefer `gh` as the source of truth** instead of browser scraping or unstable connectors.
 
 ## Verification (run before declaring done)
 
