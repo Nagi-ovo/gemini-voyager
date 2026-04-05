@@ -110,17 +110,14 @@ export class KeyboardShortcutService {
   private async loadConfig(): Promise<void> {
     try {
       if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
-        const result =
-          (await chrome.storage.sync.get(StorageKeys.TIMELINE_SHORTCUTS)) ?? {};
+        const result = (await chrome.storage.sync.get(StorageKeys.TIMELINE_SHORTCUTS)) ?? {};
         const stored = result[StorageKeys.TIMELINE_SHORTCUTS] as
           | KeyboardShortcutStorage
           | undefined;
 
         if (stored?.shortcuts) {
           const normalized = this.normalizeConfig(stored.shortcuts);
-          this.config = this.validateConfig(normalized)
-            ? normalized
-            : DEFAULT_SHORTCUTS;
+          this.config = this.validateConfig(normalized) ? normalized : DEFAULT_SHORTCUTS;
           this.enabled = stored.enabled ?? true;
         }
       } else {
@@ -129,9 +126,7 @@ export class KeyboardShortcutService {
         if (stored) {
           const parsed = JSON.parse(stored) as KeyboardShortcutStorage;
           const normalized = this.normalizeConfig(parsed.shortcuts);
-          this.config = this.validateConfig(normalized)
-            ? normalized
-            : DEFAULT_SHORTCUTS;
+          this.config = this.validateConfig(normalized) ? normalized : DEFAULT_SHORTCUTS;
           this.enabled = parsed.enabled ?? true;
         }
       }
@@ -196,11 +191,12 @@ export class KeyboardShortcutService {
     return {
       action: fallback.action,
       modifiers: Array.isArray(shortcut?.modifiers) ? shortcut.modifiers : fallback.modifiers,
-      key: typeof shortcut?.key === 'string' && shortcut.key.length > 0 ? shortcut.key : fallback.key,
+      key:
+        typeof shortcut?.key === 'string' && shortcut.key.length > 0 ? shortcut.key : fallback.key,
       sequenceLength:
         typeof shortcut?.sequenceLength === 'number' && Number.isInteger(shortcut.sequenceLength)
           ? shortcut.sequenceLength
-          : fallback.sequenceLength ?? 1,
+          : (fallback.sequenceLength ?? 1),
     };
   }
 
@@ -302,9 +298,7 @@ export class KeyboardShortcutService {
             | undefined;
           if (newValue?.shortcuts) {
             const normalized = this.normalizeConfig(newValue.shortcuts);
-            this.config = this.validateConfig(normalized)
-              ? normalized
-              : DEFAULT_SHORTCUTS;
+            this.config = this.validateConfig(normalized) ? normalized : DEFAULT_SHORTCUTS;
             this.enabled = newValue.enabled ?? true;
           }
         }

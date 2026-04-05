@@ -81,8 +81,12 @@ describe('KeyboardShortcutService', () => {
     const listener = vi.fn();
     const unsubscribe = keyboardShortcutService.on(listener);
 
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true }));
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true }));
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true }),
+    );
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true }),
+    );
 
     expect(listener).toHaveBeenCalledTimes(1);
     expect(listener).toHaveBeenCalledWith('timeline:last', expect.any(KeyboardEvent));
