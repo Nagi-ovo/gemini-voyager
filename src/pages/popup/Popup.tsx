@@ -1482,7 +1482,9 @@ export default function Popup() {
                   >
                     {t('pinTimelinePreview')}
                   </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('pinTimelinePreviewHint')}</p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('pinTimelinePreviewHint')}
+                  </p>
                 </div>
                 <Switch
                   id="timeline-preview-pinned"
