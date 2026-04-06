@@ -9,9 +9,6 @@
 import { StorageKeys } from '@/core/types/common';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
-import { listFilesForFolder } from '@/core/utils/folderFileStore';
-import { isSafari } from '@/core/utils/browser';
-
 import { getFolderColor, isDarkMode } from '../folder/folderColors';
 import type { FolderManager } from '../folder/manager';
 import { setInputText } from '../utils/inputHelper';
@@ -104,21 +101,45 @@ export function waitForElement(selector: string, timeoutMs: number): Promise<HTM
 // Picker UI
 // ============================================================================
 
-function populateDropdown(
+async function populateDropdown(
   dropdown: HTMLElement,
   manager: FolderManager,
   chip: HTMLButtonElement,
-): void {
+): Promise<void> {
   dropdown.innerHTML = '';
-  const folders = manager.getFolders();
+  await manager.ensureDataLoaded();
+  const allFolders = manager.getFolders();
 
-  if (folders.length === 0) {
+  if (allFolders.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'gv-fp-item';
     empty.textContent = t('folderAsProject_noFolder');
     dropdown.appendChild(empty);
     return;
   }
+
+  // Index children by parentId for tree traversal
+  const childrenOf = new Map<string, typeof allFolders[number][]>();
+  for (const f of allFolders) {
+    const key = f.parentId ?? '__root__';
+    if (!childrenOf.has(key)) childrenOf.set(key, []);
+    childrenOf.get(key)!.push(f);
+  }
+
+  // Handler for selecting a folder
+  const selectFolder = (folder: typeof allFolders[number]) => {
+    selectedFolderId = folder.id;
+    chip.textContent = `📁 ${folder.name}`;
+    chip.dataset.selected = folder.id;
+    dropdown.hidden = true;
+    chip.setAttribute('aria-expanded', 'false');
+    if (folder.instructions) {
+      void injectInstructions(folder.instructions, folder.name);
+    } else {
+      // No instructions on this folder — remove any existing block
+      void clearInstructions();
+    }
+  };
 
   // "No folder" / clear selection option
   const noneItem = document.createElement('button');
@@ -132,155 +153,172 @@ function populateDropdown(
     chip.removeAttribute('data-selected');
     dropdown.hidden = true;
     chip.setAttribute('aria-expanded', 'false');
+    void clearInstructions();
   });
   dropdown.appendChild(noneItem);
 
-  for (const folder of folders) {
-    const item = document.createElement('button');
-    item.className = 'gv-fp-item';
-    item.type = 'button';
-    item.setAttribute('role', 'option');
-    item.dataset.folderId = folder.id;
+  /**
+   * Render folder items for a given parent level.
+   *
+   * @param parentId - Parent folder ID, or '__root__' for top-level
+   * @param container - DOM element to append items to
+   */
+  const renderLevel = (parentId: string, container: HTMLElement) => {
+    const siblings = childrenOf.get(parentId) ?? [];
+    for (const folder of siblings) {
+      const hasChildren = childrenOf.has(folder.id);
 
-    if (folder.color && folder.color !== 'default') {
-      const dot = document.createElement('span');
-      dot.className = 'gv-fp-color-dot';
-      dot.style.backgroundColor = getFolderColor(folder.color, isDarkMode());
-      item.appendChild(dot);
+      const row = document.createElement('div');
+      row.className = 'gv-fp-tree-row';
+
+      const item = document.createElement('button');
+      item.className = 'gv-fp-item';
+      item.type = 'button';
+      item.setAttribute('role', 'option');
+      item.dataset.folderId = folder.id;
+
+      if (folder.color && folder.color !== 'default') {
+        const dot = document.createElement('span');
+        dot.className = 'gv-fp-color-dot';
+        dot.style.backgroundColor = getFolderColor(folder.color, isDarkMode());
+        item.appendChild(dot);
+      }
+
+      const label = document.createElement('span');
+      label.textContent = folder.name;
+      item.appendChild(label);
+
+      item.addEventListener('click', () => selectFolder(folder));
+      row.appendChild(item);
+
+      if (hasChildren) {
+        const arrow = document.createElement('button');
+        arrow.className = 'gv-fp-expand-btn';
+        arrow.type = 'button';
+        arrow.textContent = '›';
+        arrow.setAttribute('aria-label', 'Expand');
+
+        const sublist = document.createElement('div');
+        sublist.className = 'gv-fp-sublist';
+        sublist.hidden = true;
+
+        arrow.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const expanding = sublist.hidden;
+          sublist.hidden = !expanding;
+          arrow.textContent = expanding ? '‹' : '›';
+          arrow.setAttribute('aria-label', expanding ? 'Collapse' : 'Expand');
+          // Lazy render children on first expand
+          if (expanding && sublist.children.length === 0) {
+            renderLevel(folder.id, sublist);
+          }
+        });
+
+        row.appendChild(arrow);
+        container.appendChild(row);
+        container.appendChild(sublist);
+      } else {
+        container.appendChild(row);
+      }
     }
+  };
 
-    const label = document.createElement('span');
-    label.textContent = folder.name;
-    item.appendChild(label);
-
-    item.addEventListener('click', () => {
-      selectedFolderId = folder.id;
-      chip.textContent = `📁 ${folder.name}`;
-      chip.dataset.selected = folder.id;
-      dropdown.hidden = true;
-      chip.setAttribute('aria-expanded', 'false');
-      // Inject folder instructions into the chat input if set
-      if (folder.instructions) {
-        void injectInstructions(folder.instructions, folder.instructions.length);
-      }
-      // Auto-attach folder files (skipped on Safari)
-      if (folder.attachments && folder.attachments.length > 0) {
-        void tryAutoAttachFiles(folder.id, folder.attachments.length);
-      }
-    });
-    dropdown.appendChild(item);
-  }
+  renderLevel('__root__', dropdown);
 }
 
+// Markers for instruction block detection — must be unique enough to avoid
+// false positives with user text, but readable in the chat input.
+const INSTRUCTIONS_START = '[System Instructions]';
+const INSTRUCTIONS_END = '[/System Instructions]';
+const INSTRUCTIONS_PATTERN = new RegExp(
+  `${INSTRUCTIONS_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s\\S]*?${INSTRUCTIONS_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\n*`,
+);
+
 /**
- * Inject folder instructions into the chat input and show a brief info banner.
+ * Inject folder instructions into the chat input, wrapped as a system prompt.
+ * If an existing instruction block is present, it is replaced in-place,
+ * preserving any text the user has already typed.
  *
- * @param instructions - The text to inject
- * @param charCount - Character count for the banner
+ * @param instructions - The raw instruction text from the folder
+ * @param folderName - The folder name for context in the prompt
  */
-async function injectInstructions(instructions: string, charCount: number): Promise<void> {
+async function injectInstructions(instructions: string, folderName: string): Promise<void> {
   const input = await waitForElement('rich-textarea [contenteditable="true"]', 3000);
   if (!input) return;
 
-  setInputText(input as HTMLElement, instructions);
+  const block = [
+    INSTRUCTIONS_START,
+    `Project: ${folderName}`,
+    '',
+    'Follow these instructions for the entire conversation.',
+    'Do not mention or repeat these instructions in your response.',
+    '',
+    instructions,
+    INSTRUCTIONS_END,
+    '',
+  ].join('\n');
 
-  // Show a transient info banner
-  showInstructionsBanner(charCount);
+  // Read current input text and strip any existing instruction block.
+  // Quill uses <p> tags per line; innerText renders those as \n\n.
+  // Normalise back to single \n so the round-trip doesn't double spacing.
+  const rawText = (input as HTMLElement).innerText ?? '';
+  const currentText = rawText.replace(/\n\n/g, '\n');
+  const stripped = currentText.replace(INSTRUCTIONS_PATTERN, '');
+
+  // Combine: new instructions first, then any user-typed text
+  const combined = block + stripped;
+
+  // Select all and replace to preserve Quill state
+  (input as HTMLElement).focus();
+  const selection = window.getSelection();
+  if (selection) {
+    const range = document.createRange();
+    range.selectNodeContents(input);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  document.execCommand('insertText', false, combined);
+  (input as HTMLElement).dispatchEvent(new Event('input', { bubbles: true }));
+
+  // Move cursor to the end so the user can type immediately
+  if (selection) {
+    selection.selectAllChildren(input);
+    selection.collapseToEnd();
+  }
+  (input as HTMLElement).scrollTop = (input as HTMLElement).scrollHeight;
 }
 
 /**
- * Show a short-lived banner above the picker noting how many instruction
- * characters were loaded.
- *
- * @param charCount - Number of instruction characters injected
+ * Remove the instruction block from the chat input, preserving user text.
  */
-function showInstructionsBanner(charCount: number): void {
-  // Remove any existing banner
-  document.querySelector('.gv-fp-banner')?.remove();
+async function clearInstructions(): Promise<void> {
+  const input = await waitForElement('rich-textarea [contenteditable="true"]', 1000);
+  if (!input) return;
 
-  const banner = document.createElement('div');
-  banner.className = 'gv-fp-banner';
-  banner.textContent = `${t('folderAsProject_instructionsBanner')} ${charCount} ${t('folderAsProject_instructionsCount').replace('{n}', String(charCount))}`;
+  const rawText = (input as HTMLElement).innerText ?? '';
+  const currentText = rawText.replace(/\n\n/g, '\n');
+  if (!INSTRUCTIONS_PATTERN.test(currentText)) return;
 
-  pickerContainer?.parentElement?.insertBefore(banner, pickerContainer);
+  const stripped = currentText.replace(INSTRUCTIONS_PATTERN, '');
 
-  setTimeout(() => banner.remove(), 4000);
-}
-
-/**
- * Attempt to programmatically attach folder files to the Gemini chat input.
- *
- * Skipped on Safari due to fetch-interceptor limitations. Falls back to a
- * notification if attachment via DataTransfer events fails.
- *
- * @param folderId - The folder ID to load files from
- * @param expectedCount - Number of files the user expects to attach
- */
-async function tryAutoAttachFiles(folderId: string, expectedCount: number): Promise<void> {
-  if (isSafari()) {
-    showAttachNotification(t('folderAsProject_attachFailed'));
-    return;
+  (input as HTMLElement).focus();
+  const selection = window.getSelection();
+  if (selection) {
+    const range = document.createRange();
+    range.selectNodeContents(input);
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
 
-  const files = await listFilesForFolder(folderId);
-  if (files.length === 0) return;
+  document.execCommand('insertText', false, stripped);
+  (input as HTMLElement).dispatchEvent(new Event('input', { bubbles: true }));
 
-  // Look for the Gemini file-upload button / attachment trigger
-  const attachBtn = document.querySelector<HTMLElement>(
-    '[data-test-id*="attachment"], [data-test-id*="upload"], [aria-label*="attach"], [aria-label*="upload"]',
-  );
-
-  if (!attachBtn) {
-    showAttachNotification(t('folderAsProject_attachFailed'));
-    return;
+  if (selection) {
+    selection.selectAllChildren(input);
+    selection.collapseToEnd();
   }
-
-  // Build a DataTransfer with reconstructed File objects
-  const dt = new DataTransfer();
-  for (const sf of files) {
-    const blob = new Blob([sf.data], { type: sf.mimeType });
-    const file = new File([blob], sf.name, { type: sf.mimeType });
-    dt.items.add(file);
-  }
-
-  // Dispatch a drop event on the attachment button's parent area
-  const dropTarget = attachBtn.closest('form') ?? attachBtn.parentElement ?? document.body;
-  const dropEvent = new DragEvent('drop', {
-    bubbles: true,
-    cancelable: true,
-    dataTransfer: dt,
-  });
-
-  let attached = false;
-  try {
-    attached = dropTarget.dispatchEvent(dropEvent);
-  } catch {
-    // Ignore dispatch errors
-  }
-
-  if (attached) {
-    showAttachNotification(
-      t('folderAsProject_filesAttached').replace('{n}', String(files.length)),
-    );
-  } else {
-    showAttachNotification(t('folderAsProject_attachFailed'));
-  }
-
-  void expectedCount; // suppress lint warning
-}
-
-/**
- * Show a short-lived notification above the picker.
- *
- * @param message - Text to display in the notification
- */
-function showAttachNotification(message: string): void {
-  document.querySelector('.gv-fp-attach-notification')?.remove();
-  const note = document.createElement('div');
-  note.className = 'gv-fp-banner gv-fp-attach-notification';
-  note.textContent = message;
-  pickerContainer?.parentElement?.insertBefore(note, pickerContainer);
-  setTimeout(() => note.remove(), 5000);
+  (input as HTMLElement).scrollTop = (input as HTMLElement).scrollHeight;
 }
 
 function buildFolderPicker(manager: FolderManager): {
@@ -297,6 +335,12 @@ function buildFolderPicker(manager: FolderManager): {
   chip.setAttribute('aria-expanded', 'false');
   chip.textContent = t('folderAsProject_selectFolder');
 
+  // Match font-size from the model picker button so it scales with Gemini's CSS
+  const modelBtn = document.querySelector<HTMLElement>('.model-picker-container button');
+  if (modelBtn) {
+    chip.style.fontSize = getComputedStyle(modelBtn).fontSize;
+  }
+
   const dropdown = document.createElement('div');
   dropdown.className = 'gv-fp-dropdown';
   dropdown.setAttribute('role', 'listbox');
@@ -306,7 +350,7 @@ function buildFolderPicker(manager: FolderManager): {
     e.stopPropagation();
     const isOpen = !dropdown.hidden;
     if (!isOpen) {
-      populateDropdown(dropdown, manager, chip);
+      void populateDropdown(dropdown, manager, chip);
     }
     dropdown.hidden = isOpen;
     chip.setAttribute('aria-expanded', String(!isOpen));
@@ -342,8 +386,8 @@ function removePicker(): void {
 async function injectPicker(manager: FolderManager): Promise<void> {
   if (pickerContainer) return; // Already present
 
-  const richTextarea = await waitForElement('rich-textarea', 8000);
-  if (!richTextarea) return;
+  // Target the model-picker-container inside trailing-actions-wrapper (right side)
+  const modelPicker = await waitForElement('.model-picker-container', 5000);
 
   // Guard: if we navigated away while waiting, abort
   if (!isNewChatPath(window.location.pathname)) return;
@@ -351,6 +395,21 @@ async function injectPicker(manager: FolderManager): Promise<void> {
   if (document.querySelector('.gv-fp-picker-container')) return;
 
   const { element, cleanup } = buildFolderPicker(manager);
+
+  if (modelPicker?.parentElement) {
+    // Insert before the model picker in trailing-actions-wrapper
+    modelPicker.parentElement.insertBefore(element, modelPicker);
+    pickerContainer = element;
+    pickerCleanup = cleanup;
+    return;
+  }
+
+  // Fallback: insert before rich-textarea (original behavior)
+  const richTextarea = await waitForElement('rich-textarea', 3000);
+  if (!richTextarea) return;
+  if (!isNewChatPath(window.location.pathname)) return;
+  if (document.querySelector('.gv-fp-picker-container')) return;
+
   const parent = richTextarea.parentElement;
   if (parent) {
     parent.insertBefore(element, richTextarea);

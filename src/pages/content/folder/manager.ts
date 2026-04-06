@@ -15,7 +15,6 @@ import { isSafari } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
-import { listFilesForFolder, removeFile, saveFile } from '@/core/utils/folderFileStore';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 import { mergeTimelineHierarchy } from '@/utils/merge';
 
@@ -33,7 +32,7 @@ import {
   type IFolderStorageAdapter,
   createFolderStorageAdapter,
 } from './storage/FolderStorageAdapter';
-import type { ConversationReference, DragData, Folder, FolderAttachment, FolderData } from './types';
+import type { ConversationReference, DragData, Folder, FolderData } from './types';
 
 const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
@@ -128,6 +127,7 @@ export class FolderManager {
   private folderNameClickTimeout: number | null = null; // Distinguish single-click toggle from double-click rename
   private longPressThreshold: number = 500; // Long-press duration in ms
   private folderEnabled: boolean = true; // Whether folder feature is enabled
+  private folderProjectEnabled: boolean = false; // Whether Folder-as-Project feature is enabled
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private folderTreeIndent: number = FOLDER_TREE_INDENT_DEFAULT; // Tree indentation width (px)
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
@@ -225,6 +225,7 @@ export class FolderManager {
       // Load filter user setting
       await this.loadFilterUserSetting();
       await this.loadFolderTreeIndentSetting();
+      await this.loadFolderProjectEnabledSetting();
 
       // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
@@ -3898,7 +3899,7 @@ export class FolderManager {
     menu.style.left = `${event.clientX}px`;
     menu.style.top = `${event.clientY}px`;
 
-    const menuItems = [
+    const menuItems: Array<{ label: string; action: () => void }> = [
       {
         label: folder.pinned ? this.t('folder_unpin') : this.t('folder_pin'),
         action: () => this.togglePinFolder(folderId),
@@ -3906,14 +3907,19 @@ export class FolderManager {
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
       { label: this.t('folder_change_color'), action: () => this.showColorPicker(folderId, event) },
-      {
+    ];
+
+    // Only show instructions editor when Folder-as-Project is enabled
+    if (this.folderProjectEnabled) {
+      menuItems.push({
         label: folder.instructions
           ? this.t('folderAsProject_editInstructions')
           : this.t('folderAsProject_setInstructions'),
         action: () => this.showInstructionsEditor(folderId),
-      },
-      { label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) },
-    ];
+      });
+    }
+
+    menuItems.push({ label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) });
 
     menuItems.forEach((item) => {
       const menuItem = document.createElement('button');
@@ -4267,24 +4273,29 @@ export class FolderManager {
   }
 
   /**
+   * Ensures folder data is loaded. Re-reads from storage if the folder list
+   * is empty, which can happen after extension context invalidation or async
+   * storage listener resets.
+   */
+  public async ensureDataLoaded(): Promise<void> {
+    if (this.data.folders.length === 0) {
+      await this.loadData();
+    }
+  }
+
+  /**
    * Open a modal that lets the user write or edit text instructions for a
    * folder and manage attached files. Instructions and attachment metadata are
    * saved to `folder.instructions` / `folder.attachments` and persisted via
    * `saveData()`. Binary file content is stored in IndexedDB.
    *
-   * @param folderId - The folder to edit instructions and attachments for
+   * @param folderId - The folder to edit instructions for
    */
   private showInstructionsEditor(folderId: string): void {
     const folder = this.data.folders.find((f) => f.id === folderId);
     if (!folder) return;
 
     const MAX_CHARS = 10000;
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-    const ACCEPTED_TYPES = ['.txt', '.md', '.ts', '.js', '.py', '.json', '.csv', '.pdf'];
-
-    // Pending file changes (committed on Save)
-    const pendingAdds: Array<{ meta: FolderAttachment; data: ArrayBuffer }> = [];
-    const pendingRemoveIds = new Set<string>();
 
     // ── Overlay ───────────────────────────────────────────────────────────
 
@@ -4318,123 +4329,6 @@ export class FolderManager {
       charCount.textContent = `${textarea.value.length} / ${MAX_CHARS}`;
     });
 
-    // ── File upload section ───────────────────────────────────────────────
-
-    const uploadSection = document.createElement('div');
-    uploadSection.className = 'gv-fi-upload-section';
-
-    const uploadLabel = document.createElement('div');
-    uploadLabel.className = 'gv-fi-upload-label';
-    uploadLabel.textContent = this.t('folderAsProject_attachFiles');
-
-    const uploadZone = document.createElement('div');
-    uploadZone.className = 'gv-fi-upload-zone';
-    uploadZone.textContent = this.t('folderAsProject_dropFiles');
-
-    const uploadHint = document.createElement('div');
-    uploadHint.className = 'gv-fi-char-count';
-    uploadHint.textContent = this.t('folderAsProject_fileLimit');
-
-    // Hidden file input
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.multiple = true;
-    fileInput.accept = ACCEPTED_TYPES.join(',');
-    fileInput.style.display = 'none';
-
-    const fileList = document.createElement('div');
-    fileList.className = 'gv-fi-file-list';
-
-    // Render current attachments
-    const renderFileList = () => {
-      fileList.innerHTML = '';
-      const existing = (folder.attachments ?? []).filter((a) => !pendingRemoveIds.has(a.id));
-      for (const att of existing) {
-        fileList.appendChild(buildFileRow(att.name, att.id, () => pendingRemoveIds.add(att.id)));
-      }
-      for (const p of pendingAdds) {
-        const label = `${p.meta.name} (${formatBytes(p.meta.size)})`;
-        fileList.appendChild(buildFileRow(label, p.meta.id, () => {
-          const idx = pendingAdds.findIndex((x) => x.meta.id === p.meta.id);
-          if (idx !== -1) pendingAdds.splice(idx, 1);
-        }));
-      }
-    };
-
-    const buildFileRow = (label: string, id: string, onRemove: () => void): HTMLElement => {
-      const row = document.createElement('div');
-      row.className = 'gv-fi-file-row';
-      row.dataset.id = id;
-
-      const name = document.createElement('span');
-      name.textContent = label;
-
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'gv-fi-file-remove';
-      removeBtn.type = 'button';
-      removeBtn.textContent = '×';
-      removeBtn.addEventListener('click', () => {
-        onRemove();
-        renderFileList();
-      });
-
-      row.appendChild(name);
-      row.appendChild(removeBtn);
-      return row;
-    };
-
-    const processFiles = (files: FileList | File[]) => {
-      for (const file of Array.from(files)) {
-        if (file.size > MAX_FILE_SIZE) continue;
-        const ext = '.' + file.name.split('.').pop()!.toLowerCase();
-        if (!ACCEPTED_TYPES.includes(ext)) continue;
-
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (!(reader.result instanceof ArrayBuffer)) return;
-          const meta: FolderAttachment = {
-            id: crypto.randomUUID(),
-            name: file.name,
-            size: file.size,
-            mimeType: file.type || 'application/octet-stream',
-            storedAt: Date.now(),
-          };
-          pendingAdds.push({ meta, data: reader.result });
-          renderFileList();
-        };
-        reader.onerror = () => {
-          console.warn(`[GeminiVoyager] Failed to read file: ${file.name}`);
-        };
-        reader.readAsArrayBuffer(file);
-      }
-    };
-
-    uploadZone.addEventListener('click', () => fileInput.click());
-    uploadZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadZone.classList.add('gv-fi-upload-zone--drag');
-    });
-    uploadZone.addEventListener('dragleave', () => {
-      uploadZone.classList.remove('gv-fi-upload-zone--drag');
-    });
-    uploadZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadZone.classList.remove('gv-fi-upload-zone--drag');
-      if (e.dataTransfer?.files) processFiles(e.dataTransfer.files);
-    });
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files) processFiles(fileInput.files);
-      fileInput.value = '';
-    });
-
-    renderFileList();
-
-    uploadSection.appendChild(uploadLabel);
-    uploadSection.appendChild(uploadZone);
-    uploadSection.appendChild(uploadHint);
-    uploadSection.appendChild(fileInput);
-    uploadSection.appendChild(fileList);
-
     // ── Actions ──────────────────────────────────────────────────────────
 
     const actions = document.createElement('div');
@@ -4451,28 +4345,8 @@ export class FolderManager {
     saveBtn.type = 'button';
     saveBtn.textContent = this.t('pm_save');
     saveBtn.addEventListener('click', async () => {
-      // Persist text instructions
       const trimmed = textarea.value.trim();
       folder.instructions = trimmed || undefined;
-
-      // Persist file additions
-      for (const { meta, data } of pendingAdds) {
-        await saveFile({ id: meta.id, folderId, name: meta.name, mimeType: meta.mimeType, data });
-      }
-
-      // Persist file removals
-      for (const id of pendingRemoveIds) {
-        await removeFile(id);
-      }
-
-      // Update attachment metadata on the folder
-      const existingKept = (folder.attachments ?? []).filter(
-        (a) => !pendingRemoveIds.has(a.id),
-      );
-      const addedMeta = pendingAdds.map((p) => p.meta);
-      folder.attachments = [...existingKept, ...addedMeta];
-      if (folder.attachments.length === 0) folder.attachments = undefined;
-
       await this.saveData();
       overlay.remove();
     });
@@ -4485,7 +4359,6 @@ export class FolderManager {
     dialog.appendChild(titleEl);
     dialog.appendChild(textarea);
     dialog.appendChild(charCount);
-    dialog.appendChild(uploadSection);
     dialog.appendChild(actions);
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
@@ -5916,6 +5789,17 @@ export class FolderManager {
     }
   }
 
+  private async loadFolderProjectEnabledSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
+      });
+      this.folderProjectEnabled = result[StorageKeys.FOLDER_PROJECT_ENABLED] === true;
+    } catch {
+      this.folderProjectEnabled = false;
+    }
+  }
+
   private applyFolderTreeIndentSetting(value: unknown): void {
     const nextIndent = clampFolderTreeIndent(value);
     if (nextIndent === this.folderTreeIndent) return;
@@ -5958,6 +5842,9 @@ export class FolderManager {
         }
         if (changes[StorageKeys.GV_FOLDER_TREE_INDENT]) {
           this.applyFolderTreeIndentSetting(changes[StorageKeys.GV_FOLDER_TREE_INDENT].newValue);
+        }
+        if (changes[StorageKeys.FOLDER_PROJECT_ENABLED]) {
+          this.folderProjectEnabled = changes[StorageKeys.FOLDER_PROJECT_ENABLED].newValue === true;
         }
         if (
           changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] ||

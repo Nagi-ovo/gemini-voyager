@@ -7352,49 +7352,44 @@ body.gv-rtl .gv-timestamp {
   position: relative;
   display: flex;
   align-items: center;
-  padding: 4px 8px;
-  margin-bottom: 4px;
   z-index: 10;
 }
 
-/* Chip / trigger button */
+/* Chip / trigger button — font-size copied from model picker at runtime */
 .gv-fp-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  border-radius: 16px;
-  border: 1px solid transparent;
-  font-size: 13px;
-  line-height: 1.4;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-family: "Google Sans Flex", "Google Sans Text", "Google Sans", sans-serif;
+  font-weight: 500;
+  line-height: normal;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s;
   white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
 }
 
 .theme-host.light-theme .gv-fp-chip {
-  background-color: #f1f3f4;
-  color: #202124;
-  border-color: #dadce0;
+  color: #444746;
 }
 
 .theme-host.light-theme .gv-fp-chip:hover {
-  background-color: #e8eaed;
+  background-color: rgba(0, 0, 0, 0.06);
 }
 
 .theme-host.dark-theme .gv-fp-chip {
-  background-color: #303134;
-  color: #e8eaed;
-  border-color: #5f6368;
+  color: #c4c7c5;
 }
 
 .theme-host.dark-theme .gv-fp-chip:hover {
-  background-color: #3c4043;
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
-.gv-fp-chip[data-selected] {
-  border-color: currentColor;
-}
 
 /* Dropdown list */
 .gv-fp-dropdown {
@@ -7459,6 +7454,50 @@ body.gv-rtl .gv-timestamp {
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+/* Tree row: folder item + optional expand arrow */
+.gv-fp-tree-row {
+  display: flex;
+  align-items: center;
+}
+
+.gv-fp-tree-row > .gv-fp-item {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Expand/collapse arrow button */
+.gv-fp-expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 100%;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.1s;
+}
+
+.gv-fp-expand-btn:hover {
+  opacity: 1;
+}
+
+.theme-host.light-theme .gv-fp-expand-btn {
+  color: #5f6368;
+}
+
+.theme-host.dark-theme .gv-fp-expand-btn {
+  color: #9aa0a6;
+}
+
+/* Nested subfolder list */
+.gv-fp-sublist {
+  padding-left: 12px;
 }
 
 /* Instructions banner */
@@ -7753,6 +7792,11 @@ body.gv-rtl .gv-fp-dropdown {
 
 body.gv-rtl .gv-fp-item {
   text-align: right;
+}
+
+body.gv-rtl .gv-fp-sublist {
+  padding-left: 0;
+  padding-right: 12px;
 }
 
 /* RTL overrides — instructions modal */

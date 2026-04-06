@@ -1734,9 +1734,16 @@ export default function Popup() {
                 <div className="flex-1">
                   <Label
                     htmlFor="folder-project-enabled"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
                   >
                     {t('folderAsProject_enable')}
+                    <span
+                      className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                      title={t('experimentalLabel')}
+                      style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                    >
+                      experiment
+                    </span>
                   </Label>
                   <p className="text-muted-foreground mt-1 text-xs">
                     {t('folderAsProject_description')}
