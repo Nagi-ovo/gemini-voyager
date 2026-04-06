@@ -1548,7 +1548,7 @@
     "description": "Tooltip for moving a settings section down in popup"
   },
   "folderAsProject_enable": {
-    "message": "Dossier comme Projet",
+    "message": "Activer Dossier comme Projet",
     "description": "Toggle label for the Folder-as-Project feature"
   },
   "folderAsProject_description": {

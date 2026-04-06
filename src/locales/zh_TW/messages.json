@@ -1499,7 +1499,10 @@
     "message": "AI 整理",
     "description": "複製資料夾結構和對話以供 AI 整理的按鈕"
   },
-  "aiOrgCopied": { "message": "已複製！", "description": "複製 AI 整理提示後的確認" },
+  "aiOrgCopied": {
+    "message": "已複製！",
+    "description": "複製 AI 整理提示後的確認"
+  },
   "aiOrgError": {
     "message": "失敗 — 請先開啟 Gemini",
     "description": "複製 AI 整理提示失敗時的錯誤"
@@ -1508,13 +1511,22 @@
     "message": "複製所有對話和資料夾結構作為提示詞。貼到 Gemini 中即可獲得可匯入的資料夾方案。",
     "description": "AI 整理複製按鈕下方的提示文字"
   },
-  "aiOrgCurrentFolders": { "message": "目前資料夾結構", "description": "AI 整理提示中的標題" },
+  "aiOrgCurrentFolders": {
+    "message": "目前資料夾結構",
+    "description": "AI 整理提示中的標題"
+  },
   "aiOrgUnfiledConversations": {
     "message": "未歸類的對話",
     "description": "不在任何資料夾中的對話標題"
   },
-  "aiOrgEmpty": { "message": "空", "description": "AI 整理提示中空資料夾的標籤" },
-  "aiOrgInstructions": { "message": "指示", "description": "AI 指示部分的標題" },
+  "aiOrgEmpty": {
+    "message": "空",
+    "description": "AI 整理提示中空資料夾的標籤"
+  },
+  "aiOrgInstructions": {
+    "message": "指示",
+    "description": "AI 指示部分的標題"
+  },
   "aiOrgInstructionsBody": {
     "message": "根據以上對話和資料夾結構，請將它們重新整理為合理的資料夾層級。輸出一個使用以下格式的 JSON 檔案，可以直接匯入到 Gemini Voyager 擴充功能中（使用「合併」匯入策略）。保留已有的合理資料夾，根據需要建立新資料夾，將未歸類的對話移入合適的資料夾。每個資料夾需要一個唯一 ID（使用短隨機字串），每個對話必須保留其原始的 conversationId 和 url。",
     "description": "AI 生成可匯入資料夾結構的指示正文"
@@ -1536,7 +1548,7 @@
     "description": "Tooltip for moving a settings section down in popup"
   },
   "folderAsProject_enable": {
-    "message": "將資料夾用作專案",
+    "message": "啟用資料夾作為專案",
     "description": "Toggle label for the Folder-as-Project feature"
   },
   "folderAsProject_description": {

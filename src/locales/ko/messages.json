@@ -1499,7 +1499,10 @@
     "message": "AI 정리",
     "description": "AI 정리를 위해 폴더 구조와 대화를 복사하는 버튼"
   },
-  "aiOrgCopied": { "message": "복사됨!", "description": "AI 정리 프롬프트 복사 후 확인" },
+  "aiOrgCopied": {
+    "message": "복사됨!",
+    "description": "AI 정리 프롬프트 복사 후 확인"
+  },
   "aiOrgError": {
     "message": "실패 — 먼저 Gemini를 열어주세요",
     "description": "AI 정리 프롬프트 복사 실패 시 에러"
@@ -1508,13 +1511,22 @@
     "message": "모든 대화와 폴더 구조를 프롬프트로 복사합니다. Gemini에 붙여넣어 가져올 수 있는 폴더 계획을 얻으세요.",
     "description": "AI 정리 복사 버튼 아래 힌트 텍스트"
   },
-  "aiOrgCurrentFolders": { "message": "현재 폴더 구조", "description": "AI 정리 프롬프트의 제목" },
+  "aiOrgCurrentFolders": {
+    "message": "현재 폴더 구조",
+    "description": "AI 정리 프롬프트의 제목"
+  },
   "aiOrgUnfiledConversations": {
     "message": "분류되지 않은 대화",
     "description": "폴더에 없는 대화 제목"
   },
-  "aiOrgEmpty": { "message": "비어 있음", "description": "AI 정리 프롬프트에서 빈 폴더 라벨" },
-  "aiOrgInstructions": { "message": "지시사항", "description": "AI 지시사항 섹션 제목" },
+  "aiOrgEmpty": {
+    "message": "비어 있음",
+    "description": "AI 정리 프롬프트에서 빈 폴더 라벨"
+  },
+  "aiOrgInstructions": {
+    "message": "지시사항",
+    "description": "AI 지시사항 섹션 제목"
+  },
   "aiOrgInstructionsBody": {
     "message": "위의 대화와 폴더 구조를 기반으로 논리적인 폴더 계층으로 재정리해주세요. 아래 형식의 JSON 파일을 출력하여 Gemini Voyager 확장 프로그램에 직접 가져올 수 있도록 하세요(\"병합\" 가져오기 전략 사용). 기존의 잘 정리된 폴더는 유지하고, 필요에 따라 새 폴더를 만들고, 분류되지 않은 대화를 적절한 폴더로 이동하세요. 각 폴더에는 고유한 ID(짧은 랜덤 문자열)가 필요하며, 각 대화는 원래의 conversationId와 url을 유지해야 합니다.",
     "description": "AI가 가져올 수 있는 폴더 구조를 생성하기 위한 지시사항 본문"
@@ -1536,7 +1548,7 @@
     "description": "Tooltip for moving a settings section down in popup"
   },
   "folderAsProject_enable": {
-    "message": "폴더를 프로젝트로 사용",
+    "message": "폴더를 프로젝트로 사용 활성화",
     "description": "Toggle label for the Folder-as-Project feature"
   },
   "folderAsProject_description": {

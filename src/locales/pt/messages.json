@@ -1548,7 +1548,7 @@
     "description": "Tooltip for moving a settings section down in popup"
   },
   "folderAsProject_enable": {
-    "message": "Pasta como Projeto",
+    "message": "Habilitar Pasta como Projeto",
     "description": "Toggle label for the Folder-as-Project feature"
   },
   "folderAsProject_description": {

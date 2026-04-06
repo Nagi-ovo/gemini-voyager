@@ -1548,7 +1548,7 @@
     "description": "Tooltip for moving a settings section down in popup"
   },
   "folderAsProject_enable": {
-    "message": "Carpeta como Proyecto",
+    "message": "Habilitar Carpeta como Proyecto",
     "description": "Toggle label for the Folder-as-Project feature"
   },
   "folderAsProject_description": {
