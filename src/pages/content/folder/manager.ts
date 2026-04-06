@@ -15,6 +15,7 @@ import { isSafari } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
+import { listFilesForFolder, removeFile, saveFile } from '@/core/utils/folderFileStore';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 import { mergeTimelineHierarchy } from '@/utils/merge';
 
@@ -32,7 +33,7 @@ import {
   type IFolderStorageAdapter,
   createFolderStorageAdapter,
 } from './storage/FolderStorageAdapter';
-import type { ConversationReference, DragData, Folder, FolderData } from './types';
+import type { ConversationReference, DragData, Folder, FolderAttachment, FolderData } from './types';
 
 const STORAGE_KEY = 'gvFolderData';
 const IS_DEBUG = false; // Set to true to enable debug logging
@@ -63,6 +64,18 @@ export function calculateFolderConversationPaddingLeft(level: number, indent: nu
 
 export function calculateFolderDialogPaddingLeft(level: number, indent: number): number {
   return Math.max(0, level * indent + 12);
+}
+
+/**
+ * Format a byte size into a human-readable string (e.g. "3.2 MB").
+ *
+ * @param bytes - Number of bytes
+ * @returns Human-readable size string
+ */
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /**
@@ -3893,6 +3906,12 @@ export class FolderManager {
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
       { label: this.t('folder_change_color'), action: () => this.showColorPicker(folderId, event) },
+      {
+        label: folder.instructions
+          ? this.t('folderAsProject_editInstructions')
+          : this.t('folderAsProject_setInstructions'),
+        action: () => this.showInstructionsEditor(folderId),
+      },
       { label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) },
     ];
 
@@ -4206,7 +4225,7 @@ export class FolderManager {
     this.refresh();
   }
 
-  private addConversationToFolderFromNative(
+  public addConversationToFolderFromNative(
     folderId: string,
     conversationId: string,
     title: string,
@@ -4238,6 +4257,244 @@ export class FolderManager {
 
     this.saveData();
     this.refresh();
+  }
+
+  /**
+   * Returns the current folder list (read-only snapshot for external callers).
+   */
+  public getFolders(): readonly Folder[] {
+    return this.data.folders;
+  }
+
+  /**
+   * Open a modal that lets the user write or edit text instructions for a
+   * folder and manage attached files. Instructions and attachment metadata are
+   * saved to `folder.instructions` / `folder.attachments` and persisted via
+   * `saveData()`. Binary file content is stored in IndexedDB.
+   *
+   * @param folderId - The folder to edit instructions and attachments for
+   */
+  private showInstructionsEditor(folderId: string): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    const MAX_CHARS = 10000;
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    const ACCEPTED_TYPES = ['.txt', '.md', '.ts', '.js', '.py', '.json', '.csv', '.pdf'];
+
+    // Pending file changes (committed on Save)
+    const pendingAdds: Array<{ meta: FolderAttachment; data: ArrayBuffer }> = [];
+    const pendingRemoveIds = new Set<string>();
+
+    // ── Overlay ───────────────────────────────────────────────────────────
+
+    const overlay = document.createElement('div');
+    overlay.className = 'gv-fi-overlay';
+
+    const dialog = document.createElement('div');
+    dialog.className = 'gv-fi-dialog';
+
+    // ── Title ─────────────────────────────────────────────────────────────
+
+    const titleEl = document.createElement('h2');
+    titleEl.className = 'gv-fi-title';
+    titleEl.textContent = folder.instructions
+      ? this.t('folderAsProject_editInstructions')
+      : this.t('folderAsProject_setInstructions');
+
+    // ── Instructions textarea ─────────────────────────────────────────────
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'gv-fi-textarea';
+    textarea.maxLength = MAX_CHARS;
+    textarea.rows = 7;
+    textarea.placeholder = this.t('folderAsProject_setInstructions');
+    textarea.value = folder.instructions ?? '';
+
+    const charCount = document.createElement('div');
+    charCount.className = 'gv-fi-char-count';
+    charCount.textContent = `${textarea.value.length} / ${MAX_CHARS}`;
+    textarea.addEventListener('input', () => {
+      charCount.textContent = `${textarea.value.length} / ${MAX_CHARS}`;
+    });
+
+    // ── File upload section ───────────────────────────────────────────────
+
+    const uploadSection = document.createElement('div');
+    uploadSection.className = 'gv-fi-upload-section';
+
+    const uploadLabel = document.createElement('div');
+    uploadLabel.className = 'gv-fi-upload-label';
+    uploadLabel.textContent = this.t('folderAsProject_attachFiles');
+
+    const uploadZone = document.createElement('div');
+    uploadZone.className = 'gv-fi-upload-zone';
+    uploadZone.textContent = this.t('folderAsProject_dropFiles');
+
+    const uploadHint = document.createElement('div');
+    uploadHint.className = 'gv-fi-char-count';
+    uploadHint.textContent = this.t('folderAsProject_fileLimit');
+
+    // Hidden file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.multiple = true;
+    fileInput.accept = ACCEPTED_TYPES.join(',');
+    fileInput.style.display = 'none';
+
+    const fileList = document.createElement('div');
+    fileList.className = 'gv-fi-file-list';
+
+    // Render current attachments
+    const renderFileList = () => {
+      fileList.innerHTML = '';
+      const existing = (folder.attachments ?? []).filter((a) => !pendingRemoveIds.has(a.id));
+      for (const att of existing) {
+        fileList.appendChild(buildFileRow(att.name, att.id, () => pendingRemoveIds.add(att.id)));
+      }
+      for (const p of pendingAdds) {
+        const label = `${p.meta.name} (${formatBytes(p.meta.size)})`;
+        fileList.appendChild(buildFileRow(label, p.meta.id, () => {
+          const idx = pendingAdds.findIndex((x) => x.meta.id === p.meta.id);
+          if (idx !== -1) pendingAdds.splice(idx, 1);
+        }));
+      }
+    };
+
+    const buildFileRow = (label: string, id: string, onRemove: () => void): HTMLElement => {
+      const row = document.createElement('div');
+      row.className = 'gv-fi-file-row';
+      row.dataset.id = id;
+
+      const name = document.createElement('span');
+      name.textContent = label;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'gv-fi-file-remove';
+      removeBtn.type = 'button';
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', () => {
+        onRemove();
+        renderFileList();
+      });
+
+      row.appendChild(name);
+      row.appendChild(removeBtn);
+      return row;
+    };
+
+    const processFiles = (files: FileList | File[]) => {
+      for (const file of Array.from(files)) {
+        if (file.size > MAX_FILE_SIZE) continue;
+        const ext = '.' + file.name.split('.').pop()!.toLowerCase();
+        if (!ACCEPTED_TYPES.includes(ext)) continue;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (!(reader.result instanceof ArrayBuffer)) return;
+          const meta: FolderAttachment = {
+            id: crypto.randomUUID(),
+            name: file.name,
+            size: file.size,
+            mimeType: file.type || 'application/octet-stream',
+            storedAt: Date.now(),
+          };
+          pendingAdds.push({ meta, data: reader.result });
+          renderFileList();
+        };
+        reader.onerror = () => {
+          console.warn(`[GeminiVoyager] Failed to read file: ${file.name}`);
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    };
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('gv-fi-upload-zone--drag');
+    });
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('gv-fi-upload-zone--drag');
+    });
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('gv-fi-upload-zone--drag');
+      if (e.dataTransfer?.files) processFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files) processFiles(fileInput.files);
+      fileInput.value = '';
+    });
+
+    renderFileList();
+
+    uploadSection.appendChild(uploadLabel);
+    uploadSection.appendChild(uploadZone);
+    uploadSection.appendChild(uploadHint);
+    uploadSection.appendChild(fileInput);
+    uploadSection.appendChild(fileList);
+
+    // ── Actions ──────────────────────────────────────────────────────────
+
+    const actions = document.createElement('div');
+    actions.className = 'gv-fi-actions';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'gv-fi-btn gv-fi-btn-cancel';
+    cancelBtn.type = 'button';
+    cancelBtn.textContent = this.t('pm_cancel');
+    cancelBtn.addEventListener('click', () => overlay.remove());
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'gv-fi-btn gv-fi-btn-save';
+    saveBtn.type = 'button';
+    saveBtn.textContent = this.t('pm_save');
+    saveBtn.addEventListener('click', async () => {
+      // Persist text instructions
+      const trimmed = textarea.value.trim();
+      folder.instructions = trimmed || undefined;
+
+      // Persist file additions
+      for (const { meta, data } of pendingAdds) {
+        await saveFile({ id: meta.id, folderId, name: meta.name, mimeType: meta.mimeType, data });
+      }
+
+      // Persist file removals
+      for (const id of pendingRemoveIds) {
+        await removeFile(id);
+      }
+
+      // Update attachment metadata on the folder
+      const existingKept = (folder.attachments ?? []).filter(
+        (a) => !pendingRemoveIds.has(a.id),
+      );
+      const addedMeta = pendingAdds.map((p) => p.meta);
+      folder.attachments = [...existingKept, ...addedMeta];
+      if (folder.attachments.length === 0) folder.attachments = undefined;
+
+      await this.saveData();
+      overlay.remove();
+    });
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(saveBtn);
+
+    // ── Assembly ──────────────────────────────────────────────────────────
+
+    dialog.appendChild(titleEl);
+    dialog.appendChild(textarea);
+    dialog.appendChild(charCount);
+    dialog.appendChild(uploadSection);
+    dialog.appendChild(actions);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+
+    setTimeout(() => textarea.focus(), 50);
   }
 
   private setupNativeConversationMenuObserver(): void {

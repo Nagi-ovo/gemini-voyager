@@ -1537,5 +1537,57 @@
   "moveSectionDown": {
     "message": "تحريك لأسفل",
     "description": "Tooltip for moving a settings section down in popup"
+  },
+  "folderAsProject_enable": {
+    "message": "مجلد كمشروع",
+    "description": "Toggle label for the Folder-as-Project feature"
+  },
+  "folderAsProject_description": {
+    "message": "إظهار منتقي المجلدات في المحادثات الجديدة وتعيين المحادثة تلقائياً للمجلد المحدد عند الإرسال الأول",
+    "description": "Hint for the Folder-as-Project feature toggle"
+  },
+  "folderAsProject_selectFolder": {
+    "message": "اختر مجلداً…",
+    "description": "Placeholder text for the folder picker chip when no folder is selected"
+  },
+  "folderAsProject_noFolder": {
+    "message": "بدون مجلد",
+    "description": "Option in the folder picker dropdown to clear the selection"
+  },
+  "folderAsProject_setInstructions": {
+    "message": "تعيين التعليمات",
+    "description": "Folder context menu item to open the instructions editor"
+  },
+  "folderAsProject_editInstructions": {
+    "message": "تحرير التعليمات",
+    "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_instructionsBanner": {
+    "message": "تم تحميل تعليمات المجلد.",
+    "description": "Banner shown in chat input area after folder instructions are injected"
+  },
+  "folderAsProject_instructionsCount": {
+    "message": "{n} حرف",
+    "description": "Character count shown in the instructions banner"
+  },
+  "folderAsProject_attachFiles": {
+    "message": "إرفاق ملفات",
+    "description": "Section label for file attachment in the folder instructions modal"
+  },
+  "folderAsProject_dropFiles": {
+    "message": "أسقط الملفات هنا أو انقر للاستعراض",
+    "description": "Placeholder text for the file upload zone"
+  },
+  "folderAsProject_fileLimit": {
+    "message": "الحد الأقصى 10 ميغابايت لكل ملف. المدعوم: .txt، .md، .ts، .js، .py، .json، .csv، .pdf",
+    "description": "File size and type limit hint in the upload zone"
+  },
+  "folderAsProject_filesAttached": {
+    "message": "تم إرفاق {n} ملف(ات)",
+    "description": "Notification shown after files are attached to the chat"
+  },
+  "folderAsProject_attachFailed": {
+    "message": "تعذّر إرفاق الملفات تلقائياً. يرجى إرفاقها يدوياً.",
+    "description": "Fallback notification when programmatic file attachment fails"
   }
 }

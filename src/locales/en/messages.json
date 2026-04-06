@@ -1546,5 +1546,57 @@
   "moveSectionDown": {
     "message": "Move down",
     "description": "Tooltip for moving a settings section down in popup"
+  },
+  "folderAsProject_enable": {
+    "message": "Folder as Project",
+    "description": "Toggle label for the Folder-as-Project feature"
+  },
+  "folderAsProject_description": {
+    "message": "Show a folder picker on new chats and auto-assign the conversation to the selected folder on first send",
+    "description": "Hint for the Folder-as-Project feature toggle"
+  },
+  "folderAsProject_selectFolder": {
+    "message": "Select folder…",
+    "description": "Placeholder text for the folder picker chip when no folder is selected"
+  },
+  "folderAsProject_noFolder": {
+    "message": "No folder",
+    "description": "Option in the folder picker dropdown to clear the selection"
+  },
+  "folderAsProject_setInstructions": {
+    "message": "Set Instructions",
+    "description": "Folder context menu item to open the instructions editor"
+  },
+  "folderAsProject_editInstructions": {
+    "message": "Edit Instructions",
+    "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_instructionsBanner": {
+    "message": "Folder instructions loaded.",
+    "description": "Banner shown in chat input area after folder instructions are injected"
+  },
+  "folderAsProject_instructionsCount": {
+    "message": "{n} characters",
+    "description": "Character count shown in the instructions banner"
+  },
+  "folderAsProject_attachFiles": {
+    "message": "Attach Files",
+    "description": "Section label for file attachment in the folder instructions modal"
+  },
+  "folderAsProject_dropFiles": {
+    "message": "Drop files here or click to browse",
+    "description": "Placeholder text for the file upload zone"
+  },
+  "folderAsProject_fileLimit": {
+    "message": "Max 10 MB per file. Supported: .txt, .md, .ts, .js, .py, .json, .csv, .pdf",
+    "description": "File size and type limit hint in the upload zone"
+  },
+  "folderAsProject_filesAttached": {
+    "message": "{n} file(s) attached",
+    "description": "Notification shown after files are attached to the chat"
+  },
+  "folderAsProject_attachFailed": {
+    "message": "Could not attach files automatically. Please attach them manually.",
+    "description": "Fallback notification when programmatic file attachment fails"
   }
 }

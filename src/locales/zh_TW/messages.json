@@ -1534,5 +1534,57 @@
   "moveSectionDown": {
     "message": "下移",
     "description": "Tooltip for moving a settings section down in popup"
+  },
+  "folderAsProject_enable": {
+    "message": "將資料夾用作專案",
+    "description": "Toggle label for the Folder-as-Project feature"
+  },
+  "folderAsProject_description": {
+    "message": "在新對話頁面顯示資料夾選擇器，首次傳送時自動將對話分配到所選資料夾",
+    "description": "Hint for the Folder-as-Project feature toggle"
+  },
+  "folderAsProject_selectFolder": {
+    "message": "選擇資料夾…",
+    "description": "Placeholder text for the folder picker chip when no folder is selected"
+  },
+  "folderAsProject_noFolder": {
+    "message": "不選擇資料夾",
+    "description": "Option in the folder picker dropdown to clear the selection"
+  },
+  "folderAsProject_setInstructions": {
+    "message": "設定指令",
+    "description": "Folder context menu item to open the instructions editor"
+  },
+  "folderAsProject_editInstructions": {
+    "message": "編輯指令",
+    "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_instructionsBanner": {
+    "message": "資料夾指令已載入。",
+    "description": "Banner shown in chat input area after folder instructions are injected"
+  },
+  "folderAsProject_instructionsCount": {
+    "message": "{n} 個字元",
+    "description": "Character count shown in the instructions banner"
+  },
+  "folderAsProject_attachFiles": {
+    "message": "附加檔案",
+    "description": "Section label for file attachment in the folder instructions modal"
+  },
+  "folderAsProject_dropFiles": {
+    "message": "將檔案拖放到此處或點擊瀏覽",
+    "description": "Placeholder text for the file upload zone"
+  },
+  "folderAsProject_fileLimit": {
+    "message": "每個檔案最大 10 MB。支援格式：.txt、.md、.ts、.js、.py、.json、.csv、.pdf",
+    "description": "File size and type limit hint in the upload zone"
+  },
+  "folderAsProject_filesAttached": {
+    "message": "已附加 {n} 個檔案",
+    "description": "Notification shown after files are attached to the chat"
+  },
+  "folderAsProject_attachFailed": {
+    "message": "無法自動附加檔案，請手動附加。",
+    "description": "Fallback notification when programmatic file attachment fails"
   }
 }

@@ -1540,5 +1540,57 @@
   "moveSectionDown": {
     "message": "下に移動",
     "description": "Tooltip for moving a settings section down in popup"
+  },
+  "folderAsProject_enable": {
+    "message": "フォルダをプロジェクトとして使用",
+    "description": "Toggle label for the Folder-as-Project feature"
+  },
+  "folderAsProject_description": {
+    "message": "新しいチャット画面でフォルダ選択ツールを表示し、最初のメッセージ送信時に会話を選択したフォルダに自動追加します",
+    "description": "Hint for the Folder-as-Project feature toggle"
+  },
+  "folderAsProject_selectFolder": {
+    "message": "フォルダを選択…",
+    "description": "Placeholder text for the folder picker chip when no folder is selected"
+  },
+  "folderAsProject_noFolder": {
+    "message": "フォルダなし",
+    "description": "Option in the folder picker dropdown to clear the selection"
+  },
+  "folderAsProject_setInstructions": {
+    "message": "指示を設定",
+    "description": "Folder context menu item to open the instructions editor"
+  },
+  "folderAsProject_editInstructions": {
+    "message": "指示を編集",
+    "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_instructionsBanner": {
+    "message": "フォルダの指示を読み込みました。",
+    "description": "Banner shown in chat input area after folder instructions are injected"
+  },
+  "folderAsProject_instructionsCount": {
+    "message": "{n} 文字",
+    "description": "Character count shown in the instructions banner"
+  },
+  "folderAsProject_attachFiles": {
+    "message": "ファイルを添付",
+    "description": "Section label for file attachment in the folder instructions modal"
+  },
+  "folderAsProject_dropFiles": {
+    "message": "ファイルをここにドロップするか、クリックして選択",
+    "description": "Placeholder text for the file upload zone"
+  },
+  "folderAsProject_fileLimit": {
+    "message": "最大 10 MB／ファイル。対応形式: .txt, .md, .ts, .js, .py, .json, .csv, .pdf",
+    "description": "File size and type limit hint in the upload zone"
+  },
+  "folderAsProject_filesAttached": {
+    "message": "{n} 件のファイルを添付しました",
+    "description": "Notification shown after files are attached to the chat"
+  },
+  "folderAsProject_attachFailed": {
+    "message": "ファイルを自動的に添付できませんでした。手動で添付してください。",
+    "description": "Fallback notification when programmatic file attachment fails"
   }
 }

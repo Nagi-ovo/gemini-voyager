@@ -7343,3 +7343,427 @@ body.gv-rtl .gv-timestamp {
 .horizontal-scroll-wrapper:has(.table-block) {
   max-width: none !important;
 }
+
+/* ============================================================
+   Folder-as-Project picker  (.gv-fp-*)
+   ============================================================ */
+
+.gv-fp-picker-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  z-index: 10;
+}
+
+/* Chip / trigger button */
+.gv-fp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.theme-host.light-theme .gv-fp-chip {
+  background-color: #f1f3f4;
+  color: #202124;
+  border-color: #dadce0;
+}
+
+.theme-host.light-theme .gv-fp-chip:hover {
+  background-color: #e8eaed;
+}
+
+.theme-host.dark-theme .gv-fp-chip {
+  background-color: #303134;
+  color: #e8eaed;
+  border-color: #5f6368;
+}
+
+.theme-host.dark-theme .gv-fp-chip:hover {
+  background-color: #3c4043;
+}
+
+.gv-fp-chip[data-selected] {
+  border-color: currentColor;
+}
+
+/* Dropdown list */
+.gv-fp-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 8px;
+  min-width: 200px;
+  max-width: 320px;
+  max-height: 240px;
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  z-index: 1000;
+  padding: 4px 0;
+}
+
+.theme-host.light-theme .gv-fp-dropdown {
+  background-color: #ffffff;
+  border: 1px solid #dadce0;
+}
+
+.theme-host.dark-theme .gv-fp-dropdown {
+  background-color: #292a2d;
+  border: 1px solid #5f6368;
+}
+
+/* Individual folder row */
+.gv-fp-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.theme-host.light-theme .gv-fp-item {
+  color: #202124;
+}
+
+.theme-host.light-theme .gv-fp-item:hover {
+  background-color: #f1f3f4;
+}
+
+.theme-host.dark-theme .gv-fp-item {
+  color: #e8eaed;
+}
+
+.theme-host.dark-theme .gv-fp-item:hover {
+  background-color: #3c4043;
+}
+
+/* Color dot indicator */
+.gv-fp-color-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Instructions banner */
+.gv-fp-banner {
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  margin: 0 8px 4px;
+  animation: gv-fp-fade-in 0.2s ease-out;
+}
+
+.theme-host.light-theme .gv-fp-banner {
+  background-color: #e8f0fe;
+  color: #1a73e8;
+}
+
+.theme-host.dark-theme .gv-fp-banner {
+  background-color: #1e3a5f;
+  color: #8ab4f8;
+}
+
+@keyframes gv-fp-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   Folder instructions modal  (.gv-fi-*)
+   ============================================================ */
+
+.gv-fi-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.theme-host.light-theme .gv-fi-overlay {
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
+.theme-host.dark-theme .gv-fi-overlay {
+  background-color: rgba(0, 0, 0, 0.65);
+}
+
+.gv-fi-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 480px;
+  max-width: 90vw;
+  max-height: 80vh;
+  border-radius: 12px;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.theme-host.light-theme .gv-fi-dialog {
+  background-color: #ffffff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.theme-host.dark-theme .gv-fi-dialog {
+  background-color: #292a2d;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.gv-fi-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.theme-host.light-theme .gv-fi-title {
+  color: #202124;
+}
+
+.theme-host.dark-theme .gv-fi-title {
+  color: #e8eaed;
+}
+
+.gv-fi-textarea {
+  flex: 1;
+  min-height: 120px;
+  max-height: 280px;
+  border-radius: 8px;
+  border: 1px solid;
+  padding: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.theme-host.light-theme .gv-fi-textarea {
+  background-color: #f8f9fa;
+  border-color: #dadce0;
+  color: #202124;
+}
+
+.theme-host.light-theme .gv-fi-textarea:focus {
+  border-color: #1a73e8;
+  outline: none;
+}
+
+.theme-host.dark-theme .gv-fi-textarea {
+  background-color: #303134;
+  border-color: #5f6368;
+  color: #e8eaed;
+}
+
+.theme-host.dark-theme .gv-fi-textarea:focus {
+  border-color: #8ab4f8;
+  outline: none;
+}
+
+.gv-fi-char-count {
+  font-size: 11px;
+  text-align: right;
+}
+
+.theme-host.light-theme .gv-fi-char-count {
+  color: #70757a;
+}
+
+.theme-host.dark-theme .gv-fi-char-count {
+  color: #9aa0a6;
+}
+
+.gv-fi-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.gv-fi-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.gv-fi-btn-cancel {
+  background: transparent;
+}
+
+.theme-host.light-theme .gv-fi-btn-cancel {
+  color: #202124;
+  border-color: #dadce0;
+}
+
+.theme-host.light-theme .gv-fi-btn-cancel:hover {
+  background-color: #f1f3f4;
+}
+
+.theme-host.dark-theme .gv-fi-btn-cancel {
+  color: #e8eaed;
+  border-color: #5f6368;
+}
+
+.theme-host.dark-theme .gv-fi-btn-cancel:hover {
+  background-color: #3c4043;
+}
+
+.gv-fi-btn-save {
+  border: none;
+}
+
+.theme-host.light-theme .gv-fi-btn-save {
+  background-color: #1a73e8;
+  color: #ffffff;
+}
+
+.theme-host.light-theme .gv-fi-btn-save:hover {
+  background-color: #1765cc;
+}
+
+.theme-host.dark-theme .gv-fi-btn-save {
+  background-color: #8ab4f8;
+  color: #202124;
+}
+
+.theme-host.dark-theme .gv-fi-btn-save:hover {
+  background-color: #aecbfa;
+}
+
+/* File upload zone */
+.gv-fi-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gv-fi-upload-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.theme-host.light-theme .gv-fi-upload-label {
+  color: #202124;
+}
+
+.theme-host.dark-theme .gv-fi-upload-label {
+  color: #e8eaed;
+}
+
+.gv-fi-upload-zone {
+  border: 2px dashed;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.theme-host.light-theme .gv-fi-upload-zone {
+  border-color: #dadce0;
+  color: #70757a;
+}
+
+.theme-host.light-theme .gv-fi-upload-zone:hover,
+.theme-host.light-theme .gv-fi-upload-zone.gv-fi-upload-zone--drag {
+  background-color: #e8f0fe;
+  border-color: #1a73e8;
+}
+
+.theme-host.dark-theme .gv-fi-upload-zone {
+  border-color: #5f6368;
+  color: #9aa0a6;
+}
+
+.theme-host.dark-theme .gv-fi-upload-zone:hover,
+.theme-host.dark-theme .gv-fi-upload-zone.gv-fi-upload-zone--drag {
+  background-color: #1e3a5f;
+  border-color: #8ab4f8;
+}
+
+/* File list */
+.gv-fi-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.gv-fi-file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.theme-host.light-theme .gv-fi-file-row {
+  background-color: #f1f3f4;
+  color: #202124;
+}
+
+.theme-host.dark-theme .gv-fi-file-row {
+  background-color: #3c4043;
+  color: #e8eaed;
+}
+
+.gv-fi-file-remove {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 4px;
+  opacity: 0.6;
+  transition: opacity 0.1s;
+}
+
+.gv-fi-file-remove:hover {
+  opacity: 1;
+}
+
+/* RTL overrides — folder picker */
+body.gv-rtl .gv-fp-dropdown {
+  left: auto;
+  right: 8px;
+}
+
+body.gv-rtl .gv-fp-item {
+  text-align: right;
+}
+
+/* RTL overrides — instructions modal */
+body.gv-rtl .gv-fi-dialog {
+  direction: rtl;
+}
+
+body.gv-rtl .gv-fi-char-count {
+  text-align: left;
+}
+
+body.gv-rtl .gv-fi-actions {
+  justify-content: flex-start;
+}

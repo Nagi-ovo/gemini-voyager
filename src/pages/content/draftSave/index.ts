@@ -17,6 +17,7 @@
  */
 import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
+import { setInputText } from '../utils/inputHelper';
 
 // ============================================================================
 // Constants
@@ -133,35 +134,6 @@ function isInputEffectivelyEmpty(input: HTMLElement): boolean {
   ].filter((v): v is string => Boolean(v));
 
   return placeholders.some((p) => p.trim() === text);
-}
-
-/**
- * Set text content in the chat input.
- */
-function setInputText(input: HTMLElement, text: string): void {
-  if (input instanceof HTMLTextAreaElement) {
-    input.value = text;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    return;
-  }
-
-  // For contenteditable (Quill editor)
-  input.focus();
-
-  // Check if Quill marks this as blank
-  const isQuillBlank = input.classList.contains('ql-blank');
-  if (isQuillBlank) {
-    input.classList.remove('ql-blank');
-  }
-
-  // Use insertText to work with Quill's state management
-  const success = document.execCommand('insertText', false, text);
-  if (!success) {
-    // Fallback: set textContent directly
-    input.textContent = text;
-  }
-
-  input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 // ============================================================================

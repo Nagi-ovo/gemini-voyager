@@ -1534,5 +1534,57 @@
   "moveSectionDown": {
     "message": "아래로 이동",
     "description": "Tooltip for moving a settings section down in popup"
+  },
+  "folderAsProject_enable": {
+    "message": "폴더를 프로젝트로 사용",
+    "description": "Toggle label for the Folder-as-Project feature"
+  },
+  "folderAsProject_description": {
+    "message": "새 채팅 화면에서 폴더 선택기를 표시하고 첫 번째 메시지 전송 시 대화를 선택한 폴더에 자동으로 추가합니다",
+    "description": "Hint for the Folder-as-Project feature toggle"
+  },
+  "folderAsProject_selectFolder": {
+    "message": "폴더 선택…",
+    "description": "Placeholder text for the folder picker chip when no folder is selected"
+  },
+  "folderAsProject_noFolder": {
+    "message": "폴더 없음",
+    "description": "Option in the folder picker dropdown to clear the selection"
+  },
+  "folderAsProject_setInstructions": {
+    "message": "지침 설정",
+    "description": "Folder context menu item to open the instructions editor"
+  },
+  "folderAsProject_editInstructions": {
+    "message": "지침 편집",
+    "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_instructionsBanner": {
+    "message": "폴더 지침이 로드되었습니다.",
+    "description": "Banner shown in chat input area after folder instructions are injected"
+  },
+  "folderAsProject_instructionsCount": {
+    "message": "{n}자",
+    "description": "Character count shown in the instructions banner"
+  },
+  "folderAsProject_attachFiles": {
+    "message": "파일 첨부",
+    "description": "Section label for file attachment in the folder instructions modal"
+  },
+  "folderAsProject_dropFiles": {
+    "message": "파일을 여기에 놓거나 클릭하여 탐색",
+    "description": "Placeholder text for the file upload zone"
+  },
+  "folderAsProject_fileLimit": {
+    "message": "파일당 최대 10 MB. 지원 형식: .txt, .md, .ts, .js, .py, .json, .csv, .pdf",
+    "description": "File size and type limit hint in the upload zone"
+  },
+  "folderAsProject_filesAttached": {
+    "message": "파일 {n}개 첨부됨",
+    "description": "Notification shown after files are attached to the chat"
+  },
+  "folderAsProject_attachFailed": {
+    "message": "파일을 자동으로 첨부할 수 없습니다. 수동으로 첨부해 주세요.",
+    "description": "Fallback notification when programmatic file attachment fails"
   }
 }

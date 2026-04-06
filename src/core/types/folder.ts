@@ -4,6 +4,14 @@
  */
 import type { ConversationId, FolderId } from './common';
 
+export interface FolderAttachment {
+  id: string; // UUID used as the IndexedDB key
+  name: string;
+  size: number;
+  mimeType: string;
+  storedAt: number; // Unix ms when the file was saved
+}
+
 export interface Folder {
   readonly id: FolderId;
   name: string;
@@ -14,6 +22,8 @@ export interface Folder {
   sortIndex?: number;
   createdAt: number;
   updatedAt: number;
+  instructions?: string; // Optional system instructions injected on new chats (Folder-as-Project)
+  attachments?: FolderAttachment[]; // Files stored in IndexedDB and auto-attached on new chats
 }
 
 export interface ConversationReference {

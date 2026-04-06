@@ -1546,5 +1546,57 @@
   "moveSectionDown": {
     "message": "Déplacer vers le bas",
     "description": "Tooltip for moving a settings section down in popup"
+  },
+  "folderAsProject_enable": {
+    "message": "Dossier comme Projet",
+    "description": "Toggle label for the Folder-as-Project feature"
+  },
+  "folderAsProject_description": {
+    "message": "Affiche un sélecteur de dossier dans les nouveaux chats et attribue automatiquement la conversation au dossier sélectionné lors du premier envoi",
+    "description": "Hint for the Folder-as-Project feature toggle"
+  },
+  "folderAsProject_selectFolder": {
+    "message": "Sélectionner un dossier…",
+    "description": "Placeholder text for the folder picker chip when no folder is selected"
+  },
+  "folderAsProject_noFolder": {
+    "message": "Aucun dossier",
+    "description": "Option in the folder picker dropdown to clear the selection"
+  },
+  "folderAsProject_setInstructions": {
+    "message": "Définir les instructions",
+    "description": "Folder context menu item to open the instructions editor"
+  },
+  "folderAsProject_editInstructions": {
+    "message": "Modifier les instructions",
+    "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_instructionsBanner": {
+    "message": "Instructions du dossier chargées.",
+    "description": "Banner shown in chat input area after folder instructions are injected"
+  },
+  "folderAsProject_instructionsCount": {
+    "message": "{n} caractères",
+    "description": "Character count shown in the instructions banner"
+  },
+  "folderAsProject_attachFiles": {
+    "message": "Joindre des fichiers",
+    "description": "Section label for file attachment in the folder instructions modal"
+  },
+  "folderAsProject_dropFiles": {
+    "message": "Déposez des fichiers ici ou cliquez pour parcourir",
+    "description": "Placeholder text for the file upload zone"
+  },
+  "folderAsProject_fileLimit": {
+    "message": "Max. 10 Mo par fichier. Types : .txt, .md, .ts, .js, .py, .json, .csv, .pdf",
+    "description": "File size and type limit hint in the upload zone"
+  },
+  "folderAsProject_filesAttached": {
+    "message": "{n} fichier(s) joint(s)",
+    "description": "Notification shown after files are attached to the chat"
+  },
+  "folderAsProject_attachFailed": {
+    "message": "Impossible de joindre les fichiers automatiquement. Veuillez les joindre manuellement.",
+    "description": "Fallback notification when programmatic file attachment fails"
   }
 }
