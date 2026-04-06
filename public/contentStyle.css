@@ -7499,35 +7499,6 @@ body.gv-rtl .gv-timestamp {
   padding-left: 12px;
 }
 
-/* Instructions banner */
-.gv-fp-banner {
-  padding: 4px 12px;
-  font-size: 12px;
-  border-radius: 4px;
-  margin: 0 8px 4px;
-  animation: gv-fp-fade-in 0.2s ease-out;
-}
-
-.theme-host.light-theme .gv-fp-banner {
-  background-color: #e8f0fe;
-  color: #1a73e8;
-}
-
-.theme-host.dark-theme .gv-fp-banner {
-  background-color: #1e3a5f;
-  color: #8ab4f8;
-}
-
-@keyframes gv-fp-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 /* ============================================================
    Folder instructions modal  (.gv-fi-*)

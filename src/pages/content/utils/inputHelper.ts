@@ -1,8 +1,8 @@
 /**
  * Shared utility for setting text in the Gemini chat input.
  *
- * Extracted from draftSave/index.ts so that both draft restore and
- * folder-as-project instruction injection can reuse the same logic.
+ * Extracted from draftSave/index.ts to centralize the input-setting logic
+ * used by draft restore and make it available for reuse by other features.
  */
 
 /**
