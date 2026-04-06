@@ -213,12 +213,7 @@ describe('startFolderProject — runtime toggle', () => {
     (
       chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
     ).mockImplementation(
-      (
-        listener: (
-          changes: Record<string, chrome.storage.StorageChange>,
-          area: string,
-        ) => void,
-      ) => {
+      (listener: (changes: Record<string, chrome.storage.StorageChange>, area: string) => void) => {
         storageListeners.push(listener);
       },
     );
@@ -232,10 +227,7 @@ describe('startFolderProject — runtime toggle', () => {
   it('does not initialize when toggled on in non-sync area', async () => {
     // Feature starts disabled
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (
-        _defaults: Record<string, unknown>,
-        callback: (result: Record<string, unknown>) => void,
-      ) => {
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
         callback({ [StorageKeys.FOLDER_PROJECT_ENABLED]: false });
       },
     );
@@ -262,10 +254,7 @@ describe('startFolderProject — runtime toggle', () => {
   it('removes picker when feature is toggled off', async () => {
     // Feature starts enabled
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (
-        _defaults: Record<string, unknown>,
-        callback: (result: Record<string, unknown>) => void,
-      ) => {
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
         callback({ [StorageKeys.FOLDER_PROJECT_ENABLED]: true });
       },
     );
