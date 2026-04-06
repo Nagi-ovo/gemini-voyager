@@ -11,7 +11,6 @@ import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
 import { getFolderColor, isDarkMode } from '../folder/folderColors';
 import type { FolderManager } from '../folder/manager';
-import { setInputText } from '../utils/inputHelper';
 
 // ============================================================================
 // Module state (per-tab, reset on navigation)
