@@ -1570,33 +1570,5 @@
   "folderAsProject_editInstructions": {
     "message": "Изменить инструкции",
     "description": "Folder context menu item to edit existing instructions"
-  },
-  "folderAsProject_instructionsBanner": {
-    "message": "Инструкции папки загружены.",
-    "description": "Banner shown in chat input area after folder instructions are injected"
-  },
-  "folderAsProject_instructionsCount": {
-    "message": "{n} символов",
-    "description": "Character count shown in the instructions banner"
-  },
-  "folderAsProject_attachFiles": {
-    "message": "Прикрепить файлы",
-    "description": "Section label for file attachment in the folder instructions modal"
-  },
-  "folderAsProject_dropFiles": {
-    "message": "Перетащите файлы или нажмите для выбора",
-    "description": "Placeholder text for the file upload zone"
-  },
-  "folderAsProject_fileLimit": {
-    "message": "Макс. 10 МБ на файл. Типы: .txt, .md, .ts, .js, .py, .json, .csv, .pdf",
-    "description": "File size and type limit hint in the upload zone"
-  },
-  "folderAsProject_filesAttached": {
-    "message": "Прикреплено файлов: {n}",
-    "description": "Notification shown after files are attached to the chat"
-  },
-  "folderAsProject_attachFailed": {
-    "message": "Не удалось автоматически прикрепить файлы. Прикрепите их вручную.",
-    "description": "Fallback notification when programmatic file attachment fails"
   }
 }

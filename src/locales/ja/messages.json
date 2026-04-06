@@ -1564,33 +1564,5 @@
   "folderAsProject_editInstructions": {
     "message": "指示を編集",
     "description": "Folder context menu item to edit existing instructions"
-  },
-  "folderAsProject_instructionsBanner": {
-    "message": "フォルダの指示を読み込みました。",
-    "description": "Banner shown in chat input area after folder instructions are injected"
-  },
-  "folderAsProject_instructionsCount": {
-    "message": "{n} 文字",
-    "description": "Character count shown in the instructions banner"
-  },
-  "folderAsProject_attachFiles": {
-    "message": "ファイルを添付",
-    "description": "Section label for file attachment in the folder instructions modal"
-  },
-  "folderAsProject_dropFiles": {
-    "message": "ファイルをここにドロップするか、クリックして選択",
-    "description": "Placeholder text for the file upload zone"
-  },
-  "folderAsProject_fileLimit": {
-    "message": "最大 10 MB／ファイル。対応形式: .txt, .md, .ts, .js, .py, .json, .csv, .pdf",
-    "description": "File size and type limit hint in the upload zone"
-  },
-  "folderAsProject_filesAttached": {
-    "message": "{n} 件のファイルを添付しました",
-    "description": "Notification shown after files are attached to the chat"
-  },
-  "folderAsProject_attachFailed": {
-    "message": "ファイルを自動的に添付できませんでした。手動で添付してください。",
-    "description": "Fallback notification when programmatic file attachment fails"
   }
 }

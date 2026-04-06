@@ -1570,33 +1570,5 @@
   "folderAsProject_editInstructions": {
     "message": "Editar instrucciones",
     "description": "Folder context menu item to edit existing instructions"
-  },
-  "folderAsProject_instructionsBanner": {
-    "message": "Instrucciones de carpeta cargadas.",
-    "description": "Banner shown in chat input area after folder instructions are injected"
-  },
-  "folderAsProject_instructionsCount": {
-    "message": "{n} caracteres",
-    "description": "Character count shown in the instructions banner"
-  },
-  "folderAsProject_attachFiles": {
-    "message": "Adjuntar archivos",
-    "description": "Section label for file attachment in the folder instructions modal"
-  },
-  "folderAsProject_dropFiles": {
-    "message": "Suelta archivos aquí o haz clic para explorar",
-    "description": "Placeholder text for the file upload zone"
-  },
-  "folderAsProject_fileLimit": {
-    "message": "Máx. 10 MB por archivo. Tipos: .txt, .md, .ts, .js, .py, .json, .csv, .pdf",
-    "description": "File size and type limit hint in the upload zone"
-  },
-  "folderAsProject_filesAttached": {
-    "message": "{n} archivo(s) adjuntado(s)",
-    "description": "Notification shown after files are attached to the chat"
-  },
-  "folderAsProject_attachFailed": {
-    "message": "No se pudieron adjuntar los archivos automáticamente. Por favor, adjúntalos manualmente.",
-    "description": "Fallback notification when programmatic file attachment fails"
   }
 }

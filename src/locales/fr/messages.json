@@ -1570,33 +1570,5 @@
   "folderAsProject_editInstructions": {
     "message": "Modifier les instructions",
     "description": "Folder context menu item to edit existing instructions"
-  },
-  "folderAsProject_instructionsBanner": {
-    "message": "Instructions du dossier chargées.",
-    "description": "Banner shown in chat input area after folder instructions are injected"
-  },
-  "folderAsProject_instructionsCount": {
-    "message": "{n} caractères",
-    "description": "Character count shown in the instructions banner"
-  },
-  "folderAsProject_attachFiles": {
-    "message": "Joindre des fichiers",
-    "description": "Section label for file attachment in the folder instructions modal"
-  },
-  "folderAsProject_dropFiles": {
-    "message": "Déposez des fichiers ici ou cliquez pour parcourir",
-    "description": "Placeholder text for the file upload zone"
-  },
-  "folderAsProject_fileLimit": {
-    "message": "Max. 10 Mo par fichier. Types : .txt, .md, .ts, .js, .py, .json, .csv, .pdf",
-    "description": "File size and type limit hint in the upload zone"
-  },
-  "folderAsProject_filesAttached": {
-    "message": "{n} fichier(s) joint(s)",
-    "description": "Notification shown after files are attached to the chat"
-  },
-  "folderAsProject_attachFailed": {
-    "message": "Impossible de joindre les fichiers automatiquement. Veuillez les joindre manuellement.",
-    "description": "Fallback notification when programmatic file attachment fails"
   }
 }
