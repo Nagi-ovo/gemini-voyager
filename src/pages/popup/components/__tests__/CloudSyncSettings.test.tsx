@@ -256,6 +256,61 @@ describe('CloudSyncSettings auth flow', () => {
     );
   });
 
+  it('restores synced settings into chrome.storage.sync on download', async () => {
+    const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
+      if (message.type === 'gv.sync.getState') {
+        return Promise.resolve({ ok: true, state: baseState });
+      }
+      if (message.type === 'gv.sync.download') {
+        return Promise.resolve({
+          ok: true,
+          state: { ...baseState, isAuthenticated: true },
+          data: {
+            folders: { data: { folders: [], folderContents: {} } },
+            prompts: { items: [] },
+            settings: {
+              format: 'gemini-voyager.settings.v1',
+              exportedAt: new Date().toISOString(),
+              version: '1.0.0',
+              data: {
+                [StorageKeys.CHAT_WIDTH]: 88,
+                [StorageKeys.CONTEXT_SYNC_PORT]: 4040,
+                unknownKey: 'ignore-me',
+              },
+            },
+            starred: { data: { messages: {} } },
+          },
+        });
+      }
+      return Promise.resolve({ ok: true });
+    });
+
+    const chromeMock = createChromeMock(sendMessageMock);
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<CloudSyncSettings />);
+    });
+    await flushMicrotasks();
+
+    const downloadButton = Array.from(container.querySelectorAll('button')).find((btn) =>
+      (btn.textContent || '').includes('syncMerge'),
+    );
+    expect(downloadButton).toBeTruthy();
+
+    await act(async () => {
+      downloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await flushMicrotasks();
+
+    const syncSetMock = chromeMock.storage.sync.set as unknown as ReturnType<typeof vi.fn>;
+    expect(syncSetMock).toHaveBeenCalledWith({
+      [StorageKeys.CHAT_WIDTH]: 88,
+      [StorageKeys.CONTEXT_SYNC_PORT]: 4040,
+    });
+  });
+
   it('stores merged timeline hierarchy under the current account scope when isolation is enabled', async () => {
     const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
       if (message.type === 'gv.sync.getState') {

@@ -47,8 +47,10 @@ export interface BackupConfig {
 export interface BackupMetadata {
   version: string;
   timestamp: string;
+  includesSettings?: boolean;
   includesPrompts: boolean;
   includesFolders: boolean;
+  settingsCount?: number;
   promptCount?: number;
   folderCount?: number;
   conversationCount?: number;
@@ -62,6 +64,8 @@ export interface BackupMetadata {
 export interface BackupResult {
   /** Timestamp of backup (ISO 8601) */
   timestamp: string;
+  /** Number of settings backed up */
+  settingsCount?: number;
   /** Number of prompts backed up */
   promptCount: number;
   /** Number of folders backed up */

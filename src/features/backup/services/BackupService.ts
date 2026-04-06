@@ -4,6 +4,7 @@
  * Follows enterprise best practices with comprehensive error handling
  */
 import { AppError, ErrorCode } from '@/core/errors/AppError';
+import { exportBackupableSyncSettings } from '@/core/services/SettingsBackupService';
 import { type Result, StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { EXTENSION_VERSION } from '@/core/utils/version';
@@ -127,10 +128,18 @@ export class BackupService implements IBackupService {
   async generateBackupFiles(config: BackupConfig): Promise<Result<BackupFile[]>> {
     try {
       const files: BackupFile[] = [];
+      let settingsCount = 0;
       let promptCount = 0;
       let folderCount = 0;
       let conversationCount = 0;
       let timelineHierarchyConversationCount = 0;
+
+      const settingsPayload = await exportBackupableSyncSettings();
+      settingsCount = Object.keys(settingsPayload.data).length;
+      files.push({
+        name: 'settings.json',
+        content: JSON.stringify(settingsPayload, null, 2),
+      });
 
       // Generate prompt backup if enabled
       if (config.includePrompts) {
@@ -205,8 +214,10 @@ export class BackupService implements IBackupService {
       const metadata: BackupMetadata = {
         version: EXTENSION_VERSION,
         timestamp: new Date().toISOString(),
+        includesSettings: true,
         includesPrompts: config.includePrompts,
         includesFolders: config.includeFolders,
+        settingsCount,
         promptCount,
         folderCount,
         conversationCount,
@@ -275,6 +286,7 @@ export class BackupService implements IBackupService {
 
       const result: BackupResult = {
         timestamp: new Date().toISOString(),
+        settingsCount: metadata.settingsCount || 0,
         promptCount: metadata.promptCount || 0,
         folderCount: metadata.folderCount || 0,
         conversationCount: metadata.conversationCount || 0,
