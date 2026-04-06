@@ -5,7 +5,6 @@
  * pages. When the user sends their first message (URL gains a conversation ID),
  * the conversation is automatically assigned to the selected folder.
  */
-
 import { StorageKeys } from '@/core/types/common';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
@@ -118,7 +117,7 @@ async function populateDropdown(
   }
 
   // Index children by parentId for tree traversal
-  const childrenOf = new Map<string, typeof allFolders[number][]>();
+  const childrenOf = new Map<string, (typeof allFolders)[number][]>();
   for (const f of allFolders) {
     const key = f.parentId ?? '__root__';
     if (!childrenOf.has(key)) childrenOf.set(key, []);
@@ -126,7 +125,7 @@ async function populateDropdown(
   }
 
   // Handler for selecting a folder
-  const selectFolder = (folder: typeof allFolders[number]) => {
+  const selectFolder = (folder: (typeof allFolders)[number]) => {
     selectedFolderId = folder.id;
     chip.textContent = `📁 ${folder.name}`;
     chip.dataset.selected = folder.id;
@@ -433,11 +432,7 @@ function getConversationTitle(convId: string): string {
 // URL change handler
 // ============================================================================
 
-function handleNavigation(
-  manager: FolderManager,
-  prevPath: string,
-  newPath: string,
-): void {
+function handleNavigation(manager: FolderManager, prevPath: string, newPath: string): void {
   const prevWasNewChat = isNewChatPath(prevPath);
   const newConvId = extractConvId(newPath);
 
@@ -505,15 +500,12 @@ function startURLWatcher(manager: FolderManager): void {
  * @param manager - The active FolderManager instance
  */
 export function startFolderProject(manager: FolderManager): void {
-  chrome.storage?.sync?.get(
-    { [StorageKeys.FOLDER_PROJECT_ENABLED]: false },
-    (res) => {
-      if (res?.[StorageKeys.FOLDER_PROJECT_ENABLED] !== true) return;
-      if (featureInitialized) return;
-      featureInitialized = true;
-      startURLWatcher(manager);
-    },
-  );
+  chrome.storage?.sync?.get({ [StorageKeys.FOLDER_PROJECT_ENABLED]: false }, (res) => {
+    if (res?.[StorageKeys.FOLDER_PROJECT_ENABLED] !== true) return;
+    if (featureInitialized) return;
+    featureInitialized = true;
+    startURLWatcher(manager);
+  });
 
   // React to toggle changes without a page reload
   chrome.storage.onChanged.addListener((changes, area) => {

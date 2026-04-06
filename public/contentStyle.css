@@ -7365,7 +7365,7 @@ body.gv-rtl .gv-timestamp {
   border-radius: 8px;
   border: none;
   background: transparent;
-  font-family: "Google Sans Flex", "Google Sans Text", "Google Sans", sans-serif;
+  font-family: 'Google Sans Flex', 'Google Sans Text', 'Google Sans', sans-serif;
   font-weight: 500;
   line-height: normal;
   cursor: pointer;
@@ -7389,7 +7389,6 @@ body.gv-rtl .gv-timestamp {
 .theme-host.dark-theme .gv-fp-chip:hover {
   background-color: rgba(255, 255, 255, 0.08);
 }
-
 
 /* Dropdown list */
 .gv-fp-dropdown {
@@ -7520,8 +7519,14 @@ body.gv-rtl .gv-timestamp {
 }
 
 @keyframes gv-fp-fade-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ============================================================
@@ -7716,7 +7721,9 @@ body.gv-rtl .gv-timestamp {
   text-align: center;
   font-size: 12px;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
 }
 
 .theme-host.light-theme .gv-fi-upload-zone {

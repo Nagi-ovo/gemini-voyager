@@ -17,6 +17,7 @@
  */
 import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
+
 import { setInputText } from '../utils/inputHelper';
 
 // ============================================================================
