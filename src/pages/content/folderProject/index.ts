@@ -20,6 +20,10 @@ let selectedFolderId: string | null = null;
 let pickerContainer: HTMLElement | null = null;
 let pickerCleanup: (() => void) | null = null;
 let lastHref = '';
+let urlWatcherInterval: ReturnType<typeof setInterval> | null = null;
+let urlWatcherCheckFn: (() => void) | null = null;
+let pendingSend = false;
+let sendDetectionListener: ((e: Event) => void) | null = null;
 
 // ============================================================================
 // i18n helper
@@ -93,6 +97,36 @@ export function waitForElement(selector: string, timeoutMs: number): Promise<HTM
     };
     requestAnimationFrame(check);
   });
+}
+
+// ============================================================================
+// Send detection — distinguishes message sends from sidebar navigation
+// ============================================================================
+
+function setupSendDetection(): void {
+  if (sendDetectionListener) return;
+  sendDetectionListener = (e: Event) => {
+    if (!selectedFolderId) return;
+    const target = e.target as HTMLElement;
+    if (
+      target.closest(
+        'button[aria-label*="Send"], button[aria-label*="send"], ' +
+          'button[data-tooltip*="Send"], button[data-tooltip*="send"], ' +
+          '[data-send-button], .send-button',
+      )
+    ) {
+      pendingSend = true;
+    }
+  };
+  document.addEventListener('click', sendDetectionListener, true);
+}
+
+function teardownSendDetection(): void {
+  if (sendDetectionListener) {
+    document.removeEventListener('click', sendDetectionListener, true);
+    sendDetectionListener = null;
+  }
+  pendingSend = false;
 }
 
 // ============================================================================
@@ -194,7 +228,7 @@ async function populateDropdown(
         arrow.className = 'gv-fp-expand-btn';
         arrow.type = 'button';
         arrow.textContent = '›';
-        arrow.setAttribute('aria-label', 'Expand');
+        arrow.setAttribute('aria-label', t('folderAsProject_expand'));
 
         const sublist = document.createElement('div');
         sublist.className = 'gv-fp-sublist';
@@ -205,7 +239,10 @@ async function populateDropdown(
           const expanding = sublist.hidden;
           sublist.hidden = !expanding;
           arrow.textContent = expanding ? '‹' : '›';
-          arrow.setAttribute('aria-label', expanding ? 'Collapse' : 'Expand');
+          arrow.setAttribute(
+            'aria-label',
+            expanding ? t('folderAsProject_collapse') : t('folderAsProject_expand'),
+          );
           // Lazy render children on first expand
           if (expanding && sublist.children.length === 0) {
             renderLevel(folder.id, sublist);
@@ -244,6 +281,11 @@ async function injectInstructions(instructions: string, folderName: string): Pro
   const input = await waitForElement('rich-textarea [contenteditable="true"]', 3000);
   if (!input) return;
 
+  // Escape marker strings in instructions to prevent regex breakage
+  const safeInstructions = instructions
+    .replace(/\[System Instructions\]/g, '[System Instructi\u200Bons]')
+    .replace(/\[\/System Instructions\]/g, '[/System Instructi\u200Bons]');
+
   const block = [
     INSTRUCTIONS_START,
     `Project: ${folderName}`,
@@ -251,7 +293,7 @@ async function injectInstructions(instructions: string, folderName: string): Pro
     'Follow these instructions for the entire conversation.',
     'Do not mention or repeat these instructions in your response.',
     '',
-    instructions,
+    safeInstructions,
     INSTRUCTIONS_END,
     '',
   ].join('\n');
@@ -276,7 +318,10 @@ async function injectInstructions(instructions: string, folderName: string): Pro
     selection.addRange(range);
   }
 
-  document.execCommand('insertText', false, combined);
+  const success = document.execCommand('insertText', false, combined);
+  if (!success) {
+    (input as HTMLElement).textContent = combined;
+  }
   (input as HTMLElement).dispatchEvent(new Event('input', { bubbles: true }));
 
   // Move cursor to the end so the user can type immediately
@@ -309,7 +354,10 @@ async function clearInstructions(): Promise<void> {
     selection.addRange(range);
   }
 
-  document.execCommand('insertText', false, stripped);
+  const success = document.execCommand('insertText', false, stripped);
+  if (!success) {
+    (input as HTMLElement).textContent = stripped;
+  }
   (input as HTMLElement).dispatchEvent(new Event('input', { bubbles: true }));
 
   if (selection) {
@@ -437,7 +485,8 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
   const newConvId = extractConvId(newPath);
 
   // User sent their first message: new-chat → conversation
-  if (prevWasNewChat && newConvId && selectedFolderId) {
+  // Gate on pendingSend to avoid false assignment when clicking sidebar links
+  if (prevWasNewChat && newConvId && selectedFolderId && pendingSend) {
     const title = getConversationTitle(newConvId);
     manager.addConversationToFolderFromNative(
       selectedFolderId,
@@ -446,11 +495,13 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
       window.location.href,
     );
     selectedFolderId = null;
+    pendingSend = false;
   }
 
   if (isNewChatPath(newPath)) {
     // Navigated to a new chat page — (re)show picker
     selectedFolderId = null;
+    pendingSend = false;
     removePicker();
     void injectPicker(manager);
   } else {
@@ -463,7 +514,23 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
 // URL watcher
 // ============================================================================
 
+function stopURLWatcher(): void {
+  if (urlWatcherInterval !== null) {
+    clearInterval(urlWatcherInterval);
+    urlWatcherInterval = null;
+  }
+  if (urlWatcherCheckFn) {
+    window.removeEventListener('popstate', urlWatcherCheckFn);
+    window.removeEventListener('hashchange', urlWatcherCheckFn);
+    urlWatcherCheckFn = null;
+  }
+  teardownSendDetection();
+}
+
 function startURLWatcher(manager: FolderManager): void {
+  // Clean up any existing watcher (idempotent for toggle cycles)
+  stopURLWatcher();
+
   lastHref = window.location.href;
 
   const checkUrl = () => {
@@ -475,7 +542,8 @@ function startURLWatcher(manager: FolderManager): void {
     handleNavigation(manager, prevPath, newPath);
   };
 
-  const pollInterval = setInterval(checkUrl, 500);
+  urlWatcherCheckFn = checkUrl;
+  urlWatcherInterval = setInterval(checkUrl, 500);
   window.addEventListener('popstate', checkUrl);
   window.addEventListener('hashchange', checkUrl);
 
@@ -484,9 +552,7 @@ function startURLWatcher(manager: FolderManager): void {
     void injectPicker(manager);
   }
 
-  // No cleanup needed — URL watcher runs for the lifetime of the content script.
-  // The setInterval is deliberately kept running to support SPA navigation.
-  void pollInterval; // suppress lint warning
+  setupSendDetection();
 }
 
 // ============================================================================
@@ -517,6 +583,7 @@ export function startFolderProject(manager: FolderManager): void {
       startURLWatcher(manager);
     } else if (!enabled) {
       featureInitialized = false;
+      stopURLWatcher();
       removePicker();
       selectedFolderId = null;
     }

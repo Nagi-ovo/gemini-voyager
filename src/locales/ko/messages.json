@@ -1558,5 +1558,13 @@
   "folderAsProject_editInstructions": {
     "message": "지침 편집",
     "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_expand": {
+    "message": "펼치기",
+    "description": "Aria-label for the expand button (screen readers)"
+  },
+  "folderAsProject_collapse": {
+    "message": "접기",
+    "description": "Aria-label for the collapse button (screen readers)"
   }
 }

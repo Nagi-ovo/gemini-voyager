@@ -1570,5 +1570,13 @@
   "folderAsProject_editInstructions": {
     "message": "Editar instrucciones",
     "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_expand": {
+    "message": "Expandir",
+    "description": "Aria-label for the expand button (screen readers)"
+  },
+  "folderAsProject_collapse": {
+    "message": "Contraer",
+    "description": "Aria-label for the collapse button (screen readers)"
   }
 }

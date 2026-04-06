@@ -66,18 +66,6 @@ export function calculateFolderDialogPaddingLeft(level: number, indent: number):
 }
 
 /**
- * Format a byte size into a human-readable string (e.g. "3.2 MB").
- *
- * @param bytes - Number of bytes
- * @returns Human-readable size string
- */
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-/**
  * Validate folder data structure
  */
 function validateFolderData(data: unknown): boolean {
@@ -4239,6 +4227,11 @@ export class FolderManager {
     isGem?: boolean,
     gemId?: string,
   ): void {
+    // Guard: ensure the target folder still exists (it may have been deleted
+    // from the sidebar or another tab between selection and message send)
+    const folderExists = this.data.folders.some((f) => f.id === folderId);
+    if (!folderExists) return;
+
     // Add to folder
     if (!this.data.folderContents[folderId]) {
       this.data.folderContents[folderId] = [];
@@ -4285,9 +4278,8 @@ export class FolderManager {
 
   /**
    * Open a modal that lets the user write or edit text instructions for a
-   * folder and manage attached files. Instructions and attachment metadata are
-   * saved to `folder.instructions` / `folder.attachments` and persisted via
-   * `saveData()`. Binary file content is stored in IndexedDB.
+   * folder. Instructions are saved to `folder.instructions` and persisted
+   * via `saveData()`.
    *
    * @param folderId - The folder to edit instructions for
    */
@@ -4304,11 +4296,15 @@ export class FolderManager {
 
     const dialog = document.createElement('div');
     dialog.className = 'gv-fi-dialog';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.setAttribute('aria-labelledby', 'gv-fi-dialog-title');
 
     // ── Title ─────────────────────────────────────────────────────────────
 
     const titleEl = document.createElement('h2');
     titleEl.className = 'gv-fi-title';
+    titleEl.id = 'gv-fi-dialog-title';
     titleEl.textContent = folder.instructions
       ? this.t('folderAsProject_editInstructions')
       : this.t('folderAsProject_setInstructions');
@@ -4347,6 +4343,7 @@ export class FolderManager {
     saveBtn.addEventListener('click', async () => {
       const trimmed = textarea.value.trim();
       folder.instructions = trimmed || undefined;
+      folder.updatedAt = Date.now();
       await this.saveData();
       overlay.remove();
     });
@@ -4365,6 +4362,9 @@ export class FolderManager {
 
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) overlay.remove();
+    });
+    overlay.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') overlay.remove();
     });
 
     setTimeout(() => textarea.focus(), 50);

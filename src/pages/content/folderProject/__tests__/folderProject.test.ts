@@ -194,3 +194,98 @@ describe('waitForElement — model selector', () => {
     expect(result).toBeNull();
   });
 });
+
+// ============================================================================
+// startFolderProject — runtime toggle
+// ============================================================================
+
+describe('startFolderProject — runtime toggle', () => {
+  let storageListeners: Array<
+    (changes: Record<string, chrome.storage.StorageChange>, area: string) => void
+  >;
+
+  beforeEach(() => {
+    vi.resetModules();
+    storageListeners = [];
+    document.body.innerHTML = '';
+
+    // Capture onChanged listeners registered by startFolderProject
+    (
+      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
+    ).mockImplementation(
+      (
+        listener: (
+          changes: Record<string, chrome.storage.StorageChange>,
+          area: string,
+        ) => void,
+      ) => {
+        storageListeners.push(listener);
+      },
+    );
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
+  });
+
+  it('does not initialize when toggled on in non-sync area', async () => {
+    // Feature starts disabled
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (
+        _defaults: Record<string, unknown>,
+        callback: (result: Record<string, unknown>) => void,
+      ) => {
+        callback({ [StorageKeys.FOLDER_PROJECT_ENABLED]: false });
+      },
+    );
+
+    const { startFolderProject } = await import('../index');
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue([]),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+    startFolderProject(mockManager as unknown as Parameters<typeof startFolderProject>[0]);
+
+    // Simulate toggle in 'local' area (not 'sync') — should be ignored
+    for (const listener of storageListeners) {
+      listener(
+        { [StorageKeys.FOLDER_PROJECT_ENABLED]: { newValue: true, oldValue: false } },
+        'local',
+      );
+    }
+
+    expect(document.querySelector('.gv-fp-picker-container')).toBeNull();
+  });
+
+  it('removes picker when feature is toggled off', async () => {
+    // Feature starts enabled
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (
+        _defaults: Record<string, unknown>,
+        callback: (result: Record<string, unknown>) => void,
+      ) => {
+        callback({ [StorageKeys.FOLDER_PROJECT_ENABLED]: true });
+      },
+    );
+
+    const { startFolderProject } = await import('../index');
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue([]),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+    startFolderProject(mockManager as unknown as Parameters<typeof startFolderProject>[0]);
+
+    // Simulate toggle off
+    for (const listener of storageListeners) {
+      listener(
+        { [StorageKeys.FOLDER_PROJECT_ENABLED]: { newValue: false, oldValue: true } },
+        'sync',
+      );
+    }
+
+    expect(document.querySelector('.gv-fp-picker-container')).toBeNull();
+  });
+});

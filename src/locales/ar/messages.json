@@ -1561,5 +1561,13 @@
   "folderAsProject_editInstructions": {
     "message": "تحرير التعليمات",
     "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_expand": {
+    "message": "توسيع",
+    "description": "Aria-label for the expand button (screen readers)"
+  },
+  "folderAsProject_collapse": {
+    "message": "طي",
+    "description": "Aria-label for the collapse button (screen readers)"
   }
 }
