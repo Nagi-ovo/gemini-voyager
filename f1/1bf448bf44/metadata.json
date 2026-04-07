@@ -1,0 +1,43 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "f11bf448bf44",
+  "strategy": "manual-commit",
+  "branch": "codex/settings-backup-sync",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/core/types/common.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/chatInput/__tests__/index.test.ts",
+    "src/pages/content/chatInput/index.ts",
+    "src/pages/content/prompt/__tests__/promptClickAction.test.ts",
+    "src/pages/content/prompt/index.ts",
+    "src/pages/content/prompt/promptClickAction.ts",
+    "src/pages/content/quoteReply/index.ts",
+    "src/pages/popup/Popup.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/f1/1bf448bf44/0/metadata.json",
+      "transcript": "/f1/1bf448bf44/0/full.jsonl",
+      "context": "/f1/1bf448bf44/0/context.md",
+      "content_hash": "/f1/1bf448bf44/0/content_hash.txt",
+      "prompt": "/f1/1bf448bf44/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
