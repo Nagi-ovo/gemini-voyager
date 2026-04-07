@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "0d1cd13d3839",
+  "strategy": "manual-commit",
+  "branch": "codex/settings-backup-sync",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/pages/content/folder/__tests__/conversationTitleSync.test.ts",
+    "src/pages/content/folder/manager.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0d/1cd13d3839/0/metadata.json",
+      "transcript": "/0d/1cd13d3839/0/full.jsonl",
+      "context": "/0d/1cd13d3839/0/context.md",
+      "content_hash": "/0d/1cd13d3839/0/content_hash.txt",
+      "prompt": "/0d/1cd13d3839/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
