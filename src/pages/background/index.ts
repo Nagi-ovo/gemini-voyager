@@ -9,6 +9,7 @@ import {
   extractRouteUserIdFromUrl,
 } from '@/core/services/AccountIsolationService';
 import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
+import { exportBackupableSyncSettings } from '@/core/services/SettingsBackupService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
@@ -827,6 +828,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     timelineHierarchyAccountScope.routeUserId,
                   )
                 : timelineHierarchyDataRaw;
+            const settingsPayload = await exportBackupableSyncSettings();
             const success = await googleDriveSyncService.upload(
               folders,
               prompts,
@@ -837,6 +839,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               timelineHierarchyData,
               accountScope,
               timelineHierarchyAccountScope,
+              settingsPayload.data,
             );
             sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
             return;

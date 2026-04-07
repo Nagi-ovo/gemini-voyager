@@ -79,6 +79,16 @@ export interface PromptExportPayload {
   version?: string;
   items: PromptItem[];
 }
+
+/**
+ * Settings export payload format
+ */
+export interface SettingsExportPayload {
+  format: 'gemini-voyager.settings.v1';
+  exportedAt: string;
+  version?: string;
+  data: Record<string, unknown>;
+}
 /**
  * Re-export starred message types from their canonical source
  * These are used for Google Drive sync
@@ -143,6 +153,8 @@ export interface SyncData {
   folders: FolderExportPayload;
   /** Prompt data in export format */
   prompts: PromptExportPayload;
+  /** UI settings/preferences in export format */
+  settings?: SettingsExportPayload;
   /** Starred messages in export format */
   starred?: StarredExportPayload;
   /** Fork metadata in export format */

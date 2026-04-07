@@ -6,10 +6,12 @@ import {
   detectAccountPlatformFromUrl,
   extractRouteUserIdFromUrl,
 } from '@/core/services/AccountIsolationService';
+import { restoreBackupableSyncSettings } from '@/core/services/SettingsBackupService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type {
   PromptItem,
+  SettingsExportPayload,
   SyncAccountScope,
   SyncMode,
   SyncPlatform,
@@ -447,6 +449,7 @@ export function CloudSyncSettings() {
             data?: {
               folders?: { data?: FolderData };
               prompts?: { items?: PromptItem[] };
+              settings?: SettingsExportPayload;
               starred?: { data?: StarredMessagesData };
               timelineHierarchy?: { data?: TimelineHierarchyData };
             } | null;
@@ -547,6 +550,7 @@ export function CloudSyncSettings() {
       const {
         folders: cloudFoldersPayload,
         prompts: cloudPromptsPayload,
+        settings: cloudSettingsPayload,
         starred: cloudStarredPayload,
         timelineHierarchy: cloudTimelineHierarchyPayload,
       } = response.data;
@@ -595,6 +599,7 @@ export function CloudSyncSettings() {
         localTimelineHierarchy,
         cloudTimelineHierarchyData,
       );
+      await restoreBackupableSyncSettings(cloudSettingsPayload?.data);
 
       console.log('[CloudSyncSettings] Merged folders count:', mergedFolders.folders?.length || 0);
       console.log(

@@ -94,6 +94,19 @@ describe('BackupService', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
 
+    const settingsFile = result.data.find((file) => file.name === 'settings.json');
+    expect(settingsFile).toBeDefined();
+    expect(JSON.parse(settingsFile?.content || '{}')).toEqual({
+      format: 'gemini-voyager.settings.v1',
+      exportedAt: expect.any(String),
+      version: expect.any(String),
+      data: expect.objectContaining({
+        [StorageKeys.TIMELINE_SCROLL_MODE]: 'flow',
+        [StorageKeys.CHAT_WIDTH]: 70,
+        [StorageKeys.CONTEXT_SYNC_PORT]: 3030,
+      }),
+    });
+
     const timelineHierarchyFile = result.data.find(
       (file) => file.name === 'timeline-hierarchy.json',
     );
@@ -123,6 +136,8 @@ describe('BackupService', () => {
     const metadataFile = result.data.find((file) => file.name === 'metadata.json');
     expect(JSON.parse(metadataFile?.content || '{}')).toEqual(
       expect.objectContaining({
+        includesSettings: true,
+        settingsCount: expect.any(Number),
         timelineHierarchyConversationCount: 2,
       }),
     );

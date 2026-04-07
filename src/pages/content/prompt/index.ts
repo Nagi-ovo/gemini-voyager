@@ -15,13 +15,14 @@ import {
   detectAccountContextFromDocument,
 } from '@/core/services/AccountIsolationService';
 import { logger } from '@/core/services/LoggerService';
+import { exportBackupableSyncSettings } from '@/core/services/SettingsBackupService';
 import { promptStorageService } from '@/core/services/StorageService';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
 import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
-import { compareVersions } from '@/core/utils/version';
+import { EXTENSION_VERSION, compareVersions } from '@/core/utils/version';
 import {
   getTimelineHierarchyStorageKeysToRead,
   resolveTimelineHierarchyDataForStorageScope,
@@ -1488,6 +1489,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const promptPayload = {
           format: 'gemini-voyager.prompts.v1',
           exportedAt: new Date().toISOString(),
+          version: EXTENSION_VERSION,
           items: prompts,
         };
 
@@ -1502,12 +1504,15 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const folderPayload = {
           format: 'gemini-voyager.folders.v1',
           exportedAt: new Date().toISOString(),
-          version: '0.9.3',
+          version: EXTENSION_VERSION,
           data: {
             folders: folderData.folders || [],
             folderContents: folderData.folderContents || {},
           },
         };
+
+        const settingsPayload = await exportBackupableSyncSettings();
+        const settingsCount = Object.keys(settingsPayload.data).length;
 
         // Count conversations
         const conversationCount = Object.values(folderData.folderContents || {}).reduce(
@@ -1543,16 +1548,18 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const timelineHierarchyPayload = {
           format: 'gemini-voyager.timeline-hierarchy.v1' as const,
           exportedAt: new Date().toISOString(),
-          version: '0.9.3',
+          version: EXTENSION_VERSION,
           data: timelineHierarchyData,
         };
 
         // Create metadata
         const metadata = {
-          version: '0.9.3',
+          version: EXTENSION_VERSION,
           timestamp: new Date().toISOString(),
+          includesSettings: true,
           includesPrompts: true,
           includesFolders: true,
+          settingsCount,
           promptCount: prompts.length,
           folderCount: folderData.folders?.length || 0,
           conversationCount,
@@ -1592,6 +1599,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           await foldersWritable.write(JSON.stringify(folderPayload, null, 2));
           await foldersWritable.close();
 
+          const settingsFile = await backupDir.getFileHandle('settings.json', { create: true });
+          const settingsWritable = await settingsFile.createWritable();
+          await settingsWritable.write(JSON.stringify(settingsPayload, null, 2));
+          await settingsWritable.close();
+
           const metaFile = await backupDir.getFileHandle('metadata.json', { create: true });
           const metaWritable = await metaFile.createWritable();
           await metaWritable.write(JSON.stringify(metadata, null, 2));
@@ -1615,6 +1627,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           // Add files to ZIP
           zip.file('prompts.json', JSON.stringify(promptPayload, null, 2));
           zip.file('folders.json', JSON.stringify(folderPayload, null, 2));
+          zip.file('settings.json', JSON.stringify(settingsPayload, null, 2));
           zip.file('metadata.json', JSON.stringify(metadata, null, 2));
           zip.file('timeline-hierarchy.json', JSON.stringify(timelineHierarchyPayload, null, 2));
 
