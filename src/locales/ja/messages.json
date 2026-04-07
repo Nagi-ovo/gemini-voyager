@@ -111,6 +111,10 @@
     "message": "コピーしました",
     "description": "Copied notice"
   },
+  "pm_inserted": {
+    "message": "入力欄に挿入しました",
+    "description": "Prompt inserted into the chat input"
+  },
   "pm_delete": {
     "message": "削除",
     "description": "Delete prompt"
@@ -698,6 +702,14 @@
   "hidePromptManagerHint": {
     "message": "ページ上のプロンプトマネージャーのフローティングアイコンを非表示にします",
     "description": "Hint for hiding prompt manager feature"
+  },
+  "promptInsertOnClick": {
+    "message": "クリック時にプロンプトを直接挿入",
+    "description": "Enable direct prompt insertion instead of copying"
+  },
+  "promptInsertOnClickHint": {
+    "message": "オンにすると、プロンプトをクリックしたときに Gemini の入力欄へ直接挿入します。オフでは既定のコピー動作のままです。",
+    "description": "Hint for prompt click insertion behavior"
   },
   "customWebsites": {
     "message": "カスタムウェブサイト",

@@ -111,6 +111,10 @@
     "message": "Скопировано",
     "description": "Copied notice"
   },
+  "pm_inserted": {
+    "message": "Вставлено",
+    "description": "Prompt inserted into the chat input"
+  },
   "pm_delete": {
     "message": "Удалить",
     "description": "Delete prompt"
@@ -698,6 +702,14 @@
   "hidePromptManagerHint": {
     "message": "Скрыть плавающую кнопку Менеджера промптов на странице",
     "description": "Hint for hiding prompt manager feature"
+  },
+  "promptInsertOnClick": {
+    "message": "Вставлять промпт по клику",
+    "description": "Enable direct prompt insertion instead of copying"
+  },
+  "promptInsertOnClickHint": {
+    "message": "Если включено, клик по промпту вставляет его в поле Gemini. Если выключено, сохраняется стандартное поведение копирования.",
+    "description": "Hint for prompt click insertion behavior"
   },
   "customWebsites": {
     "message": "Пользовательские сайты",

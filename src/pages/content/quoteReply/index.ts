@@ -4,6 +4,7 @@ import { StorageKeys } from '@/core/types/common';
 import { getBrowserName } from '@/core/utils/browser';
 
 import { getTranslationSync } from '../../../utils/i18n';
+import { findChatInput } from '../chatInput/index';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
 
 // ============================================================================
@@ -103,32 +104,6 @@ function injectStyles() {
     }
   `;
   document.head.appendChild(style);
-}
-
-// Function to find the chat input
-function getChatInput(): HTMLElement | null {
-  // Gemini usually has a rich-textarea
-  // Try multiple selectors from most specific to generic
-  const selectors = [
-    'rich-textarea [contenteditable="true"]',
-    'div[contenteditable="true"][role="textbox"]',
-    '.input-area textarea',
-    'textarea[placeholder*="Ask"]',
-    'textarea', // Fallback, might be dangerous
-  ];
-
-  for (const selector of selectors) {
-    // We probably want the one in the main footer/input area, not others (like edit mode)
-    // Usually the main input is visible and larger.
-    const els = document.querySelectorAll(selector);
-    for (const el of Array.from(els)) {
-      // Check if it's visible
-      if (el.getBoundingClientRect().height > 0) {
-        return el as HTMLElement;
-      }
-    }
-  }
-  return null;
 }
 
 function countLineBreaks(raw: string): number {
@@ -356,7 +331,7 @@ export function startQuoteReply() {
     const selectedText = extractTextWithLatex(currentSelectionRange).trim();
     if (!selectedText) return;
 
-    const input = getChatInput();
+    const input = findChatInput();
     if (input) {
       expandInputCollapseIfNeeded();
 

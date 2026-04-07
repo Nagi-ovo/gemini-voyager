@@ -111,6 +111,10 @@
     "message": "已复制",
     "description": "复制成功"
   },
+  "pm_inserted": {
+    "message": "已插入",
+    "description": "提示词已插入输入框"
+  },
   "pm_delete": {
     "message": "删除",
     "description": "删除 prompt"
@@ -698,6 +702,14 @@
   "hidePromptManagerHint": {
     "message": "隐藏页面上的提示词管理器悬浮球",
     "description": "隐藏提示词管理器功能提示"
+  },
+  "promptInsertOnClick": {
+    "message": "点击时直接插入提示词",
+    "description": "启用后点击提示词时直接插入而不是复制"
+  },
+  "promptInsertOnClickHint": {
+    "message": "开启后，点击提示词会直接插入 Gemini 输入框。关闭时保持默认复制行为。",
+    "description": "提示词点击插入行为说明"
   },
   "customWebsites": {
     "message": "自定义网站",

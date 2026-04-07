@@ -111,6 +111,10 @@
     "message": "تم النسخ",
     "description": "Copied notice"
   },
+  "pm_inserted": {
+    "message": "تم الإدراج",
+    "description": "Prompt inserted into the chat input"
+  },
   "pm_delete": {
     "message": "حذف",
     "description": "Delete prompt"
@@ -698,6 +702,14 @@
   "hidePromptManagerHint": {
     "message": "إخفاء الزر العائم لمدير المطالبات على الصفحة",
     "description": "Hint for hiding prompt manager feature"
+  },
+  "promptInsertOnClick": {
+    "message": "إدراج المطالبة عند النقر",
+    "description": "Enable direct prompt insertion instead of copying"
+  },
+  "promptInsertOnClickHint": {
+    "message": "عند التفعيل، يؤدي النقر على المطالبة إلى إدراجها في حقل إدخال Gemini. عند الإيقاف يبقى السلوك الافتراضي هو النسخ.",
+    "description": "Hint for prompt click insertion behavior"
   },
   "customWebsites": {
     "message": "مواقع مخصصة",

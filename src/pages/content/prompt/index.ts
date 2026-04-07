@@ -39,7 +39,10 @@ import {
 import type { TranslationKey } from '@/utils/translations';
 
 import { hasUnreadChangelog, openChangelog, showChangelogModalDirect } from '../changelog/index';
+import { insertTextIntoChatInput } from '../chatInput/index';
 import { createFolderStorageAdapter } from '../folder/storage/FolderStorageAdapter';
+import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
+import { activatePromptText } from './promptClickAction';
 import { getScrollHintState } from './scrollHint';
 
 type PromptItem = {
@@ -318,6 +321,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // Check if the prompt manager should be hidden & changelog badge state
     let pmHiddenByUser = false;
     let changelogBadgeActive = false;
+    let promptInsertOnClick = false;
 
     try {
       const result = await browser.storage.sync.get({ gvHidePromptManager: false });
@@ -327,6 +331,17 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         'Failed to check hide prompt manager setting, continuing with default behavior',
         { error },
       );
+    }
+
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.PROMPT_INSERT_ON_CLICK]: false,
+      });
+      promptInsertOnClick = result?.[StorageKeys.PROMPT_INSERT_ON_CLICK] === true;
+    } catch (error) {
+      pmLogger.warn('Failed to check prompt click mode setting, falling back to copy behavior', {
+        error,
+      });
     }
 
     // Check changelog badge mode
@@ -906,12 +921,39 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           }
         });
 
-        textBtn.title = i18n.t('pm_copy') || 'Copy';
-        textBtn.addEventListener('click', async (e) => {
-          // Don't copy when clicking expand button
-          if ((e.target as HTMLElement).closest('.gv-pm-expand-btn')) return;
-          await copyText(it.text);
-          setNotice(i18n.t('pm_copied') || 'Copied', 'ok');
+        textBtn.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.stopPropagation();
+          void activatePromptText(it.text, promptInsertOnClick, {
+            copyText,
+            expandInputCollapseIfNeeded,
+            insertTextIntoChatInput,
+          }).then((result) => {
+            setNotice(
+              result === 'inserted'
+                ? i18n.t('pm_inserted') || 'Inserted'
+                : i18n.t('pm_copied') || 'Copied',
+              'ok',
+            );
+          });
+        });
+        textBtn.addEventListener('keydown', (e) => {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          e.preventDefault();
+          e.stopPropagation();
+          void activatePromptText(it.text, promptInsertOnClick, {
+            copyText,
+            expandInputCollapseIfNeeded,
+            insertTextIntoChatInput,
+          }).then((result) => {
+            setNotice(
+              result === 'inserted'
+                ? i18n.t('pm_inserted') || 'Inserted'
+                : i18n.t('pm_copied') || 'Copied',
+              'ok',
+            );
+          });
         });
 
         // Add expand/collapse button
@@ -1305,6 +1347,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           // Show trigger
           trigger.style.display = '';
         }
+      }
+      if (area === 'sync' && changes[StorageKeys.PROMPT_INSERT_ON_CLICK]) {
+        promptInsertOnClick = changes[StorageKeys.PROMPT_INSERT_ON_CLICK].newValue === true;
       }
       // Handle changelog notify mode changes (dynamic badge update)
       if (
