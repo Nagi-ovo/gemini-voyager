@@ -111,6 +111,10 @@
     "message": "已複製",
     "description": "複製成功"
   },
+  "pm_inserted": {
+    "message": "已插入",
+    "description": "提示詞已插入輸入框"
+  },
   "pm_delete": {
     "message": "刪除",
     "description": "刪除 prompt"
@@ -658,6 +662,14 @@
   "hidePromptManagerHint": {
     "message": "隱藏頁面上的提示詞管理器懸浮球",
     "description": "隱藏提示詞管理器功能提示"
+  },
+  "promptInsertOnClick": {
+    "message": "點擊時直接插入提示詞",
+    "description": "啟用後點擊提示詞時直接插入而不是複製"
+  },
+  "promptInsertOnClickHint": {
+    "message": "開啟後，點擊提示詞會直接插入 Gemini 輸入框。關閉時維持預設複製行為。",
+    "description": "提示詞點擊插入行為說明"
   },
   "customWebsites": {
     "message": "自訂網站",

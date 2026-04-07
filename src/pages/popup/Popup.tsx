@@ -323,6 +323,7 @@ interface SettingsUpdate {
   customWebsites?: string[];
   watermarkRemoverEnabled?: boolean;
   hidePromptManager?: boolean;
+  promptInsertOnClickEnabled?: boolean;
   inputCollapseEnabled?: boolean;
   inputCollapseWhenNotEmpty?: boolean;
   tabTitleUpdateEnabled?: boolean;
@@ -431,6 +432,7 @@ export default function Popup() {
   const [safariDmgUrl, setSafariDmgUrl] = useState<string | null>(null);
   const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
+  const [promptInsertOnClickEnabled, setPromptInsertOnClickEnabled] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
   const [inputCollapseWhenNotEmpty, setInputCollapseWhenNotEmpty] = useState<boolean>(false);
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
@@ -522,6 +524,8 @@ export default function Popup() {
         payload.geminiWatermarkRemoverEnabled = settings.watermarkRemoverEnabled;
       if (typeof settings.hidePromptManager === 'boolean')
         payload.gvHidePromptManager = settings.hidePromptManager;
+      if (typeof settings.promptInsertOnClickEnabled === 'boolean')
+        payload[StorageKeys.PROMPT_INSERT_ON_CLICK] = settings.promptInsertOnClickEnabled;
       if (typeof settings.inputCollapseEnabled === 'boolean')
         payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
       if (typeof settings.inputCollapseWhenNotEmpty === 'boolean')
@@ -862,6 +866,7 @@ export default function Popup() {
           gvFormulaCopyFormat: 'latex',
           geminiWatermarkRemoverEnabled: true,
           gvHidePromptManager: false,
+          [StorageKeys.PROMPT_INSERT_ON_CLICK]: false,
           gvInputCollapseEnabled: false,
           gvInputCollapseWhenNotEmpty: false,
           gvTabTitleUpdateEnabled: true,
@@ -916,6 +921,7 @@ export default function Popup() {
           setCustomWebsites(loadedCustomWebsites);
           setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
           setHidePromptManager(!!res?.gvHidePromptManager);
+          setPromptInsertOnClickEnabled(res?.[StorageKeys.PROMPT_INSERT_ON_CLICK] === true);
           setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
           setInputCollapseWhenNotEmpty(res?.gvInputCollapseWhenNotEmpty === true);
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
@@ -2231,6 +2237,27 @@ export default function Popup() {
                   onChange={(e) => {
                     setHidePromptManager(e.target.checked);
                     apply({ hidePromptManager: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="prompt-insert-on-click"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('promptInsertOnClick')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('promptInsertOnClickHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="prompt-insert-on-click"
+                  checked={promptInsertOnClickEnabled}
+                  onChange={(e) => {
+                    setPromptInsertOnClickEnabled(e.target.checked);
+                    apply({ promptInsertOnClickEnabled: e.target.checked });
                   }}
                 />
               </div>

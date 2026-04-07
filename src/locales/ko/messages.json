@@ -111,6 +111,10 @@
     "message": "복사됨",
     "description": "Copied notice"
   },
+  "pm_inserted": {
+    "message": "입력창에 삽입됨",
+    "description": "Prompt inserted into the chat input"
+  },
   "pm_delete": {
     "message": "삭제",
     "description": "Delete prompt"
@@ -698,6 +702,14 @@
   "hidePromptManagerHint": {
     "message": "페이지의 프롬프트 관리자 플로팅 볼을 숨깁니다",
     "description": "Hint for hiding prompt manager feature"
+  },
+  "promptInsertOnClick": {
+    "message": "클릭 시 프롬프트 바로 삽입",
+    "description": "Enable direct prompt insertion instead of copying"
+  },
+  "promptInsertOnClickHint": {
+    "message": "켜면 프롬프트를 클릭할 때 Gemini 입력창에 바로 삽입합니다. 끄면 기본 복사 동작을 유지합니다.",
+    "description": "Hint for prompt click insertion behavior"
   },
   "customWebsites": {
     "message": "사용자 지정 웹사이트",

@@ -111,6 +111,10 @@
     "message": "Copié",
     "description": "Copied notice"
   },
+  "pm_inserted": {
+    "message": "Inséré",
+    "description": "Prompt inserted into the chat input"
+  },
   "pm_delete": {
     "message": "Supprimer",
     "description": "Delete prompt"
@@ -698,6 +702,14 @@
   "hidePromptManagerHint": {
     "message": "Masquer le bouton flottant du gestionnaire",
     "description": "Hint for hiding prompt manager feature"
+  },
+  "promptInsertOnClick": {
+    "message": "Inserer le prompt au clic",
+    "description": "Enable direct prompt insertion instead of copying"
+  },
+  "promptInsertOnClickHint": {
+    "message": "Lorsque cette option est activee, cliquer sur un prompt l'insere dans le champ Gemini. Sinon, le comportement par defaut reste la copie.",
+    "description": "Hint for prompt click insertion behavior"
   },
   "customWebsites": {
     "message": "Sites personnalisés",

@@ -69,6 +69,7 @@ export const StorageKeys = {
   PROMPT_TRIGGER_POSITION: 'gvPromptTriggerPosition',
   PROMPT_CUSTOM_WEBSITES: 'gvPromptCustomWebsites',
   PROMPT_THEME: 'gvPromptTheme',
+  PROMPT_INSERT_ON_CLICK: 'gvPromptInsertOnClick',
 
   // Global settings
   LANGUAGE: 'language',
