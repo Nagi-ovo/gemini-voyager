@@ -42,6 +42,8 @@ const FOLDER_TREE_INDENT_MIN = -8;
 const FOLDER_TREE_INDENT_MAX = 32;
 const FOLDER_TREE_INDENT_DEFAULT = -8;
 const FOLDER_NAME_SINGLE_CLICK_DELAY_MS = 220;
+const NATIVE_CONVERSATION_SELECTOR = '[data-test-id="conversation"]';
+const NATIVE_TITLE_SYNC_DEBOUNCE_MS = 280;
 
 // Export session backup keys for use by FolderImportExportService (deprecated, kept for compatibility)
 export const SESSION_BACKUP_KEY = 'gvFolderBackup';
@@ -63,6 +65,50 @@ export function calculateFolderConversationPaddingLeft(level: number, indent: nu
 
 export function calculateFolderDialogPaddingLeft(level: number, indent: number): number {
   return Math.max(0, level * indent + 12);
+}
+
+function nodeContainsNativeConversation(node: Node): boolean {
+  if (!(node instanceof Element)) return false;
+  if (node.matches(NATIVE_CONVERSATION_SELECTOR)) return true;
+  return !!node.querySelector(NATIVE_CONVERSATION_SELECTOR);
+}
+
+function mutationMayAffectNativeConversationTitles(mutations: MutationRecord[]): boolean {
+  for (const mutation of mutations) {
+    if (mutation.type === 'characterData') {
+      if (mutation.target.parentElement?.closest(NATIVE_CONVERSATION_SELECTOR)) return true;
+      continue;
+    }
+
+    if (mutation.type === 'attributes') {
+      if (
+        mutation.target instanceof Element &&
+        mutation.target.closest(NATIVE_CONVERSATION_SELECTOR)
+      ) {
+        return true;
+      }
+      continue;
+    }
+
+    if (mutation.type === 'childList') {
+      if (
+        mutation.target instanceof Element &&
+        mutation.target.closest(NATIVE_CONVERSATION_SELECTOR)
+      ) {
+        return true;
+      }
+
+      for (const node of Array.from(mutation.addedNodes)) {
+        if (nodeContainsNativeConversation(node)) return true;
+      }
+
+      for (const node of Array.from(mutation.removedNodes)) {
+        if (nodeContainsNativeConversation(node)) return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -129,6 +175,8 @@ export class FolderManager {
   private removalCheckDelay: number = 300; // Delay (ms) before confirming conversation deletion
   private isDestroyed: boolean = false; // Flag to prevent callbacks after destruction
   private reinitializePromise: Promise<void> | null = null; // Prevent duplicate reinitialization cascades
+  private nativeTitleSyncTimer: number | null = null; // Debounced native title sync timer
+  private nativeTitleSyncInProgress: boolean = false; // Guard against overlapping native title syncs
   private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
   private activeColorPickerFolderId: string | null = null; // Folder ID of currently open color picker
   private activeColorPickerCloseHandler: ((e: MouseEvent) => void) | null = null; // Event handler for closing color picker
@@ -272,6 +320,11 @@ export class FolderManager {
     if (this.tooltipTimeout) {
       clearTimeout(this.tooltipTimeout);
       this.tooltipTimeout = null;
+    }
+
+    if (this.nativeTitleSyncTimer !== null) {
+      clearTimeout(this.nativeTitleSyncTimer);
+      this.nativeTitleSyncTimer = null;
     }
 
     if (this.navPoller) {
@@ -1774,19 +1827,23 @@ export class FolderManager {
     }
 
     this.conversationObserver = new MutationObserver((mutations) => {
+      if (mutationMayAffectNativeConversationTitles(mutations)) {
+        this.scheduleNativeConversationTitleSync();
+      }
+
       // 1. Handle added conversations (always safe)
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
             // Check if the node itself is a conversation
-            if (node.matches('[data-test-id="conversation"]')) {
+            if (node.matches(NATIVE_CONVERSATION_SELECTOR)) {
               this.makeConversationDraggable(node);
               this.applyHideArchivedToConversation(node);
               // Cancel pending removal for this conversation (it's back!)
               this.cancelPendingRemovalForElement(node);
             }
             // Also check for conversations within the node
-            const conversations = node.querySelectorAll('[data-test-id="conversation"]');
+            const conversations = node.querySelectorAll(NATIVE_CONVERSATION_SELECTOR);
             conversations.forEach((conv) => {
               const convElement = conv as HTMLElement;
               this.makeConversationDraggable(convElement);
@@ -1815,11 +1872,9 @@ export class FolderManager {
       mutations.forEach((mutation) => {
         mutation.removedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
-            const isConv = node.matches('[data-test-id="conversation"]');
+            const isConv = node.matches(NATIVE_CONVERSATION_SELECTOR);
             // Check if it contains conversations (e.g. a container was removed)
-            const containedConvsCount = node.querySelectorAll(
-              '[data-test-id="conversation"]',
-            ).length;
+            const containedConvsCount = node.querySelectorAll(NATIVE_CONVERSATION_SELECTOR).length;
 
             if (isConv) {
               totalRemovedCount++;
@@ -1848,9 +1903,9 @@ export class FolderManager {
       // NEW: Instead of immediately removing, schedule a delayed check
       // This prevents false positives when Gemini temporarily removes/re-adds DOM elements during UI updates
       nodesWithRemovals.forEach((node) => {
-        const conversations = node.matches('[data-test-id="conversation"]')
+        const conversations = node.matches(NATIVE_CONVERSATION_SELECTOR)
           ? [node]
-          : Array.from(node.querySelectorAll('[data-test-id="conversation"]'));
+          : Array.from(node.querySelectorAll(NATIVE_CONVERSATION_SELECTOR));
 
         conversations.forEach((conv) => {
           // Extract conversation ID from the removed element
@@ -1868,6 +1923,9 @@ export class FolderManager {
     this.conversationObserver.observe(this.sidebarContainer, {
       childList: true,
       subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['aria-label', 'href', 'title'],
     });
   }
 
@@ -4669,7 +4727,7 @@ export class FolderManager {
       (conversationEl.closest('[data-test-id="conversation"]') as HTMLElement) || conversationEl;
     // 1) Known title selectors
     const titleEl = scope.querySelector(
-      '.gds-label-l, .conversation-title-text, [data-test-id="conversation-title"], h3',
+      '.gds-label-l, .conversation-title, .conversation-title-text, [data-test-id="conversation-title"], h3',
     );
     let title = titleEl?.textContent?.trim() || null;
     if (title && !this.isGemLabel(title)) {
@@ -4712,36 +4770,75 @@ export class FolderManager {
 
   private syncConversationTitleFromNative(conversationId: string): string | null {
     try {
+      const cleanConversationId = conversationId.replace(/^c_/, '');
       // Try to find the conversation in the native sidebar by its ID
-      const conversations = document.querySelectorAll('[data-test-id="conversation"]');
+      const conversations = document.querySelectorAll(NATIVE_CONVERSATION_SELECTOR);
       for (const convEl of Array.from(conversations)) {
-        // Check if this conversation matches the ID
-        const jslog = convEl.getAttribute('jslog');
-        if (jslog && jslog.includes(conversationId)) {
-          // Found the matching conversation, extract its current title
-          const currentTitle = this.extractNativeConversationTitle(convEl as HTMLElement);
-          if (currentTitle) {
-            this.debug('Synced title from native:', currentTitle);
-            return currentTitle;
-          }
-        }
+        const nativeConversationId = this.extractConversationIdFromElement(convEl);
+        if (nativeConversationId !== cleanConversationId) continue;
 
-        // Also check by href
-        const link = convEl.querySelector(
-          'a[href*="/app/"], a[href*="/gem/"]',
-        ) as HTMLAnchorElement | null;
-        if (link && link.href.includes(conversationId)) {
-          const currentTitle = this.extractNativeConversationTitle(convEl as HTMLElement);
-          if (currentTitle) {
-            this.debug('Synced title from native (by href):', currentTitle);
-            return currentTitle;
-          }
+        const currentTitle = this.extractNativeConversationTitle(convEl as HTMLElement);
+        if (currentTitle) {
+          this.debug('Synced title from native:', currentTitle);
+          return currentTitle;
         }
       }
     } catch (e) {
       this.debug('Error syncing title from native:', e);
     }
     return null;
+  }
+
+  private hasStoredConversations(): boolean {
+    return Object.values(this.data.folderContents).some((conversations) => conversations.length > 0);
+  }
+
+  private scheduleNativeConversationTitleSync(): void {
+    if (!this.hasStoredConversations()) return;
+    if (this.nativeTitleSyncTimer !== null) return;
+
+    this.nativeTitleSyncTimer = window.setTimeout(() => {
+      this.nativeTitleSyncTimer = null;
+      void this.runNativeConversationTitleSync();
+    }, NATIVE_TITLE_SYNC_DEBOUNCE_MS);
+  }
+
+  private async runNativeConversationTitleSync(): Promise<void> {
+    if (this.nativeTitleSyncInProgress) return;
+
+    this.nativeTitleSyncInProgress = true;
+    try {
+      await this.syncConversationTitlesFromNativeSidebar();
+    } finally {
+      this.nativeTitleSyncInProgress = false;
+    }
+  }
+
+  private async syncConversationTitlesFromNativeSidebar(): Promise<void> {
+    if (!this.hasStoredConversations()) return;
+
+    let hasUpdates = false;
+
+    for (const conversations of Object.values(this.data.folderContents)) {
+      for (const conversation of conversations) {
+        if (conversation.customTitle) continue;
+
+        const nativeTitle = this.syncConversationTitleFromNative(conversation.conversationId);
+        if (!nativeTitle || nativeTitle === conversation.title) continue;
+
+        conversation.title = nativeTitle;
+        conversation.updatedAt = Date.now();
+        hasUpdates = true;
+      }
+    }
+
+    if (!hasUpdates) return;
+
+    const saved = await this.saveData();
+    if (!saved) {
+      this.debugWarn('Failed to persist synced native conversation titles');
+    }
+    this.renderAllFolders();
   }
 
   private updateConversationTitle(conversationId: string, newTitle: string): void {
@@ -4751,12 +4848,9 @@ export class FolderManager {
     for (const folderId in this.data.folderContents) {
       const conversations = this.data.folderContents[folderId];
       for (const conv of conversations) {
-        // Match by conversation ID (check both direct match and URL match)
-        if (
-          (conv.conversationId === conversationId || conv.url.includes(conversationId)) &&
-          !conv.customTitle
-        ) {
+        if (!conv.customTitle && this.isSameConversation(conversationId, conv)) {
           conv.title = newTitle;
+          conv.updatedAt = Date.now();
           updated = true;
           this.debug(`Updated title for conversation ${conversationId} in folder ${folderId}`);
         }
