@@ -1,9 +1,11 @@
 /**
  * Alpha Map Calculator
  *
- * This module is ported from gemini-watermark-remover by journey-ad (Jad).
+ * This module is ported from gemini-watermark-remover by journey-ad (Jad),
+ * itself based on GeminiWatermarkTool by AllenK (Kwyshell).
  * Original: https://github.com/journey-ad/gemini-watermark-remover/blob/main/src/core/alphaMap.js
- * License: MIT - Copyright (c) 2025 Jad
+ * License: MIT - Copyright (c) 2025 Jad; Copyright (c) 2024 AllenK (Kwyshell)
+ * Full retained notice: see /THIRD_PARTY_NOTICES.md
  *
  * Calculates alpha map from captured background watermark images.
  */

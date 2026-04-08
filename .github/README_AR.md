@@ -224,6 +224,8 @@
 
 ## 🌟 الاعتمادات
 
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - تم بناء NanoBanana بالاعتماد على هذين المشروعين. إشعارات MIT الخاصة بالأطراف الثالثة والمحفوظة موجودة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - نسخة مشتقة من Voyager مخصصة لـ DeepSeek.
 
 - **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - إضافة لتحسين Claude.ai مستوحاة من Voyager، تتضمن التنقّل عبر الخط الزمني، وإدارة المجلدات، ومكتبة المطالبات والمزيد، مع توافق كامل لاستيراد/تصدير المطالبات مع Voyager!
@@ -233,6 +235,13 @@
 - **[Ophel Atlas](https://github.com/urzeye/ophel)** - إضافة متصفح تحوّل محادثات الذكاء الاصطناعي إلى مستندات منظمة وقابلة للبحث، مع إنشاء تلقائي للمخططات وإدارة المحادثات ومكتبة للأوامر، وتدعم منصات ذكاء اصطناعي متعددة.
 
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - إضافة متصفح متقدمة تعزز Doubao بميزات التنقل المحسّن والتنظيم والإنتاجية.
+
+---
+
+## 📄 الترخيص
+
+يتم توزيع Voyager بموجب **GPL-3.0**.
+إشعارات MIT الخاصة بالأطراف الثالثة والمحفوظة لشفرة NanoBanana وموارده موجودة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 ---
 

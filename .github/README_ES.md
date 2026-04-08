@@ -224,6 +224,8 @@ Un agradecimiento especial a todos los colaboradores por sus contribuciones a Vo
 
 ## 🌟 Créditos
 
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana está adaptado de estos proyectos. Los avisos MIT de terceros conservados están en [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Un fork de Voyager adaptado para DeepSeek.
 
 - **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Una extensión de mejora para Claude.ai inspirada en Voyager, con navegación de línea de tiempo, gestión de carpetas, biblioteca de prompts y más, con compatibilidad total de importación/exportación de prompts con Voyager.
@@ -233,6 +235,13 @@ Un agradecimiento especial a todos los colaboradores por sus contribuciones a Vo
 - **[Ophel Atlas](https://github.com/urzeye/ophel)** - Una extensión de navegador que transforma las conversaciones de IA en documentos organizados y buscables, con esquemas autogenerados, gestión de conversaciones y biblioteca de prompts, compatible con múltiples plataformas de IA.
 
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - Una extensión de navegador avanzada que potencia Doubao con navegación mejorada, organización y funciones de productividad.
+
+---
+
+## 📄 Licencia
+
+Voyager se distribuye bajo **GPL-3.0**.
+Los avisos MIT de terceros conservados para el código y los recursos relacionados con NanoBanana están en [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 ---
 

@@ -33,6 +33,7 @@ NanoBanana는 **역 알파 블렌딩 (Reverse Alpha Blending)** 알고리즘을 
 ## 감사 인사
 
 이 기능은 [journey-ad (Jad)](https://github.com/journey-ad)의 [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) 프로젝트를 기반으로 하며, 이는 [allenk](https://github.com/allenk)의 [원본 C++ 구현](https://github.com/allenk/GeminiWatermarkTool)을 JavaScript로 포팅한 것입니다. 커뮤니티에 대한 그들의 기여에 감사드립니다. 🧡
+보존된 제3자 MIT 고지는 [THIRD_PARTY_NOTICES.md](https://github.com/Nagi-ovo/gemini-voyager/blob/main/THIRD_PARTY_NOTICES.md)에서 확인할 수 있습니다.
 
 ## 프라이버시 및 보안
 

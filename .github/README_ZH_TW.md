@@ -278,6 +278,8 @@ bun run build:all
 
 ## 🌟 致謝
 
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana 基於這些專案適配而來，相關第三方 MIT 聲明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
+
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - 為 DeepSeek 適配的 Fork 版本。
 
 - **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - 受 Voyager 啟發的 Claude.ai 增強擴充套件，提供時間軸導覽、資料夾管理、提示詞庫等功能，並與 Voyager 的提示詞匯入/匯出完全相容！
@@ -287,6 +289,13 @@ bun run build:all
 - **[Ophel Atlas](https://github.com/urzeye/ophel)** - 將 AI 對話轉化為有組織、可搜尋文件的瀏覽器擴充功能，支援自動生成大綱、對話管理和提示詞庫，相容多個 AI 平台。
 
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - 為豆包提供增強導航、組織管理和生產力功能的瀏覽器擴充功能。
+
+---
+
+## 📄 授權
+
+Voyager 基於 **GPL-3.0** 授權發布。
+NanoBanana 相關程式碼與資源的第三方 MIT 聲明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
 
 ---
 

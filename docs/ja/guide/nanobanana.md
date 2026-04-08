@@ -33,6 +33,7 @@ NanoBanana は **逆アルファブレンドアルゴリズム (Reverse Alpha Bl
 ## 特別謝辞
 
 本機能は、[journey-ad (Jad)](https://github.com/journey-ad) 氏が開発した [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) プロジェクトに基づいています。このプロジェクトは、[allenk](https://github.com/allenk) 氏による [GeminiWatermarkTool C++ 版](https://github.com/allenk/GeminiWatermarkTool) の JavaScript 移植版です。オープンソースコミュニティへの多大なる貢献に感謝します。🧡
+保持している第三者の MIT notice は [THIRD_PARTY_NOTICES.md](https://github.com/Nagi-ovo/gemini-voyager/blob/main/THIRD_PARTY_NOTICES.md) に記載しています。
 
 ## プライバシーとセキュリティ
 

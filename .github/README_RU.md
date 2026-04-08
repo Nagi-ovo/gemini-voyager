@@ -224,6 +224,8 @@
 
 ## 🌟 Благодарности
 
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana адаптирован на основе этих проектов. Сохраненные сторонние MIT-уведомления находятся в [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Форк Voyager, адаптированный для DeepSeek.
 
 - **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Расширение для улучшения Claude.ai, вдохновлённое Voyager: навигация по таймлайну, управление папками, библиотека промптов и многое другое, с полной совместимостью импорта/экспорта промптов с Voyager!
@@ -233,6 +235,13 @@
 - **[Ophel Atlas](https://github.com/urzeye/ophel)** - Расширение браузера, которое превращает диалоги с ИИ в организованные и доступные для поиска документы с автоматическим созданием оглавлений, управлением диалогами и библиотекой промптов, поддерживающее несколько платформ ИИ.
 
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - Продвинутое расширение браузера, улучшающее Doubao с помощью расширенной навигации, организации и функций продуктивности.
+
+---
+
+## 📄 Лицензия
+
+Voyager распространяется под лицензией **GPL-3.0**.
+Сохраненные сторонние MIT-уведомления для кода и ресурсов NanoBanana находятся в [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 ---
 
