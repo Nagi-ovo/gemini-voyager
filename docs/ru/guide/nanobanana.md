@@ -33,6 +33,7 @@ NanoBanana использует алгоритм **Обратного альфа
 ## Благодарность
 
 Эта функция основана на проекте [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) от [journey-ad (Jad)](https://github.com/journey-ad), который является портом на JavaScript [оригинальной реализации на C++](https://github.com/allenk/GeminiWatermarkTool) от [allenk](https://github.com/allenk). Мы благодарны за их вклад в сообщество. 🧡
+Сохраненные сторонние MIT-уведомления доступны в [THIRD_PARTY_NOTICES.md](https://github.com/Nagi-ovo/gemini-voyager/blob/main/THIRD_PARTY_NOTICES.md).
 
 ## Конфиденциальность и безопасность
 

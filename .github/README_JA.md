@@ -244,6 +244,8 @@ Voyager に貢献してくださったすべてのコントリビューターに
 
 ## 🌟 クレジット
 
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana はこれらのプロジェクトをもとに適応されています。関連する第三者の MIT notice は [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) に記載しています。
+
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Voyager を DeepSeek 向けに移植したプロジェクト。
 
 - **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Voyager に着想を得た Claude.ai 向け拡張機能。タイムラインナビゲーション、フォルダ管理、プロンプトライブラリなどを備え、Voyager のプロンプトのインポート／エクスポートと完全互換です！
@@ -253,6 +255,13 @@ Voyager に貢献してくださったすべてのコントリビューターに
 - **[Ophel Atlas](https://github.com/urzeye/ophel)** - AI チャットを整理された検索可能なドキュメントに変換するブラウザ拡張機能。アウトラインの自動生成、会話管理、プロンプトライブラリを備え、複数の AI プラットフォームに対応しています。
 
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - Doubao を強化するブラウザ拡張機能。ナビゲーション、整理、生産性機能を向上させます。
+
+---
+
+## 📄 ライセンス
+
+Voyager は **GPL-3.0** の下で提供されています。
+NanoBanana 関連のコードとアセットに関する第三者の MIT notice は [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) に記載しています。
 
 ---
 

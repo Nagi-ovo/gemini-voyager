@@ -33,6 +33,7 @@ NanoBanana uses a **Reverse Alpha Blending** algorithm.
 ## Acknowledgement
 
 This feature is based on the [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) project by [journey-ad (Jad)](https://github.com/journey-ad), which is a JavaScript port of the [original C++ implementation](https://github.com/allenk/GeminiWatermarkTool) by [allenk](https://github.com/allenk). We are grateful for their contributions to the community. 🧡
+The retained MIT notices are available in [THIRD_PARTY_NOTICES.md](https://github.com/Nagi-ovo/gemini-voyager/blob/main/THIRD_PARTY_NOTICES.md).
 
 ## Privacy & Security
 
