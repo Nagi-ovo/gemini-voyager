@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "7373f4ad0213",
+  "strategy": "manual-commit",
+  "branch": "codex/settings-backup-sync",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "README.md",
+    "THIRD_PARTY_NOTICES.md",
+    "docs/ar/index.md",
+    "docs/en/index.md",
+    "docs/es/index.md",
+    "docs/fr/index.md",
+    "docs/index.md",
+    "docs/ja/index.md",
+    "docs/ko/index.md",
+    "docs/pt/index.md",
+    "docs/ru/index.md",
+    "docs/zh_TW/index.md",
+    "src/pages/content/watermarkRemover/alphaMap.ts",
+    "src/pages/content/watermarkRemover/blendModes.ts",
+    "src/pages/content/watermarkRemover/credits.ts",
+    "src/pages/content/watermarkRemover/index.ts",
+    "src/pages/content/watermarkRemover/watermarkEngine.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/73/73f4ad0213/0/metadata.json",
+      "transcript": "/73/73f4ad0213/0/full.jsonl",
+      "context": "/73/73f4ad0213/0/context.md",
+      "content_hash": "/73/73f4ad0213/0/content_hash.txt",
+      "prompt": "/73/73f4ad0213/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
