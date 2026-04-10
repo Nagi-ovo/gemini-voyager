@@ -1499,7 +1499,10 @@
     "message": "تنظيم AI",
     "description": "زر لنسخ هيكل المجلدات والمحادثات لتنظيم AI"
   },
-  "aiOrgCopied": { "message": "تم النسخ!", "description": "تأكيد بعد نسخ موجه تنظيم AI" },
+  "aiOrgCopied": {
+    "message": "تم النسخ!",
+    "description": "تأكيد بعد نسخ موجه تنظيم AI"
+  },
   "aiOrgError": {
     "message": "فشل — افتح Gemini أولاً",
     "description": "خطأ عند فشل نسخ موجه تنظيم AI"
@@ -1516,8 +1519,14 @@
     "message": "محادثات غير مصنفة",
     "description": "عنوان للمحادثات غير الموجودة في أي مجلد"
   },
-  "aiOrgEmpty": { "message": "فارغ", "description": "تسمية للمجلدات الفارغة في موجه تنظيم AI" },
-  "aiOrgInstructions": { "message": "التعليمات", "description": "عنوان قسم تعليمات AI" },
+  "aiOrgEmpty": {
+    "message": "فارغ",
+    "description": "تسمية للمجلدات الفارغة في موجه تنظيم AI"
+  },
+  "aiOrgInstructions": {
+    "message": "التعليمات",
+    "description": "عنوان قسم تعليمات AI"
+  },
   "aiOrgInstructionsBody": {
     "message": "بناءً على المحادثات وهيكل المجلدات أعلاه، يرجى إعادة تنظيمها في تسلسل هرمي منطقي للمجلدات. أخرج ملف JSON باستخدام التنسيق أدناه يمكن استيراده مباشرة إلى إضافة Gemini Voyager (استخدم استراتيجية الاستيراد \"دمج\"). احتفظ بالمجلدات المنظمة جيداً الحالية، وأنشئ مجلدات جديدة حسب الحاجة، وانقل المحادثات غير المصنفة إلى مجلدات مناسبة. يحتاج كل مجلد إلى معرف فريد (استخدم سلسلة عشوائية قصيرة)، ويجب أن تحتفظ كل محادثة بـ conversationId و url الأصليين.",
     "description": "نص التعليمات لـ AI لإنشاء هيكل مجلدات قابل للاستيراد"
@@ -1537,5 +1546,37 @@
   "moveSectionDown": {
     "message": "تحريك لأسفل",
     "description": "Tooltip for moving a settings section down in popup"
+  },
+  "folderAsProject_enable": {
+    "message": "تمكين المجلد كمشروع",
+    "description": "Toggle label for the Folder-as-Project feature"
+  },
+  "folderAsProject_description": {
+    "message": "إظهار منتقي المجلدات في المحادثات الجديدة وتعيين المحادثة تلقائياً للمجلد المحدد عند الإرسال الأول",
+    "description": "Hint for the Folder-as-Project feature toggle"
+  },
+  "folderAsProject_selectFolder": {
+    "message": "اختر مجلداً…",
+    "description": "Placeholder text for the folder picker chip when no folder is selected"
+  },
+  "folderAsProject_noFolder": {
+    "message": "بدون مجلد",
+    "description": "Option in the folder picker dropdown to clear the selection"
+  },
+  "folderAsProject_setInstructions": {
+    "message": "تعيين التعليمات",
+    "description": "Folder context menu item to open the instructions editor"
+  },
+  "folderAsProject_editInstructions": {
+    "message": "تحرير التعليمات",
+    "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_expand": {
+    "message": "توسيع",
+    "description": "Aria-label for the expand button (screen readers)"
+  },
+  "folderAsProject_collapse": {
+    "message": "طي",
+    "description": "Aria-label for the collapse button (screen readers)"
   }
 }

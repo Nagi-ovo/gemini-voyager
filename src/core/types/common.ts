@@ -133,6 +133,9 @@ export const StorageKeys = {
   // Context sync
   CONTEXT_SYNC_ENABLED: 'contextSyncEnabled',
   CONTEXT_SYNC_PORT: 'contextSyncPort',
+
+  // Folder as Project
+  FOLDER_PROJECT_ENABLED: 'gvFolderProjectEnabled',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

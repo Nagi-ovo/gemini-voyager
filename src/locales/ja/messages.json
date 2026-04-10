@@ -1519,8 +1519,14 @@
     "message": "未分類の会話",
     "description": "フォルダに入っていない会話の見出し"
   },
-  "aiOrgEmpty": { "message": "空", "description": "AI整理プロンプトの空フォルダのラベル" },
-  "aiOrgInstructions": { "message": "指示", "description": "AI指示セクションの見出し" },
+  "aiOrgEmpty": {
+    "message": "空",
+    "description": "AI整理プロンプトの空フォルダのラベル"
+  },
+  "aiOrgInstructions": {
+    "message": "指示",
+    "description": "AI指示セクションの見出し"
+  },
   "aiOrgInstructionsBody": {
     "message": "上記の会話とフォルダ構造に基づいて、論理的なフォルダ階層に再整理してください。以下の形式の JSON ファイルを出力し、Gemini Voyager 拡張機能に直接インポートできるようにしてください（「マージ」インポート戦略を使用）。既存の整理済みフォルダはそのまま維持し、必要に応じて新しいフォルダを作成し、未分類の会話を適切なフォルダに移動してください。各フォルダには一意の ID（短いランダム文字列）が必要で、各会話は元の conversationId と url を保持する必要があります。",
     "description": "AI がインポート可能なフォルダ構造を生成するための指示本文"
@@ -1540,5 +1546,37 @@
   "moveSectionDown": {
     "message": "下に移動",
     "description": "Tooltip for moving a settings section down in popup"
+  },
+  "folderAsProject_enable": {
+    "message": "フォルダをプロジェクトとして有効化",
+    "description": "Toggle label for the Folder-as-Project feature"
+  },
+  "folderAsProject_description": {
+    "message": "新しいチャット画面でフォルダ選択ツールを表示し、最初のメッセージ送信時に会話を選択したフォルダに自動追加します",
+    "description": "Hint for the Folder-as-Project feature toggle"
+  },
+  "folderAsProject_selectFolder": {
+    "message": "フォルダを選択…",
+    "description": "Placeholder text for the folder picker chip when no folder is selected"
+  },
+  "folderAsProject_noFolder": {
+    "message": "フォルダなし",
+    "description": "Option in the folder picker dropdown to clear the selection"
+  },
+  "folderAsProject_setInstructions": {
+    "message": "指示を設定",
+    "description": "Folder context menu item to open the instructions editor"
+  },
+  "folderAsProject_editInstructions": {
+    "message": "指示を編集",
+    "description": "Folder context menu item to edit existing instructions"
+  },
+  "folderAsProject_expand": {
+    "message": "展開",
+    "description": "Aria-label for the expand button (screen readers)"
+  },
+  "folderAsProject_collapse": {
+    "message": "折りたたむ",
+    "description": "Aria-label for the collapse button (screen readers)"
   }
 }

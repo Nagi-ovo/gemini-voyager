@@ -14,6 +14,7 @@ export interface Folder {
   sortIndex?: number;
   createdAt: number;
   updatedAt: number;
+  instructions?: string; // Optional system instructions injected on new chats (Folder-as-Project)
 }
 
 export interface ConversationReference {

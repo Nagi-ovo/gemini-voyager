@@ -115,6 +115,7 @@ export class FolderManager {
   private folderNameClickTimeout: number | null = null; // Distinguish single-click toggle from double-click rename
   private longPressThreshold: number = 500; // Long-press duration in ms
   private folderEnabled: boolean = true; // Whether folder feature is enabled
+  private folderProjectEnabled: boolean = false; // Whether Folder-as-Project feature is enabled
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
   private folderTreeIndent: number = FOLDER_TREE_INDENT_DEFAULT; // Tree indentation width (px)
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
@@ -212,6 +213,7 @@ export class FolderManager {
       // Load filter user setting
       await this.loadFilterUserSetting();
       await this.loadFolderTreeIndentSetting();
+      await this.loadFolderProjectEnabledSetting();
 
       // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
@@ -3885,7 +3887,7 @@ export class FolderManager {
     menu.style.left = `${event.clientX}px`;
     menu.style.top = `${event.clientY}px`;
 
-    const menuItems = [
+    const menuItems: Array<{ label: string; action: () => void }> = [
       {
         label: folder.pinned ? this.t('folder_unpin') : this.t('folder_pin'),
         action: () => this.togglePinFolder(folderId),
@@ -3893,8 +3895,19 @@ export class FolderManager {
       { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
       { label: this.t('folder_change_color'), action: () => this.showColorPicker(folderId, event) },
-      { label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) },
     ];
+
+    // Only show instructions editor when Folder-as-Project is enabled
+    if (this.folderProjectEnabled) {
+      menuItems.push({
+        label: folder.instructions
+          ? this.t('folderAsProject_editInstructions')
+          : this.t('folderAsProject_setInstructions'),
+        action: () => this.showInstructionsEditor(folderId),
+      });
+    }
+
+    menuItems.push({ label: this.t('folder_delete'), action: () => this.deleteFolder(folderId) });
 
     menuItems.forEach((item) => {
       const menuItem = document.createElement('button');
@@ -4206,7 +4219,7 @@ export class FolderManager {
     this.refresh();
   }
 
-  private addConversationToFolderFromNative(
+  public addConversationToFolderFromNative(
     folderId: string,
     conversationId: string,
     title: string,
@@ -4214,6 +4227,11 @@ export class FolderManager {
     isGem?: boolean,
     gemId?: string,
   ): void {
+    // Guard: ensure the target folder still exists (it may have been deleted
+    // from the sidebar or another tab between selection and message send)
+    const folderExists = this.data.folders.some((f) => f.id === folderId);
+    if (!folderExists) return;
+
     // Add to folder
     if (!this.data.folderContents[folderId]) {
       this.data.folderContents[folderId] = [];
@@ -4238,6 +4256,118 @@ export class FolderManager {
 
     this.saveData();
     this.refresh();
+  }
+
+  /**
+   * Returns the current folder list (read-only snapshot for external callers).
+   */
+  public getFolders(): readonly Folder[] {
+    return this.data.folders;
+  }
+
+  /**
+   * Ensures folder data is loaded. Re-reads from storage if the folder list
+   * is empty, which can happen after extension context invalidation or async
+   * storage listener resets.
+   */
+  public async ensureDataLoaded(): Promise<void> {
+    if (this.data.folders.length === 0) {
+      await this.loadData();
+    }
+  }
+
+  /**
+   * Open a modal that lets the user write or edit text instructions for a
+   * folder. Instructions are saved to `folder.instructions` and persisted
+   * via `saveData()`.
+   *
+   * @param folderId - The folder to edit instructions for
+   */
+  private showInstructionsEditor(folderId: string): void {
+    const folder = this.data.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    const MAX_CHARS = 10000;
+
+    // ── Overlay ───────────────────────────────────────────────────────────
+
+    const overlay = document.createElement('div');
+    overlay.className = 'gv-fi-overlay';
+
+    const dialog = document.createElement('div');
+    dialog.className = 'gv-fi-dialog';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.setAttribute('aria-labelledby', 'gv-fi-dialog-title');
+
+    // ── Title ─────────────────────────────────────────────────────────────
+
+    const titleEl = document.createElement('h2');
+    titleEl.className = 'gv-fi-title';
+    titleEl.id = 'gv-fi-dialog-title';
+    titleEl.textContent = folder.instructions
+      ? this.t('folderAsProject_editInstructions')
+      : this.t('folderAsProject_setInstructions');
+
+    // ── Instructions textarea ─────────────────────────────────────────────
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'gv-fi-textarea';
+    textarea.maxLength = MAX_CHARS;
+    textarea.rows = 7;
+    textarea.placeholder = this.t('folderAsProject_setInstructions');
+    textarea.value = folder.instructions ?? '';
+
+    const charCount = document.createElement('div');
+    charCount.className = 'gv-fi-char-count';
+    charCount.textContent = `${textarea.value.length} / ${MAX_CHARS}`;
+    textarea.addEventListener('input', () => {
+      charCount.textContent = `${textarea.value.length} / ${MAX_CHARS}`;
+    });
+
+    // ── Actions ──────────────────────────────────────────────────────────
+
+    const actions = document.createElement('div');
+    actions.className = 'gv-fi-actions';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'gv-fi-btn gv-fi-btn-cancel';
+    cancelBtn.type = 'button';
+    cancelBtn.textContent = this.t('pm_cancel');
+    cancelBtn.addEventListener('click', () => overlay.remove());
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'gv-fi-btn gv-fi-btn-save';
+    saveBtn.type = 'button';
+    saveBtn.textContent = this.t('pm_save');
+    saveBtn.addEventListener('click', async () => {
+      const trimmed = textarea.value.trim();
+      folder.instructions = trimmed || undefined;
+      folder.updatedAt = Date.now();
+      await this.saveData();
+      overlay.remove();
+    });
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(saveBtn);
+
+    // ── Assembly ──────────────────────────────────────────────────────────
+
+    dialog.appendChild(titleEl);
+    dialog.appendChild(textarea);
+    dialog.appendChild(charCount);
+    dialog.appendChild(actions);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+    overlay.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') overlay.remove();
+    });
+
+    setTimeout(() => textarea.focus(), 50);
   }
 
   private setupNativeConversationMenuObserver(): void {
@@ -5659,6 +5789,17 @@ export class FolderManager {
     }
   }
 
+  private async loadFolderProjectEnabledSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
+      });
+      this.folderProjectEnabled = result[StorageKeys.FOLDER_PROJECT_ENABLED] === true;
+    } catch {
+      this.folderProjectEnabled = false;
+    }
+  }
+
   private applyFolderTreeIndentSetting(value: unknown): void {
     const nextIndent = clampFolderTreeIndent(value);
     if (nextIndent === this.folderTreeIndent) return;
@@ -5701,6 +5842,9 @@ export class FolderManager {
         }
         if (changes[StorageKeys.GV_FOLDER_TREE_INDENT]) {
           this.applyFolderTreeIndentSetting(changes[StorageKeys.GV_FOLDER_TREE_INDENT].newValue);
+        }
+        if (changes[StorageKeys.FOLDER_PROJECT_ENABLED]) {
+          this.folderProjectEnabled = changes[StorageKeys.FOLDER_PROJECT_ENABLED].newValue === true;
         }
         if (
           changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] ||

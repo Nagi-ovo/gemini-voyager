@@ -18,6 +18,9 @@
 import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
+import { stripInstructionBlock } from '../folderProject/instructionBlock';
+import { setInputText } from '../utils/inputHelper';
+
 // ============================================================================
 // Constants
 // ============================================================================
@@ -135,35 +138,6 @@ function isInputEffectivelyEmpty(input: HTMLElement): boolean {
   return placeholders.some((p) => p.trim() === text);
 }
 
-/**
- * Set text content in the chat input.
- */
-function setInputText(input: HTMLElement, text: string): void {
-  if (input instanceof HTMLTextAreaElement) {
-    input.value = text;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    return;
-  }
-
-  // For contenteditable (Quill editor)
-  input.focus();
-
-  // Check if Quill marks this as blank
-  const isQuillBlank = input.classList.contains('ql-blank');
-  if (isQuillBlank) {
-    input.classList.remove('ql-blank');
-  }
-
-  // Use insertText to work with Quill's state management
-  const success = document.execCommand('insertText', false, text);
-  if (!success) {
-    // Fallback: set textContent directly
-    input.textContent = text;
-  }
-
-  input.dispatchEvent(new Event('input', { bubbles: true }));
-}
-
 // ============================================================================
 // Draft Storage Operations
 // ============================================================================
@@ -172,7 +146,9 @@ function setInputText(input: HTMLElement, text: string): void {
  * Save a draft for the current conversation.
  */
 function saveDraft(path: string, content: string): void {
-  if (!content.trim()) {
+  const sanitizedContent = stripInstructionBlock(content).trim();
+
+  if (!sanitizedContent) {
     // Remove draft if content is empty
     removeDraft(path);
     return;
@@ -180,7 +156,7 @@ function saveDraft(path: string, content: string): void {
 
   const key = getDraftStorageKey(path);
   const data = {
-    content,
+    content: sanitizedContent,
     timestamp: Date.now(),
     path,
   };
@@ -191,7 +167,7 @@ function saveDraft(path: string, content: string): void {
         console.warn(LOG_PREFIX, 'Failed to save draft:', chrome.runtime.lastError.message);
         return;
       }
-      lastSavedContent = content;
+      lastSavedContent = sanitizedContent;
       // Prune old drafts periodically (not every save)
       saveCount++;
       if (saveCount % PRUNE_EVERY_N_SAVES === 0) {
@@ -283,7 +259,7 @@ function handleInputChange(): void {
     const input = findChatInput();
     if (!input) return;
 
-    const content = getInputText(input).trim();
+    const content = stripInstructionBlock(getInputText(input)).trim();
     const path = getConversationPath();
 
     // Only save if content actually changed
@@ -368,7 +344,8 @@ async function restoreDraft(): Promise<void> {
   const path = getConversationPath();
   if (hasRestoredForCurrentPath && path === currentPath) return;
 
-  const content = await loadDraft(path);
+  const savedContent = await loadDraft(path);
+  const content = savedContent ? stripInstructionBlock(savedContent).trim() : null;
   if (!content) {
     hasRestoredForCurrentPath = true;
     return;
@@ -416,7 +393,7 @@ function startUrlWatcher(): void {
       // Save current draft before navigation (in case debounce hasn't fired)
       const input = findChatInput();
       if (input) {
-        const content = getInputText(input).trim();
+        const content = stripInstructionBlock(getInputText(input)).trim();
         if (content && content !== lastSavedContent) {
           saveDraft(currentPath, content);
         }
