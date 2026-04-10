@@ -86,6 +86,24 @@ Cliquez sur **Importer des dossiers** depuis le menu du panneau de dossiers, sé
 - **Fusion incrémentale** : Utilise la stratégie « Fusionner » par défaut — ajoute uniquement les nouveaux dossiers et assignations, sans jamais détruire votre organisation existante.
 - **Multilingue** : Le prompt utilise automatiquement votre langue configurée, et les noms de dossiers sont générés dans cette langue également.
 
+#### Dossier comme projet
+
+Vous voulez donner aux nouveaux chats un léger preset de projet ? Transformez n'importe quel dossier en projet.
+L'idée s'inspire de Claude Projects, mais Voyager l'implémente sous une forme plus légère : des instructions pour le premier message basées sur le dossier et un classement automatique, pas un espace de travail à contexte partagé.
+
+1. Activez `Activer Dossier comme Projet` dans la fenêtre de l'extension.
+2. Faites un clic droit sur un dossier puis choisissez `Définir les instructions` ou `Modifier les instructions`.
+3. Ouvrez un nouveau chat Gemini, utilisez le sélecteur de dossiers à côté de la zone de saisie et choisissez ce dossier.
+4. Envoyez votre premier message.
+
+Ce qui se passe ensuite :
+
+- La conversation est automatiquement rangée dans ce dossier après le premier envoi.
+- Si le dossier contient des instructions, Voyager les préfixe uniquement pour ce premier envoi.
+- Si le dossier n'a pas d'instructions, il reste utile comme raccourci de classement rapide.
+- Les chats d'un même dossier **ne** partagent **pas** automatiquement leur mémoire et ne lisent pas le contenu des autres.
+- L'auto-enregistrement des brouillons conserve uniquement votre texte ; les instructions cachées ne reviennent pas dans le champ de saisie.
+
 ### Exclusivité AI Studio
 
 - **Ajustement de la barre latérale** : Faites glisser pour redimensionner la largeur de la barre latérale.

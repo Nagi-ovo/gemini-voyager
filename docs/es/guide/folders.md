@@ -86,6 +86,24 @@ Haz clic en **Importar carpetas** desde el menú del panel de carpetas, seleccio
 - **Fusión incremental**: Usa la estrategia de "Fusionar" por defecto — solo agrega nuevas carpetas y asignaciones, nunca destruye tu organización existente.
 - **Multilingüe**: El prompt usa automáticamente tu idioma configurado, y los nombres de carpetas también se generan en ese idioma.
 
+#### Carpeta como Proyecto
+
+¿Quieres que los chats nuevos arranquen con un pequeño preset de proyecto? Convierte cualquier carpeta en uno.
+La idea está inspirada en Claude Projects, pero Voyager la implementa de forma más ligera: instrucciones para el primer mensaje basadas en carpetas y archivado automático, no un espacio de trabajo con contexto compartido.
+
+1. Activa `Habilitar Carpeta como Proyecto` en el popup de la extensión.
+2. Haz clic derecho sobre una carpeta y elige `Establecer instrucciones` o `Editar instrucciones`.
+3. Abre un chat nuevo de Gemini, usa el selector de carpetas junto al cuadro de escritura y elige esa carpeta.
+4. Envía tu primer mensaje.
+
+Qué ocurre después:
+
+- La conversación se guarda automáticamente en esa carpeta tras el primer envío.
+- Si la carpeta tiene instrucciones, Voyager las antepone solo en ese primer envío.
+- Si la carpeta no tiene instrucciones, igualmente sirve como atajo rápido de archivado.
+- Los chats de la misma carpeta **no** comparten memoria ni leen automáticamente el contenido de los otros.
+- El auto-guardado de borradores conserva solo el texto que escribiste; las instrucciones ocultas no vuelven al cuadro de entrada.
+
 ### Exclusivo de AI Studio
 
 - **Ajuste de barra lateral**: Arrastra para cambiar el ancho de la barra lateral.

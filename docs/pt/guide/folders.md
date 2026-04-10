@@ -86,6 +86,24 @@ Clique em **Importar pastas** no menu do painel de pastas, selecione **Ou colar 
 - **Mesclagem incremental**: Usa a estratégia de "Mesclar" por padrão — apenas adiciona novas pastas e atribuições, nunca destrói sua organização existente.
 - **Multilíngue**: O prompt usa automaticamente o idioma configurado, e os nomes das pastas também são gerados nesse idioma.
 
+#### Pasta como Projeto
+
+Quer que novas conversas já comecem com um pequeno preset de projeto? Transforme qualquer pasta num projeto.
+A ideia é inspirada no Claude Projects, mas o Voyager implementa isso de forma mais leve: instruções baseadas em pasta para a primeira mensagem e arquivamento automático, não um workspace de contexto partilhado.
+
+1. Ative `Habilitar Pasta como Projeto` no popup da extensão.
+2. Clique com o botão direito numa pasta e escolha `Definir instruções` ou `Editar instruções`.
+3. Abra um novo chat do Gemini, use o seletor de pastas ao lado da caixa de escrita e escolha essa pasta.
+4. Envie a primeira mensagem.
+
+O que acontece a seguir:
+
+- A conversa é automaticamente colocada nessa pasta após o primeiro envio.
+- Se a pasta tiver instruções, o Voyager prefixa essas instruções apenas nesse primeiro envio.
+- Se a pasta não tiver instruções, continua a funcionar como atalho rápido de organização.
+- Os chats na mesma pasta **não** partilham memória nem leem automaticamente o conteúdo uns dos outros.
+- O auto-save de rascunhos guarda apenas o texto que escreveu; as instruções ocultas não voltam para a caixa de entrada.
+
 ### Exclusivo para AI Studio
 
 - **Ajuste da barra lateral**: Arraste para redimensionar a largura da barra lateral.
