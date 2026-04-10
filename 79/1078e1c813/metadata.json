@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "791078e1c813",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "docs/ar/guide/folders.md",
+    "docs/en/guide/folders.md",
+    "docs/es/guide/folders.md",
+    "docs/fr/guide/folders.md",
+    "docs/guide/folders.md",
+    "docs/ja/guide/folders.md",
+    "docs/ko/guide/folders.md",
+    "docs/pt/guide/folders.md",
+    "docs/ru/guide/folders.md",
+    "docs/zh_TW/guide/folders.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/79/1078e1c813/0/metadata.json",
+      "transcript": "/79/1078e1c813/0/full.jsonl",
+      "context": "/79/1078e1c813/0/context.md",
+      "content_hash": "/79/1078e1c813/0/content_hash.txt",
+      "prompt": "/79/1078e1c813/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
