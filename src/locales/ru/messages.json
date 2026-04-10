@@ -1315,6 +1315,22 @@
     "message": "Съешь ещё этих мягких французских булок, да выпей чаю.",
     "description": "Preview text for font size slider in export dialog"
   },
+  "export_image_width_label": {
+    "message": "Ширина изображения",
+    "description": "Label for image width selection in export dialog"
+  },
+  "export_image_width_narrow": {
+    "message": "Узкая (Телефоны)",
+    "description": "Narrow width option (e.g. mobile)"
+  },
+  "export_image_width_medium": {
+    "message": "Средняя (Планшеты)",
+    "description": "Medium width option (e.g. tablet)"
+  },
+  "export_image_width_wide": {
+    "message": "Широкая (ПК)",
+    "description": "Wide width option (e.g. desktop)"
+  },
   "export_error_generic": {
     "message": "Не удалось экспортировать: {error}",
     "description": "Общее сообщение об ошибке экспорта с подробной причиной"

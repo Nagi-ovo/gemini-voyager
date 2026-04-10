@@ -1315,6 +1315,22 @@
     "message": "吾輩は猫である。名前はまだない。",
     "description": "Preview text for font size slider in export dialog"
   },
+  "export_image_width_label": {
+    "message": "画像の幅",
+    "description": "Label for image width selection in export dialog"
+  },
+  "export_image_width_narrow": {
+    "message": "狭い (スマホ)",
+    "description": "Narrow width option (e.g. mobile)"
+  },
+  "export_image_width_medium": {
+    "message": "標準 (タブレット)",
+    "description": "Medium width option (e.g. tablet)"
+  },
+  "export_image_width_wide": {
+    "message": "広い (デスクトップ)",
+    "description": "Wide width option (e.g. desktop)"
+  },
   "export_error_generic": {
     "message": "エクスポートに失敗しました：{error}",
     "description": "詳細理由付きのエクスポート失敗メッセージ"

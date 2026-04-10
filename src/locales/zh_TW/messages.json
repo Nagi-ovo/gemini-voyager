@@ -1315,6 +1315,22 @@
     "message": "天地玄黃，宇宙洪荒。日月盈昃，辰宿列張。",
     "description": "Preview text for font size slider in export dialog"
   },
+  "export_image_width_label": {
+    "message": "匯出圖片寬度",
+    "description": "Label for image width selection in export dialog"
+  },
+  "export_image_width_narrow": {
+    "message": "窄 (手機)",
+    "description": "Narrow width option (e.g. mobile)"
+  },
+  "export_image_width_medium": {
+    "message": "中 (平板)",
+    "description": "Medium width option (e.g. tablet)"
+  },
+  "export_image_width_wide": {
+    "message": "寬 (電腦)",
+    "description": "Wide width option (e.g. desktop)"
+  },
   "export_error_generic": {
     "message": "匯出失敗：{error}",
     "description": "附帶具體原因的匯出失敗提示"

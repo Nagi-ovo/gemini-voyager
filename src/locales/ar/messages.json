@@ -1315,6 +1315,22 @@
     "message": "نص عربي لمعاينة حجم الخط في التصدير.",
     "description": "Preview text for font size slider in export dialog"
   },
+  "export_image_width_label": {
+    "message": "عرض الصورة",
+    "description": "Label for image width selection in export dialog"
+  },
+  "export_image_width_narrow": {
+    "message": "ضيق (هاتف)",
+    "description": "Narrow width option (e.g. mobile)"
+  },
+  "export_image_width_medium": {
+    "message": "متوسط (تابلت)",
+    "description": "Medium width option (e.g. tablet)"
+  },
+  "export_image_width_wide": {
+    "message": "عريض (كمبيوتر)",
+    "description": "Wide width option (e.g. desktop)"
+  },
   "export_error_generic": {
     "message": "فشل التصدير: {error}",
     "description": "رسالة فشل تصدير عامة مع السبب التفصيلي"

@@ -1315,6 +1315,22 @@
     "message": "Le vif renard brun saute par-dessus le chien paresseux.",
     "description": "Preview text for font size slider in export dialog"
   },
+  "export_image_width_label": {
+    "message": "Largeur de l'image",
+    "description": "Label for image width selection in export dialog"
+  },
+  "export_image_width_narrow": {
+    "message": "Étroite (Mobile)",
+    "description": "Narrow width option (e.g. mobile)"
+  },
+  "export_image_width_medium": {
+    "message": "Moyenne (Tablette)",
+    "description": "Medium width option (e.g. tablet)"
+  },
+  "export_image_width_wide": {
+    "message": "Large (Ordinateur)",
+    "description": "Wide width option (e.g. desktop)"
+  },
   "export_error_generic": {
     "message": "Échec de l'exportation : {error}",
     "description": "Message d'échec d'export avec raison détaillée"

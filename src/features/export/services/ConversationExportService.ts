@@ -220,7 +220,11 @@ export class ConversationExportService {
     options: ExportOptions,
   ): Promise<ExportResult> {
     const filename = options.filename || this.generateFilename('png', metadata.title);
-    await ImageExportService.export(turns, metadata, { filename, fontSize: options.fontSize });
+    await ImageExportService.export(turns, metadata, {
+      filename,
+      fontSize: options.fontSize,
+      imageWidth: options.imageWidth,
+    });
     return { success: true, format: 'image' as ExportFormat, filename };
   }
 
@@ -302,7 +306,7 @@ export class ConversationExportService {
         markdown: content.markdown,
         html: content.html,
       },
-      { filename },
+      { filename, imageWidth: options.imageWidth },
     );
 
     return {

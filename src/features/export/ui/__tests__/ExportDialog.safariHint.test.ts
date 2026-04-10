@@ -33,6 +33,10 @@ describe('ExportDialog (Safari hint)', () => {
       export: 'Export',
       fontSizeLabel: 'Font Size',
       fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
+      imageWidthLabel: 'Image Width',
+      imageWidthNarrow: 'Narrow',
+      imageWidthMedium: 'Medium',
+      imageWidthWide: 'Wide',
       formatDescriptions: {
         json: 'JSON desc',
         markdown: 'MD desc',
