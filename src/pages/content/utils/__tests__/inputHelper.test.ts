@@ -50,6 +50,17 @@ describe('setInputText', () => {
     expect(listener).toHaveBeenCalledOnce();
   });
 
+  it('replaces existing content in a contenteditable element', () => {
+    const div = document.createElement('div');
+    div.contentEditable = 'true';
+    div.textContent = 'old text';
+    document.body.appendChild(div);
+
+    setInputText(div, 'new text');
+
+    expect(document.execCommand).toHaveBeenCalledWith('insertText', false, 'new text');
+  });
+
   it('falls back to textContent when execCommand returns false', () => {
     const div = document.createElement('div');
     div.contentEditable = 'true';

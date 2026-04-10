@@ -2,14 +2,22 @@
  * Folder-as-Project feature
  *
  * When enabled, injects a folder picker above the Gemini chat input on new-chat
- * pages. When the user sends their first message (URL gains a conversation ID),
- * the conversation is automatically assigned to the selected folder.
+ * pages. On the first send, it prepends any folder instructions just-in-time
+ * and automatically assigns the new conversation to the selected folder.
  */
 import { StorageKeys } from '@/core/types/common';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
+import { findChatInput } from '../chatInput/index';
 import { getFolderColor, isDarkMode } from '../folder/folderColors';
 import type { FolderManager } from '../folder/manager';
+import { setInputText } from '../utils/inputHelper';
+
+import {
+  buildInstructionBlock,
+  hasInstructionBlock,
+  stripInstructionBlock,
+} from './instructionBlock';
 
 // ============================================================================
 // Module state (per-tab, reset on navigation)
@@ -17,13 +25,23 @@ import type { FolderManager } from '../folder/manager';
 
 let featureInitialized = false;
 let selectedFolderId: string | null = null;
+let selectedFolderName: string | null = null;
+let selectedFolderInstructions: string | null = null;
 let pickerContainer: HTMLElement | null = null;
 let pickerCleanup: (() => void) | null = null;
 let lastHref = '';
 let urlWatcherInterval: ReturnType<typeof setInterval> | null = null;
 let urlWatcherCheckFn: (() => void) | null = null;
+let ctrlEnterSendEnabled = false;
 let pendingSend = false;
-let sendDetectionListener: ((e: Event) => void) | null = null;
+let pendingSendResetTimer: ReturnType<typeof setTimeout> | null = null;
+let sendClickListener: ((e: Event) => void) | null = null;
+let sendKeydownListener: ((e: KeyboardEvent) => void) | null = null;
+
+const SEND_BUTTON_SELECTOR =
+  'button[aria-label*="Send"], button[aria-label*="send"], ' +
+  'button[data-tooltip*="Send"], button[data-tooltip*="send"], ' +
+  '[data-send-button], .send-button';
 
 // ============================================================================
 // i18n helper
@@ -103,30 +121,121 @@ export function waitForElement(selector: string, timeoutMs: number): Promise<HTM
 // Send detection — distinguishes message sends from sidebar navigation
 // ============================================================================
 
+function readInputText(input: HTMLElement): string {
+  return input instanceof HTMLTextAreaElement
+    ? input.value
+    : input.innerText ?? input.textContent ?? '';
+}
+
+function clearPendingSendState(): void {
+  if (pendingSendResetTimer !== null) {
+    clearTimeout(pendingSendResetTimer);
+    pendingSendResetTimer = null;
+  }
+  pendingSend = false;
+}
+
+function clearPreparedInstructions(): void {
+  const input = findChatInput();
+  if (!input) return;
+
+  const currentText = readInputText(input);
+  if (!hasInstructionBlock(currentText)) return;
+
+  setInputText(input, stripInstructionBlock(currentText));
+}
+
+function prepareInputForSend(input: HTMLElement | null): void {
+  if (!input || !selectedFolderInstructions || !selectedFolderName) return;
+
+  const currentText = stripInstructionBlock(readInputText(input));
+  const combined = `${buildInstructionBlock(selectedFolderName, selectedFolderInstructions)}${currentText}`;
+  setInputText(input, combined);
+}
+
+function schedulePendingSendReset(): void {
+  if (pendingSendResetTimer !== null) {
+    clearTimeout(pendingSendResetTimer);
+  }
+
+  pendingSendResetTimer = setTimeout(() => {
+    if (!pendingSend) return;
+    clearPendingSendState();
+    if (isNewChatPath(window.location.pathname)) {
+      clearPreparedInstructions();
+    }
+  }, 4000);
+}
+
+function markPendingSend(input: HTMLElement | null): void {
+  prepareInputForSend(input);
+  pendingSend = true;
+  schedulePendingSendReset();
+}
+
+function isKeyboardSend(event: KeyboardEvent): boolean {
+  if (event.key !== 'Enter' || event.isComposing || event.shiftKey) return false;
+
+  if (ctrlEnterSendEnabled) {
+    return event.ctrlKey || event.metaKey;
+  }
+
+  return !event.ctrlKey && !event.metaKey;
+}
+
+function isEditableTarget(target: EventTarget | null): target is HTMLElement {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return (
+    target instanceof HTMLTextAreaElement ||
+    target.isContentEditable ||
+    target.getAttribute('contenteditable') === 'true' ||
+    target.getAttribute('role') === 'textbox'
+  );
+}
+
+function extractGemMetadata(path: string): { isGem: boolean; gemId?: string } {
+  const gemMatch = path.match(/\/gem\/([^/]+)\/[^/?#]+/);
+  if (!gemMatch?.[1]) {
+    return { isGem: false };
+  }
+
+  return {
+    isGem: true,
+    gemId: gemMatch[1],
+  };
+}
+
 function setupSendDetection(): void {
-  if (sendDetectionListener) return;
-  sendDetectionListener = (e: Event) => {
+  if (sendClickListener || sendKeydownListener) return;
+
+  sendClickListener = (e: Event) => {
     if (!selectedFolderId) return;
     const target = e.target as HTMLElement;
-    if (
-      target.closest(
-        'button[aria-label*="Send"], button[aria-label*="send"], ' +
-          'button[data-tooltip*="Send"], button[data-tooltip*="send"], ' +
-          '[data-send-button], .send-button',
-      )
-    ) {
-      pendingSend = true;
+    if (target.closest(SEND_BUTTON_SELECTOR)) {
+      markPendingSend(findChatInput());
     }
   };
-  document.addEventListener('click', sendDetectionListener, true);
+
+  sendKeydownListener = (e: KeyboardEvent) => {
+    if (!selectedFolderId || !isKeyboardSend(e) || !isEditableTarget(e.target)) return;
+    markPendingSend(e.target);
+  };
+
+  document.addEventListener('click', sendClickListener, true);
+  document.addEventListener('keydown', sendKeydownListener, true);
 }
 
 function teardownSendDetection(): void {
-  if (sendDetectionListener) {
-    document.removeEventListener('click', sendDetectionListener, true);
-    sendDetectionListener = null;
+  if (sendClickListener) {
+    document.removeEventListener('click', sendClickListener, true);
+    sendClickListener = null;
   }
-  pendingSend = false;
+  if (sendKeydownListener) {
+    document.removeEventListener('keydown', sendKeydownListener, true);
+    sendKeydownListener = null;
+  }
+  clearPendingSendState();
 }
 
 // ============================================================================
@@ -161,16 +270,13 @@ async function populateDropdown(
   // Handler for selecting a folder
   const selectFolder = (folder: (typeof allFolders)[number]) => {
     selectedFolderId = folder.id;
+    selectedFolderName = folder.name;
+    selectedFolderInstructions = folder.instructions ?? null;
     chip.textContent = `📁 ${folder.name}`;
     chip.dataset.selected = folder.id;
     dropdown.hidden = true;
     chip.setAttribute('aria-expanded', 'false');
-    if (folder.instructions) {
-      void injectInstructions(folder.instructions, folder.name);
-    } else {
-      // No instructions on this folder — remove any existing block
-      void clearInstructions();
-    }
+    clearPreparedInstructions();
   };
 
   // "No folder" / clear selection option
@@ -181,11 +287,13 @@ async function populateDropdown(
   noneItem.textContent = t('folderAsProject_noFolder');
   noneItem.addEventListener('click', () => {
     selectedFolderId = null;
+    selectedFolderName = null;
+    selectedFolderInstructions = null;
     chip.textContent = t('folderAsProject_selectFolder');
     chip.removeAttribute('data-selected');
     dropdown.hidden = true;
     chip.setAttribute('aria-expanded', 'false');
-    void clearInstructions();
+    clearPreparedInstructions();
   });
   dropdown.appendChild(noneItem);
 
@@ -259,112 +367,6 @@ async function populateDropdown(
   };
 
   renderLevel('__root__', dropdown);
-}
-
-// Markers for instruction block detection — must be unique enough to avoid
-// false positives with user text, but readable in the chat input.
-const INSTRUCTIONS_START = '[System Instructions]';
-const INSTRUCTIONS_END = '[/System Instructions]';
-const INSTRUCTIONS_PATTERN = new RegExp(
-  `${INSTRUCTIONS_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s\\S]*?${INSTRUCTIONS_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\n*`,
-);
-
-/**
- * Inject folder instructions into the chat input, wrapped as a system prompt.
- * If an existing instruction block is present, it is replaced in-place,
- * preserving any text the user has already typed.
- *
- * @param instructions - The raw instruction text from the folder
- * @param folderName - The folder name for context in the prompt
- */
-async function injectInstructions(instructions: string, folderName: string): Promise<void> {
-  const input = await waitForElement('rich-textarea [contenteditable="true"]', 3000);
-  if (!input) return;
-
-  // Escape marker strings in instructions to prevent regex breakage
-  const safeInstructions = instructions
-    .replace(/\[System Instructions\]/g, '[System Instructi\u200Bons]')
-    .replace(/\[\/System Instructions\]/g, '[/System Instructi\u200Bons]');
-
-  const block = [
-    INSTRUCTIONS_START,
-    `Project: ${folderName}`,
-    '',
-    'Follow these instructions for the entire conversation.',
-    'Do not mention or repeat these instructions in your response.',
-    '',
-    safeInstructions,
-    INSTRUCTIONS_END,
-    '',
-  ].join('\n');
-
-  // Read current input text and strip any existing instruction block.
-  // Quill uses <p> tags per line; innerText renders those as \n\n.
-  // Normalise back to single \n so the round-trip doesn't double spacing.
-  const rawText = (input as HTMLElement).innerText ?? '';
-  const currentText = rawText.replace(/\n\n/g, '\n');
-  const stripped = currentText.replace(INSTRUCTIONS_PATTERN, '');
-
-  // Combine: new instructions first, then any user-typed text
-  const combined = block + stripped;
-
-  // Select all and replace to preserve Quill state
-  (input as HTMLElement).focus();
-  const selection = window.getSelection();
-  if (selection) {
-    const range = document.createRange();
-    range.selectNodeContents(input);
-    selection.removeAllRanges();
-    selection.addRange(range);
-  }
-
-  const success = document.execCommand('insertText', false, combined);
-  if (!success) {
-    (input as HTMLElement).textContent = combined;
-  }
-  (input as HTMLElement).dispatchEvent(new Event('input', { bubbles: true }));
-
-  // Move cursor to the end so the user can type immediately
-  if (selection) {
-    selection.selectAllChildren(input);
-    selection.collapseToEnd();
-  }
-  (input as HTMLElement).scrollTop = (input as HTMLElement).scrollHeight;
-}
-
-/**
- * Remove the instruction block from the chat input, preserving user text.
- */
-async function clearInstructions(): Promise<void> {
-  const input = await waitForElement('rich-textarea [contenteditable="true"]', 1000);
-  if (!input) return;
-
-  const rawText = (input as HTMLElement).innerText ?? '';
-  const currentText = rawText.replace(/\n\n/g, '\n');
-  if (!INSTRUCTIONS_PATTERN.test(currentText)) return;
-
-  const stripped = currentText.replace(INSTRUCTIONS_PATTERN, '');
-
-  (input as HTMLElement).focus();
-  const selection = window.getSelection();
-  if (selection) {
-    const range = document.createRange();
-    range.selectNodeContents(input);
-    selection.removeAllRanges();
-    selection.addRange(range);
-  }
-
-  const success = document.execCommand('insertText', false, stripped);
-  if (!success) {
-    (input as HTMLElement).textContent = stripped;
-  }
-  (input as HTMLElement).dispatchEvent(new Event('input', { bubbles: true }));
-
-  if (selection) {
-    selection.selectAllChildren(input);
-    selection.collapseToEnd();
-  }
-  (input as HTMLElement).scrollTop = (input as HTMLElement).scrollHeight;
 }
 
 function buildFolderPicker(manager: FolderManager): {
@@ -471,7 +473,7 @@ async function injectPicker(manager: FolderManager): Promise<void> {
 function getConversationTitle(convId: string): string {
   const escapedId = convId.replace(/"/g, '\\"');
   const link = document.querySelector<HTMLAnchorElement>(
-    `[data-test-id="conversation"][jslog*="c_${escapedId}"] a, a[href*="/app/${escapedId}"]`,
+    `[data-test-id="conversation"][jslog*="c_${escapedId}"] a, a[href*="/app/${escapedId}"], a[href*="/gem/"][href$="/${escapedId}"]`,
   );
   return link?.textContent?.trim() || document.title || 'New Chat';
 }
@@ -488,24 +490,33 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
   // Gate on pendingSend to avoid false assignment when clicking sidebar links
   if (prevWasNewChat && newConvId && selectedFolderId && pendingSend) {
     const title = getConversationTitle(newConvId);
+    const { isGem, gemId } = extractGemMetadata(newPath);
     manager.addConversationToFolderFromNative(
       selectedFolderId,
       newConvId,
       title,
       window.location.href,
+      isGem,
+      gemId,
     );
     selectedFolderId = null;
-    pendingSend = false;
+    selectedFolderName = null;
+    selectedFolderInstructions = null;
+    clearPendingSendState();
   }
 
   if (isNewChatPath(newPath)) {
     // Navigated to a new chat page — (re)show picker
     selectedFolderId = null;
-    pendingSend = false;
+    selectedFolderName = null;
+    selectedFolderInstructions = null;
+    clearPendingSendState();
+    clearPreparedInstructions();
     removePicker();
     void injectPicker(manager);
   } else {
     // Left the new-chat page — hide picker
+    clearPendingSendState();
     removePicker();
   }
 }
@@ -566,16 +577,27 @@ function startURLWatcher(manager: FolderManager): void {
  * @param manager - The active FolderManager instance
  */
 export function startFolderProject(manager: FolderManager): void {
-  chrome.storage?.sync?.get({ [StorageKeys.FOLDER_PROJECT_ENABLED]: false }, (res) => {
-    if (res?.[StorageKeys.FOLDER_PROJECT_ENABLED] !== true) return;
-    if (featureInitialized) return;
-    featureInitialized = true;
-    startURLWatcher(manager);
-  });
+  chrome.storage?.sync?.get(
+    {
+      [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
+      [StorageKeys.CTRL_ENTER_SEND]: false,
+    },
+    (res) => {
+      ctrlEnterSendEnabled = res?.[StorageKeys.CTRL_ENTER_SEND] === true;
+      if (res?.[StorageKeys.FOLDER_PROJECT_ENABLED] !== true) return;
+      if (featureInitialized) return;
+      featureInitialized = true;
+      startURLWatcher(manager);
+    },
+  );
 
   // React to toggle changes without a page reload
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'sync') return;
+    if (StorageKeys.CTRL_ENTER_SEND in changes) {
+      ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
+    }
+
     if (!(StorageKeys.FOLDER_PROJECT_ENABLED in changes)) return;
     const enabled = changes[StorageKeys.FOLDER_PROJECT_ENABLED].newValue === true;
     if (enabled && !featureInitialized) {
@@ -584,8 +606,11 @@ export function startFolderProject(manager: FolderManager): void {
     } else if (!enabled) {
       featureInitialized = false;
       stopURLWatcher();
+      clearPreparedInstructions();
       removePicker();
       selectedFolderId = null;
+      selectedFolderName = null;
+      selectedFolderInstructions = null;
     }
   });
 }

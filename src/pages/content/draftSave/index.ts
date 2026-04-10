@@ -18,6 +18,7 @@
 import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
+import { stripInstructionBlock } from '../folderProject/instructionBlock';
 import { setInputText } from '../utils/inputHelper';
 
 // ============================================================================
@@ -145,7 +146,9 @@ function isInputEffectivelyEmpty(input: HTMLElement): boolean {
  * Save a draft for the current conversation.
  */
 function saveDraft(path: string, content: string): void {
-  if (!content.trim()) {
+  const sanitizedContent = stripInstructionBlock(content).trim();
+
+  if (!sanitizedContent) {
     // Remove draft if content is empty
     removeDraft(path);
     return;
@@ -153,7 +156,7 @@ function saveDraft(path: string, content: string): void {
 
   const key = getDraftStorageKey(path);
   const data = {
-    content,
+    content: sanitizedContent,
     timestamp: Date.now(),
     path,
   };
@@ -164,7 +167,7 @@ function saveDraft(path: string, content: string): void {
         console.warn(LOG_PREFIX, 'Failed to save draft:', chrome.runtime.lastError.message);
         return;
       }
-      lastSavedContent = content;
+      lastSavedContent = sanitizedContent;
       // Prune old drafts periodically (not every save)
       saveCount++;
       if (saveCount % PRUNE_EVERY_N_SAVES === 0) {
@@ -256,7 +259,7 @@ function handleInputChange(): void {
     const input = findChatInput();
     if (!input) return;
 
-    const content = getInputText(input).trim();
+    const content = stripInstructionBlock(getInputText(input)).trim();
     const path = getConversationPath();
 
     // Only save if content actually changed
@@ -341,7 +344,8 @@ async function restoreDraft(): Promise<void> {
   const path = getConversationPath();
   if (hasRestoredForCurrentPath && path === currentPath) return;
 
-  const content = await loadDraft(path);
+  const savedContent = await loadDraft(path);
+  const content = savedContent ? stripInstructionBlock(savedContent).trim() : null;
   if (!content) {
     hasRestoredForCurrentPath = true;
     return;
@@ -389,7 +393,7 @@ function startUrlWatcher(): void {
       // Save current draft before navigation (in case debounce hasn't fired)
       const input = findChatInput();
       if (input) {
-        const content = getInputText(input).trim();
+        const content = stripInstructionBlock(getInputText(input)).trim();
         if (content && content !== lastSavedContent) {
           saveDraft(currentPath, content);
         }

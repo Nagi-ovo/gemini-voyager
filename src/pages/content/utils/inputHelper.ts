@@ -24,6 +24,14 @@ export function setInputText(input: HTMLElement, text: string): void {
   // For contenteditable (Quill editor)
   input.focus();
 
+  const selection = window.getSelection();
+  if (selection) {
+    const range = document.createRange();
+    range.selectNodeContents(input);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
   // Check if Quill marks this as blank
   const isQuillBlank = input.classList.contains('ql-blank');
   if (isQuillBlank) {
@@ -38,4 +46,9 @@ export function setInputText(input: HTMLElement, text: string): void {
   }
 
   input.dispatchEvent(new Event('input', { bubbles: true }));
+
+  if (selection) {
+    selection.selectAllChildren(input);
+    selection.collapseToEnd();
+  }
 }

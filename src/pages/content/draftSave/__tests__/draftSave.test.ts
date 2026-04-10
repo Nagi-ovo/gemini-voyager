@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
+import { buildInstructionBlock } from '../../folderProject/instructionBlock';
+
 type StorageChangeListener = (
   changes: Record<string, chrome.storage.StorageChange>,
   area: string,
@@ -129,6 +131,23 @@ describe('draftSave', () => {
     cleanup();
   });
 
+  it('strips folder project instructions before saving a draft', async () => {
+    setupMocks(true);
+    const input = createContentEditable();
+
+    const { startDraftSave } = await import('../index');
+    const cleanup = await startDraftSave();
+
+    input.textContent = `${buildInstructionBlock('Inbox', 'Always answer tersely.')}User draft`;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+
+    const draft = localStore['gvDraft_/app/test-conversation-123'] as { content: string };
+    expect(draft.content).toBe('User draft');
+
+    cleanup();
+  });
+
   it('does not save draft when feature is disabled', async () => {
     setupMocks(false);
     const input = createContentEditable();
@@ -226,6 +245,33 @@ describe('draftSave', () => {
 
     // execCommand should have been called with the draft content
     expect(document.execCommand).toHaveBeenCalledWith('insertText', false, 'My saved draft');
+
+    cleanup();
+  });
+
+  it('strips folder project instructions from older polluted drafts during restore', async () => {
+    vi.useRealTimers();
+    setupMocks(true);
+
+    localStore['gvDraft_/app/test-conversation-123'] = {
+      content: `${buildInstructionBlock('Coding', 'Reply with tests first.')}Recovered user text`,
+      timestamp: Date.now(),
+      path: '/app/test-conversation-123',
+    };
+
+    createContentEditable();
+    document.execCommand = vi.fn().mockReturnValue(true);
+
+    const { startDraftSave } = await import('../index');
+    const cleanup = await startDraftSave();
+
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    expect(document.execCommand).toHaveBeenCalledWith(
+      'insertText',
+      false,
+      'Recovered user text',
+    );
 
     cleanup();
   });
