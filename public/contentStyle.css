@@ -6371,6 +6371,88 @@ body[data-color-scheme='dark'] .gv-export-fontsize-preview {
   color: #e8eaed;
 }
 
+/* Image Width Section */
+.gv-export-imagewidth-section {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+}
+
+html.dark .gv-export-imagewidth-section,
+[data-theme='dark'] .gv-export-imagewidth-section,
+[data-color-scheme='dark'] .gv-export-imagewidth-section,
+html.dark-theme .gv-export-imagewidth-section,
+body.dark-theme .gv-export-imagewidth-section,
+body[data-theme='dark'] .gv-export-imagewidth-section,
+body[data-color-scheme='dark'] .gv-export-imagewidth-section {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gv-export-width-group {
+  display: flex;
+  gap: 8px;
+}
+
+.gv-export-width-btn {
+  flex: 1;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gv-export-width-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: #9ca3af;
+}
+
+.gv-export-width-btn.active {
+  background: oklch(0.55 0.17 155);
+  color: #ffffff;
+  border-color: oklch(0.55 0.17 155);
+  box-shadow: 0 2px 4px oklch(0.55 0.17 155 / 0.2);
+}
+
+html.dark .gv-export-width-btn,
+[data-theme='dark'] .gv-export-width-btn,
+[data-color-scheme='dark'] .gv-export-width-btn,
+html.dark-theme .gv-export-width-btn,
+body.dark-theme .gv-export-width-btn,
+body[data-theme='dark'] .gv-export-width-btn,
+body[data-color-scheme='dark'] .gv-export-width-btn {
+  color: #9ca3af;
+  border-color: #374151;
+}
+
+html.dark .gv-export-width-btn:hover,
+[data-theme='dark'] .gv-export-width-btn:hover,
+[data-color-scheme='dark'] .gv-export-width-btn:hover,
+html.dark-theme .gv-export-width-btn:hover,
+body.dark-theme .gv-export-width-btn:hover,
+body[data-theme='dark'] .gv-export-width-btn:hover,
+body[data-color-scheme='dark'] .gv-export-width-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #4b5563;
+}
+
+html.dark .gv-export-width-btn.active,
+[data-theme='dark'] .gv-export-width-btn.active,
+[data-color-scheme='dark'] .gv-export-width-btn.active,
+html.dark-theme .gv-export-width-btn.active,
+body.dark-theme .gv-export-width-btn.active,
+body[data-theme='dark'] .gv-export-width-btn.active,
+body[data-color-scheme='dark'] .gv-export-width-btn.active {
+  background: oklch(0.7 0.16 155);
+  color: #111827;
+  border-color: oklch(0.7 0.16 155);
+}
+
 .gv-aistudio .gv-conversation-title {
   min-width: 0;
   font-size: 12px;

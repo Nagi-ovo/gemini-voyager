@@ -386,7 +386,7 @@ function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
   const dialog = new ExportDialog();
   dialog.show({
-    onExport: async (format) => {
+    onExport: async (format, fontSize, imageWidth) => {
       const hideProgress = showDeepResearchExportProgressOverlay(t);
       try {
         const filename = buildReportFilename(format, reportTitle);
@@ -394,6 +394,8 @@ function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
           format,
           filename,
           layout: 'document',
+          fontSize,
+          imageWidth,
         });
         const minVisiblePromise = new Promise((resolve) => setTimeout(resolve, 420));
         const [result] = await Promise.all([resultPromise, minVisiblePromise]);
@@ -420,6 +422,10 @@ function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
       export: t('pm_export'),
       fontSizeLabel: t('export_fontsize_label'),
       fontSizePreview: t('export_fontsize_preview'),
+      imageWidthLabel: t('export_image_width_label'),
+      imageWidthNarrow: t('export_image_width_narrow'),
+      imageWidthMedium: t('export_image_width_medium'),
+      imageWidthWide: t('export_image_width_wide'),
       formatDescriptions: {
         json: t('export_format_json_description'),
         markdown: t('export_format_markdown_description'),
