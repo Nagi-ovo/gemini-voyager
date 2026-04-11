@@ -267,11 +267,7 @@ describe('draftSave', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    expect(document.execCommand).toHaveBeenCalledWith(
-      'insertText',
-      false,
-      'Recovered user text',
-    );
+    expect(document.execCommand).toHaveBeenCalledWith('insertText', false, 'Recovered user text');
 
     cleanup();
   });
