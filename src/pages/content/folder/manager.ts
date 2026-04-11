@@ -134,6 +134,11 @@ export class FolderManager {
   private activeColorPickerFolderId: string | null = null; // Folder ID of currently open color picker
   private activeColorPickerCloseHandler: ((e: MouseEvent) => void) | null = null; // Event handler for closing color picker
 
+  // Track active UI elements to prevent duplicate creation
+  private activeFolderInput: HTMLElement | null = null; // Currently open folder name input
+  private activeImportExportMenu: HTMLElement | null = null; // Currently open import/export menu
+  private activeImportDialog: HTMLElement | null = null; // Currently open import dialog
+
   // Cleanup references
   private routeChangeCleanup: (() => void) | null = null;
   private sidebarClickListener: ((e: Event) => void) | null = null;
@@ -2016,6 +2021,16 @@ export class FolderManager {
   }
 
   private createFolder(parentId: string | null = null): void {
+    // Prevent creating multiple folder inputs simultaneously
+    if (this.activeFolderInput) {
+      // Focus existing input instead of creating a new one
+      const existingInput = this.activeFolderInput.querySelector('input') as HTMLInputElement;
+      if (existingInput) {
+        existingInput.focus();
+      }
+      return;
+    }
+
     // Create inline input for folder name
     const inputContainer = document.createElement('div');
     inputContainer.className = 'gv-folder-inline-input';
@@ -2046,6 +2061,7 @@ export class FolderManager {
       const name = input.value.trim();
       if (!name) {
         inputContainer.remove();
+        this.activeFolderInput = null;
         return;
       }
 
@@ -2070,6 +2086,7 @@ export class FolderManager {
 
     const cancel = () => {
       inputContainer.remove();
+      this.activeFolderInput = null;
     };
 
     saveBtn.addEventListener('click', save);
@@ -2100,6 +2117,9 @@ export class FolderManager {
       }
 
       input.focus();
+
+      // Track this input as the active one
+      this.activeFolderInput = inputContainer;
     }
   }
 
@@ -5221,6 +5241,9 @@ export class FolderManager {
   private refresh(): void {
     if (!this.containerElement) return;
 
+    // Clear active folder input reference since the DOM will be replaced
+    this.activeFolderInput = null;
+
     // Find and update the folders list
     const oldList = this.containerElement.querySelector('.gv-folder-list');
     if (oldList) {
@@ -6619,6 +6642,9 @@ export class FolderManager {
   }
 
   private showImportDialog(): void {
+    // Prevent creating multiple import dialogs simultaneously
+    if (this.activeImportDialog) return;
+
     // Create dialog overlay
     const overlay = document.createElement('div');
     overlay.className = 'gv-folder-dialog-overlay';
@@ -6725,12 +6751,16 @@ export class FolderManager {
         await this.handleImport(fileInput, strategy);
       }
       overlay.remove();
+      this.activeImportDialog = null;
     });
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'gv-folder-dialog-btn gv-folder-dialog-btn-secondary';
     cancelBtn.textContent = this.t('pm_cancel');
-    cancelBtn.addEventListener('click', () => overlay.remove());
+    cancelBtn.addEventListener('click', () => {
+      overlay.remove();
+      this.activeImportDialog = null;
+    });
 
     buttonsContainer.appendChild(cancelBtn);
     buttonsContainer.appendChild(importBtn);
@@ -6746,10 +6776,14 @@ export class FolderManager {
     // Add to body
     document.body.appendChild(overlay);
 
+    // Track this dialog as the active one
+    this.activeImportDialog = overlay;
+
     // Close on overlay click
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) {
         overlay.remove();
+        this.activeImportDialog = null;
       }
     });
   }
@@ -7093,6 +7127,13 @@ export class FolderManager {
   private showImportExportMenu(event: MouseEvent): void {
     event.stopPropagation();
 
+    // Remove existing menu if already open (toggle behavior)
+    if (this.activeImportExportMenu) {
+      this.activeImportExportMenu.remove();
+      this.activeImportExportMenu = null;
+      return;
+    }
+
     // Create context menu
     const menu = document.createElement('div');
     menu.className = 'gv-folder-menu';
@@ -7121,16 +7162,21 @@ export class FolderManager {
       menuItem.addEventListener('click', () => {
         item.action();
         menu.remove();
+        this.activeImportExportMenu = null;
       });
       menu.appendChild(menuItem);
     });
 
     document.body.appendChild(menu);
 
+    // Track this menu as the active one
+    this.activeImportExportMenu = menu;
+
     // Close menu on click outside
     const closeMenu = (e: MouseEvent) => {
       if (!menu.contains(e.target as Node)) {
         menu.remove();
+        this.activeImportExportMenu = null;
         document.removeEventListener('click', closeMenu);
       }
     };
