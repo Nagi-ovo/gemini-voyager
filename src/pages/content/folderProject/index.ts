@@ -12,7 +12,6 @@ import { findChatInput } from '../chatInput/index';
 import { getFolderColor, isDarkMode } from '../folder/folderColors';
 import type { FolderManager } from '../folder/manager';
 import { setInputText } from '../utils/inputHelper';
-
 import {
   buildInstructionBlock,
   hasInstructionBlock,
@@ -124,7 +123,7 @@ export function waitForElement(selector: string, timeoutMs: number): Promise<HTM
 function readInputText(input: HTMLElement): string {
   return input instanceof HTMLTextAreaElement
     ? input.value
-    : input.innerText ?? input.textContent ?? '';
+    : (input.innerText ?? input.textContent ?? '');
 }
 
 function clearPendingSendState(): void {
