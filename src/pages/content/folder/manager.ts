@@ -139,6 +139,8 @@ export class FolderManager {
   private activeFolderInput: HTMLElement | null = null; // Currently open folder name input
   private activeImportExportMenu: HTMLElement | null = null; // Currently open import/export menu
   private activeImportDialog: HTMLElement | null = null; // Currently open import dialog
+  private activeImportExportMenuCloseHandler: ((e: MouseEvent) => void) | null = null;
+  private activeImportExportMenuListenerTimeout: number | null = null;
 
   // Cleanup references
   private routeChangeCleanup: (() => void) | null = null;
@@ -338,6 +340,10 @@ export class FolderManager {
       this.activeColorPickerFolderId = null;
     }
 
+    this.closeActiveImportExportMenu();
+    this.closeActiveImportDialog();
+    this.clearActiveFolderInput();
+
     // Remove container
     if (this.containerElement) {
       this.containerElement.remove();
@@ -353,6 +359,38 @@ export class FolderManager {
 
   private addCleanupTask(task: () => void): void {
     this.cleanupTasks.push(task);
+  }
+
+  private clearActiveFolderInput(): void {
+    this.activeFolderInput = null;
+  }
+
+  private closeActiveImportDialog(): void {
+    if (this.activeImportDialog) {
+      this.activeImportDialog.remove();
+      this.activeImportDialog = null;
+    }
+  }
+
+  private removeActiveImportExportMenuCloseHandler(): void {
+    if (this.activeImportExportMenuListenerTimeout !== null) {
+      clearTimeout(this.activeImportExportMenuListenerTimeout);
+      this.activeImportExportMenuListenerTimeout = null;
+    }
+
+    if (this.activeImportExportMenuCloseHandler) {
+      document.removeEventListener('click', this.activeImportExportMenuCloseHandler);
+      this.activeImportExportMenuCloseHandler = null;
+    }
+  }
+
+  private closeActiveImportExportMenu(): void {
+    if (this.activeImportExportMenu) {
+      this.activeImportExportMenu.remove();
+      this.activeImportExportMenu = null;
+    }
+
+    this.removeActiveImportExportMenuCloseHandler();
   }
 
   private async initializeFolderUI(): Promise<void> {
@@ -2006,6 +2044,10 @@ export class FolderManager {
         }
       }
 
+      this.closeActiveImportExportMenu();
+      this.closeActiveImportDialog();
+      this.clearActiveFolderInput();
+
       // Clear existing references so initialization starts from a clean slate
       this.containerElement = null;
       this.sidebarContainer = null;
@@ -2022,14 +2064,20 @@ export class FolderManager {
   }
 
   private createFolder(parentId: string | null = null): void {
+    if (this.activeFolderInput && !this.activeFolderInput.isConnected) {
+      this.clearActiveFolderInput();
+    }
+
     // Prevent creating multiple folder inputs simultaneously
     if (this.activeFolderInput) {
       // Focus existing input instead of creating a new one
       const existingInput = this.activeFolderInput.querySelector('input') as HTMLInputElement;
       if (existingInput) {
         existingInput.focus();
+        return;
       }
-      return;
+
+      this.clearActiveFolderInput();
     }
 
     // Create inline input for folder name
@@ -2062,7 +2110,7 @@ export class FolderManager {
       const name = input.value.trim();
       if (!name) {
         inputContainer.remove();
-        this.activeFolderInput = null;
+        this.clearActiveFolderInput();
         return;
       }
 
@@ -2087,7 +2135,7 @@ export class FolderManager {
 
     const cancel = () => {
       inputContainer.remove();
-      this.activeFolderInput = null;
+      this.clearActiveFolderInput();
     };
 
     saveBtn.addEventListener('click', save);
@@ -5243,7 +5291,7 @@ export class FolderManager {
     if (!this.containerElement) return;
 
     // Clear active folder input reference since the DOM will be replaced
-    this.activeFolderInput = null;
+    this.clearActiveFolderInput();
 
     // Find and update the folders list
     const oldList = this.containerElement.querySelector('.gv-folder-list');
@@ -6705,6 +6753,10 @@ export class FolderManager {
   }
 
   private showImportDialog(): void {
+    if (this.activeImportDialog && !this.activeImportDialog.isConnected) {
+      this.activeImportDialog = null;
+    }
+
     // Prevent creating multiple import dialogs simultaneously
     if (this.activeImportDialog) return;
 
@@ -6813,16 +6865,14 @@ export class FolderManager {
       } else {
         await this.handleImport(fileInput, strategy);
       }
-      overlay.remove();
-      this.activeImportDialog = null;
+      this.closeActiveImportDialog();
     });
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'gv-folder-dialog-btn gv-folder-dialog-btn-secondary';
     cancelBtn.textContent = this.t('pm_cancel');
     cancelBtn.addEventListener('click', () => {
-      overlay.remove();
-      this.activeImportDialog = null;
+      this.closeActiveImportDialog();
     });
 
     buttonsContainer.appendChild(cancelBtn);
@@ -6845,8 +6895,7 @@ export class FolderManager {
     // Close on overlay click
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) {
-        overlay.remove();
-        this.activeImportDialog = null;
+        this.closeActiveImportDialog();
       }
     });
   }
@@ -7190,10 +7239,14 @@ export class FolderManager {
   private showImportExportMenu(event: MouseEvent): void {
     event.stopPropagation();
 
+    if (this.activeImportExportMenu && !this.activeImportExportMenu.isConnected) {
+      this.activeImportExportMenu = null;
+      this.removeActiveImportExportMenuCloseHandler();
+    }
+
     // Remove existing menu if already open (toggle behavior)
     if (this.activeImportExportMenu) {
-      this.activeImportExportMenu.remove();
-      this.activeImportExportMenu = null;
+      this.closeActiveImportExportMenu();
       return;
     }
 
@@ -7223,9 +7276,8 @@ export class FolderManager {
 
       menuItem.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true" style="font-size: 18px; line-height: 1; margin-right: 8px;">${item.icon}</mat-icon>${item.label}`;
       menuItem.addEventListener('click', () => {
+        this.closeActiveImportExportMenu();
         item.action();
-        menu.remove();
-        this.activeImportExportMenu = null;
       });
       menu.appendChild(menuItem);
     });
@@ -7238,12 +7290,14 @@ export class FolderManager {
     // Close menu on click outside
     const closeMenu = (e: MouseEvent) => {
       if (!menu.contains(e.target as Node)) {
-        menu.remove();
-        this.activeImportExportMenu = null;
-        document.removeEventListener('click', closeMenu);
+        this.closeActiveImportExportMenu();
       }
     };
-    setTimeout(() => document.addEventListener('click', closeMenu), 0);
+    this.activeImportExportMenuCloseHandler = closeMenu;
+    this.activeImportExportMenuListenerTimeout = window.setTimeout(() => {
+      document.addEventListener('click', closeMenu);
+      this.activeImportExportMenuListenerTimeout = null;
+    }, 0);
   }
 
   /**
