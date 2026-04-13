@@ -17,12 +17,15 @@ export class DeepResearchPDFPrintService {
   private static cleanupFallbackTimer: ReturnType<typeof setTimeout> | null = null;
   private static originalDocumentTitle: string | null = null;
 
-  static async export(content: PrintableDocumentContent): Promise<void> {
+  static async export(
+    content: PrintableDocumentContent,
+    options?: { fontSize?: number },
+  ): Promise<void> {
     this.cleanup();
 
     const container = this.createPrintContainer(content);
     document.body.appendChild(container);
-    this.injectPrintStyles();
+    this.injectPrintStyles(options?.fontSize);
     document.body.classList.add(this.PRINT_BODY_CLASS);
 
     this.originalDocumentTitle = document.title;
@@ -251,8 +254,14 @@ export class DeepResearchPDFPrintService {
     }
   }
 
-  private static injectPrintStyles(): void {
+  private static injectPrintStyles(fontSize?: number): void {
     if (document.getElementById(this.PRINT_STYLES_ID)) return;
+
+    const basePt = fontSize ?? 11;
+    const coverTitlePt = Math.round(basePt * (36 / 11));
+    const metaPt = Math.max(basePt + 1, 10);
+    const codePt = Math.max(basePt - 2, 8);
+    const footerPt = Math.max(basePt - 2, 8);
 
     const style = document.createElement('style');
     style.id = this.PRINT_STYLES_ID;
@@ -386,7 +395,7 @@ export class DeepResearchPDFPrintService {
         }
 
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-cover-title {
-          font-size: 36pt;
+          font-size: ${coverTitlePt}pt;
           font-weight: 800;
           letter-spacing: -0.02em;
           margin: 0 0 1.5em 0;
@@ -396,7 +405,7 @@ export class DeepResearchPDFPrintService {
         }
 
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-meta {
-          font-size: 12pt;
+          font-size: ${metaPt}pt;
           color: #666;
           line-height: 2;
         }
@@ -417,7 +426,7 @@ export class DeepResearchPDFPrintService {
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-content {
           margin: 2em 0;
           line-height: 1.65;
-          font-size: 11pt;
+          font-size: ${basePt}pt;
         }
 
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-report p {
@@ -435,7 +444,7 @@ export class DeepResearchPDFPrintService {
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-report pre,
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-report code {
           font-family: 'Courier New', monospace;
-          font-size: 9pt;
+          font-size: ${codePt}pt;
           background: #f5f5f5;
           border-radius: 3px;
         }
@@ -458,7 +467,7 @@ export class DeepResearchPDFPrintService {
           margin-top: 2em;
           padding-top: 1em;
           border-top: 1px solid #ccc;
-          font-size: 9pt;
+          font-size: ${footerPt}pt;
           color: #666;
           text-align: center;
         }

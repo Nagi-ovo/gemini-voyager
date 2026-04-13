@@ -1315,6 +1315,22 @@
     "message": "다람쥐 헌 쳇바퀴에 타고파.",
     "description": "Preview text for font size slider in export dialog"
   },
+  "export_image_width_label": {
+    "message": "이미지 너비",
+    "description": "Label for image width selection in export dialog"
+  },
+  "export_image_width_narrow": {
+    "message": "좁게 (모바일)",
+    "description": "Narrow width option (e.g. mobile)"
+  },
+  "export_image_width_medium": {
+    "message": "중간 (태블릿)",
+    "description": "Medium width option (e.g. tablet)"
+  },
+  "export_image_width_wide": {
+    "message": "넓게 (PC)",
+    "description": "Wide width option (e.g. desktop)"
+  },
   "export_error_generic": {
     "message": "내보내기 실패: {error}",
     "description": "상세 원인을 포함한 일반 내보내기 실패 메시지"

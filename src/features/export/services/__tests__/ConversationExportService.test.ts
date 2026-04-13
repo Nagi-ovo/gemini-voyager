@@ -243,10 +243,19 @@ describe('ConversationExportService', () => {
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
         format: ExportFormat.PDF,
         layout: 'document' as ExportLayout,
+        fontSize: 15,
       });
 
       expect(result.success).toBe(true);
       expect(deepResearchPdfSpy).toHaveBeenCalledOnce();
+      expect(deepResearchPdfSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: mockMetadata.title,
+          url: mockMetadata.url,
+          exportedAt: mockMetadata.exportedAt,
+        }),
+        { fontSize: 15 },
+      );
       expect(pdfDocumentSpy).not.toHaveBeenCalled();
     });
 
@@ -261,10 +270,24 @@ describe('ConversationExportService', () => {
       const result = await ConversationExportService.export(mockTurns, mockMetadata, {
         format: ExportFormat.IMAGE,
         layout: 'document' as ExportLayout,
+        fontSize: 24,
+        imageWidth: 1360,
       });
 
       expect(result.success).toBe(true);
       expect(imageDocumentSpy).toHaveBeenCalledOnce();
+      expect(imageDocumentSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: mockMetadata.title,
+          url: mockMetadata.url,
+          exportedAt: mockMetadata.exportedAt,
+        }),
+        {
+          filename: 'Premier-League-Fantasy.png',
+          fontSize: 24,
+          imageWidth: 1360,
+        },
+      );
     });
 
     it('should handle unsupported format', async () => {

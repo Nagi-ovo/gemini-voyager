@@ -127,4 +127,26 @@ describe('DeepResearchPDFPrintService', () => {
     window.dispatchEvent(new Event('afterprint'));
     expect(document.body.classList.contains('gv-deep-research-pdf-safari-printing')).toBe(false);
   });
+
+  it('applies custom font size to deep research PDF print styles', async () => {
+    window.print = vi.fn();
+
+    await DeepResearchPDFPrintService.export(
+      {
+        title: 'Report',
+        url: 'https://gemini.google.com/app/abc12345',
+        exportedAt: new Date().toISOString(),
+        markdown: 'Body',
+        html: '<p>Body</p>',
+      },
+      { fontSize: 15 },
+    );
+
+    const style = document.getElementById('gv-deep-research-pdf-print-styles');
+    const styleText = style?.textContent || '';
+    expect(styleText).toContain('font-size: 15pt;');
+    expect(styleText).toContain('font-size: 49pt;');
+    expect(styleText).toContain('font-size: 16pt;');
+    expect(styleText).toContain('font-size: 13pt;');
+  });
 });

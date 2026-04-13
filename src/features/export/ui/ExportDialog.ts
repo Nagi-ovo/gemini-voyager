@@ -8,7 +8,7 @@ import { ConversationExportService } from '../services/ConversationExportService
 import type { ExportFormat } from '../types/export';
 
 export interface ExportDialogOptions {
-  onExport: (format: ExportFormat, fontSize?: number) => void;
+  onExport: (format: ExportFormat, fontSize?: number, imageWidth?: number) => void;
   onCancel: () => void;
   translations: {
     title: string;
@@ -20,6 +20,10 @@ export interface ExportDialogOptions {
     export: string;
     fontSizeLabel: string;
     fontSizePreview: string;
+    imageWidthLabel: string;
+    imageWidthNarrow: string;
+    imageWidthMedium: string;
+    imageWidthWide: string;
     formatDescriptions: Record<ExportFormat, string>;
   };
 }
@@ -35,10 +39,15 @@ const PDF_MAX = 16;
 const IMAGE_MIN = 14;
 const IMAGE_MAX = 28;
 
+const IMAGE_WIDTH_NARROW = 620;
+const IMAGE_WIDTH_MEDIUM = 960;
+const IMAGE_WIDTH_WIDE = 1360;
+
 export class ExportDialog {
   private overlay: HTMLElement | null = null;
   private selectedFormat: ExportFormat = 'markdown' as ExportFormat;
   private fontSize: number = PDF_DEFAULT_FONT_SIZE;
+  private imageWidth: number = IMAGE_WIDTH_NARROW;
 
   /**
    * Show export dialog
@@ -103,11 +112,15 @@ export class ExportDialog {
     // Font size section (visible only for PDF/Image)
     const fontSizeSection = this.createFontSizeSection(options);
 
+    // Image width section (visible only for Image)
+    const imageWidthSection = this.createImageWidthSection(options);
+
     // Buttons
     const buttons = document.createElement('div');
     buttons.className = 'gv-export-dialog-buttons';
 
     const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
     cancelBtn.className = 'gv-export-dialog-btn gv-export-dialog-btn-secondary';
     cancelBtn.textContent = options.translations.cancel;
     cancelBtn.addEventListener('click', () => {
@@ -116,13 +129,17 @@ export class ExportDialog {
     });
 
     const exportBtn = document.createElement('button');
+    exportBtn.type = 'button';
     exportBtn.className = 'gv-export-dialog-btn gv-export-dialog-btn-primary';
     exportBtn.textContent = options.translations.export;
     exportBtn.addEventListener('click', () => {
-      const isPdfOrImage =
-        this.selectedFormat === ('pdf' as ExportFormat) ||
-        this.selectedFormat === ('image' as ExportFormat);
-      options.onExport(this.selectedFormat, isPdfOrImage ? this.fontSize : undefined);
+      const isPdf = this.selectedFormat === ('pdf' as ExportFormat);
+      const isImage = this.selectedFormat === ('image' as ExportFormat);
+      options.onExport(
+        this.selectedFormat,
+        isPdf || isImage ? this.fontSize : undefined,
+        isImage ? this.imageWidth : undefined,
+      );
       this.hide();
     });
 
@@ -140,6 +157,7 @@ export class ExportDialog {
     }
     dialog.appendChild(formatsList);
     dialog.appendChild(fontSizeSection);
+    dialog.appendChild(imageWidthSection);
     dialog.appendChild(buttons);
     overlay.appendChild(dialog);
 
@@ -193,7 +211,7 @@ export class ExportDialog {
     radio.addEventListener('change', () => {
       if (radio.checked) {
         this.selectedFormat = formatInfo.format;
-        this.updateFontSizeSection();
+        this.updateOptionalSections();
       }
     });
 
@@ -291,46 +309,110 @@ export class ExportDialog {
   }
 
   /**
-   * Update font size section visibility and slider range based on selected format
+   * Create image width selection section
    */
-  private updateFontSizeSection(): void {
+  private createImageWidthSection(options: ExportDialogOptions): HTMLElement {
+    const section = document.createElement('div');
+    section.className = 'gv-export-imagewidth-section';
+    section.style.display = 'none';
+
+    const label = document.createElement('div');
+    label.className = 'gv-export-fontsize-label';
+    label.style.marginBottom = '8px';
+    label.textContent = options.translations.imageWidthLabel;
+
+    const group = document.createElement('div');
+    group.className = 'gv-export-width-group';
+    group.style.display = 'flex';
+    group.style.gap = '8px';
+
+    const widths = [
+      {
+        value: IMAGE_WIDTH_NARROW,
+        label: options.translations.imageWidthNarrow,
+      },
+      {
+        value: IMAGE_WIDTH_MEDIUM,
+        label: options.translations.imageWidthMedium,
+      },
+      { value: IMAGE_WIDTH_WIDE, label: options.translations.imageWidthWide },
+    ];
+
+    widths.forEach((w) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'gv-export-width-btn';
+      btn.textContent = w.label;
+      if (w.value === this.imageWidth) {
+        btn.classList.add('active');
+      }
+
+      btn.addEventListener('click', () => {
+        this.imageWidth = w.value;
+        group.querySelectorAll('.gv-export-width-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+
+      group.appendChild(btn);
+    });
+
+    section.appendChild(label);
+    section.appendChild(group);
+
+    return section;
+  }
+
+  /**
+   * Update optional sections visibility and slider range based on selected format
+   */
+  private updateOptionalSections(): void {
     if (!this.overlay) return;
 
-    const section = this.overlay.querySelector('.gv-export-fontsize-section') as HTMLElement | null;
-    if (!section) return;
+    const fontSizeSection = this.overlay.querySelector(
+      '.gv-export-fontsize-section',
+    ) as HTMLElement | null;
+    const imageWidthSection = this.overlay.querySelector(
+      '.gv-export-imagewidth-section',
+    ) as HTMLElement | null;
+
+    if (!fontSizeSection || !imageWidthSection) return;
 
     const isPdf = this.selectedFormat === ('pdf' as ExportFormat);
     const isImage = this.selectedFormat === ('image' as ExportFormat);
 
-    if (!isPdf && !isImage) {
-      section.style.display = 'none';
-      return;
-    }
+    fontSizeSection.style.display = isPdf || isImage ? 'block' : 'none';
+    imageWidthSection.style.display = isImage ? 'block' : 'none';
 
-    section.style.display = 'block';
+    if (isPdf || isImage) {
+      const slider = fontSizeSection.querySelector(
+        '.gv-export-fontsize-slider',
+      ) as HTMLInputElement | null;
+      const value = fontSizeSection.querySelector(
+        '.gv-export-fontsize-value',
+      ) as HTMLElement | null;
+      const preview = fontSizeSection.querySelector(
+        '.gv-export-fontsize-preview',
+      ) as HTMLElement | null;
 
-    const slider = section.querySelector('.gv-export-fontsize-slider') as HTMLInputElement | null;
-    const value = section.querySelector('.gv-export-fontsize-value') as HTMLElement | null;
-    const preview = section.querySelector('.gv-export-fontsize-preview') as HTMLElement | null;
-
-    if (isPdf) {
-      this.fontSize = PDF_DEFAULT_FONT_SIZE;
-      if (slider) {
-        slider.min = String(PDF_MIN);
-        slider.max = String(PDF_MAX);
-        slider.value = String(this.fontSize);
+      if (isPdf) {
+        this.fontSize = PDF_DEFAULT_FONT_SIZE;
+        if (slider) {
+          slider.min = String(PDF_MIN);
+          slider.max = String(PDF_MAX);
+          slider.value = String(this.fontSize);
+        }
+        if (value) value.textContent = `${this.fontSize}pt`;
+        if (preview) preview.style.fontSize = `${this.fontSize}pt`;
+      } else {
+        this.fontSize = IMAGE_DEFAULT_FONT_SIZE;
+        if (slider) {
+          slider.min = String(IMAGE_MIN);
+          slider.max = String(IMAGE_MAX);
+          slider.value = String(this.fontSize);
+        }
+        if (value) value.textContent = `${this.fontSize}px`;
+        if (preview) preview.style.fontSize = `${this.fontSize}px`;
       }
-      if (value) value.textContent = `${this.fontSize}pt`;
-      if (preview) preview.style.fontSize = `${this.fontSize}pt`;
-    } else {
-      this.fontSize = IMAGE_DEFAULT_FONT_SIZE;
-      if (slider) {
-        slider.min = String(IMAGE_MIN);
-        slider.max = String(IMAGE_MAX);
-        slider.value = String(this.fontSize);
-      }
-      if (value) value.textContent = `${this.fontSize}px`;
-      if (preview) preview.style.fontSize = `${this.fontSize}px`;
     }
   }
 }

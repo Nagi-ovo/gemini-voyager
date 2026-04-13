@@ -27,7 +27,7 @@ export class ImageExportService {
   static async export(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
-    options: { filename: string; fontSize?: number },
+    options: { filename: string; fontSize?: number; imageWidth?: number },
   ): Promise<void> {
     const filename = options.filename.toLowerCase().endsWith('.png')
       ? options.filename
@@ -39,27 +39,36 @@ export class ImageExportService {
 
   static async exportDocument(
     content: RenderableDocumentContent,
-    options: { filename: string },
+    options: { filename: string; fontSize?: number; imageWidth?: number },
   ): Promise<void> {
     const filename = options.filename.toLowerCase().endsWith('.png')
       ? options.filename
       : `${options.filename}.png`;
 
-    const blob = await this.renderDocumentBlob(content);
+    const blob = await this.renderDocumentBlob(content, options.imageWidth, options.fontSize);
     this.downloadBlob(blob, filename);
   }
 
   static async renderConversationBlob(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
-    options: { fontSize?: number },
+    options: { fontSize?: number; imageWidth?: number },
   ): Promise<Blob> {
-    const container = this.createRenderContainer(turns, metadata, options.fontSize);
+    const container = this.createRenderContainer(
+      turns,
+      metadata,
+      options.fontSize,
+      options.imageWidth,
+    );
     return await this.renderContainerToBlob(container);
   }
 
-  static async renderDocumentBlob(content: RenderableDocumentContent): Promise<Blob> {
-    const container = this.createDocumentRenderContainer(content);
+  static async renderDocumentBlob(
+    content: RenderableDocumentContent,
+    imageWidth?: number,
+    fontSize?: number,
+  ): Promise<Blob> {
+    const container = this.createDocumentRenderContainer(content, imageWidth, fontSize);
     return await this.renderContainerToBlob(container);
   }
 
@@ -67,6 +76,7 @@ export class ImageExportService {
     turns: ChatTurn[],
     metadata: ConversationMetadata,
     fontSize?: number,
+    imageWidth?: number,
   ): HTMLElement {
     const outer = document.createElement('div');
     outer.className = 'gv-image-export-container';
@@ -74,7 +84,7 @@ export class ImageExportService {
       position: 'fixed',
       left: '-10000px',
       top: '0',
-      width: '620px',
+      width: `${imageWidth ?? 620}px`,
       background: '#ffffff',
       color: '#111827',
       zIndex: '-1',
@@ -265,18 +275,25 @@ export class ImageExportService {
     return outer;
   }
 
-  private static createDocumentRenderContainer(content: RenderableDocumentContent): HTMLElement {
+  private static createDocumentRenderContainer(
+    content: RenderableDocumentContent,
+    imageWidth?: number,
+    fontSize?: number,
+  ): HTMLElement {
     const outer = document.createElement('div');
+    const baseFontSize = fontSize ?? 20;
+
     outer.className = 'gv-image-export-container';
     Object.assign(outer.style, {
       position: 'fixed',
       left: '-10000px',
       top: '0',
-      width: '620px',
+      width: `${imageWidth ?? 620}px`,
       background: '#ffffff',
       color: '#111827',
       zIndex: '-1',
       pointerEvents: 'none',
+      fontSize: `${baseFontSize}px`,
     } as Partial<CSSStyleDeclaration>);
 
     const date = this.formatDate(content.exportedAt);
@@ -302,69 +319,69 @@ export class ImageExportService {
     style.textContent = `
       .gv-image-export-doc {
         font-family: Georgia, 'Times New Roman', serif;
-        font-size: 20px;
+        font-size: 1em;
         line-height: 1.9;
-        padding: 26px;
+        padding: 1.3em;
       }
 
       .gv-image-export-header {
-        margin-bottom: 18px;
-        padding-bottom: 14px;
+        margin-bottom: 0.9em;
+        padding-bottom: 0.7em;
         border-bottom: 1px solid rgba(0,0,0,0.12);
       }
 
       .gv-image-export-title {
         margin: 0;
-        font-size: 50px;
+        font-size: 2.5em;
         line-height: 1.2;
         color: #111827;
         word-break: break-word;
       }
 
       .gv-image-export-meta {
-        margin-top: 10px;
+        margin-top: 0.5em;
         color: #6b7280;
-        font-size: 18px;
+        font-size: 0.9em;
         display: grid;
-        gap: 8px;
+        gap: 0.4em;
       }
 
       .gv-image-export-report-content {
-        margin: 18px 0 24px;
+        margin: 0.9em 0 1.2em;
         color: #1a1a1a;
-        font-size: 20px;
+        font-size: 1em;
       }
 
       .gv-image-export-report-content p {
-        margin: 12px 0;
+        margin: 0.6em 0;
       }
 
       .gv-image-export-report-content img {
         max-width: 100%;
         height: auto;
         display: block;
-        margin: 12px 0;
+        margin: 0.6em 0;
       }
 
       .gv-image-export-report-content pre {
         background: rgba(0,0,0,0.05);
-        padding: 14px 16px;
+        padding: 0.7em 0.8em;
         border-radius: 8px;
         overflow-x: auto;
         white-space: pre-wrap;
         word-break: break-word;
-        font-size: 18px;
+        font-size: 0.9em;
         line-height: 1.8;
       }
 
       .gv-image-export-footer {
-        margin-top: 24px;
-        padding-top: 14px;
+        margin-top: 1.2em;
+        padding-top: 0.7em;
         border-top: 1px solid rgba(0,0,0,0.12);
         color: #6b7280;
-        font-size: 16px;
+        font-size: 0.8em;
         display: grid;
-        gap: 8px;
+        gap: 0.4em;
       }
     `;
 
@@ -399,7 +416,10 @@ export class ImageExportService {
 
       // Try content-script fetch first
       try {
-        const resp = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
+        const resp = await fetch(url, {
+          credentials: 'include',
+          mode: 'cors' as RequestMode,
+        });
         if (resp.ok) {
           const blob = await resp.blob();
           const data = await blobToDataUrl(blob);

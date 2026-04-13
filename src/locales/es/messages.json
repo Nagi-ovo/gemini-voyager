@@ -1315,6 +1315,22 @@
     "message": "El veloz murciélago hindú comía feliz cardillo y kiwi.",
     "description": "Preview text for font size slider in export dialog"
   },
+  "export_image_width_label": {
+    "message": "Ancho de imagen",
+    "description": "Label for image width selection in export dialog"
+  },
+  "export_image_width_narrow": {
+    "message": "Estrecho (Móvil)",
+    "description": "Narrow width option (e.g. mobile)"
+  },
+  "export_image_width_medium": {
+    "message": "Medio (Tableta)",
+    "description": "Medium width option (e.g. tablet)"
+  },
+  "export_image_width_wide": {
+    "message": "Ancho (PC)",
+    "description": "Wide width option (e.g. desktop)"
+  },
   "export_error_generic": {
     "message": "Error al exportar: {error}",
     "description": "Mensaje genérico de error de exportación con detalle"

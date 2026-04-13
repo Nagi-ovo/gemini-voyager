@@ -1315,6 +1315,22 @@
     "message": "The quick brown fox jumps over the lazy dog.",
     "description": "Preview text for font size slider in export dialog"
   },
+  "export_image_width_label": {
+    "message": "Image Width",
+    "description": "Label for image width selection in export dialog"
+  },
+  "export_image_width_narrow": {
+    "message": "Narrow",
+    "description": "Narrow width option (e.g. mobile)"
+  },
+  "export_image_width_medium": {
+    "message": "Medium",
+    "description": "Medium width option (e.g. tablet)"
+  },
+  "export_image_width_wide": {
+    "message": "Wide",
+    "description": "Wide width option (e.g. desktop)"
+  },
   "export_error_generic": {
     "message": "Export failed: {error}",
     "description": "Generic export failure with detailed reason"

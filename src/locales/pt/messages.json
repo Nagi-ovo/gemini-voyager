@@ -1315,6 +1315,22 @@
     "message": "A rápida raposa marrom salta sobre o cão preguiçoso.",
     "description": "Preview text for font size slider in export dialog"
   },
+  "export_image_width_label": {
+    "message": "Largura da imagem",
+    "description": "Label for image width selection in export dialog"
+  },
+  "export_image_width_narrow": {
+    "message": "Estreita (Móvel)",
+    "description": "Narrow width option (e.g. mobile)"
+  },
+  "export_image_width_medium": {
+    "message": "Média (Tablet)",
+    "description": "Medium width option (e.g. tablet)"
+  },
+  "export_image_width_wide": {
+    "message": "Larga (PC)",
+    "description": "Wide width option (e.g. desktop)"
+  },
   "export_error_generic": {
     "message": "Falha na exportação: {error}",
     "description": "Mensagem genérica de falha na exportação com detalhe"

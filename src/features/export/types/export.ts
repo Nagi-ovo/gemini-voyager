@@ -64,6 +64,8 @@ export interface ExportOptions {
   embedImages?: 'inline' | 'none';
   // Font size for PDF (pt) and Image (px) exports
   fontSize?: number;
+  // Image width (px) for image exports
+  imageWidth?: number;
   /** Whether to include image source attribution in markdown (default: true) */
   includeImageSource?: boolean;
 }

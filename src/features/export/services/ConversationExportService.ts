@@ -220,7 +220,11 @@ export class ConversationExportService {
     options: ExportOptions,
   ): Promise<ExportResult> {
     const filename = options.filename || this.generateFilename('png', metadata.title);
-    await ImageExportService.export(turns, metadata, { filename, fontSize: options.fontSize });
+    await ImageExportService.export(turns, metadata, {
+      filename,
+      fontSize: options.fontSize,
+      imageWidth: options.imageWidth,
+    });
     return { success: true, format: 'image' as ExportFormat, filename };
   }
 
@@ -273,13 +277,16 @@ export class ConversationExportService {
     metadata: ConversationMetadata,
     options: ExportOptions,
   ): Promise<ExportResult> {
-    await DeepResearchPDFPrintService.export({
-      title: metadata.title || 'Deep Research Report',
-      url: metadata.url,
-      exportedAt: metadata.exportedAt,
-      markdown: content.markdown,
-      html: content.html,
-    });
+    await DeepResearchPDFPrintService.export(
+      {
+        title: metadata.title || 'Deep Research Report',
+        url: metadata.url,
+        exportedAt: metadata.exportedAt,
+        markdown: content.markdown,
+        html: content.html,
+      },
+      { fontSize: options.fontSize },
+    );
 
     return {
       success: true,
@@ -302,7 +309,11 @@ export class ConversationExportService {
         markdown: content.markdown,
         html: content.html,
       },
-      { filename },
+      {
+        filename,
+        fontSize: options.fontSize,
+        imageWidth: options.imageWidth,
+      },
     );
 
     return {
