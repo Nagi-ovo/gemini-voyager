@@ -42,6 +42,7 @@ const FOLDER_TREE_INDENT_MIN = -8;
 const FOLDER_TREE_INDENT_MAX = 32;
 const FOLDER_TREE_INDENT_DEFAULT = -8;
 const FOLDER_NAME_SINGLE_CLICK_DELAY_MS = 220;
+const FOLDER_NAVIGATION_CONFIRM_DELAY_MS = 300;
 
 // Export session backup keys for use by FolderImportExportService (deprecated, kept for compatibility)
 export const SESSION_BACKUP_KEY = 'gvFolderBackup';
@@ -6078,7 +6079,6 @@ export class FolderManager {
       gemId: conv.gemId,
     });
 
-    this.markConversationAsRecentlyOpened(conversationId);
     this.navigateToConversation(conv.url, conv);
   }
 
@@ -6122,20 +6122,84 @@ export class FolderManager {
     }
   }
 
+  private normalizeConversationId(value: string | null | undefined): string | null {
+    const normalized = String(value || '')
+      .trim()
+      .replace(/^c_/i, '');
+    return normalized || null;
+  }
+
+  private extractConversationIdFromHref(href: string | null | undefined): string | null {
+    if (!href) return null;
+
+    try {
+      const parsed = new URL(href, window.location.origin);
+      const appMatch = parsed.pathname.match(/\/app\/([^/?#]+)/);
+      if (appMatch?.[1]) {
+        return this.normalizeConversationId(appMatch[1]);
+      }
+
+      const gemMatch = parsed.pathname.match(/\/gem\/[^/]+\/([^/?#]+)/);
+      if (gemMatch?.[1]) {
+        return this.normalizeConversationId(gemMatch[1]);
+      }
+    } catch (error) {
+      this.debug('Failed to extract conversation id from href:', error);
+    }
+
+    return null;
+  }
+
+  private findNativeConversationLinkById(conversationId: string): HTMLAnchorElement | null {
+    const normalizedId = this.normalizeConversationId(conversationId);
+    if (!normalizedId) return null;
+
+    const byJslog = document.querySelector(
+      `[data-test-id="conversation"][jslog*="c_${normalizedId}"] a[href]`,
+    ) as HTMLAnchorElement | null;
+    if (byJslog) return byJslog;
+
+    const links = Array.from(
+      document.querySelectorAll<HTMLAnchorElement>(
+        '[data-test-id="conversation"] a[href], a[data-test-id="conversation"][href]',
+      ),
+    );
+
+    for (const link of links) {
+      if (this.extractConversationIdFromHref(link.href) === normalizedId) {
+        return link;
+      }
+    }
+
+    return null;
+  }
+
+  private triggerNativeConversationClick(target: HTMLElement): void {
+    const options = { bubbles: true, cancelable: true };
+    target.dispatchEvent(new MouseEvent('pointerdown', options));
+    target.dispatchEvent(new MouseEvent('mousedown', options));
+    target.dispatchEvent(new MouseEvent('mouseup', options));
+    target.dispatchEvent(new MouseEvent('click', options));
+  }
+
+  private navigateWithFullReload(url: string): void {
+    window.location.assign(url);
+  }
+
   private navigateToConversation(url: string, conversation?: ConversationReference): void {
     // Use History API to navigate without page reload (SPA-style)
     // This mimics how Gemini's original conversation links work
     try {
-      // Try to find and click the original conversation element in the sidebar
-      // This is the most reliable way to trigger Gemini's navigation
       const targetUrl = new URL(url);
-      const pathParts = targetUrl.pathname.split('/');
-      const hexId = pathParts[pathParts.length - 1]; // Get the hex ID part
+      const hexId =
+        this.normalizeConversationId(conversation?.conversationId) ||
+        this.extractConversationIdFromHref(targetUrl.toString());
+      const currentConversationId = this.getCurrentConversationId();
 
       let effectivePath: string | null = null;
       let effectiveUrl: string | null = null;
 
-      if (this.accountIsolationEnabled) {
+      if (this.accountIsolationEnabled && hexId) {
         // In hard isolation mode, build a navigation URL that matches the
         // current account context:
         // - If the current path contains /u/{num}/, reuse that {num}
@@ -6152,20 +6216,37 @@ export class FolderManager {
         effectiveUrl = `${window.location.origin}${effectivePath}${targetUrl.search}`;
       }
 
-      const conversations = document.querySelectorAll('[data-test-id="conversation"]');
-      for (const conv of Array.from(conversations)) {
-        const jslog = conv.getAttribute('jslog');
-        if (jslog && jslog.includes(hexId)) {
-          // Found the matching conversation, click it
-          // This will trigger SPA navigation, even if there's a brief redirect for gems
-          (conv as HTMLElement).click();
-          this.debug('Navigated by clicking sidebar element');
-          setTimeout(() => this.highlightActiveConversationInFolders(), 0);
+      const navigationUrl = this.accountIsolationEnabled && effectiveUrl ? effectiveUrl : url;
+      const hardNavigate = () => {
+        if (hexId) {
+          this.markConversationAsRecentlyOpened(hexId);
+        }
+
+        this.navigateWithFullReload(navigationUrl);
+      };
+
+      if (hexId && currentConversationId === hexId) {
+        this.highlightActiveConversationInFolders();
+        return;
+      }
+
+      const sidebarLink = hexId ? this.findNativeConversationLinkById(hexId) : null;
+      if (!sidebarLink) {
+        this.debug('Sidebar link not found, falling back to location.assign');
+        hardNavigate();
+        return;
+      }
+
+      this.triggerNativeConversationClick(sidebarLink);
+      this.debug('Triggered native sidebar link click');
+
+      window.setTimeout(() => {
+        if (!hexId || this.getCurrentConversationId() === hexId) {
+          this.highlightActiveConversationInFolders();
 
           // After navigation, sync title and check for gem updates
           setTimeout(() => {
-            // Sync title from native conversation
-            if (conversation) {
+            if (conversation && hexId) {
               const syncedTitle = this.syncConversationTitleFromNative(hexId);
               if (syncedTitle && syncedTitle !== conversation.title) {
                 this.updateConversationTitle(hexId, syncedTitle);
@@ -6173,40 +6254,22 @@ export class FolderManager {
               }
             }
 
-            // Check if URL changed (Gemini auto-redirected to /gem/)
-            if (conversation && !conversation.gemId) {
+            if (conversation && hexId && !conversation.gemId) {
               this.checkAndUpdateGemId(hexId);
             } else if (conversation?.gemId) {
               this.debug('Known gem conversation:', conversation.gemId);
             }
           }, 300);
-
           return;
         }
-      }
 
-      // If we can't find the sidebar element, try pushState + popstate
-      const navigationUrl = this.accountIsolationEnabled && effectiveUrl ? effectiveUrl : url;
-      const navigationPath =
-        this.accountIsolationEnabled && effectivePath ? effectivePath : targetUrl.pathname;
-
-      this.debug('Sidebar element not found, trying pushState');
-      window.history.pushState({}, '', navigationUrl);
-      const popStateEvent = new PopStateEvent('popstate', { state: {} });
-      window.dispatchEvent(popStateEvent);
-      setTimeout(() => this.highlightActiveConversationInFolders(), 0);
-
-      // If that doesn't work, fall back to page reload
-      setTimeout(() => {
-        if (window.location.pathname !== navigationPath) {
-          this.debug('Falling back to page reload');
-          window.location.href = navigationUrl;
-        }
-      }, 200);
+        this.debug('Native sidebar click did not navigate, falling back to location.assign');
+        hardNavigate();
+      }, FOLDER_NAVIGATION_CONFIRM_DELAY_MS);
     } catch (error) {
       console.error('[FolderManager] Navigation error:', error);
       // Fallback to regular navigation
-      window.location.href = url;
+      this.navigateWithFullReload(url);
     }
   }
 
