@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { IMAGE_EXPORT_WIDTH_WIDE } from '../../types/export';
 import { ExportDialog } from '../ExportDialog';
 
 describe('ExportDialog', () => {
@@ -81,5 +82,56 @@ describe('ExportDialog', () => {
 
     const warning = document.querySelector('.gv-export-dialog-warning') as HTMLElement | null;
     expect(warning).toBeNull();
+  });
+
+  it('uses the provided initial image width when exporting an image', () => {
+    const onExport = vi.fn();
+    const dialog = new ExportDialog();
+    dialog.show({
+      onExport,
+      onCancel: () => {},
+      initialImageWidth: IMAGE_EXPORT_WIDTH_WIDE,
+      translations: {
+        title: 'Export',
+        selectFormat: 'Select format',
+        warning: '',
+        safariCmdpHint: 'Safari tip',
+        safariMarkdownHint: 'Safari markdown tip',
+        cancel: 'Cancel',
+        export: 'Export',
+        fontSizeLabel: 'Font Size',
+        fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
+        imageWidthLabel: 'Image Width',
+        imageWidthNarrow: 'Narrow',
+        imageWidthMedium: 'Medium',
+        imageWidthWide: 'Wide',
+        formatDescriptions: {
+          json: 'JSON format',
+          markdown: 'Markdown format',
+          pdf: 'PDF format',
+          image: 'Image format',
+        },
+      },
+    });
+
+    const imageRadio = document.querySelector(
+      'input[name="export-format"][value="image"]',
+    ) as HTMLInputElement | null;
+    if (imageRadio) {
+      imageRadio.checked = true;
+    }
+    imageRadio?.dispatchEvent(new Event('change', { bubbles: true }));
+
+    const activeWidth = document.querySelector(
+      '.gv-export-width-btn.active',
+    ) as HTMLButtonElement | null;
+    expect(activeWidth?.textContent).toBe('Wide');
+
+    const exportButton = document.querySelector(
+      '.gv-export-dialog-btn-primary',
+    ) as HTMLButtonElement | null;
+    exportButton?.click();
+
+    expect(onExport).toHaveBeenCalledWith('image', 20, IMAGE_EXPORT_WIDTH_WIDE);
   });
 });

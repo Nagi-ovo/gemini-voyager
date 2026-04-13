@@ -5,11 +5,20 @@
 import { isSafari } from '@/core/utils/browser';
 
 import { ConversationExportService } from '../services/ConversationExportService';
-import type { ExportFormat } from '../types/export';
+import {
+  DEFAULT_IMAGE_EXPORT_WIDTH,
+  IMAGE_EXPORT_WIDTH_MEDIUM,
+  IMAGE_EXPORT_WIDTH_NARROW,
+  IMAGE_EXPORT_WIDTH_WIDE,
+  normalizeImageExportWidth,
+  type ExportFormat,
+  type ImageExportWidth,
+} from '../types/export';
 
 export interface ExportDialogOptions {
   onExport: (format: ExportFormat, fontSize?: number, imageWidth?: number) => void;
   onCancel: () => void;
+  initialImageWidth?: ImageExportWidth;
   translations: {
     title: string;
     selectFormat: string;
@@ -39,20 +48,17 @@ const PDF_MAX = 16;
 const IMAGE_MIN = 14;
 const IMAGE_MAX = 28;
 
-const IMAGE_WIDTH_NARROW = 620;
-const IMAGE_WIDTH_MEDIUM = 960;
-const IMAGE_WIDTH_WIDE = 1360;
-
 export class ExportDialog {
   private overlay: HTMLElement | null = null;
   private selectedFormat: ExportFormat = 'markdown' as ExportFormat;
   private fontSize: number = PDF_DEFAULT_FONT_SIZE;
-  private imageWidth: number = IMAGE_WIDTH_NARROW;
+  private imageWidth: ImageExportWidth = DEFAULT_IMAGE_EXPORT_WIDTH;
 
   /**
    * Show export dialog
    */
   show(options: ExportDialogOptions): void {
+    this.imageWidth = normalizeImageExportWidth(options.initialImageWidth);
     this.overlay = this.createDialog(options);
     document.body.appendChild(this.overlay);
 
@@ -328,14 +334,14 @@ export class ExportDialog {
 
     const widths = [
       {
-        value: IMAGE_WIDTH_NARROW,
+        value: IMAGE_EXPORT_WIDTH_NARROW,
         label: options.translations.imageWidthNarrow,
       },
       {
-        value: IMAGE_WIDTH_MEDIUM,
+        value: IMAGE_EXPORT_WIDTH_MEDIUM,
         label: options.translations.imageWidthMedium,
       },
-      { value: IMAGE_WIDTH_WIDE, label: options.translations.imageWidthWide },
+      { value: IMAGE_EXPORT_WIDTH_WIDE, label: options.translations.imageWidthWide },
     ];
 
     widths.forEach((w) => {

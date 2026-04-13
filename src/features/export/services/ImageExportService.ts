@@ -7,7 +7,7 @@
 import { isSafari } from '@/core/utils/browser';
 
 import { isEventLikeImageRenderError } from '../types/errors';
-import type { ChatTurn, ConversationMetadata } from '../types/export';
+import { DEFAULT_IMAGE_EXPORT_WIDTH, type ChatTurn, type ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
 import { renderElementToImageBlob } from './ImageRenderService';
 
@@ -84,7 +84,7 @@ export class ImageExportService {
       position: 'fixed',
       left: '-10000px',
       top: '0',
-      width: `${imageWidth ?? 620}px`,
+      width: `${imageWidth ?? DEFAULT_IMAGE_EXPORT_WIDTH}px`,
       background: '#ffffff',
       color: '#111827',
       zIndex: '-1',
@@ -288,7 +288,7 @@ export class ImageExportService {
       position: 'fixed',
       left: '-10000px',
       top: '0',
-      width: `${imageWidth ?? 620}px`,
+      width: `${imageWidth ?? DEFAULT_IMAGE_EXPORT_WIDTH}px`,
       background: '#ffffff',
       color: '#111827',
       zIndex: '-1',

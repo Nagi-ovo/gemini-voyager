@@ -37,6 +37,28 @@ export enum ExportFormat {
 }
 
 export type ExportLayout = 'conversation' | 'document';
+export type ImageExportWidth = 620 | 960 | 1360;
+
+export const IMAGE_EXPORT_WIDTH_NARROW: ImageExportWidth = 620;
+export const IMAGE_EXPORT_WIDTH_MEDIUM: ImageExportWidth = 960;
+export const IMAGE_EXPORT_WIDTH_WIDE: ImageExportWidth = 1360;
+export const DEFAULT_IMAGE_EXPORT_WIDTH: ImageExportWidth = IMAGE_EXPORT_WIDTH_NARROW;
+export const IMAGE_EXPORT_WIDTH_OPTIONS: readonly ImageExportWidth[] = [
+  IMAGE_EXPORT_WIDTH_NARROW,
+  IMAGE_EXPORT_WIDTH_MEDIUM,
+  IMAGE_EXPORT_WIDTH_WIDE,
+];
+
+export function isImageExportWidth(value: unknown): value is ImageExportWidth {
+  return (
+    typeof value === 'number' &&
+    IMAGE_EXPORT_WIDTH_OPTIONS.some((width) => width === value)
+  );
+}
+
+export function normalizeImageExportWidth(value: unknown): ImageExportWidth {
+  return isImageExportWidth(value) ? value : DEFAULT_IMAGE_EXPORT_WIDTH;
+}
 
 /**
  * Export format labels for UI

@@ -120,6 +120,9 @@ export const StorageKeys = {
   FORK_NODES: 'gvForkNodes',
   FORK_ENABLED: 'gvForkEnabled',
 
+  // Export
+  EXPORT_IMAGE_WIDTH: 'gvExportImageWidth',
+
   // AI Studio master toggle
   GV_AISTUDIO_ENABLED: 'gvAIStudioEnabled',
 

@@ -11,11 +11,15 @@ import { extractMessageDictionary } from '@/utils/localeMessages';
 import type { TranslationKey } from '@/utils/translations';
 
 import { ConversationExportService } from '../../../features/export/services/ConversationExportService';
+import {
+  getSavedImageExportWidth,
+  saveImageExportWidth,
+} from '../../../features/export/services/ImageExportPreferenceService';
 import { ImageExportService } from '../../../features/export/services/ImageExportService';
+import { DEFAULT_IMAGE_EXPORT_WIDTH, type ExportFormat } from '../../../features/export/types/export';
 import type {
   ConversationMetadata,
   ChatTurn as ExportChatTurn,
-  ExportFormat,
 } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 import { resolveExportErrorMessage } from '../../../features/export/ui/ExportErrorMessage';
@@ -1944,7 +1948,7 @@ async function handleResponseCopyImageClick(
     };
 
     const blob = await ImageExportService.renderConversationBlob(turnsForExport, metadata, {
-      imageWidth: 620,
+      imageWidth: DEFAULT_IMAGE_EXPORT_WIDTH,
     });
     blobForFallback = blob;
     await copyImageBlobToClipboard(blob);
@@ -2352,6 +2356,7 @@ async function showExportDialog(
   },
 ): Promise<void> {
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+  const initialImageWidth = await getSavedImageExportWidth();
 
   // We defer collection until after the export sequence (scrolling/refresh checks)
 
@@ -2360,6 +2365,9 @@ async function showExportDialog(
   dialog.show({
     onExport: async (format, fontSize, imageWidth) => {
       try {
+        if (format === 'image') {
+          await saveImageExportWidth(imageWidth);
+        }
         await executeExportSequenceWithProgress(
           format,
           dict,
@@ -2377,6 +2385,7 @@ async function showExportDialog(
     onCancel: () => {
       // Dialog closed
     },
+    initialImageWidth,
     translations: {
       title: t('export_dialog_title'),
       selectFormat: t('export_dialog_select'),

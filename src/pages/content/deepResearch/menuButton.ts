@@ -4,6 +4,10 @@
 import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
 import { ConversationExportService } from '@/features/export/services/ConversationExportService';
+import {
+  getSavedImageExportWidth,
+  saveImageExportWidth,
+} from '@/features/export/services/ImageExportPreferenceService';
 import type {
   ConversationMetadata,
   ChatTurn as ExportChatTurn,
@@ -359,80 +363,89 @@ export function showDeepResearchExportProgressOverlay(
 }
 
 function handleSaveReport(dict: Dictionaries, lang: AppLanguage): void {
-  const reportRoot = findDeepResearchReportRoot();
-  if (!reportRoot) {
-    console.warn('[Gemini Voyager] Report content root not found');
-    return;
-  }
+  void (async () => {
+    const reportRoot = findDeepResearchReportRoot();
+    if (!reportRoot) {
+      console.warn('[Gemini Voyager] Report content root not found');
+      return;
+    }
 
-  const reportTitle = extractDeepResearchReportTitle(reportRoot);
-  const metadata: ConversationMetadata = {
-    url: location.href,
-    exportedAt: new Date().toISOString(),
-    count: 1,
-    title: reportTitle,
-  };
+    const reportTitle = extractDeepResearchReportTitle(reportRoot);
+    const metadata: ConversationMetadata = {
+      url: location.href,
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: reportTitle,
+    };
 
-  const turns: ExportChatTurn[] = [
-    {
-      user: '',
-      assistant: '',
-      starred: false,
-      omitEmptySections: true,
-      assistantElement: reportRoot,
-    },
-  ];
-
-  const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
-  const dialog = new ExportDialog();
-  dialog.show({
-    onExport: async (format, fontSize, imageWidth) => {
-      const hideProgress = showDeepResearchExportProgressOverlay(t);
-      try {
-        const filename = buildReportFilename(format, reportTitle);
-        const resultPromise = ConversationExportService.export(turns, metadata, {
-          format,
-          filename,
-          layout: 'document',
-          fontSize,
-          imageWidth,
-        });
-        const minVisiblePromise = new Promise((resolve) => setTimeout(resolve, 420));
-        const [result] = await Promise.all([resultPromise, minVisiblePromise]);
-        if (!result.success) {
-          alert(resolveExportErrorMessage(result.error, t));
-        } else if (format === 'pdf' && isSafari()) {
-          showExportToast(t('export_toast_safari_pdf_ready'), { autoDismissMs: 5000 });
-        }
-      } catch (error) {
-        console.error('[Gemini Voyager] Report export error:', error);
-        alert('Export error occurred.');
-      } finally {
-        hideProgress();
-      }
-    },
-    onCancel: () => {},
-    translations: {
-      title: t('deepResearchSaveReport'),
-      selectFormat: t('export_dialog_select'),
-      warning: '',
-      safariCmdpHint: t('export_dialog_safari_cmdp_hint'),
-      safariMarkdownHint: t('export_dialog_safari_markdown_hint'),
-      cancel: t('pm_cancel'),
-      export: t('pm_export'),
-      fontSizeLabel: t('export_fontsize_label'),
-      fontSizePreview: t('export_fontsize_preview'),
-      imageWidthLabel: t('export_image_width_label'),
-      imageWidthNarrow: t('export_image_width_narrow'),
-      imageWidthMedium: t('export_image_width_medium'),
-      imageWidthWide: t('export_image_width_wide'),
-      formatDescriptions: {
-        json: t('export_format_json_description'),
-        markdown: t('export_format_markdown_description'),
-        pdf: t('export_format_pdf_description'),
-        image: t('export_format_image_description'),
+    const turns: ExportChatTurn[] = [
+      {
+        user: '',
+        assistant: '',
+        starred: false,
+        omitEmptySections: true,
+        assistantElement: reportRoot,
       },
-    },
+    ];
+
+    const initialImageWidth = await getSavedImageExportWidth();
+    const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
+    const dialog = new ExportDialog();
+    dialog.show({
+      onExport: async (format, fontSize, imageWidth) => {
+        const hideProgress = showDeepResearchExportProgressOverlay(t);
+        try {
+          if (format === 'image') {
+            await saveImageExportWidth(imageWidth);
+          }
+          const filename = buildReportFilename(format, reportTitle);
+          const resultPromise = ConversationExportService.export(turns, metadata, {
+            format,
+            filename,
+            layout: 'document',
+            fontSize,
+            imageWidth,
+          });
+          const minVisiblePromise = new Promise((resolve) => setTimeout(resolve, 420));
+          const [result] = await Promise.all([resultPromise, minVisiblePromise]);
+          if (!result.success) {
+            alert(resolveExportErrorMessage(result.error, t));
+          } else if (format === 'pdf' && isSafari()) {
+            showExportToast(t('export_toast_safari_pdf_ready'), { autoDismissMs: 5000 });
+          }
+        } catch (error) {
+          console.error('[Gemini Voyager] Report export error:', error);
+          alert('Export error occurred.');
+        } finally {
+          hideProgress();
+        }
+      },
+      onCancel: () => {},
+      initialImageWidth,
+      translations: {
+        title: t('deepResearchSaveReport'),
+        selectFormat: t('export_dialog_select'),
+        warning: '',
+        safariCmdpHint: t('export_dialog_safari_cmdp_hint'),
+        safariMarkdownHint: t('export_dialog_safari_markdown_hint'),
+        cancel: t('pm_cancel'),
+        export: t('pm_export'),
+        fontSizeLabel: t('export_fontsize_label'),
+        fontSizePreview: t('export_fontsize_preview'),
+        imageWidthLabel: t('export_image_width_label'),
+        imageWidthNarrow: t('export_image_width_narrow'),
+        imageWidthMedium: t('export_image_width_medium'),
+        imageWidthWide: t('export_image_width_wide'),
+        formatDescriptions: {
+          json: t('export_format_json_description'),
+          markdown: t('export_format_markdown_description'),
+          pdf: t('export_format_pdf_description'),
+          image: t('export_format_image_description'),
+        },
+      },
+    });
+  })().catch((error: unknown) => {
+    console.error('[Gemini Voyager] Failed to open report export dialog:', error);
   });
 }
 
