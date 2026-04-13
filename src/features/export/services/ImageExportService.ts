@@ -39,13 +39,13 @@ export class ImageExportService {
 
   static async exportDocument(
     content: RenderableDocumentContent,
-    options: { filename: string; imageWidth?: number },
+    options: { filename: string; fontSize?: number; imageWidth?: number },
   ): Promise<void> {
     const filename = options.filename.toLowerCase().endsWith('.png')
       ? options.filename
       : `${options.filename}.png`;
 
-    const blob = await this.renderDocumentBlob(content, options.imageWidth);
+    const blob = await this.renderDocumentBlob(content, options.imageWidth, options.fontSize);
     this.downloadBlob(blob, filename);
   }
 

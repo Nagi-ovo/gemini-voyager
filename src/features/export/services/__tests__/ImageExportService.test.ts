@@ -177,4 +177,36 @@ describe('ImageExportService', () => {
     expect(firstTarget.querySelector('img')).not.toBeNull();
     expect(secondTarget.querySelector('img')).toBeNull();
   });
+
+  it('applies custom width and font size for document image exports', async () => {
+    let capturedWidth = '';
+    let capturedFontSize = '';
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (node: HTMLElement) => {
+        const container = node.parentElement as HTMLElement | null;
+        capturedWidth = container?.style.width ?? '';
+        capturedFontSize = container?.style.fontSize ?? '';
+        return new Blob(['x'], { type: 'image/png' });
+      },
+    );
+
+    await ImageExportService.exportDocument(
+      {
+        title: 'Report',
+        url: 'https://gemini.google.com/app/report',
+        exportedAt: '2026-01-01T00:00:00.000Z',
+        markdown: 'Body',
+        html: '<p>Body</p>',
+      },
+      {
+        filename: 'report.png',
+        fontSize: 24,
+        imageWidth: 1360,
+      },
+    );
+
+    expect(capturedWidth).toBe('1360px');
+    expect(capturedFontSize).toBe('24px');
+  });
 });

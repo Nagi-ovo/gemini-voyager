@@ -277,13 +277,16 @@ export class ConversationExportService {
     metadata: ConversationMetadata,
     options: ExportOptions,
   ): Promise<ExportResult> {
-    await DeepResearchPDFPrintService.export({
-      title: metadata.title || 'Deep Research Report',
-      url: metadata.url,
-      exportedAt: metadata.exportedAt,
-      markdown: content.markdown,
-      html: content.html,
-    });
+    await DeepResearchPDFPrintService.export(
+      {
+        title: metadata.title || 'Deep Research Report',
+        url: metadata.url,
+        exportedAt: metadata.exportedAt,
+        markdown: content.markdown,
+        html: content.html,
+      },
+      { fontSize: options.fontSize },
+    );
 
     return {
       success: true,
@@ -306,7 +309,11 @@ export class ConversationExportService {
         markdown: content.markdown,
         html: content.html,
       },
-      { filename, imageWidth: options.imageWidth },
+      {
+        filename,
+        fontSize: options.fontSize,
+        imageWidth: options.imageWidth,
+      },
     );
 
     return {
