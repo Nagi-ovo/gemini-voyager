@@ -2,18 +2,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
+import { DEFAULT_IMAGE_EXPORT_WIDTH, IMAGE_EXPORT_WIDTH_WIDE } from '../../types/export';
+import { getSavedImageExportWidth, saveImageExportWidth } from '../ImageExportPreferenceService';
+
 const { getMock, setMock } = vi.hoisted(() => {
   return {
     getMock: vi.fn(),
     setMock: vi.fn(),
   };
 });
-
-import { DEFAULT_IMAGE_EXPORT_WIDTH, IMAGE_EXPORT_WIDTH_WIDE } from '../../types/export';
-import {
-  getSavedImageExportWidth,
-  saveImageExportWidth,
-} from '../ImageExportPreferenceService';
 
 vi.mock('@/core/services/StorageService', () => {
   return {
@@ -53,9 +50,6 @@ describe('ImageExportPreferenceService', () => {
     await saveImageExportWidth(undefined);
 
     expect(setMock).toHaveBeenCalledTimes(1);
-    expect(setMock).toHaveBeenCalledWith(
-      StorageKeys.EXPORT_IMAGE_WIDTH,
-      IMAGE_EXPORT_WIDTH_WIDE,
-    );
+    expect(setMock).toHaveBeenCalledWith(StorageKeys.EXPORT_IMAGE_WIDTH, IMAGE_EXPORT_WIDTH_WIDE);
   });
 });

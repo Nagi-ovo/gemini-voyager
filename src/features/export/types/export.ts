@@ -50,10 +50,7 @@ export const IMAGE_EXPORT_WIDTH_OPTIONS: readonly ImageExportWidth[] = [
 ];
 
 export function isImageExportWidth(value: unknown): value is ImageExportWidth {
-  return (
-    typeof value === 'number' &&
-    IMAGE_EXPORT_WIDTH_OPTIONS.some((width) => width === value)
-  );
+  return typeof value === 'number' && IMAGE_EXPORT_WIDTH_OPTIONS.some((width) => width === value);
 }
 
 export function normalizeImageExportWidth(value: unknown): ImageExportWidth {

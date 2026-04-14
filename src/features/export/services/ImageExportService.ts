@@ -7,7 +7,11 @@
 import { isSafari } from '@/core/utils/browser';
 
 import { isEventLikeImageRenderError } from '../types/errors';
-import { DEFAULT_IMAGE_EXPORT_WIDTH, type ChatTurn, type ConversationMetadata } from '../types/export';
+import {
+  type ChatTurn,
+  type ConversationMetadata,
+  DEFAULT_IMAGE_EXPORT_WIDTH,
+} from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
 import { renderElementToImageBlob } from './ImageRenderService';
 

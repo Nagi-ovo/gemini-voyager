@@ -7,7 +7,7 @@
  */
 import browser from 'webextension-polyfill';
 
-import { StorageKeys, type StorageKey } from '@/core/types/common';
+import { type StorageKey, StorageKeys } from '@/core/types/common';
 
 import { getTranslationSync } from '../../../utils/i18n';
 
@@ -247,10 +247,7 @@ function injectStyles(): void {
   document.head.appendChild(style);
 }
 
-function getSectionText(
-  section: HidableSectionConfig,
-  kind: 'hide' | 'show',
-): string {
+function getSectionText(section: HidableSectionConfig, kind: 'hide' | 'show'): string {
   const translationKey = kind === 'hide' ? section.hideTranslationKey : section.showTranslationKey;
   const fallback = kind === 'hide' ? section.hideFallback : section.showFallback;
   return getTranslationSync(translationKey) || fallback;
@@ -361,10 +358,7 @@ function applyState(sectionEl: HTMLElement, peekBar: HTMLDivElement, hidden: boo
   peekBar.classList.remove('gv-visible');
 }
 
-function isTargetSectionElement(
-  element: HTMLElement,
-  section: HidableSectionConfig,
-): boolean {
+function isTargetSectionElement(element: HTMLElement, section: HidableSectionConfig): boolean {
   if (!element.matches(section.containerSelector)) {
     return false;
   }

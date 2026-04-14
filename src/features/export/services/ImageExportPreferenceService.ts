@@ -3,9 +3,9 @@ import { StorageKeys } from '@/core/types/common';
 
 import {
   DEFAULT_IMAGE_EXPORT_WIDTH,
+  type ImageExportWidth,
   isImageExportWidth,
   normalizeImageExportWidth,
-  type ImageExportWidth,
 } from '../types/export';
 
 export async function getSavedImageExportWidth(): Promise<ImageExportWidth> {

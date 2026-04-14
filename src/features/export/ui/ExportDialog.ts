@@ -7,12 +7,12 @@ import { isSafari } from '@/core/utils/browser';
 import { ConversationExportService } from '../services/ConversationExportService';
 import {
   DEFAULT_IMAGE_EXPORT_WIDTH,
+  type ExportFormat,
   IMAGE_EXPORT_WIDTH_MEDIUM,
   IMAGE_EXPORT_WIDTH_NARROW,
   IMAGE_EXPORT_WIDTH_WIDE,
-  normalizeImageExportWidth,
-  type ExportFormat,
   type ImageExportWidth,
+  normalizeImageExportWidth,
 } from '../types/export';
 
 export interface ExportDialogOptions {

@@ -16,7 +16,10 @@ import {
   saveImageExportWidth,
 } from '../../../features/export/services/ImageExportPreferenceService';
 import { ImageExportService } from '../../../features/export/services/ImageExportService';
-import { DEFAULT_IMAGE_EXPORT_WIDTH, type ExportFormat } from '../../../features/export/types/export';
+import {
+  DEFAULT_IMAGE_EXPORT_WIDTH,
+  type ExportFormat,
+} from '../../../features/export/types/export';
 import type {
   ConversationMetadata,
   ChatTurn as ExportChatTurn,

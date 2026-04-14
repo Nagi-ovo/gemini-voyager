@@ -54,16 +54,21 @@ describe('gemsHider', () => {
         };
       }
     ).local = {
-      get: vi.fn().mockImplementation(
-        (defaults: Record<string, boolean>, callback: (result: Record<string, boolean>) => void) => {
-          const key = Object.keys(defaults)[0];
-          callback({
-            [key]: Object.prototype.hasOwnProperty.call(localState, key)
-              ? localState[key]
-              : defaults[key],
-          });
-        },
-      ),
+      get: vi
+        .fn()
+        .mockImplementation(
+          (
+            defaults: Record<string, boolean>,
+            callback: (result: Record<string, boolean>) => void,
+          ) => {
+            const key = Object.keys(defaults)[0];
+            callback({
+              [key]: Object.prototype.hasOwnProperty.call(localState, key)
+                ? localState[key]
+                : defaults[key],
+            });
+          },
+        ),
       set: vi.fn().mockImplementation((update: Record<string, boolean>, callback?: () => void) => {
         Object.assign(localState, update);
         callback?.();
@@ -143,7 +148,9 @@ describe('gemsHider', () => {
     expect(document.getElementById('gv-sidebar-section-tooltip')?.textContent).toBe(
       'Show Notebooks',
     );
-    expect(document.getElementById('gv-sidebar-section-tooltip')?.classList.contains('gv-visible')).toBe(true);
+    expect(
+      document.getElementById('gv-sidebar-section-tooltip')?.classList.contains('gv-visible'),
+    ).toBe(true);
     expect(gems.classList.contains('gv-sidebar-section-hidden')).toBe(true);
     expect(notebooks.classList.contains('gv-sidebar-section-hidden')).toBe(false);
   });
@@ -154,7 +161,9 @@ describe('gemsHider', () => {
 
     await startFeature();
 
-    const notebookToggle = notebooks.querySelector<HTMLButtonElement>('.gv-sidebar-section-toggle-btn');
+    const notebookToggle = notebooks.querySelector<HTMLButtonElement>(
+      '.gv-sidebar-section-toggle-btn',
+    );
     expect(notebookToggle).not.toBeNull();
 
     const result = notebookToggle?.dispatchEvent(
