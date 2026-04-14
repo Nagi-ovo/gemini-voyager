@@ -100,6 +100,8 @@ export const StorageKeys = {
   // Sidebar behavior
   GV_SIDEBAR_AUTO_HIDE: 'gvSidebarAutoHide',
   GV_SIDEBAR_FULL_HIDE: 'gvSidebarFullHide',
+  GEMS_HIDDEN: 'gvGemsHidden',
+  NOTEBOOKS_HIDDEN: 'gvNotebooksHidden',
 
   // Folder spacing
   GV_FOLDER_SPACING: 'gvFolderSpacing',

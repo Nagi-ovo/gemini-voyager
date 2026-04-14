@@ -1215,6 +1215,14 @@
     "message": "Mostrar Gems",
     "description": "Dica para mostrar a seção da lista de Gems"
   },
+  "notebooksHide": {
+    "message": "Ocultar Notebooks",
+    "description": "Dica para ocultar a seção da lista de Notebooks"
+  },
+  "notebooksShow": {
+    "message": "Mostrar Notebooks",
+    "description": "Dica para mostrar a seção da lista de Notebooks"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

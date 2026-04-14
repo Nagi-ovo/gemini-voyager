@@ -1215,6 +1215,14 @@
     "message": "إظهار Gems",
     "description": "تلميح لإظهار قسم قائمة Gems"
   },
+  "notebooksHide": {
+    "message": "إخفاء دفاتر الملاحظات",
+    "description": "تلميح لإخفاء قسم قائمة دفاتر الملاحظات"
+  },
+  "notebooksShow": {
+    "message": "إظهار دفاتر الملاحظات",
+    "description": "تلميح لإظهار قسم قائمة دفاتر الملاحظات"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

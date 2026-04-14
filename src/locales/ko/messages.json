@@ -1215,6 +1215,14 @@
     "message": "Gem 표시",
     "description": "Tooltip for showing Gems list section"
   },
+  "notebooksHide": {
+    "message": "노트북 숨기기",
+    "description": "노트북 목록 섹션을 숨기는 툴팁"
+  },
+  "notebooksShow": {
+    "message": "노트북 표시",
+    "description": "노트북 목록 섹션을 표시하는 툴팁"
+  },
   "setAsDefaultModel": {
     "message": "기본 모델로 설정",
     "description": "Tooltip for setting default model"

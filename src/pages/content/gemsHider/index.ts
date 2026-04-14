@@ -1,47 +1,80 @@
 /**
- * Gems Hider - Elegant hide/show toggle for Gems list section in sidebar
+ * Sidebar section hider for Gems and Notebooks.
  *
- * Design Philosophy:
- * Similar to recentsHider, we use a contextual "hover reveal" pattern where
- * a subtle hide button appears on hover. When hidden, a minimal "peek bar"
- * allows users to restore the section.
+ * Gemini keeps shipping new sidebar section shells for project-like content.
+ * This module keeps the same hide/show affordance across those variants while
+ * persisting state independently for each section.
  */
 import browser from 'webextension-polyfill';
 
-import { StorageKeys } from '@/core/types/common';
+import { StorageKeys, type StorageKey } from '@/core/types/common';
 
 import { getTranslationSync } from '../../../utils/i18n';
 
-// Constants
-const STYLE_ID = 'gv-gems-hider-style';
-const HIDDEN_CLASS = 'gv-gems-hidden';
-const PEEK_BAR_CLASS = 'gv-gems-peek-bar';
-const TOGGLE_BTN_CLASS = 'gv-gems-toggle-btn';
-const STORAGE_KEY = 'gvGemsHidden';
-
-// Selectors - targeting the gems list container
-const GEMS_CONTAINER_SELECTOR = '.gems-list-container';
+const STYLE_ID = 'gv-sidebar-section-hider-style';
+const HIDDEN_CLASS = 'gv-sidebar-section-hidden';
+const PEEK_BAR_CLASS = 'gv-sidebar-section-peek-bar';
+const TOGGLE_BTN_CLASS = 'gv-sidebar-section-toggle-btn';
+const TARGET_CLASS = 'gv-sidebar-section-hider-target';
+const TOOLTIP_ID = 'gv-sidebar-section-tooltip';
+const TOOLTIP_VISIBLE_CLASS = 'gv-visible';
+const PROCESSED_ATTR = 'data-gv-sidebar-section-hider';
+const SECTION_ID_ATTR = 'data-gv-sidebar-section-id';
 const ARROW_ICON_SELECTOR = '[data-test-id="arrow-icon"]';
+
+type SectionId = 'gems' | 'notebooks';
+type TranslationKey = Parameters<typeof getTranslationSync>[0];
+
+interface HidableSectionConfig {
+  id: SectionId;
+  containerSelector: string;
+  requiredDescendantSelector?: string;
+  storageKey: StorageKey;
+  hideTranslationKey: TranslationKey;
+  showTranslationKey: TranslationKey;
+  hideFallback: string;
+  showFallback: string;
+}
+
+const SECTION_CONFIGS: readonly HidableSectionConfig[] = [
+  {
+    id: 'gems',
+    containerSelector: '.gems-list-container',
+    storageKey: StorageKeys.GEMS_HIDDEN,
+    hideTranslationKey: 'gemsHide',
+    showTranslationKey: 'gemsShow',
+    hideFallback: 'Hide Gems',
+    showFallback: 'Show Gems',
+  },
+  {
+    id: 'notebooks',
+    containerSelector: '.project-sidenav-container',
+    requiredDescendantSelector: 'side-nav-entry-button[data-test-id="project-management-button"]',
+    storageKey: StorageKeys.NOTEBOOKS_HIDDEN,
+    hideTranslationKey: 'notebooksHide',
+    showTranslationKey: 'notebooksShow',
+    hideFallback: 'Hide Notebooks',
+    showFallback: 'Show Notebooks',
+  },
+] as const;
 
 let initialized = false;
 let observer: MutationObserver | null = null;
+let languageChangeListener:
+  | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
+  | null = null;
 
-/**
- * Inject CSS styles for the hide/show functionality
- */
 function injectStyles(): void {
   if (document.getElementById(STYLE_ID)) return;
 
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
-    /* Container for proper positioning */
-    ${GEMS_CONTAINER_SELECTOR} {
+    .${TARGET_CLASS} {
       position: relative;
       transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Toggle button - inline next to arrow icon */
     .${TOGGLE_BTN_CLASS} {
       width: 24px;
       height: 24px;
@@ -75,14 +108,12 @@ function injectStyles(): void {
       transition: transform 0.2s ease;
     }
 
-    /* Show button when hovering near arrow area */
     ${ARROW_ICON_SELECTOR}:hover .${TOGGLE_BTN_CLASS},
     .${TOGGLE_BTN_CLASS}:hover {
       opacity: 1;
       transform: scale(1);
     }
 
-    /* Hidden state - collapse with smooth animation */
     .${HIDDEN_CLASS} {
       max-height: 0 !important;
       overflow: hidden !important;
@@ -92,7 +123,6 @@ function injectStyles(): void {
       pointer-events: none !important;
     }
 
-    /* Peek bar - minimal restore hint */
     .${PEEK_BAR_CLASS} {
       height: 6px;
       margin: 8px 16px;
@@ -140,13 +170,10 @@ function injectStyles(): void {
       width: 60px;
     }
 
-    /* Tooltip for peek bar */
-    .${PEEK_BAR_CLASS}[data-tooltip]::before {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%) translateY(-4px);
+    #${TOOLTIP_ID} {
+      position: fixed;
+      left: 0;
+      top: 0;
       padding: 6px 12px;
       background: var(--gm3-sys-color-inverse-surface, #303030);
       color: var(--gm3-sys-color-inverse-on-surface, #f5f5f5);
@@ -158,28 +185,28 @@ function injectStyles(): void {
       opacity: 0;
       pointer-events: none;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 1000;
+      z-index: 10000;
+      transform: translate(-50%, calc(-100% - 8px));
     }
 
-    .${PEEK_BAR_CLASS}:hover[data-tooltip]::before {
+    #${TOOLTIP_ID}.${TOOLTIP_VISIBLE_CLASS} {
       opacity: 1;
-      transform: translateX(-50%) translateY(-8px);
     }
 
-    /* Show peek bar when gems is hidden */
     .${PEEK_BAR_CLASS}.gv-visible {
       display: block;
     }
 
-    /* Dark mode adjustments */
     @media (prefers-color-scheme: dark) {
       .${TOGGLE_BTN_CLASS} {
         background: rgba(255, 255, 255, 0.08);
         color: #e8eaed;
       }
+
       .${TOGGLE_BTN_CLASS}:hover {
         background: rgba(255, 255, 255, 0.14);
       }
+
       .${PEEK_BAR_CLASS} {
         background: linear-gradient(
           90deg,
@@ -189,6 +216,7 @@ function injectStyles(): void {
           transparent 100%
         );
       }
+
       .${PEEK_BAR_CLASS}:hover {
         background: linear-gradient(
           90deg,
@@ -198,35 +226,45 @@ function injectStyles(): void {
           transparent 100%
         );
       }
+
       .${PEEK_BAR_CLASS}::after {
         background: #8ab4f8;
       }
     }
 
-    /* Explicit dark theme support */
     body[data-theme="dark"] .${TOGGLE_BTN_CLASS},
     body.dark-theme .${TOGGLE_BTN_CLASS} {
       background: rgba(255, 255, 255, 0.08);
       color: #e8eaed;
     }
+
     body[data-theme="dark"] .${TOGGLE_BTN_CLASS}:hover,
     body.dark-theme .${TOGGLE_BTN_CLASS}:hover {
       background: rgba(255, 255, 255, 0.14);
     }
   `;
+
   document.head.appendChild(style);
 }
 
-/**
- * Create the toggle button element
- */
-function createToggleButton(): HTMLButtonElement {
+function getSectionText(
+  section: HidableSectionConfig,
+  kind: 'hide' | 'show',
+): string {
+  const translationKey = kind === 'hide' ? section.hideTranslationKey : section.showTranslationKey;
+  const fallback = kind === 'hide' ? section.hideFallback : section.showFallback;
+  return getTranslationSync(translationKey) || fallback;
+}
+
+function createToggleButton(section: HidableSectionConfig): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.className = TOGGLE_BTN_CLASS;
-  btn.setAttribute('aria-label', getTranslationSync('gemsHide') || 'Hide Gems');
-  btn.title = getTranslationSync('gemsHide') || 'Hide Gems';
+  btn.setAttribute(SECTION_ID_ATTR, section.id);
 
-  // Eye-off icon (Material Symbols)
+  const label = getSectionText(section, 'hide');
+  btn.setAttribute('aria-label', label);
+  btn.title = label;
+
   btn.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
       <path d="m644-428-58-58q9-47-27-88t-93-32l-58-58q17-8 34.5-12t37.5-4q75 0 127.5 52.5T660-500q0 20-4 37.5T644-428Zm128 126-58-56q38-29 67.5-63.5T832-500q-50-101-143.5-160.5T480-720q-29 0-57 4t-55 12l-62-62q41-17 84-25.5t90-8.5q151 0 269 83.5T920-500q-23 59-60.5 109.5T772-302Zm20 246L624-222q-35 11-70.5 16.5T480-200q-151 0-269-83.5T40-500q21-53 53-98.5t73-81.5L56-792l56-56 736 736-56 56ZM222-624q-29 26-53 57t-41 67q50 101 143.5 160.5T480-280q20 0 39-2.5t39-5.5l-36-38q-11 3-21 4.5t-21 1.5q-75 0-127.5-52.5T300-500q0-11 1.5-21t4.5-21l-84-82Zm319 93Zm-151 75Z"/>
@@ -236,206 +274,281 @@ function createToggleButton(): HTMLButtonElement {
   return btn;
 }
 
-/**
- * Create the peek bar element for restoring hidden section
- */
-function createPeekBar(): HTMLDivElement {
+function createPeekBar(section: HidableSectionConfig): HTMLDivElement {
   const bar = document.createElement('div');
   bar.className = PEEK_BAR_CLASS;
-  bar.setAttribute('data-tooltip', getTranslationSync('gemsShow') || 'Show Gems');
+  bar.setAttribute(SECTION_ID_ATTR, section.id);
+
+  const label = getSectionText(section, 'show');
+  bar.setAttribute('data-tooltip', label);
+  bar.title = label;
   bar.setAttribute('role', 'button');
   bar.setAttribute('tabindex', '0');
-  bar.setAttribute('aria-label', getTranslationSync('gemsShow') || 'Show Gems');
+  bar.setAttribute('aria-label', label);
 
   return bar;
 }
 
-/**
- * Get the current hidden state from storage
- */
-async function getHiddenState(): Promise<boolean> {
+function getTooltipElement(): HTMLDivElement {
+  let tooltip = document.getElementById(TOOLTIP_ID) as HTMLDivElement | null;
+  if (tooltip) {
+    return tooltip;
+  }
+
+  tooltip = document.createElement('div');
+  tooltip.id = TOOLTIP_ID;
+  tooltip.setAttribute('role', 'tooltip');
+  document.body.appendChild(tooltip);
+
+  return tooltip;
+}
+
+function hideTooltip(): void {
+  document.getElementById(TOOLTIP_ID)?.classList.remove(TOOLTIP_VISIBLE_CLASS);
+}
+
+function showTooltip(bar: HTMLDivElement): void {
+  const label = bar.getAttribute('data-tooltip') || bar.title;
+  if (!label) {
+    hideTooltip();
+    return;
+  }
+
+  const tooltip = getTooltipElement();
+  const rect = bar.getBoundingClientRect();
+
+  tooltip.textContent = label;
+  tooltip.style.left = `${rect.left + rect.width / 2}px`;
+  tooltip.style.top = `${Math.max(rect.top, 16)}px`;
+  tooltip.classList.add(TOOLTIP_VISIBLE_CLASS);
+}
+
+function getSectionConfig(sectionId: string | null): HidableSectionConfig | undefined {
+  return SECTION_CONFIGS.find((section) => section.id === sectionId);
+}
+
+async function getHiddenState(section: HidableSectionConfig): Promise<boolean> {
   return new Promise((resolve) => {
     try {
-      chrome.storage?.local?.get({ [STORAGE_KEY]: false }, (result) => {
-        resolve(result?.[STORAGE_KEY] === true);
+      chrome.storage?.local?.get({ [section.storageKey]: false }, (result) => {
+        resolve(result?.[section.storageKey] === true);
       });
     } catch {
-      // Fallback to localStorage
-      resolve(localStorage.getItem(STORAGE_KEY) === 'true');
+      resolve(localStorage.getItem(section.storageKey) === 'true');
     }
   });
 }
 
-/**
- * Save the hidden state to storage
- */
-async function setHiddenState(hidden: boolean): Promise<void> {
+async function setHiddenState(section: HidableSectionConfig, hidden: boolean): Promise<void> {
   return new Promise((resolve) => {
     try {
-      chrome.storage?.local?.set({ [STORAGE_KEY]: hidden }, () => resolve());
+      chrome.storage?.local?.set({ [section.storageKey]: hidden }, () => resolve());
     } catch {
-      // Fallback to localStorage
-      localStorage.setItem(STORAGE_KEY, String(hidden));
+      localStorage.setItem(section.storageKey, String(hidden));
       resolve();
     }
   });
 }
 
-/**
- * Apply the hidden/visible state to the gems section
- */
-function applyState(gemsEl: HTMLElement, peekBar: HTMLDivElement, hidden: boolean): void {
+function applyState(sectionEl: HTMLElement, peekBar: HTMLDivElement, hidden: boolean): void {
   if (hidden) {
-    gemsEl.classList.add(HIDDEN_CLASS);
+    sectionEl.classList.add(HIDDEN_CLASS);
     peekBar.classList.add('gv-visible');
-  } else {
-    gemsEl.classList.remove(HIDDEN_CLASS);
-    peekBar.classList.remove('gv-visible');
+    return;
+  }
+
+  sectionEl.classList.remove(HIDDEN_CLASS);
+  peekBar.classList.remove('gv-visible');
+}
+
+function isTargetSectionElement(
+  element: HTMLElement,
+  section: HidableSectionConfig,
+): boolean {
+  if (!element.matches(section.containerSelector)) {
+    return false;
+  }
+
+  if (!section.requiredDescendantSelector) {
+    return true;
+  }
+
+  return element.querySelector(section.requiredDescendantSelector) !== null;
+}
+
+function setupSectionCandidates(root: ParentNode): void {
+  SECTION_CONFIGS.forEach((section) => {
+    if (root instanceof HTMLElement && isTargetSectionElement(root, section)) {
+      void setupSectionHider(root, section);
+    }
+
+    root.querySelectorAll<HTMLElement>(section.containerSelector).forEach((element) => {
+      if (isTargetSectionElement(element, section)) {
+        void setupSectionHider(element, section);
+      }
+    });
+  });
+}
+
+async function setupSectionHider(
+  sectionEl: HTMLElement,
+  section: HidableSectionConfig,
+): Promise<void> {
+  if (sectionEl.getAttribute(PROCESSED_ATTR) === section.id) {
+    return;
+  }
+
+  const arrowIcon = sectionEl.querySelector(ARROW_ICON_SELECTOR);
+  const parent = sectionEl.parentElement;
+  if (!arrowIcon || !parent) {
+    return;
+  }
+
+  const toggleBtn = createToggleButton(section);
+  const peekBar = createPeekBar(section);
+  let hasUserInteraction = false;
+
+  sectionEl.classList.add(TARGET_CLASS);
+  sectionEl.setAttribute(PROCESSED_ATTR, section.id);
+
+  arrowIcon.insertBefore(toggleBtn, arrowIcon.firstChild);
+  parent.insertBefore(peekBar, sectionEl.nextSibling);
+
+  toggleBtn.addEventListener('click', async (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    hasUserInteraction = true;
+    await setHiddenState(section, true);
+    applyState(sectionEl, peekBar, true);
+  });
+
+  peekBar.addEventListener('click', async () => {
+    hasUserInteraction = true;
+    hideTooltip();
+    await setHiddenState(section, false);
+    applyState(sectionEl, peekBar, false);
+  });
+
+  peekBar.addEventListener('keydown', async (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      hasUserInteraction = true;
+      hideTooltip();
+      await setHiddenState(section, false);
+      applyState(sectionEl, peekBar, false);
+    }
+  });
+
+  peekBar.addEventListener('mouseenter', () => {
+    showTooltip(peekBar);
+  });
+
+  peekBar.addEventListener('mouseleave', () => {
+    hideTooltip();
+  });
+
+  peekBar.addEventListener('focus', () => {
+    showTooltip(peekBar);
+  });
+
+  peekBar.addEventListener('blur', () => {
+    hideTooltip();
+  });
+
+  const isHidden = await getHiddenState(section);
+  if (!hasUserInteraction) {
+    applyState(sectionEl, peekBar, isHidden);
   }
 }
 
-/**
- * Setup the hide/show functionality for a gems container element
- */
-async function setupGemsHider(containerEl: HTMLElement): Promise<void> {
-  // Check if already processed
-  if (document.querySelector(`.${TOGGLE_BTN_CLASS}`)) return;
-
-  // Find the arrow icon to insert button next to it
-  const arrowIcon = containerEl.querySelector(ARROW_ICON_SELECTOR);
-  if (!arrowIcon) return;
-
-  // Create UI elements
-  const toggleBtn = createToggleButton();
-  const peekBar = createPeekBar();
-
-  // Insert button before arrow icon (inside the same parent)
-  arrowIcon.insertBefore(toggleBtn, arrowIcon.firstChild);
-  containerEl.parentElement?.insertBefore(peekBar, containerEl.nextSibling);
-
-  // Get initial state and apply
-  const isHidden = await getHiddenState();
-  applyState(containerEl, peekBar, isHidden);
-
-  // Toggle button click handler
-  toggleBtn.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    await setHiddenState(true);
-    applyState(containerEl, peekBar, true);
-  });
-
-  // Peek bar click handler
-  peekBar.addEventListener('click', async () => {
-    await setHiddenState(false);
-    applyState(containerEl, peekBar, false);
-  });
-
-  // Keyboard support for peek bar
-  peekBar.addEventListener('keydown', async (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      await setHiddenState(false);
-      applyState(containerEl, peekBar, false);
-    }
-  });
-}
-
-/**
- * Update UI text when language changes
- */
 function updateLanguageText(): void {
-  // Update toggle buttons
   document.querySelectorAll<HTMLButtonElement>(`.${TOGGLE_BTN_CLASS}`).forEach((btn) => {
-    const text = getTranslationSync('gemsHide') || 'Hide Gems';
-    btn.setAttribute('aria-label', text);
-    btn.title = text;
+    const section = getSectionConfig(btn.getAttribute(SECTION_ID_ATTR));
+    if (!section) {
+      return;
+    }
+
+    const label = getSectionText(section, 'hide');
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
   });
 
-  // Update peek bars
   document.querySelectorAll<HTMLDivElement>(`.${PEEK_BAR_CLASS}`).forEach((bar) => {
-    const text = getTranslationSync('gemsShow') || 'Show Gems';
-    bar.setAttribute('data-tooltip', text);
-    bar.setAttribute('aria-label', text);
+    const section = getSectionConfig(bar.getAttribute(SECTION_ID_ATTR));
+    if (!section) {
+      return;
+    }
+
+    const label = getSectionText(section, 'show');
+    bar.setAttribute('data-tooltip', label);
+    bar.title = label;
+    bar.setAttribute('aria-label', label);
   });
 }
 
-/**
- * Initialize the gems hider
- */
 function initGemsHider(): void {
   if (initialized) return;
   initialized = true;
 
   injectStyles();
+  setupSectionCandidates(document);
 
-  // Setup existing gems container elements
-  const gemsEls = document.querySelectorAll<HTMLElement>(GEMS_CONTAINER_SELECTOR);
-  gemsEls.forEach((el) => setupGemsHider(el));
-
-  // Observe for dynamically added gems elements (SPA navigation)
   observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      for (const node of Array.from(mutation.addedNodes)) {
+    mutations.forEach((mutation) => {
+      Array.from(mutation.addedNodes).forEach((node) => {
         if (node instanceof HTMLElement) {
-          if (node.matches(GEMS_CONTAINER_SELECTOR)) {
-            setupGemsHider(node);
-          }
-          // Also check children
-          const children = node.querySelectorAll<HTMLElement>(GEMS_CONTAINER_SELECTOR);
-          children.forEach((el) => setupGemsHider(el));
+          setupSectionCandidates(node);
         }
-      }
-    }
+      });
+    });
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // Listen for language changes and update UI text
-  browser.storage.onChanged.addListener((changes, areaName) => {
+  languageChangeListener = (changes, areaName) => {
     if ((areaName === 'sync' || areaName === 'local') && changes[StorageKeys.LANGUAGE]) {
       updateLanguageText();
     }
-  });
+  };
+
+  browser.storage.onChanged.addListener(languageChangeListener);
 }
 
-/**
- * Cleanup function
- */
 function cleanup(): void {
   if (observer) {
     observer.disconnect();
     observer = null;
   }
 
-  // Remove styles
-  document.getElementById(STYLE_ID)?.remove();
+  if (languageChangeListener) {
+    browser.storage.onChanged.removeListener(languageChangeListener);
+    languageChangeListener = null;
+  }
 
-  // Remove added elements
-  document.querySelectorAll(`.${TOGGLE_BTN_CLASS}`).forEach((el) => el.remove());
-  document.querySelectorAll(`.${PEEK_BAR_CLASS}`).forEach((el) => el.remove());
-  document.querySelectorAll(`.${HIDDEN_CLASS}`).forEach((el) => {
-    el.classList.remove(HIDDEN_CLASS);
+  document.getElementById(STYLE_ID)?.remove();
+  document.querySelectorAll(`.${TOGGLE_BTN_CLASS}`).forEach((element) => element.remove());
+  document.querySelectorAll(`.${PEEK_BAR_CLASS}`).forEach((element) => element.remove());
+  document.getElementById(TOOLTIP_ID)?.remove();
+  document.querySelectorAll(`.${HIDDEN_CLASS}`).forEach((element) => {
+    element.classList.remove(HIDDEN_CLASS);
+  });
+  document.querySelectorAll<HTMLElement>(`[${PROCESSED_ATTR}]`).forEach((element) => {
+    element.classList.remove(TARGET_CLASS);
+    element.removeAttribute(PROCESSED_ATTR);
   });
 
   initialized = false;
 }
 
-/**
- * Start the gems hider feature
- */
 export function startGemsHider(): () => void {
-  // Only run on gemini.google.com
   if (location.hostname !== 'gemini.google.com') {
     return () => {};
   }
 
-  // Wait for DOM to be ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initGemsHider);
   } else {
-    // Small delay to ensure Gemini's UI is rendered
     setTimeout(initGemsHider, 500);
   }
 

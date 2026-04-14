@@ -1215,6 +1215,14 @@
     "message": "Gems を表示",
     "description": "Gems リストセクションを表示するツールチップ"
   },
+  "notebooksHide": {
+    "message": "ノートブックを非表示",
+    "description": "ノートブック一覧セクションを隠すツールチップ"
+  },
+  "notebooksShow": {
+    "message": "ノートブックを表示",
+    "description": "ノートブック一覧セクションを表示するツールチップ"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

@@ -1215,6 +1215,14 @@
     "message": "显示 Gems",
     "description": "显示 Gems 列表区域的提示"
   },
+  "notebooksHide": {
+    "message": "隐藏笔记本",
+    "description": "隐藏笔记本列表区域的提示"
+  },
+  "notebooksShow": {
+    "message": "显示笔记本",
+    "description": "显示笔记本列表区域的提示"
+  },
   "setAsDefaultModel": {
     "message": "设为新对话的默认模型",
     "description": "Tooltip for setting default model"
