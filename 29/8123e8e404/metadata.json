@@ -1,0 +1,38 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "298123e8e404",
+  "strategy": "manual-commit",
+  "branch": "codex/notebooks-peek-tooltip",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/core/types/common.ts",
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/gemsHider/__tests__/gemsHider.test.ts",
+    "src/pages/content/gemsHider/index.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/29/8123e8e404/0/metadata.json",
+      "transcript": "/29/8123e8e404/0/full.jsonl",
+      "context": "/29/8123e8e404/0/context.md",
+      "content_hash": "/29/8123e8e404/0/content_hash.txt",
+      "prompt": "/29/8123e8e404/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
