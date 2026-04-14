@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "6762a56bee32",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "README.md",
+    "docs/en/guide/sponsor.md",
+    "docs/es/guide/sponsor.md",
+    "docs/fr/guide/sponsor.md",
+    "docs/guide/sponsor.md",
+    "docs/ja/guide/sponsor.md",
+    "docs/ko/guide/sponsor.md",
+    "docs/ru/guide/sponsor.md",
+    "docs/zh_TW/guide/sponsor.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/67/62a56bee32/0/metadata.json",
+      "transcript": "/67/62a56bee32/0/full.jsonl",
+      "context": "/67/62a56bee32/0/context.md",
+      "content_hash": "/67/62a56bee32/0/content_hash.txt",
+      "prompt": "/67/62a56bee32/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
