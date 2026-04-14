@@ -195,9 +195,9 @@ If Voyager makes your life easier, consider buying me a coffee. It helps keep th
 
 ### 🎙️ Recommended Tool: Typeless
 
-I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, an AI voice-to-text tool that I used extensively during the development of Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
+I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, an AI voice-to-text tool that I used extensively during the development of Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
 
-> 🎁 **[Join via my referral link](https://www.typeless.com/?via=gemini-voyager)** (Code: _`gemini-voyager`_) to get **$5 free credits**. This also gives me credits to keep maintaining this project—a free way to support my work! ❤️
+> 🎁 **[Join via my referral link](https://www.typeless.com/refer?code=MZRYZP1)** (Code: _`MZRYZP1`_) to get **$5 free credits**. This also gives me credits to keep maintaining this project—a free way to support my work! ❤️
 
 ---
 

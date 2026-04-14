@@ -30,9 +30,9 @@ Maintenir des projets open-source est principalement motivé par la passion (et 
 
 ### 🎙️ Outil Recommandé : Typeless
 
-Je recommande vivement **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, un outil IA de voix-à-texte que j'ai utilisé intensivement durant le développement de Voyager. L'intégrer dans mon flux quotidien m'a fait gagner un temps énorme et a considérablement boosté ma productivité.
+Je recommande vivement **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, un outil IA de voix-à-texte que j'ai utilisé intensivement durant le développement de Voyager. L'intégrer dans mon flux quotidien m'a fait gagner un temps énorme et a considérablement boosté ma productivité.
 
-> 🎁 **[Rejoignez via mon lien de parrainage](https://www.typeless.com/?via=gemini-voyager)** (Code : _`gemini-voyager`_) pour obtenir **$5 de crédits gratuits**. Cela me donne aussi des crédits pour continuer à maintenir ce projet—une façon gratuite de soutenir mon travail ! ❤️
+> 🎁 **[Rejoignez via mon lien de parrainage](https://www.typeless.com/refer?code=MZRYZP1)** (Code : _`MZRYZP1`_) pour obtenir **$5 de crédits gratuits**. Cela me donne aussi des crédits pour continuer à maintenir ce projet—une façon gratuite de soutenir mon travail ! ❤️
 
 ---
 

@@ -30,9 +30,9 @@
 
 ### 🎙️ おすすめツール: Typeless
 
-**[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)** は、私が個人的に強く推奨する AI 音声入力ツールです。Voyager の開発において日常のワークフローに組み込むことで、大幅な時間短縮と開発効率の向上を実現できました。
+**[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)** は、私が個人的に強く推奨する AI 音声入力ツールです。Voyager の開発において日常のワークフローに組み込むことで、大幅な時間短縮と開発効率の向上を実現できました。
 
-> 🎁 **[私の招待リンクから登録](https://www.typeless.com/?via=gemini-voyager)**（招待コード：_`gemini-voyager`_）すると、**5 ドルの無料クレジット**を獲得できます。同時に、このプロジェクトの継続的な開発を支援することにも繋がります。❤️
+> 🎁 **[私の招待リンクから登録](https://www.typeless.com/refer?code=MZRYZP1)**（招待コード：_`MZRYZP1`_）すると、**5 ドルの無料クレジット**を獲得できます。同時に、このプロジェクトの継続的な開発を支援することにも繋がります。❤️
 
 ---
 
