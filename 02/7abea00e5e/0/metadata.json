@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "027abea00e5e",
+  "session_id": "192ac09f-b413-42fa-a33c-f7252915f9e7",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-14T19:22:01.235798Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/features/export/services/ImageExportPreferenceService.ts",
+    "src/features/export/services/ImageExportService.ts",
+    "src/features/export/services/__tests__/ImageExportPreferenceService.test.ts",
+    "src/features/export/types/export.ts",
+    "src/features/export/ui/ExportDialog.ts",
+    "src/pages/content/export/index.ts",
+    "src/pages/content/gemsHider/__tests__/gemsHider.test.ts",
+    "src/pages/content/gemsHider/index.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "15bdd17877ad",
+  "checkpoint_transcript_start": 80,
+  "transcript_lines_at_start": 80,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-14T19:22:01.066236Z",
+    "agent_lines": 41,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 41,
+    "agent_percentage": 100
+  }
+}
