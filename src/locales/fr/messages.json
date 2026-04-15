@@ -135,6 +135,10 @@
     "message": "Format de fichier invalide",
     "description": "Import invalid"
   },
+  "pm_import_empty": {
+    "message": "Le fichier importé ne contient aucun prompt",
+    "description": "Import file is valid but empty"
+  },
   "pm_import_success": {
     "message": "{count} prompts importés",
     "description": "Import success"

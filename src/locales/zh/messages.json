@@ -135,6 +135,10 @@
     "message": "文件格式不正确",
     "description": "导入失败"
   },
+  "pm_import_empty": {
+    "message": "导入文件中没有 prompt",
+    "description": "导入文件有效但为空"
+  },
   "pm_import_success": {
     "message": "已导入 {count} 条",
     "description": "导入成功"

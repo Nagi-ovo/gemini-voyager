@@ -42,6 +42,7 @@ import { hasUnreadChangelog, openChangelog, showChangelogModalDirect } from '../
 import { insertTextIntoChatInput } from '../chatInput/index';
 import { createFolderStorageAdapter } from '../folder/storage/FolderStorageAdapter';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
+import { parsePromptImportPayload } from './importPayload';
 import { activatePromptText } from './promptClickAction';
 import { getScrollHintState } from './scrollHint';
 
@@ -1710,55 +1711,50 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (!file) return;
       try {
         const text = await file.text();
-        const json = safeParseJSON<Record<string, unknown> | null>(text, null);
-        if (!json || (json.format !== 'gemini-voyager.prompts.v1' && !Array.isArray(json.items))) {
+        const json = safeParseJSON<unknown>(text, null);
+        const parsedImport = parsePromptImportPayload(json);
+
+        if (parsedImport.status === 'invalid') {
           setNotice(i18n.t('pm_import_invalid') || 'Invalid file format', 'err');
           return;
         }
-        const arr: PromptItem[] = Array.isArray(json)
-          ? json
-          : Array.isArray(json.items)
-            ? json.items
-            : [];
-        const valid: PromptItem[] = [];
-        const seen = new Set<string>();
-        for (const it of arr) {
-          const itObj = it as Record<string, unknown>;
-          const text = String((itObj && itObj.text) || '').trim();
-          if (!text) continue;
-          const tags = Array.isArray(itObj.tags) ? itObj.tags.map((t: unknown) => String(t)) : [];
-          const key = `${text.toLowerCase()}|${tags.sort().join(',')}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          valid.push({ id: uid(), text, tags: dedupeTags(tags), createdAt: Date.now() });
+
+        if (parsedImport.status === 'empty') {
+          setNotice(i18n.t('pm_import_empty') || 'Import file contains no prompts', 'err');
+          return;
         }
-        if (valid.length) {
-          // Merge by text equality (case-insensitive)
-          const map = new Map<string, PromptItem>();
-          for (const it of items) map.set(it.text.toLowerCase(), it);
-          for (const it of valid) {
-            const k = it.text.toLowerCase();
-            if (map.has(k)) {
-              const prev = map.get(k)!;
-              const mergedTags = dedupeTags([...(prev.tags || []), ...(it.tags || [])]);
-              prev.tags = mergedTags;
-              prev.updatedAt = Date.now();
-              map.set(k, prev);
-            } else {
-              map.set(k, it);
-            }
+
+        const valid: PromptItem[] = parsedImport.items.map((item) => ({
+          id: uid(),
+          text: item.text,
+          tags: item.tags,
+          createdAt: Date.now(),
+        }));
+
+        // Merge by text equality (case-insensitive)
+        const map = new Map<string, PromptItem>();
+        for (const it of items) map.set(it.text.toLowerCase(), it);
+        for (const it of valid) {
+          const k = it.text.toLowerCase();
+          if (map.has(k)) {
+            const prev = map.get(k)!;
+            const mergedTags = dedupeTags([...(prev.tags || []), ...(it.tags || [])]);
+            prev.tags = mergedTags;
+            prev.updatedAt = Date.now();
+            map.set(k, prev);
+          } else {
+            map.set(k, it);
           }
-          items = Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-          await writeStorage(STORAGE_KEYS.items, items);
-          setNotice(
-            (i18n.t('pm_import_success') || 'Imported').replace('{count}', String(valid.length)),
-            'ok',
-          );
-          renderTags();
-          renderList();
-        } else {
-          setNotice(i18n.t('pm_import_invalid') || 'Invalid file format', 'err');
         }
+
+        items = Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        await writeStorage(STORAGE_KEYS.items, items);
+        setNotice(
+          (i18n.t('pm_import_success') || 'Imported').replace('{count}', String(valid.length)),
+          'ok',
+        );
+        renderTags();
+        renderList();
       } catch {
         setNotice(i18n.t('pm_import_invalid') || 'Invalid file format', 'err');
       } finally {

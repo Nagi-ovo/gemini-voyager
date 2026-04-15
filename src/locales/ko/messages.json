@@ -135,6 +135,10 @@
     "message": "유효하지 않은 파일 형식",
     "description": "Import invalid"
   },
+  "pm_import_empty": {
+    "message": "가져올 파일에 프롬프트가 없습니다",
+    "description": "Import file is valid but empty"
+  },
   "pm_import_success": {
     "message": "{count}개의 프롬프트를 가져왔습니다",
     "description": "Import success"

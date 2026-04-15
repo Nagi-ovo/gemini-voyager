@@ -135,6 +135,10 @@
     "message": "無効なファイル形式です",
     "description": "Import invalid"
   },
+  "pm_import_empty": {
+    "message": "インポートファイルにプロンプトがありません",
+    "description": "Import file is valid but empty"
+  },
   "pm_import_success": {
     "message": "{count} 件のプロンプトをインポートしました",
     "description": "Import success"

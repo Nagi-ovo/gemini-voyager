@@ -135,6 +135,10 @@
     "message": "تنسيق ملف غير صالح",
     "description": "Import invalid"
   },
+  "pm_import_empty": {
+    "message": "ملف الاستيراد لا يحتوي على أي مطالبات",
+    "description": "Import file is valid but empty"
+  },
   "pm_import_success": {
     "message": "تم استيراد {count} مطالبة",
     "description": "Import success"

@@ -135,6 +135,10 @@
     "message": "檔案格式不正確",
     "description": "匯入失敗"
   },
+  "pm_import_empty": {
+    "message": "匯入檔案中沒有 prompt",
+    "description": "匯入檔案有效但為空"
+  },
   "pm_import_success": {
     "message": "已匯入 {count} 條",
     "description": "匯入成功"

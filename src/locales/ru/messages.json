@@ -135,6 +135,10 @@
     "message": "Неверный формат файла",
     "description": "Import invalid"
   },
+  "pm_import_empty": {
+    "message": "Файл импорта не содержит промптов",
+    "description": "Import file is valid but empty"
+  },
   "pm_import_success": {
     "message": "Импортировано {count} промптов",
     "description": "Import success"
