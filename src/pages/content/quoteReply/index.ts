@@ -21,8 +21,6 @@ const CSS_CLASSES = {
 const TIMING = {
   /** Delay before performing insertion to wait for UI expansion transitions */
   INSERTION_DELAY_MS: 200,
-  /** Delay before retrying focus for editors that need extra time */
-  FOCUS_RETRY_DELAY_MS: 50,
   /** Debounce delay for selection change detection */
   SELECTION_DEBOUNCE_MS: 250,
 } as const;
@@ -192,6 +190,18 @@ function tryInsertQuoteSeparator(input: HTMLElement, separator: string): Separat
   return { inserted: true, insertedBreaks };
 }
 
+function focusChatInput(input: HTMLElement | HTMLTextAreaElement): void {
+  if (document.activeElement === input) {
+    return;
+  }
+
+  try {
+    input.focus({ preventScroll: true });
+  } catch {
+    input.focus();
+  }
+}
+
 /**
  * Replace math elements in a cloned DOM tree with LaTeX text nodes.
  * Gemini uses `.math-inline` / `.math-block` containers with `[data-math]` children.
@@ -345,10 +355,10 @@ export function startQuoteReply() {
       // Ensure the input is visible
       input.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-      // Robust insertion and focus logic
+      // Insert the quote while minimizing selection/focus churn so IME
+      // composition can start from the very next keystroke.
       const performInsertion = () => {
-        // First focus attempt
-        input.focus();
+        focusChatInput(input);
 
         // Check input state at insertion time to avoid race conditions
         // (user might type or another quote might be inserted during the delay)
@@ -454,24 +464,8 @@ export function startQuoteReply() {
             }
           }
 
-          // Re-force cursor to the end after insertion
-          const finalRange = document.createRange();
-          finalRange.selectNodeContents(input);
-          finalRange.collapse(false);
-          sel?.removeAllRanges();
-          sel?.addRange(finalRange);
-
           input.dispatchEvent(new Event('input', { bubbles: true }));
         }
-
-        // Reset IME composition state after programmatic selection manipulation (#497).
-        // Without this blur/focus cycle, the first keystroke after quote insertion
-        // bypasses IME composition (e.g., Chinese pinyin input loses the first character).
-        // requestAnimationFrame ensures the browser has finished layout before resetting.
-        requestAnimationFrame(() => {
-          input.blur();
-          input.focus();
-        });
       };
 
       // Use a slightly longer delay to wait for any expansion transitions

@@ -13,6 +13,34 @@ vi.mock('@/core/utils/browser', () => ({
   getBrowserName: vi.fn(() => 'Chrome/Chromium'),
 }));
 
+let activeElement: Element | null = null;
+let inputFocusMock: ReturnType<typeof vi.fn>;
+let inputBlurMock: ReturnType<typeof vi.fn>;
+
+function installFocusTracking(element: HTMLElement | HTMLTextAreaElement) {
+  const focusMock = vi.fn((_options?: FocusOptions) => {
+    activeElement = element;
+  });
+  const blurMock = vi.fn(() => {
+    if (activeElement === element) {
+      activeElement = document.body;
+    }
+  });
+
+  Object.defineProperty(element, 'focus', {
+    value: focusMock,
+    configurable: true,
+    writable: true,
+  });
+  Object.defineProperty(element, 'blur', {
+    value: blurMock,
+    configurable: true,
+    writable: true,
+  });
+
+  return { focusMock, blurMock };
+}
+
 function selectSourceText(start = 0, end = 5) {
   const selection = window.getSelection();
   const textNode = document.getElementById('source')?.firstChild;
@@ -45,6 +73,12 @@ describe('quote reply', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.mocked(getBrowserName).mockReturnValue('Chrome/Chromium');
+    activeElement = document.body;
+
+    Object.defineProperty(document, 'activeElement', {
+      configurable: true,
+      get: () => activeElement ?? document.body,
+    });
 
     document.body.innerHTML = `
       <main>
@@ -70,7 +104,7 @@ describe('quote reply', () => {
         y: 0,
         toJSON: () => {},
       }) as DOMRect;
-    input.focus = vi.fn();
+    ({ focusMock: inputFocusMock, blurMock: inputBlurMock } = installFocusTracking(input));
     input.scrollIntoView = vi.fn();
 
     Object.defineProperty(Range.prototype, 'getBoundingClientRect', {
@@ -119,6 +153,22 @@ describe('quote reply', () => {
     triggerQuoteReply();
 
     expect(expandInputCollapseIfNeeded).toHaveBeenCalledTimes(1);
+
+    cleanup();
+  });
+
+  it('does not blur or refocus the contenteditable input after quote insertion', () => {
+    const cleanup = startQuoteReply();
+    const input = document.getElementById('input');
+    if (!(input instanceof HTMLElement)) {
+      throw new Error('Expected quote input element.');
+    }
+
+    triggerQuoteReply();
+
+    expect(inputBlurMock).not.toHaveBeenCalled();
+    expect(inputFocusMock).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(input);
 
     cleanup();
   });
@@ -221,7 +271,7 @@ describe('quote reply', () => {
         y: 0,
         toJSON: () => {},
       }) as DOMRect;
-    textarea.focus = vi.fn();
+    installFocusTracking(textarea);
     textarea.scrollIntoView = vi.fn();
     textarea.value = 'Existing';
 
