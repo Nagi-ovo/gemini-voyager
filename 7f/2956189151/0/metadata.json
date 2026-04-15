@@ -1,0 +1,44 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "7f2956189151",
+  "session_id": "192ac09f-b413-42fa-a33c-f7252915f9e7",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-15T12:30:17.583249Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/locales/ar/messages.json",
+    "src/locales/en/messages.json",
+    "src/locales/pt/messages.json",
+    "src/locales/ru/messages.json",
+    "src/locales/zh_TW/messages.json",
+    "src/pages/content/prompt/index.ts",
+    "src/locales/es/messages.json",
+    "src/locales/fr/messages.json",
+    "src/locales/ja/messages.json",
+    "src/locales/ko/messages.json",
+    "src/locales/zh/messages.json",
+    "src/pages/content/prompt/__tests__/importPayload.test.ts",
+    "src/pages/content/prompt/importPayload.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "15bdd17877ad",
+  "checkpoint_transcript_start": 80,
+  "transcript_lines_at_start": 80,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-15T12:30:17.475399Z",
+    "agent_lines": 187,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 187,
+    "agent_percentage": 100
+  }
+}
