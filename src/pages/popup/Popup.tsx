@@ -2240,9 +2240,7 @@ export default function Popup() {
                     >
                       {t('safariEnterFix')}
                     </Label>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {t('safariEnterFixHint')}
-                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs">{t('safariEnterFixHint')}</p>
                   </div>
                   <Switch
                     id="safari-enter-fix"
