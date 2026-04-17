@@ -433,7 +433,13 @@ function resetPredictiveState(): void {
 function handlePredictiveMouseMove(e: MouseEvent): void {
   if (!enabled && !fullHideEnabled) return;
   if (!isSidebarCollapsed()) return;
-  if (predictiveTriggered) return;
+  // If the sidebar is collapsed while the flag is still set, it was collapsed
+  // by an external path (manual toggle, full-hide sync, etc.) that did not
+  // call resetPredictiveState(). Clear the stale latch so the next swipe works.
+  if (predictiveTriggered) {
+    resetPredictiveState();
+    return;
+  }
   if (isPaused()) return;
 
   const now = performance.now();
@@ -466,13 +472,11 @@ function handlePredictiveMouseMove(e: MouseEvent): void {
         // Safety net: if the mouse never actually enters the sidebar
         // (user changed direction mid-flight), auto-collapse after a
         // generous window. handleMouseEnter will clear this if triggered.
-        if (enabled) {
-          leaveTimeoutId = window.setTimeout(() => {
-            leaveTimeoutId = null;
-            if (!enabled) return;
-            collapseSidebar();
-          }, PREDICTIVE_SAFETY_COLLAPSE_MS);
-        }
+        leaveTimeoutId = window.setTimeout(() => {
+          leaveTimeoutId = null;
+          if (!enabled && !fullHideEnabled) return;
+          collapseSidebar();
+        }, PREDICTIVE_SAFETY_COLLAPSE_MS);
 
         lastMouseX = x;
         lastMouseTime = now;
