@@ -45,6 +45,8 @@ The **Name (optional)** field at the top of the add/edit form lets you give a pr
 
 In compact mode, hover any row for **~250 ms** to see its full content in a floating tooltip — replaces the browser's native `title` tooltip (which can take 1–3 s to open).
 
+![Compact list view](/assets/gemini-prompt-manager-compact.png)
+
 ## Available Anywhere
 
 The Prompt Manager can now be used on any website you choose, not just Gemini™ and AI Studio.

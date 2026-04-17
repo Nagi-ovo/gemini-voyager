@@ -45,6 +45,8 @@ Le champ **Nom (optionnel)** en haut du formulaire d'ajout/édition vous permet 
 
 En mode compact, survolez n'importe quelle ligne pendant **~250 ms** pour voir le contenu complet dans une infobulle flottante — remplace l'infobulle `title` native du navigateur (qui peut mettre 1 à 3 s à apparaître).
 
+![Vue en liste compacte](/assets/gemini-prompt-manager-compact.png)
+
 ## Disponible Partout
 
 Le Gestionnaire de Prompts peut désormais être utilisé sur n'importe quel site web de votre choix, pas seulement Gemini™ et AI Studio.

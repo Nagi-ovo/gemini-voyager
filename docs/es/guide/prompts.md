@@ -45,6 +45,8 @@ El campo **Nombre (opcional)** al principio del formulario de agregar/editar per
 
 En modo compacto, mantén el ratón sobre cualquier fila unos **250 ms** para ver el contenido completo en un tooltip flotante — sustituye al tooltip nativo `title` del navegador (que puede tardar 1–3 s en aparecer).
 
+![Vista de lista compacta](/assets/gemini-prompt-manager-compact.png)
+
 ## Disponible en Cualquier Lugar
 
 El Gestor de Prompts ahora se puede utilizar en cualquier sitio web que elijas, no solo en Gemini™ y AI Studio.
