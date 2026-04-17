@@ -964,18 +964,31 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     applyViewModeUI();
 
-    // Load saved view mode preference (sync storage, follows theme pattern)
+    // Load saved view mode preference. Prefer sync (follows theme pattern),
+    // but fall back to local — keeps symmetry with the write path, which
+    // writes to local when sync is unavailable (Safari, sync-disabled
+    // profiles). Without this fallback, those environments lose the user's
+    // choice on every reload.
     (async () => {
+      let saved: unknown = null;
       try {
         const result = await browser.storage.sync.get(StorageKeys.PROMPT_VIEW_MODE);
-        const saved = result[StorageKeys.PROMPT_VIEW_MODE];
-        if (saved === 'compact' || saved === 'comfortable') {
-          viewMode = saved;
-          applyViewModeUI();
-          renderList();
-        }
+        saved = result[StorageKeys.PROMPT_VIEW_MODE];
       } catch {
-        // Keep default on failure
+        // Fall through to local
+      }
+      if (saved !== 'compact' && saved !== 'comfortable') {
+        try {
+          const result = await browser.storage.local.get(StorageKeys.PROMPT_VIEW_MODE);
+          saved = result[StorageKeys.PROMPT_VIEW_MODE];
+        } catch {
+          // Keep default on failure
+        }
+      }
+      if (saved === 'compact' || saved === 'comfortable') {
+        viewMode = saved;
+        applyViewModeUI();
+        renderList();
       }
     })();
 
@@ -1034,7 +1047,14 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           selectedTagList.length === 0 || selectedTagList.every((t) => it.tags.includes(t));
         if (!okTag) return false;
         if (!q) return true;
-        return it.text.toLowerCase().includes(q) || it.tags.some((t) => t.includes(q));
+        // Include the user-authored name so searching for the label shown in
+        // compact mode always finds the prompt even when the Markdown body
+        // doesn't contain that string.
+        return (
+          it.text.toLowerCase().includes(q) ||
+          it.tags.some((t) => t.includes(q)) ||
+          (it.name ? it.name.toLowerCase().includes(q) : false)
+        );
       });
       list.innerHTML = '';
       if (filtered.length === 0) {
@@ -1549,7 +1569,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (area === 'sync' && changes[StorageKeys.PROMPT_INSERT_ON_CLICK]) {
         promptInsertOnClick = changes[StorageKeys.PROMPT_INSERT_ON_CLICK].newValue === true;
       }
-      if (area === 'sync' && changes[StorageKeys.PROMPT_VIEW_MODE]) {
+      if (
+        (area === 'sync' || area === 'local') &&
+        changes[StorageKeys.PROMPT_VIEW_MODE]
+      ) {
         const nextMode = changes[StorageKeys.PROMPT_VIEW_MODE].newValue;
         if ((nextMode === 'compact' || nextMode === 'comfortable') && nextMode !== viewMode) {
           viewMode = nextMode;
@@ -1997,6 +2020,23 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           tagsWrap.removeEventListener('scroll', syncTagScrollHint);
 
           chrome.storage?.onChanged?.removeListener(storageChangeHandler);
+
+          // Tear down the fast-tooltip singleton: cancel pending timer, remove
+          // the DOM element, and detach the capture-phase scroll listeners
+          // attached to `list` and `window`. Without this, every re-init (SPA
+          // nav / extension reload) would leak an orphan tooltip + listener.
+          hideTooltip();
+          if (tooltipEl) {
+            try {
+              tooltipEl.remove();
+            } catch {}
+            tooltipEl = null;
+          }
+          for (const target of tooltipScrollTargets) {
+            try {
+              target.removeEventListener('scroll', onTooltipDismiss, { capture: true });
+            } catch {}
+          }
 
           trigger.remove();
           panel.remove();
