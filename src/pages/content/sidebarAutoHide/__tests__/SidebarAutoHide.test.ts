@@ -215,7 +215,10 @@ describe('sidebarAutoHide', () => {
       document.body.appendChild(toggleButton);
 
       (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
           callback({ gvSidebarAutoHide: true });
         },
       );
@@ -260,7 +263,10 @@ describe('sidebarAutoHide', () => {
       document.body.appendChild(toggleButton);
 
       (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
           callback({ gvSidebarAutoHide: true });
         },
       );
@@ -272,9 +278,7 @@ describe('sidebarAutoHide', () => {
 
       // Slow movement: x drops from 90 to 80 over 60ms.
       // Velocity: (80 - 90) / 60 = -0.17 px/ms — below -0.5 threshold.
-      vi.spyOn(performance, 'now')
-        .mockReturnValueOnce(2000)
-        .mockReturnValueOnce(2060);
+      vi.spyOn(performance, 'now').mockReturnValueOnce(2000).mockReturnValueOnce(2060);
 
       dispatchMouseMove(90);
       dispatchMouseMove(80);
@@ -302,7 +306,10 @@ describe('sidebarAutoHide', () => {
       document.body.appendChild(toggleButton);
 
       (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
           callback({ gvSidebarAutoHide: true });
         },
       );
@@ -313,9 +320,7 @@ describe('sidebarAutoHide', () => {
       vi.advanceTimersByTime(600);
 
       // Trigger predictive expand
-      vi.spyOn(performance, 'now')
-        .mockReturnValueOnce(3000)
-        .mockReturnValueOnce(3060);
+      vi.spyOn(performance, 'now').mockReturnValueOnce(3000).mockReturnValueOnce(3060);
 
       dispatchMouseMove(200);
       dispatchMouseMove(60);
