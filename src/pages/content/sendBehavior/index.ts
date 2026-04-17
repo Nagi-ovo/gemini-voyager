@@ -381,10 +381,12 @@ function disconnectObserver(): void {
 // ============================================================================
 
 /**
- * Check if at least one mode requires active listeners
+ * Check if at least one mode requires active listeners.
+ * Safari Enter Fix only activates on Safari to avoid unnecessary
+ * overhead on Chrome/Firefox (e.g. when the setting is synced from Safari).
  */
 function shouldBeActive(): boolean {
-  return isCtrlEnterSendEnabled || isSafariEnterFixEnabled;
+  return isCtrlEnterSendEnabled || (isSafariEnterFixEnabled && isSafari());
 }
 
 /**
