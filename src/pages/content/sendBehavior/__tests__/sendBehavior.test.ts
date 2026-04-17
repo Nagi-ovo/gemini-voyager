@@ -2,11 +2,27 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
+// Mock browser detection for Safari Enter Fix tests
+vi.mock('@/core/utils/browser', () => ({
+  isSafari: vi.fn(() => false),
+}));
+
 function markElementVisible(element: HTMLElement): void {
   Object.defineProperty(element, 'offsetParent', {
     configurable: true,
     value: document.body,
   });
+}
+
+function firePlainEnter(target: HTMLElement): KeyboardEvent {
+  const event = new KeyboardEvent('keydown', {
+    key: 'Enter',
+    code: 'Enter',
+    bubbles: true,
+    cancelable: true,
+  });
+  target.dispatchEvent(event);
+  return event;
 }
 
 function fireCtrlEnter(target: HTMLElement): KeyboardEvent {
@@ -122,6 +138,128 @@ describe('sendBehavior', () => {
     const event = fireCtrlEnter(input);
 
     expect(buttonClickSpy).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+
+    cleanup();
+  });
+});
+
+describe('safariEnterFix', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    document.body.innerHTML = '';
+
+    // Enable Safari Enter Fix, disable Ctrl+Enter Send
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({
+          [StorageKeys.CTRL_ENTER_SEND]: false,
+          [StorageKeys.SAFARI_ENTER_FIX]: true,
+        });
+      },
+    );
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('clicks send button on plain Enter when on Safari', async () => {
+    // Mock isSafari to return true
+    const { isSafari } = await import('@/core/utils/browser');
+    (isSafari as ReturnType<typeof vi.fn>).mockReturnValue(true);
+
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'text-input-field';
+
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+
+    const sendButton = document.createElement('button');
+    sendButton.setAttribute('aria-label', 'Send message');
+    markElementVisible(sendButton);
+
+    inputContainer.append(input, sendButton);
+    document.body.append(inputContainer);
+
+    const sendClickSpy = vi.spyOn(sendButton, 'click');
+
+    const { startSendBehavior } = await import('../index');
+    const cleanup = await startSendBehavior();
+
+    const event = firePlainEnter(input);
+
+    expect(sendClickSpy).toHaveBeenCalledTimes(1);
+    expect(event.defaultPrevented).toBe(true);
+
+    cleanup();
+  });
+
+  it('does not click send button on plain Enter when not on Safari', async () => {
+    // Mock isSafari to return false
+    const { isSafari } = await import('@/core/utils/browser');
+    (isSafari as ReturnType<typeof vi.fn>).mockReturnValue(false);
+
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'text-input-field';
+
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+
+    const sendButton = document.createElement('button');
+    sendButton.setAttribute('aria-label', 'Send message');
+    markElementVisible(sendButton);
+
+    inputContainer.append(input, sendButton);
+    document.body.append(inputContainer);
+
+    const sendClickSpy = vi.spyOn(sendButton, 'click');
+
+    const { startSendBehavior } = await import('../index');
+    const cleanup = await startSendBehavior();
+
+    const event = firePlainEnter(input);
+
+    expect(sendClickSpy).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+
+    cleanup();
+  });
+
+  it('does not intercept Shift+Enter on Safari', async () => {
+    const { isSafari } = await import('@/core/utils/browser');
+    (isSafari as ReturnType<typeof vi.fn>).mockReturnValue(true);
+
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'text-input-field';
+
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+
+    const sendButton = document.createElement('button');
+    sendButton.setAttribute('aria-label', 'Send message');
+    markElementVisible(sendButton);
+
+    inputContainer.append(input, sendButton);
+    document.body.append(inputContainer);
+
+    const sendClickSpy = vi.spyOn(sendButton, 'click');
+
+    const { startSendBehavior } = await import('../index');
+    const cleanup = await startSendBehavior();
+
+    // Fire Shift+Enter
+    const event = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      code: 'Enter',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    input.dispatchEvent(event);
+
+    expect(sendClickSpy).not.toHaveBeenCalled();
     expect(event.defaultPrevented).toBe(false);
 
     cleanup();

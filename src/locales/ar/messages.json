@@ -1079,6 +1079,14 @@
     "message": "اضغط {modifier}+Enter لإرسال الرسائل، Enter لإضافة سطر جديد",
     "description": "Modifier+Enter to send feature hint. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
+  "safariEnterFix": {
+    "message": "إصلاح مفتاح Enter في Safari",
+    "description": "Toggle label for Safari Enter key fix feature"
+  },
+  "safariEnterFixHint": {
+    "message": "إرسال الرسائل بضغطة واحدة على Enter (إصلاح مشكلة الضغط المزدوج في Safari)",
+    "description": "Hint text for Safari Enter key fix feature"
+  },
   "draftAutoSave": {
     "message": "حفظ المسودة تلقائيًا",
     "description": "Toggle label for input draft auto-save feature"

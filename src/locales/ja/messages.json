@@ -1079,6 +1079,14 @@
     "message": "{modifier}+Enter でメッセージを送信、Enter で改行",
     "description": "Modifier+Enter to send feature hint. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
+  "safariEnterFix": {
+    "message": "Safari の Enter キーを修正",
+    "description": "Safari Enter キー修正機能のトグルラベル"
+  },
+  "safariEnterFixHint": {
+    "message": "Enter を1回押すだけでメッセージを送信（Safari の2回押し問題を修正）",
+    "description": "Safari Enter キー修正機能のヒントテキスト"
+  },
   "draftAutoSave": {
     "message": "下書きの自動保存",
     "description": "Toggle label for input draft auto-save feature"
