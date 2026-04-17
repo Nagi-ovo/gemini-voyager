@@ -32,4 +32,43 @@ describe('parsePromptImportPayload', () => {
       }),
     ).toEqual({ status: 'invalid' });
   });
+
+  it('preserves an optional name field when round-tripping an exported item', () => {
+    const result = parsePromptImportPayload({
+      format: 'gemini-voyager.prompts.v1',
+      items: [{ text: 'Translate EN→ZH', tags: ['translate'], name: 'Translator' }],
+    });
+    expect(result).toEqual({
+      status: 'ok',
+      items: [{ text: 'Translate EN→ZH', tags: ['translate'], name: 'Translator' }],
+    });
+  });
+
+  it('trims whitespace around an imported name and drops it entirely when empty', () => {
+    const result = parsePromptImportPayload({
+      items: [
+        { text: 'A', tags: [], name: '  Custom  ' },
+        { text: 'B', tags: [], name: '   ' },
+        { text: 'C', tags: [] },
+      ],
+    });
+    expect(result).toEqual({
+      status: 'ok',
+      items: [
+        { text: 'A', tags: [], name: 'Custom' },
+        { text: 'B', tags: [] },
+        { text: 'C', tags: [] },
+      ],
+    });
+  });
+
+  it('ignores non-string name fields', () => {
+    const result = parsePromptImportPayload({
+      items: [{ text: 'A', tags: [], name: 42 }],
+    });
+    expect(result).toEqual({
+      status: 'ok',
+      items: [{ text: 'A', tags: [] }],
+    });
+  });
 });

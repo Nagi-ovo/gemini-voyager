@@ -1935,14 +1935,20 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           return;
         }
 
-        const valid: PromptItem[] = parsedImport.items.map((item) => ({
-          id: uid(),
-          text: item.text,
-          tags: item.tags,
-          createdAt: Date.now(),
-        }));
+        const valid: PromptItem[] = parsedImport.items.map((item) => {
+          const it: PromptItem = {
+            id: uid(),
+            text: item.text,
+            tags: item.tags,
+            createdAt: Date.now(),
+          };
+          if (item.name) it.name = item.name;
+          return it;
+        });
 
-        // Merge by text equality (case-insensitive)
+        // Merge by text equality (case-insensitive). Local fields win over
+        // the import — except `name`, which we inherit from the import only
+        // when the local item doesn't already have one (strictly additive).
         const map = new Map<string, PromptItem>();
         for (const it of items) map.set(it.text.toLowerCase(), it);
         for (const it of valid) {
@@ -1951,6 +1957,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
             const prev = map.get(k)!;
             const mergedTags = dedupeTags([...(prev.tags || []), ...(it.tags || [])]);
             prev.tags = mergedTags;
+            if (!prev.name && it.name) prev.name = it.name;
             prev.updatedAt = Date.now();
             map.set(k, prev);
           } else {
