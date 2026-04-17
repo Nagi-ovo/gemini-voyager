@@ -1039,6 +1039,14 @@
     "message": "按 {modifier}+Enter 傳送訊息，Enter 鍵僅換行",
     "description": "Modifier+Enter 傳送功能提示。{modifier} 在 macOS 上替換為 ⌘，其他平台替換為 Ctrl"
   },
+  "safariEnterFix": {
+    "message": "修復 Safari Enter 鍵",
+    "description": "Safari Enter 鍵修復功能的開關標籤"
+  },
+  "safariEnterFixHint": {
+    "message": "按一次 Enter 即可傳送訊息（修復 Safari 需按兩次 Enter 的問題）",
+    "description": "Safari Enter 鍵修復功能的提示文字"
+  },
   "draftAutoSave": {
     "message": "草稿自動儲存",
     "description": "Toggle label for input draft auto-save feature"

@@ -1079,6 +1079,14 @@
     "message": "Pressione {modifier}+Enter para enviar mensagens, Enter para nova linha",
     "description": "Modifier+Enter to send feature hint. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
+  "safariEnterFix": {
+    "message": "Corrigir tecla Enter no Safari",
+    "description": "Toggle label for Safari Enter key fix feature"
+  },
+  "safariEnterFixHint": {
+    "message": "Enviar mensagens com um único Enter (corrige o problema do duplo Enter no Safari)",
+    "description": "Hint text for Safari Enter key fix feature"
+  },
   "draftAutoSave": {
     "message": "Salvamento automático de rascunho",
     "description": "Toggle label for input draft auto-save feature"

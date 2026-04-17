@@ -1079,6 +1079,14 @@
     "message": "{modifier}+Enter 를 눌러 메시지를 전송하고, Enter 로 줄바꿈을 합니다",
     "description": "Modifier+Enter to send feature hint. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
+  "safariEnterFix": {
+    "message": "Safari Enter 키 수정",
+    "description": "Safari Enter 키 수정 기능 토글 라벨"
+  },
+  "safariEnterFixHint": {
+    "message": "Enter 한 번으로 메시지 전송 (Safari의 Enter 두 번 눌러야 하는 문제 수정)",
+    "description": "Safari Enter 키 수정 기능 힌트 텍스트"
+  },
   "draftAutoSave": {
     "message": "임시 저장 자동 저장",
     "description": "Toggle label for input draft auto-save feature"

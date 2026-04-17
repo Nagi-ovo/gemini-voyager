@@ -65,6 +65,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS: Record<string, unknown> = {
   [StorageKeys.MERMAID_ENABLED]: true,
   [StorageKeys.QUOTE_REPLY_ENABLED]: true,
   [StorageKeys.CTRL_ENTER_SEND]: false,
+  [StorageKeys.SAFARI_ENTER_FIX]: false,
   [StorageKeys.INPUT_COLLAPSE_ENABLED]: false,
   [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: false,
   [StorageKeys.DRAFT_AUTO_SAVE]: false,

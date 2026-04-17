@@ -330,6 +330,7 @@ interface SettingsUpdate {
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
+  safariEnterFixEnabled?: boolean;
   draftAutoSaveEnabled?: boolean;
   sidebarAutoHideEnabled?: boolean;
   sidebarFullHideEnabled?: boolean;
@@ -442,6 +443,7 @@ export default function Popup() {
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [folderProjectEnabled, setFolderProjectEnabled] = useState<boolean>(false);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
+  const [safariEnterFixEnabled, setSafariEnterFixEnabled] = useState<boolean>(false);
   const [draftAutoSaveEnabled, setDraftAutoSaveEnabled] = useState<boolean>(false);
   const [sidebarAutoHideEnabled, setSidebarAutoHideEnabled] = useState<boolean>(false);
   const [sidebarFullHideEnabled, setSidebarFullHideEnabled] = useState<boolean>(false);
@@ -542,6 +544,8 @@ export default function Popup() {
         payload[StorageKeys.FOLDER_PROJECT_ENABLED] = settings.folderProjectEnabled;
       if (typeof settings.ctrlEnterSendEnabled === 'boolean')
         payload.gvCtrlEnterSend = settings.ctrlEnterSendEnabled;
+      if (typeof settings.safariEnterFixEnabled === 'boolean')
+        payload[StorageKeys.SAFARI_ENTER_FIX] = settings.safariEnterFixEnabled;
       if (typeof settings.draftAutoSaveEnabled === 'boolean')
         payload[StorageKeys.DRAFT_AUTO_SAVE] = settings.draftAutoSaveEnabled;
       if (typeof settings.sidebarAutoHideEnabled === 'boolean')
@@ -878,6 +882,7 @@ export default function Popup() {
           gvQuoteReplyEnabled: true,
           [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
           gvCtrlEnterSend: false,
+          [StorageKeys.SAFARI_ENTER_FIX]: false,
           [StorageKeys.DRAFT_AUTO_SAVE]: false,
           gvSidebarAutoHide: false,
           gvSidebarFullHide: false,
@@ -934,6 +939,7 @@ export default function Popup() {
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
           setFolderProjectEnabled(res?.[StorageKeys.FOLDER_PROJECT_ENABLED] === true);
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
+          setSafariEnterFixEnabled(res?.[StorageKeys.SAFARI_ENTER_FIX] === true);
           setDraftAutoSaveEnabled(res?.[StorageKeys.DRAFT_AUTO_SAVE] === true);
           setSidebarAutoHideEnabled(res?.gvSidebarAutoHide === true);
           setSidebarFullHideEnabled(res?.gvSidebarFullHide === true);
@@ -2224,6 +2230,30 @@ export default function Popup() {
                   }}
                 />
               </div>
+              {/* Safari Enter Fix - only shown on Safari */}
+              {isSafariBrowser && (
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="safari-enter-fix"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('safariEnterFix')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('safariEnterFixHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="safari-enter-fix"
+                    checked={safariEnterFixEnabled}
+                    onChange={(e) => {
+                      setSafariEnterFixEnabled(e.target.checked);
+                      apply({ safariEnterFixEnabled: e.target.checked });
+                    }}
+                  />
+                </div>
+              )}
               {/* Draft Auto-Save */}
               <div className="group flex items-center justify-between">
                 <div className="flex-1">
