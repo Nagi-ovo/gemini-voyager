@@ -1079,6 +1079,14 @@
     "message": "Appuyez sur {modifier}+Entrée pour envoyer, Entrée pour un saut de ligne",
     "description": "Modifier+Enter to send feature hint. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
   },
+  "safariEnterFix": {
+    "message": "Corriger la touche Entrée sur Safari",
+    "description": "Toggle label for Safari Enter key fix feature"
+  },
+  "safariEnterFixHint": {
+    "message": "Envoyer les messages avec une seule pression sur Entrée (corrige le problème du double Entrée sur Safari)",
+    "description": "Hint text for Safari Enter key fix feature"
+  },
   "draftAutoSave": {
     "message": "Sauvegarde automatique du brouillon",
     "description": "Toggle label for input draft auto-save feature"

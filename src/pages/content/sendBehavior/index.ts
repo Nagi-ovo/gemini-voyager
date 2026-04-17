@@ -1,18 +1,27 @@
 /**
  * Send Behavior Module
  *
- * Modifies Gemini's input behavior:
- * - Enter key inserts a newline instead of sending
- * - Ctrl+Enter sends the message
+ * Modifies Gemini's input behavior with two independent modes:
  *
- * This feature is controlled by the `gvCtrlEnterSend` storage setting.
+ * 1. Ctrl+Enter Send (all browsers):
+ *    - Enter key inserts a newline instead of sending
+ *    - Ctrl+Enter sends the message
+ *    - Controlled by `gvCtrlEnterSend` storage setting
+ *
+ * 2. Safari Enter Fix (Safari only):
+ *    - Fixes Gemini's double-Enter-to-send bug on Safari
+ *    - Single Enter directly clicks the send button
+ *    - Controlled by `gvSafariEnterFix` storage setting
+ *
+ * If both are enabled, Ctrl+Enter Send takes priority (Enter → newline).
  *
  * ARCHITECTURE:
- * - Observer and listeners are ONLY active when the feature is enabled
- * - When disabled, no DOM observation or event handling occurs (zero performance overhead)
+ * - Observer and listeners are ONLY active when at least one mode is enabled
+ * - When both are disabled, no DOM observation or event handling occurs (zero performance overhead)
  * - Storage listener remains active to respond to setting changes
  */
 import { StorageKeys } from '@/core/types/common';
+import { isSafari } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import { getTextOffset, setCaretPosition } from './utils';
@@ -47,7 +56,9 @@ const LOG_PREFIX = '[SendBehavior]';
 // State
 // ============================================================================
 
-let isEnabled = false;
+let isCtrlEnterSendEnabled = false;
+let isSafariEnterFixEnabled = false;
+let isListenersActive = false;
 let observer: MutationObserver | null = null;
 let cleanupFns: (() => void)[] = [];
 let storageListener:
@@ -214,10 +225,16 @@ function insertNewlineInTextarea(textarea: HTMLTextAreaElement): void {
 
 /**
  * Handle keydown events on the input area
+ *
+ * Two modes:
+ * - Ctrl+Enter Send: Enter → newline, Ctrl/Cmd+Enter → send
+ * - Safari Enter Fix: Plain Enter → directly click send button (bypasses Safari double-Enter bug)
+ *
+ * If both modes are enabled, Ctrl+Enter Send takes priority.
  */
 function handleKeyDown(event: KeyboardEvent): void {
-  // Early exit if feature is disabled (should not happen, but defensive check)
-  if (!isEnabled) return;
+  // Early exit if no mode is active (should not happen, but defensive check)
+  if (!isCtrlEnterSendEnabled && !isSafariEnterFixEnabled) return;
 
   // Fix for Issue 260: Ignore events during IME composition
   if (event.isComposing) return;
@@ -236,29 +253,48 @@ function handleKeyDown(event: KeyboardEvent): void {
   // and pressing Enter there should trigger the default submit action
   if (!isContentEditable && !isTextarea) return;
 
-  // Ctrl+Enter or Cmd+Enter: Send the message
-  if (event.ctrlKey || event.metaKey) {
-    // Pass the current input target context so we only find its corresponding send button
+  // --- Ctrl+Enter Send mode ---
+  if (isCtrlEnterSendEnabled) {
+    // Ctrl+Enter or Cmd+Enter: Send the message
+    if (event.ctrlKey || event.metaKey) {
+      const sendButton = findSendButton(target);
+      if (sendButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        sendButton.click();
+      }
+      return;
+    }
+
+    // Shift+Enter: Default behavior (already inserts newline in most cases)
+    if (event.shiftKey) return;
+
+    // Plain Enter: Insert a newline instead of sending
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isContentEditable) {
+      insertNewlineInContentEditable(target);
+    } else if (isTextarea) {
+      insertNewlineInTextarea(target as HTMLTextAreaElement);
+    }
+    return;
+  }
+
+  // --- Safari Enter Fix mode ---
+  // Only active when Ctrl+Enter Send is NOT enabled and we're on Safari
+  if (isSafariEnterFixEnabled && isSafari()) {
+    // Only handle plain Enter (no modifiers)
+    if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return;
+
+    // Find and click the send button directly, bypassing Gemini's
+    // broken double-Enter behavior on Safari
     const sendButton = findSendButton(target);
     if (sendButton) {
       event.preventDefault();
       event.stopPropagation();
       sendButton.click();
     }
-    return;
-  }
-
-  // Shift+Enter: Default behavior (already inserts newline in most cases)
-  if (event.shiftKey) return;
-
-  // Plain Enter: Insert a newline instead of sending
-  event.preventDefault();
-  event.stopPropagation();
-
-  if (isContentEditable) {
-    insertNewlineInContentEditable(target);
-  } else if (isTextarea) {
-    insertNewlineInTextarea(target as HTMLTextAreaElement);
   }
 }
 
@@ -345,25 +381,36 @@ function disconnectObserver(): void {
 // ============================================================================
 
 /**
- * Enable the feature: attach listeners and start observing
+ * Check if at least one mode requires active listeners.
+ * Safari Enter Fix only activates on Safari to avoid unnecessary
+ * overhead on Chrome/Firefox (e.g. when the setting is synced from Safari).
  */
-function enableFeature(): void {
-  if (isEnabled) return;
-
-  isEnabled = true;
-  attachToAllInputs();
-  setupObserver();
-
-  console.log(LOG_PREFIX, 'Feature enabled');
+function shouldBeActive(): boolean {
+  return isCtrlEnterSendEnabled || (isSafariEnterFixEnabled && isSafari());
 }
 
 /**
- * Disable the feature: remove all listeners and stop observing
+ * Activate listeners: attach to inputs and start observing.
+ * Called when transitioning from no active modes to at least one active mode.
  */
-function disableFeature(): void {
-  if (!isEnabled) return;
+function activateListeners(): void {
+  if (isListenersActive) return;
 
-  isEnabled = false;
+  isListenersActive = true;
+  attachToAllInputs();
+  setupObserver();
+
+  console.log(LOG_PREFIX, 'Listeners activated');
+}
+
+/**
+ * Deactivate listeners: remove all listeners and stop observing.
+ * Called when transitioning from active modes to no active modes.
+ */
+function deactivateListeners(): void {
+  if (!isListenersActive) return;
+
+  isListenersActive = false;
 
   // Remove all event listeners
   cleanupFns.forEach((fn) => fn());
@@ -372,7 +419,19 @@ function disableFeature(): void {
   // Stop observing DOM changes
   disconnectObserver();
 
-  console.log(LOG_PREFIX, 'Feature disabled');
+  console.log(LOG_PREFIX, 'Listeners deactivated');
+}
+
+/**
+ * Reconcile listener state based on current mode flags.
+ * Activates or deactivates listeners as needed.
+ */
+function reconcileListeners(): void {
+  if (shouldBeActive()) {
+    activateListeners();
+  } else {
+    deactivateListeners();
+  }
 }
 
 // ============================================================================
@@ -380,26 +439,33 @@ function disableFeature(): void {
 // ============================================================================
 
 /**
- * Load the enabled state from storage
+ * Load the enabled state from storage for both modes
  */
-async function loadSettings(): Promise<boolean> {
+async function loadSettings(): Promise<void> {
   return new Promise((resolve) => {
     try {
       if (!chrome.storage?.sync?.get) {
-        resolve(false);
+        resolve();
         return;
       }
-      chrome.storage.sync.get({ [StorageKeys.CTRL_ENTER_SEND]: false }, (result) => {
-        const enabled = result?.[StorageKeys.CTRL_ENTER_SEND] === true;
-        resolve(enabled);
-      });
+      chrome.storage.sync.get(
+        {
+          [StorageKeys.CTRL_ENTER_SEND]: false,
+          [StorageKeys.SAFARI_ENTER_FIX]: false,
+        },
+        (result) => {
+          isCtrlEnterSendEnabled = result?.[StorageKeys.CTRL_ENTER_SEND] === true;
+          isSafariEnterFixEnabled = result?.[StorageKeys.SAFARI_ENTER_FIX] === true;
+          resolve();
+        },
+      );
     } catch (error) {
       if (isExtensionContextInvalidatedError(error)) {
-        resolve(false);
+        resolve();
         return;
       }
       console.warn(LOG_PREFIX, 'Failed to load settings:', error);
-      resolve(false);
+      resolve();
     }
   });
 }
@@ -414,15 +480,20 @@ function setupStorageListener(): void {
 
   storageListener = (changes, areaName) => {
     if (areaName !== 'sync') return;
-    if (!(StorageKeys.CTRL_ENTER_SEND in changes)) return;
 
-    const newValue = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
+    const hasCtrlEnterChange = StorageKeys.CTRL_ENTER_SEND in changes;
+    const hasSafariFixChange = StorageKeys.SAFARI_ENTER_FIX in changes;
 
-    if (newValue && !isEnabled) {
-      enableFeature();
-    } else if (!newValue && isEnabled) {
-      disableFeature();
+    if (!hasCtrlEnterChange && !hasSafariFixChange) return;
+
+    if (hasCtrlEnterChange) {
+      isCtrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
     }
+    if (hasSafariFixChange) {
+      isSafariEnterFixEnabled = changes[StorageKeys.SAFARI_ENTER_FIX].newValue === true;
+    }
+
+    reconcileListeners();
   };
 
   try {
@@ -439,7 +510,9 @@ function setupStorageListener(): void {
  * Cleanup all resources
  */
 function cleanup(): void {
-  disableFeature();
+  isCtrlEnterSendEnabled = false;
+  isSafariEnterFixEnabled = false;
+  deactivateListeners();
 
   if (storageListener) {
     try {
@@ -465,12 +538,12 @@ export async function startSendBehavior(): Promise<() => void> {
   // Always setup storage listener first (to respond to setting changes)
   setupStorageListener();
 
-  // Load initial setting and enable if needed
-  const initialEnabled = await loadSettings();
-  if (initialEnabled) {
-    enableFeature();
-  } else {
-    console.log(LOG_PREFIX, 'Feature disabled, skipping initialization');
+  // Load initial settings and activate if any mode is enabled
+  await loadSettings();
+  reconcileListeners();
+
+  if (!shouldBeActive()) {
+    console.log(LOG_PREFIX, 'All modes disabled, skipping initialization');
   }
 
   return cleanup;
