@@ -20,11 +20,11 @@ const FULL_HIDE_COLLAPSED_CLASS = 'gv-sidebar-full-hide-collapsed';
 const SIDEBAR_TOGGLE_BUTTON_SELECTOR =
   'button[data-test-id="side-nav-menu-button"], side-nav-menu-button button';
 const SIDEBAR_TOGGLE_BUTTON_MATCH_SELECTOR = `${SIDEBAR_TOGGLE_BUTTON_SELECTOR}, side-nav-menu-button`;
-const SIDEBAR_STATE_SYNC_DELAYS_MS = [0, 120, 360] as const;
+const SIDEBAR_STATE_SYNC_DELAYS_MS = [0, 300, 500] as const;
 
 // Debounce delay to avoid rapid toggling
-const LEAVE_DELAY_MS = 500;
-const ENTER_DELAY_MS = 300;
+const LEAVE_DELAY_MS = 400;
+const ENTER_DELAY_MS = 150;
 // Interval to check for sidenav element reappearing
 const SIDENAV_CHECK_INTERVAL_MS = 1000;
 // Debounce delay for resize events
@@ -33,6 +33,16 @@ const RESIZE_DEBOUNCE_MS = 200;
 const MENU_CLICK_PAUSE_MS = 1500;
 // Width of the invisible edge trigger zone (px)
 const EDGE_TRIGGER_WIDTH = 6;
+// ── Predictive aiming ──
+// When the mouse is within this distance (px) from the left edge AND moving
+// leftward faster than the velocity threshold, we pre-trigger expansion before
+// mouseenter fires, eliminating the perceived "wait" completely.
+const PREDICTIVE_ZONE_WIDTH = 100;
+const PREDICTIVE_VELOCITY_THRESHOLD = -0.5; // px/ms (negative = leftward)
+const PREDICTIVE_THROTTLE_MS = 50;
+// If mouse triggers predictive expand but never enters the sidebar, auto-collapse
+// after this safety window.
+const PREDICTIVE_SAFETY_COLLAPSE_MS = 1200;
 const CUSTOM_POPUP_SELECTORS = [
   '.gv-folder-dialog',
   '.gv-folder-dialog-overlay',
@@ -53,6 +63,13 @@ let pausedUntil = 0;
 // Full-hide state
 let fullHideEnabled = false;
 let edgeTriggerElement: HTMLElement | null = null;
+
+// Predictive aiming state
+let predictiveTriggered = false;
+let lastMouseX: number | null = null;
+let lastMouseTime: number | null = null;
+let lastMoveProcessedTime = 0;
+let predictiveMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
 
 // Shared infrastructure
 let observer: MutationObserver | null = null;
@@ -80,7 +97,8 @@ function getTransitionStyle(): string {
     bard-sidenav,
     bard-sidenav side-navigation-content,
     bard-sidenav side-navigation-content > div {
-      transition: width 0.25s ease, transform 0.25s ease !important;
+      transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), transform 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      will-change: width, transform;
     }
   `;
 }
@@ -385,6 +403,7 @@ function collapseSidebar(): void {
   if (!isSidebarCollapsed()) {
     if (clickToggleButton()) {
       autoCollapsed = true;
+      resetPredictiveState();
     }
   }
 }
@@ -393,9 +412,94 @@ function expandSidebar(): void {
   if (isSidebarCollapsed()) {
     clickToggleButton();
     autoCollapsed = false;
-    // Schedule a reattach so auto-hide listeners are re-added after expansion
-    setTimeout(() => checkAndReattach(), 350);
+    // Schedule a reattach so auto-hide listeners are re-added after expansion.
+    // Must fire after the 220ms CSS transition completes to avoid mid-animation DOM updates.
+    setTimeout(() => checkAndReattach(), 450);
   }
+}
+
+// ─── Predictive Aiming ────────────────────────────────────────────────
+// Inspired by the "Amazon mega-menu" trick: track mouse velocity on
+// document-level mousemove. When the cursor is near the left edge AND
+// heading leftward fast, pre-trigger expand *before* mouseenter fires,
+// removing the perceptual gap entirely.
+
+function resetPredictiveState(): void {
+  predictiveTriggered = false;
+  lastMouseX = null;
+  lastMouseTime = null;
+}
+
+function handlePredictiveMouseMove(e: MouseEvent): void {
+  if (!enabled && !fullHideEnabled) return;
+  if (!isSidebarCollapsed()) return;
+  // If the sidebar is collapsed while the flag is still set, it was collapsed
+  // by an external path (manual toggle, full-hide sync, etc.) that did not
+  // call resetPredictiveState(). Clear the stale latch so the next swipe works.
+  if (predictiveTriggered) {
+    resetPredictiveState();
+    return;
+  }
+  if (isPaused()) return;
+
+  const now = performance.now();
+  if (now - lastMoveProcessedTime < PREDICTIVE_THROTTLE_MS) return;
+  lastMoveProcessedTime = now;
+
+  const x = e.clientX;
+
+  if (lastMouseX !== null && lastMouseTime !== null) {
+    const dt = now - lastMouseTime;
+    // Only use recent samples; ignore stale data (e.g. after tab switch)
+    if (dt > 0 && dt < 200) {
+      const vx = (x - lastMouseX) / dt; // px/ms, negative = leftward
+
+      if (x <= PREDICTIVE_ZONE_WIDTH && vx <= PREDICTIVE_VELOCITY_THRESHOLD) {
+        predictiveTriggered = true;
+
+        // Cancel any pending enter/leave timers to avoid double-action
+        if (enterTimeoutId !== null) {
+          window.clearTimeout(enterTimeoutId);
+          enterTimeoutId = null;
+        }
+        if (leaveTimeoutId !== null) {
+          window.clearTimeout(leaveTimeoutId);
+          leaveTimeoutId = null;
+        }
+
+        expandSidebar();
+
+        // Safety net: if the mouse never actually enters the sidebar
+        // (user changed direction mid-flight), auto-collapse after a
+        // generous window. handleMouseEnter will clear this if triggered.
+        leaveTimeoutId = window.setTimeout(() => {
+          leaveTimeoutId = null;
+          if (!enabled && !fullHideEnabled) return;
+          collapseSidebar();
+        }, PREDICTIVE_SAFETY_COLLAPSE_MS);
+
+        lastMouseX = x;
+        lastMouseTime = now;
+        return;
+      }
+    }
+  }
+
+  lastMouseX = x;
+  lastMouseTime = now;
+}
+
+function attachPredictiveListener(): void {
+  if (predictiveMouseMoveHandler) return;
+  predictiveMouseMoveHandler = handlePredictiveMouseMove;
+  document.addEventListener('mousemove', predictiveMouseMoveHandler, { passive: true });
+}
+
+function detachPredictiveListener(): void {
+  if (!predictiveMouseMoveHandler) return;
+  document.removeEventListener('mousemove', predictiveMouseMoveHandler);
+  predictiveMouseMoveHandler = null;
+  resetPredictiveState();
 }
 
 // ─── Mouse Event Handlers ──────────────────────────────────────────────
@@ -590,6 +694,7 @@ function enable(): void {
   insertTransitionStyle();
   attachEventListeners();
   ensureMenuClickHandler();
+  attachPredictiveListener();
 
   setupInfrastructure();
 
@@ -626,6 +731,7 @@ function disable(): void {
 
   if (!fullHideEnabled) {
     removeTransitionStyle();
+    detachPredictiveListener();
   }
 
   maybeRemoveMenuClickHandler();
@@ -661,6 +767,7 @@ function enableFullHide(): void {
   insertFullHideStyle();
   createEdgeTrigger();
   ensureMenuClickHandler();
+  attachPredictiveListener();
 
   setupInfrastructure();
   syncFullHideState();
@@ -683,6 +790,7 @@ function disableFullHide(): void {
 
   if (!enabled) {
     removeTransitionStyle();
+    detachPredictiveListener();
   }
 
   maybeRemoveMenuClickHandler();
