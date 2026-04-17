@@ -9,6 +9,7 @@
 .gv-pm-search input,
 .gv-pm-input-text,
 .gv-pm-input-tags,
+.gv-pm-input-name,
 .gv-pm-import-btn,
 .gv-pm-export-btn,
 .gv-pm-save,
@@ -19,7 +20,8 @@
 }
 
 .gv-pm-input-text,
-.gv-pm-input-tags {
+.gv-pm-input-tags,
+.gv-pm-input-name {
   -webkit-user-select: text;
   user-select: text;
   box-sizing: border-box;
@@ -1474,10 +1476,14 @@ body.dark-theme .gv-pm-lock.active {
 
 .gv-pm-search {
   padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .gv-pm-search input[type='search'] {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   border-radius: 10px;
   background: rgba(31, 41, 55, 0.5);
   color: #e5e7eb;
@@ -1687,7 +1693,8 @@ body.dark-theme .gv-pm-tag.active {
   box-shadow: 0 0 0 3px oklch(0.55 0.17 155 / 0.1);
 }
 
-.gv-pm-input-tags {
+.gv-pm-input-tags,
+.gv-pm-input-name {
   width: 100%;
   border-radius: 10px;
   background: rgba(31, 41, 55, 0.5);
@@ -1702,15 +1709,18 @@ body.dark-theme .gv-pm-tag.active {
     box-shadow 0.2s ease;
 }
 
-.gv-pm-input-tags:focus {
+.gv-pm-input-tags:focus,
+.gv-pm-input-name:focus {
   border-color: oklch(0.55 0.17 155 / 0.5);
   box-shadow: 0 0 0 3px oklch(0.55 0.17 155 / 0.1);
 }
 
 .theme-host.light-theme .gv-pm-input-text,
 .theme-host.light-theme .gv-pm-input-tags,
+.theme-host.light-theme .gv-pm-input-name,
 body.light-theme .gv-pm-input-text,
-body.light-theme .gv-pm-input-tags {
+body.light-theme .gv-pm-input-tags,
+body.light-theme .gv-pm-input-name {
   background: rgba(0, 0, 0, 0.04);
   color: #1f2937;
   border: 1.5px solid rgba(0, 0, 0, 0.08);
@@ -1718,24 +1728,30 @@ body.light-theme .gv-pm-input-tags {
 
 .theme-host.light-theme .gv-pm-input-text:focus,
 .theme-host.light-theme .gv-pm-input-tags:focus,
+.theme-host.light-theme .gv-pm-input-name:focus,
 body.light-theme .gv-pm-input-text:focus,
-body.light-theme .gv-pm-input-tags:focus {
+body.light-theme .gv-pm-input-tags:focus,
+body.light-theme .gv-pm-input-name:focus {
   border-color: oklch(0.55 0.17 155 / 0.5);
   box-shadow: 0 0 0 3px oklch(0.55 0.17 155 / 0.08);
 }
 
 .theme-host.light-theme .gv-pm-input-text::placeholder,
 .theme-host.light-theme .gv-pm-input-tags::placeholder,
+.theme-host.light-theme .gv-pm-input-name::placeholder,
 body.light-theme .gv-pm-input-text::placeholder,
-body.light-theme .gv-pm-input-tags::placeholder {
+body.light-theme .gv-pm-input-tags::placeholder,
+body.light-theme .gv-pm-input-name::placeholder {
   color: #6b7280;
   opacity: 0.7;
 }
 
 .theme-host.dark-theme .gv-pm-input-text,
 .theme-host.dark-theme .gv-pm-input-tags,
+.theme-host.dark-theme .gv-pm-input-name,
 body.dark-theme .gv-pm-input-text,
-body.dark-theme .gv-pm-input-tags {
+body.dark-theme .gv-pm-input-tags,
+body.dark-theme .gv-pm-input-name {
   background: rgba(31, 41, 55, 0.5);
   color: #e5e7eb;
   border: 1.5px solid rgba(255, 255, 255, 0.08);
@@ -1743,16 +1759,20 @@ body.dark-theme .gv-pm-input-tags {
 
 .theme-host.dark-theme .gv-pm-input-text:focus,
 .theme-host.dark-theme .gv-pm-input-tags:focus,
+.theme-host.dark-theme .gv-pm-input-name:focus,
 body.dark-theme .gv-pm-input-text:focus,
-body.dark-theme .gv-pm-input-tags:focus {
+body.dark-theme .gv-pm-input-tags:focus,
+body.dark-theme .gv-pm-input-name:focus {
   border-color: oklch(0.7 0.16 155 / 0.5);
   box-shadow: 0 0 0 3px oklch(0.7 0.16 155 / 0.1);
 }
 
 .theme-host.dark-theme .gv-pm-input-text::placeholder,
 .theme-host.dark-theme .gv-pm-input-tags::placeholder,
+.theme-host.dark-theme .gv-pm-input-name::placeholder,
 body.dark-theme .gv-pm-input-text::placeholder,
-body.dark-theme .gv-pm-input-tags::placeholder {
+body.dark-theme .gv-pm-input-tags::placeholder,
+body.dark-theme .gv-pm-input-name::placeholder {
   color: #9ca3af;
   opacity: 0.7;
 }
@@ -2230,12 +2250,14 @@ body.dark-theme .gv-pm-del.armed {
   mask: var(--gv-icon) center / contain no-repeat;
 }
 
+/* Material Symbols outlined "edit" — matches Gemini's native action icons. */
 .gv-pm-edit::before {
-  --gv-icon: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3e%3cpath fill=%22%23000%22 d=%22M10.9 1.6l3.5 3.5-8.8 8.8H2v-3.6l8.9-8.7zM2 14h12v1H2z%22/%3e%3c/svg%3e');
+  --gv-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M3 17.46V21h3.54L17.81 9.73l-3.54-3.54L3 17.46ZM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>');
 }
 
+/* Material Symbols outlined "delete" — matches Gemini's native action icons. */
 .gv-pm-del::before {
-  --gv-icon: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3e%3cpath fill=%22%23000%22 d=%22M6 2h4l1 1h3v1H2V3h3l1-1zm-1 4h1v7H5V6zm3 0h1v7H8V6zm-2 0h1v7H6V6zm6 0l-1 8H5L4 6h8z%22/%3e%3c/svg%3e');
+  --gv-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12ZM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4Z"/></svg>');
 }
 
 .gv-pm-footer {
@@ -2888,20 +2910,23 @@ body.dark-theme .gv-pm-notice.err {
 }
 
 .gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-text,
-.gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-tags {
+.gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-tags,
+.gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-name {
   background: rgba(31, 41, 55, 0.5);
   color: #e5e7eb;
   border: 1.5px solid rgba(255, 255, 255, 0.08);
 }
 
 .gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-text:focus,
-.gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-tags:focus {
+.gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-tags:focus,
+.gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-name:focus {
   border-color: oklch(0.7 0.16 155 / 0.5);
   box-shadow: 0 0 0 3px oklch(0.7 0.16 155 / 0.1);
 }
 
 .gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-text::placeholder,
-.gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-tags::placeholder {
+.gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-tags::placeholder,
+.gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-name::placeholder {
   color: #9ca3af;
   opacity: 0.7;
 }
@@ -3153,20 +3178,23 @@ body.dark-theme .gv-pm-notice.err {
 }
 
 .gv-pm-panel[data-gv-theme='light'] .gv-pm-input-text,
-.gv-pm-panel[data-gv-theme='light'] .gv-pm-input-tags {
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-input-tags,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-input-name {
   background: rgba(0, 0, 0, 0.04);
   color: #1f2937;
   border: 1.5px solid rgba(0, 0, 0, 0.08);
 }
 
 .gv-pm-panel[data-gv-theme='light'] .gv-pm-input-text:focus,
-.gv-pm-panel[data-gv-theme='light'] .gv-pm-input-tags:focus {
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-input-tags:focus,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-input-name:focus {
   border-color: oklch(0.55 0.17 155 / 0.5);
   box-shadow: 0 0 0 3px oklch(0.55 0.17 155 / 0.08);
 }
 
 .gv-pm-panel[data-gv-theme='light'] .gv-pm-input-text::placeholder,
-.gv-pm-panel[data-gv-theme='light'] .gv-pm-input-tags::placeholder {
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-input-tags::placeholder,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-input-name::placeholder {
   color: #6b7280;
   opacity: 0.7;
 }
@@ -7792,4 +7820,239 @@ body.gv-rtl .gv-fi-char-count {
 
 body.gv-rtl .gv-fi-actions {
   justify-content: flex-start;
+}
+
+/* ===== Prompt Manager: view-mode toggle + compact rows ===== */
+
+/* View-mode toggle — lives on the right edge of the search row so the header
+ * title doesn't have to shrink. Icon-only, sized to align with the search
+ * input baseline. */
+.gv-pm-view-mode {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  color: rgba(229, 231, 235, 0.65);
+}
+
+.gv-pm-view-mode::before {
+  content: attr(data-icon);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.gv-pm-view-mode:hover {
+  border-color: oklch(0.7 0.16 155 / 0.35);
+  color: #e5e7eb;
+}
+
+.gv-pm-view-mode.gv-pm-view-mode-compact {
+  border-color: oklch(0.7 0.16 155 / 0.6);
+  color: oklch(0.8 0.08 155);
+  background: oklch(0.7 0.16 155 / 0.1);
+}
+
+.theme-host.light-theme .gv-pm-view-mode,
+body.light-theme .gv-pm-view-mode,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-view-mode {
+  border-color: rgba(0, 0, 0, 0.08);
+  color: rgba(31, 41, 55, 0.6);
+}
+
+.theme-host.light-theme .gv-pm-view-mode:hover,
+body.light-theme .gv-pm-view-mode:hover,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-view-mode:hover {
+  border-color: oklch(0.55 0.17 155 / 0.4);
+  color: #1f2937;
+}
+
+.theme-host.light-theme .gv-pm-view-mode.gv-pm-view-mode-compact,
+body.light-theme .gv-pm-view-mode.gv-pm-view-mode-compact,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-view-mode.gv-pm-view-mode-compact {
+  border-color: oklch(0.55 0.17 155 / 0.6);
+  color: oklch(0.4 0.12 155);
+  background: oklch(0.55 0.17 155 / 0.08);
+}
+
+/* ----- Compact list row ----- */
+
+/* A compact row is exactly 36px tall (including padding) regardless of which
+ * actions happen to be visible. Hover only changes icon opacity, never layout,
+ * so rows never jitter as the mouse moves down the list. */
+.gv-pm-item-compact {
+  padding: 7px 10px;
+  border-radius: 8px;
+  grid-template-rows: auto;
+  gap: 0;
+  min-height: 36px;
+  box-sizing: border-box;
+}
+
+.gv-pm-item-compact + .gv-pm-item-compact {
+  margin-top: 3px;
+}
+
+.gv-pm-item-compact .gv-pm-item-text-container {
+  align-items: center;
+  gap: 6px;
+  /* Reserve a comfortable cushion for the absolutely-positioned right-side
+   * cluster (chip + ▼ expand + ✎ edit + 🗑 delete). Generous enough that
+   * the cluster never bleeds into the title area regardless of which icons
+   * happen to be visible. */
+  padding-right: 168px;
+}
+
+.gv-pm-item-compact .gv-pm-item-text {
+  font-size: 13px;
+  line-height: 1.4;
+  align-self: center;
+  min-width: 0;
+}
+
+/* Compact title: a single-line plaintext headline. A fixed ch-based max-width
+ * keeps the preview to roughly the first ~22 visible characters, which makes
+ * all rows feel uniform and independent of row/panel width. */
+.gv-pm-compact-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  line-height: 1.4;
+  font-size: 13px;
+  margin: 0;
+  padding: 0;
+  max-width: 22ch;
+}
+
+/* Anchor the inline bottom-row (tags + ▼ expand + edit + delete) to the
+ * right, vertically centered. Width is auto so the cluster shrinks to its
+ * content and can't overflow its siblings — the title reserves a 168px
+ * cushion above which more than covers the max cluster width. */
+.gv-pm-item-compact .gv-pm-bottom {
+  grid-row: 1;
+  grid-column: 1;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.gv-pm-item-compact .gv-pm-item-meta {
+  flex-wrap: nowrap;
+  overflow: hidden;
+  max-width: 72px;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+  gap: 4px;
+}
+
+.gv-pm-item-compact:hover .gv-pm-item-meta {
+  opacity: 1;
+}
+
+.gv-pm-item-compact .gv-pm-chip {
+  font-size: 9px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+/* Actions: always laid out (so height never shifts), always visible at subtle
+ * opacity, ramp to full opacity on row hover. Smaller than comfortable mode. */
+.gv-pm-item-compact .gv-pm-actions {
+  gap: 2px;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+.gv-pm-item-compact:hover .gv-pm-actions {
+  opacity: 1;
+}
+
+.gv-pm-item-compact .gv-pm-edit,
+.gv-pm-item-compact .gv-pm-del {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+.gv-pm-item-compact .gv-pm-edit::before,
+.gv-pm-item-compact .gv-pm-del::before {
+  width: 14px;
+  height: 14px;
+}
+
+.gv-pm-item-compact .gv-pm-expand-btn {
+  align-self: center;
+  width: 24px;
+  height: 24px;
+  font-size: 9px;
+  opacity: 0.55;
+}
+
+.gv-pm-item-compact:hover .gv-pm-expand-btn {
+  opacity: 1;
+}
+
+/* RTL: mirror the absolute-positioned action bar to the left edge. */
+body.gv-rtl .gv-pm-item-compact .gv-pm-item-text-container {
+  padding-right: 0;
+  padding-left: 168px;
+}
+
+body.gv-rtl .gv-pm-item-compact .gv-pm-bottom {
+  right: auto;
+  left: 8px;
+}
+
+/* ----- Custom hover tooltip (issue #586 feedback item 5) -----
+ * Native title="" has a ~1–3s browser delay. We roll a lightweight tooltip
+ * that pops in after ~250ms so users can peek full prompt text quickly. */
+.gv-pm-tooltip {
+  position: fixed;
+  z-index: 2147483647;
+  max-width: 360px;
+  max-height: 280px;
+  overflow: auto;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: rgba(17, 24, 39, 0.98);
+  color: #f3f4f6;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
+}
+
+.gv-pm-tooltip.gv-pm-tooltip-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gv-pm-tooltip[data-gv-theme='light'] {
+  background: rgba(255, 255, 255, 0.98);
+  color: #111827;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }

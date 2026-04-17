@@ -42,6 +42,7 @@ import { hasUnreadChangelog, openChangelog, showChangelogModalDirect } from '../
 import { insertTextIntoChatInput } from '../chatInput/index';
 import { createFolderStorageAdapter } from '../folder/storage/FolderStorageAdapter';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
+import { extractPlainTitle } from './compactTitle';
 import { parsePromptImportPayload } from './importPayload';
 import { activatePromptText } from './promptClickAction';
 import { getScrollHintState } from './scrollHint';
@@ -52,6 +53,12 @@ type PromptItem = {
   tags: string[];
   createdAt: number;
   updatedAt?: number;
+  /**
+   * Optional user-authored label used as the headline in compact list view.
+   * Falls back to `extractPlainTitle(text)` when absent so existing prompts
+   * render without any migration. Introduced for issue #586 feedback item 4c.
+   */
+  name?: string;
 };
 
 type PanelPosition = { top: number; left: number };
@@ -75,6 +82,7 @@ const LATEST_VERSION_CACHE_KEY = 'gvLatestVersionCache';
 const LATEST_VERSION_MAX_AGE = 1000 * 60 * 60 * 6; // 6 hours
 
 type PMTheme = 'light' | 'dark';
+type PMViewMode = 'compact' | 'comfortable';
 
 function detectPageTheme(): PMTheme {
   if (
@@ -684,6 +692,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const addBtn = createEl('button', 'gv-pm-add');
     addBtn.textContent = i18n.t('pm_add');
 
+    const viewModeBtn = createEl('button', 'gv-pm-view-mode');
+    viewModeBtn.setAttribute('type', 'button');
+    // Title, aria-label, and data-icon are set in applyViewModeUI() below.
+
     controls.appendChild(langSel);
     controls.appendChild(addBtn);
     controls.appendChild(lockBtn);
@@ -691,11 +703,16 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     header.appendChild(titleRow);
     header.appendChild(controls);
 
+    // Search wrap hosts the search input and, on its right edge, the
+    // compact/comfortable view-mode toggle. Keeping the toggle here instead of
+    // the header controls row prevents the "Voyager" title from being squeezed
+    // into ellipsis, and keeps it adjacent to the list it governs.
     const searchWrap = createEl('div', 'gv-pm-search');
     const searchInput = createEl('input') as HTMLInputElement;
     searchInput.type = 'search';
     searchInput.placeholder = i18n.t('pm_search_placeholder');
     searchWrap.appendChild(searchInput);
+    searchWrap.appendChild(viewModeBtn);
 
     const tagsWrapOuter = createEl('div', 'gv-pm-tags-wrap');
     const tagsWrap = createEl('div', 'gv-pm-tags');
@@ -769,6 +786,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     const addForm = elFromHTML(
       `<form class="gv-pm-add-form gv-hidden">
+        <input class="gv-pm-input-name" type="text" maxlength="60" placeholder="${escapeHtml(
+          i18n.t('pm_name_placeholder') || 'Name (optional)',
+        )}" />
         <textarea class="gv-pm-input-text" placeholder="${escapeHtml(
           i18n.t('pm_prompt_placeholder') || 'Prompt text',
         )}" rows="3"></textarea>
@@ -807,6 +827,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     let draggingTrigger = false;
     let editingId: string | null = null;
     let expandedItems: Set<string> = new Set<string>(); // Track expanded prompt items
+    let viewMode: PMViewMode = 'compact';
 
     function setNotice(text: string, kind: 'ok' | 'err' = 'ok') {
       notice.textContent = text || '';
@@ -836,6 +857,147 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       tagsWrapOuter.classList.toggle('gv-pm-tags-scrollable', isOverflowing);
       tagsWrapOuter.classList.toggle('gv-pm-tags-scroll-end', !showHint);
     }
+
+    /* Fast hover tooltip for compact rows.
+     *
+     * The browser's native `title=""` tooltip has a ~1–3 second delay that
+     * users have complained about (issue #586 feedback item 5). We roll a
+     * singleton DOM tooltip shared across all prompt rows — fades in ~250ms
+     * after hover, hides on mouseleave/scroll/panel close. Rebuilt rows
+     * re-attach via `attachPromptTooltip`; no cleanup required on the old
+     * DOM nodes since listeners are GC'd with them. */
+    const TOOLTIP_OPEN_DELAY_MS = 250;
+    let tooltipEl: HTMLDivElement | null = null;
+    let tooltipOpenTimer: number | null = null;
+    let tooltipActiveTarget: HTMLElement | null = null;
+
+    function ensureTooltipEl(): HTMLDivElement {
+      if (tooltipEl) return tooltipEl;
+      const el = document.createElement('div');
+      el.className = 'gv-pm-tooltip';
+      el.setAttribute('role', 'tooltip');
+      document.body.appendChild(el);
+      tooltipEl = el;
+      return el;
+    }
+
+    function hideTooltip(): void {
+      if (tooltipOpenTimer !== null) {
+        window.clearTimeout(tooltipOpenTimer);
+        tooltipOpenTimer = null;
+      }
+      tooltipActiveTarget = null;
+      if (tooltipEl) {
+        tooltipEl.classList.remove('gv-pm-tooltip-visible');
+      }
+    }
+
+    function showTooltip(target: HTMLElement, fullText: string): void {
+      const el = ensureTooltipEl();
+      el.textContent = fullText;
+      el.setAttribute('data-gv-theme', panel.getAttribute('data-gv-theme') || '');
+
+      // Position: prefer above the target, fall back to below if clipped.
+      // Measurement requires the element to be laid out, so reveal first then
+      // adjust; CSS keeps it invisible until the `-visible` class is applied.
+      el.style.left = '0px';
+      el.style.top = '0px';
+      el.style.visibility = 'hidden';
+      el.classList.add('gv-pm-tooltip-visible');
+      const targetRect = target.getBoundingClientRect();
+      const tipRect = el.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const pad = 8;
+
+      let left = targetRect.left;
+      if (left + tipRect.width > vw - pad) left = vw - pad - tipRect.width;
+      if (left < pad) left = pad;
+
+      let top = targetRect.top - tipRect.height - 6;
+      if (top < pad) {
+        top = targetRect.bottom + 6;
+        if (top + tipRect.height > vh - pad) top = Math.max(pad, vh - pad - tipRect.height);
+      }
+
+      el.style.left = `${Math.round(left)}px`;
+      el.style.top = `${Math.round(top)}px`;
+      el.style.visibility = '';
+    }
+
+    function attachPromptTooltip(target: HTMLElement, fullText: string, _host: HTMLElement): void {
+      const scheduleShow = () => {
+        if (tooltipOpenTimer !== null) window.clearTimeout(tooltipOpenTimer);
+        tooltipActiveTarget = target;
+        tooltipOpenTimer = window.setTimeout(() => {
+          tooltipOpenTimer = null;
+          if (tooltipActiveTarget === target) showTooltip(target, fullText);
+        }, TOOLTIP_OPEN_DELAY_MS);
+      };
+      target.addEventListener('mouseenter', scheduleShow);
+      target.addEventListener('mouseleave', hideTooltip);
+      // A click/press activates the prompt; dismiss the hover preview immediately.
+      target.addEventListener('mousedown', hideTooltip);
+    }
+
+    // Dismiss on scroll or panel-wide events so the tooltip never ends up
+    // orphaned when the list scrolls under it.
+    const tooltipScrollTargets: Array<HTMLElement | Window> = [list, window];
+    const onTooltipDismiss = () => hideTooltip();
+    for (const target of tooltipScrollTargets) {
+      target.addEventListener('scroll', onTooltipDismiss, { passive: true, capture: true });
+    }
+
+    function applyViewModeUI(): void {
+      panel.setAttribute('data-gv-view', viewMode);
+      const isCompact = viewMode === 'compact';
+      viewModeBtn.classList.toggle('gv-pm-view-mode-compact', isCompact);
+      viewModeBtn.setAttribute('data-icon', isCompact ? '▦' : '≡');
+      // Tooltip describes the action the click will perform, not the current state.
+      const nextTip = isCompact
+        ? i18n.t('pm_view_comfortable') || 'Switch to comfortable view'
+        : i18n.t('pm_view_compact') || 'Switch to compact list';
+      viewModeBtn.title = nextTip;
+      viewModeBtn.setAttribute('aria-label', nextTip);
+      viewModeBtn.setAttribute('aria-pressed', isCompact ? 'true' : 'false');
+    }
+
+    applyViewModeUI();
+
+    // Load saved view mode preference (sync storage, follows theme pattern)
+    (async () => {
+      try {
+        const result = await browser.storage.sync.get(StorageKeys.PROMPT_VIEW_MODE);
+        const saved = result[StorageKeys.PROMPT_VIEW_MODE];
+        if (saved === 'compact' || saved === 'comfortable') {
+          viewMode = saved;
+          applyViewModeUI();
+          renderList();
+        }
+      } catch {
+        // Keep default on failure
+      }
+    })();
+
+    viewModeBtn.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      viewMode = viewMode === 'compact' ? 'comfortable' : 'compact';
+      applyViewModeUI();
+      renderList();
+      try {
+        await browser.storage.sync.set({ [StorageKeys.PROMPT_VIEW_MODE]: viewMode });
+      } catch {
+        try {
+          await browser.storage.local.set({ [StorageKeys.PROMPT_VIEW_MODE]: viewMode });
+        } catch {
+          // Ignore persistence failures; UI state still updates.
+        }
+      }
+      try {
+        (ev.currentTarget as HTMLButtonElement)?.blur?.();
+      } catch {}
+    });
 
     function renderTags(): void {
       const all = collectAllTags(items);
@@ -889,38 +1051,57 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const textContainer = createEl('div', 'gv-pm-item-text-container');
         const textBtn = createEl('button', 'gv-pm-item-text');
 
+        // Compact mode collapses each prompt to a single-line plaintext title
+        // to maximize density; expanding promotes the row back to the rich
+        // Markdown preview used in comfortable mode.
+        const isExpanded = expandedItems.has(it.id);
+        const compactCollapsed = viewMode === 'compact' && !isExpanded;
+        if (compactCollapsed) {
+          row.classList.add('gv-pm-item-compact');
+        }
+
         // Render Markdown + KaTeX preview (sanitized)
         const md = document.createElement('div');
         md.className = 'gv-md';
 
-        // Apply collapsed class if not expanded
-        const isExpanded = expandedItems.has(it.id);
-        if (!isExpanded) {
-          md.classList.add('gv-md-collapsed');
+        if (compactCollapsed) {
+          md.classList.add('gv-pm-compact-title');
+          // User-authored `name` takes precedence so prompts can be labeled
+          // independently of their Markdown body.
+          md.textContent = (it.name && it.name.trim()) || extractPlainTitle(it.text);
+          // Attach a lightweight, fast-opening hover tooltip for peek.
+          attachPromptTooltip(textBtn, it.text, panel);
+        } else {
+          // Apply collapsed class if not expanded (comfortable mode: 5-line clamp)
+          if (!isExpanded) {
+            md.classList.add('gv-md-collapsed');
+          }
         }
 
         // Insert element into DOM first, then render to ensure KaTeX can detect document mode correctly
         textBtn.appendChild(md);
 
-        // Defer rendering to next frame to ensure element is fully attached
-        requestAnimationFrame(() => {
-          try {
-            const out = marked.parse(it.text as string);
-            if (typeof out === 'string') {
-              md.innerHTML = DOMPurify.sanitize(out);
-            } else {
-              out
-                .then((html: string) => {
-                  md.innerHTML = DOMPurify.sanitize(html);
-                })
-                .catch(() => {
-                  md.textContent = it.text;
-                });
+        if (!compactCollapsed) {
+          // Defer rendering to next frame to ensure element is fully attached
+          requestAnimationFrame(() => {
+            try {
+              const out = marked.parse(it.text as string);
+              if (typeof out === 'string') {
+                md.innerHTML = DOMPurify.sanitize(out);
+              } else {
+                out
+                  .then((html: string) => {
+                    md.innerHTML = DOMPurify.sanitize(html);
+                  })
+                  .catch(() => {
+                    md.textContent = it.text;
+                  });
+              }
+            } catch {
+              md.textContent = it.text;
             }
-          } catch {
-            md.textContent = it.text;
-          }
-        });
+          });
+        }
 
         textBtn.addEventListener('mousedown', (e) => {
           if (e.button !== 0) return;
@@ -974,7 +1155,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         });
 
         textContainer.appendChild(textBtn);
-        textContainer.appendChild(expandBtn);
+        // In compact mode the expand button is moved into the right-side
+        // actions cluster (see below) so all right-aligned controls form a
+        // single group and can't overlap each other. In comfortable mode
+        // it stays inline with the text for progressive disclosure.
+        if (!compactCollapsed) {
+          textContainer.appendChild(expandBtn);
+        }
 
         // Edit button
         const editBtn = createEl('button', 'gv-pm-edit');
@@ -983,12 +1170,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         editBtn.addEventListener('click', async (e) => {
           e.stopPropagation();
           // Start inline edit using the add form fields
+          (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement).value = it.name ?? '';
           (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value = it.text;
           (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).value = (
             it.tags || []
           ).join(', ');
           addForm.classList.remove('gv-hidden');
-          (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).focus();
+          (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement).focus();
           editingId = it.id;
         });
         const bottom = createEl('div', 'gv-pm-bottom');
@@ -1071,6 +1259,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         // Append text container instead of textBtn
         row.appendChild(textContainer);
 
+        // In compact mode, expand sits at the left of edit/del so the cluster
+        // reads [chip] [▼] [✎] [🗑] from left to right — one cohesive group.
+        if (compactCollapsed) {
+          actions.appendChild(expandBtn);
+        }
         actions.appendChild(editBtn);
         actions.appendChild(del);
         bottom.appendChild(meta);
@@ -1100,6 +1293,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     function closePanel(): void {
       open = false;
       panel.classList.add('gv-hidden');
+      hideTooltip();
     }
 
     function applyLockUI(): void {
@@ -1135,6 +1329,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       gh.title = i18n.t('starProject');
       const ghTextEl = gh.querySelector('.gv-pm-gh-text');
       if (ghTextEl) ghTextEl.textContent = i18n.t('starProject');
+      (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement).placeholder =
+        i18n.t('pm_name_placeholder');
       (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).placeholder =
         i18n.t('pm_prompt_placeholder');
       (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).placeholder =
@@ -1143,6 +1339,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       (addForm.querySelector('.gv-pm-cancel') as HTMLButtonElement).textContent =
         i18n.t('pm_cancel');
       applyLockUI();
+      applyViewModeUI();
       renderTags();
       renderList();
     }
@@ -1352,6 +1549,14 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (area === 'sync' && changes[StorageKeys.PROMPT_INSERT_ON_CLICK]) {
         promptInsertOnClick = changes[StorageKeys.PROMPT_INSERT_ON_CLICK].newValue === true;
       }
+      if (area === 'sync' && changes[StorageKeys.PROMPT_VIEW_MODE]) {
+        const nextMode = changes[StorageKeys.PROMPT_VIEW_MODE].newValue;
+        if ((nextMode === 'compact' || nextMode === 'comfortable') && nextMode !== viewMode) {
+          viewMode = nextMode;
+          applyViewModeUI();
+          renderList();
+        }
+      }
       // Handle changelog notify mode changes (dynamic badge update)
       if (
         area === 'local' &&
@@ -1463,6 +1668,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     );
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const nameRaw = (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement).value;
+      const name = nameRaw.trim();
       const text = (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value;
       const tagsRaw = (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).value;
       const tags = dedupeTags((tagsRaw || '').split(',').map((s) => s.trim()));
@@ -1479,6 +1686,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         if (target) {
           target.text = text;
           target.tags = tags;
+          if (name) target.name = name;
+          else delete target.name;
           target.updatedAt = Date.now();
           await writeStorage(STORAGE_KEYS.items, items);
           setNotice(i18n.t('pm_saved') || 'Saved', 'ok');
@@ -1492,9 +1701,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           return;
         }
         const it: PromptItem = { id: uid(), text, tags, createdAt: Date.now() };
+        if (name) it.name = name;
         items = [it, ...items];
         await writeStorage(STORAGE_KEYS.items, items);
       }
+      (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement).value = '';
       (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value = '';
       (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).value = '';
       setInlineHint('');
