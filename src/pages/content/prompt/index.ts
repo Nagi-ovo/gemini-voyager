@@ -992,9 +992,15 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     }
 
     // Dismiss on scroll or panel-wide events so the tooltip never ends up
-    // orphaned when the list scrolls under it.
+    // orphaned when the list scrolls under it. Exception: scrolling *inside*
+    // the tooltip itself (long prompts now paginate within max-height) must
+    // keep it open — otherwise the interactive preview is useless.
     const tooltipScrollTargets: Array<HTMLElement | Window> = [list, window];
-    const onTooltipDismiss = () => actuallyHideTooltip();
+    const onTooltipDismiss = (ev: Event) => {
+      const t = ev.target as Node | null;
+      if (tooltipEl && t && (t === tooltipEl || tooltipEl.contains(t))) return;
+      actuallyHideTooltip();
+    };
     for (const target of tooltipScrollTargets) {
       target.addEventListener('scroll', onTooltipDismiss, { passive: true, capture: true });
     }
