@@ -1451,6 +1451,14 @@
     "message": "تقييم الآن",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_rate_edge": {
+    "message": "هل أعجبك Voyager؟ تقييمك على متجر إضافات Edge يساعد الآخرين على اكتشافه!",
+    "description": "Edge Add-ons store rating prompt in changelog modal"
+  },
+  "changelog_rate_edge_cta": {
+    "message": "تقييم الآن",
+    "description": "Edge Add-ons store rating CTA button text"
+  },
   "changelog_badge_mode": {
     "message": "الإشعار عبر شارة NEW على الزر العائم بدلاً من هذه النافذة",
     "description": "Changelog notification mode toggle label"

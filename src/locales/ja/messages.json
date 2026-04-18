@@ -1451,6 +1451,14 @@
     "message": "評価する",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_rate_edge": {
+    "message": "Voyager を気に入っていただけましたか？Edge アドオンストアでの評価が大きな励みになります！",
+    "description": "Edge Add-ons store rating prompt in changelog modal"
+  },
+  "changelog_rate_edge_cta": {
+    "message": "評価する",
+    "description": "Edge Add-ons store rating CTA button text"
+  },
   "changelog_badge_mode": {
     "message": "このポップアップの代わりに、フローティングボタンの NEW バッジで通知する",
     "description": "Changelog notification mode toggle label"

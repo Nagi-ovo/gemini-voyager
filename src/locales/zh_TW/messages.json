@@ -1451,6 +1451,14 @@
     "message": "立即評分",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_rate_edge": {
+    "message": "覺得 Voyager 好用嗎？在 Edge 附加元件商店給個好評，幫助更多人發現它！",
+    "description": "Edge Add-ons store rating prompt in changelog modal"
+  },
+  "changelog_rate_edge_cta": {
+    "message": "立即評分",
+    "description": "Edge Add-ons store rating CTA button text"
+  },
   "changelog_badge_mode": {
     "message": "透過懸浮球上的 NEW 標記提醒，而非彈出此視窗",
     "description": "Changelog notification mode toggle label"

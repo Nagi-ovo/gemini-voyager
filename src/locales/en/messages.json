@@ -1451,6 +1451,14 @@
     "message": "Rate Now",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_rate_edge": {
+    "message": "Love Voyager? A quick rating on the Edge Add-ons store makes a huge difference!",
+    "description": "Edge Add-ons store rating prompt in changelog modal"
+  },
+  "changelog_rate_edge_cta": {
+    "message": "Rate Now",
+    "description": "Edge Add-ons store rating CTA button text"
+  },
   "changelog_badge_mode": {
     "message": "Notify via badge on the floating button instead of this popup",
     "description": "Changelog notification mode toggle label"

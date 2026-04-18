@@ -2,7 +2,7 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
 import { StorageKeys } from '@/core/types/common';
-import { isChrome, isFirefox } from '@/core/utils/browser';
+import { isChrome, isEdge, isFirefox } from '@/core/utils/browser';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 import { getCurrentLanguage } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
@@ -209,6 +209,8 @@ function showImageLightbox(src: string, alt: string): void {
 
 const CHROME_STORE_URL =
   'https://chromewebstore.google.com/detail/gemini-voyager/iifacdnjakkhjjiengaffnegbndgingi';
+const EDGE_STORE_URL =
+  'https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne';
 
 /**
  * Read the current changelog notification mode.
@@ -441,21 +443,34 @@ function createChangelogModal(
   footer.appendChild(socialRow);
   footer.appendChild(notifyToggle);
 
-  // Chrome Web Store rating prompt (Chrome only)
-  if (isChrome()) {
+  // Web store rating prompt (Chrome Web Store / Edge Add-ons)
+  const storeRating: {
+    url: string;
+    textKey: TranslationKey;
+    ctaKey: TranslationKey;
+  } | null = isEdge()
+    ? { url: EDGE_STORE_URL, textKey: 'changelog_rate_edge', ctaKey: 'changelog_rate_edge_cta' }
+    : isChrome()
+      ? {
+          url: CHROME_STORE_URL,
+          textKey: 'changelog_rate_chrome',
+          ctaKey: 'changelog_rate_chrome_cta',
+        }
+      : null;
+  if (storeRating) {
     const ratingBanner = document.createElement('div');
     ratingBanner.className = 'gv-changelog-chrome-rating';
 
     const ratingText = document.createElement('span');
     ratingText.className = 'gv-changelog-chrome-rating-text';
-    ratingText.textContent = t('changelog_rate_chrome', lang);
+    ratingText.textContent = t(storeRating.textKey, lang);
 
     const ratingLink = document.createElement('a');
     ratingLink.className = 'gv-changelog-chrome-rating-link';
-    ratingLink.href = CHROME_STORE_URL;
+    ratingLink.href = storeRating.url;
     ratingLink.target = '_blank';
     ratingLink.rel = 'noopener noreferrer';
-    ratingLink.textContent = `⭐ ${t('changelog_rate_chrome_cta', lang)}`;
+    ratingLink.textContent = `⭐ ${t(storeRating.ctaKey, lang)}`;
 
     ratingBanner.appendChild(ratingText);
     ratingBanner.appendChild(ratingLink);

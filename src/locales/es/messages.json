@@ -1451,6 +1451,14 @@
     "message": "Valorar",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_rate_edge": {
+    "message": "¿Te gusta Voyager? ¡Una valoración en la tienda de complementos de Edge ayuda a otros a descubrirlo!",
+    "description": "Edge Add-ons store rating prompt in changelog modal"
+  },
+  "changelog_rate_edge_cta": {
+    "message": "Valorar",
+    "description": "Edge Add-ons store rating CTA button text"
+  },
   "changelog_badge_mode": {
     "message": "Notificar con una insignia NEW en el botón flotante en lugar de esta ventana",
     "description": "Changelog notification mode toggle label"

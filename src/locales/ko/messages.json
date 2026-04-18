@@ -1451,6 +1451,14 @@
     "message": "평점 주기",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_rate_edge": {
+    "message": "Voyager가 마음에 드시나요? Edge 부가 기능 스토어에 평점을 남겨 더 많은 분들이 발견할 수 있게 해주세요!",
+    "description": "Edge Add-ons store rating prompt in changelog modal"
+  },
+  "changelog_rate_edge_cta": {
+    "message": "평점 주기",
+    "description": "Edge Add-ons store rating CTA button text"
+  },
   "changelog_badge_mode": {
     "message": "이 팝업 대신 플로팅 버튼의 NEW 배지로 알림",
     "description": "Changelog notification mode toggle label"

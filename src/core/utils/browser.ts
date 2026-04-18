@@ -80,6 +80,16 @@ export function isFirefox(): boolean {
 }
 
 /**
+ * Detect if the current browser is Microsoft Edge.
+ * Edge is Chromium-based and includes 'edg' in the user agent.
+ */
+export function isEdge(): boolean {
+  if (isSafari()) return false;
+  const ua = navigator.userAgent.toLowerCase();
+  return ua.includes('edg');
+}
+
+/**
  * Detect if the current platform is macOS
  *
  * @returns true if running on macOS

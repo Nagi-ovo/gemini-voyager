@@ -1451,6 +1451,14 @@
     "message": "Évaluer",
     "description": "Chrome Web Store rating CTA button text"
   },
+  "changelog_rate_edge": {
+    "message": "Vous aimez Voyager ? Une note sur le store de modules complémentaires Edge aide d'autres utilisateurs à le découvrir !",
+    "description": "Edge Add-ons store rating prompt in changelog modal"
+  },
+  "changelog_rate_edge_cta": {
+    "message": "Évaluer",
+    "description": "Edge Add-ons store rating CTA button text"
+  },
   "changelog_badge_mode": {
     "message": "Notifier via un badge NEW sur le bouton flottant au lieu de cette fenêtre",
     "description": "Changelog notification mode toggle label"
