@@ -1539,6 +1539,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (target.closest(`#${ID.panel}`)) return;
       if (target.closest(`#${ID.trigger}`)) return;
       if (target.closest('.gv-pm-confirm')) return;
+      // The hover-preview tooltip lives on document.body so users can
+      // interact with it (scroll long prompts, select text). Without this
+      // exclusion, clicking its scrollbar would be treated as an outside
+      // click and close the whole panel.
+      if (target.closest('.gv-pm-tooltip')) return;
       closePanel();
     };
     window.addEventListener('pointerdown', onWindowPointerDown, { capture: true });
