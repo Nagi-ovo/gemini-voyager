@@ -1097,6 +1097,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     }
 
     function renderList(): void {
+      // Rebuilding the list destroys every row's DOM. Any pending hover-open
+      // timer would fire against a detached target (getBoundingClientRect()
+      // returns zeros → tooltip mispositioned) and any visible tooltip would
+      // display stale content. Close it up front so every re-render starts
+      // from a clean state.
+      hideTooltip();
+
       const q = (searchInput.value || '').trim().toLowerCase();
       const selectedTagList = Array.from(selectedTags);
       const filtered = items.filter((it) => {
@@ -1688,6 +1695,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       ev.preventDefault();
       ev.stopPropagation();
       editingId = null;
+      // Reset every field before opening. Without this, state from a cancelled
+      // edit (especially the optional name, which sits at the top and is easy
+      // to overlook) would leak into the new prompt.
+      (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement).value = '';
+      (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value = '';
+      (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).value = '';
+      setInlineHint('');
       addForm.classList.remove('gv-hidden');
       (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement)?.focus();
     });

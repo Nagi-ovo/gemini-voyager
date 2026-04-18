@@ -7886,14 +7886,19 @@ body.light-theme .gv-pm-view-mode.gv-pm-view-mode-compact,
 
 /* ----- Compact list row ----- */
 
-/* A compact row is exactly 36px tall (including padding) regardless of which
- * actions happen to be visible. Hover only changes icon opacity, never layout,
- * so rows never jitter as the mouse moves down the list. */
+/* A compact row is ~36px tall regardless of which actions happen to be
+ * visible. Hover only changes icon opacity, never layout, so rows never
+ * jitter as the mouse moves down the list.
+ *
+ * Override the base grid layout with flex so the single-line title is
+ * vertically centered against the 36px min-height — with grid + auto row,
+ * the extra vertical space fell below the content row by default, pushing
+ * the title a couple pixels above the absolute-positioned right cluster. */
 .gv-pm-item-compact {
+  display: flex;
+  align-items: center;
   padding: 7px 10px;
   border-radius: 8px;
-  grid-template-rows: auto;
-  gap: 0;
   min-height: 36px;
   box-sizing: border-box;
 }
