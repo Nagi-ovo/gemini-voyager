@@ -1104,6 +1104,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       // from a clean state.
       hideTooltip();
 
+      // Preserve the user's scroll position across the wipe-and-rebuild.
+      // Without this, actions like expand/collapse, search, tag filter,
+      // view-mode toggle, and cloud-sync updates all snap the list back to
+      // the top — most painful on the expand button, which fires a re-render
+      // right as the user is reading further down the list.
+      const savedScrollTop = list.scrollTop;
+
       const q = (searchInput.value || '').trim().toLowerCase();
       const selectedTagList = Array.from(selectedTags);
       const filtered = items.filter((it) => {
@@ -1125,6 +1132,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const empty = createEl('div', 'gv-pm-empty');
         empty.textContent = i18n.t('pm_empty') || 'No prompts yet';
         list.appendChild(empty);
+        // Nothing to scroll back to; avoid setting scrollTop on an empty list.
         return;
       }
       const frag = document.createDocumentFragment();
@@ -1356,6 +1364,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         frag.appendChild(row);
       }
       list.appendChild(frag);
+      // Restore scroll position after the DOM is laid out. Clamped to the
+      // new scrollHeight so a re-filter that shrinks the list doesn't leave
+      // us at an impossible offset.
+      const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
+      list.scrollTop = Math.min(savedScrollTop, maxScroll);
       // KaTeX rendered during Markdown step, no post-typeset needed
     }
 
