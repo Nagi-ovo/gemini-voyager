@@ -13,6 +13,12 @@ export interface PromptItem {
   tags: string[];
   createdAt: number;
   updatedAt?: number;
+  /**
+   * Optional user-authored label used as the compact-mode headline. Kept in
+   * sync with the content-script PromptItem so auto-backup and import/export
+   * preserve the field on round-trip.
+   */
+  name?: string;
 }
 
 /**

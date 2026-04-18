@@ -26,6 +26,27 @@ One click. Infinite leverage.
 
 ![Prompt Manager](/assets/gemini-prompt-manager.png)
 
+## Compact list & notes
+
+When prompts pile up and the card list no longer fits, the panel adapts:
+
+### View toggle
+
+The `≡ / ▦` button on the right of the search bar switches between **Compact list** (default) and **Comfortable view**.
+
+- **Compact list**: one prompt per row, ~10 visible at once; the right side shows tags · expand · edit · delete
+- **Comfortable view**: full Markdown preview, best for a small collection
+
+### Optional name label
+
+The **Name (optional)** field at the top of the add/edit form lets you give a prompt a short title. In compact view this overrides the auto-extracted first line; leave blank to keep the previous behavior.
+
+### Fast hover preview
+
+In compact mode, hover any row for **~250 ms** to see its full content in a floating tooltip — replaces the browser's native `title` tooltip (which can take 1–3 s to open).
+
+![Compact list view](/assets/gemini-prompt-manager-compact.png)
+
 ## Available Anywhere
 
 The Prompt Manager can now be used on any website you choose, not just Gemini™ and AI Studio.

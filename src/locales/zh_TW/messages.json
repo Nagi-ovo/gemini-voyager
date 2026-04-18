@@ -219,6 +219,18 @@
     "message": "切換至淺色模式",
     "description": "Theme toggle tooltip - switch to light"
   },
+  "pm_view_compact": {
+    "message": "切換為緊湊列表",
+    "description": "View-mode toggle tooltip - switch from comfortable cards to compact single-line rows"
+  },
+  "pm_view_comfortable": {
+    "message": "切換為舒適檢視",
+    "description": "View-mode toggle tooltip - switch from compact rows to comfortable cards with markdown preview"
+  },
+  "pm_name_placeholder": {
+    "message": "備註名稱（選填）",
+    "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
+  },
   "pm_theme_dark": {
     "message": "切換至深色模式",
     "description": "Theme toggle tooltip - switch to dark"

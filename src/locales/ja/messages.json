@@ -219,6 +219,18 @@
     "message": "ライトモードに切替",
     "description": "Theme toggle tooltip - switch to light"
   },
+  "pm_view_compact": {
+    "message": "コンパクト表示に切替",
+    "description": "View-mode toggle tooltip - switch from comfortable cards to compact single-line rows"
+  },
+  "pm_view_comfortable": {
+    "message": "快適表示に切替",
+    "description": "View-mode toggle tooltip - switch from compact rows to comfortable cards with markdown preview"
+  },
+  "pm_name_placeholder": {
+    "message": "名前（任意）",
+    "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
+  },
   "pm_theme_dark": {
     "message": "ダークモードに切替",
     "description": "Theme toggle tooltip - switch to dark"

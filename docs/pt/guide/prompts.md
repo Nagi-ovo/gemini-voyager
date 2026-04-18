@@ -26,6 +26,27 @@ Chamada num clique, duplique a eficiência.
 
 ![Gestor de Prompts](/assets/gemini-prompt-manager.png)
 
+## Lista compacta & notas
+
+Quando os prompts se acumulam e a lista de cartões não cabe mais, o painel se adapta:
+
+### Alternar visualização
+
+O botão `≡ / ▦` à direita da barra de pesquisa alterna entre **Lista compacta** (padrão) e **Visão confortável**.
+
+- **Lista compacta**: um prompt por linha, ~10 visíveis de uma vez. À direita: tags · expandir · editar · excluir
+- **Visão confortável**: preview completo de Markdown, ideal para coleções pequenas
+
+### Rótulo de nome opcional
+
+O campo **Nome (opcional)** no topo do formulário de adição/edição permite dar um título curto ao prompt. Na visão compacta esse nome substitui a primeira linha extraída automaticamente; deixe em branco para manter o comportamento original.
+
+### Preview rápido ao passar o mouse
+
+No modo compacto, passe o mouse sobre qualquer linha por **~250 ms** para ver o conteúdo completo em um tooltip flutuante — substitui o tooltip nativo `title` do navegador (que pode demorar 1–3 s para aparecer).
+
+![Visualização em lista compacta](/assets/gemini-prompt-manager-compact.png)
+
 ## Funciona em Qualquer Site
 
 O Gestor de Prompts agora pode ser usado em qualquer site à sua escolha, não limitado ao Gemini™ e AI Studio.

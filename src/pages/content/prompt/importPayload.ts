@@ -1,6 +1,12 @@
 export interface ImportedPromptDraft {
   text: string;
   tags: string[];
+  /**
+   * Optional user-authored label. Preserved through import so round-tripping
+   * an exported JSON doesn't silently drop the compact-mode headline users
+   * set in the add/edit form.
+   */
+  name?: string;
 }
 
 export type PromptImportParseResult =
@@ -59,7 +65,10 @@ export function parsePromptImportPayload(payload: unknown): PromptImportParseRes
 
     if (seenKeys.has(dedupeKey)) continue;
     seenKeys.add(dedupeKey);
-    validItems.push({ text, tags: normalizedTags });
+    const rawName = typeof candidate?.name === 'string' ? candidate.name.trim() : '';
+    const draft: ImportedPromptDraft = { text, tags: normalizedTags };
+    if (rawName) draft.name = rawName;
+    validItems.push(draft);
   }
 
   if (validItems.length === 0) {

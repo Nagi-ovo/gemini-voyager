@@ -219,6 +219,18 @@
     "message": "Switch to light mode",
     "description": "Theme toggle tooltip - switch to light"
   },
+  "pm_view_compact": {
+    "message": "Switch to compact list",
+    "description": "View-mode toggle tooltip - switch from comfortable cards to compact single-line rows"
+  },
+  "pm_view_comfortable": {
+    "message": "Switch to comfortable view",
+    "description": "View-mode toggle tooltip - switch from compact rows to comfortable cards with markdown preview"
+  },
+  "pm_name_placeholder": {
+    "message": "Name (optional)",
+    "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
+  },
   "pm_theme_dark": {
     "message": "Switch to dark mode",
     "description": "Theme toggle tooltip - switch to dark"

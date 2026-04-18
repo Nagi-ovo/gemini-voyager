@@ -62,6 +62,7 @@ Then: commit `chore: bump to v{VERSION}` → `git tag v{VERSION}` → `git push 
 3. **Data structures first.** Eliminate special cases by redesigning data, not adding branches.
 4. **For visual/CSS changes:** describe expected rendering, verify alignment/centering/spacing in both light and dark themes, and check external resources (icon fonts, CDN links).
 5. **For ambiguous requirements:** implement the minimal version first. Ask before adding scope.
+6. **Grep for a sibling precedent before adding a new primitive.** Body-level popover, global listener, CSS overlay — there is almost always an existing `gv-pm-*` analogue (e.g., `.gv-pm-confirm` for body-appended popovers) already wired into close-outside handlers, teardown, and theme overrides. Copy its integration points; don't reinvent and miss one.
 
 ## Architecture
 
