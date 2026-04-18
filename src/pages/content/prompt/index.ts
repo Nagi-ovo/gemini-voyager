@@ -1569,10 +1569,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (area === 'sync' && changes[StorageKeys.PROMPT_INSERT_ON_CLICK]) {
         promptInsertOnClick = changes[StorageKeys.PROMPT_INSERT_ON_CLICK].newValue === true;
       }
-      if (
-        (area === 'sync' || area === 'local') &&
-        changes[StorageKeys.PROMPT_VIEW_MODE]
-      ) {
+      if ((area === 'sync' || area === 'local') && changes[StorageKeys.PROMPT_VIEW_MODE]) {
         const nextMode = changes[StorageKeys.PROMPT_VIEW_MODE].newValue;
         if ((nextMode === 'compact' || nextMode === 'comfortable') && nextMode !== viewMode) {
           viewMode = nextMode;
