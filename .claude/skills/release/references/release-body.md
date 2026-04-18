@@ -61,12 +61,14 @@ Perform these steps after the tag push completes (see SKILL.md Step 5.5).
 
 ```bash
 PREV_TAG=$(git describe --tags --abbrev=0 v{VERSION}^)
-git log ${PREV_TAG}..v{VERSION} --oneline        # filter candidates for the tables
+git log ${PREV_TAG}..v{VERSION} --oneline        # authoritative list of commits for the tables
 gh api repos/Nagi-ovo/gemini-voyager/releases/generate-notes \
   -f tag_name=v{VERSION} \
   -f previous_tag_name=${PREV_TAG} \
-  --jq '.body'                                    # gets the contributor list
+  --jq '.body'                                    # use ONLY for the New Contributors section
 ```
+
+**Important:** `generate-notes` has a `"What's Changed"` section that looks like a PR list — **don't use it as your source of truth for the tables**. It filters to external-contributor PRs only; owner (`@Nagi-ovo`) PRs get silently dropped. For v1.4.0, that meant PR #616, #614, #613 (all owner PRs) didn't appear even though they're user-facing features. Always drive the tables from `git log`, where every `feat`/`fix` commit shows up with its `(#NNN)` suffix when applicable. Use `gh pr view <NNN>` to confirm authors.
 
 ### 2. Filter commits for the tables
 
