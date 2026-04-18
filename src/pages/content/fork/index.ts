@@ -275,6 +275,11 @@ function extractConversationIdFromUrl(): string | null {
   return gemMatch?.[1] || null;
 }
 
+function getNewConversationUrlForCurrentAccount(): string {
+  const accountPrefix = window.location.pathname.match(/^\/u\/\d+(?=\/)/)?.[0] || '';
+  return `${window.location.origin}${accountPrefix}/app`;
+}
+
 function getConversationTitle(): string {
   const conversationId = extractConversationIdFromUrl();
   if (conversationId) {
@@ -630,7 +635,7 @@ async function executeFork(userEl: HTMLElement, turnIndex: number): Promise<void
 
   // Open new window IMMEDIATELY to preserve user gesture context.
   // Firefox and Safari block window.open() that follows async operations.
-  const newWindow = window.open('https://gemini.google.com/app', '_blank');
+  const newWindow = window.open(getNewConversationUrlForCurrentAccount(), '_blank');
   if (!newWindow) {
     console.warn('[Fork] Failed to open new window (popup blocked?)');
     return;

@@ -114,6 +114,75 @@ describe('startFork style injection', () => {
     expect(forkButton?.parentElement?.id).toBe('copy-anchor');
   });
 
+  it.each([
+    ['/u/1/app/conv-source', '/u/1/app'],
+    ['/u/2/app/conv-source', '/u/2/app'],
+    ['/u/12/app/conv-source', '/u/12/app'],
+    ['/app/conv-source', '/app'],
+  ])(
+    'opens the fork draft under the matching Gemini account route for %s',
+    async (currentPath, expectedPath) => {
+      window.history.replaceState({}, '', currentPath);
+      document.body.innerHTML = `
+        <main>
+          <div class="user-query-container">
+            <div class="user-query-bubble-with-background">user-1</div>
+            <div class="actions">
+              <div id="copy-anchor">
+                <button data-test-id="copy-button" class="action-button" aria-label="Copy prompt">
+                  <mat-icon fonticon="content_copy"></mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="response-container">
+            <div class="markdown-main-panel">assistant-1</div>
+          </div>
+        </main>
+      `;
+
+      const userContainer = document.querySelector<HTMLElement>('.user-query-container');
+      const responseContainer = document.querySelector<HTMLElement>('.response-container');
+      if (!userContainer || !responseContainer) {
+        throw new Error('test DOM setup failed');
+      }
+
+      Object.defineProperty(userContainer, 'offsetTop', { value: 0, configurable: true });
+      Object.defineProperty(responseContainer, 'offsetTop', { value: 100, configurable: true });
+
+      sendMessageMock.mockImplementation(
+        (
+          rawMessage: unknown,
+          callback: (response: { ok: boolean; [key: string]: unknown }) => void,
+        ) => {
+          const message = rawMessage as { type?: string };
+          if (message.type === 'gv.fork.getForConversation') {
+            callback({ ok: true, nodes: [] });
+            return;
+          }
+          callback({ ok: true });
+        },
+      );
+
+      const openSpy = vi.spyOn(window, 'open').mockReturnValue({} as Window);
+
+      cleanup = startFork();
+      vi.advanceTimersByTime(1000);
+      await flushMicrotasks();
+
+      const forkButton = document.querySelector<HTMLElement>('.gv-fork-btn');
+      expect(forkButton).not.toBeNull();
+      forkButton?.click();
+
+      const confirmButton = document.querySelector<HTMLElement>('.gv-fork-primary');
+      expect(confirmButton).not.toBeNull();
+      confirmButton?.click();
+
+      expect(openSpy).toHaveBeenCalledWith(`${window.location.origin}${expectedPath}`, '_blank');
+      openSpy.mockRestore();
+    },
+  );
+
   it('avoids duplicate branch indicator groups when concurrent refreshes happen', async () => {
     window.history.replaceState({}, '', '/app/conv-source');
     document.body.innerHTML = `
