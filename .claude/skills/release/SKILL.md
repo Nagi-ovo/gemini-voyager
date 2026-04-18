@@ -17,7 +17,7 @@ Release Progress:
 - [ ] Step 3: Changelog in all 10 locales
 - [ ] Step 4: Commit + tag locally
 - [ ] Step 5: Push (user confirmation required — external action)
-- [ ] Step 6: Curated bilingual GitHub release body
+- [ ] Step 6: Curated GitHub release body (separate EN + ZH sections)
 - [ ] Step 7: Safari DMG sub-flow (Xcode-gated)
 - [ ] Step 8: Final check
 ```
@@ -100,9 +100,9 @@ If it fails, investigate — common causes: lint failing in CI (not locally beca
 
 ## Step 6 — Curated GitHub release body (required every release)
 
-The workflow auto-populates the release body with `gh api releases/generate-notes` + an Installation block. That auto-body is a fallback, **not** what ships. Every release should replace the top portion with a curated bilingual (en + zh) table that picks only user-facing changes and attributes each to its PR or commit.
+The workflow auto-populates the release body with `gh api releases/generate-notes` + an Installation block. That auto-body is a fallback, **not** what ships. Every release should replace the top portion with curated tables in **separate English and Chinese sections** (not mixed per cell — that earlier style was noisy for both audiences). The tables pick only user-facing changes and attribute each to its PR or commit.
 
-This is a judgment step — filtering commits, writing short bilingual descriptions, mapping commits to PRs — and belongs in the skill, not the workflow YAML.
+This is a judgment step — filtering commits, writing short descriptions in each language, mapping commits to PRs — and belongs in the skill, not the workflow YAML.
 
 **What to do:**
 
