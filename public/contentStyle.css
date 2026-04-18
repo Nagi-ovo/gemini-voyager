@@ -7906,10 +7906,10 @@ body.light-theme .gv-pm-view-mode.gv-pm-view-mode-compact,
   align-items: center;
   gap: 6px;
   /* Reserve a comfortable cushion for the absolutely-positioned right-side
-   * cluster (chip + ▼ expand + ✎ edit + 🗑 delete). Generous enough that
-   * the cluster never bleeds into the title area regardless of which icons
-   * happen to be visible. */
-  padding-right: 168px;
+   * cluster (chip + ▼ expand + ✎ edit + 🗑 delete). Wider than before so
+   * longer tag labels like "paper reading" can render in full without the
+   * meta container having to hard-clip them. */
+  padding-right: 196px;
 }
 
 .gv-pm-item-compact .gv-pm-item-text {
@@ -7937,7 +7937,7 @@ body.light-theme .gv-pm-view-mode.gv-pm-view-mode-compact,
 
 /* Anchor the inline bottom-row (tags + ▼ expand + edit + delete) to the
  * right, vertically centered. Width is auto so the cluster shrinks to its
- * content and can't overflow its siblings — the title reserves a 168px
+ * content and can't overflow its siblings — the title reserves a 196px
  * cushion above which more than covers the max cluster width. */
 .gv-pm-item-compact .gv-pm-bottom {
   grid-row: 1;
@@ -7948,13 +7948,19 @@ body.light-theme .gv-pm-view-mode.gv-pm-view-mode-compact,
   transform: translateY(-50%);
   width: auto;
   justify-content: flex-end;
+  /* Explicit center so every member of the cluster — chip pill, SVG icon
+   * buttons, and the ▼ character — lines up on a shared midline, matching
+   * the row's text baseline. */
+  align-items: center;
   gap: 6px;
 }
 
+/* The tag-chip container no longer hard-clips; individual chips ellipsize
+ * themselves (see below) so long labels like "paper reading" render in
+ * full when there's room, and degrade gracefully when there isn't. */
 .gv-pm-item-compact .gv-pm-item-meta {
   flex-wrap: nowrap;
-  overflow: hidden;
-  max-width: 72px;
+  align-items: center;
   opacity: 0.75;
   transition: opacity 0.15s ease;
   gap: 4px;
@@ -7968,6 +7974,15 @@ body.light-theme .gv-pm-view-mode.gv-pm-view-mode-compact,
   font-size: 9px;
   padding: 1px 6px;
   flex-shrink: 0;
+  /* Allow a generous but bounded width so the most common tags show in
+   * full; very long ones ellipsize inside the pill instead of being
+   * clipped by the outer meta container. */
+  max-width: 104px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  line-height: 1.5;
 }
 
 /* Actions: always laid out (so height never shifts), always visible at subtle
@@ -8010,7 +8025,7 @@ body.light-theme .gv-pm-view-mode.gv-pm-view-mode-compact,
 /* RTL: mirror the absolute-positioned action bar to the left edge. */
 body.gv-rtl .gv-pm-item-compact .gv-pm-item-text-container {
   padding-right: 0;
-  padding-left: 168px;
+  padding-left: 196px;
 }
 
 body.gv-rtl .gv-pm-item-compact .gv-pm-bottom {
@@ -8037,12 +8052,20 @@ body.gv-rtl .gv-pm-item-compact .gv-pm-bottom {
   color: #f3f4f6;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
+  /* Interactive: users can move their mouse onto the tooltip and scroll it
+   * to read long prompts. JS handles the hover-grace logic that keeps it
+   * open while traveling from row → gap → tooltip. */
+  pointer-events: auto;
   opacity: 0;
   transform: translateY(2px);
   transition:
     opacity 0.12s ease,
     transform 0.12s ease;
+}
+
+/* While hidden, fully inert so stray scroll / click events don't catch it. */
+.gv-pm-tooltip:not(.gv-pm-tooltip-visible) {
+  pointer-events: none;
 }
 
 .gv-pm-tooltip.gv-pm-tooltip-visible {

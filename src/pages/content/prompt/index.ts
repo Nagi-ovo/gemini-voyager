@@ -858,42 +858,83 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       tagsWrapOuter.classList.toggle('gv-pm-tags-scroll-end', !showHint);
     }
 
-    /* Fast hover tooltip for compact rows.
+    /* Fast, interactive hover tooltip for compact rows.
      *
-     * The browser's native `title=""` tooltip has a ~1–3 second delay that
-     * users have complained about (issue #586 feedback item 5). We roll a
-     * singleton DOM tooltip shared across all prompt rows — fades in ~250ms
-     * after hover, hides on mouseleave/scroll/panel close. Rebuilt rows
-     * re-attach via `attachPromptTooltip`; no cleanup required on the old
-     * DOM nodes since listeners are GC'd with them. */
+     * Opens ~250 ms after mouseenter. Closes ~150 ms after mouseleave — long
+     * enough for the user to cross the gap onto the tooltip itself, where
+     * they can read the full prompt and scroll long content. Entering the
+     * tooltip cancels any pending hide; leaving the tooltip schedules one.
+     * A singleton element is reused across rows. */
     const TOOLTIP_OPEN_DELAY_MS = 250;
+    const TOOLTIP_HIDE_GRACE_MS = 150;
     let tooltipEl: HTMLDivElement | null = null;
     let tooltipOpenTimer: number | null = null;
-    let tooltipActiveTarget: HTMLElement | null = null;
+    let tooltipHideTimer: number | null = null;
+    let tooltipTargetHovered = false;
+    let tooltipSelfHovered = false;
+
+    function clearOpenTimer(): void {
+      if (tooltipOpenTimer !== null) {
+        window.clearTimeout(tooltipOpenTimer);
+        tooltipOpenTimer = null;
+      }
+    }
+
+    function clearHideTimer(): void {
+      if (tooltipHideTimer !== null) {
+        window.clearTimeout(tooltipHideTimer);
+        tooltipHideTimer = null;
+      }
+    }
+
+    function actuallyHideTooltip(): void {
+      clearOpenTimer();
+      clearHideTimer();
+      tooltipTargetHovered = false;
+      tooltipSelfHovered = false;
+      if (tooltipEl) {
+        tooltipEl.classList.remove('gv-pm-tooltip-visible');
+      }
+    }
+
+    // External callers (closePanel, destroy, scroll listeners) want a hard
+    // dismiss; row/tooltip mouse handlers use scheduleHide with grace.
+    const hideTooltip = actuallyHideTooltip;
+
+    function scheduleHide(): void {
+      clearHideTimer();
+      tooltipHideTimer = window.setTimeout(() => {
+        tooltipHideTimer = null;
+        if (!tooltipSelfHovered && !tooltipTargetHovered) {
+          actuallyHideTooltip();
+        }
+      }, TOOLTIP_HIDE_GRACE_MS);
+    }
 
     function ensureTooltipEl(): HTMLDivElement {
       if (tooltipEl) return tooltipEl;
       const el = document.createElement('div');
       el.className = 'gv-pm-tooltip';
       el.setAttribute('role', 'tooltip');
+      // Entering the tooltip cancels any pending hide; leaving schedules it.
+      // This is what lets the user glide from row → gap → tooltip and scroll.
+      el.addEventListener('mouseenter', () => {
+        tooltipSelfHovered = true;
+        clearHideTimer();
+      });
+      el.addEventListener('mouseleave', () => {
+        tooltipSelfHovered = false;
+        scheduleHide();
+      });
       document.body.appendChild(el);
       tooltipEl = el;
       return el;
     }
 
-    function hideTooltip(): void {
-      if (tooltipOpenTimer !== null) {
-        window.clearTimeout(tooltipOpenTimer);
-        tooltipOpenTimer = null;
-      }
-      tooltipActiveTarget = null;
-      if (tooltipEl) {
-        tooltipEl.classList.remove('gv-pm-tooltip-visible');
-      }
-    }
-
     function showTooltip(target: HTMLElement, fullText: string): void {
       const el = ensureTooltipEl();
+      // Reset scroll so each open starts at the top of the content.
+      el.scrollTop = 0;
       el.textContent = fullText;
       el.setAttribute('data-gv-theme', panel.getAttribute('data-gv-theme') || '');
 
@@ -926,24 +967,34 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     }
 
     function attachPromptTooltip(target: HTMLElement, fullText: string, _host: HTMLElement): void {
-      const scheduleShow = () => {
-        if (tooltipOpenTimer !== null) window.clearTimeout(tooltipOpenTimer);
-        tooltipActiveTarget = target;
+      target.addEventListener('mouseenter', () => {
+        tooltipTargetHovered = true;
+        clearHideTimer();
+        clearOpenTimer();
         tooltipOpenTimer = window.setTimeout(() => {
           tooltipOpenTimer = null;
-          if (tooltipActiveTarget === target) showTooltip(target, fullText);
+          if (tooltipTargetHovered) showTooltip(target, fullText);
         }, TOOLTIP_OPEN_DELAY_MS);
-      };
-      target.addEventListener('mouseenter', scheduleShow);
-      target.addEventListener('mouseleave', hideTooltip);
+      });
+      target.addEventListener('mouseleave', () => {
+        tooltipTargetHovered = false;
+        // Cancel a pending open (user left before it showed) — otherwise give
+        // them the grace window to cross onto the tooltip.
+        if (tooltipOpenTimer !== null) {
+          clearOpenTimer();
+          actuallyHideTooltip();
+          return;
+        }
+        scheduleHide();
+      });
       // A click/press activates the prompt; dismiss the hover preview immediately.
-      target.addEventListener('mousedown', hideTooltip);
+      target.addEventListener('mousedown', actuallyHideTooltip);
     }
 
     // Dismiss on scroll or panel-wide events so the tooltip never ends up
     // orphaned when the list scrolls under it.
     const tooltipScrollTargets: Array<HTMLElement | Window> = [list, window];
-    const onTooltipDismiss = () => hideTooltip();
+    const onTooltipDismiss = () => actuallyHideTooltip();
     for (const target of tooltipScrollTargets) {
       target.addEventListener('scroll', onTooltipDismiss, { passive: true, capture: true });
     }
