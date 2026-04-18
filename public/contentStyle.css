@@ -3472,8 +3472,8 @@ body.light-theme {
 
 /* Folder Container */
 .gv-folder-container {
-  margin-bottom: 16px;
-  padding: 8px 8px 8px 12px;
+  margin-bottom: 8px;
+  padding: 8px 8px 4px 12px;
   /* Ensure alignment with Recent section */
   margin-left: 0;
   font-family: 'Google Sans', Roboto, Arial, sans-serif;
@@ -3538,7 +3538,7 @@ body.light-theme {
   gap: 2px;
   min-height: 24px;
   /* Reduced min-height for better visual balance when empty */
-  padding: 4px;
+  padding: 2px 4px;
   border-radius: 8px;
   transition:
     background-color 0.2s,
@@ -3609,6 +3609,12 @@ body.light-theme {
   border-radius: 1px;
   padding: 3px 0;
   transition: background-color 0.15s ease;
+}
+
+/* Last-child drop zone: collapse to avoid ~6px of dead space below the last
+ * folder. Users can still reorder via drag onto existing gaps or context menu. */
+.gv-reorder-gap:last-child {
+  padding: 0;
 }
 
 .gv-reorder-gap-active {
