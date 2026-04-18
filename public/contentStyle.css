@@ -1874,7 +1874,10 @@ body.dark-theme .gv-pm-cancel:hover {
   padding: 6px 16px 12px 16px;
   min-height: 120px;
   flex: 1 1 auto;
-  overflow: auto;
+  overflow-y: auto;
+  /* A vertical prompt list should never scroll sideways — any horizontal
+   * overflow is a layout bug, not a feature. Explicitly pin it closed. */
+  overflow-x: hidden;
 }
 
 .gv-pm-empty {
@@ -7915,6 +7918,10 @@ body.light-theme .gv-pm-view-mode.gv-pm-view-mode-compact,
    * longer tag labels like "paper reading" can render in full without the
    * meta container having to hard-clip them. */
   padding-right: 196px;
+  /* Base rule sets width:100%; with default content-box, the 196px padding
+   * above would be added on top of the full width, forcing each row 196px
+   * wider than the panel and introducing a stray horizontal scrollbar. */
+  box-sizing: border-box;
 }
 
 .gv-pm-item-compact .gv-pm-item-text {
