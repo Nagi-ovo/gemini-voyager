@@ -70,4 +70,3 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 | Modify popup settings | `src/pages/popup/components/` |
 | Fix cloud sync | `src/core/services/GoogleDriveSyncService.ts` |
 | Add keyboard shortcut | `src/core/services/KeyboardShortcutService.ts` + types |
-| Recall persistent decisions | See `~/.claude/projects/-Users-jessezhang-Build-gemini-voyager/memory/MEMORY.md` |
