@@ -1634,5 +1634,25 @@
   "folderAsProject_collapse": {
     "message": "Recolher",
     "description": "Aria-label for the collapse button (screen readers)"
+  },
+  "canvasExportCopyMarkdown": {
+    "message": "Copiar como Markdown",
+    "description": "Item do menu de compartilhamento do Canvas: copia o conteúdo como Markdown"
+  },
+  "canvasExportCopyMarkdownTooltip": {
+    "message": "Copiar o conteúdo do Canvas como Markdown",
+    "description": "Dica do item de menu Copiar como Markdown"
+  },
+  "canvasExportCopied": {
+    "message": "Canvas copiado como Markdown",
+    "description": "Notificação exibida após cópia bem-sucedida"
+  },
+  "canvasExportEmpty": {
+    "message": "O conteúdo do Canvas está vazio",
+    "description": "Notificação exibida quando o Canvas não tem conteúdo para copiar"
+  },
+  "canvasExportFailed": {
+    "message": "Falha ao copiar o conteúdo do Canvas",
+    "description": "Notificação exibida quando a cópia para a área de transferência falha"
   }
 }

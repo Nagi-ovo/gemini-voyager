@@ -1634,5 +1634,25 @@
   "folderAsProject_collapse": {
     "message": "طي",
     "description": "Aria-label for the collapse button (screen readers)"
+  },
+  "canvasExportCopyMarkdown": {
+    "message": "نسخ بصيغة Markdown",
+    "description": "عنصر قائمة مشاركة Canvas: نسخ محتوى Canvas بصيغة Markdown إلى الحافظة"
+  },
+  "canvasExportCopyMarkdownTooltip": {
+    "message": "نسخ محتوى Canvas بصيغة Markdown",
+    "description": "تلميح عنصر قائمة نسخ بصيغة Markdown"
+  },
+  "canvasExportCopied": {
+    "message": "تم نسخ Canvas بصيغة Markdown",
+    "description": "إشعار بعد النسخ الناجح"
+  },
+  "canvasExportEmpty": {
+    "message": "محتوى Canvas فارغ",
+    "description": "إشعار عندما لا يكون هناك محتوى للنسخ"
+  },
+  "canvasExportFailed": {
+    "message": "فشل نسخ محتوى Canvas",
+    "description": "إشعار عند فشل نسخ Markdown إلى الحافظة"
   }
 }

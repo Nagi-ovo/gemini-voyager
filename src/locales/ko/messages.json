@@ -1634,5 +1634,25 @@
   "folderAsProject_collapse": {
     "message": "접기",
     "description": "Aria-label for the collapse button (screen readers)"
+  },
+  "canvasExportCopyMarkdown": {
+    "message": "Markdown으로 복사",
+    "description": "Canvas 공유 메뉴 항목: Canvas 콘텐츠를 Markdown으로 클립보드에 복사"
+  },
+  "canvasExportCopyMarkdownTooltip": {
+    "message": "Canvas 콘텐츠를 Markdown으로 복사",
+    "description": "Canvas Markdown 복사 메뉴 항목의 도구 설명"
+  },
+  "canvasExportCopied": {
+    "message": "Canvas를 Markdown으로 복사했습니다",
+    "description": "복사 성공 시 표시되는 토스트"
+  },
+  "canvasExportEmpty": {
+    "message": "Canvas 콘텐츠가 비어 있습니다",
+    "description": "Canvas에 복사할 내용이 없을 때 표시되는 토스트"
+  },
+  "canvasExportFailed": {
+    "message": "Canvas 콘텐츠를 복사하지 못했습니다",
+    "description": "Markdown 클립보드 복사가 실패했을 때의 토스트"
   }
 }

@@ -8,6 +8,7 @@ import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { initI18n } from '@/utils/i18n';
 
+import { startCanvasExport } from './canvasExport/index';
 import { startChangelog } from './changelog/index';
 import { startChatFontSizeAdjuster } from './chatFontSize/index';
 import { startChatWidthAdjuster } from './chatWidth/index';
@@ -266,6 +267,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startExportButton();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      void startCanvasExport();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       if (await isForkFeatureEnabled()) {

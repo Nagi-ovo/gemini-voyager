@@ -1634,5 +1634,25 @@
   "folderAsProject_collapse": {
     "message": "收合",
     "description": "Aria-label for the collapse button (screen readers)"
+  },
+  "canvasExportCopyMarkdown": {
+    "message": "複製為 Markdown",
+    "description": "Canvas 分享選單項目：將 Canvas 內容以 Markdown 複製到剪貼簿"
+  },
+  "canvasExportCopyMarkdownTooltip": {
+    "message": "將 Canvas 內容複製為 Markdown",
+    "description": "Canvas 複製為 Markdown 選單項目的提示"
+  },
+  "canvasExportCopied": {
+    "message": "已將 Canvas 複製為 Markdown",
+    "description": "複製成功後顯示的提示"
+  },
+  "canvasExportEmpty": {
+    "message": "Canvas 內容為空",
+    "description": "Canvas 無內容可複製時顯示的提示"
+  },
+  "canvasExportFailed": {
+    "message": "複製 Canvas 內容失敗",
+    "description": "剪貼簿複製 Markdown 失敗時顯示的提示"
   }
 }

@@ -1634,5 +1634,25 @@
   "folderAsProject_collapse": {
     "message": "Свернуть",
     "description": "Aria-label for the collapse button (screen readers)"
+  },
+  "canvasExportCopyMarkdown": {
+    "message": "Скопировать как Markdown",
+    "description": "Пункт меню «Поделиться» в Canvas: копирует содержимое как Markdown"
+  },
+  "canvasExportCopyMarkdownTooltip": {
+    "message": "Скопировать содержимое Canvas как Markdown",
+    "description": "Подсказка пункта меню «Скопировать как Markdown»"
+  },
+  "canvasExportCopied": {
+    "message": "Canvas скопирован как Markdown",
+    "description": "Уведомление после успешного копирования"
+  },
+  "canvasExportEmpty": {
+    "message": "Содержимое Canvas пусто",
+    "description": "Уведомление, когда в Canvas нечего копировать"
+  },
+  "canvasExportFailed": {
+    "message": "Не удалось скопировать содержимое Canvas",
+    "description": "Уведомление при сбое копирования Markdown в буфер обмена"
   }
 }

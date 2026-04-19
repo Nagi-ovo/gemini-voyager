@@ -1634,5 +1634,25 @@
   "folderAsProject_collapse": {
     "message": "Collapse",
     "description": "Aria-label for the collapse button (screen readers)"
+  },
+  "canvasExportCopyMarkdown": {
+    "message": "Copy as Markdown",
+    "description": "Canvas share menu item: copy canvas content as Markdown to clipboard"
+  },
+  "canvasExportCopyMarkdownTooltip": {
+    "message": "Copy Canvas content as Markdown",
+    "description": "Tooltip for the Canvas copy-as-markdown menu item"
+  },
+  "canvasExportCopied": {
+    "message": "Canvas copied as Markdown",
+    "description": "Toast shown after copying canvas content as Markdown"
+  },
+  "canvasExportEmpty": {
+    "message": "Canvas content is empty",
+    "description": "Toast shown when canvas has no content to copy"
+  },
+  "canvasExportFailed": {
+    "message": "Failed to copy Canvas content",
+    "description": "Toast shown when clipboard copy of canvas markdown fails"
   }
 }

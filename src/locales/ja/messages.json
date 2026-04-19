@@ -1634,5 +1634,25 @@
   "folderAsProject_collapse": {
     "message": "折りたたむ",
     "description": "Aria-label for the collapse button (screen readers)"
+  },
+  "canvasExportCopyMarkdown": {
+    "message": "Markdown としてコピー",
+    "description": "Canvas 共有メニュー項目：Canvas の内容を Markdown としてクリップボードにコピー"
+  },
+  "canvasExportCopyMarkdownTooltip": {
+    "message": "Canvas の内容を Markdown としてコピー",
+    "description": "Canvas を Markdown としてコピーするメニュー項目のツールチップ"
+  },
+  "canvasExportCopied": {
+    "message": "Canvas を Markdown としてコピーしました",
+    "description": "コピー成功時のトースト"
+  },
+  "canvasExportEmpty": {
+    "message": "Canvas の内容が空です",
+    "description": "Canvas にコピーする内容がないときのトースト"
+  },
+  "canvasExportFailed": {
+    "message": "Canvas の内容をコピーできませんでした",
+    "description": "Markdown のクリップボードコピーが失敗したときのトースト"
   }
 }
