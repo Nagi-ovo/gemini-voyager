@@ -2,6 +2,8 @@
 name: release
 description: Cut a new gemini-voyager release — open-issue triage, preflight checks, version bump, 10-locale changelog, commit, tag, push, curated GitHub release body, and Safari DMG. Use whenever the user says "发版", "release", "bump", "cut a release", "ship vX.Y.Z", or otherwise signals shipping a new version. Also use when the user wants just a Safari DMG for an existing release.
 user-invocable: true
+metadata:
+  version: "1.0.0"
 ---
 
 # Release Workflow
