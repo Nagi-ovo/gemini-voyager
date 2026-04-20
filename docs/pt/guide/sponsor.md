@@ -1,9 +1,11 @@
 # Patrocinar o Projeto
 
 > [!NOTE]
-> Se o Voyager for útil para você, compartilhe no X, Reddit, YouTube, etc. Cada partilha ajuda mais pessoas a descobrir o projeto e a melhorar a experiência com Gemini. Obrigado.
+> Se o Voyager for útil para você, compartilhe no X, Reddit, YouTube, etc., ou recomende-o a blogueiros, YouTubers ou a quem possa gostar. Cada partilha ajuda mais pessoas a descobrir o projeto e a melhorar a experiência com Gemini. Obrigado.
 
 Se o Voyager melhora a sua produtividade diária, considere patrocinar o projeto. O seu apoio ajuda-nos a manter o desenvolvimento ativo, corrigir bugs e adicionar novas funcionalidades.
+
+Este site não exibe Google Ads e a extensão não tem versão paga — foi pensada para permanecer totalmente gratuita.
 
 ## Formas de Apoiar
 

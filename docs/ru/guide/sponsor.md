@@ -1,13 +1,11 @@
 # Поддержать
 
 > [!NOTE]
-> Если Voyager вам полезен, поделитесь им в X, Reddit, YouTube и т.д. Каждый репост помогает большему числу людей узнать о проекте и улучшать опыт использования Gemini. Спасибо.
+> Если Voyager вам полезен, поделитесь им в X, Reddit, YouTube и т.д., или порекомендуйте его блогерам, YouTube-авторам или тем, кому он может понравиться. Каждый репост помогает большему числу людей узнать о проекте и улучшать опыт использования Gemini. Спасибо.
 
 Поддержка проектов с открытым исходным кодом в основном движется энтузиазмом (и кофе) ☕
 
-**[Voyager](https://github.com/Nagi-ovo/gemini-voyager)** — это полностью бесплатное расширение браузера с открытым исходным кодом, разработанное для улучшения вашего опыта работы с Gemini. Если это расширение помогает вам использовать Gemini более эффективно, пожалуйста, рассмотрите возможность поддержки дальнейшей разработки и обслуживания этого проекта.
-
----
+На этом сайте нет Google Ads или другой рекламы, а у расширения нет платной версии — задача в том, чтобы оно оставалось полностью бесплатным.
 
 ## Онлайн-платформы
 
@@ -18,23 +16,10 @@
   <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Поддержать на GitHub" style="height: 40px;">
   </a>
+  <a href="https://afdian.com/a/nagi-ovo" target="_blank">
+    <img src="https://img.shields.io/badge/Afdian-946CE6?style=for-the-badge" alt="Afdian" style="height: 40px;">
+  </a>
 </div>
-
-<a href="https://afdian.com/a/nagi-ovo" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
-    <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
-    <img alt="Afdian" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
-  </picture>
-</a>
-
-### 🎙️ Рекомендуемый инструмент: Typeless
-
-Я настоятельно рекомендую **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, инструмент преобразования голоса в текст с использованием ИИ, который я широко использовал во время разработки Voyager. Интеграция его в мой ежедневный рабочий процесс сэкономила мне огромное количество времени и значительно повысила мою продуктивность.
-
-> 🎁 **[Присоединяйтесь по моей реферальной ссылке](https://www.typeless.com/refer?code=MZRYZP1)** (Код: _`MZRYZP1`_), чтобы получить **$5 бесплатных кредитов**. Это также дает мне кредиты для поддержания этого проекта — бесплатный способ поддержать мою работу! ❤️
-
----
 
 ## Купить мне кофе (QR) 🍵
 
@@ -48,6 +33,14 @@
     <span>Alipay</span>
   </div>
 </div>
+
+---
+
+### 🎙️ Рекомендуемый инструмент: Typeless
+
+Я настоятельно рекомендую **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, инструмент преобразования голоса в текст с использованием ИИ, который я широко использовал во время разработки Voyager. Интеграция его в мой ежедневный рабочий процесс сэкономила мне огромное количество времени и значительно повысила мою продуктивность.
+
+> 🎁 **[Присоединяйтесь по моей реферальной ссылке](https://www.typeless.com/refer?code=MZRYZP1)** (Код: _`MZRYZP1`_), чтобы получить **$5 бесплатных кредитов**. Это также дает мне кредиты для поддержания этого проекта — бесплатный способ поддержать мою работу! ❤️
 
 <style>
 .sponsor-badges {
@@ -68,7 +61,7 @@
 
 .qr-container {
   display: flex;
-  gap: 32px;
+  gap: 16px;
   flex-wrap: wrap;
   margin: 16px 0;
 }
@@ -78,15 +71,15 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 16px;
+  padding: 8px;
   border-radius: 8px;
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg-soft);
 }
 
 .qr-item img {
-  width: 200px;
-  height: 200px;
+  width: 160px;
+  height: 160px;
   object-fit: contain;
   border-radius: 4px;
 }
@@ -100,10 +93,10 @@
   .qr-container {
     justify-content: center;
   }
-  
+
   .qr-item img {
-    width: 150px;
-    height: 150px;
+    width: 140px;
+    height: 140px;
   }
 }
 </style>

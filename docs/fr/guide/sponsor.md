@@ -1,13 +1,11 @@
 # Sponsor
 
 > [!NOTE]
-> Si Voyager vous est utile, partagez-le sur X, Reddit, YouTube, etc. Chaque partage aide plus de personnes à découvrir le projet et à améliorer l'expérience Gemini. Merci.
+> Si Voyager vous est utile, partagez-le sur X, Reddit, YouTube, etc., ou recommandez-le à des blogueurs, YouTubeurs ou à quiconque pourrait l'apprécier. Chaque partage aide plus de personnes à découvrir le projet et à améliorer l'expérience Gemini. Merci.
 
 Maintenir des projets open-source est principalement motivé par la passion (et le café) ☕
 
-**[Voyager](https://github.com/Nagi-ovo/gemini-voyager)** est une extension de navigateur entièrement gratuite et open-source conçue pour améliorer votre expérience Gemini. Si cette extension vous aide à utiliser Gemini plus efficacement, envisagez de soutenir le développement continu et la maintenance de ce projet.
-
----
+Ce site n'affiche aucune publicité (Google Ads ou autre) et l'extension n'a pas de version payante — elle est pensée pour rester entièrement gratuite.
 
 ## Plateformes en Ligne
 
@@ -18,25 +16,12 @@ Maintenir des projets open-source est principalement motivé par la passion (et 
   <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" style="height: 40px;">
   </a>
+  <a href="https://afdian.com/a/nagi-ovo" target="_blank">
+    <img src="https://img.shields.io/badge/Afdian-946CE6?style=for-the-badge" alt="Afdian" style="height: 40px;">
+  </a>
 </div>
 
-<a href="https://afdian.com/a/nagi-ovo" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
-    <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
-    <img alt="Afdian" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
-  </picture>
-</a>
-
-### 🎙️ Outil Recommandé : Typeless
-
-Je recommande vivement **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, un outil IA de voix-à-texte que j'ai utilisé intensivement durant le développement de Voyager. L'intégrer dans mon flux quotidien m'a fait gagner un temps énorme et a considérablement boosté ma productivité.
-
-> 🎁 **[Rejoignez via mon lien de parrainage](https://www.typeless.com/refer?code=MZRYZP1)** (Code : _`MZRYZP1`_) pour obtenir **$5 de crédits gratuits**. Cela me donne aussi des crédits pour continuer à maintenir ce projet—une façon gratuite de soutenir mon travail ! ❤️
-
----
-
-## Buy Me a Coffee (QR) 🍵
+## Offrez-moi un café (QR) 🍵
 
 <div class="qr-container">
   <div class="qr-item">
@@ -48,6 +33,14 @@ Je recommande vivement **[Typeless (typeless.com)](https://www.typeless.com/refe
     <span>Alipay</span>
   </div>
 </div>
+
+---
+
+### 🎙️ Outil Recommandé : Typeless
+
+Je recommande vivement **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, un outil IA de voix-à-texte que j'ai utilisé intensivement durant le développement de Voyager. L'intégrer dans mon flux quotidien m'a fait gagner un temps énorme et a considérablement boosté ma productivité.
+
+> 🎁 **[Rejoignez via mon lien de parrainage](https://www.typeless.com/refer?code=MZRYZP1)** (Code : _`MZRYZP1`_) pour obtenir **$5 de crédits gratuits**. Cela me donne aussi des crédits pour continuer à maintenir ce projet—une façon gratuite de soutenir mon travail ! ❤️
 
 <style>
 .sponsor-badges {
@@ -68,7 +61,7 @@ Je recommande vivement **[Typeless (typeless.com)](https://www.typeless.com/refe
 
 .qr-container {
   display: flex;
-  gap: 32px;
+  gap: 16px;
   flex-wrap: wrap;
   margin: 16px 0;
 }
@@ -78,15 +71,15 @@ Je recommande vivement **[Typeless (typeless.com)](https://www.typeless.com/refe
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 16px;
+  padding: 8px;
   border-radius: 8px;
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg-soft);
 }
 
 .qr-item img {
-  width: 200px;
-  height: 200px;
+  width: 160px;
+  height: 160px;
   object-fit: contain;
   border-radius: 4px;
 }
@@ -100,10 +93,10 @@ Je recommande vivement **[Typeless (typeless.com)](https://www.typeless.com/refe
   .qr-container {
     justify-content: center;
   }
-  
+
   .qr-item img {
-    width: 150px;
-    height: 150px;
+    width: 140px;
+    height: 140px;
   }
 }
 </style>

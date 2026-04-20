@@ -1,13 +1,11 @@
 # Sponsor
 
 > [!NOTE]
-> If Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
+> If Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc., or recommend it to any bloggers, YouTubers, or folks you think might enjoy it. Every share helps more people discover the project and improve the Gemini experience. Thanks.
 
 Maintaining open-source projects is mainly driven by passion (and coffee) ☕
 
-**[Voyager](https://github.com/Nagi-ovo/gemini-voyager)** is a completely free and open-source browser extension designed to enhance your Gemini experience. If this extension helps you use Gemini more efficiently, please consider supporting the continued development and maintenance of this project.
-
----
+No Google Ads on this site, and the extension has no paid tier — it's built to stay fully free.
 
 ## Online Platforms
 
@@ -18,23 +16,10 @@ Maintaining open-source projects is mainly driven by passion (and coffee) ☕
   <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" style="height: 40px;">
   </a>
+  <a href="https://afdian.com/a/nagi-ovo" target="_blank">
+    <img src="https://img.shields.io/badge/Afdian-946CE6?style=for-the-badge" alt="Afdian" style="height: 40px;">
+  </a>
 </div>
-
-<a href="https://afdian.com/a/nagi-ovo" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
-    <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
-    <img alt="Afdian" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
-  </picture>
-</a>
-
-### 🎙️ Recommended Tool: Typeless
-
-I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, an AI voice-to-text tool that I used extensively during the development of Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
-
-> 🎁 **[Join via my referral link](https://www.typeless.com/refer?code=MZRYZP1)** (Code: _`MZRYZP1`_) to get **$5 free credits**. This also gives me credits to keep maintaining this project—a free way to support my work! ❤️
-
----
 
 ## Buy Me a Coffee (QR) 🍵
 
@@ -48,6 +33,14 @@ I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?co
     <span>Alipay</span>
   </div>
 </div>
+
+---
+
+### 🎙️ Recommended Tool: Typeless
+
+I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, an AI voice-to-text tool that I used extensively during the development of Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
+
+> 🎁 **[Join via my referral link](https://www.typeless.com/refer?code=MZRYZP1)** (Code: _`MZRYZP1`_) to get **$5 free credits**. This also gives me credits to keep maintaining this project—a free way to support my work! ❤️
 
 <style>
 .sponsor-badges {
@@ -68,7 +61,7 @@ I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?co
 
 .qr-container {
   display: flex;
-  gap: 32px;
+  gap: 16px;
   flex-wrap: wrap;
   margin: 16px 0;
 }
@@ -78,15 +71,15 @@ I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?co
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 16px;
+  padding: 8px;
   border-radius: 8px;
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg-soft);
 }
 
 .qr-item img {
-  width: 200px;
-  height: 200px;
+  width: 160px;
+  height: 160px;
   object-fit: contain;
   border-radius: 4px;
 }
@@ -100,10 +93,10 @@ I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?co
   .qr-container {
     justify-content: center;
   }
-  
+
   .qr-item img {
-    width: 150px;
-    height: 150px;
+    width: 140px;
+    height: 140px;
   }
 }
 </style>

@@ -31,7 +31,8 @@ Project-wide rules (always in effect):
 2. `bun run lint` — before finishing
 3. `bun run test` — all tests pass
 4. `bun run build:chrome` — builds without error
-5. New features/fixes must include tests
+5. `bun run docs:dev` — after any `docs/**/*.md` change, start in background so user can preview in browser before committing
+6. New features/fixes must include tests
 
 ## Commit Format
 
