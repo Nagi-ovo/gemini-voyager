@@ -42,6 +42,14 @@ Simplesmente parece certo.
 
 ### Exclusivo para Gemini
 
+#### Ocultar conversas arquivadas
+
+Uma vez que uma conversa foi arquivada em uma pasta, ela está "concluída" — mas por padrão continua ocupando espaço na lista principal da barra lateral. Ative **Ocultar conversas arquivadas** no popup da extensão → **Opções de pastas**, e a lista principal mostrará apenas o que ainda está ativo. Inbox zero de verdade para seus chats de IA.
+
+- Na primeira vez que você arquiva uma conversa em uma pasta, o Voyager exibe um pequeno cartão na área de pastas para ativar com um clique. Se não quiser, clique em "Agora não" e não te incomodaremos mais.
+- Conversas arquivadas **nunca são excluídas** — continuam acessíveis dentro das pastas.
+- Alterne a qualquer momento no popup.
+
 #### Cores personalizadas
 
 Clique no ícone da pasta para personalizar sua cor. Escolha entre 7 cores padrão ou use o seletor de cores para escolher qualquer cor.

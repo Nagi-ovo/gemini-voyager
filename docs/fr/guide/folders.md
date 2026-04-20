@@ -42,6 +42,14 @@ C'est tout simplement naturel.
 
 ### Exclusivité Gemini
 
+#### Masquer les discussions archivées
+
+Une fois une discussion classée dans un dossier, c'est "fait" — mais elle continue par défaut à occuper de la place dans la liste principale de la barre latérale. Activez **Masquer les discussions archivées** dans la popup de l'extension → **Options de dossiers**, et la liste principale n'affiche plus que les conversations en cours. Un vrai inbox zero pour vos chats IA.
+
+- La première fois que vous classez une discussion dans un dossier, Voyager affiche une petite carte dans la zone des dossiers permettant d'activer l'option en un clic. Si vous ne le souhaitez pas, cliquez sur « Plus tard » et nous ne vous dérangerons plus.
+- Les discussions archivées **ne sont jamais supprimées** — elles restent accessibles dans leurs dossiers.
+- Modifiable à tout moment depuis la popup.
+
 #### Couleurs personnalisées
 
 Cliquez sur l'icône du dossier pour personnaliser sa couleur. Choisissez parmi 7 couleurs par défaut ou utilisez le sélecteur de couleurs pour choisir n'importe quelle couleur.

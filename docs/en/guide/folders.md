@@ -42,6 +42,14 @@ It just feels right.
 
 ### Gemini Exclusive
 
+#### Hide Archived Conversations
+
+Once a chat is filed into a folder, it's "done" — but by default it still takes up space in the main sidebar list. Turn on **Hide archived conversations** in the extension popup → **Folder Options** and the main list shows only what's still active. A true inbox-zero for your AI chats.
+
+- The first time you file a conversation into a folder, Voyager pops up a small card right in the folder area offering one-click to enable this. Dismiss it and we won't bother you again.
+- Archived conversations are **never deleted** — they stay fully accessible inside their folders.
+- Toggle anytime from the popup.
+
 #### Custom Colors
 
 Click the folder icon to customize its color. Choose from 7 default colors or use the color picker to select any custom color.

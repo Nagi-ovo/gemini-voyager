@@ -42,6 +42,14 @@ Simplemente se siente bien.
 
 ### Exclusivo de Gemini
 
+#### Ocultar conversaciones archivadas
+
+Una vez que una conversación está archivada en una carpeta, ya está "lista" — pero por defecto sigue ocupando espacio en la lista principal de la barra lateral. Activa **Ocultar conversaciones archivadas** en el popup de la extensión → **Opciones de carpetas**, y la lista principal mostrará solo lo que está activo. Inbox zero de verdad para tus chats de IA.
+
+- La primera vez que archivas una conversación en una carpeta, Voyager muestra una pequeña tarjeta en el área de carpetas para activarlo con un clic. Si no lo quieres, pulsa "Ahora no" y no te molestaremos más.
+- Las conversaciones archivadas **nunca se eliminan** — siguen accesibles dentro de sus carpetas.
+- Puedes alternar desde el popup en cualquier momento.
+
 #### Colores personalizados
 
 Haz clic en el icono de la carpeta para personalizar su color. Elige entre 7 colores predeterminados o usa el selector de colores para elegir cualquier color.
