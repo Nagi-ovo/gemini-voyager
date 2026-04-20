@@ -543,6 +543,26 @@
     "message": "隱藏已歸檔對話",
     "description": "從主清單隱藏已新增到資料夾的對話"
   },
+  "hideArchivedNudgeTitle": {
+    "message": "整理你的側邊欄",
+    "description": "Title of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeBody": {
+    "message": "Voyager 支援自動隱藏已歸入資料夾的對話，讓側邊欄只保留進行中的內容。對話不會被刪除，隨時可在資料夾中檢視。",
+    "description": "Body text of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeEnable": {
+    "message": "立即開啟",
+    "description": "Primary button that turns on hide-archived"
+  },
+  "hideArchivedNudgeDismiss": {
+    "message": "暫不開啟",
+    "description": "Secondary button that dismisses the nudge"
+  },
+  "hideArchivedNudgeFootnote": {
+    "message": "可在擴充功能彈窗 → 資料夾選項中關閉此功能。",
+    "description": "Footnote explaining where to toggle the setting later"
+  },
   "conversation_star": {
     "message": "星號標記對話",
     "description": "星號標記對話按鈕提示"

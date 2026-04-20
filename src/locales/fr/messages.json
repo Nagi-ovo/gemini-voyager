@@ -583,6 +583,26 @@
     "message": "Masquer les discussions archivées",
     "description": "Hide conversations that are in folders from the main list"
   },
+  "hideArchivedNudgeTitle": {
+    "message": "Rangez votre barre latérale",
+    "description": "Title of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeBody": {
+    "message": "Voyager peut masquer de la liste principale les discussions déjà classées dans des dossiers, pour ne voir que les conversations en cours. Rien n'est supprimé : elles restent accessibles dans leurs dossiers.",
+    "description": "Body text of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeEnable": {
+    "message": "Activer",
+    "description": "Primary button that turns on hide-archived"
+  },
+  "hideArchivedNudgeDismiss": {
+    "message": "Plus tard",
+    "description": "Secondary button that dismisses the nudge"
+  },
+  "hideArchivedNudgeFootnote": {
+    "message": "Modifiable à tout moment dans la popup de l'extension → Options de dossiers.",
+    "description": "Footnote explaining where to toggle the setting later"
+  },
   "conversation_star": {
     "message": "Ajouter aux favoris",
     "description": "Star conversation button tooltip"

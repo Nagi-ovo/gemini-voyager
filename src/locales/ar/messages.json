@@ -583,6 +583,26 @@
     "message": "إخفاء المحادثات المؤرشفة",
     "description": "Hide conversations that are in folders from the main list"
   },
+  "hideArchivedNudgeTitle": {
+    "message": "رتّب شريطك الجانبي",
+    "description": "Title of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeBody": {
+    "message": "يمكن لـ Voyager إخفاء المحادثات المضافة إلى مجلدات من القائمة الرئيسية، لتظهر لك المحادثات الجارية فقط. لن تُحذف أي محادثة — تبقى متاحة داخل مجلداتها.",
+    "description": "Body text of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeEnable": {
+    "message": "تفعيل الآن",
+    "description": "Primary button that turns on hide-archived"
+  },
+  "hideArchivedNudgeDismiss": {
+    "message": "ليس الآن",
+    "description": "Secondary button that dismisses the nudge"
+  },
+  "hideArchivedNudgeFootnote": {
+    "message": "يمكنك تغيير ذلك في أي وقت من نافذة الإضافة ← خيارات المجلدات.",
+    "description": "Footnote explaining where to toggle the setting later"
+  },
   "conversation_star": {
     "message": "تمييز المحادثة بنجمة",
     "description": "Star conversation button tooltip"

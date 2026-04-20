@@ -583,6 +583,26 @@
     "message": "보관된 대화 숨기기",
     "description": "Hide conversations that are in folders from the main list"
   },
+  "hideArchivedNudgeTitle": {
+    "message": "사이드바 정리하기",
+    "description": "Title of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeBody": {
+    "message": "Voyager는 폴더에 보관된 대화를 메인 목록에서 숨길 수 있습니다. 대화는 삭제되지 않으며, 폴더에서 언제든 확인할 수 있습니다.",
+    "description": "Body text of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeEnable": {
+    "message": "지금 활성화",
+    "description": "Primary button that turns on hide-archived"
+  },
+  "hideArchivedNudgeDismiss": {
+    "message": "나중에",
+    "description": "Secondary button that dismisses the nudge"
+  },
+  "hideArchivedNudgeFootnote": {
+    "message": "확장 프로그램 팝업 → 폴더 옵션에서 언제든 변경할 수 있습니다.",
+    "description": "Footnote explaining where to toggle the setting later"
+  },
   "conversation_star": {
     "message": "대화 별표 표시",
     "description": "Star conversation button tooltip"

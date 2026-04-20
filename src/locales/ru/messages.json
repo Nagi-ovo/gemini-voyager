@@ -583,6 +583,26 @@
     "message": "Скрыть архивные разговоры",
     "description": "Hide conversations that are in folders from the main list"
   },
+  "hideArchivedNudgeTitle": {
+    "message": "Наведите порядок на боковой панели",
+    "description": "Title of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeBody": {
+    "message": "Voyager может скрывать из основного списка разговоры, уже разложенные по папкам, чтобы показывать только активные чаты. Ничего не удаляется — они остаются доступны в своих папках.",
+    "description": "Body text of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeEnable": {
+    "message": "Включить",
+    "description": "Primary button that turns on hide-archived"
+  },
+  "hideArchivedNudgeDismiss": {
+    "message": "Не сейчас",
+    "description": "Secondary button that dismisses the nudge"
+  },
+  "hideArchivedNudgeFootnote": {
+    "message": "Изменить можно в любое время во всплывающем окне расширения → Параметры папок.",
+    "description": "Footnote explaining where to toggle the setting later"
+  },
   "conversation_star": {
     "message": "Пометить разговор",
     "description": "Star conversation button tooltip"

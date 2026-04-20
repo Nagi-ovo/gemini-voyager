@@ -583,6 +583,26 @@
     "message": "Ocultar conversaciones archivadas",
     "description": "Hide conversations that are in folders from the main list"
   },
+  "hideArchivedNudgeTitle": {
+    "message": "Ordena tu barra lateral",
+    "description": "Title of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeBody": {
+    "message": "Voyager puede ocultar de la lista principal las conversaciones archivadas en carpetas, para que solo veas los chats activos. Nada se elimina: siguen disponibles dentro de sus carpetas.",
+    "description": "Body text of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeEnable": {
+    "message": "Activar ahora",
+    "description": "Primary button that turns on hide-archived"
+  },
+  "hideArchivedNudgeDismiss": {
+    "message": "Ahora no",
+    "description": "Secondary button that dismisses the nudge"
+  },
+  "hideArchivedNudgeFootnote": {
+    "message": "Puedes cambiarlo en cualquier momento desde el popup de la extensión → Opciones de carpetas.",
+    "description": "Footnote explaining where to toggle the setting later"
+  },
   "conversation_star": {
     "message": "Destacar conversación",
     "description": "Star conversation button tooltip"

@@ -583,6 +583,26 @@
     "message": "フォルダに入れた会話をメインリストから隠す",
     "description": "Hide conversations that are in folders from the main list"
   },
+  "hideArchivedNudgeTitle": {
+    "message": "サイドバーを整理",
+    "description": "Title of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeBody": {
+    "message": "Voyager はフォルダに入れた会話をメインリストから自動で非表示にできます。会話は削除されず、フォルダ内からいつでも確認できます。",
+    "description": "Body text of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeEnable": {
+    "message": "今すぐ有効化",
+    "description": "Primary button that turns on hide-archived"
+  },
+  "hideArchivedNudgeDismiss": {
+    "message": "後で",
+    "description": "Secondary button that dismisses the nudge"
+  },
+  "hideArchivedNudgeFootnote": {
+    "message": "拡張機能ポップアップ → フォルダ設定でいつでも切り替えできます。",
+    "description": "Footnote explaining where to toggle the setting later"
+  },
   "conversation_star": {
     "message": "会話にスターを付ける",
     "description": "Star conversation button tooltip"

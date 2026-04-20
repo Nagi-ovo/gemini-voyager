@@ -27,6 +27,11 @@ import type { TimelineHierarchyData } from '../timeline/hierarchyTypes';
 import { sortConversationsByPriority } from './conversationSort';
 import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
 import { DEFAULT_CONVERSATION_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
+import {
+  mountHideArchivedNudge,
+  shouldShowHideArchivedNudge,
+  unmountHideArchivedNudge,
+} from './hideArchivedNudge';
 import { createMoveToFolderMenuItem } from './moveToFolderMenuItem';
 import {
   type IFolderStorageAdapter,
@@ -118,6 +123,7 @@ export class FolderManager {
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private folderProjectEnabled: boolean = false; // Whether Folder-as-Project feature is enabled
   private hideArchivedConversations: boolean = false; // Whether to hide conversations in folders
+  private hideArchivedNudgeShown: boolean = false; // Whether the first-archive nudge has been shown/dismissed
   private folderTreeIndent: number = FOLDER_TREE_INDENT_DEFAULT; // Tree indentation width (px)
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
   private accountIsolationEnabled: boolean = false; // Whether hard account isolation is enabled
@@ -214,6 +220,10 @@ export class FolderManager {
 
       // Load folder enabled setting
       await this.loadFolderEnabledSetting();
+
+      // Load hide-archived onboarding nudge flag first, so loadHideArchivedSetting
+      // can mark it "shown" if the user already has the feature enabled.
+      await this.loadHideArchivedNudgeShownSetting();
 
       // Load hide archived setting
       await this.loadHideArchivedSetting();
@@ -2826,12 +2836,14 @@ export class FolderManager {
       this.debug('Moving from folder:', dragData.sourceFolderId);
       this.removeConversationFromFolder(dragData.sourceFolderId, dragData.conversationId!);
       // Note: removeConversationFromFolder calls saveData() and refresh(), so we don't need to call them again
+      // Folder→folder move is not a "first archive"; skip the nudge.
       return;
     }
 
     // Save immediately before refresh to persist data
     this.saveData();
     this.refresh();
+    this.maybeShowHideArchivedNudge();
   }
 
   // Batch add conversations to folder (for multi-select support)
@@ -2900,6 +2912,12 @@ export class FolderManager {
     // Save immediately before refresh to persist data
     this.saveData();
     this.refresh();
+    // Trigger nudge only if at least one conversation was actually added from
+    // outside. If the whole batch came from another folder (sourceFolderId set),
+    // it's a folder→folder move and not a "first archive" event.
+    if (addedCount > 0 && !sourceFolderId) {
+      this.maybeShowHideArchivedNudge();
+    }
   }
 
   private addFolderToFolder(targetFolderId: string, dragData: DragData): void {
@@ -4311,6 +4329,7 @@ export class FolderManager {
       (c) => c.conversationId === conversationId,
     );
 
+    let addedNewConversation = false;
     if (existingIndex === -1) {
       // Add new conversation
       this.data.folderContents[folderId].push({
@@ -4321,10 +4340,14 @@ export class FolderManager {
         isGem,
         gemId,
       });
+      addedNewConversation = true;
     }
 
     this.saveData();
     this.refresh();
+    if (addedNewConversation) {
+      this.maybeShowHideArchivedNudge();
+    }
   }
 
   /**
@@ -5833,6 +5856,72 @@ export class FolderManager {
       console.error('[FolderManager] Failed to load hide archived setting:', error);
       this.hideArchivedConversations = false;
     }
+    // If the user has (or ever had) hide-archived turned on, they already know
+    // the feature exists. Mark the nudge as shown so we never surface it again
+    // even if they later turn the feature off.
+    this.markNudgeShownIfUserKnowsFeature();
+  }
+
+  private markNudgeShownIfUserKnowsFeature(): void {
+    if (!this.hideArchivedConversations) return;
+    if (this.hideArchivedNudgeShown) return;
+    this.hideArchivedNudgeShown = true;
+    browser.storage.sync
+      .set({ [StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN]: true })
+      .catch((error) => {
+        console.error(
+          '[FolderManager] Failed to persist nudge-shown flag after observing hide-archived=true:',
+          error,
+        );
+      });
+  }
+
+  private async loadHideArchivedNudgeShownSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN]: false,
+      });
+      this.hideArchivedNudgeShown = !!result[StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN];
+      this.debug('Loaded hide-archived nudge shown flag:', this.hideArchivedNudgeShown);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load hide-archived nudge flag:', error);
+      this.hideArchivedNudgeShown = false;
+    }
+  }
+
+  private maybeShowHideArchivedNudge(): void {
+    if (
+      !shouldShowHideArchivedNudge({
+        nudgeShown: this.hideArchivedNudgeShown,
+        hideArchivedAlreadyOn: this.hideArchivedConversations,
+      })
+    ) {
+      return;
+    }
+    if (!this.containerElement || !document.body.contains(this.containerElement)) return;
+
+    mountHideArchivedNudge({
+      container: this.containerElement,
+      onEnable: () => {
+        this.hideArchivedNudgeShown = true;
+        browser.storage.sync
+          .set({
+            [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS]: true,
+            [StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN]: true,
+          })
+          .catch((error) => {
+            console.error('[FolderManager] Failed to enable hide-archived from nudge:', error);
+          });
+      },
+      onDismiss: () => {
+        this.hideArchivedNudgeShown = true;
+        browser.storage.sync
+          .set({ [StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN]: true })
+          .catch((error) => {
+            console.error('[FolderManager] Failed to persist nudge-dismissed flag:', error);
+          });
+      },
+    });
   }
 
   private async loadFilterUserSetting(): Promise<void> {
@@ -5911,6 +6000,21 @@ export class FolderManager {
           this.debug('Hide archived setting changed:', this.hideArchivedConversations);
           // Apply the change to all conversations
           this.applyHideArchivedSetting();
+          // If user enabled hide-archived from the popup while the nudge is
+          // still visible, remove it — the nudge's purpose is already served.
+          if (this.hideArchivedConversations && this.containerElement) {
+            unmountHideArchivedNudge(this.containerElement);
+          }
+          // Persist that the user knows this feature, so turning it off later
+          // won't cause the nudge to reappear on the next archive.
+          this.markNudgeShownIfUserKnowsFeature();
+        }
+        if (changes[StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN]) {
+          this.hideArchivedNudgeShown =
+            !!changes[StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN].newValue;
+          if (this.hideArchivedNudgeShown && this.containerElement) {
+            unmountHideArchivedNudge(this.containerElement);
+          }
         }
         if (changes[StorageKeys.GV_FOLDER_TREE_INDENT]) {
           this.applyFolderTreeIndentSetting(changes[StorageKeys.GV_FOLDER_TREE_INDENT].newValue);

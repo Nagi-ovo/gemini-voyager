@@ -583,6 +583,26 @@
     "message": "隐藏已归档对话",
     "description": "从主列表隐藏已添加到文件夹的对话"
   },
+  "hideArchivedNudgeTitle": {
+    "message": "整理你的侧边栏",
+    "description": "Title of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeBody": {
+    "message": "Voyager 支持自动隐藏已归档到文件夹的对话，让侧边栏只保留进行中的内容。对话不会被删除，随时可在文件夹中查看。",
+    "description": "Body text of the first-archive onboarding nudge"
+  },
+  "hideArchivedNudgeEnable": {
+    "message": "立即开启",
+    "description": "Primary button that turns on hide-archived"
+  },
+  "hideArchivedNudgeDismiss": {
+    "message": "暂不开启",
+    "description": "Secondary button that dismisses the nudge"
+  },
+  "hideArchivedNudgeFootnote": {
+    "message": "可在扩展弹窗 → 文件夹选项中关闭此功能。",
+    "description": "Footnote explaining where to toggle the setting later"
+  },
   "conversation_star": {
     "message": "星标对话",
     "description": "星标对话按钮提示"

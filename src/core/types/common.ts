@@ -38,6 +38,7 @@ export const StorageKeys = {
   FOLDER_DATA_AISTUDIO: 'gvFolderDataAIStudio',
   FOLDER_ENABLED: 'geminiFolderEnabled',
   FOLDER_HIDE_ARCHIVED_CONVERSATIONS: 'geminiFolderHideArchivedConversations',
+  FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN: 'geminiFolderHideArchivedNudgeShown',
 
   // Timeline
   TIMELINE_SCROLL_MODE: 'geminiTimelineScrollMode',
