@@ -5,7 +5,7 @@
 
 El mantenimiento de proyectos de código abierto se alimenta principalmente de pasión (y café) ☕
 
-Este sitio no usa Google Ads y la extensión no tiene versión de pago — está hecha para permanecer completamente gratuita.
+Este sitio no usa Google Ads y la extensión no tiene versión de pago. La intención es simple: crear una herramienta que yo mismo uso cada día y recomendaría a un amigo —— manteniendo la sinceridad en medio del ruido.
 
 ## Plataformas en Línea
 

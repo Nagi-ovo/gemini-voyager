@@ -5,7 +5,7 @@
 
 Maintaining open-source projects is mainly driven by passion (and coffee) ☕
 
-No Google Ads on this site, and the extension has no paid tier — it's built to stay fully free.
+No Google Ads on this site, and the extension has no paid tier. The intent is simple: build a tool I use every day and would gladly recommend to a friend — staying genuine in a noisy world.
 
 ## Online Platforms
 
