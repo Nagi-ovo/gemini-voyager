@@ -15,6 +15,21 @@ vi.mock('../../folder/folderColors', () => ({
   isDarkMode: () => false,
 }));
 
+// Track setInputText calls across tests. Declared outside the mock factory
+// because vi.mock is hoisted above module-level variables.
+const setInputTextCalls: Array<{ input: HTMLElement; text: string }> = [];
+vi.mock('../../utils/inputHelper', () => ({
+  setInputText: (input: HTMLElement, text: string) => {
+    setInputTextCalls.push({ input, text });
+    input.textContent = text;
+  },
+}));
+
+// findChatInput returns whatever element has id="test-chat-input" in the DOM.
+vi.mock('../../chatInput/index', () => ({
+  findChatInput: () => document.querySelector<HTMLElement>('#test-chat-input'),
+}));
+
 // ============================================================================
 // isNewChatPath
 // ============================================================================
@@ -376,5 +391,124 @@ describe('applyPendingFolderSelection', () => {
     expect(chrome.storage.local.remove).toHaveBeenCalledWith([
       StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID,
     ]);
+  });
+});
+// ============================================================================
+// Regression: follow-up message should not re-inject instructions when the
+// pendingSend timer fires before the URL change is detected (slow responses).
+// See: fix/folder-project-followup-injection
+// ============================================================================
+
+describe('follow-up injection regression', () => {
+  let originalPathname: string;
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.useFakeTimers();
+    document.body.innerHTML = '';
+    setInputTextCalls.length = 0;
+
+    // Default: feature on, Ctrl+Enter off
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({
+          [StorageKeys.FOLDER_PROJECT_ENABLED]: true,
+          [StorageKeys.CTRL_ENTER_SEND]: false,
+        });
+      },
+    );
+
+    // Start on /app
+    originalPathname = window.location.pathname;
+    window.history.pushState({}, '', '/app');
+  });
+
+  afterEach(() => {
+    window.history.pushState({}, '', originalPathname);
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    document.body.innerHTML = '';
+  });
+
+  it('does not re-inject instructions on follow-up when URL change is delayed past the 4s pendingSend timer', async () => {
+    // Chat input that findChatInput() can locate
+    const chatInput = document.createElement('div');
+    chatInput.id = 'test-chat-input';
+    chatInput.setAttribute('contenteditable', 'true');
+    chatInput.setAttribute('role', 'textbox');
+    document.body.appendChild(chatInput);
+
+    // .model-picker-container (needed by injectPicker)
+    const modelPicker = document.createElement('div');
+    modelPicker.className = 'model-picker-container';
+    const modelBtn = document.createElement('button');
+    modelPicker.appendChild(modelBtn);
+    document.body.appendChild(modelPicker);
+    vi.spyOn(modelPicker, 'getBoundingClientRect').mockReturnValue({ height: 40 } as DOMRect);
+
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue([
+        {
+          id: 'f1',
+          name: 'TestFolder',
+          parentId: null,
+          isExpanded: false,
+          createdAt: 0,
+          updatedAt: 0,
+          instructions: 'Be concise.',
+        },
+      ]),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+
+    const { startFolderProject } = await import('../index');
+    startFolderProject(mockManager as unknown as Parameters<typeof startFolderProject>[0]);
+
+    // Let the picker inject (waitForElement resolves immediately because the
+    // model-picker-container already exists with height > 0). A short advance
+    // flushes the pending microtasks without entering the 500ms URL polling.
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Open the dropdown and select the folder
+    const chip = document.querySelector<HTMLButtonElement>('.gv-fp-chip');
+    expect(chip).not.toBeNull();
+    chip!.click();
+    await vi.advanceTimersByTimeAsync(50);
+
+    const folderItem = Array.from(document.querySelectorAll<HTMLElement>('.gv-fp-item')).find(
+      (el) => el.textContent?.includes('TestFolder'),
+    );
+    expect(folderItem).toBeDefined();
+    folderItem!.click();
+
+    // User presses Enter — capture-phase listener injects instructions
+    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
+    document.dispatchEvent(enterEvent);
+
+    const firstInjections = setInputTextCalls.filter((c) =>
+      c.text.includes('[System Instructions]'),
+    );
+    expect(firstInjections).toHaveLength(1);
+
+    // Slow response: 4s timer fires before URL change
+    await vi.advanceTimersByTimeAsync(5000);
+
+    // URL finally changes to the new conversation
+    window.history.pushState({}, '', '/app/conv1');
+
+    // Let the URL watcher (500ms poll) detect the change
+    await vi.advanceTimersByTimeAsync(700);
+
+    // Follow-up Enter on the conversation page
+    const followUpEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    Object.defineProperty(followUpEvent, 'target', { value: chatInput, configurable: true });
+    document.dispatchEvent(followUpEvent);
+
+    // The fix: selectedFolder* must be cleared in handleNavigation's else branch,
+    // so the follow-up keydown must NOT prepend the instruction block again.
+    const allInjections = setInputTextCalls.filter((c) => c.text.includes('[System Instructions]'));
+    expect(allInjections).toHaveLength(1);
   });
 });

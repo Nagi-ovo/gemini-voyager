@@ -555,7 +555,14 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
     removePicker();
     void injectPicker(manager);
   } else {
-    // Left the new-chat page — hide picker
+    // Left the new-chat page — clear any stale folder selection so follow-up
+    // messages on the resulting conversation page don't re-inject instructions.
+    // This covers two cases where Branch 1 above is skipped:
+    //   1. pendingSend timer fired before URL change caught up (slow responses)
+    //   2. User navigated to an existing conversation via the sidebar without sending
+    selectedFolderId = null;
+    selectedFolderName = null;
+    selectedFolderInstructions = null;
     clearPendingSendState();
     removePicker();
   }
