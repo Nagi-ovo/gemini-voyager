@@ -36,11 +36,25 @@ let pendingSend = false;
 let pendingSendResetTimer: ReturnType<typeof setTimeout> | null = null;
 let sendClickListener: ((e: Event) => void) | null = null;
 let sendKeydownListener: ((e: KeyboardEvent) => void) | null = null;
+let sidebarNavClickListener: ((e: Event) => void) | null = null;
 
 const SEND_BUTTON_SELECTOR =
   'button[aria-label*="Send"], button[aria-label*="send"], ' +
   'button[data-tooltip*="Send"], button[data-tooltip*="send"], ' +
   '[data-send-button], .send-button';
+
+// Matches href values that navigate to an existing conversation, e.g.
+//   /app/<convId>, /u/0/app/<convId>, /gem/<gemId>/<convId>.
+// Used by the sidebar-click listener to recognise navigation clicks so they
+// can cancel a pendingSend claim before the URL change propagates.
+const CONVERSATION_HREF_PATTERN = /\/(u\/\d+\/)?(app|gem\/[^/]+)\/[^/?#]+/;
+
+// How long a send intent (pendingSend flag) survives without a URL change.
+// Gemini can take 30+ seconds to produce the first response for PDF/paper
+// analysis before updating the URL, so the window has to be comfortably
+// larger than the worst-case first-response latency. Cheap to keep because
+// sidebar clicks explicitly cancel pendingSend via sidebarNavClickListener.
+const PENDING_SEND_TIMEOUT_MS = 60_000;
 
 // ============================================================================
 // i18n helper
@@ -163,7 +177,7 @@ function schedulePendingSendReset(): void {
     if (isNewChatPath(window.location.pathname)) {
       clearPreparedInstructions();
     }
-  }, 4000);
+  }, PENDING_SEND_TIMEOUT_MS);
 }
 
 function markPendingSend(input: HTMLElement | null): void {
@@ -206,7 +220,7 @@ function extractGemMetadata(path: string): { isGem: boolean; gemId?: string } {
 }
 
 function setupSendDetection(): void {
-  if (sendClickListener || sendKeydownListener) return;
+  if (sendClickListener || sendKeydownListener || sidebarNavClickListener) return;
 
   sendClickListener = (e: Event) => {
     if (!selectedFolderId) return;
@@ -221,8 +235,24 @@ function setupSendDetection(): void {
     markPendingSend(e.target);
   };
 
+  // Capture-phase listener that cancels a pending send claim when the user
+  // clicks a sidebar conversation link. Without this, clicking an existing
+  // conversation while pendingSend is still true would misattribute that
+  // conversation to the selected folder once the URL change is detected.
+  sidebarNavClickListener = (e: Event) => {
+    if (!pendingSend) return;
+    const target = e.target as HTMLElement | null;
+    const link = target?.closest('a');
+    if (!link) return;
+    const href = link.getAttribute('href') ?? '';
+    if (CONVERSATION_HREF_PATTERN.test(href)) {
+      clearPendingSendState();
+    }
+  };
+
   document.addEventListener('click', sendClickListener, true);
   document.addEventListener('keydown', sendKeydownListener, true);
+  document.addEventListener('click', sidebarNavClickListener, true);
 }
 
 function teardownSendDetection(): void {
@@ -233,6 +263,10 @@ function teardownSendDetection(): void {
   if (sendKeydownListener) {
     document.removeEventListener('keydown', sendKeydownListener, true);
     sendKeydownListener = null;
+  }
+  if (sidebarNavClickListener) {
+    document.removeEventListener('click', sidebarNavClickListener, true);
+    sidebarNavClickListener = null;
   }
   clearPendingSendState();
 }

@@ -492,8 +492,9 @@ describe('follow-up injection regression', () => {
     );
     expect(firstInjections).toHaveLength(1);
 
-    // Slow response: 4s timer fires before URL change
-    await vi.advanceTimersByTimeAsync(5000);
+    // Very slow response: 60s pendingSend timer fires before URL change.
+    // Must exceed PENDING_SEND_TIMEOUT_MS in the production code.
+    await vi.advanceTimersByTimeAsync(61_000);
 
     // URL finally changes to the new conversation
     window.history.pushState({}, '', '/app/conv1');
@@ -510,5 +511,71 @@ describe('follow-up injection regression', () => {
     // so the follow-up keydown must NOT prepend the instruction block again.
     const allInjections = setInputTextCalls.filter((c) => c.text.includes('[System Instructions]'));
     expect(allInjections).toHaveLength(1);
+  });
+
+  it('does not auto-assign the clicked conversation when user clicks sidebar link after sending', async () => {
+    const chatInput = document.createElement('div');
+    chatInput.id = 'test-chat-input';
+    chatInput.setAttribute('contenteditable', 'true');
+    chatInput.setAttribute('role', 'textbox');
+    document.body.appendChild(chatInput);
+
+    const modelPicker = document.createElement('div');
+    modelPicker.className = 'model-picker-container';
+    modelPicker.appendChild(document.createElement('button'));
+    document.body.appendChild(modelPicker);
+    vi.spyOn(modelPicker, 'getBoundingClientRect').mockReturnValue({ height: 40 } as DOMRect);
+
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue([
+        {
+          id: 'f1',
+          name: 'TestFolder',
+          parentId: null,
+          isExpanded: false,
+          createdAt: 0,
+          updatedAt: 0,
+          instructions: 'Be concise.',
+        },
+      ]),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+
+    const { startFolderProject } = await import('../index');
+    startFolderProject(mockManager as unknown as Parameters<typeof startFolderProject>[0]);
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Select a folder
+    const chip = document.querySelector<HTMLButtonElement>('.gv-fp-chip');
+    chip!.click();
+    await vi.advanceTimersByTimeAsync(50);
+    const folderItem = Array.from(document.querySelectorAll<HTMLElement>('.gv-fp-item')).find(
+      (el) => el.textContent?.includes('TestFolder'),
+    );
+    folderItem!.click();
+
+    // User presses Enter — pendingSend=true
+    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
+    document.dispatchEvent(enterEvent);
+
+    // Instead of waiting for the response, user clicks an existing sidebar
+    // conversation link. This must cancel the pending send claim so the
+    // subsequent URL change is NOT attributed to the folder assignment.
+    const sidebarLink = document.createElement('a');
+    sidebarLink.href = '/app/existing-conv-42';
+    sidebarLink.textContent = 'Yesterday chat';
+    document.body.appendChild(sidebarLink);
+    sidebarLink.click();
+
+    // Simulate the URL change triggered by the sidebar click
+    window.history.pushState({}, '', '/app/existing-conv-42');
+    await vi.advanceTimersByTimeAsync(700);
+
+    // Critical: the clicked (existing) conversation must NOT be added to the
+    // folder. The capture-phase sidebar listener should have cleared
+    // pendingSend before handleNavigation ran.
+    expect(mockManager.addConversationToFolderFromNative).not.toHaveBeenCalled();
   });
 });
