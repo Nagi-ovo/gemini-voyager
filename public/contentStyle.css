@@ -5349,6 +5349,37 @@ body.dark-theme .gv-folder-action-btn.gv-filter-active mat-icon,
   font-size: 14px;
 }
 
+/* Hide archived conversations in the AI Studio /library table when the feature is on.
+   The class is toggled per-row by AIStudioFolderManager.applyHideArchivedToLibraryTable. */
+.gv-aistudio-root tr.mat-mdc-row.gv-conversation-archived,
+.gv-aistudio-root tr[mat-row].gv-conversation-archived {
+  display: none !important;
+}
+
+/* AI Studio–scoped theming for the shared hide-archived nudge. The base class targets
+   Gemini's theme-host tokens, which don't resolve on AI Studio, so we re-color under
+   the aistudio variant to match the platform's always-dark surface. */
+.gv-hide-archived-nudge--aistudio {
+  color: var(--mat-sys-on-surface, #e3e3e3);
+  border-color: rgba(138, 180, 248, 0.3);
+  background: linear-gradient(135deg, rgba(138, 180, 248, 0.12) 0%, rgba(167, 139, 250, 0.09) 100%);
+}
+
+.gv-hide-archived-nudge--aistudio .gv-hide-archived-nudge__btn--primary {
+  background: rgba(138, 180, 248, 0.92);
+  color: #1a1c1e;
+  border-color: rgba(138, 180, 248, 0.92);
+}
+
+.gv-hide-archived-nudge--aistudio .gv-hide-archived-nudge__btn--secondary {
+  color: var(--mat-sys-on-surface-variant, #c4c7c5);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.gv-hide-archived-nudge--aistudio .gv-hide-archived-nudge__btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 /* V2 left-nav layout: the folder panel sits between the nav items and the
    native empty-space spacer. Let it flex-shrink gracefully without forcing a
    fixed height so long folder lists can still scroll inside the nav. */

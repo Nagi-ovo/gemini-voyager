@@ -467,6 +467,26 @@
     "message": "Manage in Library",
     "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"
   },
+  "aistudio_hide_archived_nudge_title": {
+    "message": "Tidy up your AI Studio Library",
+    "description": "Onboarding nudge title inviting the user to hide archived conversations from the AI Studio library table"
+  },
+  "aistudio_hide_archived_nudge_body": {
+    "message": "Voyager can hide conversations already filed into folders from the Library table, leaving only uncategorized chats behind.",
+    "description": "Onboarding nudge body explaining the hide-archived feature in AI Studio"
+  },
+  "aistudio_hide_archived_nudge_enable": {
+    "message": "Enable",
+    "description": "Primary button on the AI Studio hide-archived nudge"
+  },
+  "aistudio_hide_archived_nudge_dismiss": {
+    "message": "Not now",
+    "description": "Dismiss button on the AI Studio hide-archived nudge"
+  },
+  "aistudio_hide_archived_nudge_footnote": {
+    "message": "Applies to AI Studio only — your Gemini preference is kept separately.",
+    "description": "Footnote on the AI Studio hide-archived nudge noting the setting is scoped per platform"
+  },
   "folder_import": {
     "message": "Import folders",
     "description": "Import folders button tooltip"

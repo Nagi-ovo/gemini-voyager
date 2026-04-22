@@ -467,6 +467,26 @@
     "message": "ライブラリで管理",
     "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"
   },
+  "aistudio_hide_archived_nudge_title": {
+    "message": "AI Studio のライブラリを整理",
+    "description": "Onboarding nudge title inviting the user to hide archived conversations from the AI Studio library table"
+  },
+  "aistudio_hide_archived_nudge_body": {
+    "message": "Voyager はフォルダに振り分け済みの会話をライブラリの一覧から隠せます。未分類だけが残ります。",
+    "description": "Onboarding nudge body explaining the hide-archived feature in AI Studio"
+  },
+  "aistudio_hide_archived_nudge_enable": {
+    "message": "有効化",
+    "description": "Primary button on the AI Studio hide-archived nudge"
+  },
+  "aistudio_hide_archived_nudge_dismiss": {
+    "message": "あとで",
+    "description": "Dismiss button on the AI Studio hide-archived nudge"
+  },
+  "aistudio_hide_archived_nudge_footnote": {
+    "message": "AI Studio でのみ有効 — Gemini の設定とは別に保存されます。",
+    "description": "Footnote on the AI Studio hide-archived nudge noting the setting is scoped per platform"
+  },
   "folder_import": {
     "message": "フォルダをインポート",
     "description": "Import folders button tooltip"

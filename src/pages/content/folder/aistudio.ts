@@ -13,6 +13,11 @@ import type { PromptItem, SyncAccountScope } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
 import { createTranslator, initI18n } from '@/utils/i18n';
 
+import {
+  mountHideArchivedNudge,
+  shouldShowHideArchivedNudge,
+  unmountHideArchivedNudge,
+} from './hideArchivedNudge';
 import type { ConversationReference, DragData, Folder, FolderData } from './types';
 
 function waitForElement<T extends Element = Element>(
@@ -216,6 +221,8 @@ export class AIStudioFolderManager {
   private promptTitleSyncInProgress: boolean = false;
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
+  private hideArchivedEnabled: boolean = false; // AI Studio-scoped — hide filed convs in /library table
+  private hideArchivedNudgeShown: boolean = false; // AI Studio-scoped — nudge dismissed/enabled before
   private accountIsolationEnabled: boolean = false; // Whether hard account isolation is enabled
   private accountScope: AccountScope | null = null; // Resolved account scope for current account
   private activeStorageKey: string = StorageKeys.FOLDER_DATA_AISTUDIO; // Active folder data key
@@ -273,6 +280,7 @@ export class AIStudioFolderManager {
 
     // Load folder enabled setting
     await this.loadFolderEnabledSetting();
+    await this.loadHideArchivedSettings();
 
     // Load account isolation setting/scope before reading folder data.
     await this.loadAccountIsolationSetting();
@@ -570,7 +578,8 @@ export class AIStudioFolderManager {
     ].join(', ');
     const mountSignal = await waitForElement<HTMLElement>(anchorSelector);
 
-    this.historyRoot = (document.querySelector('ms-prompt-history-v3') as HTMLElement | null) ?? null;
+    this.historyRoot =
+      (document.querySelector('ms-prompt-history-v3') as HTMLElement | null) ?? null;
 
     if (!mountSignal) return;
 
@@ -619,6 +628,8 @@ export class AIStudioFolderManager {
   private containerMountObserver: MutationObserver | null = null;
   private lastContainerReinjectAt: number = 0;
   private libraryShortcutBtn: HTMLButtonElement | null = null;
+  private libraryTableObserver: MutationObserver | null = null;
+  private libraryDropZoneInjected: boolean = false;
 
   /**
    * Watches the AI Studio left nav for Angular tear-downs that would silently detach
@@ -707,6 +718,10 @@ export class AIStudioFolderManager {
       // Show error notification to user
       this.showErrorNotification('Failed to save folder data. Changes may not be persisted.');
     }
+    // Folder membership drives which /library rows count as "archived"; re-sync the
+    // table and nudge visibility after every mutation, not just on explicit user toggles.
+    this.applyHideArchivedToLibraryTable();
+    this.updateHideArchivedNudgeVisibility();
   }
 
   private injectUI(): void {
@@ -966,6 +981,10 @@ export class AIStudioFolderManager {
 
     // After rendering, update active highlight
     this.highlightActiveConversation();
+
+    // Keep the onboarding nudge in sync with the post-render folder state — e.g. the
+    // user just archived their first conversation, so now we have a reason to show it.
+    this.updateHideArchivedNudgeVisibility();
   }
 
   private getCurrentPromptIdFromLocation(): string | null {
@@ -987,6 +1006,21 @@ export class AIStudioFolderManager {
       const isActive = currentId && row.dataset.conversationId === currentId;
       row.classList.toggle('gv-folder-conversation-selected', !!isActive);
     });
+  }
+
+  /**
+   * Lazily attach the /library-only setup (table observer, drag bindings, floating
+   * drop zone, hide-archived pass) when entering /library via SPA navigation. On
+   * initial page load this is already run by initializeFolderUI; this method handles
+   * the case where the user landed on /prompts first and later navigates to /library,
+   * as well as Angular rebuilding the table on re-entry.
+   */
+  private ensureLibraryBindings(): void {
+    if (!/\/library(\/|$)/.test(location.pathname)) return;
+    this.observeLibraryTable();
+    this.bindDraggablesInLibraryTable();
+    this.injectLibraryDropZone();
+    this.applyHideArchivedToLibraryTable();
   }
 
   /**
@@ -1023,6 +1057,7 @@ export class AIStudioFolderManager {
       setTimeout(() => {
         this.ensureContainerMounted();
         this.updateLibraryShortcutVisibility();
+        this.ensureLibraryBindings();
         this.highlightActiveConversation();
       }, 0);
     try {
@@ -1730,43 +1765,28 @@ export class AIStudioFolderManager {
   }
 
   /**
-   * Observe the library table for dynamic row additions
-   * This is needed because the library page loads rows dynamically
+   * Observe the library table for dynamic row additions. Idempotent — repeated calls
+   * are no-ops. Watches document.body so SPA navigations that swap the table subtree
+   * don't leave us with a stale observer target.
    */
   private observeLibraryTable(): void {
-    // The library table is within a mat-table element
-    const tableRoot = document.querySelector(
-      'table.mat-mdc-table, mat-table',
-    ) as HTMLElement | null;
-    if (!tableRoot) {
-      // Fallback: observe entire body for table appearance
-      const bodyObserver = new MutationObserver(() => {
-        const table = document.querySelector('table.mat-mdc-table, mat-table');
-        if (table) {
-          this.bindDraggablesInLibraryTable();
-        }
-      });
-      try {
-        bodyObserver.observe(document.body, { childList: true, subtree: true });
-      } catch {}
-      this.cleanupFns.push(() => {
-        try {
-          bodyObserver.disconnect();
-        } catch {}
-      });
-      return;
-    }
+    if (this.libraryTableObserver) return;
 
-    const observer = new MutationObserver(() => {
-      this.bindDraggablesInLibraryTable();
+    const bodyObserver = new MutationObserver(() => {
+      const table = document.querySelector('table.mat-mdc-table, mat-table');
+      if (table) {
+        this.bindDraggablesInLibraryTable();
+      }
     });
     try {
-      observer.observe(tableRoot, { childList: true, subtree: true });
+      bodyObserver.observe(document.body, { childList: true, subtree: true });
     } catch {}
+    this.libraryTableObserver = bodyObserver;
     this.cleanupFns.push(() => {
       try {
-        observer.disconnect();
+        bodyObserver.disconnect();
       } catch {}
+      this.libraryTableObserver = null;
     });
   }
 
@@ -1829,16 +1849,27 @@ export class AIStudioFolderManager {
         tr.style.opacity = '';
       });
     });
+
+    // Rows are bound opportunistically as the table updates; re-sync the hide-archived
+    // state each pass so newly added rows pick up the current setting.
+    this.applyHideArchivedToLibraryTable();
   }
 
   /**
-   * Inject a floating drop zone for the library page
-   * Shows available folders when user starts dragging
+   * Inject a floating drop zone for the library page. Guarded so SPA navigations
+   * into /library don't create duplicate floating cards.
    */
   private injectLibraryDropZone(): void {
+    if (this.libraryDropZoneInjected) return;
+    if (document.querySelector('.gv-library-drop-zone')) {
+      this.libraryDropZoneInjected = true;
+      return;
+    }
+
     // Create a floating container that appears during drag
     const floatingZone = document.createElement('div');
     floatingZone.className = 'gv-library-drop-zone';
+    this.libraryDropZoneInjected = true;
     floatingZone.style.cssText = `
       position: fixed;
       bottom: 20px;
@@ -2238,6 +2269,134 @@ export class AIStudioFolderManager {
     }
   }
 
+  /**
+   * Load the AI Studio hide-archived settings. Kept fully separate from the Gemini keys
+   * so a user who toggled the feature on Gemini is not surprised when they open AI Studio.
+   */
+  private async loadHideArchivedSettings(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO]: false,
+        [StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN_AISTUDIO]: false,
+      });
+      this.hideArchivedEnabled =
+        result[StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO] === true;
+      this.hideArchivedNudgeShown =
+        result[StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN_AISTUDIO] === true;
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to load hide-archived settings:', error);
+      this.hideArchivedEnabled = false;
+      this.hideArchivedNudgeShown = false;
+    }
+  }
+
+  private async saveHideArchivedEnabled(next: boolean): Promise<void> {
+    this.hideArchivedEnabled = next;
+    try {
+      await browser.storage.sync.set({
+        [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO]: next,
+      });
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to save hide-archived setting:', error);
+    }
+  }
+
+  private async saveHideArchivedNudgeShown(): Promise<void> {
+    this.hideArchivedNudgeShown = true;
+    try {
+      await browser.storage.sync.set({
+        [StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN_AISTUDIO]: true,
+      });
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to persist nudge-shown flag:', error);
+    }
+  }
+
+  /**
+   * Returns true when the user has at least one conversation filed into a real folder
+   * (uncategorized doesn't count). Used to decide whether to show the onboarding nudge
+   * — showing it with an empty state would be a mystery card.
+   */
+  private hasAnyArchivedConversation(): boolean {
+    for (const [folderId, conversations] of Object.entries(this.data.folderContents)) {
+      if (folderId === this.UNCATEGORIZED_KEY) continue;
+      if (Array.isArray(conversations) && conversations.length > 0) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Decide whether to mount or unmount the AI Studio hide-archived nudge. Safe to call
+   * from any state change path — idempotent and cheap.
+   */
+  private updateHideArchivedNudgeVisibility(): void {
+    const container = this.container;
+    if (!container) return;
+
+    const eligible =
+      shouldShowHideArchivedNudge({
+        nudgeShown: this.hideArchivedNudgeShown,
+        hideArchivedAlreadyOn: this.hideArchivedEnabled,
+      }) && this.hasAnyArchivedConversation();
+
+    if (!eligible) {
+      unmountHideArchivedNudge(container);
+      return;
+    }
+
+    mountHideArchivedNudge({
+      container,
+      variantClass: 'gv-hide-archived-nudge--aistudio',
+      i18nKeys: {
+        title: 'aistudio_hide_archived_nudge_title',
+        body: 'aistudio_hide_archived_nudge_body',
+        enable: 'aistudio_hide_archived_nudge_enable',
+        dismiss: 'aistudio_hide_archived_nudge_dismiss',
+        footnote: 'aistudio_hide_archived_nudge_footnote',
+      },
+      onEnable: () => {
+        void this.saveHideArchivedEnabled(true).then(() => this.saveHideArchivedNudgeShown());
+      },
+      onDismiss: () => {
+        void this.saveHideArchivedNudgeShown();
+      },
+    });
+  }
+
+  /**
+   * A conversation is "archived" if any non-uncategorized folder contains it. We iterate
+   * all stored folder contents once per call — small N (tens of folders), cheap.
+   */
+  private isConversationArchived(conversationId: string): boolean {
+    if (!conversationId) return false;
+    for (const [folderId, conversations] of Object.entries(this.data.folderContents)) {
+      if (folderId === this.UNCATEGORIZED_KEY) continue;
+      if (!Array.isArray(conversations)) continue;
+      if (conversations.some((c) => c.conversationId === conversationId)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Toggle the hide class on every table row in /library according to the current
+   * setting and folder membership. No-op outside /library.
+   */
+  private applyHideArchivedToLibraryTable(): void {
+    if (!/\/library(\/|$)/.test(location.pathname)) return;
+    const rows = document.querySelectorAll<HTMLElement>('tr.mat-mdc-row, tr[mat-row]');
+    rows.forEach((row) => {
+      const anchor = row.querySelector(
+        'a[href^="/prompts/"], a.name-btn[href*="/prompts/"]',
+      ) as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const id = extractPromptIdFromHref(anchor.getAttribute('href') || anchor.href || '');
+      if (!id) return;
+      const archived = this.isConversationArchived(id);
+      const shouldHide = this.hideArchivedEnabled && archived;
+      row.classList.toggle('gv-conversation-archived', shouldHide);
+    });
+  }
+
   private setupStorageListener(): void {
     browser.storage.onChanged.addListener((changes, areaName) => {
       if (areaName === 'sync') {
@@ -2267,6 +2426,17 @@ export class AIStudioFolderManager {
             this.sidebarWidth = clamped;
             this.applySidebarWidth();
           }
+        }
+        if (changes[StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO]) {
+          this.hideArchivedEnabled =
+            changes[StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO].newValue === true;
+          this.applyHideArchivedToLibraryTable();
+          this.updateHideArchivedNudgeVisibility();
+        }
+        if (changes[StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN_AISTUDIO]) {
+          this.hideArchivedNudgeShown =
+            changes[StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN_AISTUDIO].newValue === true;
+          this.updateHideArchivedNudgeVisibility();
         }
       }
     });

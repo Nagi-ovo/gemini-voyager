@@ -427,6 +427,26 @@
     "message": "到 Library 管理",
     "description": "AI Studio 側欄按鈕，跳轉到 /library 以拖曳管理對話"
   },
+  "aistudio_hide_archived_nudge_title": {
+    "message": "整理你的 AI Studio Library",
+    "description": "邀請使用者在 AI Studio 隱藏已歸檔對話的引導標題"
+  },
+  "aistudio_hide_archived_nudge_body": {
+    "message": "Voyager 可以把已經歸入資料夾的對話從 Library 表格中隱藏，只保留未分類的對話。",
+    "description": "引導卡說明 AI Studio 隱藏已歸檔功能"
+  },
+  "aistudio_hide_archived_nudge_enable": {
+    "message": "立即開啟",
+    "description": "AI Studio 隱藏已歸檔引導卡的主按鈕"
+  },
+  "aistudio_hide_archived_nudge_dismiss": {
+    "message": "暫不開啟",
+    "description": "AI Studio 隱藏已歸檔引導卡的次按鈕"
+  },
+  "aistudio_hide_archived_nudge_footnote": {
+    "message": "僅對 AI Studio 生效 —— Gemini 的偏好獨立保存。",
+    "description": "AI Studio 隱藏已歸檔引導卡的註腳，說明設定分平台保存"
+  },
   "folder_import": {
     "message": "匯入資料夾",
     "description": "匯入資料夾按鈕提示"

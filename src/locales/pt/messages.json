@@ -467,6 +467,26 @@
     "message": "Gerenciar na biblioteca",
     "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"
   },
+  "aistudio_hide_archived_nudge_title": {
+    "message": "Organize sua biblioteca do AI Studio",
+    "description": "Onboarding nudge title inviting the user to hide archived conversations from the AI Studio library table"
+  },
+  "aistudio_hide_archived_nudge_body": {
+    "message": "O Voyager pode ocultar as conversas já arquivadas em pastas da tabela da biblioteca, deixando só as não categorizadas.",
+    "description": "Onboarding nudge body explaining the hide-archived feature in AI Studio"
+  },
+  "aistudio_hide_archived_nudge_enable": {
+    "message": "Ativar",
+    "description": "Primary button on the AI Studio hide-archived nudge"
+  },
+  "aistudio_hide_archived_nudge_dismiss": {
+    "message": "Agora não",
+    "description": "Dismiss button on the AI Studio hide-archived nudge"
+  },
+  "aistudio_hide_archived_nudge_footnote": {
+    "message": "Válido só para AI Studio — sua preferência do Gemini fica guardada em separado.",
+    "description": "Footnote on the AI Studio hide-archived nudge noting the setting is scoped per platform"
+  },
   "folder_import": {
     "message": "Importar pastas",
     "description": "Import folders button tooltip"

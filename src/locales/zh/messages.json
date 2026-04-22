@@ -467,6 +467,26 @@
     "message": "到 Library 管理",
     "description": "AI Studio 侧栏按钮，跳转到 /library 以拖拽管理对话"
   },
+  "aistudio_hide_archived_nudge_title": {
+    "message": "整理你的 AI Studio Library",
+    "description": "邀请用户在 AI Studio 隐藏已归档对话的引导标题"
+  },
+  "aistudio_hide_archived_nudge_body": {
+    "message": "Voyager 可以把已经归入文件夹的对话从 Library 表格里隐藏，只留未归类的对话。",
+    "description": "引导卡说明 AI Studio 隐藏已归档功能"
+  },
+  "aistudio_hide_archived_nudge_enable": {
+    "message": "立即开启",
+    "description": "AI Studio 隐藏已归档引导卡的主按钮"
+  },
+  "aistudio_hide_archived_nudge_dismiss": {
+    "message": "暂不开启",
+    "description": "AI Studio 隐藏已归档引导卡的次按钮"
+  },
+  "aistudio_hide_archived_nudge_footnote": {
+    "message": "仅对 AI Studio 生效 —— Gemini 的偏好独立保存。",
+    "description": "AI Studio 隐藏已归档引导卡的脚注，说明配置分平台保存"
+  },
   "folder_import": {
     "message": "导入文件夹",
     "description": "导入文件夹按钮提示"

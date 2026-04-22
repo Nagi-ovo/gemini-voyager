@@ -467,6 +467,26 @@
     "message": "الإدارة في المكتبة",
     "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"
   },
+  "aistudio_hide_archived_nudge_title": {
+    "message": "رتّب مكتبة AI Studio",
+    "description": "Onboarding nudge title inviting the user to hide archived conversations from the AI Studio library table"
+  },
+  "aistudio_hide_archived_nudge_body": {
+    "message": "يمكن لـ Voyager إخفاء المحادثات المصنّفة في مجلدات من جدول المكتبة، ليبقى فيه فقط ما لم يُصنّف بعد.",
+    "description": "Onboarding nudge body explaining the hide-archived feature in AI Studio"
+  },
+  "aistudio_hide_archived_nudge_enable": {
+    "message": "تفعيل",
+    "description": "Primary button on the AI Studio hide-archived nudge"
+  },
+  "aistudio_hide_archived_nudge_dismiss": {
+    "message": "ليس الآن",
+    "description": "Dismiss button on the AI Studio hide-archived nudge"
+  },
+  "aistudio_hide_archived_nudge_footnote": {
+    "message": "يُطبَّق على AI Studio فقط — تبقى تفضيلاتك في Gemini محفوظة بشكل منفصل.",
+    "description": "Footnote on the AI Studio hide-archived nudge noting the setting is scoped per platform"
+  },
   "folder_import": {
     "message": "استيراد المجلدات",
     "description": "Import folders button tooltip"
