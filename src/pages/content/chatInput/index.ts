@@ -10,6 +10,10 @@ function isVisibleElement(element: Element): element is HTMLElement {
   return element instanceof HTMLElement && element.getBoundingClientRect().height > 0;
 }
 
+interface FindChatInputOptions {
+  requireVisible?: boolean;
+}
+
 function isRangeInsideInput(range: Range, input: HTMLElement): boolean {
   return input.contains(range.commonAncestorContainer);
 }
@@ -90,17 +94,24 @@ function insertTextIntoTextarea(input: HTMLTextAreaElement, text: string): boole
   return true;
 }
 
-export function findChatInput(): HTMLElement | null {
+export function findChatInput(options: FindChatInputOptions = {}): HTMLElement | null {
+  const requireVisible = options.requireVisible ?? true;
+  let fallback: HTMLElement | null = null;
+
   for (const selector of CHAT_INPUT_SELECTORS) {
     const elements = document.querySelectorAll(selector);
     for (const element of Array.from(elements)) {
+      if (element instanceof HTMLElement && !fallback) {
+        fallback = element;
+      }
+
       if (isVisibleElement(element)) {
         return element;
       }
     }
   }
 
-  return null;
+  return requireVisible ? null : fallback;
 }
 
 export function insertTextIntoChatInput(text: string, input = findChatInput()): boolean {

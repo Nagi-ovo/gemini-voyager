@@ -86,6 +86,39 @@ describe('chat input helpers', () => {
     expect(findChatInput()).toBe(visibleInput);
   });
 
+  it('still prefers visible input when hidden matches are allowed', () => {
+    document.body.innerHTML = `
+      <rich-textarea>
+        <div id="hidden-input" contenteditable="true"></div>
+      </rich-textarea>
+      <rich-textarea>
+        <div id="visible-input" contenteditable="true" role="textbox"></div>
+      </rich-textarea>
+    `;
+
+    const hiddenInput = document.getElementById('hidden-input');
+    const visibleInput = document.getElementById('visible-input');
+    if (!(hiddenInput instanceof HTMLElement) || !(visibleInput instanceof HTMLElement)) {
+      throw new Error('Expected test inputs.');
+    }
+
+    hiddenInput.getBoundingClientRect = () =>
+      ({
+        height: 0,
+        width: 0,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      }) as DOMRect;
+    setVisibleRect(visibleInput);
+
+    expect(findChatInput({ requireVisible: false })).toBe(visibleInput);
+  });
+
   it('replaces the current contenteditable selection and dispatches input', () => {
     document.body.innerHTML = `
       <rich-textarea>

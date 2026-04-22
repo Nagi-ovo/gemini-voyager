@@ -326,6 +326,7 @@ interface SettingsUpdate {
   promptInsertOnClickEnabled?: boolean;
   inputCollapseEnabled?: boolean;
   inputCollapseWhenNotEmpty?: boolean;
+  inputVimModeEnabled?: boolean;
   tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
@@ -437,6 +438,7 @@ export default function Popup() {
   const [promptInsertOnClickEnabled, setPromptInsertOnClickEnabled] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
   const [inputCollapseWhenNotEmpty, setInputCollapseWhenNotEmpty] = useState<boolean>(false);
+  const [inputVimModeEnabled, setInputVimModeEnabled] = useState<boolean>(false);
   const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [showMessageTimestamps, setShowMessageTimestamps] = useState<boolean>(false);
@@ -534,6 +536,8 @@ export default function Popup() {
         payload.gvInputCollapseEnabled = settings.inputCollapseEnabled;
       if (typeof settings.inputCollapseWhenNotEmpty === 'boolean')
         payload.gvInputCollapseWhenNotEmpty = settings.inputCollapseWhenNotEmpty;
+      if (typeof settings.inputVimModeEnabled === 'boolean')
+        payload[StorageKeys.INPUT_VIM_MODE] = settings.inputVimModeEnabled;
       if (typeof settings.tabTitleUpdateEnabled === 'boolean')
         payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
       if (typeof settings.mermaidEnabled === 'boolean')
@@ -877,6 +881,7 @@ export default function Popup() {
           [StorageKeys.PROMPT_INSERT_ON_CLICK]: false,
           gvInputCollapseEnabled: false,
           gvInputCollapseWhenNotEmpty: false,
+          [StorageKeys.INPUT_VIM_MODE]: false,
           gvTabTitleUpdateEnabled: true,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
@@ -934,6 +939,7 @@ export default function Popup() {
           setPromptInsertOnClickEnabled(res?.[StorageKeys.PROMPT_INSERT_ON_CLICK] === true);
           setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
           setInputCollapseWhenNotEmpty(res?.gvInputCollapseWhenNotEmpty === true);
+          setInputVimModeEnabled(res?.[StorageKeys.INPUT_VIM_MODE] === true);
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
@@ -2209,6 +2215,25 @@ export default function Popup() {
                   />
                 </div>
               )}
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="input-vim-mode"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('inputVimMode')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('inputVimModeHint')}</p>
+                </div>
+                <Switch
+                  id="input-vim-mode"
+                  checked={inputVimModeEnabled}
+                  onChange={(e) => {
+                    setInputVimModeEnabled(e.target.checked);
+                    apply({ inputVimModeEnabled: e.target.checked });
+                  }}
+                />
+              </div>
               <div className="group flex items-center justify-between">
                 <div className="flex-1">
                   <Label

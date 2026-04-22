@@ -1063,6 +1063,14 @@
     "message": "即使輸入框包含文字或附件也允許折疊",
     "description": "解釋非空折疊功能的提示文字"
   },
+  "inputVimMode": {
+    "message": "輸入 Vim Mode",
+    "description": "Toggle label for focusing and leaving the question input with Vim-style keys"
+  },
+  "inputVimModeHint": {
+    "message": "在提問框內用 i/Escape 切換插入/普通模式，用 v 選取，並支援 Vim 移動",
+    "description": "Hint for input Vim mode shortcuts"
+  },
   "ctrlEnterSend": {
     "message": "{modifier}+Enter 傳送",
     "description": "Modifier+Enter 傳送開關標籤。{modifier} 在 macOS 上替換為 ⌘，其他平台替換為 Ctrl"

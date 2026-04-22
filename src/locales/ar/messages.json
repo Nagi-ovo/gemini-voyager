@@ -1103,6 +1103,14 @@
     "message": "طي منطقة الإدخال حتى عند احتوائها على نص أو مرفقات",
     "description": "Hint text explaining the collapse when not empty feature"
   },
+  "inputVimMode": {
+    "message": "وضع Vim للإدخال",
+    "description": "Toggle label for focusing and leaving the question input with Vim-style keys"
+  },
+  "inputVimModeHint": {
+    "message": "استخدم i/Escape لوضعي الإدخال/العادي، وv للتحديد، وحركات Vim داخل مربع السؤال",
+    "description": "Hint for input Vim mode shortcuts"
+  },
   "ctrlEnterSend": {
     "message": "{modifier}+Enter للإرسال",
     "description": "Modifier+Enter to send toggle label. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"

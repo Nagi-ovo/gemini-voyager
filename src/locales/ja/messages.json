@@ -1103,6 +1103,14 @@
     "message": "テキストや添付ファイルがある場合でも入力欄を折りたたみます",
     "description": "Hint text explaining the collapse when not empty feature"
   },
+  "inputVimMode": {
+    "message": "入力 Vim モード",
+    "description": "Toggle label for focusing and leaving the question input with Vim-style keys"
+  },
+  "inputVimModeHint": {
+    "message": "質問入力内で i/Escape で挿入/ノーマルを切り替え、v で選択し、Vim 移動を使えます",
+    "description": "Hint for input Vim mode shortcuts"
+  },
   "ctrlEnterSend": {
     "message": "{modifier}+Enter で送信",
     "description": "Modifier+Enter to send toggle label. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"

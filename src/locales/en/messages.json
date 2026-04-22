@@ -1103,6 +1103,14 @@
     "message": "Collapse input area even when it contains text or attachments",
     "description": "Hint text explaining the collapse when not empty feature"
   },
+  "inputVimMode": {
+    "message": "Input Vim mode",
+    "description": "Toggle label for focusing and leaving the question input with Vim-style keys"
+  },
+  "inputVimModeHint": {
+    "message": "Use i/Escape for Insert/Normal mode, v for selection, and Vim motions inside the question input",
+    "description": "Hint for input Vim mode shortcuts"
+  },
   "ctrlEnterSend": {
     "message": "{modifier}+Enter to send",
     "description": "Modifier+Enter to send toggle label. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"

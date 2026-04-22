@@ -1103,6 +1103,14 @@
     "message": "Replier la zone de saisie meme lorsqu'elle contient du texte ou des pieces jointes",
     "description": "Hint text explaining the collapse when not empty feature"
   },
+  "inputVimMode": {
+    "message": "Mode Vim pour la saisie",
+    "description": "Toggle label for focusing and leaving the question input with Vim-style keys"
+  },
+  "inputVimModeHint": {
+    "message": "Utilisez i/Escape pour les modes insertion/normal, v pour selectionner et les mouvements Vim dans la question",
+    "description": "Hint for input Vim mode shortcuts"
+  },
   "ctrlEnterSend": {
     "message": "{modifier}+Entrée pour envoyer",
     "description": "Modifier+Enter to send toggle label. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"

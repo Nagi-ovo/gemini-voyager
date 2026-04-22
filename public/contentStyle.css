@@ -8208,3 +8208,125 @@ body.gv-rtl .gv-hide-archived-nudge {
 body.gv-rtl .gv-hide-archived-nudge__actions {
   justify-content: flex-start;
 }
+
+.gv-input-vim-hud-mount {
+  position: relative;
+  overflow: visible;
+}
+
+.gv-input-vim-hud {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 14px);
+  z-index: 2;
+  display: inline-flex;
+  transform: translateY(-50%);
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  margin-left: 0;
+  padding: 0 9px;
+  border: 1px solid rgba(60, 64, 67, 0.18);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #3c4043;
+  font:
+    600 11px/1 Google Sans,
+    Roboto,
+    Arial,
+    sans-serif;
+  letter-spacing: 0;
+  vertical-align: middle;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.12);
+  pointer-events: none;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.gv-input-vim-hud[data-active='false'] {
+  opacity: 0.56;
+}
+
+.gv-input-vim-hud[data-mode='normal'] .gv-input-vim-hud-mode {
+  color: #0b8043;
+}
+
+.gv-input-vim-hud[data-mode='insert'] .gv-input-vim-hud-mode {
+  color: #1a73e8;
+}
+
+.gv-input-vim-hud[data-mode='visual'] .gv-input-vim-hud-mode {
+  color: #b06000;
+}
+
+.gv-input-vim-hud-buffer {
+  min-width: 12px;
+  padding-left: 6px;
+  border-left: 1px solid rgba(60, 64, 67, 0.18);
+  color: #5f6368;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.gv-input-vim-mode-normal,
+.gv-input-vim-mode-visual {
+  caret-color: transparent !important;
+}
+
+.gv-input-vim-mode-insert {
+  caret-color: auto;
+}
+
+.gv-input-vim-cursor {
+  position: fixed;
+  z-index: 2147483647;
+  pointer-events: none;
+  border-radius: 2px;
+  background: rgba(11, 128, 67, 0.72);
+  mix-blend-mode: multiply;
+}
+
+.gv-input-vim-cursor[data-mode='visual'] {
+  width: 2px !important;
+  background: rgba(176, 96, 0, 0.9);
+}
+
+.theme-host.dark-theme .gv-input-vim-hud,
+body.dark-theme .gv-input-vim-hud,
+html.dark .gv-input-vim-hud {
+  border-color: rgba(232, 234, 237, 0.16);
+  background: rgba(32, 33, 36, 0.9);
+  color: #e8eaed;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.theme-host.dark-theme .gv-input-vim-hud[data-mode='normal'] .gv-input-vim-hud-mode,
+body.dark-theme .gv-input-vim-hud[data-mode='normal'] .gv-input-vim-hud-mode,
+html.dark .gv-input-vim-hud[data-mode='normal'] .gv-input-vim-hud-mode {
+  color: #81c995;
+}
+
+.theme-host.dark-theme .gv-input-vim-hud[data-mode='insert'] .gv-input-vim-hud-mode,
+body.dark-theme .gv-input-vim-hud[data-mode='insert'] .gv-input-vim-hud-mode,
+html.dark .gv-input-vim-hud[data-mode='insert'] .gv-input-vim-hud-mode {
+  color: #8ab4f8;
+}
+
+.theme-host.dark-theme .gv-input-vim-hud[data-mode='visual'] .gv-input-vim-hud-mode,
+body.dark-theme .gv-input-vim-hud[data-mode='visual'] .gv-input-vim-hud-mode,
+html.dark .gv-input-vim-hud[data-mode='visual'] .gv-input-vim-hud-mode {
+  color: #fdd663;
+}
+
+.theme-host.dark-theme .gv-input-vim-hud-buffer,
+body.dark-theme .gv-input-vim-hud-buffer,
+html.dark .gv-input-vim-hud-buffer {
+  border-left-color: rgba(232, 234, 237, 0.16);
+  color: #bdc1c6;
+}
+
+.theme-host.dark-theme .gv-input-vim-cursor,
+body.dark-theme .gv-input-vim-cursor,
+html.dark .gv-input-vim-cursor {
+  background: rgba(129, 201, 149, 0.72);
+  mix-blend-mode: screen;
+}

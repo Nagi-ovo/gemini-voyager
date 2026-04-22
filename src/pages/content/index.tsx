@@ -11,6 +11,7 @@ import { initI18n } from '@/utils/i18n';
 import { startCanvasExport } from './canvasExport/index';
 import { startChangelog } from './changelog/index';
 import { startChatFontSizeAdjuster } from './chatFontSize/index';
+import { startInputVimMode } from './chatInput/vimMode';
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
@@ -75,6 +76,7 @@ let folderManagerInstance: Awaited<ReturnType<typeof startFolderManager>> | null
 
 let promptManagerInstance: Awaited<ReturnType<typeof startPromptManager>> | null = null;
 let quoteReplyCleanup: (() => void) | null = null;
+let inputVimModeCleanup: (() => void) | null = null;
 let sendBehaviorCleanup: (() => void) | null = null;
 let draftSaveCleanup: (() => void) | null = null;
 let forkCleanup: (() => void) | null = null;
@@ -203,6 +205,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startInputCollapse();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      inputVimModeCleanup = await startInputVimMode();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startPreventAutoScroll();
@@ -489,6 +494,10 @@ function handleVisibilityChange(): void {
         if (quoteReplyCleanup) {
           quoteReplyCleanup();
           quoteReplyCleanup = null;
+        }
+        if (inputVimModeCleanup) {
+          inputVimModeCleanup();
+          inputVimModeCleanup = null;
         }
         if (sendBehaviorCleanup) {
           sendBehaviorCleanup();

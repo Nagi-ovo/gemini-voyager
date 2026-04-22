@@ -1103,6 +1103,14 @@
     "message": "Сворачивать область ввода, даже если она содержит текст или вложения",
     "description": "Hint text explaining the collapse when not empty feature"
   },
+  "inputVimMode": {
+    "message": "Vim-режим ввода",
+    "description": "Toggle label for focusing and leaving the question input with Vim-style keys"
+  },
+  "inputVimModeHint": {
+    "message": "В поле вопроса используйте i/Escape для режимов вставки/normal, v для выделения и движения Vim",
+    "description": "Hint for input Vim mode shortcuts"
+  },
   "ctrlEnterSend": {
     "message": "{modifier}+Enter для отправки",
     "description": "Modifier+Enter to send toggle label. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"

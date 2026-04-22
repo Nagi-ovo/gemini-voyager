@@ -1103,6 +1103,14 @@
     "message": "텍스트나 첨부 파일이 있어도 입력 영역을 접을 수 있습니다",
     "description": "Hint text explaining the collapse when not empty feature"
   },
+  "inputVimMode": {
+    "message": "입력 Vim 모드",
+    "description": "Toggle label for focusing and leaving the question input with Vim-style keys"
+  },
+  "inputVimModeHint": {
+    "message": "질문 입력창 안에서 i/Escape로 입력/일반 모드를 전환하고, v로 선택하며 Vim 이동을 사용합니다",
+    "description": "Hint for input Vim mode shortcuts"
+  },
   "ctrlEnterSend": {
     "message": "{modifier}+Enter 로 전송",
     "description": "Modifier+Enter to send toggle label. {modifier} is replaced with ⌘ on macOS and Ctrl on other platforms"
