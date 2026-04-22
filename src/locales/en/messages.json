@@ -1304,7 +1304,7 @@
     "description": "Fully hide sidebar toggle label"
   },
   "sidebarFullHideHint": {
-    "message": "Completely hide the collapsed sidebar, hover left edge to reveal",
+    "message": "Completely hide the collapsed sidebar",
     "description": "Fully hide sidebar feature hint"
   },
   "folderSpacing": {

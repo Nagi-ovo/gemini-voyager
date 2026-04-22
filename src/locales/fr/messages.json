@@ -1304,7 +1304,7 @@
     "description": "Fully hide sidebar toggle label"
   },
   "sidebarFullHideHint": {
-    "message": "Masquer complètement la barre latérale réduite, survoler le bord gauche pour afficher",
+    "message": "Masquer complètement la barre latérale réduite",
     "description": "Fully hide sidebar feature hint"
   },
   "folderSpacing": {

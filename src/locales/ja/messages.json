@@ -1304,7 +1304,7 @@
     "description": "サイドバー完全非表示の切り替えラベル"
   },
   "sidebarFullHideHint": {
-    "message": "折りたたみ時にサイドバーを完全に非表示にし、左端にマウスを移動して表示",
+    "message": "折りたたみ時にサイドバーを完全に非表示にする",
     "description": "サイドバー完全非表示機能のヒント"
   },
   "folderSpacing": {

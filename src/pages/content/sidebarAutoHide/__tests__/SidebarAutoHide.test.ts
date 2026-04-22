@@ -143,6 +143,46 @@ describe('sidebarAutoHide', () => {
     expect(edgeTrigger?.style.display).toBe('none');
   });
 
+  it('does not reveal from the full-hide edge trigger when auto-hide is disabled', async () => {
+    const sidenav = document.createElement('bard-sidenav');
+    mockVisibleRect(sidenav, 320, 800);
+
+    const sideNavigationContent = document.createElement('side-navigation-content');
+    const collapsedContainer = document.createElement('div');
+    collapsedContainer.className = 'collapsed';
+    sideNavigationContent.appendChild(collapsedContainer);
+    sidenav.appendChild(sideNavigationContent);
+    document.body.appendChild(sidenav);
+
+    const toggleButton = document.createElement('button');
+    toggleButton.setAttribute('data-test-id', 'side-nav-menu-button');
+    const toggleSpy = vi.fn(() => {
+      collapsedContainer.classList.toggle('collapsed');
+    });
+    toggleButton.addEventListener('click', toggleSpy);
+    document.body.appendChild(toggleButton);
+
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvSidebarAutoHide: false, gvSidebarFullHide: true });
+      },
+    );
+
+    const { startSidebarAutoHide } = await import('../index');
+    startSidebarAutoHide();
+
+    vi.advanceTimersByTime(300);
+    const edgeTrigger = document.getElementById('gv-sidebar-edge-trigger');
+    expect(edgeTrigger).not.toBeNull();
+    expect(edgeTrigger?.style.display).toBe('none');
+
+    edgeTrigger?.dispatchEvent(new Event('mouseenter'));
+    vi.advanceTimersByTime(200);
+
+    expect(toggleSpy).not.toHaveBeenCalled();
+    expect(collapsedContainer.classList.contains('collapsed')).toBe(true);
+  });
+
   it('auto-collapses after expanding from the full-hide edge trigger', async () => {
     const sidenav = document.createElement('bard-sidenav');
     mockVisibleRect(sidenav, 320, 800);
@@ -284,6 +324,48 @@ describe('sidebarAutoHide', () => {
       dispatchMouseMove(80);
 
       expect(toggleSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not expand when only full-hide is enabled', async () => {
+      const sidenav = document.createElement('bard-sidenav');
+      mockVisibleRect(sidenav, 320, 800);
+
+      const sideNavigationContent = document.createElement('side-navigation-content');
+      const collapsedContainer = document.createElement('div');
+      collapsedContainer.className = 'collapsed';
+      sideNavigationContent.appendChild(collapsedContainer);
+      sidenav.appendChild(sideNavigationContent);
+      document.body.appendChild(sidenav);
+
+      const toggleButton = document.createElement('button');
+      toggleButton.setAttribute('data-test-id', 'side-nav-menu-button');
+      const toggleSpy = vi.fn(() => {
+        collapsedContainer.classList.toggle('collapsed');
+      });
+      toggleButton.addEventListener('click', toggleSpy);
+      document.body.appendChild(toggleButton);
+
+      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({ gvSidebarAutoHide: false, gvSidebarFullHide: true });
+        },
+      );
+
+      const { startSidebarAutoHide } = await import('../index');
+      startSidebarAutoHide();
+
+      vi.advanceTimersByTime(300);
+      vi.spyOn(performance, 'now').mockReturnValueOnce(2500).mockReturnValueOnce(2560);
+
+      dispatchMouseMove(200);
+      dispatchMouseMove(60);
+      vi.advanceTimersByTime(1300);
+
+      expect(toggleSpy).not.toHaveBeenCalled();
+      expect(collapsedContainer.classList.contains('collapsed')).toBe(true);
     });
 
     it('auto-collapses via safety timer when mouse never enters sidebar', async () => {

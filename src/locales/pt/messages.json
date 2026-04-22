@@ -1304,7 +1304,7 @@
     "description": "Fully hide sidebar toggle label"
   },
   "sidebarFullHideHint": {
-    "message": "Ocultar completamente a barra lateral recolhida, passar o mouse na borda esquerda para mostrar",
+    "message": "Ocultar completamente a barra lateral recolhida",
     "description": "Fully hide sidebar feature hint"
   },
   "folderSpacing": {

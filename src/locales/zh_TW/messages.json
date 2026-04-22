@@ -1304,7 +1304,7 @@
     "description": "完全隱藏側邊欄開關標籤"
   },
   "sidebarFullHideHint": {
-    "message": "收起時完全隱藏側邊欄，滑鼠移到左邊緣喚出",
+    "message": "收起時完全隱藏側邊欄",
     "description": "完全隱藏側邊欄功能提示"
   },
   "folderSpacing": {

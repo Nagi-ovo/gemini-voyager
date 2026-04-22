@@ -1304,7 +1304,7 @@
     "description": "Fully hide sidebar toggle label"
   },
   "sidebarFullHideHint": {
-    "message": "إخفاء الشريط الجانبي المطوي بالكامل، مرر الماوس على الحافة اليسرى لإظهاره",
+    "message": "إخفاء الشريط الجانبي المطوي بالكامل",
     "description": "Fully hide sidebar feature hint"
   },
   "folderSpacing": {

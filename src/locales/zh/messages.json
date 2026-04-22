@@ -1304,7 +1304,7 @@
     "description": "完全隐藏侧边栏开关标签"
   },
   "sidebarFullHideHint": {
-    "message": "收起时完全隐藏侧边栏，鼠标移到左边缘唤出",
+    "message": "收起时完全隐藏侧边栏",
     "description": "完全隐藏侧边栏功能提示"
   },
   "folderSpacing": {

@@ -1304,7 +1304,7 @@
     "description": "Fully hide sidebar toggle label"
   },
   "sidebarFullHideHint": {
-    "message": "접힌 사이드바를 완전히 숨기고, 왼쪽 가장자리에 마우스를 올려 표시",
+    "message": "접힌 사이드바를 완전히 숨김",
     "description": "Fully hide sidebar feature hint"
   },
   "folderSpacing": {

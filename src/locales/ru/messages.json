@@ -1304,7 +1304,7 @@
     "description": "Fully hide sidebar toggle label"
   },
   "sidebarFullHideHint": {
-    "message": "Полностью скрыть свёрнутую боковую панель, наведите на левый край для показа",
+    "message": "Полностью скрыть свёрнутую боковую панель",
     "description": "Fully hide sidebar feature hint"
   },
   "folderSpacing": {

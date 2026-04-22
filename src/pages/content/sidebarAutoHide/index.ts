@@ -5,8 +5,7 @@
  * and expands when the mouse enters.
  *
  * Full-hide: when collapsed (by auto-hide or manually), the sidebar
- * is fully hidden (zero width). A left-edge hover trigger allows
- * revealing it.
+ * is fully hidden (zero width).
  *
  * Uses the `side-nav-menu-button` to toggle sidebar state.
  */
@@ -148,7 +147,7 @@ function removeFullHideStyle(): void {
 // ─── Edge Trigger (full-hide) ──────────────────────────────────────────
 
 function handleEdgeTriggerLeave(e: MouseEvent): void {
-  if (!fullHideEnabled) return;
+  if (!enabled || !fullHideEnabled) return;
 
   const related = e.relatedTarget as HTMLElement | null;
   if (related) {
@@ -431,7 +430,7 @@ function resetPredictiveState(): void {
 }
 
 function handlePredictiveMouseMove(e: MouseEvent): void {
-  if (!enabled && !fullHideEnabled) return;
+  if (!enabled) return;
   if (!isSidebarCollapsed()) return;
   // If the sidebar is collapsed while the flag is still set, it was collapsed
   // by an external path (manual toggle, full-hide sync, etc.) that did not
@@ -474,7 +473,7 @@ function handlePredictiveMouseMove(e: MouseEvent): void {
         // generous window. handleMouseEnter will clear this if triggered.
         leaveTimeoutId = window.setTimeout(() => {
           leaveTimeoutId = null;
-          if (!enabled && !fullHideEnabled) return;
+          if (!enabled) return;
           collapseSidebar();
         }, PREDICTIVE_SAFETY_COLLAPSE_MS);
 
@@ -505,7 +504,7 @@ function detachPredictiveListener(): void {
 // ─── Mouse Event Handlers ──────────────────────────────────────────────
 
 function handleMouseEnter(): void {
-  if (!enabled && !fullHideEnabled) return;
+  if (!enabled) return;
 
   if (leaveTimeoutId !== null) {
     window.clearTimeout(leaveTimeoutId);
@@ -518,7 +517,7 @@ function handleMouseEnter(): void {
 
   enterTimeoutId = window.setTimeout(() => {
     enterTimeoutId = null;
-    if (!enabled && !fullHideEnabled) return;
+    if (!enabled) return;
     expandSidebar();
   }, ENTER_DELAY_MS);
 }
@@ -695,6 +694,7 @@ function enable(): void {
   attachEventListeners();
   ensureMenuClickHandler();
   attachPredictiveListener();
+  if (fullHideEnabled) syncFullHideState();
 
   setupInfrastructure();
 
@@ -729,10 +729,12 @@ function disable(): void {
 
   detachEventListeners();
 
-  if (!fullHideEnabled) {
+  if (fullHideEnabled) {
+    syncFullHideState();
+  } else {
     removeTransitionStyle();
-    detachPredictiveListener();
   }
+  detachPredictiveListener();
 
   maybeRemoveMenuClickHandler();
 
@@ -753,7 +755,11 @@ function syncFullHideState(): void {
   setFullHideCollapsedState(collapsed);
 
   if (collapsed) {
-    showEdgeTrigger();
+    if (enabled) {
+      showEdgeTrigger();
+    } else {
+      hideEdgeTrigger();
+    }
   } else {
     hideEdgeTrigger();
   }
@@ -767,7 +773,6 @@ function enableFullHide(): void {
   insertFullHideStyle();
   createEdgeTrigger();
   ensureMenuClickHandler();
-  attachPredictiveListener();
 
   setupInfrastructure();
   syncFullHideState();
