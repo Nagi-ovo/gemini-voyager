@@ -241,6 +241,12 @@ function setupSendDetection(): void {
   // conversation to the selected folder once the URL change is detected.
   sidebarNavClickListener = (e: Event) => {
     if (!pendingSend) return;
+    // Only a plain left-click navigates the current tab. Middle-click (button 1),
+    // right-click (button 2), and modifier-key clicks (Ctrl/Cmd/Shift/Alt) open
+    // in a new tab/window or trigger context menus — the current tab's URL
+    // stays on /app, so pendingSend must NOT be cancelled for those.
+    if (!(e instanceof MouseEvent)) return;
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
     // e.target may be an SVGElement (icon inside anchor) — use Element, not
     // HTMLElement, so closest() works on the general Element hierarchy.
     const target = e.target;
@@ -637,10 +643,21 @@ function startURLWatcher(manager: FolderManager): void {
     handleNavigation(manager, prevPath, newPath);
   };
 
-  urlWatcherCheckFn = checkUrl;
+  // popstate / hashchange only fire for user-initiated history navigation
+  // (browser back/forward, anchor hash changes). Gemini's SPA uses
+  // history.pushState for its own URL updates, which does NOT fire these
+  // events. Therefore any popstate/hashchange we observe here means the user
+  // is moving away from the message they just sent — cancel pendingSend so
+  // the resulting URL change isn't misattributed to the folder assignment.
+  const onHistoryNav = () => {
+    clearPendingSendState();
+    checkUrl();
+  };
+
+  urlWatcherCheckFn = onHistoryNav;
   urlWatcherInterval = setInterval(checkUrl, 500);
-  window.addEventListener('popstate', checkUrl);
-  window.addEventListener('hashchange', checkUrl);
+  window.addEventListener('popstate', onHistoryNav);
+  window.addEventListener('hashchange', onHistoryNav);
 
   // Also check on initial load
   if (isNewChatPath(window.location.pathname)) {

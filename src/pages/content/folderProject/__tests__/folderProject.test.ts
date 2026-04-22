@@ -578,4 +578,133 @@ describe('follow-up injection regression', () => {
     // pendingSend before handleNavigation ran.
     expect(mockManager.addConversationToFolderFromNative).not.toHaveBeenCalled();
   });
+
+  it('does NOT cancel pendingSend when the user middle-clicks or Ctrl-clicks a sidebar link (opens in new tab)', async () => {
+    const chatInput = document.createElement('div');
+    chatInput.id = 'test-chat-input';
+    chatInput.setAttribute('contenteditable', 'true');
+    chatInput.setAttribute('role', 'textbox');
+    document.body.appendChild(chatInput);
+
+    const modelPicker = document.createElement('div');
+    modelPicker.className = 'model-picker-container';
+    modelPicker.appendChild(document.createElement('button'));
+    document.body.appendChild(modelPicker);
+    vi.spyOn(modelPicker, 'getBoundingClientRect').mockReturnValue({ height: 40 } as DOMRect);
+
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue([
+        {
+          id: 'f1',
+          name: 'TestFolder',
+          parentId: null,
+          isExpanded: false,
+          createdAt: 0,
+          updatedAt: 0,
+          instructions: 'Be concise.',
+        },
+      ]),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+
+    const { startFolderProject } = await import('../index');
+    startFolderProject(mockManager as unknown as Parameters<typeof startFolderProject>[0]);
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Select a folder
+    document.querySelector<HTMLButtonElement>('.gv-fp-chip')!.click();
+    await vi.advanceTimersByTimeAsync(50);
+    Array.from(document.querySelectorAll<HTMLElement>('.gv-fp-item'))
+      .find((el) => el.textContent?.includes('TestFolder'))!
+      .click();
+
+    // Send
+    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
+    document.dispatchEvent(enterEvent);
+
+    // User middle-clicks a sidebar link to open in a new tab — current tab's
+    // URL will NOT change, so pendingSend must stay true. If it gets wrongly
+    // cleared here, the subsequent (legitimate) URL change from Gemini's
+    // send would be skipped and the new conversation wouldn't be assigned.
+    const sidebarLink = document.createElement('a');
+    sidebarLink.href = '/app/existing-conv-42';
+    document.body.appendChild(sidebarLink);
+    const middleClick = new MouseEvent('click', {
+      bubbles: true,
+      button: 1, // middle mouse button
+    });
+    sidebarLink.dispatchEvent(middleClick);
+
+    // Now the legitimate URL change from the actual send completes
+    window.history.pushState({}, '', '/app/real-new-conv');
+    await vi.advanceTimersByTimeAsync(700);
+
+    // The real new conversation MUST be assigned to the folder.
+    expect(mockManager.addConversationToFolderFromNative).toHaveBeenCalledTimes(1);
+    expect(mockManager.addConversationToFolderFromNative).toHaveBeenCalledWith(
+      'f1',
+      'real-new-conv',
+      expect.any(String),
+      expect.any(String),
+      false,
+      undefined,
+    );
+  });
+
+  it('cancels pendingSend when user presses browser back button (popstate), preventing misassignment to the previously viewed conversation', async () => {
+    const chatInput = document.createElement('div');
+    chatInput.id = 'test-chat-input';
+    chatInput.setAttribute('contenteditable', 'true');
+    chatInput.setAttribute('role', 'textbox');
+    document.body.appendChild(chatInput);
+
+    const modelPicker = document.createElement('div');
+    modelPicker.className = 'model-picker-container';
+    modelPicker.appendChild(document.createElement('button'));
+    document.body.appendChild(modelPicker);
+    vi.spyOn(modelPicker, 'getBoundingClientRect').mockReturnValue({ height: 40 } as DOMRect);
+
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue([
+        {
+          id: 'f1',
+          name: 'TestFolder',
+          parentId: null,
+          isExpanded: false,
+          createdAt: 0,
+          updatedAt: 0,
+          instructions: 'Be concise.',
+        },
+      ]),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+
+    const { startFolderProject } = await import('../index');
+    startFolderProject(mockManager as unknown as Parameters<typeof startFolderProject>[0]);
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Select folder, send on /app
+    document.querySelector<HTMLButtonElement>('.gv-fp-chip')!.click();
+    await vi.advanceTimersByTimeAsync(50);
+    Array.from(document.querySelectorAll<HTMLElement>('.gv-fp-item'))
+      .find((el) => el.textContent?.includes('TestFolder'))!
+      .click();
+
+    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
+    document.dispatchEvent(enterEvent);
+
+    // User hits browser Back. This updates the URL and fires popstate.
+    // Without the fix, pendingSend stays true and handleNavigation would
+    // wrongly add the conversation the user went *back* to into the folder.
+    window.history.pushState({}, '', '/app/previous-conv-A');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await vi.advanceTimersByTimeAsync(50);
+
+    // The previously-viewed conversation must NOT be added to the folder.
+    expect(mockManager.addConversationToFolderFromNative).not.toHaveBeenCalled();
+  });
 });
