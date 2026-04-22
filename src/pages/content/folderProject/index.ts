@@ -180,7 +180,21 @@ function schedulePendingSendReset(): void {
   }, PENDING_SEND_TIMEOUT_MS);
 }
 
+/**
+ * Returns true when the chat input has no user-authored text.
+ * Any stray instruction block from a prior prepareInputForSend call is
+ * stripped before checking so the guard reflects what the USER typed.
+ */
+function isInputEmpty(input: HTMLElement | null): boolean {
+  if (!input) return true;
+  return stripInstructionBlock(readInputText(input)).trim() === '';
+}
+
 function markPendingSend(input: HTMLElement | null): void {
+  // Don't prepend instructions into an empty input. Our capture-phase listener
+  // runs before Gemini's, so injecting here would turn a stray Enter on an
+  // empty textbox into an unintentional send of just the instructions block.
+  if (isInputEmpty(input)) return;
   prepareInputForSend(input);
   pendingSend = true;
   schedulePendingSendReset();

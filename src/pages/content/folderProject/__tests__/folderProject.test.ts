@@ -482,7 +482,8 @@ describe('follow-up injection regression', () => {
     expect(folderItem).toBeDefined();
     folderItem!.click();
 
-    // User presses Enter — capture-phase listener injects instructions
+    // User types a message and presses Enter — capture-phase listener injects instructions
+    chatInput.textContent = 'summarize this paper';
     const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
     Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
     document.dispatchEvent(enterEvent);
@@ -555,7 +556,8 @@ describe('follow-up injection regression', () => {
     );
     folderItem!.click();
 
-    // User presses Enter — pendingSend=true
+    // User types and presses Enter — pendingSend=true
+    chatInput.textContent = 'a real prompt';
     const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
     Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
     document.dispatchEvent(enterEvent);
@@ -619,7 +621,8 @@ describe('follow-up injection regression', () => {
       .find((el) => el.textContent?.includes('TestFolder'))!
       .click();
 
-    // Send
+    // Send (with actual user text)
+    chatInput.textContent = 'a real prompt';
     const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
     Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
     document.dispatchEvent(enterEvent);
@@ -693,6 +696,7 @@ describe('follow-up injection regression', () => {
       .find((el) => el.textContent?.includes('TestFolder'))!
       .click();
 
+    chatInput.textContent = 'a real prompt';
     const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
     Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
     document.dispatchEvent(enterEvent);
@@ -705,6 +709,65 @@ describe('follow-up injection regression', () => {
     await vi.advanceTimersByTimeAsync(50);
 
     // The previously-viewed conversation must NOT be added to the folder.
+    expect(mockManager.addConversationToFolderFromNative).not.toHaveBeenCalled();
+  });
+
+  it('does not inject instructions when the user accidentally presses Enter on an empty input', async () => {
+    const chatInput = document.createElement('div');
+    chatInput.id = 'test-chat-input';
+    chatInput.setAttribute('contenteditable', 'true');
+    chatInput.setAttribute('role', 'textbox');
+    document.body.appendChild(chatInput);
+
+    const modelPicker = document.createElement('div');
+    modelPicker.className = 'model-picker-container';
+    modelPicker.appendChild(document.createElement('button'));
+    document.body.appendChild(modelPicker);
+    vi.spyOn(modelPicker, 'getBoundingClientRect').mockReturnValue({ height: 40 } as DOMRect);
+
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue([
+        {
+          id: 'f1',
+          name: 'TestFolder',
+          parentId: null,
+          isExpanded: false,
+          createdAt: 0,
+          updatedAt: 0,
+          instructions: 'Be concise.',
+        },
+      ]),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+
+    const { startFolderProject } = await import('../index');
+    startFolderProject(mockManager as unknown as Parameters<typeof startFolderProject>[0]);
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Select folder
+    document.querySelector<HTMLButtonElement>('.gv-fp-chip')!.click();
+    await vi.advanceTimersByTimeAsync(50);
+    Array.from(document.querySelectorAll<HTMLElement>('.gv-fp-item'))
+      .find((el) => el.textContent?.includes('TestFolder'))!
+      .click();
+
+    // The input is empty (chatInput.textContent === ''). User accidentally
+    // hits Enter. Our capture-phase listener must NOT prepend instructions,
+    // otherwise Gemini would see a now-non-empty input and submit a message
+    // containing just the [System Instructions] block.
+    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
+    document.dispatchEvent(enterEvent);
+
+    const injections = setInputTextCalls.filter((c) => c.text.includes('[System Instructions]'));
+    expect(injections).toHaveLength(0);
+
+    // pendingSend should also stay false so a later URL change (e.g. user
+    // finally types and sends for real on a different occasion) behaves
+    // correctly from a clean slate.
+    window.history.pushState({}, '', '/app/some-conv');
+    await vi.advanceTimersByTimeAsync(700);
     expect(mockManager.addConversationToFolderFromNative).not.toHaveBeenCalled();
   });
 });
