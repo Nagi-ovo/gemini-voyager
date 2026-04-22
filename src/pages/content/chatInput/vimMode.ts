@@ -76,11 +76,13 @@ const HUD_MOUNT_CLASS = 'gv-input-vim-hud-mount';
 const HUD_MODE_CLASS = 'gv-input-vim-hud-mode';
 const HUD_BUFFER_CLASS = 'gv-input-vim-hud-buffer';
 const CURSOR_CLASS = 'gv-input-vim-cursor';
+const CURSOR_MOVING_CLASS = 'gv-input-vim-cursor-moving';
 const NORMAL_CURSOR_WIDTH = 9;
 const MAX_UNDO_DEPTH = 50;
 const CARET_SCROLL_PADDING = 12;
 const SEND_RECONCILE_DELAY_MS = 80;
 const SEND_RECONCILE_ATTEMPTS = 8;
+const CURSOR_MOVE_FLASH_MS = 70;
 const SEND_BUTTON_SELECTOR = [
   '.update-button',
   'button[aria-label*="Send"]',
@@ -120,8 +122,17 @@ let storageListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
 let hudElement: HTMLElement | null = null;
+let hudMountElement: HTMLElement | null = null;
 let cursorElement: HTMLElement | null = null;
 let cursorUpdateRaf: number | null = null;
+let cursorMoveFlashTimer: number | null = null;
+let lastCursorBox: {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+  mode: VimMode;
+} | null = null;
 let hudRetryTimer: number | null = null;
 let hudRetryAttempts = 0;
 let sendReconcileTimer: number | null = null;
@@ -227,6 +238,13 @@ function getInputText(input: HTMLElement): string {
     return input.value;
   }
 
+  const blocks = getLineBlockElements(input);
+  if (blocks.length > 0) {
+    return blocks
+      .map((block) => (isEmptyLineBlock(block) ? '' : getLineBlockText(block)))
+      .join('\n');
+  }
+
   return input.innerText ?? input.textContent ?? '';
 }
 
@@ -275,6 +293,22 @@ function getBlockLineEntries(input: HTMLElement): BlockLineEntry[] {
   });
 
   return entries;
+}
+
+function getBlockLineIndexAtOffset(entries: BlockLineEntry[], offset: number): number {
+  const directIndex = entries.findIndex((entry) => offset >= entry.start && offset <= entry.end);
+  if (directIndex >= 0) return directIndex;
+
+  for (let index = entries.length - 1; index >= 0; index--) {
+    if (offset >= entries[index].start) return index;
+  }
+
+  return 0;
+}
+
+function clearLineBlockElement(element: HTMLElement): void {
+  element.textContent = '';
+  element.appendChild(document.createElement('br'));
 }
 
 function setInputText(input: HTMLElement, text: string): void {
@@ -538,6 +572,10 @@ function pushUndo(input: HTMLElement): void {
   }
 }
 
+function clearUndoStack(): void {
+  state.undoStack = [];
+}
+
 function restoreUndo(input: HTMLElement): void {
   const snapshot = state.undoStack.pop();
   if (typeof snapshot !== 'string') return;
@@ -550,6 +588,33 @@ function applyTextChange(input: HTMLElement, text: string, caret: number): void 
   pushUndo(input);
   setInputText(input, text);
   setInputSelection(input, caret);
+}
+
+function applyContentEditableRangeChange(
+  input: HTMLElement,
+  from: number,
+  to: number,
+  replacement: string,
+): boolean {
+  const selection = window.getSelection();
+  if (!selection) return false;
+
+  pushUndo(input);
+
+  const range = createRangeForTextOffsets(input, from, to);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  range.deleteContents();
+
+  if (replacement) {
+    const textNode = document.createTextNode(replacement);
+    range.insertNode(textNode);
+  }
+
+  input.classList.toggle('ql-blank', getInputText(input).length === 0);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  setInputSelection(input, from + replacement.length);
+  return true;
 }
 
 function normalizeLinewiseText(text: string): string {
@@ -579,6 +644,13 @@ function replaceRange(input: HTMLElement, start: number, end: number, replacemen
   const to = clamp(Math.max(start, end), 0, text.length);
   const removed = text.slice(from, to);
 
+  if (
+    !(input instanceof HTMLTextAreaElement) &&
+    applyContentEditableRangeChange(input, from, to, replacement)
+  ) {
+    return removed;
+  }
+
   applyTextChange(
     input,
     `${text.slice(0, from)}${replacement}${text.slice(to)}`,
@@ -594,7 +666,8 @@ function openLine(input: HTMLElement, above: boolean, count: number): void {
   const newlines = '\n'.repeat(Math.max(1, count));
   const nextCaret = above ? insertAt : insertAt + 1;
 
-  applyTextChange(input, `${text.slice(0, insertAt)}${newlines}${text.slice(insertAt)}`, nextCaret);
+  replaceRange(input, insertAt, insertAt, newlines);
+  setInputSelection(input, nextCaret);
   completeCommand();
   enterMode('insert');
 }
@@ -607,6 +680,17 @@ function getLineStart(text: string, offset: number): number {
 function getLineEnd(text: string, offset: number): number {
   const index = text.indexOf('\n', clamp(offset, 0, text.length));
   return index < 0 ? text.length : index;
+}
+
+function getNormalModeCaretOffset(text: string, offset: number): number {
+  const current = clamp(offset, 0, text.length);
+  if (text.length === 0) return 0;
+
+  const lineStart = getLineStart(text, current);
+  const lineEnd = getLineEnd(text, current);
+  if (lineStart === lineEnd) return lineStart;
+  if (current >= lineEnd) return getPreviousGraphemeOffset(text, lineEnd);
+  return current;
 }
 
 function getNextLineStart(text: string, offset: number): number {
@@ -719,6 +803,15 @@ function enterMode(mode: VimMode): void {
     state.visualAnchor = null;
   }
 
+  if (mode === 'normal' && activeInput) {
+    const text = getInputText(activeInput);
+    const caret = getCaretOffset(activeInput);
+    const normalCaret = getNormalModeCaretOffset(text, caret);
+    if (normalCaret !== caret) {
+      setInputSelection(activeInput, normalCaret);
+    }
+  }
+
   updateInputModeClasses();
   updateHud();
   scheduleCursorUpdate();
@@ -738,6 +831,7 @@ function setActiveInput(input: HTMLElement | null): void {
 
   activeInput = input;
   resetCommandState();
+  clearUndoStack();
 
   if (input) {
     enterMode('insert');
@@ -770,6 +864,7 @@ function returnToInsertAfterSubmit(input: HTMLElement | null): void {
   }
 
   resetCommandState();
+  clearUndoStack();
   enterMode('insert');
   scheduleCursorUpdate();
 }
@@ -874,28 +969,82 @@ function updateInputModeClasses(): void {
   activeInput.dataset.gvVimMode = state.mode;
 }
 
+function hasVisibleLayout(element: HTMLElement): boolean {
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
+function isElementHidden(element: HTMLElement): boolean {
+  if (element.hidden || element.getAttribute('aria-hidden') === 'true') return true;
+
+  const style = window.getComputedStyle?.(element);
+  return style?.display === 'none' || style?.visibility === 'hidden';
+}
+
+function isVisibleHudMount(element: HTMLElement | null): element is HTMLElement {
+  if (!element || !element.isConnected || isElementHidden(element)) return false;
+  return hasVisibleLayout(element);
+}
+
+function queryHudMountCandidates(): HTMLElement[] {
+  const selectors = [
+    'toolbox-drawer .toolbox-drawer-button-label-icon-text',
+    'toolbox-drawer .toolbox-drawer-button-label',
+    'toolbox-drawer .toolbox-drawer-button-container',
+    'toolbox-drawer button',
+    'toolbox-drawer .toolbox-drawer-container',
+    '[class*="toolbox-drawer"] .toolbox-drawer-button-label-icon-text',
+    '[class*="toolbox-drawer"] button',
+    'button[aria-label*="Tools"]',
+    'button[aria-label*="tools"]',
+    'button[aria-label*="工具"]',
+    'button[aria-label*="ツール"]',
+    'button[aria-label*="도구"]',
+  ];
+
+  const candidates: HTMLElement[] = [];
+  const seen = new Set<HTMLElement>();
+
+  for (const selector of selectors) {
+    for (const element of Array.from(document.querySelectorAll<HTMLElement>(selector))) {
+      if (seen.has(element)) continue;
+      seen.add(element);
+      candidates.push(element);
+    }
+  }
+
+  return candidates;
+}
+
 function getHudMount(): HTMLElement | null {
   if (typeof document === 'undefined') return null;
 
-  const drawerLabel = document.querySelector<HTMLElement>(
-    'toolbox-drawer .toolbox-drawer-button-label-icon-text',
-  );
-  if (drawerLabel) return drawerLabel;
+  const candidates = queryHudMountCandidates();
+  const visibleCandidate = candidates.find(isVisibleHudMount);
+  if (visibleCandidate) return visibleCandidate;
 
-  const drawerButton =
-    document.querySelector<HTMLElement>('toolbox-drawer .toolbox-drawer-button-container') ??
-    document.querySelector<HTMLElement>('toolbox-drawer .toolbox-drawer-container');
+  const fallbackCandidate = candidates.find((element) => element.isConnected);
+  if (fallbackCandidate) return fallbackCandidate;
 
-  if (drawerButton) return drawerButton;
-
-  return document.querySelector<HTMLElement>('rich-textarea')?.parentElement ?? null;
+  const inputFallback = document.querySelector<HTMLElement>('rich-textarea')?.parentElement;
+  return inputFallback instanceof HTMLElement ? inputFallback : null;
 }
 
 function ensureHud(): HTMLElement | null {
-  if (hudElement?.isConnected) return hudElement;
-
   const mount = getHudMount();
-  if (!mount) return null;
+  if (!mount) {
+    return hudElement?.isConnected ? hudElement : null;
+  }
+
+  if (hudElement?.isConnected) {
+    if (hudElement.parentElement !== mount) {
+      hudMountElement?.classList.remove(HUD_MOUNT_CLASS);
+      mount.classList.add(HUD_MOUNT_CLASS);
+      mount.appendChild(hudElement);
+      hudMountElement = mount;
+    }
+    return hudElement;
+  }
 
   const hud = document.createElement('div');
   hud.className = HUD_CLASS;
@@ -905,6 +1054,7 @@ function ensureHud(): HTMLElement | null {
   `;
   mount.classList.add(HUD_MOUNT_CLASS);
   mount.appendChild(hud);
+  hudMountElement = mount;
   hudElement = hud;
   return hud;
 }
@@ -978,7 +1128,40 @@ function ensureCursor(): HTMLElement {
 function hideCursor(): void {
   if (cursorElement) {
     cursorElement.hidden = true;
+    cursorElement.classList.remove(CURSOR_MOVING_CLASS);
   }
+  lastCursorBox = null;
+  if (cursorMoveFlashTimer !== null) {
+    clearTimeout(cursorMoveFlashTimer);
+    cursorMoveFlashTimer = null;
+  }
+}
+
+function updateCursorMotion(cursor: HTMLElement, box: NonNullable<typeof lastCursorBox>): void {
+  const previousBox = lastCursorBox;
+  lastCursorBox = box;
+
+  if (!previousBox || cursor.hidden) return;
+
+  const moved =
+    previousBox.mode !== box.mode ||
+    previousBox.top !== box.top ||
+    previousBox.left !== box.left ||
+    previousBox.width !== box.width ||
+    previousBox.height !== box.height;
+
+  if (!moved) return;
+
+  cursor.classList.remove(CURSOR_MOVING_CLASS);
+  cursor.classList.add(CURSOR_MOVING_CLASS);
+
+  if (cursorMoveFlashTimer !== null) {
+    clearTimeout(cursorMoveFlashTimer);
+  }
+  cursorMoveFlashTimer = window.setTimeout(() => {
+    cursorMoveFlashTimer = null;
+    cursor.classList.remove(CURSOR_MOVING_CLASS);
+  }, CURSOR_MOVE_FLASH_MS);
 }
 
 function isUsableRect(rect: DOMRect | undefined): rect is DOMRect {
@@ -1128,13 +1311,25 @@ function updateCursor(): void {
   const height = Math.max(16, rect.height || inputRect.height || 18);
   const top = Number.isFinite(rect.top) ? rect.top : inputRect.top;
   const left = Number.isFinite(rect.left) ? rect.left : inputRect.left;
+  const width =
+    state.mode === 'visual'
+      ? 2
+      : Math.max(NORMAL_CURSOR_WIDTH, Math.round(characterRect?.width ?? NORMAL_CURSOR_WIDTH));
+  const box = {
+    top: Math.round(top),
+    left: Math.round(left),
+    width,
+    height: Math.round(height),
+    mode: state.mode,
+  };
 
+  updateCursorMotion(cursor, box);
   cursor.hidden = false;
   cursor.dataset.mode = state.mode;
-  cursor.style.top = `${Math.round(top)}px`;
-  cursor.style.left = `${Math.round(left)}px`;
-  cursor.style.height = `${Math.round(height)}px`;
-  cursor.style.width = `${state.mode === 'visual' ? 2 : Math.max(NORMAL_CURSOR_WIDTH, Math.round(characterRect?.width ?? NORMAL_CURSOR_WIDTH))}px`;
+  cursor.style.top = `${box.top}px`;
+  cursor.style.left = `${box.left}px`;
+  cursor.style.height = `${box.height}px`;
+  cursor.style.width = `${box.width}px`;
 }
 
 function scheduleCursorUpdate(): void {
@@ -1182,19 +1377,23 @@ function handleMotion(input: HTMLElement, kind: MotionKind, count = getCount()):
     return;
   }
 
-  moveCaret(input, target);
+  moveCaret(
+    input,
+    state.mode === 'normal' ? getNormalModeCaretOffset(getInputText(input), target) : target,
+  );
   completeCommand();
 }
 
 function handleLineMotion(input: HTMLElement, kind: LineMotionKind): void {
   const text = getInputText(input);
-  const target = getLineMotionOffset(text, getCaretOffset(input), kind);
+  const rawTarget = getLineMotionOffset(text, getCaretOffset(input), kind);
 
   if (state.pendingOperator) {
-    applyOperatorMotion(input, target);
+    applyOperatorMotion(input, rawTarget);
     return;
   }
 
+  const target = state.mode === 'normal' ? getNormalModeCaretOffset(text, rawTarget) : rawTarget;
   moveCaret(input, target);
   completeCommand();
 }
@@ -1205,20 +1404,26 @@ function handleVerticalMotion(input: HTMLElement, direction: -1 | 1): void {
   if (!state.pendingOperator) {
     const renderedTarget = getRenderedLineMotionOffset(input, direction, count);
     if (renderedTarget !== null) {
-      moveCaret(input, renderedTarget);
+      moveCaret(
+        input,
+        state.mode === 'normal'
+          ? getNormalModeCaretOffset(getInputText(input), renderedTarget)
+          : renderedTarget,
+      );
       completeCommand(true);
       return;
     }
   }
 
-  const target = moveVertical(getInputText(input), getCaretOffset(input), direction, count);
+  const text = getInputText(input);
+  const target = moveVertical(text, getCaretOffset(input), direction, count);
 
   if (state.pendingOperator) {
     applyOperatorMotion(input, target);
     return;
   }
 
-  moveCaret(input, target);
+  moveCaret(input, state.mode === 'normal' ? getNormalModeCaretOffset(text, target) : target);
   completeCommand(true);
 }
 
@@ -1318,6 +1523,59 @@ function createTextEmptyLineItem(
   return collapsedRect ? createEmptyLineItemFromRect(input, lines, offset, collapsedRect) : null;
 }
 
+function getLineFirstStart(line: RenderedLine): number {
+  return line.items.reduce((first, item) => Math.min(first, item.start), Number.POSITIVE_INFINITY);
+}
+
+function getLineLastEnd(line: RenderedLine): number {
+  return line.items.reduce((last, item) => Math.max(last, item.end), 0);
+}
+
+function findRenderedLineBefore(lines: RenderedLine[], offset: number): RenderedLine | null {
+  return (
+    lines
+      .filter((line) => getLineFirstStart(line) < offset)
+      .sort((left, right) => getLineFirstStart(right) - getLineFirstStart(left))[0] ?? null
+  );
+}
+
+function findRenderedLineAfter(lines: RenderedLine[], offset: number): RenderedLine | null {
+  return (
+    lines
+      .filter((line) => getLineLastEnd(line) > offset)
+      .sort((left, right) => getLineFirstStart(left) - getLineFirstStart(right))[0] ?? null
+  );
+}
+
+function createSyntheticEmptyLineItem(
+  input: HTMLElement,
+  lines: RenderedLine[],
+  offset: number,
+): RenderedCharacter {
+  const previousLine = findRenderedLineBefore(lines, offset);
+  const nextLine = findRenderedLineAfter(lines, offset);
+  const lineHeight = estimateRenderedLineHeight(input, lines);
+  const inputRect = input.getBoundingClientRect();
+  const left = previousLine?.items[0]?.rect.left ?? nextLine?.items[0]?.rect.left ?? inputRect.left;
+  let top = inputRect.top;
+
+  if (previousLine && nextLine) {
+    top = previousLine.bottom + Math.max(1, (nextLine.top - previousLine.bottom) / 2);
+  } else if (previousLine) {
+    top = previousLine.bottom + 1;
+  } else if (nextLine) {
+    top = nextLine.top - lineHeight - 1;
+  }
+
+  return {
+    start: offset,
+    end: offset,
+    rect: makeDomRect(left, top, 0, lineHeight),
+    centerX: left,
+    isEmptyLine: true,
+  };
+}
+
 function pushEmptyLineItem(lines: RenderedLine[], item: RenderedCharacter | null): void {
   if (!item) return;
 
@@ -1364,7 +1622,11 @@ function addTextEmptyRenderedLines(input: HTMLElement, lines: RenderedLine[]): R
     );
     if (alreadyRepresented) continue;
 
-    pushEmptyLineItem(nextLines, createTextEmptyLineItem(input, nextLines, logicalLine.start));
+    pushEmptyLineItem(
+      nextLines,
+      createTextEmptyLineItem(input, nextLines, logicalLine.start) ??
+        createSyntheticEmptyLineItem(input, nextLines, logicalLine.start),
+    );
   }
 
   return nextLines;
@@ -1411,7 +1673,12 @@ function getRenderedLines(input: HTMLElement): RenderedLine[] {
         (left, right) => left.rect.left - right.rect.left || left.start - right.start,
       ),
     }))
-    .sort((left, right) => left.top - right.top);
+    .sort((left, right) => {
+      const topDelta = left.top - right.top;
+      return Math.abs(topDelta) <= 4
+        ? getLineFirstStart(left) - getLineFirstStart(right)
+        : topDelta;
+    });
 }
 
 function findRenderedLinePosition(
@@ -1494,11 +1761,67 @@ function applyOperatorMotion(input: HTMLElement, target: number): void {
   completeCommand();
 }
 
+function applyOperatorBlockLine(
+  input: HTMLElement,
+  operator: PendingOperator,
+  count: number,
+): boolean {
+  if (input instanceof HTMLTextAreaElement) return false;
+
+  const entries = getBlockLineEntries(input);
+  if (entries.length === 0) return false;
+
+  const startIndex = getBlockLineIndexAtOffset(entries, getCaretOffset(input));
+  const endIndex = clamp(startIndex + Math.max(1, count), startIndex + 1, entries.length);
+  const targetEntries = entries.slice(startIndex, endIndex);
+  const selected = targetEntries.map((entry) => getLineBlockText(entry.element)).join('\n');
+  const clipboardText = selected.length === 0 ? '\n' : selected;
+
+  if (operator === 'y') {
+    writeClipboard(clipboardText, true);
+    setInputSelection(input, entries[startIndex].start);
+    return true;
+  }
+
+  writeClipboard(clipboardText, true);
+  pushUndo(input);
+
+  const shouldKeepFirstTarget = operator === 'c' || targetEntries.length === entries.length;
+  const entriesToRemove = shouldKeepFirstTarget ? targetEntries.slice(1) : targetEntries;
+
+  if (shouldKeepFirstTarget) {
+    clearLineBlockElement(targetEntries[0].element);
+  }
+
+  for (const entry of entriesToRemove) {
+    entry.element.remove();
+  }
+
+  input.classList.toggle('ql-blank', getInputText(input).length === 0);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+
+  const nextEntries = getBlockLineEntries(input);
+  const nextIndex = clamp(startIndex, 0, Math.max(0, nextEntries.length - 1));
+  const nextOffset = nextEntries[nextIndex]?.start ?? 0;
+  setInputSelection(input, nextOffset);
+
+  if (operator === 'c') {
+    enterMode('insert');
+  }
+
+  return true;
+}
+
 function applyOperatorLine(
   input: HTMLElement,
   operator: PendingOperator,
   count = getCount(),
 ): void {
+  if (applyOperatorBlockLine(input, operator, count)) {
+    completeCommand();
+    return;
+  }
+
   const text = getInputText(input);
   const caret = getCaretOffset(input);
   const start = getLineStart(text, caret);
@@ -1565,11 +1888,8 @@ function paste(input: HTMLElement, before: boolean): void {
     const buffer = normalizeLinewiseText(state.yankBuffer);
 
     if (before) {
-      applyTextChange(
-        input,
-        `${text.slice(0, lineStart)}${buffer}${text.slice(lineStart)}`,
-        lineStart,
-      );
+      replaceRange(input, lineStart, lineStart, buffer);
+      setInputSelection(input, lineStart);
       completeCommand();
       return;
     }
@@ -1578,21 +1898,14 @@ function paste(input: HTMLElement, before: boolean): void {
     const insertAt = isLastLine ? text.length : lineEnd + 1;
     const prefix = isLastLine && text.length > 0 ? '\n' : '';
     const nextCaret = insertAt + prefix.length;
-    applyTextChange(
-      input,
-      `${text.slice(0, insertAt)}${prefix}${buffer}${text.slice(insertAt)}`,
-      nextCaret,
-    );
+    replaceRange(input, insertAt, insertAt, `${prefix}${buffer}`);
+    setInputSelection(input, nextCaret);
     completeCommand();
     return;
   }
 
   const insertAt = before ? caret : moveTextOffsetByGraphemes(text, caret, 1, 1);
-  applyTextChange(
-    input,
-    `${text.slice(0, insertAt)}${state.yankBuffer}${text.slice(insertAt)}`,
-    insertAt + state.yankBuffer.length,
-  );
+  replaceRange(input, insertAt, insertAt, state.yankBuffer);
   completeCommand();
 }
 
@@ -1641,13 +1954,44 @@ function shouldIgnoreKey(event: KeyboardEvent): boolean {
   return (
     event.isComposing ||
     event.altKey ||
-    (event.metaKey && event.key !== 'Enter') ||
-    (event.ctrlKey && event.key !== '[' && event.key !== 'Enter')
+    (event.metaKey && event.key !== 'Enter' && !isBrowserEditingShortcut(event)) ||
+    (event.ctrlKey &&
+      event.key !== '[' &&
+      event.key !== 'Enter' &&
+      !isBrowserEditingShortcut(event))
   );
 }
 
 function isPlainPrintableKey(event: KeyboardEvent): boolean {
   return event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey;
+}
+
+function isBrowserEditingShortcut(event: KeyboardEvent): boolean {
+  if ((!event.ctrlKey && !event.metaKey) || event.altKey) return false;
+
+  const key = event.key.toLowerCase();
+  return key === 'a' || key === 'v' || key === 'x' || key === 'y' || key === 'z';
+}
+
+function isBlockedCommandModeEditingKey(event: KeyboardEvent): boolean {
+  return event.key === 'Backspace' || event.key === 'Delete' || isBrowserEditingShortcut(event);
+}
+
+function isRepeatSensitiveCommandKey(key: string): boolean {
+  return (
+    key === 'd' ||
+    key === 'c' ||
+    key === 'x' ||
+    key === 'X' ||
+    key === 's' ||
+    key === 'D' ||
+    key === 'C' ||
+    key === 'p' ||
+    key === 'P' ||
+    key === 'u' ||
+    key === 'o' ||
+    key === 'O'
+  );
 }
 
 function isEscapeKey(event: KeyboardEvent): boolean {
@@ -1733,7 +2077,9 @@ function handleNormalMode(event: KeyboardEvent, input: HTMLElement): boolean {
   }
 
   if (key === 'A') {
-    handleLineMotion(input, 'line-end');
+    const text = getInputText(input);
+    setInputSelection(input, getLineMotionOffset(text, getCaretOffset(input), 'line-end'));
+    resetCommandState();
     enterMode('insert');
     return true;
   }
@@ -1806,7 +2152,8 @@ function handleNormalMode(event: KeyboardEvent, input: HTMLElement): boolean {
   }
 
   if (key === 'G') {
-    setInputSelection(input, getInputText(input).length);
+    const text = getInputText(input);
+    setInputSelection(input, getNormalModeCaretOffset(text, text.length));
     completeCommand();
     return true;
   }
@@ -1849,6 +2196,18 @@ function handleKeyDown(event: KeyboardEvent): void {
 
   if (!activeInput || !isChatInputTarget(target)) return;
 
+  if (
+    event.repeat &&
+    (state.mode === 'normal' || state.mode === 'visual') &&
+    !state.pendingOperator &&
+    isRepeatSensitiveCommandKey(event.key)
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+    scheduleCursorUpdate();
+    return;
+  }
+
   if (event.key === 'Enter') {
     scheduleSendReconcile(activeInput);
   }
@@ -1863,6 +2222,17 @@ function handleKeyDown(event: KeyboardEvent): void {
     event.stopPropagation();
     updateInputModeClasses();
     updateHud();
+    scheduleCursorUpdate();
+    return;
+  }
+
+  if (
+    (state.mode === 'normal' || state.mode === 'visual') &&
+    isBlockedCommandModeEditingKey(event)
+  ) {
+    completeCommand();
+    event.preventDefault();
+    event.stopPropagation();
     scheduleCursorUpdate();
     return;
   }
@@ -2012,6 +2382,7 @@ function setupStorageListener(): void {
 function cleanup(): void {
   isEnabled = false;
   deactivateListener();
+  clearUndoStack();
 
   if (storageListener) {
     try {
@@ -2026,7 +2397,9 @@ function cleanup(): void {
 
   hudElement?.remove();
   cursorElement?.remove();
+  hudMountElement?.classList.remove(HUD_MOUNT_CLASS);
   hudElement = null;
+  hudMountElement = null;
   cursorElement = null;
 }
 

@@ -8329,12 +8329,37 @@ body.gv-rtl .gv-hide-archived-nudge__actions {
   pointer-events: none;
   border-radius: 2px;
   background: rgba(11, 128, 67, 0.72);
+  opacity: 0.94;
+  box-shadow: 0 0 0 rgba(11, 128, 67, 0);
   mix-blend-mode: multiply;
+  transition:
+    background-color 70ms ease,
+    opacity 45ms ease,
+    box-shadow 70ms ease;
+  will-change: opacity;
+}
+
+.gv-input-vim-cursor-moving {
+  animation: gv-input-vim-cursor-flash 70ms ease-out;
+  box-shadow: 0 0 8px rgba(11, 128, 67, 0.24);
 }
 
 .gv-input-vim-cursor[data-mode='visual'] {
   width: 2px !important;
   background: rgba(176, 96, 0, 0.9);
+}
+
+.gv-input-vim-cursor[data-mode='visual'].gv-input-vim-cursor-moving {
+  box-shadow: 0 0 8px rgba(176, 96, 0, 0.24);
+}
+
+@keyframes gv-input-vim-cursor-flash {
+  0% {
+    opacity: 0.62;
+  }
+  100% {
+    opacity: 0.94;
+  }
 }
 
 .theme-host.dark-theme .gv-input-vim-hud,
@@ -8376,4 +8401,20 @@ body.dark-theme .gv-input-vim-cursor,
 html.dark .gv-input-vim-cursor {
   background: rgba(129, 201, 149, 0.72);
   mix-blend-mode: screen;
+}
+
+.theme-host.dark-theme .gv-input-vim-cursor-moving,
+body.dark-theme .gv-input-vim-cursor-moving,
+html.dark .gv-input-vim-cursor-moving {
+  box-shadow: 0 0 16px rgba(129, 201, 149, 0.36);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-input-vim-cursor {
+    transition: none;
+  }
+
+  .gv-input-vim-cursor-moving {
+    animation: none;
+  }
 }

@@ -137,10 +137,26 @@ function setParagraphRects(input: HTMLElement, topByLine: number[]): void {
   });
 }
 
-function addToolboxLabel(): HTMLElement {
+function getParagraphTexts(input: HTMLElement): string[] {
+  return Array.from(input.children).map((child) => child.textContent ?? '');
+}
+
+function addToolboxLabel(options: { hidden?: boolean; text?: string } = {}): HTMLElement {
   const label = document.createElement('div');
   label.className = 'toolbox-drawer-button-label-icon-text';
-  label.innerHTML = '<span>Tools</span>';
+  label.innerHTML = `<span>${options.text ?? 'Tools'}</span>`;
+  label.getBoundingClientRect = () =>
+    ({
+      height: options.hidden ? 0 : 24,
+      width: options.hidden ? 0 : 80,
+      top: 0,
+      left: 0,
+      right: options.hidden ? 0 : 80,
+      bottom: options.hidden ? 0 : 24,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    }) as DOMRect;
 
   const drawer = document.createElement('toolbox-drawer');
   drawer.appendChild(label);
@@ -171,11 +187,16 @@ function fireWindowKey(key: string): KeyboardEvent {
   return event;
 }
 
-function fireInputKey(input: HTMLElement, key: string): KeyboardEvent {
+function fireInputKey(
+  input: HTMLElement,
+  key: string,
+  options: KeyboardEventInit = {},
+): KeyboardEvent {
   const event = new KeyboardEvent('keydown', {
     key,
     bubbles: true,
     cancelable: true,
+    ...options,
   });
   input.dispatchEvent(event);
   return event;
@@ -417,6 +438,43 @@ describe('input Vim mode', () => {
     cleanup();
   });
 
+  it('mounts the HUD on a visible Tools label instead of a stale hidden one', async () => {
+    mockInputVimModeStorage(true);
+    createQuestionInput();
+    const hiddenLabel = addToolboxLabel({ hidden: true });
+    const visibleLabel = addToolboxLabel();
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    expect(hiddenLabel.querySelector('.gv-input-vim-hud')).toBeNull();
+    const hud = visibleLabel.querySelector<HTMLElement>('.gv-input-vim-hud');
+    expect(hud).not.toBeNull();
+    expect(hud?.parentElement).toBe(visibleLabel);
+
+    cleanup();
+  });
+
+  it('relocates the HUD when the visible Tools label appears after startup', async () => {
+    mockInputVimModeStorage(true);
+    const input = createQuestionInput();
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    const initialHud = document.querySelector<HTMLElement>('.gv-input-vim-hud');
+    expect(initialHud).not.toBeNull();
+    expect(initialHud?.parentElement).not.toBeNull();
+
+    const label = addToolboxLabel();
+    fireInputKey(input, 'Escape');
+
+    const hud = label.querySelector<HTMLElement>('.gv-input-vim-hud');
+    expect(hud).toBe(initialHud);
+
+    cleanup();
+  });
+
   it('switches the question input from insert to normal mode with Escape', async () => {
     mockInputVimModeStorage(true);
     const input = createQuestionInput();
@@ -478,6 +536,28 @@ describe('input Vim mode', () => {
     const cursor = document.querySelector<HTMLElement>('.gv-input-vim-cursor');
     expect(cursor?.hidden).toBe(false);
     expect(cursor?.style.left).toBe('116px');
+
+    cleanup();
+  });
+
+  it('flashes the Vim cursor when it moves', async () => {
+    mockInputVimModeStorage(true);
+    mockCollapsedCaretRects();
+    const input = createQuestionInput();
+    setContentEditableSelection(input, 1);
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    window.dispatchEvent(new Event('resize'));
+    const cursor = document.querySelector<HTMLElement>('.gv-input-vim-cursor');
+    expect(cursor?.classList.contains('gv-input-vim-cursor-moving')).toBe(false);
+
+    fireInputKey(input, 'l');
+    window.dispatchEvent(new Event('resize'));
+
+    expect(cursor?.classList.contains('gv-input-vim-cursor-moving')).toBe(true);
 
     cleanup();
   });
@@ -622,6 +702,115 @@ describe('input Vim mode', () => {
     cleanup();
   });
 
+  it('prevents Backspace and Delete from editing text in normal mode', async () => {
+    mockInputVimModeStorage(true);
+    const input = createTextareaInput('hello');
+    input.selectionStart = 2;
+    input.selectionEnd = 2;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    const backspaceEvent = fireInputKey(input, 'Backspace');
+    const deleteEvent = fireInputKey(input, 'Delete');
+
+    expect(backspaceEvent.defaultPrevented).toBe(true);
+    expect(deleteEvent.defaultPrevented).toBe(true);
+    expect(input.value).toBe('hello');
+
+    cleanup();
+  });
+
+  it('prevents browser editing shortcuts from mutating text in normal mode', async () => {
+    mockInputVimModeStorage(true);
+    const input = createTextareaInput('hello');
+    input.selectionStart = 2;
+    input.selectionEnd = 2;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    const pasteEvent = fireCtrlInputKey(input, 'v');
+    const undoEvent = fireCtrlInputKey(input, 'z');
+
+    expect(pasteEvent.defaultPrevented).toBe(true);
+    expect(undoEvent.defaultPrevented).toBe(true);
+    expect(input.value).toBe('hello');
+
+    cleanup();
+  });
+
+  it('allows browser editing shortcuts in insert mode', async () => {
+    mockInputVimModeStorage(true);
+    const input = createTextareaInput('hello');
+    input.selectionStart = 2;
+    input.selectionEnd = 2;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    const pasteEvent = fireCtrlInputKey(input, 'v');
+
+    expect(pasteEvent.defaultPrevented).toBe(false);
+
+    cleanup();
+  });
+
+  it('clamps the normal-mode caret to the final character when leaving insert at EOF', async () => {
+    mockInputVimModeStorage(true);
+    const input = createTextareaInput('hello');
+    input.selectionStart = 5;
+    input.selectionEnd = 5;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+
+    expect(input.selectionStart).toBe(4);
+    expect(input.selectionEnd).toBe(4);
+
+    cleanup();
+  });
+
+  it('keeps x effective after leaving insert mode at EOF', async () => {
+    mockInputVimModeStorage(true);
+    const input = createTextareaInput('hello');
+    input.selectionStart = 5;
+    input.selectionEnd = 5;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, 'x');
+
+    expect(input.value).toBe('hell');
+    expect(input.selectionStart).toBe(4);
+
+    cleanup();
+  });
+
+  it('keeps G on the final character in normal mode', async () => {
+    mockInputVimModeStorage(true);
+    const input = createTextareaInput('hello');
+    input.selectionStart = 1;
+    input.selectionEnd = 1;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, 'G');
+
+    expect(input.selectionStart).toBe(4);
+    expect(input.selectionEnd).toBe(4);
+
+    cleanup();
+  });
+
   it('moves the textarea caret with h and l in normal mode', async () => {
     mockInputVimModeStorage(true);
     const input = createTextareaInput('hello');
@@ -736,7 +925,7 @@ describe('input Vim mode', () => {
     cleanup();
   });
 
-  it('does not synthesize a phantom empty line when the collapsed newline rect overlaps a text line', async () => {
+  it('moves onto an empty line even when the collapsed newline rect overlaps a text line', async () => {
     mockInputVimModeStorage(true);
     mockCharacterRects({
       0: { left: 80, top: 10, width: 10 },
@@ -754,7 +943,13 @@ describe('input Vim mode', () => {
     fireInputKey(input, 'Escape');
     fireInputKey(input, 'j');
 
+    expect(selection.anchorOffset).toBe(2);
+
+    fireInputKey(input, 'j');
     expect(selection.anchorOffset).toBe(3);
+
+    fireInputKey(input, 'k');
+    expect(selection.anchorOffset).toBe(2);
 
     cleanup();
   });
@@ -964,6 +1159,106 @@ describe('input Vim mode', () => {
     cleanup();
   });
 
+  it('deletes exactly two lines with 2dd', async () => {
+    mockInputVimModeStorage(true);
+    const input = createTextareaInput('one\ntwo\nthree\nfour');
+    input.selectionStart = 4;
+    input.selectionEnd = 4;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, '2');
+    fireInputKey(input, 'd');
+    fireInputKey(input, 'd');
+
+    expect(input.value).toBe('one\nfour');
+    expect(input.selectionStart).toBe(4);
+
+    cleanup();
+  });
+
+  it('deletes a full Quill paragraph with dd instead of only text to the right', async () => {
+    mockInputVimModeStorage(true);
+    mockParagraphRangeRects();
+    const input = createQuillParagraphInput(['one', 'two', 'three']);
+    setParagraphRects(input, [10, 30, 50]);
+    setParagraphSelection(input, 1, 1);
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, 'd');
+    fireInputKey(input, 'd');
+
+    expect(getParagraphTexts(input)).toEqual(['one', 'three']);
+    expect(window.getSelection()?.anchorNode).toBe(input.children[1].firstChild);
+
+    cleanup();
+  });
+
+  it('deletes an empty Quill paragraph with dd', async () => {
+    mockInputVimModeStorage(true);
+    mockParagraphRangeRects();
+    const input = createQuillParagraphInput(['one', '', 'three']);
+    setParagraphRects(input, [10, 30, 50]);
+    setParagraphSelection(input, 1);
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, 'd');
+    fireInputKey(input, 'd');
+
+    expect(getParagraphTexts(input)).toEqual(['one', 'three']);
+    expect(window.getSelection()?.anchorNode).toBe(input.children[1].firstChild);
+
+    cleanup();
+  });
+
+  it('completes dd even when the second d keydown is marked repeat', async () => {
+    mockInputVimModeStorage(true);
+    const input = createTextareaInput('one\ntwo\nthree');
+    input.selectionStart = 4;
+    input.selectionEnd = 4;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, 'd');
+    fireInputKey(input, 'd', { repeat: true });
+
+    expect(input.value).toBe('one\nthree');
+    expect(input.selectionStart).toBe(4);
+
+    cleanup();
+  });
+
+  it('ignores repeated destructive keydown events after 2dd', async () => {
+    mockInputVimModeStorage(true);
+    const input = createTextareaInput('one\ntwo\nthree\nfour\nfive');
+    input.selectionStart = 4;
+    input.selectionEnd = 4;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, '2');
+    fireInputKey(input, 'd');
+    fireInputKey(input, 'd');
+    const repeatEvent = fireInputKey(input, 'd', { repeat: true });
+
+    expect(repeatEvent.defaultPrevented).toBe(true);
+    expect(input.value).toBe('one\nfour\nfive');
+
+    cleanup();
+  });
+
   it('extends selection in visual mode and deletes it', async () => {
     mockInputVimModeStorage(true);
     const input = createTextareaInput('hello');
@@ -1072,6 +1367,32 @@ describe('input Vim mode', () => {
 
     expect(input.value).toBe('one\ntwo\ntwo\nthree');
     expect(input.selectionStart).toBe(8);
+
+    cleanup();
+  });
+
+  it('clears undo history when the active input changes', async () => {
+    mockInputVimModeStorage(true);
+    const firstInput = createTextareaInput('hello');
+    firstInput.selectionStart = 1;
+    firstInput.selectionEnd = 1;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(firstInput, 'Escape');
+    fireInputKey(firstInput, 'x');
+    expect(firstInput.value).toBe('hllo');
+
+    const secondInput = createTextareaInput('world');
+    secondInput.selectionStart = 1;
+    secondInput.selectionEnd = 1;
+    secondInput.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+
+    fireInputKey(secondInput, 'Escape');
+    fireInputKey(secondInput, 'u');
+
+    expect(secondInput.value).toBe('world');
 
     cleanup();
   });
