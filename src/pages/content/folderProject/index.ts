@@ -241,8 +241,11 @@ function setupSendDetection(): void {
   // conversation to the selected folder once the URL change is detected.
   sidebarNavClickListener = (e: Event) => {
     if (!pendingSend) return;
-    const target = e.target as HTMLElement | null;
-    const link = target?.closest('a');
+    // e.target may be an SVGElement (icon inside anchor) — use Element, not
+    // HTMLElement, so closest() works on the general Element hierarchy.
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+    const link = target.closest('a');
     if (!link) return;
     const href = link.getAttribute('href') ?? '';
     if (CONVERSATION_HREF_PATTERN.test(href)) {

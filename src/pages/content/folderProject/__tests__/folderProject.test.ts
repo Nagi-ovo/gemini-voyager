@@ -430,7 +430,7 @@ describe('follow-up injection regression', () => {
     document.body.innerHTML = '';
   });
 
-  it('does not re-inject instructions on follow-up when URL change is delayed past the 4s pendingSend timer', async () => {
+  it('does not re-inject instructions on follow-up when URL change is delayed past the 60s pendingSend timeout', async () => {
     // Chat input that findChatInput() can locate
     const chatInput = document.createElement('div');
     chatInput.id = 'test-chat-input';
