@@ -557,14 +557,22 @@ export class AIStudioFolderManager {
   }
 
   private async initializeFolderUI(): Promise<void> {
-    // Find the prompt history component and sidebar region
-    this.historyRoot = (await waitForElement<HTMLElement>('ms-prompt-history-v3')) || null;
-
-    // On /library page, historyRoot may not exist, but we still need to load data
-    // and observe the library table for draggable elements
     const isLibraryPage = /\/library(\/|$)/.test(location.pathname);
 
-    if (!this.historyRoot && !isLibraryPage) return;
+    // Wait for a *stable* insertion anchor rather than just the outer nav-content.
+    // Angular renders the shell first and fills in children asynchronously; waiting only on
+    // the shell caused intermittent mis-mounts where the anchor wasn't there yet and we
+    // fell through to an awkward appendChild position (or appeared to "never mount" at all).
+    const anchorSelector = [
+      'ms-prompt-history-v3',
+      '.nav-content.v3-left-nav > nav > .empty-space',
+      '.nav-content.v3-left-nav > nav > .bottom-actions',
+    ].join(', ');
+    const mountSignal = await waitForElement<HTMLElement>(anchorSelector);
+
+    this.historyRoot = (document.querySelector('ms-prompt-history-v3') as HTMLElement | null) ?? null;
+
+    if (!mountSignal) return;
 
     try {
       document.documentElement.classList.add('gv-aistudio-root');
@@ -572,30 +580,88 @@ export class AIStudioFolderManager {
 
     await this.load();
 
-    // Only inject folder UI on prompts pages where historyRoot exists
+    // Inject the sidebar folder panel anywhere a mount anchor exists — including /library.
+    // Previously /library skipped the sidebar because legacy AI Studio had no place to mount
+    // it there; the V2 nav has `.empty-space`/`.bottom-actions` on every page, so users
+    // should see their folders while triaging the history table.
+    this.injectUI();
+
+    // Self-heal: Angular can tear down and rebuild the nav on route transitions, which
+    // silently detaches our container. Watch the nav root and re-inject on detach.
+    this.watchContainerMount();
+
+    // Observers that read prompt-link anchors only run when the legacy history panel is present.
     if (this.historyRoot) {
-      this.injectUI();
       this.observePromptList();
       this.bindDraggablesInPromptList();
       await this.syncConversationTitlesFromPromptList();
-
-      // Highlight current conversation initially and on navigation
-      this.highlightActiveConversation();
-      this.installRouteChangeListener();
-
-      // Apply initial sidebar width (force on first load)
-      this.applySidebarWidth(true);
-
-      // Add resize handle for sidebar width adjustment
-      this.addResizeHandle();
     }
 
-    // On library page, observe and bind draggables to table rows
+    // These work off our own folder DOM + location, so they run in both legacy and V2 nav.
+    this.highlightActiveConversation();
+    this.installRouteChangeListener();
+
+    // Apply initial sidebar width (force on first load)
+    this.applySidebarWidth(true);
+
+    // Add resize handle for sidebar width adjustment
+    this.addResizeHandle();
+
+    // On library page, also bind the table rows as drag sources and surface the floating
+    // drop zone (belt-and-suspenders alongside the sidebar panel).
     if (isLibraryPage) {
       this.observeLibraryTable();
       this.bindDraggablesInLibraryTable();
       this.injectLibraryDropZone();
     }
+  }
+
+  private containerMountObserver: MutationObserver | null = null;
+  private lastContainerReinjectAt: number = 0;
+  private libraryShortcutBtn: HTMLButtonElement | null = null;
+
+  /**
+   * Watches the AI Studio left nav for Angular tear-downs that would silently detach
+   * our folder panel, and re-injects it. Cheap reconciliation: each mutation just checks
+   * whether `this.container` is still in the document, throttled to avoid flapping.
+   */
+  private watchContainerMount(): void {
+    try {
+      this.containerMountObserver?.disconnect();
+    } catch {}
+    this.containerMountObserver = null;
+
+    const navContent = document.querySelector('.nav-content.v3-left-nav');
+    if (!navContent) return;
+
+    const observer = new MutationObserver(() => {
+      const container = this.container;
+      if (!container) return;
+      if (document.body.contains(container)) return;
+
+      // Throttle re-injection — browsers fire many mutations in a single tick during
+      // an Angular re-render. We only need to run once per burst.
+      const nowTs = Date.now();
+      if (nowTs - this.lastContainerReinjectAt < 250) return;
+      this.lastContainerReinjectAt = nowTs;
+
+      this.container = null;
+      try {
+        this.injectUI();
+      } catch (error) {
+        console.error('[AIStudioFolderManager] Failed to re-inject folder panel:', error);
+      }
+    });
+
+    try {
+      observer.observe(navContent, { childList: true, subtree: true });
+    } catch {}
+    this.containerMountObserver = observer;
+    this.cleanupFns.push(() => {
+      try {
+        observer.disconnect();
+      } catch {}
+    });
   }
 
   private async load(): Promise<void> {
@@ -701,16 +767,56 @@ export class AIStudioFolderManager {
     addBtn.addEventListener('click', () => this.createFolder());
     actions.appendChild(addBtn);
 
+    // On the V2 nav (no inline prompt history), surface a shortcut to /library.
+    // We always create the button in V2 mode and toggle its visibility on route change,
+    // since Angular won't re-run injectUI when the container survives a soft navigation.
+    if (!this.historyRoot) {
+      const libraryBtn = document.createElement('button');
+      libraryBtn.className = 'gv-folder-action-btn gv-folder-library-btn';
+      libraryBtn.title = this.t('folder_manage_in_library');
+      libraryBtn.appendChild(this.createIcon('library_books'));
+      libraryBtn.addEventListener('click', () => {
+        try {
+          location.assign('/library');
+        } catch {}
+      });
+      actions.appendChild(libraryBtn);
+      this.libraryShortcutBtn = libraryBtn;
+      this.updateLibraryShortcutVisibility();
+    } else {
+      this.libraryShortcutBtn = null;
+    }
+
     const list = document.createElement('div');
     list.className = 'gv-folder-list';
     container.appendChild(header);
     container.appendChild(list);
 
-    // Insert before prompt history
+    // Insertion point: prefer the legacy prompt history anchor; otherwise drop the
+    // panel inside the V2 left nav, right before the `.empty-space` spacer so the
+    // panel sits just below the nav items while `.bottom-actions` stays pinned.
     const root = this.historyRoot;
-    if (!root) return;
-    const host: Element = root.parentElement ?? root;
-    host.insertAdjacentElement('beforebegin', container);
+    if (root) {
+      const host: Element = root.parentElement ?? root;
+      host.insertAdjacentElement('beforebegin', container);
+    } else {
+      const navContent = document.querySelector('.nav-content.v3-left-nav');
+      const navEl = navContent?.querySelector(':scope > nav');
+      const emptySpace = navEl?.querySelector(':scope > .empty-space');
+      const bottomActions = navEl?.querySelector(':scope > .bottom-actions');
+      if (emptySpace) {
+        emptySpace.insertAdjacentElement('beforebegin', container);
+      } else if (bottomActions) {
+        bottomActions.insertAdjacentElement('beforebegin', container);
+      } else if (navEl) {
+        navEl.appendChild(container);
+      } else if (navContent) {
+        navContent.appendChild(container);
+      } else {
+        return;
+      }
+      container.classList.add('gv-aistudio-v2');
+    }
 
     this.container = container;
     this.injectStyles();
@@ -727,71 +833,80 @@ export class AIStudioFolderManager {
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = `
+      /* AI Studio is a predominantly dark surface; tuned for low contrast so the
+         confirm dialog reads as a subtle elevated card, not a bright pop-out. */
       .gv-folder-confirm-dialog.gv-aistudio-confirm {
-        background: var(--gem-sys-color-surface, #fff);
-        border: 1px solid var(--gem-sys-color-outline-variant, #e5e7eb);
+        background: var(--mat-sys-surface-container-high, #2d2e30);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
         padding: 16px;
         min-width: 280px;
         font-family: 'Google Sans', 'Segoe UI', sans-serif;
         animation: gv-fade-in 0.2s ease-out;
+        color: var(--mat-sys-on-surface, #e3e3e3);
       }
-      
-      .gv-confirm-message {
+
+      .gv-folder-confirm-dialog.gv-aistudio-confirm .gv-confirm-message {
         margin-bottom: 16px;
-        color: var(--gem-sys-color-on-surface, #1f2937);
+        color: var(--mat-sys-on-surface, #e3e3e3);
         font-size: 14px;
         line-height: 1.5;
-        font-weight: 500;
+        font-weight: 400;
+        opacity: 0.92;
       }
 
-      .gv-confirm-actions {
+      .gv-folder-confirm-dialog.gv-aistudio-confirm .gv-confirm-actions {
         display: flex;
-        gap: 12px;
-        justify-content: flex-end; /* Default right align, but we override order */
+        gap: 4px;
+        justify-content: flex-end;
       }
 
-      .gv-confirm-btn {
-        padding: 8px 16px;
-        border-radius: 8px;
+      .gv-folder-confirm-dialog.gv-aistudio-confirm .gv-confirm-btn {
+        padding: 6px 14px;
+        border-radius: 999px;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 500;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: background-color 0.15s ease;
         border: none;
         outline: none;
+        background: transparent;
       }
 
-      .gv-confirm-delete {
-        background-color: #ef4444; /* Red color */
-        color: white;
-        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
-      }
-      
-      .gv-confirm-delete:hover {
-        background-color: #dc2626;
-        box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+      /* Destructive action: filled but muted — use the token-scaled error tone when
+         available, otherwise a desaturated red that sits quietly on dark surfaces. */
+      .gv-folder-confirm-dialog.gv-aistudio-confirm .gv-confirm-delete {
+        background-color: var(--mat-sys-error-container, rgba(220, 90, 90, 0.22));
+        color: var(--mat-sys-on-error-container, #f5b8b3);
+        box-shadow: none;
       }
 
-      .gv-confirm-cancel {
+      .gv-folder-confirm-dialog.gv-aistudio-confirm .gv-confirm-delete:hover {
+        background-color: rgba(220, 90, 90, 0.32);
+        color: #ffd3cf;
+        box-shadow: none;
+      }
+
+      /* Cancel is a borderless text button — removes the framing that fought the Delete fill. */
+      .gv-folder-confirm-dialog.gv-aistudio-confirm .gv-confirm-cancel {
         background-color: transparent;
-        color: var(--gem-sys-color-on-surface-variant, #4b5563);
-        border: 1px solid var(--gem-sys-color-outline, #d1d5db);
+        color: var(--mat-sys-on-surface-variant, #c4c7c5);
+        border: none;
       }
 
-      .gv-confirm-cancel:hover {
-        background-color: var(--gem-sys-color-surface-container-high, #f3f4f6);
-        color: var(--gem-sys-color-on-surface, #111827);
+      .gv-folder-confirm-dialog.gv-aistudio-confirm .gv-confirm-cancel:hover {
+        background-color: rgba(255, 255, 255, 0.06);
+        color: var(--mat-sys-on-surface, #e3e3e3);
       }
 
       /* Hover effect for remove button in list */
-      .gv-conversation-remove-btn:hover {
-        background-color: rgba(239, 68, 68, 0.1) !important;
-        color: #ef4444 !important;
+      .gv-aistudio .gv-conversation-remove-btn:hover {
+        background-color: rgba(220, 90, 90, 0.14) !important;
+        color: #e69892 !important;
       }
 
-      .gv-conversation-remove-btn:hover span {
+      .gv-aistudio .gv-conversation-remove-btn:hover span {
         font-variation-settings: 'FILL' 1, 'wght' 600 !important;
       }
 
@@ -874,8 +989,42 @@ export class AIStudioFolderManager {
     });
   }
 
+  /**
+   * Toggle the V2 "Manage in Library" shortcut button based on the current path.
+   * Hidden on /library itself (clicking would re-navigate to self).
+   */
+  private updateLibraryShortcutVisibility(): void {
+    const btn = this.libraryShortcutBtn;
+    if (!btn) return;
+    const onLibrary = /\/library(\/|$)/.test(location.pathname);
+    btn.style.display = onLibrary ? 'none' : '';
+  }
+
+  /**
+   * Re-attach the folder panel if Angular tore it down between checks. Idempotent and
+   * cheap when the panel is already mounted.
+   */
+  private ensureContainerMounted(): void {
+    if (!this.folderEnabled) return;
+    if (this.container && document.body.contains(this.container)) return;
+    this.container = null;
+    try {
+      this.injectUI();
+    } catch (error) {
+      console.error('[AIStudioFolderManager] Failed to ensure folder panel mounted:', error);
+    }
+    // If the nav-content subtree was recreated, the previous MutationObserver lost its
+    // target. Re-arm it against the current nav root so future detaches are detected.
+    this.watchContainerMount();
+  }
+
   private installRouteChangeListener(): void {
-    const update = () => setTimeout(() => this.highlightActiveConversation(), 0);
+    const update = () =>
+      setTimeout(() => {
+        this.ensureContainerMounted();
+        this.updateLibraryShortcutVisibility();
+        this.highlightActiveConversation();
+      }, 0);
     try {
       window.addEventListener('popstate', update);
     } catch {}
@@ -1645,24 +1794,36 @@ export class AIStudioFolderManager {
       tr.draggable = true;
       tr.style.cursor = 'grab';
 
-      tr.addEventListener('dragstart', (e) => {
-        // Prevent interference from Angular Material's own drag handling if any
-        e.stopPropagation();
+      // Disable the anchor's native drag: an <a href> is implicitly draggable as a URL,
+      // which hijacks the drag from the row and produces a payload with no title.
+      anchor.draggable = false;
+      try {
+        (anchor.style as CSSStyleDeclaration & { webkitUserDrag?: string }).webkitUserDrag = 'none';
+      } catch {}
 
+      const buildDragData = (): DragData => {
         const id = this.extractPromptId(anchor);
         const title = this.extractPromptTitle(anchor) || '';
-        // Ensure accurate URL construction
         const rawHref = anchor.getAttribute('href') || anchor.href || '';
         const url = rawHref.startsWith('http')
           ? rawHref
           : `${location.origin}${rawHref.startsWith('/') ? '' : '/'}${rawHref}`;
+        return { type: 'conversation', conversationId: id, title, url };
+      };
 
-        const data: DragData = { type: 'conversation', conversationId: id, title, url };
-        this.setPromptDragData(e, data, tr);
-
-        // Visual feedback
+      const onDragStart = (e: DragEvent) => {
+        // Prevent interference from Angular Material's own drag handling if any
+        e.stopPropagation();
+        this.setPromptDragData(e, buildDragData(), tr);
         tr.style.opacity = '0.5';
-      });
+      };
+
+      // Primary: row-level drag covers every cell (icon, title, description, type, timestamp, overflow).
+      tr.addEventListener('dragstart', onDragStart, true);
+
+      // Fallback: if a browser still honors the anchor's default drag, populate the same JSON payload
+      // so the dropped conversation carries its title instead of degrading to a raw URL.
+      anchor.addEventListener('dragstart', onDragStart, true);
 
       tr.addEventListener('dragend', () => {
         tr.style.opacity = '';

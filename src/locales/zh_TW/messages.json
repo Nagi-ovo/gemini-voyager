@@ -423,6 +423,10 @@
     "message": "從雲端同步",
     "description": "雲端同步按鈕提示"
   },
+  "folder_manage_in_library": {
+    "message": "到 Library 管理",
+    "description": "AI Studio 側欄按鈕，跳轉到 /library 以拖曳管理對話"
+  },
   "folder_import": {
     "message": "匯入資料夾",
     "description": "匯入資料夾按鈕提示"

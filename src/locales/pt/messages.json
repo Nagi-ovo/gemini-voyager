@@ -463,6 +463,10 @@
     "message": "Sincronizar da nuvem",
     "description": "Cloud sync button tooltip"
   },
+  "folder_manage_in_library": {
+    "message": "Gerenciar na biblioteca",
+    "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"
+  },
   "folder_import": {
     "message": "Importar pastas",
     "description": "Import folders button tooltip"

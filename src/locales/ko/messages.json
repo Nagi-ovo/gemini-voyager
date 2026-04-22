@@ -463,6 +463,10 @@
     "message": "클라우드에서 동기화",
     "description": "Cloud sync button tooltip"
   },
+  "folder_manage_in_library": {
+    "message": "라이브러리에서 관리",
+    "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"
+  },
   "folder_import": {
     "message": "폴더 가져오기",
     "description": "Import folders button tooltip"

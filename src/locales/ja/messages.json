@@ -463,6 +463,10 @@
     "message": "クラウドから同期",
     "description": "Cloud sync button tooltip"
   },
+  "folder_manage_in_library": {
+    "message": "ライブラリで管理",
+    "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"
+  },
   "folder_import": {
     "message": "フォルダをインポート",
     "description": "Import folders button tooltip"

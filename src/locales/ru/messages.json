@@ -463,6 +463,10 @@
     "message": "Синхронизировать из облака",
     "description": "Cloud sync button tooltip"
   },
+  "folder_manage_in_library": {
+    "message": "Управлять в библиотеке",
+    "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"
+  },
   "folder_import": {
     "message": "Импорт папок",
     "description": "Import folders button tooltip"

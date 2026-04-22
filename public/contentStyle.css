@@ -5344,6 +5344,22 @@ body.dark-theme .gv-folder-action-btn.gv-filter-active mat-icon,
   font-size: 14px;
 }
 
+.gv-aistudio .google-symbols[data-icon='library_books']::before {
+  content: '📚';
+  font-size: 14px;
+}
+
+/* V2 left-nav layout: the folder panel sits between the nav items and the
+   native empty-space spacer. Let it flex-shrink gracefully without forcing a
+   fixed height so long folder lists can still scroll inside the nav. */
+.gv-aistudio.gv-aistudio-v2 {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 60%;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
 /* Import dialog */
 /* ── Folder Import Dialog ── */
 .gv-folder-import-dialog {

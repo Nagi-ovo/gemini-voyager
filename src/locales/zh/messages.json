@@ -463,6 +463,10 @@
     "message": "从云端同步",
     "description": "云同步按钮提示"
   },
+  "folder_manage_in_library": {
+    "message": "到 Library 管理",
+    "description": "AI Studio 侧栏按钮，跳转到 /library 以拖拽管理对话"
+  },
   "folder_import": {
     "message": "导入文件夹",
     "description": "导入文件夹按钮提示"

@@ -463,6 +463,10 @@
     "message": "Synchroniser depuis le cloud",
     "description": "Cloud sync button tooltip"
   },
+  "folder_manage_in_library": {
+    "message": "Gérer dans la bibliothèque",
+    "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"
+  },
   "folder_import": {
     "message": "Importer dossiers",
     "description": "Import folders button tooltip"
