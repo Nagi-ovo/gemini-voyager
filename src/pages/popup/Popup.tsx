@@ -319,6 +319,7 @@ interface SettingsUpdate {
   markerLevelEnabled?: boolean;
   resetPosition?: boolean;
   folderEnabled?: boolean;
+  floatingModeEnabled?: boolean;
   hideArchivedConversations?: boolean;
   customWebsites?: string[];
   watermarkRemoverEnabled?: boolean;
@@ -422,6 +423,7 @@ export default function Popup() {
   const [timelinePreviewPinned, setTimelinePreviewPinned] = useState<boolean>(false);
   const [markerLevelEnabled, setMarkerLevelEnabled] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
+  const [floatingModeEnabled, setFloatingModeEnabled] = useState<boolean>(false);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
   const [customWebsites, setCustomWebsites] = useState<string[]>([]);
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
@@ -522,6 +524,8 @@ export default function Popup() {
         payload.geminiTimelineMarkerLevel = settings.markerLevelEnabled;
       if (typeof settings.folderEnabled === 'boolean')
         payload.geminiFolderEnabled = settings.folderEnabled;
+      if (typeof settings.floatingModeEnabled === 'boolean')
+        payload[StorageKeys.FOLDER_FLOATING_MODE_ENABLED] = settings.floatingModeEnabled;
       if (typeof settings.hideArchivedConversations === 'boolean')
         payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
       if (settings.resetPosition) payload.geminiTimelinePosition = null;
@@ -873,6 +877,7 @@ export default function Popup() {
           [StorageKeys.TIMELINE_PREVIEW_PINNED]: false,
           geminiTimelineMarkerLevel: false,
           geminiFolderEnabled: true,
+          [StorageKeys.FOLDER_FLOATING_MODE_ENABLED]: false,
           geminiFolderHideArchivedConversations: false,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
@@ -929,6 +934,7 @@ export default function Popup() {
           setTimelinePreviewPinned(res?.[StorageKeys.TIMELINE_PREVIEW_PINNED] === true);
           setMarkerLevelEnabled(!!res?.geminiTimelineMarkerLevel);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
+          setFloatingModeEnabled(res?.[StorageKeys.FOLDER_FLOATING_MODE_ENABLED] === true);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
           const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
             ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
@@ -1652,6 +1658,34 @@ export default function Popup() {
                   onChange={(e) => {
                     setFolderEnabled(e.target.checked);
                     apply({ folderEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <Label
+                    htmlFor="floating-mode"
+                    className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+                  >
+                    {t('enableFolderFloatingMode')}
+                    <span
+                      className="material-symbols-outlined cursor-help text-[16px] leading-none opacity-50 transition-opacity hover:opacity-100"
+                      title={t('experimentalLabel')}
+                      style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                    >
+                      experiment
+                    </span>
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('enableFolderFloatingModeHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="floating-mode"
+                  checked={floatingModeEnabled}
+                  onChange={(e) => {
+                    setFloatingModeEnabled(e.target.checked);
+                    apply({ floatingModeEnabled: e.target.checked });
                   }}
                 />
               </div>

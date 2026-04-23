@@ -603,6 +603,14 @@
     "message": "Habilitar función de carpetas",
     "description": "Enable or disable the folder feature"
   },
+  "enableFolderFloatingMode": {
+    "message": "Usar panel flotante de carpetas",
+    "description": "Popup toggle that renders the folder feature as a floating window instead of injecting into Gemini's sidebar"
+  },
+  "enableFolderFloatingModeHint": {
+    "message": "Muestra las carpetas en una ventana flotante arrastrable en lugar de la barra lateral.",
+    "description": "Helper text under the floating folder mode toggle"
+  },
   "hideArchivedConversations": {
     "message": "Ocultar conversaciones archivadas",
     "description": "Hide conversations that are in folders from the main list"

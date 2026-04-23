@@ -603,6 +603,14 @@
     "message": "Включить функцию папок",
     "description": "Enable or disable the folder feature"
   },
+  "enableFolderFloatingMode": {
+    "message": "Плавающая панель папок",
+    "description": "Popup toggle that renders the folder feature as a floating window instead of injecting into Gemini's sidebar"
+  },
+  "enableFolderFloatingModeHint": {
+    "message": "Показывать папки в перемещаемом плавающем окне вместо боковой панели.",
+    "description": "Helper text under the floating folder mode toggle"
+  },
   "hideArchivedConversations": {
     "message": "Скрыть архивные разговоры",
     "description": "Hide conversations that are in folders from the main list"

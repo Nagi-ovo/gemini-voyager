@@ -603,6 +603,14 @@
     "message": "Habilitar recurso de pasta",
     "description": "Enable or disable the folder feature"
   },
+  "enableFolderFloatingMode": {
+    "message": "Usar painel flutuante de pastas",
+    "description": "Popup toggle that renders the folder feature as a floating window instead of injecting into Gemini's sidebar"
+  },
+  "enableFolderFloatingModeHint": {
+    "message": "Mostra as pastas em uma janela flutuante arrastável em vez da barra lateral.",
+    "description": "Helper text under the floating folder mode toggle"
+  },
   "hideArchivedConversations": {
     "message": "Ocultar conversas arquivadas",
     "description": "Hide conversations that are in folders from the main list"

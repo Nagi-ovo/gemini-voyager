@@ -603,6 +603,14 @@
     "message": "تمكين ميزة المجلد",
     "description": "Enable or disable the folder feature"
   },
+  "enableFolderFloatingMode": {
+    "message": "استخدام لوحة المجلدات العائمة",
+    "description": "Popup toggle that renders the folder feature as a floating window instead of injecting into Gemini's sidebar"
+  },
+  "enableFolderFloatingModeHint": {
+    "message": "عرض المجلدات في نافذة عائمة قابلة للسحب بدلاً من الشريط الجانبي.",
+    "description": "Helper text under the floating folder mode toggle"
+  },
   "hideArchivedConversations": {
     "message": "إخفاء المحادثات المؤرشفة",
     "description": "Hide conversations that are in folders from the main list"

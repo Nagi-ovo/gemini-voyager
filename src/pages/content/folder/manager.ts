@@ -32,11 +32,7 @@ import {
   mountFloatingFab,
   unmountFloatingFab,
 } from './floatingModeFab';
-import {
-  mountFloatingModeNudge,
-  shouldShowFloatingModeNudge,
-  unmountFloatingModeNudge,
-} from './floatingModeNudge';
+import { unmountFloatingModeNudge } from './floatingModeNudge';
 import {
   type FloatingPanelHandle,
   type FloatingPanelPos,
@@ -193,11 +189,14 @@ export class FolderManager {
 
   private cleanupTasks: (() => void)[] = [];
 
-  // Floating-mode fallback state — surfaced when the normal sidebar injection
-  // path fails (Google changed their DOM, user is on an unsupported nav shell,
-  // etc.) so users aren't left with silently-dead folders.
+  // Floating-mode state — an opt-in "always use a floating window for folders"
+  // switch exposed in the popup. When on, we never attempt to inject the
+  // folder panel into Gemini's sidebar; we mount the body-level floating
+  // panel + native ⋮ menu observer and call it a day. When off, normal
+  // sidebar injection; a failure is a silent no-op.
   private floatingPanelHandle: FloatingPanelHandle | null = null;
-  private floatingFallbackShown: boolean = false;
+  private floatingModeEnabled: boolean = false;
+  private floatingModeActive: boolean = false;
 
   constructor() {
     // Create storage adapter based on browser (Factory Pattern)
@@ -248,6 +247,11 @@ export class FolderManager {
       // Load folder enabled setting
       await this.loadFolderEnabledSetting();
 
+      // Load the opt-in "always use floating window" mode. Off by default —
+      // users flip it from the popup when they want to skip sidebar injection
+      // entirely and work with folders in a floating panel.
+      await this.loadFloatingModeSetting();
+
       // Load hide-archived onboarding nudge flag first, so loadHideArchivedSetting
       // can mark it "shown" if the user already has the feature enabled.
       await this.loadHideArchivedNudgeShownSetting();
@@ -272,8 +276,14 @@ export class FolderManager {
         return;
       }
 
-      // Initialize folder UI
-      await this.initializeFolderUI();
+      // Two mounting strategies:
+      //  - Floating mode (opt-in): body-level floating panel, skip sidebar.
+      //  - Default: inject the folder panel into Gemini's sidebar.
+      if (this.floatingModeEnabled) {
+        await this.startFloatingMode();
+      } else {
+        await this.initializeFolderUI();
+      }
 
       this.debug('Initialized successfully');
     } catch (error) {
@@ -440,11 +450,10 @@ export class FolderManager {
 
   private async initializeFolderUI(): Promise<void> {
     // Wait for sidebar to be available (with a hard timeout so a DOM change on
-    // Gemini's side doesn't silently kill the folder feature).
+    // Gemini's side doesn't silently hang the folder feature forever).
     const sidebarFound = await this.waitForSidebar();
     if (!sidebarFound) {
-      this.debugWarn('Sidebar anchor never appeared — surfacing floating-mode fallback');
-      void this.showFloatingModeFallback('sidebar-anchor-missing');
+      this.debugWarn('Sidebar anchor never appeared — folder panel unavailable');
       return;
     }
 
@@ -452,8 +461,7 @@ export class FolderManager {
     this.findRecentSection();
 
     if (!this.recentSection) {
-      this.debugWarn('Could not find Recent section — surfacing floating-mode fallback');
-      void this.showFloatingModeFallback('recent-section-missing');
+      this.debugWarn('Could not find Recent section — folder panel unavailable');
       return;
     }
 
@@ -566,54 +574,36 @@ export class FolderManager {
    *
    * @param reason free-form debug label (anchor-missing, recent-section-missing, etc.)
    */
-  private async showFloatingModeFallback(reason: string): Promise<void> {
-    if (this.floatingFallbackShown) return;
-    this.floatingFallbackShown = true;
-    this.debug(`Showing floating-mode fallback (${reason})`);
+  /**
+   * Enter "always floating" mode. User has explicitly flipped the popup
+   * toggle, so we skip the onboarding nudge entirely and drop the panel
+   * straight onto the page. The native ⋮ → "Move to folder" observers are
+   * wired up here too so users can file conversations without the panel
+   * being open.
+   */
+  private async startFloatingMode(): Promise<void> {
+    if (this.floatingModeActive) return;
+    this.floatingModeActive = true;
+    this.debug('Entering floating mode');
 
-    // The floating panel is a view-only surface. To *add* conversations to a
-    // folder in this fallback mode, the user goes through Gemini's own ⋮
-    // menu → "Move to folder" — which is an injected menu item. Those
-    // observers normally light up only on the sidebar-success path, but they
-    // work off `document.body` and don't actually depend on our sidebar
-    // mounting, so we wire them up here too.
     this.setupConversationClickTracking();
     this.setupNativeConversationMenuObserver();
 
-    let nudgeShown = false;
-    try {
-      const raw = await browser.storage.sync.get({
-        [StorageKeys.FOLDER_FLOATING_NUDGE_SHOWN]: false,
-      });
-      nudgeShown = !!raw[StorageKeys.FOLDER_FLOATING_NUDGE_SHOWN];
-    } catch (error) {
-      if (isExtensionContextInvalidatedError(error)) return;
-      this.debugWarn('Failed to read floating-mode nudge flag:', error);
+    await this.openFloatingPanel();
+  }
+
+  /**
+   * Leave floating mode — tear down the body-level UI. Safe to call when
+   * floating mode was never entered.
+   */
+  private stopFloatingMode(): void {
+    this.floatingModeActive = false;
+    unmountFloatingModeNudge();
+    unmountFloatingFab();
+    if (this.floatingPanelHandle) {
+      this.floatingPanelHandle.destroy();
+      this.floatingPanelHandle = null;
     }
-
-    const showNudge = shouldShowFloatingModeNudge({
-      nudgeShown,
-      floatingAlreadyOpen: !!this.floatingPanelHandle,
-    });
-
-    if (!showNudge) {
-      // The user has already seen the nudge once. Don't repeat it; just put
-      // the small FAB in the corner so they can re-enter whenever they want.
-      this.showFloatingFab();
-      return;
-    }
-
-    mountFloatingModeNudge({
-      onEnable: () => {
-        void this.persistFloatingNudgeShown();
-        void this.openFloatingPanel();
-      },
-      onDismiss: () => {
-        void this.persistFloatingNudgeShown();
-        // User dismissed the pitch but still needs a way back — surface the FAB.
-        this.showFloatingFab();
-      },
-    });
   }
 
   /**
@@ -663,17 +653,6 @@ export class FolderManager {
           },
         });
       });
-  }
-
-  private async persistFloatingNudgeShown(): Promise<void> {
-    try {
-      await browser.storage.sync.set({
-        [StorageKeys.FOLDER_FLOATING_NUDGE_SHOWN]: true,
-      });
-    } catch (error) {
-      if (isExtensionContextInvalidatedError(error)) return;
-      this.debugWarn('Failed to persist floating-mode nudge dismissal:', error);
-    }
   }
 
   private async openFloatingPanel(): Promise<void> {
@@ -6180,6 +6159,26 @@ export class FolderManager {
     }
   }
 
+  /**
+   * Opt-in toggle that puts the folder feature into "floating window" mode.
+   * When on, the sidebar-injection path is skipped entirely and folders live
+   * in a body-level floating panel instead. Off by default — users opt in
+   * from the popup's Folder options.
+   */
+  private async loadFloatingModeSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.FOLDER_FLOATING_MODE_ENABLED]: false,
+      });
+      this.floatingModeEnabled = result[StorageKeys.FOLDER_FLOATING_MODE_ENABLED] === true;
+      this.debug('Loaded floating-mode setting:', this.floatingModeEnabled);
+    } catch (error) {
+      if (isExtensionContextInvalidatedError(error)) return;
+      console.error('[FolderManager] Failed to load floating-mode setting:', error);
+      this.floatingModeEnabled = false;
+    }
+  }
+
   private async loadAccountIsolationSetting(): Promise<void> {
     try {
       this.accountIsolationEnabled = await accountIsolationService.isIsolationEnabled({
@@ -6395,6 +6394,44 @@ export class FolderManager {
           this.debug('Folder enabled setting changed:', this.folderEnabled);
           // Apply the change to folder visibility
           this.applyFolderEnabledSetting();
+        }
+        if (changes[StorageKeys.FOLDER_FLOATING_MODE_ENABLED]) {
+          const next =
+            changes[StorageKeys.FOLDER_FLOATING_MODE_ENABLED].newValue === true;
+          if (next === this.floatingModeEnabled) return;
+          this.floatingModeEnabled = next;
+          this.debug('Floating-mode toggle changed:', next);
+
+          if (!this.folderEnabled) {
+            // Folder feature itself is off — nothing to swap in or out, just
+            // remember the setting for when the user turns folders back on.
+            return;
+          }
+
+          if (next) {
+            // Switch to floating: drop any sidebar-mode UI and mount the
+            // floating panel. `reinitializeFolderUI` would normally tear down
+            // the sidebar bits but also re-run sidebar init; we want the
+            // teardown without the re-init, so do it inline.
+            if (this.containerElement) {
+              this.containerElement.remove();
+              this.containerElement = null;
+            }
+            if (this.conversationObserver) {
+              this.conversationObserver.disconnect();
+              this.conversationObserver = null;
+            }
+            if (this.sideNavObserver) {
+              this.sideNavObserver.disconnect();
+              this.sideNavObserver = null;
+            }
+            void this.startFloatingMode();
+          } else {
+            // Switch to sidebar: tear down floating, then ask the existing
+            // re-init pipeline to rebuild the sidebar panel.
+            this.stopFloatingMode();
+            this.reinitializeFolderUI();
+          }
         }
         if (changes.geminiFolderHideArchivedConversations) {
           this.hideArchivedConversations = !!changes.geminiFolderHideArchivedConversations.newValue;

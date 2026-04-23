@@ -603,6 +603,14 @@
     "message": "启用文件夹功能",
     "description": "启用或禁用文件夹功能"
   },
+  "enableFolderFloatingMode": {
+    "message": "使用悬浮文件夹面板",
+    "description": "Popup toggle that renders the folder feature as a floating window instead of injecting into Gemini's sidebar"
+  },
+  "enableFolderFloatingModeHint": {
+    "message": "以可拖动的悬浮窗形式展示文件夹，不再注入到侧边栏。",
+    "description": "Helper text under the floating folder mode toggle"
+  },
   "hideArchivedConversations": {
     "message": "隐藏已归档对话",
     "description": "从主列表隐藏已添加到文件夹的对话"
