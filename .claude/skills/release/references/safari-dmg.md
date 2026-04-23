@@ -108,9 +108,9 @@ Confirm `voyager-v${VERSION}.dmg` is in the list alongside the Chrome/Firefox as
 
 ## If Xcode isn't available on this machine
 
-The release can still ship — Chrome/Firefox/Edge users won't block on it. Tell the user:
+The release can still ship — Chrome/Firefox/Edge users won't block on it (Chrome + Firefox are on the GitHub release; Edge users update via the Edge Add-ons store). Tell the user:
 
-> Xcode isn't installed here, so I can't build the Safari DMG. The release v{VERSION} is live for Chrome/Firefox/Edge. When you're on a machine with Xcode.app, run:
+> Xcode isn't installed here, so I can't build the Safari DMG. The release v{VERSION} is live for Chrome/Firefox; Edge ships via its own store. When you're on a machine with Xcode.app, run:
 >
 > ```bash
 > # sync Xcode project version to match package.json first (bun run bump doesn't touch pbxproj)

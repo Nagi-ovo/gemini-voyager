@@ -24,54 +24,96 @@ This is the body that lands on `https://github.com/Nagi-ovo/gemini-voyager/relea
 
 The workflow (`.github/workflows/release.yml`) generates a default body on tag push using `gh api releases/generate-notes`. The default has contributor attribution but is **not** the curated table. After the workflow finishes, overwrite the body with this template.
 
-## Layout principle — separate, not mixed
+## Layout principle — EN visible, ZH collapsed
 
-Earlier releases mixed English and Chinese in every cell (e.g. `**Feature name** 功能名 | Description here. 一句中文描述。`). That's noisy for both audiences — every reader parses 2× the text they need. Instead: write the English tables in full, then a single `---` divider, then the Chinese tables in full. Each reader scans one language cleanly. Shared metadata (PR links, contributor handles, Full Changelog URL) lives only at the bottom, not duplicated.
+Two prior iterations didn't work:
+
+1. **Mixed-cell EN+ZH** (e.g. `**Feature name** 功能名 | Description here. 一句中文描述。`) — every reader parses 2× the text they need.
+2. **EN tables stacked above ZH tables** (the 1.4.0 era) — single-language and cleaner per row, but the page doubles in vertical length and readers scroll past content they can't read.
+
+Current layout:
+
+- **English tables visible at the top** (the GitHub release page audience skews global; EN gets first-screen real estate).
+- **Chinese section wrapped in `<details><summary><b>中文版 · Chinese</b></summary>`** so it collapses by default. ZH readers click once.
+- **Drop the "Implemented in" / "实现" column when every row is `direct commit by @Nagi-ovo`** — that column is pure noise when 100% owner-attributed. Inline the `closes #NNN` reference into the description for the rare row that needs it. Add a single trailer line `_All changes by @Nagi-ovo unless noted._` (and `_除特别注明外，均由 @Nagi-ovo 提交。_` in the ZH section) below each language's tables.
+- **Keep the column when external contributors landed PRs in this release** — attribution matters more than column-drop savings. Each PR row reads `PR #NNN by @author`; owner rows read `—` or are dropped to a footer note.
+
+Shared metadata (Full Changelog URL, New Contributors) lives only once, after the collapsed ZH block.
 
 ## Full template
+
+Two flavors — pick based on whether external contributors landed PRs in this release.
+
+### Flavor 1 — Owner-only release (drop attribution column)
 
 ```markdown
 ## ✨ What's New
 
-| Feature | Description | Implemented in |
-|---------|-------------|----------------|
-| **{Feature Name}** | {One-line description.} | PR #{NNN} by @{author} · or · direct commit by @Nagi-ovo, closing #{NNN} |
+| Feature | Description |
+|---------|-------------|
+| **{Feature Name}** | {One-line description.} *(closes #NNN if applicable)* |
 {repeat rows…}
 
 ## 🐛 Bug Fixes
 
-| Fix | Description | Implemented in |
-|-----|-------------|----------------|
-| **{Fix Name}** | {One-line description.} | PR #{NNN} by @{author} · or · direct commit by @Nagi-ovo |
+| Fix | Description |
+|-----|-------------|
+| **{Fix Name}** | {One-line description.} |
 {repeat rows…}
 
----
+_All changes by @Nagi-ovo unless noted._
+
+<details>
+<summary><b>中文版 · Chinese</b></summary>
 
 ## ✨ 新功能
 
-| 功能 | 说明 | 实现 |
-|------|------|------|
-| **{功能名}** | {一句话说明。} | PR #{NNN} by @{author} · 或 · @Nagi-ovo 直接提交，关联 #{NNN} |
+| 功能 | 说明 |
+|------|------|
+| **{功能名}** | {一句话说明。}（关联 #NNN，可选） |
 {repeat rows…}
 
 ## 🐛 修复
 
-| 修复 | 说明 | 实现 |
-|------|------|------|
-| **{修复名}** | {一句话说明。} | PR #{NNN} by @{author} · 或 · @Nagi-ovo 直接提交 |
+| 修复 | 说明 |
+|------|------|
+| **{修复名}** | {一句话说明。} |
 {repeat rows…}
+
+_除特别注明外，均由 @Nagi-ovo 提交。_
+
+</details>
 
 ---
 
-## New Contributors
+## New Contributors  ← omit if none
 
 * @{user} made their first contribution in PR #{NNN}
-{only include users who have never contributed before — check `gh api generate-notes` output for the list}
 
 **Full Changelog**: https://github.com/Nagi-ovo/gemini-voyager/compare/v{PREV_VERSION}...v{VERSION}
 ```
 
-The `## 📥 Installation` section below this and the Safari block are already appended by the workflow — do not duplicate them.
+### Flavor 2 — Mixed contributors (keep attribution column)
+
+When external PRs landed, the column carries information worth a column. Owner rows leave a `—` rather than repeating the handle on every row.
+
+```markdown
+## ✨ What's New
+
+| Feature | Description | By |
+|---------|-------------|----|
+| **{Feature Name}** | {One-line description.} | PR #{NNN} by @{author} |
+| **{Owner Feature}** | {One-line description.} | — |
+{repeat rows…}
+
+(rest of the structure is identical to Flavor 1, with the matching `By` / `提交者` column in the ZH table; drop the trailer line since attribution is per-row)
+```
+
+### Wrapper notes
+
+- `<details>` requires a **blank line after `</summary>`** for the inner Markdown headings/tables to parse. Don't omit it.
+- Use `<b>` inside `<summary>` (GitHub respects HTML); `**bold**` does not render inside the summary tag.
+- The `## 📥 Installation` section and the Safari block are appended by the workflow — do not duplicate them. They sit below the collapsed `<details>`, outside the wrapper.
 
 ## Generation procedure
 
@@ -120,11 +162,10 @@ EN:  | Keep the timeline preview panel pinned from the popup. |
 ZH:  | 可在弹窗中将时间线预览面板固定显示。 |
 ```
 
-**Implemented in column** — one of these forms (same in both tables):
-- PR with external contributor: `PR #547 by @chang-xinhai`
-- PR by owner: `PR #613 by @Nagi-ovo` (yes, include even if it's the owner — it's traceable)
-- Direct commit (no PR): `direct commit by @Nagi-ovo` — add `, closing #NNN` if the commit body referenced an issue
-- In the 中文 table you may mirror as `@Nagi-ovo 直接提交，关联 #NNN` — either form is fine, pick one and stay consistent within a release.
+**Attribution** — depends on which Flavor you're using (see `Full template` above):
+
+- **Flavor 1 (owner-only release)**: no `By` column. Inline `(closes #NNN)` / `（关联 #NNN）` into the description for rows that reference an issue. Add the trailer line `_All changes by @Nagi-ovo unless noted._` (and ZH equivalent) below each language's tables.
+- **Flavor 2 (mixed contributors)**: keep the `By` / `提交者` column. External PR rows read `PR #NNN by @author`; owner rows read `—` (em-dash) so the column is uniform width without repeating the handle.
 
 Map commit → PR by scanning commit messages for `(#NNN)` suffixes, or by running `gh pr list --state merged --search "<commit-short-sha>"`.
 
@@ -138,13 +179,16 @@ Combine sections into `release_body.md` in this order (top to bottom):
 
 1. `## ✨ What's New` (EN) table
 2. `## 🐛 Bug Fixes` (EN) table
-3. `---` divider
-4. `## ✨ 新功能` (ZH) table
-5. `## 🐛 修复` (ZH) table
-6. `---` divider
-7. `## New Contributors` (omit entire section if the release has no new contributors — don't leave an empty heading)
-8. `**Full Changelog**: …` link
-9. ⚠️ Stop here. The workflow already appended the Installation block and Safari block.
+3. `_All changes by @Nagi-ovo unless noted._` trailer (Flavor 1) — or skip if Flavor 2
+4. Open `<details><summary><b>中文版 · Chinese</b></summary>` + **blank line**
+5. `## ✨ 新功能` (ZH) table
+6. `## 🐛 修复` (ZH) table
+7. `_除特别注明外，均由 @Nagi-ovo 提交。_` trailer (Flavor 1) — or skip if Flavor 2
+8. **Blank line** + `</details>`
+9. `---` divider
+10. `## New Contributors` (omit entire section if the release has no new contributors — don't leave an empty heading)
+11. `**Full Changelog**: …` link
+12. ⚠️ Stop here. The workflow already appended the Installation block and Safari block.
 
 ### 6. Apply
 
@@ -164,7 +208,7 @@ printf "%s\n\n%s" "$(cat release_body.md)" "$TAIL" > final_body.md
 gh release edit v{VERSION} --notes-file final_body.md
 ```
 
-## Worked example — v1.3.9
+## Worked example — v1.3.9 (Flavor 2: external contributors present)
 
 Given commits in the v1.3.8..v1.3.9 range:
 
@@ -178,40 +222,43 @@ chore: sponsor update          ← skip
 style: prettier                 ← skip
 ```
 
-Produces:
+Two of the five commits are external PRs (#547 chang-xinhai, #567 LinJHS), so this is a Flavor 2 release — keep the `By` column and use it for attribution. Produces:
 
 ```markdown
 ## ✨ What's New
 
-| Feature | Description | Implemented in |
-|---------|-------------|----------------|
-| **Pinned timeline preview** | Keep the timeline preview panel pinned from the popup. | direct commit by @Nagi-ovo, closing #570 |
-| **Configurable timeline jump shortcuts** | Customize the shortcut keys used to jump through the timeline. | direct commit by @Nagi-ovo, closing #568 |
+| Feature | Description | By |
+|---------|-------------|----|
+| **Pinned timeline preview** | Keep the timeline preview panel pinned from the popup. (closes #570) | — |
+| **Configurable timeline jump shortcuts** | Customize the shortcut keys used to jump through the timeline. (closes #568) | — |
 
 ## 🐛 Bug Fixes
 
-| Fix | Description | Implemented in |
-|-----|-------------|----------------|
-| **Experimental node hierarchy** | Timeline node hierarchy state now persists separately for each account. | direct commit by @Nagi-ovo |
+| Fix | Description | By |
+|-----|-------------|----|
+| **Experimental node hierarchy** | Timeline node hierarchy state now persists separately for each account. | — |
 | **Nested folder moves** | Moving folders with child folders now works correctly. | PR #547 by @chang-xinhai |
 | **Firefox permission flow** | Fixed permission request handling for Firefox. | PR #567 by @LinJHS |
 
----
+<details>
+<summary><b>中文版 · Chinese</b></summary>
 
 ## ✨ 新功能
 
-| 功能 | 说明 | 实现 |
-|------|------|------|
-| **固定时间线预览** | 可在弹窗中将时间线预览面板固定显示。 | @Nagi-ovo 直接提交，关联 #570 |
-| **时间线跳转快捷键可配置** | 可自定义在时间线中跳转使用的快捷键。 | @Nagi-ovo 直接提交，关联 #568 |
+| 功能 | 说明 | 提交者 |
+|------|------|--------|
+| **固定时间线预览** | 可在弹窗中将时间线预览面板固定显示。（关联 #570） | — |
+| **时间线跳转快捷键可配置** | 可自定义在时间线中跳转使用的快捷键。（关联 #568） | — |
 
 ## 🐛 修复
 
-| 修复 | 说明 | 实现 |
-|------|------|------|
-| **实验性节点层级** | 时间线节点层级状态现在会按不同账号分别持久化保存。 | @Nagi-ovo 直接提交 |
+| 修复 | 说明 | 提交者 |
+|------|------|--------|
+| **实验性节点层级** | 时间线节点层级状态现在会按不同账号分别持久化保存。 | — |
 | **嵌套文件夹移动** | 现在可以正确移动带有子文件夹的文件夹。 | PR #547 by @chang-xinhai |
 | **Firefox 权限流程** | 修复了 Firefox 中的权限请求处理问题。 | PR #567 by @LinJHS |
+
+</details>
 
 ---
 
@@ -221,4 +268,52 @@ Produces:
 * @LinJHS made their first contribution in PR #567
 
 **Full Changelog**: https://github.com/Nagi-ovo/gemini-voyager/compare/v1.3.8...v1.3.9
+```
+
+## Worked example — v1.4.2 (Flavor 1: owner-only)
+
+All commits attributable to @Nagi-ovo, so drop the `By` column entirely; `closes #NNN` moves into the description for the one row that needs it. The trailer line carries the universal attribution.
+
+```markdown
+## ✨ What's New
+
+| Feature | Description |
+|---------|-------------|
+| **Floating folder mode** *(off by default)* | Pop the folder panel out as a draggable floating window instead of injecting it into the sidebar. Toggle from popup → Folder options. |
+| **AI Studio new nav support** | Folder panel now mounts on AI Studio's refreshed left nav (`/prompts` and `/library`), restoring the feature after Google's UI change. (closes #622) |
+| … (rest of rows) … |
+
+## 🐛 Bug Fixes
+
+| Fix | Description |
+|-----|-------------|
+| **Vim mode line editing** | Stabilized cursor behavior at end-of-line during operations. |
+| **Sidebar auto-hide / full-hide independence** | The two settings are now independent — toggling one no longer affects the other. |
+
+_All changes by @Nagi-ovo unless noted._
+
+<details>
+<summary><b>中文版 · Chinese</b></summary>
+
+## ✨ 新功能
+
+| 功能 | 说明 |
+|------|------|
+| **悬浮文件夹模式** *（默认关闭）* | 把文件夹面板拆成可拖动的悬浮窗，不再注入到侧边栏。弹窗 → 文件夹选项中开启。 |
+| … (rest of rows) … |
+
+## 🐛 修复
+
+| 修复 | 说明 |
+|------|------|
+| **Vim 模式行尾编辑** | 行尾操作时光标行为更稳定。 |
+| **侧边栏自动隐藏与完全隐藏独立** | 两项设置互相独立，不再相互干扰。 |
+
+_除特别注明外，均由 @Nagi-ovo 提交。_
+
+</details>
+
+---
+
+**Full Changelog**: https://github.com/Nagi-ovo/gemini-voyager/compare/v1.4.0...v1.4.2
 ```
