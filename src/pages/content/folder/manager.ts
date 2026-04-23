@@ -25,13 +25,7 @@ import {
 } from '../timeline/hierarchyStorage';
 import type { TimelineHierarchyData } from '../timeline/hierarchyTypes';
 import { sortConversationsByPriority } from './conversationSort';
-import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
-import { DEFAULT_CONVERSATION_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
-import {
-  type FloatingFabPos,
-  mountFloatingFab,
-  unmountFloatingFab,
-} from './floatingModeFab';
+import { type FloatingFabPos, mountFloatingFab, unmountFloatingFab } from './floatingModeFab';
 import { unmountFloatingModeNudge } from './floatingModeNudge';
 import {
   type FloatingPanelHandle,
@@ -39,6 +33,8 @@ import {
   type FloatingPanelSize,
   mountFloatingPanel,
 } from './floatingPanel';
+import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
+import { DEFAULT_CONVERSATION_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
 import {
   mountHideArchivedNudge,
   shouldShowHideArchivedNudge,
@@ -704,13 +700,11 @@ export class FolderManager {
       storedPos,
       storedSize,
       onPosChange: (pos) => {
-        void browser.storage.sync
-          .set({ [StorageKeys.FOLDER_FLOATING_POS]: pos })
-          .catch((error) => {
-            if (!isExtensionContextInvalidatedError(error)) {
-              this.debugWarn('Failed to persist floating-mode position:', error);
-            }
-          });
+        void browser.storage.sync.set({ [StorageKeys.FOLDER_FLOATING_POS]: pos }).catch((error) => {
+          if (!isExtensionContextInvalidatedError(error)) {
+            this.debugWarn('Failed to persist floating-mode position:', error);
+          }
+        });
       },
       // Fires once, 300ms after the last resize observed by the panel, so
       // storage.sync isn't spammed with every intermediate size during a drag.
@@ -2414,10 +2408,7 @@ export class FolderManager {
     // module wiring, drag shortcuts) can't silently exceed the cap. Root
     // creation (parentId === null) is always allowed.
     if (parentId !== null && this.getFolderDepth(parentId) >= MAX_FOLDER_DEPTH) {
-      this.debugWarn(
-        'createFolder refused: parent is already at MAX_FOLDER_DEPTH',
-        parentId,
-      );
+      this.debugWarn('createFolder refused: parent is already at MAX_FOLDER_DEPTH', parentId);
       return;
     }
 
@@ -6396,8 +6387,7 @@ export class FolderManager {
           this.applyFolderEnabledSetting();
         }
         if (changes[StorageKeys.FOLDER_FLOATING_MODE_ENABLED]) {
-          const next =
-            changes[StorageKeys.FOLDER_FLOATING_MODE_ENABLED].newValue === true;
+          const next = changes[StorageKeys.FOLDER_FLOATING_MODE_ENABLED].newValue === true;
           if (next === this.floatingModeEnabled) return;
           this.floatingModeEnabled = next;
           this.debug('Floating-mode toggle changed:', next);

@@ -65,9 +65,13 @@ export function mountFloatingFab({
   btn.style.left = `${initialPos.x}px`;
   btn.style.top = `${initialPos.y}px`;
 
-  let dragState:
-    | { startX: number; startY: number; offsetX: number; offsetY: number; moved: boolean }
-    | null = null;
+  let dragState: {
+    startX: number;
+    startY: number;
+    offsetX: number;
+    offsetY: number;
+    moved: boolean;
+  } | null = null;
 
   const onPointerDown = (e: PointerEvent) => {
     if (e.button !== 0) return;

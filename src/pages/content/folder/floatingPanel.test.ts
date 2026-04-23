@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   FLOATING_PANEL_CLASS,
-  mountFloatingPanel,
   type FloatingPanelHandle,
   type FloatingPanelMountArgs,
+  mountFloatingPanel,
 } from './floatingPanel';
 import type { ConversationReference, Folder, FolderData } from './types';
 
@@ -229,9 +229,7 @@ describe('mountFloatingPanel', () => {
     );
     click(title);
 
-    expect(onNavigate).toHaveBeenCalledWith(
-      expect.objectContaining({ conversationId: 'conv-a' }),
-    );
+    expect(onNavigate).toHaveBeenCalledWith(expect.objectContaining({ conversationId: 'conv-a' }));
   });
 
   it('renders the move-to-folder hint above the folder tree', () => {
@@ -348,10 +346,7 @@ describe('mountFloatingPanel', () => {
     const onRemoveConversation = vi.fn();
     const handle = mountPanel({ onToggleStar, onRemoveConversation });
 
-    const row = requireElement<HTMLElement>(
-      handle.element,
-      `.${FLOATING_PANEL_CLASS}__conv`,
-    );
+    const row = requireElement<HTMLElement>(handle.element, `.${FLOATING_PANEL_CLASS}__conv`);
     click(requireElement<HTMLButtonElement>(row, `.${FLOATING_PANEL_CLASS}__icon-button--star`));
     click(requireElement<HTMLButtonElement>(row, `.${FLOATING_PANEL_CLASS}__icon-button--remove`));
 

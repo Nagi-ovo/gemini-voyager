@@ -8859,7 +8859,8 @@ html.dark .gv-input-vim-cursor-moving {
 }
 
 .gv-floating-folder-panel__folder-header:hover .gv-floating-folder-panel__icon-button--add-child,
-.gv-floating-folder-panel__folder-header:focus-within .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__folder-header:focus-within
+  .gv-floating-folder-panel__icon-button--add-child,
 .gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--star,
 .gv-floating-folder-panel__conv:focus-within .gv-floating-folder-panel__icon-button--star,
 .gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--remove,
@@ -9427,7 +9428,8 @@ html.light-theme .gv-floating-folder-panel__folder-body::before {
 }
 
 .gv-floating-folder-panel__folder-header:hover .gv-floating-folder-panel__icon-button--add-child,
-.gv-floating-folder-panel__folder-header:focus-within .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__folder-header:focus-within
+  .gv-floating-folder-panel__icon-button--add-child,
 .gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--star,
 .gv-floating-folder-panel__conv:focus-within .gv-floating-folder-panel__icon-button--star,
 .gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--remove,
