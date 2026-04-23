@@ -39,6 +39,10 @@ export const StorageKeys = {
   FOLDER_ENABLED: 'geminiFolderEnabled',
   FOLDER_HIDE_ARCHIVED_CONVERSATIONS: 'geminiFolderHideArchivedConversations',
   FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN: 'geminiFolderHideArchivedNudgeShown',
+  FOLDER_FLOATING_NUDGE_SHOWN: 'geminiFolderFloatingNudgeShown',
+  FOLDER_FLOATING_POS: 'geminiFolderFloatingPos',
+  FOLDER_FLOATING_FAB_POS: 'geminiFolderFloatingFabPos',
+  FOLDER_FLOATING_SIZE: 'geminiFolderFloatingSize',
   // AI Studio variants — intentionally separate from the Gemini keys so toggling the
   // behaviour on one platform does not surprise users on the other.
   FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO: 'aistudioFolderHideArchivedConversations',

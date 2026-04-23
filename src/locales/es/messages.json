@@ -627,6 +627,42 @@
     "message": "Puedes cambiarlo en cualquier momento desde el popup de la extensión → Opciones de carpetas.",
     "description": "Footnote explaining where to toggle the setting later"
   },
+  "floatingModeNudgeTitle": {
+    "message": "Barra lateral no disponible: ¿abrir las carpetas en una ventana flotante?",
+    "description": "Title of the floating-mode fallback nudge"
+  },
+  "floatingModeNudgeBody": {
+    "message": "Voyager no pudo encontrar la barra lateral de Gemini, probablemente porque cambió el diseño de la página. Aún puedes explorar tus carpetas en una ventana flotante.",
+    "description": "Body copy of the floating-mode fallback nudge"
+  },
+  "floatingModeNudgeEnable": {
+    "message": "Abrir ventana flotante",
+    "description": "Primary button that opens the floating folder panel"
+  },
+  "floatingModeNudgeDismiss": {
+    "message": "Ahora no",
+    "description": "Secondary button that dismisses the floating-mode nudge"
+  },
+  "floatingPanelTitle": {
+    "message": "Carpetas",
+    "description": "Title shown in the floating folder panel header"
+  },
+  "floatingPanelClose": {
+    "message": "Cerrar",
+    "description": "Aria label for the floating panel close button"
+  },
+  "floatingPanelEmpty": {
+    "message": "Aún no hay carpetas.",
+    "description": "Empty state shown when the user has no folders"
+  },
+  "floatingPanelUntitled": {
+    "message": "Sin título",
+    "description": "Fallback label for conversations with no title"
+  },
+  "floatingFabLabel": {
+    "message": "Abrir carpetas flotantes",
+    "description": "Aria label and tooltip for the persistent floating-mode FAB"
+  },
   "conversation_star": {
     "message": "Destacar conversación",
     "description": "Star conversation button tooltip"
@@ -1706,5 +1742,85 @@
   "canvasExportFailed": {
     "message": "No se pudo copiar el contenido del Canvas",
     "description": "Aviso mostrado cuando la copia al portapapeles falla"
+  },
+  "floatingPanelCreateFolder": {
+    "message": "Crear carpeta",
+    "description": "Floating folder panel create folder action"
+  },
+  "floatingPanelCreateSubfolder": {
+    "message": "Crear subcarpeta",
+    "description": "Floating folder panel create subfolder action"
+  },
+  "floatingPanelFolderNamePlaceholder": {
+    "message": "Nombre de la carpeta",
+    "description": "Floating folder panel folder name input placeholder"
+  },
+  "floatingPanelRenameFolder": {
+    "message": "Renombrar",
+    "description": "Floating folder panel rename folder action"
+  },
+  "floatingPanelDeleteFolder": {
+    "message": "Eliminar",
+    "description": "Floating folder panel delete folder action"
+  },
+  "floatingPanelDeleteConfirm": {
+    "message": "¿Eliminar esta carpeta y todo su contenido?",
+    "description": "Floating folder panel delete folder confirmation"
+  },
+  "floatingPanelCancel": {
+    "message": "Cancelar",
+    "description": "Floating folder panel cancel action"
+  },
+  "floatingPanelSave": {
+    "message": "Guardar",
+    "description": "Floating folder panel save action"
+  },
+  "floatingPanelPinFolder": {
+    "message": "Fijar",
+    "description": "Floating folder panel pin folder action"
+  },
+  "floatingPanelUnpinFolder": {
+    "message": "Desfijar",
+    "description": "Floating folder panel unpin folder action"
+  },
+  "floatingPanelRemoveConversation": {
+    "message": "Quitar de la carpeta",
+    "description": "Floating folder panel remove conversation action"
+  },
+  "floatingPanelStarConversation": {
+    "message": "Destacar",
+    "description": "Floating folder panel star conversation action"
+  },
+  "floatingPanelUnstarConversation": {
+    "message": "Quitar destacado",
+    "description": "Floating folder panel unstar conversation action"
+  },
+  "floatingPanelColor": {
+    "message": "Color",
+    "description": "Floating folder panel color section label"
+  },
+  "floatingPanelExpandFolder": {
+    "message": "Expandir",
+    "description": "Floating folder panel expand folder aria label"
+  },
+  "floatingPanelCollapseFolder": {
+    "message": "Contraer",
+    "description": "Floating folder panel collapse folder aria label"
+  },
+  "floatingPanelCloudUpload": {
+    "message": "Subir a la nube",
+    "description": "Floating folder panel cloud upload button tooltip"
+  },
+  "floatingPanelCloudSync": {
+    "message": "Sincronizar desde la nube",
+    "description": "Floating folder panel cloud sync button tooltip"
+  },
+  "floatingPanelMoveHint": {
+    "message": "Para añadir una conversación: menú ⋮ de la conversación → \"Mover a carpeta\".",
+    "description": "Floating folder panel hint explaining how to add conversations through the native conversation menu"
+  },
+  "floatingPanelGestureHint": {
+    "message": "Doble clic para renombrar · Clic derecho para fijar/color/eliminar.",
+    "description": "Floating folder panel hint explaining folder gestures and context menu actions"
   }
 }

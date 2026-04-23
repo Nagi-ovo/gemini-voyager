@@ -28,6 +28,22 @@ import { sortConversationsByPriority } from './conversationSort';
 import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
 import { DEFAULT_CONVERSATION_ICON, GEM_CONFIG, getGemIcon } from './gemConfig';
 import {
+  type FloatingFabPos,
+  mountFloatingFab,
+  unmountFloatingFab,
+} from './floatingModeFab';
+import {
+  mountFloatingModeNudge,
+  shouldShowFloatingModeNudge,
+  unmountFloatingModeNudge,
+} from './floatingModeNudge';
+import {
+  type FloatingPanelHandle,
+  type FloatingPanelPos,
+  type FloatingPanelSize,
+  mountFloatingPanel,
+} from './floatingPanel';
+import {
   mountHideArchivedNudge,
   shouldShowHideArchivedNudge,
   unmountHideArchivedNudge,
@@ -46,6 +62,11 @@ const NOTIFICATION_TIMEOUT_MS = 10000; // Duration to show data loss notificatio
 const FOLDER_TREE_INDENT_MIN = -8;
 const FOLDER_TREE_INDENT_MAX = 32;
 const FOLDER_TREE_INDENT_DEFAULT = -8;
+// Max folder nesting depth — matches the floating panel's MAX_FOLDER_DEPTH.
+// root = 0, subfolder = 1, and that's the limit. Pre-existing data deeper
+// than this stays intact (we never destroy user data); the cap only gates
+// *new* creation. Moves remain unconstrained for the same reason.
+const MAX_FOLDER_DEPTH = 1;
 const FOLDER_NAME_SINGLE_CLICK_DELAY_MS = 220;
 const FOLDER_NAVIGATION_CONFIRM_DELAY_MS = 300;
 
@@ -171,6 +192,12 @@ export class FolderManager {
   } as const;
 
   private cleanupTasks: (() => void)[] = [];
+
+  // Floating-mode fallback state — surfaced when the normal sidebar injection
+  // path fails (Google changed their DOM, user is on an unsupported nav shell,
+  // etc.) so users aren't left with silently-dead folders.
+  private floatingPanelHandle: FloatingPanelHandle | null = null;
+  private floatingFallbackShown: boolean = false;
 
   constructor() {
     // Create storage adapter based on browser (Factory Pattern)
@@ -315,6 +342,14 @@ export class FolderManager {
       this.nativeMenuObserver = null;
     }
 
+    // Tear down floating-mode UI if it was surfaced.
+    unmountFloatingModeNudge();
+    unmountFloatingFab();
+    if (this.floatingPanelHandle) {
+      this.floatingPanelHandle.destroy();
+      this.floatingPanelHandle = null;
+    }
+
     // Remove event listeners
     if (this.routeChangeCleanup) {
       this.routeChangeCleanup();
@@ -404,14 +439,21 @@ export class FolderManager {
   }
 
   private async initializeFolderUI(): Promise<void> {
-    // Wait for sidebar to be available
-    await this.waitForSidebar();
+    // Wait for sidebar to be available (with a hard timeout so a DOM change on
+    // Gemini's side doesn't silently kill the folder feature).
+    const sidebarFound = await this.waitForSidebar();
+    if (!sidebarFound) {
+      this.debugWarn('Sidebar anchor never appeared — surfacing floating-mode fallback');
+      void this.showFloatingModeFallback('sidebar-anchor-missing');
+      return;
+    }
 
     // Find the Recent section
     this.findRecentSection();
 
     if (!this.recentSection) {
-      this.debugWarn('Could not find Recent section');
+      this.debugWarn('Could not find Recent section — surfacing floating-mode fallback');
+      void this.showFloatingModeFallback('recent-section-missing');
       return;
     }
 
@@ -481,19 +523,325 @@ export class FolderManager {
     });
   }
 
-  private async waitForSidebar(): Promise<void> {
+  /**
+   * Polls for the Gemini sidebar anchor. Resolves true when found, false if the
+   * configurable timeout elapses first. The timeout path lets the caller surface
+   * a floating-mode fallback UI instead of spinning forever when Google changes
+   * the sidebar DOM.
+   *
+   * Users can force the failure path for testing by setting
+   * `localStorage['gv-force-folder-fail'] = '1'` in the Gemini page and
+   * reloading.
+   */
+  private async waitForSidebar(timeoutMs: number = 10000): Promise<boolean> {
+    try {
+      if (localStorage.getItem('gv-force-folder-fail') === '1') {
+        console.warn('[FolderManager] gv-force-folder-fail is set — simulating sidebar failure');
+        return false;
+      }
+    } catch {}
     return new Promise((resolve) => {
+      const deadline = Date.now() + timeoutMs;
       const checkSidebar = () => {
-        // Look for the overflow-container which holds the sidebar content
         const container = document.querySelector('[data-test-id="overflow-container"]');
         if (container) {
           this.sidebarContainer = container as HTMLElement;
-          resolve();
-        } else {
-          setTimeout(checkSidebar, 500);
+          resolve(true);
+          return;
         }
+        if (Date.now() >= deadline) {
+          resolve(false);
+          return;
+        }
+        setTimeout(checkSidebar, 500);
       };
       checkSidebar();
+    });
+  }
+
+  /**
+   * Sidebar injection failed — surface a one-time nudge letting the user pop
+   * the folder panel out as a floating window. If they've already dismissed the
+   * nudge or already have the floating panel open, skip straight to mounting it.
+   *
+   * @param reason free-form debug label (anchor-missing, recent-section-missing, etc.)
+   */
+  private async showFloatingModeFallback(reason: string): Promise<void> {
+    if (this.floatingFallbackShown) return;
+    this.floatingFallbackShown = true;
+    this.debug(`Showing floating-mode fallback (${reason})`);
+
+    // The floating panel is a view-only surface. To *add* conversations to a
+    // folder in this fallback mode, the user goes through Gemini's own ⋮
+    // menu → "Move to folder" — which is an injected menu item. Those
+    // observers normally light up only on the sidebar-success path, but they
+    // work off `document.body` and don't actually depend on our sidebar
+    // mounting, so we wire them up here too.
+    this.setupConversationClickTracking();
+    this.setupNativeConversationMenuObserver();
+
+    let nudgeShown = false;
+    try {
+      const raw = await browser.storage.sync.get({
+        [StorageKeys.FOLDER_FLOATING_NUDGE_SHOWN]: false,
+      });
+      nudgeShown = !!raw[StorageKeys.FOLDER_FLOATING_NUDGE_SHOWN];
+    } catch (error) {
+      if (isExtensionContextInvalidatedError(error)) return;
+      this.debugWarn('Failed to read floating-mode nudge flag:', error);
+    }
+
+    const showNudge = shouldShowFloatingModeNudge({
+      nudgeShown,
+      floatingAlreadyOpen: !!this.floatingPanelHandle,
+    });
+
+    if (!showNudge) {
+      // The user has already seen the nudge once. Don't repeat it; just put
+      // the small FAB in the corner so they can re-enter whenever they want.
+      this.showFloatingFab();
+      return;
+    }
+
+    mountFloatingModeNudge({
+      onEnable: () => {
+        void this.persistFloatingNudgeShown();
+        void this.openFloatingPanel();
+      },
+      onDismiss: () => {
+        void this.persistFloatingNudgeShown();
+        // User dismissed the pitch but still needs a way back — surface the FAB.
+        this.showFloatingFab();
+      },
+    });
+  }
+
+  /**
+   * Mounts the small persistent FAB button in the corner. Safe to call multiple
+   * times — the module is idempotent. Hydrates and persists position via
+   * chrome.storage.sync so the user's chosen spot sticks across reloads.
+   */
+  private showFloatingFab(): void {
+    // Fire-and-forget position read — worst case the FAB lands in its default
+    // bottom-right spot for a frame before we re-place it.
+    void browser.storage.sync
+      .get({ [StorageKeys.FOLDER_FLOATING_FAB_POS]: null })
+      .then((raw) => {
+        const candidate = raw[StorageKeys.FOLDER_FLOATING_FAB_POS] as unknown;
+        let storedPos: FloatingFabPos | null = null;
+        if (
+          candidate &&
+          typeof candidate === 'object' &&
+          typeof (candidate as FloatingFabPos).x === 'number' &&
+          typeof (candidate as FloatingFabPos).y === 'number'
+        ) {
+          storedPos = candidate as FloatingFabPos;
+        }
+        mountFloatingFab({
+          storedPos,
+          onClick: () => {
+            void this.openFloatingPanel();
+          },
+          onPosChange: (pos) => {
+            void browser.storage.sync
+              .set({ [StorageKeys.FOLDER_FLOATING_FAB_POS]: pos })
+              .catch((error) => {
+                if (!isExtensionContextInvalidatedError(error)) {
+                  this.debugWarn('Failed to persist floating FAB position:', error);
+                }
+              });
+          },
+        });
+      })
+      .catch((error) => {
+        if (isExtensionContextInvalidatedError(error)) return;
+        this.debugWarn('Failed to read floating FAB position:', error);
+        // Still mount at default position so feature degrades gracefully.
+        mountFloatingFab({
+          onClick: () => {
+            void this.openFloatingPanel();
+          },
+        });
+      });
+  }
+
+  private async persistFloatingNudgeShown(): Promise<void> {
+    try {
+      await browser.storage.sync.set({
+        [StorageKeys.FOLDER_FLOATING_NUDGE_SHOWN]: true,
+      });
+    } catch (error) {
+      if (isExtensionContextInvalidatedError(error)) return;
+      this.debugWarn('Failed to persist floating-mode nudge dismissal:', error);
+    }
+  }
+
+  private async openFloatingPanel(): Promise<void> {
+    if (this.floatingPanelHandle) return;
+    unmountFloatingModeNudge();
+    // Only one entry point visible at a time — FAB hides when the panel is up.
+    unmountFloatingFab();
+
+    let storedPos: FloatingPanelPos | null = null;
+    let storedSize: FloatingPanelSize | null = null;
+    try {
+      const raw = await browser.storage.sync.get({
+        [StorageKeys.FOLDER_FLOATING_POS]: null,
+        [StorageKeys.FOLDER_FLOATING_SIZE]: null,
+      });
+      const posCandidate = raw[StorageKeys.FOLDER_FLOATING_POS] as unknown;
+      if (
+        posCandidate &&
+        typeof posCandidate === 'object' &&
+        typeof (posCandidate as FloatingPanelPos).x === 'number' &&
+        typeof (posCandidate as FloatingPanelPos).y === 'number'
+      ) {
+        storedPos = posCandidate as FloatingPanelPos;
+      }
+      const sizeCandidate = raw[StorageKeys.FOLDER_FLOATING_SIZE] as unknown;
+      if (
+        sizeCandidate &&
+        typeof sizeCandidate === 'object' &&
+        typeof (sizeCandidate as FloatingPanelSize).w === 'number' &&
+        typeof (sizeCandidate as FloatingPanelSize).h === 'number'
+      ) {
+        storedSize = sizeCandidate as FloatingPanelSize;
+      }
+    } catch (error) {
+      if (isExtensionContextInvalidatedError(error)) return;
+      this.debugWarn('Failed to read floating-mode position/size:', error);
+    }
+
+    // All mutation callbacks share the same tail: persist to storage and push
+    // a fresh snapshot into the floating panel. Factored out so each callback
+    // body stays a single expression of intent.
+    const afterMutation = (): void => {
+      void this.saveData();
+      this.floatingPanelHandle?.update(this.data);
+    };
+
+    this.floatingPanelHandle = mountFloatingPanel({
+      data: this.data,
+      storedPos,
+      storedSize,
+      onPosChange: (pos) => {
+        void browser.storage.sync
+          .set({ [StorageKeys.FOLDER_FLOATING_POS]: pos })
+          .catch((error) => {
+            if (!isExtensionContextInvalidatedError(error)) {
+              this.debugWarn('Failed to persist floating-mode position:', error);
+            }
+          });
+      },
+      // Fires once, 300ms after the last resize observed by the panel, so
+      // storage.sync isn't spammed with every intermediate size during a drag.
+      onSizeChange: (size) => {
+        void browser.storage.sync
+          .set({ [StorageKeys.FOLDER_FLOATING_SIZE]: size })
+          .catch((error) => {
+            if (!isExtensionContextInvalidatedError(error)) {
+              this.debugWarn('Failed to persist floating-mode size:', error);
+            }
+          });
+      },
+      onClose: () => {
+        this.floatingPanelHandle = null;
+        // Panel is gone — bring the FAB back so the user can re-open later.
+        this.showFloatingFab();
+      },
+      onNavigate: (conv) => {
+        if (conv.url) {
+          location.assign(conv.url);
+        }
+      },
+      onCreateFolder: (name, parentId) => {
+        const maxSortIndex = this.data.folders
+          .filter((f) => f.parentId === parentId)
+          .reduce((max, f) => Math.max(max, f.sortIndex ?? -1), -1);
+        const folder: Folder = {
+          id: this.generateId(),
+          name,
+          parentId,
+          isExpanded: true,
+          sortIndex: maxSortIndex + 1,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        this.data.folders.push(folder);
+        this.data.folderContents[folder.id] = [];
+        afterMutation();
+      },
+      onRenameFolder: (folderId, newName) => {
+        const folder = this.data.folders.find((f) => f.id === folderId);
+        if (!folder) return;
+        folder.name = newName;
+        folder.updatedAt = Date.now();
+        afterMutation();
+      },
+      onDeleteFolder: (folderId) => {
+        const foldersToDelete = this.getFolderAndDescendants(folderId);
+        this.data.folders = this.data.folders.filter((f) => !foldersToDelete.includes(f.id));
+        foldersToDelete.forEach((id) => {
+          delete this.data.folderContents[id];
+        });
+        afterMutation();
+      },
+      onRemoveConversation: (folderId, conversationId) => {
+        // Reuse the existing data-only removal path; it already calls saveData
+        // + refresh (sidebar refresh is a no-op when the sidebar isn't mounted).
+        this.removeConversationFromFolder(folderId, conversationId);
+        this.floatingPanelHandle?.update(this.data);
+      },
+      onToggleStar: (folderId, conversationId) => {
+        this.toggleConversationStar(folderId, conversationId);
+        this.floatingPanelHandle?.update(this.data);
+      },
+      onToggleFolderPinned: (folderId) => {
+        this.togglePinFolder(folderId);
+        this.floatingPanelHandle?.update(this.data);
+      },
+      // Intra-panel conversation move: user dragged a conversation row from
+      // folder A to folder B inside the floating panel. Cross-document drag
+      // (native Gemini row → panel) is intentionally NOT wired — that path
+      // proved unreliable; the user files new conversations via the native
+      // ⋮ → "Move to folder" menu instead.
+      onMoveConversation: (conversationId, fromFolderId, toFolderId) => {
+        const conv = this.data.folderContents[fromFolderId]?.find(
+          (c) => c.conversationId === conversationId,
+        );
+        if (!conv) return;
+        this.moveConversationToFolder(fromFolderId, toFolderId, conv);
+      },
+      onSetFolderColor: (folderId, color) => {
+        this.changeFolderColor(folderId, color);
+        this.floatingPanelHandle?.update(this.data);
+      },
+      // Cloud sync / upload — mirror what the sidebar's header buttons do.
+      // Only wire on non-Safari; the floating panel hides these buttons on
+      // Safari because our Drive OAuth2 flow is not supported there yet. The
+      // panel reads `isSafari()` itself, but we still guard here so callbacks
+      // stay undefined on Safari and nothing fires by accident.
+      //
+      // onCloudSync can mutate this.data (merges Drive payload locally), and
+      // the usual post-merge `refresh()` is a no-op when the sidebar isn't
+      // mounted. So after sync resolves we explicitly push the latest snapshot
+      // into the floating panel. onCloudUpload is read-only locally, so no
+      // post-hook is needed.
+      ...(isSafari()
+        ? {}
+        : {
+            onCloudUpload: () => {
+              void this.handleCloudUpload();
+            },
+            onCloudSync: () => {
+              void (async () => {
+                await this.handleCloudSync();
+                this.floatingPanelHandle?.update(this.data);
+              })();
+            },
+            getCloudUploadTooltip: () => this.getCloudUploadTooltip(),
+            getCloudSyncTooltip: () => this.getCloudSyncTooltip(),
+          }),
     });
   }
 
@@ -1459,6 +1807,13 @@ export class FolderManager {
   }
 
   private makeConversationDraggable(element: HTMLElement): void {
+    // Idempotency guard — the method can legitimately be called more than once
+    // per element (e.g. sidebar success path + document sweep on fallback,
+    // MutationObserver re-entry, route change re-scans). Without this guard
+    // we'd stack duplicate mousedown / dragstart listeners on every call.
+    if (element.dataset.gvConvDragAttached === 'true') return;
+    element.dataset.gvConvDragAttached = 'true';
+
     element.draggable = true;
     element.style.cursor = 'grab';
 
@@ -2074,6 +2429,19 @@ export class FolderManager {
   }
 
   private createFolder(parentId: string | null = null): void {
+    // Depth cap: subfolder creation stops once the parent is already as deep
+    // as MAX_FOLDER_DEPTH allows. The sidebar context menu hides the affordance
+    // at this depth, but guard here too so any other caller (imports, cross-
+    // module wiring, drag shortcuts) can't silently exceed the cap. Root
+    // creation (parentId === null) is always allowed.
+    if (parentId !== null && this.getFolderDepth(parentId) >= MAX_FOLDER_DEPTH) {
+      this.debugWarn(
+        'createFolder refused: parent is already at MAX_FOLDER_DEPTH',
+        parentId,
+      );
+      return;
+    }
+
     if (this.activeFolderInput && !this.activeFolderInput.isConnected) {
       this.clearActiveFolderInput();
     }
@@ -2964,6 +3332,22 @@ export class FolderManager {
       currentId = folder?.parentId || null;
     }
     return false;
+  }
+
+  /**
+   * Distance from a folder to the root — 0 for a top-level folder, 1 for a
+   * subfolder, etc. Returns 0 for unknown ids so callers can treat "not found"
+   * the same as "at root" for gating purposes (they'll also fail their own
+   * existence check before mutating).
+   */
+  private getFolderDepth(folderId: string): number {
+    let depth = 0;
+    let current = this.data.folders.find((f) => f.id === folderId);
+    while (current?.parentId) {
+      depth += 1;
+      current = this.data.folders.find((f) => f.id === current?.parentId);
+    }
+    return depth;
   }
 
   private toggleConversationStar(folderId: string, conversationId: string): void {
@@ -3979,10 +4363,22 @@ export class FolderManager {
         label: folder.pinned ? this.t('folder_unpin') : this.t('folder_pin'),
         action: () => this.togglePinFolder(folderId),
       },
-      { label: this.t('folder_create_subfolder'), action: () => this.createFolder(folderId) },
+    ];
+
+    // "Create subfolder" only appears when the parent isn't already at the
+    // floor of the depth cap. Pre-existing deeper data still renders; we just
+    // don't offer a UI path to grow it further.
+    if (this.getFolderDepth(folderId) < MAX_FOLDER_DEPTH) {
+      menuItems.push({
+        label: this.t('folder_create_subfolder'),
+        action: () => this.createFolder(folderId),
+      });
+    }
+
+    menuItems.push(
       { label: this.t('folder_rename'), action: () => this.renameFolder(folderId) },
       { label: this.t('folder_change_color'), action: () => this.showColorPicker(folderId, event) },
-    ];
+    );
 
     // Only show instructions editor when Folder-as-Project is enabled
     if (this.folderProjectEnabled) {
@@ -5755,6 +6151,11 @@ export class FolderManager {
         // Create primary backup AFTER successful save
         this.backupService.createPrimaryBackup(this.data);
         this.debug('Data saved successfully');
+        // Centralised floating-panel sync. Any code path that persists folder
+        // data (sidebar actions, cloud download, native menu → "Move to
+        // folder", etc.) ends up here, so one hook keeps the floating view
+        // live without every call site having to remember.
+        this.floatingPanelHandle?.update(this.data);
       } else {
         console.error('[FolderManager] Save failed after retry');
       }

@@ -8256,6 +8256,396 @@ body.gv-rtl .gv-hide-archived-nudge__actions {
   justify-content: flex-start;
 }
 
+/* ─── Floating-mode fallback nudge (body-level toast) ─────────────────────
+ * Surfaced when Gemini's sidebar anchor can't be found and our injected
+ * folder panel has nowhere to mount. Prompts the user to open the folders
+ * in a floating window instead of silently dying. */
+.gv-floating-mode-nudge {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483647;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #1f2025;
+  color: #e8eaed;
+  border: 1px solid rgba(129, 140, 248, 0.4);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gv-floating-mode-nudge.gv-floating-mode-nudge--show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.gv-floating-mode-nudge__title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.gv-floating-mode-nudge__title::before {
+  content: '🪟';
+  font-size: 14px;
+}
+.gv-floating-mode-nudge__body {
+  font-size: 12px;
+  opacity: 0.82;
+  margin-bottom: 12px;
+}
+.gv-floating-mode-nudge__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.gv-floating-mode-nudge__btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+  transition:
+    background-color 120ms,
+    border-color 120ms,
+    filter 120ms;
+}
+.gv-floating-mode-nudge__btn--primary {
+  background: rgba(129, 140, 248, 0.92);
+  color: #fff;
+  border-color: rgba(129, 140, 248, 0.92);
+}
+.gv-floating-mode-nudge__btn--primary:hover {
+  filter: brightness(1.08);
+}
+.gv-floating-mode-nudge__btn--secondary {
+  background: transparent;
+  color: inherit;
+  border-color: rgba(148, 163, 184, 0.32);
+}
+.gv-floating-mode-nudge__btn--secondary:hover {
+  background: rgba(148, 163, 184, 0.14);
+}
+.theme-host.light-theme .gv-floating-mode-nudge,
+body.light-theme .gv-floating-mode-nudge,
+html.light-theme .gv-floating-mode-nudge {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: rgba(99, 102, 241, 0.32);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18);
+}
+.theme-host.light-theme .gv-floating-mode-nudge__btn--primary,
+body.light-theme .gv-floating-mode-nudge__btn--primary,
+html.light-theme .gv-floating-mode-nudge__btn--primary {
+  background: rgba(79, 70, 229, 0.95);
+  border-color: rgba(79, 70, 229, 0.95);
+}
+body.gv-rtl .gv-floating-mode-nudge {
+  right: auto;
+  left: 16px;
+}
+body.gv-rtl .gv-floating-mode-nudge__actions {
+  justify-content: flex-start;
+}
+
+/* ─── Floating folder panel ────────────────────────────────────────────── */
+.gv-floating-folder-panel {
+  position: fixed;
+  z-index: 2147483646;
+  display: flex;
+  flex-direction: column;
+  background: #1f2025;
+  color: #e8eaed;
+  border-radius: 14px;
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 13px;
+}
+.gv-floating-folder-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: grab;
+  user-select: none;
+  background: rgba(0, 0, 0, 0.24);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  touch-action: none;
+}
+.gv-floating-folder-panel__header--dragging {
+  cursor: grabbing;
+}
+.gv-floating-folder-panel__title {
+  font-weight: 600;
+  font-size: 13px;
+}
+.gv-floating-folder-panel__close {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.gv-floating-folder-panel__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.gv-floating-folder-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+.gv-floating-folder-panel__empty {
+  text-align: center;
+  padding: 24px 12px;
+  opacity: 0.6;
+  font-size: 12px;
+}
+.gv-floating-folder-panel__folder {
+  display: flex;
+  flex-direction: column;
+}
+.gv-floating-folder-panel__folder-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 8px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.gv-floating-folder-panel__folder-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.gv-floating-folder-panel__caret {
+  font-size: 10px;
+  opacity: 0.6;
+  width: 12px;
+  display: inline-flex;
+  justify-content: center;
+}
+.gv-floating-folder-panel__folder-name {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.gv-floating-folder-panel__count {
+  font-size: 11px;
+  opacity: 0.55;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.gv-floating-folder-panel__folder-body {
+  display: flex;
+  flex-direction: column;
+}
+.gv-floating-folder-panel__conv {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 10px 5px 24px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: 4px;
+}
+.gv-floating-folder-panel__conv:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.theme-host.light-theme .gv-floating-folder-panel,
+body.light-theme .gv-floating-folder-panel,
+html.light-theme .gv-floating-folder-panel {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: rgba(99, 102, 241, 0.28);
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.22);
+}
+.theme-host.light-theme .gv-floating-folder-panel__header,
+body.light-theme .gv-floating-folder-panel__header,
+html.light-theme .gv-floating-folder-panel__header {
+  background: rgba(99, 102, 241, 0.06);
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+.theme-host.light-theme .gv-floating-folder-panel__folder-header:hover,
+body.light-theme .gv-floating-folder-panel__folder-header:hover,
+html.light-theme .gv-floating-folder-panel__folder-header:hover {
+  background: rgba(15, 23, 42, 0.04);
+}
+.theme-host.light-theme .gv-floating-folder-panel__conv:hover,
+body.light-theme .gv-floating-folder-panel__conv:hover,
+html.light-theme .gv-floating-folder-panel__conv:hover {
+  background: rgba(15, 23, 42, 0.05);
+}
+.theme-host.light-theme .gv-floating-folder-panel__count,
+body.light-theme .gv-floating-folder-panel__count,
+html.light-theme .gv-floating-folder-panel__count {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+/* ─── Floating-mode re-entry FAB ───────────────────────────────────────────
+ * Small persistent corner button that reopens the floating folder panel.
+ * Tone: quiet. Neutral tonal surface that blends with Gemini's chrome,
+ * indigo accent only on the icon. No candy-colored gradient, no saturated
+ * halo. Depth comes from a soft shadow + a 1px border, not from color.
+ */
+.gv-floating-fab {
+  position: fixed;
+  z-index: 2147483645;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: none;
+}
+.gv-floating-fab.gv-floating-fab--show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.gv-floating-fab.gv-floating-fab--dragging {
+  cursor: grabbing;
+  transition: none;
+}
+.gv-floating-fab:focus-visible {
+  outline: none;
+}
+.gv-floating-fab:focus-visible .gv-floating-fab__inner {
+  box-shadow:
+    0 0 0 2px rgba(129, 140, 248, 0.55),
+    0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+/* Inner body — matte tonal surface tuned to match Gemini's dark chrome. */
+.gv-floating-fab__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #2a2c33;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.28),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gv-floating-fab:hover .gv-floating-fab__inner {
+  background: #33363d;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.34),
+    0 1px 2px rgba(0, 0, 0, 0.24);
+}
+.gv-floating-fab:active .gv-floating-fab__inner {
+  background: #24262c;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Halo — disabled by default; kept in the DOM for backward compat but no
+ * longer visible. The hover state now lives on the inner surface itself. */
+.gv-floating-fab__halo {
+  display: none;
+}
+
+.gv-floating-fab__icon {
+  color: rgba(165, 180, 252, 0.92);
+  transition: color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gv-floating-fab:hover .gv-floating-fab__icon {
+  color: rgba(199, 210, 254, 1);
+}
+
+/* Light theme — cool off-white surface with a soft cool shadow. */
+.theme-host.light-theme .gv-floating-fab__inner,
+body.light-theme .gv-floating-fab__inner,
+html.light-theme .gv-floating-fab__inner {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 6px 18px rgba(15, 23, 42, 0.12),
+    0 1px 2px rgba(15, 23, 42, 0.08);
+}
+.theme-host.light-theme .gv-floating-fab:hover .gv-floating-fab__inner,
+body.light-theme .gv-floating-fab:hover .gv-floating-fab__inner,
+html.light-theme .gv-floating-fab:hover .gv-floating-fab__inner {
+  background: #f6f7fb;
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.16),
+    0 1px 2px rgba(15, 23, 42, 0.1);
+}
+.theme-host.light-theme .gv-floating-fab:active .gv-floating-fab__inner,
+body.light-theme .gv-floating-fab:active .gv-floating-fab__inner,
+html.light-theme .gv-floating-fab:active .gv-floating-fab__inner {
+  background: #eef0f5;
+}
+.theme-host.light-theme .gv-floating-fab__icon,
+body.light-theme .gv-floating-fab__icon,
+html.light-theme .gv-floating-fab__icon {
+  color: rgba(79, 70, 229, 0.88);
+}
+.theme-host.light-theme .gv-floating-fab:hover .gv-floating-fab__icon,
+body.light-theme .gv-floating-fab:hover .gv-floating-fab__icon,
+html.light-theme .gv-floating-fab:hover .gv-floating-fab__icon {
+  color: rgba(67, 56, 202, 1);
+}
+
+/* Reduced-motion: skip the enter transform + hover transitions. */
+@media (prefers-reduced-motion: reduce) {
+  .gv-floating-fab,
+  .gv-floating-fab__inner,
+  .gv-floating-fab__icon {
+    transition-duration: 0ms;
+  }
+}
+
 .gv-input-vim-hud-mount {
   position: relative;
   overflow: visible;
@@ -8417,4 +8807,1048 @@ html.dark .gv-input-vim-cursor-moving {
   .gv-input-vim-cursor-moving {
     animation: none;
   }
+}
+
+/* ─── Floating folder panel parity controls ────────────────────────────── */
+.gv-floating-folder-panel__header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gv-floating-folder-panel__icon-button,
+.gv-floating-folder-panel__caret {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.gv-floating-folder-panel__icon-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  font-size: 15px;
+  opacity: 0.72;
+}
+
+.gv-floating-folder-panel__icon-button:hover,
+.gv-floating-folder-panel__icon-button:focus-visible,
+.gv-floating-folder-panel__caret:hover,
+.gv-floating-folder-panel__caret:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+  outline: none;
+}
+
+.gv-floating-folder-panel__icon-button--create {
+  font-size: 17px;
+}
+
+.gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__icon-button--remove {
+  opacity: 0;
+}
+
+.gv-floating-folder-panel__folder-header:hover .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__folder-header:focus-within .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv:focus-within .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--remove,
+.gv-floating-folder-panel__conv:focus-within .gv-floating-folder-panel__icon-button--remove,
+.gv-floating-folder-panel__icon-button--active {
+  opacity: 1;
+}
+
+.gv-floating-folder-panel__icon-button--active,
+.gv-floating-folder-panel__icon-button--star:hover {
+  color: #fdd663;
+}
+
+.gv-floating-folder-panel__icon-button--remove:hover {
+  color: #f87171;
+}
+
+.gv-floating-folder-panel__folder-header {
+  min-height: 32px;
+  position: relative;
+}
+
+.gv-floating-folder-panel__folder-header--dragging,
+.gv-floating-folder-panel__conv--dragging {
+  opacity: 0.58;
+}
+
+.gv-floating-folder-panel__drop-target {
+  background: rgba(138, 180, 248, 0.18) !important;
+  box-shadow: inset 3px 0 0 #8ab4f8;
+}
+
+.gv-floating-folder-panel__folder-color {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: 0 0 8px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.gv-floating-folder-panel__folder-name-wrap {
+  min-width: 0;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.gv-floating-folder-panel__pin {
+  width: 10px;
+  color: #8ab4f8;
+  font-size: 8px;
+  line-height: 1;
+  text-align: center;
+}
+
+.gv-floating-folder-panel__inline-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+  padding: 4px 8px;
+}
+
+.gv-floating-folder-panel__inline-form--root {
+  padding-inline: 10px;
+}
+
+.gv-floating-folder-panel__inline-input {
+  min-width: 0;
+  flex: 1;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(138, 180, 248, 0.38);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  font: inherit;
+  padding: 0 8px;
+  outline: none;
+}
+
+.gv-floating-folder-panel__inline-input:focus {
+  border-color: #8ab4f8;
+  box-shadow: 0 0 0 2px rgba(138, 180, 248, 0.18);
+}
+
+.gv-floating-folder-panel__conv {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding-block: 3px;
+  padding-inline-end: 6px;
+}
+
+.gv-floating-folder-panel__conv-title {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  padding: 3px 0;
+}
+
+.gv-floating-folder-panel__context-menu {
+  position: fixed;
+  z-index: 2147483647;
+  min-width: 174px;
+  max-width: 240px;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #25262d;
+  color: #e8eaed;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
+}
+
+.gv-floating-folder-panel__menu-item {
+  appearance: none;
+  border: 0;
+  width: 100%;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font: inherit;
+  min-height: 30px;
+  padding: 6px 8px;
+  text-align: start;
+}
+
+.gv-floating-folder-panel__menu-item:hover,
+.gv-floating-folder-panel__menu-item:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.gv-floating-folder-panel__menu-item--danger {
+  color: #f87171;
+}
+
+.gv-floating-folder-panel__confirm-message {
+  color: #e8eaed;
+  font-size: 12px;
+  line-height: 1.35;
+  padding: 6px 8px 8px;
+}
+
+.gv-floating-folder-panel__confirm-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.gv-floating-folder-panel__color-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+  padding: 7px 8px;
+}
+
+.gv-floating-folder-panel__color-title {
+  font-size: 11px;
+  opacity: 0.72;
+  margin-bottom: 7px;
+}
+
+.gv-floating-folder-panel__color-swatches {
+  display: grid;
+  grid-template-columns: repeat(7, 20px);
+  gap: 6px;
+}
+
+.gv-floating-folder-panel__color-swatch {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+}
+
+.gv-floating-folder-panel__color-swatch:hover,
+.gv-floating-folder-panel__color-swatch:focus-visible,
+.gv-floating-folder-panel__color-swatch--active {
+  border-color: #e8eaed;
+  outline: none;
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__icon-button:hover,
+body.light-theme .gv-floating-folder-panel__icon-button:hover,
+html.light-theme .gv-floating-folder-panel__icon-button:hover,
+.theme-host.light-theme .gv-floating-folder-panel__icon-button:focus-visible,
+body.light-theme .gv-floating-folder-panel__icon-button:focus-visible,
+html.light-theme .gv-floating-folder-panel__icon-button:focus-visible,
+.theme-host.light-theme .gv-floating-folder-panel__caret:hover,
+body.light-theme .gv-floating-folder-panel__caret:hover,
+html.light-theme .gv-floating-folder-panel__caret:hover,
+.theme-host.light-theme .gv-floating-folder-panel__caret:focus-visible,
+body.light-theme .gv-floating-folder-panel__caret:focus-visible,
+html.light-theme .gv-floating-folder-panel__caret:focus-visible {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__drop-target,
+body.light-theme .gv-floating-folder-panel__drop-target,
+html.light-theme .gv-floating-folder-panel__drop-target {
+  background: rgba(59, 130, 246, 0.12) !important;
+  box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__folder-color,
+body.light-theme .gv-floating-folder-panel__folder-color,
+html.light-theme .gv-floating-folder-panel__folder-color {
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18);
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__inline-input,
+body.light-theme .gv-floating-folder-panel__inline-input,
+html.light-theme .gv-floating-folder-panel__inline-input {
+  background: #ffffff;
+  border-color: rgba(59, 130, 246, 0.34);
+  color: #1f2937;
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__context-menu,
+body.light-theme .gv-floating-folder-panel__context-menu,
+html.light-theme .gv-floating-folder-panel__context-menu {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.2);
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__menu-item:hover,
+body.light-theme .gv-floating-folder-panel__menu-item:hover,
+html.light-theme .gv-floating-folder-panel__menu-item:hover,
+.theme-host.light-theme .gv-floating-folder-panel__menu-item:focus-visible,
+body.light-theme .gv-floating-folder-panel__menu-item:focus-visible,
+html.light-theme .gv-floating-folder-panel__menu-item:focus-visible {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__confirm-message,
+body.light-theme .gv-floating-folder-panel__confirm-message,
+html.light-theme .gv-floating-folder-panel__confirm-message {
+  color: #1f2937;
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__color-section,
+body.light-theme .gv-floating-folder-panel__color-section,
+html.light-theme .gv-floating-folder-panel__color-section {
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__color-swatch:hover,
+body.light-theme .gv-floating-folder-panel__color-swatch:hover,
+html.light-theme .gv-floating-folder-panel__color-swatch:hover,
+.theme-host.light-theme .gv-floating-folder-panel__color-swatch:focus-visible,
+body.light-theme .gv-floating-folder-panel__color-swatch:focus-visible,
+html.light-theme .gv-floating-folder-panel__color-swatch:focus-visible,
+.theme-host.light-theme .gv-floating-folder-panel__color-swatch--active,
+body.light-theme .gv-floating-folder-panel__color-swatch--active,
+html.light-theme .gv-floating-folder-panel__color-swatch--active {
+  border-color: #1f2937;
+}
+
+body.gv-rtl .gv-floating-folder-panel__body,
+body.gv-rtl .gv-floating-folder-panel__context-menu {
+  direction: rtl;
+}
+
+body.gv-rtl .gv-floating-folder-panel__folder-header,
+body.gv-rtl .gv-floating-folder-panel__conv-title,
+body.gv-rtl .gv-floating-folder-panel__menu-item {
+  text-align: right;
+}
+
+body.gv-rtl .gv-floating-folder-panel__drop-target {
+  box-shadow: inset -3px 0 0 #8ab4f8;
+}
+
+/* ─── Floating folder panel Material polish ────────────────────────────── */
+.gv-floating-folder-panel,
+.gv-floating-folder-panel * {
+  box-sizing: border-box;
+}
+
+.gv-floating-folder-panel {
+  --gv-floating-folder-panel__surface: #ffffff;
+  --gv-floating-folder-panel__surface-container: #f8fafd;
+  --gv-floating-folder-panel__surface-hover: rgba(60, 64, 67, 0.08);
+  --gv-floating-folder-panel__surface-active: rgba(66, 133, 244, 0.12);
+  --gv-floating-folder-panel__outline: rgba(60, 64, 67, 0.16);
+  --gv-floating-folder-panel__outline-subtle: rgba(60, 64, 67, 0.1);
+  --gv-floating-folder-panel__text: #1f1f1f;
+  --gv-floating-folder-panel__text-muted: #5f6368;
+  --gv-floating-folder-panel__accent: #1a73e8;
+  --gv-floating-folder-panel__accent-soft: rgba(26, 115, 232, 0.14);
+  --gv-floating-folder-panel__danger: #b3261e;
+  --gv-floating-folder-panel__danger-soft: rgba(179, 38, 30, 0.1);
+  background: var(--gv-floating-folder-panel__surface);
+  color: var(--gv-floating-folder-panel__text);
+  border-color: var(--gv-floating-folder-panel__outline);
+  border-radius: 12px;
+  box-shadow:
+    0 16px 48px rgba(60, 64, 67, 0.22),
+    0 4px 14px rgba(60, 64, 67, 0.12);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 13px;
+  overflow: hidden;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.gv-floating-folder-panel__header {
+  min-height: 48px;
+  padding: 7px 8px 7px 14px;
+  background: var(--gv-floating-folder-panel__surface);
+  border-bottom-color: var(--gv-floating-folder-panel__outline-subtle);
+  cursor: grab;
+  gap: 8px;
+}
+
+.gv-floating-folder-panel__title {
+  min-width: 0;
+  flex: 1;
+  color: var(--gv-floating-folder-panel__text);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gv-floating-folder-panel__header-actions {
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.gv-floating-folder-panel__close,
+.gv-floating-folder-panel__icon-button,
+.gv-floating-folder-panel__caret {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 10px;
+  color: var(--gv-floating-folder-panel__text-muted);
+  transition:
+    background-color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-floating-folder-panel__close {
+  font-size: 20px;
+  padding: 0;
+}
+
+.gv-floating-folder-panel__icon-button {
+  font-size: 18px;
+  opacity: 0.86;
+}
+
+.gv-floating-folder-panel__icon-button svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  pointer-events: none;
+}
+
+.gv-floating-folder-panel__icon-button:hover,
+.gv-floating-folder-panel__icon-button:focus-visible,
+.gv-floating-folder-panel__close:hover,
+.gv-floating-folder-panel__close:focus-visible,
+.gv-floating-folder-panel__caret:hover,
+.gv-floating-folder-panel__caret:focus-visible {
+  background: var(--gv-floating-folder-panel__surface-hover);
+  color: var(--gv-floating-folder-panel__text);
+  opacity: 1;
+  outline: none;
+}
+
+.gv-floating-folder-panel__icon-button--cloud-upload,
+.gv-floating-folder-panel__icon-button--cloud-sync {
+  color: var(--gv-floating-folder-panel__text-muted);
+}
+
+.gv-floating-folder-panel__icon-button--create {
+  color: var(--gv-floating-folder-panel__accent);
+}
+
+.gv-floating-folder-panel__body {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  padding: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(95, 99, 104, 0.34) transparent;
+}
+
+.gv-floating-folder-panel__body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.gv-floating-folder-panel__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gv-floating-folder-panel__body::-webkit-scrollbar-thumb {
+  background: rgba(95, 99, 104, 0.28);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+.gv-floating-folder-panel__body::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(95, 99, 104, 0.42);
+}
+
+.gv-floating-folder-panel__folder,
+.gv-floating-folder-panel__folder-body {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Tree guide: a faint vertical line running down the body of each expanded
+ * folder, positioned under the parent's caret so children visually connect
+ * back to the row that owns them. Uses the per-folder --gv-folder-depth
+ * custom property set in renderFolderNode, so each level's line sits at
+ * its own indent without needing an explicit selector for every depth.
+ *
+ * Math: header padding-inline-start = 8 + depth*12, caret is 12px wide and
+ * centered, so the caret's visual center is at 8 + depth*12 + 6 = 14 +
+ * depth*12 px from the folder's left edge. A 1px line at that offset looks
+ * aligned with the caret above.
+ */
+.gv-floating-folder-panel__folder-body::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: calc(14px + var(--gv-folder-depth, 0) * 12px);
+  width: 1px;
+  background: rgba(255, 255, 255, 0.09);
+  pointer-events: none;
+}
+body.gv-rtl .gv-floating-folder-panel__folder-body::before {
+  left: auto;
+  right: calc(14px + var(--gv-folder-depth, 0) * 12px);
+}
+.theme-host.light-theme .gv-floating-folder-panel__folder-body::before,
+body.light-theme .gv-floating-folder-panel__folder-body::before,
+html.light-theme .gv-floating-folder-panel__folder-body::before {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.gv-floating-folder-panel__folder-header,
+.gv-floating-folder-panel__conv,
+.gv-floating-folder-panel__inline-form {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border-radius: 8px;
+  color: var(--gv-floating-folder-panel__text);
+}
+
+.gv-floating-folder-panel__folder-header {
+  min-height: 34px;
+  gap: 7px;
+  padding-block: 3px;
+  padding-inline-end: 4px;
+  transition:
+    background-color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-floating-folder-panel__folder-header:hover {
+  background: var(--gv-floating-folder-panel__surface-hover);
+}
+
+.gv-floating-folder-panel__caret {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 8px;
+  font-size: 11px;
+  opacity: 0.74;
+}
+
+.gv-floating-folder-panel__folder-color {
+  width: 9px;
+  height: 9px;
+  flex-basis: 9px;
+  box-shadow: none;
+}
+
+.gv-floating-folder-panel__folder-name-wrap,
+.gv-floating-folder-panel__folder-name,
+.gv-floating-folder-panel__conv-title {
+  min-width: 0;
+}
+
+.gv-floating-folder-panel__folder-name {
+  display: block;
+  flex: 1;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gv-floating-folder-panel__pin {
+  width: 8px;
+  color: var(--gv-floating-folder-panel__accent);
+  opacity: 0.82;
+}
+
+.gv-floating-folder-panel__count {
+  min-width: 18px;
+  border-radius: 999px;
+  background: rgba(95, 99, 104, 0.1);
+  color: var(--gv-floating-folder-panel__text-muted);
+  font-size: 11px;
+  line-height: 16px;
+  opacity: 1;
+  padding: 0 6px;
+  text-align: center;
+}
+
+.gv-floating-folder-panel__folder-header .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__folder-header .gv-floating-folder-panel__icon-button--placeholder,
+.gv-floating-folder-panel__conv .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv .gv-floating-folder-panel__icon-button--remove {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+}
+
+.gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__icon-button--remove {
+  opacity: 0;
+}
+
+.gv-floating-folder-panel__folder-header:hover .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__folder-header:focus-within .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv:focus-within .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--remove,
+.gv-floating-folder-panel__conv:focus-within .gv-floating-folder-panel__icon-button--remove,
+.gv-floating-folder-panel__icon-button--active {
+  opacity: 1;
+}
+
+/* Placeholder keeps the trailing slot's footprint so subfolder rows line up
+ * with root-level rows (where the "+ add subfolder" icon button sits). Never
+ * becomes visible, never reacts to hover/focus. */
+.gv-floating-folder-panel__icon-button--placeholder {
+  opacity: 0 !important;
+  pointer-events: none;
+  cursor: default;
+}
+
+.gv-floating-folder-panel__conv {
+  min-height: 32px;
+  gap: 4px;
+  padding-block: 3px;
+  padding-inline-end: 4px;
+  overflow: hidden;
+  transition: background-color 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-floating-folder-panel__conv:hover {
+  background: var(--gv-floating-folder-panel__surface-hover);
+}
+
+.gv-floating-folder-panel__conv-title {
+  color: inherit;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.gv-floating-folder-panel__icon-button--active,
+.gv-floating-folder-panel__icon-button--star:hover {
+  color: #fbbc04;
+}
+
+.gv-floating-folder-panel__icon-button--remove:hover {
+  color: var(--gv-floating-folder-panel__danger);
+  background: var(--gv-floating-folder-panel__danger-soft);
+}
+
+.gv-floating-folder-panel__inline-form {
+  min-height: 34px;
+  gap: 6px;
+  margin: 0;
+  padding-block: 3px;
+  padding-inline-end: 4px;
+  background: transparent;
+}
+
+.gv-floating-folder-panel__inline-form--root {
+  padding-inline-start: 8px;
+  padding-inline-end: 4px;
+}
+
+.gv-floating-folder-panel__inline-input {
+  height: 28px;
+  min-width: 0;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: var(--gv-floating-folder-panel__surface-container);
+  color: var(--gv-floating-folder-panel__text);
+  font-size: 13px;
+  line-height: 20px;
+  padding: 0 8px;
+}
+
+.gv-floating-folder-panel__inline-input:focus {
+  background: var(--gv-floating-folder-panel__surface);
+  border-color: var(--gv-floating-folder-panel__accent);
+  box-shadow: 0 0 0 2px var(--gv-floating-folder-panel__accent-soft);
+}
+
+.gv-floating-folder-panel__icon-button--save,
+.gv-floating-folder-panel__icon-button--cancel {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+  opacity: 0.86;
+}
+
+.gv-floating-folder-panel__icon-button--save:hover {
+  color: #0f9d58;
+  background: rgba(15, 157, 88, 0.1);
+}
+
+.gv-floating-folder-panel__icon-button--cancel:hover {
+  color: var(--gv-floating-folder-panel__danger);
+  background: var(--gv-floating-folder-panel__danger-soft);
+}
+
+.gv-floating-folder-panel__drop-target {
+  background: var(--gv-floating-folder-panel__surface-active) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(66, 133, 244, 0.36),
+    inset 3px 0 0 var(--gv-floating-folder-panel__accent);
+}
+
+.gv-floating-folder-panel__empty {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 18px;
+  color: var(--gv-floating-folder-panel__text-muted);
+  opacity: 1;
+  text-align: center;
+}
+
+.gv-floating-folder-panel__empty-icon {
+  width: 28px;
+  height: 28px;
+  fill: var(--gv-floating-folder-panel__accent);
+  opacity: 0.82;
+}
+
+.gv-floating-folder-panel__empty-label {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.gv-floating-folder-panel__context-menu {
+  min-width: 188px;
+  max-width: min(260px, calc(100vw - 16px));
+  padding: 6px;
+  border-radius: 8px;
+  border-color: var(--gv-floating-folder-panel__outline);
+  background: var(--gv-floating-folder-panel__surface);
+  color: var(--gv-floating-folder-panel__text);
+  box-shadow:
+    0 12px 32px rgba(60, 64, 67, 0.2),
+    0 2px 8px rgba(60, 64, 67, 0.12);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.gv-floating-folder-panel__menu-item {
+  min-height: 34px;
+  border-radius: 6px;
+  color: var(--gv-floating-folder-panel__text);
+  font-size: 13px;
+  font-weight: 400;
+  padding: 7px 10px;
+}
+
+.gv-floating-folder-panel__menu-item:hover,
+.gv-floating-folder-panel__menu-item:focus-visible {
+  background: var(--gv-floating-folder-panel__surface-hover);
+}
+
+.gv-floating-folder-panel__menu-divider {
+  height: 1px;
+  margin: 5px 4px;
+  background: var(--gv-floating-folder-panel__outline-subtle);
+}
+
+.gv-floating-folder-panel__menu-item--danger {
+  color: var(--gv-floating-folder-panel__danger);
+}
+
+.gv-floating-folder-panel__menu-item--danger:hover,
+.gv-floating-folder-panel__menu-item--danger:focus-visible {
+  background: var(--gv-floating-folder-panel__danger-soft);
+}
+
+.gv-floating-folder-panel__color-section {
+  margin: 4px 0;
+  padding: 7px 8px 8px;
+  border-top: 1px solid var(--gv-floating-folder-panel__outline-subtle);
+  border-bottom: 1px solid var(--gv-floating-folder-panel__outline-subtle);
+}
+
+.gv-floating-folder-panel__color-title {
+  margin-bottom: 7px;
+  color: var(--gv-floating-folder-panel__text-muted);
+  font-size: 11px;
+  line-height: 16px;
+  opacity: 1;
+}
+
+.gv-floating-folder-panel__color-swatches {
+  grid-template-columns: repeat(6, 18px);
+  gap: 7px;
+}
+
+.gv-floating-folder-panel__color-swatch {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.16),
+    0 0 0 1px transparent;
+}
+
+.gv-floating-folder-panel__color-swatch:hover,
+.gv-floating-folder-panel__color-swatch:focus-visible,
+.gv-floating-folder-panel__color-swatch--active {
+  border-color: var(--gv-floating-folder-panel__surface);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.16),
+    0 0 0 2px var(--gv-floating-folder-panel__accent);
+}
+
+.gv-floating-folder-panel__context-menu--confirming {
+  min-width: 224px;
+}
+
+.gv-floating-folder-panel__confirm-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+}
+
+.gv-floating-folder-panel__confirm-message {
+  flex: 1;
+  min-width: 0;
+  color: var(--gv-floating-folder-panel__text);
+  font-size: 13px;
+  line-height: 20px;
+  padding: 0;
+}
+
+.gv-floating-folder-panel__confirm-actions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.gv-floating-folder-panel__confirm-button {
+  width: auto;
+  min-height: 28px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.theme-host.dark-theme .gv-floating-folder-panel,
+body.dark-theme .gv-floating-folder-panel,
+html.dark-theme .gv-floating-folder-panel,
+html.dark .gv-floating-folder-panel,
+[data-theme='dark'] .gv-floating-folder-panel,
+[data-color-scheme='dark'] .gv-floating-folder-panel {
+  --gv-floating-folder-panel__surface: #1f1f1f;
+  --gv-floating-folder-panel__surface-container: #282a2d;
+  --gv-floating-folder-panel__surface-hover: rgba(232, 234, 237, 0.08);
+  --gv-floating-folder-panel__surface-active: rgba(138, 180, 248, 0.16);
+  --gv-floating-folder-panel__outline: rgba(232, 234, 237, 0.14);
+  --gv-floating-folder-panel__outline-subtle: rgba(232, 234, 237, 0.1);
+  --gv-floating-folder-panel__text: #e8eaed;
+  --gv-floating-folder-panel__text-muted: #bdc1c6;
+  --gv-floating-folder-panel__accent: #8ab4f8;
+  --gv-floating-folder-panel__accent-soft: rgba(138, 180, 248, 0.18);
+  --gv-floating-folder-panel__danger: #f28b82;
+  --gv-floating-folder-panel__danger-soft: rgba(242, 139, 130, 0.13);
+  background: var(--gv-floating-folder-panel__surface);
+  color: var(--gv-floating-folder-panel__text);
+  border-color: var(--gv-floating-folder-panel__outline);
+  box-shadow:
+    0 18px 52px rgba(0, 0, 0, 0.46),
+    0 4px 18px rgba(0, 0, 0, 0.32);
+}
+
+.theme-host.dark-theme .gv-floating-folder-panel__header,
+body.dark-theme .gv-floating-folder-panel__header,
+html.dark-theme .gv-floating-folder-panel__header,
+html.dark .gv-floating-folder-panel__header,
+[data-theme='dark'] .gv-floating-folder-panel__header,
+[data-color-scheme='dark'] .gv-floating-folder-panel__header {
+  background: var(--gv-floating-folder-panel__surface);
+  border-bottom-color: var(--gv-floating-folder-panel__outline-subtle);
+}
+
+.theme-host.dark-theme .gv-floating-folder-panel__body,
+body.dark-theme .gv-floating-folder-panel__body,
+html.dark-theme .gv-floating-folder-panel__body,
+html.dark .gv-floating-folder-panel__body,
+[data-theme='dark'] .gv-floating-folder-panel__body,
+[data-color-scheme='dark'] .gv-floating-folder-panel__body {
+  scrollbar-color: rgba(189, 193, 198, 0.34) transparent;
+}
+
+.theme-host.dark-theme .gv-floating-folder-panel__body::-webkit-scrollbar-thumb,
+body.dark-theme .gv-floating-folder-panel__body::-webkit-scrollbar-thumb,
+html.dark-theme .gv-floating-folder-panel__body::-webkit-scrollbar-thumb,
+html.dark .gv-floating-folder-panel__body::-webkit-scrollbar-thumb,
+[data-theme='dark'] .gv-floating-folder-panel__body::-webkit-scrollbar-thumb,
+[data-color-scheme='dark'] .gv-floating-folder-panel__body::-webkit-scrollbar-thumb {
+  background-color: rgba(189, 193, 198, 0.28);
+}
+
+.theme-host.dark-theme .gv-floating-folder-panel__context-menu,
+body.dark-theme .gv-floating-folder-panel__context-menu,
+html.dark-theme .gv-floating-folder-panel__context-menu,
+html.dark .gv-floating-folder-panel__context-menu,
+[data-theme='dark'] .gv-floating-folder-panel__context-menu,
+[data-color-scheme='dark'] .gv-floating-folder-panel__context-menu {
+  background: var(--gv-floating-folder-panel__surface);
+  color: var(--gv-floating-folder-panel__text);
+  border-color: var(--gv-floating-folder-panel__outline);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.44),
+    0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+body.gv-rtl .gv-floating-folder-panel__header {
+  padding: 7px 14px 7px 8px;
+}
+
+body.gv-rtl .gv-floating-folder-panel__drop-target {
+  box-shadow:
+    inset 0 0 0 1px rgba(66, 133, 244, 0.36),
+    inset -3px 0 0 var(--gv-floating-folder-panel__accent);
+}
+
+.gv-floating-folder-panel__move-hint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--gv-floating-folder-panel__outline-subtle, rgba(60, 64, 67, 0.1));
+  color: var(--gv-floating-folder-panel__text-muted, #5f6368);
+  background: var(--gv-floating-folder-panel__surface, #ffffff);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 11.5px;
+  line-height: 16px;
+}
+
+.gv-floating-folder-panel__hint-stack {
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--gv-floating-folder-panel__outline-subtle, rgba(60, 64, 67, 0.1));
+  background: var(--gv-floating-folder-panel__surface, #ffffff);
+}
+
+.gv-floating-folder-panel__hint-stack .gv-floating-folder-panel__move-hint {
+  min-height: 20px;
+  padding: 1px 0;
+  border-bottom: 0;
+  background: transparent;
+}
+
+.gv-floating-folder-panel {
+  min-width: 280px;
+  min-height: 320px;
+  max-width: min(640px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  resize: both;
+}
+
+.gv-floating-folder-panel__move-hint-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.78;
+}
+
+.gv-floating-folder-panel__move-hint-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 380px) {
+  .gv-floating-folder-panel__move-hint-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+  }
+}
+
+body.gv-rtl .gv-floating-folder-panel__move-hint {
+  direction: rtl;
+}
+
+.theme-host.light-theme .gv-floating-folder-panel,
+body.light-theme .gv-floating-folder-panel,
+html.light-theme .gv-floating-folder-panel {
+  background: var(--gv-floating-folder-panel__surface);
+  color: var(--gv-floating-folder-panel__text);
+  border-color: var(--gv-floating-folder-panel__outline);
+  box-shadow:
+    0 16px 48px rgba(60, 64, 67, 0.22),
+    0 4px 14px rgba(60, 64, 67, 0.12);
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__header,
+body.light-theme .gv-floating-folder-panel__header,
+html.light-theme .gv-floating-folder-panel__header {
+  background: var(--gv-floating-folder-panel__surface);
+  border-bottom-color: var(--gv-floating-folder-panel__outline-subtle);
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__folder-header:hover,
+body.light-theme .gv-floating-folder-panel__folder-header:hover,
+html.light-theme .gv-floating-folder-panel__folder-header:hover,
+.theme-host.light-theme .gv-floating-folder-panel__conv:hover,
+body.light-theme .gv-floating-folder-panel__conv:hover,
+html.light-theme .gv-floating-folder-panel__conv:hover {
+  background: var(--gv-floating-folder-panel__surface-hover);
+}
+
+.theme-host.light-theme .gv-floating-folder-panel__count,
+body.light-theme .gv-floating-folder-panel__count,
+html.light-theme .gv-floating-folder-panel__count {
+  background: rgba(95, 99, 104, 0.1);
+  color: var(--gv-floating-folder-panel__text-muted);
 }
