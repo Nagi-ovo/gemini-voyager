@@ -1,6 +1,6 @@
 ---
 name: release
-description: Cut a new gemini-voyager release — open-issue triage, preflight checks, version bump, 10-locale changelog, commit, tag, push, curated GitHub release body, and Safari DMG. Use whenever the user says "发版", "release", "bump", "cut a release", "ship vX.Y.Z", or otherwise signals shipping a new version. Also use when the user wants just a Safari DMG for an existing release.
+description: Cut a new gemini-voyager release — open-issue triage, preflight checks, version bump, 10-locale changelog, commit, tag, push, curated GitHub release body, Edge store zip, and Safari DMG. Use whenever the user says "发版", "release", "bump", "cut a release", "ship vX.Y.Z", or otherwise signals shipping a new version. Also use when the user wants just an Edge zip or Safari DMG for an existing release.
 user-invocable: true
 metadata:
   version: "1.0.0"
@@ -20,8 +20,9 @@ Release Progress:
 - [ ] Step 4: Commit + tag locally
 - [ ] Step 5: Push (user confirmation required — external action)
 - [ ] Step 6: Curated GitHub release body (separate EN + ZH sections)
-- [ ] Step 7: Safari DMG sub-flow (Xcode-gated)
-- [ ] Step 8: Final check
+- [ ] Step 7: Edge build + upload (store zip, runs anywhere)
+- [ ] Step 8: Safari DMG sub-flow (Xcode-gated)
+- [ ] Step 9: Final check
 ```
 
 ## Step 1 — Pre-flight
@@ -121,7 +122,25 @@ This is a judgment step — filtering commits, writing short descriptions in eac
 
 If the workflow's `## 📥 Installation` marker is missing (e.g., workflow failed partway), don't blindly strip — check what's there first, then paste the Installation block from the workflow YAML manually.
 
-## Step 7 — Safari DMG sub-flow
+## Step 7 — Edge build + upload
+
+Edge Add-ons store rejects Chrome's `manifest.json` `key` field, so Edge gets its own zip. The release workflow doesn't build it — we build locally and upload to the GitHub release so users can also grab it directly. Later, you manually submit the same zip to the Edge Add-ons store partner dashboard (that part isn't scripted).
+
+```bash
+bun run build:edge
+gh release upload v{VERSION} voyager-edge-v{VERSION}.zip --clobber
+```
+
+`bun run build:edge` calls `scripts/build-edge.js`, which:
+1. Re-runs `bun run build:chrome` (so it overwrites `dist_chrome/`)
+2. Strips `key` from `dist_chrome/manifest.json`
+3. Zips the contents of `dist_chrome/` as `voyager-edge-v{VERSION}.zip` in the repo root
+
+Side-effect to be aware of: `dist_chrome/` is now an Edge build (no `key`), not the Chrome Web Store build. Harmless here because the Chrome zip was built in Step 1 / Step 5 and already uploaded; but if you intend to dev-load Chrome later, re-run `bun run build:chrome` to restore.
+
+Runs anywhere — no Xcode, no code signing. Do this even when skipping the Safari DMG.
+
+## Step 8 — Safari DMG sub-flow
 
 Safari gets its own asset (a signed DMG) because Safari extensions ship as native apps, not webstore uploads. This step requires **full Xcode.app** — `xcrun safari-web-extension-converter` and `xcodebuild archive` both fail with only Command Line Tools.
 
@@ -141,10 +160,10 @@ xcodebuild -version 2>&1
   ```
   Do not block the release on Safari — the historical pattern (see v1.3.9) is that the DMG lands a few hours after the main release.
 
-## Step 8 — Final check
+## Step 9 — Final check
 
 - Open the new release page: `gh release view v{VERSION} --web` (only if user asks).
-- Confirm asset list. Expected: `voyager-chrome-v{VERSION}.zip`, `voyager-firefox-v{VERSION}.xpi`, and (if Safari sub-flow ran) `voyager-v{VERSION}.dmg`.
+- Confirm asset list. Expected: `voyager-chrome-v{VERSION}.zip`, `voyager-firefox-v{VERSION}.xpi`, `voyager-edge-v{VERSION}.zip`, and (if Safari sub-flow ran) `voyager-v{VERSION}.dmg`.
 - Summarize in one line what was shipped and what's still pending (if Safari was deferred).
 
 ## What NOT to do
