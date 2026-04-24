@@ -401,12 +401,30 @@ describe('applyPendingFolderSelection', () => {
 
 describe('follow-up injection regression', () => {
   let originalPathname: string;
+  let storageListeners: Array<
+    (changes: Record<string, chrome.storage.StorageChange>, area: string) => void
+  >;
 
   beforeEach(() => {
     vi.resetModules();
     vi.useFakeTimers();
     document.body.innerHTML = '';
     setInputTextCalls.length = 0;
+    storageListeners = [];
+
+    // Capture any onChanged listener registered by startFolderProject so we
+    // can invoke the module's own teardown path in afterEach. Without this,
+    // document/window event listeners and the 500ms URL-watcher interval
+    // leak across tests and can cause cross-test flakiness.
+    (chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>)
+      .mockReset()
+      .mockImplementation(
+        (
+          listener: (changes: Record<string, chrome.storage.StorageChange>, area: string) => void,
+        ) => {
+          storageListeners.push(listener);
+        },
+      );
 
     // Default: feature on, Ctrl+Enter off
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
@@ -424,6 +442,15 @@ describe('follow-up injection regression', () => {
   });
 
   afterEach(() => {
+    // Trigger the module's own disable path so stopURLWatcher() +
+    // teardownSendDetection() remove document/window listeners and clear
+    // the URL polling interval before the next test runs.
+    for (const listener of storageListeners) {
+      listener(
+        { [StorageKeys.FOLDER_PROJECT_ENABLED]: { newValue: false, oldValue: true } },
+        'sync',
+      );
+    }
     window.history.pushState({}, '', originalPathname);
     vi.useRealTimers();
     vi.restoreAllMocks();
