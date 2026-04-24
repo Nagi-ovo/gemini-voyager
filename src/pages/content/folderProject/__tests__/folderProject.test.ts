@@ -627,18 +627,34 @@ describe('follow-up injection regression', () => {
     Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
     document.dispatchEvent(enterEvent);
 
-    // User middle-clicks a sidebar link to open in a new tab — current tab's
-    // URL will NOT change, so pendingSend must stay true. If it gets wrongly
-    // cleared here, the subsequent (legitimate) URL change from Gemini's
-    // send would be skipped and the new conversation wouldn't be assigned.
+    // User middle-clicks AND Ctrl-clicks a sidebar link to open in new
+    // tabs/windows — the current tab's URL will NOT change in either case,
+    // so pendingSend must stay true. If it gets wrongly cleared here, the
+    // subsequent (legitimate) URL change from Gemini's send would be skipped
+    // and the new conversation wouldn't be assigned.
     const sidebarLink = document.createElement('a');
     sidebarLink.href = '/app/existing-conv-42';
     document.body.appendChild(sidebarLink);
+
     const middleClick = new MouseEvent('click', {
       bubbles: true,
       button: 1, // middle mouse button
     });
     sidebarLink.dispatchEvent(middleClick);
+
+    const ctrlClick = new MouseEvent('click', {
+      bubbles: true,
+      button: 0,
+      ctrlKey: true,
+    });
+    sidebarLink.dispatchEvent(ctrlClick);
+
+    const metaClick = new MouseEvent('click', {
+      bubbles: true,
+      button: 0,
+      metaKey: true, // Cmd-click on macOS
+    });
+    sidebarLink.dispatchEvent(metaClick);
 
     // Now the legitimate URL change from the actual send completes
     window.history.pushState({}, '', '/app/real-new-conv');
