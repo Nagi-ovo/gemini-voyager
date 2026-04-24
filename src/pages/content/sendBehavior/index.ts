@@ -185,12 +185,12 @@ function insertNewlineInContentEditable(target: HTMLElement): void {
  * Insert a newline in a textarea
  */
 function insertNewlineInTextarea(textarea: HTMLTextAreaElement): void {
-  // 建议添加此行, 以防Angular内部更新Textarea导致焦点丢失等特殊情况
+  // add this line to prevent focus loss in Angular's internal Textarea updates
   textarea.focus();
   document.execCommand('insertText', false, '\n');
 
-  // 跟Quill不同, 这里不需要重复的input event, 会自动触发input事件
-  // textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  // Trigger input event to notify any listeners
+  textarea.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 // ============================================================================
