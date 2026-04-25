@@ -254,6 +254,20 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
+.timeline-dot[data-level='3']:hover::before {
+  transform: scale(1.15);
+}
+
+/* triangle fix due to conflict in the triangle clip-path and box-shadow */
+.timeline-dot[data-level='3'].active::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  background: var(--timeline-dot-active-color);
+  /* use 90% to make the base of the triangular shadow less thick. */
+  clip-path: polygon(50% 0%, 0% 90%, 100% 90%);
+}
+
 /* ===== Timeline Context Menu ===== */
 .timeline-context-menu {
   position: fixed;
