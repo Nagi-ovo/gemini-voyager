@@ -4393,29 +4393,40 @@ export class FolderManager {
    * Navigate to a new chat page and pre-select this folder via the
    * Folder-as-Project picker. Stores the folder ID in local storage so the
    * picker can auto-select it after the page loads.
+   *
+   * Uses SPA-style navigation (pushState + popstate) so the right-side folder
+   * panel doesn't flash. When already on /app, the picker is already mounted
+   * — dispatch a custom event so it re-reads the pending folder ID without
+   * any navigation.
    */
   private createNewChatInFolder(folderId: string): void {
-    const navigate = () => {
+    const apply = () => {
       const userPrefix = window.location.pathname.match(/^\/u\/\d+/)?.[0] ?? '';
       const targetPath = `${userPrefix}/app`;
-      if (
+      const alreadyOnTarget =
         window.location.pathname === targetPath ||
-        window.location.pathname === `${targetPath}/`
-      ) {
-        window.location.reload();
-      } else {
-        window.location.href = `${window.location.origin}${targetPath}`;
+        window.location.pathname === `${targetPath}/`;
+
+      if (alreadyOnTarget) {
+        // Picker is already mounted — nudge it to re-read pending folder ID
+        window.dispatchEvent(new CustomEvent('gv:folder-project:apply-pending'));
+        return;
       }
+
+      // SPA navigation: pushState updates the URL bar; popstate dispatch
+      // lets Angular Router observe the change. No full page reload.
+      window.history.pushState({}, '', targetPath);
+      window.dispatchEvent(new PopStateEvent('popstate'));
     };
 
     browser.storage.local
       .set({ [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: folderId })
-      .then(navigate)
+      .then(apply)
       .catch((error) => {
         if (isExtensionContextInvalidatedError(error)) return;
         // storage failed — still navigate so the user isn't stranded; they can pick the folder manually
         console.warn('[folder] failed to set pending folder ID', error);
-        navigate();
+        apply();
       });
   }
 
