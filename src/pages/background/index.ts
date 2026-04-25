@@ -14,10 +14,7 @@ import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
 import { isFirefox } from '@/core/utils/browser';
-import {
-  WATERMARK_STORAGE_KEYS,
-  resolveWatermarkSettings,
-} from '@/core/utils/watermarkSettings';
+import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import {
   filterTimelineHierarchyByRouteScope,
@@ -342,9 +339,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   // Re-register fetch interceptor when any watermark-related key changes.
   // (Only the download flag actually affects registration, but we also watch
   // the legacy key so a one-time migration write triggers re-registration.)
-  if (
-    WATERMARK_STORAGE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(changes, key))
-  ) {
+  if (WATERMARK_STORAGE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(changes, key))) {
     void registerFetchInterceptor();
   }
 });

@@ -15,10 +15,7 @@
  * - Returns processed image to complete the download
  */
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
-import {
-  WATERMARK_STORAGE_KEYS,
-  resolveWatermarkSettings,
-} from '@/core/utils/watermarkSettings';
+import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import { getTranslationSync } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
@@ -213,9 +210,7 @@ const processAllImages = (): void => {
  * download path is enabled.
  */
 const decorateDownloadButtons = (): void => {
-  const images = document.querySelectorAll<HTMLImageElement>(
-    'img[src*="googleusercontent.com"]',
-  );
+  const images = document.querySelectorAll<HTMLImageElement>('img[src*="googleusercontent.com"]');
   images.forEach((img) => {
     if (isValidGeminiImage(img)) addDownloadIndicator(img);
   });
