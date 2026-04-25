@@ -175,6 +175,41 @@ describe('extractConversationInfoFromPage', () => {
     el.remove();
   });
 
+  it.each([
+    '新对话',
+    '新對話',
+    '新しいチャット',
+    '새 채팅',
+    'Nuevo chat',
+    'Nouveau chat',
+    'Novo chat',
+    'Новый чат',
+    'محادثة جديدة',
+  ])('ignores localized "New chat" placeholder: %s', (placeholder) => {
+    const hexId = 'a1b2c3d4e5f6a7b8';
+    window.history.pushState({}, '', `/app/${hexId}`);
+
+    const el = document.createElement('div');
+    el.className = 'conversation-title-container';
+    const span = document.createElement('span');
+    span.setAttribute('data-test-id', 'conversation-title');
+    span.textContent = placeholder;
+    el.appendChild(span);
+    document.body.appendChild(el);
+
+    Object.defineProperty(document, 'title', {
+      value: 'Google Gemini',
+      writable: true,
+      configurable: true,
+    });
+
+    const result = manager.extractConversationInfoFromPage();
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe('Untitled');
+
+    el.remove();
+  });
+
   it('uses second selector when first has disallowed title', () => {
     const hexId = 'a1b2c3d4e5f6a7b8';
     window.history.pushState({}, '', `/app/${hexId}`);

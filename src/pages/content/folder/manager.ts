@@ -6810,7 +6810,24 @@ export class FolderManager {
       'top-bar-actions .conversation-title.gds-title-m',
     ];
 
-    const DISALLOWED_TITLES = new Set(['New chat', 'Gemini', 'Google Gemini', '']);
+    // Placeholder strings Gemini shows before the chat is auto-titled.
+    // Must cover every locale Gemini supports — the DOM text is localized
+    // even though the brand name "Gemini" is not.
+    const DISALLOWED_TITLES = new Set([
+      '',
+      'Gemini',
+      'Google Gemini',
+      'New chat', // en
+      '新对话', // zh-CN
+      '新對話', // zh-TW
+      '新しいチャット', // ja
+      '새 채팅', // ko
+      'Nuevo chat', // es
+      'Nouveau chat', // fr
+      'Novo chat', // pt
+      'Новый чат', // ru
+      'محادثة جديدة', // ar
+    ]);
 
     let title: string | null = null;
     for (const sel of titleSelectors) {
