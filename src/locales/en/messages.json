@@ -1079,13 +1079,21 @@
     "message": "NanoBanana Options",
     "description": "NanoBanana options section label"
   },
-  "enableNanobananaWatermarkRemover": {
-    "message": "Remove NanoBanana watermark",
-    "description": "Enable automatic watermark removal for NanoBanana images"
+  "nanobananaDownloadLabel": {
+    "message": "Remove watermark on download",
+    "description": "Toggle: strip the Gemini watermark from images saved via the download button (lightweight, recommended)"
   },
-  "nanobananaWatermarkRemoverHint": {
-    "message": "Automatically removes visible Gemini watermarks from generated images",
-    "description": "Watermark remover feature hint"
+  "nanobananaDownloadHint": {
+    "message": "When you click the download button, the saved file has the watermark removed.",
+    "description": "Hint for the download-time watermark removal toggle"
+  },
+  "nanobananaPreviewLabel": {
+    "message": "Remove watermark in preview",
+    "description": "Toggle: also strip the watermark from images shown in the chat (heavier, may flash while processing)"
+  },
+  "nanobananaPreviewHint": {
+    "message": "Also process images shown on screen. Slower; the image may briefly flash while processing.",
+    "description": "Hint for the preview-time watermark removal toggle"
   },
   "nanobananaDownloadTooltip": {
     "message": "Download unwatermarked image (NanoBanana)",

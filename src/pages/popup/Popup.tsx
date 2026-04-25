@@ -17,6 +17,7 @@ import {
 } from '@/core/utils/browser';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
+import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import {
   extractDmgDownloadUrl,
   extractLatestReleaseVersion,
@@ -322,7 +323,8 @@ interface SettingsUpdate {
   floatingModeEnabled?: boolean;
   hideArchivedConversations?: boolean;
   customWebsites?: string[];
-  watermarkRemoverEnabled?: boolean;
+  watermarkDownloadEnabled?: boolean;
+  watermarkPreviewEnabled?: boolean;
   hidePromptManager?: boolean;
   promptInsertOnClickEnabled?: boolean;
   inputCollapseEnabled?: boolean;
@@ -435,7 +437,8 @@ export default function Popup() {
   const [extVersion, setExtVersion] = useState<string | null>(null);
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
   const [safariDmgUrl, setSafariDmgUrl] = useState<string | null>(null);
-  const [watermarkRemoverEnabled, setWatermarkRemoverEnabled] = useState<boolean>(true);
+  const [watermarkDownloadEnabled, setWatermarkDownloadEnabled] = useState<boolean>(true);
+  const [watermarkPreviewEnabled, setWatermarkPreviewEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
   const [promptInsertOnClickEnabled, setPromptInsertOnClickEnabled] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
@@ -530,8 +533,16 @@ export default function Popup() {
         payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
       if (settings.resetPosition) payload.geminiTimelinePosition = null;
       if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
-      if (typeof settings.watermarkRemoverEnabled === 'boolean')
-        payload.geminiWatermarkRemoverEnabled = settings.watermarkRemoverEnabled;
+      if (typeof settings.watermarkDownloadEnabled === 'boolean') {
+        payload[StorageKeys.WATERMARK_DOWNLOAD_ENABLED] = settings.watermarkDownloadEnabled;
+        // Clear the legacy single-toggle key once the user touches either new
+        // switch so it can never override the split flags on a future read.
+        payload[StorageKeys.WATERMARK_REMOVER_ENABLED] = null;
+      }
+      if (typeof settings.watermarkPreviewEnabled === 'boolean') {
+        payload[StorageKeys.WATERMARK_PREVIEW_ENABLED] = settings.watermarkPreviewEnabled;
+        payload[StorageKeys.WATERMARK_REMOVER_ENABLED] = null;
+      }
       if (typeof settings.hidePromptManager === 'boolean')
         payload.gvHidePromptManager = settings.hidePromptManager;
       if (typeof settings.promptInsertOnClickEnabled === 'boolean')
@@ -881,7 +892,9 @@ export default function Popup() {
           geminiFolderHideArchivedConversations: false,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
-          geminiWatermarkRemoverEnabled: true,
+          [StorageKeys.WATERMARK_REMOVER_ENABLED]: null,
+          [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: null,
+          [StorageKeys.WATERMARK_PREVIEW_ENABLED]: null,
           gvHidePromptManager: false,
           [StorageKeys.PROMPT_INSERT_ON_CLICK]: false,
           gvInputCollapseEnabled: false,
@@ -940,7 +953,11 @@ export default function Popup() {
             ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
             : [];
           setCustomWebsites(loadedCustomWebsites);
-          setWatermarkRemoverEnabled(res?.geminiWatermarkRemoverEnabled !== false);
+          {
+            const watermarkSettings = resolveWatermarkSettings(res);
+            setWatermarkDownloadEnabled(watermarkSettings.download);
+            setWatermarkPreviewEnabled(watermarkSettings.preview);
+          }
           setHidePromptManager(!!res?.gvHidePromptManager);
           setPromptInsertOnClickEnabled(res?.[StorageKeys.PROMPT_INSERT_ON_CLICK] === true);
           setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
@@ -2585,21 +2602,42 @@ export default function Popup() {
                 <div className="group flex items-center justify-between">
                   <div className="flex-1">
                     <Label
-                      htmlFor="watermark-remover"
+                      htmlFor="watermark-download"
                       className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                     >
-                      {t('enableNanobananaWatermarkRemover')}
+                      {t('nanobananaDownloadLabel')}
                     </Label>
                     <p className="text-muted-foreground mt-1 text-xs">
-                      {t('nanobananaWatermarkRemoverHint')}
+                      {t('nanobananaDownloadHint')}
                     </p>
                   </div>
                   <Switch
-                    id="watermark-remover"
-                    checked={watermarkRemoverEnabled}
+                    id="watermark-download"
+                    checked={watermarkDownloadEnabled}
                     onChange={(e) => {
-                      setWatermarkRemoverEnabled(e.target.checked);
-                      apply({ watermarkRemoverEnabled: e.target.checked });
+                      setWatermarkDownloadEnabled(e.target.checked);
+                      apply({ watermarkDownloadEnabled: e.target.checked });
+                    }}
+                  />
+                </div>
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="watermark-preview"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('nanobananaPreviewLabel')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('nanobananaPreviewHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="watermark-preview"
+                    checked={watermarkPreviewEnabled}
+                    onChange={(e) => {
+                      setWatermarkPreviewEnabled(e.target.checked);
+                      apply({ watermarkPreviewEnabled: e.target.checked });
                     }}
                   />
                 </div>

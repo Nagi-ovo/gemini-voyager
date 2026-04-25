@@ -1079,13 +1079,21 @@
     "message": "Настройки NanoBanana",
     "description": "NanoBanana options section label"
   },
-  "enableNanobananaWatermarkRemover": {
-    "message": "Удалить водяной знак NanoBanana",
-    "description": "Enable automatic watermark removal for NanoBanana images"
+  "nanobananaDownloadLabel": {
+    "message": "Удалять водяной знак при скачивании",
+    "description": "Toggle: strip the Gemini watermark from images saved via the download button (lightweight, recommended)"
   },
-  "nanobananaWatermarkRemoverHint": {
-    "message": "Автоматически удаляет видимые водяные знаки Gemini с сгенерированных изображений",
-    "description": "Watermark remover feature hint"
+  "nanobananaDownloadHint": {
+    "message": "При нажатии кнопки скачивания сохранённый файл выходит без водяного знака.",
+    "description": "Hint for the download-time watermark removal toggle"
+  },
+  "nanobananaPreviewLabel": {
+    "message": "Удалять водяной знак в превью",
+    "description": "Toggle: also strip the watermark from images shown in the chat (heavier, may flash while processing)"
+  },
+  "nanobananaPreviewHint": {
+    "message": "Также обрабатывает изображения, показанные на экране. Работает медленнее; во время обработки картинка может на мгновение мигнуть.",
+    "description": "Hint for the preview-time watermark removal toggle"
   },
   "nanobananaDownloadTooltip": {
     "message": "Скачать изображение без водяного знака (NanoBanana)",

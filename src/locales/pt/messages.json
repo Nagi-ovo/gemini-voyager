@@ -1079,13 +1079,21 @@
     "message": "Opções NanoBanana",
     "description": "NanoBanana options section label"
   },
-  "enableNanobananaWatermarkRemover": {
-    "message": "Remover marca d'água NanoBanana",
-    "description": "Enable automatic watermark removal for NanoBanana images"
+  "nanobananaDownloadLabel": {
+    "message": "Remover marca d'água ao baixar",
+    "description": "Toggle: strip the Gemini watermark from images saved via the download button (lightweight, recommended)"
   },
-  "nanobananaWatermarkRemoverHint": {
-    "message": "Remove automaticamente marcas d'água do Gemini visíveis em imagens geradas",
-    "description": "Watermark remover feature hint"
+  "nanobananaDownloadHint": {
+    "message": "Ao clicar no botão de download, o arquivo salvo fica sem marca d'água.",
+    "description": "Hint for the download-time watermark removal toggle"
+  },
+  "nanobananaPreviewLabel": {
+    "message": "Remover marca d'água na pré-visualização",
+    "description": "Toggle: also strip the watermark from images shown in the chat (heavier, may flash while processing)"
+  },
+  "nanobananaPreviewHint": {
+    "message": "Também processa as imagens exibidas na tela. É mais lento e a imagem pode piscar brevemente durante o processamento.",
+    "description": "Hint for the preview-time watermark removal toggle"
   },
   "nanobananaDownloadTooltip": {
     "message": "Baixar imagem sem marca d'água (NanoBanana)",

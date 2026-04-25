@@ -85,7 +85,13 @@ export const StorageKeys = {
   // Global settings
   LANGUAGE: 'language',
   FORMULA_COPY_FORMAT: 'gvFormulaCopyFormat',
+  // Legacy single-toggle key. Kept for migration: when neither
+  // WATERMARK_DOWNLOAD_ENABLED nor WATERMARK_PREVIEW_ENABLED is present, this
+  // value (defaulting to true) is used to derive both flags so existing users
+  // keep their behavior. New writes go to the two split keys below.
   WATERMARK_REMOVER_ENABLED: 'geminiWatermarkRemoverEnabled',
+  WATERMARK_DOWNLOAD_ENABLED: 'gvWatermarkDownloadEnabled',
+  WATERMARK_PREVIEW_ENABLED: 'gvWatermarkPreviewEnabled',
   HIDE_PROMPT_MANAGER: 'gvHidePromptManager',
   TAB_TITLE_UPDATE_ENABLED: 'gvTabTitleUpdateEnabled',
   MERMAID_ENABLED: 'gvMermaidEnabled',

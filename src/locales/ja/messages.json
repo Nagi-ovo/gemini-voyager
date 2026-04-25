@@ -1079,13 +1079,21 @@
     "message": "NanoBanana オプション",
     "description": "NanoBanana options section label"
   },
-  "enableNanobananaWatermarkRemover": {
-    "message": "NanoBanana 透かし除去",
-    "description": "Enable automatic watermark removal for NanoBanana images"
+  "nanobananaDownloadLabel": {
+    "message": "ダウンロード時に透かしを除去",
+    "description": "Toggle: strip the Gemini watermark from images saved via the download button (lightweight, recommended)"
   },
-  "nanobananaWatermarkRemoverHint": {
-    "message": "生成された画像から目に見える Gemini の透かしを自動的に除去します",
-    "description": "Watermark remover feature hint"
+  "nanobananaDownloadHint": {
+    "message": "ダウンロードボタンを押すと、保存されるファイルから透かしが除去されます。",
+    "description": "Hint for the download-time watermark removal toggle"
+  },
+  "nanobananaPreviewLabel": {
+    "message": "プレビュー時に透かしを除去",
+    "description": "Toggle: also strip the watermark from images shown in the chat (heavier, may flash while processing)"
+  },
+  "nanobananaPreviewHint": {
+    "message": "画面に表示される画像も処理します。動作はやや重く、処理中に画像が一瞬ちらつくことがあります。",
+    "description": "Hint for the preview-time watermark removal toggle"
   },
   "nanobananaDownloadTooltip": {
     "message": "透かしなし画像をダウンロード (NanoBanana)",

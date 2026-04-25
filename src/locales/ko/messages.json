@@ -1079,13 +1079,21 @@
     "message": "NanoBanana 옵션",
     "description": "NanoBanana options section label"
   },
-  "enableNanobananaWatermarkRemover": {
-    "message": "NanoBanana 워터마크 제거",
-    "description": "Enable automatic watermark removal for NanoBanana images"
+  "nanobananaDownloadLabel": {
+    "message": "다운로드 시 워터마크 제거",
+    "description": "Toggle: strip the Gemini watermark from images saved via the download button (lightweight, recommended)"
   },
-  "nanobananaWatermarkRemoverHint": {
-    "message": "생성된 이미지에서 가시적인 Gemini 워터마크를 자동으로 제거합니다",
-    "description": "Watermark remover feature hint"
+  "nanobananaDownloadHint": {
+    "message": "다운로드 버튼을 누르면 저장되는 파일에서 워터마크가 제거됩니다.",
+    "description": "Hint for the download-time watermark removal toggle"
+  },
+  "nanobananaPreviewLabel": {
+    "message": "미리보기에서 워터마크 제거",
+    "description": "Toggle: also strip the watermark from images shown in the chat (heavier, may flash while processing)"
+  },
+  "nanobananaPreviewHint": {
+    "message": "화면에 표시되는 이미지도 함께 처리합니다. 처리 속도는 더 느려지며, 처리 중 이미지가 잠깐 깜박일 수 있습니다.",
+    "description": "Hint for the preview-time watermark removal toggle"
   },
   "nanobananaDownloadTooltip": {
     "message": "워터마크 없는 이미지 다운로드 (NanoBanana)",

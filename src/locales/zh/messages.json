@@ -1079,13 +1079,21 @@
     "message": "NanoBanana 选项",
     "description": "NanoBanana options section label"
   },
-  "enableNanobananaWatermarkRemover": {
-    "message": "去除 NanoBanana 水印",
-    "description": "启用自动去除生成图片水印功能"
+  "nanobananaDownloadLabel": {
+    "message": "下载时去除水印",
+    "description": "下载图片时自动去除水印（轻量，推荐）"
   },
-  "nanobananaWatermarkRemoverHint": {
-    "message": "自动移除 Gemini 生成图片上的可见水印",
-    "description": "水印去除功能提示"
+  "nanobananaDownloadHint": {
+    "message": "点击下载按钮时，保存的文件已自动去除水印。",
+    "description": "下载时去水印开关说明"
+  },
+  "nanobananaPreviewLabel": {
+    "message": "预览时去除水印",
+    "description": "对话中预览图也去除水印（开销较大，处理时图片可能会闪一下）"
+  },
+  "nanobananaPreviewHint": {
+    "message": "同时处理页面上预览的图片。速度更慢，处理过程中图片可能会短暂闪一下。",
+    "description": "预览时去水印开关说明"
   },
   "nanobananaDownloadTooltip": {
     "message": "下载无水印图片 (NanoBanana)",

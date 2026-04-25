@@ -1079,13 +1079,21 @@
     "message": "Options NanoBanana",
     "description": "NanoBanana options section label"
   },
-  "enableNanobananaWatermarkRemover": {
-    "message": "Retirer le filigrane NanoBanana",
-    "description": "Enable automatic watermark removal for NanoBanana images"
+  "nanobananaDownloadLabel": {
+    "message": "Retirer le filigrane au téléchargement",
+    "description": "Toggle: strip the Gemini watermark from images saved via the download button (lightweight, recommended)"
   },
-  "nanobananaWatermarkRemoverHint": {
-    "message": "Retire automatiquement les filigranes visibles de Gemini sur les images",
-    "description": "Watermark remover feature hint"
+  "nanobananaDownloadHint": {
+    "message": "Quand vous cliquez sur le bouton de téléchargement, le fichier enregistré n'a pas de filigrane.",
+    "description": "Hint for the download-time watermark removal toggle"
+  },
+  "nanobananaPreviewLabel": {
+    "message": "Retirer le filigrane dans l'aperçu",
+    "description": "Toggle: also strip the watermark from images shown in the chat (heavier, may flash while processing)"
+  },
+  "nanobananaPreviewHint": {
+    "message": "Traite aussi les images affichées à l'écran. Plus lent ; l'image peut clignoter brièvement pendant le traitement.",
+    "description": "Hint for the preview-time watermark removal toggle"
   },
   "nanobananaDownloadTooltip": {
     "message": "Télécharger l'image sans filigrane (NanoBanana)",

@@ -61,6 +61,8 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS: Record<string, unknown> = {
   [StorageKeys.LANGUAGE]: null,
   [StorageKeys.FORMULA_COPY_FORMAT]: 'latex',
   [StorageKeys.WATERMARK_REMOVER_ENABLED]: true,
+  [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: true,
+  [StorageKeys.WATERMARK_PREVIEW_ENABLED]: true,
   [StorageKeys.HIDE_PROMPT_MANAGER]: false,
   [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: true,
   [StorageKeys.MERMAID_ENABLED]: true,

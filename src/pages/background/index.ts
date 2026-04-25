@@ -14,6 +14,10 @@ import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
 import { isFirefox } from '@/core/utils/browser';
+import {
+  WATERMARK_STORAGE_KEYS,
+  resolveWatermarkSettings,
+} from '@/core/utils/watermarkSettings';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import {
   filterTimelineHierarchyByRouteScope,
@@ -154,9 +158,10 @@ function filterForkNodesByRouteScope(
 async function registerFetchInterceptor(): Promise<void> {
   if (!chrome.scripting?.registerContentScripts) return;
 
-  // Check if watermark remover feature is enabled
-  const result = await chrome.storage.sync.get({ geminiWatermarkRemoverEnabled: true });
-  const isEnabled = result.geminiWatermarkRemoverEnabled !== false;
+  // The fetch interceptor only matters for the download path. Preview-time
+  // watermark removal happens in the content script and never touches fetch.
+  const result = await chrome.storage.sync.get([...WATERMARK_STORAGE_KEYS]);
+  const { download: downloadEnabled } = resolveWatermarkSettings(result);
 
   try {
     // Always unregister first to update settings
@@ -165,9 +170,8 @@ async function registerFetchInterceptor(): Promise<void> {
     // No-op if script was not registered
   }
 
-  // Only register if watermark remover is enabled
-  if (!isEnabled) {
-    console.log('[Background] Fetch interceptor not registered (watermark remover disabled)');
+  if (!downloadEnabled) {
+    console.log('[Background] Fetch interceptor not registered (download path disabled)');
     return;
   }
 
@@ -335,8 +339,12 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     void syncCustomContentScripts(domains);
   }
 
-  // Re-register fetch interceptor when watermark remover setting changes
-  if (Object.prototype.hasOwnProperty.call(changes, 'geminiWatermarkRemoverEnabled')) {
+  // Re-register fetch interceptor when any watermark-related key changes.
+  // (Only the download flag actually affects registration, but we also watch
+  // the legacy key so a one-time migration write triggers re-registration.)
+  if (
+    WATERMARK_STORAGE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(changes, key))
+  ) {
     void registerFetchInterceptor();
   }
 });

@@ -15,6 +15,10 @@
  * - Returns processed image to complete the download
  */
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
+import {
+  WATERMARK_STORAGE_KEYS,
+  resolveWatermarkSettings,
+} from '@/core/utils/watermarkSettings';
 import { getTranslationSync } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
@@ -187,7 +191,7 @@ async function processImage(imgElement: HTMLImageElement): Promise<void> {
 }
 
 /**
- * Process all Gemini-generated images on the page
+ * Process all Gemini-generated images on the page (preview path)
  */
 const processAllImages = (): void => {
   const images = findGeminiImages();
@@ -204,7 +208,21 @@ const processAllImages = (): void => {
 };
 
 /**
- * Setup MutationObserver to watch for new images
+ * Add the 🍌 indicator to every Gemini-generated image's download button,
+ * regardless of whether preview-time removal has run. Used when only the
+ * download path is enabled.
+ */
+const decorateDownloadButtons = (): void => {
+  const images = document.querySelectorAll<HTMLImageElement>(
+    'img[src*="googleusercontent.com"]',
+  );
+  images.forEach((img) => {
+    if (isValidGeminiImage(img)) addDownloadIndicator(img);
+  });
+};
+
+/**
+ * Setup MutationObserver to watch for new images and run the preview pipeline.
  */
 const setupMutationObserver = (): void => {
   const debouncedProcess = debounce(processAllImages, 100);
@@ -215,6 +233,21 @@ const setupMutationObserver = (): void => {
     attributeFilter: ['class', 'src'],
   });
   console.log('[Gemini Voyager] Watermark remover MutationObserver active');
+};
+
+/**
+ * Lighter MutationObserver used when only the download path is enabled: skips
+ * the canvas pipeline, only re-decorates download buttons.
+ */
+const setupIndicatorObserver = (): void => {
+  const debouncedDecorate = debounce(decorateDownloadButtons, 100);
+  new MutationObserver(debouncedDecorate).observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'src'],
+  });
+  console.log('[Gemini Voyager] Watermark download-indicator observer active');
 };
 /**
  * DOM-based communication bridge ID (must match fetchInterceptor.js)
@@ -313,31 +346,47 @@ export async function startWatermarkRemover(): Promise<void> {
     // Initialize bridge element first (so it exists when fetch interceptor loads)
     getBridgeElement();
 
-    // Check if feature is enabled
-    const result = await chrome.storage?.sync?.get({ geminiWatermarkRemoverEnabled: true });
-    const isEnabled = result?.geminiWatermarkRemoverEnabled !== false;
+    // Resolve the two split flags (with legacy fallback)
+    const result = await chrome.storage?.sync?.get([...WATERMARK_STORAGE_KEYS]);
+    const { download: downloadEnabled, preview: previewEnabled } = resolveWatermarkSettings(
+      result ?? null,
+    );
 
-    // Notify MAIN world fetch interceptor about state
-    notifyFetchInterceptor(isEnabled);
+    // Notify MAIN world fetch interceptor about download path state
+    notifyFetchInterceptor(downloadEnabled);
 
-    if (!isEnabled) {
+    if (!downloadEnabled && !previewEnabled) {
       console.log('[Gemini Voyager] Watermark remover is disabled');
       return;
     }
 
-    // Setup status listener for UI feedback ASAP (avoid missing early signals)
+    // Setup status listener for UI feedback ASAP (avoid missing early signals).
+    // Both paths benefit from the toast/status pipeline when downloads happen.
     setupStatusListener();
     setupDownloadButtonTracking();
 
-    console.log('[Gemini Voyager] Initializing watermark remover...');
+    console.log(
+      `[Gemini Voyager] Initializing watermark remover (download=${downloadEnabled}, preview=${previewEnabled})`,
+    );
     engine = await WatermarkEngine.create();
 
-    // Setup bridge to handle requests from fetch interceptor
-    setupFetchInterceptorBridge();
+    if (downloadEnabled) {
+      // Bridge handles processing requests coming from the MAIN-world fetch interceptor
+      setupFetchInterceptorBridge();
+    }
 
-    // Process preview images
-    processAllImages();
-    setupMutationObserver();
+    if (previewEnabled) {
+      // Heavy path: replace each image's src with a watermark-stripped blob.
+      // The 🍌 indicator is attached as part of processImage().
+      processAllImages();
+      setupMutationObserver();
+    } else if (downloadEnabled) {
+      // Light path: only attach the 🍌 indicator to download buttons so users
+      // know the download will be unwatermarked, without running the canvas
+      // pipeline on every preview image.
+      decorateDownloadButtons();
+      setupIndicatorObserver();
+    }
 
     console.log('[Gemini Voyager] Watermark remover ready');
   } catch (error) {
