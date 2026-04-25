@@ -272,6 +272,11 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
+/* triangle clip-path also clips box-shadow, so use drop-shadow for focus-visible glow */
+.timeline-dot[data-level='3']:focus-visible::after {
+  filter: drop-shadow(0 0 6px var(--timeline-dot-active-color));
+}
+
 /* ===== Timeline Context Menu ===== */
 .timeline-context-menu {
   position: fixed;
