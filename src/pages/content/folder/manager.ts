@@ -80,8 +80,13 @@ export function calculateFolderConversationPaddingLeft(level: number, indent: nu
   return Math.max(0, level * indent + 24);
 }
 
-export function calculateFolderDialogPaddingLeft(level: number, indent: number): number {
-  return Math.max(0, level * indent + 12);
+// Move-to-folder dialog renders a flat list (no DOM nesting), so it needs its
+// own positive per-level indent. The sidebar's `folderTreeIndent` (which can
+// be negative to compact the nested tree view) doesn't apply here — using it
+// directly inverts the hierarchy in the dialog.
+const FOLDER_DIALOG_INDENT_PER_LEVEL = 16;
+export function calculateFolderDialogPaddingLeft(level: number): number {
+  return level * FOLDER_DIALOG_INDENT_PER_LEVEL + 12;
 }
 
 /**
@@ -4611,7 +4616,7 @@ export class FolderManager {
       sortedFolders.forEach((folder) => {
         const folderItem = document.createElement('button');
         folderItem.className = 'gv-folder-dialog-item';
-        folderItem.style.paddingLeft = `${calculateFolderDialogPaddingLeft(level, this.folderTreeIndent)}px`;
+        folderItem.style.paddingLeft = `${calculateFolderDialogPaddingLeft(level)}px`;
 
         // Folder icon
         const icon = document.createElement('mat-icon');
@@ -4868,7 +4873,12 @@ export class FolderManager {
       this.nativeMenuObserver.disconnect();
     }
 
-    // Observe the document for menu appearance and disappearance
+    // Observe the global overlay container for menu panels.
+    // Angular Material renders menus into .cdk-overlay-container which is a
+    // direct child of <body>. Observing at this level catches all menu
+    // insertions without being overwhelmed by unrelated DOM mutations.
+    const observeTarget = document.querySelector('.cdk-overlay-container') ?? document.body;
+
     this.nativeMenuObserver = new MutationObserver((mutations) => {
       if (this.isDestroyed) return;
       mutations.forEach((mutation) => {
@@ -4881,6 +4891,20 @@ export class FolderManager {
               // Check if this is a conversation menu (not model selection menu or other menus)
               if (this.isConversationMenu(node)) {
                 this.debug('Observer: conversation menu detected, preparing to inject');
+
+                // Sidebar menus have conversation info pre-populated by click tracking.
+                // Top-right (header) menus do NOT — extract independently from page.
+                if (!this.lastClickedConversationInfo) {
+                  const pageInfo = this.extractConversationInfoFromPage();
+                  if (pageInfo) {
+                    this.lastClickedConversationInfo = pageInfo;
+                    this.debug('Observer: populated info from page for top menu');
+                  } else {
+                    this.debug('Observer: page URL has no valid conversation ID, skipping');
+                    return;
+                  }
+                }
+
                 this.injectMoveToFolderButton(menuContent as HTMLElement);
               } else {
                 this.debug('Observer: non-conversation menu detected, skipping injection');
@@ -4908,7 +4932,7 @@ export class FolderManager {
       });
     });
 
-    this.nativeMenuObserver.observe(document.body, {
+    this.nativeMenuObserver.observe(observeTarget, {
       childList: true,
       subtree: true,
     });
@@ -6785,6 +6809,101 @@ export class FolderManager {
     }
 
     return null;
+  }
+
+  /**
+   * Extract conversation info from the current page URL and top-bar title.
+   * Used exclusively for the top-right conversation header menu (not sidebar).
+   *
+   * Returns null ONLY when the URL does not contain a valid conversation ID,
+   * in which case injection is skipped entirely.
+   * Title always has a fallback — never returns null for title.
+   */
+  private extractConversationInfoFromPage(): { id: string; title: string; url: string } | null {
+    // --- Robust URL parsing ---
+    let path: string;
+    try {
+      path = window.location.pathname;
+    } catch {
+      this.debugWarn('extractConversationInfoFromPage: failed to read location.pathname');
+      return null;
+    }
+
+    // Support multi-user prefix /u/<n>/, /app/<hexId>, and /gem/<gemId>/<hexId>
+    const hexMatch = path.match(/\/(?:app|gem\/[^/?#]+)\/([a-f0-9]{8,})/i);
+    if (!hexMatch?.[1]) {
+      this.debug('extractConversationInfoFromPage: no valid conversation ID in URL');
+      return null;
+    }
+    const id = hexMatch[1];
+    const url = window.location.href;
+
+    // --- Defensive title extraction ---
+    // Gemini generates titles asynchronously; the DOM element may not be ready yet.
+    // Try multiple selectors, then fallback to document.title, then to a default string.
+    const titleSelectors = [
+      '.conversation-title-container [data-test-id="conversation-title"]',
+      'top-bar-actions [data-test-id="conversation-title"]',
+      '.top-bar-actions [data-test-id="conversation-title"]',
+      '.conversation-title-container .conversation-title.gds-title-m',
+      'top-bar-actions .conversation-title.gds-title-m',
+    ];
+
+    // Placeholder strings Gemini shows before the chat is auto-titled.
+    // Must cover every locale Gemini supports — the DOM text is localized
+    // even though the brand name "Gemini" is not.
+    const DISALLOWED_TITLES = new Set([
+      '',
+      'Gemini',
+      'Google Gemini',
+      'New chat', // en
+      '新对话', // zh-CN
+      '新對話', // zh-TW
+      '新しいチャット', // ja
+      '새 채팅', // ko
+      'Nuevo chat', // es
+      'Nouveau chat', // fr
+      'Novo chat', // pt
+      'Новый чат', // ru
+      'محادثة جديدة', // ar
+    ]);
+
+    let title: string | null = null;
+    for (const sel of titleSelectors) {
+      try {
+        const el = document.querySelector(sel);
+        const text = el?.textContent?.trim();
+        if (text && !DISALLOWED_TITLES.has(text)) {
+          title = text;
+          break;
+        }
+      } catch {
+        // Continue to next selector
+      }
+    }
+
+    // Fallback 1: document.title (Gemini sets "Title - Gemini" format)
+    if (!title) {
+      try {
+        const docTitle = document.title?.trim();
+        if (docTitle) {
+          const cleaned = docTitle.replace(/\s*[-–—]\s*Gemini\s*$/i, '').trim();
+          if (cleaned && !DISALLOWED_TITLES.has(cleaned)) {
+            title = cleaned;
+          }
+        }
+      } catch {
+        // Continue to default
+      }
+    }
+
+    // Fallback 2: safe default — never return empty/null title
+    if (!title) {
+      title = 'Untitled';
+    }
+
+    this.debug('extractConversationInfoFromPage:', { id, title, url });
+    return { id, title, url };
   }
 
   private findNativeConversationLinkById(conversationId: string): HTMLAnchorElement | null {

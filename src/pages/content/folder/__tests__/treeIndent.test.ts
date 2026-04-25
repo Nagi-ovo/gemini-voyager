@@ -34,10 +34,17 @@ describe('folder tree indentation', () => {
   it('calculates folder and conversation paddings from indent and level', () => {
     expect(calculateFolderHeaderPaddingLeft(2, 16)).toBe(40); // 2 * 16 + 8
     expect(calculateFolderConversationPaddingLeft(2, 16)).toBe(56); // 2 * 16 + 24
-    expect(calculateFolderDialogPaddingLeft(2, 16)).toBe(44); // 2 * 16 + 12
     expect(calculateFolderHeaderPaddingLeft(2, -16)).toBe(0);
     expect(calculateFolderConversationPaddingLeft(3, -16)).toBe(0);
-    expect(calculateFolderDialogPaddingLeft(2, -16)).toBe(0);
+  });
+
+  it('dialog padding always indents subfolders further than parents', () => {
+    // Dialog is a flat list — uses a fixed positive per-level indent (16px),
+    // independent of the sidebar's folderTreeIndent setting (which can be
+    // negative to compact the nested tree view).
+    expect(calculateFolderDialogPaddingLeft(0)).toBe(12); // 0 * 16 + 12
+    expect(calculateFolderDialogPaddingLeft(1)).toBe(28); // 1 * 16 + 12
+    expect(calculateFolderDialogPaddingLeft(2)).toBe(44); // 2 * 16 + 12
   });
 
   it('updates indent and refreshes render when setting changes', () => {
