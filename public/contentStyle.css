@@ -255,17 +255,20 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
 }
 
 .timeline-dot[data-level='3']:hover::before {
-  transform: scale(1.15);
+  transform: translate(-50%, -50%) scale(1.15);
 }
 
 /* triangle fix due to conflict in the triangle clip-path and box-shadow */
 .timeline-dot[data-level='3'].active::before {
   content: '';
   position: absolute;
-  inset: 4px;
+  inset: -3px;
+  left: 50%; 
+  top: 50%; 
+  transform: translate(-50%, -50%) ;
   background: var(--timeline-dot-active-color);
   /* use 90% to make the base of the triangular shadow less thick. */
-  clip-path: polygon(50% 0%, 0% 90%, 100% 90%);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
 /* ===== Timeline Context Menu ===== */
