@@ -262,8 +262,8 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
 .timeline-dot[data-level='3'].active::before {
   content: '';
   position: absolute;
-  left: 50%; 
-  top: 50%; 
+  left: 50%;
+  top: 50%;
   width: calc(var(--timeline-dot-size) + 6px);
   height: calc(var(--timeline-dot-size) + 6px);
   transform: translate(-50%, -50%);
