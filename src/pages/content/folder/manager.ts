@@ -80,8 +80,13 @@ export function calculateFolderConversationPaddingLeft(level: number, indent: nu
   return Math.max(0, level * indent + 24);
 }
 
-export function calculateFolderDialogPaddingLeft(level: number, indent: number): number {
-  return Math.max(0, level * indent + 12);
+// Move-to-folder dialog renders a flat list (no DOM nesting), so it needs its
+// own positive per-level indent. The sidebar's `folderTreeIndent` (which can
+// be negative to compact the nested tree view) doesn't apply here — using it
+// directly inverts the hierarchy in the dialog.
+const FOLDER_DIALOG_INDENT_PER_LEVEL = 16;
+export function calculateFolderDialogPaddingLeft(level: number): number {
+  return level * FOLDER_DIALOG_INDENT_PER_LEVEL + 12;
 }
 
 /**
@@ -4577,7 +4582,7 @@ export class FolderManager {
       sortedFolders.forEach((folder) => {
         const folderItem = document.createElement('button');
         folderItem.className = 'gv-folder-dialog-item';
-        folderItem.style.paddingLeft = `${calculateFolderDialogPaddingLeft(level, this.folderTreeIndent)}px`;
+        folderItem.style.paddingLeft = `${calculateFolderDialogPaddingLeft(level)}px`;
 
         // Folder icon
         const icon = document.createElement('mat-icon');
