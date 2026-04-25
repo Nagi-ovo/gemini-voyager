@@ -187,7 +187,16 @@ function insertNewlineInContentEditable(target: HTMLElement): void {
 function insertNewlineInTextarea(textarea: HTMLTextAreaElement): void {
   // add this line to prevent focus loss in Angular's internal Textarea updates
   textarea.focus();
-  document.execCommand('insertText', false, '\n');
+  const success = document.execCommand('insertText', false, '\n');
+
+  if (!success) {
+    // Fallback: direct value manipulation (loses undo history but guarantees insertion)
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    textarea.value = value.substring(0, start) + '\n' + value.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + 1;
+  }
 
   // Trigger input event to notify any listeners
   textarea.dispatchEvent(new Event('input', { bubbles: true }));
