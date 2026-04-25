@@ -28,8 +28,6 @@ let selectedFolderName: string | null = null;
 let selectedFolderInstructions: string | null = null;
 let pickerContainer: HTMLElement | null = null;
 let pickerCleanup: (() => void) | null = null;
-let activeChip: HTMLButtonElement | null = null;
-let activeManager: FolderManager | null = null;
 let lastHref = '';
 let urlWatcherInterval: ReturnType<typeof setInterval> | null = null;
 let urlWatcherCheckFn: (() => void) | null = null;
@@ -428,19 +426,6 @@ function buildFolderPicker(manager: FolderManager): {
 // ============================================================================
 
 /**
- * Custom event manager.ts dispatches when the user picks "New chat in this
- * folder" while already on /app — there's no SPA navigation, so we nudge the
- * already-mounted picker to re-read the pending folder ID.
- */
-export const FOLDER_PROJECT_APPLY_PENDING_EVENT = 'gv:folder-project:apply-pending';
-
-window.addEventListener(FOLDER_PROJECT_APPLY_PENDING_EVENT, () => {
-  if (activeChip && activeManager) {
-    void applyPendingFolderSelection(activeManager, activeChip);
-  }
-});
-
-/**
  * Reads a pending folder ID written by the folder manager's
  * "New chat in this folder" menu item. When found, auto-selects the folder
  * in the picker and clears the pending value.
@@ -479,8 +464,6 @@ function removePicker(): void {
   pickerCleanup = null;
   pickerContainer?.remove();
   pickerContainer = null;
-  activeChip = null;
-  activeManager = null;
 }
 
 async function injectPicker(manager: FolderManager): Promise<void> {
@@ -501,8 +484,6 @@ async function injectPicker(manager: FolderManager): Promise<void> {
     modelPicker.parentElement.insertBefore(element, modelPicker);
     pickerContainer = element;
     pickerCleanup = cleanup;
-    activeChip = chip;
-    activeManager = manager;
     void applyPendingFolderSelection(manager, chip);
     return;
   }
@@ -518,8 +499,6 @@ async function injectPicker(manager: FolderManager): Promise<void> {
     parent.insertBefore(element, richTextarea);
     pickerContainer = element;
     pickerCleanup = cleanup;
-    activeChip = chip;
-    activeManager = manager;
     void applyPendingFolderSelection(manager, chip);
   }
 }

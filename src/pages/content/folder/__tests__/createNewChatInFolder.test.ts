@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
@@ -31,22 +31,43 @@ type TestableManager = {
   createNewChatInFolder: (folderId: string) => void;
 };
 
+interface LocationMock {
+  pathname: string;
+  origin: string;
+  href: string;
+  reload: ReturnType<typeof vi.fn>;
+}
+
 describe('createNewChatInFolder', () => {
   let manager: FolderManager | null = null;
-  let pushStateSpy: MockInstance<typeof window.history.pushState>;
-  let dispatchSpy: MockInstance<typeof window.dispatchEvent>;
+  let locationMock: LocationMock;
+  let originalLocation: Location;
 
   beforeEach(() => {
-    window.history.replaceState({}, '', '/app');
+    originalLocation = window.location;
+    locationMock = {
+      pathname: '/app',
+      origin: 'https://gemini.google.com',
+      href: '',
+      reload: vi.fn(),
+    };
+    Object.defineProperty(window, 'location', {
+      value: locationMock,
+      writable: true,
+      configurable: true,
+    });
     mockBrowserStorage.local.set.mockReset();
     mockBrowserStorage.local.set.mockResolvedValue(undefined);
     mockBrowserStorage.sync.get.mockResolvedValue({});
     mockBrowserStorage.local.get.mockResolvedValue({});
-    pushStateSpy = vi.spyOn(window.history, 'pushState');
-    dispatchSpy = vi.spyOn(window, 'dispatchEvent');
   });
 
   afterEach(() => {
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+      writable: true,
+      configurable: true,
+    });
     manager?.destroy();
     manager = null;
     vi.restoreAllMocks();
@@ -54,7 +75,9 @@ describe('createNewChatInFolder', () => {
 
   it('writes the pending folder ID to storage.local', async () => {
     manager = new FolderManager();
-    (manager as unknown as TestableManager).createNewChatInFolder('folder-1');
+    const typedManager = manager as unknown as TestableManager;
+
+    typedManager.createNewChatInFolder('folder-1');
     await Promise.resolve();
     await Promise.resolve();
 
@@ -63,76 +86,77 @@ describe('createNewChatInFolder', () => {
     });
   });
 
-  it('dispatches the apply-pending custom event when already on /app', async () => {
-    window.history.replaceState({}, '', '/app');
+  it('reloads when already on /app', async () => {
+    locationMock.pathname = '/app';
     manager = new FolderManager();
-    (manager as unknown as TestableManager).createNewChatInFolder('folder-1');
+    const typedManager = manager as unknown as TestableManager;
+
+    typedManager.createNewChatInFolder('folder-1');
     await Promise.resolve();
     await Promise.resolve();
 
-    const customEventCalls = dispatchSpy.mock.calls.filter(
-      (call) => (call[0] as Event).type === 'gv:folder-project:apply-pending',
-    );
-    expect(customEventCalls).toHaveLength(1);
-    expect(pushStateSpy).not.toHaveBeenCalled();
+    expect(locationMock.reload).toHaveBeenCalledTimes(1);
+    expect(locationMock.href).toBe('');
   });
 
-  it('uses pushState + popstate to SPA-navigate from a conversation page', async () => {
-    window.history.replaceState({}, '', '/app/abc123def456');
+  it('navigates to /app from a conversation page', async () => {
+    locationMock.pathname = '/app/abc123def456';
     manager = new FolderManager();
-    (manager as unknown as TestableManager).createNewChatInFolder('folder-1');
+    const typedManager = manager as unknown as TestableManager;
+
+    typedManager.createNewChatInFolder('folder-1');
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(pushStateSpy).toHaveBeenCalledWith({}, '', '/app');
-    const popstateCalls = dispatchSpy.mock.calls.filter(
-      (call) => (call[0] as Event).type === 'popstate',
-    );
-    expect(popstateCalls).toHaveLength(1);
+    expect(locationMock.href).toBe('https://gemini.google.com/app');
+    expect(locationMock.reload).not.toHaveBeenCalled();
   });
 
-  it('preserves the multi-account user prefix when pushing state', async () => {
-    window.history.replaceState({}, '', '/u/2/c/abc');
+  it('preserves the multi-account user prefix (/u/N/app)', async () => {
+    locationMock.pathname = '/u/2/c/abc';
     manager = new FolderManager();
-    (manager as unknown as TestableManager).createNewChatInFolder('folder-1');
+    const typedManager = manager as unknown as TestableManager;
+
+    typedManager.createNewChatInFolder('folder-1');
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(pushStateSpy).toHaveBeenCalledWith({}, '', '/u/2/app');
+    expect(locationMock.href).toBe('https://gemini.google.com/u/2/app');
   });
 
   it('falls back to navigating when storage.set rejects with a generic error', async () => {
     mockBrowserStorage.local.set.mockRejectedValue(new Error('quota exceeded'));
-    window.history.replaceState({}, '', '/app/abc');
+    locationMock.pathname = '/app/abc';
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     manager = new FolderManager();
-    (manager as unknown as TestableManager).createNewChatInFolder('folder-1');
+    const typedManager = manager as unknown as TestableManager;
+
+    typedManager.createNewChatInFolder('folder-1');
     await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(pushStateSpy).toHaveBeenCalledWith({}, '', '/app');
+    expect(locationMock.href).toBe('https://gemini.google.com/app');
     expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
   it('does not navigate when extension context is invalidated', async () => {
     mockBrowserStorage.local.set.mockRejectedValue(
       new Error('Extension context invalidated.'),
     );
-    window.history.replaceState({}, '', '/app/abc');
+    locationMock.pathname = '/app/abc';
 
     manager = new FolderManager();
-    (manager as unknown as TestableManager).createNewChatInFolder('folder-1');
+    const typedManager = manager as unknown as TestableManager;
+
+    typedManager.createNewChatInFolder('folder-1');
     await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(pushStateSpy).not.toHaveBeenCalled();
-    const navEvents = dispatchSpy.mock.calls.filter((call) => {
-      const t = (call[0] as Event).type;
-      return t === 'popstate' || t === 'gv:folder-project:apply-pending';
-    });
-    expect(navEvents).toHaveLength(0);
+    expect(locationMock.href).toBe('');
+    expect(locationMock.reload).not.toHaveBeenCalled();
   });
 });
