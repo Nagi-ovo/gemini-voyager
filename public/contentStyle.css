@@ -7665,7 +7665,7 @@ body.gv-rtl .gv-timestamp {
   flex-shrink: 0;
   border: none;
   background: transparent;
-  font-size: 16px;
+  padding: 0;
   cursor: pointer;
   opacity: 0.5;
   transition: opacity 0.1s;
@@ -7673,6 +7673,23 @@ body.gv-rtl .gv-timestamp {
 
 .gv-fp-expand-btn:hover {
   opacity: 1;
+}
+
+.gv-fp-expand-icon {
+  display: block;
+  transition: transform 0.15s ease;
+}
+
+.gv-fp-expand-btn--open .gv-fp-expand-icon {
+  transform: rotate(90deg);
+}
+
+body.gv-rtl .gv-fp-expand-icon {
+  transform: rotate(180deg);
+}
+
+body.gv-rtl .gv-fp-expand-btn--open .gv-fp-expand-icon {
+  transform: rotate(90deg);
 }
 
 .theme-host.light-theme .gv-fp-expand-btn {

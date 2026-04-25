@@ -334,8 +334,10 @@ async function populateDropdown(
         const arrow = document.createElement('button');
         arrow.className = 'gv-fp-expand-btn';
         arrow.type = 'button';
-        arrow.textContent = '›';
         arrow.setAttribute('aria-label', t('folderAsProject_expand'));
+        arrow.setAttribute('aria-expanded', 'false');
+        arrow.innerHTML =
+          '<svg class="gv-fp-expand-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/></svg>';
 
         const sublist = document.createElement('div');
         sublist.className = 'gv-fp-sublist';
@@ -345,7 +347,8 @@ async function populateDropdown(
           e.stopPropagation();
           const expanding = sublist.hidden;
           sublist.hidden = !expanding;
-          arrow.textContent = expanding ? '‹' : '›';
+          arrow.classList.toggle('gv-fp-expand-btn--open', expanding);
+          arrow.setAttribute('aria-expanded', String(expanding));
           arrow.setAttribute(
             'aria-label',
             expanding ? t('folderAsProject_collapse') : t('folderAsProject_expand'),
