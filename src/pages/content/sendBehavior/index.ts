@@ -24,6 +24,8 @@ import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
+import { getTextOffset, setCaretPosition } from './utils';
+
 // ============================================================================
 // Constants
 // ============================================================================
@@ -151,9 +153,19 @@ function findSendButton(inputElement: HTMLElement): HTMLElement | null {
 function insertNewlineInContentEditable(target: HTMLElement): void {
   // Method 1: Try execCommand (deprecated but still works in most browsers)
   // This is the most reliable method for contenteditable elements
+  const currentOffset = getTextOffset(target);
+
   // This might trigger a React re-render, creating a new DOM structure
   const success = document.execCommand('insertParagraph', false);
   if (success) {
+    if (currentOffset !== null) {
+      const newOffset = currentOffset + 1;
+      const restoreCaret = () => setCaretPosition(target, newOffset);
+
+      restoreCaret();
+      requestAnimationFrame(restoreCaret);
+    }
+
     // Trigger input event to notify listeners (ensure data sync)
     target.dispatchEvent(new Event('input', { bubbles: true }));
     return;
