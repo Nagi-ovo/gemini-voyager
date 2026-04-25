@@ -4395,19 +4395,27 @@ export class FolderManager {
    * picker can auto-select it after the page loads.
    */
   private createNewChatInFolder(folderId: string): void {
+    const navigate = () => {
+      const userPrefix = window.location.pathname.match(/^\/u\/\d+/)?.[0] ?? '';
+      const targetPath = `${userPrefix}/app`;
+      if (
+        window.location.pathname === targetPath ||
+        window.location.pathname === `${targetPath}/`
+      ) {
+        window.location.reload();
+      } else {
+        window.location.href = `${window.location.origin}${targetPath}`;
+      }
+    };
+
     browser.storage.local
       .set({ [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: folderId })
-      .then(() => {
-        const userPrefix = window.location.pathname.match(/^\/u\/\d+/)?.[0] ?? '';
-        const targetPath = `${userPrefix}/app`;
-        if (
-          window.location.pathname === targetPath ||
-          window.location.pathname === `${targetPath}/`
-        ) {
-          window.location.reload();
-        } else {
-          window.location.href = `${window.location.origin}${targetPath}`;
-        }
+      .then(navigate)
+      .catch((error) => {
+        if (isExtensionContextInvalidatedError(error)) return;
+        // storage failed — still navigate so the user isn't stranded; they can pick the folder manually
+        console.warn('[folder] failed to set pending folder ID', error);
+        navigate();
       });
   }
 

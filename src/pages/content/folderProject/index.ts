@@ -648,6 +648,8 @@ export function startFolderProject(manager: FolderManager): void {
       selectedFolderId = null;
       selectedFolderName = null;
       selectedFolderInstructions = null;
+      // Drop any pending folder selection so re-enabling later doesn't auto-select a stale folder
+      void chrome.storage?.local?.remove([StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]);
     }
   });
 }

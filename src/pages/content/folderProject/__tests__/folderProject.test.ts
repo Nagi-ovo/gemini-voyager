@@ -4,16 +4,6 @@ import { StorageKeys } from '@/core/types/common';
 
 import { extractConvId, isNewChatPath, waitForElement } from '../index';
 
-// Ensure chrome.storage.local is mocked for pending-folder tests
-if (!chrome.storage.local) {
-  (chrome.storage as unknown as Record<string, unknown>).local = {
-    get: vi.fn(),
-    set: vi.fn(),
-    remove: vi.fn(),
-    clear: vi.fn(),
-  };
-}
-
 // Mock getTranslationSyncUnsafe used inside the module
 vi.mock('@/utils/i18n', () => ({
   getTranslationSyncUnsafe: (key: string) => key,
