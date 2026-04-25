@@ -147,37 +147,26 @@ function findSendButton(inputElement: HTMLElement): HTMLElement | null {
  * because it manages its own DOM state.
  *
  * Strategy:
- * 1. First try document.execCommand('insertLineBreak') - works in most browsers
+ * 1. First try document.execCommand - works in most browsers
  * 2. If that fails, simulate a Shift+Enter keypress which Quill handles natively
  */
 function insertNewlineInContentEditable(target: HTMLElement): void {
   // Method 1: Try execCommand (deprecated but still works in most browsers)
   // This is the most reliable method for contenteditable elements
-  // 1. SNAPSHOT: Remember where the cursor is (text offset)
   const currentOffset = getTextOffset(target);
 
-  // 2. EXECUTE: Native command
   // This might trigger a React re-render, creating a new DOM structure
-  const success = document.execCommand('insertLineBreak', false);
-
+  const success = document.execCommand('insertParagraph', false);
   if (success) {
-    // 3. RESTORE: Put the cursor back where it belongs
-    // Use requestAnimationFrame to wait for any immediate React re-renders to settle
     if (currentOffset !== null) {
-      // +1 to account for the newly inserted newline character
       const newOffset = currentOffset + 1;
+      const restoreCaret = () => setCaretPosition(target, newOffset);
 
-      // Try immediate restore (for synchronous DOM updates)
-      setCaretPosition(target, newOffset);
-
-      // Also try next frame (for asynchronous React updates)
-      requestAnimationFrame(() => {
-        setCaretPosition(target, newOffset);
-      });
+      restoreCaret();
+      requestAnimationFrame(restoreCaret);
     }
 
     // Trigger input event to notify listeners (ensure data sync)
-    // NOTE: Maintainer's code had this. We kept it but manage the cursor consequence.
     target.dispatchEvent(new Event('input', { bubbles: true }));
     return;
   }
@@ -208,12 +197,18 @@ function insertNewlineInContentEditable(target: HTMLElement): void {
  * Insert a newline in a textarea
  */
 function insertNewlineInTextarea(textarea: HTMLTextAreaElement): void {
-  const start = textarea.selectionStart;
-  const end = textarea.selectionEnd;
-  const value = textarea.value;
+  // add this line to prevent focus loss in Angular's internal Textarea updates
+  textarea.focus();
+  const success = document.execCommand('insertText', false, '\n');
 
-  textarea.value = value.substring(0, start) + '\n' + value.substring(end);
-  textarea.selectionStart = textarea.selectionEnd = start + 1;
+  if (!success) {
+    // Fallback: direct value manipulation (loses undo history but guarantees insertion)
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    textarea.value = value.substring(0, start) + '\n' + value.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + 1;
+  }
 
   // Trigger input event to notify any listeners
   textarea.dispatchEvent(new Event('input', { bubbles: true }));
