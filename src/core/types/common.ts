@@ -154,6 +154,7 @@ export const StorageKeys = {
 
   // Folder as Project
   FOLDER_PROJECT_ENABLED: 'gvFolderProjectEnabled',
+  FOLDER_PROJECT_PENDING_FOLDER_ID: 'gvFolderProjectPendingFolderId',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

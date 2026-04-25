@@ -1830,5 +1830,9 @@
   "floatingPanelGestureHint": {
     "message": "더블 클릭으로 이름 변경 · 우클릭으로 고정/색상/삭제.",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "folder_new_chat_in_folder": {
+    "message": "이 폴더에서 새 채팅",
+    "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
   }
 }

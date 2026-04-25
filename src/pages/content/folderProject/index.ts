@@ -370,6 +370,7 @@ async function populateDropdown(
 
 function buildFolderPicker(manager: FolderManager): {
   element: HTMLElement;
+  chip: HTMLButtonElement;
   cleanup: () => void;
 } {
   const container = document.createElement('div');
@@ -415,8 +416,43 @@ function buildFolderPicker(manager: FolderManager): {
   container.appendChild(dropdown);
   return {
     element: container,
+    chip,
     cleanup: () => document.removeEventListener('click', closeOnOutsideClick),
   };
+}
+
+// ============================================================================
+// Pending folder selection (from "New chat in folder" menu)
+// ============================================================================
+
+/**
+ * Reads a pending folder ID written by the folder manager's
+ * "New chat in this folder" menu item. When found, auto-selects the folder
+ * in the picker and clears the pending value.
+ */
+export async function applyPendingFolderSelection(
+  manager: FolderManager,
+  chip: HTMLButtonElement,
+): Promise<void> {
+  if (!chrome.storage?.local) return;
+
+  const result = await chrome.storage.local.get([StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]);
+  const pendingId = result?.[StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID];
+  if (!pendingId) return;
+
+  // Clear immediately to avoid re-application
+  await chrome.storage.local.remove([StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]);
+
+  await manager.ensureDataLoaded();
+  const folder = manager.getFolders().find((f) => f.id === pendingId);
+  if (!folder) return;
+
+  selectedFolderId = folder.id;
+  selectedFolderName = folder.name;
+  selectedFolderInstructions = folder.instructions ?? null;
+
+  chip.textContent = `📁 ${folder.name}`;
+  chip.dataset.selected = folder.id;
 }
 
 // ============================================================================
@@ -441,13 +477,14 @@ async function injectPicker(manager: FolderManager): Promise<void> {
   // Guard: don't inject twice
   if (document.querySelector('.gv-fp-picker-container')) return;
 
-  const { element, cleanup } = buildFolderPicker(manager);
+  const { element, cleanup, chip } = buildFolderPicker(manager);
 
   if (modelPicker?.parentElement) {
     // Insert before the model picker in trailing-actions-wrapper
     modelPicker.parentElement.insertBefore(element, modelPicker);
     pickerContainer = element;
     pickerCleanup = cleanup;
+    void applyPendingFolderSelection(manager, chip);
     return;
   }
 
@@ -462,6 +499,7 @@ async function injectPicker(manager: FolderManager): Promise<void> {
     parent.insertBefore(element, richTextarea);
     pickerContainer = element;
     pickerCleanup = cleanup;
+    void applyPendingFolderSelection(manager, chip);
   }
 }
 

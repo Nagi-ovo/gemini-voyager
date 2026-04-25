@@ -1830,5 +1830,9 @@
   "floatingPanelGestureHint": {
     "message": "雙擊重新命名 · 右鍵可置頂 / 改色 / 刪除。",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "folder_new_chat_in_folder": {
+    "message": "在此資料夾新增對話",
+    "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
   }
 }

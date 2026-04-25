@@ -4353,6 +4353,10 @@ export class FolderManager {
     // Only show instructions editor when Folder-as-Project is enabled
     if (this.folderProjectEnabled) {
       menuItems.push({
+        label: this.t('folder_new_chat_in_folder'),
+        action: () => this.createNewChatInFolder(folderId),
+      });
+      menuItems.push({
         label: folder.instructions
           ? this.t('folderAsProject_editInstructions')
           : this.t('folderAsProject_setInstructions'),
@@ -4383,6 +4387,28 @@ export class FolderManager {
       }
     };
     setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
+
+  /**
+   * Navigate to a new chat page and pre-select this folder via the
+   * Folder-as-Project picker. Stores the folder ID in local storage so the
+   * picker can auto-select it after the page loads.
+   */
+  private createNewChatInFolder(folderId: string): void {
+    browser.storage.local
+      .set({ [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: folderId })
+      .then(() => {
+        const userPrefix = window.location.pathname.match(/^\/u\/\d+/)?.[0] ?? '';
+        const targetPath = `${userPrefix}/app`;
+        if (
+          window.location.pathname === targetPath ||
+          window.location.pathname === `${targetPath}/`
+        ) {
+          window.location.reload();
+        } else {
+          window.location.href = `${window.location.origin}${targetPath}`;
+        }
+      });
   }
 
   /**

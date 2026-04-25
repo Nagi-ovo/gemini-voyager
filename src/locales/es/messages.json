@@ -1830,5 +1830,9 @@
   "floatingPanelGestureHint": {
     "message": "Doble clic para renombrar · Clic derecho para fijar/color/eliminar.",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "folder_new_chat_in_folder": {
+    "message": "Nuevo chat en esta carpeta",
+    "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
   }
 }

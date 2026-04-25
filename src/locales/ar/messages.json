@@ -1830,5 +1830,9 @@
   "floatingPanelGestureHint": {
     "message": "نقر مزدوج لإعادة التسمية · زر الفأرة الأيمن للتثبيت واللون والحذف.",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "folder_new_chat_in_folder": {
+    "message": "محادثة جديدة في هذا المجلد",
+    "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
   }
 }
