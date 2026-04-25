@@ -254,6 +254,29 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
+.timeline-dot[data-level='3']:hover::before {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+/* triangle fix due to conflict in the triangle clip-path and box-shadow */
+.timeline-dot[data-level='3'].active::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--timeline-dot-size) + 6px);
+  height: calc(var(--timeline-dot-size) + 6px);
+  transform: translate(-50%, -50%);
+  background: var(--timeline-dot-active-color);
+  /* use 90% to make the base of the triangular shadow less thick. */
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* triangle clip-path also clips box-shadow, so use drop-shadow for focus-visible glow */
+.timeline-dot[data-level='3']:focus-visible::after {
+  filter: drop-shadow(0 0 6px var(--timeline-dot-active-color));
+}
+
 /* ===== Timeline Context Menu ===== */
 .timeline-context-menu {
   position: fixed;
