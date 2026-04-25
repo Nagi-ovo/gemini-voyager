@@ -278,3 +278,103 @@ describe('startFolderProject — runtime toggle', () => {
     expect(document.querySelector('.gv-fp-picker-container')).toBeNull();
   });
 });
+
+// ============================================================================
+// applyPendingFolderSelection
+// ============================================================================
+
+describe('applyPendingFolderSelection', () => {
+  const mockFolders = [
+    { id: 'folder-1', name: 'Work', instructions: 'Be professional', parentId: null },
+    { id: 'folder-2', name: 'Personal', instructions: null, parentId: null },
+  ];
+
+  let chip: HTMLButtonElement;
+
+  beforeEach(() => {
+    vi.resetModules();
+    document.body.innerHTML = '';
+    chip = document.createElement('button');
+    chip.className = 'gv-fp-chip';
+    chip.textContent = 'Select folder…';
+    // Clear call history on local storage mocks
+    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockClear();
+    (chrome.storage.local.remove as unknown as ReturnType<typeof vi.fn>).mockClear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('auto-selects folder when pending ID exists in storage', async () => {
+    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'folder-1',
+    });
+    (chrome.storage.local.remove as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      undefined,
+    );
+
+    const { applyPendingFolderSelection } = await import('../index');
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue(mockFolders),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+
+    await applyPendingFolderSelection(
+      mockManager as unknown as Parameters<typeof applyPendingFolderSelection>[0],
+      chip,
+    );
+
+    expect(chip.textContent).toBe('📁 Work');
+    expect(chip.dataset.selected).toBe('folder-1');
+    expect(chrome.storage.local.remove).toHaveBeenCalledWith([
+      StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID,
+    ]);
+  });
+
+  it('does nothing when no pending folder ID exists', async () => {
+    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({});
+
+    const { applyPendingFolderSelection } = await import('../index');
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue(mockFolders),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+
+    await applyPendingFolderSelection(
+      mockManager as unknown as Parameters<typeof applyPendingFolderSelection>[0],
+      chip,
+    );
+
+    expect(chip.textContent).toBe('Select folder…');
+    expect(chrome.storage.local.remove).not.toHaveBeenCalled();
+  });
+
+  it('clears pending ID even when folder ID does not match any folder', async () => {
+    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'nonexistent',
+    });
+    (chrome.storage.local.remove as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      undefined,
+    );
+
+    const { applyPendingFolderSelection } = await import('../index');
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue(mockFolders),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+
+    await applyPendingFolderSelection(
+      mockManager as unknown as Parameters<typeof applyPendingFolderSelection>[0],
+      chip,
+    );
+
+    expect(chip.textContent).toBe('Select folder…');
+    expect(chrome.storage.local.remove).toHaveBeenCalledWith([
+      StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID,
+    ]);
+  });
+});

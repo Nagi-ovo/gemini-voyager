@@ -13,6 +13,12 @@ globalThis.chrome = {
       remove: vi.fn(),
       clear: vi.fn(),
     },
+    local: {
+      get: vi.fn(),
+      set: vi.fn(),
+      remove: vi.fn(),
+      clear: vi.fn(),
+    },
     onChanged: {
       addListener: vi.fn(),
       removeListener: vi.fn(),
