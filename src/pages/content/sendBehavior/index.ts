@@ -145,7 +145,7 @@ function findSendButton(inputElement: HTMLElement): HTMLElement | null {
  * because it manages its own DOM state.
  *
  * Strategy:
- * 1. First try document.execCommand('insertLineBreak') - works in most browsers
+ * 1. First try document.execCommand - works in most browsers
  * 2. If that fails, simulate a Shift+Enter keypress which Quill handles natively
  */
 function insertNewlineInContentEditable(target: HTMLElement): void {
