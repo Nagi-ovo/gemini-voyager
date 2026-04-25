@@ -143,9 +143,7 @@ describe('createNewChatInFolder', () => {
   });
 
   it('does not navigate when extension context is invalidated', async () => {
-    mockBrowserStorage.local.set.mockRejectedValue(
-      new Error('Extension context invalidated.'),
-    );
+    mockBrowserStorage.local.set.mockRejectedValue(new Error('Extension context invalidated.'));
     locationMock.pathname = '/app/abc';
 
     manager = new FolderManager();
