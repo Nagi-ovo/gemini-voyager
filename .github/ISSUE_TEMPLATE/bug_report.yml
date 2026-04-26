@@ -52,7 +52,7 @@ body:
     attributes:
       label: '📦 扩展版本 | Extension Version'
       description: 'Which version of Gemini Voyager are you using? (e.g., 1.1.3)'
-      placeholder: '1.1.3'
+      placeholder: 'e.g. 1.1.3'
     validations:
       required: true
   - type: textarea
