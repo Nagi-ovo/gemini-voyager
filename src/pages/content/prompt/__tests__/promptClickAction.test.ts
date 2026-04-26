@@ -37,6 +37,22 @@ describe('activatePromptText', () => {
     expect(copyText).not.toHaveBeenCalled();
   });
 
+  it('passes multi-line prompt text through unchanged so newlines reach the chat input', async () => {
+    const copyText = vi.fn(async () => {});
+    const expandInputCollapseIfNeeded = vi.fn();
+    const insertTextIntoChatInput = vi.fn(() => true);
+
+    const multiline = 'Line 1\n\nLine 3';
+    const result = await activatePromptText(multiline, true, {
+      copyText,
+      expandInputCollapseIfNeeded,
+      insertTextIntoChatInput,
+    });
+
+    expect(result).toBe('inserted');
+    expect(insertTextIntoChatInput).toHaveBeenCalledWith(multiline);
+  });
+
   it('falls back to copy when direct insert is enabled but Gemini input is unavailable', async () => {
     const copyText = vi.fn(async () => {});
     const expandInputCollapseIfNeeded = vi.fn();

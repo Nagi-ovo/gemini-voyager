@@ -35,6 +35,77 @@ function placeSelection(input: HTMLElement, range: Range): Selection | null {
   return selection;
 }
 
+function execInsertText(text: string): boolean {
+  try {
+    return document.execCommand('insertText', false, text);
+  } catch {
+    return false;
+  }
+}
+
+// Gemini's Quill editor silently drops "\n" passed via insertText, so multi-line
+// prompts must be inserted segment-by-segment with insertParagraph between them.
+function insertMultilineViaExecCommand(text: string): boolean {
+  const segments = text.split('\n');
+  for (let i = 0; i < segments.length; i++) {
+    if (i > 0) {
+      let paragraphInserted = false;
+      try {
+        paragraphInserted = document.execCommand('insertParagraph', false);
+      } catch {
+        paragraphInserted = false;
+      }
+      if (!paragraphInserted) return false;
+    }
+    const segment = segments[i];
+    if (segment.length > 0 && !execInsertText(segment)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function insertTextViaDomFallback(
+  input: HTMLElement,
+  activeSelection: Selection,
+  text: string,
+): void {
+  input.classList.remove('ql-blank');
+
+  const fallbackRange =
+    activeSelection.rangeCount > 0
+      ? activeSelection.getRangeAt(0)
+      : createCollapsedRangeAtEnd(input);
+
+  fallbackRange.deleteContents();
+
+  const fragment = document.createDocumentFragment();
+  const lines = text.split('\n');
+  let lastNode: Node | null = null;
+  lines.forEach((line, index) => {
+    if (index > 0) {
+      const br = document.createElement('br');
+      fragment.appendChild(br);
+      lastNode = br;
+    }
+    if (line.length > 0) {
+      const textNode = document.createTextNode(line);
+      fragment.appendChild(textNode);
+      lastNode = textNode;
+    }
+  });
+
+  fallbackRange.insertNode(fragment);
+
+  if (lastNode) {
+    const caretRange = document.createRange();
+    caretRange.setStartAfter(lastNode);
+    caretRange.collapse(true);
+    activeSelection.removeAllRanges();
+    activeSelection.addRange(caretRange);
+  }
+}
+
 function insertTextIntoContentEditable(input: HTMLElement, text: string): boolean {
   const selection = window.getSelection();
   const currentRange =
@@ -45,30 +116,10 @@ function insertTextIntoContentEditable(input: HTMLElement, text: string): boolea
   const activeSelection = placeSelection(input, currentRange);
   if (!activeSelection) return false;
 
-  let inserted = false;
-  try {
-    inserted = document.execCommand('insertText', false, text);
-  } catch {
-    inserted = false;
-  }
+  const inserted = text.includes('\n') ? insertMultilineViaExecCommand(text) : execInsertText(text);
 
   if (!inserted) {
-    input.classList.remove('ql-blank');
-
-    const fallbackRange =
-      activeSelection.rangeCount > 0
-        ? activeSelection.getRangeAt(0)
-        : createCollapsedRangeAtEnd(input);
-
-    fallbackRange.deleteContents();
-    const textNode = document.createTextNode(text);
-    fallbackRange.insertNode(textNode);
-
-    const caretRange = document.createRange();
-    caretRange.setStartAfter(textNode);
-    caretRange.collapse(true);
-    activeSelection.removeAllRanges();
-    activeSelection.addRange(caretRange);
+    insertTextViaDomFallback(input, activeSelection, text);
   }
 
   input.dispatchEvent(new Event('input', { bubbles: true }));
