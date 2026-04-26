@@ -194,7 +194,17 @@ function markPendingSend(input: HTMLElement | null): void {
   // Don't prepend instructions into an empty input. Our capture-phase listener
   // runs before Gemini's, so injecting here would turn a stray Enter on an
   // empty textbox into an unintentional send of just the instructions block.
-  if (isInputEmpty(input)) return;
+  if (isInputEmpty(input)) {
+    // The input may still contain a stray instruction block from a prior send
+    // whose URL change never landed (e.g., transient send failure). If we just
+    // returned here, Gemini's own keydown handler would see the lingering
+    // block as a non-empty message and submit it. Strip it first so Gemini
+    // sees the input as empty too and skips the send.
+    if (input && hasInstructionBlock(readInputText(input))) {
+      setInputText(input, stripInstructionBlock(readInputText(input)));
+    }
+    return;
+  }
   prepareInputForSend(input);
   pendingSend = true;
   schedulePendingSendReset();

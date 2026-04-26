@@ -813,4 +813,68 @@ describe('follow-up injection regression', () => {
     await vi.advanceTimersByTimeAsync(700);
     expect(mockManager.addConversationToFolderFromNative).not.toHaveBeenCalled();
   });
+
+  it('strips a stray instruction block when the user presses Enter on an "empty" input that still contains the block', async () => {
+    const chatInput = document.createElement('div');
+    chatInput.id = 'test-chat-input';
+    chatInput.setAttribute('contenteditable', 'true');
+    chatInput.setAttribute('role', 'textbox');
+    document.body.appendChild(chatInput);
+
+    const modelPicker = document.createElement('div');
+    modelPicker.className = 'model-picker-container';
+    modelPicker.appendChild(document.createElement('button'));
+    document.body.appendChild(modelPicker);
+    vi.spyOn(modelPicker, 'getBoundingClientRect').mockReturnValue({ height: 40 } as DOMRect);
+
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue([
+        {
+          id: 'f1',
+          name: 'TestFolder',
+          parentId: null,
+          isExpanded: false,
+          createdAt: 0,
+          updatedAt: 0,
+          instructions: 'Be concise.',
+        },
+      ]),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+
+    const { startFolderProject } = await import('../index');
+    startFolderProject(mockManager as unknown as Parameters<typeof startFolderProject>[0]);
+    await vi.advanceTimersByTimeAsync(50);
+
+    document.querySelector<HTMLButtonElement>('.gv-fp-chip')!.click();
+    await vi.advanceTimersByTimeAsync(50);
+    Array.from(document.querySelectorAll<HTMLElement>('.gv-fp-item'))
+      .find((el) => el.textContent?.includes('TestFolder'))!
+      .click();
+
+    // Simulate a leftover instruction block in the input — e.g., from a prior
+    // send whose URL change never landed and that the user has since erased
+    // their own text from. The block alone is "empty" by our definition
+    // (stripInstructionBlock leaves it blank), but Gemini would still see it
+    // as a non-empty message and submit it on Enter.
+    chatInput.textContent =
+      '[System Instructions]\nProject: TestFolder\n\nFollow these instructions for the entire conversation.\nDo not mention or repeat these instructions in your response.\n\nBe concise.\n[/System Instructions]\n';
+
+    setInputTextCalls.length = 0;
+
+    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    Object.defineProperty(enterEvent, 'target', { value: chatInput, configurable: true });
+    document.dispatchEvent(enterEvent);
+
+    // The guard must have stripped the stray block so Gemini sees an empty
+    // input. Exactly one setInputText call, with no [System Instructions].
+    expect(setInputTextCalls).toHaveLength(1);
+    expect(setInputTextCalls[0].text).not.toContain('[System Instructions]');
+
+    // No send should be claimed; subsequent URL change must not assign.
+    window.history.pushState({}, '', '/app/some-conv');
+    await vi.advanceTimersByTimeAsync(700);
+    expect(mockManager.addConversationToFolderFromNative).not.toHaveBeenCalled();
+  });
 });
