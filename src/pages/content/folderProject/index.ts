@@ -625,8 +625,14 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
     // Left the new-chat page — clear any stale folder selection so follow-up
     // messages on the resulting conversation page don't re-inject instructions.
     // This covers two cases where Branch 1 above is skipped:
-    //   1. pendingSend timer fired before URL change caught up (slow responses)
-    //   2. User navigated to an existing conversation via the sidebar without sending
+    //   1. pendingSend timer fired before URL change caught up (slow responses).
+    //      TRADE-OFF: in this case the new conversation is NOT auto-assigned
+    //      to the folder — the assignment is dropped to keep follow-up
+    //      messages on the new conversation page free of instruction injection.
+    //      Users hitting first responses longer than PENDING_SEND_TIMEOUT_MS
+    //      (currently 60s) will need to drag the conversation into the folder
+    //      manually.
+    //   2. User navigated to an existing conversation via the sidebar without sending.
     selectedFolderId = null;
     selectedFolderName = null;
     selectedFolderInstructions = null;
