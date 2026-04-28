@@ -43,17 +43,12 @@ const SEND_BUTTON_SELECTOR =
   'button[data-tooltip*="Send"], button[data-tooltip*="send"], ' +
   '[data-send-button], .send-button';
 
-// Matches href values that navigate to an existing conversation, e.g.
-//   /app/<convId>, /u/0/app/<convId>, /gem/<gemId>/<convId>.
-// Used by the sidebar-click listener to recognise navigation clicks so they
-// can cancel a pendingSend claim before the URL change propagates.
+// Sidebar conversation links: /app/<convId>, /u/0/app/<convId>, /gem/<gemId>/<convId>.
+// Used by sidebarNavClickListener to cancel pendingSend before URL change.
 const CONVERSATION_HREF_PATTERN = /\/(u\/\d+\/)?(app|gem\/[^/]+)\/[^/?#]+/;
 
-// How long a send intent (pendingSend flag) survives without a URL change.
-// Gemini can take 30+ seconds to produce the first response for PDF/paper
-// analysis before updating the URL, so the window has to be comfortably
-// larger than the worst-case first-response latency. Cheap to keep because
-// sidebar clicks explicitly cancel pendingSend via sidebarNavClickListener.
+// pendingSend lifetime — must exceed worst-case first-response latency
+// (PDF/paper analysis can take 30+ s before URL updates).
 const PENDING_SEND_TIMEOUT_MS = 60_000;
 
 // ============================================================================
@@ -180,26 +175,17 @@ function schedulePendingSendReset(): void {
   }, PENDING_SEND_TIMEOUT_MS);
 }
 
-/**
- * Returns true when the chat input has no user-authored text.
- * Any stray instruction block from a prior prepareInputForSend call is
- * stripped before checking so the guard reflects what the USER typed.
- */
+/** True when the input has no user text (stray instruction block stripped first). */
 function isInputEmpty(input: HTMLElement | null): boolean {
   if (!input) return true;
   return stripInstructionBlock(readInputText(input)).trim() === '';
 }
 
 function markPendingSend(input: HTMLElement | null): void {
-  // Don't prepend instructions into an empty input. Our capture-phase listener
-  // runs before Gemini's, so injecting here would turn a stray Enter on an
-  // empty textbox into an unintentional send of just the instructions block.
+  // Empty input + Enter: do nothing, so Gemini's bubble-phase handler also
+  // sees an empty input. Strip any leftover block first (from a prior send
+  // whose URL change never landed) — otherwise Gemini would submit it alone.
   if (isInputEmpty(input)) {
-    // The input may still contain a stray instruction block from a prior send
-    // whose URL change never landed (e.g., transient send failure). If we just
-    // returned here, Gemini's own keydown handler would see the lingering
-    // block as a non-empty message and submit it. Strip it first so Gemini
-    // sees the input as empty too and skips the send.
     if (input && hasInstructionBlock(readInputText(input))) {
       setInputText(input, stripInstructionBlock(readInputText(input)));
     }
@@ -259,20 +245,15 @@ function setupSendDetection(): void {
     markPendingSend(e.target);
   };
 
-  // Capture-phase listener that cancels a pending send claim when the user
-  // clicks a sidebar conversation link. Without this, clicking an existing
-  // conversation while pendingSend is still true would misattribute that
-  // conversation to the selected folder once the URL change is detected.
+  // Cancel pendingSend when user clicks a sidebar conversation link, so the
+  // resulting URL change isn't misattributed to the current send.
   sidebarNavClickListener = (e: Event) => {
     if (!pendingSend) return;
-    // Only a plain left-click navigates the current tab. Middle-click (button 1),
-    // right-click (button 2), and modifier-key clicks (Ctrl/Cmd/Shift/Alt) open
-    // in a new tab/window or trigger context menus — the current tab's URL
-    // stays on /app, so pendingSend must NOT be cancelled for those.
+    // Plain left-click only — middle/right/modifier clicks open new tabs and
+    // leave the current tab's URL on /app.
     if (!(e instanceof MouseEvent)) return;
     if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-    // e.target may be an SVGElement (icon inside anchor) — use Element, not
-    // HTMLElement, so closest() works on the general Element hierarchy.
+    // Element (not HTMLElement) so closest() works on SVG icons inside <a>.
     const target = e.target;
     if (!(target instanceof Element)) return;
     const link = target.closest('a');
@@ -622,17 +603,11 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
     removePicker();
     void injectPicker(manager);
   } else {
-    // Left the new-chat page — clear any stale folder selection so follow-up
-    // messages on the resulting conversation page don't re-inject instructions.
-    // This covers two cases where Branch 1 above is skipped:
-    //   1. pendingSend timer fired before URL change caught up (slow responses).
-    //      TRADE-OFF: in this case the new conversation is NOT auto-assigned
-    //      to the folder — the assignment is dropped to keep follow-up
-    //      messages on the new conversation page free of instruction injection.
-    //      Users hitting first responses longer than PENDING_SEND_TIMEOUT_MS
-    //      (currently 60s) will need to drag the conversation into the folder
-    //      manually.
-    //   2. User navigated to an existing conversation via the sidebar without sending.
+    // Left new-chat: clear folder selection so follow-up messages don't
+    // re-inject instructions. Trade-off: when Branch 1 was skipped because
+    // the >60s timer fired, the conversation is NOT auto-assigned (user
+    // must drag it manually) — the alternative would re-introduce follow-up
+    // injection on the new conversation page.
     selectedFolderId = null;
     selectedFolderName = null;
     selectedFolderInstructions = null;
@@ -673,12 +648,9 @@ function startURLWatcher(manager: FolderManager): void {
     handleNavigation(manager, prevPath, newPath);
   };
 
-  // popstate / hashchange only fire for user-initiated history navigation
-  // (browser back/forward, anchor hash changes). Gemini's SPA uses
-  // history.pushState for its own URL updates, which does NOT fire these
-  // events. Therefore any popstate/hashchange we observe here means the user
-  // is moving away from the message they just sent — cancel pendingSend so
-  // the resulting URL change isn't misattributed to the folder assignment.
+  // popstate / hashchange = user-initiated history nav (Gemini's SPA uses
+  // pushState, which doesn't fire either). Cancel pendingSend so the URL
+  // change isn't misattributed to the current send.
   const onHistoryNav = () => {
     clearPendingSendState();
     checkUrl();
