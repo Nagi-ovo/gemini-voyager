@@ -6039,6 +6039,8 @@ html.dark .gv-folder-import-paste-area:focus,
   padding: 24px;
   min-width: 420px;
   max-width: 500px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   font-family: 'Google Sans', Roboto, Arial, sans-serif;
   animation: gv-slide-up 0.3s ease-out;
