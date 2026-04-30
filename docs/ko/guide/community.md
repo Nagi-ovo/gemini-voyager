@@ -29,6 +29,22 @@ Discord 서버에 가입하여 다른 Voyager들과 대화해 보세요!
   </a>
 </div>
 
+## 📱 기타 소셜 플랫폼
+
+다음 플랫폼에서도 저를 만나볼 수 있습니다:
+
+<div style="margin: 1rem 0; display: flex; gap: 12px; flex-wrap: wrap;">
+  <a href="https://www.xiaohongshu.com/user/profile/5d366136000000001101950a" target="_blank" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/Xiaohongshu-@Nagi--ovo-FF2442?style=for-the-badge" alt="Xiaohongshu">
+  </a>
+  <a href="https://space.bilibili.com/312249633" target="_blank" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/Bilibili-@卡普迪姆-FB7299?style=for-the-badge&logo=bilibili&logoColor=white" alt="Bilibili">
+  </a>
+  <a href="https://www.zhihu.com/people/bu-xue-hao-shu-xue-wu-li-bu-gai-ming" target="_blank" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/Zhihu-@Nagi--ovo-0066FF?style=for-the-badge&logo=zhihu&logoColor=white" alt="Zhihu">
+  </a>
+</div>
+
 ## 🐙 GitHub 이슈
 
 버그를 발견했거나 구체적인 기능 제안이 있다면 GitHub에서 이슈를 열어주세요:

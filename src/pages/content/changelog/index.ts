@@ -287,7 +287,6 @@ function createChangelogModal(
   socialRow.className = 'gv-changelog-social-row';
   const socialAccounts = [
     {
-      name: t('changelog_social_xiaohongshu', lang),
       handle: '@Nagi-ovo',
       url: 'https://www.xiaohongshu.com/user/profile/5d366136000000001101950a',
       color: '#FF2442',
