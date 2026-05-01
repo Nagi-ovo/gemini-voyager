@@ -1043,6 +1043,14 @@
     "message": "ドライブからマージ",
     "description": "Merge button label"
   },
+  "syncOverwrite": {
+    "message": "上書き",
+    "description": "Overwrite download button label"
+  },
+  "syncOverwriteConfirm": {
+    "message": "クラウドのコピーでローカルデータを上書きしますか？アップロードしていないローカル変更は失われます。",
+    "description": "Confirmation before overwriting local sync data"
+  },
   "syncMode": {
     "message": "同期モード",
     "description": "Sync mode label"

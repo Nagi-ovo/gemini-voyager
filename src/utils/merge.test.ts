@@ -6,7 +6,12 @@ import type { ConversationReference, Folder, FolderData } from '@/core/types/fol
 import { mergeFolderData } from './merge';
 
 // Helper to create test folder
-function createFolder(id: string, name: string, updatedAt: number): Folder {
+function createFolder(
+  id: string,
+  name: string,
+  updatedAt: number,
+  extras?: Partial<Folder>,
+): Folder {
   return {
     id: id as FolderId,
     name,
@@ -14,6 +19,7 @@ function createFolder(id: string, name: string, updatedAt: number): Folder {
     isExpanded: true,
     createdAt: 1000,
     updatedAt,
+    ...extras,
   };
 }
 
@@ -61,6 +67,124 @@ describe('mergeFolderData', () => {
     expect(result.folders).toHaveLength(1);
     expect(result.folders[0].name).toBe('New Name');
     expect(result.folders[0].updatedAt).toBe(2000);
+  });
+
+  it('should merge same-path folders with different ids and remap cloud contents', () => {
+    const local = createFolderData([createFolder('local-work', 'Work', 1000)], {
+      'local-work': [createConvo('c1', 'Local Conversation', 1000)],
+    });
+    const cloud = createFolderData([createFolder('cloud-work', 'Work', 2000)], {
+      'cloud-work': [createConvo('c2', 'Cloud Conversation', 2000)],
+    });
+
+    const result = mergeFolderData(local, cloud);
+
+    expect(result.folders).toHaveLength(1);
+    expect(result.folders[0].id).toBe('local-work');
+    expect(result.folders[0].name).toBe('Work');
+    expect(result.folders[0].updatedAt).toBe(2000);
+    expect(result.folderContents['local-work'].map((c) => c.conversationId).sort()).toEqual([
+      'c1',
+      'c2',
+    ]);
+    expect(result.folderContents['cloud-work']).toBeUndefined();
+  });
+
+  it('should remap child folder parent ids and contents when parent paths are merged', () => {
+    const local = createFolderData(
+      [
+        createFolder('local-work', 'Work', 1000),
+        createFolder('local-client', 'Client', 1000, {
+          parentId: 'local-work' as FolderId,
+        }),
+      ],
+      {
+        'local-client': [createConvo('c1', 'Local Client Conversation', 1000)],
+      },
+    );
+    const cloud = createFolderData(
+      [
+        createFolder('cloud-work', 'Work', 1000),
+        createFolder('cloud-client', 'Client', 2000, {
+          parentId: 'cloud-work' as FolderId,
+        }),
+      ],
+      {
+        'cloud-client': [createConvo('c2', 'Cloud Client Conversation', 2000)],
+      },
+    );
+
+    const result = mergeFolderData(local, cloud);
+
+    expect(result.folders.map((f) => f.id).sort()).toEqual(['local-client', 'local-work']);
+    const clientFolder = result.folders.find((f) => f.id === 'local-client');
+    expect(clientFolder?.parentId).toBe('local-work');
+    expect(clientFolder?.updatedAt).toBe(2000);
+    expect(result.folderContents['local-client'].map((c) => c.conversationId).sort()).toEqual([
+      'c1',
+      'c2',
+    ]);
+    expect(result.folderContents['cloud-client']).toBeUndefined();
+  });
+
+  it('should not merge same-name folders under different parents', () => {
+    const local = createFolderData(
+      [
+        createFolder('local-root', 'Local', 1000),
+        createFolder('local-shared', 'Shared', 1000, {
+          parentId: 'local-root' as FolderId,
+        }),
+      ],
+      {
+        'local-shared': [createConvo('c1', 'Local Shared', 1000)],
+      },
+    );
+    const cloud = createFolderData(
+      [
+        createFolder('cloud-root', 'Cloud', 1000),
+        createFolder('cloud-shared', 'Shared', 1000, {
+          parentId: 'cloud-root' as FolderId,
+        }),
+      ],
+      {
+        'cloud-shared': [createConvo('c2', 'Cloud Shared', 1000)],
+      },
+    );
+
+    const result = mergeFolderData(local, cloud);
+
+    expect(result.folders.map((f) => f.id).sort()).toEqual([
+      'cloud-root',
+      'cloud-shared',
+      'local-root',
+      'local-shared',
+    ]);
+    expect(result.folderContents['local-shared']).toHaveLength(1);
+    expect(result.folderContents['cloud-shared']).toHaveLength(1);
+  });
+
+  it('should preserve ambiguous duplicate local paths instead of auto-merging by name', () => {
+    const local = createFolderData(
+      [createFolder('local-work-1', 'Work', 1000), createFolder('local-work-2', 'Work', 1000)],
+      {
+        'local-work-1': [createConvo('c1', 'Local One', 1000)],
+        'local-work-2': [createConvo('c2', 'Local Two', 1000)],
+      },
+    );
+    const cloud = createFolderData([createFolder('cloud-work', 'Work', 1000)], {
+      'cloud-work': [createConvo('c3', 'Cloud Work', 1000)],
+    });
+
+    const result = mergeFolderData(local, cloud);
+
+    expect(result.folders.map((f) => f.id).sort()).toEqual([
+      'cloud-work',
+      'local-work-1',
+      'local-work-2',
+    ]);
+    expect(result.folderContents['local-work-1']).toHaveLength(1);
+    expect(result.folderContents['local-work-2']).toHaveLength(1);
+    expect(result.folderContents['cloud-work']).toHaveLength(1);
   });
 
   describe('conversation reference merging - cloud-first strategy', () => {

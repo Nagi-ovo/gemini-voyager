@@ -12,6 +12,7 @@ import { StorageKeys } from '@/core/types/common';
 import type { PromptItem, SyncAccountScope } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
 import { createTranslator, initI18n } from '@/utils/i18n';
+import { mergeFolderData as mergeSyncedFolderData } from '@/utils/merge';
 
 import {
   mountHideArchivedNudge,
@@ -2905,7 +2906,7 @@ export class AIStudioFolderManager {
 
       // Merge folder data
       const localFolders = this.data;
-      const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
+      const mergedFolders = mergeSyncedFolderData(localFolders, cloudFolderData);
 
       // Merge prompts (simple ID-based merge)
       const mergedPrompts = this.mergePromptsData(localPrompts, cloudPromptItems);

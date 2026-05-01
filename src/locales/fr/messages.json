@@ -1043,6 +1043,14 @@
     "message": "Récupérer",
     "description": "Merge button label"
   },
+  "syncOverwrite": {
+    "message": "Remplacer",
+    "description": "Overwrite download button label"
+  },
+  "syncOverwriteConfirm": {
+    "message": "Remplacer les données locales par la copie du cloud ? Les modifications locales non téléversées seront perdues.",
+    "description": "Confirmation before overwriting local sync data"
+  },
   "syncMode": {
     "message": "Mode",
     "description": "Sync mode label"

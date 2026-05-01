@@ -1043,6 +1043,14 @@
     "message": "Fusionar",
     "description": "Merge button label"
   },
+  "syncOverwrite": {
+    "message": "Sobrescribir",
+    "description": "Overwrite download button label"
+  },
+  "syncOverwriteConfirm": {
+    "message": "¿Sobrescribir los datos locales con la copia de la nube? Se perderán los cambios locales que no se hayan subido.",
+    "description": "Confirmation before overwriting local sync data"
+  },
   "syncMode": {
     "message": "Modo sinc.",
     "description": "Sync mode label"

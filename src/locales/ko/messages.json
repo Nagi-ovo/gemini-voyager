@@ -1043,6 +1043,14 @@
     "message": "다운로드 및 병합",
     "description": "Merge button label"
   },
+  "syncOverwrite": {
+    "message": "덮어쓰기",
+    "description": "Overwrite download button label"
+  },
+  "syncOverwriteConfirm": {
+    "message": "클라우드 사본으로 로컬 데이터를 덮어쓸까요? 업로드하지 않은 로컬 변경사항은 손실됩니다.",
+    "description": "Confirmation before overwriting local sync data"
+  },
   "syncMode": {
     "message": "동기화 모드",
     "description": "Sync mode label"

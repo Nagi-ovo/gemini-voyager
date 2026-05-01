@@ -1043,6 +1043,14 @@
     "message": "Синхронизация",
     "description": "Merge button label"
   },
+  "syncOverwrite": {
+    "message": "Перезаписать",
+    "description": "Overwrite download button label"
+  },
+  "syncOverwriteConfirm": {
+    "message": "Перезаписать локальные данные облачной копией? Локальные изменения, которые не были загружены, будут потеряны.",
+    "description": "Confirmation before overwriting local sync data"
+  },
   "syncMode": {
     "message": "Режим синхронизации",
     "description": "Sync mode label"

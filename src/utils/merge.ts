@@ -1,4 +1,3 @@
-import type { ConversationReference, FolderData } from '@/core/types/folder';
 import type { PromptItem } from '@/core/types/sync';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import type {
@@ -6,6 +5,27 @@ import type {
   TimelineHierarchyData,
 } from '@/pages/content/timeline/hierarchyTypes';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
+
+type MergeableFolder = {
+  readonly id: string;
+  name: string;
+  parentId: string | null;
+  createdAt: number;
+  updatedAt: number;
+};
+
+type MergeableConversationReference = {
+  readonly conversationId: string;
+  starred?: boolean;
+};
+
+type MergeableFolderData<
+  TFolder extends MergeableFolder,
+  TConversation extends MergeableConversationReference,
+> = {
+  folders: TFolder[];
+  folderContents: Record<string, TConversation[]>;
+};
 
 /**
  * Merges two lists of items based on ID and updatedAt timestamp.
@@ -47,59 +67,199 @@ function mergeItems<T extends { id: string; updatedAt?: number; createdAt?: numb
 /**
  * Merges local and cloud folder data.
  */
-export function mergeFolderData(local: FolderData, cloud: FolderData): FolderData {
-  // 1. Merge Folders list
-  const mergedFolders = mergeItems(local.folders, cloud.folders);
+export function mergeFolderData<
+  TFolder extends MergeableFolder,
+  TConversation extends MergeableConversationReference,
+>(
+  local: MergeableFolderData<TFolder, TConversation>,
+  cloud: MergeableFolderData<TFolder, TConversation>,
+): MergeableFolderData<TFolder, TConversation> {
+  const localFoldersById = new Map(local.folders.map((folder) => [folder.id, folder]));
+  const localPaths = buildFolderPathIndex(local.folders);
+  const cloudPaths = buildFolderPathIndex(cloud.folders);
+  const localUniquePathToId = getUniquePathToId(localPaths);
+  const cloudUniquePathToId = getUniquePathToId(cloudPaths);
+  const cloudToMergedId = new Map<string, string>();
 
-  // 2. Merge Folder Contents
-  const mergedContents: Record<string, ConversationReference[]> = { ...local.folderContents };
+  cloud.folders.forEach((cloudFolder) => {
+    let targetId = cloudFolder.id;
 
-  // Iterate over cloud folders to ensure we capture all content
-  // (Even for folders we might have just added)
-  const allFolderIds = new Set([
-    ...Object.keys(local.folderContents),
-    ...Object.keys(cloud.folderContents),
-  ]);
+    if (!localFoldersById.has(cloudFolder.id)) {
+      const cloudPath = cloudPaths.pathById.get(cloudFolder.id);
+      const uniqueCloudId = cloudPath ? cloudUniquePathToId.get(cloudPath) : undefined;
+      const uniqueLocalId = cloudPath ? localUniquePathToId.get(cloudPath) : undefined;
 
-  allFolderIds.forEach((folderId) => {
-    const localConvos = local.folderContents[folderId] || [];
-    const cloudConvos = cloud.folderContents[folderId] || [];
-
-    // Merge conversation references: Cloud-first strategy
-    // This ensures renamed titles from cloud sync are applied to local
-    // - If user renamed title locally and uploaded, cloud has the new title
-    // - If user downloads on another device, cloud title should override local
-    // - If conversation only exists locally, keep it (new local addition)
-
-    const convoMap = new Map<string, ConversationReference>();
-
-    // Add local conversations first
-    localConvos.forEach((c) => convoMap.set(c.conversationId, c));
-
-    // Cloud conversations override local (this is the key change)
-    cloudConvos.forEach((c) => {
-      const existing = convoMap.get(c.conversationId);
-      if (!existing) {
-        // New from cloud
-        convoMap.set(c.conversationId, c);
-      } else {
-        // Merge: cloud properties override, but keep local-only properties
-        convoMap.set(c.conversationId, {
-          ...existing, // Keep any local-only properties
-          ...c, // Cloud overrides (title, customTitle, etc.)
-          // Preserve starred if set locally but not in cloud
-          starred: c.starred ?? existing.starred,
-        });
+      if (uniqueCloudId === cloudFolder.id && uniqueLocalId) {
+        targetId = uniqueLocalId;
       }
-    });
+    }
 
-    mergedContents[folderId] = Array.from(convoMap.values());
+    cloudToMergedId.set(cloudFolder.id, targetId);
+  });
+
+  const mergedFoldersById = new Map<string, TFolder>();
+  const folderOrder: string[] = [];
+
+  local.folders.forEach((folder) => {
+    mergedFoldersById.set(folder.id, folder);
+    folderOrder.push(folder.id);
+  });
+
+  cloud.folders.forEach((cloudFolder) => {
+    const targetId = cloudToMergedId.get(cloudFolder.id) ?? cloudFolder.id;
+    const existing = mergedFoldersById.get(targetId);
+    const parentId = remapParentId(cloudFolder.parentId, cloudToMergedId);
+    const cloudCandidate = cloneFolderWithIds(cloudFolder, targetId, parentId);
+
+    if (!existing) {
+      mergedFoldersById.set(targetId, cloudCandidate);
+      folderOrder.push(targetId);
+      return;
+    }
+
+    const cloudTime = cloudCandidate.updatedAt || cloudCandidate.createdAt || 0;
+    const localTime = existing.updatedAt || existing.createdAt || 0;
+    if (cloudTime > localTime) {
+      mergedFoldersById.set(targetId, cloudCandidate);
+    }
+  });
+
+  const mergedContents = new Map<string, Map<string, TConversation>>();
+
+  const addConversations = (
+    folderId: string,
+    conversations: TConversation[],
+    source: 'local' | 'cloud',
+  ) => {
+    if (!mergedContents.has(folderId)) {
+      mergedContents.set(folderId, new Map());
+    }
+
+    const conversationMap = mergedContents.get(folderId);
+    if (!conversationMap) return;
+
+    conversations.forEach((conversation) => {
+      const existing = conversationMap.get(conversation.conversationId);
+      if (!existing || source === 'local') {
+        conversationMap.set(conversation.conversationId, conversation);
+        return;
+      }
+
+      conversationMap.set(conversation.conversationId, {
+        ...existing,
+        ...conversation,
+        starred: conversation.starred ?? existing.starred,
+      } as TConversation);
+    });
+  };
+
+  Object.entries(local.folderContents).forEach(([folderId, conversations]) => {
+    addConversations(folderId, conversations, 'local');
+  });
+
+  Object.entries(cloud.folderContents).forEach(([folderId, conversations]) => {
+    addConversations(cloudToMergedId.get(folderId) ?? folderId, conversations, 'cloud');
+  });
+
+  const folderContents: Record<string, TConversation[]> = {};
+  folderOrder.forEach((folderId) => {
+    folderContents[folderId] = Array.from(mergedContents.get(folderId)?.values() ?? []);
+  });
+
+  mergedContents.forEach((conversationMap, folderId) => {
+    if (!folderContents[folderId]) {
+      folderContents[folderId] = Array.from(conversationMap.values());
+    }
   });
 
   return {
-    folders: mergedFolders,
-    folderContents: mergedContents,
+    folders: folderOrder.map((folderId) => mergedFoldersById.get(folderId)).filter(isDefined),
+    folderContents,
   };
+}
+
+function cloneFolderWithIds<TFolder extends MergeableFolder>(
+  folder: TFolder,
+  id: string,
+  parentId: string | null,
+): TFolder {
+  return {
+    ...folder,
+    id,
+    parentId,
+  } as TFolder;
+}
+
+function remapParentId(parentId: string | null, idMap: Map<string, string>): string | null {
+  if (!parentId) return null;
+  return idMap.get(parentId) ?? parentId;
+}
+
+function isDefined<T>(value: T | undefined): value is T {
+  return value !== undefined;
+}
+
+function getUniquePathToId(paths: {
+  pathById: Map<string, string>;
+  idsByPath: Map<string, string[]>;
+}): Map<string, string> {
+  const uniquePathToId = new Map<string, string>();
+  paths.idsByPath.forEach((ids, path) => {
+    if (ids.length === 1) {
+      uniquePathToId.set(path, ids[0]);
+    }
+  });
+  return uniquePathToId;
+}
+
+function buildFolderPathIndex<TFolder extends MergeableFolder>(
+  folders: TFolder[],
+): {
+  pathById: Map<string, string>;
+  idsByPath: Map<string, string[]>;
+} {
+  const foldersById = new Map(folders.map((folder) => [folder.id, folder]));
+  const pathById = new Map<string, string>();
+  const idsByPath = new Map<string, string[]>();
+
+  folders.forEach((folder) => {
+    const path = resolveFolderPath(folder, foldersById);
+    if (!path) return;
+
+    pathById.set(folder.id, path);
+    const ids = idsByPath.get(path) ?? [];
+    ids.push(folder.id);
+    idsByPath.set(path, ids);
+  });
+
+  return { pathById, idsByPath };
+}
+
+function resolveFolderPath<TFolder extends MergeableFolder>(
+  folder: TFolder,
+  foldersById: Map<string, TFolder>,
+): string | null {
+  const segments: string[] = [];
+  const visited = new Set<string>();
+  let current: TFolder | undefined = folder;
+
+  while (current) {
+    if (visited.has(current.id)) return null;
+    visited.add(current.id);
+
+    const name = current.name.trim();
+    if (!name) return null;
+    segments.unshift(name);
+
+    if (!current.parentId) {
+      return segments.join('\u001f');
+    }
+
+    current = foldersById.get(current.parentId);
+    if (!current) return null;
+  }
+
+  return null;
 }
 
 /**

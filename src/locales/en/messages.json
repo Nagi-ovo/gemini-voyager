@@ -1043,6 +1043,14 @@
     "message": "Download & Merge",
     "description": "Merge button label"
   },
+  "syncOverwrite": {
+    "message": "Overwrite",
+    "description": "Overwrite download button label"
+  },
+  "syncOverwriteConfirm": {
+    "message": "Overwrite local data with the cloud copy? Local changes that have not been uploaded will be lost.",
+    "description": "Confirmation before overwriting local sync data"
+  },
   "syncMode": {
     "message": "Sync Mode",
     "description": "Sync mode label"

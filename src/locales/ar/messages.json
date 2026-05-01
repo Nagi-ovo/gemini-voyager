@@ -1043,6 +1043,14 @@
     "message": "دمج",
     "description": "Merge button label"
   },
+  "syncOverwrite": {
+    "message": "استبدال",
+    "description": "Overwrite download button label"
+  },
+  "syncOverwriteConfirm": {
+    "message": "هل تريد استبدال البيانات المحلية بنسخة السحابة؟ ستُفقد التغييرات المحلية التي لم يتم رفعها.",
+    "description": "Confirmation before overwriting local sync data"
+  },
   "syncMode": {
     "message": "وضع المزامنة",
     "description": "Sync mode label"

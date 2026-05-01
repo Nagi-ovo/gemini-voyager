@@ -1043,6 +1043,14 @@
     "message": "从云端下载合并",
     "description": "同步（合并）按钮"
   },
+  "syncOverwrite": {
+    "message": "覆盖下载",
+    "description": "覆盖下载按钮"
+  },
+  "syncOverwriteConfirm": {
+    "message": "确定要用云端数据覆盖本地数据吗？未上传的本地更改会丢失。",
+    "description": "覆盖本地同步数据前的确认"
+  },
   "syncMode": {
     "message": "同步模式",
     "description": "同步模式标签"

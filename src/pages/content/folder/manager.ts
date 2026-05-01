@@ -16,7 +16,7 @@ import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContex
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
-import { mergeTimelineHierarchy } from '@/utils/merge';
+import { mergeFolderData, mergeTimelineHierarchy } from '@/utils/merge';
 
 import {
   getTimelineHierarchyStorageKey,
@@ -8143,7 +8143,7 @@ export class FolderManager {
 
       // Merge folder data
       const localFolders = this.data;
-      const mergedFolders = this.mergeFolderData(localFolders, cloudFolderData);
+      const mergedFolders = mergeFolderData(localFolders, cloudFolderData);
 
       // Merge prompts (simple ID-based merge)
       const mergedPrompts = this.mergePrompts(localPrompts, cloudPromptItems);
@@ -8262,43 +8262,6 @@ export class FolderManager {
     });
 
     return { messages: mergedMessages };
-  }
-
-  /**
-   * Merge two FolderData objects (local + cloud)
-   * Uses folder/conversation IDs to deduplicate
-   */
-  private mergeFolderData(local: FolderData, cloud: FolderData): FolderData {
-    // Merge folders by ID
-    const folderMap = new Map<string, Folder>();
-    local.folders.forEach((f) => folderMap.set(f.id, f));
-    cloud.folders.forEach((f) => {
-      if (!folderMap.has(f.id)) {
-        folderMap.set(f.id, f);
-      }
-      // If exists, keep local version (local takes priority)
-    });
-
-    // Merge folderContents
-    const mergedContents: FolderData['folderContents'] = { ...local.folderContents };
-    Object.entries(cloud.folderContents).forEach(([folderId, conversations]) => {
-      if (!mergedContents[folderId]) {
-        mergedContents[folderId] = conversations;
-      } else {
-        // Merge conversations in folder by conversationId
-        const existingIds = new Set(mergedContents[folderId].map((c) => c.conversationId));
-        conversations.forEach((conv) => {
-          if (!existingIds.has(conv.conversationId)) {
-            mergedContents[folderId].push(conv);
-          }
-        });
-      }
-    });
-
-    return {
-      folders: Array.from(folderMap.values()),
-      folderContents: mergedContents,
-    };
   }
 
   /**

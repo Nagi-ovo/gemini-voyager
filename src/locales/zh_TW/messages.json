@@ -1003,6 +1003,14 @@
     "message": "從雲端下載合併",
     "description": "同步（合併）按鈕"
   },
+  "syncOverwrite": {
+    "message": "覆蓋下載",
+    "description": "覆蓋下載按鈕"
+  },
+  "syncOverwriteConfirm": {
+    "message": "確定要用雲端資料覆蓋本機資料嗎？尚未上傳的本機變更將會遺失。",
+    "description": "覆蓋本機同步資料前的確認"
+  },
   "syncMode": {
     "message": "同步模式",
     "description": "同步模式標籤"
