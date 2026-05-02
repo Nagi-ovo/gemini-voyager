@@ -182,11 +182,106 @@ describe('TimelineManager message timestamps', () => {
 
     expect(firstTimestamp).not.toBeNull();
     expect(firstTimestamp?.textContent).toBe('2024-01-01 00:00:01');
+    expect(firstTimestamp?.classList.contains('gv-timestamp-user')).toBe(true);
 
     await internal.injectMessageTimestamps();
     const secondTimestamp = document.querySelector('.gv-timestamp') as HTMLElement | null;
 
     expect(secondTimestamp).toBe(firstTimestamp);
+    expect(document.querySelectorAll('.gv-timestamp')).toHaveLength(1);
+  });
+
+  it('keeps timestamp turn ids stable when Gemini replaces a rendered message element', async () => {
+    const main = document.createElement('main');
+    document.body.appendChild(main);
+
+    const scrollContainer = document.createElement('div');
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 400, configurable: true });
+    scrollContainer.scrollTop = 0;
+    vi.spyOn(scrollContainer, 'getBoundingClientRect').mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: 0,
+      height: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
+    main.appendChild(scrollContainer);
+
+    const container = document.createElement('div');
+    scrollContainer.appendChild(container);
+
+    const message = document.createElement('div');
+    message.className = 'user';
+    message.textContent = 'raw $x^2$';
+    setElementTop(message, 0);
+    container.appendChild(message);
+
+    const timelineBar = document.createElement('div');
+    const trackContent = document.createElement('div');
+    timelineBar.appendChild(trackContent);
+    document.body.appendChild(timelineBar);
+
+    const manager = new TimelineManager();
+    const internal = manager as unknown as {
+      conversationContainer: HTMLElement | null;
+      scrollContainer: HTMLElement | null;
+      userTurnSelector: string | null;
+      conversationId: string | null;
+      timestampService: TimestampService | null;
+      showMessageTimestampsEnabled: boolean;
+      markers: Array<{ id: string; element: HTMLElement }>;
+      ui: { timelineBar: HTMLElement | null; trackContent: HTMLElement | null };
+      activeTurnId: string | null;
+      recalculateAndRenderMarkers: () => void;
+      updateTimelineGeometry: () => void;
+      updateIntersectionObserverTargetsFromMarkers: () => void;
+      syncTimelineTrackToMain: () => void;
+      updateVirtualRangeAndRender: () => void;
+      updateActiveDotUI: () => void;
+      scheduleScrollSync: () => void;
+    };
+
+    internal.conversationContainer = container;
+    internal.scrollContainer = scrollContainer;
+    internal.userTurnSelector = '.user';
+    internal.conversationId = 'gemini:conv:test';
+    internal.timestampService = {
+      getTimestamp: vi.fn().mockReturnValue(1234),
+      formatAbsoluteTime: vi.fn().mockReturnValue('2024-01-01 00:00:01'),
+    } as unknown as TimestampService;
+    internal.showMessageTimestampsEnabled = true;
+    internal.ui.timelineBar = timelineBar;
+    internal.ui.trackContent = trackContent;
+    internal.activeTurnId = null;
+
+    internal.updateTimelineGeometry = vi.fn();
+    internal.updateIntersectionObserverTargetsFromMarkers = vi.fn();
+    internal.syncTimelineTrackToMain = vi.fn();
+    internal.updateVirtualRangeAndRender = vi.fn();
+    internal.updateActiveDotUI = vi.fn();
+    internal.scheduleScrollSync = vi.fn();
+
+    internal.recalculateAndRenderMarkers();
+    const firstTurnId = internal.markers[0]?.id;
+    expect(firstTurnId).toBe('u-0');
+
+    const rerendered = document.createElement('div');
+    rerendered.className = 'user';
+    rerendered.textContent = 'rendered x squared';
+    setElementTop(rerendered, 0);
+    message.replaceWith(rerendered);
+
+    internal.recalculateAndRenderMarkers();
+
+    expect(internal.markers[0]?.id).toBe(firstTurnId);
+    expect(rerendered.dataset.turnId).toBe(firstTurnId);
+    expect(document.querySelector('.gv-timestamp')?.getAttribute('data-gv-turn-id')).toBe(
+      firstTurnId,
+    );
     expect(document.querySelectorAll('.gv-timestamp')).toHaveLength(1);
   });
 

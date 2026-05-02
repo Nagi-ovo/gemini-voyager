@@ -16,6 +16,7 @@ import { hashString } from '@/core/utils/hash';
 import { GV_RTL_CLASS, applyRTLClass } from '@/core/utils/rtl';
 
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
+import { makeStableTurnId } from '../fork/turnId';
 import { TimestampService } from '../timestamp/TimestampService';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
@@ -74,18 +75,20 @@ interface TimelineManagerOptions {
   previousUrl?: string | null;
 }
 
+interface TimelineMarker {
+  id: string;
+  element: HTMLElement;
+  summary: string;
+  n: number;
+  baseN: number;
+  dotElement: DotElement | null;
+  starred: boolean;
+}
+
 export class TimelineManager {
   private scrollContainer: HTMLElement | null = null;
   private conversationContainer: HTMLElement | null = null;
-  private markers: Array<{
-    id: string;
-    element: HTMLElement;
-    summary: string;
-    n: number;
-    baseN: number;
-    dotElement: DotElement | null;
-    starred: boolean;
-  }> = [];
+  private markers: TimelineMarker[] = [];
   private activeTurnId: string | null = null;
   private ui: {
     timelineBar: HTMLElement | null;
@@ -220,6 +223,7 @@ export class TimelineManager {
   private timestampStartupTimer: number | null = null;
   private seenTurnIds: Set<string> = new Set();
   private pendingDraftTimestampSourceConversationId: string | null;
+  private readonly turnIdByIndex = new Map<number, string>();
 
   constructor(private readonly options: TimelineManagerOptions = {}) {
     this.pendingDraftTimestampSourceConversationId = this.computeDraftTimestampSourceConversationId(
@@ -1144,16 +1148,39 @@ export class TimelineManager {
 
   private ensureTurnId(el: Element, index: number): string {
     const asEl = el as HTMLElement & { dataset?: DOMStringMap & { turnId?: string } };
-    let id = asEl.dataset?.turnId || '';
-    if (!id) {
-      const basis = this.extractTurnText(asEl) || `user-${index}`;
-      // Append index to ensure unique IDs for identical text content
-      id = `u-${hashString(basis + '|' + index)}`;
-      try {
-        if (asEl.dataset) asEl.dataset.turnId = id;
-      } catch {}
+    const existingId = asEl.dataset?.turnId?.trim() || '';
+    if (existingId) {
+      this.turnIdByIndex.set(index, existingId);
+      return existingId;
     }
+
+    const id = this.turnIdByIndex.get(index) || makeStableTurnId(index);
+    try {
+      if (asEl.dataset) asEl.dataset.turnId = id;
+    } catch {}
+    this.turnIdByIndex.set(index, id);
     return id;
+  }
+
+  private getLegacyContentTurnId(el: HTMLElement, index: number): string {
+    const basis = this.extractTurnText(el) || `user-${index}`;
+    return `u-${hashString(basis + '|' + index)}`;
+  }
+
+  private getTimestampForMarker(
+    conversationId: string,
+    marker: TimelineMarker,
+    index: number,
+  ): number | null {
+    if (!this.timestampService) return null;
+
+    const timestamp = this.timestampService.getTimestamp(conversationId, marker.id as TurnId);
+    if (timestamp != null) return timestamp;
+
+    const legacyTurnId = this.getLegacyContentTurnId(marker.element, index);
+    if (legacyTurnId === marker.id) return null;
+
+    return this.timestampService.getTimestamp(conversationId, legacyTurnId as TurnId);
   }
 
   private detectCssVarTopSupport(pad: number, usableC: number): boolean {
@@ -1438,7 +1465,7 @@ export class TimelineManager {
     });
 
     // Use markers instead of querying DOM - markers already have the correct elements
-    this.markers.forEach((marker) => {
+    this.markers.forEach((marker, index) => {
       activeTurnIds.add(marker.id);
       const msgEl = marker.element;
       const parent = msgEl.parentElement;
@@ -1450,7 +1477,7 @@ export class TimelineManager {
 
       let insertionParent: HTMLElement | null = parent;
       let insertionAnchor: HTMLElement = msgEl;
-      let alignClass = 'gv-timestamp-assistant';
+      const alignClass = 'gv-timestamp-user';
       const existingTimestampEl = existingTimestampEls.get(marker.id) ?? null;
       try {
         // Walk up to find the nearest horizontal row wrapper (avatar + bubble).
@@ -1468,17 +1495,13 @@ export class TimelineManager {
         if (rowWrapper && rowWrapper.parentElement) {
           insertionParent = rowWrapper.parentElement as HTMLElement;
           insertionAnchor = rowWrapper;
-          const rowStyle = getComputedStyle(rowWrapper);
-          if (rowStyle.justifyContent.includes('flex-end')) {
-            alignClass = 'gv-timestamp-user';
-          }
         }
       } catch {}
       if (!insertionParent) {
         return;
       }
 
-      const timestamp = timestampService.getTimestamp(conversationId, marker.id as TurnId);
+      const timestamp = this.getTimestampForMarker(conversationId, marker, index);
       if (timestamp == null) {
         existingTimestampEls.get(marker.id)?.remove();
         existingTimestampEls.delete(marker.id);
@@ -2271,7 +2294,11 @@ export class TimelineManager {
     if (id && this.starred.has(id)) fullText = `★ ${fullText}`;
 
     if (this.showMessageTimestampsEnabled && id && this.timestampService && this.conversationId) {
-      const ts = this.timestampService.getTimestamp(this.conversationId, id as TurnId);
+      const markerIndex = this.markers.findIndex((marker) => marker.id === id);
+      const ts =
+        markerIndex >= 0
+          ? this.getTimestampForMarker(this.conversationId, this.markers[markerIndex], markerIndex)
+          : this.timestampService.getTimestamp(this.conversationId, id as TurnId);
       if (typeof ts === 'number') {
         fullText = `${this.timestampService.formatAbsoluteTime(ts)}\n${fullText}`;
       }
