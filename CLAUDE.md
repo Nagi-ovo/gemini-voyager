@@ -24,7 +24,7 @@ Project-wide rules (always in effect):
 2. **Never commit `.env` or secrets.**
 3. **When adding Material Symbol icons**, add the icon name to `icon_names=` in the Google Fonts URL in `src/pages/popup/index.html`.
 4. **For GitHub issue/PR/comment work, prefer `gh` as the source of truth** instead of browser scraping or unstable connectors.
-5. **When asked to push**, push directly to `main` unless a branch/PR is explicitly requested.
+5. **Default push target**: when asked to push without explicit branch/PR instructions, push directly to `main`.
 
 ## Verification (run before declaring done)
 
