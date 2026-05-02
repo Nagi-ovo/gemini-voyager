@@ -16,7 +16,7 @@ Mira a la derecha.
 
 - **Señalar**: Echa un vistazo a lo que se dijo en ese momento.
 - **Clic**: Viaja instantáneamente de regreso.
-- **Presionar**: Mantén presionado para destacar, marca los momentos clave.
+- **Presionar**: Mantén presionado (~0.5s) para **destacar** — un marcador para tu cerebro, salta directamente a los momentos clave.
 
 No más scroll hasta que te duela el dedo. Tan rápido como tu pensamiento.
 

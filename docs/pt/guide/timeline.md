@@ -21,11 +21,23 @@ Cada ponto representa uma troca (a sua pergunta + a resposta do Gemini™).
 
 ## Favoritos (Stars)
 
-Pressione longamente (ou clique com o botão direito) em qualquer ponto para o **Marcar com Estrela**.
+Pressione longamente (~0.5s) em qualquer ponto para o **Marcar com Estrela**.
 Pontos com estrela tornam-se maiores e mais brilhantes. Use-os para marcar:
 
 - O código final funcional.
 - A melhor explicação de um conceito.
 - O prompt que desbloqueou tudo.
+
+**Como funciona**:
+
+- Pressione longamente novamente para remover a estrela.
+- Os pontos com estrela ficam destacados para que você os encontre de relance.
+- Clique no ícone de estrela no cabeçalho da linha do tempo para abrir o painel **Histórico de Favoritos** e ver todas as mensagens marcadas num só lugar.
+
+Pense nisso como plantar uma bandeira na conversa — o momento de uma revelação, a resposta perfeita, ou o ponto de onde quer continuar depois.
+
+::: tip Dica
+As estrelas sincronizam entre dispositivos se tiver a [Sincronização na Nuvem](/guide/cloud-sync) ativada.
+:::
 
 A Linha do Tempo transforma uma parede de texto plano num mapa estruturado de conhecimento.

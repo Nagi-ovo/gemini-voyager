@@ -16,7 +16,7 @@ Olhe para a direita.
 
 - **Passe o rato** para espreitar o que disse.
 - **Clique** para se teletransportar para lá.
-- **Pressione longamente** para marcar com estrela um momento que queira guardar.
+- **Pressione longamente** (~0.5s) para **marcar com estrela** um momento que queira guardar — um marcador para o seu cérebro.
 
 Acabou-se o scroll interminável. Agora navega à velocidade do pensamento.
 

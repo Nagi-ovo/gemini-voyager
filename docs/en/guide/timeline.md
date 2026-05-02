@@ -19,6 +19,22 @@ Each node represents a message. The timeline visualizes the rhythm of your dialo
 
 ![Timeline Navigation](/assets/teaser.png)
 
+## Star: Bookmark Your Breakthroughs
+
+Long conversations bury gold. Star the moments that matter.
+
+**How it works**: Long-press (hold ~0.5s) any node on the timeline. You'll see it light up — that message is now starred.
+
+- Long-press again to unstar.
+- Starred nodes stay highlighted so you can spot them at a glance.
+- View all your starred messages from the **Starred History** panel (click the star icon in the timeline header).
+
+Think of it as planting a flag in the conversation — the moment you had a breakthrough, got the perfect answer, or want to pick up later.
+
+::: tip Pro Tip
+Stars sync across devices if you have [Cloud Sync](/guide/cloud-sync) enabled.
+:::
+
 ## Even Faster with Keys
 
 Don't want to use the mouse? Use your keyboard.

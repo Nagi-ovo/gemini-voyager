@@ -16,7 +16,7 @@ Look to the right.
 
 - **Hover** to peek at what you said.
 - **Click** to teleport there.
-- **Long-press** to star a moment you want to keep.
+- **Long-press** (hold ~0.5s) to **star** a moment you want to keep — like a bookmark for your brain.
 
 No more endless scrolling. You are now navigating at the speed of thought.
 

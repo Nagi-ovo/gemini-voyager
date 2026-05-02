@@ -19,6 +19,22 @@ Chaque nœud représente un message. La chronologie visualise le rythme de votre
 
 ![Navigation Temporelle](/assets/teaser.png)
 
+## Étoile : Marquez vos moments clés
+
+Les longues conversations enfouissent des pépites. Marquez d'une étoile les moments qui comptent.
+
+**Comment ça marche** : Appuyez longuement (~0.5s) sur n'importe quel nœud de la timeline. Vous le verrez s'illuminer — ce message est maintenant étoilé.
+
+- Appuyez longuement à nouveau pour retirer l'étoile.
+- Les nœuds étoilés restent mis en évidence pour que vous puissiez les repérer d'un coup d'œil.
+- Cliquez sur l'icône étoile dans l'en-tête de la timeline pour ouvrir le panneau **Historique des Étoiles** et voir tous vos messages marqués en un seul endroit.
+
+C'est comme planter un drapeau dans la conversation — le moment d'une révélation, la réponse parfaite, ou l'endroit où vous voulez reprendre plus tard.
+
+::: tip Astuce
+Les étoiles se synchronisent entre appareils si vous avez activé la [Synchronisation Cloud](/guide/cloud-sync).
+:::
+
 ## Encore Plus Vite au Clavier
 
 Vous ne voulez pas utiliser la souris ? Utilisez votre clavier.

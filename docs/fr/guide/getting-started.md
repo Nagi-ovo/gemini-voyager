@@ -16,7 +16,7 @@ Regardez sur la droite.
 
 - **Survolez** pour jeter un coup d'œil à ce que vous avez dit.
 - **Cliquez** pour vous téléporter à cet endroit.
-- **Appui long** pour mettre une étoile sur un moment que vous voulez garder.
+- **Appui long** (~0.5s) pour **mettre une étoile** sur un moment que vous voulez garder — un marque-page pour votre cerveau.
 
 Fini le défilement sans fin. Vous naviguez désormais à la vitesse de la pensée.
 
