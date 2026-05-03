@@ -123,6 +123,7 @@ export class FolderManager {
   private backupService: DataBackupService<FolderData>; // Multi-layer backup system
   private data: FolderData = { folders: [], folderContents: {} };
   private containerElement: HTMLElement | null = null;
+  private multiSelectHostElement: HTMLElement | null = null;
   private sidebarContainer: HTMLElement | null = null;
   private recentSection: HTMLElement | null = null;
   private tooltipElement: HTMLElement | null = null;
@@ -405,6 +406,10 @@ export class FolderManager {
       this.containerElement.remove();
       this.containerElement = null;
     }
+    if (this.multiSelectHostElement) {
+      this.multiSelectHostElement.remove();
+      this.multiSelectHostElement = null;
+    }
 
     // Execute custom cleanup tasks
     this.cleanupTasks.forEach((task) => task());
@@ -469,11 +474,7 @@ export class FolderManager {
     // Create and inject folder UI
     this.createFolderUI();
 
-    // Make conversations draggable
-    this.makeConversationsDraggable();
-
-    // Set up mutation observer to handle dynamically added conversations
-    this.setupMutationObserver();
+    this.setupNativeSidebarConversationEnhancements();
 
     // Set up sidebar visibility observer
     this.setupSideNavObserver();
@@ -568,6 +569,33 @@ export class FolderManager {
     });
   }
 
+  private setupNativeSidebarConversationEnhancements(): void {
+    this.makeConversationsDraggable();
+    this.setupMutationObserver();
+  }
+
+  private setupFloatingModeSidebarInteractions(): void {
+    const existingSidebar = document.querySelector('[data-test-id="overflow-container"]');
+    if (existingSidebar instanceof HTMLElement) {
+      this.sidebarContainer = existingSidebar;
+      this.setupNativeSidebarConversationEnhancements();
+      return;
+    }
+
+    void this.waitForSidebar()
+      .then((sidebarFound) => {
+        if (!sidebarFound) {
+          this.debugWarn('Sidebar anchor never appeared — native batch actions unavailable');
+          return;
+        }
+        if (this.isDestroyed || !this.folderEnabled || !this.floatingModeActive) return;
+        this.setupNativeSidebarConversationEnhancements();
+      })
+      .catch((error) => {
+        this.debugWarn('Failed to initialize native sidebar interactions in floating mode:', error);
+      });
+  }
+
   /**
    * Sidebar injection failed — surface a one-time nudge letting the user pop
    * the folder panel out as a floating window. If they've already dismissed the
@@ -589,6 +617,7 @@ export class FolderManager {
 
     this.setupConversationClickTracking();
     this.setupNativeConversationMenuObserver();
+    this.setupFloatingModeSidebarInteractions();
 
     await this.openFloatingPanel();
   }
@@ -604,6 +633,10 @@ export class FolderManager {
     if (this.floatingPanelHandle) {
       this.floatingPanelHandle.destroy();
       this.floatingPanelHandle = null;
+    }
+    if (this.multiSelectHostElement) {
+      this.multiSelectHostElement.remove();
+      this.multiSelectHostElement = null;
     }
   }
 
@@ -1008,6 +1041,31 @@ export class FolderManager {
     indicator.appendChild(actionsContainer);
 
     return indicator;
+  }
+
+  private getMultiSelectHost(): HTMLElement | null {
+    if (this.containerElement?.isConnected) {
+      return this.containerElement;
+    }
+
+    if (!this.multiSelectHostElement?.isConnected) {
+      const host = document.createElement('div');
+      host.className = 'gv-folder-container gv-multi-select-floating-host';
+      host.dataset.multiSelectFloatingHost = 'true';
+      host.appendChild(this.createMultiSelectIndicator());
+      document.body.appendChild(host);
+      this.multiSelectHostElement = host;
+    }
+
+    return this.multiSelectHostElement;
+  }
+
+  private getExistingMultiSelectHost(): HTMLElement | null {
+    if (this.containerElement?.isConnected) {
+      return this.containerElement;
+    }
+
+    return this.multiSelectHostElement?.isConnected ? this.multiSelectHostElement : null;
   }
 
   private createHeader(): HTMLElement {
@@ -1640,10 +1698,16 @@ export class FolderManager {
     });
   }
 
-  private makeConversationsDraggable(): void {
-    if (!this.sidebarContainer) return;
+  private getNativeConversationRoot(): ParentNode {
+    return this.sidebarContainer?.isConnected ? this.sidebarContainer : document;
+  }
 
-    const conversations = this.sidebarContainer.querySelectorAll('[data-test-id="conversation"]');
+  private getNativeConversationElements(): NodeListOf<Element> {
+    return this.getNativeConversationRoot().querySelectorAll('[data-test-id="conversation"]');
+  }
+
+  private makeConversationsDraggable(): void {
+    const conversations = this.getNativeConversationElements();
     conversations.forEach((conv) => {
       this.makeConversationDraggable(conv as HTMLElement);
 
@@ -1976,13 +2040,11 @@ export class FolderManager {
     if (folderConv) return folderConv;
 
     // Check in native conversations (Recent section)
-    const nativeConvs = this.sidebarContainer?.querySelectorAll('[data-test-id="conversation"]');
-    if (nativeConvs) {
-      for (const conv of Array.from(nativeConvs)) {
-        const id = this.extractConversationId(conv as HTMLElement);
-        if (id === conversationId) {
-          return conv as HTMLElement;
-        }
+    const nativeConvs = this.getNativeConversationElements();
+    for (const conv of Array.from(nativeConvs)) {
+      const id = this.extractConversationId(conv as HTMLElement);
+      if (id === conversationId) {
+        return conv as HTMLElement;
       }
     }
 
@@ -3586,10 +3648,7 @@ export class FolderManager {
    */
   private findNativeConversationElement(conversationId: string): HTMLElement | null {
     // Try multiple strategies to find the conversation
-    const allConversations = this.sidebarContainer?.querySelectorAll(
-      '[data-test-id="conversation"]',
-    );
-    if (!allConversations) return null;
+    const allConversations = this.getNativeConversationElements();
 
     for (const conv of allConversations) {
       const id = this.extractConversationId(conv as HTMLElement);
@@ -3992,8 +4051,8 @@ export class FolderManager {
       });
     } else if (this.multiSelectSource === 'native') {
       // Only update native conversation elements (Recent section)
-      const nativeConvs = this.sidebarContainer?.querySelectorAll('[data-test-id="conversation"]');
-      nativeConvs?.forEach((el) => {
+      const nativeConvs = this.getNativeConversationElements();
+      nativeConvs.forEach((el) => {
         const convId = this.extractConversationId(el as HTMLElement);
         if (convId) {
           if (this.selectedConversations.has(convId)) {
@@ -4069,14 +4128,22 @@ export class FolderManager {
       const target = e.target as HTMLElement;
 
       // Check if click is inside the sidebar or folder container
-      const isInsideSidebar = this.sidebarContainer?.contains(target);
+      const isInsideSidebar =
+        this.sidebarContainer?.contains(target) ||
+        !!target.closest('[data-test-id="overflow-container"]');
       const isInsideFolderContainer = this.containerElement?.contains(target);
+      const isInsideMultiSelectHost = this.multiSelectHostElement?.contains(target);
 
       // Check if click is on an overlay (menus, dialogs, etc.)
       const isOnOverlay = target.closest('.cdk-overlay-container, .mat-mdc-dialog-container');
 
       // If click is outside all relevant areas, exit multi-select mode
-      if (!isInsideSidebar && !isInsideFolderContainer && !isOnOverlay) {
+      if (
+        !isInsideSidebar &&
+        !isInsideFolderContainer &&
+        !isInsideMultiSelectHost &&
+        !isOnOverlay
+      ) {
         this.debug('Click outside sidebar detected, exiting multi-select mode');
         this.exitMultiSelectMode();
       }
@@ -4100,8 +4167,8 @@ export class FolderManager {
 
   private cleanupSelectionArtifacts(): void {
     // Remove selection classes from all native conversations
-    const nativeConvs = this.sidebarContainer?.querySelectorAll('[data-test-id="conversation"]');
-    nativeConvs?.forEach((el) => {
+    const nativeConvs = this.getNativeConversationElements();
+    nativeConvs.forEach((el) => {
       (el as HTMLElement).classList.remove('gv-conversation-selected');
       (el as HTMLElement).style.opacity = '1';
     });
@@ -4154,24 +4221,26 @@ export class FolderManager {
   }
 
   private updateMultiSelectModeUI(): void {
+    const multiSelectHost = this.isMultiSelectMode
+      ? this.getMultiSelectHost()
+      : this.getExistingMultiSelectHost();
+
     // Add or remove multi-select mode class from container
     if (this.isMultiSelectMode) {
-      this.containerElement?.classList.add('gv-multi-select-mode');
+      multiSelectHost?.classList.add('gv-multi-select-mode');
     } else {
-      this.containerElement?.classList.remove('gv-multi-select-mode');
+      multiSelectHost?.classList.remove('gv-multi-select-mode');
     }
 
     // Update selection count in indicator
-    const countElement = this.containerElement?.querySelector('[data-selection-count="true"]');
+    const countElement = multiSelectHost?.querySelector('[data-selection-count="true"]');
     if (countElement) {
       const count = this.selectedConversations.size;
       countElement.textContent = `${count} selected`;
     }
 
     // Update action buttons based on source
-    const actionsContainer = this.containerElement?.querySelector(
-      '[data-multi-select-actions="true"]',
-    );
+    const actionsContainer = multiSelectHost?.querySelector('[data-multi-select-actions="true"]');
     if (actionsContainer && this.isMultiSelectMode) {
       actionsContainer.innerHTML = ''; // Clear existing buttons
 
@@ -6465,6 +6534,10 @@ export class FolderManager {
               this.containerElement.remove();
               this.containerElement = null;
             }
+            if (this.multiSelectHostElement) {
+              this.multiSelectHostElement.remove();
+              this.multiSelectHostElement = null;
+            }
             if (this.conversationObserver) {
               this.conversationObserver.disconnect();
               this.conversationObserver = null;
@@ -6659,9 +6732,7 @@ export class FolderManager {
   }
 
   private applyHideArchivedSetting(): void {
-    if (!this.sidebarContainer) return;
-
-    const conversations = this.sidebarContainer.querySelectorAll('[data-test-id="conversation"]');
+    const conversations = this.getNativeConversationElements();
     conversations.forEach((conv) => {
       this.applyHideArchivedToConversation(conv as HTMLElement);
     });

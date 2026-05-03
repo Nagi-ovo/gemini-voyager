@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import browser from 'webextension-polyfill';
 
 import { FolderManager } from '../manager';
 
@@ -27,17 +28,33 @@ vi.mock('@/utils/i18n', () => ({
   initI18n: () => Promise.resolve(),
 }));
 
+vi.mock('../floatingPanel', () => ({
+  mountFloatingPanel: vi.fn(() => ({
+    destroy: vi.fn(),
+    update: vi.fn(),
+  })),
+}));
+
 type TestableManager = {
   containerElement: HTMLElement | null;
+  sidebarContainer: HTMLElement | null;
   activeFolderInput: HTMLElement | null;
   activeImportDialog: HTMLElement | null;
   activeImportExportMenu: HTMLElement | null;
+  enterMultiSelectMode: (
+    initialConversationId?: string,
+    source?: 'folder' | 'native',
+    folderId?: string,
+  ) => void;
+  exitMultiSelectMode: () => void;
   reinitializePromise: Promise<void> | null;
   createFolder: (parentId?: string | null) => void;
+  findNativeConversationElement: (conversationId: string) => HTMLElement | null;
   initializeFolderUI: () => Promise<void>;
   reinitializeFolderUI: () => void;
   showImportDialog: () => void;
   showImportExportMenu: (event: MouseEvent) => void;
+  startFloatingMode: () => Promise<void>;
 };
 
 function mountFolderList(manager: TestableManager): HTMLElement {
@@ -50,11 +67,26 @@ function mountFolderList(manager: TestableManager): HTMLElement {
   return list;
 }
 
+function mountNativeSidebar(conversationId: string = 'c_abc123'): HTMLElement {
+  const sidebar = document.createElement('div');
+  sidebar.setAttribute('data-test-id', 'overflow-container');
+
+  const conversation = document.createElement('div');
+  conversation.setAttribute('data-test-id', 'conversation');
+  conversation.setAttribute('jslog', `["${conversationId}"]`);
+
+  sidebar.appendChild(conversation);
+  document.body.appendChild(sidebar);
+  return conversation;
+}
+
 describe('folder duplicate click guards', () => {
   let manager: FolderManager | null = null;
 
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.mocked(browser.storage.sync.get).mockResolvedValue({});
+    vi.mocked(browser.storage.sync.set).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -224,5 +256,60 @@ describe('folder duplicate click guards', () => {
     expect(typedManager.activeFolderInput).toBeNull();
     expect(typedManager.activeImportDialog).toBeNull();
     expect(typedManager.activeImportExportMenu).toBeNull();
+  });
+
+  it('shows native multi-select actions without the sidebar folder container', () => {
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+
+    typedManager.enterMultiSelectMode('conv-a', 'native');
+
+    const floatingHost = document.querySelector(
+      '[data-multi-select-floating-host="true"]',
+    ) as HTMLElement | null;
+    expect(floatingHost).not.toBeNull();
+    expect(floatingHost?.classList.contains('gv-multi-select-mode')).toBe(true);
+    expect(floatingHost?.querySelector('[data-selection-count="true"]')?.textContent).toBe(
+      '1 selected',
+    );
+    expect(floatingHost?.querySelector('.gv-multi-select-delete-btn')).not.toBeNull();
+
+    typedManager.exitMultiSelectMode();
+
+    expect(floatingHost?.classList.contains('gv-multi-select-mode')).toBe(false);
+    expect(floatingHost?.querySelector('.gv-multi-select-delete-btn')).toBeNull();
+  });
+
+  it('wires native long-press multi-select when floating mode starts first', async () => {
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    const conversation = mountNativeSidebar('c_abc123');
+
+    await typedManager.startFloatingMode();
+
+    expect(conversation.dataset.gvConvDragAttached).toBe('true');
+
+    conversation.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    vi.advanceTimersByTime(500);
+
+    const floatingHost = document.querySelector(
+      '[data-multi-select-floating-host="true"]',
+    ) as HTMLElement | null;
+    expect(conversation.classList.contains('gv-conversation-selected')).toBe(true);
+    expect(floatingHost).not.toBeNull();
+    expect(floatingHost?.querySelector('[data-selection-count="true"]')?.textContent).toBe(
+      '1 selected',
+    );
+    expect(floatingHost?.querySelector('.gv-multi-select-delete-btn')).not.toBeNull();
+  });
+
+  it('finds native conversations from the document when no sidebar reference is cached', () => {
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    const conversation = mountNativeSidebar('c_def456');
+
+    typedManager.sidebarContainer = null;
+
+    expect(typedManager.findNativeConversationElement('c_def456')).toBe(conversation);
   });
 });
