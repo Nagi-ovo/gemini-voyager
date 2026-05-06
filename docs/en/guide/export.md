@@ -7,13 +7,13 @@ We believe that if you create it, you own it.
 
 ## Format Comparison
 
-| Feature | Markdown | PDF | JSON |
-|---------|----------|-----|------|
-| Best for | Note apps (Obsidian, Notion) | Sharing and printing | Developers, data analysis |
-| Images | Embedded (except Safari) | Fully included | Base64 encoded |
-| Code blocks | Preserved with syntax | Rendered visually | Raw text preserved |
-| File size | Smallest | Largest | Medium |
-| Searchable | Plain text | PDF reader search | Programmatic access |
+| Feature     | Markdown                     | PDF                  | JSON                      |
+| ----------- | ---------------------------- | -------------------- | ------------------------- |
+| Best for    | Note apps (Obsidian, Notion) | Sharing and printing | Developers, data analysis |
+| Images      | Embedded (except Safari)     | Fully included       | Base64 encoded            |
+| Code blocks | Preserved with syntax        | Rendered visually    | Raw text preserved        |
+| File size   | Smallest                     | Largest              | Medium                    |
+| Searchable  | Plain text                   | PDF reader search    | Programmatic access       |
 
 ## Export Everything
 

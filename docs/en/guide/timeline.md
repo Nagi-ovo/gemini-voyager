@@ -70,14 +70,14 @@ Timeline is most valuable in conversations longer than 10 messages, where scroll
 
 ## Timeline vs. Manual Scrolling
 
-| Capability | Without Timeline | With Voyager Timeline |
-|------------|-----------------|----------------------|
-| Find a specific message | Scroll up and down repeatedly | Click a node or press j/k |
-| Bookmark key moments | Copy-paste to external notes | Long-press to star, syncs to cloud |
-| See conversation structure | Read sequentially | Visual map shows full shape at a glance |
-| Keyboard navigation | Not available in Gemini | Vim-style j/k, gg/GG, fully customizable |
-| Navigate 100+ messages | Minutes of scrolling | Instant jump to any point |
-| Organize long threads | No built-in tools | Levels (1-3) and collapsible children |
+| Capability                 | Without Timeline              | With Voyager Timeline                    |
+| -------------------------- | ----------------------------- | ---------------------------------------- |
+| Find a specific message    | Scroll up and down repeatedly | Click a node or press j/k                |
+| Bookmark key moments       | Copy-paste to external notes  | Long-press to star, syncs to cloud       |
+| See conversation structure | Read sequentially             | Visual map shows full shape at a glance  |
+| Keyboard navigation        | Not available in Gemini       | Vim-style j/k, gg/GG, fully customizable |
+| Navigate 100+ messages     | Minutes of scrolling          | Instant jump to any point                |
+| Organize long threads      | No built-in tools             | Levels (1-3) and collapsible children    |
 
 ## Supported Browsers
 

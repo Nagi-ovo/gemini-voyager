@@ -4,13 +4,13 @@ Voyager Cloud Sync backs up your folders, prompt library, and starred messages t
 
 ## What Gets Synced
 
-| Data Type | Synced | Details |
-|-----------|--------|---------|
-| Folder structure | Yes | All folders, nesting, colors, and conversation assignments |
-| Prompt library | Yes | All saved prompts with tags and folder organization |
-| Starred messages | Yes | Timeline bookmarks from any conversation |
-| Extension settings | No | Settings remain local to each browser |
-| Conversation content | No | Chat content stays on Google's servers |
+| Data Type            | Synced | Details                                                    |
+| -------------------- | ------ | ---------------------------------------------------------- |
+| Folder structure     | Yes    | All folders, nesting, colors, and conversation assignments |
+| Prompt library       | Yes    | All saved prompts with tags and folder organization        |
+| Starred messages     | Yes    | Timeline bookmarks from any conversation                   |
+| Extension settings   | No     | Settings remain local to each browser                      |
+| Conversation content | No     | Chat content stays on Google's servers                     |
 
 ## Features
 
@@ -47,13 +47,13 @@ While Cloud Sync offers great convenience, we strongly recommend that you also p
 
 ## Cloud Sync vs. Manual Backup
 
-| Aspect | Manual Backup (Export/Import) | Cloud Sync |
-|--------|------------------------------|------------|
-| Frequency | Whenever you remember | On-demand with one click |
-| Data location | Local file on your computer | Your Google Drive |
-| Cross-device | Requires transferring files | Any device with your Google account |
-| Merge behavior | Replaces or requires manual merge | Intelligent merge without duplicating |
-| Privacy | File stays on your machine | Encrypted in transit, stored in your Drive |
+| Aspect         | Manual Backup (Export/Import)     | Cloud Sync                                 |
+| -------------- | --------------------------------- | ------------------------------------------ |
+| Frequency      | Whenever you remember             | On-demand with one click                   |
+| Data location  | Local file on your computer       | Your Google Drive                          |
+| Cross-device   | Requires transferring files       | Any device with your Google account        |
+| Merge behavior | Replaces or requires manual merge | Intelligent merge without duplicating      |
+| Privacy        | File stays on your machine        | Encrypted in transit, stored in your Drive |
 
 ## How It Works
 
