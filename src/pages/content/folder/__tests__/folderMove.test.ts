@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { FolderManager } from '../manager';
-import type { DragData, Folder, FolderData } from '../types';
+import type { ConversationReference, DragData, Folder, FolderData } from '../types';
 
 vi.mock('@/utils/i18n', () => ({
   getTranslationSync: (key: string) => key,
@@ -20,6 +20,14 @@ type TestableManager = {
   addFolderToFolder: (targetFolderId: string, dragData: DragData) => void;
   moveFolderToRoot: (dragData: DragData) => void;
 };
+
+type RafQueue = {
+  flush: () => void;
+  restore: () => void;
+  requestAnimationFrameMock: ReturnType<typeof vi.fn>;
+};
+
+let rafQueue: RafQueue | null = null;
 
 function createFolder(
   id: string,
@@ -55,11 +63,102 @@ function createFolderDragData(folderId: string, title: string): DragData {
   };
 }
 
+function createConversation(id: string, sortIndex: number): ConversationReference {
+  return {
+    conversationId: id,
+    title: `Conversation ${id}`,
+    url: `/app/${id}`,
+    addedAt: Date.now(),
+    sortIndex,
+  };
+}
+
+function setElementRect(element: HTMLElement, top: number, height = 24): void {
+  vi.spyOn(element, 'getBoundingClientRect').mockReturnValue({
+    x: 0,
+    y: top,
+    top,
+    left: 0,
+    right: 240,
+    bottom: top + height,
+    width: 240,
+    height,
+    toJSON: () => ({}),
+  } as DOMRect);
+}
+
+function createDataTransfer(payload: DragData): DataTransfer {
+  return {
+    types: ['application/json'],
+    effectAllowed: 'all',
+    dropEffect: 'none',
+    getData: vi.fn(() => JSON.stringify(payload)),
+    setData: vi.fn(),
+    setDragImage: vi.fn(),
+  } as unknown as DataTransfer;
+}
+
+function createDragEvent(type: string, clientY: number, payload: DragData): DragEvent {
+  const event = new Event(type, { bubbles: true, cancelable: true }) as DragEvent;
+  Object.defineProperty(event, 'clientY', { value: clientY, configurable: true });
+  Object.defineProperty(event, 'dataTransfer', {
+    value: createDataTransfer(payload),
+    configurable: true,
+  });
+  return event;
+}
+
+function installRafQueue(): RafQueue {
+  const originalRaf = window.requestAnimationFrame;
+  const originalCancelRaf = window.cancelAnimationFrame;
+  const callbacks = new Map<number, FrameRequestCallback>();
+  let nextId = 1;
+
+  const requestAnimationFrameMock = vi.fn((callback: FrameRequestCallback) => {
+    const id = nextId++;
+    callbacks.set(id, callback);
+    return id;
+  });
+  const cancelAnimationFrameMock = vi.fn((id: number) => {
+    callbacks.delete(id);
+  });
+
+  Object.defineProperty(window, 'requestAnimationFrame', {
+    configurable: true,
+    value: requestAnimationFrameMock,
+  });
+  Object.defineProperty(window, 'cancelAnimationFrame', {
+    configurable: true,
+    value: cancelAnimationFrameMock,
+  });
+
+  return {
+    requestAnimationFrameMock,
+    flush: () => {
+      const pending = Array.from(callbacks.entries());
+      callbacks.clear();
+      pending.forEach(([, callback]) => callback(0));
+    },
+    restore: () => {
+      Object.defineProperty(window, 'requestAnimationFrame', {
+        configurable: true,
+        value: originalRaf,
+      });
+      Object.defineProperty(window, 'cancelAnimationFrame', {
+        configurable: true,
+        value: originalCancelRaf,
+      });
+    },
+  };
+}
+
 describe('folder movement', () => {
   let manager: FolderManager | null = null;
 
   afterEach(() => {
     manager?.destroy();
+    rafQueue?.restore();
+    rafQueue = null;
     manager = null;
     document.body.innerHTML = '';
     vi.restoreAllMocks();
@@ -229,5 +328,52 @@ describe('folder movement', () => {
     expect(getOrderedFolderIds(typedManager, 'ancestor')).toEqual(['child']);
     expect(saveSpy).not.toHaveBeenCalled();
     expect(refreshSpy).not.toHaveBeenCalled();
+  });
+
+  it('coalesces rapid conversation reorder dragovers to the latest row', () => {
+    rafQueue = installRafQueue();
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+
+    const folder = createFolder('folder', 'Folder', null, 0);
+    typedManager.data = {
+      folders: [folder],
+      folderContents: {
+        folder: [createConversation('a', 0), createConversation('b', 1), createConversation('c', 2)],
+      },
+    };
+
+    const folderElement = typedManager.createFolderElement(folder);
+    document.body.appendChild(folderElement);
+    const rows = Array.from(
+      folderElement.querySelectorAll<HTMLElement>('.gv-folder-conversation'),
+    );
+    rows.forEach((row, index) => setElementRect(row, index * 30));
+
+    const dragData: DragData = {
+      type: 'conversation',
+      conversationId: 'new-conversation',
+      title: 'New conversation',
+      url: '/app/new-conversation',
+    };
+
+    rows[2].dispatchEvent(createDragEvent('dragover', 72, dragData));
+    rows[1].dispatchEvent(createDragEvent('dragover', 42, dragData));
+    rows[0].dispatchEvent(createDragEvent('dragover', 6, dragData));
+
+    expect(rafQueue.requestAnimationFrameMock).toHaveBeenCalledTimes(1);
+    rows.forEach((row) => {
+      expect(row.classList.contains('gv-reorder-above')).toBe(false);
+      expect(row.classList.contains('gv-reorder-below')).toBe(false);
+    });
+
+    rafQueue.flush();
+
+    expect(rows[0].classList.contains('gv-reorder-above')).toBe(true);
+    expect(rows[0].classList.contains('gv-reorder-below')).toBe(false);
+    expect(rows[1].classList.contains('gv-reorder-above')).toBe(false);
+    expect(rows[1].classList.contains('gv-reorder-below')).toBe(false);
+    expect(rows[2].classList.contains('gv-reorder-above')).toBe(false);
+    expect(rows[2].classList.contains('gv-reorder-below')).toBe(false);
   });
 });

@@ -95,6 +95,13 @@ interface FolderDialogOption {
   path: string;
 }
 
+type ConversationReorderPlacement = 'above' | 'below';
+
+interface ConversationReorderTarget {
+  element: HTMLElement;
+  placement: ConversationReorderPlacement;
+}
+
 function normalizeFolderDialogSearchText(value: string): string {
   return value
     .trim()
@@ -172,6 +179,9 @@ export class FolderManager {
   private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
   private activeColorPickerFolderId: string | null = null; // Folder ID of currently open color picker
   private activeColorPickerCloseHandler: ((e: MouseEvent) => void) | null = null; // Event handler for closing color picker
+  private pendingConversationReorderTarget: ConversationReorderTarget | null = null;
+  private activeConversationReorderTarget: ConversationReorderTarget | null = null;
+  private conversationReorderRafId: number | null = null;
 
   // Track active UI elements to prevent duplicate creation
   private activeFolderInput: HTMLElement | null = null; // Currently open folder name input
@@ -350,6 +360,7 @@ export class FolderManager {
       clearInterval(this.navPoller);
       this.navPoller = null;
     }
+    this.clearConversationReorderIndicator();
 
     // Disconnect mutation observers
     if (this.sideNavObserver) {
@@ -1420,6 +1431,10 @@ export class FolderManager {
       };
       e.dataTransfer!.effectAllowed = 'move';
       e.dataTransfer!.setData('application/json', JSON.stringify(dragData));
+      this.setLightweightDragImage(
+        e,
+        selectedConvs.length > 1 ? `${selectedConvs.length} conversations` : displayTitle,
+      );
 
       // Apply opacity to all selected conversations
       this.selectedConversations.forEach((id) => {
@@ -1444,6 +1459,7 @@ export class FolderManager {
         this.clearSelection();
         this.cleanupSelectionArtifacts();
       }
+      this.clearConversationReorderIndicator();
     });
 
     // Conversation icon - use Gem-specific icons
@@ -1996,6 +2012,7 @@ export class FolderManager {
         };
 
         e.dataTransfer?.setData('application/json', JSON.stringify(dragData));
+        this.setLightweightDragImage(e, `${selectedConvs.length} conversations`);
 
         // Apply opacity to all selected conversations
         this.selectedConversations.forEach((id) => {
@@ -2021,6 +2038,7 @@ export class FolderManager {
         };
 
         e.dataTransfer?.setData('application/json', JSON.stringify(dragData));
+        this.setLightweightDragImage(e, title);
         element.style.opacity = '0.5';
       }
     });
@@ -2041,6 +2059,7 @@ export class FolderManager {
         this.clearSelection();
         this.cleanupSelectionArtifacts();
       }
+      this.clearConversationReorderIndicator();
     });
   }
 
@@ -2899,19 +2918,17 @@ export class FolderManager {
       e.stopPropagation();
       if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
 
-      const rect = convEl.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      const isTopHalf = e.clientY < midY;
-
-      convEl.classList.remove('gv-reorder-above', 'gv-reorder-below');
-      convEl.classList.add(isTopHalf ? 'gv-reorder-above' : 'gv-reorder-below');
+      this.scheduleConversationReorderIndicator(
+        convEl,
+        this.getConversationReorderPlacement(convEl, e.clientY),
+      );
     });
 
     convEl.addEventListener('dragleave', (e) => {
       // Only remove if truly leaving the element (not entering a child)
       const related = e.relatedTarget as Node | null;
       if (!related || !convEl.contains(related)) {
-        convEl.classList.remove('gv-reorder-above', 'gv-reorder-below');
+        this.clearConversationReorderIndicator(convEl);
       }
     });
 
@@ -2919,8 +2936,11 @@ export class FolderManager {
       e.preventDefault();
       e.stopPropagation();
 
-      const isAbove = convEl.classList.contains('gv-reorder-above');
-      convEl.classList.remove('gv-reorder-above', 'gv-reorder-below');
+      const placement = this.getConversationReorderDropPlacement(
+        convEl,
+        this.getConversationReorderPlacement(convEl, e.clientY),
+      );
+      this.clearConversationReorderIndicator();
 
       const rawData = e.dataTransfer?.getData('application/json');
       if (!rawData) return;
@@ -2935,7 +2955,7 @@ export class FolderManager {
           if (el) el.style.opacity = '1';
         });
 
-        const insertIndex = isAbove ? sortedIndex : sortedIndex + 1;
+        const insertIndex = placement === 'above' ? sortedIndex : sortedIndex + 1;
         const convs = dragData.conversations ?? [];
         const singleId = dragData.conversationId;
         const sourceFolderId = dragData.sourceFolderId;
@@ -2964,6 +2984,109 @@ export class FolderManager {
         console.error('[FolderManager] Conversation reorder drop error:', error);
       }
     });
+  }
+
+  private getConversationReorderPlacement(
+    convEl: HTMLElement,
+    clientY: number,
+  ): ConversationReorderPlacement {
+    const rect = convEl.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    return clientY < midY ? 'above' : 'below';
+  }
+
+  private getConversationReorderDropPlacement(
+    convEl: HTMLElement,
+    fallback: ConversationReorderPlacement,
+  ): ConversationReorderPlacement {
+    if (this.pendingConversationReorderTarget?.element === convEl) {
+      return this.pendingConversationReorderTarget.placement;
+    }
+
+    if (this.activeConversationReorderTarget?.element === convEl) {
+      return this.activeConversationReorderTarget.placement;
+    }
+
+    return fallback;
+  }
+
+  private scheduleConversationReorderIndicator(
+    element: HTMLElement,
+    placement: ConversationReorderPlacement,
+  ): void {
+    this.pendingConversationReorderTarget = { element, placement };
+
+    if (this.conversationReorderRafId !== null) return;
+
+    this.conversationReorderRafId = window.requestAnimationFrame(() => {
+      this.conversationReorderRafId = null;
+      const target = this.pendingConversationReorderTarget;
+      this.pendingConversationReorderTarget = null;
+      if (!target) return;
+      this.applyConversationReorderIndicator(target);
+    });
+  }
+
+  private applyConversationReorderIndicator(target: ConversationReorderTarget): void {
+    if (!target.element.isConnected) {
+      this.clearConversationReorderIndicator(target.element);
+      return;
+    }
+
+    const active = this.activeConversationReorderTarget;
+    if (
+      active &&
+      (active.element !== target.element || active.placement !== target.placement)
+    ) {
+      active.element.classList.remove('gv-reorder-above', 'gv-reorder-below');
+    }
+
+    target.element.classList.toggle('gv-reorder-above', target.placement === 'above');
+    target.element.classList.toggle('gv-reorder-below', target.placement === 'below');
+    this.activeConversationReorderTarget = target;
+  }
+
+  private clearConversationReorderIndicator(element?: HTMLElement): void {
+    if (!element) {
+      if (this.conversationReorderRafId !== null) {
+        window.cancelAnimationFrame(this.conversationReorderRafId);
+        this.conversationReorderRafId = null;
+      }
+      this.pendingConversationReorderTarget = null;
+    } else if (this.pendingConversationReorderTarget?.element === element) {
+      this.pendingConversationReorderTarget = null;
+      if (this.conversationReorderRafId !== null) {
+        window.cancelAnimationFrame(this.conversationReorderRafId);
+        this.conversationReorderRafId = null;
+      }
+    }
+
+    if (!element || this.activeConversationReorderTarget?.element === element) {
+      this.activeConversationReorderTarget?.element.classList.remove(
+        'gv-reorder-above',
+        'gv-reorder-below',
+      );
+      this.activeConversationReorderTarget = null;
+    }
+  }
+
+  private setLightweightDragImage(event: DragEvent, label: string): void {
+    const transfer = event.dataTransfer;
+    if (!transfer || typeof transfer.setDragImage !== 'function') return;
+
+    const dragImage = document.createElement('div');
+    dragImage.className = 'gv-folder-drag-image';
+    dragImage.textContent = label;
+    document.body.appendChild(dragImage);
+
+    try {
+      transfer.setDragImage(dragImage, 12, 12);
+    } catch {
+      dragImage.remove();
+      return;
+    }
+
+    window.setTimeout(() => dragImage.remove(), 0);
   }
 
   /**

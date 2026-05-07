@@ -3992,6 +3992,29 @@ body.light-theme {
   cursor: grabbing;
 }
 
+.gv-folder-drag-image {
+  position: fixed;
+  top: -1000px;
+  left: -1000px;
+  z-index: -1;
+  max-width: 220px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--folder-bg);
+  color: var(--folder-text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  font:
+    12px/1.4 'Google Sans',
+    Roboto,
+    Arial,
+    sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  contain: strict;
+}
+
 .gv-conversation-icon {
   font-size: 12px !important;
   width: 16px !important;
