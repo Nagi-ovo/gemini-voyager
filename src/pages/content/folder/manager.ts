@@ -4987,9 +4987,15 @@ export class FolderManager {
 
     let addedNewConversation = false;
     if (existingIndex === -1) {
-      // Set lastOpenedAt = addedAt so the sort time-fallback ranks the new
-      // conversation above older entries the user has already opened.
+      // Insert at the top by claiming sortIndex 0 and shifting existing entries
+      // up by one. Time-based fallback alone is not enough — ensureDataIntegrity
+      // (called from saveData) will assign sortIndex 0 to the newest entry by
+      // time and collide with any pre-existing sortIndex 0, after which JS's
+      // stable sort drops the new entry below the old one.
       const now = Date.now();
+      for (const c of this.data.folderContents[folderId]) {
+        c.sortIndex = (c.sortIndex ?? 0) + 1;
+      }
       this.data.folderContents[folderId].push({
         conversationId,
         title,
@@ -4998,6 +5004,7 @@ export class FolderManager {
         lastOpenedAt: now,
         isGem,
         gemId,
+        sortIndex: 0,
       });
       addedNewConversation = true;
     }
