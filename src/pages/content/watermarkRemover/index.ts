@@ -399,6 +399,7 @@ let sequenceCounter = 0;
 
 const LARGE_WARNING_AUTO_DISMISS_MS = 8000;
 const PROCESSING_FALLBACK_AUTO_DISMISS_MS = 35000;
+const DOWNLOAD_INTENT_TTL_MS = 10000;
 
 type DownloadToastSequence = {
   id: number;
@@ -422,7 +423,14 @@ const t = (key: TranslationKey, fallback: string): string => {
   return value === key ? fallback : value;
 };
 
+function markDownloadIntent(): void {
+  const bridge = getBridgeElement();
+  bridge.dataset.downloadIntentExpiresAt = String(Date.now() + DOWNLOAD_INTENT_TTL_MS);
+}
+
 function showImmediateDownloadToast(button: HTMLButtonElement): void {
+  markDownloadIntent();
+
   const now = Date.now();
   if (now - lastImmediateToastAt < 300) return;
   lastImmediateToastAt = now;

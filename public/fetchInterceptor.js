@@ -15,6 +15,7 @@
 
   /** Timeout for watermark processing in milliseconds */
   const WATERMARK_PROCESSING_TIMEOUT_MS = 30000;
+  const DOWNLOAD_INTENT_ATTRIBUTE = 'data-download-intent-expires-at';
 
   // Prevent double injection
   if (window.__gvFetchInterceptorInstalled) {
@@ -90,6 +91,19 @@
     return bridge.dataset.enabled === 'true';
   };
 
+  /**
+   * Only user-initiated native download clicks should use the heavier
+   * watermark-removal download pipeline. Gemini may fetch rd-gg-dl URLs while
+   * an image is still being generated, and treating those as downloads creates
+   * confusing progress/success notifications.
+   */
+  const consumeDownloadIntent = () => {
+    const bridge = getBridgeElement();
+    const expiresAt = Number(bridge.dataset.downloadIntentExpiresAt || 0);
+    bridge.removeAttribute(DOWNLOAD_INTENT_ATTRIBUTE);
+    return Number.isFinite(expiresAt) && expiresAt >= Date.now();
+  };
+
   // Store original fetch
   const originalFetch = window.fetch;
 
@@ -111,6 +125,11 @@
 
     // Check if this is a Gemini download request (specifically rd-gg-dl for downloads)
     if (url && typeof url === 'string' && GEMINI_DOWNLOAD_PATTERN.test(url)) {
+      const shouldProcessDownload = isWatermarkRemoverEnabled() && consumeDownloadIntent();
+      if (!shouldProcessDownload) {
+        return originalFetch.apply(this, args);
+      }
+
       // Replace with original size URL
       const origSizeUrl = replaceWithOriginalSize(url);
 
@@ -134,107 +153,105 @@
         });
       }
 
-      // Only process watermark removal if enabled — use async IIFE only for this path
-      if (isWatermarkRemoverEnabled()) {
-        return (async () => {
-          console.log('[Gemini Voyager] Intercepting download for watermark removal');
+      // Use async IIFE only for the user-initiated watermark removal path.
+      return (async () => {
+        console.log('[Gemini Voyager] Intercepting download for watermark removal');
 
-          // Declare response and blob outside try block so they're accessible in catch
-          let response, blob;
+        // Declare response and blob outside try block so they're accessible in catch
+        let response, blob;
 
-          try {
-            // Check content length first (via HEAD request) to show appropriate message
-            // But we'll just show "downloading" first and update if large
-            updateStatus('DOWNLOADING');
+        try {
+          // Check content length first (via HEAD request) to show appropriate message
+          // But we'll just show "downloading" first and update if large
+          updateStatus('DOWNLOADING');
 
-            // Fetch the original size image
-            response = await originalFetch.apply(this, args);
+          // Fetch the original size image
+          response = await originalFetch.apply(this, args);
 
-            if (!response.ok) {
-              updateStatus('ERROR', { message: `HTTP Error: ${response.status}` });
-              return response;
-            }
+          if (!response.ok) {
+            updateStatus('ERROR', { message: `HTTP Error: ${response.status}` });
+            return response;
+          }
 
-            // Check content length for large files (5MB) - update status
-            const contentLength = response.headers.get('content-length');
-            if (contentLength && parseInt(contentLength, 10) > 5 * 1024 * 1024) {
-              updateStatus('DOWNLOADING_LARGE');
-            }
+          // Check content length for large files (5MB) - update status
+          const contentLength = response.headers.get('content-length');
+          if (contentLength && parseInt(contentLength, 10) > 5 * 1024 * 1024) {
+            updateStatus('DOWNLOADING_LARGE');
+          }
 
-            // Clone response to read blob
-            blob = await response.blob();
+          // Clone response to read blob
+          blob = await response.blob();
 
-            // Step 2: Processing
-            updateStatus('PROCESSING');
+          // Step 2: Processing
+          updateStatus('PROCESSING');
 
-            // Send blob to content script for watermark removal via DOM bridge
-            const processedBlob = await new Promise((resolve, reject) => {
-              const requestId = 'gv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-              const bridge = getBridgeElement();
+          // Send blob to content script for watermark removal via DOM bridge
+          const processedBlob = await new Promise((resolve, reject) => {
+            const requestId = 'gv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const bridge = getBridgeElement();
 
-              // Watch for response via MutationObserver (works across worlds in Firefox)
-              const observer = new MutationObserver(() => {
-                const response = bridge.dataset.response;
-                if (response) {
-                  try {
-                    const data = JSON.parse(response);
-                    if (data.requestId === requestId) {
-                      observer.disconnect();
-                      bridge.removeAttribute('data-response');
+            // Watch for response via MutationObserver (works across worlds in Firefox)
+            const observer = new MutationObserver(() => {
+              const response = bridge.dataset.response;
+              if (response) {
+                try {
+                  const data = JSON.parse(response);
+                  if (data.requestId === requestId) {
+                    observer.disconnect();
+                    bridge.removeAttribute('data-response');
 
-                      if (data.error) reject(new Error(data.error));
-                      else
-                        fetch(data.base64)
-                          .then((r) => r.blob())
-                          .then(resolve)
-                          .catch(reject);
-                    }
-                  } catch (e) {
-                    console.warn('[Gemini Voyager] Failed to parse bridge response:', e);
+                    if (data.error) reject(new Error(data.error));
+                    else
+                      fetch(data.base64)
+                        .then((r) => r.blob())
+                        .then(resolve)
+                        .catch(reject);
                   }
+                } catch (e) {
+                  console.warn('[Gemini Voyager] Failed to parse bridge response:', e);
                 }
-              });
-              observer.observe(bridge, { attributes: true, attributeFilter: ['data-response'] });
-
-              // Send request via DOM bridge
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                bridge.dataset.request = JSON.stringify({ requestId, base64: reader.result });
-              };
-              reader.onerror = () => reject(new Error('Failed to read blob'));
-              reader.readAsDataURL(blob);
-
-              // Timeout for watermark processing
-              setTimeout(() => {
-                observer.disconnect();
-                reject(new Error('Processing timeout'));
-              }, WATERMARK_PROCESSING_TIMEOUT_MS);
+              }
             });
+            observer.observe(bridge, { attributes: true, attributeFilter: ['data-response'] });
 
-            updateStatus('SUCCESS');
+            // Send request via DOM bridge
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              bridge.dataset.request = JSON.stringify({ requestId, base64: reader.result });
+            };
+            reader.onerror = () => reject(new Error('Failed to read blob'));
+            reader.readAsDataURL(blob);
 
-            // Return processed response
-            return new Response(processedBlob, {
+            // Timeout for watermark processing
+            setTimeout(() => {
+              observer.disconnect();
+              reject(new Error('Processing timeout'));
+            }, WATERMARK_PROCESSING_TIMEOUT_MS);
+          });
+
+          updateStatus('SUCCESS');
+
+          // Return processed response
+          return new Response(processedBlob, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+          });
+        } catch (error) {
+          console.warn('[Gemini Voyager] Watermark processing failed, using original:', error);
+          updateStatus('ERROR', { message: error.message || 'Unknown error' });
+          // Return the original blob if available, otherwise fall through to originalFetch
+          if (blob && response) {
+            return new Response(blob, {
               status: response.status,
               statusText: response.statusText,
               headers: response.headers,
             });
-          } catch (error) {
-            console.warn('[Gemini Voyager] Watermark processing failed, using original:', error);
-            updateStatus('ERROR', { message: error.message || 'Unknown error' });
-            // Return the original blob if available, otherwise fall through to originalFetch
-            if (blob && response) {
-              return new Response(blob, {
-                status: response.status,
-                statusText: response.statusText,
-                headers: response.headers,
-              });
-            }
-            // If blob/response not available (error before fetch completed), fall through
-            return originalFetch.apply(this, args);
           }
-        })();
-      }
+          // If blob/response not available (error before fetch completed), fall through
+          return originalFetch.apply(this, args);
+        }
+      })();
     }
 
     // Pass through: return the ORIGINAL Promise directly (no async wrapping)
