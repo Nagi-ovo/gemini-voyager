@@ -85,4 +85,42 @@ describe('addConversationToFolderFromNative — sort-order preservation', () => 
 
     expect(sorted[0]?.conversationId).toBe('auto-assigned');
   });
+
+  it('does not create duplicate sortIndex values when an existing entry lacks sortIndex', () => {
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    vi.spyOn(typedManager, 'saveData').mockImplementation(() => {});
+    vi.spyOn(typedManager, 'refresh').mockImplementation(() => {});
+
+    const folder = createFolder('folder-1', 'Project A', 0);
+    typedManager.data = {
+      folders: [folder],
+      folderContents: {
+        'folder-1': [
+          // Indexed entry, newer in time
+          createConversation('indexed-newer', 0, 200),
+          // Null-sortIndex entry, older in time. ensureSortIndices will assign it 1
+          // (last position in time-DESC order). Without normalization-before-shift,
+          // (sortIndex ?? 0) + 1 would map both this entry and 'indexed-newer' to 1.
+          {
+            conversationId: 'no-index-older',
+            title: 'no-index-older',
+            url: 'https://gemini.google.com/app/no-index-older',
+            addedAt: 100,
+            lastOpenedAt: 100,
+          },
+        ],
+      },
+    };
+
+    (manager as FolderManager).addConversationToFolderFromNative(
+      'folder-1',
+      'auto-assigned',
+      'Auto Assigned',
+      'https://gemini.google.com/app/auto-assigned',
+    );
+
+    const indices = typedManager.data.folderContents['folder-1'].map((c) => c.sortIndex);
+    expect(new Set(indices).size).toBe(indices.length);
+  });
 });
