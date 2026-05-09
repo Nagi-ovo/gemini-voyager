@@ -186,8 +186,11 @@ function markPendingSend(input: HTMLElement | null): void {
   // sees an empty input. Strip any leftover block first (from a prior send
   // whose URL change never landed) — otherwise Gemini would submit it alone.
   if (isInputEmpty(input)) {
-    if (input && hasInstructionBlock(readInputText(input))) {
-      setInputText(input, stripInstructionBlock(readInputText(input)));
+    if (input) {
+      const currentText = readInputText(input);
+      if (hasInstructionBlock(currentText)) {
+        setInputText(input, stripInstructionBlock(currentText));
+      }
     }
     return;
   }
