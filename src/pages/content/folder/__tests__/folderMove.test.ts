@@ -339,15 +339,17 @@ describe('folder movement', () => {
     typedManager.data = {
       folders: [folder],
       folderContents: {
-        folder: [createConversation('a', 0), createConversation('b', 1), createConversation('c', 2)],
+        folder: [
+          createConversation('a', 0),
+          createConversation('b', 1),
+          createConversation('c', 2),
+        ],
       },
     };
 
     const folderElement = typedManager.createFolderElement(folder);
     document.body.appendChild(folderElement);
-    const rows = Array.from(
-      folderElement.querySelectorAll<HTMLElement>('.gv-folder-conversation'),
-    );
+    const rows = Array.from(folderElement.querySelectorAll<HTMLElement>('.gv-folder-conversation'));
     rows.forEach((row, index) => setElementRect(row, index * 30));
 
     const dragData: DragData = {
