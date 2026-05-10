@@ -608,7 +608,7 @@ describe('follow-up injection regression', () => {
     expect(mockManager.addConversationToFolderFromNative).not.toHaveBeenCalled();
   });
 
-  it('does NOT cancel pendingSend when the user middle-clicks or Ctrl-clicks a sidebar link (opens in new tab)', async () => {
+  it('does NOT cancel pendingSend when the user middle-clicks, Ctrl-clicks, or Cmd-clicks a sidebar link (opens in new tab)', async () => {
     const chatInput = document.createElement('div');
     chatInput.id = 'test-chat-input';
     chatInput.setAttribute('contenteditable', 'true');
