@@ -877,4 +877,74 @@ describe('follow-up injection regression', () => {
     await vi.advanceTimersByTimeAsync(700);
     expect(mockManager.addConversationToFolderFromNative).not.toHaveBeenCalled();
   });
+
+  it('assigns the new conversation when user clicks send with attachment-only (empty text) input', async () => {
+    const chatInput = document.createElement('div');
+    chatInput.id = 'test-chat-input';
+    chatInput.setAttribute('contenteditable', 'true');
+    chatInput.setAttribute('role', 'textbox');
+    // Empty input — Gemini allows send when an attachment is present.
+    document.body.appendChild(chatInput);
+
+    const modelPicker = document.createElement('div');
+    modelPicker.className = 'model-picker-container';
+    modelPicker.appendChild(document.createElement('button'));
+    document.body.appendChild(modelPicker);
+    vi.spyOn(modelPicker, 'getBoundingClientRect').mockReturnValue({ height: 40 } as DOMRect);
+
+    // Real send button matching SEND_BUTTON_SELECTOR.
+    const sendButton = document.createElement('button');
+    sendButton.setAttribute('aria-label', 'Send message');
+    document.body.appendChild(sendButton);
+
+    const mockManager = {
+      getFolders: vi.fn().mockReturnValue([
+        {
+          id: 'f1',
+          name: 'TestFolder',
+          parentId: null,
+          isExpanded: false,
+          createdAt: 0,
+          updatedAt: 0,
+          instructions: 'Be concise.',
+        },
+      ]),
+      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+      addConversationToFolderFromNative: vi.fn(),
+    };
+
+    const { startFolderProject } = await import('../index');
+    startFolderProject(mockManager as unknown as Parameters<typeof startFolderProject>[0]);
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Select folder
+    document.querySelector<HTMLButtonElement>('.gv-fp-chip')!.click();
+    await vi.advanceTimersByTimeAsync(50);
+    Array.from(document.querySelectorAll<HTMLElement>('.gv-fp-item'))
+      .find((el) => el.textContent?.includes('TestFolder'))!
+      .click();
+
+    // User clicks send. Input is empty (attachment-only scenario). The capture-phase
+    // click listener must mark pendingSend so the subsequent URL change is attributed
+    // to this send and the new conversation is added to the folder.
+    sendButton.click();
+
+    // Gemini's URL change for the new conversation.
+    window.history.pushState({}, '', '/app/attach-only-conv');
+    await vi.advanceTimersByTimeAsync(700);
+
+    // The new conversation MUST be assigned to the selected folder. Skipping the
+    // empty-input guard on the click path is the whole point: the user explicitly
+    // clicked send and Gemini wouldn't have enabled the button without something
+    // to send (attachment).
+    expect(mockManager.addConversationToFolderFromNative).toHaveBeenCalledTimes(1);
+    expect(mockManager.addConversationToFolderFromNative).toHaveBeenCalledWith(
+      'f1',
+      'attach-only-conv',
+      expect.any(String),
+      expect.any(String),
+      false,
+      undefined,
+    );
+  });
 });

@@ -182,21 +182,30 @@ function isInputEmpty(input: HTMLElement | null): boolean {
 }
 
 function markPendingSend(input: HTMLElement | null): void {
-  // Empty input + Enter: do nothing, so Gemini's bubble-phase handler also
-  // sees an empty input. Strip any leftover block first (from a prior send
-  // whose URL change never landed) — otherwise Gemini would submit it alone.
-  if (isInputEmpty(input)) {
-    if (input) {
-      const currentText = readInputText(input);
-      if (hasInstructionBlock(currentText)) {
-        setInputText(input, stripInstructionBlock(currentText));
-      }
-    }
-    return;
-  }
   prepareInputForSend(input);
   pendingSend = true;
   schedulePendingSendReset();
+}
+
+/**
+ * Handle an empty-input Enter press: strip any leftover instruction block so
+ * Gemini's bubble-phase handler sees a truly empty input and doesn't submit
+ * a message containing only the block. Returns true when the press was
+ * handled (caller should skip markPendingSend).
+ *
+ * Click-send is NOT routed through this — Gemini only enables the send button
+ * when there is text or an attachment, so an empty-input click means
+ * "send the attachment" and the auto-assignment must proceed.
+ */
+function handleEmptyInputEnter(input: HTMLElement | null): boolean {
+  if (!isInputEmpty(input)) return false;
+  if (input) {
+    const currentText = readInputText(input);
+    if (hasInstructionBlock(currentText)) {
+      setInputText(input, stripInstructionBlock(currentText));
+    }
+  }
+  return true;
 }
 
 function isKeyboardSend(event: KeyboardEvent): boolean {
@@ -245,6 +254,7 @@ function setupSendDetection(): void {
 
   sendKeydownListener = (e: KeyboardEvent) => {
     if (!selectedFolderId || !isKeyboardSend(e) || !isEditableTarget(e.target)) return;
+    if (handleEmptyInputEnter(e.target)) return;
     markPendingSend(e.target);
   };
 
