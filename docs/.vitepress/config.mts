@@ -7,6 +7,19 @@ import { type HeadConfig, defineConfig } from 'vitepress';
 // https://vitepress.dev/reference/site-config
 const siteUrl = 'https://voyager.nagi.fun';
 
+const localeHreflang: { prefix: string; hreflang: string }[] = [
+  { prefix: '', hreflang: 'zh-CN' },
+  { prefix: 'zh_TW/', hreflang: 'zh-TW' },
+  { prefix: 'en/', hreflang: 'en-US' },
+  { prefix: 'ja/', hreflang: 'ja-JP' },
+  { prefix: 'ko/', hreflang: 'ko-KR' },
+  { prefix: 'fr/', hreflang: 'fr-FR' },
+  { prefix: 'es/', hreflang: 'es-ES' },
+  { prefix: 'pt/', hreflang: 'pt-PT' },
+  { prefix: 'ar/', hreflang: 'ar-SA' },
+  { prefix: 'ru/', hreflang: 'ru-RU' },
+];
+
 export default defineConfig({
   base: '/',
   title: 'Voyager',
@@ -41,6 +54,22 @@ export default defineConfig({
 
     const rawMdUrl = `https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/docs/${pageData.relativePath}`;
     head.push(['link', { rel: 'alternate', type: 'text/markdown', href: rawMdUrl }]);
+
+    // hreflang alternates for all locales
+    let basePath = pagePath;
+    for (const { prefix } of localeHreflang) {
+      if (prefix && pagePath.startsWith(prefix)) {
+        basePath = pagePath.slice(prefix.length);
+        break;
+      }
+    }
+    for (const { prefix, hreflang } of localeHreflang) {
+      head.push(['link', { rel: 'alternate', hreflang, href: `${siteUrl}/${prefix}${basePath}` }]);
+    }
+    head.push([
+      'link',
+      { rel: 'alternate', hreflang: 'x-default', href: `${siteUrl}/${basePath}` },
+    ]);
 
     return head;
   },
