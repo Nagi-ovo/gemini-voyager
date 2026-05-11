@@ -3034,10 +3034,7 @@ export class FolderManager {
     }
 
     const active = this.activeConversationReorderTarget;
-    if (
-      active &&
-      (active.element !== target.element || active.placement !== target.placement)
-    ) {
+    if (active && (active.element !== target.element || active.placement !== target.placement)) {
       active.element.classList.remove('gv-reorder-above', 'gv-reorder-below');
     }
 
@@ -4987,14 +4984,29 @@ export class FolderManager {
 
     let addedNewConversation = false;
     if (existingIndex === -1) {
-      // Add new conversation
+      // Insert at the top by claiming sortIndex 0 and shifting existing entries
+      // up by one. Time-based fallback alone is not enough — ensureDataIntegrity
+      // (called from saveData) will assign sortIndex 0 to the newest entry by
+      // time and collide with any pre-existing sortIndex 0, after which JS's
+      // stable sort drops the new entry below the old one.
+      //
+      // Run ensureDataIntegrity first so any nullish sortIndex on existing
+      // entries gets a numeric value before the shift. Otherwise (sortIndex ?? 0)
+      // would map both null entries and the existing 0 entry to 1.
+      this.ensureDataIntegrity();
+      const now = Date.now();
+      for (const c of this.data.folderContents[folderId]) {
+        c.sortIndex = (c.sortIndex ?? 0) + 1;
+      }
       this.data.folderContents[folderId].push({
         conversationId,
         title,
         url,
-        addedAt: Date.now(),
+        addedAt: now,
+        lastOpenedAt: now,
         isGem,
         gemId,
+        sortIndex: 0,
       });
       addedNewConversation = true;
     }

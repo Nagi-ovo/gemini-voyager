@@ -66,7 +66,10 @@ export default defineConfig({
     for (const { prefix, hreflang } of localeHreflang) {
       head.push(['link', { rel: 'alternate', hreflang, href: `${siteUrl}/${prefix}${basePath}` }]);
     }
-    head.push(['link', { rel: 'alternate', hreflang: 'x-default', href: `${siteUrl}/${basePath}` }]);
+    head.push([
+      'link',
+      { rel: 'alternate', hreflang: 'x-default', href: `${siteUrl}/${basePath}` },
+    ]);
 
     return head;
   },
