@@ -19,6 +19,12 @@ function createEnabledBridge(): HTMLElement {
   return bridge;
 }
 
+function createMockFetchResponse(body = 'ok', init: ResponseInit = { status: 200 }): Response {
+  const response = new Response(body, init);
+  vi.spyOn(response, 'blob').mockResolvedValue(new window.Blob([body]));
+  return response;
+}
+
 async function waitForBridgeRequest(bridge: HTMLElement): Promise<string> {
   for (let i = 0; i < 20; i += 1) {
     if (bridge.dataset.request) {
@@ -42,9 +48,7 @@ describe('fetchInterceptor (MAIN world script)', () => {
 
     document.documentElement.innerHTML = '';
 
-    originalFetch = vi
-      .fn()
-      .mockImplementation(() => Promise.resolve(new Response('ok', { status: 200 })));
+    originalFetch = vi.fn().mockImplementation(() => Promise.resolve(createMockFetchResponse()));
     Object.defineProperty(window, 'fetch', {
       value: originalFetch,
       writable: true,
@@ -62,7 +66,7 @@ describe('fetchInterceptor (MAIN world script)', () => {
   });
 
   it('passes through non-target requests to original fetch', async () => {
-    const originalFetch = vi.fn().mockResolvedValue(new Response('ok', { status: 200 }));
+    const originalFetch = vi.fn().mockResolvedValue(createMockFetchResponse());
     Object.defineProperty(window, 'fetch', {
       value: originalFetch,
       writable: true,
