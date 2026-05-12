@@ -266,15 +266,19 @@ bun run build:all
 
 ## 🌟 致谢
 
-> Voyager 只是一个小小的 side project。比起做「从 XX 迁移」来抢用户，我更想把时间花在真正帮到人的事情上。
+> Voyager 只是一个小小的 side project。比起做那些把其他扩展用户迁移过来的入口，我更想把时间花在真正帮到人的事情上。
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 本项目的灵感来源。
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana 基于这些项目适配而来，相关第三方 MIT 声明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 本项目的灵感来源。
+- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - 默认模型锁定功能中的部分交互逻辑参考自 Gemini Helper，并已在源码中保留 attribution。
 
 ## 🌍 生态
 
 受 Voyager 启发的项目：
+
+如果你的项目受到 Voyager 启发、直接 fork 自 Voyager，或基于 Voyager 改造而来，欢迎提交 PR 加入这里。
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - 为 DeepSeek 适配的 Fork 版本。
 

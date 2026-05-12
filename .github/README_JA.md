@@ -237,15 +237,19 @@ Voyager に貢献してくださったすべてのコントリビューターに
 
 ## 🌟 クレジット
 
-> Voyager は小さなサイドプロジェクトです。他の拡張機能からユーザーを引き抜く機能を作るより、人の役に立つものづくりに時間を使いたいと思っています。
+> Voyager は小さなサイドプロジェクトです。他の拡張機能からユーザーを移行させるための導線を作るより、人の役に立つものづくりに時間を使いたいと思っています。
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - このプロジェクトのインスピレーションの源です。
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana はこれらのプロジェクトをもとに適応されています。関連する第三者の MIT notice は [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) に記載しています。
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - このプロジェクトのインスピレーションの源です。
+- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - デフォルトモデル固定機能の一部のインタラクション設計は Gemini Helper を参考にしており、ソースコード上にも attribution を残しています。
 
 ## 🌍 エコシステム
 
 Voyager にインスパイアされたプロジェクト：
+
+あなたのプロジェクトが Voyager にインスパイアされたもの、Voyager の直接 fork、または Voyager をベースに改造したものであれば、ぜひ PR を開いてここに追加してください。
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Voyager を DeepSeek 向けに移植したプロジェクト。
 

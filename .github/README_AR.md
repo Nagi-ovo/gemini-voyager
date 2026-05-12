@@ -217,15 +217,19 @@
 
 ## 🌟 الاعتمادات
 
-> Voyager مشروع جانبي صغير. أفضّل قضاء وقتي في بناء أشياء تساعد الناس بدلاً من بناء ميزات لاستقطاب مستخدمي الإضافات الأخرى.
+> Voyager مشروع جانبي صغير. أفضّل قضاء وقتي في بناء أشياء تساعد الناس بدلاً من بناء مسارات ترحيل مصممة لجذب المستخدمين بعيدًا عن إضافات أخرى.
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - مصدر الإلهام الأصلي لهذا المشروع.
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - تم بناء NanoBanana بالاعتماد على هذين المشروعين. إشعارات MIT الخاصة بالأطراف الثالثة والمحفوظة موجودة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - مصدر الإلهام الأصلي لهذا المشروع.
+- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - يتضمن منطق تثبيت النموذج الافتراضي أفكارًا تفاعلية مقتبسة من Gemini Helper، مع الاحتفاظ بالإسناد على مستوى المصدر.
 
 ## 🌍 المنظومة
 
 مشاريع مستوحاة من Voyager:
+
+إذا كان مشروعك مستوحى من Voyager، أو متفرعًا منه مباشرة، أو مبنيًا عليه، فلا تتردد في فتح PR لإضافته هنا.
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - نسخة مشتقة من Voyager مخصصة لـ DeepSeek.
 

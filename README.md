@@ -265,15 +265,19 @@ Special thanks to all contributors for their contributions to Voyager ❤️
 
 ## 🌟 Credits
 
-> Voyager is a small side project. I'd rather spend time building things that help people than building features that poach users from other extensions.
+> Voyager is a small side project. I'd rather spend time building things that help people than building migration paths designed to pull users away from other extensions.
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project.
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana is adapted from these projects. Third-party MIT notices are retained in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project.
+- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - The default-model locking logic includes interaction ideas adapted from Gemini Helper, with source-level attribution retained.
 
 ## 🌍 Ecosystem
 
 Projects inspired by Voyager:
+
+If your project is inspired by Voyager, forked from it, or built on top of it, feel free to open a PR to add it here.
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
 

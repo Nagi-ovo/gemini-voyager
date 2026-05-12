@@ -217,15 +217,19 @@ Un agradecimiento especial a todos los colaboradores por sus contribuciones a Vo
 
 ## 🌟 Créditos
 
-> Voyager es un pequeño proyecto personal. Prefiero dedicar mi tiempo a construir cosas que ayuden a la gente que a crear funciones para atraer usuarios de otras extensiones.
+> Voyager es un pequeño proyecto personal. Prefiero dedicar mi tiempo a construir cosas que ayuden a la gente que a crear rutas de migración diseñadas para alejar usuarios de otras extensiones.
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - La fuente original de inspiración para este proyecto.
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana está adaptado de estos proyectos. Los avisos MIT de terceros conservados están en [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - La fuente original de inspiración para este proyecto.
+- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - La lógica de bloqueo del modelo predeterminado incluye ideas de interacción adaptadas de Gemini Helper, con atribución conservada en el código fuente.
 
 ## 🌍 Ecosistema
 
 Proyectos inspirados por Voyager:
+
+Si tu proyecto está inspirado en Voyager, es un fork directo o está construido sobre Voyager, no dudes en abrir un PR para añadirlo aquí.
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Un fork de Voyager adaptado para DeepSeek.
 

@@ -217,15 +217,19 @@
 
 ## 🌟 Благодарности
 
-> Voyager — это маленький сайд-проект. Я предпочитаю тратить время на создание полезных вещей, а не на функции переманивания пользователей из других расширений.
+> Voyager — это маленький сайд-проект. Я предпочитаю тратить время на создание полезных вещей, а не на миграционные пути, созданные для увода пользователей из других расширений.
+
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - Оригинальное расширение, вдохновившее этот проект.
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana адаптирован на основе этих проектов. Сохраненные сторонние MIT-уведомления находятся в [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - Оригинальное расширение, вдохновившее этот проект.
+- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - Логика фиксации модели по умолчанию включает идеи взаимодействия, адаптированные из Gemini Helper, с сохранённой атрибуцией на уровне исходного кода.
 
 ## 🌍 Экосистема
 
 Проекты, вдохновлённые Voyager:
+
+Если ваш проект вдохновлён Voyager, является прямым форком или построен на основе Voyager, смело открывайте PR, чтобы добавить его сюда.
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Форк Voyager, адаптированный для DeepSeek.
 
