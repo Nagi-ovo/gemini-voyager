@@ -82,6 +82,7 @@ export default defineConfig({
         nav: [
           { text: '首页', link: '/' },
           { text: '指南', link: '/guide/installation' },
+          { text: '数据查看器', link: '/data-viewer' },
         ],
         sidebar: [
           {
@@ -147,6 +148,7 @@ export default defineConfig({
         nav: [
           { text: '首頁', link: '/zh_TW/' },
           { text: '指南', link: '/zh_TW/guide/installation' },
+          { text: '資料查看器', link: '/zh_TW/data-viewer' },
         ],
         sidebar: [
           {
@@ -212,6 +214,7 @@ export default defineConfig({
         nav: [
           { text: 'Home', link: '/en/' },
           { text: 'Guide', link: '/en/guide/installation' },
+          { text: 'Data Viewer', link: '/en/data-viewer' },
         ],
         sidebar: [
           {
@@ -277,6 +280,7 @@ export default defineConfig({
         nav: [
           { text: 'ホーム', link: '/ja/' },
           { text: 'ガイド', link: '/ja/guide/installation' },
+          { text: 'データビューア', link: '/ja/data-viewer' },
         ],
         sidebar: [
           {
@@ -342,6 +346,7 @@ export default defineConfig({
         nav: [
           { text: '홈', link: '/ko/' },
           { text: '가이드', link: '/ko/guide/installation' },
+          { text: '데이터 뷰어', link: '/ko/data-viewer' },
         ],
         sidebar: [
           {
@@ -407,6 +412,7 @@ export default defineConfig({
         nav: [
           { text: 'Accueil', link: '/fr/' },
           { text: 'Guide', link: '/fr/guide/installation' },
+          { text: 'Visionneuse', link: '/fr/data-viewer' },
         ],
         sidebar: [
           {
@@ -472,6 +478,7 @@ export default defineConfig({
         nav: [
           { text: 'Inicio', link: '/es/' },
           { text: 'Guía', link: '/es/guide/installation' },
+          { text: 'Visor', link: '/es/data-viewer' },
         ],
         sidebar: [
           {
@@ -546,6 +553,7 @@ export default defineConfig({
         nav: [
           { text: 'Início', link: '/pt/' },
           { text: 'Guia', link: '/pt/guide/installation' },
+          { text: 'Visualizador', link: '/pt/data-viewer' },
         ],
         sidebar: [
           {
@@ -612,6 +620,7 @@ export default defineConfig({
         nav: [
           { text: 'الرئيسية', link: '/ar/' },
           { text: 'الدليل', link: '/ar/guide/installation' },
+          { text: 'عارض البيانات', link: '/ar/data-viewer' },
         ],
         sidebar: [
           {
@@ -677,6 +686,7 @@ export default defineConfig({
         nav: [
           { text: 'Главная', link: '/ru/' },
           { text: 'Руководство', link: '/ru/guide/installation' },
+          { text: 'Просмотр', link: '/ru/data-viewer' },
         ],
         sidebar: [
           {
