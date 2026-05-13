@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
 import { useData } from 'vitepress';
+import { computed, onMounted, ref } from 'vue';
 
 interface Folder {
   readonly id: string;
@@ -114,7 +114,8 @@ const i18n: Record<string, Record<string, string>> = {
     noConversations: '空のフォルダ',
     pinned: 'ピン留め',
     gem: 'Gem',
-    invalidFormat: 'ファイル形式が無効です。Voyager からエクスポートしたフォルダ JSON をアップロードしてください。',
+    invalidFormat:
+      'ファイル形式が無効です。Voyager からエクスポートしたフォルダ JSON をアップロードしてください。',
     parseError: 'ファイルの解析に失敗しました。ファイルが完全か確認してください。',
     project: 'プロジェクト',
     unfiled: '未分類の会話',
@@ -304,7 +305,13 @@ const rows = computed<FlatRow[]>(() => {
     out.push({
       kind: 'folder',
       depth: 0,
-      folder: { id: UNFILED_ID, name: t('unfiled'), parentId: null, createdAt: 0, updatedAt: 0 } as Folder,
+      folder: {
+        id: UNFILED_ID,
+        name: t('unfiled'),
+        parentId: null,
+        createdAt: 0,
+        updatedAt: 0,
+      } as Folder,
       hasChildren: true,
       convCount: unfiled.length,
     });
@@ -357,7 +364,11 @@ function loadPayload(raw: string) {
   errorMsg.value = '';
   try {
     const parsed = JSON.parse(raw);
-    if (parsed.format !== 'gemini-voyager.folders.v1' || !parsed.data?.folders || !parsed.data?.folderContents) {
+    if (
+      parsed.format !== 'gemini-voyager.folders.v1' ||
+      !parsed.data?.folders ||
+      !parsed.data?.folderContents
+    ) {
       errorMsg.value = t('invalidFormat');
       return;
     }
@@ -420,7 +431,17 @@ onMounted(() => {
       @drop.prevent="onDrop"
       @click="triggerImport"
     >
-      <svg class="fv-upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        class="fv-upload-icon"
+        width="48"
+        height="48"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
         <polyline points="17 8 12 3 7 8" />
         <line x1="12" y1="3" x2="12" y2="15" />
@@ -437,7 +458,9 @@ onMounted(() => {
         <div class="fv-meta">
           <span class="fv-badge">{{ stats.folders }} {{ t('folders') }}</span>
           <span class="fv-badge">{{ stats.conversations }} {{ t('conversations') }}</span>
-          <span v-if="payload.exportedAt" class="fv-info">{{ t('exportedAt') }}: {{ formatDate(payload.exportedAt) }}</span>
+          <span v-if="payload.exportedAt" class="fv-info"
+            >{{ t('exportedAt') }}: {{ formatDate(payload.exportedAt) }}</span
+          >
           <span v-if="payload.version" class="fv-info">v{{ payload.version }}</span>
         </div>
         <div class="fv-actions">
@@ -458,11 +481,15 @@ onMounted(() => {
             :style="{ paddingLeft: `${row.depth * 20 + 12}px` }"
             @click="toggle(row.folder!.id)"
           >
-            <span class="fv-toggle">{{ row.hasChildren ? (expandedIds.has(row.folder!.id) ? '▾' : '▸') : '' }}</span>
+            <span class="fv-toggle">{{
+              row.hasChildren ? (expandedIds.has(row.folder!.id) ? '▾' : '▸') : ''
+            }}</span>
             <span class="fv-icon">📂</span>
             <span class="fv-name">{{ row.folder!.name }}</span>
             <span v-if="row.folder?.pinned" class="fv-tag fv-tag-pin">{{ t('pinned') }}</span>
-            <span v-if="row.folder?.instructions" class="fv-tag fv-tag-project">{{ t('project') }}</span>
+            <span v-if="row.folder?.instructions" class="fv-tag fv-tag-project">{{
+              t('project')
+            }}</span>
             <span class="fv-count">{{ row.convCount }}</span>
           </div>
 
@@ -484,16 +511,20 @@ onMounted(() => {
           </a>
 
           <!-- Empty folder hint -->
-          <div
-            v-else
-            class="fv-empty"
-            :style="{ paddingLeft: `${row.depth * 20 + 20}px` }"
-          >{{ t('noConversations') }}</div>
+          <div v-else class="fv-empty" :style="{ paddingLeft: `${row.depth * 20 + 20}px` }">
+            {{ t('noConversations') }}
+          </div>
         </template>
       </div>
     </div>
 
-    <input ref="fileInput" type="file" accept=".json" style="display: none" @change="onFileChange" />
+    <input
+      ref="fileInput"
+      type="file"
+      accept=".json"
+      style="display: none"
+      @change="onFileChange"
+    />
   </div>
 </template>
 
@@ -509,7 +540,9 @@ onMounted(() => {
   padding: 48px 24px;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 .fv-upload:hover,
 .fv-upload.dragging {
@@ -533,7 +566,9 @@ onMounted(() => {
   font-size: 14px;
   cursor: pointer;
 }
-.fv-browse:hover { opacity: 0.85; }
+.fv-browse:hover {
+  opacity: 0.85;
+}
 .fv-hint {
   color: var(--vp-c-text-3);
   font-size: 12px;
@@ -594,8 +629,12 @@ onMounted(() => {
   background: var(--vp-c-bg-mute);
   color: var(--vp-c-text-1);
 }
-.fv-btn-danger { color: var(--vp-c-danger-1); }
-.fv-btn-danger:hover { background: var(--vp-c-danger-soft); }
+.fv-btn-danger {
+  color: var(--vp-c-danger-1);
+}
+.fv-btn-danger:hover {
+  background: var(--vp-c-danger-soft);
+}
 
 .fv-tree {
   border: 1px solid var(--vp-c-border);
@@ -612,7 +651,9 @@ onMounted(() => {
   user-select: none;
   transition: background 0.1s;
 }
-.fv-folder:hover { background: var(--vp-c-bg-soft); }
+.fv-folder:hover {
+  background: var(--vp-c-bg-soft);
+}
 .fv-toggle {
   width: 14px;
   font-size: 12px;
@@ -620,7 +661,10 @@ onMounted(() => {
   flex-shrink: 0;
   text-align: center;
 }
-.fv-icon { font-size: 16px; flex-shrink: 0; }
+.fv-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
 .fv-name {
   font-size: 14px;
   font-weight: 500;
@@ -670,7 +714,9 @@ onMounted(() => {
   font-size: 13px;
   transition: background 0.1s;
 }
-.fv-conv:hover { background: var(--vp-c-bg-soft); }
+.fv-conv:hover {
+  background: var(--vp-c-bg-soft);
+}
 .fv-conv-title {
   flex: 1;
   overflow: hidden;
