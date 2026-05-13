@@ -11,13 +11,14 @@ import browser from 'webextension-polyfill';
 import { StorageKeys } from '@/core/types/common';
 
 import { getTranslationSync } from '../../../utils/i18n';
+import { removeSidebarCollapseNudge, showSidebarCollapseNudgeOnce } from '../sidebarCollapseNudge';
 
 // Constants
 const STYLE_ID = 'gv-recents-hider-style';
 const HIDDEN_CLASS = 'gv-recents-hidden';
 const PEEK_BAR_CLASS = 'gv-recents-peek-bar';
 const TOGGLE_BTN_CLASS = 'gv-recents-toggle-btn';
-const STORAGE_KEY = 'gvRecentsHidden';
+const STORAGE_KEY = StorageKeys.RECENTS_HIDDEN;
 
 // Selectors - targeting the recents preview section
 const RECENTS_SELECTOR = '.my-stuff-recents-preview';
@@ -242,11 +243,14 @@ function createToggleButton(): HTMLButtonElement {
  */
 function createPeekBar(): HTMLDivElement {
   const bar = document.createElement('div');
+  const label = getTranslationSync('recentsShow') || 'Show recent items';
+
   bar.className = PEEK_BAR_CLASS;
-  bar.setAttribute('data-tooltip', getTranslationSync('recentsShow') || 'Show recent items');
+  bar.setAttribute('data-tooltip', label);
+  bar.title = label;
   bar.setAttribute('role', 'button');
   bar.setAttribute('tabindex', '0');
-  bar.setAttribute('aria-label', getTranslationSync('recentsShow') || 'Show recent items');
+  bar.setAttribute('aria-label', label);
 
   return bar;
 }
@@ -321,10 +325,12 @@ async function setupRecentsHider(recentsEl: HTMLElement): Promise<void> {
 
     await setHiddenState(true);
     applyState(recentsEl, peekBar, true);
+    void showSidebarCollapseNudgeOnce(peekBar);
   });
 
   // Peek bar click handler
   peekBar.addEventListener('click', async () => {
+    removeSidebarCollapseNudge();
     await setHiddenState(false);
     applyState(recentsEl, peekBar, false);
   });
@@ -333,6 +339,7 @@ async function setupRecentsHider(recentsEl: HTMLElement): Promise<void> {
   peekBar.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
+      removeSidebarCollapseNudge();
       await setHiddenState(false);
       applyState(recentsEl, peekBar, false);
     }
@@ -354,6 +361,7 @@ function updateLanguageText(): void {
   document.querySelectorAll<HTMLDivElement>(`.${PEEK_BAR_CLASS}`).forEach((bar) => {
     const text = getTranslationSync('recentsShow') || 'Show recent items';
     bar.setAttribute('data-tooltip', text);
+    bar.title = text;
     bar.setAttribute('aria-label', text);
   });
 }
@@ -412,6 +420,7 @@ function cleanup(): void {
   // Remove added elements
   document.querySelectorAll(`.${TOGGLE_BTN_CLASS}`).forEach((el) => el.remove());
   document.querySelectorAll(`.${PEEK_BAR_CLASS}`).forEach((el) => el.remove());
+  removeSidebarCollapseNudge();
   document.querySelectorAll(`.${HIDDEN_CLASS}`).forEach((el) => {
     el.classList.remove(HIDDEN_CLASS);
   });

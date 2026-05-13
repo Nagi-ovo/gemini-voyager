@@ -1379,6 +1379,26 @@
     "message": "إظهار دفاتر الملاحظات",
     "description": "تلميح لإظهار قسم قائمة دفاتر الملاحظات"
   },
+  "foldersHide": {
+    "message": "إخفاء المجلدات",
+    "description": "Tooltip for hiding Folders section"
+  },
+  "foldersShow": {
+    "message": "إظهار المجلدات",
+    "description": "Tooltip for showing Folders section"
+  },
+  "sidebarCollapseNudgeTitle": {
+    "message": "الأقسام المطوية لا تزال هنا",
+    "description": "Title of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeBody": {
+    "message": "سيبقى شريط رفيع في الشريط الجانبي. انقر عليه في أي وقت لتوسيع هذا القسم مرة أخرى.",
+    "description": "Body text of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeDismiss": {
+    "message": "فهمت",
+    "description": "Dismiss button for the one-time sidebar collapse nudge"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

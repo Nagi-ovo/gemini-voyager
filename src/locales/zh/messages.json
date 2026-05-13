@@ -1379,6 +1379,26 @@
     "message": "显示笔记本",
     "description": "显示笔记本列表区域的提示"
   },
+  "foldersHide": {
+    "message": "隐藏文件夹",
+    "description": "Tooltip for hiding Folders section"
+  },
+  "foldersShow": {
+    "message": "显示文件夹",
+    "description": "Tooltip for showing Folders section"
+  },
+  "sidebarCollapseNudgeTitle": {
+    "message": "折叠后还能找回来",
+    "description": "Title of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeBody": {
+    "message": "侧边栏会保留一条细栏，随时点击它即可重新展开这个区域。",
+    "description": "Body text of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeDismiss": {
+    "message": "知道了",
+    "description": "Dismiss button for the one-time sidebar collapse nudge"
+  },
   "setAsDefaultModel": {
     "message": "设为新对话的默认模型",
     "description": "Tooltip for setting default model"

@@ -1,5 +1,5 @@
 /**
- * Sidebar section hider for Gems and Notebooks.
+ * Sidebar section hider for Gems, Notebooks, and Voyager Folders.
  *
  * Gemini keeps shipping new sidebar section shells for project-like content.
  * This module keeps the same hide/show affordance across those variants while
@@ -10,6 +10,7 @@ import browser from 'webextension-polyfill';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
 
 import { getTranslationSync } from '../../../utils/i18n';
+import { removeSidebarCollapseNudge, showSidebarCollapseNudgeOnce } from '../sidebarCollapseNudge';
 
 const STYLE_ID = 'gv-sidebar-section-hider-style';
 const HIDDEN_CLASS = 'gv-sidebar-section-hidden';
@@ -22,7 +23,7 @@ const PROCESSED_ATTR = 'data-gv-sidebar-section-hider';
 const SECTION_ID_ATTR = 'data-gv-sidebar-section-id';
 const ARROW_ICON_SELECTOR = '[data-test-id="arrow-icon"]';
 
-type SectionId = 'gems' | 'notebooks';
+type SectionId = 'gems' | 'notebooks' | 'folders';
 type TranslationKey = Parameters<typeof getTranslationSync>[0];
 
 interface HidableSectionConfig {
@@ -34,6 +35,7 @@ interface HidableSectionConfig {
   showTranslationKey: TranslationKey;
   hideFallback: string;
   showFallback: string;
+  toggleHostSelector?: string;
 }
 
 const SECTION_CONFIGS: readonly HidableSectionConfig[] = [
@@ -55,6 +57,17 @@ const SECTION_CONFIGS: readonly HidableSectionConfig[] = [
     showTranslationKey: 'notebooksShow',
     hideFallback: 'Hide Notebooks',
     showFallback: 'Show Notebooks',
+  },
+  {
+    id: 'folders',
+    containerSelector: '.gv-folder-container:not(.gv-aistudio):not(.gv-multi-select-floating-host)',
+    requiredDescendantSelector: '.gv-folder-header',
+    storageKey: StorageKeys.FOLDERS_HIDDEN,
+    hideTranslationKey: 'foldersHide',
+    showTranslationKey: 'foldersShow',
+    hideFallback: 'Hide Folders',
+    showFallback: 'Show Folders',
+    toggleHostSelector: '.gv-folder-header-actions',
   },
 ] as const;
 
@@ -109,6 +122,7 @@ function injectStyles(): void {
     }
 
     ${ARROW_ICON_SELECTOR}:hover .${TOGGLE_BTN_CLASS},
+    .gv-folder-header:hover .${TOGGLE_BTN_CLASS},
     .${TOGGLE_BTN_CLASS}:hover {
       opacity: 1;
       transform: scale(1);
@@ -392,9 +406,9 @@ async function setupSectionHider(
     return;
   }
 
-  const arrowIcon = sectionEl.querySelector(ARROW_ICON_SELECTOR);
+  const toggleHost = sectionEl.querySelector(section.toggleHostSelector ?? ARROW_ICON_SELECTOR);
   const parent = sectionEl.parentElement;
-  if (!arrowIcon || !parent) {
+  if (!toggleHost || !parent) {
     return;
   }
 
@@ -405,7 +419,7 @@ async function setupSectionHider(
   sectionEl.classList.add(TARGET_CLASS);
   sectionEl.setAttribute(PROCESSED_ATTR, section.id);
 
-  arrowIcon.insertBefore(toggleBtn, arrowIcon.firstChild);
+  toggleHost.insertBefore(toggleBtn, toggleHost.firstChild);
   parent.insertBefore(peekBar, sectionEl.nextSibling);
 
   toggleBtn.addEventListener('click', async (event) => {
@@ -415,11 +429,13 @@ async function setupSectionHider(
     hasUserInteraction = true;
     await setHiddenState(section, true);
     applyState(sectionEl, peekBar, true);
+    void showSidebarCollapseNudgeOnce(peekBar);
   });
 
   peekBar.addEventListener('click', async () => {
     hasUserInteraction = true;
     hideTooltip();
+    removeSidebarCollapseNudge();
     await setHiddenState(section, false);
     applyState(sectionEl, peekBar, false);
   });
@@ -429,6 +445,7 @@ async function setupSectionHider(
       event.preventDefault();
       hasUserInteraction = true;
       hideTooltip();
+      removeSidebarCollapseNudge();
       await setHiddenState(section, false);
       applyState(sectionEl, peekBar, false);
     }
@@ -524,6 +541,7 @@ function cleanup(): void {
   document.querySelectorAll(`.${TOGGLE_BTN_CLASS}`).forEach((element) => element.remove());
   document.querySelectorAll(`.${PEEK_BAR_CLASS}`).forEach((element) => element.remove());
   document.getElementById(TOOLTIP_ID)?.remove();
+  removeSidebarCollapseNudge();
   document.querySelectorAll(`.${HIDDEN_CLASS}`).forEach((element) => {
     element.classList.remove(HIDDEN_CLASS);
   });

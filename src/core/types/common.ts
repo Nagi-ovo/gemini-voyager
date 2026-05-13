@@ -122,8 +122,11 @@ export const StorageKeys = {
   // Sidebar behavior
   GV_SIDEBAR_AUTO_HIDE: 'gvSidebarAutoHide',
   GV_SIDEBAR_FULL_HIDE: 'gvSidebarFullHide',
+  RECENTS_HIDDEN: 'gvRecentsHidden',
   GEMS_HIDDEN: 'gvGemsHidden',
   NOTEBOOKS_HIDDEN: 'gvNotebooksHidden',
+  FOLDERS_HIDDEN: 'gvFoldersHidden',
+  SIDEBAR_COLLAPSE_NUDGE_SHOWN: 'gvSidebarCollapseNudgeShown',
 
   // Folder spacing
   GV_FOLDER_SPACING: 'gvFolderSpacing',

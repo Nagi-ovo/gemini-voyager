@@ -1379,6 +1379,26 @@
     "message": "Mostrar Notebooks",
     "description": "Dica para mostrar a seção da lista de Notebooks"
   },
+  "foldersHide": {
+    "message": "Ocultar pastas",
+    "description": "Tooltip for hiding Folders section"
+  },
+  "foldersShow": {
+    "message": "Mostrar pastas",
+    "description": "Tooltip for showing Folders section"
+  },
+  "sidebarCollapseNudgeTitle": {
+    "message": "As seções recolhidas continuam aqui",
+    "description": "Title of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeBody": {
+    "message": "Uma barra fina permanece na lateral. Clique nela a qualquer momento para expandir esta seção novamente.",
+    "description": "Body text of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeDismiss": {
+    "message": "Entendi",
+    "description": "Dismiss button for the one-time sidebar collapse nudge"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

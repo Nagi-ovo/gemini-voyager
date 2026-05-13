@@ -1379,6 +1379,26 @@
     "message": "Show Notebooks",
     "description": "Tooltip for showing Notebooks list section"
   },
+  "foldersHide": {
+    "message": "Hide Folders",
+    "description": "Tooltip for hiding Folders section"
+  },
+  "foldersShow": {
+    "message": "Show Folders",
+    "description": "Tooltip for showing Folders section"
+  },
+  "sidebarCollapseNudgeTitle": {
+    "message": "Collapsed sections are still here",
+    "description": "Title of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeBody": {
+    "message": "A slim bar stays in the sidebar. Click it anytime to expand this section again.",
+    "description": "Body text of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeDismiss": {
+    "message": "Got it",
+    "description": "Dismiss button for the one-time sidebar collapse nudge"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

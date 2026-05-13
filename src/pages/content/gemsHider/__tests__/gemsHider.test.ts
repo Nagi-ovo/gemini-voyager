@@ -20,6 +20,12 @@ vi.mock('@/utils/i18n', () => ({
       gemsShow: 'Show Gems',
       notebooksHide: 'Hide Notebooks',
       notebooksShow: 'Show Notebooks',
+      foldersHide: 'Hide Folders',
+      foldersShow: 'Show Folders',
+      sidebarCollapseNudgeTitle: 'Collapsed sections are still here',
+      sidebarCollapseNudgeBody:
+        'A slim bar stays in the sidebar. Click it anytime to expand this section again.',
+      sidebarCollapseNudgeDismiss: 'Got it',
     };
 
     return translations[key] || key;
@@ -116,10 +122,40 @@ describe('gemsHider', () => {
     return container;
   }
 
+  function createFolderSection(): HTMLElement {
+    const host = document.createElement('div');
+    const container = document.createElement('div');
+    container.className = 'gv-folder-container';
+
+    const header = document.createElement('div');
+    header.className = 'gv-folder-header';
+
+    const actions = document.createElement('div');
+    actions.className = 'gv-folder-header-actions';
+    header.appendChild(actions);
+    container.appendChild(header);
+
+    const list = document.createElement('div');
+    list.className = 'gv-folder-list';
+    container.appendChild(list);
+
+    host.appendChild(container);
+    document.body.appendChild(host);
+
+    return container;
+  }
+
   async function startFeature(): Promise<void> {
     const { startGemsHider } = await import('../index');
     cleanup = startGemsHider();
     await vi.advanceTimersByTimeAsync(500);
+    await Promise.resolve();
+    await Promise.resolve();
+  }
+
+  async function flushAsyncWork(): Promise<void> {
+    await Promise.resolve();
+    await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
   }
@@ -144,6 +180,7 @@ describe('gemsHider', () => {
       '[data-gv-sidebar-section-id="notebooks"].gv-sidebar-section-peek-bar',
     );
     expect(notebookPeekBar?.getAttribute('title')).toBe('Show Notebooks');
+    expect(notebookPeekBar?.getAttribute('data-tooltip')).toBe('Show Notebooks');
     notebookPeekBar?.dispatchEvent(new MouseEvent('mouseenter'));
     expect(document.getElementById('gv-sidebar-section-tooltip')?.textContent).toBe(
       'Show Notebooks',
@@ -170,8 +207,7 @@ describe('gemsHider', () => {
       new MouseEvent('click', { bubbles: true, cancelable: true }),
     );
     expect(result).toBe(false);
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushAsyncWork();
     await vi.runAllTimersAsync();
 
     expect(localState[StorageKeys.NOTEBOOKS_HIDDEN]).toBe(true);
@@ -188,5 +224,31 @@ describe('gemsHider', () => {
 
     expect(notebooks.querySelector('.gv-sidebar-section-toggle-btn')).not.toBeNull();
     expect(document.querySelectorAll('.gv-sidebar-section-toggle-btn')).toHaveLength(1);
+  });
+
+  it('collapses the folder section and shows the shared first-use nudge', async () => {
+    const folders = createFolderSection();
+
+    await startFeature();
+
+    const folderToggle = folders.querySelector<HTMLButtonElement>('.gv-sidebar-section-toggle-btn');
+    const folderPeekBar = document.querySelector<HTMLDivElement>(
+      '[data-gv-sidebar-section-id="folders"].gv-sidebar-section-peek-bar',
+    );
+
+    expect(folderToggle?.getAttribute('title')).toBe('Hide Folders');
+    expect(folderPeekBar?.getAttribute('title')).toBe('Show Folders');
+    expect(folderPeekBar?.getAttribute('data-tooltip')).toBe('Show Folders');
+
+    folderToggle?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(localState[StorageKeys.FOLDERS_HIDDEN]).toBe(true);
+    expect(localState[StorageKeys.SIDEBAR_COLLAPSE_NUDGE_SHOWN]).toBe(true);
+    expect(folders.classList.contains('gv-sidebar-section-hidden')).toBe(true);
+    expect(folderPeekBar?.classList.contains('gv-visible')).toBe(true);
+    expect(document.querySelector('.gv-sidebar-collapse-nudge')?.textContent).toContain(
+      'A slim bar stays in the sidebar.',
+    );
   });
 });

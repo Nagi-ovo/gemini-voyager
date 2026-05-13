@@ -1379,6 +1379,26 @@
     "message": "ノートブックを表示",
     "description": "ノートブック一覧セクションを表示するツールチップ"
   },
+  "foldersHide": {
+    "message": "フォルダを非表示",
+    "description": "Tooltip for hiding Folders section"
+  },
+  "foldersShow": {
+    "message": "フォルダを表示",
+    "description": "Tooltip for showing Folders section"
+  },
+  "sidebarCollapseNudgeTitle": {
+    "message": "折りたたんでも戻せます",
+    "description": "Title of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeBody": {
+    "message": "サイドバーには細いバーが残ります。いつでもクリックすると、このセクションを再び展開できます。",
+    "description": "Body text of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeDismiss": {
+    "message": "了解",
+    "description": "Dismiss button for the one-time sidebar collapse nudge"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

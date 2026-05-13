@@ -1379,6 +1379,26 @@
     "message": "顯示筆記本",
     "description": "顯示筆記本列表區域的提示"
   },
+  "foldersHide": {
+    "message": "隱藏資料夾",
+    "description": "Tooltip for hiding Folders section"
+  },
+  "foldersShow": {
+    "message": "顯示資料夾",
+    "description": "Tooltip for showing Folders section"
+  },
+  "sidebarCollapseNudgeTitle": {
+    "message": "摺疊後還能找回來",
+    "description": "Title of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeBody": {
+    "message": "側邊欄會保留一條細欄，隨時點擊它即可重新展開這個區域。",
+    "description": "Body text of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeDismiss": {
+    "message": "知道了",
+    "description": "Dismiss button for the one-time sidebar collapse nudge"
+  },
   "setAsDefaultModel": {
     "message": "設為新對話的預設模型",
     "description": "Tooltip for setting default model"

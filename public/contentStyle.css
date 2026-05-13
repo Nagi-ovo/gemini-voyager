@@ -8303,6 +8303,12 @@ body.gv-rtl .gv-pm-item-compact .gv-pm-bottom {
   opacity: 1;
   transform: translateY(0);
 }
+.gv-hide-archived-nudge.gv-sidebar-collapse-nudge {
+  margin: 6px 16px 10px;
+}
+.gv-hide-archived-nudge.gv-sidebar-collapse-nudge .gv-hide-archived-nudge__actions {
+  margin-bottom: 0;
+}
 .gv-hide-archived-nudge__title {
   font-weight: 600;
   font-size: 13px;

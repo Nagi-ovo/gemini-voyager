@@ -1379,6 +1379,26 @@
     "message": "Afficher Notebooks",
     "description": "Infobulle pour afficher la section de liste Notebooks"
   },
+  "foldersHide": {
+    "message": "Masquer les dossiers",
+    "description": "Tooltip for hiding Folders section"
+  },
+  "foldersShow": {
+    "message": "Afficher les dossiers",
+    "description": "Tooltip for showing Folders section"
+  },
+  "sidebarCollapseNudgeTitle": {
+    "message": "Les sections repliées restent ici",
+    "description": "Title of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeBody": {
+    "message": "Une fine barre reste dans la barre latérale. Cliquez dessus à tout moment pour rouvrir cette section.",
+    "description": "Body text of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeDismiss": {
+    "message": "Compris",
+    "description": "Dismiss button for the one-time sidebar collapse nudge"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

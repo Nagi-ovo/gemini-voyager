@@ -1379,6 +1379,26 @@
     "message": "Показать Notebooks",
     "description": "Подсказка для отображения раздела списка Notebooks"
   },
+  "foldersHide": {
+    "message": "Скрыть папки",
+    "description": "Tooltip for hiding Folders section"
+  },
+  "foldersShow": {
+    "message": "Показать папки",
+    "description": "Tooltip for showing Folders section"
+  },
+  "sidebarCollapseNudgeTitle": {
+    "message": "Свернутые разделы остаются здесь",
+    "description": "Title of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeBody": {
+    "message": "В боковой панели останется тонкая полоска. Нажмите ее в любой момент, чтобы снова развернуть этот раздел.",
+    "description": "Body text of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeDismiss": {
+    "message": "Понятно",
+    "description": "Dismiss button for the one-time sidebar collapse nudge"
+  },
   "setAsDefaultModel": {
     "message": "Set as default model",
     "description": "Tooltip for setting default model"

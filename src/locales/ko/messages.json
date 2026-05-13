@@ -1379,6 +1379,26 @@
     "message": "노트북 표시",
     "description": "노트북 목록 섹션을 표시하는 툴팁"
   },
+  "foldersHide": {
+    "message": "폴더 숨기기",
+    "description": "Tooltip for hiding Folders section"
+  },
+  "foldersShow": {
+    "message": "폴더 표시",
+    "description": "Tooltip for showing Folders section"
+  },
+  "sidebarCollapseNudgeTitle": {
+    "message": "접은 섹션은 그대로 남아 있어요",
+    "description": "Title of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeBody": {
+    "message": "사이드바에 얇은 막대가 남습니다. 언제든 클릭하면 이 섹션을 다시 펼칠 수 있습니다.",
+    "description": "Body text of the one-time nudge shown after collapsing a sidebar section"
+  },
+  "sidebarCollapseNudgeDismiss": {
+    "message": "알겠어요",
+    "description": "Dismiss button for the one-time sidebar collapse nudge"
+  },
   "setAsDefaultModel": {
     "message": "기본 모델로 설정",
     "description": "Tooltip for setting default model"
