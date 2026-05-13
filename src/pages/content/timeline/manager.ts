@@ -40,6 +40,24 @@ const TURN_LABEL_PREFIXES =
   /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
 const VISUALLY_HIDDEN_CLASS_FRAGMENT = 'visually-hidden';
 const INJECTED_UI_SELECTOR = '.gv-fork-btn, .gv-fork-confirm, .gv-fork-indicator-group';
+let timestampDraftTabId: string | null = null;
+
+function getTimestampDraftTabId(): string {
+  if (timestampDraftTabId) return timestampDraftTabId;
+
+  try {
+    const randomUUID = globalThis.crypto?.randomUUID?.();
+    if (randomUUID) {
+      timestampDraftTabId = randomUUID;
+      return timestampDraftTabId;
+    }
+  } catch {}
+
+  timestampDraftTabId = hashString(
+    `${Date.now()}|${Math.random()}|${globalThis.location?.href ?? ''}`,
+  );
+  return timestampDraftTabId;
+}
 
 type ExtGlobal = typeof globalThis & {
   chrome?: {
@@ -514,6 +532,20 @@ export class TimelineManager {
 
   private computeConversationId(): string {
     return buildConversationIdFromUrl(window.location.href);
+  }
+
+  private buildTimestampConversationId(baseConversationId: string): string {
+    if (baseConversationId.startsWith('gemini:conv:')) return baseConversationId;
+    return `${baseConversationId}:tab:${getTimestampDraftTabId()}`;
+  }
+
+  private buildTimestampConversationIdFromUrl(input: string): string {
+    return this.buildTimestampConversationId(buildConversationIdFromUrl(input));
+  }
+
+  private getTimestampConversationId(): string | null {
+    if (!this.conversationId) return null;
+    return this.buildTimestampConversationId(this.conversationId);
   }
 
   private computeLegacyConversationId(): string {
@@ -1562,9 +1594,9 @@ export class TimelineManager {
   };
 
   private async injectMessageTimestamps(): Promise<void> {
-    if (!this.timestampService || !this.conversationId) return;
+    const timestampConversationId = this.getTimestampConversationId();
+    if (!this.timestampService || !timestampConversationId) return;
     const timestampService = this.timestampService;
-    const conversationId = this.conversationId;
     if (!this.showMessageTimestampsEnabled) {
       // Remove any existing timestamps if feature is disabled
       document.querySelectorAll('.gv-timestamp').forEach((el) => el.remove());
@@ -1631,7 +1663,7 @@ export class TimelineManager {
         return;
       }
 
-      const timestamp = this.getTimestampForMarker(conversationId, marker, index);
+      const timestamp = this.getTimestampForMarker(timestampConversationId, marker, index);
       if (timestamp == null) {
         existingTimestampEls.get(marker.id)?.remove();
         existingTimestampEls.delete(marker.id);
@@ -2425,12 +2457,22 @@ export class TimelineManager {
     const id = dot.dataset.targetTurnId || '';
     if (id && this.starred.has(id)) fullText = `★ ${fullText}`;
 
-    if (this.showMessageTimestampsEnabled && id && this.timestampService && this.conversationId) {
+    const timestampConversationId = this.getTimestampConversationId();
+    if (
+      this.showMessageTimestampsEnabled &&
+      id &&
+      this.timestampService &&
+      timestampConversationId
+    ) {
       const markerIndex = this.markers.findIndex((marker) => marker.id === id);
       const ts =
         markerIndex >= 0
-          ? this.getTimestampForMarker(this.conversationId, this.markers[markerIndex], markerIndex)
-          : this.timestampService.getTimestamp(this.conversationId, id as TurnId);
+          ? this.getTimestampForMarker(
+              timestampConversationId,
+              this.markers[markerIndex],
+              markerIndex,
+            )
+          : this.timestampService.getTimestamp(timestampConversationId, id as TurnId);
       if (typeof ts === 'number') {
         fullText = `${this.timestampService.formatAbsoluteTime(ts)}\n${fullText}`;
       }
@@ -4164,16 +4206,19 @@ export class TimelineManager {
   }
 
   private recordTimestampForTurn(turnId: string): void {
-    if (!this.timestampService || !this.conversationId) return;
-    if (this.timestampService.getTimestamp(this.conversationId, turnId as TurnId) !== null) return;
+    const timestampConversationId = this.getTimestampConversationId();
+    if (!this.timestampService || !timestampConversationId) return;
+    if (this.timestampService.getTimestamp(timestampConversationId, turnId as TurnId) !== null)
+      return;
 
-    this.timestampService.recordTimestamp(this.conversationId, turnId as TurnId).catch(() => {});
+    this.timestampService
+      .recordTimestamp(timestampConversationId, turnId as TurnId)
+      .catch(() => {});
   }
 
   private maybeAdoptDraftRouteTimestamps(markerIds: string[]): void {
     if (
       !this.timestampService ||
-      !this.conversationId ||
       !this.pendingDraftTimestampSourceConversationId ||
       markerIds.length === 0
     ) {
@@ -4181,6 +4226,9 @@ export class TimelineManager {
     }
 
     const sourceConversationId = this.pendingDraftTimestampSourceConversationId;
+    const targetConversationId = this.getTimestampConversationId();
+    if (!targetConversationId) return;
+
     const latestDraftTimestamp =
       this.timestampService.getLatestTimestampForConversation(sourceConversationId);
 
@@ -4196,7 +4244,7 @@ export class TimelineManager {
     this.timestampService
       .adoptTimestamps(
         sourceConversationId,
-        this.conversationId,
+        targetConversationId,
         markerIds.map((markerId) => markerId as TurnId),
       )
       .catch(() => {});
@@ -4212,7 +4260,7 @@ export class TimelineManager {
       return null;
     }
 
-    return buildConversationIdFromUrl(previousUrl);
+    return this.buildTimestampConversationIdFromUrl(previousUrl);
   }
 
   private shouldIgnoreTimestampMutations(records: MutationRecord[]): boolean {
