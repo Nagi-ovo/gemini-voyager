@@ -3524,11 +3524,13 @@ body.light-theme {
   flex: 1;
 }
 
-/* Let native Gemini title styles take precedence - don't override */
-.gv-folder-header .title {
+/* Match Gemini's sidebar label size instead of inheriting h1 defaults. */
+.gv-folder-container:not(.gv-aistudio) .gv-folder-header .title {
   margin: 0;
   padding-left: 16px;
-  /* Make the title darker/more subtle */
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
   opacity: 0.7;
   color: var(--bard-color-on-surface-variant);
 }
@@ -4057,6 +4059,13 @@ body.light-theme {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.gv-folder-container:not(.gv-aistudio) .gv-folder-name,
+.gv-folder-container:not(.gv-aistudio) .gv-conversation-title {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
 }
 
 /* Action buttons container for proper layout */
