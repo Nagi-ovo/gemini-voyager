@@ -55,6 +55,7 @@ const FOLDER_TREE_INDENT_MIN = -8;
 const FOLDER_TREE_INDENT_MAX = 32;
 const FOLDER_TREE_INDENT_DEFAULT = -8;
 const NATIVE_TITLE_SYNC_DEBOUNCE_MS = 300;
+const ARCHIVED_CONVERSATION_ACTIONS_CLASS = 'gv-conversation-archived-actions';
 // Max folder nesting depth — matches the floating panel's MAX_FOLDER_DEPTH.
 // root = 0, subfolder = 1, and that's the limit. Pre-existing data deeper
 // than this stays intact (we never destroy user data); the cap only gates
@@ -428,6 +429,7 @@ export class FolderManager {
 
     this.closeActiveImportExportMenu();
     this.closeActiveImportDialog();
+    this.closeFolderConversationMenus();
     this.clearActiveFolderInput();
 
     // Remove container
@@ -1587,6 +1589,12 @@ export class FolderManager {
       this.renameConversation(folderId, conv.conversationId, title);
     });
 
+    convEl.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.showFolderConversationMenu(e, conv);
+    });
+
     convEl.appendChild(icon);
     convEl.appendChild(title);
     convEl.appendChild(actionsContainer);
@@ -1743,17 +1751,11 @@ export class FolderManager {
   private makeConversationsDraggable(): void {
     const conversations = this.getNativeConversationElements();
     conversations.forEach((conv) => {
-      this.makeConversationDraggable(conv as HTMLElement);
+      const conversationEl = conv as HTMLElement;
+      this.makeConversationDraggable(conversationEl);
 
       // Apply hide archived setting
-      const convId = this.extractConversationId(conv as HTMLElement);
-      const isArchived = this.isConversationInFolders(convId);
-
-      if (this.hideArchivedConversations && isArchived) {
-        (conv as HTMLElement).classList.add('gv-conversation-archived');
-      } else {
-        (conv as HTMLElement).classList.remove('gv-conversation-archived');
-      }
+      this.applyHideArchivedToConversation(conversationEl);
     });
   }
 
@@ -2558,6 +2560,7 @@ export class FolderManager {
 
       this.closeActiveImportExportMenu();
       this.closeActiveImportDialog();
+      this.closeFolderConversationMenus();
       this.clearActiveFolderInput();
 
       // Clear existing references so initialization starts from a clean slate
@@ -3855,12 +3858,17 @@ export class FolderManager {
    * Find native conversation element by conversation ID
    */
   private findNativeConversationElement(conversationId: string): HTMLElement | null {
+    const targetId = this.normalizeConversationId(conversationId);
+    if (!targetId) return null;
+
     // Try multiple strategies to find the conversation
     const allConversations = this.getNativeConversationElements();
 
     for (const conv of allConversations) {
-      const id = this.extractConversationId(conv as HTMLElement);
-      if (id === conversationId) {
+      const id =
+        this.extractConversationIdFromElement(conv) ||
+        this.extractConversationId(conv as HTMLElement);
+      if (this.normalizeConversationId(id) === targetId) {
         return conv as HTMLElement;
       }
     }
@@ -3909,6 +3917,105 @@ export class FolderManager {
     }
 
     return null;
+  }
+
+  private async openNativeRenameForFolderConversation(
+    conversation: ConversationReference,
+  ): Promise<boolean> {
+    const conversationId =
+      this.normalizeConversationId(conversation.conversationId) ||
+      this.extractConversationIdFromHref(conversation.url);
+    if (!conversationId) return false;
+
+    const conversationEl = this.findNativeConversationElement(conversationId);
+    if (!conversationEl) {
+      this.debugWarn('Could not find native conversation element for rename:', conversationId);
+      return false;
+    }
+
+    const restoreArchivedVisibility = this.temporarilyRevealNativeConversation(conversationEl);
+    let moreButton: HTMLElement | null = null;
+
+    try {
+      moreButton = await this.findAndClickMoreButton(conversationEl);
+      if (!moreButton) {
+        this.debugWarn('Could not find native more button for rename:', conversationId);
+        return false;
+      }
+
+      const renamed = await this.waitForRenameButtonAndClick();
+      if (!renamed) {
+        this.debugWarn('Could not find native rename button:', conversationId);
+      }
+      return renamed;
+    } finally {
+      if (moreButton) {
+        this.resetNativeConversationMenuTrigger(moreButton);
+      }
+      restoreArchivedVisibility();
+    }
+  }
+
+  private temporarilyRevealNativeConversation(conversationEl: HTMLElement): () => void {
+    const wasArchived = conversationEl.classList.contains('gv-conversation-archived');
+    const actionsContainer = this.getNativeConversationActionsContainer(conversationEl);
+    const wereActionsArchived =
+      actionsContainer?.classList.contains(ARCHIVED_CONVERSATION_ACTIONS_CLASS) ?? false;
+    if (!wasArchived && !wereActionsArchived) return () => {};
+
+    conversationEl.classList.remove('gv-conversation-archived');
+    actionsContainer?.classList.remove(ARCHIVED_CONVERSATION_ACTIONS_CLASS);
+    return () => {
+      if (this.hideArchivedConversations) {
+        this.setNativeConversationArchivedState(conversationEl, true);
+      }
+    };
+  }
+
+  private resetNativeConversationMenuTrigger(moreButton: HTMLElement): void {
+    moreButton.blur();
+    const actionsContainer = moreButton.closest('.conversation-actions-container');
+    if (actionsContainer instanceof HTMLElement) {
+      actionsContainer.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    }
+  }
+
+  private async waitForRenameButtonAndClick(): Promise<boolean> {
+    const maxWaitTime = this.BATCH_DELETE_CONFIG.MAX_BUTTON_WAIT_TIME;
+    const checkInterval = this.BATCH_DELETE_CONFIG.BUTTON_CHECK_INTERVAL;
+    let elapsed = 0;
+
+    while (elapsed < maxWaitTime) {
+      const renameByTestId = document.querySelector(
+        '[data-test-id="rename-button"]',
+      ) as HTMLElement | null;
+      if (renameByTestId && this.isVisibleElement(renameByTestId)) {
+        renameByTestId.click();
+        this.debug('Clicked rename button (by test-id)');
+        return true;
+      }
+
+      const renameIcons = document.querySelectorAll(
+        '.cdk-overlay-container mat-icon, .cdk-overlay-container .material-icons',
+      );
+
+      for (const icon of renameIcons) {
+        const iconText = icon.textContent?.toLowerCase().trim() || '';
+        if (iconText !== 'edit' && iconText !== 'edit_square') continue;
+
+        const parentButton = icon.closest('button, [role="menuitem"]') as HTMLElement | null;
+        if (parentButton && this.isVisibleElement(parentButton)) {
+          parentButton.click();
+          this.debug('Clicked rename button (by icon)');
+          return true;
+        }
+      }
+
+      await this.delay(checkInterval);
+      elapsed += checkInterval;
+    }
+
+    return false;
   }
 
   /**
@@ -4662,6 +4769,39 @@ export class FolderManager {
     document.body.appendChild(menu);
 
     // Close menu on click outside
+    const closeMenu = (e: MouseEvent) => {
+      if (!menu.contains(e.target as Node)) {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
+
+  private closeFolderConversationMenus(): void {
+    document.querySelectorAll('.gv-folder-conversation-menu').forEach((menu) => menu.remove());
+  }
+
+  private showFolderConversationMenu(event: MouseEvent, conversation: ConversationReference): void {
+    this.closeFolderConversationMenus();
+
+    const menu = document.createElement('div');
+    menu.className = 'gv-folder-menu gv-folder-conversation-menu';
+    menu.style.position = 'fixed';
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
+
+    const renameItem = document.createElement('button');
+    renameItem.className = 'gv-folder-menu-item';
+    renameItem.textContent = this.t('folder_rename');
+    renameItem.addEventListener('click', () => {
+      menu.remove();
+      void this.openNativeRenameForFolderConversation(conversation);
+    });
+
+    menu.appendChild(renameItem);
+    document.body.appendChild(menu);
+
     const closeMenu = (e: MouseEvent) => {
       if (!menu.contains(e.target as Node)) {
         menu.remove();
@@ -7049,11 +7189,33 @@ export class FolderManager {
     const convId = this.extractConversationId(conv);
     const isArchived = this.isConversationInFolders(convId);
 
-    if (this.hideArchivedConversations && isArchived) {
-      conv.classList.add('gv-conversation-archived');
-    } else {
-      conv.classList.remove('gv-conversation-archived');
+    this.setNativeConversationArchivedState(conv, this.hideArchivedConversations && isArchived);
+  }
+
+  private setNativeConversationArchivedState(conv: HTMLElement, isArchived: boolean): void {
+    conv.classList.toggle('gv-conversation-archived', isArchived);
+    this.getNativeConversationActionsContainer(conv)?.classList.toggle(
+      ARCHIVED_CONVERSATION_ACTIONS_CLASS,
+      isArchived,
+    );
+  }
+
+  private getNativeConversationActionsContainer(conversationEl: HTMLElement): HTMLElement | null {
+    const parent = conversationEl.parentElement;
+    if (!parent) return null;
+
+    let sibling = conversationEl.nextElementSibling;
+    while (sibling) {
+      if (
+        sibling instanceof HTMLElement &&
+        sibling.classList.contains('conversation-actions-container')
+      ) {
+        return sibling;
+      }
+      sibling = sibling.nextElementSibling;
     }
+
+    return parent.querySelector<HTMLElement>('.conversation-actions-container');
   }
 
   private isConversationInFolders(conversationId: string): boolean {

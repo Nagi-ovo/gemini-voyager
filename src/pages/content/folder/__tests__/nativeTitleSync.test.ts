@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FolderManager } from '../manager';
-import type { FolderData } from '../types';
+import type { ConversationReference, FolderData } from '../types';
 
 vi.mock('@/utils/i18n', () => ({
   getTranslationSync: (key: string) => key,
@@ -12,8 +12,16 @@ vi.mock('@/utils/i18n', () => ({
 type TestableManager = {
   data: FolderData;
   sidebarContainer: HTMLElement | null;
+  hideArchivedConversations: boolean;
   setupMutationObserver: () => void;
+  createConversationElement: (
+    conv: ConversationReference,
+    folderId: string,
+    level: number,
+  ) => HTMLElement;
+  openNativeRenameForFolderConversation: (conversation: ConversationReference) => Promise<boolean>;
   syncConversationTitlesFromNative: () => Promise<void>;
+  isVisibleElement: (el: HTMLElement) => boolean;
   saveData: () => Promise<boolean>;
   renderAllFolders: () => void;
 };
@@ -35,6 +43,54 @@ function createNativeConversation(hexId: string, title: string): HTMLSpanElement
   document.body.appendChild(row);
 
   return titleEl;
+}
+
+function createNativeConversationWithActions(
+  hexId: string,
+  onRenameClick: () => void,
+): {
+  moreButton: HTMLButtonElement;
+  row: HTMLElement;
+  actions: HTMLElement;
+} {
+  const wrapper = document.createElement('div');
+
+  const row = document.createElement('div');
+  row.setAttribute('data-test-id', 'conversation');
+  row.setAttribute('jslog', `["c_${hexId}"]`);
+  row.classList.add('gv-conversation-archived');
+
+  const link = document.createElement('a');
+  link.href = `/app/${hexId}`;
+  const titleEl = document.createElement('span');
+  titleEl.className = 'conversation-title-text';
+  titleEl.textContent = 'Native title';
+  link.appendChild(titleEl);
+  row.appendChild(link);
+
+  const actions = document.createElement('div');
+  actions.className = 'conversation-actions-container gv-conversation-archived-actions';
+  const moreButton = document.createElement('button');
+  moreButton.setAttribute('data-test-id', 'actions-menu-button');
+  moreButton.addEventListener('click', () => {
+    const overlay = document.createElement('div');
+    overlay.className = 'cdk-overlay-container';
+    const menuContent = document.createElement('div');
+    menuContent.className = 'mat-mdc-menu-content';
+    const renameButton = document.createElement('button');
+    renameButton.setAttribute('data-test-id', 'rename-button');
+    renameButton.addEventListener('click', onRenameClick);
+    menuContent.appendChild(renameButton);
+    overlay.appendChild(menuContent);
+    document.body.appendChild(overlay);
+  });
+  actions.appendChild(moreButton);
+
+  wrapper.appendChild(row);
+  wrapper.appendChild(actions);
+  document.body.appendChild(wrapper);
+
+  return { row, actions, moreButton };
 }
 
 describe('Gemini native conversation title sync', () => {
@@ -117,5 +173,71 @@ describe('Gemini native conversation title sync', () => {
     expect(internals.data.folderContents.folderA[0]?.title).toBe('Manual title');
     expect(saveSpy).not.toHaveBeenCalled();
     expect(renderSpy).not.toHaveBeenCalled();
+  });
+
+  it('opens the native Gemini rename action for a folder conversation', async () => {
+    const hexId = '0123456789abcdef';
+    const renameClickSpy = vi.fn();
+    const {
+      row: nativeRow,
+      actions,
+      moreButton,
+    } = createNativeConversationWithActions(hexId, renameClickSpy);
+    const blurSpy = vi.spyOn(moreButton, 'blur');
+    manager = new FolderManager();
+    const internals = manager as unknown as TestableManager;
+    internals.sidebarContainer = document.body;
+    internals.hideArchivedConversations = true;
+    internals.isVisibleElement = () => true;
+
+    const result = await internals.openNativeRenameForFolderConversation({
+      conversationId: hexId,
+      title: 'Folder title',
+      url: `https://gemini.google.com/app/${hexId}`,
+      addedAt: Date.now(),
+    });
+
+    expect(result).toBe(true);
+    expect(renameClickSpy).toHaveBeenCalledTimes(1);
+    expect(blurSpy).toHaveBeenCalledTimes(1);
+    expect(nativeRow.classList.contains('gv-conversation-archived')).toBe(true);
+    expect(actions.classList.contains('gv-conversation-archived-actions')).toBe(true);
+  });
+
+  it('shows a right-click menu that invokes native rename instead of folder-only rename', async () => {
+    const hexId = '13579abcdef02468';
+    const conversation: ConversationReference = {
+      conversationId: `c_${hexId}`,
+      title: 'Folder title',
+      url: `https://gemini.google.com/app/${hexId}`,
+      addedAt: Date.now(),
+    };
+    manager = new FolderManager();
+    const internals = manager as unknown as TestableManager;
+    const nativeRenameSpy = vi
+      .spyOn(internals, 'openNativeRenameForFolderConversation')
+      .mockResolvedValue(true);
+
+    const row = internals.createConversationElement(conversation, 'folderA', 1);
+    document.body.appendChild(row);
+
+    row.dispatchEvent(
+      new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 24,
+        clientY: 32,
+      }),
+    );
+
+    const renameItem = document.querySelector('.gv-folder-conversation-menu .gv-folder-menu-item');
+    expect(renameItem?.textContent).toBe('folder_rename');
+
+    renameItem?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    expect(nativeRenameSpy).toHaveBeenCalledTimes(1);
+    expect(nativeRenameSpy).toHaveBeenCalledWith(conversation);
+    expect(document.querySelector('.gv-folder-conversation-menu')).toBeNull();
   });
 });
