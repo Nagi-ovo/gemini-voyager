@@ -54,6 +54,7 @@ const NOTIFICATION_TIMEOUT_MS = 10000; // Duration to show data loss notificatio
 const FOLDER_TREE_INDENT_MIN = -8;
 const FOLDER_TREE_INDENT_MAX = 32;
 const FOLDER_TREE_INDENT_DEFAULT = -8;
+const NATIVE_TITLE_SYNC_DEBOUNCE_MS = 300;
 // Max folder nesting depth — matches the floating panel's MAX_FOLDER_DEPTH.
 // root = 0, subfolder = 1, and that's the limit. Pre-existing data deeper
 // than this stays intact (we never destroy user data); the cap only gates
@@ -171,6 +172,8 @@ export class FolderManager {
   private navPoller: number | null = null;
   private lastPathname: string | null = null;
   private saveInProgress: boolean = false; // Lock to prevent concurrent saves
+  private nativeTitleSyncTimer: number | null = null;
+  private nativeTitleSyncInProgress: boolean = false;
   private pendingTitleUpdates: Map<string, string> = new Map(); // Buffer title updates during render
   private pendingRemovals: Map<string, number> = new Map(); // Pending conversation removals with timer IDs
   private removalCheckDelay: number = 300; // Delay (ms) before confirming conversation deletion
@@ -355,6 +358,8 @@ export class FolderManager {
       clearTimeout(this.tooltipTimeout);
       this.tooltipTimeout = null;
     }
+
+    this.clearNativeTitleSyncTimer();
 
     if (this.navPoller) {
       clearInterval(this.navPoller);
@@ -2257,6 +2262,10 @@ export class FolderManager {
     }
 
     this.conversationObserver = new MutationObserver((mutations) => {
+      if (this.mutationsMayAffectNativeConversationTitles(mutations)) {
+        this.scheduleNativeConversationTitleSync();
+      }
+
       // 1. Handle added conversations (always safe)
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
@@ -2351,7 +2360,73 @@ export class FolderManager {
     this.conversationObserver.observe(this.sidebarContainer, {
       childList: true,
       subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['aria-label', 'href', 'title'],
     });
+  }
+
+  private mutationsMayAffectNativeConversationTitles(mutations: MutationRecord[]): boolean {
+    for (const mutation of mutations) {
+      if (mutation.type === 'characterData') {
+        if (mutation.target.parentElement?.closest('[data-test-id="conversation"]')) return true;
+        continue;
+      }
+
+      if (mutation.type === 'attributes') {
+        if (
+          mutation.target instanceof Element &&
+          mutation.target.closest('[data-test-id="conversation"]')
+        ) {
+          return true;
+        }
+        continue;
+      }
+
+      if (mutation.type !== 'childList') continue;
+
+      if (
+        mutation.target instanceof Element &&
+        mutation.target.closest('[data-test-id="conversation"]')
+      ) {
+        return true;
+      }
+
+      for (const node of Array.from(mutation.addedNodes)) {
+        if (this.nodeTouchesNativeConversation(node)) return true;
+      }
+    }
+
+    return false;
+  }
+
+  private nodeTouchesNativeConversation(node: Node): boolean {
+    if (!(node instanceof Element)) return false;
+    if (node.matches('[data-test-id="conversation"]')) return true;
+    if (node.closest('[data-test-id="conversation"]')) return true;
+    return !!node.querySelector('[data-test-id="conversation"]');
+  }
+
+  private clearNativeTitleSyncTimer(): void {
+    if (this.nativeTitleSyncTimer === null) return;
+    clearTimeout(this.nativeTitleSyncTimer);
+    this.nativeTitleSyncTimer = null;
+  }
+
+  private scheduleNativeConversationTitleSync(): void {
+    if (!this.hasStoredConversations()) return;
+    if (this.nativeTitleSyncTimer !== null) return;
+
+    this.nativeTitleSyncTimer = window.setTimeout(() => {
+      this.nativeTitleSyncTimer = null;
+      void this.syncConversationTitlesFromNative();
+    }, NATIVE_TITLE_SYNC_DEBOUNCE_MS);
+  }
+
+  private hasStoredConversations(): boolean {
+    return Object.values(this.data.folderContents).some(
+      (conversations) => conversations.length > 0,
+    );
   }
 
   /**
@@ -5653,30 +5728,65 @@ export class FolderManager {
     return null;
   }
 
-  private updateConversationTitle(conversationId: string, newTitle: string): void {
-    // Update the title for all instances of this conversation across all folders
+  private applyConversationTitleUpdate(conversationId: string, newTitle: string): boolean {
+    const title = newTitle.trim();
+    if (!title) return false;
+
     let updated = false;
+    const updatedAt = Date.now();
 
     for (const folderId in this.data.folderContents) {
       const conversations = this.data.folderContents[folderId];
       for (const conv of conversations) {
-        // Match by conversation ID (check both direct match and URL match)
-        if (
-          (conv.conversationId === conversationId || conv.url.includes(conversationId)) &&
-          !conv.customTitle
-        ) {
-          conv.title = newTitle;
-          updated = true;
-          this.debug(`Updated title for conversation ${conversationId} in folder ${folderId}`);
-        }
+        if (conv.customTitle) continue;
+        if (!this.isSameConversation(conversationId, conv)) continue;
+        if (conv.title === title) continue;
+
+        conv.title = title;
+        conv.updatedAt = updatedAt;
+        updated = true;
+        this.debug(`Updated title for conversation ${conversationId} in folder ${folderId}`);
       }
     }
 
-    if (updated) {
-      this.saveData();
-      // Re-render folders to show updated title
+    return updated;
+  }
+
+  private async syncConversationTitlesFromNative(): Promise<void> {
+    if (this.nativeTitleSyncInProgress) return;
+    if (!this.hasStoredConversations()) return;
+
+    this.nativeTitleSyncInProgress = true;
+    try {
+      let updated = false;
+      const conversations = this.getNativeConversationElements();
+
+      for (const convEl of Array.from(conversations)) {
+        const element = convEl as HTMLElement;
+        const conversationId =
+          this.extractNativeConversationId(element) ||
+          this.extractConversationIdFromElement(element);
+        const title = this.extractNativeConversationTitle(element);
+        if (!conversationId || !title) continue;
+
+        updated = this.applyConversationTitleUpdate(conversationId, title) || updated;
+      }
+
+      if (!updated) return;
+
+      await this.saveData();
       this.renderAllFolders();
+    } finally {
+      this.nativeTitleSyncInProgress = false;
     }
+  }
+
+  private updateConversationTitle(conversationId: string, newTitle: string): void {
+    if (!this.applyConversationTitleUpdate(conversationId, newTitle)) return;
+
+    void this.saveData();
+    // Re-render folders to show updated title
+    this.renderAllFolders();
   }
 
   /**
