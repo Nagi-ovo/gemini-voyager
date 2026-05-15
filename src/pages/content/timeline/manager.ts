@@ -133,6 +133,7 @@ export class TimelineManager {
   private minActiveChangeInterval = 120;
   private pendingActiveId: string | null = null;
   private activeChangeTimer: number | null = null;
+  private navigationCommitTimer: number | null = null;
   private tooltipHideDelay = 100;
   private scrollMode: 'jump' | 'flow' = 'flow';
   private hideContainer: boolean = false;
@@ -1051,6 +1052,7 @@ export class TimelineManager {
             this.startRunner(fromIdx, index, dur);
           }
           this.smoothScrollTo(marker.element, dur);
+          this.commitActiveMarkerAfterNavigation(marker.id, dur);
         },
         (query) => this.highlightSearchInDOM(query),
       );
@@ -1788,6 +1790,8 @@ export class TimelineManager {
           this.startRunner(fromIdx, toIdx, dur);
         }
         this.smoothScrollTo(targetElement, dur);
+        const targetId = this.markers[toIdx]?.id || dot.dataset.targetTurnId || null;
+        this.commitActiveMarkerAfterNavigation(targetId, dur);
       }
     };
     this.ui.timelineBar!.addEventListener('click', this.onTimelineBarClick);
@@ -2132,6 +2136,29 @@ export class TimelineManager {
       marker.dotElement?.classList.toggle('active', marker.id === this.activeTurnId);
     });
     this.previewPanel?.updateActiveTurn(this.activeTurnId);
+  }
+
+  private clearPendingNavigationCommit(): void {
+    if (this.navigationCommitTimer !== null) {
+      clearTimeout(this.navigationCommitTimer);
+      this.navigationCommitTimer = null;
+    }
+  }
+
+  private commitActiveMarkerAfterNavigation(targetId: string | null, duration: number): void {
+    if (!targetId) return;
+
+    this.clearPendingNavigationCommit();
+
+    const delay = this.scrollMode === 'jump' ? 0 : Math.max(0, duration);
+    this.navigationCommitTimer = window.setTimeout(() => {
+      this.navigationCommitTimer = null;
+      if (!this.markers.some((marker) => marker.id === targetId)) return;
+
+      this.activeTurnId = targetId;
+      this.updateActiveDotUI();
+      this.scheduleScrollSync();
+    }, delay);
   }
 
   private static readonly SEARCH_HIGHLIGHT_CLASS = 'timeline-search-highlight';
@@ -3751,6 +3778,7 @@ export class TimelineManager {
    * Shared logic for previous/next navigation
    */
   private async performNodeNavigation(targetIndex: number, currentIndex: number): Promise<void> {
+    this.clearPendingNavigationCommit();
     const markerBeforeRefresh = this.markers[targetIndex];
     this.maybeRefreshMarkersForInteraction(markerBeforeRefresh?.element || null);
 
@@ -4147,6 +4175,7 @@ export class TimelineManager {
       clearTimeout(this.activeChangeTimer);
       this.activeChangeTimer = null;
     }
+    this.clearPendingNavigationCommit();
     if (this.tooltipHideTimer) {
       clearTimeout(this.tooltipHideTimer);
       this.tooltipHideTimer = null;
