@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { StorageKeys } from '@/core/types/common';
 
 import {
   extractLocalizedContent,
+  hasUnreadChangelog,
   resolveChangelogImageUrl,
   rewriteChangelogImageUrls,
 } from '../index';
@@ -158,5 +161,31 @@ describe('rewriteChangelogImageUrls', () => {
     );
 
     expect(result).toBe(source);
+  });
+});
+
+describe('hasUnreadChangelog', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns false on first install (no dismissed version stored)', async () => {
+    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    expect(await hasUnreadChangelog()).toBe(false);
+  });
+
+  it('returns true when dismissed version differs from current', async () => {
+    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      [StorageKeys.CHANGELOG_DISMISSED_VERSION]: '0.0.1',
+    });
+    expect(await hasUnreadChangelog()).toBe(true);
+  });
+
+  it('returns false when dismissed version matches current', async () => {
+    const { EXTENSION_VERSION } = await import('@/core/utils/version');
+    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      [StorageKeys.CHANGELOG_DISMISSED_VERSION]: EXTENSION_VERSION,
+    });
+    expect(await hasUnreadChangelog()).toBe(false);
   });
 });

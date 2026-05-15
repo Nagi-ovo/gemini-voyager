@@ -505,6 +505,19 @@ async function showChangelogModal(
     const result = await chrome.storage.local.get(StorageKeys.CHANGELOG_DISMISSED_VERSION);
     const dismissedVersion = result[StorageKeys.CHANGELOG_DISMISSED_VERSION] as string | undefined;
     if (dismissedVersion === EXTENSION_VERSION) return null;
+    // First install — user has never seen any changelog, so the current
+    // version's notes aren't meaningful.  Silently dismiss and let them
+    // explore the extension first.
+    if (!dismissedVersion) {
+      try {
+        await chrome.storage.local.set({
+          [StorageKeys.CHANGELOG_DISMISSED_VERSION]: EXTENSION_VERSION,
+        });
+      } catch {
+        // Ignore
+      }
+      return null;
+    }
   }
 
   // 2. Try to load the changelog for the target version
@@ -583,6 +596,7 @@ export async function hasUnreadChangelog(): Promise<boolean> {
   try {
     const result = await chrome.storage.local.get(StorageKeys.CHANGELOG_DISMISSED_VERSION);
     const dismissed = result[StorageKeys.CHANGELOG_DISMISSED_VERSION] as string | undefined;
+    if (!dismissed) return false;
     return dismissed !== EXTENSION_VERSION;
   } catch {
     return false;
