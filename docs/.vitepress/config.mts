@@ -109,6 +109,7 @@ export default defineConfig({
             text: 'Gemini 专属功能',
             items: [
               { text: '时间轴', link: '/guide/timeline' },
+              { text: '对话分支 (实验性)', link: '/guide/fork' },
               { text: '对话导出', link: '/guide/export' },
               { text: '引用回复', link: '/guide/quote-reply' },
               { text: '对话宽度调整', link: '/guide/settings' },
@@ -123,7 +124,6 @@ export default defineConfig({
               { text: '隐藏最近项目和 Gem', link: '/guide/recents-hider' },
               { text: '默认模型', link: '/guide/default-model' },
               { text: '标签页标题同步', link: '/guide/tab-title' },
-              { text: '对话分支 (实验性)', link: '/guide/fork' },
               { text: '上下文同步到IDE（实验性）', link: '/guide/context-sync' },
               { text: '用户消息 LaTeX 渲染', link: '/guide/user-latex' },
               { text: '消息时间戳', link: '/guide/timestamp' },
@@ -175,6 +175,7 @@ export default defineConfig({
             text: 'Gemini 專屬功能',
             items: [
               { text: '時間軸導航', link: '/zh_TW/guide/timeline' },
+              { text: '對話分支 (實驗性)', link: '/zh_TW/guide/fork' },
               { text: '對話導出', link: '/zh_TW/guide/export' },
               { text: '引用回覆', link: '/zh_TW/guide/quote-reply' },
               { text: '對話寬度', link: '/zh_TW/guide/settings' },
@@ -189,7 +190,6 @@ export default defineConfig({
               { text: '隱藏最近項目和 Gem', link: '/zh_TW/guide/recents-hider' },
               { text: '預設模型', link: '/zh_TW/guide/default-model' },
               { text: '標籤標題同步', link: '/zh_TW/guide/tab-title' },
-              { text: '對話分支 (實驗性)', link: '/zh_TW/guide/fork' },
               { text: '上下文同步（實驗性）', link: '/zh_TW/guide/context-sync' },
               { text: '使用者訊息 LaTeX 渲染', link: '/zh_TW/guide/user-latex' },
               { text: '訊息時間戳', link: '/zh_TW/guide/timestamp' },
@@ -241,6 +241,7 @@ export default defineConfig({
             text: 'Gemini Exclusive Features',
             items: [
               { text: 'Timeline Navigation', link: '/en/guide/timeline' },
+              { text: 'Conversation Fork (Experimental)', link: '/en/guide/fork' },
               { text: 'Chat Export', link: '/en/guide/export' },
               { text: 'Quote Reply', link: '/en/guide/quote-reply' },
               { text: 'Chat Width Adjustment', link: '/en/guide/settings' },
@@ -255,7 +256,6 @@ export default defineConfig({
               { text: 'Hide Recent Items and Gems', link: '/en/guide/recents-hider' },
               { text: 'Default Model', link: '/en/guide/default-model' },
               { text: 'Tab Title Sync', link: '/en/guide/tab-title' },
-              { text: 'Conversation Fork (Experimental)', link: '/en/guide/fork' },
               { text: 'Context Sync to IDE (Experimental)', link: '/en/guide/context-sync' },
               { text: 'User Message LaTeX Rendering', link: '/en/guide/user-latex' },
               { text: 'Message Timestamps', link: '/en/guide/timestamp' },
@@ -307,6 +307,7 @@ export default defineConfig({
             text: 'Gemini 専用機能',
             items: [
               { text: 'タイムライン', link: '/ja/guide/timeline' },
+              { text: '会話の分岐 (実験的)', link: '/ja/guide/fork' },
               { text: 'エクスポート', link: '/ja/guide/export' },
               { text: '引用返信', link: '/ja/guide/quote-reply' },
               { text: 'チャット幅', link: '/ja/guide/settings' },
@@ -321,7 +322,6 @@ export default defineConfig({
               { text: '最近の項目と Gem を非表示', link: '/ja/guide/recents-hider' },
               { text: 'デフォルトモデル', link: '/ja/guide/default-model' },
               { text: 'タブタイトルの同期', link: '/ja/guide/tab-title' },
-              { text: '会話の分岐 (実験的)', link: '/ja/guide/fork' },
               { text: 'IDEへのコンテキスト同期（実験的）', link: '/ja/guide/context-sync' },
               { text: 'ユーザーメッセージ LaTeX レンダリング', link: '/ja/guide/user-latex' },
               { text: 'メッセージタイムスタンプ', link: '/ja/guide/timestamp' },
@@ -373,6 +373,7 @@ export default defineConfig({
             text: 'Gemini 전용 기능',
             items: [
               { text: '타임라인 탐색', link: '/ko/guide/timeline' },
+              { text: '대화 분기 (실험적)', link: '/ko/guide/fork' },
               { text: '대화 내보내기', link: '/ko/guide/export' },
               { text: '인용 답장', link: '/ko/guide/quote-reply' },
               { text: '대화 너비 조정', link: '/ko/guide/settings' },
@@ -387,7 +388,6 @@ export default defineConfig({
               { text: '최근 항목 및 Gem 숨기기', link: '/ko/guide/recents-hider' },
               { text: '기본 모델', link: '/ko/guide/default-model' },
               { text: '탭 제목 동기화', link: '/ko/guide/tab-title' },
-              { text: '대화 분기 (실험적)', link: '/ko/guide/fork' },
               { text: 'IDE 컨텍스트 동기화 (실험적)', link: '/ko/guide/context-sync' },
               { text: '사용자 메시지 LaTeX 렌더링', link: '/ko/guide/user-latex' },
               { text: '메시지 타임스탬프', link: '/ko/guide/timestamp' },
@@ -439,6 +439,7 @@ export default defineConfig({
             text: 'Fonctionnalités Exclusives Gemini',
             items: [
               { text: 'Navigation Temporelle', link: '/fr/guide/timeline' },
+              { text: 'Bifurcation de Conversation (Expérimental)', link: '/fr/guide/fork' },
               { text: 'Export de Chat', link: '/fr/guide/export' },
               { text: 'Réponse avec Citation', link: '/fr/guide/quote-reply' },
               { text: 'Largeur de Chat', link: '/fr/guide/settings' },
@@ -453,7 +454,6 @@ export default defineConfig({
               { text: 'Masquer les éléments récents et les Gems', link: '/fr/guide/recents-hider' },
               { text: 'Modèle par Défaut', link: '/fr/guide/default-model' },
               { text: 'Synchro Titre Onglet', link: '/fr/guide/tab-title' },
-              { text: 'Bifurcation de Conversation (Expérimental)', link: '/fr/guide/fork' },
               { text: 'Synchro Contexte IDE', link: '/fr/guide/context-sync' },
               { text: 'Rendu LaTeX des messages', link: '/fr/guide/user-latex' },
               { text: 'Horodatage des Messages', link: '/fr/guide/timestamp' },
@@ -505,6 +505,10 @@ export default defineConfig({
             text: 'Funciones Exclusivas de Gemini',
             items: [
               { text: 'Navegación de Línea de Tiempo', link: '/es/guide/timeline' },
+              {
+                text: 'Bifurcación de Conversación (Experimental)',
+                link: '/es/guide/fork',
+              },
               { text: 'Exportación de Chat', link: '/es/guide/export' },
               { text: 'Respuesta con Cita', link: '/es/guide/quote-reply' },
               { text: 'Ancho de Chat', link: '/es/guide/settings' },
@@ -521,10 +525,6 @@ export default defineConfig({
               {
                 text: 'Sincronización de Título de Pestaña',
                 link: '/es/guide/tab-title',
-              },
-              {
-                text: 'Bifurcación de Conversación (Experimental)',
-                link: '/es/guide/fork',
               },
               {
                 text: 'Sincronización de contexto a IDE (Experimental)',
@@ -580,6 +580,7 @@ export default defineConfig({
             text: 'Funcionalidades Exclusivas Gemini',
             items: [
               { text: 'Navegação na Linha do Tempo', link: '/pt/guide/timeline' },
+              { text: 'Bifurcação de Conversa (Experimental)', link: '/pt/guide/fork' },
               { text: 'Exportação de Chat', link: '/pt/guide/export' },
               { text: 'Resposta com Citação', link: '/pt/guide/quote-reply' },
               { text: 'Largura do Chat', link: '/pt/guide/settings' },
@@ -594,7 +595,6 @@ export default defineConfig({
               { text: 'Ocultar Itens Recentes e Gems', link: '/pt/guide/recents-hider' },
               { text: 'Modelo Padrão', link: '/pt/guide/default-model' },
               { text: 'Sincronização do Título da Aba', link: '/pt/guide/tab-title' },
-              { text: 'Bifurcação de Conversa (Experimental)', link: '/pt/guide/fork' },
               { text: 'Sincronização de Contexto (Experimental)', link: '/pt/guide/context-sync' },
               { text: 'Renderização LaTeX de mensagens', link: '/pt/guide/user-latex' },
               { text: 'Carimbo de Data/Hora', link: '/pt/guide/timestamp' },
@@ -647,6 +647,7 @@ export default defineConfig({
             text: 'ميزات Gemini الحصرية',
             items: [
               { text: 'تصفح الجدول الزمني', link: '/ar/guide/timeline' },
+              { text: 'تفريع المحادثة (تجريبي)', link: '/ar/guide/fork' },
               { text: 'تصدير الدردشة', link: '/ar/guide/export' },
               { text: 'الرد مع اقتباس', link: '/ar/guide/quote-reply' },
               { text: 'عرض الدردشة', link: '/ar/guide/settings' },
@@ -661,7 +662,6 @@ export default defineConfig({
               { text: 'إخفاء العناصر الأخيرة والـ Gems', link: '/ar/guide/recents-hider' },
               { text: 'النموذج الافتراضي', link: '/ar/guide/default-model' },
               { text: 'مزامنة عنوان علامة التبويب', link: '/ar/guide/tab-title' },
-              { text: 'تفريع المحادثة (تجريبي)', link: '/ar/guide/fork' },
               { text: 'مزامنة السياق (تجريبي)', link: '/ar/guide/context-sync' },
               { text: 'عرض LaTeX في رسائل المستخدم', link: '/ar/guide/user-latex' },
               { text: 'طابع الوقت', link: '/ar/guide/timestamp' },
@@ -713,6 +713,10 @@ export default defineConfig({
             text: 'Эксклюзивные функции Gemini',
             items: [
               { text: 'Навигация по таймлайну', link: '/ru/guide/timeline' },
+              {
+                text: 'Ветвление разговора (Экспериментально)',
+                link: '/ru/guide/fork',
+              },
               { text: 'Экспорт чата', link: '/ru/guide/export' },
               { text: 'Ответ с цитированием', link: '/ru/guide/quote-reply' },
               { text: 'Ширина чата', link: '/ru/guide/settings' },
@@ -729,10 +733,6 @@ export default defineConfig({
               {
                 text: 'Синхронизация заголовка',
                 link: '/ru/guide/tab-title',
-              },
-              {
-                text: 'Ветвление разговора (Экспериментально)',
-                link: '/ru/guide/fork',
               },
               {
                 text: 'Синхронизация контекста (Экспериментально)',

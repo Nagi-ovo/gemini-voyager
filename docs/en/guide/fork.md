@@ -12,13 +12,11 @@ Whenever you want to take a different path, simply hover over your prompt and cl
 
 ![Conversation Fork](/assets/branching.png)
 
-Voyager captures the full context from the beginning up to that point and shows a confirmation dialog:
+Voyager captures the full context from the beginning up to that point and shows a confirmation dialog. Choose based on context length:
 
-- Click **Fork**: Voyager opens a new conversation and automatically fills the input with the captured context. Review it, send it, and the new chat becomes the branch.
-- Click **Download MD**: Voyager downloads a Markdown context file and opens a new conversation. Before the bottom-right countdown expires (within 2 minutes), drag the `.md` file into Gemini's input area. The input is prefilled with a small template that says the attachment is context from the previous conversation and leaves **New request:** for your next message. Send it to record the new chat as this branch.
+- **Download MD** (recommended for most conversations): Gemini's input field has length limits, so longer context may not fit if pasted directly. Voyager downloads a Markdown context file and opens a new conversation; drag the `.md` file into Gemini before the bottom-right 2-minute countdown ends. The input is prefilled with a short note that the attachment is context from the previous conversation, leaving **New request:** for your next message.
+- **Fork** (best for short conversations): when the context is short, Voyager opens a new conversation and fills the input directly; send it to create the branch.
 
-Because Gemini's file attachment flow cannot be reliably automated by the extension, MD mode requires you to drag the file manually. The countdown hint shows the remaining time; after it expires, that fork link is no longer created.
-
-Voyager only records the branch relationship. It does not delete or rewrite your original conversation.
+After you send, Voyager only records the branch relationship. It does not delete or rewrite your original conversation.
 
 In this new branch, you can freely modify your question and explore different directions without worrying about destroying your original chat history. Unleash your creativity and curiosity!

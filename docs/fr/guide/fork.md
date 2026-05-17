@@ -12,13 +12,11 @@ Chaque fois que vous souhaitez emprunter un chemin différent, survolez simpleme
 
 ![Bifurcation](/assets/branching.png)
 
-Voyager capture tout le contexte depuis le début jusqu'à ce point, puis affiche une boîte de confirmation :
+Voyager capture tout le contexte depuis le début jusqu'à ce point, puis affiche une boîte de confirmation. Choisissez selon la longueur du contexte :
 
-- Cliquez sur **Fork** : Voyager ouvre une nouvelle conversation et remplit automatiquement le champ de saisie avec le contexte capturé. Relisez-le, puis envoyez-le pour créer la branche.
-- Cliquez sur **Télécharger le MD** : Voyager télécharge un fichier Markdown contenant le contexte et ouvre une nouvelle conversation. Avant la fin du compte à rebours en bas à droite (dans les 2 minutes), faites glisser le fichier `.md` dans la zone de saisie de Gemini. Le champ de saisie est prérempli avec un court modèle indiquant que la pièce jointe est le contexte de la conversation précédente, et laisse un espace pour votre nouvelle demande. Après l'envoi, la nouvelle conversation est enregistrée comme branche de ce point.
+- **Télécharger le MD** (recommandé pour la plupart des conversations) : le champ de saisie de Gemini a une limite de longueur, donc un long contexte peut ne pas tenir s'il est inséré directement. Voyager télécharge un fichier Markdown contenant le contexte et ouvre une nouvelle conversation ; faites glisser le fichier `.md` dans Gemini avant la fin du compte à rebours de 2 minutes en bas à droite. Le champ de saisie est prérempli avec une courte note indiquant que la pièce jointe est le contexte de la conversation précédente, avec un espace pour votre nouvelle demande.
+- **Fork** (idéal pour les conversations courtes) : si le contexte est court, Voyager ouvre une nouvelle conversation et remplit directement le champ de saisie ; envoyez-le pour créer la branche.
 
-Comme le flux de pièces jointes de Gemini ne peut pas être automatisé de manière fiable par l'extension, le mode MD vous demande de faire glisser le fichier manuellement. Le compte à rebours indique le temps restant ; une fois expiré, le lien de bifurcation de cette tentative n'est plus créé.
-
-Voyager enregistre uniquement la relation de branche. Il ne supprime ni ne réécrit la conversation d'origine.
+Après l'envoi, Voyager enregistre uniquement la relation de branche. Il ne supprime ni ne réécrit la conversation d'origine.
 
 Dans cette nouvelle branche, vous pouvez modifier librement votre question et explorer différentes directions sans craindre de détruire votre historique de conversation d'origine. Libérez votre créativité et votre curiosité !
