@@ -12,6 +12,13 @@ Chaque fois que vous souhaitez emprunter un chemin différent, survolez simpleme
 
 ![Bifurcation](/assets/branching.png)
 
-Voyager capturera instantanément tout le contexte depuis le début jusqu'à ce point et **créera une toute nouvelle conversation** pour vous.
+Voyager capture tout le contexte depuis le début jusqu'à ce point, puis affiche une boîte de confirmation :
+
+- Cliquez sur **Fork** : Voyager ouvre une nouvelle conversation et remplit automatiquement le champ de saisie avec le contexte capturé. Relisez-le, puis envoyez-le pour créer la branche.
+- Cliquez sur **Télécharger le MD** : Voyager télécharge un fichier Markdown contenant le contexte et ouvre une nouvelle conversation. Avant la fin du compte à rebours en bas à droite (dans les 2 minutes), faites glisser le fichier `.md` dans la zone de saisie de Gemini. Le champ de saisie est prérempli avec un court modèle indiquant que la pièce jointe est le contexte de la conversation précédente, et laisse un espace pour votre nouvelle demande. Après l'envoi, la nouvelle conversation est enregistrée comme branche de ce point.
+
+Comme le flux de pièces jointes de Gemini ne peut pas être automatisé de manière fiable par l'extension, le mode MD vous demande de faire glisser le fichier manuellement. Le compte à rebours indique le temps restant ; une fois expiré, le lien de bifurcation de cette tentative n'est plus créé.
+
+Voyager enregistre uniquement la relation de branche. Il ne supprime ni ne réécrit la conversation d'origine.
 
 Dans cette nouvelle branche, vous pouvez modifier librement votre question et explorer différentes directions sans craindre de détruire votre historique de conversation d'origine. Libérez votre créativité et votre curiosité !
