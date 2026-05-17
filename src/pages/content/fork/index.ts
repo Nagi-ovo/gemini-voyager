@@ -13,6 +13,7 @@ import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContex
 import { generateUniqueId } from '@/core/utils/hash';
 
 import { getTranslationSync } from '../../../utils/i18n';
+import { setInputText } from '../utils/inputHelper';
 import { ForkNodesService } from './ForkNodesService';
 import { buildBranchDisplayNodes, resolveForkPlan } from './branching';
 import { collectForkChatPairs } from './chatPairs';
@@ -20,7 +21,6 @@ import { composeForkInputWithContext } from './forkContext';
 import type { ForkNode } from './forkTypes';
 import { type ForkExtractedTurn, buildForkMarkdown } from './markdown';
 import { makeStableTurnId, normalizeTurnId } from './turnId';
-import { setInputText } from '../utils/inputHelper';
 
 // ============================================================================
 // Constants
