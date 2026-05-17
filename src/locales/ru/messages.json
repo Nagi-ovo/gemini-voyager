@@ -1655,6 +1655,10 @@
     "message": "Перетащите {filename} в Gemini и отправьте его в течение 2 минут, чтобы создать ветку.",
     "description": "Fork manual Markdown upload hint text"
   },
+  "forkManualUploadPrompt": {
+    "message": "Я прикрепил(а) {filename}; это контекст предыдущего разговора. Используй вложение как контекст и ответь на мой новый запрос ниже.\n\nНовый запрос:\n",
+    "description": "Prefilled prompt for manual Markdown upload forks"
+  },
   "forkDeleteData": {
     "message": "Удалить эту ветку",
     "description": "Delete fork branch metadata button"

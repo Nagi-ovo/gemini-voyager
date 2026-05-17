@@ -20,6 +20,7 @@ import { composeForkInputWithContext } from './forkContext';
 import type { ForkNode } from './forkTypes';
 import { type ForkExtractedTurn, buildForkMarkdown } from './markdown';
 import { makeStableTurnId, normalizeTurnId } from './turnId';
+import { setInputText } from '../utils/inputHelper';
 
 // ============================================================================
 // Constants
@@ -870,6 +871,16 @@ function formatCountdown(remainingMs: number): string {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
+function getInputText(input: HTMLElement): string {
+  return input instanceof HTMLTextAreaElement ? input.value : (input.textContent ?? '');
+}
+
+function buildManualUploadPrompt(pendingFork: PendingForkData): string {
+  return formatTranslation(getTranslationSync('forkManualUploadPrompt'), {
+    filename: pendingFork.filename || 'MD',
+  });
+}
+
 async function readPendingFork(): Promise<PendingForkData | null> {
   try {
     const result = await browser.storage.local.get(PENDING_FORK_KEY);
@@ -953,6 +964,7 @@ async function handlePendingForkFromStorage(): Promise<void> {
 
   if (pendingFork.mode === 'fileUpload') {
     showManualUploadHint(pendingFork, remainingMs);
+    void prefillManualUploadPrompt(pendingFork);
     watchForNewConversation(pendingFork, remainingMs);
     return;
   }
@@ -964,18 +976,16 @@ async function handlePendingForkFromStorage(): Promise<void> {
     return;
   }
 
-  // Paste the markdown content
-  input.focus();
-  try {
-    document.execCommand('insertText', false, pendingFork.markdown);
-  } catch {
-    // Fallback: set textContent
-    input.textContent = pendingFork.markdown;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  }
+  setInputText(input, pendingFork.markdown);
 
   // Watch for URL change (conversation created after submission)
   watchForNewConversation(pendingFork, remainingMs);
+}
+
+async function prefillManualUploadPrompt(pendingFork: PendingForkData): Promise<void> {
+  const input = await waitForElement('rich-textarea [contenteditable="true"]', 10000);
+  if (!input || getInputText(input).trim()) return;
+  setInputText(input, buildManualUploadPrompt(pendingFork));
 }
 
 function showManualUploadHint(pendingFork: PendingForkData, remainingMs: number): void {

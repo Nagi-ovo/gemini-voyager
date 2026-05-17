@@ -1655,6 +1655,10 @@
     "message": "{filename} 파일을 2분 안에 Gemini로 끌어다 놓고 보내면 분기가 생성됩니다.",
     "description": "Fork manual Markdown upload hint text"
   },
+  "forkManualUploadPrompt": {
+    "message": "{filename}을(를) 첨부했습니다. 이 파일은 이전 대화의 컨텍스트입니다. 첨부 파일을 배경으로 사용해 아래의 새 요청에 답해 주세요.\n\n새 요청:\n",
+    "description": "Prefilled prompt for manual Markdown upload forks"
+  },
   "forkDeleteData": {
     "message": "이 분기 삭제",
     "description": "Delete fork branch metadata button"

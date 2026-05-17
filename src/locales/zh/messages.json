@@ -1655,6 +1655,10 @@
     "message": "在 2 分钟内将 {filename} 拖入 Gemini 并发送，即可创建分叉。",
     "description": "Fork manual Markdown upload hint text"
   },
+  "forkManualUploadPrompt": {
+    "message": "我已上传 {filename}，这是上一段对话的上下文。请把附件作为背景资料，回答我下面的新问题。\n\n新问题：\n",
+    "description": "Prefilled prompt for manual Markdown upload forks"
+  },
   "forkDeleteData": {
     "message": "删除此分支",
     "description": "Delete fork branch metadata button"

@@ -1655,6 +1655,10 @@
     "message": "اسحب {filename} إلى Gemini وأرسله خلال دقيقتين لإنشاء التفرع.",
     "description": "Fork manual Markdown upload hint text"
   },
+  "forkManualUploadPrompt": {
+    "message": "أرفقت {filename}؛ وهو سياق من المحادثة السابقة. استخدم المرفق كخلفية وأجب عن طلبي الجديد أدناه.\n\nالطلب الجديد:\n",
+    "description": "Prefilled prompt for manual Markdown upload forks"
+  },
   "forkDeleteData": {
     "message": "حذف هذا التفرع",
     "description": "Delete fork branch metadata button"

@@ -286,6 +286,18 @@ describe('startFork style injection', () => {
         </rich-textarea>
       </main>
     `;
+    const uploadInput = document.querySelector<HTMLElement>('#chat-input');
+    if (!uploadInput) {
+      throw new Error('test DOM setup failed');
+    }
+    Object.defineProperty(uploadInput, 'getBoundingClientRect', {
+      value: () => ({ height: 24 }),
+      configurable: true,
+    });
+    Object.defineProperty(document, 'execCommand', {
+      value: vi.fn().mockReturnValue(false),
+      configurable: true,
+    });
 
     vi.mocked(browser.storage.local.get).mockResolvedValue({
       gvPendingFork: {
@@ -323,7 +335,13 @@ describe('startFork style injection', () => {
     const input = document.querySelector<HTMLElement>('#chat-input');
     const hint = document.querySelector<HTMLElement>('.gv-fork-manual-upload-hint');
     const timer = document.querySelector<HTMLElement>('.gv-fork-manual-upload-timer');
-    expect(input?.textContent).toBe('');
+    expect(input?.textContent).toContain('gemini-voyager-fork-source.md');
+    expect(input?.textContent).toContain('context from the previous conversation');
+    expect(input?.textContent).toContain('New request:');
+    expect(input?.textContent).not.toContain('manual context');
+    expect(input?.textContent).not.toContain('best practices');
+    expect(input?.textContent).not.toContain('Anthropic');
+    expect(input?.textContent).not.toContain('OpenAI');
     expect(hint?.textContent).toContain('gemini-voyager-fork-source.md');
     expect(timer?.textContent).toBe('01:30');
     expect(vi.mocked(browser.storage.local.remove)).toHaveBeenCalledWith('gvPendingFork');

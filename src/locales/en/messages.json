@@ -1655,6 +1655,10 @@
     "message": "Drag {filename} into Gemini and send within 2 minutes to create the fork.",
     "description": "Fork manual Markdown upload hint text"
   },
+  "forkManualUploadPrompt": {
+    "message": "I uploaded {filename}; it is context from the previous conversation. Please use the attachment as background and answer my new request below.\n\nNew request:\n",
+    "description": "Prefilled prompt for manual Markdown upload forks"
+  },
   "forkDeleteData": {
     "message": "Delete this branch",
     "description": "Delete fork branch metadata button"

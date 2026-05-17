@@ -1655,6 +1655,10 @@
     "message": "Arrastra {filename} a Gemini y envíalo en un plazo de 2 minutos para crear la rama.",
     "description": "Fork manual Markdown upload hint text"
   },
+  "forkManualUploadPrompt": {
+    "message": "He adjuntado {filename}; es contexto de la conversación anterior. Usa el adjunto como contexto y responde mi nueva petición de abajo.\n\nNueva petición:\n",
+    "description": "Prefilled prompt for manual Markdown upload forks"
+  },
   "forkDeleteData": {
     "message": "Eliminar esta rama",
     "description": "Delete fork branch metadata button"

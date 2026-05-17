@@ -1655,6 +1655,10 @@
     "message": "Arraste {filename} para o Gemini e envie em até 2 minutos para criar a ramificação.",
     "description": "Fork manual Markdown upload hint text"
   },
+  "forkManualUploadPrompt": {
+    "message": "Anexei {filename}; ele é o contexto da conversa anterior. Use o anexo como contexto e responda à minha nova solicitação abaixo.\n\nNova solicitação:\n",
+    "description": "Prefilled prompt for manual Markdown upload forks"
+  },
   "forkDeleteData": {
     "message": "Excluir esta ramificação",
     "description": "Delete fork branch metadata button"

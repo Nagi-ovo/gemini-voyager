@@ -1655,6 +1655,10 @@
     "message": "Glissez {filename} dans Gemini et envoyez-le sous 2 minutes pour créer la branche.",
     "description": "Fork manual Markdown upload hint text"
   },
+  "forkManualUploadPrompt": {
+    "message": "J'ai joint {filename} ; c'est le contexte de la conversation précédente. Utilise la pièce jointe comme contexte et réponds à ma nouvelle demande ci-dessous.\n\nNouvelle demande :\n",
+    "description": "Prefilled prompt for manual Markdown upload forks"
+  },
   "forkDeleteData": {
     "message": "Supprimer cette branche",
     "description": "Delete fork branch metadata button"

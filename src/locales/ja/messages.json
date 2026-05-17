@@ -1655,6 +1655,10 @@
     "message": "{filename} を 2 分以内に Gemini へドラッグして送信すると、分岐が作成されます。",
     "description": "Fork manual Markdown upload hint text"
   },
+  "forkManualUploadPrompt": {
+    "message": "{filename} を添付しました。これは前の会話のコンテキストです。添付ファイルを背景として使い、下の新しい依頼に答えてください。\n\n新しい依頼：\n",
+    "description": "Prefilled prompt for manual Markdown upload forks"
+  },
   "forkDeleteData": {
     "message": "この分岐を削除",
     "description": "Delete fork branch metadata button"
