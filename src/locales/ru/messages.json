@@ -1623,6 +1623,10 @@
     "message": "Fork",
     "description": "Fork confirmation button"
   },
+  "forkMarkdownBtn": {
+    "message": "Скачать MD",
+    "description": "Fork confirmation button for downloading a Markdown file"
+  },
   "forkCancel": {
     "message": "Cancel",
     "description": "Fork cancel button"
@@ -1646,6 +1650,10 @@
   "forkPasteHint": {
     "message": "Press Enter to send and create the fork",
     "description": "Fork paste hint text"
+  },
+  "forkManualUploadHint": {
+    "message": "Перетащите {filename} в Gemini и отправьте его в течение 2 минут, чтобы создать ветку.",
+    "description": "Fork manual Markdown upload hint text"
   },
   "forkDeleteData": {
     "message": "Удалить эту ветку",

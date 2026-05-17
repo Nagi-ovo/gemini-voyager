@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import browser from 'webextension-polyfill';
 
 import type { ForkNode } from '../forkTypes';
 import { startFork } from '../index';
@@ -22,16 +23,22 @@ describe('startFork style injection', () => {
   let sendMessageMock: ReturnType<typeof vi.fn>;
 
   const flushMicrotasks = async (): Promise<void> => {
-    await Promise.resolve();
-    await Promise.resolve();
+    for (let i = 0; i < 4; i++) {
+      await Promise.resolve();
+    }
   };
 
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.clearAllMocks();
     document.head.innerHTML = '';
     document.body.innerHTML = '';
     sessionStorage.clear();
     window.history.replaceState({}, '', '/');
+    vi.mocked(browser.storage.sync.get).mockResolvedValue({});
+    vi.mocked(browser.storage.local.get).mockResolvedValue({});
+    vi.mocked(browser.storage.local.remove).mockResolvedValue(undefined);
+    vi.mocked(browser.storage.local.set).mockResolvedValue(undefined);
 
     sendMessageMock = vi.fn();
     chrome.runtime.sendMessage = sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
@@ -182,6 +189,166 @@ describe('startFork style injection', () => {
       openSpy.mockRestore();
     },
   );
+
+  it('downloads a Markdown fork and stores a manual upload pending fork', async () => {
+    window.history.replaceState({}, '', '/u/1/app/conv-source');
+    document.title = 'Source / Long:Title';
+    document.body.innerHTML = `
+      <main>
+        <div class="user-query-container">
+          <div class="user-query-bubble-with-background">user-1</div>
+          <div class="actions">
+            <div id="copy-anchor">
+              <button data-test-id="copy-button" class="action-button" aria-label="Copy prompt">
+                <mat-icon fonticon="content_copy"></mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="response-container">
+          <div class="markdown-main-panel">assistant-1</div>
+        </div>
+      </main>
+    `;
+
+    const userContainer = document.querySelector<HTMLElement>('.user-query-container');
+    const responseContainer = document.querySelector<HTMLElement>('.response-container');
+    if (!userContainer || !responseContainer) {
+      throw new Error('test DOM setup failed');
+    }
+
+    Object.defineProperty(userContainer, 'offsetTop', { value: 0, configurable: true });
+    Object.defineProperty(responseContainer, 'offsetTop', { value: 100, configurable: true });
+
+    sendMessageMock.mockImplementation(
+      (
+        rawMessage: unknown,
+        callback: (response: { ok: boolean; [key: string]: unknown }) => void,
+      ) => {
+        const message = rawMessage as { type?: string };
+        if (message.type === 'gv.fork.getForConversation') {
+          callback({ ok: true, nodes: [] });
+          return;
+        }
+        callback({ ok: true });
+      },
+    );
+
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue({} as Window);
+    const createObjectURL = vi.fn().mockReturnValue('blob:fork-md');
+    const revokeObjectURL = vi.fn();
+    Object.defineProperty(URL, 'createObjectURL', { value: createObjectURL, configurable: true });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: revokeObjectURL, configurable: true });
+    const anchorClickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+
+    cleanup = startFork();
+    vi.advanceTimersByTime(1000);
+    await flushMicrotasks();
+
+    document.querySelector<HTMLElement>('.gv-fork-btn')?.click();
+    document.querySelector<HTMLElement>('.gv-fork-secondary')?.click();
+    for (let i = 0; i < 4; i++) {
+      await flushMicrotasks();
+    }
+
+    const storageSet = vi.mocked(browser.storage.local.set);
+    const pendingPayload = storageSet.mock.calls[0]?.[0] as
+      | { gvPendingFork?: Record<string, unknown> }
+      | undefined;
+    const pendingFork = pendingPayload?.gvPendingFork;
+
+    expect(openSpy).toHaveBeenCalledWith(`${window.location.origin}/u/1/app`, '_blank');
+    expect(pendingFork?.mode).toBe('fileUpload');
+    expect(pendingFork?.filename).toMatch(/^gemini-voyager-fork-Source - Long-Title-\d+\.md$/);
+    expect(pendingFork?.markdown).toContain('You are continuing a branched conversation.');
+    expect(pendingFork?.markdown).toContain('user-1');
+    expect(createObjectURL).toHaveBeenCalledOnce();
+    expect(anchorClickSpy).toHaveBeenCalledOnce();
+    expect(document.querySelector<HTMLAnchorElement>('a[download]')?.download).toBe(
+      pendingFork?.filename,
+    );
+
+    vi.advanceTimersByTime(100);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:fork-md');
+
+    openSpy.mockRestore();
+    anchorClickSpy.mockRestore();
+  });
+
+  it('links a manual Markdown fork when the new conversation starts inside the upload window', async () => {
+    window.history.replaceState({}, '', '/app');
+    document.body.innerHTML = `
+      <main>
+        <rich-textarea>
+          <div id="chat-input" contenteditable="true"></div>
+        </rich-textarea>
+      </main>
+    `;
+
+    vi.mocked(browser.storage.local.get).mockResolvedValue({
+      gvPendingFork: {
+        sourceConversationId: 'conv-source',
+        sourceTurnId: 'u-2',
+        sourceUrl: 'https://gemini.google.com/app/conv-source',
+        sourceTitle: 'Source',
+        forkGroupId: 'group-1',
+        sourceForkIndex: 0,
+        nextForkIndex: 1,
+        markdown: '# Source\n\nmanual context',
+        mode: 'fileUpload',
+        filename: 'gemini-voyager-fork-source.md',
+        createdAt: Date.now() - 30000,
+      },
+    });
+
+    sendMessageMock.mockImplementation(
+      (
+        rawMessage: unknown,
+        callback: (response: { ok: boolean; [key: string]: unknown }) => void,
+      ) => {
+        const message = rawMessage as { type?: string };
+        if (message.type === 'gv.fork.add') {
+          callback({ ok: true, added: true });
+          return;
+        }
+        callback({ ok: true, nodes: [] });
+      },
+    );
+
+    cleanup = startFork();
+    await flushMicrotasks();
+
+    const input = document.querySelector<HTMLElement>('#chat-input');
+    const hint = document.querySelector<HTMLElement>('.gv-fork-manual-upload-hint');
+    const timer = document.querySelector<HTMLElement>('.gv-fork-manual-upload-timer');
+    expect(input?.textContent).toBe('');
+    expect(hint?.textContent).toContain('gemini-voyager-fork-source.md');
+    expect(timer?.textContent).toBe('01:30');
+    expect(vi.mocked(browser.storage.local.remove)).toHaveBeenCalledWith('gvPendingFork');
+
+    vi.advanceTimersByTime(1000);
+    expect(timer?.textContent).toBe('01:29');
+
+    window.history.pushState({}, '', '/app/conv-new');
+    vi.advanceTimersByTime(500);
+    for (let i = 0; i < 4; i++) {
+      await flushMicrotasks();
+    }
+
+    const addPayloads = sendMessageMock.mock.calls
+      .map(([rawMessage]) => rawMessage as { type?: string; payload?: ForkNode })
+      .filter((message) => message.type === 'gv.fork.add')
+      .map((message) => message.payload);
+
+    expect(addPayloads).toHaveLength(2);
+    expect(addPayloads[0]?.conversationId).toBe('conv-source');
+    expect(addPayloads[0]?.turnId).toBe('u-2');
+    expect(addPayloads[1]?.conversationId).toBe('conv-new');
+    expect(addPayloads[1]?.turnId).toBe('u-0');
+    expect(document.querySelector('.gv-fork-manual-upload-hint')).toBeNull();
+  });
 
   it('avoids duplicate branch indicator groups when concurrent refreshes happen', async () => {
     window.history.replaceState({}, '', '/app/conv-source');

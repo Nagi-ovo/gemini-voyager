@@ -1623,6 +1623,10 @@
     "message": "Fork",
     "description": "Fork confirmation button"
   },
+  "forkMarkdownBtn": {
+    "message": "下載 MD",
+    "description": "Fork confirmation button for downloading a Markdown file"
+  },
   "forkCancel": {
     "message": "Cancel",
     "description": "Fork cancel button"
@@ -1646,6 +1650,10 @@
   "forkPasteHint": {
     "message": "Press Enter to send and create the fork",
     "description": "Fork paste hint text"
+  },
+  "forkManualUploadHint": {
+    "message": "請在 2 分鐘內將 {filename} 拖入 Gemini 並送出，即可建立分支。",
+    "description": "Fork manual Markdown upload hint text"
   },
   "forkDeleteData": {
     "message": "刪除此分支",

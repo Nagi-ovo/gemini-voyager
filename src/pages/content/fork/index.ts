@@ -32,6 +32,8 @@ const FORK_INDICATOR_CLASS = 'gv-fork-indicator';
 const FORK_INDICATOR_GROUP_CLASS = 'gv-fork-indicator-group';
 const FORK_INDICATOR_ITEM_CLASS = 'gv-fork-indicator-item';
 const FORK_INDICATOR_DELETE_CLASS = 'gv-fork-indicator-delete';
+const FORK_MANUAL_UPLOAD_HINT_CLASS = 'gv-fork-manual-upload-hint';
+const FORK_MANUAL_UPLOAD_TIMER_CLASS = 'gv-fork-manual-upload-timer';
 const PENDING_FORK_KEY = 'gvPendingFork';
 
 const FORK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"/><path d="M12 12v3"/></svg>`;
@@ -147,6 +149,60 @@ function injectStyles(): void {
     .${FORK_CONFIRM_CLASS} button.gv-fork-primary:hover {
       background: var(--gv-fork-primary-hover-bg, #1765cc);
     }
+    .${FORK_CONFIRM_CLASS} button.gv-fork-secondary {
+      background: var(--gv-fork-secondary-bg, rgba(26, 115, 232, 0.08));
+      color: var(--gv-fork-secondary-color, #1a73e8);
+      border-color: var(--gv-fork-secondary-border, rgba(26, 115, 232, 0.22));
+    }
+    .${FORK_CONFIRM_CLASS} button.gv-fork-secondary:hover {
+      background: var(--gv-fork-secondary-hover-bg, rgba(26, 115, 232, 0.14));
+    }
+
+    .${FORK_MANUAL_UPLOAD_HINT_CLASS} {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 9999;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      max-width: 340px;
+      padding: 12px 14px;
+      border: 1px solid var(--gv-fork-confirm-border, rgba(0, 0, 0, 0.12));
+      border-radius: 8px;
+      background: var(--gv-fork-confirm-bg, #fff);
+      color: var(--gv-fork-confirm-color, #202124);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+      font-size: 13px;
+      line-height: 1.4;
+      font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    }
+    .${FORK_MANUAL_UPLOAD_HINT_CLASS} span {
+      flex: 1;
+      min-width: 0;
+    }
+    .${FORK_MANUAL_UPLOAD_TIMER_CLASS} {
+      display: block;
+      margin-top: 6px;
+      color: var(--gv-fork-secondary-color, #1a73e8);
+      font-size: 14px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0;
+    }
+    .${FORK_MANUAL_UPLOAD_HINT_CLASS} button {
+      flex: 0 0 auto;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 20px;
+    }
 
     /* Fork branch indicator group */
     .${FORK_INDICATOR_GROUP_CLASS} {
@@ -232,7 +288,9 @@ function injectStyles(): void {
       --gv-fork-btn-hover-bg: rgba(255, 255, 255, 0.08);
     }
     html[dark] .${FORK_CONFIRM_CLASS},
-    body.dark-theme .${FORK_CONFIRM_CLASS} {
+    body.dark-theme .${FORK_CONFIRM_CLASS},
+    html[dark] .${FORK_MANUAL_UPLOAD_HINT_CLASS},
+    body.dark-theme .${FORK_MANUAL_UPLOAD_HINT_CLASS} {
       --gv-fork-confirm-bg: #292a2d;
       --gv-fork-confirm-color: #e8eaed;
       --gv-fork-confirm-border: rgba(255, 255, 255, 0.12);
@@ -245,6 +303,13 @@ function injectStyles(): void {
     html[dark] .${FORK_CONFIRM_CLASS} button.gv-fork-primary:hover,
     body.dark-theme .${FORK_CONFIRM_CLASS} button.gv-fork-primary:hover {
       --gv-fork-primary-hover-bg: #aecbfa;
+    }
+    html[dark] .${FORK_CONFIRM_CLASS} button.gv-fork-secondary,
+    body.dark-theme .${FORK_CONFIRM_CLASS} button.gv-fork-secondary {
+      --gv-fork-secondary-bg: rgba(138, 180, 248, 0.12);
+      --gv-fork-secondary-color: #8ab4f8;
+      --gv-fork-secondary-border: rgba(138, 180, 248, 0.28);
+      --gv-fork-secondary-hover-bg: rgba(138, 180, 248, 0.2);
     }
     html[dark] .${FORK_INDICATOR_CLASS},
     body.dark-theme .${FORK_INDICATOR_CLASS} {
@@ -290,6 +355,41 @@ function getConversationTitle(): string {
     if (link?.textContent?.trim()) return link.textContent.trim();
   }
   return document.title || 'Untitled';
+}
+
+function sanitizeFilenamePart(value: string): string {
+  const cleaned = value
+    .trim()
+    .replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-')
+    .replace(/\s+/g, ' ')
+    .slice(0, 80)
+    .replace(/^\.+$/, '');
+  return cleaned || 'fork';
+}
+
+function buildForkMarkdownFilename(title: string): string {
+  return `gemini-voyager-fork-${sanitizeFilenamePart(title)}-${Date.now()}.md`;
+}
+
+function downloadMarkdownFile(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+
+  setTimeout(() => {
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, 100);
+}
+
+function formatTranslation(template: string, values: Record<string, string>): string {
+  return Object.entries(values).reduce((result, [key, value]) => {
+    return result.split(`{${key}}`).join(value);
+  }, template);
 }
 
 function ensureTurnId(el: HTMLElement, index: number): string {
@@ -519,6 +619,8 @@ function extractConversationUpToTurn(userTurnIndex: number, sourceTurnId: string
 let observer: MutationObserver | null = null;
 let observerDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 let storageRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+let manualUploadHintTimer: ReturnType<typeof setTimeout> | null = null;
+let manualUploadCountdownTimer: ReturnType<typeof setInterval> | null = null;
 let activeConfirm: HTMLElement | null = null;
 
 function dismissConfirm(): void {
@@ -541,6 +643,18 @@ function scheduleForkIndicatorRefresh(): void {
     void injectForkIndicators();
     storageRefreshTimer = null;
   }, OBSERVER_DEBOUNCE_MS);
+}
+
+function clearManualUploadHint(): void {
+  if (manualUploadHintTimer) {
+    clearTimeout(manualUploadHintTimer);
+    manualUploadHintTimer = null;
+  }
+  if (manualUploadCountdownTimer) {
+    clearInterval(manualUploadCountdownTimer);
+    manualUploadCountdownTimer = null;
+  }
+  document.querySelectorAll(`.${FORK_MANUAL_UPLOAD_HINT_CLASS}`).forEach((el) => el.remove());
 }
 
 function injectForkButtons(): void {
@@ -586,11 +700,13 @@ function showForkConfirmation(btn: HTMLElement, userEl: HTMLElement, turnIndex: 
     <p>${getTranslationSync('forkConfirm')}</p>
     <div class="gv-fork-actions">
       <button class="gv-fork-cancel">${getTranslationSync('forkCancel')}</button>
+      <button class="gv-fork-secondary">${getTranslationSync('forkMarkdownBtn')}</button>
       <button class="gv-fork-primary">${getTranslationSync('forkConfirmBtn')}</button>
     </div>
   `;
 
   const cancelBtn = confirm.querySelector('.gv-fork-cancel')!;
+  const markdownBtn = confirm.querySelector('.gv-fork-secondary')!;
   const confirmBtn = confirm.querySelector('.gv-fork-primary')!;
 
   cancelBtn.addEventListener('click', (e) => {
@@ -602,7 +718,13 @@ function showForkConfirmation(btn: HTMLElement, userEl: HTMLElement, turnIndex: 
     e.stopPropagation();
     e.preventDefault();
     dismissConfirm();
-    void executeFork(userEl, turnIndex);
+    void executeFork(userEl, turnIndex, 'paste');
+  });
+  markdownBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    dismissConfirm();
+    void executeFork(userEl, turnIndex, 'fileUpload');
   });
 
   // Prevent clicks inside the dialog from bubbling to parent handlers
@@ -619,7 +741,13 @@ function showForkConfirmation(btn: HTMLElement, userEl: HTMLElement, turnIndex: 
   activeConfirm = confirm;
 }
 
-async function executeFork(userEl: HTMLElement, turnIndex: number): Promise<void> {
+type PendingForkMode = 'paste' | 'fileUpload';
+
+async function executeFork(
+  userEl: HTMLElement,
+  turnIndex: number,
+  mode: PendingForkMode,
+): Promise<void> {
   const conversationId = extractConversationIdFromUrl();
   if (!conversationId) {
     console.warn('[Fork] No conversation ID found');
@@ -644,6 +772,8 @@ async function executeFork(userEl: HTMLElement, turnIndex: number): Promise<void
   // Async work: resolve language and fork group (safe now, window already opened)
   const preferredLanguage = await getPreferredLanguage();
   const markdownWithContext = composeForkInputWithContext(markdown, preferredLanguage);
+  const markdownFilename =
+    mode === 'fileUpload' ? buildForkMarkdownFilename(getConversationTitle()) : undefined;
 
   let forkGroupId = generateUniqueId('fork');
   let sourceForkIndex = 0;
@@ -688,11 +818,16 @@ async function executeFork(userEl: HTMLElement, turnIndex: number): Promise<void
     sourceForkIndex,
     nextForkIndex,
     markdown: markdownWithContext,
+    mode,
+    filename: markdownFilename,
     createdAt: Date.now(),
   };
 
   try {
     await browser.storage.local.set({ [PENDING_FORK_KEY]: pendingFork });
+    if (mode === 'fileUpload' && markdownFilename) {
+      downloadMarkdownFile(markdownWithContext, markdownFilename);
+    }
   } catch (e) {
     console.error('[Fork] Failed to save pending fork:', e);
   }
@@ -711,19 +846,39 @@ interface PendingForkData {
   sourceForkIndex: number;
   nextForkIndex: number;
   markdown: string;
+  mode: PendingForkMode;
+  filename?: string;
   createdAt?: number;
 }
 
-const PENDING_FORK_STALE_MS = 60000; // Discard pending fork data older than 60s
+const PENDING_FORK_PASTE_STALE_MS = 60000;
+const PENDING_FORK_FILE_UPLOAD_STALE_MS = 120000;
+
+function getPendingForkTtl(mode: PendingForkMode): number {
+  return mode === 'fileUpload' ? PENDING_FORK_FILE_UPLOAD_STALE_MS : PENDING_FORK_PASTE_STALE_MS;
+}
+
+function getPendingForkRemainingMs(pendingFork: PendingForkData): number {
+  const createdAt = pendingFork.createdAt ?? Date.now();
+  return Math.max(0, createdAt + getPendingForkTtl(pendingFork.mode) - Date.now());
+}
+
+function formatCountdown(remainingMs: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
 
 async function readPendingFork(): Promise<PendingForkData | null> {
   try {
     const result = await browser.storage.local.get(PENDING_FORK_KEY);
     const parsed = result[PENDING_FORK_KEY] as Partial<PendingForkData> | undefined;
     if (!parsed) return null;
+    const mode: PendingForkMode = parsed.mode === 'fileUpload' ? 'fileUpload' : 'paste';
 
     // Discard stale data (e.g. from a previous failed fork)
-    if (parsed.createdAt && Date.now() - parsed.createdAt > PENDING_FORK_STALE_MS) {
+    if (parsed.createdAt && Date.now() - parsed.createdAt > getPendingForkTtl(mode)) {
       await browser.storage.local.remove(PENDING_FORK_KEY);
       return null;
     }
@@ -737,6 +892,8 @@ async function readPendingFork(): Promise<PendingForkData | null> {
       sourceForkIndex: Number.isFinite(parsed.sourceForkIndex) ? parsed.sourceForkIndex! : 0,
       nextForkIndex: Number.isFinite(parsed.nextForkIndex) ? parsed.nextForkIndex! : 1,
       markdown: parsed.markdown || '',
+      mode,
+      filename: typeof parsed.filename === 'string' ? parsed.filename : undefined,
       createdAt: parsed.createdAt,
     };
 
@@ -791,6 +948,15 @@ async function handlePendingForkFromStorage(): Promise<void> {
   // Re-check: still on a new conversation page?
   if (extractConversationIdFromUrl()) return;
 
+  const remainingMs = getPendingForkRemainingMs(pendingFork);
+  if (remainingMs <= 0) return;
+
+  if (pendingFork.mode === 'fileUpload') {
+    showManualUploadHint(pendingFork, remainingMs);
+    watchForNewConversation(pendingFork, remainingMs);
+    return;
+  }
+
   // Wait for the input field to be available
   const input = await waitForElement('rich-textarea [contenteditable="true"]', 10000);
   if (!input) {
@@ -809,7 +975,47 @@ async function handlePendingForkFromStorage(): Promise<void> {
   }
 
   // Watch for URL change (conversation created after submission)
-  watchForNewConversation(pendingFork);
+  watchForNewConversation(pendingFork, remainingMs);
+}
+
+function showManualUploadHint(pendingFork: PendingForkData, remainingMs: number): void {
+  clearManualUploadHint();
+
+  const notice = document.createElement('div');
+  notice.className = FORK_MANUAL_UPLOAD_HINT_CLASS;
+  notice.setAttribute('role', 'status');
+
+  const message = document.createElement('span');
+  message.textContent = formatTranslation(getTranslationSync('forkManualUploadHint'), {
+    filename: pendingFork.filename || 'MD',
+  });
+
+  const timer = document.createElement('strong');
+  timer.className = FORK_MANUAL_UPLOAD_TIMER_CLASS;
+  timer.setAttribute('aria-live', 'polite');
+  timer.textContent = formatCountdown(remainingMs);
+  message.appendChild(timer);
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.textContent = '\u00d7';
+  closeButton.title = getTranslationSync('forkCancel');
+  closeButton.setAttribute('aria-label', getTranslationSync('forkCancel'));
+  closeButton.addEventListener('click', () => clearManualUploadHint());
+
+  notice.appendChild(message);
+  notice.appendChild(closeButton);
+  document.body.appendChild(notice);
+
+  const expiresAt = Date.now() + remainingMs;
+  manualUploadCountdownTimer = setInterval(() => {
+    const nextRemainingMs = Math.max(0, expiresAt - Date.now());
+    timer.textContent = formatCountdown(nextRemainingMs);
+    if (nextRemainingMs <= 0) {
+      clearManualUploadHint();
+    }
+  }, 1000);
+  manualUploadHintTimer = setTimeout(clearManualUploadHint, remainingMs);
 }
 
 function waitForElement(selector: string, timeoutMs: number): Promise<HTMLElement | null> {
@@ -837,10 +1043,25 @@ function waitForElement(selector: string, timeoutMs: number): Promise<HTMLElemen
   });
 }
 
-function watchForNewConversation(pendingFork: PendingForkData): void {
+function watchForNewConversation(pendingFork: PendingForkData, timeoutMs: number): void {
   let lastUrl = window.location.href;
+  let stopped = false;
+  let pollInterval: ReturnType<typeof setInterval> | null = null;
+  let cleanupTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const stopWatching = () => {
+    if (stopped) return;
+    stopped = true;
+    urlObserver.disconnect();
+    window.removeEventListener('popstate', onUrlChange);
+    window.removeEventListener('hashchange', onUrlChange);
+    if (pollInterval) clearInterval(pollInterval);
+    if (cleanupTimer) clearTimeout(cleanupTimer);
+    clearManualUploadHint();
+  };
 
   const checkUrl = async () => {
+    if (stopped) return;
     const currentUrl = window.location.href;
     if (currentUrl === lastUrl) return;
     lastUrl = currentUrl;
@@ -849,7 +1070,7 @@ function watchForNewConversation(pendingFork: PendingForkData): void {
     if (!newConvId) return;
 
     // New conversation created! Create fork nodes for both sides
-    urlObserver.disconnect();
+    stopWatching();
 
     try {
       // Create fork node for the SOURCE conversation (original, index 0)
@@ -896,17 +1117,12 @@ function watchForNewConversation(pendingFork: PendingForkData): void {
   window.addEventListener('hashchange', onUrlChange);
 
   // Poll as fallback (SPA navigation may not trigger popstate)
-  const pollInterval = setInterval(() => {
+  pollInterval = setInterval(() => {
     void checkUrl();
   }, 500);
 
-  // Cleanup after 60 seconds
-  setTimeout(() => {
-    urlObserver.disconnect();
-    window.removeEventListener('popstate', onUrlChange);
-    window.removeEventListener('hashchange', onUrlChange);
-    clearInterval(pollInterval);
-  }, 60000);
+  // Cleanup when the fork window expires
+  cleanupTimer = setTimeout(stopWatching, timeoutMs);
 }
 
 // ============================================================================
@@ -1131,6 +1347,7 @@ export function startFork(): () => void {
       clearTimeout(storageRefreshTimer);
       storageRefreshTimer = null;
     }
+    clearManualUploadHint();
     dismissConfirm();
     document.removeEventListener('click', onDocumentClick);
     browser.storage.onChanged.removeListener(onStorageChanged);

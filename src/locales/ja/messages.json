@@ -1623,6 +1623,10 @@
     "message": "Fork",
     "description": "Fork confirmation button"
   },
+  "forkMarkdownBtn": {
+    "message": "MD をダウンロード",
+    "description": "Fork confirmation button for downloading a Markdown file"
+  },
   "forkCancel": {
     "message": "Cancel",
     "description": "Fork cancel button"
@@ -1646,6 +1650,10 @@
   "forkPasteHint": {
     "message": "Press Enter to send and create the fork",
     "description": "Fork paste hint text"
+  },
+  "forkManualUploadHint": {
+    "message": "{filename} を 2 分以内に Gemini へドラッグして送信すると、分岐が作成されます。",
+    "description": "Fork manual Markdown upload hint text"
   },
   "forkDeleteData": {
     "message": "この分岐を削除",
