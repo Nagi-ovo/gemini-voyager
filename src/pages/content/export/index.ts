@@ -35,6 +35,7 @@ import {
   injectResponseMenuExportButton,
 } from './conversationMenuInjection';
 import { injectResponseActionCopyImageButtons } from './responseActionImageButton';
+import { showResponseActionCopyImageMenu } from './responseActionImageMenu';
 import { copyImageBlobToClipboard, downloadImageBlob } from './responseImageCopy';
 import { groupSelectedMessagesByTurn, resolveInitialSelectedMessageIds } from './selectionUtils';
 import { resolveSidebarConversationTarget } from './sidebarConversationTarget';
@@ -1854,6 +1855,9 @@ type ResponseCopyImageTexts = {
   failed: string;
   unsupported: string;
   targetMissing: string;
+  widthNarrow: string;
+  widthMedium: string;
+  widthWide: string;
 };
 
 function getResponseCopyImageTexts(lang: AppLanguage): ResponseCopyImageTexts {
@@ -1865,6 +1869,9 @@ function getResponseCopyImageTexts(lang: AppLanguage): ResponseCopyImageTexts {
       failed: '复制回复图片失败',
       unsupported: '当前浏览器不支持复制图片到剪贴板',
       targetMissing: '未找到可复制的回复内容',
+      widthNarrow: '窄（手机）',
+      widthMedium: '中（平板）',
+      widthWide: '宽（电脑）',
     };
   }
 
@@ -1876,6 +1883,9 @@ function getResponseCopyImageTexts(lang: AppLanguage): ResponseCopyImageTexts {
       failed: '複製回覆圖片失敗',
       unsupported: '目前瀏覽器不支援將圖片複製到剪貼簿',
       targetMissing: '找不到可複製的回覆內容',
+      widthNarrow: '窄（手機）',
+      widthMedium: '中（平板）',
+      widthWide: '寬（電腦）',
     };
   }
 
@@ -1886,6 +1896,9 @@ function getResponseCopyImageTexts(lang: AppLanguage): ResponseCopyImageTexts {
     failed: 'Failed to copy response image',
     unsupported: 'Clipboard image copy is not supported in this browser',
     targetMissing: 'Unable to locate response content',
+    widthNarrow: 'Narrow (Mobile)',
+    widthMedium: 'Medium (Tablet)',
+    widthWide: 'Wide (Desktop)',
   };
 }
 
@@ -1921,6 +1934,7 @@ function isUnsupportedClipboardError(error: unknown): boolean {
 async function handleResponseCopyImageClick(
   trigger: HTMLElement,
   getCurrentLanguage: () => AppLanguage,
+  imageWidth: number = DEFAULT_IMAGE_EXPORT_WIDTH,
 ): Promise<void> {
   if (trigger.dataset.gvCopyImageBusy === '1') {
     return;
@@ -1951,7 +1965,7 @@ async function handleResponseCopyImageClick(
     };
 
     const blob = await ImageExportService.renderConversationBlob(turnsForExport, metadata, {
-      imageWidth: DEFAULT_IMAGE_EXPORT_WIDTH,
+      imageWidth,
     });
     blobForFallback = blob;
     await copyImageBlobToClipboard(blob);
@@ -1979,7 +1993,17 @@ function applyResponseActionCopyImageButtons(getCurrentLanguage: () => AppLangua
     label: texts.label,
     tooltip: texts.label,
     onClick: (button) => {
-      void handleResponseCopyImageClick(button, getCurrentLanguage);
+      showResponseActionCopyImageMenu({
+        anchor: button,
+        translations: {
+          narrow: texts.widthNarrow,
+          medium: texts.widthMedium,
+          wide: texts.widthWide,
+        },
+        onSelect: (width) => {
+          void handleResponseCopyImageClick(button, getCurrentLanguage, width);
+        },
+      });
     },
   });
 }
@@ -2001,7 +2025,17 @@ function setupResponseActionCopyImageObserver({
           label: texts.label,
           tooltip: texts.label,
           onClick: (button) => {
-            void handleResponseCopyImageClick(button, getCurrentLanguage);
+            showResponseActionCopyImageMenu({
+              anchor: button,
+              translations: {
+                narrow: texts.widthNarrow,
+                medium: texts.widthMedium,
+                wide: texts.widthWide,
+              },
+              onSelect: (width) => {
+                void handleResponseCopyImageClick(button, getCurrentLanguage, width);
+              },
+            });
           },
         });
       });
