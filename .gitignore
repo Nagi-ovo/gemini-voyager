@@ -3,6 +3,8 @@ node_modules/
 /dist_firefox/
 /dist_safari/
 voyager-edge-v*.zip
+final_body.md
+release_body.md
 
 # Vitest
 coverage/
@@ -14,6 +16,7 @@ coverage/
 *.xcworkspace/xcuserdata/
 DerivedData/
 safari/Models/Gemini*
+safari/Models/dmg_source/
 *.dmg
 
 .git-commit-message.txt

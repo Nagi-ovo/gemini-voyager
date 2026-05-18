@@ -245,8 +245,16 @@ export class KeyboardShortcutService {
     this.keydownHandler = (event: KeyboardEvent) => {
       if (!this.enabled) return;
 
+      if (this.isImeComposing(event)) {
+        this.resetSequence();
+        return;
+      }
+
       // Ignore shortcuts when user is typing in input fields
-      if (this.isTypingInInputField(event)) return;
+      if (this.isTypingInInputField(event)) {
+        this.resetSequence();
+        return;
+      }
 
       // Check for key sequences first (gg → first, GG → last)
       const sequenceMatch = this.matchSequence(event);
@@ -274,15 +282,24 @@ export class KeyboardShortcutService {
    * Prevents shortcuts from interfering with text input
    */
   private isTypingInInputField(event: KeyboardEvent): boolean {
-    const target = event.target as HTMLElement;
-    if (!target) return false;
-    if (typeof target.tagName !== 'string') return false;
+    return this.isEditableElement(event.target) || this.isEditableElement(document.activeElement);
+  }
+
+  private isEditableElement(target: EventTarget | Element | null): boolean {
+    if (!(target instanceof Element)) return false;
 
     const tagName = target.tagName.toLowerCase();
-    const isEditable = target.isContentEditable;
     const isInput = tagName === 'input' || tagName === 'textarea' || tagName === 'select';
+    if (isInput) return true;
 
-    return isEditable || isInput;
+    return (
+      (target instanceof HTMLElement && target.isContentEditable) ||
+      Boolean(target.closest('[contenteditable="true"], [role="textbox"]'))
+    );
+  }
+
+  private isImeComposing(event: KeyboardEvent): boolean {
+    return event.isComposing || event.key === 'Process' || event.keyCode === 229;
   }
 
   /**

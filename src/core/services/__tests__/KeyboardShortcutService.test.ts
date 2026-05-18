@@ -1,9 +1,41 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
-import type { KeyboardShortcutStorage } from '@/core/types/keyboardShortcut';
+import type {
+  KeyboardShortcutConfig,
+  KeyboardShortcutStorage,
+} from '@/core/types/keyboardShortcut';
 
 import { keyboardShortcutService } from '../KeyboardShortcutService';
+
+function createCustomSingleLetterConfig(): KeyboardShortcutConfig {
+  return {
+    previous: {
+      action: 'timeline:previous',
+      modifiers: [],
+      key: 'p',
+      sequenceLength: 1,
+    },
+    next: {
+      action: 'timeline:next',
+      modifiers: [],
+      key: 'n',
+      sequenceLength: 1,
+    },
+    first: {
+      action: 'timeline:first',
+      modifiers: [],
+      key: 'g',
+      sequenceLength: 2,
+    },
+    last: {
+      action: 'timeline:last',
+      modifiers: ['Shift'],
+      key: 'G',
+      sequenceLength: 2,
+    },
+  };
+}
 
 describe('KeyboardShortcutService', () => {
   beforeEach(() => {
@@ -92,5 +124,85 @@ describe('KeyboardShortcutService', () => {
     expect(listener).toHaveBeenCalledWith('timeline:last', expect.any(KeyboardEvent));
 
     unsubscribe();
+  });
+
+  it('ignores shortcuts during IME composition', async () => {
+    await keyboardShortcutService.saveConfig(createCustomSingleLetterConfig());
+
+    await keyboardShortcutService.init();
+
+    const listener = vi.fn();
+    const unsubscribe = keyboardShortcutService.on(listener);
+    const event = new KeyboardEvent('keydown', {
+      key: 'n',
+      bubbles: true,
+      cancelable: true,
+      isComposing: true,
+    });
+
+    window.dispatchEvent(event);
+
+    expect(listener).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+
+    unsubscribe();
+  });
+
+  it('ignores shortcuts from descendants of contenteditable chat inputs', async () => {
+    await keyboardShortcutService.saveConfig(createCustomSingleLetterConfig());
+
+    await keyboardShortcutService.init();
+
+    const editor = document.createElement('div');
+    editor.setAttribute('contenteditable', 'true');
+    editor.setAttribute('role', 'textbox');
+    const child = document.createElement('span');
+    editor.appendChild(child);
+    document.body.appendChild(editor);
+
+    const listener = vi.fn();
+    const unsubscribe = keyboardShortcutService.on(listener);
+    const event = new KeyboardEvent('keydown', {
+      key: 'n',
+      bubbles: true,
+      cancelable: true,
+    });
+
+    child.dispatchEvent(event);
+
+    expect(listener).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+
+    unsubscribe();
+    editor.remove();
+  });
+
+  it('ignores shortcuts while a contenteditable chat input is focused', async () => {
+    await keyboardShortcutService.saveConfig(createCustomSingleLetterConfig());
+
+    await keyboardShortcutService.init();
+
+    const editor = document.createElement('div');
+    editor.setAttribute('contenteditable', 'true');
+    editor.setAttribute('role', 'textbox');
+    editor.tabIndex = 0;
+    document.body.appendChild(editor);
+    editor.focus();
+
+    const listener = vi.fn();
+    const unsubscribe = keyboardShortcutService.on(listener);
+    const event = new KeyboardEvent('keydown', {
+      key: 'n',
+      bubbles: true,
+      cancelable: true,
+    });
+
+    window.dispatchEvent(event);
+
+    expect(listener).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+
+    unsubscribe();
+    editor.remove();
   });
 });
