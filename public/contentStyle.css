@@ -11125,3 +11125,41 @@ body.gv-hide-input-halo .nl-canvas {
 :root.gv-platform-themed .gv-pm-lock.active {
   box-shadow: 0 0 0 3px var(--gv-pm-brand-soft) !important;
 }
+
+/* Response action copy image menu */
+.gv-response-image-menu {
+  position: fixed;
+  background-color: var(--timeline-tooltip-bg);
+  border: 1px solid var(--timeline-tooltip-border);
+  border-radius: 8px;
+  box-shadow: var(--timeline-tooltip-shadow);
+  padding: 4px 0;
+  z-index: 2147483647;
+  min-width: 140px;
+  animation: gv-menu-in 0.12s ease-out;
+}
+
+@keyframes gv-menu-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.gv-response-image-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--timeline-tooltip-text);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.1s ease;
+}
+
+.gv-response-image-menu-item:hover {
+  background-color: var(--timeline-dot-active-color);
+  color: #fff;
+}
