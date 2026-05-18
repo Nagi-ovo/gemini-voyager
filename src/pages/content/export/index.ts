@@ -1934,7 +1934,7 @@ function isUnsupportedClipboardError(error: unknown): boolean {
 async function handleResponseCopyImageClick(
   trigger: HTMLElement,
   getCurrentLanguage: () => AppLanguage,
-  imageWidth: number = 620,
+  imageWidth: number = DEFAULT_IMAGE_EXPORT_WIDTH,
 ): Promise<void> {
   if (trigger.dataset.gvCopyImageBusy === '1') {
     return;

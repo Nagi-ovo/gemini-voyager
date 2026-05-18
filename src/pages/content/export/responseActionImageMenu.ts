@@ -15,6 +15,7 @@ export interface ResponseActionCopyImageMenuOptions {
 }
 
 let activeMenu: HTMLElement | null = null;
+let activeOutsideClickHandler: ((e: MouseEvent) => void) | null = null;
 
 export function showResponseActionCopyImageMenu(options: ResponseActionCopyImageMenuOptions): void {
   hideResponseActionCopyImageMenu();
@@ -68,13 +69,17 @@ export function showResponseActionCopyImageMenu(options: ResponseActionCopyImage
   const handleOutsideClick = (e: MouseEvent) => {
     if (activeMenu && !activeMenu.contains(e.target as Node) && !options.anchor.contains(e.target as Node)) {
       hideResponseActionCopyImageMenu();
-      document.removeEventListener('mousedown', handleOutsideClick);
     }
   };
+  activeOutsideClickHandler = handleOutsideClick;
   document.addEventListener('mousedown', handleOutsideClick);
 }
 
 export function hideResponseActionCopyImageMenu(): void {
+  if (activeOutsideClickHandler) {
+    document.removeEventListener('mousedown', activeOutsideClickHandler);
+    activeOutsideClickHandler = null;
+  }
   if (activeMenu) {
     activeMenu.remove();
     activeMenu = null;
