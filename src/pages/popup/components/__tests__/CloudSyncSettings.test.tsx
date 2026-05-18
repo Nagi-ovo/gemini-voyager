@@ -88,6 +88,7 @@ describe('CloudSyncSettings auth flow', () => {
     }
     document.body.innerHTML = '';
     vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   beforeEach(() => {
@@ -186,6 +187,87 @@ describe('CloudSyncSettings auth flow', () => {
       expect.objectContaining({
         type: 'gv.sync.authenticate',
       }),
+    );
+  });
+
+  it('blocks overwrite when Drive has no folders payload', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
+      if (message.type === 'gv.sync.getState') {
+        return Promise.resolve({ ok: true, state: baseState });
+      }
+      if (message.type === 'gv.sync.download') {
+        return Promise.resolve({
+          ok: true,
+          state: { ...baseState, isAuthenticated: true },
+          data: {
+            prompts: { items: [] },
+            starred: { data: { messages: {} } },
+          },
+        });
+      }
+      return Promise.resolve({ ok: true });
+    });
+
+    const chromeMock = createChromeMock(sendMessageMock);
+    (chromeMock.tabs.sendMessage as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      data: {
+        folders: [
+          {
+            id: 'folder-1',
+            name: 'Existing',
+            parentId: null,
+            isExpanded: true,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        ],
+        folderContents: {},
+      },
+    });
+    (chromeMock.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      gvFolderData: {
+        folders: [
+          {
+            id: 'folder-1',
+            name: 'Existing',
+            parentId: null,
+            isExpanded: true,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        ],
+        folderContents: {},
+      },
+      gvPromptItems: [],
+      geminiTimelineStarredMessages: { messages: {} },
+      [StorageKeys.TIMELINE_HIERARCHY]: { conversations: {} },
+    });
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<CloudSyncSettings />);
+    });
+    await flushMicrotasks();
+
+    const overwriteButton = Array.from(container.querySelectorAll('button')).find((btn) =>
+      (btn.textContent || '').includes('syncOverwrite'),
+    );
+    expect(overwriteButton).toBeTruthy();
+
+    await act(async () => {
+      overwriteButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await flushMicrotasks();
+
+    expect(confirmSpy).toHaveBeenCalledOnce();
+    expect(container.textContent).toContain('syncOverwriteMissingFolders');
+    expect(chromeMock.storage.local.set).not.toHaveBeenCalled();
+    expect(chromeMock.tabs.sendMessage).not.toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ type: 'gv.folders.reload' }),
     );
   });
 

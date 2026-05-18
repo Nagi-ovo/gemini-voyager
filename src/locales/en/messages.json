@@ -1075,6 +1075,10 @@
     "message": "No sync data found in Drive",
     "description": "Error message when no data is found in Drive"
   },
+  "syncOverwriteMissingFolders": {
+    "message": "Drive does not have a folders backup to overwrite from. Your local folders were left unchanged.",
+    "description": "Error message when overwrite is blocked because Drive has no folders payload"
+  },
   "syncUploadFailed": {
     "message": "Upload failed",
     "description": "Error message when upload fails"

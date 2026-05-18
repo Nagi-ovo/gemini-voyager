@@ -1075,6 +1075,10 @@
     "message": "لم يتم العثور على بيانات مزامنة في Drive",
     "description": "Error message when no data is found in Drive"
   },
+  "syncOverwriteMissingFolders": {
+    "message": "لا يحتوي Drive على نسخة احتياطية للمجلدات يمكن استخدامها للاستبدال. لم يتم تغيير المجلدات المحلية.",
+    "description": "Error message when overwrite is blocked because Drive has no folders payload"
+  },
   "syncUploadFailed": {
     "message": "فشل الرفع",
     "description": "Error message when upload fails"

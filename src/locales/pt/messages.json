@@ -1075,6 +1075,10 @@
     "message": "Nenhum dado de sincronização encontrado no Drive",
     "description": "Error message when no data is found in Drive"
   },
+  "syncOverwriteMissingFolders": {
+    "message": "O Drive não tem um backup de pastas para sobrescrever. Suas pastas locais não foram alteradas.",
+    "description": "Error message when overwrite is blocked because Drive has no folders payload"
+  },
   "syncUploadFailed": {
     "message": "Falha no envio",
     "description": "Error message when upload fails"

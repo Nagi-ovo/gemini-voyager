@@ -1035,6 +1035,10 @@
     "message": "未在雲端找到同步資料",
     "description": "Error message when no data is found in Drive"
   },
+  "syncOverwriteMissingFolders": {
+    "message": "雲端沒有可用來覆蓋的資料夾備份。本機資料夾已保持不變。",
+    "description": "Error message when overwrite is blocked because Drive has no folders payload"
+  },
   "syncUploadFailed": {
     "message": "上傳失敗",
     "description": "Error message when upload fails"

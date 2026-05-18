@@ -1075,6 +1075,10 @@
     "message": "ドライブに同期データが見つかりません",
     "description": "Error message when no data is found in Drive"
   },
+  "syncOverwriteMissingFolders": {
+    "message": "ドライブに上書き元のフォルダーバックアップがありません。ローカルフォルダーは変更されませんでした。",
+    "description": "Error message when overwrite is blocked because Drive has no folders payload"
+  },
   "syncUploadFailed": {
     "message": "アップロードに失敗しました",
     "description": "Error message when upload fails"

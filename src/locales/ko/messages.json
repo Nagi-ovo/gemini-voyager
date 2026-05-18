@@ -1075,6 +1075,10 @@
     "message": "Drive 에서 동기화 데이터를 찾을 수 없습니다",
     "description": "Error message when no data is found in Drive"
   },
+  "syncOverwriteMissingFolders": {
+    "message": "Drive에 덮어쓸 폴더 백업이 없습니다. 로컬 폴더는 변경되지 않았습니다.",
+    "description": "Error message when overwrite is blocked because Drive has no folders payload"
+  },
   "syncUploadFailed": {
     "message": "업로드 실패",
     "description": "Error message when upload fails"

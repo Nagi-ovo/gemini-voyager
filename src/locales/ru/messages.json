@@ -1075,6 +1075,10 @@
     "message": "Данные синхронизации не найдены в Drive",
     "description": "Error message when no data is found in Drive"
   },
+  "syncOverwriteMissingFolders": {
+    "message": "В Drive нет резервной копии папок для перезаписи. Локальные папки не были изменены.",
+    "description": "Error message when overwrite is blocked because Drive has no folders payload"
+  },
   "syncUploadFailed": {
     "message": "Загрузка не удалась",
     "description": "Error message when upload fails"

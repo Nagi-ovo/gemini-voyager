@@ -1075,6 +1075,10 @@
     "message": "未在云端找到同步数据",
     "description": "Error message when no data is found in Drive"
   },
+  "syncOverwriteMissingFolders": {
+    "message": "云端没有可用于覆盖的文件夹备份。本地文件夹已保持不变。",
+    "description": "Error message when overwrite is blocked because Drive has no folders payload"
+  },
   "syncUploadFailed": {
     "message": "上传失败",
     "description": "Error message when upload fails"

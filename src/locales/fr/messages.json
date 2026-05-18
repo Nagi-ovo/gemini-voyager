@@ -1075,6 +1075,10 @@
     "message": "Aucune donnée sur Drive",
     "description": "Error message when no data is found in Drive"
   },
+  "syncOverwriteMissingFolders": {
+    "message": "Drive ne contient aucune sauvegarde de dossiers à utiliser pour l’écrasement. Vos dossiers locaux n’ont pas été modifiés.",
+    "description": "Error message when overwrite is blocked because Drive has no folders payload"
+  },
   "syncUploadFailed": {
     "message": "Échec upload",
     "description": "Error message when upload fails"

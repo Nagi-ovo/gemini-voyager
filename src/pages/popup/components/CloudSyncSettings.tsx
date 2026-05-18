@@ -563,7 +563,11 @@ export function CloudSyncSettings() {
           starred: cloudStarredPayload,
           timelineHierarchy: cloudTimelineHierarchyPayload,
         } = response.data;
-        const cloudFolderData = cloudFoldersPayload?.data || { folders: [], folderContents: {} };
+        const cloudFolderDataRaw = cloudFoldersPayload?.data;
+        const hasCloudFolderData = isFolderData(cloudFolderDataRaw);
+        const cloudFolderData = hasCloudFolderData
+          ? cloudFolderDataRaw
+          : { folders: [], folderContents: {} };
         const cloudPromptItems = cloudPromptsPayload?.items || [];
         const cloudStarredData: StarredMessagesData = cloudStarredPayload?.data || { messages: {} };
         const cloudTimelineHierarchyData: TimelineHierarchyData =
@@ -604,6 +608,12 @@ export function CloudSyncSettings() {
         }
 
         const shouldOverwrite = mode === 'overwrite';
+        if (shouldOverwrite && !hasCloudFolderData) {
+          setStatusMessage({ text: t('syncOverwriteMissingFolders'), kind: 'err' });
+          setIsDownloading(false);
+          return;
+        }
+
         const nextFolders = shouldOverwrite
           ? cloudFolderData
           : mergeFolderData(localFolders, cloudFolderData);
