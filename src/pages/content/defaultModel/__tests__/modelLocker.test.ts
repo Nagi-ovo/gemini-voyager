@@ -698,6 +698,393 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(darkItem.querySelector('.gv-default-star-btn')).toBeNull();
   });
 
+  it('injects star buttons into the 2026 redesigned overlay (gem-menu-item + .label-container)', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+
+    const container = document.createElement('div');
+    container.className = 'container';
+
+    const item = document.createElement('gem-menu-item');
+    item.setAttribute('role', 'menuitem');
+    item.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    item.innerHTML = `
+      <gem-menu-item-content class="checkmark-only">
+        <div class="leading-container"></div>
+        <div class="label-container">
+          <span class="label">3.1 Pro</span>
+          <div class="sublabel">Advanced math &amp; code</div>
+        </div>
+        <div class="trailing-container"></div>
+      </gem-menu-item-content>
+    `;
+
+    container.appendChild(item);
+    pane.appendChild(container);
+    document.body.appendChild(pane);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
+  });
+
+  it('auto-locks in the 2026 redesigned overlay layout (.selected, .label, .cdk-overlay-pane)', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultModel: {
+            id: 'e6fa609c3fa255c0',
+            name: '3.1 Pro',
+          },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+
+    const container = document.createElement('div');
+    container.className = 'container';
+
+    const flashItem = document.createElement('gem-menu-item');
+    flashItem.setAttribute('role', 'menuitem');
+    flashItem.setAttribute('data-mode-id', '56fdd199312815e2');
+    flashItem.classList.add('selected');
+    flashItem.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">3 Flash</span></div>
+      </gem-menu-item-content>
+    `;
+    flashItem.click = vi.fn();
+
+    const proItem = document.createElement('gem-menu-item');
+    proItem.setAttribute('role', 'menuitem');
+    proItem.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    proItem.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">3.1 Pro</span></div>
+      </gem-menu-item-content>
+    `;
+    proItem.click = vi.fn();
+
+    container.appendChild(flashItem);
+    container.appendChild(proItem);
+    pane.appendChild(container);
+    document.body.appendChild(pane);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(proItem.click).toHaveBeenCalledTimes(1);
+    expect(flashItem.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('does not re-click an already-selected item in the 2026 redesign (.selected class)', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultModel: {
+            id: 'e6fa609c3fa255c0',
+            name: '3.1 Pro',
+          },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    selectorBtn.textContent = 'Flash'; // trigger label may not match the chosen model
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+    const container = document.createElement('div');
+    container.className = 'container';
+
+    const proItem = document.createElement('gem-menu-item');
+    proItem.setAttribute('role', 'menuitem');
+    proItem.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    proItem.classList.add('selected');
+    proItem.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">3.1 Pro</span></div>
+      </gem-menu-item-content>
+    `;
+    proItem.click = vi.fn();
+
+    container.appendChild(proItem);
+    pane.appendChild(container);
+    document.body.appendChild(pane);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(proItem.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('injects star buttons on Thinking level submenu items (Standard/Extended)', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    // Main menu pane (containing the trigger row)
+    const mainPane = document.createElement('div');
+    mainPane.className = 'cdk-overlay-pane';
+    const mainContainer = document.createElement('div');
+    mainContainer.className = 'container';
+
+    const thinkingRow = document.createElement('gem-menu-item');
+    thinkingRow.setAttribute('role', 'menuitem');
+    thinkingRow.setAttribute('value', 'thinking_level');
+    thinkingRow.setAttribute('aria-haspopup', 'true');
+    thinkingRow.setAttribute('aria-controls', 'ng-menu-test-thinking');
+    thinkingRow.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">Thinking level</span></div>
+      </gem-menu-item-content>
+    `;
+    mainContainer.appendChild(thinkingRow);
+    mainPane.appendChild(mainContainer);
+    document.body.appendChild(mainPane);
+
+    // Submenu pane (Standard/Extended)
+    const submenuPane = document.createElement('div');
+    submenuPane.className = 'cdk-overlay-pane';
+    const submenuList = document.createElement('div');
+    submenuList.id = 'ng-menu-test-thinking';
+    submenuList.setAttribute('role', 'menu');
+
+    const standard = document.createElement('gem-menu-item');
+    standard.setAttribute('role', 'menuitem');
+    standard.classList.add('selected');
+    standard.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">Standard</span></div>
+      </gem-menu-item-content>
+    `;
+    const extended = document.createElement('gem-menu-item');
+    extended.setAttribute('role', 'menuitem');
+    extended.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">Extended</span></div>
+      </gem-menu-item-content>
+    `;
+    submenuList.appendChild(standard);
+    submenuList.appendChild(extended);
+    submenuPane.appendChild(submenuList);
+    document.body.appendChild(submenuPane);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(standard.querySelector('.gv-default-star-btn')).not.toBeNull();
+    expect(extended.querySelector('.gv-default-star-btn')).not.toBeNull();
+  });
+
+  it('fast-path: trigger pill short label ("Pro") matches stored long name ("3.1 Pro")', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultModel: { id: 'e6fa609c3fa255c0', name: '3.1 Pro' },
+          gvDefaultThinkingLevel: { index: 0, label: 'Standard' },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    // Trigger pill shows the short label that Gemini uses, not the menu's long name.
+    selectorBtn.textContent = 'Pro';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(3000);
+
+    // Must NOT have re-clicked the trigger; the user already has Pro + Standard.
+    expect(selectorBtn.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('fast-path: trigger pill text matches stored model + thinking level → no menu click', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        if (key === 'gvDefaultModel' || (Array.isArray(key) && key.includes('gvDefaultModel'))) {
+          callback({
+            gvDefaultModel: { id: 'e6fa609c3fa255c0', name: '3.1 Pro' },
+            gvDefaultThinkingLevel: { index: 1, label: 'Extended' },
+          });
+          return;
+        }
+        if (
+          key === 'gvDefaultThinkingLevel' ||
+          (Array.isArray(key) && key.includes('gvDefaultThinkingLevel'))
+        ) {
+          callback({ gvDefaultThinkingLevel: { index: 1, label: 'Extended' } });
+          return;
+        }
+        callback({});
+      },
+    );
+
+    history.replaceState({}, '', '/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    // Two-line trigger pill: model on line 1, thinking level on line 2
+    selectorBtn.textContent = '3.1 Pro\nExtended';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(selectorBtn.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('auto-locks Thinking level by opening submenu and clicking the target item', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultThinkingLevel: { index: 1, label: 'Extended' },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    selectorBtn.textContent = 'Flash'; // No thinking-level line → not at Extended
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    // Main pane with thinking row
+    const mainPane = document.createElement('div');
+    mainPane.className = 'cdk-overlay-pane';
+    const modelItem = document.createElement('gem-menu-item');
+    modelItem.setAttribute('role', 'menuitem');
+    modelItem.setAttribute('data-mode-id', '56fdd199312815e2');
+    modelItem.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">3 Flash</span></div></gem-menu-item-content>`;
+    const thinkingRow = document.createElement('gem-menu-item');
+    thinkingRow.setAttribute('role', 'menuitem');
+    thinkingRow.setAttribute('value', 'thinking_level');
+    thinkingRow.setAttribute('aria-haspopup', 'true');
+    thinkingRow.setAttribute('aria-controls', 'ng-menu-thinking-2');
+    thinkingRow.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">Thinking level</span></div></gem-menu-item-content>`;
+    thinkingRow.click = vi.fn();
+    mainPane.appendChild(modelItem);
+    mainPane.appendChild(thinkingRow);
+    document.body.appendChild(mainPane);
+
+    // Submenu pane
+    const submenuPane = document.createElement('div');
+    submenuPane.className = 'cdk-overlay-pane';
+    const submenuList = document.createElement('div');
+    submenuList.id = 'ng-menu-thinking-2';
+
+    const standard = document.createElement('gem-menu-item');
+    standard.setAttribute('role', 'menuitem');
+    standard.classList.add('selected');
+    standard.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">Standard</span></div></gem-menu-item-content>`;
+    standard.click = vi.fn();
+
+    const extended = document.createElement('gem-menu-item');
+    extended.setAttribute('role', 'menuitem');
+    extended.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">Extended</span></div></gem-menu-item-content>`;
+    extended.click = vi.fn();
+
+    submenuList.appendChild(standard);
+    submenuList.appendChild(extended);
+    submenuPane.appendChild(submenuList);
+    document.body.appendChild(submenuPane);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    // First tick (1s) — should detect thinking mismatch and call thinkingRow.click() and extended.click()
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(thinkingRow.click).toHaveBeenCalledTimes(1);
+    expect(extended.click).toHaveBeenCalledTimes(1);
+    expect(standard.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('does not inject star on the "Thinking level" submenu opener (aria-haspopup=true, no data-mode-id)', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+    const container = document.createElement('div');
+    container.className = 'container';
+
+    const modelItem = document.createElement('gem-menu-item');
+    modelItem.setAttribute('role', 'menuitem');
+    modelItem.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    modelItem.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">3.1 Pro</span></div>
+      </gem-menu-item-content>
+    `;
+
+    // Submenu trigger row — has a label, has role=menuitem, but no data-mode-id and aria-haspopup="true".
+    const thinkingLevel = document.createElement('gem-menu-item');
+    thinkingLevel.setAttribute('role', 'menuitem');
+    thinkingLevel.setAttribute('aria-haspopup', 'true');
+    thinkingLevel.setAttribute('aria-expanded', 'false');
+    thinkingLevel.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">Thinking level</span><div class="sublabel">Standard</div></div>
+        <div class="trailing-container"><gem-icon>arrow_right</gem-icon></div>
+      </gem-menu-item-content>
+    `;
+
+    container.appendChild(modelItem);
+    container.appendChild(thinkingLevel);
+    pane.appendChild(container);
+    document.body.appendChild(pane);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(modelItem.querySelector('.gv-default-star-btn')).not.toBeNull();
+    expect(thinkingLevel.querySelector('.gv-default-star-btn')).toBeNull();
+  });
+
   it('stops retrying after consecutive failures when target model is not found', async () => {
     // Set default model to a model that won't be found
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(

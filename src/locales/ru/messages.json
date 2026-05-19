@@ -1439,6 +1439,22 @@
     "message": "Default model cleared",
     "description": "Toast message when default model is cleared"
   },
+  "setAsDefaultThinkingLevel": {
+    "message": "Set as default thinking level",
+    "description": "Tooltip for setting default thinking level"
+  },
+  "cancelDefaultThinkingLevel": {
+    "message": "Cancel default thinking level",
+    "description": "Tooltip for cancelling default thinking level"
+  },
+  "defaultThinkingLevelSet": {
+    "message": "Default thinking level set: $1",
+    "description": "Toast message when default thinking level is set"
+  },
+  "defaultThinkingLevelCleared": {
+    "message": "Default thinking level cleared",
+    "description": "Toast message when default thinking level is cleared"
+  },
   "sidebarAutoHide": {
     "message": "Авто-скрытие боковой панели",
     "description": "Auto-hide sidebar toggle label"

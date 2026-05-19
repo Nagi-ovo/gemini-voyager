@@ -1439,6 +1439,22 @@
     "message": "기본 모델 해제됨",
     "description": "Toast message when default model is cleared"
   },
+  "setAsDefaultThinkingLevel": {
+    "message": "기본 사고 강도로 설정",
+    "description": "Tooltip for setting default thinking level"
+  },
+  "cancelDefaultThinkingLevel": {
+    "message": "기본 사고 강도 취소",
+    "description": "Tooltip for cancelling default thinking level"
+  },
+  "defaultThinkingLevelSet": {
+    "message": "기본 사고 강도 설정됨: $1",
+    "description": "Toast message when default thinking level is set"
+  },
+  "defaultThinkingLevelCleared": {
+    "message": "기본 사고 강도 해제됨",
+    "description": "Toast message when default thinking level is cleared"
+  },
   "sidebarAutoHide": {
     "message": "사이드바 자동 숨김",
     "description": "Auto-hide sidebar toggle label"

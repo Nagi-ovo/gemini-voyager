@@ -44,7 +44,8 @@ const i18n: Record<string, Copy> = {
   },
   'ja-JP': {
     title: 'Gemini ウェブ版リニューアル対応中',
-    intro: 'Gemini ウェブ版が大幅にリニューアルされたため、現在対応中です。影響を受ける可能性のある機能：',
+    intro:
+      'Gemini ウェブ版が大幅にリニューアルされたため、現在対応中です。影響を受ける可能性のある機能：',
     affected: ['デフォルトモデルの自動選択', 'フォルダ UI'],
     outro: `全体的な使用には支障はないはずです。その他の不具合を見つけた場合は、${a('GitHub で issue')} を立ててお知らせください。早急に修正します。Chrome Web Store の更新をお待ちください。`,
     dismiss: '了解',
@@ -82,7 +83,8 @@ const i18n: Record<string, Copy> = {
   },
   'ar-SA': {
     title: 'التكيف مع واجهة Gemini الجديدة',
-    intro: 'خضعت واجهة Gemini على الويب مؤخراً لتغيير كبير، وأنا أعمل على التكيف. الميزات التي قد تتأثر:',
+    intro:
+      'خضعت واجهة Gemini على الويب مؤخراً لتغيير كبير، وأنا أعمل على التكيف. الميزات التي قد تتأثر:',
     affected: ['الاختيار التلقائي للنموذج الافتراضي', 'واجهة المجلدات'],
     outro: `الاستخدام العام يجب أن يبقى دون مشاكل كبيرة. إذا واجهت أي مشكلات أخرى، الرجاء فتح ${a('issue على GitHub')} وسأقوم بإصلاحها في أقرب وقت. يُرجى انتظار تحديث Chrome Web Store.`,
     dismiss: 'فهمت',
@@ -211,7 +213,9 @@ onUnmounted(() => {
   border-radius: 8px;
   color: var(--vp-c-text-2);
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 [dir='rtl'] .gv-announce-close {
@@ -294,7 +298,9 @@ onUnmounted(() => {
   font-size: 0.9em;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
 }
 
 .gv-announce-btn:hover {
@@ -314,7 +320,9 @@ onUnmounted(() => {
 
 .gv-announce-enter-active .gv-announce-card,
 .gv-announce-leave-active .gv-announce-card {
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+  transition:
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.22s ease;
 }
 
 .gv-announce-enter-from,

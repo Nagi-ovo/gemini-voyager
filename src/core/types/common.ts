@@ -111,6 +111,7 @@ export const StorageKeys = {
 
   // Default Model
   DEFAULT_MODEL: 'gvDefaultModel',
+  DEFAULT_THINKING_LEVEL: 'gvDefaultThinkingLevel',
 
   // Folder filtering
   GV_FOLDER_FILTER_USER_ONLY: 'gvFolderFilterUserOnly',

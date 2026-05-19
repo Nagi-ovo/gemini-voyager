@@ -1439,6 +1439,22 @@
     "message": "已取消默认模型",
     "description": "Toast message when default model is cleared"
   },
+  "setAsDefaultThinkingLevel": {
+    "message": "设为默认思考强度",
+    "description": "Tooltip for setting default thinking level"
+  },
+  "cancelDefaultThinkingLevel": {
+    "message": "取消默认思考强度",
+    "description": "Tooltip for cancelling default thinking level"
+  },
+  "defaultThinkingLevelSet": {
+    "message": "已设置默认思考强度：$1",
+    "description": "Toast message when default thinking level is set"
+  },
+  "defaultThinkingLevelCleared": {
+    "message": "已取消默认思考强度",
+    "description": "Toast message when default thinking level is cleared"
+  },
   "sidebarAutoHide": {
     "message": "侧边栏自动收起",
     "description": "侧边栏自动收起开关标签"

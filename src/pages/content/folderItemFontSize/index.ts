@@ -14,10 +14,7 @@ export const FOLDER_ITEM_FONT_SIZE_MAX = 18;
 export function clampFolderItemFontSize(value: unknown): number {
   const n = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(n)) return FOLDER_ITEM_FONT_SIZE_DEFAULT;
-  return Math.min(
-    FOLDER_ITEM_FONT_SIZE_MAX,
-    Math.max(FOLDER_ITEM_FONT_SIZE_MIN, Math.round(n)),
-  );
+  return Math.min(FOLDER_ITEM_FONT_SIZE_MAX, Math.max(FOLDER_ITEM_FONT_SIZE_MIN, Math.round(n)));
 }
 
 function applyFontSize(px: number) {
@@ -51,10 +48,7 @@ export function startFolderItemFontSizeAdjuster() {
     applyFontSize(current);
   });
 
-  const handler = (
-    changes: Record<string, chrome.storage.StorageChange>,
-    area: string,
-  ) => {
+  const handler = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
     if (area !== 'sync' || !changes[STORAGE_KEY]) return;
     current = clampFolderItemFontSize(changes[STORAGE_KEY].newValue);
     applyFontSize(current);

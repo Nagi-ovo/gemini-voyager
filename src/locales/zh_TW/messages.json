@@ -1439,6 +1439,22 @@
     "message": "已取消預設模型",
     "description": "Toast message when default model is cleared"
   },
+  "setAsDefaultThinkingLevel": {
+    "message": "設為預設思考強度",
+    "description": "Tooltip for setting default thinking level"
+  },
+  "cancelDefaultThinkingLevel": {
+    "message": "取消預設思考強度",
+    "description": "Tooltip for cancelling default thinking level"
+  },
+  "defaultThinkingLevelSet": {
+    "message": "已設定預設思考強度：$1",
+    "description": "Toast message when default thinking level is set"
+  },
+  "defaultThinkingLevelCleared": {
+    "message": "已取消預設思考強度",
+    "description": "Toast message when default thinking level is cleared"
+  },
   "sidebarAutoHide": {
     "message": "側邊欄自動收起",
     "description": "側邊欄自動收起開關標籤"

@@ -8,6 +8,10 @@ type DefaultModelSetting =
 
 type StoredDefaultModelSetting = { id: string; name: string };
 
+// 2026 redesign: the trigger pill optionally shows a "Thinking level" line below the model.
+// We let users star Standard / Extended and lock that too.
+type DefaultThinkingLevel = { index: number; label: string };
+
 // Known Flash/Fast model IDs that should skip auto-selection (page defaults to these)
 const FAST_MODEL_IDS = new Set([
   '56fdd199312815e2', // Gemini 2.0 Flash
@@ -17,11 +21,16 @@ const FAST_MODEL_IDS = new Set([
 const FAST_MODEL_NAMES = ['flash', '2.0 flash', 'gemini 2.0 flash', 'fast', '高速', '高速モード'];
 
 // Gemini may use either role="menuitemradio" or role="menuitem" depending on the UI variant.
+// The 2026 redesign uses <gem-menu-item data-mode-id="..." role="menuitem">.
 const MODE_ITEM_SELECTOR = '[role="menuitemradio"], [role="menuitem"]';
 
 // Fallback selector that excludes known non-model menus (e.g. the settings/profile dropdown).
 const NON_MODEL_MENU_EXCLUSION_FALLBACK =
   '.mat-mdc-menu-panel[role="menu"]:not(.desktop-settings-menu)';
+
+// 2026 redesign: model picker is now rendered inside a plain cdk-overlay-pane (no Material menu wrapper).
+// The pane is identified by containing one or more items carrying data-mode-id.
+const NEW_LAYOUT_ITEM_SELECTOR = '[data-mode-id]';
 
 const CHAT_INPUT_SELECTORS = [
   'main rich-textarea [contenteditable="true"]',
@@ -40,6 +49,7 @@ class DefaultModelManager {
   private checkTimer: number | null = null;
   private isLocked = false;
   private currentDefaultModel: DefaultModelSetting | null = null;
+  private currentDefaultThinkingLevel: DefaultThinkingLevel | null = null;
   private initialized = false;
   private pendingMenuPanelInjections = new WeakSet<HTMLElement>();
   private menuPanelInjectAttempts = new WeakMap<HTMLElement, number>();
@@ -72,6 +82,10 @@ class DefaultModelManager {
     // Initialize cache
     const result = await storageService.get<unknown>(StorageKeys.DEFAULT_MODEL);
     this.currentDefaultModel = result.success ? this.parseStoredDefaultModel(result.data) : null;
+    const thinkingResult = await storageService.get<unknown>(StorageKeys.DEFAULT_THINKING_LEVEL);
+    this.currentDefaultThinkingLevel = thinkingResult.success
+      ? this.parseStoredThinkingLevel(thinkingResult.data)
+      : null;
     this.initialized = true;
 
     this.initObserver();
@@ -193,21 +207,49 @@ class DefaultModelManager {
       return root;
     }
 
-    return (
+    // 2026 redesign: the added node may be a cdk-overlay-pane containing gem-menu-item entries
+    // (model menu) or the thinking-level submenu (no data-mode-id, but aria-controls'd by a
+    // value="thinking_level" row that lives in a sibling overlay).
+    if (root.matches?.('.cdk-overlay-pane')) {
+      if (root.querySelector(NEW_LAYOUT_ITEM_SELECTOR) !== null) return root;
+      if (this.isThinkingLevelSubmenuPane(root)) return root;
+    }
+
+    const legacy =
       root.querySelector<HTMLElement>('.mat-mdc-menu-panel.gds-mode-switch-menu[role="menu"]') ??
-      root.querySelector<HTMLElement>('mat-action-list.gds-mode-switch-menu-list') ??
-      root.querySelector<HTMLElement>(NON_MODEL_MENU_EXCLUSION_FALLBACK)
-    );
+      root.querySelector<HTMLElement>('mat-action-list.gds-mode-switch-menu-list');
+    if (legacy) return legacy;
+
+    const newItem = root.querySelector<HTMLElement>(NEW_LAYOUT_ITEM_SELECTOR);
+    if (newItem) {
+      const pane = newItem.closest<HTMLElement>('.cdk-overlay-pane');
+      if (pane) return pane;
+    }
+
+    // Thinking submenu may appear nested inside a different root (rare; observer normally sees the pane directly).
+    const thinkingPane = this.findThinkingLevelSubmenuPane();
+    if (thinkingPane && root.contains(thinkingPane)) return thinkingPane;
+
+    return root.querySelector<HTMLElement>(NON_MODEL_MENU_EXCLUSION_FALLBACK);
   }
 
   private getModeSwitchMenuPanel(): HTMLElement | null {
-    return (
+    const legacy =
       document.querySelector<HTMLElement>(
         '.mat-mdc-menu-panel.gds-mode-switch-menu[role="menu"]',
-      ) ??
-      document.querySelector<HTMLElement>('mat-action-list.gds-mode-switch-menu-list') ??
-      document.querySelector<HTMLElement>(NON_MODEL_MENU_EXCLUSION_FALLBACK)
+      ) ?? document.querySelector<HTMLElement>('mat-action-list.gds-mode-switch-menu-list');
+    if (legacy) return legacy;
+
+    // 2026 redesign: any cdk-overlay-pane that contains a [data-mode-id] item is the model picker.
+    const newItem = document.querySelector<HTMLElement>(
+      `.cdk-overlay-pane ${NEW_LAYOUT_ITEM_SELECTOR}`,
     );
+    if (newItem) {
+      const pane = newItem.closest<HTMLElement>('.cdk-overlay-pane');
+      if (pane) return pane;
+    }
+
+    return document.querySelector<HTMLElement>(NON_MODEL_MENU_EXCLUSION_FALLBACK);
   }
 
   private async waitForModeSwitchMenuPanel(timeoutMs: number): Promise<HTMLElement | null> {
@@ -254,13 +296,19 @@ class DefaultModelManager {
     const items = menuPanel.querySelectorAll(MODE_ITEM_SELECTOR);
     if (!items.length) return false;
 
+    // If this is the thinking-level submenu pane, run the dedicated injector.
+    if (menuPanel.matches?.('.cdk-overlay-pane') && this.isThinkingLevelSubmenuPane(menuPanel)) {
+      return this.injectThinkingLevelStars(menuPanel);
+    }
+
     // Guard: only inject into menus that look like a model selector.
-    // Model menus always contain .title-and-description, .mode-title, or data-mode-id.
+    // Model menus always contain .title-and-description, .mode-title, .label-container, or data-mode-id.
     // Non-model menus (theme picker, help, etc.) lack these even if they use menuitemradio.
     const isModelMenu =
       menuPanel.querySelector('[data-mode-id]') !== null ||
       menuPanel.querySelector('.mode-title') !== null ||
-      menuPanel.querySelector('.title-and-description') !== null;
+      menuPanel.querySelector('.title-and-description') !== null ||
+      menuPanel.querySelector('.label-container') !== null;
     if (!isModelMenu) return false;
 
     // Use cached value efficiently
@@ -273,7 +321,18 @@ class DefaultModelManager {
     const currentDefault = this.currentDefaultModel;
 
     items.forEach((item) => {
-      const modelName = this.getModelNameFromItem(item as HTMLElement);
+      const itemEl = item as HTMLElement;
+
+      // Skip submenu triggers (e.g. "Thinking level" → Standard/Extended in the 2026 redesign).
+      // Real model rows always resolve to a stable model id; submenu rows do not.
+      if (itemEl.getAttribute('aria-haspopup') === 'true') return;
+      if (itemEl.getAttribute('role') === 'menuitem' && !this.getModelIdFromItem(itemEl)) {
+        // role=menuitem without any resolvable id is either a submenu opener or a non-model entry.
+        // role=menuitemradio (legacy variant) may legitimately lack data-mode-id, so we keep it.
+        return;
+      }
+
+      const modelName = this.getModelNameFromItem(itemEl);
       if (!modelName) return;
 
       // Avoid duplicates
@@ -294,11 +353,14 @@ class DefaultModelManager {
         await this.handleStarClick(modelName, btn);
       });
 
-      // Finding the correct container (title-and-description)
-      const titleContainer = item.querySelector('.title-and-description');
+      // Finding the correct container. The 2026 redesign uses .label-container; older
+      // variants use .title-and-description.
+      const titleContainer = item.querySelector('.title-and-description, .label-container');
 
       if (titleContainer) {
-        const titleEl = titleContainer.querySelector('.mode-title, .gds-title-m, .gds-label-l');
+        const titleEl = titleContainer.querySelector(
+          '.mode-title, .gds-title-m, .gds-label-l, .label',
+        );
         if (titleEl) {
           const titleParent = titleEl.parentElement;
           let wrapper = titleContainer.querySelector('.gv-title-wrapper') as HTMLElement | null;
@@ -339,8 +401,151 @@ class DefaultModelManager {
     return true;
   }
 
+  private async injectThinkingLevelStars(submenuPane: HTMLElement): Promise<boolean> {
+    const items = Array.from(
+      submenuPane.querySelectorAll<HTMLElement>('gem-menu-item, [role="menuitem"]'),
+    );
+    if (!items.length) return false;
+
+    if (!this.initialized) {
+      const result = await storageService.get<unknown>(StorageKeys.DEFAULT_THINKING_LEVEL);
+      this.currentDefaultThinkingLevel = result.success
+        ? this.parseStoredThinkingLevel(result.data)
+        : null;
+      this.initialized = true;
+    }
+
+    const currentDefault = this.currentDefaultThinkingLevel;
+
+    items.forEach((item, index) => {
+      const label = this.getThinkingLevelLabel(item);
+      if (!label) return;
+
+      if (item.querySelector('.gv-default-star-btn')) {
+        this.updateThinkingStarState(item, index, label, currentDefault);
+        return;
+      }
+
+      const btn = document.createElement('button');
+      btn.className = 'gv-default-star-btn';
+      btn.innerHTML = this.getStarIcon(false);
+      btn.title = chrome.i18n.getMessage('setAsDefaultThinkingLevel');
+
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        await this.handleThinkingLevelStarClick(index, label, btn);
+      });
+
+      const labelContainer = item.querySelector('.label-container');
+      if (labelContainer) {
+        const titleEl = labelContainer.querySelector('.label, .gds-title-m, .gds-label-l');
+        if (titleEl) {
+          const titleParent = titleEl.parentElement;
+          let wrapper = labelContainer.querySelector('.gv-title-wrapper') as HTMLElement | null;
+          if (!wrapper && titleParent?.classList.contains('gv-title-wrapper')) {
+            wrapper = titleParent;
+          }
+          if (!wrapper) {
+            wrapper = document.createElement('div');
+            wrapper.className = 'gv-title-wrapper';
+            wrapper.style.cssText = 'display: flex; align-items: center; width: 100%;';
+            if (titleParent) {
+              titleParent.insertBefore(wrapper, titleEl);
+            } else {
+              labelContainer.appendChild(wrapper);
+            }
+            wrapper.appendChild(titleEl);
+          }
+          wrapper.appendChild(btn);
+        } else {
+          labelContainer.appendChild(btn);
+        }
+      } else {
+        item.appendChild(btn);
+      }
+
+      this.updateThinkingStarState(item, index, label, currentDefault);
+    });
+
+    return true;
+  }
+
+  private getThinkingLevelLabel(item: HTMLElement): string {
+    const titleEl = item.querySelector('.label, .gds-title-m, .gds-label-l');
+    return titleEl?.textContent?.trim() || '';
+  }
+
+  private isThinkingDefaultForItem(
+    currentDefault: DefaultThinkingLevel | null,
+    index: number,
+    label: string,
+  ): boolean {
+    if (!currentDefault) return false;
+    if (currentDefault.label && currentDefault.label === label) return true;
+    return currentDefault.index === index;
+  }
+
+  private updateThinkingStarState(
+    item: HTMLElement,
+    index: number,
+    label: string,
+    currentDefault: DefaultThinkingLevel | null,
+  ) {
+    const btn = item.querySelector('.gv-default-star-btn') as HTMLElement | null;
+    if (!btn) return;
+    if (!btn.hasAttribute('data-event-bound')) {
+      btn.setAttribute('data-event-bound', 'true');
+      btn.addEventListener('mousedown', (e) => e.stopPropagation());
+      btn.addEventListener('click', (e) => e.stopPropagation());
+    }
+    const isDefault = this.isThinkingDefaultForItem(currentDefault, index, label);
+    if (isDefault) {
+      btn.classList.add('is-default');
+      btn.innerHTML = this.getStarIcon(true);
+      btn.title = chrome.i18n.getMessage('cancelDefaultThinkingLevel');
+    } else {
+      btn.classList.remove('is-default');
+      btn.innerHTML = this.getStarIcon(false);
+      btn.title = chrome.i18n.getMessage('setAsDefaultThinkingLevel');
+    }
+  }
+
+  private async handleThinkingLevelStarClick(index: number, label: string, btn: HTMLElement) {
+    const isCurrentlyDefault = this.isThinkingDefaultForItem(
+      this.currentDefaultThinkingLevel,
+      index,
+      label,
+    );
+    const nextDefault: DefaultThinkingLevel | null = isCurrentlyDefault ? null : { index, label };
+
+    this.currentDefaultThinkingLevel = nextDefault;
+
+    const itemEl = btn.closest('gem-menu-item, [role="menuitem"]');
+    if (itemEl instanceof HTMLElement) {
+      this.updateThinkingStarState(itemEl, index, label, nextDefault);
+    }
+
+    if (nextDefault) {
+      this.showToast(chrome.i18n.getMessage('defaultThinkingLevelSet', [label]));
+    } else {
+      this.showToast(chrome.i18n.getMessage('defaultThinkingLevelCleared'));
+    }
+
+    const submenu = this.findThinkingLevelSubmenuPane();
+    if (submenu) {
+      void this.injectThinkingLevelStars(submenu);
+    }
+
+    if (isCurrentlyDefault) {
+      await storageService.remove(StorageKeys.DEFAULT_THINKING_LEVEL);
+    } else {
+      await storageService.set(StorageKeys.DEFAULT_THINKING_LEVEL, nextDefault);
+    }
+  }
+
   private getModelNameFromItem(item: HTMLElement): string {
-    const titleEl = item.querySelector('.mode-title, .gds-title-m, .gds-label-l');
+    const titleEl = item.querySelector('.mode-title, .gds-title-m, .gds-label-l, .label');
     return titleEl?.textContent?.trim() || '';
   }
 
@@ -512,12 +717,20 @@ class DefaultModelManager {
     const result = await storageService.get<unknown>(StorageKeys.DEFAULT_MODEL);
     const targetModel = result.success ? this.parseStoredDefaultModel(result.data) : null;
     this.currentDefaultModel = targetModel;
+
+    const thinkingResult = await storageService.get<unknown>(StorageKeys.DEFAULT_THINKING_LEVEL);
+    const targetThinking = thinkingResult.success
+      ? this.parseStoredThinkingLevel(thinkingResult.data)
+      : null;
+    this.currentDefaultThinkingLevel = targetThinking;
+
     this.initialized = true;
 
-    if (!targetModel) return;
+    if (!targetModel && !targetThinking) return;
 
-    // Check if the target model is a Flash/Fast model (default model, skip auto-selection)
-    if (this.isFastModel(targetModel)) {
+    // Skip when the only target is the Flash/Fast model and no thinking preference exists —
+    // Gemini already defaults to Flash, so a no-op lock loop just wastes ticks.
+    if (targetModel && this.isFastModel(targetModel) && !targetThinking) {
       return;
     }
 
@@ -546,8 +759,63 @@ class DefaultModelManager {
         return;
       }
 
-      await this.tryLockToModel(targetModel);
+      await this.tickLock(targetModel, targetThinking);
     }, 1000);
+  }
+
+  /**
+   * Single tick: cheap fast-path via trigger pill text, then targeted lock if needed.
+   * Handles both model and thinking-level prefs.
+   */
+  private async tickLock(
+    targetModel: DefaultModelSetting | null,
+    targetThinking: DefaultThinkingLevel | null,
+  ) {
+    const lines = this.readTriggerPillLines();
+    const modelOk = !targetModel || this.modelMatchesLines(targetModel, lines);
+    const thinkingOk = !targetThinking || this.thinkingMatchesLines(targetThinking, lines);
+
+    if (modelOk && thinkingOk) {
+      if (this.checkTimer) clearInterval(this.checkTimer);
+      this.consecutiveFailures = 0;
+      return;
+    }
+
+    if (!modelOk && targetModel) {
+      await this.tryLockToModel(targetModel);
+      return;
+    }
+
+    if (!thinkingOk && targetThinking) {
+      await this.tryLockToThinkingLevel(targetThinking);
+    }
+  }
+
+  private modelMatchesLines(target: DefaultModelSetting, lines: string[]): boolean {
+    if (!lines.length) return false;
+    const modelLine = lines[0].toLowerCase().trim();
+    const targetName = target.name.toLowerCase().trim();
+    if (!targetName || !modelLine) return false;
+    const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const wholeWordIn = (needle: string, haystack: string) =>
+      new RegExp(`(^|\\b)${escape(needle)}(\\b|$)`, 'i').test(haystack);
+    if (modelLine === targetName) return true;
+    if (wholeWordIn(targetName, modelLine)) return true;
+    // Gemini's trigger pill shows the short variant ("Pro", "Flash") while menu items
+    // expose the full variant ("3.1 Pro", "3 Flash") that we persisted. Accept the
+    // reverse direction (line is a word-bounded substring of the stored name) so the
+    // fast-path correctly recognises "Pro" === stored "3.1 Pro" and stops re-clicking.
+    if (modelLine.length >= 2 && wholeWordIn(modelLine, targetName)) return true;
+    return false;
+  }
+
+  private thinkingMatchesLines(target: DefaultThinkingLevel, lines: string[]): boolean {
+    // Gemini omits the thinking-level line in the trigger pill when at Standard (index 0, the default).
+    if (lines.length < 2) {
+      return target.index === 0 || target.label.toLowerCase().trim() === 'standard';
+    }
+    const thinkingLine = lines.slice(1).join(' ').toLowerCase().trim();
+    return thinkingLine === target.label.toLowerCase().trim();
   }
 
   private isNewConversation() {
@@ -578,11 +846,15 @@ class DefaultModelManager {
     const targetName = normalize(targetModel.name);
     const targetAsWholeWord = new RegExp(`(^|\\b)${escapeRegExp(targetName)}(\\b|$)`, 'i');
 
-    // 1. Find selector button
+    // 1. Find selector button. The 2026 redesign exposes the real button via
+    // [data-test-id="bard-mode-menu-button"]; older builds only had the inner
+    // .input-area-switch-label div (click bubbles to its parent button).
     const selectorBtn =
+      document.querySelector('[data-test-id="bard-mode-menu-button"]') ||
+      document.querySelector('button.input-area-switch') ||
       document.querySelector('.input-area-switch-label') ||
       document.querySelector('[data-test-id="model-selector"]') ||
-      document.querySelector('button[aria-haspopup="menu"].mat-mdc-menu-trigger'); // General fallback
+      document.querySelector('button[aria-haspopup="menu"].mat-mdc-menu-trigger'); // Legacy fallback
 
     if (!selectorBtn) return;
 
@@ -607,7 +879,16 @@ class DefaultModelManager {
       (selectorBtn as HTMLElement).click();
 
       const menuPanel = await this.waitForModeSwitchMenuPanel(1500);
-      if (!menuPanel) return;
+      if (!menuPanel) {
+        // Menu UI may have been restructured (e.g. Gemini redesign). Close any opened
+        // menu and count this as a failure so we don't loop forever toggling the trigger.
+        document.body.click();
+        this.consecutiveFailures++;
+        if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
+          clearInterval(this.checkTimer);
+        }
+        return;
+      }
 
       const items = menuPanel.querySelectorAll(MODE_ITEM_SELECTOR);
       let found = false;
@@ -622,7 +903,8 @@ class DefaultModelManager {
         if (targetItem instanceof HTMLElement) {
           const alreadySelected =
             targetItem.getAttribute('aria-checked') === 'true' ||
-            targetItem.classList.contains('is-selected');
+            targetItem.classList.contains('is-selected') ||
+            targetItem.classList.contains('selected');
 
           if (!alreadySelected) {
             targetItem.click();
@@ -640,7 +922,8 @@ class DefaultModelManager {
           if (normalize(modelName) === targetName) {
             const alreadySelected =
               (item as HTMLElement).getAttribute('aria-checked') === 'true' ||
-              (item as HTMLElement).classList.contains('is-selected');
+              (item as HTMLElement).classList.contains('is-selected') ||
+              (item as HTMLElement).classList.contains('selected');
 
             if (!alreadySelected) {
               (item as HTMLElement).click();
@@ -662,7 +945,8 @@ class DefaultModelManager {
           if (targetAsWholeWord.test(normalize(text))) {
             const alreadySelected =
               (item as HTMLElement).getAttribute('aria-checked') === 'true' ||
-              (item as HTMLElement).classList.contains('is-selected');
+              (item as HTMLElement).classList.contains('is-selected') ||
+              (item as HTMLElement).classList.contains('selected');
 
             if (!alreadySelected) {
               (item as HTMLElement).click();
@@ -677,8 +961,8 @@ class DefaultModelManager {
         }
       }
 
-      if (found && this.checkTimer) {
-        clearInterval(this.checkTimer);
+      if (found) {
+        // Reset failure counter; tickLock will clear the timer once both model + thinking are OK.
         this.consecutiveFailures = 0;
       }
       if (switchedModel) {
@@ -705,6 +989,98 @@ class DefaultModelManager {
     }
   }
 
+  private async tryLockToThinkingLevel(target: DefaultThinkingLevel) {
+    if (this.isLocked) return;
+    this.isLocked = true;
+
+    try {
+      const trigger =
+        document.querySelector<HTMLElement>('[data-test-id="bard-mode-menu-button"]') ??
+        document.querySelector<HTMLElement>('button.input-area-switch');
+      if (!trigger) return;
+
+      // Open the model menu first.
+      trigger.click();
+
+      const modelPane = await this.waitForModeSwitchMenuPanel(1500);
+      if (!modelPane) {
+        document.body.click();
+        this.consecutiveFailures++;
+        if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
+          clearInterval(this.checkTimer);
+        }
+        return;
+      }
+
+      const thinkingRow = this.findThinkingLevelTriggerRow();
+      if (!thinkingRow) {
+        // This model doesn't expose a Thinking level. Nothing to lock — stop trying.
+        document.body.click();
+        if (this.checkTimer) clearInterval(this.checkTimer);
+        return;
+      }
+
+      thinkingRow.click();
+
+      // Wait briefly for the submenu to mount.
+      const submenu = await this.waitForThinkingLevelSubmenu(1500);
+      if (!submenu) {
+        document.body.click();
+        this.consecutiveFailures++;
+        if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
+          clearInterval(this.checkTimer);
+        }
+        return;
+      }
+
+      const items = this.getThinkingLevelItems();
+      if (!items.length) {
+        document.body.click();
+        return;
+      }
+
+      const targetLabel = target.label.toLowerCase().trim();
+      const byLabel = items.find(
+        (it) => this.getThinkingLevelLabel(it).toLowerCase().trim() === targetLabel,
+      );
+      const byIndex = items[target.index] ?? null;
+      const targetItem = byLabel ?? byIndex;
+
+      if (!targetItem) {
+        document.body.click();
+        this.consecutiveFailures++;
+        if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
+          clearInterval(this.checkTimer);
+        }
+        return;
+      }
+
+      const alreadySelected = targetItem.classList.contains('selected');
+      if (!alreadySelected) {
+        targetItem.click();
+        this.focusChatInputAfterAutoSwitch();
+      } else {
+        document.body.click();
+      }
+
+      this.consecutiveFailures = 0;
+    } catch (e) {
+      console.error('Auto thinking-level lock failed', e);
+    } finally {
+      this.isLocked = false;
+    }
+  }
+
+  private async waitForThinkingLevelSubmenu(timeoutMs: number): Promise<HTMLElement | null> {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeoutMs) {
+      const pane = this.findThinkingLevelSubmenuPane();
+      if (pane?.isConnected && this.getThinkingLevelItems().length > 0) return pane;
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 50));
+    }
+    return null;
+  }
+
   private focusChatInputAfterAutoSwitch(): void {
     const focusDelayMs = 120;
     window.setTimeout(() => {
@@ -729,6 +1105,73 @@ class DefaultModelManager {
       }
     }
     return null;
+  }
+
+  // ==================== Thinking level helpers (2026 redesign) ====================
+
+  /**
+   * Find the "Thinking level" submenu row in any open model picker.
+   * Detected by the stable attribute value="thinking_level" rendered by Gemini.
+   */
+  private findThinkingLevelTriggerRow(): HTMLElement | null {
+    return document.querySelector<HTMLElement>(
+      '.cdk-overlay-pane [value="thinking_level"], .cdk-overlay-pane gem-menu-item[value="thinking_level"]',
+    );
+  }
+
+  /**
+   * Resolve the submenu pane (the one containing Standard/Extended) by walking
+   * from the Thinking level row's aria-controls to the matching menu id.
+   */
+  private findThinkingLevelSubmenuPane(): HTMLElement | null {
+    const row = this.findThinkingLevelTriggerRow();
+    const controlsId = row?.getAttribute('aria-controls');
+    if (!controlsId) return null;
+    const submenu = document.getElementById(controlsId);
+    if (!submenu) return null;
+    return submenu.closest<HTMLElement>('.cdk-overlay-pane') ?? submenu;
+  }
+
+  private getThinkingLevelItems(): HTMLElement[] {
+    const submenu = this.findThinkingLevelSubmenuPane();
+    if (!submenu) return [];
+    return Array.from(submenu.querySelectorAll<HTMLElement>('gem-menu-item, [role="menuitem"]'));
+  }
+
+  private isThinkingLevelSubmenuPane(pane: HTMLElement): boolean {
+    // The submenu pane never carries the trigger row itself — that lives only in the parent overlay.
+    if (pane.querySelector('[value="thinking_level"]')) return false;
+    const row = this.findThinkingLevelTriggerRow();
+    const controlsId = row?.getAttribute('aria-controls');
+    if (!controlsId) return false;
+    const submenuEl = document.getElementById(controlsId);
+    if (!submenuEl) return false;
+    return pane.id === controlsId || pane.contains(submenuEl);
+  }
+
+  /**
+   * Read the trigger pill's visible text. The 2026 redesign renders the model name and
+   * the optional thinking level on two separate lines (innerText newline-separated).
+   * Returns lower-cased lines so callers can match against stored labels.
+   */
+  private readTriggerPillLines(): string[] {
+    const btn =
+      document.querySelector<HTMLElement>('[data-test-id="bard-mode-menu-button"]') ??
+      document.querySelector<HTMLElement>('button.input-area-switch');
+    const text = btn?.innerText ?? btn?.textContent ?? '';
+    return text
+      .split(/\n+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  private parseStoredThinkingLevel(value: unknown): DefaultThinkingLevel | null {
+    if (typeof value !== 'object' || value === null) return null;
+    const record = value as Record<string, unknown>;
+    const index = typeof record.index === 'number' ? record.index : NaN;
+    const label = typeof record.label === 'string' ? record.label.trim() : '';
+    if (!Number.isFinite(index) || index < 0 || !label) return null;
+    return { index, label };
   }
 
   private parseStoredDefaultModel(value: unknown): DefaultModelSetting | null {

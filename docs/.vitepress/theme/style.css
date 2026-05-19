@@ -43,7 +43,7 @@
    Mobile menu rows are full-width, so a positioned ::before stretches into
    an awkward horizontal blob — there we swap to a text-shadow glow which
    naturally hugs the text. */
-a[href*="#announcement"] {
+a[href*='#announcement'] {
   position: relative;
   isolation: isolate;
   color: var(--vp-c-brand-1) !important;
@@ -51,12 +51,12 @@ a[href*="#announcement"] {
   transition: color 0.3s ease;
 }
 
-a[href*="#announcement"]:hover {
+a[href*='#announcement']:hover {
   color: var(--vp-c-brand-2) !important;
 }
 
 @media (min-width: 768px) {
-  a[href*="#announcement"]::before {
+  a[href*='#announcement']::before {
     content: '';
     position: absolute;
     inset: 6px -4px;
@@ -73,13 +73,14 @@ a[href*="#announcement"]:hover {
     transition: filter 0.3s ease;
   }
 
-  a[href*="#announcement"]:hover::before {
+  a[href*='#announcement']:hover::before {
     filter: blur(2px) brightness(1.2);
   }
 }
 
 @keyframes gv-announce-nav-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.65;
     transform: scale(0.96);
   }
@@ -90,13 +91,14 @@ a[href*="#announcement"]:hover {
 }
 
 @media (max-width: 767px) {
-  a[href*="#announcement"] {
+  a[href*='#announcement'] {
     animation: gv-announce-nav-text-glow 4s ease-in-out infinite;
   }
 }
 
 @keyframes gv-announce-nav-text-glow {
-  0%, 100% {
+  0%,
+  100% {
     text-shadow:
       0 0 8px color-mix(in oklch, var(--vp-c-brand-1) 35%, transparent),
       0 0 16px color-mix(in oklch, var(--vp-c-brand-1) 18%, transparent);
@@ -109,11 +111,11 @@ a[href*="#announcement"]:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  a[href*="#announcement"]::before {
+  a[href*='#announcement']::before {
     animation: none;
     opacity: 0.85;
   }
-  a[href*="#announcement"] {
+  a[href*='#announcement'] {
     animation: none;
   }
 }
