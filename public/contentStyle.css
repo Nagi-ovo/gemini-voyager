@@ -3496,19 +3496,18 @@ body.light-theme {
 /* Folder Container */
 .gv-folder-container {
   margin-bottom: 8px;
-  padding: 8px 8px 4px 12px;
-  /* Ensure alignment with Recent section */
+  padding: 8px 0 4px 0;
   margin-left: 0;
   font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
-/* Folder Header */
+/* Folder Header — left padding matches Gemini's native expandable-section-header (14px). */
 .gv-folder-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px 8px 0;
-  margin-bottom: 8px;
+  padding: 8px 6px 8px 14px;
+  margin-bottom: 4px;
   border-radius: 8px;
   transition:
     background-color 0.2s,
@@ -3524,15 +3523,19 @@ body.light-theme {
   flex: 1;
 }
 
-/* Match Gemini's sidebar label size instead of inheriting h1 defaults. */
+/* Match Gemini's native section title (.expandable-section-title.gds-body-s). */
 .gv-folder-container:not(.gv-aistudio) .gv-folder-header .title {
   margin: 0;
-  padding-left: 16px;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 500;
-  opacity: 0.7;
-  color: var(--bard-color-on-surface-variant);
+  padding-left: 0;
+  font-size: 13px;
+  line-height: 17px;
+  font-weight: 400;
+  opacity: 1;
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.theme-host.light-theme .gv-folder-container:not(.gv-aistudio) .gv-folder-header .title {
+  color: rgba(31, 31, 31, 0.6);
 }
 
 .gv-folder-add-btn {

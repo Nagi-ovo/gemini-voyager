@@ -17,8 +17,9 @@ describe('folder sidebar typography', () => {
     const aiStudioConversationBlock =
       css.match(/\.gv-aistudio \.gv-conversation-title\s*{([\s\S]*?)}/g)?.at(-1) ?? '';
 
-    expect(titleBlock).toContain('font-size: 14px;');
-    expect(titleBlock).toContain('line-height: 20px;');
+    // Section title matches Gemini's native expandable-section title (gds-body-s).
+    expect(titleBlock).toContain('font-size: 13px;');
+    expect(titleBlock).toContain('line-height: 17px;');
     expect(itemTextBlock).toContain('font-size: 14px;');
     expect(itemTextBlock).toContain('line-height: 20px;');
     expect(aiStudioNameBlock).toContain('font-size: 12px;');

@@ -890,25 +890,33 @@ export class FolderManager {
   private findRecentSection(): void {
     if (!this.sidebarContainer) return;
 
-    // Find conversations-list (Recent section) by looking for the conversations container
-    // Try multiple selectors to find the Recent section
-    let conversationsList = this.sidebarContainer.querySelector(
-      '[data-test-id="all-conversations"]',
+    // New Gemini layout wraps the "Recents" header + list in
+    // <expandable-section data-test-id="chats-expandable-section">. Anchoring to that
+    // wrapper inserts the folder panel ABOVE the "Recents" title (the original visual
+    // order); anchoring to the inner list would place it BELOW the title.
+    let conversationsList: Element | null = this.sidebarContainer.querySelector(
+      'expandable-section[data-test-id="chats-expandable-section"]',
     );
 
     if (!conversationsList) {
-      // Fallback: find by class name
+      // Legacy layout: insert directly before the conversations list.
+      conversationsList = this.sidebarContainer.querySelector(
+        '[data-test-id="all-conversations"]',
+      );
+    }
+
+    if (!conversationsList) {
       conversationsList = this.sidebarContainer.querySelector('.chat-history');
     }
 
     if (!conversationsList) {
-      // Fallback: find the element that contains conversation items
       const conversationItems = this.sidebarContainer.querySelectorAll(
         '[data-test-id="conversation"]',
       );
       if (conversationItems.length > 0) {
-        // Find the parent that contains these conversations
-        conversationsList = conversationItems[0].closest('.chat-history, [class*="conversation"]');
+        conversationsList = conversationItems[0].closest(
+          'expandable-section, .chat-history, [class*="conversation"]',
+        );
       }
     }
 
