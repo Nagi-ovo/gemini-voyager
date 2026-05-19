@@ -10344,6 +10344,25 @@ gem-nav-list-item.gv-gems-toggle-host {
 }
 
 /* ---------------------------------------------------------------------------
+ * Collapsed-sidebar leak fix
+ *
+ * When the user collapses Gemini's sidebar (rail ~52px), our injected gems
+ * dropdown, gems chevron, and folder panel are wider than the rail and leak
+ * out as cropped half-circles / stray text. Native Gemini entries adapt to
+ * the rail by hiding their labels; ours don't, so we hide them outright in
+ * collapsed mode. Two selectors cover both signals Gemini uses for the
+ * collapsed state (matches isSidebarCollapsed() in sidebarAutoHide).
+ * ------------------------------------------------------------------------- */
+bard-sidenav.collapsed .gv-folder-container,
+bard-sidenav.collapsed .gv-gems-inline-list,
+bard-sidenav.collapsed .gv-gems-expand-toggle,
+side-navigation-content > div.collapsed .gv-folder-container,
+side-navigation-content > div.collapsed .gv-gems-inline-list,
+side-navigation-content > div.collapsed .gv-gems-expand-toggle {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------------------
  * Input Halo Hider
  *
  * Hides Gemini's blue radial-gradient halo behind the input area:
