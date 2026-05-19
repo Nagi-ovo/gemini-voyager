@@ -24,21 +24,21 @@ This is the body that lands on `https://github.com/Nagi-ovo/gemini-voyager/relea
 
 The workflow (`.github/workflows/release.yml`) generates a default body on tag push using `gh api releases/generate-notes`. The default has contributor attribution but is **not** the curated table. After the workflow finishes, overwrite the body with this template.
 
-## Layout principle — EN visible, ZH collapsed
+## Layout principle — EN on top, ZH stacked below
 
 Two prior iterations didn't work:
 
 1. **Mixed-cell EN+ZH** (e.g. `**Feature name** 功能名 | Description here. 一句中文描述。`) — every reader parses 2× the text they need.
-2. **EN tables stacked above ZH tables** (the 1.4.0 era) — single-language and cleaner per row, but the page doubles in vertical length and readers scroll past content they can't read.
+2. **Chinese section wrapped in `<details>` (the 1.4.0–1.4.5 era)** — saved vertical space but ZH readers had to click to expand. Most users dismissed without seeing the Chinese notes at all. Discoverability beats compactness for this audience.
 
 Current layout:
 
-- **English tables visible at the top** (the GitHub release page audience skews global; EN gets first-screen real estate).
-- **Chinese section wrapped in `<details><summary><b>中文版 · Chinese</b></summary>`** so it collapses by default. ZH readers click once.
+- **English tables at the top** (the GitHub release page audience skews global; EN gets first-screen real estate).
+- **Chinese section rendered directly below**, separated by a thin `---` divider and an `## 中文版` heading. Both languages are visible without interaction.
 - **Drop the "Implemented in" / "实现" column when every row is `direct commit by @Nagi-ovo`** — that column is pure noise when 100% owner-attributed. Inline the `closes #NNN` reference into the description for the rare row that needs it. Add a single trailer line `_All changes by @Nagi-ovo unless noted._` (and `_除特别注明外，均由 @Nagi-ovo 提交。_` in the ZH section) below each language's tables.
 - **Keep the column when external contributors landed PRs in this release** — attribution matters more than column-drop savings. Each PR row reads `PR #NNN by @author`; owner rows read `—` or are dropped to a footer note.
 
-Shared metadata (Full Changelog URL, New Contributors) lives only once, after the collapsed ZH block.
+Shared metadata (Full Changelog URL, New Contributors) lives once, at the very bottom after the Chinese tables.
 
 ## Full template
 
@@ -63,8 +63,9 @@ Two flavors — pick based on whether external contributors landed PRs in this r
 
 _All changes by @Nagi-ovo unless noted._
 
-<details>
-<summary><b>中文版 · Chinese</b></summary>
+---
+
+## 中文版
 
 ## ✨ 新功能
 
@@ -81,8 +82,6 @@ _All changes by @Nagi-ovo unless noted._
 {repeat rows…}
 
 _除特别注明外，均由 @Nagi-ovo 提交。_
-
-</details>
 
 ---
 
@@ -109,11 +108,9 @@ When external PRs landed, the column carries information worth a column. Owner r
 (rest of the structure is identical to Flavor 1, with the matching `By` / `提交者` column in the ZH table; drop the trailer line since attribution is per-row)
 ```
 
-### Wrapper notes
+### Layout notes
 
-- `<details>` requires a **blank line after `</summary>`** for the inner Markdown headings/tables to parse. Don't omit it.
-- Use `<b>` inside `<summary>` (GitHub respects HTML); `**bold**` does not render inside the summary tag.
-- The `## 📥 Installation` section and the Safari block are appended by the workflow — do not duplicate them. They sit below the collapsed `<details>`, outside the wrapper.
+- The `## 📥 Installation` section and the Safari block are appended by the workflow — do not duplicate them. They sit below the Chinese tables.
 
 ## Generation procedure
 
@@ -180,11 +177,11 @@ Combine sections into `release_body.md` in this order (top to bottom):
 1. `## ✨ What's New` (EN) table
 2. `## 🐛 Bug Fixes` (EN) table
 3. `_All changes by @Nagi-ovo unless noted._` trailer (Flavor 1) — or skip if Flavor 2
-4. Open `<details><summary><b>中文版 · Chinese</b></summary>` + **blank line**
-5. `## ✨ 新功能` (ZH) table
-6. `## 🐛 修复` (ZH) table
-7. `_除特别注明外，均由 @Nagi-ovo 提交。_` trailer (Flavor 1) — or skip if Flavor 2
-8. **Blank line** + `</details>`
+4. `---` divider
+5. `## 中文版` heading
+6. `## ✨ 新功能` (ZH) table
+7. `## 🐛 修复` (ZH) table
+8. `_除特别注明外，均由 @Nagi-ovo 提交。_` trailer (Flavor 1) — or skip if Flavor 2
 9. `---` divider
 10. `## New Contributors` (omit entire section if the release has no new contributors — don't leave an empty heading)
 11. `**Full Changelog**: …` link
@@ -240,8 +237,9 @@ Two of the five commits are external PRs (#547 chang-xinhai, #567 LinJHS), so th
 | **Nested folder moves** | Moving folders with child folders now works correctly. | PR #547 by @chang-xinhai |
 | **Firefox permission flow** | Fixed permission request handling for Firefox. | PR #567 by @LinJHS |
 
-<details>
-<summary><b>中文版 · Chinese</b></summary>
+---
+
+## 中文版
 
 ## ✨ 新功能
 
@@ -257,8 +255,6 @@ Two of the five commits are external PRs (#547 chang-xinhai, #567 LinJHS), so th
 | **实验性节点层级** | 时间线节点层级状态现在会按不同账号分别持久化保存。 | — |
 | **嵌套文件夹移动** | 现在可以正确移动带有子文件夹的文件夹。 | PR #547 by @chang-xinhai |
 | **Firefox 权限流程** | 修复了 Firefox 中的权限请求处理问题。 | PR #567 by @LinJHS |
-
-</details>
 
 ---
 
@@ -292,8 +288,9 @@ All commits attributable to @Nagi-ovo, so drop the `By` column entirely; `closes
 
 _All changes by @Nagi-ovo unless noted._
 
-<details>
-<summary><b>中文版 · Chinese</b></summary>
+---
+
+## 中文版
 
 ## ✨ 新功能
 
@@ -310,8 +307,6 @@ _All changes by @Nagi-ovo unless noted._
 | **侧边栏自动隐藏与完全隐藏独立** | 两项设置互相独立，不再相互干扰。 |
 
 _除特别注明外，均由 @Nagi-ovo 提交。_
-
-</details>
 
 ---
 
