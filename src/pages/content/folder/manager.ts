@@ -152,6 +152,16 @@ export class FolderManager {
   private tooltipTimeout: number | null = null;
   private sideNavObserver: MutationObserver | null = null;
   private conversationObserver: MutationObserver | null = null; // Observer for conversation additions/removals
+  // Watches the sidebar for re-renders that would leave the folder container in
+  // the wrong slot relative to the Recents section. Gemini occasionally replaces
+  // the `expandable-section[data-test-id="chats-expandable-section"]` element
+  // wholesale, which leaves our folder container stranded below the new section
+  // even though it was inserted above the old one. The position enforcer below
+  // (`enforceFolderAboveRecents`) runs on any sidebar childList mutation,
+  // batched via requestAnimationFrame, and is a no-op once the container is
+  // already correctly placed.
+  private positionObserver: MutationObserver | null = null;
+  private positionEnforceRafId: number | null = null;
   private importInProgress: boolean = false; // Lock to prevent concurrent imports
   private exportInProgress: boolean = false; // Lock to prevent concurrent exports
   private selectedConversations: Set<string> = new Set(); // For multi-select support
@@ -393,6 +403,8 @@ export class FolderManager {
       this.nativeMenuObserver.disconnect();
       this.nativeMenuObserver = null;
     }
+
+    this.teardownPositionEnforcer();
 
     // Tear down floating-mode UI if it was surfaced.
     unmountFloatingModeNudge();
@@ -643,6 +655,10 @@ export class FolderManager {
           this.floatingPanelHandle = null;
         }
       }
+      // Belt-and-suspenders: if the position observer ever misses a mutation
+      // (e.g. it was torn down across a reinit and not yet re-attached), the
+      // recovery tick repairs the ordering here. No-op when already correct.
+      this.enforceFolderAboveRecents();
       return;
     }
 
@@ -1004,16 +1020,17 @@ export class FolderManager {
     });
   }
 
-  private findRecentSection(): void {
-    if (!this.sidebarContainer) return;
+  /**
+   * Pure re-query for the current Recents section element. Returns the
+   * `expandable-section[data-test-id="chats-expandable-section"]` wrapper when
+   * Gemini's new layout is in effect, or one of the legacy containers as a
+   * fallback. Does NOT touch instance state — callers decide whether to update
+   * `this.recentSection`. This is the single place the lookup logic lives so
+   * `findRecentSection` and `enforceFolderAboveRecents` can't drift apart.
+   */
+  private findRecentSectionCandidate(): HTMLElement | null {
+    if (!this.sidebarContainer) return null;
 
-    // New Gemini layout wraps the "Recents" header + list in
-    // <expandable-section data-test-id="chats-expandable-section">. Anchoring to that
-    // wrapper inserts the folder panel ABOVE the "Recents" title; anchoring to the
-    // inner list would place it BELOW the title. Whenever we find a candidate, we
-    // climb to the enclosing <expandable-section> so transient re-renders (where the
-    // outer wrapper is briefly remounted but the inner list lingers) can't drop the
-    // folder underneath the title.
     const promoteToSection = (el: Element | null): Element | null =>
       el ? (el.closest('expandable-section') ?? el) : null;
 
@@ -1042,19 +1059,102 @@ export class FolderManager {
       }
     }
 
-    if (conversationsList) {
-      this.recentSection = conversationsList as HTMLElement;
-    } else {
-      this.debugWarn('Could not find Recent section - will retry');
-      // Retry after a delay
-      setTimeout(() => {
-        this.findRecentSection();
-        if (this.recentSection && !this.containerElement) {
-          this.createFolderUI();
-          this.makeConversationsDraggable();
-          this.setupMutationObserver();
-        }
-      }, 2000);
+    return conversationsList instanceof HTMLElement ? conversationsList : null;
+  }
+
+  private findRecentSection(): void {
+    if (!this.sidebarContainer) return;
+
+    const candidate = this.findRecentSectionCandidate();
+    if (candidate) {
+      this.recentSection = candidate;
+      return;
+    }
+
+    this.debugWarn('Could not find Recent section - will retry');
+    // Retry after a delay
+    setTimeout(() => {
+      this.findRecentSection();
+      if (this.recentSection && !this.containerElement) {
+        this.createFolderUI();
+        this.makeConversationsDraggable();
+        this.setupMutationObserver();
+      }
+    }, 2000);
+  }
+
+  /**
+   * Ensure the folder container is positioned immediately before the *current*
+   * Recents section. Gemini periodically replaces the section element wholesale
+   * (especially during the 2026 redesign rollout), which would leave our folder
+   * container stranded below the new section. This is the recovery hook.
+   *
+   * Returns `true` when a move occurred. No-ops (and returns `false`) once the
+   * container is already correctly placed, so it's safe to call from
+   * MutationObserver callbacks without creating an infinite reorder loop.
+   */
+  private enforceFolderAboveRecents(): boolean {
+    if (this.isDestroyed) return false;
+    if (!this.folderEnabled || this.floatingModeActive) return false;
+    if (!this.containerElement || !document.body.contains(this.containerElement)) {
+      return false;
+    }
+
+    const currentSection = this.findRecentSectionCandidate();
+    if (!currentSection || !currentSection.parentElement) return false;
+
+    // Refresh stale reference whenever Gemini replaced the section element.
+    if (this.recentSection !== currentSection) {
+      this.recentSection = currentSection;
+    }
+
+    const parent = currentSection.parentElement;
+    const inRightParent = this.containerElement.parentElement === parent;
+    const immediatelyBefore = this.containerElement.nextElementSibling === currentSection;
+
+    if (inRightParent && immediatelyBefore) return false;
+
+    this.debug('Re-anchoring folder container above Recents');
+    parent.insertBefore(this.containerElement, currentSection);
+    return true;
+  }
+
+  private scheduleEnforceFolderAboveRecents(): void {
+    if (this.positionEnforceRafId !== null) return;
+    this.positionEnforceRafId = window.requestAnimationFrame(() => {
+      this.positionEnforceRafId = null;
+      this.enforceFolderAboveRecents();
+    });
+  }
+
+  /**
+   * Watch the sidebar for any childList changes and re-enforce position on the
+   * next animation frame. Disconnects any prior observer so this is safe to
+   * call from re-init paths.
+   */
+  private setupPositionEnforcer(): void {
+    if (!this.sidebarContainer) return;
+    if (this.positionObserver) {
+      this.positionObserver.disconnect();
+      this.positionObserver = null;
+    }
+    this.positionObserver = new MutationObserver(() => {
+      this.scheduleEnforceFolderAboveRecents();
+    });
+    this.positionObserver.observe(this.sidebarContainer, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  private teardownPositionEnforcer(): void {
+    if (this.positionObserver) {
+      this.positionObserver.disconnect();
+      this.positionObserver = null;
+    }
+    if (this.positionEnforceRafId !== null) {
+      window.cancelAnimationFrame(this.positionEnforceRafId);
+      this.positionEnforceRafId = null;
     }
   }
 
@@ -1087,6 +1187,10 @@ export class FolderManager {
 
     // Apply initial folder enabled setting
     this.applyFolderEnabledSetting();
+
+    // Wire up the position enforcer so future Gemini re-renders that swap the
+    // Recents section element can't strand our folder container below it.
+    this.setupPositionEnforcer();
   }
 
   private createMultiSelectIndicator(): HTMLElement {
@@ -2650,6 +2754,8 @@ export class FolderManager {
         this.nativeMenuObserver.disconnect();
         this.nativeMenuObserver = null;
       }
+
+      this.teardownPositionEnforcer();
 
       if (this.routeChangeCleanup) {
         try {
@@ -7109,6 +7215,7 @@ export class FolderManager {
               this.sideNavObserver.disconnect();
               this.sideNavObserver = null;
             }
+            this.teardownPositionEnforcer();
             void this.startFloatingMode();
           } else {
             // Switch to sidebar: tear down floating, then ask the existing
