@@ -23,6 +23,7 @@ import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderManager } from './folder/index';
 import { startFolderProject } from './folderProject/index';
+import { startFolderItemFontSizeAdjuster } from './folderItemFontSize/index';
 import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { isForkFeatureEnabledValue } from './fork/featureFlag';
 import { startFork } from './fork/index';
@@ -183,6 +184,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
       startFolderSpacingAdjuster('gemini');
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      startFolderItemFontSizeAdjuster();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startChatWidthAdjuster();

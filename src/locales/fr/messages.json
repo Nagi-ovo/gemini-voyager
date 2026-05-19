@@ -475,6 +475,26 @@
     "message": "Synchroniser depuis le cloud",
     "description": "Cloud sync button tooltip"
   },
+  "folder_cloud": {
+    "message": "Synchronisation cloud",
+    "description": "Tooltip for the merged cloud button that opens an upload/sync popover"
+  },
+  "folder_settings": {
+    "message": "Paramètres des dossiers",
+    "description": "Tooltip for the gear icon that opens folder-scoped settings"
+  },
+  "folder_item_font_size": {
+    "message": "Taille du texte",
+    "description": "Label for the folder/conversation text size stepper inside folder settings"
+  },
+  "folder_item_font_size_decrease": {
+    "message": "Réduire",
+    "description": "Tooltip for the minus button on the folder text size stepper"
+  },
+  "folder_item_font_size_increase": {
+    "message": "Agrandir",
+    "description": "Tooltip for the plus button on the folder text size stepper"
+  },
   "folder_manage_in_library": {
     "message": "Gérer dans la bibliothèque",
     "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"

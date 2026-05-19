@@ -475,6 +475,26 @@
     "message": "从云端同步",
     "description": "云同步按钮提示"
   },
+  "folder_cloud": {
+    "message": "云同步",
+    "description": "合并后的云按钮提示，点击弹出上传/同步选项"
+  },
+  "folder_settings": {
+    "message": "文件夹设置",
+    "description": "齿轮图标提示，打开文件夹相关设置"
+  },
+  "folder_item_font_size": {
+    "message": "字号",
+    "description": "文件夹/对话字号步进器的标签"
+  },
+  "folder_item_font_size_decrease": {
+    "message": "减小",
+    "description": "字号步进器减号按钮提示"
+  },
+  "folder_item_font_size_increase": {
+    "message": "增大",
+    "description": "字号步进器加号按钮提示"
+  },
   "folder_manage_in_library": {
     "message": "到 Library 管理",
     "description": "AI Studio 侧栏按钮，跳转到 /library 以拖拽管理对话"

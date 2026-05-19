@@ -25,6 +25,11 @@ export const baseManifest = {
         default_locale: 'en',
       }
     : {}),
+  // Dev override: bypass the i18n placeholder so the unpacked dev extension
+  // shows up as "Voyager (Dev)" in chrome://extensions, the toolbar tooltip,
+  // and OS task switchers. Makes it impossible to confuse with the Chrome Web
+  // Store install when both are loaded.
+  ...(isDev ? { name: 'Voyager (Dev)' } : {}),
 } as ManifestV3Export;
 
 export const baseBuildOptions: BuildOptions = {

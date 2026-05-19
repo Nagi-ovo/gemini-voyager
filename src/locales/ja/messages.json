@@ -475,6 +475,26 @@
     "message": "クラウドから同期",
     "description": "Cloud sync button tooltip"
   },
+  "folder_cloud": {
+    "message": "クラウド同期",
+    "description": "Tooltip for the merged cloud button that opens an upload/sync popover"
+  },
+  "folder_settings": {
+    "message": "フォルダ設定",
+    "description": "Tooltip for the gear icon that opens folder-scoped settings"
+  },
+  "folder_item_font_size": {
+    "message": "文字サイズ",
+    "description": "Label for the folder/conversation text size stepper inside folder settings"
+  },
+  "folder_item_font_size_decrease": {
+    "message": "小さく",
+    "description": "Tooltip for the minus button on the folder text size stepper"
+  },
+  "folder_item_font_size_increase": {
+    "message": "大きく",
+    "description": "Tooltip for the plus button on the folder text size stepper"
+  },
   "folder_manage_in_library": {
     "message": "ライブラリで管理",
     "description": "Shortcut button shown in AI Studio sidebar to jump to /library for drag-and-drop conversation management"

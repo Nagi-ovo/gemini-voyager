@@ -4277,6 +4277,128 @@ body.light-theme .gv-folder-menu-item:hover {
   background: oklch(0.14 0.004 285 / 0.06);
 }
 
+/* Inline-SVG icon slot inside .gv-folder-menu-item (used when an item ships its
+   own SVG instead of a Material Symbols ligature, e.g. cloud upload/sync). */
+.gv-folder-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.gv-folder-menu-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Folder Settings Popover ── */
+.gv-folder-settings-menu {
+  min-width: 220px;
+}
+
+.gv-folder-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 9px;
+}
+
+.gv-folder-settings-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: oklch(0.14 0.004 285);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-folder-settings-label {
+    color: oklch(0.92 0.004 250);
+  }
+}
+
+.theme-host.dark-theme .gv-folder-settings-label,
+body.dark-theme .gv-folder-settings-label {
+  color: oklch(0.92 0.004 250);
+}
+
+.gv-folder-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gv-folder-stepper-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid oklch(0.92 0.004 250 / 0.7);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  color: oklch(0.14 0.004 285);
+  transition: background-color 0.15s ease;
+}
+
+.gv-folder-stepper-btn:hover:not(:disabled) {
+  background: oklch(0.14 0.004 285 / 0.06);
+}
+
+.gv-folder-stepper-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.gv-folder-stepper-btn mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+}
+
+.gv-folder-stepper-value {
+  min-width: 34px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: oklch(0.14 0.004 285);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-folder-stepper-btn {
+    color: oklch(0.92 0.004 250);
+    border-color: oklch(0.3 0.008 285 / 0.7);
+  }
+  .gv-folder-stepper-btn:hover:not(:disabled) {
+    background: oklch(0.92 0.004 250 / 0.08);
+  }
+  .gv-folder-stepper-value {
+    color: oklch(0.92 0.004 250);
+  }
+}
+
+.theme-host.dark-theme .gv-folder-stepper-btn,
+body.dark-theme .gv-folder-stepper-btn {
+  color: oklch(0.92 0.004 250);
+  border-color: oklch(0.3 0.008 285 / 0.7);
+}
+
+.theme-host.dark-theme .gv-folder-stepper-btn:hover:not(:disabled),
+body.dark-theme .gv-folder-stepper-btn:hover:not(:disabled) {
+  background: oklch(0.92 0.004 250 / 0.08);
+}
+
+.theme-host.dark-theme .gv-folder-stepper-value,
+body.dark-theme .gv-folder-stepper-value {
+  color: oklch(0.92 0.004 250);
+}
+
 /* ── Color Picker Dialog ── */
 .gv-color-picker-dialog {
   position: fixed;

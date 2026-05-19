@@ -435,6 +435,26 @@
     "message": "從雲端同步",
     "description": "雲端同步按鈕提示"
   },
+  "folder_cloud": {
+    "message": "雲端同步",
+    "description": "合併後的雲端按鈕提示，點擊彈出上傳/同步選項"
+  },
+  "folder_settings": {
+    "message": "資料夾設定",
+    "description": "齒輪圖示提示，開啟資料夾相關設定"
+  },
+  "folder_item_font_size": {
+    "message": "字級",
+    "description": "資料夾/對話字級步進器的標籤"
+  },
+  "folder_item_font_size_decrease": {
+    "message": "縮小",
+    "description": "字級步進器減號按鈕提示"
+  },
+  "folder_item_font_size_increase": {
+    "message": "放大",
+    "description": "字級步進器加號按鈕提示"
+  },
   "folder_manage_in_library": {
     "message": "到 Library 管理",
     "description": "AI Studio 側欄按鈕，跳轉到 /library 以拖曳管理對話"

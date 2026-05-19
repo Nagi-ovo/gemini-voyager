@@ -133,6 +133,10 @@ export const StorageKeys = {
   GV_AISTUDIO_FOLDER_SPACING: 'gvAIStudioFolderSpacing',
   GV_FOLDER_TREE_INDENT: 'gvFolderTreeIndent',
 
+  // Folder item font size (px). Range 12-18, default 13 to match Gemini's
+  // native sidebar item text size after the May 2026 redesign.
+  GV_FOLDER_ITEM_FONT_SIZE: 'gvFolderItemFontSize',
+
   // Snow effect (legacy, kept for backward compat migration)
   GV_SNOW_EFFECT: 'gvSnowEffect',
 
