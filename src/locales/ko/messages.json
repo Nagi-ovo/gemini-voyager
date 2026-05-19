@@ -1327,6 +1327,14 @@
     "message": "대화에서 텍스트를 선택할 때 선택한 텍스트를 인용할 수 있는 플로팅 버튼을 표시합니다",
     "description": "Quote reply feature hint"
   },
+  "hideInputHalo": {
+    "message": "입력창 광채 숨기기",
+    "description": "Input halo hider toggle label"
+  },
+  "hideInputHaloHint": {
+    "message": "Gemini 채팅 입력창 뒤의 파란색 방사형 그라데이션 광채를 숨깁니다",
+    "description": "Input halo hider feature hint"
+  },
   "contextSync": {
     "message": "컨텍스트 동기화",
     "description": "Context Sync title"

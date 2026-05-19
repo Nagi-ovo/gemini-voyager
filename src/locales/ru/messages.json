@@ -1327,6 +1327,14 @@
     "message": "Показывать плавающую кнопку для цитирования выделенного текста при выделении текста в разговорах",
     "description": "Quote reply feature hint"
   },
+  "hideInputHalo": {
+    "message": "Скрыть ореол поля ввода",
+    "description": "Input halo hider toggle label"
+  },
+  "hideInputHaloHint": {
+    "message": "Скрывает синий радиально-градиентный ореол за полем ввода чата Gemini",
+    "description": "Input halo hider feature hint"
+  },
   "contextSync": {
     "message": "Синхронизация контекста",
     "description": "Context Sync title"

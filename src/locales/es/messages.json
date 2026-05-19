@@ -1327,6 +1327,14 @@
     "message": "Muestra un botón flotante para citar el texto seleccionado en las conversaciones",
     "description": "Quote reply feature hint"
   },
+  "hideInputHalo": {
+    "message": "Ocultar halo del cuadro de entrada",
+    "description": "Input halo hider toggle label"
+  },
+  "hideInputHaloHint": {
+    "message": "Oculta el halo azul de degradado radial detrás del cuadro de entrada del chat de Gemini",
+    "description": "Input halo hider feature hint"
+  },
   "contextSync": {
     "message": "Sincronización de contexto",
     "description": "Context Sync title"

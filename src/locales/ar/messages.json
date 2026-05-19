@@ -1327,6 +1327,14 @@
     "message": "إظهار زر عائم لاقتباس النص المحدد عند تحديد نص في المحادثات",
     "description": "Quote reply feature hint"
   },
+  "hideInputHalo": {
+    "message": "إخفاء هالة مربع الإدخال",
+    "description": "Input halo hider toggle label"
+  },
+  "hideInputHaloHint": {
+    "message": "إخفاء الهالة الزرقاء المتدرجة شعاعياً خلف مربع إدخال محادثة Gemini",
+    "description": "Input halo hider feature hint"
+  },
   "contextSync": {
     "message": "مزامنة السياق",
     "description": "Context Sync title"

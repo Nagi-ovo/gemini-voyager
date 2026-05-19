@@ -347,6 +347,7 @@ interface SettingsUpdate {
   sidebarFullHideEnabled?: boolean;
   visualEffect?: 'off' | 'snow' | 'sakura' | 'rain';
   preventAutoScrollEnabled?: boolean;
+  inputHaloHidden?: boolean;
   forkEnabled?: boolean;
   accountIsolationEnabled?: boolean;
   accountIsolationPlatform?: AccountPlatform;
@@ -464,6 +465,7 @@ export default function Popup() {
   const [sidebarFullHideEnabled, setSidebarFullHideEnabled] = useState<boolean>(false);
   const [visualEffect, setVisualEffect] = useState<'off' | 'snow' | 'sakura' | 'rain'>('off');
   const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState<boolean>(false);
+  const [inputHaloHidden, setInputHaloHidden] = useState<boolean>(false);
   const [forkEnabled, setForkEnabled] = useState<boolean>(false);
   const [chatWidthEnabled, setChatWidthEnabled] = useState<boolean>(false);
   const [chatFontSizeEnabled, setChatFontSizeEnabled] = useState<boolean>(false);
@@ -589,6 +591,8 @@ export default function Popup() {
       }
       if (typeof settings.preventAutoScrollEnabled === 'boolean')
         payload.gvPreventAutoScrollEnabled = settings.preventAutoScrollEnabled;
+      if (typeof settings.inputHaloHidden === 'boolean')
+        payload[StorageKeys.INPUT_HALO_HIDDEN] = settings.inputHaloHidden;
       if (typeof settings.forkEnabled === 'boolean')
         payload[StorageKeys.FORK_ENABLED] = settings.forkEnabled;
       if (typeof settings.accountIsolationEnabled === 'boolean') {
@@ -952,6 +956,7 @@ export default function Popup() {
           gvVisualEffect: 'off',
           gvSnowEffect: false,
           gvPreventAutoScrollEnabled: false,
+          [StorageKeys.INPUT_HALO_HIDDEN]: false,
           [StorageKeys.FORK_ENABLED]: false,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
           [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
@@ -1029,6 +1034,7 @@ export default function Popup() {
             setVisualEffect('off');
           }
           setPreventAutoScrollEnabled(res?.gvPreventAutoScrollEnabled === true);
+          setInputHaloHidden(res?.[StorageKeys.INPUT_HALO_HIDDEN] === true);
           setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
           setAiStudioEnabled(res?.[StorageKeys.GV_AISTUDIO_ENABLED] !== false);
 
@@ -2684,6 +2690,25 @@ export default function Popup() {
                   onChange={(e) => {
                     setQuoteReplyEnabled(e.target.checked);
                     apply({ quoteReplyEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="input-halo-hidden"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('hideInputHalo')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">{t('hideInputHaloHint')}</p>
+                </div>
+                <Switch
+                  id="input-halo-hidden"
+                  checked={inputHaloHidden}
+                  onChange={(e) => {
+                    setInputHaloHidden(e.target.checked);
+                    apply({ inputHaloHidden: e.target.checked });
                   }}
                 />
               </div>

@@ -1327,6 +1327,14 @@
     "message": "会話でテキストを選択したときに、選択したテキストを引用するフローティングボタンを表示します",
     "description": "Quote reply feature hint"
   },
+  "hideInputHalo": {
+    "message": "入力欄の光暈を非表示",
+    "description": "Input halo hider toggle label"
+  },
+  "hideInputHaloHint": {
+    "message": "Gemini のチャット入力欄の背後にある青いラジアルグラデーションの光暈を非表示にします",
+    "description": "Input halo hider feature hint"
+  },
   "contextSync": {
     "message": "コンテキスト同期",
     "description": "Context Sync title"

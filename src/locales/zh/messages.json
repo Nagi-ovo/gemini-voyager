@@ -1327,6 +1327,14 @@
     "message": "在对话中选中文字时显示悬浮按钮，用于引用所选内容",
     "description": "引用回复功能提示"
   },
+  "hideInputHalo": {
+    "message": "隐藏输入框光晕",
+    "description": "输入框光晕开关标签"
+  },
+  "hideInputHaloHint": {
+    "message": "隐藏 Gemini 输入框背后的蓝色径向渐变光晕",
+    "description": "输入框光晕开关说明"
+  },
   "contextSync": {
     "message": "上下文同步",
     "description": "上下文同步标题"

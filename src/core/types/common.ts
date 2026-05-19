@@ -151,6 +151,10 @@ export const StorageKeys = {
   // native sidebar item text size after the May 2026 redesign.
   GV_FOLDER_ITEM_FONT_SIZE: 'gvFolderItemFontSize',
 
+  // Hide Gemini's blue radial-gradient halo behind the input box
+  // (chat-window::before + .nl-canvas blobs). Default false (halo visible).
+  INPUT_HALO_HIDDEN: 'gvInputHaloHidden',
+
   // Snow effect (legacy, kept for backward compat migration)
   GV_SNOW_EFFECT: 'gvSnowEffect',
 
