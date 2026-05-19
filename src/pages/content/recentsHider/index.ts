@@ -20,8 +20,10 @@ const PEEK_BAR_CLASS = 'gv-recents-peek-bar';
 const TOGGLE_BTN_CLASS = 'gv-recents-toggle-btn';
 const STORAGE_KEY = StorageKeys.RECENTS_HIDDEN;
 
-// Selectors - targeting the recents preview section
-const RECENTS_SELECTOR = '.my-stuff-recents-preview';
+// Selectors — target Gemini's 2026 expandable-section shell for Recents.
+// The old `.my-stuff-recents-preview` class was removed in the May 2026 sidebar
+// redesign; we now match the same anchor the folder manager uses.
+const RECENTS_SELECTOR = 'expandable-section[data-test-id="chats-expandable-section"]';
 
 let initialized = false;
 let observer: MutationObserver | null = null;
@@ -36,7 +38,7 @@ function injectStyles(): void {
   style.id = STYLE_ID;
   style.textContent = `
     /* Container for proper positioning */
-    .my-stuff-recents-preview {
+    expandable-section[data-test-id="chats-expandable-section"] {
       position: relative;
       transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -78,8 +80,10 @@ function injectStyles(): void {
       transition: transform 0.2s ease;
     }
 
-    /* Show button on container hover */
-    .my-stuff-recents-preview:hover .${TOGGLE_BTN_CLASS} {
+    /* Show button on container hover (and on focus for keyboard users). */
+    expandable-section[data-test-id="chats-expandable-section"]:hover .${TOGGLE_BTN_CLASS},
+    .${TOGGLE_BTN_CLASS}:hover,
+    .${TOGGLE_BTN_CLASS}:focus-visible {
       opacity: 1;
       transform: scale(1);
     }
@@ -220,11 +224,18 @@ function injectStyles(): void {
 }
 
 /**
- * Create the toggle button element
+ * Create the toggle button element.
+ *
+ * Uses `<span role="button">` rather than `<button>` because the Recents
+ * expandable-section's header is itself a `<button>` in Gemini's 2026 layout.
+ * The toggle is positioned absolutely over the section so it visually sits
+ * inside the header's area, and nested interactive buttons are invalid HTML.
  */
-function createToggleButton(): HTMLButtonElement {
-  const btn = document.createElement('button');
+function createToggleButton(): HTMLSpanElement {
+  const btn = document.createElement('span');
   btn.className = TOGGLE_BTN_CLASS;
+  btn.setAttribute('role', 'button');
+  btn.setAttribute('tabindex', '0');
   btn.setAttribute('aria-label', getTranslationSync('recentsHide') || 'Hide recent items');
   btn.title = getTranslationSync('recentsHide') || 'Hide recent items';
 
@@ -318,15 +329,33 @@ async function setupRecentsHider(recentsEl: HTMLElement): Promise<void> {
   const isHidden = await getHiddenState();
   applyState(recentsEl, peekBar, isHidden);
 
-  // Toggle button click handler
-  toggleBtn.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-
+  const performHide = async () => {
     await setHiddenState(true);
     applyState(recentsEl, peekBar, true);
     void showSidebarCollapseNudgeOnce(peekBar);
+  };
+
+  // Toggle button click handler. stopPropagation prevents the wrapping
+  // `<button class="expandable-section-header">` from also toggling expand/
+  // collapse on the underlying section.
+  toggleBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    await performHide();
   });
+
+  // Span-as-button needs explicit keyboard activation (Enter / Space).
+  toggleBtn.addEventListener('keydown', async (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.stopPropagation();
+    e.preventDefault();
+    await performHide();
+  });
+
+  // Pointerdown/mousedown can also bubble to the wrapping header button —
+  // stop them so a stray drag/click doesn't fire the section toggle.
+  toggleBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+  toggleBtn.addEventListener('mousedown', (e) => e.stopPropagation());
 
   // Peek bar click handler
   peekBar.addEventListener('click', async () => {

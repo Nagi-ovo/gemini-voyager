@@ -443,6 +443,14 @@
     "message": "資料夾設定",
     "description": "齒輪圖示提示，開啟資料夾相關設定"
   },
+  "folder_anchor_move_above_notebooks": {
+    "message": "將資料夾移到 Notebooks 上方",
+    "description": "Tooltip on the folder header swap button shown when folders are currently above Recents — clicking moves them above Notebooks instead."
+  },
+  "folder_anchor_move_above_recents": {
+    "message": "將資料夾移到 Recents 上方",
+    "description": "Tooltip on the folder header swap button shown when folders are currently above Notebooks — clicking moves them above Recents instead."
+  },
   "folder_item_font_size": {
     "message": "字級",
     "description": "資料夾/對話字級步進器的標籤"

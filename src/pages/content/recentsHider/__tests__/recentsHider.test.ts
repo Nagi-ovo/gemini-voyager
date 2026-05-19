@@ -85,8 +85,16 @@ describe('recentsHider', () => {
   });
 
   function createRecentsSection(): HTMLElement {
-    const recents = document.createElement('div');
-    recents.className = 'my-stuff-recents-preview';
+    // Mirrors Gemini's 2026 expandable-section layout. The inner
+    // .expandable-section-header is a real <button>; the hider toggle is a
+    // span[role=button] mounted on the section wrapper.
+    const recents = document.createElement('expandable-section');
+    recents.setAttribute('data-test-id', 'chats-expandable-section');
+
+    const header = document.createElement('button');
+    header.className = 'expandable-section-header';
+    recents.appendChild(header);
+
     document.body.appendChild(recents);
     return recents;
   }

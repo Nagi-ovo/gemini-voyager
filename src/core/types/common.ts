@@ -127,6 +127,11 @@ export const StorageKeys = {
   GEMS_HIDDEN: 'gvGemsHidden',
   NOTEBOOKS_HIDDEN: 'gvNotebooksHidden',
   FOLDERS_HIDDEN: 'gvFoldersHidden',
+  // 'above-recents' (default) anchors the folder panel just above the Recents
+  // expandable-section; 'above-notebooks' anchors it above the Notebooks
+  // section instead. Persisted in chrome.storage.local since it's a UI-only
+  // preference and changes feel best when they take effect immediately.
+  FOLDERS_ANCHOR: 'gvFoldersAnchor',
   SIDEBAR_COLLAPSE_NUDGE_SHOWN: 'gvSidebarCollapseNudgeShown',
 
   // Folder spacing

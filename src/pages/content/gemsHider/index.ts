@@ -36,10 +36,27 @@ interface HidableSectionConfig {
   hideFallback: string;
   showFallback: string;
   toggleHostSelector?: string;
+  /**
+   * Where the hide-toggle button gets mounted.
+   *
+   * `'inline'` (default) inserts a real `<button>` into the toggle host element
+   * — used for folders, where the host is `.gv-folder-header-actions` (a plain
+   * div) so nested buttons are legal.
+   *
+   * `'absolute'` mounts a `<span role="button">` directly on the section
+   * element and positions it via CSS in the top-right corner. Used for Gemini's
+   * 2026 `<expandable-section>` shells, where the natural host
+   * `.expandable-section-header` is itself a `<button>` — nested interactive
+   * elements are invalid HTML and confuse keyboard navigation.
+   */
+  placement?: 'inline' | 'absolute';
 }
 
 const SECTION_CONFIGS: readonly HidableSectionConfig[] = [
   {
+    // Gemini's 2026 redesign removed the Gems section from the sidebar. We
+    // keep the config so older layouts still get the affordance; the new
+    // selector never matches on current Gemini.
     id: 'gems',
     containerSelector: '.gems-list-container',
     storageKey: StorageKeys.GEMS_HIDDEN,
@@ -48,16 +65,12 @@ const SECTION_CONFIGS: readonly HidableSectionConfig[] = [
     hideFallback: 'Hide Gems',
     showFallback: 'Show Gems',
   },
-  {
-    id: 'notebooks',
-    containerSelector: '.project-sidenav-container',
-    requiredDescendantSelector: 'side-nav-entry-button[data-test-id="project-management-button"]',
-    storageKey: StorageKeys.NOTEBOOKS_HIDDEN,
-    hideTranslationKey: 'notebooksHide',
-    showTranslationKey: 'notebooksShow',
-    hideFallback: 'Hide Notebooks',
-    showFallback: 'Show Notebooks',
-  },
+  // Notebooks intentionally omitted: the same top-right slot is now used by
+  // the folder-anchor swap button (mounted from the folder manager). Keeping
+  // both would crowd the corner and the swap action subsumes the value of
+  // hiding the whole Notebooks section. The StorageKeys.NOTEBOOKS_HIDDEN key
+  // is preserved so any pre-existing hidden state simply stops applying — the
+  // section will naturally render again.
   {
     id: 'folders',
     containerSelector: '.gv-folder-container:not(.gv-aistudio):not(.gv-multi-select-floating-host)',
@@ -124,6 +137,23 @@ function injectStyles(): void {
     ${ARROW_ICON_SELECTOR}:hover .${TOGGLE_BTN_CLASS},
     .gv-folder-header:hover .${TOGGLE_BTN_CLASS},
     .${TOGGLE_BTN_CLASS}:hover {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Absolute-placement variant: mounted on the expandable-section itself
+     * (e.g. Notebooks) instead of nested inside the header button. Reveals on
+     * hover of the parent section. */
+    .${TOGGLE_BTN_CLASS}--absolute {
+      position: absolute;
+      top: 4px;
+      right: 8px;
+      margin-right: 0;
+      z-index: 2;
+    }
+    expandable-section:hover > .${TOGGLE_BTN_CLASS}--absolute,
+    .${TOGGLE_BTN_CLASS}--absolute:hover,
+    .${TOGGLE_BTN_CLASS}--absolute:focus-visible {
       opacity: 1;
       transform: scale(1);
     }
@@ -267,9 +297,26 @@ function getSectionText(section: HidableSectionConfig, kind: 'hide' | 'show'): s
   return getTranslationSync(translationKey) || fallback;
 }
 
-function createToggleButton(section: HidableSectionConfig): HTMLButtonElement {
-  const btn = document.createElement('button');
+/**
+ * Build the hide-toggle element.
+ *
+ * Inline mode returns a real `<button>` (current behavior for folders).
+ *
+ * Absolute mode returns a `<span role="button">` so the toggle can live inside
+ * an element that is itself a `<button>` (Gemini's `.expandable-section-header`)
+ * without producing invalid nested-button HTML. Keyboard support is added
+ * separately in `setupSectionHider`.
+ */
+function createToggleButton(section: HidableSectionConfig): HTMLElement {
+  const placement = section.placement ?? 'inline';
+  const useSpan = placement === 'absolute';
+  const btn = document.createElement(useSpan ? 'span' : 'button');
   btn.className = TOGGLE_BTN_CLASS;
+  if (useSpan) {
+    btn.classList.add(`${TOGGLE_BTN_CLASS}--absolute`);
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('tabindex', '0');
+  }
   btn.setAttribute(SECTION_ID_ATTR, section.id);
 
   const label = getSectionText(section, 'hide');
@@ -406,10 +453,20 @@ async function setupSectionHider(
     return;
   }
 
-  const toggleHost = sectionEl.querySelector(section.toggleHostSelector ?? ARROW_ICON_SELECTOR);
+  const placement = section.placement ?? 'inline';
   const parent = sectionEl.parentElement;
-  if (!toggleHost || !parent) {
+  if (!parent) {
     return;
+  }
+
+  // Inline mode needs an explicit host element to nest the button into.
+  // Absolute mode mounts the button directly on the section, but we still
+  // verify the requiredDescendantSelector matched (handled in caller) before
+  // proceeding so we don't paint a toggle on the wrong element.
+  let inlineHost: Element | null = null;
+  if (placement === 'inline') {
+    inlineHost = sectionEl.querySelector(section.toggleHostSelector ?? ARROW_ICON_SELECTOR);
+    if (!inlineHost) return;
   }
 
   const toggleBtn = createToggleButton(section);
@@ -419,18 +476,46 @@ async function setupSectionHider(
   sectionEl.classList.add(TARGET_CLASS);
   sectionEl.setAttribute(PROCESSED_ATTR, section.id);
 
-  toggleHost.insertBefore(toggleBtn, toggleHost.firstChild);
+  if (placement === 'absolute') {
+    // The button is `position: absolute` per CSS; mount it on the section
+    // (which has `position: relative` via TARGET_CLASS). Appending — instead
+    // of `insertBefore` on the header button — keeps it outside the native
+    // header `<button>`, avoiding nested-button HTML.
+    sectionEl.appendChild(toggleBtn);
+  } else {
+    inlineHost!.insertBefore(toggleBtn, inlineHost!.firstChild);
+  }
   parent.insertBefore(peekBar, sectionEl.nextSibling);
 
-  toggleBtn.addEventListener('click', async (event) => {
-    event.stopPropagation();
-    event.preventDefault();
-
+  const handleHideRequest = async () => {
     hasUserInteraction = true;
     await setHiddenState(section, true);
     applyState(sectionEl, peekBar, true);
     void showSidebarCollapseNudgeOnce(peekBar);
+  };
+
+  toggleBtn.addEventListener('click', async (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    await handleHideRequest();
   });
+
+  // Span-as-button (absolute mode) needs explicit keyboard handling — native
+  // <button> Enter/Space activation isn't synthesized for span[role=button].
+  // Also stop pointerdown/mousedown bubbling so the underlying section header
+  // (which is itself a <button>) doesn't toggle expand/collapse on a stray
+  // drag-click that lands on the toggle.
+  if (placement === 'absolute') {
+    toggleBtn.addEventListener('keydown', async (event) => {
+      const ke = event as KeyboardEvent;
+      if (ke.key !== 'Enter' && ke.key !== ' ') return;
+      event.stopPropagation();
+      event.preventDefault();
+      await handleHideRequest();
+    });
+    toggleBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+    toggleBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+  }
 
   peekBar.addEventListener('click', async () => {
     hasUserInteraction = true;

@@ -104,18 +104,23 @@ describe('gemsHider', () => {
   }
 
   function createNotebookSection(): HTMLElement {
-    const host = document.createElement('project-sidenav-list');
-    const container = document.createElement('div');
-    container.className = 'project-sidenav-container';
+    // Mirrors Gemini's 2026 expandable-section layout. The header is itself a
+    // <button>, so the hider mounts its toggle in absolute mode on the section
+    // wrapper (rather than nested inside the header button).
+    const host = document.createElement('infinite-scroller');
+    const container = document.createElement('expandable-section');
+    container.setAttribute('data-test-id', 'notebooks-expandable-section');
 
-    const entry = document.createElement('side-nav-entry-button');
-    entry.setAttribute('data-test-id', 'project-management-button');
+    const header = document.createElement('button');
+    header.className = 'expandable-section-header';
+    header.setAttribute('data-test-id', 'expandable-section-toggle');
 
-    const arrowIcon = document.createElement('div');
-    arrowIcon.setAttribute('data-test-id', 'arrow-icon');
-    entry.appendChild(arrowIcon);
+    const title = document.createElement('span');
+    title.className = 'expandable-section-title gds-body-s';
+    title.textContent = 'Notebooks';
+    header.appendChild(title);
 
-    container.appendChild(entry);
+    container.appendChild(header);
     host.appendChild(container);
     document.body.appendChild(host);
 
@@ -160,70 +165,25 @@ describe('gemsHider', () => {
     await Promise.resolve();
   }
 
-  it('initializes separate hide controls for gems and notebooks', async () => {
+  it('does not inject a hide control on Notebooks (slot is now used by the folder-anchor swap toggle)', async () => {
     localState[StorageKeys.GEMS_HIDDEN] = true;
-    localState[StorageKeys.NOTEBOOKS_HIDDEN] = false;
 
     const gems = createLegacyGemsSection();
     const notebooks = createNotebookSection();
 
     await startFeature();
 
-    expect(document.querySelectorAll('.gv-sidebar-section-toggle-btn')).toHaveLength(2);
+    // Gems still gets its toggle (legacy layout still supported).
     expect(gems.querySelector('.gv-sidebar-section-toggle-btn')?.getAttribute('title')).toBe(
       'Hide Gems',
     );
-    expect(notebooks.querySelector('.gv-sidebar-section-toggle-btn')?.getAttribute('title')).toBe(
-      'Hide Notebooks',
-    );
-    const notebookPeekBar = document.querySelector<HTMLDivElement>(
-      '[data-gv-sidebar-section-id="notebooks"].gv-sidebar-section-peek-bar',
-    );
-    expect(notebookPeekBar?.getAttribute('title')).toBe('Show Notebooks');
-    expect(notebookPeekBar?.getAttribute('data-tooltip')).toBe('Show Notebooks');
-    notebookPeekBar?.dispatchEvent(new MouseEvent('mouseenter'));
-    expect(document.getElementById('gv-sidebar-section-tooltip')?.textContent).toBe(
-      'Show Notebooks',
-    );
+    // Notebooks no longer gets one — the same corner is owned by the folder
+    // manager's anchor swap button.
+    expect(notebooks.querySelector('.gv-sidebar-section-toggle-btn')).toBeNull();
+    // And no peek bar is mounted for the notebooks section.
     expect(
-      document.getElementById('gv-sidebar-section-tooltip')?.classList.contains('gv-visible'),
-    ).toBe(true);
-    expect(gems.classList.contains('gv-sidebar-section-hidden')).toBe(true);
-    expect(notebooks.classList.contains('gv-sidebar-section-hidden')).toBe(false);
-  });
-
-  it('persists notebook hidden state without affecting gems', async () => {
-    const gems = createLegacyGemsSection();
-    const notebooks = createNotebookSection();
-
-    await startFeature();
-
-    const notebookToggle = notebooks.querySelector<HTMLButtonElement>(
-      '.gv-sidebar-section-toggle-btn',
-    );
-    expect(notebookToggle).not.toBeNull();
-
-    const result = notebookToggle?.dispatchEvent(
-      new MouseEvent('click', { bubbles: true, cancelable: true }),
-    );
-    expect(result).toBe(false);
-    await flushAsyncWork();
-    await vi.runAllTimersAsync();
-
-    expect(localState[StorageKeys.NOTEBOOKS_HIDDEN]).toBe(true);
-    expect(localState[StorageKeys.GEMS_HIDDEN]).toBeUndefined();
-    expect(notebooks.classList.contains('gv-sidebar-section-hidden')).toBe(true);
-    expect(gems.classList.contains('gv-sidebar-section-hidden')).toBe(false);
-  });
-
-  it('processes notebook sections added after initialization', async () => {
-    await startFeature();
-
-    const notebooks = createNotebookSection();
-    await Promise.resolve();
-
-    expect(notebooks.querySelector('.gv-sidebar-section-toggle-btn')).not.toBeNull();
-    expect(document.querySelectorAll('.gv-sidebar-section-toggle-btn')).toHaveLength(1);
+      document.querySelector('[data-gv-sidebar-section-id="notebooks"].gv-sidebar-section-peek-bar'),
+    ).toBeNull();
   });
 
   it('collapses the folder section and shows the shared first-use nudge', async () => {

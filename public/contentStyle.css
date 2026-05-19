@@ -3495,8 +3495,13 @@ body.light-theme {
 
 /* Folder Container */
 .gv-folder-container {
-  margin-bottom: 8px;
-  padding: 8px 0 4px 0;
+  /* Top padding is 0 so the Folders title sits flush against the bottom of the
+   * adjacent native section (Notebooks/Recents), matching Gemini's own
+   * inter-section density after the 2026 redesign. Bottom uses a thin 4px
+   * gap that keeps the folder list visually grouped with the title without
+   * crowding the next native section below. */
+  margin-bottom: 4px;
+  padding: 0 0 4px 0;
   margin-left: 0;
   font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
@@ -3506,8 +3511,8 @@ body.light-theme {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 6px 8px 14px;
-  margin-bottom: 4px;
+  padding: 4px 6px 4px 14px;
+  margin-bottom: 2px;
   border-radius: 8px;
   transition:
     background-color 0.2s,
@@ -5239,6 +5244,80 @@ body.dark-theme .gv-folder-action-btn.gv-filter-active mat-icon,
 [data-theme='dark'] .gv-folder-action-btn.gv-filter-active mat-icon,
 [data-color-scheme='dark'] .gv-folder-action-btn.gv-filter-active mat-icon {
   color: #8ab4f8;
+}
+
+/* Notebooks corner swap toggle — small hover-reveal pill that paints over
+ * the Notebooks expandable-section's top-right corner. Takes the slot the
+ * old section-hider "eye" used to live in; clicking flips the folder anchor
+ * between "above Recents" (default) and "above Notebooks". Uses an inline
+ * SVG instead of mat-icon because Gemini ships its own private icon font
+ * that doesn't include `swap_vert`. */
+expandable-section.gv-folders-anchor-host {
+  position: relative;
+}
+
+.gv-folders-anchor-toggle {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.85);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.2s ease;
+  color: var(--gm3-sys-color-on-surface-variant, #5f6368);
+  z-index: 2;
+}
+
+.gv-folders-anchor-toggle svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-folders-anchor-toggle:hover {
+  background: var(--gm3-sys-color-surface-container-highest, rgba(0, 0, 0, 0.12));
+  transform: scale(1);
+}
+
+expandable-section.gv-folders-anchor-host:hover > .gv-folders-anchor-toggle,
+.gv-folders-anchor-toggle:hover,
+.gv-folders-anchor-toggle:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+  outline: none;
+}
+
+/* Active state — folder is currently anchored above Notebooks. Rotate the
+ * swap glyph so the visual matches the "move folders back below" semantic. */
+.gv-folders-anchor-toggle.gv-anchor-above-notebooks svg {
+  transform: rotate(180deg);
+}
+
+/* Dark theme */
+html.dark .gv-folders-anchor-toggle,
+body.dark-theme .gv-folders-anchor-toggle,
+[data-theme='dark'] .gv-folders-anchor-toggle,
+[data-color-scheme='dark'] .gv-folders-anchor-toggle {
+  color: #e8eaed;
+}
+
+html.dark .gv-folders-anchor-toggle:hover,
+body.dark-theme .gv-folders-anchor-toggle:hover,
+[data-theme='dark'] .gv-folders-anchor-toggle:hover,
+[data-color-scheme='dark'] .gv-folders-anchor-toggle:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 
 /* ==========================

@@ -41,9 +41,14 @@ type TestableManager = {
   recentSection: HTMLElement | null;
   folderEnabled: boolean;
   floatingModeActive: boolean;
+  folderAnchor: 'above-recents' | 'above-notebooks';
+  notebooksAnchorButton: HTMLElement | null;
   enforceFolderAboveRecents: () => boolean;
   setupPositionEnforcer: () => void;
+  ensureNotebooksAnchorButton: () => void;
+  cleanupNotebooksAnchorButton: () => void;
   findRecentSectionCandidate: () => HTMLElement | null;
+  findFolderAnchorCandidate: () => HTMLElement | null;
 };
 
 /**
@@ -214,6 +219,137 @@ describe('folder position enforcer (above Recents)', () => {
 
     expect(moved).toBe(false);
     expect(container.nextElementSibling).toBeNull();
+  });
+
+  it('anchors above Notebooks when folderAnchor is set to "above-notebooks"', () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    const { sidebar, sectionParent, notebooksSection, recentsSection } = mountSidebar();
+
+    // Folder container starts above Recents (default state).
+    const container = mountFolderContainer(sectionParent, recentsSection);
+
+    typed.sidebarContainer = sidebar;
+    typed.recentSection = recentsSection;
+    typed.containerElement = container;
+    typed.folderEnabled = true;
+    typed.floatingModeActive = false;
+
+    // Flip the anchor preference: enforcer should move the container above the
+    // Notebooks section instead.
+    typed.folderAnchor = 'above-notebooks';
+    const moved = typed.enforceFolderAboveRecents();
+
+    expect(moved).toBe(true);
+    expect(container.nextElementSibling).toBe(notebooksSection);
+    // recentSection field now mirrors the active anchor element.
+    expect(typed.recentSection).toBe(notebooksSection);
+  });
+
+  it('falls back to Recents anchor when "above-notebooks" is requested but Notebooks is absent', () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    const sidebar = document.createElement('div');
+    sidebar.setAttribute('data-test-id', 'overflow-container');
+    const sectionParent = document.createElement('div');
+    sidebar.appendChild(sectionParent);
+    const recentsSection = document.createElement('expandable-section');
+    recentsSection.setAttribute('data-test-id', 'chats-expandable-section');
+    sectionParent.appendChild(recentsSection);
+    document.body.appendChild(sidebar);
+
+    const container = document.createElement('div');
+    container.className = 'gv-folder-container';
+    sectionParent.appendChild(container); // Below Recents — wrong position.
+
+    typed.sidebarContainer = sidebar;
+    typed.recentSection = recentsSection;
+    typed.containerElement = container;
+    typed.folderEnabled = true;
+    typed.floatingModeActive = false;
+    typed.folderAnchor = 'above-notebooks'; // requested, but no Notebooks present
+
+    const moved = typed.enforceFolderAboveRecents();
+
+    expect(moved).toBe(true);
+    expect(container.nextElementSibling).toBe(recentsSection);
+  });
+
+  it('mounts the Notebooks corner swap toggle when ensureNotebooksAnchorButton runs', () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    const { sidebar, sectionParent, notebooksSection, recentsSection } = mountSidebar();
+    const container = mountFolderContainer(sectionParent, recentsSection);
+
+    typed.sidebarContainer = sidebar;
+    typed.recentSection = recentsSection;
+    typed.containerElement = container;
+    typed.folderEnabled = true;
+    typed.floatingModeActive = false;
+
+    typed.ensureNotebooksAnchorButton();
+
+    const btn = notebooksSection.querySelector('.gv-folders-anchor-toggle');
+    expect(btn).not.toBeNull();
+    expect(notebooksSection.classList.contains('gv-folders-anchor-host')).toBe(true);
+    // Default anchor is above-recents → tooltip should describe "move above
+    // notebooks" (the click action, not the current state).
+    expect(btn?.getAttribute('aria-label')).toBe('folder_anchor_move_above_notebooks');
+  });
+
+  it('re-attaches the Notebooks corner toggle when Gemini replaces the section element', () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    const { sidebar, sectionParent, notebooksSection, recentsSection } = mountSidebar();
+    const container = mountFolderContainer(sectionParent, recentsSection);
+
+    typed.sidebarContainer = sidebar;
+    typed.recentSection = recentsSection;
+    typed.containerElement = container;
+    typed.folderEnabled = true;
+    typed.floatingModeActive = false;
+
+    typed.ensureNotebooksAnchorButton();
+    const firstBtn = notebooksSection.querySelector('.gv-folders-anchor-toggle');
+    expect(firstBtn).not.toBeNull();
+
+    // Swap the Notebooks section element for a new one.
+    notebooksSection.remove();
+    const newNotebooks = document.createElement('expandable-section');
+    newNotebooks.setAttribute('data-test-id', 'notebooks-expandable-section');
+    sectionParent.insertBefore(newNotebooks, container);
+
+    typed.ensureNotebooksAnchorButton();
+
+    expect(newNotebooks.querySelector('.gv-folders-anchor-toggle')).not.toBeNull();
+    // The old button (still detached) is no longer the tracked one.
+    expect(typed.notebooksAnchorButton?.parentElement).toBe(newNotebooks);
+  });
+
+  it('cleanupNotebooksAnchorButton removes the button and host class', () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    const { sidebar, sectionParent, notebooksSection, recentsSection } = mountSidebar();
+    const container = mountFolderContainer(sectionParent, recentsSection);
+
+    typed.sidebarContainer = sidebar;
+    typed.recentSection = recentsSection;
+    typed.containerElement = container;
+    typed.folderEnabled = true;
+    typed.floatingModeActive = false;
+    typed.ensureNotebooksAnchorButton();
+    expect(notebooksSection.querySelector('.gv-folders-anchor-toggle')).not.toBeNull();
+
+    typed.cleanupNotebooksAnchorButton();
+
+    expect(notebooksSection.querySelector('.gv-folders-anchor-toggle')).toBeNull();
+    expect(notebooksSection.classList.contains('gv-folders-anchor-host')).toBe(false);
+    expect(typed.notebooksAnchorButton).toBeNull();
   });
 
   it('observer reacts to childList mutations and re-anchors within an animation frame', async () => {

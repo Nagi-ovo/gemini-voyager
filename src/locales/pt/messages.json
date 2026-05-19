@@ -483,6 +483,14 @@
     "message": "Configurações de pastas",
     "description": "Tooltip for the gear icon that opens folder-scoped settings"
   },
+  "folder_anchor_move_above_notebooks": {
+    "message": "Mover pastas acima de Notebooks",
+    "description": "Tooltip on the folder header swap button shown when folders are currently above Recents — clicking moves them above Notebooks instead."
+  },
+  "folder_anchor_move_above_recents": {
+    "message": "Mover pastas acima de Recents",
+    "description": "Tooltip on the folder header swap button shown when folders are currently above Notebooks — clicking moves them above Recents instead."
+  },
   "folder_item_font_size": {
     "message": "Tamanho do texto",
     "description": "Label for the folder/conversation text size stepper inside folder settings"

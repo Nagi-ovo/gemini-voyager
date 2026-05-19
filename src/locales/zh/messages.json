@@ -483,6 +483,14 @@
     "message": "文件夹设置",
     "description": "齿轮图标提示，打开文件夹相关设置"
   },
+  "folder_anchor_move_above_notebooks": {
+    "message": "将文件夹移到 Notebooks 上方",
+    "description": "Tooltip on the folder header swap button shown when folders are currently above Recents — clicking moves them above Notebooks instead."
+  },
+  "folder_anchor_move_above_recents": {
+    "message": "将文件夹移到 Recents 上方",
+    "description": "Tooltip on the folder header swap button shown when folders are currently above Notebooks — clicking moves them above Recents instead."
+  },
   "folder_item_font_size": {
     "message": "字号",
     "description": "文件夹/对话字号步进器的标签"

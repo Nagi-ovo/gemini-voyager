@@ -483,6 +483,14 @@
     "message": "폴더 설정",
     "description": "Tooltip for the gear icon that opens folder-scoped settings"
   },
+  "folder_anchor_move_above_notebooks": {
+    "message": "폴더를 Notebooks 위로 이동",
+    "description": "Tooltip on the folder header swap button shown when folders are currently above Recents — clicking moves them above Notebooks instead."
+  },
+  "folder_anchor_move_above_recents": {
+    "message": "폴더를 Recents 위로 이동",
+    "description": "Tooltip on the folder header swap button shown when folders are currently above Notebooks — clicking moves them above Recents instead."
+  },
   "folder_item_font_size": {
     "message": "글자 크기",
     "description": "Label for the folder/conversation text size stepper inside folder settings"

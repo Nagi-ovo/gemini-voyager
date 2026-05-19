@@ -162,6 +162,18 @@ export class FolderManager {
   // already correctly placed.
   private positionObserver: MutationObserver | null = null;
   private positionEnforceRafId: number | null = null;
+  // User-controlled placement of the folder panel within Gemini's sidebar.
+  // 'above-recents' (default) keeps the historical behavior of anchoring just
+  // above the Recents expandable-section. 'above-notebooks' anchors above the
+  // Notebooks section instead, which collapses the visual gap when the user
+  // wants Folders to be the topmost section. Persisted via
+  // `StorageKeys.FOLDERS_ANCHOR` in chrome.storage.local.
+  private folderAnchor: 'above-recents' | 'above-notebooks' = 'above-recents';
+  // The small hover-reveal swap button we paint over Notebooks' top-right
+  // corner (the same spot the section-hider's "eye" button used to live in).
+  // Click flips `folderAnchor`. Tracked so we can detect a stale element when
+  // Gemini swaps the Notebooks section wholesale and re-paint on the new one.
+  private notebooksAnchorButton: HTMLElement | null = null;
   private importInProgress: boolean = false; // Lock to prevent concurrent imports
   private exportInProgress: boolean = false; // Lock to prevent concurrent exports
   private selectedConversations: Set<string> = new Set(); // For multi-select support
@@ -308,6 +320,9 @@ export class FolderManager {
       // Load hide archived setting
       await this.loadHideArchivedSetting();
 
+      // Load folder anchor preference (which native section to sit above)
+      await this.loadFolderAnchorSetting();
+
       // Load filter user setting
       await this.loadFilterUserSetting();
       await this.loadFolderTreeIndentSetting();
@@ -405,6 +420,7 @@ export class FolderManager {
     }
 
     this.teardownPositionEnforcer();
+    this.cleanupNotebooksAnchorButton();
 
     // Tear down floating-mode UI if it was surfaced.
     unmountFloatingModeNudge();
@@ -1021,6 +1037,33 @@ export class FolderManager {
   }
 
   /**
+   * Re-query the current Notebooks section element. Only the 2026 layout
+   * exposes this — older layouts return null and the caller falls back to the
+   * Recents anchor. Pure (no instance state touched).
+   */
+  private findNotebooksSectionCandidate(): HTMLElement | null {
+    if (!this.sidebarContainer) return null;
+    const notebooks = this.sidebarContainer.querySelector(
+      'expandable-section[data-test-id="notebooks-expandable-section"]',
+    );
+    return notebooks instanceof HTMLElement ? notebooks : null;
+  }
+
+  /**
+   * Resolve the section element the folder panel should anchor immediately
+   * above, honoring the user's `folderAnchor` preference. Falls back to the
+   * Recents section when 'above-notebooks' is requested but the Notebooks
+   * section isn't present (e.g. legacy layout, not signed in to Notebooks).
+   */
+  private findFolderAnchorCandidate(): HTMLElement | null {
+    if (this.folderAnchor === 'above-notebooks') {
+      const notebooks = this.findNotebooksSectionCandidate();
+      if (notebooks) return notebooks;
+    }
+    return this.findRecentSectionCandidate();
+  }
+
+  /**
    * Pure re-query for the current Recents section element. Returns the
    * `expandable-section[data-test-id="chats-expandable-section"]` wrapper when
    * Gemini's new layout is in effect, or one of the legacy containers as a
@@ -1065,7 +1108,10 @@ export class FolderManager {
   private findRecentSection(): void {
     if (!this.sidebarContainer) return;
 
-    const candidate = this.findRecentSectionCandidate();
+    // Honor folderAnchor on first injection so the panel lands in the right
+    // slot without needing a follow-up enforcer pass. Falls through to the
+    // Recents candidate when the requested anchor isn't present.
+    const candidate = this.findFolderAnchorCandidate();
     if (candidate) {
       this.recentSection = candidate;
       return;
@@ -1084,14 +1130,18 @@ export class FolderManager {
   }
 
   /**
-   * Ensure the folder container is positioned immediately before the *current*
-   * Recents section. Gemini periodically replaces the section element wholesale
-   * (especially during the 2026 redesign rollout), which would leave our folder
-   * container stranded below the new section. This is the recovery hook.
+   * Ensure the folder container is positioned immediately before whichever
+   * section element matches the current `folderAnchor` preference. Gemini
+   * periodically replaces section elements wholesale during the 2026 redesign,
+   * which would leave our folder container stranded below the new anchor.
+   * This is the recovery hook.
    *
    * Returns `true` when a move occurred. No-ops (and returns `false`) once the
    * container is already correctly placed, so it's safe to call from
    * MutationObserver callbacks without creating an infinite reorder loop.
+   *
+   * Kept under the old name (`...AboveRecents`) because Recents is the default
+   * anchor; semantically it now means "above the current anchor section".
    */
   private enforceFolderAboveRecents(): boolean {
     if (this.isDestroyed) return false;
@@ -1100,22 +1150,27 @@ export class FolderManager {
       return false;
     }
 
-    const currentSection = this.findRecentSectionCandidate();
-    if (!currentSection || !currentSection.parentElement) return false;
+    const anchorSection = this.findFolderAnchorCandidate();
+    if (!anchorSection || !anchorSection.parentElement) return false;
 
     // Refresh stale reference whenever Gemini replaced the section element.
-    if (this.recentSection !== currentSection) {
-      this.recentSection = currentSection;
+    if (this.recentSection !== anchorSection) {
+      this.recentSection = anchorSection;
     }
 
-    const parent = currentSection.parentElement;
+    // Piggyback on every enforcer tick to re-attach the Notebooks corner
+    // toggle if Gemini swapped the Notebooks section element. Cheap no-op
+    // when it's already correctly mounted.
+    this.ensureNotebooksAnchorButton();
+
+    const parent = anchorSection.parentElement;
     const inRightParent = this.containerElement.parentElement === parent;
-    const immediatelyBefore = this.containerElement.nextElementSibling === currentSection;
+    const immediatelyBefore = this.containerElement.nextElementSibling === anchorSection;
 
     if (inRightParent && immediatelyBefore) return false;
 
-    this.debug('Re-anchoring folder container above Recents');
-    parent.insertBefore(this.containerElement, currentSection);
+    this.debug('Re-anchoring folder container above', this.folderAnchor);
+    parent.insertBefore(this.containerElement, anchorSection);
     return true;
   }
 
@@ -1191,6 +1246,11 @@ export class FolderManager {
     // Wire up the position enforcer so future Gemini re-renders that swap the
     // Recents section element can't strand our folder container below it.
     this.setupPositionEnforcer();
+
+    // Paint the Notebooks corner swap toggle in its initial state (mounts on
+    // the current Notebooks section, syncs tooltip + active class). The
+    // enforcer keeps it up to date when Gemini re-renders that section.
+    this.ensureNotebooksAnchorButton();
   }
 
   private createMultiSelectIndicator(): HTMLElement {
@@ -2756,6 +2816,7 @@ export class FolderManager {
       }
 
       this.teardownPositionEnforcer();
+      this.cleanupNotebooksAnchorButton();
 
       if (this.routeChangeCleanup) {
         try {
@@ -7032,6 +7093,143 @@ export class FolderManager {
     }
   }
 
+  private async loadFolderAnchorSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.local.get({
+        [StorageKeys.FOLDERS_ANCHOR]: 'above-recents',
+      });
+      const raw = result[StorageKeys.FOLDERS_ANCHOR];
+      this.folderAnchor = raw === 'above-notebooks' ? 'above-notebooks' : 'above-recents';
+      this.debug('Loaded folder anchor preference:', this.folderAnchor);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load folder anchor preference:', error);
+      this.folderAnchor = 'above-recents';
+    }
+  }
+
+  /**
+   * Flip the folder anchor between 'above-recents' and 'above-notebooks',
+   * persist it, and re-anchor the panel immediately. Persistence triggers the
+   * storage listener too, but we eagerly call the enforcer here so the user
+   * sees the panel jump instantly instead of waiting for the storage echo.
+   */
+  private async toggleFolderAnchor(): Promise<void> {
+    const next: 'above-recents' | 'above-notebooks' =
+      this.folderAnchor === 'above-notebooks' ? 'above-recents' : 'above-notebooks';
+    this.folderAnchor = next;
+    this.refreshNotebooksAnchorButtonState();
+    this.enforceFolderAboveRecents();
+    try {
+      await browser.storage.local.set({ [StorageKeys.FOLDERS_ANCHOR]: next });
+    } catch (error) {
+      console.error('[FolderManager] Failed to persist folder anchor preference:', error);
+    }
+  }
+
+  /**
+   * Build the small hover-reveal swap toggle that paints over the Notebooks
+   * section's top-right corner (taking the slot where the section-hider's eye
+   * used to live). Uses an inline SVG — not a `mat-icon` ligature — because
+   * Gemini ships its own `Luminous Symbols` font that doesn't include
+   * `swap_vert`; the public `Google Symbols` font does, but it's not loaded on
+   * gemini.google.com, so the ligature would render as the literal letter "S".
+   *
+   * Built as `<span role="button">` rather than `<button>` so it can sit
+   * inside Gemini's expandable-section without producing a nested button.
+   */
+  private createNotebooksAnchorButton(): HTMLElement {
+    const btn = document.createElement('span');
+    btn.className = 'gv-folders-anchor-toggle';
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('tabindex', '0');
+    // Material Symbols `swap_vert` path data. Inline so font availability is
+    // a non-issue. viewBox matches the Material Symbols sheet.
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true">
+      <path d="M320-440v-287L217-624l-57-56 200-200 200 200-57 56-103-103v287h-80Zm320 280L440-360l57-56 103 103v-287h80v287l103-103 57 56-200 200Z"/>
+    </svg>`;
+    btn.addEventListener('click', (e) => {
+      // Stop the click from bubbling to the expandable-section's header
+      // <button> (which would toggle the section open/closed).
+      e.stopPropagation();
+      e.preventDefault();
+      void this.toggleFolderAnchor();
+    });
+    btn.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.stopPropagation();
+      e.preventDefault();
+      void this.toggleFolderAnchor();
+    });
+    btn.addEventListener('pointerdown', (e) => e.stopPropagation());
+    btn.addEventListener('mousedown', (e) => e.stopPropagation());
+    return btn;
+  }
+
+  /**
+   * Make sure exactly one swap toggle is mounted on the *current* Notebooks
+   * section. Safe to call on every position-enforcer tick: re-mounts after
+   * Gemini replaces the Notebooks element, no-ops once correctly attached.
+   */
+  private ensureNotebooksAnchorButton(): void {
+    if (this.isDestroyed) return;
+    if (!this.folderEnabled || this.floatingModeActive) {
+      this.cleanupNotebooksAnchorButton();
+      return;
+    }
+
+    const notebooks = this.findNotebooksSectionCandidate();
+    if (!notebooks) {
+      // Legacy layout or signed-out — nothing to paint on.
+      if (this.notebooksAnchorButton && !this.notebooksAnchorButton.isConnected) {
+        this.notebooksAnchorButton = null;
+      }
+      return;
+    }
+
+    const existing = this.notebooksAnchorButton;
+    if (existing && existing.parentElement === notebooks) {
+      this.refreshNotebooksAnchorButtonState();
+      return;
+    }
+
+    // Either no button yet, or the prior section element was replaced.
+    if (existing && existing.isConnected) existing.remove();
+    notebooks.classList.add('gv-folders-anchor-host');
+    const btn = this.createNotebooksAnchorButton();
+    notebooks.appendChild(btn);
+    this.notebooksAnchorButton = btn;
+    this.refreshNotebooksAnchorButtonState();
+  }
+
+  private cleanupNotebooksAnchorButton(): void {
+    if (this.notebooksAnchorButton) {
+      this.notebooksAnchorButton.remove();
+      this.notebooksAnchorButton = null;
+    }
+    // Strip the host class from any lingering Notebooks section so we don't
+    // leave it `position: relative` after the feature shuts down.
+    document
+      .querySelectorAll('expandable-section.gv-folders-anchor-host')
+      .forEach((el) => el.classList.remove('gv-folders-anchor-host'));
+  }
+
+  /**
+   * Sync the swap button's tooltip + active-state class with the current
+   * anchor preference. Tooltip describes the action a click will take (not
+   * the current state) so it stays useful no matter which side folders are on.
+   */
+  private refreshNotebooksAnchorButtonState(): void {
+    const btn = this.notebooksAnchorButton;
+    if (!btn) return;
+    const showsAboveNotebooks = this.folderAnchor === 'above-notebooks';
+    const label = showsAboveNotebooks
+      ? this.t('folder_anchor_move_above_recents')
+      : this.t('folder_anchor_move_above_notebooks');
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+    btn.classList.toggle('gv-anchor-above-notebooks', showsAboveNotebooks);
+  }
+
   private async loadHideArchivedSetting(): Promise<void> {
     try {
       const result = await browser.storage.sync.get({
@@ -7216,6 +7414,7 @@ export class FolderManager {
               this.sideNavObserver = null;
             }
             this.teardownPositionEnforcer();
+            this.cleanupNotebooksAnchorButton();
             void this.startFloatingMode();
           } else {
             // Switch to sidebar: tear down floating, then ask the existing
@@ -7278,6 +7477,19 @@ export class FolderManager {
       if (areaName === 'local' && changes[this.activeStorageKey]) {
         this.debug('Folder data changed in chrome.storage.local, reloading...');
         this.reloadFoldersFromStorage();
+      }
+      // Folder anchor preference (local-only) — re-anchor the panel without
+      // a full reinit. Mirrors `toggleFolderAnchor` for the cross-tab case.
+      if (areaName === 'local' && changes[StorageKeys.FOLDERS_ANCHOR]) {
+        const raw = changes[StorageKeys.FOLDERS_ANCHOR].newValue;
+        const next: 'above-recents' | 'above-notebooks' =
+          raw === 'above-notebooks' ? 'above-notebooks' : 'above-recents';
+        if (next !== this.folderAnchor) {
+          this.folderAnchor = next;
+          this.debug('Folder anchor changed via storage event:', next);
+          this.refreshNotebooksAnchorButtonState();
+          this.enforceFolderAboveRecents();
+        }
       }
     });
 
@@ -8025,6 +8237,10 @@ export class FolderManager {
     if (emptyState) {
       emptyState.textContent = this.t('folder_empty');
     }
+
+    // Notebooks corner swap toggle is mounted on the Notebooks section, not
+    // inside our container — refresh its tooltip in the now-current locale.
+    this.refreshNotebooksAnchorButtonState();
 
     this.debug('Header language text updated');
   }
