@@ -18,6 +18,24 @@ const changelogModules = import.meta.glob('./notes/*.md', {
   eager: false,
 }) as Record<string, () => Promise<string>>;
 
+/**
+ * Versions whose changelog must show as a popup even for users who opted into
+ * badge-only mode. Reserved for releases the maintainer wants every user to
+ * actually read — e.g. when Gemini ships a major UI overhaul that breaks
+ * assumptions and a quiet badge would let users miss critical context.
+ *
+ * Effect: bypasses the badge-mode early-return in startChangelog. The user's
+ * CHANGELOG_NOTIFY_MODE preference is preserved untouched for future releases.
+ */
+const FORCE_POPUP_VERSIONS: ReadonlySet<string> = new Set(['1.4.5']);
+
+/**
+ * Seconds the close controls remain disabled after the modal opens for a
+ * force-popup version, so users actually skim the notes before dismissing.
+ * Only applies to FORCE_POPUP_VERSIONS — regular releases close immediately.
+ */
+const FORCE_POPUP_READ_GATE_SECONDS = 15;
+
 const MARKDOWN_IMAGE_URL_REGEX = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
 const MARKDOWN_DOC_LINK_REGEX = /\[([^\]]*)\]\((\/guide\/[^\s)]+)\)/g;
 
@@ -232,6 +250,7 @@ function createChangelogModal(
   htmlContent: string,
   lang: AppLanguage,
   initialNotifyMode: 'popup' | 'badge' = 'popup',
+  readGateSeconds: number = 0,
 ): {
   overlay: HTMLDivElement;
   onClose: () => void;
@@ -277,12 +296,16 @@ function createChangelogModal(
   const footer = document.createElement('div');
   footer.className = 'gv-changelog-footer';
 
-  // Recommendation message
-  const recommendation = document.createElement('p');
-  recommendation.className = 'gv-changelog-recommendation';
-  recommendation.textContent = t('changelog_recommendation', lang);
+  // Follow-me area — one gradient-tinted block that contains the CTA text
+  // and the social chips together. The gradient lives on the wrapper; the
+  // text and the chip row sit inside as siblings.
+  const followArea = document.createElement('div');
+  followArea.className = 'gv-changelog-follow-area';
 
-  // Social media handles row
+  const followText = document.createElement('p');
+  followText.className = 'gv-changelog-follow-text';
+  followText.textContent = t('changelog_follow_cta', lang);
+
   const socialRow = document.createElement('div');
   socialRow.className = 'gv-changelog-social-row';
   const socialAccounts = [
@@ -316,6 +339,9 @@ function createChangelogModal(
     const iconSpan = document.createElement('span');
     iconSpan.className = 'gv-changelog-social-icon';
     iconSpan.innerHTML = account.icon;
+    // Keep the platform brand color on the SVG icon so chips still read as
+    // each platform's own; the chip border/glow uses a unified teal-blue-
+    // green gradient (see .gv-changelog-social-item in contentStyle.css).
     if (account.color) {
       iconSpan.style.color = account.color;
     }
@@ -353,17 +379,10 @@ function createChangelogModal(
   githubLink.innerHTML =
     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>';
 
-  // X (Twitter) link
-  const xLink = document.createElement('a');
-  xLink.className = 'gv-changelog-icon-link gv-changelog-icon-x';
-  xLink.href = 'https://x.com/Nag1ovo';
-  xLink.target = '_blank';
-  xLink.rel = 'noopener noreferrer';
-  xLink.setAttribute('aria-label', 'X (Twitter)');
-  xLink.innerHTML =
-    '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.26 5.632 5.904-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
-
   // Docs link with annotation
+  // (X/Twitter icon is intentionally omitted from this bottom row — it
+  // already appears as a chip in the follow-me CTA card above, so a
+  // duplicate would just visually crowd the action row.)
   const docsWrapper = document.createElement('div');
   docsWrapper.className = 'gv-changelog-docs-wrapper';
 
@@ -386,7 +405,6 @@ function createChangelogModal(
 
   iconGroup.appendChild(sponsorLink);
   iconGroup.appendChild(githubLink);
-  iconGroup.appendChild(xLink);
   iconGroup.appendChild(docsWrapper);
 
   const gotItBtn = document.createElement('button');
@@ -431,8 +449,10 @@ function createChangelogModal(
     }
   });
 
-  footer.appendChild(recommendation);
-  footer.appendChild(socialRow);
+  followArea.appendChild(followText);
+  followArea.appendChild(socialRow);
+
+  footer.appendChild(followArea);
   footer.appendChild(notifyToggle);
 
   // Web store rating prompt (Chrome Web Store / Edge Add-ons)
@@ -476,14 +496,72 @@ function createChangelogModal(
   dialog.appendChild(footer);
   overlay.appendChild(dialog);
 
+  // Read-gate countdown: for force-popup releases we briefly disable the
+  // close controls (× / Got-it button / outside-click) and show the remaining
+  // seconds on the Got-it button. This makes sure users actually see the
+  // notes for major releases instead of dismissing reflexively.
+  let readyToClose = readGateSeconds <= 0;
+  let countdownTimer: ReturnType<typeof setInterval> | null = null;
+  const gotItLabel = t('changelog_close', lang);
+
+  const setGated = (remaining: number) => {
+    closeBtn.disabled = true;
+    closeBtn.classList.add('gv-changelog-close--gated');
+    gotItBtn.disabled = true;
+    gotItBtn.classList.add('gv-changelog-got-it--gated');
+    gotItBtn.textContent = `${gotItLabel} (${remaining})`;
+  };
+
+  const releaseGate = () => {
+    readyToClose = true;
+    closeBtn.disabled = false;
+    closeBtn.classList.remove('gv-changelog-close--gated');
+    gotItBtn.disabled = false;
+    gotItBtn.classList.remove('gv-changelog-got-it--gated');
+    gotItBtn.textContent = gotItLabel;
+    if (countdownTimer !== null) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+    }
+  };
+
+  if (!readyToClose) {
+    let remaining = readGateSeconds;
+    setGated(remaining);
+    countdownTimer = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        releaseGate();
+      } else {
+        setGated(remaining);
+      }
+    }, 1000);
+  }
+
   const onClose = (): void => {
+    if (countdownTimer !== null) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+    }
     overlay.remove();
   };
 
-  closeBtn.addEventListener('click', onClose);
-  gotItBtn.addEventListener('click', onClose);
+  closeBtn.addEventListener('click', () => {
+    if (!readyToClose) return;
+    onClose();
+  });
+  gotItBtn.addEventListener('click', () => {
+    if (!readyToClose) return;
+    onClose();
+  });
+  // Force-popup releases require an explicit click on × or the Got-it
+  // button to dismiss — outside-click never closes the modal, even after
+  // the countdown finishes. Regular releases keep the click-outside-to-
+  // dismiss convenience.
+  const lockOutsideClick = readGateSeconds > 0;
   overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
+    if (lockOutsideClick) return;
+    if (e.target === overlay && readyToClose) {
       onClose();
     }
   });
@@ -495,10 +573,15 @@ function createChangelogModal(
  * Load and render the changelog modal.
  * @param version - Which version's changelog to show (defaults to EXTENSION_VERSION)
  * @param skipDismissCheck - Skip the dismissed-version check
+ * @param applyReadGate - Whether the force-popup read-gate countdown should
+ *   engage. True for the auto-popup on page load; false for re-opens from
+ *   the prompt manager (the user has already seen this once, no need to
+ *   gate them again).
  */
 async function showChangelogModal(
   version = EXTENSION_VERSION,
   skipDismissCheck = false,
+  applyReadGate = true,
 ): Promise<HTMLDivElement | null> {
   // 1. Check dismissed version
   if (!skipDismissCheck) {
@@ -577,16 +660,20 @@ async function showChangelogModal(
 
   // 6. Inject modal
   const notifyMode = await readNotifyMode();
-  const { overlay } = createChangelogModal(sanitizedHtml, lang, notifyMode);
+  const readGateSeconds =
+    applyReadGate && FORCE_POPUP_VERSIONS.has(version) ? FORCE_POPUP_READ_GATE_SECONDS : 0;
+  const { overlay } = createChangelogModal(sanitizedHtml, lang, notifyMode, readGateSeconds);
   document.body.appendChild(overlay);
   return overlay;
 }
 
 /**
- * Open the changelog modal for the current version (always shows, no dismiss check).
+ * Open the changelog modal for the current version (always shows, no dismiss
+ * check). Manual opens from the prompt manager skip the read-gate countdown
+ * since the user has already seen the auto-popup once.
  */
 export async function openChangelog(): Promise<void> {
-  await showChangelogModal(EXTENSION_VERSION, true);
+  await showChangelogModal(EXTENSION_VERSION, true, false);
 }
 
 /**
@@ -608,7 +695,9 @@ export async function hasUnreadChangelog(): Promise<boolean> {
  * Returns a Promise that resolves when the modal is closed.
  */
 export async function showChangelogModalDirect(): Promise<void> {
-  const overlay = await showChangelogModal(EXTENSION_VERSION, true);
+  // Badge-mode prompt-manager open: skip the read-gate. The user is
+  // explicitly clicking the changelog button — they don't need a countdown.
+  const overlay = await showChangelogModal(EXTENSION_VERSION, true, false);
   if (!overlay) {
     // No notes found for this version — dismiss anyway so badge doesn't persist
     try {
@@ -650,9 +739,11 @@ export async function startChangelog(): Promise<() => void> {
   };
 
   try {
-    // In badge mode, skip auto-showing the modal (prompt manager handles it)
+    // In badge mode, skip auto-showing the modal (prompt manager handles it).
+    // Exception: force-popup versions ignore this and surface the modal anyway.
     const notifyMode = await readNotifyMode();
-    if (notifyMode === 'badge') {
+    const isForcePopup = FORCE_POPUP_VERSIONS.has(EXTENSION_VERSION);
+    if (notifyMode === 'badge' && !isForcePopup) {
       return () => {};
     }
 

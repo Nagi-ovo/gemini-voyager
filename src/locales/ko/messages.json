@@ -1651,6 +1651,10 @@
     "message": "Voyager 가 도움이 되셨다면, 친구나 SNS 에서 공유해 주세요 — 개발자를 태그해 주시면 큰 힘이 됩니다!",
     "description": "Changelog modal recommendation message"
   },
+  "changelog_follow_cta": {
+    "message": "최신 업데이트를 받아보세요 — 새 릴리스와 즉시 수정 소식은 SNS에서 가장 먼저 알려드립니다. 팔로우해 주세요!",
+    "description": "Changelog modal follow-me CTA headline"
+  },
   "changelog_social_xiaohongshu": {
     "message": "Xiaohongshu",
     "description": "Xiaohongshu platform name for social links"

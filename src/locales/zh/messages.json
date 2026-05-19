@@ -1651,6 +1651,10 @@
     "message": "如果 Voyager 帮到了你，欢迎推荐给朋友或发到社媒，记得 @ 作者哦！",
     "description": "Changelog modal recommendation message"
   },
+  "changelog_follow_cta": {
+    "message": "获取最新更新，欢迎关注我的社交媒体，新功能与即时修复都在这里第一时间发布。",
+    "description": "Changelog modal follow-me CTA headline"
+  },
   "changelog_social_xiaohongshu": {
     "message": "小红书",
     "description": "Xiaohongshu platform name for social links"

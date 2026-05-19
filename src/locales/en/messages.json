@@ -1651,6 +1651,10 @@
     "message": "If Voyager has been helpful, share it with friends or on social media — feel free to tag the author!",
     "description": "Changelog modal recommendation message"
   },
+  "changelog_follow_cta": {
+    "message": "Get the latest updates — follow me on social media for new releases and quick fixes.",
+    "description": "Changelog modal follow-me CTA headline"
+  },
   "changelog_social_xiaohongshu": {
     "message": "Xiaohongshu",
     "description": "Xiaohongshu platform name for social links"

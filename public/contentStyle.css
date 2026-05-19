@@ -7344,6 +7344,21 @@ html.dark .gv-changelog-body h3,
   color: #e8eaed;
 }
 
+/* Highlights lead-in — the bold sentence opening the first paragraph
+ * of the changelog body (e.g. "**Important update — please skim…**"
+ * / "**重要更新，建议花一分钟浏览。**"). The markdown source has no
+ * separate "### Highlights" heading; the bold strong tag IS the heading,
+ * tinted in the project's theme green so it reads as the primary pointer. */
+.gv-changelog-body > p:first-child strong:first-child {
+  color: oklch(0.55 0.17 155);
+}
+
+html.dark .gv-changelog-body > p:first-child strong:first-child,
+[data-theme='dark'] .gv-changelog-body > p:first-child strong:first-child,
+[data-color-scheme='dark'] .gv-changelog-body > p:first-child strong:first-child {
+  color: oklch(0.7 0.16 155);
+}
+
 .gv-changelog-body ul {
   margin: 0 0 12px;
   padding-left: 20px;
@@ -7411,52 +7426,114 @@ html.dark .gv-changelog-footer,
   border-top-color: #3c4043;
 }
 
-.gv-changelog-recommendation {
-  font-size: 13px;
-  color: #5f6368;
+/* Follow-me area — gradient-tinted block holding the CTA copy and the
+ * social chips together. The gradient is the visual cue that "this is the
+ * follow-me block"; the inner text + chip row are direct children, no
+ * extra cards. */
+.gv-changelog-follow-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    oklch(0.96 0.05 195) 0%,
+    oklch(0.95 0.06 250) 50%,
+    oklch(0.95 0.05 155) 100%
+  );
+}
+
+html.dark .gv-changelog-follow-area,
+[data-theme='dark'] .gv-changelog-follow-area,
+[data-color-scheme='dark'] .gv-changelog-follow-area {
+  background: linear-gradient(
+    135deg,
+    oklch(0.35 0.06 195) 0%,
+    oklch(0.32 0.08 250) 50%,
+    oklch(0.32 0.07 155) 100%
+  );
+}
+
+.gv-changelog-follow-text {
   margin: 0;
+  font-size: 13px;
   line-height: 1.5;
+  color: #1f2937;
 }
 
-html.dark .gv-changelog-recommendation,
-[data-theme='dark'] .gv-changelog-recommendation,
-[data-color-scheme='dark'] .gv-changelog-recommendation {
-  color: #9aa0a6;
+html.dark .gv-changelog-follow-text,
+[data-theme='dark'] .gv-changelog-follow-text,
+[data-color-scheme='dark'] .gv-changelog-follow-text {
+  color: #e8eaed;
 }
 
+/* Chip row inside the follow-me area — plain flex layout; gradient lives
+ * on the parent .gv-changelog-follow-area. */
 .gv-changelog-social-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 12px;
-  margin: 8px 0 0;
+  gap: 8px;
+  margin: 0;
   font-size: 12px;
-  color: #5f6368;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
+/* Chips — clean white pills sitting on the gradient ribbon. Spring lift
+ * + icon micro-scale on hover keeps them feeling alive without competing
+ * with the background gradient. */
 .gv-changelog-social-item {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  color: #1f2937;
   text-decoration: none;
-  color: inherit;
-  transition: opacity 0.15s;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 a.gv-changelog-social-item:hover {
-  opacity: 0.7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+}
+
+a.gv-changelog-social-item:hover .gv-changelog-social-icon {
+  transform: scale(1.1);
+}
+
+a.gv-changelog-social-item:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .gv-changelog-social-icon {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-html.dark .gv-changelog-social-row,
-[data-theme='dark'] .gv-changelog-social-row,
-[data-color-scheme='dark'] .gv-changelog-social-row {
-  color: #9aa0a6;
+html.dark .gv-changelog-social-item,
+[data-theme='dark'] .gv-changelog-social-item,
+[data-color-scheme='dark'] .gv-changelog-social-item {
+  background: #2d2e30;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e8eaed;
+}
+
+html.dark a.gv-changelog-social-item:hover,
+[data-theme='dark'] a.gv-changelog-social-item:hover,
+[data-color-scheme='dark'] a.gv-changelog-social-item:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 
 .gv-changelog-action-row {
@@ -7598,6 +7675,44 @@ html.dark .gv-changelog-got-it:hover,
 [data-theme='dark'] .gv-changelog-got-it:hover,
 [data-color-scheme='dark'] .gv-changelog-got-it:hover {
   background: #aecbfa;
+}
+
+/* Read-gate disabled state — used during the force-popup countdown.
+ * Mute color, kill hover/pointer feedback, but keep a monospace-ish tabular
+ * feel so the " (5)" → " (1)" countdown digits don't reflow the button. */
+.gv-changelog-got-it--gated,
+.gv-changelog-got-it--gated:hover {
+  background: #c5d3e8;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: not-allowed;
+  font-variant-numeric: tabular-nums;
+}
+
+html.dark .gv-changelog-got-it--gated,
+html.dark .gv-changelog-got-it--gated:hover,
+[data-theme='dark'] .gv-changelog-got-it--gated,
+[data-theme='dark'] .gv-changelog-got-it--gated:hover,
+[data-color-scheme='dark'] .gv-changelog-got-it--gated,
+[data-color-scheme='dark'] .gv-changelog-got-it--gated:hover {
+  background: #4a5566;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.gv-changelog-close--gated,
+.gv-changelog-close--gated:hover {
+  color: rgba(95, 99, 104, 0.35);
+  background-color: transparent;
+  cursor: not-allowed;
+}
+
+html.dark .gv-changelog-close--gated,
+html.dark .gv-changelog-close--gated:hover,
+[data-theme='dark'] .gv-changelog-close--gated,
+[data-theme='dark'] .gv-changelog-close--gated:hover,
+[data-color-scheme='dark'] .gv-changelog-close--gated,
+[data-color-scheme='dark'] .gv-changelog-close--gated:hover {
+  color: rgba(154, 160, 166, 0.35);
+  background-color: transparent;
 }
 
 .gv-changelog-chrome-rating {
