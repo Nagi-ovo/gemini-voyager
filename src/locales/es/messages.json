@@ -1503,6 +1503,18 @@
     "message": "Ancha",
     "description": "Wide subfolder indentation label"
   },
+  "gemsSidebarCount": {
+    "message": "Gems recientes en la barra lateral",
+    "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."
+  },
+  "gemsSidebarCountOff": {
+    "message": "Desactivado",
+    "description": "Narrow-end label on the gems count slider (count=0, section hidden)."
+  },
+  "gemsSidebarCountMany": {
+    "message": "Muchos",
+    "description": "Wide-end label on the gems count slider (count up to 10)."
+  },
   "export_select_mode_select_all": {
     "message": "Seleccionar todo",
     "description": "Selection mode select all toggle"

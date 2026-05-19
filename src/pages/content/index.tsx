@@ -28,6 +28,7 @@ import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { isForkFeatureEnabledValue } from './fork/featureFlag';
 import { startFork } from './fork/index';
 import { startGemsHider } from './gemsHider/index';
+import { startGemsSidebar } from './gemsSidebar/index';
 import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';
 import { startMarkdownPatcher } from './markdownPatcher/index';
@@ -82,6 +83,7 @@ let inputVimModeCleanup: (() => void) | null = null;
 let sendBehaviorCleanup: (() => void) | null = null;
 let draftSaveCleanup: (() => void) | null = null;
 let forkCleanup: (() => void) | null = null;
+let gemsSidebarCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -269,6 +271,12 @@ async function initializeFeatures(): Promise<void> {
 
       // Gems hider - hide/show toggle for Gems list section
       startGemsHider();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Gems sidebar — recent gems list injected above Notebooks, populated
+      // from a local cache that's refreshed whenever the user visits the
+      // /gems/view management page. Count is controlled from the popup.
+      gemsSidebarCleanup = await startGemsSidebar();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Markdown Patcher - fixes broken bold tags due to HTML injection
@@ -522,6 +530,10 @@ function handleVisibilityChange(): void {
         if (forkCleanup) {
           forkCleanup();
           forkCleanup = null;
+        }
+        if (gemsSidebarCleanup) {
+          gemsSidebarCleanup();
+          gemsSidebarCleanup = null;
         }
         chrome.storage?.onChanged?.removeListener(onStorageChanged);
       } catch (e) {

@@ -127,6 +127,14 @@ export const StorageKeys = {
   GEMS_HIDDEN: 'gvGemsHidden',
   NOTEBOOKS_HIDDEN: 'gvNotebooksHidden',
   FOLDERS_HIDDEN: 'gvFoldersHidden',
+  // How many recent gems to show as an expandable section in the sidebar.
+  // 0 disables the feature entirely (no section injected); 1-10 shows that
+  // many items. Cached gem list lives in `GV_GEMS_LIST_CACHE`.
+  GV_GEMS_SIDEBAR_COUNT: 'gvGemsSidebarCount',
+  // Local cache of the Gems list scraped from /gems/view. Stored as
+  // { items: GemMetadata[]; cachedAt: number }. Falls into local (not sync)
+  // because gem rosters can be sizeable + sync quota is precious.
+  GV_GEMS_LIST_CACHE: 'gvGemsListCache',
   // 'above-recents' (default) anchors the folder panel just above the Recents
   // expandable-section; 'above-notebooks' anchors it above the Notebooks
   // section instead. Persisted in chrome.storage.local since it's a UI-only

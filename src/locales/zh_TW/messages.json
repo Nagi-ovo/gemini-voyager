@@ -1503,6 +1503,18 @@
     "message": "更寬",
     "description": "較寬的子資料夾縮排標籤"
   },
+  "gemsSidebarCount": {
+    "message": "側欄中顯示的最近 Gems",
+    "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."
+  },
+  "gemsSidebarCountOff": {
+    "message": "關閉",
+    "description": "Narrow-end label on the gems count slider (count=0, section hidden)."
+  },
+  "gemsSidebarCountMany": {
+    "message": "更多",
+    "description": "Wide-end label on the gems count slider (count up to 10)."
+  },
   "export_select_mode_select_all": {
     "message": "全選",
     "description": "Selection mode select all toggle"

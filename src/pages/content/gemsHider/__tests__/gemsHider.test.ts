@@ -182,7 +182,9 @@ describe('gemsHider', () => {
     expect(notebooks.querySelector('.gv-sidebar-section-toggle-btn')).toBeNull();
     // And no peek bar is mounted for the notebooks section.
     expect(
-      document.querySelector('[data-gv-sidebar-section-id="notebooks"].gv-sidebar-section-peek-bar'),
+      document.querySelector(
+        '[data-gv-sidebar-section-id="notebooks"].gv-sidebar-section-peek-bar',
+      ),
     ).toBeNull();
   });
 

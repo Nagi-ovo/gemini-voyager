@@ -61,6 +61,7 @@ const POPUP_SECTION_IDS = [
   'folder',
   'folderSpacing',
   'folderTreeIndent',
+  'gemsSidebar',
   'chatWidth',
   'chatFontSize',
   'chatLineHeight',
@@ -265,6 +266,9 @@ const normalizePercent = (
 
 const FOLDER_SPACING = { min: 0, max: 16, defaultValue: 2 };
 const FOLDER_TREE_INDENT = { min: -8, max: 32, defaultValue: -8 };
+// Gems sidebar count: 0 disables the section entirely (no UI), 1-10 shows
+// that many recent gems above Notebooks.
+const GEMS_SIDEBAR_COUNT = { min: 0, max: 10, defaultValue: 3 };
 const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LEGACY_BASELINE_PX };
 const CHAT_FONT_SIZE = { min: 80, max: 150, defaultValue: 100 };
 const CHAT_LINE_HEIGHT = { min: 120, max: 220, defaultValue: 160 };
@@ -776,6 +780,21 @@ export default function Popup() {
       const clamped = clampNumber(indent, FOLDER_TREE_INDENT.min, FOLDER_TREE_INDENT.max);
       try {
         chrome.storage?.sync?.set({ gvFolderTreeIndent: clamped });
+      } catch {}
+    }, []),
+  });
+
+  // Gems sidebar count — 0 hides the section, 1-10 controls how many recent
+  // gems show above Notebooks. Persists to chrome.storage.sync so the
+  // preference follows the user across devices.
+  const gemsSidebarCountAdjuster = useWidthAdjuster({
+    storageKey: StorageKeys.GV_GEMS_SIDEBAR_COUNT,
+    defaultValue: GEMS_SIDEBAR_COUNT.defaultValue,
+    normalize: (v) => clampNumber(v, GEMS_SIDEBAR_COUNT.min, GEMS_SIDEBAR_COUNT.max),
+    onApply: useCallback((count: number) => {
+      const clamped = clampNumber(count, GEMS_SIDEBAR_COUNT.min, GEMS_SIDEBAR_COUNT.max);
+      try {
+        chrome.storage?.sync?.set({ [StorageKeys.GV_GEMS_SIDEBAR_COUNT]: clamped });
       } catch {}
     }, []),
   });
@@ -1907,6 +1926,23 @@ export default function Popup() {
               valueFormatter={(v) => `${v}px`}
               onChange={folderTreeIndentAdjuster.handleChange}
               onChangeComplete={folderTreeIndentAdjuster.handleChangeComplete}
+            />,
+          )}
+        {/* Gems sidebar — only on gemini.google.com, not AI Studio */}
+        {!isAIStudio &&
+          wrapSection(
+            'gemsSidebar',
+            <WidthSlider
+              label={t('gemsSidebarCount')}
+              value={gemsSidebarCountAdjuster.width}
+              min={GEMS_SIDEBAR_COUNT.min}
+              max={GEMS_SIDEBAR_COUNT.max}
+              step={1}
+              narrowLabel={t('gemsSidebarCountOff')}
+              wideLabel={t('gemsSidebarCountMany')}
+              valueFormatter={(v) => (v === 0 ? t('gemsSidebarCountOff') : String(v))}
+              onChange={gemsSidebarCountAdjuster.handleChange}
+              onChangeComplete={gemsSidebarCountAdjuster.handleChangeComplete}
             />,
           )}
         {/* Chat Width */}

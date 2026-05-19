@@ -10201,3 +10201,144 @@ html.light-theme .gv-floating-folder-panel__count {
   background: rgba(95, 99, 104, 0.1);
   color: var(--gv-floating-folder-panel__text-muted);
 }
+
+/* ============================================================
+ * Gems inline list — hangs off Gemini's native Gems nav entry
+ *
+ * Sits as a sibling immediately after `gem-nav-list-item[gems-side-nav-
+ * entry-button]` inside the top mat-nav-list. The chevron toggle (see
+ * `.gv-gems-expand-toggle` further down) is mounted on the native entry
+ * itself; the list collapses via `gv-collapsed`.
+ *
+ * Indentation rationale: empirically measured Gemini's native label sits at
+ * left=46 inside the nav-list (which starts at left=8 in the viewport).
+ * That means the entry's content-column starts ~38px inside the list.
+ * Our items use padding-left: 38px so their icon lands in the same column
+ * as the native "Gems" label — they read as a continuation/sub-list, not a
+ * pasted-on panel.
+ * ============================================================ */
+.gv-gems-inline-list {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 6px 4px 40px;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  overflow: hidden;
+  max-height: 600px;
+  opacity: 1;
+  transition:
+    max-height 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.18s ease,
+    padding-top 0.18s ease,
+    padding-bottom 0.18s ease;
+}
+
+.gv-gems-inline-list.gv-collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  pointer-events: none;
+}
+
+.gv-gems-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+  min-width: 0;
+}
+
+.gv-gems-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.theme-host.light-theme .gv-gems-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.gv-gems-item-icon {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8ab4f8 0%, #c58af9 100%);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.gv-gems-item-name {
+  flex: 1 1 auto;
+  font-size: 13px;
+  line-height: 18px;
+  color: rgba(232, 234, 237, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theme-host.light-theme .gv-gems-item-name {
+  color: rgba(31, 31, 31, 0.85);
+}
+
+/* Chevron toggle — mounted on the native gem-nav-list-item that Gemini
+ * renders for the "Gems" entry. Absolute-positioned so it overlays the
+ * entry's right edge (where Gemini's own submenu items keep their
+ * keyboard_arrow_right glyph). Rotates 90° → down when expanded. */
+gem-nav-list-item.gv-gems-toggle-host {
+  position: relative;
+}
+
+.gv-gems-expand-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(232, 234, 237, 0.7);
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+  z-index: 2;
+}
+
+.gv-gems-expand-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(232, 234, 237, 0.95);
+}
+
+.theme-host.light-theme .gv-gems-expand-toggle {
+  color: rgba(31, 31, 31, 0.65);
+}
+
+.theme-host.light-theme .gv-gems-expand-toggle:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(31, 31, 31, 0.9);
+}
+
+.gv-gems-expand-toggle svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-gems-expand-toggle.gv-expanded svg {
+  transform: rotate(90deg);
+}

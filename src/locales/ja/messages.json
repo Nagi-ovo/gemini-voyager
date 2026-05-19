@@ -1503,6 +1503,18 @@
     "message": "広い",
     "description": "広いサブフォルダインデントラベル"
   },
+  "gemsSidebarCount": {
+    "message": "サイドバーの最近の Gems",
+    "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."
+  },
+  "gemsSidebarCountOff": {
+    "message": "オフ",
+    "description": "Narrow-end label on the gems count slider (count=0, section hidden)."
+  },
+  "gemsSidebarCountMany": {
+    "message": "多め",
+    "description": "Wide-end label on the gems count slider (count up to 10)."
+  },
   "export_select_mode_select_all": {
     "message": "すべて選択",
     "description": "Selection mode select all toggle"
