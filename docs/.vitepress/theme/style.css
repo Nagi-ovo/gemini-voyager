@@ -33,3 +33,87 @@
     width: 25%;
   }
 }
+
+/* Announcement nav entry: always-on theme-color highlight.
+   The entry only exists in the DOM when ENABLED in
+   theme/composables/announcement.ts, so when ENABLED is false this selector
+   matches nothing and the styling disappears automatically.
+
+   Desktop: radial background glow behind the text (uses ::before).
+   Mobile menu rows are full-width, so a positioned ::before stretches into
+   an awkward horizontal blob — there we swap to a text-shadow glow which
+   naturally hugs the text. */
+a[href*="#announcement"] {
+  position: relative;
+  isolation: isolate;
+  color: var(--vp-c-brand-1) !important;
+  font-weight: 600 !important;
+  transition: color 0.3s ease;
+}
+
+a[href*="#announcement"]:hover {
+  color: var(--vp-c-brand-2) !important;
+}
+
+@media (min-width: 768px) {
+  a[href*="#announcement"]::before {
+    content: '';
+    position: absolute;
+    inset: 6px -4px;
+    z-index: -1;
+    border-radius: 999px;
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in oklch, var(--vp-c-brand-1) 24%, transparent) 0%,
+      color-mix(in oklch, var(--vp-c-brand-1) 10%, transparent) 45%,
+      transparent 80%
+    );
+    filter: blur(3px);
+    animation: gv-announce-nav-glow 4s ease-in-out infinite;
+    transition: filter 0.3s ease;
+  }
+
+  a[href*="#announcement"]:hover::before {
+    filter: blur(2px) brightness(1.2);
+  }
+}
+
+@keyframes gv-announce-nav-glow {
+  0%, 100% {
+    opacity: 0.65;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@media (max-width: 767px) {
+  a[href*="#announcement"] {
+    animation: gv-announce-nav-text-glow 4s ease-in-out infinite;
+  }
+}
+
+@keyframes gv-announce-nav-text-glow {
+  0%, 100% {
+    text-shadow:
+      0 0 8px color-mix(in oklch, var(--vp-c-brand-1) 35%, transparent),
+      0 0 16px color-mix(in oklch, var(--vp-c-brand-1) 18%, transparent);
+  }
+  50% {
+    text-shadow:
+      0 0 12px color-mix(in oklch, var(--vp-c-brand-1) 60%, transparent),
+      0 0 22px color-mix(in oklch, var(--vp-c-brand-1) 40%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a[href*="#announcement"]::before {
+    animation: none;
+    opacity: 0.85;
+  }
+  a[href*="#announcement"] {
+    animation: none;
+  }
+}

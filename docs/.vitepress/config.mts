@@ -4,8 +4,18 @@ import {
 } from '@nolebase/vitepress-plugin-git-changelog/vite';
 import { type HeadConfig, defineConfig } from 'vitepress';
 
+import { ENABLED as ANNOUNCEMENT_ENABLED } from './theme/composables/announcement';
+
 // https://vitepress.dev/reference/site-config
 const siteUrl = 'https://voyager.nagi.fun';
+
+// Inject a "Notice" nav entry next to the main menu items when an
+// announcement is active. The hash link is intercepted by AnnouncementModal,
+// which opens the modal and clears the hash. Toggle ENABLED in
+// theme/composables/announcement.ts to remove the entry from every locale.
+function announcementNav(text: string) {
+  return ANNOUNCEMENT_ENABLED ? [{ text, link: '#announcement' }] : [];
+}
 
 const localeHreflang: { prefix: string; hreflang: string }[] = [
   { prefix: '', hreflang: 'zh-CN' },
@@ -80,6 +90,7 @@ export default defineConfig({
       lang: 'zh-CN',
       themeConfig: {
         nav: [
+          ...announcementNav('重要通知'),
           { text: '首页', link: '/' },
           { text: '指南', link: '/guide/installation' },
           { text: '数据查看器', link: '/data-viewer' },
@@ -146,6 +157,7 @@ export default defineConfig({
       link: '/zh_TW/',
       themeConfig: {
         nav: [
+          ...announcementNav('重要通知'),
           { text: '首頁', link: '/zh_TW/' },
           { text: '指南', link: '/zh_TW/guide/installation' },
           { text: '資料查看器', link: '/zh_TW/data-viewer' },
@@ -212,6 +224,7 @@ export default defineConfig({
       link: '/en/',
       themeConfig: {
         nav: [
+          ...announcementNav('Notice'),
           { text: 'Home', link: '/en/' },
           { text: 'Guide', link: '/en/guide/installation' },
           { text: 'Data Viewer', link: '/en/data-viewer' },
@@ -278,6 +291,7 @@ export default defineConfig({
       link: '/ja/',
       themeConfig: {
         nav: [
+          ...announcementNav('お知らせ'),
           { text: 'ホーム', link: '/ja/' },
           { text: 'ガイド', link: '/ja/guide/installation' },
           { text: 'データビューア', link: '/ja/data-viewer' },
@@ -344,6 +358,7 @@ export default defineConfig({
       link: '/ko/',
       themeConfig: {
         nav: [
+          ...announcementNav('공지'),
           { text: '홈', link: '/ko/' },
           { text: '가이드', link: '/ko/guide/installation' },
           { text: '데이터 뷰어', link: '/ko/data-viewer' },
@@ -410,6 +425,7 @@ export default defineConfig({
       link: '/fr/',
       themeConfig: {
         nav: [
+          ...announcementNav('Annonce'),
           { text: 'Accueil', link: '/fr/' },
           { text: 'Guide', link: '/fr/guide/installation' },
           { text: 'Visionneuse', link: '/fr/data-viewer' },
@@ -476,6 +492,7 @@ export default defineConfig({
       link: '/es/',
       themeConfig: {
         nav: [
+          ...announcementNav('Aviso'),
           { text: 'Inicio', link: '/es/' },
           { text: 'Guía', link: '/es/guide/installation' },
           { text: 'Visor', link: '/es/data-viewer' },
@@ -551,6 +568,7 @@ export default defineConfig({
       link: '/pt/',
       themeConfig: {
         nav: [
+          ...announcementNav('Aviso'),
           { text: 'Início', link: '/pt/' },
           { text: 'Guia', link: '/pt/guide/installation' },
           { text: 'Visualizador', link: '/pt/data-viewer' },
@@ -618,6 +636,7 @@ export default defineConfig({
       dir: 'rtl',
       themeConfig: {
         nav: [
+          ...announcementNav('إعلان'),
           { text: 'الرئيسية', link: '/ar/' },
           { text: 'الدليل', link: '/ar/guide/installation' },
           { text: 'عارض البيانات', link: '/ar/data-viewer' },
@@ -684,6 +703,7 @@ export default defineConfig({
       link: '/ru/',
       themeConfig: {
         nav: [
+          ...announcementNav('Объявление'),
           { text: 'Главная', link: '/ru/' },
           { text: 'Руководство', link: '/ru/guide/installation' },
           { text: 'Просмотр', link: '/ru/data-viewer' },

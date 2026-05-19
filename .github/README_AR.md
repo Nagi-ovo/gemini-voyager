@@ -54,6 +54,9 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
+> [!IMPORTANT]
+> **خضعت واجهة Gemini على الويب مؤخراً لتغيير كبير** — وأنا أعمل على التكيف. الميزات التي قد تتأثر: **الاختيار التلقائي للنموذج الافتراضي** و **واجهة المجلدات**. الاستخدام العام يجب أن يبقى دون مشاكل كبيرة. إذا واجهت أي مشكلات أخرى، الرجاء فتح issue على GitHub وسأقوم بإصلاحها في أقرب وقت. يُرجى انتظار تحديث Chrome Web Store. _(2026-05-19)_
+
 > [!NOTE]
 > إذا كان Voyager مفيداً لك، فشاركْه على X أو Reddit أو YouTube إلخ. كل مشاركة تساعد المزيد من الناس على اكتشاف المشروع وتحسين تجربة Gemini. شكراً.
 

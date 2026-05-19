@@ -54,6 +54,9 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
+> [!IMPORTANT]
+> **Gemini 網頁版近期進行了較大改版** —— 我正在適配中。當前可能受影響的功能：**自動選擇預設模型**、**資料夾 UI**。整體使用應無大礙，如遇其他異常，歡迎在 GitHub 上提 issue 回饋，我會盡快修復。請耐心等待 Chrome Web Store 更新。_(2026-05-19)_
+
 > [!NOTE]
 > 如果 Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案，從而改善 Gemini 的使用體驗。謝謝。
 

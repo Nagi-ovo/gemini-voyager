@@ -4,6 +4,7 @@ import { type Theme } from 'vitepress';
 import DefaultTheme from 'vitepress/theme';
 import { h } from 'vue';
 
+import AnnouncementModal from './components/AnnouncementModal.vue';
 import FolderViewer from './components/FolderViewer.vue';
 import HomeAskAI from './components/HomeAskAI.vue';
 import HomeReviews from './components/HomeReviews.vue';
@@ -15,6 +16,7 @@ export default {
   extends: DefaultTheme,
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
+      'layout-top': () => h(AnnouncementModal),
       'home-hero-after': () => h(HomeTeaser),
       'home-features-after': () => [h(HomeAskAI), h(HomeReviews)],
     });

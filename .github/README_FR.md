@@ -54,6 +54,9 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
+> [!IMPORTANT]
+> **L'interface web de Gemini a subi une refonte majeure** — adaptation en cours. Fonctionnalités potentiellement affectées : **sélection automatique du modèle par défaut** et **interface des dossiers**. L'utilisation globale devrait rester correcte ; si vous rencontrez d'autres anomalies, ouvrez une issue GitHub et je corrigerai au plus vite. Patientez le temps de la mise à jour sur le Chrome Web Store. _(2026-05-19)_
+
 > [!NOTE]
 > Si Voyager vous est utile, partagez-le sur X, Reddit, YouTube, etc. Chaque partage aide plus de personnes à découvrir le projet et à améliorer l'expérience Gemini. Merci.
 

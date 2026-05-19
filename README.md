@@ -54,6 +54,9 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p>
 
+> [!IMPORTANT]
+> **Gemini's web UI just had a major redesign** — adapting now. Features that may be affected: **Default Model auto-selection** and the **Folder UI**. Day-to-day usage should still be fine; if you spot other anomalies, please open a GitHub issue and I'll fix it ASAP. Please wait for the Chrome Web Store update. _(2026-05-19)_
+
 > [!NOTE]
 > If Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
 
