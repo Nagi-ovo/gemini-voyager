@@ -16,9 +16,28 @@ const STORAGE_KEY = 'gvSidebarAutoHide';
 const FULL_HIDE_STORAGE_KEY = 'gvSidebarFullHide';
 const EDGE_TRIGGER_ID = 'gv-sidebar-edge-trigger';
 const FULL_HIDE_COLLAPSED_CLASS = 'gv-sidebar-full-hide-collapsed';
-const SIDEBAR_TOGGLE_BUTTON_SELECTOR =
-  'button[data-test-id="side-nav-menu-button"], side-nav-menu-button button';
-const SIDEBAR_TOGGLE_BUTTON_MATCH_SELECTOR = `${SIDEBAR_TOGGLE_BUTTON_SELECTOR}, side-nav-menu-button`;
+// Union of every shape we've seen the sidebar toggle take. Order matters only
+// for `querySelectorAll` ordering tie-breaks; visibility filtering happens in
+// `findToggleButton` because the 2026 layout keeps an invisible 0×0 sibling
+// around at all times.
+//
+//   - 2026 redesign: a real <button> with `aria-label="Open sidebar"` /
+//     `aria-label="Close sidebar"`, wrapping `<mat-icon fonticon="side_nav">`
+//     or `side_nav_expand`. The aria-label is localized, so we anchor on the
+//     icon's fonticon attribute (i18n-stable) plus the English aria-label as
+//     a redundant safety net.
+//   - Legacy: `side-nav-menu-button` custom element (and inner <button>) — kept
+//     so older Gemini layouts and AI-Studio-shaped tabs still work.
+const SIDEBAR_TOGGLE_BUTTON_SELECTOR = [
+  'button[aria-label="Open sidebar"]',
+  'button[aria-label="Close sidebar"]',
+  'side-nav-sparkle-button button',
+  'button[data-test-id="side-nav-menu-button"]',
+  'side-nav-menu-button button',
+].join(', ');
+const SIDEBAR_TOGGLE_BUTTON_MATCH_SELECTOR = `${SIDEBAR_TOGGLE_BUTTON_SELECTOR}, side-nav-menu-button, side-nav-sparkle-button`;
+// Stable icon ligature names Gemini uses for the toggle (independent of locale).
+const TOGGLE_ICON_FONTICONS = ['side_nav', 'side_nav_expand'] as const;
 const SIDEBAR_STATE_SYNC_DELAYS_MS = [0, 300, 500] as const;
 
 // Debounce delay to avoid rapid toggling
@@ -207,8 +226,37 @@ function hideEdgeTrigger(): void {
 // ─── Sidebar State Detection ───────────────────────────────────────────
 
 function findToggleButton(): HTMLButtonElement | null {
-  const btn = document.querySelector<HTMLButtonElement>(SIDEBAR_TOGGLE_BUTTON_SELECTOR);
-  if (btn) return btn;
+  // The 2026 layout renders TWO buttons matching our selectors at any given
+  // moment: one is the actually-visible toggle and the other is a 0×0
+  // placeholder waiting for the opposite state. We need the visible one,
+  // so `querySelector` (always picks the first DOM match) won't do — we
+  // walk `querySelectorAll` and skip anything with zero geometry.
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(SIDEBAR_TOGGLE_BUTTON_SELECTOR),
+  );
+
+  // Also pick up the new layout via icon-ligature so localized aria-labels
+  // can't shut us out. Walk up to the nearest <button> ancestor.
+  for (const icon of document.querySelectorAll('mat-icon[fonticon]')) {
+    const f = icon.getAttribute('fonticon');
+    if (!f || !TOGGLE_ICON_FONTICONS.includes(f as (typeof TOGGLE_ICON_FONTICONS)[number])) {
+      continue;
+    }
+    const btn = icon.closest('button');
+    if (btn instanceof HTMLButtonElement && !candidates.includes(btn)) {
+      candidates.push(btn);
+    }
+  }
+
+  const visible = candidates.find((b) => {
+    const rect = b.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  });
+  if (visible) return visible;
+
+  // Legacy fallback — return any match even if 0×0, since older Gemini
+  // layouts render the button in odd lifecycles where geometry isn't ready.
+  if (candidates[0]) return candidates[0];
 
   const sideNavMenuButton = document.querySelector('side-nav-menu-button');
   if (sideNavMenuButton) {

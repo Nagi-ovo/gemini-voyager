@@ -416,4 +416,94 @@ describe('sidebarAutoHide', () => {
       expect(collapsedContainer.classList.contains('collapsed')).toBe(true);
     });
   });
+
+  describe('2026 redesign toggle discovery', () => {
+    it('picks the visible Close-sidebar button and skips the 0×0 invisible copy', async () => {
+      document.body.classList.add('mat-sidenav-opened');
+
+      const sidenav = document.createElement('bard-sidenav');
+      mockVisibleRect(sidenav, 320, 800);
+      document.body.appendChild(sidenav);
+
+      // Invisible duplicate that Gemini renders alongside the visible toggle.
+      const invisibleBtn = document.createElement('button');
+      invisibleBtn.setAttribute('aria-label', 'Open sidebar');
+      const invisibleIcon = document.createElement('mat-icon');
+      invisibleIcon.setAttribute('fonticon', 'side_nav_expand');
+      invisibleBtn.appendChild(invisibleIcon);
+      mockVisibleRect(invisibleBtn, 0, 0);
+      document.body.appendChild(invisibleBtn);
+
+      // The actually-visible Close-sidebar toggle.
+      const visibleBtn = document.createElement('button');
+      visibleBtn.setAttribute('aria-label', 'Close sidebar');
+      const visibleIcon = document.createElement('mat-icon');
+      visibleIcon.setAttribute('fonticon', 'side_nav');
+      visibleBtn.appendChild(visibleIcon);
+      mockVisibleRect(visibleBtn, 40, 40);
+      const visibleSpy = vi.fn();
+      visibleBtn.addEventListener('click', visibleSpy);
+      document.body.appendChild(visibleBtn);
+
+      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({ gvSidebarAutoHide: true });
+        },
+      );
+
+      const invisibleSpy = vi.fn();
+      invisibleBtn.addEventListener('click', invisibleSpy);
+
+      const { startSidebarAutoHide } = await import('../index');
+      startSidebarAutoHide();
+
+      // Initial-collapse timer fires at 500ms; that's enough for one click.
+      // The crucial assertion is that it lands on the visible button, never
+      // on the 0×0 placeholder Gemini renders alongside it.
+      vi.advanceTimersByTime(600);
+
+      expect(visibleSpy).toHaveBeenCalled();
+      expect(invisibleSpy).not.toHaveBeenCalled();
+    });
+
+    it('finds the toggle via mat-icon fonticon when aria-label is localized', async () => {
+      document.body.classList.add('mat-sidenav-opened');
+
+      const sidenav = document.createElement('bard-sidenav');
+      mockVisibleRect(sidenav, 320, 800);
+      document.body.appendChild(sidenav);
+
+      // Mimic a non-English locale: aria-label doesn't contain "sidebar".
+      const localizedBtn = document.createElement('button');
+      localizedBtn.setAttribute('aria-label', 'サイドバーを閉じる');
+      const icon = document.createElement('mat-icon');
+      icon.setAttribute('fonticon', 'side_nav');
+      localizedBtn.appendChild(icon);
+      mockVisibleRect(localizedBtn, 40, 40);
+      const spy = vi.fn();
+      localizedBtn.addEventListener('click', spy);
+      document.body.appendChild(localizedBtn);
+
+      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({ gvSidebarAutoHide: true });
+        },
+      );
+
+      const { startSidebarAutoHide } = await import('../index');
+      startSidebarAutoHide();
+
+      vi.advanceTimersByTime(600);
+
+      // Aria-label is in Japanese — discovery must succeed via the
+      // fonticon-anchored fallback, not English string matching.
+      expect(spy).toHaveBeenCalled();
+    });
+  });
 });
