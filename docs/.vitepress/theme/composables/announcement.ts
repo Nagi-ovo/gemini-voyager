@@ -5,7 +5,7 @@ import { ref } from 'vue';
 // When re-enabling for a NEW announcement, also bump STORAGE_KEY's date
 // so users who dismissed the previous one see the new one.
 export const ENABLED = true;
-export const STORAGE_KEY = 'gv-announce-2026-05-19';
+export const STORAGE_KEY = 'gv-announce-2026-05-20';
 
 const visible = ref(false);
 

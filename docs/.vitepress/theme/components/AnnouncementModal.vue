@@ -23,14 +23,14 @@ const i18n: Record<string, Copy> = {
   'zh-CN': {
     title: 'Gemini 网页版改版适配中',
     intro: 'Gemini 网页版近期进行了较大改版，我正在适配中。当前可能受影响的功能：',
-    affected: ['自动选择默认模型', '文件夹 UI'],
+    affected: ['自动选择默认模型', '文件夹 UI', 'NanoBanana 水印去除（等下个版本修复）'],
     outro: `整体使用应无大碍。如遇其他异常，欢迎在 ${a('GitHub 上提 issue')} 反馈，我会尽快修复。请耐心等待 Chrome Web Store 更新。`,
     dismiss: '知道了',
   },
   'zh-TW': {
     title: 'Gemini 網頁版改版適配中',
     intro: 'Gemini 網頁版近期進行了較大改版，我正在適配中。當前可能受影響的功能：',
-    affected: ['自動選擇預設模型', '資料夾 UI'],
+    affected: ['自動選擇預設模型', '資料夾 UI', 'NanoBanana 浮水印去除（等下個版本修復）'],
     outro: `整體使用應無大礙。如遇其他異常，歡迎在 ${a('GitHub 上提 issue')} 回饋，我會盡快修復。請耐心等待 Chrome Web Store 更新。`,
     dismiss: '我知道了',
   },
@@ -38,7 +38,7 @@ const i18n: Record<string, Copy> = {
     title: 'Adapting to the new Gemini web UI',
     intro:
       "Gemini's web UI just went through a major redesign and I'm adapting. Features that may be affected:",
-    affected: ['Default Model auto-selection', 'Folder UI'],
+    affected: ['Default Model auto-selection', 'Folder UI', 'NanoBanana watermark removal (fix coming next release)'],
     outro: `Day-to-day usage should still be fine. If you spot other anomalies, please open a ${a('GitHub issue')} and I'll fix it as soon as I can. Please wait for the Chrome Web Store update.`,
     dismiss: 'Got it',
   },
@@ -46,14 +46,14 @@ const i18n: Record<string, Copy> = {
     title: 'Gemini ウェブ版リニューアル対応中',
     intro:
       'Gemini ウェブ版が大幅にリニューアルされたため、現在対応中です。影響を受ける可能性のある機能：',
-    affected: ['デフォルトモデルの自動選択', 'フォルダ UI'],
+    affected: ['デフォルトモデルの自動選択', 'フォルダ UI', 'NanoBanana の透かし除去（次バージョンで修正予定）'],
     outro: `全体的な使用には支障はないはずです。その他の不具合を見つけた場合は、${a('GitHub で issue')} を立ててお知らせください。早急に修正します。Chrome Web Store の更新をお待ちください。`,
     dismiss: '了解',
   },
   'ko-KR': {
     title: 'Gemini 웹 UI 개편 적응 중',
     intro: 'Gemini 웹 버전이 최근 대규모로 개편되어 적응 중입니다. 영향을 받을 수 있는 기능:',
-    affected: ['기본 모델 자동 선택', '폴더 UI'],
+    affected: ['기본 모델 자동 선택', '폴더 UI', 'NanoBanana 워터마크 제거(다음 버전에서 수정 예정)'],
     outro: `전반적인 사용에는 큰 문제가 없을 것입니다. 다른 이상이 발견되면 ${a('GitHub issue')}로 알려주세요. 최대한 빨리 수정하겠습니다. Chrome Web Store 업데이트를 기다려 주세요.`,
     dismiss: '확인',
   },
@@ -61,7 +61,11 @@ const i18n: Record<string, Copy> = {
     title: 'Adaptation à la nouvelle interface Gemini',
     intro:
       "L'interface web de Gemini vient de subir une refonte majeure et je suis en train de m'adapter. Fonctionnalités potentiellement affectées :",
-    affected: ['Sélection automatique du modèle par défaut', 'Interface des dossiers'],
+    affected: [
+      'Sélection automatique du modèle par défaut',
+      'Interface des dossiers',
+      'Suppression du filigrane NanoBanana (correctif à la prochaine version)',
+    ],
     outro: `L'utilisation globale devrait rester correcte. Si vous rencontrez d'autres anomalies, ouvrez une ${a('issue GitHub')} et je corrigerai au plus vite. Patientez le temps de la mise à jour sur le Chrome Web Store.`,
     dismiss: 'Compris',
   },
@@ -69,7 +73,11 @@ const i18n: Record<string, Copy> = {
     title: 'Adaptándome al nuevo Gemini web',
     intro:
       'La interfaz web de Gemini ha sido rediseñada recientemente y me estoy adaptando. Funciones que pueden verse afectadas:',
-    affected: ['Selección automática del modelo predeterminado', 'Interfaz de carpetas'],
+    affected: [
+      'Selección automática del modelo predeterminado',
+      'Interfaz de carpetas',
+      'Eliminación de marca de agua NanoBanana (se corregirá en la próxima versión)',
+    ],
     outro: `El uso general debería estar bien. Si detectas otras anomalías, abre un ${a('issue en GitHub')} y lo arreglaré lo antes posible. Espera la actualización en la Chrome Web Store.`,
     dismiss: 'Entendido',
   },
@@ -77,7 +85,11 @@ const i18n: Record<string, Copy> = {
     title: 'A adaptar-me ao novo Gemini web',
     intro:
       'A interface web do Gemini passou por uma grande reformulação e estou a adaptar-me. Funcionalidades potencialmente afetadas:',
-    affected: ['Seleção automática do modelo padrão', 'Interface de pastas'],
+    affected: [
+      'Seleção automática do modelo padrão',
+      'Interface de pastas',
+      'Remoção de marca de água NanoBanana (será corrigida na próxima versão)',
+    ],
     outro: `O uso geral deve permanecer estável. Se encontrar outras anomalias, abra uma ${a('issue no GitHub')} e corrigirei o quanto antes. Aguarde a atualização na Chrome Web Store.`,
     dismiss: 'Entendi',
   },
@@ -85,7 +97,11 @@ const i18n: Record<string, Copy> = {
     title: 'التكيف مع واجهة Gemini الجديدة',
     intro:
       'خضعت واجهة Gemini على الويب مؤخراً لتغيير كبير، وأنا أعمل على التكيف. الميزات التي قد تتأثر:',
-    affected: ['الاختيار التلقائي للنموذج الافتراضي', 'واجهة المجلدات'],
+    affected: [
+      'الاختيار التلقائي للنموذج الافتراضي',
+      'واجهة المجلدات',
+      'إزالة العلامة المائية بـ NanoBanana (سيتم إصلاحها في الإصدار التالي)',
+    ],
     outro: `الاستخدام العام يجب أن يبقى دون مشاكل كبيرة. إذا واجهت أي مشكلات أخرى، الرجاء فتح ${a('issue على GitHub')} وسأقوم بإصلاحها في أقرب وقت. يُرجى انتظار تحديث Chrome Web Store.`,
     dismiss: 'فهمت',
   },
@@ -93,7 +109,11 @@ const i18n: Record<string, Copy> = {
     title: 'Адаптация к обновлённому Gemini',
     intro:
       'Веб-интерфейс Gemini недавно был значительно переработан, и я адаптируюсь. Функции, на которые это может повлиять:',
-    affected: ['Автоматический выбор модели по умолчанию', 'Интерфейс папок'],
+    affected: [
+      'Автоматический выбор модели по умолчанию',
+      'Интерфейс папок',
+      'Удаление водяного знака NanoBanana (исправление в следующем релизе)',
+    ],
     outro: `В целом использование не должно сильно пострадать. Если вы заметите другие отклонения, откройте ${a('issue на GitHub')}, и я постараюсь исправить как можно скорее. Дождитесь обновления в Chrome Web Store.`,
     dismiss: 'Понятно',
   },
@@ -162,7 +182,7 @@ onUnmounted(() => {
           </ul>
           <p class="gv-announce-text" v-html="t.outro"></p>
           <div class="gv-announce-footer">
-            <span class="gv-announce-date">2026-05-19</span>
+            <span class="gv-announce-date">2026-05-20</span>
             <button ref="dismissBtn" class="gv-announce-btn" @click="dismiss">
               {{ t.dismiss }}
             </button>
