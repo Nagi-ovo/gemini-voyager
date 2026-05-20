@@ -27,21 +27,55 @@
   console.log('[Gemini Voyager] Fetch interceptor loading (MAIN world)...');
 
   /**
-   * Pattern to match Gemini download URLs
-   * Only matches rd-gg-dl paths (dl = download) to avoid intercepting normal image display
-   * Matches both googleusercontent.com and ggpht.com domains
+   * Gemini's image download is a multi-step chain on `googleusercontent.com`:
+   *
+   *   /gg-dl/...=d-I        → text body containing the next URL (~450B)
+   *   /...usercontent.google.com/rd-gg-dl/...=s0-d-I  → another text body
+   *   /rd-gg-dl/...=s0-d-I  → the actual image bytes
+   *
+   * We intercept ONLY the final image step. Intercepting the text-body steps
+   * would consume `consumeDownloadIntent()` on the first hop and feed the
+   * watermark pipeline a 450-byte text blob (which fails to decode as an
+   * image), so they MUST pass through untouched.
+   *
+   *   /rd-gg-dl/  — current image endpoint
+   *   /rd-gg/     — older image endpoint, still occasionally seen
    */
   const GEMINI_DOWNLOAD_PATTERN =
-    /https:\/\/[^/]+(\.googleusercontent\.com|\.ggpht\.com)\/rd-gg-dl\//;
+    /https:\/\/[^/]+(\.googleusercontent\.com|\.ggpht\.com)\/(?:rd-gg-dl|rd-gg)\//;
   const CSP_BLOCKED_TELEMETRY_PATTERNS = [/^https:\/\/www\.googletagmanager\.com\/td\?/i];
-  const GOOGLE_SIZE_PATTERN = /=[swh]\d+[^?#]*/;
+  /**
+   * Matches Google's size token `=sNNN` / `=wNNN` / `=hNNN`. The size number is
+   * captured tightly (without trailing flags like `-d-I`) so a URL such as
+   * `=s0-d-I` keeps its download flag when we replace the size.
+   */
+  const GOOGLE_SIZE_PATTERN = /=[swh]\d+/;
+  /**
+   * Matches a URL that already requests the original size (`=s0` optionally
+   * followed by a `-flag` suffix). Such URLs should not be rewritten.
+   */
+  const ORIGINAL_SIZE_PATTERN = /=s0(?:-[A-Za-z0-9]+)?(?=[?#]|$)/;
+  /**
+   * Matches Google's download parameter `=d` / `=d-I`. URLs ending in this
+   * already serve the original-sized image so we must not append `-s0`.
+   */
+  const GOOGLE_DOWNLOAD_PARAM_PATTERN = /=d(?:-[A-Za-z0-9]+)?(?=[?#]|$)/;
 
   /**
    * Replace size parameter with =s0 for original size
    * Gemini uses =sNNN format for resized images, =s0 means original
    */
   const replaceWithOriginalSize = (src) => {
-    // Match common Google size patterns and replace with =s0 (but keep the rest of the URL)
+    // Already requesting original (e.g. `=s0`, `=s0-d-I`). Leave it alone.
+    if (ORIGINAL_SIZE_PATTERN.test(src)) {
+      return src;
+    }
+    // `=d` / `=d-I` URLs already serve the original-sized image; leave them untouched
+    // to avoid producing an invalid URL like `...=d-I?alr=yes-s0`.
+    if (GOOGLE_DOWNLOAD_PARAM_PATTERN.test(src)) {
+      return src;
+    }
+    // Replace size token while preserving any trailing flags (e.g. `=s512-d-I` → `=s0-d-I`).
     if (GOOGLE_SIZE_PATTERN.test(src)) {
       return src.replace(GOOGLE_SIZE_PATTERN, '=s0');
     }
