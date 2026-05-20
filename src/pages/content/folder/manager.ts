@@ -200,6 +200,14 @@ export class FolderManager {
   private pendingTitleUpdates: Map<string, string> = new Map(); // Buffer title updates during render
   private pendingRemovals: Map<string, number> = new Map(); // Pending conversation removals with timer IDs
   private removalCheckDelay: number = 300; // Delay (ms) before confirming conversation deletion
+  // Batched mutation processing for the sidebar observer. Gemini emits a
+  // burst of mutations every time the user clicks a conversation row (it
+  // re-renders rows to update active state). Doing per-element setup work
+  // synchronously inside the observer callback caused noticeable click
+  // jank — issue #678. We now coalesce mutations to the microtask boundary
+  // and dedupe by element/conversationId before doing any work.
+  private mutationBatchQueue: MutationRecord[] = [];
+  private mutationFlushScheduled: boolean = false;
   private isDestroyed: boolean = false; // Flag to prevent callbacks after destruction
   private reinitializePromise: Promise<void> | null = null; // Prevent duplicate reinitialization cascades
   private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
@@ -413,6 +421,7 @@ export class FolderManager {
       this.conversationObserver.disconnect();
       this.conversationObserver = null;
     }
+    this.mutationBatchQueue.length = 0;
 
     if (this.nativeMenuObserver) {
       this.nativeMenuObserver.disconnect();
@@ -2547,99 +2556,11 @@ export class FolderManager {
     }
 
     this.conversationObserver = new MutationObserver((mutations) => {
-      if (this.mutationsMayAffectNativeConversationTitles(mutations)) {
-        this.scheduleNativeConversationTitleSync();
-      }
-
-      // 1. Handle added conversations (always safe)
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node instanceof HTMLElement) {
-            // Check if the node itself is a conversation
-            if (node.matches('[data-test-id="conversation"]')) {
-              this.makeConversationDraggable(node);
-              this.applyHideArchivedToConversation(node);
-              // Cancel pending removal for this conversation (it's back!)
-              this.cancelPendingRemovalForElement(node);
-            }
-            // Also check for conversations within the node
-            const conversations = node.querySelectorAll('[data-test-id="conversation"]');
-            conversations.forEach((conv) => {
-              const convElement = conv as HTMLElement;
-              this.makeConversationDraggable(convElement);
-              // Apply hide archived setting to newly added conversations
-              this.applyHideArchivedToConversation(convElement);
-              // Cancel pending removal for this conversation (it's back!)
-              this.cancelPendingRemovalForElement(convElement);
-            });
-          }
-        });
-      });
-
-      // 2. Handle removed conversations with safeguards
-      // CRITICAL FIX: Prevent data loss when network disconnects or UI refreshes
-
-      // Check 1: If offline, assume removals are due to network error
-      if (!navigator.onLine) {
-        this.debug('Network offline, ignoring conversation removals to prevent data loss');
-        return;
-      }
-
-      // Check 2: Calculate total conversations being removed in this batch
-      let totalRemovedCount = 0;
-      const nodesWithRemovals: HTMLElement[] = [];
-
-      mutations.forEach((mutation) => {
-        mutation.removedNodes.forEach((node) => {
-          if (node instanceof HTMLElement) {
-            const isConv = node.matches('[data-test-id="conversation"]');
-            // Check if it contains conversations (e.g. a container was removed)
-            const containedConvsCount = node.querySelectorAll(
-              '[data-test-id="conversation"]',
-            ).length;
-
-            if (isConv) {
-              totalRemovedCount++;
-              nodesWithRemovals.push(node);
-            } else if (containedConvsCount > 0) {
-              totalRemovedCount += containedConvsCount;
-              nodesWithRemovals.push(node);
-            }
-          }
-        });
-      });
-
-      // If no conversations were removed, we're done
-      if (totalRemovedCount === 0) return;
-
-      // Check 3: If multiple conversations are removed at once, it's likely a UI refresh/clear
-      // Users typically delete conversations one by one.
-      // EXCEPTION: If we are in multi-select mode, the user might be performing a bulk delete.
-      if (totalRemovedCount > 1 && !this.isMultiSelectMode) {
-        this.debugWarn(
-          `Ignored bulk removal of ${totalRemovedCount} conversations - likely UI refresh`,
-        );
-        return;
-      }
-
-      // NEW: Instead of immediately removing, schedule a delayed check
-      // This prevents false positives when Gemini temporarily removes/re-adds DOM elements during UI updates
-      nodesWithRemovals.forEach((node) => {
-        const conversations = node.matches('[data-test-id="conversation"]')
-          ? [node]
-          : Array.from(node.querySelectorAll('[data-test-id="conversation"]'));
-
-        conversations.forEach((conv) => {
-          // Extract conversation ID from the removed element
-          const conversationId = this.extractConversationIdFromElement(conv);
-
-          if (conversationId) {
-            this.debug('Detected potential conversation removal:', conversationId);
-            // Schedule delayed removal check
-            this.scheduleConversationRemovalCheck(conversationId);
-          }
-        });
-      });
+      // Coalesce mutations to the microtask boundary instead of processing
+      // them synchronously. Synchronous processing caused sidebar-click
+      // jank — see issue #678. Flush is implemented in `flushMutationBatch`.
+      for (const mutation of mutations) this.mutationBatchQueue.push(mutation);
+      this.scheduleMutationBatchFlush();
     });
 
     this.conversationObserver.observe(this.sidebarContainer, {
@@ -2648,6 +2569,118 @@ export class FolderManager {
       characterData: true,
       attributes: true,
       attributeFilter: ['aria-label', 'href', 'title'],
+    });
+  }
+
+  private scheduleMutationBatchFlush(): void {
+    if (this.mutationFlushScheduled) return;
+    this.mutationFlushScheduled = true;
+    queueMicrotask(() => {
+      this.mutationFlushScheduled = false;
+      if (this.isDestroyed) {
+        this.mutationBatchQueue.length = 0;
+        return;
+      }
+      this.flushMutationBatch();
+    });
+  }
+
+  // Exposed via the private surface so tests can drive flushing
+  // deterministically without depending on microtask ordering in jsdom.
+  private flushMutationBatch(): void {
+    if (this.mutationBatchQueue.length === 0) return;
+    const mutations = this.mutationBatchQueue;
+    this.mutationBatchQueue = [];
+
+    // Title-sync detection: short-circuits, debounced downstream.
+    if (this.mutationsMayAffectNativeConversationTitles(mutations)) {
+      this.scheduleNativeConversationTitleSync();
+    }
+
+    // Dedupe added conversation elements. Multiple mutations in a single
+    // tick frequently touch the same row; the per-element work
+    // (makeConversationDraggable, applyHideArchivedToConversation) is
+    // idempotent but the upfront DOM queries are not free.
+    const addedConversations = new Set<HTMLElement>();
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        if (node.matches('[data-test-id="conversation"]')) {
+          addedConversations.add(node);
+        }
+        const nested = node.querySelectorAll('[data-test-id="conversation"]');
+        nested.forEach((conv) => addedConversations.add(conv as HTMLElement));
+      });
+    }
+
+    addedConversations.forEach((convEl) => {
+      if (!convEl.isConnected) return; // re-removed within the same batch
+      this.makeConversationDraggable(convEl);
+      this.applyHideArchivedToConversation(convEl);
+      this.cancelPendingRemovalForElement(convEl);
+    });
+
+    // Re-check navigator.onLine at flush time, not when each mutation arrived.
+    if (!navigator.onLine) {
+      this.debug('Network offline, ignoring conversation removals to prevent data loss');
+      return;
+    }
+
+    // Dedupe removed conversations by conversationId so each ID is processed
+    // once even if it shows up across multiple mutations in the same batch.
+    const removalCandidates = new Map<string, HTMLElement>();
+    let totalRemovedCount = 0;
+
+    for (const mutation of mutations) {
+      mutation.removedNodes.forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        if (node.matches('[data-test-id="conversation"]')) {
+          totalRemovedCount++;
+          const id = this.extractConversationIdFromElement(node);
+          if (id && !removalCandidates.has(id)) removalCandidates.set(id, node);
+          return;
+        }
+        const contained = node.querySelectorAll('[data-test-id="conversation"]');
+        if (contained.length === 0) return;
+        totalRemovedCount += contained.length;
+        contained.forEach((conv) => {
+          const id = this.extractConversationIdFromElement(conv);
+          if (id && !removalCandidates.has(id)) {
+            removalCandidates.set(id, conv as HTMLElement);
+          }
+        });
+      });
+    }
+
+    if (totalRemovedCount === 0) return;
+
+    // Bulk-removal protection: large batches are almost always Gemini's
+    // own UI refresh, not a user delete. Multi-select bulk delete is the
+    // explicit exception.
+    if (totalRemovedCount > 1 && !this.isMultiSelectMode) {
+      this.debugWarn(
+        `Ignored bulk removal of ${totalRemovedCount} conversations - likely UI refresh`,
+      );
+      return;
+    }
+
+    // Reconcile add+remove within the same batch: if a conversation was
+    // both added and removed in this tick, Gemini re-attached it, so we
+    // skip the removal entirely. (Cross-batch add-after-remove is still
+    // handled by `cancelPendingRemovalForElement` on the add path.)
+    const addedIds = new Set<string>();
+    addedConversations.forEach((el) => {
+      const id = this.extractConversationIdFromElement(el);
+      if (id) addedIds.add(id);
+    });
+
+    removalCandidates.forEach((_el, conversationId) => {
+      if (addedIds.has(conversationId)) {
+        this.debug(`Same-batch add+remove for ${conversationId}, skipping removal`);
+        return;
+      }
+      this.debug('Detected potential conversation removal:', conversationId);
+      this.scheduleConversationRemovalCheck(conversationId);
     });
   }
 
