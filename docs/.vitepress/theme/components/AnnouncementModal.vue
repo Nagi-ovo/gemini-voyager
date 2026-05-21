@@ -23,14 +23,24 @@ const i18n: Record<string, Copy> = {
   'zh-CN': {
     title: 'Gemini 网页版改版适配中',
     intro: 'Gemini 网页版近期进行了较大改版，我正在适配中。当前可能受影响的功能：',
-    affected: ['自动选择默认模型', '文件夹 UI', 'NanoBanana 水印去除（等下个版本修复）', '对话导出（可点击对话右上角三个点，在菜单中找到导出按钮）'],
+    affected: [
+      '自动选择默认模型',
+      '文件夹 UI',
+      'NanoBanana 水印去除（等下个版本修复）',
+      '对话导出（可点击对话右上角三个点，在菜单中找到导出按钮）',
+    ],
     outro: `整体使用应无大碍。如遇其他异常，欢迎在 ${a('GitHub 上提 issue')} 反馈，我会尽快修复。请耐心等待 Chrome Web Store 更新。`,
     dismiss: '知道了',
   },
   'zh-TW': {
     title: 'Gemini 網頁版改版適配中',
     intro: 'Gemini 網頁版近期進行了較大改版，我正在適配中。當前可能受影響的功能：',
-    affected: ['自動選擇預設模型', '資料夾 UI', 'NanoBanana 浮水印去除（等下個版本修復）', '對話匯出（可點擊對話右上角三個點，在選單中找到匯出按鈕）'],
+    affected: [
+      '自動選擇預設模型',
+      '資料夾 UI',
+      'NanoBanana 浮水印去除（等下個版本修復）',
+      '對話匯出（可點擊對話右上角三個點，在選單中找到匯出按鈕）',
+    ],
     outro: `整體使用應無大礙。如遇其他異常，歡迎在 ${a('GitHub 上提 issue')} 回饋，我會盡快修復。請耐心等待 Chrome Web Store 更新。`,
     dismiss: '我知道了',
   },
