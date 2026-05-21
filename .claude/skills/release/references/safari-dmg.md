@@ -52,6 +52,24 @@ ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
 
 The env var flips the extension to check for updates via the repo's release page (needed since there's no Safari Extensions Gallery for us). If the build fails, stop and report.
 
+Verify the flag actually compiled into the Safari bundle before opening Xcode. The generated helper should return `true` for Safari update reminders:
+
+```bash
+node - <<'NODE'
+const fs = require('fs');
+const dir = 'dist_safari/assets';
+const file = fs.readdirSync(dir).find((name) => name.startsWith('watermarkSettings-') && name.endsWith('.js'));
+if (!file) throw new Error('Missing dist_safari/assets/watermarkSettings-*.js');
+const source = fs.readFileSync(`${dir}/${file}`, 'utf8');
+if (!source.includes('try{return!0}catch{return!1}')) {
+  throw new Error('Safari update reminder is not enabled in the compiled bundle');
+}
+console.log(`Safari update reminder enabled in ${file}`);
+NODE
+```
+
+If this fails, do not archive. Fix the Vite env injection first; otherwise the Safari release will ship without update reminders even though the build command included `ENABLE_SAFARI_UPDATE_CHECK=true`.
+
 ### 4. Xcode export (manual user step)
 
 Tell the user:

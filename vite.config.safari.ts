@@ -17,7 +17,9 @@ export default mergeConfig(
   defineConfig({
     define: {
       // Inject flag into the build
-      'import.meta.env.ENABLE_SAFARI_UPDATE_CHECK': JSON.stringify(enableSafariUpdateCheck),
+      'import.meta.env.ENABLE_SAFARI_UPDATE_CHECK': JSON.stringify(
+        enableSafariUpdateCheck ? 'true' : 'false',
+      ),
     },
     plugins: [
       crx({
