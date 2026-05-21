@@ -1138,4 +1138,436 @@ describe('DefaultModelManager (default model locker)', () => {
       3,
     );
   });
+
+  describe('auto-apply kill switch', () => {
+    function mockSyncGet(stored: Record<string, unknown>) {
+      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        (_keys: unknown, callback: (items: Record<string, unknown>) => void) => callback(stored),
+      );
+    }
+
+    it('does not start the lock loop when gvDefaultModelAutoApply is false', async () => {
+      mockSyncGet({
+        gvDefaultModel: { id: 'mid-1', name: 'Model 1' },
+        gvDefaultModelAutoApply: false,
+      });
+
+      history.replaceState({}, '', '/app');
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      // Wait for the init-time checkAndLockModel to settle.
+      await vi.advanceTimersByTimeAsync(200);
+
+      const internal = instance as unknown as { checkTimer: number | null };
+      expect(internal.checkTimer).toBeNull();
+    });
+
+    it('resumes the lock loop after gvDefaultModelAutoApply flips from false to true via storage change', async () => {
+      mockSyncGet({
+        gvDefaultModel: { id: 'mid-2', name: 'Model 2' },
+        gvDefaultModelAutoApply: false,
+      });
+
+      history.replaceState({}, '', '/app');
+
+      const onChangedAdd = chrome.storage.onChanged.addListener as ReturnType<typeof vi.fn>;
+      onChangedAdd.mockClear();
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      await vi.advanceTimersByTimeAsync(200);
+      const internal = instance as unknown as { checkTimer: number | null };
+      expect(internal.checkTimer).toBeNull();
+
+      // Simulate the popup flipping the toggle ON.
+      const listener = onChangedAdd.mock.calls[0]?.[0] as
+        | ((changes: Record<string, { newValue?: unknown }>, area: string) => void)
+        | undefined;
+      expect(listener).toBeTypeOf('function');
+      listener!({ gvDefaultModelAutoApply: { newValue: true } }, 'sync');
+
+      // Trigger a fresh navigation so checkAndLockModel runs again.
+      history.pushState({}, '', '/app');
+      await vi.advanceTimersByTimeAsync(200);
+
+      expect(internal.checkTimer).not.toBeNull();
+    });
+
+    it('skips star button injection when the toggle is off at init time', async () => {
+      mockSyncGet({
+        gvDefaultModelAutoApply: false,
+      });
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      await DefaultModelManager.getInstance().init();
+      destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+      const menuPanel = document.createElement('div');
+      menuPanel.className = 'mat-mdc-menu-panel';
+      menuPanel.setAttribute('role', 'menu');
+      const item = document.createElement('div');
+      item.setAttribute('role', 'menuitemradio');
+      item.innerHTML = `
+        <div class="title-and-description">
+          <div class="mode-title">Model A</div>
+        </div>
+      `;
+      menuPanel.appendChild(item);
+      document.body.appendChild(menuPanel);
+
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(500);
+
+      expect(item.querySelector('.gv-default-star-btn')).toBeNull();
+    });
+
+    it('sweeps already-injected star buttons when the toggle flips off', async () => {
+      mockSyncGet({
+        gvDefaultModel: { id: 'mid-x', name: 'Model X' },
+        // flag absent → enabled
+      });
+
+      const onChangedAdd = chrome.storage.onChanged.addListener as ReturnType<typeof vi.fn>;
+      onChangedAdd.mockClear();
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      await DefaultModelManager.getInstance().init();
+      destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+      const menuPanel = document.createElement('div');
+      menuPanel.className = 'mat-mdc-menu-panel';
+      menuPanel.setAttribute('role', 'menu');
+      const item = document.createElement('div');
+      item.setAttribute('role', 'menuitemradio');
+      item.innerHTML = `
+        <div class="title-and-description">
+          <div class="mode-title">Model X</div>
+        </div>
+      `;
+      menuPanel.appendChild(item);
+      document.body.appendChild(menuPanel);
+
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(500);
+      expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
+
+      const listener = onChangedAdd.mock.calls[0]?.[0] as
+        | ((changes: Record<string, { newValue?: unknown }>, area: string) => void)
+        | undefined;
+      listener!({ gvDefaultModelAutoApply: { newValue: false } }, 'sync');
+
+      expect(item.querySelector('.gv-default-star-btn')).toBeNull();
+    });
+
+    it('renders a failure toast once after maxConsecutiveFailures threshold is crossed', async () => {
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      // Drive the consecutive-failure counter through the helper directly —
+      // the runtime path that increments it is exercised by other tests
+      // (e.g. the "stops retrying after consecutive failures" case in the
+      // outer describe), but we want a focused assertion on the toast UI.
+      const internal = instance as unknown as {
+        consecutiveFailures: number;
+        maxConsecutiveFailures: number;
+        maybeNotifyAutoApplyFailure: () => void;
+      };
+
+      internal.consecutiveFailures = internal.maxConsecutiveFailures;
+      internal.maybeNotifyAutoApplyFailure();
+
+      const toasts = document.querySelectorAll('.gv-default-model-fail-toast');
+      expect(toasts.length).toBe(1);
+
+      // Calling again must NOT stack a second toast.
+      internal.maybeNotifyAutoApplyFailure();
+      expect(document.querySelectorAll('.gv-default-model-fail-toast').length).toBe(1);
+    });
+
+    it('toast action button sends gv.openPopup runtime message', async () => {
+      const sendMessageMock = vi.fn().mockResolvedValue({ ok: true });
+      (chrome as unknown as { runtime: { sendMessage: typeof sendMessageMock } }).runtime
+        .sendMessage = sendMessageMock;
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      const internal = instance as unknown as {
+        consecutiveFailures: number;
+        maxConsecutiveFailures: number;
+        maybeNotifyAutoApplyFailure: () => void;
+      };
+      internal.consecutiveFailures = internal.maxConsecutiveFailures;
+      internal.maybeNotifyAutoApplyFailure();
+
+      const button = document.querySelector(
+        '.gv-default-model-fail-toast button',
+      ) as HTMLButtonElement | null;
+      expect(button).not.toBeNull();
+      button!.click();
+
+      // Let the click handler's microtask run.
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(sendMessageMock).toHaveBeenCalledWith({ type: 'gv.openPopup' });
+    });
+
+    it('toast falls back to manual-open text when openPopup is rejected', async () => {
+      const sendMessageMock = vi.fn().mockResolvedValue({ ok: false });
+      (chrome as unknown as { runtime: { sendMessage: typeof sendMessageMock } }).runtime
+        .sendMessage = sendMessageMock;
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      const internal = instance as unknown as {
+        consecutiveFailures: number;
+        maxConsecutiveFailures: number;
+        maybeNotifyAutoApplyFailure: () => void;
+      };
+      internal.consecutiveFailures = internal.maxConsecutiveFailures;
+      internal.maybeNotifyAutoApplyFailure();
+
+      const toast = document.querySelector('.gv-default-model-fail-toast') as HTMLElement;
+      const button = toast.querySelector('button') as HTMLButtonElement;
+      const textSpan = toast.querySelector('span') as HTMLSpanElement;
+
+      button.click();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      // Button removed, fallback text rendered (i18n mock returns the key as the message).
+      expect(toast.querySelector('button')).toBeNull();
+      expect(textSpan.textContent).toBe('defaultModelAutoApplyFailedFallback');
+    });
+
+    it('observer ignores menu mutations when the toggle is off (no scheduled injection)', async () => {
+      mockSyncGet({ gvDefaultModelAutoApply: false });
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      // Mounting a menu panel that would normally trigger the inject path.
+      const menuPanel = document.createElement('div');
+      menuPanel.className = 'mat-mdc-menu-panel';
+      menuPanel.setAttribute('role', 'menu');
+      const item = document.createElement('div');
+      item.setAttribute('role', 'menuitemradio');
+      item.innerHTML = `
+        <div class="title-and-description">
+          <div class="mode-title">Pro</div>
+        </div>
+      `;
+      menuPanel.appendChild(item);
+      document.body.appendChild(menuPanel);
+
+      // Generous wait: the retry loop would normally tick up to 10× 50ms.
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(1000);
+
+      // Hard expectation: zero stars, zero pending injection state.
+      expect(menuPanel.querySelectorAll('.gv-default-star-btn').length).toBe(0);
+      const internal = instance as unknown as { menuPanelInjectAttempts: WeakMap<HTMLElement, number> };
+      expect(internal.menuPanelInjectAttempts.get(menuPanel) ?? 0).toBe(0);
+    });
+
+    it('panel-level sweep removes stars whose owning item is orphaned', async () => {
+      mockSyncGet({ gvDefaultModel: { id: 'mid-z', name: 'Pro' } });
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      // Build a panel where a stale item carries an old star, alongside a
+      // fresh item that hasn't been injected yet. Simulates Gemini's view
+      // recycling leaving the previous item element attached.
+      const menuPanel = document.createElement('div');
+      menuPanel.className = 'mat-mdc-menu-panel';
+      menuPanel.setAttribute('role', 'menu');
+
+      // Stale item — not in the current items list (e.g. removed role) but
+      // still attached as a sibling, carrying an old star.
+      const staleItem = document.createElement('div');
+      staleItem.setAttribute('data-stale', 'true');
+      // No role attribute → won't match MODE_ITEM_SELECTOR
+      const staleStar = document.createElement('button');
+      staleStar.className = 'gv-default-star-btn';
+      staleItem.appendChild(staleStar);
+      menuPanel.appendChild(staleItem);
+
+      // Fresh item — matches the selector, no star yet.
+      const freshItem = document.createElement('div');
+      freshItem.setAttribute('role', 'menuitemradio');
+      freshItem.innerHTML = `
+        <div class="title-and-description">
+          <div class="mode-title">Pro</div>
+        </div>
+      `;
+      menuPanel.appendChild(freshItem);
+      document.body.appendChild(menuPanel);
+
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(500);
+
+      // After injection: stale star gone, exactly one fresh star on freshItem.
+      expect(staleItem.querySelector('.gv-default-star-btn')).toBeNull();
+      expect(menuPanel.querySelectorAll('.gv-default-star-btn').length).toBe(1);
+      expect(freshItem.querySelector('.gv-default-star-btn')).not.toBeNull();
+    });
+
+    it('off-state observer sweeps stale stars in a reattached detached overlay pane', async () => {
+      mockSyncGet({ gvDefaultModelAutoApply: false });
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      // Build a detached pane carrying a stale star, then attach it.
+      // Simulates a CDK overlay pane that was detached at toggle-off time
+      // (so the storage-onChanged sweep missed it) and now comes back into
+      // the document when the user reopens the model menu.
+      const stalePane = document.createElement('div');
+      stalePane.className = 'cdk-overlay-pane';
+      const item = document.createElement('div');
+      item.setAttribute('role', 'menuitemradio');
+      item.innerHTML = `
+        <div class="title-and-description">
+          <div class="mode-title">Pro</div>
+        </div>
+      `;
+      const staleStar = document.createElement('button');
+      staleStar.className = 'gv-default-star-btn is-default';
+      item.appendChild(staleStar);
+      stalePane.appendChild(item);
+
+      // Attach to DOM — observer should fire and sweep.
+      document.body.appendChild(stalePane);
+
+      // Flush the MutationObserver microtask + any delayed work.
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(stalePane.querySelector('.gv-default-star-btn')).toBeNull();
+    });
+
+    it('off-state click on a stale star does not write to storage', async () => {
+      const setSpy = chrome.storage.sync.set as unknown as ReturnType<typeof vi.fn>;
+      const removeSpy = chrome.storage.sync.remove as unknown as ReturnType<typeof vi.fn>;
+
+      mockSyncGet({
+        gvDefaultModel: { id: 'mid-pro', name: 'Pro' },
+        gvDefaultModelAutoApply: false,
+      });
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      // Manually plant a stale star whose click handler was bound during
+      // a prior on-session (we approximate that by calling handleStarClick
+      // directly on a freshly constructed button).
+      const item = document.createElement('div');
+      item.setAttribute('role', 'menuitemradio');
+      item.setAttribute('data-mode-id', 'mid-flash');
+      item.innerHTML = `
+        <div class="title-and-description">
+          <div class="mode-title">Flash</div>
+        </div>
+      `;
+      const btn = document.createElement('button');
+      btn.className = 'gv-default-star-btn';
+      item.appendChild(btn);
+      document.body.appendChild(item);
+
+      setSpy.mockClear();
+      removeSpy.mockClear();
+
+      // Invoke the click path directly via the private method, simulating
+      // the closure captured before the kill switch flipped off.
+      const internal = instance as unknown as {
+        handleStarClick: (name: string, b: HTMLElement) => Promise<void>;
+      };
+      await internal.handleStarClick('Flash', btn);
+
+      // The stale star should be evicted from the DOM and no storage I/O
+      // should have happened.
+      expect(item.querySelector('.gv-default-star-btn')).toBeNull();
+      expect(setSpy).not.toHaveBeenCalled();
+      expect(removeSpy).not.toHaveBeenCalled();
+    });
+
+    it('sweeps the failure toast when the toggle flips off', async () => {
+      mockSyncGet({});
+      const onChangedAdd = chrome.storage.onChanged.addListener as ReturnType<typeof vi.fn>;
+      onChangedAdd.mockClear();
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      const internal = instance as unknown as {
+        consecutiveFailures: number;
+        maxConsecutiveFailures: number;
+        maybeNotifyAutoApplyFailure: () => void;
+      };
+      internal.consecutiveFailures = internal.maxConsecutiveFailures;
+      internal.maybeNotifyAutoApplyFailure();
+      expect(document.querySelector('.gv-default-model-fail-toast')).not.toBeNull();
+
+      const listener = onChangedAdd.mock.calls[0]?.[0] as
+        | ((changes: Record<string, { newValue?: unknown }>, area: string) => void)
+        | undefined;
+      listener!({ gvDefaultModelAutoApply: { newValue: false } }, 'sync');
+
+      expect(document.querySelector('.gv-default-model-fail-toast')).toBeNull();
+    });
+
+    it('aborts an in-flight lock loop when the toggle flips off', async () => {
+      mockSyncGet({
+        gvDefaultModel: { id: 'mid-3', name: 'Model 3' },
+        // flag absent → enabled by default
+      });
+
+      history.replaceState({}, '', '/app');
+
+      const onChangedAdd = chrome.storage.onChanged.addListener as ReturnType<typeof vi.fn>;
+      onChangedAdd.mockClear();
+
+      const { default: DefaultModelManager } = await import('../modelLocker');
+      const instance = DefaultModelManager.getInstance();
+      await instance.init();
+      destroyManager = () => instance.destroy();
+
+      await vi.advanceTimersByTimeAsync(200);
+      const internal = instance as unknown as { checkTimer: number | null };
+      expect(internal.checkTimer).not.toBeNull();
+
+      const listener = onChangedAdd.mock.calls[0]?.[0] as
+        | ((changes: Record<string, { newValue?: unknown }>, area: string) => void)
+        | undefined;
+      listener!({ gvDefaultModelAutoApply: { newValue: false } }, 'sync');
+
+      expect(internal.checkTimer).toBeNull();
+    });
+  });
 });

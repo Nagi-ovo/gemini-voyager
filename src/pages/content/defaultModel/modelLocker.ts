@@ -65,6 +65,19 @@ class DefaultModelManager {
   // Track consecutive failures to stop retrying when model is unavailable
   private consecutiveFailures = 0;
   private readonly maxConsecutiveFailures = 3;
+  // Once we hit `maxConsecutiveFailures`, show a one-time toast suggesting
+  // the user pause the feature (until we ship a fix for the broken selector).
+  // The flag only resets when the user flips the kill switch off-then-on,
+  // so revisiting /app many times in a broken session does not spam toasts.
+  private failureToastShown = false;
+  // Master kill switch — when false, all auto-apply paths short-circuit but
+  // the in-page star UI still works so users can set/clear defaults. Loaded
+  // at init and kept in sync via chrome.storage.onChanged so a popup flip
+  // takes effect without a page reload.
+  private autoApplyEnabled = true;
+  private storageChangeListener:
+    | ((changes: Record<string, chrome.storage.StorageChange>, area: string) => void)
+    | null = null;
 
   private constructor() {}
 
@@ -86,7 +99,24 @@ class DefaultModelManager {
     this.currentDefaultThinkingLevel = thinkingResult.success
       ? this.parseStoredThinkingLevel(thinkingResult.data)
       : null;
+    const autoApplyResult = await storageService.get<unknown>(
+      StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
+    );
+    // Missing key → enabled (backward compat for users upgrading from a
+    // build that did not have this toggle).
+    this.autoApplyEnabled = !autoApplyResult.success || autoApplyResult.data !== false;
     this.initialized = true;
+
+    if (!this.autoApplyEnabled) {
+      // Cross-session cleanup: a previous session may have left star
+      // buttons in the DOM (or the storage onChanged sweep ran in a build
+      // that didn't have this listener). Without this, those stale stars
+      // stay clickable and reproduce the multi-is-default state observed
+      // in MCP browser inspection.
+      this.sweepDefaultModelUi();
+    }
+
+    this.subscribeToAutoApplyChanges();
 
     this.initObserver();
     void this.checkAndLockModel();
@@ -174,6 +204,15 @@ class DefaultModelManager {
       this.originalReplaceState = null;
     }
 
+    if (this.storageChangeListener) {
+      try {
+        chrome.storage.onChanged.removeListener(this.storageChangeListener);
+      } catch {
+        // ignore — listener may already be gone if context invalidated
+      }
+      this.storageChangeListener = null;
+    }
+
     this.pendingMenuPanelInjections = new WeakSet<HTMLElement>();
     this.menuPanelInjectAttempts = new WeakMap<HTMLElement, number>();
   }
@@ -182,6 +221,21 @@ class DefaultModelManager {
     // Observe only for the mode switch panel/bottom-sheet being added; Gemini UI triggers many mutations and
     // querying the entire document on every mutation can cause severe jank/crashes.
     this.observer = new MutationObserver((mutations) => {
+      // When the kill switch is off, still walk added subtrees so we can
+      // sweep stale star buttons that were sitting inside a detached CDK
+      // overlay pane at toggle-off time and get reattached now. Without
+      // this, the storage-onChanged sweep misses them and the user sees
+      // stars come back the moment they reopen the menu.
+      if (!this.autoApplyEnabled) {
+        for (const mutation of mutations) {
+          for (const node of Array.from(mutation.addedNodes)) {
+            if (!(node instanceof HTMLElement)) continue;
+            this.sweepDefaultModelUi(node);
+          }
+        }
+        return;
+      }
+
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
           if (!(node instanceof HTMLElement)) continue;
@@ -196,6 +250,15 @@ class DefaultModelManager {
     });
 
     this.observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  // Single chokepoint for "remove all extension-injected UI inside this
+  // subtree". Used at init time, on flip-off via storage onChanged, and on
+  // the observer's off-state path so that detached → reattached CDK panes
+  // get cleaned up too.
+  private sweepDefaultModelUi(root: ParentNode = document) {
+    root.querySelectorAll('.gv-default-star-btn').forEach((el) => el.remove());
+    root.querySelectorAll('.gv-default-model-fail-toast').forEach((el) => el.remove());
   }
 
   private resolveModeSwitchContainer(root: HTMLElement): HTMLElement | null {
@@ -264,6 +327,9 @@ class DefaultModelManager {
   }
 
   private scheduleMenuPanelInjection(menuPanel: HTMLElement) {
+    // Second-line defence: even if a caller bypassed the observer-level
+    // gate, never queue retry attempts when the kill switch is off.
+    if (!this.autoApplyEnabled) return;
     if (this.pendingMenuPanelInjections.has(menuPanel)) return;
     this.pendingMenuPanelInjections.add(menuPanel);
 
@@ -293,6 +359,17 @@ class DefaultModelManager {
   }
 
   private async injectStarButtons(menuPanel: HTMLElement): Promise<boolean> {
+    // When the master kill switch is off, do not just bail — actively sweep
+    // any star buttons that survived from a previous on-state. Bailing left
+    // residual stars clickable, which then re-entered handleStarClick and
+    // produced an inconsistent multi-is-default state because the cleanup
+    // re-injection short-circuited too. See issue follow-up to the
+    // default-model toggle.
+    if (!this.autoApplyEnabled) {
+      this.sweepDefaultModelUi(menuPanel);
+      return false;
+    }
+
     const items = menuPanel.querySelectorAll(MODE_ITEM_SELECTOR);
     if (!items.length) return false;
 
@@ -310,6 +387,20 @@ class DefaultModelManager {
       menuPanel.querySelector('.title-and-description') !== null ||
       menuPanel.querySelector('.label-container') !== null;
     if (!isModelMenu) return false;
+
+    // Sweep stars whose owning item is no longer in the current `items`
+    // set. Gemini's Angular view recycling can leave old item elements
+    // attached to the panel after a re-render; without this sweep, the
+    // per-item dedup below would happily inject a fresh star into each new
+    // item, leaving the orphaned old item with its own star — visually
+    // duplicating the star icon.
+    const currentItems = new Set<Element>(Array.from(items));
+    menuPanel.querySelectorAll('.gv-default-star-btn').forEach((star) => {
+      const owner = star.closest(MODE_ITEM_SELECTOR);
+      if (!owner || !currentItems.has(owner)) {
+        star.remove();
+      }
+    });
 
     // Use cached value efficiently
     if (!this.initialized) {
@@ -402,10 +493,25 @@ class DefaultModelManager {
   }
 
   private async injectThinkingLevelStars(submenuPane: HTMLElement): Promise<boolean> {
+    // Master kill switch — see comment on `injectStarButtons`.
+    if (!this.autoApplyEnabled) {
+      this.sweepDefaultModelUi(submenuPane);
+      return false;
+    }
+
     const items = Array.from(
       submenuPane.querySelectorAll<HTMLElement>('gem-menu-item, [role="menuitem"]'),
     );
     if (!items.length) return false;
+
+    // Orphan-star sweep — same rationale as `injectStarButtons`.
+    const currentItems = new Set<Element>(items);
+    submenuPane.querySelectorAll('.gv-default-star-btn').forEach((star) => {
+      const owner = star.closest('gem-menu-item, [role="menuitem"]');
+      if (!owner || !currentItems.has(owner)) {
+        star.remove();
+      }
+    });
 
     if (!this.initialized) {
       const result = await storageService.get<unknown>(StorageKeys.DEFAULT_THINKING_LEVEL);
@@ -512,6 +618,17 @@ class DefaultModelManager {
   }
 
   private async handleThinkingLevelStarClick(index: number, label: string, btn: HTMLElement) {
+    // Stale-click guard. Stars are normally swept the instant the user
+    // toggles the kill switch off, but a star inside a detached overlay
+    // pane (or attached to a closure from a previous on-session) can
+    // outlive the sweep. Without this guard such a click would silently
+    // mutate storage even though the user has paused the feature.
+    if (!this.autoApplyEnabled) {
+      btn.closest('[role="menuitemradio"], [role="menuitem"], gem-menu-item')
+        ?.querySelectorAll('.gv-default-star-btn')
+        .forEach((el) => el.remove());
+      return;
+    }
     const isCurrentlyDefault = this.isThinkingDefaultForItem(
       this.currentDefaultThinkingLevel,
       index,
@@ -620,6 +737,16 @@ class DefaultModelManager {
     const modelItem = closestItem instanceof HTMLElement ? closestItem : null;
     const modelId = modelItem ? this.getModelIdFromItem(modelItem) : null;
 
+    // Stale-click guard — see comment on `handleThinkingLevelStarClick`.
+    if (!this.autoApplyEnabled) {
+      if (modelItem) {
+        modelItem.querySelectorAll('.gv-default-star-btn').forEach((el) => el.remove());
+      } else {
+        btn.remove();
+      }
+      return;
+    }
+
     // 1. Optimistic UI Update (Instant feedback)
     const isCurrentlyDefault = modelItem
       ? this.isDefaultForItem(this.currentDefaultModel, modelItem, modelName)
@@ -695,7 +822,139 @@ class DefaultModelManager {
     }, 3000);
   }
 
+  private maybeNotifyAutoApplyFailure() {
+    if (this.consecutiveFailures < this.maxConsecutiveFailures) return;
+    if (this.failureToastShown) return;
+    this.failureToastShown = true;
+    this.showAutoApplyFailureToast();
+  }
+
+  private showAutoApplyFailureToast() {
+    // Drop any earlier instance so consecutive triggers (shouldn't happen
+    // thanks to `failureToastShown`, but defensive) don't stack.
+    document.querySelectorAll('.gv-default-model-fail-toast').forEach((n) => n.remove());
+
+    const toast = document.createElement('div');
+    toast.className = 'gv-default-model-fail-toast';
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #323232;
+      color: white;
+      padding: 14px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      line-height: 1.45;
+      z-index: 10000;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      max-width: min(520px, calc(100vw - 48px));
+      transition: opacity 0.3s;
+    `;
+
+    const text = document.createElement('span');
+    text.style.cssText = 'flex: 1; min-width: 0;';
+    text.textContent =
+      chrome.i18n.getMessage('defaultModelAutoApplyFailed') ||
+      'Default model auto-apply failed 3 times in a row. Gemini may have changed its menu layout.';
+
+    const action = document.createElement('button');
+    action.type = 'button';
+    action.style.cssText = `
+      flex: 0 0 auto;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    `;
+    action.textContent =
+      chrome.i18n.getMessage('defaultModelAutoApplyFailedAction') || 'Pause in settings';
+
+    const dismiss = () => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    };
+
+    action.addEventListener('click', () => {
+      void this.requestOpenPopup().then((opened) => {
+        if (opened) {
+          dismiss();
+          return;
+        }
+        // Firefox/Safari (or any host that refuses programmatic popup):
+        // swap the text to the manual-fallback instruction and hide the
+        // button — there's nothing useful left for it to do.
+        text.textContent =
+          chrome.i18n.getMessage('defaultModelAutoApplyFailedFallback') ||
+          'Open the extension popup from your toolbar to pause this feature.';
+        action.remove();
+      });
+    });
+
+    toast.appendChild(text);
+    toast.appendChild(action);
+    document.body.appendChild(toast);
+
+    // Stay visible long enough to read + act, but auto-dismiss eventually
+    // so it isn't a permanent splash on the page.
+    setTimeout(dismiss, 12000);
+  }
+
+  private async requestOpenPopup(): Promise<boolean> {
+    try {
+      const response = (await chrome.runtime.sendMessage({ type: 'gv.openPopup' })) as
+        | { ok?: boolean }
+        | undefined;
+      return response?.ok === true;
+    } catch {
+      return false;
+    }
+  }
+
   // ==================== Auto Lock Logic ====================
+
+  private subscribeToAutoApplyChanges() {
+    if (this.storageChangeListener) return;
+    this.storageChangeListener = (changes, area) => {
+      if (area !== 'sync' && area !== 'local') return;
+      const change = changes[StorageKeys.DEFAULT_MODEL_AUTO_APPLY];
+      if (!change) return;
+      const next = change.newValue !== false; // missing/true → enabled
+      if (next === this.autoApplyEnabled) return;
+      this.autoApplyEnabled = next;
+      if (!next) {
+        // Flipping off: abort any running lock loop so it doesn't keep
+        // clicking after the user disabled the feature.
+        if (this.checkTimer) {
+          clearInterval(this.checkTimer);
+          this.checkTimer = null;
+        }
+        this.autoSelectSessionId = null;
+        // Sweep any star buttons already injected into open menus so the UI
+        // matches the off-state immediately (next menu open will skip
+        // injection too via the guards in `injectStarButtons`).
+        this.sweepDefaultModelUi();
+      } else {
+        // Flipping on: clear the once-per-session toast guard so a future
+        // breakage during the re-enabled run can surface a fresh warning.
+        this.failureToastShown = false;
+      }
+    };
+    try {
+      chrome.storage.onChanged.addListener(this.storageChangeListener);
+    } catch {
+      // chrome.storage may be unavailable in certain test contexts; safe to ignore.
+    }
+  }
 
   /**
    * Delayed version of checkAndLockModel for SPA navigation.
@@ -708,6 +967,8 @@ class DefaultModelManager {
   }
 
   private async checkAndLockModel() {
+    // Master kill switch — see `autoApplyEnabled`.
+    if (!this.autoApplyEnabled) return;
     // Only lock on new conversation pages
     if (!this.isNewConversation()) return;
 
@@ -884,6 +1145,7 @@ class DefaultModelManager {
         // menu and count this as a failure so we don't loop forever toggling the trigger.
         document.body.click();
         this.consecutiveFailures++;
+        this.maybeNotifyAutoApplyFailure();
         if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
           clearInterval(this.checkTimer);
         }
@@ -976,6 +1238,7 @@ class DefaultModelManager {
         // Track consecutive failures - if model is consistently not found,
         // stop trying to avoid endless flashing (e.g., model not available for this account)
         this.consecutiveFailures++;
+        this.maybeNotifyAutoApplyFailure();
         if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
           if (this.checkTimer) {
             clearInterval(this.checkTimer);
@@ -1006,6 +1269,7 @@ class DefaultModelManager {
       if (!modelPane) {
         document.body.click();
         this.consecutiveFailures++;
+        this.maybeNotifyAutoApplyFailure();
         if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
           clearInterval(this.checkTimer);
         }
@@ -1027,6 +1291,7 @@ class DefaultModelManager {
       if (!submenu) {
         document.body.click();
         this.consecutiveFailures++;
+        this.maybeNotifyAutoApplyFailure();
         if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
           clearInterval(this.checkTimer);
         }
@@ -1049,6 +1314,7 @@ class DefaultModelManager {
       if (!targetItem) {
         document.body.click();
         this.consecutiveFailures++;
+        this.maybeNotifyAutoApplyFailure();
         if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
           clearInterval(this.checkTimer);
         }

@@ -76,6 +76,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS: Record<string, unknown> = {
   [StorageKeys.DRAFT_AUTO_SAVE]: false,
   [StorageKeys.PREVENT_AUTO_SCROLL_ENABLED]: false,
   [StorageKeys.DEFAULT_MODEL]: null,
+  [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: true,
   [StorageKeys.GV_FOLDER_FILTER_USER_ONLY]: false,
   [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
   [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
