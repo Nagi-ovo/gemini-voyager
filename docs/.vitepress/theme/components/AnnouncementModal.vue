@@ -38,7 +38,11 @@ const i18n: Record<string, Copy> = {
     title: 'Adapting to the new Gemini web UI',
     intro:
       "Gemini's web UI just went through a major redesign and I'm adapting. Features that may be affected:",
-    affected: ['Default Model auto-selection', 'Folder UI', 'NanoBanana watermark removal (fix coming next release)'],
+    affected: [
+      'Default Model auto-selection',
+      'Folder UI',
+      'NanoBanana watermark removal (fix coming next release)',
+    ],
     outro: `Day-to-day usage should still be fine. If you spot other anomalies, please open a ${a('GitHub issue')} and I'll fix it as soon as I can. Please wait for the Chrome Web Store update.`,
     dismiss: 'Got it',
   },
@@ -46,14 +50,22 @@ const i18n: Record<string, Copy> = {
     title: 'Gemini ウェブ版リニューアル対応中',
     intro:
       'Gemini ウェブ版が大幅にリニューアルされたため、現在対応中です。影響を受ける可能性のある機能：',
-    affected: ['デフォルトモデルの自動選択', 'フォルダ UI', 'NanoBanana の透かし除去（次バージョンで修正予定）'],
+    affected: [
+      'デフォルトモデルの自動選択',
+      'フォルダ UI',
+      'NanoBanana の透かし除去（次バージョンで修正予定）',
+    ],
     outro: `全体的な使用には支障はないはずです。その他の不具合を見つけた場合は、${a('GitHub で issue')} を立ててお知らせください。早急に修正します。Chrome Web Store の更新をお待ちください。`,
     dismiss: '了解',
   },
   'ko-KR': {
     title: 'Gemini 웹 UI 개편 적응 중',
     intro: 'Gemini 웹 버전이 최근 대규모로 개편되어 적응 중입니다. 영향을 받을 수 있는 기능:',
-    affected: ['기본 모델 자동 선택', '폴더 UI', 'NanoBanana 워터마크 제거(다음 버전에서 수정 예정)'],
+    affected: [
+      '기본 모델 자동 선택',
+      '폴더 UI',
+      'NanoBanana 워터마크 제거(다음 버전에서 수정 예정)',
+    ],
     outro: `전반적인 사용에는 큰 문제가 없을 것입니다. 다른 이상이 발견되면 ${a('GitHub issue')}로 알려주세요. 최대한 빨리 수정하겠습니다. Chrome Web Store 업데이트를 기다려 주세요.`,
     dismiss: '확인',
   },

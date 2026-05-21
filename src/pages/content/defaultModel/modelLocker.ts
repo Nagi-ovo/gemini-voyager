@@ -99,9 +99,7 @@ class DefaultModelManager {
     this.currentDefaultThinkingLevel = thinkingResult.success
       ? this.parseStoredThinkingLevel(thinkingResult.data)
       : null;
-    const autoApplyResult = await storageService.get<unknown>(
-      StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
-    );
+    const autoApplyResult = await storageService.get<unknown>(StorageKeys.DEFAULT_MODEL_AUTO_APPLY);
     // Missing key → enabled (backward compat for users upgrading from a
     // build that did not have this toggle).
     this.autoApplyEnabled = !autoApplyResult.success || autoApplyResult.data !== false;
@@ -624,7 +622,8 @@ class DefaultModelManager {
     // outlive the sweep. Without this guard such a click would silently
     // mutate storage even though the user has paused the feature.
     if (!this.autoApplyEnabled) {
-      btn.closest('[role="menuitemradio"], [role="menuitem"], gem-menu-item')
+      btn
+        .closest('[role="menuitemradio"], [role="menuitem"], gem-menu-item')
         ?.querySelectorAll('.gv-default-star-btn')
         .forEach((el) => el.remove());
       return;

@@ -531,9 +531,7 @@ export async function injectDownloadButton(targetMenuPanel?: HTMLElement): Promi
       return;
     }
 
-    let downloadButton = menuPanel.querySelector(
-      `.${DOWNLOAD_BUTTON_CLASS}`,
-    ) as HTMLElement | null;
+    let downloadButton = menuPanel.querySelector(`.${DOWNLOAD_BUTTON_CLASS}`) as HTMLElement | null;
     if (!downloadButton) {
       downloadButton = createDownloadButton(
         t('deepResearchDownload'),

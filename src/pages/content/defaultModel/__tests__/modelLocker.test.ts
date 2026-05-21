@@ -1295,8 +1295,9 @@ describe('DefaultModelManager (default model locker)', () => {
 
     it('toast action button sends gv.openPopup runtime message', async () => {
       const sendMessageMock = vi.fn().mockResolvedValue({ ok: true });
-      (chrome as unknown as { runtime: { sendMessage: typeof sendMessageMock } }).runtime
-        .sendMessage = sendMessageMock;
+      (
+        chrome as unknown as { runtime: { sendMessage: typeof sendMessageMock } }
+      ).runtime.sendMessage = sendMessageMock;
 
       const { default: DefaultModelManager } = await import('../modelLocker');
       const instance = DefaultModelManager.getInstance();
@@ -1326,8 +1327,9 @@ describe('DefaultModelManager (default model locker)', () => {
 
     it('toast falls back to manual-open text when openPopup is rejected', async () => {
       const sendMessageMock = vi.fn().mockResolvedValue({ ok: false });
-      (chrome as unknown as { runtime: { sendMessage: typeof sendMessageMock } }).runtime
-        .sendMessage = sendMessageMock;
+      (
+        chrome as unknown as { runtime: { sendMessage: typeof sendMessageMock } }
+      ).runtime.sendMessage = sendMessageMock;
 
       const { default: DefaultModelManager } = await import('../modelLocker');
       const instance = DefaultModelManager.getInstance();
@@ -1383,7 +1385,9 @@ describe('DefaultModelManager (default model locker)', () => {
 
       // Hard expectation: zero stars, zero pending injection state.
       expect(menuPanel.querySelectorAll('.gv-default-star-btn').length).toBe(0);
-      const internal = instance as unknown as { menuPanelInjectAttempts: WeakMap<HTMLElement, number> };
+      const internal = instance as unknown as {
+        menuPanelInjectAttempts: WeakMap<HTMLElement, number>;
+      };
       expect(internal.menuPanelInjectAttempts.get(menuPanel) ?? 0).toBe(0);
     });
 

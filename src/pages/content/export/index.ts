@@ -2209,9 +2209,8 @@ export async function startExportButton(): Promise<void> {
       try {
         const stored = await new Promise<Record<string, unknown>>((resolve) => {
           try {
-            chrome.storage?.sync?.get(
-              [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED],
-              (items) => resolve(items || {}),
+            chrome.storage?.sync?.get([StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED], (items) =>
+              resolve(items || {}),
             );
           } catch {
             resolve({});
