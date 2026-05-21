@@ -80,6 +80,16 @@ const POPUP_SECTION_IDS = [
 type PopupSectionId = (typeof POPUP_SECTION_IDS)[number];
 
 const DEFAULT_SECTION_ORDER: readonly PopupSectionId[] = POPUP_SECTION_IDS;
+const VALUE_BADGE_SECTION_IDS = new Set<PopupSectionId>([
+  'folderSpacing',
+  'folderTreeIndent',
+  'gemsSidebar',
+  'chatWidth',
+  'chatFontSize',
+  'chatLineHeight',
+  'editInputWidth',
+  'sidebarWidth',
+]);
 
 const ROOT_CONVERSATIONS_ID = '__root_conversations__';
 
@@ -361,6 +371,7 @@ interface SettingsUpdate {
 function SectionReorderControls({
   isFirst,
   isLast,
+  hasValueBadge,
   onMoveUp,
   onMoveDown,
   moveUpLabel,
@@ -368,13 +379,22 @@ function SectionReorderControls({
 }: {
   isFirst: boolean;
   isLast: boolean;
+  hasValueBadge: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
   moveUpLabel: string;
   moveDownLabel: string;
 }) {
+  const positionClass = hasValueBadge ? 'top-px' : 'top-1';
+  const buttonClass = hasValueBadge
+    ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/80 flex h-4 w-4 items-center justify-center rounded-sm transition-colors disabled:cursor-not-allowed disabled:opacity-30'
+    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-sm p-0.5 transition-colors disabled:cursor-not-allowed disabled:opacity-30';
+  const iconSize = hasValueBadge ? 12 : 14;
+
   return (
-    <div className="absolute -top-1 right-1 z-10 flex gap-px rounded-md opacity-0 transition-opacity group-hover/reorder:opacity-100">
+    <div
+      className={`absolute ${positionClass} right-1 z-10 flex gap-px rounded-md opacity-0 transition-opacity group-hover/reorder:opacity-100`}
+    >
       <button
         type="button"
         onClick={(e) => {
@@ -382,13 +402,13 @@ function SectionReorderControls({
           onMoveUp();
         }}
         disabled={isFirst}
-        className="text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-sm p-0.5 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+        className={buttonClass}
         aria-label={moveUpLabel}
         title={moveUpLabel}
       >
         <svg
-          width="14"
-          height="14"
+          width={iconSize}
+          height={iconSize}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -406,13 +426,13 @@ function SectionReorderControls({
           onMoveDown();
         }}
         disabled={isLast}
-        className="text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-sm p-0.5 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+        className={buttonClass}
         aria-label={moveDownLabel}
         title={moveDownLabel}
       >
         <svg
-          width="14"
-          height="14"
+          width={iconSize}
+          height={iconSize}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -1402,6 +1422,7 @@ export default function Popup() {
       <SectionReorderControls
         isFirst={visibleSections[0] === id}
         isLast={visibleSections[visibleSections.length - 1] === id}
+        hasValueBadge={VALUE_BADGE_SECTION_IDS.has(id)}
         onMoveUp={() => moveSectionInOrder(id, 'up')}
         onMoveDown={() => moveSectionInOrder(id, 'down')}
         moveUpLabel={t('moveSectionUp')}
