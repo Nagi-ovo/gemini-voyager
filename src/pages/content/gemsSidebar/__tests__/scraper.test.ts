@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { scrapeGemsFromDocument } from '../index';
+import { isGemsViewPathname, scrapeGemsFromDocument } from '../index';
 
 /**
  * Build a JSDOM fragment that mirrors Gemini's actual /gems/view structure.
@@ -101,6 +101,19 @@ describe('gemsSidebar scraper', () => {
     ]);
   });
 
+  it('parses account-scoped gem hrefs', () => {
+    document.body.appendChild(buildGemsListFragment([{ id: 'scoped', name: 'Scoped Gem' }]));
+    document.querySelector('a.bot-row')!.setAttribute('href', '/u/1/gem/scoped');
+
+    expect(scrapeGemsFromDocument()).toEqual([
+      {
+        id: 'scoped',
+        href: '/u/1/gem/scoped',
+        name: 'Scoped Gem',
+      },
+    ]);
+  });
+
   it('ignores rows whose href does not match /gem/<id>', () => {
     document.body.appendChild(buildGemsListFragment([{ id: 'real', name: 'Real Gem' }]));
     // Append a malformed row.
@@ -143,5 +156,20 @@ describe('gemsSidebar scraper', () => {
 
     const result = scrapeGemsFromDocument();
     expect(result.map((g) => g.id)).toEqual(['good']);
+  });
+});
+
+describe('gemsSidebar route matching', () => {
+  it('matches both root and account-scoped Gems pages', () => {
+    expect(isGemsViewPathname('/gems')).toBe(true);
+    expect(isGemsViewPathname('/gems/view')).toBe(true);
+    expect(isGemsViewPathname('/u/0/gems')).toBe(true);
+    expect(isGemsViewPathname('/u/12/gems/view')).toBe(true);
+  });
+
+  it('does not match gem conversation routes or similarly named paths', () => {
+    expect(isGemsViewPathname('/gem/custom-gem/conversation')).toBe(false);
+    expect(isGemsViewPathname('/u/0/gem/custom-gem')).toBe(false);
+    expect(isGemsViewPathname('/gems-old')).toBe(false);
   });
 });

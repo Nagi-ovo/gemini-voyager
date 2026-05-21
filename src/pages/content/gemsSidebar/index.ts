@@ -57,8 +57,10 @@ const EXPANDED_STORAGE_KEY = 'gvGemsSidebarExpanded';
 /** Module-level singleton — only one injector ever needs to run per tab. */
 let scrapeObserver: MutationObserver | null = null;
 let scrapeTimer: number | null = null;
+let scrapeRetryTimer: number | null = null;
 let positionObserver: MutationObserver | null = null;
 let enforceRafId: number | null = null;
+let positionRetryTimer: number | null = null;
 let storageListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
@@ -87,12 +89,12 @@ export function scrapeGemsFromDocument(doc: Document = document): GemMetadata[] 
   const items: GemMetadata[] = [];
 
   rows.forEach((row) => {
-    const anchor = row.querySelector<HTMLAnchorElement>('a.bot-row, a[href^="/gem/"]');
+    const anchor = row.querySelector<HTMLAnchorElement>('a.bot-row, a[href*="/gem/"]');
     const href = anchor?.getAttribute('href') ?? '';
-    const match = href.match(/^\/gem\/([^/?#]+)/);
-    if (!anchor || !match) return;
+    const parsed = parseGemHref(href);
+    if (!anchor || !parsed) return;
 
-    const id = match[1];
+    const { id, path } = parsed;
 
     // Gemini's title is split across `.title-container > div`. Reading the
     // anchor's textContent and stripping the logo-letter prefix yields the
@@ -108,15 +110,30 @@ export function scrapeGemsFromDocument(doc: Document = document): GemMetadata[] 
     const iconEl = anchor.querySelector('.bot-logo-text');
     const iconLetter = iconEl?.textContent?.trim() || undefined;
 
-    items.push({ id, href, name: rawName, description, iconLetter });
+    items.push({ id, href: path, name: rawName, description, iconLetter });
   });
 
   return items;
 }
 
+function parseGemHref(href: string): { id: string; path: string } | null {
+  try {
+    const url = new URL(href, location.origin);
+    const match = url.pathname.match(/^\/(?:u\/\d+\/)?gem\/([^/?#]+)/);
+    if (!match) return null;
+    return { id: match[1], path: `${url.pathname}${url.search}${url.hash}` };
+  } catch {
+    return null;
+  }
+}
+
+export function isGemsViewPathname(pathname: string): boolean {
+  return /^\/(?:u\/\d+\/)?gems(?:\/|$)/.test(pathname);
+}
+
 /** Are we currently on the Gems management page? */
 function isOnGemsViewPage(): boolean {
-  return location.pathname.startsWith('/gems');
+  return isGemsViewPathname(location.pathname);
 }
 
 async function saveCache(items: GemMetadata[]): Promise<void> {
@@ -152,14 +169,25 @@ function scheduleScrape(): void {
 }
 
 function setupScrapeObserver(): void {
+  if (!isOnGemsViewPage()) return;
+
   // Re-scrape whenever the visible gem list changes — covers reorder, rename,
   // create, delete. Cheap because we debounce + early-exit on empty matches.
   const list = document.querySelector('[data-test-id="your-gems-list"]');
   if (!list) {
     // The list isn't mounted yet; retry shortly. Gemini's gems page lazy-loads
     // its content after a brief Angular bootstrap.
-    window.setTimeout(setupScrapeObserver, 500);
+    if (scrapeRetryTimer === null) {
+      scrapeRetryTimer = window.setTimeout(() => {
+        scrapeRetryTimer = null;
+        setupScrapeObserver();
+      }, 500);
+    }
     return;
+  }
+  if (scrapeRetryTimer !== null) {
+    clearTimeout(scrapeRetryTimer);
+    scrapeRetryTimer = null;
   }
   // Initial scrape (post-render).
   scheduleScrape();
@@ -177,6 +205,10 @@ function teardownScrapeObserver(): void {
   if (scrapeTimer !== null) {
     clearTimeout(scrapeTimer);
     scrapeTimer = null;
+  }
+  if (scrapeRetryTimer !== null) {
+    clearTimeout(scrapeRetryTimer);
+    scrapeRetryTimer = null;
   }
 }
 
@@ -394,10 +426,21 @@ function enforcePosition(): void {
 }
 
 function setupPositionEnforcer(): void {
+  if (currentCount <= 0) return;
+
   const overflow = document.querySelector('[data-test-id="overflow-container"]');
   if (!overflow) {
-    window.setTimeout(setupPositionEnforcer, 500);
+    if (positionRetryTimer === null) {
+      positionRetryTimer = window.setTimeout(() => {
+        positionRetryTimer = null;
+        setupPositionEnforcer();
+      }, 500);
+    }
     return;
+  }
+  if (positionRetryTimer !== null) {
+    clearTimeout(positionRetryTimer);
+    positionRetryTimer = null;
   }
   positionObserver?.disconnect();
   positionObserver = new MutationObserver(() => scheduleEnforce());
@@ -414,6 +457,21 @@ function teardownPositionEnforcer(): void {
     cancelAnimationFrame(enforceRafId);
     enforceRafId = null;
   }
+  if (positionRetryTimer !== null) {
+    clearTimeout(positionRetryTimer);
+    positionRetryTimer = null;
+  }
+}
+
+function refreshInjector(): void {
+  if (currentCount <= 0) {
+    cleanupSection();
+    teardownPositionEnforcer();
+    return;
+  }
+
+  setupPositionEnforcer();
+  renderSection();
 }
 
 function clampCount(raw: unknown): number {
@@ -449,14 +507,14 @@ function setupStorageListener(): void {
       const next = clampCount(changes[StorageKeys.GV_GEMS_SIDEBAR_COUNT].newValue);
       if (next === currentCount) return;
       currentCount = next;
-      renderSection();
+      refreshInjector();
       return;
     }
     if (areaName === 'local' && changes[StorageKeys.GV_GEMS_LIST_CACHE]) {
       const raw = changes[StorageKeys.GV_GEMS_LIST_CACHE].newValue as GemCacheEnvelope | undefined;
       if (raw && Array.isArray(raw.items)) {
         currentCache = raw;
-        renderSection();
+        refreshInjector();
       }
     }
     if (areaName === 'local' && changes[EXPANDED_STORAGE_KEY]) {
@@ -490,10 +548,7 @@ export async function startGemsSidebar(): Promise<() => void> {
     setupScrapeObserver();
   }
 
-  if (currentCount > 0) {
-    renderSection();
-    setupPositionEnforcer();
-  }
+  refreshInjector();
 
   // Also handle SPA navigations into /gems/view post-load.
   window.addEventListener('popstate', handleNavigation);
@@ -535,8 +590,6 @@ function handleNavigation(): void {
     } else {
       teardownScrapeObserver();
     }
-    if (currentCount > 0) {
-      setupPositionEnforcer();
-    }
+    refreshInjector();
   }, 250);
 }
