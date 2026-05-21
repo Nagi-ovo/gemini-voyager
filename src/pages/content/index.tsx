@@ -37,7 +37,6 @@ import { startMermaid } from './mermaid/index';
 import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
-import { startRecentsHider } from './recentsHider/index';
 import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
@@ -267,10 +266,6 @@ async function initializeFeatures(): Promise<void> {
 
       // Draft auto-save
       draftSaveCleanup = await startDraftSave();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // Recents hider - hide/show toggle for recent items section
-      startRecentsHider();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Gems hider - hide/show toggle for Gems list section

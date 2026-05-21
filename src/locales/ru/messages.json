@@ -1403,14 +1403,6 @@
     "message": "Ошибка",
     "description": "Status prefix when download fails"
   },
-  "recentsHide": {
-    "message": "Скрыть недавние элементы",
-    "description": "Подсказка для скрытия раздела недавних элементов"
-  },
-  "recentsShow": {
-    "message": "Показать недавние элементы",
-    "description": "Подсказка для отображения раздела недавних элементов"
-  },
   "gemsHide": {
     "message": "Скрыть Gems",
     "description": "Подсказка для скрытия раздела списка Gems"

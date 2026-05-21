@@ -1403,14 +1403,6 @@
     "message": "فشل",
     "description": "Status prefix when download fails"
   },
-  "recentsHide": {
-    "message": "إخفاء العناصر الأخيرة",
-    "description": "تلميح لإخفاء قسم العناصر الأخيرة"
-  },
-  "recentsShow": {
-    "message": "إظهار العناصر الأخيرة",
-    "description": "تلميح لإظهار قسم العناصر الأخيرة"
-  },
   "gemsHide": {
     "message": "إخفاء Gems",
     "description": "تلميح لإخفاء قسم قائمة Gems"

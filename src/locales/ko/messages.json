@@ -1403,14 +1403,6 @@
     "message": "실패",
     "description": "Status prefix when download fails"
   },
-  "recentsHide": {
-    "message": "최근 항목 숨기기",
-    "description": "Tooltip for hiding recents preview section"
-  },
-  "recentsShow": {
-    "message": "최근 항목 표시",
-    "description": "Tooltip for showing recents preview section"
-  },
   "gemsHide": {
     "message": "Gem 숨기기",
     "description": "Tooltip for hiding Gems list section"

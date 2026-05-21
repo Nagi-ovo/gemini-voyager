@@ -1403,14 +1403,6 @@
     "message": "Falha",
     "description": "Status prefix when download fails"
   },
-  "recentsHide": {
-    "message": "Ocultar itens recentes",
-    "description": "Dica para ocultar a seção de itens recentes"
-  },
-  "recentsShow": {
-    "message": "Mostrar itens recentes",
-    "description": "Dica para mostrar a seção de itens recentes"
-  },
   "gemsHide": {
     "message": "Ocultar Gems",
     "description": "Dica para ocultar a seção da lista de Gems"
