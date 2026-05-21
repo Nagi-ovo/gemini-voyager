@@ -339,6 +339,7 @@ interface SettingsUpdate {
   tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
+  defaultModelAutoApplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
   aiStudioEnterSendEnabled?: boolean;
   safariEnterFixEnabled?: boolean;
@@ -354,6 +355,7 @@ interface SettingsUpdate {
   aiStudioEnabled?: boolean;
   showMessageTimestamps?: boolean;
   folderProjectEnabled?: boolean;
+  persistentExportToolbarEnabled?: boolean;
 }
 
 function SectionReorderControls({
@@ -456,6 +458,7 @@ export default function Popup() {
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [showMessageTimestamps, setShowMessageTimestamps] = useState<boolean>(false);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
+  const [defaultModelAutoApplyEnabled, setDefaultModelAutoApplyEnabled] = useState<boolean>(true);
   const [folderProjectEnabled, setFolderProjectEnabled] = useState<boolean>(false);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
   const [aiStudioEnterSendEnabled, setAiStudioEnterSendEnabled] = useState<boolean>(false);
@@ -477,6 +480,8 @@ export default function Popup() {
   const [accountIsolationEnabledAIStudio, setAccountIsolationEnabledAIStudio] =
     useState<boolean>(false);
   const [aiStudioEnabled, setAiStudioEnabled] = useState<boolean>(true);
+  const [persistentExportToolbarEnabled, setPersistentExportToolbarEnabled] =
+    useState<boolean>(true);
   const [activeAccountPlatform, setActiveAccountPlatform] = useState<AccountPlatform>('gemini');
   const [aiStructureCopyStatus, setAiStructureCopyStatus] = useState<
     'idle' | 'loading' | 'copied' | 'error'
@@ -570,6 +575,8 @@ export default function Popup() {
         payload.gvMermaidEnabled = settings.mermaidEnabled;
       if (typeof settings.quoteReplyEnabled === 'boolean')
         payload.gvQuoteReplyEnabled = settings.quoteReplyEnabled;
+      if (typeof settings.defaultModelAutoApplyEnabled === 'boolean')
+        payload[StorageKeys.DEFAULT_MODEL_AUTO_APPLY] = settings.defaultModelAutoApplyEnabled;
       if (typeof settings.folderProjectEnabled === 'boolean')
         payload[StorageKeys.FOLDER_PROJECT_ENABLED] = settings.folderProjectEnabled;
       if (typeof settings.ctrlEnterSendEnabled === 'boolean')
@@ -604,6 +611,9 @@ export default function Popup() {
         payload[StorageKeys.GV_AISTUDIO_ENABLED] = settings.aiStudioEnabled;
       if (typeof settings.showMessageTimestamps === 'boolean')
         payload[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS] = settings.showMessageTimestamps;
+      if (typeof settings.persistentExportToolbarEnabled === 'boolean')
+        payload[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED] =
+          settings.persistentExportToolbarEnabled;
       void setSyncStorage(payload);
     },
     [activeAccountPlatform, setSyncStorage],
@@ -946,6 +956,7 @@ export default function Popup() {
           gvTabTitleUpdateEnabled: true,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
+          [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: true,
           [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
           gvCtrlEnterSend: false,
           [StorageKeys.AISTUDIO_ENTER_SEND]: false,
@@ -972,6 +983,7 @@ export default function Popup() {
           geminiChatWidth: CHAT_PERCENT.defaultValue,
           geminiEditInputWidth: EDIT_PERCENT.defaultValue,
           [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false,
+          [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: true,
           [StorageKeys.GV_POPUP_SECTION_ORDER]: null,
         },
         (res) => {
@@ -1013,6 +1025,7 @@ export default function Popup() {
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
+          setDefaultModelAutoApplyEnabled(res?.[StorageKeys.DEFAULT_MODEL_AUTO_APPLY] !== false);
           setFolderProjectEnabled(res?.[StorageKeys.FOLDER_PROJECT_ENABLED] === true);
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
           setAiStudioEnterSendEnabled(res?.[StorageKeys.AISTUDIO_ENTER_SEND] === true);
@@ -1037,6 +1050,9 @@ export default function Popup() {
           setInputHaloHidden(res?.[StorageKeys.INPUT_HALO_HIDDEN] === true);
           setForkEnabled(res?.[StorageKeys.FORK_ENABLED] === true);
           setAiStudioEnabled(res?.[StorageKeys.GV_AISTUDIO_ENABLED] !== false);
+          setPersistentExportToolbarEnabled(
+            res?.[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED] !== false,
+          );
 
           // Width enabled flags — auto-enable if user previously customized the width
           setChatWidthEnabled(
@@ -2656,6 +2672,27 @@ export default function Popup() {
               <div className="group flex items-center justify-between">
                 <div className="flex-1">
                   <Label
+                    htmlFor="persistent-export-toolbar"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('persistentExportToolbar')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('persistentExportToolbarHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="persistent-export-toolbar"
+                  checked={persistentExportToolbarEnabled}
+                  onChange={(e) => {
+                    setPersistentExportToolbarEnabled(e.target.checked);
+                    apply({ persistentExportToolbarEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
                     htmlFor="mermaid-enabled"
                     className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                   >
@@ -2709,6 +2746,27 @@ export default function Popup() {
                   onChange={(e) => {
                     setInputHaloHidden(e.target.checked);
                     apply({ inputHaloHidden: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="default-model-auto-apply"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('enableDefaultModelAutoApply')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('enableDefaultModelAutoApplyHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="default-model-auto-apply"
+                  checked={defaultModelAutoApplyEnabled}
+                  onChange={(e) => {
+                    setDefaultModelAutoApplyEnabled(e.target.checked);
+                    apply({ defaultModelAutoApplyEnabled: e.target.checked });
                   }}
                 />
               </div>

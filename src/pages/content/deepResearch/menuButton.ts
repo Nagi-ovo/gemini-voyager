@@ -114,7 +114,7 @@ async function loadDictionaries(): Promise<Dictionaries> {
 }
 
 export function applyDeepResearchDownloadButtonI18n(
-  button: HTMLButtonElement,
+  button: HTMLElement,
   dict: Dictionaries,
   lang: AppLanguage,
 ): void {
@@ -126,7 +126,7 @@ export function applyDeepResearchDownloadButtonI18n(
 }
 
 export function applyDeepResearchSaveReportButtonI18n(
-  button: HTMLButtonElement,
+  button: HTMLElement,
   dict: Dictionaries,
   lang: AppLanguage,
 ): void {
@@ -269,7 +269,7 @@ function createMenuButton({
   iconName: string;
   onClick: () => void;
   menuContent: HTMLElement;
-}): HTMLButtonElement {
+}): HTMLElement {
   const button =
     createMenuItemFromNativeTemplate({
       menuContent,
@@ -300,7 +300,7 @@ function createDownloadButton(
   text: string,
   tooltip: string,
   menuContent: HTMLElement,
-): HTMLButtonElement {
+): HTMLElement {
   return createMenuButton({
     text,
     tooltip,
@@ -454,7 +454,7 @@ function createSaveReportButton(
   tooltip: string,
   dict: Dictionaries,
   menuContent: HTMLElement,
-): HTMLButtonElement {
+): HTMLElement {
   return createMenuButton({
     text,
     tooltip,
@@ -533,7 +533,7 @@ export async function injectDownloadButton(targetMenuPanel?: HTMLElement): Promi
 
     let downloadButton = menuPanel.querySelector(
       `.${DOWNLOAD_BUTTON_CLASS}`,
-    ) as HTMLButtonElement | null;
+    ) as HTMLElement | null;
     if (!downloadButton) {
       downloadButton = createDownloadButton(
         t('deepResearchDownload'),
@@ -545,7 +545,7 @@ export async function injectDownloadButton(targetMenuPanel?: HTMLElement): Promi
 
     let saveReportButton = menuPanel.querySelector(
       `.${SAVE_REPORT_BUTTON_CLASS}`,
-    ) as HTMLButtonElement | null;
+    ) as HTMLElement | null;
     if (!saveReportButton) {
       saveReportButton = createSaveReportButton(
         t('deepResearchSaveReport'),

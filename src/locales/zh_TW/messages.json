@@ -1271,6 +1271,14 @@
     "message": "自動將瀏覽器分頁標題更新為目前對話的標題",
     "description": "分頁標題同步功能提示"
   },
+  "persistentExportToolbar": {
+    "message": "顯示懸浮匯出按鈕",
+    "description": "右上角兜底匯出工具列開關標籤"
+  },
+  "persistentExportToolbarHint": {
+    "message": "當 Gemini 頂列不再提供匯出入口時，於右上角顯示匯出按鈕。關閉即可隱藏。",
+    "description": "右上角兜底匯出工具列開關提示"
+  },
   "enableMermaidRendering": {
     "message": "啟用 Mermaid 圖表轉譯",
     "description": "啟用 Mermaid 圖表轉譯開關標籤"
@@ -1454,6 +1462,26 @@
   "defaultModelCleared": {
     "message": "已取消預設模型",
     "description": "Toast message when default model is cleared"
+  },
+  "enableDefaultModelAutoApply": {
+    "message": "新對話時自動套用預設模型",
+    "description": "Toggle label for the default-model auto-apply kill switch in the popup"
+  },
+  "enableDefaultModelAutoApplyHint": {
+    "message": "開始新對話時自動切換到您已加星號的預設模型與思考強度。若 Gemini 改版導致自動選擇失靈，關閉此項即可。",
+    "description": "Hint text under the default-model auto-apply toggle"
+  },
+  "defaultModelAutoApplyFailed": {
+    "message": "預設模型連續 3 次自動套用失敗，Gemini 選單可能已改版，可以暫時關閉此功能。",
+    "description": "Toast body when the model locker hits its consecutive-failure threshold"
+  },
+  "defaultModelAutoApplyFailedAction": {
+    "message": "到設定中暫停",
+    "description": "Action button label on the auto-apply failure toast"
+  },
+  "defaultModelAutoApplyFailedFallback": {
+    "message": "請點擊工具列上的 Voyager 圖示開啟設定面板，再關閉此功能。",
+    "description": "Fallback message shown when programmatic popup open fails (e.g. Firefox)"
   },
   "setAsDefaultThinkingLevel": {
     "message": "設為預設思考強度",

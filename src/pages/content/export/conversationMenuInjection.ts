@@ -22,12 +22,24 @@ export type ResponseMenuContext = {
 
 const MENU_BUTTON_CLASS = 'gv-export-conversation-menu-btn';
 const RESPONSE_MENU_BUTTON_CLASS = 'gv-export-response-menu-btn';
-const MENU_PANEL_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
-const SIDEBAR_CONTAINER_SELECTOR = '[data-test-id="overflow-container"]';
+// gem-menu is Gemini's "lr26" replacement for mat-mdc-menu-panel.
+export const MENU_PANEL_SELECTOR = '.mat-mdc-menu-panel[role="menu"], gem-menu';
+const SIDEBAR_CONTAINER_SELECTOR =
+  '[data-test-id="overflow-container"], [data-test-id="all-conversations"]';
 const EXPANDED_MENU_TRIGGER_SELECTOR = '[aria-haspopup="menu"][aria-expanded="true"]';
 const RESPONSE_MORE_MENU_TRIGGER_TEST_ID = 'more-menu-button';
+const CONVERSATION_MENU_TRIGGER_TEST_IDS = new Set([
+  'actions-menu-button',
+  'conversation-actions-menu-icon-button',
+]);
+const MENU_ITEM_SELECTOR = 'button.mat-mdc-menu-item, gem-menu-item';
+
+function isGemMenu(menuPanel: HTMLElement): boolean {
+  return menuPanel.tagName.toLowerCase() === 'gem-menu';
+}
 
 function findMenuContent(menuPanel: HTMLElement): HTMLElement | null {
+  if (isGemMenu(menuPanel)) return menuPanel;
   return menuPanel.querySelector('.mat-mdc-menu-content') as HTMLElement | null;
 }
 
@@ -68,24 +80,15 @@ function hasDeepResearchReportMarkers(menuContent: HTMLElement): boolean {
   );
 }
 
-function updateButtonLabelAndTooltip(
-  button: HTMLButtonElement,
-  label: string,
-  tooltip: string,
-): void {
+function updateButtonLabelAndTooltip(button: HTMLElement, label: string, tooltip: string): void {
   updateMenuItemTemplateLabel(button, label, tooltip);
 }
 
-function findMenuButtonByIcon(
-  menuContent: HTMLElement,
-  iconName: string,
-): HTMLButtonElement | null {
-  const buttons = Array.from(
-    menuContent.querySelectorAll<HTMLButtonElement>('button.mat-mdc-menu-item'),
-  );
+function findMenuButtonByIcon(menuContent: HTMLElement, iconName: string): HTMLElement | null {
+  const items = Array.from(menuContent.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR));
   return (
-    buttons.find((button) => {
-      const icon = button.querySelector('mat-icon');
+    items.find((item) => {
+      const icon = item.querySelector('mat-icon');
       if (!icon) return false;
       const fontIcon = icon.getAttribute('fonticon') || icon.getAttribute('data-mat-icon-name');
       if (fontIcon === iconName) return true;
@@ -122,7 +125,7 @@ function createMenuItemButton({
   injectedClassName: string;
   iconName: string;
   excludedClassNames?: string[];
-}): HTMLButtonElement | null {
+}): HTMLElement | null {
   const button = createMenuItemFromNativeTemplate({
     menuContent,
     injectedClassName,
@@ -163,7 +166,8 @@ export function isConversationMenuPanel(menuPanel: HTMLElement): boolean {
   if (!hasShareButton) return false;
 
   const trigger = resolveExpandedMenuTrigger(menuPanel);
-  return trigger?.getAttribute('data-test-id') === 'actions-menu-button';
+  const triggerTestId = trigger?.getAttribute('data-test-id') || '';
+  return CONVERSATION_MENU_TRIGGER_TEST_IDS.has(triggerTestId);
 }
 
 export function getConversationMenuContext(menuPanel: HTMLElement): ConversationMenuContext | null {
@@ -205,12 +209,12 @@ export function getResponseMenuContext(menuPanel: HTMLElement): ResponseMenuCont
 export function injectConversationMenuExportButton(
   menuPanel: HTMLElement,
   options: ConversationMenuExportOptions,
-): HTMLButtonElement | null {
+): HTMLElement | null {
   if (!isConversationMenuPanel(menuPanel)) return null;
   const menuContent = findMenuContent(menuPanel);
   if (!menuContent) return null;
 
-  const existing = menuContent.querySelector(`.${MENU_BUTTON_CLASS}`) as HTMLButtonElement | null;
+  const existing = menuContent.querySelector(`.${MENU_BUTTON_CLASS}`) as HTMLElement | null;
   if (existing) {
     updateButtonLabelAndTooltip(existing, options.label, options.tooltip);
     return existing;
@@ -244,14 +248,14 @@ export function injectConversationMenuExportButton(
 export function injectResponseMenuExportButton(
   menuPanel: HTMLElement,
   options: ConversationMenuExportOptions,
-): HTMLButtonElement | null {
+): HTMLElement | null {
   if (!isResponseMenuPanel(menuPanel)) return null;
   const menuContent = findMenuContent(menuPanel);
   if (!menuContent) return null;
 
   const existing = menuContent.querySelector(
     `.${RESPONSE_MENU_BUTTON_CLASS}`,
-  ) as HTMLButtonElement | null;
+  ) as HTMLElement | null;
   if (existing) {
     updateButtonLabelAndTooltip(existing, options.label, options.tooltip);
     return existing;

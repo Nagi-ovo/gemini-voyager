@@ -8,6 +8,8 @@ const COPY_BUTTON_TEST_ID = 'copy-button';
 const MORE_BUTTON_TEST_ID = 'more-menu-button';
 const COPY_IMAGE_BUTTON_TEST_ID = 'gv-copy-image-button';
 const COPY_IMAGE_ICON_NAME = 'image';
+const COPY_ICON_NAME = 'content_copy';
+const COPY_BUTTON_ARIA_PATTERNS = [/^copy\b/i, /复制/];
 const ASSISTANT_SCOPE_SELECTOR = [
   '[data-message-author-role="assistant"]',
   '[data-message-author-role="model"]',
@@ -59,11 +61,34 @@ function findButtonByTestId(container: HTMLElement, testId: string): HTMLElement
   return (container.querySelector(`[data-test-id="${escaped}"]`) as HTMLElement | null) ?? null;
 }
 
+function findCopyButtonInContainer(container: HTMLElement): HTMLElement | null {
+  // Legacy: test-id="copy-button"
+  const byTestId = findButtonByTestId(container, COPY_BUTTON_TEST_ID);
+  if (byTestId) return byTestId;
+
+  // gem UI: button has no test-id, identify by mat-icon[fonticon="content_copy"]
+  // and aria-label starting with "Copy" (English) / 含 "复制" (Chinese) — we still
+  // try other locales by checking icon first and only filter aria as a sanity check.
+  const candidates = Array.from(
+    container.querySelectorAll<HTMLElement>('button, gem-icon-button, [role="button"]'),
+  );
+  for (const el of candidates) {
+    const icon = el.querySelector('mat-icon');
+    const fontIcon = icon?.getAttribute('fonticon') || icon?.getAttribute('data-mat-icon-name');
+    if (fontIcon !== COPY_ICON_NAME && icon?.textContent?.trim() !== COPY_ICON_NAME) continue;
+    const aria = el.getAttribute('aria-label') || '';
+    // Skip if aria-label looks unrelated (defensive — most copy buttons match the patterns)
+    if (aria && !COPY_BUTTON_ARIA_PATTERNS.some((re) => re.test(aria))) continue;
+    return el;
+  }
+  return null;
+}
+
 function findActionContainerFromMoreButton(moreButton: HTMLElement): HTMLElement | null {
   let current: HTMLElement | null = moreButton;
   let depth = 0;
   while (current && depth < 12) {
-    const hasCopy = !!findButtonByTestId(current, COPY_BUTTON_TEST_ID);
+    const hasCopy = !!findCopyButtonInContainer(current);
     const hasMore = !!findButtonByTestId(current, MORE_BUTTON_TEST_ID);
     if (hasCopy && hasMore) {
       return current;
@@ -124,7 +149,7 @@ function injectIntoActionContainer(
 ): HTMLElement | null {
   if (!isAssistantActionContainer(container)) return null;
 
-  const copyButton = findButtonByTestId(container, COPY_BUTTON_TEST_ID);
+  const copyButton = findCopyButtonInContainer(container);
   const moreButton = findButtonByTestId(container, MORE_BUTTON_TEST_ID);
   if (!(copyButton instanceof HTMLElement) || !(moreButton instanceof HTMLElement)) return null;
 

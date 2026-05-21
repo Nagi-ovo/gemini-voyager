@@ -1,6 +1,6 @@
 import { createMenuItemFromNativeTemplate } from '../shared/nativeMenuItemTemplate';
 
-function createMoveToFolderMenuItemFallback(label: string): HTMLButtonElement {
+function createMoveToFolderMenuItemFallback(label: string): HTMLElement {
   const menuItem = document.createElement('button');
   menuItem.className = 'mat-mdc-menu-item mat-focus-indicator gv-move-to-folder-btn';
   menuItem.setAttribute('role', 'menuitem');
@@ -36,7 +36,7 @@ export function createMoveToFolderMenuItem(
   menuContent: HTMLElement,
   label: string,
   tooltip: string,
-): HTMLButtonElement {
+): HTMLElement {
   return (
     createMenuItemFromNativeTemplate({
       menuContent,

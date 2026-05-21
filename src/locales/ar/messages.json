@@ -1311,6 +1311,14 @@
     "message": "تحديث عنوان علامة تبويب المتصفح تلقائيًا لمطابقة عنوان المحادثة الحالية",
     "description": "Tab title sync feature hint"
   },
+  "persistentExportToolbar": {
+    "message": "إظهار زر التصدير العائم",
+    "description": "Toggle label for the fallback top-right export toolbar"
+  },
+  "persistentExportToolbarHint": {
+    "message": "يضيف زر تصدير في أعلى اليمين عندما لا يعرض رأس Gemini واحدًا. أوقفه لإخفائه.",
+    "description": "Hint for the persistent export toolbar toggle"
+  },
   "enableMermaidRendering": {
     "message": "تمكين عرض مخططات Mermaid",
     "description": "Enable Mermaid diagram rendering toggle label"
@@ -1454,6 +1462,26 @@
   "defaultModelCleared": {
     "message": "Default model cleared",
     "description": "Toast message when default model is cleared"
+  },
+  "enableDefaultModelAutoApply": {
+    "message": "تطبيق النموذج الافتراضي تلقائيًا في المحادثات الجديدة",
+    "description": "Toggle label for the default-model auto-apply kill switch in the popup"
+  },
+  "enableDefaultModelAutoApplyHint": {
+    "message": "التبديل تلقائيًا إلى النموذج الافتراضي ومستوى التفكير المميزَين عند بدء محادثة جديدة. أوقف هذه الميزة إذا تسبب تصميم Gemini الجديد في تشغيل خاطئ للتحديد التلقائي.",
+    "description": "Hint text under the default-model auto-apply toggle"
+  },
+  "defaultModelAutoApplyFailed": {
+    "message": "فشل تطبيق النموذج الافتراضي تلقائيًا 3 مرات متتالية. ربما تغيّرت قائمة Gemini — يمكنك إيقاف هذه الميزة مؤقتًا.",
+    "description": "Toast body when the model locker hits its consecutive-failure threshold"
+  },
+  "defaultModelAutoApplyFailedAction": {
+    "message": "إيقاف مؤقت في الإعدادات",
+    "description": "Action button label on the auto-apply failure toast"
+  },
+  "defaultModelAutoApplyFailedFallback": {
+    "message": "انقر على أيقونة Voyager في شريط الأدوات لفتح الإعدادات ثم أوقف هذه الميزة مؤقتًا.",
+    "description": "Fallback message shown when programmatic popup open fails (e.g. Firefox)"
   },
   "setAsDefaultThinkingLevel": {
     "message": "Set as default thinking level",

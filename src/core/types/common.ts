@@ -112,6 +112,12 @@ export const StorageKeys = {
   // Default Model
   DEFAULT_MODEL: 'gvDefaultModel',
   DEFAULT_THINKING_LEVEL: 'gvDefaultThinkingLevel',
+  // Master switch for auto-applying the stored default model / thinking level
+  // on new conversations. Defaults to enabled; users can flip this off as a
+  // kill switch if a Gemini redesign breaks the locker or makes it
+  // misbehave. Setting/clearing the default itself (the star buttons inside
+  // the model menu) remains available regardless of this flag.
+  DEFAULT_MODEL_AUTO_APPLY: 'gvDefaultModelAutoApply',
 
   // Folder filtering
   GV_FOLDER_FILTER_USER_ONLY: 'gvFolderFilterUserOnly',
@@ -171,6 +177,11 @@ export const StorageKeys = {
 
   // Export
   EXPORT_IMAGE_WIDTH: 'gvExportImageWidth',
+  // Fallback top-right export toolbar shown when Gemini's logo (the normal
+  // inline injection point) is absent. Defaults to true. When false, the
+  // toolbar is suppressed even if the logo is missing — users keep the menu
+  // injections (顶栏 ⋮ / per-response ⋮) as their only export entry.
+  PERSISTENT_EXPORT_TOOLBAR_ENABLED: 'gvPersistentExportToolbarEnabled',
 
   // AI Studio master toggle
   GV_AISTUDIO_ENABLED: 'gvAIStudioEnabled',

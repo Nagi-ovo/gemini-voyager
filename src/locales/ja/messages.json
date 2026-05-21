@@ -1311,6 +1311,14 @@
     "message": "ブラウザのタブタイトルを、現在の会話タイトルと自動的に同期します",
     "description": "Tab title sync feature hint"
   },
+  "persistentExportToolbar": {
+    "message": "フローティングエクスポートボタンを表示",
+    "description": "Toggle label for the fallback top-right export toolbar"
+  },
+  "persistentExportToolbarHint": {
+    "message": "Gemini のヘッダーにエクスポート項目が表示されないとき、右上にエクスポートボタンを表示します。オフで非表示。",
+    "description": "Hint for the persistent export toolbar toggle"
+  },
   "enableMermaidRendering": {
     "message": "Mermaid 図表のレンダリング",
     "description": "Enable Mermaid diagram rendering toggle label"
@@ -1454,6 +1462,26 @@
   "defaultModelCleared": {
     "message": "Default model cleared",
     "description": "Toast message when default model is cleared"
+  },
+  "enableDefaultModelAutoApply": {
+    "message": "新しい会話でデフォルトモデルを自動適用",
+    "description": "Toggle label for the default-model auto-apply kill switch in the popup"
+  },
+  "enableDefaultModelAutoApplyHint": {
+    "message": "新しい会話を開始するとき、星をつけたデフォルトモデルと思考レベルに自動的に切り替えます。Gemini のデザイン変更で自動選択が誤動作するときはオフにしてください。",
+    "description": "Hint text under the default-model auto-apply toggle"
+  },
+  "defaultModelAutoApplyFailed": {
+    "message": "デフォルトモデルの自動適用が 3 回連続で失敗しました。Gemini のメニューが変わった可能性があります。いったんこの機能をオフにできます。",
+    "description": "Toast body when the model locker hits its consecutive-failure threshold"
+  },
+  "defaultModelAutoApplyFailedAction": {
+    "message": "設定で一時停止",
+    "description": "Action button label on the auto-apply failure toast"
+  },
+  "defaultModelAutoApplyFailedFallback": {
+    "message": "ツールバーの Voyager アイコンをクリックして設定を開き、この機能をオフにしてください。",
+    "description": "Fallback message shown when programmatic popup open fails (e.g. Firefox)"
   },
   "setAsDefaultThinkingLevel": {
     "message": "Set as default thinking level",

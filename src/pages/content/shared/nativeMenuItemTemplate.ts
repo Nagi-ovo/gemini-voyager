@@ -7,50 +7,83 @@ type NativeMenuItemTemplateOptions = {
   excludedClassNames?: string[];
 };
 
+const TEMPLATE_ITEM_SELECTOR = 'button.mat-mdc-menu-item, gem-menu-item';
+
+function isGemMenuItem(el: Element): boolean {
+  return el.tagName.toLowerCase() === 'gem-menu-item';
+}
+
 function findTemplateMenuItem(
   menuContent: HTMLElement,
   excludedClassNames: string[],
-): HTMLButtonElement | null {
-  const directButtons = Array.from(menuContent.children).filter(
-    (node): node is HTMLButtonElement =>
-      node instanceof HTMLButtonElement && node.classList.contains('mat-mdc-menu-item'),
+): HTMLElement | null {
+  const directChildren = Array.from(menuContent.children).filter(
+    (node): node is HTMLElement =>
+      node instanceof HTMLElement &&
+      (isGemMenuItem(node) || node.classList.contains('mat-mdc-menu-item')),
   );
-
-  const nestedButtons = Array.from(
-    menuContent.querySelectorAll<HTMLButtonElement>('button.mat-mdc-menu-item'),
-  );
-  const candidates: HTMLButtonElement[] = [...directButtons];
-  for (const button of nestedButtons) {
-    if (!candidates.includes(button)) {
-      candidates.push(button);
-    }
+  const nested = Array.from(menuContent.querySelectorAll<HTMLElement>(TEMPLATE_ITEM_SELECTOR));
+  const candidates: HTMLElement[] = [...directChildren];
+  for (const el of nested) {
+    if (!candidates.includes(el)) candidates.push(el);
   }
-
   return (
     candidates.find(
-      (button) => !excludedClassNames.some((className) => button.classList.contains(className)),
+      (el) => !excludedClassNames.some((className) => el.classList.contains(className)),
     ) ?? null
   );
 }
 
-function updateMenuItemLabel(button: HTMLButtonElement, label: string): void {
-  const textContainer = button.querySelector('.mat-mdc-menu-item-text') as HTMLElement | null;
-  if (!textContainer) return;
-
-  const styledLabel = textContainer.querySelector(
-    '.menu-text, .gds-body-m, .gds-label-m, .subtitle',
-  );
-  if (styledLabel) {
-    styledLabel.textContent = label;
+function updateMenuItemLabel(button: HTMLElement, label: string): void {
+  // gem-menu-item structure: .label-container > .label > <span> (text)
+  const gemLabel = button.querySelector('.label-container .label') as HTMLElement | null;
+  if (gemLabel) {
+    const innerSpan = gemLabel.querySelector('span');
+    if (innerSpan) {
+      innerSpan.textContent = label;
+      return;
+    }
+    gemLabel.textContent = label;
     return;
   }
 
-  textContainer.textContent = label;
+  // Legacy mat-mdc-menu-item structure
+  const textContainer = button.querySelector('.mat-mdc-menu-item-text') as HTMLElement | null;
+  if (textContainer) {
+    const styledLabel = textContainer.querySelector(
+      '.menu-text, .gds-body-m, .gds-label-m, .subtitle',
+    );
+    if (styledLabel) {
+      styledLabel.textContent = label;
+      return;
+    }
+    textContainer.textContent = label;
+    return;
+  }
+
+  // Last resort: replace direct text content
+  button.textContent = label;
 }
 
-function updateMenuItemIcon(button: HTMLButtonElement, iconName: string): void {
+function updateMenuItemIcon(button: HTMLElement, iconName: string): void {
   const icon = button.querySelector('mat-icon') as HTMLElement | null;
   if (!icon) return;
+
+  // The lumi-symbols font in lr26+ Gemini only ships a subset of glyphs (no
+  // `download` etc). Material Symbols icons like `download` live in
+  // google-symbols. When the cloned template uses lumi-symbols, swap to
+  // google-symbols so our custom icon names render correctly. Gemini sets
+  // the actual font-family via inline style (not via the class), so we must
+  // override it inline; otherwise the icon falls back to Luminous Symbols
+  // and renders a wrong glyph (or a Unicode codepoint placeholder).
+  if (icon.classList.contains('lumi-symbols')) {
+    icon.classList.remove('lumi-symbols');
+    icon.classList.add('google-symbols');
+  }
+  const inlineFamily = icon.style.fontFamily || '';
+  if (!inlineFamily || /luminous/i.test(inlineFamily)) {
+    icon.style.fontFamily = '"Google Symbols"';
+  }
 
   const usesFontIconAttribute = icon.hasAttribute('fonticon');
   if (usesFontIconAttribute) {
@@ -65,7 +98,7 @@ function updateMenuItemIcon(button: HTMLButtonElement, iconName: string): void {
   icon.textContent = usesFontIconAttribute ? '' : iconName;
 }
 
-function clearTemplateSpecificAttributes(button: HTMLButtonElement): void {
+function clearTemplateSpecificAttributes(button: HTMLElement): void {
   const attributesToRemove = [
     'data-test-id',
     'id',
@@ -87,6 +120,7 @@ function clearTemplateSpecificAttributes(button: HTMLButtonElement): void {
     'cdk-program-focused',
     'cdk-mouse-focused',
     'mat-mdc-menu-item-highlighted',
+    'active',
   ];
   for (const className of classesToRemove) {
     button.classList.remove(className);
@@ -100,17 +134,19 @@ export function createMenuItemFromNativeTemplate({
   label,
   tooltip,
   excludedClassNames = [],
-}: NativeMenuItemTemplateOptions): HTMLButtonElement | null {
+}: NativeMenuItemTemplateOptions): HTMLElement | null {
   const template = findTemplateMenuItem(menuContent, [injectedClassName, ...excludedClassNames]);
   if (!template) return null;
 
-  const button = template.cloneNode(true) as HTMLButtonElement;
+  const button = template.cloneNode(true) as HTMLElement;
   clearTemplateSpecificAttributes(button);
   button.classList.add(injectedClassName);
   button.setAttribute('role', 'menuitem');
   button.setAttribute('tabindex', '0');
   button.setAttribute('aria-disabled', 'false');
-  button.disabled = false;
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = false;
+  }
 
   const description = tooltip || label;
   button.title = description;
@@ -123,7 +159,7 @@ export function createMenuItemFromNativeTemplate({
 }
 
 export function updateMenuItemTemplateLabel(
-  button: HTMLButtonElement,
+  button: HTMLElement,
   label: string,
   tooltip?: string,
 ): void {

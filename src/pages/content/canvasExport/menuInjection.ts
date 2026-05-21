@@ -73,14 +73,14 @@ export function findCanvasProseMirrorRoot(): HTMLElement | null {
 export function injectCanvasCopyMarkdownButton(
   menuPanel: HTMLElement,
   options: CanvasMenuInjectionOptions,
-): HTMLButtonElement | null {
+): HTMLElement | null {
   if (!isCanvasShareMenuPanel(menuPanel)) return null;
   const menuContent = findMenuContent(menuPanel);
   if (!menuContent) return null;
 
   const existing = menuContent.querySelector(
     `.${CANVAS_MARKDOWN_BUTTON_CLASS}`,
-  ) as HTMLButtonElement | null;
+  ) as HTMLElement | null;
   if (existing) {
     existing.title = options.tooltip || options.label;
     existing.setAttribute('aria-label', options.tooltip || options.label);

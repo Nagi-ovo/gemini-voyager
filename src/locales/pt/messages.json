@@ -1311,6 +1311,14 @@
     "message": "Atualiza automaticamente o título da guia do navegador para corresponder ao título da conversa atual",
     "description": "Tab title sync feature hint"
   },
+  "persistentExportToolbar": {
+    "message": "Mostrar botão flutuante de exportação",
+    "description": "Toggle label for the fallback top-right export toolbar"
+  },
+  "persistentExportToolbarHint": {
+    "message": "Adiciona um botão de exportação no canto superior direito quando o cabeçalho do Gemini deixa de mostrar um. Desative para ocultá-lo.",
+    "description": "Hint for the persistent export toolbar toggle"
+  },
   "enableMermaidRendering": {
     "message": "Habilitar renderização de diagramas Mermaid",
     "description": "Enable Mermaid diagram rendering toggle label"
@@ -1454,6 +1462,26 @@
   "defaultModelCleared": {
     "message": "Default model cleared",
     "description": "Toast message when default model is cleared"
+  },
+  "enableDefaultModelAutoApply": {
+    "message": "Aplicar modelo padrão em novos chats",
+    "description": "Toggle label for the default-model auto-apply kill switch in the popup"
+  },
+  "enableDefaultModelAutoApplyHint": {
+    "message": "Alterna automaticamente para o modelo padrão e o nível de raciocínio favoritados ao iniciar uma nova conversa. Desative se uma reformulação do Gemini fizer a seleção automática falhar.",
+    "description": "Hint text under the default-model auto-apply toggle"
+  },
+  "defaultModelAutoApplyFailed": {
+    "message": "Não foi possível aplicar o modelo padrão 3 vezes seguidas. O menu do Gemini pode ter mudado — você pode pausar esta função por enquanto.",
+    "description": "Toast body when the model locker hits its consecutive-failure threshold"
+  },
+  "defaultModelAutoApplyFailedAction": {
+    "message": "Pausar nas configurações",
+    "description": "Action button label on the auto-apply failure toast"
+  },
+  "defaultModelAutoApplyFailedFallback": {
+    "message": "Clique no ícone do Voyager na barra de ferramentas para abrir o painel e pause esta função.",
+    "description": "Fallback message shown when programmatic popup open fails (e.g. Firefox)"
   },
   "setAsDefaultThinkingLevel": {
     "message": "Set as default thinking level",

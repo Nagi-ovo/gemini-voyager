@@ -122,4 +122,52 @@ describe('nativeMenuItemTemplate', () => {
     expect(button?.classList.contains('gv-export-conversation-menu-btn')).toBe(true);
     expect(button?.querySelector('mat-icon')?.className).toContain('menu-icon');
   });
+
+  it('swaps lumi-symbols to google-symbols so Material Symbols glyphs render', () => {
+    // Simulate a gem-menu-item template using lumi-symbols (lr26 Gemini default).
+    const menuContent = document.createElement('gem-menu');
+    const item = document.createElement('gem-menu-item');
+    item.setAttribute('role', 'menuitem');
+    item.setAttribute('data-test-id', 'pin-button');
+
+    const content = document.createElement('gem-menu-item-content');
+    const leading = document.createElement('div');
+    leading.className = 'leading-container';
+    const gemIcon = document.createElement('gem-icon');
+    const icon = document.createElement('mat-icon');
+    icon.className = 'mat-icon notranslate lm-icon-m lumi-symbols mat-ligature-font';
+    icon.setAttribute('fonticon', 'push_pin');
+    icon.setAttribute('role', 'img');
+    gemIcon.appendChild(icon);
+    leading.appendChild(gemIcon);
+
+    const labelContainer = document.createElement('div');
+    labelContainer.className = 'label-container';
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'label';
+    const inner = document.createElement('span');
+    inner.textContent = 'Pin';
+    labelSpan.appendChild(inner);
+    labelContainer.appendChild(labelSpan);
+
+    content.appendChild(leading);
+    content.appendChild(labelContainer);
+    item.appendChild(content);
+    menuContent.appendChild(item);
+    document.body.appendChild(menuContent);
+
+    const button = createMenuItemFromNativeTemplate({
+      menuContent,
+      injectedClassName: 'gv-export-conversation-menu-btn',
+      iconName: 'download',
+      label: 'Export',
+      tooltip: 'Export',
+    });
+
+    expect(button).toBeTruthy();
+    const cloneIcon = button?.querySelector('mat-icon');
+    expect(cloneIcon?.classList.contains('lumi-symbols')).toBe(false);
+    expect(cloneIcon?.classList.contains('google-symbols')).toBe(true);
+    expect(cloneIcon?.getAttribute('fonticon')).toBe('download');
+  });
 });

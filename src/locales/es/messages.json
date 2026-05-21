@@ -1311,6 +1311,14 @@
     "message": "Actualiza automáticamente el título de la pestaña del navegador para que coincida con el título de la conversación actual",
     "description": "Tab title sync feature hint"
   },
+  "persistentExportToolbar": {
+    "message": "Mostrar botón flotante de exportación",
+    "description": "Toggle label for the fallback top-right export toolbar"
+  },
+  "persistentExportToolbarHint": {
+    "message": "Añade un botón de exportación en la esquina superior derecha cuando la cabecera de Gemini ya no muestra uno. Desactívalo para ocultarlo.",
+    "description": "Hint for the persistent export toolbar toggle"
+  },
   "enableMermaidRendering": {
     "message": "Habilitar renderizado de diagramas Mermaid",
     "description": "Enable Mermaid diagram rendering toggle label"
@@ -1454,6 +1462,26 @@
   "defaultModelCleared": {
     "message": "Default model cleared",
     "description": "Toast message when default model is cleared"
+  },
+  "enableDefaultModelAutoApply": {
+    "message": "Aplicar modelo predeterminado en chats nuevos",
+    "description": "Toggle label for the default-model auto-apply kill switch in the popup"
+  },
+  "enableDefaultModelAutoApplyHint": {
+    "message": "Cambia automáticamente al modelo predeterminado destacado y al nivel de pensamiento cuando inicies una conversación nueva. Desactívalo si un rediseño de Gemini provoca que la selección automática falle.",
+    "description": "Hint text under the default-model auto-apply toggle"
+  },
+  "defaultModelAutoApplyFailed": {
+    "message": "El modelo predeterminado no pudo aplicarse 3 veces seguidas. El menú de Gemini puede haber cambiado — puedes pausar esta función por ahora.",
+    "description": "Toast body when the model locker hits its consecutive-failure threshold"
+  },
+  "defaultModelAutoApplyFailedAction": {
+    "message": "Pausar en ajustes",
+    "description": "Action button label on the auto-apply failure toast"
+  },
+  "defaultModelAutoApplyFailedFallback": {
+    "message": "Haz clic en el icono de Voyager en la barra de herramientas para abrir el panel y pausa esta función.",
+    "description": "Fallback message shown when programmatic popup open fails (e.g. Firefox)"
   },
   "setAsDefaultThinkingLevel": {
     "message": "Set as default thinking level",

@@ -1311,6 +1311,14 @@
     "message": "브라우저 탭 제목을 현재 대화 제목과 일치하도록 자동으로 업데이트합니다",
     "description": "Tab title sync feature hint"
   },
+  "persistentExportToolbar": {
+    "message": "플로팅 내보내기 버튼 표시",
+    "description": "Toggle label for the fallback top-right export toolbar"
+  },
+  "persistentExportToolbarHint": {
+    "message": "Gemini 헤더에 내보내기 항목이 없을 때 오른쪽 상단에 내보내기 버튼을 표시합니다. 끄면 숨겨집니다.",
+    "description": "Hint for the persistent export toolbar toggle"
+  },
   "enableMermaidRendering": {
     "message": "Mermaid 다이어그램 렌더링 활성화",
     "description": "Enable Mermaid diagram rendering toggle label"
@@ -1454,6 +1462,26 @@
   "defaultModelCleared": {
     "message": "기본 모델 해제됨",
     "description": "Toast message when default model is cleared"
+  },
+  "enableDefaultModelAutoApply": {
+    "message": "새 대화에서 기본 모델 자동 적용",
+    "description": "Toggle label for the default-model auto-apply kill switch in the popup"
+  },
+  "enableDefaultModelAutoApplyHint": {
+    "message": "새 대화를 시작할 때 즐겨찾기한 기본 모델과 사고 수준으로 자동 전환합니다. Gemini 리디자인으로 자동 선택이 오작동하면 끄세요.",
+    "description": "Hint text under the default-model auto-apply toggle"
+  },
+  "defaultModelAutoApplyFailed": {
+    "message": "기본 모델 자동 적용이 3회 연속 실패했습니다. Gemini 메뉴가 변경됐을 수 있어요. 잠시 이 기능을 꺼두실 수 있습니다.",
+    "description": "Toast body when the model locker hits its consecutive-failure threshold"
+  },
+  "defaultModelAutoApplyFailedAction": {
+    "message": "설정에서 일시 중지",
+    "description": "Action button label on the auto-apply failure toast"
+  },
+  "defaultModelAutoApplyFailedFallback": {
+    "message": "도구 모음의 Voyager 아이콘을 클릭해 설정을 열고 이 기능을 꺼주세요.",
+    "description": "Fallback message shown when programmatic popup open fails (e.g. Firefox)"
   },
   "setAsDefaultThinkingLevel": {
     "message": "기본 사고 강도로 설정",

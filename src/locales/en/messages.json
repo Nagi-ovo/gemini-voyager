@@ -1311,6 +1311,14 @@
     "message": "Automatically update the browser tab title to match the current conversation title",
     "description": "Tab title sync feature hint"
   },
+  "persistentExportToolbar": {
+    "message": "Show floating export button",
+    "description": "Toggle label for the fallback top-right export toolbar"
+  },
+  "persistentExportToolbarHint": {
+    "message": "Adds a top-right export button when Gemini's header no longer hosts one. Turn off to hide it.",
+    "description": "Hint for the persistent export toolbar toggle"
+  },
   "enableMermaidRendering": {
     "message": "Enable Mermaid diagram rendering",
     "description": "Enable Mermaid diagram rendering toggle label"
@@ -1454,6 +1462,26 @@
   "defaultModelCleared": {
     "message": "Default model cleared",
     "description": "Toast message when default model is cleared"
+  },
+  "enableDefaultModelAutoApply": {
+    "message": "Auto-apply default model on new chats",
+    "description": "Toggle label for the default-model auto-apply kill switch in the popup"
+  },
+  "enableDefaultModelAutoApplyHint": {
+    "message": "Automatically switch to your starred default model and thinking level when you start a new conversation. Turn off if a Gemini redesign causes the auto-selection to misfire.",
+    "description": "Hint text under the default-model auto-apply toggle"
+  },
+  "defaultModelAutoApplyFailed": {
+    "message": "Default model couldn't auto-apply after 3 tries. Gemini may have changed its menu — you can pause this feature for now.",
+    "description": "Toast body when the model locker hits its consecutive-failure threshold"
+  },
+  "defaultModelAutoApplyFailedAction": {
+    "message": "Pause in settings",
+    "description": "Action button label on the auto-apply failure toast"
+  },
+  "defaultModelAutoApplyFailedFallback": {
+    "message": "Click the Voyager icon in your toolbar to open the popup, then pause this feature.",
+    "description": "Fallback message shown when programmatic popup open fails (e.g. Firefox)"
   },
   "setAsDefaultThinkingLevel": {
     "message": "Set as default thinking level",

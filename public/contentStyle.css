@@ -1067,6 +1067,93 @@ body.dark-theme .gv-export-dropdown-btn:hover,
   transform: translateY(0);
 }
 
+/* Persistent top-right export toolbar — fallback for lr26+ Gemini UI
+ * where the logo (the usual inline injection point) is absent. */
+.gv-persistent-export-toolbar {
+  position: fixed;
+  top: 12px;
+  right: 84px; /* leave room for Gemini's conversation-actions ⋮ button */
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.gv-persistent-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.gv-persistent-export-btn:hover {
+  background: oklch(0.55 0.17 155 / 0.12);
+  border-color: oklch(0.55 0.17 155 / 0.45);
+  color: oklch(0.4 0.17 155);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.gv-persistent-export-btn:active {
+  background: oklch(0.55 0.17 155 / 0.2);
+}
+
+.gv-persistent-export-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex-shrink: 0;
+  background: currentColor;
+  -webkit-mask: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3e%3cpath fill=%22%23000%22 d=%22M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4.007 4.007a1 1 0 01-1.414 0L7.279 11.707a1 1 0 011.414-1.414L11 12.586V4a1 1 0 011-1zm-7 14a1 1 0 011-1h12a1 1 0 011 1v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z%22/%3e%3c/svg%3e')
+    center / contain no-repeat;
+  mask: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3e%3cpath fill=%22%23000%22 d=%22M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4.007 4.007a1 1 0 01-1.414 0L7.279 11.707a1 1 0 011.414-1.414L11 12.586V4a1 1 0 011-1zm-7 14a1 1 0 011-1h12a1 1 0 011 1v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z%22/%3e%3c/svg%3e')
+    center / contain no-repeat;
+}
+
+.gv-persistent-export-label {
+  white-space: nowrap;
+}
+
+/* Dark theme */
+html.dark-theme .gv-persistent-export-btn,
+body.dark-theme .gv-persistent-export-btn,
+.theme-host.dark-theme .gv-persistent-export-btn {
+  background: rgba(30, 30, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+}
+
+html.dark-theme .gv-persistent-export-btn:hover,
+body.dark-theme .gv-persistent-export-btn:hover,
+.theme-host.dark-theme .gv-persistent-export-btn:hover {
+  background: oklch(0.7 0.16 155 / 0.18);
+  border-color: oklch(0.7 0.16 155 / 0.5);
+  color: oklch(0.78 0.16 155);
+}
+
+/* RTL: flip to top-left */
+body.gv-rtl .gv-persistent-export-toolbar {
+  right: auto;
+  left: 84px;
+}
+
 .gv-pm-panel {
   position: fixed;
   display: flex;

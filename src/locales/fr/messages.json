@@ -1311,6 +1311,14 @@
     "message": "Met à jour automatiquement le titre de l'onglet avec celui de la discussion",
     "description": "Tab title sync feature hint"
   },
+  "persistentExportToolbar": {
+    "message": "Afficher le bouton d'export flottant",
+    "description": "Toggle label for the fallback top-right export toolbar"
+  },
+  "persistentExportToolbarHint": {
+    "message": "Ajoute un bouton d'export en haut à droite lorsque l'en-tête de Gemini n'en propose plus. Désactivez pour le masquer.",
+    "description": "Hint for the persistent export toolbar toggle"
+  },
   "enableMermaidRendering": {
     "message": "Activer le rendu Mermaid",
     "description": "Enable Mermaid diagram rendering toggle label"
@@ -1454,6 +1462,26 @@
   "defaultModelCleared": {
     "message": "Default model cleared",
     "description": "Toast message when default model is cleared"
+  },
+  "enableDefaultModelAutoApply": {
+    "message": "Appliquer le modèle par défaut aux nouveaux chats",
+    "description": "Toggle label for the default-model auto-apply kill switch in the popup"
+  },
+  "enableDefaultModelAutoApplyHint": {
+    "message": "Bascule automatiquement vers le modèle par défaut et le niveau de réflexion mis en favori au démarrage d'une nouvelle conversation. Désactivez si une refonte de Gemini fait dérailler la sélection automatique.",
+    "description": "Hint text under the default-model auto-apply toggle"
+  },
+  "defaultModelAutoApplyFailed": {
+    "message": "Le modèle par défaut n'a pas pu être appliqué automatiquement 3 fois de suite. Gemini a peut-être changé son menu — vous pouvez mettre cette fonction en pause.",
+    "description": "Toast body when the model locker hits its consecutive-failure threshold"
+  },
+  "defaultModelAutoApplyFailedAction": {
+    "message": "Mettre en pause",
+    "description": "Action button label on the auto-apply failure toast"
+  },
+  "defaultModelAutoApplyFailedFallback": {
+    "message": "Cliquez sur l'icône Voyager dans votre barre d'outils pour ouvrir les paramètres, puis désactivez cette fonction.",
+    "description": "Fallback message shown when programmatic popup open fails (e.g. Firefox)"
   },
   "setAsDefaultThinkingLevel": {
     "message": "Set as default thinking level",

@@ -34,6 +34,7 @@ import {
   injectConversationMenuExportButton,
   injectResponseMenuExportButton,
 } from './conversationMenuInjection';
+import { mountPersistentExportToolbar } from './persistentExportToolbar';
 import { injectResponseActionCopyImageButtons } from './responseActionImageButton';
 import { copyImageBlobToClipboard, downloadImageBlob } from './responseImageCopy';
 import { groupSelectedMessagesByTurn, resolveInitialSelectedMessageIds } from './selectionUtils';
@@ -45,8 +46,11 @@ import {
 
 // Storage key to persist export state across reloads (e.g. when clicking top node triggers refresh)
 const SESSION_KEY_PENDING_EXPORT = 'gv_export_pending';
-const CONVERSATION_MENU_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
-const CONVERSATION_MENU_TRIGGER_TEST_ID = 'actions-menu-button';
+const CONVERSATION_MENU_SELECTOR = '.mat-mdc-menu-panel[role="menu"], gem-menu';
+const CONVERSATION_MENU_TRIGGER_TEST_IDS = [
+  'actions-menu-button',
+  'conversation-actions-menu-icon-button',
+];
 const RESPONSE_MENU_TRIGGER_TEST_ID = 'more-menu-button';
 const MENU_INJECTION_RETRY_LIMIT = 8;
 const MENU_INJECTION_RETRY_DELAY_MS = 80;
@@ -2118,12 +2122,13 @@ function setupConversationMenuExportObserver({
   const existingPanels = document.querySelectorAll<HTMLElement>(CONVERSATION_MENU_SELECTOR);
   existingPanels.forEach((panel) => window.setTimeout(() => tryInjectOnPanel(panel), 30));
 
+  const triggerSelector = [...CONVERSATION_MENU_TRIGGER_TEST_IDS, RESPONSE_MENU_TRIGGER_TEST_ID]
+    .map((id) => `[data-test-id="${id}"]`)
+    .join(', ');
   const onMenuTriggerInteraction = (event: Event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
-    const trigger = target.closest(
-      `[data-test-id="${CONVERSATION_MENU_TRIGGER_TEST_ID}"], [data-test-id="${RESPONSE_MENU_TRIGGER_TEST_ID}"]`,
-    ) as HTMLElement | null;
+    const trigger = target.closest(triggerSelector) as HTMLElement | null;
     if (!trigger) return;
 
     const panelIds = parseMenuTriggerPanelIds(trigger);
@@ -2190,9 +2195,84 @@ export async function startExportButton(): Promise<void> {
     getCurrentLanguage: () => lang,
   });
 
+  const t0 = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
   const logo =
     (await waitForElement('[data-test-id="logo"]', 6000)) || (await waitForElement('.logo', 2000));
-  if (!logo) return;
+  if (!logo) {
+    // Fallback for lr26+ Gemini UI where the logo has been removed: mount a
+    // persistent top-right toolbar so users still have an always-visible
+    // export entry point. Menu injection (conversation ⋮ / response ⋮) still
+    // runs in parallel via the observers above.
+    let toolbarHandle: ReturnType<typeof mountPersistentExportToolbar> | null = null;
+
+    const readToolbarEnabled = async (): Promise<boolean> => {
+      try {
+        const stored = await new Promise<Record<string, unknown>>((resolve) => {
+          try {
+            chrome.storage?.sync?.get(
+              [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED],
+              (items) => resolve(items || {}),
+            );
+          } catch {
+            resolve({});
+          }
+        });
+        const v = stored[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED];
+        return v !== false;
+      } catch {
+        return true;
+      }
+    };
+
+    const ensureToolbarVisibility = (enabled: boolean) => {
+      if (enabled && !toolbarHandle) {
+        toolbarHandle = mountPersistentExportToolbar({
+          label: t0('pm_export'),
+          tooltip: t0('exportChatJson'),
+          onClick: () => showExportDialog(dict, lang),
+        });
+      } else if (!enabled && toolbarHandle) {
+        toolbarHandle.remove();
+        toolbarHandle = null;
+      }
+    };
+
+    ensureToolbarVisibility(await readToolbarEnabled());
+
+    const onStorageChange = (
+      changes: Record<string, chrome.storage.StorageChange>,
+      area: string,
+    ) => {
+      if (area !== 'sync') return;
+      const nextRaw = changes[StorageKeys.LANGUAGE]?.newValue;
+      if (typeof nextRaw === 'string') {
+        const next = normalizeLang(nextRaw);
+        lang = next;
+        const lbl = dict[next]?.['pm_export'] ?? dict.en?.['pm_export'] ?? 'Export';
+        const ttl =
+          dict[next]?.['exportChatJson'] ?? dict.en?.['exportChatJson'] ?? 'Export chat history';
+        toolbarHandle?.setText(lbl, ttl);
+        applyResponseActionCopyImageButtons(() => lang);
+      }
+      const toolbarChange = changes[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED];
+      if (toolbarChange && 'newValue' in toolbarChange) {
+        ensureToolbarVisibility(toolbarChange.newValue !== false);
+      }
+    };
+    try {
+      chrome.storage?.onChanged?.addListener(onStorageChange);
+      window.addEventListener(
+        'beforeunload',
+        () => {
+          try {
+            chrome.storage?.onChanged?.removeListener(onStorageChange);
+          } catch {}
+        },
+        { once: true },
+      );
+    } catch {}
+    return;
+  }
   const btn = ensureDropdownInjected(logo);
   if (!btn) return;
   if ((btn as Element & { _gvBound?: boolean })._gvBound) return;
