@@ -7,8 +7,11 @@ import { ResponseCompletionDetector } from './detector';
 const LOG_PREFIX = '[ResponseNotification]';
 const PAGE_OBSERVER_SOURCE = 'gemini-voyager-response-complete-observer';
 const PAGE_OBSERVER_SCRIPT_ID = 'gv-response-complete-observer-script';
+const FOREGROUND_TOAST_ID = 'gv-response-complete-toast';
+const FOREGROUND_TOAST_TEXT = '新对话已完成';
 const EVALUATE_DEBOUNCE_MS = 250;
 const STARTUP_DELAY_MS = 1000;
+const FOREGROUND_TOAST_VISIBLE_MS = 3200;
 const MAX_FINGERPRINT_TEXT_LENGTH = 400;
 
 const GENERATING_SELECTORS = [
@@ -45,6 +48,7 @@ let startupTimer: number | null = null;
 let pageObserverInjected = false;
 let activeNetworkRequestCount = 0;
 let hasPendingBackgroundCompletion = false;
+let toastHideTimer: number | null = null;
 let storageListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
@@ -57,6 +61,126 @@ function getConversationKey(): string {
 
 function shouldNotifyForBackgroundCompletion(): boolean {
   return document.visibilityState !== 'visible' || !document.hasFocus();
+}
+
+function getPromptContainerRect(): DOMRect | null {
+  const promptElements = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      'rich-textarea, textarea, [contenteditable="true"], div[role="textbox"]',
+    ),
+  );
+  let bestRect: DOMRect | null = null;
+  let bestScore = -Infinity;
+
+  for (const promptElement of promptElements) {
+    let current: HTMLElement | null = promptElement;
+
+    for (let depth = 0; current && depth < 10; depth += 1) {
+      const rect = current.getBoundingClientRect();
+      const isVisible =
+        rect.width > 280 &&
+        rect.height >= 44 &&
+        rect.height <= 260 &&
+        rect.top > 0 &&
+        rect.bottom <= window.innerHeight + 8 &&
+        rect.right > 0 &&
+        rect.left < window.innerWidth;
+
+      if (isVisible) {
+        const style = window.getComputedStyle(current);
+        const borderRadius = Number.parseFloat(style.borderTopLeftRadius || '0');
+        const distanceFromBottom = Math.abs(window.innerHeight - rect.bottom - 72);
+        const widthScore = Math.min(rect.width, 900) / 10;
+        const roundedScore = Math.min(borderRadius, 36) * 4;
+        const bottomScore = Math.max(0, 220 - distanceFromBottom);
+        const depthPenalty = depth * 8;
+        const fullPagePenalty = rect.width > window.innerWidth * 0.95 ? 180 : 0;
+        const score = widthScore + roundedScore + bottomScore - depthPenalty - fullPagePenalty;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestRect = rect;
+        }
+      }
+
+      current = current.parentElement;
+    }
+  }
+
+  return bestRect;
+}
+
+function ensureForegroundToast(): HTMLDivElement {
+  const existing = document.getElementById(FOREGROUND_TOAST_ID);
+  if (existing instanceof HTMLDivElement) return existing;
+
+  const toast = document.createElement('div');
+  toast.id = FOREGROUND_TOAST_ID;
+  toast.textContent = FOREGROUND_TOAST_TEXT;
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  Object.assign(toast.style, {
+    position: 'fixed',
+    left: '50%',
+    bottom: '148px',
+    transform: 'translate(-50%, 10px)',
+    zIndex: '2147483647',
+    minWidth: '150px',
+    maxWidth: 'min(78vw, 280px)',
+    boxSizing: 'border-box',
+    padding: '10px 24px',
+    borderRadius: '999px',
+    background: 'rgba(232, 240, 254, 0.96)',
+    color: '#1f1f1f',
+    fontSize: '16px',
+    lineHeight: '22px',
+    fontWeight: '400',
+    textAlign: 'center',
+    boxShadow: '0 18px 48px rgba(60, 64, 67, 0.18)',
+    opacity: '0',
+    pointerEvents: 'none',
+    transition: 'opacity 180ms ease, transform 180ms ease',
+  } satisfies Partial<CSSStyleDeclaration>);
+
+  document.body.appendChild(toast);
+  return toast;
+}
+
+function hideForegroundCompletionToast(): void {
+  const toast = document.getElementById(FOREGROUND_TOAST_ID);
+  if (!(toast instanceof HTMLDivElement)) return;
+
+  toast.style.opacity = '0';
+  toast.style.transform = 'translate(-50%, 10px)';
+}
+
+function showForegroundCompletionToast(): void {
+  const toast = ensureForegroundToast();
+  const promptRect = getPromptContainerRect();
+  if (promptRect !== null) {
+    const centerX = Math.min(
+      window.innerWidth - 24,
+      Math.max(24, promptRect.left + promptRect.width / 2),
+    );
+    const bottom = Math.max(96, window.innerHeight - promptRect.top + 22);
+    toast.style.left = `${centerX}px`;
+    toast.style.bottom = `${bottom}px`;
+  } else {
+    toast.style.left = '50%';
+    toast.style.bottom = '148px';
+  }
+
+  toast.textContent = FOREGROUND_TOAST_TEXT;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translate(-50%, 0)';
+
+  if (toastHideTimer !== null) {
+    clearTimeout(toastHideTimer);
+  }
+  toastHideTimer = window.setTimeout(() => {
+    toastHideTimer = null;
+    hideForegroundCompletionToast();
+  }, FOREGROUND_TOAST_VISIBLE_MS);
 }
 
 function isElementVisible(element: Element): boolean {
@@ -199,7 +323,7 @@ function evaluate(): void {
   });
 
   if (decision.type === 'notify') {
-    void sendCompletionNotification();
+    showForegroundCompletionToast();
   }
 }
 
@@ -241,6 +365,11 @@ function stopObserver(): void {
     clearTimeout(startupTimer);
     startupTimer = null;
   }
+  if (toastHideTimer !== null) {
+    clearTimeout(toastHideTimer);
+    toastHideTimer = null;
+  }
+  hideForegroundCompletionToast();
   activeNetworkRequestCount = 0;
   hasPendingBackgroundCompletion = false;
   detector.reset();
