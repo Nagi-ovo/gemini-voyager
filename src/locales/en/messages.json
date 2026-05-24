@@ -1990,5 +1990,13 @@
   "floatingPanelGestureHint": {
     "message": "Double-click to rename • Right-click for pin, color, delete.",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "responseCompleteNotification": {
+    "message": "Response completion notifications",
+    "description": "Toggle label for response completion system notifications"
+  },
+  "responseCompleteNotificationHint": {
+    "message": "Send a system notification when Gemini finishes a response.",
+    "description": "Hint for response completion system notifications"
   }
 }

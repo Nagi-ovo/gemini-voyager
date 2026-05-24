@@ -1990,5 +1990,13 @@
   "folder_new_chat_in_folder": {
     "message": "Nuevo chat en esta carpeta",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
+  },
+  "responseCompleteNotification": {
+    "message": "Notificaciones al completar la respuesta",
+    "description": "Gemini response completion notification toggle"
+  },
+  "responseCompleteNotificationHint": {
+    "message": "Envía una notificación del sistema cuando Gemini termina una respuesta.",
+    "description": "Gemini response completion notification hint"
   }
 }

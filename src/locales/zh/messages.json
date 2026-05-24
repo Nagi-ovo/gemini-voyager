@@ -1990,5 +1990,13 @@
   "floatingPanelGestureHint": {
     "message": "双击重命名 · 右键可置顶/改色/删除。",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "responseCompleteNotification": {
+    "message": "Gemini 思考完成通知",
+    "description": "Gemini 回答完成系统通知开关"
+  },
+  "responseCompleteNotificationHint": {
+    "message": "当 Gemini 完整输出回答后，发送系统通知。",
+    "description": "Gemini 回答完成系统通知提示"
   }
 }

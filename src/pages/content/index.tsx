@@ -37,6 +37,7 @@ import { startMermaid } from './mermaid/index';
 import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
+import { startResponseCompleteNotification } from './responseNotification/index';
 import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
@@ -84,6 +85,7 @@ let sendBehaviorCleanup: (() => void) | null = null;
 let draftSaveCleanup: (() => void) | null = null;
 let forkCleanup: (() => void) | null = null;
 let gemsSidebarCleanup: (() => void) | null = null;
+let responseCompleteNotificationCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -255,6 +257,9 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startDeepResearchExport();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      responseCompleteNotificationCleanup = await startResponseCompleteNotification();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startContextSync();
@@ -533,6 +538,10 @@ function handleVisibilityChange(): void {
         if (gemsSidebarCleanup) {
           gemsSidebarCleanup();
           gemsSidebarCleanup = null;
+        }
+        if (responseCompleteNotificationCleanup) {
+          responseCompleteNotificationCleanup();
+          responseCompleteNotificationCleanup = null;
         }
         chrome.storage?.onChanged?.removeListener(onStorageChanged);
       } catch (e) {

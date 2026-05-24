@@ -1990,5 +1990,13 @@
   "folder_new_chat_in_folder": {
     "message": "在此資料夾新增對話",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
+  },
+  "responseCompleteNotification": {
+    "message": "Gemini 思考完成通知",
+    "description": "Gemini 回答完成系統通知開關"
+  },
+  "responseCompleteNotificationHint": {
+    "message": "當 Gemini 完整輸出回答後，傳送系統通知。",
+    "description": "Gemini 回答完成系統通知提示"
   }
 }

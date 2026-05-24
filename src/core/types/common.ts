@@ -98,6 +98,7 @@ export const StorageKeys = {
   TAB_TITLE_UPDATE_ENABLED: 'gvTabTitleUpdateEnabled',
   MERMAID_ENABLED: 'gvMermaidEnabled',
   QUOTE_REPLY_ENABLED: 'gvQuoteReplyEnabled',
+  RESPONSE_COMPLETE_NOTIFICATION_ENABLED: 'gvResponseCompleteNotificationEnabled',
 
   // Input behavior
   CTRL_ENTER_SEND: 'gvCtrlEnterSend',

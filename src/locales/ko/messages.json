@@ -1990,5 +1990,13 @@
   "folder_new_chat_in_folder": {
     "message": "이 폴더에서 새 채팅",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
+  },
+  "responseCompleteNotification": {
+    "message": "Gemini 응답 완료 알림",
+    "description": "Gemini response completion notification toggle"
+  },
+  "responseCompleteNotificationHint": {
+    "message": "Gemini가 답변을 완료하면 시스템 알림을 보냅니다.",
+    "description": "Gemini response completion notification hint"
   }
 }
