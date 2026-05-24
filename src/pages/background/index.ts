@@ -30,8 +30,24 @@ const RESPONSE_COMPLETE_OBSERVER_SCRIPT_ID = 'gv-response-complete-observer';
 const RESPONSE_COMPLETE_NOTIFICATION_DEDUP_MS = 3000;
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE = 'gemini思考完成';
 const RESPONSE_COMPLETE_NOTIFICATION_TITLE = 'Gemini Voyager';
+const RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR = ' - ';
+const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR = ': ';
+const RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH = 120;
+const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH = 220;
+const RESPONSE_COMPLETE_PENDING_MAX_AGE_MS = 10 * 60 * 1000;
+const RESPONSE_COMPLETE_PENDING_MIN_AGE_MS = 800;
+const RESPONSE_COMPLETE_NOTIFICATION_ICON = 'icon-128.png';
+const RESPONSE_COMPLETE_UNKNOWN_TAB_ID = 'unknown';
+const GEMINI_GENERATION_REQUEST_URL_MARKERS = [
+  'streamgenerate',
+  'bardfrontendservice',
+  'generatecontent',
+  'assistant.lamda',
+  'batchexecute',
+] as const;
 
 const responseCompleteNotificationLastShown = new Map<string, number>();
+const responseCompletePendingByTabId = new Map<number, ResponseCompletePendingRequest[]>();
 
 // Gemini domains where the fetch interceptor should run
 const GEMINI_MATCHES = [
@@ -41,13 +57,40 @@ const GEMINI_MATCHES = [
   'https://aistudio.google.cn/*',
 ];
 
+interface ResponseCompleteNotificationDetails {
+  conversationUrl?: string;
+  conversationTitle?: string;
+  userPrompt?: string;
+}
+
+interface ResponseCompletePendingRequest extends ResponseCompleteNotificationDetails {
+  requestUrl: string;
+  startedAt: number;
+}
+
+function getTabDedupKey(
+  tabId: number | undefined,
+  tabUrl: string | undefined,
+  conversationUrl?: string,
+): string {
+  return `${tabId ?? RESPONSE_COMPLETE_UNKNOWN_TAB_ID}:${conversationUrl ?? tabUrl ?? ''}`;
+}
+
+function normalizeNotificationText(value: unknown, maxLength: number): string {
+  if (typeof value !== 'string') return '';
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (!normalized) return '';
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}…` : normalized;
+}
+
 async function showResponseCompleteNotification(
   sender: chrome.runtime.MessageSender,
-  conversationUrl?: string,
+  details: ResponseCompleteNotificationDetails,
 ): Promise<boolean> {
   if (!chrome.notifications?.create) return false;
 
-  const dedupKey = `${sender.tab?.id ?? 'unknown'}:${conversationUrl ?? sender.tab?.url ?? ''}`;
+  const conversationUrl = details.conversationUrl;
+  const dedupKey = getTabDedupKey(sender.tab?.id, sender.tab?.url, conversationUrl);
   const now = Date.now();
   const lastShown = responseCompleteNotificationLastShown.get(dedupKey) ?? 0;
   if (now - lastShown < RESPONSE_COMPLETE_NOTIFICATION_DEDUP_MS) {
@@ -55,13 +98,148 @@ async function showResponseCompleteNotification(
   }
 
   responseCompleteNotificationLastShown.set(dedupKey, now);
+  const conversationTitle = normalizeNotificationText(
+    details.conversationTitle,
+    RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH -
+      RESPONSE_COMPLETE_NOTIFICATION_TITLE.length -
+      RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR.length,
+  );
+  const userPrompt = normalizeNotificationText(
+    details.userPrompt,
+    RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH -
+      RESPONSE_COMPLETE_NOTIFICATION_MESSAGE.length -
+      RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR.length,
+  );
+
   await chrome.notifications.create(`gv-response-complete-${now}`, {
     type: 'basic',
-    iconUrl: chrome.runtime.getURL('icon-128.png'),
-    title: RESPONSE_COMPLETE_NOTIFICATION_TITLE,
-    message: RESPONSE_COMPLETE_NOTIFICATION_MESSAGE,
+    iconUrl: chrome.runtime.getURL(RESPONSE_COMPLETE_NOTIFICATION_ICON),
+    title: conversationTitle
+      ? `${RESPONSE_COMPLETE_NOTIFICATION_TITLE}${RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR}${conversationTitle}`
+      : RESPONSE_COMPLETE_NOTIFICATION_TITLE,
+    message: userPrompt
+      ? `${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE}${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR}${userPrompt}`
+      : RESPONSE_COMPLETE_NOTIFICATION_MESSAGE,
   });
   return true;
+}
+
+function cleanupExpiredResponseCompletePendingRequests(now = Date.now()): void {
+  for (const [tabId, pendingRequests] of responseCompletePendingByTabId.entries()) {
+    const freshRequests = pendingRequests.filter(
+      (request) => now - request.startedAt <= RESPONSE_COMPLETE_PENDING_MAX_AGE_MS,
+    );
+
+    if (freshRequests.length > 0) {
+      responseCompletePendingByTabId.set(tabId, freshRequests);
+      continue;
+    }
+
+    responseCompletePendingByTabId.delete(tabId);
+  }
+}
+
+function isGeminiGenerationRequestUrl(url: string): boolean {
+  const normalizedUrl = url.toLowerCase();
+  return GEMINI_GENERATION_REQUEST_URL_MARKERS.some((marker) => normalizedUrl.includes(marker));
+}
+
+function rememberResponseCompletePendingRequest(
+  sender: chrome.runtime.MessageSender,
+  details: ResponseCompleteNotificationDetails & { requestUrl?: string },
+): boolean {
+  const tabId = sender.tab?.id;
+  if (typeof tabId !== 'number') return false;
+  if (typeof details.requestUrl !== 'string') return false;
+  if (!isGeminiGenerationRequestUrl(details.requestUrl)) return false;
+
+  const now = Date.now();
+  cleanupExpiredResponseCompletePendingRequests(now);
+  const pendingRequests = responseCompletePendingByTabId.get(tabId) ?? [];
+  pendingRequests.push({
+    requestUrl: details.requestUrl,
+    conversationUrl: details.conversationUrl,
+    conversationTitle: details.conversationTitle,
+    userPrompt: details.userPrompt,
+    startedAt: now,
+  });
+  responseCompletePendingByTabId.set(tabId, pendingRequests);
+  return true;
+}
+
+function clearResponseCompletePendingRequests(tabId: number | undefined): void {
+  if (typeof tabId !== 'number') return;
+  responseCompletePendingByTabId.delete(tabId);
+}
+
+function takeCompletedResponseCompletePendingRequest(
+  tabId: number,
+  requestUrl: string,
+): ResponseCompletePendingRequest | null {
+  const pendingRequests = responseCompletePendingByTabId.get(tabId);
+  if (!pendingRequests) return null;
+
+  const now = Date.now();
+  const requestIndex = pendingRequests.findIndex(
+    (request) =>
+      request.requestUrl === requestUrl &&
+      now - request.startedAt >= RESPONSE_COMPLETE_PENDING_MIN_AGE_MS &&
+      now - request.startedAt <= RESPONSE_COMPLETE_PENDING_MAX_AGE_MS,
+  );
+
+  if (requestIndex === -1) {
+    cleanupExpiredResponseCompletePendingRequests(now);
+    return null;
+  }
+
+  const [request] = pendingRequests.splice(requestIndex, 1);
+  if (pendingRequests.length > 0) {
+    responseCompletePendingByTabId.set(tabId, pendingRequests);
+  } else {
+    responseCompletePendingByTabId.delete(tabId);
+  }
+
+  return request ?? null;
+}
+
+async function shouldNotifyForBackgroundTab(tab: chrome.tabs.Tab): Promise<boolean> {
+  if (!tab.active) return true;
+  if (typeof tab.windowId !== 'number') return true;
+
+  try {
+    const windowInfo = await chrome.windows.get(tab.windowId);
+    if (windowInfo.state === 'minimized') return true;
+    return windowInfo.focused !== true;
+  } catch {
+    return true;
+  }
+}
+
+async function handleResponseCompleteWebRequest(
+  details: chrome.webRequest.OnCompletedDetails,
+): Promise<void> {
+  if (details.tabId < 0) return;
+  if (!isGeminiGenerationRequestUrl(details.url)) return;
+
+  const pendingRequest = takeCompletedResponseCompletePendingRequest(details.tabId, details.url);
+  if (!pendingRequest) return;
+
+  let tab: chrome.tabs.Tab;
+  try {
+    tab = await chrome.tabs.get(details.tabId);
+  } catch {
+    return;
+  }
+
+  if (!(await shouldNotifyForBackgroundTab(tab))) return;
+
+  await showResponseCompleteNotification({ tab }, pendingRequest);
+}
+
+if (chrome.webRequest?.onCompleted) {
+  chrome.webRequest.onCompleted.addListener(handleResponseCompleteWebRequest, {
+    urls: GEMINI_MATCHES,
+  });
 }
 
 function isStarredMessagesData(value: unknown): value is StarredMessagesData {
@@ -728,12 +906,45 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
+      if (message?.type === 'gv.responseComplete.requestStarted') {
+        const ok = rememberResponseCompletePendingRequest(sender, {
+          requestUrl:
+            typeof message.payload?.requestUrl === 'string'
+              ? message.payload.requestUrl
+              : undefined,
+          conversationUrl:
+            typeof message.payload?.conversationUrl === 'string'
+              ? message.payload.conversationUrl
+              : undefined,
+          conversationTitle:
+            typeof message.payload?.conversationTitle === 'string'
+              ? message.payload.conversationTitle
+              : undefined,
+          userPrompt:
+            typeof message.payload?.userPrompt === 'string'
+              ? message.payload.userPrompt
+              : undefined,
+        });
+        sendResponse({ ok });
+        return;
+      }
+
       if (message?.type === 'gv.responseComplete.notify') {
-        const conversationUrl =
-          typeof message.payload?.conversationUrl === 'string'
-            ? message.payload.conversationUrl
-            : undefined;
-        const ok = await showResponseCompleteNotification(sender, conversationUrl);
+        clearResponseCompletePendingRequests(sender.tab?.id);
+        const ok = await showResponseCompleteNotification(sender, {
+          conversationUrl:
+            typeof message.payload?.conversationUrl === 'string'
+              ? message.payload.conversationUrl
+              : undefined,
+          conversationTitle:
+            typeof message.payload?.conversationTitle === 'string'
+              ? message.payload.conversationTitle
+              : undefined,
+          userPrompt:
+            typeof message.payload?.userPrompt === 'string'
+              ? message.payload.userPrompt
+              : undefined,
+        });
         sendResponse({ ok });
         return;
       }

@@ -9,13 +9,40 @@ const PAGE_OBSERVER_SOURCE = 'gemini-voyager-response-complete-observer';
 const PAGE_OBSERVER_SCRIPT_ID = 'gv-response-complete-observer-script';
 const FOREGROUND_TOAST_ID = 'gv-response-complete-toast';
 const FOREGROUND_TOAST_TEXT = '新对话已完成';
+const FOREGROUND_TOAST_TRANSFORM_HIDDEN = 'translate(-50%, 10px)';
+const FOREGROUND_TOAST_TRANSFORM_VISIBLE = 'translate(-50%, 0)';
+const FOREGROUND_TOAST_DEFAULT_BOTTOM_PX = 148;
+const FOREGROUND_TOAST_MIN_EDGE_GAP_PX = 24;
+const FOREGROUND_TOAST_BOTTOM_GAP_FROM_PROMPT_PX = 22;
+const FOREGROUND_TOAST_MIN_BOTTOM_PX = 96;
+const FOREGROUND_TOAST_Z_INDEX = '2147483647';
+const FOREGROUND_TOAST_MIN_WIDTH_PX = 150;
+const FOREGROUND_TOAST_MAX_WIDTH_PX = 280;
+const FOREGROUND_TOAST_MAX_VIEWPORT_WIDTH_PERCENT = 78;
 const EVALUATE_DEBOUNCE_MS = 250;
 const STARTUP_DELAY_MS = 1000;
 const FOREGROUND_TOAST_VISIBLE_MS = 3200;
 const MAX_FINGERPRINT_TEXT_LENGTH = 400;
+const MAX_NOTIFICATION_TITLE_LENGTH = 80;
+const MAX_NOTIFICATION_PROMPT_LENGTH = 140;
 const LATEST_RESPONSE_VISIBLE_MARGIN_PX = 96;
 const BOTTOM_SCROLL_THRESHOLD_PX = 160;
 const PROMPT_SELECTORS = 'rich-textarea, textarea, [contenteditable="true"], div[role="textbox"]';
+const PROMPT_CONTAINER_MAX_PARENT_DEPTH = 10;
+const PROMPT_CONTAINER_MIN_WIDTH_PX = 280;
+const PROMPT_CONTAINER_MIN_HEIGHT_PX = 44;
+const PROMPT_CONTAINER_MAX_HEIGHT_PX = 260;
+const PROMPT_CONTAINER_VIEWPORT_BOTTOM_TOLERANCE_PX = 8;
+const PROMPT_CONTAINER_BOTTOM_TARGET_OFFSET_PX = 72;
+const PROMPT_CONTAINER_WIDTH_SCORE_LIMIT_PX = 900;
+const PROMPT_CONTAINER_WIDTH_SCORE_DIVISOR = 10;
+const PROMPT_CONTAINER_BORDER_RADIUS_SCORE_LIMIT_PX = 36;
+const PROMPT_CONTAINER_BORDER_RADIUS_SCORE_MULTIPLIER = 4;
+const PROMPT_CONTAINER_BOTTOM_SCORE_BASE = 220;
+const PROMPT_CONTAINER_DEPTH_PENALTY_MULTIPLIER = 8;
+const PROMPT_CONTAINER_FULL_WIDTH_RATIO = 0.95;
+const PROMPT_CONTAINER_FULL_WIDTH_PENALTY = 180;
+const COMPLETION_ACTION_MAX_PARENT_DEPTH = 4;
 
 const GENERATING_SELECTORS = [
   '[aria-busy="true"]',
@@ -42,6 +69,15 @@ const COMPLETION_ACTION_SELECTORS = [
   'mat-icon[fonticon="content_copy"]',
   'mat-icon[fonticon="thumb_up"]',
   'mat-icon[fonticon="thumb_down"]',
+] as const;
+
+const USER_PROMPT_SELECTORS = [
+  '[data-message-author-role="user"]',
+  '[data-testid*="user"]',
+  '[data-test-id*="user"]',
+  '[class*="user-query"]',
+  '[class*="userQuery"]',
+  'user-query',
 ] as const;
 
 let enabled = false;
@@ -88,9 +124,8 @@ function shouldSuppressInitialForegroundToast(): boolean {
 }
 
 function handlePromptInteraction(event: Event): void {
-  if (isPromptInteractionTarget(event.target)) {
-    markForegroundToastArmed();
-  }
+  if (!isPromptInteractionTarget(event.target)) return;
+  markForegroundToastArmed();
 }
 
 function getPromptContainerRect(): DOMRect | null {
@@ -101,26 +136,35 @@ function getPromptContainerRect(): DOMRect | null {
   for (const promptElement of promptElements) {
     let current: HTMLElement | null = promptElement;
 
-    for (let depth = 0; current && depth < 10; depth += 1) {
+    for (let depth = 0; current && depth < PROMPT_CONTAINER_MAX_PARENT_DEPTH; depth += 1) {
       const rect = current.getBoundingClientRect();
       const isVisible =
-        rect.width > 280 &&
-        rect.height >= 44 &&
-        rect.height <= 260 &&
+        rect.width > PROMPT_CONTAINER_MIN_WIDTH_PX &&
+        rect.height >= PROMPT_CONTAINER_MIN_HEIGHT_PX &&
+        rect.height <= PROMPT_CONTAINER_MAX_HEIGHT_PX &&
         rect.top > 0 &&
-        rect.bottom <= window.innerHeight + 8 &&
+        rect.bottom <= window.innerHeight + PROMPT_CONTAINER_VIEWPORT_BOTTOM_TOLERANCE_PX &&
         rect.right > 0 &&
         rect.left < window.innerWidth;
 
       if (isVisible) {
         const style = window.getComputedStyle(current);
         const borderRadius = Number.parseFloat(style.borderTopLeftRadius || '0');
-        const distanceFromBottom = Math.abs(window.innerHeight - rect.bottom - 72);
-        const widthScore = Math.min(rect.width, 900) / 10;
-        const roundedScore = Math.min(borderRadius, 36) * 4;
-        const bottomScore = Math.max(0, 220 - distanceFromBottom);
-        const depthPenalty = depth * 8;
-        const fullPagePenalty = rect.width > window.innerWidth * 0.95 ? 180 : 0;
+        const distanceFromBottom = Math.abs(
+          window.innerHeight - rect.bottom - PROMPT_CONTAINER_BOTTOM_TARGET_OFFSET_PX,
+        );
+        const widthScore =
+          Math.min(rect.width, PROMPT_CONTAINER_WIDTH_SCORE_LIMIT_PX) /
+          PROMPT_CONTAINER_WIDTH_SCORE_DIVISOR;
+        const roundedScore =
+          Math.min(borderRadius, PROMPT_CONTAINER_BORDER_RADIUS_SCORE_LIMIT_PX) *
+          PROMPT_CONTAINER_BORDER_RADIUS_SCORE_MULTIPLIER;
+        const bottomScore = Math.max(0, PROMPT_CONTAINER_BOTTOM_SCORE_BASE - distanceFromBottom);
+        const depthPenalty = depth * PROMPT_CONTAINER_DEPTH_PENALTY_MULTIPLIER;
+        const fullPagePenalty =
+          rect.width > window.innerWidth * PROMPT_CONTAINER_FULL_WIDTH_RATIO
+            ? PROMPT_CONTAINER_FULL_WIDTH_PENALTY
+            : 0;
         const score = widthScore + roundedScore + bottomScore - depthPenalty - fullPagePenalty;
 
         if (score > bestScore) {
@@ -189,14 +233,15 @@ function scrollToLatestResponse(): void {
       block: 'end',
       behavior: 'smooth',
     });
-  } else {
-    const scrollRoot = getScrollRoot();
-    scrollRoot.scrollTo({
-      top: scrollRoot.scrollHeight,
-      behavior: 'smooth',
-    });
+    hideForegroundCompletionToast();
+    return;
   }
 
+  const scrollRoot = getScrollRoot();
+  scrollRoot.scrollTo({
+    top: scrollRoot.scrollHeight,
+    behavior: 'smooth',
+  });
   hideForegroundCompletionToast();
 }
 
@@ -219,11 +264,11 @@ function ensureForegroundToast(): HTMLDivElement {
   Object.assign(toast.style, {
     position: 'fixed',
     left: '50%',
-    bottom: '148px',
-    transform: 'translate(-50%, 10px)',
-    zIndex: '2147483647',
-    minWidth: '150px',
-    maxWidth: 'min(78vw, 280px)',
+    bottom: `${FOREGROUND_TOAST_DEFAULT_BOTTOM_PX}px`,
+    transform: FOREGROUND_TOAST_TRANSFORM_HIDDEN,
+    zIndex: FOREGROUND_TOAST_Z_INDEX,
+    minWidth: `${FOREGROUND_TOAST_MIN_WIDTH_PX}px`,
+    maxWidth: `min(${FOREGROUND_TOAST_MAX_VIEWPORT_WIDTH_PERCENT}vw, ${FOREGROUND_TOAST_MAX_WIDTH_PX}px)`,
     boxSizing: 'border-box',
     padding: '10px 24px',
     borderRadius: '999px',
@@ -250,7 +295,7 @@ function hideForegroundCompletionToast(): void {
   if (!(toast instanceof HTMLDivElement)) return;
 
   toast.style.opacity = '0';
-  toast.style.transform = 'translate(-50%, 10px)';
+  toast.style.transform = FOREGROUND_TOAST_TRANSFORM_HIDDEN;
 }
 
 function showForegroundCompletionToast(): void {
@@ -258,21 +303,24 @@ function showForegroundCompletionToast(): void {
   const promptRect = getPromptContainerRect();
   if (promptRect !== null) {
     const centerX = Math.min(
-      window.innerWidth - 24,
-      Math.max(24, promptRect.left + promptRect.width / 2),
+      window.innerWidth - FOREGROUND_TOAST_MIN_EDGE_GAP_PX,
+      Math.max(FOREGROUND_TOAST_MIN_EDGE_GAP_PX, promptRect.left + promptRect.width / 2),
     );
-    const bottom = Math.max(96, window.innerHeight - promptRect.top + 22);
+    const bottom = Math.max(
+      FOREGROUND_TOAST_MIN_BOTTOM_PX,
+      window.innerHeight - promptRect.top + FOREGROUND_TOAST_BOTTOM_GAP_FROM_PROMPT_PX,
+    );
     toast.style.left = `${centerX}px`;
     toast.style.bottom = `${bottom}px`;
   } else {
     toast.style.left = '50%';
-    toast.style.bottom = '148px';
+    toast.style.bottom = `${FOREGROUND_TOAST_DEFAULT_BOTTOM_PX}px`;
   }
 
   toast.textContent = FOREGROUND_TOAST_TEXT;
   toast.setAttribute('aria-label', FOREGROUND_TOAST_TEXT);
   toast.style.opacity = '1';
-  toast.style.transform = 'translate(-50%, 0)';
+  toast.style.transform = FOREGROUND_TOAST_TRANSFORM_VISIBLE;
 
   if (toastHideTimer !== null) {
     clearTimeout(toastHideTimer);
@@ -308,7 +356,7 @@ function getLatestAssistantResponse(): HTMLElement | null {
 
 function hasCompletionActions(response: HTMLElement): boolean {
   let current: HTMLElement | null = response;
-  for (let depth = 0; current && depth < 4; depth += 1) {
+  for (let depth = 0; current && depth < COMPLETION_ACTION_MAX_PARENT_DEPTH; depth += 1) {
     const hasActions = COMPLETION_ACTION_SELECTORS.some((selector) => {
       try {
         return !!current?.querySelector(selector);
@@ -332,12 +380,64 @@ function getResponseFingerprint(response: HTMLElement): string | null {
   return `${text.length}:${boundedText}`;
 }
 
+function normalizeNotificationText(text: string | null | undefined, maxLength: number): string {
+  const normalized = (text ?? '').replace(/\s+/g, ' ').trim();
+  if (!normalized) return '';
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}…` : normalized;
+}
+
+function getConversationTitle(): string {
+  const titleFromDocument = normalizeNotificationText(
+    document.title.replace(/\s*[-|]\s*Gemini\s*$/i, '').replace(/\s*[-|]\s*Google\s*$/i, ''),
+    MAX_NOTIFICATION_TITLE_LENGTH,
+  );
+  if (titleFromDocument && !/^gemini$/i.test(titleFromDocument)) return titleFromDocument;
+
+  const heading = Array.from(document.querySelectorAll<HTMLElement>('h1, h2, [role="heading"]'))
+    .map((element) => normalizeNotificationText(element.textContent, MAX_NOTIFICATION_TITLE_LENGTH))
+    .find((text) => text && !/^gemini$/i.test(text));
+
+  return heading ?? '';
+}
+
+function isInsideAssistantResponse(element: Element): boolean {
+  const selector = getAssistantTurnSelectors().join(', ');
+  try {
+    return !!element.closest(selector);
+  } catch {
+    return false;
+  }
+}
+
+function getLatestUserPrompt(): string {
+  const candidates: HTMLElement[] = [];
+
+  for (const selector of USER_PROMPT_SELECTORS) {
+    try {
+      candidates.push(...Array.from(document.querySelectorAll<HTMLElement>(selector)));
+    } catch {
+      // Ignore selectors that do not match the current Gemini DOM.
+    }
+  }
+
+  const promptTexts = candidates
+    .filter((element) => !isInsideAssistantResponse(element) && !isPromptInteractionTarget(element))
+    .map((element) =>
+      normalizeNotificationText(element.textContent, MAX_NOTIFICATION_PROMPT_LENGTH),
+    )
+    .filter((text) => text.length > 0);
+
+  return promptTexts.at(-1) ?? '';
+}
+
 async function sendCompletionNotification(): Promise<void> {
   try {
     await chrome.runtime?.sendMessage?.({
       type: 'gv.responseComplete.notify',
       payload: {
         conversationUrl: location.href,
+        conversationTitle: getConversationTitle(),
+        userPrompt: getLatestUserPrompt(),
       },
     });
   } catch (error) {
@@ -345,6 +445,27 @@ async function sendCompletionNotification(): Promise<void> {
       return;
     }
     console.warn(LOG_PREFIX, 'Failed to send completion notification:', error);
+  }
+}
+
+async function sendRequestStarted(requestUrl: string | undefined): Promise<void> {
+  if (!requestUrl) return;
+
+  try {
+    await chrome.runtime?.sendMessage?.({
+      type: 'gv.responseComplete.requestStarted',
+      payload: {
+        requestUrl,
+        conversationUrl: location.href,
+        conversationTitle: getConversationTitle(),
+        userPrompt: getLatestUserPrompt(),
+      },
+    });
+  } catch (error) {
+    if (isExtensionContextInvalidatedError(error)) {
+      return;
+    }
+    console.warn(LOG_PREFIX, 'Failed to send request start notification state:', error);
   }
 }
 
@@ -376,7 +497,7 @@ function handlePageObserverMessage(event: MessageEvent): void {
   const data = event.data as {
     source?: string;
     type?: string;
-    payload?: { requestId?: number; duration?: number; shouldNotify?: boolean };
+    payload?: { requestId?: number; duration?: number; shouldNotify?: boolean; url?: string };
   } | null;
   if (!data || data.source !== PAGE_OBSERVER_SOURCE) return;
 
@@ -389,6 +510,7 @@ function handlePageObserverMessage(event: MessageEvent): void {
       responseFingerprint: null,
       now: Date.now(),
     });
+    void sendRequestStarted(data.payload?.url);
     return;
   }
 
