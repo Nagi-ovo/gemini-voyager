@@ -18,6 +18,7 @@ import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import DefaultModelManager from './defaultModel/modelLocker';
 import { startDraftSave } from './draftSave/index';
+import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
@@ -84,6 +85,7 @@ let sendBehaviorCleanup: (() => void) | null = null;
 let draftSaveCleanup: (() => void) | null = null;
 let forkCleanup: (() => void) | null = null;
 let gemsSidebarCleanup: (() => void) | null = null;
+let edgeFinalVersionNoticeCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -159,6 +161,8 @@ async function initializeFeatures(): Promise<void> {
     }
 
     console.log('[Gemini Voyager] Not a custom website, checking for Gemini/AI Studio');
+
+    edgeFinalVersionNoticeCleanup = startEdgeFinalVersionNotice();
 
     const isEnterprise = isGeminiEnterpriseEnvironment(
       {
@@ -533,6 +537,10 @@ function handleVisibilityChange(): void {
         if (gemsSidebarCleanup) {
           gemsSidebarCleanup();
           gemsSidebarCleanup = null;
+        }
+        if (edgeFinalVersionNoticeCleanup) {
+          edgeFinalVersionNoticeCleanup();
+          edgeFinalVersionNoticeCleanup = null;
         }
         chrome.storage?.onChanged?.removeListener(onStorageChanged);
       } catch (e) {

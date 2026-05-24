@@ -490,14 +490,129 @@ export class FolderManager {
     }
 
     // Execute custom cleanup tasks
-    this.cleanupTasks.forEach((task) => task());
-    this.cleanupTasks = [];
+    this.runCleanupTasks();
 
     this.debug('Cleanup complete');
   }
 
   private addCleanupTask(task: () => void): void {
     this.cleanupTasks.push(task);
+  }
+
+  private runCleanupTasks(): void {
+    const tasks = this.cleanupTasks;
+    this.cleanupTasks = [];
+
+    tasks.forEach((task) => {
+      try {
+        task();
+      } catch (error) {
+        this.debugWarn('Folder runtime cleanup task failed:', error);
+      }
+    });
+  }
+
+  private teardownMountedFolderRuntime(): void {
+    this.runCleanupTasks();
+
+    this.pendingRemovals.forEach((timerId) => clearTimeout(timerId));
+    this.pendingRemovals.clear();
+
+    if (this.longPressTimeout) {
+      clearTimeout(this.longPressTimeout);
+      this.longPressTimeout = null;
+    }
+
+    if (this.folderNameClickTimeout !== null) {
+      clearTimeout(this.folderNameClickTimeout);
+      this.folderNameClickTimeout = null;
+    }
+
+    this.clearNativeTitleSyncTimer();
+
+    if (this.navPoller) {
+      clearInterval(this.navPoller);
+      this.navPoller = null;
+    }
+
+    if (this.folderRecoveryTimer !== null) {
+      clearInterval(this.folderRecoveryTimer);
+      this.folderRecoveryTimer = null;
+    }
+    this.folderRecoveryInFlight = false;
+    this.floatingFallbackActive = false;
+
+    if (this.sideNavObserver) {
+      this.sideNavObserver.disconnect();
+      this.sideNavObserver = null;
+    }
+
+    if (this.conversationObserver) {
+      this.conversationObserver.disconnect();
+      this.conversationObserver = null;
+    }
+    this.mutationBatchQueue.length = 0;
+    this.mutationFlushScheduled = false;
+
+    if (this.nativeMenuObserver) {
+      this.nativeMenuObserver.disconnect();
+      this.nativeMenuObserver = null;
+    }
+
+    this.teardownPositionEnforcer();
+    this.cleanupNotebooksAnchorButton();
+    this.clearConversationReorderIndicator();
+    this.stopFloatingMode();
+
+    if (this.routeChangeCleanup) {
+      try {
+        this.routeChangeCleanup();
+      } catch (error) {
+        this.debugWarn('Route change cleanup failed:', error);
+      }
+      this.routeChangeCleanup = null;
+    }
+
+    if (this.sidebarClickListener && this.sidebarContainer) {
+      try {
+        this.sidebarContainer.removeEventListener('click', this.sidebarClickListener, true);
+      } catch (error) {
+        this.debugWarn('Sidebar click listener cleanup failed:', error);
+      }
+      this.sidebarClickListener = null;
+    }
+
+    this.removeOutsideClickHandler();
+    this.closeActiveImportExportMenu();
+    this.closeActiveImportDialog();
+    this.closeFolderConversationMenus();
+    this.clearActiveFolderInput();
+
+    if (this.activeColorPicker) {
+      this.activeColorPicker.remove();
+      if (this.activeColorPickerCloseHandler) {
+        document.removeEventListener('click', this.activeColorPickerCloseHandler);
+        this.activeColorPickerCloseHandler = null;
+      }
+      this.activeColorPicker = null;
+      this.activeColorPickerFolderId = null;
+    }
+
+    if (this.containerElement) {
+      this.containerElement.remove();
+      this.containerElement = null;
+    }
+    if (this.multiSelectHostElement) {
+      this.multiSelectHostElement.remove();
+      this.multiSelectHostElement = null;
+    }
+
+    this.selectedConversations.clear();
+    this.isMultiSelectMode = false;
+    this.multiSelectSource = null;
+    this.multiSelectFolderId = null;
+    this.sidebarContainer = null;
+    this.recentSection = null;
   }
 
   private clearActiveFolderInput(): void {
@@ -800,6 +915,7 @@ export class FolderManager {
    * being open.
    */
   private async startFloatingMode(): Promise<void> {
+    if (this.isDestroyed || !this.folderEnabled) return;
     if (this.floatingModeActive) return;
     this.floatingModeActive = true;
     this.debug('Entering floating mode');
@@ -879,6 +995,7 @@ export class FolderManager {
   }
 
   private async openFloatingPanel(): Promise<void> {
+    if (this.isDestroyed || !this.folderEnabled) return;
     if (this.floatingPanelHandle) return;
     unmountFloatingModeNudge();
     // Only one entry point visible at a time — FAB hides when the panel is up.
@@ -913,6 +1030,8 @@ export class FolderManager {
       if (isExtensionContextInvalidatedError(error)) return;
       this.debugWarn('Failed to read floating-mode position/size:', error);
     }
+
+    if (this.isDestroyed || !this.folderEnabled) return;
 
     // All mutation callbacks share the same tail: persist to storage and push
     // a fresh snapshot into the floating panel. Factored out so each callback
@@ -2829,8 +2948,7 @@ export class FolderManager {
       this.debug('Reinitializing folder UI...');
 
       // Execute general cleanup tasks first (including event listeners)
-      this.cleanupTasks.forEach((task) => task());
-      this.cleanupTasks = [];
+      this.runCleanupTasks();
 
       // Clean up observers/listeners tied to stale DOM nodes
       if (this.sideNavObserver) {
@@ -7626,23 +7744,26 @@ export class FolderManager {
 
   private applyFolderEnabledSetting(): void {
     if (this.folderEnabled) {
-      // If folder UI doesn't exist yet, initialize it
+      this.debug('Folder feature enabled');
+
+      if (this.floatingModeEnabled) {
+        void this.startFloatingMode().catch((error) => {
+          console.error('[FolderManager] Failed to initialize floating folder UI:', error);
+        });
+        return;
+      }
+
       if (!this.containerElement) {
-        this.debug('Folder feature enabled, initializing UI');
-        this.initializeFolderUI().catch((error) => {
+        this.debug('Folder feature enabled, initializing sidebar UI');
+        void this.initializeFolderUI().catch((error) => {
           console.error('[FolderManager] Failed to initialize folder UI:', error);
         });
       } else {
-        // UI already exists, just show it
         this.containerElement.style.display = '';
-        this.debug('Folder feature enabled');
       }
     } else {
-      // Hide the folder UI if it exists
-      if (this.containerElement) {
-        this.containerElement.style.display = 'none';
-        this.debug('Folder feature disabled');
-      }
+      this.debug('Folder feature disabled, tearing down mounted runtime');
+      this.teardownMountedFolderRuntime();
     }
   }
 
