@@ -448,27 +448,6 @@ async function sendCompletionNotification(): Promise<void> {
   }
 }
 
-async function sendRequestStarted(requestUrl: string | undefined): Promise<void> {
-  if (!requestUrl) return;
-
-  try {
-    await chrome.runtime?.sendMessage?.({
-      type: 'gv.responseComplete.requestStarted',
-      payload: {
-        requestUrl,
-        conversationUrl: location.href,
-        conversationTitle: getConversationTitle(),
-        userPrompt: getLatestUserPrompt(),
-      },
-    });
-  } catch (error) {
-    if (isExtensionContextInvalidatedError(error)) {
-      return;
-    }
-    console.warn(LOG_PREFIX, 'Failed to send request start notification state:', error);
-  }
-}
-
 function injectPageObserver(): void {
   if (pageObserverInjected) return;
   if (document.getElementById(PAGE_OBSERVER_SCRIPT_ID)) {
@@ -497,7 +476,7 @@ function handlePageObserverMessage(event: MessageEvent): void {
   const data = event.data as {
     source?: string;
     type?: string;
-    payload?: { requestId?: number; duration?: number; shouldNotify?: boolean; url?: string };
+    payload?: { requestId?: number; duration?: number; shouldNotify?: boolean };
   } | null;
   if (!data || data.source !== PAGE_OBSERVER_SOURCE) return;
 
@@ -510,7 +489,6 @@ function handlePageObserverMessage(event: MessageEvent): void {
       responseFingerprint: null,
       now: Date.now(),
     });
-    void sendRequestStarted(data.payload?.url);
     return;
   }
 

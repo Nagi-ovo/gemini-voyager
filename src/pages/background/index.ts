@@ -34,20 +34,10 @@ const RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR = ' - ';
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR = ': ';
 const RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH = 120;
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH = 220;
-const RESPONSE_COMPLETE_PENDING_MAX_AGE_MS = 10 * 60 * 1000;
-const RESPONSE_COMPLETE_PENDING_MIN_AGE_MS = 800;
 const RESPONSE_COMPLETE_NOTIFICATION_ICON = 'icon-128.png';
 const RESPONSE_COMPLETE_UNKNOWN_TAB_ID = 'unknown';
-const GEMINI_GENERATION_REQUEST_URL_MARKERS = [
-  'streamgenerate',
-  'bardfrontendservice',
-  'generatecontent',
-  'assistant.lamda',
-  'batchexecute',
-] as const;
 
 const responseCompleteNotificationLastShown = new Map<string, number>();
-const responseCompletePendingByTabId = new Map<number, ResponseCompletePendingRequest[]>();
 
 // Gemini domains where the fetch interceptor should run
 const GEMINI_MATCHES = [
@@ -61,11 +51,6 @@ interface ResponseCompleteNotificationDetails {
   conversationUrl?: string;
   conversationTitle?: string;
   userPrompt?: string;
-}
-
-interface ResponseCompletePendingRequest extends ResponseCompleteNotificationDetails {
-  requestUrl: string;
-  startedAt: number;
 }
 
 function getTabDedupKey(
@@ -122,124 +107,6 @@ async function showResponseCompleteNotification(
       : RESPONSE_COMPLETE_NOTIFICATION_MESSAGE,
   });
   return true;
-}
-
-function cleanupExpiredResponseCompletePendingRequests(now = Date.now()): void {
-  for (const [tabId, pendingRequests] of responseCompletePendingByTabId.entries()) {
-    const freshRequests = pendingRequests.filter(
-      (request) => now - request.startedAt <= RESPONSE_COMPLETE_PENDING_MAX_AGE_MS,
-    );
-
-    if (freshRequests.length > 0) {
-      responseCompletePendingByTabId.set(tabId, freshRequests);
-      continue;
-    }
-
-    responseCompletePendingByTabId.delete(tabId);
-  }
-}
-
-function isGeminiGenerationRequestUrl(url: string): boolean {
-  const normalizedUrl = url.toLowerCase();
-  return GEMINI_GENERATION_REQUEST_URL_MARKERS.some((marker) => normalizedUrl.includes(marker));
-}
-
-function rememberResponseCompletePendingRequest(
-  sender: chrome.runtime.MessageSender,
-  details: ResponseCompleteNotificationDetails & { requestUrl?: string },
-): boolean {
-  const tabId = sender.tab?.id;
-  if (typeof tabId !== 'number') return false;
-  if (typeof details.requestUrl !== 'string') return false;
-  if (!isGeminiGenerationRequestUrl(details.requestUrl)) return false;
-
-  const now = Date.now();
-  cleanupExpiredResponseCompletePendingRequests(now);
-  const pendingRequests = responseCompletePendingByTabId.get(tabId) ?? [];
-  pendingRequests.push({
-    requestUrl: details.requestUrl,
-    conversationUrl: details.conversationUrl,
-    conversationTitle: details.conversationTitle,
-    userPrompt: details.userPrompt,
-    startedAt: now,
-  });
-  responseCompletePendingByTabId.set(tabId, pendingRequests);
-  return true;
-}
-
-function clearResponseCompletePendingRequests(tabId: number | undefined): void {
-  if (typeof tabId !== 'number') return;
-  responseCompletePendingByTabId.delete(tabId);
-}
-
-function takeCompletedResponseCompletePendingRequest(
-  tabId: number,
-  requestUrl: string,
-): ResponseCompletePendingRequest | null {
-  const pendingRequests = responseCompletePendingByTabId.get(tabId);
-  if (!pendingRequests) return null;
-
-  const now = Date.now();
-  const requestIndex = pendingRequests.findIndex(
-    (request) =>
-      request.requestUrl === requestUrl &&
-      now - request.startedAt >= RESPONSE_COMPLETE_PENDING_MIN_AGE_MS &&
-      now - request.startedAt <= RESPONSE_COMPLETE_PENDING_MAX_AGE_MS,
-  );
-
-  if (requestIndex === -1) {
-    cleanupExpiredResponseCompletePendingRequests(now);
-    return null;
-  }
-
-  const [request] = pendingRequests.splice(requestIndex, 1);
-  if (pendingRequests.length > 0) {
-    responseCompletePendingByTabId.set(tabId, pendingRequests);
-  } else {
-    responseCompletePendingByTabId.delete(tabId);
-  }
-
-  return request ?? null;
-}
-
-async function shouldNotifyForBackgroundTab(tab: chrome.tabs.Tab): Promise<boolean> {
-  if (!tab.active) return true;
-  if (typeof tab.windowId !== 'number') return true;
-
-  try {
-    const windowInfo = await chrome.windows.get(tab.windowId);
-    if (windowInfo.state === 'minimized') return true;
-    return windowInfo.focused !== true;
-  } catch {
-    return true;
-  }
-}
-
-async function handleResponseCompleteWebRequest(
-  details: chrome.webRequest.OnCompletedDetails,
-): Promise<void> {
-  if (details.tabId < 0) return;
-  if (!isGeminiGenerationRequestUrl(details.url)) return;
-
-  const pendingRequest = takeCompletedResponseCompletePendingRequest(details.tabId, details.url);
-  if (!pendingRequest) return;
-
-  let tab: chrome.tabs.Tab;
-  try {
-    tab = await chrome.tabs.get(details.tabId);
-  } catch {
-    return;
-  }
-
-  if (!(await shouldNotifyForBackgroundTab(tab))) return;
-
-  await showResponseCompleteNotification({ tab }, pendingRequest);
-}
-
-if (chrome.webRequest?.onCompleted) {
-  chrome.webRequest.onCompleted.addListener(handleResponseCompleteWebRequest, {
-    urls: GEMINI_MATCHES,
-  });
 }
 
 function isStarredMessagesData(value: unknown): value is StarredMessagesData {
@@ -906,31 +773,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
-      if (message?.type === 'gv.responseComplete.requestStarted') {
-        const ok = rememberResponseCompletePendingRequest(sender, {
-          requestUrl:
-            typeof message.payload?.requestUrl === 'string'
-              ? message.payload.requestUrl
-              : undefined,
-          conversationUrl:
-            typeof message.payload?.conversationUrl === 'string'
-              ? message.payload.conversationUrl
-              : undefined,
-          conversationTitle:
-            typeof message.payload?.conversationTitle === 'string'
-              ? message.payload.conversationTitle
-              : undefined,
-          userPrompt:
-            typeof message.payload?.userPrompt === 'string'
-              ? message.payload.userPrompt
-              : undefined,
-        });
-        sendResponse({ ok });
-        return;
-      }
-
       if (message?.type === 'gv.responseComplete.notify') {
-        clearResponseCompletePendingRequests(sender.tab?.id);
         const ok = await showResponseCompleteNotification(sender, {
           conversationUrl:
             typeof message.payload?.conversationUrl === 'string'
