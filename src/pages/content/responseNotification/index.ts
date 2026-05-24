@@ -13,6 +13,9 @@ const EVALUATE_DEBOUNCE_MS = 250;
 const STARTUP_DELAY_MS = 1000;
 const FOREGROUND_TOAST_VISIBLE_MS = 3200;
 const MAX_FINGERPRINT_TEXT_LENGTH = 400;
+const LATEST_RESPONSE_VISIBLE_MARGIN_PX = 96;
+const BOTTOM_SCROLL_THRESHOLD_PX = 160;
+const PROMPT_SELECTORS = 'rich-textarea, textarea, [contenteditable="true"], div[role="textbox"]';
 
 const GENERATING_SELECTORS = [
   '[aria-busy="true"]',
@@ -49,6 +52,9 @@ let pageObserverInjected = false;
 let activeNetworkRequestCount = 0;
 let hasPendingBackgroundCompletion = false;
 let toastHideTimer: number | null = null;
+let latestCompletedResponse: HTMLElement | null = null;
+const foregroundToastArmedConversationKeys = new Set<string>();
+const suppressedInitialForegroundToastConversationKeys = new Set<string>();
 let storageListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
@@ -63,12 +69,32 @@ function shouldNotifyForBackgroundCompletion(): boolean {
   return document.visibilityState !== 'visible' || !document.hasFocus();
 }
 
+function isPromptInteractionTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return !!target.closest(PROMPT_SELECTORS);
+}
+
+function markForegroundToastArmed(): void {
+  foregroundToastArmedConversationKeys.add(getConversationKey());
+}
+
+function shouldSuppressInitialForegroundToast(): boolean {
+  const conversationKey = getConversationKey();
+  if (foregroundToastArmedConversationKeys.has(conversationKey)) return false;
+  if (suppressedInitialForegroundToastConversationKeys.has(conversationKey)) return false;
+
+  suppressedInitialForegroundToastConversationKeys.add(conversationKey);
+  return true;
+}
+
+function handlePromptInteraction(event: Event): void {
+  if (isPromptInteractionTarget(event.target)) {
+    markForegroundToastArmed();
+  }
+}
+
 function getPromptContainerRect(): DOMRect | null {
-  const promptElements = Array.from(
-    document.querySelectorAll<HTMLElement>(
-      'rich-textarea, textarea, [contenteditable="true"], div[role="textbox"]',
-    ),
-  );
+  const promptElements = Array.from(document.querySelectorAll<HTMLElement>(PROMPT_SELECTORS));
   let bestRect: DOMRect | null = null;
   let bestScore = -Infinity;
 
@@ -110,6 +136,70 @@ function getPromptContainerRect(): DOMRect | null {
   return bestRect;
 }
 
+function getDocumentScrollRoot(): HTMLElement {
+  return document.scrollingElement instanceof HTMLElement
+    ? document.scrollingElement
+    : document.documentElement;
+}
+
+function getScrollRoot(anchor: Element | null = null): HTMLElement {
+  let current = anchor?.parentElement ?? null;
+
+  while (current && current !== document.body) {
+    const style = window.getComputedStyle(current);
+    const hasScrollableOverflow = /auto|scroll|overlay/.test(style.overflowY);
+    if (
+      hasScrollableOverflow &&
+      current.scrollHeight - current.clientHeight > BOTTOM_SCROLL_THRESHOLD_PX
+    ) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+
+  return getDocumentScrollRoot();
+}
+
+function getRemainingScrollDistance(anchor: Element | null = null): number {
+  const scrollRoot = getScrollRoot(anchor);
+  return Math.max(0, scrollRoot.scrollHeight - scrollRoot.scrollTop - scrollRoot.clientHeight);
+}
+
+function isLatestResponseVisible(response: HTMLElement): boolean {
+  const rect = response.getBoundingClientRect();
+  if (rect.height <= 0 || rect.width <= 0) return false;
+
+  return (
+    rect.bottom >= LATEST_RESPONSE_VISIBLE_MARGIN_PX &&
+    rect.top <= window.innerHeight - LATEST_RESPONSE_VISIBLE_MARGIN_PX
+  );
+}
+
+function shouldShowForegroundCompletionToast(response: HTMLElement | null): boolean {
+  if (!response) return false;
+  if (isLatestResponseVisible(response)) return false;
+  return getRemainingScrollDistance(response) > BOTTOM_SCROLL_THRESHOLD_PX;
+}
+
+function scrollToLatestResponse(): void {
+  const target = latestCompletedResponse ?? getLatestAssistantResponse();
+
+  if (target) {
+    target.scrollIntoView({
+      block: 'end',
+      behavior: 'smooth',
+    });
+  } else {
+    const scrollRoot = getScrollRoot();
+    scrollRoot.scrollTo({
+      top: scrollRoot.scrollHeight,
+      behavior: 'smooth',
+    });
+  }
+
+  hideForegroundCompletionToast();
+}
+
 function ensureForegroundToast(): HTMLDivElement {
   const existing = document.getElementById(FOREGROUND_TOAST_ID);
   if (existing instanceof HTMLDivElement) return existing;
@@ -117,8 +207,15 @@ function ensureForegroundToast(): HTMLDivElement {
   const toast = document.createElement('div');
   toast.id = FOREGROUND_TOAST_ID;
   toast.textContent = FOREGROUND_TOAST_TEXT;
-  toast.setAttribute('role', 'status');
+  toast.setAttribute('role', 'button');
   toast.setAttribute('aria-live', 'polite');
+  toast.tabIndex = 0;
+  toast.addEventListener('click', scrollToLatestResponse);
+  toast.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    scrollToLatestResponse();
+  });
   Object.assign(toast.style, {
     position: 'fixed',
     left: '50%',
@@ -138,8 +235,10 @@ function ensureForegroundToast(): HTMLDivElement {
     textAlign: 'center',
     boxShadow: '0 18px 48px rgba(60, 64, 67, 0.18)',
     opacity: '0',
-    pointerEvents: 'none',
+    cursor: 'pointer',
+    pointerEvents: 'auto',
     transition: 'opacity 180ms ease, transform 180ms ease',
+    userSelect: 'none',
   } satisfies Partial<CSSStyleDeclaration>);
 
   document.body.appendChild(toast);
@@ -171,6 +270,7 @@ function showForegroundCompletionToast(): void {
   }
 
   toast.textContent = FOREGROUND_TOAST_TEXT;
+  toast.setAttribute('aria-label', FOREGROUND_TOAST_TEXT);
   toast.style.opacity = '1';
   toast.style.transform = 'translate(-50%, 0)';
 
@@ -323,7 +423,11 @@ function evaluate(): void {
   });
 
   if (decision.type === 'notify') {
-    showForegroundCompletionToast();
+    latestCompletedResponse = latestResponse;
+    if (shouldSuppressInitialForegroundToast()) return;
+    if (shouldShowForegroundCompletionToast(latestResponse)) {
+      showForegroundCompletionToast();
+    }
   }
 }
 
@@ -340,6 +444,8 @@ function startObserver(): void {
 
   injectPageObserver();
   window.addEventListener('message', handlePageObserverMessage);
+  document.addEventListener('input', handlePromptInteraction, true);
+  document.addEventListener('keydown', handlePromptInteraction, true);
   observer = new MutationObserver(() => scheduleEvaluate());
   observer.observe(document.body, {
     childList: true,
@@ -353,6 +459,8 @@ function startObserver(): void {
 
 function stopObserver(): void {
   window.removeEventListener('message', handlePageObserverMessage);
+  document.removeEventListener('input', handlePromptInteraction, true);
+  document.removeEventListener('keydown', handlePromptInteraction, true);
   if (observer) {
     observer.disconnect();
     observer = null;
@@ -372,6 +480,7 @@ function stopObserver(): void {
   hideForegroundCompletionToast();
   activeNetworkRequestCount = 0;
   hasPendingBackgroundCompletion = false;
+  latestCompletedResponse = null;
   detector.reset();
 }
 
