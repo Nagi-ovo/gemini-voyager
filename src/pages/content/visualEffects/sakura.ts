@@ -21,19 +21,36 @@
  * - Motion: slow fall, wide lazy drift + tiny fast flutter. Petals
  *   feel like they're floating, not dropping.
  */
+import { isFirefox } from '@/core/utils/browser';
 
 const CANVAS_ID = 'gv-sakura-effect-canvas';
 const STORAGE_KEY = 'gvVisualEffect';
 const LEGACY_KEY = 'gvSnowEffect';
 const EFFECT_VALUE = 'sakura';
+const BASE_FRAME_MS = 1000 / 60;
+const FIREFOX_FRAME_INTERVAL_MS = 1000 / 30;
 
-const LAYERS = [
+type SakuraLayer = {
+  count: number;
+  size: readonly [number, number];
+  speed: readonly [number, number];
+  opacity: readonly [number, number];
+  drift: readonly [number, number];
+};
+
+const LAYERS: readonly SakuraLayer[] = [
   // far — tiny, slow, ghostly
   { count: 40, size: [2.5, 4.5], speed: [0.1, 0.3], opacity: [0.1, 0.25], drift: [0.15, 0.4] },
   // mid — main visible petals
   { count: 32, size: [4.5, 7.5], speed: [0.25, 0.55], opacity: [0.25, 0.5], drift: [0.35, 0.8] },
   // near — large, soft foreground
   { count: 16, size: [7.5, 11], speed: [0.4, 0.75], opacity: [0.4, 0.65], drift: [0.5, 1.0] },
+] as const;
+
+const FIREFOX_LAYERS: readonly SakuraLayer[] = [
+  { count: 18, size: [2.5, 4.5], speed: [0.1, 0.3], opacity: [0.1, 0.25], drift: [0.15, 0.4] },
+  { count: 14, size: [4.5, 7.5], speed: [0.25, 0.55], opacity: [0.25, 0.5], drift: [0.35, 0.8] },
+  { count: 6, size: [7.5, 11], speed: [0.4, 0.75], opacity: [0.4, 0.65], drift: [0.5, 1.0] },
 ] as const;
 
 /**
@@ -91,6 +108,8 @@ let animationFrameId: number | null = null;
 let petals: Petal[] = [];
 let resizeHandler: (() => void) | null = null;
 let visibilityHandler: (() => void) | null = null;
+let frameIntervalMs = 0;
+let lastDrawTime = 0;
 
 function rand(min: number, max: number): number {
   return min + Math.random() * (max - min);
@@ -99,7 +118,7 @@ function rand(min: number, max: number): number {
 function createPetal(
   canvasWidth: number,
   canvasHeight: number,
-  layer: (typeof LAYERS)[number],
+  layer: SakuraLayer,
   randomY: boolean,
 ): Petal {
   return {
@@ -130,7 +149,8 @@ function createPetal(
 
 function initPetals(width: number, height: number): void {
   const items: Petal[] = [];
-  for (const layer of LAYERS) {
+  const layers = isFirefox() ? FIREFOX_LAYERS : LAYERS;
+  for (const layer of layers) {
     for (let i = 0; i < layer.count; i++) {
       items.push(createPetal(width, height, layer, true));
     }
@@ -179,6 +199,15 @@ function tracePetal(c: CanvasRenderingContext2D, s: number): void {
 function updateAndDraw(time: number): void {
   if (!ctx || !canvas) return;
 
+  if (lastDrawTime > 0 && frameIntervalMs > 0 && time - lastDrawTime < frameIntervalMs) {
+    animationFrameId = requestAnimationFrame(updateAndDraw);
+    return;
+  }
+
+  const elapsedMs = lastDrawTime > 0 ? time - lastDrawTime : BASE_FRAME_MS;
+  const frameScale = Math.min(2, Math.max(0.5, elapsedMs / BASE_FRAME_MS));
+  lastDrawTime = time;
+
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
 
@@ -187,11 +216,12 @@ function updateAndDraw(time: number): void {
 
   for (const p of petals) {
     // Gentle fall + dual-frequency sway
-    p.y += p.speedY;
+    p.y += p.speedY * frameScale;
     p.x +=
-      Math.sin(p.phase + time * p.driftFreq) * p.drift +
-      Math.sin(p.phase * 2.7 + time * p.flutterFreq) * p.flutter;
-    p.rotation += p.rotationSpeed;
+      (Math.sin(p.phase + time * p.driftFreq) * p.drift +
+        Math.sin(p.phase * 2.7 + time * p.flutterFreq) * p.flutter) *
+      frameScale;
+    p.rotation += p.rotationSpeed * frameScale;
 
     // Recycle off-screen (or skip during drain)
     if (p.y > height + p.size * 2) {
@@ -275,6 +305,8 @@ function enable(): void {
     return;
   }
   state = 'active';
+  frameIntervalMs = isFirefox() ? FIREFOX_FRAME_INTERVAL_MS : 0;
+  lastDrawTime = 0;
 
   canvas = document.createElement('canvas');
   canvas.id = CANVAS_ID;
@@ -330,6 +362,8 @@ function finalizeDrain(): void {
 
   ctx = null;
   petals = [];
+  frameIntervalMs = 0;
+  lastDrawTime = 0;
 }
 
 /** Immediate disable: remove everything without draining (e.g. page unload). */
