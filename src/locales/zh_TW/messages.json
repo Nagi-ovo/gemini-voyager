@@ -1998,5 +1998,13 @@
   "responseCompleteNotificationHint": {
     "message": "當 Gemini 完整輸出回答後，傳送系統通知。",
     "description": "Gemini 回答完成系統通知提示"
+  },
+  "responseCompleteNotificationMessage": {
+    "message": "Gemini 思考完成",
+    "description": "Gemini 完成回答時的系統通知內文"
+  },
+  "responseCompleteForegroundToast": {
+    "message": "新回覆已完成",
+    "description": "Gemini 回覆在畫面外完成時的前景提示文字"
   }
 }

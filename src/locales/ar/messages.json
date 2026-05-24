@@ -1998,5 +1998,13 @@
   "responseCompleteNotificationHint": {
     "message": "إرسال إشعار نظام عندما ينهي Gemini الرد.",
     "description": "Gemini response completion notification hint"
+  },
+  "responseCompleteNotificationMessage": {
+    "message": "اكتمل رد Gemini",
+    "description": "نص إشعار النظام عندما ينهي Gemini الرد"
+  },
+  "responseCompleteForegroundToast": {
+    "message": "اكتمل الرد الجديد",
+    "description": "نص التنبيه الأمامي عندما يكتمل رد Gemini خارج الشاشة"
   }
 }

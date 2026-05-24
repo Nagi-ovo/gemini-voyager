@@ -8,7 +8,8 @@ const LOG_PREFIX = '[ResponseNotification]';
 const PAGE_OBSERVER_SOURCE = 'gemini-voyager-response-complete-observer';
 const PAGE_OBSERVER_SCRIPT_ID = 'gv-response-complete-observer-script';
 const FOREGROUND_TOAST_ID = 'gv-response-complete-toast';
-const FOREGROUND_TOAST_TEXT = '新对话已完成';
+const FOREGROUND_TOAST_TEXT_KEY = 'responseCompleteForegroundToast';
+const FOREGROUND_TOAST_TEXT_FALLBACK = 'New response completed';
 const FOREGROUND_TOAST_TRANSFORM_HIDDEN = 'translate(-50%, 10px)';
 const FOREGROUND_TOAST_TRANSFORM_VISIBLE = 'translate(-50%, 0)';
 const FOREGROUND_TOAST_DEFAULT_BOTTOM_PX = 148;
@@ -96,6 +97,18 @@ let storageListener:
   | null = null;
 
 const detector = new ResponseCompletionDetector();
+
+function getI18nMessage(key: string, fallback: string): string {
+  try {
+    return chrome.i18n?.getMessage?.(key) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function getForegroundToastText(): string {
+  return getI18nMessage(FOREGROUND_TOAST_TEXT_KEY, FOREGROUND_TOAST_TEXT_FALLBACK);
+}
 
 function getConversationKey(): string {
   return `${location.pathname}${location.search}`;
@@ -251,7 +264,7 @@ function ensureForegroundToast(): HTMLDivElement {
 
   const toast = document.createElement('div');
   toast.id = FOREGROUND_TOAST_ID;
-  toast.textContent = FOREGROUND_TOAST_TEXT;
+  toast.textContent = getForegroundToastText();
   toast.setAttribute('role', 'button');
   toast.setAttribute('aria-live', 'polite');
   toast.tabIndex = 0;
@@ -317,8 +330,9 @@ function showForegroundCompletionToast(): void {
     toast.style.bottom = `${FOREGROUND_TOAST_DEFAULT_BOTTOM_PX}px`;
   }
 
-  toast.textContent = FOREGROUND_TOAST_TEXT;
-  toast.setAttribute('aria-label', FOREGROUND_TOAST_TEXT);
+  const toastText = getForegroundToastText();
+  toast.textContent = toastText;
+  toast.setAttribute('aria-label', toastText);
   toast.style.opacity = '1';
   toast.style.transform = FOREGROUND_TOAST_TRANSFORM_VISIBLE;
 

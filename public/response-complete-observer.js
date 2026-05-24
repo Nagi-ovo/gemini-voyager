@@ -83,31 +83,39 @@
         post('request-start', { requestId, url });
       }
 
-      return originalFetch.apply(this, arguments).then(function (response) {
-        if (!isCandidate) return response;
-        if (!response || !response.body || typeof response.clone !== 'function') {
-          postComplete(requestId, url, startedAt);
+      return originalFetch.apply(this, arguments).then(
+        function (response) {
+          if (!isCandidate) return response;
+          if (!response || !response.body || typeof response.clone !== 'function') {
+            postComplete(requestId, url, startedAt);
+            return response;
+          }
+
+          try {
+            response
+              .clone()
+              .arrayBuffer()
+              .then(
+                function () {
+                  postComplete(requestId, url, startedAt);
+                },
+                function () {
+                  postComplete(requestId, url, startedAt);
+                },
+              );
+          } catch {
+            postComplete(requestId, url, startedAt);
+          }
+
           return response;
-        }
-
-        try {
-          response
-            .clone()
-            .arrayBuffer()
-            .then(
-              function () {
-                postComplete(requestId, url, startedAt);
-              },
-              function () {
-                postComplete(requestId, url, startedAt);
-              },
-            );
-        } catch {
-          postComplete(requestId, url, startedAt);
-        }
-
-        return response;
-      });
+        },
+        function (error) {
+          if (isCandidate) {
+            postComplete(requestId, url, startedAt);
+          }
+          throw error;
+        },
+      );
     };
   }
 

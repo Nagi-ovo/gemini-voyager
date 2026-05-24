@@ -1998,5 +1998,13 @@
   "responseCompleteNotificationHint": {
     "message": "Send a system notification when Gemini finishes a response.",
     "description": "Hint for response completion system notifications"
+  },
+  "responseCompleteNotificationMessage": {
+    "message": "Gemini response complete",
+    "description": "System notification body when Gemini finishes a response"
+  },
+  "responseCompleteForegroundToast": {
+    "message": "New response completed",
+    "description": "Foreground toast text when a Gemini response completes offscreen"
   }
 }

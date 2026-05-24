@@ -1998,5 +1998,13 @@
   "responseCompleteNotificationHint": {
     "message": "Отправлять системное уведомление, когда Gemini завершает ответ.",
     "description": "Gemini response completion notification hint"
+  },
+  "responseCompleteNotificationMessage": {
+    "message": "Ответ Gemini завершён",
+    "description": "Текст системного уведомления, когда Gemini завершает ответ"
+  },
+  "responseCompleteForegroundToast": {
+    "message": "Новый ответ завершён",
+    "description": "Текст всплывающего уведомления, когда ответ Gemini завершён вне экрана"
   }
 }

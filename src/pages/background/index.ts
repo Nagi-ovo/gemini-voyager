@@ -28,7 +28,8 @@ const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
 const FETCH_INTERCEPTOR_SCRIPT_ID = 'gv-fetch-interceptor';
 const RESPONSE_COMPLETE_OBSERVER_SCRIPT_ID = 'gv-response-complete-observer';
 const RESPONSE_COMPLETE_NOTIFICATION_DEDUP_MS = 3000;
-const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE = 'gemini思考完成';
+const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY = 'responseCompleteNotificationMessage';
+const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK = 'Gemini response complete';
 const RESPONSE_COMPLETE_NOTIFICATION_TITLE = 'Gemini Voyager';
 const RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR = ' - ';
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR = ': ';
@@ -39,18 +40,30 @@ const RESPONSE_COMPLETE_UNKNOWN_TAB_ID = 'unknown';
 
 const responseCompleteNotificationLastShown = new Map<string, number>();
 
-// Gemini domains where the fetch interceptor should run
-const GEMINI_MATCHES = [
+// Gemini domains where the watermark fetch interceptor should run.
+const GEMINI_FETCH_INTERCEPTOR_MATCHES = [
   'https://gemini.google.com/*',
-  'https://business.gemini.google/*',
   'https://aistudio.google.com/*',
   'https://aistudio.google.cn/*',
+];
+
+const GEMINI_RESPONSE_COMPLETE_OBSERVER_MATCHES = [
+  ...GEMINI_FETCH_INTERCEPTOR_MATCHES,
+  'https://business.gemini.google/*',
 ];
 
 interface ResponseCompleteNotificationDetails {
   conversationUrl?: string;
   conversationTitle?: string;
   userPrompt?: string;
+}
+
+function getI18nMessage(key: string, fallback: string): string {
+  try {
+    return chrome.i18n?.getMessage?.(key) || fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function getTabDedupKey(
@@ -83,6 +96,10 @@ async function showResponseCompleteNotification(
   }
 
   responseCompleteNotificationLastShown.set(dedupKey, now);
+  const notificationMessage = getI18nMessage(
+    RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY,
+    RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK,
+  );
   const conversationTitle = normalizeNotificationText(
     details.conversationTitle,
     RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH -
@@ -92,7 +109,7 @@ async function showResponseCompleteNotification(
   const userPrompt = normalizeNotificationText(
     details.userPrompt,
     RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH -
-      RESPONSE_COMPLETE_NOTIFICATION_MESSAGE.length -
+      notificationMessage.length -
       RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR.length,
   );
 
@@ -103,8 +120,8 @@ async function showResponseCompleteNotification(
       ? `${RESPONSE_COMPLETE_NOTIFICATION_TITLE}${RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR}${conversationTitle}`
       : RESPONSE_COMPLETE_NOTIFICATION_TITLE,
     message: userPrompt
-      ? `${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE}${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR}${userPrompt}`
-      : RESPONSE_COMPLETE_NOTIFICATION_MESSAGE,
+      ? `${notificationMessage}${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR}${userPrompt}`
+      : notificationMessage,
   });
   return true;
 }
@@ -252,7 +269,7 @@ async function registerFetchInterceptor(): Promise<void> {
       {
         id: FETCH_INTERCEPTOR_SCRIPT_ID,
         js: ['fetchInterceptor.js'],
-        matches: GEMINI_MATCHES,
+        matches: GEMINI_FETCH_INTERCEPTOR_MATCHES,
         world: 'MAIN',
         runAt: 'document_start',
         persistAcrossSessions: true,
@@ -280,7 +297,7 @@ async function registerResponseCompleteObserver(): Promise<void> {
       {
         id: RESPONSE_COMPLETE_OBSERVER_SCRIPT_ID,
         js: ['response-complete-observer.js'],
-        matches: GEMINI_MATCHES,
+        matches: GEMINI_RESPONSE_COMPLETE_OBSERVER_MATCHES,
         world: 'MAIN',
         runAt: 'document_start',
         persistAcrossSessions: true,
