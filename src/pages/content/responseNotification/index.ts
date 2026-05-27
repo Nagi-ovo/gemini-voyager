@@ -88,6 +88,7 @@ let startupTimer: number | null = null;
 let pageObserverInjected = false;
 let activeNetworkRequestCount = 0;
 let hasPendingBackgroundCompletion = false;
+let hasDeferredForegroundCompletion = false;
 let toastHideTimer: number | null = null;
 let latestCompletedResponse: HTMLElement | null = null;
 const foregroundToastArmedConversationKeys = new Set<string>();
@@ -444,21 +445,47 @@ function getLatestUserPrompt(): string {
   return promptTexts.at(-1) ?? '';
 }
 
-async function sendCompletionNotification(): Promise<void> {
+async function sendCompletionNotification(): Promise<boolean> {
   try {
-    await chrome.runtime?.sendMessage?.({
+    const response = (await chrome.runtime?.sendMessage?.({
       type: 'gv.responseComplete.notify',
       payload: {
         conversationUrl: location.href,
         conversationTitle: getConversationTitle(),
         userPrompt: getLatestUserPrompt(),
       },
-    });
+    })) as { ok?: boolean } | undefined;
+
+    return response?.ok === true;
   } catch (error) {
     if (isExtensionContextInvalidatedError(error)) {
-      return;
+      return false;
     }
     console.warn(LOG_PREFIX, 'Failed to send completion notification:', error);
+    return false;
+  }
+}
+
+function queueDeferredForegroundCompletion(): void {
+  hasDeferredForegroundCompletion = true;
+}
+
+function flushDeferredForegroundCompletion(): void {
+  if (!enabled || !hasDeferredForegroundCompletion || shouldNotifyForBackgroundCompletion()) {
+    return;
+  }
+
+  hasDeferredForegroundCompletion = false;
+  latestCompletedResponse = getLatestAssistantResponse();
+  if (shouldShowForegroundCompletionToast(latestCompletedResponse)) {
+    showForegroundCompletionToast();
+  }
+}
+
+async function notifyOrQueueForegroundFallback(): Promise<void> {
+  const notified = await sendCompletionNotification();
+  if (!notified) {
+    queueDeferredForegroundCompletion();
   }
 }
 
@@ -519,7 +546,7 @@ function handlePageObserverMessage(event: MessageEvent): void {
     return;
   }
 
-  void sendCompletionNotification();
+  void notifyOrQueueForegroundFallback();
   detector.reset();
 }
 
@@ -558,6 +585,8 @@ function startObserver(): void {
 
   injectPageObserver();
   window.addEventListener('message', handlePageObserverMessage);
+  window.addEventListener('focus', flushDeferredForegroundCompletion);
+  document.addEventListener('visibilitychange', flushDeferredForegroundCompletion);
   document.addEventListener('input', handlePromptInteraction, true);
   document.addEventListener('keydown', handlePromptInteraction, true);
   observer = new MutationObserver(() => scheduleEvaluate());
@@ -573,6 +602,8 @@ function startObserver(): void {
 
 function stopObserver(): void {
   window.removeEventListener('message', handlePageObserverMessage);
+  window.removeEventListener('focus', flushDeferredForegroundCompletion);
+  document.removeEventListener('visibilitychange', flushDeferredForegroundCompletion);
   document.removeEventListener('input', handlePromptInteraction, true);
   document.removeEventListener('keydown', handlePromptInteraction, true);
   if (observer) {
@@ -594,6 +625,7 @@ function stopObserver(): void {
   hideForegroundCompletionToast();
   activeNetworkRequestCount = 0;
   hasPendingBackgroundCompletion = false;
+  hasDeferredForegroundCompletion = false;
   latestCompletedResponse = null;
   detector.reset();
 }

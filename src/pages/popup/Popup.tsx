@@ -2771,7 +2771,11 @@ export default function Popup() {
                     {t('responseCompleteNotification')}
                   </Label>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {t('responseCompleteNotificationHint')}
+                    {t(
+                      isSafariBrowser
+                        ? 'responseCompleteNotificationHintSafari'
+                        : 'responseCompleteNotificationHint',
+                    )}
                   </p>
                 </div>
                 <Switch

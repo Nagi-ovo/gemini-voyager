@@ -1999,6 +1999,10 @@
     "message": "當 Gemini 完整輸出回答後，傳送系統通知。",
     "description": "Gemini 回答完成系統通知提示"
   },
+  "responseCompleteNotificationHintSafari": {
+    "message": "Safari 不支援擴充功能系統通知；返回頁面時 Voyager 會顯示頁面內提示。",
+    "description": "Safari 上 Gemini 回答完成通知提示"
+  },
   "responseCompleteNotificationMessage": {
     "message": "Gemini 思考完成",
     "description": "Gemini 完成回答時的系統通知內文"

@@ -6,6 +6,7 @@ import {
   isMac,
   isSafari,
   shouldShowSafariUpdateReminder,
+  supportsExtensionNotifications,
 } from '../browser';
 
 describe('Safari Update Reminder Control', () => {
@@ -117,6 +118,34 @@ describe('isMac', () => {
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0',
     );
     expect(isMac()).toBe(true);
+  });
+});
+
+describe('supportsExtensionNotifications', () => {
+  it('returns false on Safari even when the notifications API shape exists', () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15',
+    );
+    vi.spyOn(navigator, 'vendor', 'get').mockReturnValue('Apple Computer, Inc.');
+    const originalNotifications = chrome.notifications;
+    chrome.notifications = { create: vi.fn() } as unknown as typeof chrome.notifications;
+
+    expect(supportsExtensionNotifications()).toBe(false);
+
+    chrome.notifications = originalNotifications;
+  });
+
+  it('returns true on Chromium when notifications.create is available', () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0',
+    );
+    vi.spyOn(navigator, 'vendor', 'get').mockReturnValue('Google Inc.');
+    const originalNotifications = chrome.notifications;
+    chrome.notifications = { create: vi.fn() } as unknown as typeof chrome.notifications;
+
+    expect(supportsExtensionNotifications()).toBe(true);
+
+    chrome.notifications = originalNotifications;
   });
 });
 

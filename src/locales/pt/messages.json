@@ -1999,6 +1999,10 @@
     "message": "Envia uma notificação do sistema quando o Gemini termina uma resposta.",
     "description": "Gemini response completion notification hint"
   },
+  "responseCompleteNotificationHintSafari": {
+    "message": "O Safari não oferece suporte a notificações do sistema de extensões; o Voyager mostrará um aviso na página quando você voltar.",
+    "description": "Safari-specific hint for response completion notifications"
+  },
   "responseCompleteNotificationMessage": {
     "message": "Resposta do Gemini concluída",
     "description": "Corpo da notificação do sistema quando o Gemini termina uma resposta"

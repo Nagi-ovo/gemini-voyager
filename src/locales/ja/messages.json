@@ -1999,6 +1999,10 @@
     "message": "Gemini の回答が完了したらシステム通知を送信します。",
     "description": "Gemini response completion notification hint"
   },
+  "responseCompleteNotificationHintSafari": {
+    "message": "Safari は拡張機能のシステム通知に対応していないため、戻ったときにページ内通知を表示します。",
+    "description": "Safari-specific hint for response completion notifications"
+  },
   "responseCompleteNotificationMessage": {
     "message": "Gemini の回答が完了しました",
     "description": "Gemini の回答完了時に表示するシステム通知本文"

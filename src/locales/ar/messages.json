@@ -1999,6 +1999,10 @@
     "message": "إرسال إشعار نظام عندما ينهي Gemini الرد.",
     "description": "Gemini response completion notification hint"
   },
+  "responseCompleteNotificationHintSafari": {
+    "message": "لا يدعم Safari إشعارات النظام للإضافات؛ سيعرض Voyager تنبيهًا داخل الصفحة عند عودتك.",
+    "description": "Safari-specific hint for response completion notifications"
+  },
   "responseCompleteNotificationMessage": {
     "message": "اكتمل رد Gemini",
     "description": "نص إشعار النظام عندما ينهي Gemini الرد"

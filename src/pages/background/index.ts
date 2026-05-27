@@ -13,7 +13,7 @@ import { exportBackupableSyncSettings } from '@/core/services/SettingsBackupServ
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
-import { isFirefox } from '@/core/utils/browser';
+import { isFirefox, supportsExtensionNotifications } from '@/core/utils/browser';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import {
@@ -85,7 +85,12 @@ async function showResponseCompleteNotification(
   sender: chrome.runtime.MessageSender,
   details: ResponseCompleteNotificationDetails,
 ): Promise<boolean> {
-  if (!chrome.notifications?.create) return false;
+  if (!supportsExtensionNotifications()) return false;
+
+  const setting = await chrome.storage.sync.get({
+    [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
+  });
+  if (setting[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] !== true) return false;
 
   const conversationUrl = details.conversationUrl;
   const dedupKey = getTabDedupKey(sender.tab?.id, sender.tab?.url, conversationUrl);
@@ -113,17 +118,22 @@ async function showResponseCompleteNotification(
       RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR.length,
   );
 
-  await chrome.notifications.create(`gv-response-complete-${now}`, {
-    type: 'basic',
-    iconUrl: chrome.runtime.getURL(RESPONSE_COMPLETE_NOTIFICATION_ICON),
-    title: conversationTitle
-      ? `${RESPONSE_COMPLETE_NOTIFICATION_TITLE}${RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR}${conversationTitle}`
-      : RESPONSE_COMPLETE_NOTIFICATION_TITLE,
-    message: userPrompt
-      ? `${notificationMessage}${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR}${userPrompt}`
-      : notificationMessage,
-  });
-  return true;
+  try {
+    await browser.notifications.create(`gv-response-complete-${now}`, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL(RESPONSE_COMPLETE_NOTIFICATION_ICON),
+      title: conversationTitle
+        ? `${RESPONSE_COMPLETE_NOTIFICATION_TITLE}${RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR}${conversationTitle}`
+        : RESPONSE_COMPLETE_NOTIFICATION_TITLE,
+      message: userPrompt
+        ? `${notificationMessage}${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR}${userPrompt}`
+        : notificationMessage,
+    });
+    return true;
+  } catch (error) {
+    console.warn('[Background] Failed to show response completion notification:', error);
+    return false;
+  }
 }
 
 function isStarredMessagesData(value: unknown): value is StarredMessagesData {
@@ -281,8 +291,8 @@ async function registerFetchInterceptor(): Promise<void> {
   }
 }
 
-async function registerResponseCompleteObserver(): Promise<void> {
-  if (!chrome.scripting?.registerContentScripts) return;
+async function unregisterResponseCompleteObserver(): Promise<void> {
+  if (!chrome.scripting?.unregisterContentScripts) return;
 
   try {
     await chrome.scripting.unregisterContentScripts({
@@ -291,6 +301,22 @@ async function registerResponseCompleteObserver(): Promise<void> {
   } catch {
     // No-op if script was not registered
   }
+}
+
+async function syncResponseCompleteObserverRegistration(): Promise<void> {
+  if (!chrome.scripting?.registerContentScripts) return;
+
+  await unregisterResponseCompleteObserver();
+
+  // Firefox supports the MAIN world for registered content scripts only in
+  // newer versions than this extension's Firefox minimum. The content script
+  // injects the same observer into the page as a cross-version fallback.
+  if (isFirefox()) return;
+
+  const setting = await chrome.storage.sync.get({
+    [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
+  });
+  if (setting[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] !== true) return;
 
   try {
     await chrome.scripting.registerContentScripts([
@@ -447,7 +473,7 @@ void syncCustomContentScripts();
 void registerFetchInterceptor();
 
 // Initial response completion observer registration
-void registerResponseCompleteObserver();
+void syncResponseCompleteObserverRegistration();
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'sync') return;
@@ -463,6 +489,15 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   // the legacy key so a one-time migration write triggers re-registration.)
   if (WATERMARK_STORAGE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(changes, key))) {
     void registerFetchInterceptor();
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      changes,
+      StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED,
+    )
+  ) {
+    void syncResponseCompleteObserverRegistration();
   }
 });
 
