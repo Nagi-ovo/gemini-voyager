@@ -12,7 +12,7 @@ globs: ["src/pages/content/**", "public/contentStyle.css"]
 
 ## Storage
 - Content scripts use `chrome.storage` / `browser.storage` directly via ExtGlobal — this is the exception to the "use StorageService" rule
-- StorageService is for popup/background/options contexts
+- Outside content scripts, prefer `StorageKeys` plus existing storage helpers/services. Direct `chrome.storage` / `browser.storage` still exists in popup/background/options for established settings patterns, bulk reads/writes, and storage listeners.
 
 ## DOM Injection
 - Each content script sub-module in `src/pages/content/` is self-contained
@@ -21,4 +21,4 @@ globs: ["src/pages/content/**", "public/contentStyle.css"]
 - Extension context can be invalidated after update/reload. Use `isExtensionContextInvalidatedError()`.
 
 ## Material Symbols Icons
-- When adding new icons in popup, add the icon name to `icon_names=` in the Google Fonts URL in `src/pages/popup/index.html`
+- Popup Material Symbols are bundled locally through `public/fonts/material-symbols-outlined.css` and `.ttf`; verify the glyph exists in the bundled font or update the bundled font assets. Do not add a remote Google Fonts URL.
