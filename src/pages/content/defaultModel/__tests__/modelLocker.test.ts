@@ -70,6 +70,31 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(selectors).not.toContain('.mat-mdc-menu-panel[role="menu"]');
   });
 
+  it('skips sidebar subtree scans when Gemini renders conversation rows', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const sidebar = document.createElement('div');
+    sidebar.setAttribute('data-test-id', 'overflow-container');
+    const querySelectorSpy = vi.spyOn(sidebar, 'querySelector');
+    const querySelectorAllSpy = vi.spyOn(sidebar, 'querySelectorAll');
+
+    for (let i = 0; i < 20; i++) {
+      const row = document.createElement('gem-nav-list-item');
+      row.setAttribute('data-test-id', 'conversation');
+      row.textContent = `Conversation ${i}`;
+      sidebar.appendChild(row);
+    }
+    document.body.appendChild(sidebar);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(querySelectorSpy).not.toHaveBeenCalled();
+    expect(querySelectorAllSpy).not.toHaveBeenCalled();
+  });
+
   it('injects star buttons even when menu items render after the panel is added', async () => {
     const { default: DefaultModelManager } = await import('../modelLocker');
     await DefaultModelManager.getInstance().init();

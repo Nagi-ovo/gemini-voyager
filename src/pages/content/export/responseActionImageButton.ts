@@ -128,6 +128,15 @@ function isAssistantActionContainer(container: HTMLElement): boolean {
   return !!container.closest(ASSISTANT_SCOPE_SELECTOR);
 }
 
+function mayContainAssistantActionContainer(root: ParentNode): boolean {
+  if (!(root instanceof HTMLElement)) return true;
+  return (
+    root.matches(ASSISTANT_SCOPE_SELECTOR) ||
+    !!root.closest(ASSISTANT_SCOPE_SELECTOR) ||
+    !!root.querySelector(ASSISTANT_SCOPE_SELECTOR)
+  );
+}
+
 function ensureButtonPosition(
   container: HTMLElement,
   copyImageButton: HTMLElement,
@@ -178,6 +187,8 @@ export function injectResponseActionCopyImageButtons(
   root: ParentNode,
   options: ResponseActionCopyImageOptions,
 ): HTMLElement[] {
+  if (!mayContainAssistantActionContainer(root)) return [];
+
   const moreButtons: HTMLElement[] = [];
   if (root instanceof HTMLElement && root.getAttribute('data-test-id') === MORE_BUTTON_TEST_ID) {
     moreButtons.push(root);

@@ -31,6 +31,16 @@ const NON_MODEL_MENU_EXCLUSION_FALLBACK =
 // 2026 redesign: model picker is now rendered inside a plain cdk-overlay-pane (no Material menu wrapper).
 // The pane is identified by containing one or more items carrying data-mode-id.
 const NEW_LAYOUT_ITEM_SELECTOR = '[data-mode-id]';
+const MODE_SWITCH_OBSERVER_ROOT_SELECTOR = [
+  '.cdk-overlay-container',
+  '.cdk-global-overlay-wrapper',
+  '.cdk-overlay-pane',
+  '.mat-mdc-menu-panel[role="menu"]',
+  'mat-action-list.gds-mode-switch-menu-list',
+  NEW_LAYOUT_ITEM_SELECTOR,
+  MODE_ITEM_SELECTOR,
+].join(', ');
+const DEFAULT_MODEL_UI_SELECTOR = '.gv-default-star-btn, .gv-default-model-fail-toast';
 
 const CHAT_INPUT_SELECTORS = [
   'main rich-textarea [contenteditable="true"]',
@@ -228,6 +238,7 @@ class DefaultModelManager {
         for (const mutation of mutations) {
           for (const node of Array.from(mutation.addedNodes)) {
             if (!(node instanceof HTMLElement)) continue;
+            if (!this.mayContainDefaultModelUi(node)) continue;
             this.sweepDefaultModelUi(node);
           }
         }
@@ -237,6 +248,7 @@ class DefaultModelManager {
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
           if (!(node instanceof HTMLElement)) continue;
+          if (!this.mayContainModeSwitchContainer(node)) continue;
 
           const menuPanel = this.resolveModeSwitchContainer(node);
 
@@ -259,6 +271,14 @@ class DefaultModelManager {
     root.querySelectorAll('.gv-default-model-fail-toast').forEach((el) => el.remove());
   }
 
+  private mayContainDefaultModelUi(root: HTMLElement): boolean {
+    return root.matches(DEFAULT_MODEL_UI_SELECTOR) || !!root.querySelector(DEFAULT_MODEL_UI_SELECTOR);
+  }
+
+  private mayContainModeSwitchContainer(root: HTMLElement): boolean {
+    return root.matches(MODE_SWITCH_OBSERVER_ROOT_SELECTOR);
+  }
+
   private resolveModeSwitchContainer(root: HTMLElement): HTMLElement | null {
     if (
       root.matches('.mat-mdc-menu-panel.gds-mode-switch-menu[role="menu"]') ||
@@ -274,6 +294,13 @@ class DefaultModelManager {
     if (root.matches?.('.cdk-overlay-pane')) {
       if (root.querySelector(NEW_LAYOUT_ITEM_SELECTOR) !== null) return root;
       if (this.isThinkingLevelSubmenuPane(root)) return root;
+    }
+
+    if (root.matches(NEW_LAYOUT_ITEM_SELECTOR) || root.matches(MODE_ITEM_SELECTOR)) {
+      const pane = root.closest<HTMLElement>(
+        '.cdk-overlay-pane, .mat-mdc-menu-panel[role="menu"], mat-action-list.gds-mode-switch-menu-list',
+      );
+      if (pane) return pane;
     }
 
     const legacy =

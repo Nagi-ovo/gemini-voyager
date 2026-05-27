@@ -223,4 +223,26 @@ describe('responseActionImageButton', () => {
     expect(injected).toHaveLength(1);
     expect(buttons.querySelector('[data-test-id="gv-copy-image-button"]')).toBeTruthy();
   });
+
+  it('skips non-assistant roots without scanning nested sidebar buttons', () => {
+    const sidebar = document.createElement('div');
+    sidebar.setAttribute('data-test-id', 'overflow-container');
+
+    const querySpy = vi.spyOn(sidebar, 'querySelectorAll');
+    const more = createNativeActionButton({
+      testId: 'more-menu-button',
+      iconName: 'more_vert',
+      ariaLabel: 'More options',
+    });
+    sidebar.appendChild(more);
+
+    const injected = injectResponseActionCopyImageButtons(sidebar, {
+      label: 'Copy response as image',
+      tooltip: 'Copy response as image',
+      onClick: vi.fn(),
+    });
+
+    expect(injected).toHaveLength(0);
+    expect(querySpy).not.toHaveBeenCalled();
+  });
 });

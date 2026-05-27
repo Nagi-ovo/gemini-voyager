@@ -35,6 +35,7 @@ type TestableManager = {
   scheduleConversationRemovalCheck: (conversationId: string) => void;
   makeConversationDraggable: (el: HTMLElement) => void;
   applyHideArchivedToConversation: (el: HTMLElement) => void;
+  isConversationInFolders: (conversationId: string) => boolean;
   scheduleNativeConversationTitleSync: () => void;
 };
 
@@ -100,6 +101,10 @@ function makeCharacterDataMutation(target: Node): MutationRecord {
     type: 'characterData',
     target,
   } as MutationRecord;
+}
+
+function nextAnimationFrame(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
 describe('FolderManager — observer batching (issue #678)', () => {
@@ -249,20 +254,19 @@ describe('FolderManager — observer batching (issue #678)', () => {
     expect(titleSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('schedules only one microtask flush even across many observer ticks', async () => {
+  it('schedules only one animation-frame flush even across many observer ticks', async () => {
     const flushSpy = vi.spyOn(typed, 'flushMutationBatch');
 
     typed.scheduleMutationBatchFlush();
     typed.scheduleMutationBatchFlush();
     typed.scheduleMutationBatchFlush();
 
-    await Promise.resolve(); // exit current task, microtask drains
-    await Promise.resolve();
+    await nextAnimationFrame();
 
     expect(flushSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('clears the batch queue on destroy so a pending microtask does no work', async () => {
+  it('clears the batch queue on destroy so a pending animation-frame flush does no work', async () => {
     const flushSpy = vi.spyOn(typed, 'flushMutationBatch');
 
     const conv = createConversationEl('ffffffff');
@@ -272,9 +276,21 @@ describe('FolderManager — observer batching (issue #678)', () => {
     manager!.destroy();
     manager = null;
 
-    await Promise.resolve();
-    await Promise.resolve();
+    await nextAnimationFrame();
 
     expect(flushSpy).not.toHaveBeenCalled();
+  });
+
+  it('skips archived-folder lookup for added conversations when hide archived is off', () => {
+    const archivedLookupSpy = vi.spyOn(typed, 'isConversationInFolders');
+
+    typed.hideArchivedConversations = false;
+    const conv = createConversationEl('99999999');
+    typed.sidebarContainer!.appendChild(conv);
+
+    typed.mutationBatchQueue.push(makeChildListMutation({ added: [conv] }));
+    typed.flushMutationBatch();
+
+    expect(archivedLookupSpy).not.toHaveBeenCalled();
   });
 });
