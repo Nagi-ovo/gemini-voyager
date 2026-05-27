@@ -42,11 +42,18 @@ import { hasUnreadChangelog, openChangelog, showChangelogModalDirect } from '../
 import { insertTextIntoChatInput } from '../chatInput/index';
 import { createFolderStorageAdapter } from '../folder/storage/FolderStorageAdapter';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
+import { StarredMessagesService } from '../timeline/StarredMessagesService';
+import type { StarredMessage } from '../timeline/starredTypes';
 import { extractPlainTitle } from './compactTitle';
 import { parsePromptImportPayload } from './importPayload';
 import { loadFolderDataForLocalBackup } from './localBackup';
 import { activatePromptText } from './promptClickAction';
 import { getScrollHintState } from './scrollHint';
+import {
+  buildStarredMessageUrl,
+  filterStarredMessages,
+  formatStarredMessageTime,
+} from './starredLibrary';
 
 type PromptItem = {
   id: string;
@@ -64,6 +71,11 @@ type PromptItem = {
 
 type PanelPosition = { top: number; left: number };
 type TriggerPosition = { bottom: number; right: number };
+type PMPanelView = 'prompts' | 'starred';
+
+function isPMPanelView(value: unknown): value is PMPanelView {
+  return value === 'prompts' || value === 'starred';
+}
 
 const STORAGE_KEYS = {
   items: StorageKeys.PROMPT_ITEMS,
@@ -731,10 +743,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     importInput.accept = '.json,application/json';
     importInput.className = 'gv-pm-import-input';
 
-    // Backup button - primary action
+    // Primary view switch: the previous local backup slot now opens the
+    // starred library, and flips back to Prompt Manager inside that view.
     const backupBtn = createEl('button', 'gv-pm-backup-btn');
-    backupBtn.textContent = '💾 ' + i18n.t('pm_backup');
-    backupBtn.title = i18n.t('pm_backup_tooltip');
+    backupBtn.setAttribute('type', 'button');
 
     // Official Website button - primary action (right side)
     const websiteBtn = createEl('a', 'gv-pm-website-btn');
@@ -749,6 +761,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     // Secondary actions container
     const secondaryActions = createEl('div', 'gv-pm-footer-secondary');
+
+    const localBackupBtn = createEl('button', 'gv-pm-export-btn gv-pm-local-backup-btn');
+    localBackupBtn.textContent = i18n.t('pm_backup');
+    localBackupBtn.title = i18n.t('pm_backup_tooltip');
 
     const importBtn = createEl('button', 'gv-pm-import-btn');
     importBtn.textContent = i18n.t('pm_import');
@@ -776,6 +792,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     gh.appendChild(ghIcon);
     gh.appendChild(ghText);
 
+    secondaryActions.appendChild(localBackupBtn);
     secondaryActions.appendChild(importBtn);
     secondaryActions.appendChild(exportBtn);
     secondaryActions.appendChild(settingsBtn);
@@ -829,6 +846,12 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     let editingId: string | null = null;
     let expandedItems: Set<string> = new Set<string>(); // Track expanded prompt items
     let viewMode: PMViewMode = 'compact';
+    let panelView: PMPanelView = 'prompts';
+    let promptSearchValue = '';
+    let starredSearchValue = '';
+    let starredMessages: StarredMessage[] = [];
+    let starredLoading = false;
+    let starredLoadError = false;
 
     function setNotice(text: string, kind: 'ok' | 'err' = 'ok') {
       notice.textContent = text || '';
@@ -1053,6 +1076,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     viewModeBtn.addEventListener('click', async (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
+      if (panelView !== 'prompts') return;
       viewMode = viewMode === 'compact' ? 'comfortable' : 'compact';
       applyViewModeUI();
       renderList();
@@ -1069,6 +1093,193 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         (ev.currentTarget as HTMLButtonElement)?.blur?.();
       } catch {}
     });
+
+    function applyPanelViewUI(): void {
+      const isStarredView = panelView === 'starred';
+      panel.setAttribute('data-gv-panel-view', panelView);
+      titleText.textContent = isStarredView ? i18n.t('pm_starred_library') : 'Voyager';
+      backupBtn.textContent = isStarredView
+        ? '💬 ' + i18n.t('pm_prompt_manager')
+        : '★ ' + i18n.t('pm_starred_library');
+      backupBtn.title = isStarredView ? i18n.t('pm_prompt_manager') : i18n.t('pm_starred_library');
+      backupBtn.setAttribute('aria-label', backupBtn.title);
+      searchInput.placeholder = isStarredView
+        ? i18n.t('pm_starred_search_placeholder')
+        : i18n.t('pm_search_placeholder');
+      addBtn.classList.toggle('gv-hidden', isStarredView);
+      viewModeBtn.classList.toggle('gv-hidden', isStarredView);
+      tagsWrapOuter.classList.toggle('gv-hidden', isStarredView);
+      secondaryActions.classList.toggle('gv-hidden', isStarredView);
+      if (isStarredView) {
+        addForm.classList.add('gv-hidden');
+        editingId = null;
+        hideTooltip();
+      }
+    }
+
+    function renderActiveList(): void {
+      if (panelView === 'starred') renderStarredList();
+      else renderList();
+    }
+
+    async function persistPanelView(nextView: PMPanelView): Promise<void> {
+      try {
+        await browser.storage.sync.set({ [StorageKeys.PROMPT_PANEL_VIEW]: nextView });
+      } catch {
+        try {
+          await browser.storage.local.set({ [StorageKeys.PROMPT_PANEL_VIEW]: nextView });
+        } catch {
+          // Ignore persistence failures; the visible panel state still updates.
+        }
+      }
+    }
+
+    async function loadStarredMessages(): Promise<void> {
+      starredLoading = true;
+      starredLoadError = false;
+      renderStarredList();
+      try {
+        starredMessages = await StarredMessagesService.getAllStarredMessagesSorted();
+      } catch (error) {
+        console.warn('[PromptManager] Failed to load starred messages:', error);
+        starredLoadError = true;
+        starredMessages = [];
+        setNotice(i18n.t('pm_starred_load_error'), 'err');
+      } finally {
+        starredLoading = false;
+        renderStarredList();
+      }
+    }
+
+    function switchPanelView(nextView: PMPanelView): void {
+      if (panelView === nextView) return;
+      if (panelView === 'starred') starredSearchValue = searchInput.value || '';
+      else promptSearchValue = searchInput.value || '';
+      panelView = nextView;
+      void persistPanelView(nextView);
+      searchInput.value = panelView === 'starred' ? starredSearchValue : promptSearchValue;
+      applyPanelViewUI();
+      if (panelView === 'starred') {
+        void loadStarredMessages();
+      } else {
+        renderTags();
+        renderList();
+        requestAnimationFrame(syncTagScrollHint);
+      }
+    }
+
+    function getStarredEmptyText(query: string): string {
+      if (starredLoadError) return i18n.t('pm_starred_load_error');
+      if (query) return i18n.t('pm_starred_no_results');
+      return i18n.t('noStarredMessages');
+    }
+
+    function renderStarredList(): void {
+      hideTooltip();
+      const savedScrollTop = list.scrollTop;
+      const query = (searchInput.value || '').trim();
+      const filtered = filterStarredMessages(starredMessages, query);
+      list.innerHTML = '';
+
+      if (starredLoading) {
+        const loading = createEl('div', 'gv-pm-empty gv-pm-starred-empty');
+        loading.textContent = i18n.t('loading') || 'Loading...';
+        list.appendChild(loading);
+        return;
+      }
+
+      if (starredLoadError || filtered.length === 0) {
+        const empty = createEl('div', 'gv-pm-empty gv-pm-starred-empty');
+        empty.textContent = getStarredEmptyText(query);
+        list.appendChild(empty);
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      for (const message of filtered) {
+        const row = createEl('button', 'gv-pm-starred-item');
+        row.setAttribute('type', 'button');
+        row.setAttribute('dir', 'auto');
+        row.title = i18n.t('pm_starred_open');
+        row.addEventListener('click', (event) => {
+          event.preventDefault();
+          void (async () => {
+            await persistPanelView('starred');
+            window.location.assign(buildStarredMessageUrl(message));
+            closePanel();
+          })();
+        });
+
+        const icon = createEl('span', 'gv-pm-starred-icon');
+        icon.textContent = '★';
+        icon.setAttribute('aria-hidden', 'true');
+
+        const body = createEl('span', 'gv-pm-starred-body');
+        const title = createEl('span', 'gv-pm-starred-title');
+        title.textContent =
+          (message.conversationTitle && message.conversationTitle.trim()) ||
+          i18n.t('pm_starred_untitled');
+        const content = createEl('span', 'gv-pm-starred-content');
+        content.textContent = message.content || '';
+        const meta = createEl('span', 'gv-pm-starred-meta');
+        meta.textContent = formatStarredMessageTime(message.starredAt);
+        body.appendChild(title);
+        body.appendChild(content);
+        body.appendChild(meta);
+
+        const removeBtn = createEl('button', 'gv-pm-starred-remove');
+        removeBtn.setAttribute('type', 'button');
+        removeBtn.title = i18n.t('removeFromStarred');
+        removeBtn.setAttribute('aria-label', i18n.t('removeFromStarred'));
+        removeBtn.addEventListener('click', async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          await StarredMessagesService.removeStarredMessage(message.conversationId, message.turnId);
+          starredMessages = starredMessages.filter(
+            (item) =>
+              item.conversationId !== message.conversationId || item.turnId !== message.turnId,
+          );
+          renderStarredList();
+          setNotice(i18n.t('pm_deleted') || 'Deleted', 'ok');
+        });
+
+        row.appendChild(icon);
+        row.appendChild(body);
+        row.appendChild(removeBtn);
+        frag.appendChild(row);
+      }
+      list.appendChild(frag);
+      const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
+      list.scrollTop = Math.min(savedScrollTop, maxScroll);
+    }
+
+    // Restore the last Prompt Manager sub-view. This mirrors the compact /
+    // comfortable preference so a starred-message navigation does not drop the
+    // user back into the prompt list after the Gemini route changes.
+    (async () => {
+      let saved: unknown = null;
+      try {
+        const result = await browser.storage.sync.get(StorageKeys.PROMPT_PANEL_VIEW);
+        saved = result[StorageKeys.PROMPT_PANEL_VIEW];
+      } catch {
+        // Fall through to local
+      }
+      if (!isPMPanelView(saved)) {
+        try {
+          const result = await browser.storage.local.get(StorageKeys.PROMPT_PANEL_VIEW);
+          saved = result[StorageKeys.PROMPT_PANEL_VIEW];
+        } catch {
+          // Keep default on failure
+        }
+      }
+      if (isPMPanelView(saved) && saved !== panelView) {
+        panelView = saved;
+        searchInput.value = panelView === 'starred' ? starredSearchValue : promptSearchValue;
+        applyPanelViewUI();
+        if (panelView === 'starred' && open) void loadStarredMessages();
+        else renderActiveList();
+      }
+    })();
 
     function renderTags(): void {
       const all = collectAllTags(items);
@@ -1098,6 +1309,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     }
 
     function renderList(): void {
+      if (panelView !== 'prompts') {
+        renderStarredList();
+        return;
+      }
       // Rebuilding the list destroys every row's DOM. Any pending hover-open
       // timer would fire against a detached target (getBoundingClientRect()
       // returns zeros → tooltip mispositioned) and any visible tooltip would
@@ -1415,13 +1630,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     function refreshUITexts(): void {
       // Keep custom icon + label
-      titleText.textContent = 'Voyager';
       addBtn.textContent = i18n.t('pm_add');
-      searchInput.placeholder = i18n.t('pm_search_placeholder');
+      localBackupBtn.textContent = i18n.t('pm_backup');
+      localBackupBtn.title = i18n.t('pm_backup_tooltip');
       importBtn.textContent = i18n.t('pm_import');
       exportBtn.textContent = i18n.t('pm_export');
-      backupBtn.textContent = '💾 ' + i18n.t('pm_backup');
-      backupBtn.title = i18n.t('pm_backup_tooltip');
 
       // Update website button
       websiteBtn.textContent = '🌐 ' + i18n.t('officialDocs');
@@ -1448,8 +1661,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         i18n.t('pm_cancel');
       applyLockUI();
       applyViewModeUI();
+      applyPanelViewUI();
       renderTags();
-      renderList();
+      renderActiveList();
     }
 
     function onReposition(): void {
@@ -1537,8 +1751,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (open) closePanel();
       else {
         openPanel();
-        renderTags();
-        renderList();
+        if (panelView === 'starred') void loadStarredMessages();
+        else {
+          renderTags();
+          renderList();
+        }
       }
     });
 
@@ -1679,7 +1896,19 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         if ((nextMode === 'compact' || nextMode === 'comfortable') && nextMode !== viewMode) {
           viewMode = nextMode;
           applyViewModeUI();
-          renderList();
+          renderActiveList();
+        }
+      }
+      if ((area === 'sync' || area === 'local') && changes[StorageKeys.PROMPT_PANEL_VIEW]) {
+        const nextView = changes[StorageKeys.PROMPT_PANEL_VIEW].newValue;
+        if (isPMPanelView(nextView) && nextView !== panelView) {
+          if (panelView === 'starred') starredSearchValue = searchInput.value || '';
+          else promptSearchValue = searchInput.value || '';
+          panelView = nextView;
+          searchInput.value = panelView === 'starred' ? starredSearchValue : promptSearchValue;
+          applyPanelViewUI();
+          if (panelView === 'starred' && open) void loadStarredMessages();
+          else renderActiveList();
         }
       }
       // Handle changelog notify mode changes (dynamic badge update)
@@ -1722,9 +1951,16 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         if (Array.isArray(newItems)) {
           items = newItems;
           renderTags();
-          renderList();
+          renderActiveList();
           setNotice(i18n.t('syncSuccess') || 'Synced', 'ok');
         }
+      }
+      if (
+        area === 'local' &&
+        changes[StorageKeys.TIMELINE_STARRED_MESSAGES] &&
+        panelView === 'starred'
+      ) {
+        void loadStarredMessages();
       }
     };
 
@@ -1846,7 +2082,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       renderList();
     });
 
-    searchInput.addEventListener('input', () => renderList());
+    searchInput.addEventListener('input', () => {
+      if (panelView === 'starred') starredSearchValue = searchInput.value || '';
+      else promptSearchValue = searchInput.value || '';
+      renderActiveList();
+    });
 
     exportBtn.addEventListener('click', async () => {
       try {
@@ -1870,8 +2110,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       }
     });
 
-    // Backup button handler - creates timestamp folder with all data
-    backupBtn.addEventListener('click', async () => {
+    async function runLocalBackup(): Promise<void> {
       try {
         // Read prompts
         const prompts = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
@@ -2047,6 +2286,14 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           setNotice(i18n.t('pm_backup_error') || '✗ Backup failed', 'err');
         }
       }
+    }
+
+    backupBtn.addEventListener('click', () => {
+      switchPanelView(panelView === 'starred' ? 'prompts' : 'starred');
+    });
+
+    localBackupBtn.addEventListener('click', () => {
+      void runLocalBackup();
     });
 
     importBtn.addEventListener('click', () => importInput.click());

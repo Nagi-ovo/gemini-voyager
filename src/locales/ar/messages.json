@@ -231,6 +231,34 @@
     "message": "الاسم (اختياري)",
     "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
   },
+  "pm_prompt_manager": {
+    "message": "مدير المطالبات",
+    "description": "Button label for returning from the starred library to Prompt Manager"
+  },
+  "pm_starred_library": {
+    "message": "مكتبة العناصر المميزة",
+    "description": "Prompt Manager starred messages library title and entry button"
+  },
+  "pm_starred_search_placeholder": {
+    "message": "البحث في الرسائل المميزة",
+    "description": "Search placeholder for starred messages in Prompt Manager"
+  },
+  "pm_starred_no_results": {
+    "message": "لا توجد رسائل مميزة تطابق بحثك",
+    "description": "Empty state when starred search has no matches"
+  },
+  "pm_starred_untitled": {
+    "message": "محادثة بلا عنوان",
+    "description": "Fallback title for starred messages without a conversation title"
+  },
+  "pm_starred_open": {
+    "message": "فتح الرسالة المميزة",
+    "description": "Tooltip for opening a starred message from Prompt Manager"
+  },
+  "pm_starred_load_error": {
+    "message": "تعذر تحميل الرسائل المميزة",
+    "description": "Error shown when starred messages cannot be loaded"
+  },
   "pm_theme_dark": {
     "message": "التبديل إلى الوضع الداكن",
     "description": "Theme toggle tooltip - switch to dark"
