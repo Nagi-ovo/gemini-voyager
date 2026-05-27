@@ -1843,6 +1843,10 @@
     "message": "Falha — abra o Gemini primeiro",
     "description": "Erro ao copiar o prompt de organização com IA"
   },
+  "aiOrgNoConversations": {
+    "message": "Nenhuma conversa encontrada — abra e role sua lista de conversas e tente novamente",
+    "description": "Texto do botão quando nenhuma conversa pôde ser lida para a organização por IA"
+  },
   "aiOrgCopyHint": {
     "message": "Copia todas as conversas e a estrutura de pastas como um prompt. Cole no Gemini para obter um plano de pastas importável.",
     "description": "Texto de dica abaixo do botão de cópia de organização com IA"

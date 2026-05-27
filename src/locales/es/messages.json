@@ -1843,6 +1843,10 @@
     "message": "Error — abre Gemini primero",
     "description": "Error al copiar el prompt de organización con IA"
   },
+  "aiOrgNoConversations": {
+    "message": "No se encontraron chats: abre y desplaza tu lista de chats y vuelve a intentarlo",
+    "description": "Texto del botón cuando no se pudo leer ninguna conversación para la organización con IA"
+  },
   "aiOrgCopyHint": {
     "message": "Copia todas las conversaciones y la estructura de carpetas como un prompt. Pégalo en Gemini para obtener un plan de carpetas importable.",
     "description": "Texto de ayuda debajo del botón de copia de organización con IA"

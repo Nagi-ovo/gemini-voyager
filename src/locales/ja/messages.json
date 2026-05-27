@@ -1843,6 +1843,10 @@
     "message": "失敗 — 先に Gemini を開いてください",
     "description": "AI整理プロンプトのコピー失敗時のエラー"
   },
+  "aiOrgNoConversations": {
+    "message": "会話が見つかりません — チャット一覧を開いてスクロールしてから再試行してください",
+    "description": "AI 整理で会話を読み取れなかったときのボタン文言"
+  },
   "aiOrgCopyHint": {
     "message": "すべての会話とフォルダ構造をプロンプトとしてコピーします。Gemini に貼り付けて、インポート可能なフォルダプランを取得できます。",
     "description": "AI整理コピーボタンの下のヒントテキスト"

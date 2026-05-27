@@ -1843,6 +1843,10 @@
     "message": "Échec — ouvrez Gemini d'abord",
     "description": "Erreur lors de la copie du prompt d'organisation IA"
   },
+  "aiOrgNoConversations": {
+    "message": "Aucune conversation trouvée — ouvrez et faites défiler votre liste de discussions, puis réessayez",
+    "description": "Texte du bouton lorsqu'aucune conversation n'a pu être lue pour l'organisation par IA"
+  },
   "aiOrgCopyHint": {
     "message": "Copie toutes les conversations et la structure des dossiers comme un prompt. Collez dans Gemini pour obtenir un plan de dossiers importable.",
     "description": "Texte d'aide sous le bouton de copie d'organisation IA"

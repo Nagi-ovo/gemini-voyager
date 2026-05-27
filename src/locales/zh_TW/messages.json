@@ -1843,6 +1843,10 @@
     "message": "失敗 — 請先開啟 Gemini",
     "description": "複製 AI 整理提示失敗時的錯誤"
   },
+  "aiOrgNoConversations": {
+    "message": "找不到對話 — 請展開並捲動聊天清單後重試",
+    "description": "AI 整理未能讀取到任何對話時的按鈕文字"
+  },
   "aiOrgCopyHint": {
     "message": "複製所有對話和資料夾結構作為提示詞。貼到 Gemini 中即可獲得可匯入的資料夾方案。",
     "description": "AI 整理複製按鈕下方的提示文字"

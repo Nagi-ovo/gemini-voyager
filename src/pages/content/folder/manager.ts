@@ -60,6 +60,10 @@ const MOVE_MENU_INJECTION_RETRY_LIMIT = 8;
 const MOVE_MENU_INJECTION_RETRY_DELAY_MS = 80;
 const CONVERSATION_MENU_TRIGGER_SELECTOR =
   '[data-test-id="actions-menu-button"], [data-test-id="conversation-actions-menu-icon-button"]';
+// AI Organize: the lr26 sidebar populates conversation rows lazily, so wait
+// briefly for at least one row to gain its link before collecting (see #725).
+const AI_ORG_COLLECT_TIMEOUT_MS = 3000;
+const AI_ORG_COLLECT_POLL_MS = 150;
 const ROOT_CONVERSATIONS_ID = '__root_conversations__'; // Special ID for root-level conversations
 const NOTIFICATION_TIMEOUT_MS = 10000; // Duration to show data loss notification
 const FOLDER_TREE_INDENT_MIN = -8;
@@ -8282,13 +8286,15 @@ export class FolderManager {
       // Handle request to collect all conversations and folder structure for AI organization
       if (msg.type === 'gv.folders.getStructureForAI') {
         this.debug('Received AI structure request');
-        const sidebarConversations = this.collectAllSidebarConversations();
-        sendResponse({
-          ok: true,
-          sidebarConversations,
-          folderData: this.data,
-        });
-        return true;
+        this.collectAllSidebarConversations()
+          .then((sidebarConversations) => {
+            sendResponse({ ok: true, sidebarConversations, folderData: this.data });
+          })
+          .catch((error) => {
+            this.debugWarn('getStructureForAI collection failed:', error);
+            sendResponse({ ok: true, sidebarConversations: [], folderData: this.data });
+          });
+        return true; // respond asynchronously after rows populate
       }
 
       // Return true for all messages to keep the channel open
@@ -8297,27 +8303,68 @@ export class FolderManager {
   }
 
   /**
-   * Collect all conversation titles and URLs from the native sidebar DOM
+   * A conversation row is "populated" once Gemini fills in its link. The lr26
+   * sidebar virtualizes rows: `[data-test-id="conversation"]` elements exist as
+   * empty stubs (no link, no title) while collapsed or mid-render, and only gain
+   * an `<a href>` once actually rendered. We use the link as the populated signal.
    */
-  private collectAllSidebarConversations(): Array<{
-    id: string;
-    title: string;
-    url: string;
-  }> {
+  private isPopulatedConversationEl(el: HTMLElement): boolean {
+    return !!el.querySelector('a[href*="/app/"], a[href*="/gem/"]');
+  }
+
+  /**
+   * Collect all conversation titles and URLs from the native sidebar DOM.
+   * Waits for the virtualized rows to populate before reading them — otherwise
+   * the list comes back empty and the AI-organize prompt has nothing to work
+   * with (see #725).
+   */
+  private async collectAllSidebarConversations(): Promise<
+    Array<{ id: string; title: string; url: string }>
+  > {
+    await this.waitForPopulatedSidebarConversations();
+    return this.collectPopulatedConversations();
+  }
+
+  /** Synchronous extraction over the currently-populated sidebar rows. */
+  private collectPopulatedConversations(): Array<{ id: string; title: string; url: string }> {
     const results: Array<{ id: string; title: string; url: string }> = [];
-    const conversationEls = document.querySelectorAll('[data-test-id="conversation"]');
+    const seen = new Set<string>();
+    const conversationEls = this.getNativeConversationElements();
 
     for (const el of Array.from(conversationEls)) {
       const htmlEl = el as HTMLElement;
+      if (!this.isPopulatedConversationEl(htmlEl)) continue; // skip virtualized stub
       const id = this.extractNativeConversationId(htmlEl);
-      const title = this.extractNativeConversationTitle(htmlEl);
       const url = this.extractNativeConversationUrl(htmlEl);
-      if (id && title && url) {
-        results.push({ id, title, url });
-      }
+      if (!id || !url) continue;
+      if (seen.has(id)) continue; // collapsed rail can emit duplicate rows
+      seen.add(id);
+      const title = this.extractNativeConversationTitle(htmlEl) || 'Untitled';
+      results.push({ id, title, url });
     }
 
     return results;
+  }
+
+  /**
+   * Poll until at least one sidebar conversation row is populated, or timeout.
+   * Returns true if a populated row was found.
+   */
+  private async waitForPopulatedSidebarConversations(): Promise<boolean> {
+    const hasPopulated = () =>
+      Array.from(this.getNativeConversationElements()).some((el) =>
+        this.isPopulatedConversationEl(el as HTMLElement),
+      );
+
+    if (hasPopulated()) return true;
+
+    const deadline = Date.now() + AI_ORG_COLLECT_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+      await this.delay(AI_ORG_COLLECT_POLL_MS);
+      if (this.isDestroyed) return false;
+      if (hasPopulated()) return true;
+    }
+    return false;
   }
 
   // Tooltip methods

@@ -1843,6 +1843,10 @@
     "message": "失败 — 请先打开 Gemini",
     "description": "复制 AI 整理提示失败时的错误"
   },
+  "aiOrgNoConversations": {
+    "message": "未找到对话 — 请展开并滚动聊天列表后重试",
+    "description": "AI 整理未能读取到任何对话时的按钮文字"
+  },
   "aiOrgCopyHint": {
     "message": "复制所有对话和文件夹结构作为提示词。粘贴到 Gemini 中即可获得可导入的文件夹方案。",
     "description": "AI 整理复制按钮下方的提示文字"

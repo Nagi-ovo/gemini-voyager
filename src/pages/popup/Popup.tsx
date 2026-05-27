@@ -507,7 +507,7 @@ export default function Popup() {
     useState<boolean>(true);
   const [activeAccountPlatform, setActiveAccountPlatform] = useState<AccountPlatform>('gemini');
   const [aiStructureCopyStatus, setAiStructureCopyStatus] = useState<
-    'idle' | 'loading' | 'copied' | 'error'
+    'idle' | 'loading' | 'copied' | 'empty' | 'error'
   >('idle');
   const [sectionOrder, setSectionOrder] = useState<PopupSectionId[]>([...DEFAULT_SECTION_ORDER]);
 
@@ -671,6 +671,13 @@ export default function Popup() {
       }
 
       const { sidebarConversations, folderData } = response;
+      // The lr26 sidebar lazily renders conversation rows; if none were
+      // readable, copying an empty prompt is useless — guide the user instead.
+      if (!sidebarConversations?.length) {
+        setAiStructureCopyStatus('empty');
+        setTimeout(() => setAiStructureCopyStatus('idle'), 4000);
+        return;
+      }
       const prompt = formatFolderStructurePrompt(sidebarConversations, folderData, language);
       await navigator.clipboard.writeText(prompt);
       setAiStructureCopyStatus('copied');
@@ -1937,9 +1944,11 @@ export default function Popup() {
                     <span className="leading-5">
                       {aiStructureCopyStatus === 'copied'
                         ? t('aiOrgCopied')
-                        : aiStructureCopyStatus === 'error'
-                          ? t('aiOrgError')
-                          : t('aiOrgCopyButton')}
+                        : aiStructureCopyStatus === 'empty'
+                          ? t('aiOrgNoConversations')
+                          : aiStructureCopyStatus === 'error'
+                            ? t('aiOrgError')
+                            : t('aiOrgCopyButton')}
                     </span>
                   </span>
                 </Button>

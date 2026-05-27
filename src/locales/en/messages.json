@@ -1843,6 +1843,10 @@
     "message": "Failed — open Gemini first",
     "description": "Error when copying AI organization prompt fails"
   },
+  "aiOrgNoConversations": {
+    "message": "No chats found — open and scroll your chat list, then retry",
+    "description": "Button text shown when no conversations could be read for AI organization"
+  },
   "aiOrgCopyHint": {
     "message": "Copies all conversations & folder structure as a prompt. Paste into Gemini to get an importable folder plan.",
     "description": "Hint text below the AI organization copy button"

@@ -1843,6 +1843,10 @@
     "message": "실패 — 먼저 Gemini를 열어주세요",
     "description": "AI 정리 프롬프트 복사 실패 시 에러"
   },
+  "aiOrgNoConversations": {
+    "message": "대화를 찾을 수 없습니다 — 채팅 목록을 열고 스크롤한 후 다시 시도하세요",
+    "description": "AI 정리에서 대화를 읽지 못했을 때 표시되는 버튼 텍스트"
+  },
   "aiOrgCopyHint": {
     "message": "모든 대화와 폴더 구조를 프롬프트로 복사합니다. Gemini에 붙여넣어 가져올 수 있는 폴더 계획을 얻으세요.",
     "description": "AI 정리 복사 버튼 아래 힌트 텍스트"
