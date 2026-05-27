@@ -4,6 +4,7 @@ import {
   getConversationMenuContext,
   getResponseMenuContext,
   injectConversationMenuExportButton,
+  injectConversationMenuMoveToFolderButton,
   injectResponseMenuExportButton,
   isConversationMenuPanel,
   isResponseMenuPanel,
@@ -234,6 +235,78 @@ describe('conversationMenuInjection', () => {
     const pin = content.querySelector('[data-test-id="pin-button"]');
     expect(pin).toBeTruthy();
     expect(items[1]).toBe(first);
+  });
+
+  it('injects move-to-folder button with folder_open icon into conversation menu', () => {
+    const panel = createConversationMenuPanel();
+    const onClick = vi.fn();
+
+    const button = injectConversationMenuMoveToFolderButton(panel, {
+      label: 'Move to folder',
+      tooltip: 'Move to folder',
+      onClick,
+    });
+
+    expect(button).toBeTruthy();
+    expect(button?.classList.contains('gv-move-to-folder-btn')).toBe(true);
+    expect(button?.querySelector('mat-icon')?.getAttribute('fonticon')).toBe('folder_open');
+    expect(button?.querySelector('.mat-mdc-menu-item-text > span')?.textContent).toBe(
+      'Move to folder',
+    );
+
+    button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not re-inject move-to-folder button on the same menu', () => {
+    const panel = createConversationMenuPanel();
+    const first = injectConversationMenuMoveToFolderButton(panel, {
+      label: 'Move to folder',
+      tooltip: 'Move to folder',
+      onClick: vi.fn(),
+    });
+    const second = injectConversationMenuMoveToFolderButton(panel, {
+      label: 'Move to folder',
+      tooltip: 'Move to folder',
+      onClick: vi.fn(),
+    });
+    expect(first).toBeTruthy();
+    expect(second).toBe(first);
+    expect(panel.querySelectorAll('.gv-move-to-folder-btn').length).toBe(1);
+  });
+
+  it('places move-to-folder after the export button when both are injected', () => {
+    const panel = createConversationMenuPanel();
+    const exportBtn = injectConversationMenuExportButton(panel, {
+      label: 'Export',
+      tooltip: 'Export',
+      onClick: vi.fn(),
+    });
+    const moveBtn = injectConversationMenuMoveToFolderButton(panel, {
+      label: 'Move to folder',
+      tooltip: 'Move to folder',
+      onClick: vi.fn(),
+    });
+
+    const content = panel.querySelector('.mat-mdc-menu-content') as HTMLElement;
+    const items = Array.from(content.children);
+    const pinIdx = items.findIndex(
+      (c) => (c as HTMLElement).getAttribute('data-test-id') === 'pin-button',
+    );
+    // Order near the top: pin → export → move-to-folder
+    expect(items[pinIdx + 1]).toBe(exportBtn);
+    expect(items[pinIdx + 2]).toBe(moveBtn);
+  });
+
+  it('does not inject move-to-folder into a response (message) menu', () => {
+    const panel = createResponseMenuPanel();
+    const result = injectConversationMenuMoveToFolderButton(panel, {
+      label: 'Move to folder',
+      tooltip: 'Move to folder',
+      onClick: vi.fn(),
+    });
+    expect(result).toBeNull();
+    panel.remove();
   });
 
   it('inherits native icon/text classes to keep alignment and weight consistent', () => {
@@ -504,6 +577,41 @@ describe('conversationMenuInjection', () => {
         (c) => (c as HTMLElement).getAttribute('data-test-id') === 'pin-button',
       );
       expect(items[pinIdx + 1]).toBe(injected);
+    });
+
+    it('injects move-to-folder button into gem-menu using gem-menu-item as template', () => {
+      const menu = createGemConversationMenu();
+      const trigger = document.createElement('gem-icon-button');
+      trigger.setAttribute('data-test-id', 'conversation-actions-menu-icon-button');
+      trigger.setAttribute('aria-haspopup', 'menu');
+      trigger.setAttribute('aria-expanded', 'true');
+      document.body.appendChild(trigger);
+
+      const onClick = vi.fn();
+      const injected = injectConversationMenuMoveToFolderButton(menu, {
+        label: 'Move to folder',
+        tooltip: 'Move to folder',
+        onClick,
+      });
+
+      expect(injected).toBeTruthy();
+      expect(injected?.tagName.toLowerCase()).toBe('gem-menu-item');
+      expect(injected?.classList.contains('gv-move-to-folder-btn')).toBe(true);
+      expect(injected?.querySelector('mat-icon')?.getAttribute('fonticon')).toBe('folder_open');
+
+      const labelSpan = injected?.querySelector('.label-container .label') as HTMLElement | null;
+      const innerTextNode = labelSpan?.querySelector('span') ?? labelSpan;
+      expect(innerTextNode?.textContent).toBe('Move to folder');
+
+      // Inserted after pin-button (no export button present)
+      const items = Array.from(menu.children);
+      const pinIdx = items.findIndex(
+        (c) => (c as HTMLElement).getAttribute('data-test-id') === 'pin-button',
+      );
+      expect(items[pinIdx + 1]).toBe(injected);
+
+      injected?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(onClick).toHaveBeenCalledTimes(1);
     });
 
     it('does not duplicate-inject into the same gem-menu', () => {

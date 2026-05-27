@@ -231,6 +231,34 @@
     "message": "备注名（可选）",
     "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
   },
+  "pm_prompt_manager": {
+    "message": "提示词管理器",
+    "description": "Button label for returning from the starred library to Prompt Manager"
+  },
+  "pm_starred_library": {
+    "message": "星标收藏库",
+    "description": "Prompt Manager starred messages library title and entry button"
+  },
+  "pm_starred_search_placeholder": {
+    "message": "搜索星标内容",
+    "description": "Search placeholder for starred messages in Prompt Manager"
+  },
+  "pm_starred_no_results": {
+    "message": "没有匹配的星标内容",
+    "description": "Empty state when starred search has no matches"
+  },
+  "pm_starred_untitled": {
+    "message": "未命名会话",
+    "description": "Fallback title for starred messages without a conversation title"
+  },
+  "pm_starred_open": {
+    "message": "打开星标内容",
+    "description": "Tooltip for opening a starred message from Prompt Manager"
+  },
+  "pm_starred_load_error": {
+    "message": "星标内容加载失败",
+    "description": "Error shown when starred messages cannot be loaded"
+  },
   "pm_theme_dark": {
     "message": "切换到深色模式",
     "description": "Theme toggle tooltip - switch to dark"

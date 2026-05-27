@@ -231,6 +231,34 @@
     "message": "Nombre (opcional)",
     "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
   },
+  "pm_prompt_manager": {
+    "message": "Gestor de prompts",
+    "description": "Button label for returning from the starred library to Prompt Manager"
+  },
+  "pm_starred_library": {
+    "message": "Biblioteca destacada",
+    "description": "Prompt Manager starred messages library title and entry button"
+  },
+  "pm_starred_search_placeholder": {
+    "message": "Buscar mensajes destacados",
+    "description": "Search placeholder for starred messages in Prompt Manager"
+  },
+  "pm_starred_no_results": {
+    "message": "No hay mensajes destacados que coincidan con tu búsqueda",
+    "description": "Empty state when starred search has no matches"
+  },
+  "pm_starred_untitled": {
+    "message": "Conversación sin título",
+    "description": "Fallback title for starred messages without a conversation title"
+  },
+  "pm_starred_open": {
+    "message": "Abrir mensaje destacado",
+    "description": "Tooltip for opening a starred message from Prompt Manager"
+  },
+  "pm_starred_load_error": {
+    "message": "No se pudieron cargar los mensajes destacados",
+    "description": "Error shown when starred messages cannot be loaded"
+  },
   "pm_theme_dark": {
     "message": "Cambiar a modo oscuro",
     "description": "Theme toggle tooltip - switch to dark"

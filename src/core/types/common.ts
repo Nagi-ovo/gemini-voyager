@@ -83,6 +83,7 @@ export const StorageKeys = {
   PROMPT_THEME: 'gvPromptTheme',
   PROMPT_INSERT_ON_CLICK: 'gvPromptInsertOnClick',
   PROMPT_VIEW_MODE: 'gvPromptViewMode',
+  PROMPT_PANEL_VIEW: 'gvPromptPanelView',
 
   // Global settings
   LANGUAGE: 'language',
@@ -170,6 +171,8 @@ export const StorageKeys = {
   // Changelog
   CHANGELOG_DISMISSED_VERSION: 'gvChangelogDismissedVersion',
   CHANGELOG_NOTIFY_MODE: 'gvChangelogNotifyMode',
+  EDGE_FINAL_VERSION_NOTICE_FIRST_SEEN_AT: 'gvEdgeFinalVersionNoticeFirstSeenAt',
+  EDGE_FINAL_VERSION_NOTICE_SHOWN: 'gvEdgeFinalVersionNoticeShown',
 
   // Fork nodes
   FORK_NODES: 'gvForkNodes',

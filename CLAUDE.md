@@ -16,13 +16,13 @@ bun run docs:dev           # Docs dev server
 
 ## Core Rules
 
-Path-scoped rules live in `.claude/rules/` and load automatically by glob: `typescript.md` (src/**/*.ts(x)), `content-scripts.md` (src/pages/content/**), `i18n.md` (src/locales/**), `high-complexity.md` (StorageService / DataBackupService / GoogleDriveSyncService / AccountIsolationService / features/folder / features/export).
+Path-scoped rules live in `.claude/rules/` and load automatically by glob: `typescript.md` (src/**/*.ts(x)), `content-scripts.md` (src/pages/content/** and public/contentStyle.css), `i18n.md` (src/locales/**), `high-complexity.md` (StorageService / DataBackupService / GoogleDriveSyncService / AccountIsolationService / features/folder / features/export).
 
 Project-wide rules (always in effect):
 
 1. **Never modify `dist_*` folders directly.**
 2. **Never commit `.env` or secrets.**
-3. **When adding Material Symbol icons**, add the icon name to `icon_names=` in the Google Fonts URL in `src/pages/popup/index.html`.
+3. **When adding Material Symbol icons**, the popup uses the bundled font in `public/fonts/`; verify the glyph exists locally or update the bundled font assets. Do not add a remote Google Fonts URL.
 4. **For GitHub issue/PR/comment work, prefer `gh` as the source of truth** instead of browser scraping or unstable connectors.
 5. **Default push target**: when asked to push without explicit branch/PR instructions, push directly to `main`.
 
@@ -39,7 +39,7 @@ Project-wide rules (always in effect):
 
 Conventional Commits: `<type>(<scope>): <imperative summary>`
 
-- Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `build`, `ci`, `perf`, `style`
+- Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `build`, `ci`, `perf`, `style`, `revert`, `deps`, `ux`
 - Scope: short, feature-focused (e.g., `copy`, `export`, `popup`)
 - Summary: lowercase, imperative, no trailing period
 - If the commit relates to a GitHub issue or discussion, include `Closes #xxx` or `Fixes #xxx` in the commit **body**
@@ -55,7 +55,7 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 
 ## Architecture
 
-- **Services**: singletons in `src/core/services/`. `StorageService` is single source of truth for persistence.
+- **Services**: singletons in `src/core/services/`. `StorageService` is the typed wrapper for storage when suitable; existing persistence also uses direct `chrome.storage`/`browser.storage` and local fallback paths in popup, background, services, and content scripts.
 - **Content scripts**: `src/pages/content/`. Each sub-module is self-contained.
 - **UI**: functional React components + hooks. Business logic in `features/*/services/` or custom hooks, not in UI files.
 - **Types**: `src/core/types/common.ts` for StorageKeys and shared types.
@@ -66,7 +66,7 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 
 | Task | Where |
 |------|-------|
-| Add storage key | `src/core/types/common.ts` → `StorageService.ts` → all 10 locales |
+| Add storage key | `src/core/types/common.ts` → relevant storage defaults/migrations (for sync settings, check `SettingsBackupService.ts`) → user-facing locale keys only when new UI text is added |
 | Update translations | `src/locales/*/messages.json` (all 10) |
 | Change DOM injection | `src/pages/content/` |
 | Modify popup settings | `src/pages/popup/components/` |

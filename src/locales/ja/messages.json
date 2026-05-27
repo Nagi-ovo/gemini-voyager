@@ -231,6 +231,34 @@
     "message": "名前（任意）",
     "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
   },
+  "pm_prompt_manager": {
+    "message": "プロンプトマネージャー",
+    "description": "Button label for returning from the starred library to Prompt Manager"
+  },
+  "pm_starred_library": {
+    "message": "スター付きライブラリ",
+    "description": "Prompt Manager starred messages library title and entry button"
+  },
+  "pm_starred_search_placeholder": {
+    "message": "スター付きメッセージを検索",
+    "description": "Search placeholder for starred messages in Prompt Manager"
+  },
+  "pm_starred_no_results": {
+    "message": "検索に一致するスター付きメッセージはありません",
+    "description": "Empty state when starred search has no matches"
+  },
+  "pm_starred_untitled": {
+    "message": "無題の会話",
+    "description": "Fallback title for starred messages without a conversation title"
+  },
+  "pm_starred_open": {
+    "message": "スター付きメッセージを開く",
+    "description": "Tooltip for opening a starred message from Prompt Manager"
+  },
+  "pm_starred_load_error": {
+    "message": "スター付きメッセージを読み込めませんでした",
+    "description": "Error shown when starred messages cannot be loaded"
+  },
   "pm_theme_dark": {
     "message": "ダークモードに切替",
     "description": "Theme toggle tooltip - switch to dark"

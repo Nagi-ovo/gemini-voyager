@@ -1,13 +1,55 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { isFirefox } from '@/core/utils/browser';
+
+vi.mock('@/core/utils/browser', () => ({
+  isFirefox: vi.fn(() => false),
+}));
+
+type MockCanvasContext = {
+  clearRect: ReturnType<typeof vi.fn>;
+  beginPath: ReturnType<typeof vi.fn>;
+  moveTo: ReturnType<typeof vi.fn>;
+  bezierCurveTo: ReturnType<typeof vi.fn>;
+  quadraticCurveTo: ReturnType<typeof vi.fn>;
+  closePath: ReturnType<typeof vi.fn>;
+  fill: ReturnType<typeof vi.fn>;
+  save: ReturnType<typeof vi.fn>;
+  restore: ReturnType<typeof vi.fn>;
+  translate: ReturnType<typeof vi.fn>;
+  rotate: ReturnType<typeof vi.fn>;
+  scale: ReturnType<typeof vi.fn>;
+  setTransform: ReturnType<typeof vi.fn>;
+  drawImage: ReturnType<typeof vi.fn>;
+  fillStyle: string;
+  globalAlpha: number;
+};
+
 describe('sakuraEffect', () => {
+  let mockCtx: MockCanvasContext;
+  let animationFrameCallback: FrameRequestCallback | null;
+
+  function runAnimationFrame(time: number): void {
+    const callback = animationFrameCallback;
+    expect(callback).not.toBeNull();
+    animationFrameCallback = null;
+    callback?.(time);
+  }
+
   beforeEach(() => {
     vi.resetModules();
     vi.useFakeTimers();
     vi.clearAllMocks();
     document.body.innerHTML = '';
+    animationFrameCallback = null;
+    vi.mocked(isFirefox).mockReturnValue(false);
 
-    const mockCtx = {
+    Object.defineProperty(window, 'devicePixelRatio', {
+      configurable: true,
+      value: 1,
+    });
+
+    mockCtx = {
       clearRect: vi.fn(),
       beginPath: vi.fn(),
       moveTo: vi.fn(),
@@ -20,16 +62,25 @@ describe('sakuraEffect', () => {
       translate: vi.fn(),
       rotate: vi.fn(),
       scale: vi.fn(),
+      setTransform: vi.fn(),
+      drawImage: vi.fn(),
       fillStyle: '',
+      globalAlpha: 1,
     };
 
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
       mockCtx as unknown as CanvasRenderingContext2D,
     );
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      animationFrameCallback = callback;
+      return 1;
+    });
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
   });
 
   afterEach(() => {
     window.dispatchEvent(new Event('beforeunload'));
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -219,5 +270,88 @@ describe('sakuraEffect', () => {
     // Re-enable — cancels drain, canvas stays
     storageListener!({ gvVisualEffect: { newValue: 'sakura', oldValue: 'off' } }, 'sync');
     expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
+  });
+
+  it('draws the full sprite-backed sakura profile outside Firefox', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvVisualEffect: 'sakura' });
+      },
+    );
+
+    const { startSakuraEffect } = await import('../sakura');
+    startSakuraEffect();
+
+    runAnimationFrame(16);
+
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(88);
+    expect(mockCtx.fill).toHaveBeenCalledTimes(8);
+  });
+
+  it('starts Firefox on a lower-load profile and caps drawing to roughly 40fps', async () => {
+    vi.mocked(isFirefox).mockReturnValue(true);
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvVisualEffect: 'sakura' });
+      },
+    );
+
+    const { startSakuraEffect } = await import('../sakura');
+    startSakuraEffect();
+
+    runAnimationFrame(16);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(48);
+
+    runAnimationFrame(32);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(48);
+
+    runAnimationFrame(42);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(96);
+  });
+
+  it('caps Firefox sakura canvas DPR', async () => {
+    vi.mocked(isFirefox).mockReturnValue(true);
+    Object.defineProperty(window, 'devicePixelRatio', {
+      configurable: true,
+      value: 3,
+    });
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvVisualEffect: 'sakura' });
+      },
+    );
+
+    const { startSakuraEffect } = await import('../sakura');
+    startSakuraEffect();
+
+    const canvas = document.getElementById('gv-sakura-effect-canvas') as HTMLCanvasElement | null;
+    expect(canvas?.width).toBe(window.innerWidth);
+    expect(canvas?.height).toBe(window.innerHeight);
+    expect(mockCtx.setTransform).toHaveBeenCalledWith(1, 0, 0, 1, 0, 0);
+  });
+
+  it('adaptively drops Firefox sakura to the low profile after repeated slow frames', async () => {
+    vi.mocked(isFirefox).mockReturnValue(true);
+    let nowCall = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => {
+      const values = [0, 30, 0, 30, 0, 30, 0, 30];
+      return values[nowCall++] ?? 30;
+    });
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvVisualEffect: 'sakura' });
+      },
+    );
+
+    const { startSakuraEffect } = await import('../sakura');
+    startSakuraEffect();
+
+    runAnimationFrame(16);
+    runAnimationFrame(50);
+    runAnimationFrame(84);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(144);
+
+    runAnimationFrame(118);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(172);
   });
 });

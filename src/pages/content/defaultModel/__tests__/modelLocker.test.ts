@@ -70,6 +70,31 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(selectors).not.toContain('.mat-mdc-menu-panel[role="menu"]');
   });
 
+  it('skips sidebar subtree scans when Gemini renders conversation rows', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const sidebar = document.createElement('div');
+    sidebar.setAttribute('data-test-id', 'overflow-container');
+    const querySelectorSpy = vi.spyOn(sidebar, 'querySelector');
+    const querySelectorAllSpy = vi.spyOn(sidebar, 'querySelectorAll');
+
+    for (let i = 0; i < 20; i++) {
+      const row = document.createElement('gem-nav-list-item');
+      row.setAttribute('data-test-id', 'conversation');
+      row.textContent = `Conversation ${i}`;
+      sidebar.appendChild(row);
+    }
+    document.body.appendChild(sidebar);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(querySelectorSpy).not.toHaveBeenCalled();
+    expect(querySelectorAllSpy).not.toHaveBeenCalled();
+  });
+
   it('injects star buttons even when menu items render after the panel is added', async () => {
     const { default: DefaultModelManager } = await import('../modelLocker');
     await DefaultModelManager.getInstance().init();
@@ -726,6 +751,70 @@ describe('DefaultModelManager (default model locker)', () => {
     container.appendChild(item);
     pane.appendChild(container);
     document.body.appendChild(pane);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
+  });
+
+  it('injects star buttons when the CDK position wrapper is the added node', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cdk-overlay-connected-position-bounding-box';
+
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+
+    const item = document.createElement('gem-menu-item');
+    item.setAttribute('role', 'menuitem');
+    item.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    item.innerHTML = `
+      <gem-menu-item-content class="checkmark-only">
+        <div class="label-container">
+          <span class="label">3.1 Pro</span>
+        </div>
+      </gem-menu-item-content>
+    `;
+
+    pane.appendChild(item);
+    wrapper.appendChild(pane);
+    document.body.appendChild(wrapper);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
+  });
+
+  it('injects star buttons when a populated child is added inside an existing CDK pane', async () => {
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+    document.body.appendChild(pane);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const container = document.createElement('div');
+    container.className = 'container';
+
+    const item = document.createElement('gem-menu-item');
+    item.setAttribute('role', 'menuitem');
+    item.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    item.innerHTML = `
+      <gem-menu-item-content class="checkmark-only">
+        <div class="label-container">
+          <span class="label">3.1 Pro</span>
+        </div>
+      </gem-menu-item-content>
+    `;
+
+    container.appendChild(item);
+    pane.appendChild(container);
 
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(500);

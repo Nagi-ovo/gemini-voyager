@@ -60,6 +60,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS: Record<string, unknown> = {
   [StorageKeys.PROMPT_CUSTOM_WEBSITES]: [],
   [StorageKeys.PROMPT_THEME]: null,
   [StorageKeys.PROMPT_VIEW_MODE]: 'compact',
+  [StorageKeys.PROMPT_PANEL_VIEW]: 'prompts',
   [StorageKeys.LANGUAGE]: null,
   [StorageKeys.FORMULA_COPY_FORMAT]: 'latex',
   [StorageKeys.WATERMARK_REMOVER_ENABLED]: true,

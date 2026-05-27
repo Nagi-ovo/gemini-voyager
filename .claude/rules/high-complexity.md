@@ -6,7 +6,7 @@ globs: ["src/core/services/StorageService.ts", "src/core/services/DataBackupServ
 
 | Module | Risk | Notes |
 |--------|------|-------|
-| `StorageService` | Sync/local/session logic + migration. Single source of truth for persistence. | Do not modify lightly. |
+| `StorageService` | Typed sync/local storage wrapper used where suitable. Persistence is also handled by direct `chrome.storage`/`browser.storage` paths and migration/backup services. | Do not modify lightly. |
 | `DataBackupService` | Multi-layer backup. Race conditions during unload. | Critical for data safety. |
 | `GoogleDriveSyncService` | OAuth2 cloud sync (folders, prompts, starred). | Requires OAuth2 identity. |
 | `AccountIsolationService` | Hard account isolation for multi-account. | Integrates with Drive sync. |

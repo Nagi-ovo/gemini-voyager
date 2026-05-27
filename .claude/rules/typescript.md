@@ -15,7 +15,7 @@ globs: ["src/**/*.ts", "src/**/*.tsx"]
 ## DON'Ts
 - **No `any` type.** Use `unknown` if you must, then narrow it.
 - **No global variables** outside defined Services.
-- **No `chrome.storage` in UI components** (`src/components/`, `src/pages/popup/`). Use `StorageService`.
+- **Avoid ad hoc storage in UI components** (`src/components/`, `src/pages/popup/`). Prefer `StorageKeys` plus existing storage helpers/services; direct `chrome.storage` / `browser.storage` is acceptable when matching established popup settings patterns, bulk reads/writes, or storage listeners.
 - **No God Components.** Business logic belongs in `features/*/services/` or custom hooks, not UI files.
 - **No magic strings.** Use constants or enums (StorageKeys, CSS classes).
 - **No `console.log` in production.** Use `LoggerService` for critical info.
