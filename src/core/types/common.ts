@@ -83,6 +83,7 @@ export const StorageKeys = {
   PROMPT_THEME: 'gvPromptTheme',
   PROMPT_INSERT_ON_CLICK: 'gvPromptInsertOnClick',
   PROMPT_VIEW_MODE: 'gvPromptViewMode',
+  PROMPT_PANEL_VIEW: 'gvPromptPanelView',
 
   // Global settings
   LANGUAGE: 'language',

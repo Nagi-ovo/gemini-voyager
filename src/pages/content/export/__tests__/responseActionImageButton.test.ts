@@ -7,14 +7,14 @@ function createNativeActionButton({
   iconName,
   ariaLabel,
 }: {
-  testId: string;
+  testId?: string;
   iconName: string;
   ariaLabel: string;
 }): HTMLButtonElement {
   const button = document.createElement('button');
   button.className = 'mdc-icon-button mat-mdc-icon-button gds-icon-button';
   button.setAttribute('type', 'button');
-  button.setAttribute('data-test-id', testId);
+  if (testId) button.setAttribute('data-test-id', testId);
   button.setAttribute('aria-label', ariaLabel);
   button.title = ariaLabel;
 
@@ -97,6 +97,7 @@ function createNestedAssistantActionBar(): HTMLElement {
 
 describe('responseActionImageButton', () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     document.body.innerHTML = '';
   });
 
@@ -224,18 +225,49 @@ describe('responseActionImageButton', () => {
     expect(buttons.querySelector('[data-test-id="gv-copy-image-button"]')).toBeTruthy();
   });
 
-  it('skips non-assistant roots without scanning nested sidebar buttons', () => {
-    const sidebar = document.createElement('div');
-    sidebar.setAttribute('data-test-id', 'overflow-container');
-
-    const querySpy = vi.spyOn(sidebar, 'querySelectorAll');
+  it('finds gem copy buttons by icon without broad action-button scans', () => {
+    const host = document.createElement('model-response');
+    const bar = document.createElement('div');
+    bar.className = 'message-actions';
+    const copy = createNativeActionButton({
+      iconName: 'content_copy',
+      ariaLabel: 'Copy response',
+    });
     const more = createNativeActionButton({
       testId: 'more-menu-button',
       iconName: 'more_vert',
       ariaLabel: 'More options',
     });
-    sidebar.appendChild(more);
+    bar.append(copy, more);
+    host.appendChild(bar);
+    document.body.appendChild(host);
 
+    const querySpy = vi.spyOn(Element.prototype, 'querySelectorAll');
+    const injected = injectResponseActionCopyImageButtons(document, {
+      label: 'Copy response as image',
+      tooltip: 'Copy response as image',
+      onClick: vi.fn(),
+    });
+
+    expect(injected).toHaveLength(1);
+    expect(bar.querySelector('[data-test-id="gv-copy-image-button"]')).toBeTruthy();
+    expect(querySpy).not.toHaveBeenCalledWith('button, gem-icon-button, [role="button"]');
+  });
+
+  it('does not probe unrelated sidebar mutations with broad action-button scans', () => {
+    const sidebar = document.createElement('bard-sidenav');
+    for (let i = 0; i < 50; i += 1) {
+      sidebar.appendChild(
+        createNativeActionButton({
+          testId: `sidebar-button-${i}`,
+          iconName: 'folder',
+          ariaLabel: `Sidebar button ${i}`,
+        }),
+      );
+    }
+    document.body.appendChild(sidebar);
+
+    const querySpy = vi.spyOn(Element.prototype, 'querySelectorAll');
     const injected = injectResponseActionCopyImageButtons(sidebar, {
       label: 'Copy response as image',
       tooltip: 'Copy response as image',

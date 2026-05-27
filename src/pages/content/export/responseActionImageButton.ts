@@ -10,6 +10,19 @@ const COPY_IMAGE_BUTTON_TEST_ID = 'gv-copy-image-button';
 const COPY_IMAGE_ICON_NAME = 'image';
 const COPY_ICON_NAME = 'content_copy';
 const COPY_BUTTON_ARIA_PATTERNS = [/^copy\b/i, /复制/];
+const ACTION_BUTTON_SELECTOR = 'button, gem-icon-button, [role="button"]';
+const COPY_ICON_SELECTOR =
+  'mat-icon[fonticon="content_copy"], mat-icon[data-mat-icon-name="content_copy"]';
+const ACTION_ROOT_SELECTOR = [
+  'message-actions',
+  '.message-actions',
+  '.actions-container-v2',
+  '.buttons-container-v2',
+  '[data-test-id="copy-button"]',
+  '[data-test-id="more-menu-button"]',
+  ACTION_BUTTON_SELECTOR,
+  'mat-icon',
+].join(', ');
 const ASSISTANT_SCOPE_SELECTOR = [
   '[data-message-author-role="assistant"]',
   '[data-message-author-role="model"]',
@@ -33,7 +46,7 @@ function updateButtonLabelAndTooltip(
 ): HTMLElement {
   const interactive = button.matches('button')
     ? button
-    : ((button.querySelector('button, [role="button"]') as HTMLElement | null) ?? button);
+    : ((button.querySelector(ACTION_BUTTON_SELECTOR) as HTMLElement | null) ?? button);
 
   interactive.setAttribute('aria-label', tooltip);
   interactive.title = tooltip;
@@ -69,13 +82,18 @@ function findCopyButtonInContainer(container: HTMLElement): HTMLElement | null {
   // gem UI: button has no test-id, identify by mat-icon[fonticon="content_copy"]
   // and aria-label starting with "Copy" (English) / 含 "复制" (Chinese) — we still
   // try other locales by checking icon first and only filter aria as a sanity check.
-  const candidates = Array.from(
-    container.querySelectorAll<HTMLElement>('button, gem-icon-button, [role="button"]'),
-  );
-  for (const el of candidates) {
-    const icon = el.querySelector('mat-icon');
-    const fontIcon = icon?.getAttribute('fonticon') || icon?.getAttribute('data-mat-icon-name');
-    if (fontIcon !== COPY_ICON_NAME && icon?.textContent?.trim() !== COPY_ICON_NAME) continue;
+  const iconCandidates = Array.from(container.querySelectorAll<HTMLElement>(COPY_ICON_SELECTOR));
+  if (iconCandidates.length === 0) {
+    iconCandidates.push(
+      ...Array.from(container.querySelectorAll<HTMLElement>('mat-icon')).filter(
+        (icon) => icon.textContent?.trim() === COPY_ICON_NAME,
+      ),
+    );
+  }
+
+  for (const icon of iconCandidates) {
+    const el = icon.closest(ACTION_BUTTON_SELECTOR) as HTMLElement | null;
+    if (!el || !container.contains(el)) continue;
     const aria = el.getAttribute('aria-label') || '';
     // Skip if aria-label looks unrelated (defensive — most copy buttons match the patterns)
     if (aria && !COPY_BUTTON_ARIA_PATTERNS.some((re) => re.test(aria))) continue;
@@ -85,6 +103,8 @@ function findCopyButtonInContainer(container: HTMLElement): HTMLElement | null {
 }
 
 function findActionContainerFromMoreButton(moreButton: HTMLElement): HTMLElement | null {
+  if (!moreButton.closest(ASSISTANT_SCOPE_SELECTOR)) return null;
+
   let current: HTMLElement | null = moreButton;
   let depth = 0;
   while (current && depth < 12) {
@@ -128,13 +148,15 @@ function isAssistantActionContainer(container: HTMLElement): boolean {
   return !!container.closest(ASSISTANT_SCOPE_SELECTOR);
 }
 
-function mayContainAssistantActionContainer(root: ParentNode): boolean {
+function mayContainAssistantActionRoot(root: ParentNode): boolean {
   if (!(root instanceof HTMLElement)) return true;
-  return (
-    root.matches(ASSISTANT_SCOPE_SELECTOR) ||
-    !!root.closest(ASSISTANT_SCOPE_SELECTOR) ||
-    !!root.querySelector(ASSISTANT_SCOPE_SELECTOR)
-  );
+  if (root.closest(ASSISTANT_SCOPE_SELECTOR)) return true;
+  return !!root.querySelector(ASSISTANT_SCOPE_SELECTOR);
+}
+
+function shouldProbeDirectActionRoot(root: HTMLElement): boolean {
+  if (!root.closest(ASSISTANT_SCOPE_SELECTOR)) return false;
+  return !!(root.matches(ACTION_ROOT_SELECTOR) || root.closest(ACTION_ROOT_SELECTOR));
 }
 
 function ensureButtonPosition(
@@ -187,7 +209,7 @@ export function injectResponseActionCopyImageButtons(
   root: ParentNode,
   options: ResponseActionCopyImageOptions,
 ): HTMLElement[] {
-  if (!mayContainAssistantActionContainer(root)) return [];
+  if (!mayContainAssistantActionRoot(root)) return [];
 
   const moreButtons: HTMLElement[] = [];
   if (root instanceof HTMLElement && root.getAttribute('data-test-id') === MORE_BUTTON_TEST_ID) {
@@ -197,7 +219,7 @@ export function injectResponseActionCopyImageButtons(
     ...Array.from(root.querySelectorAll<HTMLElement>(`[data-test-id="${MORE_BUTTON_TEST_ID}"]`)),
   );
 
-  if (moreButtons.length === 0 && root instanceof HTMLElement) {
+  if (moreButtons.length === 0 && root instanceof HTMLElement && shouldProbeDirectActionRoot(root)) {
     const directContainer = findActionContainerFromMoreButton(root);
     if (directContainer) {
       const maybeInjected = injectIntoActionContainer(directContainer, options);

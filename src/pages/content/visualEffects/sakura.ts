@@ -28,7 +28,10 @@ const STORAGE_KEY = 'gvVisualEffect';
 const LEGACY_KEY = 'gvSnowEffect';
 const EFFECT_VALUE = 'sakura';
 const BASE_FRAME_MS = 1000 / 60;
-const FIREFOX_FRAME_INTERVAL_MS = 1000 / 30;
+const SPRITE_SIZE = 48;
+const SPRITE_SHAPE_HALF_SIZE = 18;
+const ADAPTIVE_SLOW_FRAMES = 3;
+const ADAPTIVE_FAST_FRAMES = 180;
 
 type SakuraLayer = {
   count: number;
@@ -38,7 +41,15 @@ type SakuraLayer = {
   drift: readonly [number, number];
 };
 
-const LAYERS: readonly SakuraLayer[] = [
+type SakuraQualityProfile = {
+  name: 'full' | 'balanced' | 'low';
+  layers: readonly SakuraLayer[];
+  frameIntervalMs: number;
+  maxDpr: number;
+  slowFrameBudgetMs: number;
+};
+
+const FULL_LAYERS: readonly SakuraLayer[] = [
   // far — tiny, slow, ghostly
   { count: 40, size: [2.5, 4.5], speed: [0.1, 0.3], opacity: [0.1, 0.25], drift: [0.15, 0.4] },
   // mid — main visible petals
@@ -47,10 +58,40 @@ const LAYERS: readonly SakuraLayer[] = [
   { count: 16, size: [7.5, 11], speed: [0.4, 0.75], opacity: [0.4, 0.65], drift: [0.5, 1.0] },
 ] as const;
 
-const FIREFOX_LAYERS: readonly SakuraLayer[] = [
-  { count: 18, size: [2.5, 4.5], speed: [0.1, 0.3], opacity: [0.1, 0.25], drift: [0.15, 0.4] },
-  { count: 14, size: [4.5, 7.5], speed: [0.25, 0.55], opacity: [0.25, 0.5], drift: [0.35, 0.8] },
-  { count: 6, size: [7.5, 11], speed: [0.4, 0.75], opacity: [0.4, 0.65], drift: [0.5, 1.0] },
+const BALANCED_LAYERS: readonly SakuraLayer[] = [
+  { count: 22, size: [2.5, 4.5], speed: [0.1, 0.3], opacity: [0.1, 0.25], drift: [0.15, 0.4] },
+  { count: 18, size: [4.5, 7.5], speed: [0.25, 0.55], opacity: [0.25, 0.5], drift: [0.35, 0.8] },
+  { count: 8, size: [7.5, 11], speed: [0.4, 0.75], opacity: [0.4, 0.65], drift: [0.5, 1.0] },
+] as const;
+
+const LOW_LAYERS: readonly SakuraLayer[] = [
+  { count: 14, size: [2.5, 4.5], speed: [0.1, 0.3], opacity: [0.1, 0.25], drift: [0.15, 0.4] },
+  { count: 10, size: [4.5, 7.5], speed: [0.25, 0.55], opacity: [0.25, 0.5], drift: [0.35, 0.8] },
+  { count: 4, size: [7.5, 11], speed: [0.4, 0.75], opacity: [0.4, 0.65], drift: [0.5, 1.0] },
+] as const;
+
+const QUALITY_PROFILES: readonly SakuraQualityProfile[] = [
+  {
+    name: 'full',
+    layers: FULL_LAYERS,
+    frameIntervalMs: 0,
+    maxDpr: 1,
+    slowFrameBudgetMs: 18,
+  },
+  {
+    name: 'balanced',
+    layers: BALANCED_LAYERS,
+    frameIntervalMs: 1000 / 40,
+    maxDpr: 1,
+    slowFrameBudgetMs: 18,
+  },
+  {
+    name: 'low',
+    layers: LOW_LAYERS,
+    frameIntervalMs: 1000 / 30,
+    maxDpr: 1,
+    slowFrameBudgetMs: 22,
+  },
 ] as const;
 
 /**
@@ -69,6 +110,7 @@ const PALETTE = [
 ] as const;
 
 interface Petal {
+  layerIndex: number;
   x: number;
   y: number;
   /** Overall size scale of this petal */
@@ -106,22 +148,45 @@ let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
 let animationFrameId: number | null = null;
 let petals: Petal[] = [];
+let petalSprites: HTMLCanvasElement[] = [];
 let resizeHandler: (() => void) | null = null;
 let visibilityHandler: (() => void) | null = null;
-let frameIntervalMs = 0;
+let viewportWidth = 0;
+let viewportHeight = 0;
+let renderDpr = 1;
+let initialQualityLevel = 0;
+let qualityLevel = 0;
 let lastDrawTime = 0;
+let slowFrameCount = 0;
+let fastFrameCount = 0;
 
 function rand(min: number, max: number): number {
   return min + Math.random() * (max - min);
+}
+
+function nowMs(): number {
+  return typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now();
+}
+
+function getActiveProfile(): SakuraQualityProfile {
+  return QUALITY_PROFILES[qualityLevel] ?? QUALITY_PROFILES[0];
+}
+
+function getInitialQualityLevel(): number {
+  return isFirefox() ? 1 : 0;
 }
 
 function createPetal(
   canvasWidth: number,
   canvasHeight: number,
   layer: SakuraLayer,
+  layerIndex: number,
   randomY: boolean,
 ): Petal {
   return {
+    layerIndex,
     x: Math.random() * canvasWidth,
     y: randomY ? Math.random() * canvasHeight : -(Math.random() * canvasHeight * 0.4),
     size: rand(layer.size[0], layer.size[1]),
@@ -147,16 +212,19 @@ function createPetal(
   };
 }
 
+function sortPetals(items: Petal[]): Petal[] {
+  return items.sort((a, b) => a.colorIdx - b.colorIdx || a.opacity - b.opacity);
+}
+
 function initPetals(width: number, height: number): void {
   const items: Petal[] = [];
-  const layers = isFirefox() ? FIREFOX_LAYERS : LAYERS;
-  for (const layer of layers) {
+  const profile = getActiveProfile();
+  profile.layers.forEach((layer, layerIndex) => {
     for (let i = 0; i < layer.count; i++) {
-      items.push(createPetal(width, height, layer, true));
+      items.push(createPetal(width, height, layer, layerIndex, true));
     }
-  }
-  items.sort((a, b) => a.colorIdx - b.colorIdx || a.opacity - b.opacity);
-  petals = items;
+  });
+  petals = sortPetals(items);
 }
 
 /**
@@ -196,22 +264,119 @@ function tracePetal(c: CanvasRenderingContext2D, s: number): void {
   c.closePath();
 }
 
+function buildPetalSprites(): void {
+  petalSprites = PALETTE.flatMap((fillPrefix) => {
+    const sprite = document.createElement('canvas');
+    sprite.width = SPRITE_SIZE;
+    sprite.height = SPRITE_SIZE;
+    const spriteCtx = sprite.getContext('2d');
+    if (!spriteCtx) return [];
+
+    spriteCtx.clearRect(0, 0, SPRITE_SIZE, SPRITE_SIZE);
+    spriteCtx.fillStyle = `${fillPrefix}1)`;
+    spriteCtx.translate(SPRITE_SIZE / 2, SPRITE_SIZE / 2);
+    tracePetal(spriteCtx, SPRITE_SHAPE_HALF_SIZE);
+    spriteCtx.fill();
+    return [sprite];
+  });
+}
+
+function reconcilePetalsForProfile(width: number, height: number): void {
+  const profile = getActiveProfile();
+  const nextPetals: Petal[] = [];
+
+  profile.layers.forEach((layer, layerIndex) => {
+    const existing = petals.filter((petal) => petal.layerIndex === layerIndex).slice(0, layer.count);
+    while (existing.length < layer.count) {
+      existing.push(createPetal(width, height, layer, layerIndex, false));
+    }
+    nextPetals.push(...existing);
+  });
+
+  petals = sortPetals(nextPetals);
+}
+
+function setQualityLevel(nextQualityLevel: number): void {
+  const clamped = Math.max(0, Math.min(QUALITY_PROFILES.length - 1, nextQualityLevel));
+  if (clamped === qualityLevel) return;
+
+  qualityLevel = clamped;
+  slowFrameCount = 0;
+  fastFrameCount = 0;
+  resizeCanvas();
+  reconcilePetalsForProfile(viewportWidth, viewportHeight);
+}
+
+function recordRenderCost(renderCostMs: number): void {
+  const profile = getActiveProfile();
+
+  if (renderCostMs > profile.slowFrameBudgetMs) {
+    slowFrameCount += 1;
+    fastFrameCount = 0;
+  } else if (renderCostMs < profile.slowFrameBudgetMs * 0.45) {
+    fastFrameCount += 1;
+    slowFrameCount = 0;
+  } else {
+    slowFrameCount = 0;
+    fastFrameCount = 0;
+  }
+
+  if (slowFrameCount >= ADAPTIVE_SLOW_FRAMES && qualityLevel < QUALITY_PROFILES.length - 1) {
+    setQualityLevel(qualityLevel + 1);
+  } else if (fastFrameCount >= ADAPTIVE_FAST_FRAMES && qualityLevel > initialQualityLevel) {
+    setQualityLevel(qualityLevel - 1);
+  }
+}
+
+function drawPetal(p: Petal, time: number): void {
+  if (!ctx) return;
+
+  // 3D wobble — gentle scaleX oscillation, always positive (no full flip)
+  const wobble = p.wobbleBase + Math.sin(p.wobblePhase + time * p.wobbleSpeed) * p.wobbleAmp;
+  const sprite = petalSprites[p.colorIdx];
+
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(p.rotation);
+  ctx.scale(wobble, 1);
+
+  if (sprite) {
+    const spriteScale = p.size / SPRITE_SHAPE_HALF_SIZE;
+    const spriteDrawSize = SPRITE_SIZE * spriteScale;
+    ctx.globalAlpha = p.opacity;
+    ctx.drawImage(sprite, -spriteDrawSize / 2, -spriteDrawSize / 2, spriteDrawSize, spriteDrawSize);
+  } else {
+    const qOpacity = Math.round(p.opacity * 20) / 20;
+    ctx.fillStyle = PALETTE[p.colorIdx] + qOpacity + ')';
+    tracePetal(ctx, p.size);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
 function updateAndDraw(time: number): void {
   if (!ctx || !canvas) return;
 
-  if (lastDrawTime > 0 && frameIntervalMs > 0 && time - lastDrawTime < frameIntervalMs) {
+  const profile = getActiveProfile();
+  if (
+    lastDrawTime > 0 &&
+    profile.frameIntervalMs > 0 &&
+    time - lastDrawTime < profile.frameIntervalMs
+  ) {
     animationFrameId = requestAnimationFrame(updateAndDraw);
     return;
   }
 
   const elapsedMs = lastDrawTime > 0 ? time - lastDrawTime : BASE_FRAME_MS;
-  const frameScale = Math.min(2, Math.max(0.5, elapsedMs / BASE_FRAME_MS));
+  const frameScale = Math.min(2.5, Math.max(0.5, elapsedMs / BASE_FRAME_MS));
   lastDrawTime = time;
 
-  const { width, height } = canvas;
+  const renderStart = nowMs();
+  const width = viewportWidth || canvas.width / renderDpr;
+  const height = viewportHeight || canvas.height / renderDpr;
   ctx.clearRect(0, 0, width, height);
 
-  let currentFill = '';
   let visibleCount = 0;
 
   for (const p of petals) {
@@ -240,26 +405,7 @@ function updateAndDraw(time: number): void {
       p.x = width + p.size * 2;
     }
 
-    // Fill batching
-    const qOpacity = Math.round(p.opacity * 20) / 20;
-    const nextFill = PALETTE[p.colorIdx] + qOpacity + ')';
-    if (nextFill !== currentFill) {
-      currentFill = nextFill;
-      ctx.fillStyle = currentFill;
-    }
-
-    // 3D wobble — gentle scaleX oscillation, always positive (no full flip)
-    const wobble = p.wobbleBase + Math.sin(p.wobblePhase + time * p.wobbleSpeed) * p.wobbleAmp;
-
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(p.rotation);
-    ctx.scale(wobble, 1);
-
-    tracePetal(ctx, p.size);
-    ctx.fill();
-
-    ctx.restore();
+    drawPetal(p, time);
   }
 
   // All petals have left the viewport — finish draining
@@ -268,13 +414,19 @@ function updateAndDraw(time: number): void {
     return;
   }
 
+  recordRenderCost(nowMs() - renderStart);
   animationFrameId = requestAnimationFrame(updateAndDraw);
 }
 
 function resizeCanvas(): void {
   if (!canvas) return;
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const profile = getActiveProfile();
+  viewportWidth = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+  viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+  renderDpr = Math.max(1, Math.min(window.devicePixelRatio || 1, profile.maxDpr));
+  canvas.width = Math.ceil(viewportWidth * renderDpr);
+  canvas.height = Math.ceil(viewportHeight * renderDpr);
+  ctx?.setTransform(renderDpr, 0, 0, renderDpr, 0, 0);
 }
 
 function startAnimation(): void {
@@ -305,7 +457,10 @@ function enable(): void {
     return;
   }
   state = 'active';
-  frameIntervalMs = isFirefox() ? FIREFOX_FRAME_INTERVAL_MS : 0;
+  initialQualityLevel = getInitialQualityLevel();
+  qualityLevel = initialQualityLevel;
+  slowFrameCount = 0;
+  fastFrameCount = 0;
   lastDrawTime = 0;
 
   canvas = document.createElement('canvas');
@@ -320,8 +475,9 @@ function enable(): void {
     return;
   }
 
+  buildPetalSprites();
   resizeCanvas();
-  initPetals(canvas.width, canvas.height);
+  initPetals(viewportWidth, viewportHeight);
   startAnimation();
 
   resizeHandler = resizeCanvas;
@@ -362,8 +518,13 @@ function finalizeDrain(): void {
 
   ctx = null;
   petals = [];
-  frameIntervalMs = 0;
+  petalSprites = [];
+  viewportWidth = 0;
+  viewportHeight = 0;
+  renderDpr = 1;
   lastDrawTime = 0;
+  slowFrameCount = 0;
+  fastFrameCount = 0;
 }
 
 /** Immediate disable: remove everything without draining (e.g. page unload). */
