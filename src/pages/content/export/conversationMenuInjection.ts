@@ -22,6 +22,7 @@ export type ResponseMenuContext = {
 
 const MENU_BUTTON_CLASS = 'gv-export-conversation-menu-btn';
 const RESPONSE_MENU_BUTTON_CLASS = 'gv-export-response-menu-btn';
+const MOVE_TO_FOLDER_BUTTON_CLASS = 'gv-move-to-folder-btn';
 // gem-menu is Gemini's "lr26" replacement for mat-mdc-menu-panel.
 export const MENU_PANEL_SELECTOR = '.mat-mdc-menu-panel[role="menu"], gem-menu';
 const SIDEBAR_CONTAINER_SELECTOR =
@@ -38,7 +39,7 @@ function isGemMenu(menuPanel: HTMLElement): boolean {
   return menuPanel.tagName.toLowerCase() === 'gem-menu';
 }
 
-function findMenuContent(menuPanel: HTMLElement): HTMLElement | null {
+export function findMenuContent(menuPanel: HTMLElement): HTMLElement | null {
   if (isGemMenu(menuPanel)) return menuPanel;
   return menuPanel.querySelector('.mat-mdc-menu-content') as HTMLElement | null;
 }
@@ -233,6 +234,57 @@ export function injectConversationMenuExportButton(
   if (pinButton && pinButton.parentElement === menuContent) {
     if (pinButton.nextSibling) {
       menuContent.insertBefore(button, pinButton.nextSibling);
+    } else {
+      menuContent.appendChild(button);
+    }
+  } else if (menuContent.firstChild) {
+    menuContent.insertBefore(button, menuContent.firstChild);
+  } else {
+    menuContent.appendChild(button);
+  }
+
+  return button;
+}
+
+export function injectConversationMenuMoveToFolderButton(
+  menuPanel: HTMLElement,
+  options: ConversationMenuExportOptions,
+): HTMLElement | null {
+  if (!isConversationMenuPanel(menuPanel)) return null;
+  const menuContent = findMenuContent(menuPanel);
+  if (!menuContent) return null;
+
+  const existing = menuContent.querySelector(
+    `.${MOVE_TO_FOLDER_BUTTON_CLASS}`,
+  ) as HTMLElement | null;
+  if (existing) {
+    updateButtonLabelAndTooltip(existing, options.label, options.tooltip);
+    return existing;
+  }
+
+  const button = createMenuItemButton({
+    ...options,
+    menuContent,
+    menuPanel,
+    injectedClassName: MOVE_TO_FOLDER_BUTTON_CLASS,
+    iconName: 'folder_open',
+    excludedClassNames: [MENU_BUTTON_CLASS, RESPONSE_MENU_BUTTON_CLASS],
+  });
+  if (!button) return null;
+
+  // Place after the export button when present, otherwise after the pin button,
+  // keeping our two injected items grouped near the top of the native menu.
+  const exportButton = menuContent.querySelector(`.${MENU_BUTTON_CLASS}`) as HTMLElement | null;
+  const pinButton = menuContent.querySelector('[data-test-id="pin-button"]') as HTMLElement | null;
+  const anchor =
+    exportButton && exportButton.parentElement === menuContent
+      ? exportButton
+      : pinButton && pinButton.parentElement === menuContent
+        ? pinButton
+        : null;
+  if (anchor) {
+    if (anchor.nextSibling) {
+      menuContent.insertBefore(button, anchor.nextSibling);
     } else {
       menuContent.appendChild(button);
     }
