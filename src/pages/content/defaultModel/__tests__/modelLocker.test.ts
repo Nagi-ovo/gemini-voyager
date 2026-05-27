@@ -758,6 +758,38 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
   });
 
+  it('injects star buttons when the CDK position wrapper is the added node', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cdk-overlay-connected-position-bounding-box';
+
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+
+    const item = document.createElement('gem-menu-item');
+    item.setAttribute('role', 'menuitem');
+    item.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    item.innerHTML = `
+      <gem-menu-item-content class="checkmark-only">
+        <div class="label-container">
+          <span class="label">3.1 Pro</span>
+        </div>
+      </gem-menu-item-content>
+    `;
+
+    pane.appendChild(item);
+    wrapper.appendChild(pane);
+    document.body.appendChild(wrapper);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
+  });
+
   it('auto-locks in the 2026 redesigned overlay layout (.selected, .label, .cdk-overlay-pane)', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {

@@ -34,6 +34,7 @@ const NEW_LAYOUT_ITEM_SELECTOR = '[data-mode-id]';
 const MODE_SWITCH_OBSERVER_ROOT_SELECTOR = [
   '.cdk-overlay-container',
   '.cdk-global-overlay-wrapper',
+  '.cdk-overlay-connected-position-bounding-box',
   '.cdk-overlay-pane',
   '.mat-mdc-menu-panel[role="menu"]',
   'mat-action-list.gds-mode-switch-menu-list',
@@ -272,7 +273,9 @@ class DefaultModelManager {
   }
 
   private mayContainDefaultModelUi(root: HTMLElement): boolean {
-    return root.matches(DEFAULT_MODEL_UI_SELECTOR) || !!root.querySelector(DEFAULT_MODEL_UI_SELECTOR);
+    return (
+      root.matches(DEFAULT_MODEL_UI_SELECTOR) || !!root.querySelector(DEFAULT_MODEL_UI_SELECTOR)
+    );
   }
 
   private mayContainModeSwitchContainer(root: HTMLElement): boolean {
