@@ -168,7 +168,7 @@ export class FolderManager {
   // the `expandable-section[data-test-id="chats-expandable-section"]` element
   // wholesale, which leaves our folder container stranded below the new section
   // even though it was inserted above the old one. The position enforcer below
-  // (`enforceFolderAboveRecents`) runs on any sidebar childList mutation,
+  // (`enforceFolderAboveRecents`) watches the anchor section's direct parent,
   // batched via requestAnimationFrame, and is a no-op once the container is
   // already correctly placed.
   private positionObserver: MutationObserver | null = null;
@@ -215,10 +215,11 @@ export class FolderManager {
   // burst of mutations every time the user clicks a conversation row (it
   // re-renders rows to update active state). Doing per-element setup work
   // synchronously inside the observer callback caused noticeable click
-  // jank — issue #678. We now coalesce mutations to the microtask boundary
+  // jank — issue #678. We now coalesce mutations to the next animation frame
   // and dedupe by element/conversationId before doing any work.
   private mutationBatchQueue: MutationRecord[] = [];
   private mutationFlushScheduled: boolean = false;
+  private mutationFlushRafId: number | null = null;
   private isDestroyed: boolean = false; // Flag to prevent callbacks after destruction
   private reinitializePromise: Promise<void> | null = null; // Prevent duplicate reinitialization cascades
   private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
@@ -435,6 +436,7 @@ export class FolderManager {
       this.conversationObserver.disconnect();
       this.conversationObserver = null;
     }
+    this.cancelMutationBatchFlush();
     this.mutationBatchQueue.length = 0;
 
     if (this.nativeMenuObserver) {
@@ -566,8 +568,8 @@ export class FolderManager {
       this.conversationObserver.disconnect();
       this.conversationObserver = null;
     }
+    this.cancelMutationBatchFlush();
     this.mutationBatchQueue.length = 0;
-    this.mutationFlushScheduled = false;
 
     if (this.nativeMenuObserver) {
       this.nativeMenuObserver.disconnect();
@@ -1326,10 +1328,19 @@ export class FolderManager {
     });
   }
 
+  private getPositionObserverTarget(): HTMLElement | null {
+    const anchorSection = this.findFolderAnchorCandidate();
+    if (anchorSection?.parentElement instanceof HTMLElement) {
+      return anchorSection.parentElement;
+    }
+    return this.sidebarContainer;
+  }
+
   /**
-   * Watch the sidebar for any childList changes and re-enforce position on the
-   * next animation frame. Disconnects any prior observer so this is safe to
-   * call from re-init paths.
+   * Watch the section list for anchor swaps and re-enforce position on the next
+   * animation frame. Keep this scoped to the anchor's direct parent: Gemini can
+   * add hundreds of nested nodes while expanding Recents, and those should not
+   * wake the position enforcer.
    */
   private setupPositionEnforcer(): void {
     if (!this.sidebarContainer) return;
@@ -1337,12 +1348,14 @@ export class FolderManager {
       this.positionObserver.disconnect();
       this.positionObserver = null;
     }
+    const observeTarget = this.getPositionObserverTarget();
+    if (!observeTarget) return;
+
     this.positionObserver = new MutationObserver(() => {
       this.scheduleEnforceFolderAboveRecents();
     });
-    this.positionObserver.observe(this.sidebarContainer, {
+    this.positionObserver.observe(observeTarget, {
       childList: true,
-      subtree: true,
     });
   }
 
@@ -2691,7 +2704,7 @@ export class FolderManager {
     }
 
     this.conversationObserver = new MutationObserver((mutations) => {
-      // Coalesce mutations to the microtask boundary instead of processing
+      // Coalesce mutations to the next animation frame instead of processing
       // them synchronously. Synchronous processing caused sidebar-click
       // jank — see issue #678. Flush is implemented in `flushMutationBatch`.
       for (const mutation of mutations) this.mutationBatchQueue.push(mutation);
@@ -2710,7 +2723,8 @@ export class FolderManager {
   private scheduleMutationBatchFlush(): void {
     if (this.mutationFlushScheduled) return;
     this.mutationFlushScheduled = true;
-    queueMicrotask(() => {
+    this.mutationFlushRafId = window.requestAnimationFrame(() => {
+      this.mutationFlushRafId = null;
       this.mutationFlushScheduled = false;
       if (this.isDestroyed) {
         this.mutationBatchQueue.length = 0;
@@ -2720,8 +2734,16 @@ export class FolderManager {
     });
   }
 
+  private cancelMutationBatchFlush(): void {
+    if (this.mutationFlushRafId !== null) {
+      window.cancelAnimationFrame(this.mutationFlushRafId);
+      this.mutationFlushRafId = null;
+    }
+    this.mutationFlushScheduled = false;
+  }
+
   // Exposed via the private surface so tests can drive flushing
-  // deterministically without depending on microtask ordering in jsdom.
+  // deterministically without depending on animation-frame timing in jsdom.
   private flushMutationBatch(): void {
     if (this.mutationBatchQueue.length === 0) return;
     const mutations = this.mutationBatchQueue;
@@ -7586,10 +7608,22 @@ export class FolderManager {
    * Apply hide archived setting to a single conversation element
    */
   private applyHideArchivedToConversation(conv: HTMLElement): void {
+    if (!this.hideArchivedConversations) {
+      if (
+        conv.classList.contains('gv-conversation-archived') ||
+        this.getNativeConversationActionsContainer(conv)?.classList.contains(
+          ARCHIVED_CONVERSATION_ACTIONS_CLASS,
+        )
+      ) {
+        this.setNativeConversationArchivedState(conv, false);
+      }
+      return;
+    }
+
     const convId = this.extractConversationId(conv);
     const isArchived = this.isConversationInFolders(convId);
 
-    this.setNativeConversationArchivedState(conv, this.hideArchivedConversations && isArchived);
+    this.setNativeConversationArchivedState(conv, isArchived);
   }
 
   private setNativeConversationArchivedState(conv: HTMLElement, isArchived: boolean): void {
