@@ -31,6 +31,8 @@ const NON_MODEL_MENU_EXCLUSION_FALLBACK =
 // 2026 redesign: model picker is now rendered inside a plain cdk-overlay-pane (no Material menu wrapper).
 // The pane is identified by containing one or more items carrying data-mode-id.
 const NEW_LAYOUT_ITEM_SELECTOR = '[data-mode-id]';
+const MODE_SWITCH_CONTAINER_SELECTOR =
+  '.cdk-overlay-pane, .mat-mdc-menu-panel[role="menu"], mat-action-list.gds-mode-switch-menu-list';
 const MODE_SWITCH_OBSERVER_ROOT_SELECTOR = [
   '.cdk-overlay-container',
   '.cdk-global-overlay-wrapper',
@@ -279,7 +281,10 @@ class DefaultModelManager {
   }
 
   private mayContainModeSwitchContainer(root: HTMLElement): boolean {
-    return root.matches(MODE_SWITCH_OBSERVER_ROOT_SELECTOR);
+    return (
+      root.matches(MODE_SWITCH_OBSERVER_ROOT_SELECTOR) ||
+      root.closest(MODE_SWITCH_CONTAINER_SELECTOR) !== null
+    );
   }
 
   private resolveModeSwitchContainer(root: HTMLElement): HTMLElement | null {
@@ -300,9 +305,7 @@ class DefaultModelManager {
     }
 
     if (root.matches(NEW_LAYOUT_ITEM_SELECTOR) || root.matches(MODE_ITEM_SELECTOR)) {
-      const pane = root.closest<HTMLElement>(
-        '.cdk-overlay-pane, .mat-mdc-menu-panel[role="menu"], mat-action-list.gds-mode-switch-menu-list',
-      );
+      const pane = root.closest<HTMLElement>(MODE_SWITCH_CONTAINER_SELECTOR);
       if (pane) return pane;
     }
 
@@ -313,7 +316,13 @@ class DefaultModelManager {
 
     const newItem = root.querySelector<HTMLElement>(NEW_LAYOUT_ITEM_SELECTOR);
     if (newItem) {
-      const pane = newItem.closest<HTMLElement>('.cdk-overlay-pane');
+      const pane = newItem.closest<HTMLElement>(MODE_SWITCH_CONTAINER_SELECTOR);
+      if (pane) return pane;
+    }
+
+    const modeItem = root.querySelector<HTMLElement>(MODE_ITEM_SELECTOR);
+    if (modeItem) {
+      const pane = modeItem.closest<HTMLElement>(MODE_SWITCH_CONTAINER_SELECTOR);
       if (pane) return pane;
     }
 
