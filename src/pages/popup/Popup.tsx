@@ -349,6 +349,7 @@ interface SettingsUpdate {
   tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
+  responseCompleteNotificationEnabled?: boolean;
   defaultModelAutoApplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
   aiStudioEnterSendEnabled?: boolean;
@@ -478,6 +479,8 @@ export default function Popup() {
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [showMessageTimestamps, setShowMessageTimestamps] = useState<boolean>(false);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
+  const [responseCompleteNotificationEnabled, setResponseCompleteNotificationEnabled] =
+    useState<boolean>(false);
   const [defaultModelAutoApplyEnabled, setDefaultModelAutoApplyEnabled] = useState<boolean>(true);
   const [folderProjectEnabled, setFolderProjectEnabled] = useState<boolean>(false);
   const [ctrlEnterSendEnabled, setCtrlEnterSendEnabled] = useState<boolean>(false);
@@ -595,6 +598,10 @@ export default function Popup() {
         payload.gvMermaidEnabled = settings.mermaidEnabled;
       if (typeof settings.quoteReplyEnabled === 'boolean')
         payload.gvQuoteReplyEnabled = settings.quoteReplyEnabled;
+      if (typeof settings.responseCompleteNotificationEnabled === 'boolean') {
+        payload[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] =
+          settings.responseCompleteNotificationEnabled;
+      }
       if (typeof settings.defaultModelAutoApplyEnabled === 'boolean')
         payload[StorageKeys.DEFAULT_MODEL_AUTO_APPLY] = settings.defaultModelAutoApplyEnabled;
       if (typeof settings.folderProjectEnabled === 'boolean')
@@ -1003,6 +1010,7 @@ export default function Popup() {
           geminiChatWidth: CHAT_PERCENT.defaultValue,
           geminiEditInputWidth: EDIT_PERCENT.defaultValue,
           [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false,
+          [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
           [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: true,
           [StorageKeys.GV_POPUP_SECTION_ORDER]: null,
         },
@@ -1045,6 +1053,9 @@ export default function Popup() {
           setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
+          setResponseCompleteNotificationEnabled(
+            res?.[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] === true,
+          );
           setDefaultModelAutoApplyEnabled(res?.[StorageKeys.DEFAULT_MODEL_AUTO_APPLY] !== false);
           setFolderProjectEnabled(res?.[StorageKeys.FOLDER_PROJECT_ENABLED] === true);
           setCtrlEnterSendEnabled(res?.gvCtrlEnterSend === true);
@@ -2748,6 +2759,31 @@ export default function Popup() {
                   onChange={(e) => {
                     setQuoteReplyEnabled(e.target.checked);
                     apply({ quoteReplyEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="response-complete-notification"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('responseCompleteNotification')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t(
+                      isSafariBrowser
+                        ? 'responseCompleteNotificationHintSafari'
+                        : 'responseCompleteNotificationHint',
+                    )}
+                  </p>
+                </div>
+                <Switch
+                  id="response-complete-notification"
+                  checked={responseCompleteNotificationEnabled}
+                  onChange={(e) => {
+                    setResponseCompleteNotificationEnabled(e.target.checked);
+                    apply({ responseCompleteNotificationEnabled: e.target.checked });
                   }}
                 />
               </div>

@@ -286,7 +286,9 @@ function reconcilePetalsForProfile(width: number, height: number): void {
   const nextPetals: Petal[] = [];
 
   profile.layers.forEach((layer, layerIndex) => {
-    const existing = petals.filter((petal) => petal.layerIndex === layerIndex).slice(0, layer.count);
+    const existing = petals
+      .filter((petal) => petal.layerIndex === layerIndex)
+      .slice(0, layer.count);
     while (existing.length < layer.count) {
       existing.push(createPetal(width, height, layer, layerIndex, false));
     }

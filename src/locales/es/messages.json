@@ -2018,5 +2018,25 @@
   "folder_new_chat_in_folder": {
     "message": "Nuevo chat en esta carpeta",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
+  },
+  "responseCompleteNotification": {
+    "message": "Notificaciones al completar la respuesta",
+    "description": "Gemini response completion notification toggle"
+  },
+  "responseCompleteNotificationHint": {
+    "message": "Envía una notificación del sistema cuando Gemini termina una respuesta.",
+    "description": "Gemini response completion notification hint"
+  },
+  "responseCompleteNotificationHintSafari": {
+    "message": "Safari no admite notificaciones del sistema para extensiones; Voyager mostrará un aviso en la página cuando vuelvas.",
+    "description": "Safari-specific hint for response completion notifications"
+  },
+  "responseCompleteNotificationMessage": {
+    "message": "Respuesta de Gemini completada",
+    "description": "Cuerpo de la notificación del sistema cuando Gemini termina una respuesta"
+  },
+  "responseCompleteForegroundToast": {
+    "message": "Nueva respuesta completada",
+    "description": "Texto del aviso en primer plano cuando una respuesta de Gemini se completa fuera de pantalla"
   }
 }

@@ -2018,5 +2018,25 @@
   "folder_new_chat_in_folder": {
     "message": "이 폴더에서 새 채팅",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
+  },
+  "responseCompleteNotification": {
+    "message": "Gemini 응답 완료 알림",
+    "description": "Gemini response completion notification toggle"
+  },
+  "responseCompleteNotificationHint": {
+    "message": "Gemini가 답변을 완료하면 시스템 알림을 보냅니다.",
+    "description": "Gemini response completion notification hint"
+  },
+  "responseCompleteNotificationHintSafari": {
+    "message": "Safari는 확장 프로그램의 시스템 알림을 지원하지 않습니다. 돌아오면 Voyager가 페이지 안에 알림을 표시합니다.",
+    "description": "Safari-specific hint for response completion notifications"
+  },
+  "responseCompleteNotificationMessage": {
+    "message": "Gemini 응답 완료",
+    "description": "Gemini가 답변을 완료했을 때의 시스템 알림 본문"
+  },
+  "responseCompleteForegroundToast": {
+    "message": "새 응답이 완료되었습니다",
+    "description": "Gemini 응답이 화면 밖에서 완료되었을 때의 전면 토스트 문구"
   }
 }

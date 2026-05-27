@@ -13,7 +13,7 @@ import { exportBackupableSyncSettings } from '@/core/services/SettingsBackupServ
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
-import { isFirefox } from '@/core/utils/browser';
+import { isFirefox, supportsExtensionNotifications } from '@/core/utils/browser';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import {
@@ -26,13 +26,115 @@ import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeli
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
 const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
 const FETCH_INTERCEPTOR_SCRIPT_ID = 'gv-fetch-interceptor';
+const RESPONSE_COMPLETE_OBSERVER_SCRIPT_ID = 'gv-response-complete-observer';
+const RESPONSE_COMPLETE_NOTIFICATION_DEDUP_MS = 3000;
+const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY = 'responseCompleteNotificationMessage';
+const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK = 'Gemini response complete';
+const RESPONSE_COMPLETE_NOTIFICATION_TITLE = 'Gemini Voyager';
+const RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR = ' - ';
+const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR = ': ';
+const RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH = 120;
+const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH = 220;
+const RESPONSE_COMPLETE_NOTIFICATION_ICON = 'icon-128.png';
+const RESPONSE_COMPLETE_UNKNOWN_TAB_ID = 'unknown';
 
-// Gemini domains where the fetch interceptor should run
-const GEMINI_MATCHES = [
+const responseCompleteNotificationLastShown = new Map<string, number>();
+
+// Gemini domains where the watermark fetch interceptor should run.
+const GEMINI_FETCH_INTERCEPTOR_MATCHES = [
   'https://gemini.google.com/*',
   'https://aistudio.google.com/*',
   'https://aistudio.google.cn/*',
 ];
+
+const GEMINI_RESPONSE_COMPLETE_OBSERVER_MATCHES = [
+  ...GEMINI_FETCH_INTERCEPTOR_MATCHES,
+  'https://business.gemini.google/*',
+];
+
+interface ResponseCompleteNotificationDetails {
+  conversationUrl?: string;
+  conversationTitle?: string;
+  userPrompt?: string;
+}
+
+function getI18nMessage(key: string, fallback: string): string {
+  try {
+    return chrome.i18n?.getMessage?.(key) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function getTabDedupKey(
+  tabId: number | undefined,
+  tabUrl: string | undefined,
+  conversationUrl?: string,
+): string {
+  return `${tabId ?? RESPONSE_COMPLETE_UNKNOWN_TAB_ID}:${conversationUrl ?? tabUrl ?? ''}`;
+}
+
+function normalizeNotificationText(value: unknown, maxLength: number): string {
+  if (typeof value !== 'string') return '';
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (!normalized) return '';
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}…` : normalized;
+}
+
+async function showResponseCompleteNotification(
+  sender: chrome.runtime.MessageSender,
+  details: ResponseCompleteNotificationDetails,
+): Promise<boolean> {
+  if (!supportsExtensionNotifications()) return false;
+
+  const setting = await chrome.storage.sync.get({
+    [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
+  });
+  if (setting[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] !== true) return false;
+
+  const conversationUrl = details.conversationUrl;
+  const dedupKey = getTabDedupKey(sender.tab?.id, sender.tab?.url, conversationUrl);
+  const now = Date.now();
+  const lastShown = responseCompleteNotificationLastShown.get(dedupKey) ?? 0;
+  if (now - lastShown < RESPONSE_COMPLETE_NOTIFICATION_DEDUP_MS) {
+    return true;
+  }
+
+  responseCompleteNotificationLastShown.set(dedupKey, now);
+  const notificationMessage = getI18nMessage(
+    RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY,
+    RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK,
+  );
+  const conversationTitle = normalizeNotificationText(
+    details.conversationTitle,
+    RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH -
+      RESPONSE_COMPLETE_NOTIFICATION_TITLE.length -
+      RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR.length,
+  );
+  const userPrompt = normalizeNotificationText(
+    details.userPrompt,
+    RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH -
+      notificationMessage.length -
+      RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR.length,
+  );
+
+  try {
+    await browser.notifications.create(`gv-response-complete-${now}`, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL(RESPONSE_COMPLETE_NOTIFICATION_ICON),
+      title: conversationTitle
+        ? `${RESPONSE_COMPLETE_NOTIFICATION_TITLE}${RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR}${conversationTitle}`
+        : RESPONSE_COMPLETE_NOTIFICATION_TITLE,
+      message: userPrompt
+        ? `${notificationMessage}${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR}${userPrompt}`
+        : notificationMessage,
+    });
+    return true;
+  } catch (error) {
+    console.warn('[Background] Failed to show response completion notification:', error);
+    return false;
+  }
+}
 
 function isStarredMessagesData(value: unknown): value is StarredMessagesData {
   if (typeof value !== 'object' || value === null) return false;
@@ -177,7 +279,7 @@ async function registerFetchInterceptor(): Promise<void> {
       {
         id: FETCH_INTERCEPTOR_SCRIPT_ID,
         js: ['fetchInterceptor.js'],
-        matches: GEMINI_MATCHES,
+        matches: GEMINI_FETCH_INTERCEPTOR_MATCHES,
         world: 'MAIN',
         runAt: 'document_start',
         persistAcrossSessions: true,
@@ -186,6 +288,49 @@ async function registerFetchInterceptor(): Promise<void> {
     console.log('[Background] Fetch interceptor registered for MAIN world');
   } catch (error) {
     console.error('[Background] Failed to register fetch interceptor:', error);
+  }
+}
+
+async function unregisterResponseCompleteObserver(): Promise<void> {
+  if (!chrome.scripting?.unregisterContentScripts) return;
+
+  try {
+    await chrome.scripting.unregisterContentScripts({
+      ids: [RESPONSE_COMPLETE_OBSERVER_SCRIPT_ID],
+    });
+  } catch {
+    // No-op if script was not registered
+  }
+}
+
+async function syncResponseCompleteObserverRegistration(): Promise<void> {
+  if (!chrome.scripting?.registerContentScripts) return;
+
+  await unregisterResponseCompleteObserver();
+
+  // Firefox supports the MAIN world for registered content scripts only in
+  // newer versions than this extension's Firefox minimum. The content script
+  // injects the same observer into the page as a cross-version fallback.
+  if (isFirefox()) return;
+
+  const setting = await chrome.storage.sync.get({
+    [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
+  });
+  if (setting[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] !== true) return;
+
+  try {
+    await chrome.scripting.registerContentScripts([
+      {
+        id: RESPONSE_COMPLETE_OBSERVER_SCRIPT_ID,
+        js: ['response-complete-observer.js'],
+        matches: GEMINI_RESPONSE_COMPLETE_OBSERVER_MATCHES,
+        world: 'MAIN',
+        runAt: 'document_start',
+        persistAcrossSessions: true,
+      },
+    ]);
+  } catch (error) {
+    console.error('[Background] Failed to register response complete observer:', error);
   }
 }
 
@@ -327,6 +472,9 @@ void syncCustomContentScripts();
 // Initial fetch interceptor registration
 void registerFetchInterceptor();
 
+// Initial response completion observer registration
+void syncResponseCompleteObserverRegistration();
+
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'sync') return;
 
@@ -341,6 +489,15 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   // the legacy key so a one-time migration write triggers re-registration.)
   if (WATERMARK_STORAGE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(changes, key))) {
     void registerFetchInterceptor();
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      changes,
+      StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED,
+    )
+  ) {
+    void syncResponseCompleteObserverRegistration();
   }
 });
 
@@ -665,6 +822,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             pageUrl: payload?.pageUrl ?? sender.tab?.url ?? null,
           }),
         });
+        return;
+      }
+
+      if (message?.type === 'gv.responseComplete.notify') {
+        const ok = await showResponseCompleteNotification(sender, {
+          conversationUrl:
+            typeof message.payload?.conversationUrl === 'string'
+              ? message.payload.conversationUrl
+              : undefined,
+          conversationTitle:
+            typeof message.payload?.conversationTitle === 'string'
+              ? message.payload.conversationTitle
+              : undefined,
+          userPrompt:
+            typeof message.payload?.userPrompt === 'string'
+              ? message.payload.userPrompt
+              : undefined,
+        });
+        sendResponse({ ok });
         return;
       }
 

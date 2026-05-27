@@ -80,6 +80,25 @@ export function isFirefox(): boolean {
 }
 
 /**
+ * Detect whether this extension runtime can show system notifications.
+ * Safari Web Extensions do not support the WebExtensions notifications API,
+ * so Safari must use in-page notification fallbacks instead.
+ */
+export function supportsExtensionNotifications(): boolean {
+  if (isSafari()) return false;
+
+  const extensionGlobal = globalThis as {
+    chrome?: {
+      notifications?: {
+        create?: unknown;
+      };
+    };
+  };
+
+  return typeof extensionGlobal.chrome?.notifications?.create === 'function';
+}
+
+/**
  * Detect if the current browser is Microsoft Edge.
  * Edge is Chromium-based and includes 'edg' in the user agent.
  */

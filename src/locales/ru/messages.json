@@ -2018,5 +2018,25 @@
   "folder_new_chat_in_folder": {
     "message": "Новый чат в этой папке",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
+  },
+  "responseCompleteNotification": {
+    "message": "Уведомления о завершении ответа",
+    "description": "Gemini response completion notification toggle"
+  },
+  "responseCompleteNotificationHint": {
+    "message": "Отправлять системное уведомление, когда Gemini завершает ответ.",
+    "description": "Gemini response completion notification hint"
+  },
+  "responseCompleteNotificationHintSafari": {
+    "message": "Safari не поддерживает системные уведомления расширений; Voyager покажет подсказку на странице, когда вы вернётесь.",
+    "description": "Safari-specific hint for response completion notifications"
+  },
+  "responseCompleteNotificationMessage": {
+    "message": "Ответ Gemini завершён",
+    "description": "Текст системного уведомления, когда Gemini завершает ответ"
+  },
+  "responseCompleteForegroundToast": {
+    "message": "Новый ответ завершён",
+    "description": "Текст всплывающего уведомления, когда ответ Gemini завершён вне экрана"
   }
 }

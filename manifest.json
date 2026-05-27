@@ -24,7 +24,7 @@
   "icons": {
     "128": "icon-128.png"
   },
-  "permissions": ["storage", "identity", "scripting"],
+  "permissions": ["storage", "identity", "scripting", "notifications"],
   "oauth2": {
     "client_id": "462948120910-vvunu0k3b4vi37u23mqnh77mbgdjcg78.apps.googleusercontent.com",
     "scopes": ["https://www.googleapis.com/auth/drive.file"]
@@ -68,6 +68,7 @@
         "icon-32.png",
         "katex-config.js",
         "fetchInterceptor.js",
+        "response-complete-observer.js",
         "prevent-auto-scroll.js",
         "assets/*.js",
         "assets/*.png"

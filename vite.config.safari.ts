@@ -33,6 +33,7 @@ export default mergeConfig(
               '32': 'icon-32-template.png',
             },
           },
+          permissions: manifest.permissions.filter((permission) => permission !== 'notifications'),
           // Safari-specific adjustments
           background: {
             // Safari supports both service_worker and scripts
