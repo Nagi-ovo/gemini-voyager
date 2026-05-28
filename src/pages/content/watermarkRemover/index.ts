@@ -24,6 +24,7 @@ import { type StatusToastManager, createStatusToastManager } from './statusToast
 import { WatermarkEngine } from './watermarkEngine';
 
 let engine: WatermarkEngine | null = null;
+let enginePromise: Promise<WatermarkEngine> | null = null;
 const processingQueue = new Set<HTMLImageElement>();
 
 /**
@@ -311,6 +312,19 @@ async function processImageRequest(
   base64: string,
   bridge: HTMLElement,
 ): Promise<void> {
+  // Engine init is async (loads two PNG assets). The bridge observer is
+  // installed BEFORE the await on engine creation, so requests can land here
+  // before the engine is ready — queue on enginePromise instead of failing
+  // fast (otherwise users who click download right after the content script
+  // re-injects, e.g. after a /u/0/ → /u/1/ account switch, see the toast
+  // stuck for ~30s while the MAIN-world interceptor times out).
+  if (!engine && enginePromise) {
+    try {
+      await enginePromise;
+    } catch {
+      // engine init failed — fall through to the "not initialized" path
+    }
+  }
   if (!engine) {
     bridge.dataset.response = JSON.stringify({
       requestId,
@@ -371,12 +385,17 @@ export async function startWatermarkRemover(): Promise<void> {
     console.log(
       `[Gemini Voyager] Initializing watermark remover (download=${downloadEnabled}, preview=${previewEnabled})`,
     );
-    engine = await WatermarkEngine.create();
 
     if (downloadEnabled) {
-      // Bridge handles processing requests coming from the MAIN-world fetch interceptor
+      // Install the bridge observer BEFORE awaiting engine init so requests
+      // that arrive during the asset-loading window (typically 100ms-2s, and
+      // larger after a hard navigation like an account switch) are not lost.
+      // processImageRequest waits on enginePromise if the engine isn't ready.
       setupFetchInterceptorBridge();
     }
+
+    enginePromise = WatermarkEngine.create();
+    engine = await enginePromise;
 
     if (previewEnabled) {
       // Heavy path: replace each image's src with a watermark-stripped blob.
