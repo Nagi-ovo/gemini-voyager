@@ -454,7 +454,10 @@ function showImmediateDownloadToast(button: HTMLButtonElement): void {
   }
 
   const sequenceId = ++sequenceCounter;
-  const downloadToastId = manager.addToast(downloadMessage, 'info', { autoDismissMs: 3000 });
+  const downloadToastId = manager.addToast(downloadMessage, 'info', {
+    pending: true,
+    autoDismissMs: 3000,
+  });
 
   const processingTimer = setTimeout(() => {
     if (!activeSequence || activeSequence.id !== sequenceId) return;
@@ -560,6 +563,7 @@ function setupStatusListener(): void {
             }
             if (!activeSequence.downloadToastId) {
               activeSequence.downloadToastId = manager.addToast(downloadMessage, 'info', {
+                pending: true,
                 autoDismissMs: 3000,
               });
             }
@@ -570,6 +574,7 @@ function setupStatusListener(): void {
           if (activeSequence) {
             if (!activeSequence.downloadToastId) {
               activeSequence.downloadToastId = manager.addToast(downloadLargeMessage, 'info', {
+                pending: true,
                 autoDismissMs: 3000,
               });
             } else {

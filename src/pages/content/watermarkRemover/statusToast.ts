@@ -151,7 +151,8 @@ export function createStatusToastManager(
   animation: gv-status-toast-pulse 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Dark theme — system preference */
+/* Dark theme — system preference. Dot override is scoped to --info only so
+ * warning/success/error/pending dots keep their level color. */
 @media (prefers-color-scheme: dark) {
   .gv-status-toast {
     background: rgba(11, 18, 32, 0.82);
@@ -161,9 +162,8 @@ export function createStatusToastManager(
       0 12px 32px rgba(0, 0, 0, 0.40),
       0 2px 6px rgba(0, 0, 0, 0.22);
   }
-  .gv-status-toast::before,
   .gv-status-toast--info::before {
-    background: #64748b; /* slate-500 — slightly cooler in dark */
+    background: #64748b; /* slate-500 — slightly cooler grey in dark */
   }
 }
 
@@ -178,9 +178,6 @@ body.dark-theme .gv-status-toast,
     0 12px 32px rgba(0, 0, 0, 0.40),
     0 2px 6px rgba(0, 0, 0, 0.22);
 }
-html.dark-theme .gv-status-toast::before,
-body.dark-theme .gv-status-toast::before,
-.theme-host.dark-theme .gv-status-toast::before,
 html.dark-theme .gv-status-toast--info::before,
 body.dark-theme .gv-status-toast--info::before,
 .theme-host.dark-theme .gv-status-toast--info::before {
