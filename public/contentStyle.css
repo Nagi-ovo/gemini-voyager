@@ -4076,6 +4076,23 @@ body.light-theme {
   transition: background 200ms ease;
 }
 
+/* Gemini's lr26 sidebar overhaul wraps the conversation row in
+ * <gem-nav-list-item data-test-id="conversation"> with the visible row
+ * (<a class="mat-mdc-list-item gem-nav-list-item">) nested inside. The inner
+ * <a> paints its own opaque background, which covers the gradient we set on
+ * the host. Propagate the gradient down to the inner <a> so the highlight is
+ * actually visible — without this only the ::before accent stripe peeks out. */
+[data-test-id='conversation'].gv-conversation-selected > a.mat-mdc-list-item,
+[data-test-id='conversation'].gv-conversation-selected > a.gem-nav-list-item {
+  background: linear-gradient(
+    to right,
+    var(--folder-selected-glow) 0%,
+    transparent 100%
+  ) !important;
+  border-radius: 12px !important;
+  transition: background 200ms ease;
+}
+
 /* Folder conversation specific adjustments */
 .gv-folder-conversation-selected {
   border-radius: 10px;
