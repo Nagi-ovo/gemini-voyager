@@ -49,6 +49,7 @@ import { parsePromptImportPayload } from './importPayload';
 import { loadFolderDataForLocalBackup } from './localBackup';
 import { activatePromptText } from './promptClickAction';
 import { getScrollHintState } from './scrollHint';
+import { sanitizeSelectedTags } from './tagFilterState';
 import {
   buildStarredMessageUrl,
   filterStarredMessages,
@@ -82,6 +83,7 @@ const STORAGE_KEYS = {
   locked: StorageKeys.PROMPT_PANEL_LOCKED,
   position: StorageKeys.PROMPT_PANEL_POSITION,
   triggerPos: StorageKeys.PROMPT_TRIGGER_POSITION,
+  selectedTags: StorageKeys.PROMPT_SELECTED_TAGS,
   language: StorageKeys.LANGUAGE, // reuse global language key
   theme: StorageKeys.PROMPT_THEME,
 } as const;
@@ -837,7 +839,16 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     // State
     let items: PromptItem[] = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
     let open = false;
-    let selectedTags: Set<string> = new Set<string>();
+    // Restore the tag filter saved in a previous session (#729), reconciled
+    // against the tags that still exist so a deleted/renamed tag can't strand
+    // the list on a chip-less filter. Local-only on purpose — see
+    // STORAGE_KEYS.selectedTags / tagFilterState.ts.
+    let selectedTags: Set<string> = new Set<string>(
+      sanitizeSelectedTags(
+        await readStorage<string[]>(STORAGE_KEYS.selectedTags, []),
+        collectAllTags(items),
+      ),
+    );
     let locked = !!(await readStorage<boolean>(STORAGE_KEYS.locked, false));
     let savedPos = await readStorage<PanelPosition | null>(STORAGE_KEYS.position, null);
     let dragging = false;
@@ -1281,14 +1292,30 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       }
     })();
 
+    // Fire-and-forget: the in-memory Set drives the UI; a failed write just
+    // means the filter isn't restored next session. Never blocks a click.
+    function persistSelectedTags(): void {
+      void writeStorage(STORAGE_KEYS.selectedTags, Array.from(selectedTags));
+    }
+
     function renderTags(): void {
       const all = collectAllTags(items);
+      // Self-heal: if a previously selected tag's prompts were all deleted or
+      // retagged this session, drop it so the filter can't get stuck on a
+      // chip-less ghost tag that hides every prompt. Persist only on a real
+      // change to avoid redundant writes on every render.
+      const valid = sanitizeSelectedTags(Array.from(selectedTags), all);
+      if (valid.length !== selectedTags.size) {
+        selectedTags = new Set(valid);
+        persistSelectedTags();
+      }
       tagsWrap.innerHTML = '';
       const allBtn = createEl('button', 'gv-pm-tag');
       allBtn.textContent = i18n.t('pm_all_tags') || 'All';
       allBtn.classList.toggle('active', selectedTags.size === 0);
       allBtn.addEventListener('click', () => {
         selectedTags = new Set();
+        persistSelectedTags();
         renderTags();
         renderList();
       });
@@ -1300,6 +1327,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         btn.addEventListener('click', () => {
           if (selectedTags.has(tag)) selectedTags.delete(tag);
           else selectedTags.add(tag);
+          persistSelectedTags();
           renderTags();
           renderList();
         });
