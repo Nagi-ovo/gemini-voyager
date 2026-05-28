@@ -20,6 +20,8 @@
 
 [<img src="https://img.shields.io/badge/Microsoft_Edge-ダウンロード-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Microsoft Edge Add-ons からインストール" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 
+> ⚠️ Edge Add-ons 版はサポート終了予定です —— バージョンは現状で固定され、今後更新されません。Edge ユーザーは上記の Chrome ウェブストアからインストールしてください（このリンクは Edge でも使えます）。
+
 **Firefox：**
 
 [<img src="https://img.shields.io/badge/Firefox_Add--ons-ダウンロード-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons からインストール" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)

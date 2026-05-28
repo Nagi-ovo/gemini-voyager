@@ -20,6 +20,8 @@ A forma mais simples de começar. As atualizações são automáticas.
 
 [<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Instalar do Microsoft Edge Add-ons" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 
+> ⚠️ A versão do Edge Add-ons será descontinuada: fica congelada na versão atual e não receberá mais atualizações. Usuários do Edge devem instalar pela Chrome Web Store acima; esse link também funciona no Edge.
+
 **Firefox:**
 
 [<img src="https://img.shields.io/badge/Firefox_Add--ons-Download-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Instalar do Firefox Add-ons" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)

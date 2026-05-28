@@ -137,7 +137,7 @@
 </div>
 
 <p align="center">
-  <sub>Версия для <b>Chrome Web Store</b> также работает в Edge, Opera, Brave, Vivaldi, Arc и других браузерах на базе Chromium.</sub>
+  <sub>Версия для <b>Chrome Web Store</b> также работает в Edge, Opera, Brave, Vivaldi, Arc и других браузерах на базе Chromium. ⚠️ Версия для Edge Add-ons прекращает поддержку (остаётся на текущей версии без дальнейших обновлений), поэтому пользователям Edge следует устанавливать по ссылке на Chrome Web Store выше.</sub>
 </p>
 
 > **Статус в магазинах:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅

@@ -137,7 +137,7 @@
 </div>
 
 <p align="center">
-  <sub><b>Chrome ストア版</b>は Edge, Opera, Brave, Vivaldi, Arc などの Chromium 系ブラウザでも動作します。</sub>
+  <sub><b>Chrome ストア版</b>は Edge, Opera, Brave, Vivaldi, Arc などの Chromium 系ブラウザでも動作します。⚠️ Edge Add-ons 版はサポート終了予定（バージョン固定・今後更新なし）のため、Edge ユーザーは上記の Chrome ストアのリンクからインストールしてください。</sub>
 </p>
 
 > **ストア状況：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅

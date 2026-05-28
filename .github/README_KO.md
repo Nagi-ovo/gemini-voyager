@@ -137,7 +137,7 @@
 </div>
 
 <p align="center">
-  <sub><b>Chrome 웹 스토어</b>는 Edge, Opera, Brave, Vivaldi, Arc 및 기타 Chromium 브라우저에서도 작동합니다.</sub>
+  <sub><b>Chrome 웹 스토어</b>는 Edge, Opera, Brave, Vivaldi, Arc 및 기타 Chromium 브라우저에서도 작동합니다. ⚠️ Edge 추가 기능 버전은 지원이 곧 종료됩니다(현재 버전으로 고정, 추가 업데이트 없음). Edge 사용자는 위의 Chrome 웹 스토어 링크에서 설치하세요.</sub>
 </p>
 
 > **스토어 상태:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅

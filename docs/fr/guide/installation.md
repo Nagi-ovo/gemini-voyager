@@ -20,6 +20,8 @@ La façon la plus simple de commencer. Les mises à jour sont automatiques.
 
 [<img src="https://img.shields.io/badge/Microsoft_Edge-Télécharger-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Installer depuis les modules complémentaires Microsoft Edge" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 
+> ⚠️ La version Edge Add-ons va être abandonnée : elle reste figée à la version actuelle et ne sera plus mise à jour. Les utilisateurs d'Edge devraient installer depuis le Chrome Web Store ci-dessus ; ce lien fonctionne aussi sur Edge.
+
 **Firefox :**
 
 [<img src="https://img.shields.io/badge/Firefox_Add--ons-Télécharger-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Installer depuis Firefox Add-ons" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)

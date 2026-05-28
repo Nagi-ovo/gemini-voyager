@@ -143,7 +143,7 @@
 </div>
 
 <p align="center">
-  <sub><b>Chrome 應用商店</b>同樣適用於 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 瀏覽器。</sub>
+  <sub><b>Chrome 應用商店</b>同樣適用於 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 瀏覽器。⚠️ Edge 版本即將停止支援（版本定格、不再更新），Edge 使用者請改用上方的 Chrome 應用商店連結。</sub>
 </p>
 
 > **商店狀態：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅

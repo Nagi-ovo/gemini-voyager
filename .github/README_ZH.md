@@ -138,7 +138,7 @@
 </div>
 
 <p align="center">
-  <sub><b>Chrome 应用商店</b>同样适用于 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 浏览器。</sub>
+  <sub><b>Chrome 应用商店</b>同样适用于 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 浏览器。⚠️ Edge 版本即将停止支持（版本定格、不再更新），Edge 用户请改用上方的 Chrome 应用商店链接。</sub>
 </p>
 
 > **商店状态：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅

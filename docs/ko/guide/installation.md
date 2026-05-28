@@ -20,6 +20,8 @@
 
 [<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Microsoft Edge 추가 기능에서 설치" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 
+> ⚠️ Edge 추가 기능 버전은 지원이 곧 종료됩니다 — 현재 버전으로 고정되며 더 이상 업데이트되지 않습니다. Edge 사용자는 위의 Chrome 웹 스토어에서 설치하세요. 이 링크는 Edge에서도 작동합니다.
+
 **Firefox:**
 
 [<img src="https://img.shields.io/badge/Firefox_Add--ons-Download-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox 추가 기능에서 설치" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)

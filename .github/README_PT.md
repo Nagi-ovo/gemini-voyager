@@ -143,7 +143,7 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
 </div>
 
 <p align="center">
-  <sub>A <b>Chrome Web Store</b> também funciona no Edge, Opera, Brave, Vivaldi, Arc e outros navegadores Chromium.</sub>
+  <sub>A <b>Chrome Web Store</b> também funciona no Edge, Opera, Brave, Vivaldi, Arc e outros navegadores Chromium. ⚠️ A versão do Edge Add-ons será descontinuada (congelada na versão atual, sem mais atualizações), então usuários do Edge devem instalar pelo link da Chrome Web Store acima.</sub>
 </p>
 
 > **Estado da Loja:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅

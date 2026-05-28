@@ -20,6 +20,8 @@
 
 [<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="التثبيت من وظائف Microsoft Edge الإضافية" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 
+> ⚠️ سيتوقف دعم نسخة Edge Add-ons —— ستظل مثبّتة على الإصدار الحالي ولن تتلقى تحديثات بعد الآن. على مستخدمي Edge التثبيت من متجر Chrome الإلكتروني أعلاه؛ هذا الرابط يعمل على Edge أيضاً.
+
 **Firefox:**
 
 [<img src="https://img.shields.io/badge/Firefox_Add--ons-Download-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="التثبيت من إضافات Firefox" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)

@@ -137,7 +137,7 @@
 </div>
 
 <p align="center">
-  <sub>سوق <b>Chrome</b> الإلكتروني يعمل أيضاً على Edge و Opera و Brave و Vivaldi و Arc ومتصفحات Chromium الأخرى.</sub>
+  <sub>سوق <b>Chrome</b> الإلكتروني يعمل أيضاً على Edge و Opera و Brave و Vivaldi و Arc ومتصفحات Chromium الأخرى. ⚠️ سيتوقف دعم نسخة Edge Add-ons (مثبّتة على إصدارها الحالي بدون تحديثات لاحقة)، لذا على مستخدمي Edge التثبيت من رابط متجر Chrome الإلكتروني أعلاه.</sub>
 </p>
 
 > **حالة المتجر:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅

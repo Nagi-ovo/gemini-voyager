@@ -137,7 +137,7 @@ C'est pourquoi nous avons créé **Voyager**. Plus qu'un simple outil, c'est un 
 </div>
 
 <p align="center">
-  <sub>Le <b>Chrome Web Store</b> fonctionne aussi sur Edge, Opera, Brave, Vivaldi, Arc et autres navigateurs Chromium.</sub>
+  <sub>Le <b>Chrome Web Store</b> fonctionne aussi sur Edge, Opera, Brave, Vivaldi, Arc et autres navigateurs Chromium. ⚠️ La version Edge Add-ons va être abandonnée (figée à sa version actuelle, sans nouvelle mise à jour), les utilisateurs d'Edge devraient donc installer depuis le lien du Chrome Web Store ci-dessus.</sub>
 </p>
 
 > **Statut des Stores :** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅

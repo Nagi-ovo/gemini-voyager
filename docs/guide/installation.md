@@ -20,6 +20,8 @@
 
 [<img src="https://img.shields.io/badge/Microsoft_Edge-前往下载-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="从 Microsoft Edge Add-ons 安装" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 
+> ⚠️ Edge 版本即将停止支持 —— 版本会定格在当前，不再更新。Edge 用户请改用上方的 Chrome 应用店；该链接同样可以装到 Edge。
+
 **Firefox：**
 
 [<img src="https://img.shields.io/badge/Firefox_Add--ons-前往下载-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="从 Firefox Add-ons 安装" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
