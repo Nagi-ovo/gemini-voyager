@@ -4331,7 +4331,9 @@ export class FolderManager {
 
       const moreButton = await this.findAndClickMoreButton(conversationEl);
       if (!moreButton) {
-        console.warn(`[FolderManager] Batch delete: actions menu button not found for ${conversationId}`);
+        console.warn(
+          `[FolderManager] Batch delete: actions menu button not found for ${conversationId}`,
+        );
         return false;
       }
 
@@ -4401,8 +4403,9 @@ export class FolderManager {
       if (inside) return inside;
 
       // Fallback: legacy sibling .conversation-actions-container layout.
-      const actionsContainer =
-        conversationEl.parentElement?.querySelector('.conversation-actions-container');
+      const actionsContainer = conversationEl.parentElement?.querySelector(
+        '.conversation-actions-container',
+      );
       const sibling = actionsContainer?.querySelector<HTMLElement>(
         '[data-test-id="actions-menu-button"]',
       );
