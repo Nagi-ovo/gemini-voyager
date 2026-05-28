@@ -4539,56 +4539,75 @@ export class FolderManager {
 
     const keywords = this.getDeleteKeywords();
 
+    // Track per-poll state so we can emit one summary diagnostic on timeout.
+    let lastTestIdCount = 0;
+    let lastVisibleTestIdCount = 0;
+    let lastOverlayPanes = 0;
+    let lastMenuPanels = 0;
+    let lastMenuItemTexts: string[] = [];
+
     while (elapsed < maxWaitTime) {
-      // Strategy 1: Look for delete button by data-test-id (primary method)
-      const deleteByTestId = document.querySelector(
-        '[data-test-id="delete-button"]',
-      ) as HTMLElement;
-      if (deleteByTestId && this.isVisibleElement(deleteByTestId)) {
-        deleteByTestId.click();
+      // Strategy 1: data-test-id (primary). Use querySelectorAll because some
+      // layouts render hidden template copies that querySelector would lock
+      // onto, never advancing past an invisible match.
+      const deleteCandidates = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-test-id="delete-button"]'),
+      );
+      lastTestIdCount = deleteCandidates.length;
+      const visibleByTestId = deleteCandidates.filter((el) => this.isVisibleElement(el));
+      lastVisibleTestIdCount = visibleByTestId.length;
+      // Prefer one that lives inside an open menu / overlay panel.
+      const targetByTestId =
+        visibleByTestId.find((el) => el.closest('.mat-mdc-menu-panel, .cdk-overlay-pane')) ??
+        visibleByTestId[0];
+      if (targetByTestId) {
+        targetByTestId.click();
         this.debug('Clicked delete button (by test-id)');
         return true;
       }
 
-      // Strategy 2: Look for menu items containing delete text (supports translations)
-      const menuItems = document.querySelectorAll(
-        '.cdk-overlay-container button, ' +
-          '.cdk-overlay-container [role="menuitem"], ' +
-          '.mat-mdc-menu-content button, ' +
-          '.mat-menu-content button',
+      // Strategy 2: scan menu items for matching text (i18n-friendly).
+      const menuItems = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '.cdk-overlay-container button[role="menuitem"], ' +
+            '.cdk-overlay-container [role="menuitem"], ' +
+            '.mat-mdc-menu-content button, ' +
+            '.mat-menu-content button',
+        ),
       );
+      lastMenuItemTexts = menuItems.map((el) => el.textContent?.trim().slice(0, 20) || '');
 
       for (const item of menuItems) {
-        if (!this.isVisibleElement(item as HTMLElement)) continue;
-
+        if (!this.isVisibleElement(item)) continue;
         const text = item.textContent?.toLowerCase().trim() || '';
-        // Match keywords from i18n
         if (
           text &&
           keywords.some(
             (keyword: string) => text === keyword || (text.includes(keyword) && text.length < 20),
           )
         ) {
-          (item as HTMLElement).click();
+          item.click();
           this.debug('Clicked delete button (by text):', text);
           return true;
         }
       }
 
-      // Strategy 3: Look for button with delete icon (mat-icon containing 'delete')
+      // Strategy 3: by icon (mat-icon delete / delete_forever / delete_outline).
       const deleteIcons = document.querySelectorAll(
         '.cdk-overlay-container mat-icon, .cdk-overlay-container .material-icons',
       );
-
       for (const icon of deleteIcons) {
         const iconText = icon.textContent?.toLowerCase().trim() || '';
+        const iconAttr = icon.getAttribute('fonticon') || '';
         if (
           iconText === 'delete' ||
           iconText === 'delete_forever' ||
-          iconText === 'delete_outline'
+          iconText === 'delete_outline' ||
+          iconAttr === 'delete' ||
+          iconAttr === 'delete_forever' ||
+          iconAttr === 'delete_outline'
         ) {
-          // Find the parent button and click it
-          const parentButton = icon.closest('button, [role="menuitem"]') as HTMLElement;
+          const parentButton = icon.closest('button, [role="menuitem"]') as HTMLElement | null;
           if (parentButton && this.isVisibleElement(parentButton)) {
             parentButton.click();
             this.debug('Clicked delete button (by icon)');
@@ -4597,10 +4616,26 @@ export class FolderManager {
         }
       }
 
+      lastOverlayPanes = document.querySelectorAll('.cdk-overlay-pane').length;
+      lastMenuPanels = document.querySelectorAll('.mat-mdc-menu-panel').length;
+
       await this.delay(checkInterval);
       elapsed += checkInterval;
     }
 
+    // Emit a SINGLE compact diagnostic on timeout so users can paste it
+    // verbatim when reporting batch-delete failures.
+    console.warn(
+      '[FolderManager] Batch delete diagnostics on timeout: ' +
+        JSON.stringify({
+          deleteButtonsFound: lastTestIdCount,
+          deleteButtonsVisible: lastVisibleTestIdCount,
+          overlayPanes: lastOverlayPanes,
+          menuPanels: lastMenuPanels,
+          menuItemTexts: lastMenuItemTexts.slice(0, 10),
+          keywordsTried: keywords,
+        }),
+    );
     return false;
   }
 
