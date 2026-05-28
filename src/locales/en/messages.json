@@ -1175,6 +1175,14 @@
     "message": "Also process images shown on screen. Slower; the image may briefly flash while processing.",
     "description": "Hint for the preview-time watermark removal toggle"
   },
+  "nanobananaBadgeRecommended": {
+    "message": "Recommended",
+    "description": "Inline badge highlighting the recommended (download-time) watermark removal option"
+  },
+  "nanobananaBadgeUnstable": {
+    "message": "Unstable",
+    "description": "Inline badge warning that the preview-time watermark removal option is unstable"
+  },
   "nanobananaDownloadTooltip": {
     "message": "Download unwatermarked image (NanoBanana)",
     "description": "Download button tooltip"

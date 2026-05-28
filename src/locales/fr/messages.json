@@ -1175,6 +1175,14 @@
     "message": "Traite aussi les images affichées à l'écran. Plus lent ; l'image peut clignoter brièvement pendant le traitement.",
     "description": "Hint for the preview-time watermark removal toggle"
   },
+  "nanobananaBadgeRecommended": {
+    "message": "Recommandé",
+    "description": "Inline badge highlighting the recommended (download-time) watermark removal option"
+  },
+  "nanobananaBadgeUnstable": {
+    "message": "Instable",
+    "description": "Inline badge warning that the preview-time watermark removal option is unstable"
+  },
   "nanobananaDownloadTooltip": {
     "message": "Télécharger l'image sans filigrane (NanoBanana)",
     "description": "Download button tooltip"

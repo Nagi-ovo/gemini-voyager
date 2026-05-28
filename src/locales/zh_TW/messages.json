@@ -1135,6 +1135,14 @@
     "message": "同時處理頁面上預覽的圖片。速度較慢，處理過程中圖片可能會短暫閃一下。",
     "description": "預覽時移除浮水印開關說明"
   },
+  "nanobananaBadgeRecommended": {
+    "message": "推薦",
+    "description": "下載時移除浮水印開關旁的推薦標籤"
+  },
+  "nanobananaBadgeUnstable": {
+    "message": "不穩定",
+    "description": "預覽時移除浮水印開關旁的不穩定標籤"
+  },
   "nanobananaDownloadTooltip": {
     "message": "下載無浮水印圖片 (NanoBanana)",
     "description": "Download button tooltip"

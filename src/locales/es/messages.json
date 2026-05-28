@@ -1175,6 +1175,14 @@
     "message": "También procesa las imágenes que se muestran en pantalla. Es más lento y la imagen puede parpadear un instante mientras se procesa.",
     "description": "Hint for the preview-time watermark removal toggle"
   },
+  "nanobananaBadgeRecommended": {
+    "message": "Recomendado",
+    "description": "Inline badge highlighting the recommended (download-time) watermark removal option"
+  },
+  "nanobananaBadgeUnstable": {
+    "message": "Inestable",
+    "description": "Inline badge warning that the preview-time watermark removal option is unstable"
+  },
   "nanobananaDownloadTooltip": {
     "message": "Descargar imagen sin marca de agua (NanoBanana)",
     "description": "Download button tooltip"

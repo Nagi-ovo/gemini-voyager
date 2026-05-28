@@ -1175,6 +1175,14 @@
     "message": "画面に表示される画像も処理します。動作はやや重く、処理中に画像が一瞬ちらつくことがあります。",
     "description": "Hint for the preview-time watermark removal toggle"
   },
+  "nanobananaBadgeRecommended": {
+    "message": "推奨",
+    "description": "Inline badge highlighting the recommended (download-time) watermark removal option"
+  },
+  "nanobananaBadgeUnstable": {
+    "message": "不安定",
+    "description": "Inline badge warning that the preview-time watermark removal option is unstable"
+  },
   "nanobananaDownloadTooltip": {
     "message": "透かしなし画像をダウンロード (NanoBanana)",
     "description": "Download button tooltip"

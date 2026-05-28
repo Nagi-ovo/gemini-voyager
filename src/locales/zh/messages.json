@@ -1175,6 +1175,14 @@
     "message": "同时处理页面上预览的图片。速度更慢，处理过程中图片可能会短暂闪一下。",
     "description": "预览时去水印开关说明"
   },
+  "nanobananaBadgeRecommended": {
+    "message": "推荐",
+    "description": "下载时去水印开关旁的推荐标签"
+  },
+  "nanobananaBadgeUnstable": {
+    "message": "不稳定",
+    "description": "预览时去水印开关旁的不稳定标签"
+  },
   "nanobananaDownloadTooltip": {
     "message": "下载无水印图片 (NanoBanana)",
     "description": "Download button tooltip"

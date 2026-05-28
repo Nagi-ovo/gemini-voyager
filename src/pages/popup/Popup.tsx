@@ -2849,12 +2849,17 @@ export default function Popup() {
               <CardContent className="space-y-4 p-0">
                 <div className="group flex items-center justify-between">
                   <div className="flex-1">
-                    <Label
-                      htmlFor="watermark-download"
-                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                    >
-                      {t('nanobananaDownloadLabel')}
-                    </Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label
+                        htmlFor="watermark-download"
+                        className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                      >
+                        {t('nanobananaDownloadLabel')}
+                      </Label>
+                      <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                        {t('nanobananaBadgeRecommended')}
+                      </span>
+                    </div>
                     <p className="text-muted-foreground mt-1 text-xs">
                       {t('nanobananaDownloadHint')}
                     </p>
@@ -2870,12 +2875,17 @@ export default function Popup() {
                 </div>
                 <div className="group flex items-center justify-between">
                   <div className="flex-1">
-                    <Label
-                      htmlFor="watermark-preview"
-                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                    >
-                      {t('nanobananaPreviewLabel')}
-                    </Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label
+                        htmlFor="watermark-preview"
+                        className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                      >
+                        {t('nanobananaPreviewLabel')}
+                      </Label>
+                      <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                        {t('nanobananaBadgeUnstable')}
+                      </span>
+                    </div>
                     <p className="text-muted-foreground mt-1 text-xs">
                       {t('nanobananaPreviewHint')}
                     </p>

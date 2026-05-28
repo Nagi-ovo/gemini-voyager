@@ -1175,6 +1175,14 @@
     "message": "تتم معالجة الصور المعروضة على الشاشة أيضًا. أبطأ؛ وقد تومض الصورة للحظة أثناء المعالجة.",
     "description": "Hint for the preview-time watermark removal toggle"
   },
+  "nanobananaBadgeRecommended": {
+    "message": "موصى به",
+    "description": "Inline badge highlighting the recommended (download-time) watermark removal option"
+  },
+  "nanobananaBadgeUnstable": {
+    "message": "غير مستقر",
+    "description": "Inline badge warning that the preview-time watermark removal option is unstable"
+  },
   "nanobananaDownloadTooltip": {
     "message": "تنزيل الصورة بدون علامة مائية (NanoBanana)",
     "description": "Download button tooltip"

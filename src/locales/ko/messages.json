@@ -1175,6 +1175,14 @@
     "message": "화면에 표시되는 이미지도 함께 처리합니다. 처리 속도는 더 느려지며, 처리 중 이미지가 잠깐 깜박일 수 있습니다.",
     "description": "Hint for the preview-time watermark removal toggle"
   },
+  "nanobananaBadgeRecommended": {
+    "message": "권장",
+    "description": "Inline badge highlighting the recommended (download-time) watermark removal option"
+  },
+  "nanobananaBadgeUnstable": {
+    "message": "불안정",
+    "description": "Inline badge warning that the preview-time watermark removal option is unstable"
+  },
   "nanobananaDownloadTooltip": {
     "message": "워터마크 없는 이미지 다운로드 (NanoBanana)",
     "description": "Download button tooltip"

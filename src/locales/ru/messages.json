@@ -1175,6 +1175,14 @@
     "message": "Также обрабатывает изображения, показанные на экране. Работает медленнее; во время обработки картинка может на мгновение мигнуть.",
     "description": "Hint for the preview-time watermark removal toggle"
   },
+  "nanobananaBadgeRecommended": {
+    "message": "Рекомендуется",
+    "description": "Inline badge highlighting the recommended (download-time) watermark removal option"
+  },
+  "nanobananaBadgeUnstable": {
+    "message": "Нестабильно",
+    "description": "Inline badge warning that the preview-time watermark removal option is unstable"
+  },
   "nanobananaDownloadTooltip": {
     "message": "Скачать изображение без водяного знака (NanoBanana)",
     "description": "Download button tooltip"
