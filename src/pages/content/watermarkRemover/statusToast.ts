@@ -151,8 +151,12 @@ export function createStatusToastManager(
   animation: gv-status-toast-pulse 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Dark theme — system preference. Dot override is scoped to --info only so
- * warning/success/error/pending dots keep their level color. */
+/* Dark theme — surface (background / border / shadow) only.
+ * Dot colors are intentionally NOT overridden here: slate-400 / amber /
+ * emerald / sky / red all read well on both themes, and adding themed
+ * dot rules creates specificity conflicts with --pending (which would
+ * otherwise lose to a '.theme-host.dark-theme .--info::before' selector
+ * and silently render grey-but-still-pulsing). */
 @media (prefers-color-scheme: dark) {
   .gv-status-toast {
     background: rgba(11, 18, 32, 0.82);
@@ -162,12 +166,8 @@ export function createStatusToastManager(
       0 12px 32px rgba(0, 0, 0, 0.40),
       0 2px 6px rgba(0, 0, 0, 0.22);
   }
-  .gv-status-toast--info::before {
-    background: #64748b; /* slate-500 — slightly cooler grey in dark */
-  }
 }
 
-/* Dark theme — Gemini's class (covers html, body, theme-host placements) */
 html.dark-theme .gv-status-toast,
 body.dark-theme .gv-status-toast,
 .theme-host.dark-theme .gv-status-toast {
@@ -177,11 +177,6 @@ body.dark-theme .gv-status-toast,
   box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.40),
     0 2px 6px rgba(0, 0, 0, 0.22);
-}
-html.dark-theme .gv-status-toast--info::before,
-body.dark-theme .gv-status-toast--info::before,
-.theme-host.dark-theme .gv-status-toast--info::before {
-  background: #64748b;
 }
 
 /* Light theme — Gemini's class (force-light override) */
