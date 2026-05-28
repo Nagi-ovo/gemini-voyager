@@ -41,8 +41,8 @@ describe('watermarkRemover engine-init race', () => {
     // download during that window. Before the fix, the request landed on a
     // bridge with no observer and the MAIN-world interceptor sat for ~30s
     // waiting for a response that never came.
-    let resolveEngine: ((engine: unknown) => void) | null = null;
-    const enginePromise = new Promise((resolve) => {
+    let resolveEngine: (engine: unknown) => void = () => undefined;
+    const enginePromise = new Promise<unknown>((resolve) => {
       resolveEngine = resolve;
     });
     (WatermarkEngine.create as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
@@ -73,7 +73,7 @@ describe('watermarkRemover engine-init race', () => {
 
     // Release the engine so any awaiting tasks can settle and Vitest doesn't
     // leak the unresolved promise into the next test.
-    resolveEngine?.({
+    resolveEngine({
       removeWatermarkFromImage: vi.fn(async () => document.createElement('canvas')),
     });
     await flushMutationObservers();
