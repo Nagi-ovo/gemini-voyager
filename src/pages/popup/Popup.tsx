@@ -2856,7 +2856,7 @@ export default function Popup() {
                       >
                         {t('nanobananaDownloadLabel')}
                       </Label>
-                      <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                      <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-600 uppercase dark:text-emerald-400">
                         {t('nanobananaBadgeRecommended')}
                       </span>
                     </div>
@@ -2882,7 +2882,7 @@ export default function Popup() {
                       >
                         {t('nanobananaPreviewLabel')}
                       </Label>
-                      <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                      <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-amber-600 uppercase dark:text-amber-400">
                         {t('nanobananaBadgeUnstable')}
                       </span>
                     </div>
