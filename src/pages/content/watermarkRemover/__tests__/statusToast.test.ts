@@ -39,6 +39,25 @@ describe('StatusToastManager', () => {
     expect(toasts[0].classList.contains('gv-status-toast--success')).toBe(true);
   });
 
+  it('applies the pending modifier class for in-progress toasts', () => {
+    const manager = createStatusToastManager();
+
+    manager.addToast('Working', 'info', { pending: true });
+    const [toast] = manager.getToastElements();
+    expect(toast.classList.contains('gv-status-toast--pending')).toBe(true);
+  });
+
+  it('removes the pending modifier when finalized', () => {
+    const manager = createStatusToastManager();
+
+    const id = manager.addToast('Working', 'info', { pending: true });
+    manager.updateToast(id, 'Done', 'success', { markFinal: true });
+
+    const [toast] = manager.getToastElements();
+    expect(toast.classList.contains('gv-status-toast--pending')).toBe(false);
+    expect(toast.classList.contains('gv-status-toast--success')).toBe(true);
+  });
+
   it('returns false when no pending toast exists', () => {
     const manager = createStatusToastManager();
 

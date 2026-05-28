@@ -62,45 +62,44 @@ export function createStatusToastManager(
   z-index: 2147483647;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   pointer-events: none;
-  max-width: min(380px, calc(100vw - 32px));
-  /* Ensure it floats above everything */
+  max-width: min(340px, calc(100vw - 32px));
   isolation: isolate;
 }
 
 .gv-status-toast {
   pointer-events: auto;
-  font-family: "Google Sans", Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.5;
-  padding: 12px 16px;
+  font-family: "Google Sans Text", "Google Sans", Roboto, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 450;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+  padding: 9px 13px 9px 11px;
   border-radius: 12px;
-  
-  /* Light Mode Default */
-  background: rgba(255, 255, 255, 0.95);
-  color: #1f2937;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-    0 2px 4px -1px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(0,0,0,0.02);
-  
-  opacity: 0;
-  transform: translateY(8px) scale(0.98);
-  transition: 
-    opacity 200ms cubic-bezier(0.16, 1, 0.3, 1), 
-    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 200ms, border-color 200ms, color 200ms;
-    
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 9px;
   width: fit-content;
+  cursor: default;
+
+  /* Light defaults — matches --timeline-tooltip-* tokens */
+  background: rgba(255, 255, 255, 0.86);
+  color: #0f172a;
+  border: 1px solid rgba(226, 232, 240, 0.72);
+  box-shadow:
+    0 12px 32px rgba(2, 8, 23, 0.10),
+    0 2px 6px rgba(2, 8, 23, 0.05);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+
+  opacity: 0;
+  transform: translateY(4px) scale(0.985);
+  transition:
+    opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms, border-color 180ms, color 180ms;
 }
 
 .gv-status-toast.show {
@@ -108,58 +107,96 @@ export function createStatusToastManager(
   transform: translateY(0) scale(1);
 }
 
-/* Status Indicators via Left Border & Emoji */
-.gv-status-toast--info {
-  border-left: 4px solid #3b82f6; 
-}
-.gv-status-toast--info::before {
-  content: "ℹ️";
+/* Status indicator: a small 6px dot (replaces the bright left border + emoji) */
+.gv-status-toast::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #94a3b8; /* slate-400 — neutral default */
 }
 
-.gv-status-toast--warning {
-  border-left: 4px solid #f59e0b;
+/**
+ * Dot colors are phase-coded, not just level-coded, so adjacent toasts in the
+ * download → process → success flow are visually distinct at a glance:
+ *   • info (passive, just reporting)   → slate-400 grey
+ *   • info + pending (active compute)  → sky-500 cool blue
+ *   • warning (caution)                → amber
+ *   • success                          → emerald (project's timeline-active)
+ *   • error                            → red
+ */
+.gv-status-toast--info::before {
+  background: #94a3b8;
 }
 .gv-status-toast--warning::before {
-  content: "⚠️";
-}
-
-.gv-status-toast--success {
-  border-left: 4px solid #22c55e;
+  background: #f59e0b; /* matches --timeline-star-color */
 }
 .gv-status-toast--success::before {
-  content: "✅";
-}
-
-.gv-status-toast--error {
-  border-left: 4px solid #ef4444;
+  background: oklch(0.55 0.17 155); /* matches --timeline-dot-active-color */
 }
 .gv-status-toast--error::before {
-  content: "❌";
+  background: #dc2626;
 }
 
-/* Dark Mode Support (System & Class-based) */
+/* Pending: cool-blue accent + soft pulse to signal in-progress compute.
+ * Selector doubled (.gv-status-toast.gv-status-toast--pending) to win
+ * over the dark-theme info-override that follows below. */
+@keyframes gv-status-toast-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.3); }
+}
+.gv-status-toast.gv-status-toast--pending::before {
+  background: #0ea5e9; /* sky-500 — distinct from passive slate info */
+  animation: gv-status-toast-pulse 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Dark theme — system preference */
 @media (prefers-color-scheme: dark) {
   .gv-status-toast {
-    background: rgba(30, 41, 59, 0.95);
-    color: #f1f5f9;
-    border-color: rgba(51, 65, 85, 0.8);
-    box-shadow: 
-      0 10px 15px -3px rgba(0, 0, 0, 0.5), 
-      0 4px 6px -4px rgba(0, 0, 0, 0.5),
-      0 0 0 1px rgba(255,255,255,0.05);
+    background: rgba(11, 18, 32, 0.82);
+    color: #e2e8f0;
+    border-color: rgba(31, 41, 55, 0.78);
+    box-shadow:
+      0 12px 32px rgba(0, 0, 0, 0.40),
+      0 2px 6px rgba(0, 0, 0, 0.22);
+  }
+  .gv-status-toast::before,
+  .gv-status-toast--info::before {
+    background: #64748b; /* slate-500 — slightly cooler in dark */
   }
 }
 
-/* Explicit .dark class support (if Gemini adds it to body) */
-body.dark .gv-status-toast, 
-html.dark .gv-status-toast {
-  background: rgba(30, 41, 59, 0.95);
-  color: #f1f5f9;
-  border-color: rgba(51, 65, 85, 0.8);
-  box-shadow: 
-    0 10px 15px -3px rgba(0, 0, 0, 0.5), 
-    0 4px 6px -4px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255,255,255,0.05);
+/* Dark theme — Gemini's class (covers html, body, theme-host placements) */
+html.dark-theme .gv-status-toast,
+body.dark-theme .gv-status-toast,
+.theme-host.dark-theme .gv-status-toast {
+  background: rgba(11, 18, 32, 0.82);
+  color: #e2e8f0;
+  border-color: rgba(31, 41, 55, 0.78);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.40),
+    0 2px 6px rgba(0, 0, 0, 0.22);
+}
+html.dark-theme .gv-status-toast::before,
+body.dark-theme .gv-status-toast::before,
+.theme-host.dark-theme .gv-status-toast::before,
+html.dark-theme .gv-status-toast--info::before,
+body.dark-theme .gv-status-toast--info::before,
+.theme-host.dark-theme .gv-status-toast--info::before {
+  background: #64748b;
+}
+
+/* Light theme — Gemini's class (force-light override) */
+html.light-theme .gv-status-toast,
+body.light-theme .gv-status-toast,
+.theme-host.light-theme .gv-status-toast {
+  background: rgba(255, 255, 255, 0.86);
+  color: #0f172a;
+  border-color: rgba(226, 232, 240, 0.72);
+  box-shadow:
+    0 12px 32px rgba(2, 8, 23, 0.10),
+    0 2px 6px rgba(2, 8, 23, 0.05);
 }
 `;
     document.head.appendChild(style);
@@ -262,6 +299,9 @@ html.dark .gv-status-toast {
 
     const toast = document.createElement('div');
     toast.className = 'gv-status-toast';
+    if (options.pending) {
+      toast.classList.add('gv-status-toast--pending');
+    }
     toast.textContent = message;
     applyLevelClass(toast, level);
     container.appendChild(toast);
@@ -308,6 +348,7 @@ html.dark .gv-status-toast {
     applyLevelClass(record.element, level);
     if (options.markFinal) {
       record.isFinal = true;
+      record.element.classList.remove('gv-status-toast--pending');
     }
     if (options.autoDismissMs && options.autoDismissMs > 0) {
       scheduleDismiss(record, options.autoDismissMs);
@@ -328,6 +369,7 @@ html.dark .gv-status-toast {
     applyLevelClass(record.element, level);
     if (options.markFinal) {
       record.isFinal = true;
+      record.element.classList.remove('gv-status-toast--pending');
     }
     if (options.autoDismissMs && options.autoDismissMs > 0) {
       scheduleDismiss(record, options.autoDismissMs);
