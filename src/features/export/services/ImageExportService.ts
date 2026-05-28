@@ -416,6 +416,23 @@ export class ImageExportService {
     };
 
     const toDataUrl = async (url: string): Promise<string | null> => {
+      if (/^data:/i.test(url)) return url;
+
+      // Blob URLs are document-scoped — fetch them directly from this context,
+      // they can't be reached from the background script.
+      if (/^blob:/i.test(url)) {
+        try {
+          const resp = await fetch(url);
+          if (resp.ok) {
+            const blob = await resp.blob();
+            return await blobToDataUrl(blob);
+          }
+        } catch {
+          /* ignore */
+        }
+        return null;
+      }
+
       if (!/^https?:\/\//i.test(url)) return null;
 
       // Try content-script fetch first

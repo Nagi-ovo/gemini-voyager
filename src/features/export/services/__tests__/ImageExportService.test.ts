@@ -209,4 +209,77 @@ describe('ImageExportService', () => {
     expect(capturedWidth).toBe('1360px');
     expect(capturedFontSize).toBe('24px');
   });
+
+  it('inlines blob: image URLs as data URLs so dom-to-image can rasterize them', async () => {
+    // Reproduces the "export to image misses generated images" issue: Gemini
+    // renders generated images with blob: URLs that don't survive the
+    // dom-to-image SVG sandbox. inlineImages must fetch + convert them.
+    const assistantElement = document.createElement('div');
+    assistantElement.innerHTML =
+      '<message-content><div class="markdown"><p>Look:</p><img src="blob:https://gemini.google.com/abc" alt="plain" /></div></message-content>';
+
+    const turns: ChatTurn[] = [
+      { user: 'show me', assistant: 'here', starred: false, assistantElement },
+    ];
+
+    const fetchedUrls: string[] = [];
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn(async (url: string | URL | Request) => {
+      fetchedUrls.push(String(url));
+      return new Response(new Blob(['fake'], { type: 'image/png' }), { status: 200 });
+    }) as unknown as typeof fetch;
+
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      new Blob(['x'], { type: 'image/png' }),
+    );
+
+    try {
+      await ImageExportService.export(turns, mockMetadata, { filename: 'gen.png' });
+    } finally {
+      global.fetch = originalFetch;
+    }
+
+    expect(fetchedUrls).toContain('blob:https://gemini.google.com/abc');
+    const capturedContainer = (toBlob as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as HTMLElement;
+    const inlinedImg = capturedContainer.querySelector('img') as HTMLImageElement | null;
+    expect(inlinedImg).not.toBeNull();
+    // The exact MIME isn't important — what matters is the blob: URL was
+    // replaced with an inlined data: URL that dom-to-image can read.
+    const finalSrc = inlinedImg?.getAttribute('src') || inlinedImg?.src || '';
+    expect(finalSrc).toMatch(/^data:/);
+    expect(finalSrc.startsWith('blob:')).toBe(false);
+  });
+
+  it('leaves data: image URLs untouched (no extra fetch round-trips)', async () => {
+    const assistantElement = document.createElement('div');
+    assistantElement.innerHTML =
+      '<message-content><div class="markdown"><img src="data:image/png;base64,UFJFMQ==" alt="inline" /></div></message-content>';
+
+    const turns: ChatTurn[] = [
+      { user: 'inline', assistant: 'ok', starred: false, assistantElement },
+    ];
+
+    const fetchSpy = vi.fn(async () => new Response(new Blob([]), { status: 200 }));
+    const originalFetch = global.fetch;
+    global.fetch = fetchSpy as unknown as typeof fetch;
+
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      new Blob(['x'], { type: 'image/png' }),
+    );
+
+    try {
+      await ImageExportService.export(turns, mockMetadata, { filename: 'pass.png' });
+    } finally {
+      global.fetch = originalFetch;
+    }
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    const capturedContainer = (toBlob as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as HTMLElement;
+    const img = capturedContainer.querySelector('img') as HTMLImageElement | null;
+    expect(img?.getAttribute('src') || img?.src).toBe('data:image/png;base64,UFJFMQ==');
+  });
 });
