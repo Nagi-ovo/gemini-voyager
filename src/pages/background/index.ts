@@ -15,6 +15,9 @@ import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
 import { isFirefox, supportsExtensionNotifications } from '@/core/utils/browser';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
+import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
+import { MarketplacePluginSource } from '@/features/plugins/sources/MarketplacePluginSource';
+import type { PluginManifest } from '@/features/plugins/types';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import {
   filterTimelineHierarchyByRouteScope,
@@ -24,6 +27,7 @@ import {
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
+const PLUGIN_CONTENT_SCRIPT_ID = 'gv-plugin-content-script';
 const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
 const FETCH_INTERCEPTOR_SCRIPT_ID = 'gv-fetch-interceptor';
 const RESPONSE_COMPLETE_OBSERVER_SCRIPT_ID = 'gv-response-complete-observer';
@@ -343,6 +347,30 @@ const MANIFEST_DEFAULT_DOMAINS = new Set(
     .filter((d): d is string => !!d),
 );
 
+// Domains targeted by marketplace plugins. Granting one of these (when a user
+// enables a plugin) must NOT also register it as a Prompt-Manager "custom
+// website", so we exclude them from the permissions.onAdded → custom-website
+// merge below. Populated asynchronously from the cached catalog (see
+// refreshPluginSiteDomains), since the catalog is network-derived.
+let pluginSiteDomains = new Set<string>();
+
+async function loadPluginCatalog(): Promise<readonly PluginManifest[]> {
+  try {
+    return await new MarketplacePluginSource().list();
+  } catch {
+    return [];
+  }
+}
+
+async function refreshPluginSiteDomains(): Promise<void> {
+  const catalog = await loadPluginCatalog();
+  pluginSiteDomains = new Set(
+    pluginsToOriginPatterns(catalog)
+      .map(patternToDomain)
+      .filter((d): d is string => !!d),
+  );
+}
+
 function patternToDomain(pattern: string | undefined): string | null {
   if (!pattern) return null;
   try {
@@ -385,7 +413,8 @@ function extractDomainsFromOrigins(origins?: string[]): string[] {
   const domains = origins
     .map(patternToDomain)
     .filter((d): d is string => !!d)
-    .filter((d) => !MANIFEST_DEFAULT_DOMAINS.has(d));
+    .filter((d) => !MANIFEST_DEFAULT_DOMAINS.has(d))
+    .filter((d) => !pluginSiteDomains.has(d));
   return Array.from(new Set(domains));
 }
 
@@ -466,8 +495,118 @@ async function syncCustomContentScripts(domains?: string[]): Promise<void> {
   }
 }
 
+/**
+ * Plugin ecosystem — dynamic content-script registration.
+ *
+ * Mirrors syncCustomContentScripts: derive the origins of currently-ENABLED
+ * builtin plugins, keep only those the user has already granted host permission
+ * for, and (re)register the content script for them. The content script runs
+ * `startPluginHost()`, which mounts the enabled plugin on the page.
+ *
+ * Plugin enable-state is the single source of truth (storage.local); permissions
+ * and registrations are derived from it.
+ */
+async function getEnabledPluginOrigins(): Promise<string[]> {
+  let state: unknown = {};
+  try {
+    const stored = await chrome.storage.local.get({ [StorageKeys.PLUGINS_STATE]: {} });
+    state = stored?.[StorageKeys.PLUGINS_STATE];
+  } catch {
+    return [];
+  }
+  const enabledIds = new Set<string>();
+  if (state && typeof state === 'object' && !Array.isArray(state)) {
+    for (const [id, entry] of Object.entries(state as Record<string, { enabled?: boolean }>)) {
+      if (entry && entry.enabled === true) enabledIds.add(id);
+    }
+  }
+  const catalog = await loadPluginCatalog();
+  const enabledPlugins = catalog.filter((plugin) => enabledIds.has(plugin.id));
+  return pluginsToOriginPatterns(enabledPlugins);
+}
+
+async function injectPluginScriptIntoOpenTabs(
+  matches: string[],
+  jsResources: string[],
+  cssResources: string[] | undefined,
+): Promise<void> {
+  if (!chrome.scripting?.executeScript || !matches.length) return;
+  let tabs: chrome.tabs.Tab[] = [];
+  try {
+    tabs = await chrome.tabs.query({ url: matches });
+  } catch {
+    return;
+  }
+  for (const tab of tabs) {
+    if (typeof tab.id !== 'number') continue;
+    try {
+      if (cssResources?.length) {
+        await chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: cssResources });
+      }
+      if (jsResources.length) {
+        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: jsResources });
+      }
+    } catch {
+      // Tab may be discarded or disallow injection — ignore; reload will cover it.
+    }
+  }
+}
+
+async function syncPluginContentScripts(): Promise<void> {
+  if (!chrome.scripting?.registerContentScripts) return;
+
+  const manifestContentScript = chrome.runtime.getManifest().content_scripts?.[0];
+  if (!manifestContentScript) return;
+
+  const origins = await getEnabledPluginOrigins();
+  const grantedMatches = await filterGrantedOrigins(origins);
+
+  try {
+    await chrome.scripting.unregisterContentScripts({ ids: [PLUGIN_CONTENT_SCRIPT_ID] });
+  } catch {
+    // No-op if the script was not registered.
+  }
+
+  if (!grantedMatches.length) return;
+
+  const runAt =
+    manifestContentScript.run_at === 'document_start'
+      ? 'document_start'
+      : manifestContentScript.run_at === 'document_end'
+        ? 'document_end'
+        : 'document_idle';
+
+  const jsResources = isFirefox()
+    ? (manifestContentScript.js || []).map(toRelativeExtensionPath)
+    : manifestContentScript.js || [];
+  const cssResources = isFirefox()
+    ? manifestContentScript.css?.map(toRelativeExtensionPath)
+    : manifestContentScript.css;
+
+  try {
+    await chrome.scripting.registerContentScripts([
+      {
+        id: PLUGIN_CONTENT_SCRIPT_ID,
+        js: jsResources,
+        css: cssResources,
+        matches: grantedMatches,
+        allFrames: manifestContentScript.all_frames,
+        runAt,
+        persistAcrossSessions: true,
+      },
+    ]);
+    // Inject into already-open matching tabs so the user sees the effect without
+    // a manual reload.
+    await injectPluginScriptIntoOpenTabs(grantedMatches, jsResources, cssResources);
+  } catch (error) {
+    console.error('[Background] Failed to register plugin content scripts:', error);
+  }
+}
+
 // Initial sync for persisted permissions
 void syncCustomContentScripts();
+void syncPluginContentScripts();
+void refreshPluginSiteDomains();
 
 // Initial fetch interceptor registration
 void registerFetchInterceptor();
@@ -498,6 +637,15 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     )
   ) {
     void syncResponseCompleteObserverRegistration();
+  }
+});
+
+// Plugin ecosystem: re-reconcile dynamic registration when the set of enabled
+// plugins changes. Plugin state lives in storage.local (not sync).
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== 'local') return;
+  if (Object.prototype.hasOwnProperty.call(changes, StorageKeys.PLUGINS_STATE)) {
+    void syncPluginContentScripts();
   }
 });
 

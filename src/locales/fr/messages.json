@@ -2050,5 +2050,33 @@
   "responseCompleteForegroundToast": {
     "message": "Nouvelle réponse terminée",
     "description": "Texte du toast au premier plan lorsqu'une réponse Gemini se termine hors écran"
+  },
+  "pluginsTitle": {
+    "message": "Extensions",
+    "description": "Popup section title for the plugin list"
+  },
+  "pluginsDescription": {
+    "message": "Activez des extensions qui améliorent d'autres sites d'IA. En activer une demande l'autorisation pour ce site.",
+    "description": "Popup subtitle explaining the plugin list"
+  },
+  "pluginViewSource": {
+    "message": "Source",
+    "description": "Link label to a plugin source/repo"
+  },
+  "pluginPermissionDenied": {
+    "message": "Autorisation du site refusée ; l'extension ne peut pas s'exécuter.",
+    "description": "Shown when the user denies the site permission for a plugin"
+  },
+  "pluginsLoading": {
+    "message": "Chargement des extensions…",
+    "description": "Shown while the plugin catalog is loading"
+  },
+  "pluginsEmpty": {
+    "message": "Aucune extension disponible.",
+    "description": "Shown when no plugins are available"
+  },
+  "pluginsRefresh": {
+    "message": "Actualiser les extensions",
+    "description": "Tooltip for the refresh-marketplace-catalog button"
   }
 }

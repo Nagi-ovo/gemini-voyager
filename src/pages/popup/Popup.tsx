@@ -20,6 +20,10 @@ import {
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
+import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
+import { MarketplacePluginSource } from '@/features/plugins/sources/MarketplacePluginSource';
+import type { PluginManifest } from '@/features/plugins/types';
+import { resolvePlatformThemeId } from '@/pages/content/platformTheme';
 import {
   extractDmgDownloadUrl,
   extractLatestReleaseVersion,
@@ -38,6 +42,7 @@ import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 import { CloudSyncSettings } from './components/CloudSyncSettings';
 import { ContextSyncSettings } from './components/ContextSyncSettings';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
+import { PluginManager } from './components/PluginManager';
 import { StarredHistory } from './components/StarredHistory';
 import {
   IconChatGPT,
@@ -75,6 +80,7 @@ const POPUP_SECTION_IDS = [
   'keyboardShortcuts',
   'inputCollapse',
   'promptManager',
+  'plugins',
   'general',
   'nanobanana',
 ] as const;
@@ -508,6 +514,10 @@ export default function Popup() {
   const [persistentExportToolbarEnabled, setPersistentExportToolbarEnabled] =
     useState<boolean>(true);
   const [activeAccountPlatform, setActiveAccountPlatform] = useState<AccountPlatform>('gemini');
+  const [activeUrl, setActiveUrl] = useState<string>('');
+  const [pluginManifests, setPluginManifests] = useState<readonly PluginManifest[]>([]);
+  const [pluginsLoading, setPluginsLoading] = useState<boolean>(true);
+  const [pluginsRefreshing, setPluginsRefreshing] = useState<boolean>(false);
   const [aiStructureCopyStatus, setAiStructureCopyStatus] = useState<
     'idle' | 'loading' | 'copied' | 'empty' | 'error'
   >('idle');
@@ -516,14 +526,52 @@ export default function Popup() {
   const isAIStudio = activeAccountPlatform === 'aistudio';
   const currentPlatformLabel = isAIStudio ? t('platformAIStudio') : t('platformGemini');
 
+  // Sites that at least one available plugin targets (e.g. Claude). On those
+  // sites the Plugins section is pinned to the top of the popup, since plugins
+  // are the only relevant Voyager surface there.
+  const isPluginSite = useMemo(
+    () => pluginManifests.some((plugin) => matchesAnyPattern(activeUrl, plugin.matches)),
+    [activeUrl, pluginManifests],
+  );
+
+  // The host platform to theme the popup for (claude → orange, chatgpt → sky blue).
+  const activePlatform = useMemo(() => resolvePlatformThemeId(activeUrl), [activeUrl]);
+
+  const handleRefreshPlugins = useCallback(async () => {
+    setPluginsRefreshing(true);
+    try {
+      setPluginManifests(await new MarketplacePluginSource().forceRefresh());
+    } finally {
+      setPluginsRefreshing(false);
+    }
+  }, []);
+
   useEffect(() => {
     browser.tabs
       .query({ active: true, currentWindow: true })
       .then((tabs) => {
         const url = tabs[0]?.url || '';
+        setActiveUrl(url);
         setActiveAccountPlatform(detectAccountPlatformFromUrl(url));
       })
       .catch(() => {});
+  }, []);
+
+  // Load the plugin catalog from the marketplace (cache-first; refreshes in bg).
+  useEffect(() => {
+    let active = true;
+    void new MarketplacePluginSource()
+      .list()
+      .then((manifests) => {
+        if (active) setPluginManifests(manifests);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setPluginsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleFormulaCopyFormatChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1410,6 +1458,10 @@ export default function Popup() {
       case 'sidebarBehavior':
       case 'visualEffect':
         return !isAIStudio;
+      case 'plugins':
+        // Pinned to the top on plugin sites (rendered separately), so hide it
+        // from the reorderable list there to avoid a duplicate.
+        return !isPluginSite;
       default:
         return true;
     }
@@ -1437,20 +1489,25 @@ export default function Popup() {
     });
   };
 
-  const wrapSection = (id: PopupSectionId, content: React.ReactNode) => (
-    <div key={id} style={{ order: sectionOrder.indexOf(id) }} className="group/reorder relative">
-      <SectionReorderControls
-        isFirst={visibleSections[0] === id}
-        isLast={visibleSections[visibleSections.length - 1] === id}
-        hasValueBadge={VALUE_BADGE_SECTION_IDS.has(id)}
-        onMoveUp={() => moveSectionInOrder(id, 'up')}
-        onMoveDown={() => moveSectionInOrder(id, 'down')}
-        moveUpLabel={t('moveSectionUp')}
-        moveDownLabel={t('moveSectionDown')}
-      />
-      {content}
-    </div>
-  );
+  const wrapSection = (id: PopupSectionId, content: React.ReactNode) => {
+    // On Claude / ChatGPT, hide the Gemini-specific sections so the popup only
+    // shows what's relevant there (the pinned Plugins section).
+    if (isPluginSite) return null;
+    return (
+      <div key={id} style={{ order: sectionOrder.indexOf(id) }} className="group/reorder relative">
+        <SectionReorderControls
+          isFirst={visibleSections[0] === id}
+          isLast={visibleSections[visibleSections.length - 1] === id}
+          hasValueBadge={VALUE_BADGE_SECTION_IDS.has(id)}
+          onMoveUp={() => moveSectionInOrder(id, 'up')}
+          onMoveDown={() => moveSectionInOrder(id, 'down')}
+          moveUpLabel={t('moveSectionUp')}
+          moveDownLabel={t('moveSectionDown')}
+        />
+        {content}
+      </div>
+    );
+  };
 
   // Show starred history if requested
   if (showStarredHistory) {
@@ -1458,7 +1515,16 @@ export default function Popup() {
   }
 
   return (
-    <div className="bg-background text-foreground w-[360px]">
+    <div
+      className="bg-background text-foreground w-[360px]"
+      style={
+        activePlatform === 'claude'
+          ? ({ '--primary': '#d97757', '--primary-foreground': '#ffffff' } as React.CSSProperties)
+          : activePlatform === 'chatgpt'
+            ? ({ '--primary': '#0ea5e9', '--primary-foreground': '#ffffff' } as React.CSSProperties)
+            : undefined
+      }
+    >
       {/* Header */}
       <div className="border-border/50 flex items-center justify-between border-b px-5 py-5">
         <h1 className="text-primary text-2xl font-extrabold tracking-tight">{t('extName')}</h1>
@@ -1552,8 +1618,31 @@ export default function Popup() {
         )}
         {/* Cloud Sync */}
         {!isSafariBrowser && wrapSection('cloudSync', <CloudSyncSettings />)}
+        {/* Plugin ecosystem — pinned to the very top on sites a plugin targets
+            (e.g. Claude). On other sites it stays in the reorderable list below. */}
+        {isPluginSite && (
+          <div style={{ order: -1 }}>
+            <PluginManager
+              manifests={pluginManifests}
+              loading={pluginsLoading}
+              onRefresh={handleRefreshPlugins}
+              refreshing={pluginsRefreshing}
+            />
+          </div>
+        )}
         {/* Context Sync */}
         {wrapSection('contextSync', <ContextSyncSettings />)}
+        {/* Plugin ecosystem — Tampermonkey-style list of integrated plugins */}
+        {!isPluginSite &&
+          wrapSection(
+            'plugins',
+            <PluginManager
+              manifests={pluginManifests}
+              loading={pluginsLoading}
+              onRefresh={handleRefreshPlugins}
+              refreshing={pluginsRefreshing}
+            />,
+          )}
         {/* Timeline Options */}
         {wrapSection(
           'timeline',

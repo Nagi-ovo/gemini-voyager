@@ -2050,5 +2050,33 @@
   "responseCompleteForegroundToast": {
     "message": "새 응답이 완료되었습니다",
     "description": "Gemini 응답이 화면 밖에서 완료되었을 때의 전면 토스트 문구"
+  },
+  "pluginsTitle": {
+    "message": "플러그인",
+    "description": "Popup section title for the plugin list"
+  },
+  "pluginsDescription": {
+    "message": "다른 AI 사이트를 향상하는 플러그인을 활성화합니다. 켜면 해당 사이트 접근 권한을 요청합니다.",
+    "description": "Popup subtitle explaining the plugin list"
+  },
+  "pluginViewSource": {
+    "message": "소스",
+    "description": "Link label to a plugin source/repo"
+  },
+  "pluginPermissionDenied": {
+    "message": "사이트 권한이 거부되어 플러그인을 실행할 수 없습니다.",
+    "description": "Shown when the user denies the site permission for a plugin"
+  },
+  "pluginsLoading": {
+    "message": "플러그인 불러오는 중…",
+    "description": "Shown while the plugin catalog is loading"
+  },
+  "pluginsEmpty": {
+    "message": "사용 가능한 플러그인이 없습니다.",
+    "description": "Shown when no plugins are available"
+  },
+  "pluginsRefresh": {
+    "message": "플러그인 새로고침",
+    "description": "Tooltip for the refresh-marketplace-catalog button"
   }
 }

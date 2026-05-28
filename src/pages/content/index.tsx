@@ -6,6 +6,7 @@ import {
 } from '@/core/utils/extensionContext';
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
+import { startPluginHost } from '@/features/plugins';
 import { initI18n } from '@/utils/i18n';
 
 import { startCanvasExport } from './canvasExport/index';
@@ -35,6 +36,7 @@ import { startInputHaloHider } from './inputHaloHider/index';
 import { initKaTeXConfig } from './katexConfig';
 import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startMermaid } from './mermaid/index';
+import { applyPlatformThemeClass } from './platformTheme';
 import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
@@ -88,6 +90,7 @@ let forkCleanup: (() => void) | null = null;
 let gemsSidebarCleanup: (() => void) | null = null;
 let responseCompleteNotificationCleanup: (() => void) | null = null;
 let edgeFinalVersionNoticeCleanup: (() => void) | null = null;
+let pluginHostCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -147,6 +150,7 @@ async function initializeFeatures(): Promise<void> {
     if (!hasValidExtensionContext()) {
       return;
     }
+
     // Sequential initialization with small delays between features
     // to further reduce simultaneous resource usage
     const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -411,6 +415,19 @@ function handleVisibilityChange(): void {
   try {
     if (!hasValidExtensionContext()) return;
 
+    // Plugin ecosystem host. Started up-front on EVERY page the content script is
+    // injected into (Gemini / AI Studio, and any site a user enabled a plugin for,
+    // e.g. claude.ai via dynamic registration). It self-detects the site adapter
+    // and only mounts plugins that match the current URL AND are enabled — inert by
+    // default since all builtin plugins ship disabled, so it has no effect unless a
+    // user turns a plugin on in the popup.
+    pluginHostCleanup = startPluginHost();
+
+    // Cosmetic: on Claude / ChatGPT, re-skin the Prompt Manager accent to the
+    // host platform's brand color (sets a gv-platform-* body class; CSS does the
+    // rest). No-op on Gemini / AI Studio.
+    applyPlatformThemeClass();
+
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       if (isExtensionContextInvalidatedError(event.reason)) {
         event.preventDefault();
@@ -550,6 +567,10 @@ function handleVisibilityChange(): void {
         if (edgeFinalVersionNoticeCleanup) {
           edgeFinalVersionNoticeCleanup();
           edgeFinalVersionNoticeCleanup = null;
+        }
+        if (pluginHostCleanup) {
+          pluginHostCleanup();
+          pluginHostCleanup = null;
         }
         chrome.storage?.onChanged?.removeListener(onStorageChanged);
       } catch (e) {

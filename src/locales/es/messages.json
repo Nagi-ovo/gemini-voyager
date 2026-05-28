@@ -2050,5 +2050,33 @@
   "responseCompleteForegroundToast": {
     "message": "Nueva respuesta completada",
     "description": "Texto del aviso en primer plano cuando una respuesta de Gemini se completa fuera de pantalla"
+  },
+  "pluginsTitle": {
+    "message": "Complementos",
+    "description": "Popup section title for the plugin list"
+  },
+  "pluginsDescription": {
+    "message": "Activa complementos que mejoran otros sitios de IA. Al activar uno se pedirá permiso para ese sitio.",
+    "description": "Popup subtitle explaining the plugin list"
+  },
+  "pluginViewSource": {
+    "message": "Código",
+    "description": "Link label to a plugin source/repo"
+  },
+  "pluginPermissionDenied": {
+    "message": "Permiso del sitio denegado; el complemento no puede ejecutarse.",
+    "description": "Shown when the user denies the site permission for a plugin"
+  },
+  "pluginsLoading": {
+    "message": "Cargando complementos…",
+    "description": "Shown while the plugin catalog is loading"
+  },
+  "pluginsEmpty": {
+    "message": "No hay complementos disponibles.",
+    "description": "Shown when no plugins are available"
+  },
+  "pluginsRefresh": {
+    "message": "Actualizar complementos",
+    "description": "Tooltip for the refresh-marketplace-catalog button"
   }
 }

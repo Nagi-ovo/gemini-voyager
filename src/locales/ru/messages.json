@@ -2050,5 +2050,33 @@
   "responseCompleteForegroundToast": {
     "message": "Новый ответ завершён",
     "description": "Текст всплывающего уведомления, когда ответ Gemini завершён вне экрана"
+  },
+  "pluginsTitle": {
+    "message": "Плагины",
+    "description": "Popup section title for the plugin list"
+  },
+  "pluginsDescription": {
+    "message": "Включайте плагины, улучшающие другие сайты ИИ. При включении запрашивается доступ к этому сайту.",
+    "description": "Popup subtitle explaining the plugin list"
+  },
+  "pluginViewSource": {
+    "message": "Исходник",
+    "description": "Link label to a plugin source/repo"
+  },
+  "pluginPermissionDenied": {
+    "message": "Доступ к сайту отклонён — плагин не может работать без него.",
+    "description": "Shown when the user denies the site permission for a plugin"
+  },
+  "pluginsLoading": {
+    "message": "Загрузка плагинов…",
+    "description": "Shown while the plugin catalog is loading"
+  },
+  "pluginsEmpty": {
+    "message": "Нет доступных плагинов.",
+    "description": "Shown when no plugins are available"
+  },
+  "pluginsRefresh": {
+    "message": "Обновить плагины",
+    "description": "Tooltip for the refresh-marketplace-catalog button"
   }
 }

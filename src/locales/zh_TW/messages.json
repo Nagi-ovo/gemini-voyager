@@ -2050,5 +2050,33 @@
   "responseCompleteForegroundToast": {
     "message": "新回覆已完成",
     "description": "Gemini 回覆在畫面外完成時的前景提示文字"
+  },
+  "pluginsTitle": {
+    "message": "外掛",
+    "description": "Popup section title for the plugin list"
+  },
+  "pluginsDescription": {
+    "message": "啟用強化其他 AI 網站的外掛。開啟時會要求該網站的存取權限。",
+    "description": "Popup subtitle explaining the plugin list"
+  },
+  "pluginViewSource": {
+    "message": "原始碼",
+    "description": "Link label to a plugin source/repo"
+  },
+  "pluginPermissionDenied": {
+    "message": "網站權限遭拒，外掛無法運作。",
+    "description": "Shown when the user denies the site permission for a plugin"
+  },
+  "pluginsLoading": {
+    "message": "正在載入外掛…",
+    "description": "Shown while the plugin catalog is loading"
+  },
+  "pluginsEmpty": {
+    "message": "暫無可用外掛。",
+    "description": "Shown when no plugins are available"
+  },
+  "pluginsRefresh": {
+    "message": "重新整理外掛",
+    "description": "Tooltip for the refresh-marketplace-catalog button"
   }
 }

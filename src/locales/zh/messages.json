@@ -2050,5 +2050,33 @@
   "responseCompleteForegroundToast": {
     "message": "新回复已完成",
     "description": "Gemini 回复在屏幕外完成时的前台提示文本"
+  },
+  "pluginsTitle": {
+    "message": "插件",
+    "description": "Popup section title for the plugin list"
+  },
+  "pluginsDescription": {
+    "message": "启用增强其他 AI 网站的插件。开启时会请求该网站的访问权限。",
+    "description": "Popup subtitle explaining the plugin list"
+  },
+  "pluginViewSource": {
+    "message": "源码",
+    "description": "Link label to a plugin source/repo"
+  },
+  "pluginPermissionDenied": {
+    "message": "网站权限被拒绝，插件无法运行。",
+    "description": "Shown when the user denies the site permission for a plugin"
+  },
+  "pluginsLoading": {
+    "message": "正在加载插件…",
+    "description": "Shown while the plugin catalog is loading"
+  },
+  "pluginsEmpty": {
+    "message": "暂无可用插件。",
+    "description": "Shown when no plugins are available"
+  },
+  "pluginsRefresh": {
+    "message": "刷新插件",
+    "description": "Tooltip for the refresh-marketplace-catalog button"
   }
 }

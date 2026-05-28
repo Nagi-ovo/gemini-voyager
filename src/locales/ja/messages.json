@@ -2050,5 +2050,33 @@
   "responseCompleteForegroundToast": {
     "message": "新しい回答が完了しました",
     "description": "Gemini の回答が画面外で完了したときの前面トースト文言"
+  },
+  "pluginsTitle": {
+    "message": "プラグイン",
+    "description": "Popup section title for the plugin list"
+  },
+  "pluginsDescription": {
+    "message": "他の AI サイトを強化するプラグインを有効化します。オンにするとそのサイトへのアクセス権限を要求します。",
+    "description": "Popup subtitle explaining the plugin list"
+  },
+  "pluginViewSource": {
+    "message": "ソース",
+    "description": "Link label to a plugin source/repo"
+  },
+  "pluginPermissionDenied": {
+    "message": "サイトの権限が拒否されたため、プラグインを実行できません。",
+    "description": "Shown when the user denies the site permission for a plugin"
+  },
+  "pluginsLoading": {
+    "message": "プラグインを読み込み中…",
+    "description": "Shown while the plugin catalog is loading"
+  },
+  "pluginsEmpty": {
+    "message": "利用できるプラグインはありません。",
+    "description": "Shown when no plugins are available"
+  },
+  "pluginsRefresh": {
+    "message": "プラグインを更新",
+    "description": "Tooltip for the refresh-marketplace-catalog button"
   }
 }

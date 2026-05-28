@@ -1163,6 +1163,10 @@ body.gv-rtl .gv-persistent-export-toolbar {
   max-width: calc(100vw - 20px);
   max-height: min(75vh, 600px);
   overflow: hidden;
+  /* Pin a base font-size so the panel never inherits the host page's (which is
+     larger on Claude/ChatGPT, and oversized on Gemini too) — keeps the Add
+     button and all panel text consistent across every platform. */
+  font-size: 14px;
   --gv-pm-surface: oklch(0.995 0.002 250);
   border-radius: 18px;
   background: oklch(0.995 0.002 250);
@@ -10962,4 +10966,80 @@ body.gv-hide-input-halo chat-window::before {
 body.gv-hide-input-halo chat-loading-animation,
 body.gv-hide-input-halo .nl-canvas {
   display: none !important;
+}
+
+/* ============================================================================
+   Platform-adaptive Prompt Manager accent (cosmetic re-skin).
+   On Claude / ChatGPT, Voyager's Gemini-green accent is swapped for the host
+   platform's brand color. The `gv-platform-<id>` class is set on <body> by
+   src/pages/content/platformTheme. Gemini / AI Studio have no class → keep green.
+   Not user-customizable; just an adaptation on these two platforms.
+   ============================================================================ */
+body.gv-platform-claude {
+  --gv-pm-brand: #d97757; /* Claude clay/terracotta */
+  --gv-pm-brand-hover: #c75f41;
+  --gv-pm-brand-fg: #ffffff;
+  --gv-pm-brand-soft: rgb(217 119 87 / 0.14);
+}
+body.gv-platform-chatgpt {
+  --gv-pm-brand: #0ea5e9; /* ChatGPT sky blue */
+  --gv-pm-brand-hover: #0284c7;
+  --gv-pm-brand-fg: #ffffff;
+  --gv-pm-brand-soft: rgb(14 165 233 / 0.14);
+}
+
+/* Solid accent surfaces (filled Add/Save buttons + floating trigger): brand
+   background, WHITE text/icon, neutral shadow so no green glow leaks through. */
+body.gv-platform-claude .gv-pm-add,
+body.gv-platform-chatgpt .gv-pm-add,
+body.gv-platform-claude .gv-pm-save,
+body.gv-platform-chatgpt .gv-pm-save,
+body.gv-platform-claude .gv-pm-trigger,
+body.gv-platform-chatgpt .gv-pm-trigger {
+  background: var(--gv-pm-brand) !important;
+  border-color: var(--gv-pm-brand) !important;
+  color: var(--gv-pm-brand-fg) !important;
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 0.18),
+    inset 0 1px 0 rgb(255 255 255 / 0.15) !important;
+}
+body.gv-platform-claude .gv-pm-add:hover,
+body.gv-platform-chatgpt .gv-pm-add:hover,
+body.gv-platform-claude .gv-pm-save:hover,
+body.gv-platform-chatgpt .gv-pm-save:hover,
+body.gv-platform-claude .gv-pm-trigger:hover,
+body.gv-platform-chatgpt .gv-pm-trigger:hover {
+  background: var(--gv-pm-brand-hover) !important;
+  border-color: var(--gv-pm-brand-hover) !important;
+}
+
+/* Ghost / soft accent surfaces (footer Starred-Library + Official-Docs buttons,
+   and the compact-view grid toggle): faint brand tint + brand text/border. */
+body.gv-platform-claude .gv-pm-backup-btn,
+body.gv-platform-chatgpt .gv-pm-backup-btn,
+body.gv-platform-claude .gv-pm-website-btn,
+body.gv-platform-chatgpt .gv-pm-website-btn,
+body.gv-platform-claude .gv-pm-view-mode.gv-pm-view-mode-compact,
+body.gv-platform-chatgpt .gv-pm-view-mode.gv-pm-view-mode-compact {
+  background: var(--gv-pm-brand-soft) !important;
+  border-color: var(--gv-pm-brand) !important;
+  color: var(--gv-pm-brand) !important;
+}
+
+/* Accent text on the panel surface */
+body.gv-platform-claude .gv-pm-chip,
+body.gv-platform-chatgpt .gv-pm-chip,
+body.gv-platform-claude .gv-pm-trigger-new::after,
+body.gv-platform-chatgpt .gv-pm-trigger-new::after {
+  color: var(--gv-pm-brand) !important;
+}
+
+/* Active filter tag + active lock: brand text on a faint brand pill */
+body.gv-platform-claude .gv-pm-tag.active,
+body.gv-platform-chatgpt .gv-pm-tag.active,
+body.gv-platform-claude .gv-pm-lock.active,
+body.gv-platform-chatgpt .gv-pm-lock.active {
+  background: var(--gv-pm-brand-soft) !important;
+  border-color: var(--gv-pm-brand) !important;
+  color: var(--gv-pm-brand) !important;
 }
