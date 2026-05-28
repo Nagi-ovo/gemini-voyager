@@ -104,23 +104,14 @@ const replaceWithNormalSize = (src: string): string => {
 };
 
 /**
- * Add a visual indicator (🍌) to the native download button
- * The click goes through to the native button, which triggers the fetch interceptor
+ * Attach the 🍌 badge to a download button. The badge lives INSIDE the button
+ * because Gemini wraps it in `<gem-icon-button>` which has `overflow: hidden`,
+ * so any negative offset overhanging the wrapper would be clipped.
  */
-function addDownloadIndicator(imgElement: HTMLImageElement): void {
-  const container = imgElement.closest('generated-image,.generated-image-container');
-  if (!container) return;
+function attachIndicatorToButton(nativeButton: HTMLButtonElement): void {
+  // Idempotency: don't add a second indicator to the same button.
+  if (nativeButton.querySelector('.nanobanana-indicator')) return;
 
-  // Try to find Gemini's native download button area
-  const nativeDownloadIcon = container.querySelector(DOWNLOAD_ICON_SELECTOR);
-  const nativeButton = nativeDownloadIcon?.closest('button');
-
-  if (!nativeButton) return;
-
-  // Check if indicator already exists
-  if (container.querySelector('.nanobanana-indicator')) return;
-
-  // Create the banana indicator badge
   const indicator = document.createElement('span');
   indicator.className = 'nanobanana-indicator';
   indicator.textContent = '🍌';
@@ -128,26 +119,41 @@ function addDownloadIndicator(imgElement: HTMLImageElement): void {
     chrome.i18n.getMessage('nanobananaDownloadTooltip') ||
     'NanoBanana: Downloads will have watermark removed';
 
-  // Style it as a small badge on the button
   Object.assign(indicator.style, {
     position: 'absolute',
-    top: '-4px',
-    right: '-4px',
-    fontSize: '12px',
+    top: '2px',
+    right: '2px',
+    fontSize: '11px',
+    lineHeight: '1',
     pointerEvents: 'none', // Let clicks pass through to the native button
     zIndex: '10',
-    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.45))',
   });
 
-  // Make the button container relative for absolute positioning
-  const buttonContainer = nativeButton.parentElement;
-  if (buttonContainer) {
-    const currentPosition = getComputedStyle(buttonContainer).position;
-    if (currentPosition === 'static') {
-      (buttonContainer as HTMLElement).style.position = 'relative';
-    }
-    buttonContainer.appendChild(indicator);
+  // mdc-icon-button is `position: relative` by default; guard against future
+  // Gemini changes that might flip it to static.
+  if (getComputedStyle(nativeButton).position === 'static') {
+    nativeButton.style.position = 'relative';
   }
+  nativeButton.appendChild(indicator);
+}
+
+/**
+ * Add a visual indicator (🍌) to the native download button via the
+ * preview-image path. Looks up the button through the generated-image
+ * container; for the lightbox/expansion-dialog path, see
+ * decorateDownloadButtons() which walks every `<download-generated-image-button>`
+ * host (toolbar AND lightbox).
+ */
+function addDownloadIndicator(imgElement: HTMLImageElement): void {
+  const container = imgElement.closest('generated-image,.generated-image-container');
+  if (!container) return;
+
+  const nativeDownloadIcon = container.querySelector(DOWNLOAD_ICON_SELECTOR);
+  const nativeButton = nativeDownloadIcon?.closest('button');
+  if (!nativeButton) return;
+
+  attachIndicatorToButton(nativeButton as HTMLButtonElement);
 }
 
 /**
@@ -194,25 +200,27 @@ const processAllImages = (): void => {
   const images = findGeminiImages();
   images.forEach(processImage);
 
-  // Also check existing processed images to see if they need an indicator
-  // (e.g. if the native buttons loaded after the image was processed)
-  const processedImages = document.querySelectorAll<HTMLImageElement>(
-    'img[data-watermark-processed="true"]',
-  );
-  processedImages.forEach((img) => {
-    addDownloadIndicator(img);
-  });
+  // Always re-run the indicator pass so blob-src previews and late-loading
+  // native buttons still pick up the 🍌 badge (idempotent).
+  decorateDownloadButtons();
 };
 
 /**
- * Add the 🍌 indicator to every Gemini-generated image's download button,
- * regardless of whether preview-time removal has run. Used when only the
- * download path is enabled.
+ * Add the 🍌 indicator to every Gemini-generated image's download button.
+ *
+ * Walks `<download-generated-image-button>` hosts directly instead of going
+ * through the img element. This covers:
+ *  1. The in-message toolbar (host lives inside `<generated-image>`)
+ *  2. The lightbox / `<expansion-dialog>` rendered into `cdk-overlay-container`
+ *     — same custom element, but NOT inside any `generated-image` container.
+ *
+ * Also independent of the img src (blob: vs googleusercontent.com).
  */
-const decorateDownloadButtons = (): void => {
-  const images = document.querySelectorAll<HTMLImageElement>('img[src*="googleusercontent.com"]');
-  images.forEach((img) => {
-    if (isValidGeminiImage(img)) addDownloadIndicator(img);
+export const decorateDownloadButtons = (): void => {
+  const hosts = document.querySelectorAll<HTMLElement>('download-generated-image-button');
+  hosts.forEach((host) => {
+    const button = host.querySelector<HTMLButtonElement>('button');
+    if (button) attachIndicatorToButton(button);
   });
 };
 

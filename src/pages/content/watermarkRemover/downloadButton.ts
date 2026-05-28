@@ -2,13 +2,19 @@ export const DOWNLOAD_ICON_SELECTOR =
   'mat-icon[fonticon="download"], .google-symbols[data-mat-icon-name="download"]';
 
 /**
- * Selector for the generated image container
- * Only buttons within this container should trigger watermark removal download progress
+ * Selector for an ancestor that proves the button belongs to a Gemini-generated
+ * image. Two cases:
+ *  - `<generated-image>` / `.generated-image-container` — the in-message toolbar
+ *  - `<download-generated-image-button>` — the same component is reused inside
+ *    the lightbox (`<expansion-dialog>` rendered into `cdk-overlay-container`),
+ *    where neither of the above ancestors is present. The custom element name
+ *    is Gemini-specific so user-uploaded image previews still won't match.
  */
-const GENERATED_IMAGE_CONTAINER_SELECTOR = 'generated-image, .generated-image-container';
+const GENERATED_IMAGE_CONTAINER_SELECTOR =
+  'generated-image, .generated-image-container, download-generated-image-button';
 
 /**
- * Check if an element is within a generated image container
+ * Check if an element is within a generated image container (toolbar or lightbox).
  */
 function isWithinGeneratedImageContainer(element: Element): boolean {
   return element.closest(GENERATED_IMAGE_CONTAINER_SELECTOR) !== null;

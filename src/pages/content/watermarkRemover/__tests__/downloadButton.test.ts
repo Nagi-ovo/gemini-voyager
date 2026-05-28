@@ -85,4 +85,30 @@ describe('findNativeDownloadButton', () => {
     const button = findNativeDownloadButton(target);
     expect(button).toBeNull();
   });
+
+  it('finds the lightbox download button (inside expansion-dialog, no generated-image ancestor)', () => {
+    // Mirrors the real lightbox DOM: the same `<download-generated-image-button>`
+    // custom element is reused here, but it lives under <expansion-dialog> in
+    // cdk-overlay-container — NOT inside any <generated-image>.
+    document.body.innerHTML = `
+      <div class="cdk-overlay-container">
+        <div class="mat-dialog-container">
+          <expansion-dialog>
+            <div class="arrow-back-container">
+              <download-generated-image-button>
+                <gem-icon-button>
+                  <button class="lightbox-btn" aria-label="Download full size image">
+                    <mat-icon fonticon="download" class="target"></mat-icon>
+                  </button>
+                </gem-icon-button>
+              </download-generated-image-button>
+            </div>
+          </expansion-dialog>
+        </div>
+      </div>
+    `;
+    const target = document.querySelector('.target');
+    const button = findNativeDownloadButton(target);
+    expect(button?.classList.contains('lightbox-btn')).toBe(true);
+  });
 });
