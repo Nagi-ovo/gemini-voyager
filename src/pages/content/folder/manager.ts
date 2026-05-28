@@ -2384,6 +2384,27 @@ export class FolderManager {
     element.addEventListener(
       'click',
       (e) => {
+        // Never swallow clicks on the trailing ⋮ menu button — those need to
+        // open the per-row actions menu (rename / delete / move / etc.).
+        // Without this guard, our capture-phase stopPropagation below silently
+        // kills the menu trigger during programmatic batch-delete (the
+        // moreButton.click() never reaches Material's menu, so the menu never
+        // opens and waitForDeleteButtonAndClick times out at 3s every row).
+        if (
+          e.target instanceof Element &&
+          e.target.closest(
+            '[data-test-id="actions-menu-button"], [data-test-id="conversation-actions-menu-icon-button"]',
+          )
+        ) {
+          return;
+        }
+
+        // Programmatic batch delete drives Gemini's own menu via .click() — let
+        // every click through unimpeded for the duration of the batch.
+        if (this.batchDeleteInProgress) {
+          return;
+        }
+
         // Prevent navigation if long-press was triggered
         if (longPressTriggered) {
           e.preventDefault();
@@ -4734,8 +4755,11 @@ export class FolderManager {
    */
   private getDeleteKeywords(): string[] {
     const rawPatterns = this.t('batch_delete_match_patterns') || '';
+    // Split on both ASCII and CJK fullwidth commas (and a couple of common
+    // separators) so locales authored with `，` / `、` / `；` don't end up as
+    // one giant unsplittable string.
     return rawPatterns
-      .split(',')
+      .split(/[,，、；;]+/)
       .map((s: string) => s.trim().toLowerCase())
       .filter((s: string) => s.length > 0);
   }
