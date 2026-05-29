@@ -361,47 +361,54 @@ export function PluginManager({
                           </a>
                         )}
                       </div>
-
-                      {/* Settings (only meaningful when enabled) */}
-                      {enabled && settingsSchema && (
-                        <div className="mt-2 space-y-2">
-                          {Object.entries(settingsSchema).map(([key, field]) => {
-                            if (field.type !== 'number') return null;
-                            const value = Number(settingsMap[plugin.id]?.[key] ?? field.default);
-                            return (
-                              <label key={key} className="block">
-                                <div className="text-muted-foreground mb-1 flex justify-between text-[11px]">
-                                  <span>{field.label}</span>
-                                  <span className="tabular-nums">{value}</span>
-                                </div>
-                                <input
-                                  type="range"
-                                  min={field.min ?? 0}
-                                  max={field.max ?? 100}
-                                  value={value}
-                                  onChange={(e) =>
-                                    handleSetting(plugin.id, key, Number(e.target.value))
-                                  }
-                                  className="accent-primary h-1.5 w-full cursor-pointer"
-                                />
-                              </label>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {deniedId === plugin.id && (
-                        <p className="mt-1 text-[11px] text-red-500">
-                          {t('pluginPermissionDenied')}
-                        </p>
-                      )}
-
-                      {unsupportedId === plugin.id && (
-                        <p className="mt-1 text-[11px] text-red-500">
-                          {t('pluginUnsupportedPlatform')}
-                        </p>
-                      )}
                     </>
+                  )}
+
+                  {/* Settings stay visible even when the description is collapsed, so a
+                      slider-based plugin (e.g. reading width) is always adjustable. Compact
+                      Gemini-style row: a narrow↔wide slider, no space-hungry label/value block. */}
+                  {enabled && settingsSchema && (
+                    <div className="mt-2 space-y-2.5">
+                      {Object.entries(settingsSchema).map(([key, field]) => {
+                        if (field.type !== 'number') return null;
+                        const value = Number(settingsMap[plugin.id]?.[key] ?? field.default);
+                        return (
+                          <div
+                            key={key}
+                            className="flex items-center gap-2"
+                            title={`${field.label}: ${value}`}
+                          >
+                            <span className="text-muted-foreground shrink-0 text-[10px]">
+                              {t('pluginRangeNarrower')}
+                            </span>
+                            <input
+                              type="range"
+                              min={field.min ?? 0}
+                              max={field.max ?? 100}
+                              value={value}
+                              aria-label={field.label}
+                              onChange={(e) =>
+                                handleSetting(plugin.id, key, Number(e.target.value))
+                              }
+                              className="accent-primary h-1.5 flex-1 cursor-pointer"
+                            />
+                            <span className="text-muted-foreground shrink-0 text-[10px]">
+                              {t('pluginRangeWider')}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {deniedId === plugin.id && (
+                    <p className="mt-1 text-[11px] text-red-500">{t('pluginPermissionDenied')}</p>
+                  )}
+
+                  {unsupportedId === plugin.id && (
+                    <p className="mt-1 text-[11px] text-red-500">
+                      {t('pluginUnsupportedPlatform')}
+                    </p>
                   )}
                 </div>
                 <Switch

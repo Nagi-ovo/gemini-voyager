@@ -2063,6 +2063,14 @@
     "message": "المصدر",
     "description": "Link label to a plugin source/repo"
   },
+  "pluginRangeNarrower": {
+    "message": "أضيق",
+    "description": "Narrow-end label on a plugin width/range slider"
+  },
+  "pluginRangeWider": {
+    "message": "أوسع",
+    "description": "Wide-end label on a plugin width/range slider"
+  },
   "pluginPermissionDenied": {
     "message": "تم رفض إذن الموقع، ولا يمكن تشغيل الإضافة بدونه.",
     "description": "Shown when the user denies the site permission for a plugin"

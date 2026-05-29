@@ -2063,6 +2063,14 @@
     "message": "소스",
     "description": "Link label to a plugin source/repo"
   },
+  "pluginRangeNarrower": {
+    "message": "좁게",
+    "description": "Narrow-end label on a plugin width/range slider"
+  },
+  "pluginRangeWider": {
+    "message": "넓게",
+    "description": "Wide-end label on a plugin width/range slider"
+  },
   "pluginPermissionDenied": {
     "message": "사이트 권한이 거부되어 플러그인을 실행할 수 없습니다.",
     "description": "Shown when the user denies the site permission for a plugin"

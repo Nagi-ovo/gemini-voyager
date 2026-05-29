@@ -2063,6 +2063,14 @@
     "message": "Código",
     "description": "Link label to a plugin source/repo"
   },
+  "pluginRangeNarrower": {
+    "message": "Más estrecho",
+    "description": "Narrow-end label on a plugin width/range slider"
+  },
+  "pluginRangeWider": {
+    "message": "Más ancho",
+    "description": "Wide-end label on a plugin width/range slider"
+  },
   "pluginPermissionDenied": {
     "message": "Permiso del sitio denegado; el complemento no puede ejecutarse.",
     "description": "Shown when the user denies the site permission for a plugin"

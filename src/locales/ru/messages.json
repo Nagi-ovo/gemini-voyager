@@ -2063,6 +2063,14 @@
     "message": "Исходник",
     "description": "Link label to a plugin source/repo"
   },
+  "pluginRangeNarrower": {
+    "message": "Уже",
+    "description": "Narrow-end label on a plugin width/range slider"
+  },
+  "pluginRangeWider": {
+    "message": "Шире",
+    "description": "Wide-end label on a plugin width/range slider"
+  },
   "pluginPermissionDenied": {
     "message": "Доступ к сайту отклонён — плагин не может работать без него.",
     "description": "Shown when the user denies the site permission for a plugin"
