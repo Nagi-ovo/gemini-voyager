@@ -61,6 +61,7 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 - **Types**: `src/core/types/common.ts` for StorageKeys and shared types.
 - **Translations**: `src/locales/*/messages.json` (10 languages).
 - **Injected CSS**: `public/contentStyle.css`.
+- **Plugins**: declarative CSS+JSON plugin system in `src/features/plugins/` (engine + `PluginHost` + popup `PluginManager`). The plugin catalog/content lives in a **separate repo** — `github.com/nagi-studio/voyager-plugins` (`marketplace.json` + `plugins/<name>/plugin.json`) — fetched at runtime by `MarketplacePluginSource`. Don't add plugin manifests to this repo. Locally it's a **sibling clone at `../voyager-plugins`** — read it directly when reasoning about catalog plugins. Builtin/native-function plugins that need JS (e.g. **Formula Copy**, which targets Claude + ChatGPT) live in `src/features/plugins/builtin/index.ts`, NOT in the catalog repo.
 
 ## Task Map
 
