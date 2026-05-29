@@ -55,6 +55,13 @@ export interface SiteAdapter {
    */
   readonly selectors: Readonly<Record<string, string>>;
   readonly theme: SiteThemeDescriptor;
+  /**
+   * Optional brand accent (hex) for Voyager's OWN UI when running on this site —
+   * the Prompt Manager, formula-copy toast, popup. Acts as the built-in default;
+   * a matching plugin's `theme.brand` overrides it. Omit (e.g. Gemini / AI
+   * Studio) to keep Voyager's native green.
+   */
+  readonly brandColor?: string;
   readonly capabilities: ReadonlySet<SiteCapability>;
 }
 
@@ -160,6 +167,17 @@ export const PLUGIN_CATEGORIES = [
 export type KnownPluginCategory = (typeof PLUGIN_CATEGORIES)[number];
 export type PluginCategory = KnownPluginCategory | (string & {});
 
+/**
+ * Optional brand theming a plugin contributes for the site(s) it matches. The
+ * author declares only a single accent `brand` (hex); Voyager derives the
+ * hover / soft / foreground shades via CSS `color-mix`. Overrides the matching
+ * `SiteAdapter.brandColor`.
+ */
+export interface PluginTheme {
+  /** Accent colour as a hex string (e.g. `#d97757`). */
+  readonly brand: string;
+}
+
 export interface PluginManifest {
   /** Globally unique, reverse-dotted (e.g. `vendor.my-plugin`). */
   readonly id: string;
@@ -178,6 +196,8 @@ export interface PluginManifest {
   /** URL match patterns the plugin applies to (glob subset of Chrome match patterns). */
   readonly matches: readonly string[];
   readonly contributes: PluginContributions;
+  /** Optional brand accent for Voyager UI on the matched site(s). */
+  readonly theme?: PluginTheme;
 }
 
 /** Where an installed plugin came from. Drives trust + update behaviour. */

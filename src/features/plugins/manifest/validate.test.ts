@@ -160,4 +160,27 @@ describe('validateManifest', () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it('accepts an optional theme with a hex brand colour', () => {
+    const result = validateManifest({ ...valid, theme: { brand: '#d97757' } });
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.theme?.brand).toBe('#d97757');
+  });
+
+  it('omits theme when not provided', () => {
+    const result = validateManifest(valid);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.theme).toBeUndefined();
+  });
+
+  it('rejects a theme whose brand is not a hex colour', () => {
+    for (const brand of ['red', 'rgb(1,2,3)', 'd97757', '', '#ggg', 'url(x)']) {
+      const result = validateManifest({ ...valid, theme: { brand } });
+      expect(result.success).toBe(false);
+      if (result.success) continue;
+      expect(result.error.some((e) => e.path === 'theme.brand')).toBe(true);
+    }
+  });
 });

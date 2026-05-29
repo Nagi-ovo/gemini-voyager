@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
@@ -22,12 +22,16 @@ import { IconChatGPT, IconClaude } from './WebsiteLogos';
 type EnabledMap = Record<string, boolean>;
 type SettingsMap = Record<string, Record<string, PluginSettingValue>>;
 
-/** Platform logo + brand color for a plugin, derived from its match hosts. */
-function platformBadge(matches: readonly string[]): { icon: ReactNode; color: string } | null {
-  const host = matches.map((m) => m.replace(/^[a-z*]+:\/\//i, '').replace(/\/.*$/, '')).join(' ');
-  if (host.includes('claude.ai')) return { icon: <IconClaude />, color: '#d97757' };
+/** Platform logo + brand color for a plugin. Colour prefers the plugin's
+ *  declared `theme.brand`, falling back to the platform's default accent. */
+function platformBadge(plugin: PluginManifest): { icon: ReactNode; color: string } | null {
+  const host = plugin.matches
+    .map((m) => m.replace(/^[a-z*]+:\/\//i, '').replace(/\/.*$/, ''))
+    .join(' ');
+  const brand = plugin.theme?.brand;
+  if (host.includes('claude.ai')) return { icon: <IconClaude />, color: brand ?? '#d97757' };
   if (host.includes('chatgpt.com') || host.includes('openai.com'))
-    return { icon: <IconChatGPT />, color: '#0ea5e9' };
+    return { icon: <IconChatGPT />, color: brand ?? '#0ea5e9' };
   return null;
 }
 
@@ -97,6 +101,13 @@ export function PluginManager({
   const [deniedId, setDeniedId] = useState<string | null>(null);
   const [unsupportedId, setUnsupportedId] = useState<string | null>(null);
 
+  // Coalesced persistence for setting sliders (see handleSetting). Keyed by
+  // `${pluginId}:${settingKey}` so independent sliders keep independent timers.
+  const settingTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const pendingSettings = useRef(
+    new Map<string, { id: string; key: string; value: PluginSettingValue }>(),
+  );
+
   useEffect(() => {
     let active = true;
     void loadPluginState().then((state) => {
@@ -157,8 +168,41 @@ export function PluginManager({
   }, []);
 
   const handleSetting = useCallback((id: string, key: string, value: PluginSettingValue) => {
+    // Keep the visible slider value instant via local state, but DEBOUNCE the
+    // storage write. A range drag fires onChange on every step; each persist is
+    // a read-modify-write of chrome.storage.local that, via storage.onChanged,
+    // makes the content script re-render the plugin CSS and reflow the (wide)
+    // thread. Writing per-tick would fire dozens of those round-trips + reflows
+    // per drag (and the concurrent read-modify-writes could race). We coalesce
+    // to the last value ~200ms after the user stops moving.
     setSettingsMap((prev) => ({ ...prev, [id]: { ...prev[id], [key]: value } }));
-    void setPluginSetting(id, key, value);
+    const mapKey = `${id}:${key}`;
+    pendingSettings.current.set(mapKey, { id, key, value });
+    const existing = settingTimers.current.get(mapKey);
+    if (existing) clearTimeout(existing);
+    settingTimers.current.set(
+      mapKey,
+      setTimeout(() => {
+        settingTimers.current.delete(mapKey);
+        const pending = pendingSettings.current.get(mapKey);
+        if (!pending) return;
+        pendingSettings.current.delete(mapKey);
+        void setPluginSetting(pending.id, pending.key, pending.value);
+      }, 200),
+    );
+  }, []);
+
+  // Flush any pending setting write if the popup closes mid-drag, so the user's
+  // final value is never lost to the debounce window.
+  useEffect(() => {
+    const timers = settingTimers.current;
+    const pending = pendingSettings.current;
+    return () => {
+      for (const timer of timers.values()) clearTimeout(timer);
+      timers.clear();
+      for (const { id, key, value } of pending.values()) void setPluginSetting(id, key, value);
+      pending.clear();
+    };
   }, []);
 
   const toggleCollapsed = useCallback((id: string) => {
@@ -217,7 +261,7 @@ export function PluginManager({
           const isOpen = !collapsed.has(plugin.id);
           const hosts = siteHostsFromMatches(plugin.matches);
           const settingsSchema = plugin.contributes.settings;
-          const badge = platformBadge(plugin.matches);
+          const badge = platformBadge(plugin);
           return (
             <div key={plugin.id} className="border-border/60 rounded-lg border p-3">
               <div className="flex items-start justify-between gap-3">

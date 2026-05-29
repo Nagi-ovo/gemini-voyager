@@ -1735,8 +1735,8 @@ body.dark-theme .gv-pm-search input[type='search']::placeholder {
 }
 
 .gv-pm-tag.active {
-  background: oklch(0.55 0.17 155 / 0.18);
-  color: oklch(0.85 0.1 155);
+  background: var(--gv-pm-brand-soft, oklch(0.55 0.17 155 / 0.18));
+  color: var(--gv-pm-brand, oklch(0.85 0.1 155));
   font-weight: 600;
 }
 
@@ -1755,8 +1755,8 @@ body.light-theme .gv-pm-tag:hover {
 
 .theme-host.light-theme .gv-pm-tag.active,
 body.light-theme .gv-pm-tag.active {
-  background: oklch(0.55 0.17 155 / 0.12);
-  color: oklch(0.4 0.15 155);
+  background: var(--gv-pm-brand-soft, oklch(0.55 0.17 155 / 0.12));
+  color: var(--gv-pm-brand, oklch(0.4 0.15 155));
 }
 
 .theme-host.dark-theme .gv-pm-tag,
@@ -1774,8 +1774,8 @@ body.dark-theme .gv-pm-tag:hover {
 
 .theme-host.dark-theme .gv-pm-tag.active,
 body.dark-theme .gv-pm-tag.active {
-  background: oklch(0.7 0.16 155 / 0.18);
-  color: oklch(0.85 0.1 155);
+  background: var(--gv-pm-brand-soft, oklch(0.7 0.16 155 / 0.18));
+  color: var(--gv-pm-brand, oklch(0.85 0.1 155));
 }
 
 .gv-pm-add-form {
@@ -3195,8 +3195,8 @@ body.dark-theme .gv-pm-notice.err {
 }
 
 .gv-pm-panel[data-gv-theme='dark'] .gv-pm-tag.active {
-  background: oklch(0.7 0.16 155 / 0.18);
-  color: oklch(0.85 0.1 155);
+  background: var(--gv-pm-brand-soft, oklch(0.7 0.16 155 / 0.18));
+  color: var(--gv-pm-brand, oklch(0.85 0.1 155));
 }
 
 .gv-pm-panel[data-gv-theme='dark'] .gv-pm-input-text,
@@ -3463,8 +3463,8 @@ body.dark-theme .gv-pm-notice.err {
 }
 
 .gv-pm-panel[data-gv-theme='light'] .gv-pm-tag.active {
-  background: oklch(0.55 0.17 155 / 0.12);
-  color: oklch(0.4 0.15 155);
+  background: var(--gv-pm-brand-soft, oklch(0.55 0.17 155 / 0.12));
+  color: var(--gv-pm-brand, oklch(0.4 0.15 155));
 }
 
 .gv-pm-panel[data-gv-theme='light'] .gv-pm-input-text,
@@ -5431,6 +5431,16 @@ html[data-color-scheme='light'] .gv-copy-toast-error {
     0 2px 8px rgba(234, 67, 53, 0.2);
 }
 
+/* Themed platforms (Claude / ChatGPT / any plugin-declared theme): tint the
+   "Copied" toast with the brand colour (clay / sky blue) instead of Gemini's
+   green. The gv-platform-themed class + --gv-pm-brand live on the document root. */
+:root.gv-platform-themed .gv-copy-toast-success {
+  background: linear-gradient(135deg, var(--gv-pm-brand) 0%, var(--gv-pm-brand-hover) 100%);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    0 2px 8px var(--gv-pm-brand-soft);
+}
+
 /* AI Studio formula hover effect - make ms-katex elements clickable */
 ms-katex {
   cursor: pointer !important;
@@ -5457,6 +5467,26 @@ ms-katex:hover .katex {
 html[data-color-scheme='light'] ms-katex:hover,
 body.light-theme ms-katex:hover {
   background-color: rgba(66, 133, 244, 0.08) !important;
+}
+
+/* ChatGPT / Claude formula hover effect. KaTeX here is rendered as a bare
+   .katex (no ms-katex / .math-inline wrapper), so the rules above never reach
+   it — that's why hovering a formula on these sites showed no feedback. Tint it
+   with the platform brand colour to signal "click to copy", matching the toast
+   and prompt manager. NB: KaTeX is size-sensitive, so we deliberately add NO
+   padding — only border-radius + background + box-shadow, none of which shift
+   layout or disturb the maths rendering. */
+:root.gv-platform-themed .katex {
+  cursor: pointer;
+  border-radius: 4px;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+:root.gv-platform-themed .katex:hover {
+  background-color: var(--gv-pm-brand-soft);
+  box-shadow: 0 0 0 1px var(--gv-pm-brand);
 }
 
 /* ==========================================================================
@@ -10969,33 +10999,28 @@ body.gv-hide-input-halo .nl-canvas {
 }
 
 /* ============================================================================
-   Platform-adaptive Prompt Manager accent (cosmetic re-skin).
-   On Claude / ChatGPT, Voyager's Gemini-green accent is swapped for the host
-   platform's brand color. The `gv-platform-<id>` class is set on <body> by
-   src/pages/content/platformTheme. Gemini / AI Studio have no class → keep green.
-   Not user-customizable; just an adaptation on these two platforms.
+   Platform-adaptive accent. On a themed platform (Claude / ChatGPT, or any
+   plugin that declares `theme.brand`), src/pages/content/platformTheme injects
+   --gv-pm-brand on the document root (<html>) + adds .gv-platform-themed there.
+   We derive the hover / soft / foreground shades from that ONE variable via
+   color-mix; the rules below repaint Voyager UI with !important so they win over
+   every per-theme variant — including the high-specificity
+   .gv-pm-panel[data-gv-theme=...] ones that a body-scoped override couldn't beat.
+   Single source of truth for the colour is data (adapter.brandColor / plugin
+   theme), not this file. Gemini / AI Studio get no variable/class → native green.
    ============================================================================ */
-body.gv-platform-claude {
-  --gv-pm-brand: #d97757; /* Claude clay/terracotta */
-  --gv-pm-brand-hover: #c75f41;
+:root.gv-platform-themed {
+  /* --gv-pm-brand is injected at runtime by applyBrandTheme(); derive the rest. */
+  --gv-pm-brand-hover: color-mix(in srgb, var(--gv-pm-brand) 82%, black);
+  --gv-pm-brand-soft: color-mix(in srgb, var(--gv-pm-brand) 14%, transparent);
   --gv-pm-brand-fg: #ffffff;
-  --gv-pm-brand-soft: rgb(217 119 87 / 0.14);
-}
-body.gv-platform-chatgpt {
-  --gv-pm-brand: #0ea5e9; /* ChatGPT sky blue */
-  --gv-pm-brand-hover: #0284c7;
-  --gv-pm-brand-fg: #ffffff;
-  --gv-pm-brand-soft: rgb(14 165 233 / 0.14);
 }
 
 /* Solid accent surfaces (filled Add/Save buttons + floating trigger): brand
    background, WHITE text/icon, neutral shadow so no green glow leaks through. */
-body.gv-platform-claude .gv-pm-add,
-body.gv-platform-chatgpt .gv-pm-add,
-body.gv-platform-claude .gv-pm-save,
-body.gv-platform-chatgpt .gv-pm-save,
-body.gv-platform-claude .gv-pm-trigger,
-body.gv-platform-chatgpt .gv-pm-trigger {
+:root.gv-platform-themed .gv-pm-add,
+:root.gv-platform-themed .gv-pm-save,
+:root.gv-platform-themed .gv-pm-trigger {
   background: var(--gv-pm-brand) !important;
   border-color: var(--gv-pm-brand) !important;
   color: var(--gv-pm-brand-fg) !important;
@@ -11003,43 +11028,58 @@ body.gv-platform-chatgpt .gv-pm-trigger {
     0 4px 16px rgb(0 0 0 / 0.18),
     inset 0 1px 0 rgb(255 255 255 / 0.15) !important;
 }
-body.gv-platform-claude .gv-pm-add:hover,
-body.gv-platform-chatgpt .gv-pm-add:hover,
-body.gv-platform-claude .gv-pm-save:hover,
-body.gv-platform-chatgpt .gv-pm-save:hover,
-body.gv-platform-claude .gv-pm-trigger:hover,
-body.gv-platform-chatgpt .gv-pm-trigger:hover {
+:root.gv-platform-themed .gv-pm-add:hover,
+:root.gv-platform-themed .gv-pm-save:hover,
+:root.gv-platform-themed .gv-pm-trigger:hover {
   background: var(--gv-pm-brand-hover) !important;
   border-color: var(--gv-pm-brand-hover) !important;
 }
 
 /* Ghost / soft accent surfaces (footer Starred-Library + Official-Docs buttons,
    and the compact-view grid toggle): faint brand tint + brand text/border. */
-body.gv-platform-claude .gv-pm-backup-btn,
-body.gv-platform-chatgpt .gv-pm-backup-btn,
-body.gv-platform-claude .gv-pm-website-btn,
-body.gv-platform-chatgpt .gv-pm-website-btn,
-body.gv-platform-claude .gv-pm-view-mode.gv-pm-view-mode-compact,
-body.gv-platform-chatgpt .gv-pm-view-mode.gv-pm-view-mode-compact {
+:root.gv-platform-themed .gv-pm-backup-btn,
+:root.gv-platform-themed .gv-pm-website-btn,
+:root.gv-platform-themed .gv-pm-view-mode.gv-pm-view-mode-compact {
+  background: var(--gv-pm-brand-soft) !important;
+  border-color: var(--gv-pm-brand) !important;
+  color: var(--gv-pm-brand) !important;
+}
+:root.gv-platform-themed .gv-pm-backup-btn:hover,
+:root.gv-platform-themed .gv-pm-website-btn:hover,
+:root.gv-platform-themed .gv-pm-backup-btn:active,
+:root.gv-platform-themed .gv-pm-website-btn:active {
+  background: color-mix(in srgb, var(--gv-pm-brand) 22%, transparent) !important;
+  border-color: var(--gv-pm-brand) !important;
+  color: var(--gv-pm-brand) !important;
+}
+
+/* Hover hints that only tint a border (view-mode toggle, lock button). */
+:root.gv-platform-themed .gv-pm-view-mode:hover,
+:root.gv-platform-themed .gv-pm-lock:hover {
+  border-color: var(--gv-pm-brand) !important;
+}
+
+/* Search field focus ring. */
+:root.gv-platform-themed .gv-pm-search input[type='search']:focus {
+  border-color: var(--gv-pm-brand) !important;
+  box-shadow: 0 0 0 3px var(--gv-pm-brand-soft) !important;
+}
+
+/* Accent text on the panel surface. */
+:root.gv-platform-themed .gv-pm-chip,
+:root.gv-platform-themed .gv-pm-trigger-new::after {
+  color: var(--gv-pm-brand) !important;
+}
+
+/* Active filter tag + active lock: brand text on a faint brand pill. */
+:root.gv-platform-themed .gv-pm-tag.active,
+:root.gv-platform-themed .gv-pm-lock.active {
   background: var(--gv-pm-brand-soft) !important;
   border-color: var(--gv-pm-brand) !important;
   color: var(--gv-pm-brand) !important;
 }
 
-/* Accent text on the panel surface */
-body.gv-platform-claude .gv-pm-chip,
-body.gv-platform-chatgpt .gv-pm-chip,
-body.gv-platform-claude .gv-pm-trigger-new::after,
-body.gv-platform-chatgpt .gv-pm-trigger-new::after {
-  color: var(--gv-pm-brand) !important;
-}
-
-/* Active filter tag + active lock: brand text on a faint brand pill */
-body.gv-platform-claude .gv-pm-tag.active,
-body.gv-platform-chatgpt .gv-pm-tag.active,
-body.gv-platform-claude .gv-pm-lock.active,
-body.gv-platform-chatgpt .gv-pm-lock.active {
-  background: var(--gv-pm-brand-soft) !important;
-  border-color: var(--gv-pm-brand) !important;
-  color: var(--gv-pm-brand) !important;
+/* Active lock's focus-ring glow follows the brand too. */
+:root.gv-platform-themed .gv-pm-lock.active {
+  box-shadow: 0 0 0 3px var(--gv-pm-brand-soft) !important;
 }

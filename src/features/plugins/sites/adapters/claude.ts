@@ -18,5 +18,6 @@ export const claudeAdapter: SiteAdapter = {
     lightSelector: ':root:not(.dark)',
     darkSelector: ':root.dark',
   },
+  brandColor: '#d97757', // Claude clay / terracotta
   capabilities: new Set<SiteCapability>(['chat', 'sidebar', 'composer', 'darkMode']),
 };

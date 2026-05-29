@@ -37,7 +37,7 @@ import { startInputHaloHider } from './inputHaloHider/index';
 import { initKaTeXConfig } from './katexConfig';
 import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startMermaid } from './mermaid/index';
-import { applyPlatformThemeClass } from './platformTheme';
+import { startBrandTheme } from './platformTheme';
 import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
@@ -92,6 +92,7 @@ let gemsSidebarCleanup: (() => void) | null = null;
 let responseCompleteNotificationCleanup: (() => void) | null = null;
 let edgeFinalVersionNoticeCleanup: (() => void) | null = null;
 let pluginHostCleanup: (() => void) | null = null;
+let brandThemeCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -424,10 +425,12 @@ function handleVisibilityChange(): void {
     // user turns a plugin on in the popup.
     pluginHostCleanup = startPluginHost();
 
-    // Cosmetic: on Claude / ChatGPT, re-skin the Prompt Manager accent to the
-    // host platform's brand color (sets a gv-platform-* body class; CSS does the
-    // rest). No-op on Gemini / AI Studio.
-    applyPlatformThemeClass();
+    // Cosmetic: on Claude / ChatGPT, re-skin Voyager's accent to the host
+    // platform's brand colour (injects --gv-pm-brand + a gv-platform-themed body
+    // class; CSS derives the rest). Applies the adapter's built-in colour at
+    // once, then lets an enabled plugin's declared theme override it live. No-op
+    // on Gemini / AI Studio.
+    brandThemeCleanup = startBrandTheme();
 
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       if (isExtensionContextInvalidatedError(event.reason)) {
@@ -484,14 +487,25 @@ function handleVisibilityChange(): void {
 
     // If not a known site, check if it's a custom website (async)
     if (!isSupportedSite) {
-      // Third-party plugin platforms (Claude / ChatGPT / Grok …): the plugin host
-      // and platform theme already ran above. Add the KaTeX formula-copy feature
-      // (click an inline/block formula to copy its LaTeX), but DO NOT start the
-      // Prompt Manager or any other Gemini feature here — even if this domain is
-      // also saved as a Prompt-Manager "custom website". This keeps these sites
-      // plugin-only, matching how Claude already behaves.
+      // Third-party plugin platforms (Claude / ChatGPT / Grok …): the plugin
+      // host and platform theme already ran above. Start the cross-site Voyager
+      // features that belong everywhere — the Prompt Manager floating ball and
+      // KaTeX formula-copy (click an inline/block formula to copy its LaTeX) —
+      // but NOT any Gemini-specific feature (folders, timeline, export, width
+      // adjusters, …). The platform-theme CSS re-skins the Prompt Manager and
+      // the copy toast with the site's brand colour. We set `initialized` so the
+      // visibilitychange handler doesn't later fall into initializeFeatures()
+      // (which is Gemini/AI-Studio/custom-site shaped, not plugin-platform).
       if (resolvePluginPlatformId(location.href)) {
-        console.log('[Gemini Voyager] Plugin platform detected, formula copy only');
+        console.log('[Gemini Voyager] Plugin platform: prompt manager + formula copy');
+        initialized = true;
+        void startPromptManager()
+          .then((instance) => {
+            promptManagerInstance = instance;
+          })
+          .catch((error) => {
+            console.error('[Gemini Voyager] Prompt Manager init error on plugin platform:', error);
+          });
         startFormulaCopy();
         return;
       }
@@ -584,6 +598,10 @@ function handleVisibilityChange(): void {
         if (pluginHostCleanup) {
           pluginHostCleanup();
           pluginHostCleanup = null;
+        }
+        if (brandThemeCleanup) {
+          brandThemeCleanup();
+          brandThemeCleanup = null;
         }
         chrome.storage?.onChanged?.removeListener(onStorageChanged);
       } catch (e) {

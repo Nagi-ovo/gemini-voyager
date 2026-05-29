@@ -23,7 +23,7 @@ import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
 import { MarketplacePluginSource } from '@/features/plugins/sources/MarketplacePluginSource';
 import type { PluginManifest } from '@/features/plugins/types';
-import { resolvePlatformThemeId } from '@/pages/content/platformTheme';
+import { resolveBrandColor } from '@/pages/content/platformTheme';
 import {
   extractDmgDownloadUrl,
   extractLatestReleaseVersion,
@@ -536,7 +536,13 @@ export default function Popup() {
   const isPluginSite = siteScopedManifests.length > 0;
 
   // The host platform to theme the popup for (claude → orange, chatgpt → sky blue).
-  const activePlatform = useMemo(() => resolvePlatformThemeId(activeUrl), [activeUrl]);
+  // Brand accent for the popup, matching the tab the user is on (adapter
+  // built-in, or a plugin's declared theme). Drives --primary/--ring/--accent so
+  // the whole popup — not just primary buttons — adopts the platform colour.
+  const activeBrand = useMemo(() => resolveBrandColor(activeUrl, pluginManifests), [
+    activeUrl,
+    pluginManifests,
+  ]);
 
   const handleRefreshPlugins = useCallback(async () => {
     setPluginsRefreshing(true);
@@ -1524,11 +1530,14 @@ export default function Popup() {
     <div
       className="bg-background text-foreground w-[360px]"
       style={
-        activePlatform === 'claude'
-          ? ({ '--primary': '#d97757', '--primary-foreground': '#ffffff' } as React.CSSProperties)
-          : activePlatform === 'chatgpt'
-            ? ({ '--primary': '#0ea5e9', '--primary-foreground': '#ffffff' } as React.CSSProperties)
-            : undefined
+        activeBrand
+          ? ({
+              '--primary': activeBrand,
+              '--primary-foreground': '#ffffff',
+              '--ring': activeBrand,
+              '--accent': `color-mix(in srgb, ${activeBrand} 14%, transparent)`,
+            } as React.CSSProperties)
+          : undefined
       }
     >
       {/* Header */}

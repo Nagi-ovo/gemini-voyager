@@ -22,5 +22,6 @@ export const chatgptAdapter: SiteAdapter = {
     lightSelector: 'html.light',
     darkSelector: 'html.dark',
   },
+  brandColor: '#0ea5e9', // ChatGPT sky blue
   capabilities: new Set<SiteCapability>(['chat', 'sidebar', 'composer', 'darkMode']),
 };

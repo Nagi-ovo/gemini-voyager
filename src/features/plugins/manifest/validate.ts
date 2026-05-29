@@ -14,6 +14,7 @@ import type {
   DomOperation,
   PluginContributions,
   PluginManifest,
+  PluginTheme,
   PluginTier,
   SelectorRef,
   SettingField,
@@ -49,6 +50,19 @@ function isString(value: unknown): value is string {
 }
 function nonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * Accept ONLY hex colours for a plugin-declared brand. The value is injected
+ * into a CSS custom property and string-concatenated into a `color-mix(...)`
+ * expression at runtime, so anything other than a strict hex literal (3/4/6/8
+ * digits) could break out of the value context — reject it.
+ */
+function isHexColor(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)
+  );
 }
 
 /**
@@ -285,6 +299,15 @@ export function validateManifest(input: unknown): Result<PluginManifest, Manifes
 
   const contributes = normalizeContributions(input.contributes, issues);
 
+  let theme: PluginTheme | undefined;
+  if (input.theme !== undefined) {
+    if (!isRecord(input.theme) || !isHexColor(input.theme.brand)) {
+      issues.push({ path: 'theme.brand', message: 'must be a hex colour string (e.g. #d97757)' });
+    } else {
+      theme = { brand: input.theme.brand };
+    }
+  }
+
   if (issues.length > 0) return { success: false, error: issues };
 
   const manifest: PluginManifest = {
@@ -300,6 +323,7 @@ export function validateManifest(input: unknown): Result<PluginManifest, Manifes
     tier: input.tier as PluginTier,
     matches: (input.matches as string[]).slice(),
     contributes,
+    ...(theme ? { theme } : {}),
   };
   return { success: true, data: manifest };
 }
