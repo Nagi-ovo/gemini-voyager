@@ -65,6 +65,33 @@ function isHexColor(value: unknown): value is string {
   );
 }
 
+/** Per-field cap for localized strings (UNTRUSTED input). */
+const MAX_I18N_FIELD_LENGTH = 500;
+
+/**
+ * Sanitize an optional `i18n` map (UNTRUSTED). Keeps only locales whose `name`
+ * and/or `description` are non-oversized strings; drops everything else. Returns
+ * undefined when nothing survives, so the field is simply absent on the manifest.
+ */
+function normalizeI18n(
+  raw: unknown,
+): Readonly<Record<string, { name?: string; description?: string }>> | undefined {
+  if (!isRecord(raw)) return undefined;
+  const out: Record<string, { name?: string; description?: string }> = {};
+  for (const [locale, value] of Object.entries(raw)) {
+    if (!isRecord(value)) continue;
+    const entry: { name?: string; description?: string } = {};
+    if (isString(value.name) && value.name.length <= MAX_I18N_FIELD_LENGTH) {
+      entry.name = value.name;
+    }
+    if (isString(value.description) && value.description.length <= MAX_I18N_FIELD_LENGTH) {
+      entry.description = value.description;
+    }
+    if (entry.name !== undefined || entry.description !== undefined) out[locale] = entry;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 /**
  * Reject CSS that can fetch remote resources — `@import` and external `url()`
  * (http(s):// or protocol-relative //). A declarative plugin is meant to be
@@ -308,6 +335,8 @@ export function validateManifest(input: unknown): Result<PluginManifest, Manifes
     }
   }
 
+  const i18n = normalizeI18n(input.i18n);
+
   if (issues.length > 0) return { success: false, error: issues };
 
   const manifest: PluginManifest = {
@@ -324,6 +353,7 @@ export function validateManifest(input: unknown): Result<PluginManifest, Manifes
     matches: (input.matches as string[]).slice(),
     contributes,
     ...(theme ? { theme } : {}),
+    ...(i18n ? { i18n } : {}),
   };
   return { success: true, data: manifest };
 }

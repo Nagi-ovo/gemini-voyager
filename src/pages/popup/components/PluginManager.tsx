@@ -58,6 +58,15 @@ function displayName(name: string): string {
   return name.replace(/^(Claude|ChatGPT|Grok|Gemini|AI Studio)\s*[·:|]\s*/i, '');
 }
 
+/**
+ * Localized field for the current UI language, falling back to the manifest's
+ * top-level English. The language code (e.g. `zh`, `zh_TW`) matches the plugin
+ * `i18n` keys directly.
+ */
+function pickLocalized(plugin: PluginManifest, field: 'name' | 'description', lang: string): string {
+  return plugin.i18n?.[lang]?.[field] ?? plugin[field];
+}
+
 /** Human-readable host list from a plugin's match patterns (e.g. "claude.ai"). */
 function siteHostsFromMatches(matches: readonly string[]): string {
   const hosts = matches
@@ -115,7 +124,7 @@ export function PluginManager({
   refreshing = false,
   activeUrl,
 }: PluginManagerProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   // The site the popup is currently open on — the "active site" the badge needs
   // to pick the right logo for a multi-site plugin. Resolved via the shared
   // SiteRegistry (single source of truth for "which site is this URL").
@@ -328,14 +337,14 @@ export function PluginManager({
                       </span>
                     )}
                     <span className="text-sm leading-snug font-medium break-words">
-                      {displayName(plugin.name)}
+                      {displayName(pickLocalized(plugin, 'name', language))}
                     </span>
                   </button>
 
                   {isOpen && (
                     <>
                       <p className="text-muted-foreground mt-1 text-xs leading-snug">
-                        {plugin.description}
+                        {pickLocalized(plugin, 'description', language)}
                       </p>
                       <div className="mt-1.5 flex items-center gap-2 text-[11px]">
                         {hosts && <span className="text-muted-foreground">{hosts}</span>}

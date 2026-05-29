@@ -198,6 +198,14 @@ export interface PluginManifest {
   readonly contributes: PluginContributions;
   /** Optional brand accent for Voyager UI on the matched site(s). */
   readonly theme?: PluginTheme;
+  /**
+   * Optional localized name/description, keyed by app language code
+   * (`en`, `zh`, `zh_TW`, `ja`, …). Per-field fallback to the top-level
+   * English `name`/`description` when a translation is missing.
+   */
+  readonly i18n?: Readonly<
+    Record<string, { readonly name?: string; readonly description?: string }>
+  >;
 }
 
 /** Where an installed plugin came from. Drives trust + update behaviour. */

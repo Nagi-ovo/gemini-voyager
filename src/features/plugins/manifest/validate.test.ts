@@ -54,6 +54,31 @@ describe('validateManifest', () => {
     expect(result.error.map((e) => e.path)).toContain('category');
   });
 
+  it('carries through a sanitized i18n map, dropping invalid entries', () => {
+    const result = validateManifest({
+      ...valid,
+      i18n: {
+        zh: { name: 'Claude · 测试', description: '中文描述' },
+        ja: { name: 123, description: '日本語' }, // bad name dropped, description kept
+        ko: { name: 'x'.repeat(600) }, // over-length → entry empty → locale dropped
+        fr: 'not-an-object', // dropped
+      },
+    });
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.i18n).toEqual({
+      zh: { name: 'Claude · 测试', description: '中文描述' },
+      ja: { description: '日本語' },
+    });
+  });
+
+  it('omits i18n when absent or when no entry survives sanitization', () => {
+    const absent = validateManifest(valid);
+    expect(absent.success && absent.data.i18n).toBeUndefined();
+    const empty = validateManifest({ ...valid, i18n: { zh: { name: 42 } } });
+    expect(empty.success && empty.data.i18n).toBeUndefined();
+  });
+
   it('rejects unknown dom op kinds', () => {
     const result = validateManifest({
       ...valid,
