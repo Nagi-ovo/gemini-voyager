@@ -1625,7 +1625,8 @@ export default function Popup() {
         {/* Cloud Sync */}
         {!isSafariBrowser && wrapSection('cloudSync', <CloudSyncSettings />)}
         {/* Plugin ecosystem — pinned to the very top on sites a plugin targets
-            (e.g. Claude). On other sites it stays in the reorderable list below. */}
+            (e.g. Claude / ChatGPT), scoped to that site's plugins. Hidden entirely
+            on sites with no matching plugin (e.g. Gemini). */}
         {isPluginSite && (
           <div style={{ order: -1 }}>
             <PluginManager
