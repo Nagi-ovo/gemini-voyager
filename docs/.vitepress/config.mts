@@ -93,6 +93,7 @@ export default defineConfig({
           ...announcementNav('重要通知'),
           { text: '首页', link: '/' },
           { text: '指南', link: '/guide/installation' },
+          { text: '插件市场', link: '/plugins' },
           { text: '数据查看器', link: '/data-viewer' },
         ],
         sidebar: [
@@ -161,6 +162,7 @@ export default defineConfig({
           ...announcementNav('重要通知'),
           { text: '首頁', link: '/zh_TW/' },
           { text: '指南', link: '/zh_TW/guide/installation' },
+          { text: '外掛市集', link: '/zh_TW/plugins' },
           { text: '資料查看器', link: '/zh_TW/data-viewer' },
         ],
         sidebar: [
@@ -229,6 +231,7 @@ export default defineConfig({
           ...announcementNav('Notice'),
           { text: 'Home', link: '/en/' },
           { text: 'Guide', link: '/en/guide/installation' },
+          { text: 'Marketplace', link: '/en/plugins' },
           { text: 'Data Viewer', link: '/en/data-viewer' },
         ],
         sidebar: [
@@ -297,6 +300,7 @@ export default defineConfig({
           ...announcementNav('お知らせ'),
           { text: 'ホーム', link: '/ja/' },
           { text: 'ガイド', link: '/ja/guide/installation' },
+          { text: 'マーケット', link: '/ja/plugins' },
           { text: 'データビューア', link: '/ja/data-viewer' },
         ],
         sidebar: [
@@ -365,6 +369,7 @@ export default defineConfig({
           ...announcementNav('공지'),
           { text: '홈', link: '/ko/' },
           { text: '가이드', link: '/ko/guide/installation' },
+          { text: '마켓플레이스', link: '/ko/plugins' },
           { text: '데이터 뷰어', link: '/ko/data-viewer' },
         ],
         sidebar: [
@@ -433,6 +438,7 @@ export default defineConfig({
           ...announcementNav('Annonce'),
           { text: 'Accueil', link: '/fr/' },
           { text: 'Guide', link: '/fr/guide/installation' },
+          { text: 'Marketplace', link: '/fr/plugins' },
           { text: 'Visionneuse', link: '/fr/data-viewer' },
         ],
         sidebar: [
@@ -501,6 +507,7 @@ export default defineConfig({
           ...announcementNav('Aviso'),
           { text: 'Inicio', link: '/es/' },
           { text: 'Guía', link: '/es/guide/installation' },
+          { text: 'Mercado', link: '/es/plugins' },
           { text: 'Visor', link: '/es/data-viewer' },
         ],
         sidebar: [
@@ -578,6 +585,7 @@ export default defineConfig({
           ...announcementNav('Aviso'),
           { text: 'Início', link: '/pt/' },
           { text: 'Guia', link: '/pt/guide/installation' },
+          { text: 'Mercado', link: '/pt/plugins' },
           { text: 'Visualizador', link: '/pt/data-viewer' },
         ],
         sidebar: [
@@ -647,6 +655,7 @@ export default defineConfig({
           ...announcementNav('إعلان'),
           { text: 'الرئيسية', link: '/ar/' },
           { text: 'الدليل', link: '/ar/guide/installation' },
+          { text: 'سوق الإضافات', link: '/ar/plugins' },
           { text: 'عارض البيانات', link: '/ar/data-viewer' },
         ],
         sidebar: [
@@ -715,6 +724,7 @@ export default defineConfig({
           ...announcementNav('Объявление'),
           { text: 'Главная', link: '/ru/' },
           { text: 'Руководство', link: '/ru/guide/installation' },
+          { text: 'Маркетплейс', link: '/ru/plugins' },
           { text: 'Просмотр', link: '/ru/data-viewer' },
         ],
         sidebar: [

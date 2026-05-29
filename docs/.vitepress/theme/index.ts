@@ -9,6 +9,7 @@ import FolderViewer from './components/FolderViewer.vue';
 import HomeAskAI from './components/HomeAskAI.vue';
 import HomeReviews from './components/HomeReviews.vue';
 import HomeTeaser from './components/HomeTeaser.vue';
+import PluginStore from './components/PluginStore.vue';
 import SafariDownloadLink from './components/SafariDownloadLink.vue';
 import './style.css';
 
@@ -28,5 +29,6 @@ export default {
     app.component('HomeAskAI', HomeAskAI);
     app.component('SafariDownloadLink', SafariDownloadLink);
     app.component('FolderViewer', FolderViewer);
+    app.component('PluginStore', PluginStore);
   },
 } satisfies Theme;
