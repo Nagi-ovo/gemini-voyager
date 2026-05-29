@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MARKETPLACE_URL,
   displayName,
+  localeKey,
   localePrefix,
   platformsFromMatches,
   resolveSourceUrl,
@@ -63,5 +64,18 @@ describe('localePrefix', () => {
 
   it('falls back to the root prefix for unknown locales', () => {
     expect(localePrefix('xx-YY')).toBe('');
+  });
+});
+
+describe('localeKey', () => {
+  it('maps VitePress langs to the catalog locale codes', () => {
+    expect(localeKey('zh-CN')).toBe('zh');
+    expect(localeKey('zh-TW')).toBe('zh_TW');
+    expect(localeKey('ja-JP')).toBe('ja');
+    expect(localeKey('en-US')).toBe('en');
+  });
+
+  it('falls back to English for unknown locales', () => {
+    expect(localeKey('xx-YY')).toBe('en');
   });
 });

@@ -25,6 +25,7 @@ export interface PluginManifest {
   tier: string;
   matches: string[];
   theme?: { brand?: string };
+  i18n?: Record<string, { name?: string; description?: string }>;
 }
 
 export interface Platform {
@@ -99,4 +100,21 @@ export function localePrefix(lang: string): string {
     'ru-RU': '/ru',
   };
   return map[lang] ?? '';
+}
+
+/** Catalog i18n locale code for a VitePress lang (matches the extension's 10 codes). */
+export function localeKey(lang: string): string {
+  const map: Record<string, string> = {
+    'zh-CN': 'zh',
+    'zh-TW': 'zh_TW',
+    'en-US': 'en',
+    'ja-JP': 'ja',
+    'ko-KR': 'ko',
+    'fr-FR': 'fr',
+    'es-ES': 'es',
+    'pt-PT': 'pt',
+    'ar-SA': 'ar',
+    'ru-RU': 'ru',
+  };
+  return map[lang] ?? 'en';
 }

@@ -6,6 +6,7 @@ import {
   MARKETPLACE_URL,
   type PluginManifest,
   displayName,
+  localeKey,
   localePrefix,
   platformsFromMatches,
   resolveSourceUrl,
@@ -435,15 +436,17 @@ const rawPlugins = ref<(PluginManifest & { official: boolean })[]>([]);
 const loading = ref(true);
 const failed = ref(false);
 
-const cards = computed<PluginCard[]>(() =>
-  rawPlugins.value.map((p) => {
+const cards = computed<PluginCard[]>(() => {
+  const loc = localeKey(lang.value as string);
+  return rawPlugins.value.map((p) => {
     const platforms = platformsFromMatches(p.matches);
     const primary = platforms[0];
+    const localized = p.i18n?.[loc];
     return {
       id: p.id,
-      name: displayName(p.name),
+      name: displayName(localized?.name ?? p.name),
       version: p.version,
-      description: p.description,
+      description: localized?.description ?? p.description,
       category: p.category,
       homepage: p.homepage,
       official: p.official,
@@ -451,8 +454,8 @@ const cards = computed<PluginCard[]>(() =>
       accent: p.theme?.brand || primary?.color || 'var(--vp-c-brand-1)',
       icon: primary ? PLATFORM_ICONS[primary.key] ?? null : null,
     };
-  }),
-);
+  });
+});
 
 function categoryLabel(category: string): string {
   return t.value.categories[category] || t.value.categories.other;
