@@ -92,6 +92,8 @@ export const semanticRef = (key: string): SemanticSelectorRef => ({ kind: 'seman
 export interface StyleContribution {
   /** Raw CSS injected as a <style> element. Classes should be `gv-` prefixed. */
   readonly css: string;
+  /** Optional source path when the CSS came from a plugin-authored style file. */
+  readonly source?: string;
 }
 
 /**
@@ -121,6 +123,10 @@ export interface SettingField {
   readonly type: 'boolean' | 'number' | 'string' | 'color' | 'select';
   readonly label: string;
   readonly default: boolean | number | string;
+  /** Optional label for the low end of a number/range control. */
+  readonly minLabel?: string;
+  /** Optional label for the high end of a number/range control. */
+  readonly maxLabel?: string;
   readonly options?: readonly { readonly value: string; readonly label: string }[];
   readonly min?: number;
   readonly max?: number;
@@ -178,6 +184,18 @@ export interface PluginTheme {
   readonly brand: string;
 }
 
+export interface LocalizedSettingField {
+  readonly label?: string;
+  readonly minLabel?: string;
+  readonly maxLabel?: string;
+}
+
+export interface PluginLocalization {
+  readonly name?: string;
+  readonly description?: string;
+  readonly settings?: Readonly<Record<string, LocalizedSettingField>>;
+}
+
 export interface PluginManifest {
   /** Globally unique, reverse-dotted (e.g. `vendor.my-plugin`). */
   readonly id: string;
@@ -199,13 +217,11 @@ export interface PluginManifest {
   /** Optional brand accent for Voyager UI on the matched site(s). */
   readonly theme?: PluginTheme;
   /**
-   * Optional localized name/description, keyed by app language code
-   * (`en`, `zh`, `zh_TW`, `ja`, …). Per-field fallback to the top-level
-   * English `name`/`description` when a translation is missing.
+   * Optional localized metadata and setting labels, keyed by app language code
+   * (`en`, `zh`, `zh_TW`, `ja`, …). Per-field fallback to the top-level English
+   * fields when a translation is missing.
    */
-  readonly i18n?: Readonly<
-    Record<string, { readonly name?: string; readonly description?: string }>
-  >;
+  readonly i18n?: Readonly<Record<string, PluginLocalization>>;
 }
 
 /** Where an installed plugin came from. Drives trust + update behaviour. */

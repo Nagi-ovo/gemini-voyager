@@ -2063,14 +2063,6 @@
     "message": "Código",
     "description": "Link label to a plugin source/repo"
   },
-  "pluginRangeNarrower": {
-    "message": "Mais estreito",
-    "description": "Narrow-end label on a plugin width/range slider"
-  },
-  "pluginRangeWider": {
-    "message": "Mais largo",
-    "description": "Wide-end label on a plugin width/range slider"
-  },
   "pluginPermissionDenied": {
     "message": "Permissão do site negada; o plugin não pode ser executado.",
     "description": "Shown when the user denies the site permission for a plugin"

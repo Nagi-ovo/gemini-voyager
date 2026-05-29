@@ -69,13 +69,20 @@ EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, 
   "tier": "declarative",
   "matches": ["https://claude.ai/*"],
   "contributes": {
-    "styles": [
-      { "css": ".gv-plugin-readable .font-claude-message { max-width: 70ch !important; } " },
-    ],
+    "styles": [{ "file": "style.css" }],
     "domOps": [{ "op": "addClass", "target": "body", "className": "gv-plugin-readable" }],
   },
 }
 ```
+
+Marketplace manifests may keep tiny CSS inline with `{ "css": "..." }`, but the
+preferred authoring shape is `{ "file": "style.css" }` next to `plugin.json`.
+The marketplace source fetches that CSS, rejects remote-resource loads
+(`@import`, external `url()`), and normalizes it before the runtime sees it. For
+user settings, `{{settingKey}}` tokens can be used in CSS text or in
+`setAttribute` / `setStyle` DOM op values; a common pattern is for CSS files to
+use a normal custom property and for a `setStyle` op to set that variable from a
+setting.
 
 `target` is a CSS selector string, or `{ "kind": "semantic", "key": "userTurn" }`
 to use the site adapter's stable selector. Supported ops: `addClass`,

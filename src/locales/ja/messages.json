@@ -2063,14 +2063,6 @@
     "message": "ソース",
     "description": "Link label to a plugin source/repo"
   },
-  "pluginRangeNarrower": {
-    "message": "狭く",
-    "description": "Narrow-end label on a plugin width/range slider"
-  },
-  "pluginRangeWider": {
-    "message": "広く",
-    "description": "Wide-end label on a plugin width/range slider"
-  },
   "pluginPermissionDenied": {
     "message": "サイトの権限が拒否されたため、プラグインを実行できません。",
     "description": "Shown when the user denies the site permission for a plugin"

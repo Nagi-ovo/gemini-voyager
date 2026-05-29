@@ -139,7 +139,8 @@ const i18n: Record<string, I18nData> = {
       pr: 'Every plugin is open source — send a PR anytime and build the experience you want, for everyone.',
     },
     howto: '🔎 How to open the popup?',
-    howtoAlt: 'Two steps to open the Voyager popup: ① click the browser Extensions (puzzle) icon ② pick Voyager from the list.',
+    howtoAlt:
+      'Two steps to open the Voyager popup: ① click the browser Extensions (puzzle) icon ② pick Voyager from the list.',
     categories: {
       readability: 'Readability',
       'render-fix': 'Render fix',
@@ -174,7 +175,8 @@ const i18n: Record<string, I18nData> = {
       pr: 'プラグインはすべてオープンソース —— いつでも PR を歓迎、思い描いた体験をみんなのために。',
     },
     howto: '🔎 ポップアップの開き方は？',
-    howtoAlt: 'Voyager のポップアップを開く 2 ステップ：① ブラウザの拡張機能（パズル）アイコンをクリック ② 一覧から Voyager を選択。',
+    howtoAlt:
+      'Voyager のポップアップを開く 2 ステップ：① ブラウザの拡張機能（パズル）アイコンをクリック ② 一覧から Voyager を選択。',
     categories: {
       readability: '読みやすさ',
       'render-fix': '表示修正',
@@ -209,7 +211,8 @@ const i18n: Record<string, I18nData> = {
       pr: '모든 플러그인은 오픈 소스입니다 —— 언제든 PR을 환영하며, 원하는 경험을 모두를 위해 만들어 보세요.',
     },
     howto: '🔎 팝업을 여는 방법은?',
-    howtoAlt: 'Voyager 팝업을 여는 두 단계: ① 브라우저 확장 프로그램(퍼즐) 아이콘 클릭 ② 목록에서 Voyager 선택.',
+    howtoAlt:
+      'Voyager 팝업을 여는 두 단계: ① 브라우저 확장 프로그램(퍼즐) 아이콘 클릭 ② 목록에서 Voyager 선택.',
     categories: {
       readability: '가독성',
       'render-fix': '렌더링 수정',
@@ -244,7 +247,8 @@ const i18n: Record<string, I18nData> = {
       pr: 'Tous les plugins sont open source — proposez une PR à tout moment et créez l’expérience que vous voulez, pour tous.',
     },
     howto: '🔎 Comment ouvrir la fenêtre ?',
-    howtoAlt: 'Deux étapes pour ouvrir la fenêtre Voyager : ① cliquez sur l’icône Extensions (puzzle) du navigateur ② choisissez Voyager dans la liste.',
+    howtoAlt:
+      'Deux étapes pour ouvrir la fenêtre Voyager : ① cliquez sur l’icône Extensions (puzzle) du navigateur ② choisissez Voyager dans la liste.',
     categories: {
       readability: 'Lisibilité',
       'render-fix': 'Correctif de rendu',
@@ -279,7 +283,8 @@ const i18n: Record<string, I18nData> = {
       pr: 'Todos los plugins son de código abierto: envía un PR cuando quieras y crea la experiencia que deseas, para todos.',
     },
     howto: '🔎 ¿Cómo abrir la ventana?',
-    howtoAlt: 'Dos pasos para abrir la ventana de Voyager: ① haz clic en el icono de Extensiones (pieza de puzle) del navegador ② elige Voyager en la lista.',
+    howtoAlt:
+      'Dos pasos para abrir la ventana de Voyager: ① haz clic en el icono de Extensiones (pieza de puzle) del navegador ② elige Voyager en la lista.',
     categories: {
       readability: 'Legibilidad',
       'render-fix': 'Corrección de renderizado',
@@ -314,7 +319,8 @@ const i18n: Record<string, I18nData> = {
       pr: 'Todos os plugins são open source — envie um PR quando quiser e crie a experiência que deseja, para todos.',
     },
     howto: '🔎 Como abrir a janela?',
-    howtoAlt: 'Dois passos para abrir a janela do Voyager: ① clique no ícone de Extensões (peça de puzzle) do navegador ② escolha o Voyager na lista.',
+    howtoAlt:
+      'Dois passos para abrir a janela do Voyager: ① clique no ícone de Extensões (peça de puzzle) do navegador ② escolha o Voyager na lista.',
     categories: {
       readability: 'Legibilidade',
       'render-fix': 'Correção de renderização',
@@ -349,7 +355,8 @@ const i18n: Record<string, I18nData> = {
       pr: 'جميع الإضافات مفتوحة المصدر — أرسل طلب دمج (PR) في أي وقت، واصنع التجربة التي تريدها للجميع.',
     },
     howto: '🔎 كيف تفتح النافذة المنبثقة؟',
-    howtoAlt: 'خطوتان لفتح نافذة Voyager: ① انقر أيقونة الإضافات (قطعة الأحجية) في المتصفح ② اختر Voyager من القائمة.',
+    howtoAlt:
+      'خطوتان لفتح نافذة Voyager: ① انقر أيقونة الإضافات (قطعة الأحجية) في المتصفح ② اختر Voyager من القائمة.',
     categories: {
       readability: 'سهولة القراءة',
       'render-fix': 'إصلاح العرض',
@@ -384,7 +391,8 @@ const i18n: Record<string, I18nData> = {
       pr: 'Все плагины с открытым кодом — присылайте PR в любое время и создавайте нужный вам опыт для всех.',
     },
     howto: '🔎 Как открыть всплывающее окно?',
-    howtoAlt: 'Два шага, чтобы открыть окно Voyager: ① нажмите значок расширений (пазл) в браузере ② выберите Voyager из списка.',
+    howtoAlt:
+      'Два шага, чтобы открыть окно Voyager: ① нажмите значок расширений (пазл) в браузере ② выберите Voyager из списка.',
     categories: {
       readability: 'Читаемость',
       'render-fix': 'Исправление отображения',
@@ -417,7 +425,9 @@ const PLATFORM_ICONS: Record<string, { viewBox: string; path: string }> = {
 };
 
 const t = computed(() => i18n[lang.value as string] || i18n['en-US']);
-const installLink = computed(() => withBase(`${localePrefix(lang.value as string)}/guide/installation`));
+const installLink = computed(() =>
+  withBase(`${localePrefix(lang.value as string)}/guide/installation`),
+);
 
 interface PluginCard {
   id: string;
@@ -452,7 +462,7 @@ const cards = computed<PluginCard[]>(() => {
       official: p.official,
       platforms,
       accent: p.theme?.brand || primary?.color || 'var(--vp-c-brand-1)',
-      icon: primary ? PLATFORM_ICONS[primary.key] ?? null : null,
+      icon: primary ? (PLATFORM_ICONS[primary.key] ?? null) : null,
     };
   });
 });
@@ -547,11 +557,7 @@ onMounted(load);
       <span v-if="t.howto" class="gv-howto" tabindex="0">
         {{ t.howto }}
         <span class="gv-howto__pop" role="tooltip">
-          <img
-            :src="withBase('/assets/plugin-popup-guide.png')"
-            :alt="t.howtoAlt"
-            loading="lazy"
-          />
+          <img :src="withBase('/assets/plugin-popup-guide.png')" :alt="t.howtoAlt" loading="lazy" />
         </span>
       </span>
     </p>
@@ -580,7 +586,12 @@ onMounted(load);
 
     <!-- Cards -->
     <div v-else class="gv-store__grid">
-      <article v-for="card in cards" :key="card.id" class="gv-card" :style="{ '--gv-accent': card.accent }">
+      <article
+        v-for="card in cards"
+        :key="card.id"
+        class="gv-card"
+        :style="{ '--gv-accent': card.accent }"
+      >
         <div class="gv-card__top">
           <div class="gv-card__icon">
             <svg

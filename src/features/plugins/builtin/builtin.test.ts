@@ -21,5 +21,7 @@ describe('BUILTIN_PLUGINS', () => {
     // No declarative contributions — its behaviour comes from a native handler.
     expect(fc?.contributes.styles ?? []).toEqual([]);
     expect(fc?.contributes.domOps ?? []).toEqual([]);
+    expect(fc?.i18n?.zh?.name).toBe('公式复制');
+    expect(fc?.i18n?.ja?.description).toContain('LaTeX');
   });
 });

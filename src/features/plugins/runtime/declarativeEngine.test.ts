@@ -183,6 +183,30 @@ describe('DeclarativeEngine', () => {
     expect(styleEl?.textContent).toContain('max-width:95ch');
   });
 
+  it('substitutes {{setting}} tokens in domOps and updates them live', () => {
+    document.body.innerHTML = '<div class="box"></div>';
+    const engine = new DeclarativeEngine({ doc: document });
+    engine.mount(
+      makeManifest({
+        settings: { width: { type: 'number', label: 'Width', default: 70 } },
+        domOps: [
+          {
+            op: 'setStyle',
+            target: cssRef('.box'),
+            styles: { '--gv-plugin-reading-width': '{{width}}px' },
+          },
+        ],
+      }),
+      { width: 80 },
+    );
+
+    const box = document.querySelector<HTMLElement>('.box');
+    expect(box?.style.getPropertyValue('--gv-plugin-reading-width')).toBe('80px');
+
+    engine.updateSettings('test.plugin', { width: 95 });
+    expect(box?.style.getPropertyValue('--gv-plugin-reading-width')).toBe('95px');
+  });
+
   it('falls back to the schema default when a setting value is absent', () => {
     const engine = new DeclarativeEngine({ doc: document });
     engine.mount(

@@ -13,7 +13,7 @@
  * range this version does not satisfy. Bump the MAJOR when a change to the
  * manifest/contribution shape is backwards-incompatible.
  */
-export const PLUGIN_ENGINE_VERSION = '1.1.0';
+export const PLUGIN_ENGINE_VERSION = '1.2.0';
 
 /** Plugin-scoped CSS class prefix. Authors should namespace classes under this. */
 export const PLUGIN_CLASS_PREFIX = 'gv-plugin-';

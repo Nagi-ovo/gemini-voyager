@@ -4,8 +4,11 @@
  *
  * The marketplace is plain data: a `marketplace.json` catalog listing plugins,
  * each pointing at a `plugin.json` (relative path resolved against the catalog,
- * or an absolute URL for third-party repos). Only data/CSS is fetched — never
- * executable code — so this is Chrome MV3 "remotely-hosted code" compliant.
+ * or an absolute URL for third-party repos). A manifest may reference adjacent
+ * CSS files via `contributes.styles[].file`; those are fetched, validated, and
+ * normalized into CSS text before the runtime sees them. Only data/CSS is
+ * fetched — never executable code — so this is Chrome MV3 "remotely-hosted code"
+ * compliant.
  *
  * `list()` is cache-aware: returns a fresh cache immediately (refreshing in the
  * background), otherwise fetches; on network failure it falls back to a stale
@@ -15,7 +18,7 @@
  */
 import { logger } from '@/core/services/LoggerService';
 
-import { validateManifest } from '../manifest/validate';
+import { validateManifest, validateStyleCss } from '../manifest/validate';
 import { CATALOG_TTL_MS, loadCachedCatalog, saveCachedCatalog } from '../storage/catalogCache';
 import type { PluginManifest, PluginSource } from '../types';
 
@@ -93,7 +96,7 @@ export class MarketplacePluginSource implements PluginSource {
       if (!entry?.source) continue;
       const url = /^https?:\/\//i.test(entry.source) ? entry.source : base + entry.source;
       try {
-        const raw = await this.fetchJson(url);
+        const raw = await this.resolveStyleFiles(await this.fetchJson(url), url);
         const result = validateManifest(raw);
         if (result.success) {
           manifests.push(result.data);
@@ -120,4 +123,65 @@ export class MarketplacePluginSource implements PluginSource {
     if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
     return response.json();
   }
+
+  private async fetchText(url: string): Promise<string> {
+    const response = await this.fetchImpl(url, { cache: 'no-cache' });
+    if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+    return response.text();
+  }
+
+  private async resolveStyleFiles(raw: unknown, manifestUrl: string): Promise<unknown> {
+    if (!isRecord(raw) || !isRecord(raw.contributes) || !Array.isArray(raw.contributes.styles)) {
+      return raw;
+    }
+
+    let changed = false;
+    const styles = await Promise.all(
+      raw.contributes.styles.map(async (entry, index): Promise<unknown> => {
+        if (!isRecord(entry) || typeof entry.file !== 'string' || entry.css !== undefined) {
+          return entry;
+        }
+
+        const file = normalizeStyleFilePath(entry.file);
+        if (!file) {
+          throw new Error(`Invalid CSS file path at contributes.styles[${index}].file`);
+        }
+
+        const cssUrl = new URL(file, manifestUrl).toString();
+        const css = await this.fetchText(cssUrl);
+        const issues = validateStyleCss(css, `contributes.styles[${index}].file`);
+        if (issues.length > 0) {
+          throw new Error(
+            `Invalid CSS file ${file}: ${issues.map((issue) => issue.message).join('; ')}`,
+          );
+        }
+
+        changed = true;
+        return { css, source: file };
+      }),
+    );
+
+    if (!changed) return raw;
+    return {
+      ...raw,
+      contributes: {
+        ...raw.contributes,
+        styles,
+      },
+    };
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeStyleFilePath(file: string): string | null {
+  const trimmed = file.trim().replace(/^\.\//, '');
+  if (!trimmed || trimmed.startsWith('/') || trimmed.includes('\\')) return null;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return null;
+  if (trimmed.includes('?') || trimmed.includes('#')) return null;
+  if (trimmed.split('/').some((segment) => segment === '..' || segment === '')) return null;
+  if (!trimmed.toLowerCase().endsWith('.css')) return null;
+  return trimmed;
 }

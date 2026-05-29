@@ -2063,14 +2063,6 @@
     "message": "Source",
     "description": "Link label to a plugin source/repo"
   },
-  "pluginRangeNarrower": {
-    "message": "Plus étroit",
-    "description": "Narrow-end label on a plugin width/range slider"
-  },
-  "pluginRangeWider": {
-    "message": "Plus large",
-    "description": "Wide-end label on a plugin width/range slider"
-  },
   "pluginPermissionDenied": {
     "message": "Autorisation du site refusée ; l'extension ne peut pas s'exécuter.",
     "description": "Shown when the user denies the site permission for a plugin"

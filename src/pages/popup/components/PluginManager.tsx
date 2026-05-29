@@ -13,7 +13,7 @@ import {
   setPluginSetting,
   subscribePluginState,
 } from '@/features/plugins/storage/pluginState';
-import type { PluginManifest, PluginSettingValue } from '@/features/plugins/types';
+import type { PluginManifest, PluginSettingValue, SettingField } from '@/features/plugins/types';
 
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Switch } from '../../../components/ui/switch';
@@ -60,11 +60,57 @@ function displayName(name: string): string {
 
 /**
  * Localized field for the current UI language, falling back to the manifest's
- * top-level English. The language code (e.g. `zh`, `zh_TW`) matches the plugin
- * `i18n` keys directly.
+ * top-level English. Plugins should use Voyager language keys (`zh`, `zh_TW`,
+ * `ja`, …), but we accept common locale variants so cached or third-party
+ * manifests do not leak English when the app is already localized.
  */
-function pickLocalized(plugin: PluginManifest, field: 'name' | 'description', lang: string): string {
-  return plugin.i18n?.[lang]?.[field] ?? plugin[field];
+function localeCandidates(lang: string): string[] {
+  const normalized = lang.replace('-', '_');
+  const lower = normalized.toLowerCase();
+  const candidates = [lang, normalized];
+
+  if (lower === 'zh_tw' || lower === 'zh_hk' || lower.includes('hant')) {
+    candidates.push('zh_TW');
+  }
+  if (lower.startsWith('zh')) candidates.push('zh');
+
+  const base = normalized.split('_')[0];
+  if (base) candidates.push(base);
+  candidates.push('en');
+
+  return Array.from(new Set(candidates));
+}
+
+function pickLocalized(
+  plugin: PluginManifest,
+  field: 'name' | 'description',
+  lang: string,
+): string {
+  for (const locale of localeCandidates(lang)) {
+    const value = plugin.i18n?.[locale]?.[field];
+    if (value) return value;
+  }
+  return plugin[field];
+}
+
+function pickLocalizedSetting(
+  plugin: PluginManifest,
+  key: string,
+  field: SettingField,
+  lang: string,
+): { label: string; minLabel?: string; maxLabel?: string } {
+  const pick = (name: 'label' | 'minLabel' | 'maxLabel'): string | undefined => {
+    for (const locale of localeCandidates(lang)) {
+      const value = plugin.i18n?.[locale]?.settings?.[key]?.[name];
+      if (value) return value;
+    }
+    return undefined;
+  };
+  return {
+    label: pick('label') ?? field.label,
+    minLabel: pick('minLabel') ?? field.minLabel,
+    maxLabel: pick('maxLabel') ?? field.maxLabel,
+  };
 }
 
 /** Human-readable host list from a plugin's match patterns (e.g. "claude.ai"). */
@@ -302,6 +348,7 @@ export function PluginManager({
           const hosts = siteHostsFromMatches(plugin.matches);
           const settingsSchema = plugin.contributes.settings;
           const badge = platformBadge(plugin, currentSiteId);
+          const localizedName = pickLocalized(plugin, 'name', language);
           return (
             <div key={plugin.id} className="border-border/60 rounded-lg border p-3">
               <div className="flex items-start justify-between gap-3">
@@ -337,7 +384,7 @@ export function PluginManager({
                       </span>
                     )}
                     <span className="text-sm leading-snug font-medium break-words">
-                      {displayName(pickLocalized(plugin, 'name', language))}
+                      {displayName(localizedName)}
                     </span>
                   </button>
 
@@ -365,36 +412,42 @@ export function PluginManager({
                   )}
 
                   {/* Settings stay visible even when the description is collapsed, so a
-                      slider-based plugin (e.g. reading width) is always adjustable. Compact
-                      Gemini-style row: a narrow↔wide slider, no space-hungry label/value block. */}
+                      slider-based plugin (e.g. reading width) is always adjustable. */}
                   {enabled && settingsSchema && (
                     <div className="mt-2 space-y-2.5">
                       {Object.entries(settingsSchema).map(([key, field]) => {
                         if (field.type !== 'number') return null;
                         const value = Number(settingsMap[plugin.id]?.[key] ?? field.default);
+                        const settingText = pickLocalizedSetting(plugin, key, field, language);
                         return (
-                          <div
-                            key={key}
-                            className="flex items-center gap-2"
-                            title={`${field.label}: ${value}`}
-                          >
-                            <span className="text-muted-foreground shrink-0 text-[10px]">
-                              {t('pluginRangeNarrower')}
-                            </span>
-                            <input
-                              type="range"
-                              min={field.min ?? 0}
-                              max={field.max ?? 100}
-                              value={value}
-                              aria-label={field.label}
-                              onChange={(e) =>
-                                handleSetting(plugin.id, key, Number(e.target.value))
-                              }
-                              className="accent-primary h-1.5 flex-1 cursor-pointer"
-                            />
-                            <span className="text-muted-foreground shrink-0 text-[10px]">
-                              {t('pluginRangeWider')}
-                            </span>
+                          <div key={key} title={`${settingText.label}: ${value}`}>
+                            <div className="text-muted-foreground mb-1 flex items-center justify-between gap-2 text-[11px]">
+                              <span className="min-w-0 truncate">{settingText.label}</span>
+                              <span className="shrink-0 tabular-nums">{value}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {settingText.minLabel && (
+                                <span className="text-muted-foreground shrink-0 text-[10px]">
+                                  {settingText.minLabel}
+                                </span>
+                              )}
+                              <input
+                                type="range"
+                                min={field.min ?? 0}
+                                max={field.max ?? 100}
+                                value={value}
+                                aria-label={settingText.label}
+                                onChange={(e) =>
+                                  handleSetting(plugin.id, key, Number(e.target.value))
+                                }
+                                className="accent-primary h-1.5 flex-1 cursor-pointer"
+                              />
+                              {settingText.maxLabel && (
+                                <span className="text-muted-foreground shrink-0 text-[10px]">
+                                  {settingText.maxLabel}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
@@ -416,7 +469,7 @@ export function PluginManager({
                   onChange={(e) => {
                     void handleToggle(plugin, e.target.checked);
                   }}
-                  aria-label={plugin.name}
+                  aria-label={localizedName}
                 />
               </div>
             </div>

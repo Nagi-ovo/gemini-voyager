@@ -7,8 +7,22 @@ import type { PluginManifest } from '@/features/plugins/types';
 
 import { PluginManager, platformBadge } from '../PluginManager';
 
+// The slider-debounce behaviour under test lives in PluginManager; the storage
+// layer is mocked so we can assert exactly how often (and with what value) the
+// persistence call fires. `vi.hoisted` lets the (hoisted) vi.mock factory below
+// reference these without a TDZ error.
+const { setPluginSetting, PLUGIN_ID, mockLanguage } = vi.hoisted(() => ({
+  setPluginSetting: vi.fn().mockResolvedValue(undefined),
+  PLUGIN_ID: 'voyager.test-width',
+  mockLanguage: { current: 'en' },
+}));
+
 vi.mock('@/contexts/LanguageContext', () => ({
-  useLanguage: () => ({ language: 'en', setLanguage: vi.fn(), t: (key: string) => key }),
+  useLanguage: () => ({
+    language: mockLanguage.current,
+    setLanguage: vi.fn(),
+    t: (key: string) => key,
+  }),
 }));
 
 vi.mock('@/core/utils/browser', () => ({
@@ -20,14 +34,6 @@ vi.mock('@/features/plugins/runtime/siteRegistration', () => ({
   pluginsToOriginPatterns: () => [],
 }));
 
-// The slider-debounce behaviour under test lives in PluginManager; the storage
-// layer is mocked so we can assert exactly how often (and with what value) the
-// persistence call fires. `vi.hoisted` lets the (hoisted) vi.mock factory below
-// reference these without a TDZ error.
-const { setPluginSetting, PLUGIN_ID } = vi.hoisted(() => ({
-  setPluginSetting: vi.fn().mockResolvedValue(undefined),
-  PLUGIN_ID: 'voyager.test-width',
-}));
 vi.mock('@/features/plugins/storage/pluginState', () => ({
   setPluginSetting,
   setPluginEnabled: vi.fn().mockResolvedValue(undefined),
@@ -42,6 +48,19 @@ const widthPlugin: PluginManifest = {
   name: 'Test · Width',
   version: '1.0.0',
   description: 'Adjustable width',
+  i18n: {
+    zh: {
+      name: '测试 · 宽度',
+      description: '可调节宽度',
+      settings: {
+        width: {
+          label: '阅读宽度（px）',
+          minLabel: '更窄',
+          maxLabel: '更宽',
+        },
+      },
+    },
+  },
   author: 'Test',
   category: 'readability',
   license: 'MIT',
@@ -50,7 +69,15 @@ const widthPlugin: PluginManifest = {
   matches: ['https://claude.ai/*'],
   contributes: {
     settings: {
-      width: { type: 'number', label: 'Reading width (px)', default: 768, min: 600, max: 1600 },
+      width: {
+        type: 'number',
+        label: 'Reading width (px)',
+        minLabel: 'Narrower',
+        maxLabel: 'Wider',
+        default: 768,
+        min: 600,
+        max: 1600,
+      },
     },
   },
 };
@@ -79,6 +106,7 @@ async function render(): Promise<void> {
 beforeEach(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   vi.useFakeTimers();
+  mockLanguage.current = 'en';
   setPluginSetting.mockClear();
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -98,6 +126,17 @@ afterEach(() => {
 });
 
 describe('PluginManager setting slider', () => {
+  it('renders localized range labels from the plugin i18n map', async () => {
+    mockLanguage.current = 'zh';
+    await render();
+
+    expect(container.textContent).toContain('阅读宽度（px）');
+    expect(container.textContent).toContain('768');
+    expect(container.textContent).toContain('更窄');
+    expect(container.textContent).toContain('更宽');
+    expect(container.textContent).not.toContain('Reading width (px)');
+  });
+
   it('debounces rapid drag changes into a single storage write with the final value', async () => {
     await render();
     const slider = container.querySelector('input[type="range"]') as HTMLInputElement;

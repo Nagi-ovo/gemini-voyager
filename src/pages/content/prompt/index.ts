@@ -49,12 +49,12 @@ import { parsePromptImportPayload } from './importPayload';
 import { loadFolderDataForLocalBackup } from './localBackup';
 import { activatePromptText } from './promptClickAction';
 import { getScrollHintState } from './scrollHint';
-import { sanitizeSelectedTags } from './tagFilterState';
 import {
   buildStarredMessageUrl,
   filterStarredMessages,
   formatStarredMessageTime,
 } from './starredLibrary';
+import { sanitizeSelectedTags } from './tagFilterState';
 
 type PromptItem = {
   id: string;

@@ -2063,14 +2063,6 @@
     "message": "原始碼",
     "description": "Link label to a plugin source/repo"
   },
-  "pluginRangeNarrower": {
-    "message": "更窄",
-    "description": "Narrow-end label on a plugin width/range slider"
-  },
-  "pluginRangeWider": {
-    "message": "更寬",
-    "description": "Wide-end label on a plugin width/range slider"
-  },
   "pluginPermissionDenied": {
     "message": "網站權限遭拒，外掛無法運作。",
     "description": "Shown when the user denies the site permission for a plugin"
