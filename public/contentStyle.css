@@ -11074,6 +11074,15 @@ body.gv-hide-input-halo .nl-canvas {
   box-shadow: 0 0 0 3px var(--gv-pm-brand-soft) !important;
 }
 
+/* Version + language pickers: brand-tint their hover/focus highlight. */
+:root.gv-platform-themed .gv-pm-version:hover,
+:root.gv-platform-themed .gv-pm-version-outdated,
+:root.gv-platform-themed .gv-pm-lang:hover,
+:root.gv-platform-themed .gv-pm-lang:focus,
+:root.gv-platform-themed .gv-pm-lang:focus-within {
+  border-color: var(--gv-pm-brand) !important;
+}
+
 /* Accent text on the panel surface. */
 :root.gv-platform-themed .gv-pm-chip,
 :root.gv-platform-themed .gv-pm-trigger-new::after {

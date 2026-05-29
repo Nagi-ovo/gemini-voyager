@@ -83,9 +83,7 @@ export function startBrandTheme(url: string = location.href, doc: Document = doc
   const recompute = async (): Promise<void> => {
     const [catalog, state] = await Promise.all([loadCachedCatalog(), loadPluginState()]);
     if (cancelled) return;
-    const active = (catalog?.manifests ?? []).filter(
-      (m) => m.theme?.brand && state[m.id]?.enabled,
-    );
+    const active = (catalog?.manifests ?? []).filter((m) => m.theme?.brand && state[m.id]?.enabled);
     applyBrandTheme(url, active, doc);
   };
   void recompute();
