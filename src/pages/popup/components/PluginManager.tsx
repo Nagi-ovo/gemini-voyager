@@ -1,9 +1,10 @@
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
 import { isFirefox, isSafari } from '@/core/utils/browser';
 import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
+import { SiteRegistry } from '@/features/plugins/sites/registry';
 import {
   loadCollapsedPlugins,
   loadPluginState,
@@ -22,16 +23,33 @@ import { IconChatGPT, IconClaude } from './WebsiteLogos';
 type EnabledMap = Record<string, boolean>;
 type SettingsMap = Record<string, Record<string, PluginSettingValue>>;
 
-/** Platform logo + brand color for a plugin. Colour prefers the plugin's
- *  declared `theme.brand`, falling back to the platform's default accent. */
-function platformBadge(plugin: PluginManifest): { icon: ReactNode; color: string } | null {
+/** Logo + default accent per known site id. */
+const SITE_BADGES: Record<string, { Icon: typeof IconClaude; color: string }> = {
+  claude: { Icon: IconClaude, color: '#d97757' },
+  chatgpt: { Icon: IconChatGPT, color: '#0ea5e9' },
+};
+
+/**
+ * Platform logo + brand color for a plugin. Prefers the site the popup is
+ * actually open on (`currentSiteId`) so a multi-site plugin (e.g. formula-copy
+ * matching both Claude and ChatGPT) shows the CURRENT site's logo — not whichever
+ * match string happens to be first. Falls back to inferring from the plugin's
+ * match hosts. Colour prefers the plugin's declared `theme.brand`.
+ */
+export function platformBadge(
+  plugin: PluginManifest,
+  currentSiteId?: string,
+): { icon: ReactNode; color: string } | null {
+  const brand = plugin.theme?.brand;
+  const current = currentSiteId ? SITE_BADGES[currentSiteId] : undefined;
+  if (current) return { icon: <current.Icon />, color: brand ?? current.color };
   const host = plugin.matches
     .map((m) => m.replace(/^[a-z*]+:\/\//i, '').replace(/\/.*$/, ''))
     .join(' ');
-  const brand = plugin.theme?.brand;
-  if (host.includes('claude.ai')) return { icon: <IconClaude />, color: brand ?? '#d97757' };
+  if (host.includes('claude.ai'))
+    return { icon: <IconClaude />, color: brand ?? SITE_BADGES.claude.color };
   if (host.includes('chatgpt.com') || host.includes('openai.com'))
-    return { icon: <IconChatGPT />, color: brand ?? '#0ea5e9' };
+    return { icon: <IconChatGPT />, color: brand ?? SITE_BADGES.chatgpt.color };
   return null;
 }
 
@@ -86,6 +104,8 @@ export interface PluginManagerProps {
   readonly onRefresh?: () => void;
   /** True while a manual refresh is in flight. */
   readonly refreshing?: boolean;
+  /** URL of the active tab — selects which platform logo each plugin shows. */
+  readonly activeUrl?: string;
 }
 
 export function PluginManager({
@@ -93,8 +113,19 @@ export function PluginManager({
   loading = false,
   onRefresh,
   refreshing = false,
+  activeUrl,
 }: PluginManagerProps) {
   const { t } = useLanguage();
+  // The site the popup is currently open on — the "active site" the badge needs
+  // to pick the right logo for a multi-site plugin. Resolved via the shared
+  // SiteRegistry (single source of truth for "which site is this URL").
+  const currentSiteId = useMemo(
+    () =>
+      activeUrl
+        ? (SiteRegistry.createDefault().resolveByUrl(activeUrl)?.id ?? undefined)
+        : undefined,
+    [activeUrl],
+  );
   const [enabledMap, setEnabledMap] = useState<EnabledMap>({});
   const [settingsMap, setSettingsMap] = useState<SettingsMap>({});
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -261,7 +292,7 @@ export function PluginManager({
           const isOpen = !collapsed.has(plugin.id);
           const hosts = siteHostsFromMatches(plugin.matches);
           const settingsSchema = plugin.contributes.settings;
-          const badge = platformBadge(plugin);
+          const badge = platformBadge(plugin, currentSiteId);
           return (
             <div key={plugin.id} className="border-border/60 rounded-lg border p-3">
               <div className="flex items-start justify-between gap-3">

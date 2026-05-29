@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PluginManifest } from '@/features/plugins/types';
 
-import { PluginManager } from '../PluginManager';
+import { PluginManager, platformBadge } from '../PluginManager';
 
 vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({ language: 'en', setLanguage: vi.fn(), t: (key: string) => key }),
@@ -49,7 +49,9 @@ const widthPlugin: PluginManifest = {
   tier: 'declarative',
   matches: ['https://claude.ai/*'],
   contributes: {
-    settings: { width: { type: 'number', label: 'Reading width (px)', default: 768, min: 600, max: 1600 } },
+    settings: {
+      width: { type: 'number', label: 'Reading width (px)', default: 768, min: 600, max: 1600 },
+    },
   },
 };
 
@@ -125,5 +127,36 @@ describe('PluginManager setting slider', () => {
 
     expect(setPluginSetting).toHaveBeenCalledTimes(1);
     expect(setPluginSetting).toHaveBeenCalledWith(PLUGIN_ID, 'width', 1024);
+  });
+});
+
+describe('platformBadge', () => {
+  const formulaCopy: PluginManifest = {
+    id: 'voyager.formula-copy',
+    name: 'Formula Copy',
+    version: '1.0.0',
+    description: 'd',
+    author: 'a',
+    category: 'productivity',
+    license: 'MIT',
+    engine: '>=1.0.0',
+    tier: 'declarative',
+    matches: ['https://claude.ai/*', 'https://chatgpt.com/*', 'https://chat.openai.com/*'],
+    contributes: {},
+  };
+
+  it('uses the CURRENT site colour for a multi-site plugin', () => {
+    expect(platformBadge(formulaCopy, 'chatgpt')?.color).toBe('#0ea5e9');
+    expect(platformBadge(formulaCopy, 'claude')?.color).toBe('#d97757');
+  });
+
+  it('prefers the plugin-declared theme.brand over the site default', () => {
+    const themed = { ...formulaCopy, theme: { brand: '#123456' } };
+    expect(platformBadge(themed, 'chatgpt')?.color).toBe('#123456');
+  });
+
+  it('falls back to the first matched host when the current site is unknown', () => {
+    // No currentSiteId → infer from matches (claude is listed first).
+    expect(platformBadge(formulaCopy, undefined)?.color).toBe('#d97757');
   });
 });

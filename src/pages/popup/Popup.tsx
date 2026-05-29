@@ -21,16 +21,17 @@ import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateRe
 import { compareVersions } from '@/core/utils/version';
 import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
+import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 import { MarketplacePluginSource } from '@/features/plugins/sources/MarketplacePluginSource';
 import type { PluginManifest } from '@/features/plugins/types';
 import { resolveBrandColor } from '@/pages/content/platformTheme';
+import { createPopupBrandThemeStyle } from '@/pages/popup/utils/brandTheme';
 import {
   extractDmgDownloadUrl,
   extractLatestReleaseVersion,
   getCachedLatestVersion,
   getManifestUpdateUrl,
 } from '@/pages/popup/utils/latestVersion';
-import { createPopupBrandThemeStyle } from '@/pages/popup/utils/brandTheme';
 import { isPluginPopupSite } from '@/pages/popup/utils/siteMode';
 
 import { DarkModeToggle } from '../../components/DarkModeToggle';
@@ -56,6 +57,20 @@ import {
 import WidthSlider from './components/WidthSlider';
 
 type ScrollMode = 'jump' | 'flow';
+
+/** Merge manifest lists from multiple sources; first occurrence of an id wins. */
+function dedupeManifestsById(lists: readonly (readonly PluginManifest[])[]): PluginManifest[] {
+  const seen = new Set<string>();
+  const merged: PluginManifest[] = [];
+  for (const list of lists) {
+    for (const m of list) {
+      if (seen.has(m.id)) continue;
+      seen.add(m.id);
+      merged.push(m);
+    }
+  }
+  return merged;
+}
 
 /**
  * Reorderable popup section IDs — order here is the default display order.
@@ -532,9 +547,9 @@ export default function Popup() {
     () => pluginManifests.filter((plugin) => matchesAnyPattern(activeUrl, plugin.matches)),
     [activeUrl, pluginManifests],
   );
-  // True on known plugin platforms even before the marketplace catalog loads.
-  // Keeps Claude / ChatGPT / Grok in their plugin-focused popup and prevents a
-  // fallback to Gemini's full settings UI when manifests are still empty.
+  // True for non-native web pages even before the marketplace catalog loads.
+  // Keeps Claude / ChatGPT / Grok and arbitrary third-party sites in their
+  // plugin-only popup instead of falling back to Gemini's full settings UI.
   const isPluginSite = useMemo(
     () => isPluginPopupSite(activeUrl, siteScopedManifests),
     [activeUrl, siteScopedManifests],
@@ -544,15 +559,19 @@ export default function Popup() {
   // Brand accent for the popup, matching the tab the user is on (adapter
   // built-in, or a plugin's declared theme). Drives --primary/--ring/--accent so
   // the whole popup — not just primary buttons — adopts the platform colour.
-  const activeBrand = useMemo(() => resolveBrandColor(activeUrl, pluginManifests), [
-    activeUrl,
-    pluginManifests,
-  ]);
+  const activeBrand = useMemo(
+    () => resolveBrandColor(activeUrl, pluginManifests),
+    [activeUrl, pluginManifests],
+  );
 
   const handleRefreshPlugins = useCallback(async () => {
     setPluginsRefreshing(true);
     try {
-      setPluginManifests(await new MarketplacePluginSource().forceRefresh());
+      const lists = await Promise.all([
+        new BuiltinPluginSource().list(),
+        new MarketplacePluginSource().forceRefresh(),
+      ]);
+      setPluginManifests(dedupeManifestsById(lists));
     } finally {
       setPluginsRefreshing(false);
     }
@@ -574,12 +593,13 @@ export default function Popup() {
   // Load the plugin catalog from the marketplace (cache-first; refreshes in bg).
   useEffect(() => {
     let active = true;
-    void new MarketplacePluginSource()
-      .list()
-      .then((manifests) => {
-        if (active) setPluginManifests(manifests);
+    void Promise.all([
+      new BuiltinPluginSource().list(),
+      new MarketplacePluginSource().list().catch(() => []),
+    ])
+      .then((lists) => {
+        if (active) setPluginManifests(dedupeManifestsById(lists));
       })
-      .catch(() => {})
       .finally(() => {
         if (active) setPluginsLoading(false);
       });
@@ -1509,14 +1529,11 @@ export default function Popup() {
   };
 
   const wrapSection = (id: PopupSectionId, content: React.ReactNode) => {
-    // On Claude / ChatGPT, hide the Gemini-specific sections so the popup only
-    // shows what's relevant there (the pinned Plugins section). The Prompt
-    // Manager is the exception — it runs on those sites too, so keep it visible
-    // (rendered plainly, without the Gemini-only reorder controls).
-    if (isPluginSite) {
-      if (id !== 'promptManager') return null;
-      return <div key={id}>{content}</div>;
-    }
+    // On plugin / third-party sites, keep the popup focused on the pinned
+    // Plugins section only. Gemini-specific settings, including Prompt Manager
+    // custom-site controls, remain available from the native Gemini/AI Studio popup.
+    if (isPluginSite) return null;
+
     return (
       <div key={id} style={{ order: sectionOrder.indexOf(id) }} className="group/reorder relative">
         <SectionReorderControls
@@ -1636,9 +1653,9 @@ export default function Popup() {
         )}
         {/* Cloud Sync */}
         {!isSafariBrowser && wrapSection('cloudSync', <CloudSyncSettings />)}
-        {/* Plugin ecosystem — pinned to the very top on sites a plugin targets
-            (e.g. Claude / ChatGPT), scoped to that site's plugins. Hidden entirely
-            on sites with no matching plugin (e.g. Gemini). */}
+        {/* Plugin ecosystem — pinned to the very top on third-party web pages,
+            scoped to plugins that target the active site. Hidden on native
+            Gemini / AI Studio, where the full settings surface belongs. */}
         {isPluginSite && (
           <div style={{ order: -1 }}>
             <PluginManager
@@ -1646,6 +1663,7 @@ export default function Popup() {
               loading={pluginsLoading}
               onRefresh={handleRefreshPlugins}
               refreshing={pluginsRefreshing}
+              activeUrl={activeUrl}
             />
           </div>
         )}
