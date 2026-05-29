@@ -31,6 +31,7 @@ import {
   getManifestUpdateUrl,
 } from '@/pages/popup/utils/latestVersion';
 import { createPopupBrandThemeStyle } from '@/pages/popup/utils/brandTheme';
+import { isPluginPopupSite } from '@/pages/popup/utils/siteMode';
 
 import { DarkModeToggle } from '../../components/DarkModeToggle';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
@@ -531,10 +532,13 @@ export default function Popup() {
     () => pluginManifests.filter((plugin) => matchesAnyPattern(activeUrl, plugin.matches)),
     [activeUrl, pluginManifests],
   );
-  // True when at least one plugin targets the active site. On those sites the
-  // Plugins section is pinned to the top of the popup and the Gemini-specific
-  // sections are hidden, since plugins are the only relevant surface there.
-  const isPluginSite = siteScopedManifests.length > 0;
+  // True on known plugin platforms even before the marketplace catalog loads.
+  // Keeps Claude / ChatGPT / Grok in their plugin-focused popup and prevents a
+  // fallback to Gemini's full settings UI when manifests are still empty.
+  const isPluginSite = useMemo(
+    () => isPluginPopupSite(activeUrl, siteScopedManifests),
+    [activeUrl, siteScopedManifests],
+  );
 
   // The host platform to theme the popup for (claude → orange, chatgpt → sky blue).
   // Brand accent for the popup, matching the tab the user is on (adapter
@@ -554,16 +558,18 @@ export default function Popup() {
     }
   }, []);
 
-  useEffect(() => {
-    browser.tabs
-      .query({ active: true, currentWindow: true })
-      .then((tabs) => {
-        const url = tabs[0]?.url || '';
-        setActiveUrl(url);
-        setActiveAccountPlatform(detectAccountPlatformFromUrl(url));
-      })
-      .catch(() => {});
+  const refreshActiveTabContext = useCallback(async () => {
+    try {
+      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+      const url = tabs[0]?.url || '';
+      setActiveUrl(url);
+      setActiveAccountPlatform(detectAccountPlatformFromUrl(url));
+    } catch {}
   }, []);
+
+  useEffect(() => {
+    void refreshActiveTabContext();
+  }, [refreshActiveTabContext]);
 
   // Load the plugin catalog from the marketplace (cache-first; refreshes in bg).
   useEffect(() => {
@@ -1301,12 +1307,17 @@ export default function Popup() {
         // Avoid awaiting other extension APIs before this call in Firefox.
         if (!isFirefox()) {
           const alreadyGranted = await browser.permissions.contains({ origins: originPatterns });
-          if (alreadyGranted) return true;
+          if (alreadyGranted) {
+            await refreshActiveTabContext();
+            return true;
+          }
         }
 
         const granted = await browser.permissions.request({ origins: originPatterns });
         if (!granted) {
           setWebsiteError(t('permissionDenied'));
+        } else {
+          await refreshActiveTabContext();
         }
         return granted;
       } catch (err) {
@@ -1315,7 +1326,7 @@ export default function Popup() {
         return false;
       }
     },
-    [originPatternsForDomain, t],
+    [originPatternsForDomain, refreshActiveTabContext, t],
   );
 
   const revokeCustomWebsitePermission = useCallback(

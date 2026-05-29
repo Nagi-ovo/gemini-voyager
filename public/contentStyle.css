@@ -11035,6 +11035,15 @@ body.gv-hide-input-halo .nl-canvas {
   border-color: var(--gv-pm-brand-hover) !important;
 }
 
+/* Prompt Manager copy/insert toast: follows the host platform too. */
+:root.gv-platform-themed .gv-pm-notice.ok {
+  background: var(--gv-pm-brand) !important;
+  color: var(--gv-pm-brand-fg) !important;
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 0.18),
+    0 2px 8px var(--gv-pm-brand-soft) !important;
+}
+
 /* Ghost / soft accent surfaces (footer Starred-Library + Official-Docs buttons,
    and the compact-view grid toggle): faint brand tint + brand text/border. */
 :root.gv-platform-themed .gv-pm-backup-btn,

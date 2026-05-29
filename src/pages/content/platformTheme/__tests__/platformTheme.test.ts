@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { PluginManifest } from '@/features/plugins/types';
@@ -67,5 +70,17 @@ describe('applyBrandTheme', () => {
     applyBrandTheme('https://gemini.google.com/app', [], document);
     expect(document.documentElement.classList.contains(PLATFORM_THEME_CLASS)).toBe(false);
     expect(document.documentElement.style.getPropertyValue('--gv-pm-brand')).toBe('');
+  });
+});
+
+describe('platform theme CSS', () => {
+  it('themes the Prompt Manager copy notice on third-party platforms', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const noticeBlock =
+      css.match(/:root\.gv-platform-themed \.gv-pm-notice\.ok\s*{([\s\S]*?)}/)?.[1] ?? '';
+
+    expect(noticeBlock).toContain('background: var(--gv-pm-brand) !important;');
+    expect(noticeBlock).toContain('color: var(--gv-pm-brand-fg) !important;');
+    expect(noticeBlock).toContain('0 2px 8px var(--gv-pm-brand-soft) !important;');
   });
 });
