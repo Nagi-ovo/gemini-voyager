@@ -22,6 +22,7 @@ import { LocalEntitlementProvider } from '../entitlement/LocalEntitlementProvide
 import { engineSatisfied } from '../semver';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import { SiteRegistry } from '../sites/registry';
+import { BuiltinPluginSource } from '../sources/BuiltinPluginSource';
 import { MarketplacePluginSource } from '../sources/MarketplacePluginSource';
 import { subscribeCatalog } from '../storage/catalogCache';
 import { type PluginStateMap, loadPluginState, subscribePluginState } from '../storage/pluginState';
@@ -61,7 +62,7 @@ export class PluginHost {
   constructor(options: PluginHostOptions = {}) {
     this.url = options.url ?? location.href;
     this.registry = options.registry ?? SiteRegistry.createDefault();
-    this.sources = options.sources ?? [new MarketplacePluginSource()];
+    this.sources = options.sources ?? [new BuiltinPluginSource(), new MarketplacePluginSource()];
     this.entitlement = options.entitlement ?? new LocalEntitlementProvider();
     this.doc = options.doc ?? document;
   }

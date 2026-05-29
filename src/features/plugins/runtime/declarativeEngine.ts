@@ -38,12 +38,15 @@ import type {
   SelectorRef,
   SiteAdapter,
 } from '../types';
+import { type NativeHandler, getNativeHandler } from './nativeHandlers';
 
 interface ActivePlugin {
   readonly manifest: PluginManifest;
   styleEl: HTMLStyleElement | null;
   /** Current resolved setting values, substituted into the CSS via `{{key}}`. */
   settings: PluginSettings;
+  /** First-party start/stop bound to a builtin plugin id (see nativeHandlers). */
+  nativeHandler?: NativeHandler;
 }
 
 /**
@@ -97,9 +100,13 @@ export class DeclarativeEngine {
     if (this.active.has(manifest.id)) return;
     this.ensureBaseStyle();
     const entry: ActivePlugin = { manifest, styleEl: null, settings };
+    entry.nativeHandler = getNativeHandler(manifest.id);
     this.active.set(manifest.id, entry);
     this.injectStyles(entry);
     this.applyDomOps(entry);
+    // First-party builtin plugins (e.g. formula copy) run JS via a registered
+    // native handler, in lockstep with the declarative lifecycle.
+    entry.nativeHandler?.start?.();
     this.ensureObserver();
     logger.info('Plugin mounted', { id: manifest.id });
   }
@@ -116,6 +123,7 @@ export class DeclarativeEngine {
     const entry = this.active.get(id);
     if (!entry) return;
 
+    entry.nativeHandler?.stop?.();
     entry.styleEl?.remove();
     this.releasePlugin(id);
 
@@ -249,7 +257,10 @@ export class DeclarativeEngine {
 
   private applySetStyle(id: string, el: HTMLElement, prop: string, value: string): void {
     const perEl = mapGet(this.styleLayers, el, () => new Map<string, OverrideLayer>());
-    const layer = mapGet(perEl, prop, () => ({ original: el.style.getPropertyValue(prop), stack: [] }));
+    const layer = mapGet(perEl, prop, () => ({
+      original: el.style.getPropertyValue(prop),
+      stack: [],
+    }));
     pushLayerValue(layer, id, value);
     el.style.setProperty(prop, topValue(layer));
   }

@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PLUGIN_BASE_STYLE_ID, PLUGIN_HIDDEN_CLASS } from '../constants';
 import { type PluginManifest, type SiteAdapter, cssRef, semanticRef } from '../types';
 import { DeclarativeEngine } from './declarativeEngine';
+import { registerNativeHandler } from './nativeHandlers';
 
 function makeManifest(
   contributes: PluginManifest['contributes'],
@@ -47,6 +48,23 @@ describe('DeclarativeEngine', () => {
 
     engine.unmount('test.plugin');
     expect(document.getElementById('gv-plugin-style-test.plugin')).toBeNull();
+  });
+
+  it('runs a registered native handler: start on mount, stop on unmount, once each', () => {
+    const start = vi.fn();
+    const stop = vi.fn();
+    registerNativeHandler('test.native', { start, stop });
+    const engine = new DeclarativeEngine({ doc: document });
+
+    engine.mount(makeManifest({}, 'test.native'));
+    expect(start).toHaveBeenCalledTimes(1);
+
+    // Re-mounting an already-active plugin is a no-op → start not called again.
+    engine.mount(makeManifest({}, 'test.native'));
+    expect(start).toHaveBeenCalledTimes(1);
+
+    engine.unmount('test.native');
+    expect(stop).toHaveBeenCalledTimes(1);
   });
 
   it('addClass is reversible', () => {
