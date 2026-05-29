@@ -5,7 +5,9 @@ import browser from 'webextension-polyfill';
 import { isFirefox } from '@/core/utils/browser';
 import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
 import {
+  loadCollapsedPlugins,
   loadPluginState,
+  setPluginCollapsed,
   setPluginEnabled,
   setPluginSetting,
   subscribePluginState,
@@ -102,6 +104,9 @@ export function PluginManager({
       setEnabledMap(enabled);
       setSettingsMap(settings);
     });
+    void loadCollapsedPlugins().then((ids) => {
+      if (active) setCollapsed(new Set(ids));
+    });
     const unsubscribe = subscribePluginState((state) => {
       const { enabled, settings } = readState(state);
       setEnabledMap(enabled);
@@ -149,8 +154,11 @@ export function PluginManager({
   const toggleCollapsed = useCallback((id: string) => {
     setCollapsed((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      const willCollapse = !prev.has(id);
+      if (willCollapse) next.add(id);
+      else next.delete(id);
+      // Persist so the expanded/collapsed choice survives reopening the popup.
+      void setPluginCollapsed(id, willCollapse);
       return next;
     });
   }, []);
@@ -208,7 +216,7 @@ export function PluginManager({
                   <button
                     type="button"
                     onClick={() => toggleCollapsed(plugin.id)}
-                    className="group flex w-full items-center gap-1.5 text-left"
+                    className="group flex w-full items-start gap-1.5 text-left"
                     aria-expanded={isOpen}
                   >
                     <svg
@@ -220,21 +228,23 @@ export function PluginManager({
                       strokeWidth="3"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={`text-muted-foreground shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`}
+                      className={`text-muted-foreground mt-0.5 shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`}
                       aria-hidden="true"
                     >
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
                     {badge && (
                       <span
-                        className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center"
+                        className="mt-0.5 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center"
                         style={{ color: badge.color }}
                         aria-hidden="true"
                       >
                         {badge.icon}
                       </span>
                     )}
-                    <span className="truncate text-sm font-medium">{displayName(plugin.name)}</span>
+                    <span className="text-sm leading-snug font-medium break-words">
+                      {displayName(plugin.name)}
+                    </span>
                   </button>
 
                   {isOpen && (

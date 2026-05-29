@@ -97,6 +97,40 @@ export async function setPluginSetting(
   }
 }
 
+const COLLAPSED_KEY = StorageKeys.PLUGIN_UI_COLLAPSED;
+
+/** Load the set of plugin ids the user has collapsed in the popup list. */
+export async function loadCollapsedPlugins(): Promise<string[]> {
+  const local = localArea();
+  if (!local) return [];
+  try {
+    const result = await local.get({ [COLLAPSED_KEY]: [] });
+    const raw = result?.[COLLAPSED_KEY];
+    return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string') : [];
+  } catch (error) {
+    if (!isExtensionContextInvalidatedError(error)) {
+      logger.warn('loadCollapsedPlugins failed', { error: String(error) });
+    }
+    return [];
+  }
+}
+
+/** Persist whether a plugin card is collapsed (so it stays that way next time). */
+export async function setPluginCollapsed(id: string, collapsed: boolean): Promise<void> {
+  const local = localArea();
+  if (!local) return;
+  try {
+    const next = new Set(await loadCollapsedPlugins());
+    if (collapsed) next.add(id);
+    else next.delete(id);
+    await local.set({ [COLLAPSED_KEY]: Array.from(next) });
+  } catch (error) {
+    if (!isExtensionContextInvalidatedError(error)) {
+      logger.warn('setPluginCollapsed failed', { id, error: String(error) });
+    }
+  }
+}
+
 /** Subscribe to plugin-state changes (e.g. user toggles a plugin in the store UI). */
 export function subscribePluginState(callback: (state: PluginStateMap) => void): () => void {
   const g = globalThis as { chrome?: typeof chrome };

@@ -64,12 +64,35 @@ export async function saveCachedCatalog(
   }
 }
 
-/** Fire `callback` whenever the cached catalog changes (e.g. a manual refresh). */
+/** Stable signature of a cached catalog's manifests, ignoring `fetchedAt`. */
+function manifestsSignature(raw: unknown): string {
+  if (raw && typeof raw === 'object' && Array.isArray((raw as CachedCatalog).manifests)) {
+    try {
+      return JSON.stringify((raw as CachedCatalog).manifests);
+    } catch {
+      return '';
+    }
+  }
+  return '';
+}
+
+/**
+ * Fire `callback` whenever the catalog's *manifest content* changes (e.g. a
+ * manual refresh that pulls updated plugin CSS).
+ *
+ * Crucially, a write that only bumps `fetchedAt` — which every background
+ * refresh does via `saveCachedCatalog(manifests, Date.now())` — is ignored.
+ * Otherwise a subscriber that reloads-then-refreshes (the content-script
+ * PluginHost) would self-trigger: save → onChanged → reload → list() → refresh
+ * → save → … a fetch storm that Chrome aborts with ERR_INSUFFICIENT_RESOURCES.
+ */
 export function subscribeCatalog(callback: () => void): () => void {
   const onChanged = (globalThis as { chrome?: typeof chrome }).chrome?.storage?.onChanged;
   if (!onChanged) return () => {};
   const listener = (changes: Record<string, chrome.storage.StorageChange>, area: string): void => {
-    if (area === 'local' && changes[KEY]) callback();
+    if (area !== 'local' || !changes[KEY]) return;
+    const change = changes[KEY];
+    if (manifestsSignature(change.oldValue) !== manifestsSignature(change.newValue)) callback();
   };
   onChanged.addListener(listener);
   return () => {

@@ -1491,8 +1491,13 @@ export default function Popup() {
 
   const wrapSection = (id: PopupSectionId, content: React.ReactNode) => {
     // On Claude / ChatGPT, hide the Gemini-specific sections so the popup only
-    // shows what's relevant there (the pinned Plugins section).
-    if (isPluginSite) return null;
+    // shows what's relevant there (the pinned Plugins section). The Prompt
+    // Manager is the exception — it runs on those sites too, so keep it visible
+    // (rendered plainly, without the Gemini-only reorder controls).
+    if (isPluginSite) {
+      if (id !== 'promptManager') return null;
+      return <div key={id}>{content}</div>;
+    }
     return (
       <div key={id} style={{ order: sectionOrder.indexOf(id) }} className="group/reorder relative">
         <SectionReorderControls
@@ -2654,23 +2659,26 @@ export default function Popup() {
               </div>
               <div>
                 <Label className="mb-2 block text-sm font-medium">{t('customWebsites')}</Label>
-                {/* Gemini Only Notice - moved here since it's about Prompt Manager */}
-                <div className="bg-primary/10 border-primary/20 mb-2 flex items-center gap-2 rounded-md border p-2">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-primary shrink-0"
-                  >
-                    <path
-                      d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 11c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm1-4H7V5h2v3z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  <p className="text-primary text-xs font-medium">{t('geminiOnlyNotice')}</p>
-                </div>
+                {/* Gemini-default notice — only meaningful on Gemini itself, so
+                    hide it on Claude/ChatGPT where the user is already off-Gemini. */}
+                {!isPluginSite && (
+                  <div className="bg-primary/10 border-primary/20 mb-2 flex items-center gap-2 rounded-md border p-2">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="text-primary shrink-0"
+                    >
+                      <path
+                        d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 11c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm1-4H7V5h2v3z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    <p className="text-primary text-xs font-medium">{t('geminiOnlyNotice')}</p>
+                  </div>
+                )}
 
                 {/* Quick-select buttons for popular websites */}
                 <div className="mb-3 flex flex-wrap gap-1.5">

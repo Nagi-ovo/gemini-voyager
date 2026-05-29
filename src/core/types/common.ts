@@ -223,6 +223,9 @@ export const StorageKeys = {
   // Shape: { manifests: PluginManifest[]; fetchedAt: number }. Local (not sync)
   // because it's network-derived per-device data, refreshed on a TTL.
   PLUGIN_CATALOG_CACHE: 'gvPluginCatalogCache',
+  // Plugin cards the user has collapsed in the popup list (string[] of plugin
+  // ids). Local (not sync) — it's a per-device UI preference, not user data.
+  PLUGIN_UI_COLLAPSED: 'gvPluginUiCollapsed',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];
