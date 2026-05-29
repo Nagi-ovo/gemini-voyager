@@ -5,7 +5,7 @@
  * mutable so future work (or tests) can register additional sites without
  * touching the runtime.
  */
-import type { SiteAdapter } from '../types';
+import type { SiteAdapter, SiteId } from '../types';
 import { aistudioAdapter } from './adapters/aistudio';
 import { chatgptAdapter } from './adapters/chatgpt';
 import { claudeAdapter } from './adapters/claude';
@@ -20,6 +20,14 @@ export const DEFAULT_ADAPTERS: readonly SiteAdapter[] = [
   claudeAdapter,
   grokAdapter,
 ];
+
+/**
+ * Site ids Voyager treats as first-party "native" surfaces — these get the full
+ * Gemini Voyager feature set (Timeline, Folders, Prompt Manager, …). Every other
+ * adapter (Claude / ChatGPT / Grok) is a *plugin platform*: declarative plugins
+ * + platform theming only, never core Gemini features.
+ */
+export const NATIVE_SITE_IDS: ReadonlySet<SiteId> = new Set<SiteId>(['gemini', 'aistudio']);
 
 export class SiteRegistry {
   private readonly adapters: SiteAdapter[] = [];
@@ -45,4 +53,19 @@ export class SiteRegistry {
     for (const adapter of DEFAULT_ADAPTERS) registry.register(adapter);
     return registry;
   }
+}
+
+/**
+ * Resolve the id of a third-party *plugin platform* for a URL (Claude / ChatGPT /
+ * Grok …), or `null` when the URL is a native Voyager site (Gemini / AI Studio)
+ * or has no adapter at all. The content script uses this to keep core Gemini
+ * features off plugin-only platforms while still running the plugin host + theme.
+ */
+export function resolvePluginPlatformId(
+  url: string,
+  registry: SiteRegistry = SiteRegistry.createDefault(),
+): SiteId | null {
+  const adapter = registry.resolveByUrl(url);
+  if (!adapter) return null;
+  return NATIVE_SITE_IDS.has(adapter.id) ? null : adapter.id;
 }

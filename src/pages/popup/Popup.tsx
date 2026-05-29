@@ -45,10 +45,7 @@ import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings'
 import { PluginManager } from './components/PluginManager';
 import { StarredHistory } from './components/StarredHistory';
 import {
-  IconChatGPT,
-  IconClaude,
   IconDeepSeek,
-  IconGrok,
   IconKimi,
   IconMidjourney,
   IconNotebookLM,
@@ -526,13 +523,17 @@ export default function Popup() {
   const isAIStudio = activeAccountPlatform === 'aistudio';
   const currentPlatformLabel = isAIStudio ? t('platformAIStudio') : t('platformGemini');
 
-  // Sites that at least one available plugin targets (e.g. Claude). On those
-  // sites the Plugins section is pinned to the top of the popup, since plugins
-  // are the only relevant Voyager surface there.
-  const isPluginSite = useMemo(
-    () => pluginManifests.some((plugin) => matchesAnyPattern(activeUrl, plugin.matches)),
+  // Plugins whose match patterns cover the active tab's URL. A plugin only ever
+  // shows on — and only affects — the site it targets, so Claude plugins appear
+  // only on Claude, ChatGPT plugins only on ChatGPT, and neither on Gemini.
+  const siteScopedManifests = useMemo(
+    () => pluginManifests.filter((plugin) => matchesAnyPattern(activeUrl, plugin.matches)),
     [activeUrl, pluginManifests],
   );
+  // True when at least one plugin targets the active site. On those sites the
+  // Plugins section is pinned to the top of the popup and the Gemini-specific
+  // sections are hidden, since plugins are the only relevant surface there.
+  const isPluginSite = siteScopedManifests.length > 0;
 
   // The host platform to theme the popup for (claude → orange, chatgpt → sky blue).
   const activePlatform = useMemo(() => resolvePlatformThemeId(activeUrl), [activeUrl]);
@@ -1459,9 +1460,9 @@ export default function Popup() {
       case 'visualEffect':
         return !isAIStudio;
       case 'plugins':
-        // Pinned to the top on plugin sites (rendered separately), so hide it
-        // from the reorderable list there to avoid a duplicate.
-        return !isPluginSite;
+        // The Plugins section is always rendered pinned to the top (and only on
+        // sites a plugin targets). It never appears in the reorderable list.
+        return false;
       default:
         return true;
     }
@@ -1628,7 +1629,7 @@ export default function Popup() {
         {isPluginSite && (
           <div style={{ order: -1 }}>
             <PluginManager
-              manifests={pluginManifests}
+              manifests={siteScopedManifests}
               loading={pluginsLoading}
               onRefresh={handleRefreshPlugins}
               refreshing={pluginsRefreshing}
@@ -1637,17 +1638,6 @@ export default function Popup() {
         )}
         {/* Context Sync */}
         {wrapSection('contextSync', <ContextSyncSettings />)}
-        {/* Plugin ecosystem — Tampermonkey-style list of integrated plugins */}
-        {!isPluginSite &&
-          wrapSection(
-            'plugins',
-            <PluginManager
-              manifests={pluginManifests}
-              loading={pluginsLoading}
-              onRefresh={handleRefreshPlugins}
-              refreshing={pluginsRefreshing}
-            />,
-          )}
         {/* Timeline Options */}
         {wrapSection(
           'timeline',
@@ -2680,12 +2670,11 @@ export default function Popup() {
                   </div>
                 )}
 
-                {/* Quick-select buttons for popular websites */}
+                {/* Quick-select buttons for popular websites. ChatGPT / Claude /
+                    Grok are intentionally absent: they're plugin platforms (managed
+                    via the Plugins section), not Prompt-Manager custom sites. */}
                 <div className="mb-3 flex flex-wrap gap-1.5">
                   {[
-                    { domain: 'chatgpt.com', label: 'ChatGPT', Icon: IconChatGPT },
-                    { domain: 'claude.ai', label: 'Claude', Icon: IconClaude },
-                    { domain: 'grok.com', label: 'Grok', Icon: IconGrok },
                     { domain: 'deepseek.com', label: 'DeepSeek', Icon: IconDeepSeek },
                     { domain: 'qwen.ai', label: 'Qwen', Icon: IconQwen },
                     { domain: 'kimi.com', label: 'Kimi', Icon: IconKimi },

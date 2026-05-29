@@ -363,14 +363,25 @@ export class FormulaCopyService {
       return aiStudioContainer;
     }
 
-    // 4. Try AI Studio: clicked inside .katex element
+    // 4. Generic KaTeX (AI Studio, ChatGPT, Claude) — clicked inside .katex
     const katexElement = target.closest('.katex');
     if (katexElement instanceof HTMLElement) {
-      // Find the parent ms-katex container
+      // AI Studio wraps .katex in an <ms-katex> container; prefer it when present.
       const parentMsKatex = katexElement.closest('ms-katex');
       if (parentMsKatex instanceof HTMLElement) {
         return parentMsKatex;
       }
+      // ChatGPT / Claude: a block formula is wrapped in .katex-display. Return the
+      // wrapper so isDisplayMode() can detect it; inline math returns the .katex.
+      const displayWrapper = katexElement.closest('.katex-display');
+      return displayWrapper instanceof HTMLElement ? displayWrapper : katexElement;
+    }
+
+    // 5. ChatGPT / Claude: clicked on the .katex-display padding around a block
+    //    formula (outside the inner .katex).
+    const displayContainer = target.closest('.katex-display');
+    if (displayContainer instanceof HTMLElement) {
+      return displayContainer;
     }
 
     return null;

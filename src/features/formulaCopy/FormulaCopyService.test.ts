@@ -448,4 +448,90 @@ describe('FormulaCopyService', () => {
     document.body.removeChild(inlineMath);
     document.body.removeChild(displayMath);
   });
+
+  // ChatGPT and Claude render math with standard KaTeX: a `.katex` span whose
+  // `.katex-mathml` holds <annotation encoding="application/x-tex">, with block
+  // formulas wrapped in `.katex-display` and `math[display="block"]`. There is no
+  // `data-math` attribute and no `<ms-katex>` wrapper (unlike Gemini / AI Studio).
+  function makeKatex(latex: string, opts: { display: boolean }): HTMLElement {
+    const katex = document.createElement('span');
+    katex.className = 'katex';
+    const mathml = document.createElement('span');
+    mathml.className = 'katex-mathml';
+    const displayAttr = opts.display ? ' display="block"' : '';
+    mathml.innerHTML = `<math xmlns="http://www.w3.org/1998/Math/MathML"${displayAttr}><semantics><mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">${latex}</annotation></semantics></math>`;
+    const html = document.createElement('span');
+    html.className = 'katex-html';
+    html.textContent = 'rendered';
+    katex.appendChild(mathml);
+    katex.appendChild(html);
+    if (!opts.display) return katex;
+    const wrapper = document.createElement('span');
+    wrapper.className = 'katex-display';
+    wrapper.appendChild(katex);
+    return wrapper;
+  }
+
+  it('should copy ChatGPT/Claude inline KaTeX as $...$', async () => {
+    const clipboard = navigator.clipboard as unknown as { write?: unknown };
+    clipboard.write = undefined;
+
+    resetSingleton();
+    service = FormulaCopyService.getInstance({ format: 'latex' });
+
+    const inline = makeKatex('E = mc^2', { display: false });
+    document.body.appendChild(inline);
+
+    service.initialize();
+    // Click the inner rendered span, mimicking a real click inside .katex.
+    inline.querySelector('.katex-html')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    expect(writeTextMock).toHaveBeenCalledWith('$E = mc^2$');
+
+    document.body.removeChild(inline);
+  });
+
+  it('should copy ChatGPT/Claude block KaTeX as $$...$$', async () => {
+    const clipboard = navigator.clipboard as unknown as { write?: unknown };
+    clipboard.write = undefined;
+
+    resetSingleton();
+    service = FormulaCopyService.getInstance({ format: 'latex' });
+
+    const block = makeKatex('p(\\theta \\mid D) = \\frac{p(D \\mid \\theta)p(\\theta)}{p(D)}', {
+      display: true,
+    });
+    document.body.appendChild(block);
+
+    service.initialize();
+    block.querySelector('.katex-html')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    expect(writeTextMock).toHaveBeenCalledWith(
+      '$$p(\\theta \\mid D) = \\frac{p(D \\mid \\theta)p(\\theta)}{p(D)}$$',
+    );
+
+    document.body.removeChild(block);
+  });
+
+  it('should copy block KaTeX when clicking the .katex-display padding', async () => {
+    const clipboard = navigator.clipboard as unknown as { write?: unknown };
+    clipboard.write = undefined;
+
+    resetSingleton();
+    service = FormulaCopyService.getInstance({ format: 'latex' });
+
+    const block = makeKatex('a^2 + b^2 = c^2', { display: true });
+    document.body.appendChild(block);
+
+    service.initialize();
+    // Click the .katex-display wrapper itself (not the inner .katex).
+    block.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+
+    expect(writeTextMock).toHaveBeenCalledWith('$$a^2 + b^2 = c^2$$');
+
+    document.body.removeChild(block);
+  });
 });

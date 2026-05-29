@@ -7,6 +7,7 @@ import {
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy } from '@/features/formulaCopy';
 import { startPluginHost } from '@/features/plugins';
+import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
 import { initI18n } from '@/utils/i18n';
 
 import { startCanvasExport } from './canvasExport/index';
@@ -483,6 +484,18 @@ function handleVisibilityChange(): void {
 
     // If not a known site, check if it's a custom website (async)
     if (!isSupportedSite) {
+      // Third-party plugin platforms (Claude / ChatGPT / Grok …): the plugin host
+      // and platform theme already ran above. Add the KaTeX formula-copy feature
+      // (click an inline/block formula to copy its LaTeX), but DO NOT start the
+      // Prompt Manager or any other Gemini feature here — even if this domain is
+      // also saved as a Prompt-Manager "custom website". This keeps these sites
+      // plugin-only, matching how Claude already behaves.
+      if (resolvePluginPlatformId(location.href)) {
+        console.log('[Gemini Voyager] Plugin platform detected, formula copy only');
+        startFormulaCopy();
+        return;
+      }
+
       // For unknown sites, check storage asynchronously
       chrome.storage?.sync?.get({ gvPromptCustomWebsites: [] }, (result) => {
         const customWebsites = Array.isArray(result?.gvPromptCustomWebsites)
