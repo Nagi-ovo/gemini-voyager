@@ -2067,6 +2067,10 @@
     "message": "サイトの権限が拒否されたため、プラグインを実行できません。",
     "description": "Shown when the user denies the site permission for a plugin"
   },
+  "pluginUnsupportedPlatform": {
+    "message": "このブラウザでは利用できません。プラグインに必要なサイト権限を付与できません。",
+    "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
+  },
   "pluginsLoading": {
     "message": "プラグインを読み込み中…",
     "description": "Shown while the plugin catalog is loading"

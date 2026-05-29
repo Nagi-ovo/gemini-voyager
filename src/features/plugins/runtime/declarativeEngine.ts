@@ -7,8 +7,15 @@
  *  - **Reversible.** Every applied change is bookkept so `unmount()` restores the
  *    DOM exactly (removes injected styles/classes, restores overwritten
  *    attributes/inline styles).
- *  - **Idempotent.** Re-applying ops never duplicates work (classes/attrs are set
- *    once; originals captured only on first touch).
+ *  - **Composable across plugins.** Class/attribute/style changes are tracked in
+ *    engine-level, ref-counted ledgers — NOT per-plugin "original value" copies.
+ *    When two plugins touch the same class/attribute/style, the *true* pre-plugin
+ *    original is captured once; unmounting one plugin restores the value of the
+ *    other still-active plugin (last writer wins), and only the last release
+ *    restores the original. This is what makes a multi-plugin marketplace safe.
+ *  - **Idempotent.** Re-applying ops never duplicates work (a plugin owns a given
+ *    class/attr/style once; re-application just re-asserts the DOM value, which
+ *    also re-heals SPA re-renders that stripped it).
  *  - **No observer loop.** The MutationObserver watches `childList`+`subtree`
  *    only, so the engine's own class/attribute/style mutations never retrigger
  *    it. Re-application happens only when new nodes appear (SPA re-renders),
@@ -37,12 +44,17 @@ interface ActivePlugin {
   styleEl: HTMLStyleElement | null;
   /** Current resolved setting values, substituted into the CSS via `{{key}}`. */
   settings: PluginSettings;
-  /** Classes we added, per element, so we remove exactly what we added. */
-  readonly addedClasses: Map<Element, Set<string>>;
-  /** Original attribute values we overwrote (null = attribute was absent). */
-  readonly attrOriginals: Map<Element, Map<string, string | null>>;
-  /** Original inline style values we overwrote ('' = property was unset). */
-  readonly styleOriginals: Map<HTMLElement, Map<string, string>>;
+}
+
+/**
+ * One overwritten attribute/style value. `original` is the value *before any
+ * plugin touched it* (captured once): `null` = attribute was absent, `''` = inline
+ * style property was unset. `stack` holds each active plugin's desired value; the
+ * top entry is the one currently written to the DOM (last writer wins).
+ */
+interface OverrideLayer {
+  readonly original: string | null;
+  readonly stack: Array<{ id: string; value: string }>;
 }
 
 export interface DeclarativeEngineOptions {
@@ -56,6 +68,15 @@ export class DeclarativeEngine {
   private readonly doc: Document;
   private readonly adapter: SiteAdapter | null;
   private readonly active = new Map<string, ActivePlugin>();
+
+  // Engine-level, ref-counted ledgers shared across plugins (see class doc).
+  /** element → className → set of plugin ids that requested the class. */
+  private readonly classOwners = new Map<Element, Map<string, Set<string>>>();
+  /** element → attribute name → layer. */
+  private readonly attrLayers = new Map<Element, Map<string, OverrideLayer>>();
+  /** element → inline-style property → layer. */
+  private readonly styleLayers = new Map<HTMLElement, Map<string, OverrideLayer>>();
+
   private observer: MutationObserver | null = null;
   private reapplyScheduled = false;
 
@@ -75,14 +96,7 @@ export class DeclarativeEngine {
   mount(manifest: PluginManifest, settings: PluginSettings = {}): void {
     if (this.active.has(manifest.id)) return;
     this.ensureBaseStyle();
-    const entry: ActivePlugin = {
-      manifest,
-      styleEl: null,
-      settings,
-      addedClasses: new Map(),
-      attrOriginals: new Map(),
-      styleOriginals: new Map(),
-    };
+    const entry: ActivePlugin = { manifest, styleEl: null, settings };
     this.active.set(manifest.id, entry);
     this.injectStyles(entry);
     this.applyDomOps(entry);
@@ -103,22 +117,7 @@ export class DeclarativeEngine {
     if (!entry) return;
 
     entry.styleEl?.remove();
-
-    for (const [el, classes] of entry.addedClasses) {
-      for (const className of classes) el.classList.remove(className);
-    }
-    for (const [el, attrs] of entry.attrOriginals) {
-      for (const [name, prev] of attrs) {
-        if (prev === null) el.removeAttribute(name);
-        else el.setAttribute(name, prev);
-      }
-    }
-    for (const [el, props] of entry.styleOriginals) {
-      for (const [prop, prev] of props) {
-        if (prev === '') el.style.removeProperty(prop);
-        else el.style.setProperty(prop, prev);
-      }
-    }
+    this.releasePlugin(id);
 
     this.active.delete(id);
     if (this.active.size === 0) this.disconnectObserver();
@@ -206,41 +205,96 @@ export class DeclarativeEngine {
   private applyDomOps(entry: ActivePlugin): void {
     const ops = entry.manifest.contributes.domOps;
     if (!ops) return;
-    for (const op of ops) this.applyOp(entry, op);
+    const id = entry.manifest.id;
+    for (const op of ops) this.applyOp(id, op);
   }
 
-  private applyOp(entry: ActivePlugin, op: DomOperation): void {
+  private applyOp(id: string, op: DomOperation): void {
     for (const el of this.queryAll(op.target)) {
       switch (op.op) {
         case 'addClass':
-          this.addClass(entry, el, op.className);
+          this.applyAddClass(id, el, op.className);
           break;
         case 'hide':
-          this.addClass(entry, el, PLUGIN_HIDDEN_CLASS);
+          this.applyAddClass(id, el, PLUGIN_HIDDEN_CLASS);
           break;
-        case 'setAttribute': {
-          const originals = mapGet(entry.attrOriginals, el, () => new Map<string, string | null>());
-          if (!originals.has(op.name)) originals.set(op.name, el.getAttribute(op.name));
-          el.setAttribute(op.name, op.value);
+        case 'setAttribute':
+          this.applySetAttribute(id, el, op.name, op.value);
           break;
-        }
-        case 'setStyle': {
-          if (!(el instanceof HTMLElement)) break;
-          const originals = mapGet(entry.styleOriginals, el, () => new Map<string, string>());
-          for (const [prop, value] of Object.entries(op.styles)) {
-            if (!originals.has(prop)) originals.set(prop, el.style.getPropertyValue(prop));
-            el.style.setProperty(prop, value);
+        case 'setStyle':
+          if (el instanceof HTMLElement) {
+            for (const [prop, value] of Object.entries(op.styles)) {
+              this.applySetStyle(id, el, prop, value);
+            }
           }
           break;
-        }
       }
     }
   }
 
-  private addClass(entry: ActivePlugin, el: Element, className: string): void {
-    if (el.classList.contains(className)) return;
-    el.classList.add(className);
-    mapGet(entry.addedClasses, el, () => new Set<string>()).add(className);
+  private applyAddClass(id: string, el: Element, className: string): void {
+    const perEl = mapGet(this.classOwners, el, () => new Map<string, Set<string>>());
+    const owners = mapGet(perEl, className, () => new Set<string>());
+    owners.add(id);
+    // (Re)assert the class — also re-heals an SPA re-render that stripped it.
+    if (!el.classList.contains(className)) el.classList.add(className);
+  }
+
+  private applySetAttribute(id: string, el: Element, name: string, value: string): void {
+    const perEl = mapGet(this.attrLayers, el, () => new Map<string, OverrideLayer>());
+    const layer = mapGet(perEl, name, () => ({ original: el.getAttribute(name), stack: [] }));
+    pushLayerValue(layer, id, value);
+    el.setAttribute(name, topValue(layer));
+  }
+
+  private applySetStyle(id: string, el: HTMLElement, prop: string, value: string): void {
+    const perEl = mapGet(this.styleLayers, el, () => new Map<string, OverrideLayer>());
+    const layer = mapGet(perEl, prop, () => ({ original: el.style.getPropertyValue(prop), stack: [] }));
+    pushLayerValue(layer, id, value);
+    el.style.setProperty(prop, topValue(layer));
+  }
+
+  /** Remove every contribution of `id` from the shared ledgers, restoring the
+   *  next-highest plugin's value (or the captured original when it was last). */
+  private releasePlugin(id: string): void {
+    for (const [el, perEl] of this.classOwners) {
+      for (const [className, owners] of perEl) {
+        if (owners.delete(id) && owners.size === 0) {
+          el.classList.remove(className);
+          perEl.delete(className);
+        }
+      }
+      if (perEl.size === 0) this.classOwners.delete(el);
+    }
+
+    for (const [el, perEl] of this.attrLayers) {
+      for (const [name, layer] of perEl) {
+        if (!removeLayerValue(layer, id)) continue;
+        if (layer.stack.length === 0) {
+          if (layer.original === null) el.removeAttribute(name);
+          else el.setAttribute(name, layer.original);
+          perEl.delete(name);
+        } else {
+          el.setAttribute(name, topValue(layer));
+        }
+      }
+      if (perEl.size === 0) this.attrLayers.delete(el);
+    }
+
+    for (const [el, perEl] of this.styleLayers) {
+      for (const [prop, layer] of perEl) {
+        if (!removeLayerValue(layer, id)) continue;
+        if (layer.stack.length === 0) {
+          // '' (or null) means the property was unset before any plugin.
+          if (!layer.original) el.style.removeProperty(prop);
+          else el.style.setProperty(prop, layer.original);
+          perEl.delete(prop);
+        } else {
+          el.style.setProperty(prop, topValue(layer));
+        }
+      }
+      if (perEl.size === 0) this.styleLayers.delete(el);
+    }
   }
 
   private ensureObserver(): void {
@@ -275,4 +329,22 @@ function mapGet<K, V>(map: Map<K, V>, key: K, create: () => V): V {
     map.set(key, value);
   }
   return value;
+}
+
+/** Update-or-insert a plugin's desired value, moving it to the top of the stack. */
+function pushLayerValue(layer: OverrideLayer, id: string, value: string): void {
+  removeLayerValue(layer, id);
+  layer.stack.push({ id, value });
+}
+
+/** Remove a plugin's entry from the stack. Returns true if one was present. */
+function removeLayerValue(layer: OverrideLayer, id: string): boolean {
+  const index = layer.stack.findIndex((entry) => entry.id === id);
+  if (index < 0) return false;
+  layer.stack.splice(index, 1);
+  return true;
+}
+
+function topValue(layer: OverrideLayer): string {
+  return layer.stack[layer.stack.length - 1].value;
 }

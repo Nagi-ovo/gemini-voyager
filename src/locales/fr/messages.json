@@ -2067,6 +2067,10 @@
     "message": "Autorisation du site refusée ; l'extension ne peut pas s'exécuter.",
     "description": "Shown when the user denies the site permission for a plugin"
   },
+  "pluginUnsupportedPlatform": {
+    "message": "Non pris en charge par ce navigateur : impossible d'accorder l'accès au site requis par l'extension.",
+    "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
+  },
   "pluginsLoading": {
     "message": "Chargement des extensions…",
     "description": "Shown while the plugin catalog is loading"

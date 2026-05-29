@@ -2067,6 +2067,10 @@
     "message": "Site permission denied — the plugin can't run without it.",
     "description": "Shown when the user denies the site permission for a plugin"
   },
+  "pluginUnsupportedPlatform": {
+    "message": "Unsupported on this browser — it can't grant the site access this plugin needs.",
+    "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
+  },
   "pluginsLoading": {
     "message": "Loading plugins…",
     "description": "Shown while the plugin catalog is loading"

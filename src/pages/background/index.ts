@@ -650,29 +650,43 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 });
 
 chrome.permissions.onAdded.addListener(({ origins }) => {
-  const domains = extractDomainsFromOrigins(origins);
-  if (domains.length) {
-    void browser.storage.sync
-      .get({ [CUSTOM_WEBSITE_KEY]: [] })
-      .then((current) => {
+  void (async () => {
+    // Refresh the plugin-site set FIRST so a freshly-granted plugin origin
+    // (e.g. claude.ai / chatgpt.com) is reliably excluded from the Prompt-Manager
+    // custom-website list. Otherwise onAdded can fire before the initial async
+    // refresh has populated `pluginSiteDomains`, racing a plugin site into the
+    // custom-website list.
+    await refreshPluginSiteDomains();
+
+    const domains = extractDomainsFromOrigins(origins);
+    if (domains.length) {
+      try {
+        const current = await browser.storage.sync.get({ [CUSTOM_WEBSITE_KEY]: [] });
         const existing = Array.isArray(current[CUSTOM_WEBSITE_KEY])
           ? current[CUSTOM_WEBSITE_KEY]
           : [];
         const merged = Array.from(new Set([...existing, ...domains]));
         if (merged.length !== existing.length) {
-          return browser.storage.sync.set({ [CUSTOM_WEBSITE_KEY]: merged });
+          await browser.storage.sync.set({ [CUSTOM_WEBSITE_KEY]: merged });
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.warn('[Background] Failed to persist domains from permissions.onAdded:', error);
-      });
-  }
+      }
+    }
 
-  void syncCustomContentScripts();
+    // A granted origin may belong to an enabled plugin — (re)register both the
+    // custom-website and the plugin content scripts for newly-granted origins.
+    await syncCustomContentScripts();
+    await syncPluginContentScripts();
+  })();
 });
 
 chrome.permissions.onRemoved.addListener(() => {
   void syncCustomContentScripts();
+  // Keep plugin content-script registrations in sync when a site's host
+  // permission is revoked from the browser UI — filterGrantedOrigins will now
+  // drop the revoked origin, so the stale plugin registration is removed.
+  void syncPluginContentScripts();
 });
 
 /**

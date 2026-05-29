@@ -107,4 +107,57 @@ describe('validateManifest', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it('rejects CSS that uses @import', () => {
+    const result = validateManifest({
+      ...valid,
+      contributes: { styles: [{ css: '@import url("https://evil.example/x.css");' }] },
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.some((e) => e.path === 'contributes.styles[0].css')).toBe(true);
+  });
+
+  it('rejects CSS with an external url() (http/https/protocol-relative)', () => {
+    for (const css of [
+      'body{background:url(https://t.example/p.gif)}',
+      "body{background:url('http://t.example/p.gif')}",
+      'body{background:url(//t.example/p.gif)}',
+    ]) {
+      const result = validateManifest({ ...valid, contributes: { styles: [{ css }] } });
+      expect(result.success).toBe(false);
+    }
+  });
+
+  it('allows self-contained CSS (data: URIs, relative refs)', () => {
+    const result = validateManifest({
+      ...valid,
+      contributes: {
+        styles: [{ css: 'body{background:url(data:image/png;base64,AAAA)}.x{color:red}' }],
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects setAttribute on event-handler attributes (on*)', () => {
+    const result = validateManifest({
+      ...valid,
+      contributes: {
+        domOps: [{ op: 'setAttribute', target: 'body', name: 'onclick', value: 'alert(1)' }],
+      },
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.some((e) => e.path === 'contributes.domOps[0].name')).toBe(true);
+  });
+
+  it('still allows normal setAttribute', () => {
+    const result = validateManifest({
+      ...valid,
+      contributes: {
+        domOps: [{ op: 'setAttribute', target: 'a', name: 'target', value: '_blank' }],
+      },
+    });
+    expect(result.success).toBe(true);
+  });
 });

@@ -2067,6 +2067,10 @@
     "message": "Доступ к сайту отклонён — плагин не может работать без него.",
     "description": "Shown when the user denies the site permission for a plugin"
   },
+  "pluginUnsupportedPlatform": {
+    "message": "Не поддерживается в этом браузере — невозможно предоставить доступ к сайту, нужный плагину.",
+    "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
+  },
   "pluginsLoading": {
     "message": "Загрузка плагинов…",
     "description": "Shown while the plugin catalog is loading"

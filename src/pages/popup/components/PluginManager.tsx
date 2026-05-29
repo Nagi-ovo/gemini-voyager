@@ -2,7 +2,7 @@ import { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
-import { isFirefox } from '@/core/utils/browser';
+import { isFirefox, isSafari } from '@/core/utils/browser';
 import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
 import {
   loadCollapsedPlugins,
@@ -95,6 +95,7 @@ export function PluginManager({
   const [settingsMap, setSettingsMap] = useState<SettingsMap>({});
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [deniedId, setDeniedId] = useState<string | null>(null);
+  const [unsupportedId, setUnsupportedId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -120,9 +121,18 @@ export function PluginManager({
 
   const handleToggle = useCallback(async (plugin: PluginManifest, next: boolean) => {
     setDeniedId(null);
+    setUnsupportedId(null);
     if (next) {
       const origins = pluginsToOriginPatterns([plugin]);
-      if (origins.length > 0 && browser.permissions?.request) {
+      if (origins.length > 0) {
+        // This plugin needs host access on a site Voyager reaches only via dynamic
+        // content-script registration. If the platform can't grant or inject that
+        // (Safari, or a build without permissions.request), enabling would be a
+        // silent no-op — so refuse and explain, instead of a misleading toggle.
+        if (isSafari() || !browser.permissions?.request) {
+          setUnsupportedId(plugin.id);
+          return;
+        }
         try {
           // Firefox requires permissions.request to be the first await in the
           // user gesture, so skip the contains() pre-check there.
@@ -299,6 +309,12 @@ export function PluginManager({
                       {deniedId === plugin.id && (
                         <p className="mt-1 text-[11px] text-red-500">
                           {t('pluginPermissionDenied')}
+                        </p>
+                      )}
+
+                      {unsupportedId === plugin.id && (
+                        <p className="mt-1 text-[11px] text-red-500">
+                          {t('pluginUnsupportedPlatform')}
                         </p>
                       )}
                     </>

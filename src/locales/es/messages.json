@@ -2067,6 +2067,10 @@
     "message": "Permiso del sitio denegado; el complemento no puede ejecutarse.",
     "description": "Shown when the user denies the site permission for a plugin"
   },
+  "pluginUnsupportedPlatform": {
+    "message": "No compatible con este navegador: no puede conceder el acceso al sitio que necesita el complemento.",
+    "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
+  },
   "pluginsLoading": {
     "message": "Cargando complementos…",
     "description": "Shown while the plugin catalog is loading"

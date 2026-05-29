@@ -177,4 +177,79 @@ describe('DeclarativeEngine', () => {
       'max-width:70ch',
     );
   });
+
+  // Multi-plugin composition: two plugins touching the SAME class/attribute/style
+  // must not clobber each other on unmount (ref-counted / layered ledgers).
+  it('ref-counts a shared class: unmounting one plugin keeps it until the last', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    const engine = new DeclarativeEngine({ doc: document });
+    const op = { op: 'addClass' as const, target: cssRef('.target'), className: 'gv-shared' };
+    engine.mount(makeManifest({ domOps: [op] }, 'plugin.a'));
+    engine.mount(makeManifest({ domOps: [op] }, 'plugin.b'));
+
+    const target = document.querySelector('.target');
+    expect(target?.classList.contains('gv-shared')).toBe(true);
+
+    engine.unmount('plugin.a');
+    // B still wants it → class stays.
+    expect(target?.classList.contains('gv-shared')).toBe(true);
+
+    engine.unmount('plugin.b');
+    expect(target?.classList.contains('gv-shared')).toBe(false);
+  });
+
+  it('layers a shared attribute: unmounting the top restores the other plugin, then the original', () => {
+    document.body.innerHTML = '<a class="lnk" href="#orig">x</a>';
+    const engine = new DeclarativeEngine({ doc: document });
+    engine.mount(
+      makeManifest(
+        { domOps: [{ op: 'setAttribute', target: cssRef('.lnk'), name: 'href', value: '#a' }] },
+        'plugin.a',
+      ),
+    );
+    engine.mount(
+      makeManifest(
+        { domOps: [{ op: 'setAttribute', target: cssRef('.lnk'), name: 'href', value: '#b' }] },
+        'plugin.b',
+      ),
+    );
+
+    const lnk = document.querySelector('.lnk');
+    // Last writer wins.
+    expect(lnk?.getAttribute('href')).toBe('#b');
+
+    engine.unmount('plugin.b');
+    // Falls back to the still-active plugin A — NOT the captured original.
+    expect(lnk?.getAttribute('href')).toBe('#a');
+
+    engine.unmount('plugin.a');
+    // Last release restores the true pre-plugin original.
+    expect(lnk?.getAttribute('href')).toBe('#orig');
+  });
+
+  it('layers a shared inline style across plugins', () => {
+    document.body.innerHTML = '<div class="box" style="color: blue;"></div>';
+    const engine = new DeclarativeEngine({ doc: document });
+    engine.mount(
+      makeManifest(
+        { domOps: [{ op: 'setStyle', target: cssRef('.box'), styles: { color: 'red' } }] },
+        'plugin.a',
+      ),
+    );
+    engine.mount(
+      makeManifest(
+        { domOps: [{ op: 'setStyle', target: cssRef('.box'), styles: { color: 'green' } }] },
+        'plugin.b',
+      ),
+    );
+
+    const box = document.querySelector<HTMLElement>('.box');
+    expect(box?.style.color).toBe('green');
+
+    engine.unmount('plugin.b');
+    expect(box?.style.color).toBe('red');
+
+    engine.unmount('plugin.a');
+    expect(box?.style.color).toBe('blue');
+  });
 });

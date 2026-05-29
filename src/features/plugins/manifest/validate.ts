@@ -51,6 +51,23 @@ function nonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+/**
+ * Reject CSS that can fetch remote resources — `@import` and external `url()`
+ * (http(s):// or protocol-relative //). A declarative plugin is meant to be
+ * self-contained data; remote fetches enable tracking/exfiltration and defeat
+ * the "no remotely-hosted code/resources" posture. `data:` URIs stay allowed.
+ */
+function cssHasRemoteResource(css: string): boolean {
+  if (/@import\b/i.test(css)) return true;
+  if (/url\(\s*['"]?\s*(?:https?:)?\/\//i.test(css)) return true;
+  return false;
+}
+
+/** Event-handler attributes (`onclick`, `onload`, …) inject executable code. */
+function isEventHandlerAttribute(name: string): boolean {
+  return /^on/i.test(name);
+}
+
 function normalizeSelector(
   raw: unknown,
   path: string,
@@ -106,6 +123,13 @@ function normalizeOp(raw: unknown, path: string, issues: ManifestIssue[]): DomOp
         });
         return null;
       }
+      if (isEventHandlerAttribute(raw.name)) {
+        issues.push({
+          path: `${path}.name`,
+          message: 'event-handler attributes (on*) are not allowed',
+        });
+        return null;
+      }
       return { op: 'setAttribute', target, name: raw.name, value: raw.value };
     case 'setStyle': {
       if (!isRecord(raw.styles)) {
@@ -152,6 +176,13 @@ function normalizeContributions(raw: unknown, issues: ManifestIssue[]): PluginCo
           issues.push({
             path: `contributes.styles[${index}].css`,
             message: `exceeds ${MAX_STYLE_LENGTH} chars`,
+          });
+          return;
+        }
+        if (cssHasRemoteResource(entry.css)) {
+          issues.push({
+            path: `contributes.styles[${index}].css`,
+            message: 'must not use @import or external url() (remote-resource fetch)',
           });
           return;
         }
