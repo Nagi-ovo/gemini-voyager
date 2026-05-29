@@ -1402,6 +1402,24 @@ body.dark-theme .gv-pm-version:hover {
   transition: all 0.2s ease;
 }
 
+/* Draw our OWN dropdown chevron for the language <select>. The native arrow is
+   inconsistent across hosts — ChatGPT's reset hides it, others place it tight to
+   the edge. `appearance:none` removes the native one; a self-contained SVG sits
+   at a controlled inset (mirrored under RTL). !important only on the arrow layer
+   + appearance, so each theme keeps its own background-color. */
+.gv-pm-lang {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  padding-inline-end: 30px !important;
+}
+
+body.gv-rtl .gv-pm-lang {
+  background-position: left 10px center !important;
+}
+
 .gv-pm-lang:hover {
   border-color: oklch(0.55 0.17 155 / 0.4);
   box-shadow: 0 2px 6px oklch(0 0 0 / 0.06);
@@ -11083,10 +11101,16 @@ body.gv-hide-input-halo .nl-canvas {
   border-color: var(--gv-pm-brand) !important;
 }
 
-/* Accent text on the panel surface. */
+/* Accent text + faint brand pill on the panel surface (list tag chips). */
 :root.gv-platform-themed .gv-pm-chip,
 :root.gv-platform-themed .gv-pm-trigger-new::after {
   color: var(--gv-pm-brand) !important;
+}
+:root.gv-platform-themed .gv-pm-chip {
+  background: var(--gv-pm-brand-soft) !important;
+}
+:root.gv-platform-themed .gv-pm-chip:hover {
+  background: color-mix(in srgb, var(--gv-pm-brand) 24%, transparent) !important;
 }
 
 /* Active filter tag + active lock: brand text on a faint brand pill. */
