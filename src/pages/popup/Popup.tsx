@@ -30,6 +30,7 @@ import {
   getCachedLatestVersion,
   getManifestUpdateUrl,
 } from '@/pages/popup/utils/latestVersion';
+import { createPopupBrandThemeStyle } from '@/pages/popup/utils/brandTheme';
 
 import { DarkModeToggle } from '../../components/DarkModeToggle';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
@@ -1529,16 +1530,7 @@ export default function Popup() {
   return (
     <div
       className="bg-background text-foreground w-[360px]"
-      style={
-        activeBrand
-          ? ({
-              '--primary': activeBrand,
-              '--primary-foreground': '#ffffff',
-              '--ring': activeBrand,
-              '--accent': `color-mix(in srgb, ${activeBrand} 14%, transparent)`,
-            } as React.CSSProperties)
-          : undefined
-      }
+      style={activeBrand ? createPopupBrandThemeStyle(activeBrand) : undefined}
     >
       {/* Header */}
       <div className="border-border/50 flex items-center justify-between border-b px-5 py-5">
