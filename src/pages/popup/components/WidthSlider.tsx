@@ -52,6 +52,7 @@ export default function WidthSlider({
               checked={enabled}
               onChange={(e) => onToggle(e.target.checked)}
               className="scale-75"
+              aria-label={label}
             />
           )}
           <CardTitle>{label}</CardTitle>
@@ -80,6 +81,8 @@ export default function WidthSlider({
               value={value}
               onValueChange={onChange}
               onValueCommit={onChangeComplete}
+              aria-label={label}
+              aria-valuetext={formatValue(value)}
             />
             <div className="text-muted-foreground mt-3 flex items-center justify-between text-xs font-medium">
               <span>{narrowLabel}</span>

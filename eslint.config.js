@@ -1,6 +1,7 @@
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import prettierConfig from 'eslint-config-prettier';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 
@@ -39,6 +40,7 @@ export default [
       '@typescript-eslint': tsPlugin,
       react: reactPlugin,
       'react-hooks': reactHooks,
+      'jsx-a11y': jsxA11y,
     },
     settings: {
       react: { version: 'detect' },
@@ -51,6 +53,17 @@ export default [
       // React Hooks rules
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+
+      // Accessibility rules (jsx-a11y). The plugin was a declared dependency but
+      // was never wired into the flat config, so a11y was effectively unlinted.
+      // Surfaced as warnings (consistent with exhaustive-deps / no-explicit-any)
+      // so they show up in `bun run lint` and editors without blocking the build.
+      ...Object.fromEntries(
+        Object.keys(jsxA11y.flatConfigs.recommended.rules).map((rule) => [rule, 'warn']),
+      ),
+      // Deprecated by jsx-a11y in favour of label-has-associated-control; keeping
+      // it on just double-reports the same labels. Disable to avoid noise.
+      'jsx-a11y/label-has-for': 'off',
 
       // TypeScript rules
       '@typescript-eslint/no-unused-vars': [
