@@ -80,6 +80,31 @@ export function isFirefox(): boolean {
 }
 
 /**
+ * Parse the Firefox major version from the user agent, or 0 if unavailable.
+ */
+function getFirefoxMajorVersion(): number {
+  const match = navigator.userAgent.match(/Firefox\/(\d+)/i);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
+/**
+ * Whether this browser honors the MV3 `optional_host_permissions` manifest key,
+ * i.e. whether `permissions.request({ origins })` for an optional host can
+ * actually be granted. Chrome/Edge: yes. Firefox: only from 128 (Bugzilla
+ * 1766026) — older Firefox installs but ignores the key, so the request would
+ * silently fail. Safari is gated separately via isSafari().
+ *
+ * Used to feature-gate the plugin / custom-website host-grant flows with a clear
+ * "unsupported" message instead of a misleading "denied" on older Firefox.
+ */
+export function supportsOptionalHostPermissions(): boolean {
+  if (isFirefox()) {
+    return getFirefoxMajorVersion() >= 128;
+  }
+  return true;
+}
+
+/**
  * Detect whether this extension runtime can show system notifications.
  * Safari Web Extensions do not support the WebExtensions notifications API,
  * so Safari must use in-page notification fallbacks instead.

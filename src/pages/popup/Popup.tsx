@@ -16,6 +16,7 @@ import {
   isFirefox,
   isSafari,
   shouldShowSafariUpdateReminder,
+  supportsOptionalHostPermissions,
 } from '@/core/utils/browser';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
@@ -1319,6 +1320,13 @@ export default function Popup() {
 
       if (!browser.permissions?.request || !browser.permissions?.contains) {
         setWebsiteError(t('permissionRequestFailed'));
+        return false;
+      }
+
+      if (!supportsOptionalHostPermissions()) {
+        // Firefox < 128 ignores optional_host_permissions, so the host grant can
+        // never succeed. Explain instead of showing a misleading "denied".
+        setWebsiteError(t('pluginUnsupportedPlatform'));
         return false;
       }
 
