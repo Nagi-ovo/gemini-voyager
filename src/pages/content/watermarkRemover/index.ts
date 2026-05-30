@@ -27,6 +27,15 @@ let engine: WatermarkEngine | null = null;
 let enginePromise: Promise<WatermarkEngine> | null = null;
 const processingQueue = new Set<HTMLImageElement>();
 
+// Observers are kept at module scope so they can be disconnected on teardown
+// and so re-running startWatermarkRemover() can't stack duplicate observers.
+// Two of these watch document.body (subtree + attributes), so leaking them is
+// permanent page-wide overhead.
+let previewObserver: MutationObserver | null = null;
+let indicatorObserver: MutationObserver | null = null;
+let bridgeObserver: MutationObserver | null = null;
+let statusObserver: MutationObserver | null = null;
+
 /**
  * Debounce function to limit execution frequency
  */
@@ -229,8 +238,10 @@ export const decorateDownloadButtons = (): void => {
  * Setup MutationObserver to watch for new images and run the preview pipeline.
  */
 const setupMutationObserver = (): void => {
+  if (previewObserver) return;
   const debouncedProcess = debounce(processAllImages, 100);
-  new MutationObserver(debouncedProcess).observe(document.body, {
+  previewObserver = new MutationObserver(debouncedProcess);
+  previewObserver.observe(document.body, {
     childList: true,
     subtree: true,
     attributes: true, // Watch for attribute changes (like native buttons appearing)
@@ -244,8 +255,10 @@ const setupMutationObserver = (): void => {
  * the canvas pipeline, only re-decorates download buttons.
  */
 const setupIndicatorObserver = (): void => {
+  if (indicatorObserver) return;
   const debouncedDecorate = debounce(decorateDownloadButtons, 100);
-  new MutationObserver(debouncedDecorate).observe(document.body, {
+  indicatorObserver = new MutationObserver(debouncedDecorate);
+  indicatorObserver.observe(document.body, {
     childList: true,
     subtree: true,
     attributes: true,
@@ -284,10 +297,11 @@ function notifyFetchInterceptor(enabled: boolean): void {
  * Uses MutationObserver to watch for requests in the bridge element
  */
 function setupFetchInterceptorBridge(): void {
+  if (bridgeObserver) return;
   const bridge = getBridgeElement();
 
   // Watch for requests from MAIN world via MutationObserver
-  const observer = new MutationObserver(async () => {
+  bridgeObserver = new MutationObserver(async () => {
     const requestData = bridge.dataset.request;
     if (requestData) {
       bridge.removeAttribute('data-request');
@@ -300,7 +314,7 @@ function setupFetchInterceptorBridge(): void {
     }
   });
 
-  observer.observe(bridge, { attributes: true, attributeFilter: ['data-request'] });
+  bridgeObserver.observe(bridge, { attributes: true, attributeFilter: ['data-request'] });
   console.log('[Gemini Voyager] Fetch interceptor bridge ready');
 }
 
@@ -419,6 +433,21 @@ export async function startWatermarkRemover(): Promise<void> {
   }
 }
 
+/**
+ * Disconnect every watermark observer. Safe to call when nothing was started.
+ * Wired into the content-script beforeunload teardown so the two document.body
+ * subtree observers don't outlive the page.
+ */
+export function stopWatermarkRemover(): void {
+  for (const observer of [previewObserver, indicatorObserver, bridgeObserver, statusObserver]) {
+    observer?.disconnect();
+  }
+  previewObserver = null;
+  indicatorObserver = null;
+  bridgeObserver = null;
+  statusObserver = null;
+}
+
 let statusToastManager: StatusToastManager | null = null;
 let downloadTrackingReady = false;
 let lastImmediateToastAt = 0;
@@ -519,6 +548,7 @@ function setupDownloadButtonTracking(): void {
  * Setup listener for status events from fetchInterceptor
  */
 function setupStatusListener(): void {
+  if (statusObserver) return;
   const bridge = getBridgeElement();
   const manager = getStatusToastManager();
   const downloadMessage = t('downloadingOriginal', '正在下载原始图片');
@@ -633,13 +663,13 @@ function setupStatusListener(): void {
     }
   };
 
-  const observer = new MutationObserver(() => {
+  statusObserver = new MutationObserver(() => {
     const statusData = bridge.dataset.status;
     if (!statusData) return;
     handleStatus(statusData);
   });
 
-  observer.observe(bridge, { attributes: true, attributeFilter: ['data-status'] });
+  statusObserver.observe(bridge, { attributes: true, attributeFilter: ['data-status'] });
   if (bridge.dataset.status) {
     handleStatus(bridge.dataset.status);
   }

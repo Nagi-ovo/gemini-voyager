@@ -50,7 +50,7 @@ import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
 import { startUserLatex } from './userLatex/index';
 import { startRainEffect, startSakuraEffect, startSnowEffect } from './visualEffects';
-import { startWatermarkRemover } from './watermarkRemover/index';
+import { startWatermarkRemover, stopWatermarkRemover } from './watermarkRemover/index';
 
 // Suppress Vite's CSS preload errors in the Chrome extension content script context.
 // Dynamic imports (e.g., mermaid) trigger Vite's __vitePreload helper which tries to
@@ -154,9 +154,21 @@ async function initializeFeatures(): Promise<void> {
       return;
     }
 
-    // Sequential initialization with small delays between features
-    // to further reduce simultaneous resource usage
-    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    // Yield between features instead of sleeping a fixed amount. On an idle main
+    // thread (the common foreground case) requestIdleCallback fires on the next
+    // idle slice — typically well under `ms` — so tail features (timeline, export,
+    // mermaid, …) wire up promptly instead of waiting out a ~2s floor of stacked
+    // setTimeouts. When the thread is busy, the `timeout` cap makes it back off
+    // exactly like the old fixed delay, preserving the anti-thundering-herd intent.
+    // Falls back to setTimeout where requestIdleCallback is unavailable (older WebKit).
+    const delay = (ms: number) =>
+      new Promise<void>((resolve) => {
+        if (typeof window.requestIdleCallback === 'function') {
+          window.requestIdleCallback(() => resolve(), { timeout: ms });
+        } else {
+          setTimeout(resolve, ms);
+        }
+      });
 
     // Check if this is a custom website (only prompt manager should be enabled)
     const isCustomSite = await isCustomWebsite();
@@ -566,6 +578,8 @@ function handleVisibilityChange(): void {
       try {
         window.removeEventListener('unhandledrejection', onUnhandledRejection);
         window.removeEventListener('error', onWindowError);
+        // Disconnect watermark-remover observers (no-op if it never started, e.g. Safari)
+        stopWatermarkRemover();
         if (folderManagerInstance) {
           folderManagerInstance.destroy();
           folderManagerInstance = null;
