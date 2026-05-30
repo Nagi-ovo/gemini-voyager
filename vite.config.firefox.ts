@@ -55,7 +55,10 @@ export default mergeConfig(
           browser_specific_settings: {
             gecko: {
               id: 'gemini-voyager@nagi-ovo',
-              strict_min_version: '115.0',
+              // Firefox 116 is the first version where MV3 optional_host_permissions
+              // is honored. Pinning below 116 lets Fx install but silently fails the
+              // runtime permissions.request() used by the plugin / custom-website flows.
+              strict_min_version: '116.0',
               data_collection_permissions: {
                 required: ['none'],
               },

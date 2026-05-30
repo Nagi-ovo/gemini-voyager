@@ -14,7 +14,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "gemini-voyager@nagi-ovo",
-      "strict_min_version": "109.0"
+      "strict_min_version": "116.0"
     }
   },
   "options_ui": {
