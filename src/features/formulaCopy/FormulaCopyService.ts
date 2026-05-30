@@ -9,6 +9,7 @@ import browser from 'webextension-polyfill';
 import { logger } from '@/core';
 import { StorageKeys } from '@/core/types/common';
 import type { ILogger } from '@/core/types/common';
+import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
 /**
  * Formula copy format options
@@ -56,7 +57,6 @@ export class FormulaCopyService {
 
   private isInitialized = false;
   private copyToast: HTMLDivElement | null = null;
-  private i18nMessages: Record<string, string> = {};
 
   private constructor(config: FormulaCopyConfig = {}) {
     this.logger = logger.createChild('FormulaCopy');
@@ -66,7 +66,6 @@ export class FormulaCopyService {
       maxTraversalDepth: config.maxTraversalDepth ?? 10,
     };
     this.currentFormat = config.format ?? 'latex';
-    this.loadI18nMessages();
     this.loadFormatPreference();
   }
 
@@ -81,21 +80,17 @@ export class FormulaCopyService {
   }
 
   /**
-   * Load i18n messages for toast notifications
+   * Resolve a toast message in the user's selected in-extension language.
+   *
+   * Uses the custom translation layer (getTranslationSyncUnsafe), NOT
+   * browser.i18n.getMessage — the latter follows the BROWSER UI locale, so an
+   * English-browser user who picked Chinese in the popup would see an English
+   * toast while the rest of Voyager's UI is Chinese. Resolving here (at toast
+   * time) also guarantees initI18n() has populated the cached language by the
+   * time the user actually clicks a formula.
    */
-  private loadI18nMessages(): void {
-    try {
-      this.i18nMessages = {
-        copied: browser.i18n.getMessage('formula_copied') || '✓ Formula copied',
-        failed: browser.i18n.getMessage('formula_copy_failed') || '✗ Failed to copy',
-      };
-    } catch (error) {
-      this.logger.warn('Failed to load i18n messages, using defaults', { error });
-      this.i18nMessages = {
-        copied: '✓ Formula copied',
-        failed: '✗ Failed to copy',
-      };
-    }
+  private toastMessage(key: 'formula_copied' | 'formula_copy_failed'): string {
+    return getTranslationSyncUnsafe(key);
   }
 
   /**
@@ -223,14 +218,14 @@ export class FormulaCopyService {
       const success = await this.copyToClipboard(text, html);
 
       if (success) {
-        this.showToast(this.i18nMessages.copied, x, y, true);
+        this.showToast(this.toastMessage('formula_copied'), x, y, true);
         this.logger.debug('Formula copied successfully', { length: text.length, hasHtml: !!html });
       } else {
-        this.showToast(this.i18nMessages.failed, x, y, false);
+        this.showToast(this.toastMessage('formula_copy_failed'), x, y, false);
         this.logger.error('Failed to copy formula');
       }
     } catch (error) {
-      this.showToast(this.i18nMessages.failed, x, y, false);
+      this.showToast(this.toastMessage('formula_copy_failed'), x, y, false);
       this.logger.error('Error copying formula', { error });
     }
   }

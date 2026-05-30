@@ -1,6 +1,8 @@
 import temml from 'temml';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setCachedLanguage } from '@/utils/i18n';
+
 import { FormulaCopyService } from './FormulaCopyService';
 
 // Mock dependencies
@@ -93,6 +95,30 @@ describe('FormulaCopyService', () => {
   it('should initialize correctly', () => {
     service.initialize();
     expect(service.isServiceInitialized()).toBe(true);
+  });
+
+  it('shows the success toast in the user-selected language, not the browser UI locale', async () => {
+    // Pick Chinese the way the popup language switcher does (custom i18n layer),
+    // independent of browser.i18n / the browser UI locale.
+    setCachedLanguage('zh');
+    resetSingleton();
+    service = FormulaCopyService.getInstance({ format: 'latex' });
+
+    const mathElement = document.createElement('span');
+    mathElement.setAttribute('data-math', 'x^2');
+    mathElement.classList.add('math-inline');
+    document.body.appendChild(mathElement);
+
+    service.initialize();
+    mathElement.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true, clientX: 10, clientY: 10 }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const toast = document.querySelector('.gv-copy-toast');
+    expect(toast?.textContent).toBe('✓ 公式已复制');
+
+    setCachedLanguage('en');
   });
 
   it('should generate MathML when format is unicodemath (now mapped to MathML)', async () => {
