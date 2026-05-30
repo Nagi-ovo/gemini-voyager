@@ -5,7 +5,6 @@
  * - Optional lock to pin panel position; when locked, panel is draggable and persisted
  */
 import DOMPurify from 'dompurify';
-import JSZip from 'jszip';
 import 'katex/dist/katex.min.css';
 import type { marked as MarkedFn } from 'marked';
 import browser from 'webextension-polyfill';
@@ -2278,7 +2277,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
             'ok',
           );
         } else {
-          // Fallback for Firefox, Safari - download as ZIP file
+          // Fallback for Firefox, Safari - download as ZIP file.
+          // Load JSZip on demand so it stays out of the per-page content chunk.
+          const { default: JSZip } = await import('jszip');
           const zip = new JSZip();
 
           // Add files to ZIP
