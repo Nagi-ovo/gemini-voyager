@@ -306,8 +306,14 @@ export class AccountIsolationService {
         keyFromRoute ??
         (emailHash ? `email:${emailHash}` : routeUserId ? `route:${routeUserId}` : 'default');
 
-      let profile = map.profiles[accountKey];
-      if (!profile) {
+      const existing = map.profiles[accountKey];
+      const routeAliasChanged = routeUserId ? map.routeAliases[routeUserId] !== accountKey : false;
+      const emailAliasChanged = emailHash ? map.emailAliases[emailHash] !== accountKey : false;
+
+      let profile: AccountProfileRecord;
+      let mutated = false;
+
+      if (!existing) {
         profile = {
           id: map.nextId,
           createdAt: now,
@@ -316,24 +322,40 @@ export class AccountIsolationService {
           emailHash: emailHash ?? undefined,
         };
         map.nextId += 1;
+        map.profiles[accountKey] = profile;
+        mutated = true;
       } else {
-        profile = {
-          ...profile,
-          updatedAt: now,
-          routeUserId: routeUserId ?? profile.routeUserId,
-          emailHash: emailHash ?? profile.emailHash,
-        };
+        const nextRouteUserId = routeUserId ?? existing.routeUserId;
+        const nextEmailHash = emailHash ?? existing.emailHash;
+        if (nextRouteUserId !== existing.routeUserId || nextEmailHash !== existing.emailHash) {
+          profile = {
+            ...existing,
+            updatedAt: now,
+            routeUserId: nextRouteUserId,
+            emailHash: nextEmailHash,
+          };
+          map.profiles[accountKey] = profile;
+          mutated = true;
+        } else {
+          // Nothing actually changed. Skip the updatedAt-only full-map rewrite
+          // (and the storage.onChanged fan-out it triggers) on this hot,
+          // per-navigation path.
+          profile = existing;
+        }
       }
 
-      if (routeUserId) {
+      if (routeUserId && routeAliasChanged) {
         map.routeAliases[routeUserId] = accountKey;
+        mutated = true;
       }
-      if (emailHash) {
+      if (emailHash && emailAliasChanged) {
         map.emailAliases[emailHash] = accountKey;
+        mutated = true;
       }
 
-      map.profiles[accountKey] = profile;
-      await this.writeProfileMap(map);
+      if (mutated) {
+        await this.writeProfileMap(map);
+      }
 
       return {
         accountKey,

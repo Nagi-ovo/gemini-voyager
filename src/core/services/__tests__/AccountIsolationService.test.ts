@@ -110,6 +110,27 @@ describe('AccountIsolationService', () => {
     expect(withRouteOnly.accountKey).toBe(withEmail.accountKey);
   });
 
+  it('does not rewrite the profile map when an identical scope is resolved again', async () => {
+    const service = new AccountIsolationService();
+    const hints = {
+      pageUrl: 'https://gemini.google.com/u/1/app',
+      routeUserId: '1',
+      email: 'user@example.com',
+    };
+
+    await service.resolveAccountScope(hints);
+    const setSpy = chrome.storage.local.set as unknown as ReturnType<typeof vi.fn>;
+    const writesAfterFirst = setSpy.mock.calls.length;
+    // The first resolve creates a new profile and must persist it.
+    expect(writesAfterFirst).toBeGreaterThan(0);
+
+    const repeat = await service.resolveAccountScope(hints);
+    // A second identical resolve changes nothing, so it must not write again
+    // (no updatedAt-only churn / storage.onChanged fan-out on the hot path).
+    expect(setSpy.mock.calls.length).toBe(writesAfterFirst);
+    expect(repeat.accountKey.startsWith('email:')).toBe(true);
+  });
+
   it('extracts route user id from gemini urls', () => {
     expect(extractRouteUserIdFromUrl('https://gemini.google.com/u/3/app')).toBe('3');
     expect(extractRouteUserIdFromUrl('https://gemini.google.com/app')).toBeNull();
