@@ -195,6 +195,14 @@ async function processElement(el: HTMLElement): Promise<void> {
   const katex = await loadKatex();
   if (!katex) return; // load failed — leave the original "$...$" text in place
 
+  // If Gemini repainted this node while KaTeX was loading, the captured `raw`
+  // (and its segments) are stale. Bail and let a later observer pass reprocess
+  // the fresh content instead of clobbering it with the old rendering.
+  if (el.textContent !== raw) {
+    delete el.dataset.userLatexProcessed;
+    return;
+  }
+
   const frag = document.createDocumentFragment();
 
   for (const seg of segments) {
