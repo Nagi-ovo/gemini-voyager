@@ -340,6 +340,34 @@ function computeAnchoredPosition(
 
 export async function startPromptManager(): Promise<{ destroy: () => void }> {
   let marked!: typeof MarkedFn;
+
+  // Lazily load marked + the KaTeX extension only when a markdown preview is
+  // actually rendered. marked-katex-extension pulls in the ~265 KB KaTeX chunk,
+  // so doing this at startup would load KaTeX on every Gemini/AI Studio page even
+  // when the user never opens the prompt panel. Cached after the first call.
+  let markdownReady: Promise<void> | null = null;
+  const ensureMarkdown = (): Promise<void> => {
+    if (!markdownReady) {
+      markdownReady = (async () => {
+        marked = (await import('marked')).marked;
+        const { default: markedKatex } = await import('marked-katex-extension');
+        try {
+          // markdown config: single newlines as <br> and KaTeX inline/display math
+          marked.use(
+            markedKatex({
+              throwOnError: false,
+              output: 'html',
+              trust: true, // Trust the rendering environment (content script context)
+              strict: false, // Disable strict mode checks including quirks mode detection
+            }),
+          );
+          marked.setOptions({ breaks: true });
+        } catch {}
+      })();
+    }
+    return markdownReady;
+  };
+
   try {
     // Check if the prompt manager should be hidden & changelog badge state
     let pmHiddenByUser = false;
@@ -427,23 +455,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       // Continue even if migration fails - data will still work from current storage
     }
 
-    // Dynamic imports to prevent side effects on unsupported pages
-    // Dynamic imports to prevent side effects on unsupported pages
-    marked = (await import('marked')).marked;
-    const { default: markedKatex } = await import('marked-katex-extension');
+    // marked + KaTeX now load lazily via ensureMarkdown() on first preview render.
 
-    // markdown config: respect single newlines as <br> and KaTeX inline/display math
-    try {
-      marked.use(
-        markedKatex({
-          throwOnError: false,
-          output: 'html',
-          trust: true, // Trust the rendering environment (content script context)
-          strict: false, // Disable strict mode checks including quirks mode detection
-        }),
-      );
-      marked.setOptions({ breaks: true });
-    } catch {}
     // Initialize centralized i18n system
     await initI18n();
     const i18n = createI18n();
@@ -1419,22 +1432,20 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         if (!compactCollapsed) {
           // Defer rendering to next frame to ensure element is fully attached
           requestAnimationFrame(() => {
-            try {
-              const out = marked.parse(it.text as string);
-              if (typeof out === 'string') {
-                md.innerHTML = DOMPurify.sanitize(out);
-              } else {
-                out
-                  .then((html: string) => {
+            void ensureMarkdown()
+              .then(() => {
+                const out = marked.parse(it.text as string);
+                if (typeof out === 'string') {
+                  md.innerHTML = DOMPurify.sanitize(out);
+                } else {
+                  return out.then((html: string) => {
                     md.innerHTML = DOMPurify.sanitize(html);
-                  })
-                  .catch(() => {
-                    md.textContent = it.text;
                   });
-              }
-            } catch {
-              md.textContent = it.text;
-            }
+                }
+              })
+              .catch(() => {
+                md.textContent = it.text;
+              });
           });
         }
 
