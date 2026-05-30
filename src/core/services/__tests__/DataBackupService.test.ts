@@ -93,6 +93,45 @@ describe('DataBackupService durable mirror (Safari)', () => {
     expect(reader.recoverFromBackup()).toEqual(data);
   });
 
+  it('still recovers a Safari backup older than 7 days (the ITP window the mirror targets)', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+      isSafariValue = true;
+      const data: Sample = { folders: [7, 7, 7] };
+
+      const writer = new DataBackupService<Sample>('test-ns');
+      await writer.ensureHydrated();
+      writer.createPrimaryBackup(data);
+
+      // Day 8: past the old 7-day TTL, and ITP has wiped page localStorage.
+      vi.setSystemTime(new Date('2026-01-09T00:00:00Z'));
+      localStorage.clear();
+
+      const reader = new DataBackupService<Sample>('test-ns');
+      await reader.ensureHydrated();
+      // Must NOT be rejected as "too old" — that would defeat the whole fix.
+      expect(reader.recoverFromBackup()).toEqual(data);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('rejects a non-Safari backup older than 7 days (original TTL preserved)', () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+      isSafariValue = false;
+      const service = new DataBackupService<Sample>('test-ns');
+      service.createPrimaryBackup({ folders: [1] });
+
+      vi.setSystemTime(new Date('2026-01-09T00:00:00Z')); // 8 days later
+      expect(service.recoverFromBackup()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('ensureHydrated resolves immediately on non-Safari', async () => {
     isSafariValue = false;
     const service = new DataBackupService<Sample>('test-ns');

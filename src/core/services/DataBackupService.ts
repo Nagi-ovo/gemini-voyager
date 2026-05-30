@@ -38,7 +38,12 @@ export class DataBackupService<T = unknown> {
   private readonly emergencyKey: string;
   private readonly beforeUnloadKey: string;
   private readonly metadataKey: string;
-  private readonly maxBackupAge: number = 7 * 24 * 60 * 60 * 1000; // 7 days
+  // Recovery backups expire after this window. The Safari durable mirror exists
+  // precisely to survive ~7-day ITP localStorage eviction, so a 7-day TTL would
+  // reject exactly the backups it just restored when a user returns on day 8+.
+  // Use a much longer window on Safari (the mirror in browser.storage.local is
+  // not ITP-evicted); keep the original 7 days elsewhere.
+  private readonly maxBackupAge: number = (isSafari() ? 180 : 7) * 24 * 60 * 60 * 1000;
   private beforeUnloadHandler: (() => void) | null = null;
 
   // Safari evicts localStorage after ~7 days of inactivity (ITP), which would
