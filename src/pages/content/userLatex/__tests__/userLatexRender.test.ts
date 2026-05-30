@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { _resetUserLatexKatexLoader, startUserLatex } from '../index';
+
 // Mock the dynamically-imported KaTeX module.
 const renderToString = vi.fn((tex: string) => `<span class="katex-rendered">${tex}</span>`);
 vi.mock('katex', () => ({ default: { renderToString } }));
-
-import { _resetUserLatexKatexLoader, startUserLatex } from '../index';
 
 function makeUserMessage(text: string): HTMLElement {
   const p = document.createElement('p');

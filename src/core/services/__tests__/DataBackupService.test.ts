@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { DataBackupService } from '../DataBackupService';
+
 // In-memory stand-in for browser.storage.local (the Safari durable mirror).
 const durableStore: Record<string, unknown> = {};
 
@@ -32,8 +34,6 @@ let isSafariValue = false;
 vi.mock('@/core/utils/browser', () => ({
   isSafari: () => isSafariValue,
 }));
-
-import { DataBackupService } from '../DataBackupService';
 
 interface Sample {
   folders: number[];

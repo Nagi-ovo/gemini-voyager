@@ -16,7 +16,6 @@
  * 3. BeforeUnload backup (page exit snapshot)
  * 4. In-memory data (current session)
  */
-
 import browser from 'webextension-polyfill';
 
 import { isSafari } from '@/core/utils/browser';
