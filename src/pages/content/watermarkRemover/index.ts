@@ -434,9 +434,11 @@ export async function startWatermarkRemover(): Promise<void> {
 }
 
 /**
- * Disconnect every watermark observer. Safe to call when nothing was started.
+ * Fully tear down the watermark remover. Safe to call when nothing was started.
  * Wired into the content-script beforeunload teardown so the two document.body
- * subtree observers don't outlive the page.
+ * subtree observers don't outlive the page; also written to be a complete stop
+ * (observers + MAIN-world interceptor + document listeners) so it can be reused
+ * for SPA teardown/restart without leaving the interceptor thinking it's enabled.
  */
 export function stopWatermarkRemover(): void {
   for (const observer of [previewObserver, indicatorObserver, bridgeObserver, statusObserver]) {
@@ -446,10 +448,28 @@ export function stopWatermarkRemover(): void {
   indicatorObserver = null;
   bridgeObserver = null;
   statusObserver = null;
+
+  // Tell the MAIN-world fetch interceptor the feature is off, so it stops
+  // intercepting and doesn't wait on bridge responses that will never come.
+  // Only if the bridge already exists — don't create one just to disable it
+  // (stop runs on every page's beforeunload, including where it never started).
+  const existingBridge = document.getElementById(GV_BRIDGE_ID);
+  if (existingBridge) {
+    existingBridge.dataset.enabled = 'false';
+  }
+
+  // Remove the global download-button tracking listeners.
+  if (downloadCaptureHandler) {
+    document.removeEventListener('pointerdown', downloadCaptureHandler, true);
+    document.removeEventListener('click', downloadCaptureHandler, true);
+    downloadCaptureHandler = null;
+  }
+  downloadTrackingReady = false;
 }
 
 let statusToastManager: StatusToastManager | null = null;
 let downloadTrackingReady = false;
+let downloadCaptureHandler: ((event: Event) => void) | null = null;
 let lastImmediateToastAt = 0;
 let sequenceCounter = 0;
 
@@ -534,14 +554,14 @@ function setupDownloadButtonTracking(): void {
   if (downloadTrackingReady) return;
   downloadTrackingReady = true;
 
-  const captureAnchor = (event: Event): void => {
+  downloadCaptureHandler = (event: Event): void => {
     const button = findNativeDownloadButton(event.target);
     if (!button) return;
     showImmediateDownloadToast(button);
   };
 
-  document.addEventListener('pointerdown', captureAnchor, true);
-  document.addEventListener('click', captureAnchor, true);
+  document.addEventListener('pointerdown', downloadCaptureHandler, true);
+  document.addEventListener('click', downloadCaptureHandler, true);
 }
 
 /**
