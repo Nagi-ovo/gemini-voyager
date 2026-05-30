@@ -678,6 +678,10 @@ export class AIStudioFolderManager {
 
   private async load(): Promise<void> {
     try {
+      // On Safari, restore recovery backups from the durable mirror before any
+      // recoverFromBackup() can run (localStorage may have been ITP-evicted).
+      await this.backupService.ensureHydrated();
+
       // Use chrome.storage.local with account-scoped key when isolation is enabled.
       const result = await chrome.storage.local.get(this.activeStorageKey);
       let data = result[this.activeStorageKey];

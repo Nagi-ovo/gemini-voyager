@@ -17,6 +17,10 @@
  * 4. In-memory data (current session)
  */
 
+import browser from 'webextension-polyfill';
+
+import { isSafari } from '@/core/utils/browser';
+
 export interface BackupMetadata {
   timestamp: string;
   version: string;
@@ -37,6 +41,15 @@ export class DataBackupService<T = unknown> {
   private readonly maxBackupAge: number = 7 * 24 * 60 * 60 * 1000; // 7 days
   private beforeUnloadHandler: (() => void) | null = null;
 
+  // Safari evicts localStorage after ~7 days of inactivity (ITP), which would
+  // silently destroy these recovery backups — on the exact browser where folder
+  // data is otherwise protected via browser.storage.local. On Safari we mirror
+  // every backup to the durable browser.storage.local and restore localStorage
+  // from it at startup, so the synchronous recoverFromBackup() still finds them.
+  // Chrome/Firefox/Edge keep the localStorage-only path unchanged.
+  private readonly useDurableMirror: boolean = isSafari();
+  private hydrationPromise: Promise<void> | null = null;
+
   constructor(
     private readonly namespace: string,
     private readonly validateData: (data: T) => boolean = () => true,
@@ -45,6 +58,52 @@ export class DataBackupService<T = unknown> {
     this.emergencyKey = `gvBackup_${namespace}_emergency`;
     this.beforeUnloadKey = `gvBackup_${namespace}_beforeUnload`;
     this.metadataKey = `gvBackup_${namespace}_metadata`;
+
+    if (this.useDurableMirror) {
+      this.hydrationPromise = this.hydrateFromDurableStore();
+    }
+  }
+
+  /**
+   * Resolve once Safari's durable-store backups have been restored into
+   * localStorage. Callers should await this before recoverFromBackup() on the
+   * recovery path. No-op (resolved) on non-Safari browsers.
+   */
+  async ensureHydrated(): Promise<void> {
+    if (this.hydrationPromise) await this.hydrationPromise;
+  }
+
+  /** Mirror a backup slot to the durable browser.storage.local (Safari only). */
+  private mirrorToDurableStore(key: string, value: string): void {
+    if (!this.useDurableMirror) return;
+    void browser.storage.local.set({ [key]: value }).catch((error) => {
+      console.warn(`[BackupService:${this.namespace}] Durable mirror write failed:`, error);
+    });
+  }
+
+  /**
+   * Restore any backup slots that localStorage lost (e.g. Safari ITP eviction)
+   * from the durable browser.storage.local mirror. Live writes keep both in
+   * sync, so a value already present in localStorage is left untouched.
+   */
+  private async hydrateFromDurableStore(): Promise<void> {
+    try {
+      const keys = [this.primaryKey, this.emergencyKey, this.beforeUnloadKey, this.metadataKey];
+      const stored = await browser.storage.local.get(keys);
+      for (const key of keys) {
+        const value = stored[key];
+        if (typeof value !== 'string') continue;
+        try {
+          if (localStorage.getItem(key) === null) {
+            localStorage.setItem(key, value);
+          }
+        } catch {
+          // localStorage unavailable in this context; nothing to restore into.
+        }
+      }
+    } catch (error) {
+      console.warn(`[BackupService:${this.namespace}] Durable hydrate failed:`, error);
+    }
   }
 
   /**
@@ -53,7 +112,9 @@ export class DataBackupService<T = unknown> {
   createPrimaryBackup(data: T): boolean {
     try {
       const backup = this.createBackupData(data);
-      localStorage.setItem(this.primaryKey, JSON.stringify(backup));
+      const serialized = JSON.stringify(backup);
+      localStorage.setItem(this.primaryKey, serialized);
+      this.mirrorToDurableStore(this.primaryKey, serialized);
       this.updateMetadata('primary', backup.metadata);
       console.log(`[BackupService:${this.namespace}] Primary backup created`);
       return true;
@@ -69,7 +130,9 @@ export class DataBackupService<T = unknown> {
   createEmergencyBackup(data: T): boolean {
     try {
       const backup = this.createBackupData(data);
-      localStorage.setItem(this.emergencyKey, JSON.stringify(backup));
+      const serialized = JSON.stringify(backup);
+      localStorage.setItem(this.emergencyKey, serialized);
+      this.mirrorToDurableStore(this.emergencyKey, serialized);
       console.log(`[BackupService:${this.namespace}] Emergency backup created`);
       return true;
     } catch (error) {
@@ -84,7 +147,9 @@ export class DataBackupService<T = unknown> {
   private createBeforeUnloadBackup(data: T): boolean {
     try {
       const backup = this.createBackupData(data);
-      localStorage.setItem(this.beforeUnloadKey, JSON.stringify(backup));
+      const serialized = JSON.stringify(backup);
+      localStorage.setItem(this.beforeUnloadKey, serialized);
+      this.mirrorToDurableStore(this.beforeUnloadKey, serialized);
       console.log(`[BackupService:${this.namespace}] BeforeUnload backup created`);
       return true;
     } catch (error) {
@@ -245,7 +310,9 @@ export class DataBackupService<T = unknown> {
     try {
       const allMetadata = this.getAllMetadata();
       allMetadata[type] = metadata;
-      localStorage.setItem(this.metadataKey, JSON.stringify(allMetadata));
+      const serialized = JSON.stringify(allMetadata);
+      localStorage.setItem(this.metadataKey, serialized);
+      this.mirrorToDurableStore(this.metadataKey, serialized);
     } catch (error) {
       console.warn(`[BackupService:${this.namespace}] Failed to update metadata:`, error);
     }
@@ -272,6 +339,13 @@ export class DataBackupService<T = unknown> {
       localStorage.removeItem(this.emergencyKey);
       localStorage.removeItem(this.beforeUnloadKey);
       localStorage.removeItem(this.metadataKey);
+      if (this.useDurableMirror) {
+        void browser.storage.local
+          .remove([this.primaryKey, this.emergencyKey, this.beforeUnloadKey, this.metadataKey])
+          .catch((error) => {
+            console.warn(`[BackupService:${this.namespace}] Durable mirror clear failed:`, error);
+          });
+      }
       console.log(`[BackupService:${this.namespace}] All backups cleared`);
     } catch (error) {
       console.error(`[BackupService:${this.namespace}] Failed to clear backups:`, error);

@@ -6825,6 +6825,10 @@ export class FolderManager {
    */
   private async loadData(): Promise<void> {
     try {
+      // On Safari, restore recovery backups from the durable mirror before any
+      // recoverFromBackup() can run (localStorage may have been ITP-evicted).
+      await this.backupService.ensureHydrated();
+
       let loadedData = await this.storage.loadData(this.activeStorageKey);
 
       if (!loadedData && this.accountIsolationEnabled && this.activeStorageKey !== STORAGE_KEY) {
