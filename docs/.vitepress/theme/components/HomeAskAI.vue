@@ -94,6 +94,7 @@ const links = computed(() => {
       href: `https://chatgpt.com/?q=${encodedQuery}`,
       text: t.value.chatgpt,
       color: '#10a37f',
+      darkColor: '#10a37f',
     },
     {
       name: 'Perplexity',
@@ -101,13 +102,15 @@ const links = computed(() => {
       href: `https://www.perplexity.ai/?q=${encodedQuery}`,
       text: t.value.perplexity,
       color: '#1fbad6',
+      darkColor: '#1fbad6',
     },
     {
       name: 'Grok',
       icon: 'grok',
       href: `https://grok.com/?q=${encodedQuery}`,
       text: t.value.grok,
-      color: '#f0f0f0',
+      color: '#111827',
+      darkColor: '#f0f0f0',
     },
   ];
 });
@@ -123,7 +126,7 @@ const links = computed(() => {
         :href="link.href"
         target="_blank"
         class="ask-btn"
-        :style="{ '--btn-hover-color': link.color }"
+        :style="{ '--btn-hover-color': link.color, '--btn-hover-color-dark': link.darkColor }"
       >
         <div class="icon-wrapper">
           <svg v-if="link.icon === 'chatgpt'" viewBox="0 0 24 24" fill="currentColor">
@@ -192,6 +195,11 @@ const links = computed(() => {
   background: var(--vp-c-bg);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   color: var(--btn-hover-color);
+}
+
+:global(.dark) .ask-btn:hover {
+  border-color: var(--btn-hover-color-dark, var(--btn-hover-color));
+  color: var(--btn-hover-color-dark, var(--btn-hover-color));
 }
 
 .icon-wrapper {
