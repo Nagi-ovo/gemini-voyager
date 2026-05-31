@@ -1408,7 +1408,7 @@ export class AIStudioFolderManager {
 
     const confirmBtn = document.createElement('button');
     confirmBtn.className = 'gv-confirm-btn gv-confirm-delete';
-    confirmBtn.textContent = this.t('pm_delete') || 'Delete';
+    confirmBtn.textContent = this.t('folder_remove_conversation_action') || 'Remove';
     confirmBtn.addEventListener('click', () => {
       this.removeConversationFromFolder(folderId, conversationId);
       dialog.remove();

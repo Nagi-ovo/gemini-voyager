@@ -347,6 +347,10 @@
     "message": "從資料夾中移除",
     "description": "移除對話按鈕提示"
   },
+  "folder_remove_conversation_action": {
+    "message": "移除",
+    "description": "從資料夾移除對話確認按鈕的短標籤"
+  },
   "folder_remove_conversation_confirm": {
     "message": "從此資料夾中移除「{title}」？",
     "description": "移除對話確認"

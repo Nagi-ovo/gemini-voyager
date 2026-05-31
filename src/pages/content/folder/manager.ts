@@ -3293,7 +3293,7 @@ export class FolderManager {
     // Create buttons safely
     const yesBtn = document.createElement('button');
     yesBtn.className = 'gv-folder-confirm-btn gv-folder-confirm-yes';
-    yesBtn.textContent = this.t('pm_delete'); // Safe: uses textContent
+    yesBtn.textContent = this.t('folder_remove_conversation_action'); // Safe: uses textContent
 
     const noBtn = document.createElement('button');
     noBtn.className = 'gv-folder-confirm-btn gv-folder-confirm-no';

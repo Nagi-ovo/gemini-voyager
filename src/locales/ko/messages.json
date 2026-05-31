@@ -387,6 +387,10 @@
     "message": "폴더에서 제거",
     "description": "Remove conversation button tooltip"
   },
+  "folder_remove_conversation_action": {
+    "message": "제거",
+    "description": "Short confirmation button label for removing a conversation from a folder"
+  },
   "folder_remove_conversation_confirm": {
     "message": "이 폴더에서 \"{title}\"을 (를) 제거하시겠습니까?",
     "description": "Remove conversation confirmation"

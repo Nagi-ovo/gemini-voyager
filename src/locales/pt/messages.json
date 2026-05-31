@@ -387,6 +387,10 @@
     "message": "Remover da pasta",
     "description": "Remove conversation button tooltip"
   },
+  "folder_remove_conversation_action": {
+    "message": "Remover",
+    "description": "Short confirmation button label for removing a conversation from a folder"
+  },
   "folder_remove_conversation_confirm": {
     "message": "Remover \"{title}\" desta pasta?",
     "description": "Remove conversation confirmation"
