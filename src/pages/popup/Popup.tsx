@@ -3061,15 +3061,15 @@ export default function Popup() {
             }
             target="_blank"
             rel="noreferrer"
-            className="group flex items-center gap-2.5 rounded-xl border border-amber-300/60 bg-amber-50/70 px-3 py-2.5 text-xs transition-colors hover:bg-amber-100/80 dark:border-amber-700/40 dark:bg-amber-950/30 dark:hover:bg-amber-900/40"
+            className="group flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs shadow-sm transition-[border-color,box-shadow] hover:border-primary/30 hover:shadow-md"
           >
             <span className="text-base leading-none" aria-hidden="true">
               ⭐
             </span>
-            <span className="text-foreground/80 flex-1 leading-snug">
+            <span className="flex-1 leading-snug text-slate-700">
               {isEdge() ? t('changelog_rate_edge') : t('changelog_rate_chrome')}
             </span>
-            <span className="font-semibold whitespace-nowrap text-amber-700 transition-transform group-hover:translate-x-0.5 dark:text-amber-400">
+            <span className="text-primary font-semibold whitespace-nowrap transition-transform group-hover:translate-x-0.5">
               {isEdge() ? t('changelog_rate_edge_cta') : t('changelog_rate_chrome_cta')} →
             </span>
           </a>
