@@ -20,6 +20,12 @@ export { validateManifest } from './manifest/validate';
 export type { ManifestIssue } from './manifest/validate';
 export { loadPluginState, setPluginEnabled, subscribePluginState } from './storage/pluginState';
 export { BUILTIN_PLUGINS } from './builtin';
+export {
+  createDefaultPluginSources,
+  dedupeManifestsById,
+  listPluginManifests,
+  refreshPluginManifests,
+} from './sources/defaultSources';
 export * from './types';
 
 let host: PluginHost | null = null;

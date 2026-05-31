@@ -2,9 +2,9 @@
 // Kept in a separate .ts module so they can be unit-tested with Vitest
 // (the .vue component itself is not part of the typecheck/test surface).
 
-/** Live official catalog, the same source the extension reads at runtime. */
+/** Bundled official catalog, mirrored from the extension's main repository. */
 export const MARKETPLACE_URL =
-  'https://raw.githubusercontent.com/nagi-studio/voyager-plugins/main/marketplace.json';
+  'https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/src/features/plugins/catalog/marketplace.json';
 
 export interface MarketplaceEntry {
   name: string;

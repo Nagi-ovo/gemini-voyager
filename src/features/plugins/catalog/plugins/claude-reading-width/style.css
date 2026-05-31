@@ -1,0 +1,15 @@
+/* voyager.claude-reading-width - one centered, adjustable reading column.
+ * Claude caps each conversation turn at max-w-3xl (768px), which also makes a
+ * per-turn .standard-markdown max-width ineffective (the parent wins). We set
+ * the adjustable width on the turn containers themselves (user + assistant
+ * alike); they are mx-auto, so they stay centered. We also flip the user
+ * message from its right-aligned bubble (the items-end container) to
+ * left-aligned, matching the assistant, so the whole thread reads as one
+ * centered column of equal width. */
+.gv-plugin-claude-readable div[class*='max-w-3xl'] {
+  max-width: var(--gv-plugin-reading-width, 768px) !important;
+}
+
+.gv-plugin-claude-readable div[class*='items-end']:has([data-testid='user-message']) {
+  align-items: flex-start !important;
+}

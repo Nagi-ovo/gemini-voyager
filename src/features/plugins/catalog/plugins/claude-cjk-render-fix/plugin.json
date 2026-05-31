@@ -1,0 +1,54 @@
+{
+  "id": "voyager.claude-cjk-render-fix",
+  "name": "Claude · CJK Render Fix",
+  "version": "1.1.0",
+  "description": "Fixes uneven CJK (Chinese/Japanese/Korean) text in Claude on macOS, where some characters render noticeably thinner than the rest.",
+  "i18n": {
+    "zh": {
+      "name": "Claude · 中日韩字体渲染修复",
+      "description": "修复 Claude 在 macOS 上中日韩文字粗细不均的问题——部分字符明显比其余文字更细。"
+    },
+    "zh_TW": {
+      "name": "Claude · 中日韓字體渲染修正",
+      "description": "修正 Claude 在 macOS 上中日韓文字粗細不一的問題——部分字元明顯比其餘文字更細。"
+    },
+    "ja": {
+      "name": "Claude · CJK 表示崩れ修正",
+      "description": "macOS の Claude で一部の文字だけ細く表示される、CJK（中国語・日本語・韓国語）文字の表示ムラを修正します。"
+    },
+    "ko": {
+      "name": "Claude · CJK 렌더링 수정",
+      "description": "macOS의 Claude에서 일부 글자만 유독 가늘게 표시되는 CJK(중국어·일본어·한국어) 텍스트의 두께 불균형을 바로잡습니다."
+    },
+    "fr": {
+      "name": "Claude · Correction du rendu CJK",
+      "description": "Corrige le rendu inégal du texte CJK (chinois, japonais, coréen) dans Claude sur macOS, où certains caractères paraissent nettement plus fins que les autres."
+    },
+    "es": {
+      "name": "Claude · Corrección del renderizado CJK",
+      "description": "Corrige la representación irregular del texto CJK (chino, japonés y coreano) en Claude en macOS, donde algunos caracteres se ven notablemente más finos que el resto."
+    },
+    "pt": {
+      "name": "Claude · Correção de renderização CJK",
+      "description": "Corrige a renderização irregular do texto CJK (chinês, japonês e coreano) no Claude no macOS, onde alguns caracteres aparecem visivelmente mais finos que os demais."
+    },
+    "ru": {
+      "name": "Claude · Исправление отрисовки CJK",
+      "description": "Исправляет неравномерную отрисовку текста CJK (китайский, японский, корейский) в Claude на macOS, где некоторые символы выглядят заметно тоньше остальных."
+    },
+    "ar": {
+      "name": "Claude · إصلاح عرض المحارف الآسيوية (CJK)",
+      "description": "يصلح التفاوت في عرض نص CJK (الصينية واليابانية والكورية) في Claude على macOS، حيث تظهر بعض المحارف أنحف بوضوح من بقية النص."
+    }
+  },
+  "author": "voyager-official",
+  "category": "render-fix",
+  "license": "MIT",
+  "homepage": "https://github.com/Nagi-ovo/gemini-voyager/tree/main/src/features/plugins/catalog/plugins/claude-cjk-render-fix",
+  "engine": ">=1.2.0",
+  "tier": "declarative",
+  "matches": ["https://claude.ai/*"],
+  "contributes": {
+    "styles": [{ "file": "style.css" }]
+  }
+}

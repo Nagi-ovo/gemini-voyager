@@ -21,7 +21,8 @@
  */
 import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
 import { SiteRegistry } from '@/features/plugins/sites/registry';
-import { loadCachedCatalog, subscribeCatalog } from '@/features/plugins/storage/catalogCache';
+import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
+import { subscribeCatalog } from '@/features/plugins/storage/catalogCache';
 import { loadPluginState, subscribePluginState } from '@/features/plugins/storage/pluginState';
 import type { PluginManifest } from '@/features/plugins/types';
 
@@ -81,9 +82,9 @@ export function startBrandTheme(url: string = location.href, doc: Document = doc
   applyBrandTheme(url, [], doc); // immediate: adapter built-in colour
   let cancelled = false;
   const recompute = async (): Promise<void> => {
-    const [catalog, state] = await Promise.all([loadCachedCatalog(), loadPluginState()]);
+    const [manifests, state] = await Promise.all([listPluginManifests(), loadPluginState()]);
     if (cancelled) return;
-    const active = (catalog?.manifests ?? []).filter((m) => m.theme?.brand && state[m.id]?.enabled);
+    const active = manifests.filter((m) => m.theme?.brand && state[m.id]?.enabled);
     applyBrandTheme(url, active, doc);
   };
   void recompute();

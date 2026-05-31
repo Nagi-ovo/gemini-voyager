@@ -29,8 +29,9 @@ Both constraints point at the same answer → **declarative-first** plugins.
 
 ```
 PluginSource[]  ──►  manifests        SiteRegistry ──► SiteAdapter (current URL)
-   (builtin now,                          │
-    marketplace later)                     ▼
+   (native builtin,
+    bundled catalog,
+    remote marketplace)                    ▼
 pluginState (storage) ─► enabled?    DeclarativeEngine (interprets contributions)
 EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, idempotent
         └──────────►  PluginHost.reconcile() ──► engine.mount/unmount
@@ -48,11 +49,16 @@ EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, 
 - **`runtime/PluginHost.ts`** — orchestrator. Loads manifests, checks
   match-URL + enabled + engine-range + entitlement, mounts/unmounts, reacts to
   state changes. All dependencies injected → fully unit-testable.
-- **`manifest/validate.ts`** — turns untrusted `unknown` into a typed manifest or
-  a list of issues (marketplace plugins are untrusted input).
+- **`manifest/validate.ts`** — turns `unknown` into a typed manifest or a list of
+  issues. Remote marketplace plugins are untrusted; bundled catalog plugins use
+  the same validator so official data cannot drift from the runtime contract.
 - **`storage/pluginState.ts`** — per-plugin enable state in `chrome.storage.local`.
-- **`sources/` `entitlement/`** — the swap points for a git marketplace and a
-  paid (Stripe/account) store. Default impls are builtin-bundle + everything-free.
+- **`sources/` `entitlement/`** — the swap points for native first-party
+  features, bundled official declarative plugins, remote marketplace plugins,
+  and a future paid (Stripe/account) store.
+- **`catalog/`** — official declarative plugins bundled with the extension. This
+  keeps official CSS/JSON changes in the same PR, CI run, and release as engine
+  or popup changes.
 
 ## Authoring a declarative plugin
 
@@ -75,10 +81,10 @@ EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, 
 }
 ```
 
-Marketplace manifests may keep tiny CSS inline with `{ "css": "..." }`, but the
-preferred authoring shape is `{ "file": "style.css" }` next to `plugin.json`.
-The marketplace source fetches that CSS, rejects remote-resource loads
-(`@import`, external `url()`), and normalizes it before the runtime sees it. For
+Manifests may keep tiny CSS inline with `{ "css": "..." }`, but the preferred
+authoring shape is `{ "file": "style.css" }` next to `plugin.json`. Bundled and
+marketplace sources both resolve that CSS, reject remote-resource loads
+(`@import`, external `url()`), and normalize it before the runtime sees it. For
 user settings, `{{settingKey}}` tokens can be used in CSS text or in
 `setAttribute` / `setStyle` DOM op values; a common pattern is for CSS files to
 use a normal custom property and for a `setStyle` op to set that variable from a
@@ -89,16 +95,22 @@ to use the site adapter's stable selector. Supported ops: `addClass`,
 `setAttribute`, `setStyle`, `hide`. All are reversible. Classes must be `gv-`
 prefixed (content-script rule).
 
+## Boundaries
+
+- **Official CSS/JSON plugins** live in `catalog/` and load through
+  `BundledCatalogPluginSource`.
+- **First-party features that need JS** live in `builtin/` and register native
+  handlers in the content script. `voyager.formula-copy` is the model here.
+- **Third-party/experimental CSS+JSON plugins** can still arrive from the remote
+  marketplace. They never fetch executable code.
+
 ## What is NOT done yet (next milestones)
 
-- **Cross-site injection.** The content script is injected only on Gemini / AI
-  Studio today (manifest `matches`). Running on claude.ai etc. needs an optional
-  host-permission request (from a popup user gesture) + `chrome.scripting.
-registerContentScripts`. Helpers are stubbed in `runtime/siteRegistration.ts`;
-  the manifest already has `optional_host_permissions` + `scripting`, so no
-  manifest change is needed.
-- **Store UI** (browse / install / toggle), **git marketplace source**, **scripted
-  runtime**, **account + Stripe entitlement**.
+- **Full setting UI coverage.** The schema accepts boolean/string/color/select,
+  but the popup currently renders the number/range control used by the official
+  width plugins.
+- **Scripted runtime** via gated `chrome.userScripts`.
+- **Account + Stripe entitlement**.
 
 ## Platform notes
 

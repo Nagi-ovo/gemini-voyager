@@ -3,7 +3,8 @@
  *
  * Flow on start():
  *   1. resolve the SiteAdapter for the current URL (may be null on unknown sites)
- *   2. load manifests from all configured sources (builtin now; marketplace later)
+ *   2. load manifests from all configured sources (builtin, bundled catalog,
+ *      remote marketplace)
  *   3. load per-plugin enable state from storage
  *   4. reconcile: mount every plugin that (matches URL) AND (is enabled) AND
  *      (satisfies the engine version) AND (is not entitlement-locked); unmount the rest
@@ -22,8 +23,7 @@ import { LocalEntitlementProvider } from '../entitlement/LocalEntitlementProvide
 import { engineSatisfied } from '../semver';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import { SiteRegistry } from '../sites/registry';
-import { BuiltinPluginSource } from '../sources/BuiltinPluginSource';
-import { MarketplacePluginSource } from '../sources/MarketplacePluginSource';
+import { createDefaultPluginSources, listPluginManifests } from '../sources/defaultSources';
 import { subscribeCatalog } from '../storage/catalogCache';
 import { type PluginStateMap, loadPluginState, subscribePluginState } from '../storage/pluginState';
 import type {
@@ -62,7 +62,7 @@ export class PluginHost {
   constructor(options: PluginHostOptions = {}) {
     this.url = options.url ?? location.href;
     this.registry = options.registry ?? SiteRegistry.createDefault();
-    this.sources = options.sources ?? [new BuiltinPluginSource(), new MarketplacePluginSource()];
+    this.sources = options.sources ?? createDefaultPluginSources();
     this.entitlement = options.entitlement ?? new LocalEntitlementProvider();
     this.doc = options.doc ?? document;
   }
@@ -161,19 +161,6 @@ export class PluginHost {
   }
 
   private async loadManifests(): Promise<readonly PluginManifest[]> {
-    const merged: PluginManifest[] = [];
-    const seen = new Set<string>();
-    for (const source of this.sources) {
-      try {
-        for (const manifest of await source.list()) {
-          if (seen.has(manifest.id)) continue;
-          seen.add(manifest.id);
-          merged.push(manifest);
-        }
-      } catch (error) {
-        logger.warn('Plugin source failed to list', { source: source.id, error: String(error) });
-      }
-    }
-    return merged;
+    return listPluginManifests(this.sources);
   }
 }

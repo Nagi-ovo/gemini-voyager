@@ -12,7 +12,7 @@ import {
 describe('resolveSourceUrl', () => {
   it('resolves a relative source against the catalog base', () => {
     expect(resolveSourceUrl(MARKETPLACE_URL, 'plugins/foo/plugin.json')).toBe(
-      'https://raw.githubusercontent.com/nagi-studio/voyager-plugins/main/plugins/foo/plugin.json',
+      'https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/src/features/plugins/catalog/plugins/foo/plugin.json',
     );
   });
 

@@ -22,8 +22,10 @@ import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateRe
 import { compareVersions } from '@/core/utils/version';
 import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
-import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
-import { MarketplacePluginSource } from '@/features/plugins/sources/MarketplacePluginSource';
+import {
+  listPluginManifests,
+  refreshPluginManifests,
+} from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
 import { resolveBrandColor } from '@/pages/content/platformTheme';
 import { createPopupBrandThemeStyle } from '@/pages/popup/utils/brandTheme';
@@ -58,20 +60,6 @@ import {
 import WidthSlider from './components/WidthSlider';
 
 type ScrollMode = 'jump' | 'flow';
-
-/** Merge manifest lists from multiple sources; first occurrence of an id wins. */
-function dedupeManifestsById(lists: readonly (readonly PluginManifest[])[]): PluginManifest[] {
-  const seen = new Set<string>();
-  const merged: PluginManifest[] = [];
-  for (const list of lists) {
-    for (const m of list) {
-      if (seen.has(m.id)) continue;
-      seen.add(m.id);
-      merged.push(m);
-    }
-  }
-  return merged;
-}
 
 /**
  * Reorderable popup section IDs — order here is the default display order.
@@ -548,7 +536,7 @@ export default function Popup() {
     () => pluginManifests.filter((plugin) => matchesAnyPattern(activeUrl, plugin.matches)),
     [activeUrl, pluginManifests],
   );
-  // True for non-native web pages even before the marketplace catalog loads.
+  // True for non-native web pages even before the plugin manifest list loads.
   // Keeps Claude / ChatGPT / Grok and arbitrary third-party sites in their
   // plugin-only popup instead of falling back to Gemini's full settings UI.
   const isPluginSite = useMemo(
@@ -568,11 +556,7 @@ export default function Popup() {
   const handleRefreshPlugins = useCallback(async () => {
     setPluginsRefreshing(true);
     try {
-      const lists = await Promise.all([
-        new BuiltinPluginSource().list(),
-        new MarketplacePluginSource().forceRefresh(),
-      ]);
-      setPluginManifests(dedupeManifestsById(lists));
+      setPluginManifests(await refreshPluginManifests());
     } finally {
       setPluginsRefreshing(false);
     }
@@ -591,15 +575,12 @@ export default function Popup() {
     void refreshActiveTabContext();
   }, [refreshActiveTabContext]);
 
-  // Load the plugin catalog from the marketplace (cache-first; refreshes in bg).
+  // Load plugin manifests from bundled sources plus the remote marketplace.
   useEffect(() => {
     let active = true;
-    void Promise.all([
-      new BuiltinPluginSource().list(),
-      new MarketplacePluginSource().list().catch(() => []),
-    ])
-      .then((lists) => {
-        if (active) setPluginManifests(dedupeManifestsById(lists));
+    void listPluginManifests()
+      .then((manifests) => {
+        if (active) setPluginManifests(manifests);
       })
       .finally(() => {
         if (active) setPluginsLoading(false);

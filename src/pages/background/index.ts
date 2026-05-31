@@ -16,7 +16,7 @@ import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
 import { isFirefox, supportsExtensionNotifications } from '@/core/utils/browser';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
-import { MarketplacePluginSource } from '@/features/plugins/sources/MarketplacePluginSource';
+import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import {
@@ -347,16 +347,16 @@ const MANIFEST_DEFAULT_DOMAINS = new Set(
     .filter((d): d is string => !!d),
 );
 
-// Domains targeted by marketplace plugins. Granting one of these (when a user
+// Domains targeted by plugins. Granting one of these (when a user
 // enables a plugin) must NOT also register it as a Prompt-Manager "custom
 // website", so we exclude them from the permissions.onAdded → custom-website
 // merge below. Populated asynchronously from the cached catalog (see
-// refreshPluginSiteDomains), since the catalog is network-derived.
+// refreshPluginSiteDomains).
 let pluginSiteDomains = new Set<string>();
 
 async function loadPluginCatalog(): Promise<readonly PluginManifest[]> {
   try {
-    return await new MarketplacePluginSource().list();
+    return await listPluginManifests();
   } catch {
     return [];
   }
@@ -499,7 +499,7 @@ async function syncCustomContentScripts(domains?: string[]): Promise<void> {
  * Plugin ecosystem — dynamic content-script registration.
  *
  * Mirrors syncCustomContentScripts: derive the origins of currently-ENABLED
- * builtin plugins, keep only those the user has already granted host permission
+ * plugins, keep only those the user has already granted host permission
  * for, and (re)register the content script for them. The content script runs
  * `startPluginHost()`, which mounts the enabled plugin on the page.
  *

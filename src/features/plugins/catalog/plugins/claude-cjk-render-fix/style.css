@@ -1,0 +1,19 @@
+/* voyager.claude-cjk-render-fix - even CJK rendering on macOS.
+ * Two issues compound:
+ * 1. Claude's CJK font stack lists Japanese/Traditional fonts (Hiragino,
+ *    PingFang TC) before PingFang SC, so some Simplified characters
+ *    get grabbed by them and render visibly thinner - the "some thin, some
+ *    normal" effect.
+ * 2. Body text is set to font-weight 360, a value CJK fallback fonts lack, so
+ *    macOS synthesizes an uneven faux weight.
+ * Fix: pull PingFang SC to the front of the CJK stack so Simplified text is
+ * uniform, normalize plain body text to a real 400, and disable weight
+ * synthesis. <strong> carries its own heavier weight, so bold stays bold. */
+.standard-markdown :where(p, li, ul, ol, blockquote, dd, dt, td, th),
+.font-claude-response-body {
+  font-family:
+    'Anthropic Serif', Georgia, 'PingFang SC', 'Hiragino Sans', 'Microsoft YaHei',
+    'Noto Sans CJK SC', sans-serif !important;
+  font-weight: 400 !important;
+  font-synthesis-weight: none !important;
+}

@@ -1,11 +1,9 @@
 /**
- * Storage-backed cache of the plugin catalog fetched from the marketplace.
+ * Storage-backed cache of the remote plugin catalog fetched from the marketplace.
  *
  * The catalog (the list of available plugin manifests) is network-derived, so we
- * cache it in `chrome.storage.local` with a TTL. All three consumers — popup
- * (the list UI), content script (`PluginHost`), and background (origin
- * derivation) — read through the same cache, so the network is hit at most once
- * per TTL window regardless of how many contexts ask.
+ * cache it in `chrome.storage.local` with a TTL. Bundled official plugins do
+ * not use this cache; they are imported directly from the extension package.
  */
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';

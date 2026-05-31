@@ -1,0 +1,27 @@
+{
+  "$schema": "https://voyager.nagi.fun/marketplace.schema.json",
+  "name": "voyager-official",
+  "version": "1.0.0",
+  "owner": {
+    "name": "voyager-official",
+    "url": "https://github.com/Nagi-ovo/gemini-voyager"
+  },
+  "description": "Bundled official plugin catalog for Voyager — declarative plugins that enhance AI chat sites (Claude, ChatGPT, …).",
+  "plugins": [
+    {
+      "name": "claude-cjk-render-fix",
+      "source": "plugins/claude-cjk-render-fix/plugin.json",
+      "official": true
+    },
+    {
+      "name": "claude-reading-width",
+      "source": "plugins/claude-reading-width/plugin.json",
+      "official": true
+    },
+    {
+      "name": "chatgpt-reading-width",
+      "source": "plugins/chatgpt-reading-width/plugin.json",
+      "official": true
+    }
+  ]
+}

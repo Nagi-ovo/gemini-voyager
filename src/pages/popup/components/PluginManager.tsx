@@ -151,11 +151,11 @@ function GitHubIcon() {
 }
 
 export interface PluginManagerProps {
-  /** Plugin manifests from the marketplace (loaded by the parent). */
+  /** Plugin manifests from bundled and remote sources (loaded by the parent). */
   readonly manifests: readonly PluginManifest[];
-  /** True while the catalog is still loading and none are cached yet. */
+  /** True while the manifest list is still loading. */
   readonly loading?: boolean;
-  /** Force-refresh the marketplace catalog. */
+  /** Force-refresh the remote marketplace and re-read bundled manifests. */
   readonly onRefresh?: () => void;
   /** True while a manual refresh is in flight. */
   readonly refreshing?: boolean;

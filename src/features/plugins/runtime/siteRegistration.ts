@@ -1,9 +1,9 @@
 /**
- * Cross-site injection — NEXT MILESTONE (helpers only; not wired into a trigger).
+ * Cross-site injection helpers.
  *
- * Today the content script is injected only on Gemini / AI Studio (the manifest
- * `content_scripts.matches`). To run plugins on claude.ai / chatgpt.com / grok.com
- * the extension must, at install/enable time:
+ * The base content script is injected only on manifest-declared sites. To run
+ * plugins on claude.ai / chatgpt.com / grok.com the extension must, at
+ * install/enable time:
  *
  *   1. Request the OPTIONAL host permission for the plugin's origins. This MUST be
  *      driven by a user gesture (popup/options click), not the background worker.
@@ -19,8 +19,8 @@
  *     subject to App Store review. Safari realistically stays on its
  *     manifest-declared sites. Gate any registration behind `!isSafari()`.
  *
- * `pluginsToOriginPatterns` (pure) is unit-tested; the registration call is kept
- * thin and guarded so the upcoming store UI can call it directly.
+ * `pluginsToOriginPatterns` (pure) is unit-tested; background registration and
+ * popup permission requests use the same derived origins.
  */
 import { logger } from '@/core/services/LoggerService';
 
