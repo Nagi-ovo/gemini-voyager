@@ -8517,7 +8517,9 @@ body.gv-rtl .gv-timestamp {
 /* Dropdown list */
 .gv-fp-dropdown {
   position: absolute;
-  top: 100%;
+  top: auto;
+  bottom: 100%;
+  margin-bottom: 4px;
   left: 8px;
   min-width: 200px;
   max-width: 320px;
