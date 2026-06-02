@@ -90,8 +90,11 @@ function uid(): string {
 const NOTIFICATION_TIMEOUT_MS = 5000;
 const PROMPT_LINK_SELECTORS = [
   'a[href^="/prompts/"]',
+  'a[href^="/u/"][href*="/prompts/"]',
   'a[href*="://aistudio.google.com/prompts/"]',
+  'a[href*="://aistudio.google.com/u/"][href*="/prompts/"]',
   'a[href*="://aistudio.google.cn/prompts/"]',
+  'a[href*="://aistudio.google.cn/u/"][href*="/prompts/"]',
 ];
 const PROMPT_LINK_SELECTOR = PROMPT_LINK_SELECTORS.join(', ');
 const UNBOUND_PROMPT_LINK_SELECTOR = PROMPT_LINK_SELECTORS.map(

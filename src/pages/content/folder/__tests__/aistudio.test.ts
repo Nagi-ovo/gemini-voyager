@@ -37,6 +37,7 @@ function createPromptRow(
 function createHistoryPopoverPromptLink(
   promptId: string,
   title: string,
+  href: string = `/prompts/${promptId}`,
 ): {
   overlay: HTMLElement;
   row: HTMLElement;
@@ -47,7 +48,7 @@ function createHistoryPopoverPromptLink(
   const row = document.createElement('div');
   row.setAttribute('role', 'listitem');
   const anchor = document.createElement('a');
-  anchor.setAttribute('href', `/prompts/${promptId}`);
+  anchor.setAttribute('href', href);
   anchor.textContent = title;
   row.appendChild(anchor);
   overlay.appendChild(row);
@@ -130,6 +131,27 @@ describe('AIStudio prompt binding performance guards', () => {
     } as unknown as MutationRecord;
 
     expect(mutationAddsPromptLinks([mutation])).toBe(true);
+  });
+
+  it('detects account-prefixed AI Studio prompt links in popovers', () => {
+    const { overlay: relativeOverlay } = createHistoryPopoverPromptLink(
+      'accountRelative123',
+      'Account Relative Prompt',
+      '/u/1/prompts/accountRelative123',
+    );
+    const absoluteOverlay = document.createElement('div');
+    absoluteOverlay.className = 'cdk-overlay-pane';
+    const absoluteAnchor = document.createElement('a');
+    absoluteAnchor.href = 'https://aistudio.google.com/u/2/prompts/accountAbsolute123';
+    absoluteAnchor.textContent = 'Account Absolute Prompt';
+    absoluteOverlay.appendChild(absoluteAnchor);
+
+    expect(
+      mutationAddsPromptLinks([{ addedNodes: [relativeOverlay] } as unknown as MutationRecord]),
+    ).toBe(true);
+    expect(
+      mutationAddsPromptLinks([{ addedNodes: [absoluteOverlay] } as unknown as MutationRecord]),
+    ).toBe(true);
   });
 
   it('parses fallback URL payloads used by Firefox native drag data', () => {
@@ -253,6 +275,48 @@ describe('AIStudio prompt binding performance guards', () => {
       conversationId: 'hover456',
       title: 'Hover Prompt Title',
       url: expect.stringMatching(/\/prompts\/hover456$/),
+    });
+  });
+
+  it('preserves titles when dragging from account-prefixed history popovers', () => {
+    const { row, anchor } = createHistoryPopoverPromptLink(
+      'accountHover456',
+      'Account Hover Prompt Title',
+      '/u/1/prompts/accountHover456',
+    );
+    const manager = new AIStudioFolderManager();
+    const bindDraggablesInPromptList = (
+      manager as unknown as {
+        bindDraggablesInPromptList: (scope?: ParentNode | null) => void;
+      }
+    ).bindDraggablesInPromptList.bind(manager);
+
+    bindDraggablesInPromptList(document.body);
+
+    expect(anchor.dataset.gvDragBound).toBe('1');
+    expect(row.draggable).toBe(true);
+
+    const transfer: DragDataTransferMock = {
+      effectAllowed: '',
+      setData: vi.fn(),
+      setDragImage: vi.fn(),
+    };
+    const dragstart = new Event('dragstart', { bubbles: true, cancelable: true }) as DragEvent;
+    Object.defineProperty(dragstart, 'dataTransfer', {
+      value: transfer,
+      configurable: true,
+    });
+
+    anchor.dispatchEvent(dragstart);
+
+    const jsonPayload = (transfer.setData.mock.calls as Array<[string, string]>).find(
+      ([type]) => type === 'application/json',
+    )?.[1];
+    expect(jsonPayload).toBeTruthy();
+    expect(JSON.parse(jsonPayload || '{}')).toMatchObject({
+      conversationId: 'accountHover456',
+      title: 'Account Hover Prompt Title',
+      url: expect.stringMatching(/\/u\/1\/prompts\/accountHover456$/),
     });
   });
 });
