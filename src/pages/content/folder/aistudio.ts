@@ -88,8 +88,25 @@ function uid(): string {
 }
 
 const NOTIFICATION_TIMEOUT_MS = 5000;
-const PROMPT_LINK_SELECTOR = 'a.prompt-link[href^="/prompts/"]';
-const UNBOUND_PROMPT_LINK_SELECTOR = `${PROMPT_LINK_SELECTOR}:not([data-gv-drag-bound])`;
+const PROMPT_LINK_SELECTORS = [
+  'a[href^="/prompts/"]',
+  'a[href^="/u/"][href*="/prompts/"]',
+  'a[href*="://aistudio.google.com/prompts/"]',
+  'a[href*="://aistudio.google.com/u/"][href*="/prompts/"]',
+  'a[href*="://aistudio.google.cn/prompts/"]',
+  'a[href*="://aistudio.google.cn/u/"][href*="/prompts/"]',
+];
+const PROMPT_LINK_SELECTOR = PROMPT_LINK_SELECTORS.join(', ');
+const UNBOUND_PROMPT_LINK_SELECTOR = PROMPT_LINK_SELECTORS.map(
+  (selector) => `${selector}:not([data-gv-drag-bound])`,
+).join(', ');
+const BODY_PROMPT_POPOVER_SELECTOR = [
+  '.cdk-overlay-container',
+  '.cdk-overlay-pane',
+  '[role="menu"]',
+  '[role="listbox"]',
+  '[role="dialog"]',
+].join(', ');
 const PROMPT_LIST_BIND_DEBOUNCE_MS = 120;
 const PROMPT_TITLE_SYNC_DEBOUNCE_MS = 280;
 const PROMPT_DRAG_HOST_SELECTORS = [
@@ -607,6 +624,10 @@ export class AIStudioFolderManager {
       await this.syncConversationTitlesFromPromptList();
     }
 
+    // V2 nav renders History recents in a body-level hover popover rather than
+    // inline ms-prompt-history-v3 rows. Bind those transient links as they appear.
+    this.observeBodyPromptPopovers();
+
     // These work off our own folder DOM + location, so they run in both legacy and V2 nav.
     this.highlightActiveConversation();
     this.installRouteChangeListener();
@@ -630,6 +651,7 @@ export class AIStudioFolderManager {
   private lastContainerReinjectAt: number = 0;
   private libraryShortcutBtn: HTMLButtonElement | null = null;
   private libraryTableObserver: MutationObserver | null = null;
+  private bodyPromptPopoverObserver: MutationObserver | null = null;
   private libraryDropZoneInjected: boolean = false;
 
   /**
@@ -1585,6 +1607,46 @@ export class AIStudioFolderManager {
     });
   }
 
+  private isBodyPromptPopoverElement(element: Element): boolean {
+    return (
+      element.matches(BODY_PROMPT_POPOVER_SELECTOR) ||
+      !!element.closest(BODY_PROMPT_POPOVER_SELECTOR)
+    );
+  }
+
+  private bindDraggablesInBodyPromptPopovers(): void {
+    const popoverRoots = document.querySelectorAll(BODY_PROMPT_POPOVER_SELECTOR);
+    popoverRoots.forEach((root) => this.bindDraggablesInPromptList(root));
+  }
+
+  private observeBodyPromptPopovers(): void {
+    if (this.bodyPromptPopoverObserver) return;
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of Array.from(mutation.addedNodes)) {
+          if (!(node instanceof Element)) continue;
+          if (!nodeContainsPromptLink(node)) continue;
+          if (!this.isBodyPromptPopoverElement(node)) continue;
+          this.bindDraggablesInPromptList(node);
+        }
+      }
+    });
+
+    try {
+      observer.observe(document.body, { childList: true, subtree: true });
+    } catch {}
+    this.bodyPromptPopoverObserver = observer;
+    this.cleanupFns.push(() => {
+      try {
+        observer.disconnect();
+      } catch {}
+      this.bodyPromptPopoverObserver = null;
+    });
+
+    this.bindDraggablesInBodyPromptPopovers();
+  }
+
   private schedulePromptListBinding(): void {
     if (this.promptListBindTimer !== null) return;
     this.promptListBindTimer = window.setTimeout(() => {
@@ -1741,9 +1803,14 @@ export class AIStudioFolderManager {
   private bindDraggablesInPromptList(scope: ParentNode | null = this.historyRoot): void {
     const root = scope ?? this.historyRoot;
     if (!root) return;
-    const anchors = root.querySelectorAll(UNBOUND_PROMPT_LINK_SELECTOR);
-    anchors.forEach((a) => {
-      const anchor = a as HTMLAnchorElement;
+    const anchors: HTMLAnchorElement[] = [];
+    if (root instanceof Element && root.matches(UNBOUND_PROMPT_LINK_SELECTOR)) {
+      anchors.push(root as HTMLAnchorElement);
+    }
+    root.querySelectorAll(UNBOUND_PROMPT_LINK_SELECTOR).forEach((anchor) => {
+      anchors.push(anchor as HTMLAnchorElement);
+    });
+    anchors.forEach((anchor) => {
       const hostEl = this.resolvePromptDragHost(anchor);
       anchor.dataset.gvDragBound = '1';
       if (!(hostEl as Element & { _gvDragBound?: boolean })._gvDragBound) {

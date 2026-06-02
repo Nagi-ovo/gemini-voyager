@@ -98,6 +98,18 @@ The folder manager detects Gem conversations by analyzing the `jslog` attribute:
 - Gem conversations: `/gem/{gem-id}/{hex-id}`
 - Multi-account support: `/u/{account-number}/...`
 
+### AI Studio History Drag Sources
+
+AI Studio exposes saved prompts in two shapes:
+
+- `/library` table rows
+- V2 left-nav History hover popovers rendered as body-level overlays
+
+Both paths must populate Voyager's JSON drag payload before a prompt is dropped into a folder.
+The payload includes the prompt id, title, and URL; if a browser native URL drag reaches the
+folder without that JSON payload, the folder can only recover the id and must fall back to the
+localized untitled label.
+
 ### Icon Mapping
 
 The system uses a two-way mapping:
