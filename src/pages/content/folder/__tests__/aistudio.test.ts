@@ -34,6 +34,27 @@ function createPromptRow(
   return { root, row, host: li, anchor };
 }
 
+function createHistoryPopoverPromptLink(
+  promptId: string,
+  title: string,
+): {
+  overlay: HTMLElement;
+  row: HTMLElement;
+  anchor: HTMLAnchorElement;
+} {
+  const overlay = document.createElement('div');
+  overlay.className = 'cdk-overlay-pane';
+  const row = document.createElement('div');
+  row.setAttribute('role', 'listitem');
+  const anchor = document.createElement('a');
+  anchor.setAttribute('href', `/prompts/${promptId}`);
+  anchor.textContent = title;
+  row.appendChild(anchor);
+  overlay.appendChild(row);
+  document.body.appendChild(overlay);
+  return { overlay, row, anchor };
+}
+
 type AIStudioManagerInternals = {
   data: {
     folders: Array<{
@@ -84,6 +105,31 @@ describe('AIStudio prompt binding performance guards', () => {
 
     expect(mutationAddsPromptLinks([hitMutation])).toBe(true);
     expect(mutationAddsPromptLinks([missMutation])).toBe(false);
+  });
+
+  it('detects body-level history popover prompt link additions', () => {
+    const { overlay } = createHistoryPopoverPromptLink('hover123', 'Hover Prompt Title');
+
+    const mutation = {
+      addedNodes: [overlay],
+    } as unknown as MutationRecord;
+
+    expect(mutationAddsPromptLinks([mutation])).toBe(true);
+  });
+
+  it('detects absolute AI Studio prompt links in popovers', () => {
+    const overlay = document.createElement('div');
+    overlay.className = 'cdk-overlay-pane';
+    const anchor = document.createElement('a');
+    anchor.href = 'https://aistudio.google.com/prompts/absolute123';
+    anchor.textContent = 'Absolute Prompt Title';
+    overlay.appendChild(anchor);
+
+    const mutation = {
+      addedNodes: [overlay],
+    } as unknown as MutationRecord;
+
+    expect(mutationAddsPromptLinks([mutation])).toBe(true);
   });
 
   it('parses fallback URL payloads used by Firefox native drag data', () => {
@@ -169,6 +215,44 @@ describe('AIStudio prompt binding performance guards', () => {
     expect(JSON.parse(jsonPayload || '{}')).toMatchObject({
       conversationId: 'abc124',
       title: 'Native prompt title',
+    });
+  });
+
+  it('preserves titles when dragging from the body-level history popover', () => {
+    const { row, anchor } = createHistoryPopoverPromptLink('hover456', 'Hover Prompt Title');
+    const manager = new AIStudioFolderManager();
+    const bindDraggablesInPromptList = (
+      manager as unknown as {
+        bindDraggablesInPromptList: (scope?: ParentNode | null) => void;
+      }
+    ).bindDraggablesInPromptList.bind(manager);
+
+    bindDraggablesInPromptList(document.body);
+
+    expect(anchor.dataset.gvDragBound).toBe('1');
+    expect(row.draggable).toBe(true);
+
+    const transfer: DragDataTransferMock = {
+      effectAllowed: '',
+      setData: vi.fn(),
+      setDragImage: vi.fn(),
+    };
+    const dragstart = new Event('dragstart', { bubbles: true, cancelable: true }) as DragEvent;
+    Object.defineProperty(dragstart, 'dataTransfer', {
+      value: transfer,
+      configurable: true,
+    });
+
+    anchor.dispatchEvent(dragstart);
+
+    const jsonPayload = (transfer.setData.mock.calls as Array<[string, string]>).find(
+      ([type]) => type === 'application/json',
+    )?.[1];
+    expect(jsonPayload).toBeTruthy();
+    expect(JSON.parse(jsonPayload || '{}')).toMatchObject({
+      conversationId: 'hover456',
+      title: 'Hover Prompt Title',
+      url: expect.stringMatching(/\/prompts\/hover456$/),
     });
   });
 });
