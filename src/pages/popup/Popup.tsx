@@ -3061,7 +3061,7 @@ export default function Popup() {
             }
             target="_blank"
             rel="noreferrer"
-            className="group flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs shadow-sm transition-[border-color,box-shadow] hover:border-primary/30 hover:shadow-md"
+            className="group hover:border-primary/30 flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs shadow-sm transition-[border-color,box-shadow] hover:shadow-md"
           >
             <span className="text-base leading-none" aria-hidden="true">
               ⭐
