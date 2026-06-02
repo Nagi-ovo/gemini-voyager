@@ -29,6 +29,7 @@ type TestableManager = {
   sidebarContainer: HTMLElement | null;
   hideArchivedConversations: boolean;
   isMultiSelectMode: boolean;
+  selectedConversations: Set<string>;
   mutationBatchQueue: MutationRecord[];
   flushMutationBatch: () => void;
   scheduleMutationBatchFlush: () => void;
@@ -39,7 +40,11 @@ type TestableManager = {
   scheduleNativeConversationTitleSync: () => void;
 };
 
-function createConversationEl(hexId: string, title: string = 'Title'): HTMLElement {
+function createConversationEl(
+  hexId: string,
+  title: string = 'Title',
+  titleClassName: string = 'conversation-title-text',
+): HTMLElement {
   const row = document.createElement('div');
   row.setAttribute('data-test-id', 'conversation');
   row.setAttribute('jslog', `["c_${hexId}"]`);
@@ -47,12 +52,42 @@ function createConversationEl(hexId: string, title: string = 'Title'): HTMLEleme
   const link = document.createElement('a');
   link.href = `/app/${hexId}`;
   const titleEl = document.createElement('span');
-  titleEl.className = 'conversation-title-text';
+  titleEl.className = titleClassName;
   titleEl.textContent = title;
   link.appendChild(titleEl);
   row.appendChild(link);
 
   return row;
+}
+
+function createLr26ConversationEl(hexId: string, title: string): HTMLElement {
+  return createConversationEl(hexId, title, 'title-text gds-body-s');
+}
+
+function dispatchDragStart(element: HTMLElement) {
+  const transfer = {
+    effectAllowed: '',
+    setData: vi.fn(),
+    setDragImage: vi.fn(),
+  };
+  const dragstart = new Event('dragstart', { bubbles: true, cancelable: true }) as DragEvent;
+  Object.defineProperty(dragstart, 'dataTransfer', {
+    value: transfer,
+    configurable: true,
+  });
+
+  element.dispatchEvent(dragstart);
+
+  return transfer;
+}
+
+function getJsonDragPayload(transfer: ReturnType<typeof dispatchDragStart>) {
+  const payload = (transfer.setData.mock.calls as Array<[string, string]>).find(
+    ([type]) => type === 'application/json',
+  )?.[1];
+
+  expect(payload).toBeTruthy();
+  return JSON.parse(payload || '{}');
 }
 
 /**
@@ -252,6 +287,45 @@ describe('FolderManager — observer batching (issue #678)', () => {
     typed.flushMutationBatch();
 
     expect(titleSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses lr26 title-text when dragging a native conversation into folders', () => {
+    const conv = createLr26ConversationEl('1234abcd', 'Quarterly planning notes');
+    typed.sidebarContainer!.appendChild(conv);
+    typed.makeConversationDraggable(conv);
+
+    const payload = getJsonDragPayload(dispatchDragStart(conv));
+
+    expect(payload).toMatchObject({
+      conversationId: 'c_1234abcd',
+      title: 'Quarterly planning notes',
+      url: expect.stringContaining('/app/1234abcd'),
+    });
+  });
+
+  it('uses lr26 title-text for every selected native conversation drag payload', () => {
+    const first = createLr26ConversationEl('aaaabbbb', 'First selected chat');
+    const second = createLr26ConversationEl('ccccdddd', 'Second selected chat');
+    typed.sidebarContainer!.append(first, second);
+    typed.makeConversationDraggable(first);
+    typed.makeConversationDraggable(second);
+    typed.selectedConversations = new Set(['c_aaaabbbb', 'c_ccccdddd']);
+
+    const payload = getJsonDragPayload(dispatchDragStart(first));
+
+    expect(payload.title).toBe('2 conversations');
+    expect(payload.conversations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          conversationId: 'c_aaaabbbb',
+          title: 'First selected chat',
+        }),
+        expect.objectContaining({
+          conversationId: 'c_ccccdddd',
+          title: 'Second selected chat',
+        }),
+      ]),
+    );
   });
 
   it('schedules only one animation-frame flush even across many observer ticks', async () => {

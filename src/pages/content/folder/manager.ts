@@ -2435,8 +2435,8 @@ export class FolderManager {
     ); // Use capture phase to intercept before navigation
 
     element.addEventListener('dragstart', (e) => {
-      const title = element.querySelector('.conversation-title')?.textContent?.trim() || 'Untitled';
       const conversationId = this.extractConversationId(element);
+      const title = this.extractNativeDragTitle(element, conversationId);
 
       // Extract URL and conversation metadata together
       const conversationData = this.extractConversationData(element);
@@ -2466,8 +2466,7 @@ export class FolderManager {
         this.selectedConversations.forEach((id) => {
           const convEl = this.findConversationElement(id);
           if (convEl) {
-            const convTitle =
-              convEl.querySelector('.conversation-title')?.textContent?.trim() || 'Untitled';
+            const convTitle = this.extractNativeDragTitle(convEl, id);
             const convData = this.extractConversationData(convEl);
 
             selectedConvs.push({
@@ -2559,6 +2558,14 @@ export class FolderManager {
     return null;
   }
 
+  private extractNativeDragTitle(element: HTMLElement, conversationId?: string): string {
+    const title =
+      this.extractNativeConversationTitle(element) ||
+      (conversationId ? this.syncConversationTitleFromNative(conversationId) : null);
+
+    return title || 'Untitled';
+  }
+
   private extractConversationId(element: HTMLElement): string {
     // Strategy 1: Extract from jslog attribute
     // This is the preferred method as it follows the internal ID format
@@ -2601,7 +2608,7 @@ export class FolderManager {
 
     // Fallback: generate unique ID from element attributes
     // Use multiple attributes to ensure uniqueness
-    const title = element.querySelector('.conversation-title')?.textContent?.trim() || '';
+    const title = this.extractNativeConversationTitle(element) || '';
     const index = Array.from(element.parentElement?.children || []).indexOf(element);
 
     // Generate unique ID combining title, index, random, and timestamp
@@ -3804,7 +3811,7 @@ export class FolderManager {
 
       this.data.folderContents[folderId].push({
         conversationId: item.id,
-        title: item.title,
+        title: this.resolveDraggedConversationTitleForStorage(item.id, item.title),
         url: item.url ?? '',
         addedAt: Date.now(),
         isGem: item.isGem,
@@ -3812,6 +3819,13 @@ export class FolderManager {
         sortIndex: ++maxSortIndex,
       });
     }
+  }
+
+  private resolveDraggedConversationTitleForStorage(conversationId: string, title: string): string {
+    const normalizedTitle = title.trim();
+    if (normalizedTitle && normalizedTitle !== 'Untitled') return normalizedTitle;
+
+    return this.syncConversationTitleFromNative(conversationId) || normalizedTitle || 'Untitled';
   }
 
   /**
@@ -3939,9 +3953,10 @@ export class FolderManager {
       (max, c) => Math.max(max, c.sortIndex ?? -1),
       -1,
     );
+    const conversationId = dragData.conversationId!;
     const conv: ConversationReference = {
-      conversationId: dragData.conversationId!,
-      title: dragData.title,
+      conversationId,
+      title: this.resolveDraggedConversationTitleForStorage(conversationId, dragData.title),
       url: dragData.url!,
       addedAt: Date.now(),
       isGem: dragData.isGem,
@@ -4001,6 +4016,9 @@ export class FolderManager {
         // Create a copy with updated timestamp
         const newConv: ConversationReference = {
           ...conv,
+          title: sourceFolderId
+            ? conv.title
+            : this.resolveDraggedConversationTitleForStorage(conv.conversationId, conv.title),
           addedAt: Date.now(),
           sortIndex: maxSortIndex,
         };
