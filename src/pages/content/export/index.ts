@@ -1864,7 +1864,11 @@ type ResponseCopyImageTexts = {
   widthWide: string;
 };
 
-function getResponseCopyImageTexts(lang: AppLanguage): ResponseCopyImageTexts {
+function getResponseCopyImageTexts(
+  lang: AppLanguage,
+  dict: Record<AppLanguage, Record<string, string>>,
+): ResponseCopyImageTexts {
+  const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
   if (lang === 'zh') {
     return {
       label: '复制回复为图片',
@@ -1873,9 +1877,9 @@ function getResponseCopyImageTexts(lang: AppLanguage): ResponseCopyImageTexts {
       failed: '复制回复图片失败',
       unsupported: '当前浏览器不支持复制图片到剪贴板',
       targetMissing: '未找到可复制的回复内容',
-      widthNarrow: '窄（手机）',
-      widthMedium: '中（平板）',
-      widthWide: '宽（电脑）',
+      widthNarrow: t('export_image_width_narrow'),
+      widthMedium: t('export_image_width_medium'),
+      widthWide: t('export_image_width_wide'),
     };
   }
 
@@ -1887,9 +1891,9 @@ function getResponseCopyImageTexts(lang: AppLanguage): ResponseCopyImageTexts {
       failed: '複製回覆圖片失敗',
       unsupported: '目前瀏覽器不支援將圖片複製到剪貼簿',
       targetMissing: '找不到可複製的回覆內容',
-      widthNarrow: '窄（手機）',
-      widthMedium: '中（平板）',
-      widthWide: '寬（電腦）',
+      widthNarrow: t('export_image_width_narrow'),
+      widthMedium: t('export_image_width_medium'),
+      widthWide: t('export_image_width_wide'),
     };
   }
 
@@ -1900,9 +1904,9 @@ function getResponseCopyImageTexts(lang: AppLanguage): ResponseCopyImageTexts {
     failed: 'Failed to copy response image',
     unsupported: 'Clipboard image copy is not supported in this browser',
     targetMissing: 'Unable to locate response content',
-    widthNarrow: 'Narrow (Mobile)',
-    widthMedium: 'Medium (Tablet)',
-    widthWide: 'Wide (Desktop)',
+    widthNarrow: t('export_image_width_narrow'),
+    widthMedium: t('export_image_width_medium'),
+    widthWide: t('export_image_width_wide'),
   };
 }
 
@@ -1938,6 +1942,7 @@ function isUnsupportedClipboardError(error: unknown): boolean {
 async function handleResponseCopyImageClick(
   trigger: HTMLElement,
   getCurrentLanguage: () => AppLanguage,
+  dict: Record<AppLanguage, Record<string, string>>,
   imageWidth: number = DEFAULT_IMAGE_EXPORT_WIDTH,
 ): Promise<void> {
   if (trigger.dataset.gvCopyImageBusy === '1') {
@@ -1945,7 +1950,7 @@ async function handleResponseCopyImageClick(
   }
   trigger.dataset.gvCopyImageBusy = '1';
 
-  const texts = getResponseCopyImageTexts(getCurrentLanguage());
+  const texts = getResponseCopyImageTexts(getCurrentLanguage(), dict);
   const messageId = resolveAssistantMessageIdFromMenuTrigger(trigger);
   let blobForFallback: Blob | null = null;
   try {
@@ -1991,8 +1996,11 @@ async function handleResponseCopyImageClick(
   }
 }
 
-function applyResponseActionCopyImageButtons(getCurrentLanguage: () => AppLanguage): void {
-  const texts = getResponseCopyImageTexts(getCurrentLanguage());
+function applyResponseActionCopyImageButtons(
+  getCurrentLanguage: () => AppLanguage,
+  dict: Record<AppLanguage, Record<string, string>>,
+): void {
+  const texts = getResponseCopyImageTexts(getCurrentLanguage(), dict);
   injectResponseActionCopyImageButtons(document, {
     label: texts.label,
     tooltip: texts.label,
@@ -2005,7 +2013,7 @@ function applyResponseActionCopyImageButtons(getCurrentLanguage: () => AppLangua
           wide: texts.widthWide,
         },
         onSelect: (width) => {
-          void handleResponseCopyImageClick(button, getCurrentLanguage, width);
+          void handleResponseCopyImageClick(button, getCurrentLanguage, dict, width);
         },
       });
     },
@@ -2014,17 +2022,19 @@ function applyResponseActionCopyImageButtons(getCurrentLanguage: () => AppLangua
 
 function setupResponseActionCopyImageObserver({
   getCurrentLanguage,
+  dict,
 }: {
   getCurrentLanguage: () => AppLanguage;
+  dict: Record<AppLanguage, Record<string, string>>;
 }): void {
-  applyResponseActionCopyImageButtons(getCurrentLanguage);
+  applyResponseActionCopyImageButtons(getCurrentLanguage, dict);
   if (responseActionObserver) return;
 
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       mutation.addedNodes.forEach((node) => {
         if (!(node instanceof HTMLElement)) return;
-        const texts = getResponseCopyImageTexts(getCurrentLanguage());
+        const texts = getResponseCopyImageTexts(getCurrentLanguage(), dict);
         injectResponseActionCopyImageButtons(node, {
           label: texts.label,
           tooltip: texts.label,
@@ -2037,7 +2047,7 @@ function setupResponseActionCopyImageObserver({
                 wide: texts.widthWide,
               },
               onSelect: (width) => {
-                void handleResponseCopyImageClick(button, getCurrentLanguage, width);
+                void handleResponseCopyImageClick(button, getCurrentLanguage, dict, width);
               },
             });
           },
@@ -2227,6 +2237,7 @@ export async function startExportButton(): Promise<void> {
   });
   setupResponseActionCopyImageObserver({
     getCurrentLanguage: () => lang,
+    dict,
   });
 
   const t0 = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
@@ -2285,7 +2296,7 @@ export async function startExportButton(): Promise<void> {
         const ttl =
           dict[next]?.['exportChatJson'] ?? dict.en?.['exportChatJson'] ?? 'Export chat history';
         toolbarHandle?.setText(lbl, ttl);
-        applyResponseActionCopyImageButtons(() => lang);
+        applyResponseActionCopyImageButtons(() => lang, dict);
       }
       const toolbarChange = changes[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED];
       if (toolbarChange && 'newValue' in toolbarChange) {
@@ -2356,7 +2367,7 @@ export async function startExportButton(): Promise<void> {
       const lbl = btn.querySelector('.gv-export-dropdown-label');
       if (lbl) lbl.textContent = dict[next]?.['pm_export'] ?? dict.en?.['pm_export'] ?? 'Export';
 
-      applyResponseActionCopyImageButtons(() => lang);
+      applyResponseActionCopyImageButtons(() => lang, dict);
     }
   };
 
