@@ -134,6 +134,7 @@ export class TimelineManager {
   private pendingActiveId: string | null = null;
   private activeChangeTimer: number | null = null;
   private navigationCommitTimer: number | null = null;
+  private readonly tooltipShowDelay = 250;
   private tooltipHideDelay = 100;
   private scrollMode: 'jump' | 'flow' = 'flow';
   private hideContainer: boolean = false;
@@ -147,6 +148,8 @@ export class TimelineManager {
   private runnerRing: HTMLElement | null = null;
   private flowAnimating = false;
   private tooltipHideTimer: number | null = null;
+  private tooltipShowTimer: number | null = null;
+  private tooltipPendingDot: DotElement | null = null;
   private tooltipDotId: string | null = null;
   private measureEl: HTMLElement | null = null;
   private measureCanvas: HTMLCanvasElement | null = null;
@@ -1810,12 +1813,13 @@ export class TimelineManager {
 
     this.onTimelineBarOver = (e: MouseEvent) => {
       const dot = (e.target as HTMLElement).closest('.timeline-dot') as DotElement | null;
-      if (dot) this.showTooltipForDot(dot);
+      if (dot) this.scheduleTooltipForDot(dot);
     };
     this.onTimelineBarOut = (e: MouseEvent) => {
       const fromDot = (e.target as HTMLElement).closest('.timeline-dot');
       const toDot = (e.relatedTarget as HTMLElement | null)?.closest?.('.timeline-dot');
       if (fromDot && !toDot) {
+        this.cancelPendingTooltipShow();
         const stillHoveringDot = this.ui.timelineBar?.querySelector('.timeline-dot:hover');
         if (!stillHoveringDot) this.hideTooltip();
       }
@@ -2384,6 +2388,7 @@ export class TimelineManager {
   private showTooltipForDot(dot: DotElement): void {
     if (!this.ui.tooltip) return;
     if (this.previewPanel?.isOpen) return;
+    this.cancelPendingTooltipShow();
     if (this.tooltipHideTimer) {
       clearTimeout(this.tooltipHideTimer);
       this.tooltipHideTimer = null;
@@ -2411,6 +2416,38 @@ export class TimelineManager {
       this.showRafId = null;
       tip.classList.add('visible');
     });
+  }
+
+  private scheduleTooltipForDot(dot: DotElement): void {
+    if (!this.ui.tooltip) return;
+    if (this.previewPanel?.isOpen) return;
+
+    const dotId = dot.dataset.targetTurnId || '';
+    if (this.ui.tooltip.classList.contains('visible') && this.tooltipDotId === dotId) {
+      this.showTooltipForDot(dot);
+      return;
+    }
+
+    if (this.tooltipShowTimer !== null && this.tooltipPendingDot === dot) return;
+
+    this.cancelPendingTooltipShow();
+    this.tooltipPendingDot = dot;
+    this.tooltipShowTimer = window.setTimeout(() => {
+      const pendingDot = this.tooltipPendingDot;
+      this.tooltipShowTimer = null;
+      this.tooltipPendingDot = null;
+
+      if (!pendingDot?.isConnected) return;
+      this.showTooltipForDot(pendingDot);
+    }, this.tooltipShowDelay);
+  }
+
+  private cancelPendingTooltipShow(): void {
+    if (this.tooltipShowTimer !== null) {
+      clearTimeout(this.tooltipShowTimer);
+      this.tooltipShowTimer = null;
+    }
+    this.tooltipPendingDot = null;
   }
 
   private placeTooltipAt(
@@ -2952,6 +2989,7 @@ export class TimelineManager {
 
   private hideTooltip(immediate = false): void {
     if (!this.ui.tooltip) return;
+    this.cancelPendingTooltipShow();
     const doHide = () => {
       this.ui.tooltip!.classList.remove('visible');
       this.ui.tooltip!.setAttribute('aria-hidden', 'true');
@@ -4082,6 +4120,12 @@ export class TimelineManager {
       this.ui.timelineBar?.removeEventListener('contextmenu', this.onContextMenu!);
     } catch {}
     try {
+      this.ui.timelineBar?.removeEventListener('mouseover', this.onTimelineBarOver!);
+    } catch {}
+    try {
+      this.ui.timelineBar?.removeEventListener('mouseout', this.onTimelineBarOut!);
+    } catch {}
+    try {
       document.removeEventListener('click', this.onDocumentClick!);
     } catch {}
     try {
@@ -4179,6 +4223,11 @@ export class TimelineManager {
     if (this.tooltipHideTimer) {
       clearTimeout(this.tooltipHideTimer);
       this.tooltipHideTimer = null;
+    }
+    this.cancelPendingTooltipShow();
+    if (this.showRafId !== null) {
+      cancelAnimationFrame(this.showRafId);
+      this.showRafId = null;
     }
     if (this.resizeIdleTimer) {
       clearTimeout(this.resizeIdleTimer);
