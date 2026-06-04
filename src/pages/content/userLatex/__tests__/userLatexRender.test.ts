@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { _resetUserLatexKatexLoader, startUserLatex } from '../index';
+import {
+  _resetUserLatexKatexLoader,
+  _setUserLatexKatexLoaderForTest,
+  startUserLatex,
+} from '../index';
+
+type KatexDefault = (typeof import('katex'))['default'];
 
 // Mock the dynamically-imported KaTeX module.
 const renderToString = vi.fn((tex: string) => `<span class="katex-rendered">${tex}</span>`);
@@ -44,10 +50,22 @@ describe('userLatex dynamic KaTeX rendering', () => {
   });
 
   it('does not clobber a node that was repainted while KaTeX was loading', async () => {
+    let resolveKatex!: () => void;
+    _setUserLatexKatexLoaderForTest(
+      () =>
+        new Promise((resolve) => {
+          resolveKatex = () =>
+            resolve({
+              default: { renderToString } as unknown as KatexDefault,
+            } as unknown as typeof import('katex'));
+        }),
+    );
+
     const el = makeUserMessage('$x^2$');
     startUserLatex();
     // Gemini re-renders this node before the dynamic import resolves.
     el.textContent = 'totally new content';
+    resolveKatex();
     await flush();
 
     // The stale render must not overwrite the fresh content; the processed flag

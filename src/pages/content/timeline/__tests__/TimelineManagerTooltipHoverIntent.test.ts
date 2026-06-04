@@ -15,6 +15,7 @@ type TimelineManagerInternal = {
     width: number,
     height: number,
   ) => void;
+  tooltipShowDelay: number;
   scheduleTooltipForDot: (dot: DotElement) => void;
   cancelPendingTooltipShow: () => void;
 };
@@ -30,6 +31,7 @@ function setupTooltipManager(): { manager: TimelineManager; internal: TimelineMa
   internal.ui.tooltip = tooltip;
   internal.previewPanel = null;
   internal.starred = new Set<string>();
+  internal.tooltipShowDelay = 5;
   internal.computePlacementInfo = vi.fn(() => ({ placement: 'left' as const, width: 240 }));
   internal.truncateToThreeLines = vi.fn((text: string) => ({ text, height: 36 }));
   internal.placeTooltipAt = vi.fn();
@@ -46,19 +48,19 @@ function createDot(): DotElement {
   return dot;
 }
 
+const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
 describe('TimelineManager tooltip hover intent', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
     document.body.innerHTML = '';
     vi.restoreAllMocks();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     document.body.innerHTML = '';
   });
 
-  it('does not build tooltip content for a quick pass over a node', () => {
+  it('does not build tooltip content for a quick pass over a node', async () => {
     const { manager, internal } = setupTooltipManager();
     const dot = createDot();
 
@@ -66,21 +68,20 @@ describe('TimelineManager tooltip hover intent', () => {
 
     expect(internal.truncateToThreeLines).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(249);
     internal.cancelPendingTooltipShow();
-    vi.advanceTimersByTime(250);
+    await wait(10);
 
     expect(internal.truncateToThreeLines).not.toHaveBeenCalled();
 
     manager.destroy();
   });
 
-  it('builds tooltip content after the hover intent delay', () => {
+  it('builds tooltip content after the hover intent delay', async () => {
     const { manager, internal } = setupTooltipManager();
     const dot = createDot();
 
     internal.scheduleTooltipForDot(dot);
-    vi.advanceTimersByTime(250);
+    await wait(10);
 
     expect(internal.truncateToThreeLines).toHaveBeenCalledWith('A long conversation preview', 240);
     expect(internal.placeTooltipAt).toHaveBeenCalledWith(dot, 'left', 240, 36);

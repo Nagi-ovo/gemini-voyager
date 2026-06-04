@@ -19,6 +19,7 @@ const USER_MSG_SELECTOR = 'p.query-text-line';
  */
 let katexInstance: (typeof import('katex'))['default'] | null = null;
 let katexLoadFailed = false;
+let katexLoaderForTest: (() => Promise<typeof import('katex')>) | null = null;
 
 /**
  * Reset internal loader state. Only for testing.
@@ -27,6 +28,19 @@ let katexLoadFailed = false;
 export const _resetUserLatexKatexLoader = (): void => {
   katexInstance = null;
   katexLoadFailed = false;
+  katexLoaderForTest = null;
+};
+
+/**
+ * Override the KaTeX loader. Only for testing async load races.
+ * @internal
+ */
+export const _setUserLatexKatexLoaderForTest = (
+  loader: (() => Promise<typeof import('katex')>) | null,
+): void => {
+  katexInstance = null;
+  katexLoadFailed = false;
+  katexLoaderForTest = loader;
 };
 
 const loadKatex = async (): Promise<typeof katexInstance> => {
@@ -34,7 +48,7 @@ const loadKatex = async (): Promise<typeof katexInstance> => {
   if (katexLoadFailed) return null;
 
   try {
-    const mod = await import('katex');
+    const mod = await (katexLoaderForTest ? katexLoaderForTest() : import('katex'));
     katexInstance = mod.default;
     return katexInstance;
   } catch (error) {
