@@ -104,7 +104,9 @@ function buildStyle(widthValue: number): string {
       textarea,
       [role='button'],
       [tabindex]:not([tabindex='-1']),
-      search-nav-button
+      search-nav-button,
+      side-nav-sparkle-button,
+      side-nav-menu-button
     ) {
       pointer-events: auto !important;
     }
@@ -117,7 +119,9 @@ function buildStyle(widthValue: number): string {
       textarea,
       [role='button'],
       [tabindex]:not([tabindex='-1']),
-      search-nav-button
+      search-nav-button,
+      side-nav-sparkle-button,
+      side-nav-menu-button
     ) {
       pointer-events: auto !important;
     }
@@ -130,7 +134,9 @@ function buildStyle(widthValue: number): string {
       textarea,
       [role='button'],
       [tabindex]:not([tabindex='-1']),
-      search-nav-button
+      search-nav-button,
+      side-nav-sparkle-button,
+      side-nav-menu-button
     ) {
       pointer-events: auto !important;
     }
@@ -144,6 +150,24 @@ function buildStyle(widthValue: number): string {
 
     top-bar-actions search-nav-button,
     top-bar-actions search-nav-button button {
+      position: relative;
+      z-index: 1;
+      pointer-events: auto !important;
+    }
+
+    #app-root > main > div > bard-mode-switcher side-nav-sparkle-button,
+    #app-root > main > div > bard-mode-switcher side-nav-sparkle-button button,
+    #app-root > main > div > bard-mode-switcher side-nav-menu-button,
+    #app-root > main > div > bard-mode-switcher side-nav-menu-button button {
+      position: relative;
+      z-index: 1;
+      pointer-events: auto !important;
+    }
+
+    top-bar-actions side-nav-sparkle-button,
+    top-bar-actions side-nav-sparkle-button button,
+    top-bar-actions side-nav-menu-button,
+    top-bar-actions side-nav-menu-button button {
       position: relative;
       z-index: 1;
       pointer-events: auto !important;

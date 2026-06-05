@@ -70,9 +70,25 @@ describe('sidebar width title centering', () => {
     expect(code).toContain('top-bar-actions {');
     expect(code).toContain('pointer-events: none !important;');
     expect(code).toContain('search-nav-button');
+    expect(code).toContain('side-nav-sparkle-button');
+    expect(code).toContain('side-nav-menu-button');
     expect(code).toContain('top-bar-actions :is(');
     expect(code).toContain('top-bar-actions search-nav-button button');
     expect(code).toContain('search-nav-button button');
     expect(code).toContain('pointer-events: auto !important;');
+  });
+
+  it('keeps custom sidebar toggle hosts clickable inside transparent top-bar actions', () => {
+    const code = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
+      'utf8',
+    );
+
+    expect(code).toContain('top-bar-actions side-nav-sparkle-button');
+    expect(code).toContain('top-bar-actions side-nav-sparkle-button button');
+    expect(code).toContain('top-bar-actions side-nav-menu-button');
+    expect(code).toContain('top-bar-actions side-nav-menu-button button');
+    expect(code).toContain('#app-root > main > div > bard-mode-switcher side-nav-sparkle-button');
+    expect(code).toContain('#app-root > main > div > bard-mode-switcher side-nav-menu-button');
   });
 });
