@@ -1,17 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  type WatermarkAnchorOption,
+  type WatermarkConfig,
   calculateWatermarkPosition,
   chooseWatermarkAnchorOption,
   detectWatermarkConfig,
   getWatermarkConfigOptions,
-  type WatermarkAnchorOption,
-  type WatermarkConfig,
 } from '../watermarkEngine';
 
 const TEST_ALPHA_MAP = Float32Array.from([
-  0.02, 0.15, 0.15, 0.02, 0.15, 0.8, 0.8, 0.15, 0.15, 0.8, 0.8, 0.15, 0.02, 0.15, 0.15,
-  0.02,
+  0.02, 0.15, 0.15, 0.02, 0.15, 0.8, 0.8, 0.15, 0.15, 0.8, 0.8, 0.15, 0.02, 0.15, 0.15, 0.02,
 ]);
 
 function createImageDataWithWatermark(config: WatermarkConfig): ImageData {
