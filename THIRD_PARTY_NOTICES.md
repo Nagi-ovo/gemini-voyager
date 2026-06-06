@@ -5,6 +5,7 @@ Gemini Voyager is licensed as a whole under `GPL-3.0`. Some files and assets in
 the MIT License:
 
 - `journey-ad/gemini-watermark-remover`
+- `GargantuaX/gemini-watermark-remover`
 - `allenk/GeminiWatermarkTool`
 
 This applies in particular to the watermark-removal implementation and related
@@ -16,10 +17,12 @@ assets, including:
 - `src/pages/content/watermarkRemover/watermarkEngine.ts`
 - `src/pages/content/watermarkRemover/assets/bg_48.png`
 - `src/pages/content/watermarkRemover/assets/bg_96.png`
+- `src/pages/content/watermarkRemover/assets/bg_96_20260520.png`
 
 Source repositories:
 
 - https://github.com/journey-ad/gemini-watermark-remover
+- https://github.com/GargantuaX/gemini-watermark-remover
 - https://github.com/allenk/GeminiWatermarkTool
 
 The following MIT notice is retained for those materials:
