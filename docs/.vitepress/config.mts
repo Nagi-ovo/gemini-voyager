@@ -104,6 +104,7 @@ export default defineConfig({
               { text: '快速上手', link: '/guide/getting-started' },
               { text: '赞助', link: '/guide/sponsor' },
               { text: '交流与反馈', link: '/guide/community' },
+              { text: '插件贡献说明', link: '/guide/plugin-contribution' },
               { text: '受 Voyager 启发的项目', link: '/guide/ecosystem' },
             ],
           },
