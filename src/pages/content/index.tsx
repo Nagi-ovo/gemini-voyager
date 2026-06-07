@@ -94,6 +94,7 @@ let responseCompleteNotificationCleanup: (() => void) | null = null;
 let edgeFinalVersionNoticeCleanup: (() => void) | null = null;
 let pluginHostCleanup: (() => void) | null = null;
 let brandThemeCleanup: (() => void) | null = null;
+let titleUpdaterCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -276,7 +277,7 @@ async function initializeFeatures(): Promise<void> {
       }
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      startTitleUpdater();
+      titleUpdaterCleanup = await startTitleUpdater();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startDeepResearchExport();
@@ -627,6 +628,10 @@ function handleVisibilityChange(): void {
         if (brandThemeCleanup) {
           brandThemeCleanup();
           brandThemeCleanup = null;
+        }
+        if (titleUpdaterCleanup) {
+          titleUpdaterCleanup();
+          titleUpdaterCleanup = null;
         }
         chrome.storage?.onChanged?.removeListener(onStorageChanged);
       } catch (e) {

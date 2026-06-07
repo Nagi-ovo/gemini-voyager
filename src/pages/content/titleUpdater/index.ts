@@ -3,94 +3,198 @@
  * Description: Automatically updates the browser tab title to match the current Gemini chat title.
  * Performance: Targeted observer on top-bar-actions + History API interception.
  */
+import { StorageKeys } from '@/core/types/common';
 
 let lastTitle = '';
 let lastUrl = '';
 let observer: MutationObserver | null = null;
+let throttleTimer: ReturnType<typeof setTimeout> | null = null;
+let active = false;
+let cleanupController: (() => void) | null = null;
+let popstateAttached = false;
+let originalPushState: History['pushState'] | null = null;
+let originalReplaceState: History['replaceState'] | null = null;
+let wrappedPushState: History['pushState'] | null = null;
+let wrappedReplaceState: History['replaceState'] | null = null;
+
+type StorageChanges = Record<string, chrome.storage.StorageChange>;
 
 /**
  * Starts the title updater service.
  * Uses targeted MutationObserver + History API interception for best performance.
  */
-export async function startTitleUpdater() {
+export async function startTitleUpdater(): Promise<() => void> {
+  if (cleanupController) return cleanupController;
+
+  chrome.storage?.onChanged?.addListener(handleStorageChange);
+
   const { gvTabTitleUpdateEnabled } = await chrome.storage.sync.get({
-    gvTabTitleUpdateEnabled: true,
+    [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: true,
   });
 
-  if (!gvTabTitleUpdateEnabled) return;
+  if (gvTabTitleUpdateEnabled !== false) {
+    enableTitleUpdater();
+  }
+
+  cleanupController = () => {
+    chrome.storage?.onChanged?.removeListener(handleStorageChange);
+    disableTitleUpdater({ restoreTitle: false });
+    restoreHistoryPatchIfTopLevel();
+    cleanupController = null;
+  };
+
+  return cleanupController;
+}
+
+function handleStorageChange(changes: StorageChanges, area: string): void {
+  if (area !== 'sync') return;
+
+  const change = changes[StorageKeys.TAB_TITLE_UPDATE_ENABLED];
+  if (!change) return;
+
+  if (change.newValue === false) {
+    disableTitleUpdater({ restoreTitle: true });
+  } else {
+    enableTitleUpdater();
+  }
+}
+
+function enableTitleUpdater(): void {
+  if (active) return;
+
+  active = true;
 
   lastUrl = location.href;
+  patchHistory();
 
-  // Throttled update function (500ms)
-  let throttleTimer: ReturnType<typeof setTimeout> | null = null;
-  const throttledUpdate = () => {
-    if (throttleTimer) return;
-    throttleTimer = setTimeout(() => {
-      throttleTimer = null;
-      tryUpdateTitle();
-    }, 500);
-  };
+  if (!popstateAttached) {
+    window.addEventListener('popstate', handleUrlChange);
+    popstateAttached = true;
+  }
 
-  // Handle URL changes - reset title cache and re-attach observer
-  const handleUrlChange = () => {
-    if (location.href !== lastUrl) {
-      lastUrl = location.href;
-      lastTitle = '';
-      attachObserver();
-      tryUpdateTitle();
-    }
-  };
-
-  // Smart observer attachment - targets top-bar-actions for minimal scope
-  const attachObserver = () => {
-    if (observer) observer.disconnect();
-
-    // Target the most specific container: top-bar-actions or conversation-title-container
-    const target =
-      document.querySelector('top-bar-actions') ||
-      document.querySelector('.conversation-title-container') ||
-      document.querySelector('.center-section') ||
-      document.querySelector('header');
-
-    if (!target) {
-      // Container not ready yet, watch for it
-      observer = new MutationObserver(() => {
-        if (document.querySelector('top-bar-actions') || document.querySelector('header')) {
-          attachObserver();
-        }
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
-      return;
-    }
-
-    observer = new MutationObserver(throttledUpdate);
-    observer.observe(target, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-  };
-
-  // Intercept History API for SPA navigation detection
-  const originalPushState = history.pushState.bind(history);
-  const originalReplaceState = history.replaceState.bind(history);
-
-  history.pushState = (...args) => {
-    originalPushState(...args);
-    handleUrlChange();
-  };
-
-  history.replaceState = (...args) => {
-    originalReplaceState(...args);
-    handleUrlChange();
-  };
-
-  // Also listen for browser back/forward
-  window.addEventListener('popstate', handleUrlChange);
-
-  // Initialize
   attachObserver();
   tryUpdateTitle();
+}
+
+function disableTitleUpdater({ restoreTitle }: { restoreTitle: boolean }): void {
+  active = false;
+
+  if (throttleTimer) {
+    clearTimeout(throttleTimer);
+    throttleTimer = null;
+  }
+
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
+
+  if (popstateAttached) {
+    window.removeEventListener('popstate', handleUrlChange);
+    popstateAttached = false;
+  }
+
+  if (restoreTitle) {
+    restoreDefaultTitleIfOwned();
+  }
+
+  lastTitle = '';
+}
+
+function throttledUpdate(): void {
+  if (!active || throttleTimer) return;
+  throttleTimer = setTimeout(() => {
+    throttleTimer = null;
+    if (active) tryUpdateTitle();
+  }, 500);
+}
+
+function handleUrlChange(): void {
+  if (!active || location.href === lastUrl) return;
+
+  lastUrl = location.href;
+  lastTitle = '';
+  attachObserver();
+  tryUpdateTitle();
+}
+
+function attachObserver(): void {
+  if (!active) return;
+  if (observer) observer.disconnect();
+
+  // Target the most specific container: top-bar-actions or conversation-title-container
+  const target =
+    document.querySelector('top-bar-actions') ||
+    document.querySelector('.conversation-title-container') ||
+    document.querySelector('.center-section') ||
+    document.querySelector('header');
+
+  if (!target) {
+    // Container not ready yet, watch for it
+    observer = new MutationObserver(() => {
+      if (!active) return;
+      if (document.querySelector('top-bar-actions') || document.querySelector('header')) {
+        attachObserver();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return;
+  }
+
+  observer = new MutationObserver(throttledUpdate);
+  observer.observe(target, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+}
+
+function patchHistory(): void {
+  if (wrappedPushState && wrappedReplaceState) return;
+
+  if (!wrappedPushState) {
+    originalPushState = history.pushState;
+    wrappedPushState = function pushStateWrapper(
+      this: History,
+      ...args: Parameters<History['pushState']>
+    ): void {
+      originalPushState?.apply(this, args);
+      handleUrlChange();
+    };
+    history.pushState = wrappedPushState;
+  }
+
+  if (!wrappedReplaceState) {
+    originalReplaceState = history.replaceState;
+    wrappedReplaceState = function replaceStateWrapper(
+      this: History,
+      ...args: Parameters<History['replaceState']>
+    ): void {
+      originalReplaceState?.apply(this, args);
+      handleUrlChange();
+    };
+    history.replaceState = wrappedReplaceState;
+  }
+}
+
+function restoreHistoryPatchIfTopLevel(): void {
+  if (wrappedPushState && history.pushState === wrappedPushState && originalPushState) {
+    history.pushState = originalPushState;
+    wrappedPushState = null;
+    originalPushState = null;
+  }
+
+  if (wrappedReplaceState && history.replaceState === wrappedReplaceState && originalReplaceState) {
+    history.replaceState = originalReplaceState;
+    wrappedReplaceState = null;
+    originalReplaceState = null;
+  }
+}
+
+function restoreDefaultTitleIfOwned(): void {
+  if (lastTitle && document.title === `${lastTitle} - Gemini`) {
+    document.title = 'Google Gemini';
+  }
 }
 
 /**
