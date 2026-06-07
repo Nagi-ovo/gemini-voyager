@@ -4062,6 +4062,23 @@ body.light-theme {
   background-color: var(--folder-hover-bg);
 }
 
+.gv-folder-conversation-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gv-folder-conversation-link:visited,
+.gv-folder-conversation-link:hover,
+.gv-folder-conversation-link:active {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* Starred conversation - subtle gold accent on the left */
 .gv-folder-conversation.gv-starred {
   background: linear-gradient(to right, rgba(251, 191, 36, 0.08) 0%, transparent 100%);

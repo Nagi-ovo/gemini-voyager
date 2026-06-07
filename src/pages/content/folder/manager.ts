@@ -1917,6 +1917,14 @@ export class FolderManager {
       this.clearConversationReorderIndicator();
     });
 
+    const link = document.createElement('a');
+    link.className = 'gv-folder-conversation-link';
+    link.href = this.getFolderConversationHref(conv);
+    link.draggable = false;
+    try {
+      (link.style as CSSStyleDeclaration & { webkitUserDrag?: string }).webkitUserDrag = 'none';
+    } catch {}
+
     // Conversation icon - use Gem-specific icons
     const icon = document.createElement('mat-icon');
     icon.className =
@@ -1999,10 +2007,13 @@ export class FolderManager {
       }
     });
 
-    // Click to navigate or toggle selection based on mode
-    convEl.addEventListener('click', (e) => {
+    // Plain left clicks keep the existing SPA navigation path. Modified clicks,
+    // middle clicks, and context-menu actions stay native because the row
+    // contains a real anchor.
+    link.addEventListener('click', (e) => {
       // Prevent navigation if long-press was triggered
       if (longPressTriggered) {
+        e.preventDefault();
         longPressTriggered = false;
         return;
       }
@@ -2026,6 +2037,13 @@ export class FolderManager {
         this.toggleConversationSelection(conv.conversationId);
         this.updateConversationSelectionUI();
       } else {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+          return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
         // Normal mode: navigate to conversation
         this.navigateToConversationById(folderId, conv.conversationId);
       }
@@ -2043,11 +2061,32 @@ export class FolderManager {
       this.showFolderConversationMenu(e, conv);
     });
 
-    convEl.appendChild(icon);
-    convEl.appendChild(title);
+    link.appendChild(icon);
+    link.appendChild(title);
+    convEl.appendChild(link);
     convEl.appendChild(actionsContainer);
 
     return convEl;
+  }
+
+  private getFolderConversationHref(conversation: ConversationReference): string {
+    const normalizedId = this.normalizeConversationId(conversation.conversationId);
+
+    try {
+      const storedUrl = new URL(conversation.url, window.location.origin);
+
+      if (this.accountIsolationEnabled && normalizedId) {
+        const currentUserMatch = window.location.pathname.match(/\/u\/(\d+)\//);
+        const accountPrefix = currentUserMatch ? `/u/${currentUserMatch[1]}` : '';
+        return `${storedUrl.origin}${accountPrefix}/app/${normalizedId}${storedUrl.search}`;
+      }
+
+      return storedUrl.toString();
+    } catch (error) {
+      this.debug('Failed to build folder conversation href:', error);
+    }
+
+    return normalizedId ? this.buildConversationUrlFromId(normalizedId) : window.location.href;
   }
 
   private setupDropZone(element: HTMLElement, folderId: string): void {

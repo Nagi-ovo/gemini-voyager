@@ -24,6 +24,12 @@ vi.mock('@/utils/i18n', () => ({
 
 type TestableManager = {
   data: FolderData;
+  accountIsolationEnabled: boolean;
+  createConversationElement: (
+    conv: ConversationReference,
+    folderId: string,
+    level: number,
+  ) => HTMLElement;
   navigateToConversationById: (folderId: string, conversationId: string) => void;
   markConversationAsRecentlyOpened: (conversationId: string) => void;
   navigateWithFullReload: (url: string) => void;
@@ -142,5 +148,64 @@ describe('folder conversation navigation', () => {
     expect(markSpy).toHaveBeenCalledWith(targetHexId);
     expect(hardNavigateSpy).toHaveBeenCalledTimes(1);
     expect(hardNavigateSpy).toHaveBeenCalledWith(`https://gemini.google.com/app/${targetHexId}`);
+  });
+
+  it('renders folder conversations as real links for browser-native new-tab actions', () => {
+    const targetHexId = '4d5e6f7890abcdef';
+    const conversation = createConversation(targetHexId);
+
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    const navigateSpy = vi
+      .spyOn(typedManager, 'navigateToConversationById')
+      .mockImplementation(() => {});
+
+    const row = typedManager.createConversationElement(conversation, 'folder-1', 1);
+    const link = row.querySelector<HTMLAnchorElement>('a.gv-folder-conversation-link');
+
+    expect(link).not.toBeNull();
+    expect(link?.href).toBe(`https://gemini.google.com/app/${targetHexId}`);
+
+    const plainClick = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
+    expect(link?.dispatchEvent(plainClick)).toBe(false);
+    expect(plainClick.defaultPrevented).toBe(true);
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+    expect(navigateSpy).toHaveBeenCalledWith('folder-1', `c_${targetHexId}`);
+
+    link!.target = '_blank';
+    const ctrlClick = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      ctrlKey: true,
+    });
+    expect(link?.dispatchEvent(ctrlClick)).toBe(true);
+    expect(ctrlClick.defaultPrevented).toBe(false);
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+
+    const middleClick = new MouseEvent('auxclick', {
+      bubbles: true,
+      cancelable: true,
+      button: 1,
+    });
+    expect(link?.dispatchEvent(middleClick)).toBe(true);
+    expect(middleClick.defaultPrevented).toBe(false);
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses the current account prefix for link hrefs when account isolation is enabled', () => {
+    const targetHexId = 'abcdef1234567890';
+    const conversation = createConversation(targetHexId);
+    conversation.url = `https://gemini.google.com/u/1/app/${targetHexId}?hl=en`;
+    window.history.replaceState({}, '', '/u/2/app/original12345678');
+
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    typedManager.accountIsolationEnabled = true;
+
+    const row = typedManager.createConversationElement(conversation, 'folder-1', 1);
+    const link = row.querySelector<HTMLAnchorElement>('a.gv-folder-conversation-link');
+
+    expect(link?.href).toBe(`https://gemini.google.com/u/2/app/${targetHexId}?hl=en`);
   });
 });
