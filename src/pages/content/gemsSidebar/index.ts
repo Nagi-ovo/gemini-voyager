@@ -1,17 +1,27 @@
 /**
- * Gems Sidebar — hangs a thin list of recent gems off Gemini's native
+ * Gems Sidebar — hangs a thin list of recently-used gems off Gemini's native
  * `gem-nav-list-item[data-test-id="gems-side-nav-entry-button"]` so the
  * sidebar reads as if Gemini's own Gems entry expanded inline.
  *
- * Two responsibilities live in this module:
+ * Three responsibilities live in this module:
  *
  *   1. **Scraper** (runs only on `/gems/view`): when the user visits the Gems
  *      management page, parse the rendered `bot-list-row` items and write
- *      them to `chrome.storage.local[GV_GEMS_LIST_CACHE]`. A MutationObserver
- *      keeps the cache in sync as the user reorders, renames, or creates
+ *      them to `chrome.storage.local[GV_GEMS_LIST_CACHE]`. This is the catalog
+ *      of known gems (names/icons/descriptions) and the fallback render order.
+ *      A MutationObserver keeps it in sync as the user reorders/renames/creates
  *      gems — all without any network calls of our own.
  *
- *   2. **Injector** (runs on every Gemini page): when the count preference is
+ *   2. **MRU tracker** (runs on every Gemini page): whenever the user lands on
+ *      a `/gem/<id>` page — a custom OR a premade gem — capture its identity
+ *      off the zero-state hero and push it to the front of
+ *      `chrome.storage.local[GV_GEMS_MRU]`. This is what makes the list reflect
+ *      *recently used* gems rather than the static management-page order, and it
+ *      surfaces premade gems the scraper can't see. The render ranks MRU first,
+ *      newest first, then pads with the catalog; an empty MRU degrades to the
+ *      catalog order (the original behavior).
+ *
+ *   3. **Injector** (runs on every Gemini page): when the count preference is
  *      > 0, append a list element immediately after the native Gems nav
  *      item. The injector survives Gemini's frequent sidebar re-renders the
  *      same way the folder manager does — a per-frame mutation-observed
@@ -46,12 +56,32 @@ interface GemCacheEnvelope {
   cachedAt: number;
 }
 
+/** A gem the user has opened, plus when. Newest first in storage. */
+export interface GemMruEntry extends GemMetadata {
+  lastUsedAt: number;
+}
+
+/** MRU envelope persisted in chrome.storage.local. */
+interface GemMruEnvelope {
+  entries: GemMruEntry[];
+}
+
 const LIST_CLASS = 'gv-gems-inline-list';
 const TOGGLE_CLASS = 'gv-gems-expand-toggle';
 const HOST_CLASS = 'gv-gems-toggle-host';
 const SCRAPE_DEBOUNCE_MS = 300;
 const DEFAULT_COUNT = 3;
 const MAX_COUNT = 10;
+// Keep a little more recent history than we ever render so raising the count
+// (or re-enabling the feature) still has gems to rank.
+const MRU_CAP = 20;
+// The gem zero-state hero renders a tick after we land on /gem/<id>; retry a
+// few times before giving up on capturing its name.
+const MRU_CAPTURE_RETRY_MS = 400;
+const MRU_CAPTURE_MAX_ATTEMPTS = 6;
+// How often to poll the pathname for SPA navigations the pushState wrapper
+// can't see (Gemini's router lives in the page's main world).
+const NAV_POLL_MS = 600;
 const EXPANDED_STORAGE_KEY = 'gvGemsSidebarExpanded';
 
 /** Module-level singleton — only one injector ever needs to run per tab. */
@@ -68,6 +98,11 @@ let injectedList: HTMLElement | null = null;
 let injectedToggle: HTMLElement | null = null;
 let currentCount = 0;
 let currentCache: GemCacheEnvelope = { items: [], cachedAt: 0 };
+let currentMru: GemMruEntry[] = [];
+let mruRetryTimer: number | null = null;
+let mruCaptureAttempts = 0;
+let navPollTimer: number | null = null;
+let lastPolledPath = '';
 // Default to expanded so users see the recent gems immediately the first time
 // they enable the feature; the chevron lets them collapse if they want it
 // out of the way. Persisted in chrome.storage.local.
@@ -156,6 +191,125 @@ async function loadCache(): Promise<GemCacheEnvelope> {
     console.warn('[GemsSidebar] Failed to load gems cache:', error);
   }
   return { items: [], cachedAt: 0 };
+}
+
+// -----------------------------------------------------------------------------
+// MRU (recently-used) tracking
+// -----------------------------------------------------------------------------
+
+async function loadMru(): Promise<GemMruEntry[]> {
+  try {
+    const result = await browser.storage.local.get(StorageKeys.GV_GEMS_MRU);
+    const raw = (result as Record<string, unknown>)[StorageKeys.GV_GEMS_MRU];
+    if (raw && typeof raw === 'object' && Array.isArray((raw as GemMruEnvelope).entries)) {
+      return (raw as GemMruEnvelope).entries.filter(
+        (e): e is GemMruEntry => !!e && typeof e.id === 'string' && typeof e.lastUsedAt === 'number',
+      );
+    }
+  } catch (error) {
+    console.warn('[GemsSidebar] Failed to load gems MRU:', error);
+  }
+  return [];
+}
+
+async function saveMru(entries: GemMruEntry[]): Promise<void> {
+  try {
+    await browser.storage.local.set({ [StorageKeys.GV_GEMS_MRU]: { entries } });
+  } catch (error) {
+    console.warn('[GemsSidebar] Failed to persist gems MRU:', error);
+  }
+}
+
+/**
+ * Read the current gem's identity off a `/gem/<id>` page's zero-state hero.
+ * `.bot-logo-text` is the same logo-letter class the /gems/view scraper uses,
+ * so custom and premade gems resolve identically — no /gems/view visit needed.
+ * Pure (DOM + pathname in, metadata out) so it can be unit-tested. Returns null
+ * when the path isn't a gem page or the hero hasn't rendered its name yet.
+ */
+export function readGemMetadata(pathname: string, doc: Document = document): GemMetadata | null {
+  const parsed = parseGemHref(pathname);
+  if (!parsed) return null;
+  const name = doc.querySelector('.bot-name-container')?.textContent?.trim();
+  if (!name) return null;
+  const iconLetter = doc.querySelector('.bot-logo-text')?.textContent?.trim() || undefined;
+  return { id: parsed.id, href: parsed.path, name, iconLetter };
+}
+
+/**
+ * Merge a freshly-used gem to the front of the MRU list (newest first),
+ * de-duplicating by id and capping the history. Preserves any richer metadata
+ * (e.g. description from the /gems/view scrape) the previous entry carried.
+ * Pure — returns the next list, does not persist.
+ */
+export function upsertMru(mru: GemMruEntry[], meta: GemMetadata, now: number): GemMruEntry[] {
+  const prev = mru.find((e) => e.id === meta.id);
+  const merged: GemMruEntry = { ...prev, ...meta, lastUsedAt: now };
+  return [merged, ...mru.filter((e) => e.id !== meta.id)].slice(0, MRU_CAP);
+}
+
+/**
+ * Final render order: gems the user actually used, newest first, then the
+ * scraped catalog (management-page order) to fill the remaining slots. When the
+ * MRU is empty this degrades to the catalog order — i.e. the original behavior.
+ * Catalog metadata wins for shared ids so descriptions survive. Pure.
+ */
+export function orderGemsByRecency(mru: GemMruEntry[], catalog: GemMetadata[]): GemMetadata[] {
+  const sorted = [...mru].sort((a, b) => b.lastUsedAt - a.lastUsedAt);
+  const byId = new Map(catalog.map((g) => [g.id, g]));
+  const seen = new Set<string>();
+  const out: GemMetadata[] = [];
+  for (const entry of sorted) {
+    if (seen.has(entry.id)) continue;
+    seen.add(entry.id);
+    const cat = byId.get(entry.id);
+    out.push(cat ? { ...entry, ...cat } : entry);
+  }
+  for (const gem of catalog) {
+    if (seen.has(gem.id)) continue;
+    seen.add(gem.id);
+    out.push(gem);
+  }
+  return out;
+}
+
+function clearMruRetry(): void {
+  if (mruRetryTimer !== null) {
+    clearTimeout(mruRetryTimer);
+    mruRetryTimer = null;
+  }
+  mruCaptureAttempts = 0;
+}
+
+/**
+ * If we're on a `/gem/<id>` page, record that gem as just-used (and capture its
+ * name/icon for the sidebar). The hero renders async, so retry a few times
+ * before giving up. No-op when the feature is disabled or we're not on a gem
+ * page.
+ */
+function recordGemUsageFromPage(): void {
+  if (currentCount <= 0) return;
+  if (!parseGemHref(location.pathname)) {
+    clearMruRetry();
+    return;
+  }
+
+  const meta = readGemMetadata(location.pathname);
+  if (!meta) {
+    if (mruCaptureAttempts < MRU_CAPTURE_MAX_ATTEMPTS && mruRetryTimer === null) {
+      mruRetryTimer = window.setTimeout(() => {
+        mruRetryTimer = null;
+        mruCaptureAttempts += 1;
+        recordGemUsageFromPage();
+      }, MRU_CAPTURE_RETRY_MS);
+    }
+    return;
+  }
+
+  clearMruRetry();
+  currentMru = upsertMru(currentMru, meta, Date.now());
+  void saveMru(currentMru);
+  refreshInjector();
 }
 
 function scheduleScrape(): void {
@@ -303,9 +457,14 @@ function refreshExpandedState(): void {
   }
 }
 
+/** Gems to render, ordered by recent use then catalog order. */
+function orderedGems(): GemMetadata[] {
+  return orderGemsByRecency(currentMru, currentCache.items);
+}
+
 /** Mount / re-mount the chevron on the current Gems nav entry. */
 function ensureExpandToggle(): void {
-  if (currentCount <= 0 || currentCache.items.length === 0) {
+  if (currentCount <= 0 || orderedGems().length === 0) {
     removeExpandToggle();
     return;
   }
@@ -367,7 +526,7 @@ function renderSection(): void {
     return;
   }
 
-  const fresh = buildGemsList(currentCache.items, currentCount);
+  const fresh = buildGemsList(orderedGems(), currentCount);
   if (!fresh) {
     cleanupSection();
     return;
@@ -499,6 +658,7 @@ async function loadInitialState(): Promise<void> {
   }
 
   currentCache = await loadCache();
+  currentMru = await loadMru();
 }
 
 function setupStorageListener(): void {
@@ -514,6 +674,14 @@ function setupStorageListener(): void {
       const raw = changes[StorageKeys.GV_GEMS_LIST_CACHE].newValue as GemCacheEnvelope | undefined;
       if (raw && Array.isArray(raw.items)) {
         currentCache = raw;
+        refreshInjector();
+      }
+    }
+    if (areaName === 'local' && changes[StorageKeys.GV_GEMS_MRU]) {
+      // Cross-tab sync: another tab opened a gem.
+      const raw = changes[StorageKeys.GV_GEMS_MRU].newValue as GemMruEnvelope | undefined;
+      if (raw && Array.isArray(raw.entries)) {
+        currentMru = raw.entries;
         refreshInjector();
       }
     }
@@ -549,10 +717,16 @@ export async function startGemsSidebar(): Promise<() => void> {
   }
 
   refreshInjector();
+  // Capture the gem if we loaded directly onto a /gem/<id> page.
+  recordGemUsageFromPage();
 
-  // Also handle SPA navigations into /gems/view post-load.
+  // Back/forward fire a real `popstate` event we can hear.
   window.addEventListener('popstate', handleNavigation);
-  // Patch pushState/replaceState so we catch programmatic navigation.
+  // Patch pushState/replaceState as a fast-path for same-world programmatic
+  // navigation. NOTE: this can't catch Gemini's OWN router — Angular runs in the
+  // page's main world and calls the unpatched main-world history, so an in-app
+  // click to a gem never reaches this wrapper. The poll below is the reliable
+  // catch-all for those forward SPA navigations.
   const origPush = history.pushState;
   const origReplace = history.replaceState;
   history.pushState = function (...args: Parameters<typeof history.pushState>) {
@@ -566,10 +740,25 @@ export async function startGemsSidebar(): Promise<() => void> {
     return r;
   };
 
+  // Reliable navigation detector. Because the pushState wrapper above is blind to
+  // Gemini's main-world router, poll the pathname so opening a gem via an in-app
+  // click (the common case) still records MRU + re-checks the scraper.
+  lastPolledPath = location.pathname;
+  navPollTimer = window.setInterval(() => {
+    if (location.pathname === lastPolledPath) return;
+    lastPolledPath = location.pathname;
+    handleNavigation();
+  }, NAV_POLL_MS);
+
   return () => {
     started = false;
     teardownScrapeObserver();
     teardownPositionEnforcer();
+    clearMruRetry();
+    if (navPollTimer !== null) {
+      clearInterval(navPollTimer);
+      navPollTimer = null;
+    }
     cleanupSection();
     window.removeEventListener('popstate', handleNavigation);
     history.pushState = origPush;
@@ -591,5 +780,7 @@ function handleNavigation(): void {
       teardownScrapeObserver();
     }
     refreshInjector();
+    // Record the gem when navigating into a /gem/<id> page (custom or premade).
+    recordGemUsageFromPage();
   }, 250);
 }

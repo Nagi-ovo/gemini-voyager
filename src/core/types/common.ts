@@ -147,6 +147,12 @@ export const StorageKeys = {
   // { items: GemMetadata[]; cachedAt: number }. Falls into local (not sync)
   // because gem rosters can be sizeable + sync quota is precious.
   GV_GEMS_LIST_CACHE: 'gvGemsListCache',
+  // Most-recently-used gems, newest first. Stored as
+  // { entries: Array<GemMetadata & { lastUsedAt: number }> }. Captured when the
+  // user opens a `/gem/<id>` page (custom OR premade), so the sidebar ranks gems
+  // by recent use rather than by the static management-page order. Local for the
+  // same quota reason as the list cache.
+  GV_GEMS_MRU: 'gvGemsMru',
   // 'above-recents' (default) anchors the folder panel just above the Recents
   // expandable-section; 'above-notebooks' anchors it above the Notebooks
   // section instead. Persisted in chrome.storage.local since it's a UI-only
