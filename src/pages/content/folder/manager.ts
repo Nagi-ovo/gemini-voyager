@@ -289,6 +289,13 @@ export class FolderManager {
   private floatingFallbackActive: boolean = false;
   private folderRecoveryTimer: number | null = null;
   private folderRecoveryInFlight: boolean = false;
+  // Long-lived DOM-recovery watchers. Deliberately NOT registered via
+  // `addCleanupTask`, so `reinitializeFolderUI`'s `runCleanupTasks()` cannot tear
+  // them down: a reinit that bails mid-transition (sidebar/anchor not present yet)
+  // must still leave the self-heal machinery running. Cleared only on full
+  // teardown (`destroy` / `teardownMountedFolderRuntime`).
+  private domRecoveryHandler: (() => void) | null = null;
+  private domRecoveryDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     // Create storage adapter based on browser (Factory Pattern)
@@ -432,6 +439,8 @@ export class FolderManager {
       clearInterval(this.navPoller);
       this.navPoller = null;
     }
+    this.teardownDomRecoveryWatchers();
+    this.folderRecoveryInFlight = false;
     this.clearConversationReorderIndicator();
 
     // Disconnect mutation observers
@@ -560,10 +569,7 @@ export class FolderManager {
       this.navPoller = null;
     }
 
-    if (this.folderRecoveryTimer !== null) {
-      clearInterval(this.folderRecoveryTimer);
-      this.folderRecoveryTimer = null;
-    }
+    this.teardownDomRecoveryWatchers();
     this.folderRecoveryInFlight = false;
     this.floatingFallbackActive = false;
 
@@ -682,6 +688,20 @@ export class FolderManager {
       return;
     }
 
+    // Arm the self-heal watchers as soon as a sidebar exists — BEFORE the
+    // `recentSection` bail below and before `createFolderUI`. Gemini rebuilds the
+    // sidebar when the window crosses its mobile breakpoint, stripping our folder
+    // out; recovery then calls `reinitializeFolderUI`, whose `runCleanupTasks()`
+    // runs first. If this init then bails (chats anchor not present yet, mid-drag),
+    // the watchers must already be live or the feature can never self-heal and the
+    // folder stays gone until a full page reload. The watchers are lifetime-scoped
+    // (not cleanup tasks) so they survive that `runCleanupTasks()`; this call just
+    // guarantees they're armed even when the first mount lands via the
+    // `findRecentSection` retry rather than this method's tail. Idempotent, and the
+    // synchronous mount steps below can't be interrupted by the 2s tick, so no
+    // floating-fallback flash. See `ensureDomRecoveryWatchers`.
+    this.ensureDomRecoveryWatchers();
+
     // Find the Recent section
     this.findRecentSection();
 
@@ -704,74 +724,86 @@ export class FolderManager {
     // Set up native conversation menu injection
     this.setupConversationClickTracking();
     this.setupNativeConversationMenuObserver();
+  }
 
-    // ─── DOM recovery (resize / print) ─────────────────────────────────────
-    // Gemini may re-render the sidebar DOM during window resize or
-    // window.print(), detaching the folder container.  The sideNavObserver
-    // (watching `side-nav-open` on #app-root) CANNOT catch all cases because
-    // when the sidebar closes AND the DOM is rebuilt simultaneously, the
-    // observer fires with isSideNavOpen=false and skips reinitialization.
-    // A debounced resize listener provides a reliable fallback.
-    let domRecoveryTimer: ReturnType<typeof setTimeout> | null = null;
+  /**
+   * Arm the long-lived DOM-recovery watchers: a debounced resize/print listener
+   * plus the watchdog interval.
+   *
+   * Why these are lifetime-scoped and idempotent (NOT per-init cleanup tasks):
+   * Gemini re-renders the sidebar DOM during window resize / window.print() /
+   * the narrow-viewport mobile breakpoint, detaching the folder container. The
+   * `sideNavObserver` (watching `side-nav-open` on #app-root) can't catch every
+   * case — when the sidebar closes AND the DOM is rebuilt at once it fires with
+   * isSideNavOpen=false and skips reinit.
+   *
+   *  - The debounced resize/print listener is a single-shot fallback for the
+   *    common resize / split-screen / print cases.
+   *  - The 2s watchdog interval *pulls*: it inspects what Gemini currently
+   *    offers and decides whether the sidebar folder is recoverable now, or
+   *    whether to surface the floating panel as a temporary fallback.
+   *
+   * Both are re-armed at the TOP of `initializeFolderUI` so that a reinit which
+   * bails mid-transition (anchor not present yet) still leaves self-heal alive.
+   * If they were torn down by `reinitializeFolderUI`'s `runCleanupTasks()` and
+   * not re-armed before the bail, the folder would stay gone until a full page
+   * reload.
+   */
+  private ensureDomRecoveryWatchers(): void {
+    if (!this.domRecoveryHandler) {
+      const domRecoveryCheck = () => {
+        if (this.domRecoveryDebounceTimer !== null) clearTimeout(this.domRecoveryDebounceTimer);
+        this.domRecoveryDebounceTimer = setTimeout(() => {
+          this.domRecoveryDebounceTimer = null;
+          if (this.isDestroyed) return;
+          if (this.isSidebarFolderMountedInCurrentSidebar()) {
+            return; // Everything still attached – nothing to do.
+          }
+          // Only reinitialize if the sidebar is currently visible (open).
+          // If it is closed, the sideNavObserver will trigger reinitialization
+          // when it reopens.
+          const appRoot = document.querySelector('#app-root');
+          if (appRoot && !appRoot.classList.contains('side-nav-open')) {
+            this.debug('DOM recovery: container lost but sidebar closed, deferring');
+            return;
+          }
+          this.debug('DOM recovery: folder UI lost from DOM, reinitializing');
+          this.reinitializeFolderUI();
+        }, 800);
+      };
+      this.domRecoveryHandler = domRecoveryCheck;
+      window.addEventListener('resize', domRecoveryCheck);
+      window.addEventListener('gv-print-cleanup', domRecoveryCheck);
+      window.addEventListener('afterprint', domRecoveryCheck);
+    }
 
-    const domRecoveryCheck = () => {
-      if (domRecoveryTimer !== null) clearTimeout(domRecoveryTimer);
-      domRecoveryTimer = setTimeout(() => {
-        domRecoveryTimer = null;
-        if (this.isDestroyed) return;
-        if (
-          this.containerElement &&
-          document.body.contains(this.containerElement) &&
-          this.sidebarContainer &&
-          document.body.contains(this.sidebarContainer)
-        ) {
-          return; // Everything still attached – nothing to do.
-        }
-        // Only reinitialize if the sidebar is currently visible (open).
-        // If it is closed, the sideNavObserver will trigger reinitialization
-        // when it reopens.
-        const appRoot = document.querySelector('#app-root');
-        if (appRoot && !appRoot.classList.contains('side-nav-open')) {
-          this.debug('DOM recovery: container lost but sidebar closed, deferring');
-          return;
-        }
-        this.debug('DOM recovery: folder UI lost from DOM, reinitializing');
-        this.reinitializeFolderUI();
-      }, 800);
-    };
-
-    window.addEventListener('resize', domRecoveryCheck);
-    window.addEventListener('gv-print-cleanup', domRecoveryCheck);
-    window.addEventListener('afterprint', domRecoveryCheck);
-
-    // Long-running watchdog. The single-shot recovery above wins the common
-    // resize / split-screen / print cases, but when Gemini swaps to its
-    // narrow-viewport mobile layout it tears the desktop sidebar out entirely
-    // and our sidebar anchor disappears. The user might pull the window wide
-    // again before Gemini finishes restoring the desktop sidebar, so the
-    // sideNavObserver mutation we'd otherwise rely on can fire mid-transition
-    // and bail. This tick instead pulls: every couple of seconds it inspects
-    // what Gemini *currently* offers and decides whether the sidebar folder is
-    // recoverable now, or whether we should surface the floating panel as a
-    // temporary fallback until it is.
     if (this.folderRecoveryTimer === null) {
       this.folderRecoveryTimer = window.setInterval(() => {
         void this.runFolderRecoveryTick();
       }, 2000);
-      this.addCleanupTask(() => {
-        if (this.folderRecoveryTimer !== null) {
-          clearInterval(this.folderRecoveryTimer);
-          this.folderRecoveryTimer = null;
-        }
-      });
     }
+  }
 
-    this.addCleanupTask(() => {
-      if (domRecoveryTimer !== null) clearTimeout(domRecoveryTimer);
-      window.removeEventListener('resize', domRecoveryCheck);
-      window.removeEventListener('gv-print-cleanup', domRecoveryCheck);
-      window.removeEventListener('afterprint', domRecoveryCheck);
-    });
+  /**
+   * Tear down the lifetime-scoped DOM-recovery watchers. Called only from full
+   * teardown paths (`destroy`, `teardownMountedFolderRuntime`) — never from
+   * `reinitializeFolderUI`, which relies on these surviving.
+   */
+  private teardownDomRecoveryWatchers(): void {
+    if (this.domRecoveryDebounceTimer !== null) {
+      clearTimeout(this.domRecoveryDebounceTimer);
+      this.domRecoveryDebounceTimer = null;
+    }
+    if (this.domRecoveryHandler) {
+      window.removeEventListener('resize', this.domRecoveryHandler);
+      window.removeEventListener('gv-print-cleanup', this.domRecoveryHandler);
+      window.removeEventListener('afterprint', this.domRecoveryHandler);
+      this.domRecoveryHandler = null;
+    }
+    if (this.folderRecoveryTimer !== null) {
+      clearInterval(this.folderRecoveryTimer);
+      this.folderRecoveryTimer = null;
+    }
   }
 
   /**
@@ -801,16 +833,16 @@ export class FolderManager {
     if (this.reinitializePromise) return;
     if (this.folderRecoveryInFlight) return;
 
-    const sidebarFolderAlive =
-      !!this.containerElement && document.body.contains(this.containerElement);
-    const overflow = document.querySelector('[data-test-id="overflow-container"]');
-    const sidebarAnchor = overflow
-      ? overflow.querySelector(
-          'expandable-section[data-test-id="chats-expandable-section"], [data-test-id="all-conversations"]',
-        )
-      : null;
+    const currentSidebar = this.findCurrentSidebarContainer();
+    const sidebarAnchor = currentSidebar ? this.findFolderAnchorCandidateIn(currentSidebar) : null;
+    const sidebarFolderAlive = this.isSidebarFolderMountedInCurrentSidebar(currentSidebar);
 
     if (sidebarFolderAlive) {
+      if (currentSidebar && this.sidebarContainer !== currentSidebar) {
+        this.sidebarContainer = currentSidebar;
+        this.setupNativeSidebarConversationEnhancements();
+        this.setupPositionEnforcer();
+      }
       // The sidebar is hosting the folder right now. If we left a floating
       // fallback up from a previous transition, retire it.
       if (this.floatingFallbackActive) {
@@ -883,7 +915,7 @@ export class FolderManager {
     return new Promise((resolve) => {
       const deadline = Date.now() + timeoutMs;
       const checkSidebar = () => {
-        const container = document.querySelector('[data-test-id="overflow-container"]');
+        const container = this.findCurrentSidebarContainer();
         if (container) {
           this.sidebarContainer = container as HTMLElement;
           resolve(true);
@@ -905,7 +937,7 @@ export class FolderManager {
   }
 
   private setupFloatingModeSidebarInteractions(): void {
-    const existingSidebar = document.querySelector('[data-test-id="overflow-container"]');
+    const existingSidebar = this.findCurrentSidebarContainer();
     if (existingSidebar instanceof HTMLElement) {
       this.sidebarContainer = existingSidebar;
       this.setupNativeSidebarConversationEnhancements();
@@ -1197,7 +1229,11 @@ export class FolderManager {
    */
   private findNotebooksSectionCandidate(): HTMLElement | null {
     if (!this.sidebarContainer) return null;
-    const notebooks = this.sidebarContainer.querySelector(
+    return this.findNotebooksSectionCandidateIn(this.sidebarContainer);
+  }
+
+  private findNotebooksSectionCandidateIn(sidebar: HTMLElement): HTMLElement | null {
+    const notebooks = sidebar.querySelector(
       'expandable-section[data-test-id="notebooks-expandable-section"]',
     );
     return notebooks instanceof HTMLElement ? notebooks : null;
@@ -1210,11 +1246,16 @@ export class FolderManager {
    * section isn't present (e.g. legacy layout, not signed in to Notebooks).
    */
   private findFolderAnchorCandidate(): HTMLElement | null {
+    if (!this.sidebarContainer) return null;
+    return this.findFolderAnchorCandidateIn(this.sidebarContainer);
+  }
+
+  private findFolderAnchorCandidateIn(sidebar: HTMLElement): HTMLElement | null {
     if (this.folderAnchor === 'above-notebooks') {
-      const notebooks = this.findNotebooksSectionCandidate();
+      const notebooks = this.findNotebooksSectionCandidateIn(sidebar);
       if (notebooks) return notebooks;
     }
-    return this.findRecentSectionCandidate();
+    return this.findRecentSectionCandidateIn(sidebar);
   }
 
   /**
@@ -1227,28 +1268,29 @@ export class FolderManager {
    */
   private findRecentSectionCandidate(): HTMLElement | null {
     if (!this.sidebarContainer) return null;
+    return this.findRecentSectionCandidateIn(this.sidebarContainer);
+  }
 
+  private findRecentSectionCandidateIn(sidebar: HTMLElement): HTMLElement | null {
     const promoteToSection = (el: Element | null): Element | null =>
       el ? (el.closest('expandable-section') ?? el) : null;
 
-    let conversationsList: Element | null = this.sidebarContainer.querySelector(
+    let conversationsList: Element | null = sidebar.querySelector(
       'expandable-section[data-test-id="chats-expandable-section"]',
     );
 
     if (!conversationsList) {
       conversationsList = promoteToSection(
-        this.sidebarContainer.querySelector('[data-test-id="all-conversations"]'),
+        sidebar.querySelector('[data-test-id="all-conversations"]'),
       );
     }
 
     if (!conversationsList) {
-      conversationsList = promoteToSection(this.sidebarContainer.querySelector('.chat-history'));
+      conversationsList = promoteToSection(sidebar.querySelector('.chat-history'));
     }
 
     if (!conversationsList) {
-      const conversationItems = this.sidebarContainer.querySelectorAll(
-        '[data-test-id="conversation"]',
-      );
+      const conversationItems = sidebar.querySelectorAll('[data-test-id="conversation"]');
       if (conversationItems.length > 0) {
         conversationsList =
           conversationItems[0].closest('expandable-section') ??
@@ -1257,6 +1299,29 @@ export class FolderManager {
     }
 
     return conversationsList instanceof HTMLElement ? conversationsList : null;
+  }
+
+  private findCurrentSidebarContainer(): HTMLElement | null {
+    const candidates = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-test-id="overflow-container"]'),
+    );
+    if (candidates.length === 0) return null;
+
+    const visible = candidates.find((candidate) => {
+      const rect = candidate.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+
+    return visible ?? candidates[0];
+  }
+
+  private isSidebarFolderMountedInCurrentSidebar(
+    currentSidebar: HTMLElement | null = this.findCurrentSidebarContainer(),
+  ): boolean {
+    if (!this.containerElement || !document.body.contains(this.containerElement)) return false;
+    if (!currentSidebar || !document.body.contains(currentSidebar)) return false;
+    if (!currentSidebar.contains(this.containerElement)) return false;
+    return !!this.findFolderAnchorCandidateIn(currentSidebar);
   }
 
   private findRecentSection(): void {
@@ -1380,6 +1445,16 @@ export class FolderManager {
 
   private createFolderUI(): void {
     if (!this.recentSection) return;
+
+    // Idempotency guard. A pending `findRecentSection` retry timer can race the
+    // recovery-driven reinit and reach this while a container already exists;
+    // since the recovery watchers now stay armed across reinit, that reinit is
+    // more reliable and the race is easier to hit. Drop any prior container
+    // first so we never strand a duplicate folder in the sidebar.
+    if (this.containerElement) {
+      this.containerElement.remove();
+      this.containerElement = null;
+    }
 
     // Create folder container
     this.containerElement = document.createElement('div');
@@ -3016,33 +3091,25 @@ export class FolderManager {
 
     const isSideNavOpen = appRoot.classList.contains('side-nav-open');
 
-    // Check if containerElement exists AND is still in the DOM
-    // During screen resize (e.g., split-screen to fullscreen), Gemini may re-render the sidebar DOM,
-    // causing containerElement to become detached from the DOM tree
-    if (!this.containerElement || !document.body.contains(this.containerElement)) {
+    // During resize Gemini can keep the old sidebar attached while mounting a
+    // new visible sidebar. Treat the folder as healthy only when it lives under
+    // the current sidebar and that sidebar still exposes an anchor section.
+    if (!this.isSidebarFolderMountedInCurrentSidebar()) {
       if (isSideNavOpen) {
-        this.debug('Container element not in DOM, reinitializing folder UI');
-        // Reinitialize the entire folder UI asynchronously
-        // This ensures sidebarContainer and recentSection are also re-found
+        this.debug('Folder UI is not mounted in the current sidebar, reinitializing');
         this.reinitializeFolderUI();
       }
       return;
     }
 
-    // Also check if sidebarContainer is still valid
-    if (!this.sidebarContainer || !document.body.contains(this.sidebarContainer)) {
-      if (isSideNavOpen) {
-        this.debug('Sidebar container not in DOM, reinitializing folder UI');
-        this.reinitializeFolderUI();
-      }
-      return;
-    }
+    const containerElement = this.containerElement;
+    if (!containerElement) return;
 
     if (isSideNavOpen) {
-      this.containerElement.style.display = '';
+      containerElement.style.display = '';
       this.debug('Sidebar open - showing folder container');
     } else {
-      this.containerElement.style.display = 'none';
+      containerElement.style.display = 'none';
       this.debug('Sidebar closed - hiding folder container');
     }
   }

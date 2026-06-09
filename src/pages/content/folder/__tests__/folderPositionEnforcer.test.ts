@@ -45,6 +45,15 @@ type TestableManager = {
   notebooksAnchorButton: HTMLElement | null;
   enforceFolderAboveRecents: () => boolean;
   setupPositionEnforcer: () => void;
+  runFolderRecoveryTick: () => Promise<void>;
+  reinitializeFolderUI: () => void;
+  initializeFolderUI: () => Promise<void>;
+  ensureDomRecoveryWatchers: () => void;
+  teardownDomRecoveryWatchers: () => void;
+  runCleanupTasks: () => void;
+  folderRecoveryTimer: number | null;
+  domRecoveryHandler: (() => void) | null;
+  findCurrentSidebarContainer: () => HTMLElement | null;
   ensureNotebooksAnchorButton: () => void;
   cleanupNotebooksAnchorButton: () => void;
   findRecentSectionCandidate: () => HTMLElement | null;
@@ -86,6 +95,23 @@ function mountFolderContainer(parent: HTMLElement, beforeRecents: HTMLElement): 
   container.className = 'gv-folder-container';
   parent.insertBefore(container, beforeRecents);
   return container;
+}
+
+function mockRect(element: HTMLElement, width: number, height: number): void {
+  Object.defineProperty(element, 'getBoundingClientRect', {
+    configurable: true,
+    value: () => ({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: width,
+      bottom: height,
+      width,
+      height,
+      toJSON: () => ({}),
+    }),
+  });
 }
 
 describe('folder position enforcer (above Recents)', () => {
@@ -383,5 +409,98 @@ describe('folder position enforcer (above Recents)', () => {
 
     expect(container.nextElementSibling).toBe(newRecents);
     expect(typed.recentSection).toBe(newRecents);
+  });
+
+  it('reinitializes when resize leaves the folder in a hidden old sidebar', async () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    const oldLayout = mountSidebar();
+    const container = mountFolderContainer(oldLayout.sectionParent, oldLayout.recentsSection);
+    mockRect(oldLayout.sidebar, 0, 0);
+
+    const newLayout = mountSidebar();
+    mockRect(newLayout.sidebar, 280, 800);
+
+    typed.sidebarContainer = oldLayout.sidebar;
+    typed.recentSection = oldLayout.recentsSection;
+    typed.containerElement = container;
+    typed.folderEnabled = true;
+    typed.floatingModeActive = false;
+
+    const reinitializeSpy = vi.spyOn(typed, 'reinitializeFolderUI').mockImplementation(() => {});
+
+    await typed.runFolderRecoveryTick();
+
+    expect(typed.findCurrentSidebarContainer()).toBe(newLayout.sidebar);
+    expect(reinitializeSpy).toHaveBeenCalledTimes(1);
+  });
+
+  // Regression: dragging the window across Gemini's mobile breakpoint strips the
+  // folder and fires a recovery reinit. `reinitializeFolderUI` runs
+  // `runCleanupTasks()` BEFORE re-running `initializeFolderUI`; if that init bails
+  // mid-transition (chats anchor not present yet), the self-heal watchers must NOT
+  // have been torn down, or the folder stays gone until a full page reload and
+  // widening the window never re-triggers recovery. The watchers are therefore
+  // lifetime-scoped (not cleanup tasks) and survive `runCleanupTasks()`.
+  it('keeps the DOM-recovery watchers armed across a reinit teardown', () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    const addSpy = vi.spyOn(window, 'addEventListener');
+    const removeSpy = vi.spyOn(window, 'removeEventListener');
+
+    typed.ensureDomRecoveryWatchers();
+
+    // The resize listener and the 2s watchdog interval are now armed.
+    expect(typed.folderRecoveryTimer).not.toBeNull();
+    expect(typed.domRecoveryHandler).not.toBeNull();
+    const armedHandler = typed.domRecoveryHandler;
+    expect(addSpy).toHaveBeenCalledWith('resize', armedHandler);
+
+    // `reinitializeFolderUI` runs this first. The watchers must survive it.
+    typed.runCleanupTasks();
+
+    expect(typed.folderRecoveryTimer).not.toBeNull();
+    expect(typed.domRecoveryHandler).toBe(armedHandler);
+    expect(removeSpy).not.toHaveBeenCalledWith('resize', armedHandler);
+
+    // Idempotent: a second arm (e.g. the top of a re-run init) is a no-op and
+    // never stacks a duplicate resize listener.
+    addSpy.mockClear();
+    typed.ensureDomRecoveryWatchers();
+    expect(addSpy).not.toHaveBeenCalledWith('resize', expect.anything());
+
+    // Full teardown actually removes them.
+    typed.teardownDomRecoveryWatchers();
+    expect(typed.folderRecoveryTimer).toBeNull();
+    expect(typed.domRecoveryHandler).toBeNull();
+    expect(removeSpy).toHaveBeenCalledWith('resize', armedHandler);
+  });
+
+  // Regression: the partial mount done by `findRecentSection`'s retry timer can
+  // race the recovery-driven reinit. `createFolderUI` must drop any existing
+  // container first so the race can't strand a duplicate folder in the sidebar.
+  it('does not strand a duplicate container when createFolderUI runs twice', () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager &
+      Record<'createFolderUI', () => void> & { data: unknown };
+
+    const { sidebar, sectionParent, recentsSection } = mountSidebar();
+    typed.sidebarContainer = sidebar;
+    typed.recentSection = recentsSection;
+    typed.folderEnabled = true;
+    typed.floatingModeActive = false;
+
+    typed.createFolderUI();
+    const first = typed.containerElement;
+    expect(first).not.toBeNull();
+    expect(sectionParent.querySelectorAll('.gv-folder-container')).toHaveLength(1);
+
+    // Second call (the racing retry) must replace, not duplicate.
+    typed.createFolderUI();
+    expect(sectionParent.querySelectorAll('.gv-folder-container')).toHaveLength(1);
+    expect(first?.isConnected).toBe(false);
+    expect(typed.containerElement?.isConnected).toBe(true);
   });
 });
