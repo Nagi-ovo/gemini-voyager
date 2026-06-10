@@ -475,7 +475,9 @@ let sequenceCounter = 0;
 
 const LARGE_WARNING_AUTO_DISMISS_MS = 8000;
 const PROCESSING_FALLBACK_AUTO_DISMISS_MS = 35000;
-const DOWNLOAD_INTENT_TTL_MS = 10000;
+// Gemini can spend more than 10s walking the download chain on slow networks
+// before the final rd-gg/rd-gg-dl image request appears.
+const DOWNLOAD_INTENT_TTL_MS = 60000;
 
 type DownloadToastSequence = {
   id: number;
