@@ -33,9 +33,12 @@ describe('userLatex dynamic KaTeX rendering', () => {
   it('lazily loads KaTeX and renders math when a user message contains LaTeX', async () => {
     const el = makeUserMessage('Euler: $e^{i\\pi}+1=0$ done');
     startUserLatex();
-    await flush();
 
-    expect(renderToString).toHaveBeenCalled();
+    // The mocked dynamic import('katex') can span several macrotasks under
+    // full-suite load, so poll instead of a single setTimeout(0) flush —
+    // otherwise the late continuation also leaks into the next test.
+    await vi.waitFor(() => expect(renderToString).toHaveBeenCalled());
+
     expect(el.dataset.userLatexProcessed).toBe('1');
     expect(el.querySelector('.katex-rendered')).not.toBeNull();
   });
