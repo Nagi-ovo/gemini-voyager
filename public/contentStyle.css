@@ -8548,6 +8548,13 @@ body.gv-rtl .gv-timestamp {
   padding: 4px 0;
 }
 
+/* Gemini's text-input-field clips its subtree (overflow: hidden), which would
+   truncate the upward-opening dropdown to the input bar's height; lift the
+   clip only while the dropdown is open. */
+.text-input-field:has(.gv-fp-dropdown:not([hidden])) {
+  overflow: visible !important;
+}
+
 .theme-host.light-theme .gv-fp-dropdown {
   background-color: #ffffff;
   border: 1px solid #dadce0;
