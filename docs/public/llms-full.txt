@@ -19,10 +19,11 @@ The extension is built with TypeScript and React, uses Manifest V3 for cross-bro
 
 ### Extension Stores (Recommended)
 
-- **Chrome / Brave / Opera / Vivaldi**: Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi)
-- **Microsoft Edge**: Install from [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+- **Chrome / Edge / Brave / Opera / Vivaldi**: Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi)
 - **Firefox**: Install from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
 - **Safari (macOS)**: Download the pre-signed `.dmg` from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
+
+Edge users should install Voyager from the Chrome Web Store. The dedicated Edge Add-ons build is no longer recommended because Edge store reviews are too slow.
 
 ### Manual Installation (Latest Features)
 
@@ -232,7 +233,7 @@ Voyager is designed with privacy as a core principle:
 | Browser | Status | Notes |
 |---------|--------|-------|
 | Chrome | Full support | Primary development target |
-| Microsoft Edge | Full support | 50k+ users on Edge Add-ons |
+| Microsoft Edge | Full support | Install via Chrome Web Store |
 | Firefox | Full support | Signed XPI for permanent installation |
 | Safari (macOS) | Supported | No watermark removal, no image export (use PDF), no cloud sync |
 | Opera | Full support | Install via Chrome Web Store |
@@ -265,6 +266,5 @@ Voyager welcomes contributions. See the [Contributing Guide](https://github.com/
 - Documentation: https://voyager.nagi.fun/en/
 - GitHub: https://github.com/Nagi-ovo/gemini-voyager
 - Chrome Web Store: https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi
-- Edge Add-ons: https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne
 - Firefox Add-ons: https://addons.mozilla.org/firefox/addon/gemini-voyager/
 - Privacy Policy: https://voyager.nagi.fun/en/privacy

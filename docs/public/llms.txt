@@ -6,8 +6,7 @@
 
 - [Documentation](https://voyager.nagi.fun/en/)
 - [GitHub](https://github.com/Nagi-ovo/gemini-voyager)
-- [Chrome Web Store](https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi)
-- [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+- [Chrome Web Store](https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi) (also recommended for Edge)
 - [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
 - [Privacy Policy](https://voyager.nagi.fun/en/privacy)
 - [Installation Guide](https://voyager.nagi.fun/en/guide/installation)

@@ -1,6 +1,6 @@
 ---
 name: release
-description: Cut a new gemini-voyager release — open-issue triage, preflight checks, version bump, 10-locale changelog, commit, tag, push, curated GitHub release body, Edge store zip, and Safari DMG. Use whenever the user says "发版", "release", "bump", "cut a release", "ship vX.Y.Z", or otherwise signals shipping a new version. Also use when the user wants just an Edge zip or Safari DMG for an existing release.
+description: Cut a new gemini-voyager release — open-issue triage, preflight checks, version bump, 10-locale changelog, commit, tag, push, curated GitHub release body, Chrome/Firefox artifacts, optional legacy Edge zip, and Safari DMG. Use whenever the user says "发版", "release", "bump", "cut a release", "ship vX.Y.Z", or otherwise signals shipping a new version. Also use when the user wants just an Edge compatibility zip or Safari DMG for an existing release.
 user-invocable: true
 metadata:
   version: "1.0.0"
@@ -20,7 +20,7 @@ Release Progress:
 - [ ] Step 4: Commit + tag locally
 - [ ] Step 5: Push (user confirmation required — external action)
 - [ ] Step 6: Curated GitHub release body (separate EN + ZH sections)
-- [ ] Step 7: Edge build (store zip — local only, not uploaded to GitHub release)
+- [ ] Step 7: Optional Edge compatibility zip (only if explicitly requested)
 - [ ] Step 8: Safari DMG sub-flow (Xcode-gated)
 - [ ] Step 9: Final check
 ```
@@ -122,9 +122,13 @@ This is a judgment step — filtering commits, writing short descriptions in eac
 
 If the workflow's `## 📥 Installation` marker is missing (e.g., workflow failed partway), don't blindly strip — check what's there first, then paste the Installation block from the workflow YAML manually.
 
-## Step 7 — Edge build (local artifact only)
+## Step 7 — Optional Edge compatibility zip
 
-Edge Add-ons store rejects Chrome's `manifest.json` `key` field, so Edge gets its own zip. The release workflow doesn't build it. Build locally:
+Voyager no longer recommends a dedicated Edge Add-ons build because Edge store reviews are too slow. Edge users should install Voyager from the Chrome Web Store; the Chrome Web Store build works in Edge.
+
+Skip this step during normal releases. Only run it when the user explicitly asks for an Edge compatibility zip or says they still want to submit a build to the Edge Add-ons partner dashboard.
+
+If needed, build locally:
 
 ```bash
 bun run build:edge
@@ -135,19 +139,17 @@ bun run build:edge
 2. Strips `key` from `dist_chrome/manifest.json`
 3. Zips the contents of `dist_chrome/` as `voyager-edge-v{VERSION}.zip` in the repo root
 
-**Do NOT upload this zip to the GitHub release.** Edge users should install via the Edge Add-ons store, not sideload a github asset — sideloading bypasses store updates. The zip exists solely so the maintainer can hand-submit it to the Edge Add-ons partner dashboard. `.gitignore` covers `voyager-edge-v*.zip` so it stays untracked.
+**Do NOT upload this zip to the GitHub release.** It exists only as an optional compatibility artifact for manual Edge Add-ons submission. `.gitignore` covers `voyager-edge-v*.zip` so it stays untracked.
 
-Side-effect: `dist_chrome/` is now the Edge variant (no `key`), not the Chrome Web Store build. The Chrome Web Store zip is built and uploaded by the release workflow on tag push, so this is harmless after the release; but if you plan to dev-load Chrome locally afterwards, re-run `bun run build:chrome` to restore.
+Side-effect: `dist_chrome/` is now the Edge variant (no `key`), not the Chrome Web Store build. If you plan to dev-load Chrome locally afterwards, re-run `bun run build:chrome` to restore.
 
-Runs anywhere — no Xcode, no code signing. Do this even when skipping the Safari DMG.
+Runs anywhere — no Xcode, no code signing.
 
-After the build, download the CI-built Chrome zip (the local `dist_chrome/` is now the Edge variant without `key`), reveal the Edge zip in Finder, and open both store dashboards so the user can upload:
+If the user requested this artifact, reveal the Edge zip in Finder and open the Edge dashboard:
 
 ```bash
-gh release download v{VERSION} --pattern "voyager-chrome-v{VERSION}.zip" --clobber
 open -R voyager-edge-v{VERSION}.zip
 open https://partner.microsoft.com/en-us/dashboard/microsoftedge/overview
-open "https://chrome.google.com/webstore/devconsole"
 ```
 
 ## Step 8 — Safari DMG sub-flow
@@ -161,7 +163,7 @@ xcodebuild -version 2>&1
 ```
 
 - If it prints a version (e.g., `Xcode 15.4`): proceed to **references/safari-dmg.md** for the full flow.
-- If it prints `xcode-select: error: tool 'xcodebuild' requires Xcode, but active developer directory ... is a command line tools instance`: tell the user they can't build the DMG here, note that the GitHub Release went out with just Chrome/Firefox, and show them how to finish later on a machine with Xcode:
+- If it prints `xcode-select: error: tool 'xcodebuild' requires Xcode, but active developer directory ... is a command line tools instance`: tell the user they can't build the DMG here, note that the GitHub Release went out with Chrome/Firefox (Edge users should use the Chrome Web Store build), and show them how to finish later on a machine with Xcode:
   ```
   # On a machine with Xcode.app
   ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
@@ -173,7 +175,7 @@ xcodebuild -version 2>&1
 ## Step 9 — Final check
 
 - Open the new release page: `gh release view v{VERSION} --web` (only if user asks).
-- Confirm asset list. Expected: `voyager-chrome-v{VERSION}.zip`, `voyager-firefox-v{VERSION}.xpi`, and (if Safari sub-flow ran) `voyager-v{VERSION}.dmg`. The Edge zip from Step 7 lives only on disk, never on the release page.
+- Confirm asset list. Expected: `voyager-chrome-v{VERSION}.zip`, `voyager-firefox-v{VERSION}.xpi`, and (if Safari sub-flow ran) `voyager-v{VERSION}.dmg`. Any Edge zip from Step 7 lives only on disk, never on the release page.
 - Summarize in one line what was shipped and what's still pending (if Safari was deferred).
 
 ## What NOT to do
