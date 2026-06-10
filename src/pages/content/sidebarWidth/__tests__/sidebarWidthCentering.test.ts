@@ -91,4 +91,16 @@ describe('sidebar width title centering', () => {
     expect(code).toContain('#app-root > main > div > bard-mode-switcher side-nav-sparkle-button');
     expect(code).toContain('#app-root > main > div > bard-mode-switcher side-nav-menu-button');
   });
+
+  it('lifts the in-sidenav toggle above the fixed top-bar-actions overlay (#748)', () => {
+    const code = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
+      'utf8',
+    );
+
+    expect(code).toContain(
+      'bard-sidenav side-navigation-content > div > button.mat-mdc-icon-button',
+    );
+    expect(code).toContain('z-index: 5 !important;');
+  });
 });
