@@ -203,7 +203,8 @@ async function loadMru(): Promise<GemMruEntry[]> {
     const raw = (result as Record<string, unknown>)[StorageKeys.GV_GEMS_MRU];
     if (raw && typeof raw === 'object' && Array.isArray((raw as GemMruEnvelope).entries)) {
       return (raw as GemMruEnvelope).entries.filter(
-        (e): e is GemMruEntry => !!e && typeof e.id === 'string' && typeof e.lastUsedAt === 'number',
+        (e): e is GemMruEntry =>
+          !!e && typeof e.id === 'string' && typeof e.lastUsedAt === 'number',
       );
     }
   } catch (error) {

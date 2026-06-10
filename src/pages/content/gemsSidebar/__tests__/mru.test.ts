@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  type GemMruEntry,
-  orderGemsByRecency,
-  readGemMetadata,
-  upsertMru,
-} from '../index';
+import { type GemMruEntry, orderGemsByRecency, readGemMetadata, upsertMru } from '../index';
 import type { GemMetadata } from '../index';
 
 const gem = (id: string, name = id): GemMetadata => ({ id, name, href: `/gem/${id}` });
@@ -57,7 +52,9 @@ describe('gemsSidebar upsertMru', () => {
   });
 
   it('preserves prior description when the new capture lacks one', () => {
-    const list: GemMruEntry[] = [{ id: 'a', name: 'A', href: '/gem/a', description: 'd', lastUsedAt: 1 }];
+    const list: GemMruEntry[] = [
+      { id: 'a', name: 'A', href: '/gem/a', description: 'd', lastUsedAt: 1 },
+    ];
     const next = upsertMru(list, gem('a'), 2);
     expect(next[0].description).toBe('d');
   });
@@ -90,7 +87,12 @@ describe('gemsSidebar readGemMetadata', () => {
 
   it('reads id/name/icon from a /gem/<id> hero', () => {
     const meta = readGemMetadata('/gem/abc123', heroDoc('Resume Coach', 'R'));
-    expect(meta).toEqual({ id: 'abc123', href: '/gem/abc123', name: 'Resume Coach', iconLetter: 'R' });
+    expect(meta).toEqual({
+      id: 'abc123',
+      href: '/gem/abc123',
+      name: 'Resume Coach',
+      iconLetter: 'R',
+    });
   });
 
   it('handles the /u/<n>/gem/<id> multi-account path', () => {
