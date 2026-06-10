@@ -123,10 +123,6 @@ That's why I built **Voyager**. It's not just a tool; it's a companion that help
     <img src="https://img.shields.io/badge/Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store" height="36">
   </a>
   &nbsp;&nbsp;
-  <a href="https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank">
-    <img src="https://img.shields.io/badge/Microsoft%20Edge-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Microsoft Edge Add-ons" height="36">
-  </a>
-  &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
@@ -137,10 +133,10 @@ That's why I built **Voyager**. It's not just a tool; it's a companion that help
 </div>
 
 <p align="center">
-  <sub><b>Chrome Web Store</b> also works on Edge, Opera, Brave, Vivaldi, Arc, and other Chromium browsers. ⚠️ The Edge Add-ons build is being discontinued — pinned at its current version with no further updates — so Edge users should install from the Chrome Web Store link above instead.</sub>
+  <sub><b>Edge users:</b> please install Voyager from the Chrome Web Store link above. Edge Add-ons reviews are too slow, so the dedicated Edge store build is no longer recommended.</sub>
 </p>
 
-> **Store Status:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
+> **Store Status:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge via Chrome Web Store
 
 For **manual installation** or **development builds**, please refer to the [Installation Guide](https://voyager.nagi.fun/en/guide/installation).
 
