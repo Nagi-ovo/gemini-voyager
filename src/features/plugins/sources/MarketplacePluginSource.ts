@@ -10,11 +10,16 @@
  * fetched — never executable code — so this is Chrome MV3 "remotely-hosted code"
  * compliant.
  *
- * `list()` is cache-aware: returns a fresh cache immediately (refreshing in the
- * background), otherwise fetches; on network failure it falls back to a stale
- * cache. raw.githubusercontent.com returns `access-control-allow-origin: *`, so
- * the fetch works from popup, background and content contexts without any extra
- * host permission.
+ * `list()` is cache-aware: a fresh cache (within TTL) is served with NO network
+ * traffic at all; a stale cache is served immediately while a single-flight
+ * refresh revalidates in the background (subscribers remount only if manifest
+ * content actually changed); with no cache the fetch is awaited. On a partial
+ * failure (one plugin's manifest/CSS fetch fails) the last-known-good manifest
+ * from the cache is kept, so a transient network error neither disables an
+ * installed plugin nor flips the catalog signature (which would retrigger
+ * subscriber reloads). raw.githubusercontent.com returns
+ * `access-control-allow-origin: *`, so the fetch works from popup, background
+ * and content contexts without any extra host permission.
  */
 import { logger } from '@/core/services/LoggerService';
 
@@ -47,6 +52,7 @@ export class MarketplacePluginSource implements PluginSource {
   private readonly ttlMs: number;
   private readonly fetchImpl: typeof fetch;
   private readonly now: () => number;
+  private refreshPromise: Promise<PluginManifest[]> | null = null;
 
   constructor(options: MarketplacePluginSourceOptions = {}) {
     this.catalogUrl = options.catalogUrl ?? DEFAULT_MARKETPLACE_URL;
@@ -58,22 +64,32 @@ export class MarketplacePluginSource implements PluginSource {
   async list(): Promise<readonly PluginManifest[]> {
     const cached = await loadCachedCatalog();
     if (cached && this.now() - cached.fetchedAt < this.ttlMs) {
-      // Fresh enough — serve cache, refresh in the background for next time.
-      void this.refresh().catch(() => undefined);
+      // Fresh — serve the cache and stay off the network entirely. An
+      // unconditional background refresh here defeated the TTL: every
+      // list() call (each page load, plus every PluginHost catalog-change
+      // reload) hit the marketplace for as long as a tab stayed open.
+      return cached.manifests;
+    }
+    if (cached) {
+      // Stale — serve it immediately, revalidate in the background.
+      // subscribeCatalog notifies subscribers only if content changed.
+      void this.refreshOnce().catch(() => undefined);
       return cached.manifests;
     }
     try {
-      return await this.refresh();
+      return await this.refreshOnce();
     } catch (error) {
-      logger.warn('Marketplace fetch failed; using cached catalog', { error: String(error) });
-      return cached?.manifests ?? [];
+      logger.warn('Marketplace fetch failed and no cached catalog exists', {
+        error: String(error),
+      });
+      return [];
     }
   }
 
   /** Bypass the cache and fetch the catalog now (used by the "refresh" button). */
   async forceRefresh(): Promise<readonly PluginManifest[]> {
     try {
-      return await this.refresh();
+      return await this.refreshOnce();
     } catch (error) {
       logger.warn('Marketplace forceRefresh failed', { error: String(error) });
       const cached = await loadCachedCatalog();
@@ -81,7 +97,21 @@ export class MarketplacePluginSource implements PluginSource {
     }
   }
 
+  /** Dedupe concurrent refreshes within this context into one network pass. */
+  private refreshOnce(): Promise<PluginManifest[]> {
+    if (!this.refreshPromise) {
+      this.refreshPromise = this.refresh().finally(() => {
+        this.refreshPromise = null;
+      });
+    }
+    return this.refreshPromise;
+  }
+
   private async refresh(): Promise<PluginManifest[]> {
+    // Last-known-good lookup for entries whose fetch fails transiently.
+    const cached = await loadCachedCatalog();
+    const cachedById = new Map((cached?.manifests ?? []).map((m) => [m.id, m]));
+
     const catalog = await this.fetchJson(this.catalogUrl);
     const entries: CatalogEntry[] =
       catalog &&
@@ -92,6 +122,7 @@ export class MarketplacePluginSource implements PluginSource {
 
     const base = this.catalogUrl.replace(/\/[^/]*$/, '/');
     const manifests: PluginManifest[] = [];
+    const sources: Record<string, string> = {};
 
     for (const entry of entries) {
       if (!entry?.source) continue;
@@ -103,6 +134,7 @@ export class MarketplacePluginSource implements PluginSource {
         const result = validateManifest(raw);
         if (result.success) {
           manifests.push(result.data);
+          sources[url] = result.data.id;
         } else {
           logger.warn('Skipping invalid marketplace plugin', {
             name: entry.name ?? url,
@@ -110,14 +142,29 @@ export class MarketplacePluginSource implements PluginSource {
           });
         }
       } catch (error) {
-        logger.warn('Failed to fetch marketplace plugin', {
-          name: entry.name ?? url,
-          error: String(error),
-        });
+        // Transient failure (network blip, rate limit): keep the
+        // last-known-good manifest instead of silently dropping the plugin,
+        // which would unmount its CSS mid-session and flip the catalog
+        // signature, retriggering subscriber reloads.
+        const lastGoodId = cached?.sources?.[url];
+        const lastGood = lastGoodId ? cachedById.get(lastGoodId) : undefined;
+        if (lastGood) {
+          manifests.push(lastGood);
+          sources[url] = lastGood.id;
+          logger.warn('Marketplace plugin fetch failed; keeping cached manifest', {
+            name: entry.name ?? url,
+            error: String(error),
+          });
+        } else {
+          logger.warn('Failed to fetch marketplace plugin', {
+            name: entry.name ?? url,
+            error: String(error),
+          });
+        }
       }
     }
 
-    await saveCachedCatalog(manifests, this.now());
+    await saveCachedCatalog(manifests, this.now(), sources);
     return manifests;
   }
 

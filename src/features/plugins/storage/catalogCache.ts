@@ -18,6 +18,13 @@ const KEY = StorageKeys.PLUGIN_CATALOG_CACHE;
 export interface CachedCatalog {
   readonly manifests: readonly PluginManifest[];
   readonly fetchedAt: number;
+  /**
+   * Resolved manifest URL → manifest id for the entries above. Lets a later
+   * refresh keep the last-known-good manifest when a single plugin fetch
+   * fails transiently. Optional: caches written before this field existed
+   * stay valid.
+   */
+  readonly sources?: Readonly<Record<string, string>>;
 }
 
 function localArea(): chrome.storage.LocalStorageArea | undefined {
@@ -50,11 +57,14 @@ export async function loadCachedCatalog(): Promise<CachedCatalog | null> {
 export async function saveCachedCatalog(
   manifests: readonly PluginManifest[],
   fetchedAt: number,
+  sources?: Readonly<Record<string, string>>,
 ): Promise<void> {
   const local = localArea();
   if (!local) return;
   try {
-    await local.set({ [KEY]: { manifests, fetchedAt } satisfies CachedCatalog });
+    await local.set({
+      [KEY]: { manifests, fetchedAt, ...(sources ? { sources } : {}) } satisfies CachedCatalog,
+    });
   } catch (error) {
     if (!isExtensionContextInvalidatedError(error)) {
       logger.warn('saveCachedCatalog failed', { error: String(error) });
