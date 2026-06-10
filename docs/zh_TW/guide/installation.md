@@ -12,15 +12,11 @@
 
 最簡單的方式，支持自動更新。
 
-**Chrome / Brave / Opera / Vivaldi：**
+**Chrome / Edge / Brave / Opera / Vivaldi：**
 
 [<img src="https://img.shields.io/badge/Chrome_應用店-前往下載-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="從 Chrome 線上應用店安裝" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=zh_tw)
 
-**Microsoft Edge：**
-
-[<img src="https://img.shields.io/badge/Microsoft_Edge-前往下載-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="從 Microsoft Edge Add-ons 安裝" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
-
-> ⚠️ Edge 版本即將停止支援 —— 版本會定格在目前，不再更新。Edge 使用者請改用上方的 Chrome 應用商店；該連結同樣可以安裝到 Edge。
+> **Edge 使用者：**請透過上方 Chrome 應用商店連結安裝。Edge 商店審核太慢，後續不再推薦使用獨立的 Edge 商店版本。
 
 **Firefox：**
 

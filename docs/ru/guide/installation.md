@@ -12,15 +12,11 @@
 
 Самый простой способ начать. Обновления происходят автоматически.
 
-**Chrome / Brave / Opera / Vivaldi:**
+**Chrome / Edge / Brave / Opera / Vivaldi:**
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Установить из Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ru)
 
-**Microsoft Edge:**
-
-[<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Установить из Microsoft Edge Add-ons" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
-
-> ⚠️ Версия для Edge Add-ons прекращает поддержку — она остаётся на текущей версии и больше не будет обновляться. Пользователям Edge следует устанавливать из Chrome Web Store выше; эта ссылка работает и в Edge.
+> **Пользователям Edge:** устанавливайте по ссылке Chrome Web Store выше. Проверки в Edge Add-ons слишком медленные, поэтому отдельная версия для магазина Edge больше не рекомендуется.
 
 **Firefox:**
 

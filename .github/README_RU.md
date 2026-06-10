@@ -21,7 +21,6 @@
     <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub downloads">
     <img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome Web Store users">
     <img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome Web Store rating">
-    <img src="https://img.shields.io/badge/edge%20users-50k%2B-0078D7?style=flat-square&logo=microsoftedge&logoColor=white" alt="Edge Add-ons users">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons users">
     <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons rating">
   </p>
@@ -123,10 +122,6 @@
     <img src="https://img.shields.io/badge/Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store" height="36">
   </a>
   &nbsp;&nbsp;
-  <a href="https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank">
-    <img src="https://img.shields.io/badge/Microsoft%20Edge-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Microsoft Edge Add-ons" height="36">
-  </a>
-  &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
@@ -137,10 +132,10 @@
 </div>
 
 <p align="center">
-  <sub>Версия для <b>Chrome Web Store</b> также работает в Edge, Opera, Brave, Vivaldi, Arc и других браузерах на базе Chromium. ⚠️ Версия для Edge Add-ons прекращает поддержку (остаётся на текущей версии без дальнейших обновлений), поэтому пользователям Edge следует устанавливать по ссылке на Chrome Web Store выше.</sub>
+  <sub><b>Пользователям Edge:</b> устанавливайте Voyager по ссылке Chrome Web Store выше. Проверки в Edge Add-ons слишком медленные, поэтому отдельная версия для магазина Edge больше не рекомендуется.</sub>
 </p>
 
-> **Статус в магазинах:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
+> **Статус в магазинах:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge через Chrome Web Store
 
 Для **ручной установки** или **сборки для разработки**, пожалуйста, обратитесь к [Руководству по установке](https://voyager.nagi.fun/ru/guide/installation).
 

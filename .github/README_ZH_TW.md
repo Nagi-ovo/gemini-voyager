@@ -21,7 +21,6 @@
     <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub 下載量">
     <img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 商店用戶數">
     <img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 商店評分">
-    <img src="https://img.shields.io/badge/edge%20users-50k%2B-0078D7?style=flat-square&logo=microsoftedge&logoColor=white" alt="Edge 商店用戶數">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店用戶數">
     <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店評分">
   </p>
@@ -129,10 +128,6 @@
     <img src="https://img.shields.io/badge/Chrome%20應用商店-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome 應用商店" height="36">
   </a>
   &nbsp;&nbsp;
-  <a href="https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank">
-    <img src="https://img.shields.io/badge/Microsoft%20Edge-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Microsoft Edge Add-ons" height="36">
-  </a>
-  &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
@@ -143,10 +138,10 @@
 </div>
 
 <p align="center">
-  <sub><b>Chrome 應用商店</b>同樣適用於 Edge、Opera、Brave、Vivaldi、Arc 等 Chromium 瀏覽器。⚠️ Edge 版本即將停止支援（版本定格、不再更新），Edge 使用者請改用上方的 Chrome 應用商店連結。</sub>
+  <sub><b>Edge 使用者：</b>請透過上方的 Chrome 應用商店連結安裝 Voyager。由於 Edge Add-ons 審核太慢，後續不再推薦使用獨立的 Edge 商店版本。</sub>
 </p>
 
-> **商店狀態：** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
+> **商店狀態：** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge 經由 Chrome 應用商店
 
 關於 **手動安裝** 或 **開發構建**，請參閱 [安裝指南](https://voyager.nagi.fun/zh_TW/guide/installation)。
 

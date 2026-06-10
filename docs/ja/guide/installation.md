@@ -12,15 +12,11 @@
 
 最も簡単な方法で、自動更新に対応しています。
 
-**Chrome / Brave / Opera / Vivaldi：**
+**Chrome / Edge / Brave / Opera / Vivaldi：**
 
 [<img src="https://img.shields.io/badge/Chrome_ウェブストア-ダウンロード-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome ウェブストアからインストール" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ja)
 
-**Microsoft Edge：**
-
-[<img src="https://img.shields.io/badge/Microsoft_Edge-ダウンロード-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Microsoft Edge Add-ons からインストール" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
-
-> ⚠️ Edge Add-ons 版はサポート終了予定です —— バージョンは現状で固定され、今後更新されません。Edge ユーザーは上記の Chrome ウェブストアからインストールしてください（このリンクは Edge でも使えます）。
+> **Edge ユーザー：**上記の Chrome ウェブストアリンクからインストールしてください。Edge Add-ons の審査が遅すぎるため、専用の Edge ストア版は今後おすすめしません。
 
 **Firefox：**
 

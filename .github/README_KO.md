@@ -21,7 +21,6 @@
     <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub downloads">
     <img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome Web Store users">
     <img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome Web Store rating">
-    <img src="https://img.shields.io/badge/edge%20users-50k%2B-0078D7?style=flat-square&logo=microsoftedge&logoColor=white" alt="Edge Add-ons users">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons users">
     <img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons rating">
   </p>
@@ -123,10 +122,6 @@
     <img src="https://img.shields.io/badge/Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store" height="36">
   </a>
   &nbsp;&nbsp;
-  <a href="https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank">
-    <img src="https://img.shields.io/badge/Microsoft%20Edge-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Microsoft Edge Add-ons" height="36">
-  </a>
-  &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
@@ -137,10 +132,10 @@
 </div>
 
 <p align="center">
-  <sub><b>Chrome 웹 스토어</b>는 Edge, Opera, Brave, Vivaldi, Arc 및 기타 Chromium 브라우저에서도 작동합니다. ⚠️ Edge 추가 기능 버전은 지원이 곧 종료됩니다(현재 버전으로 고정, 추가 업데이트 없음). Edge 사용자는 위의 Chrome 웹 스토어 링크에서 설치하세요.</sub>
+  <sub><b>Edge 사용자:</b> 위의 Chrome 웹 스토어 링크에서 Voyager를 설치하세요. Edge Add-ons 심사가 너무 느려서 전용 Edge 스토어 버전은 더 이상 권장하지 않습니다.</sub>
 </p>
 
-> **스토어 상태:** Chrome ✅ · Firefox ✅ · Edge ✅ · Safari ✅
+> **스토어 상태:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge는 Chrome 웹 스토어 통해 설치
 
 **수동 설치** 또는 **개발 빌드**에 대해서는 [설치 가이드](https://voyager.nagi.fun/ko/guide/installation)를 참조하세요.
 
