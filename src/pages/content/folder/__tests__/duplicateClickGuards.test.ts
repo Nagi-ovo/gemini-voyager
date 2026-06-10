@@ -55,6 +55,7 @@ type TestableManager = {
   showImportDialog: () => void;
   showImportExportMenu: (event: MouseEvent) => void;
   startFloatingMode: () => Promise<void>;
+  drainEnhancementQueue: () => void;
 };
 
 function mountFolderList(manager: TestableManager): HTMLElement {
@@ -286,6 +287,9 @@ describe('folder duplicate click guards', () => {
     const conversation = mountNativeSidebar('c_abc123');
 
     await typedManager.startFloatingMode();
+    // Per-row enhancement work is queued and drained under a frame budget
+    // (issue #753) — drive the drain deterministically.
+    typedManager.drainEnhancementQueue();
 
     expect(conversation.dataset.gvConvDragAttached).toBe('true');
 

@@ -84,6 +84,30 @@ describe('fixBrokenBoldTags', () => {
 
   // ===== Issue #507: Consecutive bold groups across split nodes =====
 
+  describe('skip-zone semantics (issue #753 check-order regression)', () => {
+    it('leaves ** inside code blocks untouched', () => {
+      container.innerHTML = '<pre><code>const glob = "**/*.ts";</code></pre>';
+      fixBrokenBoldTags(container);
+      expect(container.querySelector('strong')).toBeNull();
+      expect(container.textContent).toBe('const glob = "**/*.ts";');
+    });
+
+    it('leaves ** inside editable areas untouched', () => {
+      container.innerHTML = '<div contenteditable="true">typing **bold** draft</div>';
+      fixBrokenBoldTags(container);
+      expect(container.querySelector('strong')).toBeNull();
+      expect(container.textContent).toBe('typing **bold** draft');
+    });
+
+    it('still bolds ** outside skip zones when siblings are inside them', () => {
+      container.innerHTML = '<code>**ignored**</code> plain **bold** tail';
+      fixBrokenBoldTags(container);
+      const strong = container.querySelector('strong');
+      expect(strong?.textContent).toBe('bold');
+      expect(container.querySelector('code')?.textContent).toBe('**ignored**');
+    });
+  });
+
   describe('consecutive split-node bolds (#507)', () => {
     it('two split-node bolds with short connector: **A** elem "**和**" elem **B**', () => {
       // DOM: TextNode("**") Elem(A) TextNode("**和**") Elem(B) TextNode("**")

@@ -31,11 +31,16 @@ type TestableManager = {
   isMultiSelectMode: boolean;
   selectedConversations: Set<string>;
   mutationBatchQueue: MutationRecord[];
+  pendingRemovals: Map<string, number>;
+  enhancementQueue: Set<HTMLElement>;
+  legacyActionsProbe: { present: boolean; at: number } | null;
   flushMutationBatch: () => void;
   scheduleMutationBatchFlush: () => void;
+  drainEnhancementQueue: () => void;
   scheduleConversationRemovalCheck: (conversationId: string) => void;
   makeConversationDraggable: (el: HTMLElement) => void;
   applyHideArchivedToConversation: (el: HTMLElement) => void;
+  getNativeConversationActionsContainer: (el: HTMLElement) => HTMLElement | null;
   isConversationInFolders: (conversationId: string) => boolean;
   scheduleNativeConversationTitleSync: () => void;
 };
@@ -182,6 +187,7 @@ describe('FolderManager — observer batching (issue #678)', () => {
       typed.mutationBatchQueue.push(makeChildListMutation({ added: [conv] }));
     }
     typed.flushMutationBatch();
+    typed.drainEnhancementQueue();
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(conv);
@@ -246,6 +252,7 @@ describe('FolderManager — observer batching (issue #678)', () => {
 
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
     typed.flushMutationBatch();
+    typed.drainEnhancementQueue();
 
     expect(draggableSpy).toHaveBeenCalledWith(added);
     expect(removalSpy).not.toHaveBeenCalled();
@@ -364,7 +371,101 @@ describe('FolderManager — observer batching (issue #678)', () => {
 
     typed.mutationBatchQueue.push(makeChildListMutation({ added: [conv] }));
     typed.flushMutationBatch();
+    typed.drainEnhancementQueue();
 
     expect(archivedLookupSpy).not.toHaveBeenCalled();
+  });
+
+  describe('budgeted enhancement drain + legacy layout probe (issue #753)', () => {
+    it('defers per-row enhancement work to the queue instead of running it inside the flush', () => {
+      const spy = vi.spyOn(typed, 'makeConversationDraggable');
+
+      const c1 = createConversationEl('aa11aa11');
+      const c2 = createConversationEl('bb22bb22');
+      typed.sidebarContainer!.append(c1, c2);
+
+      typed.mutationBatchQueue.push(makeChildListMutation({ added: [c1, c2] }));
+      typed.flushMutationBatch();
+
+      expect(spy).not.toHaveBeenCalled();
+      expect(typed.enhancementQueue.size).toBe(2);
+
+      typed.drainEnhancementQueue();
+
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect(typed.enhancementQueue.size).toBe(0);
+    });
+
+    it('stops draining when the frame budget is exhausted and resumes on the next pass', () => {
+      const spy = vi.spyOn(typed, 'makeConversationDraggable');
+
+      const rows = ['cc11cc11', 'cc22cc22', 'cc33cc33'].map((id) => createConversationEl(id));
+      typed.sidebarContainer!.append(...rows);
+      rows.forEach((row) => typed.enhancementQueue.add(row));
+
+      // drainEnhancementQueue reads performance.now() once for the deadline,
+      // once inside the legacy-layout probe of the first row, then once for
+      // the budget check — exceed the 8ms budget right after the first row.
+      const ticks = [0, 0, 100];
+      vi.spyOn(performance, 'now').mockImplementation(() =>
+        ticks.length > 0 ? (ticks.shift() as number) : 100,
+      );
+
+      typed.drainEnhancementQueue();
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(typed.enhancementQueue.size).toBe(2);
+
+      typed.drainEnhancementQueue();
+      expect(spy).toHaveBeenCalledTimes(3);
+      expect(typed.enhancementQueue.size).toBe(0);
+    });
+
+    it('cancels pending removals synchronously during the flush, before any drain', () => {
+      const hexId = 'dd44dd44';
+      const timerId = window.setTimeout(() => {}, 60_000);
+      typed.pendingRemovals.set(hexId, timerId);
+
+      const conv = createConversationEl(hexId);
+      typed.sidebarContainer!.appendChild(conv);
+
+      typed.mutationBatchQueue.push(makeChildListMutation({ added: [conv] }));
+      typed.flushMutationBatch();
+
+      expect(typed.pendingRemovals.has(hexId)).toBe(false);
+      // The rest of the per-row work is still queued — cancellation did not
+      // wait for the budgeted drain.
+      expect(typed.enhancementQueue.size).toBe(1);
+    });
+
+    it('probes the legacy actions-container layout once and serves the cached miss per row', () => {
+      const conv = createConversationEl('ee55ee55');
+      typed.sidebarContainer!.appendChild(conv);
+
+      typed.legacyActionsProbe = null;
+      const querySpy = vi.spyOn(typed.sidebarContainer!, 'querySelector');
+
+      expect(typed.getNativeConversationActionsContainer(conv)).toBeNull();
+      expect(typed.getNativeConversationActionsContainer(conv)).toBeNull();
+
+      const probeCalls = querySpy.mock.calls.filter(
+        ([selector]) => selector === '.conversation-actions-container',
+      );
+      expect(probeCalls.length).toBe(1);
+    });
+
+    it('still clears leftover archived state in the legacy sibling layout (back-compat)', () => {
+      typed.hideArchivedConversations = false;
+      typed.legacyActionsProbe = null;
+
+      const conv = createConversationEl('ff66ff66');
+      const actions = document.createElement('div');
+      actions.className = 'conversation-actions-container gv-conversation-archived-actions';
+      typed.sidebarContainer!.append(conv, actions);
+
+      typed.applyHideArchivedToConversation(conv);
+
+      expect(actions.classList.contains('gv-conversation-archived-actions')).toBe(false);
+      expect(conv.classList.contains('gv-conversation-archived')).toBe(false);
+    });
   });
 });

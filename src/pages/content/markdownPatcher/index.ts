@@ -17,6 +17,13 @@ export function fixBrokenBoldTags(root: HTMLElement) {
   let node: Node | null;
 
   while ((node = walker.nextNode())) {
+    // Cheap relevance gate FIRST: almost no text node on the page contains
+    // '**', and this walker also runs over sidebar-row bursts (issue #753) —
+    // the ancestor-walk skip chain below must only be paid by actual hits.
+    if (!node.textContent?.includes('**')) {
+      continue;
+    }
+
     const parent = node.parentElement;
     // Skip if inside code block, pre tags, or math/formula containers
     if (
@@ -40,9 +47,7 @@ export function fixBrokenBoldTags(root: HTMLElement) {
       continue;
     }
 
-    if (node.textContent?.includes('**')) {
-      textNodes.push(node as Text);
-    }
+    textNodes.push(node as Text);
   }
 
   for (const startNode of textNodes) {

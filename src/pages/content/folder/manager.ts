@@ -71,6 +71,10 @@ const FOLDER_TREE_INDENT_MAX = 32;
 const FOLDER_TREE_INDENT_DEFAULT = -8;
 const NATIVE_TITLE_SYNC_DEBOUNCE_MS = 300;
 const ARCHIVED_CONVERSATION_ACTIONS_CLASS = 'gv-conversation-archived-actions';
+// Issue #753: per-frame time budget for draining queued per-row enhancement
+// work, and how long the legacy actions-container layout probe stays cached.
+const ENHANCEMENT_FRAME_BUDGET_MS = 8;
+const LEGACY_ACTIONS_PROBE_TTL_MS = 1000;
 // Max folder nesting depth — matches the floating panel's MAX_FOLDER_DEPTH.
 // root = 0, subfolder = 1, and that's the limit. Pre-existing data deeper
 // than this stays intact (we never destroy user data); the cap only gates
@@ -224,6 +228,18 @@ export class FolderManager {
   private mutationBatchQueue: MutationRecord[] = [];
   private mutationFlushScheduled: boolean = false;
   private mutationFlushRafId: number | null = null;
+  // Per-row enhancement work (drag listeners, hide-archived state) for added
+  // conversations is drained from this queue under a per-frame time budget
+  // instead of synchronously inside one flush — a sidebar-open burst can add
+  // every Recents row at once, and doing all of it in a single animation
+  // frame blocked paint for the whole sweep (issue #753). Removal
+  // *cancellation* stays synchronous in `flushMutationBatch`: it must beat
+  // the `removalCheckDelay` timer.
+  private enhancementQueue: Set<HTMLElement> = new Set();
+  private enhancementDrainRafId: number | null = null;
+  // Cached result of the legacy `.conversation-actions-container` layout
+  // probe — see `hasLegacyActionsContainer` (issue #753).
+  private legacyActionsProbe: { present: boolean; at: number } | null = null;
   private isDestroyed: boolean = false; // Flag to prevent callbacks after destruction
   private reinitializePromise: Promise<void> | null = null; // Prevent duplicate reinitialization cascades
   private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
@@ -455,6 +471,7 @@ export class FolderManager {
     }
     this.cancelMutationBatchFlush();
     this.mutationBatchQueue.length = 0;
+    this.cancelEnhancementDrain();
 
     if (this.nativeMenuObserver) {
       this.nativeMenuObserver.disconnect();
@@ -584,6 +601,7 @@ export class FolderManager {
     }
     this.cancelMutationBatchFlush();
     this.mutationBatchQueue.length = 0;
+    this.cancelEnhancementDrain();
 
     if (this.nativeMenuObserver) {
       this.nativeMenuObserver.disconnect();
@@ -2311,14 +2329,14 @@ export class FolderManager {
   }
 
   private makeConversationsDraggable(): void {
+    // Full sweeps (init, reinit, recovery) go through the same budgeted
+    // drain as observer bursts so a large Recents list never blocks one
+    // frame for the whole sweep (issue #753).
     const conversations = this.getNativeConversationElements();
     conversations.forEach((conv) => {
-      const conversationEl = conv as HTMLElement;
-      this.makeConversationDraggable(conversationEl);
-
-      // Apply hide archived setting
-      this.applyHideArchivedToConversation(conversationEl);
+      this.enhancementQueue.add(conv as HTMLElement);
     });
+    this.scheduleEnhancementDrain();
   }
 
   /**
@@ -2892,6 +2910,41 @@ export class FolderManager {
     this.mutationFlushScheduled = false;
   }
 
+  private scheduleEnhancementDrain(): void {
+    if (this.enhancementQueue.size === 0) return;
+    if (this.enhancementDrainRafId !== null) return;
+    this.enhancementDrainRafId = window.requestAnimationFrame(() => {
+      this.enhancementDrainRafId = null;
+      if (this.isDestroyed) {
+        this.enhancementQueue.clear();
+        return;
+      }
+      this.drainEnhancementQueue();
+    });
+  }
+
+  private cancelEnhancementDrain(): void {
+    if (this.enhancementDrainRafId !== null) {
+      window.cancelAnimationFrame(this.enhancementDrainRafId);
+      this.enhancementDrainRafId = null;
+    }
+    this.enhancementQueue.clear();
+  }
+
+  // Exposed via the private surface so tests can drive draining
+  // deterministically without depending on animation-frame timing in jsdom.
+  private drainEnhancementQueue(): void {
+    const deadline = performance.now() + ENHANCEMENT_FRAME_BUDGET_MS;
+    for (const convEl of this.enhancementQueue) {
+      this.enhancementQueue.delete(convEl);
+      if (!convEl.isConnected) continue; // removed while queued
+      this.makeConversationDraggable(convEl);
+      this.applyHideArchivedToConversation(convEl);
+      if (performance.now() >= deadline) break;
+    }
+    this.scheduleEnhancementDrain();
+  }
+
   // Exposed via the private surface so tests can drive flushing
   // deterministically without depending on animation-frame timing in jsdom.
   private flushMutationBatch(): void {
@@ -2922,10 +2975,18 @@ export class FolderManager {
 
     addedConversations.forEach((convEl) => {
       if (!convEl.isConnected) return; // re-removed within the same batch
-      this.makeConversationDraggable(convEl);
-      this.applyHideArchivedToConversation(convEl);
-      this.cancelPendingRemovalForElement(convEl);
+      // Removal-cancel must stay synchronous to beat the `removalCheckDelay`
+      // timer; skip the per-row id extraction entirely in the common case
+      // where nothing is pending.
+      if (this.pendingRemovals.size > 0) {
+        this.cancelPendingRemovalForElement(convEl);
+      }
+      // Drag listeners + hide-archived state are deferred to the budgeted
+      // drain — both are idempotent and tolerate a few frames of latency
+      // (issue #753).
+      this.enhancementQueue.add(convEl);
     });
+    this.scheduleEnhancementDrain();
 
     // Re-check navigator.onLine at flush time, not when each mutation arrived.
     if (!navigator.onLine) {
@@ -7914,7 +7975,32 @@ export class FolderManager {
     );
   }
 
+  /**
+   * `.conversation-actions-container` only exists in Gemini's legacy sidebar
+   * layout (lr26 renders the actions button INSIDE the conversation host).
+   * Probing per row turned every sidebar-open burst into an O(N²) scan —
+   * issue #753 — so probe the root once and cache the answer briefly.
+   */
+  private hasLegacyActionsContainer(): boolean {
+    const now = performance.now();
+    if (
+      this.legacyActionsProbe &&
+      now - this.legacyActionsProbe.at < LEGACY_ACTIONS_PROBE_TTL_MS
+    ) {
+      return this.legacyActionsProbe.present;
+    }
+    const present =
+      this.getNativeConversationRoot().querySelector('.conversation-actions-container') !== null;
+    this.legacyActionsProbe = { present, at: now };
+    return present;
+  }
+
   private getNativeConversationActionsContainer(conversationEl: HTMLElement): HTMLElement | null {
+    // When no legacy actions container exists anywhere under the conversation
+    // root, neither the sibling walk nor the parent querySelector below can
+    // match — skip both (issue #753).
+    if (!this.hasLegacyActionsContainer()) return null;
+
     const parent = conversationEl.parentElement;
     if (!parent) return null;
 
