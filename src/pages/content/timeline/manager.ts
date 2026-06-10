@@ -1091,6 +1091,25 @@ export class TimelineManager {
     return false;
   }
 
+  // extractTurnText deep-clones the turn subtree, so it must not run for
+  // every turn on every debounced recalc — during streaming that meant
+  // re-cloning the whole conversation every 200ms. Cache per element,
+  // validated against the element's current raw textContent: any in-place
+  // change (user edit, late LaTeX render, injected UI) alters the raw text
+  // and recomputes. WeakMap entries die with their DOM nodes; nothing is
+  // persisted to storage.
+  private turnTextCache = new WeakMap<HTMLElement, { raw: string; summary: string }>();
+
+  private getTurnTextCached(element: HTMLElement | null): string {
+    if (!element) return '';
+    const raw = element.textContent || '';
+    const cached = this.turnTextCache.get(element);
+    if (cached && cached.raw === raw) return cached.summary;
+    const summary = this.extractTurnText(element);
+    this.turnTextCache.set(element, { raw, summary });
+    return summary;
+  }
+
   private extractTurnText(element: HTMLElement | null): string {
     if (!element) return '';
     try {
@@ -1169,16 +1188,8 @@ export class TimelineManager {
     const seen = new Set<string>();
     const out: HTMLElement[] = [];
 
-    // Cache normalized text to avoid repeated processing
-    const normalizedCache = new Map<HTMLElement, string>();
-
     for (const el of elements) {
-      // Get or compute normalized text
-      let normalizedText = normalizedCache.get(el);
-      if (normalizedText === undefined) {
-        normalizedText = this.extractTurnText(el);
-        normalizedCache.set(el, normalizedText);
-      }
+      const normalizedText = this.getTurnTextCached(el);
 
       const offsetFromStart = (el.offsetTop || 0) - firstTurnOffset;
       const key = `${normalizedText}|${Math.round(offsetFromStart)}`;
@@ -1260,7 +1271,7 @@ export class TimelineManager {
     usedIds: Set<string>,
     existingTurnIdOwners: Map<string, HTMLElement[]>,
   ): string {
-    const basis = this.extractTurnText(el) || `user-${index}`;
+    const basis = this.getTurnTextCached(el) || `user-${index}`;
     const candidates = [
       this.turnIdByIndex.get(index) || '',
       makeStableTurnId(index),
@@ -1317,7 +1328,7 @@ export class TimelineManager {
   }
 
   private getLegacyContentTurnId(el: HTMLElement, index: number): string {
-    const basis = this.extractTurnText(el) || `user-${index}`;
+    const basis = this.getTurnTextCached(el) || `user-${index}`;
     return `u-${hashString(basis + '|' + index)}`;
   }
 
@@ -1570,7 +1581,7 @@ export class TimelineManager {
       const m = {
         id,
         element,
-        summary: this.extractTurnText(element),
+        summary: this.getTurnTextCached(element),
         n,
         baseN: n,
         dotElement: oldDots.get(id) ?? null,
