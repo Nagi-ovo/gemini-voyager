@@ -27,7 +27,7 @@ export class LoggerService implements ILogger {
     this.config = {
       level:
         config.level ?? (process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.DEBUG),
-      prefix: config.prefix ?? '[GeminiVoyager]',
+      prefix: config.prefix ?? '[Voyager]',
       enableTimestamp: config.enableTimestamp ?? true,
       enableContext: config.enableContext ?? true,
     };
