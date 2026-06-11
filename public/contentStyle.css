@@ -11128,12 +11128,19 @@ body.gv-hide-input-halo .nl-canvas {
 }
 
 /* Accent text + faint brand pill on the panel surface (list tag chips). */
-:root.gv-platform-themed .gv-pm-chip,
-:root.gv-platform-themed .gv-pm-trigger-new::after {
-  color: var(--gv-pm-brand) !important;
-}
 :root.gv-platform-themed .gv-pm-chip {
+  color: var(--gv-pm-brand) !important;
   background: var(--gv-pm-brand-soft) !important;
+}
+/* Floating NEW badge: the base rule paints an orange gradient, and tinting
+   only the text with the brand colour left brand-on-orange (unreadable on
+   Claude, whose brand IS orange-ish). Paint the whole pill with the brand
+   colour and use the platform's on-brand foreground instead — derived purely
+   from --gv-pm-brand / --gv-pm-brand-fg so any future site adapter inherits
+   a readable badge automatically. */
+:root.gv-platform-themed .gv-pm-trigger-new::after {
+  color: var(--gv-pm-brand-fg, #ffffff) !important;
+  background: var(--gv-pm-brand) !important;
 }
 :root.gv-platform-themed .gv-pm-chip:hover {
   background: color-mix(in srgb, var(--gv-pm-brand) 24%, transparent) !important;
