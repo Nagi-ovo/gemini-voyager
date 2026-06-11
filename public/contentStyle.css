@@ -11202,3 +11202,184 @@ body.gv-hide-input-halo .nl-canvas {
   background-color: var(--timeline-dot-active-color);
   color: #fff;
 }
+
+/* ============================================================
+ * Usage status mini-bar (#690) — compact daily/weekly quota
+ * readout docked bottom-right (out of the centered reading
+ * column) by JS. Persistent, translucent, single row. Refresh =
+ * silent replay; the ↗ icon is the only thing that opens /usage.
+ * theme-host light/dark + RTL aware.
+ * ============================================================ */
+.gv-usage-pill {
+  position: fixed;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 92vw;
+  padding: 5px 8px 5px 10px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1;
+  /* dark theme defaults */
+  background: oklch(0.21 0.008 285 / 0.85);
+  color: rgba(232, 234, 237, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  user-select: none;
+  opacity: 0.82;
+  cursor: grab;
+  touch-action: none;
+  transition: opacity 0.18s ease;
+}
+
+.gv-usage-pill:hover {
+  opacity: 1;
+}
+
+.gv-usage-pill.gv-usage-dragging {
+  cursor: grabbing;
+  opacity: 1;
+  transition: none;
+}
+
+.theme-host.light-theme .gv-usage-pill,
+body.light-theme .gv-usage-pill {
+  background: oklch(0.995 0.002 250 / 0.9);
+  color: rgba(31, 31, 31, 0.86);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.gv-usage-tier {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: oklch(0.55 0.17 155 / 0.18);
+  color: oklch(0.82 0.12 155);
+}
+
+.theme-host.light-theme .gv-usage-tier,
+body.light-theme .gv-usage-tier {
+  background: oklch(0.55 0.17 155 / 0.14);
+  color: oklch(0.42 0.15 155);
+}
+
+.gv-usage-tier[hidden] {
+  display: none;
+}
+
+.gv-usage-metric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gv-usage-metric[hidden] {
+  display: none;
+}
+
+.gv-usage-label {
+  opacity: 0.7;
+}
+
+.gv-usage-track {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.theme-host.light-theme .gv-usage-track,
+body.light-theme .gv-usage-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.gv-usage-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: oklch(0.64 0.17 155);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-usage-metric.gv-usage-mid .gv-usage-fill {
+  background: oklch(0.74 0.15 75);
+}
+
+.gv-usage-metric.gv-usage-high .gv-usage-fill {
+  background: oklch(0.62 0.2 25);
+}
+
+.gv-usage-pct {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+  min-width: 24px;
+}
+
+.gv-usage-refresh,
+.gv-usage-open {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  opacity: 0.55;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.gv-usage-refresh svg,
+.gv-usage-open svg {
+  width: 13px;
+  height: 13px;
+}
+
+.gv-usage-refresh:hover,
+.gv-usage-open:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.theme-host.light-theme .gv-usage-refresh:hover,
+.theme-host.light-theme .gv-usage-open:hover,
+body.light-theme .gv-usage-refresh:hover,
+body.light-theme .gv-usage-open:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Spin the refresh glyph while a silent refresh is in flight. */
+.gv-usage-pill.gv-usage-loading .gv-usage-refresh svg {
+  animation: gv-usage-spin 0.8s linear infinite;
+}
+
+@keyframes gv-usage-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* RTL: mirror the bar so the icons sit on the left. */
+body.gv-rtl .gv-usage-pill,
+body.gv-rtl .gv-usage-metric {
+  flex-direction: row-reverse;
+}

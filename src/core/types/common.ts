@@ -153,6 +153,22 @@ export const StorageKeys = {
   // by recent use rather than by the static management-page order. Local for the
   // same quota reason as the list cache.
   GV_GEMS_MRU: 'gvGemsMru',
+  // Usage status-line. Enables the slim daily/weekly usage pill near the
+  // composer. Synced so the toggle follows the user across devices. Default off
+  // (opt-in) since it injects persistent UI.
+  USAGE_STATUS_ENABLED: 'gvUsageStatusEnabled',
+  // Local cache of the usage limits scraped from /usage. Stored as a
+  // UsageSnapshot envelope ({ daily, weekly, tier, updatedAt }). Local (not
+  // sync) because it changes constantly and is per-account, not a preference.
+  GV_USAGE_CACHE: 'gvUsageCache',
+  // Self-calibrated "recipe" for silently refreshing usage off the /usage page:
+  // { rpcid, args } of the batchexecute call that carries the usage metrics,
+  // captured by the document_start observer and DOM-verified on /usage. Replayed
+  // from any Gemini page to refresh the snapshot without navigating.
+  GV_USAGE_RECIPE: 'gvUsageRecipe',
+  // User-dragged position of the usage mini-bar ({ x, y } viewport px). Absent =
+  // default bottom-right. Local since it's a per-device UI placement.
+  GV_USAGE_POS: 'gvUsagePos',
   // 'above-recents' (default) anchors the folder panel just above the Recents
   // expandable-section; 'above-notebooks' anchors it above the Notebooks
   // section instead. Persisted in chrome.storage.local since it's a UI-only

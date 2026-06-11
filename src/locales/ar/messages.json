@@ -1583,6 +1583,54 @@
     "message": "كثيرة",
     "description": "Wide-end label on the gems count slider (count up to 10)."
   },
+  "usageStatusTitle": {
+    "message": "حدود استخدام Gemini",
+    "description": "Accessible label / tooltip for the usage status pill near the composer."
+  },
+  "usageStatusDaily": {
+    "message": "يومي",
+    "description": "Label for the rolling daily usage bar in the usage status pill."
+  },
+  "usageStatusWeekly": {
+    "message": "أسبوعي",
+    "description": "Label for the weekly usage limit bar in the usage status pill."
+  },
+  "usageStatusResets": {
+    "message": "إعادة التعيين",
+    "description": "Tooltip prefix shown before the reset time on a usage bar."
+  },
+  "usageStatusRefresh": {
+    "message": "تحديث",
+    "description": "Tooltip/aria-label for the refresh button on the usage status pill."
+  },
+  "usageStatusOpenHint": {
+    "message": "فتح حدود الاستخدام",
+    "description": "Tooltip on the usage status pill; clicking opens the Gemini usage page."
+  },
+  "usageStatusJustUpdated": {
+    "message": "تم التحديث للتو",
+    "description": "Freshness stamp on the usage status pill when data is under a minute old."
+  },
+  "usageStatusMinutesAgo": {
+    "message": "تم التحديث قبل {n} دقيقة",
+    "description": "Freshness stamp; {n} is a number of minutes. Keep the {n} placeholder literal."
+  },
+  "usageStatusHoursAgo": {
+    "message": "تم التحديث قبل {n} ساعة",
+    "description": "Freshness stamp; {n} is a number of hours. Keep the {n} placeholder literal."
+  },
+  "usageStatusDaysAgo": {
+    "message": "تم التحديث قبل {n} يوم",
+    "description": "Freshness stamp; {n} is a number of days. Keep the {n} placeholder literal."
+  },
+  "usageStatusToggle": {
+    "message": "شريط حالة الاستخدام",
+    "description": "Popup toggle label to enable the usage status pill."
+  },
+  "usageStatusToggleHint": {
+    "message": "إظهار حدود الاستخدام اليومية والأسبوعية بجوار مربع المحادثة",
+    "description": "Popup helper text under the usage status bar toggle."
+  },
   "export_select_mode_select_all": {
     "message": "تحديد الكل",
     "description": "Selection mode select all toggle"

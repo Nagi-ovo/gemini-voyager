@@ -1583,6 +1583,54 @@
     "message": "更多",
     "description": "Wide-end label on the gems count slider (count up to 10)."
   },
+  "usageStatusTitle": {
+    "message": "Gemini 用量限额",
+    "description": "Accessible label / tooltip for the usage status pill near the composer."
+  },
+  "usageStatusDaily": {
+    "message": "每日",
+    "description": "Label for the rolling daily usage bar in the usage status pill."
+  },
+  "usageStatusWeekly": {
+    "message": "每周",
+    "description": "Label for the weekly usage limit bar in the usage status pill."
+  },
+  "usageStatusResets": {
+    "message": "重置于",
+    "description": "Tooltip prefix shown before the reset time on a usage bar."
+  },
+  "usageStatusRefresh": {
+    "message": "刷新",
+    "description": "Tooltip/aria-label for the refresh button on the usage status pill."
+  },
+  "usageStatusOpenHint": {
+    "message": "打开用量限额",
+    "description": "Tooltip on the usage status pill; clicking opens the Gemini usage page."
+  },
+  "usageStatusJustUpdated": {
+    "message": "刚刚更新",
+    "description": "Freshness stamp on the usage status pill when data is under a minute old."
+  },
+  "usageStatusMinutesAgo": {
+    "message": "{n} 分钟前更新",
+    "description": "Freshness stamp; {n} is a number of minutes. Keep the {n} placeholder literal."
+  },
+  "usageStatusHoursAgo": {
+    "message": "{n} 小时前更新",
+    "description": "Freshness stamp; {n} is a number of hours. Keep the {n} placeholder literal."
+  },
+  "usageStatusDaysAgo": {
+    "message": "{n} 天前更新",
+    "description": "Freshness stamp; {n} is a number of days. Keep the {n} placeholder literal."
+  },
+  "usageStatusToggle": {
+    "message": "用量状态栏",
+    "description": "Popup toggle label to enable the usage status pill."
+  },
+  "usageStatusToggleHint": {
+    "message": "在聊天框附近显示每日和每周用量限额",
+    "description": "Popup helper text under the usage status bar toggle."
+  },
   "export_select_mode_select_all": {
     "message": "全选",
     "description": "Selection mode select all toggle"

@@ -1583,6 +1583,54 @@
     "message": "많이",
     "description": "Wide-end label on the gems count slider (count up to 10)."
   },
+  "usageStatusTitle": {
+    "message": "Gemini 사용 한도",
+    "description": "Accessible label / tooltip for the usage status pill near the composer."
+  },
+  "usageStatusDaily": {
+    "message": "일간",
+    "description": "Label for the rolling daily usage bar in the usage status pill."
+  },
+  "usageStatusWeekly": {
+    "message": "주간",
+    "description": "Label for the weekly usage limit bar in the usage status pill."
+  },
+  "usageStatusResets": {
+    "message": "재설정",
+    "description": "Tooltip prefix shown before the reset time on a usage bar."
+  },
+  "usageStatusRefresh": {
+    "message": "새로고침",
+    "description": "Tooltip/aria-label for the refresh button on the usage status pill."
+  },
+  "usageStatusOpenHint": {
+    "message": "사용 한도 열기",
+    "description": "Tooltip on the usage status pill; clicking opens the Gemini usage page."
+  },
+  "usageStatusJustUpdated": {
+    "message": "방금 업데이트됨",
+    "description": "Freshness stamp on the usage status pill when data is under a minute old."
+  },
+  "usageStatusMinutesAgo": {
+    "message": "{n}분 전 업데이트",
+    "description": "Freshness stamp; {n} is a number of minutes. Keep the {n} placeholder literal."
+  },
+  "usageStatusHoursAgo": {
+    "message": "{n}시간 전 업데이트",
+    "description": "Freshness stamp; {n} is a number of hours. Keep the {n} placeholder literal."
+  },
+  "usageStatusDaysAgo": {
+    "message": "{n}일 전 업데이트",
+    "description": "Freshness stamp; {n} is a number of days. Keep the {n} placeholder literal."
+  },
+  "usageStatusToggle": {
+    "message": "사용량 상태 바",
+    "description": "Popup toggle label to enable the usage status pill."
+  },
+  "usageStatusToggleHint": {
+    "message": "채팅창 근처에 일간 및 주간 사용 한도를 표시합니다",
+    "description": "Popup helper text under the usage status bar toggle."
+  },
   "export_select_mode_select_all": {
     "message": "전체 선택",
     "description": "Selection mode select all toggle"

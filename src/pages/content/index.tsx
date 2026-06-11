@@ -48,6 +48,7 @@ import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
+import { startUsageStatus } from './usageStatus/index';
 import { startUserLatex } from './userLatex/index';
 import { startRainEffect, startSakuraEffect, startSnowEffect } from './visualEffects';
 import { startWatermarkRemover, stopWatermarkRemover } from './watermarkRemover/index';
@@ -95,6 +96,7 @@ let edgeFinalVersionNoticeCleanup: (() => void) | null = null;
 let pluginHostCleanup: (() => void) | null = null;
 let brandThemeCleanup: (() => void) | null = null;
 let titleUpdaterCleanup: (() => void) | null = null;
+let usageStatusCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -305,6 +307,11 @@ async function initializeFeatures(): Promise<void> {
       // from a local cache that's refreshed whenever the user visits the
       // /gems/view management page. Count is controlled from the popup.
       gemsSidebarCleanup = await startGemsSidebar();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      // Usage status pill — scrapes /usage, shows daily/weekly quota near the
+      // composer. Self-gates on the GV usage-status setting (default off).
+      usageStatusCleanup = await startUsageStatus();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Markdown Patcher - fixes broken bold tags due to HTML injection
@@ -632,6 +639,10 @@ function handleVisibilityChange(): void {
         if (titleUpdaterCleanup) {
           titleUpdaterCleanup();
           titleUpdaterCleanup = null;
+        }
+        if (usageStatusCleanup) {
+          usageStatusCleanup();
+          usageStatusCleanup = null;
         }
         chrome.storage?.onChanged?.removeListener(onStorageChanged);
       } catch (e) {

@@ -1583,6 +1583,54 @@
     "message": "Beaucoup",
     "description": "Wide-end label on the gems count slider (count up to 10)."
   },
+  "usageStatusTitle": {
+    "message": "Limites d'utilisation de Gemini",
+    "description": "Accessible label / tooltip for the usage status pill near the composer."
+  },
+  "usageStatusDaily": {
+    "message": "Quotidien",
+    "description": "Label for the rolling daily usage bar in the usage status pill."
+  },
+  "usageStatusWeekly": {
+    "message": "Hebdomadaire",
+    "description": "Label for the weekly usage limit bar in the usage status pill."
+  },
+  "usageStatusResets": {
+    "message": "Réinitialisation",
+    "description": "Tooltip prefix shown before the reset time on a usage bar."
+  },
+  "usageStatusRefresh": {
+    "message": "Actualiser",
+    "description": "Tooltip/aria-label for the refresh button on the usage status pill."
+  },
+  "usageStatusOpenHint": {
+    "message": "Ouvrir les limites d'utilisation",
+    "description": "Tooltip on the usage status pill; clicking opens the Gemini usage page."
+  },
+  "usageStatusJustUpdated": {
+    "message": "Mise à jour à l'instant",
+    "description": "Freshness stamp on the usage status pill when data is under a minute old."
+  },
+  "usageStatusMinutesAgo": {
+    "message": "Mis à jour il y a {n} min",
+    "description": "Freshness stamp; {n} is a number of minutes. Keep the {n} placeholder literal."
+  },
+  "usageStatusHoursAgo": {
+    "message": "Mis à jour il y a {n} h",
+    "description": "Freshness stamp; {n} is a number of hours. Keep the {n} placeholder literal."
+  },
+  "usageStatusDaysAgo": {
+    "message": "Mis à jour il y a {n} j",
+    "description": "Freshness stamp; {n} is a number of days. Keep the {n} placeholder literal."
+  },
+  "usageStatusToggle": {
+    "message": "Barre d'état d'utilisation",
+    "description": "Popup toggle label to enable the usage status pill."
+  },
+  "usageStatusToggleHint": {
+    "message": "Afficher les limites d'utilisation quotidiennes et hebdomadaires près de la zone de discussion",
+    "description": "Popup helper text under the usage status bar toggle."
+  },
   "export_select_mode_select_all": {
     "message": "Tout sélectionner",
     "description": "Selection mode select all toggle"
