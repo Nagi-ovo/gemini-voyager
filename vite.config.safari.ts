@@ -34,6 +34,9 @@ export default mergeConfig(
             },
           },
           permissions: manifest.permissions.filter((permission) => permission !== 'notifications'),
+          optional_permissions: (manifest.optional_permissions ?? []).filter(
+            (permission) => permission !== 'notifications',
+          ),
           // Safari-specific adjustments
           background: {
             // Safari supports both service_worker and scripts

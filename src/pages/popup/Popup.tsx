@@ -18,6 +18,7 @@ import {
   shouldShowSafariUpdateReminder,
   supportsOptionalHostPermissions,
 } from '@/core/utils/browser';
+import { ensureNotificationsPermission } from '@/core/utils/notificationsPermission';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
@@ -2904,9 +2905,16 @@ export default function Popup() {
                 <Switch
                   id="response-complete-notification"
                   checked={responseCompleteNotificationEnabled}
-                  onChange={(e) => {
-                    setResponseCompleteNotificationEnabled(e.target.checked);
-                    apply({ responseCompleteNotificationEnabled: e.target.checked });
+                  onChange={async (e) => {
+                    const next = e.target.checked;
+                    // "notifications" is an optional permission — request it
+                    // inside this user gesture before enabling the feature.
+                    if (next && !(await ensureNotificationsPermission())) {
+                      setResponseCompleteNotificationEnabled(false);
+                      return;
+                    }
+                    setResponseCompleteNotificationEnabled(next);
+                    apply({ responseCompleteNotificationEnabled: next });
                   }}
                 />
               </div>

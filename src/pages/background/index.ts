@@ -14,6 +14,7 @@ import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
 import { isFirefox, supportsExtensionNotifications } from '@/core/utils/browser';
+import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
 import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
@@ -95,6 +96,11 @@ async function showResponseCompleteNotification(
     [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
   });
   if (setting[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] !== true) return false;
+
+  // "notifications" is an optional permission (granted from the popup toggle);
+  // the namespace check above is not reliable across grant/revoke, so verify
+  // explicitly before attempting to create a notification.
+  if (!(await hasNotificationsPermission())) return false;
 
   const conversationUrl = details.conversationUrl;
   const dedupKey = getTabDedupKey(sender.tab?.id, sender.tab?.url, conversationUrl);
