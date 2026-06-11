@@ -589,25 +589,37 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     versionBadge.addEventListener('click', async (e) => {
       e.stopPropagation();
       closePanel();
+      // The user explicitly asked for release notes: if the modal cannot
+      // open (chunk load blocked, missing notes for this version, …) fall
+      // back to the GitHub releases page instead of silently doing nothing,
+      // and log the error so site-specific failures (e.g. on Claude/ChatGPT
+      // custom websites) are diagnosable from the console.
+      const openReleasesFallback = () => {
+        window.open('https://github.com/Nagi-ovo/gemini-voyager/releases', '_blank', 'noopener');
+      };
       // If badge was active, clear it
       if (changelogBadgeActive) {
         changelogBadgeActive = false;
         trigger.classList.remove('gv-pm-trigger-new');
         versionBadge.classList.remove('gv-pm-version-outdated');
+        let shown = false;
         try {
-          await showChangelogModalDirect();
-        } catch {
-          // Ignore
+          shown = await showChangelogModalDirect();
+        } catch (error) {
+          logger.error('Changelog modal failed to open', { error: String(error) });
         }
+        if (!shown) openReleasesFallback();
         if (pmHiddenByUser) {
           trigger.style.display = 'none';
         }
       } else {
+        let shown = false;
         try {
-          await openChangelog();
-        } catch {
-          // Ignore
+          shown = await openChangelog();
+        } catch (error) {
+          logger.error('Changelog modal failed to open', { error: String(error) });
         }
+        if (!shown) openReleasesFallback();
       }
     });
 

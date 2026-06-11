@@ -671,9 +671,13 @@ async function showChangelogModal(
  * Open the changelog modal for the current version (always shows, no dismiss
  * check). Manual opens from the prompt manager skip the read-gate countdown
  * since the user has already seen the auto-popup once.
+ *
+ * @returns whether the modal was actually shown — callers reacting to an
+ * explicit user click should provide a fallback when this is false.
  */
-export async function openChangelog(): Promise<void> {
-  await showChangelogModal(EXTENSION_VERSION, true, false);
+export async function openChangelog(): Promise<boolean> {
+  const overlay = await showChangelogModal(EXTENSION_VERSION, true, false);
+  return overlay !== null;
 }
 
 /**
@@ -694,7 +698,7 @@ export async function hasUnreadChangelog(): Promise<boolean> {
  * Show the changelog modal directly (used by badge mode in prompt manager).
  * Returns a Promise that resolves when the modal is closed.
  */
-export async function showChangelogModalDirect(): Promise<void> {
+export async function showChangelogModalDirect(): Promise<boolean> {
   // Badge-mode prompt-manager open: skip the read-gate. The user is
   // explicitly clicking the changelog button — they don't need a countdown.
   const overlay = await showChangelogModal(EXTENSION_VERSION, true, false);
@@ -707,15 +711,15 @@ export async function showChangelogModalDirect(): Promise<void> {
     } catch {
       // Ignore
     }
-    return;
+    return false;
   }
 
-  // Return promise that resolves when overlay is removed
-  return new Promise<void>((resolve) => {
+  // Resolve once the overlay is removed (modal closed)
+  return new Promise<boolean>((resolve) => {
     const observer = new MutationObserver(() => {
       if (!overlay.isConnected) {
         observer.disconnect();
-        resolve();
+        resolve(true);
       }
     });
     observer.observe(document.body, { childList: true });
