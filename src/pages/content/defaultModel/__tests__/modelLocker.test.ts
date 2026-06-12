@@ -1061,6 +1061,35 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(selectorBtn.click).toHaveBeenCalledTimes(0);
   });
 
+  it('fast-path: button found via .input-area-switch-label still skips menu click (#756)', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultModel: { id: 'e6fa609c3fa255c0', name: '3.1 Pro' },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/app');
+
+    // Use .input-area-switch-label instead of data-test-id="bard-mode-menu-button"
+    // to verify the shared findSelectorButton() helper covers all selectors.
+    const selectorBtn = document.createElement('div');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Pro';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(3000);
+
+    // Must NOT have re-clicked the trigger — fast-path should recognise "Pro" === "3.1 Pro".
+    expect(selectorBtn.click).toHaveBeenCalledTimes(0);
+  });
+
   it('auto-locks Thinking level by opening submenu and clicking the target item', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
