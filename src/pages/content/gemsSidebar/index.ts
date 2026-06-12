@@ -151,15 +151,50 @@ export function scrapeGemsFromDocument(doc: Document = document): GemMetadata[] 
   return items;
 }
 
+/**
+ * Matches a leading `/u/<n>` Google multi-account segment (e.g. `/u/1`). The
+ * default account is served at the bare path, so a missing segment is normal.
+ */
+const ACCOUNT_SEGMENT_RE = /^\/u\/\d+/;
+
 function parseGemHref(href: string): { id: string; path: string } | null {
   try {
     const url = new URL(href, location.origin);
     const match = url.pathname.match(/^\/(?:u\/\d+\/)?gem\/([^/?#]+)/);
     if (!match) return null;
-    return { id: match[1], path: `${url.pathname}${url.search}${url.hash}` };
+    // Store the account-*relative* path. The gem cache + MRU are shared across
+    // every window of the same browser profile (chrome.storage.local), so
+    // baking in the `/u/<n>` of whichever account happened to populate the
+    // cache would leak it into a window signed into a different account. The
+    // live account is re-applied at render time — see resolveGemHref.
+    const accountRelativePath = url.pathname.replace(ACCOUNT_SEGMENT_RE, '');
+    return { id: match[1], path: `${accountRelativePath}${url.search}${url.hash}` };
   } catch {
     return null;
   }
+}
+
+/**
+ * Resolve a cached gem path to an absolute URL pinned to the *current window's*
+ * Google account.
+ *
+ * Two browser windows signed into two accounts share one chrome.storage.local
+ * gem cache/MRU. Without this, the rendered href carries whatever `/u/<n>`
+ * segment last populated the cache, so clicking a gem in one window silently
+ * switches it to the other window's account (and the cross-tab storage listener
+ * spreads that stale href to both windows). Stripping any cached segment — which
+ * also heals caches written by older builds — and re-applying the segment from
+ * the live URL keeps every click inside the window's own account.
+ *
+ * `currentPathname` is injectable for tests; it defaults to the live location.
+ */
+export function resolveGemHref(
+  cachedHref: string,
+  currentPathname: string = location.pathname,
+): string {
+  const accountSegment = currentPathname.match(ACCOUNT_SEGMENT_RE)?.[0] ?? '';
+  const accountRelative = cachedHref.replace(ACCOUNT_SEGMENT_RE, '');
+  return `https://gemini.google.com${accountSegment}${accountRelative}`;
 }
 
 export function isGemsViewPathname(pathname: string): boolean {
@@ -498,7 +533,7 @@ function buildItem(gem: GemMetadata): HTMLElement {
   const item = document.createElement('a');
   item.className = 'gv-gems-item';
   item.setAttribute('role', 'listitem');
-  item.href = `https://gemini.google.com${gem.href}`;
+  item.href = resolveGemHref(gem.href);
   item.title = gem.description ? `${gem.name} — ${gem.description}` : gem.name;
 
   const icon = document.createElement('span');

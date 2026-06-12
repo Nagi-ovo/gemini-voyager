@@ -101,14 +101,16 @@ describe('gemsSidebar scraper', () => {
     ]);
   });
 
-  it('parses account-scoped gem hrefs', () => {
+  it('normalizes account-scoped gem hrefs to an account-relative path', () => {
+    // The cache is shared across every window of the browser profile, so the
+    // scraped href must not carry the account that happened to scrape it.
     document.body.appendChild(buildGemsListFragment([{ id: 'scoped', name: 'Scoped Gem' }]));
     document.querySelector('a.bot-row')!.setAttribute('href', '/u/1/gem/scoped');
 
     expect(scrapeGemsFromDocument()).toEqual([
       {
         id: 'scoped',
-        href: '/u/1/gem/scoped',
+        href: '/gem/scoped',
         name: 'Scoped Gem',
       },
     ]);
