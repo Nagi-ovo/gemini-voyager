@@ -1145,16 +1145,9 @@ class DefaultModelManager {
     const targetName = normalize(targetModel.name);
     const targetAsWholeWord = new RegExp(`(^|\\b)${escapeRegExp(targetName)}(\\b|$)`, 'i');
 
-    // 1. Find selector button. The 2026 redesign exposes the real button via
-    // [data-test-id="bard-mode-menu-button"]; older builds only had the inner
-    // .input-area-switch-label div (click bubbles to its parent button).
-    const selectorBtn =
-      document.querySelector('[data-test-id="bard-mode-menu-button"]') ||
-      document.querySelector('button.input-area-switch') ||
-      document.querySelector('.input-area-switch-label') ||
-      document.querySelector('[data-test-id="model-selector"]') ||
-      document.querySelector('button[aria-haspopup="menu"].mat-mdc-menu-trigger'); // Legacy fallback
-
+    // 1. Find selector button (shared helper keeps selectors in sync with the
+    //    fast-path check in readTriggerPillLines — #756).
+    const selectorBtn = this.findSelectorButton();
     if (!selectorBtn) return;
 
     // 2. Check current model text - early return if already correct
@@ -1295,9 +1288,7 @@ class DefaultModelManager {
     this.isLocked = true;
 
     try {
-      const trigger =
-        document.querySelector<HTMLElement>('[data-test-id="bard-mode-menu-button"]') ??
-        document.querySelector<HTMLElement>('button.input-area-switch');
+      const trigger = this.findSelectorButton();
       if (!trigger) return;
 
       // Open the model menu first.
@@ -1454,14 +1445,29 @@ class DefaultModelManager {
   }
 
   /**
+   * Find the model selector trigger button using all known selectors.
+   * Shared by `readTriggerPillLines`, `tryLockToModel`, and `tryLockToThinkingLevel`
+   * so the fast-path check and the actual menu-opening code always agree on
+   * whether the button exists (prevents unnecessary menu clicks when the button
+   * is only discoverable via a selector that the fast-path didn't check — #756).
+   */
+  private findSelectorButton(): HTMLElement | null {
+    return (
+      document.querySelector<HTMLElement>('[data-test-id="bard-mode-menu-button"]') ??
+      document.querySelector<HTMLElement>('button.input-area-switch') ??
+      document.querySelector<HTMLElement>('.input-area-switch-label') ??
+      document.querySelector<HTMLElement>('[data-test-id="model-selector"]') ??
+      document.querySelector<HTMLElement>('button[aria-haspopup="menu"].mat-mdc-menu-trigger')
+    );
+  }
+
+  /**
    * Read the trigger pill's visible text. The 2026 redesign renders the model name and
    * the optional thinking level on two separate lines (innerText newline-separated).
-   * Returns lower-cased lines so callers can match against stored labels.
+   * Returns the raw lines so callers can match against stored labels.
    */
   private readTriggerPillLines(): string[] {
-    const btn =
-      document.querySelector<HTMLElement>('[data-test-id="bard-mode-menu-button"]') ??
-      document.querySelector<HTMLElement>('button.input-area-switch');
+    const btn = this.findSelectorButton();
     const text = btn?.innerText ?? btn?.textContent ?? '';
     return text
       .split(/\n+/)
