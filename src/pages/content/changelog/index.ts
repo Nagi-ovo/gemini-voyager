@@ -461,15 +461,16 @@ function createChangelogModal(
     url: string;
     textKey: TranslationKey;
     ctaKey: TranslationKey;
-  } | null = webStoreRatingChannel === 'edge'
-    ? { url: EDGE_STORE_URL, textKey: 'changelog_rate_edge', ctaKey: 'changelog_rate_edge_cta' }
-    : webStoreRatingChannel === 'chrome'
-      ? {
-          url: CHROME_STORE_URL,
-          textKey: 'changelog_rate_chrome',
-          ctaKey: 'changelog_rate_chrome_cta',
-        }
-      : null;
+  } | null =
+    webStoreRatingChannel === 'edge'
+      ? { url: EDGE_STORE_URL, textKey: 'changelog_rate_edge', ctaKey: 'changelog_rate_edge_cta' }
+      : webStoreRatingChannel === 'chrome'
+        ? {
+            url: CHROME_STORE_URL,
+            textKey: 'changelog_rate_chrome',
+            ctaKey: 'changelog_rate_chrome_cta',
+          }
+        : null;
   if (storeRating) {
     const ratingBanner = document.createElement('div');
     ratingBanner.className = 'gv-changelog-chrome-rating';

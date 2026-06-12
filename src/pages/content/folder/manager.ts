@@ -7720,7 +7720,8 @@ export class FolderManager {
           this.applyFolderEnabledSetting();
         }
         if (changes[StorageKeys.FOLDER_FLOATING_OPEN_ON_START]) {
-          this.floatingOpenOnStart = changes[StorageKeys.FOLDER_FLOATING_OPEN_ON_START].newValue !== false;
+          this.floatingOpenOnStart =
+            changes[StorageKeys.FOLDER_FLOATING_OPEN_ON_START].newValue !== false;
           this.debug('Floating-mode startup panel setting changed:', this.floatingOpenOnStart);
         }
         if (changes[StorageKeys.FOLDER_FLOATING_MODE_ENABLED]) {

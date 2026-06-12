@@ -4,15 +4,15 @@ import {
   CHROME_WEB_STORE_EXTENSION_ID,
   EDGE_ADDONS_EXTENSION_ID,
   getExtensionRuntimeId,
+  getModifierKey,
   getVoyagerBuildTarget,
   getWebStoreRatingChannel,
-  getModifierKey,
   isBrave,
   isChromeReleaseChannel,
   isChromeWebStoreInstall,
   isChromeWebStoreInstallOnEdge,
-  isEdgeAddonsInstall,
   isEdgeAddonsBuild,
+  isEdgeAddonsInstall,
   isEdgeBuild,
   isEdgeReleaseChannel,
   isLocalEdgeBuildInstall,
@@ -24,8 +24,7 @@ import {
 } from '../browser';
 
 const ORIGINAL_RUNTIME_ID = chrome.runtime.id;
-const CHROME_UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0';
+const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0';
 const EDGE_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Edg/120.0.0.0';
 const FIREFOX_UA = 'Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0';
