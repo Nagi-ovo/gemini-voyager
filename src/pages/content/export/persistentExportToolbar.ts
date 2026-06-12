@@ -32,7 +32,10 @@ const TOP_RIGHT_AVOIDANCE_SELECTORS = [
 let activeAvoidanceRoot: HTMLDivElement | null = null;
 let activeAvoidanceCleanup: (() => void) | null = null;
 
-function isVisibleTopRightElement(element: Element, toolbarRoot: HTMLElement): element is HTMLElement {
+function isVisibleTopRightElement(
+  element: Element,
+  toolbarRoot: HTMLElement,
+): element is HTMLElement {
   if (!(element instanceof HTMLElement)) return false;
   if (element === toolbarRoot || toolbarRoot.contains(element)) return false;
   const rect = element.getBoundingClientRect();
@@ -51,7 +54,10 @@ function calculateRightOffset(toolbarRoot: HTMLElement): number {
     (minLeft, element) => Math.min(minLeft, element.getBoundingClientRect().left),
     window.innerWidth,
   );
-  return Math.max(DEFAULT_RIGHT_OFFSET_PX, Math.ceil(window.innerWidth - leftMost + TOP_RIGHT_GAP_PX));
+  return Math.max(
+    DEFAULT_RIGHT_OFFSET_PX,
+    Math.ceil(window.innerWidth - leftMost + TOP_RIGHT_GAP_PX),
+  );
 }
 
 function installToolbarAvoidance(root: HTMLDivElement): void {
