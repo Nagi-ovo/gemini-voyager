@@ -13,7 +13,7 @@ A simple guide for installing Voyager on Safari.
 
 ### 1. Download
 
-Get the latest `gemini-voyager-X.Y.Z.dmg` from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+Get the latest `voyager-vX.Y.Z.dmg` from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 
 ### 2. Install
 

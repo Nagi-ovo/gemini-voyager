@@ -68,8 +68,8 @@ describe('Popup latest version helpers', () => {
       expect(
         extractDmgDownloadUrl({
           assets: [
-            { name: 'gemini-voyager-chrome-v1.3.3.zip', browser_download_url: 'https://x/a.zip' },
-            { name: 'gemini-voyager-firefox-v1.3.3.xpi', browser_download_url: 'https://x/a.xpi' },
+            { name: 'voyager-chrome-v1.3.3.zip', browser_download_url: 'https://x/a.zip' },
+            { name: 'voyager-firefox-v1.3.3.xpi', browser_download_url: 'https://x/a.xpi' },
           ],
         }),
       ).toBeNull();
@@ -81,12 +81,12 @@ describe('Popup latest version helpers', () => {
 
     it('returns the DMG download URL when present', () => {
       const url =
-        'https://github.com/Nagi-ovo/gemini-voyager/releases/download/v1.3.3/gemini-voyager-v1.3.3.dmg';
+        'https://github.com/Nagi-ovo/gemini-voyager/releases/download/v1.3.3/voyager-v1.3.3.dmg';
       expect(
         extractDmgDownloadUrl({
           assets: [
-            { name: 'gemini-voyager-chrome-v1.3.3.zip', browser_download_url: 'https://x/a.zip' },
-            { name: 'gemini-voyager-v1.3.3.dmg', browser_download_url: url },
+            { name: 'voyager-chrome-v1.3.3.zip', browser_download_url: 'https://x/a.zip' },
+            { name: 'voyager-v1.3.3.dmg', browser_download_url: url },
           ],
         }),
       ).toBe(url);

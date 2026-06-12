@@ -28,7 +28,7 @@
 
 **Chrome / Edge / Brave / Opera의 경우:**
 
-1. [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)에서 최신 `gemini-voyager-chrome-vX.Y.Z.zip`을 다운로드합니다.
+1. [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)에서 최신 `voyager-chrome-vX.Y.Z.zip`을 다운로드합니다.
 2. 파일의 압축을 풉니다.
 3. 브라우저의 확장 프로그램 페이지(`chrome://extensions`)를 엽니다.
 4. 우측 상단의 **개발자 모드**를 활성화합니다.
@@ -36,7 +36,7 @@
 
 **Firefox의 경우:**
 
-1. [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)에서 최신 `gemini-voyager-firefox-vX.Y.Z.xpi`를 다운로드합니다.
+1. [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)에서 최신 `voyager-firefox-vX.Y.Z.xpi`를 다운로드합니다.
 2. 부가 기능 관리자(`about:addons`)를 엽니다.
 3. `.xpi` 파일을 드래그 앤 드롭하여 설치합니다 (또는 톱니바퀴 아이콘 ⚙️ -> **파일에서 부가 기능 설치** 클릭).
 

@@ -28,7 +28,7 @@ Le processus de validation des stores peut être lent. Si vous voulez la version
 
 **Pour Chrome / Edge / Brave / Opera :**
 
-1. Téléchargez la dernière version de `gemini-voyager-chrome-vX.Y.Z.zip` depuis les [Releases GitHub](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Téléchargez la dernière version de `voyager-chrome-vX.Y.Z.zip` depuis les [Releases GitHub](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Décompressez le fichier.
 3. Ouvrez la page des Extensions de votre navigateur (`chrome://extensions`).
 4. Activez le **Mode développeur** (en haut à droite).
@@ -36,7 +36,7 @@ Le processus de validation des stores peut être lent. Si vous voulez la version
 
 **Pour Firefox :**
 
-1. Téléchargez la dernière version de `gemini-voyager-firefox-vX.Y.Z.xpi` depuis les [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Téléchargez la dernière version de `voyager-firefox-vX.Y.Z.xpi` depuis les [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Ouvrez le Gestionnaire de modules complémentaires (`about:addons`).
 3. Glissez-déposez le fichier `.xpi` pour l'installer (ou cliquez sur l'icône d'engrenage ⚙️ -> **Installer un module depuis un fichier**).
 

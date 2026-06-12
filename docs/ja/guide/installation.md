@@ -28,7 +28,7 @@
 
 **Chrome / Edge / Brave / Opera：**
 
-1. [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) から最新の `gemini-voyager-chrome-vX.Y.Z.zip` をダウンロードします。
+1. [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) から最新の `voyager-chrome-vX.Y.Z.zip` をダウンロードします。
 2. 解凍します。
 3. 拡張機能ページ (`chrome://extensions`) を開きます。
 4. **デベロッパーモード**（右上）をオンにします。
@@ -36,7 +36,7 @@
 
 **Firefox：**
 
-1. [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) から最新の `gemini-voyager-firefox-vX.Y.Z.xpi` をダウンロードします。
+1. [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) から最新の `voyager-firefox-vX.Y.Z.xpi` をダウンロードします。
 2. アドオン管理ページ (`about:addons`) を開きます。
 3. ダウンロードした `.xpi` ファイルをドラッグ＆ドロップしてインストールします（または右上の歯車アイコン ⚙️ -> **ファイルからアドオンをインストール**）。
 

@@ -158,6 +158,15 @@ jobs:
 
           cd dist_chrome && zip -r ../voyager-chrome-${TAG}.zip . && cd ..
 
+      - name: Validate Chrome artifact
+        run: |
+          TAG=${{ steps.vars.outputs.tag_name }}
+          ZIP="voyager-chrome-${TAG}.zip"
+
+          unzip -Z1 "$ZIP" > chrome-zip-files.txt
+          grep -qx 'manifest.json' chrome-zip-files.txt
+          grep -qx '_locales/en/messages.json' chrome-zip-files.txt
+
       - name: Sign Firefox Extension and Submit to AMO
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
@@ -219,6 +228,8 @@ jobs:
           - **Chrome / Edge / Chromium browsers**: \`voyager-chrome-${TAG}.zip\`
           - **Firefox**: \`voyager-firefox-${TAG}.xpi\`
           - **Safari**: \`voyager-${TAG}.dmg\`
+
+          > Do not use GitHub's auto-generated **Source code (zip/tar.gz)** archives for manual extension installs. Those files are repository source snapshots, not browser-ready extension packages.
 
           ### 🍎 Safari 安装与限制 (Safari Installation & Limitations)
 

@@ -28,7 +28,7 @@
 
 **Для Chrome / Edge / Brave / Opera:**
 
-1. Скачайте последний `gemini-voyager-chrome-vX.Y.Z.zip` из [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Скачайте последний `voyager-chrome-vX.Y.Z.zip` из [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Распакуйте файл.
 3. Откройте страницу Расширений вашего браузера (`chrome://extensions`).
 4. Включите **Режим разработчика** (вверху справа).
@@ -36,7 +36,7 @@
 
 **Для Firefox:**
 
-1. Скачайте последний `gemini-voyager-firefox-vX.Y.Z.xpi` из [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Скачайте последний `voyager-firefox-vX.Y.Z.xpi` из [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Откройте Менеджер дополнений (`about:addons`).
 3. Перетащите файл `.xpi` для установки (или нажмите значок шестеренки ⚙️ -> **Установить дополнение из файла**).
 

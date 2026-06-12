@@ -28,7 +28,7 @@ O processo de revisão da Web Store pode ser lento. Se quiser a versão de ponta
 
 **Para Chrome / Edge / Brave / Opera:**
 
-1. Descarregue o último `gemini-voyager-chrome-vX.Y.Z.zip` das [Releases do GitHub](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Descarregue o último `voyager-chrome-vX.Y.Z.zip` das [Releases do GitHub](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Descompacte o ficheiro.
 3. Abra a página de Extensões do seu navegador (`chrome://extensions`).
 4. Ative o **Modo de programador** (canto superior direito).
@@ -36,7 +36,7 @@ O processo de revisão da Web Store pode ser lento. Se quiser a versão de ponta
 
 **Para Firefox:**
 
-1. Descarregue o último `gemini-voyager-firefox-vX.Y.Z.xpi` das [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Descarregue o último `voyager-firefox-vX.Y.Z.xpi` das [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Abra o Gestor de Add-ons (`about:addons`).
 3. Arraste e largue o ficheiro `.xpi` para instalar (ou clique no ícone de engrenagem ⚙️ -> **Instalar Add-on de Ficheiro**).
 

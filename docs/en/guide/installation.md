@@ -28,7 +28,7 @@ The Web Store review process can be slow. If you want the cutting-edge version i
 
 **For Chrome / Edge / Brave / Opera:**
 
-1. Download the latest `gemini-voyager-chrome-vX.Y.Z.zip` from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Download the latest `voyager-chrome-vX.Y.Z.zip` from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Unzip the file.
 3. Open your browser's Extensions page (`chrome://extensions`).
 4. Enable **Developer mode** (top right).
@@ -36,7 +36,7 @@ The Web Store review process can be slow. If you want the cutting-edge version i
 
 **For Firefox:**
 
-1. Download the latest `gemini-voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Download the latest `voyager-firefox-vX.Y.Z.xpi` from [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
 2. Open the Add-ons Manager (`about:addons`).
 3. Drag and drop the `.xpi` file to install (or click the gear icon ⚙️ -> **Install Add-on From File**).
 

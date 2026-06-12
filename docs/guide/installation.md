@@ -28,7 +28,7 @@
 
 **Chrome / Edge / Brave / Opera：**
 
-1. 去 [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下最新的 `gemini-voyager-chrome-vX.Y.Z.zip`。
+1. 去 [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下最新的 `voyager-chrome-vX.Y.Z.zip`。
 2. 解压。
 3. 打开扩展页 (`chrome://extensions`)。
 4. 开 **开发者模式** (右上角)。
@@ -36,7 +36,7 @@
 
 **Firefox：**
 
-1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下最新的 `gemini-voyager-firefox-vX.Y.Z.xpi`。
+1. 去 [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下最新的 `voyager-firefox-vX.Y.Z.xpi`。
 2. 打开扩展管理页 (`about:addons`)。
 3. 把下载的 `.xpi` 文件拖进去安装（或者点右上角齿轮 ⚙️ -> **从文件安装附加组件**）。
 

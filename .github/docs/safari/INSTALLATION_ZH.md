@@ -13,7 +13,7 @@
 
 ### 1. 下载
 
-从 [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载最新的 `gemini-voyager-X.Y.Z.dmg`。
+从 [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载最新的 `voyager-vX.Y.Z.dmg`。
 
 ### 2. 安装
 
