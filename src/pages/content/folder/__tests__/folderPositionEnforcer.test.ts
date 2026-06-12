@@ -3,6 +3,13 @@ import browser from 'webextension-polyfill';
 
 import { FolderManager } from '../manager';
 
+const { mountFloatingPanelMock } = vi.hoisted(() => ({
+  mountFloatingPanelMock: vi.fn(() => ({
+    destroy: vi.fn(),
+    update: vi.fn(),
+  })),
+}));
+
 vi.mock('webextension-polyfill', () => ({
   default: {
     storage: {
@@ -29,10 +36,7 @@ vi.mock('@/utils/i18n', () => ({
 }));
 
 vi.mock('../floatingPanel', () => ({
-  mountFloatingPanel: vi.fn(() => ({
-    destroy: vi.fn(),
-    update: vi.fn(),
-  })),
+  mountFloatingPanel: mountFloatingPanelMock,
 }));
 
 type TestableManager = {
@@ -56,6 +60,7 @@ type TestableManager = {
   findCurrentSidebarContainer: () => HTMLElement | null;
   ensureNotebooksAnchorButton: () => void;
   cleanupNotebooksAnchorButton: () => void;
+  findRecentSection: () => boolean;
   findRecentSectionCandidate: () => HTMLElement | null;
   findFolderAnchorCandidate: () => HTMLElement | null;
 };
@@ -118,6 +123,7 @@ describe('folder position enforcer (above Recents)', () => {
   let manager: FolderManager | null = null;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(browser.storage.sync.get).mockResolvedValue({});
     vi.mocked(browser.storage.sync.set).mockResolvedValue(undefined);
   });
@@ -126,6 +132,7 @@ describe('folder position enforcer (above Recents)', () => {
     manager?.destroy();
     manager = null;
     document.body.innerHTML = '';
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -436,6 +443,31 @@ describe('folder position enforcer (above Recents)', () => {
     expect(reinitializeSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('waits before opening the floating fallback when a visible sidebar anchor is temporarily missing', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-12T00:00:00.000Z'));
+
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    const sidebar = document.createElement('div');
+    sidebar.setAttribute('data-test-id', 'overflow-container');
+    document.body.appendChild(sidebar);
+    mockRect(sidebar, 280, 800);
+
+    typed.folderEnabled = true;
+    typed.floatingModeActive = false;
+
+    await typed.runFolderRecoveryTick();
+
+    expect(mountFloatingPanelMock).not.toHaveBeenCalled();
+
+    vi.setSystemTime(new Date('2026-06-12T00:00:06.001Z'));
+    await typed.runFolderRecoveryTick();
+
+    expect(mountFloatingPanelMock).toHaveBeenCalledTimes(1);
+  });
+
   // Regression: dragging the window across Gemini's mobile breakpoint strips the
   // folder and fires a recovery reinit. `reinitializeFolderUI` runs
   // `runCleanupTasks()` BEFORE re-running `initializeFolderUI`; if that init bails
@@ -478,9 +510,9 @@ describe('folder position enforcer (above Recents)', () => {
     expect(removeSpy).toHaveBeenCalledWith('resize', armedHandler);
   });
 
-  // Regression: the partial mount done by `findRecentSection`'s retry timer can
-  // race the recovery-driven reinit. `createFolderUI` must drop any existing
-  // container first so the race can't strand a duplicate folder in the sidebar.
+  // Regression: recovery-driven reinit can call `createFolderUI` while an older
+  // container still exists. Drop the old one first so we never strand a
+  // duplicate folder in the sidebar.
   it('does not strand a duplicate container when createFolderUI runs twice', () => {
     manager = new FolderManager();
     const typed = manager as unknown as TestableManager &
@@ -497,10 +529,38 @@ describe('folder position enforcer (above Recents)', () => {
     expect(first).not.toBeNull();
     expect(sectionParent.querySelectorAll('.gv-folder-container')).toHaveLength(1);
 
-    // Second call (the racing retry) must replace, not duplicate.
+    // Second call (for example, a recovery reinit) must replace, not duplicate.
     typed.createFolderUI();
     expect(sectionParent.querySelectorAll('.gv-folder-container')).toHaveLength(1);
     expect(first?.isConnected).toBe(false);
     expect(typed.containerElement?.isConnected).toBe(true);
+  });
+
+  it('does not partially mount from findRecentSection when the anchor appears late', async () => {
+    vi.useFakeTimers();
+
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager & Record<'createFolderUI', () => void>;
+
+    const sidebar = document.createElement('div');
+    sidebar.setAttribute('data-test-id', 'overflow-container');
+    document.body.appendChild(sidebar);
+
+    typed.sidebarContainer = sidebar;
+    typed.folderEnabled = true;
+    typed.floatingModeActive = false;
+
+    const createSpy = vi.spyOn(typed, 'createFolderUI');
+
+    expect(typed.findRecentSection()).toBe(false);
+
+    const recentsSection = document.createElement('expandable-section');
+    recentsSection.setAttribute('data-test-id', 'chats-expandable-section');
+    sidebar.appendChild(recentsSection);
+
+    await vi.advanceTimersByTimeAsync(2500);
+
+    expect(createSpy).not.toHaveBeenCalled();
+    expect(typed.containerElement).toBeNull();
   });
 });

@@ -348,6 +348,7 @@ interface SettingsUpdate {
   resetPosition?: boolean;
   folderEnabled?: boolean;
   floatingModeEnabled?: boolean;
+  floatingOpenOnStart?: boolean;
   hideArchivedConversations?: boolean;
   customWebsites?: string[];
   watermarkDownloadEnabled?: boolean;
@@ -469,6 +470,7 @@ export default function Popup() {
   const [markerLevelEnabled, setMarkerLevelEnabled] = useState<boolean>(false);
   const [folderEnabled, setFolderEnabled] = useState<boolean>(true);
   const [floatingModeEnabled, setFloatingModeEnabled] = useState<boolean>(false);
+  const [floatingOpenOnStart, setFloatingOpenOnStart] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
   const [customWebsites, setCustomWebsites] = useState<string[]>([]);
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
@@ -636,6 +638,8 @@ export default function Popup() {
         payload.geminiFolderEnabled = settings.folderEnabled;
       if (typeof settings.floatingModeEnabled === 'boolean')
         payload[StorageKeys.FOLDER_FLOATING_MODE_ENABLED] = settings.floatingModeEnabled;
+      if (typeof settings.floatingOpenOnStart === 'boolean')
+        payload[StorageKeys.FOLDER_FLOATING_OPEN_ON_START] = settings.floatingOpenOnStart;
       if (typeof settings.hideArchivedConversations === 'boolean')
         payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
       if (settings.resetPosition) payload.geminiTimelinePosition = null;
@@ -1046,6 +1050,7 @@ export default function Popup() {
           geminiTimelineMarkerLevel: false,
           geminiFolderEnabled: true,
           [StorageKeys.FOLDER_FLOATING_MODE_ENABLED]: false,
+          [StorageKeys.FOLDER_FLOATING_OPEN_ON_START]: true,
           geminiFolderHideArchivedConversations: false,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
@@ -1113,6 +1118,7 @@ export default function Popup() {
           setMarkerLevelEnabled(!!res?.geminiTimelineMarkerLevel);
           setFolderEnabled(res?.geminiFolderEnabled !== false);
           setFloatingModeEnabled(res?.[StorageKeys.FOLDER_FLOATING_MODE_ENABLED] === true);
+          setFloatingOpenOnStart(res?.[StorageKeys.FOLDER_FLOATING_OPEN_ON_START] !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
           const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
             ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
@@ -1924,6 +1930,29 @@ export default function Popup() {
                   }}
                 />
               </div>
+              {floatingModeEnabled && (
+                <div className="group flex items-center justify-between gap-3 pl-4">
+                  <div className="min-w-0 flex-1">
+                    <Label
+                      htmlFor="floating-open-on-start"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('openFloatingFolderOnStartup')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('openFloatingFolderOnStartupHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="floating-open-on-start"
+                    checked={floatingOpenOnStart}
+                    onChange={(e) => {
+                      setFloatingOpenOnStart(e.target.checked);
+                      apply({ floatingOpenOnStart: e.target.checked });
+                    }}
+                  />
+                </div>
+              )}
               <div className="group flex items-center justify-between">
                 <Label
                   htmlFor="hide-archived"

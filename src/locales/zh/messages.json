@@ -683,6 +683,14 @@
     "message": "以可拖动的悬浮窗形式展示文件夹，不再注入到侧边栏。",
     "description": "Helper text under the floating folder mode toggle"
   },
+  "openFloatingFolderOnStartup": {
+    "message": "进入时自动打开悬浮面板",
+    "description": "Popup toggle that controls whether floating folder mode opens the panel immediately when Gemini loads"
+  },
+  "openFloatingFolderOnStartupHint": {
+    "message": "关闭后，进入 Gemini 时只显示悬浮按钮，需要时点击按钮打开文件夹。",
+    "description": "Helper text under the floating folder startup toggle"
+  },
   "hideArchivedConversations": {
     "message": "隐藏已归档对话",
     "description": "从主列表隐藏已添加到文件夹的对话"

@@ -75,6 +75,7 @@ const ARCHIVED_CONVERSATION_ACTIONS_CLASS = 'gv-conversation-archived-actions';
 // work, and how long the legacy actions-container layout probe stays cached.
 const ENHANCEMENT_FRAME_BUDGET_MS = 8;
 const LEGACY_ACTIONS_PROBE_TTL_MS = 1000;
+const SIDEBAR_ANCHOR_FALLBACK_GRACE_MS = 6000;
 // Max folder nesting depth — matches the floating panel's MAX_FOLDER_DEPTH.
 // root = 0, subfolder = 1, and that's the limit. Pre-existing data deeper
 // than this stays intact (we never destroy user data); the cap only gates
@@ -290,10 +291,11 @@ export class FolderManager {
   // Floating-mode state — an opt-in "always use a floating window for folders"
   // switch exposed in the popup. When on, we never attempt to inject the
   // folder panel into Gemini's sidebar; we mount the body-level floating
-  // panel + native ⋮ menu observer and call it a day. When off, normal
+  // panel (or its FAB) + native ⋮ menu observer and call it a day. When off, normal
   // sidebar injection; a failure is a silent no-op.
   private floatingPanelHandle: FloatingPanelHandle | null = null;
   private floatingModeEnabled: boolean = false;
+  private floatingOpenOnStart: boolean = true;
   private floatingModeActive: boolean = false;
   // When Gemini swaps its sidebar DOM for an unsupported layout (e.g. mobile
   // breakpoint at narrow viewport widths), our sidebar folder is removed and
@@ -303,6 +305,7 @@ export class FolderManager {
   // anchor returns. It is distinct from `floatingModeActive`, which reflects
   // the user's *explicit* floating-mode toggle in the popup.
   private floatingFallbackActive: boolean = false;
+  private sidebarAnchorMissingSince: number | null = null;
   private folderRecoveryTimer: number | null = null;
   private folderRecoveryInFlight: boolean = false;
   // Long-lived DOM-recovery watchers. Deliberately NOT registered via
@@ -714,16 +717,13 @@ export class FolderManager {
     // the watchers must already be live or the feature can never self-heal and the
     // folder stays gone until a full page reload. The watchers are lifetime-scoped
     // (not cleanup tasks) so they survive that `runCleanupTasks()`; this call just
-    // guarantees they're armed even when the first mount lands via the
-    // `findRecentSection` retry rather than this method's tail. Idempotent, and the
-    // synchronous mount steps below can't be interrupted by the 2s tick, so no
-    // floating-fallback flash. See `ensureDomRecoveryWatchers`.
+    // guarantees they're armed even when Gemini has rendered the sidebar shell
+    // before the chats anchor. Idempotent, and the synchronous mount steps below
+    // can't be interrupted by the 2s tick, so no floating-fallback flash. See
+    // `ensureDomRecoveryWatchers`.
     this.ensureDomRecoveryWatchers();
 
-    // Find the Recent section
-    this.findRecentSection();
-
-    if (!this.recentSection) {
+    if (!this.findRecentSection()) {
       this.debugWarn('Could not find Recent section — folder panel unavailable');
       return;
     }
@@ -856,6 +856,7 @@ export class FolderManager {
     const sidebarFolderAlive = this.isSidebarFolderMountedInCurrentSidebar(currentSidebar);
 
     if (sidebarFolderAlive) {
+      this.sidebarAnchorMissingSince = null;
       if (currentSidebar && this.sidebarContainer !== currentSidebar) {
         this.sidebarContainer = currentSidebar;
         this.setupNativeSidebarConversationEnhancements();
@@ -879,6 +880,7 @@ export class FolderManager {
     }
 
     if (sidebarAnchor) {
+      this.sidebarAnchorMissingSince = null;
       // The sidebar is back to a layout we can inject into but the folder
       // isn't there. This usually means a previous reinit ran mid-transition
       // and lost the race against Gemini's render. Retry now.
@@ -894,6 +896,20 @@ export class FolderManager {
       }
       this.reinitializeFolderUI();
       return;
+    }
+
+    if (currentSidebar) {
+      const now = Date.now();
+      if (this.sidebarAnchorMissingSince === null) {
+        this.sidebarAnchorMissingSince = now;
+      }
+      const missingDuration = now - this.sidebarAnchorMissingSince;
+      if (missingDuration < SIDEBAR_ANCHOR_FALLBACK_GRACE_MS) {
+        this.debug('Recovery: sidebar anchor missing temporarily — waiting');
+        return;
+      }
+    } else {
+      this.sidebarAnchorMissingSince = null;
     }
 
     // Anchor is gone — Gemini moved the goalposts. Surface the floating panel
@@ -986,11 +1002,11 @@ export class FolderManager {
   /**
    * Enter "always floating" mode. User has explicitly flipped the popup
    * toggle, so we skip the onboarding nudge entirely and drop the panel
-   * straight onto the page. The native ⋮ → "Move to folder" observers are
-   * wired up here too so users can file conversations without the panel
-   * being open.
+   * or the persistent FAB onto the page based on their startup preference.
+   * The native ⋮ → "Move to folder" observers are wired up here too so users
+   * can file conversations without the panel being open.
    */
-  private async startFloatingMode(): Promise<void> {
+  private async startFloatingMode(openPanel = this.floatingOpenOnStart): Promise<void> {
     if (this.isDestroyed || !this.folderEnabled) return;
     if (this.floatingModeActive) return;
     this.floatingModeActive = true;
@@ -1000,7 +1016,11 @@ export class FolderManager {
     this.setupNativeConversationMenuObserver();
     this.setupFloatingModeSidebarInteractions();
 
-    await this.openFloatingPanel();
+    if (openPanel) {
+      await this.openFloatingPanel();
+    } else {
+      this.showFloatingFab();
+    }
   }
 
   /**
@@ -1342,8 +1362,8 @@ export class FolderManager {
     return !!this.findFolderAnchorCandidateIn(currentSidebar);
   }
 
-  private findRecentSection(): void {
-    if (!this.sidebarContainer) return;
+  private findRecentSection(): boolean {
+    if (!this.sidebarContainer) return false;
 
     // Honor folderAnchor on first injection so the panel lands in the right
     // slot without needing a follow-up enforcer pass. Falls through to the
@@ -1351,19 +1371,12 @@ export class FolderManager {
     const candidate = this.findFolderAnchorCandidate();
     if (candidate) {
       this.recentSection = candidate;
-      return;
+      return true;
     }
 
-    this.debugWarn('Could not find Recent section - will retry');
-    // Retry after a delay
-    setTimeout(() => {
-      this.findRecentSection();
-      if (this.recentSection && !this.containerElement) {
-        this.createFolderUI();
-        this.makeConversationsDraggable();
-        this.setupMutationObserver();
-      }
-    }, 2000);
+    this.recentSection = null;
+    this.debugWarn('Could not find Recent section - waiting for recovery tick');
+    return false;
   }
 
   /**
@@ -1464,11 +1477,9 @@ export class FolderManager {
   private createFolderUI(): void {
     if (!this.recentSection) return;
 
-    // Idempotency guard. A pending `findRecentSection` retry timer can race the
-    // recovery-driven reinit and reach this while a container already exists;
-    // since the recovery watchers now stay armed across reinit, that reinit is
-    // more reliable and the race is easier to hit. Drop any prior container
-    // first so we never strand a duplicate folder in the sidebar.
+    // Idempotency guard. A recovery-driven reinit can reach this while a
+    // container already exists; drop any prior container first so we never
+    // strand a duplicate folder in the sidebar.
     if (this.containerElement) {
       this.containerElement.remove();
       this.containerElement = null;
@@ -7332,20 +7343,26 @@ export class FolderManager {
   /**
    * Opt-in toggle that puts the folder feature into "floating window" mode.
    * When on, the sidebar-injection path is skipped entirely and folders live
-   * in a body-level floating panel instead. Off by default — users opt in
+   * in a body-level floating panel/FAB instead. Off by default — users opt in
    * from the popup's Folder options.
    */
   private async loadFloatingModeSetting(): Promise<void> {
     try {
       const result = await browser.storage.sync.get({
         [StorageKeys.FOLDER_FLOATING_MODE_ENABLED]: false,
+        [StorageKeys.FOLDER_FLOATING_OPEN_ON_START]: true,
       });
       this.floatingModeEnabled = result[StorageKeys.FOLDER_FLOATING_MODE_ENABLED] === true;
-      this.debug('Loaded floating-mode setting:', this.floatingModeEnabled);
+      this.floatingOpenOnStart = result[StorageKeys.FOLDER_FLOATING_OPEN_ON_START] !== false;
+      this.debug('Loaded floating-mode setting:', {
+        enabled: this.floatingModeEnabled,
+        openOnStart: this.floatingOpenOnStart,
+      });
     } catch (error) {
       if (isExtensionContextInvalidatedError(error)) return;
       console.error('[FolderManager] Failed to load floating-mode setting:', error);
       this.floatingModeEnabled = false;
+      this.floatingOpenOnStart = true;
     }
   }
 
@@ -7702,47 +7719,49 @@ export class FolderManager {
           // Apply the change to folder visibility
           this.applyFolderEnabledSetting();
         }
+        if (changes[StorageKeys.FOLDER_FLOATING_OPEN_ON_START]) {
+          this.floatingOpenOnStart = changes[StorageKeys.FOLDER_FLOATING_OPEN_ON_START].newValue !== false;
+          this.debug('Floating-mode startup panel setting changed:', this.floatingOpenOnStart);
+        }
         if (changes[StorageKeys.FOLDER_FLOATING_MODE_ENABLED]) {
           const next = changes[StorageKeys.FOLDER_FLOATING_MODE_ENABLED].newValue === true;
-          if (next === this.floatingModeEnabled) return;
-          this.floatingModeEnabled = next;
-          this.debug('Floating-mode toggle changed:', next);
+          if (next !== this.floatingModeEnabled) {
+            this.floatingModeEnabled = next;
+            this.debug('Floating-mode toggle changed:', next);
 
-          if (!this.folderEnabled) {
-            // Folder feature itself is off — nothing to swap in or out, just
-            // remember the setting for when the user turns folders back on.
-            return;
-          }
-
-          if (next) {
-            // Switch to floating: drop any sidebar-mode UI and mount the
-            // floating panel. `reinitializeFolderUI` would normally tear down
-            // the sidebar bits but also re-run sidebar init; we want the
-            // teardown without the re-init, so do it inline.
-            if (this.containerElement) {
-              this.containerElement.remove();
-              this.containerElement = null;
+            if (!this.folderEnabled) {
+              // Folder feature itself is off — nothing to swap in or out, just
+              // remember the setting for when the user turns folders back on.
+            } else if (next) {
+              // Switch to floating: drop any sidebar-mode UI and mount the
+              // floating panel. `reinitializeFolderUI` would normally tear down
+              // the sidebar bits but also re-run sidebar init; we want the
+              // teardown without the re-init, so do it inline.
+              if (this.containerElement) {
+                this.containerElement.remove();
+                this.containerElement = null;
+              }
+              if (this.multiSelectHostElement) {
+                this.multiSelectHostElement.remove();
+                this.multiSelectHostElement = null;
+              }
+              if (this.conversationObserver) {
+                this.conversationObserver.disconnect();
+                this.conversationObserver = null;
+              }
+              if (this.sideNavObserver) {
+                this.sideNavObserver.disconnect();
+                this.sideNavObserver = null;
+              }
+              this.teardownPositionEnforcer();
+              this.cleanupNotebooksAnchorButton();
+              void this.startFloatingMode();
+            } else {
+              // Switch to sidebar: tear down floating, then ask the existing
+              // re-init pipeline to rebuild the sidebar panel.
+              this.stopFloatingMode();
+              this.reinitializeFolderUI();
             }
-            if (this.multiSelectHostElement) {
-              this.multiSelectHostElement.remove();
-              this.multiSelectHostElement = null;
-            }
-            if (this.conversationObserver) {
-              this.conversationObserver.disconnect();
-              this.conversationObserver = null;
-            }
-            if (this.sideNavObserver) {
-              this.sideNavObserver.disconnect();
-              this.sideNavObserver = null;
-            }
-            this.teardownPositionEnforcer();
-            this.cleanupNotebooksAnchorButton();
-            void this.startFloatingMode();
-          } else {
-            // Switch to sidebar: tear down floating, then ask the existing
-            // re-init pipeline to rebuild the sidebar panel.
-            this.stopFloatingMode();
-            this.reinitializeFolderUI();
           }
         }
         if (changes.geminiFolderHideArchivedConversations) {

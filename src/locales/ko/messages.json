@@ -683,6 +683,14 @@
     "message": "폴더를 사이드바에 주입하지 않고 드래그 가능한 플로팅 창으로 표시합니다.",
     "description": "Helper text under the floating folder mode toggle"
   },
+  "openFloatingFolderOnStartup": {
+    "message": "시작 시 플로팅 패널 열기",
+    "description": "Popup toggle that controls whether floating folder mode opens the panel immediately when Gemini loads"
+  },
+  "openFloatingFolderOnStartupHint": {
+    "message": "끄면 Gemini 진입 시 플로팅 버튼만 표시되고, 버튼을 누르면 폴더가 열립니다.",
+    "description": "Helper text under the floating folder startup toggle"
+  },
   "hideArchivedConversations": {
     "message": "보관된 대화 숨기기",
     "description": "Hide conversations that are in folders from the main list"

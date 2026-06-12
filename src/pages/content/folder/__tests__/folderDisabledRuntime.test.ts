@@ -3,6 +3,11 @@ import browser from 'webextension-polyfill';
 
 import { FolderManager } from '../manager';
 
+const { mountFloatingFabMock, mountFloatingPanelMock } = vi.hoisted(() => ({
+  mountFloatingFabMock: vi.fn(),
+  mountFloatingPanelMock: vi.fn(() => ({ destroy: vi.fn(), update: vi.fn() })),
+}));
+
 vi.mock('webextension-polyfill', () => ({
   default: {
     storage: {
@@ -21,7 +26,12 @@ vi.mock('@/utils/i18n', () => ({
 }));
 
 vi.mock('../floatingPanel', () => ({
-  mountFloatingPanel: vi.fn(() => ({ destroy: vi.fn(), update: vi.fn() })),
+  mountFloatingPanel: mountFloatingPanelMock,
+}));
+
+vi.mock('../floatingModeFab', () => ({
+  mountFloatingFab: mountFloatingFabMock,
+  unmountFloatingFab: vi.fn(),
 }));
 
 type TestableManager = {
@@ -34,11 +44,12 @@ type TestableManager = {
   nativeMenuObserver: MutationObserver | null;
   folderEnabled: boolean;
   floatingModeEnabled: boolean;
+  floatingOpenOnStart: boolean;
   floatingModeActive: boolean;
   applyFolderEnabledSetting: () => void;
   setupMutationObserver: () => void;
   setupSideNavObserver: () => void;
-  startFloatingMode: () => Promise<void>;
+  startFloatingMode: (openPanel?: boolean) => Promise<void>;
 };
 
 function mountSidebar(): { appRoot: HTMLElement; sidebar: HTMLElement; recents: HTMLElement } {
@@ -62,6 +73,7 @@ describe('FolderManager disabled runtime teardown', () => {
   let manager: FolderManager | null = null;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(browser.storage.sync.get).mockResolvedValue({});
     vi.mocked(browser.storage.sync.set).mockResolvedValue(undefined);
     vi.mocked(browser.storage.local.get).mockResolvedValue({});
@@ -127,5 +139,31 @@ describe('FolderManager disabled runtime teardown', () => {
     typed.applyFolderEnabledSetting();
 
     expect(startFloatingSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens the floating panel by default when floating mode starts', async () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    typed.folderEnabled = true;
+
+    await typed.startFloatingMode();
+
+    expect(mountFloatingPanelMock).toHaveBeenCalledTimes(1);
+    expect(mountFloatingFabMock).not.toHaveBeenCalled();
+  });
+
+  it('starts floating mode as a FAB only when startup panel is disabled', async () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    typed.folderEnabled = true;
+    typed.floatingOpenOnStart = false;
+
+    await typed.startFloatingMode();
+    await vi.waitFor(() => expect(mountFloatingFabMock).toHaveBeenCalledTimes(1));
+
+    expect(mountFloatingPanelMock).not.toHaveBeenCalled();
+    expect(typed.floatingModeActive).toBe(true);
   });
 });

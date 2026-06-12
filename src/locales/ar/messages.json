@@ -683,6 +683,14 @@
     "message": "عرض المجلدات في نافذة عائمة قابلة للسحب بدلاً من الشريط الجانبي.",
     "description": "Helper text under the floating folder mode toggle"
   },
+  "openFloatingFolderOnStartup": {
+    "message": "فتح اللوحة العائمة عند بدء التشغيل",
+    "description": "Popup toggle that controls whether floating folder mode opens the panel immediately when Gemini loads"
+  },
+  "openFloatingFolderOnStartupHint": {
+    "message": "عند إيقافه، يبدأ Voyager بزر عائم فقط؛ انقر عليه لفتح المجلدات.",
+    "description": "Helper text under the floating folder startup toggle"
+  },
   "hideArchivedConversations": {
     "message": "إخفاء المحادثات المؤرشفة",
     "description": "Hide conversations that are in folders from the main list"

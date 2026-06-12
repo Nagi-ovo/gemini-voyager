@@ -683,6 +683,14 @@
     "message": "Muestra las carpetas en una ventana flotante arrastrable en lugar de la barra lateral.",
     "description": "Helper text under the floating folder mode toggle"
   },
+  "openFloatingFolderOnStartup": {
+    "message": "Abrir el panel flotante al iniciar",
+    "description": "Popup toggle that controls whether floating folder mode opens the panel immediately when Gemini loads"
+  },
+  "openFloatingFolderOnStartupHint": {
+    "message": "Si está desactivado, Voyager inicia solo con el botón flotante; haz clic para abrir las carpetas.",
+    "description": "Helper text under the floating folder startup toggle"
+  },
   "hideArchivedConversations": {
     "message": "Ocultar conversaciones archivadas",
     "description": "Hide conversations that are in folders from the main list"

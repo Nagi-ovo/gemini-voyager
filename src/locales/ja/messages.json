@@ -683,6 +683,14 @@
     "message": "サイドバーではなく、ドラッグ可能なフローティングウィンドウでフォルダを表示します。",
     "description": "Helper text under the floating folder mode toggle"
   },
+  "openFloatingFolderOnStartup": {
+    "message": "起動時にフローティングパネルを開く",
+    "description": "Popup toggle that controls whether floating folder mode opens the panel immediately when Gemini loads"
+  },
+  "openFloatingFolderOnStartupHint": {
+    "message": "オフにすると、Voyager はフローティングボタンだけを表示し、クリックするとフォルダを開けます。",
+    "description": "Helper text under the floating folder startup toggle"
+  },
   "hideArchivedConversations": {
     "message": "フォルダに入れた会話をメインリストから隠す",
     "description": "Hide conversations that are in folders from the main list"
