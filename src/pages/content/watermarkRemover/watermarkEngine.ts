@@ -61,6 +61,14 @@ const WATERMARK_ALPHA_MIN = 0.01;
 const WATERMARK_ALPHA_HIGH = 0.35;
 const WATERMARK_ALPHA_LOW = 0.08;
 const WATERMARK_ANCHOR_SWITCH_EVIDENCE_GAP = 8;
+const WATERMARK_MAX_REMOVAL_PASSES = 3;
+const WATERMARK_REPEAT_EVIDENCE_MIN = 20;
+const WATERMARK_REPEAT_LUMINANCE_DELTA_MIN = 12;
+
+interface WatermarkEvidence {
+  score: number;
+  luminanceDelta: number;
+}
 
 const LEGACY_96_WATERMARK_CONFIG: WatermarkConfig = {
   logoSize: 96,
@@ -167,11 +175,11 @@ function calculateLuminance(data: Uint8ClampedArray, index: number): number {
   return data[index] * 0.2126 + data[index + 1] * 0.7152 + data[index + 2] * 0.0722;
 }
 
-function measureWatermarkEvidence(
+function measureWatermarkEvidenceDetails(
   imageData: ImageData,
   alphaMap: Float32Array,
   position: WatermarkPosition,
-): number {
+): WatermarkEvidence {
   let count = 0;
   let alphaSum = 0;
   let luminanceSum = 0;
@@ -217,7 +225,9 @@ function measureWatermarkEvidence(
     }
   }
 
-  if (count === 0) return Number.NEGATIVE_INFINITY;
+  if (count === 0) {
+    return { score: Number.NEGATIVE_INFINITY, luminanceDelta: Number.NEGATIVE_INFINITY };
+  }
 
   const alphaMean = alphaSum / count;
   const luminanceMean = luminanceSum / count;
@@ -231,7 +241,18 @@ function measureWatermarkEvidence(
       ? highAlphaLuminanceSum / highAlphaCount - lowAlphaLuminanceSum / lowAlphaCount
       : 0;
 
-  return correlation * 100 + luminanceDelta;
+  return {
+    score: correlation * 100 + luminanceDelta,
+    luminanceDelta,
+  };
+}
+
+function measureWatermarkEvidence(
+  imageData: ImageData,
+  alphaMap: Float32Array,
+  position: WatermarkPosition,
+): number {
+  return measureWatermarkEvidenceDetails(imageData, alphaMap, position).score;
 }
 
 export function chooseWatermarkAnchorOption(
@@ -265,6 +286,31 @@ export function chooseWatermarkAnchorOption(
   return strongestEvidence - baseEvidence >= WATERMARK_ANCHOR_SWITCH_EVIDENCE_GAP
     ? strongestOption
     : baseOption;
+}
+
+export function removeWatermarkWithResidualCheck(
+  imageData: ImageData,
+  alphaMap: Float32Array,
+  position: WatermarkPosition,
+): number {
+  let passes = 0;
+
+  while (passes < WATERMARK_MAX_REMOVAL_PASSES) {
+    if (passes > 0) {
+      const residualEvidence = measureWatermarkEvidenceDetails(imageData, alphaMap, position);
+      if (
+        residualEvidence.score < WATERMARK_REPEAT_EVIDENCE_MIN ||
+        residualEvidence.luminanceDelta < WATERMARK_REPEAT_LUMINANCE_DELTA_MIN
+      ) {
+        break;
+      }
+    }
+
+    removeWatermark(imageData, alphaMap, position);
+    passes++;
+  }
+
+  return passes;
 }
 
 interface BgCaptures {
@@ -423,8 +469,10 @@ export class WatermarkEngine {
     const { config, alphaMap } = chooseWatermarkAnchorOption(imageData, anchorOptions);
     const position = calculateWatermarkPosition(canvas.width, canvas.height, config);
 
-    // Remove watermark from image data
-    removeWatermark(imageData, alphaMap, position);
+    // Remove watermark from image data. Gemini can stack multiple transparent
+    // marks after iterative image edits, so repeat only while the known alpha
+    // pattern is still clearly present at the selected anchor.
+    removeWatermarkWithResidualCheck(imageData, alphaMap, position);
 
     // Write processed image data back to canvas
     ctx.putImageData(imageData, 0, 0);

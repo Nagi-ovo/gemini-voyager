@@ -7,13 +7,14 @@ import {
   chooseWatermarkAnchorOption,
   detectWatermarkConfig,
   getWatermarkConfigOptions,
+  removeWatermarkWithResidualCheck,
 } from '../watermarkEngine';
 
 const TEST_ALPHA_MAP = Float32Array.from([
   0.02, 0.15, 0.15, 0.02, 0.15, 0.8, 0.8, 0.15, 0.15, 0.8, 0.8, 0.15, 0.02, 0.15, 0.15, 0.02,
 ]);
 
-function createImageDataWithWatermark(config: WatermarkConfig): ImageData {
+function createImageDataWithWatermark(config: WatermarkConfig, layers = 1): ImageData {
   const width = 24;
   const height = 24;
   const data = new Uint8ClampedArray(width * height * 4);
@@ -29,7 +30,10 @@ function createImageDataWithWatermark(config: WatermarkConfig): ImageData {
   for (let row = 0; row < position.height; row++) {
     for (let col = 0; col < position.width; col++) {
       const alpha = TEST_ALPHA_MAP[row * position.width + col];
-      const value = Math.round(255 * alpha + 80 * (1 - alpha));
+      let value = 80;
+      for (let layer = 0; layer < layers; layer++) {
+        value = Math.round(255 * alpha + value * (1 - alpha));
+      }
       const index = ((position.y + row) * width + position.x + col) * 4;
       data[index] = value;
       data[index + 1] = value;
@@ -45,6 +49,22 @@ function createTestAnchorOption(config: WatermarkConfig): WatermarkAnchorOption 
     config,
     alphaMap: TEST_ALPHA_MAP,
   };
+}
+
+function expectWatermarkAreaNearBase(imageData: ImageData, config: WatermarkConfig): void {
+  const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
+
+  for (let row = 0; row < position.height; row++) {
+    for (let col = 0; col < position.width; col++) {
+      const alpha = TEST_ALPHA_MAP[row * position.width + col];
+      if (alpha < 0.08) continue;
+
+      const index = ((position.y + row) * imageData.width + position.x + col) * 4;
+      expect(Math.abs(imageData.data[index] - 80)).toBeLessThanOrEqual(1);
+      expect(Math.abs(imageData.data[index + 1] - 80)).toBeLessThanOrEqual(1);
+      expect(Math.abs(imageData.data[index + 2] - 80)).toBeLessThanOrEqual(1);
+    }
+  }
 }
 
 describe('watermarkEngine config detection', () => {
@@ -167,5 +187,27 @@ describe('watermarkEngine config detection', () => {
         createTestAnchorOption(newConfig),
       ]).config,
     ).toBe(newConfig);
+  });
+
+  it('removes a single transparent watermark layer in one pass', () => {
+    const config = { logoSize: 4, marginRight: 1, marginBottom: 1 };
+    const imageData = createImageDataWithWatermark(config);
+    const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
+
+    const passes = removeWatermarkWithResidualCheck(imageData, TEST_ALPHA_MAP, position);
+
+    expect(passes).toBe(1);
+    expectWatermarkAreaNearBase(imageData, config);
+  });
+
+  it('repeats removal while a stacked watermark layer remains', () => {
+    const config = { logoSize: 4, marginRight: 1, marginBottom: 1 };
+    const imageData = createImageDataWithWatermark(config, 2);
+    const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
+
+    const passes = removeWatermarkWithResidualCheck(imageData, TEST_ALPHA_MAP, position);
+
+    expect(passes).toBe(2);
+    expectWatermarkAreaNearBase(imageData, config);
   });
 });
