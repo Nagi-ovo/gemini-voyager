@@ -23,6 +23,10 @@ async function buildForEdge() {
   try {
     execSync('bun run build:chrome', {
       cwd: rootDir,
+      env: {
+        ...process.env,
+        VOYAGER_BUILD_TARGET: 'edge',
+      },
       stdio: 'inherit',
     });
   } catch (error) {

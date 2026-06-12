@@ -123,6 +123,96 @@ export function supportsExtensionNotifications(): boolean {
   return typeof extensionGlobal.chrome?.notifications?.create === 'function';
 }
 
+export const CHROME_WEB_STORE_EXTENSION_ID = 'iifacdnjakkhjjiengaffnegbndgingi';
+export const EDGE_ADDONS_EXTENSION_ID = 'gibmkggjijalcjinbdhcpklodjkhhlne';
+
+export type VoyagerBuildTarget = 'chrome' | 'edge' | 'firefox' | 'safari';
+export type WebStoreRatingChannel = 'chrome' | 'edge';
+
+/**
+ * The release channel this bundle was built for. Runtime browser detection is
+ * intentionally separate: Edge can run the Chrome Web Store build, and local
+ * Edge test builds do not have the Edge Add-ons store id.
+ */
+export function getVoyagerBuildTarget(): VoyagerBuildTarget {
+  try {
+    const target = import.meta.env.VOYAGER_BUILD_TARGET;
+    if (target === 'edge' || target === 'firefox' || target === 'safari') return target;
+  } catch {
+    // import.meta.env can be unavailable in non-Vite test contexts.
+  }
+
+  return 'chrome';
+}
+
+export function getExtensionRuntimeId(): string | undefined {
+  const extensionGlobal = globalThis as {
+    chrome?: {
+      runtime?: {
+        id?: string;
+      };
+    };
+  };
+
+  return extensionGlobal.chrome?.runtime?.id;
+}
+
+/**
+ * Detect whether the currently installed extension is from Edge Add-ons.
+ * This must use the runtime id instead of the browser user agent: Edge users can
+ * install the Chrome Web Store build, and those installs should behave like the
+ * normal Chrome release channel.
+ */
+export function isEdgeAddonsInstall(): boolean {
+  return getExtensionRuntimeId() === EDGE_ADDONS_EXTENSION_ID;
+}
+
+/**
+ * @deprecated Use isEdgeAddonsInstall for the accurate runtime/install semantic.
+ */
+export function isEdgeAddonsBuild(): boolean {
+  return isEdgeAddonsInstall();
+}
+
+export function isChromeWebStoreInstall(): boolean {
+  return getExtensionRuntimeId() === CHROME_WEB_STORE_EXTENSION_ID;
+}
+
+export function isChromeWebStoreInstallOnEdge(): boolean {
+  return isEdge() && isChromeWebStoreInstall();
+}
+
+export function isChromeReleaseChannel(): boolean {
+  return getVoyagerBuildTarget() === 'chrome' && !isEdgeAddonsInstall();
+}
+
+/**
+ * Detect whether this bundle should follow the Edge release-channel behavior.
+ * Covers both published Edge Add-ons installs and locally built Edge packages.
+ */
+export function isEdgeReleaseChannel(): boolean {
+  return getVoyagerBuildTarget() === 'edge' || isEdgeAddonsInstall();
+}
+
+/**
+ * @deprecated Use isEdgeReleaseChannel for the clearer release-channel semantic.
+ */
+export function isEdgeBuild(): boolean {
+  return isEdgeReleaseChannel();
+}
+
+export function isLocalEdgeBuildInstall(): boolean {
+  return getVoyagerBuildTarget() === 'edge' && !isEdgeAddonsInstall();
+}
+
+export function getWebStoreRatingChannel(): WebStoreRatingChannel | null {
+  if (!isChrome() && !isEdge()) return null;
+  if (isEdgeReleaseChannel()) return 'edge';
+  if (isChromeReleaseChannel()) return 'chrome';
+
+  return null;
+}
+
 /**
  * Detect if the current browser is Microsoft Edge.
  * Edge is Chromium-based and includes 'edg' in the user agent.

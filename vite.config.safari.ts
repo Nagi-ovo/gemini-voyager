@@ -20,6 +20,7 @@ export default mergeConfig(
       'import.meta.env.ENABLE_SAFARI_UPDATE_CHECK': JSON.stringify(
         enableSafariUpdateCheck ? 'true' : 'false',
       ),
+      'import.meta.env.VOYAGER_BUILD_TARGET': JSON.stringify('safari'),
     },
     plugins: [
       crx({

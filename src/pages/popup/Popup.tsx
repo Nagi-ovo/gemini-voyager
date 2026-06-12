@@ -11,8 +11,7 @@ import { StorageKeys } from '@/core/types/common';
 import type { ConversationReference, Folder } from '@/core/types/folder';
 import {
   getModifierKey,
-  isChrome,
-  isEdge,
+  getWebStoreRatingChannel,
   isFirefox,
   isSafari,
   shouldShowSafariUpdateReminder,
@@ -1461,6 +1460,7 @@ export default function Popup() {
   const normalizedCurrentVersion = normalizeVersionString(extVersion);
   const normalizedLatestVersion = normalizeVersionString(latestVersion);
   const isSafariBrowser = isSafari();
+  const webStoreRatingChannel = getWebStoreRatingChannel();
   const safariUpdateReminderEnabled = isSafariBrowser && shouldShowSafariUpdateReminder();
   const shouldShowUpdateNotification = shouldShowUpdateReminderForCurrentVersion({
     currentVersion: normalizedCurrentVersion,
@@ -3085,10 +3085,10 @@ export default function Popup() {
           </a>
         </div>
 
-        {(isChrome() || isEdge()) && (
+        {webStoreRatingChannel && (
           <a
             href={
-              isEdge()
+              webStoreRatingChannel === 'edge'
                 ? 'https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne'
                 : 'https://chromewebstore.google.com/detail/gemini-voyager/iifacdnjakkhjjiengaffnegbndgingi'
             }
@@ -3100,10 +3100,12 @@ export default function Popup() {
               ⭐
             </span>
             <span className="flex-1 leading-snug text-slate-700">
-              {isEdge() ? t('changelog_rate_edge') : t('changelog_rate_chrome')}
+              {webStoreRatingChannel === 'edge'
+                ? t('changelog_rate_edge')
+                : t('changelog_rate_chrome')}
             </span>
             <span className="text-primary font-semibold whitespace-nowrap transition-transform group-hover:translate-x-0.5">
-              {isEdge() ? t('changelog_rate_edge_cta') : t('changelog_rate_chrome_cta')} →
+              {`${webStoreRatingChannel === 'edge' ? t('changelog_rate_edge_cta') : t('changelog_rate_chrome_cta')} →`}
             </span>
           </a>
         )}

@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
-import { isEdge } from '@/core/utils/browser';
+import { isEdgeReleaseChannel } from '@/core/utils/browser';
 
 import { startEdgeFinalVersionNotice } from '../index';
 
 vi.mock('@/core/utils/browser', () => ({
-  isEdge: vi.fn(() => true),
+  isEdgeReleaseChannel: vi.fn(() => true),
 }));
 
 vi.mock('@/utils/i18n', () => ({
@@ -35,7 +35,7 @@ describe('Edge final version notice', () => {
     vi.setSystemTime(new Date('2026-05-23T10:00:00Z'));
     document.body.innerHTML = '';
     vi.clearAllMocks();
-    vi.mocked(isEdge).mockReturnValue(true);
+    vi.mocked(isEdgeReleaseChannel).mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -102,8 +102,8 @@ describe('Edge final version notice', () => {
     cleanup();
   });
 
-  it('does not start outside Edge', async () => {
-    vi.mocked(isEdge).mockReturnValue(false);
+  it('does not start outside the Edge release channel', async () => {
+    vi.mocked(isEdgeReleaseChannel).mockReturnValue(false);
     mockLocalStorage({});
 
     const cleanup = startEdgeFinalVersionNotice(0);

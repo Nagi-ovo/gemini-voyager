@@ -11,6 +11,7 @@ import manifest from './manifest.json';
 import pkg from './package.json';
 
 const isDev = process.env.__DEV__ === 'true';
+const buildTarget = process.env.VOYAGER_BUILD_TARGET === 'edge' ? 'edge' : 'chrome';
 // set this flag to true, if you want localization support
 const localize = true;
 
@@ -42,6 +43,9 @@ export const baseBuildOptions: BuildOptions = {
 };
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VOYAGER_BUILD_TARGET': JSON.stringify(buildTarget),
+  },
   plugins: [
     tailwindcss(),
     tsconfigPaths(),

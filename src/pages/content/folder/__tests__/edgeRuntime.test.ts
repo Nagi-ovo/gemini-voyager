@@ -1,22 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  isEdge: vi.fn(),
   folderInit: vi.fn(),
   FolderManager: vi.fn(),
-}));
-
-vi.mock('@/core/utils/browser', () => ({
-  isEdge: mocks.isEdge,
 }));
 
 vi.mock('../manager', () => ({
   FolderManager: mocks.FolderManager,
 }));
 
-describe('FolderManager Edge runtime guard', () => {
+describe('FolderManager runtime startup', () => {
   beforeEach(() => {
-    mocks.isEdge.mockReset();
     mocks.folderInit.mockReset();
     mocks.FolderManager.mockReset();
     mocks.FolderManager.mockImplementation(function FolderManagerMock() {
@@ -24,22 +18,14 @@ describe('FolderManager Edge runtime guard', () => {
     });
   });
 
-  it('does not start the Gemini folder runtime on Edge', async () => {
-    mocks.isEdge.mockReturnValue(true);
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const { startFolderManager } = await import('../index');
-    const manager = await startFolderManager();
-
-    expect(manager).toBeNull();
-    expect(mocks.FolderManager).not.toHaveBeenCalled();
-    expect(mocks.folderInit).not.toHaveBeenCalled();
-
-    warnSpy.mockRestore();
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
-  it('starts the Gemini folder runtime outside Edge', async () => {
-    mocks.isEdge.mockReturnValue(false);
+  it('starts the Gemini folder runtime when running in Edge', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Edg/120.0.0.0',
+    );
 
     const { startFolderManager } = await import('../index');
     const manager = await startFolderManager();

@@ -48,6 +48,9 @@ function appendFirefoxChangelogResources<
 export default mergeConfig(
   baseConfig,
   defineConfig({
+    define: {
+      'import.meta.env.VOYAGER_BUILD_TARGET': JSON.stringify('firefox'),
+    },
     plugins: [
       crx({
         manifest: appendFirefoxChangelogResources({

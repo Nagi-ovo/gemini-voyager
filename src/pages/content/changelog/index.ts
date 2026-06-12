@@ -2,7 +2,7 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
 import { StorageKeys } from '@/core/types/common';
-import { isChrome, isEdge, isFirefox } from '@/core/utils/browser';
+import { getWebStoreRatingChannel, isFirefox } from '@/core/utils/browser';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 import { getCurrentLanguage } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
@@ -456,13 +456,14 @@ function createChangelogModal(
   footer.appendChild(notifyToggle);
 
   // Web store rating prompt (Chrome Web Store / Edge Add-ons)
+  const webStoreRatingChannel = getWebStoreRatingChannel();
   const storeRating: {
     url: string;
     textKey: TranslationKey;
     ctaKey: TranslationKey;
-  } | null = isEdge()
+  } | null = webStoreRatingChannel === 'edge'
     ? { url: EDGE_STORE_URL, textKey: 'changelog_rate_edge', ctaKey: 'changelog_rate_edge_cta' }
-    : isChrome()
+    : webStoreRatingChannel === 'chrome'
       ? {
           url: CHROME_STORE_URL,
           textKey: 'changelog_rate_chrome',

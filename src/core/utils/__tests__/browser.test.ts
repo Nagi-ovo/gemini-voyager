@@ -1,14 +1,52 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  CHROME_WEB_STORE_EXTENSION_ID,
+  EDGE_ADDONS_EXTENSION_ID,
+  getExtensionRuntimeId,
+  getVoyagerBuildTarget,
+  getWebStoreRatingChannel,
   getModifierKey,
   isBrave,
+  isChromeReleaseChannel,
+  isChromeWebStoreInstall,
+  isChromeWebStoreInstallOnEdge,
+  isEdgeAddonsInstall,
+  isEdgeAddonsBuild,
+  isEdgeBuild,
+  isEdgeReleaseChannel,
+  isLocalEdgeBuildInstall,
   isMac,
   isSafari,
   shouldShowSafariUpdateReminder,
   supportsExtensionNotifications,
   supportsOptionalHostPermissions,
 } from '../browser';
+
+const ORIGINAL_RUNTIME_ID = chrome.runtime.id;
+const CHROME_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0';
+const EDGE_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Edg/120.0.0.0';
+const FIREFOX_UA = 'Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0';
+
+function setRuntimeId(id: string | undefined): void {
+  Object.defineProperty(chrome.runtime, 'id', {
+    value: id,
+    configurable: true,
+  });
+}
+
+function setUserAgent(ua: string, vendor = 'Google Inc.'): void {
+  vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(ua);
+  vi.spyOn(navigator, 'vendor', 'get').mockReturnValue(vendor);
+}
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+  setRuntimeId(ORIGINAL_RUNTIME_ID);
+});
 
 describe('supportsOptionalHostPermissions', () => {
   const setUA = (ua: string) => vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(ua);
@@ -170,6 +208,139 @@ describe('supportsExtensionNotifications', () => {
     expect(supportsExtensionNotifications()).toBe(true);
 
     chrome.notifications = originalNotifications;
+  });
+});
+
+describe('extension runtime id helpers', () => {
+  it('reads the current extension runtime id', () => {
+    setRuntimeId('local-dev-extension-id');
+
+    expect(getExtensionRuntimeId()).toBe('local-dev-extension-id');
+  });
+
+  it('detects Edge Add-ons installs by runtime id', () => {
+    setRuntimeId(EDGE_ADDONS_EXTENSION_ID);
+    expect(isEdgeAddonsInstall()).toBe(true);
+    expect(isEdgeAddonsBuild()).toBe(true);
+
+    setRuntimeId(CHROME_WEB_STORE_EXTENSION_ID);
+    expect(isEdgeAddonsInstall()).toBe(false);
+    expect(isEdgeAddonsBuild()).toBe(false);
+  });
+
+  it('detects Chrome Web Store installs by runtime id', () => {
+    setRuntimeId(CHROME_WEB_STORE_EXTENSION_ID);
+    expect(isChromeWebStoreInstall()).toBe(true);
+
+    setRuntimeId(EDGE_ADDONS_EXTENSION_ID);
+    expect(isChromeWebStoreInstall()).toBe(false);
+  });
+
+  it('detects Chrome Web Store installs running in Edge', () => {
+    setRuntimeId(CHROME_WEB_STORE_EXTENSION_ID);
+    setUserAgent(EDGE_UA);
+    expect(isChromeWebStoreInstallOnEdge()).toBe(true);
+
+    setUserAgent(CHROME_UA);
+    expect(isChromeWebStoreInstallOnEdge()).toBe(false);
+  });
+});
+
+describe('getVoyagerBuildTarget', () => {
+  it('defaults to chrome', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', '');
+
+    expect(getVoyagerBuildTarget()).toBe('chrome');
+  });
+
+  it('falls back to chrome for invalid injected targets', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'opera');
+
+    expect(getVoyagerBuildTarget()).toBe('chrome');
+  });
+
+  it('returns the injected build target for release channels', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'edge');
+    expect(getVoyagerBuildTarget()).toBe('edge');
+
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'firefox');
+    expect(getVoyagerBuildTarget()).toBe('firefox');
+
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'safari');
+    expect(getVoyagerBuildTarget()).toBe('safari');
+  });
+});
+
+describe('release channel helpers', () => {
+  it('treats locally built Edge packages as Edge release channel', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'edge');
+    setRuntimeId('local-dev-extension-id');
+
+    expect(isEdgeReleaseChannel()).toBe(true);
+    expect(isEdgeBuild()).toBe(true);
+    expect(isLocalEdgeBuildInstall()).toBe(true);
+  });
+
+  it('treats published Edge Add-ons installs as Edge release channel', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'chrome');
+    setRuntimeId(EDGE_ADDONS_EXTENSION_ID);
+
+    expect(isEdgeReleaseChannel()).toBe(true);
+    expect(isEdgeBuild()).toBe(true);
+    expect(isLocalEdgeBuildInstall()).toBe(false);
+  });
+
+  it('keeps Chrome Web Store installs in Edge on the Chrome release channel', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'chrome');
+    setRuntimeId(CHROME_WEB_STORE_EXTENSION_ID);
+    setUserAgent(EDGE_UA);
+
+    expect(isEdgeReleaseChannel()).toBe(false);
+    expect(isEdgeBuild()).toBe(false);
+    expect(isChromeReleaseChannel()).toBe(true);
+    expect(isChromeWebStoreInstallOnEdge()).toBe(true);
+  });
+});
+
+describe('getWebStoreRatingChannel', () => {
+  it('uses the Chrome Web Store for Chrome release channel installs in Chrome', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'chrome');
+    setRuntimeId(CHROME_WEB_STORE_EXTENSION_ID);
+    setUserAgent(CHROME_UA);
+
+    expect(getWebStoreRatingChannel()).toBe('chrome');
+  });
+
+  it('uses the Chrome Web Store for Chrome release channel installs in Edge', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'chrome');
+    setRuntimeId(CHROME_WEB_STORE_EXTENSION_ID);
+    setUserAgent(EDGE_UA);
+
+    expect(getWebStoreRatingChannel()).toBe('chrome');
+  });
+
+  it('uses Edge Add-ons for locally built Edge packages', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'edge');
+    setRuntimeId('local-dev-extension-id');
+    setUserAgent(EDGE_UA);
+
+    expect(getWebStoreRatingChannel()).toBe('edge');
+  });
+
+  it('uses Edge Add-ons for published Edge Add-ons installs', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'chrome');
+    setRuntimeId(EDGE_ADDONS_EXTENSION_ID);
+    setUserAgent(EDGE_UA);
+
+    expect(getWebStoreRatingChannel()).toBe('edge');
+  });
+
+  it('does not show a Chrome/Edge rating prompt in Firefox', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'chrome');
+    setRuntimeId(CHROME_WEB_STORE_EXTENSION_ID);
+    setUserAgent(FIREFOX_UA, '');
+
+    expect(getWebStoreRatingChannel()).toBeNull();
   });
 });
 

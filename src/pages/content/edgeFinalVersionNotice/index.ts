@@ -1,5 +1,5 @@
 import { StorageKeys } from '@/core/types/common';
-import { isEdge } from '@/core/utils/browser';
+import { isEdgeReleaseChannel } from '@/core/utils/browser';
 import { getCurrentLanguage } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
 
@@ -265,7 +265,7 @@ async function scheduleNotice(delayMs: number, currentRunId: number): Promise<vo
 export function startEdgeFinalVersionNotice(
   delayMs: number = EDGE_FINAL_VERSION_NOTICE_DELAY_MS,
 ): () => void {
-  if (!isEdge()) return () => {};
+  if (!isEdgeReleaseChannel()) return () => {};
   if (started) return () => {};
   started = true;
   const currentRunId = runId + 1;
