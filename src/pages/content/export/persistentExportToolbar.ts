@@ -13,6 +13,96 @@ const TOOLBAR_CLASS = 'gv-persistent-export-toolbar';
 const BUTTON_CLASS = 'gv-persistent-export-btn';
 const ICON_CLASS = 'gv-persistent-export-icon';
 const LABEL_CLASS = 'gv-persistent-export-label';
+const DEFAULT_RIGHT_OFFSET_PX = 84;
+const TOP_RIGHT_GAP_PX = 12;
+const TOP_RIGHT_MAX_Y_PX = 96;
+const TOP_RIGHT_MIN_WIDTH_RATIO = 0.45;
+const TOP_RIGHT_AVOIDANCE_SELECTORS = [
+  'top-bar-actions',
+  '.top-bar-actions',
+  '[data-test-id="top-bar-actions"]',
+  'side-nav-sparkle-button',
+  'side-nav-menu-button',
+  '[data-test-id*="upgrade" i]',
+  '[aria-label*="upgrade" i]',
+  '[aria-label*="pro" i]',
+  '[aria-label*="advanced" i]',
+].join(',');
+
+let activeAvoidanceRoot: HTMLDivElement | null = null;
+let activeAvoidanceCleanup: (() => void) | null = null;
+
+function isVisibleTopRightElement(element: Element, toolbarRoot: HTMLElement): element is HTMLElement {
+  if (!(element instanceof HTMLElement)) return false;
+  if (element === toolbarRoot || toolbarRoot.contains(element)) return false;
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  if (rect.bottom <= 0 || rect.top >= TOP_RIGHT_MAX_Y_PX) return false;
+  return rect.right >= window.innerWidth * TOP_RIGHT_MIN_WIDTH_RATIO;
+}
+
+function calculateRightOffset(toolbarRoot: HTMLElement): number {
+  const candidates = Array.from(document.querySelectorAll(TOP_RIGHT_AVOIDANCE_SELECTORS)).filter(
+    (element): element is HTMLElement => isVisibleTopRightElement(element, toolbarRoot),
+  );
+  if (candidates.length === 0) return DEFAULT_RIGHT_OFFSET_PX;
+
+  const leftMost = candidates.reduce(
+    (minLeft, element) => Math.min(minLeft, element.getBoundingClientRect().left),
+    window.innerWidth,
+  );
+  return Math.max(DEFAULT_RIGHT_OFFSET_PX, Math.ceil(window.innerWidth - leftMost + TOP_RIGHT_GAP_PX));
+}
+
+function installToolbarAvoidance(root: HTMLDivElement): void {
+  if (activeAvoidanceRoot === root) return;
+  activeAvoidanceCleanup?.();
+  activeAvoidanceRoot = root;
+
+  let frameId: number | null = null;
+  const update = () => {
+    frameId = null;
+    if (!root.isConnected) {
+      activeAvoidanceCleanup?.();
+      return;
+    }
+    root.style.setProperty('--gv-persistent-export-right', `${calculateRightOffset(root)}px`);
+  };
+  const scheduleUpdate = () => {
+    if (frameId !== null) return;
+    frameId = window.requestAnimationFrame(update);
+  };
+
+  const observer = new MutationObserver(scheduleUpdate);
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['aria-hidden', 'class', 'hidden', 'style'],
+  });
+  window.addEventListener('resize', scheduleUpdate);
+  scheduleUpdate();
+
+  activeAvoidanceCleanup = () => {
+    if (frameId !== null) {
+      window.cancelAnimationFrame(frameId);
+      frameId = null;
+    }
+    observer.disconnect();
+    window.removeEventListener('resize', scheduleUpdate);
+    if (activeAvoidanceRoot === root) {
+      activeAvoidanceRoot = null;
+      activeAvoidanceCleanup = null;
+    }
+  };
+}
+
+function removeToolbarRoot(root: HTMLDivElement): void {
+  if (activeAvoidanceRoot === root) activeAvoidanceCleanup?.();
+  try {
+    root.remove();
+  } catch {}
+}
 
 function buildToolbarDom(options: PersistentExportToolbarOptions): {
   root: HTMLDivElement;
@@ -61,6 +151,7 @@ export function mountPersistentExportToolbar(
     button.title = options.tooltip;
     button.setAttribute('aria-label', options.tooltip);
     if (labelEl) labelEl.textContent = options.label;
+    installToolbarAvoidance(existing);
     return {
       root: existing,
       button,
@@ -70,9 +161,7 @@ export function mountPersistentExportToolbar(
         if (labelEl) labelEl.textContent = label;
       },
       remove() {
-        try {
-          existing.remove();
-        } catch {}
+        removeToolbarRoot(existing);
       },
     };
   }
@@ -99,6 +188,7 @@ export function mountPersistentExportToolbar(
   });
 
   document.body.appendChild(root);
+  installToolbarAvoidance(root);
 
   return {
     root,
@@ -109,9 +199,7 @@ export function mountPersistentExportToolbar(
       labelEl.textContent = label;
     },
     remove() {
-      try {
-        root.remove();
-      } catch {}
+      removeToolbarRoot(root);
     },
   };
 }

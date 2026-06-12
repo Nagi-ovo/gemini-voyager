@@ -7,7 +7,34 @@ import {
 
 afterEach(() => {
   document.querySelectorAll('.gv-persistent-export-toolbar').forEach((n) => n.remove());
+  document.body
+    .querySelectorAll('[data-test-id="upgrade-button"], top-bar-actions')
+    .forEach((n) => n.remove());
+  vi.restoreAllMocks();
 });
+
+function mockRect(element: Element, rect: Partial<DOMRect>): void {
+  Object.defineProperty(element, 'getBoundingClientRect', {
+    configurable: true,
+    value: () => ({
+      x: rect.left ?? 0,
+      y: rect.top ?? 0,
+      top: rect.top ?? 0,
+      left: rect.left ?? 0,
+      right: rect.right ?? 0,
+      bottom: rect.bottom ?? 0,
+      width: rect.width ?? 0,
+      height: rect.height ?? 0,
+      toJSON: () => ({}),
+    }),
+  });
+}
+
+function nextFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
+}
 
 describe('persistentExportToolbar', () => {
   it('mounts a top-right export button with label and tooltip', () => {
@@ -62,5 +89,68 @@ describe('persistentExportToolbar', () => {
     expect(handle.button.title).toBe('Exporter la conversation');
     expect(handle.button.getAttribute('aria-label')).toBe('Exporter la conversation');
     expect(handle.button.textContent).toContain('Exporter');
+  });
+
+  it('keeps the default right offset when no top-right controls are present', async () => {
+    const handle = mountPersistentExportToolbar({
+      label: 'Export',
+      tooltip: 'Export chat history',
+      onClick: vi.fn(),
+    });
+
+    await nextFrame();
+
+    expect(handle.root.style.getPropertyValue('--gv-persistent-export-right')).toBe('84px');
+  });
+
+  it('moves left to avoid Gemini top-right upgrade controls', async () => {
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1280);
+    const upgradeButton = document.createElement('button');
+    upgradeButton.setAttribute('data-test-id', 'upgrade-button');
+    mockRect(upgradeButton, {
+      top: 8,
+      bottom: 44,
+      left: 960,
+      right: 1130,
+      width: 170,
+      height: 36,
+    });
+    document.body.appendChild(upgradeButton);
+
+    const handle = mountPersistentExportToolbar({
+      label: 'Export',
+      tooltip: 'Export chat history',
+      onClick: vi.fn(),
+    });
+
+    await nextFrame();
+
+    expect(handle.root.style.getPropertyValue('--gv-persistent-export-right')).toBe('332px');
+  });
+
+  it('updates avoidance when Gemini renders top-right controls after mount', async () => {
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1280);
+    const handle = mountPersistentExportToolbar({
+      label: 'Export',
+      tooltip: 'Export chat history',
+      onClick: vi.fn(),
+    });
+    await nextFrame();
+    expect(handle.root.style.getPropertyValue('--gv-persistent-export-right')).toBe('84px');
+
+    const topBarActions = document.createElement('top-bar-actions');
+    mockRect(topBarActions, {
+      top: 0,
+      bottom: 56,
+      left: 920,
+      right: 1260,
+      width: 340,
+      height: 56,
+    });
+    document.body.appendChild(topBarActions);
+    await Promise.resolve();
+    await nextFrame();
+
+    expect(handle.root.style.getPropertyValue('--gv-persistent-export-right')).toBe('372px');
   });
 });

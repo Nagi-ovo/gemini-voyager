@@ -1073,7 +1073,7 @@ body.dark-theme .gv-export-dropdown-btn:hover,
 .gv-persistent-export-toolbar {
   position: fixed;
   top: 12px;
-  right: 84px; /* leave room for Gemini's conversation-actions ⋮ button */
+  right: var(--gv-persistent-export-right, 84px);
   z-index: 9000;
   display: flex;
   align-items: center;
