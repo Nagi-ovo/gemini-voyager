@@ -28,7 +28,8 @@ Project-wide rules (always in effect):
 2. **Never commit `.env` or secrets.**
 3. **When adding Material Symbol icons**, the popup uses the bundled font in `public/fonts/`; verify the glyph exists locally or update the bundled font assets. Do not add a remote Google Fonts URL.
 4. **For GitHub issue/PR/comment work, prefer `gh` as the source of truth** instead of browser scraping or unstable connectors.
-5. **Default push target**: when asked to push without explicit branch/PR instructions, push a fast-forward update to `origin/main`. Never force-push unless explicitly requested.
+5. **After fixing an issue with a pushed `Fixes #xxx` / `Closes #xxx` commit or PR**, leave a short GitHub comment in the reporter's language: the fix has landed, it will be available in the next version, and they are welcome to reopen the issue if the problem remains.
+6. **Default push target**: when asked to push without explicit branch/PR instructions, push a fast-forward update to `origin/main`. Never force-push unless explicitly requested.
 
 ## Verification (run before declaring done)
 
