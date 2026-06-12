@@ -4,19 +4,23 @@
 
 ```bash
 bun install                # Setup
-bun run dev:chrome         # Dev (also: dev:firefox, dev:safari)
-bun run build:chrome       # Build (also: build:firefox, build:safari, build:edge, build:all)
+bun run dev:chrome         # Dev (also: dev, dev:firefox, dev:safari, dev:chrome-open)
+bun run build:chrome       # Build Chrome (also: build, build:firefox, build:safari)
+bun run build:edge         # Edge package (runs Chrome build, adjusts manifest, creates zip)
+bun run build:all          # Build Chrome + Firefox + Safari (does not include Edge)
 bun run test               # Test (also: test:watch, test:ui, test:coverage)
 bun run typecheck          # Type check
-bun run lint               # Lint
+bun run lint               # Lint and auto-fix
 bun run format             # Format
-bun run bump               # Version bump (patch)
+bun run bump               # Bump package/manifest versions and run format
 bun run docs:dev           # Docs dev server
+bun run docs:build         # Build docs
+bun run docs:preview       # Preview built docs
 ```
 
 ## Core Rules
 
-Path-scoped rules live in `.claude/rules/` and load automatically by glob: `typescript.md` (src/**/*.ts(x)), `content-scripts.md` (src/pages/content/** and public/contentStyle.css), `i18n.md` (src/locales/**), `high-complexity.md` (StorageService / DataBackupService / GoogleDriveSyncService / AccountIsolationService / features/folder / features/export).
+Path-scoped rules live in `.claude/rules/` and load automatically by glob: `typescript.md` (src/**/*.ts(x)), `content-scripts.md` (src/pages/content/** and public/contentStyle.css), `i18n.md` (src/locales/**), `high-complexity.md` (core storage/sync services plus folder/export services and content modules).
 
 Project-wide rules (always in effect):
 
@@ -24,25 +28,26 @@ Project-wide rules (always in effect):
 2. **Never commit `.env` or secrets.**
 3. **When adding Material Symbol icons**, the popup uses the bundled font in `public/fonts/`; verify the glyph exists locally or update the bundled font assets. Do not add a remote Google Fonts URL.
 4. **For GitHub issue/PR/comment work, prefer `gh` as the source of truth** instead of browser scraping or unstable connectors.
-5. **Default push target**: when asked to push without explicit branch/PR instructions, push directly to `main`.
+5. **Default push target**: when asked to push without explicit branch/PR instructions, push a fast-forward update to `origin/main`. Never force-push unless explicitly requested.
 
 ## Verification (run before declaring done)
 
 1. `bun run typecheck` — after any `.ts`/`.tsx` change
-2. `bun run lint` — before finishing
+2. `bun run lint` — before finishing; note this runs `eslint . --fix`, so inspect resulting changes
 3. `bun run test` — all tests pass
 4. `bun run build:chrome` — builds without error
-5. `bun run docs:dev` — after any `docs/**/*.md` change, start in background so user can preview in browser before committing
-6. New features/fixes must include tests
+5. `bun run docs:build` — after any `docs/**/*.md` or `docs/.vitepress/**` change
+6. `bun run docs:dev` — after docs changes when preview is needed, start in background so user can preview in browser before committing
+7. New features/fixes must include tests
 
 ## Commit Format
 
 Conventional Commits: `<type>(<scope>): <imperative summary>`
 
 - Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `build`, `ci`, `perf`, `style`, `revert`, `deps`, `ux`
-- Scope: short, feature-focused (e.g., `copy`, `export`, `popup`)
-- Summary: lowercase, imperative, no trailing period
-- If the commit relates to a GitHub issue or discussion, include `Closes #xxx` or `Fixes #xxx` in the commit **body**
+- Scope: short, feature-focused, lowercase when possible; commitlint currently enforces lowercase scopes and a 100-character header limit
+- Summary: imperative, preferably lowercase, no trailing period
+- If the commit relates to a GitHub issue or discussion, include `Closes #xxx` or `Fixes #xxx` in the commit body or PR description
 
 ## Design Principles
 
@@ -55,21 +60,22 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 
 ## Architecture
 
-- **Services**: singletons in `src/core/services/`. `StorageService` is the typed wrapper for storage when suitable; existing persistence also uses direct `chrome.storage`/`browser.storage` and local fallback paths in popup, background, services, and content scripts.
+- **Services**: service classes, singleton exports, factories, and service helpers live in `src/core/services/`. `StorageService` is the typed wrapper for storage when suitable; existing persistence also uses direct `chrome.storage`/`browser.storage` and local fallback paths in popup, background, services, and content scripts.
 - **Content scripts**: `src/pages/content/`. Each sub-module is self-contained.
 - **UI**: functional React components + hooks. Business logic in `features/*/services/` or custom hooks, not in UI files.
 - **Types**: `src/core/types/common.ts` for StorageKeys and shared types.
 - **Translations**: `src/locales/*/messages.json` (10 languages).
-- **Injected CSS**: `public/contentStyle.css`.
-- **Plugins**: declarative CSS+JSON plugin system in `src/features/plugins/` (engine + `PluginHost` + popup `PluginManager`). The plugin catalog/content lives in a **separate repo** — `github.com/nagi-studio/voyager-plugins` (`marketplace.json` + `plugins/<name>/plugin.json`) — fetched at runtime by `MarketplacePluginSource`. Don't add plugin manifests to this repo. Locally it's a **sibling clone at `../voyager-plugins`** — read it directly when reasoning about catalog plugins. Builtin/native-function plugins that need JS (e.g. **Formula Copy**, which targets Claude + ChatGPT) live in `src/features/plugins/builtin/index.ts`, NOT in the catalog repo.
+- **Injected CSS**: shared/static content CSS lives in `public/contentStyle.css`; feature-specific dynamic CSS may be injected by content modules or the plugin runtime when values are computed at runtime, with `gv-` prefixes and teardown.
+- **Plugins**: declarative CSS+JSON plugin system in `src/features/plugins/` (engine + `PluginHost` + popup `PluginManager`). Default sources are builtin native plugins, bundled official catalog plugins, and the remote marketplace. Official CSS/JSON plugins that ship with Voyager live in `src/features/plugins/catalog/` and load through `BundledCatalogPluginSource`; update them in this repo together with engine/popup changes. Third-party or experimental marketplace plugins can still live in `github.com/nagi-studio/voyager-plugins` and are fetched at runtime by `MarketplacePluginSource`. A local sibling clone may exist at `../voyager-plugins`, but treat it as the remote marketplace mirror, not the source of truth for bundled official plugins. Builtin/native-function plugins that need JS (e.g. **Formula Copy**, which targets Claude + ChatGPT) live in `src/features/plugins/builtin/index.ts`.
 
 ## Task Map
 
 | Task | Where |
 |------|-------|
-| Add storage key | `src/core/types/common.ts` → relevant storage defaults/migrations (for sync settings, check `SettingsBackupService.ts`) → user-facing locale keys only when new UI text is added |
+| Add storage key | `src/core/types/common.ts` → storage defaults/migrations (`SettingsBackupService.ts` for sync-backed settings) → popup/content consumers → locale keys only when new UI text is added |
 | Update translations | `src/locales/*/messages.json` (all 10) |
 | Change DOM injection | `src/pages/content/` |
-| Modify popup settings | `src/pages/popup/components/` |
+| Modify popup settings | Existing top-level settings often live in `src/pages/popup/Popup.tsx`; extracted sections live in `src/pages/popup/components/` |
 | Fix cloud sync | `src/core/services/GoogleDriveSyncService.ts` |
-| Add keyboard shortcut | `src/core/services/KeyboardShortcutService.ts` + types |
+| Add keyboard shortcut | `src/core/services/KeyboardShortcutService.ts` + related types + `src/pages/popup/components/KeyboardShortcutSettings.tsx` |
+| Add/update bundled official plugin | `src/features/plugins/catalog/` + `BundledCatalogPluginSource.ts` mapping/tests |

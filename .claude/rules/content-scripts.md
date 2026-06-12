@@ -6,8 +6,8 @@ globs: ["src/pages/content/**", "public/contentStyle.css"]
 
 ## CSS
 - All injected CSS classes MUST be prefixed with `gv-` (e.g., `.gv-rtl`, `.gv-pm-trigger`)
-- Styles go in `public/contentStyle.css`
-- Support both light and dark themes: use `.theme-host.light-theme` / `.theme-host.dark-theme` overrides, NOT `@media (prefers-color-scheme)`
+- Shared/static injected CSS goes in `public/contentStyle.css` by default. Feature-specific dynamic CSS may be injected by content modules or the plugin runtime when values are computed at runtime; keep it `gv-` prefixed and tear it down.
+- Support both light and dark themes: prefer `.theme-host.light-theme` / `.theme-host.dark-theme` overrides. Use `@media (prefers-color-scheme)` only as a fallback or alongside explicit theme-host overrides.
 - RTL layout: use `body.gv-rtl` selector for RTL overrides (see `src/core/utils/rtl.ts`)
 
 ## Storage

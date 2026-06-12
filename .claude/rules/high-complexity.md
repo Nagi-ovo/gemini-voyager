@@ -1,5 +1,5 @@
 ---
-globs: ["src/core/services/StorageService.ts", "src/core/services/DataBackupService.ts", "src/core/services/GoogleDriveSyncService.ts", "src/core/services/AccountIsolationService.ts", "src/features/folder/**", "src/features/export/**"]
+globs: ["src/core/services/StorageService.ts", "src/core/services/DataBackupService.ts", "src/core/services/GoogleDriveSyncService.ts", "src/core/services/AccountIsolationService.ts", "src/features/folder/**", "src/features/export/**", "src/pages/content/folder/**", "src/pages/content/export/**"]
 ---
 
 # High-Complexity Modules — Edit with Caution
@@ -10,8 +10,8 @@ globs: ["src/core/services/StorageService.ts", "src/core/services/DataBackupServ
 | `DataBackupService` | Multi-layer backup. Race conditions during unload. | Critical for data safety. |
 | `GoogleDriveSyncService` | OAuth2 cloud sync (folders, prompts, starred). | Requires OAuth2 identity. |
 | `AccountIsolationService` | Hard account isolation for multi-account. | Integrates with Drive sync. |
-| `features/folder` | Drag-and-drop + cloud sync UI. DOM manipulation + state sync. | Watch for infinite loops. |
-| `features/export` | JSON/MD/PDF/Image export + Deep Research. | Fragile to Gemini UI changes. Multi-browser compat. |
+| `features/folder` + `pages/content/folder` | Drag-and-drop + cloud sync UI. DOM manipulation + state sync. | Watch for infinite loops. |
+| `features/export` + `pages/content/export` | JSON/MD/PDF/Image export + Deep Research. | Fragile to Gemini UI changes. Multi-browser compat. |
 
 ## Before modifying these modules
 1. Read the entire file first — not just the section you plan to change
