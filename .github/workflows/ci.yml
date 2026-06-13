@@ -106,7 +106,10 @@ jobs:
   # ── PR size label ─────────────────────────────────────────────────────
   pr-size:
     name: PR Size
-    if: github.event_name == 'pull_request'
+    # Skip on fork PRs — GITHUB_TOKEN lacks write permission for labels
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
