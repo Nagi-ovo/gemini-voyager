@@ -6,34 +6,133 @@ on:
   pull_request:
     branches: [main]
 
+# Cancel in-progress runs for the same PR / branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-and-check:
+  # ── Prettier ───────────────────────────────────────────────────────────
+  format:
+    name: Format
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun x prettier --check .
 
-      - name: Install bun
-        uses: oven-sh/setup-bun@v2
+  # ── ESLint ─────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+  # ── TypeScript ─────────────────────────────────────────────────────────
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+
+  # ── Tests ──────────────────────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run test
+
+  # ── Build (all browsers) ──────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chrome, firefox, safari]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build:${{ matrix.browser }}
+
+  # ── i18n consistency ──────────────────────────────────────────────────
+  i18n:
+    name: i18n
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check locale key consistency
+        run: |
+          echo "Comparing locale keys across all 10 locales..."
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            const dir = 'src/locales';
+            const locales = fs.readdirSync(dir).sort();
+            const allKeys = {};
+            for (const loc of locales) {
+              const file = path.join(dir, loc, 'messages.json');
+              if (!fs.existsSync(file)) continue;
+              allKeys[loc] = new Set(Object.keys(JSON.parse(fs.readFileSync(file, 'utf8'))));
+            }
+            const ref = allKeys['en'];
+            if (!ref) { console.error('ERROR: en locale not found'); process.exit(1); }
+            let failed = false;
+            for (const [loc, keys] of Object.entries(allKeys)) {
+              if (loc === 'en') continue;
+              const missing = [...ref].filter(k => !keys.has(k));
+              const extra = [...keys].filter(k => !ref.has(k));
+              if (missing.length || extra.length) {
+                failed = true;
+                console.error(loc + ': missing=' + missing.length + ' extra=' + extra.length);
+                for (const k of missing.slice(0, 5)) console.error('  - ' + k);
+                for (const k of extra.slice(0, 5)) console.error('  + ' + k);
+              }
+            }
+            if (failed) { console.error('\nFAILED: locale keys are inconsistent'); process.exit(1); }
+            console.error('OK: all ' + locales.length + ' locales are consistent (' + ref.size + ' keys)');
+          "
+
+  # ── PR size label ─────────────────────────────────────────────────────
+  pr-size:
+    name: PR Size
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
         with:
-          node-version: '20'
-
-      - name: Install
-        run: bun i
-      - name: Check Formatting
-        run: bun x prettier --check .
-      - name: Lint
-        run: bun run lint
-      - name: Typecheck
-        run: bun run typecheck
-      - name: Test
-        run: bun run test
-      - name: Build (Chrome)
-        run: bun run build:chrome
-      - name: Build (Firefox)
-        run: bun run build:firefox
-      - name: Build (Safari)
-        run: bun run build:safari
+          fetch-depth: 0
+      - name: Label PR by changed lines
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request.number;
+            const { data: files } = await github.rest.pulls.listFiles({ owner, repo, pull_number: pr, per_page: 100 });
+            const changes = files.reduce((sum, f) => sum + f.changes, 0);
+            let label;
+            if (changes < 50)       label = 'size/S';
+            else if (changes < 200) label = 'size/M';
+            else if (changes < 500) label = 'size/L';
+            else                    label = 'size/XL';
+            // Remove old size labels
+            const { data: existing } = await github.rest.issues.listLabelsOnIssue({ owner, repo, issue_number: pr });
+            for (const l of existing) {
+              if (l.name.startsWith('size/')) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: pr, name: l.name });
+              }
+            }
+            await github.rest.issues.addLabels({ owner, repo, issue_number: pr, labels: [label] });
+            core.info(`PR #${pr}: ${changes} changed lines → ${label}`);
