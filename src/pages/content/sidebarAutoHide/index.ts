@@ -40,6 +40,10 @@ const SIDEBAR_TOGGLE_BUTTON_MATCH_SELECTOR = `${SIDEBAR_TOGGLE_BUTTON_SELECTOR},
 const TOGGLE_ICON_FONTICONS = ['side_nav', 'side_nav_expand'] as const;
 const SIDEBAR_STATE_SYNC_DELAYS_MS = [0, 300, 500] as const;
 
+// Debounce delay for the global body MutationObserver. During sidebar expansion
+// Gemini renders hundreds of conversation rows in rapid succession; without
+// debouncing, every mutation triggers a synchronous checkAndReattach() sweep.
+const OBSERVER_DEBOUNCE_MS = 100;
 // Debounce delay to avoid rapid toggling
 const LEAVE_DELAY_MS = 400;
 const ENTER_DELAY_MS = 150;
@@ -93,6 +97,7 @@ let predictiveMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
 let observer: MutationObserver | null = null;
 let resizeHandler: (() => void) | null = null;
 let resizeDebounceTimer: number | null = null;
+let observerDebounceTimer: number | null = null;
 let sidenavCheckTimer: number | null = null;
 let menuClickHandler: ((e: Event) => void) | null = null;
 let sidebarStateSyncTimeoutIds: number[] = [];
@@ -683,7 +688,15 @@ function stopSidenavCheck(): void {
 function setupInfrastructure(): void {
   if (!observer) {
     observer = new MutationObserver(() => {
-      if (enabled || fullHideEnabled) checkAndReattach();
+      if (!enabled && !fullHideEnabled) return;
+      // Debounce: during sidebar expansion Gemini renders hundreds of
+      // conversation rows in rapid succession. Without debouncing every
+      // mutation triggers a synchronous DOM-query sweep (#753).
+      if (observerDebounceTimer !== null) window.clearTimeout(observerDebounceTimer);
+      observerDebounceTimer = window.setTimeout(() => {
+        observerDebounceTimer = null;
+        checkAndReattach();
+      }, OBSERVER_DEBOUNCE_MS);
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
@@ -705,6 +718,11 @@ function teardownInfrastructure(): void {
   if (resizeDebounceTimer !== null) {
     window.clearTimeout(resizeDebounceTimer);
     resizeDebounceTimer = null;
+  }
+
+  if (observerDebounceTimer !== null) {
+    window.clearTimeout(observerDebounceTimer);
+    observerDebounceTimer = null;
   }
 
   if (observer) {

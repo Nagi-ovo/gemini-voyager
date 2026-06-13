@@ -7983,10 +7983,7 @@ export class FolderManager {
    */
   private hasLegacyActionsContainer(): boolean {
     const now = performance.now();
-    if (
-      this.legacyActionsProbe &&
-      now - this.legacyActionsProbe.at < LEGACY_ACTIONS_PROBE_TTL_MS
-    ) {
+    if (this.legacyActionsProbe && now - this.legacyActionsProbe.at < LEGACY_ACTIONS_PROBE_TTL_MS) {
       return this.legacyActionsProbe.present;
     }
     const present =
