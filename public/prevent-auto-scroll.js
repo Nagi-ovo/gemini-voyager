@@ -6,10 +6,119 @@
   console.log('[Gemini Voyager] Prevent auto scroll script loaded');
 
   const BRIDGE_ID = 'gv-prevent-auto-scroll-bridge';
+  const INITIAL_NATIVE_SCROLL_ALLOW_MS = 8000;
+  const ROUTE_NATIVE_SCROLL_ALLOW_MS = 4000;
+  const SUBMIT_SCROLL_BLOCK_MS = 120000;
+  const SUBMIT_ROUTE_GRACE_MS = 5000;
+  const SEND_BUTTON_TEXT_RE =
+    /\b(send|submit|run|update)\b|发送|提交|傳送|送出|送信|전송|enviar|envoyer|senden|отправ|إرسال|运行|執行|実行|실행|更新/i;
+
+  let nativeScrollAllowedUntil = Date.now() + INITIAL_NATIVE_SCROLL_ALLOW_MS;
+  let blockScrollUntil = 0;
+  let lastSubmitIntentAt = 0;
+  let lastUrl = location.href;
+
   function isEnabled() {
     const bridge = document.getElementById(BRIDGE_ID);
     return bridge && bridge.dataset.enabled === 'true';
   }
+
+  function allowNativeScrollFor(durationMs) {
+    const now = Date.now();
+    if (now - lastSubmitIntentAt < SUBMIT_ROUTE_GRACE_MS) return;
+    blockScrollUntil = 0;
+    nativeScrollAllowedUntil = Math.max(nativeScrollAllowedUntil, now + durationMs);
+  }
+
+  function markSubmitIntent() {
+    if (!isEnabled()) return;
+    const now = Date.now();
+    lastSubmitIntentAt = now;
+    blockScrollUntil = now + SUBMIT_SCROLL_BLOCK_MS;
+    nativeScrollAllowedUntil = 0;
+  }
+
+  function shouldBlockAutoScroll() {
+    const now = Date.now();
+    return isEnabled() && now >= nativeScrollAllowedUntil && now < blockScrollUntil;
+  }
+
+  function handlePossibleRouteChange() {
+    setTimeout(() => {
+      if (location.href === lastUrl) return;
+      lastUrl = location.href;
+      allowNativeScrollFor(ROUTE_NATIVE_SCROLL_ALLOW_MS);
+    }, 0);
+  }
+
+  function wrapHistoryMethod(name) {
+    const original = history[name];
+    if (typeof original !== 'function') return;
+    history[name] = function (...args) {
+      const result = original.apply(this, args);
+      handlePossibleRouteChange();
+      return result;
+    };
+  }
+
+  function isEditableTarget(target) {
+    if (!(target instanceof Element)) return false;
+    return Boolean(target.closest('textarea, input, [contenteditable="true"], [role="textbox"]'));
+  }
+
+  function closestButton(target) {
+    if (!(target instanceof Element)) return null;
+    return target.closest('button, [role="button"]');
+  }
+
+  function isLikelySendButton(button) {
+    if (!button) return false;
+    const text = [
+      button.getAttribute('aria-label'),
+      button.getAttribute('title'),
+      button.getAttribute('data-tooltip'),
+      button.getAttribute('data-test-id'),
+      button.textContent,
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    if (SEND_BUTTON_TEXT_RE.test(text)) return true;
+
+    const icon = button.querySelector(
+      'mat-icon[fonticon], .material-icons, .material-symbols-rounded',
+    );
+    const iconName = icon?.getAttribute('fonticon') || icon?.textContent?.trim();
+    return iconName === 'send' || iconName === 'play_arrow';
+  }
+
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key !== 'Enter' || event.shiftKey || event.altKey || event.isComposing) return;
+      if (isEditableTarget(event.target)) markSubmitIntent();
+    },
+    true,
+  );
+
+  document.addEventListener(
+    'click',
+    (event) => {
+      const button = closestButton(event.target);
+      if (isLikelySendButton(button)) markSubmitIntent();
+    },
+    true,
+  );
+
+  wrapHistoryMethod('pushState');
+  wrapHistoryMethod('replaceState');
+  window.addEventListener('popstate', handlePossibleRouteChange, true);
+  window.addEventListener('hashchange', handlePossibleRouteChange, true);
+  window.addEventListener(
+    'pageshow',
+    () => allowNativeScrollFor(INITIAL_NATIVE_SCROLL_ALLOW_MS),
+    true,
+  );
 
   function getScrollTop(el) {
     if (el === window) return document.documentElement.scrollTop || document.body.scrollTop;
@@ -60,7 +169,7 @@
   }
 
   function shouldBlockScrollTo(el, args) {
-    if (!isEnabled()) return false;
+    if (!shouldBlockAutoScroll()) return false;
     if (isScrolledUp(el) && isScrollingDownTo(el, args)) {
       return true;
     }
@@ -68,7 +177,7 @@
   }
 
   function shouldBlockScrollBy(el, args) {
-    if (!isEnabled()) return false;
+    if (!shouldBlockAutoScroll()) return false;
     if (isScrolledUp(el) && isScrollingDownBy(args)) {
       return true;
     }
@@ -101,7 +210,7 @@
 
   const originalScrollIntoView = Element.prototype.scrollIntoView;
   Element.prototype.scrollIntoView = function (...args) {
-    if (isEnabled()) {
+    if (shouldBlockAutoScroll()) {
       let ancestor = this.parentElement;
       let blocked = false;
       while (ancestor) {
@@ -138,7 +247,7 @@
     Object.defineProperty(Element.prototype, 'scrollTop', {
       get: originalScrollTopDescriptor.get,
       set: function (value) {
-        if (isEnabled() && isScrolledUp(this)) {
+        if (shouldBlockAutoScroll() && isScrolledUp(this)) {
           const currentVal = originalScrollTopDescriptor.get.call(this);
           if (value > currentVal) {
             return;
