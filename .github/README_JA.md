@@ -60,9 +60,6 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p> -->
 
-> [!IMPORTANT]
-> **Gemini ウェブ版が大幅にリニューアル** —— 現在対応中です。影響を受ける可能性のある機能：**デフォルトモデルの自動選択**、**フォルダ UI**。全体的な使用には支障はないはずですが、その他の不具合を見つけた場合は GitHub で issue を立ててお知らせください。早急に修正します。Chrome Web Store の更新をお待ちください。_(2026-05-19)_
-
 > [!NOTE]
 > もし Voyager が役に立っているなら、X、YouTube、Reddit などで共有してもらえると嬉しいです。シェアが増えるほど、このプロジェクトをより多くの人に届けられ、Gemini の体験改善にもつながります。ありがとう。
 

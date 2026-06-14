@@ -60,9 +60,6 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p> -->
 
-> [!IMPORTANT]
-> **Gemini 网页版近期进行了较大改版** —— 我正在适配中。当前可能受影响的功能：**自动选择默认模型**、**文件夹 UI**。整体使用应无大碍，如遇其他异常，欢迎在 GitHub 上提 issue 反馈，我会尽快修复。请耐心等待 Chrome Web Store 更新。_(2026-05-19)_
-
 > [!NOTE]
 > 如果 Voyager 帮到了你，欢迎分享到 X、即刻、小红书、Linux.do、V2EX 等等，也欢迎推荐给海外 KOL。每一次分享都能让更多人看到这个项目，从而改善 Gemini 的使用体验。谢谢。
 

@@ -60,9 +60,6 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p> -->
 
-> [!IMPORTANT]
-> **Gemini 웹 UI가 최근 대규모로 개편되었습니다** —— 적응 중입니다. 영향을 받을 수 있는 기능: **기본 모델 자동 선택**, **폴더 UI**. 전반적인 사용에는 큰 문제가 없을 것입니다. 다른 이상이 발견되면 GitHub issue로 알려주세요. 최대한 빨리 수정하겠습니다. Chrome Web Store 업데이트를 기다려 주세요. _(2026-05-19)_
-
 > [!NOTE]
 > Voyager 가 도움이 되었다면 X, YouTube, Reddit 등에서 공유해 주세요. 공유가 늘수록 더 많은 사용자가 프로젝트를 발견하고 Gemini 사용 경험도 함께 좋아집니다. 감사합니다.
 

@@ -60,9 +60,6 @@
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
   </p> -->
 
-> [!IMPORTANT]
-> **A interface web do Gemini passou por uma grande reformulação** — estou a adaptar-me. Funcionalidades potencialmente afetadas: **seleção automática do modelo padrão** e **interface de pastas**. O uso geral deve permanecer estável; se encontrar outras anomalias, abra uma issue no GitHub e corrigirei o quanto antes. Aguarde a atualização na Chrome Web Store. _(2026-05-19)_
-
 > [!NOTE]
 > Se o Voyager for útil para você, compartilhe no X, Reddit, YouTube, etc. Cada partilha ajuda mais pessoas a descobrir o projeto e a melhorar a experiência com Gemini. Obrigado.
 
