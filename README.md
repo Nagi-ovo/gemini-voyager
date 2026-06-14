@@ -49,9 +49,16 @@
   <a href="./.github/README_KO.md">한국어</a>
 </p>
 
+<!-- Fable 5 Verified badge source: https://github.com/yetone/alma-releases/issues/56 (@yetone). -->
 <p align="center">
+  <a href="https://github.com/yetone/alma-releases/issues/56" target="_blank" rel="noopener noreferrer" title="Fable 5 Verified badge by @yetone" aria-label="Fable 5 Verified badge by @yetone">
+    <img src="docs/public/assets/fable-5-verified.png" alt="Fable 5 Verified" width="360">
+  </a>
+</p>
+
+<!-- <p align="center">
     <img src="https://count.getloli.com/@gemini-voyager?name=gemini-voyager&theme=rule34&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
-  </p>
+  </p> -->
 
 > [!IMPORTANT]
 > **Gemini's web UI just had a major redesign** — adapting now. Features that may be affected: **Default Model auto-selection** and the **Folder UI**. Day-to-day usage should still be fine; if you spot other anomalies, please open a GitHub issue and I'll fix it ASAP. Please wait for the Chrome Web Store update. _(2026-05-19)_
