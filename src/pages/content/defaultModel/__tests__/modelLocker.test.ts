@@ -1257,6 +1257,60 @@ describe('DefaultModelManager (default model locker)', () => {
     );
   });
 
+  it('stops retrying when clicks do not move the pill (quota-exhausted model) — #761', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultModel: { id: 'e6fa609c3fa255c0', name: '3.1 Pro' },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    // The pill stays on "Flash" no matter how many times Pro is clicked.
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+    const container = document.createElement('div');
+    container.className = 'container';
+
+    const proItem = document.createElement('gem-menu-item');
+    proItem.setAttribute('role', 'menuitem');
+    proItem.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    proItem.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">3.1 Pro</span></div>
+      </gem-menu-item-content>
+    `;
+    proItem.click = vi.fn();
+
+    container.appendChild(proItem);
+    pane.appendChild(container);
+    document.body.appendChild(pane);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(5000);
+
+    const clicksAfterBackoff = (proItem.click as ReturnType<typeof vi.fn>).mock.calls.length;
+
+    expect(selectorBtn.textContent).toBe('Flash');
+    expect(clicksAfterBackoff).toBeGreaterThan(0);
+    expect(clicksAfterBackoff).toBeLessThanOrEqual(3);
+    expect(document.querySelectorAll('.gv-default-model-fail-toast').length).toBe(1);
+
+    await vi.advanceTimersByTimeAsync(25000);
+    expect((proItem.click as ReturnType<typeof vi.fn>).mock.calls.length).toBe(clicksAfterBackoff);
+  });
+
   describe('auto-apply kill switch', () => {
     function mockSyncGet(stored: Record<string, unknown>) {
       (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(

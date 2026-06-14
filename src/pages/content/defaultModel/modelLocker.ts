@@ -83,6 +83,12 @@ class DefaultModelManager {
   // The flag only resets when the user flips the kill switch off-then-on,
   // so revisiting /app many times in a broken session does not spam toasts.
   private failureToastShown = false;
+  // Tracks a model item we clicked on the previous tick. If the trigger pill is
+  // still not on that model on the next tick, Gemini likely rejected the switch
+  // (for example because that model's quota is exhausted), so we back off after
+  // a few confirmations instead of reopening the menu forever (#761).
+  private pendingModelSwitchKey: string | null = null;
+  private consecutiveRejectedModelSwitches = 0;
   // Master kill switch — when false, all auto-apply paths short-circuit but
   // the in-page star UI still works so users can set/clear defaults. Loaded
   // at init and kept in sync via chrome.storage.onChanged so a popup flip
@@ -983,8 +989,12 @@ class DefaultModelManager {
         this.sweepDefaultModelUi();
       } else {
         // Flipping on: clear the once-per-session toast guard so a future
-        // breakage during the re-enabled run can surface a fresh warning.
+        // breakage during the re-enabled run can surface a fresh warning,
+        // and reset the rejected-switch tracker so a prior quota-exhausted
+        // session doesn't keep the loop suppressed on the next chat.
         this.failureToastShown = false;
+        this.pendingModelSwitchKey = null;
+        this.consecutiveRejectedModelSwitches = 0;
       }
     };
     try {
@@ -1038,6 +1048,8 @@ class DefaultModelManager {
     this.autoSelectSessionId = sessionId;
     // Reset failure counter for new session
     this.consecutiveFailures = 0;
+    this.pendingModelSwitchKey = null;
+    this.consecutiveRejectedModelSwitches = 0;
 
     // Start checking loop
     let attempts = 0;
@@ -1077,11 +1089,35 @@ class DefaultModelManager {
     if (modelOk && thinkingOk) {
       if (this.checkTimer) clearInterval(this.checkTimer);
       this.consecutiveFailures = 0;
+      this.pendingModelSwitchKey = null;
+      this.consecutiveRejectedModelSwitches = 0;
       return;
     }
 
+    if (modelOk) {
+      this.pendingModelSwitchKey = null;
+      this.consecutiveRejectedModelSwitches = 0;
+    }
+
     if (!modelOk && targetModel) {
-      await this.tryLockToModel(targetModel);
+      const switchKey = this.getModelSwitchKey(targetModel);
+      if (this.pendingModelSwitchKey === switchKey) {
+        this.consecutiveRejectedModelSwitches++;
+        if (this.consecutiveRejectedModelSwitches >= this.maxConsecutiveFailures) {
+          this.consecutiveFailures = this.maxConsecutiveFailures;
+          this.maybeNotifyAutoApplyFailure();
+          if (this.checkTimer) clearInterval(this.checkTimer);
+          return;
+        }
+      }
+
+      const clicked = await this.tryLockToModel(targetModel);
+      if (clicked) {
+        this.pendingModelSwitchKey = switchKey;
+      } else {
+        this.pendingModelSwitchKey = null;
+        this.consecutiveRejectedModelSwitches = 0;
+      }
       return;
     }
 
@@ -1138,7 +1174,11 @@ class DefaultModelManager {
     );
   }
 
-  private async tryLockToModel(targetModel: DefaultModelSetting) {
+  private getModelSwitchKey(model: DefaultModelSetting): string {
+    return model.kind === 'id' ? `id:${model.id}` : `name:${model.name.toLowerCase().trim()}`;
+  }
+
+  private async tryLockToModel(targetModel: DefaultModelSetting): Promise<boolean> {
     // Ported from https://github.com/urzeye/tampermonkey-scripts (Gemini Helper)
     const normalize = (s: string) => s.toLowerCase().trim();
     const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1148,7 +1188,7 @@ class DefaultModelManager {
     // 1. Find selector button (shared helper keeps selectors in sync with the
     //    fast-path check in readTriggerPillLines — #756).
     const selectorBtn = this.findSelectorButton();
-    if (!selectorBtn) return;
+    if (!selectorBtn) return false;
 
     // 2. Check current model text - early return if already correct
     const currentText = selectorBtn.textContent || '';
@@ -1159,12 +1199,12 @@ class DefaultModelManager {
     if (targetAsWholeWord.test(normalizedCurrent) || normalizedCurrent === targetName) {
       // Already correct
       if (this.checkTimer) clearInterval(this.checkTimer);
-      return;
+      return false;
     }
 
     // 3. Switch model
     // This part is tricky because we need to open the menu and click safely
-    if (this.isLocked) return; // Prevent concurrent locks
+    if (this.isLocked) return false; // Prevent concurrent locks
     this.isLocked = true;
 
     try {
@@ -1180,7 +1220,7 @@ class DefaultModelManager {
         if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
           clearInterval(this.checkTimer);
         }
-        return;
+        return false;
       }
 
       const items = menuPanel.querySelectorAll(MODE_ITEM_SELECTOR);
@@ -1254,10 +1294,6 @@ class DefaultModelManager {
         }
       }
 
-      if (found) {
-        // Reset failure counter; tickLock will clear the timer once both model + thinking are OK.
-        this.consecutiveFailures = 0;
-      }
       if (switchedModel) {
         this.focusChatInputAfterAutoSwitch();
       }
@@ -1275,9 +1311,13 @@ class DefaultModelManager {
             clearInterval(this.checkTimer);
           }
         }
+        return false;
       }
+
+      return switchedModel;
     } catch (e) {
       console.error('Auto lock failed', e);
+      return false;
     } finally {
       this.isLocked = false;
     }
