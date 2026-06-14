@@ -44,7 +44,6 @@ export async function startPreventAutoScroll(): Promise<void> {
         notifyScript(changes.gvPreventAutoScrollEnabled.newValue === true);
       }
     });
-
   } catch (error) {
     if (isExtensionContextInvalidatedError(error)) {
       return;
