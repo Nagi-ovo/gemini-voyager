@@ -3,6 +3,23 @@ import { describe, expect, it, vi } from 'vitest';
 import { TimelineManager } from '../manager';
 
 describe('TimelineManager active marker', () => {
+  it('starts with the thinnest visual bar width for users without a saved width', () => {
+    const manager = new TimelineManager();
+    const bar = document.createElement('div');
+    const internal = manager as unknown as {
+      barWidth: number;
+      barWidthMin: number;
+      ui: { timelineBar: HTMLElement | null };
+      applyContainerVisibility: () => void;
+    };
+
+    internal.ui.timelineBar = bar;
+    internal.applyContainerVisibility();
+
+    expect(internal.barWidth).toBe(internal.barWidthMin);
+    expect(bar.style.getPropertyValue('--timeline-bar-width')).toBe('4px');
+  });
+
   it('uses cached marker tops when available', () => {
     const manager = new TimelineManager();
 

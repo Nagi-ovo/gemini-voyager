@@ -138,7 +138,7 @@ export class TimelineManager {
   private tooltipHideDelay = 100;
   private scrollMode: 'jump' | 'flow' = 'flow';
   private hideContainer: boolean = false;
-  private barWidth: number = 24;
+  private barWidth: number = 4;
   private readonly barWidthMin = 4;
   private readonly barWidthMax = 24;
   private resizing = false;

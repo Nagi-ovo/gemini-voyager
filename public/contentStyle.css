@@ -129,8 +129,8 @@
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: var(--timeline-bar-width, 24px);
-  border-radius: calc(var(--timeline-bar-width, 24px) / 2);
+  width: var(--timeline-bar-width, 4px);
+  border-radius: calc(var(--timeline-bar-width, 4px) / 2);
   background-color: var(--timeline-bar-bg);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -11206,7 +11206,7 @@ body.gv-hide-input-halo .nl-canvas {
 /* ============================================================
  * Usage status mini-bar (#690) — compact daily/weekly quota
  * readout docked bottom-right (out of the centered reading
- * column) by JS. Persistent, translucent, single row. Refresh =
+ * column) by JS. Persistent, compact, single row. Refresh =
  * silent replay; the ↗ icon is the only thing that opens /usage.
  * theme-host light/dark + RTL aware.
  * ============================================================ */
@@ -11231,7 +11231,7 @@ body.gv-hide-input-halo .nl-canvas {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   user-select: none;
-  opacity: 0.82;
+  opacity: 1;
   cursor: grab;
   touch-action: none;
   transition: opacity 0.18s ease;
