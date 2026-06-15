@@ -3,6 +3,8 @@ import { useData } from 'vitepress';
 import { computed } from 'vue';
 import { Vue3Marquee } from 'vue3-marquee';
 
+import reviewPoolData from '../data/reviews.json';
+
 const { lang } = useData();
 
 interface I18nData {
@@ -60,77 +62,90 @@ interface Review {
   username?: string;
   avatar: string;
   content: string;
-  source?: 'Chrome Web Store' | 'Edge Add-ons' | 'X';
+  source?: string;
+  lang?: string;
 }
 
-const reviews: Review[] = [
-  {
-    name: 'Shuyun Yang',
-    avatar:
-      'https://lh3.googleusercontent.com/a/ACg8ocI4nd0KLo2Cgi8PSmkl9oUxy6Dm-fIMqepv-uR0hpGHt7Zw3A=s48-w48-h48',
-    content: '非常好用，最全最顺滑的扩展！',
-    source: 'Chrome Web Store',
-  },
-  {
-    name: 'Aimee Chen',
-    avatar:
-      'https://lh3.googleusercontent.com/a-/ALV-UjUMiFlYAN-GdaQWqSepuvA_JuWDNWLTrx-VFrCjK0J2DeD4_QN5Ig=s48-w48-h48',
-    content:
-      '太好用了，helps a lot!! 解決很多對話框雜亂及一直上下捲找資料的困擾，安裝完馬上直覺操作，神器呀!!',
-    source: 'Chrome Web Store',
-  },
-  {
-    name: '@yug1224',
-    avatar: 'https://pbs.twimg.com/profile_images/1600779910720520192/QKdZC5yr_400x400.jpg',
-    content:
-      'Geminiの操作性を高める拡張機能群らしい。チャット管理や機能追加で作業効率が上がりそうかな。',
-    source: 'X',
-  },
-  {
-    name: 'Hi Sanzee',
-    avatar:
-      'https://lh3.googleusercontent.com/a-/ALV-UjVKp0gzYvVWOcKVbXxpZqAwo8tZer5qv6isJoYeVfZet7C28aQh=s48-w48-h48',
-    content:
-      'This is a god send. Thank you so much. Someone who Designs and Develops. This is a gold mine I was searching for.',
-    source: 'Chrome Web Store',
-  },
-  {
-    name: 'Mars Wang',
-    avatar:
-      'https://lh3.googleusercontent.com/a-/ALV-UjX9WVnxeHbGZOkSMFxgtrFxUeCpqxKiGW213iWf-XIYuQBJ2KM=s48-w48-h48',
-    content:
-      'omg, this is exactly what I need. Looking forward for more functions! Thank you for open scourse!',
-    source: 'Chrome Web Store',
-  },
-  {
-    name: 'CCC',
-    avatar:
-      'https://lh3.googleusercontent.com/a/ACg8ocIYRaHTC91ZFa_QS3wyFxv97bgOgWiJxtwcxhXVn13XJIDNMVP7=s48-w48-h48',
-    content: '必須大推！文件夾功能超好用，根本像原裝軟件，屌翻天。',
-    source: 'Chrome Web Store',
-  },
-  {
-    name: 'frequnet san',
-    avatar:
-      'https://lh3.googleusercontent.com/a/ACg8ocJ0vcIr0k64uGkLU7pJ1mXmSPm28uKfedjge0Jf7zvwdiDjaQ=s48-w48-h48',
-    content:
-      "It's helpful to use gemini with study / research for students like me, more details in readme of github help a lot!",
-    source: 'Chrome Web Store',
-  },
-  {
-    name: 'Kook Wu',
-    avatar:
-      'https://lh3.googleusercontent.com/a-/ALV-UjUf2aLVqTH5ji5yAq1-dRfmghfn0-Zik1Thg593VfEsIuLMpY5i=s48-w48-h48',
-    content: '这个世界完美了',
-    source: 'Chrome Web Store',
-  },
-  {
-    name: 'LYNXUTE',
-    avatar:
-      'https://lh3.googleusercontent.com/a-/ALV-UjVQNBHXfgi56K3ekpxu7rsMKD0Iv5KJA5fmL31IcQM6oWHZMxw=s48-w48-h48',
-    content: '爱音神了',
-    source: 'Chrome Web Store',
-  },
+// Curated, maintainable review pool (docs/.vitepress/theme/data/reviews.json).
+// Refresh it with `bun output/reviews/fetch-reviews.mjs` then re-curate.
+const reviewPool = reviewPoolData as Review[];
+
+// VitePress locale -> review language code.
+const localeToReviewLang: Record<string, string> = {
+  'zh-CN': 'zh',
+  'zh-TW': 'zh',
+  'en-US': 'en',
+  'ja-JP': 'ja',
+  'fr-FR': 'fr',
+  'es-ES': 'es',
+  'ko-KR': 'ko',
+};
+
+const TOTAL = 30; // cards rendered across all rows
+const SPRINKLE = 6; // other-language cards mixed into the wall
+
+function dedupeByName(list: Review[]): Review[] {
+  const seen = new Set<string>();
+  return list.filter((r) => {
+    if (seen.has(r.name)) return false;
+    seen.add(r.name);
+    return true;
+  });
+}
+
+// Build the display list: mostly the current locale's language, with a small,
+// language-diverse sprinkle of others interleaved at even intervals. Locales
+// without depth fall back to an English-majority wall but keep any native
+// reviews up front. Fully deterministic (no randomness) so SSR === client.
+function buildDisplay(primaryLang: string): Review[] {
+  const primary = reviewPool.filter((r) => r.lang === primaryLang);
+  const english = reviewPool.filter((r) => r.lang === 'en');
+  const body = dedupeByName(
+    primary.length >= TOTAL - SPRINKLE ? primary : [...primary, ...english],
+  );
+
+  const bodyNames = new Set(body.map((r) => r.name));
+  const others = reviewPool.filter((r) => r.lang !== primaryLang && !bodyNames.has(r.name));
+  const byLang = new Map<string, Review[]>();
+  for (const r of others) {
+    const key = r.lang ?? 'other';
+    if (!byLang.has(key)) byLang.set(key, []);
+    byLang.get(key)!.push(r);
+  }
+  // Round-robin one per language so the sprinkle spans as many languages as possible.
+  const sprinkle: Review[] = [];
+  const langs = [...byLang.keys()];
+  let i = 0;
+  while (sprinkle.length < SPRINKLE && langs.some((l) => byLang.get(l)!.length > 0)) {
+    const bucket = byLang.get(langs[i % langs.length])!;
+    if (bucket.length) sprinkle.push(bucket.shift()!);
+    i++;
+  }
+
+  const main = body.slice(0, TOTAL - sprinkle.length);
+  const out = [...main];
+  const gap = Math.max(1, Math.floor(out.length / (sprinkle.length + 1)));
+  sprinkle.forEach((s, idx) => {
+    out.splice(Math.min((idx + 1) * gap + idx, out.length), 0, s);
+  });
+  return out.slice(0, TOTAL);
+}
+
+const displayReviews = computed<Review[]>(() =>
+  buildDisplay(localeToReviewLang[lang.value as string] ?? 'en'),
+);
+
+// Split into 3 staggered rows; modulo keeps each row language-mixed.
+const rows = computed<Review[][]>(() =>
+  [0, 1, 2].map((r) => displayReviews.value.filter((_, i) => i % 3 === r)),
+);
+
+// Each row scrolls at a slightly different speed and alternating direction so
+// the wall feels organic rather than a single synchronized block.
+const rowConfig = [
+  { direction: 'normal' as const, duration: 64 },
+  { direction: 'reverse' as const, duration: 52 },
+  { direction: 'normal' as const, duration: 72 },
 ];
 </script>
 
@@ -178,24 +193,33 @@ const reviews: Review[] = [
 
     <p class="subtitle">{{ t.subtitle }}</p>
 
-    <Vue3Marquee :pause-on-hover="true" :duration="40" class="marquee-wrapper">
-      <div v-for="(review, index) in reviews" :key="index" class="review-card">
-        <div class="card-header">
-          <img
-            :src="review.avatar"
-            :alt="review.name"
-            class="avatar"
-            loading="lazy"
-            referrerpolicy="no-referrer"
-          />
-          <div class="user-info">
-            <div class="name">{{ review.name }}</div>
-            <div class="source" v-if="review.source">{{ review.source }}</div>
+    <div class="marquee-stack">
+      <Vue3Marquee
+        v-for="(row, rowIndex) in rows"
+        :key="rowIndex"
+        :pause-on-hover="true"
+        :duration="rowConfig[rowIndex].duration"
+        :direction="rowConfig[rowIndex].direction"
+        class="marquee-row"
+      >
+        <div v-for="(review, index) in row" :key="index" class="review-card">
+          <div class="card-header">
+            <img
+              :src="review.avatar"
+              :alt="review.name"
+              class="avatar"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            />
+            <div class="user-info">
+              <div class="name">{{ review.name }}</div>
+              <div class="source" v-if="review.source">{{ review.source }}</div>
+            </div>
           </div>
+          <p class="content">{{ review.content }}</p>
         </div>
-        <p class="content">"{{ review.content }}"</p>
-      </div>
-    </Vue3Marquee>
+      </Vue3Marquee>
+    </div>
   </div>
 </template>
 
@@ -317,36 +341,48 @@ const reviews: Review[] = [
   object-fit: contain;
 }
 
-.marquee-wrapper {
-  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+.marquee-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Fade both horizontal edges so cards slide in/out softly. */
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.marquee-row {
+  width: 100%;
 }
 
 .review-card {
-  width: 320px;
-  height: 180px; /* Fixed height for uniformity */
+  box-sizing: border-box;
+  width: 340px;
+  height: 172px; /* Fits header + 3 full lines; keeps each row aligned */
+  overflow: hidden; /* Clean rounded clipping, no mid-glyph spill */
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-bg-soft-up);
   border-radius: 16px;
-  padding: 24px;
-  margin: 0 16px;
+  padding: 20px 22px;
+  margin: 0 10px;
   display: flex;
   flex-direction: column;
   transition:
     transform 0.2s ease,
-    border-color 0.2s ease;
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   text-align: left;
 }
 
 .review-card:hover {
   transform: translateY(-4px);
   border-color: var(--vp-c-brand-1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .avatar {
@@ -354,12 +390,15 @@ const reviews: Review[] = [
   height: 40px;
   border-radius: 50%;
   margin-right: 12px;
+  flex-shrink: 0;
+  object-fit: cover;
   background-color: var(--vp-c-bg-mute); /* Placeholder bg */
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .name {
@@ -367,6 +406,9 @@ const reviews: Review[] = [
   font-size: 15px;
   color: var(--vp-c-text-1);
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .source {
@@ -381,9 +423,63 @@ const reviews: Review[] = [
   line-height: 1.5;
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-style: italic;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .review-card {
+    width: 300px;
+    height: 168px;
+    padding: 18px 20px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .reviews-section {
+    padding: 0 12px;
+  }
+
+  .marquee-stack {
+    gap: 12px;
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  }
+
+  .review-card {
+    width: 258px;
+    height: 156px;
+    padding: 16px 16px;
+    margin: 0 7px;
+    border-radius: 14px;
+  }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    margin-right: 10px;
+  }
+
+  .card-header {
+    margin-bottom: 10px;
+  }
+
+  .name {
+    font-size: 14px;
+  }
+
+  .content {
+    font-size: 13px;
+  }
+}
+
+/* Respect reduced-motion preference: stop the scroll. */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-row :deep(.marquee) {
+    animation: none !important;
+  }
 }
 </style>
