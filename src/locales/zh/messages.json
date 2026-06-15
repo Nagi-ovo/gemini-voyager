@@ -287,6 +287,10 @@
     "message": "更新源尚未同步，请几小时后再试",
     "description": "Safari 上 DMG 文件尚未上传到 GitHub releases 时显示"
   },
+  "fableVerifiedBadgeAlt": {
+    "message": "Fable 5 Verified",
+    "description": "Alt text for the Fable 5 Verified badge in the popup footer"
+  },
   "starProject": {
     "message": "为项目点亮 ⭐️",
     "description": "Github 引导"

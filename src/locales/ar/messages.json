@@ -287,6 +287,10 @@
     "message": "مصدر التحديث غير متزامن بعد، يرجى المحاولة مرة أخرى بعد بضع ساعات",
     "description": "Shown on Safari when the DMG file is not yet available on GitHub releases"
   },
+  "fableVerifiedBadgeAlt": {
+    "message": "Fable 5 Verified",
+    "description": "Alt text for the Fable 5 Verified badge in the popup footer"
+  },
   "starProject": {
     "message": "ادعمني ⭐",
     "description": "Github callout"

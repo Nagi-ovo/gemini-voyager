@@ -287,6 +287,10 @@
     "message": "업데이트 소스가 아직 동기화되지 않았습니다. 몇 시간 후에 다시 시도해 주세요",
     "description": "Shown on Safari when the DMG file is not yet available on GitHub releases"
   },
+  "fableVerifiedBadgeAlt": {
+    "message": "Fable 5 Verified",
+    "description": "Alt text for the Fable 5 Verified badge in the popup footer"
+  },
   "starProject": {
     "message": "지원하기 ⭐",
     "description": "Github callout"

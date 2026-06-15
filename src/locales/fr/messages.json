@@ -287,6 +287,10 @@
     "message": "La mise à jour n'est pas encore disponible, veuillez réessayer dans quelques heures",
     "description": "Shown on Safari when the DMG file is not yet available on GitHub releases"
   },
+  "fableVerifiedBadgeAlt": {
+    "message": "Fable 5 Verified",
+    "description": "Alt text for the Fable 5 Verified badge in the popup footer"
+  },
   "starProject": {
     "message": "Me soutenir ⭐",
     "description": "Github callout"

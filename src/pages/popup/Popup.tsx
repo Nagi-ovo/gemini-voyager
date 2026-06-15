@@ -1489,6 +1489,16 @@ export default function Popup() {
   const websiteUrl =
     language === 'zh' ? 'https://voyager.nagi.fun' : `https://voyager.nagi.fun/${language}`;
 
+  // Bundled "Fable 5 Verified" badge (public/fable-verified-badge.png). Guarded
+  // so non-extension contexts (e.g. tests) don't throw on chrome.runtime.getURL.
+  const fableBadgeUrl = (() => {
+    try {
+      return chrome?.runtime?.getURL?.('fable-verified-badge.png') ?? null;
+    } catch {
+      return null;
+    }
+  })();
+
   // ── Section reorder helpers ──────────────────────────────────
   const isSectionVisible = (id: PopupSectionId): boolean => {
     switch (id) {
@@ -3088,6 +3098,22 @@ export default function Popup() {
             >
               {extVersion ?? '...'}
             </a>
+            {fableBadgeUrl && (
+              <a
+                href="https://github.com/yetone/alma-releases/issues/56"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center opacity-75 transition-opacity hover:opacity-100"
+                title={t('fableVerifiedBadgeAlt')}
+                aria-label={t('fableVerifiedBadgeAlt')}
+              >
+                <img
+                  src={fableBadgeUrl}
+                  alt={t('fableVerifiedBadgeAlt')}
+                  className="h-[40px] w-auto"
+                />
+              </a>
+            )}
           </div>
 
           <a

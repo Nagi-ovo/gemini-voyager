@@ -287,6 +287,10 @@
     "message": "A atualização ainda não está sincronizada, tente novamente em algumas horas",
     "description": "Shown on Safari when the DMG file is not yet available on GitHub releases"
   },
+  "fableVerifiedBadgeAlt": {
+    "message": "Fable 5 Verified",
+    "description": "Alt text for the Fable 5 Verified badge in the popup footer"
+  },
   "starProject": {
     "message": "Apoie-me ⭐",
     "description": "Github callout"
