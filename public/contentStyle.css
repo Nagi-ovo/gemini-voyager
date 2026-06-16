@@ -11568,11 +11568,9 @@ body.gv-rtl .gv-usage-metric {
   position: fixed;
   inset: 0;
   z-index: 2147483640;
-  background: rgba(8, 12, 20, 0.42);
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
+  background: rgba(8, 12, 20, 0.2);
   opacity: 0;
-  transition: opacity 0.22s ease;
+  transition: opacity 180ms ease;
 }
 .gv-coach-scrim.--show {
   opacity: 1;
@@ -11599,33 +11597,36 @@ body.gv-rtl .gv-usage-metric {
   100% {
     box-shadow:
       0 6px 22px rgba(0, 0, 0, 0.28),
-      0 0 0 0 rgba(26, 115, 232, 0.45);
+      0 0 0 0 oklch(0.64 0.17 155 / 0.42);
   }
   50% {
     box-shadow:
       0 6px 22px rgba(0, 0, 0, 0.28),
-      0 0 0 6px rgba(26, 115, 232, 0);
+      0 0 0 6px oklch(0.64 0.17 155 / 0);
   }
 }
 
 .gv-coach {
-  --gv-coach-bg: #ffffff;
-  --gv-coach-border: rgba(15, 23, 42, 0.1);
-  --gv-coach-text: #1f2933;
-  --gv-coach-muted: #5b6675;
-  --gv-coach-accent: #1a73e8;
-  --gv-coach-track: rgba(15, 23, 42, 0.16);
+  --gv-coach-bg: rgba(255, 255, 255, 0.98);
+  --gv-coach-border: rgba(60, 64, 67, 0.16);
+  --gv-coach-text: #202124;
+  --gv-coach-muted: #5f6368;
+  --gv-coach-accent: oklch(0.56 0.16 155);
+  --gv-coach-accent-soft: oklch(0.56 0.16 155 / 0.12);
+  --gv-coach-track: rgba(60, 64, 67, 0.12);
   position: fixed;
   z-index: 2147483647;
   box-sizing: border-box;
-  width: 296px;
+  width: 312px;
   max-width: calc(100vw - 24px);
-  padding: 14px 16px 13px;
-  border-radius: 14px;
+  padding: 12px;
+  border-radius: 8px;
   background: var(--gv-coach-bg);
   border: 1px solid var(--gv-coach-border);
   color: var(--gv-coach-text);
-  box-shadow: 0 12px 38px rgba(8, 12, 20, 0.24);
+  box-shadow:
+    0 8px 24px rgba(60, 64, 67, 0.16),
+    0 1px 3px rgba(60, 64, 67, 0.12);
   font-family:
     'Google Sans',
     'Roboto',
@@ -11633,28 +11634,35 @@ body.gv-rtl .gv-usage-metric {
     -apple-system,
     sans-serif;
   opacity: 0;
-  transform: translateY(6px) scale(0.97);
+  transform: translateY(8px);
   transform-origin: center bottom;
   transition:
-    opacity 0.22s ease,
-    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-    border-color 0.22s ease;
+    opacity 180ms ease,
+    transform 180ms ease,
+    border-color 180ms ease;
 }
 .gv-coach.--show {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
 }
 .gv-coach[data-side='bottom'] {
   transform-origin: center top;
 }
+html.dark .gv-coach,
+[data-theme='dark'] .gv-coach,
+[data-color-scheme='dark'] .gv-coach,
+.theme-host.dark-theme .gv-coach,
 body.dark-theme .gv-coach {
-  --gv-coach-bg: #1e2230;
-  --gv-coach-border: rgba(255, 255, 255, 0.12);
+  --gv-coach-bg: rgba(32, 33, 36, 0.98);
+  --gv-coach-border: rgba(232, 234, 237, 0.12);
   --gv-coach-text: #e8eaed;
-  --gv-coach-muted: #9aa4b2;
-  --gv-coach-accent: #8ab4f8;
-  --gv-coach-track: rgba(255, 255, 255, 0.18);
-  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.5);
+  --gv-coach-muted: #bdc1c6;
+  --gv-coach-accent: oklch(0.74 0.15 155);
+  --gv-coach-accent-soft: oklch(0.74 0.15 155 / 0.16);
+  --gv-coach-track: rgba(232, 234, 237, 0.1);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.28),
+    0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .gv-coach-arrow {
@@ -11687,7 +11695,7 @@ body.dark-theme .gv-coach {
   height: 24px;
   padding: 0;
   border: none;
-  border-radius: 8px;
+  border-radius: 50%;
   background: transparent;
   color: var(--gv-coach-muted);
   cursor: pointer;
@@ -11705,25 +11713,31 @@ body.dark-theme .gv-coach {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 24px 6px 0;
+  margin: 0 28px 6px 0;
 }
 .gv-coach-icon {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--gv-coach-accent-soft);
   color: var(--gv-coach-accent);
 }
 .gv-coach-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
 .gv-coach-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.35;
 }
 .gv-coach-body {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12.5px;
+  line-height: 1.45;
   color: var(--gv-coach-muted);
 }
 
@@ -11732,11 +11746,15 @@ body.dark-theme .gv-coach {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 10px;
+  padding: 8px 8px 8px 10px;
+  border: 1px solid var(--gv-coach-border);
+  border-radius: 8px;
+  background: var(--gv-coach-track);
   cursor: pointer;
 }
 .gv-coach-toggle-label {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--gv-coach-text);
 }
@@ -11746,19 +11764,22 @@ body.dark-theme .gv-coach {
   width: 40px;
   height: 22px;
   padding: 0;
-  border: none;
+  border: 1px solid rgba(60, 64, 67, 0.12);
   border-radius: 999px;
-  background: var(--gv-coach-track);
+  background: rgba(60, 64, 67, 0.18);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
 }
 .gv-coach-switch[aria-checked='true'] {
   background: var(--gv-coach-accent);
+  border-color: var(--gv-coach-accent);
 }
 .gv-coach-knob {
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 1px;
+  left: 1px;
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -11773,16 +11794,20 @@ body.dark-theme .gv-coach {
 .gv-coach-dismiss {
   display: block;
   margin: 8px 0 0 auto;
-  padding: 2px 4px;
+  padding: 5px 8px;
   border: none;
+  border-radius: 999px;
   background: transparent;
   color: var(--gv-coach-muted);
-  font-size: 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1;
   cursor: pointer;
 }
 .gv-coach-dismiss:hover {
+  background: var(--gv-coach-track);
   color: var(--gv-coach-text);
-  text-decoration: underline;
 }
 
 /* Brief confirmation accent once the switch is flipped on. */
