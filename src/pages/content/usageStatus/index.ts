@@ -910,7 +910,9 @@ function setupStorageListener(): void {
       });
     }
     const usageCacheChange =
-      areaName === 'local' ? changes[currentUsageCacheKey()] ?? changes[StorageKeys.GV_USAGE_CACHE] : null;
+      areaName === 'local'
+        ? (changes[currentUsageCacheKey()] ?? changes[StorageKeys.GV_USAGE_CACHE])
+        : null;
     if (usageCacheChange) {
       const raw = usageCacheChange.newValue as UsageSnapshot | undefined;
       if (raw && typeof raw.updatedAt === 'number' && isCurrentAccountSnapshot(raw)) {

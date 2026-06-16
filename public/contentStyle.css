@@ -7741,6 +7741,7 @@ body[data-color-scheme='dark'] .gv-export-progress-desc {
   background: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(4px);
   font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  animation: gv-fade-in 0.2s ease-out;
 }
 
 .gv-edge-final-version-notice__dialog {
@@ -7748,9 +7749,10 @@ body[data-color-scheme='dark'] .gv-export-progress-desc {
   max-height: min(80vh, 520px);
   overflow: auto;
   border: 1px solid #dfe4ee;
-  border-radius: 8px;
+  border-radius: 16px;
   background: #ffffff;
-  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.22);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  animation: gv-slide-up 0.3s ease-out;
 }
 
 .gv-edge-final-version-notice__header {
@@ -7781,6 +7783,7 @@ body[data-color-scheme='dark'] .gv-export-progress-desc {
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
+  transition: background-color 0.2s;
 }
 
 .gv-edge-final-version-notice__close:hover {
@@ -7809,18 +7812,20 @@ body[data-color-scheme='dark'] .gv-export-progress-desc {
 .gv-edge-final-version-notice__btn {
   min-height: 36px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 20px;
   padding: 0 14px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
   white-space: normal;
+  transition: background-color 0.2s;
 }
 
 .gv-edge-final-version-notice__btn--secondary {
   border-color: #d0d7e2;
   background: #ffffff;
   color: #344054;
+  padding: 0 18px;
 }
 
 .gv-edge-final-version-notice__btn--secondary:hover {
@@ -7830,6 +7835,7 @@ body[data-color-scheme='dark'] .gv-export-progress-desc {
 .gv-edge-final-version-notice__btn--primary {
   background: #1a73e8;
   color: #ffffff;
+  padding: 0 18px;
 }
 
 .gv-edge-final-version-notice__btn--primary:hover {

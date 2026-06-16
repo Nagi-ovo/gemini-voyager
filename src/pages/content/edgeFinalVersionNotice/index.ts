@@ -115,7 +115,7 @@ function mountNotice(copy: NoticeCopy): void {
   closeBtn.type = 'button';
   closeBtn.className = `${NOTICE_CLASS}__close`;
   closeBtn.setAttribute('aria-label', copy.close);
-  closeBtn.textContent = 'x';
+  closeBtn.textContent = '✕';
   closeBtn.disabled = true;
 
   header.appendChild(title);
