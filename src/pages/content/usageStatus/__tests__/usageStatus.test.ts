@@ -8,7 +8,10 @@ import {
   mergeUsageSnapshots,
   parseUsageRpcResponse,
   scrapeUsageFromDocument,
+  selectUsageSnapshotForAccount,
   usageAccountKeyFromPathname,
+  usageCacheKeyForAccount,
+  usageUrlForPathname,
 } from '../index';
 
 /**
@@ -125,6 +128,31 @@ describe('usage account scoping', () => {
     expect(usageAccountKeyFromPathname('/usage')).toBe('default');
     expect(usageAccountKeyFromPathname('/u/0/app')).toBe('u/0');
     expect(usageAccountKeyFromPathname('/u/12/usage')).toBe('u/12');
+  });
+
+  it('uses per-account cache keys and usage urls', () => {
+    expect(usageCacheKeyForAccount('default')).toBe('gvUsageCache:default');
+    expect(usageCacheKeyForAccount('u/2')).toBe('gvUsageCache:u/2');
+    expect(usageUrlForPathname('/app')).toBe('https://gemini.google.com/usage');
+    expect(usageUrlForPathname('/u/2/app')).toBe('https://gemini.google.com/u/2/usage');
+  });
+
+  it('loads the scoped cache before the legacy single-account cache', () => {
+    const scoped = {
+      accountKey: 'u/1',
+      daily: { percent: 20, resetLabel: '1:00 AM' },
+      weekly: null,
+      updatedAt: 2,
+    };
+    const legacy = {
+      accountKey: 'default',
+      daily: { percent: 90, resetLabel: '1:00 AM' },
+      weekly: null,
+      updatedAt: 1,
+    };
+
+    expect(selectUsageSnapshotForAccount(scoped, legacy, 'u/1')).toBe(scoped);
+    expect(selectUsageSnapshotForAccount(null, legacy, 'u/1')).toBeNull();
   });
 });
 

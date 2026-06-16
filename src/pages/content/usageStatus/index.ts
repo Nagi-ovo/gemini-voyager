@@ -9,9 +9,9 @@
  *      numbers into an Angular `usage-metrics-window` component. Whenever the
  *      user visits `/usage` we parse the two metric blocks (`.gxu-currently`
  *      daily bucket + `.gxu-weekly` weekly limit) plus the plan tier and write a
- *      {@link UsageSnapshot} to `chrome.storage.local[GV_USAGE_CACHE]`. A
- *      MutationObserver keeps it fresh while the page is open. No network calls
- *      of our own — the data path is pure DOM.
+ *      {@link UsageSnapshot} to an account-scoped local cache. A MutationObserver
+ *      keeps it fresh while the page is open. No network calls of our own — the
+ *      data path is pure DOM.
  *
  *   2. **Injector** (runs on every Gemini page): render a fixed pill just above
  *      the composer from the cached snapshot — a tier badge, an "updated X ago"
@@ -85,7 +85,6 @@ const SCRAPE_DEBOUNCE_MS = 300;
 // Refresh the relative "updated X ago" stamp without re-scraping.
 const STAMP_REFRESH_MS = 30_000;
 const NAV_POLL_MS = 600;
-const USAGE_URL = 'https://gemini.google.com/usage';
 // Bridge to the MAIN-world usage-observer (document_start). Must match the
 // `source` strings in public/usage-observer.js.
 const OBS_SRC = 'gv-usage-observer';
@@ -168,6 +167,19 @@ export function usageAccountKeyFromPathname(pathname: string): string {
 
 function currentUsageAccountKey(): string {
   return usageAccountKeyFromPathname(location.pathname);
+}
+
+export function usageCacheKeyForAccount(accountKey: string): string {
+  return `${StorageKeys.GV_USAGE_CACHE}:${accountKey}`;
+}
+
+function currentUsageCacheKey(): string {
+  return usageCacheKeyForAccount(currentUsageAccountKey());
+}
+
+export function usageUrlForPathname(pathname: string): string {
+  const match = pathname.match(/^\/u\/\d+(?=\/|$)/);
+  return `https://gemini.google.com${match?.[0] ?? ''}/usage`;
 }
 
 function scopeSnapshot(next: UsageSnapshot): UsageSnapshot {
@@ -298,24 +310,41 @@ export function scrapeUsageFromDocument(doc: Document = document): UsageSnapshot
 
 async function saveSnapshot(next: UsageSnapshot): Promise<void> {
   try {
-    await browser.storage.local.set({ [StorageKeys.GV_USAGE_CACHE]: next });
+    await browser.storage.local.set({
+      [usageCacheKeyForAccount(next.accountKey ?? currentUsageAccountKey())]: next,
+      [StorageKeys.GV_USAGE_CACHE]: next,
+    });
   } catch (error) {
     console.warn('[UsageStatus] Failed to persist usage cache:', error);
   }
 }
 
+export function selectUsageSnapshotForAccount(
+  scoped: unknown,
+  legacy: unknown,
+  accountKey: string,
+): UsageSnapshot | null {
+  const isMatch = (raw: unknown): raw is UsageSnapshot =>
+    !!raw &&
+    typeof raw === 'object' &&
+    typeof (raw as UsageSnapshot).updatedAt === 'number' &&
+    (raw as UsageSnapshot).accountKey === accountKey;
+
+  if (isMatch(scoped)) return scoped;
+  if (isMatch(legacy)) return legacy;
+  return null;
+}
+
 async function loadSnapshot(): Promise<UsageSnapshot | null> {
   try {
-    const result = await browser.storage.local.get(StorageKeys.GV_USAGE_CACHE);
-    const raw = (result as Record<string, unknown>)[StorageKeys.GV_USAGE_CACHE];
-    if (
-      raw &&
-      typeof raw === 'object' &&
-      typeof (raw as UsageSnapshot).updatedAt === 'number' &&
-      isCurrentAccountSnapshot(raw as UsageSnapshot)
-    ) {
-      return raw as UsageSnapshot;
-    }
+    const accountKey = currentUsageAccountKey();
+    const scopedKey = usageCacheKeyForAccount(accountKey);
+    const result = await browser.storage.local.get([scopedKey, StorageKeys.GV_USAGE_CACHE]);
+    return selectUsageSnapshotForAccount(
+      (result as Record<string, unknown>)[scopedKey],
+      (result as Record<string, unknown>)[StorageKeys.GV_USAGE_CACHE],
+      accountKey,
+    );
   } catch (error) {
     console.warn('[UsageStatus] Failed to load usage cache:', error);
   }
@@ -620,7 +649,7 @@ function ensurePill(): HTMLElement {
   // The only affordance that opens the native /usage page — a real link, new tab.
   const open = document.createElement('a');
   open.className = 'gv-usage-open';
-  open.href = USAGE_URL;
+  open.href = usageUrlForPathname(location.pathname);
   open.target = '_blank';
   open.rel = 'noopener noreferrer';
   open.innerHTML = OPEN_ICON;
@@ -678,6 +707,7 @@ function updatePillContent(el: HTMLElement, snap: UsageSnapshot): void {
     const label = t('usageStatusOpenHint', 'Open usage limits');
     open.setAttribute('aria-label', label);
     open.title = label;
+    if (open instanceof HTMLAnchorElement) open.href = usageUrlForPathname(location.pathname);
   }
 
   setMetric(el, 'daily', snap.daily);
@@ -879,8 +909,10 @@ function setupStorageListener(): void {
         render();
       });
     }
-    if (areaName === 'local' && changes[StorageKeys.GV_USAGE_CACHE]) {
-      const raw = changes[StorageKeys.GV_USAGE_CACHE].newValue as UsageSnapshot | undefined;
+    const usageCacheChange =
+      areaName === 'local' ? changes[currentUsageCacheKey()] ?? changes[StorageKeys.GV_USAGE_CACHE] : null;
+    if (usageCacheChange) {
+      const raw = usageCacheChange.newValue as UsageSnapshot | undefined;
       if (raw && typeof raw.updatedAt === 'number' && isCurrentAccountSnapshot(raw)) {
         const merged = mergeUsageSnapshots(snapshot, raw);
         if (!snapshotEquals(merged, raw)) void saveSnapshot(merged);
@@ -910,12 +942,16 @@ function setupStorageListener(): void {
 
 function handleNavigation(): void {
   window.setTimeout(() => {
-    if (isOnUsagePage()) {
-      setupScrapeObserver();
-    } else {
-      teardownScrapeObserver();
-    }
-    render();
+    void (async () => {
+      snapshot = await loadSnapshot();
+      if (isOnUsagePage()) {
+        setupScrapeObserver();
+      } else {
+        teardownScrapeObserver();
+      }
+      render();
+      if (enabled) maybeReplay();
+    })();
   }, 250);
 }
 
