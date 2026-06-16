@@ -19,6 +19,7 @@
  * - Colour: cool blue-grey (hsl 210–220) to evoke the melancholy
  *   atmosphere of Shinjuku Gyoen in the rain.
  */
+import { isFirefox } from '@/core/utils/browser';
 
 const CANVAS_ID = 'gv-rain-effect-canvas';
 const STORAGE_KEY = 'gvVisualEffect';
@@ -30,7 +31,15 @@ const WIND_ANGLE = 0.14;
 const WIND_DX = Math.sin(WIND_ANGLE);
 const WIND_DY = Math.cos(WIND_ANGLE);
 
-const LAYERS = [
+type RainLayer = {
+  count: number;
+  length: readonly [number, number];
+  speed: readonly [number, number];
+  opacity: readonly [number, number];
+  width: readonly [number, number];
+};
+
+const LAYERS: readonly RainLayer[] = [
   // far — misty fine drizzle
   {
     count: 80,
@@ -59,6 +68,16 @@ const LAYERS = [
 
 /** Maximum concurrent splashes */
 const MAX_SPLASHES = 24;
+
+const FIREFOX_LAYERS: readonly RainLayer[] = [
+  { count: 28, length: [6, 14], speed: [3, 6], opacity: [0.06, 0.14], width: [0.3, 0.6] },
+  { count: 20, length: [14, 28], speed: [7, 13], opacity: [0.12, 0.25], width: [0.5, 1.0] },
+  { count: 8, length: [26, 48], speed: [12, 20], opacity: [0.2, 0.38], width: [0.8, 1.5] },
+] as const;
+
+export function getRainParticleCountForBrowser(firefox: boolean = isFirefox()): number {
+  return (firefox ? FIREFOX_LAYERS : LAYERS).reduce((sum, layer) => sum + layer.count, 0);
+}
 
 interface Raindrop {
   x: number;
@@ -98,7 +117,7 @@ function rand(min: number, max: number): number {
 function createDrop(
   canvasWidth: number,
   canvasHeight: number,
-  layer: (typeof LAYERS)[number],
+  layer: RainLayer,
   randomY: boolean,
   canSplash: boolean,
 ): Raindrop {
@@ -115,8 +134,9 @@ function createDrop(
 
 function initDrops(width: number, height: number): void {
   const items: Raindrop[] = [];
-  for (let li = 0; li < LAYERS.length; li++) {
-    const layer = LAYERS[li];
+  const layers = isFirefox() ? FIREFOX_LAYERS : LAYERS;
+  for (let li = 0; li < layers.length; li++) {
+    const layer = layers[li];
     const canSplash = li >= 1; // mid + near
     for (let i = 0; i < layer.count; i++) {
       items.push(createDrop(width, height, layer, true, canSplash));

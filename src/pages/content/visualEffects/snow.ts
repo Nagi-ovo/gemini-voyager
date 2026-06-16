@@ -14,13 +14,21 @@
  * - Single canvas with simple arc draws (no images, no shadows)
  * - Snowflakes sorted by opacity at init; drawn in batches to minimize fillStyle switches
  * - Animation pauses on hidden tabs via visibilitychange
- * - ~160 particles total — negligible GPU/CPU overhead
+ * - Firefox uses fewer particles to keep long Gemini sidebars responsive
  */
+import { isFirefox } from '@/core/utils/browser';
 
 const CANVAS_ID = 'gv-snow-effect-canvas';
 const STORAGE_KEY = 'gvVisualEffect';
 const LEGACY_KEY = 'gvSnowEffect';
 const EFFECT_VALUE = 'snow';
+type SnowLayer = {
+  count: number;
+  radius: readonly [number, number];
+  speed: readonly [number, number];
+  opacity: readonly [number, number];
+  drift: readonly [number, number];
+};
 
 /**
  * Three layers simulate depth-of-field:
@@ -28,7 +36,7 @@ const EFFECT_VALUE = 'snow';
  *   mid   – main visible snowflakes
  *   large – sparse foreground flakes, faster, more opaque
  */
-const LAYERS = [
+const LAYERS: readonly SnowLayer[] = [
   // dust
   {
     count: 100,
@@ -42,6 +50,16 @@ const LAYERS = [
   // large
   { count: 60, radius: [1.2, 2.5], speed: [0.8, 1.6], opacity: [0.5, 0.8], drift: [0.25, 0.6] },
 ] as const;
+
+const FIREFOX_LAYERS: readonly SnowLayer[] = [
+  { count: 24, radius: [0.15, 0.45], speed: [0.15, 0.4], opacity: [0.15, 0.35], drift: [0.05, 0.2] },
+  { count: 18, radius: [0.5, 1.0], speed: [0.4, 1.0], opacity: [0.3, 0.6], drift: [0.15, 0.45] },
+  { count: 10, radius: [1.2, 2.5], speed: [0.8, 1.6], opacity: [0.5, 0.8], drift: [0.25, 0.6] },
+] as const;
+
+export function getSnowParticleCountForBrowser(firefox: boolean = isFirefox()): number {
+  return (firefox ? FIREFOX_LAYERS : LAYERS).reduce((sum, layer) => sum + layer.count, 0);
+}
 
 interface Snowflake {
   x: number;
@@ -72,7 +90,7 @@ function rand(min: number, max: number): number {
 function createSnowflake(
   canvasWidth: number,
   canvasHeight: number,
-  layer: (typeof LAYERS)[number],
+  layer: SnowLayer,
   randomY: boolean,
 ): Snowflake {
   return {
@@ -89,7 +107,7 @@ function createSnowflake(
 
 function initSnowflakes(width: number, height: number): void {
   const flakes: Snowflake[] = [];
-  for (const layer of LAYERS) {
+  for (const layer of isFirefox() ? FIREFOX_LAYERS : LAYERS) {
     for (let i = 0; i < layer.count; i++) {
       flakes.push(createSnowflake(width, height, layer, true));
     }

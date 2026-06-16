@@ -60,6 +60,13 @@ describe('rainEffect', () => {
     expect(document.getElementById('gv-rain-effect-canvas')).toBeNull();
   });
 
+  it('uses a smaller particle budget on Firefox', async () => {
+    const { getRainParticleCountForBrowser } = await import('../rain');
+
+    expect(getRainParticleCountForBrowser(false)).toBe(170);
+    expect(getRainParticleCountForBrowser(true)).toBe(56);
+  });
+
   it('begins graceful drain when disabled via storage change (canvas persists)', async () => {
     let storageListener: ((changes: Record<string, unknown>, area: string) => void) | null = null;
 

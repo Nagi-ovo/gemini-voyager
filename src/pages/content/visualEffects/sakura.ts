@@ -175,7 +175,7 @@ function getActiveProfile(): SakuraQualityProfile {
 }
 
 function getInitialQualityLevel(): number {
-  return isFirefox() ? 1 : 0;
+  return isFirefox() ? 2 : 0;
 }
 
 function createPetal(

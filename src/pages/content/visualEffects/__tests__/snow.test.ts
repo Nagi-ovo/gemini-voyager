@@ -57,6 +57,13 @@ describe('snowEffect', () => {
     expect(canvas).not.toBeNull();
   });
 
+  it('uses a smaller particle budget on Firefox', async () => {
+    const { getSnowParticleCountForBrowser } = await import('../snow');
+
+    expect(getSnowParticleCountForBrowser(false)).toBe(240);
+    expect(getSnowParticleCountForBrowser(true)).toBe(52);
+  });
+
   it('does not create canvas when disabled', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
