@@ -29,7 +29,7 @@ function mockLocalStorage(state: StorageState): void {
   );
 }
 
-describe('Edge final version notice', () => {
+describe('Edge continued support notice', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-05-23T10:00:00Z'));
@@ -51,7 +51,7 @@ describe('Edge final version notice', () => {
     const cleanup = startEdgeFinalVersionNotice(1000);
     await Promise.resolve();
 
-    expect(state[StorageKeys.EDGE_FINAL_VERSION_NOTICE_FIRST_SEEN_AT]).toBe(Date.now());
+    expect(state[StorageKeys.EDGE_CONTINUED_SUPPORT_NOTICE_FIRST_SEEN_AT]).toBe(Date.now());
     expect(document.querySelector('.gv-edge-final-version-notice')).toBeNull();
 
     await vi.advanceTimersByTimeAsync(1000);
@@ -64,7 +64,7 @@ describe('Edge final version notice', () => {
   });
 
   it('does not schedule the notice once it has already been shown', async () => {
-    mockLocalStorage({ [StorageKeys.EDGE_FINAL_VERSION_NOTICE_SHOWN]: true });
+    mockLocalStorage({ [StorageKeys.EDGE_CONTINUED_SUPPORT_NOTICE_SHOWN]: true });
 
     const cleanup = startEdgeFinalVersionNotice(0);
     await Promise.resolve();
@@ -87,16 +87,7 @@ describe('Edge final version notice', () => {
       .querySelector<HTMLButtonElement>('.gv-edge-final-version-notice__btn--secondary')
       ?.click();
 
-    expect(state[StorageKeys.EDGE_FINAL_VERSION_NOTICE_SHOWN]).toBeUndefined();
-    expect(document.querySelector('.gv-edge-final-version-notice')).not.toBeNull();
-
-    await vi.advanceTimersByTimeAsync(10_000);
-
-    document
-      .querySelector<HTMLButtonElement>('.gv-edge-final-version-notice__btn--secondary')
-      ?.click();
-
-    expect(state[StorageKeys.EDGE_FINAL_VERSION_NOTICE_SHOWN]).toBe(true);
+    expect(state[StorageKeys.EDGE_CONTINUED_SUPPORT_NOTICE_SHOWN]).toBe(true);
     expect(document.querySelector('.gv-edge-final-version-notice')).toBeNull();
 
     cleanup();
@@ -115,7 +106,21 @@ describe('Edge final version notice', () => {
     cleanup();
   });
 
-  it('keeps notice actions disabled during the required reading time', async () => {
+  it('still shows when only the old final-version notice was dismissed', async () => {
+    mockLocalStorage({ [StorageKeys.EDGE_FINAL_VERSION_NOTICE_SHOWN]: true });
+
+    const cleanup = startEdgeFinalVersionNotice(0);
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(document.querySelector('.gv-edge-final-version-notice')?.textContent).toContain(
+      '会继续支持 Edge',
+    );
+
+    cleanup();
+  });
+
+  it('allows dismissing the notice immediately', async () => {
     mockLocalStorage({});
 
     const cleanup = startEdgeFinalVersionNotice(0);
@@ -131,12 +136,6 @@ describe('Edge final version notice', () => {
     const closeButton = document.querySelector<HTMLButtonElement>(
       '.gv-edge-final-version-notice__close',
     );
-
-    expect(dismissButton?.disabled).toBe(true);
-    expect(storeButton?.disabled).toBe(true);
-    expect(closeButton?.disabled).toBe(true);
-
-    await vi.advanceTimersByTimeAsync(10_000);
 
     expect(dismissButton?.disabled).toBe(false);
     expect(storeButton?.disabled).toBe(false);

@@ -210,6 +210,8 @@ export const StorageKeys = {
   CHANGELOG_NOTIFY_MODE: 'gvChangelogNotifyMode',
   EDGE_FINAL_VERSION_NOTICE_FIRST_SEEN_AT: 'gvEdgeFinalVersionNoticeFirstSeenAt',
   EDGE_FINAL_VERSION_NOTICE_SHOWN: 'gvEdgeFinalVersionNoticeShown',
+  EDGE_CONTINUED_SUPPORT_NOTICE_FIRST_SEEN_AT: 'gvEdgeContinuedSupportNoticeFirstSeenAt',
+  EDGE_CONTINUED_SUPPORT_NOTICE_SHOWN: 'gvEdgeContinuedSupportNoticeShown',
 
   // Fork nodes
   FORK_NODES: 'gvForkNodes',

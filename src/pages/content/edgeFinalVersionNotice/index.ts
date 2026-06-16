@@ -3,8 +3,8 @@ import { isEdgeReleaseChannel } from '@/core/utils/browser';
 import { getCurrentLanguage } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
 
-export const EDGE_FINAL_VERSION_NOTICE_DELAY_MS = 10 * 60 * 1000;
-export const EDGE_FINAL_VERSION_NOTICE_READ_MS = 10 * 1000;
+export const EDGE_FINAL_VERSION_NOTICE_DELAY_MS = 3 * 1000;
+export const EDGE_FINAL_VERSION_NOTICE_READ_MS = 0;
 
 const NOTICE_CLASS = 'gv-edge-final-version-notice';
 const EDGE_ADDONS_URL =
@@ -82,7 +82,7 @@ function setLocalStorage(values: Record<string, unknown>): Promise<void> {
 }
 
 async function markNoticeShown(): Promise<void> {
-  await setLocalStorage({ [StorageKeys.EDGE_FINAL_VERSION_NOTICE_SHOWN]: true });
+  await setLocalStorage({ [StorageKeys.EDGE_CONTINUED_SUPPORT_NOTICE_SHOWN]: true });
 }
 
 function removeExistingNotice(): void {
@@ -230,21 +230,21 @@ function mountNotice(copy: NoticeCopy): void {
 
 async function scheduleNotice(delayMs: number, currentRunId: number): Promise<void> {
   const defaults = {
-    [StorageKeys.EDGE_FINAL_VERSION_NOTICE_FIRST_SEEN_AT]: null,
-    [StorageKeys.EDGE_FINAL_VERSION_NOTICE_SHOWN]: false,
+    [StorageKeys.EDGE_CONTINUED_SUPPORT_NOTICE_FIRST_SEEN_AT]: null,
+    [StorageKeys.EDGE_CONTINUED_SUPPORT_NOTICE_SHOWN]: false,
   };
   const stored = await getLocalStorage(defaults);
   if (currentRunId !== runId) return;
 
-  if (stored[StorageKeys.EDGE_FINAL_VERSION_NOTICE_SHOWN] === true) return;
+  if (stored[StorageKeys.EDGE_CONTINUED_SUPPORT_NOTICE_SHOWN] === true) return;
 
   const now = Date.now();
-  const firstSeenRaw = stored[StorageKeys.EDGE_FINAL_VERSION_NOTICE_FIRST_SEEN_AT];
+  const firstSeenRaw = stored[StorageKeys.EDGE_CONTINUED_SUPPORT_NOTICE_FIRST_SEEN_AT];
   const firstSeenAt = typeof firstSeenRaw === 'number' ? firstSeenRaw : now;
 
   if (firstSeenRaw !== firstSeenAt) {
     await setLocalStorage({
-      [StorageKeys.EDGE_FINAL_VERSION_NOTICE_FIRST_SEEN_AT]: firstSeenAt,
+      [StorageKeys.EDGE_CONTINUED_SUPPORT_NOTICE_FIRST_SEEN_AT]: firstSeenAt,
     });
     if (currentRunId !== runId) return;
   }
@@ -257,7 +257,7 @@ async function scheduleNotice(delayMs: number, currentRunId: number): Promise<vo
     if (currentRunId !== runId) return;
     const latest = await getLocalStorage(defaults);
     if (currentRunId !== runId) return;
-    if (latest[StorageKeys.EDGE_FINAL_VERSION_NOTICE_SHOWN] === true) return;
+    if (latest[StorageKeys.EDGE_CONTINUED_SUPPORT_NOTICE_SHOWN] === true) return;
     mountNotice(copyForLanguage(lang));
   }, remainingMs);
 }
