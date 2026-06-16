@@ -24,7 +24,7 @@
   "icons": {
     "128": "icon-128.png"
   },
-  "permissions": ["storage", "identity", "scripting"],
+  "permissions": ["storage", "identity", "scripting", "alarms"],
   "optional_permissions": ["notifications"],
   "oauth2": {
     "client_id": "462948120910-vvunu0k3b4vi37u23mqnh77mbgdjcg78.apps.googleusercontent.com",

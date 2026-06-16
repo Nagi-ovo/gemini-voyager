@@ -15,9 +15,13 @@ import {
   isFirefox,
   isSafari,
   shouldShowSafariUpdateReminder,
+  supportsExtensionNotifications,
   supportsOptionalHostPermissions,
 } from '@/core/utils/browser';
-import { ensureNotificationsPermission } from '@/core/utils/notificationsPermission';
+import {
+  ensureNotificationsPermission,
+  hasNotificationsPermission,
+} from '@/core/utils/notificationsPermission';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
@@ -362,6 +366,7 @@ interface SettingsUpdate {
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
   responseCompleteNotificationEnabled?: boolean;
+  remoteAnnouncementEnabled?: boolean;
   usageStatusEnabled?: boolean;
   defaultModelAutoApplyEnabled?: boolean;
   ctrlEnterSendEnabled?: boolean;
@@ -494,6 +499,9 @@ export default function Popup() {
   const [showMessageTimestamps, setShowMessageTimestamps] = useState<boolean>(false);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
   const [responseCompleteNotificationEnabled, setResponseCompleteNotificationEnabled] =
+    useState<boolean>(false);
+  const [remoteAnnouncementEnabled, setRemoteAnnouncementEnabled] = useState<boolean>(true);
+  const [remoteAnnouncementPermissionGranted, setRemoteAnnouncementPermissionGranted] =
     useState<boolean>(false);
   const [usageStatusEnabled, setUsageStatusEnabled] = useState<boolean>(false);
   const [defaultModelAutoApplyEnabled, setDefaultModelAutoApplyEnabled] = useState<boolean>(true);
@@ -673,6 +681,9 @@ export default function Popup() {
       if (typeof settings.responseCompleteNotificationEnabled === 'boolean') {
         payload[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] =
           settings.responseCompleteNotificationEnabled;
+      }
+      if (typeof settings.remoteAnnouncementEnabled === 'boolean') {
+        payload[StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED] = settings.remoteAnnouncementEnabled;
       }
       if (typeof settings.usageStatusEnabled === 'boolean')
         payload[StorageKeys.USAGE_STATUS_ENABLED] = settings.usageStatusEnabled;
@@ -1094,6 +1105,7 @@ export default function Popup() {
           geminiEditInputWidth: EDIT_PERCENT.defaultValue,
           [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false,
           [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
+          [StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED]: true,
           [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: true,
           [StorageKeys.GV_POPUP_SECTION_ORDER]: null,
         },
@@ -1140,6 +1152,7 @@ export default function Popup() {
           setResponseCompleteNotificationEnabled(
             res?.[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] === true,
           );
+          setRemoteAnnouncementEnabled(res?.[StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED] !== false);
           setUsageStatusEnabled(res?.[StorageKeys.USAGE_STATUS_ENABLED] === true);
           setDefaultModelAutoApplyEnabled(res?.[StorageKeys.DEFAULT_MODEL_AUTO_APPLY] !== false);
           setFolderProjectEnabled(res?.[StorageKeys.FOLDER_PROJECT_ENABLED] === true);
@@ -1466,8 +1479,30 @@ export default function Popup() {
   const normalizedCurrentVersion = normalizeVersionString(extVersion);
   const normalizedLatestVersion = normalizeVersionString(latestVersion);
   const isSafariBrowser = isSafari();
+  const canUseSystemNotifications = supportsExtensionNotifications();
   const webStoreRatingChannel = getWebStoreRatingChannel();
   const safariUpdateReminderEnabled = isSafariBrowser && shouldShowSafariUpdateReminder();
+  useEffect(() => {
+    let active = true;
+    if (!canUseSystemNotifications) {
+      setRemoteAnnouncementPermissionGranted(false);
+      return () => {
+        active = false;
+      };
+    }
+    void hasNotificationsPermission().then((granted) => {
+      if (active) setRemoteAnnouncementPermissionGranted(granted);
+    });
+    return () => {
+      active = false;
+    };
+  }, [canUseSystemNotifications]);
+
+  const requestRemoteAnnouncementSystemPermission = useCallback(async () => {
+    if (await ensureNotificationsPermission()) {
+      setRemoteAnnouncementPermissionGranted(true);
+    }
+  }, []);
   const shouldShowUpdateNotification = shouldShowUpdateReminderForCurrentVersion({
     currentVersion: normalizedCurrentVersion,
     isSafariBrowser,
@@ -2952,8 +2987,44 @@ export default function Popup() {
                       setResponseCompleteNotificationEnabled(false);
                       return;
                     }
+                    if (next) setRemoteAnnouncementPermissionGranted(true);
                     setResponseCompleteNotificationEnabled(next);
                     apply({ responseCompleteNotificationEnabled: next });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="remote-announcement-notification"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('remoteAnnouncementNotification')}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('remoteAnnouncementNotificationHint')}
+                  </p>
+                  {remoteAnnouncementEnabled &&
+                    canUseSystemNotifications &&
+                    !remoteAnnouncementPermissionGranted && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="mt-2 h-7 px-2.5 text-xs"
+                        onClick={requestRemoteAnnouncementSystemPermission}
+                      >
+                        {t('remoteAnnouncementSystemPermissionCta')}
+                      </Button>
+                    )}
+                </div>
+                <Switch
+                  id="remote-announcement-notification"
+                  checked={remoteAnnouncementEnabled}
+                  onChange={(e) => {
+                    const next = e.target.checked;
+                    setRemoteAnnouncementEnabled(next);
+                    apply({ remoteAnnouncementEnabled: next });
                   }}
                 />
               </div>

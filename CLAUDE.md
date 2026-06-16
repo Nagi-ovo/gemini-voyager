@@ -58,6 +58,7 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 4. **For visual/CSS changes:** describe expected rendering, verify alignment/centering/spacing in both light and dark themes, and check external resources (icon fonts, CDN links).
 5. **For ambiguous requirements:** implement the minimal version first. Ask before adding scope.
 6. **Grep for a sibling precedent before adding a new primitive.** Body-level popover, global listener, CSS overlay — there is almost always an existing `gv-pm-*` analogue (e.g., `.gv-pm-confirm` for body-appended popovers) already wired into close-outside handlers, teardown, and theme overrides. Copy its integration points; don't reinvent and miss one.
+7. **Account scope matters.** Any Gemini feature that persists or reuses page-derived data must consider multi-account routes (`/u/<index>/...`). Cache keys, storage payloads, background refreshes, DOM-derived state, and links back to Gemini pages should preserve the current account scope where applicable. Avoid global caches unless the data is truly account-independent.
 
 ## Architecture
 

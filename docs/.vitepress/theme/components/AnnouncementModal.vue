@@ -21,130 +21,123 @@ const a = (text: string) => `<a href="${ISSUE_URL}" target="_blank" rel="noopene
 
 const i18n: Record<string, Copy> = {
   'zh-CN': {
-    title: 'Gemini 网页版改版适配中',
-    intro: 'Gemini 网页版近期进行了较大改版，我正在适配中。当前可能受影响的功能：',
+    title: 'Gemini 侧边栏改版提示',
+    intro:
+      'Gemini 近期调整了侧边栏结构，部分版本的 Voyager 可能暂时看不到文件夹入口。这不是卡住，文件夹数据通常还在。',
     affected: [
-      '自动选择默认模型',
-      '文件夹 UI',
-      'NanoBanana 水印去除（等下个版本修复）',
-      '对话导出（可点击对话右上角三个点，在菜单中找到导出按钮）',
+      '不要清除浏览器数据，也不要为了恢复文件夹而重装扩展。',
+      '修复已合入，将随下一版发布；更新后刷新 Gemini 页面即可恢复。',
+      '新用户安装前看到这条提示：如果遇到文件夹入口不显示，请先更新到最新版。',
     ],
-    outro: `整体使用应无大碍。如遇其他异常，欢迎在 ${a('GitHub 上提 issue')} 反馈，我会尽快修复。请耐心等待 Chrome Web Store 更新。`,
+    outro: `如更新后仍异常，欢迎在 ${a('GitHub 上提 issue')} 反馈，我会继续跟进。`,
     dismiss: '知道了',
   },
   'zh-TW': {
-    title: 'Gemini 網頁版改版適配中',
-    intro: 'Gemini 網頁版近期進行了較大改版，我正在適配中。當前可能受影響的功能：',
+    title: 'Gemini 側邊欄改版提醒',
+    intro:
+      'Gemini 近期調整了側邊欄結構，部分版本的 Voyager 可能暫時看不到資料夾入口。這不是卡住，資料夾資料通常還在。',
     affected: [
-      '自動選擇預設模型',
-      '資料夾 UI',
-      'NanoBanana 浮水印去除（等下個版本修復）',
-      '對話匯出（可點擊對話右上角三個點，在選單中找到匯出按鈕）',
+      '不要清除瀏覽器資料，也不要為了恢復資料夾而重裝擴充功能。',
+      '修復已合併，將隨下一版發布；更新後重新整理 Gemini 頁面即可恢復。',
+      '新使用者安裝前看到這則提醒：如果資料夾入口沒有顯示，請先更新到最新版。',
     ],
-    outro: `整體使用應無大礙。如遇其他異常，歡迎在 ${a('GitHub 上提 issue')} 回饋，我會盡快修復。請耐心等待 Chrome Web Store 更新。`,
+    outro: `如更新後仍異常，歡迎在 ${a('GitHub 上提 issue')} 回饋，我會繼續跟進。`,
     dismiss: '我知道了',
   },
   'en-US': {
-    title: 'Adapting to the new Gemini web UI',
+    title: 'Gemini sidebar update notice',
     intro:
-      "Gemini's web UI just went through a major redesign and I'm adapting. Features that may be affected:",
+      'Gemini recently changed its sidebar structure. Some Voyager versions may temporarily hide the folder entry; this is not a freeze, and your folder data is usually still there.',
     affected: [
-      'Default Model auto-selection',
-      'Folder UI',
-      'NanoBanana watermark removal (fix coming next release)',
-      'Conversation export (click the three dots in the top-right of a conversation to find the export button)',
+      'Do not clear browser data or reinstall the extension just to recover folders.',
+      'A fix has landed and will ship in the next release; update Voyager and refresh Gemini.',
+      'New users seeing this before install: if folders do not show up, update to the latest version first.',
     ],
-    outro: `Day-to-day usage should still be fine. If you spot other anomalies, please open a ${a('GitHub issue')} and I'll fix it as soon as I can. Please wait for the Chrome Web Store update.`,
+    outro: `If the problem remains after updating, please open a ${a('GitHub issue')} and I will keep following it.`,
     dismiss: 'Got it',
   },
   'ja-JP': {
-    title: 'Gemini ウェブ版リニューアル対応中',
+    title: 'Gemini サイドバー変更のお知らせ',
     intro:
-      'Gemini ウェブ版が大幅にリニューアルされたため、現在対応中です。影響を受ける可能性のある機能：',
+      'Gemini のサイドバー構造が最近変更され、一部の Voyager バージョンではフォルダ入口が一時的に表示されない場合があります。フリーズではなく、フォルダデータは通常そのまま残っています。',
     affected: [
-      'デフォルトモデルの自動選択',
-      'フォルダ UI',
-      'NanoBanana の透かし除去（次バージョンで修正予定）',
-      '会話エクスポート（会話右上の三点メニューからエクスポートボタンを見つけてください）',
+      'フォルダ復旧のためにブラウザデータを削除したり、拡張機能を再インストールしたりしないでください。',
+      '修正はすでに取り込まれており、次のリリースで配信されます。更新後に Gemini ページを再読み込みしてください。',
+      'インストール前にこの通知を見た新規ユーザーは、フォルダが表示されない場合、まず最新版へ更新してください。',
     ],
-    outro: `全体的な使用には支障はないはずです。その他の不具合を見つけた場合は、${a('GitHub で issue')} を立ててお知らせください。早急に修正します。Chrome Web Store の更新をお待ちください。`,
+    outro: `更新後も問題が残る場合は、${a('GitHub で issue')} を作成してください。引き続き対応します。`,
     dismiss: '了解',
   },
   'ko-KR': {
-    title: 'Gemini 웹 UI 개편 적응 중',
-    intro: 'Gemini 웹 버전이 최근 대규모로 개편되어 적응 중입니다. 영향을 받을 수 있는 기능:',
+    title: 'Gemini 사이드바 변경 안내',
+    intro:
+      'Gemini가 최근 사이드바 구조를 변경하여 일부 Voyager 버전에서 폴더 진입점이 일시적으로 보이지 않을 수 있습니다. 멈춘 것이 아니며 폴더 데이터는 보통 그대로 남아 있습니다.',
     affected: [
-      '기본 모델 자동 선택',
-      '폴더 UI',
-      'NanoBanana 워터마크 제거(다음 버전에서 수정 예정)',
-      '대화 내보내기(대화 오른쪽 상단의 점 세 개를 클릭하면 내보내기 버튼을 찾을 수 있습니다)',
+      '폴더를 복구하려고 브라우저 데이터를 지우거나 확장 프로그램을 다시 설치하지 마세요.',
+      '수정은 이미 병합되었고 다음 버전에 포함됩니다. 업데이트 후 Gemini 페이지를 새로고침하세요.',
+      '설치 전 이 안내를 보는 신규 사용자는 폴더가 보이지 않으면 먼저 최신 버전으로 업데이트하세요.',
     ],
-    outro: `전반적인 사용에는 큰 문제가 없을 것입니다. 다른 이상이 발견되면 ${a('GitHub issue')}로 알려주세요. 최대한 빨리 수정하겠습니다. Chrome Web Store 업데이트를 기다려 주세요.`,
+    outro: `업데이트 후에도 문제가 계속되면 ${a('GitHub issue')}로 알려주세요. 계속 확인하겠습니다.`,
     dismiss: '확인',
   },
   'fr-FR': {
-    title: 'Adaptation à la nouvelle interface Gemini',
+    title: 'Avis sur le changement de barre latérale Gemini',
     intro:
-      "L'interface web de Gemini vient de subir une refonte majeure et je suis en train de m'adapter. Fonctionnalités potentiellement affectées :",
+      "Gemini a récemment modifié la structure de sa barre latérale. Certaines versions de Voyager peuvent temporairement masquer l'entrée des dossiers ; ce n'est pas un blocage et vos données de dossiers sont normalement toujours là.",
     affected: [
-      'Sélection automatique du modèle par défaut',
-      'Interface des dossiers',
-      'Suppression du filigrane NanoBanana (correctif à la prochaine version)',
-      "Export de conversation (cliquez sur les trois points en haut à droite d'une conversation pour trouver le bouton d'export)",
+      "Ne supprimez pas les données du navigateur et ne réinstallez pas l'extension juste pour récupérer les dossiers.",
+      'Le correctif est déjà fusionné et sera publié dans la prochaine version ; mettez Voyager à jour puis rechargez Gemini.',
+      "Nouveaux utilisateurs : si les dossiers n'apparaissent pas après l'installation, mettez d'abord Voyager à jour.",
     ],
-    outro: `L'utilisation globale devrait rester correcte. Si vous rencontrez d'autres anomalies, ouvrez une ${a('issue GitHub')} et je corrigerai au plus vite. Patientez le temps de la mise à jour sur le Chrome Web Store.`,
+    outro: `Si le problème persiste après la mise à jour, ouvrez une ${a('issue GitHub')} et je continuerai à suivre le sujet.`,
     dismiss: 'Compris',
   },
   'es-ES': {
-    title: 'Adaptándome al nuevo Gemini web',
+    title: 'Aviso sobre la barra lateral de Gemini',
     intro:
-      'La interfaz web de Gemini ha sido rediseñada recientemente y me estoy adaptando. Funciones que pueden verse afectadas:',
+      'Gemini cambió recientemente la estructura de su barra lateral. Algunas versiones de Voyager pueden ocultar temporalmente la entrada de carpetas; no está bloqueado y tus datos de carpetas normalmente siguen ahí.',
     affected: [
-      'Selección automática del modelo predeterminado',
-      'Interfaz de carpetas',
-      'Eliminación de marca de agua NanoBanana (se corregirá en la próxima versión)',
-      'Exportación de conversación (haz clic en los tres puntos en la esquina superior derecha de una conversación para encontrar el botón de exportación)',
+      'No borres los datos del navegador ni reinstales la extensión solo para recuperar las carpetas.',
+      'La corrección ya se fusionó y llegará en la próxima versión; actualiza Voyager y recarga Gemini.',
+      'Usuarios nuevos: si las carpetas no aparecen después de instalar, primero actualiza a la versión más reciente.',
     ],
-    outro: `El uso general debería estar bien. Si detectas otras anomalías, abre un ${a('issue en GitHub')} y lo arreglaré lo antes posible. Espera la actualización en la Chrome Web Store.`,
+    outro: `Si el problema continúa después de actualizar, abre un ${a('issue en GitHub')} y seguiré revisándolo.`,
     dismiss: 'Entendido',
   },
   'pt-PT': {
-    title: 'A adaptar-me ao novo Gemini web',
+    title: 'Aviso sobre a barra lateral do Gemini',
     intro:
-      'A interface web do Gemini passou por uma grande reformulação e estou a adaptar-me. Funcionalidades potencialmente afetadas:',
+      'O Gemini alterou recentemente a estrutura da barra lateral. Algumas versões do Voyager podem ocultar temporariamente a entrada das pastas; não está bloqueado e os dados das pastas normalmente continuam lá.',
     affected: [
-      'Seleção automática do modelo padrão',
-      'Interface de pastas',
-      'Remoção de marca de água NanoBanana (será corrigida na próxima versão)',
-      'Exportação de conversa (clique nos três pontos no canto superior direito de uma conversa para encontrar o botão de exportação)',
+      'Não apague os dados do navegador nem reinstale a extensão apenas para recuperar as pastas.',
+      'A correção já foi integrada e chegará na próxima versão; atualize o Voyager e recarregue o Gemini.',
+      'Novos utilizadores: se as pastas não aparecerem após a instalação, atualize primeiro para a versão mais recente.',
     ],
-    outro: `O uso geral deve permanecer estável. Se encontrar outras anomalias, abra uma ${a('issue no GitHub')} e corrigirei o quanto antes. Aguarde a atualização na Chrome Web Store.`,
+    outro: `Se o problema continuar após atualizar, abra uma ${a('issue no GitHub')} e continuarei a acompanhar.`,
     dismiss: 'Entendi',
   },
   'ar-SA': {
-    title: 'التكيف مع واجهة Gemini الجديدة',
+    title: 'تنبيه حول تغيير الشريط الجانبي في Gemini',
     intro:
-      'خضعت واجهة Gemini على الويب مؤخراً لتغيير كبير، وأنا أعمل على التكيف. الميزات التي قد تتأثر:',
+      'غيّر Gemini مؤخراً بنية الشريط الجانبي. قد تخفي بعض إصدارات Voyager مدخل المجلدات مؤقتاً؛ هذا ليس تجمداً، وبيانات المجلدات عادةً ما تزال موجودة.',
     affected: [
-      'الاختيار التلقائي للنموذج الافتراضي',
-      'واجهة المجلدات',
-      'إزالة العلامة المائية بـ NanoBanana (سيتم إصلاحها في الإصدار التالي)',
-      'تصدير المحادثة (انقر على النقاط الثلاث في أعلى يمين المحادثة للعثور على زر التصدير)',
+      'لا تمسح بيانات المتصفح ولا تعِد تثبيت الإضافة فقط لاستعادة المجلدات.',
+      'تم دمج الإصلاح وسيصدر مع النسخة القادمة؛ حدّث Voyager ثم أعد تحميل صفحة Gemini.',
+      'للمستخدمين الجدد: إذا لم تظهر المجلدات بعد التثبيت، فحدّث أولاً إلى أحدث إصدار.',
     ],
-    outro: `الاستخدام العام يجب أن يبقى دون مشاكل كبيرة. إذا واجهت أي مشكلات أخرى، الرجاء فتح ${a('issue على GitHub')} وسأقوم بإصلاحها في أقرب وقت. يُرجى انتظار تحديث Chrome Web Store.`,
+    outro: `إذا استمرت المشكلة بعد التحديث، فالرجاء فتح ${a('issue على GitHub')} وسأتابعها.`,
     dismiss: 'فهمت',
   },
   'ru-RU': {
-    title: 'Адаптация к обновлённому Gemini',
+    title: 'Уведомление об изменении боковой панели Gemini',
     intro:
-      'Веб-интерфейс Gemini недавно был значительно переработан, и я адаптируюсь. Функции, на которые это может повлиять:',
+      'Gemini недавно изменил структуру боковой панели. В некоторых версиях Voyager вход в папки может временно не отображаться; это не зависание, и данные папок обычно остаются на месте.',
     affected: [
-      'Автоматический выбор модели по умолчанию',
-      'Интерфейс папок',
-      'Удаление водяного знака NanoBanana (исправление в следующем релизе)',
-      'Экспорт разговора (нажмите на три точки в правом верхнем углу разговора, чтобы найти кнопку экспорта)',
+      'Не очищайте данные браузера и не переустанавливайте расширение только ради восстановления папок.',
+      'Исправление уже объединено и выйдет в следующем релизе; обновите Voyager и перезагрузите Gemini.',
+      'Новым пользователям: если папки не отображаются после установки, сначала обновитесь до последней версии.',
     ],
-    outro: `В целом использование не должно сильно пострадать. Если вы заметите другие отклонения, откройте ${a('issue на GitHub')}, и я постараюсь исправить как можно скорее. Дождитесь обновления в Chrome Web Store.`,
+    outro: `Если проблема останется после обновления, откройте ${a('issue на GitHub')}, и я продолжу разбираться.`,
     dismiss: 'Понятно',
   },
 };
@@ -212,7 +205,7 @@ onUnmounted(() => {
           </ul>
           <p class="gv-announce-text" v-html="t.outro"></p>
           <div class="gv-announce-footer">
-            <span class="gv-announce-date">2026-05-20</span>
+            <span class="gv-announce-date">2026-06-16</span>
             <button ref="dismissBtn" class="gv-announce-btn" @click="dismiss">
               {{ t.dismiss }}
             </button>

@@ -19,8 +19,8 @@
  */
 export function isSafari(): boolean {
   // Reliable detection using user agent and vendor
-  const ua = navigator.userAgent.toLowerCase();
-  const vendor = navigator.vendor.toLowerCase();
+  const ua = navigator.userAgent?.toLowerCase() ?? '';
+  const vendor = navigator.vendor?.toLowerCase() ?? '';
 
   // Safari has 'Apple' vendor and 'safari' in UA, but not 'chrome'
   const isAppleVendor = vendor.includes('apple');

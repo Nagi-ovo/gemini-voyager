@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "announcements": [
+    {
+      "id": "gemini-page-format-change-2026-06",
+      "level": "warning",
+      "startsAt": "2026-06-16T00:00:00Z",
+      "endsAt": "2026-07-16T00:00:00Z",
+      "minExtensionVersion": "1.4.9",
+      "platforms": ["chrome", "edge", "firefox", "safari"],
+      "locales": {
+        "default": {
+          "title": "Gemini page format changed",
+          "body": "Gemini changed its page structure; Voyager now uses multi-anchor detection and self-healing remounts to keep injection stable."
+        },
+        "zh": {
+          "title": "Gemini 网页格式发生变化",
+          "body": "Gemini 调整了页面结构；Voyager 已通过多锚点探测和自愈重挂载，让功能挂载保持稳定。"
+        },
+        "zh_TW": {
+          "title": "Gemini 網頁格式發生變化",
+          "body": "Gemini 調整了頁面結構；Voyager 已透過多錨點偵測與自我修復重掛載，讓功能掛載保持穩定。"
+        },
+        "ja": {
+          "title": "Gemini のページ構造が変更されました",
+          "body": "Gemini のページ構造変更に対応し、Voyager は複数アンカー検出と自己修復リマウントで機能のマウントを安定させました。"
+        },
+        "fr": {
+          "title": "La structure de Gemini a changé",
+          "body": "Gemini a modifié sa structure de page ; Voyager utilise désormais plusieurs points d'ancrage et un remontage automatique pour stabiliser l'injection."
+        },
+        "es": {
+          "title": "Cambió la estructura de Gemini",
+          "body": "Gemini cambió la estructura de la página; Voyager ahora usa detección de varios anclajes y remontaje automático para mantener estable la inyección."
+        },
+        "pt": {
+          "title": "A estrutura do Gemini mudou",
+          "body": "O Gemini mudou a estrutura da página; o Voyager agora usa detecção de múltiplas âncoras e remontagem automática para manter a injeção estável."
+        },
+        "ar": {
+          "title": "تغيّر تنسيق صفحة Gemini",
+          "body": "غيّر Gemini بنية الصفحة؛ يستخدم Voyager الآن اكتشاف عدة نقاط تثبيت وإعادة تركيب تلقائية للحفاظ على ثبات الحقن."
+        },
+        "ru": {
+          "title": "Структура страницы Gemini изменилась",
+          "body": "Gemini изменил структуру страницы; Voyager теперь использует поиск нескольких якорей и самовосстанавливающееся повторное монтирование для стабильной вставки."
+        },
+        "ko": {
+          "title": "Gemini 페이지 구조가 변경되었습니다",
+          "body": "Gemini 페이지 구조 변경에 맞춰 Voyager는 다중 앵커 감지와 자동 재마운트로 기능 주입을 안정적으로 유지합니다."
+        }
+      }
+    }
+  ]
+}

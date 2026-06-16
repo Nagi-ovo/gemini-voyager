@@ -16,6 +16,10 @@ import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
 import { isFirefox, supportsExtensionNotifications } from '@/core/utils/browser';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
+import {
+  isRemoteAnnouncementRuntimeMessage,
+  startRemoteAnnouncementBackgroundService,
+} from '@/features/announcements/background';
 import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
 import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
@@ -44,6 +48,7 @@ const RESPONSE_COMPLETE_NOTIFICATION_ICON = 'icon-128.png';
 const RESPONSE_COMPLETE_UNKNOWN_TAB_ID = 'unknown';
 
 const responseCompleteNotificationLastShown = new Map<string, number>();
+const remoteAnnouncementService = startRemoteAnnouncementBackgroundService();
 
 // Gemini domains where the watermark fetch interceptor should run.
 const GEMINI_FETCH_INTERCEPTOR_MATCHES = [
@@ -1009,6 +1014,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               : undefined,
         });
         sendResponse({ ok });
+        return;
+      }
+
+      if (isRemoteAnnouncementRuntimeMessage(message)) {
+        if (message.type === 'gv.remoteAnnouncement.getPending') {
+          sendResponse({
+            ok: true,
+            announcements: await remoteAnnouncementService.getPendingAnnouncements(),
+          });
+          return;
+        }
+
+        const id = typeof message.payload?.id === 'string' ? message.payload.id : '';
+        if (id) await remoteAnnouncementService.acknowledgeAnnouncement(id);
+        sendResponse({ ok: true });
         return;
       }
 

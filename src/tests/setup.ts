@@ -24,9 +24,49 @@ globalThis.chrome = {
       removeListener: vi.fn(),
     },
   },
+  alarms: {
+    create: vi.fn(),
+    get: vi.fn(),
+    clear: vi.fn(),
+    onAlarm: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    },
+  },
+  notifications: {
+    create: vi.fn(),
+    clear: vi.fn(),
+    onClicked: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    },
+  },
+  tabs: {
+    create: vi.fn(),
+    query: vi.fn(),
+    sendMessage: vi.fn(),
+  },
   runtime: {
     lastError: null,
     id: 'test-extension-id',
+    getURL: vi.fn((path: string) => `chrome-extension://test-extension-id/${path}`),
+    onInstalled: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    },
+    onStartup: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    },
+    onMessage: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    },
+    sendMessage: vi.fn(),
+  },
+  i18n: {
+    getMessage: vi.fn((key: string) => key),
+    getUILanguage: vi.fn(() => 'en'),
   },
 } as unknown as typeof chrome;
 

@@ -6,6 +6,7 @@
   "icons": {
     "128": "public/dev-icon-128.png"
   },
+  "permissions": ["storage", "identity", "scripting", "alarms"],
   "web_accessible_resources": [
     {
       "resources": [
