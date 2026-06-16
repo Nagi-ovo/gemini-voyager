@@ -2120,7 +2120,7 @@
     "description": "Libellé de l'interrupteur des annonces distantes du mainteneur"
   },
   "remoteAnnouncementNotificationHint": {
-    "message": "Voyager vérifie localement un fichier JSON GitHub public et affiche les annonces du mainteneur. Il ne peut pas exécuter de code distant ni contrôler votre ordinateur.",
+    "message": "Voyager vérifie localement un fichier JSON GitHub public et affiche uniquement des annonces texte/lien. Il ne peut pas injecter ni exécuter de code distant, ni contrôler votre ordinateur.",
     "description": "Explication des annonces distantes et de leur limite de sécurité"
   },
   "remoteAnnouncementSystemPermissionCta": {

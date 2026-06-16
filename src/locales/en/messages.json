@@ -2120,7 +2120,7 @@
     "description": "Toggle label for maintainer remote announcement notifications"
   },
   "remoteAnnouncementNotificationHint": {
-    "message": "Voyager locally checks a public GitHub JSON file and shows maintainer notices. It cannot run remote code or control your computer.",
+    "message": "Voyager locally checks a public GitHub JSON file and only shows text/link notices. It cannot inject or run remote code, or control your computer.",
     "description": "Hint explaining remote announcement notifications and their safety boundary"
   },
   "remoteAnnouncementSystemPermissionCta": {

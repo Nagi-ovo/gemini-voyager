@@ -2120,7 +2120,7 @@
     "description": "관리자 원격 공지 알림 토글 라벨"
   },
   "remoteAnnouncementNotificationHint": {
-    "message": "Voyager는 공개 GitHub JSON 파일을 로컬에서 주기적으로 확인하고 관리자 공지를 표시합니다. 원격 코드를 실행하거나 컴퓨터를 제어할 수 없습니다.",
+    "message": "Voyager는 공개 GitHub JSON 파일을 로컬에서 주기적으로 확인하고 텍스트/링크 공지만 표시합니다. 원격 코드를 주입하거나 실행할 수 없고, 컴퓨터를 제어할 수도 없습니다.",
     "description": "원격 공지 알림과 안전 경계 설명"
   },
   "remoteAnnouncementSystemPermissionCta": {

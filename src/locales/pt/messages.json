@@ -2120,7 +2120,7 @@
     "description": "Rótulo do botão de anúncios remotos do mantenedor"
   },
   "remoteAnnouncementNotificationHint": {
-    "message": "O Voyager verifica localmente um JSON público no GitHub e mostra avisos do mantenedor. Ele não pode executar código remoto nem controlar seu computador.",
+    "message": "O Voyager verifica localmente um JSON público no GitHub e mostra apenas avisos de texto/link. Ele não pode injetar nem executar código remoto, nem controlar seu computador.",
     "description": "Explicação dos anúncios remotos e do limite de segurança"
   },
   "remoteAnnouncementSystemPermissionCta": {

@@ -2120,7 +2120,7 @@
     "description": "Etiqueta del interruptor de anuncios remotos del mantenedor"
   },
   "remoteAnnouncementNotificationHint": {
-    "message": "Voyager comprueba localmente un JSON público de GitHub y muestra avisos del mantenedor. No puede ejecutar código remoto ni controlar tu ordenador.",
+    "message": "Voyager comprueba localmente un JSON público de GitHub y solo muestra avisos de texto/enlace. No puede inyectar ni ejecutar código remoto, ni controlar tu ordenador.",
     "description": "Explicación de los anuncios remotos y su límite de seguridad"
   },
   "remoteAnnouncementSystemPermissionCta": {

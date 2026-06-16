@@ -2120,7 +2120,7 @@
     "description": "تسمية مفتاح إشعارات الإعلانات البعيدة من المشرف"
   },
   "remoteAnnouncementNotificationHint": {
-    "message": "يتحقق Voyager محليًا من ملف JSON عام على GitHub ويعرض تنبيهات المشرف. لا يمكنه تشغيل كود بعيد أو التحكم في جهازك.",
+    "message": "يتحقق Voyager محليًا من ملف JSON عام على GitHub ويعرض تنبيهات نصية/روابط فقط. لا يمكنه حقن أو تشغيل كود بعيد، ولا التحكم في جهازك.",
     "description": "شرح إشعارات الإعلانات البعيدة وحدود الأمان"
   },
   "remoteAnnouncementSystemPermissionCta": {

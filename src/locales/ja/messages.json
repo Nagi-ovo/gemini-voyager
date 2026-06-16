@@ -2120,7 +2120,7 @@
     "description": "Toggle label for maintainer remote announcement notifications"
   },
   "remoteAnnouncementNotificationHint": {
-    "message": "Voyager は公開 GitHub JSON をローカルで定期確認し、メンテナーからのお知らせを表示します。リモートコードの実行や端末の制御はできません。",
+    "message": "Voyager は公開 GitHub JSON をローカルで定期確認し、テキスト/リンクのお知らせだけを表示します。リモートコードの注入や実行、端末の制御はできません。",
     "description": "Hint explaining remote announcement notifications and their safety boundary"
   },
   "remoteAnnouncementSystemPermissionCta": {

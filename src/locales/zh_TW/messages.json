@@ -2120,7 +2120,7 @@
     "description": "維護者遠端公告通知開關"
   },
   "remoteAnnouncementNotificationHint": {
-    "message": "Voyager 會在本機定時讀取公開 GitHub JSON 公告並顯示維護者提醒。它不能執行遠端程式碼，也不能控制你的電腦。",
+    "message": "Voyager 會在本機定時讀取公開 GitHub JSON 公告，只顯示文字/連結提醒。它不能遠端注入或執行程式碼，也不能控制你的電腦。",
     "description": "遠端公告通知說明及安全邊界"
   },
   "remoteAnnouncementSystemPermissionCta": {
