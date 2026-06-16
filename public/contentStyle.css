@@ -11750,7 +11750,7 @@ body.dark-theme .gv-coach {
   padding: 8px 8px 8px 10px;
   border: 1px solid var(--gv-coach-border);
   border-radius: 8px;
-  background: var(--gv-coach-track);
+  background: rgba(60, 64, 67, 0.055);
   cursor: pointer;
 }
 .gv-coach-toggle-label {
@@ -11758,23 +11758,42 @@ body.dark-theme .gv-coach {
   font-weight: 600;
   color: var(--gv-coach-text);
 }
+html.dark .gv-coach-toggle,
+[data-theme='dark'] .gv-coach-toggle,
+[data-color-scheme='dark'] .gv-coach-toggle,
+.theme-host.dark-theme .gv-coach-toggle,
+body.dark-theme .gv-coach-toggle {
+  background: rgba(232, 234, 237, 0.055);
+}
 .gv-coach-switch {
   position: relative;
   flex: 0 0 auto;
   width: 40px;
   height: 22px;
   padding: 0;
-  border: 1px solid rgba(60, 64, 67, 0.12);
+  border: 1px solid rgba(60, 64, 67, 0.28);
   border-radius: 999px;
-  background: rgba(60, 64, 67, 0.18);
+  background: rgba(60, 64, 67, 0.26);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
   cursor: pointer;
   transition:
     background 160ms ease,
-    border-color 160ms ease;
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+html.dark .gv-coach-switch,
+[data-theme='dark'] .gv-coach-switch,
+[data-color-scheme='dark'] .gv-coach-switch,
+.theme-host.dark-theme .gv-coach-switch,
+body.dark-theme .gv-coach-switch {
+  border-color: rgba(232, 234, 237, 0.24);
+  background: rgba(232, 234, 237, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.24);
 }
 .gv-coach-switch[aria-checked='true'] {
   background: var(--gv-coach-accent);
   border-color: var(--gv-coach-accent);
+  box-shadow: none;
 }
 .gv-coach-knob {
   position: absolute;
