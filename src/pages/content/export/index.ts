@@ -34,6 +34,7 @@ import {
   injectConversationMenuExportButton,
   injectResponseMenuExportButton,
 } from './conversationMenuInjection';
+import { resolveExportLogoAnchor } from './exportLogoAnchor';
 import { mountPersistentExportToolbar } from './persistentExportToolbar';
 import { injectResponseActionCopyImageButtons } from './responseActionImageButton';
 import { showResponseActionCopyImageMenu } from './responseActionImageMenu';
@@ -2241,8 +2242,10 @@ export async function startExportButton(): Promise<void> {
   });
 
   const t0 = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
-  const logo =
-    (await waitForElement('[data-test-id="logo"]', 6000)) || (await waitForElement('.logo', 2000));
+  // The lr26 UI removed the logo entirely; resolveExportLogoAnchor short-circuits
+  // there instead of waiting out the full timeout (which delayed this fallback
+  // toolbar by several seconds on every conversation load).
+  const logo = await resolveExportLogoAnchor(waitForElement);
   if (!logo) {
     // Fallback for lr26+ Gemini UI where the logo has been removed: mount a
     // persistent top-right toolbar so users still have an always-visible
