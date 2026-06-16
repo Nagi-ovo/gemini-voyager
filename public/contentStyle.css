@@ -1149,10 +1149,11 @@ body.dark-theme .gv-persistent-export-btn:hover,
   color: oklch(0.78 0.16 155);
 }
 
-/* RTL: flip to top-left */
+/* Keep the fallback export entry in the top-right control area even in RTL.
+ * Gemini's left rail is already occupied by navigation icons. */
 body.gv-rtl .gv-persistent-export-toolbar {
-  right: auto;
-  left: 84px;
+  right: var(--gv-persistent-export-right, 84px);
+  left: auto;
 }
 
 .gv-pm-panel {

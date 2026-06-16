@@ -153,4 +153,28 @@ describe('persistentExportToolbar', () => {
 
     expect(handle.root.style.getPropertyValue('--gv-persistent-export-right')).toBe('372px');
   });
+
+  it('ignores full-width top-bar containers so the toolbar stays top-right', async () => {
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1280);
+    const topBarActions = document.createElement('top-bar-actions');
+    mockRect(topBarActions, {
+      top: 0,
+      bottom: 56,
+      left: 0,
+      right: 1280,
+      width: 1280,
+      height: 56,
+    });
+    document.body.appendChild(topBarActions);
+
+    const handle = mountPersistentExportToolbar({
+      label: 'Export',
+      tooltip: 'Export chat history',
+      onClick: vi.fn(),
+    });
+
+    await nextFrame();
+
+    expect(handle.root.style.getPropertyValue('--gv-persistent-export-right')).toBe('84px');
+  });
 });

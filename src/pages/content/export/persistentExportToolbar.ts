@@ -16,7 +16,7 @@ const LABEL_CLASS = 'gv-persistent-export-label';
 const DEFAULT_RIGHT_OFFSET_PX = 84;
 const TOP_RIGHT_GAP_PX = 12;
 const TOP_RIGHT_MAX_Y_PX = 96;
-const TOP_RIGHT_MIN_WIDTH_RATIO = 0.45;
+const TOP_RIGHT_MIN_LEFT_RATIO = 0.45;
 const TOP_RIGHT_AVOIDANCE_SELECTORS = [
   'top-bar-actions',
   '.top-bar-actions',
@@ -41,7 +41,11 @@ function isVisibleTopRightElement(
   const rect = element.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return false;
   if (rect.bottom <= 0 || rect.top >= TOP_RIGHT_MAX_Y_PX) return false;
-  return rect.right >= window.innerWidth * TOP_RIGHT_MIN_WIDTH_RATIO;
+  // Some Gemini top-bar hosts span the full viewport. Treating those as
+  // right-side controls makes the computed offset enormous and pushes the
+  // toolbar into the left rail, so only avoid elements whose own left edge is
+  // already in the right-side control cluster.
+  return rect.left >= window.innerWidth * TOP_RIGHT_MIN_LEFT_RATIO;
 }
 
 function calculateRightOffset(toolbarRoot: HTMLElement): number {
