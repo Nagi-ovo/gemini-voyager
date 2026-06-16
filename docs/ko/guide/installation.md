@@ -16,7 +16,7 @@
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome 웹 스토어에서 설치" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ko)
 
-> **Edge 사용자:** 위의 Chrome 웹 스토어 링크에서 설치하세요. Edge Add-ons 심사가 너무 느려서 전용 Edge 스토어 버전은 더 이상 권장하지 않습니다.
+> **Edge 사용자:** 모바일이나 태블릿에서 Edge가 필요한 사용자를 위해 Voyager는 [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) 버전을 계속 유지하고 배포합니다. 심사가 지연되면 Chrome Web Store 버전이나 GitHub 수동 패키지를 사용할 수 있습니다.
 
 **Firefox:**
 

@@ -26,7 +26,7 @@ Download the latest version for your browser:
 
 > Do not download GitHub's auto-generated **Source code (zip/tar.gz)** archives for manual extension installs. Those are repository snapshots, not browser-ready extension packages.
 
-Edge users should install from the Chrome Web Store when using a store install. The dedicated Edge Add-ons build is no longer recommended because reviews are too slow.
+Edge users can keep using the Edge Add-ons build, which remains maintained for mobile and tablet needs. If Edge review is delayed, Chrome Web Store and GitHub manual packages remain available.
 
 See [README](https://github.com/Nagi-ovo/gemini-voyager#-installation) for installation instructions.
 

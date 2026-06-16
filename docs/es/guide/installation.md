@@ -16,7 +16,7 @@ La forma más sencilla de empezar. Las actualizaciones son automáticas.
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Ir_a_descargar-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Instalar desde Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=es)
 
-> **Usuarios de Edge:** instala desde el enlace de Chrome Web Store de arriba. Las revisiones de Edge Add-ons son demasiado lentas, por lo que ya no recomendamos la versión dedicada de la tienda Edge.
+> **Usuarios de Edge:** Voyager seguirá manteniendo y publicando la versión de [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) para quienes necesitan Edge en móvil o tablet. Si la revisión se retrasa, siguen disponibles Chrome Web Store y los paquetes manuales de GitHub.
 
 **Firefox:**
 

@@ -136,10 +136,10 @@
 </div>
 
 <p align="center">
-  <sub><b>لمستخدمي Edge:</b> يرجى تثبيت Voyager من رابط سوق Chrome الإلكتروني أعلاه. مراجعات Edge Add-ons بطيئة جداً، لذلك لم نعد نوصي بإصدار متجر Edge المخصص.</sub>
+  <sub><b>لمستخدمي Edge:</b> سيواصل Voyager صيانة ونشر إصدار Edge Add-ons لمن يحتاجون Edge على الهاتف أو الجهاز اللوحي. إذا تأخرت المراجعة، تبقى نسخة Chrome Web Store وحزم GitHub اليدوية متاحة.</sub>
 </p>
 
-> **حالة المتجر:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge عبر Chrome Web Store
+> **حالة المتجر:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge ✅
 
 لـ **التثبيت اليدوي** أو **بناء التطوير**، يرجى الرجوع إلى [دليل التثبيت](https://voyager.nagi.fun/ar/guide/installation).
 

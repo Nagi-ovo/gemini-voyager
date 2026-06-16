@@ -16,7 +16,7 @@
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Установить из Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ru)
 
-> **Пользователям Edge:** устанавливайте по ссылке Chrome Web Store выше. Проверки в Edge Add-ons слишком медленные, поэтому отдельная версия для магазина Edge больше не рекомендуется.
+> **Пользователям Edge:** Voyager продолжит поддерживать и публиковать версию [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) для тех, кому нужен Edge на телефоне или планшете. Если проверка задержится, остаются Chrome Web Store и ручные пакеты GitHub.
 
 **Firefox:**
 

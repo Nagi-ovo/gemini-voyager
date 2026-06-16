@@ -16,6 +16,7 @@ export default [
       'coverage/**',
       'gemini-voyager-sync/**',
       'gemini-voyager-formal/**',
+      '.agent/**',
       '.github/sponsors/**',
       'public/**',
       'safari/Models/**',

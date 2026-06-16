@@ -19,11 +19,12 @@ The extension is built with TypeScript and React, uses Manifest V3 for cross-bro
 
 ### Extension Stores (Recommended)
 
-- **Chrome / Edge / Brave / Opera / Vivaldi**: Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi)
+- **Chrome / Brave / Opera / Vivaldi**: Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi)
+- **Microsoft Edge**: Install from [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) or the Chrome Web Store
 - **Firefox**: Install from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
 - **Safari (macOS)**: Download the pre-signed `.dmg` from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
 
-Edge users should install Voyager from the Chrome Web Store. The dedicated Edge Add-ons build is no longer recommended because Edge store reviews are too slow.
+Edge users can keep using the Edge Add-ons build, which remains maintained for mobile and tablet needs. If Edge review is delayed, Chrome Web Store and GitHub manual packages remain available.
 
 ### Manual Installation (Latest Features)
 
@@ -233,7 +234,7 @@ Voyager is designed with privacy as a core principle:
 | Browser | Status | Notes |
 |---------|--------|-------|
 | Chrome | Full support | Primary development target |
-| Microsoft Edge | Full support | Install via Chrome Web Store |
+| Microsoft Edge | Full support | Install via Edge Add-ons or Chrome Web Store |
 | Firefox | Full support | Signed XPI for permanent installation |
 | Safari (macOS) | Supported | No watermark removal, no image export (use PDF), no cloud sync |
 | Opera | Full support | Install via Chrome Web Store |

@@ -136,10 +136,10 @@ That's why I built **Voyager**. It's not just a tool; it's a companion that help
 </div>
 
 <p align="center">
-  <sub><b>Edge users:</b> please install Voyager from the Chrome Web Store link above. Edge Add-ons reviews are too slow, so the dedicated Edge store build is no longer recommended.</sub>
+  <sub><b>Edge users:</b> Voyager is still maintained on Edge Add-ons for users who need Edge on mobile or tablet. If review is delayed, Chrome Web Store and GitHub manual packages remain available.</sub>
 </p>
 
-> **Store Status:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge via Chrome Web Store
+> **Store Status:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge ✅
 
 For **manual installation** or **development builds**, please refer to the [Installation Guide](https://voyager.nagi.fun/en/guide/installation).
 

@@ -7,8 +7,8 @@ export const EDGE_FINAL_VERSION_NOTICE_DELAY_MS = 10 * 60 * 1000;
 export const EDGE_FINAL_VERSION_NOTICE_READ_MS = 10 * 1000;
 
 const NOTICE_CLASS = 'gv-edge-final-version-notice';
-const CHROME_STORE_URL =
-  'https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi';
+const EDGE_ADDONS_URL =
+  'https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne';
 
 type NoticeCopy = {
   title: string;
@@ -21,29 +21,29 @@ type NoticeCopy = {
 
 const COPY: Record<'en' | 'zh' | 'zh_TW', NoticeCopy> = {
   en: {
-    title: 'Voyager Edge support is changing',
-    body: 'This is the final version published for Microsoft Edge Add-ons. Edge store reviews have become too slow for Voyager to keep shipping a dedicated Edge build.',
+    title: 'Voyager will keep supporting Edge',
+    body: 'Because some users rely on Edge on mobile and tablet devices, Voyager will keep maintaining and publishing the Microsoft Edge Add-ons version.',
     backup:
-      'To keep receiving the latest fixes and features, back up your Voyager data first, then install Voyager from the Chrome Web Store.',
-    cta: 'Open Chrome Web Store',
+      'Edge Add-ons review may still lag behind the Chrome Web Store. For urgent fixes, desktop Edge users can temporarily use the Chrome Web Store build or the GitHub manual package.',
+    cta: 'Open Edge Add-ons',
     dismiss: 'Got it',
     close: 'Close',
   },
   zh: {
-    title: 'Voyager 的 Edge 版本即将停止更新',
-    body: '这是 Voyager 在 Edge 插件商店发布的最后一个版本。由于 Edge 插件商店审核过慢，后续不会再专门发布 Edge 版本。',
+    title: 'Voyager 会继续支持 Edge',
+    body: '考虑到仍有用户依赖 Edge 的移动端和平板使用场景，Voyager 会继续维护并发布 Microsoft Edge Add-ons 版本。',
     backup:
-      '如果想继续体验最新版本，请先在 Voyager 中做好数据备份，再转为通过 Chrome 网上应用店安装。',
-    cta: '前往 Chrome 网上应用店',
+      'Edge Add-ons 审核可能仍会慢于 Chrome 网上应用店；如遇紧急修复，桌面 Edge 用户可以临时使用 Chrome 商店版或 GitHub 手动包。',
+    cta: '打开 Edge Add-ons',
     dismiss: '我知道了',
     close: '关闭',
   },
   zh_TW: {
-    title: 'Voyager 的 Edge 版本即將停止更新',
-    body: '這是 Voyager 在 Edge 附加元件商店發布的最後一個版本。由於 Edge 商店審核過慢，後續不會再專門發布 Edge 版本。',
+    title: 'Voyager 會繼續支援 Edge',
+    body: '考量到仍有使用者依賴 Edge 的行動端和平板使用情境，Voyager 會繼續維護並發布 Microsoft Edge Add-ons 版本。',
     backup:
-      '如果想繼續體驗最新版本，請先在 Voyager 中做好資料備份，再改為透過 Chrome 線上應用程式商店安裝。',
-    cta: '前往 Chrome 線上應用程式商店',
+      'Edge Add-ons 審核可能仍會慢於 Chrome 線上應用程式商店；如遇緊急修復，桌面 Edge 使用者可以暫時使用 Chrome 商店版或 GitHub 手動包。',
+    cta: '打開 Edge Add-ons',
     dismiss: '我知道了',
     close: '關閉',
   },
@@ -202,7 +202,7 @@ function mountNotice(copy: NoticeCopy): void {
   storeBtn.addEventListener('click', () => {
     if (Date.now() < unlockAt) return;
     void markNoticeShown();
-    window.open(CHROME_STORE_URL, '_blank', 'noopener,noreferrer');
+    window.open(EDGE_ADDONS_URL, '_blank', 'noopener,noreferrer');
     removeExistingNotice();
     document.removeEventListener('keydown', onKeyDown);
     if (readTimer !== null) {

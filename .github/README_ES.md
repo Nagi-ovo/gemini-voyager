@@ -136,10 +136,10 @@ Por eso creamos **Voyager**. No es solo una herramienta; es un compañero que te
 </div>
 
 <p align="center">
-  <sub><b>Usuarios de Edge:</b> instala Voyager desde el enlace de Chrome Web Store de arriba. Las revisiones de Edge Add-ons son demasiado lentas, por lo que ya no recomendamos la versión dedicada de la tienda Edge.</sub>
+  <sub><b>Usuarios de Edge:</b> Voyager seguirá manteniendo y publicando la versión de Edge Add-ons para quienes necesitan Edge en móvil o tablet. Si la revisión se retrasa, siguen disponibles Chrome Web Store y los paquetes manuales de GitHub.</sub>
 </p>
 
-> **Estado de la Tienda:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge vía Chrome Web Store
+> **Estado de la Tienda:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge ✅
 
 Para **instalación manual** o **compilaciones de desarrollo**, consulta la [Guía de Instalación](https://voyager.nagi.fun/es/guide/installation).
 

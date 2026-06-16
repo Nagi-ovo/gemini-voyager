@@ -142,10 +142,10 @@
 </div>
 
 <p align="center">
-  <sub><b>Edge 使用者：</b>請透過上方的 Chrome 應用商店連結安裝 Voyager。由於 Edge Add-ons 審核太慢，後續不再推薦使用獨立的 Edge 商店版本。</sub>
+  <sub><b>Edge 使用者：</b>考量到行動端和平板使用者需求，Voyager 會繼續維護並發布 Edge Add-ons 版本。若商店審核延遲，仍可暫時使用 Chrome 商店版或 GitHub 手動包。</sub>
 </p>
 
-> **商店狀態：** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge 經由 Chrome 應用商店
+> **商店狀態：** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge ✅
 
 關於 **手動安裝** 或 **開發構建**，請參閱 [安裝指南](https://voyager.nagi.fun/zh_TW/guide/installation)。
 

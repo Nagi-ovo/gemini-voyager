@@ -136,10 +136,10 @@ C'est pourquoi nous avons créé **Voyager**. Plus qu'un simple outil, c'est un 
 </div>
 
 <p align="center">
-  <sub><b>Utilisateurs Edge :</b> installez Voyager depuis le lien Chrome Web Store ci-dessus. Les validations Edge Add-ons sont trop lentes, donc la version dédiée au store Edge n'est plus recommandée.</sub>
+  <sub><b>Utilisateurs Edge :</b> Voyager reste maintenu sur Edge Add-ons pour les personnes qui ont besoin d'Edge sur mobile ou tablette. Si la validation tarde, Chrome Web Store et les paquets GitHub restent disponibles.</sub>
 </p>
 
-> **Statut des Stores :** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge via Chrome Web Store
+> **Statut des Stores :** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge ✅
 
 Pour une **installation manuelle** ou des **builds de développement**, veuillez vous référer au [Guide d'Installation](https://voyager.nagi.fun/fr/guide/installation).
 

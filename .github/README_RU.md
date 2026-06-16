@@ -136,10 +136,10 @@
 </div>
 
 <p align="center">
-  <sub><b>Пользователям Edge:</b> устанавливайте Voyager по ссылке Chrome Web Store выше. Проверки в Edge Add-ons слишком медленные, поэтому отдельная версия для магазина Edge больше не рекомендуется.</sub>
+  <sub><b>Пользователям Edge:</b> Voyager продолжит поддерживать и публиковать версию Edge Add-ons для тех, кому нужен Edge на телефоне или планшете. Если проверка задержится, остаются Chrome Web Store и ручные пакеты GitHub.</sub>
 </p>
 
-> **Статус в магазинах:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge через Chrome Web Store
+> **Статус в магазинах:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge ✅
 
 Для **ручной установки** или **сборки для разработки**, пожалуйста, обратитесь к [Руководству по установке](https://voyager.nagi.fun/ru/guide/installation).
 

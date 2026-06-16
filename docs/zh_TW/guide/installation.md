@@ -16,7 +16,7 @@
 
 [<img src="https://img.shields.io/badge/Chrome_應用店-前往下載-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="從 Chrome 線上應用店安裝" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=zh_tw)
 
-> **Edge 使用者**：請透過上方 Chrome 應用商店連結安裝。Edge 商店審核太慢，後續不再推薦使用獨立的 Edge 商店版本。
+> **Edge 使用者**：考量到行動端和平板使用者需求，Voyager 會繼續維護並發布 [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) 版本。若商店審核延遲，仍可暫時使用 Chrome 商店版或 GitHub 手動包。
 
 **Firefox：**
 

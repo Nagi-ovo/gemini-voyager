@@ -57,7 +57,7 @@ describe('Edge final version notice', () => {
     await vi.advanceTimersByTimeAsync(1000);
 
     expect(document.querySelector('.gv-edge-final-version-notice')?.textContent).toContain(
-      'Edge 版本即将停止更新',
+      '会继续支持 Edge',
     );
 
     cleanup();

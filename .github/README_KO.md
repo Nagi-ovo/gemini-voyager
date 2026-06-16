@@ -136,10 +136,10 @@
 </div>
 
 <p align="center">
-  <sub><b>Edge 사용자:</b> 위의 Chrome 웹 스토어 링크에서 Voyager를 설치하세요. Edge Add-ons 심사가 너무 느려서 전용 Edge 스토어 버전은 더 이상 권장하지 않습니다.</sub>
+  <sub><b>Edge 사용자:</b> 모바일이나 태블릿에서 Edge가 필요한 사용자를 위해 Voyager는 Edge Add-ons 버전을 계속 유지하고 배포합니다. 심사가 지연되면 Chrome Web Store 버전이나 GitHub 수동 패키지를 사용할 수 있습니다.</sub>
 </p>
 
-> **스토어 상태:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge는 Chrome 웹 스토어 통해 설치
+> **스토어 상태:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge ✅
 
 **수동 설치** 또는 **개발 빌드**에 대해서는 [설치 가이드](https://voyager.nagi.fun/ko/guide/installation)를 참조하세요.
 

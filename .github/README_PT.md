@@ -142,10 +142,10 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
 </div>
 
 <p align="center">
-  <sub><b>Usuários do Edge:</b> instalem o Voyager pelo link da Chrome Web Store acima. As revisões do Edge Add-ons são lentas demais, então a versão dedicada da loja Edge não é mais recomendada.</sub>
+  <sub><b>Usuários do Edge:</b> o Voyager continuará mantendo e publicando a versão do Edge Add-ons para quem precisa do Edge em celulares ou tablets. Se a revisão atrasar, a Chrome Web Store e os pacotes manuais do GitHub continuam disponíveis.</sub>
 </p>
 
-> **Estado da Loja:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge via Chrome Web Store
+> **Estado da Loja:** Chrome ✅ · Firefox ✅ · Safari ✅ · Edge ✅
 
 Para **instalação manual** ou **builds de desenvolvimento**, consulte o [Guia de Instalação](https://voyager.nagi.fun/pt/guide/installation).
 
