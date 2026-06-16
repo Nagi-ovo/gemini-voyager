@@ -20,7 +20,8 @@
 
 Download the latest version for your browser:
 
-- **Chrome / Edge / Chromium browsers**: `voyager-chrome-v{VERSION}.zip`
+- **Chrome / Chromium browsers**: `voyager-chrome-v{VERSION}.zip`
+- **Microsoft Edge**: [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 - **Firefox**: `voyager-firefox-v{VERSION}.xpi`
 - **Safari**: `voyager-v{VERSION}.dmg`
 

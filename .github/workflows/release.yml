@@ -225,7 +225,8 @@ jobs:
             # Append version-specific file names
             cat >> release_body.md << EOF
 
-          - **Chrome / Edge / Chromium browsers**: \`voyager-chrome-${TAG}.zip\`
+          - **Chrome / Chromium browsers**: \`voyager-chrome-${TAG}.zip\`
+          - **Microsoft Edge**: [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
           - **Firefox**: \`voyager-firefox-${TAG}.xpi\`
           - **Safari**: \`voyager-${TAG}.dmg\`
 
