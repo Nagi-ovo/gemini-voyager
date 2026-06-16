@@ -11811,3 +11811,102 @@ body.gv-rtl .gv-coach-dismiss {
     animation: none;
   }
 }
+
+/* ============================================================================
+ * Code blocks follow the page theme (#705).
+ *
+ * Gemini's "luminous" code block is hard-dark even in light mode (#141414 with
+ * a light-on-dark highlight.js palette), so it glares on a light page. In light
+ * mode we repaint that single surface with a tasteful light syntax theme
+ * (Catppuccin Latte) — a soft lavender-grey base, not glaring white, with a
+ * full accent palette so every token stays legible. Dark mode is left to
+ * Gemini's native styling. No toggle: dark page → dark code, light page → light
+ * code. `!important` overrides Gemini's own token colors.
+ * ========================================================================== */
+.theme-host.light-theme
+  code-block.enable-luminous-code-block
+  .formatted-code-block-internal-container {
+  background: #eff1f5 !important; /* Latte base */
+  border: 1px solid #dce0e8 !important; /* Latte crust — hairline edge on white */
+}
+/* Base text + the header (language label, copy / expand icons). */
+.theme-host.light-theme code-block.enable-luminous-code-block code,
+.theme-host.light-theme code-block.enable-luminous-code-block pre,
+.theme-host.light-theme code-block.enable-luminous-code-block .hljs {
+  color: #4c4f69 !important; /* Latte text */
+}
+.theme-host.light-theme code-block.enable-luminous-code-block .code-block-decoration,
+.theme-host.light-theme code-block.enable-luminous-code-block button,
+.theme-host.light-theme code-block.enable-luminous-code-block mat-icon {
+  color: #6c6f85 !important; /* Latte subtext0 */
+}
+.theme-host.light-theme code-block.enable-luminous-code-block button:hover {
+  color: #4c4f69 !important;
+}
+
+/* Catppuccin Latte syntax palette (highlight.js token classes). */
+.theme-host.light-theme code-block .hljs-comment,
+.theme-host.light-theme code-block .hljs-quote {
+  color: #8c8fa1 !important; /* overlay1 */
+  font-style: italic;
+}
+.theme-host.light-theme code-block .hljs-keyword,
+.theme-host.light-theme code-block .hljs-selector-tag,
+.theme-host.light-theme code-block .hljs-meta-keyword {
+  color: #8839ef !important; /* mauve */
+}
+.theme-host.light-theme code-block .hljs-title,
+.theme-host.light-theme code-block .hljs-title.function_,
+.theme-host.light-theme code-block .hljs-section,
+.theme-host.light-theme code-block .hljs-name {
+  color: #1e66f5 !important; /* blue */
+}
+.theme-host.light-theme code-block .hljs-built_in,
+.theme-host.light-theme code-block .hljs-type,
+.theme-host.light-theme code-block .hljs-title.class_,
+.theme-host.light-theme code-block .hljs-attr,
+.theme-host.light-theme code-block .hljs-attribute {
+  color: #df8e1d !important; /* yellow */
+}
+.theme-host.light-theme code-block .hljs-string,
+.theme-host.light-theme code-block .hljs-meta .hljs-string {
+  color: #40a02b !important; /* green */
+}
+.theme-host.light-theme code-block .hljs-number,
+.theme-host.light-theme code-block .hljs-literal {
+  color: #fe640b !important; /* peach */
+}
+.theme-host.light-theme code-block .hljs-variable,
+.theme-host.light-theme code-block .hljs-template-variable {
+  color: #e64553 !important; /* maroon */
+}
+.theme-host.light-theme code-block .hljs-symbol,
+.theme-host.light-theme code-block .hljs-bullet,
+.theme-host.light-theme code-block .hljs-regexp,
+.theme-host.light-theme code-block .hljs-link {
+  color: #179299 !important; /* teal */
+}
+.theme-host.light-theme code-block .hljs-meta {
+  color: #fe640b !important; /* peach — decorators / preprocessor */
+}
+.theme-host.light-theme code-block .hljs-deletion {
+  color: #d20f39 !important; /* red */
+}
+.theme-host.light-theme code-block .hljs-addition {
+  color: #40a02b !important; /* green */
+}
+/* Tokens Gemini paints light (e.g. plain function/operator text) → readable. */
+.theme-host.light-theme code-block .hljs-function,
+.theme-host.light-theme code-block .hljs-operator,
+.theme-host.light-theme code-block .hljs-punctuation,
+.theme-host.light-theme code-block .hljs-property,
+.theme-host.light-theme code-block .hljs-params,
+.theme-host.light-theme code-block .hljs-subst {
+  color: #4c4f69 !important; /* Latte text */
+}
+.theme-host.light-theme code-block .hljs-emphasis {
+  font-style: italic;
+}
+.theme-host.light-theme code-block .hljs-strong {
+  font-weight: 700;
+}
