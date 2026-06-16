@@ -14,7 +14,7 @@
  * - Single canvas with simple arc draws (no images, no shadows)
  * - Snowflakes sorted by opacity at init; drawn in batches to minimize fillStyle switches
  * - Animation pauses on hidden tabs via visibilitychange
- * - Firefox uses fewer particles to keep long Gemini sidebars responsive
+ * - Firefox draws at a lower cadence to keep long Gemini sidebars responsive
  */
 import { isFirefox } from '@/core/utils/browser';
 
@@ -22,6 +22,8 @@ const CANVAS_ID = 'gv-snow-effect-canvas';
 const STORAGE_KEY = 'gvVisualEffect';
 const LEGACY_KEY = 'gvSnowEffect';
 const EFFECT_VALUE = 'snow';
+const BASE_FRAME_MS = 1000 / 60;
+const FIREFOX_FRAME_INTERVAL_MS = 1000 / 30;
 type SnowLayer = {
   count: number;
   radius: readonly [number, number];
@@ -51,14 +53,8 @@ const LAYERS: readonly SnowLayer[] = [
   { count: 60, radius: [1.2, 2.5], speed: [0.8, 1.6], opacity: [0.5, 0.8], drift: [0.25, 0.6] },
 ] as const;
 
-const FIREFOX_LAYERS: readonly SnowLayer[] = [
-  { count: 24, radius: [0.15, 0.45], speed: [0.15, 0.4], opacity: [0.15, 0.35], drift: [0.05, 0.2] },
-  { count: 18, radius: [0.5, 1.0], speed: [0.4, 1.0], opacity: [0.3, 0.6], drift: [0.15, 0.45] },
-  { count: 10, radius: [1.2, 2.5], speed: [0.8, 1.6], opacity: [0.5, 0.8], drift: [0.25, 0.6] },
-] as const;
-
-export function getSnowParticleCountForBrowser(firefox: boolean = isFirefox()): number {
-  return (firefox ? FIREFOX_LAYERS : LAYERS).reduce((sum, layer) => sum + layer.count, 0);
+export function getSnowFrameIntervalForBrowser(firefox: boolean = isFirefox()): number {
+  return firefox ? FIREFOX_FRAME_INTERVAL_MS : 0;
 }
 
 interface Snowflake {
@@ -81,6 +77,8 @@ let animationFrameId: number | null = null;
 let snowflakes: Snowflake[] = [];
 let resizeHandler: (() => void) | null = null;
 let visibilityHandler: (() => void) | null = null;
+let frameIntervalMs = 0;
+let lastDrawTime = 0;
 
 /** Random float in [min, max) */
 function rand(min: number, max: number): number {
@@ -107,7 +105,7 @@ function createSnowflake(
 
 function initSnowflakes(width: number, height: number): void {
   const flakes: Snowflake[] = [];
-  for (const layer of isFirefox() ? FIREFOX_LAYERS : LAYERS) {
+  for (const layer of LAYERS) {
     for (let i = 0; i < layer.count; i++) {
       flakes.push(createSnowflake(width, height, layer, true));
     }
@@ -120,6 +118,15 @@ function initSnowflakes(width: number, height: number): void {
 function updateAndDraw(time: number): void {
   if (!ctx || !canvas) return;
 
+  if (lastDrawTime > 0 && frameIntervalMs > 0 && time - lastDrawTime < frameIntervalMs) {
+    animationFrameId = requestAnimationFrame(updateAndDraw);
+    return;
+  }
+
+  const elapsedMs = lastDrawTime > 0 ? time - lastDrawTime : BASE_FRAME_MS;
+  const frameScale = Math.min(2.5, Math.max(0.5, elapsedMs / BASE_FRAME_MS));
+  lastDrawTime = time;
+
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
 
@@ -127,8 +134,8 @@ function updateAndDraw(time: number): void {
   let visibleCount = 0;
 
   for (const flake of snowflakes) {
-    flake.y += flake.speedY;
-    flake.x += Math.sin(flake.phase + time * flake.driftFreq) * flake.drift;
+    flake.y += flake.speedY * frameScale;
+    flake.x += Math.sin(flake.phase + time * flake.driftFreq) * flake.drift * frameScale;
 
     // Recycle when off-screen bottom (or skip during drain)
     if (flake.y > height + flake.radius) {
@@ -203,6 +210,8 @@ function enable(): void {
     return;
   }
   state = 'active';
+  frameIntervalMs = getSnowFrameIntervalForBrowser();
+  lastDrawTime = 0;
 
   canvas = document.createElement('canvas');
   canvas.id = CANVAS_ID;
@@ -258,6 +267,8 @@ function finalizeDrain(): void {
 
   ctx = null;
   snowflakes = [];
+  frameIntervalMs = 0;
+  lastDrawTime = 0;
 }
 
 /** Immediate disable: remove everything without draining (e.g. page unload). */

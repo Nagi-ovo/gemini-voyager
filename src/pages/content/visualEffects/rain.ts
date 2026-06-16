@@ -25,6 +25,8 @@ const CANVAS_ID = 'gv-rain-effect-canvas';
 const STORAGE_KEY = 'gvVisualEffect';
 const LEGACY_KEY = 'gvSnowEffect';
 const EFFECT_VALUE = 'rain';
+const BASE_FRAME_MS = 1000 / 60;
+const FIREFOX_FRAME_INTERVAL_MS = 1000 / 30;
 
 /** Wind angle in radians (~8° from vertical) */
 const WIND_ANGLE = 0.14;
@@ -69,14 +71,8 @@ const LAYERS: readonly RainLayer[] = [
 /** Maximum concurrent splashes */
 const MAX_SPLASHES = 24;
 
-const FIREFOX_LAYERS: readonly RainLayer[] = [
-  { count: 28, length: [6, 14], speed: [3, 6], opacity: [0.06, 0.14], width: [0.3, 0.6] },
-  { count: 20, length: [14, 28], speed: [7, 13], opacity: [0.12, 0.25], width: [0.5, 1.0] },
-  { count: 8, length: [26, 48], speed: [12, 20], opacity: [0.2, 0.38], width: [0.8, 1.5] },
-] as const;
-
-export function getRainParticleCountForBrowser(firefox: boolean = isFirefox()): number {
-  return (firefox ? FIREFOX_LAYERS : LAYERS).reduce((sum, layer) => sum + layer.count, 0);
+export function getRainFrameIntervalForBrowser(firefox: boolean = isFirefox()): number {
+  return firefox ? FIREFOX_FRAME_INTERVAL_MS : 0;
 }
 
 interface Raindrop {
@@ -109,6 +105,8 @@ let drops: Raindrop[] = [];
 let splashes: Splash[] = [];
 let resizeHandler: (() => void) | null = null;
 let visibilityHandler: (() => void) | null = null;
+let frameIntervalMs = 0;
+let lastDrawTime = 0;
 
 function rand(min: number, max: number): number {
   return min + Math.random() * (max - min);
@@ -134,7 +132,7 @@ function createDrop(
 
 function initDrops(width: number, height: number): void {
   const items: Raindrop[] = [];
-  const layers = isFirefox() ? FIREFOX_LAYERS : LAYERS;
+  const layers = LAYERS;
   for (let li = 0; li < layers.length; li++) {
     const layer = layers[li];
     const canSplash = li >= 1; // mid + near
@@ -159,8 +157,17 @@ function spawnSplash(x: number, y: number): void {
   });
 }
 
-function updateAndDraw(_time: number): void {
+function updateAndDraw(time: number): void {
   if (!ctx || !canvas) return;
+
+  if (lastDrawTime > 0 && frameIntervalMs > 0 && time - lastDrawTime < frameIntervalMs) {
+    animationFrameId = requestAnimationFrame(updateAndDraw);
+    return;
+  }
+
+  const elapsedMs = lastDrawTime > 0 ? time - lastDrawTime : BASE_FRAME_MS;
+  const frameScale = Math.min(2.5, Math.max(0.5, elapsedMs / BASE_FRAME_MS));
+  lastDrawTime = time;
 
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
@@ -176,8 +183,8 @@ function updateAndDraw(_time: number): void {
     const prevY = d.y;
 
     // Move
-    d.x += d.speed * WIND_DX;
-    d.y += d.speed * WIND_DY;
+    d.x += d.speed * WIND_DX * frameScale;
+    d.y += d.speed * WIND_DY * frameScale;
 
     // Off-screen bottom
     if (d.y > height + d.length) {
@@ -228,8 +235,8 @@ function updateAndDraw(_time: number): void {
   ctx.lineWidth = 0.6;
   for (let i = splashes.length - 1; i >= 0; i--) {
     const s = splashes[i];
-    s.radius += s.expandSpeed;
-    s.opacity -= s.fadeSpeed;
+    s.radius += s.expandSpeed * frameScale;
+    s.opacity -= s.fadeSpeed * frameScale;
 
     if (s.opacity <= 0 || s.radius >= s.maxRadius) {
       splashes.splice(i, 1);
@@ -285,6 +292,8 @@ function enable(): void {
     return;
   }
   state = 'active';
+  frameIntervalMs = getRainFrameIntervalForBrowser();
+  lastDrawTime = 0;
 
   canvas = document.createElement('canvas');
   canvas.id = CANVAS_ID;
@@ -341,6 +350,8 @@ function finalizeDrain(): void {
   ctx = null;
   drops = [];
   splashes = [];
+  frameIntervalMs = 0;
+  lastDrawTime = 0;
 }
 
 /** Immediate disable: remove everything without draining (e.g. page unload). */

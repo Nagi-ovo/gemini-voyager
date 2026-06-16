@@ -57,11 +57,11 @@ describe('snowEffect', () => {
     expect(canvas).not.toBeNull();
   });
 
-  it('uses a smaller particle budget on Firefox', async () => {
-    const { getSnowParticleCountForBrowser } = await import('../snow');
+  it('caps Firefox drawing cadence without reducing the particle budget', async () => {
+    const { getSnowFrameIntervalForBrowser } = await import('../snow');
 
-    expect(getSnowParticleCountForBrowser(false)).toBe(240);
-    expect(getSnowParticleCountForBrowser(true)).toBe(52);
+    expect(getSnowFrameIntervalForBrowser(false)).toBe(0);
+    expect(getSnowFrameIntervalForBrowser(true)).toBeCloseTo(1000 / 30);
   });
 
   it('does not create canvas when disabled', async () => {

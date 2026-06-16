@@ -60,11 +60,11 @@ describe('rainEffect', () => {
     expect(document.getElementById('gv-rain-effect-canvas')).toBeNull();
   });
 
-  it('uses a smaller particle budget on Firefox', async () => {
-    const { getRainParticleCountForBrowser } = await import('../rain');
+  it('caps Firefox drawing cadence without reducing the particle budget', async () => {
+    const { getRainFrameIntervalForBrowser } = await import('../rain');
 
-    expect(getRainParticleCountForBrowser(false)).toBe(170);
-    expect(getRainParticleCountForBrowser(true)).toBe(56);
+    expect(getRainFrameIntervalForBrowser(false)).toBe(0);
+    expect(getRainFrameIntervalForBrowser(true)).toBeCloseTo(1000 / 30);
   });
 
   it('begins graceful drain when disabled via storage change (canvas persists)', async () => {
