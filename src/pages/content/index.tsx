@@ -110,6 +110,11 @@ async function isForkFeatureEnabled(): Promise<boolean> {
   }
 }
 
+function showUsageCoachmarkWhenChangelogIsIdle(): void {
+  if (document.querySelector('.gv-changelog-overlay')) return;
+  void maybeShowUsageCoachmark();
+}
+
 /**
  * Check if current hostname matches any custom websites
  */
@@ -336,9 +341,11 @@ async function initializeFeatures(): Promise<void> {
         await delay(LIGHT_FEATURE_INIT_DELAY);
       }
 
-      // After the "what's new" modal is dismissed, introduce the opt-in usage
-      // pill with a one-time guided coachmark (no-op if already enabled/seen).
-      startChangelog({ onClosed: () => void maybeShowUsageCoachmark() });
+      // Introduce the opt-in usage pill once the changelog is out of the way;
+      // if the changelog doesn't show (already read / badge mode), still try.
+      void startChangelog({ onClosed: showUsageCoachmarkWhenChangelogIsIdle }).then(() => {
+        window.setTimeout(showUsageCoachmarkWhenChangelogIsIdle, 1200);
+      });
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 

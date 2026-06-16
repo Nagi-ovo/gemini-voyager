@@ -18,6 +18,7 @@ import type { TranslationKey } from '@/utils/translations';
 import { showCoachmark } from '../coachmark';
 
 const COACH_ID = 'usage-pill-intro';
+export const USAGE_COACHMARK_DEBUG_EVENT = 'gv:debug:usageCoachmark';
 
 const t = (key: TranslationKey, fallback: string): string => {
   try {
@@ -151,11 +152,14 @@ export async function maybeShowUsageCoachmark(opts: { force?: boolean } = {}): P
   });
 }
 
-// Debug: switch DevTools console to the content-script context, then run
-// `__gvUsageCoachmark()` to preview the guide regardless of seen / enabled state.
+const showDebugUsageCoachmark = () => void maybeShowUsageCoachmark({ force: true });
+
+// Debug: from the normal page console, run:
+// document.dispatchEvent(new Event('gv:debug:usageCoachmark'))
+// The legacy __gvUsageCoachmark() helper still works from the content-script context.
 try {
-  (window as unknown as Record<string, unknown>).__gvUsageCoachmark = () =>
-    maybeShowUsageCoachmark({ force: true });
+  (window as unknown as Record<string, unknown>).__gvUsageCoachmark = showDebugUsageCoachmark;
+  document.addEventListener(USAGE_COACHMARK_DEBUG_EVENT, showDebugUsageCoachmark);
 } catch {
   /* ignore */
 }
