@@ -11790,9 +11790,9 @@ body.dark-theme .gv-coach-switch {
   background: rgba(232, 234, 237, 0.18);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.24);
 }
-.gv-coach-switch[aria-checked='true'] {
-  background: var(--gv-coach-accent);
-  border-color: var(--gv-coach-accent);
+.gv-coach .gv-coach-switch[aria-checked='true'] {
+  background: var(--gv-pm-brand, var(--gv-coach-accent));
+  border-color: var(--gv-pm-brand, var(--gv-coach-accent));
   box-shadow: none;
 }
 .gv-coach-knob {
