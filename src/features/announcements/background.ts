@@ -3,8 +3,8 @@ import { StorageKeys } from '@/core/types/common';
 import { getVoyagerBuildTarget, supportsExtensionNotifications } from '@/core/utils/browser';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
 import { EXTENSION_VERSION } from '@/core/utils/version';
-import type { AppLanguage } from '@/utils/language';
 import { getCurrentLanguage } from '@/utils/i18n';
+import type { AppLanguage } from '@/utils/language';
 
 import { selectRemoteAnnouncements } from './select';
 import type {
@@ -105,8 +105,7 @@ function normalizePending(value: unknown): PresentedRemoteAnnouncement[] {
         typeof record.createdAt === 'number' &&
         (typeof record.link === 'undefined' || typeof record.link === 'string') &&
         (typeof record.linkLabel === 'undefined' || typeof record.linkLabel === 'string') &&
-        (typeof record.requiresAction === 'undefined' ||
-          typeof record.requiresAction === 'boolean')
+        (typeof record.requiresAction === 'undefined' || typeof record.requiresAction === 'boolean')
       );
     })
     .slice(-MAX_PENDING_ANNOUNCEMENTS);
@@ -135,7 +134,11 @@ async function openChromeTab(url: string): Promise<void> {
 function isRemoteAnnouncementMessage(
   message: unknown,
 ): message is { type: string; payload?: { id?: unknown } } {
-  return typeof message === 'object' && message !== null && typeof (message as { type?: unknown }).type === 'string';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    typeof (message as { type?: unknown }).type === 'string'
+  );
 }
 
 export class RemoteAnnouncementBackgroundService {
@@ -162,7 +165,8 @@ export class RemoteAnnouncementBackgroundService {
     this.getPlatform = options.getPlatform ?? resolvePlatform;
     this.getExtensionVersion = options.getExtensionVersion ?? (() => EXTENSION_VERSION);
     this.supportsNotifications = options.supportsNotifications ?? supportsExtensionNotifications;
-    this.hasNotificationPermission = options.hasNotificationPermission ?? hasNotificationsPermission;
+    this.hasNotificationPermission =
+      options.hasNotificationPermission ?? hasNotificationsPermission;
     this.createNotification = options.createNotification ?? createChromeNotification;
     this.openTab = options.openTab ?? openChromeTab;
   }
@@ -317,7 +321,8 @@ export class RemoteAnnouncementBackgroundService {
           iconUrl: chrome.runtime.getURL(NOTIFICATION_ICON),
           title: normalizeText(announcement.title, NOTIFICATION_TITLE_MAX_LENGTH),
           message: normalizeText(announcement.body, NOTIFICATION_BODY_MAX_LENGTH),
-          priority: announcement.level === 'critical' ? 2 : announcement.level === 'warning' ? 1 : 0,
+          priority:
+            announcement.level === 'critical' ? 2 : announcement.level === 'warning' ? 1 : 0,
         });
         await this.markShown(announcement.id, announcement.link, notificationId);
         return;
@@ -331,10 +336,9 @@ export class RemoteAnnouncementBackgroundService {
 
   private async queuePendingAnnouncement(announcement: PresentedRemoteAnnouncement): Promise<void> {
     const pending = await this.loadPendingAnnouncements();
-    const next = [
-      ...pending.filter((item) => item.id !== announcement.id),
-      announcement,
-    ].slice(-MAX_PENDING_ANNOUNCEMENTS);
+    const next = [...pending.filter((item) => item.id !== announcement.id), announcement].slice(
+      -MAX_PENDING_ANNOUNCEMENTS,
+    );
     await this.savePendingAnnouncements(next);
     await this.broadcastPendingAnnouncements(next);
   }
@@ -374,11 +378,7 @@ export class RemoteAnnouncementBackgroundService {
     }
   }
 
-  private async markShown(
-    id: string,
-    link?: string,
-    notificationId?: string,
-  ): Promise<void> {
+  private async markShown(id: string, link?: string, notificationId?: string): Promise<void> {
     const state = await this.loadState();
     const shownIds = [...state.shownIds.filter((shownId) => shownId !== id), id].slice(
       -MAX_SHOWN_IDS,
@@ -466,9 +466,7 @@ export function startRemoteAnnouncementBackgroundService(): RemoteAnnouncementBa
   return service;
 }
 
-export function isRemoteAnnouncementRuntimeMessage(
-  message: unknown,
-): message is {
+export function isRemoteAnnouncementRuntimeMessage(message: unknown): message is {
   type:
     | 'gv.remoteAnnouncement.getPending'
     | 'gv.remoteAnnouncement.ack'

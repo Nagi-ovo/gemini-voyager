@@ -2,10 +2,7 @@ import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
-import {
-  REMOTE_ANNOUNCEMENTS_ALARM_NAME,
-  RemoteAnnouncementBackgroundService,
-} from './background';
+import { REMOTE_ANNOUNCEMENTS_ALARM_NAME, RemoteAnnouncementBackgroundService } from './background';
 
 const NOW = Date.parse('2026-06-16T12:00:00Z');
 
@@ -71,12 +68,14 @@ function installStorage(syncStore: Record<string, unknown>, localStore: Record<s
   });
 }
 
-function makeService(options: {
-  fetchImpl?: ReturnType<typeof makeFetch>;
-  supportsNotifications?: boolean;
-  hasPermission?: boolean;
-  createNotification?: Mock;
-} = {}) {
+function makeService(
+  options: {
+    fetchImpl?: ReturnType<typeof makeFetch>;
+    supportsNotifications?: boolean;
+    hasPermission?: boolean;
+    createNotification?: Mock;
+  } = {},
+) {
   return new RemoteAnnouncementBackgroundService({
     feedUrl: 'https://example.com/announcements.json',
     fetchImpl: (options.fetchImpl ?? makeFetch(FEED)) as unknown as typeof fetch,

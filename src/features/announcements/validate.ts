@@ -68,7 +68,9 @@ function normalizeVersion(value: unknown): string | undefined | null {
   return parseSemver(raw) ? raw : null;
 }
 
-function normalizePlatforms(value: unknown): readonly RemoteAnnouncementPlatform[] | undefined | null {
+function normalizePlatforms(
+  value: unknown,
+): readonly RemoteAnnouncementPlatform[] | undefined | null {
   if (typeof value === 'undefined') return undefined;
   if (!Array.isArray(value)) return null;
   const platforms: RemoteAnnouncementPlatform[] = [];

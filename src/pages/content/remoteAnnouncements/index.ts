@@ -1,5 +1,5 @@
-import type { PresentedRemoteAnnouncement } from '@/features/announcements';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
+import type { PresentedRemoteAnnouncement } from '@/features/announcements';
 
 const CONTAINER_ID = 'gv-remote-announcement';
 const SHOW_CLASS = 'gv-remote-announcement--show';
@@ -31,13 +31,12 @@ function normalizeAnnouncements(value: unknown): PresentedRemoteAnnouncement[] {
     return (
       typeof record.id === 'string' &&
       typeof record.title === 'string' &&
-        typeof record.body === 'string' &&
-        typeof record.createdAt === 'number' &&
-        (record.level === 'info' || record.level === 'warning' || record.level === 'critical') &&
-        (typeof record.requiresAction === 'undefined' ||
-          typeof record.requiresAction === 'boolean')
-      );
-    });
+      typeof record.body === 'string' &&
+      typeof record.createdAt === 'number' &&
+      (record.level === 'info' || record.level === 'warning' || record.level === 'critical') &&
+      (typeof record.requiresAction === 'undefined' || typeof record.requiresAction === 'boolean')
+    );
+  });
 }
 
 function removeAnnouncement(): void {
@@ -73,7 +72,8 @@ function createAnnouncementElement(announcement: PresentedRemoteAnnouncement): H
 
   const title = document.createElement('div');
   title.className = 'gv-remote-announcement__title';
-  title.textContent = announcement.title || getI18nMessage(DEFAULT_TITLE_KEY, DEFAULT_TITLE_FALLBACK);
+  title.textContent =
+    announcement.title || getI18nMessage(DEFAULT_TITLE_KEY, DEFAULT_TITLE_FALLBACK);
 
   const body = document.createElement('div');
   body.className = 'gv-remote-announcement__body';

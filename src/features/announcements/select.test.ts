@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RemoteAnnouncementFeed } from './types';
 import { selectRemoteAnnouncements } from './select';
+import type { RemoteAnnouncementFeed } from './types';
 
 const FEED: RemoteAnnouncementFeed = {
   version: 1,

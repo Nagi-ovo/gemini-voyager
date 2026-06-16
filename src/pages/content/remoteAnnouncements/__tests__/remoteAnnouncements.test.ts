@@ -20,7 +20,10 @@ beforeEach(() => {
   (chrome.runtime.onMessage.addListener as unknown as Mock).mockClear();
   (chrome.runtime.onMessage.removeListener as unknown as Mock).mockClear();
   (chrome.runtime.sendMessage as unknown as Mock).mockReset();
-  (chrome.runtime.sendMessage as unknown as Mock).mockResolvedValue({ ok: true, announcements: [] });
+  (chrome.runtime.sendMessage as unknown as Mock).mockResolvedValue({
+    ok: true,
+    announcements: [],
+  });
   (chrome.i18n.getMessage as unknown as Mock).mockImplementation((key: string) => {
     if (key === 'remoteAnnouncementDismiss') return 'Dismiss';
     if (key === 'remoteAnnouncementOpen') return 'Open';
@@ -70,7 +73,9 @@ describe('startRemoteAnnouncements', () => {
 
   it('renders announcements delivered by runtime message with action buttons', async () => {
     cleanup = startRemoteAnnouncements();
-    const listener = (chrome.runtime.onMessage.addListener as unknown as Mock).mock.calls.at(-1)?.[0];
+    const listener = (chrome.runtime.onMessage.addListener as unknown as Mock).mock.calls.at(
+      -1,
+    )?.[0];
 
     listener({
       type: 'gv.remoteAnnouncement.show',
@@ -96,7 +101,9 @@ describe('startRemoteAnnouncements', () => {
 
   it('does not render a dismiss button for required-action announcements', async () => {
     cleanup = startRemoteAnnouncements();
-    const listener = (chrome.runtime.onMessage.addListener as unknown as Mock).mock.calls.at(-1)?.[0];
+    const listener = (chrome.runtime.onMessage.addListener as unknown as Mock).mock.calls.at(
+      -1,
+    )?.[0];
 
     listener({
       type: 'gv.remoteAnnouncement.show',

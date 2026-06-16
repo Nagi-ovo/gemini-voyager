@@ -31,10 +31,7 @@ function compareVersions(a: string, b: string): number | null {
   return left.patch - right.patch;
 }
 
-function isWithinVersionRange(
-  announcement: RemoteAnnouncement,
-  extensionVersion: string,
-): boolean {
+function isWithinVersionRange(announcement: RemoteAnnouncement, extensionVersion: string): boolean {
   if (announcement.minExtensionVersion) {
     const compared = compareVersions(extensionVersion, announcement.minExtensionVersion);
     if (compared === null || compared < 0) return false;
