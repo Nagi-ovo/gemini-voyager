@@ -76,6 +76,11 @@ const ARCHIVED_CONVERSATION_ACTIONS_CLASS = 'gv-conversation-archived-actions';
 const ENHANCEMENT_FRAME_BUDGET_MS = 8;
 const LEGACY_ACTIONS_PROBE_TTL_MS = 1000;
 const SIDEBAR_ANCHOR_FALLBACK_GRACE_MS = 6000;
+// Grace before treating an attached-but-invisible folder as broken. Long enough
+// that the sidebar's open/close width animation (momentary zero height) can't
+// flicker the floating fallback, short enough to recover quickly from a real
+// fault (e.g. Gemini moving DOM so our hide logic mis-fires).
+const FOLDER_HIDDEN_ANOMALY_GRACE_MS = 1500;
 // Max folder nesting depth — matches the floating panel's MAX_FOLDER_DEPTH.
 // root = 0, subfolder = 1, and that's the limit. Pre-existing data deeper
 // than this stays intact (we never destroy user data); the cap only gates
@@ -306,6 +311,10 @@ export class FolderManager {
   // the user's *explicit* floating-mode toggle in the popup.
   private floatingFallbackActive: boolean = false;
   private sidebarAnchorMissingSince: number | null = null;
+  // When the sidebar folder is attached but not actually usable (hidden while
+  // the sidebar is open and not user-collapsed). Drives the visibility-aware
+  // safety net so a broken-but-present folder still falls back to floating.
+  private folderHiddenAnomalySince: number | null = null;
   private folderRecoveryTimer: number | null = null;
   private folderRecoveryInFlight: boolean = false;
   // Long-lived DOM-recovery watchers. Deliberately NOT registered via
@@ -780,8 +789,7 @@ export class FolderManager {
           // Only reinitialize if the sidebar is currently visible (open).
           // If it is closed, the sideNavObserver will trigger reinitialization
           // when it reopens.
-          const appRoot = document.querySelector('#app-root');
-          if (appRoot && !appRoot.classList.contains('side-nav-open')) {
+          if (!this.isSideNavOpen()) {
             this.debug('DOM recovery: container lost but sidebar closed, deferring');
             return;
           }
@@ -862,6 +870,47 @@ export class FolderManager {
         this.setupNativeSidebarConversationEnhancements();
         this.setupPositionEnforcer();
       }
+
+      // Visibility-aware safety net: "attached" ≠ "usable". A folder that is
+      // mounted but invisible while the sidebar is open (and not user-collapsed)
+      // is broken — historically this slipped through because recovery only
+      // checked presence, so a stale display:none made folders vanish with no
+      // floating fallback. Treat it as a fault, after a short grace so sidebar
+      // open/close animations don't flicker the fallback.
+      if (!this.isSidebarFolderUsable()) {
+        const now = Date.now();
+        if (this.folderHiddenAnomalySince === null) this.folderHiddenAnomalySince = now;
+        if (now - this.folderHiddenAnomalySince < FOLDER_HIDDEN_ANOMALY_GRACE_MS) {
+          this.debug('Recovery: folder attached but hidden while sidebar open — within grace');
+          return;
+        }
+        this.folderHiddenAnomalySince = null;
+        // Cheap repair first: drop a stale inline hide and re-evaluate. Covers
+        // the common case (a detection miss left display:none on the container).
+        this.containerElement?.style.removeProperty('display');
+        this.updateVisibilityBasedOnSideNav();
+        if (this.isSidebarFolderUsable()) {
+          this.debug('Recovery: cleared stale hide — sidebar folder usable again');
+          return;
+        }
+        // Still hidden by something outside our control → surface the floating
+        // panel so folders stay reachable (the whole reason floating mode exists).
+        if (this.floatingFallbackActive || this.floatingPanelHandle) return;
+        this.debug('Recovery: sidebar folder unusable — surfacing floating fallback');
+        this.folderRecoveryInFlight = true;
+        try {
+          this.floatingFallbackActive = true;
+          await this.openFloatingPanel();
+        } catch (error) {
+          this.floatingFallbackActive = false;
+          this.debugWarn('Recovery: failed to mount floating fallback (hidden folder):', error);
+        } finally {
+          this.folderRecoveryInFlight = false;
+        }
+        return;
+      }
+      this.folderHiddenAnomalySince = null;
+
       // The sidebar is hosting the folder right now. If we left a floating
       // fallback up from a previous transition, retire it.
       if (this.floatingFallbackActive) {
@@ -878,6 +927,7 @@ export class FolderManager {
       this.enforceFolderAboveRecents();
       return;
     }
+    this.folderHiddenAnomalySince = null;
 
     if (sidebarAnchor) {
       this.sidebarAnchorMissingSince = null;
@@ -3131,9 +3181,11 @@ export class FolderManager {
    * Hides folder container when sidebar is collapsed for better UX
    */
   private setupSideNavObserver(): void {
-    const appRoot = document.querySelector('#app-root');
-    if (!appRoot) {
-      this.debugWarn('Could not find #app-root element for sidebar monitoring');
+    // lr26 moved the `side-nav-open` class from #app-root to the <chat-app>
+    // shell; observe whichever currently carries it (legacy fallback included).
+    const sideNavHost = document.querySelector('chat-app') ?? document.querySelector('#app-root');
+    if (!sideNavHost) {
+      this.debugWarn('Could not find sidebar host element for monitoring');
       return;
     }
 
@@ -3145,7 +3197,7 @@ export class FolderManager {
       });
     });
 
-    this.sideNavObserver.observe(appRoot, {
+    this.sideNavObserver.observe(sideNavHost, {
       attributes: true,
       attributeFilter: ['class'],
     });
@@ -3154,14 +3206,48 @@ export class FolderManager {
   }
 
   /**
-   * Check if sidebar is open and update folder container visibility
-   * Sidebar is considered open when #app-root has 'side-nav-open' class
+   * Whether Gemini's sidebar is currently open.
+   *
+   * The `side-nav-open` class used to live on `#app-root`, but the lr26 UI
+   * refresh moved it to the `<chat-app>` shell (`#app-root` became a class-less
+   * `<chat-app-orchestrator>`, so the old check was always false and the folder
+   * container got hidden even with the sidebar open). Match either element, then
+   * fall back to the rendered width of the sidenav so a future class rename
+   * still degrades sanely.
+   */
+  private isSideNavOpen(): boolean {
+    if (document.querySelector('chat-app.side-nav-open, #app-root.side-nav-open')) return true;
+    const sideNav = document.querySelector('bard-sidenav, side-nav');
+    return sideNav instanceof HTMLElement && sideNav.offsetWidth > 120;
+  }
+
+  /**
+   * Whether the sidebar folder is not just attached but actually *usable*.
+   *
+   * "Mounted in the DOM" is not the same as "the user can see/use it": a Gemini
+   * DOM change can leave the container attached yet invisible (e.g. a stale
+   * display:none from a mis-fired open/closed detection). This predicate is the
+   * basis of the visibility-aware safety net — it returns false ONLY for a
+   * genuine fault, excluding the legitimate hidden states:
+   *   - sidebar collapsed → folder is meant to be hidden;
+   *   - user collapsed the Folders section via the section-hider (peek bar).
+   */
+  private isSidebarFolderUsable(): boolean {
+    const container = this.containerElement;
+    if (!container || !container.isConnected) return false;
+    // Sidebar closed → the folder is supposed to be hidden. Not a fault.
+    if (!this.isSideNavOpen()) return true;
+    // Collapsed by the user via the section-hider (a peek bar stands in). Fine.
+    if (container.classList.contains('gv-sidebar-section-hidden')) return true;
+    // Sidebar open and not user-collapsed: the container must render a real box.
+    return container.offsetParent !== null && container.getBoundingClientRect().height > 0;
+  }
+
+  /**
+   * Check if sidebar is open and update folder container visibility.
    */
   private updateVisibilityBasedOnSideNav(): void {
-    const appRoot = document.querySelector('#app-root');
-    if (!appRoot) return;
-
-    const isSideNavOpen = appRoot.classList.contains('side-nav-open');
+    const isSideNavOpen = this.isSideNavOpen();
 
     // During resize Gemini can keep the old sidebar attached while mounting a
     // new visible sidebar. Treat the folder as healthy only when it lives under
