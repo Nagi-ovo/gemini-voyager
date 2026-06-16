@@ -96,10 +96,10 @@ features:
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">Cada descarga es una medida de confianza</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Datos en tiempo real de Chrome Web Store y GitHub. Un tributo a cada Voyager que viaja con nosotros.</p>
   <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-    <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="Estrellas en GitHub">
-    <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="Forks en GitHub">
-    <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="Última versión">
-    <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="Descargas en GitHub">
+    <img src="/badges/github-stars.svg" alt="Estrellas en GitHub">
+    <img src="/badges/github-forks.svg" alt="Forks en GitHub">
+    <img src="/badges/github-release.svg" alt="Última versión">
+    <img src="/badges/github-downloads.svg" alt="Descargas en GitHub">
     <img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Usuarios Chrome Web Store">
     <img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Calificación Chrome Web Store">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Usuarios Firefox Add-ons">

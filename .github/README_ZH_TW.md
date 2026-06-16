@@ -15,10 +15,10 @@
     <img src="https://img.shields.io/badge/Brave-✓-FB542B?style=flat-square&logo=brave&logoColor=white" alt="Brave">
   </p>
   <p>
-    <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Star">
-    <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Fork">
-    <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="最新版本">
-    <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub 下載量">
+    <img src="../badges/github-stars.svg" alt="GitHub Star">
+    <img src="../badges/github-forks.svg" alt="GitHub Fork">
+    <img src="../badges/github-release.svg" alt="最新版本">
+    <img src="../badges/github-downloads.svg" alt="GitHub 下載量">
     <img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 商店用戶數">
     <img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 商店評分">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店用戶數">

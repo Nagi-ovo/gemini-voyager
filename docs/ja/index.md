@@ -96,10 +96,10 @@ features:
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">すべてのダウンロードは、信頼の証</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Chrome ウェブストアと GitHub からのリアルタイムデータ。共に歩んでくれるすべての Voyager に敬意を表します。</p>
   <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-    <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Star">
-    <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Fork">
-    <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="最新バージョン">
-    <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub ダウンロード数">
+    <img src="/badges/github-stars.svg" alt="GitHub Star">
+    <img src="/badges/github-forks.svg" alt="GitHub Fork">
+    <img src="/badges/github-release.svg" alt="最新バージョン">
+    <img src="/badges/github-downloads.svg" alt="GitHub ダウンロード数">
     <img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome ストア ユーザー数">
     <img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome ストア 評価">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox ストア ユーザー数">

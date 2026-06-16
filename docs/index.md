@@ -96,10 +96,10 @@ features:
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">每一次下载，都是信任的刻度</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">来自 Chrome Web Store 与 GitHub 的实时数据。致敬每一位与我们同行的 Voyager。</p>
   <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-    <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Star">
-    <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Fork">
-    <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="最新版本">
-    <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub 下载量">
+    <img src="/badges/github-stars.svg" alt="GitHub Star">
+    <img src="/badges/github-forks.svg" alt="GitHub Fork">
+    <img src="/badges/github-release.svg" alt="最新版本">
+    <img src="/badges/github-downloads.svg" alt="GitHub 下载量">
     <img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 商店用户数">
     <img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 商店评分">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店用户数">

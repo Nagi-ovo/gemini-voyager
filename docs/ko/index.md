@@ -96,10 +96,10 @@ features:
   <h3 style="margin: 0 0 8px; font-weight: 600; font-size: 1.05em;">모든 설치는 신뢰의 투표입니다</h3>
   <p style="margin: 0 0 16px; opacity: 0.78; font-size: 0.95em;">Chrome 웹 스토어와 GitHub의 실시간 수치입니다. 우리와 함께해주시는 동료 Voyager분들께 감사드립니다.</p>
   <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-    <img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Stars">
-    <img src="https://img.shields.io/github/forks/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="GitHub Forks">
-    <img src="https://img.shields.io/github/v/release/Nagi-ovo/gemini-voyager?style=flat-square&logo=github" alt="Latest Release">
-    <img src="https://img.shields.io/github/downloads/Nagi-ovo/gemini-voyager/total?style=flat-square&logo=github" alt="GitHub Downloads">
+    <img src="/badges/github-stars.svg" alt="GitHub Stars">
+    <img src="/badges/github-forks.svg" alt="GitHub Forks">
+    <img src="/badges/github-release.svg" alt="Latest Release">
+    <img src="/badges/github-downloads.svg" alt="GitHub Downloads">
     <img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome Web Store Users">
     <img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome Web Store Rating">
     <img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox Add-ons Users">

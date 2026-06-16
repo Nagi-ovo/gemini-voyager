@@ -25,7 +25,7 @@ Uma forma simples de oferecer um café como agradecimento.
 
 É grátis e ajuda imenso! Dê uma estrela ao nosso repositório para nos ajudar a alcançar mais pessoas.
 
-[<img src="https://img.shields.io/github/stars/Nagi-ovo/gemini-voyager?style=social" alt="GitHub stars" height="30"/>](https://github.com/Nagi-ovo/gemini-voyager)
+[<img src="/badges/github-stars.svg" alt="GitHub stars" height="30"/>](https://github.com/Nagi-ovo/gemini-voyager)
 
 ## Para onde vai o dinheiro?
 

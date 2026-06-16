@@ -1,0 +1,28 @@
+name: Update README Badges
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * *'
+
+jobs:
+  update-readme-badges:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate README badges
+        run: node scripts/update-readme-badges.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: update readme badges'
+          file_pattern: 'badges/*.svg docs/public/badges/*.svg'
