@@ -1,0 +1,143 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { hasSeenCoachmark, markCoachmarkSeen, resetCoachmark, showCoachmark } from '../index';
+
+// In-memory sync storage so the seen-set logic is deterministic.
+const store: Record<string, unknown> = {};
+vi.mock('webextension-polyfill', () => ({
+  default: {
+    storage: {
+      sync: {
+        get: vi.fn(async (defaults?: Record<string, unknown>) => {
+          const out: Record<string, unknown> = { ...(defaults ?? {}) };
+          for (const k of Object.keys(out)) if (k in store) out[k] = store[k];
+          return out;
+        }),
+        set: vi.fn(async (obj: Record<string, unknown>) => {
+          Object.assign(store, obj);
+        }),
+      },
+    },
+  },
+}));
+
+const flush = () => new Promise((r) => setTimeout(r, 0));
+
+beforeEach(() => {
+  for (const k of Object.keys(store)) delete store[k];
+  document.body.innerHTML = '';
+});
+
+describe('coachmark seen-state', () => {
+  it('marks and reads seen ids in a shared array', async () => {
+    expect(await hasSeenCoachmark('a')).toBe(false);
+    await markCoachmarkSeen('a');
+    await markCoachmarkSeen('a'); // idempotent
+    expect(await hasSeenCoachmark('a')).toBe(true);
+    expect(await hasSeenCoachmark('b')).toBe(false);
+    expect(store['gvCoachmarksSeen']).toEqual(['a']);
+  });
+
+  it('resetCoachmark clears a single id', async () => {
+    await markCoachmarkSeen('a');
+    await markCoachmarkSeen('b');
+    await resetCoachmark('a');
+    expect(await hasSeenCoachmark('a')).toBe(false);
+    expect(await hasSeenCoachmark('b')).toBe(true);
+  });
+});
+
+describe('showCoachmark', () => {
+  it('skips (no DOM) when already seen', async () => {
+    await markCoachmarkSeen('seen-one');
+    const anchor = document.createElement('div');
+    document.body.appendChild(anchor);
+
+    const res = await showCoachmark({ id: 'seen-one', anchor: () => anchor, body: 'hi' });
+
+    expect(res).toBe('skipped');
+    expect(document.querySelector('.gv-coach')).toBeNull();
+  });
+
+  it('resolves "enabled" when the inline switch is turned on, then marks seen', async () => {
+    const anchor = document.createElement('div');
+    document.body.appendChild(anchor);
+    const onChange = vi.fn();
+
+    const p = showCoachmark({
+      id: 'enable-me',
+      anchor: () => anchor,
+      body: 'intro',
+      toggle: { label: 'on', initial: false, onChange },
+    });
+    await flush();
+
+    const sw = document.querySelector('.gv-coach-switch') as HTMLElement;
+    expect(sw).toBeTruthy();
+    expect(sw.getAttribute('aria-checked')).toBe('false');
+    sw.click();
+    expect(onChange).toHaveBeenCalledWith(true);
+    expect(sw.getAttribute('aria-checked')).toBe('true');
+
+    const res = await p;
+    expect(res).toBe('enabled');
+    expect(await hasSeenCoachmark('enable-me')).toBe(true);
+    expect(document.querySelector('.gv-coach')).toBeNull(); // torn down
+  });
+
+  it('resolves "dismissed" when the close button is clicked, and marks seen', async () => {
+    const anchor = document.createElement('div');
+    document.body.appendChild(anchor);
+
+    const p = showCoachmark({
+      id: 'dismiss-me',
+      anchor: () => anchor,
+      body: 'intro',
+      dismissLabel: 'later',
+    });
+    await flush();
+
+    (document.querySelector('.gv-coach-close') as HTMLElement).click();
+
+    const res = await p;
+    expect(res).toBe('dismissed');
+    expect(await hasSeenCoachmark('dismiss-me')).toBe(true);
+  });
+
+  it('reveals a preview element and unmounts it on close', async () => {
+    const p = showCoachmark({
+      id: 'with-preview',
+      anchor: () => null, // fall back to the revealed element as the anchor
+      reveal: {
+        mount: () => {
+          const el = document.createElement('div');
+          el.className = 'prev';
+          document.body.appendChild(el);
+          return el;
+        },
+        unmount: (el) => el.remove(),
+      },
+      body: 'intro',
+    });
+    await flush();
+    expect(document.querySelector('.prev')).toBeTruthy();
+    expect(document.querySelector('.gv-coach')).toBeTruthy();
+
+    (document.querySelector('.gv-coach-close') as HTMLElement).click();
+    await p;
+    expect(document.querySelector('.prev')).toBeNull();
+  });
+
+  it('does not show twice when once is left default (second call skips)', async () => {
+    const anchor = document.createElement('div');
+    document.body.appendChild(anchor);
+
+    const p1 = showCoachmark({ id: 'once-only', anchor: () => anchor, body: 'intro' });
+    await flush();
+    (document.querySelector('.gv-coach-close') as HTMLElement).click();
+    await p1;
+
+    const res2 = await showCoachmark({ id: 'once-only', anchor: () => anchor, body: 'intro' });
+    expect(res2).toBe('skipped');
+  });
+});

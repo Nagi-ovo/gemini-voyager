@@ -42,6 +42,7 @@ import { startBrandTheme } from './platformTheme';
 import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { startPromptManager } from './prompt/index';
 import { startQuoteReply } from './quoteReply/index';
+import { startRemoteAnnouncements } from './remoteAnnouncements/index';
 import { startResponseCompleteNotification } from './responseNotification/index';
 import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
@@ -49,6 +50,7 @@ import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
 import { startTitleUpdater } from './titleUpdater';
 import { startUsageStatus } from './usageStatus/index';
+import { maybeShowUsageCoachmark } from './usageStatus/usageCoachmark';
 import { startUserLatex } from './userLatex/index';
 import { startRainEffect, startSakuraEffect, startSnowEffect } from './visualEffects';
 import { startWatermarkRemover, stopWatermarkRemover } from './watermarkRemover/index';
@@ -97,6 +99,7 @@ let pluginHostCleanup: (() => void) | null = null;
 let brandThemeCleanup: (() => void) | null = null;
 let titleUpdaterCleanup: (() => void) | null = null;
 let usageStatusCleanup: (() => void) | null = null;
+let remoteAnnouncementsCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -333,7 +336,9 @@ async function initializeFeatures(): Promise<void> {
         await delay(LIGHT_FEATURE_INIT_DELAY);
       }
 
-      startChangelog();
+      // After the "what's new" modal is dismissed, introduce the opt-in usage
+      // pill with a one-time guided coachmark (no-op if already enabled/seen).
+      startChangelog({ onClosed: () => void maybeShowUsageCoachmark() });
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
@@ -506,6 +511,11 @@ function handleVisibilityChange(): void {
       hostname.includes('business.gemini.google') ||
       hostname.includes('aistudio.google.com') ||
       hostname.includes('aistudio.google.cn');
+    const pluginPlatformId = resolvePluginPlatformId(location.href);
+
+    if (isSupportedSite || pluginPlatformId) {
+      remoteAnnouncementsCleanup = startRemoteAnnouncements();
+    }
 
     // Initialize KaTeX configuration early to suppress Unicode warnings
     // This must run before any formulas are rendered on the page
@@ -526,7 +536,7 @@ function handleVisibilityChange(): void {
       // the copy toast with the site's brand colour. We set `initialized` so the
       // visibilitychange handler doesn't later fall into initializeFeatures()
       // (which is Gemini/AI-Studio/custom-site shaped, not plugin-platform).
-      if (resolvePluginPlatformId(location.href)) {
+      if (pluginPlatformId) {
         console.log('[Gemini Voyager] Plugin platform: prompt manager');
         initialized = true;
         void startPromptManager()
@@ -635,6 +645,10 @@ function handleVisibilityChange(): void {
         if (brandThemeCleanup) {
           brandThemeCleanup();
           brandThemeCleanup = null;
+        }
+        if (remoteAnnouncementsCleanup) {
+          remoteAnnouncementsCleanup();
+          remoteAnnouncementsCleanup = null;
         }
         if (titleUpdaterCleanup) {
           titleUpdaterCleanup();

@@ -2115,6 +2115,30 @@
     "message": "新回复已完成",
     "description": "Gemini 回复在屏幕外完成时的前台提示文本"
   },
+  "remoteAnnouncementNotification": {
+    "message": "远程公告通知",
+    "description": "维护者远程公告通知开关"
+  },
+  "remoteAnnouncementNotificationHint": {
+    "message": "Voyager 会在本地定时读取公开 GitHub JSON 公告并显示维护者提醒。它不能执行远程代码，也不能控制你的电脑。",
+    "description": "远程公告通知说明及安全边界"
+  },
+  "remoteAnnouncementSystemPermissionCta": {
+    "message": "启用系统提醒",
+    "description": "为远程公告授予可选系统通知权限的按钮文本"
+  },
+  "remoteAnnouncementDefaultTitle": {
+    "message": "Voyager 公告",
+    "description": "远程公告页面内提示的默认标题"
+  },
+  "remoteAnnouncementOpen": {
+    "message": "打开",
+    "description": "远程公告链接按钮"
+  },
+  "remoteAnnouncementDismiss": {
+    "message": "关闭",
+    "description": "远程公告关闭按钮"
+  },
   "pluginsTitle": {
     "message": "插件",
     "description": "Popup section title for the plugin list"
@@ -2146,5 +2170,21 @@
   "pluginsRefresh": {
     "message": "刷新插件",
     "description": "Tooltip for the refresh-marketplace-catalog button"
+  },
+  "usageCoachmarkTitle": {
+    "message": "新功能：用量额度",
+    "description": "Coachmark title introducing the usage pill"
+  },
+  "usageCoachmarkBody": {
+    "message": "在输入框旁随时查看你剩余的 Gemini 5 小时和每周额度。",
+    "description": "Coachmark body text introducing the usage pill"
+  },
+  "usageCoachmarkToggle": {
+    "message": "显示用量胶囊",
+    "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "coachmarkDismiss": {
+    "message": "以后再说",
+    "description": "Generic dismiss/maybe-later label for feature coachmarks"
   }
 }

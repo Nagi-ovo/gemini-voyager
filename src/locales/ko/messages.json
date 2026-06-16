@@ -2115,6 +2115,30 @@
     "message": "새 응답이 완료되었습니다",
     "description": "Gemini 응답이 화면 밖에서 완료되었을 때의 전면 토스트 문구"
   },
+  "remoteAnnouncementNotification": {
+    "message": "원격 공지",
+    "description": "관리자 원격 공지 알림 토글 라벨"
+  },
+  "remoteAnnouncementNotificationHint": {
+    "message": "Voyager는 공개 GitHub JSON 파일을 로컬에서 주기적으로 확인하고 관리자 공지를 표시합니다. 원격 코드를 실행하거나 컴퓨터를 제어할 수 없습니다.",
+    "description": "원격 공지 알림과 안전 경계 설명"
+  },
+  "remoteAnnouncementSystemPermissionCta": {
+    "message": "시스템 알림 켜기",
+    "description": "원격 공지를 위한 선택적 시스템 알림 권한 요청 버튼"
+  },
+  "remoteAnnouncementDefaultTitle": {
+    "message": "Voyager 공지",
+    "description": "페이지 내 원격 공지 알림의 기본 제목"
+  },
+  "remoteAnnouncementOpen": {
+    "message": "열기",
+    "description": "원격 공지 링크 버튼"
+  },
+  "remoteAnnouncementDismiss": {
+    "message": "닫기",
+    "description": "원격 공지 닫기 버튼"
+  },
   "pluginsTitle": {
     "message": "플러그인",
     "description": "Popup section title for the plugin list"
@@ -2146,5 +2170,21 @@
   "pluginsRefresh": {
     "message": "플러그인 새로고침",
     "description": "Tooltip for the refresh-marketplace-catalog button"
+  },
+  "usageCoachmarkTitle": {
+    "message": "신규: 사용량 한도",
+    "description": "Coachmark title introducing the usage pill"
+  },
+  "usageCoachmarkBody": {
+    "message": "채팅창 옆에서 Gemini의 5시간 및 주간 잔여 사용량을 바로 확인하세요.",
+    "description": "Coachmark body text introducing the usage pill"
+  },
+  "usageCoachmarkToggle": {
+    "message": "사용량 표시줄 보기",
+    "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "coachmarkDismiss": {
+    "message": "나중에",
+    "description": "Generic dismiss/maybe-later label for feature coachmarks"
   }
 }

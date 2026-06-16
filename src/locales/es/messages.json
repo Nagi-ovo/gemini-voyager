@@ -2115,6 +2115,30 @@
     "message": "Nueva respuesta completada",
     "description": "Texto del aviso en primer plano cuando una respuesta de Gemini se completa fuera de pantalla"
   },
+  "remoteAnnouncementNotification": {
+    "message": "Anuncios remotos",
+    "description": "Etiqueta del interruptor de anuncios remotos del mantenedor"
+  },
+  "remoteAnnouncementNotificationHint": {
+    "message": "Voyager comprueba localmente un JSON público de GitHub y muestra avisos del mantenedor. No puede ejecutar código remoto ni controlar tu ordenador.",
+    "description": "Explicación de los anuncios remotos y su límite de seguridad"
+  },
+  "remoteAnnouncementSystemPermissionCta": {
+    "message": "Activar alertas del sistema",
+    "description": "Botón para conceder el permiso opcional de notificaciones del sistema para anuncios remotos"
+  },
+  "remoteAnnouncementDefaultTitle": {
+    "message": "Anuncio de Voyager",
+    "description": "Título alternativo para avisos de anuncios remotos en la página"
+  },
+  "remoteAnnouncementOpen": {
+    "message": "Abrir",
+    "description": "Botón de enlace de anuncio remoto"
+  },
+  "remoteAnnouncementDismiss": {
+    "message": "Cerrar",
+    "description": "Botón para cerrar anuncio remoto"
+  },
   "pluginsTitle": {
     "message": "Complementos",
     "description": "Popup section title for the plugin list"
@@ -2146,5 +2170,21 @@
   "pluginsRefresh": {
     "message": "Actualizar complementos",
     "description": "Tooltip for the refresh-marketplace-catalog button"
+  },
+  "usageCoachmarkTitle": {
+    "message": "Nuevo: límites de uso",
+    "description": "Coachmark title introducing the usage pill"
+  },
+  "usageCoachmarkBody": {
+    "message": "Ten a la vista tus límites restantes de Gemini (5 horas y semanal), junto al cuadro de chat.",
+    "description": "Coachmark body text introducing the usage pill"
+  },
+  "usageCoachmarkToggle": {
+    "message": "Mostrar la píldora de uso",
+    "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "coachmarkDismiss": {
+    "message": "Quizás más tarde",
+    "description": "Generic dismiss/maybe-later label for feature coachmarks"
   }
 }

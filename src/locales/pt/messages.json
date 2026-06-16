@@ -2115,6 +2115,30 @@
     "message": "Nova resposta concluída",
     "description": "Texto do toast em primeiro plano quando uma resposta do Gemini termina fora da tela"
   },
+  "remoteAnnouncementNotification": {
+    "message": "Anúncios remotos",
+    "description": "Rótulo do botão de anúncios remotos do mantenedor"
+  },
+  "remoteAnnouncementNotificationHint": {
+    "message": "O Voyager verifica localmente um JSON público no GitHub e mostra avisos do mantenedor. Ele não pode executar código remoto nem controlar seu computador.",
+    "description": "Explicação dos anúncios remotos e do limite de segurança"
+  },
+  "remoteAnnouncementSystemPermissionCta": {
+    "message": "Ativar alertas do sistema",
+    "description": "Botão para conceder a permissão opcional de notificação do sistema para anúncios remotos"
+  },
+  "remoteAnnouncementDefaultTitle": {
+    "message": "Anúncio do Voyager",
+    "description": "Título alternativo para anúncios remotos dentro da página"
+  },
+  "remoteAnnouncementOpen": {
+    "message": "Abrir",
+    "description": "Botão de link de anúncio remoto"
+  },
+  "remoteAnnouncementDismiss": {
+    "message": "Fechar",
+    "description": "Botão para fechar anúncio remoto"
+  },
   "pluginsTitle": {
     "message": "Plugins",
     "description": "Popup section title for the plugin list"
@@ -2146,5 +2170,21 @@
   "pluginsRefresh": {
     "message": "Atualizar plugins",
     "description": "Tooltip for the refresh-marketplace-catalog button"
+  },
+  "usageCoachmarkTitle": {
+    "message": "Novo: limites de uso",
+    "description": "Coachmark title introducing the usage pill"
+  },
+  "usageCoachmarkBody": {
+    "message": "Acompanhe seus limites restantes do Gemini (5 horas e semanal), ao lado da caixa de chat.",
+    "description": "Coachmark body text introducing the usage pill"
+  },
+  "usageCoachmarkToggle": {
+    "message": "Mostrar a pílula de uso",
+    "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "coachmarkDismiss": {
+    "message": "Talvez depois",
+    "description": "Generic dismiss/maybe-later label for feature coachmarks"
   }
 }

@@ -2115,6 +2115,30 @@
     "message": "New response completed",
     "description": "Foreground toast text when a Gemini response completes offscreen"
   },
+  "remoteAnnouncementNotification": {
+    "message": "Remote announcements",
+    "description": "Toggle label for maintainer remote announcement notifications"
+  },
+  "remoteAnnouncementNotificationHint": {
+    "message": "Voyager locally checks a public GitHub JSON file and shows maintainer notices. It cannot run remote code or control your computer.",
+    "description": "Hint explaining remote announcement notifications and their safety boundary"
+  },
+  "remoteAnnouncementSystemPermissionCta": {
+    "message": "Enable system alerts",
+    "description": "Button text for granting optional system notification permission for remote announcements"
+  },
+  "remoteAnnouncementDefaultTitle": {
+    "message": "Voyager announcement",
+    "description": "Fallback title for remote announcement in-page notifications"
+  },
+  "remoteAnnouncementOpen": {
+    "message": "Open",
+    "description": "Remote announcement link button"
+  },
+  "remoteAnnouncementDismiss": {
+    "message": "Dismiss",
+    "description": "Remote announcement dismiss button"
+  },
   "pluginsTitle": {
     "message": "Plugins",
     "description": "Popup section title for the plugin list"
@@ -2146,5 +2170,21 @@
   "pluginsRefresh": {
     "message": "Refresh plugins",
     "description": "Tooltip for the refresh-marketplace-catalog button"
+  },
+  "usageCoachmarkTitle": {
+    "message": "New: usage limits",
+    "description": "Coachmark title introducing the usage pill"
+  },
+  "usageCoachmarkBody": {
+    "message": "Keep your remaining Gemini 5-hour and weekly limits in view, right by the chat box.",
+    "description": "Coachmark body text introducing the usage pill"
+  },
+  "usageCoachmarkToggle": {
+    "message": "Show the usage pill",
+    "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "coachmarkDismiss": {
+    "message": "Maybe later",
+    "description": "Generic dismiss/maybe-later label for feature coachmarks"
   }
 }

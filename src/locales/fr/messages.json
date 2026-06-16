@@ -2115,6 +2115,30 @@
     "message": "Nouvelle réponse terminée",
     "description": "Texte du toast au premier plan lorsqu'une réponse Gemini se termine hors écran"
   },
+  "remoteAnnouncementNotification": {
+    "message": "Annonces distantes",
+    "description": "Libellé de l'interrupteur des annonces distantes du mainteneur"
+  },
+  "remoteAnnouncementNotificationHint": {
+    "message": "Voyager vérifie localement un fichier JSON GitHub public et affiche les annonces du mainteneur. Il ne peut pas exécuter de code distant ni contrôler votre ordinateur.",
+    "description": "Explication des annonces distantes et de leur limite de sécurité"
+  },
+  "remoteAnnouncementSystemPermissionCta": {
+    "message": "Activer les alertes système",
+    "description": "Bouton pour accorder l'autorisation optionnelle de notification système pour les annonces distantes"
+  },
+  "remoteAnnouncementDefaultTitle": {
+    "message": "Annonce Voyager",
+    "description": "Titre de secours pour les annonces distantes dans la page"
+  },
+  "remoteAnnouncementOpen": {
+    "message": "Ouvrir",
+    "description": "Bouton de lien d'une annonce distante"
+  },
+  "remoteAnnouncementDismiss": {
+    "message": "Fermer",
+    "description": "Bouton de fermeture d'une annonce distante"
+  },
   "pluginsTitle": {
     "message": "Extensions",
     "description": "Popup section title for the plugin list"
@@ -2146,5 +2170,21 @@
   "pluginsRefresh": {
     "message": "Actualiser les extensions",
     "description": "Tooltip for the refresh-marketplace-catalog button"
+  },
+  "usageCoachmarkTitle": {
+    "message": "Nouveau : limites d'utilisation",
+    "description": "Coachmark title introducing the usage pill"
+  },
+  "usageCoachmarkBody": {
+    "message": "Gardez un œil sur vos limites Gemini restantes (5 h et hebdomadaire), juste à côté de la zone de discussion.",
+    "description": "Coachmark body text introducing the usage pill"
+  },
+  "usageCoachmarkToggle": {
+    "message": "Afficher la pastille d'utilisation",
+    "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "coachmarkDismiss": {
+    "message": "Plus tard",
+    "description": "Generic dismiss/maybe-later label for feature coachmarks"
   }
 }

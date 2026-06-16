@@ -2115,6 +2115,30 @@
     "message": "Новый ответ завершён",
     "description": "Текст всплывающего уведомления, когда ответ Gemini завершён вне экрана"
   },
+  "remoteAnnouncementNotification": {
+    "message": "Удалённые объявления",
+    "description": "Подпись переключателя удалённых объявлений от сопровождающего"
+  },
+  "remoteAnnouncementNotificationHint": {
+    "message": "Voyager локально проверяет публичный JSON-файл на GitHub и показывает объявления сопровождающего. Он не может выполнять удалённый код или управлять вашим компьютером.",
+    "description": "Пояснение удалённых объявлений и их границы безопасности"
+  },
+  "remoteAnnouncementSystemPermissionCta": {
+    "message": "Включить системные оповещения",
+    "description": "Кнопка выдачи необязательного разрешения на системные уведомления для удалённых объявлений"
+  },
+  "remoteAnnouncementDefaultTitle": {
+    "message": "Объявление Voyager",
+    "description": "Запасной заголовок для удалённого объявления на странице"
+  },
+  "remoteAnnouncementOpen": {
+    "message": "Открыть",
+    "description": "Кнопка ссылки удалённого объявления"
+  },
+  "remoteAnnouncementDismiss": {
+    "message": "Закрыть",
+    "description": "Кнопка закрытия удалённого объявления"
+  },
   "pluginsTitle": {
     "message": "Плагины",
     "description": "Popup section title for the plugin list"
@@ -2146,5 +2170,21 @@
   "pluginsRefresh": {
     "message": "Обновить плагины",
     "description": "Tooltip for the refresh-marketplace-catalog button"
+  },
+  "usageCoachmarkTitle": {
+    "message": "Новое: лимиты использования",
+    "description": "Coachmark title introducing the usage pill"
+  },
+  "usageCoachmarkBody": {
+    "message": "Следите за оставшимися лимитами Gemini (за 5 часов и за неделю) прямо рядом с полем чата.",
+    "description": "Coachmark body text introducing the usage pill"
+  },
+  "usageCoachmarkToggle": {
+    "message": "Показать индикатор использования",
+    "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "coachmarkDismiss": {
+    "message": "Позже",
+    "description": "Generic dismiss/maybe-later label for feature coachmarks"
   }
 }

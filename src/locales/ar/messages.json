@@ -2115,6 +2115,30 @@
     "message": "اكتمل الرد الجديد",
     "description": "نص التنبيه الأمامي عندما يكتمل رد Gemini خارج الشاشة"
   },
+  "remoteAnnouncementNotification": {
+    "message": "الإعلانات البعيدة",
+    "description": "تسمية مفتاح إشعارات الإعلانات البعيدة من المشرف"
+  },
+  "remoteAnnouncementNotificationHint": {
+    "message": "يتحقق Voyager محليًا من ملف JSON عام على GitHub ويعرض تنبيهات المشرف. لا يمكنه تشغيل كود بعيد أو التحكم في جهازك.",
+    "description": "شرح إشعارات الإعلانات البعيدة وحدود الأمان"
+  },
+  "remoteAnnouncementSystemPermissionCta": {
+    "message": "تفعيل تنبيهات النظام",
+    "description": "زر منح إذن إشعارات النظام الاختياري للإعلانات البعيدة"
+  },
+  "remoteAnnouncementDefaultTitle": {
+    "message": "إعلان Voyager",
+    "description": "عنوان احتياطي لإشعارات الإعلانات البعيدة داخل الصفحة"
+  },
+  "remoteAnnouncementOpen": {
+    "message": "فتح",
+    "description": "زر رابط الإعلان البعيد"
+  },
+  "remoteAnnouncementDismiss": {
+    "message": "إغلاق",
+    "description": "زر إغلاق الإعلان البعيد"
+  },
   "pluginsTitle": {
     "message": "الإضافات",
     "description": "Popup section title for the plugin list"
@@ -2146,5 +2170,21 @@
   "pluginsRefresh": {
     "message": "تحديث الإضافات",
     "description": "Tooltip for the refresh-marketplace-catalog button"
+  },
+  "usageCoachmarkTitle": {
+    "message": "جديد: حدود الاستخدام",
+    "description": "Coachmark title introducing the usage pill"
+  },
+  "usageCoachmarkBody": {
+    "message": "تابِع ما تبقّى من حدود Gemini (كل 5 ساعات وأسبوعيًا) بجوار مربع الدردشة مباشرةً.",
+    "description": "Coachmark body text introducing the usage pill"
+  },
+  "usageCoachmarkToggle": {
+    "message": "إظهار شارة الاستخدام",
+    "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "coachmarkDismiss": {
+    "message": "لاحقًا",
+    "description": "Generic dismiss/maybe-later label for feature coachmarks"
   }
 }

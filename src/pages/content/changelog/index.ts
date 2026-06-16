@@ -733,7 +733,7 @@ export async function showChangelogModalDirect(): Promise<boolean> {
  * Shows a version-based changelog popup when the user upgrades to a new version.
  * Returns a cleanup function.
  */
-export async function startChangelog(): Promise<() => void> {
+export async function startChangelog(opts: { onClosed?: () => void } = {}): Promise<() => void> {
   let overlayRef: HTMLDivElement | null = null;
 
   // Debug helper: switch DevTools console context to this extension's content script
@@ -754,6 +754,23 @@ export async function startChangelog(): Promise<() => void> {
     }
 
     overlayRef = await showChangelogModal();
+    // Fire onClosed once the user dismisses the modal (overlay leaves the DOM).
+    // Only when a modal actually showed — so downstream onboarding stays tied to
+    // the "what's new" moment.
+    if (overlayRef && opts.onClosed) {
+      const node = overlayRef;
+      const obs = new MutationObserver(() => {
+        if (!node.isConnected) {
+          obs.disconnect();
+          try {
+            opts.onClosed?.();
+          } catch {
+            /* non-critical */
+          }
+        }
+      });
+      obs.observe(document.body, { childList: true });
+    }
   } catch {
     // Silently fail — changelog is non-critical
   }

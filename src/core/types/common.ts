@@ -106,6 +106,9 @@ export const StorageKeys = {
   MERMAID_ENABLED: 'gvMermaidEnabled',
   QUOTE_REPLY_ENABLED: 'gvQuoteReplyEnabled',
   RESPONSE_COMPLETE_NOTIFICATION_ENABLED: 'gvResponseCompleteNotificationEnabled',
+  REMOTE_ANNOUNCEMENTS_ENABLED: 'gvRemoteAnnouncementsEnabled',
+  REMOTE_ANNOUNCEMENTS_STATE: 'gvRemoteAnnouncementsState',
+  REMOTE_ANNOUNCEMENTS_PENDING: 'gvRemoteAnnouncementsPending',
 
   // Input behavior
   CTRL_ENTER_SEND: 'gvCtrlEnterSend',
@@ -177,6 +180,11 @@ export const StorageKeys = {
   // preference and changes feel best when they take effect immediately.
   FOLDERS_ANCHOR: 'gvFoldersAnchor',
   SIDEBAR_COLLAPSE_NUDGE_SHOWN: 'gvSidebarCollapseNudgeShown',
+  // Reusable one-time feature coachmarks (spotlight + bubble + optional inline
+  // toggle). A single sync key holding the array of coachmark ids the user has
+  // already seen, so every coachmark shows at most once per user across devices.
+  // See src/pages/content/coachmark.
+  COACHMARKS_SEEN: 'gvCoachmarksSeen',
 
   // Folder spacing
   GV_FOLDER_SPACING: 'gvFolderSpacing',

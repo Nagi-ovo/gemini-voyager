@@ -2115,6 +2115,30 @@
     "message": "新しい回答が完了しました",
     "description": "Gemini の回答が画面外で完了したときの前面トースト文言"
   },
+  "remoteAnnouncementNotification": {
+    "message": "リモートお知らせ",
+    "description": "Toggle label for maintainer remote announcement notifications"
+  },
+  "remoteAnnouncementNotificationHint": {
+    "message": "Voyager は公開 GitHub JSON をローカルで定期確認し、メンテナーからのお知らせを表示します。リモートコードの実行や端末の制御はできません。",
+    "description": "Hint explaining remote announcement notifications and their safety boundary"
+  },
+  "remoteAnnouncementSystemPermissionCta": {
+    "message": "システム通知を有効化",
+    "description": "Button text for granting optional system notification permission for remote announcements"
+  },
+  "remoteAnnouncementDefaultTitle": {
+    "message": "Voyager からのお知らせ",
+    "description": "Fallback title for remote announcement in-page notifications"
+  },
+  "remoteAnnouncementOpen": {
+    "message": "開く",
+    "description": "Remote announcement link button"
+  },
+  "remoteAnnouncementDismiss": {
+    "message": "閉じる",
+    "description": "Remote announcement dismiss button"
+  },
   "pluginsTitle": {
     "message": "プラグイン",
     "description": "Popup section title for the plugin list"
@@ -2146,5 +2170,21 @@
   "pluginsRefresh": {
     "message": "プラグインを更新",
     "description": "Tooltip for the refresh-marketplace-catalog button"
+  },
+  "usageCoachmarkTitle": {
+    "message": "新機能：使用量の上限",
+    "description": "Coachmark title introducing the usage pill"
+  },
+  "usageCoachmarkBody": {
+    "message": "チャット欄のそばで、Gemini の 5 時間ごと・週ごとの残り使用量をいつでも確認できます。",
+    "description": "Coachmark body text introducing the usage pill"
+  },
+  "usageCoachmarkToggle": {
+    "message": "使用量ピルを表示",
+    "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "coachmarkDismiss": {
+    "message": "後で",
+    "description": "Generic dismiss/maybe-later label for feature coachmarks"
   }
 }
