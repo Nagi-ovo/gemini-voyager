@@ -185,6 +185,10 @@
       }
       var rpcid = d.payload.rpcid;
       var args = d.payload.args;
+      var sourcePath =
+        typeof d.payload.sourcePath === 'string' && d.payload.sourcePath
+          ? d.payload.sourcePath
+          : location.pathname || '/app';
       var freq = JSON.stringify([[[rpcid, args, null, 'generic']]]);
       var reqBody = 'f.req=' + encodeURIComponent(freq) + '&at=' + encodeURIComponent(at) + '&';
       var reqid = 100000 + (Math.floor(performance.now()) % 800000);
@@ -192,7 +196,9 @@
         location.origin +
         '/_/BardChatUi/data/batchexecute?rpcids=' +
         encodeURIComponent(rpcid) +
-        '&source-path=%2Fapp&bl=' +
+        '&source-path=' +
+        encodeURIComponent(sourcePath) +
+        '&bl=' +
         encodeURIComponent(bl || '') +
         '&f.sid=' +
         encodeURIComponent(fsid || '') +

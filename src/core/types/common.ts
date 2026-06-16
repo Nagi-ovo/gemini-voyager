@@ -159,8 +159,9 @@ export const StorageKeys = {
   // (opt-in) since it injects persistent UI.
   USAGE_STATUS_ENABLED: 'gvUsageStatusEnabled',
   // Local cache of the usage limits scraped from /usage. Stored as a
-  // UsageSnapshot envelope ({ daily, weekly, tier, updatedAt }). Local (not
-  // sync) because it changes constantly and is per-account, not a preference.
+  // UsageSnapshot envelope ({ daily, weekly, tier, accountKey, updatedAt }).
+  // Local (not sync) because it changes constantly and is per-account, not a
+  // preference.
   GV_USAGE_CACHE: 'gvUsageCache',
   // Self-calibrated "recipe" for silently refreshing usage off the /usage page:
   // { rpcid, args } of the batchexecute call that carries the usage metrics,

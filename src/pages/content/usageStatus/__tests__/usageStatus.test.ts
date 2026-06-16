@@ -5,8 +5,10 @@ import {
   formatResetLabel,
   formatUpdatedAgo,
   isUsagePathname,
+  mergeUsageSnapshots,
   parseUsageRpcResponse,
   scrapeUsageFromDocument,
+  usageAccountKeyFromPathname,
 } from '../index';
 
 /**
@@ -114,6 +116,122 @@ describe('isUsagePathname', () => {
     expect(isUsagePathname('/app')).toBe(false);
     expect(isUsagePathname('/usages')).toBe(false);
     expect(isUsagePathname('/')).toBe(false);
+  });
+});
+
+describe('usage account scoping', () => {
+  it('derives the Gemini account namespace from the route', () => {
+    expect(usageAccountKeyFromPathname('/app')).toBe('default');
+    expect(usageAccountKeyFromPathname('/usage')).toBe('default');
+    expect(usageAccountKeyFromPathname('/u/0/app')).toBe('u/0');
+    expect(usageAccountKeyFromPathname('/u/12/usage')).toBe('u/12');
+  });
+});
+
+describe('mergeUsageSnapshots', () => {
+  it('keeps the higher value when an older same-window snapshot tries to lower usage', () => {
+    const current = {
+      accountKey: 'u/0',
+      daily: { percent: 42, resetLabel: '12:47 AM', resetEpoch: 1781135233 },
+      weekly: { percent: 11, resetLabel: 'Jun 16', resetEpoch: 1781646433 },
+      tier: 'PRO',
+      updatedAt: 1000,
+    };
+    const staleLower = {
+      accountKey: 'u/0',
+      daily: { percent: 3, resetLabel: '12:47 AM', resetEpoch: 1781135233 },
+      weekly: { percent: 5, resetLabel: 'Jun 16', resetEpoch: 1781646433 },
+      tier: 'PRO',
+      updatedAt: 2000,
+    };
+
+    expect(mergeUsageSnapshots(current, staleLower)).toEqual(current);
+  });
+
+  it('allows usage to drop after the reset window changes', () => {
+    const current = {
+      accountKey: 'u/0',
+      daily: { percent: 95, resetLabel: '12:47 AM', resetEpoch: 1781135233 },
+      weekly: { percent: 40, resetLabel: 'Jun 16', resetEpoch: 1781646433 },
+      tier: 'PRO',
+      updatedAt: 1000,
+    };
+    const afterReset = {
+      accountKey: 'u/0',
+      daily: { percent: 0, resetLabel: '1:47 AM', resetEpoch: 1781138833 },
+      weekly: { percent: 41, resetLabel: 'Jun 16', resetEpoch: 1781646433 },
+      tier: 'PRO',
+      updatedAt: 2000,
+    };
+
+    expect(
+      mergeUsageSnapshots(current, afterReset, { now: current.daily.resetEpoch * 1000 + 1 }),
+    ).toEqual(afterReset);
+  });
+
+  it('blocks a large automatic drop before the previous reset boundary has passed', () => {
+    const current = {
+      accountKey: 'u/0',
+      daily: { percent: 76, resetLabel: '12:47 AM', resetEpoch: 1781135233 },
+      weekly: { percent: 40, resetLabel: 'Jun 16', resetEpoch: 1781646433 },
+      tier: 'PRO',
+      updatedAt: 1000,
+    };
+    const suspiciousLower = {
+      accountKey: 'u/0',
+      daily: { percent: 10, resetLabel: '1:47 AM', resetEpoch: 1781138833 },
+      weekly: { percent: 10, resetLabel: 'Jun 17', resetEpoch: 1781732833 },
+      tier: 'PRO',
+      updatedAt: 2000,
+    };
+
+    const merged = mergeUsageSnapshots(current, suspiciousLower, {
+      now: current.daily.resetEpoch * 1000 - 10 * 60_000,
+    });
+
+    expect(merged.daily).toEqual(current.daily);
+    expect(merged.weekly).toEqual(current.weekly);
+    expect(merged.updatedAt).toBe(current.updatedAt);
+  });
+
+  it('allows a manual refresh to accept a large drop immediately', () => {
+    const current = {
+      accountKey: 'u/0',
+      daily: { percent: 76, resetLabel: '12:47 AM', resetEpoch: 1781135233 },
+      weekly: { percent: 40, resetLabel: 'Jun 16', resetEpoch: 1781646433 },
+      tier: 'PRO',
+      updatedAt: 1000,
+    };
+    const manualLower = {
+      accountKey: 'u/0',
+      daily: { percent: 10, resetLabel: '1:47 AM', resetEpoch: 1781138833 },
+      weekly: { percent: 10, resetLabel: 'Jun 17', resetEpoch: 1781732833 },
+      tier: 'PRO',
+      updatedAt: 2000,
+    };
+
+    expect(mergeUsageSnapshots(current, manualLower, { allowRegression: true })).toEqual(
+      manualLower,
+    );
+  });
+
+  it('does not merge snapshots from another Gemini account namespace', () => {
+    const current = {
+      accountKey: 'u/0',
+      daily: { percent: 42, resetLabel: '12:47 AM', resetEpoch: 1781135233 },
+      weekly: { percent: 11, resetLabel: 'Jun 16', resetEpoch: 1781646433 },
+      tier: 'PRO',
+      updatedAt: 1000,
+    };
+    const otherAccount = {
+      accountKey: 'u/1',
+      daily: { percent: 2, resetLabel: '12:47 AM', resetEpoch: 1781135233 },
+      weekly: { percent: 1, resetLabel: 'Jun 16', resetEpoch: 1781646433 },
+      tier: 'FREE',
+      updatedAt: 2000,
+    };
+
+    expect(mergeUsageSnapshots(current, otherAccount)).toEqual(otherAccount);
   });
 });
 

@@ -61,6 +61,11 @@ interface UsageRecipe {
   args: string;
 }
 
+interface MergeUsageSnapshotOptions {
+  allowRegression?: boolean;
+  now?: number;
+}
+
 /** Snapshot persisted in chrome.storage.local. Small by construction. */
 export interface UsageSnapshot {
   /** Rolling "Current usage" bucket (resets daily). Null if unparsed. */
@@ -69,6 +74,8 @@ export interface UsageSnapshot {
   weekly: UsageMetric | null;
   /** Plan tier badge, e.g. `PRO`. Optional — purely cosmetic. */
   tier?: string;
+  /** Gemini account namespace from the URL, e.g. `u/0` or `default`. */
+  accountKey?: string;
   /** Date.now() when scraped, for the "updated X ago" stamp. */
   updatedAt: number;
 }
@@ -91,6 +98,8 @@ const OBS_CMD = 'gv-usage-observer-cmd';
 const STALE_MS = 5 * 60_000; // consider a snapshot stale after 5 min
 const HEARTBEAT_MS = 2 * 60_000; // idle re-check cadence (staleness-gated)
 const GEN_DEBOUNCE_MS = 4_000; // wait after a generation completes, then refresh
+const RESET_GRACE_MS = 2 * 60_000;
+const AUTO_REGRESSION_TOLERANCE_PCT = 5;
 // Known usage RPC (verified live: rpcid `jSf9Qc`, empty args). Used as the
 // out-of-the-box recipe so silent refresh works on enable without first cold-
 // loading /usage; the document_start observer re-calibrates (DOM-verified) if
@@ -128,6 +137,7 @@ let pillMoveHandler: ((ev: PointerEvent) => void) | null = null;
 let recipe: UsageRecipe | null = null;
 let replayTimer: number | null = null;
 let replaySeq = 0;
+const forcedReplayIds = new Set<number>();
 let genTimer: number | null = null;
 let spinTimer: number | null = null;
 let visibilityHandler: (() => void) | null = null;
@@ -149,6 +159,88 @@ export function isUsagePathname(pathname: string): boolean {
 
 function isOnUsagePage(): boolean {
   return isUsagePathname(location.pathname);
+}
+
+export function usageAccountKeyFromPathname(pathname: string): string {
+  const match = pathname.match(/^\/u\/(\d+)(?:\/|$)/);
+  return match ? `u/${match[1]}` : 'default';
+}
+
+function currentUsageAccountKey(): string {
+  return usageAccountKeyFromPathname(location.pathname);
+}
+
+function scopeSnapshot(next: UsageSnapshot): UsageSnapshot {
+  return { ...next, accountKey: currentUsageAccountKey() };
+}
+
+function isCurrentAccountSnapshot(raw: UsageSnapshot | null | undefined): raw is UsageSnapshot {
+  return raw?.accountKey === currentUsageAccountKey();
+}
+
+function sameResetWindow(current: UsageMetric, next: UsageMetric): boolean {
+  if (typeof current.resetEpoch === 'number' && typeof next.resetEpoch === 'number') {
+    return current.resetEpoch === next.resetEpoch;
+  }
+  return !!current.resetLabel && current.resetLabel === next.resetLabel;
+}
+
+function metricRegresses(current: UsageMetric | null, next: UsageMetric | null): boolean {
+  return !!current && !!next && next.percent < current.percent;
+}
+
+function resetBoundaryHasPassed(current: UsageMetric, next: UsageMetric, now: number): boolean {
+  if (typeof current.resetEpoch !== 'number' || typeof next.resetEpoch !== 'number') return false;
+  return next.resetEpoch > current.resetEpoch && now >= current.resetEpoch * 1000 - RESET_GRACE_MS;
+}
+
+function shouldKeepCurrentMetric(
+  current: UsageMetric | null,
+  next: UsageMetric | null,
+  options: MergeUsageSnapshotOptions,
+): boolean {
+  if (!metricRegresses(current, next)) return false;
+  if (options.allowRegression) return false;
+  if (!current || !next) return false;
+  if (sameResetWindow(current, next)) return true;
+  if (current.percent - next.percent <= AUTO_REGRESSION_TOLERANCE_PCT) return false;
+  return !resetBoundaryHasPassed(current, next, options.now ?? Date.now());
+}
+
+function metricEquals(a: UsageMetric | null, b: UsageMetric | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.percent === b.percent && a.resetLabel === b.resetLabel && a.resetEpoch === b.resetEpoch;
+}
+
+function snapshotEquals(a: UsageSnapshot, b: UsageSnapshot): boolean {
+  return (
+    a.accountKey === b.accountKey &&
+    a.tier === b.tier &&
+    a.updatedAt === b.updatedAt &&
+    metricEquals(a.daily, b.daily) &&
+    metricEquals(a.weekly, b.weekly)
+  );
+}
+
+export function mergeUsageSnapshots(
+  current: UsageSnapshot | null,
+  next: UsageSnapshot,
+  options: MergeUsageSnapshotOptions = {},
+): UsageSnapshot {
+  if (!current || current.accountKey !== next.accountKey) return next;
+
+  const keepDaily = shouldKeepCurrentMetric(current.daily, next.daily, options);
+  const keepWeekly = shouldKeepCurrentMetric(current.weekly, next.weekly, options);
+  if (!keepDaily && !keepWeekly) return next;
+
+  return {
+    ...next,
+    daily: keepDaily ? current.daily : next.daily,
+    weekly: keepWeekly ? current.weekly : next.weekly,
+    tier: next.tier ?? current.tier,
+    updatedAt: current.updatedAt,
+  };
 }
 
 /** First `N% ...` percentage in a block of text, or null. */
@@ -216,7 +308,12 @@ async function loadSnapshot(): Promise<UsageSnapshot | null> {
   try {
     const result = await browser.storage.local.get(StorageKeys.GV_USAGE_CACHE);
     const raw = (result as Record<string, unknown>)[StorageKeys.GV_USAGE_CACHE];
-    if (raw && typeof raw === 'object' && typeof (raw as UsageSnapshot).updatedAt === 'number') {
+    if (
+      raw &&
+      typeof raw === 'object' &&
+      typeof (raw as UsageSnapshot).updatedAt === 'number' &&
+      isCurrentAccountSnapshot(raw as UsageSnapshot)
+    ) {
       return raw as UsageSnapshot;
     }
   } catch (error) {
@@ -231,8 +328,8 @@ function scheduleScrape(): void {
     scrapeTimer = null;
     const next = scrapeUsageFromDocument();
     if (!next) return; // transient empty render — keep the last good snapshot
-    snapshot = next;
-    void saveSnapshot(next);
+    snapshot = mergeUsageSnapshots(snapshot, scopeSnapshot(next), { allowRegression: true });
+    void saveSnapshot(snapshot);
     render();
   }, SCRAPE_DEBOUNCE_MS);
 }
@@ -437,6 +534,7 @@ function snapshotFromParsed(
     daily: metricFromRaw(parsed.daily, now),
     weekly: metricFromRaw(parsed.weekly, now),
     tier,
+    accountKey: currentUsageAccountKey(),
     updatedAt: now,
   };
 }
@@ -515,7 +613,7 @@ function ensurePill(): HTMLElement {
   refresh.addEventListener('click', (e) => {
     e.stopPropagation();
     e.preventDefault();
-    requestReplay();
+    requestReplay(true);
   });
   el.appendChild(refresh);
 
@@ -546,7 +644,7 @@ function setMetric(el: HTMLElement, kind: 'daily' | 'weekly', metric: UsageMetri
   const pct = seg.querySelector<HTMLElement>('.gv-usage-pct');
   if (label) {
     label.textContent =
-      kind === 'daily' ? t('usageStatusDaily', 'Daily') : t('usageStatusWeekly', 'Weekly');
+      kind === 'daily' ? t('usageStatusDaily', '5h') : t('usageStatusWeekly', 'Weekly');
   }
   if (metric) {
     seg.removeAttribute('hidden');
@@ -783,8 +881,10 @@ function setupStorageListener(): void {
     }
     if (areaName === 'local' && changes[StorageKeys.GV_USAGE_CACHE]) {
       const raw = changes[StorageKeys.GV_USAGE_CACHE].newValue as UsageSnapshot | undefined;
-      if (raw && typeof raw.updatedAt === 'number') {
-        snapshot = raw;
+      if (raw && typeof raw.updatedAt === 'number' && isCurrentAccountSnapshot(raw)) {
+        const merged = mergeUsageSnapshots(snapshot, raw);
+        if (!snapshotEquals(merged, raw)) void saveSnapshot(merged);
+        snapshot = merged;
         render();
       }
     }
@@ -849,9 +949,14 @@ async function saveRecipe(next: UsageRecipe): Promise<void> {
 function applyParsed(
   parsed: { daily: RawMetric | null; weekly: RawMetric | null },
   tier: string | undefined,
+  options: MergeUsageSnapshotOptions = {},
 ): void {
   if (!parsed.daily && !parsed.weekly) return;
-  snapshot = snapshotFromParsed(parsed, Date.now(), tier ?? snapshot?.tier);
+  snapshot = mergeUsageSnapshots(
+    snapshot,
+    snapshotFromParsed(parsed, Date.now(), tier ?? snapshot?.tier),
+    options,
+  );
   void saveSnapshot(snapshot);
   render();
 }
@@ -878,18 +983,20 @@ function handleCapture(payload: { rpcid?: string; args?: string | null; body?: s
     rpcid: typeof payload.rpcid === 'string' ? payload.rpcid : parsed.rpcid,
     args: typeof payload.args === 'string' ? payload.args : '[]',
   });
-  applyParsed(parsed, dom?.tier);
+  applyParsed(parsed, dom?.tier, { allowRegression: true });
 }
 
-function handleReplayResult(payload: { body?: string; error?: string }): void {
+function handleReplayResult(payload: { id?: number; body?: string; error?: string }): void {
   setSpinning(false);
   if (spinTimer !== null) {
     clearTimeout(spinTimer);
     spinTimer = null;
   }
+  const allowRegression =
+    typeof payload.id === 'number' ? forcedReplayIds.delete(payload.id) : false;
   if (!enabled || !payload || typeof payload.body !== 'string') return;
   const parsed = parseUsageRpcResponse(payload.body);
-  if (parsed) applyParsed(parsed, undefined);
+  if (parsed) applyParsed(parsed, undefined, { allowRegression });
 }
 
 /** A Gemini generation just finished → usage changed → refresh shortly after. */
@@ -911,7 +1018,7 @@ function setupObserverBridge(): void {
     if (data.type === 'capture') {
       handleCapture(data.payload as { rpcid?: string; args?: string | null; body?: string });
     } else if (data.type === 'replay-result') {
-      handleReplayResult(data.payload as { body?: string; error?: string });
+      handleReplayResult(data.payload as { id?: number; body?: string; error?: string });
     } else if (data.type === 'generation-complete') {
       onGenerationComplete();
     }
@@ -932,7 +1039,7 @@ function teardownObserverBridge(): void {
 }
 
 /** Ask the MAIN-world observer to re-issue the usage RPC with the page's tokens. */
-function requestReplay(): void {
+function requestReplay(allowRegression = false): void {
   if (!recipe) return;
   setSpinning(true);
   if (spinTimer !== null) clearTimeout(spinTimer);
@@ -941,9 +1048,19 @@ function requestReplay(): void {
     setSpinning(false);
   }, 6_000);
   const id = ++replaySeq;
+  if (allowRegression) forcedReplayIds.add(id);
   try {
     window.postMessage(
-      { source: OBS_CMD, type: 'replay', payload: { id, rpcid: recipe.rpcid, args: recipe.args } },
+      {
+        source: OBS_CMD,
+        type: 'replay',
+        payload: {
+          id,
+          rpcid: recipe.rpcid,
+          args: recipe.args,
+          sourcePath: location.pathname || '/app',
+        },
+      },
       location.origin,
     );
   } catch {

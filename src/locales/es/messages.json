@@ -1600,8 +1600,8 @@
     "description": "Accessible label / tooltip for the usage status pill near the composer."
   },
   "usageStatusDaily": {
-    "message": "Diario",
-    "description": "Label for the rolling daily usage bar in the usage status pill."
+    "message": "5h",
+    "description": "Label for the rolling 5-hour usage window bar in the usage status pill."
   },
   "usageStatusWeekly": {
     "message": "Semanal",
@@ -1640,7 +1640,7 @@
     "description": "Popup toggle label to enable the usage status pill."
   },
   "usageStatusToggleHint": {
-    "message": "Mostrar los límites de uso diario y semanal junto al cuadro de chat",
+    "message": "Mostrar los límites de uso de 5h y semanal junto al cuadro de chat",
     "description": "Popup helper text under the usage status bar toggle."
   },
   "export_select_mode_select_all": {
