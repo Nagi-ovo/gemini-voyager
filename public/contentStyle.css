@@ -118,7 +118,12 @@
   border-radius: 12px;
   overflow: visible;
   contain: layout;
-  pointer-events: none;
+  /* Hover hit-zone = this full reserved 24px column, NOT just the thin visible
+   * bar. When the bar is narrowed the visible `::before` can be ~4px, so making
+   * only it interactive forced users to land exactly on the thin line to wake
+   * the slider / reveal the preview toggle. Keeping the element interactive lets
+   * a hover anywhere in the reserved width (where the bar "used to be") trigger. */
+  pointer-events: auto;
 }
 
 /* Visual background layer — width adjustable via edge drag, dots unaffected */
@@ -667,25 +672,47 @@ html.dark .timeline-left-slider::before {
 }
 
 .timeline-preview-search {
-  padding: 8px 10px;
+  position: relative;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--timeline-tooltip-border);
   flex-shrink: 0;
+}
+
+/* Leading magnifier glyph (mask so it inherits the theme's muted color). */
+.timeline-preview-search::before {
+  content: '';
+  position: absolute;
+  left: 23px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  opacity: 0.55;
+  background-color: var(--timeline-dot-color);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath d='M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath d='M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
 .timeline-preview-search input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--timeline-tooltip-border);
-  border-radius: 6px;
-  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 7px 10px 7px 30px;
   font-family: inherit;
   font-size: 13px;
   line-height: 1.4;
-  background: transparent;
+  background: var(--timeline-search-bg, rgba(120, 130, 150, 0.12));
   color: var(--timeline-tooltip-text);
   text-align: start;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .timeline-preview-search input::placeholder {
@@ -695,43 +722,56 @@ html.dark .timeline-left-slider::before {
 
 .timeline-preview-search input:focus {
   border-color: var(--timeline-dot-active-color);
+  background: var(--timeline-tooltip-bg);
+  box-shadow: 0 0 0 3px oklch(0.55 0.17 155 / 0.15);
 }
 
 .timeline-preview-list {
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px 0;
-  max-height: calc(100% - 42px);
+  padding: 6px;
+  max-height: calc(100% - 50px);
 }
 
 .timeline-preview-item {
-  padding: 6px 10px 6px 6px;
+  padding: 7px 10px;
   cursor: pointer;
   color: var(--timeline-tooltip-text);
   font-size: 13px;
   line-height: 1.4;
-  border-left: 3px solid transparent;
+  border-radius: 8px;
   display: flex;
-  align-items: baseline;
-  gap: 6px;
-  transition: background-color 0.1s ease;
+  align-items: center;
+  gap: 9px;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
 }
 
 .timeline-preview-item:hover {
-  background-color: rgba(59, 130, 246, 0.08);
+  background-color: oklch(0.55 0.17 155 / 0.08);
 }
 
 .timeline-preview-item.active {
-  border-left-color: var(--timeline-dot-active-color);
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: oklch(0.55 0.17 155 / 0.14);
 }
 
-.timeline-preview-item.starred .timeline-preview-index::after {
+.timeline-preview-item.active .timeline-preview-index {
+  color: var(--timeline-dot-active-color);
+  font-weight: 700;
+  opacity: 1;
+}
+
+/* Star marker as a trailing badge (pinned to the row's right edge) so it never
+ * crowds the fixed-width number gutter. */
+.timeline-preview-item.starred::after {
   content: '\2605';
-  margin-inline-start: 2px;
+  flex-shrink: 0;
+  margin-inline-start: 6px;
   color: var(--timeline-star-color);
   font-size: 11px;
+  line-height: 1;
 }
 
 .timeline-preview-starred-time {
@@ -746,12 +786,14 @@ html.dark .timeline-left-slider::before {
 .timeline-preview-index {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   flex-shrink: 0;
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
   color: var(--timeline-dot-color);
-  min-width: 14px;
-  text-align: left;
+  opacity: 0.65;
+  min-width: 16px;
+  text-align: center;
 }
 
 .timeline-preview-text {
@@ -772,10 +814,10 @@ html.dark .timeline-left-slider::before {
 
 /* Search highlights — preview panel */
 .timeline-preview-highlight {
-  background-color: rgba(59, 130, 246, 0.2);
+  background-color: oklch(0.55 0.17 155 / 0.22);
   color: inherit;
-  border-radius: 2px;
-  padding: 0;
+  border-radius: 3px;
+  padding: 0 1px;
   pointer-events: none;
 }
 
@@ -792,18 +834,23 @@ mark.timeline-search-highlight {
   background-color: rgba(11, 18, 32, 0.95);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  --timeline-search-bg: rgba(255, 255, 255, 0.06);
 }
 
 .theme-host.dark-theme .timeline-preview-item:hover {
-  background-color: rgba(96, 165, 250, 0.08);
+  background-color: oklch(0.77 0.15 163 / 0.1);
 }
 
 .theme-host.dark-theme .timeline-preview-item.active {
-  background-color: rgba(96, 165, 250, 0.12);
+  background-color: oklch(0.77 0.15 163 / 0.16);
+}
+
+.theme-host.dark-theme .timeline-preview-search input:focus {
+  box-shadow: 0 0 0 3px oklch(0.77 0.15 163 / 0.18);
 }
 
 .theme-host.dark-theme .timeline-preview-highlight {
-  background-color: rgba(96, 165, 250, 0.25);
+  background-color: oklch(0.77 0.15 163 / 0.28);
 }
 
 .theme-host.dark-theme mark.timeline-search-highlight {
@@ -814,6 +861,7 @@ mark.timeline-search-highlight {
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  --timeline-search-bg: rgba(15, 23, 42, 0.05);
 }
 
 /* Prompt Manager styles (scoped) */
