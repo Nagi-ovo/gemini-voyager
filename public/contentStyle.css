@@ -11960,3 +11960,17 @@ body.gv-rtl .gv-coach-dismiss {
 .theme-host.light-theme code-block .hljs-strong {
   font-weight: 700;
 }
+
+/* ============================================================================
+ * Sticky copy/action bar on code blocks (#752).
+ *
+ * Gemini's code block header (language label, copy button, expand button)
+ * scrolls away when code is long. Making it sticky at the top keeps the
+ * copy button accessible without scrolling back up.
+ * ========================================================================== */
+code-block .code-block-decoration,
+.code-block .code-block-decoration {
+  position: sticky !important;
+  top: 0;
+  z-index: 1;
+}
