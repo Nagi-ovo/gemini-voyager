@@ -16,6 +16,10 @@ La façon la plus simple de commencer. Les mises à jour sont automatiques.
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Télécharger-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Installer depuis le Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=fr)
 
+**Microsoft Edge :**
+
+[<img src="https://img.shields.io/badge/Microsoft_Edge-Télécharger-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Installer depuis les modules complémentaires Microsoft Edge" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+
 > **Utilisateurs Edge :** Voyager reste maintenu sur [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) pour les personnes qui ont besoin d'Edge sur mobile ou tablette. Si la validation tarde, Chrome Web Store et les paquets GitHub restent disponibles.
 
 **Firefox :**

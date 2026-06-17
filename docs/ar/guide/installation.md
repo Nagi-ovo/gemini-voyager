@@ -16,6 +16,10 @@
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="التثبيت من سوق Chrome الإلكتروني" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ar)
 
+**Microsoft Edge:**
+
+[<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="التثبيت من وظائف Microsoft Edge الإضافية" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+
 > **لمستخدمي Edge:** سيواصل Voyager صيانة ونشر إصدار [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) لمن يحتاجون Edge على الهاتف أو الجهاز اللوحي. إذا تأخرت المراجعة، تبقى نسخة Chrome Web Store وحزم GitHub اليدوية متاحة.
 
 **Firefox:**

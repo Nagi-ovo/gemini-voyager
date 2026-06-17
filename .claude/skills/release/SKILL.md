@@ -124,7 +124,7 @@ If the workflow's `## 📥 Installation` marker is missing (e.g., workflow faile
 
 ## Step 7 — Optional Edge compatibility zip
 
-Voyager no longer recommends a dedicated Edge Add-ons build because Edge store reviews are too slow. Edge users should install Voyager from the Chrome Web Store; the Chrome Web Store build works in Edge.
+Voyager maintains the Edge Add-ons build for users who need Edge on mobile or tablet, so the Installation block includes a Microsoft Edge Add-ons button. The Chrome Web Store build also works in Edge if a store review is delayed.
 
 Skip this step during normal releases. Only run it when the user explicitly asks for an Edge compatibility zip or says they still want to submit a build to the Edge Add-ons partner dashboard.
 

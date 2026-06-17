@@ -16,6 +16,10 @@
 
 [<img src="https://img.shields.io/badge/Chrome_应用店-前往下载-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="从 Chrome 网上应用店安装" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=zh)
 
+**Microsoft Edge：**
+
+[<img src="https://img.shields.io/badge/Microsoft_Edge-前往下载-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="从 Microsoft Edge Add-ons 安装" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+
 > **Edge 用户**：考虑到移动端和平板用户需求，Voyager 会继续维护并发布 [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) 版本。若商店审核延迟，仍可临时使用 Chrome 应用店版本或 GitHub 手动包。
 
 **Firefox：**

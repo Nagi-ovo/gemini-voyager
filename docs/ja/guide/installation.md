@@ -16,6 +16,10 @@
 
 [<img src="https://img.shields.io/badge/Chrome_ウェブストア-ダウンロード-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome ウェブストアからインストール" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ja)
 
+**Microsoft Edge：**
+
+[<img src="https://img.shields.io/badge/Microsoft_Edge-ダウンロード-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Microsoft Edge Add-ons からインストール" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+
 > **Edge ユーザー：**モバイルやタブレットで Edge が必要なユーザーのため、Voyager は [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) 版の保守と公開を継続します。審査が遅れる場合は Chrome Web Store 版または GitHub の手動パッケージも利用できます。
 
 **Firefox：**

@@ -111,7 +111,7 @@ When external PRs landed, the column carries information worth a column. Owner r
 ### Layout notes
 
 - The `## 📥 Installation` section and the Safari block are appended by the workflow — do not duplicate them. They sit below the Chinese tables.
-- The Installation block should show Chrome Web Store + Firefox buttons, a short note telling Edge users to install from the Chrome Web Store, and no Microsoft Edge Add-ons badge.
+- The Installation block should show Chrome Web Store + Microsoft Edge Add-ons + Firefox buttons (Edge button links to `https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne`), plus the "Edge users: Voyager is still maintained on Edge Add-ons" note.
 
 ## Generation procedure
 
@@ -194,7 +194,7 @@ Combine sections into `release_body.md` in this order (top to bottom):
 gh release edit v{VERSION} --notes-file release_body.md
 ```
 
-This overwrites the body. The asset list and Installation block are preserved if they live as a separate field — check `gh release view v{VERSION} --json body` immediately after and confirm the Installation section is still present and does not include a Microsoft Edge Add-ons badge. If it disappeared (because `--notes-file` replaced the entire body, including workflow-appended tail), append the Installation block manually before re-running.
+This overwrites the body. The asset list and Installation block are preserved if they live as a separate field — check `gh release view v{VERSION} --json body` immediately after and confirm the Installation section is still present and includes the Microsoft Edge Add-ons button alongside Chrome Web Store and Firefox. If it disappeared (because `--notes-file` replaced the entire body, including workflow-appended tail), append the Installation block manually before re-running.
 
 **Safer alternative:** first read the current body, strip the curated sections if present (from a previous attempt), prepend the new curated sections, and write back. This preserves whatever the workflow put there:
 

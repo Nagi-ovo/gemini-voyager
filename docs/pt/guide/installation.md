@@ -16,6 +16,10 @@ A forma mais simples de começar. As atualizações são automáticas.
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Instalar da Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=pt)
 
+**Microsoft Edge:**
+
+[<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Instalar do Microsoft Edge Add-ons" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+
 > **Usuários do Edge:** o Voyager continuará mantendo e publicando a versão do [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) para quem precisa do Edge em celulares ou tablets. Se a revisão atrasar, a Chrome Web Store e os pacotes manuais do GitHub continuam disponíveis.
 
 **Firefox:**
