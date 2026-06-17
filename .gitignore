@@ -60,6 +60,7 @@ scripts/chrome-profile/
 .worktrees/
 
 # Local agent outputs
+.entire/
 .agent/
 docs/plans/
 output/
