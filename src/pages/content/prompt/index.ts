@@ -1,7 +1,7 @@
 /* Prompt Manager content module
  * - Injects a floating trigger button using the extension icon
  * - Opens a small anchored panel above the trigger (default)
- * - Panel supports: i18n language switch, add prompt, tag chips, search, copy, import/export
+ * - Panel supports: i18n language switch, add prompt, tag chips, search, copy
  * - Optional lock to pin panel position; when locked, panel is draggable and persisted
  */
 import DOMPurify from 'dompurify';
@@ -9,24 +9,14 @@ import 'katex/dist/katex.min.css';
 import type { marked as MarkedFn } from 'marked';
 import browser from 'webextension-polyfill';
 
-import {
-  accountIsolationService,
-  detectAccountContextFromDocument,
-} from '@/core/services/AccountIsolationService';
 import { logger } from '@/core/services/LoggerService';
-import { exportBackupableSyncSettings } from '@/core/services/SettingsBackupService';
 import { promptStorageService } from '@/core/services/StorageService';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
 import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
-import { EXTENSION_VERSION, compareVersions } from '@/core/utils/version';
-import {
-  getTimelineHierarchyStorageKeysToRead,
-  resolveTimelineHierarchyDataForStorageScope,
-} from '@/pages/content/timeline/hierarchyStorage';
-import { normalizeTimelineHierarchyData } from '@/pages/content/timeline/hierarchyTypes';
+import { compareVersions } from '@/core/utils/version';
 import { getCurrentLanguage, getTranslationSync, initI18n, setCachedLanguage } from '@/utils/i18n';
 import {
   APP_LANGUAGES,
@@ -39,13 +29,10 @@ import type { TranslationKey } from '@/utils/translations';
 
 import { hasUnreadChangelog, openChangelog, showChangelogModalDirect } from '../changelog/index';
 import { insertTextIntoChatInput } from '../chatInput/index';
-import { createFolderStorageAdapter } from '../folder/storage/FolderStorageAdapter';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
 import { StarredMessagesService } from '../timeline/StarredMessagesService';
 import type { StarredMessage } from '../timeline/starredTypes';
 import { extractPlainTitle } from './compactTitle';
-import { parsePromptImportPayload } from './importPayload';
-import { loadFolderDataForLocalBackup } from './localBackup';
 import { activatePromptText } from './promptClickAction';
 import { getScrollHintState } from './scrollHint';
 import {
@@ -125,15 +112,6 @@ function getRuntimeUrl(path: string): string {
   } catch {
     const win = window as Window & { chrome?: { runtime?: { getURL?: (path: string) => string } } };
     return win.chrome?.runtime?.getURL?.(path) || path;
-  }
-}
-
-function safeParseJSON<T>(raw: string, fallback: T): T {
-  try {
-    const v = JSON.parse(raw);
-    return v as T;
-  } catch {
-    return fallback;
   }
 }
 
@@ -764,69 +742,33 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const list = createEl('div', 'gv-pm-list');
 
     const footer = createEl('div', 'gv-pm-footer');
-    const importInput = createEl('input') as HTMLInputElement;
-    importInput.type = 'file';
-    importInput.accept = '.json,application/json';
-    importInput.className = 'gv-pm-import-input';
-
     // Primary view switch: the previous local backup slot now opens the
     // starred library, and flips back to Prompt Manager inside that view.
     const backupBtn = createEl('button', 'gv-pm-backup-btn');
     backupBtn.setAttribute('type', 'button');
 
-    // Official Website button - primary action (right side)
-    const websiteBtn = createEl('a', 'gv-pm-website-btn');
-    websiteBtn.target = '_blank';
-    websiteBtn.rel = 'noreferrer';
-    // Initial text/href will be set in refreshUITexts
-
     // Primary actions container
     const primaryActions = createEl('div', 'gv-pm-footer-actions');
     primaryActions.appendChild(backupBtn);
-    primaryActions.appendChild(websiteBtn);
 
     // Secondary actions container
     const secondaryActions = createEl('div', 'gv-pm-footer-secondary');
-
-    const localBackupBtn = createEl('button', 'gv-pm-export-btn gv-pm-local-backup-btn');
-    localBackupBtn.textContent = i18n.t('pm_backup');
-    localBackupBtn.title = i18n.t('pm_backup_tooltip');
-
-    const importBtn = createEl('button', 'gv-pm-import-btn');
-    importBtn.textContent = i18n.t('pm_import');
-
-    const exportBtn = createEl('button', 'gv-pm-export-btn');
-    exportBtn.textContent = i18n.t('pm_export');
 
     const settingsBtn = createEl('button', 'gv-pm-settings');
     settingsBtn.textContent = i18n.t('pm_settings');
     settingsBtn.title = i18n.t('pm_settings_tooltip');
 
-    const gh = document.createElement('a');
-    gh.className = 'gv-pm-gh';
-    gh.href = 'https://github.com/Nagi-ovo/gemini-voyager';
-    gh.target = '_blank';
-    gh.rel = 'noreferrer';
-    gh.title = i18n.t('starProject');
+    const supportLink = document.createElement('a');
+    supportLink.className = 'gv-pm-support';
+    supportLink.target = '_blank';
+    supportLink.rel = 'noreferrer';
+    supportLink.title = i18n.t('starProject');
 
-    // Add icon and text
-    const ghIcon = document.createElement('span');
-    ghIcon.className = 'gv-pm-gh-icon';
-    const ghText = document.createElement('span');
-    ghText.className = 'gv-pm-gh-text';
-    ghText.textContent = i18n.t('starProject');
-    gh.appendChild(ghIcon);
-    gh.appendChild(ghText);
-
-    secondaryActions.appendChild(localBackupBtn);
-    secondaryActions.appendChild(importBtn);
-    secondaryActions.appendChild(exportBtn);
     secondaryActions.appendChild(settingsBtn);
-    secondaryActions.appendChild(gh);
+    secondaryActions.appendChild(supportLink);
 
     footer.appendChild(primaryActions);
     footer.appendChild(secondaryActions);
-    footer.appendChild(importInput);
 
     const addForm = elFromHTML(
       `<form class="gv-pm-add-form gv-hidden">
@@ -1681,15 +1623,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     function refreshUITexts(): void {
       // Keep custom icon + label
       addBtn.textContent = i18n.t('pm_add');
-      localBackupBtn.textContent = i18n.t('pm_backup');
-      localBackupBtn.title = i18n.t('pm_backup_tooltip');
-      importBtn.textContent = i18n.t('pm_import');
-      exportBtn.textContent = i18n.t('pm_export');
-
-      // Update website button
-      websiteBtn.textContent = '🌐 ' + i18n.t('officialDocs');
+      supportLink.textContent = i18n.t('starProject');
+      supportLink.title = i18n.t('starProject');
       i18n.get().then((lang) => {
-        websiteBtn.href =
+        supportLink.href =
           lang === 'zh'
             ? 'https://voyager.nagi.fun/guide/sponsor.html'
             : `https://voyager.nagi.fun/${lang}/guide/sponsor.html`;
@@ -1697,9 +1634,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
       settingsBtn.textContent = i18n.t('pm_settings');
       settingsBtn.title = i18n.t('pm_settings_tooltip');
-      gh.title = i18n.t('starProject');
-      const ghTextEl = gh.querySelector('.gv-pm-gh-text');
-      if (ghTextEl) ghTextEl.textContent = i18n.t('starProject');
       (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement).placeholder =
         i18n.t('pm_name_placeholder');
       (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).placeholder =
@@ -2138,278 +2072,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       renderActiveList();
     });
 
-    exportBtn.addEventListener('click', async () => {
-      try {
-        const data = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
-        const payload = {
-          format: 'gemini-voyager.prompts.v1',
-          exportedAt: new Date().toISOString(),
-          items: data,
-        };
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `prompts-${Date.now()}.json`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      } catch {
-        setNotice('Export failed', 'err');
-      }
-    });
-
-    async function runLocalBackup(): Promise<void> {
-      try {
-        // Read prompts
-        const prompts = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
-        const promptPayload = {
-          format: 'gemini-voyager.prompts.v1',
-          exportedAt: new Date().toISOString(),
-          version: EXTENSION_VERSION,
-          items: prompts,
-        };
-
-        // Read folders for the current platform (Safari-compatible: uses storage adapter)
-        const folderStorage = createFolderStorageAdapter();
-        const folderData = await loadFolderDataForLocalBackup(
-          folderStorage,
-          window.location.href,
-          document,
-        );
-
-        // Create folder export payload with correct format
-        const folderPayload = {
-          format: 'gemini-voyager.folders.v1',
-          exportedAt: new Date().toISOString(),
-          version: EXTENSION_VERSION,
-          data: {
-            folders: folderData.folders || [],
-            folderContents: folderData.folderContents || {},
-          },
-        };
-
-        const settingsPayload = await exportBackupableSyncSettings();
-        const settingsCount = Object.keys(settingsPayload.data).length;
-
-        // Count conversations
-        const conversationCount = Object.values(folderData.folderContents || {}).reduce(
-          (sum: number, convs: unknown) => sum + (Array.isArray(convs) ? convs.length : 0),
-          0,
-        );
-
-        let timelineHierarchyData = normalizeTimelineHierarchyData(null);
-        try {
-          const context = detectAccountContextFromDocument(window.location.href, document);
-          const scope =
-            context.routeUserId || context.email
-              ? await accountIsolationService.resolveAccountScope({
-                  pageUrl: window.location.href,
-                  routeUserId: context.routeUserId,
-                  email: context.email,
-                })
-              : null;
-          const timelineHierarchyStorage = (await chrome.storage.local.get(
-            getTimelineHierarchyStorageKeysToRead(scope?.accountKey),
-          )) as Record<string, unknown>;
-          timelineHierarchyData = resolveTimelineHierarchyDataForStorageScope(
-            timelineHierarchyStorage,
-            scope?.accountKey,
-            scope?.routeUserId ?? null,
-          );
-        } catch (error) {
-          console.warn(
-            '[PromptManager] Failed to load scoped timeline hierarchy backup data:',
-            error,
-          );
-        }
-        const timelineHierarchyPayload = {
-          format: 'gemini-voyager.timeline-hierarchy.v1' as const,
-          exportedAt: new Date().toISOString(),
-          version: EXTENSION_VERSION,
-          data: timelineHierarchyData,
-        };
-
-        // Create metadata
-        const metadata = {
-          version: EXTENSION_VERSION,
-          timestamp: new Date().toISOString(),
-          includesSettings: true,
-          includesPrompts: true,
-          includesFolders: true,
-          settingsCount,
-          promptCount: prompts.length,
-          folderCount: folderData.folders?.length || 0,
-          conversationCount,
-          timelineHierarchyConversationCount: Object.keys(timelineHierarchyData.conversations || {})
-            .length,
-        };
-
-        // Generate timestamp for folder/file name
-        const pad = (n: number) => String(n).padStart(2, '0');
-        const d = new Date();
-        const timestamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-        const folderName = `backup-${timestamp}`;
-
-        // Check File System Access API support
-        if ('showDirectoryPicker' in window) {
-          // Modern browsers (Chrome, Edge) - use File System Access API
-          const dirHandle = await (
-            window as Window & {
-              showDirectoryPicker: (opts?: { mode?: string }) => Promise<FileSystemDirectoryHandle>;
-            }
-          ).showDirectoryPicker({ mode: 'readwrite' });
-          if (!dirHandle) {
-            setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');
-            return;
-          }
-
-          const backupDir = await dirHandle.getDirectoryHandle(folderName, { create: true });
-
-          // Write files
-          const promptsFile = await backupDir.getFileHandle('prompts.json', { create: true });
-          const promptsWritable = await promptsFile.createWritable();
-          await promptsWritable.write(JSON.stringify(promptPayload, null, 2));
-          await promptsWritable.close();
-
-          const foldersFile = await backupDir.getFileHandle('folders.json', { create: true });
-          const foldersWritable = await foldersFile.createWritable();
-          await foldersWritable.write(JSON.stringify(folderPayload, null, 2));
-          await foldersWritable.close();
-
-          const settingsFile = await backupDir.getFileHandle('settings.json', { create: true });
-          const settingsWritable = await settingsFile.createWritable();
-          await settingsWritable.write(JSON.stringify(settingsPayload, null, 2));
-          await settingsWritable.close();
-
-          const metaFile = await backupDir.getFileHandle('metadata.json', { create: true });
-          const metaWritable = await metaFile.createWritable();
-          await metaWritable.write(JSON.stringify(metadata, null, 2));
-          await metaWritable.close();
-
-          const timelineHierarchyFile = await backupDir.getFileHandle('timeline-hierarchy.json', {
-            create: true,
-          });
-          const timelineHierarchyWritable = await timelineHierarchyFile.createWritable();
-          await timelineHierarchyWritable.write(JSON.stringify(timelineHierarchyPayload, null, 2));
-          await timelineHierarchyWritable.close();
-
-          setNotice(
-            `✓ Backed up ${prompts.length} prompts, ${folderData.folders?.length || 0} folders`,
-            'ok',
-          );
-        } else {
-          // Fallback for Firefox, Safari - download as ZIP file.
-          // Load JSZip on demand so it stays out of the per-page content chunk.
-          const { default: JSZip } = await import('jszip');
-          const zip = new JSZip();
-
-          // Add files to ZIP
-          zip.file('prompts.json', JSON.stringify(promptPayload, null, 2));
-          zip.file('folders.json', JSON.stringify(folderPayload, null, 2));
-          zip.file('settings.json', JSON.stringify(settingsPayload, null, 2));
-          zip.file('metadata.json', JSON.stringify(metadata, null, 2));
-          zip.file('timeline-hierarchy.json', JSON.stringify(timelineHierarchyPayload, null, 2));
-
-          // Generate ZIP file
-          const zipBlob = await zip.generateAsync({ type: 'blob' });
-
-          // Download ZIP file
-          const url = URL.createObjectURL(zipBlob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `${folderName}.zip`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          URL.revokeObjectURL(url);
-
-          setNotice(
-            `✓ Downloaded ${folderName}.zip (${prompts.length} prompts, ${folderData.folders?.length || 0} folders)`,
-            'ok',
-          );
-        }
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          setNotice(i18n.t('pm_backup_cancelled') || 'Backup cancelled', 'err');
-        } else {
-          console.error('[PromptManager] Backup failed:', err);
-          setNotice(i18n.t('pm_backup_error') || '✗ Backup failed', 'err');
-        }
-      }
-    }
-
     backupBtn.addEventListener('click', () => {
       switchPanelView(panelView === 'starred' ? 'prompts' : 'starred');
-    });
-
-    localBackupBtn.addEventListener('click', () => {
-      void runLocalBackup();
-    });
-
-    importBtn.addEventListener('click', () => importInput.click());
-    importInput.addEventListener('change', async () => {
-      const file = importInput.files && importInput.files[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const json = safeParseJSON<unknown>(text, null);
-        const parsedImport = parsePromptImportPayload(json);
-
-        if (parsedImport.status === 'invalid') {
-          setNotice(i18n.t('pm_import_invalid') || 'Invalid file format', 'err');
-          return;
-        }
-
-        if (parsedImport.status === 'empty') {
-          setNotice(i18n.t('pm_import_empty') || 'Import file contains no prompts', 'err');
-          return;
-        }
-
-        const valid: PromptItem[] = parsedImport.items.map((item) => {
-          const it: PromptItem = {
-            id: uid(),
-            text: item.text,
-            tags: item.tags,
-            createdAt: Date.now(),
-          };
-          if (item.name) it.name = item.name;
-          return it;
-        });
-
-        // Merge by text equality (case-insensitive). Local fields win over
-        // the import — except `name`, which we inherit from the import only
-        // when the local item doesn't already have one (strictly additive).
-        const map = new Map<string, PromptItem>();
-        for (const it of items) map.set(it.text.toLowerCase(), it);
-        for (const it of valid) {
-          const k = it.text.toLowerCase();
-          if (map.has(k)) {
-            const prev = map.get(k)!;
-            const mergedTags = dedupeTags([...(prev.tags || []), ...(it.tags || [])]);
-            prev.tags = mergedTags;
-            if (!prev.name && it.name) prev.name = it.name;
-            prev.updatedAt = Date.now();
-            map.set(k, prev);
-          } else {
-            map.set(k, it);
-          }
-        }
-
-        items = Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-        await writeStorage(STORAGE_KEYS.items, items);
-        setNotice(
-          (i18n.t('pm_import_success') || 'Imported').replace('{count}', String(valid.length)),
-          'ok',
-        );
-        renderTags();
-        renderList();
-      } catch {
-        setNotice(i18n.t('pm_import_invalid') || 'Invalid file format', 'err');
-      } finally {
-        importInput.value = '';
-      }
     });
 
     // Initialize
