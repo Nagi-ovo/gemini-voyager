@@ -89,6 +89,8 @@ class DefaultModelManager {
   // a few confirmations instead of reopening the menu forever (#761).
   private pendingModelSwitchKey: string | null = null;
   private consecutiveRejectedModelSwitches = 0;
+  private pendingThinkingSwitchKey: string | null = null;
+  private consecutiveRejectedThinkingSwitches = 0;
   // Master kill switch — when false, all auto-apply paths short-circuit but
   // the in-page star UI still works so users can set/clear defaults. Loaded
   // at init and kept in sync via chrome.storage.onChanged so a popup flip
@@ -995,6 +997,8 @@ class DefaultModelManager {
         this.failureToastShown = false;
         this.pendingModelSwitchKey = null;
         this.consecutiveRejectedModelSwitches = 0;
+        this.pendingThinkingSwitchKey = null;
+        this.consecutiveRejectedThinkingSwitches = 0;
       }
     };
     try {
@@ -1050,23 +1054,25 @@ class DefaultModelManager {
     this.consecutiveFailures = 0;
     this.pendingModelSwitchKey = null;
     this.consecutiveRejectedModelSwitches = 0;
+    this.pendingThinkingSwitchKey = null;
+    this.consecutiveRejectedThinkingSwitches = 0;
 
     // Start checking loop
     let attempts = 0;
-    const maxAttempts = 20;
+    const maxAttempts = 5;
 
     if (this.checkTimer) clearInterval(this.checkTimer);
 
     this.checkTimer = window.setInterval(async () => {
       // Abort if session changed (e.g., user navigated away and came back)
       if (this.autoSelectSessionId !== sessionId) {
-        if (this.checkTimer) clearInterval(this.checkTimer);
+        this.stopLockTimer();
         return;
       }
 
       attempts++;
       if (attempts > maxAttempts) {
-        if (this.checkTimer) clearInterval(this.checkTimer);
+        this.stopLockTimer();
         return;
       }
 
@@ -1087,10 +1093,12 @@ class DefaultModelManager {
     const thinkingOk = !targetThinking || this.thinkingMatchesLines(targetThinking, lines);
 
     if (modelOk && thinkingOk) {
-      if (this.checkTimer) clearInterval(this.checkTimer);
+      this.stopLockTimer();
       this.consecutiveFailures = 0;
       this.pendingModelSwitchKey = null;
       this.consecutiveRejectedModelSwitches = 0;
+      this.pendingThinkingSwitchKey = null;
+      this.consecutiveRejectedThinkingSwitches = 0;
       return;
     }
 
@@ -1106,14 +1114,22 @@ class DefaultModelManager {
         if (this.consecutiveRejectedModelSwitches >= this.maxConsecutiveFailures) {
           this.consecutiveFailures = this.maxConsecutiveFailures;
           this.maybeNotifyAutoApplyFailure();
-          if (this.checkTimer) clearInterval(this.checkTimer);
+          this.stopLockTimer();
           return;
         }
       }
 
-      const clicked = await this.tryLockToModel(targetModel);
-      if (clicked) {
+      const result = await this.tryLockToModel(targetModel);
+      if (result === 'switched') {
         this.pendingModelSwitchKey = switchKey;
+      } else if (result === 'already-selected') {
+        this.pendingModelSwitchKey = null;
+        this.consecutiveRejectedModelSwitches = 0;
+        if (!thinkingOk && targetThinking) {
+          await this.tryLockToThinkingLevel(targetThinking);
+        } else {
+          this.stopLockTimer();
+        }
       } else {
         this.pendingModelSwitchKey = null;
         this.consecutiveRejectedModelSwitches = 0;
@@ -1122,7 +1138,24 @@ class DefaultModelManager {
     }
 
     if (!thinkingOk && targetThinking) {
-      await this.tryLockToThinkingLevel(targetThinking);
+      const switchKey = this.getThinkingSwitchKey(targetThinking);
+      if (this.pendingThinkingSwitchKey === switchKey) {
+        this.consecutiveRejectedThinkingSwitches++;
+        if (this.consecutiveRejectedThinkingSwitches >= this.maxConsecutiveFailures) {
+          this.consecutiveFailures = this.maxConsecutiveFailures;
+          this.maybeNotifyAutoApplyFailure();
+          this.stopLockTimer();
+          return;
+        }
+      }
+
+      const clicked = await this.tryLockToThinkingLevel(targetThinking);
+      if (clicked) {
+        this.pendingThinkingSwitchKey = switchKey;
+      } else {
+        this.pendingThinkingSwitchKey = null;
+        this.consecutiveRejectedThinkingSwitches = 0;
+      }
     }
   }
 
@@ -1178,7 +1211,19 @@ class DefaultModelManager {
     return model.kind === 'id' ? `id:${model.id}` : `name:${model.name.toLowerCase().trim()}`;
   }
 
-  private async tryLockToModel(targetModel: DefaultModelSetting): Promise<boolean> {
+  private getThinkingSwitchKey(thinking: DefaultThinkingLevel): string {
+    return `thinking:${thinking.index}:${thinking.label.toLowerCase().trim()}`;
+  }
+
+  private stopLockTimer() {
+    if (!this.checkTimer) return;
+    clearInterval(this.checkTimer);
+    this.checkTimer = null;
+  }
+
+  private async tryLockToModel(
+    targetModel: DefaultModelSetting,
+  ): Promise<'switched' | 'already-selected' | 'failed'> {
     // Ported from https://github.com/urzeye/tampermonkey-scripts (Gemini Helper)
     const normalize = (s: string) => s.toLowerCase().trim();
     const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1188,7 +1233,7 @@ class DefaultModelManager {
     // 1. Find selector button (shared helper keeps selectors in sync with the
     //    fast-path check in readTriggerPillLines — #756).
     const selectorBtn = this.findSelectorButton();
-    if (!selectorBtn) return false;
+    if (!selectorBtn) return 'failed';
 
     // 2. Check current model text - early return if already correct
     const currentText = selectorBtn.textContent || '';
@@ -1198,13 +1243,13 @@ class DefaultModelManager {
     // This helps avoid unnecessary menu clicks when the model is already selected
     if (targetAsWholeWord.test(normalizedCurrent) || normalizedCurrent === targetName) {
       // Already correct
-      if (this.checkTimer) clearInterval(this.checkTimer);
-      return false;
+      this.stopLockTimer();
+      return 'already-selected';
     }
 
     // 3. Switch model
     // This part is tricky because we need to open the menu and click safely
-    if (this.isLocked) return false; // Prevent concurrent locks
+    if (this.isLocked) return 'failed'; // Prevent concurrent locks
     this.isLocked = true;
 
     try {
@@ -1218,9 +1263,9 @@ class DefaultModelManager {
         this.consecutiveFailures++;
         this.maybeNotifyAutoApplyFailure();
         if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
-          clearInterval(this.checkTimer);
+          this.stopLockTimer();
         }
-        return false;
+        return 'failed';
       }
 
       const items = menuPanel.querySelectorAll(MODE_ITEM_SELECTOR);
@@ -1245,6 +1290,7 @@ class DefaultModelManager {
           } else {
             // Already selected, close menu to avoid stuck UI
             document.body.click();
+            this.stopLockTimer();
           }
 
           found = true;
@@ -1264,6 +1310,7 @@ class DefaultModelManager {
             } else {
               // Already selected, close menu to avoid stuck UI
               document.body.click();
+              this.stopLockTimer();
             }
             found = true;
             break;
@@ -1287,6 +1334,7 @@ class DefaultModelManager {
             } else {
               // Already selected, close menu to avoid stuck UI
               document.body.click();
+              this.stopLockTimer();
             }
             found = true;
             break;
@@ -1308,28 +1356,28 @@ class DefaultModelManager {
         this.maybeNotifyAutoApplyFailure();
         if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
           if (this.checkTimer) {
-            clearInterval(this.checkTimer);
+            this.stopLockTimer();
           }
         }
-        return false;
+        return 'failed';
       }
 
-      return switchedModel;
+      return switchedModel ? 'switched' : 'already-selected';
     } catch (e) {
       console.error('Auto lock failed', e);
-      return false;
+      return 'failed';
     } finally {
       this.isLocked = false;
     }
   }
 
-  private async tryLockToThinkingLevel(target: DefaultThinkingLevel) {
-    if (this.isLocked) return;
+  private async tryLockToThinkingLevel(target: DefaultThinkingLevel): Promise<boolean> {
+    if (this.isLocked) return false;
     this.isLocked = true;
 
     try {
       const trigger = this.findSelectorButton();
-      if (!trigger) return;
+      if (!trigger) return false;
 
       // Open the model menu first.
       trigger.click();
@@ -1340,17 +1388,17 @@ class DefaultModelManager {
         this.consecutiveFailures++;
         this.maybeNotifyAutoApplyFailure();
         if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
-          clearInterval(this.checkTimer);
+          this.stopLockTimer();
         }
-        return;
+        return false;
       }
 
       const thinkingRow = this.findThinkingLevelTriggerRow();
       if (!thinkingRow) {
         // This model doesn't expose a Thinking level. Nothing to lock — stop trying.
         document.body.click();
-        if (this.checkTimer) clearInterval(this.checkTimer);
-        return;
+        this.stopLockTimer();
+        return false;
       }
 
       thinkingRow.click();
@@ -1362,15 +1410,15 @@ class DefaultModelManager {
         this.consecutiveFailures++;
         this.maybeNotifyAutoApplyFailure();
         if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
-          clearInterval(this.checkTimer);
+          this.stopLockTimer();
         }
-        return;
+        return false;
       }
 
       const items = this.getThinkingLevelItems();
       if (!items.length) {
         document.body.click();
-        return;
+        return false;
       }
 
       const targetLabel = target.label.toLowerCase().trim();
@@ -1385,22 +1433,28 @@ class DefaultModelManager {
         this.consecutiveFailures++;
         this.maybeNotifyAutoApplyFailure();
         if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
-          clearInterval(this.checkTimer);
+          this.stopLockTimer();
         }
-        return;
+        return false;
       }
 
       const alreadySelected = targetItem.classList.contains('selected');
       if (!alreadySelected) {
         targetItem.click();
         this.focusChatInputAfterAutoSwitch();
+        this.consecutiveFailures = 0;
+        return true;
       } else {
         document.body.click();
+        this.consecutiveFailures = 0;
+        this.stopLockTimer();
       }
 
       this.consecutiveFailures = 0;
+      return false;
     } catch (e) {
       console.error('Auto thinking-level lock failed', e);
+      return false;
     } finally {
       this.isLocked = false;
     }

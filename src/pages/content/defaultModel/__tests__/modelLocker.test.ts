@@ -932,6 +932,10 @@ describe('DefaultModelManager (default model locker)', () => {
     await vi.advanceTimersByTimeAsync(1500);
 
     expect(proItem.click).toHaveBeenCalledTimes(0);
+    expect(selectorBtn.click).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(selectorBtn.click).toHaveBeenCalledTimes(1);
   });
 
   it('injects star buttons on Thinking level submenu items (Standard/Extended)', async () => {
@@ -1158,6 +1162,70 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(thinkingRow.click).toHaveBeenCalledTimes(1);
     expect(extended.click).toHaveBeenCalledTimes(1);
     expect(standard.click).toHaveBeenCalledTimes(0);
+  });
+
+  it('backs off when Thinking level clicks do not move the pill', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultThinkingLevel: { index: 1, label: 'Extended' },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const mainPane = document.createElement('div');
+    mainPane.className = 'cdk-overlay-pane';
+    const modelItem = document.createElement('gem-menu-item');
+    modelItem.setAttribute('role', 'menuitem');
+    modelItem.setAttribute('data-mode-id', '56fdd199312815e2');
+    modelItem.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">3 Flash</span></div></gem-menu-item-content>`;
+    const thinkingRow = document.createElement('gem-menu-item');
+    thinkingRow.setAttribute('role', 'menuitem');
+    thinkingRow.setAttribute('value', 'thinking_level');
+    thinkingRow.setAttribute('aria-haspopup', 'true');
+    thinkingRow.setAttribute('aria-controls', 'ng-menu-thinking-loop');
+    thinkingRow.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">Thinking level</span></div></gem-menu-item-content>`;
+    thinkingRow.click = vi.fn();
+    mainPane.append(modelItem, thinkingRow);
+    document.body.appendChild(mainPane);
+
+    const submenuPane = document.createElement('div');
+    submenuPane.className = 'cdk-overlay-pane';
+    const submenuList = document.createElement('div');
+    submenuList.id = 'ng-menu-thinking-loop';
+    const standard = document.createElement('gem-menu-item');
+    standard.setAttribute('role', 'menuitem');
+    standard.classList.add('selected');
+    standard.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">Standard</span></div></gem-menu-item-content>`;
+    const extended = document.createElement('gem-menu-item');
+    extended.setAttribute('role', 'menuitem');
+    extended.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">Extended</span></div></gem-menu-item-content>`;
+    extended.click = vi.fn();
+    submenuList.append(standard, extended);
+    submenuPane.appendChild(submenuList);
+    document.body.appendChild(submenuPane);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(5000);
+    const clicksAfterBackoff = (extended.click as ReturnType<typeof vi.fn>).mock.calls.length;
+
+    expect(clicksAfterBackoff).toBeGreaterThan(0);
+    expect(clicksAfterBackoff).toBeLessThanOrEqual(3);
+    expect(document.querySelectorAll('.gv-default-model-fail-toast').length).toBe(1);
+
+    await vi.advanceTimersByTimeAsync(10000);
+    expect((extended.click as ReturnType<typeof vi.fn>).mock.calls.length).toBe(clicksAfterBackoff);
   });
 
   it('does not inject star on the "Thinking level" submenu opener (aria-haspopup=true, no data-mode-id)', async () => {
