@@ -230,6 +230,62 @@ describe('sidebarAutoHide', () => {
     expect(collapsedContainer.classList.contains('collapsed')).toBe(true);
   });
 
+  it('delays full-hide after auto-collapse so the native close animation can run', async () => {
+    const sidenav = document.createElement('bard-sidenav');
+    mockVisibleRect(sidenav, 320, 800);
+
+    const sideNavigationContent = document.createElement('side-navigation-content');
+    const expandedContainer = document.createElement('div');
+    sideNavigationContent.appendChild(expandedContainer);
+    sidenav.appendChild(sideNavigationContent);
+    document.body.appendChild(sidenav);
+
+    const toggleButton = document.createElement('button');
+    toggleButton.setAttribute('data-test-id', 'side-nav-menu-button');
+    toggleButton.addEventListener('click', () => {
+      expandedContainer.classList.toggle('collapsed');
+    });
+    document.body.appendChild(toggleButton);
+
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvSidebarAutoHide: true, gvSidebarFullHide: true });
+      },
+    );
+
+    const { startSidebarAutoHide } = await import('../index');
+    startSidebarAutoHide();
+
+    expect(document.getElementById('gv-sidebar-full-hide-style')?.textContent).toContain(
+      ':not(.gv-sidebar-full-hide-collapsing)',
+    );
+
+    vi.advanceTimersByTime(500);
+
+    expect(expandedContainer.classList.contains('collapsed')).toBe(true);
+    expect(document.documentElement.classList.contains('gv-sidebar-full-hide-collapsing')).toBe(
+      true,
+    );
+    expect(sidenav.style.getPropertyValue('width')).toBe('0px');
+    expect(sidenav.style.getPropertyPriority('width')).toBe('important');
+    expect(document.documentElement.classList.contains('gv-sidebar-full-hide-collapsed')).toBe(
+      false,
+    );
+
+    vi.advanceTimersByTime(260);
+
+    expect(document.documentElement.classList.contains('gv-sidebar-full-hide-collapsed')).toBe(
+      true,
+    );
+
+    vi.advanceTimersByTime(240);
+
+    expect(document.documentElement.classList.contains('gv-sidebar-full-hide-collapsing')).toBe(
+      false,
+    );
+    expect(sidenav.style.getPropertyValue('width')).toBe('');
+  });
+
   describe('predictive aiming', () => {
     function dispatchMouseMove(x: number): void {
       document.dispatchEvent(new MouseEvent('mousemove', { clientX: x, clientY: 400 }));

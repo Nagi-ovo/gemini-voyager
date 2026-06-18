@@ -177,6 +177,7 @@ function buildStyle(widthValue: number): string {
        custom-widened sidebar slides its own toggle button underneath it, where the
        pointer-events re-enabled above let invisible legacy top-bar controls steal the
        hit-test (#748). Lift the sidenav's real toggle above that overlay. */
+    bard-sidenav .close-sidenav-button,
     bard-sidenav side-navigation-content > div > button.mat-mdc-icon-button {
       z-index: 5 !important;
     }

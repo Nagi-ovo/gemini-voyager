@@ -16,6 +16,7 @@ const STORAGE_KEY = 'gvSidebarAutoHide';
 const FULL_HIDE_STORAGE_KEY = 'gvSidebarFullHide';
 const EDGE_TRIGGER_ID = 'gv-sidebar-edge-trigger';
 const FULL_HIDE_COLLAPSED_CLASS = 'gv-sidebar-full-hide-collapsed';
+const FULL_HIDE_COLLAPSING_CLASS = 'gv-sidebar-full-hide-collapsing';
 // Union of every shape we've seen the sidebar toggle take. Order matters only
 // for `querySelectorAll` ordering tie-breaks; visibility filtering happens in
 // `findToggleButton` because the 2026 layout keeps an invisible 0×0 sibling
@@ -38,7 +39,8 @@ const SIDEBAR_TOGGLE_BUTTON_SELECTOR = [
 const SIDEBAR_TOGGLE_BUTTON_MATCH_SELECTOR = `${SIDEBAR_TOGGLE_BUTTON_SELECTOR}, side-nav-menu-button, side-nav-sparkle-button`;
 // Stable icon ligature names Gemini uses for the toggle (independent of locale).
 const TOGGLE_ICON_FONTICONS = ['side_nav', 'side_nav_expand'] as const;
-const SIDEBAR_STATE_SYNC_DELAYS_MS = [0, 300, 500] as const;
+const FULL_HIDE_COLLAPSE_SYNC_DELAY_MS = 260;
+const SIDEBAR_STATE_SYNC_DELAYS_MS = [FULL_HIDE_COLLAPSE_SYNC_DELAY_MS, 500] as const;
 
 // Debounce delay for the global body MutationObserver. During sidebar expansion
 // Gemini renders hundreds of conversation rows in rapid succession; without
@@ -102,6 +104,9 @@ let sidenavCheckTimer: number | null = null;
 let menuClickHandler: ((e: Event) => void) | null = null;
 let sidebarStateSyncTimeoutIds: number[] = [];
 let internalToggleClickDepth = 0;
+let fullHideCollapsedSyncBlockedUntil = 0;
+let fullHideCollapseAnimationTimeoutId: number | null = null;
+let fullHideCollapseAnimationElements: HTMLElement[] = [];
 
 function isElementVisible(element: HTMLElement): boolean {
   const style = window.getComputedStyle(element);
@@ -120,8 +125,8 @@ function getTransitionStyle(): string {
     bard-sidenav,
     bard-sidenav side-navigation-content,
     bard-sidenav side-navigation-content > div {
-      transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), transform 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      will-change: width, transform;
+      transition: width 0.26s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.26s cubic-bezier(0.4, 0, 0.2, 1), transform 0.26s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      will-change: width, min-width, transform;
     }
   `;
 }
@@ -143,13 +148,29 @@ function removeTransitionStyle(): void {
 
 function getFullHideStyle(): string {
   return `
-    /* Fully hide collapsed sidebar */
-    html.${FULL_HIDE_COLLAPSED_CLASS} bard-sidenav,
-    html.${FULL_HIDE_COLLAPSED_CLASS} bard-sidenav side-navigation-content,
-    html.${FULL_HIDE_COLLAPSED_CLASS} bard-sidenav side-navigation-content > div {
+    /* Animate to zero width before fully hiding collapsed sidebar */
+    html.${FULL_HIDE_COLLAPSING_CLASS} bard-sidenav,
+    html.${FULL_HIDE_COLLAPSING_CLASS} bard-sidenav side-navigation-content,
+    html.${FULL_HIDE_COLLAPSING_CLASS} bard-sidenav side-navigation-content > div {
       width: 0 !important;
       min-width: 0 !important;
       overflow: hidden !important;
+    }
+
+    html.${FULL_HIDE_COLLAPSED_CLASS}:not(.${FULL_HIDE_COLLAPSING_CLASS}) bard-sidenav,
+    html.${FULL_HIDE_COLLAPSED_CLASS}:not(.${FULL_HIDE_COLLAPSING_CLASS}) bard-sidenav side-navigation-content,
+    html.${FULL_HIDE_COLLAPSED_CLASS}:not(.${FULL_HIDE_COLLAPSING_CLASS}) bard-sidenav side-navigation-content > div {
+      width: 0 !important;
+      min-width: 0 !important;
+      max-width: 0 !important;
+      flex-basis: 0 !important;
+      overflow: hidden !important;
+    }
+
+    /* Fully hide collapsed sidebar */
+    html.${FULL_HIDE_COLLAPSED_CLASS}:not(.${FULL_HIDE_COLLAPSING_CLASS}) bard-sidenav,
+    html.${FULL_HIDE_COLLAPSED_CLASS}:not(.${FULL_HIDE_COLLAPSING_CLASS}) bard-sidenav side-navigation-content,
+    html.${FULL_HIDE_COLLAPSED_CLASS}:not(.${FULL_HIDE_COLLAPSING_CLASS}) bard-sidenav side-navigation-content > div {
       padding: 0 !important;
     }
   `;
@@ -319,13 +340,69 @@ function clearScheduledSidebarStateSync(): void {
     window.clearTimeout(timeoutId);
   }
   sidebarStateSyncTimeoutIds = [];
+  fullHideCollapsedSyncBlockedUntil = 0;
 }
 
-function scheduleSidebarStateSync(): void {
+function clearFullHideCollapseAnimation(): void {
+  if (fullHideCollapseAnimationTimeoutId !== null) {
+    window.clearTimeout(fullHideCollapseAnimationTimeoutId);
+    fullHideCollapseAnimationTimeoutId = null;
+  }
+  document.documentElement.classList.remove(FULL_HIDE_COLLAPSING_CLASS);
+  for (const element of fullHideCollapseAnimationElements) {
+    element.style.removeProperty('width');
+    element.style.removeProperty('min-width');
+    element.style.removeProperty('overflow');
+  }
+  fullHideCollapseAnimationElements = [];
+}
+
+function startFullHideCollapseAnimation(): void {
+  clearFullHideCollapseAnimation();
+  const elements = [
+    getSidenavElement(),
+    document.querySelector<HTMLElement>('bard-sidenav side-navigation-content'),
+    getSidebarContentContainer(),
+  ].filter((element): element is HTMLElement => element !== null);
+
+  fullHideCollapseAnimationElements = elements;
+  for (const element of elements) {
+    const width = element.getBoundingClientRect().width;
+    element.style.setProperty('width', `${width}px`, 'important');
+    element.style.setProperty('min-width', `${width}px`, 'important');
+    element.style.setProperty('overflow', 'hidden', 'important');
+  }
+
+  getSidenavElement()?.getBoundingClientRect();
+  document.documentElement.classList.add(FULL_HIDE_COLLAPSING_CLASS);
+  for (const element of elements) {
+    element.style.setProperty('width', '0px', 'important');
+    element.style.setProperty('min-width', '0px', 'important');
+  }
+
+  fullHideCollapseAnimationTimeoutId = window.setTimeout(() => {
+    fullHideCollapseAnimationTimeoutId = null;
+    clearFullHideCollapseAnimation();
+  }, SIDEBAR_STATE_SYNC_DELAYS_MS[SIDEBAR_STATE_SYNC_DELAYS_MS.length - 1]);
+}
+
+function scheduleSidebarStateSync(syncImmediately: boolean): void {
   if (!fullHideEnabled) return;
 
   clearScheduledSidebarStateSync();
-  for (const delay of SIDEBAR_STATE_SYNC_DELAYS_MS) {
+  if (syncImmediately) {
+    clearFullHideCollapseAnimation();
+  }
+
+  if (!syncImmediately) {
+    fullHideCollapsedSyncBlockedUntil = Date.now() + FULL_HIDE_COLLAPSE_SYNC_DELAY_MS;
+  }
+
+  const delays = syncImmediately
+    ? ([0, ...SIDEBAR_STATE_SYNC_DELAYS_MS] as const)
+    : SIDEBAR_STATE_SYNC_DELAYS_MS;
+
+  for (const delay of delays) {
     const timeoutId = window.setTimeout(() => {
       checkAndReattach();
       sidebarStateSyncTimeoutIds = sidebarStateSyncTimeoutIds.filter((id) => id !== timeoutId);
@@ -395,7 +472,9 @@ function handleMenuClick(e: Event): void {
     }
 
     if (fullHideEnabled) {
-      scheduleSidebarStateSync();
+      const wasCollapsed = isSidebarCollapsed();
+      if (!wasCollapsed) startFullHideCollapseAnimation();
+      scheduleSidebarStateSync(wasCollapsed);
     }
 
     if (enabled) {
@@ -435,13 +514,15 @@ function clickToggleButton(): boolean {
 
   internalToggleClickDepth += 1;
   try {
+    const wasCollapsed = isSidebarCollapsed();
+    if (fullHideEnabled && !wasCollapsed) startFullHideCollapseAnimation();
     btn.click();
+
+    if (fullHideEnabled) {
+      scheduleSidebarStateSync(wasCollapsed);
+    }
   } finally {
     internalToggleClickDepth -= 1;
-  }
-
-  if (fullHideEnabled) {
-    scheduleSidebarStateSync();
   }
 
   return true;
@@ -818,6 +899,12 @@ function syncFullHideState(): void {
   const sidenavExists = Boolean(sidenav && sidenav.getBoundingClientRect().height > 0);
   const collapsed = sidenavExists && isSidebarCollapsed();
 
+  if (collapsed && Date.now() < fullHideCollapsedSyncBlockedUntil) return;
+  if (!collapsed) {
+    fullHideCollapsedSyncBlockedUntil = 0;
+    clearFullHideCollapseAnimation();
+  }
+
   setFullHideCollapsedState(collapsed);
 
   if (collapsed) {
@@ -855,6 +942,7 @@ function disableFullHide(): void {
   fullHideEnabled = false;
 
   clearScheduledSidebarStateSync();
+  clearFullHideCollapseAnimation();
   setFullHideCollapsedState(false);
   removeEdgeTrigger();
   removeFullHideStyle();

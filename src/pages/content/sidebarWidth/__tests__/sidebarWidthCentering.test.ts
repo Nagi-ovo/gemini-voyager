@@ -101,6 +101,7 @@ describe('sidebar width title centering', () => {
     expect(code).toContain(
       'bard-sidenav side-navigation-content > div > button.mat-mdc-icon-button',
     );
+    expect(code).toContain('bard-sidenav .close-sidenav-button');
     expect(code).toContain('z-index: 5 !important;');
   });
 });
