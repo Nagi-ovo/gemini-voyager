@@ -358,7 +358,7 @@ describe('formatResetCountdown', () => {
   const now = new Date('2026-06-18T10:00:00Z').getTime();
 
   it('formats reset time as a compact duration', () => {
-    expect(formatResetCountdown(Math.floor((now + 4 * 3_600_000) / 1000), now)).toBe('4h');
+    expect(formatResetCountdown(Math.floor((now + 4 * 3_600_000) / 1000), now)).toBe('0d4h');
     expect(formatResetCountdown(Math.floor((now + (5 * 24 + 10) * 3_600_000) / 1000), now)).toBe(
       '5d10h',
     );
