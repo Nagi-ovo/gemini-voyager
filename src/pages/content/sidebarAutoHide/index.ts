@@ -380,10 +380,13 @@ function startFullHideCollapseAnimation(): void {
     element.style.setProperty('min-width', '0px', 'important');
   }
 
-  fullHideCollapseAnimationTimeoutId = window.setTimeout(() => {
-    fullHideCollapseAnimationTimeoutId = null;
-    clearFullHideCollapseAnimation();
-  }, SIDEBAR_STATE_SYNC_DELAYS_MS[SIDEBAR_STATE_SYNC_DELAYS_MS.length - 1]);
+  fullHideCollapseAnimationTimeoutId = window.setTimeout(
+    () => {
+      fullHideCollapseAnimationTimeoutId = null;
+      clearFullHideCollapseAnimation();
+    },
+    SIDEBAR_STATE_SYNC_DELAYS_MS[SIDEBAR_STATE_SYNC_DELAYS_MS.length - 1],
+  );
 }
 
 function scheduleSidebarStateSync(syncImmediately: boolean): void {

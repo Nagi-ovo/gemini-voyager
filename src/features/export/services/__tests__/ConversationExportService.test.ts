@@ -534,7 +534,9 @@ describe('ConversationExportService', () => {
       const toOriginalSizeUrl = (
         ConversationExportService as unknown as Record<string, (url: string) => string>
       ).toOriginalSizeUrl;
-      const result = toOriginalSizeUrl('https://lh3.googleusercontent.com/gg/export-image?authuser=2');
+      const result = toOriginalSizeUrl(
+        'https://lh3.googleusercontent.com/gg/export-image?authuser=2',
+      );
       const parsed = new URL(result);
 
       expect(result).not.toContain('authuser=2-s0');

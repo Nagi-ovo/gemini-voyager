@@ -581,7 +581,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const refreshActiveTabContext = useCallback(async () => {
     try {
       let tab =
-        typeof sourceTabId === 'number' ? await browser.tabs.get(sourceTabId).catch(() => null) : null;
+        typeof sourceTabId === 'number'
+          ? await browser.tabs.get(sourceTabId).catch(() => null)
+          : null;
       tab ??= (await browser.tabs.query({ active: true, currentWindow: true }))[0] ?? null;
       const url = tab?.url || '';
       setActiveUrl(url);

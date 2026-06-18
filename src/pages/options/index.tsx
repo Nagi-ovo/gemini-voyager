@@ -1,10 +1,11 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import '@assets/styles/tailwind.css';
+import '@pages/options/index.css';
 import Popup from '@pages/popup/Popup';
 import '@pages/popup/index.css';
-import '@pages/options/index.css';
+
+import '@assets/styles/tailwind.css';
 
 import { LanguageProvider } from '../../contexts/LanguageContext';
 
