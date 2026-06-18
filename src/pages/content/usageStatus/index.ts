@@ -588,8 +588,9 @@ export function formatResetCountdown(epochSec: number | undefined, now: number):
   if (typeof epochSec !== 'number') return '';
   const diffMs = epochSec * 1000 - now;
   if (diffMs <= 0) return '';
+  const mins = Math.floor(diffMs / 60_000);
   const hours = Math.floor(diffMs / 3_600_000);
-  if (hours < 1) return '<1h';
+  if (hours < 1) return `${mins}m`;
   const days = Math.floor(hours / 24);
   const rest = hours % 24;
   return `${days}d${rest}h`;

@@ -367,6 +367,6 @@ describe('formatResetCountdown', () => {
   it('hides missing or expired reset times', () => {
     expect(formatResetCountdown(undefined, now)).toBe('');
     expect(formatResetCountdown(Math.floor((now - 1_000) / 1000), now)).toBe('');
-    expect(formatResetCountdown(Math.floor((now + 30 * 60_000) / 1000), now)).toBe('<1h');
+    expect(formatResetCountdown(Math.floor((now + 30 * 60_000) / 1000), now)).toBe('30m');
   });
 });
