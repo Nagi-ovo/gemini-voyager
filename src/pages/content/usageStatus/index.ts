@@ -584,6 +584,17 @@ export function formatUpdatedAgo(updatedAt: number, now: number): string {
   return t('usageStatusDaysAgo', 'Updated {n}d ago').replace('{n}', String(days));
 }
 
+export function formatResetCountdown(epochSec: number | undefined, now: number): string {
+  if (typeof epochSec !== 'number') return '';
+  const diffMs = epochSec * 1000 - now;
+  if (diffMs <= 0) return '';
+  const hours = Math.floor(diffMs / 3_600_000);
+  if (hours < 1) return '<1h';
+  const days = Math.floor(hours / 24);
+  const rest = hours % 24;
+  return days > 0 ? `${days}d${rest ? `${rest}h` : ''}` : `${hours}h`;
+}
+
 const REFRESH_ICON = `<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-820q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>`;
 const OPEN_ICON = `<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/></svg>`;
 
@@ -678,7 +689,10 @@ function setMetric(el: HTMLElement, kind: 'daily' | 'weekly', metric: UsageMetri
   if (metric) {
     seg.removeAttribute('hidden');
     if (fill) fill.style.width = `${metric.percent}%`;
-    if (pct) pct.textContent = `${metric.percent}%`;
+    if (pct) {
+      const reset = formatResetCountdown(metric.resetEpoch, Date.now());
+      pct.textContent = `${metric.percent}%${reset ? ` (${reset})` : ''}`;
+    }
     seg.classList.toggle('gv-usage-high', metric.percent >= 90);
     seg.classList.toggle('gv-usage-mid', metric.percent >= 70 && metric.percent < 90);
     // Reset time lives in the segment tooltip to keep the bar short.
@@ -860,7 +874,7 @@ function render(): void {
 
   if (stampTimer === null) {
     stampTimer = window.setInterval(() => {
-      if (pill && snapshot) pill.title = formatUpdatedAgo(snapshot.updatedAt, Date.now());
+      if (pill && snapshot) updatePillContent(pill, snapshot);
     }, STAMP_REFRESH_MS);
   }
 }

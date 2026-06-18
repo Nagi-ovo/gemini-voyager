@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   extractUsagePayload,
+  formatResetCountdown,
   formatResetLabel,
   formatUpdatedAgo,
   isUsagePathname,
@@ -350,5 +351,22 @@ describe('formatUpdatedAgo', () => {
   });
   it('never goes negative for a future timestamp', () => {
     expect(formatUpdatedAgo(base + 10_000, base)).toBe('Just updated');
+  });
+});
+
+describe('formatResetCountdown', () => {
+  const now = new Date('2026-06-18T10:00:00Z').getTime();
+
+  it('formats reset time as a compact duration', () => {
+    expect(formatResetCountdown(Math.floor((now + 4 * 3_600_000) / 1000), now)).toBe('4h');
+    expect(formatResetCountdown(Math.floor((now + (5 * 24 + 10) * 3_600_000) / 1000), now)).toBe(
+      '5d10h',
+    );
+  });
+
+  it('hides missing or expired reset times', () => {
+    expect(formatResetCountdown(undefined, now)).toBe('');
+    expect(formatResetCountdown(Math.floor((now - 1_000) / 1000), now)).toBe('');
+    expect(formatResetCountdown(Math.floor((now + 30 * 60_000) / 1000), now)).toBe('<1h');
   });
 });
