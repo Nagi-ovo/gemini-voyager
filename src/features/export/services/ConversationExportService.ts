@@ -472,7 +472,12 @@ export class ConversationExportService {
     if (GOOGLE_SIZE_PATTERN.test(url)) {
       return url.replace(GOOGLE_SIZE_PATTERN, '=s0');
     }
-    return url.includes('=') ? url + '-s0' : url + '=s0';
+    if (url.includes('?')) {
+      const parsed = new URL(url);
+      parsed.searchParams.set('s', '0');
+      return parsed.toString();
+    }
+    return url.split(/[?#]/, 1)[0].includes('=') ? url + '-s0' : url + '=s0';
   }
 
   private static pickImageExtension(contentType: string | null, url: string): string {

@@ -530,6 +530,18 @@ describe('ConversationExportService', () => {
       expect(capturedAssetOptions).toMatchObject({ base64: true });
     });
 
+    it('does not append -s0 to Google authuser query params', () => {
+      const toOriginalSizeUrl = (
+        ConversationExportService as unknown as Record<string, (url: string) => string>
+      ).toOriginalSizeUrl;
+      const result = toOriginalSizeUrl('https://lh3.googleusercontent.com/gg/export-image?authuser=2');
+      const parsed = new URL(result);
+
+      expect(result).not.toContain('authuser=2-s0');
+      expect(parsed.searchParams.get('authuser')).toBe('2');
+      expect(parsed.searchParams.get('s')).toBe('0');
+    });
+
     it('should fallback to gv.fetchImageViaPage when direct and background fetch fail', async () => {
       const imageUrl = 'https://lh3.googleusercontent.com/export-image.png';
       vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network blocked'));
