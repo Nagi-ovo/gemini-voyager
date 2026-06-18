@@ -39,6 +39,7 @@ function createChromeMock(sendMessage: ReturnType<typeof vi.fn>): MockedChrome {
       id: 'test-extension-id',
     },
     tabs: {
+      get: vi.fn().mockResolvedValue({ id: 1, url: 'https://gemini.google.com/app' }),
       query: vi.fn().mockResolvedValue([{ id: 1, url: 'https://gemini.google.com/app' }]),
       sendMessage: vi.fn().mockResolvedValue({
         ok: true,
@@ -138,6 +139,57 @@ describe('CloudSyncSettings auth flow', () => {
       expect.objectContaining({
         type: 'gv.sync.authenticate',
       }),
+    );
+  });
+
+  it('uses the source tab when options is opened as the popup fallback', async () => {
+    const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
+      if (message.type === 'gv.sync.getState') {
+        return Promise.resolve({ ok: true, state: baseState });
+      }
+      if (message.type === 'gv.sync.upload') {
+        return Promise.resolve({
+          ok: true,
+          state: { ...baseState, isAuthenticated: true },
+        });
+      }
+      return Promise.resolve({ ok: true });
+    });
+
+    const chromeMock = createChromeMock(sendMessageMock);
+    (chromeMock.tabs.query as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: 7, url: 'chrome-extension://test/src/pages/options/index.html' },
+    ]);
+    (chromeMock.tabs.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 42,
+      url: 'https://gemini.google.com/app/source',
+    });
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<CloudSyncSettings sourceTabId={42} />);
+    });
+    await flushMicrotasks();
+
+    const uploadButton = Array.from(container.querySelectorAll('button')).find((btn) =>
+      (btn.textContent || '').includes('syncUpload'),
+    );
+    expect(uploadButton).toBeTruthy();
+
+    await act(async () => {
+      uploadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await flushMicrotasks();
+
+    expect(chromeMock.tabs.get).toHaveBeenCalledWith(42);
+    expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ type: 'gv.sync.requestData' }),
+    );
+    expect(chromeMock.tabs.sendMessage).not.toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ type: 'gv.sync.requestData' }),
     );
   });
 

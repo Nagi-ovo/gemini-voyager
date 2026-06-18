@@ -9,7 +9,11 @@ const STORAGE_KEY_ENABLED = 'contextSyncEnabled';
 const STORAGE_KEY_PORT = 'contextSyncPort';
 const DEFAULT_PORT = 3030;
 
-export function ContextSyncSettings() {
+interface ContextSyncSettingsProps {
+  sourceTabId?: number;
+}
+
+export function ContextSyncSettings({ sourceTabId }: ContextSyncSettingsProps = {}) {
   const { t } = useLanguage();
   const [isEnabled, setIsEnabled] = useState(false);
   const [port, setPort] = useState(DEFAULT_PORT);
@@ -25,6 +29,17 @@ export function ContextSyncSettings() {
   useEffect(() => {
     tRef.current = t;
   }, [t]);
+
+  const getTargetTab = useCallback(async (): Promise<chrome.tabs.Tab | undefined> => {
+    if (typeof sourceTabId === 'number') {
+      try {
+        return await chrome.tabs.get(sourceTabId);
+      } catch {}
+    }
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    return tab;
+  }, [sourceTabId]);
 
   useEffect(() => {
     chrome.storage.sync.get([STORAGE_KEY_ENABLED, STORAGE_KEY_PORT], (result) => {
@@ -103,7 +118,7 @@ export function ContextSyncSettings() {
     setStatusMessage({ text: t('capturing'), kind: 'info' });
 
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tab = await getTargetTab();
 
       if (!tab?.id) {
         throw new Error('No active tab found');

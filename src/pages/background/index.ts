@@ -76,6 +76,20 @@ function getI18nMessage(key: string, fallback: string): string {
   }
 }
 
+async function openSettingsPageFallback(sourceTabId?: number): Promise<void> {
+  if (typeof sourceTabId === 'number') {
+    const url = chrome.runtime.getURL(`src/pages/options/index.html?sourceTabId=${sourceTabId}`);
+    await chrome.tabs.create({ url });
+    return;
+  }
+
+  if (chrome.runtime.openOptionsPage) {
+    await chrome.runtime.openOptionsPage();
+    return;
+  }
+  await chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/options/index.html') });
+}
+
 function getTabDedupKey(
   tabId: number | undefined,
   tabUrl: string | undefined,
@@ -1265,9 +1279,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           await chrome.action.openPopup();
           sendResponse({ ok: true });
         } catch (e) {
-          // Fallback: If openPopup fails, user can click the extension icon
           console.warn('[GV] Failed to open popup programmatically:', e);
-          sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
+          try {
+            await openSettingsPageFallback(sender.tab?.id);
+            sendResponse({ ok: true, fallback: 'options' });
+          } catch (fallbackError) {
+            sendResponse({
+              ok: false,
+              error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+            });
+          }
         }
         return;
       }

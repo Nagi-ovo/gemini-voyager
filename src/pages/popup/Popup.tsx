@@ -387,6 +387,10 @@ interface SettingsUpdate {
   persistentExportToolbarEnabled?: boolean;
 }
 
+interface PopupProps {
+  sourceTabId?: number;
+}
+
 function SectionReorderControls({
   isFirst,
   isLast,
@@ -466,7 +470,7 @@ function SectionReorderControls({
   );
 }
 
-export default function Popup() {
+export default function Popup({ sourceTabId }: PopupProps = {}) {
   const { t, language } = useLanguage();
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
@@ -576,12 +580,14 @@ export default function Popup() {
 
   const refreshActiveTabContext = useCallback(async () => {
     try {
-      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-      const url = tabs[0]?.url || '';
+      let tab =
+        typeof sourceTabId === 'number' ? await browser.tabs.get(sourceTabId).catch(() => null) : null;
+      tab ??= (await browser.tabs.query({ active: true, currentWindow: true }))[0] ?? null;
+      const url = tab?.url || '';
       setActiveUrl(url);
       setActiveAccountPlatform(detectAccountPlatformFromUrl(url));
     } catch {}
-  }, []);
+  }, [sourceTabId]);
 
   useEffect(() => {
     void refreshActiveTabContext();
@@ -735,8 +741,10 @@ export default function Popup() {
   const handleCopyFolderStructureForAI = useCallback(async () => {
     setAiStructureCopyStatus('loading');
     try {
-      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-      const tabId = tabs[0]?.id;
+      const tabId =
+        typeof sourceTabId === 'number'
+          ? sourceTabId
+          : (await browser.tabs.query({ active: true, currentWindow: true }))[0]?.id;
       if (!tabId) {
         setAiStructureCopyStatus('error');
         return;
@@ -771,7 +779,7 @@ export default function Popup() {
       setAiStructureCopyStatus('error');
       setTimeout(() => setAiStructureCopyStatus('idle'), 2000);
     }
-  }, [language]);
+  }, [language, sourceTabId]);
 
   // Width adjuster for chat width
   const chatWidthAdjuster = useWidthAdjuster({
@@ -1599,7 +1607,9 @@ export default function Popup() {
 
   // Show starred history if requested
   if (showStarredHistory) {
-    return <StarredHistory onClose={() => setShowStarredHistory(false)} />;
+    return (
+      <StarredHistory sourceTabId={sourceTabId} onClose={() => setShowStarredHistory(false)} />
+    );
   }
 
   return (
@@ -1699,7 +1709,8 @@ export default function Popup() {
           </Card>
         )}
         {/* Cloud Sync */}
-        {!isSafariBrowser && wrapSection('cloudSync', <CloudSyncSettings />)}
+        {!isSafariBrowser &&
+          wrapSection('cloudSync', <CloudSyncSettings sourceTabId={sourceTabId} />)}
         {/* Plugin ecosystem — pinned to the very top on third-party web pages,
             scoped to plugins that target the active site. Hidden on native
             Gemini / AI Studio, where the full settings surface belongs. */}
@@ -1715,7 +1726,7 @@ export default function Popup() {
           </div>
         )}
         {/* Context Sync */}
-        {wrapSection('contextSync', <ContextSyncSettings />)}
+        {wrapSection('contextSync', <ContextSyncSettings sourceTabId={sourceTabId} />)}
         {/* Timeline Options */}
         {wrapSection(
           'timeline',

@@ -8,9 +8,10 @@ import type { StarredMessage } from '@/pages/content/timeline/starredTypes';
 
 interface StarredHistoryProps {
   onClose: () => void;
+  sourceTabId?: number;
 }
 
-export function StarredHistory({ onClose }: StarredHistoryProps) {
+export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
   const { t } = useLanguage();
   const [messages, setMessages] = useState<StarredMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,10 @@ export function StarredHistory({ onClose }: StarredHistoryProps) {
 
   const handleMessageClick = async (message: StarredMessage) => {
     // Check if we're already on a Gemini page
-    const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const currentTab =
+      typeof sourceTabId === 'number'
+        ? await chrome.tabs.get(sourceTabId).catch(() => undefined)
+        : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
     const targetUrl = `${message.conversationUrl}#gv-turn-${message.turnId}`;
 
     const isGeminiPage =

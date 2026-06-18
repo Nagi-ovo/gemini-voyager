@@ -85,7 +85,11 @@ type DownloadMode = 'merge' | 'overwrite';
  * CloudSyncSettings component for popup
  * Allows users to configure Google Drive sync settings
  */
-export function CloudSyncSettings() {
+interface CloudSyncSettingsProps {
+  sourceTabId?: number;
+}
+
+export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) {
   const { t } = useLanguage();
   const isSafariBrowser = isSafari();
 
@@ -104,16 +108,27 @@ export function CloudSyncSettings() {
     [],
   );
 
+  const getTargetTab = useCallback(async (): Promise<chrome.tabs.Tab | undefined> => {
+    if (typeof sourceTabId === 'number') {
+      try {
+        return await chrome.tabs.get(sourceTabId);
+      } catch {}
+    }
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    return tab;
+  }, [sourceTabId]);
+
   // Detect current platform from active tab URL
   const detectPlatform = useCallback(async (): Promise<SyncPlatform> => {
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tab = await getTargetTab();
       return detectAccountPlatformFromUrl(tab?.url ?? null);
     } catch (e) {
       console.warn('[CloudSyncSettings] Failed to detect platform:', e);
     }
     return 'gemini';
-  }, []);
+  }, [getTargetTab]);
 
   const resolveCurrentPageSyncScope = useCallback(
     async (respectIsolationSetting: boolean): Promise<SyncAccountScope | null> => {
@@ -129,7 +144,7 @@ export function CloudSyncSettings() {
       let email: string | null = null;
 
       try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const tab = await getTargetTab();
         pageUrl = tab?.url || '';
         routeUserId = platform === 'gemini' ? extractRouteUserIdFromUrl(pageUrl) : null;
 
@@ -171,7 +186,7 @@ export function CloudSyncSettings() {
         routeUserId: resolvedScope.routeUserId,
       };
     },
-    [platform],
+    [getTargetTab, platform],
   );
 
   const resolveAccountSyncContext = useCallback(async (): Promise<{
@@ -335,7 +350,7 @@ export function CloudSyncSettings() {
 
       // 1. Try to get fresh folder data from active tab
       try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const tab = await getTargetTab();
         if (tab?.id) {
           // Short timeout to avoid blocking
           const response = (await Promise.race([
@@ -421,6 +436,7 @@ export function CloudSyncSettings() {
     }
   }, [
     getBaseFolderStorageKey,
+    getTargetTab,
     platform,
     resolveAccountSyncContext,
     resolveTimelineHierarchySyncContext,
@@ -486,7 +502,7 @@ export function CloudSyncSettings() {
 
         // 1. Try to get fresh folder data from active tab
         try {
-          const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          const tab = await getTargetTab();
           console.log('[CloudSyncSettings] Active tab:', tab?.id, tab?.url);
           if (tab?.id) {
             const tabResponse = (await Promise.race([
@@ -662,7 +678,7 @@ export function CloudSyncSettings() {
 
         // Notify content script to reload folders
         try {
-          const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          const tab = await getTargetTab();
           if (tab?.id) {
             await chrome.tabs.sendMessage(tab.id, { type: 'gv.folders.reload' });
             console.log('[CloudSyncSettings] Sent reload message to content script');
@@ -683,6 +699,7 @@ export function CloudSyncSettings() {
     },
     [
       getBaseFolderStorageKey,
+      getTargetTab,
       platform,
       resolveAccountSyncContext,
       resolveTimelineHierarchySyncContext,
