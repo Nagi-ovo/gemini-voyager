@@ -71,3 +71,26 @@ describe('FolderImportExportService — instructions round-trip', () => {
     expect(payload.data.folders[0].instructions).toBeUndefined();
   });
 });
+
+describe('FolderImportExportService — pasted AI organize output', () => {
+  it('parses JSON from a Gemini markdown code block', () => {
+    const text = `Sure, here is the importable plan:
+
+\`\`\`json
+{
+  "format": "gemini-voyager.folders.v1",
+  "exportedAt": "2026-06-18T00:00:00.000Z",
+  "data": {
+    "folders": [],
+    "folderContents": {}
+  }
+}
+\`\`\`
+`;
+
+    const parsed = FolderImportExportService.parseJSONText(text);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(FolderImportExportService.validatePayload(parsed.data).success).toBe(true);
+  });
+});

@@ -9203,10 +9203,8 @@ export class FolderManager {
     this.importInProgress = true;
 
     try {
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(jsonText);
-      } catch {
+      const parseResult = FolderImportExportService.parseJSONText(jsonText);
+      if (!parseResult.success) {
         this.showNotification(this.t('folder_import_invalid_format'), 'error');
         return;
       }
@@ -9216,7 +9214,7 @@ export class FolderManager {
         if (!confirmed) return;
       }
 
-      const validationResult = FolderImportExportService.validatePayload(parsed);
+      const validationResult = FolderImportExportService.validatePayload(parseResult.data);
       if (!validationResult.success) {
         this.showNotification(
           this.t('folder_import_invalid_format') + ': ' + validationResult.error.message,

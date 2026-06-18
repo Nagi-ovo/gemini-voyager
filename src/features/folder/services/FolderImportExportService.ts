@@ -386,16 +386,44 @@ export class FolderImportExportService {
   }
 
   /**
+   * Parse folder JSON from a file or pasted AI response.
+   */
+  static parseJSONText(text: string): Result<unknown> {
+    const trimmed = text.trim();
+    const candidates = [trimmed];
+    const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenced?.[1]) candidates.push(fenced[1].trim());
+
+    const firstBrace = trimmed.indexOf('{');
+    const lastBrace = trimmed.lastIndexOf('}');
+    if (firstBrace >= 0 && lastBrace > firstBrace) {
+      candidates.push(trimmed.slice(firstBrace, lastBrace + 1));
+    }
+
+    let lastError: unknown;
+    for (const candidate of candidates) {
+      try {
+        return { success: true, data: JSON.parse(candidate) };
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    return {
+      success: false,
+      error: new AppError(ErrorCode.VALIDATION_ERROR, 'Failed to parse JSON text', {
+        originalError: lastError,
+      }),
+    };
+  }
+
+  /**
    * Read and parse JSON file from user upload
    */
   static async readJSONFile(file: File): Promise<Result<unknown>> {
     try {
       const text = await file.text();
-      const parsed = JSON.parse(text);
-      return {
-        success: true,
-        data: parsed,
-      };
+      return this.parseJSONText(text);
     } catch (error) {
       return {
         success: false,
