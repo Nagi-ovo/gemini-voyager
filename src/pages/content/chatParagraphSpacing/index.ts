@@ -1,7 +1,6 @@
 /**
  * Adjusts vertical spacing between chat markdown blocks.
  */
-
 import { StorageKeys } from '@/core/types/common';
 
 const STYLE_ID = 'gv-chat-paragraph-spacing-style';
