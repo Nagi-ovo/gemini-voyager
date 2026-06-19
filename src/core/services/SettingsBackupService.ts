@@ -50,6 +50,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS: Record<string, unknown> = {
   [StorageKeys.CHAT_LINE_HEIGHT]: 160,
   [StorageKeys.CHAT_LINE_HEIGHT_ENABLED]: false,
   [StorageKeys.CHAT_PARAGRAPH_SPACING]: 12,
+  [StorageKeys.GV_GEMS_PINNED]: [],
   [StorageKeys.EDIT_INPUT_WIDTH]: 60,
   [StorageKeys.EDIT_INPUT_WIDTH_ENABLED]: false,
   [StorageKeys.SIDEBAR_WIDTH]: 312,
