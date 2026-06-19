@@ -99,6 +99,7 @@ let injectedToggle: HTMLElement | null = null;
 let currentCount = 0;
 let currentCache: GemCacheEnvelope = { items: [], cachedAt: 0 };
 let currentMru: GemMruEntry[] = [];
+let currentPinned: string[] = [];
 let mruRetryTimer: number | null = null;
 let mruCaptureAttempts = 0;
 let navPollTimer: number | null = null;
@@ -309,6 +310,39 @@ export function orderGemsByRecency(mru: GemMruEntry[], catalog: GemMetadata[]): 
   return out;
 }
 
+/**
+ * Final visible list for the sidebar: pinned gems first, in pinned order, then
+ * recently-used gems filling the remaining slots up to `count` total. Pinned
+ * gems are never trimmed by `count` — naming a gem outranks the size limit —
+ * so when more gems are pinned than `count`, all pinned gems still show (and
+ * nothing else). Pinned ids with no resolvable metadata (e.g. synced from a
+ * device whose cache we don't have yet) are skipped. An empty pin list
+ * degrades to the existing recency order. Pure.
+ */
+export function selectVisibleGems(
+  pinned: string[],
+  mru: GemMruEntry[],
+  catalog: GemMetadata[],
+  count: number,
+): GemMetadata[] {
+  const ranked = orderGemsByRecency(mru, catalog);
+  const byId = new Map(ranked.map((g) => [g.id, g]));
+
+  const pinnedGems: GemMetadata[] = [];
+  const pinnedIds = new Set<string>();
+  for (const id of pinned) {
+    if (pinnedIds.has(id)) continue;
+    const gem = byId.get(id);
+    if (!gem) continue;
+    pinnedIds.add(id);
+    pinnedGems.push(gem);
+  }
+
+  const fill = ranked.filter((g) => !pinnedIds.has(g.id));
+  const fillCount = Math.max(0, count - pinnedGems.length);
+  return [...pinnedGems, ...fill.slice(0, fillCount)];
+}
+
 function clearMruRetry(): void {
   if (mruRetryTimer !== null) {
     clearTimeout(mruRetryTimer);
@@ -429,7 +463,7 @@ function findGemsNavEntry(): HTMLElement | null {
  * Build the inline list element. Returns `null` when there's nothing to show
  * (empty cache) — the caller treats null as "tear down any existing UI".
  */
-function buildGemsList(items: GemMetadata[], count: number): HTMLElement | null {
+function buildGemsList(items: GemMetadata[]): HTMLElement | null {
   if (items.length === 0) return null;
 
   const list = document.createElement('div');
@@ -439,7 +473,7 @@ function buildGemsList(items: GemMetadata[], count: number): HTMLElement | null 
   // semantics already live on the parent mat-nav-list.
   list.setAttribute('role', 'list');
 
-  items.slice(0, count).forEach((gem) => list.appendChild(buildItem(gem)));
+  items.forEach((gem) => list.appendChild(buildItem(gem)));
   return list;
 }
 
@@ -493,14 +527,14 @@ function refreshExpandedState(): void {
   }
 }
 
-/** Gems to render, ordered by recent use then catalog order. */
-function orderedGems(): GemMetadata[] {
-  return orderGemsByRecency(currentMru, currentCache.items);
+/** Gems to render: pinned first (pinned order), then recent up to the count. */
+function visibleGems(): GemMetadata[] {
+  return selectVisibleGems(currentPinned, currentMru, currentCache.items, currentCount);
 }
 
 /** Mount / re-mount the chevron on the current Gems nav entry. */
 function ensureExpandToggle(): void {
-  if (currentCount <= 0 || orderedGems().length === 0) {
+  if (currentCount <= 0 || visibleGems().length === 0) {
     removeExpandToggle();
     return;
   }
@@ -562,7 +596,7 @@ function renderSection(): void {
     return;
   }
 
-  const fresh = buildGemsList(orderedGems(), currentCount);
+  const fresh = buildGemsList(visibleGems());
   if (!fresh) {
     cleanupSection();
     return;
@@ -675,15 +709,24 @@ function clampCount(raw: unknown): number {
   return Math.max(0, Math.min(MAX_COUNT, Math.floor(n)));
 }
 
+/** Narrow a raw storage value to the pinned-ids shape (string[]). */
+export function sanitizePinnedIds(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((id): id is string => typeof id === 'string' && id.length > 0);
+}
+
 async function loadInitialState(): Promise<void> {
   try {
     const sync = await browser.storage.sync.get({
       [StorageKeys.GV_GEMS_SIDEBAR_COUNT]: DEFAULT_COUNT,
+      [StorageKeys.GV_GEMS_PINNED]: [],
     });
     currentCount = clampCount(sync[StorageKeys.GV_GEMS_SIDEBAR_COUNT]);
+    currentPinned = sanitizePinnedIds(sync[StorageKeys.GV_GEMS_PINNED]);
   } catch (error) {
     console.warn('[GemsSidebar] Failed to load sidebar count:', error);
     currentCount = DEFAULT_COUNT;
+    currentPinned = [];
   }
 
   try {
@@ -701,10 +744,14 @@ function setupStorageListener(): void {
   storageListener = (changes, areaName) => {
     if (areaName === 'sync' && changes[StorageKeys.GV_GEMS_SIDEBAR_COUNT]) {
       const next = clampCount(changes[StorageKeys.GV_GEMS_SIDEBAR_COUNT].newValue);
-      if (next === currentCount) return;
-      currentCount = next;
+      if (next !== currentCount) {
+        currentCount = next;
+        refreshInjector();
+      }
+    }
+    if (areaName === 'sync' && changes[StorageKeys.GV_GEMS_PINNED]) {
+      currentPinned = sanitizePinnedIds(changes[StorageKeys.GV_GEMS_PINNED].newValue);
       refreshInjector();
-      return;
     }
     if (areaName === 'local' && changes[StorageKeys.GV_GEMS_LIST_CACHE]) {
       const raw = changes[StorageKeys.GV_GEMS_LIST_CACHE].newValue as GemCacheEnvelope | undefined;

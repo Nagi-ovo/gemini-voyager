@@ -52,6 +52,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 import { CloudSyncSettings } from './components/CloudSyncSettings';
 import { ContextSyncSettings } from './components/ContextSyncSettings';
+import { GemsPinSettings } from './components/GemsPinSettings';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { PluginManager } from './components/PluginManager';
 import { StarredHistory } from './components/StarredHistory';
@@ -843,11 +844,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     defaultValue: CHAT_PARAGRAPH_SPACING.defaultValue,
     normalize: (v) => clampNumber(v, CHAT_PARAGRAPH_SPACING.min, CHAT_PARAGRAPH_SPACING.max),
     onApply: useCallback((value: number) => {
-      const clamped = clampNumber(
-        value,
-        CHAT_PARAGRAPH_SPACING.min,
-        CHAT_PARAGRAPH_SPACING.max,
-      );
+      const clamped = clampNumber(value, CHAT_PARAGRAPH_SPACING.min, CHAT_PARAGRAPH_SPACING.max);
       try {
         chrome.storage?.sync?.set({ [StorageKeys.CHAT_PARAGRAPH_SPACING]: clamped });
       } catch {}
@@ -2215,18 +2212,21 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         {!isAIStudio &&
           wrapSection(
             'gemsSidebar',
-            <WidthSlider
-              label={t('gemsSidebarCount')}
-              value={gemsSidebarCountAdjuster.width}
-              min={GEMS_SIDEBAR_COUNT.min}
-              max={GEMS_SIDEBAR_COUNT.max}
-              step={1}
-              narrowLabel={t('gemsSidebarCountOff')}
-              wideLabel={t('gemsSidebarCountMany')}
-              valueFormatter={(v) => (v === 0 ? t('gemsSidebarCountOff') : String(v))}
-              onChange={gemsSidebarCountAdjuster.handleChange}
-              onChangeComplete={gemsSidebarCountAdjuster.handleChangeComplete}
-            />,
+            <>
+              <WidthSlider
+                label={t('gemsSidebarCount')}
+                value={gemsSidebarCountAdjuster.width}
+                min={GEMS_SIDEBAR_COUNT.min}
+                max={GEMS_SIDEBAR_COUNT.max}
+                step={1}
+                narrowLabel={t('gemsSidebarCountOff')}
+                wideLabel={t('gemsSidebarCountMany')}
+                valueFormatter={(v) => (v === 0 ? t('gemsSidebarCountOff') : String(v))}
+                onChange={gemsSidebarCountAdjuster.handleChange}
+                onChangeComplete={gemsSidebarCountAdjuster.handleChangeComplete}
+              />
+              {gemsSidebarCountAdjuster.width > 0 && <GemsPinSettings />}
+            </>,
           )}
         {/* Chat Width */}
         {wrapSection(

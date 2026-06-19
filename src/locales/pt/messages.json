@@ -1599,6 +1599,38 @@
     "message": "Muitos",
     "description": "Wide-end label on the gems count slider (count up to 10)."
   },
+  "gemsPinnedTitle": {
+    "message": "Gems fixados",
+    "description": "Popup card title — picker for pinning specific gems to the sidebar list."
+  },
+  "gemsPinnedDescription": {
+    "message": "Os Gems fixados sempre aparecem no topo da lista da barra lateral, nesta ordem. As vagas restantes são preenchidas com os Gems usados recentemente.",
+    "description": "Explains pinned gems always show first in pinned order; remaining slots fill with recent gems."
+  },
+  "gemsPinnedEmpty": {
+    "message": "Nenhum Gem encontrado ainda — abra a página de Gems no Gemini uma vez para carregar sua lista.",
+    "description": "Shown when no gems are cached yet; tells the user to open Gemini's Gems page once."
+  },
+  "gemsPinnedAvailable": {
+    "message": "Gems disponíveis",
+    "description": "Sub-header above the list of known gems that are not pinned yet."
+  },
+  "gemsPinnedPin": {
+    "message": "Fixar",
+    "description": "Button tooltip — pin a gem so it always shows in the sidebar."
+  },
+  "gemsPinnedUnpin": {
+    "message": "Desafixar",
+    "description": "Button tooltip — remove a gem from the pinned list."
+  },
+  "gemsPinnedMoveUp": {
+    "message": "Mover para cima",
+    "description": "Button tooltip — move a pinned gem up in the display order."
+  },
+  "gemsPinnedMoveDown": {
+    "message": "Mover para baixo",
+    "description": "Button tooltip — move a pinned gem down in the display order."
+  },
   "usageStatusTitle": {
     "message": "Limites de uso do Gemini",
     "description": "Accessible label / tooltip for the usage status pill near the composer."
