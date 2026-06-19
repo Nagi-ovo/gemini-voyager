@@ -436,8 +436,8 @@
     "description": "Large font size label"
   },
   "chatLineHeight": {
-    "message": "チャットの行間",
-    "description": "Chat message line spacing adjustment label"
+    "message": "チャットの間隔",
+    "description": "Chat message spacing adjustment label"
   },
   "chatLineHeightTight": {
     "message": "狭め",
@@ -446,6 +446,10 @@
   "chatLineHeightLoose": {
     "message": "広め",
     "description": "Loose chat line spacing label"
+  },
+  "chatParagraphSpacing": {
+    "message": "チャットの段落間隔",
+    "description": "Chat message paragraph spacing adjustment label"
   },
   "sidebarWidth": {
     "message": "サイドバーの幅",

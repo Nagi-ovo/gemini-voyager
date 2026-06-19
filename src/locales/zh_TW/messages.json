@@ -396,8 +396,8 @@
     "description": "大字體大小標籤"
   },
   "chatLineHeight": {
-    "message": "對話行距",
-    "description": "對話訊息行距調整標籤"
+    "message": "對話間距",
+    "description": "對話訊息間距調整標籤"
   },
   "chatLineHeightTight": {
     "message": "緊湊",
@@ -406,6 +406,10 @@
   "chatLineHeightLoose": {
     "message": "寬鬆",
     "description": "寬鬆行距標籤"
+  },
+  "chatParagraphSpacing": {
+    "message": "對話段落間距",
+    "description": "對話訊息段落間距調整標籤"
   },
   "sidebarWidth": {
     "message": "側邊欄寬度",

@@ -436,8 +436,8 @@
     "description": "Large font size label"
   },
   "chatLineHeight": {
-    "message": "대화 줄 간격",
-    "description": "Chat message line spacing adjustment label"
+    "message": "대화 간격",
+    "description": "Chat message spacing adjustment label"
   },
   "chatLineHeightTight": {
     "message": "좁게",
@@ -446,6 +446,10 @@
   "chatLineHeightLoose": {
     "message": "넓게",
     "description": "Loose chat line spacing label"
+  },
+  "chatParagraphSpacing": {
+    "message": "대화 문단 간격",
+    "description": "Chat message paragraph spacing adjustment label"
   },
   "sidebarWidth": {
     "message": "사이드바 너비",

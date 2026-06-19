@@ -436,8 +436,8 @@
     "description": "Large font size label"
   },
   "chatLineHeight": {
-    "message": "Chat line spacing",
-    "description": "Chat message line spacing adjustment label"
+    "message": "Chat spacing",
+    "description": "Chat message spacing adjustment label"
   },
   "chatLineHeightTight": {
     "message": "Tight",
@@ -446,6 +446,10 @@
   "chatLineHeightLoose": {
     "message": "Loose",
     "description": "Loose chat line spacing label"
+  },
+  "chatParagraphSpacing": {
+    "message": "Chat paragraph spacing",
+    "description": "Chat message paragraph spacing adjustment label"
   },
   "sidebarWidth": {
     "message": "Sidebar width",

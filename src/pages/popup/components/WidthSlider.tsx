@@ -19,6 +19,7 @@ interface WidthSliderProps {
   enabled?: boolean;
   /** Callback when the toggle is flipped */
   onToggle?: (enabled: boolean) => void;
+  children?: React.ReactNode;
 }
 
 /**
@@ -38,6 +39,7 @@ export default function WidthSlider({
   onChangeComplete,
   enabled,
   onToggle,
+  children,
 }: WidthSliderProps) {
   const formatValue = valueFormatter ?? ((v: number) => `${v}%`);
   const hasToggle = enabled !== undefined && onToggle !== undefined;
@@ -67,7 +69,7 @@ export default function WidthSlider({
       <div
         className="overflow-hidden transition-all duration-200 ease-in-out"
         style={{
-          maxHeight: isExpanded ? '120px' : '0px',
+          maxHeight: isExpanded ? (children ? '240px' : '120px') : '0px',
           opacity: isExpanded ? 1 : 0,
           marginTop: isExpanded ? '12px' : '0px',
         }}
@@ -88,6 +90,7 @@ export default function WidthSlider({
               <span>{narrowLabel}</span>
               <span>{wideLabel}</span>
             </div>
+            {children}
           </div>
         </CardContent>
       </div>

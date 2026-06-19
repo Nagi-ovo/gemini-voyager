@@ -436,8 +436,8 @@
     "description": "大字体大小标签"
   },
   "chatLineHeight": {
-    "message": "对话行间距",
-    "description": "对话消息行间距调整标签"
+    "message": "对话间距",
+    "description": "对话消息间距调整标签"
   },
   "chatLineHeightTight": {
     "message": "紧凑",
@@ -446,6 +446,10 @@
   "chatLineHeightLoose": {
     "message": "宽松",
     "description": "宽松行间距标签"
+  },
+  "chatParagraphSpacing": {
+    "message": "对话段落间距",
+    "description": "对话消息段落间距调整标签"
   },
   "sidebarWidth": {
     "message": "侧边栏宽度",

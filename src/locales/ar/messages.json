@@ -436,8 +436,8 @@
     "description": "Large font size label"
   },
   "chatLineHeight": {
-    "message": "تباعد أسطر الدردشة",
-    "description": "Chat message line spacing adjustment label"
+    "message": "تباعد الدردشة",
+    "description": "Chat message spacing adjustment label"
   },
   "chatLineHeightTight": {
     "message": "ضيق",
@@ -446,6 +446,10 @@
   "chatLineHeightLoose": {
     "message": "واسع",
     "description": "Loose chat line spacing label"
+  },
+  "chatParagraphSpacing": {
+    "message": "تباعد فقرات الدردشة",
+    "description": "Chat message paragraph spacing adjustment label"
   },
   "sidebarWidth": {
     "message": "عرض الشريط الجانبي",

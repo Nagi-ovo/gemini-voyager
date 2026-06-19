@@ -69,6 +69,7 @@ export const StorageKeys = {
   CHAT_FONT_SIZE_ENABLED: 'gvChatFontSizeEnabled',
   CHAT_LINE_HEIGHT: 'gvChatLineHeight',
   CHAT_LINE_HEIGHT_ENABLED: 'gvChatLineHeightEnabled',
+  CHAT_PARAGRAPH_SPACING: 'gvChatParagraphSpacing',
   EDIT_INPUT_WIDTH: 'geminiEditInputWidth',
   EDIT_INPUT_WIDTH_ENABLED: 'gvEditInputWidthEnabled',
   SIDEBAR_WIDTH: 'geminiSidebarWidth',

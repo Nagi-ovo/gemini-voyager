@@ -46,6 +46,7 @@ import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../components/ui/card';
 import { Label } from '../../components/ui/label';
+import { Slider } from '../../components/ui/slider';
 import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
@@ -297,6 +298,7 @@ const GEMS_SIDEBAR_COUNT = { min: 0, max: 10, defaultValue: 3 };
 const CHAT_PERCENT = { min: 30, max: 100, defaultValue: 70, legacyBaselinePx: LEGACY_BASELINE_PX };
 const CHAT_FONT_SIZE = { min: 80, max: 150, defaultValue: 100 };
 const CHAT_LINE_HEIGHT = { min: 120, max: 220, defaultValue: 160 };
+const CHAT_PARAGRAPH_SPACING = { min: 0, max: 24, defaultValue: 12 };
 const EDIT_PERCENT = { min: 30, max: 100, defaultValue: 60, legacyBaselinePx: LEGACY_BASELINE_PX };
 const SIDEBAR_PERCENT = {
   min: 15,
@@ -835,6 +837,23 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     }, []),
   });
 
+  // Paragraph spacing adjuster for chat messages
+  const chatParagraphSpacingAdjuster = useWidthAdjuster({
+    storageKey: StorageKeys.CHAT_PARAGRAPH_SPACING,
+    defaultValue: CHAT_PARAGRAPH_SPACING.defaultValue,
+    normalize: (v) => clampNumber(v, CHAT_PARAGRAPH_SPACING.min, CHAT_PARAGRAPH_SPACING.max),
+    onApply: useCallback((value: number) => {
+      const clamped = clampNumber(
+        value,
+        CHAT_PARAGRAPH_SPACING.min,
+        CHAT_PARAGRAPH_SPACING.max,
+      );
+      try {
+        chrome.storage?.sync?.set({ [StorageKeys.CHAT_PARAGRAPH_SPACING]: clamped });
+      } catch {}
+    }, []),
+  });
+
   // Width adjuster for edit input width
   const editInputWidthAdjuster = useWidthAdjuster({
     storageKey: 'geminiEditInputWidth',
@@ -1109,6 +1128,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           [StorageKeys.CHAT_FONT_SIZE]: CHAT_FONT_SIZE.defaultValue,
           [StorageKeys.CHAT_LINE_HEIGHT_ENABLED]: false,
           [StorageKeys.CHAT_LINE_HEIGHT]: CHAT_LINE_HEIGHT.defaultValue,
+          [StorageKeys.CHAT_PARAGRAPH_SPACING]: CHAT_PARAGRAPH_SPACING.defaultValue,
           gvEditInputWidthEnabled: false,
           gvSidebarWidthEnabled: false,
           geminiChatWidth: CHAT_PERCENT.defaultValue,
@@ -2252,7 +2272,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             }}
           />,
         )}
-        {/* Chat Line Height */}
+        {/* Chat Spacing */}
         {wrapSection(
           'chatLineHeight',
           <WidthSlider
@@ -2272,7 +2292,30 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                 chrome.storage?.sync?.set({ [StorageKeys.CHAT_LINE_HEIGHT_ENABLED]: v });
               } catch {}
             }}
-          />,
+          >
+            <div className="border-border/60 mt-4 border-t pt-3">
+              <div className="mb-2 flex items-center justify-between text-xs font-medium">
+                <span className="text-foreground">{t('chatParagraphSpacing')}</span>
+                <span className="text-primary bg-primary/10 rounded-md px-2 py-0.5 font-bold">
+                  {chatParagraphSpacingAdjuster.width}px
+                </span>
+              </div>
+              <Slider
+                min={CHAT_PARAGRAPH_SPACING.min}
+                max={CHAT_PARAGRAPH_SPACING.max}
+                step={1}
+                value={chatParagraphSpacingAdjuster.width}
+                onValueChange={chatParagraphSpacingAdjuster.handleChange}
+                onValueCommit={chatParagraphSpacingAdjuster.handleChangeComplete}
+                aria-label={t('chatParagraphSpacing')}
+                aria-valuetext={`${chatParagraphSpacingAdjuster.width}px`}
+              />
+              <div className="text-muted-foreground mt-3 flex items-center justify-between text-xs font-medium">
+                <span>{t('chatLineHeightTight')}</span>
+                <span>{t('chatLineHeightLoose')}</span>
+              </div>
+            </div>
+          </WidthSlider>,
         )}
         {/* Edit Input Width */}
         {wrapSection(

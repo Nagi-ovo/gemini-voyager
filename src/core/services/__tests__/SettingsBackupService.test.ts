@@ -30,6 +30,7 @@ describe('SettingsBackupService', () => {
         [StorageKeys.CHAT_WIDTH]: 88,
         [StorageKeys.CHAT_FONT_SIZE]: 100,
         [StorageKeys.CHAT_LINE_HEIGHT]: 160,
+        [StorageKeys.CHAT_PARAGRAPH_SPACING]: 12,
       }),
     });
     expect(payload.data).not.toHaveProperty('unknownKey');

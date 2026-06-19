@@ -436,8 +436,8 @@
     "description": "Large font size label"
   },
   "chatLineHeight": {
-    "message": "Межстрочный интервал чата",
-    "description": "Chat message line spacing adjustment label"
+    "message": "Интервалы чата",
+    "description": "Chat message spacing adjustment label"
   },
   "chatLineHeightTight": {
     "message": "Плотный",
@@ -446,6 +446,10 @@
   "chatLineHeightLoose": {
     "message": "Свободный",
     "description": "Loose chat line spacing label"
+  },
+  "chatParagraphSpacing": {
+    "message": "Интервал между абзацами чата",
+    "description": "Chat message paragraph spacing adjustment label"
   },
   "sidebarWidth": {
     "message": "Ширина боковой панели",
