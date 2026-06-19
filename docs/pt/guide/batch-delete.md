@@ -1,6 +1,6 @@
 # Eliminação em Lote
 
-Elimine várias conversas de uma só vez, sem precisar de apagar uma a uma.
+Elimine várias conversas de uma só vez no Gemini e no AI Studio, sem precisar de apagar uma a uma.
 
 ## Funcionalidades
 
@@ -15,12 +15,21 @@ Elimine várias conversas de uma só vez, sem precisar de apagar uma a uma.
 
 ## Como Usar
 
+### Gemini
+
 1. Na lista de conversas da barra lateral, **pressione e segure** qualquer item de conversa.
 2. Após entrar no modo de seleção múltipla, aparecerão caixas de seleção no lado esquerdo de cada conversa.
 3. Marque as conversas que deseja eliminar (até 50 de uma vez).
 4. Clique no **botão Eliminar** que aparece.
 5. Clique em "Confirmar" na área de confirmação vermelha que aparece **acima da lista de pastas** para iniciar a eliminação.
 
+### AI Studio
+
+1. Abra a página **Library** do AI Studio.
+2. **Pressione e segure** qualquer linha de prompt para entrar no modo de seleção múltipla.
+3. Selecione os prompts que deseja eliminar (até 50 de uma vez).
+4. Clique no **botão Eliminar** flutuante e confirme o aviso do navegador.
+
 ::: tip Nota
-O painel de confirmação sobrepõe a área de pastas para evitar bloquear a lista de conversas. As operações de eliminação em lote não podem ser desfeitas, por isso prossiga com cuidado.
+No Gemini, o painel de confirmação sobrepõe a área de pastas para evitar bloquear a lista de conversas. As operações de eliminação em lote não podem ser desfeitas, por isso prossiga com cuidado.
 :::

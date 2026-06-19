@@ -5818,6 +5818,16 @@ body.dark-theme .gv-folders-anchor-toggle:hover,
   z-index: 1;
 }
 
+tr.gv-library-row-selected,
+tr.gv-library-row-selected:hover {
+  background: color-mix(in srgb, var(--folder-selected-accent) 7%, transparent) !important;
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--folder-selected-accent) 82%, transparent);
+}
+
+tr.gv-library-row-selected td {
+  background: transparent !important;
+}
+
 .gv-aistudio .gv-conversation-title {
   min-width: 0;
 }

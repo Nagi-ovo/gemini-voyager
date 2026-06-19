@@ -116,6 +116,8 @@ const PROMPT_DRAG_HOST_SELECTORS = [
   'li',
 ];
 
+type LibraryPromptData = DragData & { conversationId: string };
+
 function nodeContainsPromptLink(node: Node): boolean {
   if (!(node instanceof Element)) return false;
   if (node.matches(PROMPT_LINK_SELECTOR)) return true;
@@ -237,6 +239,12 @@ export class AIStudioFolderManager {
   private promptListBindTimer: number | null = null;
   private promptTitleSyncTimer: number | null = null;
   private promptTitleSyncInProgress: boolean = false;
+  private selectedLibraryPrompts: Set<string> = new Set();
+  private isLibraryMultiSelectMode: boolean = false;
+  private libraryOutsideClickHandler: ((e: MouseEvent) => void) | null = null;
+  private libraryMultiSelectHostElement: HTMLElement | null = null;
+  private libraryBatchDeleteInProgress: boolean = false;
+  private libraryBatchDeleteProgressElement: HTMLElement | null = null;
   private readonly STORAGE_KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private hideArchivedEnabled: boolean = false; // AI Studio-scoped — hide filed convs in /library table
@@ -252,6 +260,17 @@ export class AIStudioFolderManager {
   private readonly MIN_SIDEBAR_WIDTH = 240;
   private readonly MAX_SIDEBAR_WIDTH = 600;
   private readonly UNCATEGORIZED_KEY = '__uncategorized__'; // Special key for root-level conversations
+  private readonly LIBRARY_LONG_PRESS_MS = 500;
+  private readonly MAX_LIBRARY_BATCH_DELETE_COUNT = 50;
+  private readonly LIBRARY_BATCH_DELETE_CONFIG = {
+    DELAY_BETWEEN_DELETIONS: 500,
+    MENU_APPEAR_DELAY: 300,
+    DIALOG_APPEAR_DELAY: 300,
+    DELETION_COMPLETE_DELAY: 500,
+    MAX_BUTTON_WAIT_TIME: 3000,
+    BUTTON_CHECK_INTERVAL: 100,
+    PAGE_REFRESH_DELAY: 1500,
+  } as const;
 
   // Helper to create a ligature icon span with a data-icon attribute
   private createIcon(name: string): HTMLSpanElement {
@@ -1084,6 +1103,9 @@ export class AIStudioFolderManager {
       setTimeout(() => {
         this.ensureContainerMounted();
         this.updateLibraryShortcutVisibility();
+        if (!/\/library(\/|$)/.test(location.pathname) && this.isLibraryMultiSelectMode) {
+          this.exitLibraryMultiSelectMode();
+        }
         this.ensureLibraryBindings();
         this.highlightActiveConversation();
       }, 0);
@@ -1844,11 +1866,9 @@ export class AIStudioFolderManager {
   private observeLibraryTable(): void {
     if (this.libraryTableObserver) return;
 
-    const bodyObserver = new MutationObserver(() => {
-      const table = document.querySelector('table.mat-mdc-table, mat-table');
-      if (table) {
-        this.bindDraggablesInLibraryTable();
-      }
+    const bodyObserver = new MutationObserver((mutations) => {
+      if (!this.libraryTableMutated(mutations)) return;
+      this.bindDraggablesInLibraryTable();
     });
     try {
       bodyObserver.observe(document.body, { childList: true, subtree: true });
@@ -1862,6 +1882,32 @@ export class AIStudioFolderManager {
     });
   }
 
+  private libraryTableMutated(mutations: MutationRecord[]): boolean {
+    for (const mutation of mutations) {
+      if (
+        mutation.target instanceof Element &&
+        mutation.target.closest('table.mat-mdc-table, mat-table')
+      ) {
+        return true;
+      }
+
+      for (const node of Array.from(mutation.addedNodes)) {
+        if (!(node instanceof Element)) continue;
+        if (
+          node.matches(
+            'table.mat-mdc-table, mat-table, tr.mat-mdc-row, tr[mat-row], tr[role="row"]',
+          ) ||
+          !!node.querySelector(
+            'table.mat-mdc-table, mat-table, tr.mat-mdc-row, tr[mat-row], tr[role="row"]',
+          )
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   /**
    * Bind drag handlers to library table rows
    * Each row contains an anchor with href like /prompts/{id}
@@ -1869,14 +1915,10 @@ export class AIStudioFolderManager {
   private bindDraggablesInLibraryTable(): void {
     // Find all table rows that contain chat prompt links
     // The structure from user's example: <tr> > <td> > <a href="/prompts/..."> title </a>
-    const rows = document.querySelectorAll('tr.mat-mdc-row, tr[mat-row]');
+    const rows = this.getLibraryPromptRows();
     rows.forEach((row) => {
-      const tr = row as HTMLElement;
-      // Find the anchor with prompt link in this row
-      // Matches: a[href^="/prompts/"] or a.name-btn with /prompts/ in href
-      const anchor = tr.querySelector(
-        'a[href^="/prompts/"], a.name-btn[href*="/prompts/"]',
-      ) as HTMLAnchorElement | null;
+      const tr = row;
+      const anchor = this.getLibraryPromptAnchor(tr);
       if (!anchor) return;
 
       // Skip if already bound
@@ -1893,22 +1935,18 @@ export class AIStudioFolderManager {
         (anchor.style as CSSStyleDeclaration & { webkitUserDrag?: string }).webkitUserDrag = 'none';
       } catch {}
 
-      const buildDragData = (): DragData => {
-        const id = this.extractPromptId(anchor);
-        const title = this.extractPromptTitle(anchor) || '';
-        const rawHref = anchor.getAttribute('href') || anchor.href || '';
-        const url = rawHref.startsWith('http')
-          ? rawHref
-          : `${location.origin}${rawHref.startsWith('/') ? '' : '/'}${rawHref}`;
-        return { type: 'conversation', conversationId: id, title, url };
-      };
+      const buildDragData = (): LibraryPromptData | null => this.buildLibraryPromptData(tr);
 
       const onDragStart = (e: DragEvent) => {
         // Prevent interference from Angular Material's own drag handling if any
         e.stopPropagation();
-        this.setPromptDragData(e, buildDragData(), tr);
+        const data = buildDragData();
+        if (!data) return;
+        this.setPromptDragData(e, data, tr);
         tr.style.opacity = '0.5';
       };
+
+      this.bindLibraryMultiSelectRow(tr);
 
       // Primary: row-level drag covers every cell (icon, title, description, type, timestamp, overflow).
       tr.addEventListener('dragstart', onDragStart, true);
@@ -1925,6 +1963,487 @@ export class AIStudioFolderManager {
     // Rows are bound opportunistically as the table updates; re-sync the hide-archived
     // state each pass so newly added rows pick up the current setting.
     this.applyHideArchivedToLibraryTable();
+    this.updateLibrarySelectionUI();
+  }
+
+  private getLibraryPromptRows(): HTMLElement[] {
+    return Array.from(
+      document.querySelectorAll<HTMLElement>('tr.mat-mdc-row, tr[mat-row], tr[role="row"]'),
+    ).filter((row) => !!this.getLibraryPromptAnchor(row));
+  }
+
+  private getLibraryPromptAnchor(row: HTMLElement): HTMLAnchorElement | null {
+    return row.querySelector(PROMPT_LINK_SELECTOR) as HTMLAnchorElement | null;
+  }
+
+  private buildLibraryPromptData(row: HTMLElement): LibraryPromptData | null {
+    const anchor = this.getLibraryPromptAnchor(row);
+    if (!anchor) return null;
+    const conversationId = this.extractPromptId(anchor);
+    if (!conversationId) return null;
+    const title = this.extractPromptTitle(anchor) || '';
+    const rawHref = anchor.getAttribute('href') || anchor.href || '';
+    const url = rawHref.startsWith('http')
+      ? rawHref
+      : `${location.origin}${rawHref.startsWith('/') ? '' : '/'}${rawHref}`;
+    return { type: 'conversation', conversationId, title, url };
+  }
+
+  private bindLibraryMultiSelectRow(row: HTMLElement): void {
+    if ((row as Element & { _gvLibraryMultiSelectBound?: boolean })._gvLibraryMultiSelectBound)
+      return;
+    (row as Element & { _gvLibraryMultiSelectBound?: boolean })._gvLibraryMultiSelectBound = true;
+
+    let longPressTriggered = false;
+    let longPressTimeoutId: number | null = null;
+
+    const clearLongPress = () => {
+      if (longPressTimeoutId === null) return;
+      clearTimeout(longPressTimeoutId);
+      longPressTimeoutId = null;
+    };
+
+    row.addEventListener('mousedown', (event) => {
+      if (event.button !== 0) return;
+      if (event.target instanceof Element && event.target.closest('button, [role="button"]')) {
+        return;
+      }
+      const data = this.buildLibraryPromptData(row);
+      if (!data) return;
+      longPressTriggered = false;
+      clearLongPress();
+      longPressTimeoutId = window.setTimeout(() => {
+        longPressTriggered = true;
+        this.enterLibraryMultiSelectMode(data.conversationId);
+      }, this.LIBRARY_LONG_PRESS_MS);
+    });
+
+    row.addEventListener('mouseup', clearLongPress);
+    row.addEventListener('mouseleave', clearLongPress);
+
+    row.addEventListener(
+      'click',
+      (event) => {
+        if (event.target instanceof Element && event.target.closest('button, [role="button"]')) {
+          return;
+        }
+        if (this.libraryBatchDeleteInProgress) return;
+
+        if (longPressTriggered) {
+          event.preventDefault();
+          event.stopPropagation();
+          longPressTriggered = false;
+          return;
+        }
+
+        if (!this.isLibraryMultiSelectMode) return;
+
+        const data = this.buildLibraryPromptData(row);
+        if (!data) return;
+        event.preventDefault();
+        event.stopPropagation();
+        this.toggleLibraryPromptSelection(data.conversationId);
+      },
+      true,
+    );
+  }
+
+  private enterLibraryMultiSelectMode(initialConversationId: string): void {
+    this.isLibraryMultiSelectMode = true;
+    this.selectedLibraryPrompts.add(initialConversationId);
+    this.updateLibrarySelectionUI();
+    this.setupLibraryOutsideClickHandler();
+  }
+
+  private exitLibraryMultiSelectMode(): void {
+    this.isLibraryMultiSelectMode = false;
+    this.removeLibraryOutsideClickHandler();
+    this.selectedLibraryPrompts.clear();
+    this.updateLibrarySelectionUI();
+  }
+
+  private toggleLibraryPromptSelection(conversationId: string): void {
+    if (this.selectedLibraryPrompts.has(conversationId)) {
+      this.selectedLibraryPrompts.delete(conversationId);
+      if (this.selectedLibraryPrompts.size === 0) {
+        this.exitLibraryMultiSelectMode();
+        return;
+      }
+    } else {
+      if (this.selectedLibraryPrompts.size >= this.MAX_LIBRARY_BATCH_DELETE_COUNT) {
+        this.showNotification(
+          this.t('batch_delete_limit_reached').replace(
+            '{max}',
+            String(this.MAX_LIBRARY_BATCH_DELETE_COUNT),
+          ),
+          'info',
+        );
+        return;
+      }
+      this.selectedLibraryPrompts.add(conversationId);
+    }
+    this.updateLibrarySelectionUI();
+  }
+
+  private updateLibrarySelectionUI(): void {
+    this.getLibraryPromptRows().forEach((row) => {
+      const data = this.buildLibraryPromptData(row);
+      row.classList.toggle(
+        'gv-library-row-selected',
+        !!data && this.selectedLibraryPrompts.has(data.conversationId),
+      );
+    });
+
+    const host = this.isLibraryMultiSelectMode
+      ? this.getLibraryMultiSelectHost()
+      : this.getExistingLibraryMultiSelectHost();
+    if (!host) return;
+
+    host.classList.toggle('gv-multi-select-mode', this.isLibraryMultiSelectMode);
+
+    const count = host.querySelector('[data-selection-count="true"]');
+    if (count) count.textContent = `${this.selectedLibraryPrompts.size} selected`;
+
+    const actions = host.querySelector('[data-multi-select-actions="true"]');
+    if (!actions) return;
+    if (!this.isLibraryMultiSelectMode) {
+      if (actions.childElementCount > 0) actions.innerHTML = '';
+      return;
+    }
+    if (actions.childElementCount > 0) return;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'gv-multi-select-action-btn gv-multi-select-delete-btn';
+    deleteBtn.title = this.t('batch_delete_button');
+    deleteBtn.appendChild(this.createIcon('delete'));
+    deleteBtn.addEventListener('click', () => void this.batchDeleteLibraryPrompts());
+    actions.appendChild(deleteBtn);
+
+    const exitBtn = document.createElement('button');
+    exitBtn.className = 'gv-multi-select-action-btn gv-multi-select-exit-btn';
+    exitBtn.title = 'Exit multi-select mode';
+    exitBtn.appendChild(this.createIcon('close'));
+    exitBtn.addEventListener('click', () => this.exitLibraryMultiSelectMode());
+    actions.appendChild(exitBtn);
+  }
+
+  private createLibraryMultiSelectIndicator(): HTMLElement {
+    const indicator = document.createElement('div');
+    indicator.className = 'gv-multi-select-indicator';
+
+    const content = document.createElement('div');
+    content.className = 'gv-multi-select-indicator-content';
+    content.appendChild(this.createIcon('check_circle'));
+
+    const text = document.createElement('span');
+    text.className = 'gv-multi-select-indicator-text';
+    text.dataset.selectionCount = 'true';
+    text.textContent = '0 selected';
+    content.appendChild(text);
+    indicator.appendChild(content);
+
+    const actions = document.createElement('div');
+    actions.className = 'gv-multi-select-actions';
+    actions.dataset.multiSelectActions = 'true';
+    indicator.appendChild(actions);
+
+    return indicator;
+  }
+
+  private getLibraryMultiSelectHost(): HTMLElement {
+    if (!this.libraryMultiSelectHostElement?.isConnected) {
+      const host = document.createElement('div');
+      host.className =
+        'gv-folder-container gv-multi-select-floating-host gv-aistudio-library-select';
+      host.dataset.multiSelectFloatingHost = 'true';
+      host.style.position = 'fixed';
+      host.style.top = '72px';
+      host.style.right = '24px';
+      host.style.width = 'min(360px, calc(100vw - 48px))';
+      host.style.zIndex = String(2147483647);
+      host.appendChild(this.createLibraryMultiSelectIndicator());
+      document.body.appendChild(host);
+      this.libraryMultiSelectHostElement = host;
+    }
+    return this.libraryMultiSelectHostElement;
+  }
+
+  private getExistingLibraryMultiSelectHost(): HTMLElement | null {
+    return this.libraryMultiSelectHostElement?.isConnected
+      ? this.libraryMultiSelectHostElement
+      : null;
+  }
+
+  private setupLibraryOutsideClickHandler(): void {
+    this.removeLibraryOutsideClickHandler();
+    this.libraryOutsideClickHandler = (event) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (this.libraryMultiSelectHostElement?.contains(target)) return;
+      if ((target as Element).closest?.('.cdk-overlay-container, .mat-mdc-dialog-container'))
+        return;
+      if (this.getLibraryPromptRows().some((row) => row.contains(target))) return;
+      this.exitLibraryMultiSelectMode();
+    };
+    setTimeout(() => {
+      document.addEventListener('click', this.libraryOutsideClickHandler!, true);
+    }, 0);
+  }
+
+  private removeLibraryOutsideClickHandler(): void {
+    if (!this.libraryOutsideClickHandler) return;
+    document.removeEventListener('click', this.libraryOutsideClickHandler, true);
+    this.libraryOutsideClickHandler = null;
+  }
+
+  private async batchDeleteLibraryPrompts(): Promise<void> {
+    if (this.libraryBatchDeleteInProgress) return;
+    const conversationIds = Array.from(this.selectedLibraryPrompts);
+    if (conversationIds.length === 0) return;
+
+    const confirmed = confirm(
+      this.t('batch_delete_confirm').replace('{count}', String(conversationIds.length)),
+    );
+    if (!confirmed) return;
+
+    this.libraryBatchDeleteInProgress = true;
+    let successCount = 0;
+    let failedCount = 0;
+
+    try {
+      this.showLibraryBatchDeleteProgress(0, conversationIds.length);
+      for (let i = 0; i < conversationIds.length; i++) {
+        this.updateLibraryBatchDeleteProgress(i + 1, conversationIds.length);
+        const success = await this.triggerLibraryDeleteForPrompt(conversationIds[i]);
+        if (success) successCount++;
+        else failedCount++;
+        if (i < conversationIds.length - 1) {
+          await this.delay(this.LIBRARY_BATCH_DELETE_CONFIG.DELAY_BETWEEN_DELETIONS);
+        }
+      }
+    } finally {
+      this.libraryBatchDeleteInProgress = false;
+      this.hideLibraryBatchDeleteProgress();
+    }
+
+    if (failedCount === 0) {
+      this.showNotification(
+        this.t('batch_delete_success').replace('{count}', String(successCount)),
+        'info',
+      );
+    } else {
+      this.showNotification(
+        this.t('batch_delete_partial')
+          .replace('{success}', String(successCount))
+          .replace('{failed}', String(failedCount)),
+        'warning',
+      );
+    }
+
+    this.exitLibraryMultiSelectMode();
+    if (successCount > 0) {
+      setTimeout(() => location.reload(), this.LIBRARY_BATCH_DELETE_CONFIG.PAGE_REFRESH_DELAY);
+    }
+  }
+
+  private async triggerLibraryDeleteForPrompt(conversationId: string): Promise<boolean> {
+    const row = this.findLibraryPromptRow(conversationId);
+    if (!row) return false;
+    const moreButton = row.querySelector<HTMLElement>(
+      'button[aria-label="More options"], button[aria-label*="More"], button.ms-button-icon',
+    );
+    if (!moreButton) return false;
+
+    moreButton.click();
+    await this.delay(this.LIBRARY_BATCH_DELETE_CONFIG.MENU_APPEAR_DELAY);
+    const deleteClicked = await this.waitForDeleteButtonAndClick();
+    if (!deleteClicked) {
+      this.clickBackdropToCloseMenu();
+      return false;
+    }
+
+    await this.delay(this.LIBRARY_BATCH_DELETE_CONFIG.DIALOG_APPEAR_DELAY);
+    await this.confirmDeleteIfNeeded();
+    await this.delay(this.LIBRARY_BATCH_DELETE_CONFIG.DELETION_COMPLETE_DELAY);
+    return true;
+  }
+
+  private findLibraryPromptRow(conversationId: string): HTMLElement | null {
+    for (const row of this.getLibraryPromptRows()) {
+      const data = this.buildLibraryPromptData(row);
+      if (data?.conversationId === conversationId) return row;
+    }
+    return null;
+  }
+
+  private async waitForDeleteButtonAndClick(): Promise<boolean> {
+    const maxWaitTime = this.LIBRARY_BATCH_DELETE_CONFIG.MAX_BUTTON_WAIT_TIME;
+    const checkInterval = this.LIBRARY_BATCH_DELETE_CONFIG.BUTTON_CHECK_INTERVAL;
+    const keywords = this.getDeleteKeywords();
+    let elapsed = 0;
+
+    while (elapsed < maxWaitTime) {
+      const byTestId = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-test-id="delete-button"]'),
+      ).find((el) => this.isVisibleElement(el));
+      if (byTestId) {
+        byTestId.click();
+        return true;
+      }
+
+      const menuItems = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '.cdk-overlay-container button[role="menuitem"], .cdk-overlay-container [role="menuitem"], .mat-mdc-menu-content button',
+        ),
+      );
+      for (const item of menuItems) {
+        if (!this.isVisibleElement(item)) continue;
+        const text = normalizeText(item.textContent).toLowerCase();
+        if (
+          keywords.some(
+            (keyword) => text === keyword || (text.includes(keyword) && text.length < 20),
+          )
+        ) {
+          item.click();
+          return true;
+        }
+      }
+
+      const deleteIcon = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '.cdk-overlay-container mat-icon, .cdk-overlay-container .material-icons, .cdk-overlay-container .google-symbols',
+        ),
+      ).find((icon) => {
+        const text = normalizeText(icon.textContent).toLowerCase();
+        const fontIcon = normalizeText(icon.getAttribute('fonticon')).toLowerCase();
+        return ['delete', 'delete_forever', 'delete_outline'].includes(text || fontIcon);
+      });
+      const iconButton = deleteIcon?.closest('button, [role="menuitem"]') as HTMLElement | null;
+      if (iconButton && this.isVisibleElement(iconButton)) {
+        iconButton.click();
+        return true;
+      }
+
+      await this.delay(checkInterval);
+      elapsed += checkInterval;
+    }
+
+    return false;
+  }
+
+  private async confirmDeleteIfNeeded(): Promise<void> {
+    const maxWaitTime = this.LIBRARY_BATCH_DELETE_CONFIG.MAX_BUTTON_WAIT_TIME;
+    const checkInterval = this.LIBRARY_BATCH_DELETE_CONFIG.BUTTON_CHECK_INTERVAL;
+    const keywords = this.getDeleteKeywords();
+    let elapsed = 0;
+
+    while (elapsed < maxWaitTime) {
+      const confirmByTestId = document.querySelector<HTMLElement>(
+        '[data-test-id*="confirm"], [data-test-id*="delete"]:not([data-test-id="delete-button"])',
+      );
+      if (confirmByTestId && this.isVisibleElement(confirmByTestId)) {
+        confirmByTestId.click();
+        return;
+      }
+
+      const buttons = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '.cdk-overlay-container button, .mat-mdc-dialog-container button',
+        ),
+      ).filter((button) => this.isVisibleElement(button));
+      for (const button of buttons) {
+        const text = normalizeText(button.textContent).toLowerCase();
+        if (keywords.some((keyword) => text === keyword || text.includes(keyword))) {
+          button.click();
+          return;
+        }
+      }
+
+      const actions = document.querySelector('.mat-mdc-dialog-actions, .mat-dialog-actions');
+      const actionButtons = actions?.querySelectorAll<HTMLElement>('button');
+      if (actionButtons && actionButtons.length >= 2) {
+        const last = actionButtons[actionButtons.length - 1];
+        if (this.isVisibleElement(last)) {
+          last.click();
+          return;
+        }
+      }
+
+      await this.delay(checkInterval);
+      elapsed += checkInterval;
+    }
+  }
+
+  private getDeleteKeywords(): string[] {
+    return (this.t('batch_delete_match_patterns') || '')
+      .split(/[,，、；;]+/)
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean);
+  }
+
+  private isVisibleElement(el: HTMLElement): boolean {
+    const style = window.getComputedStyle(el);
+    return (
+      style.display !== 'none' &&
+      style.visibility !== 'hidden' &&
+      style.opacity !== '0' &&
+      el.offsetParent !== null
+    );
+  }
+
+  private clickBackdropToCloseMenu(): void {
+    document.querySelector<HTMLElement>('.cdk-overlay-backdrop')?.click();
+  }
+
+  private showLibraryBatchDeleteProgress(current: number, total: number): void {
+    this.hideLibraryBatchDeleteProgress();
+
+    const progress = document.createElement('div');
+    progress.className = 'gv-batch-delete-progress';
+    progress.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(32, 33, 36, 0.95);
+      color: #e8eaed;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      z-index: 2147483647;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Google Sans', Roboto, Arial, sans-serif;
+      font-size: 14px;
+    `;
+
+    const text = document.createElement('span');
+    text.className = 'gv-batch-delete-progress-text';
+    text.textContent = this.t('batch_delete_in_progress')
+      .replace('{current}', String(current))
+      .replace('{total}', String(total));
+    progress.appendChild(text);
+    document.body.appendChild(progress);
+    this.libraryBatchDeleteProgressElement = progress;
+  }
+
+  private updateLibraryBatchDeleteProgress(current: number, total: number): void {
+    const text = this.libraryBatchDeleteProgressElement?.querySelector(
+      '.gv-batch-delete-progress-text',
+    );
+    if (!text) return;
+    text.textContent = this.t('batch_delete_in_progress')
+      .replace('{current}', String(current))
+      .replace('{total}', String(total));
+  }
+
+  private hideLibraryBatchDeleteProgress(): void {
+    this.libraryBatchDeleteProgressElement?.remove();
+    this.libraryBatchDeleteProgressElement = null;
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**

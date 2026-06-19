@@ -90,6 +90,7 @@ That's why I built **Voyager**. It's not just a tool; it's a companion that help
   - **Gemini**: Supports **Account Isolation Mode** and **Custom Folder Colors**.
 - **💡 [Prompt Vault](https://voyager.nagi.fun/en/guide/prompts)**: Save and reuse prompts across Gemini, AI Studio, and [custom websites](https://voyager.nagi.fun/en/guide/custom-websites).
 - **☁️ [Cloud Sync](https://voyager.nagi.fun/en/guide/cloud-sync)**: Sync folders and prompts to Google Drive.
+- **🗑️ [Batch Delete](https://voyager.nagi.fun/en/guide/batch-delete)**: Bulk delete conversations.
 - **📐 Formula Copy**: One-click copy for LaTeX and MathML (Word) source codes.
 - **🌦️ Visual Effects**: Add seasonal ambience with **snow**, **cinematic rain**, or **falling sakura petals** from the settings panel.
 
@@ -102,7 +103,6 @@ That's why I built **Voyager**. It's not just a tool; it's a companion that help
 - **🍌 [NanoBanana](https://voyager.nagi.fun/en/guide/nanobanana)**: Lossless watermark removal for Gemini-generated images.
 - **🔬 [Deep Research](https://voyager.nagi.fun/en/guide/deep-research)**: Extract thinking processes and research links from Deep Research sessions.
 - **🛠️ Power Tools**:
-  - **[Batch Delete](https://voyager.nagi.fun/en/guide/batch-delete)**: Bulk delete conversations.
   - **[Quote Reply](https://voyager.nagi.fun/en/guide/quote-reply)**: Reply with context by selecting text.
   - **[Tab Title Sync](https://voyager.nagi.fun/en/guide/tab-title)**: Auto-sync browser tab titles.
   - **[Prevent Auto Scroll](https://voyager.nagi.fun/en/guide/prevent-auto-scroll)**: Intercepts unwanted jumping behavior when hitting enter to send a new prompt.

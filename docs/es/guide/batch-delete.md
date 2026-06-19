@@ -1,6 +1,6 @@
 # Eliminación por Lote
 
-Elimina múltiples conversaciones a la vez, di adiós a la tediosa eliminación una por una.
+Elimina múltiples conversaciones a la vez en Gemini y AI Studio, sin borrarlas una por una.
 
 ## Características
 
@@ -15,12 +15,21 @@ Elimina múltiples conversaciones a la vez, di adiós a la tediosa eliminación 
 
 ## Cómo Usar
 
+### Gemini
+
 1. En la lista de conversaciones de la barra lateral, **mantén presionado** cualquier elemento de conversación.
 2. Después de entrar en el modo de selección múltiple, aparecerán casillas de verificación a la izquierda de los elementos de conversación.
 3. Marca las conversaciones que deseas eliminar (máximo 50 a la vez).
 4. Haz clic en el **botón de eliminar** que aparece.
 5. Haz clic en "Aceptar" en el área roja de confirmación que aparece **sobre la lista de carpetas** para comenzar la eliminación por lote.
 
+### AI Studio
+
+1. Abre la página **Library** de AI Studio.
+2. **Mantén presionada** cualquier fila de prompt para entrar en el modo de selección múltiple.
+3. Selecciona los prompts que quieres eliminar (máximo 50 a la vez).
+4. Haz clic en el **botón de eliminar** flotante y confirma el aviso del navegador.
+
 ::: tip Consejo
-El panel de confirmación de eliminación cubrirá directamente el área de carpetas para evitar bloquear la lista de conversaciones. La operación de eliminación por lote no se puede deshacer, por favor opera con precaución.
+En Gemini, el panel de confirmación de eliminación cubre el área de carpetas para evitar bloquear la lista de conversaciones. La operación de eliminación por lote no se puede deshacer, por favor opera con precaución.
 :::

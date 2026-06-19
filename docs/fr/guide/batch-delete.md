@@ -1,6 +1,6 @@
 # Suppression par Lot
 
-Supprimez plusieurs conversations à la fois, fini la suppression une par une.
+Supprimez plusieurs conversations à la fois sur Gemini et AI Studio, fini la suppression une par une.
 
 ## Fonctionnalités
 
@@ -15,12 +15,21 @@ Supprimez plusieurs conversations à la fois, fini la suppression une par une.
 
 ## Comment Utiliser
 
+### Gemini
+
 1. Dans la liste des conversations de la barre latérale, faites un **appui long** sur n'importe quel élément de conversation.
 2. Après être entré en mode multi-sélection, des cases à cocher apparaîtront sur le côté gauche de chaque conversation.
 3. Cochez les conversations que vous souhaitez supprimer (jusqu'à 50 à la fois).
 4. Cliquez sur le **Bouton Supprimer** qui apparaît.
 5. Cliquez sur "Confirmer" dans la zone de confirmation rouge qui apparaît **au-dessus de la liste des dossiers** pour lancer la suppression.
 
+### AI Studio
+
+1. Ouvrez la page **Library** d'AI Studio.
+2. Faites un **appui long** sur n'importe quelle ligne de prompt pour entrer en mode multi-sélection.
+3. Sélectionnez les prompts à supprimer (jusqu'à 50 à la fois).
+4. Cliquez sur le **bouton Supprimer** flottant, puis confirmez l'invite du navigateur.
+
 ::: tip Note
-Le panneau de confirmation se superpose à la zone des dossiers pour éviter de bloquer la liste des conversations. Les opérations de suppression par lot ne peuvent pas être annulées, veuillez donc procéder avec prudence.
+Sur Gemini, le panneau de confirmation se superpose à la zone des dossiers pour éviter de bloquer la liste des conversations. Les opérations de suppression par lot ne peuvent pas être annulées, veuillez donc procéder avec prudence.
 :::

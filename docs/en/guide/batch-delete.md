@@ -1,6 +1,6 @@
 # Batch Delete
 
-Delete multiple conversations at once, no more deleting one by one.
+Delete multiple conversations at once on Gemini and AI Studio, no more deleting one by one.
 
 ## Features
 
@@ -15,12 +15,21 @@ Delete multiple conversations at once, no more deleting one by one.
 
 ## How to Use
 
+### Gemini
+
 1. In the sidebar conversation list, **long-press** any conversation item.
 2. After entering multi-select mode, checkboxes will appear on the left side of each conversation.
 3. Check the conversations you want to delete (up to 50 at a time).
 4. Click the **Delete button** that appears.
 5. Click "Confirm" in the red confirmation area that appears **above the folder list** to start the deletion.
 
+### AI Studio
+
+1. Open the AI Studio **Library** page.
+2. **Long-press** any prompt row to enter multi-select mode.
+3. Select the prompts you want to delete (up to 50 at a time).
+4. Click the floating **Delete button**, then confirm the browser prompt.
+
 ::: tip Note
-The confirmation panel overlays the folder area to avoid blocking the conversation list. Batch delete operations cannot be undone, so please proceed with caution.
+On Gemini, the confirmation panel overlays the folder area to avoid blocking the conversation list. Batch delete operations cannot be undone, so please proceed with caution.
 :::
