@@ -5,6 +5,7 @@ const TRANSPARENT_IMAGE_PLACEHOLDER =
 const DEFAULT_OFFSCREEN_LEFT = '-100000px';
 const DEFAULT_SANITIZE_SELECTOR = 'img, video, iframe, canvas, svg image';
 const DEFAULT_RENDER_WIDTH = 720;
+const MATH_RENDER_SELECTOR = '.katex, .math-inline, .math-block, [data-math]';
 
 /**
  * XML 1.0 §2.2 legal chars: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
@@ -21,6 +22,10 @@ function stripXmlIllegalChars(root: HTMLElement): void {
       node.data = node.data.replace(XML_ILLEGAL_CONTROL_CHAR_RE, '');
     }
   }
+}
+
+function hasMathContent(target: HTMLElement): boolean {
+  return target.matches(MATH_RENDER_SELECTOR) || !!target.querySelector(MATH_RENDER_SELECTOR);
 }
 
 export type RenderElementToImageBlobOptions = {
@@ -53,7 +58,7 @@ async function renderTargetToBlob(target: HTMLElement): Promise<Blob> {
     cacheBust: true,
     pixelRatio: 1.2,
     backgroundColor: '#ffffff',
-    skipFonts: true,
+    skipFonts: !hasMathContent(target),
     imagePlaceholder: TRANSPARENT_IMAGE_PLACEHOLDER,
     onImageErrorHandler: () => undefined,
   });

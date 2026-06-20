@@ -26,6 +26,18 @@ describe('ImageRenderService', () => {
 
     expect(result).toBe(blob);
     expect(toBlob).toHaveBeenCalledTimes(1);
+    expect(toBlob).toHaveBeenCalledWith(target, expect.objectContaining({ skipFonts: true }));
+  });
+
+  it('embeds fonts for math content so KaTeX radicals render correctly', async () => {
+    const target = document.createElement('div');
+    target.innerHTML = '<span class="math-inline" data-math="\\sqrt{x}">sqrt</span>';
+    const blob = new Blob(['ok'], { type: 'image/png' });
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(blob);
+
+    await renderElementToImageBlob(target);
+
+    expect(toBlob).toHaveBeenCalledWith(target, expect.objectContaining({ skipFonts: false }));
   });
 
   it('retries when shouldRetry returns true and later succeeds', async () => {
