@@ -3,7 +3,7 @@
  * `gem-nav-list-item[data-test-id="gems-side-nav-entry-button"]` so the
  * sidebar reads as if Gemini's own Gems entry expanded inline.
  *
- * Three responsibilities live in this module:
+ * Four responsibilities live in this module:
  *
  *   1. **Scraper** (runs only on `/gems/view`): when the user visits the Gems
  *      management page, parse the rendered `bot-list-row` items and write
@@ -27,14 +27,22 @@
  *      same way the folder manager does — a per-frame mutation-observed
  *      enforcer.
  *
- * The popup exposes a single `GV_GEMS_SIDEBAR_COUNT` (0-10). `count=0` is the
- * disabled state: the injector tears down its UI and exits. `count>0` shows
- * that many cached items. No expand/collapse, no "view all" — clicking
- * Gemini's own Gems entry already opens the full list.
+ *   4. **Pin toggle** (runs only on `/gems/view`): after every scrape, inject
+ *      a pin/unpin button next to each `bot-list-row`. The button reads/writes
+ *      `chrome.storage.sync[GV_GEMS_PINNED]` — an ordered list of gem ids the
+ *      user explicitly wants in the sidebar. Pinned gems always render first
+ *      (in pin order) and are never trimmed by the sidebar count.
+ *
+ * The popup exposes `GV_GEMS_SIDEBAR_COUNT` (0-10). `count=0` is the disabled
+ * state: the injector tears down its UI and exits. `count>0` shows that many
+ * cached items. No expand/collapse, no "view all" — clicking Gemini's own
+ * Gems entry already opens the full list.
  */
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
+
+import { injectPinButtons, listenPinnedChanges } from './pinToggle';
 
 /** Single gem as we cache and render it. Keep this small — chrome.storage. */
 export interface GemMetadata {
@@ -99,6 +107,7 @@ let injectedToggle: HTMLElement | null = null;
 let currentCount = 0;
 let currentCache: GemCacheEnvelope = { items: [], cachedAt: 0 };
 let currentMru: GemMruEntry[] = [];
+let currentPinned: string[] = [];
 let mruRetryTimer: number | null = null;
 let mruCaptureAttempts = 0;
 let navPollTimer: number | null = null;
@@ -309,6 +318,39 @@ export function orderGemsByRecency(mru: GemMruEntry[], catalog: GemMetadata[]): 
   return out;
 }
 
+/**
+ * Final visible list for the sidebar: pinned gems first, in pinned order, then
+ * recently-used gems filling the remaining slots up to `count` total. Pinned
+ * gems are never trimmed by `count` — naming a gem outranks the size limit —
+ * so when more gems are pinned than `count`, all pinned gems still show (and
+ * nothing else). Pinned ids with no resolvable metadata (e.g. synced from a
+ * device whose cache we don't have yet) are skipped. An empty pin list
+ * degrades to the existing recency order. Pure.
+ */
+export function selectVisibleGems(
+  pinned: string[],
+  mru: GemMruEntry[],
+  catalog: GemMetadata[],
+  count: number,
+): GemMetadata[] {
+  const ranked = orderGemsByRecency(mru, catalog);
+  const byId = new Map(ranked.map((g) => [g.id, g]));
+
+  const pinnedGems: GemMetadata[] = [];
+  const pinnedIds = new Set<string>();
+  for (const id of pinned) {
+    if (pinnedIds.has(id)) continue;
+    const gem = byId.get(id);
+    if (!gem) continue;
+    pinnedIds.add(id);
+    pinnedGems.push(gem);
+  }
+
+  const fill = ranked.filter((g) => !pinnedIds.has(g.id));
+  const fillCount = Math.max(0, count - pinnedGems.length);
+  return [...pinnedGems, ...fill.slice(0, fillCount)];
+}
+
 function clearMruRetry(): void {
   if (mruRetryTimer !== null) {
     clearTimeout(mruRetryTimer);
@@ -355,6 +397,9 @@ function scheduleScrape(): void {
     const items = scrapeGemsFromDocument();
     if (items.length === 0) return; // don't clobber cache on transient empty render
     void saveCache(items);
+    // Re-inject pin buttons after the cache is updated — the scraped
+    // rows may have been re-rendered or reordered by the user.
+    void injectPinButtons();
   }, SCRAPE_DEBOUNCE_MS);
 }
 
@@ -381,6 +426,8 @@ function setupScrapeObserver(): void {
   }
   // Initial scrape (post-render).
   scheduleScrape();
+  // Inject pin buttons on initial render of the gems list.
+  void injectPinButtons();
 
   scrapeObserver?.disconnect();
   scrapeObserver = new MutationObserver(() => scheduleScrape());
@@ -429,7 +476,7 @@ function findGemsNavEntry(): HTMLElement | null {
  * Build the inline list element. Returns `null` when there's nothing to show
  * (empty cache) — the caller treats null as "tear down any existing UI".
  */
-function buildGemsList(items: GemMetadata[], count: number): HTMLElement | null {
+function buildGemsList(items: GemMetadata[]): HTMLElement | null {
   if (items.length === 0) return null;
 
   const list = document.createElement('div');
@@ -439,7 +486,7 @@ function buildGemsList(items: GemMetadata[], count: number): HTMLElement | null 
   // semantics already live on the parent mat-nav-list.
   list.setAttribute('role', 'list');
 
-  items.slice(0, count).forEach((gem) => list.appendChild(buildItem(gem)));
+  items.forEach((gem) => list.appendChild(buildItem(gem)));
   return list;
 }
 
@@ -493,14 +540,14 @@ function refreshExpandedState(): void {
   }
 }
 
-/** Gems to render, ordered by recent use then catalog order. */
-function orderedGems(): GemMetadata[] {
-  return orderGemsByRecency(currentMru, currentCache.items);
+/** Gems to render: pinned first (pinned order), then recent up to the count. */
+function visibleGems(): GemMetadata[] {
+  return selectVisibleGems(currentPinned, currentMru, currentCache.items, currentCount);
 }
 
 /** Mount / re-mount the chevron on the current Gems nav entry. */
 function ensureExpandToggle(): void {
-  if (currentCount <= 0 || orderedGems().length === 0) {
+  if (currentCount <= 0 || visibleGems().length === 0) {
     removeExpandToggle();
     return;
   }
@@ -562,7 +609,7 @@ function renderSection(): void {
     return;
   }
 
-  const fresh = buildGemsList(orderedGems(), currentCount);
+  const fresh = buildGemsList(visibleGems());
   if (!fresh) {
     cleanupSection();
     return;
@@ -675,15 +722,24 @@ function clampCount(raw: unknown): number {
   return Math.max(0, Math.min(MAX_COUNT, Math.floor(n)));
 }
 
+/** Narrow a raw storage value to the pinned-ids shape (string[]). */
+export function sanitizePinnedIds(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((id): id is string => typeof id === 'string' && id.length > 0);
+}
+
 async function loadInitialState(): Promise<void> {
   try {
     const sync = await browser.storage.sync.get({
       [StorageKeys.GV_GEMS_SIDEBAR_COUNT]: DEFAULT_COUNT,
+      [StorageKeys.GV_GEMS_PINNED]: [],
     });
     currentCount = clampCount(sync[StorageKeys.GV_GEMS_SIDEBAR_COUNT]);
+    currentPinned = sanitizePinnedIds(sync[StorageKeys.GV_GEMS_PINNED]);
   } catch (error) {
     console.warn('[GemsSidebar] Failed to load sidebar count:', error);
     currentCount = DEFAULT_COUNT;
+    currentPinned = [];
   }
 
   try {
@@ -701,10 +757,14 @@ function setupStorageListener(): void {
   storageListener = (changes, areaName) => {
     if (areaName === 'sync' && changes[StorageKeys.GV_GEMS_SIDEBAR_COUNT]) {
       const next = clampCount(changes[StorageKeys.GV_GEMS_SIDEBAR_COUNT].newValue);
-      if (next === currentCount) return;
-      currentCount = next;
+      if (next !== currentCount) {
+        currentCount = next;
+        refreshInjector();
+      }
+    }
+    if (areaName === 'sync' && changes[StorageKeys.GV_GEMS_PINNED]) {
+      currentPinned = sanitizePinnedIds(changes[StorageKeys.GV_GEMS_PINNED].newValue);
       refreshInjector();
-      return;
     }
     if (areaName === 'local' && changes[StorageKeys.GV_GEMS_LIST_CACHE]) {
       const raw = changes[StorageKeys.GV_GEMS_LIST_CACHE].newValue as GemCacheEnvelope | undefined;
@@ -745,6 +805,7 @@ export async function startGemsSidebar(): Promise<() => void> {
 
   await loadInitialState();
   setupStorageListener();
+  listenPinnedChanges();
 
   // Scrape only when we're on the gems management page; the injector runs on
   // every Gemini page (it's keyed off the cache, not the page).

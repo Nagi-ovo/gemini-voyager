@@ -843,11 +843,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     defaultValue: CHAT_PARAGRAPH_SPACING.defaultValue,
     normalize: (v) => clampNumber(v, CHAT_PARAGRAPH_SPACING.min, CHAT_PARAGRAPH_SPACING.max),
     onApply: useCallback((value: number) => {
-      const clamped = clampNumber(
-        value,
-        CHAT_PARAGRAPH_SPACING.min,
-        CHAT_PARAGRAPH_SPACING.max,
-      );
+      const clamped = clampNumber(value, CHAT_PARAGRAPH_SPACING.min, CHAT_PARAGRAPH_SPACING.max);
       try {
         chrome.storage?.sync?.set({ [StorageKeys.CHAT_PARAGRAPH_SPACING]: clamped });
       } catch {}

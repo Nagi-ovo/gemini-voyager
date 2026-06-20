@@ -1,6 +1,6 @@
-import { StorageKeys } from '@/core/types/common';
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { StorageKeys } from '@/core/types/common';
 
 const STYLE_ID = 'gv-chat-paragraph-spacing-style';
 
