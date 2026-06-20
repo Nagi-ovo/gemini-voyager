@@ -1599,38 +1599,6 @@
     "message": "많이",
     "description": "Wide-end label on the gems count slider (count up to 10)."
   },
-  "gemsPinnedTitle": {
-    "message": "고정 표시할 Gems",
-    "description": "Popup card title — picker for pinning specific gems to the sidebar list."
-  },
-  "gemsPinnedDescription": {
-    "message": "고정된 Gems는 항상 이 순서대로 사이드바 목록 맨 위에 표시됩니다. 남은 자리는 최근 사용한 Gems로 채워집니다.",
-    "description": "Explains pinned gems always show first in pinned order; remaining slots fill with recent gems."
-  },
-  "gemsPinnedEmpty": {
-    "message": "아직 Gems를 찾지 못했습니다. Gemini의 Gems 페이지를 한 번 열어 목록을 불러오세요.",
-    "description": "Shown when no gems are cached yet; tells the user to open Gemini's Gems page once."
-  },
-  "gemsPinnedAvailable": {
-    "message": "선택 가능한 Gems",
-    "description": "Sub-header above the list of known gems that are not pinned yet."
-  },
-  "gemsPinnedPin": {
-    "message": "고정",
-    "description": "Button tooltip — pin a gem so it always shows in the sidebar."
-  },
-  "gemsPinnedUnpin": {
-    "message": "고정 해제",
-    "description": "Button tooltip — remove a gem from the pinned list."
-  },
-  "gemsPinnedMoveUp": {
-    "message": "위로 이동",
-    "description": "Button tooltip — move a pinned gem up in the display order."
-  },
-  "gemsPinnedMoveDown": {
-    "message": "아래로 이동",
-    "description": "Button tooltip — move a pinned gem down in the display order."
-  },
   "usageStatusTitle": {
     "message": "Gemini 사용 한도",
     "description": "Accessible label / tooltip for the usage status pill near the composer."

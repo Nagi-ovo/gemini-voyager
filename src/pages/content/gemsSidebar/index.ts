@@ -3,7 +3,7 @@
  * `gem-nav-list-item[data-test-id="gems-side-nav-entry-button"]` so the
  * sidebar reads as if Gemini's own Gems entry expanded inline.
  *
- * Three responsibilities live in this module:
+ * Four responsibilities live in this module:
  *
  *   1. **Scraper** (runs only on `/gems/view`): when the user visits the Gems
  *      management page, parse the rendered `bot-list-row` items and write
@@ -27,14 +27,22 @@
  *      same way the folder manager does — a per-frame mutation-observed
  *      enforcer.
  *
- * The popup exposes a single `GV_GEMS_SIDEBAR_COUNT` (0-10). `count=0` is the
- * disabled state: the injector tears down its UI and exits. `count>0` shows
- * that many cached items. No expand/collapse, no "view all" — clicking
- * Gemini's own Gems entry already opens the full list.
+ *   4. **Pin toggle** (runs only on `/gems/view`): after every scrape, inject
+ *      a pin/unpin button next to each `bot-list-row`. The button reads/writes
+ *      `chrome.storage.sync[GV_GEMS_PINNED]` — an ordered list of gem ids the
+ *      user explicitly wants in the sidebar. Pinned gems always render first
+ *      (in pin order) and are never trimmed by the sidebar count.
+ *
+ * The popup exposes `GV_GEMS_SIDEBAR_COUNT` (0-10). `count=0` is the disabled
+ * state: the injector tears down its UI and exits. `count>0` shows that many
+ * cached items. No expand/collapse, no "view all" — clicking Gemini's own
+ * Gems entry already opens the full list.
  */
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
+
+import { injectPinButtons, listenPinnedChanges } from './pinToggle';
 
 /** Single gem as we cache and render it. Keep this small — chrome.storage. */
 export interface GemMetadata {
@@ -389,6 +397,9 @@ function scheduleScrape(): void {
     const items = scrapeGemsFromDocument();
     if (items.length === 0) return; // don't clobber cache on transient empty render
     void saveCache(items);
+    // Re-inject pin buttons after the cache is updated — the scraped
+    // rows may have been re-rendered or reordered by the user.
+    void injectPinButtons();
   }, SCRAPE_DEBOUNCE_MS);
 }
 
@@ -415,6 +426,8 @@ function setupScrapeObserver(): void {
   }
   // Initial scrape (post-render).
   scheduleScrape();
+  // Inject pin buttons on initial render of the gems list.
+  void injectPinButtons();
 
   scrapeObserver?.disconnect();
   scrapeObserver = new MutationObserver(() => scheduleScrape());
@@ -792,6 +805,7 @@ export async function startGemsSidebar(): Promise<() => void> {
 
   await loadInitialState();
   setupStorageListener();
+  listenPinnedChanges();
 
   // Scrape only when we're on the gems management page; the injector runs on
   // every Gemini page (it's keyed off the cache, not the page).

@@ -1599,38 +1599,6 @@
     "message": "更多",
     "description": "Wide-end label on the gems count slider (count up to 10)."
   },
-  "gemsPinnedTitle": {
-    "message": "固定显示的 Gems",
-    "description": "Popup card title — picker for pinning specific gems to the sidebar list."
-  },
-  "gemsPinnedDescription": {
-    "message": "固定的 Gems 始终按此顺序显示在侧栏列表顶部，剩余名额由最近使用的 Gems 填充。",
-    "description": "Explains pinned gems always show first in pinned order; remaining slots fill with recent gems."
-  },
-  "gemsPinnedEmpty": {
-    "message": "尚未找到任何 Gems——请先在 Gemini 上打开一次 Gems 页面以加载列表。",
-    "description": "Shown when no gems are cached yet; tells the user to open Gemini's Gems page once."
-  },
-  "gemsPinnedAvailable": {
-    "message": "可选 Gems",
-    "description": "Sub-header above the list of known gems that are not pinned yet."
-  },
-  "gemsPinnedPin": {
-    "message": "固定",
-    "description": "Button tooltip — pin a gem so it always shows in the sidebar."
-  },
-  "gemsPinnedUnpin": {
-    "message": "取消固定",
-    "description": "Button tooltip — remove a gem from the pinned list."
-  },
-  "gemsPinnedMoveUp": {
-    "message": "上移",
-    "description": "Button tooltip — move a pinned gem up in the display order."
-  },
-  "gemsPinnedMoveDown": {
-    "message": "下移",
-    "description": "Button tooltip — move a pinned gem down in the display order."
-  },
   "usageStatusTitle": {
     "message": "Gemini 用量限额",
     "description": "Accessible label / tooltip for the usage status pill near the composer."

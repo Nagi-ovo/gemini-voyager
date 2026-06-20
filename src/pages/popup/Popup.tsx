@@ -52,7 +52,6 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useWidthAdjuster } from '../../hooks/useWidthAdjuster';
 import { CloudSyncSettings } from './components/CloudSyncSettings';
 import { ContextSyncSettings } from './components/ContextSyncSettings';
-import { GemsPinSettings } from './components/GemsPinSettings';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { PluginManager } from './components/PluginManager';
 import { StarredHistory } from './components/StarredHistory';
@@ -2212,21 +2211,18 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         {!isAIStudio &&
           wrapSection(
             'gemsSidebar',
-            <>
-              <WidthSlider
-                label={t('gemsSidebarCount')}
-                value={gemsSidebarCountAdjuster.width}
-                min={GEMS_SIDEBAR_COUNT.min}
-                max={GEMS_SIDEBAR_COUNT.max}
-                step={1}
-                narrowLabel={t('gemsSidebarCountOff')}
-                wideLabel={t('gemsSidebarCountMany')}
-                valueFormatter={(v) => (v === 0 ? t('gemsSidebarCountOff') : String(v))}
-                onChange={gemsSidebarCountAdjuster.handleChange}
-                onChangeComplete={gemsSidebarCountAdjuster.handleChangeComplete}
-              />
-              {gemsSidebarCountAdjuster.width > 0 && <GemsPinSettings />}
-            </>,
+            <WidthSlider
+              label={t('gemsSidebarCount')}
+              value={gemsSidebarCountAdjuster.width}
+              min={GEMS_SIDEBAR_COUNT.min}
+              max={GEMS_SIDEBAR_COUNT.max}
+              step={1}
+              narrowLabel={t('gemsSidebarCountOff')}
+              wideLabel={t('gemsSidebarCountMany')}
+              valueFormatter={(v) => (v === 0 ? t('gemsSidebarCountOff') : String(v))}
+              onChange={gemsSidebarCountAdjuster.handleChange}
+              onChangeComplete={gemsSidebarCountAdjuster.handleChangeComplete}
+            />,
           )}
         {/* Chat Width */}
         {wrapSection(
