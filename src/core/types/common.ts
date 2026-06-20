@@ -158,9 +158,9 @@ export const StorageKeys = {
   // by recent use rather than by the static management-page order. Local for the
   // same quota reason as the list cache.
   GV_GEMS_MRU: 'gvGemsMru',
-  // Ordered list of gem ids the user pinned from the popup. Pinned gems always
-  // render first in the sidebar (in this order) and are never trimmed by
-  // GV_GEMS_SIDEBAR_COUNT; remaining slots fill with recently-used gems.
+  // Ordered list of gem ids the user pinned from Gemini's Gems list. Pinned
+  // gems always render first in the sidebar (in this order) and are never
+  // trimmed by GV_GEMS_SIDEBAR_COUNT; remaining slots fill with recently-used gems.
   // Empty array (default) preserves the pure MRU behavior. Stored as string[]
   // in chrome.storage.sync — ids only, so it stays tiny; names/icons resolve
   // from the local cache/MRU on each device.
