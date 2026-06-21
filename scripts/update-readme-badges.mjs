@@ -5,7 +5,6 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 const owner = 'Nagi-ovo';
 const repo = 'gemini-voyager';
 const outDirs = [
-  new URL('../badges/', import.meta.url),
   new URL('../docs/public/badges/', import.meta.url),
 ];
 const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
