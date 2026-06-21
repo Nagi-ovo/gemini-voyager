@@ -222,4 +222,31 @@ describe('DOMContentExtractor', () => {
       );
     });
   });
+
+  describe('Canvas export support', () => {
+    it('extracts injected canvas-export-section content correctly', () => {
+      const assistant = document.createElement('div');
+      assistant.innerHTML = `
+        <message-content>
+          <div class="markdown">
+            <p>Here is my canvas doc:</p>
+            <div class="gv-canvas-export-section">
+              <h3>📄 Canvas Document: Doc Title</h3>
+              <div class="gv-canvas-content"># Heading 1\nThis is canvas content.</div>
+            </div>
+          </div>
+        </message-content>
+      `;
+
+      const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+      expect(extracted.text).toContain('Here is my canvas doc:');
+      expect(extracted.text).toContain('### 📄 Canvas Document: Doc Title');
+      expect(extracted.text).toContain('# Heading 1\nThis is canvas content.');
+
+      expect(extracted.html).toContain('gv-canvas-export-section');
+      expect(extracted.html).toContain('<h3>📄 Canvas Document: Doc Title</h3>');
+      expect(extracted.html).toContain('<pre style="white-space: pre-wrap;"># Heading 1\nThis is canvas content.</pre>');
+    });
+  });
 });
