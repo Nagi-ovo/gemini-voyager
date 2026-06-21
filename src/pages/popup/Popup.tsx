@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
@@ -31,7 +31,11 @@ import {
   refreshPluginManifests,
 } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
-import { resolveBrandColor } from '@/pages/content/platformTheme';
+import {
+  effectiveAccentForDisplay,
+  resolveBrandColor,
+  resolveSiteId,
+} from '@/pages/content/platformTheme';
 import { createPopupBrandThemeStyle } from '@/pages/popup/utils/brandTheme';
 import {
   extractDmgDownloadUrl,
@@ -55,6 +59,7 @@ import { ContextSyncSettings } from './components/ContextSyncSettings';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { PluginManager } from './components/PluginManager';
 import { StarredHistory } from './components/StarredHistory';
+import { ThemeColorButton } from './components/ThemeColorButton';
 import {
   IconDeepSeek,
   IconKimi,
@@ -537,6 +542,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [activeAccountPlatform, setActiveAccountPlatform] = useState<AccountPlatform>('gemini');
   const [activeUrl, setActiveUrl] = useState<string>('');
   const [pluginManifests, setPluginManifests] = useState<readonly PluginManifest[]>([]);
+  // Per-site custom accent overrides: Record<siteId, hex>.
+  const [accentColors, setAccentColors] = useState<Record<string, string>>({});
+  // Debounce timer for persisting accent changes to throttled sync storage.
+  const accentWriteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pluginsLoading, setPluginsLoading] = useState<boolean>(true);
   const [pluginsRefreshing, setPluginsRefreshing] = useState<boolean>(false);
   const [aiStructureCopyStatus, setAiStructureCopyStatus] = useState<
@@ -567,8 +576,78 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   // built-in, or a plugin's declared theme). Drives --primary/--ring/--accent so
   // the whole popup — not just primary buttons — adopts the platform colour.
   const activeBrand = useMemo(
-    () => resolveBrandColor(activeUrl, pluginManifests),
+    () => resolveBrandColor(activeUrl, pluginManifests, accentColors),
+    [activeUrl, pluginManifests, accentColors],
+  );
+
+  // Theme-colour picker: which site the override applies to, that site's
+  // default (what "reset" returns to), and a friendly scope label.
+  const activeSiteId = useMemo(() => resolveSiteId(activeUrl), [activeUrl]);
+  const activeSiteDefault = useMemo(
+    () => effectiveAccentForDisplay(activeUrl, pluginManifests, {}),
     [activeUrl, pluginManifests],
+  );
+  const activeSiteLabel = useMemo(() => {
+    const labels: Record<string, string> = {
+      gemini: 'Gemini',
+      aistudio: 'AI Studio',
+      claude: 'Claude',
+      chatgpt: 'ChatGPT',
+      grok: 'Grok',
+    };
+    return activeSiteId ? (labels[activeSiteId] ?? activeSiteId) : '';
+  }, [activeSiteId]);
+
+  // Load the per-site accent map once and keep it live (changes flow back in
+  // from this same popup's writes, or another device's sync).
+  useEffect(() => {
+    let alive = true;
+    const read = (): void => {
+      try {
+        chrome.storage?.sync?.get(StorageKeys.ACCENT_COLORS, (res) => {
+          if (!alive) return;
+          const value = res?.[StorageKeys.ACCENT_COLORS];
+          setAccentColors(value && typeof value === 'object' ? value : {});
+        });
+      } catch {
+        /* storage unavailable */
+      }
+    };
+    read();
+    const onChanged = (
+      changes: Record<string, chrome.storage.StorageChange>,
+      area: string,
+    ): void => {
+      if (area === 'sync' && StorageKeys.ACCENT_COLORS in changes) read();
+    };
+    chrome.storage?.onChanged?.addListener(onChanged);
+    return () => {
+      alive = false;
+      chrome.storage?.onChanged?.removeListener(onChanged);
+    };
+  }, []);
+
+  const handleAccentColorChange = useCallback(
+    (next: string | null) => {
+      if (!activeSiteId) return;
+      const updated = { ...accentColors };
+      if (next) updated[activeSiteId] = next;
+      else delete updated[activeSiteId];
+      setAccentColors(updated); // instant popup preview from React state
+      // Debounce the sync write: dragging the native colour wheel fires onChange
+      // rapidly, and chrome.storage.sync throttles write bursts (~120/min), after
+      // which writes are dropped and the colour appears to "freeze". Persist only
+      // the final value once the user pauses.
+      if (accentWriteTimer.current) clearTimeout(accentWriteTimer.current);
+      accentWriteTimer.current = setTimeout(() => {
+        try {
+          chrome.storage?.sync?.set({ [StorageKeys.ACCENT_COLORS]: updated });
+        } catch {
+          /* storage unavailable */
+        }
+      }, 200);
+    },
+    [activeSiteId, accentColors],
   );
 
   const handleRefreshPlugins = useCallback(async () => {
@@ -1640,6 +1719,13 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         <h1 className="text-primary text-2xl font-extrabold tracking-tight">{t('extName')}</h1>
         <div className="flex items-center gap-1">
           <DarkModeToggle />
+          <ThemeColorButton
+            siteId={activeSiteId}
+            siteLabel={activeSiteLabel}
+            defaultColor={activeSiteDefault}
+            value={(activeSiteId && accentColors[activeSiteId]) || null}
+            onChange={handleAccentColorChange}
+          />
           <LanguageSwitcher />
         </div>
       </div>

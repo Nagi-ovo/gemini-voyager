@@ -2190,5 +2190,17 @@
   "coachmarkDismiss": {
     "message": "之後再說",
     "description": "Generic dismiss/maybe-later label for feature coachmarks"
+  },
+  "themeColor": {
+    "message": "主題色",
+    "description": "Accent/theme colour picker title"
+  },
+  "themeColorDesc": {
+    "message": "為目前網站自訂 Voyager 的主題色。",
+    "description": "Accent colour picker description"
+  },
+  "themeColorReset": {
+    "message": "回復預設",
+    "description": "Reset accent colour to default"
   }
 }

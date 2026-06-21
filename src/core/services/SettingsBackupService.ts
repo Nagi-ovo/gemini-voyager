@@ -99,6 +99,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS: Record<string, unknown> = {
   [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS]: false,
   [StorageKeys.CONTEXT_SYNC_ENABLED]: false,
   [StorageKeys.CONTEXT_SYNC_PORT]: 3030,
+  [StorageKeys.ACCENT_COLORS]: {},
 };
 
 export const BACKUPABLE_SYNC_SETTINGS_KEYS = Object.keys(BACKUPABLE_SYNC_SETTINGS_DEFAULTS);

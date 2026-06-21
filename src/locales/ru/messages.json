@@ -2190,5 +2190,17 @@
   "coachmarkDismiss": {
     "message": "Позже",
     "description": "Generic dismiss/maybe-later label for feature coachmarks"
+  },
+  "themeColor": {
+    "message": "Акцентный цвет",
+    "description": "Accent/theme colour picker title"
+  },
+  "themeColorDesc": {
+    "message": "Настройте акцентный цвет Voyager для этого сайта.",
+    "description": "Accent colour picker description"
+  },
+  "themeColorReset": {
+    "message": "Сбросить по умолчанию",
+    "description": "Reset accent colour to default"
   }
 }

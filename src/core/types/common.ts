@@ -268,6 +268,12 @@ export const StorageKeys = {
   // Plugin cards the user has collapsed in the popup list (string[] of plugin
   // ids). Local (not sync) — it's a per-device UI preference, not user data.
   PLUGIN_UI_COLLAPSED: 'gvPluginUiCollapsed',
+  // Per-site custom accent colour overrides (chrome.storage.sync, backed up).
+  // Shape: Record<siteId, string> keyed by SiteAdapter id ('gemini' | 'claude'
+  // | 'chatgpt' | 'aistudio' | 'grok' | ...). A site WITH an entry uses that
+  // colour for the whole Voyager UI on that site; a site WITHOUT an entry falls
+  // back to its default (Gemini = Everforest sage; others = adapter brandColor).
+  ACCENT_COLORS: 'gvAccentColors',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

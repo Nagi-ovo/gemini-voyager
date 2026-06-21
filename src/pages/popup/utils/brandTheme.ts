@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react';
 
+import { readableForeground } from '@/pages/content/platformTheme';
+
 export type PopupBrandThemeStyle = CSSProperties & {
   '--primary': string;
   '--color-primary': string;
@@ -19,12 +21,15 @@ export type PopupBrandThemeStyle = CSSProperties & {
  */
 export function createPopupBrandThemeStyle(brand: string): PopupBrandThemeStyle {
   const accent = `color-mix(in srgb, ${brand} 14%, transparent)`;
+  // Keep text/icons on filled brand surfaces readable when the user picks a
+  // light accent (white-on-pale would vanish) — mirrors the content script.
+  const fg = readableForeground(brand);
 
   return {
     '--primary': brand,
     '--color-primary': brand,
-    '--primary-foreground': '#ffffff',
-    '--color-primary-foreground': '#ffffff',
+    '--primary-foreground': fg,
+    '--color-primary-foreground': fg,
     '--ring': brand,
     '--color-ring': brand,
     '--accent': accent,

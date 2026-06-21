@@ -2190,5 +2190,17 @@
   "coachmarkDismiss": {
     "message": "Quizás más tarde",
     "description": "Generic dismiss/maybe-later label for feature coachmarks"
+  },
+  "themeColor": {
+    "message": "Color de acento",
+    "description": "Accent/theme colour picker title"
+  },
+  "themeColorDesc": {
+    "message": "Personaliza el color de acento de Voyager para este sitio.",
+    "description": "Accent colour picker description"
+  },
+  "themeColorReset": {
+    "message": "Restablecer valores predeterminados",
+    "description": "Reset accent colour to default"
   }
 }
